@@ -98,14 +98,17 @@ bool	ProcControlServer::pollForMessage() const
 
 bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg) 
 {
+	// get the information out of the command
 	int16	cmdType 	 = theMsg->getCommand();
 	string	options		 = theMsg->getOptions();
 	LOG_DEBUG_STR("cmd=" << cmdType <<
 				  ", options=[" << options << "]" << endl);
 
-	bool	sendAnswer = true;
-	bool	result 	   = false;
+	// setup control defaults
+	bool	sendAnswer = true;		// assume that answer must be send
+	tribool	result 	   = false;		// assume failure
 
+	// handle the command
 	switch (cmdType) {
 	case PCCmdInfo:		
 		// TODO: make a real implementation.
@@ -147,8 +150,10 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 		break;
 	}
 
+	// send result to AC
 	if (sendAnswer) {
-		sendResult(theMsg->getCommand(), result ? PcCmdMaskOk : 0);
+		sendResult(theMsg->getCommand(), result ? PcCmdMaskOk : 
+						  indeterminate(result) ? PcCmdMaskNotSupported : 0);
 	}
 
 	return (true);

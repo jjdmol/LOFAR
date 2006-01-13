@@ -27,7 +27,9 @@
 
 //# Includes
 #include <PLC/ProcessControl.h>
+#include <boost/logic/tribool.hpp>
 
+using boost::logic::tribool;
 using namespace LOFAR::ACC::PLC;
 
 namespace LOFAR {
@@ -44,14 +46,14 @@ public:
 	virtual ~APCmdImpl();
 
 	// Command to control the application processes.
-	virtual bool	define 	 ();
-	virtual bool	init 	 ();
-	virtual bool	run 	 ();
-	virtual bool	pause  	 (const	string&		condition);
-	virtual bool	quit  	 ();
-	virtual bool	snapshot (const string&		destination);
-	virtual bool	recover  (const string&		source);
-	virtual bool	reinit	 (const string&		configID);
+	virtual tribool	define 	 ();
+	virtual tribool	init 	 ();
+	virtual tribool	run 	 ();
+	virtual tribool	pause  	 (const	string&		condition);
+	virtual tribool	quit  	 ();
+	virtual tribool	snapshot (const string&		destination);
+	virtual tribool	recover  (const string&		source);
+	virtual tribool	reinit	 (const string&		configID);
 
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist);

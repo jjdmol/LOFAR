@@ -54,7 +54,7 @@ bool PR_Shell::start()
 		return (true);
 	}
 
-	LOG_TRACE_OBJ_STR ("PR_Shell:start " << itsProcName);
+	LOG_TRACE_OBJ_STR ("PR_Shell: " << itsStartCmd);
 
 	int32 result = system (itsStartCmd.c_str());
 
@@ -69,7 +69,7 @@ bool PR_Shell::stop()
 {
 	// Note: always execute the stop command because it may also cleanup
 	// some mess the process left behind.
-	LOG_TRACE_OBJ_STR ("PR_Shell:stop " << itsProcName);
+	LOG_TRACE_OBJ_STR ("PR_Shell: " << itsStopCmd);
 
 	int32 result = system (itsStopCmd.c_str());
 

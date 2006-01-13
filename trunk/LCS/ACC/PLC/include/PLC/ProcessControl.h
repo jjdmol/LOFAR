@@ -31,6 +31,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <PLC/DH_ProcControl.h>
+#include <boost/logic/tribool.hpp>
+
+using boost::logic::tribool;
 
 namespace LOFAR {
   namespace ACC {
@@ -64,46 +67,46 @@ public:
 	// ParameterSet it received during start-up. When everthing seems ok the
 	// process constructs the communication channels for exchanging data
 	// with the other processes. The connection are NOT made in the stage.
-	virtual bool	define 	 ()  = 0;
+	virtual tribool	define 	 ()  = 0;
 
 	// When a process receives an \c init command it allocates the buffers it
 	// needs an makes the connections with the other processes. When the
 	// process succeeds in this it is ready for dataprocessing (or whatever
 	// task the process has).
-	virtual bool	init 	 ()  = 0;
+	virtual tribool	init 	 ()  = 0;
 
 	// During the \c run phase the process does the work it is designed for.
 	// The run phase stays active until another command is send.
-	virtual bool	run 	 ()  = 0;
+	virtual tribool	run 	 ()  = 0;
 
 	// With the \c pause command the process stops its run phase and starts
 	// waiting for another command. The \c condition argument contains the
 	// contition the process should use for ending the run phase. This
 	// condition is a key-value pair that can eg. contain a timestamp or a
 	// number of a datasample.
-	virtual bool	pause  	 (const	string&		condition) 	   = 0;
+	virtual tribool	pause  	 (const	string&		condition) 	   = 0;
 
 	// \c Quit stops the process.
 	// The process \b must call \c unregisterAtAC at ProcControlServer during 
 	// the execution of this command to pass the final results to the 
 	// Application Controller.
-	virtual bool	quit  	 ()  = 0;
+	virtual tribool	quit  	 ()  = 0;
 
 	// With the \c snapshot command the process is instructed to save itself
 	// in a database is such a way that on another moment in time it can
 	// be reconstructed and can continue it task.<br>
 	// The \c destination argument contains database info the process
 	// must use to save itself.
-	virtual bool	snapshot (const string&		destination)   = 0;
+	virtual tribool	snapshot (const string&		destination)   = 0;
 
 	// \c Recover reconstructs the process as it was saved some time earlier.
 	// The \c source argument contains the database info the process must use
 	// to find the information it needs.
-	virtual bool	recover  (const string&		source) 	   = 0;
+	virtual tribool	recover  (const string&		source) 	   = 0;
 
 	// With \c reinit the process receives a new parameterset that it must use
 	// to reinitialize itself.
-	virtual bool	reinit	 (const string&		configID)	   = 0;
+	virtual tribool	reinit	 (const string&		configID)	   = 0;
 	// @}
 
 	// Define a generic way to exchange info between client and server.

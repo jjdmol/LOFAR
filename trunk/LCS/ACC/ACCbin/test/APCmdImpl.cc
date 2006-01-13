@@ -24,8 +24,11 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<APCmdImpl.h>
+#include <Common/LofarLogger.h>
+#include <APCmdImpl.h>
+#include <boost/logic/tribool.hpp>
+
+using boost::logic::tribool;
 
 namespace LOFAR {
   namespace ACC {
@@ -36,50 +39,50 @@ APCmdImpl::APCmdImpl()
 APCmdImpl::~APCmdImpl()
 {}
 
-bool	APCmdImpl::define 	 ()
+tribool	APCmdImpl::define 	 ()
 {
 	LOG_DEBUG("define");
 	return (true);
 }
 
-bool	APCmdImpl::init 	 ()
+tribool	APCmdImpl::init 	 ()
 {
 	LOG_DEBUG("init");
 	return (true);
 }
 
-bool	APCmdImpl::run 	 ()
+tribool	APCmdImpl::run 	 ()
 {
 	LOG_DEBUG("run");
 	return (true);
 }
 
-bool	APCmdImpl::pause  	 (const	string&		condition)
+tribool	APCmdImpl::pause  	 (const	string&		condition)
 {
 	LOG_DEBUG_STR("pause: " << condition);
-	return (true);
+	return (boost::logic::indeterminate);
 }
 
-bool	APCmdImpl::quit  	 ()
+tribool	APCmdImpl::quit  	 ()
 {
 	LOG_DEBUG("quit");
 	return (true);
 }
 
-bool	APCmdImpl::snapshot (const string&		destination)
+tribool	APCmdImpl::snapshot (const string&		destination)
 {
 	LOG_DEBUG_STR("snapshot: " << destination);
 	return (true);
 }
 
-bool	APCmdImpl::recover  (const string&		source)
+tribool	APCmdImpl::recover  (const string&		source)
 {
 	LOG_DEBUG_STR("recover: " << source);
 	return (true);
 }
 
 
-bool	APCmdImpl::reinit	 (const string&		configID)
+tribool	APCmdImpl::reinit	 (const string&		configID)
 {
 	LOG_DEBUG_STR("reinit: " << configID);
 	return (true);

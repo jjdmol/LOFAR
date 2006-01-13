@@ -58,19 +58,19 @@ int main (int argc, char *argv[]) {
 	INIT_LOGGER(progName.c_str());
 
 	// Check invocation syntax
-	if (argc < 2) {
+	if (argc < 3) {
 		LOG_FATAL_STR("Invocation error, syntax: " << progName << 
-					  " parameterfile");
+					  " ACC parameterfile");
 		return (-1);
 	}
 
-	LOG_INFO_STR("Starting up: " << argv[0] << "(" << argv[1] << ")");
+	LOG_INFO_STR("Starting up: " << argv[0] << "(" << argv[2] << ")");
 
 	try {
 		// --- begin of example code ---
 
 		// Read in parameterfile and get my name
-		ParameterSet	itsParamSet(argv[1]);			// may throw
+		ParameterSet	itsParamSet(argv[2]);			// may throw
 		string			itsProcID = itsParamSet.getString("process.name");
 
 		// Create a APCmdImpl object. This object contains the real 
