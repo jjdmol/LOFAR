@@ -49,14 +49,14 @@ public:
   virtual ~ApplicationHolderController();
 
   // Command to control the application processes.
-  virtual bool	define   () ;
-  virtual bool	init     () ;
-  virtual bool	run      () ;
-  virtual bool	pause    (const	string&	condition) ;
-  virtual bool	quit  	 ();
-  virtual bool	snapshot (const string&	destination) ;
-  virtual bool	recover  (const string&	source) ;
-  virtual bool	reinit	 (const string&	configID) ;
+  virtual tribool	define   () ;
+  virtual tribool	init     () ;
+  virtual tribool	run      () ;
+  virtual tribool	pause    (const	string&	condition) ;
+  virtual tribool	quit  	 ();
+  virtual tribool	snapshot (const string&	destination) ;
+  virtual tribool	recover  (const string&	source) ;
+  virtual tribool	reinit	 (const string&	configID) ;
   virtual string askInfo   (const string& 	keylist) ;
   
   virtual int main(int argc, const char* argv[]);

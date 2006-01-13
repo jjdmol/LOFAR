@@ -51,7 +51,7 @@ ApplicationHolderController::ApplicationHolderController(TinyApplicationHolder& 
 ApplicationHolderController::~ApplicationHolderController()
 {};
 
-bool ApplicationHolderController::define   () 
+tribool ApplicationHolderController::define   () 
 {
   LOG_TRACE_FLOW("Define called by ACC");
   try {
@@ -61,7 +61,7 @@ bool ApplicationHolderController::define   ()
   }
   return true;
 }
-bool ApplicationHolderController::init     () 
+tribool ApplicationHolderController::init     () 
 {
   LOG_TRACE_FLOW("Init called by ACC");
   try {
@@ -72,7 +72,7 @@ bool ApplicationHolderController::init     ()
   }
   return true;
 }
-bool ApplicationHolderController::run      () 
+tribool ApplicationHolderController::run      () 
 {
   LOG_TRACE_FLOW("Run called by ACC");
   try {
@@ -83,13 +83,13 @@ bool ApplicationHolderController::run      ()
   }
   return true;
 }
-bool ApplicationHolderController::pause    (const	string&	condition)
+tribool ApplicationHolderController::pause    (const	string&	condition)
 {
   LOG_TRACE_FLOW("Pause called");
   itsIsRunning = false;
   return true;
 }
-bool ApplicationHolderController::quit  	 () 
+tribool ApplicationHolderController::quit  	 () 
 {
   LOG_TRACE_FLOW("Quit called by ACC");
   try {
@@ -103,7 +103,7 @@ bool ApplicationHolderController::quit  	 ()
   LOG_TRACE_FLOW("Quit ready");
   return true;
 }
-bool ApplicationHolderController::snapshot (const string&	destination) 
+tribool ApplicationHolderController::snapshot (const string&	destination) 
 {
   LOG_TRACE_FLOW("Snapshot called by ACC");
   try {
@@ -113,7 +113,7 @@ bool ApplicationHolderController::snapshot (const string&	destination)
   }
   return false; // this is not implemented
 }
-bool ApplicationHolderController::recover  (const string&	source) 
+tribool ApplicationHolderController::recover  (const string&	source) 
 {
   LOG_TRACE_FLOW("Recover called by ACC");
   try {
@@ -123,7 +123,7 @@ bool ApplicationHolderController::recover  (const string&	source)
   }
   return false; // this is not implemented
 }
-bool ApplicationHolderController::reinit	 (const string&	configID) 
+tribool ApplicationHolderController::reinit	 (const string&	configID) 
 {
   LOG_TRACE_FLOW("Reinit called by ACC");
   try {
