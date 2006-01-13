@@ -59,7 +59,8 @@ public class BB_Gui extends javax.swing.JFrame {
         //Initially disable the FlowEdit panel and the MainEdit panel
         // The FlowEditPanel can be enabled as soon as there is a Configuration file available (after save or load)
         // The MainEdit Panel can be used as soon as the Toplevel panel is filled(or loaded)
-        
+
+        enableTopLevelParamPanel(false);
         enableMainEditPanel(false);
         enableFlowEditPanel(false);
     }
@@ -148,11 +149,11 @@ public class BB_Gui extends javax.swing.JFrame {
         ExclParamDeleteButton = new javax.swing.JButton();
         excludeParamsInput = new javax.swing.JList();
         ExclParamClearButton = new javax.swing.JButton();
-        jLabel16 = new javax.swing.JLabel();
+        timeIntervalLabel = new javax.swing.JLabel();
         timeIntervalInput = new javax.swing.JTextField();
-        jLabel20 = new javax.swing.JLabel();
+        maxNrIterationsLabel = new javax.swing.JLabel();
         maxNrIterationsInput = new javax.swing.JTextField();
-        jLabel21 = new javax.swing.JLabel();
+        fitCriterionLabel = new javax.swing.JLabel();
         fitCriterionInput = new javax.swing.JTextField();
         RestoreDefaultButton = new javax.swing.JButton();
         ConfigurationFileLabel = new javax.swing.JLabel();
@@ -209,7 +210,7 @@ public class BB_Gui extends javax.swing.JFrame {
             }
         });
 
-        TopLevelParamPanel.add(GetDescriptionFileButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 50, -1, 20));
+        TopLevelParamPanel.add(GetDescriptionFileButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(560, 50, 150, 20));
 
         jLabel9.setText("Common Parameters Table Name");
         TopLevelParamPanel.add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, -1));
@@ -229,7 +230,7 @@ public class BB_Gui extends javax.swing.JFrame {
         TopLevelParamPanel.add(CommonParameterBrowseButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 80, -1, 20));
 
         jLabel10.setText("LSM Parameters Table Name");
-        TopLevelParamPanel.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 160, -1));
+        TopLevelParamPanel.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 210, -1));
 
         skyTableNameInput.setToolTipText("GSM Parameters Table Name");
         skyTableNameInput.setEnabled(false);
@@ -246,7 +247,7 @@ public class BB_Gui extends javax.swing.JFrame {
         TopLevelParamPanel.add(LSMParametersButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 110, -1, 20));
 
         jLabel11.setText("Parameter Database Type");
-        TopLevelParamPanel.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(680, 24, -1, 20));
+        TopLevelParamPanel.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 20, -1, 20));
 
         DBTypeInput.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "aips", "bdb", "bdbrepl" }));
         DBTypeInput.addItemListener(new java.awt.event.ItemListener() {
@@ -255,27 +256,27 @@ public class BB_Gui extends javax.swing.JFrame {
             }
         });
 
-        TopLevelParamPanel.add(DBTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(880, 20, 110, -1));
+        TopLevelParamPanel.add(DBTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(920, 20, 110, -1));
 
         DBHostLabel.setText("Parameter Database Host Name");
         DBHostLabel.setVisible(false);
-        TopLevelParamPanel.add(DBHostLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(680, 50, -1, 20));
+        TopLevelParamPanel.add(DBHostLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 50, -1, 20));
 
         DBHostInput.setHorizontalAlignment(javax.swing.JTextField.LEFT);
         DBHostInput.setText("localhost");
         DBHostInput.setToolTipText("host where the parameter database runs");
         DBHostInput.setVisible(false);
-        TopLevelParamPanel.add(DBHostInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(880, 50, 110, -1));
+        TopLevelParamPanel.add(DBHostInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(920, 50, 110, -1));
 
         DBMasterPortLabel.setText("Port");
         DBMasterPortLabel.setVisible(false);
-        TopLevelParamPanel.add(DBMasterPortLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(680, 80, -1, 20));
+        TopLevelParamPanel.add(DBMasterPortLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 80, -1, 20));
 
         DBMasterPortInput.setHorizontalAlignment(javax.swing.JTextField.LEFT);
         DBMasterPortInput.setText("13157");
         DBMasterPortInput.setToolTipText("Master Database Listen Portnumber");
         DBMasterPortInput.setVisible(false);
-        TopLevelParamPanel.add(DBMasterPortInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(880, 80, 50, -1));
+        TopLevelParamPanel.add(DBMasterPortInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(920, 80, 50, -1));
 
         SourcePatchButton.setText("Source Patches");
         SourcePatchButton.setToolTipText("Define Source Patch List");
@@ -285,7 +286,7 @@ public class BB_Gui extends javax.swing.JFrame {
             }
         });
 
-        TopLevelParamPanel.add(SourcePatchButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(680, 110, -1, 20));
+        TopLevelParamPanel.add(SourcePatchButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 110, -1, 20));
 
         getContentPane().add(TopLevelParamPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1210, 140));
 
@@ -320,7 +321,7 @@ public class BB_Gui extends javax.swing.JFrame {
         GeneralParameterPanel.setBorder(new javax.swing.border.TitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 2, true), "General Parameters"));
         parmSolutionTableLabel.setText("To DataBase Table: ");
         parmSolutionTableLabel.setVisible(false);
-        GeneralParameterPanel.add(parmSolutionTableLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 20, -1, 20));
+        GeneralParameterPanel.add(parmSolutionTableLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 20, -1, 20));
 
         writeIndividualParmsInput.setText("Export Solutions");
         writeIndividualParmsInput.setToolTipText("Export Solutions to database");
@@ -335,7 +336,7 @@ public class BB_Gui extends javax.swing.JFrame {
         parmSolutionTableInput.setText("bbs3ParmSolutions");
         parmSolutionTableInput.setToolTipText("Table to store individual parameters in");
         parmSolutionTableInput.setVisible(false);
-        GeneralParameterPanel.add(parmSolutionTableInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 20, 230, -1));
+        GeneralParameterPanel.add(parmSolutionTableInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 20, 230, -1));
 
         MainEditPanel.add(GeneralParameterPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 900, 50));
 
@@ -350,7 +351,7 @@ public class BB_Gui extends javax.swing.JFrame {
             }
         });
 
-        StratSpecParamPanel.add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 30, 110, 20));
+        StratSpecParamPanel.add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 30, 160, 20));
 
         jLabel1.setText("Strategy Type");
         StratSpecParamPanel.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, -1, 20));
@@ -363,22 +364,22 @@ public class BB_Gui extends javax.swing.JFrame {
 
         startTimeInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         startTimeInput.setText("-1");
-        MeasurementPanel.add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 20, 170, 20));
+        MeasurementPanel.add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 20, 170, 20));
 
         jLabel15.setText("End Time");
         MeasurementPanel.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 20, -1, 20));
 
         endTimeInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         endTimeInput.setText("-1");
-        MeasurementPanel.add(endTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 20, 180, -1));
+        MeasurementPanel.add(endTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 20, 180, -1));
 
         jLabel17.setText("Start Channel");
         MeasurementPanel.add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
 
         startChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        startChannelInput.setText("0");
+        startChannelInput.setText("1");
         startChannelInput.setToolTipText("Enter Start Channel Number");
-        MeasurementPanel.add(startChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 50, 100, -1));
+        MeasurementPanel.add(startChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 100, -1));
 
         jLabel18.setText("End Channel");
         MeasurementPanel.add(jLabel18, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 50, -1, 20));
@@ -386,7 +387,7 @@ public class BB_Gui extends javax.swing.JFrame {
         endChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         endChannelInput.setText("1");
         endChannelInput.setToolTipText("Give end channel number");
-        MeasurementPanel.add(endChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 50, 100, -1));
+        MeasurementPanel.add(endChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 50, 100, -1));
 
         useAutoCorrInput.setText("Use AutoCorrelations");
         MeasurementPanel.add(useAutoCorrInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 90, -1, -1));
@@ -412,22 +413,22 @@ public class BB_Gui extends javax.swing.JFrame {
         MeasurementPanel.add(jLabel22, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, -1, -1));
 
         stationNamesInput.setToolTipText("Comma Seperated List with Station Names");
-        MeasurementPanel.add(stationNamesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 140, 440, -1));
+        MeasurementPanel.add(stationNamesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 140, 440, -1));
 
-        StratSpecParamPanel.add(MeasurementPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 20, 550, 180));
+        StratSpecParamPanel.add(MeasurementPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 20, 580, 180));
 
         jLabel19.setText("Solvable Source Numbers");
         StratSpecParamPanel.add(jLabel19, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, -1, 20));
 
         sourcesInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         sourcesInput.setToolTipText("Comma seperated array with sourcenumbers");
-        StratSpecParamPanel.add(sourcesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 220, 700, 20));
+        StratSpecParamPanel.add(sourcesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 220, 700, 20));
 
         jLabel23.setText("Model Type");
         StratSpecParamPanel.add(jLabel23, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, -1, 20));
 
         modelTypeInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        StratSpecParamPanel.add(modelTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 60, 110, -1));
+        StratSpecParamPanel.add(modelTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 60, 160, -1));
 
         calcUVWInput.setText("Calculate UVW Coordinates");
         StratSpecParamPanel.add(calcUVWInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, -1, -1));
@@ -536,29 +537,29 @@ public class BB_Gui extends javax.swing.JFrame {
 
         ExcludeParamPanel.add(ExclParamClearButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 80, -1, -1));
 
-        StratSpecParamPanel.add(ExcludeParamPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(440, 250, 410, 210));
+        StratSpecParamPanel.add(ExcludeParamPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 250, 410, 210));
 
-        jLabel16.setText("Time Interval Size (s)");
-        StratSpecParamPanel.add(jLabel16, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 470, -1, 20));
+        timeIntervalLabel.setText("Time Interval Size (s)");
+        StratSpecParamPanel.add(timeIntervalLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 470, -1, 20));
 
         timeIntervalInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         timeIntervalInput.setText("1.0e12");
-        StratSpecParamPanel.add(timeIntervalInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 470, 100, -1));
+        StratSpecParamPanel.add(timeIntervalInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 470, 100, -1));
 
-        jLabel20.setText("Maximum Iterations");
-        StratSpecParamPanel.add(jLabel20, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 500, -1, 20));
+        maxNrIterationsLabel.setText("Maximum Iterations");
+        StratSpecParamPanel.add(maxNrIterationsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 500, -1, 20));
 
         maxNrIterationsInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         maxNrIterationsInput.setText("1");
         maxNrIterationsInput.setToolTipText("Maximum Number of Iterations");
-        StratSpecParamPanel.add(maxNrIterationsInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 500, 100, -1));
+        StratSpecParamPanel.add(maxNrIterationsInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 500, 100, -1));
 
-        jLabel21.setText("Fit Criterion");
-        StratSpecParamPanel.add(jLabel21, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 530, -1, 20));
+        fitCriterionLabel.setText("Fit Criterion");
+        StratSpecParamPanel.add(fitCriterionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 530, -1, 20));
 
         fitCriterionInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         fitCriterionInput.setText("-1");
-        StratSpecParamPanel.add(fitCriterionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 530, 100, 20));
+        StratSpecParamPanel.add(fitCriterionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 530, 100, 20));
 
         RestoreDefaultButton.setText("Restore Default");
         RestoreDefaultButton.setToolTipText("Restore Default Settings");
@@ -708,14 +709,14 @@ public class BB_Gui extends javax.swing.JFrame {
         if (aFile != null && aFile.exists()) {
             BBSConfigFileRep aF = new BBSConfigFileRep();
             aF.loadFile(aFile);
-            boolean reload=false;
+            boolean reload=true;
             if (!saved) {
                 int anI=JOptionPane.showConfirmDialog(null,"This action will overwrite changes in the input screens\n"+
                        " Are you sure you want to continue?",
                         "Overwrite InputScreens Warning",
                         JOptionPane.YES_NO_OPTION);                
-                if (anI==JOptionPane.YES_OPTION){
-                   reload=true;
+                if (anI==JOptionPane.NO_OPTION){
+                   reload=false;
                 }            
             }
             if (reload) {
@@ -731,13 +732,27 @@ public class BB_Gui extends javax.swing.JFrame {
     }//GEN-LAST:event_FileMenuOpenFileActionPerformed
 
     private void FileMenuNewFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FileMenuNewFileActionPerformed
-        File aFile=getFileName("NewConfig");
-        if (aFile != null) {
-            itsConfigFileName=aFile;
-            itsConfigFile.setFile(itsConfigFileName);
-            FileMenuSaveFile.setEnabled(true);
-            FileMenuSaveFileAs.setEnabled(true);
-            ConfigurationFileLabel.setText("Currently working on configuration file: "+ itsConfigFileName.getName());
+        boolean discard=true;
+        if (itsConfigFileName != null) {
+            int anI=JOptionPane.showConfirmDialog(null,"This action will overwrite changes in the input screens\n"+
+                  " Are you sure you want to continue?",
+                  "Overwrite InputScreens Warning",
+                  JOptionPane.YES_NO_OPTION);                
+            if (anI==JOptionPane.NO_OPTION){
+               discard=false;
+            }                    
+        }
+        if (discard) {
+            File aFile=getFileName("NewConfig");
+            if (aFile != null) {
+                itsConfigFileName=aFile;
+                itsConfigFile.setFile(itsConfigFileName);
+                FileMenuSaveFile.setEnabled(true);
+                FileMenuSaveFileAs.setEnabled(true);
+                enableTopLevelParamPanel(true);
+                reloadPanels(itsConfigFile);
+                ConfigurationFileLabel.setText("Currently working on configuration file: "+ itsConfigFileName.getName());
+            }
         }
     }//GEN-LAST:event_FileMenuNewFileActionPerformed
 
@@ -900,17 +915,15 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JTextField endTimeInput;
     private javax.swing.JList excludeParamsInput;
     private javax.swing.JTextField fitCriterionInput;
+    private javax.swing.JLabel fitCriterionLabel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
-    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
-    private javax.swing.JLabel jLabel20;
-    private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel23;
     private javax.swing.JLabel jLabel24;
@@ -920,6 +933,7 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JList jList1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTextField maxNrIterationsInput;
+    private javax.swing.JLabel maxNrIterationsLabel;
     private javax.swing.JTextField meqTableNameInput;
     private javax.swing.JTextField modelTypeInput;
     private javax.swing.JTextField newExclParameter;
@@ -934,6 +948,7 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JTextField stationNamesInput;
     private javax.swing.JComboBox strategyInput;
     private javax.swing.JTextField timeIntervalInput;
+    private javax.swing.JLabel timeIntervalLabel;
     private javax.swing.JCheckBox useAutoCorrInput;
     private javax.swing.JCheckBox useSVDInput;
     private javax.swing.JCheckBox writeInDataColInput;
@@ -1314,9 +1329,9 @@ public class BB_Gui extends javax.swing.JFrame {
         for (int i=0;i<TopLevelParamPanel.getComponentCount();i++) {
             Component aC=TopLevelParamPanel.getComponent(i);
             // The following components need to keep their (disabled) state
-            if (aC.getName().equals("MSNameInput") ||
+            if (aC.getName() != null && (aC.getName().equals("MSNameInput") ||
                     aC.getName().equals("skyTableInput") ||
-                    aC.getName().equals("meqTableInput")) {
+                    aC.getName().equals("meqTableInput"))) {
             } else {
                 aC.setEnabled(aFlag);
             }
@@ -1388,8 +1403,11 @@ public class BB_Gui extends javax.swing.JFrame {
             aFlag=true;
         }
         timeIntervalInput.setVisible(!aFlag);
+        timeIntervalLabel.setVisible(!aFlag);
         maxNrIterationsInput.setVisible(!aFlag);
+        maxNrIterationsLabel.setVisible(!aFlag);
         fitCriterionInput.setVisible(!aFlag);
+        fitCriterionLabel.setVisible(!aFlag);
         useSVDInput.setVisible(!aFlag);
         controlParmUpdateInput.setVisible(!aFlag);
         writeParmsInput.setVisible(!aFlag);
