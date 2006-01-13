@@ -31,7 +31,7 @@ public class Main {
     
     private static void initGui() {
         itsGui = new BB_Gui();
-        itsGui.setSize(910,825);
+        itsGui.setSize(1225,975);
         itsGui.setResizable(false);
         itsGui.setVisible(true);
     }
