@@ -33,6 +33,7 @@ public class BB_Gui extends javax.swing.JFrame {
     private int              itsTimeNSteps;
     private DefaultListModel itsSolvableParamsModel;
     private DefaultListModel itsExcludeParamsModel;
+    private DefaultListModel itsFlowListModel;
     private String           itsSubsetMSPath="";
     
     private File             itsConfigFileName;
@@ -53,8 +54,10 @@ public class BB_Gui extends javax.swing.JFrame {
         // The listmodels
         itsSolvableParamsModel=new DefaultListModel();
         itsExcludeParamsModel=new DefaultListModel();
+        itsFlowListModel=new DefaultListModel();
         solvableParamsInput.setModel(itsSolvableParamsModel);
         excludeParamsInput.setModel(itsExcludeParamsModel);
+        flowListInput.setModel(itsFlowListModel);
         
         //Initially disable the FlowEdit panel and the MainEdit panel
         // The FlowEditPanel can be enabled as soon as there is a Configuration file available (after save or load)
@@ -96,10 +99,12 @@ public class BB_Gui extends javax.swing.JFrame {
         SourcePatchButton = new javax.swing.JButton();
         FlowEditPanel = new javax.swing.JPanel();
         FlowScrollPane = new javax.swing.JScrollPane();
-        jList1 = new javax.swing.JList();
+        flowListInput = new javax.swing.JList();
         DeleteStepButton = new javax.swing.JButton();
         AddStepButton = new javax.swing.JButton();
         MoveStepUpButton = new javax.swing.JButton();
+        MoveStepDownButton = new javax.swing.JButton();
+        RunFlowButton = new javax.swing.JButton();
         ParameterPanel = new javax.swing.JPanel();
         BB_GuiTabbedPane = new javax.swing.JTabbedPane();
         MainEditPanel = new javax.swing.JPanel();
@@ -167,6 +172,10 @@ public class BB_Gui extends javax.swing.JFrame {
         FileMenuSaveFileAs = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         FileMenuClose = new javax.swing.JMenuItem();
+        FlowMenu = new javax.swing.JMenu();
+        FlowMenuOpenFile = new javax.swing.JMenuItem();
+        FlowMenuSaveFile = new javax.swing.JMenuItem();
+        FlowMenuSaveFileAs = new javax.swing.JMenuItem();
         HelpMenu = new javax.swing.JMenu();
 
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -293,21 +302,57 @@ public class BB_Gui extends javax.swing.JFrame {
         FlowEditPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         FlowEditPanel.setBorder(new javax.swing.border.TitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 2, true), "Edit Flow"));
-        FlowScrollPane.setViewportView(jList1);
+        FlowScrollPane.setViewportView(flowListInput);
 
         FlowEditPanel.add(FlowScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 270, 550));
 
         DeleteStepButton.setText("Delete Step");
         DeleteStepButton.setToolTipText("Delete Step From List");
+        DeleteStepButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                DeleteStepButtonActionPerformed(evt);
+            }
+        });
+
         FlowEditPanel.add(DeleteStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 620, -1, -1));
 
         AddStepButton.setText("Add Step");
         AddStepButton.setToolTipText("Add Step to StepList");
+        AddStepButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                AddStepButtonActionPerformed(evt);
+            }
+        });
+
         FlowEditPanel.add(AddStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 590, 90, -1));
 
         MoveStepUpButton.setText("Move Up");
         MoveStepUpButton.setToolTipText("Move Step Up in List");
-        FlowEditPanel.add(MoveStepUpButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 590, -1, -1));
+        MoveStepUpButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                MoveStepUpButtonActionPerformed(evt);
+            }
+        });
+
+        FlowEditPanel.add(MoveStepUpButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 590, 100, -1));
+
+        MoveStepDownButton.setText("Move Down");
+        MoveStepDownButton.setToolTipText("Move Step Down in List");
+        MoveStepDownButton.setMaximumSize(new java.awt.Dimension(77, 23));
+        MoveStepDownButton.setMinimumSize(new java.awt.Dimension(77, 23));
+        MoveStepDownButton.setPreferredSize(new java.awt.Dimension(77, 23));
+        MoveStepDownButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                MoveStepDownButtonActionPerformed(evt);
+            }
+        });
+
+        FlowEditPanel.add(MoveStepDownButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 620, 100, -1));
+
+        RunFlowButton.setText("Run");
+        RunFlowButton.setToolTipText("Run Complete Flow");
+        RunFlowButton.setEnabled(false);
+        FlowEditPanel.add(RunFlowButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 680, 90, -1));
 
         getContentPane().add(FlowEditPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 150, 300, 760));
 
@@ -646,6 +691,22 @@ public class BB_Gui extends javax.swing.JFrame {
 
         BB_GuiMenuBar.add(FileMenu);
 
+        FlowMenu.setText("Flow");
+        FlowMenu.setToolTipText("FlowList actions");
+        FlowMenuOpenFile.setText("Open");
+        FlowMenuOpenFile.setToolTipText("Open a FlowList");
+        FlowMenu.add(FlowMenuOpenFile);
+
+        FlowMenuSaveFile.setText("Save");
+        FlowMenuSaveFile.setToolTipText("Save Flow List");
+        FlowMenu.add(FlowMenuSaveFile);
+
+        FlowMenuSaveFileAs.setText("Save As...");
+        FlowMenuSaveFileAs.setToolTipText("Save Flow Listwith a new name");
+        FlowMenu.add(FlowMenuSaveFileAs);
+
+        BB_GuiMenuBar.add(FlowMenu);
+
         HelpMenu.setText("Help");
         BB_GuiMenuBar.add(HelpMenu);
 
@@ -654,6 +715,42 @@ public class BB_Gui extends javax.swing.JFrame {
         pack();
     }
     // </editor-fold>//GEN-END:initComponents
+
+    private void DeleteStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DeleteStepButtonActionPerformed
+        if (flowListInput.getSelectedIndex() > -1) {
+            itsFlowListModel.remove(flowListInput.getSelectedIndex());
+        }
+        flowListInput.validate();
+    }//GEN-LAST:event_DeleteStepButtonActionPerformed
+
+    private void MoveStepDownButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MoveStepDownButtonActionPerformed
+        int index=flowListInput.getSelectedIndex();
+        if (index > -1 && index<itsFlowListModel.size()-1) {
+            File aFile=(File)itsFlowListModel.get(index+1);
+            itsFlowListModel.set(index+1, itsFlowListModel.get(index));
+            itsFlowListModel.set(index, aFile);
+            flowListInput.setSelectedIndex(index+1);
+            flowListInput.validate();
+        }
+    }//GEN-LAST:event_MoveStepDownButtonActionPerformed
+
+    private void MoveStepUpButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MoveStepUpButtonActionPerformed
+        int index=flowListInput.getSelectedIndex();
+        if (index > 0) {
+            File aFile=(File)itsFlowListModel.get(index-1);
+            itsFlowListModel.set(index-1, itsFlowListModel.get(index));
+            itsFlowListModel.set(index, aFile);
+            flowListInput.setSelectedIndex(index-1);
+            flowListInput.validate();
+        }
+    }//GEN-LAST:event_MoveStepUpButtonActionPerformed
+
+    private void AddStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AddStepButtonActionPerformed
+        File aFile=getFileName("getFlowEntry");
+        if (aFile != null) {
+            addFlowStep(aFile);
+        }
+    }//GEN-LAST:event_AddStepButtonActionPerformed
 
     private void RestoreDefaultButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RestoreDefaultButtonActionPerformed
         boolean reload=true;
@@ -686,6 +783,7 @@ public class BB_Gui extends javax.swing.JFrame {
         if (aFile != null) {
             itsConfigFileName=aFile;
             saveFile();
+            enableFlowEditPanel(true);
         }
     }//GEN-LAST:event_FileMenuSaveFileAsActionPerformed
 
@@ -702,6 +800,7 @@ public class BB_Gui extends javax.swing.JFrame {
 
     private void FileMenuSaveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FileMenuSaveFileActionPerformed
         saveFile();
+        enableFlowEditPanel(true);
     }//GEN-LAST:event_FileMenuSaveFileActionPerformed
 
     private void FileMenuOpenFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FileMenuOpenFileActionPerformed
@@ -727,6 +826,7 @@ public class BB_Gui extends javax.swing.JFrame {
                 FileMenuSaveFileAs.setEnabled(true);
                 enableMainEditPanel(true);
                 ConfigurationFileLabel.setText("Currently working on configuration file: "+ itsConfigFileName.getName());
+                enableFlowEditPanel(true);
             }
         }
     }//GEN-LAST:event_FileMenuOpenFileActionPerformed
@@ -883,6 +983,10 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JMenuItem FileMenuSaveFile;
     private javax.swing.JMenuItem FileMenuSaveFileAs;
     private javax.swing.JPanel FlowEditPanel;
+    private javax.swing.JMenu FlowMenu;
+    private javax.swing.JMenuItem FlowMenuOpenFile;
+    private javax.swing.JMenuItem FlowMenuSaveFile;
+    private javax.swing.JMenuItem FlowMenuSaveFileAs;
     private javax.swing.JScrollPane FlowScrollPane;
     private javax.swing.JPanel GeneralParameterPanel;
     private javax.swing.JButton GetDescriptionFileButton;
@@ -894,10 +998,12 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JPanel MainEditPanel;
     private javax.swing.JPanel MeasurementPanel;
     private javax.swing.JButton MeasurementSetBrowseButton;
+    private javax.swing.JButton MoveStepDownButton;
     private javax.swing.JButton MoveStepUpButton;
     private javax.swing.JPanel ParameterPanel;
     private javax.swing.JButton RestoreDefaultButton;
     private javax.swing.JButton RunConfigButton;
+    private javax.swing.JButton RunFlowButton;
     private javax.swing.JPanel SolvableParamPanel;
     private javax.swing.JButton SolveParamAddButton;
     private javax.swing.JButton SolveParamClearButton;
@@ -916,6 +1022,7 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JList excludeParamsInput;
     private javax.swing.JTextField fitCriterionInput;
     private javax.swing.JLabel fitCriterionLabel;
+    private javax.swing.JList flowListInput;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -930,7 +1037,6 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JList jList1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTextField maxNrIterationsInput;
     private javax.swing.JLabel maxNrIterationsLabel;
@@ -958,13 +1064,18 @@ public class BB_Gui extends javax.swing.JFrame {
     
     private File getFileName(String aFileChoice) {
         File aFile=null;
-        JFileChooser fc = new JFileChooser();
+        JFileChooser fc = new JFileChooser("Test");
         fc.addChoosableFileFilter(new MyFileFilter(aFileChoice));
         fc.setAcceptAllFileFilterUsed(false);
         if (aFileChoice.equals("MSName") || aFileChoice.equals("meqTableName") || aFileChoice.equals("skyTableName")) {
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         }
-        int returnVal = fc.showOpenDialog(BB_Gui.this);
+        int returnVal=-1;
+        if (aFileChoice.equals("ConfigSaveAs")) {
+            returnVal = fc.showSaveDialog(BB_Gui.this);
+        } else {
+            returnVal = fc.showOpenDialog(BB_Gui.this);
+        }
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             aFile=fc.getSelectedFile();
         } else {
@@ -1117,6 +1228,11 @@ public class BB_Gui extends javax.swing.JFrame {
             if (endFreq > 0 && itsStartFreq > 0){
                 itsFreqLength=endFreq - itsStartFreq;   
             }
+            
+            
+            // Set startChannel to 1 (as initial start)
+            startChannelInput.setText("1");
+            
         } catch (IOException e) {
             System.out.println("Error reading from file: "+aFile.getName());
         }
@@ -1416,5 +1532,9 @@ public class BB_Gui extends javax.swing.JFrame {
         changed=true;        
     }
     
-    
+    private void addFlowStep(File aFile) {
+        // Add a step to the flowlist.
+        itsFlowListModel.addElement(aFile);
+        flowListInput.validate();
+    }
 }

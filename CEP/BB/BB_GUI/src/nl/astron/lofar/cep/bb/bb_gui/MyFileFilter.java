@@ -56,6 +56,12 @@ public class MyFileFilter extends FileFilter {
                return false;
            }
            
+       } else if (itsFilterChoice.equals("getFlowEntry")) {
+           if (extension.equals("cfg")) {
+               return true;
+           } else {
+               return false;
+           }
        } else {
            return true;
        }
