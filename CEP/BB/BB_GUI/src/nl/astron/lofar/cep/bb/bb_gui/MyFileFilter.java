@@ -20,10 +20,26 @@ import javax.swing.filechooser.*;
 public class MyFileFilter extends FileFilter {
     
     private String itsFilterChoice;
+    private String itsFilterDescription;
     
     /** Creates a new instance of MyFileChooser */
     public MyFileFilter(String aFilterChoice) {
         itsFilterChoice=aFilterChoice;
+        if (aFilterChoice.equals("LoadConfig") ||
+                aFilterChoice.equals("NewConfig")  ||
+                aFilterChoice.equals("ConfigSaveAs")) {
+            itsFilterDescription="BB Configuration File (*.cfg)";
+        } else if (aFilterChoice.equals("GetFlowEntry")) { 
+            itsFilterDescription="BB Flow Configuration File (*.flow_cfg)";            
+        } else if (aFilterChoice.equals("MSName")) {
+            itsFilterDescription="Measurement Sets (*.MS)";
+        } else  if (aFilterChoice.equals("SkyTableName")) {
+            itsFilterDescription="LSM Table (*_gsm.MEP)";
+        } else if (aFilterChoice.equals("MeqTableName")) {
+            itsFilterDescription="Common Parameter Table (*.MEP)";
+        } else {
+            itsFilterDescription=aFilterChoice;
+        }
     }
     
     public boolean accept(File aF) {
@@ -38,25 +54,33 @@ public class MyFileFilter extends FileFilter {
 
        String extension = getExtension(aF);
        if (itsFilterChoice.equals("MSName")) {
-           if (extension.equals("ms")) {
+           if (extension != null && extension.equals("ms")) {
                return true;
            } else {
                return false;
            }
-       } else if (itsFilterChoice.equals("meqTableName")) {
-           if (extension.equals("mep")) {
+       } else if (itsFilterChoice.equals("MeqTableName")) {
+           if (extension != null && extension.equals("mep")) {
                return true;
            } else {
                return false;
            }
-       } else if (itsFilterChoice.equals("skyTableName")) {
+       } else if (extension != null && itsFilterChoice.equals("SkyTableName")) {
            if (extension.equals("mep")) {
                return true;
            } else {
                return false;
            }
            
-       } else if (itsFilterChoice.equals("getFlowEntry")) {
+       } else if (extension != null && itsFilterChoice.equals("GetFlowEntry")) {
+           if (extension.equals("cfg")) {
+               return true;
+           } else {
+               return false;
+           }
+       } else if (extension != null && (itsFilterChoice.equals("NewConfig")    ||
+               itsFilterChoice.equals("LoadConfig")   || 
+               itsFilterChoice.equals("ConfigSaveAs"))) {
            if (extension.equals("cfg")) {
                return true;
            } else {
@@ -68,7 +92,7 @@ public class MyFileFilter extends FileFilter {
     }
     
     public String getDescription() {
-        return itsFilterChoice;
+        return itsFilterDescription;
     }
     
     private String getExtension(File aF) {

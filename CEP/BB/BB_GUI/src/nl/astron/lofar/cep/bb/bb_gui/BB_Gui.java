@@ -13,6 +13,7 @@ import java.io.IOException;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.ListCellRenderer;
 
 /**
  *
@@ -58,6 +59,8 @@ public class BB_Gui extends javax.swing.JFrame {
         solvableParamsInput.setModel(itsSolvableParamsModel);
         excludeParamsInput.setModel(itsExcludeParamsModel);
         flowListInput.setModel(itsFlowListModel);
+        ListCellRenderer aR=(ListCellRenderer)new FlowListRenderer();
+        flowListInput.setCellRenderer(aR);
         
         //Initially disable the FlowEdit panel and the MainEdit panel
         // The FlowEditPanel can be enabled as soon as there is a Configuration file available (after save or load)
@@ -746,7 +749,7 @@ public class BB_Gui extends javax.swing.JFrame {
     }//GEN-LAST:event_MoveStepUpButtonActionPerformed
 
     private void AddStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AddStepButtonActionPerformed
-        File aFile=getFileName("getFlowEntry");
+        File aFile=getFileName("GetFlowEntry");
         if (aFile != null) {
             addFlowStep(aFile);
         }
@@ -922,7 +925,7 @@ public class BB_Gui extends javax.swing.JFrame {
     }//GEN-LAST:event_GetDescriptionFileButtonActionPerformed
     
     private void LSMParametersButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LSMParametersButtonActionPerformed
-        File aFile = getFileName("skyTableName");
+        File aFile = getFileName("SkyTableName");
         if (aFile != null && aFile.exists()) {
             skyTableNameInput.setText(aFile.getAbsolutePath());
             changed=true;
@@ -930,7 +933,7 @@ public class BB_Gui extends javax.swing.JFrame {
     }//GEN-LAST:event_LSMParametersButtonActionPerformed
     
     private void CommonParameterBrowseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CommonParameterBrowseButtonActionPerformed
-        File aFile=getFileName("meqTableName");
+        File aFile=getFileName("MeqTableName");
         if (aFile != null && aFile.exists() ){
             meqTableNameInput.setText(aFile.getAbsolutePath());
             changed=true;
@@ -1064,18 +1067,34 @@ public class BB_Gui extends javax.swing.JFrame {
     
     private File getFileName(String aFileChoice) {
         File aFile=null;
+        String aWindowName="Open";
+        if (aFileChoice.equals("MSName")) {
+            aWindowName="Load Measurement Set Name";
+        } else         if (aFileChoice.equals("GetFlowEntry")) {
+            aWindowName="Load flow configuration";
+        } else         if (aFileChoice.equals("SkyTableName")) {
+            aWindowName="Load LSMTable";
+        } else         if (aFileChoice.equals("MeqTableName")) {
+            aWindowName="Load Common Parameter Table";
+        } else         if (aFileChoice.equals("LoadConfig")) {
+            aWindowName="Open Existing Configuration File";
+        } else         if (aFileChoice.equals("NewConfig")) {
+            aWindowName="Open New Configuration File";
+        } else         if (aFileChoice.equals("ConfigSaveAs")) {
+            aWindowName="Save New Configuration Name";
+        }
         JFileChooser fc = new JFileChooser("Test");
+        
         fc.addChoosableFileFilter(new MyFileFilter(aFileChoice));
         fc.setAcceptAllFileFilterUsed(false);
-        if (aFileChoice.equals("MSName") || aFileChoice.equals("meqTableName") || aFileChoice.equals("skyTableName")) {
+        // The next filechoices allow to chose for directories in stead of filenames
+        if (aFileChoice.equals("MSName") || aFileChoice.equals("MeqTableName") || aFileChoice.equals("SkyTableName")) {
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         }
+        
         int returnVal=-1;
-        if (aFileChoice.equals("ConfigSaveAs")) {
-            returnVal = fc.showSaveDialog(BB_Gui.this);
-        } else {
-            returnVal = fc.showOpenDialog(BB_Gui.this);
-        }
+        returnVal = fc.showDialog(BB_Gui.this,aWindowName);
+        
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             aFile=fc.getSelectedFile();
         } else {
