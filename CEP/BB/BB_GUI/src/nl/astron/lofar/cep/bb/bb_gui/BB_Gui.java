@@ -7,8 +7,10 @@
 package nl.astron.lofar.cep.bb.bb_gui;
 import java.awt.Component;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
@@ -38,10 +40,14 @@ public class BB_Gui extends javax.swing.JFrame {
     private String           itsSubsetMSPath="";
     
     private File             itsConfigFileName;
+    private File             itsDescriptionFile;
     private String           itsGeneralMSPath;
     private boolean          saved=false;
+    private boolean          flowSaved=false;
     private boolean          changed=false;
     
+    
+    private File             itsFlowFileName;
     /**
      * Creates new form BB_Gui
      */
@@ -51,6 +57,7 @@ public class BB_Gui extends javax.swing.JFrame {
         // The Main Configuration file representation
         itsConfigFile = new BBSConfigFileRep();
         itsSourcePatchPanel = new SourcePatchPanel();
+        
         
         // The listmodels
         itsSolvableParamsModel=new DefaultListModel();
@@ -100,6 +107,7 @@ public class BB_Gui extends javax.swing.JFrame {
         DBMasterPortLabel = new javax.swing.JLabel();
         DBMasterPortInput = new javax.swing.JTextField();
         SourcePatchButton = new javax.swing.JButton();
+        RestoreTopLevelDefault = new javax.swing.JButton();
         FlowEditPanel = new javax.swing.JPanel();
         FlowScrollPane = new javax.swing.JScrollPane();
         flowListInput = new javax.swing.JList();
@@ -164,6 +172,7 @@ public class BB_Gui extends javax.swing.JFrame {
         fitCriterionLabel = new javax.swing.JLabel();
         fitCriterionInput = new javax.swing.JTextField();
         RestoreDefaultButton = new javax.swing.JButton();
+        ShowDescriptionFileButton = new javax.swing.JButton();
         ConfigurationFileLabel = new javax.swing.JLabel();
         LogScrollPane = new javax.swing.JScrollPane();
         LogPaneTextArea = new javax.swing.JTextArea();
@@ -299,6 +308,16 @@ public class BB_Gui extends javax.swing.JFrame {
         });
 
         TopLevelParamPanel.add(SourcePatchButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 110, -1, 20));
+
+        RestoreTopLevelDefault.setText("Default");
+        RestoreTopLevelDefault.setToolTipText("Reset to DefaultValues");
+        RestoreTopLevelDefault.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                RestoreTopLevelDefaultActionPerformed(evt);
+            }
+        });
+
+        TopLevelParamPanel.add(RestoreTopLevelDefault, new org.netbeans.lib.awtextra.AbsoluteConstraints(1060, 110, -1, 20));
 
         getContentPane().add(TopLevelParamPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1210, 140));
 
@@ -617,7 +636,18 @@ public class BB_Gui extends javax.swing.JFrame {
             }
         });
 
-        StratSpecParamPanel.add(RestoreDefaultButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 590, -1, -1));
+        StratSpecParamPanel.add(RestoreDefaultButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 590, -1, -1));
+
+        ShowDescriptionFileButton.setText("Show Description File");
+        ShowDescriptionFileButton.setToolTipText("Show Description for this Measurement");
+        ShowDescriptionFileButton.setEnabled(false);
+        ShowDescriptionFileButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ShowDescriptionFileButtonActionPerformed(evt);
+            }
+        });
+
+        StratSpecParamPanel.add(ShowDescriptionFileButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 590, -1, -1));
 
         MainEditPanel.add(StratSpecParamPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 60, 900, 630));
 
@@ -698,14 +728,34 @@ public class BB_Gui extends javax.swing.JFrame {
         FlowMenu.setToolTipText("FlowList actions");
         FlowMenuOpenFile.setText("Open");
         FlowMenuOpenFile.setToolTipText("Open a FlowList");
+        FlowMenuOpenFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                FlowMenuOpenFileActionPerformed(evt);
+            }
+        });
+
         FlowMenu.add(FlowMenuOpenFile);
 
         FlowMenuSaveFile.setText("Save");
         FlowMenuSaveFile.setToolTipText("Save Flow List");
+        FlowMenuSaveFile.setEnabled(false);
+        FlowMenuSaveFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                FlowMenuSaveFileActionPerformed(evt);
+            }
+        });
+
         FlowMenu.add(FlowMenuSaveFile);
 
         FlowMenuSaveFileAs.setText("Save As...");
         FlowMenuSaveFileAs.setToolTipText("Save Flow Listwith a new name");
+        FlowMenuSaveFileAs.setEnabled(false);
+        FlowMenuSaveFileAs.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                FlowMenuSaveFileAsActionPerformed(evt);
+            }
+        });
+
         FlowMenu.add(FlowMenuSaveFileAs);
 
         BB_GuiMenuBar.add(FlowMenu);
@@ -718,6 +768,78 @@ public class BB_Gui extends javax.swing.JFrame {
         pack();
     }
     // </editor-fold>//GEN-END:initComponents
+
+    private void ShowDescriptionFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ShowDescriptionFileButtonActionPerformed
+        if (itsDescriptionFile != null && itsDescriptionFile.exists()) {
+            showDescriptionFile(itsDescriptionFile,true);
+        }
+    }//GEN-LAST:event_ShowDescriptionFileButtonActionPerformed
+
+    private void RestoreTopLevelDefaultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RestoreTopLevelDefaultActionPerformed
+        if (itsConfigFile != null) {
+            itsConfigFile.clearTopLevel();
+            reloadPanels(itsConfigFile);
+            enableMainEditPanel(false);
+        }
+    }//GEN-LAST:event_RestoreTopLevelDefaultActionPerformed
+
+    private void FlowMenuOpenFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FlowMenuOpenFileActionPerformed
+        // Open an existing Flow configuration
+        // will overwrite flowwindow and all input panels
+        // read in the first file to read and lock the TopLevelParamPanel
+        
+        File aFile=getFileName("FlowOpen");
+        if (aFile != null && aFile.exists()) {
+            boolean reload=true;
+            if (!saved) {
+                int anI=JOptionPane.showConfirmDialog(null,"This action will overwrite all the input screens\n"+
+                       " Are you sure you want to continue?",
+                        "Overwrite Screens Warning",
+                        JOptionPane.YES_NO_OPTION);                
+                if (anI==JOptionPane.NO_OPTION){
+                   reload=false;
+                }            
+            }
+            if (reload) {
+                itsFlowFileName=aFile;
+                if (loadFlowList() ) {
+                    flowListInput.validate();
+                    if (itsFlowListModel.size() > 0) {
+                        itsConfigFileName=(File)itsFlowListModel.get(0);
+                        itsConfigFile.loadFile(itsConfigFileName);
+                        itsConfigFile.clearButTopLevel();
+                        reloadPanels(itsConfigFile);
+                        
+                        enableTopLevelParamPanel(false);
+                        enableMainEditPanel(true);
+                        ConfigurationFileLabel.setText("Currently working on configuration file: "+ itsConfigFileName.getName());
+                        enableFlowEditPanel(true);
+                        FlowMenuSaveFile.setEnabled(true);
+                        FlowMenuSaveFileAs.setEnabled(true);
+                        FileMenuSaveFileAs.setEnabled(true);
+                    }
+                }
+            }
+        }
+    }//GEN-LAST:event_FlowMenuOpenFileActionPerformed
+
+    private void FlowMenuSaveFileAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FlowMenuSaveFileAsActionPerformed
+        File aFile=getFileName("FlowSave");
+        if (aFile != null) {
+            itsFlowFileName=aFile;
+            saveFile(itsFlowFileName);
+            flowSaved=true;
+        }
+    }//GEN-LAST:event_FlowMenuSaveFileAsActionPerformed
+
+    private void FlowMenuSaveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FlowMenuSaveFileActionPerformed
+        File aFile=getFileName("FlowSave");
+        if (aFile != null) {
+            itsFlowFileName=aFile;
+            saveFile(itsFlowFileName);
+            flowSaved=true;
+        }
+    }//GEN-LAST:event_FlowMenuSaveFileActionPerformed
 
     private void DeleteStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DeleteStepButtonActionPerformed
         if (flowListInput.getSelectedIndex() > -1) {
@@ -752,7 +874,10 @@ public class BB_Gui extends javax.swing.JFrame {
         File aFile=getFileName("GetFlowEntry");
         if (aFile != null) {
             addFlowStep(aFile);
-        }
+            enableTopLevelParamPanel(false);
+            FlowMenuSaveFile.setEnabled(true);
+            FlowMenuSaveFileAs.setEnabled(true);
+        }   
     }//GEN-LAST:event_AddStepButtonActionPerformed
 
     private void RestoreDefaultButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RestoreDefaultButtonActionPerformed
@@ -768,7 +893,12 @@ public class BB_Gui extends javax.swing.JFrame {
         }
        
         if (reload) {
-            itsConfigFile.restoreParams("default");
+            if (saved || itsFlowListModel.size()>0) {
+                itsConfigFile.clearButTopLevel();  
+                
+            } else {
+                itsConfigFile.restoreParams("default");
+            }
             reloadPanels(itsConfigFile);
         }
     }//GEN-LAST:event_RestoreDefaultButtonActionPerformed
@@ -785,7 +915,7 @@ public class BB_Gui extends javax.swing.JFrame {
         File aFile=getFileName("ConfigSaveAs");
         if (aFile != null) {
             itsConfigFileName=aFile;
-            saveFile();
+            saveFile(itsConfigFileName);
             enableFlowEditPanel(true);
         }
     }//GEN-LAST:event_FileMenuSaveFileAsActionPerformed
@@ -802,7 +932,7 @@ public class BB_Gui extends javax.swing.JFrame {
     }//GEN-LAST:event_MeasurementSetBrowseButtonActionPerformed
 
     private void FileMenuSaveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FileMenuSaveFileActionPerformed
-        saveFile();
+        saveFile(itsConfigFileName);
         enableFlowEditPanel(true);
     }//GEN-LAST:event_FileMenuSaveFileActionPerformed
 
@@ -830,6 +960,7 @@ public class BB_Gui extends javax.swing.JFrame {
                 enableMainEditPanel(true);
                 ConfigurationFileLabel.setText("Currently working on configuration file: "+ itsConfigFileName.getName());
                 enableFlowEditPanel(true);
+                saved=false;
             }
         }
     }//GEN-LAST:event_FileMenuOpenFileActionPerformed
@@ -854,6 +985,7 @@ public class BB_Gui extends javax.swing.JFrame {
                 FileMenuSaveFileAs.setEnabled(true);
                 enableTopLevelParamPanel(true);
                 reloadPanels(itsConfigFile);
+                saved=false;
                 ConfigurationFileLabel.setText("Currently working on configuration file: "+ itsConfigFileName.getName());
             }
         }
@@ -913,10 +1045,9 @@ public class BB_Gui extends javax.swing.JFrame {
     }//GEN-LAST:event_SourcePatchButtonActionPerformed
     
     private void GetDescriptionFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GetDescriptionFileButtonActionPerformed
-        
         File aFile=new File(itsGeneralMSPath+"/"+MSNameInput.getText()+".dess");
         if (aFile != null && aFile.exists()) {
-            showDescriptionFile(aFile);
+            showDescriptionFile(aFile,false);
         } else {
             JOptionPane.showMessageDialog(null,"There is no Description File for this MS",
                     "Get Description File Warning",
@@ -1005,8 +1136,10 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JButton MoveStepUpButton;
     private javax.swing.JPanel ParameterPanel;
     private javax.swing.JButton RestoreDefaultButton;
+    private javax.swing.JButton RestoreTopLevelDefault;
     private javax.swing.JButton RunConfigButton;
     private javax.swing.JButton RunFlowButton;
+    private javax.swing.JButton ShowDescriptionFileButton;
     private javax.swing.JPanel SolvableParamPanel;
     private javax.swing.JButton SolveParamAddButton;
     private javax.swing.JButton SolveParamClearButton;
@@ -1082,10 +1215,14 @@ public class BB_Gui extends javax.swing.JFrame {
             aWindowName="Open New Configuration File";
         } else         if (aFileChoice.equals("ConfigSaveAs")) {
             aWindowName="Save New Configuration Name";
+        } else         if (aFileChoice.equals("FlowSave")) {
+            aWindowName="Save Flow Configuration";
+        } else         if (aFileChoice.equals("FlowOpen")) {
+            aWindowName="Open Flow Configuration";
         }
         JFileChooser fc = new JFileChooser("Test");
         
-        fc.addChoosableFileFilter(new MyFileFilter(aFileChoice));
+        fc.addChoosableFileFilter(new BBFileFilter(aFileChoice));
         fc.setAcceptAllFileFilterUsed(false);
         // The next filechoices allow to chose for directories in stead of filenames
         if (aFileChoice.equals("MSName") || aFileChoice.equals("MeqTableName") || aFileChoice.equals("SkyTableName")) {
@@ -1105,23 +1242,51 @@ public class BB_Gui extends javax.swing.JFrame {
         return aFile;
     }
     
-    private void saveFile() {
-        if (itsConfigFileName != null) {
-            if (itsConfigFileName.exists()) {
+    
+    private void saveFile(File aFile) {
+        // see if the file is a FlowFile or a ConfigFile
+        boolean isConfigFile = true;
+        if (aFile == itsFlowFileName) {
+            isConfigFile= false;
+        }
+        if (aFile != null) {
+            if (aFile.exists()) {
                 int anI=JOptionPane.showConfirmDialog(null,"This File allready exists, Are you sure you want to overwrite it?",
-                    itsConfigFileName.getName()+" Overwrite Warning",
+                    aFile.getName()+" Overwrite Warning",
                     JOptionPane.YES_NO_OPTION);                
                 if (anI==JOptionPane.YES_OPTION){
-                    saveConfig();
+                    if (isConfigFile) {
+                        saveConfig();
+                    } else {
+                        saveFlow();
+                    }
                 }
             } else {
-                saveConfig();
+                if (isConfigFile) {
+                    saveConfig();
+                } else {
+                    saveFlow();
+                }
             }
         }    
     }
     
-    private void showDescriptionFile(File aFile) {
-      MSDescriptionPanel aMSD=new MSDescriptionPanel(aFile,this);
+    private void saveFlow() {
+        if (itsFlowListModel.size() > 0) {
+            try {
+                BufferedWriter out = new BufferedWriter(new FileWriter(itsFlowFileName));
+                for (int i=0; i< itsFlowListModel.size(); i++ ) {
+                    out.write(((File) itsFlowListModel.get(i)).getPath());
+                }
+                out.close();
+            } catch (IOException e) {
+                System.out.println("Error writing Flow File: "+e);
+            }
+        }
+    }
+    
+    private void showDescriptionFile(File aFile,boolean ro) {
+      MSDescriptionPanel aMSD=new MSDescriptionPanel(aFile,this,ro);
       aMSD.setSize(700,550);
       aMSD.setModal(true);
       aMSD.setAlwaysOnTop(true);
@@ -1133,7 +1298,7 @@ public class BB_Gui extends javax.swing.JFrame {
         // and fill all possible GUI values from this file.
         // Keywords defined so far:
         // npart           (nrPrediffers) 
-        // coortype        (XX,XY,YX,YY)
+        // corrtype        (XX,XY,YX,YY)
         // stations        (stationnames seperated by ,)
         // subsetMSPath    (Path for Measurement Subsets)
         // freq.start      (start frequency)
@@ -1167,7 +1332,7 @@ public class BB_Gui extends javax.swing.JFrame {
                         } catch  (NumberFormatException e) {
                             System.out.println("Error converting "+value+" to integer.");
                         }
-                    } else if(keyword.contains("coortype")) {
+                    } else if(keyword.contains("corrtype")) {
                         String aS[]=value.split(",");
                         XXInput.setSelected(false);
                         XYInput.setSelected(false);
@@ -1251,6 +1416,8 @@ public class BB_Gui extends javax.swing.JFrame {
             
             // Set startChannel to 1 (as initial start)
             startChannelInput.setText("1");
+            
+            itsDescriptionFile=aFile;
             
         } catch (IOException e) {
             System.out.println("Error reading from file: "+aFile.getName());
@@ -1429,7 +1596,10 @@ public class BB_Gui extends javax.swing.JFrame {
     private void enableStratSpecParamPanel(boolean aFlag) {
         for (int i=0;i<StratSpecParamPanel.getComponentCount();i++) {
             StratSpecParamPanel.getComponent(i).setEnabled(aFlag);
-        }               
+        }  
+        if (aFlag=true && itsDescriptionFile!= null) {
+             ShowDescriptionFileButton.setEnabled(aFlag);           
+        }
         enableMeasurementPanel(aFlag);
         enableSolvableParamPanel(aFlag);
         enableExcludeParamPanel(aFlag);
@@ -1513,7 +1683,9 @@ public class BB_Gui extends javax.swing.JFrame {
         useAutoCorrInput.setSelected(string2Boolean(aConfigFile.getParams("useAutoCorr")));
         controlParmUpdateInput.setSelected(string2Boolean(aConfigFile.getParams("controlParmUpdate")));
         writeParmsInput.setSelected(string2Boolean(aConfigFile.getParams("writeParms")));
-        writeInDataColInput.setSelected(string2Boolean(aConfigFile.getParams("writeInDataCol")));        
+        writeInDataColInput.setSelected(string2Boolean(aConfigFile.getParams("writeInDataCol")));  
+        
+        setDescriptionFile();
      }
     
     private void checkDBTypeChange() {
@@ -1556,4 +1728,40 @@ public class BB_Gui extends javax.swing.JFrame {
         itsFlowListModel.addElement(aFile);
         flowListInput.validate();
     }
+
+    private boolean loadFlowList() {
+        boolean aFlag=true;
+        itsFlowListModel.clear();
+        flowListInput.removeAll();
+        try {
+
+            BufferedReader in = new BufferedReader(new FileReader(itsFlowFileName));
+            String aStr;
+            
+            while ((aStr = in.readLine()) != null) {
+                File aF = new File(aStr);
+                if (aF.exists()) {
+                    itsFlowListModel.addElement(aF);
+                } else {
+                    System.out.println("Error: Something goes wrong while reading FlowInput.");
+                    System.out.println(aStr+" Can not be found here");                    
+                    aFlag=false;
+                }
+            }
+            in.close();            
+        } catch (IOException e) {
+            System.out.println("Error reading from file: "+itsFlowFileName.getName());
+            aFlag=false;
+        }
+        return aFlag;
+    }
+    
+    private void setDescriptionFile() {
+        File aDescFile=new File(itsGeneralMSPath+"/"+MSNameInput.getText()+".dess");
+        if (aDescFile != null && aDescFile.exists()) {
+            readDescriptionFile(aDescFile);
+            itsDescriptionFile=aDescFile;
+        }
+    }
 }
+

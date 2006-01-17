@@ -18,12 +18,15 @@ import java.io.Reader;
 public class MSDescriptionPanel extends javax.swing.JDialog {
     private File itsFile;
     private BB_Gui itsGui;
+    private boolean readOnly=false;
    
     /** Creates new form MSDescriptionPanel */
-    public MSDescriptionPanel(File aFile,BB_Gui aGui) {
+    public MSDescriptionPanel(File aFile,BB_Gui aGui,boolean ro) {
         initComponents();
         itsFile=aFile;
         itsGui=aGui;
+        readOnly=ro;
+        AcceptButton.setVisible(!readOnly);
         DescriptionLabel.setText("Description for "+aFile.getName());
         readFile();
         DescriptionTextArea.setEditable(false);
