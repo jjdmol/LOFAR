@@ -1,5 +1,5 @@
 /*
- * MyFileFilter.java
+ * BBFileFilter.java
  *
  * Created on 4 januari 2006, 13:44
  *
@@ -17,26 +17,28 @@ import javax.swing.filechooser.*;
  *
  * @author Coolen
  */
-public class MyFileFilter extends FileFilter {
+public class BBFileFilter extends FileFilter {
     
     private String itsFilterChoice;
     private String itsFilterDescription;
     
     /** Creates a new instance of MyFileChooser */
-    public MyFileFilter(String aFilterChoice) {
+    public BBFileFilter(String aFilterChoice) {
         itsFilterChoice=aFilterChoice;
         if (aFilterChoice.equals("LoadConfig") ||
                 aFilterChoice.equals("NewConfig")  ||
-                aFilterChoice.equals("ConfigSaveAs")) {
+                aFilterChoice.equals("ConfigSaveAs") ||
+                aFilterChoice.equals("GetFlowEntry" )) {
             itsFilterDescription="BB Configuration File (*.cfg)";
-        } else if (aFilterChoice.equals("GetFlowEntry")) { 
-            itsFilterDescription="BB Flow Configuration File (*.flow_cfg)";            
         } else if (aFilterChoice.equals("MSName")) {
             itsFilterDescription="Measurement Sets (*.MS)";
         } else  if (aFilterChoice.equals("SkyTableName")) {
             itsFilterDescription="LSM Table (*_gsm.MEP)";
         } else if (aFilterChoice.equals("MeqTableName")) {
             itsFilterDescription="Common Parameter Table (*.MEP)";
+        } else if (aFilterChoice.equals("FlowOpen") ||
+                       aFilterChoice.equals("FlowSave")) {
+            itsFilterDescription="BB Flow Configuration (*.flow_cfg)";
         } else {
             itsFilterDescription=aFilterChoice;
         }
@@ -82,6 +84,13 @@ public class MyFileFilter extends FileFilter {
                itsFilterChoice.equals("LoadConfig")   || 
                itsFilterChoice.equals("ConfigSaveAs"))) {
            if (extension.equals("cfg")) {
+               return true;
+           } else {
+               return false;
+           }
+       } else if (extension != null && (itsFilterChoice.equals("FlowOpen")    ||
+               itsFilterChoice.equals("FlowSave"))) {
+           if (extension.equals("flow_cfg")) {
                return true;
            } else {
                return false;
