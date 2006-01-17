@@ -34,53 +34,53 @@ public class BBSConfigFileRep {
     private Boolean b1=new Boolean(false);
     private BBSConfigParamBaseClass writeIndividualParms =new BBSConfigParamBaseClass("", "writeIndividualParms", b1);    
     private BBSConfigParamBaseClass parmSolutionTable    =new BBSConfigParamBaseClass("", "parmSolutionTable", "bbs3ParmSolutions");    
-    private BBSConfigParamBaseClass strategy             =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "strategy", "Solve");
-    private BBSConfigParamBaseClass MSName               =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "MSName", "");    
-    private BBSConfigParamBaseClass generalMSPath        =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "generalMSPath", "./");    
-    private BBSConfigParamBaseClass subsetMSPath         =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "subsetMSPath", "./");    
-    private BBSConfigParamBaseClass meqTableName         =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "meqTableName", "");    
-    private BBSConfigParamBaseClass skyTableName         =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "skyTableName", "");    
-    private BBSConfigParamBaseClass DBType               =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "DBType", "aips");    
-    private BBSConfigParamBaseClass DBHost               =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "DBHost", "localhost");
+    private BBSConfigParamBaseClass strategy             =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "strategy", "Solve");
+    private BBSConfigParamBaseClass MSName               =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "MSName", "");    
+    private BBSConfigParamBaseClass generalMSPath        =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "generalMSPath", "./");    
+    private BBSConfigParamBaseClass subsetMSPath         =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "subsetMSPath", "./");    
+    private BBSConfigParamBaseClass meqTableName         =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "meqTableName", "");    
+    private BBSConfigParamBaseClass skyTableName         =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "skyTableName", "");    
+    private BBSConfigParamBaseClass DBType               =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "DBType", "aips");    
+    private BBSConfigParamBaseClass DBHost               =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "DBHost", "localhost");
     private Integer i3=new Integer(13157);
-    private BBSConfigParamBaseClass DBMasterPort         =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "DBMasterPort", i3); 
+    private BBSConfigParamBaseClass DBMasterPort         =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "DBMasterPort", i3); 
     private Vector v1=new Vector();
-    private BBSConfigParamBaseClass solvableParams       =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "solvableParams",v1);    
+    private BBSConfigParamBaseClass solvableParams       =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "solvableParams",v1);    
     private Vector v2=new Vector();
-    private BBSConfigParamBaseClass excludeParams        =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "excludeParams",v2);    
-    private BBSConfigParamBaseClass startTime            =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "startTime","");    
-    private BBSConfigParamBaseClass endTime              =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "endTime","");    
+    private BBSConfigParamBaseClass excludeParams        =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "excludeParams",v2);    
+    private BBSConfigParamBaseClass startTime            =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "startTime","");    
+    private BBSConfigParamBaseClass endTime              =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "endTime","");    
     private Double d1=new Double(1.0e12);
-    private BBSConfigParamBaseClass timeInterval         =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "timeInterval",d1);    
+    private BBSConfigParamBaseClass timeInterval         =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "timeInterval",d1);    
     private Vector v3=new Vector();
-    private BBSConfigParamBaseClass sources              =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "sources",v3); 
+    private BBSConfigParamBaseClass sources              =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "sources",v3); 
     private Vector v4=new Vector();
-    private BBSConfigParamBaseClass sourcePatches        =new BBSConfigParamBaseClass("CtrlParams.SC1params.MSDBparams.", "sourcePatches",v4); 
+    private BBSConfigParamBaseClass sourcePatches        =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "sourcePatches",v4); 
     private Integer i4=new Integer(1);
-    private BBSConfigParamBaseClass maxNrIterations      =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "maxNrIterations",i4); 
-    private Integer i5=new Integer(1);
-    private BBSConfigParamBaseClass fitCriterion         =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "fitCriterion",i5); 
+    private BBSConfigParamBaseClass maxNrIterations      =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "maxNrIterations",i4); 
+    private Integer i5=new Integer(-1);
+    private BBSConfigParamBaseClass fitCriterion         =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "fitCriterion",i5); 
     private Vector v5=new Vector();
-    private BBSConfigParamBaseClass stationNames         =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "stationNames",v5);
-    private BBSConfigParamBaseClass modelType            =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "modelType","");
+    private BBSConfigParamBaseClass stationNames         =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "stationNames",v5);
+    private BBSConfigParamBaseClass modelType            =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "modelType","");
     private Boolean b2=new Boolean(false);
-    private BBSConfigParamBaseClass calcUVW              =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "calcUVW",b2);
+    private BBSConfigParamBaseClass calcUVW              =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "calcUVW",b2);
     private Boolean b3=new Boolean(true);
-    private BBSConfigParamBaseClass useSVD               =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "useSVD",b3);
+    private BBSConfigParamBaseClass useSVD               =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "useSVD",b3);
     private Integer[] aI1 = {0,3};
-    private BBSConfigParamBaseClass correlations         =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "correlations",aI1);
+    private BBSConfigParamBaseClass correlations         =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "correlations",aI1);
     private Boolean b4=new Boolean(false);
-    private BBSConfigParamBaseClass useAutoCorr          =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "useAutoCorr",b4);
+    private BBSConfigParamBaseClass useAutoCorr          =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "useAutoCorr",b4);
     private Boolean b5=new Boolean(false);
-    private BBSConfigParamBaseClass controlParmUpdate    =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "controlParmUpdate",b5);
+    private BBSConfigParamBaseClass controlParmUpdate    =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "controlParmUpdate",b5);
     private Boolean b6=new Boolean(false);
-    private BBSConfigParamBaseClass writeParms           =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "writeParms",b6);
+    private BBSConfigParamBaseClass writeParms           =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "writeParms",b6);
     private Boolean b7=new Boolean(true);
-    private BBSConfigParamBaseClass writeInDataCol       =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "writeInDataCol",b7);
+    private BBSConfigParamBaseClass writeInDataCol       =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "writeInDataCol",b7);
     private Integer i6=new Integer(1);
-    private BBSConfigParamBaseClass startChan            =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "startChan",i6); 
+    private BBSConfigParamBaseClass startChan            =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "startChan",i6); 
     private Integer i7=new Integer(1);
-    private BBSConfigParamBaseClass endChan              =new BBSConfigParamBaseClass("CtrlParams.SC1params.", "endChan",i7); 
+    private BBSConfigParamBaseClass endChan              =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "endChan",i7); 
     
     private File itsFile=null;
     
@@ -155,7 +155,7 @@ public class BBSConfigFileRep {
         // aStage old     == Gui needs to be reset to old values        
         
         boolean aDefaultValue=false;
-        if (aStage.equals("deafult")) {
+        if (aStage.equals("default")) {
             aDefaultValue=true;
         }
         
@@ -284,6 +284,55 @@ public class BBSConfigFileRep {
         }
         return flag;
         
+    }
+    
+    public void clearButTopLevel() {
+        // Set all values to default except Toplevel stuff
+        boolean aDefaultValue=true;
+        
+        restoreParam(startTime, aDefaultValue);
+        restoreParam(endTime, aDefaultValue);
+        restoreParam(maxNrIterations, aDefaultValue);
+        restoreParam(fitCriterion, aDefaultValue);
+        restoreParam(timeInterval, aDefaultValue);
+        restoreParam(startChan, aDefaultValue);
+        restoreParam(endChan, aDefaultValue);
+        restoreParam(writeIndividualParms, aDefaultValue);
+        restoreParam(calcUVW, aDefaultValue);
+        restoreParam(useSVD, aDefaultValue);
+        restoreParam(useAutoCorr, aDefaultValue);
+        restoreParam(controlParmUpdate, aDefaultValue);
+        restoreParam(writeParms, aDefaultValue);
+        restoreParam(writeInDataCol, aDefaultValue);
+        restoreParam(parmSolutionTable, aDefaultValue);
+        restoreParam(useSVD, aDefaultValue);
+        restoreParam(strategy, aDefaultValue);
+        restoreParam(modelType, aDefaultValue);
+        restoreParam(solvableParams, aDefaultValue);
+        restoreParam(excludeParams, aDefaultValue);
+        restoreParam(sources, aDefaultValue);
+        restoreParam(sourcePatches, aDefaultValue);
+        restoreParam(stationNames, aDefaultValue);
+        restoreParam(writeParms, aDefaultValue);
+        restoreParam(writeInDataCol, aDefaultValue);
+        restoreParam(correlations, aDefaultValue);        
+    }
+    
+    public void clearTopLevel() {
+        
+        boolean aDefaultValue=true;
+        
+        restoreParam(nrPrediffers, aDefaultValue);
+        restoreParam(nrStrategies, aDefaultValue);
+        restoreParam(DBMasterPort, aDefaultValue);
+        restoreParam(BBDBname, aDefaultValue);
+        restoreParam(MSName, aDefaultValue);
+        restoreParam(generalMSPath, aDefaultValue);
+        restoreParam(subsetMSPath, aDefaultValue);
+        restoreParam(meqTableName, aDefaultValue);
+        restoreParam(skyTableName, aDefaultValue);
+        restoreParam(DBType, aDefaultValue);
+        restoreParam(DBHost, aDefaultValue);
     }
     
     public boolean loadFile(File aFile) {
