@@ -40,6 +40,8 @@ using namespace LOFAR;
 using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::PLC;
 
+using namespace boost::logic;
+
 ApplicationHolderController::ApplicationHolderController(TinyApplicationHolder& AH, int noRuns)
   : itsAH(AH),
     itsNoRuns(noRuns),
@@ -83,7 +85,7 @@ tribool ApplicationHolderController::run      ()
   }
   return true;
 }
-tribool ApplicationHolderController::pause    (const	string&	condition)
+tribool ApplicationHolderController::pause    (const	string&	)
 {
   LOG_TRACE_FLOW("Pause called");
   itsIsRunning = false;
@@ -103,7 +105,7 @@ tribool ApplicationHolderController::quit  	 ()
   LOG_TRACE_FLOW("Quit ready");
   return true;
 }
-tribool ApplicationHolderController::snapshot (const string&	destination) 
+tribool ApplicationHolderController::snapshot (const string&) 
 {
   LOG_TRACE_FLOW("Snapshot called by ACC");
   try {
@@ -111,9 +113,9 @@ tribool ApplicationHolderController::snapshot (const string&	destination)
   } catch (Exception&	ex) {
     return false;
   }
-  return false; // this is not implemented
+  return indeterminate; // this is not implemented
 }
-tribool ApplicationHolderController::recover  (const string&	source) 
+tribool ApplicationHolderController::recover  (const string& ) 
 {
   LOG_TRACE_FLOW("Recover called by ACC");
   try {
@@ -121,9 +123,9 @@ tribool ApplicationHolderController::recover  (const string&	source)
   } catch (Exception&	ex) {
     return false;
   }
-  return false; // this is not implemented
+  return indeterminate; // this is not implemented
 }
-tribool ApplicationHolderController::reinit	 (const string&	configID) 
+tribool ApplicationHolderController::reinit	 (const string&	) 
 {
   LOG_TRACE_FLOW("Reinit called by ACC");
   try {
@@ -133,7 +135,7 @@ tribool ApplicationHolderController::reinit	 (const string&	configID)
   }
   return true;
 }  
-string ApplicationHolderController::askInfo   (const string& 	keylist) 
+string ApplicationHolderController::askInfo   (const string& ) 
 {
   LOG_TRACE_FLOW("AskInfo called by ACC");
   return "no info available yet";
