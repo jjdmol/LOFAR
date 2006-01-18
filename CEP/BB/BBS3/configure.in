@@ -66,6 +66,7 @@ lofar_INTERNAL(CEP/BB/BDBReplication,BDBReplication,,1,BDBReplication/BDBReplica
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,boost_thread-gcc-mt)
 lofar_EXTERNAL(bdb,1,db_cxx.h,"db_cxx")
 
+lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
 
 dnl
 dnl Output Makefiles
