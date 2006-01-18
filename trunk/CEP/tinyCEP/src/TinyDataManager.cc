@@ -175,7 +175,7 @@ namespace LOFAR
     itsOutDHs[channel] = dhptr;
   }
 
-  void TinyDataManager::assertChannel(int channel, bool input) {
+  void TinyDataManager::assertChannel(int channel, bool input) const {
     if (input) {
       ASSERTSTR (channel >= 0,          "input channel too low");
       ASSERTSTR (channel < getInputs(), "input channel too high");
@@ -247,12 +247,12 @@ namespace LOFAR
   }
 
 
-  DataHolder* TinyDataManager::getGeneralInHolder(int channel) {
+  DataHolder* TinyDataManager::getGeneralInHolder(int channel) const {
     assertChannel(channel, true);
     return itsInDHs[channel];
   }
 
-  DataHolder* TinyDataManager::getGeneralOutHolder(int channel) {
+  DataHolder* TinyDataManager::getGeneralOutHolder(int channel) const {
     assertChannel(channel, false);
     return itsOutDHs[channel];
   }
