@@ -1,12 +1,10 @@
-INSTHDRS	=	 			\
-	segbasemap.h				\
-	dlmalloc.h				\
+pkginclude_shmemdir = $(pkgincludedir)/shmem
+
+pkginclude_shmem_HEADERS = \
+	segbasemap.h	\
+	dlmalloc.h	\
 	shmem_alloc.h
 
-DOCHDRS	= $(INSTHDRS)
-
-nobase_shmem_HEADERS = $(INSTHDRS)
-
-shmemdir = $(pkgincludedir)/shmem
+noinst_HEADERS = 
 
 include $(top_srcdir)/Makefile.common
