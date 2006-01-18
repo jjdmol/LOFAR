@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqDFTPS.h>
 #include <BBS3/MNS/MeqStatUVW.h>
@@ -48,8 +47,6 @@ MeqDFTPS::~MeqDFTPS()
 
 MeqResultVec MeqDFTPS::getResultVec (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
-
   const MeqDomain& domain = request.domain();
   // The exponent and its frequency delta are calculated.
   // However, the delta is only calculated if there are multiple channels.

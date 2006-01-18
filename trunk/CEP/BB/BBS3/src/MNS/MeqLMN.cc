@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqLMN.h>
 #include <BBS3/MNS/MeqPointSource.h>
@@ -42,8 +41,6 @@ MeqLMN::MeqLMN (MeqPointSource* source)
 
 MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
-
   MeqResultVec result(3, request.nspid());
   MeqResult& resL = result[0];
   MeqResult& resM = result[1];
@@ -106,8 +103,6 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
 
 MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
-
   MeqResultVec result(3, request.nspid());
   MeqResult& resL = result[0];
   MeqResult& resM = result[1];

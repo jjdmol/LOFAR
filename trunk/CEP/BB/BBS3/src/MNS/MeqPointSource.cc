@@ -21,8 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
-
 #include <BBS3/MNS/MeqPointSource.h>
 
 

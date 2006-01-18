@@ -71,7 +71,7 @@ BlackBoardDemo::~BlackBoardDemo()
    Define function for the BlackBoardDemo simulation. It defines the steps that 
    process part of the data.
  */
-void BlackBoardDemo::define(const KeyValueMap& params_depr)
+void BlackBoardDemo::define(const KeyValueMap&)
 {
   // Free any memory previously allocated
   undefine();

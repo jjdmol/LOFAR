@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 //#include <Common/Timer.h>
 
 #include <BBS3/MNS/MeqBaseLinPS.h>
@@ -48,8 +47,6 @@ MeqBaseLinPS::~MeqBaseLinPS()
 
 MeqJonesResult MeqBaseLinPS::getJResult (const MeqRequest& request)
 {
-  PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
-
   //static NSTimer timer("MeqBaseLinPS::getResult", true);
   //timer.start();
 

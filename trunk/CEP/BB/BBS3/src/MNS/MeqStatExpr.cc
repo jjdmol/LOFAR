@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 #include <Common/Timer.h>
 
 #include <BBS3/MNS/MeqStatExpr.h>
@@ -55,8 +54,6 @@ MeqStatExpr::~MeqStatExpr()
 
 MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
-
   static NSTimer timer("MeqStatExpr::getResult", true);
   timer.start();
   

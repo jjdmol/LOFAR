@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqJonesNode.h>
 #include <BBS3/MNS/MeqExpr.h>
@@ -46,8 +45,6 @@ MeqJonesNode::~MeqJonesNode()
 
 MeqJonesResult MeqJonesNode::getJResult (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
-
   MeqJonesResult res(0);
   {
     itsExpr11.getResultSynced (request, res.result11());

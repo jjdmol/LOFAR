@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqJonesSum.h>
 #include <BBS3/MNS/MeqJonesResult.h>
@@ -42,8 +41,6 @@ namespace LOFAR {
 
   MeqJonesResult MeqJonesSum::getJResult (const MeqRequest& request)
   {
-    PERFPROFILE(__PRETTY_FUNCTION__);
-
     int nx = request.nx();
     int ny = request.ny();
     MeqJonesResult res(request.nspid());

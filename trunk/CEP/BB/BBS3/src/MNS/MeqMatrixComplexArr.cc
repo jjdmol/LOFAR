@@ -23,7 +23,6 @@
 #undef TIMER
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqMatrixRealSca.h>
 #include <BBS3/MNS/MeqMatrixRealArr.h>
@@ -67,8 +66,6 @@ MeqMatrixComplexArr::~MeqMatrixComplexArr()
 
 MeqMatrixRep* MeqMatrixComplexArr::clone() const
 {
-  PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
-
 #if defined TIMER
   static NSTimer timer("clone CA", true);
   timer.start();
