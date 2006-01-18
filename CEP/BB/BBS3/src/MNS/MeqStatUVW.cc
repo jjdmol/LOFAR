@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqStatUVW.h>
 #include <BBS3/MNS/MeqStation.h>
@@ -65,7 +64,6 @@ void MeqStatUVW::clear()
 
 void MeqStatUVW::calculate (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
   // Make sure the MeqResult/Matrix objects have the correct size.
   double* uptr = itsU.setDoubleFormat (1, request.ny());
   double* vptr = itsV.setDoubleFormat (1, request.ny());

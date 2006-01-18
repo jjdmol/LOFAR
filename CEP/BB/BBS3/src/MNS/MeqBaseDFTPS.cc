@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqBaseDFTPS.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
@@ -48,8 +47,6 @@ MeqBaseDFTPS::~MeqBaseDFTPS()
 
 MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
 {
-  PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
-
   // We can only calculate for a single time bin.
   ASSERT (request.ny() == 1);
   MeqResult result(request.nspid());

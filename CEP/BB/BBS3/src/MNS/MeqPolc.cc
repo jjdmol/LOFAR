@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqPolc.h>
 #include <BBS3/MNS/MeqRequest.h>
@@ -39,7 +38,6 @@ MeqPolc::~MeqPolc()
 
 MeqResult MeqPolc::getResult (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
   bool makeDiff = itsMaxNrSpid > 0  &&  request.nspid() > 0;
   // It is not checked if the domain is valid.
   // In that way any value can be used for the default domain [-1,1].
@@ -183,7 +181,6 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 
 MeqResult MeqPolc::getAnResult (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
   bool makeDiff = itsMaxNrSpid > 0  &&  request.nspid() > 0;
   // It is not checked if the domain is valid.
   // In that way any value can be used for the default domain [-1,1].

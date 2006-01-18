@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqJonesMul2.h>
 #include <BBS3/MNS/MeqRequest.h>
@@ -48,8 +47,6 @@ MeqJonesMul2::~MeqJonesMul2()
 
 MeqJonesResult MeqJonesMul2::getJResult (const MeqRequest& request)
 {
-  PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
-
   // Create the result object.
   MeqJonesResult result(request.nspid());
   MeqResult& result11 = result.result11();

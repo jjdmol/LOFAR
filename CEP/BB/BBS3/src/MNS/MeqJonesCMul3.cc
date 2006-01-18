@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 #include <Common/Timer.h>
 
 #include <BBS3/MNS/MeqJonesCMul3.h>
@@ -443,8 +442,6 @@ v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i))
 
 MeqJonesResult MeqJonesCMul3::getJResult (const MeqRequest& request)
 {
-  PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
-
 // static NSTimer timer("MeqJonesCMul3::getResult", true);
   // Create the result object.
   MeqJonesResult result(request.nspid());
