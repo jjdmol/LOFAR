@@ -89,23 +89,6 @@ Composite* Composite::clone() const
   return new Composite (*this);
 }
 
-bool Composite::connectInputArray (Composite* aComposite[],
-				   int    nrItems,
-				   TransportHolder* prototype,
-				   bool blockingComm)
-{
-  if (nrItems < 0) {  // set nr_items automatically
-    nrItems = itsComposite->getNrInputs();
-  }
-  Block** blockPtrs = new Block* [nrItems];
-  for (int i=0; i<nrItems; i++) {
-    blockPtrs[i] = aComposite[i];
-  }
-  bool result = itsRep->connectInputArray (blockPtrs, nrItems, prototype, blockingComm);
-  delete [] blockPtrs;
-  return result;
-}
-
 }
 
 
