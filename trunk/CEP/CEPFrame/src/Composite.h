@@ -112,12 +112,6 @@ public:
   /// Is the Block a Composite?
   bool isComposite() const; 
 
-  /// Connect this Composite to an array of Composites.
-  bool connectInputArray (Composite* aComposite[],   // pointer to  array of ptrs to Blocks
-			  int    nrItems, // nr of Blocks in aBlock[] array
-			  TransportHolder* prototype,
-			  bool blockingComm=true);
-
   /**
      Set nrChan input channels of aBlock as input channels of this Composite.
      Start at the given indices. 
