@@ -1,19 +1,3 @@
-INSTHDRS =
-
-NOINSTHDRS =
-
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
-
-#lib_LTLIBRARIES         = libtools.la
-
-#libtools_la_SOURCES =
-
 bin_PROGRAMS      = LimitExec pkgdep
 
 LimitExec_SOURCES = LimitExec.cc
