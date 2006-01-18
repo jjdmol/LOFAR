@@ -1,21 +1,13 @@
-INSTHDRS = \
-ACAsyncClient.h \
-ACRequest.h \
-ACSyncClient.h \
-ApplControlClient.h \
-ApplControlComm.h \
-ApplControl.h \
-ApplControlServer.h \
-DH_ApplControl.h
+pkginclude_HEADERS = \
+	ACAsyncClient.h \
+	ACRequest.h \
+	ACSyncClient.h \
+	ApplControlClient.h \
+	ApplControlComm.h \
+	ApplControl.h \
+	ApplControlServer.h \
+	DH_ApplControl.h
 
-NOINSTHDRS =
-
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+noinst_HEADERS = 
 
 include $(top_srcdir)/Makefile.common

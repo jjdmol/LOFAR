@@ -1,15 +1,8 @@
-INSTHDRS = \
-KVpair.h \
-ParameterSet.h
+pkginclude_HEADERS = \
+	KVpair.h \
+	ParameterSet.h
 
-NOINSTHDRS =
 
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+noinst_HEADERS = 
 
 include $(top_srcdir)/Makefile.common
