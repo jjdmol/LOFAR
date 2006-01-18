@@ -61,8 +61,8 @@ namespace LOFAR
 
     virtual void initializeInputs();
 
-    virtual DataHolder* getGeneralInHolder(int channel);
-    virtual DataHolder* getGeneralOutHolder(int channel);
+    virtual DataHolder* getGeneralInHolder(int channel) const;
+    virtual DataHolder* getGeneralOutHolder(int channel) const;
 
    /**  accessor functions to the auto trigger flags.
        This flag determines if automated triggering of read/write
@@ -140,7 +140,7 @@ namespace LOFAR
     Selector* itsOutputSelector; // Output selection mechanism
  
   private:  
-    void assertChannel(int channel, bool input);
+    void assertChannel(int channel, bool input) const ;
 
     /// A static to keep track of the DataHolderID's
     static int DataHolderID;
