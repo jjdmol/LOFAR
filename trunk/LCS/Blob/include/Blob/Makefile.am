@@ -1,8 +1,10 @@
-INSTHDRS = \
+pkginclude_HEADERS = \
         BlobArray.h \
+	BlobArray.tcc \
         BlobArrayHeader.h \
         BlobException.h \
         BlobField.h \
+	BlobField.tcc \
         BlobFieldSet.h \
         BlobHeader.h \
         BlobIBufChar.h \
@@ -25,17 +27,6 @@ INSTHDRS = \
         KeyValue.h \
         KeyValueMap.h 
 
-NOINSTHDRS =
-
-TCCHDRS = \
-	BlobField.tcc \
-	BlobArray.tcc 
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
-
+noinst_HEADERS =
 
 include $(top_srcdir)/Makefile.common

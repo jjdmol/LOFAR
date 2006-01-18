@@ -1,17 +1,9 @@
-INSTHDRS = \
-DH_ProcControl.h \
-ProcControlComm.h \
-ProcControlServer.h \
-ProcessControl.h
+pkginclude_HEADERS = \
+	DH_ProcControl.h \
+	ProcControlComm.h \
+	ProcControlServer.h \
+	ProcessControl.h
 
-NOINSTHDRS =
-
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+noinst_HEADERS = 
 
 include $(top_srcdir)/Makefile.common
