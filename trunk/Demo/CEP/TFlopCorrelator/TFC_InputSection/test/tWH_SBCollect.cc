@@ -53,10 +53,11 @@ namespace LOFAR
 
   void AH_SBCollect::define(const KeyValueMap& kvm) {
     ACC::APS::ParameterSet myPset;
-    myPset.add("Input.NRSP", "2");
-    myPset.add("Input.NSamplesToDH", "10");
-    myPset.add("Input.NPolarisations", "2");
-    myPset.add("Input.NSBCollectOutputs", "1");
+    myPset.add("Data.NStations", "2");
+    myPset.add("Data.NSamplesToIntegrate", "10");
+    myPset.add("Data.NPolarisations", "2");
+    myPset.add("Data.NSubbands", "1");
+    myPset.add("FakeData.NSubbands", "1");
     cout<<myPset<<endl;
 
     itsInDH1 = new DH_RSP("DH_RSP1", myPset);
