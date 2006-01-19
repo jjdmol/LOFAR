@@ -1597,7 +1597,7 @@ public class BB_Gui extends javax.swing.JFrame {
         for (int i=0;i<StratSpecParamPanel.getComponentCount();i++) {
             StratSpecParamPanel.getComponent(i).setEnabled(aFlag);
         }  
-        if (aFlag=true && itsDescriptionFile!= null) {
+        if (aFlag==true && itsDescriptionFile!= null) {
              ShowDescriptionFileButton.setEnabled(aFlag);           
         }
         enableMeasurementPanel(aFlag);
