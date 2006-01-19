@@ -556,8 +556,9 @@ const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) 
 
 
 
-WH_BGL_Processing::WH_BGL_Processing(const string& name, const short subBandID, const ACC::APS::ParameterSet ps):
+WH_BGL_Processing::WH_BGL_Processing(const string& name, const short subBandID, const ACC::APS::ParameterSet& ps):
   WorkHolder(1, 1, name, "WH_Correlator"),
+  itsPS(ps),
   itsSubBandID(subBandID)
 {
 #if 0
@@ -586,15 +587,15 @@ WH_BGL_Processing::~WH_BGL_Processing()
 }
 
 
-WorkHolder* WH_BGL_Processing::construct(const string& name, const short subBandID)
+WorkHolder* WH_BGL_Processing::construct(const string& name, const short subBandID, const ACC::APS::ParameterSet& ps)
 {
-  return new WH_BGL_Processing(name, subBandID);
+  return new WH_BGL_Processing(name, subBandID, ps);
 }
 
 
 WH_BGL_Processing* WH_BGL_Processing::make(const string& name)
 {
-  return new WH_BGL_Processing(name, itsSubBandID);
+  return new WH_BGL_Processing(name, itsSubBandID, itsPS);
 }
 
 

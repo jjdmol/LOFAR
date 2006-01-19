@@ -45,7 +45,7 @@ namespace LOFAR
     explicit WH_BGL_Processing (const string& name, const short subBandID, const ACC::APS::ParameterSet& ps);
     virtual ~WH_BGL_Processing();
 
-    static WorkHolder* construct (const string& name, const short subBandID); 
+    static WorkHolder* construct (const string& name, const short subBandID, const ACC::APS::ParameterSet& ps); 
     virtual WH_BGL_Processing* make (const string& name);
 
     virtual void preprocess();
@@ -65,6 +65,7 @@ namespace LOFAR
 
     /// CorrCube
     static fcomplex itsCorrCube[NR_SUB_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));
+    const ACC::APS::ParameterSet& itsPS;
 
     /// FIR Filter variables
     fftw_plan itsFFTWPlan;
