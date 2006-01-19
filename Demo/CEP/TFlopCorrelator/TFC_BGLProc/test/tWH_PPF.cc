@@ -50,13 +50,13 @@ namespace LOFAR
   {
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
-    itsWH     = new WH_PPF("WH_PPF", 0, /*18*/ MAX_STATIONS_PER_PPF);
+    itsWH     = new WH_PPF("WH_PPF", 0, /*18*/ MAX_STATIONS_PER_PPF, myPset);
     itsTH     = new TH_Mem();
     itsInDH   = new DH_PPF("itsIn", 0, myPset);
     itsInConn = new Connection("in", itsInDH, itsWH->getDataManager().getInHolder(0), itsTH, false);
 
     for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; ++ corr) {
-      itsOutDHs[corr]   = new DH_CorrCube("itsOutDH", corr);
+      itsOutDHs[corr]   = new DH_CorrCube("itsOutDH", corr, myPset);
       itsOutConns[corr] = new Connection("out", itsWH->getDataManager().getOutHolder(corr), itsOutDHs[corr], itsTH, false);
     }
   }
