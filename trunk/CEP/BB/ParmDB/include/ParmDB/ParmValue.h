@@ -49,6 +49,9 @@ public:
   // Create a default ParmValue object.
   ParmValueRep();
 
+  // Copy (except itsCount).
+  void copy (const ParmValueRep&);
+
   // Set the funklet type and possible constants needed.
   // <group>
   void setType (const std::string& type)
@@ -104,11 +107,13 @@ public:
   int            itsDBRowRef;  //# Ref to parmrecord in table (e.g. rownr)
 
 private:
-  // Copies cannot be made.
+  // Copy and assignment cannot be done.
   // <group>
   ParmValueRep (const ParmValueRep&);
   ParmValueRep& operator= (const ParmValueRep&);
   // </group>
+
+  // Get the length of the coefficients array/
   int getLength (const std::vector<int>& shape) const;
 
   int itsCount;         //# reference count
@@ -128,9 +133,17 @@ class ParmValue
 {
 public:
   ParmValue();
+
+  // Copy with reference semantics.
+  // <group>
   ParmValue (const ParmValue&);
   ParmValue& operator= (const ParmValue&);
+  // </group>
+
   ~ParmValue();
+
+  // Copy semantics.
+  ParmValue clone() const;
 
   // Get access to the actual data.
   ParmValueRep& rep()

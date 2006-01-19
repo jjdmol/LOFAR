@@ -39,6 +39,25 @@ namespace ParmDB {
     itsCount        (1)
   {}
 
+  void ParmValueRep::copy (const ParmValueRep& that)
+  {
+    itsType         = that.itsType;
+    itsConstants    = that.itsConstants;
+    itsCoeff        = that.itsCoeff;
+    itsSolvMask     = that.itsSolvMask;
+    itsShape        = that.itsShape;
+    itsPerturbation = that.itsPerturbation;
+    itsIsRelPert    = that.itsIsRelPert;
+    itsDomain       = that.itsDomain;
+    itsOffset       = that.itsOffset;
+    itsScale        = that.itsScale;
+    itsWeight       = that.itsWeight;
+    itsID           = that.itsID;
+    itsParentID     = that.itsParentID;
+    itsDBTabRef     = that.itsDBTabRef;
+    itsDBRowRef     = that.itsDBRowRef;
+  }
+
   void ParmValueRep::setCoeff (const double* coeff,
 			       const std::vector<int>& shape)
   {
@@ -149,6 +168,13 @@ namespace ParmDB {
   ParmValue::~ParmValue()
   {
     ParmValueRep::unlink (itsRep);
+  }
+
+  ParmValue ParmValue::clone() const
+  {
+    ParmValue pval;
+    pval.rep().copy (rep());
+    return pval;
   }
 
 
