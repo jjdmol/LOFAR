@@ -49,7 +49,7 @@ namespace LOFAR
   {
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
-    itsWH     = new WH_BGL_Processing("WH_BGL_Processing", 0);
+    itsWH     = new WH_BGL_Processing("WH_BGL_Processing", 0, myPset);
     itsTH     = new TH_Mem();
     itsInDH   = new DH_PPF("itsIn", 0, myPset);
     itsInConn = new Connection("in", itsInDH, itsWH->getDataManager().getInHolder(0), itsTH, false);

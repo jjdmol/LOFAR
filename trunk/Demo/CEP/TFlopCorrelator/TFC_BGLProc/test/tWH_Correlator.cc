@@ -52,10 +52,10 @@ namespace LOFAR
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
 //     itsInDH1 = new DH_PPF("itsIn1",0, myPset);
-    itsInDH1 = new DH_CorrCube("itsIn1",0);
+    itsInDH1 = new DH_CorrCube("itsIn1",0, myPset);
     itsOutDH1 = new DH_Vis("itsOutDH1", 0, myPset);
 
-    itsWH = new WH_Correlator("WH_Correlator");
+    itsWH = new WH_Correlator("WH_Correlator", myPset);
     itsTH = new TH_Mem();
 
     itsInCon1 = new Connection("in1", 
