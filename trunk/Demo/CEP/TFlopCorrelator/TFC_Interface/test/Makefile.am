@@ -1,5 +1,5 @@
 
-check_PROGRAMS = tRectMatrix tDH_FIR
+check_PROGRAMS = tRectMatrix 
 
 
 AM_CXXFLAGS = \
@@ -8,13 +8,8 @@ AM_CXXFLAGS = \
 tRectMatrix_SOURCES =				\
 tRectMatrix.cc					
 
-tDH_FIR_SOURCES =				\
-../src/DH_FIR.cc				\
-tDH_FIR.cc					
-
 TESTS   = 					\
-tRectMatrix.sh					\
-tDH_FIR.sh
+tRectMatrix.sh					
 
 LDADD = ../src/libtfc_interface.la
 DEPENDENCIES = ../src/libtfc_interface.la $(LOFAR_DEPEND)
