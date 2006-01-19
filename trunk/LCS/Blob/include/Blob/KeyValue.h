@@ -187,9 +187,9 @@ namespace LOFAR {
       // \name Parse a position value.
       // Parse a position value and return the value in radians.
       // <group>
-      static double KeyValue::parsePos (const string& value,
-					KeyValue::AngleType atype);
-      static double KeyValue::parse (const string& value, char sep, double factor);
+      static double parsePos (const string& value,
+			      KeyValue::AngleType atype);
+      static double parse (const string& value, char sep, double factor);
       // </group>
       
     private:
