@@ -21,6 +21,8 @@
 //#  $Id$
 
 #include <ParmDB/ParmDBMeta.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 
 
 namespace LOFAR {
@@ -45,6 +47,22 @@ namespace ParmDB {
     itsDBPwd    = dbPwd;
     itsHostName = hostName;
   }
+
+  BlobOStream& operator<< (BlobOStream& bos, const ParmDBMeta& pdm)
+  {
+    bos << pdm.itsType   << pdm.itsTableName
+	<< pdm.itsDBName << pdm.itsUserName
+	<< pdm.itsDBPwd  << pdm.itsHostName;
+    return bos;
+  }
+    
+  BlobIStream& operator>> (BlobIStream& bis, ParmDBMeta& pdm)
+  {
+    bis >> pdm.itsType >> pdm.itsTableName
+	>> pdm.itsDBName >> pdm.itsUserName
+	>> pdm.itsDBPwd >> pdm.itsHostName;
+    return bis;
+  }   
 
 } // namespace ParmDB
 } // namespace LOFAR

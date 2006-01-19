@@ -30,6 +30,10 @@
 
 
 namespace LOFAR {
+//# Forward Declarations.
+class BlobOStream;
+class BlobIStream;
+
 namespace ParmDB {
 
   // \addtogroup ParmDB
@@ -51,6 +55,12 @@ namespace ParmDB {
 
     const std::string& getTableName() const
       { return itsTableName; }
+
+    // Write the object into a blob.
+    friend BlobOStream& operator<< (BlobOStream&, const ParmDBMeta&);
+
+    // Read the object from a blob.
+    friend BlobIStream& operator>> (BlobIStream&, ParmDBMeta&);
 
   private:
     //# Datamembers
