@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_TECHFLYER_TRANSPORT_H
 #define LOFAR_PL_TECHFLYER_TRANSPORT_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <PL/PLfwd.h>

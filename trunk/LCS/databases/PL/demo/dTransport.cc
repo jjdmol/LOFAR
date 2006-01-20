@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-// \file dTransport.cc
+// \file
 // Demo program showing the use of PL with complex classes.
 
 //# Always #include <lofar_config.h> first!

@@ -20,6 +20,12 @@
 //#
 //#  $Id$
 
+// \file
+// Demo program showing the use of PL with complex classes.
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include "Transport.h"
 #include "PO_Transport.h"
 #include <PL/TPersistentObject.h>
@@ -29,8 +35,9 @@
 #include <Common/LofarLogger.h>
 #include <iostream>
 
-using namespace LOFAR::PL;
 using namespace std;
+using namespace LOFAR;
+using namespace LOFAR::PL;
 
 //
 // This demo program shows how the Persistence Layer can be used to save and
@@ -214,5 +221,5 @@ int main (int argc, const char* argv[])
     return 1;
   }
 
-return 0;
+  return 0;
 }

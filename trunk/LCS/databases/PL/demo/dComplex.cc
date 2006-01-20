@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-// \file dComplex.cc
+// \file
 // Demo program showing the use the PL with complex numbers.
 
 //# Always #include <lofar_config.h> first!

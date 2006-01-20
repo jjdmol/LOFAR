@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-// \file dPerson.cc
+// \file
 // Demo program that shows you how to use the Persistence Layer.
 
 //# Always #include <lofar_config.h> first!
