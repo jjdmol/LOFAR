@@ -37,7 +37,7 @@ namespace LOFAR
 {
 
 const unsigned int MaxKSTypeLength = 16;
-const unsigned int MaxModelTypeLength = 16;
+const unsigned int MaxModelTypeLength = 50;
 
 DH_WOPrediff::DH_WOPrediff (const string& name)
   : DH_DB(name, "DH_WOPrediff", 1),
