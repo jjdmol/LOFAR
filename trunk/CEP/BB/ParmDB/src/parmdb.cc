@@ -363,12 +363,10 @@ ParmDomain getDomain (const KeyValueMap& kvmap, int size=0)
   }
   if (size > 0) {
     ASSERTSTR (int(st.size()) <= size, "Domain has too many axes");
-    if (st.size() < size) {
-      int nr = size - st.size();
-      for (int i=0; i<nr; ++i) {
-	st.push_back (0);
-	end.push_back (1);
-      }
+    int nr = size - st.size();
+    for (int i=0; i<nr; ++i) {
+      st.push_back (0);
+      end.push_back (1);
     }
   }
   return ParmDomain(st, end);

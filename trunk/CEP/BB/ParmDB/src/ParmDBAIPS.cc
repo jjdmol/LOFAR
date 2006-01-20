@@ -40,6 +40,8 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/BasicMath/Math.h>
+//# Include this file for automatic instantiation of Vector<vector>.
+#include <casa/Arrays/Vector2.cc>
 
 using namespace casa;
 using std::string;
