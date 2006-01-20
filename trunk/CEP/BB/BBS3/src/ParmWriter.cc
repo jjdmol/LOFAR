@@ -28,7 +28,6 @@
 #include <BBS3/ParmData.h>
 #include <MNS/MeqPolc.h>
 #include <MNS/MeqDomain.h>
-#include <MNS/ParmTable.h>
 #include <Common/LofarLogger.h>
 
 #include <BBS3/MNS/MeqStoredParmPolc.h>
