@@ -30,7 +30,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <PL/Query/Expr.h>
 #include <PL/Query/ExprNode.h>
-#include <string>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -50,19 +50,19 @@ namespace LOFAR
       class BinaryExprNode : public ExprNode
       {
       public:
-        BinaryExprNode(const std::string& oper, 
+        BinaryExprNode(const string& oper, 
                        const Expr& lhs, const Expr& rhs);
 
         virtual ~BinaryExprNode();
 
-        virtual void print(std::ostream& os) const;
+        virtual void print(ostream& os) const;
 
         virtual Expr getConstraint() const;
 
       private:
 
         // \name The operation
-        const std::string itsOperation;
+        const string itsOperation;
 
         // \name The operands
         // @{

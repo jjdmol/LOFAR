@@ -22,11 +22,8 @@
 
 #include <PL/Query/SQLExprNode.h>
 #include <PL/Exception.h>
-#include <iostream>
-#include <sstream>
-
-using std::string;
-using std::ostringstream;
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_sstream.h>
 
 namespace LOFAR
 {
@@ -35,7 +32,7 @@ namespace LOFAR
     namespace Query
     {
 
-      BetweenExprNode::BetweenExprNode(const std::string& oper, 
+      BetweenExprNode::BetweenExprNode(const string& oper, 
                                        const Expr& value,
                                        const Expr& lower, const Expr& upper) :
         itsOperation(oper),
@@ -50,7 +47,7 @@ namespace LOFAR
       {
       }
 
-      void BetweenExprNode::print(std::ostream& os) const
+      void BetweenExprNode::print(ostream& os) const
       {
         os << "(";
         itsValue.print(os);
@@ -70,7 +67,7 @@ namespace LOFAR
       }
 
 
-      InExprNode::InExprNode(const std::string oper,
+      InExprNode::InExprNode(const string oper,
                              const Expr& lhs, const Collection<Expr>& rhs) :
         itsOperation(oper),
         itsLeft(lhs), itsRight(rhs)
@@ -89,7 +86,7 @@ namespace LOFAR
       {
       }
 
-      void InExprNode::print(std::ostream& os) const
+      void InExprNode::print(ostream& os) const
       {
         itsLeft.print(os);
         ostringstream oss;
@@ -116,8 +113,8 @@ namespace LOFAR
       }
 
 
-      LikeExprNode::LikeExprNode(const std::string& oper, const Expr& value, 
-                                 const std::string& pattern) :
+      LikeExprNode::LikeExprNode(const string& oper, const Expr& value, 
+                                 const string& pattern) :
         itsOperation(oper),
         itsOperand(value), itsPattern(pattern)
       {
@@ -129,7 +126,7 @@ namespace LOFAR
       {
       }
 
-      void LikeExprNode::print(std::ostream& os) const
+      void LikeExprNode::print(ostream& os) const
       {
         // This string will contain the output pattern in SQL format.
         string pattern;

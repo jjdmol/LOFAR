@@ -30,7 +30,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <PL/Query/Expr.h>
 #include <PL/Query/ExprNode.h>
-#include <string>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -60,13 +60,13 @@ namespace LOFAR
       public:
 
         // Construct a column expression node.
-        ColumnExprNode(const std::string& tableName,
-                       const std::string& columnName);
+        ColumnExprNode(const string& tableName,
+                       const string& columnName);
 
         virtual ~ColumnExprNode();
         
         // Print the expression node into an output stream.
-        virtual void print(std::ostream& os) const;
+        virtual void print(ostream& os) const;
         
         // Return the constraint associated with this expression node.
         virtual Expr getConstraint() const;
@@ -76,8 +76,8 @@ namespace LOFAR
 
       private:
 
-        const std::string itsTableName;
-        const std::string itsColumnName;
+        const string itsTableName;
+        const string itsColumnName;
         Expr              itsConstraint;
 
       };

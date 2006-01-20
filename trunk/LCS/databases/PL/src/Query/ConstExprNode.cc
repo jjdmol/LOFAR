@@ -21,9 +21,7 @@
 //#  $Id$
 
 #include <PL/Query/ConstExprNode.h>
-#include <iostream>
-
-using std::string;
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
@@ -40,7 +38,7 @@ namespace LOFAR
       {
       }
 
-      void NullExprNode::print(std::ostream&) const
+      void NullExprNode::print(ostream&) const
       {
       }
 
@@ -59,7 +57,7 @@ namespace LOFAR
       {
       }
       
-      void IntExprNode::print(std::ostream& os) const
+      void IntExprNode::print(ostream& os) const
       {
         os << itsOperand; 
       }
@@ -73,12 +71,12 @@ namespace LOFAR
       {
       }
       
-      void DoubleExprNode::print(std::ostream& os) const
+      void DoubleExprNode::print(ostream& os) const
       {
         os << itsOperand;
       }
 
-      StringExprNode::StringExprNode(const std::string& s) : 
+      StringExprNode::StringExprNode(const string& s) : 
         itsOperand(s)
       {
       }
@@ -87,7 +85,7 @@ namespace LOFAR
       {
       }
       
-      void StringExprNode::print(std::ostream& os) const
+      void StringExprNode::print(ostream& os) const
       {
         // If the string contains one or more single quote (') characters
         // we will need to escape them by duplicating them.

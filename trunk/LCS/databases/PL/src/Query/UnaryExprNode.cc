@@ -22,7 +22,7 @@
 
 #include <PL/Query/UnaryExprNode.h>
 #include <PL/Exception.h>
-#include <iostream>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
@@ -31,7 +31,7 @@ namespace LOFAR
     namespace Query
     {
 
-      UnaryExprNode::UnaryExprNode(const std::string& oper, 
+      UnaryExprNode::UnaryExprNode(const string& oper, 
                                    const Expr& value) : 
         itsOperation(oper), 
         itsOperand(value)
@@ -44,7 +44,7 @@ namespace LOFAR
       {
       }
 
-      void UnaryExprNode::print(std::ostream& os) const
+      void UnaryExprNode::print(ostream& os) const
       {
         os << itsOperation;
         itsOperand.print(os);

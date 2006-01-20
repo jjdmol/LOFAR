@@ -29,7 +29,7 @@
 //# Includes
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <PL/Query/ExprNode.h>
-#include <string>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -53,7 +53,7 @@ namespace LOFAR
       public:
         NullExprNode();
         virtual ~NullExprNode();
-        virtual void print(std::ostream&) const;
+        virtual void print(ostream&) const;
         virtual bool isNull() const;
       };
 
@@ -63,7 +63,7 @@ namespace LOFAR
       public:
         IntExprNode(int i);
         virtual ~IntExprNode();
-        virtual void print(std::ostream& os) const;
+        virtual void print(ostream& os) const;
       private:
         const int itsOperand;
       };
@@ -74,7 +74,7 @@ namespace LOFAR
       public:
         DoubleExprNode(double d);
         virtual ~DoubleExprNode();
-        virtual void print(std::ostream& os) const;
+        virtual void print(ostream& os) const;
       private:
         const double itsOperand;
       };
@@ -83,11 +83,11 @@ namespace LOFAR
       class StringExprNode : public ExprNode
       {
       public:
-        StringExprNode(const std::string& s);
+        StringExprNode(const string& s);
         virtual ~StringExprNode();
-        virtual void print(std::ostream& os) const;
+        virtual void print(ostream& os) const;
       private:
-        const std::string itsOperand;
+        const string itsOperand;
       };
 
       // @}

@@ -28,7 +28,7 @@
 
 //# Includes
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-#include <iosfwd>
+#include <Common/lofar_iosfwd.h>
 
 namespace LOFAR
 {
@@ -53,7 +53,7 @@ namespace LOFAR
         virtual ~ExprNode() {}
 
         // Print the expression node into an output stream.
-        virtual void print(std::ostream& os) const = 0;
+        virtual void print(ostream& os) const = 0;
 
         // Return the constraint associated with this expression node.  Most
         // expression nodes have a constraint associated with them. The

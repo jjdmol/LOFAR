@@ -28,18 +28,17 @@
 
 //# Includes
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+
+#include <PL/PLfwd.h>
 #include <PL/Query/ExprNode.h>
+#include <Common/lofar_iosfwd.h>
+#include <Common/lofar_string.h>
 #include <boost/shared_ptr.hpp>
-#include <iosfwd>
-#include <string>
 
 namespace LOFAR
 {
   namespace PL
   {
-    //# Forward declarations
-    template<typename T> class Collection;
-
     namespace Query
     {
       // \addtogroup QueryExpr Query Expressions
@@ -66,7 +65,7 @@ namespace LOFAR
         Expr();
         Expr(int value);
         Expr(double value);
-        Expr(const std::string& value);
+        Expr(const string& value);
         Expr(const char* const value);
         // @}
 
@@ -78,7 +77,7 @@ namespace LOFAR
         // Print the expression into an output stream.
         // \attention This method will \e only print the expression itself, \e
         // not its associated constraint.
-        void print(std::ostream& os) const;
+        void print(ostream& os) const;
 
         // Test whether this expression is a null expression.
         bool isNull() const;
@@ -127,12 +126,12 @@ namespace LOFAR
         // the pattern string \a str to contain \c "\", then \a str should
         // contain \c "\\". Consequently, if you want the pattern string \a
         // str to expand to \c "\", then \a str should contain \c "\\\\".
-        Expr like(const std::string& str) const;
+        Expr like(const string& str) const;
 
         // The \c NOT \c LIKE operator is used to test if a value does not
         // have a match with a pattern expression.
         // \see Expr::like()
-        Expr notLike(const std::string& str) const;
+        Expr notLike(const string& str) const;
 
         // @}
 
@@ -170,7 +169,7 @@ namespace LOFAR
         // @{
         // Print the expression \a exp and the associated constraints onto the
         // output stream \a os.
-        friend std::ostream& operator<< (std::ostream& os, const Expr& exp);
+        friend ostream& operator<< (ostream& os, const Expr& exp);
         // @}
 
         // The actual node of the expression query.
