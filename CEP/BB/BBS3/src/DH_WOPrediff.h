@@ -143,7 +143,7 @@ public:
 		  vector<int>& peelSrcs,
 		  vector<int>& corrs);
 
-  void dump();
+  virtual void dump() const;
 
   void clearData();
 

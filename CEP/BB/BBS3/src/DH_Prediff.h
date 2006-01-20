@@ -83,7 +83,7 @@ public:
   double getEndTime() const;
   void setDomain(double fStart, double fEnd, double tStart, double tEnd);
 
-  void dump();
+  virtual void dump() const;
 
   void clearData();
 

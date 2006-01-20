@@ -27,6 +27,7 @@
 // The domain for an expression
 
 #include <iosfwd>
+#include <ParmDB/ParmDomain.h>
 
 namespace LOFAR {
 
@@ -48,6 +49,12 @@ public:
 
   // Create an x,y domain.
   MeqDomain (double startX, double endX, double startY, double endY);
+
+  // Create from a ParmDomain. It checks if it is a 2-dim domain.
+  explicit MeqDomain (const ParmDB::ParmDomain&);
+
+  // Convert to a ParmDomain.
+  ParmDB::ParmDomain toParmDomain() const;
 
   // Get offset and scale value.
   double offsetX() const

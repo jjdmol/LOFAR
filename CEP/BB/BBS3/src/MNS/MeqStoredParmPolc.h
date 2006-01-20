@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBS3/MNS/MeqParmPolc.h>
-#include <BBS3/MNS/ParmTable.h>
+#include <ParmDB/ParmDB.h>
 
 namespace LOFAR {
 
@@ -47,12 +47,12 @@ class MeqStoredParmPolc: public MeqParmPolc
 public:
   // Create a stored paramater with the given name and type.
   MeqStoredParmPolc (const string& name, MeqParmGroup*,
-		     ParmTable* table);
+		     ParmDB::ParmDB* table);
 
   virtual ~MeqStoredParmPolc();
 
-  // Get the ParmTableInfo
-  virtual ParmTableData getParmTableData() const;
+  // Get the ParmDBInfo
+  virtual ParmDB::ParmDBMeta getParmDBMeta() const;
 
   // Read the polcs for the given domain.
   virtual void readPolcs (const MeqDomain& domain);
@@ -70,8 +70,8 @@ public:
   virtual void updateFromTable();
 
 private:
-  ParmTable* itsTable;
-  MeqDomain  itsDomain;
+  ParmDB::ParmDB* itsTable;
+  MeqDomain       itsDomain;
 };
 
 // @}

@@ -41,8 +41,7 @@ WH_Prediff::WH_Prediff(const string& name, const string& id, const ParameterSet&
   : WorkHolder   (2, 3, name, "WH_Prediff"),
     itsID        (id),
     itsArgs      (pset),
-    itsFirstCall (true),
-    itsParmTable (0)
+    itsFirstCall (true)
 {
   LOG_TRACE_FLOW("WH_Prediff constructor");
   getDataManager().addInDataHolder(0, new DH_WOPrediff(name+"_in0"));
@@ -69,8 +68,6 @@ WH_Prediff::~WH_Prediff()
     delete (*iter).second;
   }
   itsPrediffs.clear();
-
-  delete itsParmTable;
 }
 
 WH_Prediff* WH_Prediff::make (const string& name)
@@ -81,25 +78,6 @@ WH_Prediff* WH_Prediff::make (const string& name)
 void WH_Prediff::preprocess()
 {
   LOG_TRACE_RTTI("WH_Prediff preprocess()");
-  if (itsParmTable == 0) {
-    ParameterSet sckvm = itsArgs.makeSubset("SC1params.");
-    ParameterSet dbkvm = sckvm.makeSubset("MSDBparams.");
-
-    string dbtype = dbkvm.getString("DBType");
-    if (dbtype == "bdbrepl") {
-      // Create master for bdb replication
-      // this object is made so that a master exists on the control node
-      // the table name does not matter
-      dbkvm["dummyTableName"] = "dummyTableName";
-      dbkvm["DBIsMaster"] = "F";
-      ostringstream noSlavesString;
-      noSlavesString<<-1;
-      dbkvm["DBNoSlaves"] = noSlavesString.str();
-      BBSTest::ScopedUSRTimer dbstartupTimer("P:DBStartup");
-      ParmTableData ptd("dummyTableName", dbkvm);
-      itsParmTable = new ParmTable(ptd);
-    }
-  }
 }
 
 void WH_Prediff::process()
@@ -280,8 +258,6 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
     ParameterSet myargs = args;
     myargs["DBIsMaster"] = "F";
     BBSTest::ScopedUSRTimer dbStartupTimer("C:DBStartup");
-    ParmTableData meqPtd("meqTableName", myargs);
-    ParmTableData skyPtd("skyTableName", myargs);
     dbStartupTimer.end();
   
     string modelType = args.getString("modelType");
@@ -290,8 +266,10 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
 
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
-    Prediffer* pred = new Prediffer(msName, myargs.getString("meqTableName"), meqPtd, 
-				    myargs.getString("skyTableName"), skyPtd,
+    Prediffer* pred = new Prediffer(msName, myargs.getString("meqTableName"),
+				    makePDM("meqTableName", myargs),
+				    myargs.getString("skyTableName"),
+				    makePDM("skyTableName", myargs),
 				    antNrs, modelType, srcgrp, calcUVW);
     // add to map
     itsPrediffs.insert(PrediffMap::value_type(id, pred));
@@ -402,6 +380,38 @@ bool WH_Prediff::readSolution(int woid, int iteration, vector<ParmData>& solVec)
   sol->getSolution(solVec);
 
   return (sol->hasConverged());
+}
+
+ParmDB::ParmDBMeta WH_Prediff::makePDM (const string& nameKey,
+					const ParameterSet& ps)
+{
+  ASSERTSTR(ps.isDefined("DBType"),
+	    "DBType is not defined in the ParameterSet");
+  string type = ps.getString("DBType");
+  ASSERTSTR(ps.isDefined(nameKey),
+	    nameKey << " is not defined in the ParameterSet");
+  string tableName = ps.getString(nameKey);
+  ParmDB::ParmDBMeta pdm(type, tableName);
+
+  if (type == "aips") {
+    // do nothing, we have all the info we need
+  } else {
+    // extract all information for other types
+    ASSERTSTR(ps.isDefined("DBName"),
+	      "DBName is not defined in the ParameterSet");
+    string dbName = ps.getString("DBName");
+    ASSERTSTR(ps.isDefined("DBUserName"),
+	      "DBUserName is not defined in the ParameterSet");
+    string userName = ps.getString("DBUserName");
+    ASSERTSTR(ps.isDefined("DBPwd"),
+	      "DBPwd is not defined in the ParameterSet");
+    string dbPwd = ps.getString("DBPwd");
+    ASSERTSTR(ps.isDefined("DBMasterHost"),
+	      "DBMasterHost is not defined in the ParameterSet");
+    string hostName = ps.getString("DBMasterHost");
+    pdm.setSQLMeta (dbName, userName, dbPwd, hostName);
+  }
+  return pdm;
 }
 
 } // namespace LOFAR

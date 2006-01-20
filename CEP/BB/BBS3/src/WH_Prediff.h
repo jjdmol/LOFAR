@@ -30,7 +30,7 @@
 //# Includes
 #include <tinyCEP/WorkHolder.h>
 #include <APS/ParameterSet.h>
-#include <MNS/ParmTable.h>
+#include <ParmDB/ParmDB.h>
 
 namespace LOFAR
 {
@@ -94,14 +94,15 @@ class WH_Prediff : public LOFAR::WorkHolder
   // and return a boolean indicating if this solution has converged.
   bool readSolution(int woid, int iteration, vector<ParmData>& solVec);
 
+  static ParmDB::ParmDBMeta makePDM (const string& nameKey,
+				     const ParameterSet& ps);
+
   string       itsID;         // Identification number
   ParameterSet itsArgs;       // Arguments
   PrediffMap   itsPrediffs;   // Map of Prediffer objects, each associated
   // with a strategy (controller)
 
   bool        itsFirstCall;  // Temporary!!! Needs to be done correctly for multiple strategies
-
-  ParmTable* itsParmTable;
 };
 
 // @}

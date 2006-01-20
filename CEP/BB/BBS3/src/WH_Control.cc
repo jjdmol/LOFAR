@@ -51,8 +51,7 @@ string i2str(int i) {
   : WorkHolder     (3, 3, name,"WH_Control"),
     itsNrPrediffers(nrPrediffers),
     itsArgs        (args),
-    itsFirstCall   (true),
-    itsParmTable   (0)
+    itsFirstCall   (true)
 {
   getDataManager().addInDataHolder(0, new DH_Solution("in_0")); 
   getDataManager().addInDataHolder(1, new DH_WOPrediff("in_1")); // dummy
@@ -77,7 +76,6 @@ WH_Control::~WH_Control()
     delete (*iter);
   }
   itsControllers.clear();
-  delete itsParmTable;
 }
 
 WorkHolder* WH_Control::construct (const string& name, int nrPrediffers,
@@ -87,36 +85,7 @@ WorkHolder* WH_Control::construct (const string& name, int nrPrediffers,
 }
 
 void WH_Control::preprocess()
-{
-  if (itsParmTable == 0) {
-    ParameterSet sckvm = itsArgs.makeSubset("SC1params.");
-    ParameterSet dbkvm = sckvm.makeSubset("MSDBparams.");
-
-    string dbtype = dbkvm.getString("DBType");
-    if (dbtype == "bdbrepl") {
-      // Create master for bdb replication
-      // this object is made so that a master exists on the control node
-      // the table name does not matter
-      dbkvm["dummyTableName"] = "dummyTableName";
-      dbkvm["DBIsMaster"] = "T";
-      ostringstream os;
-#ifdef HAVE_MPI
-      // if there are multiple processes, the number of slaves is equal to the number of prediffers
-      os<<itsNrPrediffers;
-#else
-      // if we don't use mpi, there are two possibilities
-      // - multiple processes but started in another way (not mpirun)
-      //     the number of slaves should be set, but at the moment it is not known
-      // - one process -> the prediffers and controller all use the same bdbreplicator, so there are no slaves
-      os<<0;
-#endif
-      dbkvm["DBNoSlaves"] = os.str();
-      BBSTest::ScopedUSRTimer dbstartupTimer("C:DBStartup");
-      ParmTableData ptd("dummyTableName", dbkvm);
-      itsParmTable = new ParmTable(ptd);
-    }
-  }
-}
+{}
 
 WH_Control* WH_Control::make (const string& name)
 {

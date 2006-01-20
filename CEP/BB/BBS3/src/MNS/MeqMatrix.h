@@ -95,8 +95,7 @@ public:
   MeqMatrix& operator= (const MeqMatrixTmp& other);
 
   // Clone the matrix (copy semantics).
-  MeqMatrix clone() const
-    { return MeqMatrix (itsRep->clone()); }
+  MeqMatrix clone() const;
 
   // Change the type/or shape if different.
   double* setDoubleFormat (int nrx, int nry)

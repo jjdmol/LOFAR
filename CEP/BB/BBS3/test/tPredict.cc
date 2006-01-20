@@ -61,14 +61,8 @@ int main (int argc, const char* argv[])
       return 1;
     }
     // Read the info for the ParmTables
-    ACC::APS::ParameterSet ps;
-    string meqModelName(argv[3]);
-    string skyModelName(argv[4]);
-    ps["meqModel"] = meqModelName;
-    ps["skyModel"] = skyModelName;
-    ps["DBType"] = "aips";
-    ParmTableData meqPdt("meqModel", ps);
-    ParmTableData skyPdt("skyModel", ps);
+    ParmDB::ParmDBMeta meqPdm("aips", argv[3]);
+    ParmDB::ParmDBMeta skyPdm("aips", argv[4]);
 
     // Do a predict.
     {
@@ -78,7 +72,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
+      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
 		     antVec, "REALIMAG.TOTALEJ.DIPOLE", srcgrp, false);
       doPredict (pre1);
       cout << "End of predict test" << endl;

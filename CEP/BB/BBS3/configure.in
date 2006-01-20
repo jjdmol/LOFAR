@@ -1,11 +1,12 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
+dnl Do not define VERSION, etc. in config.h.
 dnl
 AC_INIT(src/BlackBoardDemo.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(BlackBoardDemo, 0.1)
+AM_INIT_AUTOMAKE(BlackBoardDemo, 0.1, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -58,7 +59,7 @@ lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
 lofar_INTERNAL(LCS/databases/TransportPostgres,TransportPostgres,,1,TransportPostgres/DH_DB.h)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h)
-lofar_INTERNAL(CEP/BB/BDBReplication,BDBReplication,,1,BDBReplication/BDBReplicator.h)
+lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
 
 #lofar_EXTERNAL(psql,1,libpq-fe.h,pq)
 #lofar_EXTERNAL(mysql,1,mysql/mysql.h,"z mysqlclient")

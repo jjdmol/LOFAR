@@ -32,49 +32,48 @@ namespace LOFAR {
 
 
 MeqFunklet::MeqFunklet()
-: itsDomain     (0,1,0,1),
-  itsMaxNrSpid  (0),
-  itsPertValue  (1e-6),
-  itsIsRelPert  (true),
-  itsX0         (0),
-  itsY0         (0),
-  itsXScale     (1),
-  itsYScale     (1),
-  itsID         (-1)
+: itsMaxNrSpid (0)
+{
+  setDomain (MeqDomain(0,1,0,1));
+}
+
+MeqFunklet::MeqFunklet (const ParmDB::ParmValue& pvalue)
+: itsMaxNrSpid (0),
+  itsParmValue (pvalue.clone())
+{
+  const ParmDB::ParmValueRep& pval = pvalue.rep();
+  itsDomain = MeqDomain(pval.itsDomain);
+  if (pval.itsShape.size() != 0) {
+    ASSERT (pval.itsShape.size() == 2);
+    int nx = pval.itsShape[0];
+    int ny = pval.itsShape[1];
+    itsCoeff = MeqMatrix (&(pval.itsCoeff[0]), nx, ny);
+  }
+}
+
+MeqFunklet::MeqFunklet (const MeqFunklet& that)
+: itsCoeff     (that.itsCoeff.clone()),
+  itsCoeffPert (that.itsCoeffPert.clone()),
+  itsDomain    (that.itsDomain),
+  itsSpidInx   (that.itsSpidInx),
+  itsMaxNrSpid (that.itsMaxNrSpid),
+  itsParmValue (that.itsParmValue.clone())
 {}
 
 MeqFunklet::~MeqFunklet()
 {}
 
-void MeqFunklet::setCoeff (const MeqMatrix& values)
+MeqFunklet& MeqFunklet::operator= (const MeqFunklet& that)
 {
-  itsCoeff = values.clone();
-  itsMask.resize (values.nelements());
-  for (int i=0; i<values.nelements(); i++) {
-    itsMask[i] = true;
+  if (this != &that) {
+    itsCoeff     = that.itsCoeff.clone();
+    itsCoeffPert = that.itsCoeffPert.clone();
+    itsDomain    = that.itsDomain;
+    itsSpidInx   = that.itsSpidInx;
+    itsMaxNrSpid = that.itsMaxNrSpid;
+    itsParmValue = that.itsParmValue.clone();
   }
-  clearSolvable();
-}
-
-void MeqFunklet::setCoeff (const MeqMatrix& values,
-			   const Matrix<bool>& mask)
-{
-  ///  ASSERT (values.nx()==mask.shape()(0) && values.ny()==mask.shape()(1));
-  itsCoeff = values.clone();
-  itsMask.resize (values.nelements());
-  bool deleteM;
-  const bool* mdata = mask.getStorage(deleteM);
-  for (unsigned int i=0; i<mask.nelements(); i++) {
-    itsMask[i] = true;
-  }
-  mask.freeStorage (mdata, deleteM);
-  clearSolvable();
-}
-
-void MeqFunklet::setCoeffOnly (const MeqMatrix& values)
-{
-  itsCoeff = values.clone();
-  clearSolvable();
+  return *this;
 }
 
 int MeqFunklet::makeSolvable (int spidIndex)
@@ -86,7 +85,7 @@ int MeqFunklet::makeSolvable (int spidIndex)
   itsMaxNrSpid = 0;
   int nr=0;
   for (int i=0; i<itsCoeff.nelements(); i++) {
-    if (itsMask[i]) {
+    if (itsParmValue.rep().itsSolvMask[i]) {
       itsSpidInx[i] = spidIndex++;
       itsMaxNrSpid = spidIndex;
       nr++;
@@ -98,12 +97,12 @@ int MeqFunklet::makeSolvable (int spidIndex)
   // The perturbation is absolute or a factor of the coefficient.
   // If the coefficient is too small, take absolute.
   if (nr > 0) {
-    itsPerturbation = itsCoeff.clone();
+    itsCoeffPert = itsCoeff.clone();
     const double* coeff = itsCoeff.doubleStorage();
-    double* pert  = itsPerturbation.doubleStorage();
-    for (int i=0; i<itsCoeff.nelements(); i++) {
-      double perturbation = itsPertValue;
-      if (itsIsRelPert  &&  std::abs(coeff[i]) > 1e-10) {
+    double* pert = itsCoeffPert.doubleStorage();
+    for (int i=0; i<itsCoeffPert.nelements(); i++) {
+      double perturbation = itsParmValue.rep().itsPerturbation;
+      if (itsParmValue.rep().itsIsRelPert  &&  std::abs(coeff[i]) > 1e-10) {
 	perturbation *= coeff[i];
       }
       pert[i] = perturbation;
@@ -116,7 +115,29 @@ void MeqFunklet::clearSolvable()
 {
   itsSpidInx.resize (0);
   itsMaxNrSpid = 0;
-  itsPerturbation = MeqMatrix();
+  itsCoeffPert = MeqMatrix();
+}
+
+void MeqFunklet::setDomain (const MeqDomain& domain)
+{
+  itsDomain = domain;
+  itsParmValue.rep().setDomain (ParmDB::ParmDomain(domain.startX(),
+						   domain.endX(),
+						   domain.startY(),
+						   domain.endY()));
+}
+
+void MeqFunklet::setCoeff (const MeqMatrix& value, const bool* mask)
+{
+  itsCoeff = value.clone();
+  vector<int> shp(2);
+  shp[0] = value.nx();
+  shp[1] = value.ny();
+  if (mask == 0) {
+    itsParmValue.rep().setCoeff (value.doubleStorage(), shp);
+  } else {
+    itsParmValue.rep().setCoeff (value.doubleStorage(), mask, shp);
+  }
 }
 
 void MeqFunklet::update (const MeqMatrix& value)
@@ -126,6 +147,7 @@ void MeqFunklet::update (const MeqMatrix& value)
   ASSERT (value.nelements() == itsCoeff.nelements());
   for (int i=0; i<value.nelements(); ++i) {
     coeff[i] = vals[i];
+    itsParmValue.rep().itsCoeff[i] = vals[i];
   }
 }
 
@@ -136,6 +158,7 @@ void MeqFunklet::update (const vector<double>& values)
     if (itsSpidInx[i] >= 0) {
       DBGASSERT (itsSpidInx[i] < int(values.size()));
       coeff[i] = values[itsSpidInx[i]];
+      itsParmValue.rep().itsCoeff[i] = values[itsSpidInx[i]];
     }
   }
 }

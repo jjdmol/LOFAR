@@ -33,12 +33,12 @@ namespace LOFAR {
       itsFirstSpid(0)
   {}
 
-  ParmData::ParmData (const string& name,
-		      const ParmTableData& ptd,
+  ParmData::ParmData (const std::string& name,
+		      const ParmDB::ParmDBMeta& pdm,
 		      int nrSpid, int firstSpid,
 		      const MeqMatrix& values)
-    : itsName(name),
-      itsPTD(ptd),
+    : itsName      (name),
+      itsPDM       (pdm),
       itsNrSpid    (nrSpid),
       itsFirstSpid (firstSpid),
       itsValues    (values)
@@ -52,14 +52,11 @@ namespace LOFAR {
     }
   }
 
-  double ParmData::getValue(unsigned int index)
+  double ParmData::getValue (unsigned int index)
   {
-    if (index >= itsValues.nelements())
-    {
+    if (int(index) >= itsValues.nelements()) {
       return 0;
-    }
-    else
-    {
+    } else {
       double* val = itsValues.doubleStorage();
       return val[index];
     }
@@ -84,7 +81,7 @@ namespace LOFAR {
   BlobOStream& operator<< (BlobOStream& bos, const ParmData& parm)
   {
     bos << parm.itsName
-	<< parm.itsPTD
+	<< parm.itsPDM
 	<< parm.itsNrSpid << parm.itsFirstSpid
 	<< parm.itsValues;
     return bos;
@@ -94,7 +91,7 @@ namespace LOFAR {
   BlobIStream& operator>> (BlobIStream& bis, ParmData& parm)
   {
     bis >> parm.itsName
-	>> parm.itsPTD
+	>> parm.itsPDM
 	>> parm.itsNrSpid >> parm.itsFirstSpid
 	>> parm.itsValues;
     return bis;

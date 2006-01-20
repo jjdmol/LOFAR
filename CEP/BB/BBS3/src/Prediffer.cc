@@ -128,9 +128,9 @@ namespace LOFAR
 //----------------------------------------------------------------------
 Prediffer::Prediffer(const string& msName,
 		     const string& meqModelName,
-		     const ParmTableData& meqPtd,
+		     const ParmDB::ParmDBMeta& meqPtd,
 		     const string& skyModelName,
-		     const ParmTableData& skyPtd,
+		     const ParmDB::ParmDBMeta& skyPtd,
 		     const vector<int>& ant,
 		     const string& modelType,
 		     const vector<vector<int> >& sourceGroups,
@@ -218,10 +218,6 @@ Prediffer::Prediffer(const string& msName,
   // 1 is the number of time steps. This code is limited to one timestep only
   MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
   MeqMatrixRealArr::poolActivate(itsNrChan * 1);
-  // Unlock the parm tables.
-  itsMEP.unlock();
-  itsGSMMEP.unlock();
-
 }
 
 //----------------------------------------------------------------------
@@ -403,13 +399,13 @@ void Prediffer::countBaseCorr()
     }
   }
   ASSERTSTR (nrSelBl > 0, "No valid baselines selected");
-  itsNSelCorr = 0;
+  int nSelCorr = 0;
   for (int i=0; i<itsNCorr; ++i) {
     if (itsCorr[i]) {
-      itsNSelCorr++;
+      nSelCorr++;
     }
   }
-  ASSERTSTR (itsNSelCorr > 0, "No valid correlations selected");
+  ASSERTSTR (nSelCorr > 0, "No valid correlations selected");
 }
 
 //----------------------------------------------------------------------
@@ -422,7 +418,7 @@ void Prediffer::countBaseCorr()
 void Prediffer::getSources()
 {
   // Get the sources from the ParmTable
-  itsSources = itsGSMMEP.getPointSources (&itsParmGroup, Vector<int>());
+  itsSources = MeqSourceList(itsGSMMEP, &itsParmGroup);
   int nrsrc = itsSources.size();
   for (int i=0; i<nrsrc; ++i) {
     itsSources[i].setSourceNr (i);
@@ -745,17 +741,13 @@ void Prediffer::initParms (const MeqDomain& domain)
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
 	itsParmData.push_back (ParmData((*iter)->getName(),
-					(*iter)->getParmTableData(),
+					(*iter)->getParmDBMeta(),
 					nr, itsNrScid,
 					(*iter)->getCoeffValues()));
 	itsNrScid += nr;
       }
     }
   }
-
-  // Unlock the parm tables.
-  itsMEP.unlock();
-  itsGSMMEP.unlock();
 }
 
 //----------------------------------------------------------------------
@@ -1046,7 +1038,7 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 		     timeOffset + blOffset + freqOffset + flagStartBit);
 	  // Get an equation for this baseline.
 	  int blindex = itsBLIndex(ant1,ant2);
-	  fillEquation (*myFitter, itsNSelCorr, &diffVec[0], &indicesVec[0],
+	  fillEquation (*myFitter, &diffVec[0], &indicesVec[0],
 			&resultVec[0], &flagVec[0], data, &flags[0],
 			request, blindex);
 ////			request, blindex, ant1==4&&ant2==8&&tStep<5);
@@ -1075,7 +1067,7 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 // Fill the fitter with the equations for the given baseline.
 //
 //----------------------------------------------------------------------
-void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
+void Prediffer::fillEquation (casa::LSQFit &fitter,
 			      double *diff, unsigned *indices,
 			      double *result, char *flagResult,
 			      const fcomplex *data, const bool *flags,
@@ -1942,9 +1934,6 @@ void Prediffer::updateSolvableParms()
     }
   }
   resetEqLoop();
-
-  itsMEP.unlock();
-  itsGSMMEP.unlock();
 }
 
 void Prediffer::resetEqLoop()
@@ -1969,9 +1958,6 @@ void Prediffer::writeParms()
       }
     }
   }
-  // Unlock the parm tables.
-  itsMEP.unlock();
-  itsGSMMEP.unlock();
   //  saveTimer.stop();
   //  BBSTest::Logger::log("write-parm", saveTimer);
   cout << "wrote timeIndex=" << itsTimeIndex

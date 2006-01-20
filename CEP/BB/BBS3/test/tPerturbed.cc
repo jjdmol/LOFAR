@@ -137,14 +137,8 @@ int main (int argc, const char* argv[])
       return 1;
     }
     // Read the info for the ParmTables
-    ACC::APS::ParameterSet ps;
-    string meqModelName(argv[3]);
-    string skyModelName(argv[4]);
-    ps["meqModel"] = meqModelName;
-    ps["skyModel"] = skyModelName;
-    ps["DBType"] = "aips";
-    ParmTableData meqPdt("meqModel", ps);
-    ParmTableData skyPdt("skyModel", ps);
+    ParmDB::ParmDBMeta meqPdm("aips", argv[3]);
+    ParmDB::ParmDBMeta skyPdm("aips", argv[4]);
 
     // Do a solve using the model and a few stations.
     {
@@ -154,7 +148,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 4*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
+      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
 		     antVec, argv[5], srcgrp, false);
       vector<string> solv(argc-6);
       for (uint i=0; i<solv.size(); ++i) {

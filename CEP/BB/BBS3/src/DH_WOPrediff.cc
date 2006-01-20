@@ -368,7 +368,7 @@ bool DH_WOPrediff::getVarData(ParameterSet& predArgs,
 
 }
 
-void DH_WOPrediff::dump()
+void DH_WOPrediff::dump() const
 {
   cout << "DH_WOPrediff: " << endl;
   cout << "ID = " << getWorkOrderID() << endl;
@@ -400,7 +400,9 @@ void DH_WOPrediff::dump()
   vector<string> exPNames;
   vector<int> srcs;
   vector<int> corrs;
-  if (getVarData(sArguments, antNrs, pNames, exPNames, srcs, corrs))
+  if (const_cast<DH_WOPrediff*>(this)->getVarData(sArguments, antNrs,
+						  pNames, exPNames,
+						  srcs, corrs))
   { 
     cout << "MS name = " << sArguments.getString ("MSName")
 	 << endl;
