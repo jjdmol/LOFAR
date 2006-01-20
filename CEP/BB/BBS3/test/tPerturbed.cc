@@ -148,7 +148,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 4*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 
 		     antVec, argv[5], srcgrp, false);
       vector<string> solv(argc-6);
       for (uint i=0; i<solv.size(); ++i) {

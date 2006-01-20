@@ -127,20 +127,18 @@ namespace LOFAR
 //
 //----------------------------------------------------------------------
 Prediffer::Prediffer(const string& msName,
-		     const string& meqModelName,
-		     const ParmDB::ParmDBMeta& meqPtd,
-		     const string& skyModelName,
-		     const ParmDB::ParmDBMeta& skyPtd,
+		     const ParmDB::ParmDBMeta& meqPdm,
+		     const ParmDB::ParmDBMeta& skyPdm,
 		     const vector<int>& ant,
 		     const string& modelType,
 		     const vector<vector<int> >& sourceGroups,
 		     bool      calcUVW)
   :
   itsMSName       (msName),
-  itsMEPName      (meqModelName),
-  itsMEP          (meqPtd),
-  itsGSMMEPName   (skyModelName),
-  itsGSMMEP       (skyPtd),
+  itsMEPName      (meqPdm.getTableName()),
+  itsMEP          (meqPdm),
+  itsGSMMEPName   (skyPdm.getTableName()),
+  itsGSMMEP       (skyPdm),
   itsCalcUVW      (calcUVW),
   itsSrcGrp       (sourceGroups),
   itsNCorr        (0),
@@ -157,8 +155,8 @@ Prediffer::Prediffer(const string& msName,
 {
   LOG_INFO_STR( "Prediffer constructor ("
 		<< "'" << msName   << "', "
-		<< "'" << meqModelName << "', "
-		<< "'" << skyModelName << "', "
+		<< "'" << meqPdm.getTableName() << "', "
+		<< "'" << skyPdm.getTableName() << "', "
 		<< itsCalcUVW << ")" );
 
   // Initially use all correlations.
@@ -441,7 +439,8 @@ void Prediffer::getSources()
       ASSERTSTR (srcs.size() > 0, "Sourcegroup " << j << " is empty");
       for (uint i=0; i<srcs.size(); ++i) {
 	ASSERTSTR (srcs[i] > 0  &&  srcs[i] <= nrsrc,
-		   "Sourcenr must be > 0 and <= #sources (=" << nrsrc << ')');
+		   "Sourcenr " << srcs[i]
+		   << " must be > 0 and <= #sources (=" << nrsrc << ')');
 	ASSERTSTR (itsSources[srcs[i]-1].getGroupNr() < 0,
 		   "Sourcenr " << srcs[i] << " multiply used in groups");
         itsSources[srcs[i]-1].setGroupNr (j);
@@ -703,9 +702,11 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
   for (int level=1; level<nrLev; ++level) {
     std::vector<MeqExprRep*>& nodes = itsPrecalcNodes[level];
     nodes.resize (0);
-    for (uint i=0; i<itsExpr.size(); ++i) {
-      if (! itsExpr[i].isNull()) {
-	itsExpr[i].getCachingNodes (nodes, level, false);
+    for (std::vector<MeqJonesExpr>::iterator iter=itsExpr.begin();
+	 iter != itsExpr.end();
+	 ++iter) {
+      if (! iter->isNull()) {
+	iter->getCachingNodes (nodes, level, false);
       }
     }
   }

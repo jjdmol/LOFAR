@@ -266,9 +266,8 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
 
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
-    Prediffer* pred = new Prediffer(msName, myargs.getString("meqTableName"),
+    Prediffer* pred = new Prediffer(msName,
 				    makePDM("meqTableName", myargs),
-				    myargs.getString("skyTableName"),
 				    makePDM("skyTableName", myargs),
 				    antNrs, modelType, srcgrp, calcUVW);
     // add to map
