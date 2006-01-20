@@ -31,7 +31,7 @@ using namespace casa;
 namespace LOFAR {
 
 MeqStoredParmPolc::MeqStoredParmPolc (const string& name, MeqParmGroup* group,
-				      ParmTable* table)
+				      ParmDB::ParmDB* table)
 : MeqParmPolc (name, group),
   itsTable    (table)
 {}
@@ -39,29 +39,41 @@ MeqStoredParmPolc::MeqStoredParmPolc (const string& name, MeqParmGroup* group,
 MeqStoredParmPolc::~MeqStoredParmPolc()
 {}
 
-ParmTableData MeqStoredParmPolc::getParmTableData() const
+ParmDB::ParmDBMeta MeqStoredParmPolc::getParmDBMeta() const
 {
-  return itsTable->getParmTableData();
+  return itsTable->getParmDBMeta();
 }
 
 void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
 {
   // Find the polc(s) for the given domain.
-  vector<MeqPolc> polcs = itsTable->getPolcs (getName(), domain);
+  ParmDB::ParmDomain pdomain = domain.toParmDomain();
+  ParmDB::ParmValueSet pset = itsTable->getValues (getName(), pdomain);
+  vector<ParmDB::ParmValue>& vec = pset.getValues();
+  vector<MeqPolc> polcs;
   // If none found, try to get a default value.
-  // If no default found, use a 2nd order polynomial with values 1.
-  if (polcs.size() == 0) {
-    MeqPolc polc = itsTable->getInitCoeff (getName());
-    ASSERTSTR (!polc.getCoeff().isNull(), "No value found for parameter "
-	       << getName());
-    polc.setDomain (domain);
-    polc.setID (-2);           // Certainly a new polc
-    ///    itsTable->putCoeff (getName(), polc);
-    polcs.push_back (polc);
+  if (vec.size() == 0) {
+    ParmDB::ParmValue pval = itsTable->getDefValue (getName());
+    ASSERTSTR (!pval.rep().itsType.empty(),
+	       "No value found for parameter " << getName());
+    ASSERTSTR (pval.rep().itsType=="polc",
+	       "No 'polc' funklet found for parameter " << getName());
+    ASSERTSTR (pval.rep().itsShape.size()==2,
+	       "No 2-dim funklet found for parameter " << getName());
+    pval.rep().setDomain (pdomain);
+    polcs.push_back (MeqPolc(pval));
   } else {
     // Check if the polc domains cover the entire domain and if they
     // do not overlap.
     // Not implemented yet!!!
+    // Convert all to polcs.
+    for (uint i=0; i<vec.size(); ++i) {
+      ASSERTSTR (vec[i].rep().itsType=="polc",
+		 "No 'polc' funklet found for parameter " << getName());
+      ASSERTSTR (vec[i].rep().itsShape.size()==2,
+		 "No 2-dim funklet found for parameter " << getName());
+      polcs.push_back (MeqPolc(vec[i]));
+    }
   }
   setPolcs (polcs);
   itsDomain = domain;
@@ -102,17 +114,20 @@ void MeqStoredParmPolc::updateFromTable()
 	     "MeqStoredParmPolc::updateFromTable - "
 	     "domain mismatches domain given in itsPolcs");
   // Find the polc(s) for the current domain.
-  vector<MeqPolc> newPolcs = itsTable->getPolcs (getName(), itsDomain);
-  ASSERT(1 == newPolcs.size());
+  ParmDB::ParmDomain pdomain = itsDomain.toParmDomain();
+  ParmDB::ParmValueSet pset = itsTable->getValues (getName(), pdomain);
+  ASSERT(pset.getValues().size() == 1);
+  MeqPolc newpolc (pset.getValues()[0]);
   // Update the coefficients with the new ones.
-  update (newPolcs[0].getCoeff());
+  update (newpolc.getCoeff());
 }
 
 void MeqStoredParmPolc::save()
 {
   vector<MeqPolc>& polcs = getPolcs();
   for (unsigned int i=0; i<polcs.size(); i++) {
-    itsTable->putCoeff (getName(), polcs[i]);
+    ParmDB::ParmValue pval = polcs[i].getParmValue();
+    itsTable->putValue (getName(), pval);
   }
   MeqParmPolc::save();
 }

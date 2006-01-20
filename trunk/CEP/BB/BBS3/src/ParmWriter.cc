@@ -50,24 +50,38 @@ void ParmWriter::write(vector<ParmData>& pData, double fStart, double fEnd,
   MeqDomain domain(fStart, fEnd, tStart, tEnd);
 
   // Store all parameters in their own ParmTable
-
+  // Use one ParmTable at the time to avoid reopening the same table.
+  vector<char> done(pData.size(), 0); 
   MeqParmGroup pgroup;
-  for (uint i=0; i<pData.size(); ++i) {
+  uint nrDone = 0;
+  string lastName;
+  ParmDB::ParmDB* dbptr = 0;
+  while (nrDone < pData.size()) {
+    for (uint i=0; i<pData.size(); ++i) {
+      if (done[i] == 0) {
+	if (dbptr == 0) {
+	  lastName = pData[i].getParmDBMeta().getTableName();
+	  dbptr = new ParmDB::ParmDB(pData[i].getParmDBMeta());
+	}
+	if (pData[i].getParmDBMeta().getTableName() == lastName) {
 //     cout << "Writing parm " << pData[i].getName() 
 //  	 << " values=" << pData[i].getValues() << endl;
-    ParmTable ptab(pData[i].getParmTableData());
-    MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
-    parm.readPolcs (domain);
-    parm.update (pData[i].getValues());
-    parm.save();
-
+	  MeqStoredParmPolc parm(pData[i].getName(), &pgroup, dbptr);
+	  parm.readPolcs (domain);
+	  parm.update (pData[i].getValues());
+	  parm.save();
+	  done[i] = 1;
+	  nrDone++;
 //     streamsize prec = cout.precision();
 //     cout.precision(10);
 //     cout << "****Contr write: " << parm.getCoeffValues().getDouble()
 // 	 << " for parameter " << pData[i].getName() << endl;
 //     cout.precision (prec);
-
-    ptab.unlock();
+	}
+      }
+    }
+    delete dbptr;
+    dbptr = 0;
   }
 }
 

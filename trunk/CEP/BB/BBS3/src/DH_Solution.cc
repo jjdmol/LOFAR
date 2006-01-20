@@ -222,10 +222,10 @@ void DH_Solution::clearData()
   setDomain(0, 0, 0, 0);
 }
 
-void DH_Solution::dump()
+void DH_Solution::dump() const
 {
   vector<ParmData> pData;
-  getSolution(pData);
+  const_cast<DH_Solution*>(this)->getSolution(pData);
   
   cout << "Workorder id = " << getWorkOrderID() << endl;
   cout << "Iteration = " << getIteration() << endl;

@@ -171,7 +171,7 @@ void doEval (MeqPolc& polc, const MeqDomain& domain, int nx, int ny)
     double* coeffp = coeff.doubleStorage();
     coeffp[i] += polc.getPerturbation();
     MeqPolc polcp (polc);
-    polcp.setCoeff (coeff);
+    polcp.update (coeff);
     MeqResult resp = polcp.getResult (req);
     ASSERT (compare (resp.getValue(), resm.getPerturbedValue (i)));
   }
@@ -237,31 +237,38 @@ void doIt (MeqPolc& polc)
 int main()
 {
   {
-    MeqPolc polc;
-    polc.setPerturbation (1, false);
+    // Always use the entire mask as true.
+    bool mask[100];
+    for (int i=0; i<100; ++i) {
+      mask[i] = true;
+    }
+    ParmDB::ParmValue pval;
+    pval.rep().setPerturbation (1, false);
+    pval.rep().setDomain (ParmDB::ParmDomain(0,1,0,1));
+    MeqPolc polc(pval);
 
-    polc.setCoeff(MeqMatrix(2.));
+    polc.setCoeff(MeqMatrix(2.), mask);
     doIt (polc);
 
-    polc.setCoeff(MeqMatrix(2.,2,1,true));
+    polc.setCoeff(MeqMatrix(2.,2,1,true), mask);
     doIt (polc);
 
-    polc.setCoeff(MeqMatrix(2.,1,2,true));
+    polc.setCoeff(MeqMatrix(2.,1,2,true), mask);
     doIt (polc);
 
-    polc.setCoeff(MeqMatrix(2.,3,3,true));
+    polc.setCoeff(MeqMatrix(2.,3,3,true), mask);
     doIt (polc);
 
     double c1[12] = {1.5, 2.1, -0.3, -2,
 		     1.45, -2.3, 0.34, 1.7,
 		     5, 1, 0, -1};
-    polc.setCoeff(MeqMatrix(c1, 3, 4));
+    polc.setCoeff(MeqMatrix(c1, 3, 4), mask);
     doIt(polc);
-    polc.setCoeff(MeqMatrix(c1, 4, 3));
+    polc.setCoeff(MeqMatrix(c1, 4, 3), mask);
     doIt(polc);
-    polc.setCoeff(MeqMatrix(c1, 6, 2));
+    polc.setCoeff(MeqMatrix(c1, 6, 2), mask);
     doIt(polc);
-    polc.setCoeff(MeqMatrix(c1, 2, 6));
+    polc.setCoeff(MeqMatrix(c1, 2, 6), mask);
     doIt(polc);
   }
   cout << "OK" << endl;

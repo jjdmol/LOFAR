@@ -25,6 +25,7 @@
 #include <BBS3/Solver.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <BBS3/BBSTestLogger.h>
+#include <ParmDB/ParmDB.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
@@ -49,7 +50,7 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
   for (uint i=0; i<pData.size(); ++i) {
     cout << "Writing parm " << pData[i].getName() 
 	 << " values=" << pData[i].getValues() << endl;
-    ParmTable ptab(pData[i].getParmTableData());
+    ParmDB::ParmDB ptab(pData[i].getParmDBMeta());
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
     parm.readPolcs (domain);
     parm.update (pData[i].getValues());
@@ -224,14 +225,8 @@ int main (int argc, const char* argv[])
     cout << "       dbtype:       " << dbtype << endl;
 
     // Read the info for the ParmTables
-    ACC::APS::ParameterSet ps;
-    string meqModelName(argv[3]);
-    string skyModelName(argv[4]);
-    ps["meqModel"] = meqModelName;
-    ps["skyModel"] = skyModelName;
-    ps["DBType"] = "aips";
-    ParmTableData meqPdt("meqModel", ps);
-    ParmTableData skyPdt("skyModel", ps);
+    ParmDB::ParmDBMeta meqPdm("aips", argv[3]);
+    ParmDB::ParmDBMeta skyPdm("aips", argv[4]);
 
     // Do a solve.
     {
@@ -250,7 +245,7 @@ int main (int argc, const char* argv[])
 	grp1.push_back (2);
 	srcgrp.push_back (grp1);
       }
-      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
+      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
 		     antVec, argv[5], srcgrp, calcuvw);
       // Do a further selection; only XX,YY and no autocorrelations.
       vector<int> corr(2,0);

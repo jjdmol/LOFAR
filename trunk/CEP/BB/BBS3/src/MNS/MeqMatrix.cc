@@ -132,6 +132,14 @@ MeqMatrix& MeqMatrix::operator= (const MeqMatrixTmp& that)
     return *this;
 }
 
+MeqMatrix MeqMatrix::clone() const
+{
+  if (itsRep == 0) {
+    return MeqMatrix();
+  }
+  return MeqMatrix (itsRep->clone());
+}
+
 void MeqMatrix::setDMat (int nx, int ny)
 {
     MeqMatrixRep::unlink (itsRep);

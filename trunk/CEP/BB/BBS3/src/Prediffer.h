@@ -43,7 +43,7 @@
 #include <BBS3/MNS/MeqStatUVW.h>
 #include <BBS3/MNS/MeqLMN.h>
 #include <BBS3/MNS/MeqDFTPS.h>
-#include <BBS3/MNS/ParmTable.h>
+#include <ParmDB/ParmDB.h>
 
 #include <Common/Timer.h>
 #include <Common/LofarTypes.h>
@@ -76,9 +76,9 @@ public:
   // The UVW coordinates can be recalculated or taken from the MS.
   Prediffer (const string& msName,
 	     const string& meqModelName,
-	     const ParmTableData& meqPtd,
+	     const ParmDB::ParmDBMeta& meqPtd,
 	     const string& skyModelName,
-	     const ParmTableData& skyPtd,
+	     const ParmDB::ParmDBMeta& skyPtd,
 	     const vector<int>& ant,
 	     const string& modelType,
 	     const vector<vector<int> >& sourceGroups,
@@ -218,7 +218,7 @@ private:
 		      bool useStatParm);
 
   // Fill the fitter with the equations for the given baseline.
-  void fillEquation (casa::LSQFit& fitter, int nresult,
+  void fillEquation (casa::LSQFit& fitter,
 		     double *diff, unsigned *indices,
 		     double* result, char* flagResult,
 		     const fcomplex* data, const bool* flags,
@@ -245,9 +245,9 @@ private:
 
   string                itsMSName;      //# Measurement set name
   string                itsMEPName;     //# Common parmtable name
-  ParmTable             itsMEP;         //# Common parmtable
+  ParmDB::ParmDB        itsMEP;         //# Common parmtable
   string                itsGSMMEPName;  //# GSM parameters parmtable name
-  ParmTable             itsGSMMEP;      //# parmtable for GSM parameters
+  ParmDB::ParmDB        itsGSMMEP;      //# parmtable for GSM parameters
   MeqParmGroup          itsParmGroup;   //# container for all parms
   bool                  itsCalcUVW;
 

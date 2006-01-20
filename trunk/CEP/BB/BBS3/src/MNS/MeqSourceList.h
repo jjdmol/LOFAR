@@ -28,9 +28,13 @@
 
 //# Includes
 #include <BBS3/MNS/MeqPointSource.h>
+#include <ParmDB/ParmDB.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
+
+//# Forward Declarations
+class MeqParmGroup;
 
 // \ingroup BBS3
 // \addtogroup MNS
@@ -41,10 +45,10 @@ class MeqSourceList
 public:
   // The default constructor.
   MeqSourceList()
-    {};
+    {}
 
-  // Add a source.
-  void add (const MeqPointSource&);
+  // Fill the source list from the sources in the parm table.
+  MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup* group);
 
   // Get the number of sources to be used.
   int size() const
@@ -63,6 +67,9 @@ public:
   void setSelected (const vector<int>&);
   
 private:
+  // Add a source.
+  void add (const MeqPointSource&);
+
   vector<MeqPointSource> itsSources;
   vector<int>            itsSelected;
 };

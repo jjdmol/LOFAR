@@ -162,7 +162,7 @@ void DH_Prediff::setDomain(double fStart, double fEnd, double tStart, double tEn
   *itsEndTime = tEnd;
 }
 
-void DH_Prediff::dump()
+void DH_Prediff::dump() const
 {
   cout << "DH_Prediff: " << endl;
   cout << "Parm data : " << endl;
@@ -171,7 +171,7 @@ void DH_Prediff::dump()
   cout << "Start time = " << getStartTime() << endl;
   cout << "End time = " << getEndTime() << endl;
   vector<ParmData> pData;
-  getParmData(pData);
+  const_cast<DH_Prediff*>(this)->getParmData(pData);
   for (uint i=0; i<pData.size(); i++)
   {
     cout << pData[i] << endl;

@@ -43,10 +43,12 @@ MeqParm::~MeqParm()
   itsGroup->remove (itsParmId);
 }
 
-ParmTableData MeqParm::getParmTableData() const
+ParmDB::ParmDBMeta MeqParm::getParmDBMeta() const
 {
-  return ParmTableData();
+  return ParmDB::ParmDBMeta();
 }
+
+
 
 MeqParmGroup::MeqParmGroup()
   : itsNparm (0)

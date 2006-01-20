@@ -86,7 +86,7 @@ public:
   // Resets (clears) the contents of its DataPacket 
   void clearData();
   
-  void dump();
+  virtual void dump() const;
 
  protected:
   virtual string createInsertStatement(TH_DB* th);

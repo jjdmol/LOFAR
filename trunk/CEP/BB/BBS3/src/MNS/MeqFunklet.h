@@ -29,6 +29,7 @@
 //# Includes
 #include <BBS3/MNS/MeqDomain.h>
 #include <BBS3/MNS/MeqMatrix.h>
+#include <ParmDB/ParmValue.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
@@ -54,7 +55,16 @@ public:
   // By default a relative perturbation of 10^-6 is used.
   MeqFunklet();
 
+  // Create the funklet from a parm value.
+  explicit MeqFunklet (const ParmDB::ParmValue& pvalue);
+
+  // Copy constructor.
+  MeqFunklet (const MeqFunklet&);
+
   virtual ~MeqFunklet();
+
+  // Assignment.
+  MeqFunklet& operator= (const MeqFunklet&);
 
   // Calculate the value and possible perturbations.
   virtual MeqResult getResult (const MeqRequest&) = 0;
@@ -63,36 +73,23 @@ public:
   int ncoeff() const
     { return itsCoeff.nelements(); }
 
+  // Set the coefficients and optional mask.
+  void setCoeff (const MeqMatrix& value, const bool* mask = 0);
+
   // Get the coefficients.
   const MeqMatrix& getCoeff() const
     { return itsCoeff; }
 
-  // Set the coefficients. The mask is set to all true.
-  void setCoeff (const MeqMatrix& coeff);
+  // Get the perturbation.
+  double getPerturbation() const
+    { return itsParmValue.rep().itsPerturbation; }
 
-  // Set the coefficients and mask.
-  void setCoeff (const MeqMatrix& coeff, const casa::Matrix<bool>& mask);
-
-  // Set the coefficients only. The mask is left alone.
-  void setCoeffOnly (const MeqMatrix& coeff);
+  // Set the domain.
+  void setDomain (const MeqDomain&);
 
   // Get the domain.
   const MeqDomain& domain() const
     { return itsDomain; }
-
-  // Set the domain.
-  void setDomain (const MeqDomain& domain)
-    { itsDomain = domain; }
-
-  // Get the perturbation.
-  double getPerturbation() const
-    { return itsPertValue; }
-  bool isRelativePerturbation() const
-    { return itsIsRelPert; }
-
-  void setPerturbation (double perturbation = 1e-6,
-			bool isRelativePerturbation = true)
-    { itsPertValue = perturbation; itsIsRelPert = isRelativePerturbation; }
 
   // Make the coefficients non-solvable.
   void clearSolvable();
@@ -108,6 +105,10 @@ public:
   void getCurrentValue (MeqMatrix& value) const
     { value = itsCoeff; }
 
+  // Get the parm value.
+  const ParmDB::ParmValue& getParmValue() const
+    { return itsParmValue; }
+
   // Update the solvable coefficients with the new values taken at
   // the spid index from the vector.
   void update (const vector<double>& values);
@@ -115,72 +116,13 @@ public:
   // Update the solvable coefficients with the new values.
   void update (const MeqMatrix& value);
 
-  // Set the original simulation coefficients.
-  void setSimCoeff (const MeqMatrix& coeff)
-    { itsSimCoeff = coeff; }
-
-  // Set the perturbation of the simulation coefficients.
-  void setPertSimCoeff (const MeqMatrix& coeff)
-    { itsPertSimCoeff = coeff; }
-
-  // Get the original simulation coefficients.
-  const MeqMatrix& getSimCoeff() const
-    { return itsSimCoeff; }
-
-  // Get the perturbation of the simulation coefficients.
-  const MeqMatrix& getPertSimCoeff() const
-    { return itsPertSimCoeff; }
-
-  // Set the zero-points of the funklet.
-  void setX0 (double x0)
-    { itsX0 = x0; }
-  void setY0 (double y0)
-    { itsY0 = y0; }
-
-  // Set the scales of the funklet.
-  void setXScale (double xScale)
-    { itsXScale = xScale; }
-  void setYScale (double yScale)
-    { itsYScale = yScale; }
-
-  // Get the zero-points of the funklet.
-  double getX0() const
-    { return itsX0; }
-  double getY0() const
-    { return itsY0; }
-
-  // Get the scales of the funklet.
-  double getXScale() const
-    { return itsXScale; }
-  double getYScale() const
-    { return itsYScale; }
-
-  // Set the ID of the funklet in the database table.
-  void setID (int id)
-    { itsID = id; }
-
-  // Get the ID of the funklet in the database table.
-  int getID() const
-    { return itsID; }
-
 protected:
   MeqMatrix    itsCoeff;
-  MeqMatrix    itsSimCoeff;
-  MeqMatrix    itsPertSimCoeff;
-  MeqMatrix    itsPerturbation;
+  MeqMatrix    itsCoeffPert;
   MeqDomain    itsDomain;
-  vector<bool> itsMask;
-  vector<int>  itsSpidInx;     //# -1 is not solvable
+  vector<int>  itsSpidInx;     //# empty is not solvable
   int          itsMaxNrSpid;
-  double       itsPertValue;
-  bool         itsIsRelPert;   //# true = perturbation is relative
-  double       itsX0;
-  double       itsY0;
-  double       itsXScale;
-  double       itsYScale;
-  int          itsID;          //# ID of funklet in database
-                               //#   -1 = might be new
-                               //#   -2 = certainly new
+  ParmDB::ParmValue itsParmValue;
 };
 
 // @}

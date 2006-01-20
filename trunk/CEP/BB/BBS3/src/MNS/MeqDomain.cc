@@ -46,6 +46,21 @@ MeqDomain::MeqDomain (double startX, double endX,
   itsScaleY  = (endY - startY) * .5;
 }
 
+MeqDomain::MeqDomain (const ParmDB::ParmDomain& pdomain)
+{
+  ASSERTSTR (pdomain.getStart().size() == 2,
+	     "BBS only supports 2-dim funklets and domains");
+  itsOffsetX = (pdomain.getEnd()[0] + pdomain.getStart()[0]) * .5;
+  itsScaleX  = (pdomain.getEnd()[0] - pdomain.getStart()[0]) * .5;
+  itsOffsetY = (pdomain.getEnd()[1] + pdomain.getStart()[1]) * .5;
+  itsScaleY  = (pdomain.getEnd()[1] - pdomain.getStart()[1]) * .5;
+}
+
+ParmDB::ParmDomain MeqDomain::toParmDomain() const
+{
+  return ParmDB::ParmDomain (startX(), endX(), startY(), endY());
+}
+
 std::ostream& operator<< (std::ostream& os, const MeqDomain& domain)
 {
   os << "[(" << domain.startX() << ',' << domain.endX() << "),("

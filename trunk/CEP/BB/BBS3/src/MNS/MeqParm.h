@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQPARM_H)
+#ifndef MNS_MEQPARM_H
 #define MNS_MEQPARM_H
 
 // \file
@@ -29,7 +29,7 @@
 //# Includes
 #include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqResult.h>
-#include <BBS3/MNS/ParmTableData.h>
+#include <ParmDB/ParmDBMeta.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
@@ -64,8 +64,8 @@ public:
   void setName (const string& name)
     { itsName = name; }
 
-  // Get the ParmTableInfo
-  virtual ParmTableData getParmTableData() const;
+  // Get the ParmDBInfo
+  virtual ParmDB::ParmDBMeta getParmDBMeta() const;
 
   // Get the parameter id.
   unsigned int getParmId() const

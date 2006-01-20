@@ -48,6 +48,12 @@ public:
   MeqPolc()
     {}
 
+  // Create a polc from a ParmValue object.
+  MeqPolc (const ParmDB::ParmValue&);
+
+  // Convert a polc to a ParmValue object.
+  ParmDB::ParmValue toParmValue() const;
+
   virtual ~MeqPolc();
 
   // Calculate the value and possible perturbations.

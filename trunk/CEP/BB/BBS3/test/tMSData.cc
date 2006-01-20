@@ -82,22 +82,15 @@ void doIt (const string& msName, Prediffer& prediff, const string& column,
 int main(int argc, char** argv)
 {
   try {
-    if (argc < 3) {
+    if (argc < 6) {
       cout << "Run as:  tMSData ms user msname meqparmtable skyparmtable [datacolumn]" << endl;
       cout << "   datacolumn defaults to MODEL_DATA" << endl;
       return 0;
     }
 
     // Read the info for the ParmTables
-    ACC::APS::ParameterSet ps;
-    string meqModelName(argv[4]);
-    string skyModelName(argv[5]);
-    ps["meqModel"] = meqModelName;
-    ps["skyModel"] = skyModelName;
-    ps["DBType"] = "aips";
-    ParmTableData meqPdt("meqModel", ps);
-    ParmTableData skyPdt("skyModel", ps);
-
+    ParmDB::ParmDBMeta meqPdm("aips", argv[4]);
+    ParmDB::ParmDBMeta skyPdm("aips", argv[5]);
 
     string column("MODEL_DATA");
     if (argc > 6) {
@@ -108,7 +101,7 @@ int main(int argc, char** argv)
       antVec[i] = i;
     }
     vector<vector<int> > srcgrp;
-    Prediffer pre (argv[3], "meqModel", meqPdt, "skyModel", skyPdt, 
+    Prediffer pre (argv[3], "meqModel", meqPdm, "skyModel", skyPdm, 
 		   antVec, "", srcgrp, false);
     doIt (argv[1], pre, column, 0, 50);
     doIt (argv[1], pre, column, 10,10);

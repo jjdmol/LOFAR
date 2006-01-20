@@ -28,7 +28,6 @@
 #include <BBS3/DH_WOPrediff.h>
 #include <BBS3/DH_WOSolve.h>
 #include <BBS3/BBSTestLogger.h>
-#include <BBS3/MNS/ParmTable.h>
 
 namespace LOFAR
 {
@@ -222,21 +221,6 @@ bool SC_Simple::execute()
   //WOSolve->dump();
 
   //  cout << "!!!!!!! " << endl;
-
-  if (itsWriteParms || itsControlParmUpd) // If Controller writes parameters
-  {
-    BBSTest::ScopedTimer syncTimer("C:SyncTimer");
-    // Sync the parmtables so the prediffers read the newest values of the parms
-    vector<ParmData> pData;
-    getSolution()->getSolution(pData);
-    if (pData.size() > 0) {
-      ParmTable ptab(pData.back().getParmTableData());
-      // sync is now only implemented by ParmTableBDBRepl
-      // if a sync is called on a table, all tables in that replication group are synced
-      // right now all our tables are in the same replication group
-      ptab.sync();
-    }
-  }
 
   // Insert WorkOrders into database
   BBSTest::ScopedTimer st("C:putWOinDB");

@@ -33,6 +33,14 @@ using namespace casa;
 namespace LOFAR {
 
 
+MeqPolc::MeqPolc (const ParmDB::ParmValue& pvalue)
+: MeqFunklet (pvalue)
+{
+  const ParmDB::ParmValueRep& pval = pvalue.rep();
+  ASSERTSTR (pval.itsType == "polc",
+	     "Funklet in ParmValue is not of type 'polc'");
+}
+
 MeqPolc::~MeqPolc()
 {}
 
@@ -61,10 +69,10 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     if (makeDiff) {
       result.setPerturbedValue (itsSpidInx[0],
 				MeqMatrix(itsCoeff.getDouble()
-					  + itsPerturbation.getDouble()));
-      result.setPerturbation (itsSpidInx[0], itsPerturbation.getDouble());
+					  + itsCoeffPert.getDouble()));
+      result.setPerturbation (itsSpidInx[0], itsCoeffPert.getDouble());
 // 	cout << "polc " << itsSpidInx[0] << ' ' << result.getValue()
-// 	     << result.getPerturbedValue(itsSpidInx[0]) << itsPerturbation
+// 	     << result.getPerturbedValue(itsSpidInx[0]) << itsCoeffPert
 // 	     << ' ' << itsCoeff << endl;
     }
   } else {
@@ -87,7 +95,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     const double* pertData = 0;
     double* pertValPtr[100];
     if (makeDiff) {
-      pertData = itsPerturbation.doubleStorage();
+      pertData = itsCoeffPert.doubleStorage();
       // Create the matrix for each perturbed value.
       // Keep a pointer to the internal matrix data.
       for (unsigned int i=0; i<itsSpidInx.size(); i++) {
@@ -96,6 +104,8 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 				    MeqMatrix(double(0), ndx, ndy));
 	  pertValPtr[i] =
 	    result.getPerturbedValueRW(itsSpidInx[i]).doubleStorage();
+	} else {
+	  pertValPtr[i] = 0;
 	}
       }
     }
@@ -168,7 +178,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     }
     // Set the perturbations.
     if (makeDiff) {
-      const double* pert = itsPerturbation.doubleStorage();
+      const double* pert = itsCoeffPert.doubleStorage();
       for (unsigned int i=0; i<itsSpidInx.size(); i++) {
 	if (itsSpidInx[i] >= 0) {
 	  result.setPerturbation (itsSpidInx[i], pert[i]);
@@ -204,9 +214,9 @@ MeqResult MeqPolc::getAnResult (const MeqRequest& request)
     if (makeDiff) {
       result.setPerturbedValue (itsSpidInx[0],
 				MeqMatrix(1.));
-      result.setPerturbation (itsSpidInx[0], itsPerturbation.getDouble());
+      result.setPerturbation (itsSpidInx[0], itsCoeffPert.getDouble());
 // 	cout << "polc " << itsSpidInx[0] << ' ' << result.getValue()
-// 	     << result.getPerturbedValue(itsSpidInx[0]) << itsPerturbation
+// 	     << result.getPerturbedValue(itsSpidInx[0]) << itsCoeffPert
 // 	     << ' ' << itsCoeff << endl;
     }
   } else {
@@ -236,6 +246,8 @@ MeqResult MeqPolc::getAnResult (const MeqRequest& request)
 				    MeqMatrix(double(0), ndx, ndy));
 	  pertValPtr[i] =
 	    result.getPerturbedValueRW(itsSpidInx[i]).doubleStorage();
+	} else {
+	  pertValPtr[i] = 0;
 	}
       }
     }
@@ -307,7 +319,7 @@ MeqResult MeqPolc::getAnResult (const MeqRequest& request)
     }
     // Set the perturbations.
     if (makeDiff) {
-      const double* pert = itsPerturbation.doubleStorage();
+      const double* pert = itsCoeffPert.doubleStorage();
       for (unsigned int i=0; i<itsSpidInx.size(); i++) {
 	if (itsSpidInx[i] >= 0) {
 	  result.setPerturbation (itsSpidInx[i], pert[i]);

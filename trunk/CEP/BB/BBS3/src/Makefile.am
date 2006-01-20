@@ -1,4 +1,4 @@
-INSTHDRS          = 				\
+pkginclude_HEADERS = \
 DH_Solution.h                                   \
 DH_WOSolve.h					\
 DH_WOPrediff.h					\
@@ -18,6 +18,10 @@ Prediffer.h					\
 Solver.h					\
 ParmData.h					\
 ParmWriter.h					\
+BBSTestLogger.h
+
+pkginclude_MNSdir = $(pkgincludedir)/MNS
+pkginclude_MNS_HEADERS = \
 MNS/MeqBaseDFTPS.h \
 MNS/MeqBaseLinPS.h \
 MNS/MeqDFTPS.h \
@@ -56,23 +60,10 @@ MNS/MeqSourceList.h \
 MNS/MeqStatExpr.h \
 MNS/MeqStation.h \
 MNS/MeqStatUVW.h \
-MNS/MeqStoredParmPolc.h \
-MNS/ParmTableAIPS.h \
-MNS/ParmTableBDB.h\
-MNS/ParmTableBDBRepl.h\
-MNS/ParmTable.h\
-MNS/ParmTableData.h\
-BBSTestLogger.h
+MNS/MeqStoredParmPolc.h
 
-NOINSTHDRS =
+noinst_HEADERS =
 
-TCCHDRS =
-
-pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES = libbbs3.la
 
@@ -132,23 +123,13 @@ MNS/MeqStatExpr.cc \
 MNS/MeqStation.cc \
 MNS/MeqStatUVW.cc \
 MNS/MeqStoredParmPolc.cc \
-MNS/ParmTableAIPS.cc \
-MNS/ParmTableBDB.cc\
-MNS/ParmTableBDBRepl.cc\
-MNS/ParmTable.cc\
-MNS/ParmTableData.cc\
 BBSTestLogger.cc
 
 
-
 #bin_PROGRAMS = BlackBoardDemo fillsqldb
-bin_PROGRAMS = BBS3 parmdb psReader
+bin_PROGRAMS = BBS3 psReader
 
 psReader_SOURCES = ParameterSetReader.cc
-
-parmdb_SOURCES = MNS/parmdb.cc
-parmdb_LDADD = libbbs3.la
-parmdb_DEPENDENCIES = libbbs3.la $(LOFAR_DEPEND)
 
 BBS3_SOURCES = BBS3.cc
 BBS3_LDADD = libbbs3.la

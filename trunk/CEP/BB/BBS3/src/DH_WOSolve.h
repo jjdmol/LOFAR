@@ -95,7 +95,7 @@ public:
   bool getCleanUp() const;
   void setCleanUp(bool clean);
 
-  void dump() const;
+  virtual void dump() const;
 
   void clearData();
 

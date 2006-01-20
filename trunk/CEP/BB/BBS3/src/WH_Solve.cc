@@ -168,7 +168,7 @@ void WH_Solve::process()
       Quality resultQuality;
       // Do the solve
       vector<double> res = solver->getSolvableValues();
-      char strVal[20];
+//       char strVal[20];
 //       cout << "Iteration " << wo->getIteration()+ curIter << endl;
 //           cout << "Before: [ " ;
 //           for (unsigned int i = 0; i < res.size(); i++)
