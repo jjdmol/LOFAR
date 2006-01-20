@@ -31,7 +31,7 @@
 #include <PL/Query/Expr.h>
 #include <PL/Query/ExprNode.h>
 #include <PL/Collection.h>
-#include <string>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -56,19 +56,19 @@ namespace LOFAR
       {
       public:
         // Construct a between expression node. 
-        BetweenExprNode(const std::string& oper, const Expr& value, 
+        BetweenExprNode(const string& oper, const Expr& value, 
                         const Expr& lower, const Expr& upper);
 
         virtual ~BetweenExprNode();
 
-        virtual void print(std::ostream& os) const;
+        virtual void print(ostream& os) const;
 
         virtual Expr getConstraint() const;
 
       private:
 
         // \name The operation
-        const std::string itsOperation;
+        const string itsOperation;
 
         // \name The operands
         // @{
@@ -90,19 +90,19 @@ namespace LOFAR
       {
       public:
         // Construct an IN expression node.
-        InExprNode(const std::string oper,
+        InExprNode(const string oper,
                    const Expr& lhs, const Collection<Expr>& rhs);
 
         virtual ~InExprNode();
 
-        virtual void print(std::ostream& os) const;
+        virtual void print(ostream& os) const;
  
         virtual Expr getConstraint() const;
 
      private:
  
         // \name The operation
-        const std::string itsOperation;
+        const string itsOperation;
 
         // \name The operands
         // @{
@@ -140,24 +140,24 @@ namespace LOFAR
       class LikeExprNode : public ExprNode
       {
       public:
-        LikeExprNode(const std::string& oper, const Expr& value, 
-                     const std::string& pattern);
+        LikeExprNode(const string& oper, const Expr& value, 
+                     const string& pattern);
 
         virtual ~LikeExprNode();
         
-        virtual void print(std::ostream& os) const;
+        virtual void print(ostream& os) const;
 
         virtual Expr getConstraint() const;
 
      private:
  
         // \name The operation
-        const std::string itsOperation;
+        const string itsOperation;
 
         // \name The operands
         // @{
         const Expr        itsOperand;
-        const std::string itsPattern;
+        const string itsPattern;
         // @}
 
       };

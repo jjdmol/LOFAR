@@ -25,7 +25,7 @@
 #include <PL/Query/UnaryExprNode.h>
 #include <PL/Query/BinaryExprNode.h>
 #include <PL/Query/SQLExprNode.h>
-#include <iostream>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
@@ -53,7 +53,7 @@ namespace LOFAR
       {
       }
 
-      Expr::Expr(const std::string& value) : 
+      Expr::Expr(const string& value) : 
         itsNode(new StringExprNode(value))
       {
       }
@@ -73,7 +73,7 @@ namespace LOFAR
       //                          Public methods                       //
       ///////////////////////////////////////////////////////////////////
 
-      void Expr::print(std::ostream& os) const
+      void Expr::print(ostream& os) const
       {
         itsNode->print(os);
       }
@@ -133,12 +133,12 @@ namespace LOFAR
         return new InExprNode(" NOT IN ", *this, set);
       }
 
-      Expr Expr::like (const std::string& str) const
+      Expr Expr::like (const string& str) const
       {
         return new LikeExprNode(" LIKE ", *this, str);
       }
 
-      Expr Expr::notLike (const std::string& str) const
+      Expr Expr::notLike (const string& str) const
       {
         return new LikeExprNode(" NOT LIKE ", *this, str);
       }
@@ -227,7 +227,7 @@ namespace LOFAR
       //                     I/O stream operators                      //
       ///////////////////////////////////////////////////////////////////
 
-      std::ostream& operator<< (std::ostream& os, const Expr& exp)
+      ostream& operator<< (ostream& os, const Expr& exp)
       {
         exp.print(os);
         Expr cs(exp.getConstraint());

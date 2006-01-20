@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include <PL/Query/ColumnExprNode.h>
-#include <iostream>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
@@ -30,8 +30,8 @@ namespace LOFAR
     namespace Query
     {
 
-      ColumnExprNode::ColumnExprNode(const std::string& tableName,
-                                     const std::string& columnName) :
+      ColumnExprNode::ColumnExprNode(const string& tableName,
+                                     const string& columnName) :
         itsTableName(tableName),
         itsColumnName(columnName)
       {
@@ -41,7 +41,7 @@ namespace LOFAR
       {
       }
 
-      void ColumnExprNode::print(std::ostream& os) const
+      void ColumnExprNode::print(ostream& os) const
       {
         os << itsTableName << "." << itsColumnName;
       }

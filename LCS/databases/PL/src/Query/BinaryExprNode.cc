@@ -22,7 +22,7 @@
 
 #include <PL/Query/BinaryExprNode.h>
 #include <PL/Exception.h>
-#include <iostream>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
@@ -31,7 +31,7 @@ namespace LOFAR
     namespace Query
     {
 
-      BinaryExprNode::BinaryExprNode(const std::string& oper, 
+      BinaryExprNode::BinaryExprNode(const string& oper, 
                                      const Expr& lhs, const Expr& rhs) :
         itsOperation(oper), 
         itsLeft(lhs), itsRight(rhs)
@@ -44,7 +44,7 @@ namespace LOFAR
       {
       }
 
-      void BinaryExprNode::print(std::ostream& os) const
+      void BinaryExprNode::print(ostream& os) const
       {
         os << "(";
         itsLeft.print(os);
