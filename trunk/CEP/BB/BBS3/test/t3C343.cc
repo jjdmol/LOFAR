@@ -225,8 +225,8 @@ int main (int argc, const char* argv[])
     cout << "       dbtype:       " << dbtype << endl;
 
     // Read the info for the ParmTables
-    ParmDB::ParmDBMeta meqPdm("aips", argv[3]);
-    ParmDB::ParmDBMeta skyPdm("aips", argv[4]);
+    ParmDB::ParmDBMeta meqPdm(dbtype, argv[3]);
+    ParmDB::ParmDBMeta skyPdm(dbtype, argv[4]);
 
     // Do a solve.
     {
@@ -245,7 +245,7 @@ int main (int argc, const char* argv[])
 	grp1.push_back (2);
 	srcgrp.push_back (grp1);
       }
-      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 
 		     antVec, argv[5], srcgrp, calcuvw);
       // Do a further selection; only XX,YY and no autocorrelations.
       vector<int> corr(2,0);

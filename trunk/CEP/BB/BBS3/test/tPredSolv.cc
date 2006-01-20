@@ -243,7 +243,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 
 		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -269,7 +269,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 
 		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -293,9 +293,9 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 
 		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
-      Prediffer pre2(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
+      Prediffer pre2(argv[2], meqPdm, skyPdm, 
 		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -320,7 +320,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 4*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 
 		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Only use first correlation.
       vector<int> corrVec(1, 0);
@@ -342,7 +342,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], "meqModel", meqPdm, "skyModel", skyPdm, 
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 
 		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);

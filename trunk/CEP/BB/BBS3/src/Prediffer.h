@@ -75,9 +75,7 @@ public:
   // For postgres the database name has to be given as well.
   // The UVW coordinates can be recalculated or taken from the MS.
   Prediffer (const string& msName,
-	     const string& meqModelName,
 	     const ParmDB::ParmDBMeta& meqPtd,
-	     const string& skyModelName,
 	     const ParmDB::ParmDBMeta& skyPtd,
 	     const vector<int>& ant,
 	     const string& modelType,

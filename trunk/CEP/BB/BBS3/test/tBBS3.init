@@ -2,6 +2,8 @@
 
 MSDIR=/data/PSS3/diepen/BBS2
 
+blddir=`pwd | sed -e 's%.*/BBS3/\(build/[^/]*\)/.*%\1%'`
+
 rm -rf tBBS3_tmp
 mkdir tBBS3_tmp
 cd tBBS3_tmp
@@ -12,7 +14,7 @@ ln -s ../../../../src/clearBB .
 ln -s ../../../../src/initparms .
 ln -s ../../../../test/run.test* .
 ln -s ../../src/BBS3 tBBS3 
-ln -s ../../src/parmdb . 
+ln -s ../../../../../ParmDB/$blddir/src/parmdb . 
 ln -s ../../../../test/generalinfo.sh .
 ln -s ../../../../test/cp2web.sh .
 ln -s ../../../../test/tBBS3.machinefile tBBS3_tmp.machinefile

@@ -101,7 +101,7 @@ int main(int argc, char** argv)
       antVec[i] = i;
     }
     vector<vector<int> > srcgrp;
-    Prediffer pre (argv[3], "meqModel", meqPdm, "skyModel", skyPdm, 
+    Prediffer pre (argv[3], meqPdm, skyPdm, 
 		   antVec, "", srcgrp, false);
     doIt (argv[1], pre, column, 0, 50);
     doIt (argv[1], pre, column, 10,10);
