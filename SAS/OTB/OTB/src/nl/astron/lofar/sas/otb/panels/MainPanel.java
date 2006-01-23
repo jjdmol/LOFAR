@@ -66,14 +66,14 @@ public class MainPanel extends javax.swing.JPanel
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        buttonPanel1 = new nl.astron.lofar.otbcomponents.ButtonPanel();
+        buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        tablePanel1 = new nl.astron.lofar.otbcomponents.TablePanel();
-        tablePanel2 = new nl.astron.lofar.otbcomponents.TablePanel();
-        tablePanel3 = new nl.astron.lofar.otbcomponents.TablePanel();
-        tablePanel4 = new nl.astron.lofar.otbcomponents.TablePanel();
-        tablePanel5 = new nl.astron.lofar.otbcomponents.TablePanel();
-        tablePanel6 = new nl.astron.lofar.otbcomponents.TablePanel();
+        tablePanel1 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        tablePanel2 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        tablePanel3 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        tablePanel4 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        tablePanel5 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        tablePanel6 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -109,14 +109,14 @@ public class MainPanel extends javax.swing.JPanel
     private MainFrame itsMainFrame;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.otbcomponents.ButtonPanel buttonPanel1;
+    private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private nl.astron.lofar.otbcomponents.TablePanel tablePanel1;
-    private nl.astron.lofar.otbcomponents.TablePanel tablePanel2;
-    private nl.astron.lofar.otbcomponents.TablePanel tablePanel3;
-    private nl.astron.lofar.otbcomponents.TablePanel tablePanel4;
-    private nl.astron.lofar.otbcomponents.TablePanel tablePanel5;
-    private nl.astron.lofar.otbcomponents.TablePanel tablePanel6;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel1;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel2;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel3;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel4;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel5;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel6;
     // End of variables declaration//GEN-END:variables
     
 }

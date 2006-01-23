@@ -11,7 +11,7 @@
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
   <SubComponents>
-    <Component class="nl.astron.lofar.otbcomponents.ButtonPanel" name="buttonPanel1">
+    <Component class="nl.astron.lofar.sas.otbcomponents.ButtonPanel" name="buttonPanel1">
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonPanel1ActionPerformed"/>
       </Events>
@@ -30,7 +30,7 @@
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
       <SubComponents>
-        <Component class="nl.astron.lofar.otbcomponents.TablePanel" name="tablePanel1">
+        <Component class="nl.astron.lofar.sas.otbcomponents.TablePanel" name="tablePanel1">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="tab1">
@@ -39,7 +39,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.otbcomponents.TablePanel" name="tablePanel2">
+        <Component class="nl.astron.lofar.sas.otbcomponents.TablePanel" name="tablePanel2">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="tab2">
@@ -48,7 +48,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.otbcomponents.TablePanel" name="tablePanel3">
+        <Component class="nl.astron.lofar.sas.otbcomponents.TablePanel" name="tablePanel3">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="tab3">
@@ -57,7 +57,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.otbcomponents.TablePanel" name="tablePanel4">
+        <Component class="nl.astron.lofar.sas.otbcomponents.TablePanel" name="tablePanel4">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="tab4">
@@ -66,7 +66,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.otbcomponents.TablePanel" name="tablePanel5">
+        <Component class="nl.astron.lofar.sas.otbcomponents.TablePanel" name="tablePanel5">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="tab5">
@@ -75,7 +75,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.otbcomponents.TablePanel" name="tablePanel6">
+        <Component class="nl.astron.lofar.sas.otbcomponents.TablePanel" name="tablePanel6">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="tab6">

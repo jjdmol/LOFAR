@@ -179,7 +179,7 @@ public class MainFrame extends javax.swing.JFrame {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        statusPanelMainFrame = new nl.astron.lofar.otbcomponents.StatusPanel();
+        statusPanelMainFrame = new nl.astron.lofar.sas.otbcomponents.StatusPanel();
         jToolBarPlugins = new javax.swing.JToolBar();
         jMenuBarMainFrame = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
@@ -320,8 +320,8 @@ public class MainFrame extends javax.swing.JFrame {
     /** Registers the panels that every user has to see
      */
     private void registerDefaultPlugins() {
-        registerPlugin("nl.astron.lofar.otb.panels.MainPanel", false, true);
-        registerPlugin("nl.astron.lofar.otb.panels.SamplePanel",true,true);
+        registerPlugin("nl.astron.lofar.sas.otb.panels.MainPanel", false, true);
+        registerPlugin("nl.astron.lofar.sas.otb.panels.SamplePanel",true,true);
     }
 
     /** Registers other panels
@@ -354,7 +354,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenuPlugins;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JToolBar jToolBarPlugins;
-    private nl.astron.lofar.otbcomponents.StatusPanel statusPanelMainFrame;
+    private nl.astron.lofar.sas.otbcomponents.StatusPanel statusPanelMainFrame;
     // End of variables declaration//GEN-END:variables
     
 }
