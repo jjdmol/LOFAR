@@ -4,11 +4,10 @@
  * Created on January 13, 2006, 2:58 PM
  */
 
-package nl.astron.lofar.otb.panels;
-
-import nl.astron.lofar.otb.*;
-import nl.astron.lofar.otb.util.*;
+package nl.astron.lofar.sas.otb.panels;
 import org.apache.log4j.Logger;
+import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.util.UserAccount;
 
 /**
  *
@@ -74,6 +73,7 @@ public class MainPanel extends javax.swing.JPanel
         tablePanel3 = new nl.astron.lofar.otbcomponents.TablePanel();
         tablePanel4 = new nl.astron.lofar.otbcomponents.TablePanel();
         tablePanel5 = new nl.astron.lofar.otbcomponents.TablePanel();
+        tablePanel6 = new nl.astron.lofar.otbcomponents.TablePanel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -95,13 +95,15 @@ public class MainPanel extends javax.swing.JPanel
 
         jTabbedPane1.addTab("tab5", tablePanel5);
 
+        jTabbedPane1.addTab("tab6", tablePanel6);
+
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
     }
     // </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        logger.debug("actionPerformed: " + evt);
+        logger.debug("actionPerformed: " + evt.getActionCommand());
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
     private MainFrame itsMainFrame;
@@ -114,6 +116,7 @@ public class MainPanel extends javax.swing.JPanel
     private nl.astron.lofar.otbcomponents.TablePanel tablePanel3;
     private nl.astron.lofar.otbcomponents.TablePanel tablePanel4;
     private nl.astron.lofar.otbcomponents.TablePanel tablePanel5;
+    private nl.astron.lofar.otbcomponents.TablePanel tablePanel6;
     // End of variables declaration//GEN-END:variables
     
 }
