@@ -63,6 +63,8 @@ lofar_INTERNAL(Demo/CEP/TFlopCorrelator/TFC_Interface,TFC_Interface,,1,TFC_Inter
 dnl The property interface is not used right now
 dnl lofar_INTERNAL(MAC/GCF/GCFCommon,GCFCommon,,1,GCF/GCF_PVString.h,gcfcommon)
 dnl lofar_INTERNAL(MAC/GCF/PALlight,PALlight,,1,GCF/PALlight/CEPPropertySet.h,gcfceppallight)
+lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
+
 
 dnl
 dnl Output Makefiles
