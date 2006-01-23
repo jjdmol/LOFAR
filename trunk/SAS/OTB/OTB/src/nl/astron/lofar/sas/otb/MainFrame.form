@@ -59,7 +59,7 @@
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
   <SubComponents>
-    <Component class="nl.astron.lofar.otbcomponents.StatusPanel" name="statusPanelMainFrame">
+    <Component class="nl.astron.lofar.sas.otbcomponents.StatusPanel" name="statusPanelMainFrame">
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
           <BorderConstraints direction="South"/>

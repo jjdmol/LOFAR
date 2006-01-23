@@ -47,7 +47,7 @@ public class SamplePanel extends javax.swing.JPanel
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        buttonPanel1 = new nl.astron.lofar.otbcomponents.ButtonPanel();
+        buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
@@ -86,7 +86,7 @@ public class SamplePanel extends javax.swing.JPanel
     private MainFrame itsMainFrame;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.otbcomponents.ButtonPanel buttonPanel1;
+    private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JTextField jTextField1;
