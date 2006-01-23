@@ -8,14 +8,14 @@
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package nl.astron.lofar.otb.panels;
+package nl.astron.lofar.sas.otb.panels;
 
 /**
  *
  * @author blaakmeer
  */
 public interface IPluginPanel {
-    public void initializePlugin(nl.astron.lofar.otb.MainFrame mainframe);
+    public void initializePlugin(nl.astron.lofar.sas.otb.MainFrame mainframe);
     public String getFriendlyName();
 
 }

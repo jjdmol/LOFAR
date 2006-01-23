@@ -8,7 +8,7 @@
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package nl.astron.lofar.otb.util;
+package nl.astron.lofar.sas.otb.util;
 
 import java.io.*;
 

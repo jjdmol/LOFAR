@@ -4,11 +4,9 @@
  * Created on January 13, 2006, 2:58 PM
  */
 
-package nl.astron.lofar.otb.panels;
-
-import nl.astron.lofar.otb.*;
-import nl.astron.lofar.otb.util.*;
+package nl.astron.lofar.sas.otb.panels;
 import org.apache.log4j.Logger;
+import nl.astron.lofar.sas.otb.MainFrame;
 
 /**
  *

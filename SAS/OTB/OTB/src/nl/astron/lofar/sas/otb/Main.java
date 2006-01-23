@@ -8,7 +8,7 @@
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package nl.astron.lofar.otb;
+package nl.astron.lofar.sas.otb;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;

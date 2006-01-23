@@ -4,15 +4,18 @@
  * Created on January 11, 2006, 9:31 AM
  */
 
-package nl.astron.lofar.otb;
+package nl.astron.lofar.sas.otb;
 
 import java.util.*;
 import javax.swing.*;
 import org.apache.log4j.Logger;
-import nl.astron.lofar.otb.util.*;
-import nl.astron.lofar.otb.panels.*;
-import nl.astron.lofar.otb.exceptions.*;
-import nl.astron.lofar.otbcomponents.*;
+import nl.astron.lofar.sas.otb.exceptions.NoAccessException;
+import nl.astron.lofar.sas.otb.panels.IPluginPanel;
+import nl.astron.lofar.sas.otb.panels.MainPanel;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
+import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otbcomponents.LoginDialog;
+import nl.astron.lofar.sas.otbcomponents.StatusPanel;
 
 /**
  *
@@ -247,7 +250,7 @@ public class MainFrame extends javax.swing.JFrame {
       * @param evt 
      */
     private void pluginButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        logger.debug("Plugin selected: " + evt);
+        logger.debug("Plugin selected: " + evt.getActionCommand());
         showPanel(evt.getActionCommand());
     }
     

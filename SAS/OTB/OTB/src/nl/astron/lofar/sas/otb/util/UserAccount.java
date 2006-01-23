@@ -8,10 +8,10 @@
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package nl.astron.lofar.otb.util;
+package nl.astron.lofar.sas.otb.util;
 
-import nl.astron.lofar.otb.util.OtdbRmi;
-import nl.astron.lofar.otb.exceptions.*;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
+import nl.astron.lofar.sas.otb.exceptions.NoAccessException;
 
 /**
  *

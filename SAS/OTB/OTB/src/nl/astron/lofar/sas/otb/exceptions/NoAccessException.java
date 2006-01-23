@@ -8,7 +8,7 @@
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package nl.astron.lofar.otb.exceptions;
+package nl.astron.lofar.sas.otb.exceptions;
 
 /**
  *
