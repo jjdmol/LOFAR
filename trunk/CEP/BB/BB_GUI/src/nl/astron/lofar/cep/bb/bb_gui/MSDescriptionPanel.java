@@ -27,6 +27,10 @@ public class MSDescriptionPanel extends javax.swing.JDialog {
         itsGui=aGui;
         readOnly=ro;
         AcceptButton.setVisible(!readOnly);
+        if (readOnly) {
+            CancelButton.setText("Done");
+            CancelButton.setToolTipText("Done Viewing this file");
+        }
         DescriptionLabel.setText("Description for "+aFile.getName());
         readFile();
         DescriptionTextArea.setEditable(false);

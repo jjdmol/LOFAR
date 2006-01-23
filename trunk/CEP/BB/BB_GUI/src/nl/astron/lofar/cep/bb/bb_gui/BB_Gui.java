@@ -12,12 +12,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.NumberFormat;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
 import javax.swing.ListCellRenderer;
 
 /**
+ * BB_GUI is the 2nd version (and still a temporary solution) for a GUI to help ppl creating configuration files for 
+ * runs in CEP/BB
  *
  * @author  coolen
  */
@@ -46,6 +50,8 @@ public class BB_Gui extends javax.swing.JFrame {
     private boolean          flowSaved=false;
     private boolean          changed=false;
     
+    private NumberFormat     integerFormat;
+    
     
     private File             itsFlowFileName;
     /**
@@ -54,24 +60,38 @@ public class BB_Gui extends javax.swing.JFrame {
     public BB_Gui() {
         initComponents();
         
-        // The Main Configuration file representation
+        /**
+         * The Main Configuration file representation
+         */
         itsConfigFile = new BBSConfigFileRep();
+        /**
+         * The Panel where all the source patches will be maintained
+         */
         itsSourcePatchPanel = new SourcePatchPanel();
         
         
-        // The listmodels
+        /* 
+         * The listmodels
+         */
         itsSolvableParamsModel=new DefaultListModel();
-        itsExcludeParamsModel=new DefaultListModel();
-        itsFlowListModel=new DefaultListModel();
         solvableParamsInput.setModel(itsSolvableParamsModel);
+        itsExcludeParamsModel=new DefaultListModel();
         excludeParamsInput.setModel(itsExcludeParamsModel);
+        itsFlowListModel=new DefaultListModel();
         flowListInput.setModel(itsFlowListModel);
+        
+        /**
+         * Rendered for the Flowlist, to make it possible to have only the shortname in the list
+         * while keeping the complete PATH intact
+         */       
         ListCellRenderer aR=(ListCellRenderer)new FlowListRenderer();
         flowListInput.setCellRenderer(aR);
         
-        //Initially disable the FlowEdit panel and the MainEdit panel
-        // The FlowEditPanel can be enabled as soon as there is a Configuration file available (after save or load)
-        // The MainEdit Panel can be used as soon as the Toplevel panel is filled(or loaded)
+        /** 
+         * Initially disable the FlowEdit panel and the MainEdit panel
+         * The FlowEditPanel can be enabled as soon as there is a Configuration file available (after save or load)
+         * The MainEdit Panel can be used as soon as the Toplevel panel is filled(or loaded)
+         */
 
         enableTopLevelParamPanel(false);
         enableMainEditPanel(false);
@@ -132,9 +152,7 @@ public class BB_Gui extends javax.swing.JFrame {
         jLabel15 = new javax.swing.JLabel();
         endTimeInput = new javax.swing.JTextField();
         jLabel17 = new javax.swing.JLabel();
-        startChannelInput = new javax.swing.JTextField();
         jLabel18 = new javax.swing.JLabel();
-        endChannelInput = new javax.swing.JTextField();
         useAutoCorrInput = new javax.swing.JCheckBox();
         jLabel24 = new javax.swing.JLabel();
         XXInput = new javax.swing.JCheckBox();
@@ -143,6 +161,8 @@ public class BB_Gui extends javax.swing.JFrame {
         YYInput = new javax.swing.JCheckBox();
         jLabel22 = new javax.swing.JLabel();
         stationNamesInput = new javax.swing.JTextField();
+        startChannelInput = startChannelInput=new JFormattedTextField(integerFormat);
+        endChannelInput = new javax.swing.JFormattedTextField();
         jLabel19 = new javax.swing.JLabel();
         sourcesInput = new javax.swing.JTextField();
         jLabel23 = new javax.swing.JLabel();
@@ -443,18 +463,8 @@ public class BB_Gui extends javax.swing.JFrame {
         jLabel17.setText("Start Channel");
         MeasurementPanel.add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
 
-        startChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        startChannelInput.setText("1");
-        startChannelInput.setToolTipText("Enter Start Channel Number");
-        MeasurementPanel.add(startChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 100, -1));
-
         jLabel18.setText("End Channel");
         MeasurementPanel.add(jLabel18, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 50, -1, 20));
-
-        endChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        endChannelInput.setText("1");
-        endChannelInput.setToolTipText("Give end channel number");
-        MeasurementPanel.add(endChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 50, 100, -1));
 
         useAutoCorrInput.setText("Use AutoCorrelations");
         MeasurementPanel.add(useAutoCorrInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 90, -1, -1));
@@ -481,6 +491,16 @@ public class BB_Gui extends javax.swing.JFrame {
 
         stationNamesInput.setToolTipText("Comma Seperated List with Station Names");
         MeasurementPanel.add(stationNamesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 140, 440, -1));
+
+        startChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        startChannelInput.setText("1");
+        startChannelInput.setToolTipText("Enter Start Channel");
+        MeasurementPanel.add(startChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 120, 20));
+
+        endChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        endChannelInput.setText("1");
+        endChannelInput.setToolTipText("Insert End Channel");
+        MeasurementPanel.add(endChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 50, 110, 20));
 
         StratSpecParamPanel.add(MeasurementPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 20, 580, 180));
 
@@ -784,9 +804,11 @@ public class BB_Gui extends javax.swing.JFrame {
     }//GEN-LAST:event_RestoreTopLevelDefaultActionPerformed
 
     private void FlowMenuOpenFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FlowMenuOpenFileActionPerformed
-        // Open an existing Flow configuration
-        // will overwrite flowwindow and all input panels
-        // read in the first file to read and lock the TopLevelParamPanel
+        /*
+         * Open an existing Flow configuration
+         * will overwrite flowwindow and all input panels
+         * read in the first file to read and lock the TopLevelParamPanel
+         */
         
         File aFile=getFileName("FlowOpen");
         if (aFile != null && aFile.exists()) {
@@ -1153,7 +1175,7 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JCheckBox YYInput;
     private javax.swing.JCheckBox calcUVWInput;
     private javax.swing.JCheckBox controlParmUpdateInput;
-    private javax.swing.JTextField endChannelInput;
+    private javax.swing.JFormattedTextField endChannelInput;
     private javax.swing.JTextField endTimeInput;
     private javax.swing.JList excludeParamsInput;
     private javax.swing.JTextField fitCriterionInput;
@@ -1185,7 +1207,7 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JTextField skyTableNameInput;
     private javax.swing.JList solvableParamsInput;
     private javax.swing.JTextField sourcesInput;
-    private javax.swing.JTextField startChannelInput;
+    private javax.swing.JFormattedTextField startChannelInput;
     private javax.swing.JTextField startTimeInput;
     private javax.swing.JTextField stationNamesInput;
     private javax.swing.JComboBox strategyInput;
@@ -1197,14 +1219,33 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JCheckBox writeIndividualParmsInput;
     private javax.swing.JCheckBox writeParmsInput;
     // End of variables declaration//GEN-END:variables
-    
+
+    /**
+     * Opens a Filechooser depending on the Filechoice given.
+     * Returns the chosen file, or an empty one if no choice has been
+     * made.
+     * <p>
+     * <b>Possible fileChoices for now are:</b><br>
+     *      MSName          :   Measurement set <br>
+     *      GetFlowEntry    :   Configuration file for insertion in flow Window <br>
+     *      SkyTableName    :   LSM Table Name <br>
+     *      MeqTableName    :   Common parameter Table <br>
+     *      LoadConfig      :   Configuration File <br>
+     *      NewConfig       :   New Configuration File <br> 
+     *      ConfigSaveAs    :   Save as FileName <br>
+     *      FlowSave        :   Save Flow Configuration File <br>
+     *      FlowOpen        :   Open Flow Configuration File <br>
+     * 
+     * @param   aFileChoice fileChoice for the filebrowser. (See list above)
+     * @return              The selected File or null if no file was seleted
+     */
     private File getFileName(String aFileChoice) {
         File aFile=null;
         String aWindowName="Open";
         if (aFileChoice.equals("MSName")) {
             aWindowName="Load Measurement Set Name";
         } else         if (aFileChoice.equals("GetFlowEntry")) {
-            aWindowName="Load flow configuration";
+            aWindowName="Load configuration file for flowwindow";
         } else         if (aFileChoice.equals("SkyTableName")) {
             aWindowName="Load LSMTable";
         } else         if (aFileChoice.equals("MeqTableName")) {
@@ -1239,10 +1280,15 @@ public class BB_Gui extends javax.swing.JFrame {
                     aFileChoice+" Selection Warning",
                     JOptionPane.WARNING_MESSAGE);
         }
+
         return aFile;
     }
     
-    
+    /**
+     * Saves (Flow-)Configuration files
+     *
+     * @param   aFile   The file that needs to be saved
+     */
     private void saveFile(File aFile) {
         // see if the file is a FlowFile or a ConfigFile
         boolean isConfigFile = true;
@@ -1271,6 +1317,9 @@ public class BB_Gui extends javax.swing.JFrame {
         }    
     }
     
+    /**
+     * Saves the FlowList contents.
+     */
     private void saveFlow() {
         if (itsFlowListModel.size() > 0) {
             try {
@@ -1285,6 +1334,64 @@ public class BB_Gui extends javax.swing.JFrame {
         }
     }
     
+    /**
+     * Saves the Configuration file
+     */
+    private void saveConfig() {
+        itsConfigFile.saveParams("nrPrediffers",Integer.toString(itsNrPrediffers));
+        itsConfigFile.saveParams("nrStrategies",Integer.toString(itsNrStrategies));
+        itsConfigFile.saveParams("BBDBname",BBDBnameInput.getText());
+        itsConfigFile.saveParams("writeIndividualParms",boolean2String(writeIndividualParmsInput.isSelected()));
+        itsConfigFile.saveParams("parmSolutionTable",parmSolutionTableInput.getText());
+        itsConfigFile.saveParams("strategy",strategyInput.getSelectedItem().toString());
+        itsConfigFile.saveParams("MSName",MSNameInput.getText());
+        itsConfigFile.saveParams("generalMSPath",itsGeneralMSPath);
+        itsConfigFile.saveParams("subsetMSPath",itsSubsetMSPath);
+        if (meqTableNameInput.getText().length() > 0) {
+            itsConfigFile.saveParams("meqTableName",meqTableNameInput.getText());
+        }
+        if (skyTableNameInput.getText().length() > 0) {
+            itsConfigFile.saveParams("skyTableName",skyTableNameInput.getText());
+        }
+        itsConfigFile.saveParams("DBType",DBTypeInput.getSelectedItem().toString());
+        if (DBTypeInput.getSelectedItem().toString().equals("bdbrepl")) {
+            itsConfigFile.saveParams("DBHost",DBHostInput.getText());
+            itsConfigFile.saveParams("DBMasterPort",DBMasterPortInput.getText());
+        }
+        itsConfigFile.saveParams("solvableParams",listModel2String(itsSolvableParamsModel));
+        itsConfigFile.saveParams("excludeParams",listModel2String(itsExcludeParamsModel));
+        itsConfigFile.saveParams("startTime",startTimeInput.getText());
+        itsConfigFile.saveParams("endTime",endTimeInput.getText());
+        itsConfigFile.saveParams("timeInterval",Double.toString(itsTimeStep));
+        itsConfigFile.saveParams("startChan",startChannelInput.getText());
+        itsConfigFile.saveParams("endChan",endChannelInput.getText());
+        itsConfigFile.saveParams("sources",textList2String(sourcesInput.getText()));
+        itsConfigFile.saveParams("sourcePatches",listModel2String(itsSourcePatchPanel.getList()));
+        itsConfigFile.saveParams("maxNrIterations",maxNrIterationsInput.getText());
+        itsConfigFile.saveParams("fitCriterion",fitCriterionInput.getText());
+        itsConfigFile.saveParams("stationNames",textList2String(stationNamesInput.getText()));
+        itsConfigFile.saveParams("modelType",modelTypeInput.getText());
+        itsConfigFile.saveParams("calcUVW",boolean2String(calcUVWInput.isSelected()));
+        itsConfigFile.saveParams("useSVD",boolean2String(useSVDInput.isSelected()));
+        itsConfigFile.saveParams("correlations",getCorrelationsArray());
+        itsConfigFile.saveParams("useAutoCorr",boolean2String(useAutoCorrInput.isSelected()));
+        itsConfigFile.saveParams("controlParmUpdate",boolean2String(controlParmUpdateInput.isSelected()));
+        itsConfigFile.saveParams("writeParms",boolean2String(writeParmsInput.isSelected()));
+        itsConfigFile.saveParams("writeInDataCol",boolean2String(writeInDataColInput.isSelected()));
+                
+        itsConfigFile.saveFile(itsConfigFileName);
+        saved=true;
+    }
+    
+    /**
+     * Opens the Description File.
+     * Opens a DescriptionPanel with the found Description file. Depending on
+     * on the parameters it will be just to show the contents, or an accept button
+     * will be available to actually read the contents into the BB_GUI.
+     *
+     * @param   aFile   The description file to be displayed.
+     * @param   ro      Boolean readOnly. If false then the accept button will be displayed.
+     */
     private void showDescriptionFile(File aFile,boolean ro) {
       MSDescriptionPanel aMSD=new MSDescriptionPanel(aFile,this,ro);
       aMSD.setSize(700,550);
@@ -1293,24 +1400,27 @@ public class BB_Gui extends javax.swing.JFrame {
       aMSD.setVisible(true);        
     }
     
-    public void readDescriptionFile(File aFile) {
-        //Open and read the description file for this MS (if any available)
-        // and fill all possible GUI values from this file.
-        // Keywords defined so far:
-        // npart           (nrPrediffers) 
-        // corrtype        (XX,XY,YX,YY)
-        // stations        (stationnames seperated by ,)
-        // subsetMSPath    (Path for Measurement Subsets)
-        // freq.start      (start frequency)
-        // freq.end        (end frequency)
-        // freq.step       (Frequency step size)
-        // freq.nchan      (Number of frequence channels)
-        // time.start      (start time)
-        // time.end        (end time)
-        // time.step       (time step size)
-        // time.nsteps     (number of timesteps)
-        
-        
+    
+    /**
+     * Opens and read the description file for this MS (if any available) <br>
+     * After opening, fill all possible GUI values from this file. <br>
+     * Keywords defined so far: <br>
+     * npart           (nrPrediffers) <br> 
+     * corrtype        (XX,XY,YX,YY) <br>
+     * stations        (stationnames seperated by ,) <br>
+     * subsetMSPath    (Path for Measurement Subsets) <br>
+     * freq.start      (start frequency) <br>
+     * freq.end        (end frequency) <br>
+     * freq.step       (Frequency step size) <br>
+     * freq.nchan      (Number of frequence channels) <br>
+     * time.start      (start time) <br>
+     * time.end        (end time) <br>
+     * time.step       (time step size) <br>
+     * time.nsteps     (number of timesteps) <br>
+     *
+     * @param   aFile   the DescriptionFile.
+     */
+    public void readDescriptionFile(File aFile) {     
         try {
             BufferedReader in = new BufferedReader(new FileReader(aFile));
             String aStr;
@@ -1381,7 +1491,7 @@ public class BB_Gui extends javax.swing.JFrame {
                     } else if (keyword.contains("freq.nchan")) {
                         try {
                             value=value.replaceAll("[\\p{Cntrl}\\p{Blank}\\p{Space}]*", "");                                                        
-                            Integer anI= Integer.valueOf(value).intValue()-1;
+                            Integer anI= Integer.valueOf(value).intValue();
                             endChannelInput.setText(anI.toString());
                         } catch  (NumberFormatException e) {
                             System.out.println("Error converting "+value+" to integer.");
@@ -1424,7 +1534,12 @@ public class BB_Gui extends javax.swing.JFrame {
         }
     }
     
-    
+    /**
+     * converts a ListModel to a comma seperated String.
+     *
+     * @param   aListModel  The listModel that needs to be converted.
+     * @return              The created string.
+     */
     private String listModel2String(DefaultListModel aListModel) {
             String aS="[";
             if (aListModel.size() > 0) {
@@ -1439,6 +1554,12 @@ public class BB_Gui extends javax.swing.JFrame {
         return aS;
     }
     
+     /**
+     * converts a comma seperated String to a ListModel.
+     *
+     * @param   aStr    The String that needs to be converted.
+     * @return          The created ListModel;
+     */
     private DefaultListModel string2ListModel(String aStr) {
         DefaultListModel aModel= new DefaultListModel();
         String aS[]=aStr.split(",");
@@ -1448,26 +1569,21 @@ public class BB_Gui extends javax.swing.JFrame {
         return aModel;
     }
     
+    /**
+     * Converts a comma seperated textList to a String.
+     *
+     * @param   aStr    The String thats need to be converted
+     * @return          The Created String
+     */
     private String textList2String(String aStr) {
-            String aS= "[";
-            if (aStr.length() > 0) {
-                String a[]=aStr.split(",");
-                for (int i=0;i<a.length;i++) {  
-                    if (i > 0) {
-                        aS+=",";
-                    } 
-                    aS+=a[i];
-                }                    
-            }
-        aS+="]";
-        return aS;
-    }
-    
-    private String text2IntArray(String aStr) {
         return "["+aStr+"]";
     }
     
-    
+    /**
+     * Set Correlations in GUI from a CorrelationString
+     *
+     * @param   aStr    The String containing the correlations p.e.:(0,1,3)
+     */
     private void setCorrelations(String aStr) {
         XXInput.setSelected(false);
         XYInput.setSelected(false);
@@ -1488,6 +1604,11 @@ public class BB_Gui extends javax.swing.JFrame {
         }
     }
     
+    /**
+     * Prepare a correlationsString from the selections.
+     *
+     * @return      The CorrelationsString
+     */
     private String getCorrelationsArray() {
         String aS="[";
         boolean first=true;
@@ -1520,6 +1641,12 @@ public class BB_Gui extends javax.swing.JFrame {
         return aS;
     }
     
+    /**
+     * Converts a Boolean to a Stringrepresentation.
+     *
+     * @param aB    Boolean to convert
+     * @return      The string representation
+     */
     private String boolean2String(boolean aB) {
         if (aB) {
             return "T";
@@ -1528,6 +1655,12 @@ public class BB_Gui extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Converts a String to a Boolean.
+     *
+     * @param aS    String to convert
+     * @return      The converted boolean
+     */
     private Boolean string2Boolean(String aS) {
         boolean aB=false;
         if (aS.equals("T")) {
@@ -1536,63 +1669,33 @@ public class BB_Gui extends javax.swing.JFrame {
         return aB;
     }
 
-    private void saveConfig() {
-        itsConfigFile.saveParams("nrPrediffers",Integer.toString(itsNrPrediffers));
-        itsConfigFile.saveParams("nrStrategies",Integer.toString(itsNrStrategies));
-        itsConfigFile.saveParams("BBDBname",BBDBnameInput.getText());
-        itsConfigFile.saveParams("writeIndividualParms",boolean2String(writeIndividualParmsInput.isSelected()));
-        itsConfigFile.saveParams("parmSolutionTable",parmSolutionTableInput.getText());
-        itsConfigFile.saveParams("strategy",strategyInput.getSelectedItem().toString());
-        itsConfigFile.saveParams("MSName",MSNameInput.getText());
-        itsConfigFile.saveParams("generalMSPath",itsGeneralMSPath);
-        itsConfigFile.saveParams("subsetMSPath",itsSubsetMSPath);
-        if (meqTableNameInput.getText().length() > 0) {
-            itsConfigFile.saveParams("meqTableName",meqTableNameInput.getText());
-        }
-        if (skyTableNameInput.getText().length() > 0) {
-            itsConfigFile.saveParams("skyTableName",skyTableNameInput.getText());
-        }
-        itsConfigFile.saveParams("DBType",DBTypeInput.getSelectedItem().toString());
-        if (DBTypeInput.getSelectedItem().toString().equals("bdbrepl")) {
-            itsConfigFile.saveParams("DBHost",DBHostInput.getText());
-            itsConfigFile.saveParams("DBMasterPort",DBMasterPortInput.getText());
-        }
-        itsConfigFile.saveParams("solvableParams",listModel2String(itsSolvableParamsModel));
-        itsConfigFile.saveParams("excludeParams",listModel2String(itsExcludeParamsModel));
-        itsConfigFile.saveParams("startTime",startTimeInput.getText());
-        itsConfigFile.saveParams("endTime",endTimeInput.getText());
-        itsConfigFile.saveParams("timeInterval",Double.toString(itsTimeStep));
-        itsConfigFile.saveParams("startChan",startChannelInput.getText());
-        itsConfigFile.saveParams("endChan",endChannelInput.getText());
-        itsConfigFile.saveParams("sources",text2IntArray(sourcesInput.getText()));
-        itsConfigFile.saveParams("sourcePatches",listModel2String(itsSourcePatchPanel.getList()));
-        itsConfigFile.saveParams("maxNrIterations",maxNrIterationsInput.getText());
-        itsConfigFile.saveParams("fitCriterion",fitCriterionInput.getText());
-        itsConfigFile.saveParams("stationNames",textList2String(stationNamesInput.getText()));
-        itsConfigFile.saveParams("modelType",modelTypeInput.getText());
-        itsConfigFile.saveParams("calcUVW",boolean2String(calcUVWInput.isSelected()));
-        itsConfigFile.saveParams("useSVD",boolean2String(useSVDInput.isSelected()));
-        itsConfigFile.saveParams("correlations",getCorrelationsArray());
-        itsConfigFile.saveParams("useAutoCorr",boolean2String(useAutoCorrInput.isSelected()));
-        itsConfigFile.saveParams("controlParmUpdate",boolean2String(controlParmUpdateInput.isSelected()));
-        itsConfigFile.saveParams("writeParms",boolean2String(writeParmsInput.isSelected()));
-        itsConfigFile.saveParams("writeInDataCol",boolean2String(writeInDataColInput.isSelected()));
-                
-        itsConfigFile.saveFile(itsConfigFileName);
-        saved=true;
-    }
-    
+
+    /**
+     * enables or disables the MainPanel.
+     *
+     * @param   aFlag   Flag to determine if it should be enabled or disabled
+     */
     private void enableMainEditPanel(boolean aFlag) {
         enableGeneralParameterPanel(aFlag);
         enableStratSpecParamPanel(aFlag);
     }
     
+    /**
+     * enables or disables the GeneralParameterPanel.
+     *
+     * @param   aFlag   Flag to determine if it should be enabled or disabled
+     */
     private void enableGeneralParameterPanel(boolean aFlag) {
         for (int i=0;i<GeneralParameterPanel.getComponentCount();i++) {
             GeneralParameterPanel.getComponent(i).setEnabled(aFlag);
         }               
     }
     
+    /**
+     * enables or disables the StratSpecPanel.
+     *
+     * @param   aFlag   Flag to determine if it should be enabled or disabled
+     */
     private void enableStratSpecParamPanel(boolean aFlag) {
         for (int i=0;i<StratSpecParamPanel.getComponentCount();i++) {
             StratSpecParamPanel.getComponent(i).setEnabled(aFlag);
@@ -1605,18 +1708,33 @@ public class BB_Gui extends javax.swing.JFrame {
         enableExcludeParamPanel(aFlag);
     }
     
+    /**
+     * enables or disables the MeasurementPanel.
+     *
+     * @param   aFlag   Flag to determine if it should be enabled or disabled
+     */
     private void enableMeasurementPanel(boolean aFlag) {
         for (int i=0;i<MeasurementPanel.getComponentCount();i++) {
             MeasurementPanel.getComponent(i).setEnabled(aFlag);
         }               
     }
 
+    /**
+     * enables or disables the SolvableParameterPanel.
+     *
+     * @param   aFlag   Flag to determine if it should be enabled or disabled
+     */
     private void enableSolvableParamPanel(boolean aFlag) {
         for (int i=0;i<SolvableParamPanel.getComponentCount();i++) {
             SolvableParamPanel.getComponent(i).setEnabled(aFlag);
         }               
     }
 
+    /**
+     * enables or disables the ExcludeParameterPanel.
+     *
+     * @param   aFlag   Flag to determine if it should be enabled or disabled
+     */
     private void enableExcludeParamPanel(boolean aFlag) {
         for (int i=0;i<ExcludeParamPanel.getComponentCount();i++) {
             ExcludeParamPanel.getComponent(i).setEnabled(aFlag);
@@ -1624,12 +1742,22 @@ public class BB_Gui extends javax.swing.JFrame {
     }
     
     
+    /**
+     * enables or disables the FlowEditPanel.
+     *
+     * @param   aFlag   Flag to determine if it should be enabled or disabled
+     */
     private void enableFlowEditPanel(boolean aFlag) {
         for (int i=0;i<FlowEditPanel.getComponentCount();i++) {
             FlowEditPanel.getComponent(i).setEnabled(aFlag);
         }        
     }
 
+    /**
+     * enables or disables the TopLevelParameterPanel.
+     *
+     * @param   aFlag   Flag to determine if it should be enabled or disabled
+     */
     private void enableTopLevelParamPanel(boolean aFlag) {
         for (int i=0;i<TopLevelParamPanel.getComponentCount();i++) {
             Component aC=TopLevelParamPanel.getComponent(i);
@@ -1643,6 +1771,11 @@ public class BB_Gui extends javax.swing.JFrame {
         }           
     }
     
+    /**
+     * reloads all panels from a choosen configuration file
+     * 
+     * @param   aConfigFile     The confurationfile that serves as input for the panels
+     */
     private void reloadPanels(BBSConfigFileRep aConfigFile) {        
         itsNrPrediffers=Integer.valueOf(aConfigFile.getParams("nrPrediffers")).intValue();
         itsNrStrategies=Integer.valueOf(aConfigFile.getParams("nrStrategies")).intValue();
@@ -1688,8 +1821,13 @@ public class BB_Gui extends javax.swing.JFrame {
         setDescriptionFile();
      }
     
+    /**
+     * Check DBType selection change
+     * If itgoes to bdbrepl then DBHost and Port should be filled also
+     *
+     */
     private void checkDBTypeChange() {
-        // If selection goes to bdbrepl then DBHost and Port should be filled also
+        
         boolean isBDBRepl=false;
         if (DBTypeInput.getSelectedItem().toString().equals("bdbrepl")) {
             isBDBRepl=true;
@@ -1701,10 +1839,13 @@ public class BB_Gui extends javax.swing.JFrame {
         changed=true;        
     }
     
+    /**
+     * Check Strategy selection change.
+     * When choice is WritePredData, writeInDataColumn choice needs to be visible <br>
+     * While TimeInterval,Maximum iterations, Fit criterion,Use singular value decomposition,<br>
+     * Control updates parameters and Write final parameters in parameter table can vanish.
+     */
     private void checkStrategyChange() {
-        // When choice is WritePredData, writeInDataColumn choice needs to be visible
-        // While TimeInterval,Maximum iterations, Fit criterion,Use singular value decomposition,
-        // Control updates parameters and Write final parameters in parameter table can vanish.
         boolean aFlag=false;
         if (strategyInput.getSelectedItem().toString().equals("WritePredData")) {
             aFlag=true;
@@ -1723,12 +1864,22 @@ public class BB_Gui extends javax.swing.JFrame {
         changed=true;        
     }
     
+    /**
+     * Ad a new step to the Flow.
+     *
+     * @param   aFile   The configuration file that needs 2 be added.
+     */
     private void addFlowStep(File aFile) {
         // Add a step to the flowlist.
         itsFlowListModel.addElement(aFile);
         flowListInput.validate();
     }
 
+    /**
+     * Load a Flowconfiguration file into GUI
+     *
+     * @return  boolean that represents the result.
+     */
     private boolean loadFlowList() {
         boolean aFlag=true;
         itsFlowListModel.clear();
@@ -1756,12 +1907,23 @@ public class BB_Gui extends javax.swing.JFrame {
         return aFlag;
     }
     
+    /**
+     * Sets the description file from the given MSName.
+     * otherwise itsDescriptionFile=null.
+     */
     private void setDescriptionFile() {
         File aDescFile=new File(itsGeneralMSPath+"/"+MSNameInput.getText()+".dess");
         if (aDescFile != null && aDescFile.exists()) {
             readDescriptionFile(aDescFile);
             itsDescriptionFile=aDescFile;
         }
+    }
+    
+    /**
+     * setup the different format for formatted textinputs
+     */
+    private void setUpFormats() {
+        integerFormat=NumberFormat.getIntegerInstance();
     }
 }
 
