@@ -35,6 +35,8 @@ namespace LOFAR {
 //   matrix.setValue(cursor, 0);
 // } 
 
+// \addtogroup TFC_Interface
+// @{
 
 // the definition of a dimension
 // this class is only used when constructing a rectmatrix
@@ -132,6 +134,8 @@ class RectMatrix {
   map<string, dimType*> itsDimMap;
   int itsTotalSize;
 };
+
+  // @}
 
 #ifdef ENABLE_DBGASSERT
 

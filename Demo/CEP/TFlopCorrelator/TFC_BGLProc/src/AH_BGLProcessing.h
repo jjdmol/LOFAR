@@ -19,7 +19,7 @@ namespace LOFAR {
 class Stub_FIR;
 class Stub_Corr;
 
-// Description of class.
+// \ingroup TFC_BGLProc
 class AH_BGLProcessing: public LOFAR::TinyApplicationHolder
 {
  public:

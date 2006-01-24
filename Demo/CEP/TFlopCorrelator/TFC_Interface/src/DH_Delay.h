@@ -14,10 +14,7 @@
 #define TFLOPCORRELATOR_DH_DELAY_H
 
 
-#include <lofar_config.h>
 #include <Transport/DataHolder.h>
-
-using std::complex;
 
 namespace LOFAR
 {
