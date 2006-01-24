@@ -1,39 +1,3 @@
-INSTHDRS = \
-	Attrib.h \
-	Collection.h \
-	ConnectionHandler.h \
-	DBRep.h \
-	DBRepHolder.h \
-	DBRepMeta.h \
-	DTLBase.h \
-	Exception.h \
-	ObjectId.h \
-	PersistenceBroker.h \
-	PersistentObject.h \
-	QueryObject.h \
-	TPersistentObject.h \
-	PLfwd.h \
-	Query/BinaryExprNode.h \
-	Query/ColumnExprNode.h \
-	Query/ConstExprNode.h \
-	Query/Expr.h \
-	Query/ExprNode.h \
-	Query/FunctionExprNode.h \
-	Query/SQLExprNode.h \
-	Query/UnaryExprNode.h
-
-NOINSTHDRS = 
-
-TCCHDRS = \
-	PersistenceBroker.tcc \
-	TPersistentObject.tcc
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
-
 lib_LTLIBRARIES = libpl.la
 
 libpl_la_SOURCES = \

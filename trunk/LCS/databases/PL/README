@@ -1,0 +1,12 @@
+LCS/databases/PL
+================
+
+The Persistence Layer bridges the gap between the objected-oriented C++ world
+and the relational database world.
+
+Several scripts are available in the LCS/databases/PLGEN directory that can
+help generating the required "stub" code for making an object persistent.
+
+Detailed information about the PL can be found in the "LOFAR Persistence Layer
+- User Manual".
+
