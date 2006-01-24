@@ -32,6 +32,9 @@ namespace LOFAR
 {
   typedef TYPES::i16complex RSPDataType;
   using ACC::APS::ParameterSet;
+
+  // \addtogroup TFC_Generator
+  // @{
   
   // EpaHeader is the class that represents the header data of the epa packet
   // it contains the following fields:
@@ -117,7 +120,7 @@ namespace LOFAR
     bool itsIsMemoryMine;
   };
 
-
+  // @}
 
 
 

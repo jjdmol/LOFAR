@@ -24,6 +24,7 @@
 
 namespace LOFAR
 {
+  // \ingroup TFC_DelayCompensation
   class WH_DelayControl: public WorkHolder
   {
   public:
@@ -59,7 +60,6 @@ inline int WH_DelayControl::getDelay()
 inline void WH_DelayControl::setDelay(const int delay)
   {  itsDelay = delay; }
 
-  // @}
 } // namespace LOFAR
 
 #endif

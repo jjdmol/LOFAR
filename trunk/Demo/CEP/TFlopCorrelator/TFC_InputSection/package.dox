@@ -3,10 +3,4 @@
 \ingroup TFlopCorrelator
 \defgroup TFC_InputSection Input Section
 
-This package contains the second protoype. The Teraflop Correlator Demo shows
-how an end-to-end processing chain could be implemented in the Central
-Processor. The package is divided into several subpackages, where each
-subpackage contains a more or less independent functional block in the
-complete processing chain.
-
 */
