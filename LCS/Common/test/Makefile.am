@@ -16,7 +16,6 @@ TESTSCRIPTS = \
 	  testLogger_test.sh \
 	  tHexdump_test.sh    \
 	  tNumeric.sh \
-	  tComplex.sh \
 	  tRunOnNode.sh \
 	  tStringUtil_test.sh
 
