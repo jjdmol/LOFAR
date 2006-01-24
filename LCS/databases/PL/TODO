@@ -1,12 +1,3 @@
-2004-09-21, Marcel Loose:
-========================
-
-* The current version has been tagged as "PL_1-0".
-
-* Issue #2 in the TODO section of 2003-12-08 has been "solved". The Query
-  classes are now part of the PL package.
-
-
 2003-12-08, Marcel Loose:
 ========================
 
@@ -21,32 +12,13 @@
   attributes of each class are mapped onto the columns of the corresponding
   database table. 
 
-  1. Each "complex" object is retrieved from the database using multiple
-     database queries, one for each "owned PersistentObject". This is very
-     inefficient. 
+  Each "complex" object is retrieved from the database using multiple database
+  queries, one for each "owned PersistentObject". This is very inefficient.
 
-     This problem can be solved by using DTL BPA's that do not only map the
-     attributes of the toplevel class, but also map the attributes of the
-     "owned" classes. In this way it is (at least theoretically) possible to
-     retrieve any kind of object with just one query, no matter how complex
-     the object is.
-
-  2. As the Query class is not yet available, users must supply their own
-     handwritten SQL query. Due to the current implementation, it is not
-     possible, though, to write a WHERE clause that needs to match attributes
-     that are not in the toplevel class.
-
-     Hence, if we want to retrieve instances of class C, the WHERE clause can
-     only contain attributes of class C, because their is a one-to-one mapping
-     between classes and tables, and between class attributes and table
-     columns. Hence, table C only contains columns that match with C's
-     attributes, and not with any attributes of class A or B.
-
-     This problem will be solved once the Query class has been
-     implemented. The Query class will then be responsible for translating an
-     "OO query" into an SQL query. Combined with the proposed changes in the
-     retrieve method (see 1.) it will be possible to build a query using any
-     attribute of the related classes.
+  This problem can be solved by using DTL BPA's that do not only map the
+  attributes of the toplevel class, but also map the attributes of the "owned"
+  classes. In this way it is (at least theoretically) possible to retrieve any
+  kind of object with just one query, no matter how complex the object is.
 
 
 2003-10-23, Marcel Loose:
