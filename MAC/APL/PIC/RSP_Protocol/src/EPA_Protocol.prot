@@ -34,7 +34,7 @@ prelude = << PRELUDE_END
   static const int N_AP            = 4; // number of AP's per board
   static const int N_COEF          = MIN(MEPHeader::FRAGMENT_SIZE, MEPHeader::BF_XROUT_SIZE) / sizeof(int16);
   static const int BF_N_FRAGMENTS  = 1; // MEPHeader::BF_XROUT_SIZE / MEPHeader::FRAGMENT_SIZE
-  static const int N_WAVE_SAMPLES  = MEPHeader::DIAG_WGXWAVE_SIZE / sizeof(int16);
+  static const int N_WAVE_SAMPLES  = MEPHeader::DIAG_WGXWAVE_SIZE / sizeof(int32);
   static const int BST_N_FRAGMENTS = 1; // MEPHeader::BST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
   static const int SST_N_FRAGMENTS = MEPHeader::SST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
   static const int N_SST_STATS     = MEPHeader::FRAGMENT_SIZE / sizeof(uint32);
@@ -543,11 +543,11 @@ event = {
   };
   param = {
     name = "freq";
-    type = "uint16";
+    type = "uint32";
   };
   param = {
     name = "ampl";
-    type = "uint16";
+    type = "uint32";
   };
 };
 
@@ -562,7 +562,7 @@ event = {
   };
   param = {
     name = "samples";
-    type = "int16[N_WAVE_SAMPLES]";
+    type = "int32[N_WAVE_SAMPLES]";
   };
 };
 

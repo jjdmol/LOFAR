@@ -36,7 +36,7 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 // preset waveforms for the 4 types sine, square, triangle and ramp
-Array<int16, 2> WGSettings::m_presets;
+Array<int32, 2> WGSettings::m_presets;
 
 void WGSettings::initWaveformPresets()
 {
@@ -47,7 +47,7 @@ void WGSettings::initWaveformPresets()
   //
   for (int i = 0; i < N_WAVE_SAMPLES; i++)
   {
-    WGSettings::m_presets(PRESET_SINE, i) = (int16)(::sin((double)i * 2.0 * M_PI / N_WAVE_SAMPLES) * (1<<15));
+    WGSettings::m_presets(PRESET_SINE, i) = (int32)(::sin((double)i * 2.0 * M_PI / N_WAVE_SAMPLES) * (1<<15));
   }
   cout << "sine=" << WGSettings::m_presets(PRESET_SINE, Range::all()) << endl;
 
@@ -120,7 +120,7 @@ unsigned int WGSettings::unpack(void *buffer)
   return offset;
 }
 
-Array<int16, 1> WGSettings::preset(int index)
+Array<int32, 1> WGSettings::preset(int index)
 {
   // if index is invalid, return PRESET_SINE
   if (index < 0 || index >= WGSettings::N_WAVEFORM_PRESETS) index = 0;

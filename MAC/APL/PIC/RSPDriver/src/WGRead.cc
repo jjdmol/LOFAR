@@ -163,7 +163,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
-    Array<int16, 1> wave((int16*)&wgwave.samples,
+    Array<int32, 1> wave((int32*)&wgwave.samples,
 			 shape(N_WAVE_SAMPLES),
 			 neverDeleteData);
     w.waveforms()(global_rcu, Range::all()) = wave;
