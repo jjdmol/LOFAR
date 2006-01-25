@@ -39,6 +39,7 @@
 #include <BBS3/MNS/MeqPointSource.h>
 #include <BBS3/MNS/MeqJonesCMul3.h>
 
+#include <MS/MSDesc.h>
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
 #include <Blob/BlobIStream.h>
@@ -263,26 +264,21 @@ void Prediffer::readDescriptiveData(const string& fileName)
   ASSERTSTR (istr, "File " << fileName << "/vis.des could not be opened");
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
-  bis.getStart("ms.des");
-  double ra, dec;
-  int nparts;
-  bis >> nparts;
-  bis >> ra;
-  bis >> dec;
-  bis >> itsNCorr;
-  bis >> itsNrChan;
-  bis >> itsStartFreq;
-  bis >> itsEndFreq;
-  bis >> itsStepFreq;
-  bis >> itsAnt1;
-  bis >> itsAnt2;
-  bis >> itsTimes;
-  bis >> itsIntervals;
-  bis >> itsAntPos;
-  bis.getEnd();
+  MSDesc msd;
+  bis >> msd;
+  ASSERTSTR (msd.nchan.size() == 1, "Multiple bands in MS cannot be handled");
+  itsNCorr     = msd.corrTypes.size();
+  itsNrChan    = msd.nchan[0];
+  itsStartFreq = msd.startFreq[0];
+  itsEndFreq   = msd.endFreq[0];
+  itsStepFreq  = (itsEndFreq - itsStartFreq)/itsNrChan;
+  itsAnt1      = msd.ant1;
+  itsAnt2      = msd.ant2;
+  itsTimes     = msd.times;
+  itsIntervals = msd.exposures;
+  itsAntPos    = msd.antPos;
   ASSERT (itsAnt1.size() == itsAnt2.size());
   itsNrBl = itsAnt1.size();
-  getPhaseRef(ra, dec, itsTimes[0]);
   itsReverseChan = itsStartFreq > itsEndFreq;
   if (itsReverseChan) {
     double  tmp  = itsEndFreq;
@@ -290,6 +286,7 @@ void Prediffer::readDescriptiveData(const string& fileName)
     itsStartFreq = tmp;
     itsStepFreq  = std::abs(itsStepFreq);
   }
+  getPhaseRef(msd.ra, msd.dec, msd.startTime);
 }
 
 //----------------------------------------------------------------------
