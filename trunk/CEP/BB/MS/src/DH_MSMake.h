@@ -30,6 +30,7 @@
 
 //# Forward Declarations.
 namespace casa {
+  class String;
   template<class T> class Array;
 }
 
@@ -52,7 +53,8 @@ namespace LOFAR {
       { itsTimes[0]=start; itsTimes[1]=end; *itsNTime=n; }
     void setPos (double ra, double dec)
       { itsPos[0]=ra; itsPos[1]=dec; }
-    void fillExtra (const string& msName, const casa::Array<double>& antPos);
+    void fillExtra (const string& msName, const casa::Array<double>& antPos,
+		    const casa::Array<casa::String>& antNames);
 
     void getFreq (double& start, double& end, int& n) const
       { start=itsFreqs[0]; end=itsFreqs[1]; n=*itsNFreq; }
@@ -60,7 +62,8 @@ namespace LOFAR {
       { start=itsTimes[0]; end=itsTimes[1]; n=*itsNTime; }
     void getPos (double& ra, double& dec) const
       { ra=itsPos[0]; dec=itsPos[1]; }
-    void getExtra (string& msName, casa::Array<double>& antPos);
+    void getExtra (string& msName, casa::Array<double>& antPos,
+		   casa::Array<casa::String>& antNames);
 
   private:
     // Forbid assignment.

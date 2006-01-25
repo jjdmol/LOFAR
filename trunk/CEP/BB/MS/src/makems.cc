@@ -25,6 +25,7 @@
 
 #include <MS/DH_MSMake.h>
 #include <MS/MSCreate.h>
+#include <MS/MSDesc.h>
 #include <APS/ParameterSet.h>
 #include <Blob/BlobOBufStream.h>
 #include <Blob/BlobOStream.h>
@@ -36,8 +37,10 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/Vector.h>
 #include <casa/OS/Path.h>
 #include <tables/Tables/Table.h>
+#include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 
 #include <iostream>
@@ -51,53 +54,71 @@ using namespace std;
 
 
 // Now write out all descriptive data.
-void writeDesc (const string& fileName, int nparts,
+void writeDesc (const string& fileName, bool writeDess,
+		const string& msName, int nparts,
 		const Array<double>& antPos,
+		const Vector<String>& antNames,
 		const DH_MSMake& info)
 {
-  double startFreq, endFreq, startTime, endTime, ra, dec;
-  int nfreq, ntime;
-  info.getFreq (startFreq, endFreq, nfreq);
-  info.getTime (startTime, endTime, ntime);
-  info.getPos (ra, dec);
+  MSDesc msd;
+  Path mspath(msName);
+  Path path = Path(mspath.absoluteName());
+  msd.msPath = path.dirName();
+  msd.msName = path.baseName();
+  msd.npart = nparts;
+  info.getPos (msd.ra, msd.dec);
+  int ntime;
+  info.getTime (msd.startTime, msd.endTime, ntime);
+  msd.corrTypes.push_back ("XX");
+  msd.corrTypes.push_back ("XY");
+  msd.corrTypes.push_back ("YX");
+  msd.corrTypes.push_back ("YY");
+  msd.nchan.resize (1);
+  msd.startFreq.resize (1);
+  msd.endFreq.resize (1);
+  info.getFreq (msd.startFreq[0], msd.endFreq[0], msd.nchan[0]);
   // Get nr of stations and baselines.
-  int nstat = antPos.shape()[1];
+  uint nstat = antPos.shape()[1];
   int nbl = nstat*(nstat-1)/2;
-  vector<int> ant1, ant2;
-  ant1.reserve (nbl);
-  ant2.reserve (nbl);
+  msd.antPos = antPos;
+  ASSERT (antNames.nelements() == nstat);
+  for (uint i=0; i<nstat; ++i) {
+    msd.antNames.push_back (antNames(i));
+  }
+  for (int i=0; i<3; ++i) {
+    msd.arrayPos.push_back (msd.antPos(IPosition(2,i,nstat/2)));
+  }
+  msd.ant1.reserve (nbl);
+  msd.ant2.reserve (nbl);
   // Fill the stations of all baselines.
-  for (int i=0; i<nstat; ++i) {
-    for (int j=i+1; j<nstat; ++j) {
-      ant1.push_back (i);
-      ant2.push_back (j);
+  for (uint i=0; i<nstat; ++i) {
+    for (uint j=i+1; j<nstat; ++j) {
+      msd.ant1.push_back (i);
+      msd.ant2.push_back (j);
     }
   }
-  ASSERT (uint(nbl) == ant1.size());
+  ASSERT (uint(nbl) == msd.ant1.size());
   // Fill the times and intervals.
   // The times are the midpoints of the intervals.
-  double timeStep = (endTime-startTime) / ntime;
-  vector<double> times(ntime);
-  vector<double> intervals(ntime);
+  double timeStep = (msd.endTime-msd.startTime) / ntime;
+  msd.times.reserve (ntime);
+  msd.exposures.reserve (ntime);
   for (int i=0; i<ntime; ++i) {
-    times[i] = startTime + i*timeStep + timeStep/2;
-    intervals[i] = timeStep;
+    msd.times.push_back (msd.startTime + i*timeStep + timeStep/2);
+    msd.exposures.push_back (timeStep);
   }
-  std::ofstream ostr(fileName.c_str());
-  BlobOBufStream bbs(ostr);
-  BlobOStream bos(bbs);
-  bos.putStart("ms.des", 1);
-  bos << nparts;
-  bos << ra << dec << 4 << nfreq << startFreq << endFreq
-      << (endFreq-startFreq)/2;
-  bos << ant1 << ant2;
-  bos << times;
-  bos << intervals;
-  bos << antPos;
-  bos.putEnd();
-  cout << "freq: " << startFreq << ' ' << endFreq << ' ' << nfreq << endl;
-  cout << "time: " << startTime << ' ' << endTime << ' ' << ntime << endl;
-  cout << "pos: " << ra << ' ' << dec << endl;
+  {
+    string fullName = fileName + ".des";
+    std::ofstream ostr(fullName.c_str());
+    BlobOBufStream bbs(ostr);
+    BlobOStream bos(bbs);
+    bos << msd;
+  }
+  if (writeDess) {
+    string fullName = fileName + ".dess";
+    std::ofstream ostr(fullName.c_str());
+    ostr << msd;
+  }
 }
 
 void createMS (const string& msName, const Array<double>& antPos,
@@ -121,6 +142,7 @@ void createMS (const string& msName, const Array<double>& antPos,
 }
 
 void createMSSeq (const string& msName, int seqnr, const Array<double>& antPos,
+		  const Vector<String>& antNames,
 		  const DH_MSMake& info)
 {
   // Write a part of the entire frequency range.
@@ -129,7 +151,7 @@ void createMSSeq (const string& msName, int seqnr, const Array<double>& antPos,
   string msNameF = msName + ostr.str();
   createMS (msNameF, antPos, info);
   // Write the description file.
-  writeDesc (msNameF + "/vis.des", 0, antPos, info);
+  writeDesc (msNameF + "/vis.des", false, msNameF, 0, antPos, antNames, info);
 }
 
 void doMaster (bool send)
@@ -159,7 +181,6 @@ void doMaster (bool send)
   ASSERT (stepFreq > 0);
   ASSERT (stepTime > 0);
   int nfpn = nfreq/nnode;
-  double endFreq = startFreq + nfreq*stepFreq;
   double endTime = startTime + ntime*stepTime;
 
   // Get the station info from the given antenna table.
@@ -169,6 +190,8 @@ void doMaster (bool send)
   Table tab(tabName, TableLock(TableLock::AutoNoReadLocking));
   ROArrayColumn<double> posCol(tab, "POSITION");
   Array<double> antPos = posCol.getColumn();
+  ROScalarColumn<String> nameCol(tab, "NAME");
+  Vector<String> antNames = nameCol.getColumn();
 
   // Setup the connections to the slaves.
   // Each slave writes a part of the entire frequency range.
@@ -177,36 +200,23 @@ void doMaster (bool send)
   conn.sender.setTime (startTime, endTime, ntime);
   conn.sender.setPos (ra, dec);
   // Write the antPos and MSName in the extra blob.
-  conn.sender.fillExtra (msName, antPos);
+  conn.sender.fillExtra (msName, antPos, antNames);
   // Write the data in the DataHolder and send it to each slave.
   for (int i=0; i<nnode; ++i) {
     conn.sender.setFreq (startFreq+i*stepFreq, startFreq+(i+1)*stepFreq, nfpn);
     if (send) {
       conn.conns[i]->write();
     } else {
-      createMSSeq (msName, i+1, antPos, conn.sender);
+      createMSSeq (msName, i+1, antPos, antNames, conn.sender);
     }
   }
   // Write the overall description files.
   // Do this on the local node.
-  Path path(msName);
+  Path mspath(msName);
+  Path path = Path(mspath.absoluteName());
   string msDesName = msDesPath + "/" + string(path.baseName());
-  writeDesc (msDesName + ".des", nnode, antPos, conn.sender);
-  string fileName = msDesName+".dess";
-  std::ofstream ostr(fileName.c_str());
-  int nstat = antPos.shape()[1];
-  ostr << "npol=4  nstat=" << nstat << "  nbl=" << nstat*(nstat-1)/2 << endl;
-  ostr << "freq: start=" << startFreq/1e6 << " Mhz  end=" << endFreq/1e6
-       << " Mhz  step=" << (endFreq-startFreq)/nfreq/1e3
-       << " Khz" << endl;
-  ostr << "      nchan=" << nfreq << "  npart=" << nnode
-       << " (" << nfpn << " chan per part)" << endl;
-  ostr << "time: start="
-       << MVTime::Format(MVTime::DMY) << MVTime(Quantity(startTime,"s"))
-       << "  end="
-       << MVTime::Format(MVTime::DMY) << MVTime(Quantity(endTime,"s"))
-       << "  step=" << (endTime-startTime)/ntime << " sec" << endl;
-  ostr << "      ntime=" << ntime << endl;
+  writeDesc (msDesName, true, path.originalName(), nnode,
+	     antPos, antNames, conn.sender);
 }
 
 void doSlave (int rank)
@@ -217,11 +227,14 @@ void doSlave (int rank)
   // the correct tag in the Connection object.
   MSMakeConn conn(rank);
   conn.conns[rank-1]->read();
-  cout << "Rank " << rank << " received " << conn.receiver.getDataSize() << " bytes" << endl;
+  cout << "Rank " << rank << " received " << conn.receiver.getDataSize()
+       << " bytes" << endl;
   Array<double> antPos;
+  Array<String> antNamesArr;
   string msName;
-  conn.receiver.getExtra (msName, antPos);
-  createMSSeq (msName, rank, antPos, conn.receiver);
+  conn.receiver.getExtra (msName, antPos, antNamesArr);
+  Vector<String> antNames(antNamesArr);
+  createMSSeq (msName, rank, antPos, antNames, conn.receiver);
 }
 
 
