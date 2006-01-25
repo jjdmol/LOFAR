@@ -98,8 +98,8 @@ uint LOFAR::boolToBit (void* to, const void* from, uint nvalues, uint startbit)
   uint i,j;
   uint index = 0;
   {
-    unsigned char mask = 128;
-    mask >>= startbit;
+    unsigned char mask = 1;
+    mask <<= startbit;
     unsigned char& ch = bits[0];
     //# Take care of correct number of bits in first byte.
     uint nbits = (nvalues-index < 8-startbit  ?  nvalues-index : 8-startbit);
@@ -109,11 +109,11 @@ uint LOFAR::boolToBit (void* to, const void* from, uint nvalues, uint startbit)
       } else {
 	ch &= ~mask;
       }
-      mask >>= 1;
+      mask <<= 1;
     }
   }
   for (i=1; i<nbytes; ++i) {
-    unsigned char mask = 128;
+    unsigned char mask = 1;
     unsigned char& ch = bits[i];
     ch = 0;
     //# Take care of correct number of bits in last byte.
@@ -122,7 +122,7 @@ uint LOFAR::boolToBit (void* to, const void* from, uint nvalues, uint startbit)
       if (data[index++]) {
 	ch |= mask;
       }
-      mask >>= 1;
+      mask <<= 1;
     }
   }
   return nbytes;
@@ -138,24 +138,24 @@ uint LOFAR::bitToBool (void* to, const void* from, uint nvalues, uint startbit)
   uint i,j;
   uint index = 0;
   {
-    unsigned char mask = 128;
-    mask >>= startbit;
+    unsigned char mask = 1;
+    mask <<= startbit;
     const unsigned char ch = bits[0];
     //# Take care of correct number of bits in first byte.
     uint nbits = (nvalues-index < 8-startbit  ?  nvalues-index : 8-startbit);
     for (j=0; j<nbits; j++) {
       data[index++] = ((ch & mask) != 0);
-      mask >>= 1;
+      mask <<= 1;
     }
   }
   for (i=1; i<nbytes; ++i) {
-    unsigned char mask = 128;
+    unsigned char mask = 1;
     const unsigned char ch = bits[i];
     //# Take care of correct number of bits in last byte.
     uint nbits = (nvalues-index < 8  ?  nvalues-index : 8);
     for (j=0; j<nbits; j++) {
       data[index++] = ((ch & mask) != 0);
-      mask >>= 1;
+      mask <<= 1;
     }
   }
   return nbytes;
