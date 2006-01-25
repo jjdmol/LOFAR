@@ -529,8 +529,8 @@ int main(int argc, const char* argv[])
     flag &= queryNotIn (pb, ATTR5, ATTR0, 1,0,6);
     flag &= queryNotIn (pb, ATTR5, ATTR1,-1 ,0 ,1);
 
-  } catch (std::exception& e) {
-    cerr << e.what() << endl;
+  } catch (LOFAR::Exception& e) {
+    cerr << e << endl;
     return 1;
   }
   // Return with correct status.
