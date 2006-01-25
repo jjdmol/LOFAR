@@ -56,6 +56,13 @@ void WGWrite::sendrequest()
     return;
   }
 
+  // Should we write the wave form also?
+  if (GET_CONFIG("RSPDriver.WRITE_WG_WAVE", i) == 0 && (getCurrentIndex() >= 
+					GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)) {
+    setContinue(true);
+    return;
+  }
+
   if (getCurrentIndex() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
   {
     uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
@@ -104,7 +111,7 @@ void WGWrite::sendrequest()
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
     // copy waveform to event to be sent
-    Array<int16, 1> wave((int16*)&wgwave.samples,
+    Array<int32, 1> wave((int32*)&wgwave.samples,
 			 shape(N_WAVE_SAMPLES),
 			 neverDeleteData);
 

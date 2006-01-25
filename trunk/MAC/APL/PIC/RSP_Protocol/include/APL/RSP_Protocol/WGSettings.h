@@ -73,12 +73,12 @@ namespace LOFAR {
       /* get reference to wg settings array */
       blitz::Array<WGRegisterType, 1>& operator()();
       
-      /* get reference to the wave array */
-      blitz::Array<int16, 2>& waveforms();
+      /* get reference to the wave array (int32 in FTS2) */
+      blitz::Array<int32, 2>& waveforms();
 
-      /* preset waveform methods */
+      /* preset waveform methods (int32 in FTS2) */
       static void initWaveformPresets();
-      static blitz::Array<int16, 1> preset(int index);
+      static blitz::Array<int32, 1> preset(int index);
 
       /**
        * Access methods.
@@ -99,14 +99,14 @@ namespace LOFAR {
 
     private:
       blitz::Array<WGRegisterType, 1> m_registers;
-      blitz::Array<int16, 2>          m_waveforms;
+      blitz::Array<int32, 2>          m_waveforms;
       bool                            m_modified; // has the value been modified?
 
-      static blitz::Array<int16, 2>   m_presets;
+      static blitz::Array<int32, 2>   m_presets;
     };
 
     inline blitz::Array<WGSettings::WGRegisterType, 1>& WGSettings::operator()() { return m_registers; }
-    inline blitz::Array<int16, 2>& WGSettings::waveforms() { return m_waveforms; }
+    inline blitz::Array<int32, 2>& WGSettings::waveforms() { return m_waveforms; }
   };
 }; // namespace LOFAR
 
