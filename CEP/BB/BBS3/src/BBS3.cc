@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBS3/BlackBoardDemo.h>
+#include <MS/MSDesc.h>
 #ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
 #endif
@@ -51,42 +52,17 @@ using namespace std;
 void readMSTimes(const string& fileName, double& startTime, double& endTime,
 		 double& interval)
 {
-  // Get meta data from description file.
+  // Get meta data from global description file.
   string name(fileName+".des");
   std::ifstream istr(name.c_str());
   ASSERTSTR (istr, "File " << fileName << ".des could not be opened");
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
-  bis.getStart("ms.des");
-  double ra, dec;
-  int nparts;
-  bis >> nparts;
-  bis >> ra;
-  bis >> dec;
-  int itsNCorr, itsNrChan;
-  bis >> itsNCorr;
-  bis >> itsNrChan;
-  double itsStartFreq, itsEndFreq, itsStepFreq;
-  bis >> itsStartFreq;
-  bis >> itsEndFreq;
-  bis >> itsStepFreq;
-  vector<int> itsAnt1, itsAnt2;
-  vector<double> itsTimes, itsIntervals;
-  bis >> itsAnt1;
-  bis >> itsAnt2;
-  bis >> itsTimes;
-  bis >> itsIntervals;
-  casa::Matrix<double> itsAntPos;
-  bis >> itsAntPos;
-  bis.getEnd();
-  istr.close();
-  // Get startTime, endTime and interval size
-  double sTime = itsTimes.front();
-  interval = itsIntervals[0];
-  double eTime = itsTimes.back();
-  double eInterval = itsIntervals.back();
-  startTime = sTime-(interval/2);
-  endTime = eTime+(eInterval/2);
+  MSDesc msd;
+  bis >> msd;
+  startTime = msd.startTime;
+  endTime = msd.endTime;
+  interval = msd.exposures.back();
 }
 
 void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
