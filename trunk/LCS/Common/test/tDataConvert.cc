@@ -218,6 +218,13 @@ int main()
       for (int i=0; i<50; i++) {
 	ASSERT (bufb2[i+25] == bufb[i]);
       }
+      bufc[0] = 8; bufc[1]=4;
+      bitToBool (bufb, bufc, 16, 0);
+      for (int i=0; i<16; i++) {
+	cout << bufb[i] << ' ';
+      }
+      cout << endl;
+	
     }
   } catch (std::exception& x) {
     std::cout << "Unexpected exception: " << x.what() << std::endl;
