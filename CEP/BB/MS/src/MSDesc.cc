@@ -21,196 +21,99 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <MS/MSDesc.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobOBufStream.h>
 #include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
-
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSAntenna.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <ms/MeasurementSets/MSDataDescription.h>
-#include <ms/MeasurementSets/MSDataDescColumns.h>
-#include <ms/MeasurementSets/MSField.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSSpectralWindow.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MeasConvert.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/Exceptions/Error.h>
+#include <Common/VectorUtil.h>
+#include <casa/Quanta/MVTime.h>
 
 #include <iostream>
-#include <fstream>
-#include <unistd.h>
 
-using namespace LOFAR;
 using namespace casa;
 using namespace std;
 
-void getFreq (MS& ms, int ddid, int& nrchan,
-	      double& startFreq, double& endFreq, double& stepFreq)
+namespace LOFAR {
+
+BlobOStream& operator<< (BlobOStream& bos, const MSDesc& msd)
 {
-  // Get the frequency domain of the given data descriptor id
-  // which gives the spwid.
-  MSDataDescription mssub1(ms.dataDescription());
-  ROMSDataDescColumns mssub1c(mssub1);
-  int spw = mssub1c.spectralWindowId()(ddid);
-  MSSpectralWindow mssub(ms.spectralWindow());
-  ROMSSpWindowColumns mssubc(mssub);
-  Vector<double> chanFreq = mssubc.chanFreq()(spw);
-  Vector<double> chanWidth = mssubc.chanWidth()(spw);
-  // So far, only equal frequency spacings are possible.
-  if (! allEQ (chanWidth, chanWidth(0))) {
-    throw AipsError("Channels must have equal spacings");
-  }
-  nrchan    = chanWidth.nelements();
-  stepFreq  = abs(chanWidth(0));
-  if (chanFreq(0) > chanFreq(nrchan-1)) {
-    startFreq = chanFreq(0) + stepFreq/2;
-    endFreq   = startFreq - nrchan*stepFreq;
-  } else {
-    startFreq = chanFreq(0) - stepFreq/2;
-    endFreq   = startFreq + nrchan*stepFreq;
-  }
+  bos.putStart("MSDesc", 1);
+  bos << msd.msPath << msd.msName << msd.npart;
+  bos << msd.ra << msd.dec << msd.startTime << msd.endTime << msd.corrTypes;
+  bos << msd.nchan << msd.startFreq << msd.endFreq;
+  bos << msd.times << msd.exposures;
+  bos << msd.ant1 << msd.ant2;
+  bos << msd.antNames;
+  bos << msd.antPos;
+  bos << msd.arrayPos;
+  bos.putEnd();
+  return bos;
 }
 
-void getPhaseRef (MS& ms, double& ra, double& dec)
+BlobIStream& operator>> (BlobIStream& bis, MSDesc& msd)
 {
-  MSField mssub(ms.field());
-  ROMSFieldColumns mssubc(mssub);
-  // Use the phase reference of the first field.
-  MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
-  // Get RA and DEC in J2000.
-  MDirection dir = MDirection::Convert (phaseRef, MDirection::J2000)();
-  Quantum<Vector<double> > angles = dir.getAngle();
-  ra  = angles.getBaseValue()(0);
-  dec = angles.getBaseValue()(1);
+  int version = bis.getStart("MSDesc");
+  ASSERTSTR (version==1, "Unknown version in MSDesc blob");
+  bis >> msd.msPath >> msd.msName >> msd.npart;
+  bis >> msd.ra >> msd.dec >> msd.startTime >> msd.endTime >> msd.corrTypes;
+  bis >> msd.nchan >> msd.startFreq >> msd.endFreq;
+  bis >> msd.times >> msd.exposures;
+  bis >> msd.ant1 >> msd.ant2;
+  bis >> msd.antNames;
+  bis >> msd.antPos;
+  bis >> msd.arrayPos;
+  bis.getEnd();
+  return bis;
 }
 
-void doIt (const string& in, const string& column)
+ostream& operator<< (ostream& os, const MSDesc& msd)
 {
-  // Open the table and make sure it is in the correct order.
-  MS ms(in);
-  {
-    Block<String> cols(5);
-    cols[0] = "ARRAY_ID";
-    cols[1] = "DATA_DESC_ID";
-    cols[2] = "TIME";
-    cols[3] = "ANTENNA1";
-    cols[4] = "ANTENNA2";
-    Table tab = ms.sort(cols);
-    Vector<uInt> nrs(tab.nrow());
-    indgen (nrs);
-    ASSERTSTR (allEQ(nrs, tab.rowNumbers(ms)), "MS not in correct order");
+  os << "MS: " << msd.msPath << ' ' << msd.msName
+     << "   npart=" << msd.npart << endl;
+  os << " ncorr=" << msd.corrTypes.size() << "  nstat=" << msd.antNames.size()
+     << "  nbl=" << msd.ant1.size() << endl;
+  int nband = msd.startFreq.size();
+  os << " freq: start=" << msd.startFreq[0]/1e6 << " Mhz  end="
+     << msd.endFreq[nband-1]/1e6 << " Mhz  step="
+     << (msd.endFreq[0]-msd.startFreq[0])/msd.nchan[0]/1e3 << " Khz" << endl;
+  os << "       nband=" << nband
+     << "    1st band: nchan=" << msd.nchan[0] << endl;
+  int ntime = msd.times.size();
+  os << " time: start="
+       << MVTime::Format(MVTime::DMY) << MVTime(Quantity(msd.startTime,"s"))
+       << "  end="
+       << MVTime::Format(MVTime::DMY) << MVTime(Quantity(msd.endTime,"s"))
+       << "  step=" << (msd.endTime-msd.startTime)/ntime << " sec" << endl;
+  os << "       ntime=" << ntime << endl;
+  os << " stations:";
+  for (uint i=0; i<msd.antNames.size(); ++i) {
+    os << ' ' << msd.antNames[i];
   }
-  // Get all unique baselines.
-  Vector<Int> a1;
-  Vector<Int> a2;
-  {
-    Block<String> colsb(2);
-    colsb[0] = "ANTENNA1";
-    colsb[1] = "ANTENNA2";
-    Table tabb = ms.sort(colsb, Sort::Ascending,
-			 Sort::QuickSort+Sort::NoDuplicates);
-    ROScalarColumn<Int> ant1(tabb,"ANTENNA1");
-    ROScalarColumn<Int> ant2(tabb,"ANTENNA2");
-    a1 = ant1.getColumn();
-    a2 = ant2.getColumn();
-  }
-  // Get all unique array-ids and data-desc-ids.
-  ROScalarColumn<int> aidcol(ms, "ARRAY_ID");
-  Vector<int> aid = aidcol.getColumn();
-  uInt naid = GenSort<int>::sort (aid, Sort::Ascending,
-				  Sort::InsSort+Sort::NoDuplicates);
-  aid.resize (naid, True);
-  ROScalarColumn<int> ddidcol(ms, "DATA_DESC_ID");
-  Vector<int> ddid = ddidcol.getColumn();
-  uInt nddid = GenSort<int>::sort (ddid, Sort::Ascending,
-				   Sort::InsSort+Sort::NoDuplicates);
-  ddid.resize (nddid, True);
-  // Get all unique times.
-  ROScalarColumn<double> time(ms, "TIME");
-  Vector<double> tim1 = time.getColumn();
-  Vector<uInt> index;
-  uInt nt = GenSortIndirect<double>::sort (index, tim1, Sort::Ascending,
-					   Sort::InsSort+Sort::NoDuplicates);
-  Vector<double> tim2(nt);
-  Vector<double> interval2(nt);
-  {
-    ROScalarColumn<double> intvCol(ms, "EXPOSURE");
-    Vector<double> interval1 = intvCol.getColumn();
-    for (uInt i=0; i<nt; i++) {
-      tim2[i] = tim1[index[i]];
-      interval2[i] = interval1[index[i]];
-    }
-  }
-  // Check if they span the entire table.
-  if (naid * nddid * nt * a1.nelements() != ms.nrow()) {
-    throw AipsError("#rows in MS " + in +
-		    " mismatches #array-ids * #dd-ids * #times * #baselines");
-  }
-
-  // Get npol,nfreq from data.
-  int npol,nfreq;
-  {
-    ROArrayColumn<Complex> cold(ms,column);
-    IPosition shp = cold.shape (0);
-    npol = shp[0];
-    nfreq = shp[1];
-  }
-  // Now write out all descriptive data.
-  {
-    int nchan;
-    double startFreq, endFreq, stepFreq, ra, dec;
-    getFreq (ms, 0, nchan, startFreq, endFreq, stepFreq);
-    getPhaseRef (ms, ra, dec);
-    ASSERT (nchan == nfreq);
-    string name(in+"/vis.des");
-    std::ofstream ostr(name.c_str());
-    BlobOBufStream bbs(ostr);
-    BlobOStream bos(bbs);
-    bos.putStart("ms.des", 1);
-    bos << 1;
-    bos << ra << dec << npol << nfreq << startFreq << endFreq << stepFreq;
-    bos << a1 << a2;
-    bos << tim2;
-    bos << interval2;
-    MSAntenna mssub(ms.antenna());
-    ROMSAntennaColumns mssubc(mssub);
-    bos << mssubc.position().getColumn();
-    bos.putEnd();
-  }
-  cout << "      " << npol << " polarizations" << endl;
-  cout << "      " << nfreq << " frequency channels" << endl;
-  cout << "      " << a1.nelements() << " baselines" << endl;
-  cout << "      " << tim2.nelements() << " times" << endl;
-  cout << "      DD-ids:    " << ddid << endl;
-  cout << "      Array-ids: " << aid << endl;
-  cout << " in file " << in << "/vis.des" << endl;
+  os << endl;
+  return os;
 }
 
-int main(int argc, char** argv)
+void MSDesc::writeDesc (ostream& os) const
 {
-  try {
-    if (argc < 2) {
-      cout << "Run as:  MSDesc ms [datacolumn]" << endl;
-      cout << "   datacolumn defaults to DATA" << endl;
-      return 0;
-    }
-    string column("DATA");
-    if (argc > 2) {
-      column = argv[2];
-    }
-    doIt (argv[1], column);
-  } catch (exception& x) {
-    cout << "Unexpected expection: " << x.what() << endl;
-    return 1;
-  }
-  return 0;
+  os << "npart=" << npart << endl;
+  os << "subsetMSPath=" << msPath << endl;
+  os << "corrTypes=" << corrTypes << endl;
+  os << "stations=" << antNames << endl;
+  int nband = startFreq.size();
+  os << "freq.nband=" << nband << endl;
+  os << "freq.start=" << startFreq[0]/1e6 << " Mhz" << endl;
+  os << "freq.end=" << endFreq[0]/1e6 << " Mhz" << endl;
+  os << "freq.step=" << (endFreq[0]-startFreq[0]) / nchan[0] / 1e3
+     << " Khz" << endl;
+  os << "freq.nchan=" << nchan[0] << endl;
+  int ntime = times.size();
+  os << "time.start="
+     << MVTime::Format(MVTime::DMY) << MVTime(Quantity(startTime,"s")) << endl;
+  os << "time.end=  "
+     << MVTime::Format(MVTime::DMY) << MVTime(Quantity(endTime,"s")) << endl;
+  os << "time.step=" << (endTime-startTime) / ntime << " #sec" << endl;
+  os << "time.nsteps=" << ntime << endl;
 }
+
+}  //# namespace LOFAR

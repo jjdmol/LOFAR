@@ -79,16 +79,18 @@ namespace LOFAR {
   }
 
   void DH_MSMake::fillExtra (const string& msName,
-			     const Array<double>& antPos)
+			     const Array<double>& antPos,
+			     const Array<String>& antNames)
   {
-    createExtraBlob() << msName << antPos;
+    createExtraBlob() << msName << antPos << antNames;
   }
 
   void DH_MSMake::getExtra (string& msName,
-			    Array<double>& antPos)
+			    Array<double>& antPos,
+			    Array<String>& antNames)
   {
     BlobIStream& bis = getExtraBlob();
-    bis >> msName >> antPos;
+    bis >> msName >> antPos >> antNames;
     bis.getEnd();
   }
 
