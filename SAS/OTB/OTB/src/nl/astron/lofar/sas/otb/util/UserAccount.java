@@ -10,6 +10,7 @@
 
 package nl.astron.lofar.sas.otb.util;
 
+import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.exceptions.NoAccessException;
 
@@ -19,6 +20,13 @@ import nl.astron.lofar.sas.otb.exceptions.NoAccessException;
  */
 public class UserAccount {
     
+    // Create a Log4J logger instance
+    static Logger logger = Logger.getLogger(UserAccount.class);
+
+    // fields
+    private OtdbRmi itsOtdbRmi;
+    private int itsRoleMask;
+
     /**
      * Creates a new instance of UserAccount 
      */
@@ -60,7 +68,4 @@ public class UserAccount {
         // access the OTDB and check if the rolemask includes the Astronomer role
         return true;
     }
-    
-    private OtdbRmi itsOtdbRmi;
-    private int itsRoleMask;
 }

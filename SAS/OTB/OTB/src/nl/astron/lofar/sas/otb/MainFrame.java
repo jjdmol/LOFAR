@@ -9,13 +9,10 @@ package nl.astron.lofar.sas.otb;
 import java.util.*;
 import javax.swing.*;
 import org.apache.log4j.Logger;
-import nl.astron.lofar.sas.otb.exceptions.NoAccessException;
-import nl.astron.lofar.sas.otb.panels.IPluginPanel;
-import nl.astron.lofar.sas.otb.panels.MainPanel;
-import nl.astron.lofar.sas.otb.util.OtdbRmi;
-import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otbcomponents.LoginDialog;
-import nl.astron.lofar.sas.otbcomponents.StatusPanel;
+import nl.astron.lofar.sas.otb.exceptions.*;
+import nl.astron.lofar.sas.otb.panels.*;
+import nl.astron.lofar.sas.otb.util.*;
+import nl.astron.lofar.sas.otbcomponents.*;
 
 /**
  *
@@ -26,6 +23,15 @@ public class MainFrame extends javax.swing.JFrame {
     // Create a Log4J logger instance
     static Logger logger = Logger.getLogger(MainFrame.class);
 
+    // fields declaration
+    private HashMap<String,PluginPanelInfo>  itsPlugins;
+    private JPanel                           itsActivePanel;
+    private OtdbRmi                          itsOtdbRmi;
+    private StorageLocation                  itsStorageLocation;
+    private MACNavigatorInteraction          itsMACInteraction;
+    private static UserAccount               itsUserAccount;
+    
+    
     /** nested class for plugin panel administration */
     public class PluginPanelInfo {
         /** Creates new PluginPanelInfo */
@@ -61,8 +67,10 @@ public class MainFrame extends javax.swing.JFrame {
     /** Creates new form MainFrame */
     public MainFrame() {
         itsPlugins = new HashMap<String,PluginPanelInfo>();
-        itsOtdbRmi = new OtdbRmi();
-        
+        itsOtdbRmi = null;
+        itsStorageLocation = new StorageLocation(itsOtdbRmi);
+        itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
+
         initComponents();
 
         login();
@@ -276,6 +284,7 @@ public class MainFrame extends javax.swing.JFrame {
                 try {
                     itsUserAccount = new UserAccount(itsOtdbRmi, userName, password);
                     accessAllowed = true;
+                    itsMACInteraction.setCurrentUser(userName,password);
                     
                     statusPanelMainFrame.setText(StatusPanel.MIDDLE,userName);
                     
@@ -340,11 +349,6 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
     }
-
-    private HashMap<String,PluginPanelInfo> itsPlugins;
-    private JPanel itsActivePanel;
-    private OtdbRmi itsOtdbRmi;
-    private static UserAccount itsUserAccount;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar jMenuBarMainFrame;
