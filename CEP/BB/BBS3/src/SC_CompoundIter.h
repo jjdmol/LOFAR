@@ -64,7 +64,7 @@ public:
   SC_CompoundIter(const SC_CompoundIter&);
   SC_CompoundIter& operator=(const SC_CompoundIter&);
 
-  void readSolution();
+  void readFinalSolution();
 
   bool         itsFirstCall;
   int          itsPrevWOID;
