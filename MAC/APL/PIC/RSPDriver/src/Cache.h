@@ -51,6 +51,7 @@ namespace LOFAR {
       RSP_Protocol::BeamletWeights&    getBeamletWeights();
       RSP_Protocol::SubbandSelection&  getSubbandSelection();
       RSP_Protocol::RCUSettings&       getRCUSettings();
+      RSP_Protocol::RSUSettings&       getRSUSettings();
       RSP_Protocol::WGSettings&        getWGSettings();
       RSP_Protocol::SystemStatus&      getSystemStatus();
       RSP_Protocol::Statistics&        getSubbandStats();
@@ -71,6 +72,7 @@ namespace LOFAR {
       RSP_Protocol::BeamletWeights   m_beamletweights;
       RSP_Protocol::SubbandSelection m_subbandselection;
       RSP_Protocol::RCUSettings      m_rcusettings;
+      RSP_Protocol::RSUSettings      m_rsusettings;
       RSP_Protocol::WGSettings       m_wgsettings;
       RSP_Protocol::Statistics       m_subbandstats;
       RSP_Protocol::Statistics       m_beamletstats;

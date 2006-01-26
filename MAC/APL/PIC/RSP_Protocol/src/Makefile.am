@@ -28,6 +28,7 @@ librsp_protocol_la_SOURCES = \
 	BeamletWeights.cc \
 	Clocks.cc \
 	RCUSettings.cc \
+	RSUSettings.cc \
 	Statistics.cc \
 	SubbandSelection.cc \
 	SystemStatus.cc \

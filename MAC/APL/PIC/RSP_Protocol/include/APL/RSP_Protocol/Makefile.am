@@ -5,6 +5,7 @@ INSTHDRS = \
 	BeamletWeights.h \
 	Clocks.h \
 	RCUSettings.h \
+	RSUSettings.h \
 	Statistics.h \
 	SubbandSelection.h \
 	SystemStatus.h \

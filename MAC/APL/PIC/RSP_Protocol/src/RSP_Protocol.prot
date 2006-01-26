@@ -18,6 +18,7 @@ include = '<APL/RTCCommon/Timestamp.h>';
 include = '<APL/RSP_Protocol/BeamletWeights.h>';
 include = '<APL/RSP_Protocol/SubbandSelection.h>';
 include = '<APL/RSP_Protocol/RCUSettings.h>';
+include = '<APL/RSP_Protocol/RSUSettings.h>';
 include = '<APL/RSP_Protocol/WGSettings.h>';
 include = '<APL/RSP_Protocol/SystemStatus.h>';
 include = '<APL/RSP_Protocol/Statistics.h>';
@@ -439,6 +440,42 @@ event = {
   param = {
     name = "handle";
     type = "uint32";
+  };
+};
+
+//
+// RSU Control
+//
+event = {
+  signal = SETRSU;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "RSUSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETRSUACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
   };
 };
 

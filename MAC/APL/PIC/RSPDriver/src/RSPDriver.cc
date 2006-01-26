@@ -51,6 +51,7 @@
 #include "SetRCUCmd.h"
 #include "GetRCUCmd.h"
 #include "UpdRCUCmd.h"
+#include "SetRSUCmd.h"
 #include "SetWGCmd.h"
 #include "GetWGCmd.h"
 #include "GetVersionsCmd.h"
@@ -773,6 +774,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       rsp_unsubrcu(event, port);
       break;
       
+    case RSP_SETRSU:
+      rsp_setrsu(event, port);
+      break;
+
     case RSP_SETWG:
       rsp_setwg(event, port);
       break;
@@ -1381,6 +1386,36 @@ void RSPDriver::rsp_unsubrcu(GCFEvent& event, GCFPortInterface& port)
   }
 
   port.send(ack);
+}
+
+//
+// rsp_setrsu(event,port)
+//
+void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<SetRSUCmd> command = new SetRSUCmd(event, port, Command::WRITE);
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SETRCU: invalid parameter");
+    
+    RSPSetrsuackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+
+  // if timestamp == Timestamp(0,0) apply changes immediately
+  if (Timestamp(0,0) == command->getTimestamp()) {
+    LOG_INFO("applying RSU control to front buffer");
+    command->apply(Cache::getInstance().getFront());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+  command->ack(Cache::getInstance().getFront());
 }
 
 //
