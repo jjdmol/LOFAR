@@ -267,7 +267,7 @@ void SC_Simple::readSolution()
 {
   LOG_TRACE_FLOW("SC_Simple reading solution");
 
-  DH_DB* solPtr = dynamic_cast<DH_DB*>(getSolution());
+  DH_DB* solPtr = getSolution();
 
   // Wait for solution
   bool firstTime = true;

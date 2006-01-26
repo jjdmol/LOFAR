@@ -91,12 +91,13 @@ bool SC_CompoundIter::execute()
     WOPD->setNewBaselines(false);
     WOPD->setNewPeelSources(false);
   
-    if (itsControlParmUpd || itsWriteParms)   // If Controller handles parameter writing
+    if (itsWriteParms) // If Controller writes parameters at end of interval
     {
-      // Read solution of previously issued workorders
+      // Read final solution of previously issued workorders
       BBSTest::ScopedTimer readSolTimer("C:read solutions");
-      readSolution();
+      readFinalSolution();
       readSolTimer.end();
+
       // Controller writes new parameter values directly to the tables
       vector<ParmData> pData;
       getSolution()->getSolution(pData);
@@ -107,11 +108,10 @@ bool SC_CompoundIter::execute()
       BBSTest::ScopedTimer st("C:parmwriter");
       getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
     }
-       
+
     itsCurStartTime += itsTimeLength;
 
     BBSTest::Logger::log("NextInterval");
-
   }
 
   // Set prediffer workorder data
@@ -201,9 +201,11 @@ bool SC_CompoundIter::execute()
 
 void SC_CompoundIter::postprocess()
 {
-  if (itsWriteParms || itsControlParmUpd)           // write solution in parmtable
+  if (itsWriteParms)     // If Controller writes parameters at end of interval
   {
-    readSolution();
+    // Read final solution of previously issued workorders
+    readFinalSolution();
+
     // Controller writes found parameter values in the tables
     vector<ParmData> pData;
     getSolution()->getSolution(pData);
@@ -217,17 +219,18 @@ void SC_CompoundIter::postprocess()
   BBSTest::Logger::log("End of TestRun");
 }
 
-void SC_CompoundIter::readSolution()
+void SC_CompoundIter::readFinalSolution()
 {
   LOG_TRACE_FLOW("SC_CompoundIter reading solution");
 
-  DH_DB* solPtr = dynamic_cast<DH_DB*>(getSolution());
+  DH_DB* solPtr = getSolution();
 
   // Wait for solution
   bool firstTime = true;
   int id = itsPrevWOID;
-  char str[64];
-  sprintf(str, "SELECT * FROM bbs3solutions WHERE WOID=%i ORDER BY iteration DESC", id);
+  char str[128];
+  sprintf(str, "SELECT * FROM bbs3solutions WHERE WOID=%i AND (HASCONVERGED=1 OR ITERATION=%i)", 
+	  id, itsMaxIterations-1);
   string query(str);
 
   while (solPtr->queryDB(query, *itsInSolConn) <= 0)
@@ -243,5 +246,6 @@ void SC_CompoundIter::readSolution()
   //getSolution()->dump();
 
 }
+
 
 } // namespace LOFAR
