@@ -319,6 +319,25 @@ namespace LOFAR {
       RCUSettings::Control m_control;
     };
 
+    class RSUCommand : public Command
+    {
+    public:
+      RSUCommand(GCFPortInterface& port);
+      virtual ~RSUCommand() {}
+      virtual void send();
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+
+      RSUSettings::ResetControl& control() {
+	// return reference so we can modify it
+	// using the methods of RCUSettings::Control
+	return m_control;
+      }
+
+    private:
+
+      RSUSettings::ResetControl m_control;
+    };
+
     class WGCommand : public Command
     {
     public:
@@ -330,6 +349,10 @@ namespace LOFAR {
       void setFrequency(double frequency)
       {
         m_frequency = frequency;
+      }
+      void setWaveMode(int mode)
+      {
+        m_mode = mode;
       }
       void setPhase(int phase)
       {
@@ -343,6 +366,7 @@ namespace LOFAR {
       double m_frequency;
       uint8  m_phase;
       uint32 m_amplitude;
+	  uint8	 m_mode;
     };
 
     class StatusCommand : public Command

@@ -90,12 +90,18 @@ CacheBuffer::CacheBuffer()
   RCUSettings::Control rcumode;
   rcumode.setMode(RCUSettings::Control::MODE_OFF);
   m_rcusettings() = rcumode;
-
   // allocate modified flags for all receivers
   m_rcusettings.getModifiedFlags().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
 
+	// RSU settings
+	m_rsusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+	RSUSettings::ResetControl 	rsumode;
+	rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
+	m_rsusettings() = rsumode;
+	m_rsusettings.getModifiedFlags().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+
+
   m_wgsettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
-  
   WGSettings::WGRegisterType init;
   init.freq        = 0;
   init.phase       = 0;
@@ -148,6 +154,7 @@ CacheBuffer::CacheBuffer()
   LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
   LOG_DEBUG_STR("m_subbandselection().size()   =" << m_subbandselection().size()   * sizeof(uint16));
   LOG_DEBUG_STR("m_rcusettings().size()        =" << m_rcusettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_rsusettings().size()        =" << m_rsusettings().size()        * sizeof(uint8));
   LOG_DEBUG_STR("m_wgsettings().size()         =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
   LOG_DEBUG_STR("m_subbandstats().size()       =" << m_subbandstats().size()       * sizeof(uint16));
   LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
@@ -163,6 +170,7 @@ CacheBuffer::~CacheBuffer()
   m_beamletweights().free();
   m_subbandselection().free();
   m_rcusettings().free();
+  m_rsusettings().free();
   m_wgsettings().free();
   m_wgsettings.waveforms().free();
   m_subbandstats().free();
@@ -192,6 +200,11 @@ SubbandSelection& CacheBuffer::getSubbandSelection()
 RCUSettings& CacheBuffer::getRCUSettings()
 {
   return m_rcusettings;
+}
+
+RSUSettings& CacheBuffer::getRSUSettings()
+{
+  return m_rsusettings;
 }
 
 WGSettings& CacheBuffer::getWGSettings()
@@ -264,6 +277,7 @@ Cache::Cache() : m_front(0), m_back(0)
   m_back->getWGSettings().setModified();
   m_back->getClocks().setModified();
   m_back->getRCUSettings().getModifiedFlags() = true;
+  m_back->getRSUSettings().getModifiedFlags() = true;
 }
 
 Cache::~Cache()
@@ -278,6 +292,7 @@ void Cache::swapBuffers()
   m_back->getWGSettings().clearModified();
   m_back->getClocks().clearModified();
   m_back->getRCUSettings().clearModified();
+  m_back->getRSUSettings().clearModified();
 
   CacheBuffer *tmp = m_front;
   m_front = m_back;

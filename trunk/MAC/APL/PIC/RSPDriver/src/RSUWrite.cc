@@ -45,6 +45,7 @@ using namespace RTC;
 static const EPA_Protocol::RSUReset  g_RSU_RESET_SYNC  = { 1, 0, 0, 0 }; // Soft SYNC
 static const EPA_Protocol::RSUReset  g_RSU_RESET_CLEAR = { 0, 1, 0, 0 }; // CLEAR
 static const EPA_Protocol::RSUReset  g_RSU_RESET_RESET = { 0, 0, 1, 0 }; // RESET
+static const EPA_Protocol::RSUReset  g_RSU_RESET_NONE  = { 0, 0, 0, 0 }; // No action
 
 RSUWrite::RSUWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
@@ -64,11 +65,9 @@ void RSUWrite::sendrequest()
 
   //
   // Send CLEAR on first write
-  // Send SYNC on all subsequent writes
   //
   static bool first = true;
-  if (first)
-  {
+  if (first) {
     LOG_INFO("Sending CLEAR to all RSP boards");
 
     reset.reset = g_RSU_RESET_CLEAR;
@@ -80,7 +79,25 @@ void RSUWrite::sendrequest()
 
     first = false;
   }
-  else setContinue(true);
+  else {
+	// cache modified?
+	// TODO: global_rcu should be something different: like global_board.
+    if (!Cache::getInstance().getBack().getRSUSettings().getModifiedFlags()(getBoardId())) {
+      setContinue(true);
+      return;
+    }
+
+    // read values from cache
+    RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
+	if (s()(getBoardId()).getSync())		reset.reset = g_RSU_RESET_SYNC;
+	else if (s()(getBoardId()).getClear())	reset.reset = g_RSU_RESET_CLEAR;
+	else if (s()(getBoardId()).getReset())	reset.reset = g_RSU_RESET_RESET;
+	else {
+      setContinue(true);
+      return;
+	}
+    getBoardPort().send(reset);
+  }
 }
 
 void RSUWrite::sendrequest_status()

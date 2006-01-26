@@ -51,6 +51,7 @@
 //# rspctl --xcsubband=<int>                   # set the subband to cross correlate
 //# rspctl --clocks          [--select=<set>]  # get or set the clock frequency of clocks
 //# rspctl --version         [--select=<set>]  # get version information
+//# rspctl --rspclear		 [--select=<set>]  # clear FPGA registers on rspboards
 //#
 
 #include <lofar_config.h>
@@ -479,6 +480,76 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
   return GCFEvent::HANDLED;
 }
 
+//
+// RSUCommand
+//
+RSUCommand::RSUCommand(GCFPortInterface& port) : Command(port)
+{
+}
+
+void RSUCommand::send()
+{
+  if (getMode()) {
+    // GET
+	// does not exist yet
+  }
+  else {
+    // SET
+    RSPSetrsuEvent setrsu;
+    setrsu.timestamp = Timestamp(0,0);
+    setrsu.rcumask = getRCUMask();
+
+    setrsu.settings().resize(1);
+    setrsu.settings()(0) = m_control;
+
+    for (int i = 0; i < setrsu.settings().extent(firstDim); i++) {
+      printf("control(%d)=0x%08x\n", i, setrsu.settings()(i).getRaw());
+    }
+
+    m_rspport.send(setrsu);
+  }
+}
+
+GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
+{
+  switch (e.signal) {
+#if 0
+    case RSP_GETRSUACK: {
+      RSPGetrsuackEvent ack(e);
+      bitset<MAX_N_RCUS> mask = getRCUMask();
+
+      if (SUCCESS == ack.status) {
+        int boardin = 0;
+        for (int boardout = 0; boardout < get_ndevices(); boardout++) {
+
+          if (mask[boardout]) {
+            logMessage(cout,formatString("RSU[%02d].control=0x%08x",boardout, ack.settings()(boardin++).getRaw()));
+          }
+        }
+      }
+      else {
+        logMessage(cerr,"Error: RSP_GETRSU command failed.");
+      }
+    }
+    break;
+#endif
+    case RSP_SETRSUACK: {
+      RSPSetrsuackEvent ack(e);
+
+      if (SUCCESS != ack.status) {
+        logMessage(cerr,"Error: RSP_SETRSU command failed.");
+      }
+    }
+  }
+
+  GCFTask::stop();
+
+  return GCFEvent::HANDLED;
+}
+
+//
+// ClocksCommand
+//
 ClocksCommand::ClocksCommand(GCFPortInterface& port) : Command(port)
 {
 }
@@ -557,7 +628,8 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 WGCommand::WGCommand(GCFPortInterface& port) : Command(port),
     m_frequency(0.0),
     m_phase(0),
-    m_amplitude(1<<31)
+    m_amplitude(1<<23),
+	m_mode(0)
 {
 }
 
@@ -585,13 +657,20 @@ void WGCommand::send()
     wgset.settings()(0).ampl = m_amplitude;
     wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
 
-    if (m_frequency > 1e-6)
-    {
-      wgset.settings()(0).mode = WGSettings::MODE_CALC;
-    }
-    else
+    if (m_frequency < 1e-6)
     {
       wgset.settings()(0).mode = WGSettings::MODE_OFF;
+    }
+    else /* frequency ok */
+    {
+      if (m_mode == 0) { 	/* forget to set mode? assume calc mode */
+        wgset.settings()(0).mode = WGSettings::MODE_CALC;
+    	wgset.settings()(0).nof_samples = 1024;
+      }
+	  else {
+        wgset.settings()(0).mode = m_mode;
+    	wgset.settings()(0).nof_samples = 1024;
+      }
     }
     wgset.settings()(0).preset = 0; // or one of PRESET_[SINE|SQUARE|TRIANGLE|RAMP]
 
@@ -1330,6 +1409,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 
     case RSP_GETRCUACK:
     case RSP_SETRCUACK:
+    case RSP_SETRSUACK:
     case RSP_GETSTATSACK:
     case RSP_SUBSTATSACK:
     case RSP_UPDSTATS:
@@ -1465,6 +1545,7 @@ static void usage()
   cout << "rspctl --xcsubband=<int>                  # set the subband to cross correlate" << endl;
   cout << "rspctl --clocks=<int>    [--select=<set>] # get or set the clock frequency of clocks in Hz" << endl;
   cout << "rspctl --version         [--select=<set>] # get version information" << endl;
+  cout << "rspctl --rspclear        [--select=<set>] # clear FPGA register board" << endl;
 }
 
 Command* RSPCtl::parse_options(int argc, char** argv)
@@ -1498,12 +1579,15 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "rcuspecinv",     no_argument,       0, 'u' },
 	  { "rcudelay",       required_argument, 0, 'y' },
 	  { "wg",             optional_argument, 0, 'g' },
+	  { "wgmode",         required_argument, 0, 'G' },
 	  { "status",         no_argument,       0, 'q' },
 	  { "statistics",     optional_argument, 0, 't' },
-	  { "xcstatistics",   no_argument,     0, 'x' },
+	  { "xcstatistics",   no_argument,       0, 'x' },
 	  { "xcsubband",      optional_argument, 0, 'z' },
 	  { "clocks",         optional_argument, 0, 'c' },
 	  { "version",        no_argument,       0, 'v' },
+//	  { "rspreset",       optional_argument, 0, 'R' },
+	  { "rspclear",       optional_argument, 0, 'C' },
 	  { "help",           no_argument,       0, 'h' },
 #ifdef ENABLE_RSPFE
 	  { "feport",         required_argument, 0, 'f' },
@@ -1524,7 +1608,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
       switch (c)
 	{
-	case 'l':
+	case 'l': 	// --select
 	  if (optarg)
 	    {
 	      if (!command || 0 == command->get_ndevices())
@@ -1545,7 +1629,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    }
 	  break;
 
-	case 'w':
+	case 'w':	// --weights
 	  {
 	    if (command)
 	      delete command;
@@ -1570,7 +1654,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'a':
+	case 'a':	// --aweights
 	  {
 	    if (command)
 	      delete command;
@@ -1602,7 +1686,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 's':
+	case 's':	// --subbands
 	  {
 	    if (command)
 	      delete command;
@@ -1725,7 +1809,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'g':
+	case 'g':	// --wg
 	  {
 	    if (command)
 	      delete command;
@@ -1749,7 +1833,23 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'q':
+	case 'G':	// --wgmode
+	  {
+	    if (optarg)
+	      {
+		int mode = atoi(optarg);
+		if (mode != 0 && mode != 1 && mode != 3 && mode != 5) {
+		    logMessage(cerr,"Error: option '--wgmode' parameter must be 0,1,3 or 5");
+		    delete command;
+		    return 0;
+		}
+		WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
+		wgcommand->setWaveMode(mode);
+	      }
+	  }
+	  break;
+
+	case 'q' :	// --status
 	  {
 	    if (command)
 	      delete command;
@@ -1760,7 +1860,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 't':
+	case 't':	// --statistics
 	  {
 	    if (command)
 	      delete command;
@@ -1784,7 +1884,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'x':
+	case 'x':	// -- xcstatistics
 	  {
 	    if (command)
 	      delete command;
@@ -1795,7 +1895,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'z':
+	case 'z':	// -- xcsubbands
 	  {
 	    if (command)
 	      delete command;
@@ -1827,7 +1927,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'c':
+	case 'c':	// --clocks
 	  {
 	    if (command)
 	      delete command;
@@ -1852,7 +1952,20 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'v':
+	case 'C': // --rspclear
+	  {
+	    if (command)
+	      delete command;
+	    RSUCommand* rsucommand = new RSUCommand(m_server);
+	    command = rsucommand;
+	    command->set_ndevices(m_nrspboards);
+
+		rsucommand->setMode(false);	// is a SET command
+	    rsucommand->control().setClear(true);
+	  }
+	  break;
+
+	case 'v':	// --version
 	  {
 	    if (command)
 	      delete command;
@@ -1862,12 +1975,12 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'h':
+	case 'h':	// --help
 	  usage();
 	  break;
 
 #ifdef ENABLE_RSPFE
-	case 'f':
+	case 'f':	// --feport
 	  if (optarg)
 	    {
 	      if (!command || 0 == command->get_ndevices())
@@ -1890,7 +2003,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  break;
 #endif
 
-	case 'd':
+	case 'd':	// --duration
 	  if (optarg)
 	    {
 	      if (!command || 0 == command->get_ndevices())
@@ -1912,7 +2025,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    }
 	  break;
 
-	case 'i':
+	case 'i':	// -- integration
 	  if (optarg)
 	    {
 	      if (!command || 0 == command->get_ndevices())
@@ -1934,7 +2047,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    }
 	  break;
 
-	case 'D':
+	case 'D':	// -- directory
 	  if (optarg)
 	    {
 	      if (!command || 0 == command->get_ndevices())

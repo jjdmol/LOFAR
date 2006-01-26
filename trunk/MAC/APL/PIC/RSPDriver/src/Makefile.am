@@ -103,6 +103,8 @@ RSPDriver_SOURCES = \
 	GetRCUCmd.cc \
 	UpdRCUCmd.h \
 	UpdRCUCmd.cc \
+	SetRSUCmd.h \
+	SetRSUCmd.cc \
 	SetWGCmd.h \
 	SetWGCmd.cc \
 	GetWGCmd.h \

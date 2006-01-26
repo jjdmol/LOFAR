@@ -120,6 +120,8 @@ namespace LOFAR {
       void rsp_subrcu  (GCFEvent& event, GCFPortInterface &port);
       void rsp_unsubrcu(GCFEvent& event, GCFPortInterface &port);
 
+      void rsp_setrsu  (GCFEvent& event, GCFPortInterface &port);
+
       void rsp_setwg(GCFEvent& event, GCFPortInterface &port);
       void rsp_getwg(GCFEvent& event, GCFPortInterface &port);
 
