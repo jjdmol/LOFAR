@@ -373,6 +373,7 @@ int main()
       {
 	// Use a file output stream.
 	std::ofstream os ("tBlobStream_tmp.dat");
+	ASSERTSTR (os, "tBlobStream_tmp.dat could not be created");
 	BlobOBufStream bob(os);
         len = doOut (bob);
 	ASSERT (int(os.tellp()) == len);
@@ -380,6 +381,7 @@ int main()
       {
 	// Use the file as input.
 	std::ifstream is ("tBlobStream_tmp.dat");
+	ASSERTSTR (is, "tBlobStream_tmp.dat not found");
 	BlobIBufStream bib(is);
 	doIn (bib);
 	ASSERT (int(is.tellg()) == len);
@@ -387,6 +389,7 @@ int main()
       {
 	// Use a standard little-endian file as input.
 	std::ifstream is ("tBlobStream.in_le");
+	ASSERTSTR (is, "tBlobStream.in_le not found");
 	BlobIBufStream bib(is);
 	doIn (bib);
 	ASSERT (int(is.tellg()) == len);
@@ -394,6 +397,7 @@ int main()
       {
 	// Use a standard big-endian file as input.
 	std::ifstream is ("tBlobStream.in_be");
+	ASSERTSTR (is, "tBlobStream.in_be not found");
 	BlobIBufStream bib(is);
 	doIn (bib);
 	ASSERT (int(is.tellg()) == len);
