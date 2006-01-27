@@ -4,7 +4,7 @@
  * Created on 26 januari 2006, 11:33
  */
 
-package nl.astron.lofar.otbcomponents;
+package nl.astron.lofar.sas.otbcomponents;
 
 import java.io.File;
 import javax.swing.JFileChooser;
