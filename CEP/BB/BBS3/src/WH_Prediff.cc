@@ -218,14 +218,15 @@ void WH_Prediff::process()
 	pred->subtractPeelSources(true);   // >>>For now: always write in new file 
       }
       
-      if (wo->getCleanUp())   // If Prediffer object is no longer needed: clean up  
-      {
-	itsPrediffs.erase(contrID);
-      }
-
     } // end else
 
   } // end if (wo->getDoNothing==false)
+
+  if (wo->getCleanUp())   // If Prediffer object is no longer needed: clean up  
+  {
+    int contrID = wo->getStrategyControllerID();
+    deletePrediffer(contrID);
+  }
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Executed);
@@ -233,8 +234,6 @@ void WH_Prediff::process()
   ASSERTSTR(conn!=0, "No connection set!");
   BBSTest::ScopedTimer st("P:prediffer_updating_db");
   wo->updateDB(*conn);
-
-
 }
 
 void WH_Prediff::dump() const
@@ -274,6 +273,17 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
     itsPrediffs.insert(PrediffMap::value_type(id, pred));
     isNew = true;
     return pred;
+  }
+}
+
+void WH_Prediff::deletePrediffer(int id)
+{
+  PrediffMap::iterator iter;
+  iter = itsPrediffs.find(id);
+  if (iter != itsPrediffs.end())
+  {
+    delete iter->second;
+    itsPrediffs.erase(iter);
   }
 }
 

@@ -133,7 +133,7 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
     string stratType = params.getString(stratName + "strategy");
     if ((stratType == "CompoundIter"))
     {
-      maxIter = 1;
+      maxIter = 1;     // Iterations are done within one CEPFrame run.
     }
     int nrIntervals = 0;
     if (intervalSize >= endTime-startTime)
@@ -148,6 +148,9 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
     LOG_INFO_STR("Strategy " << string(nrStr) << " max number of runs " << maxRuns);
     totalNrRuns += maxRuns;
   }
+
+  totalNrRuns += nrStrategies-1; // Add 1 extra CEPFrame run per strategy for possible
+                                 // clean-up orders
 
   // Set total number of CEPFrame runs
   params.replace(ACC::APS::KVpair("nrCEPFrameRuns", totalNrRuns));
@@ -172,7 +175,7 @@ int main (int argc, const char** argv)
     TH_MPI::initMPI(argc, argv);
 #endif
 
-    //    BBSTest::Logger::init();
+    //BBSTest::Logger::init();
     BlackBoardDemo simulator;
     {
       BBSTest::ScopedUSRTimer st("total-execute-without-MPI");

@@ -75,6 +75,9 @@ class WH_Solve : public LOFAR::WorkHolder
   // Create a Solver object
   Solver* getSolver(int id);
 
+  // Delete a Solver object
+  void deleteSolver(int id);
+
   // Read all Prediffer inputs
   void readInputs(Solver* solver, bool firstRead);
   

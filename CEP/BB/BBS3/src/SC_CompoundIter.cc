@@ -44,9 +44,11 @@ SC_CompoundIter::SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn,
     itsCurStartTime   (0),
     itsControlParmUpd (false),
     itsStartTime      (0),
+    itsEndTime        (0),
     itsTimeLength     (0),
     itsStartFreq      (0),
-    itsFreqLength     (0)
+    itsFreqLength     (0),
+    itsSendDoNothingWO(false)
 {
   itsMaxIterations = itsArgs.getInt32("maxNrIterations");
   if (itsArgs.isDefined("fitCriterion"))
@@ -60,6 +62,7 @@ SC_CompoundIter::SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn,
   itsControlParmUpd = itsArgs.getBool ("controlParmUpdate");
   itsWriteParms = itsArgs.getBool("writeParms");
   itsStartTime = itsArgs.getDouble ("startTime");
+  itsEndTime = itsArgs.getDouble ("endTime");
   itsTimeLength = itsArgs.getDouble ("timeInterval");
   itsStartFreq = itsArgs.getDouble ("startFreq");
   itsFreqLength = itsArgs.getDouble ("freqLength");
@@ -72,6 +75,7 @@ bool SC_CompoundIter::execute()
 {
   BBSTest::ScopedTimer si_exec("C:strategycontroller_execute");
   BBSTest::ScopedTimer getWOTimer("C:getWorkOrders");
+  bool finished = false;  // Has this strategy completed?
   DH_WOPrediff* WOPD = getPrediffWorkOrder();
   DH_WOSolve* WOSolve = getSolveWorkOrder();
   getWOTimer.end();
@@ -85,11 +89,17 @@ bool SC_CompoundIter::execute()
 
     WOPD->setNewBaselines(true);
     WOPD->setNewPeelSources(true);
+    WOPD->setDoNothing(false);
+    WOPD->setCleanUp(false);
+    WOSolve->setDoNothing(false);
+    WOSolve->setCleanUp(false);
   }
   else
   {
     WOPD->setNewBaselines(false);
     WOPD->setNewPeelSources(false);
+    WOPD->setCleanUp(false);            // Reset
+    WOSolve->setCleanUp(false);
   
     if (itsWriteParms) // If Controller writes parameters at end of interval
     {
@@ -111,6 +121,13 @@ bool SC_CompoundIter::execute()
 
     itsCurStartTime += itsTimeLength;
 
+    if (itsCurStartTime >= itsEndTime) // If all time intervals handled, send workorders to
+    {                                  // clean up.
+      itsSendDoNothingWO = true;
+      WOPD->setCleanUp(true);
+      WOSolve->setCleanUp(true);
+      finished = true;                 // This strategy has finished!
+    }
     BBSTest::Logger::log("NextInterval");
   }
 
@@ -122,9 +139,9 @@ bool SC_CompoundIter::execute()
   {
     WOPD->setUpdateParms(false);
     WOPD->setMaxIterations(itsMaxIterations);
+    WOPD->setDoNothing(itsSendDoNothingWO);
     WOPD->setNewDomain(true);
     WOPD->setSubtractSources(false);
-    WOPD->setDoNothing(false);
     WOPD->setStartFreq (itsArgs.getDouble ("startFreq"));
     WOPD->setFreqLength (itsArgs.getDouble ("freqLength")); 
     WOPD->setTimeLength (itsTimeLength); 
@@ -150,11 +167,11 @@ bool SC_CompoundIter::execute()
     msParams["calcUVW"] = itsArgs.getString("calcUVW");
     WOPD->setVarData (msParams, ant, pNames, exPNames, srcs, corrs);
     WOPD->setStrategyControllerID(getID());
-  
+ 
+    WOSolve->setDoNothing(itsSendDoNothingWO); 
     WOSolve->setNewDomain(true);
     WOSolve->setMaxIterations(itsMaxIterations);
     WOSolve->setFitCriterion(itsFitCriterion);
-    WOSolve->setDoNothing(false);
     WOSolve->setUseSVD (itsArgs.getBool ("useSVD"));
     WOSolve->setIteration(itsCurIter);
     WOSolve->setStrategyControllerID(getID());
@@ -196,12 +213,12 @@ bool SC_CompoundIter::execute()
 
   WOSolve->insertDB(*itsOutWOSolveConn);
 
-  return true;
+  return (!finished);
 }
 
 void SC_CompoundIter::postprocess()
 {
-  if (itsWriteParms)     // If Controller writes parameters at end of interval
+  if ((!itsSendDoNothingWO) && itsWriteParms)   // If Controller writes parameters at end of interval
   {
     // Read final solution of previously issued workorders
     readFinalSolution();
