@@ -6,6 +6,7 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
+import java.awt.event.ActionListener;
 import java.util.*;
 import javax.swing.*;
 
@@ -43,7 +44,43 @@ public class ButtonPanel extends javax.swing.JPanel {
     }
     
     /** sets the visibility state of the button */
-    public void setButtonVisible(String button, boolean visisble) {
+    public void setButtonVisible(String button, boolean visible) {
+        //TODO
+    }
+    
+    
+    /** remove one button and the actionListeners associated with it
+     *
+     * @param   key     the Key identifying this button
+     */
+     public void removeButton(String aKey) {
+         if (buttons.containsKey(aKey)) {
+            ActionListener al[]=buttons.get(aKey).getActionListeners();
+            for (int i=0;i<al.length;i++) {
+                removeActionListener(al[i]);
+            }
+            jPanelButtons.remove(buttons.get(aKey));
+            buttons.remove(aKey);            
+         }
+         jPanelButtons.repaint();
+     }
+    
+    /** remove all buttons from button panel, restores the buttonplaceholder
+     *  and removes all actionListeners associated with these buttons.
+     */ 
+    public void removeAllButtons() {
+        Iterator it=buttons.keySet().iterator();
+        while (it.hasNext()) {
+            String key=(String)it.next();
+            ActionListener al[]=buttons.get(key).getActionListeners();
+            for (int i=0;i<al.length;i++) {
+                removeActionListener(al[i]);
+            }
+            jPanelButtons.remove(buttons.get(key));
+        }
+        buttons.clear();
+        jPanelButtons.add(buttonsPlaceHolder);
+        jPanelButtons.repaint();
     }
 
     /** This method is called from within the constructor to
@@ -88,6 +125,7 @@ public class ButtonPanel extends javax.swing.JPanel {
 
     /**
      * Registers ActionListener to receive events.
+     *
      * @param listener The listener to register.
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
@@ -100,6 +138,7 @@ public class ButtonPanel extends javax.swing.JPanel {
 
     /**
      * Removes ActionListener from the list of listeners.
+     *
      * @param listener The listener to remove.
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
