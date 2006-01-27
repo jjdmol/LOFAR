@@ -81,6 +81,10 @@ class WH_Prediff : public LOFAR::WorkHolder
 			  const ParameterSet& args, 
 			  const vector<int>& antNrs,
 			  bool& isNew);
+
+  // Delete the Prediffer object with specified ID
+  void deletePrediffer (int id);
+
   // Read the next workorder
   void readWorkOrder();
 

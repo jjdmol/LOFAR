@@ -61,6 +61,7 @@ SC_Simple::SC_Simple(Connection* inSolConn, Connection* outWOPDConn,
   itsControlParmUpd = itsArgs.getBool ("controlParmUpdate");
   itsWriteParms = itsArgs.getBool("writeParms");
   itsStartTime = itsArgs.getDouble ("startTime");
+  itsEndTime = itsArgs.getDouble ("endTime");
   itsTimeLength = itsArgs.getDouble ("timeInterval");
   itsStartFreq = itsArgs.getDouble ("startFreq");
   itsFreqLength = itsArgs.getDouble ("freqLength");
@@ -73,6 +74,7 @@ bool SC_Simple::execute()
 {
   BBSTest::ScopedTimer si_exec("C:strategycontroller_execute");
   BBSTest::ScopedTimer getWOTimer("C:getWorkOrders");
+  bool finished = false;   // Has this strategy completed?
   DH_WOPrediff* WOPD = getPrediffWorkOrder();
   DH_WOSolve* WOSolve = getSolveWorkOrder();
   getWOTimer.end();
@@ -88,7 +90,9 @@ bool SC_Simple::execute()
     WOPD->setNewPeelSources(true);
     WOPD->setSubtractSources(false);
     WOPD->setUpdateParms(false);
+    WOPD->setCleanUp(false);
     WOSolve->setNewDomain(true);
+    WOSolve->setCleanUp(false);
     itsCurStartTime = itsArgs.getDouble ("startTime");
   }
   else
@@ -98,7 +102,9 @@ bool SC_Simple::execute()
     WOPD->setNewPeelSources(false);
     WOPD->setSubtractSources(false);
     WOPD->setUpdateParms(true);
+    WOPD->setCleanUp(false);         //Reset
     WOSolve->setNewDomain(false);
+    WOSolve->setCleanUp(false);
 
     if (itsSendDoNothingWO==false)  /// if previous sent WorkOrder was a "do nothing", do not read solution
     {
@@ -144,6 +150,15 @@ bool SC_Simple::execute()
       WOPD->setUpdateParms(false);  // New time interval, so do not reread parameters
       WOPD->setSolutionID(-1);  // New time interval, so do not use solution from previous interval
       itsCurStartTime += itsArgs.getDouble ("timeInterval");
+
+      if (itsCurStartTime >= itsEndTime)  // If all time intervals handled, send workorders to
+      {                                  // clean up.
+	itsSendDoNothingWO = true;
+	WOPD->setCleanUp(true);
+	WOSolve->setCleanUp(true);
+	finished = true;               // This strategy has finished!
+      }
+
       if (itsWriteParms && (!itsControlParmUpd))  // If controller should write params at end of
       {                                           // each interval and has not already done so.
 	vector<ParmData> pData;
@@ -239,7 +254,7 @@ bool SC_Simple::execute()
 
   WOSolve->insertDB(*itsOutWOSolveConn);
 
-  return true;
+  return (!finished);
 }
 
 void SC_Simple::postprocess()

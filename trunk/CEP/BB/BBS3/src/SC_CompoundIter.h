@@ -76,9 +76,11 @@ public:
   bool         itsControlParmUpd;    // Does this Controller update the parameters?
   bool         itsWriteParms;        // Write the parameters in the parmtable at the end of each interval?
   double       itsStartTime;
+  double       itsEndTime;
   double       itsTimeLength;
   double       itsStartFreq;
   double       itsFreqLength;
+  bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
 };
 
 inline string SC_CompoundIter::getType() const

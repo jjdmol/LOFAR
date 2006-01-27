@@ -226,11 +226,13 @@ void WH_Solve::process()
       }
 
     } // End loop iterations
-  
-    if (wo->getCleanUp())   // If Solver object is no longer needed: clean up  
-    {
-      itsSolvers.erase(contrID);
-    }
+ 
+  }
+
+  if (wo->getCleanUp())   // If Solver object is no longer needed: clean up  
+  {
+    int contrID = wo->getStrategyControllerID();
+    deleteSolver(contrID);
   }
   
   // Update workorder status
@@ -259,6 +261,17 @@ Solver* WH_Solve::getSolver(int id)
     // add to map
     itsSolvers.insert(SolverMap::value_type(id, slv));
     return slv;
+  }
+}
+
+void WH_Solve::deleteSolver(int id)
+{
+  SolverMap::iterator iter;
+  iter = itsSolvers.find(id);
+  if (iter != itsSolvers.end())
+  {
+    delete (iter->second);
+    itsSolvers.erase(iter);
   }
 }
 
