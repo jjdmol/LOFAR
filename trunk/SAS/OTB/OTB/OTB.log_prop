@@ -1,4 +1,4 @@
-log4j.rootLogger=DEBUG, STDOUT, FILE
+log4j.rootLogger=TRACE, STDOUT, FILE
 log4j.additivity.ASTRON=FALSE
 
 log4j.appender.STDOUT=org.apache.log4j.ConsoleAppender

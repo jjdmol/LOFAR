@@ -5,10 +5,17 @@
  */
 
 package nl.astron.lofar.sas.otb.panels;
+
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.util.OTDBtreeNode;
+import jOTDB.jOTDBnode;
 
 /**
+ * This panel contains a TreePanel and some textfields that display information
+ * about the selected node.
+ *
+ * An event listener was added to catch TreeSelection events from the TreePanel
  *
  * @author  blaakmeer
  */
@@ -30,6 +37,17 @@ public class SamplePanel extends javax.swing.JPanel
 
     public void initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
+
+        // initialize the tree
+        // create a sample root node. This should be retrieved from the OTDB of course.
+        jOTDBnode otdbNode = new jOTDBnode(0,0,0,0);
+        otdbNode.name = "Node_0";
+
+        // put the OTDBnode in a wrapper for the tree
+        OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+
+        // and create a new root
+        treePanel1.newRootNode(otdbTreeNode);
     }
     
     public String getFriendlyName() {
@@ -47,10 +65,34 @@ public class SamplePanel extends javax.swing.JPanel
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
+
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
         jPanel1 = new javax.swing.JPanel();
+        jSplitPane1 = new javax.swing.JSplitPane();
+        treePanel1 = new nl.astron.lofar.sas.otbcomponents.TreePanel();
+        jPanel3 = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        jTextField2 = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        jTextField3 = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        jTextField4 = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
+        jTextField5 = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
+        jTextField6 = new javax.swing.JTextField();
+        jLabel7 = new javax.swing.JLabel();
+        jTextField7 = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        jTextField8 = new javax.swing.JTextField();
+        jLabel9 = new javax.swing.JLabel();
+        jTextField9 = new javax.swing.JTextField();
+        jLabel10 = new javax.swing.JLabel();
+        jTextField10 = new javax.swing.JTextField();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -62,18 +104,199 @@ public class SamplePanel extends javax.swing.JPanel
 
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
-        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        jPanel1.setLayout(new java.awt.BorderLayout());
 
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("This is a sample panel");
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 130, -1, -1));
+        jSplitPane1.setDividerLocation(250);
+        treePanel1.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                treePanel1ValueChanged(evt);
+            }
+        });
 
-        jPanel1.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 130, 290, -1));
+        jSplitPane1.setLeftComponent(treePanel1);
+
+        jPanel3.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+
+        jPanel2.setLayout(new java.awt.GridBagLayout());
+
+        jLabel1.setText("Name");
+        jLabel1.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel1, gridBagConstraints);
+
+        jTextField1.setEditable(false);
+        jTextField1.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        jPanel2.add(jTextField1, gridBagConstraints);
+
+        jLabel2.setText("Index");
+        jLabel2.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel2, gridBagConstraints);
+
+        jTextField2.setEditable(false);
+        jTextField2.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        jPanel2.add(jTextField2, gridBagConstraints);
+
+        jLabel3.setText("Leaf");
+        jLabel3.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel3, gridBagConstraints);
+
+        jTextField3.setEditable(false);
+        jTextField3.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        jPanel2.add(jTextField3, gridBagConstraints);
+
+        jLabel4.setText("Instances");
+        jLabel4.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel4, gridBagConstraints);
+
+        jTextField4.setEditable(false);
+        jTextField4.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 3;
+        jPanel2.add(jTextField4, gridBagConstraints);
+
+        jLabel5.setText("Limits");
+        jLabel5.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel5, gridBagConstraints);
+
+        jTextField5.setEditable(false);
+        jTextField5.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 4;
+        jPanel2.add(jTextField5, gridBagConstraints);
+
+        jLabel6.setText("Description");
+        jLabel6.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 5;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel6, gridBagConstraints);
+
+        jTextField6.setEditable(false);
+        jTextField6.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 5;
+        jPanel2.add(jTextField6, gridBagConstraints);
+
+        jLabel7.setText("TreeID");
+        jLabel7.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel7, gridBagConstraints);
+
+        jTextField7.setEditable(false);
+        jTextField7.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 6;
+        jPanel2.add(jTextField7, gridBagConstraints);
+
+        jLabel8.setText("NodeID");
+        jLabel8.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 7;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel8, gridBagConstraints);
+
+        jTextField8.setEditable(false);
+        jTextField8.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 7;
+        jPanel2.add(jTextField8, gridBagConstraints);
+
+        jLabel9.setText("ParentID");
+        jLabel9.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 8;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel9, gridBagConstraints);
+
+        jTextField9.setEditable(false);
+        jTextField9.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 8;
+        jPanel2.add(jTextField9, gridBagConstraints);
+
+        jLabel10.setText("ParamDefID");
+        jLabel10.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 9;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanel2.add(jLabel10, gridBagConstraints);
+
+        jTextField10.setEditable(false);
+        jTextField10.setPreferredSize(new java.awt.Dimension(200, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 9;
+        jPanel2.add(jTextField10, gridBagConstraints);
+
+        jPanel3.add(jPanel2);
+
+        jSplitPane1.setRightComponent(jPanel3);
+
+        jPanel1.add(jSplitPane1, java.awt.BorderLayout.CENTER);
 
         add(jPanel1, java.awt.BorderLayout.CENTER);
 
     }
     // </editor-fold>//GEN-END:initComponents
+
+    private void treePanel1ValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanel1ValueChanged
+        logger.debug("treeselection event: " + evt);
+        
+        OTDBtreeNode node = (OTDBtreeNode)evt.getPath().getLastPathComponent();
+        if (node != null) {
+            jTextField1.setText(node.getOTDBnode().name);
+            jTextField2.setText(String.valueOf(node.getOTDBnode().index));
+            jTextField3.setText(String.valueOf(node.getOTDBnode().leaf));
+            jTextField4.setText(String.valueOf(node.getOTDBnode().instances));
+            jTextField5.setText(node.getOTDBnode().limits);
+            jTextField6.setText(node.getOTDBnode().description);
+            jTextField7.setText(String.valueOf(node.getOTDBnode().treeID()));
+            jTextField8.setText(String.valueOf(node.getOTDBnode().nodeID()));
+            jTextField9.setText(String.valueOf(node.getOTDBnode().parentID()));
+            jTextField10.setText(String.valueOf(node.getOTDBnode().paramDefID()));
+        }
+    }//GEN-LAST:event_treePanel1ValueChanged
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
@@ -88,8 +311,30 @@ public class SamplePanel extends javax.swing.JPanel
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField jTextField10;
+    private javax.swing.JTextField jTextField2;
+    private javax.swing.JTextField jTextField3;
+    private javax.swing.JTextField jTextField4;
+    private javax.swing.JTextField jTextField5;
+    private javax.swing.JTextField jTextField6;
+    private javax.swing.JTextField jTextField7;
+    private javax.swing.JTextField jTextField8;
+    private javax.swing.JTextField jTextField9;
+    private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel1;
     // End of variables declaration//GEN-END:variables
     
 }

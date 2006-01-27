@@ -10,6 +10,8 @@
 
 package nl.astron.lofar.sas.otb.util;
 
+import jOTDB.*;
+
 /**
  *
  * @author blaakmeer
@@ -20,4 +22,8 @@ public class OtdbRmi {
     public OtdbRmi() {
     }
     
+    public jTreeMaintenanceInterface getRemoteMaintenance() {
+        //TODO: return the OTDB JNI jTreeMaintenanceInterface
+        return null;
+    }
 }
