@@ -78,6 +78,10 @@ public class MainFrame extends javax.swing.JFrame {
         showPanel(MainPanel.getFriendlyNameStatic());
     }
     
+    public OtdbRmi getOTDBrmi() {
+        return itsOtdbRmi;
+    }
+    
     /** Registers the panel with the given name without adding it to the 
       * toolbar or Plugin menu
       *
