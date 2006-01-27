@@ -4,7 +4,7 @@
  * Created on 26 januari 2006, 15:23
  */
 
-package nl.astron.lofar.otbcomponents;
+package nl.astron.lofar.sas.otbcomponents;
 
 /**
  *

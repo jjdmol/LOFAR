@@ -149,9 +149,11 @@ public class MainFrame extends javax.swing.JFrame {
             // remove the toolbar button and menu item
             if(ppi.toolbarButton != null) {
                 jToolBarPlugins.remove(ppi.toolbarButton);
+                jToolBarPlugins.repaint();
             }
             if(ppi.menuItem != null) {
                 jMenuPlugins.remove(ppi.menuItem);
+                jMenuPlugins.repaint();
             }
             itsPlugins.remove(friendlyName);
         }

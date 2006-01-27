@@ -4,11 +4,9 @@
  * Created on 24 januari 2006, 18:54
  */
 
-package nl.astron.lofar.otbcomponents;
-
-import nl.astron.lofar.otb.panels.MainPanel;
+package nl.astron.lofar.sas.otbcomponents;
+import nl.astron.lofar.sas.otb.panels.MainPanel;
 import org.apache.log4j.Logger;
-
 /**
  *
  * @author  Coolen
@@ -44,7 +42,7 @@ public class ComponentPanel extends javax.swing.JPanel {
         parameterTypeField = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
         jTextArea1 = new javax.swing.JTextArea();
-        buttonPanel1 = new nl.astron.lofar.otbcomponents.ButtonPanel();
+        buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -113,7 +111,7 @@ public class ComponentPanel extends javax.swing.JPanel {
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.otbcomponents.ButtonPanel buttonPanel1;
+    private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JTextField defaultValueField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
