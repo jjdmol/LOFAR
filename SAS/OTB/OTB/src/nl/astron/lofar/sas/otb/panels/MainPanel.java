@@ -5,9 +5,11 @@
  */
 
 package nl.astron.lofar.sas.otb.panels;
+import java.io.File;
+import nl.astron.lofar.sas.otb.*;
+import nl.astron.lofar.sas.otb.util.*;
+import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
 import org.apache.log4j.Logger;
-import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.util.UserAccount;
 
 /**
  *
@@ -22,16 +24,35 @@ public class MainPanel extends javax.swing.JPanel
     /** Creates new form BeanForm */
     public MainPanel() {
         initComponents();
-        initialize();
+        initializeButtons();
     }
         
-    public void initialize() {
-        buttonPanel1.addButton("Query Panel");
-        buttonPanel1.addButton("New");
-        buttonPanel1.addButton("Delete");
-        buttonPanel1.addButton("Duplicate");
-        buttonPanel1.addButton("Info");
+    public void initializeButtons() {
+        buttonPanel1.removeAllButtons();
+        if (itsTabFocus.equals("PIC")) {
+            buttonPanel1.addButton("Query Panel");
+            buttonPanel1.addButton("New");
+            buttonPanel1.addButton("Delete");
+            buttonPanel1.addButton("Duplicate");
+        } else if (itsTabFocus.equals("VIC")) {
+            buttonPanel1.addButton("Query Panel");
+            buttonPanel1.addButton("Delete");
+            buttonPanel1.addButton("Duplicate");
+        } else if (itsTabFocus.equals("Templates")) {
+            buttonPanel1.addButton("Query Panel");
+            buttonPanel1.addButton("New");
+            buttonPanel1.addButton("Duplicate");
+            buttonPanel1.addButton("Modify");
+        } else if (itsTabFocus.equals("Components")) {
+            buttonPanel1.addButton("Query Panel");
+            buttonPanel1.addButton("New");
+            buttonPanel1.addButton("Modify");            
+        } else if (itsTabFocus.equals("Query Results")) {
+        
+        }
+        buttonPanel1.addButton("View");
         buttonPanel1.addButton("Quit");
+        buttonsInitialized=true;
     }
 
     public void initializePlugin(MainFrame mainframe) {
@@ -68,12 +89,11 @@ public class MainPanel extends javax.swing.JPanel
     private void initComponents() {
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        tablePanel1 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
-        tablePanel2 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
-        tablePanel3 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
-        tablePanel4 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
-        tablePanel5 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
-        tablePanel6 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        PICPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        VICPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        TemplatesPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        ComponentsPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        QueryResultsPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -85,38 +105,127 @@ public class MainPanel extends javax.swing.JPanel
 
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
-        jTabbedPane1.addTab("tab1", tablePanel1);
+        jTabbedPane1.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                jTabbedPane1StateChanged(evt);
+            }
+        });
 
-        jTabbedPane1.addTab("tab2", tablePanel2);
+        jTabbedPane1.addTab("PIC", PICPanel);
 
-        jTabbedPane1.addTab("tab3", tablePanel3);
+        jTabbedPane1.addTab("VIC", VICPanel);
 
-        jTabbedPane1.addTab("tab4", tablePanel4);
+        jTabbedPane1.addTab("Templates", TemplatesPanel);
 
-        jTabbedPane1.addTab("tab5", tablePanel5);
+        jTabbedPane1.addTab("Components", ComponentsPanel);
 
-        jTabbedPane1.addTab("tab6", tablePanel6);
+        jTabbedPane1.addTab("Query Results", QueryResultsPanel);
 
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
     }
     // </editor-fold>//GEN-END:initComponents
 
+    private void jTabbedPane1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPane1StateChanged
+        if (jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex())  != null && buttonsInitialized) {        
+            itsTabFocus=jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex());
+            initializeButtons();
+        }
+    }//GEN-LAST:event_jTabbedPane1StateChanged
+
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        logger.debug("actionPerformed: " + evt.getActionCommand());
+        logger.debug("actionPerformed: " + evt);
+        buttonPanelAction(evt.getActionCommand());
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
+    /** Perform actions depending on the Button pressed and the Tab active
+     *
+     * @param   aButton     Name of the pressed button
+     */
+    private void buttonPanelAction(String aButton) {
+        logger.debug("Button pressed: "+aButton+ "  ActiveTab: " + itsTabFocus);
+        if (itsTabFocus.equals("PIC")) {
+            if (aButton.equals("Query Panel")) {
+            } else if (aButton.equals("New")) {
+                File aFile=getFile("PIC-tree");
+            } else if (aButton.equals("Delete")) {
+            } else if (aButton.equals("Duplicate")) {
+            } else if (aButton.equals("View")) {
+            } else if (aButton.equals("Quit")) {
+            }
+        } else if (itsTabFocus.equals("VIC")) {
+            if (aButton.equals("Query Panel")) {
+            } else if (aButton.equals("Delete")) {
+            } else if (aButton.equals("Duplicate")) {
+            } else if (aButton.equals("View")) {
+            } else if (aButton.equals("Quit")) {
+            }
+        } else if (itsTabFocus.equals("Templates")) {
+            if (aButton.equals("Query Panel")) {
+            } else if (aButton.equals("New")) {
+            } else if (aButton.equals("Duplicate")) {
+            } else if (aButton.equals("Modify")) {
+            } else if (aButton.equals("View")) {
+            } else if (aButton.equals("Quit")) {
+            }
+        } else if (itsTabFocus.equals("Components")) {
+            if (aButton.equals("Query Panel")) {
+            } else if (aButton.equals("New")) {
+                File aFile=getFile("VIC-component");
+            } else if (aButton.equals("Modify")) {
+                itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
+                itsMainFrame.showPanel(ComponentMaintenancePanel.getFriendlyNameStatic());
+            } else if (aButton.equals("View")) {
+            } else if (aButton.equals("Quit")) {
+            }
+        } else if (itsTabFocus.equals("Query Results")) {
+        
+        } else {
+            logger.debug("Other command found: "+aButton);
+        }
+    }
+    
+    /** Launch LoadFileDialog to get a file to wrok with.
+     *
+     * @param   aType   PIC-tree or VIC-component
+     *
+     */
+    private File getFile(String aType) {
+        File aFile=null;
+        String aStatus="";
+        String aDescription="";
+        
+        // show login dialog
+        LoadFileDialog loadFileDialog = new LoadFileDialog(itsMainFrame,true,aType);
+        loadFileDialog.setLocationRelativeTo(this);
+        loadFileDialog.setVisible(true);
+        if(loadFileDialog.isOk()) {
+            aDescription = loadFileDialog.getDescription();
+            aStatus = loadFileDialog.getStatus();
+            aFile = loadFileDialog.getFile();       
+        } else {
+            logger.info("No File chosen");
+        }
+        if (aFile != null && aFile.exists()) {
+            logger.debug("File to load: " + aFile.getName()); 
+            logger.debug("Status: " + aStatus);
+            logger.debug("Description: "+ aDescription);
+        }
+        return aFile;        
+    }
+    
     private MainFrame itsMainFrame;
+    private String    itsTabFocus="PIC";
+    private boolean   buttonsInitialized=false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private nl.astron.lofar.sas.otbcomponents.TablePanel ComponentsPanel;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel PICPanel;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel QueryResultsPanel;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel TemplatesPanel;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel VICPanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel1;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel2;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel3;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel4;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel5;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel6;
     // End of variables declaration//GEN-END:variables
     
 }
