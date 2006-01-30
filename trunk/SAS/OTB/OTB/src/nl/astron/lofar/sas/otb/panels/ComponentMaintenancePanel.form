@@ -44,7 +44,7 @@
 
           <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
           <SubComponents>
-            <Component class="nl.astron.lofar.otbcomponents.ComponentPanel" name="componentPanel1">
+            <Component class="nl.astron.lofar.sas.otbcomponents.ComponentPanel" name="componentPanel1">
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
                   <BorderConstraints direction="Center"/>
@@ -55,7 +55,7 @@
         </Container>
       </SubComponents>
     </Container>
-    <Component class="nl.astron.lofar.otbcomponents.ButtonPanel" name="buttonPanel1">
+    <Component class="nl.astron.lofar.sas.otbcomponents.ButtonPanel" name="buttonPanel1">
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonPanel1ActionPerformed"/>
       </Events>

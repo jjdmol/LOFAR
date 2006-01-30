@@ -32,7 +32,7 @@ public class SamplePanel extends javax.swing.JPanel
     }
         
     public void initialize() {
-        buttonPanel1.addButton("Back to Main");
+        buttonPanel.addButton("Back to Main");
     }
 
     public void initializePlugin(MainFrame mainframe) {
@@ -47,7 +47,7 @@ public class SamplePanel extends javax.swing.JPanel
         OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
 
         // and create a new root
-        treePanel1.newRootNode(otdbTreeNode);
+        treePanel.newRootNode(otdbTreeNode);
     }
     
     public String getFriendlyName() {
@@ -67,12 +67,12 @@ public class SamplePanel extends javax.swing.JPanel
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
-        buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
-        jPanel1 = new javax.swing.JPanel();
-        jSplitPane1 = new javax.swing.JSplitPane();
-        treePanel1 = new nl.astron.lofar.sas.otbcomponents.TreePanel();
-        jPanel3 = new javax.swing.JPanel();
-        jPanel2 = new javax.swing.JPanel();
+        buttonPanel = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
+        jPanelMain = new javax.swing.JPanel();
+        jSplitPane = new javax.swing.JSplitPane();
+        treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
+        jPanelContents = new javax.swing.JPanel();
+        jPanelFields = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -93,31 +93,33 @@ public class SamplePanel extends javax.swing.JPanel
         jTextField9 = new javax.swing.JTextField();
         jLabel10 = new javax.swing.JLabel();
         jTextField10 = new javax.swing.JTextField();
+        jLabel11 = new javax.swing.JLabel();
+        jTextField11 = new javax.swing.JTextField();
 
         setLayout(new java.awt.BorderLayout());
 
-        buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
+        buttonPanel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonPanel1ActionPerformed(evt);
+                buttonPanelActionPerformed(evt);
             }
         });
 
-        add(buttonPanel1, java.awt.BorderLayout.SOUTH);
+        add(buttonPanel, java.awt.BorderLayout.SOUTH);
 
-        jPanel1.setLayout(new java.awt.BorderLayout());
+        jPanelMain.setLayout(new java.awt.BorderLayout());
 
-        jSplitPane1.setDividerLocation(250);
-        treePanel1.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+        jSplitPane.setDividerLocation(250);
+        treePanel.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
             public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
-                treePanel1ValueChanged(evt);
+                treePanelValueChanged(evt);
             }
         });
 
-        jSplitPane1.setLeftComponent(treePanel1);
+        jSplitPane.setLeftComponent(treePanel);
 
-        jPanel3.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+        jPanelContents.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-        jPanel2.setLayout(new java.awt.GridBagLayout());
+        jPanelFields.setLayout(new java.awt.GridBagLayout());
 
         jLabel1.setText("Name");
         jLabel1.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -125,14 +127,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel1, gridBagConstraints);
+        jPanelFields.add(jLabel1, gridBagConstraints);
 
         jTextField1.setEditable(false);
+        jTextField1.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField1.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
-        jPanel2.add(jTextField1, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField1, gridBagConstraints);
 
         jLabel2.setText("Index");
         jLabel2.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -140,14 +144,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel2, gridBagConstraints);
+        jPanelFields.add(jLabel2, gridBagConstraints);
 
         jTextField2.setEditable(false);
+        jTextField2.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField2.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
-        jPanel2.add(jTextField2, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField2, gridBagConstraints);
 
         jLabel3.setText("Leaf");
         jLabel3.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -155,14 +161,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel3, gridBagConstraints);
+        jPanelFields.add(jLabel3, gridBagConstraints);
 
         jTextField3.setEditable(false);
+        jTextField3.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField3.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 2;
-        jPanel2.add(jTextField3, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField3, gridBagConstraints);
 
         jLabel4.setText("Instances");
         jLabel4.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -170,14 +178,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel4, gridBagConstraints);
+        jPanelFields.add(jLabel4, gridBagConstraints);
 
         jTextField4.setEditable(false);
+        jTextField4.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField4.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 3;
-        jPanel2.add(jTextField4, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField4, gridBagConstraints);
 
         jLabel5.setText("Limits");
         jLabel5.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -185,14 +195,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 4;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel5, gridBagConstraints);
+        jPanelFields.add(jLabel5, gridBagConstraints);
 
         jTextField5.setEditable(false);
+        jTextField5.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField5.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 4;
-        jPanel2.add(jTextField5, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField5, gridBagConstraints);
 
         jLabel6.setText("Description");
         jLabel6.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -200,14 +212,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 5;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel6, gridBagConstraints);
+        jPanelFields.add(jLabel6, gridBagConstraints);
 
         jTextField6.setEditable(false);
+        jTextField6.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField6.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 5;
-        jPanel2.add(jTextField6, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField6, gridBagConstraints);
 
         jLabel7.setText("TreeID");
         jLabel7.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -215,14 +229,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 6;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel7, gridBagConstraints);
+        jPanelFields.add(jLabel7, gridBagConstraints);
 
         jTextField7.setEditable(false);
+        jTextField7.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField7.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 6;
-        jPanel2.add(jTextField7, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField7, gridBagConstraints);
 
         jLabel8.setText("NodeID");
         jLabel8.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -230,14 +246,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 7;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel8, gridBagConstraints);
+        jPanelFields.add(jLabel8, gridBagConstraints);
 
         jTextField8.setEditable(false);
+        jTextField8.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField8.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 7;
-        jPanel2.add(jTextField8, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField8, gridBagConstraints);
 
         jLabel9.setText("ParentID");
         jLabel9.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -245,14 +263,16 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 8;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel9, gridBagConstraints);
+        jPanelFields.add(jLabel9, gridBagConstraints);
 
         jTextField9.setEditable(false);
+        jTextField9.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField9.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 8;
-        jPanel2.add(jTextField9, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField9, gridBagConstraints);
 
         jLabel10.setText("ParamDefID");
         jLabel10.setPreferredSize(new java.awt.Dimension(75, 15));
@@ -260,27 +280,46 @@ public class SamplePanel extends javax.swing.JPanel
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 9;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
-        jPanel2.add(jLabel10, gridBagConstraints);
+        jPanelFields.add(jLabel10, gridBagConstraints);
 
         jTextField10.setEditable(false);
+        jTextField10.setMinimumSize(new java.awt.Dimension(200, 19));
         jTextField10.setPreferredSize(new java.awt.Dimension(200, 19));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 9;
-        jPanel2.add(jTextField10, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField10, gridBagConstraints);
 
-        jPanel3.add(jPanel2);
+        jLabel11.setText("Path");
+        jLabel11.setPreferredSize(new java.awt.Dimension(75, 15));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        jPanelFields.add(jLabel11, gridBagConstraints);
 
-        jSplitPane1.setRightComponent(jPanel3);
+        jTextField11.setEditable(false);
+        jTextField11.setMinimumSize(new java.awt.Dimension(200, 19));
+        jTextField11.setPreferredSize(new java.awt.Dimension(400, 19));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanelFields.add(jTextField11, gridBagConstraints);
 
-        jPanel1.add(jSplitPane1, java.awt.BorderLayout.CENTER);
+        jPanelContents.add(jPanelFields);
 
-        add(jPanel1, java.awt.BorderLayout.CENTER);
+        jSplitPane.setRightComponent(jPanelContents);
+
+        jPanelMain.add(jSplitPane, java.awt.BorderLayout.CENTER);
+
+        add(jPanelMain, java.awt.BorderLayout.CENTER);
 
     }
     // </editor-fold>//GEN-END:initComponents
 
-    private void treePanel1ValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanel1ValueChanged
+    private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
         logger.debug("treeselection event: " + evt);
         
         OTDBtreeNode node = (OTDBtreeNode)evt.getPath().getLastPathComponent();
@@ -296,22 +335,25 @@ public class SamplePanel extends javax.swing.JPanel
             jTextField9.setText(String.valueOf(node.getOTDBnode().parentID()));
             jTextField10.setText(String.valueOf(node.getOTDBnode().paramDefID()));
         }
-    }//GEN-LAST:event_treePanel1ValueChanged
+        jTextField11.setText(evt.getPath().toString());
+        
+    }//GEN-LAST:event_treePanelValueChanged
 
-    private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
+    private void buttonPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanelActionPerformed
         logger.debug("actionPerformed: " + evt);
         
         if(evt.getActionCommand() == "Back to Main") {
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
         }
-    }//GEN-LAST:event_buttonPanel1ActionPerformed
+    }//GEN-LAST:event_buttonPanelActionPerformed
     
     private MainFrame itsMainFrame;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
+    private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -320,12 +362,13 @@ public class SamplePanel extends javax.swing.JPanel
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JPanel jPanelContents;
+    private javax.swing.JPanel jPanelFields;
+    private javax.swing.JPanel jPanelMain;
+    private javax.swing.JSplitPane jSplitPane;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField10;
+    private javax.swing.JTextField jTextField11;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
     private javax.swing.JTextField jTextField4;
@@ -334,7 +377,7 @@ public class SamplePanel extends javax.swing.JPanel
     private javax.swing.JTextField jTextField7;
     private javax.swing.JTextField jTextField8;
     private javax.swing.JTextField jTextField9;
-    private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel1;
+    private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
     
 }
