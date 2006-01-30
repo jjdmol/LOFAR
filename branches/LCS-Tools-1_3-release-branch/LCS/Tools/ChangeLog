@@ -1,3 +1,66 @@
+2006-01-18 11:57  loose
+
+	* src/Makefile.am: BugID: 596
+
+	  Removed any references to nobase_. Removed unused "local"
+	  variables.
+
+2006-01-02 11:03  loose
+
+	* src/makedoc: BugID: 423
+
+	  Added OUTPUT_DIRECTORY to the generated doxygen.cfg file, so
+	  that, if doxygen is run (again) directly using the doxygen.cfg
+	  config file, the generated files will end up in the same
+	  directory as before (when using makedoc).
+
+2005-12-27 11:02  loose
+
+	* src/templates/: header.h_template, templated_header.h_template:
+	  BugID: 394
+
+	  Removed argument to the Doxygen \file command. It caused subtle
+	  documentation bugs and it defaults to the current filename
+	  anyway.
+
+2005-12-15 11:05  loose
+
+	* src/makedoc: BugID: 423
+
+	  Added a few keywords with doxygen runtime specific settings (e.g.
+	  IMAGE_PATH).	Removed a few keywords with static settings (e.g.
+	  RECURSIVE); these will be added to doxygen.cfg in the
+	  autoconf_share directory.
+
+2005-12-13 16:31  diepen
+
+	* src/: makeClass.py, templates/header.cc_template,
+	  templates/header.h_template,
+	  templates/templated_header.cc_template,
+	  templates/templated_header.h_template,
+	  templates/templated_header.tcc_template: BugID: 528 Put templated
+	  class code in template file Added _ in include guard Check
+	  correctly on existence of class
+
+2005-11-22 09:37  loose
+
+	* AUTHORS, ChangeLog, NEWS, README, configure.in: BugID: 324
+
+	  Merged relevant changes in release 1.2 with the main development
+	  line.
+
+2005-11-18 17:58  loose
+
+	* NEWS: BugID: 324
+
+	  Added extra release info for release 1.2
+
+2005-11-16 16:05  loose
+
+	* AUTHORS, ChangeLog, NEWS, README, configure.in: BugID: 324
+
+	  Prepare for release 1.2
+
 2005-10-31 09:18  diepen
 
 	* src/lofarinit.sh: BugID: 396 Clean up temporary variables
