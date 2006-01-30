@@ -178,7 +178,8 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
         Vector<jOTDBnode> v = new Vector<jOTDBnode>();
         Random rand = new Random();
         
-        for(int i = 0; i < 5; i++) {
+        int childs = rand.nextInt(10);
+        for(int i = 0; i < childs; i++) {
             int randomNumber = rand.nextInt();
             jOTDBnode jotdbnode = new jOTDBnode(aTreeID, randomNumber, topNode, 0);
             jotdbnode.name = "Node_"+randomNumber;

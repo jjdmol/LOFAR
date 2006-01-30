@@ -134,7 +134,7 @@ public class MainPanel extends javax.swing.JPanel
     }//GEN-LAST:event_jTabbedPane1StateChanged
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        logger.debug("actionPerformed: " + evt);
+        logger.debug("actionPerformed: " + evt.getActionCommand());
         buttonPanelAction(evt.getActionCommand());
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
