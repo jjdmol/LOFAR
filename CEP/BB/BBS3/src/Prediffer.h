@@ -99,7 +99,7 @@ public:
   // the LSQFit object filled by fillFitter.
   // The length is 0 if the domain is outside the observation domain.
   // If needed the given domain is adjusted to the observation domain.
-  int setDomain (double startFreq, double lengthFreq,
+  int setDomain (int startChan, int endChan,
 		 double startTime, double lengthTime);
 
   // Get the actual domain.

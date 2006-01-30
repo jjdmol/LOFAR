@@ -756,24 +756,20 @@ void Prediffer::initParms (const MeqDomain& domain)
 // Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-int Prediffer::setDomain (double fstart, double flength,
+int Prediffer::setDomain (int startChan, int endChan,
 			  double tstart, double tlength)
 {
-  // Determine the first channel and nr of channels to process.
-  ASSERT (fstart <= itsEndFreq);
-  ASSERT (flength > 0  &&  tlength > 0);
-  if (fstart < itsStartFreq) {
+  // Determine the first and last channel to process.
+  if (startChan < 0) {
     itsFirstChan = 0;
   } else {
-    itsFirstChan = int((fstart-itsStartFreq) / itsStepFreq);
+    itsFirstChan = startChan;
   }
-  double fend = fstart+flength;
-  if (fend >= itsEndFreq) {
-    itsLastChan = itsNrChan;
+  if (endChan >= itsNrChan) {
+    itsLastChan = itsNrChan-1;
   } else {
-    itsLastChan = int(0.5 + (fend-itsStartFreq) / itsStepFreq);
+    itsLastChan = endChan;
   }
-  itsLastChan--;
   ASSERT (itsFirstChan <= itsLastChan);
   // Determine the first data channel to be mapped in.
   if (itsReverseChan) {

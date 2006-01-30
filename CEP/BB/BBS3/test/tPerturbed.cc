@@ -48,7 +48,7 @@ void doTest (Prediffer& pre1, const vector<string>& solv)
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain of some channels and all times.
-  pre1.setDomain (137750000-250000, 4*500000, 0., 1e12);
+  pre1.setDomain (0, 3, 0., 1e12);
   // Get the values of the solvable parms.
   Solver solver;
   solver.initSolvableParmData (1);
