@@ -72,6 +72,24 @@ KVpair::KVpair(const string& aKey, time_t		  aValue, bool genTimestamp) :
 	OPTIONAL_TIMESTAMP
 }
 
+KVpair::KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp)
+{
+        uint max = aValue.size();
+        string strValue = "[";
+        for (uint i=0; i<max; i++)
+	{
+                strValue += formatString("%d", aValue[i]);
+                if (i < max-1)
+                {
+                        strValue += ",";
+                }
+        } 
+        strValue += "]";
+        first = aKey;
+	second = strValue;
+
+	OPTIONAL_TIMESTAMP
+} 
 
 KVpair::~KVpair()
 {}
