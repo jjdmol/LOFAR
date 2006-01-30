@@ -103,13 +103,17 @@ namespace LOFAR
     RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)itsInDH1)->getDataMatrix();
     dimType timeDim = inMatrix->getDim("Times");
     RectMatrix<DH_RSP::BufferType>::cursorType tCursor = inMatrix->getCursor();
-    MATRIX_FOR_LOOP(*inMatrix, timeDim, tCursor) {
-      inMatrix->setValue(tCursor, makei16complex(1, value++));
+    {
+      MATRIX_FOR_LOOP(*inMatrix, timeDim, tCursor) {
+	inMatrix->setValue(tCursor, makei16complex(1, value++));
+      }
     }
     inMatrix = &((DH_RSP*)itsInDH2)->getDataMatrix();
     tCursor = inMatrix->getCursor();
-    MATRIX_FOR_LOOP(*inMatrix, timeDim, tCursor) {
-      inMatrix->setValue(tCursor, makei16complex(2, value++));
+    {
+      MATRIX_FOR_LOOP(*inMatrix, timeDim, tCursor) {
+	inMatrix->setValue(tCursor, makei16complex(2, value++));
+      }
     }
   }
 
