@@ -48,6 +48,7 @@ public:
 	KVpair(const string& aKey, double		 aValue, bool genTimestamp = false);
 	KVpair(const string& aKey, float		 aValue, bool genTimestamp = false);
 	KVpair(const string& aKey, time_t		 aValue, bool genTimestamp = false);
+	KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp = false); 
 
 	~KVpair();
 
