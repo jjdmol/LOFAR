@@ -64,7 +64,7 @@ void doIt (const string& msName, Prediffer& prediff, const string& column,
     double time = timeCol(0);
     double interval = intCol(0);
     // Set a domain of some channels and this time.
-    prediff.setDomain (137750000-250000+stchan*500000, nrchan*500000,
+    prediff.setDomain (stchan, stchan+nrchan-1,
 		       time-interval/2, interval);
     // Get the data and remove the time axis.
     prediff.getData (data, flags);

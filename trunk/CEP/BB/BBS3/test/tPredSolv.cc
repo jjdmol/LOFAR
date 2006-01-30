@@ -73,7 +73,8 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
   cout << ">>>" << endl;
-  int bufsize = pre1.setDomain (137750000-250000, 2*500000, 0., 1e12);
+  int bufsize = pre1.setDomain (0, 1, 0., 1e12);
+  //  int bufsize = pre1.setDomain (137750000-250000, 2*500000, 0., 1e12);
   //int bufsize = pre1.setDomain (0., 1e12, 0., 1e12);
   cout << "<<<" << endl;
   char* fitBuf = new char[bufsize];
@@ -146,9 +147,9 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2,
   pre2.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
   cout << ">>>" << endl;
-  pre1.setDomain (137750000-250000, 4*500000, 0., 1e12);
+  pre1.setDomain (0, 3, 0., 1e12);
   ///  vector<uint32> shape1 = pre1.setDomain (0., 1e12, 0., 1e12);
-  pre2.setDomain (137750000-250000, 4*500000, 0., 1e12);
+  pre2.setDomain (0, 3, 0., 1e12);
   ///  vector<uint32> shape2 = pre2.setDomain (0., 1e12, 0., 1e12);
   cout << "<<<" << endl;
   // Get the ParmData from the Prediffers and send it to the solver.
@@ -185,7 +186,7 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
   cout << ">>>" << endl;
-  pre1.setDomain (137750000-250000, 4*500000, 0., 1e12);
+  pre1.setDomain (0, 3, 0., 1e12);
   //pre1.setDomain (0., 1e12, 0., 1e12);
   cout << "<<<" << endl;
     

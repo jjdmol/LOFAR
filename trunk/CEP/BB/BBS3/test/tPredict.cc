@@ -40,8 +40,7 @@ using namespace casa;
 void doPredict (Prediffer& pre1)
 {
   cout << ">>>" << endl;
-  //pre1.setDomain (137750000-250000, 2*500000, 0., 1e12);
-  pre1.setDomain (0., 1e12, 0., 1e12);
+  pre1.setDomain (0, 1000, 0., 1e12);
   cout << "<<<" << endl;
     
   cout << ">>>" << endl;
