@@ -34,7 +34,7 @@ public class BBSConfigFileRep {
     private Boolean b1=new Boolean(false);
     private BBSConfigParamBaseClass writeIndividualParms =new BBSConfigParamBaseClass("", "writeIndividualParms", b1);    
     private BBSConfigParamBaseClass parmSolutionTable    =new BBSConfigParamBaseClass("", "parmSolutionTable", "bbs3ParmSolutions");    
-    private BBSConfigParamBaseClass strategy             =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "strategy", "Solve");
+    private BBSConfigParamBaseClass strategy             =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "strategy", "Simple");
     private BBSConfigParamBaseClass MSName               =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "MSName", "");    
     private BBSConfigParamBaseClass generalMSPath        =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "generalMSPath", "./");    
     private BBSConfigParamBaseClass subsetMSPath         =new BBSConfigParamBaseClass("CTRLparams.SC1params.MSDBparams.", "subsetMSPath", "./");    
@@ -77,9 +77,9 @@ public class BBSConfigFileRep {
     private BBSConfigParamBaseClass writeParms           =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "writeParms",b6);
     private Boolean b7=new Boolean(true);
     private BBSConfigParamBaseClass writeInDataCol       =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "writeInDataCol",b7);
-    private Integer i6=new Integer(1);
+    private Integer i6=new Integer(0);
     private BBSConfigParamBaseClass startChan            =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "startChan",i6); 
-    private Integer i7=new Integer(1);
+    private Integer i7=new Integer(0);
     private BBSConfigParamBaseClass endChan              =new BBSConfigParamBaseClass("CTRLparams.SC1params.", "endChan",i7); 
     
     private File itsFile=null;

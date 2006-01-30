@@ -430,7 +430,7 @@ public class BB_Gui extends javax.swing.JFrame {
         StratSpecParamPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         StratSpecParamPanel.setBorder(new javax.swing.border.TitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 2, true), "Strategy Specific Parameters"));
-        strategyInput.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Solve", "Subtract", "Correct", "WritePredData" }));
+        strategyInput.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Simple", "CompoundIter", "WritePredData" }));
         strategyInput.setToolTipText("Strategy Type");
         strategyInput.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -493,12 +493,12 @@ public class BB_Gui extends javax.swing.JFrame {
         MeasurementPanel.add(stationNamesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 140, 440, -1));
 
         startChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        startChannelInput.setText("1");
+        startChannelInput.setText("0");
         startChannelInput.setToolTipText("Enter Start Channel");
         MeasurementPanel.add(startChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 120, 20));
 
         endChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        endChannelInput.setText("1");
+        endChannelInput.setText("0");
         endChannelInput.setToolTipText("Insert End Channel");
         MeasurementPanel.add(endChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 50, 110, 20));
 
@@ -1002,10 +1002,13 @@ public class BB_Gui extends javax.swing.JFrame {
             File aFile=getFileName("NewConfig");
             if (aFile != null) {
                 itsConfigFileName=aFile;
+                itsConfigFile.restoreParams("default");
                 itsConfigFile.setFile(itsConfigFileName);
                 FileMenuSaveFile.setEnabled(true);
                 FileMenuSaveFileAs.setEnabled(true);
                 enableTopLevelParamPanel(true);
+                enableMainEditPanel(false);
+                enableFlowEditPanel(false);
                 reloadPanels(itsConfigFile);
                 saved=false;
                 ConfigurationFileLabel.setText("Currently working on configuration file: "+ itsConfigFileName.getName());
@@ -1491,7 +1494,7 @@ public class BB_Gui extends javax.swing.JFrame {
                     } else if (keyword.contains("freq.nchan")) {
                         try {
                             value=value.replaceAll("[\\p{Cntrl}\\p{Blank}\\p{Space}]*", "");                                                        
-                            Integer anI= Integer.valueOf(value).intValue();
+                            Integer anI= Integer.valueOf(value).intValue()-1;
                             endChannelInput.setText(anI.toString());
                         } catch  (NumberFormatException e) {
                             System.out.println("Error converting "+value+" to integer.");
@@ -1525,7 +1528,7 @@ public class BB_Gui extends javax.swing.JFrame {
             
             
             // Set startChannel to 1 (as initial start)
-            startChannelInput.setText("1");
+            startChannelInput.setText("0");
             
             itsDescriptionFile=aFile;
             
