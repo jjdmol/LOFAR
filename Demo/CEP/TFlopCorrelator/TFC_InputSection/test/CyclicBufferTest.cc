@@ -49,7 +49,7 @@ void* produce(void* argument)
   int nsubbands = arg->nsubbands;
   
   timestamp_t ts(0,0);
-  SubbandType data[nsubbands];
+  SubbandType* data = new SubbandType[nsubbands];
   
   while (1) {
    for (int i=0; i<nsubbands; i++) {
@@ -59,6 +59,7 @@ void* produce(void* argument)
     bc->writeElements(data,ts, 1, nsubbands);
     ts++;   
   }
+  delete [] data;
 }
 
 void* consume(void* argument)
