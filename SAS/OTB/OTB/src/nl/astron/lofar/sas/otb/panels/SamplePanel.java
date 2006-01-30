@@ -25,6 +25,8 @@ public class SamplePanel extends javax.swing.JPanel
     static Logger logger = Logger.getLogger(SamplePanel.class);
     static String name = "Sample";
     
+    private int treeCounter=0;
+    
     /** Creates new form BeanForm */
     public SamplePanel() {
         initComponents();
@@ -32,6 +34,7 @@ public class SamplePanel extends javax.swing.JPanel
     }
         
     public void initialize() {
+        buttonPanel.addButton("New Tree");
         buttonPanel.addButton("Back to Main");
     }
 
@@ -44,7 +47,9 @@ public class SamplePanel extends javax.swing.JPanel
         otdbNode.name = "Node_0";
 
         // put the OTDBnode in a wrapper for the tree
-        OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+        //OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+        // example of an empty tree
+        OTDBtreeNode otdbTreeNode = new OTDBtreeNode();
 
         // and create a new root
         treePanel.newRootNode(otdbTreeNode);
@@ -324,16 +329,21 @@ public class SamplePanel extends javax.swing.JPanel
         
         OTDBtreeNode node = (OTDBtreeNode)evt.getPath().getLastPathComponent();
         if (node != null) {
-            jTextField1.setText(node.getOTDBnode().name);
-            jTextField2.setText(String.valueOf(node.getOTDBnode().index));
-            jTextField3.setText(String.valueOf(node.getOTDBnode().leaf));
-            jTextField4.setText(String.valueOf(node.getOTDBnode().instances));
-            jTextField5.setText(node.getOTDBnode().limits);
-            jTextField6.setText(node.getOTDBnode().description);
-            jTextField7.setText(String.valueOf(node.getOTDBnode().treeID()));
-            jTextField8.setText(String.valueOf(node.getOTDBnode().nodeID()));
-            jTextField9.setText(String.valueOf(node.getOTDBnode().parentID()));
-            jTextField10.setText(String.valueOf(node.getOTDBnode().paramDefID()));
+            try {
+                jTextField1.setText(node.getOTDBnode().name);
+                jTextField2.setText(String.valueOf(node.getOTDBnode().index));
+                jTextField3.setText(String.valueOf(node.getOTDBnode().leaf));
+                jTextField4.setText(String.valueOf(node.getOTDBnode().instances));
+                jTextField5.setText(node.getOTDBnode().limits);
+                jTextField6.setText(node.getOTDBnode().description);
+                jTextField7.setText(String.valueOf(node.getOTDBnode().treeID()));
+                jTextField8.setText(String.valueOf(node.getOTDBnode().nodeID()));
+                jTextField9.setText(String.valueOf(node.getOTDBnode().parentID()));
+                jTextField10.setText(String.valueOf(node.getOTDBnode().paramDefID()));
+            }
+            catch(Exception e) {
+                logger.fatal(e);
+            }
         }
         jTextField11.setText(evt.getPath().toString());
         
@@ -342,7 +352,19 @@ public class SamplePanel extends javax.swing.JPanel
     private void buttonPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanelActionPerformed
         logger.debug("actionPerformed: " + evt);
         
-        if(evt.getActionCommand() == "Back to Main") {
+        if(evt.getActionCommand() == "New Tree") {
+            // initialize the tree
+            // create a sample root node. This should be retrieved from the OTDB of course.
+            jOTDBnode otdbNode = new jOTDBnode(0,0,0,0);
+            otdbNode.name = "Node_" + treeCounter++;
+
+            // put the OTDBnode in a wrapper for the tree
+            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+            
+            // and create a new root
+            treePanel.newRootNode(otdbTreeNode);
+        }
+        else if(evt.getActionCommand() == "Back to Main") {
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
         }
     }//GEN-LAST:event_buttonPanelActionPerformed

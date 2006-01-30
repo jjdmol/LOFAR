@@ -38,8 +38,27 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
     // TEST ONLY. In the future, childs are retrieved from the OTDB
     private Vector childs;
 
+    /**
+     * default constructor - creates an empty node.
+     */
+    public OTDBtreeNode() {
+        logger.trace("Entry - OTDBtreeNode()");
+
+        node = new jOTDBnode(0,0,0,0);
+        node.name = "No node defined";
+        otdbRmi = null;
+        
+        logger.trace("Exit - OTDBtreeNode()");
+    }
+    
+    /**
+     * constructor
+     * 
+     * @param node jOTDBnode to be wrapped
+     * @param otdbRmi Reference to the OTDB database 
+     */
     public OTDBtreeNode(jOTDBnode node, OtdbRmi otdbRmi) {
-        logger.trace("Entry - OTDBtreeNode("+node.name+")");
+        logger.trace("Entry - OTDBtreeNode("+toString()+")");
 
         this.node = node;
         this.otdbRmi = otdbRmi;
@@ -47,11 +66,29 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
         // TEST ONLY
         childs = defineTestChilds(node.nodeID(),node.treeID());
 
-        logger.trace("Exit - OTDBtreeNode("+node.name+")");
+        logger.trace("Exit - OTDBtreeNode("+toString()+")");
     }
     
+    /**
+     * jOTDBnode accessor
+     */
     public jOTDBnode getOTDBnode() {
         return node;
+    }
+
+    /**
+     * jOTDBnode accessor
+     */
+    public void setOTDBnode(jOTDBnode node) {
+        this.node = null;
+        this.node = node;
+    }
+    
+    /**
+     * OtdbRmi accessor
+     */
+    public void setOTDBrmi(OtdbRmi otdbRmi) {
+        this.otdbRmi = otdbRmi;
     }
 
     /**
@@ -59,20 +96,20 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
      * Determines if the node has childs or not
      */
     public boolean isLeaf() {
-        logger.trace("Entry - isLeaf("+node.name+")");
+        logger.trace("Entry - isLeaf("+toString()+")");
         
         boolean isLeaf = false;
         try {
             //TODO Vector childs = otdbRmi.getRemoteMaintenance().getItemList(node.nodeID(), node.treeID(), 1);
-            
+
             if(childs.size() == 0)
                 isLeaf = true;
         }
         catch(Exception e) {
-            logger.fatal(e);
+            logger.fatal("Exception during defineChildNodes: " + e);
+            isLeaf = true;
         }
-        
-        logger.trace("Exit - isLeaf("+node.name+"): " + isLeaf);
+        logger.trace("Exit - isLeaf("+toString()+"): " + isLeaf);
         return isLeaf;
     }
 
@@ -81,13 +118,13 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
      * Adds childs if they are not defined and returns the number of childs
      */
     public int getChildCount() {
-        logger.trace("Entry - getChildCount("+node.name+")");
+        logger.trace("Entry - getChildCount("+toString()+")");
 
         if (!areChildrenDefined)
             defineChildNodes();
         int childCount = super.getChildCount();
         
-        logger.trace("Exit - getChildCount("+node.name+"): " + childCount);
+        logger.trace("Exit - getChildCount("+toString()+"): " + childCount);
         return(childCount);
     }
 
@@ -95,7 +132,7 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
      * Retrieves a list of child nodes from the OTDB and adds them
      */
     private void defineChildNodes() {
-        logger.trace("Entry - defineChildNodes("+node.name+")");
+        logger.trace("Entry - defineChildNodes("+toString()+")");
 
         // You must set the flag before defining children if you
         // use "add" for the new children. Otherwise you get an infinite
@@ -113,16 +150,21 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
             }
         }
         catch(Exception e) {
-            logger.fatal(e);
+            logger.fatal("Exception during defineChildNodes: " + e);
         }
-        logger.trace("Exit - defineChildNodes("+node.name+")");
+        logger.trace("Exit - defineChildNodes("+toString()+")");
     }
 
     /**
      * Called by the JTree
+     * @return the human readable name of the node
      */
     public String toString() {
-        return node.name;
+        String name = "";
+        if(node != null) {
+            name = node.name;
+        }
+        return name;
     }
     
     
@@ -130,7 +172,7 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
     * TEST ONLY. Defines some child nodes
     */
     private Vector defineTestChilds(int aTreeID, int topNode) {
-        logger.trace("Entry - defineChildNodes("+node.name+")(" + aTreeID + "," + topNode + ")");
+        logger.trace("Entry - defineChildNodes("+toString()+")(" + aTreeID + "," + topNode + ")");
 
         // using Java Generics to get a typesafe container
         Vector<jOTDBnode> v = new Vector<jOTDBnode>();
@@ -143,7 +185,7 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
             v.add(jotdbnode);
         }
 
-        logger.trace("Exit - defineChildNodes("+node.name+")(" + aTreeID + "," + topNode + ")");
+        logger.trace("Exit - defineChildNodes("+toString()+")(" + aTreeID + "," + topNode + ")");
         return v;
     }
 }
