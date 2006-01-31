@@ -42,14 +42,12 @@
 namespace LOFAR {
   namespace rspctl {
 
-    /**
-     * Base class for control commands towards the RSPDriver.
-     */
-    class Command
-    {
+    //
+	// class Command :base class for control commands towards the RSPDriver.
+    //
+    class Command {
     public:
-      virtual ~Command()
-      {}
+      virtual ~Command() {}
 
       /**
        * Send the command to the RSPDriver
@@ -59,9 +57,7 @@ namespace LOFAR {
       /**
        * rspctl is stopped. perform cleanup code here
        */
-      virtual void stop()
-      {
-      }
+      virtual void stop() {}
 
       /**
        * Check the acknowledgement sent by the RSPDriver.
@@ -102,14 +98,12 @@ namespace LOFAR {
         mask.reset();
         std::list<int>::const_iterator it;
         int count = 0; // limit to ndevices
-        for (it = m_select.begin(); it != m_select.end(); ++it, ++count)
-        {
+        for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
           if (count >= get_ndevices())
             break;
           if (*it < MAX_N_RCUS)
             mask.set(*it);
         }
-
         return mask;
       }
 
@@ -123,8 +117,7 @@ namespace LOFAR {
         mask.reset();
         std::list<int>::const_iterator it;
         int count = 0; // limit to ndevices
-        for (it = m_select.begin(); it != m_select.end(); ++it, ++count)
-        {
+        for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
           if (count >= get_ndevices())
             break;
           if (*it < MAX_N_TDS)
@@ -191,6 +184,9 @@ namespace LOFAR {
       int            m_ndevices;
     };
 
+	//
+	// Class FECommand
+	//
     class FECommand : public Command
     {
     public:
@@ -257,6 +253,9 @@ namespace LOFAR {
       GCFTCPPort m_feClient;
     };
 
+	//
+	// class WeightsCommand
+	//
     class WeightsCommand : public Command
     {
     public:
@@ -279,6 +278,9 @@ namespace LOFAR {
       int                  m_type;
     };
 
+	//
+	// class SubbandsCommand
+	//
     class SubbandsCommand : public Command
     {
     public:
@@ -300,6 +302,9 @@ namespace LOFAR {
       int m_type;
     };
 
+	//
+	// class RCUCommand
+	//
     class RCUCommand : public Command
     {
     public:
@@ -319,6 +324,9 @@ namespace LOFAR {
       RCUSettings::Control m_control;
     };
 
+	//
+	// class RSUCommand
+	//
     class RSUCommand : public Command
     {
     public:
@@ -338,6 +346,9 @@ namespace LOFAR {
       RSUSettings::ResetControl m_control;
     };
 
+	//
+	// class WGCommand
+	//
     class WGCommand : public Command
     {
     public:
@@ -369,65 +380,47 @@ namespace LOFAR {
 	  uint8	 m_mode;
     };
 
-    class StatusCommand : public Command
-    {
-    public:
-      StatusCommand(GCFPortInterface& port);
-      virtual ~StatusCommand()
-      {}
-      virtual void send();
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-    private:
-    };
-
+	//
+	// class StatisticsBaseCommand
+	//
     class StatisticsBaseCommand : public FECommand
     {
     public:
       StatisticsBaseCommand(GCFPortInterface& port);
       virtual ~StatisticsBaseCommand()
       {
-        if(m_file)
-        {
+        if(m_file) {
           delete[] m_file;
           m_file=0;
         }
       }
-      void setDuration(uint32 duration)
-      {
+      void setDuration(uint32 duration) {
         m_duration=duration;
         m_endTime.setNow((double)m_duration);
       }
-      void setIntegration(uint32 integration)
-      {
+      void setIntegration(uint32 integration) {
         if(integration > 0)
           m_integration=integration;
       }
-      void setDirectory(const char* dir)
-      {
+      void setDirectory(const char* dir) {
         m_directory = dir;
-        if(dir[strlen(dir)-1] != '/')
-        {
+        if(dir[strlen(dir)-1] != '/') {
           m_directory += "/";
         }
       }
-      FILE* getFile(int rcu, char* fileName)
-      {
-        if(!m_file)
-        {
+      FILE* getFile(int rcu, char* fileName) {
+        if(!m_file) {
           m_file = new (FILE*)[get_ndevices()];
-          if(!m_file)
-          {
+          if(!m_file) {
             logMessage(cerr,"Error: failed to allocate memory for file handles.");
             exit(EXIT_FAILURE);
           }
           memset(m_file,0,sizeof(FILE*)*get_ndevices());
         }
-        if(!m_file[rcu])
-        {
+        if(!m_file[rcu]) {
           m_file[rcu] = fopen(fileName, "w+");
         }
-        if(!m_file[rcu])
-        {
+        if(!m_file[rcu]) {
           logMessage(cerr,formatString("Error: Failed to open file: %s",fileName));
           exit(EXIT_FAILURE);
         }
@@ -444,6 +437,9 @@ namespace LOFAR {
     private:
     };
 
+	//
+	// class Statistics
+	//
     class StatisticsCommand : public StatisticsBaseCommand
     {
     public:
@@ -466,6 +462,9 @@ namespace LOFAR {
       blitz::Array<double, 2> m_stats;
     };
 
+	//
+	// class XCStatisticsCommand
+	//
     class XCStatisticsCommand : public StatisticsBaseCommand
     {
     public:
@@ -483,6 +482,26 @@ namespace LOFAR {
       blitz::Array<std::complex<double>, 4> m_stats;
     };
 
+	//
+	// class StatusCommand
+	//
+    class StatusCommand : public Command
+    {
+    public:
+		StatusCommand(GCFPortInterface& port);
+		virtual ~StatusCommand() {}
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+		blitz::Array<SystemStatus, 1>& board() {	// just pass reference to user
+			return m_board;
+		}
+    private:
+		blitz::Array<RSP_Protocol::SystemStatus, 1> m_board;
+    };
+
+	//
+	// class ClockCommand
+	//
     class ClocksCommand : public Command
     {
     public:
@@ -500,6 +519,9 @@ namespace LOFAR {
       uint32 m_clock;
     };
 
+	//
+	// class VersionCommand
+	//
     class VersionCommand : public Command
     {
     public:
@@ -514,6 +536,9 @@ namespace LOFAR {
     /**
      * Controller class for rspctl
      */
+	//
+	// class RSPCtl
+	//
     class RSPCtl : public GCFTask
     {
     public:

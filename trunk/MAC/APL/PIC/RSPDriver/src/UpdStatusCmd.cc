@@ -70,27 +70,8 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
   ack.sysstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   ack.sysstatus.board() = cache.getSystemStatus().board();
 
-  ack.sysstatus.rcu().resize(m_event->rcumask.count());
-
-  int result_rcu = 0;
-  for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      if (result_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-      {
-	ack.sysstatus.rcu()(result_rcu) = cache.getSystemStatus().rcu()(cache_rcu);
-      }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
-      }
-      
-      result_rcu++;
-    }
+  for (int boardNr = 0; boardNr < GET_CONFIG("RS.N_RSPBOARDS", i); boardNr++) {
+	ack.sysstatus.board()(boardNr) = cache.getSystemStatus().board()(boardNr);
   }
 
   getPort()->send(ack);
@@ -108,5 +89,6 @@ void UpdStatusCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdStatusCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
+	// TODO: should depend on nr_boards (rsp_mask ???)
+	return (true);
 }

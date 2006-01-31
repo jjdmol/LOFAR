@@ -109,26 +109,6 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
       LOG_WARN(formatString("RSP[%02d]: slice_count mismatch", getBoardId()));
     }
 
-  uint8 global_rcu_base = getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-
-  // copy RCU status
-  status.rcu()(global_rcu_base    ).pll          = ack.board.ap0_rcu.pllx;
-  status.rcu()(global_rcu_base    ).nof_overflow = ack.board.ap0_rcu.nof_overflowx;
-  status.rcu()(global_rcu_base + 1).pll          = ack.board.ap0_rcu.plly;
-  status.rcu()(global_rcu_base + 1).nof_overflow = ack.board.ap0_rcu.nof_overflowy;
-  status.rcu()(global_rcu_base + 2).pll          = ack.board.ap1_rcu.pllx;
-  status.rcu()(global_rcu_base + 2).nof_overflow = ack.board.ap1_rcu.nof_overflowx;
-  status.rcu()(global_rcu_base + 3).pll          = ack.board.ap1_rcu.plly;
-  status.rcu()(global_rcu_base + 3).nof_overflow = ack.board.ap1_rcu.nof_overflowy;
-  status.rcu()(global_rcu_base + 4).pll          = ack.board.ap2_rcu.pllx;
-  status.rcu()(global_rcu_base + 4).nof_overflow = ack.board.ap2_rcu.nof_overflowx;
-  status.rcu()(global_rcu_base + 5).pll          = ack.board.ap2_rcu.plly;
-  status.rcu()(global_rcu_base + 5).nof_overflow = ack.board.ap2_rcu.nof_overflowy;
-  status.rcu()(global_rcu_base + 6).pll          = ack.board.ap3_rcu.pllx;
-  status.rcu()(global_rcu_base + 6).nof_overflow = ack.board.ap3_rcu.nof_overflowx;
-  status.rcu()(global_rcu_base + 7).pll          = ack.board.ap3_rcu.plly;
-  status.rcu()(global_rcu_base + 7).nof_overflow = ack.board.ap3_rcu.nof_overflowy;
-
   return GCFEvent::HANDLED;
 }
 

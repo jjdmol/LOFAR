@@ -130,16 +130,11 @@ CacheBuffer::CacheBuffer()
 
   m_xcstats() = complex<double>(0,0);
 
+  // BoardStatus
   m_systemstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
-  m_systemstatus.rcu().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
-
   BoardStatus             boardinit;
-  SystemStatus::RCUStatus rcuinit = { 0, 0 };
-
   memset(&boardinit, 0, sizeof(BoardStatus));
-  
   m_systemstatus.board() = boardinit;
-  m_systemstatus.rcu()   = rcuinit;
 
   EPA_Protocol::RSRVersion versioninit = { 0, 0, 0, 0, 0 };
   m_versions.bp().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
@@ -160,7 +155,6 @@ CacheBuffer::CacheBuffer()
   LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
   LOG_DEBUG_STR("m_xcstats().size()            =" << m_xcstats().size()            * sizeof(complex<double>));
   LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
-  LOG_DEBUG_STR("m_systemstatus.rcu().size()   =" << m_systemstatus.rcu().size()   * sizeof(SystemStatus::RCUStatus));
   LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
   LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
 }
@@ -177,7 +171,6 @@ CacheBuffer::~CacheBuffer()
   m_beamletstats().free();
   m_xcstats().free();
   m_systemstatus.board().free();
-  m_systemstatus.rcu().free();
   m_versions.bp().free();
   m_versions.ap().free();
 }

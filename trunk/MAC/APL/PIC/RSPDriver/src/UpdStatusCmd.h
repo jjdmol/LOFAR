@@ -77,7 +77,8 @@ namespace LOFAR {
       virtual bool validate() const;
 
     private:
-      UpdStatusCmd();
+      UpdStatusCmd();				// don't allow default construction
+
       RSPSubstatusEvent* m_event;
     };
   };
