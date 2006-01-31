@@ -738,19 +738,79 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
   return status;
 }
 
-StatusCommand::StatusCommand(GCFPortInterface& port) : Command(port)
+StatusCommand::StatusCommand(GCFPortInterface& port) : 
+	Command(port),
+	m_board()
 {
 }
 
 void StatusCommand::send()
 {
-  logMessage(cerr,"Error: option '--status' not supported yet.");
-  exit(EXIT_FAILURE);
+	if (getMode()) { // GET
+		RSPGetstatusEvent getstatus;
+
+		getstatus.timestamp = Timestamp(0,0);
+		getstatus.rcumask = getRCUMask();
+		getstatus.cache = true;
+
+		m_rspport.send(getstatus);
+	}
+	else { // SET
+		logMessage(cerr,"Setting status not yet allowed");
+	}
 }
 
-GCFEvent::TResult StatusCommand::ack(GCFEvent& /*e*/)
+GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 {
-  return GCFEvent::NOT_HANDLED;
+	switch (event.signal) {
+	case RSP_GETSTATUSACK: {
+		RSPGetstatusackEvent ack(event);
+		bitset<MAX_N_RCUS> mask = getRCUMask();
+
+		if (ack.status != SUCCESS) {
+			logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
+			break;
+		}
+
+		BoardStatus&	board = ack.sysstatus.board()(0);
+		logMessage(cout,formatString("BP_temp: %2d , BP_clock: %3d",
+						board.rsp.bp_temp, board.rsp.bp_clock));
+		logMessage(cout,formatString("Temp AP0: %3d , AP1: %3d , AP2: %3d , AP3: %3d", 
+						board.rsp.ap0_temp, board.rsp.ap1_temp, 
+						board.rsp.ap2_temp, board.rsp.ap3_temp));
+		logMessage(cout,formatString("Ethernet nr frames: %ld , nr errors: %ld , last error: %d",
+						board.eth.nof_frames, board.eth.nof_errors,
+						board.eth.last_error));
+		logMessage(cout,formatString("MEP sequencenr: %ld , error: %d",
+						board.mep.seqnr, board.mep.error));
+		logMessage(cout,formatString("Errors ri: %5d ,  rcuX: %5d ,  rcuY: %5d,   lcu: %5d,    cep: %5d",
+						board.diag.ri_errors, board.diag.rcux_errors,
+						board.diag.rcuy_errors, board.diag.lcu_errors,
+					 	board.diag.cep_errors));
+		logMessage(cout,formatString("   serdes: %5d , ap0ri: %5d , ap1ri: %5d, ap2ri: %5d , ap3ri: %5d",
+						board.diag.serdes_errors, board.diag.ap0_ri_errors,
+						board.diag.ap1_ri_errors, board.diag.ap2_ri_errors,
+						board.diag.ap3_ri_errors));
+		logMessage(cout,formatString("Sync     diff     count   samples    slices"));
+		for (int blp = 0; blp < 4; blp++) {
+			BSStatus*	bs= &(board.ap0_sync)+(blp*sizeof(BSStatus));
+			logMessage(cout,formatString("%d:  %9ld %9ld %9ld %9ld", 
+						blp, bs->ext_count, bs->sync_count,
+						bs->sample_offset, bs->slice_count));
+		}
+		logMessage(cout,formatString("Status   pllX      pllY overflowX overflowY"));
+		for (int ap = 0; ap < 4; ap++) {
+			APStatus*	as= &(board.ap0_rcu)+(ap*sizeof(APStatus));
+			logMessage(cout,formatString("%d:  %9ld %9ld %9ld %9ld", 
+								ap, as->pllx, as->plly, 
+								as->nof_overflowx, as->nof_overflowy));
+		}
+	}
+	break;
+	}
+
+	GCFTask::stop();
+	return GCFEvent::HANDLED;
 }
 
 StatisticsBaseCommand::StatisticsBaseCommand(GCFPortInterface& port) : FECommand(port),
@@ -1424,6 +1484,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_SETWGACK:
     case RSP_SETCLOCKSACK:
     case RSP_GETCLOCKSACK:
+    case RSP_GETSTATUSACK:
       status = m_command->ack(e); // handle the acknowledgement
       break;
       
@@ -1545,7 +1606,7 @@ static void usage()
   cout << "rspctl --xcsubband=<int>                  # set the subband to cross correlate" << endl;
   cout << "rspctl --clocks=<int>    [--select=<set>] # get or set the clock frequency of clocks in Hz" << endl;
   cout << "rspctl --version         [--select=<set>] # get version information" << endl;
-  cout << "rspctl --rspclear        [--select=<set>] # clear FPGA register board" << endl;
+  cout << "rspctl --rspclear        [--select=<set>] # clear FPGA registers on RSPboard" << endl;
 }
 
 Command* RSPCtl::parse_options(int argc, char** argv)

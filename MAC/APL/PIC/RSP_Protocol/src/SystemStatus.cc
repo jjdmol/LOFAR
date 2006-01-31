@@ -38,9 +38,7 @@ using namespace EPA_Protocol;
 
 unsigned int SystemStatus::getSize()
 {
-  return
-      MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::BoardStatus)
-    + MSH_ARRAY_SIZE(m_rcu_status,   SystemStatus::RCUStatus);
+  return MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::BoardStatus);
 }
 
 unsigned int SystemStatus::pack  (void* buffer)
@@ -48,7 +46,6 @@ unsigned int SystemStatus::pack  (void* buffer)
   unsigned int offset = 0;
   
   MSH_PACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus);
-  MSH_PACK_ARRAY(buffer, offset, m_rcu_status,   SystemStatus::RCUStatus);
 
   return offset;
 }
@@ -58,7 +55,5 @@ unsigned int SystemStatus::unpack(void *buffer)
   unsigned int offset = 0;
   
   MSH_UNPACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus, 1);
-  MSH_UNPACK_ARRAY(buffer, offset, m_rcu_status,   SystemStatus::RCUStatus,   1);
-
   return offset;
 }

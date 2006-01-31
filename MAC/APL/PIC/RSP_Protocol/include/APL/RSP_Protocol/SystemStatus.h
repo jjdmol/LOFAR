@@ -39,17 +39,7 @@ namespace LOFAR {
     {
     public:
       /**
-       * RCUStatus as used in the CacheBuffer
-       */
-      typedef struct RCUStatus {
-	uint8  pll;
-	uint32 nof_overflow;
-      };
-
-      /**
        * Constructors for a SystemStatus object.
-       * Currently the tv_usec part is always set to 0 irrespective
-       * of the value passed in.
        */
       SystemStatus() { }
 	  
@@ -61,7 +51,6 @@ namespace LOFAR {
        * Member accessor functions.
        */
       blitz::Array<EPA_Protocol::BoardStatus, 1>& board();
-      blitz::Array<RCUStatus, 1>&                 rcu();
       /*@}*/
 
     public:
@@ -81,10 +70,8 @@ namespace LOFAR {
        *
        * Dimensions of the arrays are:
        *  - m_board_status  [N_RSPBOARDS]
-       *  - m_rcu_status    [N_RCUS]
        */
       blitz::Array<EPA_Protocol::BoardStatus, 1> m_board_status;
-      blitz::Array<RCUStatus, 1>                 m_rcu_status;
       /*@}*/
     };
 
@@ -93,10 +80,6 @@ namespace LOFAR {
       return m_board_status;
     }
 
-    inline blitz::Array<SystemStatus::RCUStatus, 1>& SystemStatus::rcu()
-    {
-      return m_rcu_status;
-    }
   };
 }; // namespace LOFAR
 

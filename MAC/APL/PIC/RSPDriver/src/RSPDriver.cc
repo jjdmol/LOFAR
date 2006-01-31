@@ -1441,7 +1441,7 @@ void RSPDriver::rsp_setwg(GCFEvent& event, GCFPortInterface& port)
   {
     LOG_INFO("applying WG settings immediately");
     command->apply(Cache::getInstance().getFront());
-    command->apply(Cache::getInstance().getBack());
+//    command->apply(Cache::getInstance().getBack());
   }
   else
   {

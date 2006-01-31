@@ -59,27 +59,8 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   ack.sysstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   ack.sysstatus.board() = cache.getSystemStatus().board();
 
-  ack.sysstatus.rcu().resize(m_event->rcumask.count());
-
-  int result_rcu = 0;
-  for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-      {
-	ack.sysstatus.rcu()(result_rcu) = cache.getSystemStatus().rcu()(cache_rcu);
-      }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
-      }
-      
-      result_rcu++;
-    }
+  for (int boardNr = 0; boardNr < GET_CONFIG("RS.N_RSPBOARDS", i); boardNr++) {
+	ack.sysstatus.board()(boardNr) = cache.getSystemStatus().board()(boardNr);
   }
 
   getPort()->send(ack);
@@ -107,7 +88,9 @@ void GetStatusCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetStatusCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
+
+  return (true);
+//  return (m_event->rspmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i));
 }
 
 bool GetStatusCmd::readFromCache() const
@@ -124,19 +107,14 @@ void GetStatusCmd::ack_fail()
 
 #if 1
   ack.sysstatus.board().resize(0);
-  ack.sysstatus.rcu().resize(0);
 #else
   ack.sysstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
-  ack.sysstatus.rcu().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
 
   BoardStatus boardinit;
-  RCUStatus rcuinit;
 
   memset(&boardinit, 0, sizeof(BoardStatus));
-  memset(&rcuinit, 0, sizeof(RCUStatus));
   
   ack.sysstatus.board() = boardinit;
-  ack.sysstatus.rcu()   = rcuinit;
 #endif
 
   getPort()->send(ack);

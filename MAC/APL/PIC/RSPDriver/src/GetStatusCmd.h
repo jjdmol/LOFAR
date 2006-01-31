@@ -87,7 +87,8 @@ namespace LOFAR {
       void ack_fail();
       
     private:
-      GetStatusCmd();
+      GetStatusCmd();				// Default construction is not allowed.
+
       RSPGetstatusEvent* m_event;
     };
   };
