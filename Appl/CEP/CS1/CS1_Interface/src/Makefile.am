@@ -1,33 +1,53 @@
-# if HAVE_SHMEM
-# SUBDIRS = shmem .
-# endif
+INSTHDRS         	=	\
+bitset.h			\
+RSPTimeStamp.h          	\
+DH_RSPSync.h            	\
+DH_CoarseDelay.h		\
+DH_FineDelay.h			\
+DH_RSP.h                	\
+DH_Subband.h            	\
+DH_RFI_Mitigation.h		\
+DH_Visibilities.h		\
+RectMatrix.h			\
+Stub_BGL.h			\
+Stub_BGL_Subband.h		\
+Stub_BGL_RFI_Mitigation.h	\
+Stub_BGL_FineDelay.h		\
+Stub_BGL_Visibilities.h		\
+Stub_RSP.h			\
+Stub_CoarseDelay.h		\
+CS1_Config.h
 
-lib_LTLIBRARIES         = libcs1_interface.la
+NOINSTHDRS 		=
 
-libcs1_interface_la_SOURCES =
+TCCHDRS 		= RectMatrix.tcc
 
-# AM_YFLAGS               = -d -p KeyParse
-# AM_LFLAGS               = -PKeyTokenize
-# LEX_OUTPUT_ROOT         = lex.KeyTokenize
+pkginclude_HEADERS 	= $(INSTHDRS) $(TCCHDRS)
 
-# if HAVE_SHMEM
-# libcs1_interface_la_LIBADD     = shmem/libshmem.la
-# endif
+noinst_HEADERS 		= $(NOINSTHDRS)
 
-bin_PROGRAMS =
+DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
-# Lines to build a program prg
-#prg_SOURCES		= prg.cc
-#prg_LDADD		= libcs1_interface.la
-#prg_DEPENDENCIES	= libcs1_interface.la $(LOFAR_DEPEND)
+lib_LTLIBRARIES	= libcs1_interface.la
 
-glishdir = $(libexecdir)/glish
-dist_glish_SCRIPTS = 
+libcs1_interface_la_SOURCES  	= \
+RSPTimeStamp.cc          	\
+DH_RSPSync.cc                   \
+DH_CoarseDelay.cc		\
+DH_FineDelay.cc			\
+DH_RSP.cc                	\
+DH_Subband.cc                   \
+DH_RFI_Mitigation.cc		\
+DH_Visibilities.cc		\
+Stub_BGL.cc			\
+Stub_BGL_Subband.cc		\
+Stub_BGL_RFI_Mitigation.cc	\
+Stub_BGL_FineDelay.cc		\
+Stub_BGL_Visibilities.cc	\
+Stub_CoarseDelay.cc		\
+Stub_RSP.cc
 
-pythondir = $(bindir)
-dist_python_SCRIPTS = 
-
-scriptdir = $(bindir)
-dist_script_SCRIPTS = 
+configfilesdir=$(bindir)
+configfiles_DATA=CS1.cfg
 
 include $(top_srcdir)/Makefile.common

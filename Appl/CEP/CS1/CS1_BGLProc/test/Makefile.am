@@ -1,30 +1,26 @@
-check_PROGRAMS        =
+..common_top_builddir=@common_top_builddir@
 
-# programs to run through supplied checktools
-CHECKTOOLPROGS        =
-#ENDCHECKTOOLPROGS
+check_PROGRAMS = tWH_BGL_Processing
 
-# scripts used to run tests
-TESTSCRIPTS           =
 
-# scripts and possible programs to run tests
-TESTS	              = $(TESTSCRIPTS)
+AM_CXXFLAGS = \
+	-I../../../src
 
-XFAIL_TESTS           =
+tWH_BGL_Processing_SOURCES =			\
+tWH_BGL_Processing.cc				\
+../src/WH_BGL_Processing.cc			\
+../src/Correlator.S				\
+../src/FIR.S
 
-# all files (.run, .stdout, .in, .log_prop, etc.) needed to run tests
-EXTRA_DIST            = $(TESTSCRIPTS)
 
-# Lines to build a test program testprg
-#testprg_SOURCES		= testprg.cc
-#testprg_LDADD			= ../src/libcs1_bglproc.la
-#testprg_DEPENDENCIES		= ../src/libcs1_bglproc.la $(LOFAR_DEPEND)
+CCAS = gcc
+CCASFLAGS = $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  srcdir=$(srcdir) \
-				  LOFARROOT=$(LOFARROOT) \
-				  LOFARDATAROOT=$(LOFARDATAROOT) \
-				  MPIBIN=$(MPIBIN)
+TESTS   = 					\
+tWH_BGL_Processing.sh
 
+TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
+				  lofar_sharedir=$(lofar_sharedir) \
+				  common_top_builddir=$(common_top_builddir)
 
 include $(top_srcdir)/Makefile.common
