@@ -29,6 +29,7 @@ public class BB_Gui extends javax.swing.JFrame {
     
     BBSConfigFileRep itsConfigFile;
     SourcePatchPanel itsSourcePatchPanel;
+    ModelTypeDialog itsModelTypeDialog;
             
     // ConfigurationFile variables
     private int              itsNrPrediffers=1;
@@ -68,6 +69,10 @@ public class BB_Gui extends javax.swing.JFrame {
          * The Panel where all the source patches will be maintained
          */
         itsSourcePatchPanel = new SourcePatchPanel();
+        /**
+         * The ModelType Panel
+         */
+        itsModelTypeDialog = new ModelTypeDialog();
         
         
         /* 
@@ -155,10 +160,10 @@ public class BB_Gui extends javax.swing.JFrame {
         jLabel18 = new javax.swing.JLabel();
         useAutoCorrInput = new javax.swing.JCheckBox();
         jLabel24 = new javax.swing.JLabel();
-        XXInput = new javax.swing.JCheckBox();
-        XYInput = new javax.swing.JCheckBox();
-        YXInput = new javax.swing.JCheckBox();
-        YYInput = new javax.swing.JCheckBox();
+        corr_0Input = new javax.swing.JCheckBox();
+        corr_1Input = new javax.swing.JCheckBox();
+        corr_2Input = new javax.swing.JCheckBox();
+        corr_3Input = new javax.swing.JCheckBox();
         jLabel22 = new javax.swing.JLabel();
         stationNamesInput = new javax.swing.JTextField();
         startChannelInput = startChannelInput=new JFormattedTextField(integerFormat);
@@ -166,7 +171,6 @@ public class BB_Gui extends javax.swing.JFrame {
         jLabel19 = new javax.swing.JLabel();
         sourcesInput = new javax.swing.JTextField();
         jLabel23 = new javax.swing.JLabel();
-        modelTypeInput = new javax.swing.JTextField();
         calcUVWInput = new javax.swing.JCheckBox();
         useSVDInput = new javax.swing.JCheckBox();
         controlParmUpdateInput = new javax.swing.JCheckBox();
@@ -193,6 +197,8 @@ public class BB_Gui extends javax.swing.JFrame {
         fitCriterionInput = new javax.swing.JTextField();
         RestoreDefaultButton = new javax.swing.JButton();
         ShowDescriptionFileButton = new javax.swing.JButton();
+        modelTypeInput = new javax.swing.JTextField();
+        getModelInput = new javax.swing.JButton();
         ConfigurationFileLabel = new javax.swing.JLabel();
         LogScrollPane = new javax.swing.JScrollPane();
         LogPaneTextArea = new javax.swing.JTextArea();
@@ -438,7 +444,7 @@ public class BB_Gui extends javax.swing.JFrame {
             }
         });
 
-        StratSpecParamPanel.add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 30, 160, 20));
+        StratSpecParamPanel.add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 30, 160, 20));
 
         jLabel1.setText("Strategy Type");
         StratSpecParamPanel.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, -1, 20));
@@ -451,46 +457,46 @@ public class BB_Gui extends javax.swing.JFrame {
 
         startTimeInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         startTimeInput.setText("-1");
-        MeasurementPanel.add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 20, 170, 20));
+        MeasurementPanel.add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 20, 150, 20));
 
         jLabel15.setText("End Time");
-        MeasurementPanel.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 20, -1, 20));
+        MeasurementPanel.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 20, -1, 20));
 
         endTimeInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         endTimeInput.setText("-1");
-        MeasurementPanel.add(endTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 20, 180, -1));
+        MeasurementPanel.add(endTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 20, 150, -1));
 
         jLabel17.setText("Start Channel");
         MeasurementPanel.add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
 
         jLabel18.setText("End Channel");
-        MeasurementPanel.add(jLabel18, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 50, -1, 20));
+        MeasurementPanel.add(jLabel18, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 50, -1, 20));
 
         useAutoCorrInput.setText("Use AutoCorrelations");
-        MeasurementPanel.add(useAutoCorrInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 90, -1, -1));
+        MeasurementPanel.add(useAutoCorrInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 90, -1, -1));
 
         jLabel24.setText("Correlations");
-        MeasurementPanel.add(jLabel24, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 90, -1, 20));
+        MeasurementPanel.add(jLabel24, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 90, -1, 20));
 
-        XXInput.setSelected(true);
-        XXInput.setText("XX");
-        MeasurementPanel.add(XXInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 80, -1, -1));
+        corr_0Input.setSelected(true);
+        corr_0Input.setText("00");
+        MeasurementPanel.add(corr_0Input, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 90, -1, -1));
 
-        XYInput.setText("XY");
-        MeasurementPanel.add(XYInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 80, -1, -1));
+        corr_1Input.setText("01");
+        MeasurementPanel.add(corr_1Input, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 90, -1, -1));
 
-        YXInput.setText("YX");
-        MeasurementPanel.add(YXInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 100, -1, -1));
+        corr_2Input.setText("10");
+        MeasurementPanel.add(corr_2Input, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 90, -1, -1));
 
-        YYInput.setSelected(true);
-        YYInput.setText("YY");
-        MeasurementPanel.add(YYInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 100, -1, -1));
+        corr_3Input.setSelected(true);
+        corr_3Input.setText("11");
+        MeasurementPanel.add(corr_3Input, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 90, -1, -1));
 
         jLabel22.setText("Station Names");
         MeasurementPanel.add(jLabel22, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, -1, -1));
 
         stationNamesInput.setToolTipText("Comma Seperated List with Station Names");
-        MeasurementPanel.add(stationNamesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 140, 440, -1));
+        MeasurementPanel.add(stationNamesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 140, 410, -1));
 
         startChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         startChannelInput.setText("0");
@@ -500,9 +506,9 @@ public class BB_Gui extends javax.swing.JFrame {
         endChannelInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         endChannelInput.setText("0");
         endChannelInput.setToolTipText("Insert End Channel");
-        MeasurementPanel.add(endChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 50, 110, 20));
+        MeasurementPanel.add(endChannelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 50, 110, 20));
 
-        StratSpecParamPanel.add(MeasurementPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 20, 580, 180));
+        StratSpecParamPanel.add(MeasurementPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 20, 520, 180));
 
         jLabel19.setText("Solvable Source Numbers");
         StratSpecParamPanel.add(jLabel19, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, -1, 20));
@@ -513,9 +519,6 @@ public class BB_Gui extends javax.swing.JFrame {
 
         jLabel23.setText("Model Type");
         StratSpecParamPanel.add(jLabel23, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, -1, 20));
-
-        modelTypeInput.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        StratSpecParamPanel.add(modelTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 60, 160, -1));
 
         calcUVWInput.setText("Calculate UVW Coordinates");
         StratSpecParamPanel.add(calcUVWInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, -1, -1));
@@ -669,6 +672,20 @@ public class BB_Gui extends javax.swing.JFrame {
 
         StratSpecParamPanel.add(ShowDescriptionFileButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 590, -1, -1));
 
+        modelTypeInput.setToolTipText("Selected ModelType(s)");
+        modelTypeInput.setEnabled(false);
+        StratSpecParamPanel.add(modelTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 60, 160, -1));
+
+        getModelInput.setText("Get");
+        getModelInput.setToolTipText("Get the models of your choice");
+        getModelInput.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                getModelInputActionPerformed(evt);
+            }
+        });
+
+        StratSpecParamPanel.add(getModelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 60, 60, -1));
+
         MainEditPanel.add(StratSpecParamPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 60, 900, 630));
 
         ConfigurationFileLabel.setText("Currently working on configuration file: ");
@@ -788,6 +805,14 @@ public class BB_Gui extends javax.swing.JFrame {
         pack();
     }
     // </editor-fold>//GEN-END:initComponents
+
+    private void getModelInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_getModelInputActionPerformed
+      itsModelTypeDialog.setSize(425,350);
+      itsModelTypeDialog.setModal(true);
+      itsModelTypeDialog.setAlwaysOnTop(true);
+      itsModelTypeDialog.setVisible(true);
+      modelTypeInput.setText(itsModelTypeDialog.getSelection());
+    }//GEN-LAST:event_getModelInputActionPerformed
 
     private void ShowDescriptionFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ShowDescriptionFileButtonActionPerformed
         if (itsDescriptionFile != null && itsDescriptionFile.exists()) {
@@ -1172,18 +1197,19 @@ public class BB_Gui extends javax.swing.JFrame {
     private javax.swing.JButton SourcePatchButton;
     private javax.swing.JPanel StratSpecParamPanel;
     private javax.swing.JPanel TopLevelParamPanel;
-    private javax.swing.JCheckBox XXInput;
-    private javax.swing.JCheckBox XYInput;
-    private javax.swing.JCheckBox YXInput;
-    private javax.swing.JCheckBox YYInput;
     private javax.swing.JCheckBox calcUVWInput;
     private javax.swing.JCheckBox controlParmUpdateInput;
+    private javax.swing.JCheckBox corr_0Input;
+    private javax.swing.JCheckBox corr_1Input;
+    private javax.swing.JCheckBox corr_2Input;
+    private javax.swing.JCheckBox corr_3Input;
     private javax.swing.JFormattedTextField endChannelInput;
     private javax.swing.JTextField endTimeInput;
     private javax.swing.JList excludeParamsInput;
     private javax.swing.JTextField fitCriterionInput;
     private javax.swing.JLabel fitCriterionLabel;
     private javax.swing.JList flowListInput;
+    private javax.swing.JButton getModelInput;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -1409,7 +1435,7 @@ public class BB_Gui extends javax.swing.JFrame {
      * After opening, fill all possible GUI values from this file. <br>
      * Keywords defined so far: <br>
      * npart           (nrPrediffers) <br> 
-     * corrtype        (XX,XY,YX,YY) <br>
+     * corrtype        (00,01,10,11) <br>
      * stations        (stationnames seperated by ,) <br>
      * subsetMSPath    (Path for Measurement Subsets) <br>
      * freq.start      (start frequency) <br>
@@ -1446,22 +1472,7 @@ public class BB_Gui extends javax.swing.JFrame {
                             System.out.println("Error converting "+value+" to integer.");
                         }
                     } else if(keyword.contains("corrtype")) {
-                        String aS[]=value.split(",");
-                        XXInput.setSelected(false);
-                        XYInput.setSelected(false);
-                        YXInput.setSelected(false);
-                        YYInput.setSelected(false);
-                        for (int i=0; i< aS.length;i++){
-                            if (aS[i].equals("XX")) {
-                                XXInput.setSelected(true);
-                            } else if (aS[i].equals("XY")) {
-                                XYInput.setSelected(true);
-                            } else if (aS[i].equals("YX")) {
-                                YXInput.setSelected(true);
-                            } else if (aS[i].equals("YY")) {
-                                YYInput.setSelected(true);
-                            }
-                        }
+                       // not needed for now
                     } else if (keyword.contains("station")) {
                         stationNamesInput.setText(value);
                     } else if (keyword.contains("subsetMSPath")) {
@@ -1588,21 +1599,22 @@ public class BB_Gui extends javax.swing.JFrame {
      * @param   aStr    The String containing the correlations p.e.:(0,1,3)
      */
     private void setCorrelations(String aStr) {
-        XXInput.setSelected(false);
-        XYInput.setSelected(false);
-        YXInput.setSelected(false);
-        YYInput.setSelected(false);
+
+        corr_0Input.setSelected(false);
+        corr_1Input.setSelected(false);
+        corr_2Input.setSelected(false);
+        corr_3Input.setSelected(false);
 
         String [] aI= aStr.split(",");
         for (int i=0; i< aI.length;i++) {
             if (aI[i].equals("0")) {
-                XXInput.setSelected(true);
+                corr_0Input.setSelected(true);
             } else if (aI[i].equals("1")) {
-                XYInput.setSelected(true);
+                corr_1Input.setSelected(true);
             } else if (aI[i].equals("2")) {
-                YXInput.setSelected(true);
+                corr_2Input.setSelected(true);
             } else if (aI[i].equals("3")) {
-                YYInput.setSelected(true);
+                corr_3Input.setSelected(true);
             }
         }
     }
@@ -1615,25 +1627,25 @@ public class BB_Gui extends javax.swing.JFrame {
     private String getCorrelationsArray() {
         String aS="[";
         boolean first=true;
-        if (XXInput.isSelected()) {
+        if (corr_0Input.isSelected()) {
             aS+="0";
             first=false;
         }
-        if (XYInput.isSelected()) {
+        if (corr_1Input.isSelected()) {
             if (!first) {
                 aS+=",";
             }
             aS+="1";
             first=false;
         }
-        if (YXInput.isSelected()) {
+        if (corr_2Input.isSelected()) {
             if (!first) {
                 aS+=",";
             }
             aS+="2";
             first=false;
         }
-        if (YYInput.isSelected()) {
+        if (corr_3Input.isSelected()) {
             if (!first) {
                 aS+=",";
             }
@@ -1813,6 +1825,7 @@ public class BB_Gui extends javax.swing.JFrame {
         fitCriterionInput.setText(aConfigFile.getParams("fitCriterion"));
         stationNamesInput.setText(aConfigFile.getParams("stationNames"));
         modelTypeInput.setText(aConfigFile.getParams("modelType"));
+        itsModelTypeDialog.setSelection(modelTypeInput.getText());
         calcUVWInput.setSelected(string2Boolean(aConfigFile.getParams("calcUVW")));
         useSVDInput.setSelected(string2Boolean(aConfigFile.getParams("useSVD")));
         setCorrelations(aConfigFile.getParams("correlations"));
