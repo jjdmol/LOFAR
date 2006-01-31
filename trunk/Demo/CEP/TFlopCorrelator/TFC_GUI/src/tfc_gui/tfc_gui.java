@@ -5,11 +5,12 @@
  */
 
 package tfc_gui;
-import java.awt.Color;
 import java.awt.Image;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
@@ -32,6 +33,7 @@ public class tfc_gui extends javax.swing.JFrame {
     private boolean      singleProcess=false;
     
     private String workDir="";
+    private File itsConfigurationFile=null;
  
     class WaitForFileThread extends Thread {
         String theJobName;
@@ -55,6 +57,14 @@ public class tfc_gui extends javax.swing.JFrame {
             initComponents();
             printLog("Workdir: "+workDir);
             LogPaneTextArea.setEditable(false);
+            
+            // Try to load in the initial file if available
+            File aFile= new File("TFlopCorrelator.cfg");
+            if (aFile.exists() && aFile.canRead() && aFile.canWrite()) {
+                if (loadFile(aFile)) {
+                    itsConfigurationFile=aFile;
+                }
+            }
         } catch(Exception e) {
             printLog("Error getting running system");
             e.printStackTrace();
@@ -82,8 +92,10 @@ public class tfc_gui extends javax.swing.JFrame {
         StopWrapperButton = new javax.swing.JButton();
         StartPostProcessingButton = new javax.swing.JButton();
         tfc_guiTabbedPane = new javax.swing.JTabbedPane();
+        ConfigPanePanel = new javax.swing.JPanel();
         ConfigPane = new javax.swing.JScrollPane();
         ConfigPaneTextArea = new javax.swing.JTextArea();
+        saveConfigButton = new javax.swing.JButton();
         LogPane = new javax.swing.JScrollPane();
         LogPaneTextArea = new javax.swing.JTextArea();
         PlotPane = new javax.swing.JScrollPane();
@@ -224,9 +236,23 @@ public class tfc_gui extends javax.swing.JFrame {
 
         getContentPane().add(ButtonPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 210, 580));
 
+        ConfigPanePanel.setLayout(new java.awt.BorderLayout());
+
         ConfigPane.setViewportView(ConfigPaneTextArea);
 
-        tfc_guiTabbedPane.addTab("Config", ConfigPane);
+        ConfigPanePanel.add(ConfigPane, java.awt.BorderLayout.CENTER);
+
+        saveConfigButton.setText("Save");
+        saveConfigButton.setToolTipText("save the configuration");
+        saveConfigButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveConfigButtonActionPerformed(evt);
+            }
+        });
+
+        ConfigPanePanel.add(saveConfigButton, java.awt.BorderLayout.SOUTH);
+
+        tfc_guiTabbedPane.addTab("Config", ConfigPanePanel);
 
         LogPane.setViewportView(LogPaneTextArea);
 
@@ -234,7 +260,7 @@ public class tfc_gui extends javax.swing.JFrame {
 
         tfc_guiTabbedPane.addTab("Plot", PlotPane);
 
-        getContentPane().add(tfc_guiTabbedPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 0, 680, 510));
+        getContentPane().add(tfc_guiTabbedPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 20, 680, 520));
 
         FileMenu.setText("File");
         FileMenuOpenFile.setText("Open Configuration File");
@@ -258,7 +284,6 @@ public class tfc_gui extends javax.swing.JFrame {
         });
 
         FileMenu.add(FileMenuExit);
-        FileMenuExit.getAccessibleContext().setAccessibleName("Exit");
 
         tfc_guiMenuBar.add(FileMenu);
 
@@ -281,6 +306,12 @@ public class tfc_gui extends javax.swing.JFrame {
         pack();
     }
     // </editor-fold>//GEN-END:initComponents
+
+    private void saveConfigButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveConfigButtonActionPerformed
+        if (itsConfigurationFile != null) {
+            saveFile();
+        }
+    }//GEN-LAST:event_saveConfigButtonActionPerformed
 
     private void StartPostProcessingButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StartPostProcessingButtonActionPerformed
         startPostProcessing();
@@ -355,6 +386,7 @@ public class tfc_gui extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel ButtonPanel;
     private javax.swing.JScrollPane ConfigPane;
+    private javax.swing.JPanel ConfigPanePanel;
     private javax.swing.JTextArea ConfigPaneTextArea;
     private javax.swing.JMenu FileMenu;
     private javax.swing.JMenuItem FileMenuExit;
@@ -377,6 +409,7 @@ public class tfc_gui extends javax.swing.JFrame {
     private javax.swing.JButton StopWrapperButton;
     private javax.swing.JButton clearButton;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JButton saveConfigButton;
     private javax.swing.JMenuBar tfc_guiMenuBar;
     private javax.swing.JTabbedPane tfc_guiTabbedPane;
     // End of variables declaration//GEN-END:variables
@@ -388,23 +421,45 @@ public class tfc_gui extends javax.swing.JFrame {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File aFile = fc.getSelectedFile();
             itsSelectedFile=aFile.getName();
-            try {
-                BufferedReader in = new BufferedReader(new FileReader(aFile));
-                String aStr;
-                while ((aStr = in.readLine()) != null) {
-                    ConfigPaneTextArea.append(aStr+"\n");
-                }
-                in.close();                     
-            } catch (IOException e) {
-                printLog("Error reading from file: "+aFile.getName());
-                 e.printStackTrace();
+            if (loadFile(aFile)) {
+                itsConfigurationFile=aFile;
             }
         } else {
               JOptionPane.showMessageDialog(null,"You didn't select a file",
                       "Config selection warning",
                       JOptionPane.WARNING_MESSAGE);
         }
-       ConfigPaneTextArea.setEditable(false);
+    }
+    
+    private void saveFile() {
+        try {
+            BufferedWriter aW=new BufferedWriter(new FileWriter(itsConfigurationFile));
+            ConfigPaneTextArea.write(aW);
+            aW.close();
+        } catch (IOException e) {
+            printLog("Error writing to file: "+itsConfigurationFile.getName());
+            e.printStackTrace();
+        }
+        
+        JOptionPane.showMessageDialog(null,"New ConfigurationFile Saved!!",
+                "File Saved Message",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private boolean loadFile(File aFile) {
+        try {
+            BufferedReader in = new BufferedReader(new FileReader(aFile));
+            String aStr;
+            while ((aStr = in.readLine()) != null) {
+                ConfigPaneTextArea.append(aStr+"\n");
+            }
+            in.close();                     
+        } catch (IOException e) {
+            printLog("Error reading from file: "+aFile.getName());
+            e.printStackTrace();
+            return false;
+        } 
+        return true;
     }
     
     private void displayPlot() {
