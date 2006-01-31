@@ -16,8 +16,13 @@ package nl.astron.lofar.sas.otbcomponents;
  */
 public class TableModel extends javax.swing.table.AbstractTableModel {
     
+    private String headers[];
+    private Object data[][];
+
     /** Creates a new instance of TableModel */
-    public TableModel() {
+    public TableModel(String headers[],Object data[][]) {
+        this.headers = headers;
+        this.data = data;
     }
 
     public int getRowCount() {
@@ -25,7 +30,12 @@ public class TableModel extends javax.swing.table.AbstractTableModel {
     }
 
     public String getColumnName(int c) {
-        return headers[c];
+        try {
+            return headers[c];
+        }
+        catch(ArrayIndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     public int getColumnCount() {
@@ -33,10 +43,11 @@ public class TableModel extends javax.swing.table.AbstractTableModel {
     }
 
     public Object getValueAt(int r, int c) {
-        return data[r][c];
+        try {
+            return data[r][c];
+        }
+        catch(ArrayIndexOutOfBoundsException e) {
+            return null;
+        }
     }
-    
-   
-    private String headers[] = {"header1","header2"};
-    private Object data[][] = {{null,null},{null,null}};
 }

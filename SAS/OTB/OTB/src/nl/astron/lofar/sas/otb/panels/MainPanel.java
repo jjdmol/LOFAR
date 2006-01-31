@@ -9,6 +9,7 @@ import java.io.File;
 import nl.astron.lofar.sas.otb.*;
 import nl.astron.lofar.sas.otb.util.*;
 import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
+import nl.astron.lofar.sas.otbcomponents.TableModel;
 import org.apache.log4j.Logger;
 
 /**
@@ -21,12 +22,15 @@ public class MainPanel extends javax.swing.JPanel
     static Logger logger = Logger.getLogger(MainPanel.class);
     static String name = "Main";
 
-    /** Creates new form BeanForm */
+    /** Creates new form MainPanel */
     public MainPanel() {
         initComponents();
         initializeButtons();
     }
         
+    /** 
+     * Initializes the buttonpanel. Every tab has different buttons 
+     */
     public void initializeButtons() {
         buttonPanel1.removeAllButtons();
         if (itsTabFocus.equals("PIC")) {
@@ -55,6 +59,13 @@ public class MainPanel extends javax.swing.JPanel
         buttonsInitialized=true;
     }
 
+    /** 
+     * Perform initialization of the plugin. The OTDB is accessed
+     * in this method to get user information and to initialize
+     * the tables. 
+     *
+     * @param mainframe MainFrame reference
+     */
     public void initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
         
@@ -70,12 +81,35 @@ public class MainPanel extends javax.swing.JPanel
             // enable/disable certain controls
         }
         
+        initializeTabs();
+        
     }
     
+    /** 
+     * Initializes the tab-panels. Each tab has a specific table model that
+     * contains the data for the table in the tab
+     */
+    public void initializeTabs() {
+        PICtableModel PICmodel = new PICtableModel(itsMainFrame.getOTDBrmi());
+        PICPanel.setTableModel(PICmodel);
+        
+        //TODO: do the same for the other tabs
+    }
+    
+    /** 
+     * Returns the human-readable name of this panel
+     *
+     * @return human-readable name of the panel
+     */
     public String getFriendlyName() {
         return getFriendlyNameStatic();
     }
 
+    /** 
+     * Static method that returns the human-readable name of this panel
+     *
+     * @return human-readable name of the panel
+     */
     public static String getFriendlyNameStatic() {
         return name;
     }
