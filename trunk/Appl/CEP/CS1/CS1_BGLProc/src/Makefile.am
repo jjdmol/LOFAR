@@ -1,33 +1,34 @@
-# if HAVE_SHMEM
-# SUBDIRS = shmem .
-# endif
+INSTHDRS         	=\
+Correlator.h		\
+FIR.h			\
+AH_BGL_Processing.h	\
+WH_BGL_Processing.h	
 
-lib_LTLIBRARIES         = libcs1_bglproc.la
+NOINSTHDRS 		=
 
-libcs1_bglproc_la_SOURCES =
+TCCHDRS 		=
 
-# AM_YFLAGS               = -d -p KeyParse
-# AM_LFLAGS               = -PKeyTokenize
-# LEX_OUTPUT_ROOT         = lex.KeyTokenize
+pkginclude_HEADERS 	= $(INSTHDRS) $(TCCHDRS)
 
-# if HAVE_SHMEM
-# libcs1_bglproc_la_LIBADD     = shmem/libshmem.la
-# endif
+noinst_HEADERS 		= $(NOINSTHDRS)
 
-bin_PROGRAMS =
+DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
-# Lines to build a program prg
-#prg_SOURCES		= prg.cc
-#prg_LDADD		= libcs1_bglproc.la
-#prg_DEPENDENCIES	= libcs1_bglproc.la $(LOFAR_DEPEND)
+bin_PROGRAMS 		= CS1_BGL_Processing 
 
-glishdir = $(libexecdir)/glish
-dist_glish_SCRIPTS = 
+CCAS			= gcc
+CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/
 
-pythondir = $(bindir)
-dist_python_SCRIPTS = 
+CS1_BGL_Processing_SOURCES	= $(DOCHDRS) \
+Correlator.S			\
+FIR.S				\
+CS1_BGL_Processing_main.cc 	\
+AH_BGL_Processing.cc		\
+WH_BGL_Processing.cc
 
-scriptdir = $(bindir)
-dist_script_SCRIPTS = 
+configfilesdir=$(bindir)
+configfiles_DATA	=	\
+CS1_BGL_Processing.machinefile	\
+CS1_BGL_Processing.log_prop	
 
 include $(top_srcdir)/Makefile.common
