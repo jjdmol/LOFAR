@@ -1,3 +1,26 @@
+LCS/ACC: Version 2.1, date: 2006/02/01
+======================================
+
+In preparation of making package distributable as rpm package, all header
+files that must be installed have been moved from the `src' directory to the
+`inclucde/<package>' directory (ref. BugID #396).
+
+Furthermore, some changes to the build environment require the use of
+autoconf_share 2.4 (or later). 
+
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 466 : make ACC RPM installable
+        All subpackages of ACC are made installable by rpm.
+
+# 546 : Add 'not_supported' return value to ACC commands
+        Implemented tribool's for the Process commands. The commands on the
+        application side are left unchanged and still return a bool.
+
+
+
 LCS/ACC: Version 2.0, date: 2005/07/08
 ======================================
 
