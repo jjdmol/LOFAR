@@ -69,9 +69,14 @@ int main (int argc, const char** argv) {
       cout << "init done" << endl;
       cout.flush();
       Profiler::activate();
-      cout << "run" << endl;
+      int nrSeconds = ps.getInt32("General.NRuns");
+      int nrSlaves = ps.getInt32("BGLProc.SlavesPerSubband");
+      ASSERTSTR( (fmod ((float)nrSeconds, (float)nrSlaves)) == 0, 
+		"General.NRuns should be a multiple of BGLProc.SlavesPerSubband");
+      int nrRuns = nrSeconds / nrSlaves;
+      cout << "run " << nrRuns << " time" << endl;
       cout.flush();
-      myAH.baseRun(ps.getInt32("General.NRuns"));
+      myAH.baseRun(nrRuns);
       cout << "run complete" << endl;
       cout.flush();
       myAH.baseDump();

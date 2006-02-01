@@ -35,7 +35,8 @@ Data.BeamElevation = 90.0
 Data.Delays.Station0_Station1=0   # (Constant) delay between stations 
 
 # General Variables
-General.NRuns = 1
+General.NRuns = 7      # Number of seconds to process
+                       # NB: must be a multiple of 'BGLProc.SlavesPerSubband'
 
 # Variables for the DelayCompensation
 
