@@ -100,12 +100,12 @@ public class BBSConfigFileRep {
             out.write(BBSStringToString(BBDBname));
             String aB=BBSBooleanToString(writeIndividualParms);
             out.write(aB);
-            if (aB.equals("T")) {
+            if (((Boolean) writeIndividualParms.getValue())){
                 out.write(BBSStringToString(parmSolutionTable));
             }
             String aStratType=BBSStringToString(strategy);
             out.write(aStratType);
-            if (aStratType.equals("WritePredData")) {
+            if (((String) strategy.getValue()).equals("WritePredData")) {
                 out.write(BBSBooleanToString(writeInDataCol));
             } else {
                 out.write(BBSDoubleToString(timeInterval));
@@ -122,7 +122,7 @@ public class BBSConfigFileRep {
             out.write(BBSStringToString(skyTableName));
             String aDBType = BBSStringToString(DBType);
             out.write(aDBType);
-            if (aDBType.equals("bdbrepl")) {
+            if (((String)DBType.getValue()).equals("bdbrepl")) {
                 out.write(BBSStringToString(DBHost));
                 out.write(BBSIntegerToString(DBMasterPort));
             }

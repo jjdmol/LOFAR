@@ -444,7 +444,7 @@ public class BB_Gui extends javax.swing.JFrame {
             }
         });
 
-        StratSpecParamPanel.add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 30, 160, 20));
+        StratSpecParamPanel.add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 30, 160, 20));
 
         jLabel1.setText("Strategy Type");
         StratSpecParamPanel.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, -1, 20));
@@ -674,7 +674,7 @@ public class BB_Gui extends javax.swing.JFrame {
 
         modelTypeInput.setToolTipText("Selected ModelType(s)");
         modelTypeInput.setEnabled(false);
-        StratSpecParamPanel.add(modelTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 60, 160, -1));
+        StratSpecParamPanel.add(modelTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 60, 160, -1));
 
         getModelInput.setText("Get");
         getModelInput.setToolTipText("Get the models of your choice");
@@ -684,7 +684,7 @@ public class BB_Gui extends javax.swing.JFrame {
             }
         });
 
-        StratSpecParamPanel.add(getModelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 60, 60, -1));
+        StratSpecParamPanel.add(getModelInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 60, 60, 20));
 
         MainEditPanel.add(StratSpecParamPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 60, 900, 630));
 
@@ -1391,7 +1391,11 @@ public class BB_Gui extends javax.swing.JFrame {
         itsConfigFile.saveParams("excludeParams",listModel2String(itsExcludeParamsModel));
         itsConfigFile.saveParams("startTime",startTimeInput.getText());
         itsConfigFile.saveParams("endTime",endTimeInput.getText());
-        itsConfigFile.saveParams("timeInterval",Double.toString(itsTimeStep));
+        try {
+            itsConfigFile.saveParams("timeInterval",timeIntervalInput.getText());
+        } catch  (NumberFormatException e) {
+            System.out.println("Error converting "+timeIntervalInput.getText()+" to integer.");
+        }            
         itsConfigFile.saveParams("startChan",startChannelInput.getText());
         itsConfigFile.saveParams("endChan",endChannelInput.getText());
         itsConfigFile.saveParams("sources",textList2String(sourcesInput.getText()));
@@ -1474,6 +1478,7 @@ public class BB_Gui extends javax.swing.JFrame {
                     } else if(keyword.contains("corrtype")) {
                        // not needed for now
                     } else if (keyword.contains("station")) {
+                        value=value.replaceAll("[\\[\\]\\p{Cntrl}\\p{Blank}\\p{Space}]*", "");                            
                         stationNamesInput.setText(value);
                     } else if (keyword.contains("subsetMSPath")) {
                         itsSubsetMSPath=value;
@@ -1517,9 +1522,10 @@ public class BB_Gui extends javax.swing.JFrame {
                     } else if (keyword.contains("time.step")) {
                         try {
                             value=value.replaceAll("[\\p{Cntrl}\\p{Blank}\\p{Space}]*", "");                                                        
-                            itsTimeStep=Integer.valueOf(value).intValue();
+                            itsTimeStep=Double.valueOf(value).doubleValue();
+                            timeIntervalInput.setText(Double.toString(itsTimeStep));
                         } catch  (NumberFormatException e) {
-                            System.out.println("Error converting "+value+" to integer.");
+                            System.out.println("Error converting "+value+" to Double.");
                         }
                     } else if (keyword.contains("time.nsteps")) {
                         try {
@@ -1678,7 +1684,7 @@ public class BB_Gui extends javax.swing.JFrame {
      */
     private Boolean string2Boolean(String aS) {
         boolean aB=false;
-        if (aS.equals("T")) {
+        if (aS.equals("true")) {
             aB=true;
         }
         return aB;
@@ -1718,6 +1724,9 @@ public class BB_Gui extends javax.swing.JFrame {
         if (aFlag==true && itsDescriptionFile!= null) {
              ShowDescriptionFileButton.setEnabled(aFlag);           
         }
+        
+        // ModelTypeInput always disabled
+        modelTypeInput.setEnabled(false);
         enableMeasurementPanel(aFlag);
         enableSolvableParamPanel(aFlag);
         enableExcludeParamPanel(aFlag);
@@ -1817,6 +1826,7 @@ public class BB_Gui extends javax.swing.JFrame {
         startTimeInput.setText(aConfigFile.getParams("startTime"));
         endTimeInput.setText(aConfigFile.getParams("endTime"));
         itsTimeStep=Double.valueOf(aConfigFile.getParams("timeInterval")).doubleValue();
+        timeIntervalInput.setText(Double.toString(itsTimeStep));
         startChannelInput.setText(aConfigFile.getParams("startChan"));
         endChannelInput.setText(aConfigFile.getParams("endChan"));
         sourcesInput.setText(aConfigFile.getParams("sources"));
@@ -1930,7 +1940,6 @@ public class BB_Gui extends javax.swing.JFrame {
     private void setDescriptionFile() {
         File aDescFile=new File(itsGeneralMSPath+"/"+MSNameInput.getText()+".dess");
         if (aDescFile != null && aDescFile.exists()) {
-            readDescriptionFile(aDescFile);
             itsDescriptionFile=aDescFile;
         }
     }
