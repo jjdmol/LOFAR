@@ -24,6 +24,7 @@
 DROP TABLE classification CASCADE;
 DROP TABLE constr_type 	  CASCADE;
 DROP TABLE param_type 	  CASCADE;
+DROP TABLE pvss_type 	  CASCADE;
 DROP TABLE validation 	  CASCADE;
 DROP TABLE unit		 	  CASCADE;
 DROP TABLE treetype 	  CASCADE;
@@ -76,27 +77,45 @@ CREATE TABLE param_type (
 	ID			INT2			NOT NULL,
 	name		VARCHAR(4)		NOT NULL,
 
-	CONSTRAINT param_type_uniq		UNIQUE (ID)
+	CONSTRAINT param_type_uniq		UNIQUE (ID),
+	CONSTRAINT param_name_uniq		UNIQUE (name)
 ) WITHOUT OIDS;
 INSERT INTO param_type VALUES (  0, 'node');
 INSERT INTO param_type VALUES (101, 'bool');
 INSERT INTO param_type VALUES (102, 'int');
-INSERT INTO param_type VALUES (103, 'long');
-INSERT INTO param_type VALUES (104, 'flt');
-INSERT INTO param_type VALUES (105, 'dbl');
-INSERT INTO param_type VALUES (106, 'icpx');
-INSERT INTO param_type VALUES (107, 'lcpx');
-INSERT INTO param_type VALUES (108, 'fcpx');
-INSERT INTO param_type VALUES (109, 'dcpx');
-INSERT INTO param_type VALUES (110, 'text');
-INSERT INTO param_type VALUES (111, 'bin');
+INSERT INTO param_type VALUES (103, 'uint');
+INSERT INTO param_type VALUES (104, 'long');
+INSERT INTO param_type VALUES (105, 'ulng');
+INSERT INTO param_type VALUES (106, 'flt');
+INSERT INTO param_type VALUES (107, 'dbl');
+INSERT INTO param_type VALUES (108, 'icpx');
+INSERT INTO param_type VALUES (109, 'lcpx');
+INSERT INTO param_type VALUES (110, 'fcpx');
+INSERT INTO param_type VALUES (111, 'dcpx');
+INSERT INTO param_type VALUES (112, 'text');
+INSERT INTO param_type VALUES (113, 'bin');
+INSERT INTO param_type VALUES (114, 'time');
+INSERT INTO param_type VALUES (115, 'date');
+
+--
+-- PVSS type
+--
+-- Assigns a name to the typeIDs of PVSS. The names should exist
+-- in the param_type table.
+--
+CREATE TABLE pvss_type (
+	ID			INT2			NOT NULL,
+	name		VARCHAR(4)		NOT NULL REFERENCES param_type(name),
+
+	CONSTRAINT pvss_type_uniq		UNIQUE (ID)
+) WITHOUT OIDS;
 -- PVSS values
-INSERT INTO param_type VALUES ( 6, 'flt');
-INSERT INTO param_type VALUES (20, 'uint');
-INSERT INTO param_type VALUES (21, 'int');
-INSERT INTO param_type VALUES (22, 'flt');
-INSERT INTO param_type VALUES (23, 'bool');
-INSERT INTO param_type VALUES (25, 'text');
+INSERT INTO pvss_type VALUES ( 6, 'flt');
+INSERT INTO pvss_type VALUES (20, 'uint');
+INSERT INTO pvss_type VALUES (21, 'int');
+INSERT INTO pvss_type VALUES (22, 'flt');
+INSERT INTO pvss_type VALUES (23, 'bool');
+INSERT INTO pvss_type VALUES (25, 'text');
 
 --
 -- Validation table
