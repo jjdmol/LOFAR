@@ -1,3 +1,22 @@
+LCS/Transport: Version 2.3, date: 2006/02/01
+============================================
+
+The release only contains minor changes. The most notable change is probably
+due to the split-off of LCS/Blob. Furthermore, some changes were made to the
+TH_Ethernet class.
+
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 514 : TH_Ethernet: add an interface for setting the kernel level socket
+        buffers.
+        The size of the socketbuffers can be given to the constructor. They
+        will be set during init. Also added TH_Null. This is useful if you do
+        not want a connection but you do need an TH-object.
+
+
+
 LCS/Transport: Version 2.2, date: 2005/11/16
 ============================================
 

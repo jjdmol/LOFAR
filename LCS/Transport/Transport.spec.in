@@ -28,8 +28,8 @@ BuildRoot: %{_tmppath}/%{pkgdir}-root
 URL: http://www.astron.nl
 Prefix: %{prefix}
 BuildArchitectures: i386 # Target platforms, i.e., i586
-Requires: Common 
-Requires: Blob
+Requires: Common >= 3.0
+Requires: Blob >= 1.0
 Packager: %{packager}
 Distribution: The LOFAR project
 Vendor: ASTRON

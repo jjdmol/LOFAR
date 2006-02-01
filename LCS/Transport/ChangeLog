@@ -1,3 +1,99 @@
+2006-01-18 11:45  loose
+
+	* Makefile.am, include/Transport/Makefile.am: BugID: 596
+
+	  * Removed any references to nobase_.	* Removed "local" variable
+	  INSTHDRS as it is not useful anymore.  * Added few missing
+	  --with-<package>=$(prefix) lines.
+
+2006-01-02 13:03  diepen
+
+	* Transport.spec.in, configure.in,
+	  include/Transport/DataBlobExtra.h,
+	  include/Transport/DataHolder.h, src/DataBlobExtra.cc,
+	  src/DataHolder.cc, src/TH_ShMem.cc, src/TransportHolder.cc,
+	  test/ExampleBlMem.cc, test/ExampleEthernet.cc,
+	  test/ExampleMPI.cc, test/ExampleMem.cc,
+	  test/ExampleNonBlocking.cc, test/ExampleShMem.cc,
+	  test/ExampleVarBuf.cc: BugID: 556 Blob code has been moved to a
+	  separate package
+
+2005-12-27 11:02  loose
+
+	* include/Transport/: CSConnection.h, Connection.h,
+	  ConnectionPool.h, DataBlobExtra.h, DataHolder.h, TH_Ethernet.h,
+	  TH_File.h, TH_MPI.h, TH_Mem.h, TH_Null.h, TH_ShMem.h,
+	  TH_Socket.h, TransportHolder.h: BugID: 394
+
+	  Removed argument to the Doxygen \file command. It caused subtle
+	  documentation bugs and it defaults to the current filename
+	  anyway.
+
+2005-12-16 10:06  diepen
+
+	* include/Transport/DataHolder.h, src/DataHolder.cc: BugID: 537
+	  Added alignment argument to function addField.
+
+2005-12-12 10:47  zwart
+
+	* src/TH_Ethernet.cc: BugID: 524
+
+	  Splitted init routines, changed remote and own mac to src and
+	  dest mac
+
+2005-12-12 10:45  zwart
+
+	* include/Transport/TH_Ethernet.h: BugID: 514
+
+	  Splitted init routine
+
+2005-11-30 16:38  zwart
+
+	* include/Transport/Makefile.am, include/Transport/TH_Ethernet.h,
+	  include/Transport/TH_Null.h, src/TH_Ethernet.cc: BugID: 514
+
+	  The size of the socketbuffers can be given to the constructor.
+	  They will be set during init.
+
+	  Also added TH_Null. This is useful if you do not want a
+	  connection but you do need an TH-object.
+
+2005-11-28 12:00  meijeren
+
+	* src/TH_MPI.cc: BugID:480
+
+	  Changed type.
+
+2005-11-25 10:54  romein
+
+	* src/TH_MPI.cc: BugID: 225 Use MPI_Get_count instead of reading
+	  private field (which does not work on newer mpiches).
+
+2005-11-22 09:44  loose
+
+	* ChangeLog, NEWS, configure.in: BugID: 327
+
+	  Merged relevant changes in release 2.2 with the main development
+	  line.
+
+2005-11-18 18:02  loose
+
+	* NEWS: BugID: 327
+
+	  Added extra release info for release 2.2
+
+2005-11-16 17:15  loose
+
+	* configure.in: BugID: 327
+
+	  Prepare for release 2.2
+
+2005-11-16 17:12  loose
+
+	* ChangeLog, NEWS, configure.in: BugID: 327
+
+	  Prepare for release 2.2
+
 2005-10-27 12:29  loose
 
 	* ChangeLog, NEWS, configure.in: BugID: 327
