@@ -1,17 +1,17 @@
 check_PROGRAMS	      =	testLogger \
-			tDataConvert tStringUtil tHexdump \
+			tAllocator tDataConvert tStringUtil tHexdump \
 			testSocket tComplex \
 			tRunOnNode tTimer tNumeric
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS 	      =	testLogger tBlobString \
-			tBlobStream tBlobArray tBlobField \
-			tDataConvert tKeyValueMap tStringUtil tHexdump \
+CHECKTOOLPROGS 	      =	testLogger \
+			tAllocator tDataConvert tStringUtil tHexdump \
 			tTimer tNumeric
 #ENDCHECKTOOLPROGS
 
 TESTSCRIPTS = \
 	  tComplex.sh \
+	  tAllocator.sh \
 	  tDataConvert_test.sh \
 	  testLogger_test.sh \
 	  tHexdump_test.sh    \
@@ -37,6 +37,10 @@ testSocket_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 testLogger_SOURCES		= testLogger.cc
 testLogger_LDADD		= ../src/libcommon.la	
 testLogger_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tAllocator_SOURCES		= tAllocator.cc
+tAllocator_LDADD		= ../src/libcommon.la	
+tAllocator_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 tDataConvert_SOURCES		= tDataConvert.cc
 tDataConvert_LDADD		= ../src/libcommon.la
