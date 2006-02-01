@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/Allocator.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -40,14 +41,38 @@ namespace LOFAR
     return new HeapAllocator();
   }
 
-  void* HeapAllocator::allocate (size_t nbytes)
+  void* HeapAllocator::allocate (size_t nbytes, unsigned int alignment)
   {
-    return new char[nbytes];
+    // Make sure alignment is power of 2.
+    int align = 1;
+    if (alignment > 0) {
+      align = alignment;
+      ASSERT (align <= 256  &&  (align & (align-1)) == 0);
+    }
+    // Allocate some extra bytes to be sure that the data can be aligned
+    // correctly and that the nr of extra bytes can be stored in the byte
+    // just before the returned buffer.
+    // Usually allocation is always done on a multiple of 8 bytes, but
+    // with valgrind that is not the case. So be prepared for everything.
+    uchar* data = new uchar[nbytes + align];
+    // Align the buffer as needed.
+    ptrdiff_t ptr = (ptrdiff_t(data) & ~(align-1)) + align;
+    uchar* newbuf = (uchar*)ptr;
+    ptrdiff_t ptrd = newbuf-data;
+    DBGASSERT (ptrd > 0  &&  ptrd <= align);
+    // Store the nr of bytes 'shifted'. This nr is > 0, so subtract 1
+    // to be sure that 256 byte alignment also fits.
+    *(newbuf-1) = ptrd-1;
+    return newbuf;
   }
 
   void HeapAllocator::deallocate (void* data)
   {
-    delete [] (char*)data;
+    if (data != 0) {
+      uchar* buf = (uchar*)data;
+      buf -= *(buf-1) + 1;
+      delete [] buf;
+    }
   }
 
 } // end namespace LOFAR

@@ -54,7 +54,9 @@ namespace LOFAR {
       virtual Allocator* clone() const = 0;
       
       // Allocate memory.
-      virtual void* allocate (size_t nbytes) = 0;
+      // It is possible to specify how the data need to be aligned
+      // to a maximum of 256 bytes. The alignment must be a power of 2.
+      virtual void* allocate (size_t nbytes, unsigned int alignment=0) = 0;
       
       // Deallocate memory.
       virtual void deallocate (void* data) = 0;
@@ -77,7 +79,9 @@ namespace LOFAR {
       virtual HeapAllocator* clone() const;
       
       // Allocate memory.
-      virtual void* allocate (size_t nbytes);
+      // It is possible to specify how the data need to be aligned
+      // to a maximum of 256 bytes. The alignment must be a power of 2.
+      virtual void* allocate (size_t nbytes, unsigned int alignment=0);
       
       // Deallocate memory.
       virtual void deallocate (void* data);
