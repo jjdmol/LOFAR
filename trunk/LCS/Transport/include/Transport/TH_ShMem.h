@@ -134,7 +134,9 @@ public:
       virtual ShMemAllocator* clone() const;
 
       // Allocate shared memory.
-      virtual void* allocate (size_t size);
+      // It is possible to specify how the data need to be aligned
+      // to a maximum of 256 bytes. The alignment must be a power of 2.
+      virtual void* allocate (size_t size, unsigned int alignment=0);
       // Deallocate shared memory.
       virtual void  deallocate (void* ptr);
   };
@@ -180,20 +182,22 @@ public:
   class ShMemBuf
   {
   public:
-      ShMemBuf();
-      void init(void);
+    ShMemBuf();
+    void init (int align);
       
-      int           getMagicCookie();
-      bool          matchMagicCookie();
-      void*         getDataAddress();   
-      static ShMemBuf* toBuf(void* ptr);
+    int           getMagicCookie();
+    bool          matchMagicCookie();
+    void*         getDataAddress()
+      { return (char*)this + itsNrSkip; }
+    static ShMemBuf* toBuf(void* ptr);
 
   private:
-      unsigned int itsMagicCookie;    // Identifies this as a shared memory buffer
-      void*        itsBuf;
+    unsigned int itsMagicCookie;  // Identifies this as a shared memory buffer
+    unsigned int itsNrSkip;       // Nr of bytes to skip for data buffer
   };
 
-  TransportHolder* itsHelperTH;       // TransportHolder, used once to communicate the shared memory handle
+
+  TransportHolder* itsHelperTH;      // TransportHolder, used once to communicate the shared memory handle
 
   bool             itsFirstCall;     // First time send/recv is called on this TH?
   bool             itsReset;         // Has reset been called?

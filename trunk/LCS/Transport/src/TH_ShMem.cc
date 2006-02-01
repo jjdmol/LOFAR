@@ -137,22 +137,27 @@ void TH_ShMem::reset()
   itsReset = true;
 }
 
-void* TH_ShMem::ShMemAllocator::allocate(size_t size)
+void* TH_ShMem::ShMemAllocator::allocate (size_t size, unsigned int alignment)
 {
-  ShMemBuf* buf = 0;
-
-  // allocate buffer header plus data space
-  buf = (TH_ShMem::ShMemBuf*)shmem_malloc(sizeof(TH_ShMem::ShMemBuf) + size); // Allocate a ShMemBuf
-                                                                              // and return ptr to data buffer
-  LOG_TRACE_STAT_STR( " alloc " << (void*)buf
-	   << ' ' << size);
-  // initialize header
-  buf->init();
-
-  // return address of first buffer element
-  void* ptr = buf->getDataAddress();
-  LOG_TRACE_STAT_STR ("TH_ShMem:: alloc ptr " << ptr);
-  return buf->getDataAddress();
+  // Make sure alignment is power of 2.
+  int align = 1;
+  if (alignment > 0) {
+    align = alignment;
+    ASSERT (align <= 256  &&  (align & (align-1)) == 0);
+  }
+  // Allocate buffer header plus data space
+  // Allocate some extra bytes to be sure that the data can be aligned
+  // correctly and that the nr of extra bytes can be stored in the byte
+  // just before the returned buffer.
+  ShMemBuf* buf = (ShMemBuf*)shmem_malloc(sizeof(TH_ShMem::ShMemBuf) +
+					  size + align);
+  LOG_TRACE_STAT_STR( " alloc " << (void*)buf << ' ' << size);
+  // Initialize header.
+  buf->init (align);
+  // Get address of first buffer element.
+  void* data = buf->getDataAddress();
+  LOG_TRACE_STAT_STR ("TH_ShMem:: alloc ptr " << data);
+  return data;
 }
 
 void TH_ShMem::ShMemAllocator::deallocate(void* ptr)
@@ -355,19 +360,30 @@ shmem_cond_t* TH_ShMem::CommContext::getSendReadyCondition(void)
 TH_ShMem::ShMemBuf::ShMemBuf()
 {}
 
-void TH_ShMem::ShMemBuf::init(void)
+void TH_ShMem::ShMemBuf::init (int align)
 {
   itsMagicCookie = TH_SHMEM_MAGIC_COOKIE;
-  itsBuf = 0;
+  // Skip header.
+  uchar* data = (uchar*)this + sizeof(ShMemBuf);
+  // Align the buffer as needed.
+  ptrdiff_t ptr = (ptrdiff_t(data) & ~(align-1)) + align;
+  uchar* newbuf = (uchar*)ptr;
+  ptrdiff_t ptrd = newbuf-data;
+  DBGASSERT (ptrd > 0  &&  ptrd <= align);
+  // Store the nr of bytes 'shifted'. This nr is > 0, so subtract 1
+  // to be sure that 256 byte alignment also fits.
+  *(newbuf-1) = ptrd-1;
+  itsNrSkip = ptrd + sizeof(ShMemBuf);
 }
 
-TH_ShMem::ShMemBuf* TH_ShMem::ShMemBuf::toBuf(void* ptr)
+TH_ShMem::ShMemBuf* TH_ShMem::ShMemBuf::toBuf (void* ptr)
 {
-  ShMemBuf *result = 0;
-  ShMemBuf b;
-
-  result = (TH_ShMem::ShMemBuf*)((char*)ptr - ((char*)&(b.itsBuf) - (char*)&b));
-
+  uchar* buf = (uchar*)ptr;
+  // First take possible alignment bytes into account.
+  int nalign = 1 + *(buf-1);
+  buf -= nalign;
+  ShMemBuf* result = (ShMemBuf*)(buf - sizeof(ShMemBuf));
+  DBGASSERT (nalign == int(result->itsNrSkip - sizeof(ShMemBuf)));
   return result;
 }
 
@@ -379,13 +395,6 @@ int TH_ShMem::ShMemBuf::getMagicCookie(void)
 bool TH_ShMem::ShMemBuf::matchMagicCookie(void)
 {
   return TH_SHMEM_MAGIC_COOKIE == itsMagicCookie;
-}
-
-void* TH_ShMem::ShMemBuf::getDataAddress()
-{
-  // return the address of the itsBuf field since
-  // that is where the buffer should start
-  return &itsBuf;
 }
 
 
