@@ -2,7 +2,7 @@ LCS/Transport: Version 2.3, date: 2006/02/01
 ============================================
 
 The release only contains minor changes. The most notable change is probably
-due to the split-off of LCS/Blob. Furthermore, some bugs were fixed in the
+due to the split-off of LCS/Blob. Furthermore, some changes were made to the
 TH_Ethernet class.
 
 
@@ -14,12 +14,6 @@ The following BugIDs have been resolved
         The size of the socketbuffers can be given to the constructor. They
         will be set during init. Also added TH_Null. This is useful if you do
         not want a connection but you do need an TH-object.
-
-# 524 : TH_Ethernet: does not work properly in a CEPFrame application
-        Splitted init routines, changed remote and own mac to src and dest mac
-
-# 537 : Alignment of data in DataHolder
-        Added alignment argument to function addField.
 
 
 
