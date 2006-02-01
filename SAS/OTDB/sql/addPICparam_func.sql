@@ -42,6 +42,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 		vParRefID	PICparamref.paramID%TYPE;
 		vNodeID		PIChierarchy.nodeID%TYPE;
 		vParentID	PIChierarchy.parentID%TYPE;
+		vParType	param_type.id%TYPE;
 		vFullname	VARCHAR(120);
 		vNodename	VARCHAR(120);
 		vBasename	VARCHAR(120);
@@ -50,6 +51,15 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 		vLeaf		BOOLEAN;
 
 	BEGIN
+	  -- convert pvss-type to param-type
+	  SELECT m.id
+	  INTO   vParType
+	  FROM	 param_type m, pvss_type s
+	  WHERE	 s.id = $3 and s.name = m.name;
+	  IF NOT FOUND THEN
+		RAISE EXCEPTION \'Parametertype %d can not be converted\', $3;
+	  END IF;
+
 	  -- be sure NODE exists in reference table.
 	  -- PVSSname has format like xxx:aaa_bbb_ccc.ddd 
 	  -- or xxx:aaa_bbb_ccc.ddd.eee
@@ -66,7 +76,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 	    IF NOT FOUND THEN
 		  -- node not yet in reference table, add it.
 	      INSERT INTO PICparamRef(PVSSname, par_type)
-	      VALUES (vNodename, $3);
+	      VALUES (vNodename, vParType);
 	    END IF;
 	  END IF;
 
@@ -81,7 +91,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 		-- param not yet in reference table, add it.
 		-- TODO: add other fields also.
 	    INSERT INTO PICparamRef(PVSSname, par_type)
-	    VALUES (vFullname, $3);
+	    VALUES (vFullname, vParType);
 		-- and retrieve its ID
 --	    SELECT paramID 
 --	    INTO   vParRefID
