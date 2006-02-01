@@ -5,7 +5,7 @@ AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Transport, 2.2, no-define)
+AM_INIT_AUTOMAKE(Transport, 2.3, no-define)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -54,8 +54,8 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_MPI
-lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-3_0,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Blob,Blob,LCS-Blob-1_0,1,Blob/BlobHeader.h,,)
 
 dnl
 dnl Output Makefiles
