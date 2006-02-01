@@ -78,8 +78,8 @@ public:
   double       itsStartTime;
   double       itsEndTime;
   double       itsTimeLength;
-  double       itsStartFreq;
-  double       itsFreqLength;
+  int          itsStartChannel;
+  int          itsEndChannel;
   bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
 };
 

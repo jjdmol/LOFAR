@@ -38,13 +38,6 @@ namespace LOFAR
 const unsigned int MaxNumberOfParam = 32;  // These need NOT be the same as in DH_WorkOrder
 const unsigned int MaxParamNameLength = 16;
 
-string dtos(double dbl) // Convert double to string
-{
-  char buf[10];
-  sprintf(buf, "%.15g", dbl);
-  return buf;
-}
-
 DH_Solution::DH_Solution (const string& name, bool writeIndivParms,
 			  const string& parmTableName)
   : DH_DB             (name, "DH_Solution", 1),

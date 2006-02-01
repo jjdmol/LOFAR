@@ -36,8 +36,7 @@ using namespace std;
 
 namespace LOFAR
 {
-ParmWriter::ParmWriter(const int DBMasterPort)
-  : itsDBMasterPort(DBMasterPort)
+ParmWriter::ParmWriter()
 {}
 
 ParmWriter::~ParmWriter()

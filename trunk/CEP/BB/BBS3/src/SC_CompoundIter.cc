@@ -36,7 +36,7 @@ SC_CompoundIter::SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn,
 		     Connection* outWOSolveConn, int nrPrediffers,
 		     const ParameterSet& args)
   : StrategyController(inSolConn, outWOPDConn, outWOSolveConn, 
-		       nrPrediffers, args.getInt32("MSDBparams.DBMasterPort")), 
+		       nrPrediffers), 
     itsFirstCall      (true),
     itsPrevWOID       (0),
     itsArgs           (args),
@@ -46,8 +46,8 @@ SC_CompoundIter::SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn,
     itsStartTime      (0),
     itsEndTime        (0),
     itsTimeLength     (0),
-    itsStartFreq      (0),
-    itsFreqLength     (0),
+    itsStartChannel   (0),
+    itsEndChannel     (0),
     itsSendDoNothingWO(false)
 {
   itsMaxIterations = itsArgs.getInt32("maxNrIterations");
@@ -61,11 +61,11 @@ SC_CompoundIter::SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn,
   }
   itsControlParmUpd = itsArgs.getBool ("controlParmUpdate");
   itsWriteParms = itsArgs.getBool("writeParms");
-  itsStartTime = itsArgs.getDouble ("startTime");
-  itsEndTime = itsArgs.getDouble ("endTime");
+  itsStartTime = itsArgs.getDouble ("startTimeSec");
+  itsEndTime = itsArgs.getDouble ("endTimeSec");
   itsTimeLength = itsArgs.getDouble ("timeInterval");
-  itsStartFreq = itsArgs.getDouble ("startFreq");
-  itsFreqLength = itsArgs.getDouble ("freqLength");
+  itsStartChannel = itsArgs.getInt32 ("startChan");
+  itsEndChannel = itsArgs.getInt32 ("endChan");
 }
 
 SC_CompoundIter::~SC_CompoundIter()
@@ -85,7 +85,7 @@ bool SC_CompoundIter::execute()
     BBSTest::Logger::log("Start of testrun");
     itsFirstCall = false;
 
-    itsCurStartTime = itsArgs.getDouble ("startTime");
+    itsCurStartTime = itsArgs.getDouble ("startTimeSec");
 
     WOPD->setNewBaselines(true);
     WOPD->setNewPeelSources(true);
@@ -142,8 +142,8 @@ bool SC_CompoundIter::execute()
     WOPD->setDoNothing(itsSendDoNothingWO);
     WOPD->setNewDomain(true);
     WOPD->setSubtractSources(false);
-    WOPD->setStartFreq (itsArgs.getDouble ("startFreq"));
-    WOPD->setFreqLength (itsArgs.getDouble ("freqLength")); 
+    WOPD->setStartChannel (itsStartChannel);
+    WOPD->setEndChannel (itsEndChannel); 
     WOPD->setTimeLength (itsTimeLength); 
     WOPD->setModelType (itsArgs.getString ("modelType"));
     WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr"));

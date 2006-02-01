@@ -111,8 +111,8 @@ applyfile
 ../../src/clearBB -user $usernm -tablename bbs3SolveAP
 
 # Solve for phase
-# time src/BBS3 ../../test/SolveAP.input $usernm
+time src/BBS3 ../../test/SolveAP.input $usernm
 
-time /usr/local/mpich/bin/mpirun -np 3 -machinefile myMachines src/BBS3 ../../test/SolveAP.input $usernm
+#time /usr/local/mpich/bin/mpirun -np 3 -machinefile myMachines src/BBS3 ../../test/SolveAP.input $usernm
 
-touch SolveAP.ready
+#touch SolveAP.ready

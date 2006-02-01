@@ -121,7 +121,7 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
     cout << "timecounter=" << counter++ << ' ' << timeStart-st << endl;
     // Set a domain. Use middle 56 channels and a few times per step.
     ///pre1.setDomain (1170078125+24*156250, 16*156250, timeStart, timeStep);
-    pre1.setDomain (1170078125+30*156250, 4*156250, timeStart, timeStep);
+    pre1.setDomain (4, 59,timeStart, timeStep);
     ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
 
     // Get the ParmData from the Prediffer and send it to the solver.
@@ -167,7 +167,7 @@ void doSubtract (Prediffer& pre1, double timeStep)
   // Loop through all time domains.
   while (timeStart < timeLast) {
     // Set a domain. Use middle 56 channels and 20 times per step.
-    pre1.setDomain (1170078125+24*156250, 16*156250, timeStart, timeStep);
+    pre1.setDomain (4, 59,timeStart, timeStep);
     ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
     pre1.showSettings();
     // Subtract the model.

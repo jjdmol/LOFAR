@@ -103,30 +103,32 @@ makeGsm2
 applyfile
 
 
+echo "Solving phases 1st time ..."
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 2 $maxniter $calcuvw $dbtype
+
 # Solve for StokesI as function of freq.
-echo "Solving fluxes 1st time ..."
-time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "" 1 1 $maxniter $calcuvw $dbtype
+#echo "Solving fluxes 1st time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "" 1 1 $maxniter $calcuvw $dbtype
 
 # Solve for phase
-echo "Solving phases 1st time ..."
-time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
-exit
+#echo "Solving phases 1st time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
 
 # Solve again for StokesI as function of freq.
-echo "Solving fluxes 2nd time ..."
-time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
+#echo "Solving fluxes 2nd time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
 
 # Solve again for phase
-echo "Solving phases 2nd time ..."
-time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
+#echo "Solving phases 2nd time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
 
 # Solve again for StokesI as function of freq.
-echo "Solving fluxes 3rd time ..."
-time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
+#echo "Solving fluxes 3rd time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
 
 # Solve for amplitude in 2 patches.
-echo "Solving amplitudes ..."
-time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 3 $maxniter $calcuvw $dbtype
+#echo "Solving amplitudes ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 3 $maxniter $calcuvw $dbtype
 
 # Subtract the sources.
 #echo "Subtracting sources"
