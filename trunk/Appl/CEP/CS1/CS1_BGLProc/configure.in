@@ -61,6 +61,7 @@ lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
 lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
 lofar_INTERNAL(Appl/CEP/CS1/CS1_Interface,CS1_Interface,,1,CS1_Interface/DH_RSP.h,,)
+lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
 
 dnl
 dnl Output Makefiles
