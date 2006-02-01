@@ -57,6 +57,8 @@ TESTSCRIPTS = \
 
 TESTS = $(TESTSCRIPTS)
 
+XFAIL_TESTS = ExampleShMem_test.sh
+
 TESTS_ENVIRONMENT	  = lofar_sharedir=$(lofar_sharedir) \
 					   MPIBIN=$(MPIBIN)
 
