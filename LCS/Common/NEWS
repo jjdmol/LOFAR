@@ -1,3 +1,60 @@
+LCS/Common: Version 3.0, date: 2006/01/30
+=========================================
+
+All Blob related stuff has been moved into the new LCS/Blob package.
+Deprecated stuff -- Debug, Thread and Profiling -- has been removed.
+Blitz support has been moved into the LCS/Math package.
+
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 146 : LofarLogger segfaults when used in statically initialized objects
+        Created patch for log4cplus 1.0.2.
+
+# 396 : Support of rpm builds
+        Make it possibe to build an rpm from a package. Also support spec.in
+        files in rub to find dependent packages.
+
+# 420 : Move programs/scripts to derive package dependencies to LCS/Tools
+        The script makedep.sh and the C++ code pkgdep.cc have both been moved
+        to the LCS/Tools directory. The respective Makefile.am files have been
+        updated as well.
+
+# 500 : NSTimer doesn't have ostream& operator<<
+        Made operator<< public. Added functions getElapsed and getCount
+
+# 538 : Add alignment control to BlobField
+        Added alignment argument to BlobField, BlobString and BlobArray
+        functions.  Changed BlobArray such that alignment > 8 bytes is
+        possible.
+
+# 548 : Interupted accept call on socket is not repeated
+        If the accept call returns EWOULDBLOCK, EAGAIN or EINTR the call is
+        repeated.
+
+# 556 : move blob to Blob
+        Blob code moved to a separate package
+
+# 557 : Remove all deprecated stuff
+        The following stuff is deprecated and has been removed: Debug,
+        Profiling, Thread and Blitz and some backward compatibility stuff
+        (e.g. Net/backward).
+
+# 596 : Remove all occurrences of nobase_ from all Makefile.am files
+        Reason for banning the use of nobase_ is that automake will use
+        install-sh instead of /usr/bin/install when installing nobase_ header
+        files. Because install-sh does not support the -C option, the header
+        files will always be copied to the installation directory, even if
+        they haven't been modified. This will trigger a lot of useless
+        compilations of dependent sources.
+
+# 602 : Bit order incorrect in dataConvert
+        The order of the bits in a byte should be swapped when converting
+        to/from bools to make it the same as AIPS++.
+
+
+
 LCS/Common: Version 2.4, date: 2005/11/16
 =========================================
 
