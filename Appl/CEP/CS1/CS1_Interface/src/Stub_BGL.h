@@ -39,7 +39,7 @@ class Stub_BGL
 
 public:
   Stub_BGL(bool iAmOnBGL, bool isInput, unsigned channel, const ACC::APS::ParameterSet &pSet);
-  ~Stub_BGL();
+  virtual ~Stub_BGL();
 
   void connect(unsigned subband, unsigned slave, TinyDataManager& dm);
 
