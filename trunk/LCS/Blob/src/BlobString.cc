@@ -34,14 +34,12 @@ BlobString::BlobString (bool useString, size_t capacity,
   itsCapacity  (0),
   itsSize      (0),
   itsCanIncr   (true),
-  itsAlignMask (alignment),
-  itsBuffer    (0),
-  itsChars     (0)
+  itsAlignment (alignment),
+  itsBuffer    (0)
 {
   // Make sure alignment is power of 2.
   if (alignment > 1) {
     ASSERT ((alignment & (alignment-1)) == 0);
-    itsAlignMask -= 1;
   }
   reserve (capacity);
   itsCanIncr = canIncreaseCapacity;
@@ -53,14 +51,12 @@ BlobString::BlobString (const BlobStringType& allocator, size_t capacity,
   itsCapacity  (0),
   itsSize      (0),
   itsCanIncr   (true),
-  itsAlignMask (alignment),
-  itsBuffer    (0),
-  itsChars     (0)
+  itsAlignment (alignment),
+  itsBuffer    (0)
 {
   // Make sure alignment is power of 2.
   if (alignment > 1) {
     ASSERT ((alignment & (alignment-1)) == 0);
-    itsAlignMask -= 1;
   }
   reserve (capacity);
   itsCanIncr = canIncreaseCapacity;
@@ -69,7 +65,7 @@ BlobString::BlobString (const BlobStringType& allocator, size_t capacity,
 BlobString::~BlobString()
 {
   if (! itsAllocator.useString()) {
-    itsAllocator.allocator().deallocate (itsChars);
+    itsAllocator.allocator().deallocate (itsBuffer);
   }
 }
 
@@ -82,21 +78,11 @@ void BlobString::reserve (size_t newSize)
       itsBuffer = const_cast<uchar*>(itsString.data());
       itsCapacity = itsString.capacity();
     } else {
-      // Allocate some extra bytes for alignment if needed.
-      // Usually allocation is always done on a multiple of 8 bytes, but
-      // with valgrind that is not the case. So be prepared for everything.
-      size_t nsize = newSize + itsAlignMask;
-      void* data = itsAllocator.allocator().allocate (nsize);
-      ASSERTSTR (data, "BlobString could not allocate " << nsize
+      void* newbuf = itsAllocator.allocator().allocate (newSize, itsAlignment);
+      ASSERTSTR (newbuf, "BlobString could not allocate " << newSize
 		 << " bytes");
-      void* newbuf = data;
-      if (itsAlignMask > 0) {
-	ptrdiff_t ptr = (ptrdiff_t(data) + itsAlignMask) & ~itsAlignMask;
-	newbuf = (void*)ptr;
-      }
       memcpy (newbuf, itsBuffer, itsSize);
-      itsAllocator.allocator().deallocate (itsChars);
-      itsChars  = data;
+      itsAllocator.allocator().deallocate (itsBuffer);
       itsBuffer = newbuf;
       itsCapacity = newSize;
     }

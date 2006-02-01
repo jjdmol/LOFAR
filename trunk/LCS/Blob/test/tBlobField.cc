@@ -184,6 +184,7 @@ void readFile (BlobFieldSet& fset, BlobFieldSet& fset2,
 {
   // Read the blob as a byte array from the file.
   std::ifstream is (fileName);
+  ASSERTSTR (is, fileName << " not found");
   BlobIBufStream bibs(is);
   BlobIStream bis(bibs);
   std::vector<char> buf;
@@ -292,6 +293,7 @@ int main()
 	doIn (fset2, bib);  // this should ignore the double field
 	// Write the blob in a file (as an array of bytes).
 	std::ofstream os ("tBlobField_tmp.dat");
+	ASSERTSTR (os, "tBlobField_tmp.dat could not be created");
 	BlobOBufStream bobs(os);
 	BlobOStream bos(bobs);
 	putBlobVector (bos, bstr.data(), bstr.size());
