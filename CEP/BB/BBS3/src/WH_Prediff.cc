@@ -107,7 +107,7 @@ void WH_Prediff::process()
     // Execute workorder
     if (wo->getWritePredData())
     {
-      pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+      pred->setDomain(wo->getStartChannel(), wo->getEndChannel(), 
 		      wo->getStartTime(), wo->getTimeLength());
       pred->writePredictedData(wo->getWriteInDataCol());
     }
@@ -125,7 +125,7 @@ void WH_Prediff::process()
 	pred->clearSolvableParms();
 	pred->setSolvableParms(pNames, exPNames, true);
 	
-	int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+	int size = pred->setDomain(wo->getStartChannel(), wo->getEndChannel(), 
 				   wo->getStartTime(), wo->getTimeLength());
 	
 	dhRes->setBufferSize(size);              // Set data field of output DH_Prediff to correct size
@@ -142,7 +142,7 @@ void WH_Prediff::process()
 	pred->clearSolvableParms();
 	pred->setSolvableParms(pNames, exPNames, true);
       
-	int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+	int size = pred->setDomain(wo->getStartChannel(), wo->getEndChannel(), 
 				   wo->getStartTime(), wo->getTimeLength());
 	dhRes->setBufferSize(size);      // Set data field of output DH_Prediff to correct size
       
@@ -169,7 +169,11 @@ void WH_Prediff::process()
 	  BBSTest::ScopedTimer updatePTimer("P:update-parms");
 	  vector<ParmData> solVec;
 	  converged = readSolution(wo->getSolutionID(), curIter-1, solVec);
-	  if (!converged)
+	  if (readSolution(wo->getSolutionID(), curIter-1, solVec))
+	  {
+	    break; // Skip prediffing and end iterating
+	  }
+	  else
 	  {
 	    pred->updateSolvableParms(solVec);
 	  }
@@ -188,11 +192,6 @@ void WH_Prediff::process()
 	  {                            // Reread parameter values from table
 	    pred->updateSolvableParms();
 	  }
-	}
-
-	if (converged)  // Skip prediffing and end iterating
-	{ 
-	  break;
 	}
 
 	// Calculate, put in output dataholder buffer and send to solver
@@ -261,7 +260,7 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
   
     string modelType = args.getString("modelType");
     bool calcUVW = args.getBool("calcUVW");
-    string msName = args.getString("subsetMSPath") + args.getString("MSName")+ "_p" + itsID;
+    string msName = args.getString("subsetMSPath") + "/" + args.getString("MSName")+ "_p" + itsID;
 
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);

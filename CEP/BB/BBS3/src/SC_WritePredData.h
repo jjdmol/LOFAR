@@ -68,9 +68,10 @@ public:
   double       itsCurStartTime;
   bool         itsWriteInDataCol;
   double       itsStartTime;
+  double       itsEndTime;
   double       itsTimeLength;
-  double       itsStartFreq;
-  double       itsFreqLength;
+  int          itsStartChannel;
+  int          itsEndChannel;
 };
 
 inline string SC_WritePredData::getType() const

@@ -35,13 +35,11 @@ int StrategyController::theirNextWOID=-1;
 StrategyController::StrategyController(Connection* inSolConn, 
 				       Connection* outWOPDConn, 
 				       Connection* outWOSolveConn,
-				       int nrPrediffers,
-				       const int DBMasterPort)
+				       int nrPrediffers)
   : itsInSolConn     (inSolConn),
     itsOutWOPDConn   (outWOPDConn),
     itsOutWOSolveConn(outWOSolveConn),
-    itsNrPrediffers(nrPrediffers),
-    itsParmWriter(DBMasterPort)
+    itsNrPrediffers(nrPrediffers)
     
 {
   LOG_TRACE_FLOW("StrategyController constructor");

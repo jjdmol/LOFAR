@@ -36,20 +36,22 @@ SC_WritePredData::SC_WritePredData(Connection* inSolConn, Connection* outWOPDCon
 		     Connection* outWOSolveConn, int nrPrediffers,
 		     const ParameterSet& args)
   : StrategyController(inSolConn, outWOPDConn, outWOSolveConn, 
-		       nrPrediffers, args.getInt32("MSDBparams.DBMasterPort")), 
+		       nrPrediffers), 
     itsFirstCall      (true),
     itsArgs           (args),
     itsCurStartTime   (0),
     itsStartTime      (0),
+    itsEndTime        (0),
     itsTimeLength     (0),
-    itsStartFreq      (0),
-    itsFreqLength     (0)
+    itsStartChannel   (0),
+    itsEndChannel     (0)
 {
   itsWriteInDataCol = itsArgs.getBool ("writeInDataCol");
-  itsStartTime = itsArgs.getDouble ("startTime");
+  itsStartTime = itsArgs.getDouble ("startTimeSec");
+  itsEndTime = itsArgs.getDouble ("endTimeSec");
   itsTimeLength = itsArgs.getDouble ("timeInterval");
-  itsStartFreq = itsArgs.getDouble ("startFreq");
-  itsFreqLength = itsArgs.getDouble ("freqLength");
+  itsStartChannel = itsArgs.getInt32 ("startChan");
+  itsEndChannel = itsArgs.getInt32 ("endChan");
 }
 
 SC_WritePredData::~SC_WritePredData()
@@ -59,20 +61,32 @@ bool SC_WritePredData::execute()
 {
   BBSTest::ScopedTimer si_exec("C:strategycontroller_execute");
   BBSTest::ScopedTimer getWOTimer("C:getWorkOrders");
+  bool finished = false; // Has this strategy completed?
   DH_WOPrediff* WOPD = getPrediffWorkOrder();
   DH_WOSolve* WOSolve = getSolveWorkOrder();
   getWOTimer.end();
 
+  WOPD->setCleanUp(false);
+  WOPD->setDoNothing(false);
+  
   if (itsFirstCall)
   {
     BBSTest::Logger::log("Start of testrun");
     itsFirstCall = false;
-    itsCurStartTime = itsArgs.getDouble ("startTime");
+    itsCurStartTime = itsStartTime;
   }
   else
   {
-    itsCurStartTime += itsArgs.getDouble ("timeInterval");
+    itsCurStartTime += itsTimeLength;
     BBSTest::Logger::log("NextInterval");
+    
+    if (itsCurStartTime >= itsEndTime)  // If all time intervals handled, send workorder to
+    {                                  // clean up.
+      WOPD->setDoNothing(true);
+      WOPD->setCleanUp(true);
+      finished = true;               // This strategy has finished!
+    }
+
   }
 
   // Set prediffer workorder data
@@ -80,11 +94,10 @@ bool SC_WritePredData::execute()
   WOPD->setKSType("Prediff1");
   WOPD->setWritePredData(true);
   WOPD->setWriteInDataCol(itsWriteInDataCol);
-  WOPD->setStartFreq (itsArgs.getDouble ("startFreq"));
-  WOPD->setFreqLength (itsArgs.getDouble ("freqLength"));
+  WOPD->setStartChannel (itsStartChannel);
+  WOPD->setEndChannel (itsEndChannel);
   WOPD->setStartTime (itsCurStartTime);
-  double timeLength = itsArgs.getDouble ("timeInterval");
-  WOPD->setTimeLength (timeLength);
+  WOPD->setTimeLength (itsTimeLength);
   WOPD->setModelType (itsArgs.getString ("modelType"));
   WOPD->setCalcUVW (itsArgs.getBool ("calcUVW"));
   ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
@@ -111,7 +124,7 @@ bool SC_WritePredData::execute()
   // Set solver workorder data  
   WOSolve->setStatus(DH_WOSolve::New);
   WOSolve->setKSType("Solver");
-  WOSolve->setDoNothing(true);  // No solve
+  WOSolve->setDoNothing(true);  // Solver is not used in this strategy
   WOSolve->setWorkOrderID(woid);
   WOSolve->setStrategyControllerID(getID());
 
@@ -139,7 +152,7 @@ bool SC_WritePredData::execute()
 
   WOSolve->insertDB(*itsOutWOSolveConn);
 
-  return true;
+  return (!finished);
 }
 
 void SC_WritePredData::postprocess()

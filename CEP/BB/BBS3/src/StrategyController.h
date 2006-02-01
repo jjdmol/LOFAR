@@ -54,8 +54,7 @@ public:
   StrategyController(Connection* inSolConn, 
 		     Connection* outWOPDConn, 
 		     Connection* outWOSolveConn,
-		     int nrPrediffers,
-		     const int DBMasterPort);
+		     int nrPrediffers);
 
   // Destructor
   virtual ~StrategyController();

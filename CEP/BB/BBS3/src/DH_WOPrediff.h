@@ -100,11 +100,11 @@ public:
   int getMaxIterations() const;
   void setMaxIterations(int nr);
 
-  double getStartFreq() const;
-  void setStartFreq(double fr);
+  int getStartChannel() const;
+  void setStartChannel(int chan);
 
-  double getFreqLength() const;
-  void setFreqLength(double fr);
+  int getEndChannel() const;
+  void setEndChannel(int chan);
 
   double getStartTime() const;
   void setStartTime(double time);
@@ -176,8 +176,8 @@ private:
   unsigned int* itsWritePredData;           // Write predicted data?
   unsigned int* itsWriteInDataCol;          // Write predicted data in DATA column?
   int*          itsMaxIterations;           // Maximum number of iterations to do
-  double*       itsStartFreq;               // Start frequency
-  double*       itsFreqLength;              // Frequency interval size
+  int*          itsStartChan;               // Start channel
+  int*          itsEndChan;                 // End channel
   double*       itsStartTime;               // Start time of time interval
   double*       itsTimeLength;              // Time interval size (s)
   char*         itsModelType;
@@ -258,17 +258,17 @@ inline int DH_WOPrediff::getMaxIterations() const
 inline void DH_WOPrediff::setMaxIterations(int nr)
 { *itsMaxIterations = nr; }
 
-inline double DH_WOPrediff::getStartFreq() const
-{ return *itsStartFreq; }
+inline int DH_WOPrediff::getStartChannel() const
+{ return *itsStartChan; }
 
-inline void DH_WOPrediff::setStartFreq(double fr)
-{ *itsStartFreq = fr; }
+inline void DH_WOPrediff::setStartChannel(int chan)
+{ *itsStartChan = chan; }
 
-inline double DH_WOPrediff::getFreqLength() const
-{ return *itsFreqLength; }
+inline int DH_WOPrediff::getEndChannel() const
+{ return *itsEndChan; }
 
-inline void DH_WOPrediff::setFreqLength(double fr)
-{ *itsFreqLength = fr; }
+inline void DH_WOPrediff::setEndChannel(int chan)
+{ *itsEndChan = chan; }
 
 inline double DH_WOPrediff::getStartTime() const
 { return *itsStartTime; }

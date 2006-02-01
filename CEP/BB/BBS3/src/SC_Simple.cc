@@ -36,7 +36,7 @@ SC_Simple::SC_Simple(Connection* inSolConn, Connection* outWOPDConn,
 		     Connection* outWOSolveConn, int nrPrediffers,
 		     const ParameterSet& args)
   : StrategyController(inSolConn, outWOPDConn, outWOSolveConn, 
-		       nrPrediffers, args.getInt32("MSDBparams.DBMasterPort")), 
+		       nrPrediffers), 
     itsFirstCall      (true),
     itsPrevWOID       (0),
     itsArgs           (args),
@@ -45,8 +45,8 @@ SC_Simple::SC_Simple(Connection* inSolConn, Connection* outWOPDConn,
     itsControlParmUpd (false),
     itsStartTime      (0),
     itsTimeLength     (0),
-    itsStartFreq      (0),
-    itsFreqLength     (0),
+    itsStartChannel   (0),
+    itsEndChannel     (0),
     itsSendDoNothingWO(false)
 {
   itsNrIterations = itsArgs.getInt32("maxNrIterations");
@@ -60,11 +60,11 @@ SC_Simple::SC_Simple(Connection* inSolConn, Connection* outWOPDConn,
   }
   itsControlParmUpd = itsArgs.getBool ("controlParmUpdate");
   itsWriteParms = itsArgs.getBool("writeParms");
-  itsStartTime = itsArgs.getDouble ("startTime");
-  itsEndTime = itsArgs.getDouble ("endTime");
+  itsStartTime = itsArgs.getDouble ("startTimeSec");
+  itsEndTime = itsArgs.getDouble ("endTimeSec");
   itsTimeLength = itsArgs.getDouble ("timeInterval");
-  itsStartFreq = itsArgs.getDouble ("startFreq");
-  itsFreqLength = itsArgs.getDouble ("freqLength");
+  itsStartChannel = itsArgs.getInt32 ("startChan");
+  itsEndChannel = itsArgs.getInt32 ("endChan");
 }
 
 SC_Simple::~SC_Simple()
@@ -93,7 +93,7 @@ bool SC_Simple::execute()
     WOPD->setCleanUp(false);
     WOSolve->setNewDomain(true);
     WOSolve->setCleanUp(false);
-    itsCurStartTime = itsArgs.getDouble ("startTime");
+    itsCurStartTime = itsArgs.getDouble ("startTimeSec");
   }
   else
   {
@@ -186,8 +186,8 @@ bool SC_Simple::execute()
     // Set prediffer workorder data
     WOPD->setStatus(DH_WOPrediff::New);
     WOPD->setKSType("Prediff1");
-    WOPD->setStartFreq (itsArgs.getDouble ("startFreq"));
-    WOPD->setFreqLength (itsArgs.getDouble ("freqLength"));
+    WOPD->setStartChannel (itsStartChannel);
+    WOPD->setEndChannel (itsEndChannel);
     WOPD->setStartTime (itsCurStartTime);
     double timeLength = itsArgs.getDouble ("timeInterval");
     WOPD->setTimeLength (timeLength);

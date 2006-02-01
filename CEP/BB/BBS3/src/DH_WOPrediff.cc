@@ -52,9 +52,9 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsSubtractSources (0),
     itsWritePredData   (0),
     itsWriteInDataCol  (0),
-    itsMaxIterations    (0),
-    itsStartFreq       (0),
-    itsFreqLength      (0),
+    itsMaxIterations   (0),
+    itsStartChan       (0),
+    itsEndChan         (0),
     itsStartTime       (0),
     itsTimeLength      (0),
     itsModelType       (0),
@@ -81,9 +81,9 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsSubtractSources (0),
     itsWritePredData   (0),
     itsWriteInDataCol  (0),
-    itsMaxIterations    (0),
-    itsStartFreq       (0),
-    itsFreqLength      (0),
+    itsMaxIterations   (0),
+    itsStartChan       (0),
+    itsEndChan         (0),
     itsStartTime       (0),
     itsTimeLength      (0),
     itsModelType       (0),
@@ -122,8 +122,8 @@ void DH_WOPrediff::init()
   addField ("WritePredData", BlobField<unsigned int>(1));
   addField ("WriteInDataCol", BlobField<unsigned int>(1));
   addField ("MaxIterations", BlobField<int>(1));
-  addField ("StartFreq", BlobField<double>(1));
-  addField ("FreqLength", BlobField<double>(1));
+  addField ("StartChan", BlobField<int>(1));
+  addField ("EndChan", BlobField<int>(1));
   addField ("StartTime", BlobField<double>(1));
   addField ("TimeLength", BlobField<double>(1));
   addField ("ModelType", BlobField<char>(1, MaxModelTypeLength));
@@ -157,8 +157,8 @@ void DH_WOPrediff::init()
   *itsWritePredData = 0;
   *itsWriteInDataCol = 0;
   *itsMaxIterations = 1;
-  *itsStartFreq = 0;
-  *itsFreqLength = 0;
+  *itsStartChan = 0;
+  *itsEndChan = 0;
   *itsStartTime = 0;
   *itsTimeLength = 0;
   *itsCalcUVW = 0;
@@ -183,8 +183,8 @@ void DH_WOPrediff::fillDataPointers()
   itsWritePredData = getData<unsigned int> ("WritePredData");
   itsWriteInDataCol = getData<unsigned int> ("WriteInDataCol");
   itsMaxIterations = getData<int> ("MaxIterations");
-  itsStartFreq = getData<double> ("StartFreq");
-  itsFreqLength = getData<double> ("FreqLength");
+  itsStartChan = getData<int> ("StartChan");
+  itsEndChan = getData<int> ("EndChan");
   itsStartTime = getData<double> ("StartTime");
   itsTimeLength = getData<double> ("TimeLength");
   itsModelType = getData<char> ("ModelType");
@@ -383,8 +383,8 @@ void DH_WOPrediff::dump() const
   cout << "Write predicted data? = " << getWritePredData() << endl;
   cout << "Write in DATA column? = " << getWriteInDataCol() << endl;
   cout << "Number of iterations = " << getMaxIterations() << endl;
-  cout << "Start frequency = " << getStartFreq() << endl;
-  cout << "Frequency length = " << getFreqLength() << endl;
+  cout << "Start channel = " << getStartChannel() << endl;
+  cout << "End channel = " << getEndChannel() << endl;
   cout << "Start time = " << getStartTime() << endl;
   cout << "Time length = " << getTimeLength() << endl;
   cout << "Model type = " << getModelType() << endl;
@@ -475,8 +475,8 @@ void DH_WOPrediff::clearData()
   setWritePredData(false);
   setWriteInDataCol(false);
   setMaxIterations(1);
-  setStartFreq(0);
-  setFreqLength(0);
+  setStartChannel(0);
+  setEndChannel(0);
   setStartTime(0);
   setTimeLength(0);
   setModelType("");
@@ -490,7 +490,7 @@ void DH_WOPrediff::clearData()
 string DH_WOPrediff::createInsertStatement(TH_DB* th)
 {
    ostringstream q;
-   q << "INSERT INTO bbs3woprediffer (data, woid, scid, status, kstype, donothing, newbaselines, newdomain, newsources, subtractsources, writepreddata, writeindatacol, maxiterations, startfreq, freqlength, starttime, timelength, cleanup, updateparms, solutionid) VALUES ('";
+   q << "INSERT INTO bbs3woprediffer (data, woid, scid, status, kstype, donothing, newbaselines, newdomain, newsources, subtractsources, writepreddata, writeindatacol, maxiterations, startchan, endchan, starttime, timelength, cleanup, updateparms, solutionid) VALUES ('";
    th->addDBBlob(this, q);
    q << "', "
      << getWorkOrderID() << ", "
@@ -505,8 +505,8 @@ string DH_WOPrediff::createInsertStatement(TH_DB* th)
      << getWritePredData() << ", "
      << getWriteInDataCol() << ", "
      << getMaxIterations() << ", "
-     << getStartFreq() << ", "
-     << getFreqLength() << ", "
+     << getStartChannel() << ", "
+     << getEndChannel() << ", "
      << getStartTime() << ", "
      << getTimeLength() << ", "
      << getCleanUp() << ", "

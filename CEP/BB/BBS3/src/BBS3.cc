@@ -40,17 +40,19 @@
 #include <Blob/BlobArray.h>
 
 #include <casa/Arrays/Matrix.h>
+#include <casa/Quanta/MVTime.h>
 
 #include <BBS3/BBSTestLogger.h>
 
 using namespace LOFAR;
 using namespace std;
+using namespace casa;
 
 // This program should be called with input file name(1) and user name(2) as
 // arguments
 
 void readMSTimes(const string& fileName, double& startTime, double& endTime,
-		 double& interval)
+		 double& interval, vector<string>& stationNames)
 {
   // Get meta data from global description file.
   string name(fileName+".des");
@@ -63,7 +65,30 @@ void readMSTimes(const string& fileName, double& startTime, double& endTime,
   startTime = msd.startTime;
   endTime = msd.endTime;
   interval = msd.exposures.back();
+  stationNames = msd.antNames;
 }
+
+void determineStationNumbers(ACC::APS::ParameterSet& params, 
+			     const string& prefix,
+			     const vector<string>& stationNames)
+{
+  vector<string> selection = params.getStringVector(prefix + "stationNames");
+  vector<int32> stationNrs;
+  vector<string>::iterator iterSel;
+  for (iterSel=selection.begin(); iterSel!=selection.end(); iterSel++)
+  {
+    for (uint nr = 0; nr <= stationNames.size(); nr++)
+    {
+      if ((*iterSel) == stationNames[nr])
+      {
+	stationNrs.push_back(nr);
+	break;
+      }
+    }
+  }
+  params.add(ACC::APS::KVpair(prefix + "antennas", stationNrs));
+}
+
 
 void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
 {
@@ -86,16 +111,24 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
     }
 
     // Read MS description file
-    string msName = params.getString(stratName + "MSDBparams.generalMSPath") + params.getString(stratName + "MSDBparams.MSName");   
+    string msName = params.getString(stratName + "MSDBparams.generalMSPath") + "/" + params.getString(stratName + "MSDBparams.MSName");   
     double msStartTime, msEndTime, msInterval;
-    readMSTimes(msName, msStartTime, msEndTime, msInterval);
+    vector<string> stationNames;
+    readMSTimes(msName, msStartTime, msEndTime, msInterval, stationNames);
+
+    // Determine station numbers
+    determineStationNumbers(params, stratName, stationNames);
 
     // Get time parameters
     double intervalSize = params.getDouble(stratName + "timeInterval");
     double startTime = -1;
     if (params.isDefined(stratName + "startTime"))
     {
-      startTime = params.getDouble(stratName + "startTime");
+      string startTimeStr = params.getString(stratName + "startTime");
+      Quantity qn;
+      ASSERT (MVTime::read (qn, startTimeStr, true));
+      startTime = qn.getValue ("s");
+      params.add(ACC::APS::KVpair(stratName + "startTimeSec", startTime));
     }
     if (startTime < 0)
     {
@@ -103,13 +136,17 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
       LOG_INFO_STR("Using " << msName << " start time " << msStartTime
 		   << " for strategy " << string(nrStr));
       startTime = msStartTime;
-      params.replace(ACC::APS::KVpair(stratName+ "startTime", msStartTime));
+      params.replace(ACC::APS::KVpair(stratName+ "startTimeSec", msStartTime));
     }
     
     double endTime = -1;
     if (params.isDefined(stratName + "endTime"))
     {
-      endTime = params.getDouble(stratName + "endTime");
+      string endTimeStr = params.getString(stratName + "endTime");
+      Quantity qn;
+      ASSERT (MVTime::read (qn, endTimeStr, true));
+      endTime = qn.getValue ("s");
+      params.add(ACC::APS::KVpair(stratName + "endTimeSec", endTime));
     }
     if (endTime < 0)
     {
@@ -117,7 +154,7 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
       LOG_INFO_STR("Using " << msName << " end time " << msEndTime
 		   << " for strategy " << string(nrStr));
       endTime = msEndTime;
-      params.replace(ACC::APS::KVpair(stratName+ "endTime", msEndTime));
+      params.replace(ACC::APS::KVpair(stratName+ "endTimeSec", msEndTime));
     }
 
     if (msInterval > intervalSize)
