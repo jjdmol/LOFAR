@@ -59,6 +59,9 @@ Converter::Converter(OTDBconnection*	aConn, const string&	aTypeName) :
 		THROW(Exception, "Exception during construction of " << itsTypeName 
 						<< ex.what());
 	}
+
+	// init internal iterator
+	itsIter = itsMap.begin();
 	
 }
 
@@ -85,6 +88,21 @@ string	Converter::convert(int16			aTypeID) const
 		++iter;
 	}
 	return ("");
+}
+
+//
+// get pair at inernal iterator
+//
+bool	Converter::get(int16&	theValue, string&	theName) const
+{
+	if (itsIter == itsMap.end()) {
+		return (false);
+	}
+
+	theValue = itsIter->second;
+	theName  = itsIter->first;
+
+	return (true);
 }
 
 

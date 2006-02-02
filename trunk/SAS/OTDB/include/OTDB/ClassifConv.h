@@ -55,8 +55,13 @@ public:
 	{ return (convert(aType));	}
 
 	// value to string
-	inline string	get(classifType		aTypeID) const
+	inline string		get(classifType		aTypeID) const
 	{ return (convert(aTypeID));	}
+
+	// get pair at internal iterator
+	inline bool		get(classifType&	theID, string&	theName) const 
+	{ return (Converter::get(theID, theName));	}
+
 };
 
 // @}
