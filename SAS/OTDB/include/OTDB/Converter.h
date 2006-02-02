@@ -50,6 +50,9 @@ public:
 	// Show whole conversiontable
 	ostream& print (ostream& os) const;
 
+	void	top();
+	bool	next();
+
 protected:
 	// Only derived classes may construct me
 	Converter(OTDBconnection* aConn, const string&	aTypeName);
@@ -59,6 +62,10 @@ protected:
 	int16	convert(const string&	aType)   const;
 	string	convert(int16			aTypeID) const;
 
+	// routine for getting both values the iterator points at.
+	// False is returned if the iterator points at end();
+	bool	get(int16&	theValue, string&	theName) const;
+
 private:
 	// Copying is not allowed
 	Converter(const Converter&	that);
@@ -66,15 +73,26 @@ private:
 
 	map<string, int16>		itsMap;
 	string					itsTypeName;
+	const_iterator			itsIter;
 };
 
 //#
 //# operator<<
 //#
 inline ostream& operator<< (ostream&			os,
-							const Converter		aConverter)
+							const Converter&	aConverter)
 {
 	return (aConverter.print(os));
+}
+
+inline void Converter::top() 
+{
+	itsIter = itsMap.begin();
+}
+
+inline bool Converter::next()
+{
+	return (++itsIter != itsMap.end());
 }
 
 

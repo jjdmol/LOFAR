@@ -56,6 +56,11 @@ public:
 	// value to string
 	inline string	get(treeType		aTypeID) const
 	{ return (convert(aTypeID));	}
+
+	// get pair at internal iterator
+	inline bool		get(treeType&	theID, string&	theName) const 
+	{ return (Converter::get(theID, theName));	}
+
 };
 
 // @}
