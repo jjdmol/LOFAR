@@ -116,8 +116,9 @@ RSPDriver::RSPDriver(string name)
 #ifdef HAVE_SYS_TIMEPPS_H
   memset(&m_ppsinfo, 0, sizeof(pps_info_t));
 #endif
-
+  LOG_DEBUG ("Registering RSP protocol");
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+  LOG_DEBUG ("Registering EPA protocol");
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
   m_clock.init(*this, "spid", GCFPortInterface::SAP, 0 /*don't care*/, true /*raw*/);
@@ -133,6 +134,13 @@ RSPDriver::RSPDriver(string name)
   bool bUseMAC_BASE = true;
   try         { (void)GET_CONFIG("RSPDriver.MAC_BASE",i); }
   catch (...) { bUseMAC_BASE = false;                     }
+
+	if (bUseMAC_BASE) {
+		LOG_DEBUG ("MAC addresses based on position in rack");
+	}
+	else {
+		LOG_DEBUG ("MAC addresses based on conf-file settings");
+	}
 
   char boardname[64];
   char paramname[64];

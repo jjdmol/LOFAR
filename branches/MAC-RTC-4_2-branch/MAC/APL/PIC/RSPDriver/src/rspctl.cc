@@ -591,6 +591,8 @@ void WGCommand::send()
     }
     wgset.settings()(0).preset = 0; // or one of PRESET_[SINE|SQUARE|TRIANGLE|RAMP]
 
+cout << "RCUMASK=" << wgset.rcumask << endl;
+cout << "FREQ   =" << wgset.settings()(0).freq << endl;
     m_rspport.send(wgset);
   }
 }
@@ -616,10 +618,11 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            logMessage(cout,formatString("RCU[%02d].wg=[freq=%6d, phase=%3d, ampl=%3d, nof_samples=%6d, mode=%3d]",
+            logMessage(cout,formatString("RCU[%02d].wg=[freq=%6d, phase=%3d(%5.3f), ampl=%3d, nof_samples=%6d, mode=%3d]",
                    rcuout,
                    ack.settings()(rcuin).freq,
                    ack.settings()(rcuin).phase,
+                   (double) (ack.settings()(rcuin).phase) / 256 * 2 * M_PI,
                    ack.settings()(rcuin).ampl,
                    ack.settings()(rcuin).nof_samples,
                    ack.settings()(rcuin).mode));
@@ -1389,7 +1392,7 @@ static void usage()
   cout << "             0x01 = LBA_ENABLE" << endl;
   cout << "  Common values: LB_10_90=0xB9, HB_110_190=0xC6, HB_170_230=0xCE, HB_210_250=0xD6" << endl;
   cout << "rspctl --wg             [--select=<set>]  # get waveform generator settings" << endl;
-  cout << "rspctl --wg=freq        [--select=<set>]  # set waveform generator settings" << endl;
+  cout << "rspctl --wg=freq [--phase=..][--select=<set>]  # set waveform generator settings" << endl;
   cout << "rspctl --status         [--select=<set>]  # get status" << endl;
   cout << "rspctl --statistics[=(subband|beamlet)]   # get subband (default) or beamlet statistics" << endl;
   cout << "             [--select=<set>]             #" << endl;
@@ -1436,6 +1439,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         { "subbands",   optional_argument, 0, 's' },
         { "rcu",        optional_argument, 0, 'r' },
         { "wg",         optional_argument, 0, 'g' },
+        { "phase",      required_argument, 0, 'P' },
         { "status",     no_argument,       0, 'q' },
         { "statistics", optional_argument, 0, 't' },
         { "xcstatistics", no_argument,     0, 'x' },
@@ -1608,6 +1612,21 @@ Command* RSPCtl::parse_options(int argc, char** argv)
             return 0;
           }
           wgcommand->setFrequency(frequency);
+        }
+      }
+      break;
+
+      case 'P':	// --phase
+      {
+	if (optarg) {
+  	  double phase = atof(optarg);
+	  if (phase < 0 || phase > (M_PI * 2.0)) {
+	    logMessage(cerr,"Error: option '--phase' parameter must be between 0 and 2 pi");
+	    delete command;
+	    return 0;
+ 	  }
+    	  WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
+    	  wgcommand->setPhase(phase / (2 * M_PI) * 256);
         }
       }
       break;
