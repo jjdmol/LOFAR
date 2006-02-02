@@ -699,10 +699,11 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            logMessage(cout,formatString("RCU[%02d].wg=[freq=%6d, phase=%3d, ampl=%3d, nof_samples=%6d, mode=%3d]",
+            logMessage(cout,formatString("RCU[%02d].wg=[freq=%6d, phase=%3d(%5.3f), ampl=%3d, nof_samples=%6d, mode=%3d]",
                    rcuout,
                    ack.settings()(rcuin).freq,
                    ack.settings()(rcuin).phase,
+                   (double)ack.settings()(rcuin).phase / 256 * 2 * M_PI,
                    ack.settings()(rcuin).ampl,
                    ack.settings()(rcuin).nof_samples,
                    ack.settings()(rcuin).mode));
@@ -793,14 +794,16 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 						board.diag.ap3_ri_errors));
 		logMessage(cout,formatString("Sync     diff     count   samples    slices"));
 		for (int blp = 0; blp < 4; blp++) {
-			BSStatus*	bs= &(board.ap0_sync)+(blp*sizeof(BSStatus));
+//			BSStatus*	bs= &(board.ap0_sync)+(blp*sizeof(BSStatus));
+			BSStatus*	bs= &(board.ap0_sync)+blp;
 			logMessage(cout,formatString("%d:  %9ld %9ld %9ld %9ld", 
 						blp, bs->ext_count, bs->sync_count,
 						bs->sample_offset, bs->slice_count));
 		}
 		logMessage(cout,formatString("Status   pllX      pllY overflowX overflowY"));
 		for (int ap = 0; ap < 4; ap++) {
-			APStatus*	as= &(board.ap0_rcu)+(ap*sizeof(APStatus));
+//			APStatus*	as= &(board.ap0_rcu)+(ap*sizeof(APStatus));
+			APStatus*	as= &(board.ap0_rcu)+ap;
 			logMessage(cout,formatString("%d:  %9ld %9ld %9ld %9ld", 
 								ap, as->pllx, as->plly, 
 								as->nof_overflowx, as->nof_overflowy));
@@ -1584,8 +1587,8 @@ static void usage()
   cout << "       --rcuspecinv              # enable spectral inversion" << endl;
   cout << "       --rcudelay=[0..31]        # set the delay for rcu's" << endl;
   cout << endl;
-  cout << "rspctl --wg             [--select=<set>]  # get waveform generator settings" << endl;
-  cout << "rspctl --wg=freq        [--select=<set>]  # set waveform generator settings" << endl;
+  cout << "rspctl --wg                  [--select=<set>]  # get waveform generator settings" << endl;
+  cout << "rspctl --wg=freq [--phase=..][--select=<set>]  # set waveform generator settings" << endl;
   cout << "rspctl --status         [--select=<set>]  # get status" << endl;
   cout << "rspctl --statistics[=(subband|beamlet)]   # get subband (default) or beamlet statistics" << endl;
   cout << "             [--select=<set>]             #" << endl;
@@ -1641,6 +1644,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "rcudelay",       required_argument, 0, 'y' },
 	  { "wg",             optional_argument, 0, 'g' },
 	  { "wgmode",         required_argument, 0, 'G' },
+	  { "phase",          required_argument, 0, 'P' },
 	  { "status",         no_argument,       0, 'q' },
 	  { "statistics",     optional_argument, 0, 't' },
 	  { "xcstatistics",   no_argument,       0, 'x' },
@@ -1896,8 +1900,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	case 'G':	// --wgmode
 	  {
-	    if (optarg)
-	      {
+	    if (optarg) {
 		int mode = atoi(optarg);
 		if (mode != 0 && mode != 1 && mode != 3 && mode != 5) {
 		    logMessage(cerr,"Error: option '--wgmode' parameter must be 0,1,3 or 5");
@@ -1906,6 +1909,21 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		}
 		WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
 		wgcommand->setWaveMode(mode);
+	      }
+	  }
+	  break;
+
+	case 'P':	// --phase
+	  {
+	    if (optarg) {
+		double phase = atof(optarg);
+		if (phase < 0 || phase > (M_PI * 2.0)) {
+		    logMessage(cerr,"Error: option '--phase' parameter must be between 0 and 2 pi");
+		    delete command;
+		    return 0;
+		}
+		WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
+		wgcommand->setPhase(phase / (2 * M_PI) * 256);
 	      }
 	  }
 	  break;
