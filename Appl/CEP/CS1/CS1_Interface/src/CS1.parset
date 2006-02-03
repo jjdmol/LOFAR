@@ -35,8 +35,7 @@ Data.BeamElevation = 90.0
 Data.Delays.Station0_Station1=0   # (Constant) delay between stations 
 
 # General Variables
-General.NRuns = 7      # Number of seconds to process
-                       # NB: must be a multiple of 'BGLProc.SlavesPerSubband'
+General.NRuns = 7      # Number of seconds to process. NB: must be a multiple of 'BGLProc.SlavesPerSubband'
 
 # Variables for the DelayCompensation
 
@@ -64,6 +63,7 @@ BGLProc.NPPFTaps = 16
 # Variables for Storage
 Storage.MSName = ObservationA.MS
 Storage.WriteToMAC = F
+Storage.WriteSubbandNr = 0  # Number of subband to be written (0-based)
 
 Generator.NoRuns = 3             # 0 means run indefinitely
 Generator.OutputRate = 0        # number of ethernet frames per second

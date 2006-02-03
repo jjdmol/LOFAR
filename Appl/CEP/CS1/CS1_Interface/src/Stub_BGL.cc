@@ -31,10 +31,9 @@ namespace LOFAR {
 unsigned Stub_BGL::itsNrSubbands, Stub_BGL::itsNrSlavesPerSubband;
 
 
-Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, unsigned channel, const ACC::APS::ParameterSet &pSet)
+Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet)
   : itsIAmOnBGL(iAmOnBGL),
     itsIsInput(isInput),
-    itsChannel(channel),
     itsTHs(0),
     itsConnections(0)
 {
@@ -56,7 +55,7 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, unsigned channel, const ACC::APS
 Stub_BGL::~Stub_BGL()
 {
   if (itsTHs != 0 && itsConnections != 0) {
-    for (int i = 0; i < itsNrSubbands * itsNrSlavesPerSubband; i ++) {
+    for (uint i = 0; i < itsNrSubbands * itsNrSlavesPerSubband; i ++) {
       delete itsTHs[i];
       delete itsConnections[i];
     }
@@ -67,7 +66,8 @@ Stub_BGL::~Stub_BGL()
 }
 
 
-void Stub_BGL::connect(unsigned subband, unsigned slave, TinyDataManager &dm)
+void Stub_BGL::connect(unsigned subband, unsigned slave, TinyDataManager &dm, 
+		       unsigned channel)
 {
   size_t index = subband * itsNrSlavesPerSubband + slave;
 
@@ -76,16 +76,16 @@ void Stub_BGL::connect(unsigned subband, unsigned slave, TinyDataManager &dm)
   ASSERTSTR(slave < itsNrSlavesPerSubband, "slave argument out of bounds; "
 	   << slave << " / " << itsNrSlavesPerSubband);
   ASSERTSTR(itsTHs[index] == 0, "already connected: subband = "
-	   << subband << ", slave = " << slave << ", channel = " << itsChannel);
+	   << subband << ", slave = " << slave << ", channel = " << channel);
 
   itsTHs[index] = itsIAmOnBGL ? newClientTH(subband, slave) : newServerTH(subband, slave);
 
   if (itsIsInput) {
-    itsConnections[index] = new Connection("output", 0, dm.getGeneralInHolder(itsChannel), itsTHs[index], true);
-    dm.setInConnection(itsChannel, itsConnections[index]);
+    itsConnections[index] = new Connection("output", 0, dm.getGeneralInHolder(channel), itsTHs[index], true);
+    dm.setInConnection(channel, itsConnections[index]);
   } else {
-    itsConnections[index] = new Connection("input", dm.getGeneralOutHolder(itsChannel), 0, itsTHs[index], true);
-    dm.setOutConnection(itsChannel, itsConnections[index]);
+    itsConnections[index] = new Connection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index], true);
+    dm.setOutConnection(channel, itsConnections[index]);
   }
 };
 

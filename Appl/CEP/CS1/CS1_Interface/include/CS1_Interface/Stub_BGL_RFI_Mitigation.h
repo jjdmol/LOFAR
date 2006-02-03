@@ -30,8 +30,8 @@ namespace LOFAR {
 class Stub_BGL_RFI_Mitigation : public Stub_BGL
 {
 public:
-  Stub_BGL_RFI_Mitigation(bool iAmOnBGL, unsigned dhIndex, const ACC::APS::ParameterSet &pSet)
-  : Stub_BGL(iAmOnBGL, iAmOnBGL, dhIndex, pSet) {}
+  Stub_BGL_RFI_Mitigation(bool iAmOnBGL, const ACC::APS::ParameterSet &pSet)
+  : Stub_BGL(iAmOnBGL, iAmOnBGL, pSet) {}
 
 protected:
   virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);

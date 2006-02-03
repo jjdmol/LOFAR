@@ -27,13 +27,13 @@ using namespace LOFAR;
 
 namespace LOFAR { 
 
-TransportHolder *Stub_BGL_FineDelay::newClientTH(unsigned subband, unsigned slave)
+TransportHolder *Stub_BGL_FineDelay::newClientTH(unsigned, unsigned)
 {
   return new TH_Mem();
 }
 
 
-TransportHolder *Stub_BGL_FineDelay::newServerTH(unsigned subband, unsigned slave)
+TransportHolder *Stub_BGL_FineDelay::newServerTH(unsigned, unsigned)
 {
   return new TH_Mem();
 }
