@@ -38,17 +38,17 @@ class Stub_BGL
   // classes that must provide the necessary TransportHolders.
 
 public:
-  Stub_BGL(bool iAmOnBGL, bool isInput, unsigned channel, const ACC::APS::ParameterSet &pSet);
+  Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet);
   virtual ~Stub_BGL();
 
-  void connect(unsigned subband, unsigned slave, TinyDataManager& dm);
+  void connect(unsigned subband, unsigned slave, TinyDataManager& dm,
+	       unsigned channel);
 
 protected:
   virtual TransportHolder *newClientTH(unsigned subband, unsigned slave) = 0;
   virtual TransportHolder *newServerTH(unsigned subband, unsigned slave) = 0;
 
   bool		  itsIAmOnBGL, itsIsInput;
-  unsigned	  itsChannel;
   TransportHolder **itsTHs;
   Connection	  **itsConnections;
 

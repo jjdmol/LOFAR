@@ -28,8 +28,8 @@ using namespace LOFAR;
 
 namespace LOFAR { 
 
-Stub_BGL_Visibilities::Stub_BGL_Visibilities(bool iAmOnBGL, unsigned dhIndex, const ACC::APS::ParameterSet &pSet)
-: Stub_BGL(iAmOnBGL, !iAmOnBGL, dhIndex, pSet),
+Stub_BGL_Visibilities::Stub_BGL_Visibilities(bool iAmOnBGL, const ACC::APS::ParameterSet &pSet)
+: Stub_BGL(iAmOnBGL, !iAmOnBGL, pSet),
   servers(pSet.getStringVector("Connections.BGLProc_Storage.ServerHosts")),
   services(pSet.getStringVector("Connections.BGLProc_Storage.Ports"))
 {
@@ -46,7 +46,7 @@ TransportHolder *Stub_BGL_Visibilities::newClientTH(unsigned subband, unsigned s
 }
 
 
-TransportHolder *Stub_BGL_Visibilities::newServerTH(unsigned subband, unsigned slave)
+TransportHolder *Stub_BGL_Visibilities::newServerTH(unsigned, unsigned slave)
 {
   return new TH_Socket(services[slave], true, Socket::TCP, 5, false);
 }

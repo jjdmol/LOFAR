@@ -28,13 +28,13 @@ using namespace LOFAR;
 
 namespace LOFAR { 
 
-TransportHolder *Stub_BGL_RFI_Mitigation::newClientTH(unsigned subband, unsigned slave)
+TransportHolder *Stub_BGL_RFI_Mitigation::newClientTH(unsigned, unsigned)
 {
   return new TH_Mem();
 }
 
 
-TransportHolder *Stub_BGL_RFI_Mitigation::newServerTH(unsigned subband, unsigned slave)
+TransportHolder *Stub_BGL_RFI_Mitigation::newServerTH(unsigned, unsigned)
 {
   return new TH_Mem();
 }

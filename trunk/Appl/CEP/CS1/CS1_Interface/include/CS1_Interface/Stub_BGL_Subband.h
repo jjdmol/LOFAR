@@ -30,7 +30,7 @@ namespace LOFAR {
 class Stub_BGL_Subband : public Stub_BGL
 {
 public:
-  Stub_BGL_Subband(bool iAmOnBGL, unsigned dhIndex, const ACC::APS::ParameterSet &);
+  Stub_BGL_Subband(bool iAmOnBGL, const ACC::APS::ParameterSet &);
 
 protected:
   virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);

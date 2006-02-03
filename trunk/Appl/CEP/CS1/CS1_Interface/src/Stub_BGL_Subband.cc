@@ -29,8 +29,8 @@ using namespace LOFAR;
 
 namespace LOFAR { 
 
-Stub_BGL_Subband::Stub_BGL_Subband(bool iAmOnBGL, unsigned dhIndex, const ACC::APS::ParameterSet &pSet)
-: Stub_BGL(iAmOnBGL, iAmOnBGL, dhIndex, pSet),
+Stub_BGL_Subband::Stub_BGL_Subband(bool iAmOnBGL, const ACC::APS::ParameterSet &pSet)
+: Stub_BGL(iAmOnBGL, iAmOnBGL, pSet),
   servers(pSet.getStringVector("Connections.Input_BGLProc.ServerHosts")),
   services(pSet.getStringVector("Connections.Input_BGLProc.Ports"))
 {
@@ -47,7 +47,7 @@ TransportHolder *Stub_BGL_Subband::newClientTH(unsigned subband, unsigned slave)
 }
 
 
-TransportHolder *Stub_BGL_Subband::newServerTH(unsigned subband, unsigned slave)
+TransportHolder *Stub_BGL_Subband::newServerTH(unsigned, unsigned slave)
 {
   return new TH_Socket(services[slave], true, Socket::TCP, 5, false);
 }
