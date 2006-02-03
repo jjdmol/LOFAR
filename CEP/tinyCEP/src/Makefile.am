@@ -1,65 +1,32 @@
-lib_LTLIBRARIES 	= libtinycep.la
+lib_LTLIBRARIES	= libtinycep.la
 
-INSTHDRS = \
-Profiler.h					\
-SimulatorParseClass.h \
-TinyDataManager.h \
-TinyApplicationHolder.h \
-ApplicationHolderController.h \
-WorkHolder.h \
-Selector.h \
-Sel_Linked.h \
-Sel_RoundRobin.h 
+pkginclude_HEADERS = 			\
+	ApplicationHolderController.h 	\
+	Profiler.h			\
+	Selector.h			\
+	Sel_Linked.h 			\
+	Sel_RoundRobin.h		\
+	SimulatorParseClass.h		\
+	TinyApplicationHolder.h		\
+	TinyDataManager.h		\
+	WorkHolder.h
 
-NOINSTHDRS =
+libtinycep_la_SOURCES = 		\
+	ApplicationHolderController.cc	\
+	Profiler.cc			\
+	Selector.cc 			\
+	Sel_Linked.cc 			\
+	Sel_RoundRobin.cc 		\
+	SimulatorParseClass.cc          \
+	SimulatorParse.h                \
+	SimulatorParse.yy               \
+	SimulatorTokenize.ll            \
+	TinyApplicationHolder.cc 	\
+	TinyDataManager.cc 		\
+	WorkHolder.cc 
 
-TCCHDRS = 
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
-
-#bin_PROGRAMS 		= \
-# 			tinyCFmemcpy \
-# 			CFinput 
-
-# tinyCFmemcpy_SOURCES	= \
-# 			WB_Memcpy.cc \
-# 			DH_Memcpy.cc \
-# 			Memcpy.cc
-
-# CFinput_SOURCES		= \
-# 			WH_TFinput.cc \
-# 			DH_Memcpy.cc \
-# 			CFinput.cc
-
-# tinyCFmemcpy_LDADD 	= \
-# 			libtinyframe.la \
-# 			libtransport.la 
-
-# CFinput_LDADD		= \
-#			libcepframe.la
-
-libtinycep_la_SOURCES =  \
-Profiler.cc			\
-SimulatorParse.yy               \
-SimulatorParse.h                \
-SimulatorTokenize.ll            \
-SimulatorParseClass.cc          \
-TinyDataManager.cc 		\
-TinyApplicationHolder.cc 	\
-ApplicationHolderController.cc  \
-WorkHolder.cc 			\
-Selector.cc 			\
-Sel_Linked.cc 			\
-Sel_RoundRobin.cc 		
-
-EXTRA_DIST = assay
-
-AM_YFLAGS               = -d -p SimulatorParse
-AM_LFLAGS               = -PSimulatorTokenize
-LEX_OUTPUT_ROOT         = lex.SimulatorTokenize
+AM_YFLAGS	= -d -p SimulatorParse
+AM_LFLAGS       = -PSimulatorTokenize
+LEX_OUTPUT_ROOT = lex.SimulatorTokenize
 
 include $(top_srcdir)/Makefile.common
