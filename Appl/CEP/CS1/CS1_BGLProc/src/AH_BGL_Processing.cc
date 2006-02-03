@@ -87,12 +87,12 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
   
-  itsSubbandStub	   = new Stub_BGL_Subband(true, WH_BGL_Processing::SUBBAND_CHANNEL, *itsParameterSet);
-  itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, WH_BGL_Processing::RFI_MITIGATION_CHANNEL, *itsParameterSet);
+  itsSubbandStub	   = new Stub_BGL_Subband(true, *itsParameterSet);
+  itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, *itsParameterSet);
 #if defined DELAY_COMPENSATION
-  itsFineDelayStub	   = new Stub_BGL_FineDelay(true, WH_BGL_Processing::FINE_DELAY_CHANNEL, *itsParameterSet);
+  itsFineDelayStub	   = new Stub_BGL_FineDelay(true, *itsParameterSet);
 #endif
-  itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, WH_BGL_Processing::VISIBILITIES_CHANNEL, *itsParameterSet);
+  itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, *itsParameterSet);
 
 #if defined HAVE_BGL
   struct BGLPersonality personality;
@@ -116,12 +116,12 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
       WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", baseFreqs[subband], *itsParameterSet);
       itsWHs.push_back(wh);
       TinyDataManager &dm = wh->getDataManager();
-      itsSubbandStub->connect(subband, slave, dm);
-      itsRFI_MitigationStub->connect(subband, slave, dm);
+      itsSubbandStub->connect(subband, slave, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
+      itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
 #if defined DELAY_COMPENSATION
-      itsFineDelayStub->connect(subband, slave, dm);
+      itsFineDelayStub->connect(subband, slave, dm, WH_BGL_Processing::FINE_DELAY_CHANNEL);
 #endif
-      itsVisibilitiesStub->connect(subband, slave, dm);
+      itsVisibilitiesStub->connect(subband, slave, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
 #if defined HAVE_BGL
       // check if current compute cell is full
