@@ -26,7 +26,7 @@
 %{
 #include <Blob/KeyValueMap.h>
 #include <tinyCEP/SimulatorParseClass.h>
-#include <tinyCEP/SimulatorParse.h>
+#include "SimulatorParse.h"
 
 #undef YY_DECL
 #define YY_DECL int yylex (YYSTYPE* lvalp)
