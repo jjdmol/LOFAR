@@ -1,3 +1,199 @@
+2006-02-03 17:11  loose
+
+	* tinyCEP.spec.in: BugID: 398
+
+	  Prepare for release 2.2
+
+2006-02-03 16:35  loose
+
+	* src/Makefile.am, src/SimulatorTokenize.ll, Makefile.am,
+	  configure.in, test/Makefile.am: BugID: 398
+
+	  Prepare for release 2.2
+
+2006-02-03 15:55  loose
+
+	* src/Makefile.am: BugID: 596
+
+	  Removed all occurrences of nobase_. Reformatted file.
+
+2006-01-18 16:07  meijeren
+
+	* src/: TinyDataManager.cc, TinyDataManager.h: BugID:598
+
+	  Made getGeneralIn/OutHolder() methods const, in line with
+	  DataManager::getGeneralIn/OutHolder methods.
+
+2006-01-17 13:43  meijeren
+
+	* src/ApplicationHolderController.cc: BugID:235
+
+	  Return indeterminate value if command is not supported.
+
+2006-01-13 16:35  overeem
+
+	* configure.in, src/ApplicationHolderController.cc,
+	  src/ApplicationHolderController.h: BugID:  546 Modified for
+	  tribool interface of PLC.
+
+2006-01-02 14:27  diepen
+
+	* src/: SimulatorParse.yy, SimulatorTokenize.ll: BugID: 556 Blob
+	  code has been moved to a separate package
+
+2006-01-02 13:52  diepen
+
+	* src/SimulatorParseClass.cc, src/TinyApplicationHolder.h,
+	  test/Example.cc, test/Example2.cc, test/Example3.cc,
+	  test/MyExample.h, test/MySecondExample.h, test/WH_Example.cc:
+	  BugID: 556 Blob code has been moved to a separate package
+
+2005-12-27 11:02  loose
+
+	* src/: ApplicationHolderController.h, Profiler.h, Sel_Linked.h,
+	  Sel_RoundRobin.h, Selector.h, SimulatorParseClass.h,
+	  TinyApplicationHolder.h, TinyDataManager.h, WorkHolder.h: BugID:
+	  394
+
+	  Removed argument to the Doxygen \file command. It caused subtle
+	  documentation bugs and it defaults to the current filename
+	  anyway.
+
+2005-10-17 15:14  meijeren
+
+	* test/Example3.cc: BugID:268
+
+	  Made test it succeed for gnu_mpich.
+
+2005-10-14 15:59  meijeren
+
+	* test/: Example3.cc, Example3.run, Example3.stdout,
+	  MySocketExample.cc, MySocketExample.h: BugID:268
+
+	  Example3 now actually executes and transports the data.
+
+2005-10-14 15:54  meijeren
+
+	* src/Sel_Linked.cc: BugID:268
+
+	  Fixed bug; getCurrentSelection() will now return correct value.
+
+2005-10-04 11:42  diepen
+
+	* Makefile.am, src/Makefile.am, test/Makefile.am: BugId: 396 Use
+	  $(top_srcdir)/Makefile.common
+
+2005-10-04 11:40  diepen
+
+	* configure.in: BugId: 396 Use lofar_GENERAL
+
+2005-09-22 12:53  loose
+
+	* AUTHORS, ChangeLog, NEWS, configure.in: BugID: 398
+
+	  Prepare for release 2.1
+
+2005-08-17 09:41  meijeren
+
+	* src/TinyApplicationHolder.cc: BugID:192 Fixed typo.
+
+2005-08-16 17:31  zwart
+
+	* src/TinyDataManager.cc: BugID: 270
+
+	  DataManagers now loop over all TH's until they are all initted
+
+2005-08-16 17:31  zwart
+
+	* src/TinyApplicationHolder.cc: BugID: 270
+
+	  Added TH_MPI::finalise to baseQuit
+
+2005-08-11 13:27  meijeren
+
+	* src/TinyDataManager.cc: BugID:269 Initialize TransportHolders in
+	  preprocess phase.
+
+2005-08-10 10:05  romein
+
+	* src/TinyDataManager.cc: BugID: 225 Avoid segfault due to deleting
+	  uninitialized itsInDHs[i] and itsOutDHs[j]
+
+2005-08-04 13:28  meijeren
+
+	* src/: WorkHolder.cc, WorkHolder.h: BugID:241 Added DBGASSERT on
+	  preprocessed flag in baseProcess method.
+
+2005-07-29 13:35  zwart
+
+	* src/ApplicationHolderController.cc: BugID: 235
+
+	  ACC now gives "ACC" as first parameter and the parameterfile as
+	  second
+
+2005-07-26 12:37  meijeren
+
+	* src/WorkHolder.cc, src/WorkHolder.h, test/DH_Example.cc,
+	  test/DH_Example.h, test/WH_Example.cc, test/WH_Example.h:
+	  BugID:209 Made WorkHolder::dump method const. This to be
+	  consistent with all other dump methods in the CEP framework.
+
+2005-07-13 16:53  meijeren
+
+	* src/TinyDataManager.cc: %[ER: 231]% Fixed bug; added check on
+	  error in return status of Connection::read() and
+	  Connection::write().
+
+2005-07-06 14:47  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, configure.in,
+	  test/Makefile.am: %[ER: 0]%
+
+	  Merged relevant changes from the 2.0 release branch into the main
+	  development line.
+
+2005-07-06 10:15  overeem
+
+	* configure.in, src/ApplicationHolderController.cc,
+	  src/ApplicationHolderController.h, src/TinyApplicationHolder.cc,
+	  src/TinyApplicationHolder.h: %[ER:285]% Upgrade ACC 1.0 to 1.1
+	  ParameterSet is now in ACC/APS.  ProceControl is now in ACC/PLC.
+	  ParameterSet getInt changed to getInt32.
+
+2005-06-24 17:44  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepare for release.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-23 17:43  loose
+
+	* test/Makefile.am: %[ER: 0]%
+
+	  Prepare for release 2.0 Replaced "illegal" use of CFLAGS and
+	  CXXFLAGS with AM_CPPFLAGS.
+
+2005-06-23 17:39  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 17:26  loose
+
+	* NEWS, README, configure.in: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 16:47  meijeren
+
+	* NEWS, README: %[ER: 0]% Addition of NEWS and README file for
+	  release 2.0
+
 2005-06-14 16:42  meijeren
 
 	* src/: ApplicationHolderController.h, Profiler.h, Sel_Linked.h,
