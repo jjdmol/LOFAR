@@ -33,6 +33,8 @@ namespace LOFAR {
       itsNSubbands(nSubbands),
       itsSize(bufferSize),
       itsLockedRange(bufferSize, readWriteDelay, bufferSize - history, 0),
+      itsDroppedItems(0),
+      itsDummyItems(0),
       itsWriteTimer("write"),
       itsReadTimer("read")
     {
@@ -44,9 +46,10 @@ namespace LOFAR {
 
     BeamletBuffer::~BeamletBuffer()
     {      
-      cout<<"\nBeamletBufferTimers:"<<endl;
-      itsWriteTimer.print(cout);
-      itsReadTimer.print(cout);
+      LOG_TRACE_INFO_STR("BeamletBuffer did not receive "<<itsDummyItems<<" stamps and received "<<itsDroppedItems<<" items too late.");
+      LOG_TRACE_INFO_STR("BeamletBufferTimers:");
+      LOG_TRACE_INFO_STR(itsReadTimer);
+      LOG_TRACE_INFO_STR(itsWriteTimer);
 
       vector<SubbandType*>::iterator bit = itsSBBuffers.begin();
       for (; bit != itsSBBuffers.end(); bit++) {
@@ -55,17 +58,18 @@ namespace LOFAR {
       delete [] itsInvalidFlags;
     }
 
-    int BeamletBuffer::writeElements(SubbandType* data, TimeStamp begin, int nElements, int stride, bool valid) {
+    int BeamletBuffer::writeElements(SubbandType* data, TimeStamp begin, int nElements, int stride) {
       TimeStamp end = begin + nElements;
       TimeStamp realBegin = itsLockedRange.writeLock(begin, end);
+      itsDroppedItems += realBegin - begin;
      
       itsWriteTimer.start();
       for (TimeStamp i = realBegin; i < end; i++) {
 	for (int sb = 0; sb < itsNSubbands; sb++) {
-	  itsSBBuffers[sb][map(i)] = data[sb];
+	  itsSBBuffers[sb][mapTime2Index(i)] = data[sb];
 	}
 	data += stride;
-	itsInvalidFlags[map(i)] = !valid;
+	itsInvalidFlags[mapTime2Index(i)] = false; // these items are not invalid
       }      
       itsWriteTimer.stop();
       itsLockedRange.writeUnlock(end);
@@ -79,8 +83,8 @@ namespace LOFAR {
       
       itsReadTimer.start();
       ASSERTSTR(realBegin <= end, "requested data no longer present in buffer");
-      int startI = map(realBegin);
-      int endI = map(end);
+      int startI = mapTime2Index(realBegin);
+      int endI = mapTime2Index(end);
       if (endI < startI) {
 	  int firstChunk = itsSize - startI;
 	  for (int sb = 0; sb < itsNSubbands; sb++) {
@@ -93,10 +97,20 @@ namespace LOFAR {
 	  }	  
       }
 
-      invalidCount = 0;
+      invalidCount = 0;      
       for (TimeStamp i = realBegin; i < end; i++) {
-	invalidCount += itsInvalidFlags[map(i)] ? 1 : 0;
+	if (itsInvalidFlags[mapTime2Index(i)]) {
+	  for (int sb = 0; sb < itsNSubbands; sb++) {
+	    // for all invalid subbands set the subband to zero, it will later be copied to the output
+	    memset(&(itsSBBuffers[sb])[mapTime2Index(i)], 0, sizeof(SubbandType));
+	  }
+	  invalidCount += 1;
+	}
+	// invalidate all positions
+	// TODO: this assumes every item is read exactly once (no more, no less)
+	itsInvalidFlags[mapTime2Index(i)] = true;
       }
+      itsDummyItems += invalidCount;
 
       itsReadTimer.stop();
       itsLockedRange.readUnlock(end);
@@ -104,8 +118,7 @@ namespace LOFAR {
     }
 
     TimeStamp BeamletBuffer::startBufferRead() {
-      TimeStamp begin(0, 0);
-      TimeStamp oldest = itsLockedRange.readLock(begin, begin);
+      TimeStamp oldest = itsLockedRange.getReadStart();
       TimeStamp fixPoint(oldest.getSeqId() + 1, 0); 
      
       itsLockedRange.readUnlock(fixPoint);
@@ -113,6 +126,7 @@ namespace LOFAR {
     }
 
     TimeStamp BeamletBuffer::startBufferRead(TimeStamp begin) {
+      TimeStamp oldest = itsLockedRange.getReadStart();
       TimeStamp realBegin = itsLockedRange.readLock(begin, begin);
 
       // if begin is no longer in the buffer the oldest possible beginning is returned

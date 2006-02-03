@@ -73,7 +73,7 @@ namespace LOFAR
       BeamletBuffer (const BeamletBuffer& that);
       BeamletBuffer& operator= (const BeamletBuffer& that);
 
-      int map(TimeStamp time) { return (((long)time.getSeqId() * time.getMaxBlockId()) + time.getBlockId()) % itsSize; };
+      int mapTime2Index(TimeStamp time) { return ((((long long)time.getSeqId()) * ((long long)time.getMaxBlockId())) + time.getBlockId()) % itsSize; };
 
       vector<SubbandType *> itsSBBuffers;
       bool* itsInvalidFlags;
@@ -81,7 +81,9 @@ namespace LOFAR
       int itsSize;
       
       LockedRange<TimeStamp, int> itsLockedRange;
-      //# Datamembers
+
+      int itsDroppedItems;
+      int itsDummyItems;
 
       NSTimer itsWriteTimer;
       NSTimer itsReadTimer;

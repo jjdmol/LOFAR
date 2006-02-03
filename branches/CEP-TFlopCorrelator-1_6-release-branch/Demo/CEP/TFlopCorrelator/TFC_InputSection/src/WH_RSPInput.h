@@ -93,16 +93,12 @@ namespace LOFAR
       // synced stamp
       timestamp_t itsSyncedStamp;
      
-      int itsSzRSPframe;
-      int itsNPackets;
       int itsNRSPOutputs;
       int itsNSubbands;
       int itsNSamplesToCopy;
       int itsNPolarisations;
       int itsCyclicBufferSize;
       int itsStationID;
-      int itsEPAHeaderSize;
-      int itsEPAPacketSize;
      
       BeamletBuffer* itsBBuffer;
 
