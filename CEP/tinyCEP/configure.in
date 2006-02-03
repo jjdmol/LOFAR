@@ -5,7 +5,7 @@ AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(tinyCEP, 2.0, no-define)
+AM_INIT_AUTOMAKE(tinyCEP, 2.2, no-define)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -67,4 +67,5 @@ AC_OUTPUT(
 src/Makefile
 test/Makefile
 Makefile
+tinyCEP.spec
 )
