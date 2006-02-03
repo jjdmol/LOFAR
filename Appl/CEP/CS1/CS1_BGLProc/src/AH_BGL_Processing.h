@@ -49,7 +49,6 @@ class AH_BGL_Processing: public TinyApplicationHolder
   virtual void quit();
 
  private:
-  ACC::APS::ParameterSet      *itsParameterSet;
   vector<WH_BGL_Processing *> itsWHs;
 
   Stub_BGL_Subband	      *itsSubbandStub;

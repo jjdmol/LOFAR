@@ -23,8 +23,6 @@
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
 
-#include <APS/ParameterSet.h>
-
 #include <AH_BGL_Processing.h>
 #include <CS1_Interface/CS1_Config.h>
 // tinyCEP
@@ -42,7 +40,6 @@ using namespace LOFAR;
 
 AH_BGL_Processing::AH_BGL_Processing() 
 : itsWHs(0),
-  itsParameterSet(0),
   itsSubbandStub(0),
   itsRFI_MitigationStub(0),
 #if defined DELAY_COMPENSATION
@@ -59,12 +56,11 @@ AH_BGL_Processing::~AH_BGL_Processing()
 
 void AH_BGL_Processing::undefine()
 {
-  for (int i = 0; i < itsWHs.size(); i ++) {
+  for (uint i = 0; i < itsWHs.size(); i ++) {
     delete itsWHs[i];
   }
   itsWHs.clear();
 
-  delete itsParameterSet;	itsParameterSet	      = 0;
   delete itsSubbandStub;	itsSubbandStub	      = 0;
   delete itsRFI_MitigationStub;	itsRFI_MitigationStub = 0;
 #if defined DELAY_COMPENSATION
@@ -77,22 +73,20 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGL_Processing::define()");
 
-  itsParameterSet	   = new ACC::APS::ParameterSet("CS1.cfg");
-
-  int nrSubBands	   = itsParameterSet->getInt32("Data.NSubbands");
-  vector<double> baseFreqs = itsParameterSet->getDoubleVector("Data.RefFreqs");
-  int slavesPerSubBand	   = itsParameterSet->getInt32("BGLProc.SlavesPerSubband");
-  int cellsPerSubBand	   = itsParameterSet->getInt32("BGLProc.CellsPerSubband");
+  int nrSubBands	   = itsParamSet.getInt32("Data.NSubbands");
+  vector<double> baseFreqs = itsParamSet.getDoubleVector("Data.RefFreqs");
+  int slavesPerSubBand	   = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
+  int cellsPerSubBand	   = itsParamSet.getInt32("BGLProc.CellsPerSubband");
   int slavesPerCell	   = slavesPerSubBand / cellsPerSubBand;
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
   
-  itsSubbandStub	   = new Stub_BGL_Subband(true, *itsParameterSet);
-  itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, *itsParameterSet);
+  itsSubbandStub	   = new Stub_BGL_Subband(true, itsParamSet);
+  itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, itsParamSet);
 #if defined DELAY_COMPENSATION
-  itsFineDelayStub	   = new Stub_BGL_FineDelay(true, *itsParameterSet);
+  itsFineDelayStub	   = new Stub_BGL_FineDelay(true, itsParamSet);
 #endif
-  itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, *itsParameterSet);
+  itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, itsParamSet);
 
 #if defined HAVE_BGL
   struct BGLPersonality personality;
@@ -113,7 +107,7 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
 #endif
 
     for (int slave = 0; slave < slavesPerSubBand; slave ++) {
-      WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", baseFreqs[subband], *itsParameterSet);
+      WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", baseFreqs[subband], itsParamSet);
       itsWHs.push_back(wh);
       TinyDataManager &dm = wh->getDataManager();
       itsSubbandStub->connect(subband, slave, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
@@ -144,7 +138,7 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
 
 void AH_BGL_Processing::init()
 {
-  for (int i = 0; i < itsWHs.size(); i ++) {
+  for (uint i = 0; i < itsWHs.size(); i ++) {
     WH_BGL_Processing *wh = itsWHs[i];
     wh->basePreprocess();
 
@@ -163,9 +157,8 @@ void AH_BGL_Processing::run(int steps) {
   LOG_TRACE_FLOW_STR("Start AH_BGL_Processing::run() "  );
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );
-    vector<WH_BGL_Processing *>::iterator it = itsWHs.begin();
     cout << "run " << i << " of " << steps << '\n';
-    for (int j = 0; j < itsWHs.size(); j ++) {
+    for (uint j = 0; j < itsWHs.size(); j ++) {
       itsWHs[j]->baseProcess();
     }
   }
