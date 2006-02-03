@@ -57,7 +57,7 @@ namespace LOFAR
       ~BeamletBuffer();
 
       // write elements in the buffer, return value is number of succesfully written elements
-      int writeElements(SubbandType* data, TimeStamp begin, int nElements, int stride, bool valid = true);
+      int writeElements(SubbandType* data, TimeStamp begin, int nElements, int stride);
       // get elements out of the buffer, return value is number of valid elements
       int getElements(vector<SubbandType*> buffers, int& invalidCount, TimeStamp begin, int nElements);
 

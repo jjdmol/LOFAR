@@ -63,8 +63,10 @@ namespace LOFAR {
     // buffer for incoming rsp data
     char totRecvframe[args->PayloadSize + args->IPHeaderSize];
     char* recvframe = totRecvframe;
-    if (args->Connection->getType == "TH_Ethernet") {
+    int recvDataSize = args->PayloadSize;
+    if (args->Connection->getType() == "TH_Ethernet") {
       recvframe += args->IPHeaderSize;
+      recvDataSize = args->PayloadSize + args->IPHeaderSize;
     };
     
     vector<NSTimer*> itsTimers;
@@ -86,7 +88,7 @@ namespace LOFAR {
 
       try {
 	receiveTimer.start();
-	args->Connection->recvBlocking( (void*)totRecvframe, args->FrameSize, 0);
+	args->Connection->recvBlocking( (void*)totRecvframe, recvDataSize, 0);
 	receiveTimer.stop();
       } catch (Exception& e) {
 	LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder, stopping thread");
@@ -141,15 +143,15 @@ namespace LOFAR {
 
     printTimers(itsTimers);
 #ifdef PACKET_STATISTICS
-    LOG_TRACE_INFO("Timestamps of missed packets:");
+    LOG_INFO("Timestamps of missed packets:");
     vector<PacketStats>::iterator it = missedStamps.begin();
     for (; it != missedStamps.end(); it++) {
-      LOG_TRACE_INFO_STR("MIS " << it->expectedStamp << " missed at time " << it->receivedStamp);
+      LOG_INFO_STR("MIS " << it->expectedStamp << " missed at time " << it->receivedStamp);
     }
-    LOG_TRACE_INFO_STR("Rewritten packets:");
+    LOG_INFO_STR("Rewritten packets:");
     vector<PacketStats>::iterator rit = oldStamps.begin();
     for (; rit != oldStamps.end(); rit++) {
-      LOG_TRACE_INFO_STR("REW " << rit->receivedStamp<<" received at time "<< rit->expectedStamp);
+      LOG_INFO_STR("REW " << rit->receivedStamp<<" received at time "<< rit->expectedStamp);
     }
 #endif
   

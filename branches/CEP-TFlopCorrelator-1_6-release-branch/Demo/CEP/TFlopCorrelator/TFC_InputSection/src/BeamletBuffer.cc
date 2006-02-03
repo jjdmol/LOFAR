@@ -46,10 +46,10 @@ namespace LOFAR {
 
     BeamletBuffer::~BeamletBuffer()
     {      
-      LOG_TRACE_INFO_STR("BeamletBuffer did not receive "<<itsDummyItems<<" stamps and received "<<itsDroppedItems<<" items too late.");
-      LOG_TRACE_INFO_STR("BeamletBufferTimers:");
-      LOG_TRACE_INFO_STR(itsReadTimer);
-      LOG_TRACE_INFO_STR(itsWriteTimer);
+      LOG_INFO_STR("BeamletBuffer did not receive "<<itsDummyItems<<" stamps and received "<<itsDroppedItems<<" items too late.");
+      LOG_INFO_STR("BeamletBufferTimers:");
+      LOG_INFO_STR(itsReadTimer);
+      LOG_INFO_STR(itsWriteTimer);
 
       vector<SubbandType*>::iterator bit = itsSBBuffers.begin();
       for (; bit != itsSBBuffers.end(); bit++) {
