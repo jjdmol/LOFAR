@@ -140,7 +140,11 @@ void SynchronisityManager::preprocess()
   for (int j = 0; j < itsNoutputs; j++)
   {
     DBGASSERTSTR(itsOutManagers[j]!=0, "No DHPoolManager constructed");
-    itsOutManagers[j]->preprocess();
+    // if the input and output of this channel are shared, the manager is already
+    // initted in the first loop
+    if (!itsOutManagers[j]->getSharing()) {
+      itsOutManagers[j]->preprocess();
+    }
   }
 }
 
