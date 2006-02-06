@@ -73,6 +73,8 @@ namespace LOFAR {
     }
 
     int BeamletBuffer::getElements(vector<SubbandType*> buffers, int& invalidCount, TimeStamp begin, int nElements) { 
+      //TODO: We should give dummies for elements that were already removed from the buffer
+
       ASSERTSTR(buffers.size() == itsNSubbands, "BeamletBuffer received wrong number of buffers to write to (in getElements).");
       TimeStamp end = begin + nElements;
       TimeStamp realBegin = itsLockedRange.readLock(begin, end);
