@@ -22,13 +22,15 @@ Tester_SOURCES			= Tester.cc
 tmat_SOURCES			= tmat.cc
 shmem_alloc1_SOURCES		= shmem_alloc1.cc
 shmem_alloc2_SOURCES		= shmem_alloc2.cc
-TestAutoTrigger_SOURCES         = TestAutoTrigger.cc WH_TestAutoTrigger.h WH_TestAutoTrigger.cc
+TestAutoTrigger_SOURCES         = TestAutoTrigger.cc TestAutoTrigger.h \
+				  WH_TestAutoTrigger.cc WH_TestAutoTrigger.h
 CyclicBufferTest_SOURCES	= CyclicBufferTest.cc
 
 LDADD				= ../src/libcepframe.la
 DEPENDENCIES			= ../src/libcepframe.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
+				  top_srcdir=$(top_srcdir) \
 				  MPIBIN=$(MPIBIN)
 
 TESTS	=					\
@@ -41,21 +43,22 @@ TESTS	=					\
 	TestAutoTrigger.sh			\
 	CyclicBufferTest.sh
 
-EXTRA_DIST = 					\
-	Example_test.sh				\
-	Example.out				\
+EXTRA_DIST = $(TESTS)				\
+	CyclicBufferTest.gnuplot		\
+	CyclicBufferTest.run			\
+	Example.run				\
+	Example.stdout				\
 	Simulator_Example.in			\
-	Simulator_Example.out			\
-	Simulator_Example_test.sh		\
-	Tester.out				\
-	Tester_test.sh				\
-	tmat_test.sh				\
-	shmem_alloc1.sh				\
-	shmem_alloc2.sh				\
-	TestAutoTrigger.sh			\
-	runtest.sh				\
+	Simulator_Example.run			\
+	Simulator_Example.stdout		\
+	TestAutoTrigger.run			\
+	TestAutoTrigger.stdout			\
+	Tester.run				\
+	Tester.stdout				\
 	cleanipc				\
 	checkipc
 
+clean-local:
+	$(RM) CB.* gnuplot.cmd
 
 include $(top_srcdir)/Makefile.common

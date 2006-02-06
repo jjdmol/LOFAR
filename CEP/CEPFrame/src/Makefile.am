@@ -1,5 +1,4 @@
-
-INSTHDRS		 	= 			\
+pkginclude_HEADERS = \
 DH_Example.h					\
 DH_Tester.h					\
 NetworkBuilder.h				\
@@ -20,19 +19,9 @@ CompositeRep.h					\
 Lock.h						\
 CyclicBuffer.h
 
-NOINSTHDRS =
-
-TCCHDRS = 
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
-
 lib_LTLIBRARIES 	= libcepframe.la
 
-libcepframe_la_SOURCES 	= $(DOCHDRS)		\
+libcepframe_la_SOURCES 	= $(pkginclude_HEADERS) \
 DH_Example.cc					\
 DH_Tester.cc					\
 NetworkBuilder.cc				\
@@ -50,11 +39,5 @@ Block.cc					\
 BlockRep.cc					\
 Composite.cc					\
 CompositeRep.cc					
-
-EXTRA_DIST = assay
-
-AM_YFLAGS		= -d -p SimulatorParse
-AM_LFLAGS		= -PSimulatorTokenize
-LEX_OUTPUT_ROOT		= lex.SimulatorTokenize
 
 include $(top_srcdir)/Makefile.common

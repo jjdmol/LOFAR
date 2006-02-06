@@ -1,3 +1,47 @@
+CEP/CEPFrame: Version 2.2, date: 2006/02/06
+===========================================
+
+This is the second minor release of version 2 of the CEP/CEPFrame library.
+Only minor changes have been made to the code. Most of the changes were
+related to making CEP/CEPFrame distributable, either through `make dist' or
+`make rpm'.
+
+
+The following BugIDs have been resolved
+---------------------------------------
+# 396 : Support of rpm builds
+        Support for making an rpm package was added
+
+# 412 : size of cyclicbuffer cannot be set
+        Added method to set the size of the cyclicbuffer The methods
+        set*BufferingProperties should not be used for buffering anymore.
+
+# 598 : compiler warnings about overriden base methods
+        Fixed
+
+
+CEP/CEPFrame: Version 2.1, date: 2005/09/23
+===========================================
+
+This is the first minor release of version 2 of the CEP/CEPFrame library.
+Only minor changes have been made.
+
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 268 : Update CEPFrame manual and example applications.
+        Make sure the example applications mentioned in the updated CEPFrame
+        manual are up-to-date.
+
+# 269 : Initialize TransportHolders in preprocess phase.
+        Call the init() method of the TransportHolders in the preprocess
+        phase. This means that in blocking Socket connections, there is a
+        valid connection after the preprocess phase. This is needed in the
+        TFlopCorrelator Demo.
+
+
+
 CEP/CEPFrame: Version 2.0, date: 2005/06/17
 ============================================
 
