@@ -1,3 +1,38 @@
+2006-02-06 14:49  loose
+
+	* NEWS, ChangeLog: BugID: 403
+
+	  Added last minute patch (ref. BugID: 623).
+
+2006-02-06 14:43  loose
+
+	* src/SynchronisityManager.cc: BugID: 403
+
+	  Added last minute patch (ref. BugID: 623).
+
+2006-02-06 14:33  zwart
+
+	* src/SynchronisityManager.cc: BugID: 623
+
+	  Only preprocess the outmanager if it is not shared
+
+2006-02-06 14:00  loose
+
+	* CEPFrame.spec.in, ChangeLog, Makefile.am, NEWS, configure.in,
+	  src/Makefile.am, test/CyclicBufferTest.sh, test/Makefile.am:
+	  BugID: 403
+
+	  Merged relevant changes from release 2.2 branch with main
+	  development line.
+
+2006-02-06 12:27  loose
+
+	* CEPFrame.spec.in, ChangeLog, Makefile.am, NEWS, configure.in,
+	  src/Makefile.am, test/CyclicBufferTest.sh, test/Makefile.am:
+	  BugID: 403
+
+	  Prepare for release 2.2
+
 2006-01-18 16:10  meijeren
 
 	* src/: Composite.cc, Composite.h: BugID:598 Removed

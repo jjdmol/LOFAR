@@ -19,6 +19,11 @@ The following BugIDs have been resolved
 # 598 : compiler warnings about overriden base methods
         Fixed
 
+# 623 : sharing dataholders doesn't work properly
+        When sharing is activated on an in and output channel of a step, the
+        dataholder was initted twice.
+
+
 
 CEP/CEPFrame: Version 2.1, date: 2005/09/23
 ===========================================
