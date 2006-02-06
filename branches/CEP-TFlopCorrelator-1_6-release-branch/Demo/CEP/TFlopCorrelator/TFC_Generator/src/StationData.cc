@@ -26,19 +26,17 @@
 
 namespace LOFAR
 {
-  // EpaHeader constructor and destructor
-  EpaHeader::EpaHeader(char* bufferP)
+  // Header constructor and destructor
+  Header::Header(char* bufferP)
     : itsBufferp(bufferP)
   {};
 
-  EpaHeader::~EpaHeader()
+  Header::~Header()
   {};
-
 
   // EpaPacket constructor and destructor
   EpaPacket::EpaPacket(char* bufferSpace, int bufferSize, ParameterSet ps)
     : itsBufferp(bufferSpace),
-      itsEpaHeader(bufferSpace),
       itsMatrix(0)
   {
     int NoSubbands = ps.getInt32("Input.SzEPApayload") / ( 2 * sizeof(RSPDataType));
@@ -52,7 +50,7 @@ namespace LOFAR
     vdd.push_back(DimDef("subband", NoSubbands));
     vdd.push_back(DimDef("polarisation", 2));
     itsMatrix = new RectMatrix<RSPDataType>(vdd);
-    itsMatrix->setBuffer((RSPDataType*)(itsBufferp + EpaHeader::getSize()), 2*NoSubbands);
+    itsMatrix->setBuffer((RSPDataType*)(itsBufferp + Header::getSize()), 2*NoSubbands);
   };
 
   EpaPacket::~EpaPacket()
@@ -61,7 +59,8 @@ namespace LOFAR
   };
 
   // EthernetFrame constructor and destructor
-  EthernetFrame::EthernetFrame(ParameterSet ps, char* bufferP, int bufferSize) 
+  EthernetFrame::EthernetFrame(ParameterSet ps, char* bufferP, int bufferSize)
+    : itsFrameHeader(bufferP)
   {
     if (((int)bufferP)*bufferSize == 0) {
       // if either bufferP or the size is 0, allocate the memory myself
@@ -77,9 +76,9 @@ namespace LOFAR
     } else {
       ASSERTSTR(itsBufferSize <= bufferSize, "EthernetFrame received too little memory");
       itsBufferp = bufferP;
-    }
+    }    
     for (int epap = 0; epap < noEpaP; epap++) {
-      itsEpaPackets.push_back(new EpaPacket(&(itsBufferp[epap * epaSize]), epaSize, ps));
+      itsEpaPackets.push_back(new EpaPacket(&(itsBufferp[epap * epaSize + itsFrameHeader.getSize()]), epaSize, ps));
     }
   };
 
@@ -95,32 +94,38 @@ namespace LOFAR
   };
 
 
-  // Some accessors to the EpaHeader that could not be inlined because
+  // Some accessors to the Header that could not be inlined because
   //   of the ifdef WORDS_BIGENDIAN
-  int16 EpaHeader::getProtocol()
+  int32 Header::getProtocol()
   { 
 #ifdef WORDS_BIGENDIAN
-    int16 ret;
+    int32 ret;
     char* valuep = (char*)&ret;
-    valuep[0] = itsBufferp[1];
-    valuep[1] = itsBufferp[0];
+    valuep[0] = itsBufferp[3];
+    valuep[1] = itsBufferp[2];
+    valuep[2] = itsBufferp[1];
+    valuep[3] = itsBufferp[0];
     return ret;
 #else 
-    return (int16)itsBufferp[0];
+    return (int32)itsBufferp[0];
 #endif
   };
-  void EpaHeader::setProtocol(int16 newProt)
+  void Header::setProtocol(int32 newProt)
   {
 #ifdef WORDS_BIGENDIAN
-    itsBufferp[0] = ((const char*)(&newProt))[1];
-    itsBufferp[1] = ((const char*)(&newProt))[0];
+    itsBufferp[0] = ((const char*)(&newProt))[3];
+    itsBufferp[1] = ((const char*)(&newProt))[2];
+    itsBufferp[2] = ((const char*)(&newProt))[1];
+    itsBufferp[3] = ((const char*)(&newProt))[0];
 #else 
     itsBufferp[0] = ((const char*)(&newProt))[0];
     itsBufferp[1] = ((const char*)(&newProt))[1];
+    itsBufferp[2] = ((const char*)(&newProt))[2];
+    itsBufferp[3] = ((const char*)(&newProt))[3];
 #endif
   };
 
-  int32 EpaHeader::getInt32(char* memLoc)
+  int32 Header::getInt32(char* memLoc)
   {
 #ifdef WORDS_BIGENDIAN
     int32 ret;
@@ -134,7 +139,7 @@ namespace LOFAR
     return ((int32*)memLoc)[0];
 #endif
   }
-  void EpaHeader::setInt32(char* memLoc, const char* newValueP)
+  void Header::setInt32(char* memLoc, const char* newValueP)
   {
 #ifdef WORDS_BIGENDIAN
     memLoc[0] = (newValueP)[3];

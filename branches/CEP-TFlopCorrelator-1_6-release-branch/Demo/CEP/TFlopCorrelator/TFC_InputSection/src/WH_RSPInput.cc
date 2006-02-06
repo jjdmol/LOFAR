@@ -121,7 +121,6 @@ void WH_RSPInput::startThread()
   
   writerinfo.BBuffer            = itsBBuffer;
   writerinfo.Connection         = &itsTH;
-  writerinfo.PayloadSize        = itsPS.getInt32("Input.PayloadSize");
   writerinfo.IPHeaderSize       = itsPS.getInt32("Input.IPHeaderSize");
   writerinfo.nrPacketsInFrame   = itsPS.getInt32("Input.NPacketsInFrame");
   writerinfo.nrSubbandsInPacket = itsNSubbands;
@@ -132,6 +131,7 @@ void WH_RSPInput::startThread()
   writerinfo.EPAHeaderSize      = itsPS.getInt32("Input.SzEPAheader");
   writerinfo.EPAPacketSize      = itsPS.getInt32("Input.SzEPApayload");
   writerinfo.IsMaster           = itsSyncMaster;
+  writerinfo.PayloadSize        = writerinfo.SubbandSize * writerinfo.nrSubbandsInPacket * writerinfo.nrPacketsInFrame;
   
   if ((itsTH.getType() == "TH_File") || (itsTH.getType() == "TH_Null")) {
     // if we are reading from file, overwriting the buffer should not be allowed

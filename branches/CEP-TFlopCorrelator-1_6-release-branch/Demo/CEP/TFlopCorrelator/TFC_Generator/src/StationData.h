@@ -36,21 +36,19 @@ namespace LOFAR
   // \addtogroup TFC_Generator
   // @{
   
-  // EpaHeader is the class that represents the header data of the epa packet
+  // Header is the class that represents the header data of the epa packet
   // it contains the following fields:
-  //   protocol(int16)
+  //   protocol(int32)
   //   stationId(int32)
   //   sequenceId(int32)
   //   blockId(int32)
-  // Because there is an int16 in here, we need to do some strange copying with pointers
-  // These operations are defined below.
-  class EpaHeader
+  class Header
   {
   public:
-    ~EpaHeader();
+    ~Header();
 
-    int16 getProtocol();
-    void setProtocol(int16 newProt);
+    int32 getProtocol();
+    void setProtocol(int32 newProt);
     int32 getStationId();
     void setStationId(int32 newSid);
     int32 getSeqId();
@@ -59,11 +57,12 @@ namespace LOFAR
     void setBlockId(int32 newBid);
     static int getSize();
   protected:
-    EpaHeader(EpaHeader&);
+    Header(Header&);
     int32 getInt32(char* memLoc);
     void setInt32(char* memLoc, const char* newValueP);
     friend class EpaPacket;
-    EpaHeader(char* bufferSpace);
+    friend class EthernetFrame;
+    Header(char* bufferSpace);
     char* itsBufferp;
 
     static const int theirHeaderSize = 16;
@@ -72,10 +71,9 @@ namespace LOFAR
     static const int theirBlockIDOffset = 12;
   };
 
-
   // EpaPacket represents 1 packet in an ethernet frame
   // it contains:
-  //    1 EpaHeader 
+  //    1 Header 
   //    a matrix containing:
   //       NoSubbands * noPolarisations(=2) * complex<int16>
   class EpaPacket
@@ -83,7 +81,6 @@ namespace LOFAR
   public:
     ~EpaPacket();
 
-    EpaHeader& getHeader();
     RectMatrix<RSPDataType>& getMatrix();
     static int getSize(ParameterSet& ps);
   protected:
@@ -93,7 +90,6 @@ namespace LOFAR
     EpaPacket(char* bufferSpace, int bufferSize, ParameterSet ps);
 
     char* itsBufferp;
-    EpaHeader itsEpaHeader;
     RectMatrix<RSPDataType>* itsMatrix;
   };
 
@@ -112,12 +108,15 @@ namespace LOFAR
     int getPayloadSize();
     void reset();
     static int getSize(ParameterSet& ps);
+    Header& getHeader();
+
   protected:
     EthernetFrame(EthernetFrame&);
     vector<EpaPacket*> itsEpaPackets;
     char* itsBufferp;
     int itsBufferSize;
     bool itsIsMemoryMine;
+    Header itsFrameHeader;
   };
 
   // @}
@@ -126,36 +125,31 @@ namespace LOFAR
 
   //inline functions
 
-  inline int EpaHeader::getSize()
+  inline int Header::getSize()
   { return theirHeaderSize; };
-  inline int32 EpaHeader::getStationId()
+  inline int32 Header::getStationId()
   { return getInt32(&itsBufferp[theirStatIDOffset]); };
-  inline void EpaHeader::setStationId(int32 sid)
+  inline void Header::setStationId(int32 sid)
   { setInt32(&itsBufferp[theirStatIDOffset], (const char*)&sid); };
-  inline int32 EpaHeader::getSeqId()
+  inline int32 Header::getSeqId()
   { return getInt32(&itsBufferp[theirSeqIDOffset]); };
-  inline void EpaHeader::setSeqId(int32 sid)
+  inline void Header::setSeqId(int32 sid)
   { setInt32(&itsBufferp[theirSeqIDOffset], (const char*)&sid); };
-  inline int32 EpaHeader::getBlockId()
+  inline int32 Header::getBlockId()
   { return getInt32(&itsBufferp[theirBlockIDOffset]); };
-  inline void EpaHeader::setBlockId(int32 bid)
+  inline void Header::setBlockId(int32 bid)
   { setInt32(&itsBufferp[theirBlockIDOffset], (const char*)&bid); };
 
-  inline EpaHeader& EpaPacket::getHeader()
-    { return itsEpaHeader; };
   inline RectMatrix<RSPDataType>& EpaPacket::getMatrix()
     { return *itsMatrix; };
   inline int EpaPacket::getSize(ParameterSet& ps)
-    // This was:
-    // { return EpaHeader::getSize() + ps.getInt32("Data.NSubbands") * \
-    // ps.getInt32("Data.NPolarisations") * sizeof(RSPDataType); };
-    // but now the number of subbands to generate is:
-    // ps.getInt32("Input.SzEPApayload") / ( 2 * sizeof(RSPDataType))
-    { return EpaHeader::getSize() + sizeof(RSPDataType) * ps.getInt32("Data.NPolarisations") * \
+    { return sizeof(RSPDataType) * ps.getInt32("Data.NPolarisations") * \
 	(ps.getInt32("Input.SzEPApayload") / ( 2 * sizeof(RSPDataType))); }; //this is the number
 
   inline int EthernetFrame::getNoPacketsInFrame()
     { return itsEpaPackets.size(); };
+  inline Header& EthernetFrame::getHeader()
+    { return itsFrameHeader; };
   inline EpaPacket& EthernetFrame::getEpaPacket(int index)
     { return *(itsEpaPackets[index]); };
   inline char* EthernetFrame::getPayloadp()
@@ -165,8 +159,7 @@ namespace LOFAR
   inline void EthernetFrame::reset()
     { memset(itsBufferp, 0, itsBufferSize); };
   inline int EthernetFrame::getSize(ParameterSet& ps)
-    { return EpaPacket::getSize(ps) * ps.getInt32("Input.NPacketsInFrame"); };
-  
+    { return Header::getSize() + EpaPacket::getSize(ps) * ps.getInt32("Input.NPacketsInFrame"); };
 
 } // namespace LOFAR
 
