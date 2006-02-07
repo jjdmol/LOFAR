@@ -109,7 +109,7 @@ void WH_Prediff::process()
     {
       pred->setDomain(wo->getStartChannel(), wo->getEndChannel(), 
 		      wo->getStartTime(), wo->getTimeLength());
-      pred->writePredictedData(wo->getWriteInDataCol());
+      pred->writePredictedData(wo->getWriteInDataCol() ? "DATA" : "CORRECTED_DATA");
     }
     else
     {
@@ -199,7 +199,7 @@ void WH_Prediff::process()
 	  BBSTest::ScopedTimer predifTimer("P:prediffer");
 	  dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
 	  casa::LSQFit fitter;
-	  pred->fillFitter (fitter);
+	  pred->fillFitter (fitter, "DATA");
 	  Prediffer::marshall (fitter, dhRes->getDataBuffer(),
 			       dhRes->getBufferSize());
 	  MeqDomain domain = pred->getDomain();
@@ -214,7 +214,7 @@ void WH_Prediff::process()
 
       if (wo->getSubtractSources())
       {
-	pred->subtractPeelSources(true);   // >>>For now: always write in new file 
+	pred->subtractData("DATA", "CORRECTED_DATA");   // >>>For now: always write in new file 
       }
       
     } // end else

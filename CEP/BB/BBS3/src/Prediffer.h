@@ -31,6 +31,7 @@
 #include <scimath/Fitting/LSQFit.h>
 
 #include <BBS3/ParmData.h>
+#include <BBS3/MMapMSInfo.h>
 #include <BBS3/MNS/MeqDomain.h>
 #include <BBS3/MNS/MeqJonesExpr.h>
 #include <BBS3/MNS/MeqJonesNode.h>
@@ -48,6 +49,11 @@
 #include <Common/Timer.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+
+namespace casa {
+  class Table;
+}
 
 namespace LOFAR
 {
@@ -123,21 +129,22 @@ public:
   // Get the equations for all selected baselines and fill the
   // fitter object with them.
   // The fitter object gets initialized before being filled.
-  void fillFitter (casa::LSQFit&);
+  void fillFitter (casa::LSQFit&, const string& dataColumnName);
+
+  // Apply corrections to the data.
+  void correctData (const string& inColumnName,
+		    const string& outColumnName, bool flush=false);
+
+  // Subtract the corrupted peel source(s) from the data.
+  void subtractData (const string& inColumnName,
+		     const string& outColumnName, bool flush=false);
+
+  // Write the predicted data into the .res or .dat file.
+  void writePredictedData (const string& outColumnName);
 
   // Set the source numbers to use in this peel step.
   bool setPeelGroups (const vector<int>& peelGroups,
 		      const vector<int>& extraGroups);
-
-  // Apply the amplitude/phase corrections (from the first source group).
-  void applyAP (bool flush);
-
-  // Subtract the peel source(s) from the data in the .res file.
-  // Optionally the mapped data are flushed to the file.
-  void subtractPeelSources (bool flush=false);
-
-  // Write the predicted data into the .res or .dat file.
-  void writePredictedData (bool inDataColumn);
 
   // There are three ways to update the solvable parms after the solver
   // found a new solution.
@@ -161,9 +168,10 @@ public:
   // This is mainly used for test purposes.
   vector<MeqResult> getResults (bool calcDeriv=true);
 
-  // Get the data and flags for a single time.
+  // Get the data and flags for the time domain.
   // This is mainly used for test purposes.
-  void getData (casa::Array<casa::Complex>& data,
+  void getData (const string& columnName, bool useTree,
+		casa::Array<casa::Complex>& data,
 		casa::Array<casa::Bool>& flags);
 
   // Write the solved parms.
@@ -216,29 +224,77 @@ private:
 		      bool useStatParm);
 
   // Fill the fitter with the equations for the given baseline.
-  void fillEquation (casa::LSQFit& fitter,
-		     double *diff, unsigned *indices,
-		     double* result, char* flagResult,
-		     const fcomplex* data, const bool* flags,
+  void fillEquation (int threadnr, void* arg,
+		     const fcomplex* dataIn, fcomplex* dummy,
+		     const bool* flags,
 		     const MeqRequest& request, int blindex,
 		     bool showd=false);
 
-  // Subtract the peel source(s) from the data.
-  // Optionally the mapped data are flushed to the file.
-  void saveResidualData (bool subtract, bool flush);
-
-  // Subtract the predicted data for this baseline from the data.
-  void saveData (bool subtract, fcomplex* data, const MeqRequest& request,
-		 int blindex, int ant1, int ant2);
-
-  // Map the residual data column.
-  // If needed, add the residual data column CORRECTED_DATA to the MS
-  // and create the symlink vis.res for it. Optionally the data from column
-  // DATA are copied to the new column.
-  void mapResidualData (bool copyData);
-  
   // Reset the loop variables for the getEquations loop.
   void resetEqLoop();
+
+  // Map the correct data files (if not mapped yet).
+  // If a string is empty, the file is not mapped.
+  void mapDataFiles (const string& inFile, const string& outFile);
+
+  // Add a data column to the table and create a symlink for it.
+  void addDataColumn (casa::Table& tab, const string& columnName,
+		      const string& symlinkName);
+
+  // Define the signature of a function processing a baseline.
+  typedef void (Prediffer::*ProcessFuncBL) (int threadnr, void* arg,
+					    const fcomplex* dataIn,
+					    fcomplex* dataOut,
+					    const bool* flags,
+					    const MeqRequest& request,
+					    int blindex, bool showd);
+
+  // Loop through all data and process each baseline by ProcessFuncBL.
+  void processData (const string& inFile, const string& outFile,
+		    bool useFlags, bool preCalc, bool calcDeriv,
+		    ProcessFuncBL func, void* arg);
+
+  // Subtract the data of a baseline.
+  void subtractBL (int threadnr, void* arg,
+		   const fcomplex* dataIn, fcomplex* dataOut,
+		   const bool* flags,
+		   const MeqRequest& request, int blindex,
+		   bool showd);
+
+  // Correct the data of a baseline.
+  void correctBL (int threadnr, void* arg,
+		  const fcomplex* dataIn, fcomplex* dataOut,
+		  const bool* flags,
+		  const MeqRequest& request, int blindex,
+		  bool showd);
+
+  // Write the predicted data of a baseline.
+  void predictBL (int threadnr, void* arg,
+		  const fcomplex* dummy, fcomplex* dataOut,
+		  const bool* flags,
+		  const MeqRequest& request, int blindex,
+		  bool showd);
+
+  // Get the data of a single baseline.
+  // <group>
+  void getBL (int threadnr, void* arg,
+	      const fcomplex* data, fcomplex*,
+	      const bool* flags,
+	      const MeqRequest&, int blindex,
+	      bool);
+  void getMapBL (int threadnr, void* arg,
+		 const fcomplex* data, fcomplex*,
+		 const bool* flags,
+		 const MeqRequest& request, int blindex,
+		 bool);
+  // </group>
+
+  // Get access to the next data chunk and fill in all pointers.
+  // The data pointers are filled in the MMapMSInfo object.
+  bool nextDataChunk();
+
+  // Do the precalculations for all lower level nodes.
+  void precalcNodes (const MeqRequest& request);
 
 
   string                itsMSName;      //# Measurement set name
@@ -263,7 +319,9 @@ private:
   vector<vector<MeqExprRep*> > itsPrecalcNodes;  //# nodes to be precalculated
   vector<MeqJonesExpr>  itsCorrExpr;    //# Ampl/phase expressions (to correct)
 
-  int    itsNrSelBl;                  //# nr of selected baselines
+  string itsInDataColumn;
+  string itsOutDataColumn;
+
   double itsStartFreq;                //# start frequency of observation
   double itsEndFreq;
   double itsStepFreq;
@@ -281,31 +339,47 @@ private:
   vector<ParmData> itsParmData;       //# solvable parm info. 
 
   bool                 itsCorr[4];     //# Correlations to use
-  vector<int>          itsAnt1;        //# Antenna1 antenna numbers
-  vector<int>          itsAnt2;        //# Antenna2 antenna numbers
   int                  itsNCorr;       //# Number of correlations (XX, etc.)
   int                  itsNSelCorr;    //# Number of correlations selected
   casa::Vector<double> itsTimes;       //# All times in MS
   casa::Vector<double> itsIntervals;   //# All intervals in MS
   casa::Matrix<double> itsAntPos;      //# All antenna positions
-  unsigned int         itsNrBl;        //# Total number of unique baselines
-  casa::Matrix<bool>   itsBLSelection; //# true = baseline is selected
+
+  //# All bselines in the MS are numbered 0 to itsNrBl-1.
+  unsigned int         itsNrBl;        //# Total number of baselines in MS
+  int                  itsNrUsedBl;    //# nr of used baselines
+  vector<int>          itsAnt1;        //# Baseline antenna1 numbers in MS
+  vector<int>          itsAnt2;        //# Baseline antenna2 numbers in MS
+  //# Define the baselines that can be used (thus selected in constructor).
+  //# The baseline index is a sequence number in the itsExpr vector.
+  vector<int>          itsBLUsedInx;   //# map of basel index to basel number
   casa::Matrix<int>    itsBLIndex;     //# baseline index of antenna pair
-                                       //# -1 is baseline is absent
+                                       //# -1 means will never be used
+  //# Define which baselines are selected in the select function.
+  casa::Matrix<bool>   itsBLSelection; //# true = antenna pair is selected
+  vector<int>          itsBLSelInx;    //# indices of selected baselines
   unsigned int   itsTimeIndex;     //# The index of the current time
   unsigned int   itsNrTimes;       //# The number of times in the time domain
-  unsigned int   itsNrBufTB;       //# Nr of times/baselines fitting in buffer
-  unsigned int   itsNrTimesDone;   //# The number of times done in time domain
-  unsigned int   itsBlNext;        //# Next baseline to do in time domain
+  unsigned int   itsNrTimesDone;   //# Nr of times done after a setDomain
 
-  bool           itsVisMapped;     //# True = .vis file is mapped (not .res)
-  MMap*          itsDataMap;       //# Data file to map
-  FlagsMap*      itsFlagsMap;      //# Flags file to map
-  bool           itsLockMappedMem; //# Lock memory immediately after mapping?
+  MMapMSInfo     itsMSMapInfo;     //# Info about mapped input and output file
+  MMap*          itsInDataMap;     //# Input data file mapped
+  MMap*          itsOutDataMap;    //# Output data file mapped (can same as in)
+  FlagsMap*      itsFlagsMap;      //# Flags file mapped
+  MMap*          itsWeightMap;     //# Weights file mapped
+  bool           itsIsWeightSpec;  //# true = weight per channel
 
+  //# Thread private buffers.
+  int itsNthread;
+  vector<casa::Block<bool> >     itsFlagVecs;
+  vector<casa::Block<double> >   itsResultVecs;
+  vector<casa::Block<double> >   itsDiffVecs;
+  vector<casa::Block<unsigned> > itsIndexVecs;
+  vector<casa::Block<bool> >     itsOrdFlagVecs;
+
+  //# Timers.
   NSTimer itsPredTimer;
   NSTimer itsEqTimer;
-
 };
 
 // @}
