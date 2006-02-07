@@ -72,6 +72,7 @@ public:
 private:
   ParmDB::ParmDB* itsTable;
   MeqDomain       itsDomain;
+  bool            itsDefUsed;    //# true = default is used as initial value
 };
 
 // @}

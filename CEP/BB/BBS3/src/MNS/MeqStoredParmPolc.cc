@@ -33,7 +33,8 @@ namespace LOFAR {
 MeqStoredParmPolc::MeqStoredParmPolc (const string& name, MeqParmGroup* group,
 				      ParmDB::ParmDB* table)
 : MeqParmPolc (name, group),
-  itsTable    (table)
+  itsTable    (table),
+  itsDefUsed  (false)
 {}
 
 MeqStoredParmPolc::~MeqStoredParmPolc()
@@ -50,23 +51,12 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
   ParmDB::ParmDomain pdomain = domain.toParmDomain();
   ParmDB::ParmValueSet pset = itsTable->getValues (getName(), pdomain);
   vector<ParmDB::ParmValue>& vec = pset.getValues();
-  vector<MeqPolc> polcs;
-  // If none found, try to get a default value.
-  if (vec.size() == 0) {
-    ParmDB::ParmValue pval = itsTable->getDefValue (getName());
-    ASSERTSTR (!pval.rep().itsType.empty(),
-	       "No value found for parameter " << getName());
-    ASSERTSTR (pval.rep().itsType=="polc",
-	       "No 'polc' funklet found for parameter " << getName());
-    ASSERTSTR (pval.rep().itsShape.size()==2,
-	       "No 2-dim funklet found for parameter " << getName());
-    pval.rep().setDomain (pdomain);
-    polcs.push_back (MeqPolc(pval));
-  } else {
+  vector<MeqPolc>& polcs = getPolcs();
+  if (vec.size() > 0) {
     // Check if the polc domains cover the entire domain and if they
-    // do not overlap.
-    // Not implemented yet!!!
-    // Convert all to polcs.
+    // do not overlap.  // Not implemented yet!!!
+    // Convert all parmvalues to polcs.
+    polcs.resize (0);
     for (uint i=0; i<vec.size(); ++i) {
       ASSERTSTR (vec[i].rep().itsType=="polc",
 		 "No 'polc' funklet found for parameter " << getName());
@@ -74,8 +64,28 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
 		 "No 2-dim funklet found for parameter " << getName());
       polcs.push_back (MeqPolc(vec[i]));
     }
+    itsDefUsed = false;
+  } else {
+    // Use a default value.
+    // See if the values of the previous domain can be used.
+    // We only do that if the default was used in a single previous domain.
+    if (itsDefUsed  &&  polcs.size() == 1) {
+      polcs[0].setDomain (domain);
+    } else {
+      // No old values; try to get a default value.
+      ParmDB::ParmValue pval = itsTable->getDefValue (getName());
+      ASSERTSTR (!pval.rep().itsType.empty(),
+		 "No value found for parameter " << getName());
+      ASSERTSTR (pval.rep().itsType=="polc",
+		 "No 'polc' funklet found for parameter " << getName());
+      ASSERTSTR (pval.rep().itsShape.size()==2,
+		 "No 2-dim funklet found for parameter " << getName());
+      pval.rep().setDomain (pdomain);
+      polcs.push_back (MeqPolc(pval));
+      setPolcs (polcs);
+    }
+    itsDefUsed = true;
   }
-  setPolcs (polcs);
   itsDomain = domain;
 }
 
