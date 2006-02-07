@@ -1,6 +1,6 @@
-TFC_Interface    	# holds the DH's and Stubs 
-TFC_InputSection 	# input from station
-TFC_BGLProc      	# processing on BGL (filter, correlator)
-TFC_Storage      	# output to storage
-TFC_Generator    	# station emulator
-TFC_DelayCompensation	# delaycompensation for fringes etc
+TFC_Interface		#-vCEP-TFlopCorrelator-1_6-release-branch
+TFC_InputSection	#-vCEP-TFlopCorrelator-1_6-release-branch
+TFC_BGLProc		#-vCEP-TFlopCorrelator-1_6-release-branch
+TFC_Storage		#-vCEP-TFlopCorrelator-1_6-release-branch
+TFC_Generator		#-vCEP-TFlopCorrelator-1_6-release-branch
+TFC_DelayCompensation	#-vCEP-TFlopCorrelator-1_6-release-branch
