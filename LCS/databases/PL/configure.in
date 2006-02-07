@@ -61,6 +61,7 @@ dnl
 AC_OUTPUT(
 include/Makefile
 include/PL/Makefile
+scripts/Makefile
 src/Makefile
 test/Makefile
 demo/Makefile
