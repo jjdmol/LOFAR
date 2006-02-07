@@ -265,6 +265,7 @@ Prediffer::~Prediffer()
 
   // clear up the matrix pool
   MeqMatrixComplexArr::poolDeactivate();
+  MeqMatrixRealArr::poolDeactivate();
 }
 
 
@@ -501,7 +502,7 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
   int nrstat = itsStations.size();
   int nrsrc  = itsSrcNrMap.size();
   int nrgrp  = itsSrcGrp.size();
-  itsStatUVW.reserve  (nrstat);
+  itsStatUVW.reserve (nrstat);
   // EJ is real/imag or ampl/phase
   string ejname1 = "real.";
   string ejname2 = "imag.";
@@ -1680,13 +1681,13 @@ void Prediffer::fillUVW()
     int a1 = itsAnt1[bl];
     int a2 = itsAnt2[bl];
     if (itsBLSelection(a1,a2) == true) {
-      if (!statFnd[itsAnt1[bl]]) {
+      if (!statFnd[a1]) {
 	nStatFnd++;
-	statFnd[itsAnt1[bl]] = true;
+	statFnd[a1] = true;
       }
-      if (!statFnd[itsAnt2[bl]]) {
+      if (!statFnd[a2]) {
 	nStatFnd++;
-	statFnd[itsAnt2[bl]] = true;
+	statFnd[a2] = true;
       }
     }
   }
@@ -1704,13 +1705,14 @@ void Prediffer::fillUVW()
     double* uvw = uvwDataPtr + tOffset;
     double time = itsTimes[tStep];
     
-    // Set UVW of first station to 0 (UVW coordinates are relative!).
+    // Set UVW of first station used to 0 (UVW coordinates are relative!).
     statDone.assign (statDone.size(), false);
-    statuvw[3*itsAnt1[0]]   = 0;
-    statuvw[3*itsAnt1[0]+1] = 0;
-    statuvw[3*itsAnt1[0]+2] = 0;
-    statDone[itsAnt1[0]] = true;
-    itsStatUVW[itsAnt1[0]]->set (time, 0, 0, 0);
+    int ant0 = itsAnt1[itsBLUsedInx[0]];
+    statuvw[3*ant0]   = 0;
+    statuvw[3*ant0+1] = 0;
+    statuvw[3*ant0+2] = 0;
+    statDone[ant0] = true;
+    itsStatUVW[ant0]->set (time, 0, 0, 0);
 
 //     cout << "itsStatUVW[" << itsAnt1Data[0] << "] time: " << time << " 0, 0, 0" << endl;
 
