@@ -1102,8 +1102,8 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 	&& (Timestamp(0,0) == sw_event->timestamp))
     {
       LOG_INFO("applying beamforming weights immediately");
-      command->apply(Cache::getInstance().getFront());
-      command->apply(Cache::getInstance().getBack());
+      command->apply(Cache::getInstance().getFront(), true);
+      command->apply(Cache::getInstance().getBack(), false);
     }
     else
     {
@@ -1169,8 +1169,8 @@ void RSPDriver::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
   if (Timestamp(0,0) == command->getTimestamp())
   {
     LOG_INFO("applying setsubbands immediately");
-    command->apply(Cache::getInstance().getFront());
-    command->apply(Cache::getInstance().getBack());
+    command->apply(Cache::getInstance().getFront(), true);
+    command->apply(Cache::getInstance().getBack(), false);
   }
   else
   {
@@ -1290,8 +1290,8 @@ void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
   if (Timestamp(0,0) == command->getTimestamp())
   {
     LOG_INFO("applying RCU control immediately");
-    command->apply(Cache::getInstance().getFront());
-    command->apply(Cache::getInstance().getBack());
+    command->apply(Cache::getInstance().getFront(), true);
+    command->apply(Cache::getInstance().getBack(), false);
   }
   else
   {
@@ -1409,7 +1409,7 @@ void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
   // if timestamp == Timestamp(0,0) apply changes immediately
   if (Timestamp(0,0) == command->getTimestamp()) {
     LOG_INFO("applying RSU control to front buffer");
-    command->apply(Cache::getInstance().getFront());
+    command->apply(Cache::getInstance().getFront(), true);
   }
   else
   {
@@ -1440,8 +1440,8 @@ void RSPDriver::rsp_setwg(GCFEvent& event, GCFPortInterface& port)
   if (Timestamp(0,0) == command->getTimestamp())
   {
     LOG_INFO("applying WG settings immediately");
-    command->apply(Cache::getInstance().getFront());
-//    command->apply(Cache::getInstance().getBack());
+    command->apply(Cache::getInstance().getFront(), true);
+    command->apply(Cache::getInstance().getBack(), false);
   }
   else
   {
@@ -1795,8 +1795,8 @@ void RSPDriver::rsp_setclocks(GCFEvent& event, GCFPortInterface& port)
   if (Timestamp(0,0) == command->getTimestamp())
   {
     LOG_INFO("applying Clock control immediately");
-    command->apply(Cache::getInstance().getFront());
-    command->apply(Cache::getInstance().getBack());
+    command->apply(Cache::getInstance().getFront(), true);
+    command->apply(Cache::getInstance().getBack(), false);
   }
   else
   {

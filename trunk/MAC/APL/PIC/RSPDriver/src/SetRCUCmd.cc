@@ -61,16 +61,16 @@ void SetRCUCmd::ack(CacheBuffer& /*cache*/)
   getPort()->send(ack);
 }
 
-void SetRCUCmd::apply(CacheBuffer& cache)
+void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
   for (int cache_rcu = 0;
        cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
+       cache_rcu++) {
+    if (m_event->rcumask[cache_rcu]) {
       cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
-      cache.getRCUSettings().setModified(cache_rcu);
+      if (setModFlag) {
+        cache.getRCUSettings().setModified(cache_rcu);
+      }
     }
   }
 }

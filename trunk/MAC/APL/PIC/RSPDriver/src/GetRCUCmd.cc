@@ -83,7 +83,7 @@ void GetRCUCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetRCUCmd::apply(CacheBuffer& /*cache*/)
+void GetRCUCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   /* intentionally left empty */
 }

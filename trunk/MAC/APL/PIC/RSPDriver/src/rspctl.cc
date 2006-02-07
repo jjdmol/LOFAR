@@ -774,6 +774,9 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 		}
 
 		BoardStatus&	board = ack.sysstatus.board()(0);
+		logMessage(cout,formatString("1.2 V: %3.2f , 2.5 V: %3.2f",
+						0.013  * board.rsp.voltage_1_5, 
+						0.0172 * board.rsp.voltage_3_3));
 		logMessage(cout,formatString("BP_temp: %2d , BP_clock: %3d",
 						board.rsp.bp_temp, board.rsp.bp_clock));
 		logMessage(cout,formatString("Temp AP0: %3d , AP1: %3d , AP2: %3d , AP3: %3d", 
@@ -1923,7 +1926,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		    return 0;
 		}
 		WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
-		wgcommand->setPhase(phase / (2 * M_PI) * 256);
+		wgcommand->setPhase((uint8)(phase / (2 * M_PI) * 256));
 	      }
 	  }
 	  break;

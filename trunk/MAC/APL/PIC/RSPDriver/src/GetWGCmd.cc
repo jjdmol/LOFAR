@@ -82,7 +82,7 @@ void GetWGCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetWGCmd::apply(CacheBuffer& /*cache*/)
+void GetWGCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   /* intentionally left empty */
 }

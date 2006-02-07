@@ -61,13 +61,15 @@ void SetRSUCmd::ack(CacheBuffer& /*cache*/)
 	getPort()->send(ack);
 }
 
-void SetRSUCmd::apply(CacheBuffer& cache)
+void SetRSUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-	for (int boardNr = 0; boardNr < GET_CONFIG("RS.N_RSPBOARDS", i); boardNr++) {
-		// TODO: don't reset all boards
+	for (int boardNr = 0; boardNr < GET_CONFIG("RS.N_RSPBOARDS", i); boardNr++) { 
+        // TODO: don't reset all boards
 		LOG_INFO (formatString("RSUcontrol for board %d", boardNr));
 		cache.getRSUSettings()()(boardNr) = m_event->settings()(0);
-		cache.getRSUSettings().getModifiedFlags()(boardNr) = true;
+	    if (setModFlag) {
+		  cache.getRSUSettings().getModifiedFlags()(boardNr) = true;
+	    }
 	}
 }
 

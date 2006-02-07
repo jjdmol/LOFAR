@@ -68,7 +68,7 @@ void UpdSubbandsCmd::ack(CacheBuffer& /*cache*/)
 //
 // apply(cache)
 //
-void UpdSubbandsCmd::apply(CacheBuffer& /*cache*/)
+void UpdSubbandsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
 	// no-op
 }

@@ -59,17 +59,17 @@ void SetWGCmd::ack(CacheBuffer& /*cache*/)
   getPort()->send(ack);
 }
 
-void SetWGCmd::apply(CacheBuffer& cache)
+void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  cache.getWGSettings().setModified();
   for (int cache_rcu = 0;
        cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
+       cache_rcu++) {
+    if (m_event->rcumask[cache_rcu]) {
       cache.getWGSettings()()(cache_rcu) = m_event->settings()(0);
     }
+  }
+  if (setModFlag) {
+    cache.getWGSettings().setModified();
   }
 }
 

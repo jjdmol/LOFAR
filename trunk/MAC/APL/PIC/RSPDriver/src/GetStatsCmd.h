@@ -55,7 +55,7 @@ namespace LOFAR {
        * Make necessary changes to the cache for the next synchronization.
        * Any changes will be sent to the RSP boards.
        */
-      virtual void apply(CacheBuffer& cache);
+      virtual void apply(CacheBuffer& cache, bool setModFlag = true);
 
       /**
        * Complete the command by sending the appropriate response on

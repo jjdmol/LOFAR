@@ -59,7 +59,7 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
   getPort()->send(ack);
 }
 
-void SetSubbandsCmd::apply(CacheBuffer& cache)
+void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 {
   Range dst_range;
 
