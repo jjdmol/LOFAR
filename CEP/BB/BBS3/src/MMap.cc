@@ -37,6 +37,7 @@ MMap::MMap (const string& fileName, protection prot)
   : itsFileName  (fileName),
     itsSize      (0),
     itsOffset    (0),
+    itsMapOffset (0),
     itsNrBytes   (0),
     itsPageStart (0),
     itsPtr       (0),
@@ -74,14 +75,19 @@ void MMap::mapFile (int64 offset, size_t size)
 {
   // The actual mapped area will be a multiple of the page size
   if (itsPtr != 0) {
-    LOG_WARN("Previous region still mapped! Unmapping...");
+    if (offset >= itsMapOffset  &&  offset+size <= itsMapOffset+itsNrBytes) {
+      itsPtr    = (char*)itsPageStart + offset-itsMapOffset;
+      itsOffset = offset;
+      itsSize   = size;
+      return;
+    }
     unmapFile();
   }
   int64 sz = getpagesize();
   // Calculate start of page on which offset is located.
-  int64 pageStartOffset = (offset/sz) * sz;
+  itsMapOffset = (offset/sz) * sz;
   // Add the difference to the nr of bytes to map.
-  itsNrBytes = size + offset-pageStartOffset;
+  itsNrBytes = size + offset-itsMapOffset;
 
   int protect;
   switch (itsProtection) {
@@ -101,13 +107,13 @@ void MMap::mapFile (int64 offset, size_t size)
     
   // Do mmap
   itsPageStart = ::mmap (0, itsNrBytes, protect, MAP_SHARED, itsFd,
-			 pageStartOffset);
+			 itsMapOffset);
   ASSERTSTR (itsPageStart != MAP_FAILED, "MMap::MMap - mmap failed: "
 	     << strerror(errno) ); 
-  ///  cout << "Mapped "<<size<<" bytes at " << offset<<' '<<pageStartOffset<<' '<<itsNrBytes<<endl;
+  ///  cout << "Mapped "<<size<<" bytes at " << offset<<' '<<itsMapOffset<<' '<<itsNrBytes<<endl;
   ::madvise (itsPageStart, itsNrBytes, MADV_SEQUENTIAL);
   // Get requested pointer
-  itsPtr = (char*)itsPageStart + offset-pageStartOffset;
+  itsPtr    = (char*)itsPageStart + offset-itsMapOffset;
   itsOffset = offset;
   itsSize   = size;
 }
@@ -120,6 +126,7 @@ void MMap::unmapFile()
 	       << strerror(errno));
     itsSize      = 0;
     itsOffset    = 0;
+    itsMapOffset = 0;
     itsNrBytes   = 0;
     itsPageStart = 0;
     itsPtr       = 0;
