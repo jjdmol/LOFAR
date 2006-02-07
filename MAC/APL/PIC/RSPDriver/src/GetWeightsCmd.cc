@@ -82,7 +82,7 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetWeightsCmd::apply(CacheBuffer& /*cache*/)
+void GetWeightsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   // no-op
 }

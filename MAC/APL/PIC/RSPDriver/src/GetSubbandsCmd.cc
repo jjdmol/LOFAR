@@ -90,7 +90,7 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetSubbandsCmd::apply(CacheBuffer& /*cache*/)
+void GetSubbandsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   /* intentionally left empty */
 }

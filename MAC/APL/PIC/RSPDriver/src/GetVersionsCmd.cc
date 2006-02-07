@@ -65,7 +65,7 @@ void GetVersionsCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetVersionsCmd::apply(CacheBuffer& /*cache*/)
+void GetVersionsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   /* intentionally left empty */
 }

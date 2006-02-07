@@ -59,14 +59,14 @@ void SetClocksCmd::ack(CacheBuffer& /*cache*/)
   getPort()->send(ack);
 }
 
-void SetClocksCmd::apply(CacheBuffer& cache)
+void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  for (int cache_td = 0; cache_td < GET_CONFIG("RS.N_TDBOARDS", i); cache_td++)
-  {
-    if (m_event->tdmask[cache_td])
-    {
+  for (int cache_td = 0; cache_td < GET_CONFIG("RS.N_TDBOARDS", i); cache_td++) {
+    if (m_event->tdmask[cache_td]) {
       cache.getClocks()()(cache_td) = m_event->clocks()(0);
-      cache.getClocks().setModified();
+      if (setModFlag) {
+        cache.getClocks().setModified();
+	  }
     }
   }
 }

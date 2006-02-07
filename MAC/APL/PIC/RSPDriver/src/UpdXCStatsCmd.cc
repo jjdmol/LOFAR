@@ -54,7 +54,7 @@ void UpdXCStatsCmd::ack(CacheBuffer& /*cache*/)
   // intentionally left empty
 }
 
-void UpdXCStatsCmd::apply(CacheBuffer& /*cache*/)
+void UpdXCStatsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   // no-op
 }

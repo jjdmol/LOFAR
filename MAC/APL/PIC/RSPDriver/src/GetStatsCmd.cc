@@ -100,7 +100,7 @@ void GetStatsCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetStatsCmd::apply(CacheBuffer& /*cache*/)
+void GetStatsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   // no-op
 }

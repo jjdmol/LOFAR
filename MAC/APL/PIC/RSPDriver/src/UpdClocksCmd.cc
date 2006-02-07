@@ -54,7 +54,7 @@ void UpdClocksCmd::ack(CacheBuffer& /*cache*/)
   // intentionally left empty
 }
 
-void UpdClocksCmd::apply(CacheBuffer& /*cache*/)
+void UpdClocksCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   // no-op
 }

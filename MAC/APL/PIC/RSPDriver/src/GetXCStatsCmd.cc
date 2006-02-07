@@ -79,7 +79,7 @@ void GetXCStatsCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetXCStatsCmd::apply(CacheBuffer& /*cache*/)
+void GetXCStatsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   // no-op
 }

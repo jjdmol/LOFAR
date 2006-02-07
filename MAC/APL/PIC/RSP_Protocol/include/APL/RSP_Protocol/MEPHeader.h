@@ -244,7 +244,7 @@ namespace LOFAR {
        * Define size of each register.
        */
       static const uint16 RSR_STATUS_SIZE       = 164;
-      static const uint16 RSR_VERSION_SIZE      = 3;
+      static const uint16 RSR_VERSION_SIZE      = 2;
       
       static const uint16 RSU_FLASHRW_SIZE      = 1024;
       static const uint16 RSU_FLASHERASE_SIZE   = 1;

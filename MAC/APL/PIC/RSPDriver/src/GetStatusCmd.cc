@@ -66,7 +66,7 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetStatusCmd::apply(CacheBuffer& /*cache*/)
+void GetStatusCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   // no-op
 }

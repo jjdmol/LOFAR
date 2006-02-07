@@ -69,7 +69,7 @@ void UpdRCUCmd::ack(CacheBuffer& /*cache*/)
 //
 // apply(cache)
 //
-void UpdRCUCmd::apply(CacheBuffer& /*cache*/)
+void UpdRCUCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
 	// no-op
 }

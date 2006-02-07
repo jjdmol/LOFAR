@@ -73,7 +73,7 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
   getPort()->send(ack);
 }
 
-void SetWeightsCmd::apply(CacheBuffer& cache)
+void SetWeightsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 {
   // copy to offset N_XLETS in the cache
   Range dst_range = Range(MEPHeader::N_XLETS,

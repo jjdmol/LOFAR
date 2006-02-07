@@ -73,7 +73,7 @@ void GetClocksCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetClocksCmd::apply(CacheBuffer& /*cache*/)
+void GetClocksCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   /* intentionally left empty */
 }
