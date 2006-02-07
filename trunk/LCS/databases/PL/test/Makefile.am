@@ -87,7 +87,6 @@ EXTRA_DIST		= $(check_SCRIPTS) \
 			  $(EXTRA_tCollection_DIST) \
 			  $(EXTRA_tObjectId_DIST) \
 			  $(EXTRA_tAttr1_DIST) \
-			  $(EXTRA_tQuery_DIST) \
-			  VersionNrTrigger.plpgsql
+			  $(EXTRA_tQuery_DIST)
 
 include $(top_srcdir)/Makefile.common
