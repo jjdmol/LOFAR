@@ -106,4 +106,25 @@ void DH_Visibilities::checkCorrelatorTestPattern()
     std::cerr << ch << ' ' << real((*itsVisibilities)[0][ch][0][0]) << '\n';
 }
 
+void DH_Visibilities::setStorageTestPattern(int factor)
+{
+  for (int bl = 0; bl < NR_BASELINES; bl++)
+  {
+    for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch++)
+    {
+      // Set number of valid samples
+      (*itsNrValidSamplesCounted)[bl][ch] = bl*ch;
+
+      for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++)
+      {
+	for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++)
+	{
+	  // Set visibilities
+	  (*itsVisibilities)[bl][ch][pol1][pol2] = makefcomplex(bl+ch, factor*(pol1+pol2));
+	}
+      }
+    }
+  }
+}
+
 }

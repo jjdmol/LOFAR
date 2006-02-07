@@ -2,7 +2,11 @@
 # SUBDIRS = shmem .
 # endif
 
-INSTHDRS =
+INSTHDRS =    	\
+AH_Storage.h	\
+WH_SubbandWriter.h   	\
+MSWriter.h     	\
+MSWriterImpl.h
 
 NOINSTHDRS =
 

@@ -63,7 +63,6 @@ BGLProc.NPPFTaps = 16
 # Variables for Storage
 Storage.MSName = ObservationA.MS
 Storage.WriteToMAC = F
-Storage.WriteSubbandNr = 0  # Number of subband to be written (0-based)
 
 Generator.NoRuns = 3             # 0 means run indefinitely
 Generator.OutputRate = 0        # number of ethernet frames per second
