@@ -13,6 +13,7 @@ SC_Simple.h					\
 SC_WritePredData.h				\
 SC_CompoundIter.h				\
 MMap.h						\
+MMapMSInfo.h					\
 FlagsMap.h					\
 Prediffer.h					\
 Solver.h					\
@@ -32,6 +33,7 @@ MNS/MeqJonesCMul2.h \
 MNS/MeqJonesCMul3.h \
 MNS/MeqJonesExpr.h \
 MNS/MeqJonesInvert.h \
+MNS/MeqJonesMMap.h \
 MNS/MeqJonesMul2.h \
 MNS/MeqJonesMul3.h \
 MNS/MeqJonesNode.h \
@@ -82,6 +84,7 @@ SC_Simple.cc						\
 SC_WritePredData.cc					\
 SC_CompoundIter.cc					\
 MMap.cc							\
+MMapMSInfo.cc						\
 FlagsMap.cc						\
 Prediffer.cc						\
 Solver.cc						\
@@ -97,6 +100,7 @@ MNS/MeqJonesCMul2.cc \
 MNS/MeqJonesCMul3.cc \
 MNS/MeqJonesExpr.cc \
 MNS/MeqJonesInvert.cc \
+MNS/MeqJonesMMap.cc \
 MNS/MeqJonesMul2.cc \
 MNS/MeqJonesMul3.cc \
 MNS/MeqJonesNode.cc \
