@@ -127,6 +127,10 @@ private:
 				     bool useCache=false);
   // </group>
 
+  // Let a derived class calculate the resulting value.
+  virtual MeqMatrix getResultValue (const std::vector<const MeqMatrix*>&);
+
+
   int           itsCount;      //# Reference count
   int           itsMinLevel;   //# Minimum level of node as used in tree.
   int           itsMaxLevel;   //# Maximum level of node as used in tree.

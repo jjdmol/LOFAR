@@ -144,10 +144,46 @@ const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
   return *itsResult;
 }
 
-MeqResult MeqExprRep::getResult (const MeqRequest&)
+MeqMatrix MeqExprRep::getResultValue (const vector<const MeqMatrix*>&)
 {
   THROW (LOFAR::Exception,
-	 "MeqExpr::getResult not implemented in derived class");
+	 "MeqExpr::getResult(Value) not implemented in derived class");
+}
+
+MeqResult MeqExprRep::getResult (const MeqRequest& request)
+{
+  // Calculate the result in a generic way.
+  MeqResult result;
+  // First evaluate all children and keep their results.
+  // Also keep the main value.
+  int nrchild = itsChildren.size();
+  vector<MeqResult> res(nrchild);
+  vector<const MeqMatrix*> mat(nrchild);
+  for (int i=0; i<nrchild; ++i) {
+    res[i] = itsChildren[i]->getResultSynced (request, res[i]);
+    mat[i] = &res[i].getValue();
+  }
+  // Calculate the resulting main value.
+  result.setValue (getResultValue(mat));
+  // Calculate the perturbed values for which any child is perturbed.
+  for (int spinx=0; spinx<request.nspid(); spinx++) {
+    bool eval = -1;
+    for (int i=0; i<nrchild; ++i) {
+      if (res[i].isDefined(spinx)) {
+	// Perturbed, so set value to the perturbed one.
+	mat[i] = &res[i].getPerturbedValue(spinx);
+	eval = i;
+      } else {
+	mat[i] = &res[i].getValue();
+      }
+    }
+    if (eval >= 0) {
+      // Evaluate the perturbed value and reset the value vector.
+      result.setPerturbation (spinx, res[eval].getPerturbation(spinx));
+      result.setPerturbedValue (spinx, getResultValue(mat));
+    }
+  }
+  return result;
 }
 
 const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
