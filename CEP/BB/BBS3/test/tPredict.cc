@@ -46,7 +46,7 @@ void doPredict (Prediffer& pre1)
   cout << ">>>" << endl;
   pre1.showSettings();
   cout << "<<<" << endl;
-  pre1.writePredictedData (false);
+  pre1.writePredictedData ("CORRECTED_DATA");
 }
 
 
@@ -81,6 +81,7 @@ int main (int argc, const char* argv[])
       ROArrayColumn<Complex> dcol(tab, "DATA");
       ROArrayColumn<Complex> ccol(tab, "CORRECTED_DATA");
       for (uint i=0; i<tab.nrow(); i++) {
+	if (i==0) cout << dcol(i) << ccol(i) << endl;
 	if (! allNear (dcol(i), ccol(i), 1e-8)) {
 	  THROW (LOFAR::Exception, "tPredict: mismatch in row" << i);
 	}

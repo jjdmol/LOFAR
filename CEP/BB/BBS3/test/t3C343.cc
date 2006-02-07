@@ -67,7 +67,7 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain. Only use center frequencies and all times.
   //pre1.setDomain (1170078125+24*156250, 16*156250, 0., 1e12);
-  pre1.setDomain (1170078125+30*156250, 4*156250, 0., 1e12);
+  pre1.setDomain (30, 33, 0., 1e12);
   //pre1.setDomain (1170078125+34*156250, 4*156250, 0., 1e12);
   ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, 0., 1e12);
 
@@ -83,7 +83,7 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
   for (int it=0; it<maxniter; ++it) {
     // Get the fitter from the prediffer and give them to the solver.
     casa::LSQFit fitter;
-    pre1.fillFitter (fitter);
+    pre1.fillFitter (fitter, "DATA");
     solver.mergeFitter (fitter, 0);
     // Do the solve.
     Quality quality;
@@ -136,7 +136,7 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
     for (int it=0; it<maxniter; ++it) {
       // Get the fitter from the prediffer and give them to the solver.
       casa::LSQFit fitter;
-      pre1.fillFitter (fitter);
+      pre1.fillFitter (fitter, "DATA");
       solver.mergeFitter (fitter, 0);
       // Do the solve.
       Quality quality;
@@ -171,7 +171,7 @@ void doSubtract (Prediffer& pre1, double timeStep)
     ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
     pre1.showSettings();
     // Subtract the model.
-    pre1.subtractPeelSources (true);
+    pre1.subtractData ("DATA", "CORRECTED_DATA");
     timeStart += timeStep;
   }
 }
