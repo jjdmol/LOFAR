@@ -1,9 +1,91 @@
+2006-02-07 11:08  loose
+
+	* configure.in: BugID: 627
+
+	  Prepare for release 1.1
+
+2006-02-07 09:38  loose
+
+	* scripts/Makefile.am: BugID: 625
+
+	  Merged PLGEN and PL package, by moving the scripts from the
+	  PLGEN/src directory to the PL/scripts directory.
+
+2006-02-07 09:34  loose
+
+	* test/: Makefile.am, VersionNrTrigger.plpgsql: BugID: 625
+
+	  This file, containg a triggered procedure, was moved to the
+	  `scripts' directory.
+
+2006-02-07 09:31  loose
+
+	* Makefile.am, README, configure.in: BugID: 625
+
+	  Merged PLGEN and PL package, by moving the scripts from the
+	  PLGEN/src directory to the PL/scripts directory.
+
+2006-02-07 09:10  cvs
+
+	* scripts/: genDBbase, genDBcode, genDBi, genDBsql,
+	  VersionNrTrigger.plpgsql: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/databases/PLGEN/src, creating new revision
+
+2006-01-25 09:38  loose
+
+	* test/tAttr1.cc: BugID: 597
+
+	  Catch a LOFAR::Exception, because it is a bit more informative
+	  than a std::exception.
+
+2006-01-24 09:51  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, Makefile.am, NEWS,
+	  PL.spec.in, README, TODO, configure.in, demo/Makefile.am,
+	  include/Makefile.am, include/PL/Makefile.am, src/Makefile.am,
+	  test/Makefile.am, test/tA.run, test/tAttr1.run, test/tC.run:
+	  BugID: 597
+
+	  * Updated the Makefile.am files to reflect the new situation
+	  (i.e. all   header files are now in include/PL instead of src).
+	  * Removed all occurrences of nobase_ in all Makefile.am files.  *
+	  Added a lot of EXTRA_DIST files to all Makefile.am files, so that
+	  the	distribution will contain all the necessary files.  *
+	  Modified some .run files to use $(srcdir) instead of a relative
+	  path to   locate input files (otherwise it would fail with
+	  distcheck) * Added extra clean-up in some .run files, because
+	  distcheck complained.  * Added files required for a proper (GNU)
+	  distribution.
+
 2006-01-20 15:36  cvs
 
 	* src/Query/: BinaryExprNode.h, ColumnExprNode.h, ConstExprNode.h,
 	  Expr.h, ExprNode.h, FunctionExprNode.h, SQLExprNode.h,
 	  UnaryExprNode.h: %lofarcvsmv%: Moved to
 	  LOFAR/LCS/databases/PL/include/PL/Query
+
+2006-01-20 15:36  cvs
+
+	* include/PL/Query/: BinaryExprNode.h, ColumnExprNode.h,
+	  ConstExprNode.h, Expr.h, ExprNode.h, FunctionExprNode.h,
+	  SQLExprNode.h, UnaryExprNode.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/databases/PL/src/Query, creating new revision
+
+2006-01-20 15:36  cvs
+
+	* include/PL/: DTLBase.h, Exception.h, ObjectId.h,
+	  PersistenceBroker.h, PersistentObject.h, PLfwd.h, QueryObject.h,
+	  TPersistentObject.h, PersistenceBroker.tcc,
+	  TPersistentObject.tcc: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/databases/PL/src, creating new revision
+
+2006-01-20 15:36  cvs
+
+	* src/: DBRepMeta.h, DTLBase.h, Exception.h, ObjectId.h,
+	  PersistenceBroker.h, PersistentObject.h, PLfwd.h, QueryObject.h,
+	  TPersistentObject.h, PersistenceBroker.tcc,
+	  TPersistentObject.tcc: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/databases/PL/include/PL
 
 2006-01-20 15:36  cvs
 
