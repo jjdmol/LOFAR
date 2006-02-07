@@ -86,6 +86,7 @@ private:
   int    itsFd;             // File descriptor
   size_t itsSize;           // Size of region to be mapped
   int64  itsOffset;         // Offset of region to be mapped
+  int64  itsMapOffset;      // Offset of region actually mapped
   size_t itsNrBytes;        // Actual number of mapped bytes 
   void*  itsPageStart;      // Pointer to the start of the mapped page(s)
   void*  itsPtr;            // Pointer to the start of requested map area
