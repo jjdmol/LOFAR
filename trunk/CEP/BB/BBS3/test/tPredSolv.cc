@@ -115,11 +115,11 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
     cout << ">>>" << endl;
     if (toblob) {
       casa::LSQFit fitter2;
-      pre1.fillFitter (fitter2);
+      pre1.fillFitter (fitter2, "DATA");
       Prediffer::marshall (fitter2, fitBuf, bufsize);
       Prediffer::demarshall (fitter, fitBuf, bufsize);
     } else {
-      pre1.fillFitter (fitter);
+      pre1.fillFitter (fitter, "DATA");
     }
     solver.mergeFitter (fitter, 0);
     // Do the solve.
@@ -162,9 +162,9 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2,
     // Get the fitter from the prediffer and give it to the solver.
     casa::LSQFit fitter;
     cout << ">>>" << endl;
-    pre1.fillFitter (fitter);
+    pre1.fillFitter (fitter, "DATA");
     solver.mergeFitter (fitter, 0);
-    pre2.fillFitter (fitter);
+    pre2.fillFitter (fitter, "DATA");
     solver.mergeFitter (fitter, 1);
     // Do the solve.
     Quality quality;
@@ -206,7 +206,7 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
     // Get the fitter from the prediffer and give it to the solver.
     casa::LSQFit fitter;
     cout << ">>>" << endl;
-    pre1.fillFitter (fitter);
+    pre1.fillFitter (fitter, "DATA");
     solver.mergeFitter (fitter, 0);
     // Do the solve.
     Quality quality;

@@ -37,7 +37,7 @@ using namespace casa;
 using namespace std;
 
 void doIt (const string& msName, Prediffer& prediff, const string& column,
-	   int stchan, int nrchan)
+	   int stchan, int nrchan, bool useTree)
 {
   cout << "Checking data in " << msName << " for channels " << stchan << '-'
        << stchan+nrchan-1 << endl;
@@ -67,7 +67,7 @@ void doIt (const string& msName, Prediffer& prediff, const string& column,
     prediff.setDomain (stchan, stchan+nrchan-1,
 		       time-interval/2, interval);
     // Get the data and remove the time axis.
-    prediff.getData (data, flags);
+    prediff.getData ("DATA", useTree, data, flags);
     Array<Complex> data1 = data.nonDegenerate (IPosition(3,0,1,2));
     Array<Bool> flags1 = flags.nonDegenerate (IPosition(3,0,1,2));
     int ncorr = data1.shape()[0];
@@ -103,8 +103,10 @@ int main(int argc, char** argv)
     vector<vector<int> > srcgrp;
     Prediffer pre (argv[3], meqPdm, skyPdm, 
 		   antVec, "", srcgrp, false);
-    doIt (argv[1], pre, column, 0, 50);
-    doIt (argv[1], pre, column, 10,10);
+    doIt (argv[1], pre, column, 0, 50, false);
+    doIt (argv[1], pre, column, 10,10, false);
+    doIt (argv[1], pre, column, 0, 50, true);
+    doIt (argv[1], pre, column, 10,10, true);
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;
