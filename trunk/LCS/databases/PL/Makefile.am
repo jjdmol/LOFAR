@@ -1,4 +1,4 @@
-SUBDIRS = include src demo test
+SUBDIRS = include scripts src demo test
 
 DISTCHECK_CONFIGURE_FLAGS = \
 	--with-common=$(prefix) 
