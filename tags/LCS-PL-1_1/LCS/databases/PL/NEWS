@@ -1,0 +1,19 @@
+LCS/databases/PL: Version 1.1, date: 2006/02/07
+===============================================
+
+This is the first minor release of the major release 1 of the PL package.
+No significant changes were made to the code. However, substantial changes
+have been made to the directory structure. 
+
+In order to make PL distributable, all header files have been moved to the
+`include/PL' directory. Furthermore, the scripts from the PLGEN package were
+merged with the PL package and placed in the `scripts' directory.
+
+
+
+LCS/databases/PL: Version 1.0, date: 2004/09/21
+===============================================
+
+This is the first official release of the PL package.
+
+* The Query classes are now part of the PL package.
