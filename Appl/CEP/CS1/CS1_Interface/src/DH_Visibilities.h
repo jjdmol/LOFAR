@@ -98,6 +98,9 @@ public:
   /// Test pattern methods used for regression tests of the correlator
   void checkCorrelatorTestPattern();
 
+  // Test pattern for storage section
+  void setStorageTestPattern(int factor);
+
 private:
   /// Forbid assignment.
   DH_Visibilities& operator= (const DH_Visibilities&);

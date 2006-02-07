@@ -1,4 +1,4 @@
-check_PROGRAMS        =
+check_PROGRAMS        = tAH_TestStorage
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS        =
@@ -19,6 +19,12 @@ EXTRA_DIST            = $(TESTSCRIPTS)
 #testprg_SOURCES		= testprg.cc
 #testprg_LDADD			= ../src/libcs1_storage.la
 #testprg_DEPENDENCIES		= ../src/libcs1_storage.la $(LOFAR_DEPEND)
+
+tAH_TestStorage_SOURCES =               \
+tAH_TestStorage.cc                      \
+../src/WH_SubbandWriter.cc              \
+../src/MSWriter.cc                      \
+../src/MSWriterImpl.cc
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  srcdir=$(srcdir) \
