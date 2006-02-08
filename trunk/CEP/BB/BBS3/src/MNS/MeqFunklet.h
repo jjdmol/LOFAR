@@ -109,6 +109,10 @@ public:
   const ParmDB::ParmValue& getParmValue() const
     { return itsParmValue; }
 
+  // Set to be a new parm value (i.e. a new record in the parm table).
+  void setNewParm()
+    { itsParmValue.setNewParm(); }
+
   // Update the solvable coefficients with the new values taken at
   // the spid index from the vector.
   void update (const vector<double>& values);
