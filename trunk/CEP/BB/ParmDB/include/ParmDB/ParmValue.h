@@ -145,6 +145,10 @@ public:
   // Copy semantics.
   ParmValue clone() const;
 
+  // Set it to be a new parm value.
+  void setNewParm()
+    { rep().itsDBTabRef = -2; }
+
   // Get access to the actual data.
   ParmValueRep& rep()
     { return *itsRep; }
