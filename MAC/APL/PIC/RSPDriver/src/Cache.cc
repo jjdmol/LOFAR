@@ -283,7 +283,7 @@ void Cache::swapBuffers()
 {
   // clear modified flags on back buffer
   m_back->getWGSettings().clearModified();
-  m_back->getClocks().clearModified();
+  m_back->getClocks().clearModifiedConditional();
   m_back->getRCUSettings().clearModified();
   m_back->getRSUSettings().clearModified();
 
