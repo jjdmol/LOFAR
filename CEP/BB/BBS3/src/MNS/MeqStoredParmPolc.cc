@@ -71,6 +71,7 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
     // We only do that if the default was used in a single previous domain.
     if (itsDefUsed  &&  polcs.size() == 1) {
       polcs[0].setDomain (domain);
+      polcs[0].setNewParm();
     } else {
       // No old values; try to get a default value.
       ParmDB::ParmValue pval = itsTable->getDefValue (getName());
