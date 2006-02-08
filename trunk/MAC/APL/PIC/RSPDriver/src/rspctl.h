@@ -410,7 +410,7 @@ namespace LOFAR {
       }
       FILE* getFile(int rcu, char* fileName) {
         if(!m_file) {
-          m_file = new (FILE*)[get_ndevices()];
+          m_file = new FILE*[get_ndevices()];
           if(!m_file) {
             logMessage(cerr,"Error: failed to allocate memory for file handles.");
             exit(EXIT_FAILURE);

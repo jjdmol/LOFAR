@@ -596,7 +596,8 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
 
     ack.status = ERR_NO_SUBARRAY;
     ack.handle = 0;
-    ack.subarray = SubArray();
+    memset(&ack.subarray, 0, sizeof(SubArray));
+    // doesn't work with gcc-3.4 ack.subarray = SubArray();
 
   }
 
