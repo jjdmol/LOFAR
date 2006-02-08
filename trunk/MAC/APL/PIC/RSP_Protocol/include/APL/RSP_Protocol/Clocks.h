@@ -41,7 +41,7 @@ namespace LOFAR {
       /**
        * Constructors for a Clocks object.
        */
-      Clocks() : m_modified(false) { }
+      Clocks() : m_modified(false), m_readcounter(0) { }
 	  
       /* Destructor for Clocks. */
       virtual ~Clocks() {}
@@ -51,10 +51,15 @@ namespace LOFAR {
 
       /**
        * Access methods.
+       * clearModifiedConditional only clears the modified flag if
+       * it has been read at least once while it was true. This
+       * ensures that the flag is not cleared before action has been
+       * taken on the changes (such as updating a hardware register).
        */
-      void setModified()       { m_modified = true; }
-      void clearModified()     { m_modified = false; }
-      bool getModified() const { return m_modified; }
+      void setModified()              { m_modified = true;  m_readcounter = 0; }
+      void clearModified()            { m_modified = false; m_readcounter = 0; }
+      void clearModifiedConditional() { if (m_readcounter > 0) clearModified(); }
+      bool getModified()              { if (m_modified) m_readcounter++; return m_modified; }
 
     public:
       /*@{*/
@@ -76,9 +81,11 @@ namespace LOFAR {
       blitz::Array<uint32, 1> m_clocks;
 
       /**
-       * Keep track of when clocks setting is modified.
+       * Keep track of when clocks setting is modified and
+       * how many times the modified flag has been read.
        */
       bool m_modified;
+      int  m_readcounter;
     };
 
     inline blitz::Array<uint32, 1>& Clocks::operator()() { return m_clocks; }
