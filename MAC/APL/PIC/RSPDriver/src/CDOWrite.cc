@@ -116,15 +116,16 @@ uint16 CDOWrite::compute_ip_checksum(void* addr, int count)
    */
   register long sum = 0;
 
+  uint16* addr16 = (uint16*)addr;
   while( count > 1 )  {
     /*  This is the inner loop */
-    sum += * ((uint16*)addr)++;
+    sum += *addr16++;
     count -= 2;
   }
 
   /*  Add left-over byte, if any */
   if( count > 0 )
-    sum += * (uint8 *) addr;
+    sum += * (uint8 *) addr16;
 
   /*  Fold 32-bit sum to 16 bits */
   while (sum>>16)
