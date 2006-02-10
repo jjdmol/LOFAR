@@ -1769,7 +1769,6 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 
   ack.n_rcus = GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
   ack.n_rspboards = GET_CONFIG("RS.N_RSPBOARDS", i);
-  ack.n_tdboards = GET_CONFIG("RS.N_TDBOARDS", i);
 
   port.send(ack);
 }

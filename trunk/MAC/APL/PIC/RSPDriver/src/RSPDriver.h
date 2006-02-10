@@ -25,10 +25,6 @@
 #ifndef RSPDRIVERTASK_H_
 #define RSPDRIVERTASK_H_
 
-#include <lofar_config.h>
-
-#undef HAVE_SYS_TIMEPPS_H
-
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
@@ -148,16 +144,16 @@ namespace LOFAR {
 
     private:
       // ports
-      GCFDevicePort  m_clock;    // clock pulse will arrive on this port
-      GCFTCPPort     m_acceptor; // listen for clients on this port
-      GCFETHRawPort* m_board;    // array of ports, one for each RSP board
+      GCFDevicePort                m_clock;        // clock pulse will arrive on this port
+      GCFTCPPort                   m_acceptor;     // listen for clients on this port
+      GCFETHRawPort*               m_board;        // array of ports, one for each RSP board
       std::list<GCFPortInterface*> m_client_list;  // list of clients
       std::list<GCFPortInterface*> m_dead_clients; // list of clients to cleanup
 
       Scheduler m_scheduler;
-      int m_update_counter; // nr of updates completed in one second
-      int m_n_updates;      // number of completed updates
-      int m_elapsed;        // elapsed number of seconds
+      int       m_update_counter; // nr of updates completed in one second
+      int       m_n_updates;      // number of completed updates
+      int       m_elapsed;        // elapsed number of seconds
 
 #ifdef HAVE_SYS_TIMEPPS_H
       int          m_ppsfd;     // file descriptor for PPS device

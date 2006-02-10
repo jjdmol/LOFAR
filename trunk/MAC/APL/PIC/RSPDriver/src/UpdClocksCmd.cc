@@ -67,21 +67,24 @@ void UpdClocksCmd::complete(CacheBuffer& cache)
   ack.status = SUCCESS;
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
-  ack.clocks().resize(m_event->tdmask.count());
+  ack.clocks().resize(m_event->rspmask.count());
   
-  int result_td = 0;
-  for (int cache_td = 0; cache_td < GET_CONFIG("RS.N_TDBOARDS", i); cache_td++)
+  int  result_rsp = 0;
+  bool sendack = false;
+  for (int cache_rsp = 0; cache_rsp < GET_CONFIG("RS.N_RSPBOARDS", i); cache_rsp++)
   {
-    if (m_event->tdmask[cache_td])
+    if (m_event->rspmask[cache_rsp])
     {
-      ack.clocks()(result_td) = cache.getClocks()()(cache_td);
-      
-      result_td++;
+      ack.clocks()(result_rsp) = cache.getClocks()()(cache_rsp);
+
+      // only send ack if clock setting has been applied
+      if (Clocks::APPLIED == cache.getClocks().getState(cache_rsp)) sendack = true;
+
+      result_rsp++;
     }
   }
 
-  // only send ack if clock setting has been modified
-  if (cache.getClocks().getModified()) getPort()->send(ack);
+  if (sendack) getPort()->send(ack);
 }
 
 const Timestamp& UpdClocksCmd::getTimestamp() const
@@ -96,5 +99,5 @@ void UpdClocksCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdClocksCmd::validate() const
 {
-  return (m_event->tdmask.count() <= (unsigned int)GET_CONFIG("RS.N_TDBOARDS", i));
+  return (m_event->rspmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i));
 }

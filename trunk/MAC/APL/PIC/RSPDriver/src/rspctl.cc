@@ -562,7 +562,7 @@ void ClocksCommand::send()
     RSPGetclocksEvent getclocks;
 
     getclocks.timestamp = Timestamp(0,0);
-    getclocks.tdmask = getTDMask();
+    getclocks.rspmask = getRSPMask();
     getclocks.cache = true;
 
     m_rspport.send(getclocks);
@@ -573,7 +573,7 @@ void ClocksCommand::send()
     RSPSetclocksEvent setclocks;
     setclocks.timestamp = Timestamp(0,0);
 
-    setclocks.tdmask = getTDMask();
+    setclocks.rspmask = getRSPMask();
     setclocks.clocks().resize(1);
     setclocks.clocks()(0) = m_clock;
 
@@ -588,17 +588,17 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
     case RSP_GETCLOCKSACK:
     {
       RSPGetclocksackEvent ack(e);
-      bitset<MAX_N_TDS> mask = getTDMask();
+      bitset<MAX_N_RSPBOARDS> mask = getRSPMask();
 
       if (SUCCESS == ack.status)
       {
-        int tdin = 0;
-        for (int tdout = 0; tdout < get_ndevices(); tdout++)
+        int rspin = 0;
+        for (int rspout = 0; rspout < get_ndevices(); rspout++)
         {
 
-          if (mask[tdout])
+          if (mask[rspout])
           {
-            logMessage(cout,formatString("TD[%02d] clock=%d",tdout, ack.clocks()(tdin++)));
+            logMessage(cout,formatString("RSP[%02d] clock=%d",rspout, ack.clocks()(rspin++)));
           }
         }
       }
@@ -1340,7 +1340,7 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 
 RSPCtl::RSPCtl(string name, int argc, char** argv)
     : GCFTask((State)&RSPCtl::initial, name), m_command(0),
-    m_nrcus(0), m_nrspboards(0), m_ntdboards(0), m_argc(argc), m_argv(argv)
+    m_nrcus(0), m_nrspboards(0), m_argc(argc), m_argv(argv)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 #ifdef ENABLE_RSPFE
@@ -1387,10 +1387,8 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
       RSPGetconfigackEvent ack(e);
       m_nrcus = ack.n_rcus;
       m_nrspboards = ack.n_rspboards;
-      m_ntdboards = ack.n_tdboards;
       logMessage(cout,formatString("n_rcus     =%d",m_nrcus));
       logMessage(cout,formatString("n_rspboards=%d",m_nrspboards));
-      logMessage(cout,formatString("n_tdboards =%d",m_ntdboards));
       TRAN(RSPCtl::docommand);
     }
     break;
@@ -2016,7 +2014,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    ClocksCommand* clockcommand = new ClocksCommand(m_server);
 	    command = clockcommand;
 
-	    command->set_ndevices(m_ntdboards);
+	    command->set_ndevices(m_nrspboards);
 
 	    if (optarg)
 	      {

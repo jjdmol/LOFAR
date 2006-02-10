@@ -51,11 +51,21 @@ start() {
     # Start RSPDriver
     echo -n $"Starting $prog: "
 
+    # create logging output directory and push it
+    # because RSPDriver dumps logfiles in the current
+    # directory
+    mkdir -p $PREFIX/var/log
+    pushd $PREFIX/var/log > /dev/null
+
     # start in the background with nicelevel -20 (highest priority)
     daemon -20 $PREFIX/bin/$prog $OPTIONS
     RETVAL=$?
     [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
     echo
+
+    # return to original directory
+    popd > /dev/null
+
     return $RETVAL
 }
 

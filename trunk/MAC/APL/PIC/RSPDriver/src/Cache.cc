@@ -142,7 +142,7 @@ CacheBuffer::CacheBuffer()
   m_versions.ap().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
   m_versions.ap() = versioninit;
 
-  m_clocks().resize(GET_CONFIG("RS.N_TDBOARDS", i));
+  m_clocks.init(GET_CONFIG("RS.N_RSPBOARDS", i));
   m_clocks() = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
 
   // print sizes of the cache
@@ -268,7 +268,8 @@ Cache::Cache() : m_front(0), m_back(0)
   // Make sure initial settings are sent
   //
   m_back->getWGSettings().setModified();
-  m_back->getClocks().setModified();
+  m_back->getClocks().modified();
+  m_front->getClocks().modified();
   m_back->getRCUSettings().getModifiedFlags() = true;
   m_back->getRSUSettings().getModifiedFlags() = true;
 }
@@ -283,7 +284,7 @@ void Cache::swapBuffers()
 {
   // clear modified flags on back buffer
   m_back->getWGSettings().clearModified();
-  m_back->getClocks().clearModifiedConditional();
+  m_back->getClocks().clear();
   m_back->getRCUSettings().clearModified();
   m_back->getRSUSettings().clearModified();
 
