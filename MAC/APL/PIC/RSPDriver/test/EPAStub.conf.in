@@ -18,8 +18,3 @@ EPAStub.IF_NAME=eth2
 # Needed to dimension registers appropriately.
 #
 EPAStub.N_BLPS=4
-
-#
-# Number of TD boards
-#
-EPAStub.N_TDBOARDS=6

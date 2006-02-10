@@ -48,7 +48,7 @@ BSWrite::~BSWrite()
 void BSWrite::sendrequest()
 {
   // skip update if the neither of the RCU's settings have been modified
-  if (!Cache::getInstance().getBack().getClocks().getModified())
+  if (Clocks::NOT_MODIFIED == Cache::getInstance().getBack().getClocks().getState(getBoardId()))
   {
     setContinue(true);
     return;
@@ -57,7 +57,7 @@ void BSWrite::sendrequest()
   EPABsNofsamplespersyncEvent bs;
 
   bs.hdr.set(MEPHeader::BS_NOF_SAMPLES_PER_SYNC_HDR, MEPHeader::DST_ALL_BLPS);
-  bs.nof_samples_per_sync_interval = Cache::getInstance().getBack().getClocks()()(0);
+  bs.nof_samples_per_sync_interval = Cache::getInstance().getBack().getClocks()()(getBoardId());
 
   LOG_INFO(formatString("setting BS.NOF_SAMPLES_PER_SYNC_INTERVAL to %d on all BLPs", bs.nof_samples_per_sync_interval));
 
@@ -87,6 +87,10 @@ GCFEvent::TResult BSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     LOG_ERROR("BSWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
+
+  // mark modification to indicate that it has been applied
+  // in the hardware
+  Cache::getInstance().getBack().getClocks().applied(getBoardId());
 
   return GCFEvent::HANDLED;
 }

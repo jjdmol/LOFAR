@@ -108,11 +108,11 @@ namespace LOFAR {
       }
 
       /**
-       * Get the mask (MAX_N_TDS bits).
+       * Get the mask (MAX_N_RSPBOARDS bits).
        */
-      std::bitset<MAX_N_TDS> getTDMask() const
+      std::bitset<MAX_N_RSPBOARDS> getRSPMask() const
       {
-        std::bitset<MAX_N_TDS> mask;
+        std::bitset<MAX_N_RSPBOARDS> mask;
       
         mask.reset();
         std::list<int>::const_iterator it;
@@ -120,7 +120,7 @@ namespace LOFAR {
         for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
           if (count >= get_ndevices())
             break;
-          if (*it < MAX_N_TDS)
+          if (*it < MAX_N_RSPBOARDS)
             mask.set(*it);
         }
 
@@ -588,7 +588,6 @@ namespace LOFAR {
       // dimensions of the connected hardware
       int m_nrcus;
       int m_nrspboards;
-      int m_ntdboards;
 
       // commandline parameters
       int    m_argc;

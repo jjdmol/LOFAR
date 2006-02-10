@@ -57,16 +57,16 @@ void GetClocksCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.clocks().resize(m_event->tdmask.count());
+  ack.clocks().resize(m_event->rspmask.count());
   
-  int result_td = 0;
-  for (int cache_td = 0; cache_td < GET_CONFIG("RS.N_TDBOARDS", i); cache_td++)
+  int result_rsp = 0;
+  for (int cache_rsp = 0; cache_rsp < GET_CONFIG("RS.N_RSPBOARDS", i); cache_rsp++)
   {
-    if (m_event->tdmask[cache_td])
+    if (m_event->rspmask[cache_rsp])
     {
-      ack.clocks()(result_td) = cache.getClocks()()(cache_td);
+      ack.clocks()(result_rsp) = cache.getClocks()()(cache_rsp);
       
-      result_td++;
+      result_rsp++;
     }
   }
 
@@ -95,7 +95,7 @@ void GetClocksCmd::setTimestamp(const RTC::Timestamp& timestamp)
 
 bool GetClocksCmd::validate() const
 {
-  return (m_event->tdmask.count() <= (unsigned int)GET_CONFIG("RS.N_TDBOARDS", i));
+  return (m_event->rspmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i));
 }
 
 bool GetClocksCmd::readFromCache() const

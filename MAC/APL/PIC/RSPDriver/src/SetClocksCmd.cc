@@ -54,18 +54,18 @@ void SetClocksCmd::ack(CacheBuffer& /*cache*/)
   RSPSetclocksackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status    = SUCCESS;
   
   getPort()->send(ack);
 }
 
 void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  for (int cache_td = 0; cache_td < GET_CONFIG("RS.N_TDBOARDS", i); cache_td++) {
-    if (m_event->tdmask[cache_td]) {
-      cache.getClocks()()(cache_td) = m_event->clocks()(0);
+  for (int cache_rsp = 0; cache_rsp < GET_CONFIG("RS.N_RSPBOARDS", i); cache_rsp++) {
+    if (m_event->rspmask[cache_rsp]) {
+      cache.getClocks()()(cache_rsp) = m_event->clocks()(0);
       if (setModFlag) {
-        cache.getClocks().setModified();
+        cache.getClocks().modified(cache_rsp);
 	  }
     }
   }
@@ -88,7 +88,7 @@ void SetClocksCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetClocksCmd::validate() const
 {
-  return ((m_event->tdmask.count() <= (unsigned int)GET_CONFIG("RS.N_TDBOARDS", i))
+  return ((m_event->rspmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i))
 	  && (1 == m_event->clocks().dimensions())
 	  && (1 == m_event->clocks().extent(firstDim)));
 }

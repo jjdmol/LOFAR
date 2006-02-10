@@ -11,9 +11,3 @@ RS.N_RSPBOARDS=1
 # Number of BLP's per RSP board
 #
 RS.N_BLPS=4
-
-#
-# Number of TD boards
-#
-RS.N_TDBOARDS=6
-
