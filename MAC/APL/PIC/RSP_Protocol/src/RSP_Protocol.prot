@@ -29,10 +29,10 @@ include = '<APL/RSP_Protocol/MEPHeader.h>';
 
 prelude = << PRELUDE_END
 
-  static const int MAX_N_RCUS = 128 * MEPHeader::N_POL;
-  static const int MAX_N_TDS  = MAX_N_RCUS / (8 * 2); // assuming 8 RCU's per RSP board and 1 TD board for every 2 RSP boards
-  static const int SUCCESS    = 1;
-  static const int FAILURE    = 0;
+  static const int MAX_N_RCUS      = 128 * MEPHeader::N_POL;
+  static const int MAX_N_RSPBOARDS = 24;
+  static const int SUCCESS         = 1;
+  static const int FAILURE         = 0;
 
 PRELUDE_END;
 
@@ -983,7 +983,7 @@ event = {
     type = "int16";
   };
   param = {
-    name = "n_tdboards";
+    name = "obsolete"; // used to be n_tdboards
     type = "int16";
   };
 };
@@ -997,8 +997,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "tdmask";
-    type = "std::bitset<MAX_N_TDS>";
+    name = "rspmask";
+    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "clocks";
@@ -1030,8 +1030,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "tdmask";
-    type = "std::bitset<MAX_N_TDS>";
+    name = "rspmask";
+    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "cache";
@@ -1067,8 +1067,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "tdmask";
-    type = "std::bitset<MAX_N_TDS>";
+    name = "rspmask";
+    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "period";
