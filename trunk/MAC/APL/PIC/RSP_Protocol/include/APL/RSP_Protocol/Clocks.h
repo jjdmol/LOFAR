@@ -41,7 +41,7 @@ namespace LOFAR {
       /**
        * Constructors for a Clocks object.
        */
-      Clocks() : m_modified(false), m_readcounter(0) { }
+      Clocks() : m_state(NOT_MODIFIED) { }
 	  
       /* Destructor for Clocks. */
       virtual ~Clocks() {}
@@ -49,17 +49,57 @@ namespace LOFAR {
       /* get references to the version arrays */
       blitz::Array<uint32, 1>& operator()();
 
+      typedef enum RegisterState {
+	INVALID      = 0,
+	NOT_MODIFIED = 1,
+	MODIFIED     = 2,
+	APPLIED      = 3
+      };
+
       /**
-       * Access methods.
-       * clearModifiedConditional only clears the modified flag if
-       * it has been read at least once while it was true. This
-       * ensures that the flag is not cleared before action has been
-       * taken on the changes (such as updating a hardware register).
+       * RegisterState transitions.
        */
-      void setModified()              { m_modified = true;  m_readcounter = 0; }
-      void clearModified()            { m_modified = false; m_readcounter = 0; }
-      void clearModifiedConditional() { if (m_readcounter > 0) clearModified(); }
-      bool getModified()              { if (m_modified) m_readcounter++; return m_modified; }
+      void init(int n)
+      {
+	m_clocks.resize(n);
+
+	m_state.resize(n);
+	m_state = NOT_MODIFIED;
+      }
+
+      void modified(int i = -1)
+      {
+	if (i < 0) m_state = MODIFIED;
+	else if (NOT_MODIFIED == m_state(i) || APPLIED == m_state(i)) {
+	  m_state(i) = MODIFIED;
+	}
+      }
+
+      void reset(int i = -1)
+      {
+	if (i < 0) m_state = NOT_MODIFIED;
+	else if (NOT_MODIFIED == m_state(i) || APPLIED == m_state(i)) {
+	  m_state(i) = NOT_MODIFIED;
+	}
+      }
+
+      void applied(int i = -1)
+      {
+	if (i < 0) m_state = APPLIED;
+	else if (MODIFIED == m_state(i)) {
+	  m_state(i) = APPLIED;
+	}
+      }
+
+      void clear(int i = -1)
+      {
+	if (i < 0) m_state = NOT_MODIFIED;
+	else if (APPLIED == m_state(i)) {
+	  m_state(i) = NOT_MODIFIED;
+	}
+      }
+
+      RegisterState getState(int i) { return m_state(i); }
 
     public:
       /*@{*/
@@ -76,16 +116,16 @@ namespace LOFAR {
        * Clocks
        *
        * Dimensions of the arrays are:
-       *  - m_clocks  [N_TDBOARDS]
+       *  - m_clocks  [N_RSPBOARDS]
        */
       blitz::Array<uint32, 1> m_clocks;
 
       /**
-       * Keep track of when clocks setting is modified and
-       * how many times the modified flag has been read.
+       * Keep track of the state of the registers. This
+       * is needed to make sure that a change from the cache
+       * propagates into the hardware properly.
        */
-      bool m_modified;
-      int  m_readcounter;
+      blitz::Array<RegisterState, 1> m_state;
     };
 
     inline blitz::Array<uint32, 1>& Clocks::operator()() { return m_clocks; }
