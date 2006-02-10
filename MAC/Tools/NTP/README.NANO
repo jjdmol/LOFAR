@@ -24,8 +24,8 @@ PPSkit-2.1.4.tar.gz           # the PPSkit patches on linux and NTP to achieve n
 kernel-2.4.21-NANO.config     # linux kernel configuration file (single CPU)
 kernel-2.4.21-NANO-SMP.config # SMP kernel with NANO support 
                               # WARNING: this kernel hangs after a while when ntpd is started.
-ntp.conf                      # The configuration file for the ntp daemon
-ntp.oncore.0                  # The configuration file for ntp's ONCORE driver.
+ntp-4.2.0.lofar               # Directory containing all the files necessary to build
+                              # the ntp-4.2.0.lofar-3.i386.rpm which can be installed on the target system
 
 INSTALL
 =======
@@ -88,55 +88,28 @@ These INSTALL instructions cover points 0) to 3b) of PPSkit-2.1.4/INSTALL.
 
 -----%< end excerpt from PPSkit-2.1.4/INSTALL
 
-5. At step 5) above patch and build ntp-4.2.0
+5. At step 5) above build the ntp-4.2.0.lofar-3.i386.rpm and install it
 
-	# We assume that the linux-2.4.1-NANO kernel is running at this moment
+	# !! We assume that the linux-2.4.1-NANO kernel is running at this moment
 
-	> cd ntp-4.2.0
-	> patch -p0 < ../PPSkit-2.1.4/patch-ntp-4.0
+	> cd ntp-4.2.0.lofar
+	> make srpm
+	> rpmbuild --rebuild ntp-4.2.0.lofar-3.src.rpm
 
-	This patch will produce some errors which can be ignored. The
-	output will look like this:	
-	----
-	patching file ntpd/ntp_control.c
-	Hunk #1 FAILED at 1251.
-	1 out of 1 hunk FAILED -- saving rejects to file ntpd/ntp_control.c.rej
-	patching file util/ntptime.c
-	Hunk #2 succeeded at 66 (offset -1 lines).
-	Hunk #3 succeeded at 136 (offset -3 lines).
-	Hunk #4 FAILED at 167.
-	Hunk #5 succeeded at 193 (offset -1 lines).
-	Hunk #6 FAILED at 315.
-	2 out of 6 hunks FAILED -- saving rejects to file util/ntptime.c.rej
-	----
-	
-	> mkdir builddir && cd builddir
-	> ../configure --prefix=/opt/ntp --enable-ONCORE
-	> make
-	> sudo make install
+	# assuming you've set up your RPM build environment in $HOME/rpm
+	> cd $HOME/rpm/RPMS/i386
+	> sudo rpm -ivh ntp-4.2.0.lofar-3.i386.rpm
 
-6. Configure and start NTP.
+	# That will install and configure NTP on your system
 
-	# Configure NTP to use the Oncore GPS receiver and its PPS
-	# signal as reference clock.
-	#
-	> cp ntp.conf /etc
-	> cp ntp.oncore.0 /etc
-
-	#
-	# make necessary symlinks to let the ONCORE driver find the GPS
-	# and PPS serial ports
-	# The GPS and its PPS signal should be connected to the ports.
-	#
-	> ln -s /dev/ttyS0 /dev/oncore.pps.0
-	> ln -s /dev/ttyS4 /dev/oncore.serial.0
+6. Start NTP
 
 
 	#
 	# Start the ntp daemon. Use a startup script in /etc/init.d/
 	# to do this as startup.
 	#
-	sudo /opt/ntp/bin/ntpd
+	sudo /opt/ntp/bin/ntpd start
 
 	#
 	# Watch the log output in:
