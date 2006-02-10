@@ -5,19 +5,19 @@
 #
 # CalServer task configuration
 #
-mac.ns.CalServer.acceptor_v2.type=TCP
+mac.ns.CalServer.acceptor_v3.type=TCP
 mac.ns.CalServer.rspdriver.type=TCP
-mac.top.CalServer.rspdriver.remoteservice=RSPDriver:acceptor_v2
+mac.top.CalServer.rspdriver.remoteservice=RSPDriver:acceptor_v3
 
 #
 # Define dimensions of the ACC array
 #
 # limit to 50 for testing
-CalServer.N_SUBBANDS=10
+CalServer.N_SUBBANDS=512
 # ITS-spec: CalServer.N_SUBBANDS=512
 #
 # FTS-1 spec = 8 antennas (16 signal paths)
-CalServer.N_ANTENNAS=8
+CalServer.N_ANTENNAS=4
 
 # ITS-spec: CalServer.N_ANTENNAS=60
 
@@ -41,7 +41,7 @@ CalServer.ACCTestFile=ACC.txt
 #
 # Write ACC's to file for debugging?
 #
-CalServer.WriteACCToFile=0
+CalServer.WriteACCToFile=1
 
 #
 # Disable invokation of calibration routine?
@@ -55,4 +55,4 @@ CalServer.DisableCalibration=1
 # ACMProxy task configuration
 #
 mac.ns.ACMProxy.rspdriver.type=TCP
-mac.top.ACMProxy.rspdriver.remoteservice=RSPDriver:acceptor_v2
+mac.top.ACMProxy.rspdriver.remoteservice=RSPDriver:acceptor_v3

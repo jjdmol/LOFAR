@@ -100,15 +100,15 @@ namespace LOFAR {
 
       CalibrationAlgorithm*       m_cal;          // pointer to the calibration algorithm to use
 
-      AMC::ConverterClient        m_converter;    // interface for coordinate conversion (Astronomical Measures Conversion)
+      AMC::ConverterClient*       m_converter;    // interface for coordinate conversion (Astronomical Measures Conversion)
 
       /**
        * Current sampling frequency of the system.
        */
       double m_sampling_frequency;
 
-      /** remember number of TD (Time Distribution) boards */
-      int m_n_tdboards;
+      /** remember number of RSP boards for reading the clock */
+      int m_n_rspboards;
 
       /**
        * Ports

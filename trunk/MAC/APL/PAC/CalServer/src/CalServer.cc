@@ -63,9 +63,9 @@ using namespace CAL_Protocol;
 
 CalServer::CalServer(string name, ACCs& accs)
   : GCFTask((State)&CalServer::initial, name),
-    m_accs(accs), m_cal(0), m_converter("localhost"),
+    m_accs(accs), m_cal(0), m_converter(0),
     m_sampling_frequency(0.0),
-    m_n_tdboards(0)
+    m_n_rspboards(0)
 #ifdef USE_CAL_THREAD
     , m_calthread(0)
 #endif
@@ -73,6 +73,11 @@ CalServer::CalServer(string name, ACCs& accs)
 #ifdef USE_CAL_THREAD
   pthread_mutex_init(&m_globallock, 0);
 #endif
+
+  if (!GET_CONFIG("CalServer.DisableCalibration", i)) {
+    m_converter = new AMC::ConverterClient("localhost");
+    ASSERT(0 != m_converter);
+  }
 
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
   m_acceptor.init(*this, "acceptor_v3", GCFPortInterface::MSPP, CAL_PROTOCOL);
@@ -84,6 +89,7 @@ CalServer::CalServer(string name, ACCs& accs)
 CalServer::~CalServer()
 {
   if (m_cal)       delete m_cal;
+  if (m_converter) delete m_converter;
 #ifdef USE_CAL_THREAD
   if (m_calthread) delete m_calthread;
 #endif
@@ -147,7 +153,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	  //
 	  // Setup calibration algorithm
 	  //
-	  m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, m_converter);
+	  m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, *m_converter);
 
 #ifdef USE_CAL_THREAD
 	  //
@@ -191,7 +197,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETCONFIGACK:
       {
 	RSPGetconfigackEvent ack(e);
-	m_n_tdboards = ack.n_tdboards;
+	m_n_rspboards = ack.n_rspboards;
 	if (ack.n_rcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol())
 	{
 	  LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
@@ -202,8 +208,8 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	RSPGetclocksEvent getclocks;
 	getclocks.timestamp = Timestamp(0,0);
 	getclocks.cache = true;
-	for (int i = 0; i < m_n_tdboards; ++i) {
-	  getclocks.tdmask.set(i);
+	for (int i = 0; i < m_n_rspboards; ++i) {
+	  getclocks.rspmask.set(i);
 	}
 
 	m_rspdriver.send(getclocks);
@@ -228,8 +234,8 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	// subscribe to clock change updates
 	RSPSubclocksEvent subclocks;
 	subclocks.timestamp = Timestamp(0,0);
-	for (int i = 0; i < m_n_tdboards; ++i) {
-	  subclocks.tdmask.set(i);
+	for (int i = 0; i < m_n_rspboards; ++i) {
+	  subclocks.rspmask.set(i);
 	}
 	subclocks.period = 1;
 

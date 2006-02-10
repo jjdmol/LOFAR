@@ -367,7 +367,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	  if (m_handle == upd.handle) {
 	    if (SUCCESS == upd.status) {
 
-	      LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
+	      LOG_INFO_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
 	      LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
 
 	      if (upd.timestamp != m_starttime + (long)m_update_subband + (long)1) {
