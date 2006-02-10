@@ -35,7 +35,9 @@ HTGPS 68.19 m
 # "HARDPPS" tells the kernel to discipline its clock to the PPS signal
 #
 ASSERT
-HARDPPS
+
+# 20060202 KJW HARDPPS is not supported by the 2.6 kernel
+# HARDPPS
 
 # Dont mask since it messes up TRAIM in our location
 # maybe the antennas should be moved up

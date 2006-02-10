@@ -1,0 +1,57 @@
+--- ntp-4.2.0/util/ntptime.c.preppskit	2003-07-17 12:27:41.000000000 +0200
++++ ntp-4.2.0/util/ntptime.c	2006-02-01 16:46:01.636794976 +0100
+@@ -36,10 +36,9 @@
+ #define tv_frac_sec tv_usec
+ #endif
+ 
+-
+ #define TIMEX_MOD_BITS \
+-"\20\1OFFSET\2FREQUENCY\3MAXERROR\4ESTERROR\5STATUS\6TIMECONST\
+-\13PLL\14FLL\15MICRO\16NANO\17CLKB\20CLKA"
++"\20\1OFFSET\2FREQUENCY\3MAXERROR\4ESTERROR\5STATUS\6TIMECONST\7PPSMAX\
++\10TAI\13PLL\14FLL\15MICRO\16NANO\17CLKB\20CLKA"
+  
+ #define TIMEX_STA_BITS \
+ "\20\1PLL\2PPSFREQ\3PPSTIME\4FLL\5INS\6DEL\7UNSYNC\10FREQHOLD\
+@@ -67,7 +66,7 @@
+ static volatile int status;	/* most recent status bits */
+ static volatile int flash;	/* most recent ntp_adjtime() bits */
+ char* progname;
+-static char optargs[] = "MNT:cde:f:hm:o:rs:t:";
++static char optargs[] = "MNT:cde:f:hm:o:p:rs:t:";
+ 
+ int
+ main(
+@@ -136,6 +135,12 @@
+ 		ntx.modes |= MOD_OFFSET;
+ 		ntx.offset = atoi(ntp_optarg);
+ 		break;
++#ifdef MOD_PPSMAX
++	    case 'p':
++		ntx.modes |= MOD_PPSMAX;
++		ntx.shift = atoi(ntp_optarg);
++		break;
++#endif
+ 	    case 'r':
+ 		rawtime++;
+ 		break;
+@@ -160,6 +165,7 @@
+ -f frequency	Frequency error (-500 .. 500) (ppm)\n\
+ -h		display this help info\n\
+ -m maxerror	max possible error (us)\n\
++%s\
+ -o offset	current offset (ms)\n\
+ -r		print the unix and NTP time raw\n\
+ -s status	Set the status bits\n\
+@@ -184,6 +190,11 @@
+ #else
+ "",
+ #endif
++#ifdef MOD_PPSMAX
++"-p limit	set maximum PPS averaging interval to 2^limit\n",
++#else
++"",
++#endif
+ 			       MAXTC);
+ 		exit(2);
+ 	}
