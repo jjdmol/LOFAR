@@ -1,11 +1,16 @@
 #!/bin/sh
 
 \rm -rf /tmp/$USER.demo*
-ln -s /data/PSS3/diepen/BBS2/demo3.MS_p1 /tmp/$USER.demo
 cp -r /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
 cp -r /data/PSS3/diepen/BBS2/demo3_gsm.MEP /tmp/$USER.demo_gsm.MEP
 
-./tMSData /data/PSS3/diepen/BBS2/demo3.MS $USER /tmp/$USER.demo /tmp/$USER.demo.MEP /tmp/$USER.demo_gsm.MEP MODEL_DATA
+ln -s /data/PSS3/diepen/BBS2/demo3.MS_p1 /tmp/$USER.demo
+./tMSData /data/PSS3/diepen/BBS2/demo3.MS $USER /tmp/$USER.demo /tmp/$USER.demo.MEP /tmp/$USER.demo_gsm.MEP 100 MODEL_DATA
 status=$?
+
+\rm -rf /tmp/$USER.demo
+ln -s /data/PSS3/diepen/BBS2/3C343/10008336.MS_p1 /tmp/$USER.demo
+./tMSData /data/PSS3/diepen/BBS2/3C343/10008336.MS $USER /tmp/$USER.demo /tmp/$USER.demo.MEP /tmp/$USER.demo_gsm.MEP 14 DATA
+
 #\rm -rf /tmp/$USER.demo*
 exit $status
