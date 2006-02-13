@@ -44,39 +44,40 @@
 #include <casa/Arrays/Vector2.cc>
 
 using namespace casa;
-using std::string;
-using std::vector;
+using namespace std;
 
 namespace LOFAR {
 namespace ParmDB {
 
 ParmDBAIPS::ParmDBAIPS (const string& tableName, bool forceNew)
 {
-  itsIndex[0] = itsIndex[1] = itsIndex[2] = 0;
   // Create the table if needed or if it does not exist yet.
   if (forceNew  ||  !Table::isReadable (tableName)) {
     createTables (tableName);
   }
-  // Open the main table and create an index object.
+  // Open the main table.
   itsTables[0] = Table(tableName, TableLock::UserLocking);
-  itsIndex[0] = new ColumnsIndex (itsTables[0], "NAME");
-  itsIndexName[0] = RecordFieldPtr<String> (itsIndex[0]->accessKey(), "NAME");
   // Open the old table.
-  // Do not use an index for it.
   itsTables[1] = itsTables[0].keywordSet().asTable ("OLDVALUES");
-  itsIndex[1] = 0;
   // Open the default values table.
   itsTables[2] = itsTables[0].keywordSet().asTable ("DEFAULTVALUES");
-  itsIndex[2] = new ColumnsIndex (itsTables[2], "NAME");
-  itsIndexName[2] = RecordFieldPtr<String> (itsIndex[2]->accessKey(),
-					    "NAME");
 }
 
 ParmDBAIPS::~ParmDBAIPS()
+{}
+
+void ParmDBAIPS::lock (bool lockForWrite)
 {
-  for (int i=0; i<3; ++i) {
-    delete itsIndex[i];
-  }
+  itsTables[0].lock (lockForWrite);
+  itsTables[1].lock (lockForWrite);
+  itsTables[2].lock (lockForWrite);
+}
+
+void ParmDBAIPS::unlock()
+{
+  itsTables[0].unlock();
+  itsTables[1].unlock();
+  itsTables[2].unlock();
 }
 
 void ParmDBAIPS::createTables (const string& tableName)
@@ -86,9 +87,14 @@ void ParmDBAIPS::createTables (const string& tableName)
   td.addColumn (ScalarColumnDesc<String>("NAME"));
   td.addColumn (ScalarColumnDesc<String>("TYPE"));
   td.addColumn (ArrayColumnDesc<double> ("CONSTANTS", 1));
+  td.addColumn (ScalarColumnDesc<double> ("STARTX", 1));
+  td.addColumn (ScalarColumnDesc<double> ("ENDX", 1));
+  td.addColumn (ScalarColumnDesc<double> ("STARTY", 1));
+  td.addColumn (ScalarColumnDesc<double> ("ENDY", 1));
   td.addColumn (ArrayColumnDesc<double> ("START", 1));
   td.addColumn (ArrayColumnDesc<double> ("END", 1));
   td.addColumn (ArrayColumnDesc <double>("VALUES"));
+  td.addColumn (ArrayColumnDesc <double>("ERRORS"));
   td.addColumn (ArrayColumnDesc <bool>  ("SOLVABLE"));
   td.addColumn (ArrayColumnDesc<double> ("OFFSET", 1));
   td.addColumn (ArrayColumnDesc<double> ("SCALE", 1));
@@ -137,23 +143,29 @@ void ParmDBAIPS::clearTables()
   }
 }
 
-ParmValueSet ParmDBAIPS::extractValues (const Table& tab, int tabinx)
+void ParmDBAIPS::fillDefMap (map<string,ParmValue>& defMap)
 {
-  string parmName;
-  if (tab.nrow() > 0) {
-    ROScalarColumn<String> nameCol (tab, "NAME");
-    parmName = nameCol(0);
+  Table table = itsTables[2];
+  TableLocker locker(table, FileLocker::Read);
+  ROScalarColumn<String> nameCol(table, "NAME");
+  for (uint row=0; row<table.nrow(); ++row) {
+    defMap.insert (make_pair(nameCol(row), extractDefValue(table, row)));
   }
-  ParmValueSet resultSet(parmName);
-  vector<ParmValue>& result = resultSet.getValues();
+}
+
+void ParmDBAIPS::extractValues (map<string,ParmValueSet>& result,
+				const Table& tab, int tabinx)
+{
   // Get rownrs in parm table itself.
   Vector<uInt> rownrs = tab.rowNumbers();
+  ROScalarColumn<String> nameCol (tab, "NAME");
   ROScalarColumn<String> typeCol (tab, "TYPE");
   ROArrayColumn<double> consCol (tab, "CONSTANTS");
   ROArrayColumn<double> stCol (tab, "START");
   ROArrayColumn<double> endCol (tab, "END");
   ROArrayColumn<bool> maskCol (tab, "SOLVABLE");
   ROArrayColumn<double> valCol (tab, "VALUES");
+  ///ROArrayColumn<double> errCol (tab, "ERRORS");
   ROArrayColumn<double> offCol (tab, "OFFSET");
   ROArrayColumn<double> scCol (tab, "SCALE");
   ROScalarColumn<double> pertCol (tab, "PERTURBATION");
@@ -186,9 +198,19 @@ ParmValueSet ParmDBAIPS::extractValues (const Table& tab, int tabinx)
     // Set the row number as the Ref, so it can be used in the put.
     pval.itsDBTabRef = tabinx;           //# read from given table
     pval.itsDBRowRef = rownrs[i];
-    result.push_back (pvalue);
+    pval.itsDBSeqNr = getParmDBSeqNr();
+    // Insert in the map.
+    // Create a new name entry if needed.
+    string parmName = nameCol(i);
+    map<string,ParmValueSet>::iterator pos = result.find (parmName);
+    if (pos == result.end()) {
+      ParmValueSet pset(parmName);
+      pset.getValues().push_back (pvalue);
+      result.insert (make_pair(parmName, pset));
+    } else {
+      pos->second.getValues().push_back (pvalue);
+    }
   }
-  return resultSet;
 }
 
 ParmValue ParmDBAIPS::extractDefValue (const Table& tab, int row)
@@ -208,8 +230,43 @@ ParmValue ParmDBAIPS::extractDefValue (const Table& tab, int row)
   } else {
     result.setCoeff (val.data(), toVector(val.shape()));
   }
+  if (consCol.isDefined(row)) {
+    result.setType (typeCol(row), toVector(consCol(row)));
+  } else {
+    result.setType (typeCol(row));
+  }
   result.setPerturbation (pertCol(row), prelCol(row));
+  result.itsDBTabRef = -2;
+  result.itsDBSeqNr  = getParmDBSeqNr();
   return pvalue;
+}
+
+void ParmDBAIPS::getValues (map<string,ParmValueSet>& result,
+			    const vector<string>& parmNames,
+			    const ParmDomain& domain,
+			    int parentId,
+			    ParmDBRep::TableType tableType)
+{
+  int tabinx = getTableIndex (tableType);
+  Table table = itsTables[tabinx];
+  TableLocker locker(table, FileLocker::Read);
+  // Find all rows overlapping the requested domain.
+  // Only look for values without a parent; thus results of possible refit.
+  TableExprNode expr = makeExpr (table, domain, parentId);
+  if (parmNames.size() > 0) {
+    Vector<String> nams(parmNames.size());
+    for (uint i=0; i<parmNames.size(); ++i) {
+      nams(i) = parmNames[i];
+    }
+    andExpr (expr, table.col("NAME").in (nams));
+  }
+  Table sel;
+  if (expr.isNull()) {
+    sel = table;
+  } else {
+    sel = table(expr);
+  }
+  extractValues (result, sel, tabinx);
 }
 
 ParmValueSet ParmDBAIPS::getValues (const string& parmName,
@@ -222,30 +279,18 @@ ParmValueSet ParmDBAIPS::getValues (const string& parmName,
   ParmValueSet resultSet(parmName);
   Table sel = find (parmName, domain, parentId, tabinx);
   if (sel.nrow() > 0) {
-    resultSet = extractValues (sel, tabinx);
+    map<string,ParmValueSet> res;
+    extractValues (res, sel, tabinx);
+    resultSet = res.begin()->second;
   }
   return resultSet;
 }
 
-vector<ParmValueSet> ParmDBAIPS::getValues (const vector<string>& parmNames,
-					    const ParmDomain& domain,
-					    int parentId,
-					    ParmDBRep::TableType tableType)
-{
-  int tabinx = getTableIndex (tableType);
-  TableLocker locker(itsTables[tabinx], FileLocker::Read);
-  vector<ParmValueSet> resvec;
-  for (uint i=0; i<parmNames.size(); ++i) {
-    resvec.push_back (getValues(parmNames[i], domain, parentId, tableType));
-  }
-  return resvec;
-}
-
-std::vector<ParmValueSet> ParmDBAIPS::getPatternValues
-                                     (const string& parmNamePattern,
-				      const ParmDomain& domain,
-				      int parentId,
-				      ParmDBRep::TableType tableType)
+void ParmDBAIPS::getValues (map<string,ParmValueSet>& result,
+			    const string& parmNamePattern,
+			    const ParmDomain& domain,
+			    int parentId,
+			    ParmDBRep::TableType tableType)
 {
   int tabinx = getTableIndex (tableType);
   TableLocker locker(itsTables[tabinx], FileLocker::Read);
@@ -253,60 +298,22 @@ std::vector<ParmValueSet> ParmDBAIPS::getPatternValues
   // Find all rows overlapping the requested domain.
   // Only look for values without a parent; thus results of possible refit.
   Table table = itsTables[tabinx];
-  Regex regex(Regex::fromPattern(parmNamePattern));
-  TableExprNode expr = table.col("NAME") == regex;
-  if (domain.getStart().size() > 0) {
-    expr = expr  &&
-	    nelements(table.col("START")) == int(domain.getStart().size())  &&
-	    all(fromVector(domain.getStart()) < table.col("END"))  &&
-	    all(fromVector(domain.getEnd())   > table.col("START"));
+  TableExprNode expr = makeExpr (table, domain, parentId);
+  if (parmNamePattern != ""  &&  parmNamePattern != "*") {
+    Regex regex(Regex::fromPattern(parmNamePattern));
+    andExpr (expr, table.col("NAME") == regex);
   }
-  if (parentId >= 0) {
-    expr = expr  &&  table.col("PARENTID") == parentId;
+  Table sel;
+  if (expr.isNull()) {
+    sel = table;
+  } else {
+    sel = table(expr);
   }
-  Table sel = table(expr);
-  TableIterator iter(sel, "NAME");
-  while (! iter.pastEnd()) {
-    resvec.push_back (extractValues (iter.table(), tabinx));
-    iter++;
-  }
-  return resvec;
+  extractValues (result, sel, tabinx);
 }
 
-ParmValue ParmDBAIPS::getDefValue (const string& parmName)
-{
-  // Try to find the default values in the DEFAULTVALUES subtable.
-  // The parameter name consists of parts (separated by dots), so the
-  // parameters are categorised in that way.
-  // An initial value can be defined for the full name or for a higher
-  // category.
-  // So look up until found or until no more parts are left.
-  ParmValue result;
-  TableLocker locker(itsTables[2], FileLocker::Read);
-  string name = parmName;
-  while (true) {
-    *(itsIndexName[2]) = name;
-    Vector<uInt> rownrs = itsIndex[2]->getRowNumbers();
-    if (rownrs.nelements() > 0) {
-      ASSERTSTR (rownrs.nelements() == 1,
-		 "Too many default coefficients in parmtableAIPS");
-      result = extractDefValue (itsTables[2], rownrs[0]);
-      result.rep().itsDBTabRef = -2;      //# new row
-      break;
-    }
-    string::size_type idx = name.rfind ('.');
-    // Exit loop if no more name parts.
-    if (idx == string::npos) {
-      break;
-    }
-    // Remove last part and try again.
-    name = name.substr (0, idx);
-  }
-  return result;
-}
-				    
-std::vector<ParmValueSet> ParmDBAIPS::getPatternDefValues
-                                         (const string& parmNamePattern)
+void ParmDBAIPS::getDefValues (map<string,ParmValueSet>& result,
+			       const string& parmNamePattern)
 {
   vector<ParmValueSet> resvec;
   TableLocker locker(itsTables[2], FileLocker::Read);
@@ -316,11 +323,11 @@ std::vector<ParmValueSet> ParmDBAIPS::getPatternDefValues
   Table sel = table(table.col("NAME") == regex);
   ROScalarColumn<String> nameCol(sel, "NAME");
   for (uint row=0; row<sel.nrow(); ++row) {
-    ParmValueSet set(nameCol(row));
-    set.getValues().push_back (extractDefValue (sel, row));
-    resvec.push_back (set);
+    string parmName = nameCol(row);
+    ParmValueSet pset(parmName);
+    pset.getValues().push_back (extractDefValue (sel, row));
+    result.insert (make_pair (parmName, pset));
   }
-  return resvec;
 }
 
 void ParmDBAIPS::putValue (const string& parmName,
@@ -330,7 +337,13 @@ void ParmDBAIPS::putValue (const string& parmName,
   int tabinx = getTableIndex (tableType);
   itsTables[tabinx].reopenRW();
   TableLocker locker(itsTables[tabinx], FileLocker::Write);
-  ParmValueRep& pval = pvalue.rep();
+  doPutValue (parmName, pvalue.rep(), tabinx);
+}
+
+void ParmDBAIPS::doPutValue (const string& parmName,
+			     ParmValueRep& pval,
+			     int tabinx)
+{
   if (pval.itsDBTabRef == -2) {
     // It is certainly a new row.
     putNewValue (parmName, pval, tabinx);
@@ -340,22 +353,25 @@ void ParmDBAIPS::putValue (const string& parmName,
   } else {
     int rownr = pval.itsDBRowRef;
     ArrayColumn<double> valCol (itsTables[tabinx], "VALUES");
-    
     valCol.put (rownr, fromVector(pval.itsCoeff, pval.itsShape));
   }
 }
 
-void ParmDBAIPS::putValues (vector<ParmValueSet>& parmSet,
+void ParmDBAIPS::putValues (map<string,ParmValueSet>& parmSet,
 			    ParmDBRep::TableType tableType)
 {
   int tabinx = getTableIndex (tableType);
   itsTables[tabinx].reopenRW();
   TableLocker locker(itsTables[tabinx], FileLocker::Write);
-  for (uint j=0; j<parmSet.size(); ++j) {
-    vector<ParmValue>& vec = parmSet[j].getValues();
-    const string& parmName = parmSet[j].getName();
-    for (uint i=0; i<vec.size(); ++i) {
-      putValue (parmName, vec[i], tableType);
+  for (map<string,ParmValueSet>::iterator iter = parmSet.begin();
+       iter != parmSet.end();
+       iter++) {
+    vector<ParmValue>& vec = iter->second.getValues();
+    const string& parmName = iter->first;
+    if (!vec.empty()  &&  vec[0].rep().itsDBSeqNr == getParmDBSeqNr()) {
+      for (uint i=0; i<vec.size(); ++i) {
+	doPutValue (parmName, vec[i].rep(), tabinx);
+      }
     }
   }
 }
@@ -393,10 +409,15 @@ void ParmDBAIPS::putNewValue (const string& parmName,
   ScalarColumn<String> typeCol (table, "TYPE");
   ArrayColumn<double> consCol (table, "CONSTANTS");
   ScalarColumn<String> namCol (table, "NAME");
+  ScalarColumn<double> stxCol (table, "STARTX");
+  ScalarColumn<double> endxCol (table, "ENDX");
+  ScalarColumn<double> styCol (table, "STARTY");
+  ScalarColumn<double> endyCol (table, "ENDY");
   ArrayColumn<double> stCol (table, "START");
   ArrayColumn<double> endCol (table, "END");
   ArrayColumn<bool> maskCol (table, "SOLVABLE");
   ArrayColumn<double> valCol (table, "VALUES");
+  ///ArrayColumn<double> errCol (table, "ERRORS");
   ArrayColumn<double> offCol (table, "OFFSET");
   ArrayColumn<double> scCol (table, "SCALE");
   ScalarColumn<double> pertCol (table, "PERTURBATION");
@@ -415,6 +436,20 @@ void ParmDBAIPS::putNewValue (const string& parmName,
   }
   stCol.put (rownr, fromVector(pval.itsDomain.getStart()));
   endCol.put (rownr, fromVector(pval.itsDomain.getEnd()));
+  if (pval.itsDomain.getStart().size() == 0) {
+    stxCol.put (rownr, -1.);
+    endxCol.put (rownr, -2.);
+  } else {
+    stxCol.put (rownr, pval.itsDomain.getStart()[0]);
+    endxCol.put (rownr, pval.itsDomain.getEnd()[0]);
+    if (pval.itsDomain.getStart().size() == 1) {
+      styCol.put (rownr, -1.);
+      endyCol.put (rownr, -2.);
+    } else {
+      styCol.put (rownr, pval.itsDomain.getStart()[1]);
+      endyCol.put (rownr, pval.itsDomain.getEnd()[1]);
+    }
+  }
   offCol.put (rownr, fromVector(pval.itsOffset));
   scCol.put (rownr, fromVector(pval.itsScale));
   pertCol.put (rownr, pval.itsPerturbation);
@@ -425,6 +460,7 @@ void ParmDBAIPS::putNewValue (const string& parmName,
   // ParmValue is now stored here.
   pval.itsDBTabRef = tabinx;
   pval.itsDBRowRef = rownr;
+  pval.itsDBSeqNr = getParmDBSeqNr();
 }
 
 void ParmDBAIPS::putDefValue (const string& parmName,
@@ -434,10 +470,9 @@ void ParmDBAIPS::putDefValue (const string& parmName,
   TableLocker locker(itsTables[2], FileLocker::Write);
   const ParmValueRep& pval = pvalue.rep();
   // First see if the parameter name exists at all.
-  *(itsIndexName[2]) = parmName;
-  Vector<uInt> rownrs = itsIndex[2]->getRowNumbers();
-  if (rownrs.nelements() == 1) {
-    Table sel = itsTables[2](rownrs);
+  Table table = itsTables[2];
+  Table sel = table(table.col("NAME") == String(parmName));
+  if (sel.nrow() == 1) {
     uInt rownr=0;
     ScalarColumn<String> typeCol (sel, "TYPE");
     ArrayColumn<double> consCol (sel, "CONSTANTS");
@@ -455,11 +490,12 @@ void ParmDBAIPS::putDefValue (const string& parmName,
     }
     pertCol.put (rownr, pval.itsPerturbation);
     prelCol.put (rownr, pval.itsIsRelPert);
-  } else if (rownrs.nelements() == 0) {
+  } else if (sel.nrow() == 0) {
     putNewDefValue (parmName, pval);
   } else {
     ASSERTSTR (false, "Too many default parms with the same name/domain")
   }
+  clearDefFilled();
 }
 
 void ParmDBAIPS::putNewDefValue (const string& parmName, 
@@ -486,9 +522,10 @@ void ParmDBAIPS::putNewDefValue (const string& parmName,
   pertCol.put (rownr, pval.itsPerturbation);
   prelCol.put (rownr, pval.itsIsRelPert);
   namCol.put (rownr, parmName);
+  clearDefFilled();
 }
 
-void ParmDBAIPS::deleteValues (const std::string& parmNamePattern,
+void ParmDBAIPS::deleteValues (const string& parmNamePattern,
 			       const ParmDomain& domain,
 			       int parentId,
 			       ParmDBRep::TableType tableType)
@@ -498,23 +535,15 @@ void ParmDBAIPS::deleteValues (const std::string& parmNamePattern,
   table.reopenRW();
   TableLocker locker(table, FileLocker::Write);
   // Find all rows.
+  TableExprNode expr = makeExpr (table, domain, parentId);
   Regex regex(Regex::fromPattern(parmNamePattern));
-  TableExprNode expr = table.col("NAME") == regex;
-  if (domain.getStart().size() > 0) {
-    expr = expr  &&
-	    nelements(table.col("START")) == int(domain.getStart().size())  &&
-	    all(fromVector(domain.getStart()) < table.col("END"))  &&
-	    all(fromVector(domain.getEnd())   > table.col("START"));
-  }
-  if (parentId >= 0) {
-    expr = expr  &&  table.col("PARENTID") == parentId;
-  }
+  andExpr (expr, table.col("NAME") == regex);
   Table sel = table(expr);
   // Delete all rows found.
   table.removeRow (sel.rowNumbers (table));
 }
 
-void ParmDBAIPS::deleteDefValues (const std::string& parmNamePattern)
+void ParmDBAIPS::deleteDefValues (const string& parmNamePattern)
 {
   Table& table = itsTables[2];
   table.reopenRW();
@@ -524,6 +553,7 @@ void ParmDBAIPS::deleteDefValues (const std::string& parmNamePattern)
   Table sel = table(table.col("NAME") == regex);
   // Delete all rows found.
   table.removeRow (sel.rowNumbers (table));
+  clearDefFilled();
 }
 
 Table ParmDBAIPS::find (const string& parmName,
@@ -531,28 +561,11 @@ Table ParmDBAIPS::find (const string& parmName,
 			int parentId,
 			int tabinx)
 {
-  Table sel = itsTables[tabinx];
-  // Use name index if existing.
-  if (itsIndex[tabinx]) {
-    *(itsIndexName[tabinx]) = parmName;
-    Vector<uInt> rownrs = itsIndex[tabinx]->getRowNumbers();
-    if (rownrs.nelements() == 0) {
-      return Table();
-    }
-    sel = itsTables[tabinx](rownrs);
-  }
+  Table table = itsTables[tabinx];
   // Find all rows overlapping the requested domain.
-  TableExprNode expr = sel.col("NAME") == String(parmName);
-  if (domain.getStart().size() > 0) {
-    expr = expr  &&
-	    nelements(sel.col("START")) == int(domain.getStart().size())  &&
-	    all(fromVector(domain.getStart()) < sel.col("END"))  &&
-	    all(fromVector(domain.getEnd())   > sel.col("START"));
-  }
-  if (parentId >= 0) {
-    expr = expr  &&  sel.col("PARENTID") == parentId;
-  }
-  return sel(expr);
+  TableExprNode expr = makeExpr (table, domain, parentId);
+  andExpr (expr, table.col("NAME") == String(parmName));
+  return table(expr);
 }
 
 vector<string> ParmDBAIPS::getNames (const string& pattern,
@@ -578,6 +591,43 @@ vector<string> ParmDBAIPS::getNames (const string& pattern,
   }
   LOG_TRACE_STAT_STR("Finished retrieving "<<nams.size()<<" names");
   return nams;
+}
+
+TableExprNode ParmDBAIPS::makeExpr (const Table& table,
+				    const ParmDomain& domain,
+				    int parentId) const
+{
+  TableExprNode expr;
+  if (parentId >= 0) {
+    andExpr (expr, table.col("PARENTID") == parentId);
+  }
+  if (domain.getStart().size() > 0) {
+    andExpr (expr,
+	     domain.getStart()[0] < table.col("ENDX")  &&
+             domain.getEnd()[0]   > table.col("STARTX"));
+    if (domain.getStart().size() > 1) {
+      andExpr (expr,
+	       domain.getStart()[1] < table.col("ENDY")  &&
+	       domain.getEnd()[1]   > table.col("STARTY"));
+      if (domain.getStart().size() > 0) {
+	andExpr (expr,
+	     nelements(table.col("START")) == int(domain.getStart().size())  &&
+	     all(fromVector(domain.getStart()) < table.col("END"))  &&
+	     all(fromVector(domain.getEnd())   > table.col("START")));
+      }
+    }
+  }
+  return expr;
+}
+
+void ParmDBAIPS::andExpr (TableExprNode& expr,
+			  const TableExprNode& right) const
+{
+  if (expr.isNull()) {
+    expr = right;
+  } else {
+    expr = expr && right;
+  }
 }
 
 void ParmDBAIPS::toVector (vector<double>& vec,

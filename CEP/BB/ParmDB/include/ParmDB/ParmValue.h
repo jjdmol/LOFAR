@@ -105,6 +105,7 @@ public:
                                //#    0 = read from normal table
                                //#    1 = read from old table
   int            itsDBRowRef;  //# Ref to parmrecord in table (e.g. rownr)
+  int            itsDBSeqNr;   //# The ParmDB seqnr
 
 private:
   // Copy and assignment cannot be done.

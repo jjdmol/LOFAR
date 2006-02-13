@@ -46,6 +46,14 @@ public:
 
   virtual ~ParmDBAIPS();
 
+  // Writelock and unlock the table.
+  // It is not necessary to do this, but it can be useful if many
+  // small accesses have to be done.
+  // <group>
+  virtual void lock (bool lockForWrite);
+  virtual void unlock();
+  // </group>
+
   // Get the parameter values for the given parameter and domain.
   // Note that the requested domain may contain multiple values.
   // A selection on parentId is done if >= 0.
@@ -54,24 +62,22 @@ public:
 				  int parentId,
 				  ParmDBRep::TableType);
 
-  // Get the parameter values for the given parameters and domain.
-  // An element in the returned vector belongs to the corresponding element
-  // in the parmNames vector.
-  // A selection on parentId is done if >= 0.
-  virtual std::vector<ParmValueSet>
-      getValues (const std::vector<std::string>& parmNames,
-		 const ParmDomain& domain,
-		 int parentId,
-		 ParmDBRep::TableType);
-  
+  // Get all values for a given domain and set of parm names.
+  // If the parm name vector is empty, all parm names are taken.
+  virtual void getValues (std::map<std::string,ParmValueSet>& result,
+			  const std::vector<std::string>& parmNames,
+			  const ParmDomain& domain,
+			  int parentId,
+			  ParmDBRep::TableType);
+
   // Get the parameter values for the given parameters and domain.
   // Only * and ? should be used in the pattern (no [] and {}).
   // A selection on parentId is done if >= 0.
-  virtual std::vector<ParmValueSet>
-      getPatternValues (const std::string& parmNamePattern,
-			const ParmDomain& domain,
-			int parentId,
-			ParmDBRep::TableType);
+  virtual void getValues (std::map<std::string,ParmValueSet>& result,
+			  const std::string& parmNamePattern,
+			  const ParmDomain& domain,
+			  int parentId,
+			  ParmDBRep::TableType);
 
   // Put the value for the given parameter and domain.
   // If it is a new domain, value's ParmValue::DBRef might be set.
@@ -80,7 +86,8 @@ public:
 			 ParmDBRep::TableType);
 
   // Put the value for the given parameters and domain.
-  virtual void putValues (std::vector<ParmValueSet>& values,
+  // It only writes the parameters that have the same DBSeqNr as this ParmDB.
+  virtual void putValues (std::map<std::string,ParmValueSet>& values,
 			  ParmDBRep::TableType);
 
   // Delete the records for the given parameters and domain.
@@ -90,13 +97,10 @@ public:
 			     int parentId,
 			     ParmDBRep::TableType);
 
-  // Get the default value for the given parameter.
-  virtual ParmValue getDefValue (const std::string& parmName);
-
   // Get the default value for the given parameters.
   // Only * and ? should be used in the pattern (no [] and {}).
-  virtual std::vector<ParmValueSet>
-               getPatternDefValues (const std::string& parmNamePattern);
+  virtual void getDefValues (std::map<std::string,ParmValueSet>& result,
+			     const std::string& parmNamePattern);
 
   // Put the default value.
   virtual void putDefValue (const std::string& parmName,
@@ -113,14 +117,23 @@ public:
   virtual void clearTables();
 
 private:
+  // Fill the map with default values.
+  virtual void fillDefMap (std::map<std::string,ParmValue>& defMap);
+
   // Create a parmtable with the given name.
   void createTables (const string& tableName);
 
   // Extract the parm values from a table selection with a single parm name.
   // <group>
-  ParmValueSet extractValues (const casa::Table& sel, int tabinx);
-  ParmValue    extractDefValue (const casa::Table& sel, int row);
+  void extractValues (std::map<std::string,ParmValueSet>& result,
+		      const casa::Table& tab, int tabinx);
+  ParmValue extractDefValue (const casa::Table& sel, int row);
   // </group>
+
+  // Do the actual put of a value.
+  void doPutValue (const string& parmName,
+		   ParmValueRep& pval,
+		   int tabinx);
 
   // Put the value for a new parameter.
   void putNewValue (const std::string& parmName,
@@ -149,6 +162,15 @@ private:
     return (tableType==ParmDBRep::UseHistory ? 1:0);
   }
 
+  // Create a select expression node on domain and parent id.
+  casa::TableExprNode makeExpr (const casa::Table& table,
+				const ParmDomain& domain,
+				int parentId) const;
+
+  // And two table select expressions, where the first one can be null.
+  void andExpr (casa::TableExprNode& expr,
+		const casa::TableExprNode& right) const;
+
   // Helper functions to convert from/to vectors.
   // <group>
   void toVector (std::vector<double>& vec,
@@ -162,9 +184,7 @@ private:
   casa::Array<double> fromVector (const std::vector<double>& vec) const;
   // </group>
 
-  casa::Table                        itsTables[3];    //# normal,old,default
-  casa::ColumnsIndex*                itsIndex[3];
-  casa::RecordFieldPtr<casa::String> itsIndexName[3];
+  casa::Table itsTables[3];    //# normal,old,default
 };
 
 // @}
