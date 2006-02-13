@@ -137,11 +137,11 @@ void MeqMatrixComplexArr::show (ostream& os) const
 
 size_t MeqMatrixComplexArr::memSize(int nelements)
 {
-  return ((sizeof(MeqMatrixComplexArr) + 7) & ~7) + 8 +
+  return ((sizeof(MeqMatrixComplexArr) + 7) & ~7) + 16 +
 	 2 * sizeof(double [(nelements + 1) & ~1]);
 }
 
-void *MeqMatrixComplexArr::operator new(size_t size, int nx, int ny)
+void *MeqMatrixComplexArr::operator new(size_t, int nx, int ny)
 {
 #if defined TIMER
   static NSTimer timer("new CA", true);
