@@ -54,8 +54,12 @@ public:
   // Get the ParmDBInfo
   virtual ParmDB::ParmDBMeta getParmDBMeta() const;
 
+  // Get the ParmDB seqnr.
+  virtual int getParmDBSeqNr() const;
+
   // Read the polcs for the given domain.
-  virtual void readPolcs (const MeqDomain& domain);
+  virtual void fillPolcs (const std::map<std::string,ParmDB::ParmValueSet>&,
+			  const MeqDomain&);
 
   // Initialize the solvable parameter for the given domain.
   // It checks if the given domain matches the one used for the last readPolcs.

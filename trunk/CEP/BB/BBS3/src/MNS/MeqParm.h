@@ -29,7 +29,7 @@
 //# Includes
 #include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqResult.h>
-#include <ParmDB/ParmDBMeta.h>
+#include <ParmDB/ParmValue.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
@@ -64,15 +64,16 @@ public:
   void setName (const string& name)
     { itsName = name; }
 
-  // Get the ParmDBInfo
-  virtual ParmDB::ParmDBMeta getParmDBMeta() const;
+  // Get the ParmDB seqnr.
+  virtual int getParmDBSeqNr() const;
 
   // Get the parameter id.
   unsigned int getParmId() const
     { return itsParmId; }
 
   // Read the polcs for the given domain.
-  virtual void readPolcs (const MeqDomain& domain) = 0;
+  virtual void fillPolcs (const std::map<std::string,ParmDB::ParmValueSet>&,
+			  const MeqDomain&);
 
   // Initialize the solvable parameter for the given domain.
   virtual int initDomain (const MeqDomain&, int spidIndex) = 0;
