@@ -44,20 +44,6 @@ using namespace std;
 // There are 1437 time slots of 30 sec in it, but the first one is 20 seconds.
 // timeStart is 4.47203e+09-4260-10 and timeLast is timeStart+43075+25
 
-void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
-{
-  MeqParmGroup pgroup;
-  for (uint i=0; i<pData.size(); ++i) {
-    cout << "Writing parm " << pData[i].getName() 
-	 << " values=" << pData[i].getValues() << endl;
-    ParmDB::ParmDB ptab(pData[i].getParmDBMeta());
-    MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
-    parm.readPolcs (domain);
-    parm.update (pData[i].getValues());
-    parm.save();
-  }
-}
-
 // Solve for the entire time domain.
 void doSolveAll (Prediffer& pre1, const vector<string>& solv,
 		 int maxniter, double epsilon=1e-4)
@@ -67,7 +53,7 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain. Only use center frequencies and all times.
   //pre1.setDomain (1170078125+24*156250, 16*156250, 0., 1e12);
-  pre1.setDomain (30, 33, 0., 1e12);
+  pre1.setDomain (4, 59, 0., 1e12);
   //pre1.setDomain (1170078125+34*156250, 4*156250, 0., 1e12);
   ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, 0., 1e12);
 
@@ -117,6 +103,7 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
   // Loop through all time domains.
   int counter=0;
   double st=timeStart;
+  pre1.lock();
   while (timeStart < timeLast) {
     cout << "timecounter=" << counter++ << ' ' << timeStart-st << endl;
     // Set a domain. Use middle 56 channels and a few times per step.
@@ -154,6 +141,7 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
     pre1.writeParms();
     timeStart += timeStep;
   }
+  pre1.unlock();
 }
 
 // Subtract the sources.
@@ -167,7 +155,7 @@ void doSubtract (Prediffer& pre1, double timeStep)
   // Loop through all time domains.
   while (timeStart < timeLast) {
     // Set a domain. Use middle 56 channels and 20 times per step.
-    pre1.setDomain (4, 59,timeStart, timeStep);
+    pre1.setDomain (4, 59, timeStart, timeStep);
     ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
     pre1.showSettings();
     // Subtract the model.
@@ -232,12 +220,12 @@ int main (int argc, const char* argv[])
     {
       ///      vector<int> antVec(5);
       ///antVec[0]=0; antVec[1]=3; antVec[2]=6; antVec[3]=9; antVec[4]=13;
-      vector<int> antVec(2);
-      antVec[0]=4; antVec[1]=8;
-      ///vector<int> antVec(14);
-      ///for (int i=0; i<14; i++) {
-      ///antVec[i] = i;
-      ///}
+      ///vector<int> antVec(2);
+      ///antVec[0]=4; antVec[1]=8;
+      vector<int> antVec(14);
+      for (int i=0; i<14; i++) {
+      antVec[i] = i;
+      }
       vector<vector<int> > srcgrp;
       if (nrgrp == 1) {
 	vector<int> grp1;
