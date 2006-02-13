@@ -22,32 +22,40 @@
 
 #include <lofar_config.h>
 #include <BBS3/Prediffer.h>
+#include <MS/MSDesc.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufStream.h>
 #include <Common/LofarLogger.h>
 
 #include <tables/Tables/Table.h>
+#include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Slicer.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <fstream>
+#include <sstream>
 
 using namespace LOFAR;
 using namespace casa;
 using namespace std;
 
 void doIt (const string& msName, Prediffer& prediff, const string& column,
-	   int stchan, int nrchan, bool useTree)
+	   int nrant, int stchan, int nrchan, bool useTree)
 {
   cout << "Checking data in " << msName << " for channels " << stchan << '-'
        << stchan+nrchan-1 << endl;
   // Open the table and sort in time,baseline order.
+  // Only use antenna < nrant.
   Table tab(msName);
+  Table tabsel = tab(tab.col("ANTENNA1")<nrant && tab.col("ANTENNA2")<nrant);
   Block<String> sortkeys(3);
   sortkeys[0] = "TIME";
   sortkeys[1] = "ANTENNA1";
   sortkeys[2] = "ANTENNA2";
-  Table tabs(tab.sort (sortkeys));
+  Table tabs(tabsel.sort (sortkeys));
   // Create an iterator to iterate in time order.
   Block<String> iterkeys(1);
   iterkeys[0] = "TIME";
@@ -82,8 +90,8 @@ void doIt (const string& msName, Prediffer& prediff, const string& column,
 int main(int argc, char** argv)
 {
   try {
-    if (argc < 6) {
-      cout << "Run as:  tMSData ms user msname meqparmtable skyparmtable [datacolumn]" << endl;
+    if (argc < 7) {
+      cout << "Run as:  tMSData ms user msname meqparmtable skyparmtable nrant [datacolumn]" << endl;
       cout << "   datacolumn defaults to MODEL_DATA" << endl;
       return 0;
     }
@@ -92,21 +100,41 @@ int main(int argc, char** argv)
     ParmDB::ParmDBMeta meqPdm("aips", argv[4]);
     ParmDB::ParmDBMeta skyPdm("aips", argv[5]);
 
-    string column("MODEL_DATA");
-    if (argc > 6) {
-      column = argv[6];
+    // Open the description file.
+    MSDesc msd;
+    {
+      string fileName (argv[3]);
+      string name(fileName+"/vis.des");
+      std::ifstream istr(name.c_str());
+      ASSERTSTR (istr, "File " << fileName << "/vis.des could not be opened");
+      BlobIBufStream bbs(istr);
+      BlobIStream bis(bbs);
+      bis >> msd;
     }
-    vector<int> antVec(100);
+
+    uint nrant;
+    std::istringstream istr(argv[6]);
+    istr >> nrant;
+    string column("MODEL_DATA");
+    if (argc > 7) {
+      column = argv[7];
+    }
+    if (nrant > msd.antNames.size()) {
+      nrant = msd.antNames.size();
+    }
+
+    // Fill the antenna numbers.
+    vector<int> antVec(nrant);
     for (uint i=0; i<antVec.size(); ++i) {
       antVec[i] = i;
     }
     vector<vector<int> > srcgrp;
     Prediffer pre (argv[3], meqPdm, skyPdm, 
 		   antVec, "", srcgrp, false);
-    doIt (argv[1], pre, column, 0, 50, false);
-    doIt (argv[1], pre, column, 10,10, false);
-    doIt (argv[1], pre, column, 0, 50, true);
-    doIt (argv[1], pre, column, 10,10, true);
+    doIt (argv[1], pre, column, nrant, 0, 50, false);
+    doIt (argv[1], pre, column, nrant, 10,10, false);
+    doIt (argv[1], pre, column, nrant, 0, 50, true);
+    doIt (argv[1], pre, column, nrant, 10,11, true);
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;

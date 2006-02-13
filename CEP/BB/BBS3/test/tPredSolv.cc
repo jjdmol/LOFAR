@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <BBS3/Prediffer.h>
 #include <BBS3/Solver.h>
+#include <BBS3/ParmWriter.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/VectorUtil.h>
@@ -47,23 +48,6 @@ using namespace std;
 // demo3.MS contains 50 frequency channels of 500000 Hz with
 // center frequencies of 137750000-162250000 Hz.
 // There are 5 time stamps of 2 sec in it (centers 2.35208883e9 + 2-10).
-
-void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
-{
-  MeqParmGroup pgroup;
-  streamsize prec = cout.precision();
-  cout.precision(10);
-  for (uint i=0; i<pData.size(); ++i) {
-    cout << "Writing parm " << pData[i].getName() << " into >>> "
-	 << ") <<< values=" << pData[i].getValues() << endl;
-    ParmDB::ParmDB ptab(pData[i].getParmDBMeta());
-    MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
-    parm.readPolcs (domain);
-    parm.update (pData[i].getValues());
-    parm.save();
-  }
-  cout.precision (prec);
-}
 
 void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
 	      int niter)
@@ -216,7 +200,11 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
 	 << solver.getSolvableValues() << endl;
     cout << quality << endl;
     cout.precision (prec);
-    writeParms (solver.getSolvableParmData(), pre1.getDomain());
+    MeqDomain domain(pre1.getDomain());
+    ParmWriter pwriter;
+    pwriter.write (solver.getSolvableParmData(),
+		   domain.startX(), domain.endX(),
+		   domain.startY(), domain.endY());
     pre1.updateSolvableParms();
   }
 }
