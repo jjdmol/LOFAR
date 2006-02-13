@@ -69,7 +69,7 @@ size_t MeqMatrixRealArr::memSize(int nelements) {
   return ((sizeof(MeqMatrixRealArr) + 7) & ~7) + 16 + sizeof(double[nelements]);
 }
 
-void *MeqMatrixRealArr::operator new(size_t size, int nx, int ny)
+void *MeqMatrixRealArr::operator new(size_t, int nx, int ny)
 {
 #if defined TIMER
   static NSTimer timer("new RA", true);
