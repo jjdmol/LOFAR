@@ -38,6 +38,11 @@ namespace LOFAR
   // @{
   //# Forward Declarations
   class ParmData;
+  class MeqMatrix;
+  namespace ParmDB {
+    class ParmValueRep;
+  }
+
 
   // Description of class.
   class ParmWriter
@@ -49,9 +54,12 @@ namespace LOFAR
     // Destructor
     ~ParmWriter();
 
-    void write(vector<ParmData>& pData, double fStart, double fEnd, 
-	       double tStart, double tEnd);
+    void write (const vector<ParmData>& pData,
+		double fStart, double fEnd, 
+		double tStart, double tEnd);
 
+  private:
+    void setCoeff (ParmDB::ParmValueRep& pval, const MeqMatrix& coeff);
   };
 
   // @}
