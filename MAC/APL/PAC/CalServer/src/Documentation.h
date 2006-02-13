@@ -1,6 +1,6 @@
 /**
 
-\mainpage MAC RTC Calibration Server Documentation
+\page MAC RTC Calibration Server Documentation
 
 \section intro Introduction
 
