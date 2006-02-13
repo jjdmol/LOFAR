@@ -37,9 +37,12 @@ MeqSourceList::MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup* group)
   // Get the vector of all parms containing a source name.
   vector<string> nams = parmTable.getNames("RA.*");
   if (nams.size() == 0) {
-    vector<ParmDB::ParmValueSet> pset = parmTable.getPatternDefValues ("RA.*");
-    for (uint i=0; i<pset.size(); ++i) {
-      nams.push_back (pset[i].getName());
+    map<string,ParmDB::ParmValueSet> pset;
+    parmTable.getDefValues (pset, "RA.*");
+    for (map<string,ParmDB::ParmValueSet>::const_iterator iter = pset.begin();
+	 iter != pset.end();
+	 iter++) {
+      nams.push_back (iter->first);
     }
   }
   vector<int> srcs(nams.size());

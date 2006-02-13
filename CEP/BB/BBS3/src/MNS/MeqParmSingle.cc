@@ -40,9 +40,6 @@ MeqParmSingle::MeqParmSingle (const string& name, MeqParmGroup* group,
 MeqParmSingle::~MeqParmSingle()
 {}
 
-void MeqParmSingle::readPolcs (const MeqDomain&)
-{}
-
 int MeqParmSingle::initDomain (const MeqDomain&, int spidIndex)
 {
   if (isSolvable()) {

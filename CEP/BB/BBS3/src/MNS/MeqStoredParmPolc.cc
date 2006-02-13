@@ -27,6 +27,7 @@
 #include <casa/BasicMath/Math.h>
 
 using namespace casa;
+using namespace std;
 
 namespace LOFAR {
 
@@ -45,28 +46,42 @@ ParmDB::ParmDBMeta MeqStoredParmPolc::getParmDBMeta() const
   return itsTable->getParmDBMeta();
 }
 
-void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
+int MeqStoredParmPolc::getParmDBSeqNr() const
 {
-  // Find the polc(s) for the given domain.
-  ParmDB::ParmDomain pdomain = domain.toParmDomain();
-  ParmDB::ParmValueSet pset = itsTable->getValues (getName(), pdomain);
-  vector<ParmDB::ParmValue>& vec = pset.getValues();
+  return itsTable->getParmDBSeqNr();
+}
+
+void MeqStoredParmPolc::fillPolcs
+                (const map<string,ParmDB::ParmValueSet>& parmSet,
+		 const MeqDomain& domain)
+{
+  ParmDB::ParmDomain pdomain(domain.startX(), domain.endX(),
+			     domain.startY(), domain.endY());
+  bool found = false;
   vector<MeqPolc>& polcs = getPolcs();
-  if (vec.size() > 0) {
-    // Check if the polc domains cover the entire domain and if they
-    // do not overlap.  // Not implemented yet!!!
-    // Convert all parmvalues to polcs.
-    polcs.resize (0);
-    for (uint i=0; i<vec.size(); ++i) {
-      ASSERTSTR (vec[i].rep().itsType=="polc",
-		 "No 'polc' funklet found for parameter " << getName());
-      ASSERTSTR (vec[i].rep().itsShape.size()==2,
-		 "No 2-dim funklet found for parameter " << getName());
-      polcs.push_back (MeqPolc(vec[i]));
+  // Try to find the polc in the parm set.
+  map<string,ParmDB::ParmValueSet>::const_iterator pos =
+                                                   parmSet.find(getName());
+  if (pos != parmSet.end()) {
+    const vector<ParmDB::ParmValue>& vec = pos->second.getValues();
+    if (vec.size() > 0) {
+      // Check if the polc domains cover the entire domain and if they
+      // do not overlap.  // Not implemented yet!!!
+      // Convert all parmvalues to polcs.
+      polcs.resize (0);
+      for (uint i=0; i<vec.size(); ++i) {
+	ASSERTSTR (vec[i].rep().itsType=="polc",
+		   "No 'polc' funklet found for parameter " << getName());
+	ASSERTSTR (vec[i].rep().itsShape.size()==2,
+		   "No 2-dim funklet found for parameter " << getName());
+	polcs.push_back (MeqPolc(vec[i]));
+      }
+      itsDefUsed = false;
+      found = true;
     }
-    itsDefUsed = false;
-  } else {
-    // Use a default value.
+  }
+  if (!found) {
+    // No value found, so use a default value.
     // See if the values of the previous domain can be used.
     // We only do that if the default was used in a single previous domain.
     if (itsDefUsed  &&  polcs.size() == 1) {
@@ -83,7 +98,6 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
 		 "No 2-dim funklet found for parameter " << getName());
       pval.rep().setDomain (pdomain);
       polcs.push_back (MeqPolc(pval));
-      setPolcs (polcs);
     }
     itsDefUsed = true;
   }

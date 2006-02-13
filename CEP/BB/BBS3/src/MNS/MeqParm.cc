@@ -43,10 +43,14 @@ MeqParm::~MeqParm()
   itsGroup->remove (itsParmId);
 }
 
-ParmDB::ParmDBMeta MeqParm::getParmDBMeta() const
+int MeqParm::getParmDBSeqNr() const
 {
-  return ParmDB::ParmDBMeta();
+  return -1;
 }
+
+void MeqParm::fillPolcs (const std::map<std::string,ParmDB::ParmValueSet>&,
+			 const MeqDomain&)
+{}
 
 
 

@@ -49,9 +49,6 @@ public:
 
   ~MeqParmSingle();
 
-  // Read the polcs for the given domain.
-  virtual void readPolcs (const MeqDomain& domain);
-
   // Initialize the solvable parameter for the given domain.
   virtual int initDomain (const MeqDomain&, int spidIndex);
 
