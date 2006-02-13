@@ -91,6 +91,15 @@ public:
   // Destructor
   ~Prediffer();
 
+  // Lock and unlock the parm database tables.
+  // The user does not need to lock/unlock, but it can increase performance
+  // if many small accesses have to be done.
+  // <group>
+  void lock (bool lockForWrite = true)
+    { itsMEP.lock (lockForWrite); itsGSMMEP.lock (lockForWrite); }
+  void unlock()
+    { itsMEP.unlock(); itsGSMMEP.unlock(); }
+
   // Make a selection of the MS to be used in the domain iteration.
   // The size of the antenna vectors is the number of baselines to be used.
   // They give the first and second antenna (i.e. station) of each baseline.

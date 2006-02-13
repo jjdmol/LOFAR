@@ -28,7 +28,6 @@
 
 //# Includes
 #include <BBS3/MNS/MeqMatrix.h>
-#include <ParmDB/ParmDBMeta.h>
 #include <string>
 
 namespace LOFAR {
@@ -46,7 +45,7 @@ public:
   ParmData ();
   // Constructor.
   ParmData (const std::string& name,
-	    const ParmDB::ParmDBMeta& pdm,
+	    int parmDBSeqNr,
 	    int nrSpid, int firstSpid,
 	    const MeqMatrix& values);
 
@@ -54,10 +53,8 @@ public:
   // <group>
   const std::string& getName() const
     { return itsName; }
-  const ParmDB::ParmDBMeta& getParmDBMeta() const
-    { return itsPDM; }
-  int getIndex() const
-    { return itsTableIndex; }
+  int getParmDBSeqNr() const
+    { return itsDBSeqNr; }
   int getNrSpid() const
     { return itsNrSpid; }
   int getFirstSpid() const
@@ -96,12 +93,11 @@ public:
   friend ostream& operator<< (ostream&, const ParmData&);
 
 private:
-  std::string        itsName;
-  ParmDB::ParmDBMeta itsPDM;
-  int        itsNrSpid;
-  int        itsFirstSpid;
-  int        itsTableIndex;
-  MeqMatrix  itsValues;
+  std::string itsName;
+  int         itsDBSeqNr;
+  int         itsNrSpid;
+  int         itsFirstSpid;
+  MeqMatrix   itsValues;
 };
 
 // @}

@@ -746,8 +746,15 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
 //----------------------------------------------------------------------
 void Prediffer::initParms (const MeqDomain& domain)
 {
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
+  // Read all parms for this domain into a single map.
+  map<string,ParmDB::ParmValueSet> parmValues;
+  vector<string> emptyvec;
+  ParmDB::ParmDomain pdomain(domain.startX(), domain.endX(),
+			     domain.startY(), domain.endY());
+  itsMEP.getValues (parmValues, emptyvec, pdomain);
+  itsGSMMEP.getValues (parmValues, emptyvec, pdomain);
 
+  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
   itsParmData.clear();
   itsNrScid = 0;
   int i = 0;
@@ -756,11 +763,11 @@ void Prediffer::initParms (const MeqDomain& domain)
        ++iter, ++i)
   {
     if (*iter) {
-      (*iter)->readPolcs (domain);
+      (*iter)->fillPolcs (parmValues, domain);
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
 	itsParmData.push_back (ParmData((*iter)->getName(),
-					(*iter)->getParmDBMeta(),
+					(*iter)->getParmDBSeqNr(),
 					nr, itsNrScid,
 					(*iter)->getCoeffValues()));
 	itsNrScid += nr;
@@ -1196,8 +1203,8 @@ void Prediffer::getData (const string& columnName, bool useTree,
 			 Array<Complex>& dataArr, Array<Bool>& flagArr)
 {
   int nrchan = itsLastChan-itsFirstChan+1;
-  dataArr.resize (IPosition(4, itsNCorr, nrchan, itsNrBl, itsNrTimes));
-  flagArr.resize (IPosition(4, itsNCorr, nrchan, itsNrBl, itsNrTimes));
+  dataArr.resize (IPosition(4, itsNCorr, nrchan, itsNrUsedBl, itsNrTimes));
+  flagArr.resize (IPosition(4, itsNCorr, nrchan, itsNrUsedBl, itsNrTimes));
   pair<Complex*,bool*> p;
   p.first = dataArr.data();
   p.second = flagArr.data();
@@ -1205,9 +1212,10 @@ void Prediffer::getData (const string& columnName, bool useTree,
     processData (columnName, "", true, false, false, &Prediffer::getBL, &p);
     return;
   }
-  vector<MeqJonesExpr> expr(itsNrBl);
-  for (uint i=0; i<itsNrBl; ++i) {
-    expr[i] = new MeqJonesMMap (itsMSMapInfo, (i*itsNrChan+itsFirstChan)*itsNCorr);
+  vector<MeqJonesExpr> expr(itsNrUsedBl);
+  for (int i=0; i<itsNrUsedBl; ++i) {
+    expr[i] = new MeqJonesMMap (itsMSMapInfo,
+			    (itsBLUsedInx[i]*itsNrChan+itsFirstChan)*itsNCorr);
   }
   pair<pair<Complex*,bool*>*, vector<MeqJonesExpr>*> p1;
   p1.first = &p;
@@ -1447,14 +1455,33 @@ void Prediffer::getMapBL (int, void* arg,
   jresult.result12().getValue().dcomplexStorage (r2, i2);
   jresult.result21().getValue().dcomplexStorage (r3, i3);
   jresult.result22().getValue().dcomplexStorage (r4, i4);
-  for (int i=0; i<jresult.result11().getValue().nelements(); ++i) {
-    *datap++ = Complex(r1[i], i1[i]);
-    if (itsNCorr > 2) {
-      *datap++ = Complex(r2[i], i2[i]);
-      *datap++ = Complex(r3[i], i3[i]);
-    }
-    if (itsNCorr > 1) {
-      *datap++ = Complex(r4[i], i4[i]);
+  int nx = jresult.result11().getValue().nx();
+  for (int iy=0; iy<jresult.result11().getValue().ny(); ++iy) {
+    if (itsReverseChan) {
+      for (int ix=nx; ix>0;) {
+	ix--;
+	int i = iy*nx + ix;
+	*datap++ = Complex(r1[i], i1[i]);
+	if (itsNCorr > 2) {
+	  *datap++ = Complex(r2[i], i2[i]);
+	  *datap++ = Complex(r3[i], i3[i]);
+	}
+	if (itsNCorr > 1) {
+	  *datap++ = Complex(r4[i], i4[i]);
+	}
+      }
+    } else {
+      for (int ix=0; ix<nx; ++ix) {
+	int i = iy*nx + ix;
+	*datap++ = Complex(r1[i], i1[i]);
+	if (itsNCorr > 2) {
+	  *datap++ = Complex(r2[i], i2[i]);
+	  *datap++ = Complex(r3[i], i3[i]);
+	}
+	if (itsNCorr > 1) {
+	  *datap++ = Complex(r4[i], i4[i]);
+	}
+      }
     }
   }
 }
