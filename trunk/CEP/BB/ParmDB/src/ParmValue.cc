@@ -36,6 +36,7 @@ namespace ParmDB {
     itsParentID     (0),
     itsDBTabRef     (-1),
     itsDBRowRef     (0),
+    itsDBSeqNr      (-1),
     itsCount        (1)
   {}
 
@@ -56,6 +57,7 @@ namespace ParmDB {
     itsParentID     = that.itsParentID;
     itsDBTabRef     = that.itsDBTabRef;
     itsDBRowRef     = that.itsDBRowRef;
+    itsDBSeqNr      = that.itsDBSeqNr;
   }
 
   void ParmValueRep::setCoeff (const double* coeff,

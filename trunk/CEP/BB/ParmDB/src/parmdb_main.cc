@@ -399,9 +399,12 @@ void showNames (const string& pattern, PTCommand type)
   } else if (type == NAMESOLD) {
     names = parmtab->getNames (pattern, ParmDBRep::UseHistory);
   } else {
-    vector<ParmValueSet> parmset = parmtab->getPatternDefValues (pattern);
-    for (uint i=0; i<parmset.size(); ++i) {
-      names.push_back (parmset[i].getName());
+    map<string,ParmValueSet> parmset;
+    parmtab->getDefValues (parmset, pattern);
+    for (map<string,ParmValueSet>::const_iterator iter = parmset.begin();
+	 iter != parmset.end();
+	 iter++) {
+      names.push_back (iter->first);
     }
   }
   cout << "names: " << names << endl;
@@ -433,12 +436,14 @@ void showParm (const string& parmName, const ParmValueRep& parm, bool showAll)
   }
 }
 
-void showParms (vector<ParmValueSet>& parmSet, bool showAll)
+void showParms (map<string,ParmValueSet>& parmSet, bool showAll)
 {
   int nr=0;
-  for (uint j=0; j<parmSet.size(); ++j) {
-    vector<ParmValue>& vec = parmSet[j].getValues();
-    const string& parmName = parmSet[j].getName();
+  for (map<string,ParmValueSet>::iterator iter = parmSet.begin();
+       iter != parmSet.end();
+       iter++) {
+    vector<ParmValue>& vec = iter->second.getValues();
+    const string& parmName = iter->first;
     for (uint i=0; i<vec.size(); ++i) {
       showParm (parmName, vec[i].rep(), showAll);
       nr++;
@@ -449,11 +454,13 @@ void showParms (vector<ParmValueSet>& parmSet, bool showAll)
   }
 }
 
-int countParms (vector<ParmValueSet>& parmSet)
+int countParms (map<string,ParmValueSet>& parmSet)
 {
   int nr=0;
-  for (uint j=0; j<parmSet.size(); ++j) {
-    nr += parmSet[j].getValues().size();
+  for (map<string,ParmValueSet>::const_iterator iter = parmSet.begin();
+       iter != parmSet.end();
+       iter++) {
+    nr += iter->second.getValues().size();
   }
   return nr;
 }
@@ -570,12 +577,14 @@ void updateParm (const string& parmName, ParmValue& pvalue,
   showParm (parmName, pval, true);
 }
 
-void updateParms (vector<ParmValueSet>& parmSet, KeyValueMap& kvmap,
+void updateParms (map<string,ParmValueSet>& parmSet, KeyValueMap& kvmap,
 		  ParmDBRep::TableType ttype)
 {
-  for (uint j=0; j<parmSet.size(); ++j) {
-    vector<ParmValue>& vec = parmSet[j].getValues();
-    const string& parmName = parmSet[j].getName();
+  for (map<string,ParmValueSet>::iterator iter = parmSet.begin();
+       iter != parmSet.end();
+       iter++) {
+    vector<ParmValue>& vec = iter->second.getValues();
+    const string& parmName = iter->first;
     for (uint i=0; i<vec.size(); ++i) {
       updateParm (parmName, vec[i], kvmap);
     }
@@ -584,11 +593,13 @@ void updateParms (vector<ParmValueSet>& parmSet, KeyValueMap& kvmap,
 }
 
 void moveParms (const string& parmName, const ParmDomain& domain, int parentId,
-		vector<ParmValueSet>& parmSet, KeyValueMap& kvmap)
+		map<string,ParmValueSet>& parmSet, KeyValueMap& kvmap)
 {
   int newparid = kvmap.getInt ("newparentid", -1);
-  for (uint j=0; j<parmSet.size(); ++j) {
-    vector<ParmValue>& vec = parmSet[j].getValues();
+  for (map<string,ParmValueSet>::iterator iter = parmSet.begin();
+       iter != parmSet.end();
+       iter++) {
+    vector<ParmValue>& vec = iter->second.getValues();
     for (uint i=0; i<vec.size(); ++i) {
       if (newparid >= 0) {
 	vec[i].rep().itsParentID = newparid;
@@ -644,11 +655,13 @@ void updateDefParm (const string& parmName, ParmValue& pvalue,
   parmtab->putValue (parmName, pvalue);
 }
 
-void updateDefParms (vector<ParmValueSet>& parmSet, KeyValueMap& kvmap)
+void updateDefParms (map<string,ParmValueSet>& parmSet, KeyValueMap& kvmap)
 {
-  for (uint j=0; j<parmSet.size(); ++j) {
-    vector<ParmValue>& vec = parmSet[j].getValues();
-    const string& parmName = parmSet[j].getName();
+  for (map<string,ParmValueSet>::iterator iter = parmSet.begin();
+       iter != parmSet.end();
+       iter++) {
+    vector<ParmValue>& vec = iter->second.getValues();
+    const string& parmName = iter->first;
     for (uint i=0; i<vec.size(); ++i) {
       updateDefParm (parmName, vec[i], kvmap);
     }
@@ -730,8 +743,8 @@ void doIt (bool noPrompt)
 	    }
 	    if (cmd==NEWDEF || cmd==UPDDEF || cmd==DELDEF || cmd==SHOWDEF) {
 	      // Read the given def parameters and domains.
-	      vector<ParmValueSet> parmset =
-		     parmtab->getPatternDefValues (parmName);
+	      map<string,ParmValueSet> parmset;
+	      parmtab->getDefValues (parmset, parmName);
 	      int nrparm = parmset.size();
 	      if (cmd == NEWDEF) {
 		ASSERTSTR (parmset.empty(),
@@ -755,8 +768,8 @@ void doIt (bool noPrompt)
 	      // Read the given parameters and domains.
 	      ParmDomain domain = getDomain(kvmap);
 	      int parentId = kvmap.getInt ("parentid", -1);
-	      vector<ParmValueSet> parmset =
-		     parmtab->getPatternValues (parmName, domain, parentId);
+	      map<string,ParmValueSet> parmset;
+	      parmtab->getValues (parmset, parmName, domain, parentId);
 	      int nrparm = parmset.size();
 	      int nrvalrec = countParms (parmset);
 	      if (cmd == NEW) {
@@ -785,9 +798,9 @@ void doIt (bool noPrompt)
 	      // Read the given parameters and domains.
 	      ParmDomain domain = getDomain(kvmap);
 	      int parentId = kvmap.getInt ("parentid", -1);
-	      vector<ParmValueSet> parmset =
-		     parmtab->getPatternValues (parmName, domain, parentId,
-						ParmDBRep::UseHistory);
+	      map<string,ParmValueSet> parmset;
+	      parmtab->getValues (parmset, parmName, domain, parentId,
+				  ParmDBRep::UseHistory);
 	      int nrparm = parmset.size();
 	      int nrvalrec = countParms (parmset);
 	      if (cmd == SHOWOLD) {
