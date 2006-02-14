@@ -123,12 +123,12 @@ class WH_BGL_Processing: public WorkHolder {
     fftw_plan	    itsFFTWPlan;
     double	    itsBaseFrequency;
     const ACC::APS::ParameterSet &itsPS;
-    static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS];
+    static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] __attribute__ ((aligned(32)));
 
-    static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
-    static LOFAR::bitset<NR_SAMPLES_PER_INTEGRATION> flags[NR_STATIONS];
-    static unsigned itsNrValidSamples[NR_BASELINES];
-    static float    correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1];
+    static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));
+    static LOFAR::bitset<NR_SAMPLES_PER_INTEGRATION> flags[NR_STATIONS] __attribute__ ((aligned(32)));
+    static unsigned itsNrValidSamples[NR_BASELINES] __attribute__ ((aligned(32)));
+    static float    correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] __attribute__ ((aligned(32)));
     static float    thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
 };
 
