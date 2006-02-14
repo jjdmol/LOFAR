@@ -194,7 +194,7 @@ public:
   GlishRecord getStatistics (bool detailed, bool clear);
 
   /**
-   * \defgroup DOStandard Standard Distributed Object methods.
+   * \name Standard Distributed Object methods
    */
   //@{
   virtual String         className() const;
@@ -214,7 +214,7 @@ public:
 
 private:
   /**
-   * \defgroup DisallowedContructors Dissallowed constructors.
+   * \name Dissallowed constructors
    */
   /*@{*/
   MeqCalibrater(const MeqCalibrater& other);
@@ -250,10 +250,6 @@ private:
   void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
 			      GlishRecord& rec);
 
-  /**
-   * \defgroup PrivVariable Private variables
-   */
-  /*@{*/
   MeasurementSet        itsMS;          //# MS as given
   ROMSMainColumns       itsMSCol;
   Table                 itsSelMS;       //# Selected rows from MS
@@ -303,7 +299,6 @@ private:
   vector<double> itsFitME;
   vector<LOFAR::dcomplex> itsDeriv;     //# derivatives of predict
   
-  /*@}*/
 };
 
 /*!
