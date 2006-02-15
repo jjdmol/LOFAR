@@ -10,7 +10,8 @@ INSTHDRS = \
 	Subject.h \
 	TestSuite.h \
 	Timestamp.h \
-	daemonize.h
+	daemonize.h \
+	RegisterState.h
 
 NOINSTHDRS =
 

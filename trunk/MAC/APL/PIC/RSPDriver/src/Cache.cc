@@ -268,8 +268,8 @@ Cache::Cache() : m_front(0), m_back(0)
   // Make sure initial settings are sent
   //
   m_back->getWGSettings().setModified();
-  m_back->getClocks().modified();
-  m_front->getClocks().modified();
+  m_back->getClocks().getState().modified();
+  m_front->getClocks().getState().modified();
   m_back->getRCUSettings().getModifiedFlags() = true;
   m_back->getRSUSettings().getModifiedFlags() = true;
 }
@@ -284,7 +284,7 @@ void Cache::swapBuffers()
 {
   // clear modified flags on back buffer
   m_back->getWGSettings().clearModified();
-  m_back->getClocks().clear();
+  m_back->getClocks().getState().clear();
   m_back->getRCUSettings().clearModified();
   m_back->getRSUSettings().clearModified();
 
