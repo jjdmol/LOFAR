@@ -27,7 +27,7 @@
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
 #include <Blob/KeyParser.h>
-#include "P2Perf/P2Perf.h"
+#include <P2Perf/P2Perf.h>
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif

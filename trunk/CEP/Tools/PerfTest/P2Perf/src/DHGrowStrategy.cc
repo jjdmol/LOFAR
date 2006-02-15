@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <tinyCEP/TinyDataManager.h>
-#include "P2Perf/DHGrowStrategy.h"
+#include <P2Perf/DHGrowStrategy.h>
 
 DHGrowStrategy::DHGrowStrategy ()
 {};

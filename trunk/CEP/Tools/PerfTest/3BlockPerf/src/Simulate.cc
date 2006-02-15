@@ -27,7 +27,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include "3BlockPerf/AH_3BlockPerf.h"
+#include <3BlockPerf/AH_3BlockPerf.h>
 
 using namespace LOFAR;
 using namespace std;
