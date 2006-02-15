@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <tinyCEP/TinyDataManager.h>
 #include "P2Perf/DHGrowStrategy.h"
 

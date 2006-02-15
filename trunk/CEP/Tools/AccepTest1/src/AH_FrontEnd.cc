@@ -7,6 +7,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <unistd.h>
 
 #include <AH_FrontEnd.h>

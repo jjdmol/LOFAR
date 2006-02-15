@@ -8,6 +8,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <AH_Correlator.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/Connection.h>
