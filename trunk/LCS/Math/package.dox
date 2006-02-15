@@ -1,10 +1,13 @@
-/**
+// \ingroup LCS
+// \defgroup Math Math
+//
+// Math contains a set of %LOFAR specific implementations of well-known math
+// routines. They are mostly geared towards integer calculations.
 
-\ingroup LCS
-\defgroup Math Math
+// @{
 
+//   \defgroup BlitzToAips Blitz++ to AIPS++ conversion functions
+//   Conversion methods for Blitz++ and AIPS++ data structures.
 
-Math contains a set of %LOFAR specific implementations of well-known math
-routines. They are mostly geared towards integer calculations.
+// @}
 
-*/
