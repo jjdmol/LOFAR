@@ -150,7 +150,7 @@ public:
 	virtual bool	snapshot (const time_t		scheduleTime,
 							  const string&		destination)  const = 0;
 
-	// \cRecover reconstructs the processes as they were saved some time
+	// \c Recover reconstructs the processes as they were saved some time
 	// earlier. The \c source argument contains the database info the 
 	// application must use to find the information it needs.
 	virtual bool	recover  (const time_t		scheduleTime,
