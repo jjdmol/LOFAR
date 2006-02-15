@@ -37,7 +37,7 @@
 namespace LOFAR
 {
 
-// \addtogroup TinyCEP
+// \addtogroup tinyCEP
 // @{
 
   // Description of class.

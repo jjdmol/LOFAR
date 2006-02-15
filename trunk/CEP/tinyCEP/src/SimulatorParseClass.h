@@ -38,7 +38,7 @@
 namespace LOFAR
 {
 
-// \addtogroup TinyCEP
+// \addtogroup tinyCEP
 // @{
 
 extern "C" {

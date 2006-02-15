@@ -38,7 +38,7 @@ using namespace LOFAR::ACC::PLC;
 
 class ApplicationHolderController : public ProcessControl
 {
-// \addtogroup TinyCEP
+// \addtogroup tinyCEP
 // @{
 
 public:

@@ -37,7 +37,7 @@
 namespace LOFAR
 {
 
-// \addtogroup TinyCEP
+// \addtogroup tinyCEP
 // @{
 
 class KeyValueMap;

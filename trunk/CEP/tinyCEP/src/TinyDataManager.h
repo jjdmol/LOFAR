@@ -32,7 +32,7 @@
 
 namespace LOFAR
 {
-// \addtogroup TinyCEP
+// \addtogroup tinyCEP
 // @{
 
   //# Forward Declarations
