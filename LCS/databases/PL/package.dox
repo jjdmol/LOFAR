@@ -1,4 +1,4 @@
-// \ingroup LCS
+// \ingroup databases
 // \defgroup PL Persistence Layer (PL)
 // 
 // The Persistence Layer bridges the gap between the objected-oriented C++
