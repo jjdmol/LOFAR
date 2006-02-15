@@ -2,7 +2,14 @@
 # SUBDIRS = shmem .
 # endif
 
-INSTHDRS =
+INSTHDRS        = Connector.h \
+	 InputThread.h \
+	 LockedRange.h \
+	 LockedRange.tcc \
+	 BeamletBuffer.h \
+	 AH_InputSection.h \
+	 WH_SBCollect.h \
+	 WH_RSPInput.h
 
 NOINSTHDRS =
 

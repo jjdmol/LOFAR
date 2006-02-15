@@ -11,11 +11,11 @@ dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
 dnl Checks for programs.
-AC_PROG_AWK
-AC_PROG_YACC
+dnl AC_PROG_AWK
+dnl AC_PROG_YACC
 AC_PROG_CC
 AC_PROG_CXX
-AM_PROG_LEX
+dnl AM_PROG_LEX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_DISABLE_SHARED
@@ -51,9 +51,14 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-dnl lofar_BLITZ
-dnl lofar_MPI
-dnl lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_MPI
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
+lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
+lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
+lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
+lofar_INTERNAL(Appl/CEP/CS1/CS1_Interface,CS1_Interface,,1,CS1_Interface/DH_RSP.h,,)
+lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,boost_thread-gcc-mt)
 
 dnl
 dnl Output Makefiles
