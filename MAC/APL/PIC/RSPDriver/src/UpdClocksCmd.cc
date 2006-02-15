@@ -78,7 +78,7 @@ void UpdClocksCmd::complete(CacheBuffer& cache)
       ack.clocks()(result_rsp) = cache.getClocks()()(cache_rsp);
 
       // only send ack if clock setting has been applied
-      if (Clocks::APPLIED == cache.getClocks().getState(cache_rsp)) sendack = true;
+      if (RTC::RegisterState::APPLIED == cache.getClocks().getState().get(cache_rsp)) sendack = true;
 
       result_rsp++;
     }
