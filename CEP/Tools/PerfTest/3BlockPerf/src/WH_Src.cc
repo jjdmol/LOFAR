@@ -24,7 +24,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include "3BlockPerf/WH_Src.h"
+#include <3BlockPerf/WH_Src.h>
 
 namespace LOFAR {
 

@@ -23,7 +23,7 @@
 #ifndef DHGROWSTRATEGY_HH
 #define DHGROWSTRATEGY_HH
 #include <CEPFrame/DataManager.h>
-#include "P2Perf/DH_VarSize.h"
+#include <P2Perf/DH_VarSize.h>
 
 using namespace LOFAR;
 

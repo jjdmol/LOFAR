@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 
-#include "3BlockPerf/DH_FixedSize.h"
+#include <3BlockPerf/DH_FixedSize.h>
 
 namespace LOFAR {
 

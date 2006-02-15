@@ -29,9 +29,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include "tinyCEP/WorkHolder.h"
-#include "3BlockPerf/DH_FixedSize.h"
-#include "3BlockPerf/StopWatch.h"
+#include <tinyCEP/WorkHolder.h>
+#include <3BlockPerf/DH_FixedSize.h>
+#include <3BlockPerf/StopWatch.h>
 
 namespace LOFAR {
 

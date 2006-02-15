@@ -2,7 +2,7 @@
 #include <Common/lofar_iostream.h>
 #include <string.h>
 
-#include "InOutTest/StopWatch.h"
+#include <InOutTest/StopWatch.h>
 
 StopWatch::StopWatch()
 {

@@ -27,7 +27,7 @@
 #include <Common/lofar_iostream.h>
 #include <string.h>
 
-#include "AsyncTest/StopWatch.h"
+#include <AsyncTest/StopWatch.h>
 
 StopWatch::StopWatch()
 {
