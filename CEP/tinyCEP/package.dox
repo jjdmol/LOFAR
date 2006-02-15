@@ -1,7 +1,7 @@
 /** 
 
 \ingroup CEP
-\defgroup tinyCEP
+\defgroup tinyCEP tinyCEP
 
 The tinyCEP package offers a basic framework for data processing
 applications. It has been designed for maximal performance and maximal
