@@ -102,6 +102,7 @@ CacheBuffer::CacheBuffer()
 
 
   m_wgsettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
+  m_wgsettings.getState().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
   WGSettings::WGRegisterType init;
   init.freq        = 0;
   init.phase       = 0;
@@ -267,7 +268,7 @@ Cache::Cache() : m_front(0), m_back(0)
   //
   // Make sure initial settings are sent
   //
-  m_back->getWGSettings().setModified();
+  m_back->getWGSettings().getState().modified();
   m_back->getClocks().getState().modified();
   m_front->getClocks().getState().modified();
   m_back->getRCUSettings().getModifiedFlags() = true;
@@ -283,7 +284,7 @@ Cache::~Cache()
 void Cache::swapBuffers()
 {
   // clear modified flags on back buffer
-  m_back->getWGSettings().clearModified();
+  m_back->getWGSettings().getState().clear();
   m_back->getClocks().getState().clear();
   m_back->getRCUSettings().clearModified();
   m_back->getRSUSettings().clearModified();

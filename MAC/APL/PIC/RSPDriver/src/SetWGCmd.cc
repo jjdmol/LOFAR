@@ -66,10 +66,11 @@ void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
        cache_rcu++) {
     if (m_event->rcumask[cache_rcu]) {
       cache.getWGSettings()()(cache_rcu) = m_event->settings()(0);
+
+      if (setModFlag) {
+	cache.getWGSettings().getState().modified(cache_rcu);
+      }
     }
-  }
-  if (setModFlag) {
-    cache.getWGSettings().setModified();
   }
 }
 

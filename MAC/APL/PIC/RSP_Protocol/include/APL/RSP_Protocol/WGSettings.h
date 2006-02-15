@@ -25,6 +25,8 @@
 #ifndef WGSETTINGS_H_
 #define WGSETTINGS_H_
 
+#include <APL/RTCCommon/RegisterState.h>
+
 #include <complex>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
@@ -65,7 +67,7 @@ namespace LOFAR {
       /**
        * Constructors for a WGSettings object.
        */
-      WGSettings() : m_modified(false) { }
+      WGSettings() { }
 	  
       /* Destructor for WGSettings. */
       virtual ~WGSettings() {}
@@ -80,12 +82,7 @@ namespace LOFAR {
       static void initWaveformPresets();
       static blitz::Array<int32, 1> preset(int index);
 
-      /**
-       * Access methods.
-       */
-      void setModified()       { m_modified = true; }
-      void clearModified()     { m_modified = false; }
-      bool getModified() const { return m_modified; }
+      RTC::RegisterState& getState() { return m_state; }
 
     public:
       /*@{*/
@@ -100,7 +97,7 @@ namespace LOFAR {
     private:
       blitz::Array<WGRegisterType, 1> m_registers;
       blitz::Array<int32, 2>          m_waveforms;
-      bool                            m_modified; // has the value been modified?
+      RTC::RegisterState              m_state;
 
       static blitz::Array<int32, 2>   m_presets;
     };
