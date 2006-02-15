@@ -1,4 +1,5 @@
-//#  ApplicationHolderController.h: interpretes commands from ACC and executes them on the TinyApplicationHolder object
+//#  ApplicationHolderController.h: interpretes commands from ACC and executes
+//#                                 them on the TinyApplicationHolder object
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +25,8 @@
 #define TINYAPPLICATIONHOLDERCONTROLLER_H
 
 // \file
-// Interprets commands from ACC and executes them on the TinyApplicationHolder object
+// Interprets commands from ACC and executes them on the TinyApplicationHolder
+// object
 
 #include <Common/LofarLogger.h>
 
@@ -36,11 +38,10 @@
 using namespace LOFAR;
 using namespace LOFAR::ACC::PLC;
 
-class ApplicationHolderController : public ProcessControl
-{
 // \addtogroup tinyCEP
 // @{
-
+class ApplicationHolderController : public ProcessControl
+{
 public:
   // Default constructable
   ApplicationHolderController(TinyApplicationHolder& stationCorrelator, int noRuns = 100);

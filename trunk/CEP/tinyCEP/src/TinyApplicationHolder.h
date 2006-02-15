@@ -81,13 +81,13 @@ namespace LOFAR
     
 
   protected:
-    /**@name Virtual functions
-     @memo Functions to be implemented in derived class.
-     @doc The following functions can or have to be implemented in
-     a derived class. The default implementations of the non-pure virtual
-     functions do nothing.
-     These virtual functions are called by their base... counterparts.
-    */
+    // @name Virtual functions
+    // Functions to be implemented in derived class.
+    // The following functions can or have to be implemented in a derived
+    // class. The default implementations of the non-pure virtual functions do
+    // nothing. These virtual functions are called by their
+    // base... counterparts.
+    // @{
     virtual void define(const KeyValueMap&) = 0;
     virtual void check();
     virtual void init();
@@ -96,6 +96,7 @@ namespace LOFAR
     virtual void dump() const;
     virtual void postrun();
     virtual void quit();
+    // @}
 
     // Forbid copy constructor
     TinyApplicationHolder (const TinyApplicationHolder&);
