@@ -1,14 +1,14 @@
-//  WH_Random.cc: An empty WorkHolder (doing nothing)
-//
-//  Copyright (C) 2000, 2001
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
-//
-//
-//  $Id$
-//
-//
-//////////////////////////////////////////////////////////////////////
+//#  WH_Random.cc: An empty WorkHolder (doing nothing)
+//#
+//#  Copyright (C) 2000, 2001
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
+//#
+//#
+//#  $Id$
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 #include <AccepTest2/WH_Random.h>
 #include <Common/LofarLogger.h>

@@ -1,14 +1,14 @@
-//  DH_Empty.cc:
-//
-//  Copyright (C) 2000, 2001
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
-//
-//
-//  $Id$
-//
-//
-//////////////////////////////////////////////////////////////////////
+//#  DH_Empty.cc:
+//#
+//#  Copyright (C) 2000, 2001
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
+//#
+//#
+//#  $Id$
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 
 #include <DH_Empty.h>

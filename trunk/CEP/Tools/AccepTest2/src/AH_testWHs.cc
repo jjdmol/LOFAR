@@ -1,15 +1,14 @@
-//  AH_testWHs.cc: Application holder for acceptance test 2
-//
-//  Copyright (C) 2000, 2001
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
-//
-//  $Id$
-//
-//
-//////////////////////////////////////////////////////////////////////
+//#  AH_testWHs.cc: Application holder for acceptance test 2
+//#
+//#  Copyright (C) 2000, 2001
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
+//#
+//#  $Id$
 
+//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+
 #include <Transport/Connection.h>
 #include <AccepTest2/WH_Random.h>
 #include <AccepTest2/WH_Transpose.h>
