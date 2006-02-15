@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>

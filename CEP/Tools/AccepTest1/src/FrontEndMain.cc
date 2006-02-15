@@ -6,6 +6,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 
 // TransportHolders
 #include <Common/lofar_iostream.h>

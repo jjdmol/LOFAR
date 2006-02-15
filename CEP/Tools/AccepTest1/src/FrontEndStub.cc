@@ -6,6 +6,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <DFTServer/FrontEndStub.h>
 #include <Transport/TH_Socket.h>
 #include <APS/ParameterSet.h>

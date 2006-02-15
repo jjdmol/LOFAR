@@ -27,9 +27,7 @@
 // \file
 // WorkHolder class using DH_FixedSize() objects and measuring performance
 
-#ifdef HAVE_CONFIG_H
-#include <lofar_config.h>
-#endif
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include "tinyCEP/WorkHolder.h"
 #include "3BlockPerf/DH_FixedSize.h"

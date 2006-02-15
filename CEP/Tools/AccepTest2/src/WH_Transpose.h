@@ -10,7 +10,7 @@
 #ifndef WH_TRANSPOSE_H
 #define WH_TRANSPOSE_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <tinyCEP/WorkHolder.h>
 

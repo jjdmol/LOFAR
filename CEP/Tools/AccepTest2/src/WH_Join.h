@@ -10,7 +10,7 @@
 #ifndef WH_JOIN_H
 #define WH_JOIN_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <tinyCEP/WorkHolder.h>
 
