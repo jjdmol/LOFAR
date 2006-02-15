@@ -1,3 +1,4 @@
+#include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include <AH_testWHs.h>

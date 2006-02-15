@@ -1,13 +1,13 @@
-//  DH_CorrCube.cc:
-//
-//  Copyright (C) 2004
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
-//
-//  $Id$
-//
-//
-//////////////////////////////////////////////////////////////////////
+//#  DH_CorrCube.cc:
+//#
+//#  Copyright (C) 2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
+//#
+//#  $Id$
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 
 #include <DH_CorrCube.h>

@@ -1,14 +1,14 @@
-//  WH_Dump.cc: Dump to output stream
-//
-//  Copyright (C) 2000, 2001
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
-//
-//
-//  $Id$
-//
-//
-//////////////////////////////////////////////////////////////////////
+//#  WH_Dump.cc: Dump to output stream
+//#
+//#  Copyright (C) 2000, 2001
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
+//#
+//#
+//#  $Id$
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 #include <AccepTest2/WH_Dump.h>
 #include <AccepTest2/DH_CMatrix.h>
