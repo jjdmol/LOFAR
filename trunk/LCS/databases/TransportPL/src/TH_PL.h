@@ -73,7 +73,7 @@ public:
   static void synchroniseAllProcesses ();
 
   // Specify the data source name and account for PL. Usually dbDSN =
-  // <YourName> and userName="postgres".
+  // \<YourName\> and userName="postgres".
   static void useDatabase (const string& dbDSN,
 			   const string& userName="postgres");
 
