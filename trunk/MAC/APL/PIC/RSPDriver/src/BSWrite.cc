@@ -88,8 +88,7 @@ GCFEvent::TResult BSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-  // mark modification to indicate that it has been applied
-  // in the hardware
+  // change state to indicate that it has been applied in the hardware
   Cache::getInstance().getBack().getClocks().getState().applied(getBoardId());
 
   return GCFEvent::HANDLED;

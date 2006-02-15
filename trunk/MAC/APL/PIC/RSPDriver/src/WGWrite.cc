@@ -37,8 +37,10 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace RTC;
 
+#define N_REGISTERS 2 // the number of registers to write (DiagWg and DiagWgwave)
+
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL * 2) // times 2 for writing waveforms
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL * N_REGISTERS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -50,77 +52,74 @@ WGWrite::~WGWrite()
 
 void WGWrite::sendrequest()
 {
-  if (!Cache::getInstance().getBack().getWGSettings().getModified())
-  {
+  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + (getCurrentIndex() / N_REGISTERS);
+
+  if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getWGSettings().getState().get(global_rcu)) {
     setContinue(true);
     return;
   }
 
-  // Should we write the wave form also?
-  if (GET_CONFIG("RSPDriver.WRITE_WG_WAVE", i) == 0 && (getCurrentIndex() >= 
-					GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)) {
-    setContinue(true);
-    return;
-  }
+  switch (getCurrentIndex() % N_REGISTERS) {
 
-  if (getCurrentIndex() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-  {
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
-
-    EPADiagWgEvent wgsettings;
-
-    if (0 == global_rcu % MEPHeader::N_POL)
+  case 0:
     {
-      wgsettings.hdr.set(MEPHeader::DIAG_WGX_HDR, 1 << (getCurrentIndex() / MEPHeader::N_POL));
-    }
-    else
-    {
-      wgsettings.hdr.set(MEPHeader::DIAG_WGY_HDR, 1 << (getCurrentIndex() / MEPHeader::N_POL));
-    }
+      EPADiagWgEvent wgsettings;
 
-    WGSettings& w = Cache::getInstance().getBack().getWGSettings();
+      if (0 == global_rcu % MEPHeader::N_POL) {
+	wgsettings.hdr.set(MEPHeader::DIAG_WGX_HDR, 1 << (global_rcu / MEPHeader::N_POL));
+      } else {
+	wgsettings.hdr.set(MEPHeader::DIAG_WGY_HDR, 1 << (global_rcu / MEPHeader::N_POL));
+      }
 
-    wgsettings.mode        = w()(global_rcu).mode;
-    wgsettings.phase       = w()(global_rcu).phase;
-    wgsettings.nof_samples = w()(global_rcu).nof_samples;
-    wgsettings.freq        = w()(global_rcu).freq;
-    wgsettings.ampl        = w()(global_rcu).ampl;
+      WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
-    // wgsettings.preset field is not set because it is not sent to the hardware
-    // (see struct definition in RSP_Protocol/include/APL/RSP_Protocol/WGSettings.h)
+      wgsettings.mode        = w()(global_rcu).mode;
+      wgsettings.phase       = w()(global_rcu).phase;
+      wgsettings.nof_samples = w()(global_rcu).nof_samples;
+      wgsettings.freq        = w()(global_rcu).freq;
+      wgsettings.ampl        = w()(global_rcu).ampl;
+
+      // wgsettings.preset field is not set because it is not sent to the hardware
+      // (see struct definition in RSP_Protocol/include/APL/RSP_Protocol/WGSettings.h)
   
-    m_hdr = wgsettings.hdr;
-    getBoardPort().send(wgsettings);
-  }
-  else
-  {
-    int currentIndex = getCurrentIndex() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + currentIndex;
-
-    EPADiagWgwaveEvent wgwave;
-
-    if (0 == global_rcu % MEPHeader::N_POL)
-    {
-      wgwave.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR, 1 << (currentIndex / MEPHeader::N_POL));
+      m_hdr = wgsettings.hdr;
+      getBoardPort().send(wgsettings);
     }
-    else
+    break;
+
+  case 1:
     {
-      wgwave.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR, 1 << (currentIndex / MEPHeader::N_POL));
+      // Should we write the wave form also?
+      if (GET_CONFIG("RSPDriver.WRITE_WG_WAVE", i) == 0) {
+	setContinue(true);
+	return;
+      }
+
+      EPADiagWgwaveEvent wgwave;
+
+      if (0 == global_rcu % MEPHeader::N_POL)
+	{
+	  wgwave.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR, 1 << (global_rcu / MEPHeader::N_POL));
+	}
+      else
+	{
+	  wgwave.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR, 1 << (global_rcu / MEPHeader::N_POL));
+	}
+
+      WGSettings& w = Cache::getInstance().getBack().getWGSettings();
+
+      // copy waveform to event to be sent
+      Array<int32, 1> wave((int32*)&wgwave.samples,
+			   shape(N_WAVE_SAMPLES),
+			   neverDeleteData);
+
+      wave = WGSettings::preset(w()(global_rcu).preset);
+  
+      m_hdr = wgwave.hdr;
+      getBoardPort().send(wgwave);
     }
-
-    WGSettings& w = Cache::getInstance().getBack().getWGSettings();
-
-    // copy waveform to event to be sent
-    Array<int32, 1> wave((int32*)&wgwave.samples,
-			 shape(N_WAVE_SAMPLES),
-			 neverDeleteData);
-
-    wave = WGSettings::preset(w()(global_rcu).preset);
-  
-    m_hdr = wgwave.hdr;
-    getBoardPort().send(wgwave);
+    break;
   }
-  
 }
 
 void WGWrite::sendrequest_status()
@@ -143,6 +142,9 @@ GCFEvent::TResult WGWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     LOG_ERROR("WGWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
-    
+  
+  // change state to indicate that it has been applied in the hardware
+  Cache::getInstance().getBack().getWGSettings().getState().applied(getCurrentIndex() / N_REGISTERS);
+
   return GCFEvent::HANDLED;
 }

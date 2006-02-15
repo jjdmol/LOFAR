@@ -1584,9 +1584,9 @@ static void usage()
   cout << "                          7 = HB 210-270MHz 0x00078400" << endl;
   cout << "       --rcuprsg                 # turn psrg on" << endl;
   cout << "       --rcureset                # hold rcu in reset" << endl;
-  cout << "       --rcuattenuation=[0..127] # set the RCU attenuation" << endl;
+  cout << "       --rcuattenuation=[0..31]  # set the RCU attenuation" << endl;
   cout << "       --rcuspecinv              # enable spectral inversion" << endl;
-  cout << "       --rcudelay=[0..31]        # set the delay for rcu's" << endl;
+  cout << "       --rcudelay=[0..127]       # set the delay for rcu's" << endl;
   cout << endl;
   cout << "rspctl --wg                  [--select=<set>]  # get waveform generator settings" << endl;
   cout << "rspctl --wg=freq [--phase=..][--select=<set>]  # set waveform generator settings" << endl;
@@ -1850,8 +1850,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    case 'n': // --rcuattenuation
 	      controlopt = strtoul(optarg, 0, 0);
-	      if (controlopt >= 32) {
-		logMessage(cerr,"Error: --rcuattenuation value should be < 32");
+	      if (controlopt > 31) {
+		logMessage(cerr,"Error: --rcuattenuation value should be <= 31");
 		delete command;
 		return 0;
 	      }
@@ -1862,10 +1862,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      rcumodecommand->control().setSpecinv(true);
 	      break;
 
-	    case 'y': // --recudelay
+	    case 'y': // --rcudelay
 	      controlopt = strtoul(optarg, 0, 0);
-	      if (controlopt >= 128) {
-		logMessage(cerr,"Error: --rcudelay value should be < 128");
+	      if (controlopt > 127) {
+		logMessage(cerr,"Error: --rcudelay value should be <= 127");
 		delete command;
 		return 0;
 	      }

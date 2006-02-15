@@ -1769,6 +1769,7 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 
   ack.n_rcus = GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
   ack.n_rspboards = GET_CONFIG("RS.N_RSPBOARDS", i);
+  ack.obsolete = 0; // still need to initialize it to keep valgrind happy
 
   port.send(ack);
 }
