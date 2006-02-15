@@ -23,9 +23,6 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 #include <Blob/KeyParser.h>
 #include <string>
 #include <iostream>
