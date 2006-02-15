@@ -104,11 +104,11 @@ DoForAllArrayTypes(Typedef_arrays,)
 // Define type iterator macros for arrays
 #define DoForAllArrayRanks(Do,arg) \
   Do(1,arg); Do(2,arg); Do(3,arg); Do(4,arg); Do(5,arg); 
-//  Do(6,arg); Do(7,arg); Do(8,arg); Do(9,arg); Do(10,arg); Do(11,arg);
+/*  Do(6,arg); Do(7,arg); Do(8,arg); Do(9,arg); Do(10,arg); Do(11,arg); */
 
 #define DoForAllArrayRanks1(Do,arg) \
   Do(1,arg), Do(2,arg), Do(3,arg), Do(4,arg), Do(5,arg) 
-//  Do(6,arg), Do(7,arg), Do(8,arg), Do(9,arg), Do(10,arg), Do(11,arg)
+/*  Do(6,arg), Do(7,arg), Do(8,arg), Do(9,arg), Do(10,arg), Do(11,arg) */
 
 
 namespace LOFAR 

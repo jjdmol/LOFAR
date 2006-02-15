@@ -74,10 +74,10 @@ public:
 	// @{
 	
 	// The given APAdmin is ready to receive commands
-	void APAdminPool::markAsOnline (APAdmin*		anAPAdmin);
+	void markAsOnline (APAdmin*		anAPAdmin);
 
 	// Don't send any more messages to this APAdmin.
-	void APAdminPool::markAsOffline(APAdmin*		anAPAdmin);
+	void markAsOffline(APAdmin*		anAPAdmin);
 	// @}
 
 	// \name Functions for Ack administration

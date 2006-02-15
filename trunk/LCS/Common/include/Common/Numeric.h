@@ -42,9 +42,9 @@
 // if you want to use very large values for maxUlps.
 #define USE_NANCHECK
 
-// \def USE_SIGNCHECK
-// Add check for sign. You will need this check if you don't want a very small
-// positive number to compare as "close to" a very small negative number.
+//# \def USE_SIGNCHECK
+//# Add check for sign. You will need this check if you don't want a very small
+//# positive number to compare as "close to" a very small negative number.
 /* #define USE_SIGNCHECK */
 #undef USE_SIGNCHECK
 
