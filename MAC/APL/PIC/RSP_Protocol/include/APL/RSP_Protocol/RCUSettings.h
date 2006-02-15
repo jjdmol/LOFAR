@@ -26,6 +26,7 @@
 #define RCUSETTINGS_H_
 
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
+#include <APL/RTCCommon/RegisterState.h>
 
 #include <complex>
 #include <blitz/array.h>
@@ -183,16 +184,10 @@ namespace LOFAR {
 
       /* get reference settings array */
       blitz::Array<Control, 1>& operator()();
-      blitz::Array<bool, 1>& getModifiedFlags();
+
+      RTC::RegisterState& getState();
 
     public:
-
-      /*
-       * Keep flag to track wether an RCU settings has been modified.
-       */
-      void setModified(int rcu, bool modified = true);
-      bool getModified(int rcu) const;
-      void clearModified(); // clear all flags
 
       /*@{*/
       /**
@@ -205,11 +200,12 @@ namespace LOFAR {
 
     private:
       blitz::Array<Control, 1> m_registers;
-      blitz::Array<bool, 1>    m_modified;
+
+      RTC::RegisterState       m_state;
     };
   
-    inline blitz::Array<RCUSettings::Control, 1>& RCUSettings::operator()()       { return m_registers; }
-    inline blitz::Array<bool, 1>&                 RCUSettings::getModifiedFlags() { return m_modified; }
+    inline blitz::Array<RCUSettings::Control, 1>& RCUSettings::operator()() { return m_registers; }
+    inline RTC::RegisterState& RCUSettings::getState()                      { return m_state; }
 
   };
 }; // namespace LOFAR

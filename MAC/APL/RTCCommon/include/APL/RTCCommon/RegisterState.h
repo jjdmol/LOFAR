@@ -26,6 +26,7 @@
 #define REGISTERSTATE_H_
 
 #include <blitz/array.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
   namespace RTC {
@@ -60,37 +61,56 @@ namespace LOFAR {
 
 	void modified(int i = -1)
 	  {
-	    if (i < 0) m_state = MODIFIED;
-	    else if (NOT_MODIFIED == m_state(i) || APPLIED == m_state(i)) {
+	    if (i < 0) {
+	      m_state = MODIFIED;
+	      return;
+	    }
+	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+	    if (NOT_MODIFIED == m_state(i) || APPLIED == m_state(i)) {
 	      m_state(i) = MODIFIED;
 	    }
 	  }
 
 	void reset(int i = -1)
 	  {
-	    if (i < 0) m_state = NOT_MODIFIED;
-	    else if (NOT_MODIFIED == m_state(i) || APPLIED == m_state(i)) {
+	    if (i < 0) {
+	      m_state = NOT_MODIFIED;
+	      return;
+	    }
+	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+	    if (NOT_MODIFIED == m_state(i) || APPLIED == m_state(i)) {
 	      m_state(i) = NOT_MODIFIED;
 	    }
 	  }
 
 	void applied(int i = -1)
 	  {
-	    if (i < 0) m_state = APPLIED;
-	    else if (MODIFIED == m_state(i)) {
+	    if (i < 0) {
+	      m_state = APPLIED;
+	      return;
+	    }
+	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+	    if (MODIFIED == m_state(i)) {
 	      m_state(i) = APPLIED;
 	    }
 	  }
 
 	void clear(int i = -1)
 	  {
-	    if (i < 0) m_state = NOT_MODIFIED;
-	    else if (APPLIED == m_state(i)) {
+	    if (i < 0) {
+	      m_state = NOT_MODIFIED;
+	      return;
+	    }
+	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+	    if (APPLIED == m_state(i)) {
 	      m_state(i) = NOT_MODIFIED;
 	    }
 	  }
 
-	State get(int i) { return m_state(i); }
+	State get(int i) {
+	  ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+	  return m_state(i);
+	}
 
       private:
 	/**

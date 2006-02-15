@@ -50,9 +50,8 @@ void RCUWrite::sendrequest()
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
 
   // skip update if the neither of the RCU's settings have been modified
-  if (!Cache::getInstance().getBack().getRCUSettings().getModified(global_blp * 2)
-      && !Cache::getInstance().getBack().getRCUSettings().getModified(global_blp * 2 + 1))
-  {
+  if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRCUSettings().getState().get(global_blp * 2)
+      && RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRCUSettings().getState().get(global_blp * 2 + 1)) {
     setContinue(true);
     return;
   }
@@ -96,6 +95,9 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     LOG_ERROR("RCUWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
+
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
+  Cache::getInstance().getBack().getRCUSettings().getState().applied(global_blp);
 
   return GCFEvent::HANDLED;
 }

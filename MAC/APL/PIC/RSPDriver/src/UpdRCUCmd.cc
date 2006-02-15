@@ -40,13 +40,13 @@ using namespace RTC;
 //
 UpdRCUCmd::UpdRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-	// Constructor of UpdRCUCmd is only called on a SubRCUEvent
-	// convert event to Subrcu event
-	m_event = new RSPSubrcuEvent(event);
+  // Constructor of UpdRCUCmd is only called on a SubRCUEvent
+  // convert event to Subrcu event
+  m_event = new RSPSubrcuEvent(event);
 
-	setOperation(oper);
-	setPeriod(m_event->period);
-	setPort(port);
+  setOperation(oper);
+  setPeriod(m_event->period);
+  setPort(port);
 }
 
 //
@@ -54,8 +54,8 @@ UpdRCUCmd::UpdRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 //
 UpdRCUCmd::~UpdRCUCmd()
 {
-	// delete our own event again
-	delete m_event;
+  // delete our own event again
+  delete m_event;
 }
 
 //
@@ -63,7 +63,7 @@ UpdRCUCmd::~UpdRCUCmd()
 //
 void UpdRCUCmd::ack(CacheBuffer& /*cache*/)
 {
-	// intentionally left empty
+  // intentionally left empty
 }
 
 //
@@ -71,7 +71,7 @@ void UpdRCUCmd::ack(CacheBuffer& /*cache*/)
 //
 void UpdRCUCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
-	// no-op
+  // no-op
 }
 
 //
@@ -79,40 +79,40 @@ void UpdRCUCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 //
 void UpdRCUCmd::complete(CacheBuffer& cache)
 {
-	// construct ack message
-	RSPUpdrcuEvent ack;
+  // construct ack message
+  RSPUpdrcuEvent ack;
 
-	ack.timestamp = getTimestamp();
-	ack.status 	  = SUCCESS;
-	ack.handle 	  = (uint32)this; // opaque ptr used to refer to the subscr.
+  ack.timestamp = getTimestamp();
+  ack.status 	  = SUCCESS;
+  ack.handle 	  = (uint32)this; // opaque ptr used to refer to the subscr.
 
-	// Allocate room in subbands array
-	ack.settings().resize(m_event->rcumask.count());
+  // Allocate room in subbands array
+  ack.settings().resize(m_event->rcumask.count());
 
-	// loop over RCU's to get the results.
-	int result_rcu = 0;
-	for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * 
-						  	GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; 
-						    cache_rcu++) {
+  // loop over RCU's to get the results.
+  int result_rcu = 0;
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * 
+	 GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; 
+       cache_rcu++) {
 
-		if (m_event->rcumask[cache_rcu]) {
-			if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
-							GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) {
-				ack.settings()(result_rcu)=cache.getRCUSettings()()(cache_rcu);
-			}
-			else {
-				LOG_WARN(
-				   formatString("invalid RCU index %d, there are only %d RCU's",
-				   cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) *
-				   			  GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)); 
-			}
+    if (m_event->rcumask[cache_rcu]) {
+      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
+	  GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) {
+	ack.settings()(result_rcu)=cache.getRCUSettings()()(cache_rcu);
+      }
+      else {
+	LOG_WARN(
+		 formatString("invalid RCU index %d, there are only %d RCU's",
+			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) *
+			      GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)); 
+      }
 
-			result_rcu++;
-   		}
-	}
+      result_rcu++;
+    }
+  }
 
-	// Finally send the answer
-	getPort()->send(ack);
+  // Finally send the answer
+  getPort()->send(ack);
 }
 
 //
@@ -120,7 +120,7 @@ void UpdRCUCmd::complete(CacheBuffer& cache)
 //
 const Timestamp& UpdRCUCmd::getTimestamp() const
 {
-	return m_event->timestamp;
+  return m_event->timestamp;
 }
 
 //
@@ -128,7 +128,7 @@ const Timestamp& UpdRCUCmd::getTimestamp() const
 //
 void UpdRCUCmd::setTimestamp(const Timestamp& timestamp)
 {
-	m_event->timestamp = timestamp;
+  m_event->timestamp = timestamp;
 }
 
 //
@@ -136,8 +136,8 @@ void UpdRCUCmd::setTimestamp(const Timestamp& timestamp)
 //
 bool UpdRCUCmd::validate() const
 {
-	// check ranges
-	return ((m_event->rcumask.count() <= 
-			(unsigned int)GET_CONFIG("RS.N_RSPBOARDS" , i) * 
-			GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
+  // check ranges
+  return ((m_event->rcumask.count() <= 
+	   (unsigned int)GET_CONFIG("RS.N_RSPBOARDS" , i) * 
+	   GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
 }
