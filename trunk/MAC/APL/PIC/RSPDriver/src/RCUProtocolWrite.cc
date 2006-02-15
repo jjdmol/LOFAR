@@ -52,7 +52,7 @@ void RCUProtocolWrite::sendrequest()
   uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
 
   // skip update if the RCU settings have not been modified
-  if (!Cache::getInstance().getBack().getRCUSettings().getModified(global_rcu))
+  if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))
   {
     setContinue(true);
     return;
@@ -116,6 +116,9 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
     LOG_ERROR("RCUProtocolWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
+
+  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+  Cache::getInstance().getBack().getRCUSettings().getState().applied(global_rcu);
 
   return GCFEvent::HANDLED;
 }

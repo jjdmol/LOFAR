@@ -42,23 +42,6 @@ const uint32 RCUSettings::Control::m_mode[] = {
   0x00078400, // MODE_HB_210_290MHZ
 };
 
-void RCUSettings::setModified(int rcu, bool modified)
-{
-  ASSERT(rcu >= 0 && rcu < m_modified.extent(firstDim));
-  m_modified(rcu) = modified;
-}
-
-bool RCUSettings::getModified(int rcu) const
-{
-  ASSERT(rcu >= 0 && rcu < m_modified.extent(firstDim));
-  return m_modified(rcu);
-}
-
-void RCUSettings::clearModified()
-{
-  m_modified = false;
-}
-
 unsigned int RCUSettings::getSize()
 {
   return MSH_ARRAY_SIZE(m_registers, RCUSettings::Control);
