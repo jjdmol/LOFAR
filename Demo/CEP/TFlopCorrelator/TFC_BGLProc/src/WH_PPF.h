@@ -35,7 +35,7 @@ namespace LOFAR
 
   //private:
     fcomplex itsDelayLine[NR_TAPS] __attribute__ ((aligned(16)));
-    static const float weights[NR_SUB_CHANNELS][NR_TAPS];
+    static const float weights[NR_SUB_CHANNELS][NR_TAPS] __attribute ((aligned(32)));
   };
 
 
