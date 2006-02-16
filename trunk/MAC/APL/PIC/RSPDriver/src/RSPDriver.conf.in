@@ -204,6 +204,7 @@ RSPDriver.WRITE_WG=1
 RSPDriver.WRITE_WG_WAVE=0
 RSPDriver.READ_VERSION=1
 RSPDriver.READ_XST=1
+RSPDriver.READ_RCU_RESULT=1
 
 #
 # Optionally read RW-registers.

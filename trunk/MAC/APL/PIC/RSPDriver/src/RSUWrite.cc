@@ -82,7 +82,7 @@ void RSUWrite::sendrequest()
   else {
 	// cache modified?
 	// TODO: global_rcu should be something different: like global_board.
-    if (!Cache::getInstance().getBack().getRSUSettings().getModifiedFlags()(getBoardId())) {
+    if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRSUSettings().getState().get(getBoardId())) {
       setContinue(true);
       return;
     }
@@ -120,6 +120,8 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     LOG_ERROR("RSUWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
+
+  Cache::getInstance().getBack().getRSUSettings().getState().applied(getBoardId());
 
   return GCFEvent::HANDLED;
 }

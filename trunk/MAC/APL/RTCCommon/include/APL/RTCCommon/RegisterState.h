@@ -42,7 +42,7 @@ namespace LOFAR {
 	  APPLIED      = 3
 	};
 
-	RegisterState(State state = NOT_MODIFIED)
+	explicit RegisterState(State state = NOT_MODIFIED)
 	  {
 	    m_state.resize(1);
 	    m_state = state;

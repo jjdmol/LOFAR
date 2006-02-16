@@ -1,4 +1,4 @@
-//#  RCUProtocolWrite.cc: implementation of the RCUProtocolWrite class
+//#  RCUResultRead.cc: implementation of the RCUResultRead class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,7 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <string.h>
 
-#include "RCUProtocolWrite.h"
+#include "RCUResultRead.h"
 #include "Cache.h"
 
 #include <netinet/in.h>
@@ -36,35 +36,32 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
+
 namespace LOFAR {
   namespace RSP {
-    // construct i2c sequence
-    uint8 i2c_protocol[] = { 0x0F, // PROTOCOL_C_SEND_BLOCK
-			     0x01, // I2C address for RCU
-			     0x03, // size
-			     0xFF, // <<< replace with data >>>
-			     0xFF, // <<< replace with data >>>
-			     0xFF, // <<< replace with data >>>
-			     0x10, // PROTOCOL_C_RECEIVE_BLOCK
-			     0x01, // I2C adress for RCU
-			     0x03, // requested size
-			     0x13, // PROTOCOL_C_END
+    // construct expected i2c result
+    uint8 i2c_result[] = { 0x00, // PROTOCOL_C_SEND_BLOCK OK
+			   0xFF, // <<< replace with expected data >>>
+			   0xFF, // <<< replace with expected data >>>
+			   0xFF, // <<< replace with expected data >>>
+			   0x00, // PROTOCOL_C_RECEIVE_BLOCK OK
+			   0x00, // PROTOCOL_C_END OK
     };
   };
 };
 
-RCUProtocolWrite::RCUProtocolWrite(GCFPortInterface& board_port, int board_id)
+RCUResultRead::RCUResultRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
-RCUProtocolWrite::~RCUProtocolWrite()
+RCUResultRead::~RCUResultRead()
 {
   /* TODO: delete event? */
 }
 
-void RCUProtocolWrite::sendrequest()
+void RCUResultRead::sendrequest()
 {
   uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
 
@@ -75,50 +72,55 @@ void RCUProtocolWrite::sendrequest()
     return;
   }
 
-  // reverse and copy control bytes into i2c_protocol
-  RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
-  uint32 control = htonl(rcucontrol.getRaw());
-  memcpy(i2c_protocol+3, &control, 3);
-
   // set appropriate header
   MEPHeader::FieldsType hdr;
   if (0 == global_rcu % 2) {
-    hdr = MEPHeader::RCU_PROTOCOLX_HDR;
+    hdr = MEPHeader::RCU_RESULTX_HDR;
   } else {
-    hdr = MEPHeader::RCU_PROTOCOLY_HDR;
+    hdr = MEPHeader::RCU_RESULTY_HDR;
   }
 
-  EPARcuProtocolEvent rcuprotocol;
-  rcuprotocol.hdr.set(hdr, 1 << (getCurrentIndex() / MEPHeader::N_POL), MEPHeader::WRITE, sizeof(i2c_protocol));
-  rcuprotocol.protocol.setBuffer(i2c_protocol, sizeof(i2c_protocol));
-  //  memcpy(rcuprotocol.protocol, i2c_protocol, sizeof(i2c_protocol));
+  EPAReadEvent rcuresult;
+  rcuresult.hdr.set(hdr, 1 << (getCurrentIndex() / MEPHeader::N_POL), MEPHeader::READ, sizeof(i2c_result));
   
-  m_hdr = rcuprotocol.hdr; // remember header to match with ack
-  getBoardPort().send(rcuprotocol);
+  m_hdr = rcuresult.hdr; // remember header to match with ack
+  getBoardPort().send(rcuresult);
 }
 
-void RCUProtocolWrite::sendrequest_status()
+void RCUResultRead::sendrequest_status()
 {
   // intentionally left empty
 }
 
-GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_WRITEACK != event.signal)
+  if (EPA_RCU_RESULT != event.signal)
   {
-    LOG_WARN("RCUProtocolWrite::handleack:: unexpected ack");
+    LOG_WARN("RCUResultRead::handleack:: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
   
-  EPAWriteackEvent ack(event);
+  EPARcuResultEvent ack(event);
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    LOG_ERROR("RCUProtocolWrite::handleack: invalid ack");
+    LOG_ERROR("RCUResultRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
 
-  // RCUResultRead will update the state if the result was OK
+  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+
+  // reverse and copy control bytes into i2c_result
+  RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
+  uint32 control = htonl(rcucontrol.getRaw());
+  memcpy(i2c_result + 1, &control, 3);
+
+  if (0 == memcmp(i2c_result, ack.result, sizeof(i2c_result))) {
+    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+    Cache::getInstance().getBack().getRCUSettings().getState().applied(global_rcu);
+  } else {
+    LOG_ERROR("RCUResultRead::handleack: unexpected I2C result response");
+  }
 
   return GCFEvent::HANDLED;
 }

@@ -112,14 +112,14 @@ EPAStub::EPAStub(string name)
 
   m_reg[MEPHeader::RCU][MEPHeader::RCU_SETTINGS].addr  = new char[MEPHeader::RCU_SETTINGS_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::RCU][MEPHeader::RCU_SETTINGS].size  = MEPHeader::RCU_SETTINGS_SIZE;
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_PROTOCOLX].addr = new char[MEPHeader::RCU_PROTOCOLX_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_PROTOCOLX].size = MEPHeader::RCU_PROTOCOLX_SIZE;
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTSX].addr  = new char[MEPHeader::RCU_RESULTSX_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTSX].size  = MEPHeader::RCU_RESULTSX_SIZE;
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_PROTOCOLY].addr = new char[MEPHeader::RCU_PROTOCOLY_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_PROTOCOLY].size = MEPHeader::RCU_PROTOCOLY_SIZE;
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTSY].addr  = new char[MEPHeader::RCU_RESULTSY_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTSY].size  = MEPHeader::RCU_RESULTSY_SIZE;
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_PROTOCOLX].addr = new char[MEPHeader::RCU_PROTOCOL_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_PROTOCOLX].size = MEPHeader::RCU_PROTOCOL_SIZE;
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTX].addr  = new char[MEPHeader::RCU_RESULT_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTX].size  = MEPHeader::RCU_RESULT_SIZE;
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_PROTOCOLY].addr = new char[MEPHeader::RCU_PROTOCOL_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_PROTOCOLY].size = MEPHeader::RCU_PROTOCOL_SIZE;
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTY].addr  = new char[MEPHeader::RCU_RESULT_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTY].size  = MEPHeader::RCU_RESULT_SIZE;
 
   // CR_CONTROL register for all AP's and the BP (hence the + 1)
   m_reg[MEPHeader::CR][MEPHeader::CR_CONTROL].addr     = new char[MEPHeader::CR_CONTROL_SIZE * (GET_CONFIG("EPAStub.N_BLPS", i) + 1)];
@@ -168,8 +168,8 @@ EPAStub::EPAStub(string name)
 
   m_reg[MEPHeader::TDS][MEPHeader::TDS_PROTOCOL].addr = new char[MEPHeader::TDS_PROTOCOL_SIZE];
   m_reg[MEPHeader::TDS][MEPHeader::TDS_PROTOCOL].size = MEPHeader::TDS_PROTOCOL_SIZE;
-  m_reg[MEPHeader::TDS][MEPHeader::TDS_RESULTS].addr  = new char[MEPHeader::TDS_RESULTS_SIZE];
-  m_reg[MEPHeader::TDS][MEPHeader::TDS_RESULTS].size  = MEPHeader::TDS_RESULTS_SIZE;
+  m_reg[MEPHeader::TDS][MEPHeader::TDS_RESULT].addr  = new char[MEPHeader::TDS_RESULT_SIZE];
+  m_reg[MEPHeader::TDS][MEPHeader::TDS_RESULT].size  = MEPHeader::TDS_RESULT_SIZE;
 
   m_reg[MEPHeader::TBB][MEPHeader::TBB_CONTROL].addr  = new char[MEPHeader::TBB_CONTROL_SIZE];
   m_reg[MEPHeader::TBB][MEPHeader::TBB_CONTROL].size  = MEPHeader::TBB_CONTROL_SIZE;
@@ -431,8 +431,8 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_RSR_STATUS:
     case EPA_RSR_VERSION:
     case EPA_DIAG_RESULTS:
-    case EPA_RCU_RESULTS:
-    case EPA_TDS_RESULTS:
+    case EPA_RCU_RESULT:
+    case EPA_TDS_RESULT:
       {
 	// log invalid write events
 	EPAWriteEvent write(event);

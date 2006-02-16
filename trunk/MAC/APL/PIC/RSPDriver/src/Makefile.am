@@ -142,6 +142,8 @@ RSPDriver_SOURCES = \
 	RCUWrite.cc \
 	RCUProtocolWrite.h \
 	RCUProtocolWrite.cc \
+	RCUResultRead.h \
+	RCUResultRead.cc \
 	RCURead.h \
 	RCURead.cc \
 	StatusRead.h \

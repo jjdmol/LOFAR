@@ -238,11 +238,11 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WRITEACK,     /* WRITEACK */
     },
 
-    /* reg = 0x02 (RCU_RESULTSX) */
+    /* reg = 0x02 (RCU_RESULTX) */
     { 0,
       EPA_READ,        /* READ     */
       0,
-      EPA_RCU_RESULTS, /* READACK  */
+      EPA_RCU_RESULT, /* READACK  */
       0,
     },
 
@@ -254,11 +254,11 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WRITEACK,     /* WRITEACK */
     },
 
-    /* reg = 0x04 (RCU_RESULTSY) */
+    /* reg = 0x04 (RCU_RESULTY) */
     { 0,
       EPA_READ,        /* READ     */
       0,
-      EPA_RCU_RESULTS, /* READACK  */
+      EPA_RCU_RESULT, /* READACK  */
       0,
     },
   },
@@ -383,11 +383,11 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WRITEACK,     /* WRITEACK */
     },
 
-    /* reg = 0x01 (TDS_RESULTS) */
+    /* reg = 0x01 (TDS_RESULT) */
     { 0,
-      EPA_READ,         /* READ     */
+      EPA_READ,       /* READ     */
       0,
-      EPA_TDS_PROTOCOL, /* READACK  */
+      EPA_TDS_RESULT, /* READACK  */
       0,
     },
   },
@@ -405,62 +405,63 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
 };
 
+typedef struct {
+  GCFEvent              event;
+  MEPHeader::FieldsType mephdr;
+  uint8                 payload[ETH_DATA_LEN];
+} RawFrame;
+static RawFrame buf;
+
 GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 {
-  static char buf[ETH_DATA_LEN]; // static packet buffer
+
+#if 0
+  cout << " sizeof(RawFrame)              =" << sizeof(RawFrame) << endl
+       << " sizeof(GCFEvent)              =" << sizeof(GCFEvent) << endl
+       << " sizeof(MEPHeader::FieldsType) =" << sizeof(MEPHeader::FieldsType) << endl
+       << " sizeof(payload)               =" << sizeof(buf.payload) << endl;
+#endif
 
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  MEPHeader hdr;
+  // Receive a raw packet
+  ssize_t size = port.recv(&buf.mephdr, ETH_DATA_LEN);
 
-  //
-  // Receive the packet
-  // 
-  ssize_t size = port.recv(buf, ETH_DATA_LEN);
-  ssize_t offset = 0;
-
-  if (size < (ssize_t)sizeof(hdr.m_fields)) return GCFEvent::NOT_HANDLED;
-
-  //
-  // Copy the header
-  //
-  memcpy(&hdr.m_fields, buf + offset, sizeof(hdr.m_fields));
-  offset += sizeof(hdr.m_fields);
+  if (size < (ssize_t)sizeof(buf.mephdr)) return GCFEvent::NOT_HANDLED;
 
   LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, status=%d, frame_length=%d, "
-			 "addr=(0x%04x 0x%02x 0x%02x), offset=%d, payload_length=%d, "
+			 "addr=(0x%04x 0x%02x 0x%02x), payload_length=%d, "
 			 "seqnr=%d",
-			 hdr.m_fields.type,
-			 hdr.m_fields.status,
-			 hdr.m_fields.frame_length,
-			 hdr.m_fields.addr.dstid,
-			 hdr.m_fields.addr.pid,
-			 hdr.m_fields.addr.regid,
-			 hdr.m_fields.offset,
-			 hdr.m_fields.payload_length,
-			 hdr.m_fields.seqnr));
+			 buf.mephdr.type,
+			 buf.mephdr.status,
+			 buf.mephdr.frame_length,
+			 buf.mephdr.addr.dstid,
+			 buf.mephdr.addr.pid,
+			 buf.mephdr.addr.regid,
+			 buf.mephdr.payload_length,
+			 buf.mephdr.seqnr));
 
   unsigned short signal = 0; // signal == 0 indicates unrecognised or invalid MEP message
 
   //
   // Decode the header fields
   //
-  if (   hdr.m_fields.addr.pid   >= MEPHeader::MIN_PID
-      && hdr.m_fields.addr.pid   <= MEPHeader::MAX_PID
-      && hdr.m_fields.addr.regid <= MEPHeader::MAX_REGID
-      && hdr.m_fields.type       <= MEPHeader::MAX_TYPE)
+  if (   buf.mephdr.addr.pid   >= MEPHeader::MIN_PID
+      && buf.mephdr.addr.pid   <= MEPHeader::MAX_PID
+      && buf.mephdr.addr.regid <= MEPHeader::MAX_REGID
+      && buf.mephdr.type       <= MEPHeader::MAX_TYPE)
   {
     //
     // If no error, lookup signal number, else assign ACK_ERROR signal number
     //
-    if (0 == hdr.m_fields.status)
+    if (0 == buf.mephdr.status)
     {
-      signal = signal_lut[hdr.m_fields.addr.pid - MEPHeader::MIN_PID][hdr.m_fields.addr.regid][hdr.m_fields.type];
+      signal = signal_lut[buf.mephdr.addr.pid - MEPHeader::MIN_PID][buf.mephdr.addr.regid][buf.mephdr.type];
     }
     else 
     {
-      if (MEPHeader::READACK == hdr.m_fields.type) signal = EPA_READACK_ERROR;
-      else if (MEPHeader::WRITEACK == hdr.m_fields.type) signal = EPA_WRITEACK_ERROR;
+      if (MEPHeader::READACK == buf.mephdr.type) signal = EPA_READACK_ERROR;
+      else if (MEPHeader::WRITEACK == buf.mephdr.type) signal = EPA_WRITEACK_ERROR;
       else 
       {
 	LOG_WARN("Protocol violation: received message other than MEPHeader::READACK or MEPHeader::WRITEACK with error != 0 set.");
@@ -470,66 +471,34 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   
   if (signal) // signal == 0 indicates unrecognised or invalid MEP message
   {
-    GCFEvent e(signal);
+    (void)new((void*)&buf.event) GCFEvent(signal); // placement new does in place construction
 
-    //
-    // allocate memory for the GCFEvent header,
-    // the MEPHeader and the MEP payload.
-    //
-    GCFEvent* event = (GCFEvent*)new char[sizeof(GCFEvent)
-					  + sizeof(hdr.m_fields)
-					  + hdr.m_fields.payload_length];
+    // set the event length
+    buf.event.length = sizeof(buf.mephdr) + buf.mephdr.payload_length;
 
-    //
-    // Copy the correct event and set the length
-    //
-    memcpy(event, &e, sizeof(GCFEvent));
-    event->length = sizeof(hdr.m_fields) + hdr.m_fields.payload_length;
-    memcpy((char*)event + sizeof(GCFEvent), &hdr.m_fields, sizeof(hdr.m_fields));
-
-    //
-    // If there was an error, there won't be a payload
-    // despite what the size field suggests.
-    //
-    if (0 == hdr.m_fields.status)
+    // check if there is more data than needed
+    if (size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType)) > 0)
     {
-      //
-      // Get the payload
-      //
-      if (size - offset >= hdr.m_fields.payload_length)
-      {
-	memcpy((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields), buf + offset, hdr.m_fields.payload_length);
-	offset += hdr.m_fields.payload_length;
-      }
-    }
-    
-    if (size - offset > 0)
-    {
-      LOG_DEBUG(formatString("discarding %d bytes", size - offset));
+      LOG_DEBUG(formatString("discarding %d bytes", size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType))));
     }
 
     //
     // Print debugging info
     // 
-    if ((F_DATAIN != event->signal) && 
-	(F_DATAOUT != event->signal) &&
-	(F_EVT_PROTOCOL(*event) != F_FSM_PROTOCOL) &&
-	(F_EVT_PROTOCOL(*event) != F_PORT_PROTOCOL))
+    if ((F_DATAIN != buf.event.signal) && 
+	(F_DATAOUT != buf.event.signal) &&
+	(F_EVT_PROTOCOL(buf.event) != F_FSM_PROTOCOL) &&
+	(F_EVT_PROTOCOL(buf.event) != F_PORT_PROTOCOL))
     {
       LOG_DEBUG(formatString("%s receives '%s' on port '%s'",
 			     task.getName().c_str(), 
-			     task.evtstr(*event), port.getName().c_str()));
+			     task.evtstr(buf.event), port.getName().c_str()));
     }
 
     //
     // dispatch the MEP message as a GCFEvent (which it now is)
     //
-    status = task.dispatch(*event, port);
-	
-    //
-    // Free the memory for the event
-    //
-    delete [] (char*)event;
+    status = task.dispatch(buf.event, port);
   }
   else
   {
