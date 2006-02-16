@@ -1,9 +1,113 @@
+2005-12-02 12:02  loose
+
+	* test/: tEarthCoord.stdout, tSkyCoord.stdout: BugID: 196
+
+	  Added reference output files for test programs tEarthCoord and
+	  tSkyCoord.
+
+2005-11-30 17:42  loose
+
+	* test/AMCClient/tConverterCommand.stdout: BugID: 196
+
+	  Added reference output for test programs.
+
+2005-11-30 17:27  loose
+
+	* src/EarthCoord.cc, src/SkyCoord.cc,
+	  test/AMCClient/tConverterCommand.cc: BugID: 196
+
+	  Added methods to return the enum value Types or Commands as a
+	  string.
+
+2005-11-30 16:55  loose
+
+	* src/AMCClient/BlobIO.cc, src/AMCClient/ConverterCommand.cc,
+	  src/AMCClient/ConverterCommand.h, test/AMCClient/tBlobIO.cc,
+	  test/AMCClient/tConverterCommand.cc: BugID: 196
+
+	  Reimplemented ConverterCommand class: the constructor now only
+	  accepts a true enum, which more closely matches the way that enum
+	  data members are handled in the classes SkyCoord and EarthCoord.
+
+2005-11-28 16:34  loose
+
+	* src/Converter.h, src/SkyCoord.cc,
+	  src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h,
+	  src/AMCClient/ConverterCommand.h, src/AMCClient/DH_Request.cc,
+	  src/AMCClient/DH_Result.cc, test/AMCClient/tBlobIO.cc,
+	  test/AMCClient/tConverterCommand.cc: BugID: 196
+
+	  Added ITRF --> J2000 conversion routines.
+
+2005-11-23 12:29  loose
+
+	* src/: Converter.h, AMCClient/ConverterClient.cc,
+	  AMCClient/ConverterClient.h: BugID: 382
+
+	  * Made the destructor in Converter.h public.	* Moved actual
+	  conversion routines into one generic doConvert() method; this
+	  reduces code duplication.  * Added resilience and error handling
+	  when server has died (temporarily).
+
+2005-10-07 14:04  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in,
+	  src/AMCClient/ConverterClient.cc: BugID: 196
+
+	  Development for Bug #196. Branch created at
+	  LCS-AMC-1_0-release-root; merged changes in LCS-AMC-1_0patch1
+	  into this branch.
+
+2005-10-04 11:42  diepen
+
+	* Makefile.am, src/Makefile.am, test/AMCClient/Makefile.am,
+	  test/Makefile.am: BugId: 396 Use $(top_srcdir)/Makefile.common
+
+2005-10-04 11:40  diepen
+
+	* configure.in: BugId: 396 Use lofar_GENERAL
+
+2005-09-28 22:03  loose
+
+	* ChangeLog, NEWS, src/AMCClient/ConverterClient.cc: BugID: 382
+
+	  Merged release 1.0 patch 1 with main development line.
+
+2005-09-27 16:37  loose
+
+	* ChangeLog, NEWS: BugID: 382
+
+	  Created patch release 1_0patch1.
+
 2005-09-23 23:55  loose
 
 	* src/AMCClient/ConverterClient.cc: BugID: 382
 
 	  Now throws ClientError exception when call to Connection::read()
 	  or Connection::write() returns a Connection::Error.
+
+2005-07-27 17:16  loose
+
+	* src/Converter.h, src/EarthCoord.cc, src/EarthCoord.h,
+	  src/SkyCoord.cc, src/SkyCoord.h, src/TimeCoord.cc,
+	  src/TimeCoord.h, src/AMCClient/BlobIO.cc,
+	  src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h,
+	  src/AMCClient/ConverterCommand.h, test/tEarthCoord.cc,
+	  test/tSkyCoord.cc, test/tTimeCoord.cc, test/AMCClient/tBlobIO.cc,
+	  test/AMCClient/tConverterClient.cc,
+	  test/AMCClient/tConverterCommand.cc,
+	  test/AMCClient/tDH_Request.cc: BugID: 196
+
+	  * Added conversion routines for J2000 to ITRF conversion of sky
+	  coordinates. Actual conversion has not yet been implemented.
+
+	  * Added support for different types of SkyCoord (J2000, AZEL, and
+	  ITRF) and   EarthCoord (ITRF, WGS84). Modifications are backward
+	  compatible, except for   the output of operator<<(), which now
+	  also prints the type.    Tests have been extended to cover these
+	  different types.
 
 2005-07-05 16:29  loose
 
