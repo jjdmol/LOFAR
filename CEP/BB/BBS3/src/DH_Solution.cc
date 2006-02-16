@@ -35,6 +35,8 @@
 namespace LOFAR
 {
 
+#define PRECISION 20
+
 const unsigned int MaxNumberOfParam = 32;  // These need NOT be the same as in DH_WorkOrder
 const unsigned int MaxParamNameLength = 16;
 
@@ -240,6 +242,7 @@ void DH_Solution::dump() const
 string DH_Solution::createInsertStatement(TH_DB* th)
 {
   ostringstream q;
+  q.precision(PRECISION);
   if (itsWriteIndivParms) // Store parameters individually in a subtable
   {
     q << "INSERT INTO bbs3solutions (data, woid, iteration, fit, mu, stddev, chi, "
