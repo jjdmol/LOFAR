@@ -62,10 +62,10 @@ const MEPHeader::FieldsType MEPHeader::BST_POWER_HDR         = { READ,  0, 0, { 
 const MEPHeader::FieldsType MEPHeader::SST_POWER_HDR         = { READ,  0, 0, { DST_BLP0, SST, SST_POWER }, 0, SST_POWER_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::RCU_SETTINGS_HDR      = { WRITE, 0, 0, { DST_BLP0, RCU, RCU_SETTINGS  }, 0, RCU_SETTINGS_SIZE,  0, 0 };
-const MEPHeader::FieldsType MEPHeader::RCU_PROTOCOLX_HDR     = { WRITE, 0, 0, { DST_BLP0, RCU, RCU_PROTOCOLX }, 0, RCU_PROTOCOLX_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::RCU_RESULTSX_HDR      = { READ,  0, 0, { DST_BLP0, RCU, RCU_RESULTSX  }, 0, RCU_RESULTSX_SIZE,  0, 0 };
-const MEPHeader::FieldsType MEPHeader::RCU_PROTOCOLY_HDR     = { WRITE, 0, 0, { DST_BLP0, RCU, RCU_PROTOCOLY }, 0, RCU_PROTOCOLY_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::RCU_RESULTSY_HDR      = { READ,  0, 0, { DST_BLP0, RCU, RCU_RESULTSY  }, 0, RCU_RESULTSY_SIZE,  0, 0 };
+const MEPHeader::FieldsType MEPHeader::RCU_PROTOCOLX_HDR     = { WRITE, 0, 0, { DST_BLP0, RCU, RCU_PROTOCOLX }, 0, RCU_PROTOCOL_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::RCU_RESULTX_HDR       = { READ,  0, 0, { DST_BLP0, RCU, RCU_RESULTX   }, 0, RCU_RESULT_SIZE,   0, 0 };
+const MEPHeader::FieldsType MEPHeader::RCU_PROTOCOLY_HDR     = { WRITE, 0, 0, { DST_BLP0, RCU, RCU_PROTOCOLY }, 0, RCU_PROTOCOL_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::RCU_RESULTY_HDR       = { READ,  0, 0, { DST_BLP0, RCU, RCU_RESULTY   }, 0, RCU_RESULT_SIZE,   0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::CR_CONTROL_HDR        = { WRITE, 0, 0, { DST_RSP, CR, CR_CONTROL }, 0, CR_CONTROL_SIZE, 0, 0 };
 
@@ -77,7 +77,7 @@ const MEPHeader::FieldsType MEPHeader::CDO_HEADER_HDR        = { WRITE, 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::BS_NOF_SAMPLES_PER_SYNC_HDR = { WRITE, 0, 0, { DST_BLP0, BS, BS_NOF_SAMPLES_PER_SYNC }, 0, BS_NOF_SAMPLES_PER_SYNC_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::TDS_PROTOCOL_HDR      = { WRITE, 0, 0, { DST_RSP, TDS, TDS_PROTOCOL }, 0, TDS_PROTOCOL_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::TDS_RESULTS_HDR       = { READ,  0, 0, { DST_RSP, RSR, TDS_RESULTS  }, 0, TDS_RESULTS_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::TDS_RESULT_HDR        = { READ,  0, 0, { DST_RSP, RSR, TDS_RESULT   }, 0, TDS_RESULT_SIZE,   0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::TBB_CONTROL_HDR       = { WRITE, 0, 0, { DST_RSP, TBB, TBB_CONTROL }, 0, TBB_CONTROL_SIZE, 0, 0 };
 

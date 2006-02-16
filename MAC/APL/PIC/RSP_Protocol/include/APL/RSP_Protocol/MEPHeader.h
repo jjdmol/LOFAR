@@ -159,9 +159,9 @@ namespace LOFAR {
 
       static const uint8 RCU_SETTINGS     = 0x00;
       static const uint8 RCU_PROTOCOLX    = 0x01;
-      static const uint8 RCU_RESULTSX     = 0x02;
+      static const uint8 RCU_RESULTX      = 0x02;
       static const uint8 RCU_PROTOCOLY    = 0x03;
-      static const uint8 RCU_RESULTSY     = 0x04;
+      static const uint8 RCU_RESULTY      = 0x04;
 
       static const uint8 CR_CONTROL       = 0x00;
 
@@ -187,7 +187,7 @@ namespace LOFAR {
       static const uint8 BS_NOF_SAMPLES_PER_SYNC = 0x00;
 
       static const uint8 TDS_PROTOCOL            = 0x00;
-      static const uint8 TDS_RESULTS             = 0x01;
+      static const uint8 TDS_RESULT              = 0x01;
 
       /**
        * Placeholder register for future TBB control via the RSP board.
@@ -271,10 +271,8 @@ namespace LOFAR {
       static const uint16 SST_POWER_SIZE        = N_SUBBANDS * N_POL * sizeof(uint32);
 
       static const uint16 RCU_SETTINGS_SIZE     = 3;
-      static const uint16 RCU_PROTOCOLX_SIZE    = 128;
-      static const uint16 RCU_RESULTSX_SIZE     = 128;
-      static const uint16 RCU_PROTOCOLY_SIZE    = 128;
-      static const uint16 RCU_RESULTSY_SIZE     = 128;
+      static const uint16 RCU_PROTOCOL_SIZE     = 128;
+      static const uint16 RCU_RESULT_SIZE       = 128;
 
       static const uint16 CR_CONTROL_SIZE       = 1;
 
@@ -291,7 +289,7 @@ namespace LOFAR {
       static const uint16 BS_NOF_SAMPLES_PER_SYNC_SIZE     = 4;
 
       static const uint16 TDS_PROTOCOL_SIZE     = 128;
-      static const uint16 TDS_RESULTS_SIZE      = 128;
+      static const uint16 TDS_RESULT_SIZE       = 128;
 
       /**
        * Placeholder register for future TBB control via the RSP board.
@@ -396,9 +394,9 @@ namespace LOFAR {
 
       static const FieldsType RCU_SETTINGS_HDR;
       static const FieldsType RCU_PROTOCOLX_HDR;
-      static const FieldsType RCU_RESULTSX_HDR;
+      static const FieldsType RCU_RESULTX_HDR;
       static const FieldsType RCU_PROTOCOLY_HDR;
-      static const FieldsType RCU_RESULTSY_HDR;
+      static const FieldsType RCU_RESULTY_HDR;
 
       static const FieldsType CR_CONTROL_HDR;
 
@@ -410,7 +408,7 @@ namespace LOFAR {
       static const FieldsType BS_NOF_SAMPLES_PER_SYNC_HDR;
 
       static const FieldsType TDS_PROTOCOL_HDR;
-      static const FieldsType TDS_RESULTS_HDR;
+      static const FieldsType TDS_RESULT_HDR;
 
       static const FieldsType TBB_CONTROL_HDR;
       /*@}*/

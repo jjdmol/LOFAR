@@ -37,60 +37,60 @@ using namespace RTC;
 
 SetRSUCmd::SetRSUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-	m_event = new RSPSetrsuEvent(event);
+  m_event = new RSPSetrsuEvent(event);
 
-	LOG_INFO(formatString("RSUcontrol=0x%02x", m_event->settings()(0).getRaw()));
+  LOG_INFO(formatString("RSUcontrol=0x%02x", m_event->settings()(0).getRaw()));
 
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
+  setOperation(oper);
+  setPeriod(0);
+  setPort(port);
 }
 
 SetRSUCmd::~SetRSUCmd()
 {
-	delete m_event;
+  delete m_event;
 }
 
 void SetRSUCmd::ack(CacheBuffer& /*cache*/)
 {
-	RSPSetrsuackEvent ack;
+  RSPSetrsuackEvent ack;
 
-	ack.timestamp = getTimestamp();
-	ack.status = SUCCESS;
+  ack.timestamp = getTimestamp();
+  ack.status = SUCCESS;
 
-	getPort()->send(ack);
+  getPort()->send(ack);
 }
 
 void SetRSUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-	for (int boardNr = 0; boardNr < GET_CONFIG("RS.N_RSPBOARDS", i); boardNr++) { 
-        // TODO: don't reset all boards
-		LOG_INFO (formatString("RSUcontrol for board %d", boardNr));
-		cache.getRSUSettings()()(boardNr) = m_event->settings()(0);
-	    if (setModFlag) {
-		  cache.getRSUSettings().getModifiedFlags()(boardNr) = true;
-	    }
-	}
+  for (int boardNr = 0; boardNr < GET_CONFIG("RS.N_RSPBOARDS", i); boardNr++) { 
+    // TODO: don't reset all boards
+    LOG_INFO (formatString("RSUcontrol for board %d", boardNr));
+    cache.getRSUSettings()()(boardNr) = m_event->settings()(0);
+    if (setModFlag) {
+      cache.getRSUSettings().getState().modified(boardNr);
+    }
+  }
 }
 
 void SetRSUCmd::complete(CacheBuffer& /*cache*/)
 {
-	LOG_INFO_STR("SetRSUCmd completed at time=" << getTimestamp());
+  LOG_INFO_STR("SetRSUCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetRSUCmd::getTimestamp() const
 {
-	return (m_event->timestamp);
+  return (m_event->timestamp);
 }
 
 void SetRSUCmd::setTimestamp(const Timestamp& timestamp)
 {
-	m_event->timestamp = timestamp;
+  m_event->timestamp = timestamp;
 }
 
 bool SetRSUCmd::validate() const
 {
-	return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i))
-				&& (1 == m_event->settings().dimensions())
-				&& (1 == m_event->settings().extent(firstDim)));
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i))
+	  && (1 == m_event->settings().dimensions())
+	  && (1 == m_event->settings().extent(firstDim)));
 }

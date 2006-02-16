@@ -93,13 +93,12 @@ CacheBuffer::CacheBuffer()
   // allocate modified flags for all receivers
   m_rcusettings.getState().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
 
-	// RSU settings
-	m_rsusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
-	RSUSettings::ResetControl 	rsumode;
-	rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
-	m_rsusettings() = rsumode;
-	m_rsusettings.getModifiedFlags().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
-
+  // RSU settings
+  m_rsusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  RSUSettings::ResetControl 	rsumode;
+  rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
+  m_rsusettings() = rsumode;
+  m_rsusettings.getState().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
 
   m_wgsettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
   m_wgsettings.getState().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
@@ -272,7 +271,7 @@ Cache::Cache() : m_front(0), m_back(0)
   m_back->getClocks().getState().modified();
   m_front->getClocks().getState().modified();
   m_back->getRCUSettings().getState().modified();
-  m_back->getRSUSettings().getModifiedFlags() = true;
+  m_back->getRSUSettings().getState().modified();
 }
 
 Cache::~Cache()
@@ -287,7 +286,7 @@ void Cache::swapBuffers()
   m_back->getWGSettings().getState().clear();
   m_back->getClocks().getState().clear();
   m_back->getRCUSettings().getState().clear();
-  m_back->getRSUSettings().clearModified();
+  m_back->getRSUSettings().getState().clear();
 
   CacheBuffer *tmp = m_front;
   m_front = m_back;

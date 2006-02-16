@@ -734,7 +734,7 @@ event = {
     userdefined;
   };
   param = {
-    name = "data";
+    name = "protocol";
     type = "MEPData";
     userdefined;
   };
@@ -742,7 +742,7 @@ event = {
 
 event = {
   noheader;
-  signal = RCU_RESULTS; // hdr should specify XPOL or YPOL
+  signal = RCU_RESULT; // hdr should specify XPOL or YPOL
   dir = IN; // read-only register
   param = {
     name = "hdr";
@@ -750,9 +750,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "data";
-    type = "MEPData";
-    userdefined;
+    name = "result";
+    type = "uint8[MEPHeader::RCU_RESULT_SIZE]";
   };
 };
 
@@ -857,7 +856,7 @@ event = {
     userdefined;
   };
   param = {
-    name = "data";
+    name = "protocol";
     type = "MEPData";
     userdefined;
   };
@@ -865,7 +864,7 @@ event = {
 
 event = {
   noheader;
-  signal = TDS_RESULTS;
+  signal = TDS_RESULT;
   dir = IN; // read-only register
   param = {
     name = "hdr";
@@ -873,7 +872,7 @@ event = {
     userdefined;
   };
   param = {
-    name = "data";
+    name = "result";
     type = "MEPData";
     userdefined;
   };

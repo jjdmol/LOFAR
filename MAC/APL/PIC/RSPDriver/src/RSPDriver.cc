@@ -72,6 +72,7 @@
 #include "SSRead.h"
 #include "RCUWrite.h"
 #include "RCUProtocolWrite.h"
+#include "RCUResultRead.h"
 #include "RCURead.h"
 #include "StatusRead.h"
 #include "SstRead.h"
@@ -480,6 +481,13 @@ void RSPDriver::addAllSyncActions()
 	ASSERT(xstread);
 	m_scheduler.addSyncAction(xstread);
       }
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_RCU_RESULT", i))
+    {
+      RCUResultRead* rcuresultread = new RCUResultRead(m_board[boardid], boardid);
+      ASSERT(rcuresultread);
+      m_scheduler.addSyncAction(rcuresultread);
     }
 
   } // for (boardid...)
