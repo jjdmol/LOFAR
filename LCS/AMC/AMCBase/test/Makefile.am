@@ -23,4 +23,8 @@ TESTS				= tSkyCoord.sh \
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  LOFARROOT=$(LOFARROOT)
 
+EXTRA_DIST			= $(TESTS) \
+				  tSkyCoord.stdout \
+				  tEarthCoord.stdout
+
 include $(top_srcdir)/Makefile.common
