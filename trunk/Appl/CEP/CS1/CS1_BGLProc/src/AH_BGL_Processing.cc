@@ -69,6 +69,22 @@ void AH_BGL_Processing::undefine()
   delete itsVisibilitiesStub;	itsVisibilitiesStub   = 0;
 }  
 
+unsigned AH_BGL_Processing::remapOnTree(unsigned logicalNode)
+{
+  int mpiNode = ((((logicalNode >> 0) & 1)    ) << 0) |
+		((((logicalNode >> 5) & 1) ^ 1) << 1) |
+		((((logicalNode >> 1) & 1)    ) << 2) |
+		((((logicalNode >> 4) & 1)    ) << 3) |
+		((((logicalNode >> 2) & 1)    ) << 4) |
+		((((logicalNode >> 3) & 1)    ) << 5);
+
+#if defined HAVE_MPI
+  ASSERTSTR(mpiNode < TH_MPI::getNumberOfNodes(), "not enough MPI nodes allocated");
+#endif
+  
+  return mpiNode;
+}
+
 void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGL_Processing::define()");
@@ -125,7 +141,7 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
       }
 #endif
 
-      wh->runOnNode(node ++);
+      wh->runOnNode(remapOnTree(node ++));
     }
   }
 
