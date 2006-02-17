@@ -35,6 +35,7 @@
 #include <CS1_Interface/Stub_BGL_Subband.h>
 
 #include <Transport/TransportHolder.h>
+#include <Transport/TH_MPI.h>
 
 namespace LOFAR {
   namespace CS1_InputSection {
