@@ -49,6 +49,8 @@ class AH_BGL_Processing: public TinyApplicationHolder
   virtual void quit();
 
  private:
+  static unsigned remapOnTree(unsigned logicalNode);
+
   vector<WH_BGL_Processing *> itsWHs;
 
   Stub_BGL_Subband	      *itsSubbandStub;
