@@ -61,7 +61,10 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 Makefile
+include/Makefile
+include/AMCBase/Makefile
 src/Makefile
 test/Makefile
 test/AMCClient/Makefile
+AMCBase.spec
 )

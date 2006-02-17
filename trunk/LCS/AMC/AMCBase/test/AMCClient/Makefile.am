@@ -27,4 +27,7 @@ tDH_Result_DEPENDENCIES		= ../../src/libamcbase.la $(LOFAR_DEPEND)
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  LOFARROOT=$(LOFARROOT)
 
+EXTRA_DIST			= $(TESTS) \
+				  tConverterCommand.stdout
+
 include $(top_srcdir)/Makefile.common
