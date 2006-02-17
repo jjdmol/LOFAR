@@ -69,6 +69,7 @@ lofar_INTERNAL(CEP/BB/MS,MS,,1,MS/MSDesc.h,bbms)
 #lofar_EXTERNAL(bdb,1,db_cxx.h,"db_cxx")
 
 lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
+lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)
 
 dnl
 dnl Output Makefiles
