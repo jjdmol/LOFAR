@@ -66,6 +66,5 @@ include/Makefile
 include/AMCImpl/Makefile
 src/Makefile
 test/Makefile
-test/AMCServer/Makefile
 AMCImpl.spec
 )
