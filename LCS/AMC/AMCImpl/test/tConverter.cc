@@ -184,6 +184,5 @@ int main(int /*argc*/, const char* const argv[])
   }
 
   cout << "OK" << endl;
-  return 0;
-  
+  return 2;  // forces assay to flag missing .stdout file as an error
 }

@@ -28,6 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <cstdlib>
 #include <cerrno>
+#include <unistd.h>
 
 using namespace std;
 using namespace LOFAR;
