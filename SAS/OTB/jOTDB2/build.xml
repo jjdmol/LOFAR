@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<!-- build.xml - a simple Ant buildfile -->
+<project name="jOTDB2 Buildfile" default="compile" basedir=".">
+
+  <!-- The directory containing source code -->
+  <property name="src.dir" value="src/nl/astron/lofar/sas/otb/otdb2"/>
+
+  <!-- Temporary build directories -->
+  <property name="build.dir" value="build"/>
+  <property name="build.classes" value="${build.dir}/classes"/>
+  <property name="build.lib" value="${build.dir}/lib"/>
+
+  <!-- Target to create the build directories prior to the -->
+  <!-- compile target. -->
+  <target name="prepare">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${build.classes}"/>
+    <mkdir dir="${build.lib}"/>
+  </target>
+
+  <target name="clean" description="Remove all generated files.">
+    <delete dir="${build.classes}"/>
+    <delete dir="${build.lib}"/>
+  </target>
+
+  <target name="compile" depends="prepare"
+          description="Compiles all source code.">
+    <javac srcdir="${src.dir}" destdir="${build.classes}"/>
+    <rmic base="${build.classes}" classname="nl.astron.lofar.sas.otb.jotdb2.jConverterAdapter"/>
+    <rmic base="${build.classes}" classname="nl.astron.lofar.sas.otb.jotdb2.jOTDBadapter"/>
+    <rmic base="${build.classes}" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceAdapter"/>
+    <rmic base="${build.classes}" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeValueAdapter"/>    
+  </target>
+
+  <target name="jar" depends="compile"
+          description="Generates jotdb2.jar in the 'dist' directory.">
+    <!-- Exclude unit tests from the final JAR file -->
+    <jar jarfile="${build.lib}/jotdb2.jar" 
+         basedir="${build.classes}"
+         excludes="**/*Test.class"
+	 manifest="${src.dir}/Manifest.txt"/>
+  </target>
+
+  <target name="all" depends="clean,jar"
+          description="Cleans, compiles, then builds the JAR file."/>
+	  
+  <target name="install" depends="jar"
+           description="Copies the generated jotdb2.jar to the installation directory.">
+     <copy file="${build.lib}/jotdb2.jar" todir="../../../installed/gnu_debug/lib/"/>
+  </target>
+  
+</project>
