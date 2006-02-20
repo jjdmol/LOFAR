@@ -1,23 +1,6 @@
-INSTHDRS			= ConverterImpl.h \
-				  Exceptions.h \
-				  AMCServer/ConverterProcess.h \
-				  AMCServer/ConverterServer.h \
-				  AMCServer/Process.h
-
-NOINSTHDRS			=
-
-TCCHDRS				=
-
-nobase_pkginclude_HEADERS	= $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS			= $(NOINSTHDRS)
-
-DOCHDRS				= $(INSTHDRS) $(NOINSTHDRS)
-
 lib_LTLIBRARIES			= libamcimpl.la
 
-libamcimpl_la_SOURCES 		= $(DOCHDRS) \
-				  ConverterImpl.cc \
+libamcimpl_la_SOURCES 		= ConverterImpl.cc \
 				  AMCServer/ConverterProcess.cc \
 				  AMCServer/ConverterServer.cc \
 				  AMCServer/Process.cc
