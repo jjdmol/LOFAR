@@ -4,7 +4,7 @@
 <project name="jOTDB2 Buildfile" default="compile" basedir=".">
 
   <!-- The directory containing source code -->
-  <property name="src.dir" value="src/nl/astron/lofar/sas/otb/otdb2"/>
+  <property name="src.dir" value="src/nl/astron/lofar/sas/otb/jotdb2"/>
 
   <!-- Temporary build directories -->
   <property name="build.dir" value="build"/>

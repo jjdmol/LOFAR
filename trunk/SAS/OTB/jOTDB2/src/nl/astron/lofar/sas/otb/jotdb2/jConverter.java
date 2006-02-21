@@ -12,7 +12,6 @@ package nl.astron.lofar.sas.otb.jotdb2;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  *
@@ -39,60 +38,60 @@ public class jConverter {
         itsUC  = new jUnitConv();
     }
     
-    public long getClassif(String aConv) { 
+    public short getClassif(String aConv) { 
         return itsCC.get(aConv);
     }
     
-    public String getClassif(long aConv) {
+    public String getClassif(short aConv) {
         return itsCC.get(aConv);
     }
     
-    public HashMap getClassif() {
+    public HashMap<Short,String> getClassif() {
         return itsCC.getTypes();
     }
 
-    public long getParamType(String aConv) { 
+    public short getParamType(String aConv) { 
         return itsPTC.get(aConv);
     }
     
-    public String getParamType(long aConv) {
+    public String getParamType(short aConv) {
         return itsPTC.get(aConv);
     }
     
-    public HashMap getParamType() {
+    public HashMap<Short,String> getParamType() {
         return itsPTC.getTypes();
     }
-    public long getTreeState(String aConv) { 
+    public short getTreeState(String aConv) { 
         return itsTSC.get(aConv);
     }
     
-    public String getTreeState(long aConv) {
+    public String getTreeState(short aConv) {
         return itsTSC.get(aConv);
     }
     
-    public HashMap getTreeState() {
+    public HashMap<Short,String> getTreeState() {
         return itsTSC.getTypes();
     }
-    public long getTreeType(String aConv) { 
+    public short getTreeType(String aConv) { 
         return itsTTC.get(aConv);
     }
     
-    public String getTreeType(long aConv) {
+    public String getTreeType(short aConv) {
         return itsTTC.get(aConv);
     }
     
-    public HashMap getTreeType() {
+    public HashMap<Short,String> getTreeType() {
         return itsTTC.getTypes();
     }
-    public long getUnit(String aConv) { 
+    public short getUnit(String aConv) { 
         return itsUC.get(aConv);
     }
     
-    public String getUnit(long aConv) {
+    public String getUnit(short aConv) {
         return itsUC.get(aConv);
     }
     
-    public HashMap getUnit() {
+    public HashMap<Short,String> getUnit() {
         return itsUC.getTypes();
     }
 

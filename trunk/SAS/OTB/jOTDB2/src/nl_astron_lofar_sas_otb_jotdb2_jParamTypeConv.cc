@@ -38,43 +38,63 @@ using namespace std;
 
 static ParamTypeConv* paramTypeConv;
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv
+ * Method:    initParamTypeConv
+ * Signature: ()V
+ */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_initParamTypeConv(JNIEnv *, jobject) {
   
   OTDBconn = getConnection();
   paramTypeConv = new ParamTypeConv(OTDBconn);
 }
 
-JNIEXPORT jlong JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get__Ljava_lang_String_2(JNIEnv *env, jobject, jstring aConv) {
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv
+ * Method:    get
+ * Signature: (Ljava/lang/String;)S
+ */
+JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get__Ljava_lang_String_2(JNIEnv *env, jobject, jstring aConv) {
   
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
   
-  long ret = paramTypeConv->get (str);
+  short ret = paramTypeConv->get (str);
   
   env->ReleaseStringUTFChars (aConv, chars);	     
   
   return ret;
 }
 
-JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get__J(JNIEnv *env, jobject, jlong aConv) {
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv
+ * Method:    get
+ * Signature: (S)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get__S(JNIEnv *env, jobject, jshort aConv) {
   jstring jstr = env->NewStringUTF (paramTypeConv->get(aConv).c_str());
   return jstr;
 }
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv
+ * Method:    getTypes
+ * Signature: ()Ljava/util/HashMap;
+ */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_getTypes(JNIEnv *env, jobject) {
 
   
   // Construct java Map
   jobject result;
-  jclass mapClass, longClass;
-  jmethodID mapInit, put, longInit;
+  jclass mapClass, shortClass;
+  jmethodID mapInit, put, shortInit;
     
   mapClass = env->FindClass("java/util/HashMap");
   mapInit = env->GetMethodID(mapClass, "<init>", "()V");
   result = env->NewObject(mapClass, mapInit);
 
-  longClass = env->FindClass("java/lang/Long");
-  longInit = env->GetMethodID(longClass, "<init>", "(J)V");
+  shortClass = env->FindClass("java/lang/Short");
+  shortInit = env->GetMethodID(shortClass, "<init>", "(S)V");
   
 
 
@@ -92,9 +112,9 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get
     string value;
 
     if (paramTypeConv->get(key, value)) {
-      env->CallObjectMethod(result, put, env->NewObject(longClass,
-							longInit,
-							(jlong)key), 
+      env->CallObjectMethod(result, put, env->NewObject(shortClass,
+							shortInit,
+							(jshort)key), 
 							env->NewStringUTF(value.c_str()));
 
       if ( env->ExceptionOccurred() )
@@ -106,11 +126,21 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get
 
 }
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv
+ * Method:    top
+ * Signature: ()V
+ */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_top(JNIEnv *, jobject) {
   paramTypeConv->top();
 }
 
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv
+ * Method:    next
+ * Signature: ()Z
+ */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_next(JNIEnv *, jobject) {
   jboolean aBool=paramTypeConv->next();
   return aBool;

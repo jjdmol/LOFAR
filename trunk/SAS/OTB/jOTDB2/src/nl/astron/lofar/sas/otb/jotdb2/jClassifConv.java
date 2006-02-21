@@ -31,14 +31,14 @@ public class jClassifConv {
     }
 
     private native void    initClassifConv();
-    public  native long    get(String jarg1);
-    public  native String  get(long jarg1);
+    public  native short   get(String jarg1);
+    public  native String  get(short jarg1);
 
     // java doesn't implement reference arguments, so the
     // initial call bool get(long type, string typename)
     // can't be made easily here/ Choice has been made to gather the complete
     // list in the c++ wrapper and return it completely here.
-    public  native HashMap getTypes();
+    public  native HashMap<Short,String> getTypes();
     public  native void    top();
     public  native boolean next();
 } 

@@ -30,23 +30,23 @@ public interface jConverterInterface extends Remote
     // Constants
     public static final String SERVICENAME = "jConverter";
 
-    public long getClassif (String aConv) throws RemoteException;
-    public String getClassif (long aConv) throws RemoteException;
-    public HashMap getClassif() throws RemoteException;
+    public short getClassif (String aConv) throws RemoteException;
+    public String getClassif (short aConv) throws RemoteException;
+    public HashMap<Short,String> getClassif() throws RemoteException;
     
-    public long getParamType (String aConv) throws RemoteException;
-    public String getParamType (long aConv) throws RemoteException;
-    public HashMap getParamType() throws RemoteException;
+    public short getParamType (String aConv) throws RemoteException;
+    public String getParamType (short aConv) throws RemoteException;
+    public HashMap<Short,String> getParamType() throws RemoteException;
     
-    public long getTreeState (String aConv) throws RemoteException;
-    public String getTreeState (long aConv) throws RemoteException;
-    public HashMap getTreeState() throws RemoteException;
+    public short getTreeState (String aConv) throws RemoteException;
+    public String getTreeState (short aConv) throws RemoteException;
+    public HashMap<Short,String> getTreeState() throws RemoteException;
     
-    public long getTreeType (String aConv) throws RemoteException;
-    public String getTreeType (long aConv) throws RemoteException;
-    public HashMap getTreeType() throws RemoteException;
+    public short getTreeType (String aConv) throws RemoteException;
+    public String getTreeType (short aConv) throws RemoteException;
+    public HashMap<Short,String> getTreeType() throws RemoteException;
     
-    public long getUnit (String aConv) throws RemoteException;
-    public String getUnit (long aConv) throws RemoteException;
-    public HashMap getUnit() throws RemoteException;
+    public short getUnit (String aConv) throws RemoteException;
+    public String getUnit (short aConv) throws RemoteException;
+    public HashMap<Short,String> getUnit() throws RemoteException;
 }
