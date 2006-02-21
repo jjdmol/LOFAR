@@ -11,7 +11,7 @@ class tRemoteConverter
 {
     private static jOTDBinterface conn;
     private static jConverterInterface tc;
-    private static HashMap aM;
+    private static HashMap<Short,String> aM;
     private static Iterator it;
     public static String RMIServerName      = "lofar17.astron.nl";
     public static String RMIServerPort      = "1091";
@@ -49,56 +49,57 @@ class tRemoteConverter
 
             // Classif
             System.out.println("****** Classif testen ******");
-            System.out.println("Converting 2: "+ tc.getClassif(2));
+            System.out.println("Converting 2: "+ tc.getClassif((short)2));
             System.out.println("Converting test: "+ tc.getClassif("test"));
             aM=tc.getClassif();
             it = aM.keySet().iterator();
             while (it.hasNext()) {  
-                Long key = (Long)it.next();
+                Short key = (Short)it.next();
                 System.out.println(key.toString() + "  <->  " + aM.get(key));
             }
 
             // ParamType
             System.out.println("****** ParamType testen ******");
-            System.out.println("Converting 101: "+ tc.getParamType(101));
+            System.out.println("Converting 101: "+ tc.getParamType((short)101));
             System.out.println("Converting text: "+ tc.getParamType("text"));
             aM=tc.getParamType();
+
             it = aM.keySet().iterator();
             while (it.hasNext()) {  
-                Long key = (Long)it.next();
+                Short key = (Short)it.next();
                 System.out.println(key.toString() + "  <->  " + aM.get(key));
             }
              
             // TreeState
             System.out.println("****** TreeState testen ******");
-            System.out.println("Converting 1100: "+ tc.getTreeState(1100));
+            System.out.println("Converting 1100: "+ tc.getTreeState((short)1100));
             System.out.println("Converting active: "+ tc.getTreeState("active"));
             aM=tc.getTreeState();
             it = aM.keySet().iterator();
             while (it.hasNext()) {  
-                Long key = (Long)it.next();
+                Short key = (Short)it.next();
                 System.out.println(key.toString() + "  <->  " + aM.get(key));
             }
              
             // TreeType
             System.out.println("****** TreeType testen ******");
-            System.out.println("Converting 30: "+ tc.getTreeType(30));
+            System.out.println("Converting 30: "+ tc.getTreeType((short)30));
             System.out.println("Converting hardware: "+ tc.getTreeType("hardware"));
             aM=tc.getTreeType();
             it = aM.keySet().iterator();
             while (it.hasNext()) {  
-                Long key = (Long)it.next();
+                Short key = (Short)it.next();
                 System.out.println(key.toString() + "  <->  " + aM.get(key));
             }
              
             // Unit
             System.out.println("****** Unit testen ******");
-            System.out.println("Converting 7: "+ tc.getUnit(7));
+            System.out.println("Converting 7: "+ tc.getUnit((short)7));
             System.out.println("Converting RAM: "+ tc.getUnit("RAM"));
             aM=tc.getUnit();
             it = aM.keySet().iterator();
             while (it.hasNext()) {  
-                Long key = (Long)it.next();
+                Short key = (Short)it.next();
                 System.out.println(key.toString() + "  <->  " + aM.get(key));
             }
              

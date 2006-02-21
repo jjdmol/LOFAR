@@ -11,7 +11,7 @@ import java.util.Iterator;
 class tConverter
 {
 
-    private HashMap aM;
+    private HashMap<Short,String> aM;
     private Iterator it;
 
     private String dbName="otdbtest";
@@ -46,7 +46,7 @@ class tConverter
 	System.out.println("Constructing a Classif-type converter");
 	jClassifConv cf = new jClassifConv();
 
-	System.out.println("Converting 2: "+ cf.get(2));
+	System.out.println("Converting 2: "+ cf.get((short)2));
 
 	System.out.println("Converting test: "+ cf.get("test"));
 
@@ -56,14 +56,14 @@ class tConverter
 	aM=cf.getTypes();
 	it = aM.keySet().iterator();
 	while (it.hasNext()) {
-	    Long key = (Long)it.next();
+	    Short key = (Short)it.next();
 	    System.out.println(key.toString() + "  <->  " + aM.get(key));
 	}
 
 	System.out.println("Constructing a ParamType converter");
 	jParamTypeConv ptf = new jParamTypeConv();
 
-	System.out.println("Converting 101: "+ ptf.get(101));
+	System.out.println("Converting 101: "+ ptf.get((short)101));
 
 	System.out.println("Converting text: "+ ptf.get("text"));
 
@@ -71,18 +71,17 @@ class tConverter
 	
 	ptf.top();
 	System.out.println("getTypes Map");
-	aM= new HashMap();
 	aM=ptf.getTypes();
 	it = aM.keySet().iterator();
 	while (it.hasNext()) {
-	    Long key = (Long)it.next();
+	    Short key = (Short)it.next();
 	    System.out.println(key.toString() + "  <->  " + aM.get(key));
 	}
 
 	System.out.println("Constructing a TreeState-type converter");
 	jTreeStateConv ts = new jTreeStateConv();
 
-	System.out.println("Converting 1100: "+ ts.get(1100));
+	System.out.println("Converting 1100: "+ ts.get((short)1100));
 
 	System.out.println("Converting active: "+ ts.get("active"));
 
@@ -90,11 +89,10 @@ class tConverter
 	
 	ts.top();
 	System.out.println("getTypes Map");
-	aM= new HashMap();
 	aM=ts.getTypes();
 	it = aM.keySet().iterator();
 	while (it.hasNext()) {
-	    Long key = (Long)it.next();
+	    Short key = (Short)it.next();
 	    System.out.println(key.toString() + "  <->  " + aM.get(key));
 	}
 
@@ -102,7 +100,7 @@ class tConverter
 	System.out.println("Constructing a TreeType-type converter");
 	jTreeTypeConv tt = new jTreeTypeConv();
 
-	System.out.println("Converting 30: "+ tt.get(30));
+	System.out.println("Converting 30: "+ tt.get((short)30));
 
 	System.out.println("Converting hardware: "+ tt.get("hardware"));
 
@@ -110,11 +108,10 @@ class tConverter
 	
 	tt.top();
 	System.out.println("getTypes Map");
-	aM= new HashMap();
 	aM=tt.getTypes();
 	it = aM.keySet().iterator();
 	while (it.hasNext()) {
-	    Long key = (Long)it.next();
+	    Short key = (Short)it.next();
 	    System.out.println(key.toString() + "  <->  " + aM.get(key));
 	}
 
@@ -122,7 +119,7 @@ class tConverter
 	System.out.println("Constructing a Unit-type converter");
 	jUnitConv ut = new jUnitConv();
 
-	System.out.println("Converting 7: "+ ut.get(7));
+	System.out.println("Converting 7: "+ ut.get((short)7));
 
 	System.out.println("Converting RAM: "+ ut.get("RAM"));
 
@@ -130,11 +127,10 @@ class tConverter
 	
 	ut.top();
 	System.out.println("getTypes Map");
-	aM= new HashMap();
 	aM=ut.getTypes();
 	it = aM.keySet().iterator();
 	while (it.hasNext()) {
-	    Long key = (Long)it.next();
+	    Short key = (Short)it.next();
 	    System.out.println(key.toString() + "  <->  " + aM.get(key));
 	}
 
