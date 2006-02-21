@@ -38,43 +38,63 @@ using namespace std;
 
 static UnitConv* unitConv;
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jUnitConv
+ * Method:    initUnitConv
+ * Signature: ()V
+ */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_initUnitConv(JNIEnv *, jobject) {
   
   OTDBconn = getConnection();
   unitConv = new UnitConv(OTDBconn);
 }
 
-JNIEXPORT jlong JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_get__Ljava_lang_String_2(JNIEnv *env, jobject, jstring aConv) {
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jUnitConv
+ * Method:    get
+ * Signature: (Ljava/lang/String;)S
+ */
+JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_get__Ljava_lang_String_2(JNIEnv *env, jobject, jstring aConv) {
   
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
   
-  long ret = unitConv->get (str);
+  short ret = unitConv->get (str);
   
   env->ReleaseStringUTFChars (aConv, chars);	     
   
   return ret;
 }
 
-JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_get__J(JNIEnv *env, jobject, jlong aConv) {
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jUnitConv
+ * Method:    get
+ * Signature: (S)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_get__S(JNIEnv *env, jobject, jshort aConv) {
   jstring jstr = env->NewStringUTF (unitConv->get(aConv).c_str());
   return jstr;
 }
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jUnitConv
+ * Method:    getTypes
+ * Signature: ()Ljava/util/HashMap;
+ */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_getTypes(JNIEnv *env, jobject) {
 
   
   // Construct java Map
   jobject result;
-  jclass mapClass, longClass;
-  jmethodID mapInit, put, longInit;
+  jclass mapClass, shortClass;
+  jmethodID mapInit, put, shortInit;
     
   mapClass = env->FindClass("java/util/HashMap");
   mapInit = env->GetMethodID(mapClass, "<init>", "()V");
   result = env->NewObject(mapClass, mapInit);
 
-  longClass = env->FindClass("java/lang/Long");
-  longInit = env->GetMethodID(longClass, "<init>", "(J)V");
+  shortClass = env->FindClass("java/lang/Short");
+  shortInit = env->GetMethodID(shortClass, "<init>", "(S)V");
   
 
 
@@ -92,9 +112,9 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_getTypes
     string value;
 
     if (unitConv->get(key, value)) {
-      env->CallObjectMethod(result, put, env->NewObject(longClass,
-							longInit,
-							(jlong)key), 
+      env->CallObjectMethod(result, put, env->NewObject(shortClass,
+							shortInit,
+							(jshort)key), 
 							env->NewStringUTF(value.c_str()));
 
       if ( env->ExceptionOccurred() )
@@ -106,11 +126,21 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_getTypes
 
 }
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jUnitConv
+ * Method:    top
+ * Signature: ()V
+ */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_top(JNIEnv *, jobject) {
   unitConv->top();
 }
 
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jUnitConv
+ * Method:    next
+ * Signature: ()Z
+ */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_next(JNIEnv *, jobject) {
   jboolean aBool=unitConv->next();
   return aBool;
