@@ -95,7 +95,7 @@ ypes(JNIEnv *env, jobject) {
   result = env->NewObject(mapClass, mapInit);
 
   shortClass = env->FindClass("java/lang/Short");
-  shortInit = env->GetMethodID(shortClass, "<init>", "(J)V");
+  shortInit = env->GetMethodID(shortClass, "<init>", "(S)V");
   
 
 
