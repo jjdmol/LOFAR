@@ -57,7 +57,7 @@ extern "C" {
 
   void _fast_memcpy(void *dst, const void *src, size_t bytes);
   void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
-  void _fft_16(const fcomplex *in, int in_stride, fcomplex *out, int out_stride);
+  void _prefetch(const void *src, size_t count, size_t stride);
 };
 
 }

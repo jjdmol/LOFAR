@@ -27,6 +27,8 @@
 #	fxcpnsma 1,16,21,1	# f1r += f21r*f16r, f1i -= f21i*f16r
 #	fxcxma   1,16,21,1	# f1r += f21i*f16i, f1i += f21r*f16i
 
+.align	5
+
 zero:	.long	0,0
 one:	.long	0x3f800000,0x3f800000
 
@@ -70,162 +72,145 @@ _correlate_2x2:
 #	f22,f30:S3_X
 #	f23,f31:S3_Y
 
+	lis	 12,zero@ha
 #if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
-	lis	 11,NR_SAMPLES_PER_INTEGRATION/2 / 65536
+	lis	 0,NR_SAMPLES_PER_INTEGRATION/2 / 65536
 #if NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
-	ori	 11,11,NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
+	ori	 0,0,NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
 #endif
 #else
-	li	 11,NR_SAMPLES_PER_INTEGRATION/2
+	li	 0,NR_SAMPLES_PER_INTEGRATION/2
 #endif
-	mtctr	 11
-
-	li	 11,-16		# push call-saved registers
-	stfpdux	 14,1,11
-	stfpdux	 15,1,11
-	stfpdux	 16,1,11
-	stfpdux	 17,1,11
-	stfpdux	 18,1,11
-	stfpdux	 19,1,11
-	stfpdux	 20,1,11
-	stfpdux	 21,1,11
-	stfpdux	 22,1,11
-	stfpdux	 23,1,11
-	stfpdux	 24,1,11
-	stfpdux	 25,1,11
-	stfpdux	 26,1,11
-	stfpdux	 27,1,11
-	stfpdux	 28,1,11
-	stfpdux	 29,1,11
-	stfpdux	 30,1,11
-	stfpdux	 31,1,11
-
-	lis	 12,zero@ha
 	addi	 12,12,zero@l
-	lfpsx	 0,0,12
+	mtctr	 0
+				; lfpsx	 0,0,12
 
-	li	 11,8		# prefetch station samples
-	lfpsx	 16,0,3	
-	lfpsux	 17,3,11
-	lfpsx	 18,0,4	
-	lfpsux	 19,4,11
-	lfpsx	 20,0,5	
-	lfpsux	 21,5,11
-	lfpsx	 22,0,6	
-	lfpsux	 23,6,11
 
-	fpmr	 1,0
-	fpmr	 2,0
-	fpmr	 3,0
-	fpmr	 4,0
-	fpmr	 5,0
-	fpmr	 6,0
-	fpmr	 7,0
-	fpmr	 8,0
-	fpmr	 9,0
-	fpmr	 10,0
-	fpmr	 11,0
-	fpmr	 12,0
-	fpmr	 13,0
-	fpmr	 14,0
-	fpmr	 15,0
+
+	li	 12,-16		# push call-saved registers
+				; stfpdux	 14,1,12
+				; stfpdux	 15,1,12
+				; stfpdux	 16,1,12
+				; stfpdux	 17,1,12
+				; stfpdux	 18,1,12
+				; stfpdux	 19,1,12
+				; stfpdux	 20,1,12
+
+	li	 11,8	
+				; lfpsx		 16,0,3	
+				; lfpsux	 17,3,11
+				; lfpsx		 18,0,4	
+				; lfpsux	 19,4,11
+	fpmr	 1,0		; lfpsx		 20,0,5	
+	fpmr	 2,0		; stfpdux	 21,1,12
+	fpmr	 3,0		; lfpsux	 21,5,11
+	fpmr	 4,0		; stfpdux	 22,1,12
+	fpmr	 5,0		; lfpsx		 22,0,6	
+	fpmr	 6,0		; stfpdux	 23,1,12
+	fpmr	 7,0		; lfpsux	 23,6,11
+	fpmr	 8,0		; stfpdux	 24,1,12
+	fpmr	 9,0		; stfpdux	 25,1,12
+	fpmr	 10,0		; stfpdux	 26,1,12
+	fpmr	 11,0		; stfpdux	 27,1,12
+	fpmr	 12,0		; stfpdux	 28,1,12
+	fpmr	 13,0		; stfpdux	 29,1,12
+	fpmr	 14,0		; stfpdux	 30,1,12
+	fpmr	 15,0		; stfpdux	 31,1,12
 
 loop1:	# loop over time
 
-	lfpsux	 24,3,11	# read station samples
-	lfpsux	 25,3,11
-	lfpsux	 26,4,11
-	lfpsux	 27,4,11
-	lfpsux	 28,5,11
-	lfpsux	 29,5,11
-	lfpsux	 30,6,11
-	lfpsux	 31,6,11
+	# S0 * ~S2, phase 1
+	fxcpnsma 0,16,20,0	; lfpsux	 24,3,11
+	fxcpnsma 1,16,21,1	; lfpsux	 25,3,11
+	fxcpnsma 2,17,20,2	; lfpsux	 26,4,11
+	fxcpnsma 3,17,21,3	; lfpsux	 27,4,11
 
-	fxcpnsma 0,16,20,0	# S0_X * ~S2_X, phase 1
-	fxcpnsma 1,16,21,1	# S0_X * ~S2_Y, phase 1
-	fxcpnsma 2,17,20,2	# S0_Y * ~S2_X, phase 1
-	fxcpnsma 3,17,21,3	# S0_Y * ~S2_Y, phase 1
+	# S0 * ~S3, phase 1
+	fxcpnsma 4,16,22,4	; lfpsux	 28,5,11
+	fxcpnsma 5,16,23,5	; lfpsux	 29,5,11
+	fxcpnsma 6,17,22,6	; lfpsux	 30,6,11
+	fxcpnsma 7,17,23,7	; lfpsux	 31,6,11
 
-	fxcpnsma 4,16,22,4	# S0 * ~S3, phase 1
-	fxcpnsma 5,16,23,5
-	fxcpnsma 6,17,22,6
-	fxcpnsma 7,17,23,7
-
-	fxcpnsma 8,18,20,8	# S1 * ~S2, phase 1
+	# S1 * ~S2, phase 1
+	fxcpnsma 8,18,20,8
 	fxcpnsma 9,18,21,9
 	fxcpnsma 10,19,20,10
 	fxcpnsma 11,19,21,11
 
-	fxcpnsma 12,18,22,12	# S1 * ~S3, phase 1
+	# S1 * ~S3, phase 1
+	fxcpnsma 12,18,22,12
 	fxcpnsma 13,18,23,13
 	fxcpnsma 14,19,22,14
 	fxcpnsma 15,19,23,15
 
-	fxcxma   0,16,20,0	# S0_X * ~S2_X, phase 2
-	fxcxma   1,16,21,1	# S0_X * ~S2_Y, phase 2
-	fxcxma   2,17,20,2	# S0_Y * ~S2_X, phase 2
-	fxcxma   3,17,21,3	# S0_Y * ~S2_Y, phase 2
+	# S0 * ~S2, phase 2
+	fxcxma   0,16,20,0
+	fxcxma   1,16,21,1
+	fxcxma   2,17,20,2
+	fxcxma   3,17,21,3
 
-	fxcxma   4,16,22,4	# S0 * ~S3, phase 2
+	# S0 * ~S3, phase 2
+	fxcxma   4,16,22,4
 	fxcxma   5,16,23,5
 	fxcxma   6,17,22,6
 	fxcxma   7,17,23,7
 
-	fxcxma   8,18,20,8	# S1 * ~S2, phase 2
+	# S1 * ~S2, phase 2
+	fxcxma   8,18,20,8
 	fxcxma   9,18,21,9
 	fxcxma   10,19,20,10
 	fxcxma   11,19,21,11
 
-	fxcxma   12,18,22,12	# S1 * ~S3, phase 2
+	# S1 * ~S3, phase 2
+	fxcxma   12,18,22,12
 	fxcxma   13,18,23,13
 	fxcxma   14,19,22,14
 	fxcxma   15,19,23,15
 
-	lfpsux	 16,3,11	# f16:f17 = S0
-	lfpsux	 17,3,11
-	lfpsux	 18,4,11	# f18:f19 = S1
-	lfpsux	 19,4,11
-	lfpsux	 20,5,11	# f20:f21 = S2
-	lfpsux	 21,5,11
-	lfpsux	 22,6,11	# f22:f23 = S3
-	lfpsux	 23,6,11
+	# S0 * ~S2, phase 1
+	fxcpnsma 0,24,28,0	; lfpsux	 16,3,11
+	fxcpnsma 1,24,29,1	; lfpsux	 17,3,11
+	fxcpnsma 2,25,28,2	; lfpsux	 18,4,11
+	fxcpnsma 3,25,29,3	; lfpsux	 19,4,11
 
-	fxcpnsma 0,24,28,0	# S0 * ~S2, phase 1
-	fxcpnsma 1,24,29,1	# f1r += f29r*f24r, f1i -= f29i*f24r
-	fxcpnsma 2,25,28,2
-	fxcpnsma 3,25,29,3
+	# S0 * ~S3, phase 1
+	fxcpnsma 4,24,30,4	; lfpsux	 20,5,11
+	fxcpnsma 5,24,31,5	; lfpsux	 21,5,11
+	fxcpnsma 6,25,30,6	; lfpsux	 22,6,11
+	fxcpnsma 7,25,31,7	; lfpsux	 23,6,11
 
-	fxcpnsma 4,24,30,4	# S0 * ~S3, phase 1
-	fxcpnsma 5,24,31,5
-	fxcpnsma 6,25,30,6
-	fxcpnsma 7,25,31,7
-
-	fxcpnsma 8,26,28,8	# S1 * ~S2, phase 1
+	# S1 * ~S2, phase 1
+	fxcpnsma 8,26,28,8
 	fxcpnsma 9,26,29,9
 	fxcpnsma 10,27,28,10
 	fxcpnsma 11,27,29,11
 
-	fxcpnsma 12,26,30,12	# S1 * ~S3, phase 1
+	# S1 * ~S3, phase 1
+	fxcpnsma 12,26,30,12
 	fxcpnsma 13,26,31,13
 	fxcpnsma 14,27,30,14
 	fxcpnsma 15,27,31,15
 
-	fxcxma   0,24,28,0	# S0 * ~S2, phase 2
-	fxcxma   1,24,29,1	# f1r += f29i*f24i, f1i += f29r*f24i
+	# S0 * ~S2, phase 2
+	fxcxma   0,24,28,0
+	fxcxma   1,24,29,1
 	fxcxma   2,25,28,2
 	fxcxma   3,25,29,3
 
-	fxcxma   4,24,30,4	# S0 * ~S3, phase 2
+	# S0 * ~S3, phase 2
+	fxcxma   4,24,30,4
 	fxcxma   5,24,31,5
 	fxcxma   6,25,30,6
 	fxcxma   7,25,31,7
 
-	fxcxma   8,26,28,8	# S1 * ~S2, phase 2
+	# S1 * ~S2, phase 2
+	fxcxma   8,26,28,8
 	fxcxma   9,26,29,9
 	fxcxma   10,27,28,10
 	fxcxma   11,27,29,11
 
-	fxcxma   12,26,30,12	# S1 * ~S3, phase 2
+	# S1 * ~S3, phase 2
+	fxcxma   12,26,30,12
 	fxcxma   13,26,31,13
 	fxcxma   14,27,30,14
 	fxcxma   15,27,31,15
@@ -298,9 +283,10 @@ _correlate_3x2:
 #	12(r1):	pointer to S2*~S3 output
 #	16(r1):	pointer to S2*~S4 output
 
-	lis	 11,zero@ha
-	addi	 11,11,zero@l
-	lfpsx	 0,0,11
+	lis	 11,zero@ha	; li	 12,-16	# push call-saved registers
+	addi	 11,11,zero@l	; stfpdux	 14,1,12
+				; lfpsx	 0,0,11
+				; stfpdux	 15,1,12
 
 #if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
 	lis	 0,NR_SAMPLES_PER_INTEGRATION/2 / 65536
@@ -310,213 +296,179 @@ _correlate_3x2:
 #else
 	li	 0,NR_SAMPLES_PER_INTEGRATION/2
 #endif
-	mtctr	 0
 
-	li	 11,-16		# push call-saved registers
-	stfpdux	 14,1,11
-	stfpdux	 15,1,11
-	stfpdux	 16,1,11
-	stfpdux	 17,1,11
-	stfpdux	 18,1,11
-	stfpdux	 19,1,11
-	stfpdux	 20,1,11
-	stfpdux	 21,1,11
-	stfpdux	 22,1,11
-	stfpdux	 23,1,11
-	stfpdux	 24,1,11
-	stfpdux	 25,1,11
-	stfpdux	 26,1,11
-	stfpdux	 27,1,11
-	stfpdux	 28,1,11
-	stfpdux	 29,1,11
-	stfpdux	 30,1,11
-	stfpdux	 31,1,11
+				; stfpdux	 16,1,12
+	mtctr	 0		; stfpdux	 17,1,12
+	fpmr	 1,0		; stfpdux	 18,1,12
+	fpmr	 2,0		; stfpdux	 19,1,12
+	fpmr	 3,0		; stfpdux	 20,1,12
+	fpmr	 4,0		; stfpdux	 21,1,12
+	fpmr	 5,0		; stfpdux	 22,1,12
+	fpmr	 6,0		; stfpdux	 23,1,12
+	fpmr	 7,0		; stfpdux	 24,1,12
+	fpmr	 8,0		; stfpdux	 25,1,12
+	fpmr	 9,0		; stfpdux	 26,1,12
+	fpmr	 10,0		; stfpdux	 27,1,12
+	fpmr	 11,0		; stfpdux	 28,1,12
+	fpmr	 12,0		; stfpdux	 29,1,12
+	fpmr	 13,0		; stfpdux	 30,1,12
+	fpmr	 14,0		; stfpdux	 31,1,12
+	fpmr	 15,0		; li	 11,8
 
-	li	 11,8
-
-	lfpsux	 24,0,3		# ld S0
-	lfpsux	 25,3,11
-	lfpsux	 26,0,4		# ld S1
-	lfpsux	 27,4,11
-	lfpsux	 28,0,6		# ld S3
-	lfpsux	 29,6,11
-	lfpsux	 30,0,7		# ld S4
-	lfpsux	 31,7,11
-	sub	 5,5,11
-
-	fpmr	 1,0
-	fpmr	 2,0
-	fpmr	 3,0
-	fpmr	 4,0
-	fpmr	 5,0
-	fpmr	 6,0
-	fpmr	 7,0
-	fpmr	 8,0
-	fpmr	 9,0
-	fpmr	 10,0
-	fpmr	 11,0
-	fpmr	 12,0
-	fpmr	 13,0
-	fpmr	 14,0
-	fpmr	 15,0
-	fpmr	 16,0
-	fpmr	 17,0
-	fpmr	 18,0
-	fpmr	 19,0
-	fpmr	 20,0
-	fpmr	 21,0
-	fpmr	 22,0
+	fpmr	 16,0		; lfpsux	 24,0,3
+	fpmr	 17,0		; lfpsux	 25,3,11
+	fpmr	 18,0		; lfpsux	 26,0,4
+	fpmr	 19,0		; lfpsux	 28,0,6
+	fpmr	 20,0		; lfpsux	 29,6,11
+	fpmr	 21,0		; lfpsux	 30,0,7
+	fpmr	 22,0		; sub	 5,5,11
 	fpmr	 23,0
 
+
 loop2:
-	fxcpnsma 0,24,28,0	# S0 * ~S3, phase 1
-	fxcpnsma 1,24,29,1	# f1r += f29r*f24r, f1i -= f29i*f24r
+	# S0 * ~S3, phase 1
+	fxcpnsma 0,24,28,0	; lfpsux	 31,7,11
+	fxcpnsma 1,24,29,1	; lfpsux	 27,4,11
 	fxcpnsma 2,25,28,2
 	fxcpnsma 3,25,29,3
 
-	fxcpnsma 4,24,30,4	# S0 * ~S4, phase 1
+	# S0 * ~S4, phase 1
+	fxcpnsma 4,24,30,4
 	fxcpnsma 5,24,31,5
 	fxcpnsma 6,25,30,6
 	fxcpnsma 7,25,31,7
 
-	fxcxma   0,24,28,0	# S0 * ~S3, phase 2
-	fxcxma   1,24,29,1	# f1r += f29i*f24i, f1i += f29r*f24i
+	# S0 * ~S3, phase 2
+	fxcxma   0,24,28,0
+	fxcxma   1,24,29,1
 	fxcxma   2,25,28,2
 	fxcxma   3,25,29,3
 
-	fxcxma   4,24,30,4	# S0 * ~S4, phase 2
-	fxcxma   5,24,31,5
+	# S0 * ~S4, phase 2	; # ld S2
+	fxcxma   4,24,30,4
+	fxcxma   5,24,31,5	; lfpsux	 24,5,11
 	fxcxma   6,25,30,6
-	fxcxma   7,25,31,7
+	fxcxma   7,25,31,7	; lfpsux	 25,5,11
 
-	lfpsux	 24,5,11	# ld S2
-	lfpsux	 25,5,11
-
-	fxcpnsma 8,26,28,8	# S1 * ~S3, phase 1
+	# S1 * ~S3, phase 1
+	fxcpnsma 8,26,28,8
 	fxcpnsma 9,26,29,9
 	fxcpnsma 10,27,28,10
 	fxcpnsma 11,27,29,11
 
-	fxcpnsma 12,26,30,12	# S1 * ~S4, phase 1
+	# S1 * ~S4, phase 1
+	fxcpnsma 12,26,30,12
 	fxcpnsma 13,26,31,13
 	fxcpnsma 14,27,30,14
 	fxcpnsma 15,27,31,15
 
-	fxcxma   8,26,28,8	# S1 * ~S3, phase 2
+	# S1 * ~S3, phase 2
+	fxcxma   8,26,28,8
 	fxcxma   9,26,29,9
 	fxcxma   10,27,28,10
 	fxcxma   11,27,29,11
 
-	fxcxma   12,26,30,12	# S1 * ~S4, phase 2
-	fxcxma   13,26,31,13
+	# S1 * ~S4, phase 2	; # ld S0
+	fxcxma   12,26,30,12
+	fxcxma   13,26,31,13	; lfpsux	 26,3,11
 	fxcxma   14,27,30,14
-	fxcxma   15,27,31,15
+	fxcxma   15,27,31,15	; lfpsux	 27,3,11
 
-	lfpsux	 26,3,11	# ld S0
-	lfpsux	 27,3,11
-
-	fxcpnsma 16,24,28,16	# S2 * ~S3, phase 1
-	fxcpnsma 17,24,29,17	# f17r += f29r*f24r, f17i -= f29i*f24r
+	# S2 * ~S3, phase 1
+	fxcpnsma 16,24,28,16
+	fxcpnsma 17,24,29,17
 	fxcpnsma 18,25,28,18
 	fxcpnsma 19,25,29,19
 
-	fxcpnsma 20,24,30,20	# S2 * ~S4, phase 1
+	# S2 * ~S4, phase 1
+	fxcpnsma 20,24,30,20
 	fxcpnsma 21,24,31,21
 	fxcpnsma 22,25,30,22
 	fxcpnsma 23,25,31,23
 
-	fxcxma   16,24,28,16	# S2 * ~S3, phase 2
-	fxcxma   17,24,29,17	# f17r += f29i*f24i, f17i += f29r*f24i
-	fxcxma   18,25,28,18
-	fxcxma   19,25,29,19
+	# S2 * ~S3, phase 2	; # ld S3
+	fxcxma   16,24,28,16
+	fxcxma   17,24,29,17
+	fxcxma   18,25,28,18	; lfpsux	 28,6,11
+	fxcxma   19,25,29,19	; lfpsux	 29,6,11
 
-	fxcxma   20,24,30,20	# S2 * ~S4, phase 2
+	# S2 * ~S4, phase 2	; # ld S4
+	fxcxma   20,24,30,20
 	fxcxma   21,24,31,21
-	fxcxma   22,25,30,22
-	fxcxma   23,25,31,23
+	fxcxma   22,25,30,22	; lfpsux	 30,7,11
+	fxcxma   23,25,31,23	; lfpsux	 31,7,11
 
-	lfpsux	 28,6,11	# ld S3
-	lfpsux	 29,6,11
-	lfpsux	 30,7,11	# ld S4
-	lfpsux	 31,7,11
-	lfpsux	 24,4,11	# ld S1
-	lfpsux	 25,4,11
-
-	fxcpnsma 0,26,28,0	# S0 * ~S3, phase 1
-	fxcpnsma 1,26,29,1	# f1r += f29r*f26r, f1i -= f29i*f26r
+	# S0 * ~S3, phase 1	; # ld S1
+	fxcpnsma 0,26,28,0	; lfpsux	 24,4,11
+	fxcpnsma 1,26,29,1	; lfpsux	 25,4,11
 	fxcpnsma 2,27,28,2
 	fxcpnsma 3,27,29,3
 
-	fxcpnsma 4,26,30,4	# S0 * ~S4, phase 1
+	# S0 * ~S4, phase 1
+	fxcpnsma 4,26,30,4
 	fxcpnsma 5,26,31,5
 	fxcpnsma 6,27,30,6
 	fxcpnsma 7,27,31,7
 
-	fxcxma   0,26,28,0	# S0 * ~S4, phase 2
-	fxcxma   1,26,29,1	# f1r += f29i*f26i, f1i += f29r*f26i
+	# S0 * ~S4, phase 2
+	fxcxma   0,26,28,0
+	fxcxma   1,26,29,1
 	fxcxma   2,27,28,2
 	fxcxma   3,27,29,3
 
-	fxcxma   4,26,30,4	# S0 * ~S4, phase 2
-	fxcxma   5,26,31,5
+	# S0 * ~S4, phase 2	; # ld S2
+	fxcxma   4,26,30,4
+	fxcxma   5,26,31,5	; lfpsux	 26,5,11
 	fxcxma   6,27,30,6
-	fxcxma   7,27,31,7
+	fxcxma   7,27,31,7 	; lfpsux	 27,5,11
 
-	lfpsux	 26,5,11	# ld S2
-	lfpsux	 27,5,11
-
-	dcbt	 6,11		# fetch 2 station S3 samples from L2 to L1 cache
-	dcbt	 7,11		# ditto for S4
-
-	fxcpnsma 8,24,28,8	# S1 * ~S3, phase 1
-	fxcpnsma 9,24,29,9
+	# S1 * ~S3, phase 1	; # fetch 2 station S3 samples from L2 to L1
+	fxcpnsma 8,24,28,8	; dcbt	 6,11	
+	fxcpnsma 9,24,29,9	; dcbt	 7,11		# ditto for S4
 	fxcpnsma 10,25,28,10
 	fxcpnsma 11,25,29,11
 
-	fxcpnsma 12,24,30,12	# S1 * ~S4, phase 1
+	# S1 * ~S4, phase 1
+	fxcpnsma 12,24,30,12
 	fxcpnsma 13,24,31,13
 	fxcpnsma 14,25,30,14
 	fxcpnsma 15,25,31,15
 
-	fxcxma   8,24,28,8	# S1 * ~S3, phase 2
+	# S1 * ~S3, phase 2
+	fxcxma   8,24,28,8
 	fxcxma   9,24,29,9
 	fxcxma   10,25,28,10
 	fxcxma   11,25,29,11
 
-	fxcxma   12,24,30,12	# S1 * ~S4, phase 2
-	fxcxma   13,24,31,13
+	# S1 * ~S4, phase 2	; # ld S0
+	fxcxma   12,24,30,12
+	fxcxma   13,24,31,13	; lfpsux	 24,3,11
 	fxcxma   14,25,30,14
-	fxcxma   15,25,31,15
+	fxcxma   15,25,31,15	; lfpsux	 25,3,11
 
-	lfpsux	 24,3,11	# ld S0
-	lfpsux	 25,3,11
-
-	fxcpnsma 16,26,28,16	# S2 * ~S3, phase 1
-	fxcpnsma 17,26,29,17	# f17r += f29r*f26r, f17i -= f29i*f26r
+	# S2 * ~S3, phase 1
+	fxcpnsma 16,26,28,16
+	fxcpnsma 17,26,29,17
 	fxcpnsma 18,27,28,18
 	fxcpnsma 19,27,29,19
 
-	fxcpnsma 20,26,30,20	# S2 * ~S4, phase 1
+	# S2 * ~S4, phase 1
+	fxcpnsma 20,26,30,20
 	fxcpnsma 21,26,31,21
 	fxcpnsma 22,27,30,22
 	fxcpnsma 23,27,31,23
 
-	fxcxma   16,26,28,16	# S2 * ~S3, phase 2
-	fxcxma   17,26,29,17	# f17r += f29i*f26i, f17i += f29r*f26i
-	fxcxma   18,27,28,18
-	fxcxma   19,27,29,19
+	# S2 * ~S3, phase 2	; # ld S3
+	fxcxma   16,26,28,16
+	fxcxma   17,26,29,17
+	fxcxma   18,27,28,18	; lfpsux	 28,6,11
+	fxcxma   19,27,29,19	; lfpsux	 29,6,11
 
-	fxcxma   20,26,30,20	# S2 * ~S4, phase 2
-	fxcxma   21,26,31,21
-	fxcxma   22,27,30,22
+	# S2 * ~S4, phase 2	; # ld S1 and S4
+	fxcxma   20,26,30,20
+	fxcxma   21,26,31,21	; lfpsux	 26,4,11
+	fxcxma   22,27,30,22	; lfpsux	 30,7,11
 	fxcxma   23,27,31,23
-
-	lfpsux	 26,4,11	# ld S1
-	lfpsux	 27,4,11
-	lfpsux	 28,6,11	# ld S3
-	lfpsux	 29,6,11
-	lfpsux	 30,7,11	# ld S4
-	lfpsux	 31,7,11
 
 	bdnz	 loop2
 
@@ -613,45 +565,41 @@ _auto_correlate_1:
 	lfpsux	 5,3,8
 	lfpsux	 6,3,8		# f6:f7 = S0
 	lfpsux	 7,3,8
+	fpmr	 1,0
 	lfpsux	 8,3,8		# f8:f9 = S0
+	fpmr	 2,0
 	lfpsux	 9,3,8
 
+	fpmr	 3,0
 	lfpsx	 12,12,8	# f12r = 1, f12i = 1
 
-	fpmr	 1,0
-	fpmr	 2,0
-	fpmr	 3,0
 
 loop4:	# loop over time
 
 	lfpsux	 10,3,8		# f6:f7 = S0
-	lfpsux	 11,3,8
-
 	fpmadd	 0,4,4,0	# S0 * ~S0
+	lfpsux	 11,3,8
 	fxcpnsma 1,4,5,1	# f1r += f5r*f4r, f1i -= f5i*f4r
 	fxcxma   2,4,5,2	# f2r += f5i*f4i, f2i += f5r*f4i
 	fpmadd	 3,5,5,3
 
 	lfpsux	 4,3,8		# f4:f5 = S0
-	lfpsux	 5,3,8
-
 	fpmadd	 0,6,6,0	# S0 * ~S0
+	lfpsux	 5,3,8
 	fxcpnsma 1,6,7,1	# f1r += f7r*f6r, f1i -= f7i*f6r
 	fxcxma   2,6,7,2	# f2r += f7i*f6i, f2i += f7r*f6i
 	fpmadd	 3,7,7,3
 
 	lfpsux	 6,3,8		# f6:f7 = S0
-	lfpsux	 7,3,8
-
 	fpmadd	 0,8,8,0	# S0 * ~S0
+	lfpsux	 7,3,8
 	fxcpnsma 1,8,9,1	# f1r += f9r*f8r, f1i -= f9i*f8r
 	fxcxma   2,8,9,2	# f2r += f9i*f8i, f2i += f9r*f8i
 	fpmadd	 3,9,9,3
 
 	lfpsux	 8,3,8		# f8:f9 = S0
-	lfpsux	 9,3,8
-
 	fpmadd	 0,10,10,0	# S0 * ~S0
+	lfpsux	 9,3,8
 	fxcpnsma 1,10,11,1	# f1r += f11r*f10r, f1i -= f11i*f10r
 	fxcxma   2,10,11,2	# f2r += f11i*f10i, f2i += f11r*f10i
 	fpmadd	 3,11,11,3
@@ -716,85 +664,86 @@ _auto_correlate_2:
 
 	li	 11,-16		# push call-saved registers
 	stfpdux	 14,1,11
+	fpmr	 1,0
 	stfpdux	 15,1,11
+	fpmr	 2,0
 	stfpdux	 16,1,11
+	fpmr	 3,0
 	stfpdux	 17,1,11
+	fpmr	 4,0
 	stfpdux	 18,1,11
+	fpmr	 5,0
 	stfpdux	 19,1,11
 
-	li	 11,8		# prefetch station samples
-	lfpsx	 12,0,3	
-	lfpsux	 13,3,11
-	lfpsx	 14,0,4	
-	lfpsux	 15,4,11
-
-	fpmr	 1,0
-	fpmr	 2,0
-	fpmr	 3,0
-	fpmr	 4,0
-	fpmr	 5,0
 	fpmr	 6,0
+	li	 11,8		# prefetch station samples
 	fpmr	 7,0
+	lfpsx	 12,0,3	
 	fpmr	 8,0
+	lfpsux	 13,3,11
 	fpmr	 9,0
+	lfpsx	 14,0,4	
 	fpmr	 10,0
+	lfpsux	 15,4,11
 	fpmr	 11,0
 
 loop3:	# loop over time
 
-	lfpsux	 16,3,11	# read station samples
-	lfpsux	 17,3,11
-	lfpsux	 18,4,11
-	lfpsux	 19,4,11
+	# S0 * ~S0, phase 1
+	fpmadd	 0,12,12,0	; lfpsux	 16,3,11
+	fxcpnsma 1,12,13,1	; lfpsux	 17,3,11
+	fpmadd	 3,13,13,3	; lfpsux	 18,4,11
 
-	fpmadd	 0,12,12,0	# S0_X * ~S0_X, phase 1
-	fxcpnsma 1,12,13,1	# S0_X * ~S0_Y, phase 1
-	fpmadd	 3,13,13,3	# S0_Y * ~S0_Y, phase 1
-
-	fxcpnsma 4,12,14,4	# S0 * ~S1, phase 1
+	# S0 * ~S1, phase 1
+	fxcpnsma 4,12,14,4	; lfpsux	 19,4,11
 	fxcpnsma 5,12,15,5
 	fxcpnsma 6,13,14,6
 	fxcpnsma 7,13,15,7
 
-	fpmadd	 8,14,14,8	# S1 * ~S1, phase 1
+	# S1 * ~S1, phase 1
+	fpmadd	 8,14,14,8
 	fxcpnsma 9,14,15,9
 	fpmadd	 11,15,15,11
 
-	fxcxma   1,12,13,1	# S0_X * ~S0_Y, phase 2
+	# S0 * ~S0, phase 2
+	fxcxma   1,12,13,1
 
-	fxcxma   4,12,14,4	# S0 * ~S1, phase 2
-	fxcxma   5,12,15,5
+	# S0 * ~S1, phase 2
+	fxcxma   4,12,14,4
+	fxcxma   5,12,15,5	; lfpsux	 12,3,11
 	fxcxma   6,13,14,6
-	fxcxma   7,13,15,7
+	fxcxma   7,13,15,7	; lfpsux	 13,3,11
 
-	fxcxma   9,14,15,9	# S1 * ~S1, phase 2
+	# S1 * ~S1, phase 2
+	fxcxma   9,14,15,9	; lfpsux	 14,4,11
 
-	lfpsux	 12,3,11	# f12:f13 = S0
-	lfpsux	 13,3,11
-	lfpsux	 14,4,11	# f14:f15 = S1
-	lfpsux	 15,4,11
-
-	fpmadd	 0,16,16,0	# S0 * ~S0, phase 1
-	fxcpnsma 1,16,17,1	# f1r += f17r*f16r, f1i -= f17i*f16r
+	# S0 * ~S0, phase 1
+	fpmadd	 0,16,16,0	; lfpsux	 15,4,11
+	fxcpnsma 1,16,17,1
 	fpmadd	 3,17,17,3
 
-	fxcpnsma 4,16,18,4	# S0 * ~S1, phase 1
+	# S0 * ~S1, phase 1
+	fxcpnsma 4,16,18,4
 	fxcpnsma 5,16,19,5
 	fxcpnsma 6,17,18,6
 	fxcpnsma 7,17,19,7
 
-	fpmadd	 8,18,18,8	# S1 * ~S1, phase 1
+	# S1 * ~S1, phase 1
+	fpmadd	 8,18,18,8
 	fxcpnsma 9,18,19,9
 	fpmadd	 11,19,19,11
 
-	fxcxma   1,16,17,1	# f1r += f17i*f16i, f1i += f17r*f16i
+	# S0 * ~S0, phase 2
+	fxcxma   1,16,17,1
 
-	fxcxma   4,16,18,4	# S0 * ~S1, phase 2
+	# S0 * ~S1, phase 2
+	fxcxma   4,16,18,4
 	fxcxma   5,16,19,5
 	fxcxma   6,17,18,6
 	fxcxma   7,17,19,7
 
-	fxcxma   9,18,19,9	# S1 * ~S1, phase 2
+	# S1 * ~S1, phase 2
+	fxcxma   9,18,19,9
 
 	bdnz	 loop3
 
@@ -898,144 +847,147 @@ _auto_correlate_3:
 	stfpdux	 15,1,11
 	stfpdux	 16,1,11
 	stfpdux	 17,1,11
-	stfpdux	 18,1,11
+	stfpdux	 18,1,11	; fpmr	 1,0
 	stfpdux	 19,1,11
+	fpmr	 2,0
 	stfpdux	 20,1,11
+	fpmr	 3,0
 	stfpdux	 21,1,11
+	fpmr	 4,0
 	stfpdux	 22,1,11
+	fpmr	 5,0
 	stfpdux	 23,1,11
+	fpmr	 6,0
 	stfpdux	 24,1,11
+	fpmr	 7,0
 	stfpdux	 25,1,11
+	fpmr	 8,0
 	stfpdux	 26,1,11
+	fpmr	 9,0
 	stfpdux	 27,1,11
+	fpmr	 10,0
 	stfpdux	 28,1,11
+	fpmr	 11,0
 	stfpdux	 29,1,11
 
 	li	 11,8		# prefetch station samples
-	lfpsx	 18,0,3	
-	lfpsux	 19,3,11
-	lfpsx	 20,0,4	
-	lfpsux	 21,4,11
-	lfpsx	 22,0,5	
-	lfpsux	 23,5,11
-
-	fpmr	 1,0
-	fpmr	 2,0
-	fpmr	 3,0
-	fpmr	 4,0
-	fpmr	 5,0
-	fpmr	 6,0
-	fpmr	 7,0
-	fpmr	 8,0
-	fpmr	 9,0
-	fpmr	 10,0
-	fpmr	 11,0
+	; lfpsx	 18,0,3	
 	fpmr	 12,0
+	; lfpsux	 19,3,11
 	fpmr	 13,0
+	; lfpsx	 20,0,4	
 	fpmr	 14,0
+	; lfpsux	 21,4,11
 	fpmr	 15,0
+	; lfpsx	 22,0,5	
 	fpmr	 16,0
+	; lfpsux	 23,5,11
 	fpmr	 17,0
 
 loop7:	# loop over time
+	# S0 * ~S1, phase 1
+	fxcpnsma 0,18,20,0	; lfpsux	 24,3,11
+	fxcpnsma 1,18,21,1	; lfpsux	 25,3,11
+	fxcpnsma 2,19,20,2	; lfpsux	 26,4,11
+	fxcpnsma 3,19,21,3	; lfpsux	 27,4,11
 
-	lfpsux	 24,3,11	# read station samples
-	lfpsux	 25,3,11
-	lfpsux	 26,4,11
-	lfpsux	 27,4,11
-	lfpsux	 28,5,11
-	lfpsux	 29,5,11
-
-	fxcpnsma 0,18,20,0	# S0 * ~S1, phase 1
-	fxcpnsma 1,18,21,1
-	fxcpnsma 2,19,20,2
-	fxcpnsma 3,19,21,3
-
-	fxcpnsma 4,18,22,4	# S0 * ~S2, phase 1
-	fxcpnsma 5,18,23,5
+	# S0 * ~S2, phase 1
+	fxcpnsma 4,18,22,4	; lfpsux	 28,5,11
+	fxcpnsma 5,18,23,5	; lfpsux	 29,5,11
 	fxcpnsma 6,19,22,6
 	fxcpnsma 7,19,23,7
 
-	fpmadd	 8,20,20,8	# S1_X * ~S1_X, phase 1
-	fxcpnsma 9,20,21,9	# S1_X * ~S1_Y, phase 1
-	fpmadd	 10,21,21,10	# S1_Y * ~S1_Y, phase 1
+	# S1 * ~S1, phase 1
+	fpmadd	 8,20,20,8
+	fxcpnsma 9,20,21,9
+	fpmadd	 10,21,21,10
 
-	fxcpnsma 11,20,22,11	# S1 * ~S2, phase 1
+	# S1 * ~S2, phase 1
+	fxcpnsma 11,20,22,11
 	fxcpnsma 12,20,23,12
 	fxcpnsma 13,21,22,13
 	fxcpnsma 14,21,23,14
 
-	fpmadd	 15,22,22,15	# S2 * ~S2, phase 1
+	# S2 * ~S2, phase 1
+	fpmadd	 15,22,22,15
 	fxcpnsma 16,22,23,16
 	fpmadd	 17,23,23,17
 
-	fxcxma   0,18,20,0	# S0 * ~S1, phase 2
+	# S0 * ~S1, phase 2
+	fxcxma   0,18,20,0
 	fxcxma   1,18,21,1
 	fxcxma   2,19,20,2
 	fxcxma   3,19,21,3
 
-	fxcxma	 4,18,22,4	# S0 * ~S2, phase 2
+	# S0 * ~S2, phase 2
+	fxcxma	 4,18,22,4
 	fxcxma	 5,18,23,5
 	fxcxma	 6,19,22,6
 	fxcxma	 7,19,23,7
 
-	fxcxma   9,20,21,9	# S1_X * ~S1_Y, phase 2
+	# S1_X * ~S1_Y, phase 2
+	fxcxma   9,20,21,9
 
-	fxcxma	 11,20,22,11	# S1 * ~S2, phase 2
+	# S1 * ~S2, phase 2
+	fxcxma	 11,20,22,11
 	fxcxma	 12,20,23,12
 	fxcxma	 13,21,22,13
 	fxcxma	 14,21,23,14
 
-	fxcxma   16,22,23,16	# S2 * ~S2, phase 2
+	# S2 * ~S2, phase 2
+	fxcxma   16,22,23,16
 
-	lfpsux	 18,3,11	# f18:f19 = S0
-	lfpsux	 19,3,11
-	lfpsux	 20,4,11	# f20:f21 = S1
-	lfpsux	 21,4,11
-	lfpsux	 22,5,11	# f22:f23 = S2
-	lfpsux	 23,5,11
+	# S0 * ~S1, phase 1
+	fxcpnsma 0,24,26,0	; lfpsux	 18,3,11
+	fxcpnsma 1,24,27,1	; lfpsux	 19,3,11
+	fxcpnsma 2,25,26,2	; lfpsux	 20,4,11
+	fxcpnsma 3,25,27,3	; lfpsux	 21,4,11
 
-	fxcpnsma 0,24,26,0	# S0 * ~S1, phase 1
-	fxcpnsma 1,24,27,1
-	fxcpnsma 2,25,26,2
-	fxcpnsma 3,25,27,3
-
-	fxcpnsma 4,24,28,4	# S0 * ~S2, phase 1
-	fxcpnsma 5,24,29,5
+	# S0 * ~S2, phase 1
+	fxcpnsma 4,24,28,4	; lfpsux	 22,5,11
+	fxcpnsma 5,24,29,5	; lfpsux	 23,5,11
 	fxcpnsma 6,25,28,6
 	fxcpnsma 7,25,29,7
 
-	fpmadd	 8,26,26,8	# S1_X * ~S1_X, phase 1
-	fxcpnsma 9,26,27,9	# S1_X * ~S1_Y, phase 1
-	fpmadd	 10,27,27,10	# S1_Y * ~S1_Y, phase 1
+	# S1 * ~S1, phase 1
+	fpmadd	 8,26,26,8
+	fxcpnsma 9,26,27,9
+	fpmadd	 10,27,27,10
 
-	fxcpnsma 11,26,28,11	# S1 * ~S2, phase 1
+	# S1 * ~S2, phase 1
+	fxcpnsma 11,26,28,11
 	fxcpnsma 12,26,29,12
 	fxcpnsma 13,27,28,13
 	fxcpnsma 14,27,29,14
 
-	fpmadd	 15,28,28,15	# S2 * ~S2, phase 1
+	# S2 * ~S2, phase 1
+	fpmadd	 15,28,28,15
 	fxcpnsma 16,28,29,16
 	fpmadd	 17,29,29,17
 
-	fxcxma   0,24,26,0	# S0 * ~S1, phase 2
+	# S0 * ~S1, phase 2
+	fxcxma   0,24,26,0
 	fxcxma   1,24,27,1
 	fxcxma   2,25,26,2
 	fxcxma   3,25,27,3
 
-	fxcxma	 4,24,28,4	# S0 * ~S2, phase 2
+	# S0 * ~S2, phase 2
+	fxcxma	 4,24,28,4
 	fxcxma	 5,24,29,5
 	fxcxma	 6,25,28,6
 	fxcxma	 7,25,29,7
 
-	fxcxma   9,26,27,9	# S1_X * ~S1_Y, phase 2
+	# S1_X * ~S1_Y, phase 2
+	fxcxma   9,26,27,9
 
-	fxcxma	 11,26,28,11	# S1 * ~S2, phase 2
+	# S1 * ~S2, phase 2
+	fxcxma	 11,26,28,11
 	fxcxma	 12,26,29,12
 	fxcxma	 13,27,28,13
 	fxcxma	 14,27,29,14
 
-	fxcxma   16,28,29,16	# S2 * ~S2, phase 2
+	# S2 * ~S2, phase 2
+	fxcxma   16,28,29,16
 
 	bdnz	 loop7
 
@@ -1175,13 +1127,12 @@ loop5:
 	lfsx	8,5,10
 
 	lfpsux	0,3,8
-	lfpsux	1,3,8
-	lfpsux	2,3,8
-	lfpsux	3,3,8
-
 	fxpmul	4,8,4
+	lfpsux	1,3,8
 	fxpmul	5,8,5
+	lfpsux	2,3,8
 	fxpmul	6,8,6
+	lfpsux	3,3,8
 	fxpmul	7,8,7
 
 #if NR_SAMPLES_PER_INTEGRATION < 256
@@ -1246,26 +1197,21 @@ loop6:
 #else
 	lwzux	11,4,9
 #endif
-	lfpsux	8,3,8
-	lfpsux	9,3,8
-	lfpsux	10,3,8
-	lfpsux	11,3,8
-
 	beq-	0,invalid_2
 
 	lfsx	16,5,12		# load weight
 
-	fxpmul	0,16,0
-	fxpmul	1,16,1
-	fxpmul	2,16,2
-	fxpmul	3,16,3
+	fxpmul	0,16,0		; lfpsux	8,3,8
+	fxpmul	1,16,1		; lfpsux	9,3,8
+	fxpmul	2,16,2		; lfpsux	10,3,8
+	fxpmul	3,16,3		; lfpsux	11,3,8
 
-	fmul	4,0,0
-	fmul	5,1,1
-	fmul	6,2,2
-	fmul	7,3,3
+	fmul	4,0,0		; stfpsux	0,7,8
+	fmul	5,1,1		; stfpsux	1,7,8
+	fmul	6,2,2		; stfpsux	2,7,8
+	fmul	7,3,3		; stfpsux	3,7,8
 
-	fxcxma	4,0,0,4
+	fxcxma	4,0,0,4		; lfsux	19,6,10		# load threshold
 	fxcxma	5,1,1,5
 	fxcxma	6,2,2,6
 	fxcxma	7,3,3,7
@@ -1275,19 +1221,12 @@ loop6:
 	fcmpu	6,6,18
 	fcmpu	7,7,18
 
-	lfsux	19,6,10		# load threshold
-
-	stfpsux	0,7,8
-	stfpsux	1,7,8
-	stfpsux	2,7,8
-	stfpsux	3,7,8
-
 	mfcr	12
 	andi.	12,12,0x4444
 	bne-	0,invalid_1
 
 L7:
-	slwi.	12,11,2		# if 4*nrValidSamples == 0, jump to invalid_2
+	slwi.	12,11,2		# if 4*nrValidSamples == 0, jump to invalid_4
 #if NR_SAMPLES_PER_INTEGRATION < 256
 	lbzux	11,4,9		# load nrValidSamples
 #elif NR_SAMPLES_PER_INTEGRATION < 65536
@@ -1295,26 +1234,21 @@ L7:
 #else
 	lwzux	11,4,9
 #endif
-	lfpsux	0,3,8
-	lfpsux	1,3,8
-	lfpsux	2,3,8
-	lfpsux	3,3,8
-
 	beq-	0,invalid_4
 
 	lfsx	17,5,12		# load weight
 
-	fxpmul	8,17,8
-	fxpmul	9,17,9
-	fxpmul	10,17,10
-	fxpmul	11,17,11
+	fxpmul	8,17,8		; lfpsux	0,3,8
+	fxpmul	9,17,9		; lfpsux	1,3,8
+	fxpmul	10,17,10	; lfpsux	2,3,8
+	fxpmul	11,17,11	; lfpsux	3,3,8
 
-	fmul	12,8,8
-	fmul	13,9,9
-	fmul	14,10,10
-	fmul	15,11,11
+	fmul	12,8,8		; stfpsux	8,7,8
+	fmul	13,9,9		; stfpsux	9,7,8
+	fmul	14,10,10	; stfpsux	10,7,8
+	fmul	15,11,11	; stfpsux	11,7,8
 
-	fxcxma	12,8,8,12
+	fxcxma	12,8,8,12	; lfsux	18,6,10		# load threshold
 	fxcxma	13,9,9,13
 	fxcxma	14,10,10,14
 	fxcxma	15,11,11,15
@@ -1323,13 +1257,6 @@ L7:
 	fcmpu	5,13,19
 	fcmpu	6,14,19
 	fcmpu	7,15,19
-
-	lfsux	18,6,10		# load threshold
-
-	stfpsux	8,7,8
-	stfpsux	9,7,8
-	stfpsux	10,7,8
-	stfpsux	11,7,8
 
 	mfcr	12
 	andi.	12,12,0x4444
@@ -1362,10 +1289,12 @@ invalid_1:
 	b	L7
 
 invalid_2:
-	addi	6,6,4
-	addi	7,7,32
-	dcbz	0,7
+	addi	6,6,4		; lfpsux	8,3,8
+	addi	7,7,32		; lfpsux	9,3,8
+				; lfpsux	10,3,8
+				; lfpsux	11,3,8
 
+				; dcbz	0,7
 	b	L7
 
 invalid_3:
@@ -1382,9 +1311,12 @@ invalid_3:
 	b	end
 
 invalid_4:
-	addi	6,6,4
-	addi	7,7,32
-	dcbz	0,7
+	addi	6,6,4		; lfpsux	0,3,8
+	addi	7,7,32		; lfpsux	1,3,8
+				; lfpsux	2,3,8
+				; lfpsux	3,3,8
+
+				; dcbz	0,7
 
 	bdnz	loop6
 	b	end

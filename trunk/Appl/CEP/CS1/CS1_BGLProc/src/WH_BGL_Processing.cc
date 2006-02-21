@@ -1168,6 +1168,7 @@ void WH_BGL_Processing::preprocess()
 #endif
 
   for (int i = 1; i <= NR_SAMPLES_PER_INTEGRATION; i ++) {
+    //correlationWeights[i] = 1.0e-15 / i;
     correlationWeights[i] = 1.0e-6 / i;
   }
 
@@ -1327,25 +1328,28 @@ void WH_BGL_Processing::doPPF()
     fftTimer.stop();
 #else // assembly implementation
     static fcomplex   tmp1[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
-    static i16complex tmp2[NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_TAPS + NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
+    //static i16complex tmp2[NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_TAPS + NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
     static fcomplex   fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] __attribute__((aligned(32)));
     static fcomplex   fftOutData[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] __attribute__((aligned(32)));
-    static NSTimer    trans1timer("trans1timer", true);
+    //static NSTimer    trans1timer("trans1timer", true);
 
+#if 0
     trans1timer.start();
     for (int time = 0; time < NR_TAPS + NR_SAMPLES_PER_INTEGRATION; time += 8) {
       _transpose_8x4(&tmp2[0][0][time], &(*input)[stat][time][0][0]);
     }
     trans1timer.stop();
+#endif
 
-    FIRtimer.start();
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
+	FIRtimer.start();
 	_filter(0, // itsFIRs[stat][pol][chan].itsDelayLine,
 		FIR::weights[chan],
-		&tmp2[chan][pol][0],
+		&(*input)[stat][0][chan][pol], //&tmp2[chan][pol][0],
 		tmp1[chan & 3],
 		NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
+	FIRtimer.stop();
 
 	if ((chan & 3) == 3) {
 	  _transpose_4x8(&fftInData[0][pol][chan - 3],
@@ -1356,7 +1360,6 @@ void WH_BGL_Processing::doPPF()
 	}
       }
     }
-    FIRtimer.stop();
 
 #if defined DELAY_COMPENSATION
     struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION];
