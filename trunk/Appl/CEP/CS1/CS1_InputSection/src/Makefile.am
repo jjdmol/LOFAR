@@ -19,12 +19,11 @@ libcs1_inputsection_la_SOURCES        = Connector.cc \
 # libcs1_inputsection_la_LIBADD     = shmem/libshmem.la
 # endif
 
-bin_PROGRAMS =
+bin_PROGRAMS = CS1_InputSection
 
-# Lines to build a program prg
-#prg_SOURCES		= prg.cc
-#prg_LDADD		= libcs1_inputsection.la
-#prg_DEPENDENCIES	= libcs1_inputsection.la $(LOFAR_DEPEND)
+CS1_InputSection_SOURCES = main.cc
+CS1_InputSection_LDADD = libcs1_inputsection.la
+CS1_InputSection_DEPENDENCIES	= libcs1_inputsection.la $(LOFAR_DEPEND)
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 

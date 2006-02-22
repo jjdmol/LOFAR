@@ -60,10 +60,10 @@ namespace LOFAR
       int nSubbandsPerPacket;
     };
   
-    struct {
+    struct PacketStats {
       TimeStamp receivedStamp;
       TimeStamp expectedStamp;
-    } PacketStats;
+    };
 
     // Description of class.
     class InputThread
