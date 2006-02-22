@@ -33,6 +33,8 @@
 namespace LOFAR {
   namespace CS1_InputSection {
 
+    bool InputThread::theirShouldStop = false;
+
     InputThread::InputThread(ThreadArgs args) : itsArgs(args)
     {}
 
@@ -62,11 +64,12 @@ namespace LOFAR {
       // reserve space in case there is an ip header in front of the packet
       char totRecvframe[frameSize + itsArgs.ipHeaderSize];
       char* recvframe = totRecvframe;
-      if (itsArgs.th->getType() == "TH_Ethernet") {
+      //      if (itsArgs.th->getType() == "TH_Ethernet") {
 	// only with TH_Ethernet there is an IPHeader
+        // but also when we have recorded it from the rsp boards!
 	recvframe += itsArgs.ipHeaderSize;
 	frameSize += itsArgs.ipHeaderSize;
-      };
+	//      };
     
       vector<NSTimer*> itsTimers;
       NSTimer threadTimer("threadTimer");
@@ -82,7 +85,7 @@ namespace LOFAR {
       // how far is one beamlet of a subband away from the next beamlet of the same subband
       int strideSize = itsArgs.packetSize / sizeof(Beamlet);
 
-      while(theirShouldStop) {
+      while(!theirShouldStop) {
 	threadTimer.start();
 
 	try {
@@ -90,7 +93,7 @@ namespace LOFAR {
 	  itsArgs.th->recvBlocking( (void*)totRecvframe, frameSize, 0);
 	  receiveTimer.stop();
 	} catch (Exception& e) {
-	  LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder, stopping thread");
+	  LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder("<<e.what()<<", stopping thread");
 	  pthread_exit(NULL);
 	}	
 

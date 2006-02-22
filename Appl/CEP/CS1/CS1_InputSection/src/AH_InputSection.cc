@@ -65,7 +65,7 @@ namespace LOFAR {
 #endif
       
       int nSubbands  = itsParamSet.getInt32("Data.NSubbands");  // number of SubBand filters in the application
-      int nCoresPerSubband = itsParamSet.getInt32("BGLProc.nCores");
+      int nCoresPerSubband = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
     
       LOG_TRACE_FLOW_STR("Create the top-level composite");
       Composite comp(0, 0, "topComposite");
@@ -91,7 +91,7 @@ namespace LOFAR {
    
 	// TODO: we could use a connector here too
 	snprintf(nameBuffer, nameBufferSize, "Input.Transport.%d", r);
-	TransportHolder* lastTH = Connector::readTH(itsParamSet, nameBuffer); 
+	TransportHolder* lastTH = Connector::readTH(itsParamSet, nameBuffer, true); 
     
 	snprintf(nameBuffer, nameBufferSize, "RSP_Input_node_%d_of_%d", r, nStations);
 	if (r==0) {

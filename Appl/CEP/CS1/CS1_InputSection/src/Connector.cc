@@ -43,7 +43,7 @@ namespace LOFAR {
     Connector::~Connector()
     {}
 
-    static TransportHolder* readTH(const ACC::APS::ParameterSet& ps, const string& key, const bool isReceiver) {
+    TransportHolder* Connector::readTH(const ACC::APS::ParameterSet& ps, const string& key, const bool isReceiver) {
       TransportHolder* theTH = 0;
       string transportType = ps.getString(key + ".th");
       if (transportType=="ETHERNET") {
