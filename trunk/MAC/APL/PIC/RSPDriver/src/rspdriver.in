@@ -57,8 +57,13 @@ start() {
     mkdir -p $PREFIX/var/log
     pushd $PREFIX/var/log > /dev/null
 
+    #
     # start in the background with nicelevel -20 (highest priority)
-    daemon -20 $PREFIX/bin/$prog $OPTIONS
+    #
+    # we can use the relative path because we know we are in
+    # $PREFIX/var/log (with pushd on previous line)
+    #
+    daemon -20 ../../bin/$prog $OPTIONS
     RETVAL=$?
     [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
     echo
