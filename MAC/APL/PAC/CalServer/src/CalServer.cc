@@ -48,6 +48,7 @@
 #include <GCF/ParameterSet.h>
 #include <fstream>
 #include <signal.h>
+#include <getopt.h>
 
 #include <blitz/array.h>
 
@@ -61,11 +62,45 @@ using namespace CAL_Protocol;
 
 #define NPOL 2
 
-CalServer::CalServer(string name, ACCs& accs)
+//
+// parseOptions
+//
+void CalServer::parseOptions(int	argc,
+			     char**	argv)
+{
+  static struct option long_options[] = {
+    { "instance",   required_argument, 0, 'I' },
+    { 0, 0, 0, 0 },
+  };
+
+  optind = 0; // reset option parsing
+  for(;;) {
+    int option_index = 0;
+    int c = getopt_long(argc, argv, "I:", long_options, &option_index);
+
+    if (c == -1) {
+      break;
+    }
+
+    switch (c) {
+    case 'I': 	// --instance
+      m_instancenr = atoi(optarg);
+      break;
+    default:
+      LOG_FATAL (formatString("Unknown option %c", c));
+      ASSERT(false);
+    } // switch
+  } // for loop
+}
+
+//
+// CalServer constructor
+//
+CalServer::CalServer(string name, ACCs& accs, int argc, char** argv)
   : GCFTask((State)&CalServer::initial, name),
     m_accs(accs), m_cal(0), m_converter(0),
     m_sampling_frequency(0.0),
-    m_n_rspboards(0)
+    m_n_rspboards(0), m_instancenr(-1)
 #ifdef USE_CAL_THREAD
     , m_calthread(0)
 #endif
@@ -74,16 +109,23 @@ CalServer::CalServer(string name, ACCs& accs)
   pthread_mutex_init(&m_globallock, 0);
 #endif
 
+  // adopt commandline switches
+  parseOptions (argc, argv);
+
   if (!GET_CONFIG("CalServer.DisableCalibration", i)) {
     m_converter = new AMC::ConverterClient("localhost");
     ASSERT(0 != m_converter);
   }
 
+  string	instanceID;
+  if (m_instancenr >= 0) {
+    instanceID = formatString("(%d)", m_instancenr);
+  }
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
-  m_acceptor.init(*this, "acceptor_v3", GCFPortInterface::MSPP, CAL_PROTOCOL);
+  m_acceptor.init(*this, "acceptor_v3"+instanceID, GCFPortInterface::MSPP, CAL_PROTOCOL);
 
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
-  m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_rspdriver.init(*this, "rspdriver"+instanceID,  GCFPortInterface::SAP,  RSP_PROTOCOL);
 }
 
 CalServer::~CalServer()
@@ -744,7 +786,7 @@ int main(int argc, char** argv)
   //
   try
   {
-    CalServer cal     ("CalServer", *accs);
+    CalServer cal     ("CalServer", *accs, argc, argv);
     ACMProxy  acmproxy("ACMProxy",  *accs);
 
     cal.start();      // make initial transition

@@ -1340,14 +1340,24 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 
 RSPCtl::RSPCtl(string name, int argc, char** argv)
     : GCFTask((State)&RSPCtl::initial, name), m_command(0),
-    m_nrcus(0), m_nrspboards(0), m_argc(argc), m_argv(argv)
+    m_nrcus(0), m_nrspboards(0), m_argc(argc), m_argv(argv), m_instancenr(-1)
 {
+  if (!(m_command = parse_options(m_argc, m_argv))) {
+    logMessage(cerr,"Warning: no command specified.");
+    exit(EXIT_FAILURE);
+  }
+
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 #ifdef ENABLE_RSPFE
   registerProtocol(RSPFE_PROTOCOL, RSPFE_PROTOCOL_signalnames);
 #endif
 
+  string	instanceID;
+  if (m_instancenr>=0) {
+    instanceID = formatString("(%d)", m_instancenr);
+  }
   m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
+  //m_server.init(*this, "server"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 RSPCtl::~RSPCtl()
@@ -1385,10 +1395,12 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETCONFIGACK:
     {
       RSPGetconfigackEvent ack(e);
-      m_nrcus = ack.n_rcus;
-      m_nrspboards = ack.n_rspboards;
+      m_nrcus        = ack.n_rcus;
+      m_nrspboards   = ack.n_rspboards;
+      m_maxrspboards = ack.max_rspboards;
       logMessage(cout,formatString("n_rcus     =%d",m_nrcus));
-      logMessage(cout,formatString("n_rspboards=%d",m_nrspboards));
+      logMessage(cout,formatString("n_rspboards=%d of %d",
+										m_nrspboards, m_maxrspboards));
       TRAN(RSPCtl::docommand);
     }
     break;
@@ -1423,6 +1435,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
   {
     case F_ENTRY:
     {
+	  // reparse options
       if (0 == (m_command = parse_options(m_argc, m_argv)))
       {
         logMessage(cerr,"Warning: no command specified.");
@@ -1660,6 +1673,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 #endif
 	  { "duration",       required_argument, 0, 'd' },
 	  { "integration",    required_argument, 0, 'i' },
+	  { "instance",       required_argument, 0, 'I' },
 	  { "directory"  ,    required_argument, 0, 'D' },
 
 	  { 0, 0, 0, 0 },
@@ -1667,7 +1681,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
       int option_index = 0;
       int c = getopt_long(argc, argv,
-			  "l:w::a::s::r::g::qt::xz::vc::hf:d:i:", long_options, &option_index);
+			  "l:w::a::s::r::g::qt::xz::vc::hf:d:i:I:", long_options, &option_index);
 
       if (c == -1)
 	break;
@@ -2125,6 +2139,15 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    {
 	      logMessage(cerr,"Error: option '--integration' requires an argument");
 	    }
+	  break;
+
+	case 'I':	// -- instance
+	  if (optarg) {
+	    m_instancenr = atoi(optarg);
+	  }
+	  else {
+	    logMessage(cerr,"Error: option '--instance' requires an argument");
+	  }
 	  break;
 
 	case 'D':	// -- directory

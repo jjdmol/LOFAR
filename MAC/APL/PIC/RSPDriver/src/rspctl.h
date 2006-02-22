@@ -588,10 +588,13 @@ namespace LOFAR {
       // dimensions of the connected hardware
       int m_nrcus;
       int m_nrspboards;
+	  int m_maxrspboards;
 
       // commandline parameters
       int    m_argc;
       char** m_argv;
+
+	  int32	 m_instancenr;
     };
 
   };

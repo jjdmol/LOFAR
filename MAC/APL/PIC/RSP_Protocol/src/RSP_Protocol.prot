@@ -983,7 +983,7 @@ event = {
     type = "int16";
   };
   param = {
-    name = "obsolete"; // used to be n_tdboards
+    name = "max_rspboards"; // used to be n_tdboards
     type = "int16";
   };
 };

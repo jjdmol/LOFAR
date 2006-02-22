@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <string.h>
 
+#include "StationSettings.h"
 #include "RCUWrite.h"
 #include "Cache.h"
 
@@ -35,7 +36,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 RCUWrite::RCUWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -47,7 +48,7 @@ RCUWrite::~RCUWrite()
 
 void RCUWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
   // skip update if the neither of the RCU's settings have been modified
   if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRCUSettings().getState().get(global_blp * 2)
@@ -96,7 +97,7 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
   Cache::getInstance().getBack().getRCUSettings().getState().applied(global_blp);
 
   return GCFEvent::HANDLED;

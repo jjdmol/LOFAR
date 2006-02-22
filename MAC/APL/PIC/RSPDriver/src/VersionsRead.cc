@@ -25,6 +25,7 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 #include <APL/RTCCommon/PSAccess.h>
 
+#include "StationSettings.h"
 #include "VersionsRead.h"
 #include "Cache.h"
 
@@ -33,7 +34,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 VersionsRead::VersionsRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) + 1 /* BP */)
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() + 1 /* BP */)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -113,7 +114,7 @@ GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& por
     }
 
     if (ap_index >= 0) {
-      Cache::getInstance().getBack().getVersions().ap()((getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + ap_index)
+      Cache::getInstance().getBack().getVersions().ap()((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + ap_index)
 	= ack.version;  
     }
   }

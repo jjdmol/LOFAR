@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "UpdRCUCmd.h"
 
 using namespace blitz;
@@ -91,20 +92,16 @@ void UpdRCUCmd::complete(CacheBuffer& cache)
 
   // loop over RCU's to get the results.
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * 
-	 GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; 
-       cache_rcu++) {
+  for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 
     if (m_event->rcumask[cache_rcu]) {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
-	  GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) {
+      if (cache_rcu < StationSettings::instance()->nrRcus()) {
 	ack.settings()(result_rcu)=cache.getRCUSettings()()(cache_rcu);
       }
       else {
 	LOG_WARN(
 		 formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) *
-			      GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)); 
+			      cache_rcu, StationSettings::instance()->nrRcus())); 
       }
 
       result_rcu++;
@@ -138,6 +135,5 @@ bool UpdRCUCmd::validate() const
 {
   // check ranges
   return ((m_event->rcumask.count() <= 
-	   (unsigned int)GET_CONFIG("RS.N_RSPBOARDS" , i) * 
-	   GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
+	   (unsigned int)StationSettings::instance()->nrRcus()));
 }

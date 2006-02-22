@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <string.h>
 
+#include "StationSettings.h"
 #include "RCURead.h"
 #include "Cache.h"
 
@@ -35,7 +36,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 RCURead::RCURead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -76,7 +77,7 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
   
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
   // This needs to be replaced by I2C sequences
   RCUSettings::Control& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));

@@ -38,6 +38,7 @@
 #include <sstream>
 #include <time.h>
 #include <string.h>
+#include <getopt.h>
 
 #include <netinet/in.h>
 
@@ -63,21 +64,60 @@ using namespace RSP_Protocol;
 
 #define SYSTEM_CLOCK_FREQ 120e6 // 120 MHz
 
-BeamServer::BeamServer(string name)
+//
+// parseOptions
+//
+void BeamServer::parseOptions(int	argc,
+			      char**	argv)
+{
+  static struct option long_options[] = {
+    { "instance",   required_argument, 0, 'I' },
+    { 0, 0, 0, 0 },
+  };
+
+  optind = 0; // reset option parsing
+  for(;;) {
+    int option_index = 0;
+    int c = getopt_long(argc, argv, "I:", long_options, &option_index);
+
+    if (c == -1) {
+      break;
+    }
+
+    switch (c) {
+    case 'I': 	// --instance
+      m_instancenr = atoi(optarg);
+      break;
+    default:
+      LOG_FATAL (formatString("Unknown option %c", c));
+      ASSERT(false);
+    } // switch
+  } // for loop
+}
+
+BeamServer::BeamServer(string name, int argc, char** argv)
     : GCFTask((State)&BeamServer::initial, name),
       m_beams_modified(false),
       m_sampling_frequency(160000000),
       m_nyquist_zone(1),
       m_beams(MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS),
-      m_converter("localhost")
+      m_converter("localhost"),
+	  m_instancenr(-1)
 {
+  // adopt commandline switches
+  parseOptions(argc, argv);
+
   registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_signalnames);
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
-  m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, BS_PROTOCOL);
-  m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
-  m_calserver.init(*this, "calserver", GCFPortInterface::SAP, CAL_PROTOCOL);
+  string	instanceID;
+  if (m_instancenr >= 0) {
+    instanceID=formatString("(%d)", m_instancenr);
+  }
+  m_acceptor.init(*this, "acceptor"+instanceID, GCFPortInterface::MSPP, BS_PROTOCOL);
+  m_rspdriver.init(*this, "rspdriver"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_calserver.init(*this, "calserver"+instanceID, GCFPortInterface::SAP, CAL_PROTOCOL);
 }
 
 BeamServer::~BeamServer()
@@ -842,7 +882,7 @@ int main(int argc, char** argv)
 
   try
   {
-    BeamServer beamserver("BeamServer");
+    BeamServer beamserver("BeamServer", argc, argv);
 
     beamserver.start(); // make initial transition
 

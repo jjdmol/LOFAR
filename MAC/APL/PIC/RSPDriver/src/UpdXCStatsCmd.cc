@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "UpdXCStatsCmd.h"
 
 using namespace blitz;
@@ -74,9 +75,7 @@ void UpdXCStatsCmd::complete(CacheBuffer& cache)
   ack.stats().resize(s);
   
   int result_rcu = 0;
-  for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
@@ -103,5 +102,5 @@ void UpdXCStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdXCStatsCmd::validate() const
 {
-  return ((int)m_event->rcumask.count() <= GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
+  return ((int)m_event->rcumask.count() <= StationSettings::instance()->nrRcus());
 }

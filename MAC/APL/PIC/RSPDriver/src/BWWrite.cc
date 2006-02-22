@@ -34,6 +34,7 @@
 
 #include "BWWrite.h"
 #include "Cache.h"
+#include "StationSettings.h"
 
 #define N_RETRIES 3
 
@@ -43,7 +44,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int regid)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * BF_N_FRAGMENTS),
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * BF_N_FRAGMENTS),
     m_regid(regid)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
@@ -55,7 +56,7 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentIndex() / BF_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / BF_N_FRAGMENTS);
 
   // coef int16 offset - divide by N_PHASE to get offset in complex<int16>
   uint16 offset = ((getCurrentIndex() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);

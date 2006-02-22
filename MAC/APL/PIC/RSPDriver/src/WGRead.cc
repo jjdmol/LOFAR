@@ -27,6 +27,7 @@
 
 #include <APL/RTCCommon/PSAccess.h>
 
+#include "StationSettings.h"
 #include "WGRead.h"
 #include "Cache.h"
 
@@ -38,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL * 2)
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL * 2)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -50,7 +51,7 @@ WGRead::~WGRead()
 
 void WGRead::sendrequest()
 {
-  if (getCurrentIndex() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL)
   {
     EPAReadEvent wgsettingsread;
 
@@ -72,7 +73,7 @@ void WGRead::sendrequest()
   }
   else
   {
-    int current_blp = getCurrentIndex() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+    int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL;
 
     EPAReadEvent wgwaveread;
 
@@ -101,7 +102,7 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (getCurrentIndex() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL)
   {
     if (EPA_DIAG_WG != event.signal)
     {
@@ -117,7 +118,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
       return GCFEvent::NOT_HANDLED;
     }
 
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
+    uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
@@ -143,7 +144,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   }
   else
   {
-    int current_blp = getCurrentIndex() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+    int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL;
     
     if (EPA_DIAG_WGWAVE != event.signal)
     {
@@ -159,7 +160,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
       return GCFEvent::NOT_HANDLED;
     }
 
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + current_blp;
+    uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + current_blp;
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 

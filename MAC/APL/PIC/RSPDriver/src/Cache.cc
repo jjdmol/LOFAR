@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include "StationSettings.h"
 #include "Cache.h"
 #include <APL/RTCCommon/PSAccess.h>
 
@@ -49,13 +50,10 @@ CacheBuffer::CacheBuffer()
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			    GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
-			    MEPHeader::N_XBLETS);
+  m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_XBLETS);
   m_beamletweights() = complex<int16>(0,0);
 
-  m_subbandselection().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
-			      MEPHeader::N_XBLETS);
+  m_subbandselection().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_XBLETS);
   m_subbandselection() = 0;
 
   if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i))
@@ -86,22 +84,22 @@ CacheBuffer::CacheBuffer()
     LOG_WARN_STR("m_subbandselection()=" << m_subbandselection());
   }
 
-  m_rcusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
+  m_rcusettings().resize(StationSettings::instance()->nrRcus());
   RCUSettings::Control rcumode;
   rcumode.setMode(RCUSettings::Control::MODE_OFF);
   m_rcusettings() = rcumode;
   // allocate modified flags for all receivers
-  m_rcusettings.getState().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
+  m_rcusettings.getState().resize(StationSettings::instance()->nrRcus());
 
   // RSU settings
-  m_rsusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  m_rsusettings().resize(StationSettings::instance()->nrRspBoards());
   RSUSettings::ResetControl 	rsumode;
   rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
   m_rsusettings() = rsumode;
-  m_rsusettings.getState().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  m_rsusettings.getState().resize(StationSettings::instance()->nrRspBoards());
 
-  m_wgsettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
-  m_wgsettings.getState().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
+  m_wgsettings().resize(StationSettings::instance()->nrRcus());
+  m_wgsettings.getState().resize(StationSettings::instance()->nrRcus());
   WGSettings::WGRegisterType init;
   init.freq        = 0;
   init.phase       = 0;
@@ -111,38 +109,36 @@ CacheBuffer::CacheBuffer()
   init.preset = WGSettings::PRESET_SINE;
   m_wgsettings() = init;
 
-  m_wgsettings.waveforms().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
-				  N_WAVE_SAMPLES);
+  m_wgsettings.waveforms().resize(StationSettings::instance()->nrRcus(), N_WAVE_SAMPLES);
   m_wgsettings.waveforms() = 0;
 
-  m_subbandstats().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
-			  MEPHeader::N_SUBBANDS);
+  m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
   m_subbandstats() = 0;
 
-  m_beamletstats().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL,
+  m_beamletstats().resize(StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL,
 			  MEPHeader::N_BEAMLETS);
   m_beamletstats() = 0;
 
   m_xcstats().resize(MEPHeader::N_POL,
 		     MEPHeader::N_POL,
-		     GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
-		     GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
+		     StationSettings::instance()->nrBlps(),
+		     StationSettings::instance()->nrBlps());
 
   m_xcstats() = complex<double>(0,0);
 
   // BoardStatus
-  m_systemstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  m_systemstatus.board().resize(StationSettings::instance()->nrRspBoards());
   BoardStatus             boardinit;
   memset(&boardinit, 0, sizeof(BoardStatus));
   m_systemstatus.board() = boardinit;
 
   EPA_Protocol::RSRVersion versioninit = { 0, 0, 0, 0, 0 };
-  m_versions.bp().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  m_versions.bp().resize(StationSettings::instance()->nrRspBoards());
   m_versions.bp() = versioninit;
-  m_versions.ap().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
+  m_versions.ap().resize(StationSettings::instance()->nrBlps());
   m_versions.ap() = versioninit;
 
-  m_clocks.init(GET_CONFIG("RS.N_RSPBOARDS", i));
+  m_clocks.init(StationSettings::instance()->nrRspBoards());
   m_clocks() = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
 
   // print sizes of the cache

@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "SetWGCmd.h"
 
 using namespace blitz;
@@ -62,8 +63,7 @@ void SetWGCmd::ack(CacheBuffer& /*cache*/)
 void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
   for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++) {
+       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
     if (m_event->rcumask[cache_rcu]) {
       cache.getWGSettings()()(cache_rcu) = m_event->settings()(0);
 
@@ -91,7 +91,7 @@ void SetWGCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetWGCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
 	  && (1 == m_event->settings().dimensions())
 	  && (1 == m_event->settings().extent(firstDim)));
 }

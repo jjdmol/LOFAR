@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <string.h>
 
+#include "StationSettings.h"
 #include "RCUProtocolWrite.h"
 #include "Cache.h"
 
@@ -54,7 +55,7 @@ namespace LOFAR {
 };
 
 RCUProtocolWrite::RCUProtocolWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -66,7 +67,7 @@ RCUProtocolWrite::~RCUProtocolWrite()
 
 void RCUProtocolWrite::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // skip update if the RCU settings have not been modified
   if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))

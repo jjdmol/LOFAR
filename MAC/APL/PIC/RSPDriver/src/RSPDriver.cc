@@ -39,9 +39,11 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <getopt.h>
 
 #include "RSPDriver.h"
 #include "Command.h"
+#include "StationSettings.h"
 #include "SetWeightsCmd.h"
 #include "GetWeightsCmd.h"
 #include "SetSubbandsCmd.h"
@@ -112,6 +114,45 @@ static const EPA_Protocol::RSUReset  g_RSU_RESET_SYNC      = { 1, 0, 0, 0 }; // 
 static const EPA_Protocol::RSUReset  g_RSU_RESET_CLEAR     = { 0, 1, 0, 0 }; // Soft SYNC
 static const EPA_Protocol::RSUReset  g_RSU_RESET_RESET     = { 0, 0, 1, 0 }; // Soft SYNC
 
+static int32	g_instancenr = -1;
+static bool	g_daemonize  = false;
+
+//
+// parseOptions
+//
+void parseOptions(int		argc,
+	          char**	argv)
+{
+  static struct option long_options[] = {
+    { "instance",   required_argument, 0, 'I' },
+    { "daemon",     no_argument,       0, 'd' },
+    { 0, 0, 0, 0 },
+  };
+
+  optind = 0; // reset option parsing
+  for(;;) {
+    int option_index = 0;
+    int c = getopt_long(argc, argv, "dI:", long_options, &option_index);
+
+    if (c == -1) {
+      break;
+    }
+
+    switch (c) {
+    case 'I': 	// --instance
+      g_instancenr = atoi(optarg);
+      break;
+    case 'd':	// --daemon
+      g_daemonize = true;
+      break;
+    default:
+      LOG_FATAL (formatString("Unknown option %c", c));
+      ASSERT(false);
+    } // switch
+  } // for loop
+
+}
+
 //
 // RSPDriver(name)
 //
@@ -126,14 +167,42 @@ RSPDriver::RSPDriver(string name)
   memset(&m_ppsinfo, 0, sizeof(pps_info_t));
 #endif
 
+  // first initialize the global settins
+  LOG_DEBUG("Setting up station settings");
+  StationSettings*	ssp = StationSettings::instance();
+  ssp->setMaxRspBoards  (GET_CONFIG("RS.N_RSPBOARDS", i));
+  ssp->setNrRspBoards   (GET_CONFIG("RS.N_RSPBOARDS", i));
+  ssp->setNrBlpsPerBoard(GET_CONFIG("RS.N_BLPS", i));
+  if (GET_CONFIG("RSPDriver.OPERATION_MODE", i) == MODE_SUBSTATION) {
+    ssp->setNrRspBoards(1);
+  };
+  ASSERTSTR (g_instancenr <= StationSettings::instance()->maxRspBoards(),
+		 "instancenumber larger than MAX_RSPBOARDS");
+  ASSERTSTR ((GET_CONFIG("RSPDriver.OPERATION_MODE" ,i) == MODE_SUBSTATION) == 
+	(g_instancenr != -1), 
+	"--instance option does not match OPERATION_MODE setting");
+  LOG_DEBUG_STR (*ssp);
+
+  // tell broker we are here
+  LOG_DEBUG("Registering protocols");
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
+  // connect to clock
+  LOG_DEBUG("Connecting to clock");
   m_clock.init(*this, "spid", GCFPortInterface::SAP, 0 /*don't care*/, true /*raw*/);
 
-  m_acceptor.init(*this, "acceptor_v3", GCFPortInterface::MSPP, RSP_PROTOCOL);
+  // open client port
+  LOG_DEBUG("Opening listener for clients");
+  string  acceptorID;
+  if (g_instancenr>=0) {
+    acceptorID = formatString("(%d)", g_instancenr);
+  }
+  m_acceptor.init(*this, "acceptor_v3"+acceptorID, GCFPortInterface::MSPP, RSP_PROTOCOL);
 
-  m_board = new GCFETHRawPort[GET_CONFIG("RS.N_RSPBOARDS", i)];
+  // open port with RSP board
+  LOG_DEBUG("Connecting to RSPboards");
+  m_board = new GCFETHRawPort[StationSettings::instance()->nrRspBoards()];
   ASSERT(m_board);
 
   //
@@ -147,7 +216,7 @@ RSPDriver::RSPDriver(string name)
   char boardname[64];
   char paramname[64];
   char macaddrstr[64];
-  for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
+  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
   {
     snprintf(boardname, 64, "board%d", boardid);
 
@@ -161,6 +230,7 @@ RSPDriver::RSPDriver(string name)
       strncpy(macaddrstr, GET_CONFIG_STRING(paramname), 64);
     }
 
+    LOG_DEBUG_STR("initializing board " << boardname << ":" << macaddrstr);
     m_board[boardid].init(*this, boardname, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
     m_board[boardid].setAddr(GET_CONFIG_STRING("RSPDriver.IF_NAME"), macaddrstr);
 
@@ -185,7 +255,7 @@ RSPDriver::~RSPDriver()
 bool RSPDriver::isEnabled()
 {
   bool enabled = true;
-  for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
+  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
   {
     if (!m_board[boardid].isConnected())
     {
@@ -194,8 +264,8 @@ bool RSPDriver::isEnabled()
     }
   }
 
-  // m_clock is only used in SYNC_MODE mode 0
-  if (0 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+  // m_clock is only used in SYNC_PARALLEL
+  if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
   {
     enabled = enabled && m_clock.isConnected();
   }
@@ -229,7 +299,7 @@ void RSPDriver::addAllSyncActions()
    * For each board a separate BWSync instance is created which handles
    * the synchronization of data between the board and the cache for that board.
    */
-  for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
+  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
   {
     /*
      * First clear the board
@@ -498,7 +568,7 @@ void RSPDriver::addAllSyncActions()
 //
 void RSPDriver::openBoards()
 {
-  for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
+  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
   {
     if (!m_board[boardid].isConnected()) m_board[boardid].open();
   }
@@ -515,7 +585,7 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
   {
     case F_INIT:
     {
-      if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i)) {
+      if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
 #ifdef HAVE_SYS_TIMEPPS_H
 	pps_params_t parm;
 
@@ -565,7 +635,7 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 
     case F_ENTRY:
     {
-      if (0 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+      if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
       {
 	if (!m_clock.isConnected()) m_clock.open();
       }
@@ -663,13 +733,13 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       // start waiting for clients
       if (!m_acceptor.isConnected()) m_acceptor.open();
 
-      if (1 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+      if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE)
       {
 	/* Start the update timer after 1 second */
 	m_board[0].setTimer(1.0,
 			    GET_CONFIG("RSPDriver.SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
       }
-      else if (2 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+      else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST)
       {
 	//
 	// single timeout after 1 second to set
@@ -683,7 +753,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	//
 	m_clock.setTimer(1.0, 1.0); // every second after 1.0 second
       }
-      else if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+      else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS)
       {
 #ifdef HAVE_SYS_TIMEPPS_H
 	//
@@ -860,15 +930,15 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       if (&port == &m_board[0])
       {
 	//
-	// If SYNC_MODE == 1|2 then run the scheduler
+	// If SYNC_MODE == SOFTWARE|FAST then run the scheduler
 	// directly on the software timer.
 	//
-	if (   (1 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
-	    || (2 == GET_CONFIG("RSPDriver.SYNC_MODE", i)))
+	if (   (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE)
+	    || (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST))
 	{
 	  (void)clock_tick(m_clock); // force clock tick
 	}
-	else if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+	else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS)
 	{
 	  GCFTimerEvent timer;
 
@@ -981,10 +1051,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	status = m_scheduler.dispatch(event, port);
 
 	//
-	// if SYNC_MODE mode 2 and sync has completed
+	// if SYNC_FAST mode and sync has completed
 	// send new clock_tick
 	//
-	if (2 == GET_CONFIG("RSPDriver.SYNC_MODE", i) &&
+	if ((GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST) &&
 	    m_scheduler.syncHasCompleted())
 	{
 	  m_board[0].setTimer(0.0); // immediate
@@ -1009,7 +1079,7 @@ bool RSPDriver::isBoardPort(GCFPortInterface& port)
    * to a board.
    */
   if (   &port >= &m_board[0]
-      && &port <= &m_board[GET_CONFIG("RS.N_RSPBOARDS", i)])
+      && &port <= &m_board[StationSettings::instance()->nrRspBoards()])
     return true;
   
   return false;
@@ -1024,7 +1094,7 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 
   uint8 count = '0';
 
-  if (0 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+  if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
   {
     if (port.recv(&count, sizeof(uint8)) != 1)
     {
@@ -1075,7 +1145,7 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   /* range check on parameters */
   if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
       || (sw_event->weights().extent(firstDim) < 1)
-      || (sw_event->weights().extent(secondDim) > GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+      || (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
       || (sw_event->weights().extent(thirdDim) != MEPHeader::N_BEAMLETS))
   {
     LOG_ERROR("SETWEIGHTS: invalid parameter");
@@ -1775,9 +1845,9 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
   RSPGetconfigEvent get(event);
   RSPGetconfigackEvent ack;
 
-  ack.n_rcus = GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
-  ack.n_rspboards = GET_CONFIG("RS.N_RSPBOARDS", i);
-  ack.obsolete = 0; // still need to initialize it to keep valgrind happy
+  ack.n_rcus        = StationSettings::instance()->nrRcus(); 
+  ack.n_rspboards   = StationSettings::instance()->nrRspBoards();
+  ack.max_rspboards = StationSettings::instance()->maxRspBoards();
 
   port.send(ack);
 }
@@ -1906,13 +1976,19 @@ void RSPDriver::rsp_unsubclocks(GCFEvent& event, GCFPortInterface& port)
 //
 int main(int argc, char** argv)
 {
+  GCFTask::init(argc, argv);	// initializes log system
+  
+  LOG_INFO(formatString("Starting up %s", argv[0]));
+
+  // adopt commandline switches
+  LOG_DEBUG("Parsing options");
+  parseOptions (argc, argv);
+
   /* daemonize if required */
-  if (argc >= 2) {
-    if (!strcmp(argv[1], "-d")) {
-      if (0 != daemonize(false)) {
-	cerr << "Failed to background this process: " << strerror(errno) << endl;
-	exit(EXIT_FAILURE);
-      }
+  if (g_daemonize) {
+    if (0 != daemonize(false)) {
+      cerr << "Failed to background this process: " << strerror(errno) << endl;
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -1949,10 +2025,7 @@ int main(int argc, char** argv)
   LOG_WARN("System does not support locking pages in memory.");
 #endif
 
-  GCFTask::init(argc, argv);
-  
-  LOG_INFO(formatString("Program %s has started", argv[0]));
-
+  LOG_DEBUG ("Reading configuration files");
   try
   {
     GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");

@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "GetXCStatsCmd.h"
 
 using namespace blitz;
@@ -39,7 +40,7 @@ GetXCStatsCmd::GetXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation 
 {
   m_event = new RSPGetxcstatsEvent(event);
 
-  m_n_devices = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+  m_n_devices = StationSettings::instance()->nrRcus();
 
   setOperation(oper);
   setPeriod(0);
