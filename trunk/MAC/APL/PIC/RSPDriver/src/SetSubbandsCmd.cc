@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "SetSubbandsCmd.h"
 
 using namespace blitz;
@@ -69,9 +70,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
     {
       dst_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
       for (int cache_rcu = 0;
-	   cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
-	     GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-	   cache_rcu++)
+	   cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
 	{
 	  if (m_event->rcumask[cache_rcu])
 	    {
@@ -88,9 +87,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
   case SubbandSelection::XLET:
     {
       dst_range = Range(0, MEPHeader::N_XLETS - 1);
-      for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
-	     GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-	   cache_rcu++)
+      for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
 	{
 	  if (m_event->rcumask[cache_rcu])
 	    {
@@ -145,7 +142,7 @@ bool SetSubbandsCmd::validate() const
     break;
   }
 
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
 	  && (2 == m_event->subbands().dimensions())
 	  && (1 == m_event->subbands().extent(firstDim)) && valid);
 }

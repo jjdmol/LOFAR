@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "UpdStatusCmd.h"
 
 using namespace blitz;
@@ -67,10 +68,10 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
   ack.status = SUCCESS;
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
-  ack.sysstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  ack.sysstatus.board().resize(StationSettings::instance()->nrRspBoards());
   ack.sysstatus.board() = cache.getSystemStatus().board();
 
-  for (int boardNr = 0; boardNr < GET_CONFIG("RS.N_RSPBOARDS", i); boardNr++) {
+  for (int boardNr = 0; boardNr < StationSettings::instance()->nrRspBoards(); boardNr++) {
 	ack.sysstatus.board()(boardNr) = cache.getSystemStatus().board()(boardNr);
   }
 

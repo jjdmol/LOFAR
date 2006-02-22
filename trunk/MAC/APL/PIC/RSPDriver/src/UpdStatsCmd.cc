@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "UpdStatsCmd.h"
 
 using namespace blitz;
@@ -40,8 +41,8 @@ UpdStatsCmd::UpdStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper
   m_event = new RSPSubstatsEvent(event);
 
   m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
-		 ? GET_CONFIG("RS.N_BLPS", i) : 1)
-    * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+		 ? StationSettings::instance()->nrBlpsPerBoard() : 1)
+    * StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL;
 
   setOperation(oper);
   setPeriod(m_event->period);

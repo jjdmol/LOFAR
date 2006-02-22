@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <string.h>
 
+#include "StationSettings.h"
 #include "RCUResultRead.h"
 #include "Cache.h"
 
@@ -51,7 +52,7 @@ namespace LOFAR {
 };
 
 RCUResultRead::RCUResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -63,7 +64,7 @@ RCUResultRead::~RCUResultRead()
 
 void RCUResultRead::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // skip update if the RCU settings have not been modified
   if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))
@@ -108,7 +109,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // reverse and copy control bytes into i2c_result
   RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
@@ -116,7 +117,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   memcpy(i2c_result + 1, &control, 3);
 
   if (0 == memcmp(i2c_result, ack.result, sizeof(i2c_result))) {
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+    uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
     Cache::getInstance().getBack().getRCUSettings().getState().applied(global_rcu);
   } else {
     LOG_ERROR("RCUResultRead::handleack: unexpected I2C result response");

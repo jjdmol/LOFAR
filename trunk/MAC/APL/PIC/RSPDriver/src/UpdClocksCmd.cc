@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "UpdClocksCmd.h"
 
 using namespace blitz;
@@ -71,7 +72,7 @@ void UpdClocksCmd::complete(CacheBuffer& cache)
   
   int  result_rsp = 0;
   bool sendack = false;
-  for (int cache_rsp = 0; cache_rsp < GET_CONFIG("RS.N_RSPBOARDS", i); cache_rsp++)
+  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++)
   {
     if (m_event->rspmask[cache_rsp])
     {
@@ -99,5 +100,5 @@ void UpdClocksCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdClocksCmd::validate() const
 {
-  return (m_event->rspmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i));
+  return (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards());
 }

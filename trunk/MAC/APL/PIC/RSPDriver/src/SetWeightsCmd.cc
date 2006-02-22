@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "SetWeightsCmd.h"
 
 using namespace blitz;
@@ -81,9 +82,7 @@ void SetWeightsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 
   int input_rcu = 0;
   for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
-	 GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++)
+       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {

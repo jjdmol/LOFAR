@@ -53,8 +53,13 @@ namespace LOFAR {
        * @param accs Reference to the global ACC's. These ACC's are shared between
        * the calibration algorithm and the ACMProxy class.
        */
-      CalServer(string name, ACCs& accs);
+      CalServer(string name, ACCs& accs, int argc, char** argv);
       virtual ~CalServer();
+
+      /**
+       * Adopt the commandline switches
+       */
+      void parseOptions(int argc, char** argv);
 
       /**
        * The undertaker method deletes dead clients on the m_dead_clients list.
@@ -109,6 +114,9 @@ namespace LOFAR {
 
       /** remember number of RSP boards for reading the clock */
       int m_n_rspboards;
+
+	  // Which instance of the services we should use.
+	  int32	m_instancenr;
 
       /**
        * Ports

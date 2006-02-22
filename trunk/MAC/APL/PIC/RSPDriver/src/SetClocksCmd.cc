@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "SetClocksCmd.h"
 
 using namespace blitz;
@@ -61,7 +62,7 @@ void SetClocksCmd::ack(CacheBuffer& /*cache*/)
 
 void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  for (int cache_rsp = 0; cache_rsp < GET_CONFIG("RS.N_RSPBOARDS", i); cache_rsp++) {
+  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++) {
     if (m_event->rspmask[cache_rsp]) {
       cache.getClocks()()(cache_rsp) = m_event->clocks()(0);
       if (setModFlag) {
@@ -88,7 +89,7 @@ void SetClocksCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetClocksCmd::validate() const
 {
-  return ((m_event->rspmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i))
+  return ((m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards())
 	  && (1 == m_event->clocks().dimensions())
 	  && (1 == m_event->clocks().extent(firstDim)));
 }

@@ -27,6 +27,7 @@
 
 #include <APL/RTCCommon/PSAccess.h>
 
+#include "StationSettings.h"
 #include "WGWrite.h"
 #include "Cache.h"
 
@@ -40,7 +41,7 @@ using namespace RTC;
 #define N_REGISTERS 2 // the number of registers to write (DiagWg and DiagWgwave)
 
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL * N_REGISTERS)
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL * N_REGISTERS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -52,7 +53,7 @@ WGWrite::~WGWrite()
 
 void WGWrite::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + (getCurrentIndex() / N_REGISTERS);
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + (getCurrentIndex() / N_REGISTERS);
 
   if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getWGSettings().getState().get(global_rcu)) {
     setContinue(true);

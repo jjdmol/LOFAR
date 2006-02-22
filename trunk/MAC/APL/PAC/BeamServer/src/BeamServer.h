@@ -74,8 +74,13 @@ namespace LOFAR {
 	 * up connection establishment information using the GTMNameService and
 	 * GTMTopologyService classes.
 	 */
-	BeamServer(string name);
+	BeamServer(string name, int argc, char** argc);
 	virtual ~BeamServer();
+
+	/**
+	 * Parse the commandline options
+	 */
+	void parseOptions(int argc, char** argv);
 
 	// state methods
 
@@ -232,6 +237,8 @@ namespace LOFAR {
 	Beams    m_beams;
 
 	AMC::ConverterClient m_converter;
+
+	int32	 m_instancenr;
       };
   };
 };

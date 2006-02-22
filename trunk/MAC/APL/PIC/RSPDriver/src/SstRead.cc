@@ -28,6 +28,7 @@
 
 #include <APL/RSP_Protocol/Statistics.h>
 
+#include "StationSettings.h"
 #include "SstRead.h"
 #include "Cache.h"
 
@@ -39,7 +40,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 SstRead::SstRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * SST_N_FRAGMENTS)
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * SST_N_FRAGMENTS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -105,7 +106,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentIndex() / SST_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / SST_N_FRAGMENTS);
 
   uint16 offset = ack.hdr.m_fields.offset / sizeof(uint32);
   

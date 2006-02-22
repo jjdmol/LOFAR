@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "GetWGCmd.h"
 
 using namespace blitz;
@@ -60,19 +61,18 @@ void GetWGCmd::ack(CacheBuffer& cache)
   
   int result_rcu = 0;
   for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++)
+       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+      if (cache_rcu < StationSettings::instance()->nrRcus())
       {
 	ack.settings()(result_rcu) = cache.getWGSettings()()(cache_rcu);
       }
       else
       {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's", cache_rcu, 
+		StationSettings::instance()->nrRcus()));
       }
       
       result_rcu++;
@@ -104,7 +104,7 @@ void GetWGCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetWGCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
+  return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus()));
 }
 
 bool GetWGCmd::readFromCache() const

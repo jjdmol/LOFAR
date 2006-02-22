@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RSP_Protocol/Statistics.h>
 
+#include "StationSettings.h"
 #include "XstRead.h"
 #include "Cache.h"
 
@@ -133,7 +134,7 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   uint16 offset = ((getCurrentIndex() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE) / sizeof(uint32);
 
-  int global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (m_regid/2);
+  int global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (m_regid/2);
   
   LOG_DEBUG(formatString("XstRead::handleack: global_blp=%d, offset=%d",
 			 global_blp, offset));

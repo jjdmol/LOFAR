@@ -28,6 +28,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "GetClocksCmd.h"
 
 using namespace blitz;
@@ -60,7 +61,7 @@ void GetClocksCmd::ack(CacheBuffer& cache)
   ack.clocks().resize(m_event->rspmask.count());
   
   int result_rsp = 0;
-  for (int cache_rsp = 0; cache_rsp < GET_CONFIG("RS.N_RSPBOARDS", i); cache_rsp++)
+  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++)
   {
     if (m_event->rspmask[cache_rsp])
     {
@@ -95,7 +96,7 @@ void GetClocksCmd::setTimestamp(const RTC::Timestamp& timestamp)
 
 bool GetClocksCmd::validate() const
 {
-  return (m_event->rspmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i));
+  return (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards());
 }
 
 bool GetClocksCmd::readFromCache() const

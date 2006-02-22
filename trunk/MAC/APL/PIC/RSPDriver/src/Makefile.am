@@ -82,6 +82,8 @@ RSPDriver_SOURCES = \
 	Command.cc \
 	Cache.h \
 	Cache.cc \
+	StationSettings.h \
+	StationSettings.cc \
 	\
 	SetWeightsCmd.h \
 	SetWeightsCmd.cc \

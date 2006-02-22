@@ -54,9 +54,10 @@ lofar_GENERAL
 dnl lofar_BLITZ
 dnl lofar_MPI
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/AMC/AMCBase, AMCBase, , 1, AMCBase/EarthCoord.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_1rc2, 1, GCF/GCF_Defines.h,,)
-lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, HEAD, 1, APL/RTCCommon/Marshalling.h,,)
+lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, , 1, APL/RTCCommon/Marshalling.h,,)
 lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol, , 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 

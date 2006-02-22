@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "GetStatusCmd.h"
 
 using namespace blitz;
@@ -56,10 +57,10 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.sysstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  ack.sysstatus.board().resize(StationSettings::instance()->nrRspBoards());
   ack.sysstatus.board() = cache.getSystemStatus().board();
 
-  for (int boardNr = 0; boardNr < GET_CONFIG("RS.N_RSPBOARDS", i); boardNr++) {
+  for (int boardNr = 0; boardNr < StationSettings::instance()->nrRspBoards(); boardNr++) {
 	ack.sysstatus.board()(boardNr) = cache.getSystemStatus().board()(boardNr);
   }
 
@@ -90,7 +91,7 @@ bool GetStatusCmd::validate() const
 {
 
   return (true);
-//  return (m_event->rspmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i));
+//  return (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards());
 }
 
 bool GetStatusCmd::readFromCache() const
@@ -108,7 +109,7 @@ void GetStatusCmd::ack_fail()
 #if 1
   ack.sysstatus.board().resize(0);
 #else
-  ack.sysstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  ack.sysstatus.board().resize(StationSettings::instance()->nrRspBoards());
 
   BoardStatus boardinit;
 

@@ -28,6 +28,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "SSRead.h"
 #include "Cache.h"
 
@@ -39,7 +40,7 @@ using namespace RSP;
 using namespace RTC;
 
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -80,7 +81,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
   LOG_DEBUG("handleack");
 
