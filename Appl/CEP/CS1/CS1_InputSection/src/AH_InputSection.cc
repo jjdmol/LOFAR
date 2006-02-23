@@ -126,7 +126,8 @@ namespace LOFAR {
 	sprintf(nameBuffer, "Collect_node_%d_of_%d", nf, nStations);
 	lastWH = new WH_SBCollect(nameBuffer,      // name
 				  nf,              // Subband ID
-				  itsParamSet);   // inputs  
+				  itsParamSet,
+				  nCoresPerSubband);
 	collectSteps.push_back(new Step(lastWH, nameBuffer, false));
 	collectSteps.back()->runOnNode(lowestFreeNode++); 
 	comp.addBlock(collectSteps.back());
@@ -136,13 +137,11 @@ namespace LOFAR {
 	  itsConnector.connectSteps(RSPSteps[st], nf, collectSteps.back(), st);
 	}
 	// connect outputs to FIR stub
-	for (int no=0; no < nOutputsPerSubband; no++) {
-	  for (int core = 0; core < nCoresPerSubband; core++) {
-	    outputStub.connect(nf * nOutputsPerSubband + no,
-			       core,
-			       (collectSteps.back())->getOutDataManager(no), 
-			       core);
-	  }
+	for (int core = 0; core < nCoresPerSubband; core++) {
+	  outputStub.connect(nf,
+			     core,
+			     (collectSteps.back())->getOutDataManager(core), 
+			     core);
 	}
       }
       LOG_TRACE_FLOW_STR("Finished define()");

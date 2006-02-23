@@ -34,9 +34,10 @@ namespace LOFAR {
   namespace CS1_InputSection {
 
     WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
-			       const ACC::APS::ParameterSet pset) 
+			       const ACC::APS::ParameterSet pset,
+			       const int noutputs) 
       : WorkHolder   (pset.getInt32("Data.NStations"), 
-		      pset.getInt32("FakeData.NSubbands")/pset.getInt32("Data.NSubbands"),
+		      noutputs,
 		      name,
 		      "WH_SBCollect"),
 	itsPS        (pset),
@@ -59,14 +60,15 @@ namespace LOFAR {
     }
 
     WorkHolder* WH_SBCollect::construct(const string& name, int sbID, 
-					const ACC::APS::ParameterSet pset) 
+					const ACC::APS::ParameterSet pset,
+					const int noutputs) 
     {
-      return new WH_SBCollect(name, sbID, pset);
+      return new WH_SBCollect(name, sbID, pset, noutputs);
     }
 
     WH_SBCollect* WH_SBCollect::make(const string& name)
     {
-      return new WH_SBCollect(name, itsSubBandID, itsPS);
+      return new WH_SBCollect(name, itsSubBandID, itsPS, itsNoutputs);
     }
 
     void WH_SBCollect::process() 
