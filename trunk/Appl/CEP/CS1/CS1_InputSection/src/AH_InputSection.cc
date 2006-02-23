@@ -144,7 +144,7 @@ namespace LOFAR {
 	for (int core = 0; core < nCoresPerSubband; core++) {
 	  itsOutputStub->connect(nf,
 			     core,
-			     (collectSteps.back())->getOutDataManager(core), 
+			     (collectSteps.back())->getOutDataManager(0), 
 			     core);
 	}
       }
