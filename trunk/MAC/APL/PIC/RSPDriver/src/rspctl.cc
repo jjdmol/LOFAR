@@ -1342,10 +1342,21 @@ RSPCtl::RSPCtl(string name, int argc, char** argv)
     : GCFTask((State)&RSPCtl::initial, name), m_command(0),
     m_nrcus(0), m_nrspboards(0), m_argc(argc), m_argv(argv), m_instancenr(-1)
 {
-  if (!(m_command = parse_options(m_argc, m_argv))) {
-    logMessage(cerr,"Warning: no command specified.");
-    exit(EXIT_FAILURE);
-  }
+// NOTE: parsing of option should be done BEFORE connecting to the RSPDriver
+// because we must know to which RSPDriver instance we must connect (-In)
+// Unfortunately this does not work properly.
+// The m_command created here does not work anymore were we need it.
+// Reparsing the options were we need the command doesn't recognise the
+// the arguments anymore! e.g --statistics --duration=50 --> 
+// 'command argument should come before --duration argument'
+// This is probably because getopt_long reshuffles the arguments.
+//
+// For the time being the -I option will not work.
+//
+//  if (!(m_command = parse_options(m_argc, m_argv))) {
+//    logMessage(cerr,"Warning: no command specified.");
+//    exit(EXIT_FAILURE);
+//  }
 
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 #ifdef ENABLE_RSPFE
@@ -1353,11 +1364,14 @@ RSPCtl::RSPCtl(string name, int argc, char** argv)
 #endif
 
   string	instanceID;
-  if (m_instancenr>=0) {
-    instanceID = formatString("(%d)", m_instancenr);
-  }
+//  if (m_instancenr>=0) {
+//    instanceID = formatString("(%d)", m_instancenr);
+//  }
+// NOTE: this also does not work because 'server' is a part of a parameter-
+// name that is in the conf files.!!!
+//
+//m_server.init(*this, "server"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
   m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
-  //m_server.init(*this, "server"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 RSPCtl::~RSPCtl()
