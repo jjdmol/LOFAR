@@ -29,6 +29,7 @@
 #include <CS1_Interface/DH_RSP.h>
 #include <CS1_Interface/DH_Subband.h>
 #include <Common/hexdump.h>
+#include <tinyCEP/Sel_RoundRobin.h>
 
 namespace LOFAR {
   namespace CS1_InputSection {
@@ -54,6 +55,8 @@ namespace LOFAR {
 	  sprintf(str, "DH_out_%d", i);
 	  getDataManager().addOutDataHolder(i, new DH_Subband(str, itsPS));
 	}
+      // Set a round robin output selector
+      getDataManager().setOutputSelector(new Sel_RoundRobin(itsNoutputs));
     }
 
     WH_SBCollect::~WH_SBCollect() {
@@ -74,29 +77,24 @@ namespace LOFAR {
     void WH_SBCollect::process() 
     { 
       RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(0))->getDataMatrix();
+      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().selectOutHolder())->getDataMatrix();
       dimType outStationDim = outMatrix.getDim("Station");
       dimType inStationDim = inMatrix->getDim("Stations");
 
       RectMatrix<DH_Subband::SampleType>::cursorType outCursor;
       RectMatrix<DH_RSP::BufferType>::cursorType inCursor;
 
-      for (int sb=0; sb<itsNoutputs; sb++) 
+      outCursor = outMatrix.getCursor( 0 * outStationDim);
+
+      // Loop over all inputs (stations)
+      for (int nr=0; nr<itsNinputs; nr++)
 	{
-	  outMatrix = ((DH_Subband*)getDataManager().getOutHolder(sb))->getDataMatrix();
-	  outCursor = outMatrix.getCursor( 0 * outStationDim);
-
-	  // Loop over all inputs (stations)
-	  for (int nr=0; nr<itsNinputs; nr++)
-	    {
-	      inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
-	      inCursor = inMatrix->getCursor(0*inStationDim);
-	      // copy all freq, time and pol from an input to output
-	      inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
-	      outMatrix.moveCursor(&outCursor, outStationDim);
-	    }
+	  inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
+	  inCursor = inMatrix->getCursor(0*inStationDim);
+	  // copy all freq, time and pol from an input to output
+	  inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
+	  outMatrix.moveCursor(&outCursor, outStationDim);
 	}
-
 
 #if 0
       // dump the contents of outDH to stdout
