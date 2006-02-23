@@ -31,9 +31,6 @@
 #include <CS1_InputSection/WH_RSPInput.h>
 #include <CS1_InputSection/WH_SBCollect.h>
 
-#include <CS1_Interface/Stub_CoarseDelay.h>
-#include <CS1_Interface/Stub_BGL_Subband.h>
-
 #include <Transport/TransportHolder.h>
 #include <Transport/TH_MPI.h>
 
@@ -49,7 +46,12 @@ namespace LOFAR {
     }
 
     void AH_InputSection::undefine()
-    {}
+    {
+      delete itsOutputStub;
+      delete itsInputStub;
+      itsInputStub = 0;
+      itsOutputStub = 0;
+    }
 
     void AH_InputSection::define(const LOFAR::KeyValueMap&) 
     {
@@ -73,7 +75,6 @@ namespace LOFAR {
 
       LOG_TRACE_FLOW_STR("Create the input side delay stub");
       // TODO create connector class
-      Stub_CoarseDelay inputStub(true, itsParamSet);
 
       LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
   
@@ -87,6 +88,10 @@ namespace LOFAR {
   
       int nOutputsPerSubband = itsParamSet.getInt32("FakeData.NSubbands") / itsParamSet.getInt32("Data.NSubbands"); 
     
+      itsOutputStub = new Stub_BGL_Subband(false, itsParamSet);
+      itsInputStub = new Stub_CoarseDelay(true, itsParamSet);
+
+
       for (int r=0; r<nStations; r++) {
    
 	// TODO: we could use a connector here too
@@ -111,14 +116,13 @@ namespace LOFAR {
 	comp.addBlock(RSPSteps[r]);
     
 	// Connect the Delay Controller
-	inputStub.connect(r, (RSPSteps.back())->getInDataManager(0), 0);
+	itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
 	if (r!=0) {
 	  itsConnector.connectSteps(RSPSteps[0], nSubbands + r - 1, RSPSteps.back(), 1);
 	}
       }
   
       LOG_TRACE_FLOW_STR("Create output side interface stubs");
-      Stub_BGL_Subband outputStub(true, itsParamSet);
 
       LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
       vector<Step*> collectSteps;
@@ -138,7 +142,7 @@ namespace LOFAR {
 	}
 	// connect outputs to FIR stub
 	for (int core = 0; core < nCoresPerSubband; core++) {
-	  outputStub.connect(nf,
+	  itsOutputStub->connect(nf,
 			     core,
 			     (collectSteps.back())->getOutDataManager(core), 
 			     core);
