@@ -35,7 +35,7 @@ Data.BeamElevation = 90.0
 Data.Delays.Station0_Station1=0   # (Constant) delay between stations 
 
 # The amount of fake data (this includes the normal data, so it should always be more than Data.*)
-FakeData.NSubbands=2
+FakeData.NSubbands=1
 FakeData.NStations=37
 
 # General Variables
@@ -49,9 +49,9 @@ Input.SzEPAheader=16
 Input.SzEPApayload=8  # must be a multiple of 8 (Npol * 4) and it must be more than NSubbands * 8
 Input.IPHeaderSize=32
 Input.NSamplesToBuffer=1556480
-Input.Transport.0.th        = FILE  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
 Input.Transport.0.inputFile = "udp_rsp0.data"
-Input.Transport.1.th        = FILE  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.1.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
 Input.Transport.1.inputFile = "udp_rsp1.data"
 
 # Variables for BGLProcessing

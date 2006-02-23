@@ -63,11 +63,13 @@ void DH_Subband::init()
 
   vector<DimDef> vdd;
   vdd.push_back(DimDef("Station",      NR_STATIONS));
-  vdd.push_back(DimDef("Time",	       SAMPLE_RATE));
+  vdd.push_back(DimDef("Time",	       NR_INPUT_SAMPLES));
   vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
 
   itsMatrix = new RectMatrix<SampleType> (vdd);
   itsMatrix->setBuffer((SampleType *) itsSamples, nrSamples());
+
+  memset(itsFlags, 0, sizeof *itsFlags);
 }
 
 void DH_Subband::fillDataPointers()
