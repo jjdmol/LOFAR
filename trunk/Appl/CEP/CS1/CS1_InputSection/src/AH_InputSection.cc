@@ -37,7 +37,9 @@
 namespace LOFAR {
   namespace CS1_InputSection {
 
-    AH_InputSection::AH_InputSection()
+    AH_InputSection::AH_InputSection() :
+      itsOutputStub(0),
+      itsInputStub(0)
     {}
 
     AH_InputSection::~AH_InputSection()
@@ -67,6 +69,7 @@ namespace LOFAR {
 #endif
       
       int nSubbands  = itsParamSet.getInt32("Data.NSubbands");  // number of SubBand filters in the application
+      int nFakeSubbands  = itsParamSet.getInt32("FakeData.NSubbands");  // number of SubBand filters in the application
       int nCoresPerSubband = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
     
       LOG_TRACE_FLOW_STR("Create the top-level composite");
@@ -86,8 +89,6 @@ namespace LOFAR {
       char nameBuffer[nameBufferSize];
       int rspStartNode;
   
-      int nOutputsPerSubband = itsParamSet.getInt32("FakeData.NSubbands") / itsParamSet.getInt32("Data.NSubbands"); 
-    
       itsOutputStub = new Stub_BGL_Subband(false, itsParamSet);
       itsInputStub = new Stub_CoarseDelay(true, itsParamSet);
 
@@ -126,7 +127,7 @@ namespace LOFAR {
 
       LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
       vector<Step*> collectSteps;
-      for (int nf=0; nf < nSubbands; nf++) {
+      for (int nf=0; nf < nFakeSubbands; nf++) {
 	sprintf(nameBuffer, "Collect_node_%d_of_%d", nf, nStations);
 	lastWH = new WH_SBCollect(nameBuffer,      // name
 				  nf,              // Subband ID
@@ -137,8 +138,10 @@ namespace LOFAR {
 	comp.addBlock(collectSteps.back());
 
 	// Connect splitters to mergers (transpose)
-	for (int st=0; st<nStations; st++) {
-	  itsConnector.connectSteps(RSPSteps[st], nf, collectSteps.back(), st);
+	if (nf < nSubbands) { //this is not a fake subband
+	  for (int st=0; st<nStations; st++) {
+	    itsConnector.connectSteps(RSPSteps[st], nf, collectSteps.back(), st);
+	  }
 	}
 	// connect outputs to FIR stub
 	for (int core = 0; core < nCoresPerSubband; core++) {

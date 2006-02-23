@@ -61,7 +61,8 @@ namespace LOFAR {
       // get parameters
       itsNRSPOutputs = ps.getInt32("Data.NStations");
       itsNSubbands = ps.getInt32("Data.NSubbands");
-      itsNSamplesToCopy = ps.getInt32("Data.NSamplesToIntegrate");
+      itsNSamplesPerSec = ps.getInt32("Data.NSamplesToIntegrate");
+      itsNSamplesToCopy = itsNSamplesPerSec + (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Data.NChannels");
  
       // create incoming dataholder holding the delay information 
       getDataManager().addInDataHolder(0, new DH_CoarseDelay("DH_CoarseDelay",itsNRSPOutputs));
@@ -193,7 +194,7 @@ namespace LOFAR {
 
 	} else { // not the first loop
 	  // increase the syncstamp
-	  itsSyncedStamp += itsNSamplesToCopy;
+	  itsSyncedStamp += itsNSamplesPerSec;
 	}
 
       } else {  // sync slave
@@ -215,14 +216,14 @@ namespace LOFAR {
 
 	} else {  //not the first loop
 	  // increase the syncstamp
-	  itsSyncedStamp += itsNSamplesToCopy;
+	  itsSyncedStamp += itsNSamplesPerSec;
 	}  
       }
 
       // delay control
       delayDHp = (DH_CoarseDelay*)getDataManager().getInHolder(0);
       // Get delay from the delay controller
-      delayedstamp = itsSyncedStamp + delayDHp->getDelay(itsStationID);    
+      delayedstamp = itsSyncedStamp + delayDHp->getDelay(0);    
       //delayedstamp = itsSyncedStamp;
 
 
