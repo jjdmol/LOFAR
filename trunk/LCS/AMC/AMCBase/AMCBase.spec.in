@@ -8,8 +8,7 @@
 #
 ##############################################################################
 
-Summary: AMCBase contains the interface definition of the conversion methods
-and some basic classes.
+Summary: AMCBase contains the interface definition of the conversion methods and some basic classes.
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
