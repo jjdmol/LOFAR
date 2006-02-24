@@ -94,7 +94,7 @@ namespace LOFAR {
 	  receiveTimer.stop();
 	} catch (Exception& e) {
 	  LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder("<<e.what()<<", stopping thread");
-	  pthread_exit(NULL);
+	  break;
 	}	
 
 	// get the actual timestamp of first EPApacket in frame
