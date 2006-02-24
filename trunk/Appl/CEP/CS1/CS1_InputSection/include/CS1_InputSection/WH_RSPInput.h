@@ -103,6 +103,7 @@ namespace LOFAR
      
       int itsNRSPOutputs;
       int itsNSubbands;
+      int itsNSamplesPerSec;
       int itsNSamplesToCopy;
       int itsStationID;
      
