@@ -50,7 +50,7 @@ namespace LOFAR
     void operator++ (int);
 
     TimeStamp operator+ (int other) const;
-    int operator- (const TimeStamp& other) const;
+    long long operator- (const TimeStamp& other) const;
     TimeStamp operator- (int other) const;
     bool operator>  (const TimeStamp& other) const;
     bool operator<  (const TimeStamp& other) const;
@@ -107,9 +107,9 @@ namespace LOFAR
       return TimeStamp(itsSeqId, itsBlockId - decrement);
     }
 
-   inline int TimeStamp::operator- (const TimeStamp& other) const
+   inline long long TimeStamp::operator- (const TimeStamp& other) const
     { 
-      int seqdecr = itsSeqId - other.itsSeqId;
+      long long seqdecr = itsSeqId - other.itsSeqId;
       int blockdecr = itsBlockId - other.itsBlockId;
       
       return  (seqdecr*theirMaxBlockId) + blockdecr;
