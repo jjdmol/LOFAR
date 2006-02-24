@@ -50,10 +50,11 @@ namespace LOFAR {
 
     BeamletBuffer::~BeamletBuffer()
     {      
-      LOG_INFO_STR("BeamletBuffer did not receive "<<itsDummyItems<<" stamps and received "<<itsDroppedItems<<" items too late.");
-      LOG_INFO_STR("BeamletBufferTimers:");
-      LOG_INFO_STR(itsReadTimer);
-      LOG_INFO_STR(itsWriteTimer);
+      cout<<"BeamletBuffer did not receive "<<itsDummyItems<<" stamps and received "<<itsDroppedItems<<" items too late."<<endl;
+      cout<<"BeamletBufferTimers:"<<endl;
+      cout<<itsReadTimer<<endl;
+      cout<<itsWriteTimer<<endl;
+      cout.flush();
 
       vector<Beamlet*>::iterator bit = itsSBBuffers.begin();
       for (; bit != itsSBBuffers.end(); bit++) {

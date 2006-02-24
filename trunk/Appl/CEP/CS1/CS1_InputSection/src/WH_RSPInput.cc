@@ -93,7 +93,6 @@ namespace LOFAR {
 
     WH_RSPInput::~WH_RSPInput() 
     {
-      delete itsBBuffer;
     }
 
 
@@ -212,6 +211,7 @@ namespace LOFAR {
       
 	  // start the buffer and set the stamp at which we need to start reading
 	  itsBBuffer->startBufferRead(itsSyncedStamp);
+	  cout<<"Buffer started on slave"<<endl;cout.flush();
 	  itsFirstProcessLoop = false; 
 
 	} else {  //not the first loop
@@ -223,7 +223,7 @@ namespace LOFAR {
       // delay control
       delayDHp = (DH_CoarseDelay*)getDataManager().getInHolder(0);
       // Get delay from the delay controller
-      delayedstamp = itsSyncedStamp + delayDHp->getDelay(0);    
+      delayedstamp = itsSyncedStamp + 0; //delayDHp->getDelay(0);    
       //delayedstamp = itsSyncedStamp;
 
 
@@ -237,10 +237,13 @@ namespace LOFAR {
       }
       // get the data from the cyclic buffer
       itsGetElemTimer->start();
+      cout<<"reading from buffer"<<endl;cout.flush();
+
       itsBBuffer->getElements(subbandbuffer,
 			      invalidcount, 
 			      delayedstamp, 
 			      itsNSamplesToCopy);
+      cout<<"done reading from buffer"<<endl;cout.flush();
       itsGetElemTimer->stop();
 
       // fill in the outgoing dataholders
@@ -251,7 +254,7 @@ namespace LOFAR {
 	rspDHp->setStationID(itsStationID);
 	rspDHp->setInvalidCount(invalidcount);
 	rspDHp->setTimeStamp(delayedstamp);   
-	rspDHp->setDelay(delayDHp->getDelay(itsStationID));
+	//rspDHp->setDelay(delayDHp->getDelay(itsStationID));
 
 #if 0
 	// dump the output (for debugging)
@@ -302,6 +305,7 @@ namespace LOFAR {
       delete itsInputThread;
       delete itsInputThreadObject;
 
+      delete itsBBuffer;
       sleep(2);
     }
 

@@ -42,7 +42,8 @@ namespace LOFAR {
 		      name,
 		      "WH_SBCollect"),
 	itsPS        (pset),
-	itsSubBandID (sbID)
+	itsSubBandID (sbID),
+	itsCore(0)
     {
       char str[32];
       for (int i=0; i<itsNinputs; i++)
@@ -54,9 +55,10 @@ namespace LOFAR {
 	{
 	  sprintf(str, "DH_out_%d", i);
 	  getDataManager().addOutDataHolder(i, new DH_Subband(str, itsPS));
+	  getDataManager().setAutoTriggerOut(i, false);
 	}
       // Set a round robin output selector
-      getDataManager().setOutputSelector(new Sel_RoundRobin(itsNoutputs));
+      //getDataManager().setOutputSelector(new Sel_RoundRobin(itsNoutputs));
     }
 
     WH_SBCollect::~WH_SBCollect() {
@@ -77,7 +79,7 @@ namespace LOFAR {
     void WH_SBCollect::process() 
     { 
       RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().selectOutHolder())->getDataMatrix();
+      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getDataMatrix();
       dimType outStationDim = outMatrix.getDim("Station");
       dimType inStationDim = inMatrix->getDim("Stations");
 
@@ -95,6 +97,9 @@ namespace LOFAR {
 	  inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
 	  outMatrix.moveCursor(&outCursor, outStationDim);
 	}
+      getDataManager().readyWithOutHolder(itsCore);
+      itsCore ++ ;
+      if (itsCore >= itsNoutputs) itsCore = 0;
 
 #if 0
       // dump the contents of outDH to stdout
@@ -112,6 +117,16 @@ namespace LOFAR {
 	      matrixSize * sizeof(DH_Subband::SampleType));
       cout << "WH_SBCollect output done " << endl;
 #endif
+    }
+
+    void WH_SBCollect::postprocess() {
+      sleep(10);
+//       for (int o = 0; o < itsNoutputs; o++) {
+// 	for (int i = 0; i < 3; i++) {
+// 	  getDataManager().getOutHolder(o);
+// 	  getDataManager().readyWithOutHolder(0);
+// 	}
+//       }
     }
   } // namespace CS1_InputSection
 } // namespace LOFAR
