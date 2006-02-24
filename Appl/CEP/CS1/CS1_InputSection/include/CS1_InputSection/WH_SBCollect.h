@@ -59,6 +59,7 @@ namespace LOFAR
       virtual WH_SBCollect* make(const string& name);
       
       virtual void process();
+      virtual void postprocess();
 
     private:
       // Copying is not allowed
@@ -68,6 +69,7 @@ namespace LOFAR
       //# Datamembers
       ACC::APS::ParameterSet itsPS;
       int itsSubBandID;
+      int itsCore;
     };
 
     // @}
