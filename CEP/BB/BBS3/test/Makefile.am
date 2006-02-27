@@ -1,4 +1,4 @@
-check_PROGRAMS = tMeqPolc tMeqParm tPredSolv tPredict tPerturbed t3C343 tMSData tShift
+check_PROGRAMS = tMeqPolc tMeqParm tPredSolv tPredict tSubtract tCorrect tPerturbed t3C343 tMSData tShift
 
 tMeqPolc_SOURCES = tMeqPolc.cc
 tMeqPolc_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
@@ -11,6 +11,12 @@ tPredSolv_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
 
 tPredict_SOURCES = tPredict.cc
 tPredict_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
+
+tSubtract_SOURCES = tSubtract.cc
+tSubtract_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
+
+tCorrect_SOURCES = tCorrect.cc
+tCorrect_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
 
 tPerturbed_SOURCES = tPerturbed.cc
 tPerturbed_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
@@ -31,6 +37,6 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  MPIBIN=$(MPIBIN) \
 				  AIPSPP=$(AIPSPP)
 
-TESTS = tMeqPolc.sh tMeqParm.sh tPredSolv.sh tPredict.sh tPerturbed.sh tMSData.sh
+TESTS = tMeqPolc.sh tMeqParm.sh tPredSolv.sh tPredict.sh tSubtract.sh tCorrect.sh tPerturbed.sh tMSData.sh
 
 include $(top_srcdir)/Makefile.common
