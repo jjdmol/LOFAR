@@ -20,7 +20,7 @@
 
 
 #include <CS1_Interface/Stub_BGL_FineDelay.h>
-#include <Transport/TH_Mem.h>
+#include <Transport/TH_Null.h>
 
 
 using namespace LOFAR;
@@ -29,13 +29,13 @@ namespace LOFAR {
 
 TransportHolder *Stub_BGL_FineDelay::newClientTH(unsigned, unsigned)
 {
-  return new TH_Mem();
+  return new TH_Null();
 }
 
 
 TransportHolder *Stub_BGL_FineDelay::newServerTH(unsigned, unsigned)
 {
-  return new TH_Mem();
+  return new TH_Null();
 }
 
 } //namespace
