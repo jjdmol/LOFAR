@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 
 #include <Transport/Connection.h>
 #include <Transport/DataHolder.h>
