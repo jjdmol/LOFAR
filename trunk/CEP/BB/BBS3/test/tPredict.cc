@@ -83,7 +83,7 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<tab.nrow(); i++) {
 	if (i==0) cout << dcol(i) << ccol(i) << endl;
 	if (! allNear (dcol(i), ccol(i), 1e-8)) {
-	  THROW (LOFAR::Exception, "tPredict: mismatch in row" << i);
+	  THROW (LOFAR::Exception, "tPredict: mismatch in row " << i);
 	}
       }
     }
