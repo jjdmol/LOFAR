@@ -105,6 +105,7 @@ namespace LOFAR
       int itsNSubbands;
       int itsNSamplesPerSec;
       int itsNSamplesToCopy;
+      int itsNSamplesPerSec;
       int itsStationID;
      
       BeamletBuffer* itsBBuffer;
