@@ -519,7 +519,7 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
   // Vector containing all EJ-s per station.
   vector<MeqJonesExpr> totalEJ(nrstat);
   // Correction per station.
-  itsCorrExpr.resize (nrstat);
+  vector<MeqJonesExpr> corrStat(nrstat);
   // Fill the vectors for each station.
   for (int i=0; i<nrstat; ++i) {
     MeqStatUVW* uvw = 0;
@@ -588,6 +588,7 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
 	}
 	totalEJ[i] = new MeqJonesNode (MeqExpr(ej11), MeqExpr(ej12),
 				       MeqExpr(ej21), MeqExpr(ej22));
+	corrStat[i] = new MeqJonesInvert (totalEJ[i]);
       }
       if (usePEJ) {
 	// Make a complex gain expression per station per patch.
@@ -628,7 +629,7 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
 						   MeqExpr(ej22));
 	  // Only AP of first group is used for correction.
 	  if (j == 0) {
-	    itsCorrExpr[i] = new MeqJonesInvert (patchEJ[i*nrgrp + j]);
+	    corrStat[i] = new MeqJonesInvert (patchEJ[i*nrgrp + j]);
 	  }
 	}
       }
@@ -638,14 +639,22 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
 
   // Make an expression for each baseline.
   itsExpr.resize (itsNrUsedBl);
-  if (useStatParm) {
-    itsResExpr.resize (itsNrUsedBl);
-  }
+  itsCorrExpr.resize (itsNrUsedBl);
+  itsCorrMMap.resize (itsNrUsedBl);
   int nrant = itsBLIndex.nrow();
   for (int ant2=0; ant2<nrant; ant2++) {
     for (int ant1=0; ant1<nrant; ant1++) {
       int blindex = itsBLIndex(ant1,ant2);
       if (blindex >= 0) {
+	if (usePEJ || useTEJ) {
+	  // Make correction expressions.
+	  itsCorrMMap[blindex] = new MeqJonesMMap (itsMSMapInfo,
+						   itsBLUsedInx[blindex]);
+	  itsCorrExpr[blindex] = new MeqJonesCMul3 (corrStat[ant1],
+						    itsCorrMMap[blindex],
+						    corrStat[ant2]);
+	}
+	// Predict expressions.
 	vector<MeqJonesExpr> vecPatch;
 	// Loop through all source groups.
 	for (int grp=0; grp<nrgrp; ++grp) {
@@ -700,12 +709,22 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
       }
     }
   }
+}
+
+void Prediffer::setPrecalcNodes (vector<MeqJonesExpr>& nodes)
+{
+  // First clear the levels of all nodes in the tree.
+  for (uint i=0; i<nodes.size(); ++i) {
+    if (! nodes[i].isNull()) {
+      nodes[i].clearDone();
+    }
+  }
   // Now set the levels of all nodes in the tree.
   // The top nodes have level 0; lower nodes have 1, 2, etc..
   int nrLev = -1;
-  for (uint i=0; i<itsExpr.size(); ++i) {
-    if (! itsExpr[i].isNull()) {
-      nrLev = std::max (nrLev, itsExpr[i].setLevel(0));
+  for (uint i=0; i<nodes.size(); ++i) {
+    if (! nodes[i].isNull()) {
+      nrLev = std::max (nrLev, nodes[i].setLevel(0));
     }
   }
   nrLev++;
@@ -718,17 +737,16 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
   // It may happen that a station is used by only one baseline. Calculating
   // such a baseline is much more work if the station was not precalculated.
   for (int level=1; level<nrLev; ++level) {
-    std::vector<MeqExprRep*>& nodes = itsPrecalcNodes[level];
-    nodes.resize (0);
-    for (std::vector<MeqJonesExpr>::iterator iter=itsExpr.begin();
-	 iter != itsExpr.end();
+    std::vector<MeqExprRep*>& pcnodes = itsPrecalcNodes[level];
+    pcnodes.resize (0);
+    for (std::vector<MeqJonesExpr>::iterator iter=nodes.begin();
+	 iter != nodes.end();
 	 ++iter) {
       if (! iter->isNull()) {
-	iter->getCachingNodes (nodes, level, false);
+	iter->getCachingNodes (pcnodes, level, false);
       }
     }
   }
-
   LOG_TRACE_FLOW_STR("#levels=" << nrLev);
   for (int i=0; i<nrLev; ++i) {
     LOG_TRACE_FLOW_STR("#expr on level " << i << " is " << itsPrecalcNodes[i].size());
@@ -1071,6 +1089,7 @@ void Prediffer::processData (const string& inColumnName,
     
       MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
       MeqRequest request(domain, nrchan, 1, calcDeriv?itsNrScid:0);
+      request.setFirstX (itsFirstChan);
       if (preCalc) {
 	precalcNodes (request);
       }
@@ -1144,6 +1163,8 @@ void Prediffer::precalcNodes (const MeqRequest& request)
 void Prediffer::fillFitter (casa::LSQFit& fitter, const string& dataColumnName)
 {
   fitter.set (itsNrScid);
+  // Find all nodes to be precalculated.
+  setPrecalcNodes (itsExpr);
   // Create thread private fitters for parallel execution.
   vector<LSQFit*> threadPrivateFitters(itsNthread);
   threadPrivateFitters[0] = &fitter;
@@ -1176,6 +1197,8 @@ void Prediffer::fillFitter (casa::LSQFit& fitter, const string& dataColumnName)
 void Prediffer::correctData (const string& inColumnName,
 			     const string& outColumnName, bool flush)
 {
+  // Find all nodes to be precalculated.
+  setPrecalcNodes (itsCorrExpr);
   processData (inColumnName, outColumnName, false, true, false,
 	       &Prediffer::correctBL, 0);
   if (flush) {
@@ -1186,6 +1209,8 @@ void Prediffer::correctData (const string& inColumnName,
 void Prediffer::subtractData (const string& inColumnName,
 			      const string& outColumnName, bool flush)
 {
+  // Find all nodes to be precalculated.
+  setPrecalcNodes (itsExpr);
   processData (inColumnName, outColumnName, false, true, false,
 	       &Prediffer::subtractBL, 0);
   if (flush) {
@@ -1195,6 +1220,8 @@ void Prediffer::subtractData (const string& inColumnName,
 
 void Prediffer::writePredictedData (const string& outColumnName)
 {
+  // Find all nodes to be precalculated.
+  setPrecalcNodes (itsExpr);
   processData ("", outColumnName, false, true, false,
 	       &Prediffer::predictBL, 0);
 }
@@ -1214,8 +1241,7 @@ void Prediffer::getData (const string& columnName, bool useTree,
   }
   vector<MeqJonesExpr> expr(itsNrUsedBl);
   for (int i=0; i<itsNrUsedBl; ++i) {
-    expr[i] = new MeqJonesMMap (itsMSMapInfo,
-			    (itsBLUsedInx[i]*itsNrChan+itsFirstChan)*itsNCorr);
+    expr[i] = new MeqJonesMMap (itsMSMapInfo, itsBLUsedInx[i]);
   }
   pair<pair<Complex*,bool*>*, vector<MeqJonesExpr>*> p1;
   p1.first = &p;
@@ -1236,9 +1262,9 @@ void Prediffer::fillEquation (int threadnr, void* arg,
 			      const MeqRequest& request, int blindex,
 			      bool showd)
 {
-  int bl = itsBLUsedInx[blindex];
-  int ant1 = itsAnt1[bl];
-  int ant2 = itsAnt2[bl];
+  ///int bl = itsBLUsedInx[blindex];
+  ///int ant1 = itsAnt1[bl];
+  ///int ant2 = itsAnt2[bl];
   //static NSTimer fillEquationTimer("fillEquation", true);
   //fillEquationTimer.start();
   // Get data.
@@ -1377,6 +1403,9 @@ void Prediffer::fillEquation (int threadnr, void* arg,
 //----------------------------------------------------------------------
 vector<MeqResult> Prediffer::getResults (bool calcDeriv)
 {
+  // Find all nodes to be precalculated.
+  setPrecalcNodes (itsExpr);
+  // Allocate result vector.
   vector<MeqResult> results;
   int nrchan = itsLastChan-itsFirstChan+1;
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
@@ -1539,54 +1568,16 @@ void Prediffer::subtractBL (int, void*,
 }
 
 void Prediffer::correctBL (int, void*,
-			   const fcomplex* dataIn, fcomplex* dataOut,
+			   const fcomplex*, fcomplex*,
 			   const bool*,
 			   const MeqRequest& request, int blindex,
-			   bool showd)
+			   bool)
 {
   itsPredTimer.start();
-  int bl = itsBLUsedInx[blindex];
-  int ant1 = itsAnt1[bl];
-  int ant2 = itsAnt2[bl];
-  MeqJonesExpr& expr1 = itsCorrExpr[ant1];
-  MeqJonesExpr& expr2 = itsCorrExpr[ant2];
-  // Do the actual predict.
-  MeqJonesResult r1,r2;
-  const MeqJonesResult& res1 = expr1.getResultSynced (request, r1);
-  const MeqJonesResult& res2 = expr2.getResultSynced (request, r2);
+  MeqJonesResult res = itsCorrExpr[blindex].getResult (request);
   itsPredTimer.stop();
-
   itsEqTimer.start();
-  int nrchan = request.nx();
-  // Put the results in a single array for easier handling.
-  const MeqResult* predResults[4];
-  predResults[0] = &(res1.getResult11());
-  if (itsNCorr == 2) {
-    predResults[1] = &(res1.getResult22());
-  } else if (itsNCorr == 4) {
-    predResults[1] = &(res1.getResult12());
-    predResults[2] = &(res1.getResult21());
-    predResults[3] = &(res1.getResult22());
-  }
-  // Loop through the correlations.
-  for (int corr=0; corr<itsNCorr; corr++, dataIn++, dataOut++) {
-    if (itsCorr[corr]) {
-      const MeqMatrix& val = predResults[corr]->getValue();
-      const double* realVals;
-      const double* imagVals;
-      val.dcomplexStorage(realVals, imagVals);
-      // Subtract predicted from the data.
-      int dch = itsReverseChan ? itsNCorr * (nrchan - 1) : 0;
-      int inc = itsReverseChan ? -itsNCorr : itsNCorr;
-      for (int ch=0; ch<nrchan; ch++, dch+=inc) {
-	dataOut[dch] = dataIn[dch] - makefcomplex(realVals[ch],
-						    imagVals[ch]);
-      }
-      if (showd) {
-	cout << "corr=" << corr << ' ' << val << endl;
-      }
-    }
-  }
+  itsCorrMMap[blindex]->putJResult (res, request);
   itsEqTimer.stop();
 }
 

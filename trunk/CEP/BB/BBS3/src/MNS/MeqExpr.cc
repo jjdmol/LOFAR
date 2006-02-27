@@ -73,6 +73,8 @@ int MeqExprRep::setLevel (int level)
 void MeqExprRep::clearDone()
 {
   itsLevelDone = -1;
+  itsMaxLevel  = -1;
+  itsMinLevel  = 100000000;
   for (uint i=0; i<itsChildren.size(); ++i) {
     // Avoid that a child is cleared multiple times.
     if (itsChildren[i]->levelDone() >= 0) {
@@ -167,7 +169,7 @@ MeqResult MeqExprRep::getResult (const MeqRequest& request)
   result.setValue (getResultValue(mat));
   // Calculate the perturbed values for which any child is perturbed.
   for (int spinx=0; spinx<request.nspid(); spinx++) {
-    bool eval = -1;
+    int eval = -1;
     for (int i=0; i<nrchild; ++i) {
       if (res[i].isDefined(spinx)) {
 	// Perturbed, so set value to the perturbed one.

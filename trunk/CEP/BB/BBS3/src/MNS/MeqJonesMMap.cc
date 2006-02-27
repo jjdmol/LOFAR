@@ -22,12 +22,13 @@
 
 #include <lofar_config.h>
 #include <BBS3/MNS/MeqJonesMMap.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
-  MeqJonesMMap::MeqJonesMMap (const MMapMSInfo& info, int offsetBL)
+  MeqJonesMMap::MeqJonesMMap (const MMapMSInfo& info, int blnr)
     : itsInfo     (&info),
-      itsOffsetBL (offsetBL)
+      itsOffsetBL (int64(blnr) * info.nrChan() * info.nrCorr())
   {}
 
   MeqJonesMMap::~MeqJonesMMap()
@@ -39,7 +40,8 @@ namespace LOFAR {
     int nrchan = request.nx();
     int nrtime = request.ny();
     int nrcorr = itsInfo->nrCorr();
-    int tsize  = itsInfo->timeSize();
+    int64 offset = itsOffsetBL + request.firstX() * nrcorr;
+    int64 tsize  = itsInfo->timeSize();
     // Channels might be in reversed order.
     int idch = itsInfo->reverseChan() ? nrcorr * (nrchan - 1) : 0;
     int inc  = itsInfo->reverseChan() ? -nrcorr : nrcorr;
@@ -73,7 +75,7 @@ namespace LOFAR {
     }
     // Move all data from MS to matrices.
     const fcomplex* mdata = itsInfo->inData() +
-                            itsInfo->timeOffset() + itsOffsetBL;
+                            itsInfo->timeOffset() + offset;
     for (int t=0; t<nrtime; ++t) {
       const fcomplex* data = mdata + t*tsize;
       for (int corr=0; corr<nrcorr; ++corr, ++data) {
@@ -89,7 +91,8 @@ namespace LOFAR {
     return result;
   }
 
-  void MeqJonesMMap::putJResult (const MeqJonesResult& result)
+  void MeqJonesMMap::putJResult (const MeqJonesResult& result,
+				 const MeqRequest& request)
   {
     // Get the result matrices.
     const MeqMatrix& m11 = result.getResult11().getValue();
@@ -100,7 +103,8 @@ namespace LOFAR {
     int nrchan = m11.nx();
     int nrtime = m11.ny();
     int nrcorr = itsInfo->nrCorr();
-    long tsize  = itsInfo->timeSize();
+    int64 offset = itsOffsetBL + request.firstX() * nrcorr;
+    int64 tsize  = itsInfo->timeSize();
     // Channels might be in reversed order.
     int idch = itsInfo->reverseChan() ? nrcorr * (nrchan - 1) : 0;
     int inc  = itsInfo->reverseChan() ? -nrcorr : nrcorr;
@@ -120,7 +124,7 @@ namespace LOFAR {
     }
     // Move all data from matrices to MS.
     fcomplex* mdata = itsInfo->outData() +
-                      itsInfo->timeOffset() + itsOffsetBL;
+                      itsInfo->timeOffset() + offset;
     for (int t=0; t<nrtime; ++t) {
       fcomplex* data = mdata + t*tsize;
       for (int corr=0; corr<nrcorr; ++corr, ++data) {

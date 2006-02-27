@@ -42,7 +42,7 @@ namespace LOFAR {
 class MeqJonesMMap: public MeqJonesExprRep
 {
 public:
-  MeqJonesMMap (const MMapMSInfo&, int offsetBL);
+  MeqJonesMMap (const MMapMSInfo&, int blnr);
 
   ~MeqJonesMMap();
 
@@ -50,11 +50,11 @@ public:
   virtual MeqJonesResult getJResult (const MeqRequest&);
 
   // Put the result of the expression.
-  void putJResult (const MeqJonesResult&);
+  void putJResult (const MeqJonesResult&, const MeqRequest&);
 
 private:
   const MMapMSInfo* itsInfo;
-  int               itsOffsetBL;
+  int64             itsOffsetBL;
 };
 
 // @}

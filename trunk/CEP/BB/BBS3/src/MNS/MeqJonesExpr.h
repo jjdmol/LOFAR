@@ -73,7 +73,8 @@ private:
   // Helper function adding an extra check.
   const MeqJonesResult& getJResult2 (const MeqRequest& request,
 				     MeqJonesResult& result)
-    { DBGASSERT(itsNParents<=1); return result = getJResult(request); }
+    ///#    { DBGASSERT(itsNParents<=1); return result = getJResult(request); }
+    { return result = getJResult(request); }
 
   // Forbid copy and assignment.
   MeqJonesExprRep (const MeqJonesExprRep&);

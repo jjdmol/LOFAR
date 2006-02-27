@@ -15,6 +15,7 @@ SC_CompoundIter.h				\
 MMap.h						\
 MMapMSInfo.h					\
 FlagsMap.h					\
+Fitter.h					\
 Prediffer.h					\
 Solver.h					\
 ParmData.h					\
@@ -86,6 +87,7 @@ SC_CompoundIter.cc					\
 MMap.cc							\
 MMapMSInfo.cc						\
 FlagsMap.cc						\
+Fitter.cc						\
 Prediffer.cc						\
 Solver.cc						\
 ParmData.cc						\
