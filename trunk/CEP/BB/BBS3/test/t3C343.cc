@@ -164,6 +164,26 @@ void doSubtract (Prediffer& pre1, double timeStep)
   }
 }
 
+// Subtract the sources.
+void doCorrect (Prediffer& pre1, double timeStep)
+{
+  // Set start time (take 10 sec into account for first time stamp of 20).
+  double timeStart = 4.47203e+09-4260-10;
+  double timeLast = timeStart + 43075+25;
+  ///  timeLast = timeStart + 120;
+  timeStart -=  30-20;
+  // Loop through all time domains.
+  while (timeStart < timeLast) {
+    // Set a domain. Use middle 56 channels and 20 times per step.
+    pre1.setDomain (4, 59, timeStart, timeStep);
+    ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
+    pre1.showSettings();
+    // Subtract the model.
+    pre1.correctData ("CORRECTED_DATA", "CORRECTED_DATA");
+    timeStart += timeStep;
+  }
+}
+
 
 int main (int argc, const char* argv[])
 {
@@ -273,7 +293,11 @@ int main (int argc, const char* argv[])
 	solv2[0] = "EJ11.phase.*";
 	solv2[1] = "EJ22.phase.*";
 	doSolveStep (pre1, solv2, vector<string>(), 30, maxniter);
+      } else if (type == 5) {
+	cout << "correct data ..." << endl;
+        doCorrect (pre1, 900);
       } else {
+	cout << "subtracct data ..." << endl;
         doSubtract (pre1, 900);
       }
     }
