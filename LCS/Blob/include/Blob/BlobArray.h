@@ -30,7 +30,7 @@
 #include <Blob/BlobIStream.h>
 #include <vector>
 #if defined(HAVE_BLITZ) 
-# include <Common/Lorrays.h>
+# include <blitz/array.h>
 #endif
 #if defined(HAVE_AIPSPP) 
 # include <casa/Arrays/Array.h>
