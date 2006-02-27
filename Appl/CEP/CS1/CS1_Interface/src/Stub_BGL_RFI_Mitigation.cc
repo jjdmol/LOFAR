@@ -20,7 +20,7 @@
 
 
 #include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
-#include <Transport/TH_Mem.h>
+#include <Transport/TH_Null.h>
 #include <Transport/Connection.h>
 
 
@@ -30,13 +30,13 @@ namespace LOFAR {
 
 TransportHolder *Stub_BGL_RFI_Mitigation::newClientTH(unsigned, unsigned)
 {
-  return new TH_Mem();
+  return new TH_Null();
 }
 
 
 TransportHolder *Stub_BGL_RFI_Mitigation::newServerTH(unsigned, unsigned)
 {
-  return new TH_Mem();
+  return new TH_Null();
 }
 
 } //namespace
