@@ -31,6 +31,7 @@ MeqRequestId MeqRequest::theirRequestId = 0;
 
 MeqRequest::MeqRequest (const MeqDomain& domain, int nx, int ny, int nrSpid)
 : itsRequestId (theirRequestId ++),
+  itsFirstX    (0),
   itsSourceNr  (0),
   itsNspids    (nrSpid)
 {

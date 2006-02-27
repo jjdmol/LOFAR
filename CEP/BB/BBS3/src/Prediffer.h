@@ -64,6 +64,7 @@ namespace LOFAR
 //# Forward Declarations
 class MMap;
 class FlagsMap;
+class MeqJonesMMap;
 
 // Prediffer calculates the equations for the solver.
 // It reads the measured data and predicts the data from the model.
@@ -232,6 +233,9 @@ private:
   void makeLOFARExpr (bool usePatchEJ, bool useTotalEJ, bool asAP,
 		      bool useStatParm);
 
+  // Find all nodes to be precalculated.
+  void setPrecalcNodes (vector<MeqJonesExpr>& nodes);
+
   // Fill the fitter with the equations for the given baseline.
   void fillEquation (int threadnr, void* arg,
 		     const fcomplex* dataIn, fcomplex* dummy,
@@ -324,8 +328,9 @@ private:
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;     //# UVW values per station
   vector<MeqJonesExpr>  itsExpr;        //# solve expression tree per baseline
-  vector<MeqJonesExpr>  itsResExpr;     //# residual expr tree per baseline
   vector<vector<MeqExprRep*> > itsPrecalcNodes;  //# nodes to be precalculated
+  vector<MeqJonesExpr>  itsCorrStat;    //# Correct per station
+  vector<MeqJonesMMap*> itsCorrMMap;    //# MMap for each baseline
   vector<MeqJonesExpr>  itsCorrExpr;    //# Ampl/phase expressions (to correct)
 
   string itsInDataColumn;

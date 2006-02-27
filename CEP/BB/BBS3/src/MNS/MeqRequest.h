@@ -74,6 +74,14 @@ public:
   double stepY() const
     { return itsStepY; }
 
+  // Set or get the first X-value (i.e. first channel).
+  // <group>
+  void setFirstX (int firstX)
+    { itsFirstX = firstX; }
+  int firstX() const
+    { return itsFirstX; }
+  // </group>
+
   // Set or get source nr.
   void setSourceNr (int sourceNr)
     { itsSourceNr = sourceNr; }
@@ -95,6 +103,7 @@ private:
   int          itsNy;
   double       itsStepX;
   double       itsStepY;
+  int          itsFirstX;
   int          itsSourceNr;
   int          itsNspids;
 
