@@ -78,6 +78,7 @@ int main (int argc, const char** argv) {
       cout.flush();
       myAH.baseRun(nrRuns);
       cout << "run complete" << endl;
+      TH_MPI::synchroniseAllProcesses();
       cout.flush();
       myAH.baseDump();
       myAH.baseQuit();
