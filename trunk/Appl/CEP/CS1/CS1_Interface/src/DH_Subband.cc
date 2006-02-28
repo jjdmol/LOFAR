@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 
 #include <DH_Subband.h>
+#include <Common/DataConvert.h>
 #include <Common/Timer.h>
 
 
@@ -56,7 +57,7 @@ DataHolder *DH_Subband::clone() const
 
 void DH_Subband::init()
 {
-  addField("Samples", BlobField<SampleType>(1, nrSamples()), 32);
+  addField("Samples", BlobField<uint8>(1, sizeof(SampleType) * nrSamples()), 32);
   addField("Flags",   BlobField<uint32>(1, sizeof(AllFlagsType) / sizeof(uint32)));
 
   createDataBlock();
@@ -74,8 +75,14 @@ void DH_Subband::init()
 
 void DH_Subband::fillDataPointers()
 {
-  itsSamples = (AllSamplesType *) getData<SampleType>("Samples");
-  itsFlags   = (AllFlagsType *)   getData<uint32>    ("Flags");
+  itsSamples = (AllSamplesType *) getData<uint8> ("Samples");
+  itsFlags   = (AllFlagsType *)   getData<uint32>("Flags");
+}
+
+
+void DH_Subband::swapBytes()
+{
+  dataConvert(LittleEndian, (i16complex *) itsSamples, nrSamples());
 }
 
 
@@ -125,6 +132,12 @@ void DH_Subband::setTestPattern(double Hz)
 #endif
 
   (std::cerr << "done.\n").flush();
+
+#if defined WORDS_BIGENDIAN
+  (std::cerr << "swapBytes()\n").flush();
+  swapBytes();
+#endif
+
   timer.stop();
 }
 
