@@ -34,9 +34,8 @@
 
 namespace LOFAR
 {
-// \ingroup Common
-// \addtogroup TypeNames Type name functions
-//
+  // \addtogroup TypeNames
+  //
   // These global functions return the name of the basic types.
   // They are meant to get the full id of a templated class when such an
   // object is stored in a blob.

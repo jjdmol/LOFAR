@@ -1,34 +1,36 @@
 check_PROGRAMS	      =	testLogger \
 			tAllocator tDataConvert tStringUtil tHexdump \
-			testSocket tComplex \
+			testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS 	      =	testLogger \
 			tAllocator tDataConvert tStringUtil tHexdump \
-			tTimer tNumeric
+			tProcess tTimer tNumeric
 #ENDCHECKTOOLPROGS
 
 TESTSCRIPTS = \
-	  tComplex.sh \
-	  tAllocator.sh \
-	  tDataConvert_test.sh \
-	  testLogger_test.sh \
-	  tHexdump_test.sh    \
-	  tNumeric.sh \
-	  tRunOnNode.sh \
-	  tStringUtil_test.sh
+	tComplex.sh \
+	tAllocator.sh \
+	tDataConvert_test.sh \
+	testLogger_test.sh \
+	tHexdump_test.sh    \
+	tNumeric.sh \
+	tProcess.sh \
+	tRunOnNode.sh \
+	tStringUtil_test.sh
 
-TESTS	= $(TESTSCRIPTS) \
-	  tTimer
+TESTS = $(TESTSCRIPTS) \
+	tTimer
 
 EXTRA_DIST = $(TESTSCRIPTS) \
-	  tComplex.stdout \
-	  tDataConvert.stdout \
-	  testLogger.log_prop testLogger.debug \
-	  tHexdump.log_prop \
-	  tRunOnNode.log_prop tRunOnNode.stdout \
-	  tStringUtil.stdout 
+	tComplex.stdout \
+	tDataConvert.stdout \
+	testLogger.log_prop testLogger.debug \
+	tHexdump.log_prop \
+	tProcess.log_prop tProcess.stdout \
+	tRunOnNode.log_prop tRunOnNode.stdout \
+	tStringUtil.stdout 
 
 testSocket_SOURCES		= testSocket.cc
 testSocket_LDADD		= ../src/libcommon.la	
@@ -53,6 +55,10 @@ tStringUtil_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 tHexdump_SOURCES		= tHexdump.cc
 tHexdump_LDADD			= ../src/libcommon.la	
 tHexdump_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tProcess_SOURCES		= tProcess.cc
+tProcess_LDADD			= ../src/libcommon.la	
+tProcess_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 tRunOnNode_SOURCES		= tRunOnNode.cc
 tRunOnNode_LDADD		= ../src/libcommon.la	
