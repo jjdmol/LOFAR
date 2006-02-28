@@ -57,11 +57,11 @@ Connection::Connection (const string& name, DataHolder* dhSource, DataHolder* dh
 
   itsTag = theirNextTag++;
 
-  if (itsSourceDH) {
+  if (itsSourceDH && !itsSourceDH->isInitialized()) {
 	itsSourceDH->setAllocationProperties(th->canDataGrow(), 
 					     th->blobStringType());
   }
-  if (itsDestDH) {
+  if (itsDestDH && !itsDestDH->isInitialized()) {
 	itsDestDH->setAllocationProperties(th->canDataGrow(), 
 					   th->blobStringType());
   }
