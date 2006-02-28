@@ -57,6 +57,8 @@ public:
     return *itsMatrix;
   }
 
+  // samples are ALWAYS stored in little endian format !
+
   AllSamplesType *getSamples()
   {
     return itsSamples;
@@ -82,6 +84,7 @@ public:
     return sizeof(AllSamplesType) / sizeof(SampleType);
   }
   
+  void swapBytes();
   void setTestPattern(double Hz);
 
 private:
