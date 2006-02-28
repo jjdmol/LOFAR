@@ -29,12 +29,12 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <AMCImpl/AMCServer/Process.h>
 #include <AMCImpl/ConverterImpl.h>
 #include <AMCBase/AMCClient/DH_Request.h>
 #include <AMCBase/AMCClient/DH_Result.h>
 #include <Transport/Connection.h>
 #include <Transport/TH_Socket.h>
+#include <Common/Process.h>
 
 namespace LOFAR
 {
