@@ -22,6 +22,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
+#include <Common/Timer.h>
 
 #include <AH_BGL_Processing.h>
 #include <CS1_Interface/CS1_Config.h>
@@ -127,9 +128,9 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
       itsWHs.push_back(wh);
       TinyDataManager &dm = wh->getDataManager();
       itsSubbandStub->connect(subband, slave, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
-      itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
+      //itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
 #if defined DELAY_COMPENSATION
-      itsFineDelayStub->connect(subband, slave, dm, WH_BGL_Processing::FINE_DELAY_CHANNEL);
+      //itsFineDelayStub->connect(subband, slave, dm, WH_BGL_Processing::FINE_DELAY_CHANNEL);
 #endif
       itsVisibilitiesStub->connect(subband, slave, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
@@ -167,16 +168,29 @@ void AH_BGL_Processing::init()
     }
 #endif
   }
+  std::cerr << "init done\n";
+  std::cerr.flush();
 }
     
 void AH_BGL_Processing::run(int steps) {
   LOG_TRACE_FLOW_STR("Start AH_BGL_Processing::run() "  );
   for (int i = 0; i < steps; i++) {
+    char timer_name[32];
+    sprintf(timer_name, "baseProcess(%d)", i);
+    class NSTimer timer(timer_name, true);
+
     LOG_TRACE_LOOP_STR("processing run " << i );
-    cout << "run " << i << " of " << steps << '\n';
+    std::cerr << "run " << i << " of " << steps << '\n';
+    std::cerr.flush();
+
+    timer.start();
     for (uint j = 0; j < itsWHs.size(); j ++) {
       itsWHs[j]->baseProcess();
     }
+    timer.stop();
+
+    std::cerr << "run " << i << " of " << steps << " done\n";
+    std::cerr.flush();
   }
   LOG_TRACE_FLOW_STR("Finished AH_BGL_Processing::run() "  );
 }
