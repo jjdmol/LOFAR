@@ -6,7 +6,6 @@ pkginclude_HEADERS = \
 
 pkginclude_AMCServer_HEADERS = \
 	AMCServer/ConverterProcess.h \
-	AMCServer/ConverterServer.h \
-	AMCServer/Process.h
+	AMCServer/ConverterServer.h
 
 include $(top_srcdir)/Makefile.common

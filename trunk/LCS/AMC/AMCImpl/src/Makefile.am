@@ -2,8 +2,7 @@ lib_LTLIBRARIES			= libamcimpl.la
 
 libamcimpl_la_SOURCES 		= ConverterImpl.cc \
 				  AMCServer/ConverterProcess.cc \
-				  AMCServer/ConverterServer.cc \
-				  AMCServer/Process.cc
+				  AMCServer/ConverterServer.cc
 
 bin_PROGRAMS			= amcserver
 
