@@ -222,7 +222,7 @@ _filter:
 #	r9 :	  8
 #	r10 :	  2048
 #	r11 :	  8
-#	r12 :	  0x80008000
+#	r12 :	  0x00800080
 #	r16-r31 : heavily prefetched samples
 #	f0-f15 :  delay line (real in primary, imaginary in secondary unit)
 #	f16-f23 : weights (these are real values alternately stored in primary
@@ -238,10 +238,14 @@ _filter:
 
 	stwu	1,-368(1)	# adjust stack pointer
 
+	mtctr	7		# set number of iterations
+
 	la	8,0(1)		# save call-saved registers
 	li	9,DCOMPLEX_SIZE
 	stfpdux 14,8,9
+	li	7,14
 	stfpdux 15,8,9
+	li	11,6
 	stfpdux 16,8,9
 	stfpdux 17,8,9
 	stfpdux 18,8,9
@@ -265,9 +269,9 @@ _filter:
 	lfpdx	31,0,8
 
 	li	9,FCOMPLEX_SIZE
-	lis	12,0x8000
+	lis	12,0x0080
 	li	10,I16COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
-	ori	12,12,0x8000
+	ori	12,12,0x0080
 
 	sub	6,6,9
 
@@ -298,119 +302,119 @@ _filter:
 	lwzux	19,5,10
 
 	xor	17,17,12
-	sth	17,14(1)
+	sthbrx	17,7,1
 	srawi	17,17,16
-	sth	17,6(1)
+	sthbrx	17,11,1
 	lfpdx	1,0,1
 
 	lwzux	20,5,10
 
 	xor	18,18,12
-	sth	18,14(1)
+	sthbrx	18,7,1
 	srawi	18,18,16
-	sth	18,6(1)
+	sthbrx	18,11,1
 	lfpdx	2,0,1
 
 	lwzux	21,5,10
 
 	xor	19,19,12
-	sth	19,14(1)
+	sthbrx	19,7,1
 	srawi	19,19,16
-	sth	19,6(1)
+	sthbrx	19,11,1
 	lfpdx	3,0,1
 
 	lwzux	22,5,10
 
 	xor	20,20,12
-	sth	20,14(1)
+	sthbrx	20,7,1
 	srawi	20,20,16
-	sth	20,6(1)
+	sthbrx	20,11,1
 	lfpdx	4,0,1
 
 	lwzux	23,5,10
 
 	xor	21,21,12
-	sth	21,14(1)
+	sthbrx	21,7,1
 	srawi	21,21,16
-	sth	21,6(1)
+	sthbrx	21,11,1
 	lfpdx	5,0,1
 
 	lwzux	24,5,10
 
 	xor	22,22,12
-	sth	22,14(1)
+	sthbrx	22,7,1
 	srawi	22,22,16
-	sth	22,6(1)
+	sthbrx	22,11,1
 	lfpdx	6,0,1
 
 	lwzux	25,5,10
 
 	xor	23,23,12
-	sth	23,14(1)
+	sthbrx	23,7,1
 	srawi	23,23,16
-	sth	23,6(1)
+	sthbrx	23,11,1
 	lfpdx	7,0,1
 
 	lwzux	26,5,10
 	xor	24,24,12
-	sth	24,14(1)
+	sthbrx	24,7,1
 	srawi	24,24,16
-	sth	24,6(1)
+	sthbrx	24,11,1
 	lfpdx	8,0,1
 
 	lwzux	27,5,10
 
 	xor	25,25,12
-	sth	25,14(1)
+	sthbrx	25,7,1
 	srawi	25,25,16
-	sth	25,6(1)
+	sthbrx	25,11,1
 	lfpdx	9,0,1
 
 	lwzux	28,5,10
 
 	xor	26,26,12
-	sth	26,14(1)
+	sthbrx	26,7,1
 	srawi	26,26,16
-	sth	26,6(1)
+	sthbrx	26,11,1
 	lfpdx	10,0,1
 
 	lwzux	29,5,10
 
 	xor	27,27,12
-	sth	27,14(1)
+	sthbrx	27,7,1
 	srawi	27,27,16
-	sth	27,6(1)
+	sthbrx	27,11,1
 	lfpdx	11,0,1
 
 	lwzux	30,5,10
 
 	xor	28,28,12
-	sth	28,14(1)
+	sthbrx	28,7,1
 	srawi	28,28,16
-	sth	28,6(1)
+	sthbrx	28,11,1
 	lfpdx	12,0,1
 
 	lwzux	31,5,10
 
 	xor	29,29,12
-	sth	29,14(1)
+	sthbrx	29,7,1
 	srawi	29,29,16
-	sth	29,6(1)
+	sthbrx	29,11,1
 	lfpdx	13,0,1
 
 	lwzux	16,5,10 # prefetch samples before entering loop
 	xor	30,30,12
-	sth	30,14(1)
+	sthbrx	30,7,1
 	srawi	30,30,16
-	sth	30,6(1)
+	sthbrx	30,11,1
 	lfpdx	14,0,1
 
 	lwzux	17,5,10
 
 	xor	31,31,12
-	sth	31,14(1)
+	sthbrx	31,7,1
 	srawi	31,31,16
-	sth	31,6(1)
+	sthbrx	31,11,1
 	lfpdx	15,0,1
 
 	lwzux	18,5,10
@@ -444,8 +448,6 @@ _filter:
 	lwzux	30,5,10
 	lwzux	31,5,10
 
-	mtctr	7		# set number of iterations
-
 	fxsmul	 24,16,15	# essentially part of loop, but interleaved with
 	fxpmul	 25,17,15	# the stores in the tail of the loop
 	fxsmul	 26,17,15
@@ -457,56 +459,56 @@ loop:
 	# time steps 0-5
 
 	fxcpmadd 24,17,14,24
-	fxcsmadd 25,17,14,25	; xor	16,16,12
-	fxcpmadd 26,18,14,26	; sth	16,14(1)
+	fxcsmadd 25,17,14,25	; xor	 16,16,12
+	fxcpmadd 26,18,14,26	; sthbrx 16,7,1
 	fxcsmadd 27,18,14,27
 	fxcpmadd 28,19,14,28
-	fxcsmadd 29,19,14,29	; srawi	16,16,16
+	fxcsmadd 29,19,14,29	; srawi	 16,16,16
 
-	fxcpmadd 24,21,6,24	; sth	16,6(1)
+	fxcpmadd 24,21,6,24	; sthbrx 16,11,1
 	fxcsmadd 25,21,6,25
 	fxcpmadd 26,22,6,26
-	fxcsmadd 27,22,6,27	; lfpdx	30,0,1
+	fxcsmadd 27,22,6,27	; lfpdx	 30,0,1
 	fxcpmadd 28,23,6,28
-	fxcsmadd 29,23,6,29	; lwzux	16,5,10
+	fxcsmadd 29,23,6,29	; lwzux	 16,5,10
 
 	fxcpmadd 24,20,8,24
 	fxcsmadd 25,20,8,25
 	fpsub	0,30,31
-	fxcpmadd 26,21,8,26	; xor	17,17,12
-	fxcsmadd 27,21,8,27	; sth	17,14(1)
+	fxcpmadd 26,21,8,26	; xor	 17,17,12
+	fxcsmadd 27,21,8,27	; sthbrx 17,7,1
 	fxcpmadd 28,22,8,28
 	fxcsmadd 29,22,8,29
 
-	fxcpmadd 24,16,0,24	; srawi	17,17,16
-	fxcsmadd 25,16,0,25	; sth	17,6(1)
+	fxcpmadd 24,16,0,24	; srawi	 17,17,16
+	fxcsmadd 25,16,0,25	; sthbrx 17,11,1
 	fxcpmadd 26,17,0,26
 	fxcsmadd 27,17,0,27
-	fxcpmadd 28,18,0,28	; lfpdx	30,0,1
+	fxcpmadd 28,18,0,28	; lfpdx	 30,0,1
 	fxcsmadd 29,18,0,29
 
-	fxcsmadd 24,23,1,24	; lwzux	17,5,10
+	fxcsmadd 24,23,1,24	; lwzux	 17,5,10
 	fxcpmadd 25,20,9,25
 	fxcsmadd 26,20,9,26
 	fpsub	1,30,31
-	fxcpmadd 27,21,9,27	; xor	18,18,12
-	fxcsmadd 28,21,9,28	; sth	18,14(1)
+	fxcpmadd 27,21,9,27	; xor	 18,18,12
+	fxcsmadd 28,21,9,28	; sthbrx 18,7,1
 	fxcpmadd 29,22,9,29
 
 	fxcsmadd 24,19,9,24
-	fxcpmadd 25,16,1,25	; srawi	18,18,16
-	fxcsmadd 26,16,1,26	; sth	18,6(1)
+	fxcpmadd 25,16,1,25	; srawi	 18,18,16
+	fxcsmadd 26,16,1,26	; sthbrx 18,11,1
 	fxcpmadd 27,17,1,27
 	fxcsmadd 28,17,1,28
-	fxcpmadd 29,18,1,29	; lfpdx	30,0,1
+	fxcpmadd 29,18,1,29	; lfpdx	 30,0,1
 
 	fxcpmadd 24,23,2,24
-	fxcsmadd 25,23,2,25	; lwzux	18,5,10
+	fxcsmadd 25,23,2,25	; lwzux	 18,5,10
 	fxcpmadd 26,20,10,26
 	fxcsmadd 27,20,10,27
 	fpsub	2,30,31
-	fxcpmadd 28,21,10,28	; xor	19,19,12
-	fxcsmadd 29,21,10,29	; sth	19,14(1)
+	fxcpmadd 28,21,10,28	; xor	 19,19,12
+	fxcsmadd 29,21,10,29	; sthbrx 19,7,1
 	
 	fxcsmadd 24,20,7,24
 	fxcpmadd 25,21,7,25
@@ -517,46 +519,46 @@ loop:
 
 	fxcpmadd 24,19,10,24
 	fxcsmadd 25,19,10,25
-	fxcpmadd 26,16,2,26	; srawi	19,19,16
-	fxcsmadd 27,16,2,27	; sth	19,6(1)
+	fxcpmadd 26,16,2,26	; srawi	 19,19,16
+	fxcsmadd 27,16,2,27	; sthbrx 19,11,1
 	fxcpmadd 28,17,2,28
 	fxcsmadd 29,17,2,29
 
-	fxcsmadd 24,22,3,24	; lfpdx	30,0,1
+	fxcsmadd 24,22,3,24	; lfpdx	 30,0,1
 	fxcpmadd 25,23,3,25
-	fxcsmadd 26,23,3,26	; lwzux	19,5,10
+	fxcsmadd 26,23,3,26	; lwzux	 19,5,10
 	fxcpmadd 27,20,11,27
 	fxcsmadd 28,20,11,28
 	fpsub	3,30,31
-	fxcpmadd 29,21,11,29	; xor	20,20,12
+	fxcpmadd 29,21,11,29	; xor	 20,20,12
 
-	fxcsmadd 24,18,11,24	; sth	20,14(1)
+	fxcsmadd 24,18,11,24	; sthbrx 20,7,1
 	fxcpmadd 25,19,11,25
 	fxcsmadd 26,19,11,26
-	fxcpmadd 27,16,3,27	; srawi	20,20,16
-	fxcsmadd 28,16,3,28	; sth	20,6(1)
+	fxcpmadd 27,16,3,27	; srawi	 20,20,16
+	fxcsmadd 28,16,3,28	; sthbrx 20,11,1
 	fxcpmadd 29,17,3,29
 
 	fxcpmadd 24,22,4,24
-	fxcsmadd 25,22,4,25	; lfpdx	30,0,1
+	fxcsmadd 25,22,4,25	; lfpdx	 30,0,1
 	fxcpmadd 26,23,4,26
-	fxcsmadd 27,23,4,27	; lwzux	20,5,10
+	fxcsmadd 27,23,4,27	; lwzux	 20,5,10
 	fxcpmadd 28,20,12,28
 	fxcsmadd 29,20,12,29
 
 	fpsub	4,30,31
-	fxcpmadd 24,18,12,24	; xor	21,21,12
-	fxcsmadd 25,18,12,25	; sth	21,14(1)
+	fxcpmadd 24,18,12,24	; xor	 21,21,12
+	fxcsmadd 25,18,12,25	; sthbrx 21,7,1
 	fxcpmadd 26,19,12,26
 	fxcsmadd 27,19,12,27
-	fxcpmadd 28,16,4,28	; srawi	21,21,16
-	fxcsmadd 29,16,4,29	; sth	21,6(1)
+	fxcpmadd 28,16,4,28	; srawi	 21,21,16
+	fxcsmadd 29,16,4,29	; sthbrx 21,11,1
 
 	fxcsmadd 24,21,5,24
 	fxcpmadd 25,22,5,25
-	fxcsmadd 26,22,5,26	; lfpdx	30,0,1
+	fxcsmadd 26,22,5,26	; lfpdx	 30,0,1
 	fxcpmadd 27,23,5,27
-	fxcsmadd 28,23,5,28	; lwzux	21,5,10
+	fxcsmadd 28,23,5,28	; lwzux	 21,5,10
 	fxcpmadd 29,20,13,29
 
 	fxcsmadd 24,17,13,24
@@ -564,74 +566,74 @@ loop:
 	fxcpmadd 25,18,13,25
 	fxcsmadd 26,18,13,26
 	fxcpmadd 27,19,13,27
-	fxcsmadd 28,19,13,28	; stfpsux	 24,6,9
-	fxcpmadd 29,16,5,29	; stfpsux	 25,6,9
+	fxcsmadd 28,19,13,28	; stfpsux 24,6,9
+	fxcpmadd 29,16,5,29	; stfpsux 25,6,9
 
 
 	# time steps 6-10
 
-	fxsmul	 24,21,11	; stfpsux	 26,6,9
-	fxpmul	 25,22,11	; stfpsux	 27,6,9
-	fxsmul	 26,22,11	; stfpsux	 28,6,9
-	fxpmul	 27,23,11	; stfpsux	 29,6,9
+	fxsmul	 24,21,11	; stfpsux 26,6,9
+	fxpmul	 25,22,11	; stfpsux 27,6,9
+	fxsmul	 26,22,11	; stfpsux 28,6,9
+	fxpmul	 27,23,11	; stfpsux 29,6,9
 	fxsmul	 28,23,11
 
 	fxcpmadd 24,17,4,24
 	fxcsmadd 25,17,4,25
 	fxcpmadd 26,18,4,26
-	fxcsmadd 27,18,4,27	; xor	22,22,12
-	fxcpmadd 28,19,4,28	; sth	22,14(1)
+	fxcsmadd 27,18,4,27	; xor	 22,22,12
+	fxcpmadd 28,19,4,28	; sthbrx 22,7,1
 	
 	fxcsmadd 24,20,13,24
 	fxcpmadd 25,21,13,25
-	fxcsmadd 26,21,13,26	; srawi	22,22,16
-	fxcpmadd 27,22,13,27	; sth	22,6(1)
+	fxcsmadd 26,21,13,26	; srawi	 22,22,16
+	fxcpmadd 27,22,13,27	; sthbrx 22,11,1
 	fxcsmadd 28,22,13,28
 
 	fxcsmadd 24,16,5,24
-	fxcpmadd 25,17,5,25	; lfpdx	30,0,1
+	fxcpmadd 25,17,5,25	; lfpdx	 30,0,1
 	fxcsmadd 26,17,5,26
-	fxcpmadd 27,18,5,27	; lwzux	22,5,10
+	fxcpmadd 27,18,5,27	; lwzux	 22,5,10
 	fxcsmadd 28,18,5,28
 	
-	fxcpmadd 24,20,14,24	; xor	23,23,12
-	fpsub	6,30,31		; sth	23,14(1)
+	fxcpmadd 24,20,14,24	; xor	 23,23,12
+	fpsub	6,30,31		; sthbrx 23,7,1
 	fxcsmadd 25,20,14,25
 	fxcpmadd 26,21,14,26
-	fxcsmadd 27,21,14,27	; srawi	23,23,16
-	fxcpmadd 28,22,14,28	; sth	23,6(1)
+	fxcsmadd 27,21,14,27	; srawi	 23,23,16
+	fxcpmadd 28,22,14,28	; sthbrx 23,11,1
 
 	fxcpmadd 24,16,6,24
 	fxcsmadd 25,16,6,25
-	fxcpmadd 26,17,6,26	; lfpdx	30,0,1
+	fxcpmadd 26,17,6,26	; lfpdx	 30,0,1
 	fxcsmadd 27,17,6,27
-	fxcpmadd 28,18,6,28	; lwzux	23,5,10
+	fxcpmadd 28,18,6,28	; lwzux	 23,5,10
 
 	fxcsmadd 24,23,7,24
-	fxcpmadd 25,20,15,25	; xor	24,24,12
-	fpsub	7,30,31		; sth	24,14(1)
+	fxcpmadd 25,20,15,25	; xor	 24,24,12
+	fpsub	7,30,31		; sthbrx 24,7,1
 	fxcsmadd 26,20,15,26
 	fxcpmadd 27,21,15,27
-	fxcsmadd 28,21,15,28	; srawi	24,24,16
+	fxcsmadd 28,21,15,28	; srawi	 24,24,16
 
-	fxcsmadd 24,19,15,24	; sth	24,6(1)
+	fxcsmadd 24,19,15,24	; sthbrx 24,11,1
 	fxcpmadd 25,16,7,25
 	fxcsmadd 26,16,7,26
-	fxcpmadd 27,17,7,27	; lfpdx	30,0,1
+	fxcpmadd 27,17,7,27	; lfpdx	 30,0,1
 	fxcsmadd 28,17,7,28
 
-	fxcpmadd 24,23,8,24	; lwzux	24,5,10
+	fxcpmadd 24,23,8,24	; lwzux	 24,5,10
 	fxcsmadd 25,23,8,25
-	fxcpmadd 26,20,0,26	; xor	25,25,12
-	fpsub	8,30,31		; sth	25,14(1)
+	fxcpmadd 26,20,0,26	; xor	 25,25,12
+	fpsub	8,30,31		; sthbrx 25,7,1
 	fxcsmadd 27,20,0,27
 	fxcpmadd 28,21,0,28
 
-	fxcpmadd 24,19,0,24	; srawi	25,25,16
-	fxcsmadd 25,19,0,25	; sth	25,6(1)
+	fxcpmadd 24,19,0,24	; srawi	 25,25,16
+	fxcsmadd 25,19,0,25	; sthbrx 25,11,1
 	fxcpmadd 26,16,8,26
 	fxcsmadd 27,16,8,27
-	fxcpmadd 28,17,8,28	; lfpdx	30,0,1
+	fxcpmadd 28,17,8,28	; lfpdx	 30,0,1
 
 	fxcsmadd 24,17,3,24
 	fxcpmadd 25,18,3,25
@@ -640,15 +642,15 @@ loop:
 	fxcsmadd 28,19,3,28
 
 	fxcsmadd 24,22,9,24
-	fxcpmadd 25,23,9,25	; lwzux	25,5,10
+	fxcpmadd 25,23,9,25	; lwzux	 25,5,10
 	fxcsmadd 26,23,9,26
-	fxcpmadd 27,20,1,27	; xor	26,26,12
-	fpsub	9,30,31		; sth	26,14(1)
+	fxcpmadd 27,20,1,27	; xor	 26,26,12
+	fpsub	9,30,31		; sthbrx 26,7,1
 	fxcsmadd 28,20,1,28
 
 	fxcsmadd 24,18,1,24
-	fxcpmadd 25,19,1,25	; srawi	26,26,16
-	fxcsmadd 26,19,1,26	; sth	26,6(1)
+	fxcpmadd 25,19,1,25	; srawi	 26,26,16
+	fxcsmadd 26,19,1,26	; sthbrx 26,11,1
 	fxcpmadd 27,16,9,27
 	fxcsmadd 28,16,9,28
 
@@ -658,9 +660,9 @@ loop:
 	fxcsmadd 27,22,12,27
 	fxcpmadd 28,23,12,28
 
-	fxcpmadd 24,22,10,24	; lfpdx	30,0,1
+	fxcpmadd 24,22,10,24	; lfpdx	 30,0,1
 	fxcsmadd 25,22,10,25
-	fxcpmadd 26,23,10,26	; lwzux	26,5,10
+	fxcpmadd 26,23,10,26	; lwzux	 26,5,10
 	fxcsmadd 27,23,10,27
 	fxcpmadd 28,20,2,28
 	fpsub	10,30,31
@@ -673,61 +675,61 @@ loop:
 
 
 	# time steps 11-15
-				; stfpsux	 24,6,9
-	fxsmul	 24,21,0	; stfpsux	 25,6,9
-	fxpmul	 25,22,0	; stfpsux	 26,6,9
-	fxsmul	 26,22,0	; stfpsux	 27,6,9
-	fxpmul	 27,23,0	; stfpsux	 28,6,9
+				; stfpsux 24,6,9
+	fxsmul	 24,21,0	; stfpsux 25,6,9
+	fxpmul	 25,22,0	; stfpsux 26,6,9
+	fxsmul	 26,22,0	; stfpsux 27,6,9
+	fxpmul	 27,23,0	; stfpsux 28,6,9
 	fxsmul	 28,23,0
 
 	fxcpmadd 24,17,9,24
 	fxcsmadd 25,17,9,25
 	fxcpmadd 26,18,9,26
-	fxcsmadd 27,18,9,27	; xor	27,27,12
-	fxcpmadd 28,19,9,28	; sth	27,14(1)
+	fxcsmadd 27,18,9,27	; xor	 27,27,12
+	fxcpmadd 28,19,9,28	; sthbrx 27,7,1
 	
 	fxcsmadd 24,20,2,24
 	fxcpmadd 25,21,2,25
-	fxcsmadd 26,21,2,26	; srawi	27,27,16
-	fxcpmadd 27,22,2,27	; sth	27,6(1)
+	fxcsmadd 26,21,2,26	; srawi	 27,27,16
+	fxcpmadd 27,22,2,27	; sthbrx 27,11,1
 	fxcsmadd 28,22,2,28
 
 	fxcsmadd 24,16,10,24
-	fxcpmadd 25,17,10,25	; lfpdx	30,0,1
+	fxcpmadd 25,17,10,25	; lfpdx	 30,0,1
 	fxcsmadd 26,17,10,26
-	fxcpmadd 27,18,10,27	; lwzux	27,5,10
+	fxcpmadd 27,18,10,27	; lwzux	 27,5,10
 	fxcsmadd 28,18,10,28
 
-	fxcpmadd 24,20,3,24	; xor	28,28,12
-	fpsub	11,30,31	; sth	28,14(1)
+	fxcpmadd 24,20,3,24	; xor	 28,28,12
+	fpsub	11,30,31	; sthbrx 28,7,1
 	fxcsmadd 25,20,3,25
 	fxcpmadd 26,21,3,26
-	fxcsmadd 27,21,3,27	; srawi	28,28,16
-	fxcpmadd 28,22,3,28	; sth	28,6(1)
+	fxcsmadd 27,21,3,27	; srawi	 28,28,16
+	fxcpmadd 28,22,3,28	; sthbrx 28,11,1
 	
 	fxcpmadd 24,16,11,24
 	fxcsmadd 25,16,11,25
-	fxcpmadd 26,17,11,26	; lfpdx	30,0,1
+	fxcpmadd 26,17,11,26	; lfpdx	 30,0,1
 	fxcsmadd 27,17,11,27
-	fxcpmadd 28,18,11,28	; lwzux	28,5,10
+	fxcpmadd 28,18,11,28	; lwzux	 28,5,10
 
 	fxcsmadd 24,23,12,24
-	fxcpmadd 25,20,4,25	; xor	29,29,12
-	fpsub	12,30,31	; sth	29,14(1)
+	fxcpmadd 25,20,4,25	; xor	 29,29,12
+	fpsub	12,30,31	; sthbrx 29,7,1
 	fxcsmadd 26,20,4,26
 	fxcpmadd 27,21,4,27
-	fxcsmadd 28,21,4,28	; srawi	29,29,16
+	fxcsmadd 28,21,4,28	; srawi	 29,29,16
 
-	fxcsmadd 24,19,4,24	; sth	29,6(1)
+	fxcsmadd 24,19,4,24	; sthbrx 29,11,1
 	fxcpmadd 25,16,12,25
 	fxcsmadd 26,16,12,26
-	fxcpmadd 27,17,12,27	; lfpdx	30,0,1
+	fxcpmadd 27,17,12,27	; lfpdx	 30,0,1
 	fxcsmadd 28,17,12,28
 
-	fxcpmadd 24,23,13,24	; lwzux	29,5,10
+	fxcpmadd 24,23,13,24	; lwzux	 29,5,10
 	fxcsmadd 25,23,13,25
-	fxcpmadd 26,20,5,26	; xor	30,30,12
-	fpsub	13,30,31	; sth	30,14(1)
+	fxcpmadd 26,20,5,26	; xor	 30,30,12
+	fpsub	13,30,31	; sthbrx 30,7,1
 	fxcsmadd 27,20,5,27
 	fxcpmadd 28,21,5,28
 	
@@ -737,22 +739,22 @@ loop:
 	fxcpmadd 27,19,8,27
 	fxcsmadd 28,19,8,28
 
-	fxcpmadd 24,19,5,24	; srawi	30,30,16
-	fxcsmadd 25,19,5,25	; sth	30,6(1)
+	fxcpmadd 24,19,5,24	; srawi	 30,30,16
+	fxcsmadd 25,19,5,25	; sthbrx 30,11,1
 	fxcpmadd 26,16,13,26
 	fxcsmadd 27,16,13,27
-	fxcpmadd 28,17,13,28	; lfpdx	30,0,1
+	fxcpmadd 28,17,13,28	; lfpdx	 30,0,1
 
 	fxcsmadd 24,22,14,24
-	fxcpmadd 25,23,14,25	; lwzux	30,5,10
+	fxcpmadd 25,23,14,25	; lwzux	 30,5,10
 	fxcsmadd 26,23,14,26
-	fxcpmadd 27,20,6,27	; xor	31,31,12
-	fpsub	14,30,31	; sth	31,14(1)
+	fxcpmadd 27,20,6,27	; xor	 31,31,12
+	fpsub	14,30,31	; sthbrx 31,7,1
 	fxcsmadd 28,20,6,28
 	
 	fxcsmadd 24,18,6,24
-	fxcpmadd 25,19,6,25	; srawi	31,31,16
-	fxcsmadd 26,19,6,26	; sth	31,6(1)
+	fxcpmadd 25,19,6,25	; srawi	 31,31,16
+	fxcsmadd 26,19,6,26	; sthbrx 31,11,1
 	fxcpmadd 27,16,14,27
 	fxcsmadd 28,16,14,28
 
@@ -762,9 +764,9 @@ loop:
 	fxcsmadd 27,22,1,27
 	fxcpmadd 28,23,1,28
 
-	fxcpmadd 24,22,15,24	; lfpdx	30,0,1
+	fxcpmadd 24,22,15,24	; lfpdx	 30,0,1
 	fxcsmadd 25,22,15,25
-	fxcpmadd 26,23,15,26	; lwzux	31,5,10
+	fxcpmadd 26,23,15,26	; lwzux	 31,5,10
 	fxcsmadd 27,23,15,27
 	fxcpmadd 28,20,7,28
 	fpsub	15,30,31
@@ -775,11 +777,11 @@ loop:
 	fxcsmadd 27,19,7,27
 	fxcpmadd 28,16,15,28
 
-	fxpmul	 29,19,15	; stfpsux	 24,6,9
-	fxsmul	 24,16,15	; stfpsux	 25,6,9
-	fxpmul	 25,17,15	; stfpsux	 26,6,9
-	fxsmul	 26,17,15	; stfpsux	 27,6,9
-	fxpmul	 27,18,15	; stfpsux	 28,6,9
+	fxpmul	 29,19,15	; stfpsux 24,6,9
+	fxsmul	 24,16,15	; stfpsux 25,6,9
+	fxpmul	 25,17,15	; stfpsux 26,6,9
+	fxsmul	 26,17,15	; stfpsux 27,6,9
+	fxpmul	 27,18,15	; stfpsux 28,6,9
 	fxsmul	 28,18,15
 
 	bdnz	loop
