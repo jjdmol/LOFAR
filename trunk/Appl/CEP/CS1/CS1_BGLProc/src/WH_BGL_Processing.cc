@@ -1279,6 +1279,10 @@ void WH_BGL_Processing::doPPF()
 
   timer.start();
 
+#if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
+  get_DH_Subband()->swapBytes();
+#endif
+
   typedef i16complex inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS];
 
   inputType *input = (inputType *) get_DH_Subband()->getSamples();
