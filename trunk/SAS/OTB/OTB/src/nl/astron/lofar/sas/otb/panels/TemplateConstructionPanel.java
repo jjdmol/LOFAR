@@ -15,21 +15,24 @@ import org.apache.log4j.Logger;
  *
  * @author  Coolen
  */
-public class ComponentMaintenancePanel extends javax.swing.JPanel  
+public class TemplateConstructionPanel extends javax.swing.JPanel  
         implements IPluginPanel {
     
     static Logger logger = Logger.getLogger(ComponentMaintenancePanel.class);
     static String name = "Component_Maintenance";   
     
     /** Creates new form BeanForm */
-    public ComponentMaintenancePanel() {
+    public TemplateConstructionPanel() {
         initComponents();
         initialize();
     }
  
     public void initialize() {
         buttonPanel1.addButton("Delete");
-        buttonPanel1.addButton("Load");
+        buttonPanel1.addButton("Duplicate");
+        buttonPanel1.addButton("Info");
+        buttonPanel1.addButton("Cancel");
+        buttonPanel1.addButton("Save");
         buttonPanel1.addButton("Exit");
     }
 
@@ -74,27 +77,83 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
+        jLabel2 = new javax.swing.JLabel();
         jSplitPane1 = new javax.swing.JSplitPane();
-        componentPanel1 = new nl.astron.lofar.sas.otbcomponents.ComponentPanel();
         TreeBasePanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
+        jPanel3 = new javax.swing.JPanel();
+        jLabel4 = new javax.swing.JLabel();
+        jTextField1 = new javax.swing.JTextField();
+        jSplitPane2 = new javax.swing.JSplitPane();
+        jPanel1 = new javax.swing.JPanel();
+        templateUpButton = new javax.swing.JButton();
+        templateLeftButton = new javax.swing.JButton();
+        templateRightButton = new javax.swing.JButton();
+        templateDownButton = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jLabel3 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
 
-        jSplitPane1.setDividerLocation(450);
-        jSplitPane1.setRightComponent(componentPanel1);
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel2.setText("Template Construction");
+        add(jLabel2, java.awt.BorderLayout.NORTH);
 
+        jSplitPane1.setDividerLocation(375);
         TreeBasePanel.setLayout(new java.awt.BorderLayout());
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Component list");
+        jLabel1.setText("Template List");
         TreeBasePanel.add(jLabel1, java.awt.BorderLayout.NORTH);
 
         TreeBasePanel.add(treePanel, java.awt.BorderLayout.CENTER);
 
+        jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jLabel4.setText("Parameter Name");
+        jPanel3.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 120, -1));
+
+        jPanel3.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 5, 170, 20));
+
+        TreeBasePanel.add(jPanel3, java.awt.BorderLayout.SOUTH);
+
         jSplitPane1.setLeftComponent(TreeBasePanel);
+
+        jSplitPane2.setDividerLocation(125);
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        templateUpButton.setText("^");
+        templateUpButton.setToolTipText("Move chosen template up");
+        jPanel1.add(templateUpButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 200, 50, 29));
+
+        templateLeftButton.setText("<");
+        templateLeftButton.setToolTipText("Move chosen template left");
+        jPanel1.add(templateLeftButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, -1, 29));
+
+        templateRightButton.setText(">");
+        templateRightButton.setToolTipText("Move chosen template right");
+        jPanel1.add(templateRightButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 240, -1, 29));
+
+        templateDownButton.setText("v");
+        templateDownButton.setToolTipText("Move chosen template down");
+        jPanel1.add(templateDownButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 280, 50, 29));
+
+        jSplitPane2.setLeftComponent(jPanel1);
+
+        jPanel2.setLayout(new java.awt.BorderLayout());
+
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel3.setText("Components List");
+        jPanel2.add(jLabel3, java.awt.BorderLayout.NORTH);
+
+        jPanel2.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+        jSplitPane2.setRightComponent(jPanel2);
+
+        jSplitPane1.setRightComponent(jSplitPane2);
 
         add(jSplitPane1, java.awt.BorderLayout.CENTER);
 
@@ -123,9 +182,21 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel TreeBasePanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
-    private nl.astron.lofar.sas.otbcomponents.ComponentPanel componentPanel1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JSplitPane jSplitPane2;
+    private javax.swing.JTextField jTextField1;
+    private javax.swing.JButton templateDownButton;
+    private javax.swing.JButton templateLeftButton;
+    private javax.swing.JButton templateRightButton;
+    private javax.swing.JButton templateUpButton;
     private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
 

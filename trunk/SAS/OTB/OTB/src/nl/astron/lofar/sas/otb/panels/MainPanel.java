@@ -6,6 +6,7 @@
 
 package nl.astron.lofar.sas.otb.panels;
 import java.io.File;
+import java.util.Vector;
 import nl.astron.lofar.sas.otb.*;
 import nl.astron.lofar.sas.otb.util.*;
 import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
@@ -26,6 +27,8 @@ public class MainPanel extends javax.swing.JPanel
     public MainPanel() {
         initComponents();
         initializeButtons();
+        //fill initial (PIC) table
+        //fillMainTable("PIC");
     }
         
     /** 
@@ -92,6 +95,13 @@ public class MainPanel extends javax.swing.JPanel
     public void initializeTabs() {
         PICtableModel PICmodel = new PICtableModel(itsMainFrame.getOTDBrmi());
         PICPanel.setTableModel(PICmodel);
+
+        VICtableModel VICmodel = new VICtableModel(itsMainFrame.getOTDBrmi());
+        VICPanel.setTableModel(VICmodel);
+        
+        TemplatetableModel Templatemodel = new TemplatetableModel(itsMainFrame.getOTDBrmi());
+        TemplatesPanel.setTableModel(Templatemodel);
+        
         
         //TODO: do the same for the other tabs
     }
@@ -197,8 +207,22 @@ public class MainPanel extends javax.swing.JPanel
         } else if (itsTabFocus.equals("Templates")) {
             if (aButton.equals("Query Panel")) {
             } else if (aButton.equals("New")) {
+                itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
+                itsMainFrame.showPanel(TemplateConstructionPanel.getFriendlyNameStatic());
             } else if (aButton.equals("Duplicate")) {
+                
+                // TODO look if a template was chosen to duplicate first
+                // and set it in the panel
+                
+                itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
+                itsMainFrame.showPanel(TemplateConstructionPanel.getFriendlyNameStatic());
             } else if (aButton.equals("Modify")) {
+
+                // TODO look if a template was chosen to modify first
+                // and set it in the panel
+                
+                itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
+                itsMainFrame.showPanel(TemplateConstructionPanel.getFriendlyNameStatic());
             } else if (aButton.equals("View")) {
             } else if (aButton.equals("Quit")) {
             }
@@ -246,6 +270,30 @@ public class MainPanel extends javax.swing.JPanel
             logger.debug("Description: "+ aDescription);
         }
         return aFile;        
+    }
+    
+    private boolean fillMainTable(String aType) {
+        logger.debug("fillTreeTable for "+aType);
+
+        Vector treeList=new Vector();
+
+        try {            
+            treeList=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeList((short)0, (short)0);
+            logger.debug("returned treeList has size: "+treeList.size());
+            if (treeList.size() <= 0) {
+                logger.debug("Error:" + itsMainFrame.getOTDBrmi().getRemoteOTDB().errorMsg());
+                return false;
+            } else {
+                logger.debug("Collected tree list");
+                java.util.Collections.sort(treeList);
+            }
+        } 
+        catch (Exception e)
+	{
+	 logger.debug("getTreeList via RMI and JNI failed: " + e);
+	}        
+        
+       return true;
     }
     
     private MainFrame itsMainFrame;

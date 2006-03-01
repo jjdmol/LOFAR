@@ -98,7 +98,7 @@ public class ComponentPanel extends javax.swing.JPanel {
             }
         });
 
-        jPanel1.add(buttonPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 410, 770, -1));
+        jPanel1.add(buttonPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 410, 370, 30));
 
         add(jPanel1, java.awt.BorderLayout.CENTER);
 

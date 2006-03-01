@@ -9,16 +9,13 @@
  */
 
 package nl.astron.lofar.sas.otb.util;
-
-import java.awt.*;
-import java.rmi.*;
-import javax.swing.*;
 import javax.swing.tree.*;
 import java.util.Vector;
 import java.util.Enumeration;
 import java.util.Random;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import org.apache.log4j.Logger;
-import jOTDB.*;
+
 
 /**
  * Class that wraps an jOTDBnode into a DefaultMutableTreeNode so that it 
@@ -97,11 +94,14 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
      */
     public boolean isLeaf() {
         logger.trace("Entry - isLeaf("+toString()+")");
+        if (childs == null) {
+            return false;
+        }
         
         boolean isLeaf = false;
         try {
             //TODO Vector childs = otdbRmi.getRemoteMaintenance().getItemList(node.nodeID(), node.treeID(), 1);
-
+            
             if(childs.size() == 0)
                 isLeaf = true;
         }
@@ -133,6 +133,10 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
      */
     private void defineChildNodes() {
         logger.trace("Entry - defineChildNodes("+toString()+")");
+        
+        if (childs == null) {
+            return;
+        }
 
         // You must set the flag before defining children if you
         // use "add" for the new children. Otherwise you get an infinite

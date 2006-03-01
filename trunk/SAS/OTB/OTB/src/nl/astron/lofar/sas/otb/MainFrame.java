@@ -67,7 +67,7 @@ public class MainFrame extends javax.swing.JFrame {
     /** Creates new form MainFrame */
     public MainFrame() {
         itsPlugins = new HashMap<String,PluginPanelInfo>();
-        itsOtdbRmi = null;
+        itsOtdbRmi = new OtdbRmi();
         itsStorageLocation = new StorageLocation(itsOtdbRmi);
         itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
 
@@ -294,6 +294,12 @@ public class MainFrame extends javax.swing.JFrame {
                     
                     statusPanelMainFrame.setText(StatusPanel.MIDDLE,userName);
                     
+                    // Start the actual RMI connection
+                    if (! itsOtdbRmi.isConnected()) {
+                        if (! itsOtdbRmi.openConnections()) {
+                            logger.debug("Error: failed to open RMI Connections");
+                        }
+                    }
                     registerDefaultPlugins();
                     registerUserPlugins();
                 }
