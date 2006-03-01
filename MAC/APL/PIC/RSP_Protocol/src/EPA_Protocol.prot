@@ -592,8 +592,7 @@ event = {
   };
   param = {
     name = "data";
-    type = "MEPData";
-    userdefined;
+    type = "uint8[MEPHeader::DIAG_RESULTS_SIZE]";
   };
 };
 
@@ -873,8 +872,7 @@ event = {
   };
   param = {
     name = "result";
-    type = "MEPData";
-    userdefined;
+    type = "uint8[MEPHeader::TDS_RESULT_SIZE]";
   };
 };
 

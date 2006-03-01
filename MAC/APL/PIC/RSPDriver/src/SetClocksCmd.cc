@@ -89,7 +89,17 @@ void SetClocksCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetClocksCmd::validate() const
 {
-  return ((m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards())
+  bool values_ok = true;
+  for (int i = 0; i < m_event->clocks().extent(firstDim); i++) {
+    if (  0 != m_event->clocks()(i) &&
+	160 != m_event->clocks()(i) &&
+	200 != m_event->clocks()(i)) {
+      values_ok = false;
+      break;
+    }
+  }
+  return (values_ok
+	  && (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards())
 	  && (1 == m_event->clocks().dimensions())
 	  && (1 == m_event->clocks().extent(firstDim)));
 }

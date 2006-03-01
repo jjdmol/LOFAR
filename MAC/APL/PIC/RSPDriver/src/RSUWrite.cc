@@ -82,7 +82,7 @@ void RSUWrite::sendrequest()
   else {
 	// cache modified?
 	// TODO: global_rcu should be something different: like global_board.
-    if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRSUSettings().getState().get(getBoardId())) {
+    if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBack().getRSUSettings().getState().get(getBoardId())) {
       setContinue(true);
       return;
     }
@@ -121,7 +121,7 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     return GCFEvent::NOT_HANDLED;
   }
 
-  Cache::getInstance().getBack().getRSUSettings().getState().applied(getBoardId());
+  Cache::getInstance().getBack().getRSUSettings().getState().confirmed(getBoardId());
 
   return GCFEvent::HANDLED;
 }

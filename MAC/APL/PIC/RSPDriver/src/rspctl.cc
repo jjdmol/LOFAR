@@ -2048,9 +2048,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      {
 		clockcommand->setMode(false);
 		double clock = atof(optarg);
-		if ( 160000000 != (uint32)clock && 200000000 != (uint32)clock)
+		if ( 0 != (uint32)clock && 160 != (uint32)clock && 200 != (uint32)clock)
 		  {
-		    logMessage(cerr,"Error: option '--clocks' parameter must be 160000000 or 200000000");
+		    logMessage(cerr,"Error: option '--clocks' parameter must be 0 (off), 160 (MHz) or 200 (MHz)");
 		    delete command;
 		    return 0;
 		  }

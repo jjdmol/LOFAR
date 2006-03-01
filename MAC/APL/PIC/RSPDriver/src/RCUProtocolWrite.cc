@@ -40,16 +40,16 @@ using namespace EPA_Protocol;
 namespace LOFAR {
   namespace RSP {
     // construct i2c sequence
-    uint8 i2c_protocol[] = { 0x0F, // PROTOCOL_C_SEND_BLOCK
-			     0x01, // I2C address for RCU
-			     0x03, // size
-			     0xFF, // <<< replace with data >>>
-			     0xFF, // <<< replace with data >>>
-			     0xFF, // <<< replace with data >>>
-			     0x10, // PROTOCOL_C_RECEIVE_BLOCK
-			     0x01, // I2C adress for RCU
-			     0x03, // requested size
-			     0x13, // PROTOCOL_C_END
+    static uint8 i2c_protocol[] = { 0x0F, // PROTOCOL_C_SEND_BLOCK
+				    0x01, // I2C address for RCU
+				    0x03, // size
+				    0xFF, // <<< replace with data >>>
+				    0xFF, // <<< replace with data >>>
+				    0xFF, // <<< replace with data >>>
+				    0x10, // PROTOCOL_C_RECEIVE_BLOCK
+				    0x01, // I2C adress for RCU
+				    0x03, // requested size
+				    0x13, // PROTOCOL_C_END
     };
   };
 };
@@ -70,7 +70,7 @@ void RCUProtocolWrite::sendrequest()
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // skip update if the RCU settings have not been modified
-  if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))
   {
     setContinue(true);
     return;
@@ -119,7 +119,10 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
     return GCFEvent::NOT_HANDLED;
   }
 
-  // RCUResultRead will update the state if the result was OK
+  // Mark as register modification as applied
+  // Still needs to be confirmed by RCUResultRead
+  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+  Cache::getInstance().getBack().getRCUSettings().getState().applied(global_rcu);
 
   return GCFEvent::HANDLED;
 }

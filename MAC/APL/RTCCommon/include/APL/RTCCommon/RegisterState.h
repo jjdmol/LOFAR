@@ -39,7 +39,8 @@ namespace LOFAR {
 	  INVALID      = 0,
 	  NOT_MODIFIED = 1,
 	  MODIFIED     = 2,
-	  APPLIED      = 3
+	  APPLIED      = 3,
+	  CONFIRMED    = 4,
 	};
 
 	explicit RegisterState(State state = NOT_MODIFIED)
@@ -47,11 +48,37 @@ namespace LOFAR {
 	    m_state.resize(1);
 	    m_state = state;
 	  }
-	virtual ~RegisterState() { }
+	virtual ~RegisterState()
+	  {
+	    m_state.free();
+	  }
 	
 
 	/**
-	 * RegisterState transitions.
+	 * RegisterState state machine.
+	 *
+	 *                                modified
+	 *   reset ---* NOT_MODIFIED ---------------* MODIFIED  *----- modified
+	 *                   *                        /  |
+	 *                   |    /------------------/   |applied
+	 *            clear  |   /       confirmed       |
+	 *                   |  *                        *
+	 *               CONFIRMED *----------------- APPLIED
+	 *                            confirmed
+	 *
+	 * Rationale:
+	 * When a register is modified, it transitions to the MODIFIED
+	 * state. It can only return to NOT_MODIFIED when cleared from
+	 * the CONFIRMED state. The CONFIRMED state can only be reached
+	 * from the MODIFIED state (with confirmed signal) or via the
+	 * APPLIED state.
+	 *
+	 * A register that is written and read consequently to check that
+	 * the data was written correctly would therefor transition from
+	 * NOT_MODIFIED, to MODIFIED, the to APPLIED (after the write
+	 * has completed) and then to CONFIRMED when the read result
+	 * matches what was actually written. Only then can the register
+	 * state be cleared to NOT_MODIFIED.
 	 */
 	void resize(int n)
 	  {
@@ -62,31 +89,35 @@ namespace LOFAR {
 	void modified(int i = -1)
 	  {
 	    if (i < 0) {
-	      m_state = MODIFIED;
+	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
+		m_state(j) = MODIFIED;
+	      }
 	      return;
 	    }
 	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	    if (NOT_MODIFIED == m_state(i) || APPLIED == m_state(i)) {
-	      m_state(i) = MODIFIED;
-	    }
+	    m_state(i) = MODIFIED;
 	  }
 
 	void reset(int i = -1)
 	  {
 	    if (i < 0) {
-	      m_state = NOT_MODIFIED;
+	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
+		m_state(j) = NOT_MODIFIED;
+	      }
 	      return;
 	    }
 	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	    if (NOT_MODIFIED == m_state(i) || APPLIED == m_state(i)) {
-	      m_state(i) = NOT_MODIFIED;
-	    }
+	    m_state(i) = NOT_MODIFIED;
 	  }
 
 	void applied(int i = -1)
 	  {
 	    if (i < 0) {
-	      m_state = APPLIED;
+	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
+		if (MODIFIED == m_state(j)) {
+		  m_state(j) = APPLIED;
+		}
+	      }
 	      return;
 	    }
 	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
@@ -95,14 +126,34 @@ namespace LOFAR {
 	    }
 	  }
 
-	void clear(int i = -1)
+	void confirmed(int i = -1)
 	  {
 	    if (i < 0) {
-	      m_state = NOT_MODIFIED;
+	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
+		if (MODIFIED == m_state(j) || APPLIED == m_state(j)) {
+		  m_state(j) = CONFIRMED;
+		}
+	      }
 	      return;
 	    }
 	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	    if (APPLIED == m_state(i)) {
+	    if (MODIFIED == m_state(i) || APPLIED == m_state(i)) {
+	      m_state(i) = CONFIRMED;
+	    }
+	  }
+
+	void clear(int i = -1)
+	  {
+	    if (i < 0) {
+	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
+		if (CONFIRMED == m_state(j)) {
+		  m_state(j) = NOT_MODIFIED;
+		}
+	      }
+	      return;
+	    }
+	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+	    if (CONFIRMED == m_state(i)) {
 	      m_state(i) = NOT_MODIFIED;
 	    }
 	  }
