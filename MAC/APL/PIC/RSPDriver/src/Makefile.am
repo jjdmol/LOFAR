@@ -70,7 +70,8 @@ bin_PROGRAMS = \
 	RSPDriver \
 	Tuner \
 	SetWG \
-	rspctl
+	rspctl \
+	geni2c
 
 RSPDriver_SOURCES = \
 	RefCount.h \
@@ -167,7 +168,12 @@ RSPDriver_SOURCES = \
 	BSWrite.h \
 	BSWrite.cc \
 	RSUWrite.h \
-	RSUWrite.cc
+	RSUWrite.cc \
+	TDSProtocolWrite.cc \
+	TDSProtocolWrite.h \
+	TDSi2cdefs.h \
+	TDSResultRead.cc \
+	TDSResultRead.h
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \
@@ -184,6 +190,9 @@ SetWG_SOURCES = \
 rspctl_SOURCES = \
 	rspctl.h \
 	rspctl.cc
+
+geni2c_SOURCES = \
+	geni2c.cc
 
 rspctl_LDADD = -lgnuplot_i
 
