@@ -85,6 +85,8 @@
 #include "VersionsRead.h"
 #include "WriteReg.h"
 #include "CDOWrite.h"
+#include "TDSProtocolWrite.h"
+#include "TDSResultRead.h"
 
 #include "Cache.h"
 #include "RawEvent.h"
@@ -281,6 +283,7 @@ bool RSPDriver::isEnabled()
  * - BF:      write beamformer weights          // BWWrite
  * - SS:      write subband selection settings  // SSWrite
  * - RCU:     write RCU control settings        // RCUWrite/RCUProtocolWrite
+ * - TDS:     write TDS control settings        // TDSProtocolWrite/TDSResultRead
  * - SST:     read subband statistics           // SstRead
  * - BST:     read beamlet statistics           // BstRead
  * - XST:     read crosslet statistics          // XstRead
@@ -301,24 +304,42 @@ void RSPDriver::addAllSyncActions()
    */
   for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
   {
+    if (1 == GET_CONFIG("RSPDriver.WRITE_TDS_PROTOCOL", i))
+    {
+      TDSProtocolWrite* tdsprotocolwrite = new TDSProtocolWrite(m_board[boardid], boardid);
+      ASSERT(tdsprotocolwrite);
+      m_scheduler.addSyncAction(tdsprotocolwrite);
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_TDS_RESULT", i))
+    {
+      TDSResultRead* tdsresultread = new TDSResultRead(m_board[boardid], boardid);
+      ASSERT(tdsresultread);
+      m_scheduler.addSyncAction(tdsresultread);
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i))
+    {
+      StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
+      ASSERT(statusread);
+      m_scheduler.addSyncAction(statusread);
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
+    {
+      VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
+      ASSERT(versionread);
+      m_scheduler.addSyncAction(versionread);
+    }
+
     /*
-     * First clear the board
+     * Clear the board if needed
      */
     if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
     {
       RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid);
       ASSERT(rsuwrite);
       m_scheduler.addSyncAction(rsuwrite);
-    }
-
-    /*
-     * First set correct number of samples per interval
-     */
-    if (1 == GET_CONFIG("RSPDriver.WRITE_BS", i))
-    {
-      BSWrite* bswrite = new BSWrite(m_board[boardid], boardid);
-      ASSERT(bswrite);
-      m_scheduler.addSyncAction(bswrite);
     }
 
     /*
@@ -356,6 +377,27 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(writereg);
     }
 
+    if (1 == GET_CONFIG("RSPDriver.READ_BST", i))
+    {
+      BstRead* bstread = 0;
+
+      bstread = new BstRead(m_board[boardid], boardid);
+      ASSERT(bstread);
+      m_scheduler.addSyncAction(bstread);
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_XST", i))
+    {
+      XstRead* xstread = 0;
+
+      for (int i = MEPHeader::XST_STATS; i < MEPHeader::XST_NR_STATS; i++)
+      {
+	xstread = new XstRead(m_board[boardid], boardid, i);
+	ASSERT(xstread);
+	m_scheduler.addSyncAction(xstread);
+      }
+    }
+
     if (1 == GET_CONFIG("RSPDriver.WRITE_CDO", i))
     {
       char dstip[64];
@@ -373,11 +415,48 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(cdowrite);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i))
+    for (int action = 0; action < 2; action++)
     {
-      StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
-      ASSERT(statusread);
-      m_scheduler.addSyncAction(statusread);
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+      {
+	if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
+	{
+	  WGWrite* wgwrite = new WGWrite(m_board[boardid], boardid);
+	  ASSERT(wgwrite);
+	  m_scheduler.addSyncAction(wgwrite);
+	}
+      }
+      else
+      {
+	if (1 == GET_CONFIG("RSPDriver.READ_WG", i))
+	{
+	  WGRead* wgread = new WGRead(m_board[boardid], boardid);
+	  ASSERT(wgread);
+	  m_scheduler.addSyncAction(wgread);
+	}
+      }
+    }
+
+    for (int action = 0; action < 2; action++)
+    {
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+      {
+	if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i))
+	{
+	  SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
+	  ASSERT(sswrite);
+	  m_scheduler.addSyncAction(sswrite);
+	}
+      }
+      else
+      {
+	if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
+	{
+	  SSRead* ssread = new SSRead(m_board[boardid], boardid);
+	  ASSERT(ssread);
+	  m_scheduler.addSyncAction(ssread);
+	}
+      }
     }
 
     //
@@ -442,26 +521,14 @@ void RSPDriver::addAllSyncActions()
       }
     }
     
-    for (int action = 0; action < 2; action++)
+    if (1 == GET_CONFIG("RSPDriver.READ_SST", i))
     {
-      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-      {
-	if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i))
-	{
-	  SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
-	  ASSERT(sswrite);
-	  m_scheduler.addSyncAction(sswrite);
-	}
-      }
-      else
-      {
-	if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
-	{
-	  SSRead* ssread = new SSRead(m_board[boardid], boardid);
-	  ASSERT(ssread);
-	  m_scheduler.addSyncAction(ssread);
-	}
-      }
+      SstRead* sstread = 0;
+
+      sstread = new SstRead(m_board[boardid], boardid);
+      ASSERT(sstread);
+      m_scheduler.addSyncAction(sstread);
+
     }
 
     for (int action = 0; action < 2; action++)
@@ -493,71 +560,21 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(rcuprotocolwrite);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_SST", i))
-    {
-      SstRead* sstread = 0;
-
-      sstread = new SstRead(m_board[boardid], boardid);
-      ASSERT(sstread);
-      m_scheduler.addSyncAction(sstread);
-
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_BST", i))
-    {
-      BstRead* bstread = 0;
-
-      bstread = new BstRead(m_board[boardid], boardid);
-      ASSERT(bstread);
-      m_scheduler.addSyncAction(bstread);
-    }
-
-    for (int action = 0; action < 2; action++)
-    {
-      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-      {
-	if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
-	{
-	  WGWrite* wgwrite = new WGWrite(m_board[boardid], boardid);
-	  ASSERT(wgwrite);
-	  m_scheduler.addSyncAction(wgwrite);
-	}
-      }
-      else
-      {
-	if (1 == GET_CONFIG("RSPDriver.READ_WG", i))
-	{
-	  WGRead* wgread = new WGRead(m_board[boardid], boardid);
-	  ASSERT(wgread);
-	  m_scheduler.addSyncAction(wgread);
-	}
-      }
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
-    {
-      VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
-      ASSERT(versionread);
-      m_scheduler.addSyncAction(versionread);
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_XST", i))
-    {
-      XstRead* xstread = 0;
-
-      for (int i = MEPHeader::XST_STATS; i < MEPHeader::XST_NR_STATS; i++)
-      {
-	xstread = new XstRead(m_board[boardid], boardid, i);
-	ASSERT(xstread);
-	m_scheduler.addSyncAction(xstread);
-      }
-    }
-
     if (1 == GET_CONFIG("RSPDriver.READ_RCU_RESULT", i))
     {
       RCUResultRead* rcuresultread = new RCUResultRead(m_board[boardid], boardid);
       ASSERT(rcuresultread);
       m_scheduler.addSyncAction(rcuresultread);
+    }
+
+    /*
+     * Set correct number of samples per interval
+     */
+    if (1 == GET_CONFIG("RSPDriver.WRITE_BS", i))
+    {
+      BSWrite* bswrite = new BSWrite(m_board[boardid], boardid);
+      ASSERT(bswrite);
+      m_scheduler.addSyncAction(bswrite);
     }
 
   } // for (boardid...)
