@@ -8,8 +8,9 @@ package nl.astron.lofar.sas.otb.panels;
 
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.OTDBtreeNode;
-import jOTDB.jOTDBnode;
+
 
 /**
  * This panel contains a TreePanel and some textfields that display information

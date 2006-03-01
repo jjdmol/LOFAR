@@ -117,7 +117,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
      *
      * @param   enabled     true/false enabled/disabled
      */
-    public void enable(boolean enabled) {
+    public void setEnabled(boolean enabled) {
         enableNodeName(enabled);
         enableNodeIndex(enabled);
         enableNodeInstances(enabled);

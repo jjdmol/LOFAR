@@ -1,5 +1,5 @@
 /*
- * PICtableModel.java
+ * TemplatetableModel.java
  *
  * Created on January 31, 2006, 11:11 AM
  *
@@ -17,24 +17,24 @@ import org.apache.log4j.Logger;
 /**
  * Implements the data model behind the PIC table 
  *
- * @author blaakmeer
+ * @author coolen
  */
-public class PICtableModel extends javax.swing.table.AbstractTableModel {
+public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"TreeID","Status","Creator","CreationTime","ObsoleteTime","Description"};
+    private String headers[] = {"TreeID","OriginalTree","Status","Campaign","MoMID","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
+
+    static Logger logger = Logger.getLogger(TemplatetableModel.class);
+    static String name = "TemplatetableModel";
     
-    static Logger logger = Logger.getLogger(PICtableModel.class);
-    static String name = "PICtableModel";
-
     /** Creates a new instance of PICtableModel */
-    public PICtableModel(OtdbRmi otdbRmi) {
-
+    public TemplatetableModel(OtdbRmi otdbRmi) {
         this.otdbRmi = otdbRmi;
         fillTable();
     }
-    
+
+    /** Fills the table from the database */
     public boolean fillTable() {
         
         try {
@@ -42,8 +42,8 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
                 logger.debug("No open connection available");
                 return false;
             }
-            // Get a Treelist of all available PIC's
-            Vector aTreeList=otdbRmi.getRemoteOTDB().getTreeList(otdbRmi.getRemoteTypes().getTreeType("hardware"),(short)0);
+            // Get a Treelist of all available VItemplate's
+            Vector aTreeList=otdbRmi.getRemoteOTDB().getTreeList(otdbRmi.getRemoteTypes().getTreeType("VItemplate"),(short)0);
             data = new Object[aTreeList.size()][headers.length];
             logger.debug("Treelist downloaded. Size: "+aTreeList.size());
            
@@ -54,10 +54,10 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
                 } else {
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());	   
-	            data[k][1]=new String(otdbRmi.getTreeState().get(tInfo.state));
-	            data[k][2]=new String(tInfo.creator);
-	            data[k][3]=new String(tInfo.starttime);
-	            data[k][4]=new String(tInfo.stoptime);
+                    data[k][1]=new Integer(tInfo.originalTree);	   
+	            data[k][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
+	            data[k][3]=new String(tInfo.campaign);
+	            data[k][4]=new Integer(tInfo.momID);
 //	            data[k][5]=new String(tInfo.description);
                 }
             }
@@ -67,17 +67,16 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
 	} 
         return true;
     }
-
     /** Returns the number of rows */
     public int getRowCount() {
         int rowCount;
         
-        //TODO: get rowcount from OTDB??
+       //TODO: get rowcount from OTDB??
         rowCount = data.length;
         return rowCount;
     }
 
-    /** Returns lothe column names */
+    /** Returns the column names */
     public String getColumnName(int c) {
         try {
             return headers[c];
@@ -85,7 +84,6 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
         catch(ArrayIndexOutOfBoundsException e) {
             return null;
         }
-        
     }
 
     /** Returns the number of columns */
