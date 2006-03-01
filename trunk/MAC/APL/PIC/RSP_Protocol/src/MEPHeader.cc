@@ -77,7 +77,7 @@ const MEPHeader::FieldsType MEPHeader::CDO_HEADER_HDR        = { WRITE, 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::BS_NOF_SAMPLES_PER_SYNC_HDR = { WRITE, 0, 0, { DST_BLP0, BS, BS_NOF_SAMPLES_PER_SYNC }, 0, BS_NOF_SAMPLES_PER_SYNC_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::TDS_PROTOCOL_HDR      = { WRITE, 0, 0, { DST_RSP, TDS, TDS_PROTOCOL }, 0, TDS_PROTOCOL_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::TDS_RESULT_HDR        = { READ,  0, 0, { DST_RSP, RSR, TDS_RESULT   }, 0, TDS_RESULT_SIZE,   0, 0 };
+const MEPHeader::FieldsType MEPHeader::TDS_RESULT_HDR        = { READ,  0, 0, { DST_RSP, TDS, TDS_RESULT   }, 0, TDS_RESULT_SIZE,   0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::TBB_CONTROL_HDR       = { WRITE, 0, 0, { DST_RSP, TBB, TBB_CONTROL }, 0, TBB_CONTROL_SIZE, 0, 0 };
 

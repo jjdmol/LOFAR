@@ -198,11 +198,13 @@ RSPDriver.WRITE_BF=1
 RSPDriver.WRITE_SS=1
 RSPDriver.WRITE_RCU=1
 RSPDriver.WRITE_RCU_PROTOCOL=1
-RSPDriver.READ_RCU_RESULT=1
+RSPDriver.WRITE_TDS_PROTOCOL=1
 RSPDriver.READ_SST=1
 RSPDriver.READ_BST=1
 RSPDriver.WRITE_WG=1
 RSPDriver.WRITE_WG_WAVE=0
+RSPDriver.READ_RCU_RESULT=1
+RSPDriver.READ_TDS_RESULT=1
 RSPDriver.READ_VERSION=1
 RSPDriver.READ_XST=1
 
@@ -229,11 +231,9 @@ RSPDriver.XST_FIRST_RSP_BOARD=0
 #
 # Specify the default sampling frequency that should be programmed
 # into the hardware when the driver starts.
-# Currently allowed values are: 160000000 and 200000000
+# Currently allowed values are: 0 (off), 160 (MHz) and 200 (MHz)
 #
-RSPDriver.DEFAULT_SAMPLING_FREQUENCY=160000000
-
-#
+RSPDriver.DEFAULT_SAMPLING_FREQUENCY=160
 
 #
 # Specify how the rspdriver should operate:

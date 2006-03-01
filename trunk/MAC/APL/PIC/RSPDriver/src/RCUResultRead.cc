@@ -41,12 +41,12 @@ using namespace EPA_Protocol;
 namespace LOFAR {
   namespace RSP {
     // construct expected i2c result
-    uint8 i2c_result[] = { 0x00, // PROTOCOL_C_SEND_BLOCK OK
-			   0xFF, // <<< replace with expected data >>>
-			   0xFF, // <<< replace with expected data >>>
-			   0xFF, // <<< replace with expected data >>>
-			   0x00, // PROTOCOL_C_RECEIVE_BLOCK OK
-			   0x00, // PROTOCOL_C_END OK
+    static uint8 i2c_result[] = { 0x00, // PROTOCOL_C_SEND_BLOCK OK
+				  0xFF, // <<< replace with expected data >>>
+				  0xFF, // <<< replace with expected data >>>
+				  0xFF, // <<< replace with expected data >>>
+				  0x00, // PROTOCOL_C_RECEIVE_BLOCK OK
+				  0x00, // PROTOCOL_C_END OK
     };
   };
 };
@@ -66,8 +66,8 @@ void RCUResultRead::sendrequest()
 {
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
-  // skip update if the RCU settings have not been modified
-  if (RTC::RegisterState::NOT_MODIFIED == Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))
+  // skip update if the RCU settings have not been applied yet
+  if (RTC::RegisterState::APPLIED != Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))
   {
     setContinue(true);
     return;
@@ -118,7 +118,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 
   if (0 == memcmp(i2c_result, ack.result, sizeof(i2c_result))) {
     uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
-    Cache::getInstance().getBack().getRCUSettings().getState().applied(global_rcu);
+    Cache::getInstance().getBack().getRCUSettings().getState().confirmed(global_rcu);
   } else {
     LOG_ERROR("RCUResultRead::handleack: unexpected I2C result response");
   }
