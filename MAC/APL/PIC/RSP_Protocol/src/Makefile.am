@@ -1,30 +1,46 @@
 
-AM_CPPFLAGS = -I$(top_builddir)/include
+AM_CPPFLAGS = \
+	-I$(top_builddir)/include
 
 AUTOGEN = autogen
 SUFFIXES = .ph
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	cp $*.ph $(top_builddir)/include/APL/RSP_Protocol
+
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
-	cp $@ $(top_builddir)/include/APL/RSP_Protocol
+	cp $*.ph $(top_builddir)/include/APL/RSP_Protocol
 
-BUILT_SOURCES = \
+pkgincludedir=$(includedir)/APL/RSP_Protocol
+pkginclude_HEADERS = \
 	EPA_Protocol.ph \
 	RSP_Protocol.ph \
 	RSPFE_Protocol.ph
 
-EXTRA_DIST =
+BUILT_SOURCES = \
+	EPA_Protocol.cc \
+	RSP_Protocol.cc \
+	RSPFE_Protocol.cc
 
-pkgincludedir=$(includedir)/APL/RSP_Protocol
-pkginclude_HEADERS = \
-	$(BUILT_SOURCES)
+CLEANFILES = $(BUILT_SOURCES)
+
+EXTRA_DIST = \
+	EPA_Protocol.prot \
+	RSP_Protocol.prot \
+	RSPFE_Protocol.prot
 
 lib_LTLIBRARIES         = librsp_protocol.la
 
-librsp_protocol_la_SOURCES = \
-	$(BUILT_SOURCES) \
+nodist_librsp_protocol_la_SOURCES = \
+	EPA_Protocol.ph \
+	RSP_Protocol.ph \
+	RSPFE_Protocol.ph \
 	EPA_Protocol.cc \
 	RSP_Protocol.cc \
-	RSPFE_Protocol.cc \
+	RSPFE_Protocol.cc
+
+librsp_protocol_la_SOURCES = \
 	BeamletWeights.cc \
 	Clocks.cc \
 	RCUSettings.cc \
@@ -39,6 +55,6 @@ librsp_protocol_la_SOURCES = \
 	MEPData.cc
 
 clean-local:
-	rm -f *.ph
+	rm -f $(BUILT_SOURCES)
 
 include $(top_srcdir)/Makefile.common
