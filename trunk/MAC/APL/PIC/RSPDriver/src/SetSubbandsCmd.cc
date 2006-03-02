@@ -68,7 +68,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 
   case SubbandSelection::BEAMLET:
     {
-      dst_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+      dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
       for (int cache_rcu = 0;
 	   cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
 	{
@@ -86,7 +86,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 
   case SubbandSelection::XLET:
     {
-      dst_range = Range(0, MEPHeader::N_XLETS - 1);
+      dst_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
       for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
 	{
 	  if (m_event->rcumask[cache_rcu])

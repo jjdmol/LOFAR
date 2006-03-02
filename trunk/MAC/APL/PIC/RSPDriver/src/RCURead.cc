@@ -85,7 +85,7 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
   {
-    EPA_Protocol::RCUHandler cachedvalue = { x.getSpecinv(), y.getSpecinv(), 0, x.getDelay(), 0, y.getDelay(), 0 };
+    EPA_Protocol::RCUHandler cachedvalue = { x.getDelay(), 0, y.getDelay(), 0 };
     if (memcmp(&cachedvalue, &rcusettings.ap, sizeof(EPA_Protocol::RCUHandler)))
     {
       LOG_WARN("LOOPBACK CHECK FAILED: RCURead mismatch ");
@@ -93,8 +93,6 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   }
   else
   {
-    x.setSpecinv(rcusettings.ap.spec_inv_x);
-    y.setSpecinv(rcusettings.ap.spec_inv_y);
     x.setDelay(rcusettings.ap.input_delay_x);
     y.setDelay(rcusettings.ap.input_delay_y);
   }

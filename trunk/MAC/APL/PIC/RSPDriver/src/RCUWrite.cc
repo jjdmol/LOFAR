@@ -67,8 +67,6 @@ void RCUWrite::sendrequest()
   EPARcuSettingsEvent rcusettings;
   rcusettings.hdr.set(MEPHeader::RCU_SETTINGS_HDR, 1 << getCurrentIndex()); // also sets payload_length
   rcusettings.ap = EPA_Protocol::RCUHandler();
-  rcusettings.ap.spec_inv_x    = x.getSpecinv();
-  rcusettings.ap.spec_inv_y    = y.getSpecinv();
   rcusettings.ap.input_delay_x = x.getDelay();
   rcusettings.ap.input_delay_y = y.getDelay();
 
@@ -98,7 +96,7 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   }
 
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
-  Cache::getInstance().getBack().getRCUSettings().getState().confirmed(global_blp);
+  //Cache::getInstance().getBack().getRCUSettings().getState().applied(global_blp);
 
   return GCFEvent::HANDLED;
 }

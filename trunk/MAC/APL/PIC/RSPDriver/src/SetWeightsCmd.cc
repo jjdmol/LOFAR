@@ -76,9 +76,9 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetWeightsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 {
-  // copy to offset N_XLETS in the cache
-  Range dst_range = Range(MEPHeader::N_XLETS,
-			  MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+  // copy to offset N_LOCAL_XLETS in the cache
+  Range dst_range = Range(MEPHeader::N_LOCAL_XLETS,
+			  MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
 
   int input_rcu = 0;
   for (int cache_rcu = 0;

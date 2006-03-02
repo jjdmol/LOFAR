@@ -90,7 +90,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   
   // create array point to data in the response event
   Array<uint16, 2> subbands((uint16*)&ss.subbands,
-			    shape(MEPHeader::N_XBLETS, MEPHeader::N_POL),
+			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
 			    neverDeleteData);
 
   if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))

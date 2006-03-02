@@ -93,12 +93,12 @@ void UpdSubbandsCmd::complete(CacheBuffer& cache)
 	switch (m_event->type) {
 	case SubbandSelection::BEAMLET:
 		ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_BEAMLETS);
-		src_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+		src_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
 		break;
 
 	case SubbandSelection::XLET:
-		ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_XLETS);
-		src_range = Range(0, MEPHeader::N_XLETS - 1);
+		ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_LOCAL_XLETS);
+		src_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
 		break;
 
 	default:

@@ -1,4 +1,3 @@
-
 INSTHDRS = \
 	MEPHeader.h \
 	MEPData.h \

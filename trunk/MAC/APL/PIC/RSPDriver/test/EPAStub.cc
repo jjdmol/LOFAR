@@ -122,8 +122,12 @@ EPAStub::EPAStub(string name)
   m_reg[MEPHeader::RCU][MEPHeader::RCU_RESULTY].size  = MEPHeader::RCU_RESULT_SIZE;
 
   // CR_CONTROL register for all AP's and the BP (hence the + 1)
-  m_reg[MEPHeader::CR][MEPHeader::CR_CONTROL].addr     = new char[MEPHeader::CR_CONTROL_SIZE * (GET_CONFIG("EPAStub.N_BLPS", i) + 1)];
-  m_reg[MEPHeader::CR][MEPHeader::CR_CONTROL].size     = MEPHeader::CR_CONTROL_SIZE;
+  m_reg[MEPHeader::CR][MEPHeader::CR_SOFTCLEAR].addr   = new char[MEPHeader::CR_CONTROL_SIZE * (GET_CONFIG("EPAStub.N_BLPS", i) + 1)];
+  m_reg[MEPHeader::CR][MEPHeader::CR_SOFTCLEAR].size   = MEPHeader::CR_CONTROL_SIZE;
+  m_reg[MEPHeader::CR][MEPHeader::CR_SOFTSYNC].addr    = new char[MEPHeader::CR_CONTROL_SIZE * (GET_CONFIG("EPAStub.N_BLPS", i) + 1)];
+  m_reg[MEPHeader::CR][MEPHeader::CR_SOFTSYNC].size    = MEPHeader::CR_CONTROL_SIZE;
+  m_reg[MEPHeader::CR][MEPHeader::CR_SYNCDISABLE].addr = new char[MEPHeader::CR_CONTROL_SIZE * (GET_CONFIG("EPAStub.N_BLPS", i) + 1)];
+  m_reg[MEPHeader::CR][MEPHeader::CR_SYNCDISABLE].size = MEPHeader::CR_CONTROL_SIZE;
 
   m_reg[MEPHeader::XST][MEPHeader::XST_0_X].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::XST][MEPHeader::XST_0_X].size     = MEPHeader::XST_STATS_SIZE;

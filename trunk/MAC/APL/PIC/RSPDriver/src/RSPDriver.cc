@@ -304,6 +304,16 @@ void RSPDriver::addAllSyncActions()
    */
   for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
   {
+    /*
+     * Clear the board if needed
+     */
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
+    {
+      RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid);
+      ASSERT(rsuwrite);
+      m_scheduler.addSyncAction(rsuwrite);
+    }
+
     if (1 == GET_CONFIG("RSPDriver.WRITE_TDS_PROTOCOL", i))
     {
       TDSProtocolWrite* tdsprotocolwrite = new TDSProtocolWrite(m_board[boardid], boardid);
@@ -330,16 +340,6 @@ void RSPDriver::addAllSyncActions()
       VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
       ASSERT(versionread);
       m_scheduler.addSyncAction(versionread);
-    }
-
-    /*
-     * Clear the board if needed
-     */
-    if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
-    {
-      RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid);
-      ASSERT(rsuwrite);
-      m_scheduler.addSyncAction(rsuwrite);
     }
 
     /*

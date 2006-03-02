@@ -774,9 +774,12 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 		}
 
 		BoardStatus&	board = ack.sysstatus.board()(0);
-		logMessage(cout,formatString("1.2 V: %3.2f , 2.5 V: %3.2f",
-						0.013  * board.rsp.voltage_1_5, 
-						0.0172 * board.rsp.voltage_3_3));
+		logMessage(cout,formatString("1.2 V: %3.2f , 2.5 V: %3.2f, 3.3 V: %3.2f",
+						(2.5/192.0) * board.rsp.voltage_1_2,
+						(3.3/192.0) * board.rsp.voltage_2_5,
+					        (5.0/192.0) * board.rsp.voltage_3_3));
+		logMessage(cout,formatString("PCB_temp: %2d ",
+					        board.rsp.pcb_temp));
 		logMessage(cout,formatString("BP_temp: %2d , BP_clock: %3d",
 						board.rsp.bp_temp, board.rsp.bp_clock));
 		logMessage(cout,formatString("Temp AP0: %3d , AP1: %3d , AP2: %3d , AP3: %3d", 
@@ -797,7 +800,6 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 						board.diag.ap3_ri_errors));
 		logMessage(cout,formatString("Sync     diff     count   samples    slices"));
 		for (int blp = 0; blp < 4; blp++) {
-//			BSStatus*	bs= &(board.ap0_sync)+(blp*sizeof(BSStatus));
 			BSStatus*	bs= &(board.ap0_sync)+blp;
 			logMessage(cout,formatString("%d:  %9ld %9ld %9ld %9ld", 
 						blp, bs->ext_count, bs->sync_count,
@@ -805,8 +807,7 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 		}
 		logMessage(cout,formatString("Status   pllX      pllY overflowX overflowY"));
 		for (int ap = 0; ap < 4; ap++) {
-//			APStatus*	as= &(board.ap0_rcu)+(ap*sizeof(APStatus));
-			APStatus*	as= &(board.ap0_rcu)+ap;
+		        RCUStatus*	as= &(board.blp0_rcu)+ap;
 			logMessage(cout,formatString("%d:  %9ld %9ld %9ld %9ld", 
 								ap, as->pllx, as->plly, 
 								as->nof_overflowx, as->nof_overflowy));
@@ -1321,8 +1322,9 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
   {
     for (int rsp=0; rsp < get_ndevices(); rsp++)
     {
-      logMessage(cout,formatString("RSP[%02d] BP version = %d.%d, AP version = %d.%d",
+      logMessage(cout,formatString("RSP[%02d] RSP version = %d, BP version = %d.%d, AP version = %d.%d",
                                    rsp,
+				   ack.versions.bp()(rsp).rsp_version,
                                    ack.versions.bp()(rsp).fpga_maj,
 				   ack.versions.bp()(rsp).fpga_min,
                                    ack.versions.ap()(rsp).fpga_maj,

@@ -50,10 +50,12 @@ CacheBuffer::CacheBuffer()
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_XBLETS);
+  m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(),
+			    MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
   m_beamletweights() = complex<int16>(0,0);
 
-  m_subbandselection().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_XBLETS);
+  m_subbandselection().resize(StationSettings::instance()->nrRcus(),
+			      MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
   m_subbandselection() = 0;
 
   if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i))
@@ -63,9 +65,9 @@ CacheBuffer::CacheBuffer()
     m_beamletweights()(Range::all(), Range::all(), Range::all()) =
       complex<int16>(0x4000, 0);
 
-    // reset weights on first N_XLETS beamlets for cross correlation
+    // reset weights on first N_LOCAL_XLETS beamlets for cross correlation
     // they will be set again in BWWrite::sendrequest()
-    m_beamletweights()(Range::all(), Range::all(), Range(0, MEPHeader::N_XLETS - 1)) = 
+    m_beamletweights()(Range::all(), Range::all(), Range(0, MEPHeader::N_LOCAL_XLETS - 1)) = 
       complex<int16>(0,0);
 
     LOG_INFO_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
@@ -75,7 +77,7 @@ CacheBuffer::CacheBuffer()
     //
     for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
       for (int sb = 0; sb < MEPHeader::N_BEAMLETS; sb++) {
-	m_subbandselection()(rcu, sb + MEPHeader::N_XLETS) = (rcu % MEPHeader::N_POL) +
+	m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu % MEPHeader::N_POL) +
 	  (sb * MEPHeader::N_POL) +
 	  (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
       }
@@ -132,7 +134,7 @@ CacheBuffer::CacheBuffer()
   memset(&boardinit, 0, sizeof(BoardStatus));
   m_systemstatus.board() = boardinit;
 
-  EPA_Protocol::RSRVersion versioninit = { 0, 0, 0, 0, 0 };
+  EPA_Protocol::RSRVersion versioninit = { 0, 0, 0 };
   m_versions.bp().resize(StationSettings::instance()->nrRspBoards());
   m_versions.bp() = versioninit;
   m_versions.ap().resize(StationSettings::instance()->nrBlps());

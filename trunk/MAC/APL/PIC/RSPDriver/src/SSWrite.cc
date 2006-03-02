@@ -63,7 +63,7 @@ void SSWrite::sendrequest()
     
   // create array to contain the subband selection
   Array<uint16, 2> subbands((uint16*)&ss.subbands,
-			    shape(MEPHeader::N_XBLETS, MEPHeader::N_POL),
+			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
 			    neverDeleteData);
     
   // copy the actual values from the cache

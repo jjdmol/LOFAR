@@ -85,8 +85,6 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   // copy board status
   memcpy(&status.board()(getBoardId()), &ack.board, sizeof(BoardStatus));
 
-  LOG_DEBUG_STR("RSR_STATUS[" << getBoardId() << "]=" << ack.board);
-
   // sanity check on SYNC status, status for all AP's must be the same
   if (ack.board.ap0_sync.sample_offset != ack.board.ap1_sync.sample_offset
       || ack.board.ap0_sync.sample_offset != ack.board.ap2_sync.sample_offset

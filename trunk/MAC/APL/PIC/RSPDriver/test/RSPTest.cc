@@ -435,7 +435,7 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
       LOG_INFO_STR("ack.time=" << ack.timestamp);
 
-      LOG_INFO_STR("board=" << ack.sysstatus.board());
+      // << no longer supported LOG_INFO_STR("board=" << ack.sysstatus.board());
       
       TRAN(RSPTest::test007);
     }
@@ -721,7 +721,7 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("upd.time=" << upd.timestamp);
       LOG_INFO_STR("upd.handle=" << upd.handle);
       
-      LOG_INFO_STR("upd.sysstatus.board=" << upd.sysstatus.board());
+      // << no longer supported LOG_INFO_STR("upd.sysstatus.board=" << upd.sysstatus.board());
 
       if (updcount++ > 4) // four seconds
       {

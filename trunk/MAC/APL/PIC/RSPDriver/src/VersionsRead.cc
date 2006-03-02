@@ -78,22 +78,10 @@ GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& por
 
   if (MEPHeader::DST_RSP == ack.hdr.m_fields.addr.dstid) {
 
-    LOG_DEBUG(formatString("Version information for '%s' is [rsp_version:%d, fpga_version:%d.%d, fpga_id:%d]",
-			   port.getName().c_str(),
-			   ack.version.rsp,
-			   ack.version.fpga_maj, ack.version.fpga_min,
-			   ack.version.fpga_id));
-  
     Cache::getInstance().getBack().getVersions().bp()(getBoardId()) = ack.version;
 
   } else {
 
-    LOG_DEBUG(formatString("Version information for '%s' is [fpga_version:%d.%d, fpga_id:%d, board_pos:%d]",
-			   port.getName().c_str(),
-			   ack.version.fpga_maj, ack.version.fpga_min,
-			   ack.version.fpga_id,
-			   ack.version.board_pos));
-    
     int ap_index = -1;
     switch (ack.hdr.m_fields.addr.dstid) {
     case MEPHeader::DST_BLP0:
