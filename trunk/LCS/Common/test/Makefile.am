@@ -6,7 +6,8 @@ check_PROGRAMS	      =	testLogger \
 # programs to run through supplied checktools
 CHECKTOOLPROGS 	      =	testLogger \
 			tAllocator tDataConvert tStringUtil tHexdump \
-			tProcess tTimer tNumeric
+			testSocket tComplex tProcess \
+			tRunOnNode tTimer tNumeric
 #ENDCHECKTOOLPROGS
 
 TESTSCRIPTS = \
@@ -18,10 +19,10 @@ TESTSCRIPTS = \
 	tNumeric.sh \
 	tProcess.sh \
 	tRunOnNode.sh \
+	tTimer.sh \
 	tStringUtil_test.sh
 
-TESTS = $(TESTSCRIPTS) \
-	tTimer
+TESTS = $(TESTSCRIPTS)
 
 EXTRA_DIST = $(TESTSCRIPTS) \
 	tComplex.stdout \
