@@ -40,7 +40,7 @@ namespace LOFAR {
      *  - subbands[1][nr_selected_subbands].
      *
      * When used in the Cache the dimensions should be:
-     *  - subbands[N_RCUS][N_XBLETS]  (combined crosslet and beamlet selection)
+     *  - subbands[N_RCUS][N_LOCAL_XLETS + N_BEAMLETS]  (combined crosslet and beamlet selection)
      *
      * The values in the subbands array should be 0 <= value < N_SUBBANDS * EPA_Protocol::N_POL
      */
@@ -77,7 +77,7 @@ namespace LOFAR {
 
       /**
        * Set the type of the subbands selection.
-       * @param type Type of the subband selection, valid values are SubbandSelection::BEAMLET (array should have 1 to N_BEAMLETS values) or
+       * @param type Type of the subband selection, valid values are SubbandSelection::BEAMLET (array should have 1 to N_LOCAL_XLETS + N_BEAMLETS values) or
        * SubbandSelection::XLET (array should have 1 value).
        */
       void setType(int type) { m_type = (uint16)type; }

@@ -67,7 +67,7 @@ const MEPHeader::FieldsType MEPHeader::RCU_RESULTX_HDR       = { READ,  0, 0, { 
 const MEPHeader::FieldsType MEPHeader::RCU_PROTOCOLY_HDR     = { WRITE, 0, 0, { DST_BLP0, RCU, RCU_PROTOCOLY }, 0, RCU_PROTOCOL_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::RCU_RESULTY_HDR       = { READ,  0, 0, { DST_BLP0, RCU, RCU_RESULTY   }, 0, RCU_RESULT_SIZE,   0, 0 };
 
-const MEPHeader::FieldsType MEPHeader::CR_CONTROL_HDR        = { WRITE, 0, 0, { DST_RSP, CR, CR_CONTROL }, 0, CR_CONTROL_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::CR_CONTROL_HDR        = { WRITE, 0, 0, { DST_RSP, CR, CR_SOFTSYNC /*default*/ }, 0, CR_CONTROL_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::XST_STATS_HDR         = { READ,  0, 0, { DST_RSP, XST, XST_STATS }, 0, XST_STATS_SIZE, 0, 0 };
 
@@ -80,46 +80,6 @@ const MEPHeader::FieldsType MEPHeader::TDS_PROTOCOL_HDR      = { WRITE, 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::TDS_RESULT_HDR        = { READ,  0, 0, { DST_RSP, TDS, TDS_RESULT   }, 0, TDS_RESULT_SIZE,   0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::TBB_CONTROL_HDR       = { WRITE, 0, 0, { DST_RSP, TBB, TBB_CONTROL }, 0, TBB_CONTROL_SIZE, 0, 0 };
-
-/* OLD REGISTER
-
-const MEPHeader::FieldsType MEPHeader::RSR_STATUS_HDR    = { READ,  0, 0, { DST_RSP, RSR, RSR_STATUS,    0 }, 0, RSR_STATUS_SIZE    };
-const MEPHeader::FieldsType MEPHeader::RSR_VERSION_HDR   = { READ,  0, 0, { DST_RSP, RSR, RSR_VERSION,   0 }, 0, RSR_VERSION_SIZE   };
-
-const MEPHeader::FieldsType MEPHeader::TST_SELFTEST_HDR  = { WRITE, 0, 0, { DST_RSP, TST, TST_SELFTEST,  0 }, 0, TST_SELFTEST_SIZE  };
-
-const MEPHeader::FieldsType MEPHeader::CFG_REPROGRAM_HDR = { WRITE, 0, 0, { DST_RSP, CFG, CFG_REPROGRAM, 0 }, 0, CFG_REPROGRAM_SIZE };
-
-const MEPHeader::FieldsType MEPHeader::WG_XSETTINGS_HDR  = { WRITE, 0, 0, { DST_BLP, WG,  WG_XSETTINGS,  0 }, 0, WG_XSETTINGS_SIZE  };
-const MEPHeader::FieldsType MEPHeader::WG_YSETTINGS_HDR  = { WRITE, 0, 0, { DST_BLP, WG,  WG_YSETTINGS,  0 }, 0, WG_YSETTINGS_SIZE  };
-const MEPHeader::FieldsType MEPHeader::WG_XWAVE_HDR      = { WRITE, 0, 0, { DST_BLP, WG,  WG_XWAVE,      0 }, 0, WG_XWAVE_SIZE      };
-const MEPHeader::FieldsType MEPHeader::WG_YWAVE_HDR      = { WRITE, 0, 0, { DST_BLP, WG,  WG_YWAVE,      0 }, 0, WG_YWAVE_SIZE      };
-      
-const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR     = { WRITE, 0, 0, { DST_BLP, SS,  SS_SELECT,     0 }, 0, SS_SELECT_SIZE     };
-
-const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_XROUT,      0 }, 0, BF_XROUT_SIZE      };
-const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_XIOUT,      0 }, 0, BF_XIOUT_SIZE      };
-const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_YROUT,      0 }, 0, BF_YROUT_SIZE      };
-const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_YIOUT,      0 }, 0, BF_YIOUT_SIZE      };
-
-const MEPHeader::FieldsType MEPHeader::BST_POWER_HDR     = { READ,  0, 0, { DST_RSP, BST, BST_POWER,     0 }, 0, BST_POWER_SIZE     };
-
-const MEPHeader::FieldsType MEPHeader::SST_POWER_HDR     = { READ,  0, 0, { DST_BLP, SST, SST_POWER,     0 }, 0, SST_POWER_SIZE     };
-
-const MEPHeader::FieldsType MEPHeader::RCU_SETTINGS_HDR  = { WRITE, 0, 0, { DST_BLP, RCU, RCU_SETTINGS,  0 }, 0, RCU_SETTINGS_SIZE  };
-
-const MEPHeader::FieldsType MEPHeader::CRR_SOFTRESET_HDR = { WRITE, 0, 0, { DST_RSP, CRR, CRR_SOFTRESET, 0 }, 0, CRR_SOFTRESET_SIZE };
-const MEPHeader::FieldsType MEPHeader::CRR_SOFTPPS_HDR   = { WRITE, 0, 0, { DST_RSP, CRR, CRR_SOFTPPS,   0 }, 0, CRR_SOFTPPS_SIZE   };
-
-const MEPHeader::FieldsType MEPHeader::CRB_SOFTRESET_HDR = { WRITE, 0, 0, { DST_BLP, CRB, CRB_SOFTRESET, 0 }, 0, CRB_SOFTRESET_SIZE };
-const MEPHeader::FieldsType MEPHeader::CRB_SOFTPPS_HDR   = { WRITE, 0, 0, { DST_BLP, CRB, CRB_SOFTPPS,   0 }, 0, CRB_SOFTPPS_SIZE   };
-
-const MEPHeader::FieldsType MEPHeader::CDO_SETTINGS_HDR  = { WRITE, 0, 0, { DST_RSP, CDO, CDO_SETTINGS,  0 }, 0, CDO_SETTINGS_SIZE  };
-const MEPHeader::FieldsType MEPHeader::CDO_HEADER_HDR    = { WRITE, 0, 0, { DST_RSP, CDO, CDO_HEADER,    0 }, 0, CDO_HEADER_SIZE    };
-
-const MEPHeader::FieldsType MEPHeader::XST_STATS_HDR     = { READ,  0, 0, { DST_RSP, XST, XST_STATS,     0 }, 0, XST_STATS_SIZE     };
-
-*/
 
 unsigned int MEPHeader::getSize()
 {

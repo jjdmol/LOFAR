@@ -163,7 +163,9 @@ namespace LOFAR {
       static const uint8 RCU_PROTOCOLY    = 0x03;
       static const uint8 RCU_RESULTY      = 0x04;
 
-      static const uint8 CR_CONTROL       = 0x00;
+      static const uint8 CR_SOFTCLEAR     = 0x00;
+      static const uint8 CR_SOFTSYNC      = 0x01;
+      static const uint8 CR_SYNCDISABLE   = 0x02;
 
       static const uint8 XST_STATS        = 0x00;
       static const uint8 XST_0_X          = XST_STATS + 0; // 8 registers, two for each AP
@@ -182,7 +184,7 @@ namespace LOFAR {
        * settings to set interleaving of beamlets.
        */
       static const uint8 CDO_SETTINGS  = 0x00;
-      static const uint8 CDO_HEADER    = 0x01;
+      static const uint8 CDO_HEADER = 0x01;
 
       static const uint8 BS_NOF_SAMPLES_PER_SYNC = 0x00;
 
@@ -214,15 +216,15 @@ namespace LOFAR {
        * The N_BEAMLETS are a selection from this
        * number of beamlets.
        */
-      static const uint16 N_SUBBANDS     = 512;
-      static const uint16 N_GLOBAL_XLETS = 54;  // Total number of crosslets over whole station (FTS-1.5 spec)
-      static const uint16 N_XLETS        = 4;   // Number of crosslets per RSP board
-      static const uint16 N_BEAMLETS     = 54;  // FTS-1.5 spec, final design will have > 200 BEAMLETS + N_XLETS
-      static const uint16 N_XBLETS       = N_XLETS + N_BEAMLETS; // RSP registers combine XLETS and BEAMLETS
-      static const uint16 N_POL          = 2;                    // number of polarizations
-      static const uint16 N_PHASE        = 2;                    // number of phases in a complex number
-      static const uint16 N_PHASEPOL     = N_PHASE * N_POL;      // number of phase polarizations
-      static const uint16 XLET_SIZE      = N_POL * sizeof(std::complex<uint32>);
+      static const uint16 N_SUBBANDS       = 512;
+      static const uint16 N_REMOTE_XLETS   = 54; 
+      static const uint16 N_LOCAL_XLETS    = 4;
+      static const uint16 N_BEAMLETS       = 216;
+      static const uint16 N_LOCAL_BEAMLETS = 54;
+      static const uint16 N_POL            = 2;                    // number of polarizations
+      static const uint16 N_PHASE          = 2;                    // number of phases in a complex number
+      static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      // number of phase polarizations
+      static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
  
       //
       // Registers too large to send in a single ethernet frame
@@ -231,11 +233,11 @@ namespace LOFAR {
       static const uint16 FRAGMENT_SIZE = 1024;
     
       //
-      // XST register will be too large to get in one message when N_GLOBAL_XLETS = 96
-      // When 96 crosslets are supported, the XST_FRAGMENT_SIZE should be divided by 2.
+      // XST register is too large to read in one Ethernet frame
+      // These constants are used to read the fragments.
       //
       static const uint16 MAX_XLETS_PER_FRAGMENT = FRAGMENT_SIZE / XLET_SIZE;
-      static const uint16 XST_FRAGMENT_SIZE = MIN(N_GLOBAL_XLETS, MAX_XLETS_PER_FRAGMENT) * XLET_SIZE;
+      static const uint16 XST_FRAGMENT_SIZE      = MIN(N_REMOTE_XLETS, MAX_XLETS_PER_FRAGMENT) * XLET_SIZE;
       /*@}*/
 
       
@@ -243,7 +245,7 @@ namespace LOFAR {
       /**
        * Define size of each register.
        */
-      static const uint16 RSR_STATUS_SIZE       = 164;
+      static const uint16 RSR_STATUS_SIZE       = 200;
       static const uint16 RSR_VERSION_SIZE      = 2;
       
       static const uint16 RSU_FLASHRW_SIZE      = 1024;
@@ -259,14 +261,14 @@ namespace LOFAR {
       static const uint16 DIAG_RESULTS_SIZE     = 4096;
       static const uint16 DIAG_SELFTEST_SIZE    = 4;
       
-      static const uint16 SS_SELECT_SIZE        = N_XBLETS * N_POL * sizeof(uint16);
+      static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16);
 
-      static const uint16 BF_XROUT_SIZE         = N_XBLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_XIOUT_SIZE         = N_XBLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_YROUT_SIZE         = N_XBLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_YIOUT_SIZE         = N_XBLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_XROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_XIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_YROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_YIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
 
-      static const uint16 BST_POWER_SIZE        = N_BEAMLETS * N_POL * sizeof(uint32); // TODO: should this be N_XBLETS too?
+      static const uint16 BST_POWER_SIZE        = N_LOCAL_BEAMLETS * N_POL * sizeof(uint32);
 
       static const uint16 SST_POWER_SIZE        = N_SUBBANDS * N_POL * sizeof(uint32);
 
@@ -276,14 +278,14 @@ namespace LOFAR {
 
       static const uint16 CR_CONTROL_SIZE       = 1;
 
-      static const uint16 XST_STATS_SIZE     = (N_GLOBAL_XLETS + N_XLETS) * XLET_SIZE;
+      static const uint16 XST_STATS_SIZE        = (N_LOCAL_XLETS + N_REMOTE_XLETS) * XLET_SIZE;
 
       /**
        * The CDO register will be extended to 
        * allow setting the UDP/IP header and some
        * settings to set interleaving of beamlets.
        */
-      static const uint16 CDO_SETTINGS_SIZE  = 16;
+      static const uint16 CDO_SETTINGS_SIZE     = 16;
       static const uint16 CDO_HEADER_SIZE    = 32;
 
       static const uint16 BS_NOF_SAMPLES_PER_SYNC_SIZE     = 4;

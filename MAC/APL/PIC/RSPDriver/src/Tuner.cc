@@ -182,7 +182,7 @@ GCFEvent::TResult Tuner::initialize(GCFEvent& e, GCFPortInterface& port)
 	    ss.rcumask.set(i); // all rcu's
 	  }
 
-	ss.subbands().resize(1, MEPHeader::N_XBLETS);
+	ss.subbands().resize(1, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
 	ss.subbands() = 0;
 
 	if (!m_server.send(ss))
@@ -278,7 +278,7 @@ GCFEvent::TResult Tuner::tunein(GCFEvent& e, GCFPortInterface& port)
 
 	ss.rcumask = m_device_set;
 
-	ss.subbands().resize(1, MEPHeader::N_XBLETS);
+	ss.subbands().resize(1, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
 	ss.subbands() = 0;
 
 	int s = 0;

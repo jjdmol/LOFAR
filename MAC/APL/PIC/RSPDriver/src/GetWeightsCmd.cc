@@ -61,9 +61,9 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
 		       m_event->rcumask.count(),
 		       MEPHeader::N_BEAMLETS);
 
-  // copy from offset N_XLETS in the cache
-  Range src_range = Range(MEPHeader::N_XLETS,
-			  MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+  // copy from offset N_LOCAL_XLETS in the cache
+  Range src_range = Range(MEPHeader::N_LOCAL_XLETS,
+			  MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
 
   int result_rcu = 0;
   for (int cache_rcu = 0;
