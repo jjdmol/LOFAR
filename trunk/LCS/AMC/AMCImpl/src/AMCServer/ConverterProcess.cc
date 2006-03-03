@@ -58,19 +58,19 @@ namespace LOFAR
       // While the client is connected, handle incoming requests.
       while(itsRecvConn.isConnected()) {
           
+        ConverterCommand cmd;
+        vector<SkyCoord> skyCoord;
+        vector<EarthCoord> earthCoord;
+        vector<TimeCoord> timeCoord;
+        
+        // Receive conversion request. If the receive fails, the client
+        // probably hung up.
+        if (!recvRequest(cmd, skyCoord, earthCoord, timeCoord)) break;
+        
         // ConverterImpl may throw a ConverterError; we don't want to let this
         // exception escape.
         try {
-          
-          ConverterCommand cmd;
-          vector<SkyCoord> skyCoord;
-          vector<EarthCoord> earthCoord;
-          vector<TimeCoord> timeCoord;
-          
-          // Receive conversion request. If the receive fails, the client
-          // probably hung up.
-          if (!recvRequest(cmd, skyCoord, earthCoord, timeCoord)) break;
-          
+
           // Process the conversion request, invoking the right conversion
           // method.
           switch(cmd.get()) {
@@ -95,15 +95,14 @@ namespace LOFAR
                           << "Received invalid converter command (" 
                           << cmd << ")");
           }
-          
-          // Send the conversion result to the client. If the send fails, the
-          // client probably hung up.
-          if (!sendResult(skyCoord)) break;
-
         } 
         catch (ConverterError& e) {
           LOG_DEBUG_STR(e);
         }   
+
+        // Send the conversion result to the client. If the send fails, the
+        // client probably hung up.
+        if (!sendResult(skyCoord)) break;
       }
     }
     
