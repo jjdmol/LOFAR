@@ -1,10 +1,15 @@
-check_PROGRAMS			= tConverter
+check_PROGRAMS			= tConverter tConverterStress
 
 tConverter_SOURCES		= tConverter.cc
 tConverter_LDADD		= ../src/libamcimpl.la
 tConverter_DEPENDENCIES		= ../src/libamcimpl.la $(LOFAR_DEPEND)
 
-TESTS				= tConverter.sh
+tConverterStress_SOURCES	= tConverterStress.cc
+tConverterStress_LDADD		= ../src/libamcimpl.la
+tConverterStress_DEPENDENCIES	= ../src/libamcimpl.la $(LOFAR_DEPEND)
+
+TESTS				= tConverter.sh \
+				  tConverterStress.sh 
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  LOFARROOT=$(LOFARROOT) \
@@ -12,6 +17,7 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 
 EXTRA_DIST			= $(TESTS) \
 				  tConverter.run \
+				  tConverterStress.run \
 				  tConverter.stdout
 
 include $(top_srcdir)/Makefile.common
