@@ -77,17 +77,20 @@ int main(int /*argc*/, const char* const argv[])
     try {
       LOG_INFO_STR("Client #" << i);
       auto_ptr<Converter> conv(createConverter());
-      SkyCoord result = conv->j2000ToAzel (sky, earth, time);
+      conv->j2000ToAzel (sky, earth, time);
     }
     catch (Exception& e) {
-      LOG_ERROR_STR(e);
+      LOG_WARN_STR(e);
       fails++;
     }
   }
 
-  if (fails != 0) cout << fails << " failures in " << runs << " runs." << endl;
-  else cout << "All " << runs << " runs succeeded." << endl;
+  if (fails != 0) {
+    LOG_ERROR_STR(fails << " failures in " << runs << " runs.");
+    return 1;
+  } else {
+    LOG_INFO_STR("All " << runs << " runs succeeded.");
+    return 0;
+  }
 
-  return 1;
-  
 }
