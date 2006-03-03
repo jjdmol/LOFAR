@@ -172,6 +172,9 @@ public class MainFrame extends javax.swing.JFrame {
             getContentPane().remove(itsActivePanel);
             itsActivePanel.invalidate();
         }
+        if (ppi == null || ppi.panel == null ) {
+            return;
+        }
         itsActivePanel = ppi.panel;
         getContentPane().add(itsActivePanel, java.awt.BorderLayout.CENTER);
 
