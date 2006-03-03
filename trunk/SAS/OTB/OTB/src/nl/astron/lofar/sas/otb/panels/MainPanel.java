@@ -8,9 +8,10 @@ package nl.astron.lofar.sas.otb.panels;
 import java.io.File;
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.*;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.*;
 import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
-import nl.astron.lofar.sas.otbcomponents.TableModel;
+import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 import org.apache.log4j.Logger;
 
 /**
@@ -27,8 +28,6 @@ public class MainPanel extends javax.swing.JPanel
     public MainPanel() {
         initComponents();
         initializeButtons();
-        //fill initial (PIC) table
-        //fillMainTable("PIC");
     }
         
     /** 
@@ -57,7 +56,9 @@ public class MainPanel extends javax.swing.JPanel
         } else if (itsTabFocus.equals("Query Results")) {
         
         }
-        buttonPanel1.addButton("View");
+        if (!itsTabFocus.equals("Components")) {
+            buttonPanel1.addButton("View");
+        }
         buttonPanel1.addButton("Quit");
         buttonsInitialized=true;
     }
@@ -188,6 +189,9 @@ public class MainPanel extends javax.swing.JPanel
      */
     private void buttonPanelAction(String aButton) {
         logger.debug("Button pressed: "+aButton+ "  ActiveTab: " + itsTabFocus);
+        int treeID=-1;
+        int aRow=-1;
+        
         if (itsTabFocus.equals("PIC")) {
             if (aButton.equals("Query Panel")) {
             } else if (aButton.equals("New")) {
@@ -195,14 +199,30 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("Delete")) {
             } else if (aButton.equals("Duplicate")) {
             } else if (aButton.equals("View")) {
-            } else if (aButton.equals("Quit")) {
+                aRow = PICPanel.getSelectedRow();
+                if ( aRow != -1) {
+                    treeID = ((Integer)PICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
+                    if (treeID>-1) {
+                        viewInfo(treeID);
+                    } else {
+                        logger.debug("No row selected");
+                    }
+                }
             }
         } else if (itsTabFocus.equals("VIC")) {
             if (aButton.equals("Query Panel")) {
             } else if (aButton.equals("Delete")) {
             } else if (aButton.equals("Duplicate")) {
             } else if (aButton.equals("View")) {
-            } else if (aButton.equals("Quit")) {
+                aRow = VICPanel.getSelectedRow();
+                if ( aRow != -1) {
+                    treeID = ((Integer)VICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
+                    if (treeID>-1) {
+                        viewInfo(treeID);
+                    } else {
+                        logger.debug("No row selected");
+                    }
+                }
             }
         } else if (itsTabFocus.equals("Templates")) {
             if (aButton.equals("Query Panel")) {
@@ -224,7 +244,15 @@ public class MainPanel extends javax.swing.JPanel
                 itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
                 itsMainFrame.showPanel(TemplateConstructionPanel.getFriendlyNameStatic());
             } else if (aButton.equals("View")) {
-            } else if (aButton.equals("Quit")) {
+                aRow = TemplatesPanel.getSelectedRow();
+                if ( aRow != -1) {
+                    treeID = ((Integer)TemplatesPanel.getTableModel().getValueAt(aRow, 0)).intValue();
+                    if (treeID>-1) {
+                        viewInfo(treeID);
+                    } else {
+                        logger.debug("No row selected");
+                    }
+                }
             }
         } else if (itsTabFocus.equals("Components")) {
             if (aButton.equals("Query Panel")) {
@@ -233,8 +261,6 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("Modify")) {
                 itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
                 itsMainFrame.showPanel(ComponentMaintenancePanel.getFriendlyNameStatic());
-            } else if (aButton.equals("View")) {
-            } else if (aButton.equals("Quit")) {
             }
         } else if (itsTabFocus.equals("Query Results")) {
         
@@ -243,7 +269,40 @@ public class MainPanel extends javax.swing.JPanel
         }
     }
     
-    /** Launch LoadFileDialog to get a file to wrok with.
+    /** Launch TreeInfoDialog, and if changes made save them to database
+     *
+     * @param  aTreeID  The ID of the chosen tree.
+     */
+    private void viewInfo(int aTreeID) {
+        logger.debug("viewInfo for treeID: " + aTreeID);
+        //get the selected tree from the database
+        
+        try {
+            jOTDBtree aNewTree;
+            jOTDBtree aSelectedTree=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeInfo(aTreeID, false);
+            
+            if (aSelectedTree != null) {
+                // show treeInfo dialog
+                treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
+                treeInfoDialog.setLocationRelativeTo(this);
+                treeInfoDialog.setVisible(true);
+                aNewTree = treeInfoDialog.getTree();
+                
+                if (aNewTree.equals(aSelectedTree)) {
+                    logger.debug("Trees are equal");
+                } else {
+                    logger.debug("Trees are different");
+                }
+                
+            } else {
+                logger.debug("no tree found for this ID");
+            }
+        } catch (Exception e) {
+            logger.debug("Error in viewInfo: " + e);
+        }
+    }
+    
+    /** Launch LoadFileDialog to get a file to work with.
      *
      * @param   aType   PIC-tree or VIC-component
      *
@@ -254,7 +313,7 @@ public class MainPanel extends javax.swing.JPanel
         String aDescription="";
         
         // show login dialog
-        LoadFileDialog loadFileDialog = new LoadFileDialog(itsMainFrame,true,aType);
+        loadFileDialog = new LoadFileDialog(itsMainFrame,true,aType);
         loadFileDialog.setLocationRelativeTo(this);
         loadFileDialog.setVisible(true);
         if(loadFileDialog.isOk()) {
@@ -271,34 +330,13 @@ public class MainPanel extends javax.swing.JPanel
         }
         return aFile;        
     }
+   
     
-    private boolean fillMainTable(String aType) {
-        logger.debug("fillTreeTable for "+aType);
-
-        Vector treeList=new Vector();
-
-        try {            
-            treeList=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeList((short)0, (short)0);
-            logger.debug("returned treeList has size: "+treeList.size());
-            if (treeList.size() <= 0) {
-                logger.debug("Error:" + itsMainFrame.getOTDBrmi().getRemoteOTDB().errorMsg());
-                return false;
-            } else {
-                logger.debug("Collected tree list");
-                java.util.Collections.sort(treeList);
-            }
-        } 
-        catch (Exception e)
-	{
-	 logger.debug("getTreeList via RMI and JNI failed: " + e);
-	}        
-        
-       return true;
-    }
-    
-    private MainFrame itsMainFrame;
-    private String    itsTabFocus="PIC";
-    private boolean   buttonsInitialized=false;
+    private MainFrame      itsMainFrame;
+    private String         itsTabFocus="PIC";
+    private boolean        buttonsInitialized=false;
+    private LoadFileDialog loadFileDialog;
+    private TreeInfoDialog treeInfoDialog;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.TablePanel ComponentsPanel;

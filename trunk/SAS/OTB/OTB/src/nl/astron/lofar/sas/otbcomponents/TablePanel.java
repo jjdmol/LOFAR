@@ -9,7 +9,7 @@ import javax.swing.table.AbstractTableModel;
 
 /**
  *
- * @author  blaakmeer
+ * @author  blaakmeer/coolen
  */
 public class TablePanel extends javax.swing.JPanel {
     
@@ -19,8 +19,28 @@ public class TablePanel extends javax.swing.JPanel {
 
     }
     
+    /** Set the Model for this Table
+     *
+     * @param   tableModel    The Model to be used
+     */
     public void setTableModel(AbstractTableModel tableModel) {
         jTable1.setModel(tableModel);
+    }
+    
+    /** Return the model from this table
+     *
+     * @return The abstract TableModel
+     */
+    public AbstractTableModel getTableModel() {
+        return (AbstractTableModel)jTable1.getModel();
+    }
+    
+    /** get the selected Row
+     *
+     * @return the seledcted Row
+     */
+    public int getSelectedRow() {
+        return jTable1.getSelectedRow();
     }
     
     /** This method is called from within the constructor to

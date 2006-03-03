@@ -48,7 +48,7 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
             logger.debug("Treelist downloaded. Size: "+aTreeList.size());
            
             for (int k=0; k< aTreeList.size();k++) {
-                jOTDBtree tInfo = (jOTDBtree)aTreeList.elementAt(1);
+                jOTDBtree tInfo = (jOTDBtree)aTreeList.elementAt(k);
                 if (tInfo.treeID()==0) {
                     logger.debug("No such tree found!");
                 } else {
