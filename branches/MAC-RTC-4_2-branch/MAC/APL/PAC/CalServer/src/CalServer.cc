@@ -348,7 +348,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	    && !m_accs.getBack().isLocked()
 	    && m_accs.getBack().isValid())
 	{
-	  LOG_INFO("swapping buffers");
+	  LOG_DEBUG("swapping buffers");
 
 	  // start new calibration
 	  m_accs.swap();

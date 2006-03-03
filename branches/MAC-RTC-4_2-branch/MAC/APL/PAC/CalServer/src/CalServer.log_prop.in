@@ -27,11 +27,11 @@ log4cplus.appender.FILE.logToStdErr=true
 
 log4cplus.appender.DUMP=log4cplus::NullAppender
 
-#log4cplus.logger.TRC=DUMP
+log4cplus.logger.TRC=DUMP
+log4cplus.additivity.TRC=FALSE
 #log4cplus.additivity.TRC=FALSE
+#log4cplus.logger.TRC=TRACE, FILE
 
 log4cplus.additivity.MAC=FALSE
-log4cplus.logger.MAC=DEBUG, FILE
+log4cplus.logger.MAC=INFO, STDOUT
 
-log4cplus.additivity.TRC=FALSE
-log4cplus.logger.TRC=TRACE, FILE

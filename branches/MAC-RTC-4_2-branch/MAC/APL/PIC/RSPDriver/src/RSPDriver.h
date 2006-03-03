@@ -25,10 +25,6 @@
 #ifndef RSPDRIVERTASK_H_
 #define RSPDRIVERTASK_H_
 
-#include <lofar_config.h>
-
-#undef HAVE_SYS_TIMEPPS_H
-
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 

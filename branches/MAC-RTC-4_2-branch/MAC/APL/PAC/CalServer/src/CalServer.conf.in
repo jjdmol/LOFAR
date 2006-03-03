@@ -13,7 +13,7 @@ mac.top.CalServer.rspdriver.remoteservice=RSPDriver:acceptor_v2
 # Define dimensions of the ACC array
 #
 # limit to 50 for testing
-CalServer.N_SUBBANDS=10
+CalServer.N_SUBBANDS=512
 # ITS-spec: CalServer.N_SUBBANDS=512
 #
 # FTS-1 spec = 8 antennas (16 signal paths)
@@ -41,7 +41,7 @@ CalServer.ACCTestFile=ACC.txt
 #
 # Write ACC's to file for debugging?
 #
-CalServer.WriteACCToFile=0
+CalServer.WriteACCToFile=1
 
 #
 # Disable invokation of calibration routine?

@@ -176,7 +176,7 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 	// start collecting the next ACC if needed
 	//
 	if (m_accs.getBack().writeLock()) {
-	  LOG_INFO("collecting next batch of ACMs");
+	  LOG_DEBUG("collecting next batch of ACMs");
 
 	  if (GET_CONFIG("CalServer.ACCTestEnable", i)) {
 	    const char* testfilename = GET_CONFIG_STRING("CalServer.ACCTestFile");
@@ -367,7 +367,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	  if (m_handle == upd.handle) {
 	    if (SUCCESS == upd.status) {
 
-	      LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
+	      LOG_INFO_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
 	      LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
 
 	      if (upd.timestamp != m_starttime + (long)m_update_subband + (long)1) {
