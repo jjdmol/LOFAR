@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author  blaakmeer
+ * @author  blaakmeer/coolen
  */
 public class MainPanel extends javax.swing.JPanel 
                        implements IPluginPanel {

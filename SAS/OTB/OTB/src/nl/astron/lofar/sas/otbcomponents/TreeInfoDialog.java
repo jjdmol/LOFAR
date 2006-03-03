@@ -48,13 +48,21 @@ public class TreeInfoDialog extends javax.swing.JDialog {
      */
     public jOTDBtree getTree() {
 
+        try {
+            itsTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
+            itsTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
+//            itsTree.description = descriptionInput.getText();
+        } catch ( Exception e) {
+            logger.debug("Error getting converters: " + e);
+        }
         return this.itsTree;
     }
     
     
     private void initFocus() {
         // prepare a active/obsolete only combobox for special case state changes
-        DefaultComboBoxModel aModel = new DefaultComboBoxModel();
+        DefaultComboBoxModel aModel = (DefaultComboBoxModel)stateInput.getModel();
+        aModel.removeAllElements();
         aModel.addElement("active");
         aModel.addElement("obsolete");
         
@@ -169,7 +177,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("LOFAR Load File");
+        setTitle("LOFAR View TreeInfo");
         setAlwaysOnTop(true);
         setModal(true);
         setName("loadFileDialog");
