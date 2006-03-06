@@ -380,7 +380,7 @@ docxx:
 	@echo "INPUT                   = $(DOCPACKAGES)" >> doxygen.cfg
 	@echo "IMAGE_PATH              = $(LOFARDIR)" >> doxygen.cfg
 	@echo "INPUT_FILTER            = $(LOFARDIR)/autoconf_share/slash2spanning.pl" >> doxygen.cfg
-	@echo "TAGFILES                = `basename $(LOFARDIR)`.tag" >> doxygen.cfg
+	@echo "TAGFILES                = $(DOCDIR)/doxygen.tag" >> doxygen.cfg
 	@$(MAKE) doc -C doc/doxygen
 	@$(DOXYGEN) doxygen.cfg
 	@$(RM) doxygen.cfg
