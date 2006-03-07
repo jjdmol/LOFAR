@@ -23,5 +23,5 @@ ln -s $cdir/demo.MEP /tmp/test.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
 time prepareBBD >> test.log
 echo "  Starting solve ..."
-time tBBS3 tBBS3.in 3 >& test.out
+time $LOFAR_CHECKTOOL tBBS3 tBBS3.in 3 >& test.out
 

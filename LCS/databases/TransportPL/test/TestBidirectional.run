@@ -16,7 +16,7 @@ _EOF_
 if [ "$1" != "" ]; then
   exit 0;
 fi
-./TestBidirectional
+$LOFAR_CHECKTOOL ./TestBidirectional
 STATUS=$?
 if [ $STATUS != 0 ]; then
   exit $STATUS

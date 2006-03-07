@@ -16,7 +16,7 @@ _EOF_
 if [ "$1" != "" ]; then
   exit 0;
 fi
-./ExamplePL
+$LOFAR_CHECKTOOL ./ExamplePL
 STATUS=$?
 if [ $STATUS != 0 ]; then
   exit $STATUS
@@ -28,4 +28,4 @@ psql -h dop50.astron.nl -U postgres test << _EOF_ > ExamplePL_tmp.psql_out 2>&1
 \q
 _EOF_
 
-./ExamplePL 2
+$LOFAR_CHECKTOOL ./ExamplePL 2

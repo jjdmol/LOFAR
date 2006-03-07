@@ -58,7 +58,7 @@ then
 fi
 
 # Start the test program.
-$EXEC ./tConverterStress
+$EXEC $LOFAR_CHECKTOOL ./tConverterStress
 STATUS=$?
 
 # If something went wrong, secure the log file(s)
