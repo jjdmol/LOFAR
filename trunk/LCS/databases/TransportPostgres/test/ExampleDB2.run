@@ -14,7 +14,7 @@ _EOF_
 
 # Run the test program if no first argument is given.
 if [ "$1" = "" ]; then
-  ./ExampleDB2
+  $LOFAR_CHECKTOOL ./ExampleDB2
   STATUS=$?
   if [ $STATUS != 0 ]; then
     exit $STATUS

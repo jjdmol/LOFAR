@@ -352,7 +352,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 # Rules for building documentation using doxygen or doc++.
 # Default output directory is docxxhtml.
 ifeq "$(DOCDIR)"  "" 
-   export DOCDIR := /data/LOFAR/installed/docxxhtml
+   export DOCDIR := /data/LOFAR/installed/weekly/docxxhtml
 endif
 
 ifeq "$(DOXYGEN)" ""

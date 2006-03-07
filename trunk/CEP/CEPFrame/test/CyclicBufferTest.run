@@ -10,6 +10,6 @@ if [ `uname -s | tr '[A-Z]' '[a-z]'` = "linux" ] ;  then
   fi
 fi
 
-./CyclicBufferTest -dGlobal=0
+$LOFAR_CHECKTOOL ./CyclicBufferTest -dGlobal=0
 STATUS=$?
 exit $STATUS

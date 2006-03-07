@@ -5,13 +5,13 @@ MAXRUNTIME=120
 rm masterDir -rf
 mkdir masterDir
 
-./tBDBReplication -h masterDir -o 8020 &> master.log &
+$LOFAR_CHECKTOOL ./tBDBReplication -h masterDir -o 8020 &> master.log &
 MASTERPID=$!
 echo "master has pid $MASTERPID" >&2
 
 rm slave1Dir -rf
 mkdir slave1Dir
-./tBDBReplication -h slave1Dir -m 8020 -o 8021 &> slave1.log &
+$LOFAR_CHECKTOOL ./tBDBReplication -h slave1Dir -m 8020 -o 8021 &> slave1.log &
 SLAVEPID=$!
 echo "slave has pid $SLAVEPID" >&2
 

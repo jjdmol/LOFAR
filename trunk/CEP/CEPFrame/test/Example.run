@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./Example -dGlobal=0
+$LOFAR_CHECKTOOL ./Example -dGlobal=0
 STATUS=$?
 if [ $STATUS ]
 then

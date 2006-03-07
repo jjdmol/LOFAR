@@ -56,7 +56,7 @@ then
 fi
 
 # Start the test program.
-$EXEC ./tConverter
+$EXEC $LOFAR_CHECKTOOL ./tConverter
 STATUS=$?
 
 # If something went wrong, secure the log file(s)
