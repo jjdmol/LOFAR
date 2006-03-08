@@ -178,6 +178,52 @@ treeIDType TreeMaintenance::buildTemplateTree (nodeIDType	topNodeID,
 }
 
 //
+// newTemplatetree()
+//
+// Create a new otdbtree entry in the database for a template tree.
+// The treeID of the new entry is returned. The tree can be used for adding
+// components to it with the 'template construction screen' of the OTB.
+treeIDType TreeMaintenance::newTemplateTree()
+{
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (0);
+	}
+
+	work	xAction(*(itsConn->getConn()), "newTemplateTree");
+	try {
+		// Create a new tree entry.
+		result res = xAction.exec(
+			formatString("SELECT newTree(%d,%d,%d,%d::int2,%d::int2,%d::int2,%d)",
+							itsConn->getAuthToken(),
+							0, 						// original tree
+							0, 						// MomID tree
+							TCexperimental,			// classification
+							TTtemplate,
+							TSidle,
+							0));					// no campaign
+							
+		// Analyse result.
+		treeIDType		newTreeID;
+		res[0]["newtree"].to(newTreeID);
+		if (newTreeID == 0) {
+			itsError = "Unable to create a new Template tree";
+			LOG_ERROR(itsError);
+			return (0);
+		}
+		xAction.commit();
+		return (newTreeID);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during newTemplateTree:") + ex.what();
+		LOG_FATAL(itsError);
+	}
+
+	return (0);
+}
+
+//
 // copyTemplateTree(treeID) : treeID
 //
 // Make a copy of an existing template tree.
@@ -530,6 +576,49 @@ nodeIDType	TreeMaintenance::dupNode(treeIDType		aTreeID,
 	}
 	catch (Exception& ex) {
 		itsError = string("Exception during duplicating a Template node") +
+				 + ex.what();
+		LOG_FATAL(itsError);
+		return (0);
+	}
+
+	return (0);
+}
+
+// Adds the given component under the parent of the template tree.
+// Checks if this is allowed in the Component definition.
+nodeIDType	TreeMaintenance::addComponent (nodeIDType	compID,
+										   treeIDType	treeID,
+										   nodeIDType	parentID)
+{
+	// Check Connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (0);
+	}
+
+	work	xAction(*(itsConn->getConn()), "addComponentToVT");
+	try {
+		// execute the insert action
+		result res = xAction.exec(
+					 formatString("SELECT addComponentToVT(%d,%d,%d,%d)",
+						itsConn->getAuthToken(),
+						compID,
+						treeID,
+						parentID));
+
+		// Analyse result
+		nodeIDType		nodeID;
+		res[0]["addcomponenttovt"].to(nodeID);
+		if (nodeID == 0) {
+			itsError = "Unable to add the component";
+			return (0);
+		}
+
+		xAction.commit();
+		return (nodeID);
+	}
+	catch (Exception& ex) {
+		itsError = string("Exception during adding a component to a VT:") +
 				 + ex.what();
 		LOG_FATAL(itsError);
 		return (0);

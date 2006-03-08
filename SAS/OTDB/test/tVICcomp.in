@@ -20,7 +20,7 @@
 # -- Station Operations --
 #      name        vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  "SO1"        1.0.0  test  'node constraint'  "Station Operations"
+node  "SO"        1.0.0  test  'node constraint'  "Station Operations"
 
 #--------------------------------------------------------------------------------------------------------
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
@@ -40,40 +40,16 @@ par  prepareTime             I    text   -      10    0    +32                  
 par  startTime               I    text   -      10    0    +50                     -        'description'
 par  stopTime                I    text   -      10    0    +3050                    -        'description'
 
-#########################################################################################################
-# -- Station Operations --
-#      name        vers   qual  constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  "SO2"        1.0.0  test  'node constraint'  "Station Operations"
-
-#--------------------------------------------------------------------------------------------------------
-#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  logicalDeviceType       I    text   -      10    0    STATIONOPERATIONS       -        'description'
-par  parentHost              I    text   -      10    0    lofar30                 -        'description'
-par  parentPort              I    int    -      10    0    0                       -        'description'
-par  parentTask              I    text   -      10    0    AO1                     -        'description'
-par  remoteSystem            I    text   -      10    0    STSLCU2                 -        'description'
-par  startDaemonHost         I    text   -      10    0    lofar29                 -        'description'
-par  startDaemonPort         I    text   -      10    0    27011                   -        'description'
-par  startDaemonTask         I    text   -      10    0    PAC_StationStartDaemon  -        'description'
-par  propertysetBaseName     I    text   -      10    0    PAC_SO2                 -        'description'
-par  propertysetDetailsType  I    text   -      10    0    TAplPacSO               -        'description'
-par  claimTime               I    text   -      10    0    +12                     -        'description'
-par  prepareTime             I    text   -      10    0    +32                     -        'description'
-par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +3050                    -        'description'
 
 #########################################################################################################
 # -- Array Operations --
 #      name        vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  "AO1"        1.0.0  test  'node constraint'  "Array Operations"
+node  "AO"        1.0.0  test  'node constraint'  "Array Operations"
 
 #     name          vers    qual    instances
 #------------------------------------------------------------------------------
-uses  'SO1'         1.0.0   test    0+
-uses  'SO2'         1.0.0   test    0+
+uses  'SO'         1.0.0   test    0+
 
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -98,7 +74,7 @@ par  samplingFrequency       I    int    Hz     10    0    160000000            
 # -- Station Receptor Group --
 #      name        vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  "SRG1"       1.0.0  test  'node constraint'  "Station Receptor Group"
+node  "SRG"       1.0.0  test  'node constraint'  "Station Receptor Group"
 
 #--------------------------------------------------------------------------------------------------------
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
@@ -119,39 +95,14 @@ par  startTime               I    text   -      10    0    +50                  
 par  stopTime                I    text   -      10    0    +3050                    -       'description'
 
 #########################################################################################################
-# -- Station Receptor Group --
-#      name        vers   qual  constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  "SRG2"       1.0.0  test  'node constraint'  "Station Receptor Group"
-
-#--------------------------------------------------------------------------------------------------------
-#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  logicalDeviceType       I    text   -      10    0    STATIONRECEPTORGROUP    -        'description'
-par  parentHost              I    text   -      10    0    lofar30                 -        'description'
-par  parentPort              I    int    -      10    0    0                       -        'description'
-par  parentTask              I    text   -      10    0    ARG1                    -        'description'
-par  remoteSystem            I    text   -      10    0    STSLCU2                 -        'description'
-par  startDaemonHost         I    text   -      10    0    lofar29                 -        'description'
-par  startDaemonPort         I    text   -      10    0    27011                   -        'description'
-par  startDaemonTask         I    text   -      10    0    PAC_StationStartDaemon  -        'description'
-par  propertysetBaseName     I    text   -      10    0    PAC_SRG2                -        'description'
-par  propertysetDetailsType  I    text   -      10    0    TLcuPacSRG              -        'description'
-par  claimTime               I    text   -      10    0    +13                     -        'description'
-par  prepareTime             I    text   -      10    0    +33                     -        'description'
-par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +3050                    -       'description'
-
-#########################################################################################################
 # -- Array Receptor Group --
 #      name        vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  "ARG1"       1.0.0  test  'node constraint'  "Array Receptor Group"
+node  "ARG"       1.0.0  test  'node constraint'  "Array Receptor Group"
 
 #     name          vers    qual    instances
 #------------------------------------------------------------------------------
-uses  'SRG1'        1.0.0   test    0+
-uses  'SRG2'        1.0.0   test    0+
+uses  'SRG'        1.0.0   test    0+
 
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -183,7 +134,7 @@ par  srgConfiguration        I    text   -      10    0    'SA1'                
 # -- Virtual Telescope --
 #      name        vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  "VT1"        1.0.0  test  'node constraint'  "Virtual Telescope"
+node  "VT"        1.0.0  test  'node constraint'  "Virtual Telescope"
 
 #--------------------------------------------------------------------------------------------------------
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
@@ -205,40 +156,14 @@ par  stopTime                I    text   -      10    0    +3050                
 par  subarrayName            I    text   -      10    0    SRG1                    -        'description'
 
 #########################################################################################################
-# -- Virtual Telescope 2 --
-#      name        vers   qual  constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  "VT2"        1.0.0  test  'node constraint'  "Virtual Telescope 2"
-
-#--------------------------------------------------------------------------------------------------------
-#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  logicalDeviceType       I    text   -      10    0    VIRTUALTELESCOPE        -        'description'
-par  parentHost              I    text   -      10    0    lofar30                 -        'description'
-par  parentPort              I    int    -      10    0    0                       -        'description'
-par  parentTask              I    text   -      10    0    VI1                     -        'description'
-par  remoteSystem            I    text   -      10    0    STSLCU2                 -        'description'
-par  startDaemonHost         I    text   -      10    0    lofar29                 -        'description'
-par  startDaemonPort         I    text   -      10    0    27011                   -        'description'
-par  startDaemonTask         I    text   -      10    0    PAC_StationStartDaemon  -        'description'
-par  propertysetBaseName     I    text   -      10    0    PAC_VT2                 -        'description'
-par  propertysetDetailsType  I    text   -      10    0    TLcuPacVT               -        'description'
-par  claimTime               I    text   -      10    0    +15                     -        'description'
-par  prepareTime             I    text   -      10    0    +35                     -        'description'
-par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +3050                    -        'description'
-par  subarrayName            I    text   -      10    0    SRG2                    -        'description'
-
-#########################################################################################################
 # -- Virtual Instrument --
 #      name        vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  "VI1"        1.0.0  test  'node constraint'  "Virtual Instrument"
+node  "VI"        1.0.0  test  'node constraint'  "Virtual Instrument"
 
 #     name          vers    qual    instances
 #------------------------------------------------------------------------------
-uses  'VT1'         1.0.0   test    0+
-uses  'VT2'         1.0.0   test    0+
+uses  'VT'         1.0.0   test    0+
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -283,13 +208,13 @@ par  measurementType         I    text   -      10    0    'Transient'          
 # -- Observation --
 #      name          vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  "Observation1" 1.0.0  test  'node constraint'  "Observation"
+node  "Observation" 1.0.0  test  'node constraint'  "Observation"
 
 #     name          vers    qual    instances
 #------------------------------------------------------------------------------
-uses  'AO1'         1.0.0   test    0+
-uses  'ARG1'        1.0.0   test    0+
-uses  'VI1'         1.0.0   test    0+
+uses  'AO'         1.0.0   test    0+
+uses  'ARG'        1.0.0   test    0+
+uses  'VI'         1.0.0   test    0+
 uses  'VB'          1.0.0   test    0+
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.

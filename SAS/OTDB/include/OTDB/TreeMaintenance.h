@@ -70,33 +70,45 @@ public:
 	nodeIDType	loadComponentFile (const string&	filename);
 
 	// Find the top-components in the components table.
-	vector<VICnodeDef> getTopComponentList (const string&	name = "%");
+	vector<VICnodeDef>	getComponentList (const string&	name = "%", bool topOnly = false);
 
 	// Get the node definition of a VC node
-	VICnodeDef	getNodeDef	(nodeIDType		aNodeID);
+	VICnodeDef			getComponentNode  (nodeIDType	aNodeID);
+	
+	// Get parameterlist of the component
+	vector<OTDBparam>	getComponentParams(nodeIDType	aNodeID);
+
+	// Save new node or update the limits and description fields of the node.
+	bool	saveComponentNode	(VICnodeDef&	aNode);
+
+	// Save the parameter definition
+	bool	saveComponentParam	(OTDBparam&		aParam);
+
 
 	//# --- VIC maintenance : Templates ---
 	// From a component tree a template tree can be constructed. In a template
 	// tree only the structure of the tree is created, there is no replication
 	// of nodes on the same level.
 	// Returns 0 on failure, otherwise the ID of the new tree is returned.
+	// ABOUT TO BECOME OBSOLETE WHEN OTB IS READY
 	treeIDType buildTemplateTree (nodeIDType	topNodeID,
 								  classifType	aClassif);
+
+	// Create a new OTDBtree record for an Template tree in the database and return its
+	// treeID.
+	treeIDType newTemplateTree();
 
 	// Make a copy of an existing template tree.
 	// Returns 0 on failure, otherwise the ID of the new tree is returned.
 	treeIDType	copyTemplateTree(treeIDType		aTreeID);
 
-	// Get a single node from the VIC template tree
+	// Get a single node from any tree
 	OTDBnode getNode (treeIDType	aTreeID,
 					  nodeIDType	aNodeID);
 
 	// Get the parameter definition of a node
 	OTDBparam	getParam	(treeIDType		aTreeID,
 							 nodeIDType		aParamID);
-
-	// Save the parameter definition
-	bool		saveParam	(OTDBparam&		aParam);
 
 	// Get a number of levels of children.
 	vector<OTDBnode> getItemList (treeIDType	aTreeID,
@@ -111,6 +123,12 @@ public:
 	nodeIDType	dupNode (treeIDType		aTreeID,
 						 nodeIDType		orgNodeID,
 					 	 int16			newIndex);
+
+	// Adds the given VIC Component under the given parent of a 
+	// template tree.
+	nodeIDType	addComponent (nodeIDType	compID,
+							  treeIDType	treeID,
+							  nodeIDType	parentID);
 
 	// Updates the (vector of) OTDBnodes to the database.
 	bool	saveNode    (OTDBnode&			aNode);
@@ -176,8 +194,7 @@ private:
 	TreeMaintenance(const TreeMaintenance&	that);
 	TreeMaintenance& operator=(const TreeMaintenance& that);
 
-	// Helper routines for loading the component file
-	bool		saveNodeDef	(VICnodeDef&	aNode);
+	// Helper routine for loading the component file
 	VICnodeDef	getNodeDef	(const string&	aNameFragment,
 							 uint32			aVersion = 0,
 							 classifType	aClassification = 0);

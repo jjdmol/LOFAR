@@ -47,7 +47,7 @@ CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(40), INT4,
 	BEGIN
 		-- check authorisation(authToken, tree, func, parameter)
 		vIsAuth := FALSE;
-		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
+		SELECT isAuthorized(vAuthToken, 0, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
 			RAISE EXCEPTION \'Not authorized\';
