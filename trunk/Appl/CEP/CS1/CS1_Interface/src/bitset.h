@@ -100,15 +100,12 @@
 #define _LOFAR_BITSET_WORDS(__n) \
  ((__n) < 1 ? 0 : ((__n) + _LOFAR_BITSET_BITS_PER_WORD - 1)/_LOFAR_BITSET_BITS_PER_WORD)
 
-namespace std {
-  extern unsigned char 	_S_bit_count[256];
-  extern unsigned char 	_S_first_one[256];
-}
-
 namespace LOFAR
 {
   using namespace std;
 
+  extern const unsigned char _S_bit_count[256];
+  extern const unsigned char _S_first_one[256];
   /**
    *  @if maint
    *  Base class, general case.  It is a class inveriant that _Nw will be
@@ -237,7 +234,7 @@ namespace LOFAR
 
 	while ( __byte_ptr < __end_ptr )
 	  {
-	    __result += std::_S_bit_count[*__byte_ptr];
+	    __result += _S_bit_count[*__byte_ptr];
 	    __byte_ptr++;
 	  }
 	return __result;
@@ -333,7 +330,7 @@ namespace LOFAR
 		    = static_cast<unsigned char>(__thisword & (~(unsigned char)0));
 		  if (__this_byte)
 		    return __i*_LOFAR_BITSET_BITS_PER_WORD + __j*CHAR_BIT +
-		      std::_S_first_one[__this_byte];
+		      _S_first_one[__this_byte];
 
 		  __thisword >>= CHAR_BIT;
 		}
@@ -372,7 +369,7 @@ namespace LOFAR
 		= static_cast<unsigned char>(__thisword & (~(unsigned char)0));
 	      if ( __this_byte )
 		return __i*_LOFAR_BITSET_BITS_PER_WORD + __j*CHAR_BIT +
-		  std::_S_first_one[__this_byte];
+		  _S_first_one[__this_byte];
 
 	      __thisword >>= CHAR_BIT;
 	    }
@@ -392,7 +389,7 @@ namespace LOFAR
 		    = static_cast<unsigned char>(__thisword & (~(unsigned char)0));
 		  if ( __this_byte )
 		    return __i*_LOFAR_BITSET_BITS_PER_WORD + __j*CHAR_BIT +
-		      std::_S_first_one[__this_byte];
+		      _S_first_one[__this_byte];
 
 		  __thisword >>= CHAR_BIT;
 		}
@@ -487,7 +484,7 @@ namespace LOFAR
 	  = ((const unsigned char*)&_M_w)+sizeof(_M_w);
 	while ( __byte_ptr < __end_ptr )
 	  {
-	    __result += std::_S_bit_count[*__byte_ptr];
+	    __result += _S_bit_count[*__byte_ptr];
 	    __byte_ptr++;
 	  }
 	return __result;
