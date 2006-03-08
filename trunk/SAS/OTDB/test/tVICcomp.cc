@@ -30,6 +30,7 @@
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/VICnodeDef.h>
+#include <OTDB/OTDBparam.h>
 #include <OTDB/ClassifConv.h>
 
 using namespace LOFAR;
@@ -55,6 +56,30 @@ void showList(const vector<VICnodeDef>&	nodes) {
 	}
 
 	cout << nodes.size() << " records" << endl << endl;
+}
+
+//
+// show param list 
+//
+void showParams(const vector<OTDBparam>&	params) {
+
+
+	cout << "paramID|nodeID|name           |idx|type|unit|constr.   |description" << endl;
+	cout << "-------+------+---------------+---+----+----+----------+-----------" << endl;
+	for (uint32	i = 0; i < params.size(); ++i) {
+		string row(formatString("%7d|%6d|%-15.15s|%3d|%4d|%4d|%-10.10s|%s",
+			params[i].paramID(),
+			params[i].nodeID(),
+			params[i].name.c_str(),
+			params[i].index,
+			params[i].type,
+			params[i].unit,
+			params[i].limits.c_str(),
+			params[i].description.c_str()));
+		cout << row << endl;
+	}
+
+	cout << params.size() << " parameters" << endl << endl;
 }
 
 int main (int	argc, char*	argv[]) {
@@ -95,45 +120,138 @@ int main (int	argc, char*	argv[]) {
 
 		LOG_INFO("Trying to construct a TreeMaintenance object");
 		TreeMaintenance	tm(&conn);
-
+#if 1
 		LOG_INFO("Trying to load the componentfile: tVICcomp.in");
 		nodeIDType	topNodeID = tm.loadComponentFile ("tVICcomp.in");
 		ASSERTSTR(topNodeID, "Loading of componentfile failed");
 		LOG_INFO_STR("ID of topnode is: " << topNodeID);
-		
+#endif		
 		LOG_INFO("Getting the top component list");
-		vector<VICnodeDef> nodeList = tm.getTopComponentList();
+		vector<VICnodeDef> nodeList = tm.getComponentList("%", true);
 		showList(nodeList);
 
+#if 1
 		LOG_INFO("Check if topNode is in list");
-		bool	found = false;
+		bool	foundit = false;
 		for (uint32	i = 0; i < nodeList.size(); i++) {
 			if (nodeList[i].nodeID() == topNodeID) {
-				found = true;
+				foundit = true;
 			}
 		}
-		ASSERTSTR (found, "topNode returned by loadComponentFile not in List");
+		ASSERTSTR (foundit, "topNode returned by loadComponentFile not in List");
+#else
+		nodeIDType	topNodeID = nodeList[nodeList.size()-1].nodeID();
+#endif
 		LOG_INFO("topNode found in list of topComponents");
-		VICnodeDef	aNode = tm.getNodeDef(topNodeID);
+		VICnodeDef	aNode = tm.getComponentNode(topNodeID);
 		LOG_INFO_STR(aNode);
-	
-#if 0
-		LOG_INFO("Trying to get a collection of items on depth=1");
-		nodeList = tm.getItemList(treeID, topNode.nodeID(), 1);
+
+		LOG_INFO("Getting the list of all components");
+		nodeList = tm.getComponentList("%", false);
+		// note this is the same as : tm.getComponentList();
 		showList(nodeList);
 
-		LOG_INFO("Trying to get a collection of items on depth=2");
-		nodeList = tm.getItemList(treeID, topNode.nodeID(), 2);
-		showList(nodeList);
-#endif		
+		LOG_INFO ("Getting the parameters of last topNode");
+		vector<OTDBparam> paramList = tm.getComponentParams(topNodeID);
+		showParams(paramList);
+
 		ClassifConv		CTconv (&conn);
 
-		LOG_INFO("Finally building a template tree");
-		treeIDType	treeID = tm.buildTemplateTree(topNodeID,CTconv.get("test"));
-		ASSERTSTR (treeID, "Creation of template tree failed");
+		LOG_INFO("Finally constructing a template tree");
+		treeIDType	treeID = tm.newTemplateTree();
+		ASSERTSTR (treeID, "Creation of empty template tree failed");
 		LOG_INFO_STR("TreeID = " << treeID);
 		OTDBtree	treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
+
+		LOG_INFO("Adding the top component to the tree");
+		nodeIDType	topID = tm.addComponent(topNodeID, treeID, 0); // parent
+		ASSERTSTR (topID, "Adding topnode to template tree failed");
+		LOG_INFO_STR ("Top component has ID: " << topID);
+
+		LOG_INFO("Adding good child (VI) to topNode");
+		bool	found = false;
+		nodeIDType	ref1;
+		for (uint32	i = 0; i < nodeList.size(); i++) {
+			if (nodeList[i].name == "VI") {
+				found = true;
+				ref1 = nodeList[i].nodeID();
+				break;
+			}
+		}
+		ASSERTSTR (found, "Could not find Component 'VI' in list");
+		nodeIDType	child1 = tm.addComponent(ref1, treeID, topID); 
+		ASSERTSTR (child1, "Adding topnode to template tree failed");
+		LOG_INFO_STR ("child component (VI) got ID: " << child1);
+		
+		LOG_INFO("Tryin to add a bad child(SRG) to the topNode");
+		found = false;
+		nodeIDType	ref2;
+		for (uint32	i = 0; i < nodeList.size(); i++) {
+			if (nodeList[i].name == "SRG") {
+				found = true;
+				ref2 = nodeList[i].nodeID();
+				break;
+			}
+		}
+		ASSERTSTR (found, "Could not find Component 'SRG' in list");
+		try {
+			nodeIDType	child2 = tm.addComponent(ref2, treeID, topID);
+			ASSERTSTR (false, "Adding an illegal child component should have failed!" 
+						" (child = " << child2 << ")");
+		}
+		catch (std::exception&	ex) {
+			LOG_INFO_STR("Caught expected exception: " << ex.what());
+			LOG_INFO_STR("Check on adding forbidden child components works!");
+		}
+
+		LOG_INFO("Getting information of component 'ARG'");
+		found = false;
+		nodeIDType	ref3;
+		for (uint32	i = 0; i < nodeList.size(); i++) {
+			if (nodeList[i].name == "ARG") {
+				found = true;
+				ref3 = nodeList[i].nodeID();
+				break;
+			}
+		}
+		ASSERTSTR (found, "Could not find Component 'ARG' in list");
+		VICnodeDef	testNode = tm.getComponentNode(ref3);
+		LOG_INFO_STR(testNode);
+	
+		LOG_INFO("Modifying description and limits of component node");
+		// note childNode.name, childNode.version and childNode.classif are used in the
+		// database to decide if the node is a new node or an existing node.
+		testNode.constraints = "No constraints";
+		testNode.description = "ViRtUaL InStRuMeNt";
+		ASSERTSTR (tm.saveComponentNode(testNode), "update of Node failed");
+
+		testNode = tm.getComponentNode(ref3);
+		LOG_INFO_STR(testNode);
+
+		LOG_INFO("Getting all the parameters of component ARG");
+		paramList = tm.getComponentParams(ref3);
+		showParams(paramList);
+		
+		LOG_INFO("Searching for parameter '%nrInstances'");
+		found = false;
+		nodeIDType	pref;
+		for (uint32	i = 0; i < paramList.size(); i++) {
+			if (paramList[i].name == "%nrInstances") {
+				found = true;
+				pref = paramList[i].paramID();
+				break;
+			}
+		}
+		ASSERTSTR (found, "Could not find parameter '%nrInstances' in parameterlist");
+		OTDBparam	testPar = tm.getParam(0, pref);
+		LOG_INFO_STR(testPar);
+
+		LOG_INFO("Modifying parameter '%nrInstances' to 1..5");
+		testPar.limits = "1..5";
+		ASSERTSTR (tm.saveComponentParam(testPar), "update of parameter failed");
+		testPar = tm.getParam(0, pref);
+		LOG_INFO_STR(testPar);
 
 	}
 	catch (std::exception&	ex) {

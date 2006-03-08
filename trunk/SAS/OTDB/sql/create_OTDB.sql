@@ -48,8 +48,10 @@
 \i saveVCnode_func.sql
 \i saveVICparamDef_func.sql
 \i getVICnodeDef_func.sql
-\i getVCtopNodeList_func.sql
+\i getVCNodeList_func.sql
+\i getVCparams_func.sql
 \i buildTemplateTree_func.sql
+\i addComponentToVT_func.sql
 
 -- VIChierarchy
 \i getVHitemList_func.sql

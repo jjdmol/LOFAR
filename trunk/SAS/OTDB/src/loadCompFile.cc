@@ -40,54 +40,9 @@ namespace LOFAR {
   namespace OTDB {
 
 //
-// saveNodeDef (VICnodeDef) : bool
+// saveComponentParam(OTDBparam) : bool
 //
-bool TreeMaintenance::saveNodeDef	(VICnodeDef&	aNode)
-{
-	// Check connection
-	if (!itsConn->connect()) {
-		itsError = itsConn->errorMsg();
-		return (false);
-	}
-
-	work	xAction(*(itsConn->getConn()), "saveVCnode");
-	try {
-		// execute the insert action
-		result res = xAction.exec(
-			 formatString("SELECT saveVCnode(%d,%d,'%s',%d,%d::int2,'%s'::text,'%s'::text)",
-							itsConn->getAuthToken(),
-							aNode.nodeID(),
-							aNode.name.c_str(),
-							aNode.version,
-							aNode.classif,
-							aNode.constraints.c_str(),
-							aNode.description.c_str()));
-
-		// Analyse result
-		nodeIDType		vNodeID;
-		res[0]["savevcnode"].to(vNodeID);
-		if (!vNodeID) {
-			itsError = "Unable to save the node";
-			return (false);
-		}
-
-		xAction.commit();
-		aNode.itsNodeID = vNodeID;
-		return (true);
-	}
-	catch (Exception& ex) {
-		itsError = string("Exception during save of VICnode:") + ex.what();
-		LOG_FATAL(ex.what());
-		return (false);
-	}
-
-	return (false);
-}
-
-//
-// saveParam(OTDBparam) : bool
-//
-bool TreeMaintenance::saveParam(OTDBparam&	aParam)
+bool TreeMaintenance::saveComponentParam(OTDBparam&	aParam)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -133,9 +88,9 @@ bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 }
 
 //
-// getNodeDef (nodeID) : VICnodeDef
+// getComponentNode (nodeID) : VICnodeDef
 //
-VICnodeDef TreeMaintenance::getNodeDef (nodeIDType		aNodeID)
+VICnodeDef TreeMaintenance::getComponentNode (nodeIDType		aNodeID)
 {
 	VICnodeDef		empty;
 
@@ -163,6 +118,122 @@ VICnodeDef TreeMaintenance::getNodeDef (nodeIDType		aNodeID)
 }
 
 //
+// getComponentParams (nodeID) : vector<OTDBparam>
+//
+vector<OTDBparam> TreeMaintenance::getComponentParams (nodeIDType		aNodeID)
+{
+	vector<OTDBparam>		resultVec;
+
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (resultVec);
+	}
+
+	work	xAction(*(itsConn->getConn()), "getVCparams");
+	try {
+		result res = xAction.exec("SELECT * from getVCparams(" +
+								  toString(aNodeID) + ")");
+		if (res.empty()) {
+			return (resultVec);
+		}
+
+		for (result::size_type i = 0; i < res.size(); ++i) {
+			resultVec.push_back(OTDBparam(0, res[i]));
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during getVCparams:") + ex.what();
+		LOG_FATAL(ex.what());
+	}
+	return (resultVec);
+}
+
+//
+// getComponentList(namefragment, toponly): vector<VICnodedef>
+//
+vector<VICnodeDef>	TreeMaintenance::getComponentList (
+										const string& 	namefragment,
+										bool			topOnly)
+{
+	vector<VICnodeDef>		resultVec;
+
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (resultVec);
+	}
+
+	work	xAction(*(itsConn->getConn()), "getCompList");
+	try {
+		result res = xAction.exec("SELECT * from getVCNodeList('" +
+							  namefragment + "','" + toString(topOnly) + "')");
+		if (res.empty()) {
+			return (resultVec);
+		}
+
+		for (result::size_type i = 0; i < res.size(); ++i) {
+			resultVec.push_back(VICnodeDef(res[i]));
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during getComponentList:") 
+						+ ex.what();
+		LOG_FATAL(ex.what());
+	}
+	return (resultVec);
+}
+
+// 
+// saveComponentNode (VICnodeDef) : bool
+//
+bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
+{
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	work	xAction(*(itsConn->getConn()), "saveVCnode");
+	try {
+		// execute the insert action
+		result res = xAction.exec(
+			 formatString("SELECT saveVCnode(%d,%d,'%s',%d,%d::int2,'%s'::text,'%s'::text)",
+							itsConn->getAuthToken(),
+							aNode.nodeID(),
+							aNode.name.c_str(),
+							aNode.version,
+							aNode.classif,
+							aNode.constraints.c_str(),
+							aNode.description.c_str()));
+
+		// Analyse result
+		nodeIDType		vNodeID;
+		res[0]["savevcnode"].to(vNodeID);
+		if (!vNodeID) {
+			itsError = "Unable to save the node";
+			return (false);
+		}
+
+		xAction.commit();
+		aNode.itsNodeID = vNodeID;
+		return (true);
+	}
+	catch (Exception& ex) {
+		itsError = string("Exception during save of VICnode:") + ex.what();
+		LOG_FATAL(ex.what());
+		return (false);
+	}
+
+	return (false);
+}
+
+// [private]
 // getNodeDef (name, version, classif) : VICnodedef
 //
 VICnodeDef	TreeMaintenance::getNodeDef (const string&	name,
@@ -194,41 +265,6 @@ VICnodeDef	TreeMaintenance::getNodeDef (const string&	name,
 		LOG_FATAL(ex.what());
 	}
 	return (empty);
-}
-
-//
-// getTopComponentList(namefragment): vector<VICnodedef>
-//
-vector<VICnodeDef>	TreeMaintenance::getTopComponentList (const string& namefragment)
-{
-	vector<VICnodeDef>		resultVec;
-
-	// Check connection
-	if (!itsConn->connect()) {
-		itsError = itsConn->errorMsg();
-		return (resultVec);
-	}
-
-	work	xAction(*(itsConn->getConn()), "getTopCompList");
-	try {
-		result res = xAction.exec("SELECT * from getVCtopNodeList('" +
-								  namefragment + "')");
-		if (res.empty()) {
-			return (resultVec);
-		}
-
-		for (result::size_type i = 0; i < res.size(); ++i) {
-			resultVec.push_back(VICnodeDef(res[i]));
-		}
-
-		return (resultVec);
-	}
-	catch (std::exception&	ex) {
-		itsError = string("Exception during getTopComponentList:") 
-						+ ex.what();
-		LOG_FATAL(ex.what());
-	}
-	return (resultVec);
 }
 
 //
@@ -295,8 +331,22 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			// construct object (name, version, classif, constr. descr.)
 		 	VICnodeDef	topNode(args[1], VersionNr(args[2]), 
 										CTconv.get(args[3]), args[4], args[5]);
-			saveNodeDef (topNode);
+			saveComponentNode (topNode);			// private call
 			topNodeID = topNode.itsNodeID;
+
+			// add %instances parameter
+			OTDBparam		baseParam;
+			baseParam.itsNodeID   = topNodeID;
+			baseParam.name 		  = "%nrInstances";
+			baseParam.index 	  = 0;
+			baseParam.type 		  = PTconv.get("int");	
+			baseParam.unit 		  =	UTconv.get("-");
+			baseParam.pruning 	  = 0;
+			baseParam.valMoment   = 0;
+			baseParam.runtimeMod  = false;
+			baseParam.limits	  = "1+";
+			baseParam.description = "Number of instances";
+			saveComponentParam (baseParam);
 		}
 		// -- USES --
 		else if (!args[0].compare("uses")) {
@@ -313,7 +363,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			// Check that module that is referenced exists in the database.
 			VICnodeDef	ChildNode = getNodeDef(args[1], 
 											VersionNr(args[2]), 
-											CTconv.get(args[3]));
+											CTconv.get(args[3]));		// private call
 			if (!ChildNode.nodeID()) {
 				itsError = toString(lineNr) + ": Node " + args[1] +"," +
 									args[2] + "," + args[3] + " not found";
@@ -335,7 +385,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			AttachedChild.runtimeMod  = false;
 			AttachedChild.limits	  = args[4];
 			AttachedChild.description = "";
-			saveParam (AttachedChild);
+			saveComponentParam (AttachedChild);
 		}
 		// -- PAR -- 
 		else if (!args[0].compare("par")) {
@@ -365,7 +415,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			AttachedChild.runtimeMod  = (args[2].find("O",0)) ? true : false;
 			AttachedChild.limits	  = args[7];
 			AttachedChild.description = args[9];
-			saveParam (AttachedChild);
+			saveComponentParam (AttachedChild);
 			// TODO: args[8] constraint, args[6] valmoment
 		}
 		// -- UNKNOWN --

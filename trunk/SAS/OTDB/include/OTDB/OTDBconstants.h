@@ -34,38 +34,26 @@ namespace LOFAR {
 
 // Enumeration of tree classifications. Used in VIC and PIC trees.
 const int16	TCall				= 0;
-const int16	TCexperimental		= 1;
-const int16	TCoperational		= 2;
-const int16	TCobsolete			= 3;
-
-
-// Enumeration of parameter types. Used in VIC and PIC trees.
-//const string PTbool		("bool");
-//const string PTint		("int");
-//const string PTuint		("uint");
-//const string PTlong		("long");
-//const string PTfloat	("flt");
-//const string PTdouble	("dbl");
-//const string PTicomplex	("icpx");
-//const string PTlcomplex	("lcpx");
-//const string PTfcomplex	("fcpx");
-//const string PTdcomplex	("dcpx");
-//const string PTtext		("text");
-//const string PTbin		("bin");
-
+const int16	TCdevelopment		= 1;
+const int16	TCexperimental		= 2;
+const int16	TCoperational		= 3;
 
 // Enumeration of tree types.
 const int16	TThardware			= 10;
 const int16	TTtemplate			= 20;
 const int16	TTVHtree			= 30;
 
-const int16	TSidle				= 0;
-const int16	TSconfigure			= 100;
-const int16	TSschedule			= 200;
-const int16	TSqueued			= 300;
-const int16	TSactive			= 400;
-const int16	TSfinished			= 500;
-const int16	TSobsolete			= 600;
+// Enumeration of the tree states
+const int16	TSidle				=    0;
+const int16	TSbeingSpec			=  100;
+const int16	TSspecified			=  200;
+const int16	TSapproved			=  300;
+const int16	TSscheduled			=  400;
+const int16	TSqueued			=  500;
+const int16	TSactive			=  600;
+const int16	TSfinished			= 1000;
+const int16	TSaborted			= 1100;
+const int16	TSobsolete			= 1200;
 
 
 // @}
