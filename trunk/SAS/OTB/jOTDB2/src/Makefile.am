@@ -8,7 +8,8 @@ libjotdb2_la_SOURCES   = $(DOCHDRS) \
 			 nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv.cc \
 			 nl_astron_lofar_sas_otb_jotdb2_jTreeStateConv.cc \
 			 nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv.cc \
-			 nl_astron_lofar_sas_otb_jotdb2_jUnitConv.cc
+			 nl_astron_lofar_sas_otb_jotdb2_jUnitConv.cc \
+			 nl_astron_lofar_sas_otb_jotdb2_jInitCPPLogger.cc
 
 
 # AM_YFLAGS               = -d -p KeyParse

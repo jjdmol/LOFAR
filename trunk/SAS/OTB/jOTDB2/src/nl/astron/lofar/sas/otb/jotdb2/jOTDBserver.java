@@ -46,11 +46,11 @@ public class jOTDBserver
    
     public static void main (String[] args)  {
     try {   
-        String logConfig = "jOTDB2.log_prop";
+        String logConfig = args[0]+".log_prop";
        
         PropertyConfigurator.configure(logConfig);
-        logger.info("jOTDBServer started.");
-        
+        logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
+        jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
         
 //	     if (System.getSecurityManager () == null) 
 //	       {
