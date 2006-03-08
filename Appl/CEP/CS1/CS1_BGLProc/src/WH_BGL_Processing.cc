@@ -37,7 +37,13 @@
 
 #if defined HAVE_MASS
 #include <mass.h>
-#else
+#endif
+
+
+using namespace LOFAR;
+
+
+#if !defined HAVE_MASS
 
 inline static dcomplex cosisin(double x)
 {
@@ -46,9 +52,6 @@ inline static dcomplex cosisin(double x)
 
 #endif
   
-
-using namespace LOFAR;
-
 
 FIR WH_BGL_Processing::itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] __attribute__ ((aligned(32)));
 fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));

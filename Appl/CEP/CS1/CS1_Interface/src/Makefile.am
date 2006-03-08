@@ -31,6 +31,7 @@ DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES	= libcs1_interface.la
 
 libcs1_interface_la_SOURCES  	= \
+bitset.cc	          	\
 RSPTimeStamp.cc          	\
 DH_RSPSync.cc                   \
 DH_CoarseDelay.cc		\
