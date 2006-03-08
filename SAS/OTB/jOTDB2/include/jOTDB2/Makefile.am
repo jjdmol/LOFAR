@@ -10,7 +10,8 @@ INSTHDRS =nl_astron_lofar_sas_otb_jotdb2_jOTDBConverter.h \
 	  nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv.h \
 	  nl_astron_lofar_sas_otb_jotdb2_jTreeStateConv.h \
 	  nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv.h \
-	  nl_astron_lofar_sas_otb_jotdb2_jUnitConv.h
+	  nl_astron_lofar_sas_otb_jotdb2_jUnitConv.h \
+	  nl_astron_lofar_sas_otb_jotdb2_jInitCPPLogger.h
 
 NOINSTHDRS =
 
