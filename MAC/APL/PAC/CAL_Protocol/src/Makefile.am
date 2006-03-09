@@ -1,16 +1,22 @@
 
-AM_CPPFLAGS = -I$(top_builddir)/include
+AM_CPPFLAGS = \
+	-I$(top_builddir)/include
 
 AUTOGEN = autogen
 SUFFIXES = .ph
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	cp $*.ph $(top_builddir)/include/APL/CAL_Protocol
+
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
-	cp $@ $(top_builddir)/include/APL/CAL_Protocol
+	cp $*.ph $(top_builddir)/include/APL/CAL_Protocol
+
+EXTRA_DIST = \
+	CAL_Protocol.prot
 
 BUILT_SOURCES = \
 	CAL_Protocol.ph
-
-EXTRA_DIST = 
 
 pkgincludedir=$(includedir)/APL/CAL_Protocol
 pkginclude_HEADERS = \

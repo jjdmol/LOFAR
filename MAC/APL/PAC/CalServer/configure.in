@@ -5,7 +5,7 @@ AC_INIT(src/CalServer.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(ABS, 1.0)
+AM_INIT_AUTOMAKE(CalServer, 6.0devel1, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -55,7 +55,7 @@ lofar_COMPILETOOLS
 
 lofar_INTERNAL(LCS/AMC/AMCBase, AMCBase, LCS-AMC-1_1, 1, AMCBase/EarthCoord.h,,)
 
-lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, common, LCS-Common-3_0, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/Test/Suite, suite, MAC-GCF-6_1rc2, 1, Suite/suite.h,,)
 lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol, , 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Control.h,,)
