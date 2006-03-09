@@ -69,14 +69,14 @@ public class treeModel extends AbstractTableModel {
                         if (itsDebugFlag) System.out.println("Collected tree list");
                     }
                     for (int k=0; k< aTreeList.size();k++) {
-                        if (itsDebugFlag) System.out.println("getTreeInfo(aTreeList.elementAt("+k+"),false)");
-	                Integer i = new Integer((Integer)aTreeList.elementAt(k));
-	                jOTDBtree tInfo = aRemoteOTDB.getTreeInfo(i.intValue(), false);
-	                if (tInfo.treeID()==0) {
-                            if (itsDebugFlag) System.out.println("No such tree found!");
-                        } else {
-                            if (itsDebugFlag) System.out.println("Gathered info for ID: "+tInfo.treeID());
-                        
+//                        if (itsDebugFlag) System.out.println("getTreeInfo(aTreeList.elementAt("+k+"),false)");
+//	                Integer i = new Integer((Integer)aTreeList.elementAt(k));
+//	                jOTDBtree tInfo = aRemoteOTDB.getTreeInfo(i.intValue(), false);
+//	                if (tInfo.treeID()==0) {
+//                            if (itsDebugFlag) System.out.println("No such tree found!");
+//                        } else {
+//                            if (itsDebugFlag) System.out.println("Gathered info for ID: "+tInfo.treeID());
+                        jOTDBtree tInfo=(jOTDBtree) aTreeList.get(k);
                             data[k][0]=new Integer(tInfo.treeID());	   
 	                    data[k][1]=new String(tInfo.creator);
 	                    data[k][2]=new String(tInfo.creationDate);	
@@ -87,7 +87,7 @@ public class treeModel extends AbstractTableModel {
 	                    data[k][7]=new String(tInfo.campaign);	
 	                    data[k][8]=new String(tInfo.starttime);
 	                    data[k][9]=new String(tInfo.stoptime);
-	                }
+//	                }
                     }
                     fireTableDataChanged();
                   } 

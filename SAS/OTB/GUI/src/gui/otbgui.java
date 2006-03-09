@@ -105,14 +105,14 @@ public class otbgui extends javax.swing.JFrame {
    
     // SettingsDialog Defaults
     public static String RMIServerName      = "lofar17.astron.nl";
-    public static String RMIServerPort      = "10099";
+    public static String RMIServerPort      = "10799";
     public static String RMIRegistryName    = jOTDBinterface.SERVICENAME;
     public static String RMIMaintenanceName = jTreeMaintenanceInterface.SERVICENAME;
     public static String RMIValName         = jTreeValueInterface.SERVICENAME;
     public static String RMIConverterName   = jConverterInterface.SERVICENAME; 
     public static String OTDBUserName       = "paulus";
     public static String OTDBPassword       = "boskabouter";
-    public static String OTDBDBName         = "verhoef";   
+    public static String OTDBDBName         = "coolen";   
     
     
     /** Creates new form otbgui */
