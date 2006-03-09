@@ -52,7 +52,7 @@ AH_BGL_Processing::~AH_BGL_Processing()
 
 void AH_BGL_Processing::define(const KeyValueMap &/*kvm*/)
 {
-  const double baseFrequency =  99950592.0; /* 499th Nyquist zone */
+  const double baseFrequency =  49975296.0; /* 250th Nyquist zone */
 
   ACC::APS::ParameterSet myPset("CS1.cfg");
 
@@ -71,18 +71,10 @@ void AH_BGL_Processing::define(const KeyValueMap &/*kvm*/)
 
 void AH_BGL_Processing::init()
 {
-  double     signalFrequency = 100007824.0; /* channel 73 */
-  const char *env	     = getenv("SIGNAL_FREQUENCY");
-
-  if (env != 0) {
-    signalFrequency = atof(env);
-    std::cerr << "setting signal frequency to " << env << '\n';
-  }
-
   itsWH->basePreprocess();
 
   // Fill inDHs here
-  itsWH->get_DH_Subband()->setTestPattern(signalFrequency);
+  //itsWH->get_DH_Subband()->setTestPattern(signalFrequency);
   itsWH->get_DH_RFI_Mitigation()->setTestPattern();
 
 #if defined DELAY_COMPENSATION
@@ -92,8 +84,18 @@ void AH_BGL_Processing::init()
 
 void AH_BGL_Processing::run(int steps)
 {
+  double     signalFrequency = 50032528.0; /* channel 73 */
+  const char *env	     = getenv("SIGNAL_FREQUENCY");
+
+  if (env != 0) {
+    signalFrequency = atof(env);
+    std::cerr << "setting signal frequency to " << env << '\n';
+  }
+
   for (int i = 0; i < steps; i ++) {
+    itsWH->get_DH_Subband()->setTestPattern(signalFrequency + i);
     itsWH->baseProcess();
+    itsWH->get_DH_Visibilities()->checkCorrelatorTestPattern();
   }
 }
 
@@ -105,7 +107,7 @@ void AH_BGL_Processing::dump() const
 void AH_BGL_Processing::postrun()
 {
   // check result here
-  itsWH->get_DH_Visibilities()->checkCorrelatorTestPattern();
+  //itsWH->get_DH_Visibilities()->checkCorrelatorTestPattern();
 }
 
 void AH_BGL_Processing::undefine()
