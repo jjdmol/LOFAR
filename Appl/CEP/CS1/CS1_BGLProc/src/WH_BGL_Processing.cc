@@ -1124,7 +1124,7 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
   itsPS(ps)
 {
   ASSERT(ps.getInt32("BGLProc.NPPFTaps")	 == NR_TAPS);
-  ASSERT(ps.getInt32("Data.NStations")		 == NR_STATIONS);
+  ASSERT(ps.getInt32("FakeData.NStations")	 == NR_STATIONS);
   ASSERT(ps.getInt32("Data.NSamplesToIntegrate") == SAMPLE_RATE);
   ASSERT(ps.getInt32("Data.NPolarisations")	 == NR_POLARIZATIONS);
   ASSERT(ps.getInt32("Data.NChannels")		 == NR_SUBBAND_CHANNELS);
