@@ -55,7 +55,7 @@ lofar_BLITZ
 dnl lofar_MPI
 lofar_INTERNAL(LCS/Common, common, LCS-Common-3_0, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Control.h,,)
-lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, , 1, APL/RTCCommon/Marshalling.h,,)
+lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, MAC-RTC-6_0devel1, 1, APL/RTCCommon/Marshalling.h,,)
 
 dnl
 dnl Output Makefiles
