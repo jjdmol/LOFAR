@@ -33,6 +33,7 @@
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBnode.h>
 #include <OTDB/TreeTypeConv.h>
+#include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
 
 using namespace LOFAR;
@@ -139,6 +140,7 @@ int main (int	argc, char*	argv[]) {
 
 	// Use converters in this testprogram
 	TreeTypeConv	TTconv(&conn);
+	TreeStateConv	TSconv(&conn);
 	ClassifConv		CTconv(&conn);
 
 	try {
@@ -156,6 +158,29 @@ int main (int	argc, char*	argv[]) {
 		treeIDType	treeID = treeList[treeList.size()-1].treeID();
 		LOG_INFO_STR ("Using tree " << treeID << " for the tests");
 		OTDBtree	treeInfo = conn.getTreeInfo(treeID);
+		LOG_INFO_STR(treeInfo);
+		
+		LOG_INFO("Trying to set the schedule time to 2006-01-20 12:00:00.000");
+		LOG_INFO("THIS SHOULD FAIL BECAUSE STATUS IS ACTIVE");
+		TreeMaintenance		tm(&conn);
+		try {
+			tm.setSchedule (treeID, time_from_string("2006-01-20 12:00:00.000"),
+								time_from_string("2006-01-20 14:53:12.000"));
+			ASSERTSTR(false, "THIS SHOULD HAVE FAILED");
+		}
+		catch (std::exception&	ex) {
+			LOG_INFO_STR("Caught exception, protection works!");
+		}
+		
+		LOG_INFO_STR ("Setting tree to scheduled");
+		tm.setTreeState(treeID, TSconv.get("scheduled"));
+		treeInfo = conn.getTreeInfo(treeID);
+		LOG_INFO_STR(treeInfo);
+		
+		LOG_INFO("Retrying to set the schedule time to 2006-01-20 12:00:00");
+		tm.setSchedule (treeID, time_from_string("2006-01-20 12:00:00.000"),
+								time_from_string("2006-01-20 14:53:12.000"));
+		treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 		
 		LOG_INFO("Trying to construct a TreeValue object");
@@ -190,7 +215,6 @@ int main (int	argc, char*	argv[]) {
 			LOG_INFO("Could NOT add the vector of OTDBvalue classes");
 		}
 
-		TreeMaintenance		tm(&conn);
 		OTDBnode topNode = tm.getTopNode(treeID);
 		for (int i = 1; i < 4; ++i) {
 			LOG_INFO_STR("searchInPeriod(" << topNode.nodeID() << "," << i 

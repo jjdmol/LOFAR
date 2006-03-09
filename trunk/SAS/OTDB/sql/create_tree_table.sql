@@ -56,6 +56,7 @@ CREATE TABLE OTDBtree (
 	starttime	TIMESTAMP(0),
 	stoptime	TIMESTAMP(0),
 	owner		INT4			REFERENCES operator(ID),
+	description	TEXT,
 
 	-- contraints
 	CONSTRAINT	tree_uniq		UNIQUE (treeID)

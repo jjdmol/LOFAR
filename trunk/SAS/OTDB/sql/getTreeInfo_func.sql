@@ -54,7 +54,8 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 				t.originID, 
 				c.name, 
 				t.starttime, 
-				t.stoptime
+				t.stoptime,
+				t.description
 		INTO	vRecord
 		FROM	OTDBtree t 
 				INNER JOIN OTDBuser u ON t.creator = u.userid
@@ -75,7 +76,8 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 				t.originID, 
 				c.name, 
 				t.starttime, 
-				t.stoptime
+				t.stoptime,
+				t.description
 		INTO	vRecord
 		FROM	OTDBtree t 
 				INNER JOIN OTDBuser u ON t.creator = u.userid

@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <fstream>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBnode.h>
@@ -1056,6 +1057,93 @@ bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 	}
 	catch (Exception&	ex) {
 		itsError = string("Exception during setTreeState:") + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
+
+	return (false);
+}
+
+
+//
+// setDescription(treeID, description): bool
+//
+// Set the description of the tree.
+bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
+								        string		aDescription)
+{
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	work 	xAction(*(itsConn->getConn()), "setDescription");
+	try {
+		// construct a query that calls a stored procedure.
+		result	res = xAction.exec(
+			formatString("SELECT setDescription(%d,%d,'%s'::text)",
+				itsConn->getAuthToken(),
+				aTreeID,
+				aDescription.c_str()));
+							
+		// Analyse result.
+		bool		succes;
+		res[0]["setDescription"].to(succes);
+		if (!succes) {
+			itsError = "Unable to save the description";
+			return (false);
+		}
+
+		xAction.commit();
+		return (true);
+	}
+	catch (Exception&	ex) {
+		itsError = string("Exception during setDescription:") + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
+
+	return (false);
+}
+
+//
+// setSchedule(treeID, startTime, stopTime): bool
+//
+// Set the Executiontime of a tree
+bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
+								     const ptime&	aStartTime,
+									 const ptime&	aStopTime)
+{
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	work 	xAction(*(itsConn->getConn()), "setSchedule");
+	try {
+		// construct a query that calls a stored procedure.
+		result	res = xAction.exec(
+			formatString("SELECT setSchedule(%d,%d,'%s','%s')",
+				itsConn->getAuthToken(),
+				aTreeID,
+				to_simple_string(aStartTime).c_str(),
+				to_simple_string(aStopTime).c_str()));
+							
+		// Analyse result.
+		bool		succes;
+		res[0]["setSchedule"].to(succes);
+		if (!succes) {
+			itsError = "Unable to set the schedule times:";
+			return (false);
+		}
+
+		xAction.commit();
+		return (true);
+	}
+	catch (Exception&	ex) {
+		itsError = string("Exception during setSchedule:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}

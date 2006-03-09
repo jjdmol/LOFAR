@@ -38,7 +38,7 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 	// construct OTDBtree class with right ID
 	// Note: names refer to SQL OTDBtree type
 	row["treeid"].to(itsTreeID);
-	row["momid"].to(momID);
+	row["momid"].to(itsMomID);
 
 	// fill in rest of the fields
 	row["classification"].to(classification);
@@ -62,6 +62,7 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 	if (stop.length() > 0) {
 		stoptime = time_from_string(stop);
 	}
+	row["description"].to(description);
 }
 
 //
@@ -70,17 +71,18 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 // Show Tree charateristics.
 ostream& OTDBtree::print (ostream& os) const
 {
-	os << "treeID        : " << itsTreeID << endl;
-	os << "MomID         : " << momID << endl;
+	os << "treeID        : " << itsTreeID 	   << endl;
+	os << "MomID         : " << itsMomID	   << endl;
 	os << "classification: " << classification << endl;
-	os << "creator       : " << creator << endl;
-	os << "creationdate  : " << creationDate << endl;
-	os << "tree type     : " << type << endl;
-	os << "state         : " << state << endl;
-	os << "original tree : " << originalTree << endl;
-	os << "campaign      : " << campaign << endl;
-	os << "starttime     : " << starttime << endl;
-	os << "stoptime      : " << stoptime << endl;
+	os << "creator       : " << creator 	   << endl;
+	os << "creationdate  : " << creationDate   << endl;
+	os << "tree type     : " << type 		   << endl;
+	os << "state         : " << state 		   << endl;
+	os << "original tree : " << originalTree   << endl;
+	os << "campaign      : " << campaign 	   << endl;
+	os << "starttime     : " << starttime 	   << endl;
+	os << "stoptime      : " << stoptime 	   << endl;
+	os << "description   : " << description    << endl;
 
 	return (os);
 }
