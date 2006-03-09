@@ -47,6 +47,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 		vUserID					INT4;
 		TThardware CONSTANT		INT2 := 10;
 		TSactive   CONSTANT		INT2 := 600;
+		TSobsolete CONSTANT		INT2 := 1200;
 
 	BEGIN
 		-- check authorisation(authToken, treeID, func, treeState)
@@ -99,6 +100,22 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 		SELECT  whoIs($1)
 		INTO 	vUserID;
 		PERFORM addTreeState ($2, vMomID, $3, vUserID, \'\');
+
+		-- (temp?) add extra timeinfo on PIC trees.
+		IF vTreeType = TThardware THEN
+		  BEGIN
+		  IF $3 = TSactive THEN
+			UPDATE OTDBtree
+			SET    starttime = now()
+			WHERE  treeid    = $2;
+		  END IF;
+		  IF $3 = TSobsolete THEN
+		    UPDATE OTDBtree
+			SET	   stoptime = now()
+			WHERE  treeid   = $2;
+		  END IF;
+		  END;
+		END IF;
 
 		RETURN TRUE;
 	END;
