@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(rspctlfe, 1.0, no-define)
+AM_INIT_AUTOMAKE(rspctlfe, 6.0devel1, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -54,7 +54,7 @@ dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
 lofar_PVSS(1)
-lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, common, LCS-Common-3_0, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-6_1rc2, 1, GCF/PAL/GCF_Answer.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_1rc2, 1, GCF/GCF_Defines.h,,)

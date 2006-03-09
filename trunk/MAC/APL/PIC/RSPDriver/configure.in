@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT(src/RSPDriver.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(RSPDriver, 1.0)
+AM_INIT_AUTOMAKE(RSPDriver, 6.0devel1, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -87,7 +87,7 @@ AC_HEADER_TIME
 dnl wanted by: src/CaptureStats.cc:874
 AC_STRUCT_TM
 
-lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, common, LCS-Common-3_0, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/Test/Suite, suite, MAC-GCF-6_1rc2, 1, Suite/test.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_1rc2, 1, GCF/GCF_Defines.h,,)
