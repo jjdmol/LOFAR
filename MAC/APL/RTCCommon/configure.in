@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT(src/Timestamp.cc)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(RTCCommon, 1.0)
+AM_INIT_AUTOMAKE(RTCCommon, 6.0devel1, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -51,7 +51,7 @@ dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
 
-lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, common, LCS-Common-3_0, 1, Common/LofarTypes.h,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 
 dnl
