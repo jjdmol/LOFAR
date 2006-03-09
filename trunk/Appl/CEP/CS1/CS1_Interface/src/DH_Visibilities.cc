@@ -79,31 +79,47 @@ void DH_Visibilities::fillDataPointers()
 
 void DH_Visibilities::checkCorrelatorTestPattern()
 {
+#if 0
+  float sum = 0.0;
+
+  for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++)
+    sum += real((*itsVisibilities)[0][ch][0][0]);
+
+  std::cout << sum << '\n';
+#endif
+  //std::cout << (*itsVisibilities)[0][73][0][0] << ' ' << (*itsVisibilities)[0][74][0][0] << '\n';
+#if 1
   static const int channels[] = { 0, 73, 255 };
 
   for (int stat1 = 0; stat1 < std::min(NR_STATIONS, 8); stat1 ++) {
     for (int stat2 = stat1; stat2 < std::min(NR_STATIONS, 8); stat2 ++) {
-      std::cerr << "S(" << stat1 << ") * ~S(" << stat2 << ") :\n";
+      std::cout << "S(" << stat1 << ") * ~S(" << stat2 << ") :\n";
       int bl = baseline(stat1, stat2);
       for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	  std::cerr << " " << (char) ('x' + pol1) << (char) ('x' + pol2) << ':';
+	  std::cout << " " << (char) ('x' + pol1) << (char) ('x' + pol2) << ':';
 	  for (int chidx = 0; chidx < sizeof(channels) / sizeof(int); chidx ++) {
 	    int ch = channels[chidx];
 	    if (ch < NR_SUBBAND_CHANNELS) {
-	      std::cerr << ' ' << (*itsVisibilities)[bl][ch][pol1][pol2] << '/' << (*itsNrValidSamplesCounted)[bl][ch];
+	      std::cout << ' ' << (*itsVisibilities)[bl][ch][pol1][pol2] << '/' << (*itsNrValidSamplesCounted)[bl][ch];
 	    }
 	  }
-	  std::cerr << '\n';
+	  std::cout << '\n';
 	}
       }
     }
   }
 
-  std::cerr << "newgraph yaxis log newcurve linetype solid marktype x pts\n";
+  std::cout << "newgraph yaxis newcurve linetype solid marktype none pts\n";
+  float max = 0.0;
 
   for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++)
-    std::cerr << ch << ' ' << real((*itsVisibilities)[0][ch][0][0]) << '\n';
+    if (real((*itsVisibilities)[0][ch][0][0]) > max)
+      max = real((*itsVisibilities)[0][ch][0][0]);
+
+  for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++)
+    std::cout << ch << ' ' << (10 * std::log10(real((*itsVisibilities)[0][ch][0][0]) / max)) << '\n';
+#endif
 }
 
 void DH_Visibilities::setStorageTestPattern(int factor)

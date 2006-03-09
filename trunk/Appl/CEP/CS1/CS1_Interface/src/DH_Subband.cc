@@ -98,7 +98,7 @@ void DH_Subband::setTestPattern(double Hz)
 
 #if 1
   const double c = 299792458;
-  const double antennaDistance = 2.997690041 * .25; // meter
+  const double antennaDistance = 5.99195103633380268132 * .25; // meter
 
   double labda = c / Hz;
   double phaseShift = 2 * M_PI * antennaDistance / labda;
@@ -126,7 +126,7 @@ void DH_Subband::setTestPattern(double Hz)
 
   memset(itsFlags, 0, sizeof *itsFlags);
 
-#if NR_INPUT_SAMPLES >= 17000
+#if 0 && NR_INPUT_SAMPLES >= 17000
   (*itsFlags)[4][14000] = true;
   (*itsFlags)[5][17000] = true;
 #endif
