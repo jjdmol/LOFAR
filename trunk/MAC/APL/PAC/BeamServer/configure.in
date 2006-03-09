@@ -63,9 +63,9 @@ lofar_COMPILETOOLS
 
 lofar_INTERNAL(LCS/Common, common, LCS-Common-3_0, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/Test/Suite, suite, MAC-GCF-6_1rc2, 1, Suite/suite.h,,)
-lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, rsp_protocol, HEAD, 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
-lofar_INTERNAL(MAC/APL/PAC/CAL_Protocol, CAL_Protocol, HEAD, 1, APL/CAL_Protocol/CAL_Protocol.ph,,)
-lofar_INTERNAL(MAC/APL/PAC/BS_Protocol, BS_Protocol, HEAD, 1, APL/BS_Protocol/BS_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, rsp_protocol, MAC-RSP-6_0devel1, 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PAC/CAL_Protocol, CAL_Protocol, MAC-RSP-6_0devel1, 1, APL/CAL_Protocol/CAL_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PAC/BS_Protocol, BS_Protocol, MAC-RSP-6_0devel1, 1, APL/BS_Protocol/BS_Protocol.ph,,)
 lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase, LCS-AMC-1_0, 1, AMCBase/EarthCoord.h,,)
 dnl lofar_INTERNAL(LCS/AMC/AMCImpl,AMCImpl, LCS-AMC-1_0, 1, AMCImpl/ConverterImpl.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Control.h,,)
