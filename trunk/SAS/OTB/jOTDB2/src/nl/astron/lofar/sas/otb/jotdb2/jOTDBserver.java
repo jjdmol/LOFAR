@@ -45,12 +45,12 @@ public class jOTDBserver
    static Logger logger = Logger.getLogger(jOTDBserver.class);
    
     public static void main (String[] args)  {
-    try {   
-        String logConfig = args[0]+".log_prop";
+    try {
+        String logConfig = "jOTDB2.log_prop";
        
         PropertyConfigurator.configure(logConfig);
-        logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
         jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
+        logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
         
 //	     if (System.getSecurityManager () == null) 
 //	       {

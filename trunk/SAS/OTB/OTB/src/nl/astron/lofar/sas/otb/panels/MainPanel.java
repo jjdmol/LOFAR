@@ -6,7 +6,7 @@
 
 package nl.astron.lofar.sas.otb.panels;
 import java.io.File;
-import java.util.Vector;
+import javax.swing.JOptionPane;
 import nl.astron.lofar.sas.otb.*;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.*;
@@ -200,13 +200,19 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("Duplicate")) {
             } else if (aButton.equals("View")) {
                 aRow = PICPanel.getSelectedRow();
-                if ( aRow != -1) {
+                if ( aRow > -1) {
                     treeID = ((Integer)PICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
                     if (treeID>-1) {
-                        viewInfo(treeID);
+                        if (viewInfo(treeID)) {
+                            logger.debug("Tree has been changed, reloading table");
+                        }
                     } else {
-                        logger.debug("No row selected");
+                        logger.debug("Tree not found");
                     }
+                 } else {
+                    JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                            "Tree selection warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             }
         } else if (itsTabFocus.equals("VIC")) {
@@ -215,13 +221,19 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("Duplicate")) {
             } else if (aButton.equals("View")) {
                 aRow = VICPanel.getSelectedRow();
-                if ( aRow != -1) {
+                if ( aRow > -1) {
                     treeID = ((Integer)VICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
                     if (treeID>-1) {
-                        viewInfo(treeID);
+                        if (viewInfo(treeID) ) {
+                            logger.debug("Tree has been changed, reloading table");
+                        }
                     } else {
-                        logger.debug("No row selected");
+                        logger.debug("Tree not found");
                     }
+                 } else {
+                    JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                            "Tree selection warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             }
         } else if (itsTabFocus.equals("Templates")) {
@@ -245,13 +257,19 @@ public class MainPanel extends javax.swing.JPanel
                 itsMainFrame.showPanel(TemplateConstructionPanel.getFriendlyNameStatic());
             } else if (aButton.equals("View")) {
                 aRow = TemplatesPanel.getSelectedRow();
-                if ( aRow != -1) {
+                if ( aRow > -1 ) {
                     treeID = ((Integer)TemplatesPanel.getTableModel().getValueAt(aRow, 0)).intValue();
                     if (treeID>-1) {
-                        viewInfo(treeID);
+                        if (viewInfo(treeID)) {
+                            logger.debug("Tree has been changed, reloading table");
+                        }
                     } else {
-                        logger.debug("No row selected");
+                        logger.debug("Tree not found in database");
                     }
+                } else {
+                    JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                            "Tree selection warning",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             }
         } else if (itsTabFocus.equals("Components")) {
@@ -273,12 +291,11 @@ public class MainPanel extends javax.swing.JPanel
      *
      * @param  aTreeID  The ID of the chosen tree.
      */
-    private void viewInfo(int aTreeID) {
+    private boolean viewInfo(int aTreeID) {
         logger.debug("viewInfo for treeID: " + aTreeID);
         //get the selected tree from the database
         
         try {
-            jOTDBtree aNewTree;
             jOTDBtree aSelectedTree=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeInfo(aTreeID, false);
             
             if (aSelectedTree != null) {
@@ -286,12 +303,20 @@ public class MainPanel extends javax.swing.JPanel
                 treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
                 treeInfoDialog.setLocationRelativeTo(this);
                 treeInfoDialog.setVisible(true);
-                aNewTree = treeInfoDialog.getTree();
+
                 
-                if (aNewTree.equals(aSelectedTree)) {
-                    logger.debug("Trees are equal");
-                } else {
-                    logger.debug("Trees are different");
+                // Check if something chnaged, if so save the tree
+                if (treeInfoDialog.isChanged() ) {
+                    logger.debug("Tree changed so saving to DB");
+                    if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setClassification(aSelectedTree.treeID(),treeInfoDialog.getTree().classification)) {
+                        logger.debug("failed to save new classification");
+                    }
+                    if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setTreeState(aSelectedTree.treeID(),treeInfoDialog.getTree().state)) {
+                        logger.debug("failed to save new treeState");
+                    }
+//                  if( !itsMainFrame.getOTDBrmi().getRemoteMaintenance().setDescription(aSelectedTree.treeID(),treeInfoDialog.getTree().description)) {
+//                        logger.debug("failed to save new description");
+//                    }
                 }
                 
             } else {
@@ -300,6 +325,7 @@ public class MainPanel extends javax.swing.JPanel
         } catch (Exception e) {
             logger.debug("Error in viewInfo: " + e);
         }
+        return treeInfoDialog.isChanged();
     }
     
     /** Launch LoadFileDialog to get a file to work with.

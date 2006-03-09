@@ -47,29 +47,23 @@ public class TreeInfoDialog extends javax.swing.JDialog {
      * @return Value of property itsTree.
      */
     public jOTDBtree getTree() {
-
-        try {
-            itsTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
-            itsTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
-//            itsTree.description = descriptionInput.getText();
-        } catch ( Exception e) {
-            logger.debug("Error getting converters: " + e);
-        }
         return this.itsTree;
     }
-    
+
+    /**
+     * Getter for property hasChanged.
+     * @return Value of hasChanged.
+     */
+    public boolean isChanged() {
+        return hasChanged;
+    }
     
     private void initFocus() {
-        // prepare a active/obsolete only combobox for special case state changes
-        DefaultComboBoxModel aModel = (DefaultComboBoxModel)stateInput.getModel();
-        aModel.removeAllElements();
-        aModel.addElement("active");
-        aModel.addElement("obsolete");
         
-
+        String aTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);
             
         // PIC
-        if (itsOtdbRmi.getTreeType().get(itsTree.type).equals("hardware")) {
+        if (aTreeType.equals("hardware")) {
             momIDLabel.setVisible(false);
             momIDInput.setVisible(false);
             originalTreeIDLabel.setVisible(false);
@@ -80,16 +74,14 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             startTimeInput.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
-            stateInput.setModel(aModel);
             // VICtemplate    
-        } else if (itsOtdbRmi.getTreeType().get(itsTree.type).equals("VItemplate")) {
+        } else if (aTreeType.equals("VItemplate")) {
             startTimeLabel.setVisible(false);
             startTimeInput.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
-            
         // VIC
-        } else if (itsOtdbRmi.getTreeType().get(itsTree.type).equals("VHtree")) {
+        } else if (aTreeType.equals("VHtree")) {
             
         }
         if (isAdministrator) {
@@ -117,23 +109,52 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     /* Fill the view */
     private void initView() {
+        // prepare a active/obsolete only combobox for special case state changes
+        DefaultComboBoxModel aModel = (DefaultComboBoxModel)stateInput.getModel();
+        aModel.removeAllElements();
+        aModel.addElement("active");
+        aModel.addElement("obsolete");
+        
+        // keep the fields that can be changed
+        itsTreeState=itsOtdbRmi.getTreeState().get(itsTree.state);
+        itsClassification = itsOtdbRmi.getClassif().get(itsTree.classification);
+//      itsDescription = itsTree.description;        
+        if (!itsTreeState.equals("active") && !itsTreeState.equals("obsolete")) {
+            aModel.addElement(itsTreeState);
+        }
+        
+        String aTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);        if (aTreeType.equals("hardware") || aTreeType.equals("VItemplate")) {
+            stateInput.setModel(aModel);
+        }
+
         treeIDInput.setText(String.valueOf(itsTree.treeID()));
         momIDInput.setText(String.valueOf(itsTree.momID));
-        classificationInput.setSelectedItem(itsOtdbRmi.getClassif().get(itsTree.classification));
+        classificationInput.setSelectedItem(itsTreeState);
         creatorInput.setText(itsTree.creator);
         creationDateInput.setText(itsTree.creationDate);
         typeInput.setText((String)itsOtdbRmi.getTreeType().get(itsTree.type));
-        stateInput.setSelectedItem(itsOtdbRmi.getTreeState().get(itsTree.state));
+        stateInput.setSelectedItem(itsTreeState);
         originalTreeIDInput.setText(String.valueOf(itsTree.originalTree));
         campaignInput.setText(itsTree.campaign);
         startTimeInput.setText(itsTree.starttime);
         stopTimeInput.setText(itsTree.stoptime);
-//        descriptionInput.setText(itsTree.description);
+//        descriptionInput.setText(itsDescription);
     }
     
     private void setNewTree() {
         try {
-            itsTree.classification=itsOtdbRmi.getRemoteTypes().getClassif((String)classificationInput.getSelectedItem());
+            if ( !itsClassification.equals(classificationInput.getSelectedItem().toString())) {
+                hasChanged=true;
+                itsTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
+            }
+            if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
+                hasChanged=true;
+                itsTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
+            }
+            if (!itsDescription.equals(descriptionInput.getText())) {
+                hasChanged=true;
+  //            itsTree.description = descriptionInput.getText();
+            }
         } catch (Exception e) {
           logger.debug("Getting ClassificationType via RMI and JNI failed");  
         }
@@ -306,6 +327,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private OtdbRmi   itsOtdbRmi;
     private jOTDBtree itsTree;
     private boolean   isAdministrator;
+    private boolean   hasChanged=false;
+    private String    itsClassification;
+    private String    itsTreeState;
+    private String    itsDescription;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField campaignInput;
