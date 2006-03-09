@@ -148,6 +148,11 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR ("Using tree " << VTtreeID << " for the tests");
 		OTDBtree	treeInfo = conn.getTreeInfo(VTtreeID);
 		LOG_INFO_STR(treeInfo);
+
+		LOG_INFO ("Changing the description to 'test_tree'");
+		tm.setDescription(VTtreeID, "test_tree");
+		treeInfo = conn.getTreeInfo(VTtreeID);
+		LOG_INFO_STR(treeInfo);
 		
 		LOG_INFO("Trying to get the topnode of the tree");
 		OTDBnode	topNode = tm.getTopNode(VTtreeID);

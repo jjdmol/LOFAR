@@ -44,7 +44,8 @@ CREATE TYPE treeInfo AS (
 	originalTree	INT4,			-- OTDBtree.treeID%TYPE,
 	campaign		VARCHAR(30),	-- campaign.name%TYPE,
 	starttime		timestamp(0),
-	stoptime		timestamp(0)
+	stoptime		timestamp(0),
+	description		TEXT
 );
 
 CREATE TYPE stateInfo AS (

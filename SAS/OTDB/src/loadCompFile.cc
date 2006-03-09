@@ -40,9 +40,9 @@ namespace LOFAR {
   namespace OTDB {
 
 //
-// saveComponentParam(OTDBparam) : bool
+// saveParam(OTDBparam) : bool
 //
-bool TreeMaintenance::saveComponentParam(OTDBparam&	aParam)
+bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -346,7 +346,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			baseParam.runtimeMod  = false;
 			baseParam.limits	  = "1+";
 			baseParam.description = "Number of instances";
-			saveComponentParam (baseParam);
+			saveParam (baseParam);
 		}
 		// -- USES --
 		else if (!args[0].compare("uses")) {
@@ -385,7 +385,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			AttachedChild.runtimeMod  = false;
 			AttachedChild.limits	  = args[4];
 			AttachedChild.description = "";
-			saveComponentParam (AttachedChild);
+			saveParam (AttachedChild);
 		}
 		// -- PAR -- 
 		else if (!args[0].compare("par")) {
@@ -415,7 +415,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			AttachedChild.runtimeMod  = (args[2].find("O",0)) ? true : false;
 			AttachedChild.limits	  = args[7];
 			AttachedChild.description = args[9];
-			saveComponentParam (AttachedChild);
+			saveParam (AttachedChild);
 			// TODO: args[8] constraint, args[6] valmoment
 		}
 		// -- UNKNOWN --

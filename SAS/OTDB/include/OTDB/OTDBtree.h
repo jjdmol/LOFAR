@@ -50,16 +50,18 @@ class OTDBconnection;
 // The the last few fields will be empty for PIC trees.
 class OTDBtree {
 public:
-	OTDBtree() : momID(0), itsTreeID(0) {};
+	OTDBtree() : itsTreeID(0), itsMomID(0) {};
 	~OTDBtree() {};
 
 	treeIDType		treeID() const 		{ return (itsTreeID); }
-	treeIDType		momID;
+	treeIDType		momID()  const		{ return (itsMomID);  }
 	classifType		classification; // development / test / operational
 	string			creator;
 	ptime			creationDate;	
 	treeType		type;			// hardware / VItemplate / VHtree
 	treeState		state;			// idle / configure / ... / active / ...
+	string			description;	// free text
+
 	// -- VIC only --
 	treeIDType		originalTree;
 	string			campaign;
@@ -74,10 +76,11 @@ public:
 
 private:
 //# Prevent changing the database keys
-	OTDBtree(treeIDType		aTreeID) : momID(0), itsTreeID(aTreeID) {};
+	OTDBtree(treeIDType		aTreeID) : itsTreeID(aTreeID), itsMomID(0) {};
 	OTDBtree(const pqxx::result::tuple&	row);
 
 	treeIDType		itsTreeID;
+	treeIDType		itsMomID;
 };
 
 //#

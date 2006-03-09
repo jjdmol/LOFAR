@@ -9,7 +9,6 @@
 \i create_log_system.sql
 
 \i security_func.sql
-\i classify_func.sql
 \i misc_func.sql
 
 -- State history
@@ -21,7 +20,6 @@
 \i getTreeList_func.sql
 \i getTreeInfo_func.sql
 \i newTree_func.sql
-\i setMomInfo_func.sql
 
 -- PICtree
 \i create_PIC_tables.sql
@@ -57,6 +55,7 @@
 \i getVHitemList_func.sql
 \i exportTree_func.sql
 \i searchVHinPeriod_func.sql
+\i setSchedule_func.sql
 
 -- multi treetype
 \i getTopNode_func.sql
@@ -66,5 +65,7 @@
 \i copyTree_func.sql
 \i deleteTree_func.sql
 \i addKVT_func.sql
-
+\i classify_func.sql
+\i setMomInfo_func.sql
+\i setDescription_func.sql
 

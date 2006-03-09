@@ -249,7 +249,7 @@ int main (int	argc, char*	argv[]) {
 
 		LOG_INFO("Modifying parameter '%nrInstances' to 1..5");
 		testPar.limits = "1..5";
-		ASSERTSTR (tm.saveComponentParam(testPar), "update of parameter failed");
+		ASSERTSTR (tm.saveParam(testPar), "update of parameter failed");
 		testPar = tm.getParam(0, pref);
 		LOG_INFO_STR(testPar);
 

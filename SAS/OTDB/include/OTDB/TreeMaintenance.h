@@ -81,9 +81,6 @@ public:
 	// Save new node or update the limits and description fields of the node.
 	bool	saveComponentNode	(VICnodeDef&	aNode);
 
-	// Save the parameter definition
-	bool	saveComponentParam	(OTDBparam&		aParam);
-
 
 	//# --- VIC maintenance : Templates ---
 	// From a component tree a template tree can be constructed. In a template
@@ -109,6 +106,9 @@ public:
 	// Get the parameter definition of a node
 	OTDBparam	getParam	(treeIDType		aTreeID,
 							 nodeIDType		aParamID);
+
+	// Save the parameter definition
+	bool	saveParam	(OTDBparam&		aParam);
 
 	// Get a number of levels of children.
 	vector<OTDBnode> getItemList (treeIDType	aTreeID,
@@ -182,6 +182,15 @@ public:
 	// When errors occur these can be retrieved with the errorMsg function.
 	bool	setTreeState(treeIDType		aTreeID,
 						 treeState		aState);
+
+	// Update the description of a tree.
+	bool	setDescription(treeIDType	aTreeID,
+						   string		aDescription);
+
+	// Set the scheduling times of the tree
+	bool	setSchedule(treeIDType		aTreeID,
+				        const ptime&	aStartTime,
+				        const ptime& 	aStopTime);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.

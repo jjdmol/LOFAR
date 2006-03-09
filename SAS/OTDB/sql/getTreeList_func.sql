@@ -73,7 +73,8 @@ CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2)
 			   t.originID, 
 			   c.name, 
 			   t.starttime, 
-			   t.stoptime
+			   t.stoptime,
+			   t.description
 		FROM   OTDBtree t 
 			   INNER JOIN OTDBuser u ON t.creator = u.userid
 			   INNER JOIN campaign c ON c.ID = t.campaign
