@@ -4,39 +4,23 @@ ethereal-0.9.8-epaplugin
 The following instructions explain how to compile and install the Ethereal plugin for dissecting
 EPA protocol messages received on an Ethernet interface.
 
-Unpacking
----------
-Unpack and rename the ethereal 0.9.8 distribution tarball.
+There are two versions of the plugin. One for the FTS-1 software (ethereal-0.9.8-epa1-patch) and
+one for the FTS-2 firmware (ethereal-0.9.8-epa2-patch).
 
+Unpacking the pristine Ethereal sources
+----------------------------------------
 > tar zxvf ethereal-0.9.8.tar.gz
-> mv ethereal-0.9.8 ethereal-0.9.8-epaplugin
 
 ========== FOR EPA1 ==========
-Remove files that should be replaced by the checkout which is next.
-> cd ethereal-0.9.8-epaplugin
-> rm configure.in
-> rm Makefile.am
-> rm plugins/Makefile.am
-
-Patch doc/Makefile.am: remove trailing backslash on last line, otherwise autogen.sh will fail
-to configure the software lateron.
-
-Checkout EPA plugin source code
--------------------------------
-cd to directory above LOFAR
-> cvs co LOFAR/MAC/Tools/ethereal-0.9.8-epaplugin
-
-Configure, build and install the EPA plugin
--------------------------------------------
-> cd LOFAR/MAC/Tools/ethereal-0.9.8-epaplugin
+> cd LOFAR/MAC/Tools/ethereal-0.9.8
+> patch -p1 <../ethereal-0.9.8-epa1-patch
 > mkdir aclocal-missing          # autogen assumes that this directory exists
-> ./autogen.sh --prefix=/usr
-> cd plugins/epa
+> ./autogen.sh --prefix=/usr/local
 > make
 > sudo make install  # run as root
 
 ========== FOR EPA2 ==========
-> cd LOFAR/MAC/Tools/ethereal-0.9.8-epaplugin
+> cd LOFAR/MAC/Tools/ethereal-0.9.8
 > patch -p1 <../ethereal-0.9.8-epa2-patch
 > mkdir aclocal-missing          # autogen assumes that this directory exists
 > ./autogen.sh --prefix=/usr/local

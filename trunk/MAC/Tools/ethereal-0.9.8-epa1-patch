@@ -1,12 +1,6 @@
 diff -Naur --exclude=CVS ethereal-0.9.8-orig/configure.in ethereal-0.9.8-epaplugin/configure.in
 --- ethereal-0.9.8-orig/configure.in	2002-12-04 05:26:12.000000000 +0100
 +++ ethereal-0.9.8-epaplugin/configure.in	2004-11-15 15:26:56.000000000 +0100
-@@ -1,4 +1,4 @@
--# $Id$
-+# $Id$
- dnl
- dnl Process this file with autoconf 2.13 or later to produce a
- dnl configure script; 2.12 doesn't generate a "configure" script that
 @@ -766,6 +766,7 @@
    plugins/gryphon/Makefile
    plugins/mgcp/Makefile
@@ -18,15 +12,6 @@ diff -Naur --exclude=CVS ethereal-0.9.8-orig/configure.in ethereal-0.9.8-epaplug
 diff -Naur --exclude=CVS ethereal-0.9.8-orig/Makefile.am ethereal-0.9.8-epaplugin/Makefile.am
 --- ethereal-0.9.8-orig/Makefile.am	2002-12-08 04:38:19.000000000 +0100
 +++ ethereal-0.9.8-epaplugin/Makefile.am	2004-07-13 17:15:05.000000000 +0200
-@@ -1,7 +1,7 @@
- # Makefile.am
- # Automake file for Ethereal
- #
--# $Id$
-+# $Id$
- #
- # Ethereal - Network traffic analyzer
- # By Gerald Combs <gerald@ethereal.com>
 @@ -417,7 +417,8 @@
  	plugins/giop/packet-coseventcomm.c \
  	plugins/gryphon/packet-gryphon.c \
@@ -2119,15 +2104,6 @@ diff -Naur --exclude=CVS ethereal-0.9.8-orig/plugins/epa/packet-epa.h ethereal-0
 diff -Naur --exclude=CVS ethereal-0.9.8-orig/plugins/Makefile.am ethereal-0.9.8-epaplugin/plugins/Makefile.am
 --- ethereal-0.9.8-orig/plugins/Makefile.am	2002-10-05 05:47:38.000000000 +0200
 +++ ethereal-0.9.8-epaplugin/plugins/Makefile.am	2004-07-13 17:15:05.000000000 +0200
-@@ -1,7 +1,7 @@
- # Makefile.am
- # Automake file for Ethereal
- #
--# $Id$
-+# $Id$
- #
- # Ethereal - Network traffic analyzer
- # By Gerald Combs <gerald@ethereal.com>
 @@ -21,7 +21,7 @@
  # along with this program; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -2136,4 +2112,3 @@ diff -Naur --exclude=CVS ethereal-0.9.8-orig/plugins/Makefile.am ethereal-0.9.8-
 +SUBDIRS = docsis giop gryphon mgcp pcli epa
  
  plugindir = @plugindir@
- 
