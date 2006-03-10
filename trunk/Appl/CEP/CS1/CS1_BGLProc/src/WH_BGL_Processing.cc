@@ -1164,10 +1164,10 @@ WH_BGL_Processing* WH_BGL_Processing::make(const string &name)
 void WH_BGL_Processing::preprocess()
 {
 #if defined HAVE_BGL && NR_SUBBAND_CHANNELS == 256
-  fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 1 0 1 1 1 715 0) (128 529 1 0 1 1 0 2828 0) (64 529 1 0 1 1 0 1420 0) (32 529 1 0 1 1 0 716 0) (16 529 1 0 1 1 0 364 0) (8 529 1 0 1 1 0 188 0) (4 529 1 0 1 1 0 100 0) (2 529 1 0 1 1 0 56 0))");
-  itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_BACKWARD, FFTW_USE_WISDOM);
+  fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 -1 0 1 1 1 352 0) (128 529 -1 0 1 1 0 2817 0) (64 529 -1 0 1 1 0 1409 0) (32 529 -1 0 1 1 0 705 0) (16 529 -1 0 1 1 0 353 0) (8 529 -1 0 1 1 0 177 0) (4 529 -1 0 1 1 0 89 0) (2 529 -1 0 1 1 0 45 0))");
+  itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_FORWARD, FFTW_USE_WISDOM);
 #else
-  itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_BACKWARD, FFTW_ESTIMATE);
+  itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_FORWARD, FFTW_ESTIMATE);
 #endif
 
   for (int i = 1; i <= NR_SAMPLES_PER_INTEGRATION; i ++) {
