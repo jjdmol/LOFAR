@@ -1,0 +1,794 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the EPA Demonstrator Board
+//
+autogen definitions protocol;
+
+description = "Protocol for the EPA Demonstrator Board";
+prefix = "EPA"; // for the signal names
+id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+11)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<linux/types.h>';
+include = '<net/ethernet.h>';
+include = '<Common/LofarTypes.h>';
+include = '<APL/RSP_Protocol/MEPHeader.h>';
+include = '<APL/RSP_Protocol/MEPData.h>';
+
+prelude = << PRELUDE_END
+
+/**
+ * Protocol constants.
+ */
+
+#undef MIN
+#define MIN(a,b) ((a)<(b)?(a):(b))
+
+  /*@{*/
+  /**
+   * Constants used in the EPA protocol.
+   * These constants are all derived from the leading
+   * constants in MEPHeader.h.
+   */
+  static const int N_AP            = 4; // number of AP's per board
+  static const int N_COEF          = MIN(MEPHeader::FRAGMENT_SIZE, MEPHeader::BF_XROUT_SIZE) / sizeof(int16);
+  static const int BF_N_FRAGMENTS  = 1; // MEPHeader::BF_XROUT_SIZE / MEPHeader::FRAGMENT_SIZE
+  static const int N_WAVE_SAMPLES  = MEPHeader::DIAG_WGXWAVE_SIZE / sizeof(int32);
+  static const int BST_N_FRAGMENTS = 1; // MEPHeader::BST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
+  static const int SST_N_FRAGMENTS = MEPHeader::SST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
+  static const int N_SST_STATS     = MEPHeader::FRAGMENT_SIZE / sizeof(uint32);
+  static const int N_BST_STATS     = MIN(MEPHeader::FRAGMENT_SIZE, MEPHeader::BST_POWER_SIZE) / sizeof(uint32);
+  static const int XST_N_FRAGMENTS = (MEPHeader::N_REMOTE_XLETS > MEPHeader::MAX_XLETS_PER_FRAGMENT ? 2 : 1);
+  static const int N_XST_STATS     = MEPHeader::XST_FRAGMENT_SIZE / sizeof(uint32);
+
+  /*@}*/
+
+  typedef struct RSPStatus // total size 12 bytes
+  {
+    uint8  voltage_1_2; // measured 1.2V supply voltage
+    uint8  voltage_2_5; // measured 2.5V supply voltage
+    uint8  voltage_3_3; // measured 3.3V supply voltage
+    uint8  pcb_temp;    // RSP board temperature
+    uint8  bp_temp;     // board processor temperature
+    uint8  ap0_temp;    // antenna processor 0 temperature
+    uint8  ap1_temp;    // antenna processor 1 temperature
+    uint8  ap2_temp;    // antenna processor 2 temperature
+    uint8  ap3_temp;    // antenna processor 3 temperature
+    uint8  bp_clock;    // board processor system clock speed
+    uint16 ffi0;
+  };
+
+  typedef struct ETHStatus // total size 12 bytes
+  {
+    uint32 nof_frames; // number of ETH frame received
+    uint32 nof_errors; // number of incorrect ETH frames
+    uint8  last_error; // error status of last received ETH frame
+    uint8  ffi0;
+    uint8  ffi1;
+    uint8  ffi2;
+  };
+  
+  typedef struct MEPStatus // total size 4 bytes
+  {
+    uint16 seqnr;  // sequence number of previously received message
+    uint8  error;  // error status of previously received message
+    uint8  ffi0;
+  };
+
+  typedef struct DIAGStatus // total size 24 bytes
+  {
+    uint8  interface;     // Interface under test
+    uint8  mode;          // Test mode
+    uint16 ri_errors;     // Number of detected errors
+    uint16 rcux_errors;   // Number of detected errors
+    uint16 rcuy_errors;   // Number of detected errors
+    uint16 lcu_errors;    // Number of detected errors
+    uint16 cep_errors;    // Number of detected errors
+    uint16 serdes_errors; // Number of detected errors
+    uint16 ap0_ri_errors; // Number of detected errors
+    uint16 ap1_ri_errors; // Number of detected errors
+    uint16 ap2_ri_errors; // Number of detected errors
+    uint16 ap3_ri_errors; // Number of detected errors
+    uint16 ffi0;
+  };
+  
+  typedef struct BSStatus // total size 16 bytes x 4 = 64 bytes
+  {
+    uint32 ext_count;     // number of cycles between external and internal sync, reset 
+    uint32 sync_count;    // number of internal sync events
+    uint32 sample_offset; // number of samples processed since last reset (wraps)
+    uint32 slice_count;   // number of slices in the previous internal sync interval
+  };
+
+  typedef struct RCUStatus // total size 12 bytes x 4 = 48 bytes
+  {
+    struct {
+      uint8 pllx:1;
+      uint8 plly:1;
+      uint8 ffi0:6;
+    };
+    uint8  ffi1;
+    uint8  ffi2;
+    uint8  ffi3;
+    uint32 nof_overflowx;
+    uint32 nof_overflowy;
+  };
+
+  typedef struct RSUStatus // total size 4 bytes
+  {
+    uint8 rdy:1;  // 0 = Configuration ongoing, 1 = Configuration done
+    uint8 err:1;  // 0 = Configuration was succesful, 1 = Error during configuration
+    uint8 fpga:1; // 0 = BP was reconfigured, 1 = AP was reconfigured
+    uint8 im:1;   // 0 = Factory image, 1 = Application image
+    uint8 trig:3; // 000 = Board reset
+                  // 001 = User reconfiguration request
+                  // 010 = User reset request
+                  // 100 = Watchdog timer timeout
+    uint8 ffi:1;  // not used
+  };
+
+  typedef struct ADOStatus // total size 8 bytes
+  {
+    uint32 adc_offset_x;
+    uint32 adc_offset_y;
+  };
+
+  typedef struct BoardStatus // total size 164 bytes
+  {
+    RSPStatus  rsp;
+    ETHStatus  eth;
+    MEPStatus  mep;
+    DIAGStatus diag;
+    BSStatus   ap0_sync;
+    BSStatus   ap1_sync;
+    BSStatus   ap2_sync;
+    BSStatus   ap3_sync;
+    RCUStatus  blp0_rcu;
+    RCUStatus  blp1_rcu;
+    RCUStatus  blp2_rcu;
+    RCUStatus  blp3_rcu;
+    RSUStatus  cp_status;
+    ADOStatus  blp0_adc_offset;
+    ADOStatus  blp1_adc_offset;
+    ADOStatus  blp2_adc_offset;
+    ADOStatus  blp3_adc_offset;
+  };
+
+  typedef struct RSRVersion
+  {
+    union {
+      uint8 rsp_version; // RSP hardware version
+      uint8 ap_id;          // AP identification
+    };
+    uint8 fpga_min :4; // FPGA firmware version (minor)
+    uint8 fpga_maj :4; // FPGA firmware version (major)
+  };
+
+  typedef struct RSUReconfig
+  {
+    uint8 page      :3;       // page selection
+    uint8 ffi       :4;
+    uint8 fpgaselect:1; // fpga selection (0 == reconfigure AP, 1 == reconfigure BP)
+  };
+
+  typedef struct RSUReset
+  {
+    uint8 sync :1; // send sync pulse to all FPGA's
+    uint8 clear:1; // clear all FPGA's
+    uint8 reset:1; // reset all FPGA's and reconfigure BP with factory image
+    uint8 ffi  :5;
+  };
+
+  typedef struct DIAGBypass
+  {
+    uint8 dc_disable:1; // enable DC block (high pass filter processing)
+    uint8 pfs_bypass:1; // bypass PFS
+    uint8 pft_bypass:1; // bypass PFT
+    uint8 bf_bypass :1; // bypass BF
+    uint8 si_enable :1; // enable spectral inversion processing
+    uint8 ffi0      :1;
+    uint8 use_sync  :1; // use (soft)sync, useful when WG single slice mode is used
+    uint8 use_resync:1; // use (soft)sync realigned to BLP output sync to preserve X,Y order in DIAG results buffer
+  };
+
+  typedef struct DIAGSelftest
+  {
+    uint8 interface; // 0=ring, 1=rcux, 2=rcuy, 3=lcu, 4=cep, 5=serdes
+    uint8 mode;      // 1=local loopback, 2=remote loopback, 3=transmit, 4=receive, 5=lane, 6=lane single
+    uint8 duration;  // 0=debug, 1=short, 2=normal, 3=long
+    uint8 lane;      // Ring LVDS bit lane index, raning from 0 to 13
+  };
+
+  typedef struct RCUHandler
+  {
+    uint8 input_delay_x:7; // input delay for X-receiver
+    uint8 ffi0         :1;
+    uint8 input_delay_y:7; // input delay for Y-receiver
+    uint8 ffi1         :1;
+  };
+
+  typedef struct CRControl
+  {
+    uint8 sync        :1; // generate soft sync pulse for a specific FPGA
+    uint8 clear       :1; // soft clear a specific FPGA
+    uint8 sync_disable:1; // disable the external sync pulse
+    uint8 ffi         :5;
+  };
+
+PRELUDE_END;
+
+//
+// The EPA events are specified from the point of view
+// of the EPA firmware. An event with direction IN is 
+// an input to the EPA firmware, OUT is an output of
+// the EPA firmware and INOUT is both.
+//
+
+//
+// Generic events:
+// * READ  , READACK  , READACK_ERROR
+// * WRITE , WRITEACK , WRITEACK_ERROR
+//
+// For the specific EPA registers the following generic
+// events are used because there is no point in using
+// specific events when only a MEPHeader is sent:
+// * READ, READACK_ERROR, WRITEACK, WRITEACK_ERROR
+//
+// For each read-only EPA register a specific OUT
+// event is defined.
+//
+// For each read-write EPA register a specific INOUT
+// event is defined.
+//
+// This results in the following scenarios (REGISTER_X)
+// is a placeholder for register READACK, WRITE events.
+//
+// Read register (success):
+//
+//  User                      EPA
+//  ----                      ---
+//   |                         |
+//   +-------READ------------->|
+//   |                         |
+//   |<-----REGISTER_X---------+
+//   |                         |
+//
+//  Read register (error)
+//
+//  User                          EPA
+//  ----                          ---
+//   |                             |
+//   +-------READ----------------->|
+//   |                             |
+//   |<---READACK_ERROR------------+
+//   |                             |
+//
+// Write register (success)
+//
+//  User                      EPA
+//  ----                      ---
+//   |                         |
+//   +-------REGISTER_X------->|
+//   |                         |
+//   |<------WRITEACK----------+
+//   |                         |
+//
+// Write register (error)
+//
+//  User                      EPA
+//  ----                      ---
+//   |                         |
+//   +-------REGISTER_X------->|
+//   |                         |
+//   |<------WRITEACK_ERROR----+
+//   |                         |
+//
+// There are also generic WRITE and READACK events
+// which have a generic "MEPData payload" parameter
+// to send/recv variable sized payload data.
+//
+event = {
+  noheader;
+  signal = WRITE;
+  dir = OUT; // output to hardware
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "payload";
+    type = "MEPData";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = WRITEACK;
+  dir = IN; // input from hardware
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = WRITEACK_ERROR;
+  dir = IN; // input from hardware
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = READ;
+  dir = OUT; // output to hardware
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = READACK;
+  dir = IN; // input from hardware
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "payload";
+    type = "MEPData";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = READACK_ERROR;
+  dir = IN; // input from hardware
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+};
+
+//
+// Specific READACK and WRITE events start here
+//
+
+event = {
+  noheader;
+  signal = RSR_STATUS;
+  dir = IN; // read-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "board";
+    type = "BoardStatus";
+  };
+};
+
+event = {
+  noheader;
+  signal = RSR_VERSION;
+  dir = IN; // read-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "version";
+    type = "RSRVersion";
+  };
+};
+
+event = {
+  noheader;
+  signal = RSU_FLASHRW;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "data";
+    type = "MEPData";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = RSU_FLASHERASE;
+  dir = OUT; // write-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  parm = {
+    name = "erase"; // value must always be 1
+    type = "uint8";
+  };
+};
+
+event = {
+  noheader;
+  signal = RSU_RECONFIGURE;
+  dir = OUT; // write-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "config";
+    type = "RSUReconfig";
+  };
+};
+
+event = {
+  noheader;
+  signal = RSU_RESET;
+  dir = OUT; // write-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "reset";
+    type = "RSUReset";
+  };
+};
+
+event = {
+  noheader;
+  signal = DIAG_WG; // hdr should specify XPOL/YPOL
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "mode";
+    type = "uint8";
+  };
+  param = {
+    name = "phase";
+    type = "uint8";
+  };
+  param = {
+    name = "nof_samples";
+    type = "uint16";
+  };
+  param = {
+    name = "freq";
+    type = "uint32";
+  };
+  param = {
+    name = "ampl";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = DIAG_WGWAVE; // hdr should specify XPOL/YPOL
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "samples";
+    type = "int32[N_WAVE_SAMPLES]";
+  };
+};
+
+event = {
+  noheader;
+  signal = DIAG_BYPASS;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "bypass";
+    type = "DIAGBypass";
+  };
+};
+
+event = {
+  noheader;
+  signal = DIAG_RESULTS;
+  dir = IN; // read-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "data";
+    type = "uint8[MEPHeader::DIAG_RESULTS_SIZE]";
+  };
+};
+
+event = {
+  noheader;
+  signal = DIAG_SELFTEST;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  parm = {
+    name = "selftest";
+    type = "DIAGSelftest";
+  };
+};
+
+event = {
+  noheader;
+  signal = SS_SELECT;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "subbands";
+    type = "uint16[MEPHeader::SS_SELECT_SIZE / sizeof(uint16)]";
+  };
+};
+
+event = {
+  noheader;
+  signal = BF_COEFS; // hdr should specify XROUT, XIOUT, XROUT or YIOUT
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "coef";
+    type = "int16[N_COEF]";
+  };
+};
+
+event = {
+  noheader;
+  signal = BST_STATS; // hdr should specify SST_POWER or BST_POWER
+  dir = IN; // read-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "stat";
+    type = "uint32[N_BST_STATS]";
+  };
+};
+
+event = {
+  noheader;
+  signal = SST_STATS; // hdr should specify SST_POWER or BST_POWER
+  dir = IN; // read-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "stat";
+    type = "uint32[N_SST_STATS]";
+  };
+};
+
+event = {
+  noheader;
+  signal = RCU_SETTINGS;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "ap";
+    type = "RCUHandler";
+  };
+};
+
+event = {
+  noheader;
+  signal = RCU_PROTOCOL; // hdr should specify XPOL or YPOL
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "protocol";
+    type = "MEPData";
+    userdefined;
+  };
+};  
+
+event = {
+  noheader;
+  signal = RCU_RESULT; // hdr should specify XPOL or YPOL
+  dir = IN; // read-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "result";
+    type = "uint8[MEPHeader::RCU_RESULT_SIZE]";
+  };
+};
+
+event = {
+  noheader;
+  signal = CR_CONTROL;
+  dir = OUT; // write-only register
+  param = {
+    name = "hdr"; // hdr indicates SOFTCLEAR, SOFTSYNC or SYNCDISABLE
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "control";
+    type = "uint8";
+  };
+};
+
+event = {
+  noheader;
+  signal = XST_STATS;
+  dir = IN; // read-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "xst_stat";
+    type = "uint32[N_XST_STATS]";
+  };
+};
+
+event = {
+  noheader;
+  signal = CDO_SETTINGS;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "station_id";
+    type = "uint32";
+  };
+  param = {
+    name = "configuration_id";
+    type = "uint16";
+  };
+  param = {
+    name = "format";
+    type = "uint16";
+  };
+  param = {
+    name = "antenna_id";
+    type = "uint16";
+  };
+  param = {
+    name = "destination_mac";
+    type = "uint8[ETH_ALEN]";
+  };
+};
+
+event = {
+  noheader;
+  signal = CDO_HEADER;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "header";
+    type = "uint8[MEPHeader::CDO_HEADER_SIZE]";
+  };
+};
+
+event = {
+  noheader;
+  signal = BS_NOFSAMPLESPERSYNC;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "nof_samples_per_sync_interval";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = TDS_PROTOCOL;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "protocol";
+    type = "MEPData";
+    userdefined;
+  };
+};  
+
+event = {
+  noheader;
+  signal = TDS_RESULT;
+  dir = IN; // read-only register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "result";
+    type = "uint8[MEPHeader::TDS_RESULT_SIZE]";
+  };
+};
+
+event = {
+  noheader;
+  signal = TBB_CONTROL;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "dummy";
+    type = "uint8";
+  };
+};  
