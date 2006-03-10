@@ -64,10 +64,10 @@ namespace LOFAR {
     char totRecvframe[args->PayloadSize + args->IPHeaderSize];
     char* recvframe = totRecvframe;
     int recvDataSize = args->PayloadSize;
-    if (args->Connection->getType() == "TH_Ethernet") {
+    //if (args->Connection->getType() == "TH_Ethernet") {
       recvframe += args->IPHeaderSize;
       recvDataSize = args->PayloadSize + args->IPHeaderSize;
-    };
+      //};
     
     vector<NSTimer*> itsTimers;
     NSTimer threadTimer("threadTimer");
