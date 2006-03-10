@@ -54,7 +54,7 @@ lofar_GENERAL
 lofar_COMPILETOOLS
 
 lofar_INTERNAL(LCS/AMC/AMCBase, AMCBase, LCS-AMC-1_1, 1, AMCBase/EarthCoord.h,,)
-
+lofar_INTERNAL(LCS/Blob, Blob, LCS-Blob-1_0, 1, Blob/BlobField.h,,)
 lofar_INTERNAL(LCS/Common, common, LCS-Common-3_0, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/Test/Suite, suite, MAC-GCF-6_1rc2, 1, Suite/suite.h,,)
 lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol, MAC-RTC-6_0devel1, 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
