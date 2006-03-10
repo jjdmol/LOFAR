@@ -106,7 +106,7 @@ void DH_Subband::setTestPattern(double Hz)
   for (int time = 0; time < NR_INPUT_SAMPLES; time ++) {
     double s, c, phi = 2 * M_PI * Hz * time / SAMPLE_RATE;
     sincos(phi, &s, &c);
-    i16complex sample = makei16complex((int) (32767 * s), (int) (32767 * c));
+    i16complex sample = makei16complex((int) (32767 * c), (int) (32767 * s));
 
     for (int stat = 0; stat < NR_STATIONS; stat ++) {
       for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
@@ -115,7 +115,7 @@ void DH_Subband::setTestPattern(double Hz)
     }
 #if NR_STATIONS >= 2 && NR_POLARIZATIONS == 2
     sincos(phi + phaseShift, &s, &c);
-    (*itsSamples)[1][time][1] = makei16complex((int) (32767 * s), (int) (32767 * c));
+    (*itsSamples)[1][time][1] = makei16complex((int) (32767 * c), (int) (32767 * s));
 #endif
   }
 #else // use random samples

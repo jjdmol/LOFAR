@@ -65,8 +65,8 @@ void DH_FineDelay::setTestPattern()
   memset(itsDelays, 0, sizeof(AllDelaysType));
 
 #if NR_STATIONS >= 2
-  (*itsDelays)[1].delayAtBegin  = 4.996749315e-9;
-  (*itsDelays)[1].delayAfterEnd = 4.996749315e-9;
+  (*itsDelays)[1].delayAtBegin  = -4.996749315e-9;
+  (*itsDelays)[1].delayAfterEnd = -4.996749315e-9;
 #endif
 }
 
