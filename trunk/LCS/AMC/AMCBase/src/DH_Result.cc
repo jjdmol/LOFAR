@@ -24,15 +24,14 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/AMCClient/DH_Result.h>
-#include <AMCBase/AMCClient/BlobIO.h>
-#include <AMCBase/AMCClient/ConverterCommand.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/DH_Result.h>
+#include <AMCBase/BlobIO.h>
+#include <AMCBase/ResultData.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobArray.h>
+#include <Common/LofarLogger.h>
+
 
 namespace LOFAR
 {
@@ -40,7 +39,7 @@ namespace LOFAR
   {
 
     // Initialize the verion number of this class.
-    const int DH_Result::theirVersionNr = 2;
+    const int DH_Result::theirVersionNr = 3;
 
     DH_Result::DH_Result() : 
       DataHolder("aDH_Result", "DH_Result", theirVersionNr)
@@ -60,7 +59,8 @@ namespace LOFAR
     }
 
 
-    void DH_Result::writeBuf(const vector<SkyCoord>& skyCoord)
+    void DH_Result::writeBuf(const ConverterStatus& sts, 
+                             const ResultData& res)
     {
       // Create the output blob that will hold the result data to be sent to
       // the converter client.
@@ -70,11 +70,12 @@ namespace LOFAR
       // \note We don't need to call putStart() and putEnd() on the blob
       // stream; this is done by the DataBlobExtra class in the Transport
       // library.
-      bos << skyCoord;
+      bos << sts
+          << res;
     }
 
 
-    void DH_Result::readBuf(vector<SkyCoord>& skyCoord)
+    void DH_Result::readBuf(ConverterStatus& sts, ResultData& res)
     {
       // Open the input blob to read the data that were just received from the
       // converter server.
@@ -85,8 +86,8 @@ namespace LOFAR
       // Make sure we've received the correct version of this class.
       ASSERT(found && version == theirVersionNr);
       
-      // Retrieve the vector of sky coordinates
-      bis >> skyCoord;
+      // Retrieve the converter result.
+      bis >> sts >> res;
 
       // Assert that we're really at the end of the blob.
       bis.getEnd();
@@ -96,7 +97,6 @@ namespace LOFAR
     DH_Result* DH_Result::clone() const
     {
       THROW(Exception, "We should NEVER call this method!");
-//       return new DH_Result(*this);
     }
 
   } // namespace AMC

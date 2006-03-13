@@ -1,4 +1,4 @@
-//#  ConverterCommand.cc: one line description
+//#  ConverterStatus.cc: Status that will be returned by the Converter server
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,42 +24,42 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/AMCClient/ConverterCommand.h>
-#include <Common/LofarLogger.h>
+#include <AMCBase/ConverterStatus.h>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
 
-    ConverterCommand::ConverterCommand(Commands cmd)
+    ConverterStatus::ConverterStatus(Status sts, const string& txt) :
+      itsText(txt)
     {
-      if (INVALID < cmd && cmd < N_Commands) itsCommand = cmd;
-      else itsCommand = INVALID;
+      if (UNKNOWN < sts && sts < N_Status) itsStatus = sts;
+      else itsStatus = UNKNOWN;
     }
 
-
-    const string& ConverterCommand::showCommand() const
+    const string& ConverterStatus::asString() const
     {
       //# Caution: Always keep this array of strings in sync with the enum
-      //#          Commands that is defined in the header file!
-      static const string commands[N_Commands+1] = {
-        "J2000 --> AZEL",
-        "J2000 --> ITRF",
-        "AZEL --> J2000",
-        "ITRF --> J2000",
-        "<INVALID>"
+      //#          Status that is defined in the header file!
+      static const string stsString[N_Status+1] = {
+        "Success",
+        "Converter error",
+        "Unknown error"    //# This line should ALWAYS be last!
       };
-      if (isValid()) return commands[itsCommand];
-      else return commands[N_Commands];
+      if (itsStatus < 0) return stsString[N_Status];
+      else return stsString[itsStatus];
     }
 
 
-    ostream& operator<<(ostream& os, const ConverterCommand& cc)
+    ostream& operator<<(ostream& os, const ConverterStatus& cs)
     {
-      return os << cc.showCommand();
+      os << cs.asString();
+      if (!cs.text().empty()) os << ": " << cs.text();
+      return os;
     }
 
- } // namespace AMC
+  } // namespace AMC
   
 } // namespace LOFAR

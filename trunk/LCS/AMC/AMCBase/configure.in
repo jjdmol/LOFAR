@@ -2,7 +2,7 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT
-AM_INIT_AUTOMAKE(AMCBase, 1.1, no-define)
+AM_INIT_AUTOMAKE(AMCBase, 2.0, no-define)
 AM_CONFIG_HEADER(config.h)
 dnl AX_PREFIX_CONFIG_H([lofar-config.h], [])
 
@@ -52,9 +52,9 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/TransportHolder.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-3_1,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Blob,Blob,LCS-Blob-1_0,1,Blob/BlobHeader.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_3,1,Transport/TransportHolder.h,,)
 
 dnl
 dnl Output Makefiles
@@ -65,6 +65,5 @@ include/Makefile
 include/AMCBase/Makefile
 src/Makefile
 test/Makefile
-test/AMCClient/Makefile
 AMCBase.spec
 )

@@ -39,9 +39,9 @@ then
   # Exit and interrupt handler. $! is the process id of the last background 
   # process started, i.e. the converter server.
   trap 'if [ $STATUS != 0 ] && [ $STATUS != 2 ]; then \
-          mv amcserver_tmp.log amcserver.err 2>/dev/null; \
+          mv -f amcserver_tmp.log amcserver.err 2>/dev/null; \
         else \
-          rm -f amcserver_tmp.log; \
+          rm -f amcserver_tmp.log amcserver.err; \
         fi; \
         if kill -0 $! 2>/dev/null; then kill -9 $! 2>/dev/null; fi; \
         rm -f $SERVER.log_prop; \
@@ -62,7 +62,7 @@ STATUS=$?
 # If something went wrong, secure the log file(s)
 if [ $STATUS != 0 ] && [ $STATUS != 2 ]
 then
-  mv tConverter_tmp.log tConverter_$TYPE.err 2>/dev/null
+  mv -f tConverter_tmp.log tConverter_$TYPE.err 2>/dev/null
 fi
 
 exit $STATUS

@@ -24,9 +24,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCImpl/AMCServer/ConverterServer.h>
-#include <AMCImpl/AMCServer/ConverterProcess.h>
-#include <AMCImpl/Exceptions.h>
+#include <AMCImpl/ConverterServer.h>
+#include <AMCImpl/ConverterProcess.h>
+#include <AMCBase/Exceptions.h>
 #include <Common/StringUtil.h>
 
 namespace LOFAR
@@ -38,7 +38,7 @@ namespace LOFAR
       itsListenSocket("server", toString(port), Socket::TCP)
     {
       if (!itsListenSocket.ok()) {
-        THROW (ServerError,
+        THROW (IOException,
                formatString("Failed to create listen socket on port %d - %s",
                             port, itsListenSocket.errstr().c_str()));
       }

@@ -24,16 +24,15 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/AMCClient/DH_Request.h>
-#include <AMCBase/AMCClient/BlobIO.h>
-#include <AMCBase/AMCClient/ConverterCommand.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/DH_Request.h>
+#include <AMCBase/BlobIO.h>
+#include <AMCBase/ConverterCommand.h>
+#include <AMCBase/RequestData.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
+
 
 namespace LOFAR
 {
@@ -41,7 +40,7 @@ namespace LOFAR
   {
 
     // Initialize the verion number of this class.
-    const int DH_Request::theirVersionNr = 2;
+    const int DH_Request::theirVersionNr = 3;
 
     DH_Request::DH_Request() : 
       DataHolder("aDH_Request", "DH_Request", theirVersionNr)
@@ -62,9 +61,7 @@ namespace LOFAR
 
 
     void DH_Request::writeBuf(const ConverterCommand& cmd,
-                              const vector<SkyCoord>& skyCoord,
-                              const vector<EarthCoord>& earthCoord,
-                              const vector<TimeCoord>& timeCoord)
+                              const RequestData& req)
     {
       // Create the output blob that will hold the request data to be sent to
       // the converter server.
@@ -74,17 +71,13 @@ namespace LOFAR
       // \note We don't need to call putStart() and putEnd() on the blob
       // stream; this is done by the DataBlobExtra class in the Transport
       // library.
-      bos << cmd
-          << skyCoord
-          << earthCoord
-          << timeCoord;
+      bos << cmd 
+          << req;
     }
 
 
     void DH_Request::readBuf(ConverterCommand& cmd,
-                             vector<SkyCoord>& skyCoord,
-                             vector<EarthCoord>& earthCoord,
-                             vector<TimeCoord>& timeCoord)
+                             RequestData& req)
     {
       // Open the input blob to read the data that were just received from the
       // converter client.
@@ -95,12 +88,9 @@ namespace LOFAR
       // Make sure we've received the correct version of this class.
       ASSERT(found && version == theirVersionNr);
       
-      // Retrieve the converter command and the vectors of sky, earth, and
-      // time coordinates.
+      // Retrieve the converter request.
       bis >> cmd
-          >> skyCoord
-          >> earthCoord
-          >> timeCoord;
+          >> req;
 
       // Assert that we're really at the end of the blob.
       bis.getEnd();
@@ -110,7 +100,6 @@ namespace LOFAR
     DH_Request* DH_Request::clone() const
     {
       THROW(Exception, "We should NEVER call this method!");
-//       return new DH_Request(*this);
     }
 
   } // namespace AMC

@@ -2,7 +2,7 @@ check_PROGRAMS			= tConverter tConverterStress
 
 tConverter_SOURCES		= tConverter.cc
 tConverter_LDADD		= ../src/libamcimpl.la
-tConverter_DEPENDENCIES		= ../src/libamcimpl.la $(LOFAR_DEPEND)
+#tConverter_DEPENDENCIES		= ../src/libamcimpl.la $(LOFAR_DEPEND)
 
 tConverterStress_SOURCES	= tConverterStress.cc
 tConverterStress_LDADD		= ../src/libamcimpl.la

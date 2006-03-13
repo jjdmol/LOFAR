@@ -24,11 +24,13 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <AMCImpl/ConverterImpl.h>
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
-#include <AMCBase/AMCClient/ConverterClient.h>
-#include <AMCImpl/ConverterImpl.h>
+#include <AMCBase/ConverterClient.h>
+#include <AMCBase/RequestData.h>
+#include <AMCBase/ResultData.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 #include <Common/LofarTypes.h>
@@ -116,8 +118,9 @@ int main(int /*argc*/, const char* const argv[])
     times[2] = // same arbitrary time + 1 day
       TimeCoord (times[0].mjd(), 1.);
 
-    cout.precision(9);
+    RequestData request(skies, poss, times);
 
+    cout.precision(9);
     cout << "**** Original data ****" << endl;
     cout << "skies = " << skies << endl;
     cout << "poss = " << poss << endl;
@@ -126,53 +129,64 @@ int main(int /*argc*/, const char* const argv[])
 
     // Check conversion J2000 --> AZEL and vice versa
     {
-      vector<SkyCoord> result = conv->j2000ToAzel (skies, poss, times);
-      ASSERT (result.size() == skies.size() * poss.size() * times.size());
+      ResultData result;
+      conv->j2000ToAzel(result, request);
+      ASSERT (result.skyCoord.size() == 
+              skies.size() * poss.size() * times.size());
       cout << "\n**** Convert from J2000 to AZEL and vice versa ****\n";
-      cout << "result = " << result << endl;
+      cout << "result = " << result.skyCoord << endl;
       for (uint i = 0; i < skies.size() * poss.size() * times.size(); i++) {
-        ASSERT (result[i].type() == SkyCoord::AZEL);
+        ASSERT (result.skyCoord[i].type() == SkyCoord::AZEL);
       }
       int inx=0;
       for (uint i = 0; i < times.size(); i++) {
         for (uint j = 0; j < poss.size(); j++) {
           vector<SkyCoord> sk(skies.size());
           for (uint k = 0; k < skies.size(); k++) {
-            sk[k] = result[inx++];
+            sk[k] = result.skyCoord[inx++];
           }
           // Convert back from AZEL to J2000; should yield original data
-          vector<SkyCoord> res2 = conv->azelToJ2000 (sk, poss[j], times[i]);
+          ResultData res2;
+          conv->azelToJ2000 (res2, RequestData(sk, poss[j], times[i]));
           for (uint k = 0; k < skies.size(); k++) {
-            ASSERT (res2[k].type() == SkyCoord::J2000);
-            ASSERT (compare(res2[k].angle0(), skies[k].angle0(), epsilon));
-            ASSERT (compare(res2[k].angle1(), skies[k].angle1(), epsilon));
+            ASSERT (res2.skyCoord[k].type() == SkyCoord::J2000);
+            ASSERT (compare(res2.skyCoord[k].angle0(), 
+                            skies[k].angle0(), epsilon));
+            ASSERT (compare(res2.skyCoord[k].angle1(), 
+                            skies[k].angle1(), epsilon));
           }
         }
       }
-    }    
+    }
+
 
     // Check conversion J2000 --> ITRF 
     {
-      vector<SkyCoord> result = conv->j2000ToItrf (skies, poss, times);
-      ASSERT (result.size() == skies.size() * poss.size() * times.size());
+      ResultData result;
+      conv->j2000ToItrf (result, request);
+      ASSERT (result.skyCoord.size() == 
+              skies.size() * poss.size() * times.size());
       cout << "\n**** Convert from J2000 to ITRF and vice versa ****\n";
-      cout << "result = " << result << endl;
+      cout << "result = " << result.skyCoord << endl;
       for (uint i = 0; i < skies.size() * poss.size() * times.size(); i++) {
-        ASSERT (result[i].type() == SkyCoord::ITRF);
+        ASSERT (result.skyCoord[i].type() == SkyCoord::ITRF);
       }
       int inx=0;
       for (uint i = 0; i < times.size(); i++) {
         for (uint j = 0; j < poss.size(); j++) {
           vector<SkyCoord> sk(skies.size());
           for (uint k = 0; k < skies.size(); k++) {
-            sk[k] = result[inx++];
+            sk[k] = result.skyCoord[inx++];
           }
           // Convert back from ITRF to J2000; should yield original data
-          vector<SkyCoord> res2 = conv->itrfToJ2000 (sk, poss[j], times[i]);
+          ResultData res2;
+          conv->itrfToJ2000 (res2, RequestData(sk, poss[j], times[i]));
           for (uint k = 0; k < skies.size(); k++) {
-            ASSERT (res2[k].type() == SkyCoord::J2000);
-            ASSERT (compare(res2[k].angle0(), skies[k].angle0(), epsilon));
-            ASSERT (compare(res2[k].angle1(), skies[k].angle1(), epsilon));
+            ASSERT (res2.skyCoord[k].type() == SkyCoord::J2000);
+            ASSERT (compare(res2.skyCoord[k].angle0(), 
+                            skies[k].angle0(), epsilon));
+            ASSERT (compare(res2.skyCoord[k].angle1(), 
+                            skies[k].angle1(), epsilon));
           }
         }
       }

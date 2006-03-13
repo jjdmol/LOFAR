@@ -1,18 +1,17 @@
-pkginclude_AMCClientdir	= $(pkgincludedir)/AMCClient
-
 pkginclude_HEADERS = \
+	BlobIO.h \
 	Converter.h \
+	ConverterClient.h \
+	ConverterCommand.h \
+	ConverterStatus.h \
+	DH_Request.h \
+	DH_Result.h \
 	EarthCoord.h \
 	Exceptions.h \
+	RequestData.h \
+	ResultData.h \
 	SkyCoord.h \
 	TimeCoord.h
-
-pkginclude_AMCClient_HEADERS = \
-	AMCClient/BlobIO.h \
-	AMCClient/ConverterClient.h \
-	AMCClient/ConverterCommand.h \
-	AMCClient/DH_Request.h \
-	AMCClient/DH_Result.h
 
 include $(top_srcdir)/Makefile.common
 
