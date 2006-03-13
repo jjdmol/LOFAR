@@ -45,7 +45,7 @@ public:
   virtual ~StationCorrelatorController();
 
   // Command to control the application processes.
-  virtual bool	define   () const;
+  virtual bool	define   (ACC::APS::ParameterSet ps) const;
   virtual bool	init     () const;
   virtual bool	run      () const;
   virtual bool	pause    (const	string&	condition) const;

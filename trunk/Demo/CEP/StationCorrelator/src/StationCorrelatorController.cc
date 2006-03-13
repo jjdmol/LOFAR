@@ -43,7 +43,7 @@ StationCorrelatorController::StationCorrelatorController(StationCorrelator& stat
 StationCorrelatorController::~StationCorrelatorController()
 {};
 
-bool StationCorrelatorController::define   () const
+bool StationCorrelatorController::define   (ACC::APS::ParameterSet ps) const
 {
   cout<<"Define called"<<endl;
   LOG_TRACE_FLOW("Define called by ACC");
