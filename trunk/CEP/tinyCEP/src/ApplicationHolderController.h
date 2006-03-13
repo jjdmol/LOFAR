@@ -50,7 +50,7 @@ public:
   virtual ~ApplicationHolderController();
 
   // Command to control the application processes.
-  virtual tribool	define   () ;
+  virtual tribool	define   (ACC::APS::ParameterSet ps) ;
   virtual tribool	init     () ;
   virtual tribool	run      () ;
   virtual tribool	pause    (const	string&	condition) ;
