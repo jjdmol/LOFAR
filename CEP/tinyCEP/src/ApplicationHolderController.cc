@@ -53,7 +53,7 @@ ApplicationHolderController::ApplicationHolderController(TinyApplicationHolder& 
 ApplicationHolderController::~ApplicationHolderController()
 {};
 
-tribool ApplicationHolderController::define   () 
+tribool ApplicationHolderController::define   (ParameterSet ps) 
 {
   LOG_TRACE_FLOW("Define called by ACC");
   try {
