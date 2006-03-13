@@ -31,6 +31,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <PLC/DH_ProcControl.h>
+#include <APS/ParameterSet.h>
 #include <boost/logic/tribool.hpp>
 
 using boost::logic::tribool;
@@ -67,7 +68,7 @@ public:
 	// ParameterSet it received during start-up. When everthing seems ok the
 	// process constructs the communication channels for exchanging data
 	// with the other processes. The connection are NOT made in the stage.
-	virtual tribool	define 	 ()  = 0;
+	virtual tribool	define 	 (APS::ParameterSet ps = APS::ParameterSet())  = 0;
 
 	// When a process receives an \c init command it allocates the buffers it
 	// needs an makes the connections with the other processes. When the
