@@ -158,7 +158,7 @@ using namespace std;
   ASSERT(Numeric::isNan(inf/inf));                                   \
   ASSERT(Numeric::isNan(inf/(-inf)));                                \
   ASSERT(Numeric::isNan((-inf)/inf));                                \
-  ASSERT(Numeric::isNan((-inf)/(-inf)))                              \
+  ASSERT(Numeric::isNan((-inf)/(-inf)));                             \
   ASSERT(Numeric::isNan(inf*zero));                                  \
   ASSERT(Numeric::isNan((-inf)*zero));                               \
   ASSERT(Numeric::isNan(inf*negativeZero));                          \
@@ -220,7 +220,7 @@ using namespace std;
   testFinite(T);                                                     \
   testInf(T);                                                        \
   testNan(T);                                                        \
-  testCompare(T)                                                     \
+  testCompare(T);                                                    \
 }
 
 void testFloat()

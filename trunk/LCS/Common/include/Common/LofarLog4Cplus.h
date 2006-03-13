@@ -345,13 +345,13 @@ void	initTraceModule(void);
 // This macro first sends a logrequest to logger <tt>\<module\>.EXCEPTION</tt>
 // before executing the real throw.
 #undef THROW
-#define THROW(exc,stream) { \
+#define THROW(exc,stream) do { \
 	std::ostringstream	oss;	\
 	oss << stream;				\
 	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE ".EXCEPTION").log( \
 					log4cplus::DEBUG_LOG_LEVEL, oss.str(), __FILE__, __LINE__); \
 	throw (exc(oss.str(), __HERE__)); \
-	}
+	} while(0)
 
 // @}
 
