@@ -112,7 +112,7 @@ bool TH_Mem::sendNonBlocking(void*, int, int tag, DataHolder* dh)
 {
   LOG_TRACE_RTTI("TH_Mem sendNonBlocking()"); 
   if (itsFirstSendCall) {
-    ASSERTSTR (dh!=0, "Source DataHolder needs to be specified in TH_Mem::sendNonBlocking method!") 
+    ASSERTSTR (dh!=0, "Source DataHolder needs to be specified in TH_Mem::sendNonBlocking method!");
     theirSources[tag] = dh;
     itsFirstSendCall = false;
   }
@@ -172,7 +172,7 @@ bool TH_Mem::sendBlocking(void*, int, int tag, DataHolder* dh)
     itsFirstCall = false;
   }
 
-  ASSERTSTR (dh!=0, "Source DataHolder needs to be specified in TH_Mem::sendBlocking method!") 
+  ASSERTSTR (dh!=0, "Source DataHolder needs to be specified in TH_Mem::sendBlocking method!");
   theirSources[tag] = dh;
   pthread_cond_signal(&dataAvailable[tag]); // Signal data available
   pthread_cond_wait(&dataReceived[tag], &theirMapLock);  // Wait for data received
