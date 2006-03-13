@@ -1,0 +1,14 @@
+[Exception: Using THROW macro in Exception.h]
+in function void throw1()
+(/home/loose/LOFAR/LCS/Common/test/tException.cc:36)
+
+DEBUG LCS.Common.EXCEPTION - Using THROW macro in LofarLogger.h
+[Exception: Using THROW macro in LofarLogger.h]
+in function void throw2()
+(/home/loose/LOFAR/LCS/Common/test/tException.cc:45)
+
+DEBUG LCS.Common.EXCEPTION - Again using THROW macro in LofarLogger.h
+[Exception: Again using THROW macro in LofarLogger.h]
+in function void throw3()
+(/home/loose/LOFAR/LCS/Common/test/tException.cc:54)
+

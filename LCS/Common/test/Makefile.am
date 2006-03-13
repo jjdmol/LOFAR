@@ -1,4 +1,4 @@
-check_PROGRAMS	      =	testLogger \
+check_PROGRAMS	      =	testLogger tException \
 			tAllocator tDataConvert tStringUtil tHexdump \
 			testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric
@@ -11,6 +11,7 @@ CHECKTOOLPROGS 	      =	testLogger \
 #ENDCHECKTOOLPROGS
 
 TESTSCRIPTS = \
+	tException.sh \
 	tComplex.sh \
 	tAllocator.sh \
 	tDataConvert_test.sh \
@@ -28,10 +29,15 @@ EXTRA_DIST = $(TESTSCRIPTS) \
 	tComplex.stdout \
 	tDataConvert.stdout \
 	testLogger.log_prop testLogger.debug \
+	tException.log_prop tException.stdout \
 	tHexdump.log_prop \
 	tProcess.log_prop tProcess.stdout \
 	tRunOnNode.log_prop tRunOnNode.stdout \
 	tStringUtil.stdout 
+
+tException_SOURCES		= tException.cc
+tException_LDADD		= ../src/libcommon.la	
+tException_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 testSocket_SOURCES		= testSocket.cc
 testSocket_LDADD		= ../src/libcommon.la	

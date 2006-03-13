@@ -197,11 +197,11 @@ public: \
 
 #undef THROW
 // possible object debug status. 
-#define THROW(exc,msg)  { \
+#define THROW(exc,msg) do { \
 	constructStream(msg) \
 	cLog(1, "EXCEPTION", oss.str()); \
 	throw(exc(oss.str(), __HERE__)); \
-	}
+	} while(0)
 
 //# ---------- implementation details generic part ----------
 

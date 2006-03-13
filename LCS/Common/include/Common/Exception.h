@@ -134,18 +134,20 @@ public: \
     static const std::string itsType(#excp); \
     return itsType; \
   } \
-};
+}
 
 //
 // Throw an exception of type \c excp; use \c strm for the message. 
 // Use this macro to insure that the  \c __HERE__ macro expands properly.
 //
-#define THROW(excp,strm) \
-{ \
+#if !defined(THROW)
+# define THROW(excp,strm) \
+do { \
   std::ostringstream oss; \
   oss << strm; \
   throw excp(oss.str(),__HERE__); \
-}
+} while(0)
+#endif
 
 //@}
 
