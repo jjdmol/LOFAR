@@ -24,8 +24,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/AMCClient/BlobIO.h>
-#include <AMCBase/AMCClient/ConverterCommand.h>
+#include <AMCBase/BlobIO.h>
+#include <AMCBase/ConverterCommand.h>
+#include <AMCBase/ConverterStatus.h>
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
@@ -34,7 +35,6 @@
 #include <Blob/BlobOBufChar.h>
 #include <Blob/BlobOStream.h>
 #include <Common/LofarLogger.h>
-
 #include <Common/lofar_iomanip.h>
 
 using namespace LOFAR;
@@ -58,8 +58,30 @@ void test(const ConverterCommand& cco)
   bis >> cci;
   bis.getEnd();
 
-  ASSERTSTR(cci.get() == cco.get(), 
-            "cci = " << cci.get() << "; cco = " << cco.get());
+  ASSERTSTR(cci == cco, "cci = " << cci << "; cco = " << cco);
+}
+
+
+void test(const ConverterStatus& cso)
+{
+  BlobOBufChar bob;
+  BlobOStream bos(bob);
+
+  bos.putStart(typeid(ConverterStatus).name(), 1);
+  bos << cso;
+  bos.putEnd();
+
+  BlobIBufChar bib(bob.getBuffer(), bob.size());
+  BlobIStream bis(bib);
+
+  ConverterStatus csi;
+  bis.getStart(typeid(ConverterStatus).name());
+  bis >> csi;
+  bis.getEnd();
+
+  ASSERTSTR(csi.get() == cso.get() && 
+            csi.text() == cso.text(),
+            "csi = " << csi << "; cso = " << cso);
 }
 
 
@@ -80,10 +102,7 @@ void test(const SkyCoord& sco)
   bis >> sci;
   bis.getEnd();
 
-  ASSERTSTR(sci.angle0() == sco.angle0() && 
-            sci.angle1() == sco.angle1() &&
-            sci.type()   == sco.type(), 
-            "sci = " << sci << "; sco = " << sco);
+  ASSERTSTR(sci == sco, "sci = " << sci << "; sco = " << sco);
 }
 
 
@@ -104,11 +123,7 @@ void test(const EarthCoord& eco)
   bis >> eci;
   bis.getEnd();
 
-  ASSERTSTR(eci.longitude() == eco.longitude() && 
-            eci.latitude()  == eco.latitude()  &&
-            eci.height()    == eco.height()    &&
-            eci.type()      == eco.type(),
-            "eci = " << eci << "; eco = " << eco);
+  ASSERTSTR(eci == eco, "eci = " << eci << "; eco = " << eco);
 }
 
 
@@ -155,6 +170,14 @@ int main(int /*argc*/, const char* const argv[])
       // Force the use of an undefined enumerated value.
       test(ConverterCommand(static_cast<ConverterCommand::Commands>(1000)));
     } catch (AssertError& e) {}
+
+    test(ConverterStatus());
+    test(ConverterStatus(ConverterStatus::UNKNOWN, "Unknown error"));
+    test(ConverterStatus(ConverterStatus::OK, "Success"));
+    test(ConverterStatus(ConverterStatus::ERROR, "Converter error"));
+    // Use of an undefined enumerated value result in UNKNOWN.
+    test(ConverterStatus(static_cast<ConverterStatus::Status>(1000),
+                         "Undefined error"));
 
     test(SkyCoord());
     test(SkyCoord(0.4, -0.19, SkyCoord::ITRF));

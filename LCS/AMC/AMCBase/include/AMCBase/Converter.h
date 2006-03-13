@@ -39,142 +39,79 @@ namespace LOFAR
     // @{
 
     //# Forward Declarations
-    class SkyCoord;
-    class EarthCoord;
-    class TimeCoord;
+    struct RequestData;
+    struct ResultData;
 
     // This class defines the interface of the diverse AMC Converter classes.
+    // All conversion routines operate on a struct RequestData, returning a
+    // struct ResultData. RequestData contains three vectors: \a skyCoord, a
+    // series of sky coordinates; \a earthCoord, a series of earth positions;
+    // and \a timeCoord, a series of points in time. ResultData contains one
+    // vector: \a skyCoord, a series of sky coordinates.
+    //
+    // Conversion from J2000 to another coordinate system always produces a
+    // vector of sky coordinates that contains all possible combinations of
+    // the elements in the input vectors \a skyCoord, \a earthCoord, and \a
+    // timeCoord. Hence, the output vector contains <tt>skyCoord.size() *
+    // earthCoord.size() * timeCoord.size()</tt> elements, which can be seen
+    // as a cube with shape <tt>[nsky,npos,ntime]</tt> in Fortran order (i.e.
+    // with sky as the most rapidly varying axis).
+    //
+    // Conversion from another coordinate system to J2000 always produces a
+    // vector of sky coordinates that is equal in size to the input vector \a
+    // skyCoord. The input vectors \a earthCoord and \a timeCoord should
+    // either both be equal in size to the input vector \a skyCoord, or both
+    // contain exactly one element. In the former case, the conversion routine
+    // will calculate one output skyCoord for each triplet of input sky
+    // coordinates, earth positions, and points in time. In the latter case,
+    // the conversion routine will convert the input sky coordinates for the
+    // given earth position and point in time.
     class Converter
     {
     public:
       // Destructor
       virtual ~Converter() {}
 
-      // Convert the given equatorial J2000 sky coordinate to azimuth/elevation
-      // (in radians) for the given earth position and time.
-      virtual SkyCoord j2000ToAzel(const SkyCoord& dir, 
-                                   const EarthCoord& pos, 
-                                   const TimeCoord& time) = 0;
-
-      // Convert a series of sky coordinates.
-      virtual vector<SkyCoord> j2000ToAzel (const vector<SkyCoord>& dir,
-                                            const EarthCoord& pos,
-                                            const TimeCoord& time) = 0;
-
-      // Convert a sky coordinate for a series of earth positions.
-      virtual vector<SkyCoord> j2000ToAzel (const SkyCoord& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const TimeCoord& time) = 0;
-
-      // Convert a sky coordinate for a series of times.
-      virtual vector<SkyCoord> j2000ToAzel (const SkyCoord& dir,
-                                            const EarthCoord& pos,
-                                            const vector<TimeCoord>& time) = 0;
-
-      // Convert a series of sky coordinates for a series of earth positions
-      // and times.
-      // The output vector contains <tt>dir.size() * pos.size() *
-      // time.size()</tt> elements which can be seen as a cube with shape
-      // <tt>[nsky,npos,ntime]</tt> in Fortran order (thus with sky as the
-      // most rapidly varying axis).
-      // \pre \a dir must be given in \c J2000.
-      // \return vector of SkyCoord in \c AZEL.
-      virtual vector<SkyCoord> j2000ToAzel (const vector<SkyCoord>& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const vector<TimeCoord>& time) = 0;
-
-      // Convert an azimuth/elevation for the given earth position and time
-      // to ra/dec.
-      virtual SkyCoord azelToJ2000 (const SkyCoord& dir,
-                                    const EarthCoord& pos,
-                                    const TimeCoord& time) = 0;
-
-      // Convert a series of azimuth/elevations for the given earth position
-      // and time to ra/dec. The output vector has the same length as the
-      // input \a azel vector.
-      // \pre \a azel must be given in \c AZEL.
-      // \post size of return vector is equal to size of vector \a azel.
-      // \return vector of SkyCoord in \c J2000.
-      virtual vector<SkyCoord> azelToJ2000 (const vector<SkyCoord>& dir,
-                                            const EarthCoord& pos,
-                                            const TimeCoord& time) = 0;
-
-      // Convert a series of azimuth/elevations for the given earth positions
-      // and times to ra/dec. The output vector has the same length as the
-      // input \a azel vector.
-      // \pre All input vectors must have the same length.
-      //      \a azel must be given in \c AZEL.
-      // \post size of return vector is equal to size of vector \a azel.
-      // \return vector of SkyCoord in \c J2000.
-      // \note The difference with the function above is that here each \a
-      // azel has its own earth position and time.
-      virtual vector<SkyCoord> azelToJ2000 (const vector<SkyCoord>& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const vector<TimeCoord>& time) = 0;
-
-
-      // Convert the given equatorial J2000 sky coordinate to ITRF 
-      // (in radians) for the given earth position and time.
-      virtual SkyCoord j2000ToItrf(const SkyCoord& dir, 
-                                   const EarthCoord& pos, 
-                                   const TimeCoord& time) = 0;
-
-      // Convert a series of sky coordinates.
-      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& dir,
-                                            const EarthCoord& pos,
-                                            const TimeCoord& time) = 0;
-
-      // Convert a sky coordinate for a series of earth positions.
-      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const TimeCoord& time) = 0;
-
-      // Convert a sky coordinate for a series of times.
-      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& dir,
-                                            const EarthCoord& pos,
-                                            const vector<TimeCoord>& time) = 0;
-
-      // Convert a series of sky coordinates for a series of earth positions
-      // and times.
-      // The output vector contains <tt>dir.size() * pos.size() *
-      // time.size()</tt> elements which can be seen as a cube with shape
-      // <tt>[nsky,npos,ntime]</tt> in Fortran order (thus with sky as the
-      // most rapidly varying axis).
-      // \pre \a dir must be given in \c J2000.
-      // \return vector of SkyCoord given in \c ITRF.
-      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const vector<TimeCoord>& time) = 0;
-
-      // Convert the given ITRF sky coordinate for the given earth position
-      // and time to an equatorial J2000 sky coordinate
-      virtual SkyCoord itrfToJ2000 (const SkyCoord& dir,
-                                    const EarthCoord& pos,
-                                    const TimeCoord& time) = 0;
-
-      // Convert a series of ITRF sky coordinates for the given earth position
-      // and time to J2000 ra/dec. The output vector has the same length as
-      // the input \a dir vector.
-      // \pre \a dir must be given in \c ITRF.
-      // \post size of return vector is equal to size of vector \a dir.
-      // \return vector of SkyCoord in \c J2000.
-      virtual vector<SkyCoord> itrfToJ2000 (const vector<SkyCoord>& dir,
-                                            const EarthCoord& pos,
-                                            const TimeCoord& time) = 0;
+      // Convert the given equatorial J2000 sky coordinates to
+      // azimuth/elevation (in radians) for the given earth positions and
+      // points in time.
+      // \pre \a request.skyCoord.type() == SkyCoord::J2000
+      // \post \a result.skyCoord.type() == SkyCoord::AZEL
+      // \post \a result.skyCoord.size() == request.skyCoord.size() *
+      // request.earthCoord.size() * request.timeCoord.size().
+      virtual void j2000ToAzel(ResultData& result, 
+                               const RequestData& request) = 0;
+      
+      // Convert a series of azimuth/elevations for the given earth
+      // position(s) and point(s) in time to J2000 ra/dec.
+      // \pre \a request.skyCoord.type() == SkyCoord::AZEL
+      // \pre \a request.earthCoord.size() == 1 || 
+      //         request.earthCoord.size() == request.skyCoord.size()
+      // \pre \a request.earthCoord.size() == request.timeCoord.size()
+      // \post \a result.skyCoord.type() == SkyCoord::J2000
+      // \post \a result.skyCoord.size() == request.skyCoord.size()
+      virtual void azelToJ2000(ResultData& result, 
+                               const RequestData& request) = 0;
+      
+      // Convert the given equatorial J2000 sky coordinate to ITRF (in
+      // radians) for the given earth positions and points in time.
+      // \pre \a request.skyCoord.type() == SkyCoord::J2000
+      // \post \a result.skyCoord.type() == SkyCoord::ITRF
+      // \post \a result.skyCoord.size() == request.skyCoord.size() *
+      // request.earthCoord.size() * request.timeCoord.size().
+      virtual void j2000ToItrf(ResultData& result, 
+                               const RequestData& request) = 0;
 
       // Convert a series of ITRF sky coordinates for the given earth
-      // positions and times to J2000 ra/dec. The output vector has the same
-      // length as the input \a dir vector.
-      // \pre All input vectors must have the same length.
-      //      \a dir must be given in \c ITRF.
-      // \post size of return vector is equal to size of vector \a dir.
-      // \return vector of SkyCoord in \c J2000.
-      // \note The difference with the function above is that here each \a
-      // dir has its own earth position and time.
-      virtual vector<SkyCoord> itrfToJ2000 (const vector<SkyCoord>& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const vector<TimeCoord>& time) = 0;
-
+      // position(s) and point(s) in time to J2000 ra/dec.
+      // \pre \a request.skyCoord.type() == SkyCoord::ITRF
+      // \pre \a request.earthCoord.size() == 1 || 
+      //         request.earthCoord.size() == request.skyCoord.size()
+      // \pre \a request.earthCoord.size() == request.timeCoord.size()
+      // \post \a result.skyCoord.type() == SkyCoord::J2000
+      // \post \a result.skyCoord.size() == request.skyCoord.size()
+      virtual void itrfToJ2000(ResultData& result, 
+                               const RequestData& request) = 0;
     };
 
     // @}

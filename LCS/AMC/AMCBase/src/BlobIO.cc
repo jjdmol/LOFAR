@@ -24,18 +24,25 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <AMCBase/BlobIO.h>
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
-#include <AMCBase/AMCClient/ConverterCommand.h>
+#include <AMCBase/ConverterCommand.h>
+#include <AMCBase/ConverterStatus.h>
+#include <AMCBase/RequestData.h>
+#include <AMCBase/ResultData.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
+#include <Blob/BlobArray.h> 
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
+
+    //# -------  BlobOStream operators  ------- #//
 
     BlobOStream& operator<<(BlobOStream& bos, const SkyCoord& sc)
     {
@@ -67,6 +74,29 @@ namespace LOFAR
       return bos;
     }
 
+    BlobOStream& operator<<(BlobOStream& bos, const ConverterStatus& cs)
+    {
+      bos << static_cast<int32>(cs.get())
+          << cs.text();
+      return bos;
+    }
+
+    BlobOStream& operator<<(BlobOStream& bos, const RequestData& req)
+    {
+      bos << req.skyCoord
+          << req.earthCoord
+          << req.timeCoord;
+      return bos;
+    }
+
+    BlobOStream& operator<<(BlobOStream& bos, const ResultData& res)
+    {
+      bos << res.skyCoord;
+      return bos;
+    }
+
+
+    //# -------  BlobIStream operators  ------- #//
 
     BlobIStream& operator>>(BlobIStream& bis, SkyCoord& sc)
     {
@@ -105,6 +135,28 @@ namespace LOFAR
       ASSERT(cc.isValid());
       return bis;
     }
+
+    BlobIStream& operator>>(BlobIStream& bis, ConverterStatus& cs)
+    {
+      int32 sts;
+      string txt;
+      bis >> sts >> txt;
+      cs = ConverterStatus(static_cast<ConverterStatus::Status>(sts), txt);
+      return bis;
+    }
+
+    BlobIStream& operator>>(BlobIStream& bis, RequestData& req)
+    {
+      bis >> req.skyCoord >> req.earthCoord >> req.timeCoord;
+      return bis;
+    }
+
+    BlobIStream& operator>>(BlobIStream& bis, ResultData& res)
+    {
+      bis >> res.skyCoord;
+      return bis;
+    }
+
 
   } // namespace AMC
 

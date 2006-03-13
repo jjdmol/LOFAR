@@ -1,4 +1,4 @@
-//#  ConverterImpl.h: implementation of the AMC Converter interface.
+//#  ResultData.h: Result data that will be received from the converter
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,50 +20,54 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_AMCIMPL_CONVERTERIMPL_H
-#define LOFAR_AMCIMPL_CONVERTERIMPL_H
+#ifndef LOFAR_AMCBASE_RESULTDATA_H
+#define LOFAR_AMCBASE_RESULTDATA_H
 
 // \file
-// Implementation of the AMC Converter interface
+// Result data that will be received from the converter
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <AMCBase/Converter.h>
+#include <AMCBase/SkyCoord.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
-    //# Forward declarations
-    struct RequestData;
-    struct ResultData;
-
-    // \addtogroup AMCImpl
+    // \addtogroup AMCBase
     // @{
 
-    // This class represents the real implementation of the Converter
-    // interface. The hard conversion work is done by this class.
-    class ConverterImpl : public Converter
+    // Struct wrapping the result data that will be received from the
+    // converter. The purpose of this struct is to hide the exact structure of
+    // the data to be received from the converter. It is not really necessary
+    // to make the data members private, since we need to have easy access to
+    // the data members. However, note that, because the data members are
+    // public, they become part of the interface! So, be careful in renaming
+    // them. A number of constructors have been defined in order to ease the
+    // creation of a %ResultData instance.
+    struct ResultData
     {
     public:
-      ConverterImpl();
+      ResultData()
+      {}
 
-      virtual ~ConverterImpl() {}
+      ResultData(const vector<SkyCoord>& sc) :
+        skyCoord(sc)
+      {}
 
-      virtual void j2000ToAzel(ResultData&, const RequestData&);
-      
-      virtual void azelToJ2000(ResultData&, const RequestData&);
-      
-      virtual void j2000ToItrf(ResultData&, const RequestData&);
-      
-      virtual void itrfToJ2000(ResultData&, const RequestData&);
+      ResultData(const SkyCoord& sc) :
+        skyCoord(1, sc)
+      {}
+
+      vector<SkyCoord> skyCoord;
     };
 
     // @}
 
   } // namespace AMC
-  
+
 } // namespace LOFAR
 
 #endif

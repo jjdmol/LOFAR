@@ -24,12 +24,12 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCImpl/AMCServer/ConverterProcess.h>
-#include <AMCImpl/Exceptions.h>
-#include <AMCBase/AMCClient/ConverterCommand.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCImpl/ConverterProcess.h>
+#include <AMCBase/Exceptions.h>
+#include <AMCBase/ConverterCommand.h>
+#include <AMCBase/ConverterStatus.h>
+#include <AMCBase/RequestData.h>
+#include <AMCBase/ResultData.h>
 
 namespace LOFAR
 {
@@ -57,60 +57,58 @@ namespace LOFAR
 
       // While the client is connected, handle incoming requests.
       while(itsRecvConn.isConnected()) {
-          
-        ConverterCommand cmd;
-        vector<SkyCoord> skyCoord;
-        vector<EarthCoord> earthCoord;
-        vector<TimeCoord> timeCoord;
-        
+
+        ConverterCommand command;
+        ConverterStatus status;
+        RequestData request;
+        ResultData result;
+
         // Receive conversion request. If the receive fails, the client
         // probably hung up.
-        if (!recvRequest(cmd, skyCoord, earthCoord, timeCoord)) break;
-        
-        // ConverterImpl may throw a ConverterError; we don't want to let this
-        // exception escape.
+        if (!recvRequest(command, request)) break;
+          
+        // ConverterImpl may throw a ConverterException; we don't want to let
+        // this exception escape.
         try {
-
+          
           // Process the conversion request, invoking the right conversion
           // method.
-          switch(cmd.get()) {
+          switch(command.get()) {
           case ConverterCommand::J2000toAZEL:
-            skyCoord = 
-              itsConverter.j2000ToAzel(skyCoord, earthCoord, timeCoord);
+            itsConverter.j2000ToAzel(result, request);
             break;
           case ConverterCommand::J2000toITRF:
-            skyCoord = 
-              itsConverter.j2000ToItrf(skyCoord, earthCoord, timeCoord);
+            itsConverter.j2000ToItrf(result, request);
             break;
           case ConverterCommand::AZELtoJ2000:
-            skyCoord = 
-              itsConverter.azelToJ2000(skyCoord, earthCoord, timeCoord);
+            itsConverter.azelToJ2000(result, request);
             break;
           case ConverterCommand::ITRFtoJ2000:
-            skyCoord = 
-              itsConverter.itrfToJ2000(skyCoord, earthCoord, timeCoord);
+            itsConverter.itrfToJ2000(result, request);
             break;
           default:
             LOG_DEBUG_STR("ConverterProcess::handleRequests() - "
                           << "Received invalid converter command (" 
-                          << cmd << ")");
-          }
-        } 
-        catch (ConverterError& e) {
-          LOG_DEBUG_STR(e);
-        }   
+                          << command << ")");
+          } // switch
 
+        } 
+        catch (ConverterException& e) {
+          LOG_DEBUG_STR(e);
+          status = ConverterStatus(ConverterStatus::ERROR, e.what());
+        }   
+        
         // Send the conversion result to the client. If the send fails, the
         // client probably hung up.
-        if (!sendResult(skyCoord)) break;
-      }
-    }
-    
+        if (!sendResult(status, result)) break;
 
-    bool ConverterProcess::recvRequest(ConverterCommand& cmd,
-                                       vector<SkyCoord>& skyCoord,
-                                       vector<EarthCoord>& earthCoord,
-                                       vector<TimeCoord>& timeCoord)
+      } // while
+
+    }
+
+
+    bool ConverterProcess::recvRequest(ConverterCommand& command,
+                                       RequestData& request)
     {
       // Read the result from the client into the data holder's I/O buffer.
       // If the read fails, the client probably hung up.
@@ -126,17 +124,18 @@ namespace LOFAR
 
       // Read the conversion request from the I/O buffer into \a cmd, \a
       // skyCoord, \a earthCoord, and \a timeCoord.
-      itsRequest.readBuf(cmd, skyCoord, earthCoord, timeCoord);
+      itsRequest.readBuf(command, request);
 
       // Everything went well.
       return true;
     }
 
 
-    bool ConverterProcess::sendResult(const vector<SkyCoord>& skyCoord)
+    bool ConverterProcess::sendResult(const ConverterStatus& status,
+                                      const ResultData& result)
     {
       // Write the conversion result into the data holder's I/O buffer.
-      itsResult.writeBuf(skyCoord);
+      itsResult.writeBuf(status, result);
 
       // Write the result from the data holder's I/O buffer to the client.
       if (itsSendConn.write() == Connection::Error) {

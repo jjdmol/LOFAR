@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/AMCClient/ConverterCommand.h>
+#include <AMCBase/ConverterCommand.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;

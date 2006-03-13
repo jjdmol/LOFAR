@@ -27,7 +27,9 @@
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
-#include <AMCBase/AMCClient/ConverterClient.h>
+#include <AMCBase/RequestData.h>
+#include <AMCBase/ResultData.h>
+#include <AMCBase/ConverterClient.h>
 #include <AMCImpl/ConverterImpl.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
@@ -72,12 +74,15 @@ int main(int /*argc*/, const char* const argv[])
   SkyCoord sky(1, 0.3);  // arbitrary source direction
   EarthCoord earth(0.111646531, 0.921760253, 25, EarthCoord::WGS84); // DWL
   TimeCoord time(2004, 11, 19, 15, 22, 39);  // arbitrary time
+  RequestData request(sky, earth, time);
+  ResultData result;
       
   for (uint i = 0; i < runs; i++) {
     try {
       LOG_INFO_STR("Client #" << i);
       auto_ptr<Converter> conv(createConverter());
-      conv->j2000ToAzel (sky, earth, time);
+      ASSERT(conv.get());
+      conv->j2000ToAzel (result, request);
     }
     catch (Exception& e) {
       LOG_WARN_STR(e);

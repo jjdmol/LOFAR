@@ -24,14 +24,16 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/LofarLogger.h>
-#include <AMCBase/AMCClient/DH_Request.h>
-#include <AMCBase/AMCClient/ConverterCommand.h>
+#include <AMCBase/DH_Request.h>
+#include <AMCBase/ConverterCommand.h>
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
+#include <AMCBase/RequestData.h>
+#include <AMCBase/ResultData.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
@@ -42,9 +44,8 @@ int main(int /*argc*/, const char* const argv[])
 
   try {
 
-    double usec = 1e-6;
-
     ConverterCommand sendCmd(ConverterCommand::J2000toAZEL);
+
     vector<SkyCoord> sendSky;
     sendSky.push_back(SkyCoord());
     sendSky.push_back(SkyCoord(0.4, -0.19));
@@ -58,39 +59,37 @@ int main(int /*argc*/, const char* const argv[])
     sendTime.push_back(TimeCoord());
     sendTime.push_back(TimeCoord(0));
 
-    TH_Mem aTH;
-    DH_Request sendReq;
-    DH_Request recvReq;
-    Connection conn("conn", &sendReq, &recvReq, &aTH, false);
-
-    sendReq.writeBuf(sendCmd, sendSky, sendEarth, sendTime);
-    conn.write();
-
     ConverterCommand recvCmd;
     vector<SkyCoord> recvSky;
     vector<EarthCoord> recvEarth;
     vector<TimeCoord> recvTime;
 
+    TH_Mem aTH;
+    DH_Request sendDhReq;
+    DH_Request recvDhReq;
+    Connection conn("conn", &sendDhReq, &recvDhReq, &aTH, false);
+
+    RequestData sendReqData(sendSky, sendEarth, sendTime);
+    RequestData recvReqData(recvSky, recvEarth, recvTime);
+
+    sendDhReq.writeBuf(sendCmd, sendReqData);
+    conn.write();
     conn.read();
-    recvReq.readBuf(recvCmd, recvSky, recvEarth, recvTime);
+    recvDhReq.readBuf(recvCmd, recvReqData);
 
-    ASSERT(sendCmd.get() == recvCmd.get());
-    ASSERT(sendSky.size() == recvSky.size());
-    for (uint i=0; i < sendSky.size(); ++i) {
-      ASSERT(sendSky[i].angle0() == recvSky[i].angle0());
-      ASSERT(sendSky[i].angle1() == recvSky[i].angle1());
+    ASSERT(sendCmd == recvCmd);
+    ASSERT(sendReqData.skyCoord.size() == recvReqData.skyCoord.size());
+    for (uint i=0; i < sendReqData.skyCoord.size(); ++i) {
+      ASSERT(sendReqData.skyCoord[i] == recvReqData.skyCoord[i]);
     }
-    ASSERT(sendEarth.size() == recvEarth.size());
-    for (uint i=0; i < sendEarth.size(); ++i) {
-      ASSERT(sendEarth[i].longitude() == recvEarth[i].longitude());
-      ASSERT(sendEarth[i].latitude()  == recvEarth[i].latitude());
-      ASSERT(sendEarth[i].height()    == recvEarth[i].height());
+    ASSERT(sendReqData.earthCoord.size() == recvReqData.earthCoord.size());
+    for (uint i=0; i < sendReqData.earthCoord.size(); ++i) {
+      ASSERT(sendReqData.earthCoord[i] == recvReqData.earthCoord[i]);
     }
-    ASSERT(sendTime.size() == recvTime.size());
-    for (uint i=0; i < sendTime.size(); ++i) {
-      ASSERT(sendTime[i].mjd() - recvTime[i].mjd() < usec);
+    ASSERT(sendReqData.timeCoord.size() == recvReqData.timeCoord.size());
+    for (uint i=0; i < sendReqData.timeCoord.size(); ++i) {
+      ASSERT(sendReqData.timeCoord[i] == recvReqData.timeCoord[i]);
     }
-
   }
   catch (Exception& e) {
     cerr << e << endl;

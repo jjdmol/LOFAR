@@ -25,8 +25,11 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <AMCBase/AMCClient/DH_Result.h>
+#include <AMCBase/ConverterStatus.h>
+#include <AMCBase/DH_Result.h>
 #include <AMCBase/SkyCoord.h>
+#include <AMCBase/RequestData.h>
+#include <AMCBase/ResultData.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
 
@@ -39,31 +42,34 @@ int main(int /*argc*/, const char* const argv[])
 
   try {
 
+    ConverterStatus sendStat(ConverterStatus::ERROR, "Uh-oh, oops!");
+
     vector<SkyCoord> sendSky;
     sendSky.push_back(SkyCoord());
     sendSky.push_back(SkyCoord(0.4, -0.19));
-  
-    TH_Mem aTH;
-    DH_Result sendReq;
-    DH_Result recvReq;
-    Connection conn("conn", &sendReq, &recvReq, &aTH, false);
-    
-    sendReq.writeBuf(sendSky);
-    conn.write();
-//    sendConn.waitForWrite();  // !!?? no TH_Mem::waitForSent() ??!!
 
+    ConverterStatus recvStat;
     vector<SkyCoord> recvSky;
 
+    TH_Mem aTH;
+    DH_Result sendDhRes;
+    DH_Result recvDhRes;
+    Connection conn("conn", &sendDhRes, &recvDhRes, &aTH, false);
+    
+    ResultData sendResData(sendSky);
+    ResultData recvResData(recvSky);
+
+    sendDhRes.writeBuf(sendStat, sendResData);
+    conn.write();
     conn.read();
-//     recvConn.waitForRead();
-    recvReq.readBuf(recvSky);
+    recvDhRes.readBuf(recvStat, recvResData);
 
-    ASSERT(sendSky.size() == recvSky.size());
-    for (uint i=0; i < sendSky.size(); ++i) {
-      ASSERT(sendSky[i].angle0() == recvSky[i].angle0());
-      ASSERT(sendSky[i].angle1() == recvSky[i].angle1());
+    ASSERT(sendStat.get()  == recvStat.get() &&
+           sendStat.text() == recvStat.text());
+    ASSERT(sendResData.skyCoord.size() == recvResData.skyCoord.size());
+    for (uint i=0; i < sendResData.skyCoord.size(); ++i) {
+      ASSERT(sendResData.skyCoord[i] == recvResData.skyCoord[i]);
     }
-
   }
   catch (Exception& e) {
     cerr << e << endl;

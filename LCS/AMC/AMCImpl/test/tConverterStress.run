@@ -47,6 +47,7 @@ then
           rm -f amcserver_tmp.log; \
         fi; \
         if kill -0 $! 2>/dev/null; then kill -9 $! 2>/dev/null; fi; \
+        rm -f $SERVER.log_prop \
         exit $STATUS' 0 1 2 3 15
 
   # Start the server in the background.

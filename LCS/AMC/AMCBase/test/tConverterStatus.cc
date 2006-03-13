@@ -1,4 +1,4 @@
-//#  amcserver.cc: Astronomical Measures Conversions server.
+//#  tConverterStatus.cc: test program for the ConverterStatus class.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,31 +24,47 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <AMCBase/ConverterStatus.h>
 #include <Common/LofarLogger.h>
-#include <AMCImpl/AMCServer/ConverterServer.h>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
 
-int main(int argc, const char* const argv[])
+int main(int /*argc*/, const char* const argv[])
 {
   INIT_LOGGER(argv[0]);
 
-  // Listen port (default: 31337)
-  uint16 port = argc > 1 ? atoi(argv[1]) : 31337;
-
-  LOG_INFO_STR("Starting amcserver using port " << port);
+  // These tests should all succeed.
   try {
-    // Create a converter server, listening on port \a port.
-    ConverterServer server(port);
-
-    // Run the server; this will start the event loop 
-    server.run();
-  }
-  catch (Exception& e) {
-    LOG_ERROR_STR(e);
+    {
+      ConverterStatus cs;
+      ASSERT(cs.get() == ConverterStatus::OK);
+      ASSERT(cs);
+      cout << cs << endl;
+    }
+    {
+      ConverterStatus cs(ConverterStatus::OK, "OK, keep up the good work");
+      ASSERT(cs.get() == ConverterStatus::OK);
+      ASSERT(cs);
+      cout << cs << endl;
+    }
+    {
+      ConverterStatus cs(ConverterStatus::ERROR, "This is NOT good!");
+      ASSERT(cs.get() == ConverterStatus::ERROR);
+      ASSERT(!cs);
+      cout << cs << endl;
+    }
+    {
+      // Force the use of an undefined enumerated value.
+      ConverterStatus cs(static_cast<ConverterStatus::Status>(18649),
+                         "This should never happen!");
+      ASSERT(cs.get() == ConverterStatus::UNKNOWN);
+      ASSERT(!cs);
+      cout << cs << endl;
+    }
+  } catch (Exception& e) {
+    cerr << e << endl;
     return 1;
   }
-  LOG_INFO("amcserver terminated");
-  return 0;
+  return 2;  // forces assay to flag missing .stdout file as an error
 }

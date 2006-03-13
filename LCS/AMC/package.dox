@@ -20,30 +20,15 @@
 //
 //   AMCBase contains the interface definition of the conversion methods and
 //   some basic classes that define sky coordinates, earth coordinates
-//   (position on earth) and time.
-
-//   @{
-
-//     \defgroup AMCClient AMCClient
-//
-//     AMCClient contains the implementation of the client side of the AMC
-//     client/server.
-
-//   @}
+//   (position on earth) and time. Furthermore, it contains the implementation
+//   of the client side of the AMC client/server, plus a number of classes
+//   needed for data transfer between client and server.
 
 //   \defgroup AMCImpl AMCImpl
 //
 //   AMCImpl contains the implementation of the conversion methods.
-//#  Furthermore ...
-
-//   @{
-
-//     \defgroup AMCServer AMCServer
-//
-//     AMCServer contains the implementation of the server side of the AMC
-//     client/server.
-
-//   @}
+//   Furthermore it contains the implementation of the server side of the AMC
+//   client/server.
 
 // @}
 
