@@ -64,11 +64,13 @@ namespace LOFAR
 
   void Process::parent()
   {
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   }
 
 
   void Process::child()
   {
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   }
 
 
