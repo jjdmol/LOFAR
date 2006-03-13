@@ -27,6 +27,7 @@
 
 //# Includes
 #include <PLC/ProcessControl.h>
+#include <APS/ParameterSet.h>
 #include <boost/logic/tribool.hpp>
 
 using boost::logic::tribool;
@@ -46,7 +47,7 @@ public:
 	virtual ~APCmdImpl();
 
 	// Command to control the application processes.
-	virtual tribool	define 	 ();
+	virtual tribool	define 	 (APS::ParameterSet ps);
 	virtual tribool	init 	 ();
 	virtual tribool	run 	 ();
 	virtual tribool	pause  	 (const	string&		condition);
