@@ -493,7 +493,7 @@ void ParmDBAIPS::putDefValue (const string& parmName,
   } else if (sel.nrow() == 0) {
     putNewDefValue (parmName, pval);
   } else {
-    ASSERTSTR (false, "Too many default parms with the same name/domain")
+    ASSERTSTR (false, "Too many default parms with the same name/domain");
   }
   clearDefFilled();
 }
