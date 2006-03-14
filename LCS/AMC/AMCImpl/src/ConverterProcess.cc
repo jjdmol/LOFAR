@@ -93,7 +93,7 @@ namespace LOFAR
           } // switch
 
         } 
-        catch (ConverterException& e) {
+        catch (LOFAR::Exception& e) {
           LOG_DEBUG_STR(e);
           status = ConverterStatus(ConverterStatus::ERROR, e.what());
         }   
