@@ -59,8 +59,8 @@ namespace LOFAR
     }
 
 
-    void DH_Result::writeBuf(const ConverterStatus& sts, 
-                             const ResultData& res)
+    void DH_Result::writeBuf(const ConverterStatus& status, 
+                             const ResultData& result)
     {
       // Create the output blob that will hold the result data to be sent to
       // the converter client.
@@ -70,12 +70,12 @@ namespace LOFAR
       // \note We don't need to call putStart() and putEnd() on the blob
       // stream; this is done by the DataBlobExtra class in the Transport
       // library.
-      bos << sts
-          << res;
+      bos << status
+          << result;
     }
 
 
-    void DH_Result::readBuf(ConverterStatus& sts, ResultData& res)
+    void DH_Result::readBuf(ConverterStatus& status, ResultData& result)
     {
       // Open the input blob to read the data that were just received from the
       // converter server.
@@ -87,7 +87,7 @@ namespace LOFAR
       ASSERT(found && version == theirVersionNr);
       
       // Retrieve the converter result.
-      bis >> sts >> res;
+      bis >> status >> result;
 
       // Assert that we're really at the end of the blob.
       bis.getEnd();
