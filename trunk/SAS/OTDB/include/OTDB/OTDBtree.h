@@ -76,7 +76,9 @@ public:
 
 private:
 //# Prevent changing the database keys
-	OTDBtree(treeIDType		aTreeID) : itsTreeID(aTreeID), itsMomID(0) {};
+	OTDBtree(treeIDType	aTreeID) : itsTreeID(aTreeID), itsMomID(0) {};
+	OTDBtree(treeIDType	aTreeID, treeIDType	aMomID) : 
+		itsTreeID(aTreeID), itsMomID(aMomID) {};
 	OTDBtree(const pqxx::result::tuple&	row);
 
 	treeIDType		itsTreeID;
