@@ -93,5 +93,12 @@ else
     fi
 fi
 
+# Create a .glishrc.post in the HOME directory to append
+# the LOFAR libexec to the glish path.
+if [ -f $HOME/.glishrc.post ]; then
+  mv $HOME/.glishrc.post $HOME/.glishrc.post-old
+fi
+echo "system.path.include := [system.path.include, '$LOFARROOT/libexec/glish']" > $HOME/.glishrc.post
+
 # Clean up
 unset lfr_root lfr_nroot lfr_bin lfr_lib lfr_path
