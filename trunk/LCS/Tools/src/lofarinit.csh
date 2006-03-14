@@ -65,6 +65,13 @@ else
         setenv LD_LIBRARY_PATH $LOFARROOT/lib:$LD_LIBRARY_PATH
     endif
 
+    # Create a .glishrc.post in the HOME directory to append
+    # the LOFAR libexec to the glish path.
+    if ( -f $HOME/.glishrc.post ) then
+        mv $HOME/.glishrc.post $HOME/.glishrc.post-old
+    endif
+    echo "system.path.include := [system.path.include, '$LOFARROOT/libexec/glish']" > $HOME/.glishrc.post
+
     # Now define the new LOFARDATAROOT
     set data_path = `echo $LOFARROOT | sed -e 's/\/installed.*$//'`
     if ( ! -d $data_path/data ) then
