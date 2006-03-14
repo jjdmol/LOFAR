@@ -26,13 +26,13 @@ echo "Cat Name RAh RAm RAs eRA Decd Decm Decs eDEC Freq Flux" > lsm.fil-tmp
 echo " A   A    I   I   D   D   I    I    D    D    D    D  " >> lsm.fil-tmp
 grep -v '#' $1 >> lsm.fil-tmp
 
-# Create a glish script to commands for creating and fill the table.
+# Create a glish script making commands for creating and fill the table.
 echo "include 'lsm2db.g'" > lsm.fil-glish
 echo "lsm2db ('lsm.fil-tmp', 'lsm.fil-tab', $maxnrsrc)" >> lsm.fil-glish
 echo "exit" >> lsm.fil-glish
 glish lsm.fil-glish > /dev/null
 
-# Execute the commands.
+# Execute the commands created by the glish script.
 source lsm.fil-scr
 beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='$2'"
 makeLsm
