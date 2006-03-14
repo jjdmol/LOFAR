@@ -16,12 +16,12 @@ parmdb_LDADD		= libparmdb.la
 parmdb_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
 
 glishdir = $(libexecdir)/glish
-dist_glish_SCRIPTS = 
+dist_glish_SCRIPTS = lsm2db.g
 
 pythondir = $(bindir)
 dist_python_SCRIPTS = 
 
 scriptdir = $(bindir)
-dist_script_SCRIPTS = 
+dist_script_SCRIPTS = lsm2db
 
 include $(top_srcdir)/Makefile.common
