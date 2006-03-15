@@ -83,6 +83,19 @@ void WH_Concentrator::process() {
 	   inDH->getBuffer(), 
 	   inDH->getBufSize()*sizeof(fcomplex));
     outDH->setCenterFreq(inDH->getCenterFreq(), i);
+
+//     cout<<"DH_Vis "<<i<<endl;
+//     for (int b = 0; b<NR_BASELINES; b++){
+//       cout<<"  Baseline "<<b<<endl;
+//       for (int c = 0; c<NR_CHANNELS_PER_CORRELATOR; c++){
+//         cout<<"   channel "<<c<<": ";
+// 	for (int p = 0; p < 4; p++){
+// 	  cout<<(*(inDH->getBuffer()))[b][c][0][p];
+// 	}
+// 	cout<<endl;
+//       }
+//     }
+
   }
 }
 

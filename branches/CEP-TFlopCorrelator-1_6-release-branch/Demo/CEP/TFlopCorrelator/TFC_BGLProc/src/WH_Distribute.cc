@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/hexdump.h>
 #include <WH_Distribute.h>
 
 using namespace LOFAR;
@@ -79,15 +80,23 @@ void WH_Distribute::preprocess() {
 
 void WH_Distribute::process() {
 
+//   cout<<"inputs: "<<itsNinputs<<" outputs: "<<itsNoutputs<<" inputElem: "<<itsNinputElements<<" outputElem: "<<itsNoutputElements<<endl;
+//   for (int i = 0; i < itsNinputs; i++) {
+//     DH_Subband* dhptr = dynamic_cast<DH_Subband*>(getDataManager().getInHolder(i));
+//     cout<<"input "<<i<<endl;
+//     hexdump(dhptr->getBuffer(), dhptr->getBufferSize() * sizeof(DH_Subband::BufferType));
+//   }
+
   if (itsNinputElements == itsNoutputElements) {
     /// do a straight memcpy
+    int ioRatio = itsNoutputs/itsNinputs;
     for (int i = 0; i < itsNinputs; i++) {
       
       // we could still have more outputs than inputs
-      for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
-	memcpy(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBuffer(),
-	       static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBuffer(),
-	       static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferSize() * sizeof(DH_PPF::BufferElementType));
+      for (int o = 0; o < ioRatio; o++) {
+	memcpy(dynamic_cast<DH_PPF*>(getDataManager().getOutHolder(ioRatio * i + o))->getBuffer(),
+	       dynamic_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBuffer(),
+	       dynamic_cast<DH_PPF*>(getDataManager().getOutHolder(ioRatio * i + o))->getBufferSize() * sizeof(DH_PPF::BufferElementType));
       }
     }
   } else /* (itsNinputElements < itsNoutputElements) */ {
@@ -100,7 +109,8 @@ void WH_Distribute::process() {
 
     for (int i = 0; i < itsNinputs; i++) {
     
-      for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
+      int ioRatio = itsNoutputs/itsNinputs;
+      for (int o = 0; o < ioRatio; o++) {
 
 	/// duplicate data to fill all OutHolders, keep copying from inDH until outDH buffer is filled
 	int myCounter = 0;
@@ -108,8 +118,8 @@ void WH_Distribute::process() {
 	int myNextBlock = 0;
 	
 	// buffer size in elements, not in bytes, so we multiply by the size of the buffertype (i16complex)
-	const int inBufSize = static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBufferSize() * sizeof(DH_Subband::BufferType);
-	const int outBufSize = static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferSize() * sizeof(DH_PPF::BufferElementType);
+	const int inBufSize = dynamic_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBufferSize() * sizeof(DH_Subband::BufferType);
+	const int outBufSize = dynamic_cast<DH_PPF*>(getDataManager().getOutHolder(ioRatio * i + o))->getBufferSize() * sizeof(DH_PPF::BufferElementType);
 	
 	while (myCopiedBytes < outBufSize) {
 	  
@@ -119,8 +129,8 @@ void WH_Distribute::process() {
 // 	  cout << "DEBUG: " << myCopiedBytes << " + " << myNextBlock <<" = " << myCopiedBytes+myNextBlock << 
 // 	    " should be <= " << outBufSize << " " << (myCopiedBytes+myNextBlock <= outBufSize) << endl;
 	  // duplicate data 
-	  memcpy((void*)(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferElement() + (myCopiedBytes/sizeof(DH_PPF::BufferElementType))),
-		 static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBuffer(),
+	  memcpy((void*)(dynamic_cast<DH_PPF*>(getDataManager().getOutHolder(ioRatio * i + o))->getBufferElement() + (myCopiedBytes/sizeof(DH_PPF::BufferElementType))),
+		 dynamic_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBuffer(),
 		 myNextBlock);
 	  myCopiedBytes += myNextBlock;
 	}

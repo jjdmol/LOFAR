@@ -634,6 +634,16 @@ inline __complex__ float to_fcomplex(i16complex z)
 
 void WH_PPF::doPPF()
 {
+  //dump input
+//   DH_PPF* dhptr = dynamic_cast<DH_PPF*>(getDataManager().getInHolder(0));
+//   for (int station = 0; station < 2; station++) {    
+//     for (int sample = 0; sample < NR_STATION_SAMPLES; sample++) {
+//       cout << " station " << station 
+// 	   << " sample " << sample 
+// 	   << " " << (*dhptr->getBuffer())[station][sample][0] << endl;
+//     }
+//   }
+
   static NSTimer timer("WH_PPF::process()", true);
   static NSTimer FIRtimer("FIRtimer", true), fftTimer("FFT", true);
 
@@ -751,6 +761,25 @@ void WH_PPF::doPPF()
     }
 #endif
   }
+
+#if 0
+  // plot channel 154
+  //for (int output = 0; output < NR_CORRELATORS_PER_FILTER; output++) {
+  int output = 2; {
+    DH_CorrCube* dhptr = dynamic_cast<DH_CorrCube*>(getDataManager().getOutHolder(output));
+    for (int station = 0; station < 2; station++) {    
+      for (int sample = 0; sample < NR_SAMPLES_PER_INTEGRATION; sample++) {
+	//for (int channel = 0; channel< NR_CHANNELS_PER_CORRELATOR; channel++) {    
+	int channel = 26; {
+	  cout << " station " << station 
+	       << " sample " << sample 
+	       << " channel" << channel + output * NR_CHANNELS_PER_CORRELATOR 
+	       << " " << *dhptr->getBufferElement(channel, station, sample, 0) << endl;
+	}
+      }
+    }
+  }
+#endif
 
   timer.stop();
 }
