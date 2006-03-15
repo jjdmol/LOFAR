@@ -43,13 +43,13 @@ Stub_BGL_Subband::Stub_BGL_Subband(bool iAmOnBGL, const ACC::APS::ParameterSet &
 
 TransportHolder *Stub_BGL_Subband::newClientTH(unsigned subband, unsigned slave)
 {
-  return new TH_Socket(servers[subband], services[slave], true, Socket::TCP, false);
+  return new TH_Socket(servers[subband], services[slave], false, Socket::TCP, false);
 }
 
 
 TransportHolder *Stub_BGL_Subband::newServerTH(unsigned, unsigned slave)
 {
-  return new TH_Socket(services[slave], true, Socket::TCP, 5, false);
+  return new TH_Socket(services[slave], false, Socket::TCP, 5, false);
 }
 
 } //namespace
