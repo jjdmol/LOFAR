@@ -321,10 +321,10 @@ DataManager& CompositeRep::getInDataManager(int channel)
   DBGASSERTSTR (channel < getNrInputs(), "Channel index is too high");
   Block* blockPtr = itsInputs[channel].block;
   ASSERTSTR(blockPtr!=0, "Input channel " << channel 
-	    << " has not been set in this Composite.")
+	    << " has not been set in this Composite.");
   int index = itsInputs[channel].chanNr;
   ASSERTSTR(index>=0,"Input channel " << channel 
-	    << " has not been correctly set in this Composite.")  
+	    << " has not been correctly set in this Composite.")  ;
   return blockPtr->getInDataManager(index);
 }
 
@@ -334,10 +334,10 @@ DataManager& CompositeRep::getOutDataManager(int channel)
   DBGASSERTSTR (channel < getNrOutputs(), "Channel index is too high");
   Block* blockPtr = itsOutputs[channel].block;
   ASSERTSTR(blockPtr!=0, "Output channel " << channel 
-	    << " has not been set in this Composite.")
+	    << " has not been set in this Composite.");
   int index = itsOutputs[channel].chanNr;
   ASSERTSTR(index>=0,"Output channel " << channel 
-	    << " has not been correctly set in this Composite.")  
+	    << " has not been correctly set in this Composite.");
   return blockPtr->getOutDataManager(index);
 }
 
