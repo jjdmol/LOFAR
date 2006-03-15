@@ -34,8 +34,8 @@ DH_Subband::DH_Subband(const DH_Subband &that)
 : DataHolder(that),
   itsPS(that.itsPS),
   itsMatrix(0),
-  itsBuffer(that.itsBuffer),
-  itsBufferSize(that.itsBufferSize)
+  itsBuffer(0),
+  itsBufferSize(0)
 {
 }
 

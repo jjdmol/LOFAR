@@ -53,7 +53,7 @@ void Stub_Delay ::connect (int RSP_nr,
 			   TinyDataManager& dm,
 			   int dhNr)
 {
-#if 1
+#if 0
   DBGASSERTSTR(((RSP_nr >= 0) && (RSP_nr < itsNRSP)),
  	       "RSP_nr argument out of boundaries; " << RSP_nr << " / " << itsNRSP);
 
