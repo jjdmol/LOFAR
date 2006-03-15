@@ -65,6 +65,7 @@ int main (int argc, const char** argv) {
       cout << "defined" << endl;
       cout.flush();
       Profiler::init();
+      int syncState = Profiler::defineState("synchronise", "yellow");
       myAH.basePrerun();
       cout << "init done" << endl;
       cout.flush();
@@ -76,9 +77,14 @@ int main (int argc, const char** argv) {
       int nrRuns = nrSeconds / nrSlaves;
       cout << "run " << nrRuns << " time" << endl;
       cout.flush();
+      Profiler::enterState(syncState);
+      TH_MPI::synchroniseAllProcesses();
+      Profiler::leaveState(syncState);
       myAH.baseRun(nrRuns);
       cout << "run complete" << endl;
+      Profiler::enterState(syncState);
       TH_MPI::synchroniseAllProcesses();
+      Profiler::leaveState(syncState);
       cout.flush();
       myAH.baseDump();
       myAH.baseQuit();
