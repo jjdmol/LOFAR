@@ -2,7 +2,8 @@
 # SUBDIRS = shmem .
 # endif
 
-INSTHDRS =
+INSTHDRS   = StationData.h \
+	 DH_RSP.h
 
 NOINSTHDRS =
 

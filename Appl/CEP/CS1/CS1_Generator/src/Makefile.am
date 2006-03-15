@@ -4,7 +4,8 @@
 
 lib_LTLIBRARIES         = libcs1_generator.la
 
-libcs1_generator_la_SOURCES =
+libcs1_generator_la_SOURCES   = StationData.cc \
+		 DH_RSP.cc
 
 # AM_YFLAGS               = -d -p KeyParse
 # AM_LFLAGS               = -PKeyTokenize
