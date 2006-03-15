@@ -79,14 +79,14 @@ namespace LOFAR {
     void WH_SBCollect::process() 
     { 
       RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getDataMatrix();
-      dimType outStationDim = outMatrix.getDim("Station");
+      RectMatrix<DH_Subband::SampleType>* outMatrix = &((DH_Subband*)getDataManager().getOutHolder(itsCore))->getDataMatrix();
+      dimType outStationDim = outMatrix->getDim("Station");
       dimType inStationDim = inMatrix->getDim("Stations");
 
       RectMatrix<DH_Subband::SampleType>::cursorType outCursor;
       RectMatrix<DH_RSP::BufferType>::cursorType inCursor;
 
-      outCursor = outMatrix.getCursor( 0 * outStationDim);
+      outCursor = outMatrix->getCursor( 0 * outStationDim);
 
       // Loop over all inputs (stations)
       for (int nr=0; nr<itsNinputs; nr++)
@@ -94,9 +94,13 @@ namespace LOFAR {
 	  inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
 	  inCursor = inMatrix->getCursor(0*inStationDim);
 	  // copy all freq, time and pol from an input to output
-	  inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
-	  outMatrix.moveCursor(&outCursor, outStationDim);
+	  inMatrix->cpy2Matrix(inCursor, inStationDim, *outMatrix, outCursor, outStationDim, 1);
+	  outMatrix->moveCursor(&outCursor, outStationDim);
+
+	  DH_Subband::AllSamplesType* ptr = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getSamples();
+	  (*ptr)[0][0][0] = makei16complex(1, 2);
 	}
+
       getDataManager().readyWithOutHolder(itsCore);
       itsCore ++ ;
       if (itsCore >= itsNoutputs) itsCore = 0;
@@ -104,13 +108,13 @@ namespace LOFAR {
 #if 0
       // dump the contents of outDH to stdout
       cout << "WH_SBCollect output : " << endl;
-      dimType outTimeDim = outMatrix.getDim("Time");
-      dimType outPolDim = outMatrix.getDim("Polarisation");
+      dimType outTimeDim = outMatrix->getDim("Time");
+      dimType outPolDim = outMatrix->getDim("Polarisation");
       int matrixSize = itsNinputs * 
-	outMatrix.getNElemInDim(outTimeDim) * 
-	outMatrix.getNElemInDim(outPolDim);    
+	outMatrix->getNElemInDim(outTimeDim) * 
+	outMatrix->getNElemInDim(outPolDim);    
 
-      hexdump(outMatrix.getBlock(outMatrix.getCursor(0), 
+      hexdump(outMatrix->getBlock(outMatrix->getCursor(0), 
 				 outStationDim, 
 				 itsNinputs,
 				 matrixSize),
@@ -119,14 +123,10 @@ namespace LOFAR {
 #endif
     }
 
-    void WH_SBCollect::postprocess() {
+    void WH_SBCollect::postprocess() 
+    {
       sleep(10);
-//       for (int o = 0; o < itsNoutputs; o++) {
-// 	for (int i = 0; i < 3; i++) {
-// 	  getDataManager().getOutHolder(o);
-// 	  getDataManager().readyWithOutHolder(0);
-// 	}
-//       }
-    }
+    }  
+
   } // namespace CS1_InputSection
 } // namespace LOFAR
