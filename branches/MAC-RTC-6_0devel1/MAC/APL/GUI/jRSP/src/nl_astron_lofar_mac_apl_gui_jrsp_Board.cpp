@@ -1,16 +1,31 @@
 #include "nl_astron_lofar_mac_apl_gui_jrsp_Board.h"
 
 /**
- * Implementation of the JNI method declared in the java file (nl.astron.lofar.mac.apl.gui.jrsp.Board). * This function fills the StatusBoard object, that is passed with this method, with data from RSPIO.
- * @param	env	The Java environment
- * @param	board	The board class object that called this function.
- * @param	status	A StatusBoard object that is passed with this function.
+ * Implementation of the JNI method declared in the java file (nl.astron.lofar.mac.apl.gui.jrsp.Board).
+ * This function fills a BoardStatus object, that is returned by this method, with data from RSPIO.
+ * @param	env	The Java environment interface pointer.
+ * @param	obj	The "this" pointer.
+ * @return 	status	A instance of the StatusBoard class filled with information.
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus(JNIEnv * env, jobject board, jobject status)
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus(JNIEnv * env, jobject obj)
 {
 	// Get a refrence to the class of status (StatusBoard).
-	jclass clsStatus = env->GetObjectClass(status);
+	jclass clsStatus;
+	static jmethodID sbConstructorId;
+	jobject status;
 
+	clsStatus = env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/BoardStatus");
+	if(clsStatus == NULL)
+	{
+		return NULL;
+	}
+	sbConstructorId = env->GetMethodID(clsStatus, "<init>", "()V");
+	if(sbConstructorId == NULL)
+	{
+		return NULL;
+	}
+	status = env->NewObject(clsStatus, sbConstructorId, NULL);
+	
 	// Get method identifiers for the methods of the StatusBoard class.
 	jfieldID fidVoltage1V2 = env->GetFieldID(clsStatus, "voltage1V2", "I");
         jfieldID fidVoltage2V5 = env->GetFieldID(clsStatus, "voltage2V5", "I");
@@ -178,7 +193,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatu
         if(fidBlp0Rcu != 0)
         {
                 env->SetIntField(status, fidBlp0Rcu, testData);
-        }
+	}
         if(fidBlp1Rcu != 0)
         {
                 env->SetIntField(status, fidBlp1Rcu, testData);
@@ -211,4 +226,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatu
         {
                 env->SetIntField(status, fidBlp3AdcOffset, testData);
         }
+
+	return status;
 }

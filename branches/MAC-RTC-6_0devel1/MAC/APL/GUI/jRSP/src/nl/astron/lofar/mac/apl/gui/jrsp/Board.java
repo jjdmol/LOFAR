@@ -10,11 +10,11 @@ public class Board
     
     public Board()
     {
-        boardStatus = new BoardStatus();
+        boardStatus = null;
     }
     
     // -- NATIVE FUNCTIONS --
-    private native void retrieveStatus(BoardStatus boardStatus);
+    private native BoardStatus retrieveStatus();
     
     static
     {
@@ -24,7 +24,7 @@ public class Board
     
     public BoardStatus getStatus()
     {
-        retrieveStatus(boardStatus);
+        boardStatus = retrieveStatus();
         return boardStatus;
     }
 }
