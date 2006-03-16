@@ -29,6 +29,7 @@
 //# Forward Declarations.
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
@@ -88,6 +89,9 @@ namespace LOFAR
       // Return whether sky coordinate type is valid.
       bool isValid() const
       { return itsType != INVALID; }
+
+      // Return the earth coordinate in cartesion coordinates.
+      vector<double> xyz() const;
 
     private:
       // Longitude in radians.

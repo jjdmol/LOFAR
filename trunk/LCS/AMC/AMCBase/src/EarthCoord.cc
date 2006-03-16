@@ -26,6 +26,7 @@
 //# Includes
 #include <AMCBase/EarthCoord.h>
 #include <Common/lofar_iostream.h>
+#include <cmath>
 
 namespace LOFAR
 {
@@ -52,6 +53,17 @@ namespace LOFAR
       };
       if (isValid()) return types[itsType];
       else return types[N_Types];
+    }
+
+
+    vector<double> EarthCoord::xyz() const
+    {
+      vector<double> p(3);
+      double tmp = std::cos(itsLat);
+      p[0] = itsHeight * std::cos(itsLong) * tmp;
+      p[1] = itsHeight * std::sin(itsLong) * tmp;
+      p[2] = itsHeight * std::sin(itsLat);
+      return p;
     }
 
 

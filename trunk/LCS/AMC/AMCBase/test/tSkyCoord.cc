@@ -26,11 +26,11 @@
 //# Includes
 #include <AMCBase/SkyCoord.h>
 #include <Common/LofarLogger.h>
-#include <iostream>
+#include <Common/Numeric.h>
+#include <Common/lofar_iostream.h>
 
-using namespace LOFAR::AMC;
 using namespace LOFAR;
-using namespace std;
+using namespace LOFAR::AMC;
 
 int main(int /*argc*/, const char* argv[])
 {
@@ -42,23 +42,37 @@ int main(int /*argc*/, const char* argv[])
     SkyCoord sc1(0.4, -0.19, SkyCoord::ITRF);
     SkyCoord sc2(-1.2, 2.38, SkyCoord::AZEL);
     SkyCoord sc3(-0.3, 1.75, static_cast<SkyCoord::Types>(1294));
+    vector<double> p;
 
+    p = sc0.xyz();
     ASSERT(sc0.isValid() && 
            sc0.angle0() == 0 && 
            sc0.angle1() == 0 && 
            sc0.type() == SkyCoord::J2000);
+    ASSERT(Numeric::compare(p[0], 1) && 
+           Numeric::compare(p[1], 0) && 
+           Numeric::compare(p[2], 0));
+
+    p = sc1.xyz();
     ASSERT(sc1.isValid() &&
            sc1.angle0() == 0.4 && 
            sc1.angle1() == -0.19 &&
            sc1.type() == SkyCoord::ITRF);
+    ASSERT(Numeric::compare(p[0],  0.9044857969121559) &&
+           Numeric::compare(p[1],  0.3824104613794417) &&
+           Numeric::compare(p[2], -0.1888588949765006));
+
+    p = sc2.xyz();
     ASSERT(sc2.isValid() &&
            sc2.angle0() == -1.2 && 
            sc2.angle1() == 2.38 &&
            sc2.type() == SkyCoord::AZEL);
-    ASSERT(!sc3.isValid() &&
-           sc3.angle0() == -0.3 && 
-           sc3.angle1() == 1.75 && 
-           sc3.type() == SkyCoord::INVALID);
+    ASSERT(Numeric::compare(p[0], -0.2622520325563739) &&
+           Numeric::compare(p[1],  0.6745519909458014) &&
+           Numeric::compare(p[2],  0.6900749835569364));
+
+    p = sc3.xyz();
+    ASSERT(!sc3.isValid());
 
     cout << "sc0 = " << sc0 << endl;
     cout << "sc1 = " << sc1 << endl;
