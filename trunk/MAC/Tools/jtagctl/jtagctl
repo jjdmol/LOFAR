@@ -107,6 +107,8 @@ sub readfile
 #
 sub listfiles
 {
+    if (defined($opt_T)) { test_listfiles(); return; }
+
     my ($sock) = @_;
 
     my $header, $response, $totallength, $remaining;
@@ -127,7 +129,7 @@ sub listfiles
     # print info for all files
     $remaining=length($filelist);
     print STDERR "STAT Saved files:\n\tType\tFilename\tDesignname\tSize\n";
-    while ($remaining) {
+    while ($remaining > 0) {
 
 	($type, $filename, $designname, $length) = unpack("CZ*Z*N", $filelist);
 
@@ -136,7 +138,23 @@ sub listfiles
 	$remaining -= 1 + (length($filename)+1) + (length($designname)+1) + 4;
 
 	$filelist = substr($filelist, -$remaining, $remaining);
+
     }
+}
+
+#
+# test_listfiles
+#
+sub test_listfiles
+{
+    my $n1 = "GenFile", $d1 = "GenDesign0";
+    my $n2 = "AplFile", $d2 = "";
+    my $n3 = "CnnFile", $d3 = "CnnDesignName";
+ 
+    print pack("NCZ*Z*NCZ*Z*NCZ*Z*N", 7+length($n1)+length($d1)+7+length($n2)+length($d2)+7+length($n3)+length($d3),
+	       0x0, $n1, $d1, 123,
+	       0x1, $n2, $d2, 456,
+	       0x2, $n3, $d3, 789);
 }
 
 #
@@ -144,6 +162,8 @@ sub listfiles
 #
 sub savefile
 {
+    if (defined($opt_T)) { test_savefile(); return; }
+
     my ($sock, $filename) = @_;
     my $filesize, $header;
 
@@ -160,10 +180,20 @@ sub savefile
 }
 
 #
+# test_savefile
+#
+sub test_savefile
+{
+    print pack("C", 0);
+}
+
+#
 # testexec($sock, $genfile, $aplfile)
 #
 sub testexec
 {
+    if (defined($opt_T)) { test_testexec(); return; }
+
     my ($sock, $genfile, $aplfile) = @_;
 
     $data = pack("C/a*C/a*xxC/a*x8", $genfile, $aplfile, "Test.Err");
@@ -191,10 +221,22 @@ sub testexec
 }
 
 #
+# test_testexec
+#
+sub test_testexec
+{
+    $testresult="This is the test result.";
+
+    print pack("NZ*C", length($testresult), $testresult, 0);
+}
+
+#
 # erase($sock, $filename, $type)
 #
 sub erase
 {
+    if (defined($opt_T)) { test_erase(); return; }
+
     my ($sock, $filename, $type) = @_;
     my $header;
 
@@ -215,10 +257,20 @@ sub erase
 }
 
 #
+# test_erase
+#
+sub test_erase
+{
+    print pack("C", 0);
+}
+
+#
 # ipupdate($sock, $ipaddress)
 #
 sub ipupdate
 {
+    if (defined($opt_T)) { test_ipupdate(); return; }
+
     my ($sock, $ipaddress) = @_;
     my @bytes, $newip, $header;
 
@@ -234,6 +286,14 @@ sub ipupdate
 
     # check the response
     print STDERR $IPUPDATE_RESULT{checkresponse($sock)};
+}
+
+#
+# test_ipupdate
+#
+sub test_ipupdate
+{
+    print pack("C", 0);
 }
 
 #
@@ -256,7 +316,9 @@ sub usage
 
 sub main
 {
-    Getopt::Std::getopts("h:p:ls:g:a:e:i:t:");
+    my $sock = 0;
+
+    Getopt::Std::getopts("h:p:ls:g:a:e:i:t:T");
 
       # check that at least one argument is present
       usage() if !defined($opt_l)
@@ -268,16 +330,18 @@ sub main
       # assign default values
       $opt_h = '192.168.1.25' if !defined($opt_h);
       $opt_p = '3800'         if !defined($opt_p);
-      
-      # Create socket to ECB board
-      my $sock = new IO::Socket::INET (
-				       PeerAddr => $opt_h,
-				       PeerPort => $opt_p,
-				       Proto => 'tcp',
-				       );
-      die "ERR  could not connect to ($opt_h:$opt_p): $!\n" unless $sock;
 
-      print STDERR "STAT Connected to JTAG ECB on $opt_h:$opt_p\n";
+      if (!defined($opt_T)) {
+	  # Create socket to ECB board
+	  $sock = new IO::Socket::INET (
+					PeerAddr => $opt_h,
+					PeerPort => $opt_p,
+					Proto => 'tcp',
+					);
+	  die "ERR  could not connect to ($opt_h:$opt_p): $!\n" unless $sock;
+	  
+	  print STDERR "STAT Connected to JTAG ECB on $opt_h:$opt_p\n";
+      }
 
       if ($opt_l)           { listfiles($sock);                exit(); }
       if ($opt_s)           { savefile($sock, $opt_s);         exit(); }
