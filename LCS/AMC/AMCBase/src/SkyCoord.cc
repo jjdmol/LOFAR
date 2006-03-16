@@ -26,6 +26,7 @@
 //# Includes
 #include <AMCBase/SkyCoord.h>
 #include <Common/lofar_iostream.h>
+#include <cmath>
 
 namespace LOFAR
 {
@@ -52,6 +53,17 @@ namespace LOFAR
       };
       if (isValid()) return types[itsType];
       else return types[N_Types];
+    }
+
+
+    vector<double> SkyCoord::xyz() const
+    {
+      vector<double> p(3);
+      double tmp = std::cos(itsAngle1);
+      p[0] = std::cos(itsAngle0) * tmp;
+      p[1] = std::sin(itsAngle0) * tmp;
+      p[2] = std::sin(itsAngle1);
+      return p;
     }
 
 

@@ -26,12 +26,12 @@
 //# Includes
 #include <AMCBase/EarthCoord.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iostream.h>
+#include <Common/Numeric.h>
 #include <cmath>
-#include <iostream>
 
-using namespace LOFAR::AMC;
 using namespace LOFAR;
-using namespace std;
+using namespace LOFAR::AMC;
 
 int main(int, const char* argv[])
 {
@@ -40,31 +40,45 @@ int main(int, const char* argv[])
   try {
 
     EarthCoord ec0;
-    EarthCoord ec1(0.25*M_PI, -0.33*M_PI);
+    EarthCoord ec1(0.25*M_PI, -0.33*M_PI, 1);
     EarthCoord ec2(-0.67*M_PI, 0.75*M_PI, 249.98, EarthCoord::WGS84);
     EarthCoord ec3(0.5*M_PI, 0.2*M_PI, -115.11, 
                    static_cast<EarthCoord::Types>(1294));
+    vector<double> p;
 
+    p = ec0.xyz();
     ASSERT(ec0.isValid() &&
            ec0.longitude() == 0 && 
            ec0.latitude() == 0 && 
            ec0.height() == 0 &&
            ec0.type() == EarthCoord::ITRF);
+    ASSERT(p[0] == 0 &&
+           p[1] == 0 &&
+           p[2] == 0);
+
+    p = ec1.xyz();
     ASSERT(ec1.isValid() &&
            ec1.longitude() == 0.25*M_PI && 
            ec1.latitude() == -0.33*M_PI &&
-           ec1.height() == 0 &&
+           ec1.height() == 1 &&
            ec1.type() == EarthCoord::ITRF);
+    ASSERT(Numeric::compare(p[0],  0.3599466369818882) &&
+           Numeric::compare(p[1],  0.3599466369818882) &&
+           Numeric::compare(p[2], -0.8607420270039436));
+
+    p = ec2.xyz();
     ASSERT(ec2.isValid() &&
            ec2.longitude() == -0.67*M_PI && 
            ec2.latitude() == 0.75*M_PI &&
            ec2.height() == 249.98 && 
            ec2.type() == EarthCoord::WGS84);
-    ASSERT(!ec3.isValid() &&
-           ec3.longitude() == 0.5*M_PI &&
-           ec3.latitude() == 0.2*M_PI &&
-           ec3.height() == -115.11 &&
-           ec3.type() == EarthCoord::INVALID);
+
+    ASSERT(Numeric::compare(p[0],  89.9794603127324) &&
+           Numeric::compare(p[1], 152.1469583062028) &&
+           Numeric::compare(p[2], 176.7625531610132));
+
+    p = ec3.xyz();
+    ASSERT(!ec3.isValid());
 
     cout << "ec0 = " << ec0 << endl;
     cout << "ec1 = " << ec1 << endl;
