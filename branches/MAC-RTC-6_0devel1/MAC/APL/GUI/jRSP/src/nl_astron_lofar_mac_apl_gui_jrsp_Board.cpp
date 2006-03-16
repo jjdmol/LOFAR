@@ -12,202 +12,203 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatu
 	jclass clsStatus = env->GetObjectClass(status);
 
 	// Get method identifiers for the methods of the StatusBoard class.
-	jmethodID midSetVoltage1V2 = env->GetMethodID(clsStatus, "setVoltage1V2", "(I)V");
-	jmethodID midSetVoltage2V5 = env->GetMethodID(clsStatus, "setVoltage2V5", "(I)V");
-	jmethodID midSetVoltage3V3 = env->GetMethodID(clsStatus, "setVoltage3V3", "(I)V");
-	jmethodID midSetPcbTemp = env->GetMethodID(clsStatus, "setPcbTemp", "(I)V");
-	jmethodID midSetBpTemp = env->GetMethodID(clsStatus, "setBpTemp", "(I)V");
-	jmethodID midSetAp0Temp = env->GetMethodID(clsStatus, "setAp0Temp", "(I)V");
-	jmethodID midSetAp1Temp = env->GetMethodID(clsStatus, "setAp1Temp", "(I)V");
-	jmethodID midSetAp2Temp = env->GetMethodID(clsStatus, "setAp2Temp", "(I)V");
-	jmethodID midSetAp3Temp = env->GetMethodID(clsStatus, "setAp3Temp", "(I)V");
-	jmethodID midSetBpClock = env->GetMethodID(clsStatus, "setBpClock", "(I)V");
-	jmethodID midSetNofFrames = env->GetMethodID(clsStatus, "setNofFrames", "(I)V");
-	jmethodID midSetNofErrors = env->GetMethodID(clsStatus, "setNofErrors", "(I)V");
-	jmethodID midSetLastError = env->GetMethodID(clsStatus, "setLastError", "(I)V");
-        jmethodID midSetSeqnr = env->GetMethodID(clsStatus, "setSeqnr", "(I)V");
-        jmethodID midSetError = env->GetMethodID(clsStatus, "setError", "(I)V");
-        jmethodID midSetInterface = env->GetMethodID(clsStatus, "setInterface", "(I)V");
-        jmethodID midSetMode = env->GetMethodID(clsStatus, "setMode", "(I)V");
-        jmethodID midSetRiErrors = env->GetMethodID(clsStatus, "setRiErrors", "(I)V");
-        jmethodID midSetRcuxErrors = env->GetMethodID(clsStatus, "setRcuxErrors", "(I)V");
-        jmethodID midSetLcuErrors = env->GetMethodID(clsStatus, "setLcuErrors", "(I)V");
-        jmethodID midSetCepErrors = env->GetMethodID(clsStatus, "setCepErrors", "(I)V");
-        jmethodID midSetSerdesErrors = env->GetMethodID(clsStatus, "setSerdesErrors", "(I)V");
-        jmethodID midSetAp0RiErrors = env->GetMethodID(clsStatus, "setAp0RiErrors", "(I)V");
-        jmethodID midSetAp1RiErrors = env->GetMethodID(clsStatus, "setAp1RiErrors", "(I)V");
-        jmethodID midSetAp2RiErrors = env->GetMethodID(clsStatus, "setAp2RiErrors", "(I)V");
-        jmethodID midSetAp3RiErrors = env->GetMethodID(clsStatus, "setAp3RiErrors", "(I)V");
-        jmethodID midSetBlp0Sync = env->GetMethodID(clsStatus, "setBlp0Sync", "(I)V");
-        jmethodID midSetBlp1Sync = env->GetMethodID(clsStatus, "setBlp1Sync", "(I)V");
-        jmethodID midSetBlp2Sync = env->GetMethodID(clsStatus, "setBlp2Sync", "(I)V");
-        jmethodID midSetBlp3Sync = env->GetMethodID(clsStatus, "setBlp3Sync", "(I)V");
-        jmethodID midSetBlp0Rcu = env->GetMethodID(clsStatus, "setBlp0Rcu", "(I)V");
-        jmethodID midSetBlp1Rcu = env->GetMethodID(clsStatus, "setBlp1Rcu", "(I)V");
-        jmethodID midSetBlp2Rcu = env->GetMethodID(clsStatus, "setBlp2Rcu", "(I)V");
-        jmethodID midSetBlp3Rcu = env->GetMethodID(clsStatus, "setBlp3Rcu", "(I)V");
-        jmethodID midSetCpStatus = env->GetMethodID(clsStatus, "setCpStatus", "(I)V");
-        jmethodID midSetBlp0AdcOffset = env->GetMethodID(clsStatus, "setBlp0AdcOffset", "(I)V");
-        jmethodID midSetBlp1AdcOffset = env->GetMethodID(clsStatus, "setBlp1AdcOffset", "(I)V");
-        jmethodID midSetBlp2AdcOffset = env->GetMethodID(clsStatus, "setBlp2AdcOffset", "(I)V");
-        jmethodID midSetBlp3AdcOffset = env->GetMethodID(clsStatus, "setBlp3AdcOffset", "(I)V");
+	jfieldID fidVoltage1V2 = env->GetFieldID(clsStatus, "voltage1V2", "I");
+        jfieldID fidVoltage2V5 = env->GetFieldID(clsStatus, "voltage2V5", "I");
+        jfieldID fidVoltage3V3 = env->GetFieldID(clsStatus, "voltage3V3", "I");
+        jfieldID fidPcbTemp = env->GetFieldID(clsStatus, "pcbTemp", "I");
+        jfieldID fidBpTemp = env->GetFieldID(clsStatus, "bpTemp", "I");
+        jfieldID fidAp0Temp = env->GetFieldID(clsStatus, "ap0Temp", "I");
+        jfieldID fidAp1Temp = env->GetFieldID(clsStatus, "ap1Temp", "I");
+        jfieldID fidAp2Temp = env->GetFieldID(clsStatus, "ap2Temp", "I");
+        jfieldID fidAp3Temp = env->GetFieldID(clsStatus, "ap3Temp", "I");
+        jfieldID fidBpClock = env->GetFieldID(clsStatus, "bpClock", "I");
+        jfieldID fidNofFrames = env->GetFieldID(clsStatus, "nofFrames", "I");
+        jfieldID fidNofErrors = env->GetFieldID(clsStatus, "nofErrors", "I");
+        jfieldID fidLastError = env->GetFieldID(clsStatus, "lastError", "I");
+        jfieldID fidSeqNr = env->GetFieldID(clsStatus, "seqNr", "I");
+        jfieldID fidError = env->GetFieldID(clsStatus, "error", "I");
+        jfieldID fidIfUnderTest = env->GetFieldID(clsStatus, "ifUnderTest", "I");
+        jfieldID fidMode = env->GetFieldID(clsStatus, "mode", "I");
+        jfieldID fidRiErrors = env->GetFieldID(clsStatus, "riErrors", "I");
+        jfieldID fidRcuxErrors = env->GetFieldID(clsStatus, "rcuxErrors", "I");
+        jfieldID fidLcuErrors = env->GetFieldID(clsStatus, "lcuErrors", "I");
+        jfieldID fidCepErrors = env->GetFieldID(clsStatus, "cepErrors", "I");
+        jfieldID fidSerdesErrors = env->GetFieldID(clsStatus, "serdesErrors", "I");
+        jfieldID fidAp0RiErrors = env->GetFieldID(clsStatus, "ap0RiErrors", "I");
+        jfieldID fidAp1RiErrors = env->GetFieldID(clsStatus, "ap1RiErrors", "I");
+        jfieldID fidAp2RiErrors = env->GetFieldID(clsStatus, "ap2RiErrors", "I");
+        jfieldID fidAp3RiErrors = env->GetFieldID(clsStatus, "ap3RiErrors", "I");
+        jfieldID fidBlp0Sync = env->GetFieldID(clsStatus, "blp0Sync", "I");
+        jfieldID fidBlp1Sync = env->GetFieldID(clsStatus, "blp1Sync", "I");
+        jfieldID fidBlp2Sync = env->GetFieldID(clsStatus, "blp2Sync", "I");
+        jfieldID fidBlp3Sync = env->GetFieldID(clsStatus, "blp3Sync", "I");
+        jfieldID fidBlp0Rcu = env->GetFieldID(clsStatus, "blp0Rcu", "I");
+        jfieldID fidBlp1Rcu = env->GetFieldID(clsStatus, "blp1Rcu", "I");
+        jfieldID fidBlp2Rcu = env->GetFieldID(clsStatus, "blp2Rcu", "I");
+        jfieldID fidBlp3Rcu = env->GetFieldID(clsStatus, "blp3Rcu", "I");
+        jfieldID fidCpStatus = env->GetFieldID(clsStatus, "cpStatus", "I");
+        jfieldID fidBlp0AdcOffset = env->GetFieldID(clsStatus, "blp0AdcOffset", "I");
+        jfieldID fidBlp1AdcOffset = env->GetFieldID(clsStatus, "blp1AdcOffset", "I");
+        jfieldID fidBlp2AdcOffset = env->GetFieldID(clsStatus, "blp2AdcOffset", "I");
+        jfieldID fidBlp3AdcOffset = env->GetFieldID(clsStatus, "blp3AdcOffset", "I");
 
-	jint testData = 1;
+	jint testData = 2;
 
-	if(midSetVoltage1V2 != 0)
-	{
-		env->CallVoidMethod(status, midSetVoltage1V2, testData);
-	}
-	if(midSetVoltage2V5 != 0)
-	{
-		env->CallVoidMethod(status, midSetVoltage2V5, testData);
-	}
-	if(midSetVoltage3V3 != 0)
-	{
-		env->CallVoidMethod(status, midSetVoltage3V3, testData);
-	}
-	if(midSetPcbTemp != 0)
-	{
-		env->CallVoidMethod(status, midSetPcbTemp, testData);
-	}
-	if(midSetBpTemp != 0)
-	{
-		env->CallVoidMethod(status, midSetBpTemp, testData);
-	}
-	if(midSetAp0Temp != 0)
-	{
-		env->CallVoidMethod(status, midSetAp0Temp, testData);
-	}
-	if(midSetAp1Temp != 0)
-	{
-		env->CallVoidMethod(status, midSetAp1Temp, testData);
-	}
-	if(midSetAp2Temp != 0)
-	{
-		env->CallVoidMethod(status, midSetAp2Temp, testData);
-	}
-	if(midSetAp3Temp != 0)
-	{
-		env->CallVoidMethod(status, midSetAp3Temp, testData);
-	}
-	if(midSetBpClock != 0)
-	{
-		env->CallVoidMethod(status, midSetBpClock, testData);
-	}
-	if(midSetNofFrames != 0)
-	{
-		env->CallVoidMethod(status, midSetNofFrames, testData);
-	}
-	if(midSetNofErrors != 0)
-	{
-		env->CallVoidMethod(status, midSetNofErrors, testData);
-	}
-	if(midSetLastError != 0)
+	// Access field and fill them
+        if(fidVoltage1V2 != 0)
         {
-                env->CallVoidMethod(status, midSetLastError, testData);
+                env->SetIntField(status, fidVoltage1V2, testData);
         }
-        if(midSetSeqnr != 0)
+        if(fidVoltage2V5 != 0)
         {
-                env->CallVoidMethod(status, midSetSeqnr, testData);
+                env->SetIntField(status, fidVoltage2V5, testData);
         }
-        if(midSetError != 0)
+        if(fidVoltage3V3 != 0)
         {
-                env->CallVoidMethod(status, midSetError, testData);
+                env->SetIntField(status, fidVoltage3V3, testData);
         }
-        if(midSetInterface != 0)
+        if(fidPcbTemp != 0)
         {
-                env->CallVoidMethod(status, midSetInterface, testData);
+                env->SetIntField(status, fidPcbTemp, testData);
         }
-        if(midSetMode != 0)
+        if(fidBpTemp != 0)
         {
-                env->CallVoidMethod(status, midSetMode, testData);
+                env->SetIntField(status, fidBpTemp, testData);
         }
-        if(midSetRiErrors != 0)
+        if(fidAp0Temp != 0)
         {
-                env->CallVoidMethod(status, midSetRiErrors, testData);
+                env->SetIntField(status, fidAp0Temp, testData);
         }
-        if(midSetRcuxErrors != 0)
+        if(fidAp1Temp != 0)
         {
-                env->CallVoidMethod(status, midSetRcuxErrors, testData);
+                env->SetIntField(status, fidAp1Temp, testData);
         }
-        if(midSetLcuErrors != 0)
+        if(fidAp2Temp != 0)
         {
-                env->CallVoidMethod(status, midSetLcuErrors, testData);
+                env->SetIntField(status, fidAp2Temp, testData);
         }
-        if(midSetCepErrors != 0)
+        if(fidAp3Temp != 0)
         {
-                env->CallVoidMethod(status, midSetCepErrors, testData);
+                env->SetIntField(status, fidAp3Temp, testData);
         }
-        if(midSetSerdesErrors != 0)
+        if(fidBpClock != 0)
         {
-                env->CallVoidMethod(status, midSetSerdesErrors, testData);
+                env->SetIntField(status, fidBpClock, testData);
         }
-        if(midSetAp0RiErrors != 0)
+        if(fidNofFrames != 0)
         {
-                env->CallVoidMethod(status, midSetAp0RiErrors, testData);
+                env->SetIntField(status, fidNofFrames, testData);
         }
-        if(midSetAp1RiErrors != 0)
+        if(fidNofErrors != 0)
         {
-                env->CallVoidMethod(status, midSetAp1RiErrors, testData);
+                env->SetIntField(status, fidNofErrors, testData);
         }
-        if(midSetAp2RiErrors != 0)
+        if(fidLastError != 0)
         {
-                env->CallVoidMethod(status, midSetAp2RiErrors, testData);
+                env->SetIntField(status, fidLastError, testData);
         }
-        if(midSetAp3RiErrors != 0)
+        if(fidSeqNr != 0)
         {
-                env->CallVoidMethod(status, midSetAp3RiErrors, testData);
+                env->SetIntField(status, fidSeqNr, testData);
         }
-        if(midSetBlp0Sync != 0)
+        if(fidError != 0)
         {
-                env->CallVoidMethod(status, midSetBlp0Sync, testData);
+                env->SetIntField(status, fidError, testData);
         }
-        if(midSetBlp1Sync != 0)
+        if(fidIfUnderTest != 0)
         {
-                env->CallVoidMethod(status, midSetBlp1Sync, testData);
+                env->SetIntField(status, fidIfUnderTest, testData);
         }
-        if(midSetBlp2Sync != 0)
+        if(fidMode != 0)
         {
-                env->CallVoidMethod(status, midSetBlp2Sync, testData);
+                env->SetIntField(status, fidMode, testData);
         }
-        if(midSetBlp3Sync != 0)
+        if(fidRiErrors != 0)
         {
-                env->CallVoidMethod(status, midSetBlp3Sync, testData);
+                env->SetIntField(status, fidRiErrors, testData);
         }
-        if(midSetBlp0Rcu != 0)
+        if(fidRcuxErrors != 0)
         {
-                env->CallVoidMethod(status, midSetBlp0Rcu, testData);
+                env->SetIntField(status, fidRcuxErrors, testData);
         }
-        if(midSetBlp1Rcu != 0)
+        if(fidLcuErrors != 0)
         {
-                env->CallVoidMethod(status, midSetBlp1Rcu, testData);
+                env->SetIntField(status, fidLcuErrors, testData);
         }
-        if(midSetBlp2Rcu != 0)
+        if(fidCepErrors != 0)
         {
-                env->CallVoidMethod(status, midSetBlp2Rcu, testData);
+                env->SetIntField(status, fidCepErrors, testData);
         }
-        if(midSetBlp3Rcu != 0)
+        if(fidSerdesErrors != 0)
         {
-                env->CallVoidMethod(status, midSetBlp3Rcu, testData);
+                env->SetIntField(status, fidSerdesErrors, testData);
         }
-        if(midSetCpStatus != 0)
+        if(fidAp0RiErrors != 0)
         {
-                env->CallVoidMethod(status, midSetCpStatus, testData);
+                env->SetIntField(status, fidAp0RiErrors, testData);
         }
-        if(midSetBlp0AdcOffset != 0)
+        if(fidAp1RiErrors != 0)
         {
-                env->CallVoidMethod(status, midSetBlp0AdcOffset, testData);
+                env->SetIntField(status, fidAp1RiErrors, testData);
         }
-        if(midSetBlp1AdcOffset != 0)
+        if(fidAp2RiErrors != 0)
         {
-                env->CallVoidMethod(status, midSetBlp1AdcOffset, testData);
+                env->SetIntField(status, fidAp2RiErrors, testData);
         }
-        if(midSetBlp2AdcOffset != 0)
+        if(fidAp3RiErrors != 0)
         {
-                env->CallVoidMethod(status, midSetBlp2AdcOffset, testData);
+                env->SetIntField(status, fidAp3RiErrors, testData);
         }
-        if(midSetBlp3AdcOffset != 0)
+        if(fidBlp0Sync != 0)
         {
-                env->CallVoidMethod(status, midSetBlp3AdcOffset, testData);
+                env->SetIntField(status, fidBlp0Sync, testData);
+        }
+        if(fidBlp1Sync != 0)
+        {
+                env->SetIntField(status, fidBlp1Sync, testData);
+        }
+        if(fidBlp2Sync != 0)
+        {
+                env->SetIntField(status, fidBlp2Sync, testData);
+        }
+        if(fidBlp3Sync != 0)
+        {
+                env->SetIntField(status, fidBlp3Sync, testData);
+        }
+        if(fidBlp0Rcu != 0)
+        {
+                env->SetIntField(status, fidBlp0Rcu, testData);
+        }
+        if(fidBlp1Rcu != 0)
+        {
+                env->SetIntField(status, fidBlp1Rcu, testData);
+        }
+        if(fidBlp2Rcu != 0)
+        {
+                env->SetIntField(status, fidBlp2Rcu, testData);
+        }
+        if(fidBlp3Rcu != 0)
+        {
+                env->SetIntField(status, fidBlp3Rcu, testData);
+        }
+        if(fidCpStatus != 0)
+        {
+                env->SetIntField(status, fidCpStatus, testData);
+        }
+        if(fidBlp0AdcOffset != 0)
+        {
+                env->SetIntField(status, fidBlp0AdcOffset, testData);
+        }
+        if(fidBlp1AdcOffset != 0)
+        {
+                env->SetIntField(status, fidBlp1AdcOffset, testData);
+        }
+        if(fidBlp2AdcOffset != 0)
+        {
+                env->SetIntField(status, fidBlp2AdcOffset, testData);
+        }
+        if(fidBlp3AdcOffset != 0)
+        {
+                env->SetIntField(status, fidBlp3AdcOffset, testData);
         }
 }
