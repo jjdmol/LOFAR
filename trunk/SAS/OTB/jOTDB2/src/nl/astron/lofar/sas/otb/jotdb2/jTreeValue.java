@@ -1,4 +1,4 @@
-//#  jTreeValue.java: Logging.
+//#  jTreeValue.java: Interface for access to the tree (KVT) values
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,14 +26,55 @@ import java.util.Vector;
 
 public class jTreeValue
 {
+
+    public String itsErrorMsg;
+    public int itsTreeID;
+ 
     public jTreeValue ()
     {
-	initTreeValue ();
+	itsErrorMsg="";
+	itsTreeID=0;
     }
 
-    private native void initTreeValue ();
+    public void setTreeID(int aTreeID) {
+	itsTreeID=aTreeID;
+    }
 
-    // Get the node definition of a VC node
-    public native Vector searchInPeriod (int aTreeID, int topNode, int depth, String beginDate, 
-					 String endDate, boolean mostRecentlyOnly);
+    // PVSS will continuously add value-changes to the offline PIC.
+    // There two ways PVSS can do this.
+    // The function returns false if the PIC node can not be found.
+    public native boolean addKVT( String key, String value, String time);
+    public native boolean addKVT(jOTDBvalue aKVT);
+
+    // Note: This form will probably be used by SAS and OTB when committing
+    // a list of modified node.
+    public native boolean addKVTlist(Vector<jOTDBvalue> aValueList);
+    //    public native boolean addKVTparamSet(jParamterSet aPS);
+
+    //# SHM queries
+    // With searchInPeriod a list of all valuechanges in the OTDB tree can
+    // be retrieved from the database.
+    // By chosing the topItem right one node or a sub tree of the whole tree
+    // (you probably don't want this!) can be retrieved.
+    // When the endDate is not specified all value changes from beginDate
+    // till 'now' are retrieved, otherwise the selection is limited to
+    // [beginDate..endDate>.
+    public native Vector<jOTDBvalue> searchInPeriod (int topNode, 
+						     int depth, 
+						     String beginDate, 
+						     String endDate, 
+						     boolean mostRecentlyOnly);
+
+    //# SAS queries
+    // For scheduling the VIC tree on the OTDB tree SAS must know what
+    // resources exist in the OTDB tree. This list can be retrieved with
+    // this function.
+    // TBW: Is this realy what SAS needs???
+    public native Vector<jOTDBvalue> getSchedulableItems (int topNode);
+
+    // Whenever an error occurs in one the OTDB functions the message can
+    // be retrieved with this function.
+    public String  errorMsg() {
+	return itsErrorMsg;
+    }
 }

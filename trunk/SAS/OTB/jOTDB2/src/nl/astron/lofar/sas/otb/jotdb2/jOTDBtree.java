@@ -23,26 +23,48 @@ package nl.astron.lofar.sas.otb.jotdb2;
 
 public class jOTDBtree implements java.io.Serializable
 {
+    public jOTDBtree ()
+    {
+	itsTreeID = 0;
+	itsMomID=0;
+    }
+
     public jOTDBtree (int treeID)
     {
 	itsTreeID = treeID;
+	itsMomID = 0;
     }
+
+    public jOTDBtree (int treeID, int momID)
+    {
+	itsTreeID = treeID;
+	itsMomID  = momID;
+    }
+
    
     public int treeID()
     {
 	return (itsTreeID); 
     }
+
+    public int momID()
+    {
+	return (itsMomID);
+    }
    
-    public int momID;
     public short classification; // development / test / operational
     public String creator;
     public String creationDate;	
     public short type;			// hardware / VItemplate / VHtree
     public short state;			// idle / configure / ... / active / ...
+    public String description;          // free text
+
     // -- VIC only --
     public int originalTree;
     public String campaign;
     public String starttime;
     public String stoptime;
     private int itsTreeID;
+    private int itsMomID;
+
 }

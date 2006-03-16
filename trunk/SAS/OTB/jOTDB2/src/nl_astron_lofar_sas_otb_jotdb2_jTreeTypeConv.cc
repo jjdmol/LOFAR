@@ -37,6 +37,7 @@ using namespace std;
 
 
 static TreeTypeConv* treeTypeConv;
+extern OTDBconnection* theirConn;
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv
@@ -45,8 +46,7 @@ static TreeTypeConv* treeTypeConv;
  */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_initTreeTypeConv(JNIEnv *, jobject) {
   
-  OTDBconn = getConnection();
-  treeTypeConv = new TreeTypeConv(OTDBconn);
+  treeTypeConv = new TreeTypeConv(theirConn);
 }
 
 /*
