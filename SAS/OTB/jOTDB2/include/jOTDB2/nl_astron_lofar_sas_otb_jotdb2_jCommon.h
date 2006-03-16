@@ -1,4 +1,4 @@
-//#  jOTDB_jOTDBcommon.h: Holds a static OTDBconnection.
+//#  jCommon.h: Holds a static OTDBconnection.
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,24 +25,38 @@
 // \file
 // Hold a static OTDBconnection, to be
 // shared between the different JNI implementation
-
+// Also holds the Class converters for this connection
+//
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <jni.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/OTDBnode.h>
 #include <OTDB/OTDBvalue.h>
 #include <OTDB/OTDBtree.h>
+#include <OTDB/OTDBparam.h>
+#include <OTDB/TreeState.h>
+#include <OTDB/TreeValue.h>
+#include <OTDB/VICnodeDef.h>
+#include <OTDB/TreeMaintenance.h>
 
 using namespace LOFAR::OTDB;
 
-static OTDBconnection* OTDBconn;
+jobject convertOTDBnode   (JNIEnv *env, OTDBnode aNode);
+jobject convertOTDBvalue  (JNIEnv *env, OTDBvalue aValue);
+jobject convertOTDBtree   (JNIEnv *env, OTDBtree aTree);
+jobject convertTreeState  (JNIEnv *env, TreeState aTreeState);
+jobject convertVICnodeDef (JNIEnv *env, VICnodeDef aNodeDef);
+jobject convertOTDBparam  (JNIEnv *env, OTDBparam aParam);
 
-jobject convertOTDBnode (JNIEnv *env, OTDBnode aNode);
 OTDBnode convertjOTDBnode (JNIEnv *env, jobject jNode);
-jobject convertOTDBvalue (JNIEnv *env, OTDBvalue aValue);
-jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree);
+VICnodeDef convertjVICnodeDef (JNIEnv *env, jobject jNode);
+OTDBparam convertjOTDBparam (JNIEnv *env, jobject jParam);
+OTDBvalue convertjOTDBvalue (JNIEnv *env, jobject jvalue);
 
 
-OTDBconnection* getConnection ();
+// Used in TreeValue
+void  setTreeValConnection(JNIEnv *env, jobject callerObject);
+void setErrorMsg(JNIEnv *env, jobject callerObject);
 
 #endif

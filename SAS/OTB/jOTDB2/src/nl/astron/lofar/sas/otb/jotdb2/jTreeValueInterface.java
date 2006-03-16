@@ -31,6 +31,21 @@ public interface jTreeValueInterface extends Remote
     // Constants
     public static final String SERVICENAME = "jTreeValue";
 
-    public Vector searchInPeriod (int aTreeID, int topNode, int depth, String beginDate, 
+    public void setTreeID(int aTreeID) throws RemoteException;
+
+    public boolean addKVT( String key, String value, String time) throws RemoteException;
+
+    public boolean addKVT(jOTDBvalue aKVT) throws RemoteException;
+
+    public boolean addKVTlist(Vector<jOTDBvalue> aValueList) throws RemoteException;
+
+    //    public boolean addKVTparamSet(jParamterSet aPS) throws RemoteException;
+
+    public Vector searchInPeriod (int topNode, int depth, String beginDate, 
 				  String endDate, boolean mostRecentlyOnly) throws RemoteException;
+
+
+    public Vector<jOTDBvalue> getSchedulableItems (int topNode) throws RemoteException;
+
+    public String  errorMsg() throws RemoteException;
 }

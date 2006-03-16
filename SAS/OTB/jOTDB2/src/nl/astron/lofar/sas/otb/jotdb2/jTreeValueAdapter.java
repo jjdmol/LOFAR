@@ -33,11 +33,46 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
 	this.adaptee = adaptee;
      }
    
-    public Vector searchInPeriod (int aTreeID, int topNode, int depth, String beginDate,
+    public void setTreeID(int aTreeID) throws RemoteException 
+    {
+	adaptee.setTreeID(aTreeID);
+    }
+
+    public boolean addKVT( String key, String value, String time) throws RemoteException
+    {
+	return adaptee.addKVT( key, value, time) ;
+    }
+
+    public boolean addKVT(jOTDBvalue aKVT) throws RemoteException
+    {
+	return adaptee.addKVT(aKVT);
+    }
+
+    public boolean addKVTlist(Vector<jOTDBvalue> aValueList) throws RemoteException
+    {
+	return adaptee.addKVTlist(aValueList);
+    }
+    //    public  boolean addKVTparamSet(jParamterSet aPS) throws RemoteException
+    //    {
+    //	return adaptee.addKVTparamSet(aPS);
+    //    }
+
+
+    public Vector searchInPeriod (int topNode, int depth, String beginDate,
 				  String endDate, boolean mostRecentlyOnly) throws RemoteException
     {
-	return adaptee.searchInPeriod (aTreeID, topNode, depth, beginDate, endDate, mostRecentlyOnly);
+	return adaptee.searchInPeriod (topNode, depth, beginDate, endDate, mostRecentlyOnly);
     }
-   
+
+    public Vector<jOTDBvalue> getSchedulableItems (int topNode) throws RemoteException
+    {
+	return adaptee.getSchedulableItems(topNode);
+    }
+
+    public String  errorMsg() throws RemoteException
+    {
+	return errorMsg();
+    }
+
     protected jTreeValue adaptee;   
 }

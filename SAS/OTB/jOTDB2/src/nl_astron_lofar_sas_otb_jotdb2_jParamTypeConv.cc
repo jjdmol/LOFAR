@@ -37,6 +37,7 @@ using namespace std;
 
 
 static ParamTypeConv* paramTypeConv;
+extern OTDBconnection* theirConn;
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv
@@ -45,8 +46,7 @@ static ParamTypeConv* paramTypeConv;
  */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_initParamTypeConv(JNIEnv *, jobject) {
   
-  OTDBconn = getConnection();
-  paramTypeConv = new ParamTypeConv(OTDBconn);
+  paramTypeConv = new ParamTypeConv(theirConn);
 }
 
 /*

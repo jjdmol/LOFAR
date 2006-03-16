@@ -37,6 +37,7 @@ using namespace std;
 
 
 static TreeStateConv* treeStateConv;
+extern OTDBconnection* theirConn;
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeStateConv
@@ -45,8 +46,7 @@ static TreeStateConv* treeStateConv;
  */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeStateConv_initTreeStateConv(JNIEnv *, jobject) {
   
-  OTDBconn = getConnection();
-  treeStateConv = new TreeStateConv(OTDBconn);
+  treeStateConv = new TreeStateConv(theirConn);
 }
 
 /*

@@ -37,6 +37,8 @@ using namespace std;
 
 
 static ClassifConv* classifConv;
+extern OTDBconnection* theirConn;
+
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jClassifConv
@@ -45,8 +47,7 @@ static ClassifConv* classifConv;
  */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_initClassifConv(JNIEnv *, jobject) {
   
-  OTDBconn = getConnection();
-  classifConv = new ClassifConv(OTDBconn);
+  classifConv = new ClassifConv(theirConn);
 }
 
 /*

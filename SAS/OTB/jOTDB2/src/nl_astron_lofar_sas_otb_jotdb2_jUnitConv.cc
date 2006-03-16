@@ -37,7 +37,8 @@ using namespace std;
 
 
 static UnitConv* unitConv;
-
+extern OTDBconnection* theirConn;
+ 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jUnitConv
  * Method:    initUnitConv
@@ -45,8 +46,7 @@ static UnitConv* unitConv;
  */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_initUnitConv(JNIEnv *, jobject) {
   
-  OTDBconn = getConnection();
-  unitConv = new UnitConv(OTDBconn);
+  unitConv = new UnitConv(theirConn);
 }
 
 /*

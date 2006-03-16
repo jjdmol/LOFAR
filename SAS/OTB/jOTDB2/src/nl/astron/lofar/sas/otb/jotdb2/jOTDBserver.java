@@ -103,7 +103,7 @@ public class jOTDBserver
 	     
 	     logger.info("jOTDBserver publishing service " + jTreeValueInterface.SERVICENAME + " in local registry...");
 	     localRegistry.rebind (jTreeValueInterface.SERVICENAME, jTreeValueAdapter);
-
+	     
 	     logger.info("Published jTreeValueInterface as service " + jTreeValueInterface.SERVICENAME + ". Ready...");	     
 
 	     // Export jConverter
