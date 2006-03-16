@@ -27,6 +27,9 @@
 #include <AMCBase/SkyCoord.h>
 #include <Common/lofar_iostream.h>
 #include <cmath>
+#include <limits>
+
+using namespace std;
 
 namespace LOFAR
 {
@@ -34,10 +37,13 @@ namespace LOFAR
   {
 
     SkyCoord::SkyCoord (double angle0, double angle1, Types typ)
-      : itsAngle0(angle0), itsAngle1(angle1) 
+      : itsAngle0(angle0), itsAngle1(angle1), itsType(typ)
     {
-      if (INVALID < typ && typ < N_Types) itsType = typ; 
-      else itsType = INVALID;
+      if (!(INVALID < typ && typ < N_Types)) {
+        itsAngle0 = numeric_limits<double>::quiet_NaN();
+        itsAngle1 = numeric_limits<double>::quiet_NaN();
+        itsType = INVALID;
+      }
     }
     
 
@@ -59,10 +65,10 @@ namespace LOFAR
     vector<double> SkyCoord::xyz() const
     {
       vector<double> p(3);
-      double tmp = std::cos(itsAngle1);
-      p[0] = std::cos(itsAngle0) * tmp;
-      p[1] = std::sin(itsAngle0) * tmp;
-      p[2] = std::sin(itsAngle1);
+      double tmp = cos(itsAngle1);
+      p[0] = cos(itsAngle0) * tmp;
+      p[1] = sin(itsAngle0) * tmp;
+      p[2] = sin(itsAngle1);
       return p;
     }
 

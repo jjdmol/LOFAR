@@ -27,6 +27,9 @@
 #include <AMCBase/EarthCoord.h>
 #include <Common/lofar_iostream.h>
 #include <cmath>
+#include <limits>
+
+using namespace std;
 
 namespace LOFAR
 {
@@ -35,10 +38,14 @@ namespace LOFAR
 
     EarthCoord::EarthCoord (double longitude, double latitude, double height,
                             Types typ)
-      : itsLong(longitude), itsLat(latitude), itsHeight(height)
+      : itsLong(longitude), itsLat(latitude), itsHeight(height), itsType(typ)
     {
-      if (INVALID < typ && typ < N_Types) itsType = typ; 
-      else itsType = INVALID;
+      if (!(INVALID < typ && typ < N_Types)) {
+        itsLong = numeric_limits<double>::quiet_NaN();
+        itsLat = numeric_limits<double>::quiet_NaN();
+        itsHeight = numeric_limits<double>::quiet_NaN();
+        itsType = INVALID;
+      }
     }
 
 
@@ -59,10 +66,10 @@ namespace LOFAR
     vector<double> EarthCoord::xyz() const
     {
       vector<double> p(3);
-      double tmp = std::cos(itsLat);
-      p[0] = itsHeight * std::cos(itsLong) * tmp;
-      p[1] = itsHeight * std::sin(itsLong) * tmp;
-      p[2] = itsHeight * std::sin(itsLat);
+      double tmp = cos(itsLat);
+      p[0] = itsHeight * cos(itsLong) * tmp;
+      p[1] = itsHeight * sin(itsLong) * tmp;
+      p[2] = itsHeight * sin(itsLat);
       return p;
     }
 
