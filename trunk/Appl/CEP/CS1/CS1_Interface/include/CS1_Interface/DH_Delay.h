@@ -31,7 +31,7 @@ namespace LOFAR
 class DH_Delay: public DataHolder
 {
 public:
-  explicit DH_Delay (const string &name, int nrRSPs);
+  explicit DH_Delay (const string &name, uint nrRSPs);
 
   DH_Delay(const DH_Delay &);
 
@@ -61,7 +61,7 @@ public:
   int *itsCoarseDelays;
   float *itsFineDelaysAtBegin;
   float *itsFineDelaysAfterEnd;
-  int itsNrRSPs;
+  uint itsNrRSPs;
 };
 
 
