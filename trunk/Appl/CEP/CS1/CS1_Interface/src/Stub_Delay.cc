@@ -1,4 +1,4 @@
-//# Stub_CoarseDelay.cc: Stub for connection from 
+//# Stub_Delay.cc: Stub for connection from 
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,7 +19,7 @@
 //#  $Id$
 
 
-#include <CS1_Interface/Stub_CoarseDelay.h>
+#include <CS1_Interface/Stub_Delay.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
 #include <APS/ParameterSet.h>
@@ -28,15 +28,15 @@ using namespace LOFAR;
 
 namespace LOFAR { 
 
-Stub_CoarseDelay::Stub_CoarseDelay(bool isInput, const ACC::APS::ParameterSet &pSet)
+Stub_Delay::Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet)
   : itsIsInput    (isInput),
     itsPS         (pSet),
     itsTHs        (0),
     itsConnections(0)
 {
   itsNRSP = itsPS.getInt32("Data.NStations");
-  LOG_TRACE_FLOW_STR("Total number of RSPinputs in the Stub_CoarseDelay is " << itsNRSP);
-  ASSERTSTR(itsNRSP >= 0, "Number of RSPinputs in the Stub_CoarseDelay must be greater than 0");
+  LOG_TRACE_FLOW_STR("Total number of RSPinputs in the Stub_Delay is " << itsNRSP);
+  ASSERTSTR(itsNRSP >= 0, "Number of RSPinputs in the Stub_Delay must be greater than 0");
 
   itsTHs = new TH_Socket*[itsNRSP];
   itsConnections = new Connection*[itsNRSP];
@@ -48,7 +48,7 @@ Stub_CoarseDelay::Stub_CoarseDelay(bool isInput, const ACC::APS::ParameterSet &p
   
 }
   
-Stub_CoarseDelay::~Stub_CoarseDelay()
+Stub_Delay::~Stub_Delay()
 {
   for (int i=0; i<itsNRSP; i++)
   {
@@ -59,7 +59,7 @@ Stub_CoarseDelay::~Stub_CoarseDelay()
   delete [] itsConnections;
 }
   
-void Stub_CoarseDelay::connect(int RSP_nr, TinyDataManager &dm, int dhNr)
+void Stub_Delay::connect(int RSP_nr, TinyDataManager &dm, int dhNr)
 {
 #if 0
   DBGASSERTSTR(((RSP_nr >= 0) && (RSP_nr < itsNRSP)),

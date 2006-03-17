@@ -1,4 +1,4 @@
-//# Stub_BGL_FineDelay.h: Stub for connection of BGL with outside world
+//# Stub_Delay.h: Stub for connection of delay control with RSP inputs
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,25 +20,36 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_BGL_FINE_DELAY_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_BGL_FINE_DELAY_H
+#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_DELAY_H
+#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_DELAY_H
 
-#include <CS1_Interface/Stub_BGL.h>
+#include <APS/ParameterSet.h>
+#include <tinyCEP/TinyDataManager.h>
 
 namespace LOFAR {
 
-class Stub_BGL_FineDelay : public Stub_BGL
+class TH_Socket;
+class Connection;
+
+class Stub_Delay
 {
 public:
-  Stub_BGL_FineDelay(bool iAmOnBGL, const ACC::APS::ParameterSet &pSet)
-  : Stub_BGL(iAmOnBGL, iAmOnBGL, pSet) {}
+  // Create the stub. Get its parameters from the given file name.
+  explicit Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet);
 
-protected:
-  virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);
-  virtual TransportHolder *newServerTH(unsigned subband, unsigned slave);
+  ~Stub_Delay();
+
+  // Connect the given objects to the stubs.
+  void connect(int RSP_nr, TinyDataManager &dm, int dhNr);
+
+private:
+  bool			       itsIsInput;  // Is this stub an input for a step
+  const ACC::APS::ParameterSet &itsPS;
+  int			       itsNRSP;     // total number of RSPinputs
+  TH_Socket		       **itsTHs;
+  Connection		       **itsConnections;
 };
 
 } //namespace
 
-#endif //include guard 
-
+#endif // include guard

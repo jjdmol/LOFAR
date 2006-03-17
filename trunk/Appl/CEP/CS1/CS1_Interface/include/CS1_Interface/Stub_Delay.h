@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_COARSE_DELAY_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_COARSE_DELAY_H
+#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_DELAY_H
+#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_DELAY_H
 
 #include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
@@ -31,13 +31,13 @@ namespace LOFAR {
 class TH_Socket;
 class Connection;
 
-class Stub_CoarseDelay
+class Stub_Delay
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit Stub_CoarseDelay(bool isInput, const ACC::APS::ParameterSet &pSet);
+  explicit Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet);
 
-  ~Stub_CoarseDelay();
+  ~Stub_Delay();
 
   // Connect the given objects to the stubs.
   void connect(int RSP_nr, TinyDataManager &dm, int dhNr);
