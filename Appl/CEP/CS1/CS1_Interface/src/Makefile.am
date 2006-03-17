@@ -2,8 +2,7 @@ INSTHDRS         	=	\
 bitset.h			\
 RSPTimeStamp.h          	\
 DH_RSPSync.h            	\
-DH_CoarseDelay.h		\
-DH_FineDelay.h			\
+DH_Delay.h			\
 DH_RSP.h                	\
 DH_Subband.h            	\
 DH_RFI_Mitigation.h		\
@@ -12,10 +11,9 @@ RectMatrix.h			\
 Stub_BGL.h			\
 Stub_BGL_Subband.h		\
 Stub_BGL_RFI_Mitigation.h	\
-Stub_BGL_FineDelay.h		\
 Stub_BGL_Visibilities.h		\
 Stub_RSP.h			\
-Stub_CoarseDelay.h		\
+Stub_Delay.h			\
 CS1_Config.h
 
 NOINSTHDRS 		=
@@ -34,8 +32,7 @@ libcs1_interface_la_SOURCES  	= \
 bitset.cc	          	\
 RSPTimeStamp.cc          	\
 DH_RSPSync.cc                   \
-DH_CoarseDelay.cc		\
-DH_FineDelay.cc			\
+DH_Delay.cc			\
 DH_RSP.cc                	\
 DH_Subband.cc                   \
 DH_RFI_Mitigation.cc		\
@@ -43,9 +40,8 @@ DH_Visibilities.cc		\
 Stub_BGL.cc			\
 Stub_BGL_Subband.cc		\
 Stub_BGL_RFI_Mitigation.cc	\
-Stub_BGL_FineDelay.cc		\
 Stub_BGL_Visibilities.cc	\
-Stub_CoarseDelay.cc		\
+Stub_Delay.cc			\
 Stub_RSP.cc
 
 configfilesdir=$(bindir)

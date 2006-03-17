@@ -1,5 +1,4 @@
-//# DH_CoarseDelay.h: dataholder to hold the delay information to perform
-//#            station synchronizaion       
+//# DH_Delay.h: dataholder to hold the delay information 
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,24 +20,22 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_COARSE_DELAY_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_COARSE_DELAY_H
+#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DELAY_H
+#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DELAY_H
 
-
-#include <lofar_config.h>
 #include <Transport/DataHolder.h>
 
 namespace LOFAR
 {
 
-class DH_CoarseDelay: public DataHolder
+class DH_Delay: public DataHolder
 {
 public:
-  explicit DH_CoarseDelay (const string &name, int nrRSPs);
+  explicit DH_Delay (const string &name, int nrRSPs);
 
-  DH_CoarseDelay(const DH_CoarseDelay &);
+  DH_Delay(const DH_Delay &);
 
-  virtual ~DH_CoarseDelay();
+  virtual ~DH_Delay();
 
   DataHolder *clone() const;
 
@@ -46,18 +43,24 @@ public:
   virtual void init();
 
   // accessor functions to the blob data
-  const int getDelay(int index) const;
-  void setDelay(int index, int value);
+  int   getCoarseDelay(uint station) const;
+  void  setCoarseDelay(uint station, int delay);
+  float getFineDelayAtBegin(uint station) const;
+  void  setFineDelayAtBegin(uint station, float delay);
+  float getFineDelayAfterEnd(uint station) const;
+  void  setFineDelayAfterEnd(uint station, float delay);
  
  private:
   /// Forbid assignment.
-  DH_CoarseDelay &operator = (const DH_CoarseDelay &);
+  DH_Delay &operator = (const DH_Delay &);
 
   // Fill the pointers (itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
   /// pointers to data in the blob
-  int *itsDelayPtr;
+  int *itsCoarseDelays;
+  float *itsFineDelaysAtBegin;
+  float *itsFineDelaysAfterEnd;
   int itsNrRSPs;
 };
 

@@ -40,6 +40,7 @@ namespace LOFAR
     // get block ID
     const int getBlockId () const;
     static int getMaxBlockId() {return theirMaxBlockId; };
+    static void setMaxBlockId(int nMBID) {theirMaxBlockId = nMBID; };
 
     // the blockId restarts at zero at some point. Check if we are there yet
     void checkOverflow();
