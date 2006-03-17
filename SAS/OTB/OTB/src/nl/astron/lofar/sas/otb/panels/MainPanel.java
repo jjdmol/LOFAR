@@ -6,6 +6,7 @@
 
 package nl.astron.lofar.sas.otb.panels;
 import java.io.File;
+
 import javax.swing.JOptionPane;
 import nl.astron.lofar.sas.otb.*;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
@@ -29,7 +30,8 @@ public class MainPanel extends javax.swing.JPanel
         initComponents();
         initializeButtons();
     }
-        
+    
+           
     /** 
      * Initializes the buttonpanel. Every tab has different buttons 
      */
@@ -297,30 +299,38 @@ public class MainPanel extends javax.swing.JPanel
         
         try {
             jOTDBtree aSelectedTree=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeInfo(aTreeID, false);
+            // since object are passed by ref we send a copy to the roputine, to be able to check if any changes
+            // are done to the original object.
+            jOTDBtree aNewTree = aSelectedTree;
             
             if (aSelectedTree != null) {
                 // show treeInfo dialog
-                treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
+                treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aNewTree, itsMainFrame);
                 treeInfoDialog.setLocationRelativeTo(this);
                 treeInfoDialog.setVisible(true);
+                aNewTree = treeInfoDialog.getTree();
 
-                
-                // Check if something chnaged, if so save the tree
-                if (treeInfoDialog.isChanged() ) {
-                    logger.debug("Tree changed so saving to DB");
-                    if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setClassification(aSelectedTree.treeID(),treeInfoDialog.getTree().classification)) {
-                        logger.debug("failed to save new classification");
-                    }
-                    if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setTreeState(aSelectedTree.treeID(),treeInfoDialog.getTree().state)) {
-                        logger.debug("failed to save new treeState");
-                    }
-//                  if( !itsMainFrame.getOTDBrmi().getRemoteMaintenance().setDescription(aSelectedTree.treeID(),treeInfoDialog.getTree().description)) {
-//                        logger.debug("failed to save new description");
-//                    }
+                if (aNewTree.equals(aSelectedTree)) {
+                    logger.debug("trees equal on objects diff");
+                } else {
+                    logger.debug("trees differ on object diff");
+                }
+                if (aNewTree.classification == aSelectedTree.classification && 
+                        aNewTree.state == aSelectedTree.state
+                        // && aNewTreedescription == aSelectedTree.description
+                        ) {
+                    logger.debug("Trees are equal");
+                } else {
+                    logger.debug("Saving new TreeMetaData for ID: "+ aNewTree.treeID());
+                    itsMainFrame.getOTDBrmi().getRemoteMaintenance().setClassification(aNewTree.treeID(), aNewTree.classification);
+                    itsMainFrame.getOTDBrmi().getRemoteMaintenance().setTreeState(aNewTree.treeID(), aNewTree.state);
+                  itsMainFrame.getOTDBrmi().getRemoteMaintenance().setDescription(aNewTree.treeID(), aNewTree.description);
+                    logger.debug("Trees are different");
+
                 }
                 
             } else {
-                logger.debug("no tree found for this ID");
+                logger.debug("no tree selected");
             }
         } catch (Exception e) {
             logger.debug("Error in viewInfo: " + e);

@@ -25,6 +25,7 @@ public class TablePanel extends javax.swing.JPanel {
      */
     public void setTableModel(AbstractTableModel tableModel) {
         jTable1.setModel(tableModel);
+        jTable1.updateUI();
     }
     
     /** Return the model from this table
