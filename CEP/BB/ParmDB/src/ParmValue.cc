@@ -34,7 +34,7 @@ namespace ParmDB {
     itsWeight       (1),
     itsID           (0),
     itsParentID     (0),
-    itsDBTabRef     (-1),
+    itsDBTabRef     (-2),
     itsDBRowRef     (0),
     itsDBSeqNr      (-1),
     itsCount        (1)
