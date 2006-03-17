@@ -100,8 +100,9 @@ public:
   int            itsID;        //# ID if result of a refit
   int            itsParentID;  //# ID of refit result (in old parm records)
   int            itsDBTabRef;  //# Ref to table in database
-                               //#   -1 = might be new record
-                               //#   -2 = certainly new record
+                               //#   -3 = might be new record; no check partial
+                               //#   -2 = might be new record; check on partial
+                               //#   -1 = certainly new record
                                //#    0 = read from normal table
                                //#    1 = read from old table
   int            itsDBRowRef;  //# Ref to parmrecord in table (e.g. rownr)
@@ -147,8 +148,18 @@ public:
   ParmValue clone() const;
 
   // Set it to be a new parm value.
+  // It is not checked if there is already a parm value with an
+  // overlapping domain.
   void setNewParm()
-    { rep().itsDBTabRef = -2; }
+    { rep().itsDBTabRef = -1; }
+
+  // Set that it is unknown if the parm value is new or not.
+  // If the domain matches exactly with a domain in the table it is existing.
+  // Otherwise it is new. In that case it can be checked if the parm is
+  // really new, thus if no partial overlap with an existing domain occurs.
+  // Optionally it can be checked 
+  void setUnknownParm (bool checkPartialOverlap)
+    { rep().itsDBTabRef = (checkPartialOverlap ? -2 : -3); }
 
   // Get access to the actual data.
   ParmValueRep& rep()

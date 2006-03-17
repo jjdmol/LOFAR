@@ -236,7 +236,7 @@ ParmValue ParmDBAIPS::extractDefValue (const Table& tab, int row)
     result.setType (typeCol(row));
   }
   result.setPerturbation (pertCol(row), prelCol(row));
-  result.itsDBTabRef = -2;
+  result.itsDBTabRef = -1;
   result.itsDBSeqNr  = getParmDBSeqNr();
   return pvalue;
 }
@@ -344,7 +344,7 @@ void ParmDBAIPS::doPutValue (const string& parmName,
 			     ParmValueRep& pval,
 			     int tabinx)
 {
-  if (pval.itsDBTabRef == -2) {
+  if (pval.itsDBTabRef == -1) {
     // It is certainly a new row.
     putNewValue (parmName, pval, tabinx);
   } else if (pval.itsDBTabRef != tabinx) {
@@ -382,20 +382,37 @@ void ParmDBAIPS::putValueCheck (const string& parmName,
 {
   const ParmDomain& domain = pval.itsDomain;
   Table sel = find (parmName, domain, pval.itsParentID, tabinx);
-  if (sel.nrow() > 0) {
-    ASSERTSTR (sel.nrow()==1, "Parameter " << parmName <<
-	       " has multiple entries for domain " << domain);
+  if (sel.nrow() == 0) {
+    putNewValue (parmName, pval, tabinx);
+  } else {
     ROArrayColumn<double> stCol (sel, "START");
     ROArrayColumn<double> endCol (sel, "END");
-    ASSERTSTR (allNear(Vector<double>(domain.getStart()), stCol(0), 1e-7)  &&
-	       allNear(Vector<double>(domain.getEnd()),  endCol(0), 1e-7),
-	       "Parameter " << parmName <<
-	       " has a partially instead of fully matching entry for domain "
-	       << domain);
     ArrayColumn<double> valCol (sel, "VALUES");
-    valCol.put (0, fromVector(pval.itsCoeff, pval.itsShape));
-  } else {
-    putNewValue (parmName, pval, tabinx);
+    Vector<double> sdom(domain.getStart());
+    Vector<double> edom(domain.getEnd());
+    if (pval.itsDBTabRef == -2) {
+      // Check if the domain does not overlap with another.
+      ASSERTSTR (sel.nrow()==1, "Parameter " << parmName <<
+		 " has multiple entries for domain " << domain);
+      ASSERTSTR (allNear(sdom, stCol(0), 1e-7)  &&
+		 allNear(edom,  endCol(0), 1e-7),
+		 "Parameter " << parmName <<
+		 " has a partially instead of fully matching entry for domain "
+		 << domain);
+      valCol.put (0, fromVector(pval.itsCoeff, pval.itsShape));
+    } else {
+      // Partial overlap is possible, so do not check for it.
+      // Only try to find a domain that matches exactly.
+      for (uint row=0; row<sel.nrow(); row++) {
+	if (allNear(sdom,  stCol(row), 1e-7)  &&
+	    allNear(edom, endCol(row), 1e-7)) {
+	  valCol.put (row, fromVector(pval.itsCoeff, pval.itsShape));
+	  return;
+	}
+      }
+      // No exactly matching domain found, so add a new row.
+      putNewValue (parmName, pval, tabinx);
+    }
   }
 }
 
