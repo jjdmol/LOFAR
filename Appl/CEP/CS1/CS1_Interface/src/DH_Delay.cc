@@ -26,7 +26,7 @@
 namespace LOFAR
 {
 
-DH_Delay::DH_Delay(const string &name, int nrRSPs)
+DH_Delay::DH_Delay(const string &name, uint nrRSPs)
   : DataHolder     (name, "DH_Delay"),
     itsNrRSPs      (nrRSPs)
 {
@@ -58,7 +58,7 @@ void DH_Delay::init()
   // create the data blob
   createDataBlock();
 
-  for (int i=0; i<itsNrRSPs; i++) {
+  for (uint i=0; i<itsNrRSPs; i++) {
     itsCoarseDelays[i] = 0;
     itsFineDelaysAtBegin[i] = 0;
     itsFineDelaysAfterEnd[i] = 0;
@@ -75,38 +75,38 @@ void DH_Delay::fillDataPointers()
 
 int DH_Delay::getCoarseDelay(uint station) const
 { 
-  ASSERTSTR(index < itsNrRSPs, "index is not within range");
-  return itsCoarseDelays[index]; 
+  ASSERTSTR(station < itsNrRSPs, "index is not within range");
+  return itsCoarseDelays[station]; 
 }
 
 void DH_Delay::setCoarseDelay(uint station, int delay)
 { 
-  ASSERTSTR(index < itsNrRSPs, "index is not within range");
-  itsCoarseDelays[index] = delay;
+  ASSERTSTR(station < itsNrRSPs, "index is not within range");
+  itsCoarseDelays[station] = delay;
 }
 
-int DH_Delay::getFineDelayAtBegin(uint station) const
+float DH_Delay::getFineDelayAtBegin(uint station) const
 { 
-  ASSERTSTR(index < itsNrRSPs, "index is not within range");
-  return itsFineDelaysAtBegin[index]; 
+  ASSERTSTR(station < itsNrRSPs, "index is not within range");
+  return itsFineDelaysAtBegin[station]; 
 }
 
 void DH_Delay::setFineDelayAtBegin(uint station, float delay)
 { 
-  ASSERTSTR(index < itsNrRSPs, "index is not within range");
-  itsFineDelaysAtBegin[index] = delay;
+  ASSERTSTR(station < itsNrRSPs, "index is not within range");
+  itsFineDelaysAtBegin[station] = delay;
 }
 
-int DH_Delay::getFineDelayAfterEnd(uint station) const
+float DH_Delay::getFineDelayAfterEnd(uint station) const
 { 
-  ASSERTSTR(index < itsNrRSPs, "index is not within range");
-  return itsFineDelayAfterEnd[index]; 
+  ASSERTSTR(station < itsNrRSPs, "index is not within range");
+  return itsFineDelaysAfterEnd[station]; 
 }
 
 void DH_Delay::setFineDelayAfterEnd(uint station, float delay)
 { 
-  ASSERTSTR(index < itsNrRSPs, "index is not within range");
-  itsFineDelayAfterEnd[index] = delay;
+  ASSERTSTR(station < itsNrRSPs, "index is not within range");
+  itsFineDelaysAfterEnd[station] = delay;
 }
 
 }  // end namespace
