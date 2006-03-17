@@ -24,7 +24,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     /** Creates new form BeanForm
      * 
-     * @param   parent      Frame where this dialog belongs to
+     * @param   parent      Frame where this dialog belongs
      * @param   modal       Should the Dialog be modal or not
      * @param   aFocus      PIC/VIC/Templates/Components
      */
@@ -35,9 +35,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         itsTree = aTree;
         itsOtdbRmi=itsMainFrame.getOTDBrmi();
         isAdministrator=itsMainFrame.getUserAccount().isAdministrator();
-        initFocus();
         initComboLists();
         initView();
+        initFocus();
         getRootPane().setDefaultButton(saveButton);
         
     }
@@ -80,6 +80,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             startTimeInput.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
+            
         // VIC
         } else if (aTreeType.equals("VHtree")) {
             
@@ -118,7 +119,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         // keep the fields that can be changed
         itsTreeState=itsOtdbRmi.getTreeState().get(itsTree.state);
         itsClassification = itsOtdbRmi.getClassif().get(itsTree.classification);
-//      itsDescription = itsTree.description;        
+        itsDescription = itsTree.description;     
         if (!itsTreeState.equals("active") && !itsTreeState.equals("obsolete")) {
             aModel.addElement(itsTreeState);
         }
@@ -128,7 +129,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         }
 
         treeIDInput.setText(String.valueOf(itsTree.treeID()));
-        momIDInput.setText(String.valueOf(itsTree.momID));
+        momIDInput.setText(String.valueOf(itsTree.momID()));
         classificationInput.setSelectedItem(itsTreeState);
         creatorInput.setText(itsTree.creator);
         creationDateInput.setText(itsTree.creationDate);
@@ -138,7 +139,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         campaignInput.setText(itsTree.campaign);
         startTimeInput.setText(itsTree.starttime);
         stopTimeInput.setText(itsTree.stoptime);
-//        descriptionInput.setText(itsDescription);
+        descriptionInput.setText(itsDescription);
     }
     
     private void setNewTree() {
@@ -153,7 +154,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             }
             if (!itsDescription.equals(descriptionInput.getText())) {
                 hasChanged=true;
-  //            itsTree.description = descriptionInput.getText();
+                itsTree.description = descriptionInput.getText();
             }
         } catch (Exception e) {
           logger.debug("Getting ClassificationType via RMI and JNI failed");  
