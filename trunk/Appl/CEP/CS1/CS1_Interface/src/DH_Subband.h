@@ -37,9 +37,18 @@ namespace LOFAR
 class DH_Subband: public DataHolder
 {
 public:
+  // Samples
   typedef i16complex SampleType;
   typedef SampleType AllSamplesType[NR_STATIONS][NR_INPUT_SAMPLES][NR_POLARIZATIONS];
+
+  // Flags
   typedef LOFAR::bitset<NR_INPUT_SAMPLES> AllFlagsType[NR_STATIONS];
+
+  // Fine-grained delays
+  typedef struct {
+    float delayAtBegin, delayAfterEnd;
+  } DelayIntervalType;
+  typedef DelayIntervalType AllDelaysType[NR_STATIONS];
 
   explicit DH_Subband(const string &name,
 		      const LOFAR::ACC::APS::ParameterSet &pSet); 
@@ -69,6 +78,11 @@ public:
     return itsSamples;
   }
 
+  const size_t nrSamples() const
+  {
+    return sizeof(AllSamplesType) / sizeof(SampleType);
+  }
+  
   AllFlagsType *getFlags()
   {
     return itsFlags;
@@ -79,22 +93,32 @@ public:
     return itsFlags;
   }
 
-  const size_t nrSamples() const
+  AllDelaysType *getDelays()
   {
-    return sizeof(AllSamplesType) / sizeof(SampleType);
+    return itsDelays;
   }
-  
+
+  const AllDelaysType *getDelays() const
+  {
+    return itsDelays;
+  }
+
+  const size_t nrDelays() const
+  {
+    return NR_STATIONS;
+  }
+
   void swapBytes();
-  void setTestPattern(double Hz);
 
 private:
   /// Forbid assignment.
   DH_Subband &operator = (const DH_Subband &);
 
   AllSamplesType	 *itsSamples;
-  AllFlagsType		 *itsFlags;
   // RectMatrix cannot be used for bitsets, thus not for flags
   RectMatrix<SampleType> *itsMatrix;
+  AllFlagsType		 *itsFlags;
+  AllDelaysType		 *itsDelays;
 
   void fillDataPointers();
 };

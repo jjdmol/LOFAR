@@ -23,107 +23,209 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
-#include <tWH_BGL_Processing.h>
 
-#include <Transport/TH_Mem.h>
-#include <CS1_BGLProc/WH_BGL_Processing.h>
-#include <CS1_Interface/DH_Subband.h>
-#include <CS1_Interface/DH_RFI_Mitigation.h>
-#if defined DELAY_COMPENSATION
-#include <CS1_Interface/DH_FineDelay.h>
+#if defined HAVE_MPI
+#include <Transport/TH_MPI.h>
 #endif
-#include <CS1_Interface/DH_Visibilities.h>
+
+#if defined HAVE_BGL
+#include <bglpersonality.h>
+#include <rts.h>
+#endif
+
+#include <Common/Timer.h>
+#include <CS1_BGLProc/WH_BGL_Processing.h>
+#include <cmath>
+#include <cstring>
 #include <exception>
+
 
 namespace LOFAR
 {
-
-AH_BGL_Processing::AH_BGL_Processing() :
-  itsWH(0), itsTH(0)
-{
-}
-
-AH_BGL_Processing::~AH_BGL_Processing()
-{
-  undefine();
-}
-
-void AH_BGL_Processing::define(const KeyValueMap &/*kvm*/)
-{
-  const double baseFrequency =  49975296.0; /* 250th Nyquist zone */
-
-  ACC::APS::ParameterSet myPset("CS1.cfg");
-
-  itsWH = new WH_BGL_Processing("WH_BGL_Processing", baseFrequency, myPset);
-  itsTH = new TH_Mem();
-
-  itsConnections.push_back(new Connection("input", 0, itsWH->get_DH_Subband(), itsTH, false));
-  itsConnections.push_back(new Connection("RFI", 0, itsWH->get_DH_RFI_Mitigation(), itsTH, false));
-
-#if defined DELAY_COMPENSATION
-  itsConnections.push_back(new Connection("fineDelay", 0, itsWH->get_DH_FineDelay(), itsTH, false));
+#if defined HAVE_BGL
+static BGL_Barrier *barrier;
 #endif
 
-  itsConnections.push_back(new Connection("output", itsWH->get_DH_Visibilities(), 0, itsTH, false));
+inline i16complex toComplex(double phi)
+{
+    double s, c;
+
+    sincos(phi, &s, &c);
+    return makei16complex((int) (32767 * c), (int) (32767 * s));
 }
 
-void AH_BGL_Processing::init()
+
+void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
 {
-  itsWH->basePreprocess();
+  // Simulate a monochrome complex signal into the PPF, with station 1 at a
+  // distance of .25 labda to introduce a delay.  Also, a few samples can be
+  // flagged.
 
-  // Fill inDHs here
-  //itsWH->get_DH_Subband()->setTestPattern(signalFrequency);
-  itsWH->get_DH_RFI_Mitigation()->setTestPattern();
+  (std::cerr << "setSubbandTestPattern::setTestPattern() ... ").flush();
 
-#if defined DELAY_COMPENSATION
-  itsWH->get_DH_FineDelay()->setTestPattern();
+  static NSTimer timer("setTestPattern", true);
+  timer.start();
+
+  DH_Subband		     *dh	= wh.get_DH_Subband();
+  DH_Subband::AllSamplesType *samples	= dh->getSamples();
+  DH_Subband::AllFlagsType   *flags	= dh->getFlags();
+  DH_Subband::AllDelaysType  *delays	= dh->getDelays();
+
+  const double		     distance	= .25; // labda
+  const double		     phaseShift = 2 * M_PI * distance;
+
+  for (int time = 0; time < NR_INPUT_SAMPLES; time ++) {
+    double     phi    = 2 * M_PI * signalFrequency * time / SAMPLE_RATE;
+    i16complex sample = toComplex(phi);
+
+    for (int stat = 0; stat < NR_STATIONS; stat ++) {
+      (*samples)[stat][time][0] = time;
+      (*samples)[stat][time][1] = sample;
+    }
+
+#if NR_STATIONS >= 2 && NR_POLARIZATIONS == 2
+    (*samples)[1][time][1]    = toComplex(phi + phaseShift);
+    (*delays)[1].delayAtBegin = (*delays)[1].delayAfterEnd = -distance / signalFrequency;
+#endif
+  }
+  
+  memset(flags, 0, sizeof(DH_Subband::AllFlagsType));
+
+#if 0 && NR_INPUT_SAMPLES >= 17000
+  (*flags)[4][14000] = true;
+  (*flags)[5][17000] = true;
+#endif
+
+  (std::cerr << "done.\n").flush();
+
+#if defined WORDS_BIGENDIAN
+  (std::cerr << "swapBytes()\n").flush();
+  dh->swapBytes();
+#endif
+
+  timer.stop();
+}
+
+
+void setRFItestPattern(WH_BGL_Processing &wh)
+{
+  DH_RFI_Mitigation::ChannelFlagsType *flags = wh.get_DH_RFI_Mitigation()->getChannelFlags();
+
+  memset(flags, 0, sizeof(DH_RFI_Mitigation::ChannelFlagsType));
+
+#if 0 && NR_STATIONS >= 3 && NR_SUBBAND_CHANNELS >= 256
+  (*flags)[2][255] = true;
 #endif
 }
 
-void AH_BGL_Processing::run(int steps)
-{
-  double     signalFrequency = 50032528.0; /* channel 73 */
-  const char *env	     = getenv("SIGNAL_FREQUENCY");
 
-  if (env != 0) {
+void checkCorrelatorTestPattern(WH_BGL_Processing &wh)
+{
+  DH_Visibilities		      *dh	    = wh.get_DH_Visibilities();
+  DH_Visibilities::VisibilitiesType   *visibilities = dh->getVisibilities();
+  DH_Visibilities::NrValidSamplesType *validSamples = dh->getNrValidSamplesCounted();
+
+  static const int		      channels[]    = { 0, 73, 255 };
+
+  for (int stat1 = 0; stat1 < std::min(NR_STATIONS, 8); stat1 ++) {
+    for (int stat2 = stat1; stat2 < std::min(NR_STATIONS, 8); stat2 ++) {
+      int bl = DH_Visibilities::baseline(stat1, stat2);
+
+      std::cout << "S(" << stat1 << ") * ~S(" << stat2 << ") :\n";
+
+      for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
+	for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+	  std::cout << " " << (char) ('x' + pol1) << (char) ('x' + pol2) << ':';
+
+	  for (int chidx = 0; chidx < sizeof(channels) / sizeof(int); chidx ++) {
+	    int ch = channels[chidx];
+
+	    if (ch < NR_SUBBAND_CHANNELS) {
+	      std::cout << ' ' << (*visibilities)[bl][ch][pol1][pol2] << '/' << (*validSamples)[bl][ch];
+	    }
+	  }
+
+	  std::cout << '\n';
+	}
+      }
+    }
+  }
+
+  std::cout << "newgraph newcurve linetype solid marktype none pts\n";
+  float max = 0.0;
+
+  for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+    if (cabs((*visibilities)[0][ch][1][1]) > max) {
+      max = cabs((*visibilities)[0][ch][1][1]);
+    }
+  }
+
+  for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+    std::cout << ch << ' ' << (10 * std::log10(cabs((*visibilities)[0][ch][1][1]) / max)) << '\n';
+  }
+}
+
+
+void doWork()
+{
+#if defined HAVE_BGL
+  // only test on the one or two cores of the first compute node
+
+  struct BGLPersonality personality;
+  int retval = rts_get_personality(&personality, sizeof personality);
+  ASSERTSTR(retval == 0, "Could not get personality");
+
+  if (personality.getXcoord() != 0 || personality.getYcoord() != 0 || personality.getZcoord() != 0) {
+    return;
+  }
+
+  barrier = rts_allocate_barrier();
+#endif
+
+  double     baseFrequency   = 49938432.0; // 254th Nyquist zone
+  double     signalFrequency = 49994496.0; // channel 73
+  int	     nRuns	     = 1;
+  const char *env;
+
+  if ((env = getenv("BASE_FREQUENCY")) != 0) {
     signalFrequency = atof(env);
     std::cerr << "setting signal frequency to " << env << '\n';
   }
 
-  for (int i = 0; i < steps; i ++) {
-    itsWH->get_DH_Subband()->setTestPattern(signalFrequency + i);
-    itsWH->baseProcess();
-    itsWH->get_DH_Visibilities()->checkCorrelatorTestPattern();
-  }
-}
-
-void AH_BGL_Processing::dump() const
-{
-  itsWH->dump();
-}
-
-void AH_BGL_Processing::postrun()
-{
-  // check result here
-  //itsWH->get_DH_Visibilities()->checkCorrelatorTestPattern();
-}
-
-void AH_BGL_Processing::undefine()
-{
-  delete itsWH; itsWH = 0;
-  delete itsTH; itsTH = 0;
-
-  for (int i = 0; i < itsConnections.size(); i ++) {
-    delete itsConnections[i];
+  if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
+    baseFrequency = atof(env);
+    std::cerr << "setting base frequency to " << env << '\n';
   }
 
-  itsConnections.clear();
-}
+  if ((env = getenv("NRUNS")) != 0) {
+    nRuns = atoi(env);
+    std::cerr << "setting nRuns to " << env << '\n';
+  }
 
-void AH_BGL_Processing::quit()
-{
+  ACC::APS::ParameterSet pset("CS1.cfg");
+  WH_BGL_Processing wh("WH_BGL_Processing", baseFrequency, pset);
+
+#if defined HAVE_MPI
+  wh.runOnNode(TH_MPI::getCurrentRank());
+#endif
+
+  wh.basePreprocess();
+  setSubbandTestPattern(wh, signalFrequency);
+  setRFItestPattern(wh);
+
+#if defined HAVE_BGL
+  if (TH_MPI::getNumberOfNodes() > 1) {
+    BGL_Barrier_Pass(barrier);
+  }
+#endif
+
+  for (int i = 0; i < nRuns; i ++) {
+    wh.baseProcess();
+  }
+
+  checkCorrelatorTestPattern(wh);
+  wh.basePostprocess();
 }
 
 } // namespace LOFAR
@@ -131,27 +233,30 @@ void AH_BGL_Processing::quit()
 
 using namespace LOFAR;
 
-int main (int argc, const char** argv)
+int main (int argc, const char **argv)
 {
+  int retval = 0;
+
+#if defined HAVE_MPI
+  TH_MPI::initMPI(argc, argv);
+#endif
+
   try {
-    AH_BGL_Processing test;
-    test.setarg(argc, argv);
-    test.baseDefine();
-    test.basePrerun();
-    test.baseRun(1);
-    test.baseDump();
-    test.basePostrun();
-    test.baseQuit();
+    doWork();
   } catch (LOFAR::Exception e) {
     cerr << "Caught exception: " << e.what() << endl;
-    exit(1);
+    retval = 1;
   } catch (std::exception e) {
     cerr << "Caught exception: " << e.what() << endl;
-    exit(1);
+    retval = 1;
   } catch (...) {
     cerr << "Caught exception " << endl;
-    exit(1);
+    retval = 1;
   }
 
-  return 0;
+#if defined HAVE_MPI
+  TH_MPI::finalize();
+#endif
+
+  return retval;
 }

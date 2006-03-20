@@ -24,6 +24,8 @@
 #include <CS1_Interface/bitset.h>
 #include <CS1_Interface/CS1_Config.h>
 
+#include <rts.h>
+
 namespace LOFAR {
 
 struct phase_shift {
@@ -58,6 +60,9 @@ extern "C" {
   void _fast_memcpy(void *dst, const void *src, size_t bytes);
   void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
   void _prefetch(const void *src, size_t count, size_t stride);
+
+  void _bgl_mutex_lock(BGL_Mutex *), _bgl_mutex_unlock(BGL_Mutex *);
+  unsigned long long _rdtsc();
 };
 
 }

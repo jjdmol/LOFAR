@@ -24,7 +24,7 @@ Data.NSubbands=1
 Data.NChannels = 256
 Data.NStations=2
 Data.NPolarisations=2
-Data.NSamplesToIntegrate= 200704 #155648
+Data.NSamplesToIntegrate= 196608 #155648
 Data.StartTime = 123         # number of days
 Data.TimeStep =  1           # seconds
 Data.StationPositions = [0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 2,2,2]#array of 3(=x,y,z) * nStations

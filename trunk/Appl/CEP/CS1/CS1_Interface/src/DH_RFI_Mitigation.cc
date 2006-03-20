@@ -62,13 +62,4 @@ void DH_RFI_Mitigation::fillDataPointers()
   itsChannelFlags = (ChannelFlagsType *) getData<uint32>("ChannelFlags");
 }
 
-void DH_RFI_Mitigation::setTestPattern()
-{
-  memset(itsChannelFlags, 0, sizeof(ChannelFlagsType));
-
-#if 0 && NR_STATIONS >= 3 && NR_SUBBAND_CHANNELS >= 256
-  (*itsChannelFlags)[2][255] = true;
-#endif
-}
-
 }

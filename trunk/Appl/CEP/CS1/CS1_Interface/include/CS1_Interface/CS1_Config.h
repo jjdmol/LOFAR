@@ -30,7 +30,7 @@
 #define NR_POLARIZATIONS	   2
 #define NR_SUBBAND_CHANNELS	   256
 #define NR_TAPS			   16
-#define SAMPLE_RATE		   200704 /* 155648 */
+#define SAMPLE_RATE		   196608 /* 155648 */
 
 #if SAMPLE_RATE % (NR_TAPS * NR_SUBBAND_CHANNELS) != 0
 #error  "Bad value for SAMPLE_RATE"

@@ -38,8 +38,12 @@
 #include <CS1_Interface/DH_RFI_Mitigation.h>
 #include <CS1_Interface/DH_Visibilities.h>
 
-#if defined DELAY_COMPENSATION
-#include <CS1_Interface/DH_FineDelay.h>
+
+#if defined HAVE_BGL
+#define CACHE_LINE_SIZE	32
+#define CACHE_ALIGNED	__attribute__ ((aligned(CACHE_LINE_SIZE)))
+#else
+#define CACHE_ALIGNED
 #endif
 
 
@@ -63,9 +67,6 @@ class WH_BGL_Processing: public WorkHolder {
     enum inDataHolders {
       SUBBAND_CHANNEL,
       RFI_MITIGATION_CHANNEL,
-#if defined DELAY_COMPENSATION
-      FINE_DELAY_CHANNEL,
-#endif
       NR_IN_CHANNELS
     };
 
@@ -86,21 +87,15 @@ class WH_BGL_Processing: public WorkHolder {
     virtual void postprocess();
 
     DH_Subband *get_DH_Subband() {
-      return static_cast<DH_Subband *>(getDataManager().getInHolder(SUBBAND_CHANNEL));
+      return dynamic_cast<DH_Subband *>(getDataManager().getInHolder(SUBBAND_CHANNEL));
     }
 
     DH_RFI_Mitigation *get_DH_RFI_Mitigation() {
-      return static_cast<DH_RFI_Mitigation *>(getDataManager().getInHolder(RFI_MITIGATION_CHANNEL));
+      return dynamic_cast<DH_RFI_Mitigation *>(getDataManager().getInHolder(RFI_MITIGATION_CHANNEL));
     }
-
-#if defined DELAY_COMPENSATION
-    DH_FineDelay *get_DH_FineDelay() {
-      return static_cast<DH_FineDelay *>(getDataManager().getInHolder(FINE_DELAY_CHANNEL));
-    }
-#endif
 
     DH_Visibilities *get_DH_Visibilities() {
-      return static_cast<DH_Visibilities *>(getDataManager().getOutHolder(VISIBILITIES_CHANNEL));
+      return dynamic_cast<DH_Visibilities *>(getDataManager().getOutHolder(VISIBILITIES_CHANNEL));
     }
 
   private:
@@ -115,20 +110,20 @@ class WH_BGL_Processing: public WorkHolder {
     void doCorrelate();
 
 #if defined DELAY_COMPENSATION
-    fcomplex phaseShift(int time, int chan, const DH_FineDelay::DelayIntervalType &delay) const;
-    void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_FineDelay::DelayIntervalType &delay) const;
+    fcomplex phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const;
+    void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay) const;
 #endif
 
     /// FIR Filter variables
     fftw_plan	    itsFFTWPlan;
     double	    itsBaseFrequency;
     const ACC::APS::ParameterSet &itsPS;
-    static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] __attribute__ ((aligned(32)));
+    static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 
-    static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));
-    static LOFAR::bitset<NR_SAMPLES_PER_INTEGRATION> flags[NR_STATIONS] __attribute__ ((aligned(32)));
-    static unsigned itsNrValidSamples[NR_BASELINES] __attribute__ ((aligned(32)));
-    static float    correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] __attribute__ ((aligned(32)));
+    static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
+    static LOFAR::bitset<NR_SAMPLES_PER_INTEGRATION> flags[NR_STATIONS] CACHE_ALIGNED;
+    static unsigned itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
+    static float    correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
     static float    thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
 };
 
