@@ -117,6 +117,20 @@ char*	ltrim(char*	aCstring, char*	whiteSpace)
 	return (aCstring);
 }
 
+string	toUpper(const string& str)
+{
+  string result;
+  transform(str.begin(), str.end(), back_inserter(result), toupper);
+  return result;
+}
+
+string	toLower(const string& str)
+{
+  string result;
+  transform(str.begin(), str.end(), back_inserter(result), tolower);
+  return result;
+}
+
 bool	StringToBool(const string& aString) throw(Exception)
 {
 	char	firstChar = aString.c_str()[0];
