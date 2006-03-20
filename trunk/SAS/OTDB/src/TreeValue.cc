@@ -68,6 +68,10 @@ bool TreeValue::addKVT (const string&	key,
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
+
+	LOG_TRACE_FLOW_STR("TV:addKVT(" << key << "," << value << "," 
+									<< to_simple_string(time) << ")");
+
 	// construct a query that call a stored procedure.
 	work	xAction(*(itsConn->getConn()), "addKVT");
 	string	query("SELECT * from addKVT('" +
@@ -114,6 +118,8 @@ bool	TreeValue::addKVTparamSet (const ParameterSet&		aPS)
 {
 	bool	result = true;
 
+	LOG_TRACE_FLOW("TV:addKVTparamSet()");
+
 	ParameterSet::const_iterator	iter = aPS.begin();
 	while (iter != aPS.end()) {
 		uint32	timeval = indexValue(iter->first, "{}");
@@ -142,6 +148,11 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 		itsError = itsConn->errorMsg();
 		return (resultVec);
 	}
+
+	LOG_TRACE_FLOW_STR("TV:addKVT(" << topNode << "," << depth << "," 
+									<< to_simple_string(beginDate) << ","
+									<< to_simple_string(endDate) << ","
+									<< toString(mostRecentOnly) << ")");
 
 	// Determine which function to call.
 	string	functionName;

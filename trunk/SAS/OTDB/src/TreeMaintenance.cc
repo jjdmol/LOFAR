@@ -68,6 +68,8 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 		return (0);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:loadMasterFile(" << filename << ")");
+
 	ifstream	inFile;
 	inFile.open (filename.c_str());
 	if (!inFile) {
@@ -154,6 +156,9 @@ treeIDType TreeMaintenance::buildTemplateTree (nodeIDType	topNodeID,
 		return (0);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:buildTemplateTree(" << topNodeID << ","
+											<< aClassif << ")");
+
 	work	xAction(*(itsConn->getConn()), "buildTemplateTree");
 	try {
 		result res = xAction.exec("SELECT * from instanciateVTtree(" +
@@ -191,6 +196,8 @@ treeIDType TreeMaintenance::newTemplateTree()
 		itsError = itsConn->errorMsg();
 		return (0);
 	}
+
+	LOG_TRACE_FLOW_STR("TM:newTemplateTree()");
 
 	work	xAction(*(itsConn->getConn()), "newTemplateTree");
 	try {
@@ -236,6 +243,8 @@ treeIDType	TreeMaintenance::copyTemplateTree(treeIDType		aTreeID)
 		return (0);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:copyTemplateTree(" << aTreeID << ")");
+
 	work	xAction(*(itsConn->getConn()), "copyTemplateTree");
 	try {
 		result res = xAction.exec("SELECT * from copyTree(" + 
@@ -274,6 +283,8 @@ OTDBnode TreeMaintenance::getNode (treeIDType	aTreeID,
 		return (empty);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:getNode(" << aTreeID << "," << aNodeID << ")");
+
 	work	xAction(*(itsConn->getConn()), "getNode");
 	try {
 		result res = xAction.exec("SELECT * from getNode('" +
@@ -295,6 +306,8 @@ OTDBparam TreeMaintenance::getParam (treeIDType		aTreeID,
 									 nodeIDType		aParamID)
 {
 	OTDBparam		empty;
+
+	LOG_TRACE_FLOW_STR("TM:getParam(" << aTreeID << "," << aParamID << ")");
 
 	// which function should we call?
 	string		functionName;
@@ -332,6 +345,9 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType	aTreeID,
 											   nodeIDType	topNode,
 											   uint32		depth)
 {
+	LOG_TRACE_FLOW_STR("TM:getItemList(" << aTreeID << "," << topNode 
+										 << "," << depth << ")");
+
 	OTDBtree	theTree = itsConn->getTreeInfo(aTreeID);
 	switch (theTree.type) {
 	case TThardware:
@@ -501,6 +517,9 @@ vector<OTDBnode> TreeMaintenance::getPICitemList (treeIDType	aTreeID,
 vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 											   const string&	aNameFragment)
 {
+	LOG_TRACE_FLOW_STR("TM:getItemList(" << aTreeID << "," 
+										 << aNameFragment << ")");
+
 	// First resolve function to call
 	string		functionName;
 	OTDBtree	theTree = itsConn->getTreeInfo(aTreeID);
@@ -554,6 +573,10 @@ nodeIDType	TreeMaintenance::dupNode(treeIDType		aTreeID,
 		return (0);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:dupNode(" << aTreeID << "," 
+									 << orgNodeID << ","
+									 << newIndex << ")");
+
 	work	xAction(*(itsConn->getConn()), "dupVTnode");
 	try {
 		// execute the insert action
@@ -596,6 +619,10 @@ nodeIDType	TreeMaintenance::addComponent (nodeIDType	compID,
 		itsError = itsConn->errorMsg();
 		return (0);
 	}
+
+	LOG_TRACE_FLOW_STR("TM:addComponent(" << compID << "," 
+										  << treeID << ","
+										  << parentID << ")");
 
 	work	xAction(*(itsConn->getConn()), "addComponentToVT");
 	try {
@@ -647,6 +674,9 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 		return (false);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:saveNode{" << aNode.treeID() << "," 
+									  << aNode.nodeID() << "}");
+
 	work	xAction(*(itsConn->getConn()), "saveVTnode");
 	try {
 		// execute the insert action
@@ -685,6 +715,8 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 // Updates the (vector of) OTDBnodes to the database.
 bool	TreeMaintenance::saveNodeList(vector<OTDBnode>&	aNodeList)
 {
+	LOG_TRACE_FLOW_STR("TM:saveNodeList(...)");
+
 	bool actionOK = true;
 	for (uint32 i = 0; i < aNodeList.size(); i++) {
 		actionOK &= saveNode(aNodeList[i]);
@@ -710,6 +742,9 @@ bool	TreeMaintenance::deleteNode    (OTDBnode&			aNode)
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
+
+	LOG_TRACE_FLOW_STR("TM:deleteNode{" << aNode.treeID() << "," 
+									    << aNode.nodeID() << "}");
 
 	work	xAction(*(itsConn->getConn()), "removeNode");
 	try {
@@ -748,6 +783,8 @@ bool	TreeMaintenance::deleteNode    (OTDBnode&			aNode)
 //
 bool	TreeMaintenance::deleteNodeList(vector<OTDBnode>&	aNodeList)
 {
+	LOG_TRACE_FLOW_STR("TM:deleteNodeList(...)");
+
 	bool	actionOK = true;
 	for (uint32 i = 0; i < aNodeList.size(); i++) {
 		actionOK &= deleteNode(aNodeList[i]);
@@ -782,6 +819,8 @@ treeIDType	TreeMaintenance::instanciateTree (treeIDType	baseTree)
 		itsError = itsConn->errorMsg();
 		return (0);
 	}
+
+	LOG_TRACE_FLOW_STR("TM:instanciateTree(" << baseTree << ")");
 
 	work	xAction(*(itsConn->getConn()), "instTree");
 	try {
@@ -840,6 +879,12 @@ bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 		return (false);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:exportTree(" << aTreeID << ","
+										<< topItem << ","
+										<< filename << ","
+										<< TODO_outputFormat << ","
+										<< toString(TODO_folded) << ")");
+
 	work	xAction(*(itsConn->getConn()), "exportFile");
 	try {
 		ofstream	outFile;
@@ -880,6 +925,8 @@ bool	TreeMaintenance::deleteTree(treeIDType		aTreeID)
 		return (false);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:deleteTree(" << aTreeID << ")");
+
 	work	xAction(*(itsConn->getConn()), "deleteTree");
 	try {
 		result	res = xAction.exec("SELECT deleteTree(" +
@@ -909,6 +956,8 @@ OTDBnode TreeMaintenance::getTopNode (treeIDType		aTreeID)
 		itsError = itsConn->errorMsg();
 		return (empty);
 	}
+
+	LOG_TRACE_FLOW_STR("TM:getTopNode(" << aTreeID << ")");
 
 	work	xAction(*(itsConn->getConn()), "getTopNode");
 	try {
@@ -945,6 +994,10 @@ bool	TreeMaintenance::setMomInfo (treeIDType		aTreeID,
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
+
+	LOG_TRACE_FLOW_STR("TM:setMomInfo(" << aTreeID << ","
+										<< aMomID << ","
+										<< aCampaign << ")");
 
 	work	xAction(*(itsConn->getConn()), "setMomInfo");
 	try {
@@ -991,6 +1044,9 @@ bool	TreeMaintenance::setClassification(treeIDType	aTreeID,
 		return (false);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:setClassification(" << aTreeID << ","
+											   << aClassification << ")");
+
 	work 	xAction(*(itsConn->getConn()), "setClassification");
 	try {
 		// First create a new tree entry.
@@ -1035,6 +1091,9 @@ bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 		return (false);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:setTreeState(" << aTreeID << ","
+										  << aState << ")");
+
 	work 	xAction(*(itsConn->getConn()), "setTreeState");
 	try {
 		// build and execute query
@@ -1078,6 +1137,9 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 		return (false);
 	}
 
+	LOG_TRACE_FLOW_STR("TM:setDescription(" << aTreeID << ","
+										    << aDescription << ")");
+
 	work 	xAction(*(itsConn->getConn()), "setDescription");
 	try {
 		// construct a query that calls a stored procedure.
@@ -1120,6 +1182,10 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
+
+	LOG_TRACE_FLOW_STR("TM:setSchedule(" << aTreeID << ","
+										 << to_simple_string(aStartTime) << ","
+										 << to_simple_string(aStopTime) << ")");
 
 	work 	xAction(*(itsConn->getConn()), "setSchedule");
 	try {
