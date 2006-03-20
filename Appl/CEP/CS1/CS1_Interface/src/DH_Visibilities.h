@@ -95,9 +95,6 @@ public:
     return sizeof(VisibilitiesType) / sizeof(fcomplex);
   }
 
-  /// Test pattern methods used for regression tests of the correlator
-  void checkCorrelatorTestPattern();
-
   // Test pattern for storage section
   void setStorageTestPattern(int factor);
 

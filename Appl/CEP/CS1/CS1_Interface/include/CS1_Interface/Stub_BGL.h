@@ -41,7 +41,7 @@ public:
   Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet);
   virtual ~Stub_BGL();
 
-  void connect(unsigned subband, unsigned slave, TinyDataManager& dm,
+  void connect(unsigned subband, unsigned slave, TinyDataManager &dm,
 	       unsigned channel);
 
 protected:

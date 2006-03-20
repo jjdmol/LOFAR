@@ -43,9 +43,6 @@ AH_BGL_Processing::AH_BGL_Processing()
 : itsWHs(0),
   itsSubbandStub(0),
   itsRFI_MitigationStub(0),
-#if defined DELAY_COMPENSATION
-  itsFineDelayStub(0),
-#endif
   itsVisibilitiesStub(0)
 {
 }
@@ -64,9 +61,6 @@ void AH_BGL_Processing::undefine()
 
   delete itsSubbandStub;	itsSubbandStub	      = 0;
   delete itsRFI_MitigationStub;	itsRFI_MitigationStub = 0;
-#if defined DELAY_COMPENSATION
-  delete itsFineDelayStub;	itsFineDelayStub      = 0;
-#endif
   delete itsVisibilitiesStub;	itsVisibilitiesStub   = 0;
 }  
 
@@ -100,9 +94,6 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
   
   itsSubbandStub	   = new Stub_BGL_Subband(true, itsParamSet);
   itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, itsParamSet);
-#if defined DELAY_COMPENSATION
-  itsFineDelayStub	   = new Stub_BGL_FineDelay(true, itsParamSet);
-#endif
   itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, itsParamSet);
 
 #if defined HAVE_BGL
@@ -129,9 +120,6 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
       TinyDataManager &dm = wh->getDataManager();
       itsSubbandStub->connect(subband, slave, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
       //itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-#if defined DELAY_COMPENSATION
-      //itsFineDelayStub->connect(subband, slave, dm, WH_BGL_Processing::FINE_DELAY_CHANNEL);
-#endif
       itsVisibilitiesStub->connect(subband, slave, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
 #if defined HAVE_BGL
@@ -161,13 +149,14 @@ void AH_BGL_Processing::init()
 
 #if defined HAVE_MPI
     if (wh->getNode() == TH_MPI::getCurrentRank()) {
-      wh->get_DH_RFI_Mitigation()->setTestPattern();
-#if defined DELAY_COMPENSATION
-      wh->get_DH_FineDelay()->setTestPattern();
-#endif
+      DH_RFI_Mitigation			  *dh	 = wh->get_DH_RFI_Mitigation();
+      DH_RFI_Mitigation::ChannelFlagsType *flags = dh->getChannelFlags();
+
+      memset(flags, 0, sizeof(DH_RFI_Mitigation::ChannelFlagsType));
     }
 #endif
   }
+
   std::cerr << "init done\n";
   std::cerr.flush();
 }

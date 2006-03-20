@@ -26,9 +26,6 @@
 #include <WH_BGL_Processing.h>
 #include <CS1_Interface/Stub_BGL_Subband.h>
 #include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
-#if defined DELAY_COMPENSATION
-#include <CS1_Interface/Stub_BGL_FineDelay.h>
-#endif
 #include <CS1_Interface/Stub_BGL_Visibilities.h>
 
 
@@ -55,9 +52,6 @@ class AH_BGL_Processing: public TinyApplicationHolder
 
   Stub_BGL_Subband	      *itsSubbandStub;
   Stub_BGL_RFI_Mitigation     *itsRFI_MitigationStub;
-#if defined DELAY_COMPENSATION
-  Stub_BGL_FineDelay	      *itsFineDelayStub;
-#endif
   Stub_BGL_Visibilities	      *itsVisibilitiesStub;
 };
 

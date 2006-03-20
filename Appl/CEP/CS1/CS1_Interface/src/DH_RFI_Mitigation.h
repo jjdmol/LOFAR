@@ -61,8 +61,6 @@ public:
     return NR_STATIONS * NR_SUBBAND_CHANNELS;
   }
 
-  void setTestPattern();
-
 private:
   /// Forbid assignment.
   DH_RFI_Mitigation &operator = (const DH_RFI_Mitigation&);

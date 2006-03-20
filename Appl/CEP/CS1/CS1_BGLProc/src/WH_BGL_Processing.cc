@@ -27,6 +27,7 @@
 #include <FIR.h>
 
 #include <Common/Timer.h>
+#include <Transport/TH_MPI.h>
 
 #include <fftw.h>
 #include <assert.h>
@@ -39,6 +40,9 @@
 #include <mass.h>
 #endif
 
+#if defined HAVE_BGL
+#include <rts.h>
+#endif
 
 using namespace LOFAR;
 
@@ -53,15 +57,18 @@ inline static dcomplex cosisin(double x)
 #endif
   
 
-FIR WH_BGL_Processing::itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] __attribute__ ((aligned(32)));
-fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));
-LOFAR::bitset<NR_SAMPLES_PER_INTEGRATION> WH_BGL_Processing::flags[NR_STATIONS] __attribute__ ((aligned(32)));
-unsigned WH_BGL_Processing::itsNrValidSamples[NR_BASELINES] __attribute__ ((aligned(32)));
-float WH_BGL_Processing::correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] __attribute__ ((aligned(32)));
+FIR WH_BGL_Processing::itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
+fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
+LOFAR::bitset<NR_SAMPLES_PER_INTEGRATION> WH_BGL_Processing::flags[NR_STATIONS] CACHE_ALIGNED;
+unsigned WH_BGL_Processing::itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
+float WH_BGL_Processing::correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
 float WH_BGL_Processing::thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
 
+#if !defined C_IMPLEMENTATION
+static BGL_Mutex *mutex;
+#endif
 
-const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] __attribute__((aligned(32))) = {
+const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] CACHE_ALIGNED = {
 #if NR_SUBBAND_CHANNELS == 256 && NR_TAPS == 16
   {  0.011659500, -0.011535200,  0.005131880,  0.001219900,
     -0.006891530,  0.011598600, -0.015420900,  1.000000000,
@@ -1135,11 +1142,6 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
   getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
-
-#if defined DELAY_COMPENSATION
-  getDataManager().addInDataHolder(FINE_DELAY_CHANNEL, new DH_FineDelay("delay"));
-#endif
-
   getDataManager().addOutDataHolder(VISIBILITIES_CHANNEL, new DH_Visibilities("output", ps));
 }
 
@@ -1171,7 +1173,6 @@ void WH_BGL_Processing::preprocess()
 #endif
 
   for (int i = 1; i <= NR_SAMPLES_PER_INTEGRATION; i ++) {
-    //correlationWeights[i] = 1.0e-15 / i;
     correlationWeights[i] = 1.0e-6 / i;
   }
 
@@ -1180,6 +1181,10 @@ void WH_BGL_Processing::preprocess()
       thresholds[bl][ch] = 5.0e37;
     }
   }
+
+#if !defined C_IMPLEMENTATION
+  mutex = rts_allocate_mutex();
+#endif
 }
 
 
@@ -1246,7 +1251,7 @@ void WH_BGL_Processing::computeFlags()
 
 #if defined DELAY_COMPENSATION
 
-fcomplex WH_BGL_Processing::phaseShift(int time, int chan, const DH_FineDelay::DelayIntervalType &delay) const
+fcomplex WH_BGL_Processing::phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const
 {
   double timeInterpolatedDelay = delay.delayAtBegin + ((double) time / CHANNEL_BANDWIDTH) * (delay.delayAfterEnd - delay.delayAtBegin);
   double frequency = itsBaseFrequency + chan * CHANNEL_BANDWIDTH;
@@ -1256,7 +1261,7 @@ fcomplex WH_BGL_Processing::phaseShift(int time, int chan, const DH_FineDelay::D
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
 
-void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_FineDelay::DelayIntervalType &delay) const
+void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay) const
 {
   double   phiBegin = 2 * M_PI * delay.delayAtBegin;
   double   phiEnd   = 2 * M_PI * delay.delayAfterEnd;
@@ -1282,6 +1287,10 @@ void WH_BGL_Processing::doPPF()
 
   timer.start();
 
+#if !defined C_IMPLEMENTATION && defined HAVE_BGL
+  _bgl_mutex_lock(mutex);
+#endif
+
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
   get_DH_Subband()->swapBytes();
 #endif
@@ -1291,7 +1300,7 @@ void WH_BGL_Processing::doPPF()
   inputType *input = (inputType *) get_DH_Subband()->getSamples();
 
 #if defined DELAY_COMPENSATION
-  DH_FineDelay::AllDelaysType *delays = get_DH_FineDelay()->getDelays();
+  DH_Subband::AllDelaysType *delays = get_DH_Subband()->getDelays();
 #endif
 
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
@@ -1334,10 +1343,10 @@ void WH_BGL_Processing::doPPF()
     }
     fftTimer.stop();
 #else // assembly implementation
-    static fcomplex   tmp1[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
-    //static i16complex tmp2[NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_TAPS + NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
-    static fcomplex   fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] __attribute__((aligned(32)));
-    static fcomplex   fftOutData[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] __attribute__((aligned(32)));
+    static fcomplex   tmp1[4][NR_SAMPLES_PER_INTEGRATION] CACHE_ALIGNED;
+    //static i16complex tmp2[NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_TAPS + NR_SAMPLES_PER_INTEGRATION] CACHE_ALIGNED;
+    static fcomplex   fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4] CACHE_ALIGNED;
+    static fcomplex   fftOutData[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
     //static NSTimer    trans1timer("trans1timer", true);
 
 #if 0
@@ -1348,23 +1357,24 @@ void WH_BGL_Processing::doPPF()
     trans1timer.stop();
 #endif
 
-    for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
-	FIRtimer.start();
-	_filter(0, // itsFIRs[stat][pol][chan].itsDelayLine,
-		FIR::weights[chan],
-		&(*input)[stat][0][chan][pol], //&tmp2[chan][pol][0],
-		tmp1[chan & 3],
-		NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
-	FIRtimer.stop();
-
-	if ((chan & 3) == 3) {
-	  _transpose_4x8(&fftInData[0][pol][chan - 3],
-			 &tmp1[0][0],
-			 NR_SAMPLES_PER_INTEGRATION,
-			 sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION,
-			 sizeof(fcomplex) * NR_POLARIZATIONS * NR_SUBBAND_CHANNELS);
+    for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan += 4) {
+      for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	for (int ch = 0; ch < 4; ch ++) {
+	  //NSTimer FIRtimer("test", true);
+	  FIRtimer.start();
+	  _filter(0, // itsFIRs[stat][pol][chan + ch].itsDelayLine,
+		  FIR::weights[chan + ch],
+		  &(*input)[stat][0][chan + ch][pol],//&tmp2[chan + ch][pol][0],
+		  tmp1[ch],
+		  NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
+	  FIRtimer.stop();
 	}
+
+	_transpose_4x8(&fftInData[0][pol][chan],
+		       &tmp1[0][0],
+		       NR_SAMPLES_PER_INTEGRATION,
+		       sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION,
+		       sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SUBBAND_CHANNELS + 4));
       }
     }
 
@@ -1380,6 +1390,10 @@ void WH_BGL_Processing::doPPF()
 	if (flags[stat][time + t]) {
 	  _memzero(fftOutData[t], sizeof(fftOutData[t]));
 	} else {
+	  _prefetch(fftInData[time + t],
+		    sizeof(fcomplex[NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]) / CACHE_LINE_SIZE,
+		    CACHE_LINE_SIZE);
+
 	  for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	    fftw_one(itsFFTWPlan,
 		     (fftw_complex *) fftInData[time + t][pol],
@@ -1403,6 +1417,10 @@ void WH_BGL_Processing::doPPF()
     }
 #endif
   }
+
+#if !defined C_IMPLEMENTATION && defined HAVE_BGL
+  _bgl_mutex_unlock(mutex);
+#endif
 
   timer.stop();
 }
@@ -1621,12 +1639,15 @@ invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 void WH_BGL_Processing::process()
 {
   static NSTimer timer("total", true);
-  timer.start();
 
+  timer.start();
   computeFlags();
 
 #if NR_SUBBAND_CHANNELS > 1
   doPPF();
+#if defined HAVE_BGL
+  _bgl_mutex_unlock(mutex);
+#endif
 #else
   bypassPPF();
 #endif
