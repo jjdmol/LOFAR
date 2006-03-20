@@ -102,6 +102,11 @@ int main()
   cout << ">" << p2 << "< , len=" << len2 << endl;
   cout << ">" << p3 << "< , len=" << len3 << endl;
 
+  cout << "Lowercase and uppercase a string:" << endl;
+  s = "The zip code of Hondelage in Germany is 38108";
+  cout << "orginal: " << s << endl;
+  cout << "lowered: " << toLower(s) << endl;
+  cout << "uppered: " << toUpper(s) << endl;
 
   //## Conversion of fundamental arithmetic types to string ##//
 

@@ -13,6 +13,10 @@ Trimmed C strings:
 >a String with leading and trailing whitespace< , len=45
 >a String without leading and trailing whitespace< , len=48
 >String with(out) itemnr and arrayindex< , len=38
+Lowercase and uppercase a string:
+orginal: The zip code of Hondelage in Germany is 38108
+lowered: the zip code of hondelage in germany is 38108
+uppered: THE ZIP CODE OF HONDELAGE IN GERMANY IS 38108
 
 *** Conversion of fundamental arithmetic types to string ***
 min(bool) = false	 max(bool) = true

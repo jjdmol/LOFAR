@@ -116,6 +116,12 @@ inline void ltrim(string&		aString, const string&	whiteSpace = " 	")
 	aString = aString.erase(0, aString.find_first_not_of(whiteSpace));
 }
 
+// Return an uppercased string of \a str.
+std::string toUpper(const string& str);
+
+// Return a lowercased string of \a str.
+std::string toLower(const string& str);
+
 // @name Convert numeric value to string
 // Convert the value of any of the fundamental arithmetic data types to a
 // string representation. Most of the toString() methods provide the user with
