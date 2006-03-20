@@ -49,6 +49,7 @@ CREATE TABLE classification (
 INSERT INTO classification VALUES (1, 'development');
 INSERT INTO classification VALUES (2, 'test');
 INSERT INTO classification VALUES (3, 'operational');
+INSERT INTO classification VALUES (4, 'example');
 
 --
 -- Constraint table
