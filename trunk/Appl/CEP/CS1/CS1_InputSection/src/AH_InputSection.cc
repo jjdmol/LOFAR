@@ -90,7 +90,7 @@ namespace LOFAR {
       int rspStartNode;
   
       itsOutputStub = new Stub_BGL_Subband(false, itsParamSet);
-      itsInputStub = new Stub_CoarseDelay(true, itsParamSet);
+      itsInputStub = new Stub_Delay(true, itsParamSet);
 
 
       for (int r=0; r<nStations; r++) {

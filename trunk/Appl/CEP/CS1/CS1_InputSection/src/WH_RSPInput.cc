@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <CS1_InputSection/WH_RSPInput.h>
 #include <CS1_Interface/DH_RSP.h>
-#include <CS1_Interface/DH_CoarseDelay.h>
+#include <CS1_Interface/DH_Delay.h>
 #include <CS1_Interface/DH_RSPSync.h>
 #include <Common/hexdump.h>
 #include <Common/Timer.h>
@@ -65,7 +65,7 @@ namespace LOFAR {
       itsNSamplesToCopy = itsNSamplesPerSec + (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Data.NChannels");
  
       // create incoming dataholder holding the delay information 
-      getDataManager().addInDataHolder(0, new DH_CoarseDelay("DH_CoarseDelay",itsNRSPOutputs));
+      getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));
       //  getDataManager().setAutoTriggerIn(0, false);
  
       // create a outgoing dataholder for each subband
@@ -165,7 +165,7 @@ namespace LOFAR {
       cout<<"begin of WH_RSPInput::process"<<endl;cout.flush();
       itsProcessTimer->start();
       DH_RSP* rspDHp;
-      DH_CoarseDelay* delayDHp;
+      DH_Delay* delayDHp;
       timestamp_t delayedstamp;
 
 
@@ -221,7 +221,7 @@ namespace LOFAR {
       }
 
       // delay control
-      delayDHp = (DH_CoarseDelay*)getDataManager().getInHolder(0);
+      delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
       // Get delay from the delay controller
       delayedstamp = itsSyncedStamp + 0; //delayDHp->getDelay(0);    
       //delayedstamp = itsSyncedStamp;
