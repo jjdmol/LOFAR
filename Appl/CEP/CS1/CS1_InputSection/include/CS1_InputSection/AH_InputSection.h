@@ -32,7 +32,7 @@
 #include <CEPFrame/ApplicationHolder.h>
 #include <CEPFrame/Step.h>
 #include <CS1_InputSection/Connector.h>
-#include <CS1_Interface/Stub_CoarseDelay.h>
+#include <CS1_Interface/Stub_Delay.h>
 #include <CS1_Interface/Stub_BGL_Subband.h>
 
 namespace LOFAR 
@@ -72,7 +72,7 @@ namespace LOFAR
       vector<Step*> itsSteps;
       Connector itsConnector;
       Stub_BGL_Subband *itsOutputStub;
-      Stub_CoarseDelay *itsInputStub;
+      Stub_Delay *itsInputStub;
     };
 
     // @}
