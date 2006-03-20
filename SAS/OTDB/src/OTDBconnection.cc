@@ -70,6 +70,8 @@ bool OTDBconnection::connect()
 		return (true);
 	}
 
+	LOG_TRACE_FLOW_STR ("Trying to connect to database " << itsDatabase);
+
 	// Note: we connect to the database as user Lofar, the real DBaccess
 	// is implemented in the SP's we will call.
 	string	connectString("host=dop50 dbname= " + itsDatabase
@@ -123,6 +125,9 @@ OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID,
 		return (empty); 
 	}
 
+	LOG_TRACE_FLOW_STR ("OTDB:getTreeInfo(" << aTreeID << "," 
+											<< toString(isMomID) << ")");
+	
 	try {
 		// construct a query that calls a stored procedure.
 		work	xAction(*itsConnection, "getTreeInfo");
@@ -162,6 +167,8 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 		return (empty); 
 	}
 
+	LOG_TRACE_FLOW_STR ("OTDB:getTreeList(" << aTreeType << "," 
+											<< aClassification << ")");
 	try {
 		// construct a query that calls a stored procedure.
 		work	xAction(*itsConnection, "getTreeList");
@@ -211,6 +218,11 @@ vector<TreeState> OTDBconnection::getStateList(
 		vector<TreeState> 	empty;
 		return (empty); 
 	}
+
+	LOG_TRACE_FLOW_STR ("OTDB:getTreeList(" << aTreeID << "," 
+										<< toString(isMomID) << ","
+										<< to_simple_string(beginDate) << ","
+										<< to_simple_string(endDate) << ")");
 
 	try {
 		// construct a query that calls a stored procedure.
