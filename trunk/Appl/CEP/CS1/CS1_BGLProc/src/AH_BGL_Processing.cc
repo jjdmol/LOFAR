@@ -87,8 +87,8 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
   int nrSubBands	   = itsParamSet.getInt32("Data.NSubbands");
   vector<double> baseFreqs = itsParamSet.getDoubleVector("Data.RefFreqs");
   int slavesPerSubBand	   = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
-  int cellsPerSubBand	   = itsParamSet.getInt32("BGLProc.CellsPerSubband");
-  int slavesPerCell	   = slavesPerSubBand / cellsPerSubBand;
+  int subbandsPerCell	   = itsParamSet.getInt32("BGLProc.SubbandsPerCell");
+  int slavesPerCell	   = slavesPerSubBand * subbandsPerCell;
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
   

@@ -15,9 +15,8 @@ Connections.Delay_BGLProc.ServerHost   =10.20.98.1
 
 # The ports for all (socket)connections
 Connections.Input_Delay.Ports    =[7200,7201]
-Connections.Input_BGLProc.Ports  =[8000,8001,8002,8003,8004,8005,8006]
-Connections.BGLProc_Storage.Ports=[8200,8201,8202,8203,8204,8205,8206]
-Connections.Delay_BGLProc.Port   =7202
+Connections.Input_BGLProc.Ports  =[8000,8001,8002,8003,8004,8005,8006,8007,8008,8009,8010,8011,8012,8013,8014,8015]
+Connections.BGLProc_Storage.Ports=[8200,8201,8202,8203,8204,8205,8206,8207,8208,8209,8210,8211,8212,8213,8214,8215]
 
 # The format of the data
 Data.NSubbands=1
@@ -59,7 +58,7 @@ Input.Transport.1.inputFile = "udp_rsp1.data"
 # and the number of filters within a cell. 
 # These parameters MUST match the compiled in values in TFC_Config.h
 # Note that some values may differ from values defined in the Input section.
-BGLProc.CellsPerSubband = 1
+BGLProc.SubbandsPerCell = 1
 BGLProc.SlavesPerSubband = 6
 BGLProc.NPPFTaps = 16
 
