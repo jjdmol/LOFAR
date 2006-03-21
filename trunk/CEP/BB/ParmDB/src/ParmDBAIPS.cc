@@ -177,11 +177,15 @@ void ParmDBAIPS::extractValues (map<string,ParmValueSet>& result,
     ParmValue pvalue;
     ParmValueRep& pval = pvalue.rep();
     Array<double> val = valCol(i);
+    Array<bool> mask;
     if (maskCol.isDefined(i)) {
-      Array<bool> mask = maskCol(i);
-      pval.setCoeff (val.data(), mask.data(), toVector(val.shape()));
-    } else {
+      mask = maskCol(i);
+    }
+    if (mask.nelements() == 0) {
       pval.setCoeff (val.data(), toVector(val.shape()));
+    } else {
+      ASSERT (mask.nelements() == val.nelements());
+      pval.setCoeff (val.data(), mask.data(), toVector(val.shape()));
     }
     pval.setDomain (ParmDomain(toVector(stCol(i)), toVector(endCol(i))));
     toVector (pval.itsOffset, offCol(i));
@@ -224,11 +228,15 @@ ParmValue ParmDBAIPS::extractDefValue (const Table& tab, int row)
   ROScalarColumn<double> pertCol (tab, "PERTURBATION");
   ROScalarColumn<bool> prelCol (tab, "PERT_REL");
   Array<double> val = valCol(row);
+  Array<bool> mask;
   if (maskCol.isDefined(row)) {
-    Array<bool> mask = maskCol(row);
-    result.setCoeff (val.data(), mask.data(), toVector(val.shape()));
-  } else {
+    mask = maskCol(row);
+  }
+  if (mask.nelements() == 0) {
     result.setCoeff (val.data(), toVector(val.shape()));
+  } else {
+    ASSERT (mask.nelements() == val.nelements());
+    result.setCoeff (val.data(), mask.data(), toVector(val.shape()));
   }
   if (consCol.isDefined(row)) {
     result.setType (typeCol(row), toVector(consCol(row)));
@@ -332,33 +340,35 @@ void ParmDBAIPS::getDefValues (map<string,ParmValueSet>& result,
 
 void ParmDBAIPS::putValue (const string& parmName,
 			   ParmValue& pvalue,
-			   ParmDBRep::TableType tableType)
+			   ParmDBRep::TableType tableType,
+			   bool overwriteMask)
 {
   int tabinx = getTableIndex (tableType);
   itsTables[tabinx].reopenRW();
   TableLocker locker(itsTables[tabinx], FileLocker::Write);
-  doPutValue (parmName, pvalue.rep(), tabinx);
+  doPutValue (parmName, pvalue.rep(), tabinx, overwriteMask);
 }
 
 void ParmDBAIPS::doPutValue (const string& parmName,
 			     ParmValueRep& pval,
-			     int tabinx)
+			     int tabinx,
+			     bool overwriteMask)
 {
   if (pval.itsDBTabRef == -1) {
     // It is certainly a new row.
     putNewValue (parmName, pval, tabinx);
   } else if (pval.itsDBTabRef != tabinx) {
     // It might be a new row.
-    putValueCheck (parmName, pval, tabinx);
+    putValueCheck (parmName, pval, tabinx, overwriteMask);
   } else {
-    int rownr = pval.itsDBRowRef;
-    ArrayColumn<double> valCol (itsTables[tabinx], "VALUES");
-    valCol.put (rownr, fromVector(pval.itsCoeff, pval.itsShape));
+    // It is an existing row.
+    putOldValue (pval, itsTables[tabinx], pval.itsDBRowRef, overwriteMask);
   }
 }
 
 void ParmDBAIPS::putValues (map<string,ParmValueSet>& parmSet,
-			    ParmDBRep::TableType tableType)
+			    ParmDBRep::TableType tableType,
+			    bool overwriteMask)
 {
   int tabinx = getTableIndex (tableType);
   itsTables[tabinx].reopenRW();
@@ -370,7 +380,7 @@ void ParmDBAIPS::putValues (map<string,ParmValueSet>& parmSet,
     const string& parmName = iter->first;
     if (!vec.empty()  &&  vec[0].rep().itsDBSeqNr == getParmDBSeqNr()) {
       for (uint i=0; i<vec.size(); ++i) {
-	doPutValue (parmName, vec[i].rep(), tabinx);
+	doPutValue (parmName, vec[i].rep(), tabinx, overwriteMask);
       }
     }
   }
@@ -378,7 +388,8 @@ void ParmDBAIPS::putValues (map<string,ParmValueSet>& parmSet,
 
 void ParmDBAIPS::putValueCheck (const string& parmName,
 				ParmValueRep& pval,
-				int tabinx)
+				int tabinx,
+				bool overwriteMask)
 {
   const ParmDomain& domain = pval.itsDomain;
   Table sel = find (parmName, domain, pval.itsParentID, tabinx);
@@ -387,7 +398,6 @@ void ParmDBAIPS::putValueCheck (const string& parmName,
   } else {
     ROArrayColumn<double> stCol (sel, "START");
     ROArrayColumn<double> endCol (sel, "END");
-    ArrayColumn<double> valCol (sel, "VALUES");
     Vector<double> sdom(domain.getStart());
     Vector<double> edom(domain.getEnd());
     if (pval.itsDBTabRef == -2) {
@@ -399,19 +409,34 @@ void ParmDBAIPS::putValueCheck (const string& parmName,
 		 "Parameter " << parmName <<
 		 " has a partially instead of fully matching entry for domain "
 		 << domain);
-      valCol.put (0, fromVector(pval.itsCoeff, pval.itsShape));
+      putOldValue (pval, sel, 0, overwriteMask);
     } else {
       // Partial overlap is possible, so do not check for it.
       // Only try to find a domain that matches exactly.
       for (uint row=0; row<sel.nrow(); row++) {
 	if (allNear(sdom,  stCol(row), 1e-7)  &&
 	    allNear(edom, endCol(row), 1e-7)) {
-	  valCol.put (row, fromVector(pval.itsCoeff, pval.itsShape));
+	  putOldValue (pval, sel, row, overwriteMask);
 	  return;
 	}
       }
       // No exactly matching domain found, so add a new row.
       putNewValue (parmName, pval, tabinx);
+    }
+  }
+}
+
+void ParmDBAIPS::putOldValue (ParmValueRep& pval,
+			      Table& table,
+			      int rownr,
+			      bool overwriteMask)
+{
+  ArrayColumn<double> valCol (table, "VALUES");
+  valCol.put (rownr, fromVector(pval.itsCoeff, pval.itsShape));
+  if (overwriteMask) {
+    ArrayColumn<bool> maskCol (table, "SOLVABLE");
+    if (pval.itsSolvMask.size() > 0  ||  maskCol.isDefined(rownr)) {
+      maskCol.put (rownr, fromVector(pval.itsSolvMask, pval.itsShape));
     }
   }
 }
@@ -502,7 +527,7 @@ void ParmDBAIPS::putDefValue (const string& parmName,
       consCol.put (rownr, fromVector(pval.itsConstants));
     }
     valCol.put (rownr, fromVector(pval.itsCoeff, pval.itsShape));
-    if (pval.itsSolvMask.size() > 0) {
+    if (pval.itsSolvMask.size() > 0  ||  maskCol.isDefined(rownr)) {
       maskCol.put (rownr, fromVector(pval.itsSolvMask, pval.itsShape));
     }
     pertCol.put (rownr, pval.itsPerturbation);

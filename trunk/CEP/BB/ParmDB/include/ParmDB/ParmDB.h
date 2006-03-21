@@ -103,15 +103,20 @@ public:
 			  ParmDBRep::TableType) = 0;
 
   // Put the value for the given parameter and domain.
-  // If it is a new domain, value's ParmValue::DBRef might be set.
+  // overwriteMask=true indicates that the solvableMask might be changed
+  // and should be overwritten in an existing record.
   virtual void putValue (const std::string& parmName,
 			 ParmValue& value,
-			 ParmDBRep::TableType) = 0;
+			 ParmDBRep::TableType,
+			 bool overwriteMask = true) = 0;
 
   // Put the value for the given parameters and domain.
   // It only writes the parameters that have the same DBSeqNr as this ParmDB.
+  // overwriteMask=true indicates that the solvableMask might be changed
+  // and should be overwritten in an existing record.
   virtual void putValues (std::map<std::string,ParmValueSet>& values,
-			  ParmDBRep::TableType) = 0;
+			  ParmDBRep::TableType,
+			  bool overwriteMask = true) = 0;
 
   // Delete the records for the given parameters and domain.
   // If parentId>=0, only records with that parentid will be deleted.
