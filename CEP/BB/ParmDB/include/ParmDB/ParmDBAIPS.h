@@ -80,15 +80,20 @@ public:
 			  ParmDBRep::TableType);
 
   // Put the value for the given parameter and domain.
-  // If it is a new domain, value's ParmValue::DBRef might be set.
+  // overwriteMask=true indicates that the solvableMask might be changed
+  // and should be overwritten in an existing record.
   virtual void putValue (const std::string& parmName,
 			 ParmValue& value,
-			 ParmDBRep::TableType);
+			 ParmDBRep::TableType,
+			 bool overwriteMask = true);
 
   // Put the value for the given parameters and domain.
   // It only writes the parameters that have the same DBSeqNr as this ParmDB.
+  // overwriteMask=true indicates that the solvableMask might be changed
+  // and should be overwritten in an existing record.
   virtual void putValues (std::map<std::string,ParmValueSet>& values,
-			  ParmDBRep::TableType);
+			  ParmDBRep::TableType,
+			  bool overwriteMask = true);
 
   // Delete the records for the given parameters and domain.
   // If parentId>=0, only records with that parentid will be deleted.
@@ -133,9 +138,16 @@ private:
   // Do the actual put of a value.
   void doPutValue (const string& parmName,
 		   ParmValueRep& pval,
-		   int tabinx);
+		   int tabinx,
+		   bool overwriteMask);
 
-  // Put the value for a new parameter.
+  // Put the value for an existing parameter/domain.
+  void putOldValue (ParmValueRep& pval,
+		    casa::Table& table,
+		    int rownr,
+		    bool overwriteMask);
+
+  // Put the value for a new parameter/domain.
   void putNewValue (const std::string& parmName,
 		    ParmValueRep& value,
 		    int tabinx);
@@ -143,7 +155,8 @@ private:
   // Put a parameter value. Check if it is in a new row or not.
   void putValueCheck (const std::string& parmName,
 		      ParmValueRep& value,
-		      int tabinx);
+		      int tabinx,
+		      bool overwriteMask);
 
   // Put the value for a new default parameter.
   void putNewDefValue (const std::string& parmName, const ParmValueRep& value);

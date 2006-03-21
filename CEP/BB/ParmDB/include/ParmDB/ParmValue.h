@@ -63,7 +63,7 @@ public:
   // Set the coefficients for a funklet with the given shape.
   // The solvableMask tells which coefficients are solvable
   // (false is no solvable).
-  // If no mask is given, a defaultis used where the right lower half
+  // If no mask is given, a default is used where the right lower half
   // of the mask array is set to false.
   // <group>
   void setCoeff (const double* coeff, const std::vector<int>& shape);
