@@ -598,7 +598,7 @@ nodeIDType	TreeMaintenance::dupNode(treeIDType		aTreeID,
 		xAction.commit();
 		return (nodeID);
 	}
-	catch (Exception& ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during duplicating a Template node") +
 				 + ex.what();
 		LOG_FATAL(itsError);
@@ -645,7 +645,7 @@ nodeIDType	TreeMaintenance::addComponent (nodeIDType	compID,
 		xAction.commit();
 		return (nodeID);
 	}
-	catch (Exception& ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during adding a component to a VT:") +
 				 + ex.what();
 		LOG_FATAL(itsError);
@@ -699,7 +699,7 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 		xAction.commit();
 		return (true);
 	}
-	catch (Exception& ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during saving a template node") +
 				 + ex.what();
 		LOG_FATAL(itsError);
@@ -767,7 +767,7 @@ bool	TreeMaintenance::deleteNode    (OTDBnode&			aNode)
 		aNode.itsNodeID = 0;
 		return (true);
 	}
-	catch (Exception& ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during deleting a template node") +
 				 + ex.what();
 		LOG_FATAL(itsError);
@@ -905,7 +905,7 @@ bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 		outFile.close();
 		return (true);
 	}
-	catch (Exception&	ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during exportTree:") + 
 					ex.what();
 		LOG_FATAL(itsError);
@@ -937,7 +937,7 @@ bool	TreeMaintenance::deleteTree(treeIDType		aTreeID)
 		xAction.commit();
 		return (true);
 	}
-	catch (Exception&	ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during deleteTree:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
@@ -1067,7 +1067,7 @@ bool	TreeMaintenance::setClassification(treeIDType	aTreeID,
 		xAction.commit();
 		return (true);
 	}
-	catch (Exception&	ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during setClassification:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
@@ -1114,7 +1114,7 @@ bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 		xAction.commit();
 		return (true);
 	}
-	catch (Exception&	ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during setTreeState:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
@@ -1160,7 +1160,7 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 		xAction.commit();
 		return (true);
 	}
-	catch (Exception&	ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during setDescription:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
@@ -1208,7 +1208,7 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		xAction.commit();
 		return (true);
 	}
-	catch (Exception&	ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during setSchedule:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
