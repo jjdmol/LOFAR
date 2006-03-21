@@ -53,7 +53,7 @@ void DH_PPF::init()
   addField("Buffer", BlobField<BufferElementType>(1, getBufferSize()), 32);
   createDataBlock();
 
-  //memset(itsBuffer, 0, sizeof(BufferType)); 
+  memset(itsBuffer, 0, sizeof(BufferType)); 
 
   vector<DimDef> vdd;
   vdd.push_back(DimDef("Station", MAX_STATIONS_PER_PPF));

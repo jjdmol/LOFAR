@@ -77,18 +77,13 @@ void WH_FakeStation::process()
   EthernetFrame& myEthFrame = ((DH_RSP*)getDataManager().getInHolder(0))->getEthernetFrame();
   TimeStamp myStamp;
 
-  for (int epap = 0; epap < myEthFrame.getNoPacketsInFrame(); epap++) {
-    EpaHeader& header = myEthFrame.getEpaPacket(epap).getHeader();
-
-    // set my station id
-    header.setStationId(itsStationId);
-
-    // get the stamp
-    myStamp.setStamp(header.getSeqId(), header.getBlockId());
-    // add the delay
-    myStamp += itsDelay;
-    // set the stamp
-    header.setSeqId(myStamp.getSeqId());
-    header.setBlockId(myStamp.getBlockId());
-  }
+  Header& myHeader = myEthFrame.getHeader();
+  myHeader.setStationId(itsStationId);
+  // get the stamp
+  myStamp.setStamp(myHeader.getSeqId(), myHeader.getBlockId());
+  // add the delay
+  myStamp += itsDelay;
+  // set the stamp
+  myHeader.setSeqId(myStamp.getSeqId());
+  myHeader.setBlockId(myStamp.getBlockId());
 }

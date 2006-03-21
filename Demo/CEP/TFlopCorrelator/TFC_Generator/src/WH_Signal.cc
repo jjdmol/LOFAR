@@ -119,7 +119,7 @@ void WH_Signal::process()
   myEthFrame.reset();
 
   for (int epap = 0; epap < myEthFrame.getNoPacketsInFrame(); epap++) {
-    EpaHeader& header = myEthFrame.getEpaPacket(epap).getHeader();
+    Header& header = myEthFrame.getHeader();
     header.setProtocol(43691);
     header.setSeqId(itsStamp.getSeqId());
     header.setBlockId(itsStamp.getBlockId());

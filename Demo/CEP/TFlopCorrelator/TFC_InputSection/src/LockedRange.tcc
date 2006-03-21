@@ -28,6 +28,8 @@ namespace LOFAR {
     itsMin(min), 
     itsMax(max), 
     itsNullOfType(nullOfType), 
+    itsFirstItem(nullOfType),
+    itsIsEmpty(true),
     itsIsOverwriting(true),
     itsWriteLockTimer("writeLock"),
     itsWriteUnlockTimer("writeUnlock"),
@@ -64,8 +66,17 @@ namespace LOFAR {
     
     mutex::scoped_lock sl(itsMutex);
     
+    // check if writeLock was called before
+    if (itsIsEmpty) {
+      itsFirstItem = begin;
+      itsIsEmpty = false;
+    }
     if (begin < itsReadHead) {
       begin = itsReadHead;
+    }
+    if (itsReadTail == itsNullOfType) {
+      itsReadTail = begin;
+      itsReadHead = begin;
     }
     
     bool amWaiting = false;
@@ -84,7 +95,7 @@ namespace LOFAR {
     }
     
     if (end > itsWriteHead) itsWriteHead = end;
-    if (begin < itsWriteTail) itsWriteTail = begin;
+    itsWriteTail = begin;
     
     if (itsIsOverwriting) {
       T maxReadTail = itsWriteHead - itsMax;
@@ -154,11 +165,43 @@ namespace LOFAR {
   };
 
   template<class T, class S>
+  T LockedRange<T, S>::getReadStart() {
+
+    mutex::scoped_lock sl(itsMutex);
+
+    bool amWaiting = false;
+    while (itsIsEmpty) {
+      if (!amWaiting) {
+	itsWaitingForDataTimer.start();
+	amWaiting = true;
+      }
+      itsDataAvailCond.wait(sl);
+    }
+    if (amWaiting) {
+      itsWaitingForDataTimer.stop();
+    }
+
+    T begin = itsFirstItem;
+    itsIsOverwriting = false;
+
+    if (itsWriteHead - begin > itsSize) {
+      begin = itsWriteHead - itsSize;
+      itsReadTail = begin;
+      itsSpaceAvailCond.notify_all(); 
+    }
+
+    itsReadHead = begin;
+    itsReadTail = begin;
+    return begin;
+  }
+
+  template<class T, class S>
   void LockedRange<T, S>::clear() {
     mutex::scoped_lock sl(itsMutex); 
     itsReadHead = itsReadTail = itsWriteTail = itsWriteHead = itsNullOfType; 
     itsIsOverwriting = true; 
     itsSpaceAvailCond.notify_all();
+    itsIsEmpty = true;
   };
 
 } // namespace LOFAR

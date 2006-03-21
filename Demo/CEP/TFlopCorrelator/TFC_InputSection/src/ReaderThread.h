@@ -36,10 +36,11 @@ namespace LOFAR
   {
     BeamletBuffer* BBuffer;
     TransportHolder* Connection; 
-    int FrameSize;
+    int PayloadSize;
     int SubbandSize;
     int EPAHeaderSize;
     int EPAPacketSize;
+    int IPHeaderSize;
     int nrPacketsInFrame;
     int nrSubbandsInPacket;
     int nrRSPoutputs;
@@ -49,14 +50,9 @@ namespace LOFAR
   }  ThreadArgs;
   
   typedef struct {
-    timestamp_t oldStamp;
+    timestamp_t receivedStamp;
     timestamp_t expectedStamp;
-    int succeeded;
-  } RewriteStats;
-  typedef struct {
-    timestamp_t missedStamp;
-    timestamp_t receiveTime;
-  } MisStats;
+  } PacketStats;
 
   void printTimers(vector<NSTimer*>& timers);
   void* ReaderThread(void* arguments);
