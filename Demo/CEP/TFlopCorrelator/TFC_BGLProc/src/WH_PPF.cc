@@ -614,9 +614,9 @@ void WH_PPF::preprocess()
 
 #if defined HAVE_BGL
   fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 1 0 1 1 1 715 0) (128 529 1 0 1 1 0 2828 0) (64 529 1 0 1 1 0 1420 0) (32 529 1 0 1 1 0 716 0) (16 529 1 0 1 1 0 364 0) (8 529 1 0 1 1 0 188 0) (4 529 1 0 1 1 0 100 0) (2 529 1 0 1 1 0 56 0))");
-  itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_BACKWARD, FFTW_USE_WISDOM);
+  itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_FORWARD, FFTW_USE_WISDOM);
 #else
-  itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_BACKWARD, FFTW_MEASURE);
+  itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_FORWARD, FFTW_MEASURE);
 #endif
 }
 
