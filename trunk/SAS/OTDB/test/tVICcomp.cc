@@ -195,15 +195,13 @@ int main (int	argc, char*	argv[]) {
 			}
 		}
 		ASSERTSTR (found, "Could not find Component 'SRG' in list");
-		try {
-			nodeIDType	child2 = tm.addComponent(ref2, treeID, topID);
+		nodeIDType	child2 = tm.addComponent(ref2, treeID, topID);
+		if (child2) {
 			ASSERTSTR (false, "Adding an illegal child component should have failed!" 
 						" (child = " << child2 << ")");
 		}
-		catch (std::exception&	ex) {
-			LOG_INFO_STR("Caught expected exception: " << ex.what());
-			LOG_INFO_STR("Check on adding forbidden child components works!");
-		}
+		LOG_INFO_STR("Database error: " << tm.errorMsg());
+		LOG_INFO_STR("Check on adding forbidden child components works!");
 
 		LOG_INFO("Getting information of component 'ARG'");
 		found = false;

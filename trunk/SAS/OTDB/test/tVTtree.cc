@@ -306,13 +306,10 @@ int main (int	argc, char*	argv[]) {
 
 		// Test deleting an active tree
 		LOG_INFO_STR("Trying to delete original template tree " << VTtreeID);
-		try {
-			tm.deleteTree(VTtreeID);
+		if (tm.deleteTree(VTtreeID)) {
 			ASSERTSTR(false, "DELETING AN ACTIVE TREE IS NOT ALLOWED!");
 		}
-		catch (std::exception&	ex) {
-			LOG_INFO_STR("EXPECTED exception: " << ex.what());
-		}
+		LOG_INFO_STR("Database error: " << tm.errorMsg());
 
 		aTreeState = TSconv.get("obsolete");		
 		LOG_INFO_STR("Trying to change the state of the tree to "<< aTreeState);
