@@ -59,18 +59,18 @@ WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-  itsNStations = itsPS.getInt32("Data.NStations");
+  itsNStations = itsPS.getInt32("Observation.NStations");
   itsNBaselines = itsNStations * (itsNStations +1)/2;
-  itsNChannels = itsPS.getInt32("Data.NChannels");
+  itsNChannels = itsPS.getInt32("Observation.NChannels");
   itsNInputsPerSubband = itsNinputs;
-  int pols = itsPS.getInt32("Data.NPolarisations");
+  int pols = itsPS.getInt32("Observation.NPolarisations");
   itsNPolSquared = pols*pols;
 
-  int nrSamples = itsPS.getInt32("Data.NSamplesToIntegrate");
+  int nrSamples = itsPS.getInt32("Observation.NSamplesToIntegrate");
   itsWeightFactor = (float)itsNChannels/(float)nrSamples;  // The inverse of maximum number of valid samples
 
-  vector<double> refFreqs= itsPS.getDoubleVector("Data.RefFreqs");
-  ASSERTSTR(refFreqs.size() >= itsPS.getInt32("Data.NSubbands"), 
+  vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
+  ASSERTSTR(refFreqs.size() >= itsPS.getInt32("Observation.NSubbands"), 
 	    "Wrong number of refFreqs specified!");
   char str[32];
   for (int i=0; i<itsNinputs; i++) {
@@ -121,19 +121,19 @@ void WH_SubbandWriter::preprocess() {
 
   // create MSWriter object
   string msName = itsPS.getString("Storage.MSName");
-  double startTime = itsPS.getDouble("Data.StartTime");
-  double timeStep = itsPS.getDouble("Data.TimeStep");
-  vector<double> antPos = itsPS.getDoubleVector("Data.StationPositions");
+  double startTime = itsPS.getDouble("Observation.StartTime");
+  double timeStep = itsPS.getDouble("Observation.TimeStep");
+  vector<double> antPos = itsPS.getDoubleVector("Observation.StationPositions");
   itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, itsNChannels, 
 			   itsNPolSquared, itsNStations, antPos);
 
-  double chanWidth = itsPS.getDouble("Data.ChanWidth");
-  vector<double> refFreqs= itsPS.getDoubleVector("Data.RefFreqs");
+  double chanWidth = itsPS.getDouble("Observation.ChanWidth");
+  vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
   // Add the subband
   itsBandId = itsWriter->addBand (itsNPolSquared, itsNChannels,
 				  refFreqs[itsSubbandID], chanWidth);
-  double azimuth = itsPS.getDouble("Data.BeamAzimuth");
-  double elevation = itsPS.getDouble("Data.BeamElevation");
+  double azimuth = itsPS.getDouble("Observation.BeamAzimuth");
+  double elevation = itsPS.getDouble("Observation.BeamElevation");
   // For nr of beams
   itsFieldId = itsWriter->addField (azimuth*M_PI/180., elevation*M_PI/180.);
 

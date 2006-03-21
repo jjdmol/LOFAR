@@ -38,7 +38,7 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pS
     itsConnections(0)
 {
   if (itsNrSubbands == 0) { // first time
-    itsNrSubbands	  = pSet.getInt32("Data.NSubbands");
+    itsNrSubbands	  = pSet.getInt32("Observation.NSubbands");
     itsNrSlavesPerSubband = pSet.getInt32("BGLProc.SlavesPerSubband");
   }
 

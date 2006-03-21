@@ -45,7 +45,7 @@ namespace LOFAR {
 			     TransportHolder& th,
 			     const bool isSyncMaster)
       : WorkHolder ((isSyncMaster ? 1 : 2), 
-		    ps.getInt32("Data.NSubbands") + (isSyncMaster ? ps.getInt32("Data.NStations")-1 : 0) , 
+		    ps.getInt32("Observation.NSubbands") + (isSyncMaster ? ps.getInt32("Observation.NStations")-1 : 0) , 
 		    name, 
 		    "WH_RSPInput"),
 	itsTH(th),
@@ -59,10 +59,10 @@ namespace LOFAR {
       char str[32];
 
       // get parameters
-      itsNRSPOutputs = ps.getInt32("Data.NStations");
-      itsNSubbands = ps.getInt32("Data.NSubbands");
-      itsNSamplesPerSec = ps.getInt32("Data.NSamplesToIntegrate");
-      itsNSamplesToCopy = itsNSamplesPerSec + (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Data.NChannels");
+      itsNRSPOutputs = ps.getInt32("Observation.NStations");
+      itsNSubbands = ps.getInt32("Observation.NSubbands");
+      itsNSamplesPerSec = ps.getInt32("Observation.NSamplesToIntegrate");
+      itsNSamplesToCopy = itsNSamplesPerSec + (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Observation.NChannels");
  
       // create incoming dataholder holding the delay information 
       getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));

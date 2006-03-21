@@ -1132,9 +1132,9 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
 {
   ASSERT(ps.getInt32("BGLProc.NPPFTaps")	 == NR_TAPS);
   ASSERT(ps.getInt32("FakeData.NStations")	 == NR_STATIONS);
-  ASSERT(ps.getInt32("Data.NSamplesToIntegrate") == SAMPLE_RATE);
-  ASSERT(ps.getInt32("Data.NPolarisations")	 == NR_POLARIZATIONS);
-  ASSERT(ps.getInt32("Data.NChannels")		 == NR_SUBBAND_CHANNELS);
+  ASSERT(ps.getInt32("Observation.NSamplesToIntegrate") == SAMPLE_RATE);
+  ASSERT(ps.getInt32("Observation.NPolarisations")	 == NR_POLARIZATIONS);
+  ASSERT(ps.getInt32("Observation.NChannels")		 == NR_SUBBAND_CHANNELS);
 
 #if !defined C_IMPLEMENTATION
   assert(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
