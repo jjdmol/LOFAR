@@ -78,7 +78,7 @@ bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 		aParam.itsNodeID = vParamID;
 		return (true);
 	}
-	catch (Exception& ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during saving VICparam:") + ex.what();
 		LOG_FATAL(ex.what());
 		return (false);
@@ -224,7 +224,7 @@ bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
 		aNode.itsNodeID = vNodeID;
 		return (true);
 	}
-	catch (Exception& ex) {
+	catch (std::exception&	ex) {
 		itsError = string("Exception during save of VICnode:") + ex.what();
 		LOG_FATAL(ex.what());
 		return (false);
