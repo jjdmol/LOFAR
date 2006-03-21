@@ -57,6 +57,8 @@ namespace LOFAR
       T readLock(const T& desiredBegin, const T& desiredEnd);
       void readUnlock(const T& end);
 
+      T getReadStart();
+
       void clear();
 
       void setOverwriting (bool o) {itsIsOverwriting = o; };
@@ -77,6 +79,8 @@ namespace LOFAR
       T itsReadTail;
       T itsWriteHead;
       T itsWriteTail;
+      T itsFirstItem;
+      bool itsIsEmpty;
   
       mutex itsMutex;
       condition itsDataAvailCond;

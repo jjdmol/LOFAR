@@ -110,10 +110,11 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, NRSP);
    
     if (TransportType=="ETHERNET") {
+      // we are using UDP now, so the eth type is 0x0008
       itsTHs.push_back(new TH_Ethernet(interfaces[r], 
  				       srcMacs[r],
  				       dstMacs[r], 
- 				       0xfa10,
+ 				       0x0008,
 				       2097152));
     } else if (TransportType=="FILE") {
       itsTHs.push_back(new TH_File(inFiles[r], TH_File::Read));

@@ -20,6 +20,7 @@
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_File.h>
+#include <Transport/TH_Null.h>
 #include <Transport/TH_Ethernet.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
@@ -77,7 +78,7 @@ void AH_Recorder::define(const LOFAR::KeyValueMap&) {
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   vector<string> outFileNames = itsParamSet.getStringVector("Generator.OutputFiles");
-  vector<string> interfaces = itsParamSet.getStringVector("Generator.Interfaces");
+  vector<string> interfaces = itsParamSet.getStringVector("Input.Interfaces");
   vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
   vector<string> srcMacs = itsParamSet.getStringVector("Input.SourceMacs");
   int bufferSize = itsParamSet.getInt32("Generator.RecordBufferSize");
@@ -87,14 +88,20 @@ void AH_Recorder::define(const LOFAR::KeyValueMap&) {
   for (int s=0; s<NRSP; s++) {
     //itsTHs.push_back(new TH_File("Generator1.in", TH_File::Read));
     cout<<"Creating TH_Ethernet: "<<srcMacs[s]<<" -> "<<dstMacs[s]<<endl;
-    itsTHs.push_back(new TH_Ethernet(interfaces[s],
-				     srcMacs[s],
-				     dstMacs[s]));
+
+#if 0
+    itsTHs.push_back(new TH_Null());
+#else
+     itsTHs.push_back(new TH_Ethernet(interfaces[s],
+ 				     srcMacs[s],
+ 				     dstMacs[s],
+ 				     1048576));
+#endif
     itsWHs.push_back(new WH_Wrap(WH_DH_Name,
 				 *itsTHs.back(),
 				 itsParamSet));
     Step* inStep = new Step(itsWHs.back(), WH_DH_Name);
-    inStep->setOutBuffer(0, false, 100);
+    inStep->setOutBuffer(0, false, bufferSize);
     itsSteps.push_back(inStep);
     comp.addBlock(inStep);
     inStep->runOnNode(lastFreeNode++);

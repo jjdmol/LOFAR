@@ -58,15 +58,9 @@ WH_RSPInput::WH_RSPInput(const string& name,
   // get parameters
   itsCyclicBufferSize = ps.getInt32("Input.NSamplesToBuffer");
   itsNRSPOutputs = ps.getInt32("Data.NStations");
-  itsNPackets = ps.getInt32("Input.NPacketsInFrame");
   itsNSubbands = ps.getInt32("Data.NSubbands");
   itsNPolarisations = ps.getInt32("Data.NPolarisations");
   itsNSamplesToCopy = ps.getInt32("Data.NSamplesToIntegrate");
-  itsEPAHeaderSize =  ps.getInt32("Input.SzEPAheader");
-  itsEPAPacketSize = ps.getInt32("Input.SzEPApayload") + itsEPAHeaderSize;
- 
-  // size of a RSP frame in bytes
-  itsSzRSPframe = itsNPackets * itsEPAPacketSize;
  
   // create incoming dataholder holding the delay information 
   getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));
@@ -125,18 +119,19 @@ void WH_RSPInput::startThread()
      into cyclic buffers */
   LOG_TRACE_FLOW_STR("WH_RSPInput starting thread");   
   
-  writerinfo.BBuffer         = itsBBuffer;
+  writerinfo.BBuffer            = itsBBuffer;
   writerinfo.Connection         = &itsTH;
-  writerinfo.FrameSize          = itsSzRSPframe;
-  writerinfo.nrPacketsInFrame   = itsNPackets;
+  writerinfo.IPHeaderSize       = itsPS.getInt32("Input.IPHeaderSize");
+  writerinfo.nrPacketsInFrame   = itsPS.getInt32("Input.NPacketsInFrame");
   writerinfo.nrSubbandsInPacket = itsNSubbands;
   writerinfo.nrRSPoutputs       = itsNRSPOutputs;
   writerinfo.SubbandSize        = itsNPolarisations * sizeof(u16complex);
   writerinfo.Stopthread         = false;
   writerinfo.StationIDptr       = &itsStationID;
-  writerinfo.EPAHeaderSize      = itsEPAHeaderSize;
-  writerinfo.EPAPacketSize      = itsEPAPacketSize;
+  writerinfo.EPAHeaderSize      = itsPS.getInt32("Input.SzEPAheader");
+  writerinfo.EPAPacketSize      = itsPS.getInt32("Input.SzEPApayload");
   writerinfo.IsMaster           = itsSyncMaster;
+  writerinfo.PayloadSize        = writerinfo.SubbandSize * writerinfo.nrSubbandsInPacket * writerinfo.nrPacketsInFrame + writerinfo.EPAHeaderSize;
   
   if ((itsTH.getType() == "TH_File") || (itsTH.getType() == "TH_Null")) {
     // if we are reading from file, overwriting the buffer should not be allowed
@@ -262,8 +257,10 @@ void WH_RSPInput::process()
 
 #if 0
     // dump the output (for debugging)
-    cout << "WH_RSPInput output (stamp: "<<delayedstamp<<"): " << endl;
-    hexdump(rspDHp->getBuffer(), rspDHp->getBufferSize() * sizeof(DH_RSP::BufferType)); 
+    if(itsSyncMaster) {
+      cout << "WH_RSPInput output (stamp: "<<delayedstamp<<"): " << endl;
+      hexdump(rspDHp->getBuffer(), 200 * sizeof(DH_RSP::BufferType)); 
+    }
 #endif
   }    
 

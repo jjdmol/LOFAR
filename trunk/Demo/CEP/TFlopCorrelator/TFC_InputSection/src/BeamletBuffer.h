@@ -57,7 +57,7 @@ namespace LOFAR
       ~BeamletBuffer();
 
       // write elements in the buffer, return value is number of succesfully written elements
-      int writeElements(SubbandType* data, TimeStamp begin, int nElements, int stride, bool valid = true);
+      int writeElements(SubbandType* data, TimeStamp begin, int nElements, int stride);
       // get elements out of the buffer, return value is number of valid elements
       int getElements(vector<SubbandType*> buffers, int& invalidCount, TimeStamp begin, int nElements);
 
@@ -73,7 +73,7 @@ namespace LOFAR
       BeamletBuffer (const BeamletBuffer& that);
       BeamletBuffer& operator= (const BeamletBuffer& that);
 
-      int map(TimeStamp time) { return (((long)time.getSeqId() * time.getMaxBlockId()) + time.getBlockId()) % itsSize; };
+      int mapTime2Index(TimeStamp time) { return ((((long long)time.getSeqId()) * ((long long)time.getMaxBlockId())) + time.getBlockId()) % itsSize; };
 
       vector<SubbandType *> itsSBBuffers;
       bool* itsInvalidFlags;
@@ -81,7 +81,9 @@ namespace LOFAR
       int itsSize;
       
       LockedRange<TimeStamp, int> itsLockedRange;
-      //# Datamembers
+
+      int itsDroppedItems;
+      int itsDummyItems;
 
       NSTimer itsWriteTimer;
       NSTimer itsReadTimer;

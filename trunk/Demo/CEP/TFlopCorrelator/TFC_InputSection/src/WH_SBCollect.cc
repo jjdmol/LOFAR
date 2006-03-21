@@ -74,8 +74,9 @@ WH_SBCollect* WH_SBCollect::make(const string& name)
 void WH_SBCollect::process() 
 { 
   RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-  RectMatrix<DH_Subband::BufferType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(0))->getDataMatrix();
-  dimType outStationDim = outMatrix.getDim("Station");
+  RectMatrix<DH_Subband::BufferType>* outMatrix = &(((DH_Subband*)getDataManager().getOutHolder(0))->getDataMatrix());
+
+  dimType outStationDim = outMatrix->getDim("Station");
   dimType inStationDim = inMatrix->getDim("Stations");
 
   RectMatrix<DH_Subband::BufferType>::cursorType outCursor;
@@ -83,8 +84,8 @@ void WH_SBCollect::process()
 
   for (int sb=0; sb<itsNoutputs; sb++) 
   {
-    outMatrix = ((DH_Subband*)getDataManager().getOutHolder(sb))->getDataMatrix();
-    outCursor = outMatrix.getCursor( 0 * outStationDim);
+    outMatrix = &(((DH_Subband*)getDataManager().getOutHolder(sb))->getDataMatrix());
+    outCursor = outMatrix->getCursor( 0 * outStationDim);
 
     // Loop over all inputs (stations)
     for (int nr=0; nr<itsNinputs; nr++)
@@ -92,8 +93,8 @@ void WH_SBCollect::process()
       inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
       inCursor = inMatrix->getCursor(0*inStationDim);
       // copy all freq, time and pol from an input to output
-      inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
-      outMatrix.moveCursor(&outCursor, outStationDim);
+      inMatrix->cpy2Matrix(inCursor, inStationDim, *outMatrix, outCursor, outStationDim, 1);
+      outMatrix->moveCursor(&outCursor, outStationDim);
     }
   }
 
@@ -101,17 +102,19 @@ void WH_SBCollect::process()
 #if 0
   // dump the contents of outDH to stdout
   cout << "WH_SBCollect output : " << endl;
-  dimType outTimeDim = outMatrix.getDim("Time");
-  dimType outPolDim = outMatrix.getDim("Polarisation");
+  dimType outTimeDim = outMatrix->getDim("Time");
+  dimType outPolDim = outMatrix->getDim("Polarisation");
   int matrixSize = itsNinputs * 
-    outMatrix.getNElemInDim(outTimeDim) * 
-    outMatrix.getNElemInDim(outPolDim);    
+    outMatrix->getNElemInDim(outTimeDim) * 
+    outMatrix->getNElemInDim(outPolDim);    
 
-  hexdump(outMatrix.getBlock(outMatrix.getCursor(0), 
+  hexdump(outMatrix->getBlock(outMatrix->getCursor(0), 
 			     outStationDim, 
 			     itsNinputs,
 			     matrixSize),
-	  matrixSize * sizeof(DH_Subband::BufferType));
+	  100);//matrixSize * sizeof(DH_Subband::BufferType));
+  hexdump(dynamic_cast<DH_Subband*>(getDataManager().getOutHolder(0))->getBuffer(),
+	  100);//matrixSize * sizeof(DH_Subband::BufferType));
   cout << "WH_SBCollect output done " << endl;
 #endif
 

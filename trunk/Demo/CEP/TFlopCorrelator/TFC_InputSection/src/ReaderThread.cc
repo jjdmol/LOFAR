@@ -48,36 +48,35 @@ namespace LOFAR {
     
     int seqid = 0;
     int blockid = 0;
-    timestamp_t actualstamp, expectedstamp;
-    vector<MisStats> missedStamps;
-    vector<RewriteStats> oldStamps;
+    timestamp_t actualstamp;
+
+#define PACKET_STATISTICS_NOT
+#ifdef PACKET_STATISTICS
+    timestamp_t expectedstamp;
+    vector<PacketStats> missedStamps;
+    vector<PacketStats> oldStamps;
     missedStamps.reserve(500);
     oldStamps.reserve(500);
-    bool readnew = true;
+#endif
     bool firstloop = true;
     
     // buffer for incoming rsp data
-    char recvframe[args->FrameSize];
-    
-    // define a block of dummy subband data
-    SubbandType dummyblock[args->nrPacketsInFrame];
-    memset(dummyblock, 0, args->nrPacketsInFrame*sizeof(SubbandType));
+    char totRecvframe[args->PayloadSize + args->IPHeaderSize];
+    char* recvframe = totRecvframe;
+    int recvDataSize = args->PayloadSize;
+    //if (args->Connection->getType() == "TH_Ethernet") {
+      recvframe += args->IPHeaderSize;
+      recvDataSize = args->PayloadSize + args->IPHeaderSize;
+      //};
     
     vector<NSTimer*> itsTimers;
     NSTimer threadTimer("threadTimer");
     NSTimer receiveTimer("receiveTimer");
     NSTimer writeTimer("writeTimer");
-    NSTimer rewriteTimer("rewriteTimer");
-    NSTimer writeDummyTimer("writeDummyTimer");
     itsTimers.push_back(&threadTimer);
     itsTimers.push_back(&receiveTimer);
     itsTimers.push_back(&writeTimer);
-    itsTimers.push_back(&rewriteTimer);
-    itsTimers.push_back(&writeDummyTimer);
 
-    //  pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    //  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-    //pthread_cleanup_push(&cleanupWriteBuffer, &itsTimers);
 
     // init Transportholder
     ASSERTSTR(args->Connection->init(), "Could not init TransportHolder");
@@ -87,102 +86,74 @@ namespace LOFAR {
     while(!args->Stopthread) {
       threadTimer.start();
 
-      // check stop condition
-      if (args->Stopthread == true) {
+      try {
+	receiveTimer.start();
+	args->Connection->recvBlocking( (void*)totRecvframe, recvDataSize, 0);
+	receiveTimer.stop();
+      } catch (Exception& e) {
+	LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder, stopping thread");
 	pthread_exit(NULL);
-    }
-      // catch a frame from input connection
-      if (readnew){
-	try {
-	  receiveTimer.start();
-	  args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
-	  receiveTimer.stop();
-	} catch (Exception& e) {
-	  LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder, stopping thread");
-	  pthread_exit(NULL);
-	}	
-	if (args->Connection->getType() != "TH_Null") {
-	  // get the actual timestamp of first EPApacket in frame
-	  seqid   = ((int*)&recvframe[8])[0];
-	  blockid = ((int*)&recvframe[12])[0];
-	  actualstamp.setStamp(seqid ,blockid);
-
-	  // firstloop
-	  if (firstloop) {
-	    expectedstamp.setStamp(seqid, blockid); // init expectedstamp
-	    firstloop = false;
-	  }
+      }	
+      // get the actual timestamp of first EPApacket in frame
+      seqid   = ((int*)&recvframe[8])[0];
+      blockid = ((int*)&recvframe[12])[0];
+      actualstamp.setStamp(seqid ,blockid);
+      if (args->Connection->getType() == "TH_Null") {
+	if (!firstloop) {
+	  actualstamp += args->nrPacketsInFrame; 
 	} else {
-	  if (!firstloop) {
-	    actualstamp += args->nrPacketsInFrame; 
-	  } else {
-	    actualstamp = timestamp_t(0, 0);
-	    firstloop = false;
-	  }	  
-	}      
-      }
+	  actualstamp = timestamp_t(0, 0);
+#ifdef PACKET_STATISTICS
+	  expectedstamp = actualstamp;
+#endif
+	  firstloop = false;
+	}	  
+#ifdef PACKET_STATISTICS
+      } else {
+	// firstloop
+	if (firstloop) {
+	  expectedstamp.setStamp(seqid, blockid); // init expectedstamp
+	  firstloop = false;
+	}
+#endif
+      }      
       
       // check and process the incoming data
+#ifdef PACKET_STATISTICS
       if (actualstamp < expectedstamp) {
-	RewriteStats rewritten;
-	rewritten.oldStamp = actualstamp;
-	rewritten.expectedStamp = expectedstamp;
-	rewriteTimer.start();
-	/* old packet received 
-	   Packet can be saved when its dummy is available in cyclic buffer. 
-	   Otherwise this packet will be lost */
-
-	int idx;
-	int p=0;
-	for (; p<args->nrPacketsInFrame; p++) {
-	  idx = (p*args->EPAPacketSize) + args->EPAHeaderSize;
-	  if (!args->BBuffer->writeElements((SubbandType*)&recvframe[idx], actualstamp, 1, 1, true)) {
-	    break;  
-	  }
-	  actualstamp++;   
-	}
-	rewritten.succeeded = p;
+	PacketStats rewritten = {actualstamp, expectedstamp};
 	oldStamps.push_back(rewritten);
-	
-	// read new frame in next loop
-	readnew = true;
-	// do not increase the expectedstamp
-	rewriteTimer.stop();
       } else if (actualstamp > expectedstamp) {
-	writeDummyTimer.start();
-	MisStats missed = {expectedstamp, actualstamp};
-	missedStamps.push_back(missed);
-	// missed a packet so create dummy for that missing packet
-	args->BBuffer->writeElements((SubbandType*)dummyblock, expectedstamp, args->nrPacketsInFrame, 0, false);
-	// read same frame again in next loop
-	readnew = false;
-	// increase the expectedstamp
-	expectedstamp += args->nrPacketsInFrame; 
-	writeDummyTimer.stop();
-      } else {
-	writeTimer.start();
-	// expected packet received so write data into corresponding buffer
-	args->BBuffer->writeElements((SubbandType*)&recvframe[args->EPAHeaderSize], actualstamp, args->nrPacketsInFrame, strideSize, true);
-	// read new frame in next loop
-	readnew = true;
-	// increase the expectedstamp
-	expectedstamp += args->nrPacketsInFrame; 
-	writeTimer.stop();
+	do {
+	  PacketStats missed = {actualstamp, expectedstamp};
+	  missedStamps.push_back(missed);
+	  // increase the expectedstamp
+	  expectedstamp += args->nrPacketsInFrame;
+	} while (actualstamp > expectedstamp);
       }
+      // increase the expectedstamp
+      expectedstamp += args->nrPacketsInFrame; 
+#endif
+      writeTimer.start();
+      // expected packet received so write data into corresponding buffer
+      args->BBuffer->writeElements((SubbandType*)&recvframe[args->EPAHeaderSize], actualstamp, args->nrPacketsInFrame, strideSize);
+      writeTimer.stop();
       threadTimer.stop();
     }
-    //pthread_cleanup_pop(1);
+
     printTimers(itsTimers);
-    cout<<"Timestamps of missed packets:"<<endl;
-    vector<MisStats>::iterator it = missedStamps.begin();
+#ifdef PACKET_STATISTICS
+    LOG_INFO("Timestamps of missed packets:");
+    vector<PacketStats>::iterator it = missedStamps.begin();
     for (; it != missedStamps.end(); it++) {
-      cout<<"MIS " << it->missedStamp << " received at time " << it->receiveTime <<endl;
+      LOG_INFO_STR("MIS " << it->expectedStamp << " missed at time " << it->receivedStamp);
     }
-    cout<<"Rewritten packets:"<<endl;
-    vector<RewriteStats>::iterator rit = oldStamps.begin();
+    LOG_INFO_STR("Rewritten packets:");
+    vector<PacketStats>::iterator rit = oldStamps.begin();
     for (; rit != oldStamps.end(); rit++) {
-      cout<<"REW " << rit->oldStamp<<" "<< rit->expectedStamp<<" "<<rit->succeeded<<endl;
+      LOG_INFO_STR("REW " << rit->receivedStamp<<" received at time "<< rit->expectedStamp);
     }
+#endif
   
     pthread_exit(NULL);
   }
