@@ -163,14 +163,12 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO("Trying to set the schedule time to 2006-01-20 12:00:00.000");
 		LOG_INFO("THIS SHOULD FAIL BECAUSE STATUS IS ACTIVE");
 		TreeMaintenance		tm(&conn);
-		try {
-			tm.setSchedule (treeID, time_from_string("2006-01-20 12:00:00.000"),
-								time_from_string("2006-01-20 14:53:12.000"));
+		if (tm.setSchedule (treeID, time_from_string("2006-01-20 12:00:00.000"),
+								time_from_string("2006-01-20 14:53:12.000"))) {
 			ASSERTSTR(false, "THIS SHOULD HAVE FAILED");
+			return(1);
 		}
-		catch (std::exception&	ex) {
-			LOG_INFO_STR("Caught exception, protection works!");
-		}
+		LOG_INFO_STR("Database protection works!");
 		
 		LOG_INFO_STR ("Setting tree to scheduled");
 		tm.setTreeState(treeID, TSconv.get("scheduled"));
