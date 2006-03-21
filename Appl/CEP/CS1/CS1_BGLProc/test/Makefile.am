@@ -1,6 +1,6 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_BGL_Processing tFFT
+check_PROGRAMS = tWH_BGL_Processing #tFFT
 
 
 AM_CXXFLAGS = \
@@ -12,9 +12,9 @@ tWH_BGL_Processing.cc				\
 ../src/Correlator.S				\
 ../src/FIR.S
 
-tFFT_SOURCES =					\
-tFFT.cc						\
-../src/FFT.S
+#tFFT_SOURCES =					\
+#tFFT.cc						\
+#../src/FFT.S
 
 
 CCAS = gcc
