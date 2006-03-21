@@ -37,7 +37,7 @@ namespace LOFAR {
     WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
 			       const ACC::APS::ParameterSet pset,
 			       const int noutputs) 
-      : WorkHolder   (pset.getInt32("Data.NStations"), 
+      : WorkHolder   (pset.getInt32("Observation.NStations"), 
 		      noutputs,
 		      name,
 		      "WH_SBCollect"),

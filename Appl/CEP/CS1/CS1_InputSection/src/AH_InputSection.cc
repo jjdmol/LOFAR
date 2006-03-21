@@ -68,7 +68,7 @@ namespace LOFAR {
       int lowestFreeNode = 0;
 #endif
       
-      int nSubbands  = itsParamSet.getInt32("Data.NSubbands");  // number of SubBand filters in the application
+      int nSubbands  = itsParamSet.getInt32("Observation.NSubbands");  // number of SubBand filters in the application
       int nFakeSubbands  = itsParamSet.getInt32("FakeData.NSubbands");  // number of SubBand filters in the application
       int nCoresPerSubband = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
     
@@ -84,7 +84,7 @@ namespace LOFAR {
       WorkHolder* lastWH;
       vector<Step*>        RSPSteps;
 
-      int nStations = itsParamSet.getInt32("Data.NStations");
+      int nStations = itsParamSet.getInt32("Observation.NStations");
       int nameBufferSize = 40;
       char nameBuffer[nameBufferSize];
       int rspStartNode;

@@ -50,7 +50,7 @@ namespace LOFAR
     Composite comp(0, 0, "topComposite");
     setComposite(comp); // tell the ApplicationHolder this is the top-level composite
 
-    int nrSubbands = itsParamSet.getInt32("Data.NSubbands");
+    int nrSubbands = itsParamSet.getInt32("Observation.NSubbands");
 
     for (int subb=0; subb< nrSubbands; subb++)
     {
