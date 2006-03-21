@@ -15,7 +15,7 @@ package nl.astron.lofar.sas.otb.panels;
  * @author blaakmeer
  */
 public interface IPluginPanel {
-    public void initializePlugin(nl.astron.lofar.sas.otb.MainFrame mainframe);
+    public boolean initializePlugin(nl.astron.lofar.sas.otb.MainFrame mainframe);
     public String getFriendlyName();
 
 }

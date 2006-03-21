@@ -34,6 +34,41 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
         fillTable();
     }
 
+    /** Refreshes 1 row from table out of the database
+     *
+     * @param   row     Rownr that needs to be refreshed
+     * @return  suceeded or failed status
+     */ 
+    public boolean refreshRow(int row) {
+        
+        try {
+            if (! otdbRmi.getRemoteOTDB().isConnected()) {
+                logger.debug("No open connection available");
+                return false;
+            }
+
+            // get TreeID that needs 2b refreshed
+            int aTreeID=((Integer)data[row][0]).intValue();
+            jOTDBtree tInfo=otdbRmi.getRemoteOTDB().getTreeInfo(aTreeID, false);
+            if ( tInfo == null) {
+                logger.debug("Unable to get treeInfo for tree with ID: " + aTreeID);
+                return false;
+            }
+            data[row][0]=new Integer(tInfo.treeID());	   
+            data[row][1]=new Integer(tInfo.originalTree);	   
+            data[row][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
+            data[row][3]=new String(tInfo.campaign);
+            data[row][4]=new Integer(tInfo.momID());
+            data[row][5]=new String(tInfo.starttime);
+            data[row][6]=new String(tInfo.stoptime);
+            data[row][7]=new String(tInfo.description);
+            fireTableDataChanged();
+        } catch (Exception e) {
+            logger.debug("Remote OTDB via RMI and JNI failed: " + e);
+        } 
+        return true;
+    }
+    
     /** Fills the table from the database */
     public boolean fillTable() {
         
@@ -57,10 +92,10 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
                     data[k][1]=new Integer(tInfo.originalTree);	   
 	            data[k][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
 	            data[k][3]=new String(tInfo.campaign);
-	            data[k][4]=new Integer(tInfo.momID);
+	            data[k][4]=new Integer(tInfo.momID());
 	            data[k][5]=new String(tInfo.starttime);
 	            data[k][6]=new String(tInfo.stoptime);
-//	            data[k][7]=new String(tInfo.description);
+	            data[k][7]=new String(tInfo.description);
                 }
             }
             fireTableDataChanged();
@@ -70,16 +105,17 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
         return true;
     }
     
-    /** Returns the number of rows */
+    /** Returns the number of rows 
+     *  @return Nr of rows 
+     */
     public int getRowCount() {
-        int rowCount;
-        
-        //TODO: get rowcount from OTDB??
-        rowCount = data.length;
-        return rowCount;
+        return data.length;
     }
 
-    /** Returns the column names */
+    /** Returns the column names 
+     * @param    c   Column Number
+     * @return  the name for this column     
+     */
     public String getColumnName(int c) {
         try {
             return headers[c];
@@ -89,12 +125,19 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
         }
     }
 
-    /** Returns the number of columns */
+    /** Returns the number of columns 
+     * @return  The number of columns
+     */
     public int getColumnCount() {
         return headers.length;
     }
 
-    /** Returns the value at row r and column c */
+    /** Returns value from table
+     * @param    r   rownumber
+     * @param    c   columnnumber
+     * 
+     * @return  the value at row,column
+     */
     public Object getValueAt(int r, int c) {
         try {
             return data[r][c];

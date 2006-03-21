@@ -32,8 +32,6 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
     private jOTDBnode node;
     private OtdbRmi otdbRmi;
     
-    // TEST ONLY. In the future, childs are retrieved from the OTDB
-    private Vector childs;
 
     /**
      * default constructor - creates an empty node.
@@ -55,14 +53,11 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
      * @param otdbRmi Reference to the OTDB database 
      */
     public OTDBtreeNode(jOTDBnode node, OtdbRmi otdbRmi) {
-        logger.trace("Entry - OTDBtreeNode("+toString()+")");
+        logger.trace("Entry - OTDBtreeNode("+toString()+") tree ID:"+ node.treeID() + " nodeID: "+ node.nodeID());
 
         this.node = node;
         this.otdbRmi = otdbRmi;
         
-        // TEST ONLY
-        childs = defineTestChilds(node.nodeID(),node.treeID());
-
         logger.trace("Exit - OTDBtreeNode("+toString()+")");
     }
     
@@ -89,18 +84,20 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Called by the JTree
+     * Called by the JTreeg
      * Determines if the node has childs or not
      */
     public boolean isLeaf() {
         logger.trace("Entry - isLeaf("+toString()+")");
-        if (childs == null) {
+        
+        if (node == null || otdbRmi == null) {
             return false;
         }
         
-        boolean isLeaf = false;
+/*        boolean isLeaf = false;
         try {
-            //TODO Vector childs = otdbRmi.getRemoteMaintenance().getItemList(node.nodeID(), node.treeID(), 1);
+            
+            Vector childs = otdbRmi.getRemoteMaintenance().getItemList(node.treeID(), node.nodeID(), 1);
             
             if(childs.size() == 0)
                 isLeaf = true;
@@ -110,7 +107,8 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
             isLeaf = true;
         }
         logger.trace("Exit - isLeaf("+toString()+"): " + isLeaf);
-        return isLeaf;
+ */
+        return node.leaf;
     }
 
     /**
@@ -134,7 +132,7 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
     private void defineChildNodes() {
         logger.trace("Entry - defineChildNodes("+toString()+")");
         
-        if (childs == null) {
+        if (node == null || otdbRmi == null) {
             return;
         }
 
@@ -145,7 +143,7 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
         areChildrenDefined = true;
         
         try {
-            //Vector childs = otdbRmi.getRemoteMaintenance().getItemList(node.nodeID(), node.treeID(), 1);
+            Vector childs = otdbRmi.getRemoteMaintenance().getItemList(node.treeID(), node.nodeID(), 1);
 
             Enumeration e = childs.elements();
             while( e.hasMoreElements()  ) {

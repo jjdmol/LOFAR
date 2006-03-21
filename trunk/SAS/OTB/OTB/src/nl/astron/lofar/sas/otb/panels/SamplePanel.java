@@ -35,11 +35,12 @@ public class SamplePanel extends javax.swing.JPanel
     }
         
     public void initialize() {
+        treePanel.setTitle("Example Tree");
         buttonPanel.addButton("New Tree");
         buttonPanel.addButton("Back to Main");
     }
 
-    public void initializePlugin(MainFrame mainframe) {
+    public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
 
         // initialize the tree
@@ -54,6 +55,8 @@ public class SamplePanel extends javax.swing.JPanel
 
         // and create a new root
         treePanel.newRootNode(otdbTreeNode);
+        
+        return true;
     }
     
     public String getFriendlyName() {
@@ -115,12 +118,6 @@ public class SamplePanel extends javax.swing.JPanel
         jPanelMain.setLayout(new java.awt.BorderLayout());
 
         jSplitPane.setDividerLocation(250);
-        treePanel.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
-            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
-                treePanelValueChanged(evt);
-            }
-        });
-
         jSplitPane.setLeftComponent(treePanel);
 
         jPanelContents.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
@@ -318,37 +315,11 @@ public class SamplePanel extends javax.swing.JPanel
 
         jSplitPane.setRightComponent(jPanelContents);
 
-        jPanelMain.add(jSplitPane, java.awt.BorderLayout.CENTER);
+        jPanelMain.add(jSplitPane, java.awt.BorderLayout.WEST);
 
         add(jPanelMain, java.awt.BorderLayout.CENTER);
 
-    }
-    // </editor-fold>//GEN-END:initComponents
-
-    private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
-        logger.debug("treeselection event: " + evt);
-        
-        OTDBtreeNode node = (OTDBtreeNode)evt.getPath().getLastPathComponent();
-        if (node != null) {
-            try {
-                jTextField1.setText(node.getOTDBnode().name);
-                jTextField2.setText(String.valueOf(node.getOTDBnode().index));
-                jTextField3.setText(String.valueOf(node.getOTDBnode().leaf));
-                jTextField4.setText(String.valueOf(node.getOTDBnode().instances));
-                jTextField5.setText(node.getOTDBnode().limits);
-                jTextField6.setText(node.getOTDBnode().description);
-                jTextField7.setText(String.valueOf(node.getOTDBnode().treeID()));
-                jTextField8.setText(String.valueOf(node.getOTDBnode().nodeID()));
-                jTextField9.setText(String.valueOf(node.getOTDBnode().parentID()));
-                jTextField10.setText(String.valueOf(node.getOTDBnode().paramDefID()));
-            }
-            catch(Exception e) {
-                logger.fatal(e);
-            }
-        }
-        jTextField11.setText(evt.getPath().toString());
-        
-    }//GEN-LAST:event_treePanelValueChanged
+    }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanelActionPerformed
         logger.debug("actionPerformed: " + evt);

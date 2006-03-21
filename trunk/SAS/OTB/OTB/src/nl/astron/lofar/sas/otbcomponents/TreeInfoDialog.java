@@ -124,13 +124,14 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             aModel.addElement(itsTreeState);
         }
         
-        String aTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);        if (aTreeType.equals("hardware") || aTreeType.equals("VItemplate")) {
+        String aTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);        
+        if (aTreeType.equals("hardware") || aTreeType.equals("VItemplate")) {
             stateInput.setModel(aModel);
         }
 
         treeIDInput.setText(String.valueOf(itsTree.treeID()));
         momIDInput.setText(String.valueOf(itsTree.momID()));
-        classificationInput.setSelectedItem(itsTreeState);
+        classificationInput.setSelectedItem(itsClassification);
         creatorInput.setText(itsTree.creator);
         creationDateInput.setText(itsTree.creationDate);
         typeInput.setText((String)itsOtdbRmi.getTreeType().get(itsTree.type));
@@ -239,7 +240,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         topLabel.setFont(new java.awt.Font("Tahoma", 1, 11));
         topLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        topLabel.setText("tree information");
+        topLabel.setText("Tree Meta Data");
         getContentPane().add(topLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 570, -1));
 
         jLabel1.setText("ID:");
@@ -309,8 +310,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         getContentPane().add(campaignInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 290, 330, -1));
 
         pack();
-    }
-    // </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>//GEN-END:initComponents
 
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
         setNewTree();

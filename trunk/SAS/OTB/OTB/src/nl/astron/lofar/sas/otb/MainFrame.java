@@ -29,6 +29,7 @@ public class MainFrame extends javax.swing.JFrame {
     private OtdbRmi                          itsOtdbRmi;
     private StorageLocation                  itsStorageLocation;
     private MACNavigatorInteraction          itsMACInteraction;
+    private int                              itsCurrentTreeID=0;
     private static UserAccount               itsUserAccount;
     
     
@@ -70,6 +71,7 @@ public class MainFrame extends javax.swing.JFrame {
         itsOtdbRmi = new OtdbRmi();
         itsStorageLocation = new StorageLocation(itsOtdbRmi);
         itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
+        itsCurrentTreeID=0;
 
         initComponents();
 
@@ -78,9 +80,25 @@ public class MainFrame extends javax.swing.JFrame {
         showPanel(MainPanel.getFriendlyNameStatic());
     }
     
+    /** gets OTDBrmi
+     * OTBrmi holds all JNI/RMI connections
+     *
+     * @return the OtdbRmi object
+     */
     public OtdbRmi getOTDBrmi() {
         return itsOtdbRmi;
     }
+    
+    /** gets the Current TreeID */
+    public int getTreeID() {
+        return itsCurrentTreeID;
+    }
+    
+    /** sets the Current TreeID */
+    public void setTreeID(int aTreeID) {
+        itsCurrentTreeID=aTreeID;
+    }
+    
     
     /** Registers the panel with the given name without adding it to the 
       * toolbar or Plugin menu
@@ -98,15 +116,22 @@ public class MainFrame extends javax.swing.JFrame {
       * @param menuitem true if a menuitem must be added
       * @param toolbar true if a toolbarbutton must be added
      */
-    public void registerPlugin(String pluginName, boolean menuitem, boolean toolbar) {
+    public Object registerPlugin(String pluginName, boolean menuitem, boolean toolbar) {
         try {
             JButton jButton = null;
             JMenuItem jMenuItem = null;
             
             JPanel p = (JPanel)Class.forName(pluginName).newInstance();
-            ((IPluginPanel)p).initializePlugin(this);
+            if (! ((IPluginPanel)p).initializePlugin(this)) {
+                return null;
+            }
             String friendlyName = ((IPluginPanel)p).getFriendlyName();
 
+            // unregister this name (just to avoid dangling toolbar/button instances)
+            this.unregisterPlugin(friendlyName);
+            
+
+            
             /** add the toolbar button and menu item */
             if(toolbar) {
                 jButton = new javax.swing.JButton();
@@ -129,12 +154,16 @@ public class MainFrame extends javax.swing.JFrame {
                 jMenuPlugins.add(jMenuItem);
             }
             
+            // create a new pluginpanel and add to pool
             PluginPanelInfo ppi = new PluginPanelInfo(p, pluginName,jButton,jMenuItem);
             itsPlugins.put(friendlyName, ppi);
+
+            return p;
         }
         catch(Exception e) {
             logger.fatal(e);
         }
+        return null;
     }
     
     /** Unregisters the panel with the given name and removes it from the 
@@ -143,19 +172,23 @@ public class MainFrame extends javax.swing.JFrame {
       * @param friendlyName name of the plugin
      */
     public void unregisterPlugin(String friendlyName) {
+        
         try {
             PluginPanelInfo ppi = itsPlugins.get(friendlyName);
-            
-            // remove the toolbar button and menu item
-            if(ppi.toolbarButton != null) {
-                jToolBarPlugins.remove(ppi.toolbarButton);
-                jToolBarPlugins.repaint();
+            if (ppi != null) {
+                // remove the toolbar button and menu item
+                if(ppi.toolbarButton != null) {
+                    logger.debug("Trying to remove from toolbar");
+                    jToolBarPlugins.remove(ppi.toolbarButton);
+                    jToolBarPlugins.repaint();
+                }
+               if(ppi.menuItem != null) {
+                    logger.debug("Trying to remove from menu");
+                    jMenuPlugins.remove(ppi.menuItem);
+                    jMenuPlugins.repaint();
+                }
+                itsPlugins.remove(friendlyName);
             }
-            if(ppi.menuItem != null) {
-                jMenuPlugins.remove(ppi.menuItem);
-                jMenuPlugins.repaint();
-            }
-            itsPlugins.remove(friendlyName);
         }
         catch(Exception e) {
             logger.fatal(e);
@@ -345,7 +378,7 @@ public class MainFrame extends javax.swing.JFrame {
      */
     private void registerDefaultPlugins() {
         registerPlugin("nl.astron.lofar.sas.otb.panels.MainPanel", false, true);
-        registerPlugin("nl.astron.lofar.sas.otb.panels.SamplePanel",true,true);
+//        registerPlugin("nl.astron.lofar.sas.otb.panels.SamplePanel",true,true);
     }
 
     /** Registers other panels
