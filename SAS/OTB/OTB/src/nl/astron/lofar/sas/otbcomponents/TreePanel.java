@@ -23,15 +23,26 @@ import org.apache.log4j.Logger;
  *
  * @author  blaakmeer
  */
-public class TreePanel extends javax.swing.JScrollPane {
+public class TreePanel extends javax.swing.JPanel {
+    
+    private String itsTitle;
     
     static Logger logger = Logger.getLogger(TreePanel.class);
 
+    
     /** Creates new form BeanForm */
     public TreePanel() {
         initComponents();
     }
     
+    /**
+     * set the title for this treewindow
+     * @params  aTitle  The title for this tree
+     */ 
+    public void setTitle(String aTitle) {
+        treeTitleLabel.setText(aTitle);
+        itsTitle=aTitle;
+    }
     /** 
      *  Destroys the current tree and creates a new tree with the given root
      *  All event handlers have to be added to the new tree 
@@ -49,7 +60,7 @@ public class TreePanel extends javax.swing.JScrollPane {
                 jTree1ValueChanged(evt);
             }
         });
-        setViewportView(jTree1);
+        jScrollPane1.setViewportView(jTree1);
     }
     
     /** This method is called from within the constructor to
@@ -59,7 +70,15 @@ public class TreePanel extends javax.swing.JScrollPane {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
+        treeTitleLabel = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
         jTree1 = new javax.swing.JTree();
+
+        setLayout(new java.awt.BorderLayout());
+
+        treeTitleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        treeTitleLabel.setText("No Title");
+        add(treeTitleLabel, java.awt.BorderLayout.NORTH);
 
         jTree1.setShowsRootHandles(true);
         jTree1.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
@@ -68,10 +87,11 @@ public class TreePanel extends javax.swing.JScrollPane {
             }
         });
 
-        setViewportView(jTree1);
+        jScrollPane1.setViewportView(jTree1);
 
-    }
-    // </editor-fold>//GEN-END:initComponents
+        add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+    }// </editor-fold>//GEN-END:initComponents
 
     /**
      * Exports the TreeSelection.valueChanged event from tree to the outside world of this panel.
@@ -84,7 +104,9 @@ public class TreePanel extends javax.swing.JScrollPane {
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTree jTree1;
+    private javax.swing.JLabel treeTitleLabel;
     // End of variables declaration//GEN-END:variables
 
     /**

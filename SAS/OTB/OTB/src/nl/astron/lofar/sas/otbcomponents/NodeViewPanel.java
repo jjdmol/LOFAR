@@ -149,7 +149,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         NodeNameLabel.setText("Name :");
-        add(NodeNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 10, 40, -1));
+        add(NodeNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 10, 80, -1));
 
         NodeIndexLabel.setText("Index :");
         add(NodeIndexLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 35, -1, -1));

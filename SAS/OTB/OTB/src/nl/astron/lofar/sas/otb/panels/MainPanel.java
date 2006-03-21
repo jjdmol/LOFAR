@@ -72,7 +72,7 @@ public class MainPanel extends javax.swing.JPanel
      *
      * @param mainframe MainFrame reference
      */
-    public void initializePlugin(MainFrame mainframe) {
+    public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
         
         // check access
@@ -88,6 +88,8 @@ public class MainPanel extends javax.swing.JPanel
         }
         
         initializeTabs();
+        
+        return true;
         
     }
     
@@ -117,6 +119,7 @@ public class MainPanel extends javax.swing.JPanel
     public String getFriendlyName() {
         return getFriendlyNameStatic();
     }
+    
 
     /** 
      * Static method that returns the human-readable name of this panel
@@ -191,87 +194,109 @@ public class MainPanel extends javax.swing.JPanel
      */
     private void buttonPanelAction(String aButton) {
         logger.debug("Button pressed: "+aButton+ "  ActiveTab: " + itsTabFocus);
-        int treeID=-1;
+        int treeID=0;
         int aRow=-1;
         
         if (itsTabFocus.equals("PIC")) {
+            aRow = PICPanel.getSelectedRow();
+            if ( aRow > -1) {
+                treeID = ((Integer)PICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
+                if (treeID > 0) {
+                    itsMainFrame.setTreeID(treeID);
+                } else {
+                    logger.debug("Tree not found");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                        "Tree selection warning",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             if (aButton.equals("Query Panel")) {
             } else if (aButton.equals("New")) {
                 File aFile=getFile("PIC-tree");
             } else if (aButton.equals("Delete")) {
             } else if (aButton.equals("Duplicate")) {
             } else if (aButton.equals("View")) {
-                aRow = PICPanel.getSelectedRow();
-                if ( aRow > -1) {
-                    treeID = ((Integer)PICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
-                    if (treeID>-1) {
-                        if (viewInfo(treeID)) {
-                            logger.debug("Tree has been changed, reloading table");
-                        }
-                    } else {
-                        logger.debug("Tree not found");
+                if (itsMainFrame.getTreeID() > 0) {
+                    if (viewInfo(itsMainFrame.getTreeID())) {
+                        logger.debug("Tree has been changed, reloading table");
+                        ((PICtableModel)PICPanel.getTableModel()).refreshRow(aRow);
                     }
-                 } else {
-                    JOptionPane.showMessageDialog(null,"You didn't select a tree",
-                            "Tree selection warning",
-                            JOptionPane.WARNING_MESSAGE);
                 }
             }
         } else if (itsTabFocus.equals("VIC")) {
+            // get selected row and determine the treeID
+            aRow = VICPanel.getSelectedRow();
+            if ( aRow > -1) {
+                treeID = ((Integer)VICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
+                if (treeID > 0) {
+                    itsMainFrame.setTreeID(treeID);
+                } else {
+                    logger.debug("Tree not found");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                        "Tree selection warning",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             if (aButton.equals("Query Panel")) {
             } else if (aButton.equals("Delete")) {
             } else if (aButton.equals("Duplicate")) {
             } else if (aButton.equals("View")) {
-                aRow = VICPanel.getSelectedRow();
-                if ( aRow > -1) {
-                    treeID = ((Integer)VICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
-                    if (treeID>-1) {
-                        if (viewInfo(treeID) ) {
-                            logger.debug("Tree has been changed, reloading table");
-                        }
-                    } else {
-                        logger.debug("Tree not found");
+                if (itsMainFrame.getTreeID() > 0) {
+                    if (viewInfo(itsMainFrame.getTreeID()) ) {
+                        logger.debug("Tree has been changed, reloading table");
+                        ((VICtableModel)VICPanel.getTableModel()).refreshRow(aRow);
                     }
-                 } else {
-                    JOptionPane.showMessageDialog(null,"You didn't select a tree",
-                            "Tree selection warning",
-                            JOptionPane.WARNING_MESSAGE);
                 }
             }
         } else if (itsTabFocus.equals("Templates")) {
+            // get selected row and determine the treeID
+            aRow = TemplatesPanel.getSelectedRow();
+            if ( aRow > -1) {
+                treeID = ((Integer)TemplatesPanel.getTableModel().getValueAt(aRow, 0)).intValue();
+                if (treeID > 0) {
+                    itsMainFrame.setTreeID(treeID);
+                } else {
+                    logger.debug("Tree not found");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                        "Tree selection warning",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             if (aButton.equals("Query Panel")) {
             } else if (aButton.equals("New")) {
-                itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
-                itsMainFrame.showPanel(TemplateConstructionPanel.getFriendlyNameStatic());
+                TemplateConstructionPanel aP=(TemplateConstructionPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
+                if (aP != null) {
+                    itsMainFrame.showPanel(aP.getFriendlyName());
+                }
             } else if (aButton.equals("Duplicate")) {
                 
                 // TODO look if a template was chosen to duplicate first
                 // and set it in the panel
                 
-                itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
-                itsMainFrame.showPanel(TemplateConstructionPanel.getFriendlyNameStatic());
+                TemplateConstructionPanel aP =(TemplateConstructionPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
+                if (aP != null) {
+                    itsMainFrame.showPanel(aP.getFriendlyName());
+                }
             } else if (aButton.equals("Modify")) {
 
-                // TODO look if a template was chosen to modify first
-                // and set it in the panel
-                
-                itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
-                itsMainFrame.showPanel(TemplateConstructionPanel.getFriendlyNameStatic());
-            } else if (aButton.equals("View")) {
-                aRow = TemplatesPanel.getSelectedRow();
-                if ( aRow > -1 ) {
-                    treeID = ((Integer)TemplatesPanel.getTableModel().getValueAt(aRow, 0)).intValue();
-                    if (treeID>-1) {
-                        if (viewInfo(treeID)) {
-                            logger.debug("Tree has been changed, reloading table");
-                        }
-                    } else {
-                        logger.debug("Tree not found in database");
+                if (itsMainFrame.getTreeID() > 0) {
+                    TemplateMaintenancePanel aP =(TemplateMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateMaintenancePanel", false, true);
+                    if (aP != null) {
+                        itsMainFrame.showPanel(aP.getFriendlyName());
                     }
-                } else {
-                    JOptionPane.showMessageDialog(null,"You didn't select a tree",
-                            "Tree selection warning",
-                            JOptionPane.WARNING_MESSAGE);
+                }
+            } else if (aButton.equals("View")) {
+                if (itsMainFrame.getTreeID() > 0) {
+                    if (viewInfo(itsMainFrame.getTreeID()) ) {
+                        logger.debug("Tree has been changed, reloading table");
+                        ((TemplatetableModel)TemplatesPanel.getTableModel()).refreshRow(aRow);
+                    }
                 }
             }
         } else if (itsTabFocus.equals("Components")) {
@@ -279,8 +304,10 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("New")) {
                 File aFile=getFile("VIC-component");
             } else if (aButton.equals("Modify")) {
-                itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
-                itsMainFrame.showPanel(ComponentMaintenancePanel.getFriendlyNameStatic());
+                ComponentMaintenancePanel aP = (ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
+                if (aP != null) {
+                    itsMainFrame.showPanel(aP.getFriendlyName());
+                }
             }
         } else if (itsTabFocus.equals("Query Results")) {
         
@@ -299,36 +326,29 @@ public class MainPanel extends javax.swing.JPanel
         
         try {
             jOTDBtree aSelectedTree=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeInfo(aTreeID, false);
-            // since object are passed by ref we send a copy to the roputine, to be able to check if any changes
-            // are done to the original object.
-            jOTDBtree aNewTree = aSelectedTree;
             
             if (aSelectedTree != null) {
                 // show treeInfo dialog
-                treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aNewTree, itsMainFrame);
+                treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
                 treeInfoDialog.setLocationRelativeTo(this);
                 treeInfoDialog.setVisible(true);
-                aNewTree = treeInfoDialog.getTree();
 
-                if (aNewTree.equals(aSelectedTree)) {
-                    logger.debug("trees equal on objects diff");
+                if (treeInfoDialog.isChanged()) {
+                    logger.debug("tree has been changed");
+                    logger.debug("Saving new TreeMetaData for ID: "+ aSelectedTree.treeID());
+                    if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setClassification(aSelectedTree.treeID(), aSelectedTree.classification)) {
+                        logger.debug("Error during setClassification: "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());
+                    }
+                    if (itsMainFrame.getOTDBrmi().getRemoteMaintenance().setTreeState(aSelectedTree.treeID(), aSelectedTree.state)) {
+                        logger.debug("Error during setClassification: "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());                      
+                    }
+                    if (itsMainFrame.getOTDBrmi().getRemoteMaintenance().setDescription(aSelectedTree.treeID(), aSelectedTree.description)) {
+                        logger.debug("Error during setClassification: "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());                        
+                    }
                 } else {
-                    logger.debug("trees differ on object diff");
+                    logger.debug("tree has not been changed");
                 }
-                if (aNewTree.classification == aSelectedTree.classification && 
-                        aNewTree.state == aSelectedTree.state
-                        // && aNewTreedescription == aSelectedTree.description
-                        ) {
-                    logger.debug("Trees are equal");
-                } else {
-                    logger.debug("Saving new TreeMetaData for ID: "+ aNewTree.treeID());
-                    itsMainFrame.getOTDBrmi().getRemoteMaintenance().setClassification(aNewTree.treeID(), aNewTree.classification);
-                    itsMainFrame.getOTDBrmi().getRemoteMaintenance().setTreeState(aNewTree.treeID(), aNewTree.state);
-                  itsMainFrame.getOTDBrmi().getRemoteMaintenance().setDescription(aNewTree.treeID(), aNewTree.description);
-                    logger.debug("Trees are different");
-
-                }
-                
+               
             } else {
                 logger.debug("no tree selected");
             }

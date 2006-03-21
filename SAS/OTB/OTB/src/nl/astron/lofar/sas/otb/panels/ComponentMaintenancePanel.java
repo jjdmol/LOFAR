@@ -27,13 +27,8 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         initialize();
     }
  
-    public void initialize() {
-        buttonPanel1.addButton("Delete");
-        buttonPanel1.addButton("Load");
-        buttonPanel1.addButton("Exit");
-    }
 
-    public void initializePlugin(MainFrame mainframe) {
+    public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
         
         // check access
@@ -47,21 +42,32 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         if(userAccount.isInstrumentScientist()) {
             // enable/disable certain controls
         }
- 
-        // initialize the tree
-        // create a sample root node. This should be retrieved from the OTDB of course.
-        jOTDBnode otdbNode = new jOTDBnode(0,0,0,0);
-        otdbNode.name = "Node_0";
-
-        // put the OTDBnode in a wrapper for the tree
-        OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
-
-        // and create a new root
-        treePanel.newRootNode(null);
+        return true;
     }
+ 
+    public void setNewRootNode(){
+        try {
+            jOTDBnode otdbNode=null;
+            if (itsTreeID == 0 ) {
+                // create a sample root node.
+                otdbNode = new jOTDBnode(0,0,0,0);
+                otdbNode.name = "No TreeSelection";
+            } else {
+                otdbNode = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
+            }
+        
+            // put the OTDBnode in a wrapper for the tree
+            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+
+            // and create a new root
+            treePanel.newRootNode(otdbTreeNode);        
+        } catch (Exception e) {
+            logger.debug("Exception during setNewRootNode: " + e);
+        }
+    }    
     
     public String getFriendlyName() {
-        return getFriendlyNameStatic();
+        return getFriendlyNameStatic()+"("+itsTreeID+")";
     }
 
     public static String getFriendlyNameStatic() {
@@ -75,26 +81,16 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         jSplitPane1 = new javax.swing.JSplitPane();
-        componentPanel1 = new nl.astron.lofar.sas.otbcomponents.ComponentPanel();
-        TreeBasePanel = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
         treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
+        componentPanel1 = new nl.astron.lofar.sas.otbcomponents.ComponentPanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
 
         jSplitPane1.setDividerLocation(450);
+        jSplitPane1.setLeftComponent(treePanel);
+
         jSplitPane1.setRightComponent(componentPanel1);
-
-        TreeBasePanel.setLayout(new java.awt.BorderLayout());
-
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Component list");
-        TreeBasePanel.add(jLabel1, java.awt.BorderLayout.NORTH);
-
-        TreeBasePanel.add(treePanel, java.awt.BorderLayout.CENTER);
-
-        jSplitPane1.setLeftComponent(TreeBasePanel);
 
         add(jSplitPane1, java.awt.BorderLayout.CENTER);
 
@@ -106,25 +102,33 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
 
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void initialize() {
+        treePanel.setTitle("Component List");
+        buttonPanel1.addButton("Delete");
+        buttonPanel1.addButton("Load");
+        buttonPanel1.addButton("Exit");
     }
-    // </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: "+evt.getActionCommand());
         if (evt.getActionCommand().equals("Exit")) {
-            itsMainFrame.unregisterPlugin("Component_Maintenance");
+            itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
     private MainFrame itsMainFrame;
     
+    // keep the TreeId that belongs to this panel
+    private int itsTreeID = 0;   
+    
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel TreeBasePanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private nl.astron.lofar.sas.otbcomponents.ComponentPanel componentPanel1;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JSplitPane jSplitPane1;
     private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
