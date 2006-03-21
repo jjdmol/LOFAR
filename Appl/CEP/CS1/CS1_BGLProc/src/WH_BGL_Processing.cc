@@ -64,7 +64,7 @@ unsigned WH_BGL_Processing::itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
 float WH_BGL_Processing::correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
 float WH_BGL_Processing::thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
 
-#if !defined C_IMPLEMENTATION
+#if defined HAVE_BGL && !defined C_IMPLEMENTATION
 static BGL_Mutex *mutex;
 #endif
 
@@ -1182,7 +1182,7 @@ void WH_BGL_Processing::preprocess()
     }
   }
 
-#if !defined C_IMPLEMENTATION
+#if defined HAVE_BGL && !defined C_IMPLEMENTATION
   mutex = rts_allocate_mutex();
 #endif
 }
@@ -1287,7 +1287,7 @@ void WH_BGL_Processing::doPPF()
 
   timer.start();
 
-#if !defined C_IMPLEMENTATION && defined HAVE_BGL
+#if defined HAVE_BGL && !defined C_IMPLEMENTATION
   _bgl_mutex_lock(mutex);
 #endif
 
@@ -1418,7 +1418,7 @@ void WH_BGL_Processing::doPPF()
 #endif
   }
 
-#if !defined C_IMPLEMENTATION && defined HAVE_BGL
+#if defined HAVE_BGL && !defined C_IMPLEMENTATION
   _bgl_mutex_unlock(mutex);
 #endif
 
@@ -1645,9 +1645,6 @@ void WH_BGL_Processing::process()
 
 #if NR_SUBBAND_CHANNELS > 1
   doPPF();
-#if defined HAVE_BGL
-  _bgl_mutex_unlock(mutex);
-#endif
 #else
   bypassPPF();
 #endif
