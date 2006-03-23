@@ -26,7 +26,7 @@
 #define RSUSETTINGS_H_
 
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
-#include <APL/RTCCommon/RegisterState.h>
+//#include <APL/RTCCommon/RegisterState.h>
 
 #include <complex>
 #include <blitz/array.h>
@@ -93,7 +93,7 @@ namespace LOFAR {
       /* get reference settings array */
       blitz::Array<ResetControl, 1>& operator()();
 
-      RTC::RegisterState& getState();
+      //RTC::RegisterState& getState();
 
       /*@{*/
       /**
@@ -109,16 +109,16 @@ namespace LOFAR {
        * dimensions: N_RSPBOARDS
        */
       blitz::Array<ResetControl, 1> m_registers;
-      RTC::RegisterState            m_state;
+      //RTC::RegisterState            m_state;
     };
   
     inline blitz::Array<RSUSettings::ResetControl, 1>& RSUSettings::operator()() { 
       return m_registers; 
     }
 
-    inline RTC::RegisterState& RSUSettings::getState() {
-      return m_state;
-    }
+    //inline RTC::RegisterState& RSUSettings::getState() {
+    //return m_state;
+    //}
 
   }; // namespace RSP_Protocol
 }; // namespace LOFAR

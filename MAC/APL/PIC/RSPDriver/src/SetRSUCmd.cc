@@ -69,7 +69,7 @@ void SetRSUCmd::apply(CacheBuffer& cache, bool setModFlag)
     LOG_INFO (formatString("RSUcontrol for board %d", boardNr));
     cache.getRSUSettings()()(boardNr) = m_event->settings()(0);
     if (setModFlag) {
-      cache.getRSUSettings().getState().modified(boardNr);
+      cache.getCache().getRSUClearState().modified(boardNr);
     }
   }
 }

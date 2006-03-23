@@ -25,6 +25,7 @@
 #ifndef CACHE_H_
 #define CACHE_H_
 
+#include <APL/RTCCommon/RegisterState.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
@@ -32,13 +33,14 @@
 namespace LOFAR {
   namespace RSP {
 
+    class Cache; // forward declaration
     class CacheBuffer
     {
     public:
       /**
        * Constructors for a Cache object.
        */
-      CacheBuffer();
+      CacheBuffer(Cache* cache);
 	  
       /* Destructor for Cache. */
       virtual ~CacheBuffer();
@@ -66,7 +68,15 @@ namespace LOFAR {
        */
       void setTimestamp(const RTC::Timestamp& timestamp);
 
+      /**
+       * Get const pointer to parent cache.
+       */
+      Cache& getCache() { return *m_cache; }
+
     private:
+
+      CacheBuffer(); // prevent default construction
+
       RTC::Timestamp                 m_timestamp;
 
       RSP_Protocol::BeamletWeights   m_beamletweights;
@@ -80,6 +90,8 @@ namespace LOFAR {
       RSP_Protocol::SystemStatus     m_systemstatus;
       RSP_Protocol::Versions         m_versions;
       RSP_Protocol::Clocks           m_clocks;
+
+      Cache* m_cache;
     };
 
     /**
@@ -107,12 +119,34 @@ namespace LOFAR {
       CacheBuffer& getFront();
       CacheBuffer& getBack();
 
+      /**
+       * Get register states.
+       */
+      RTC::RegisterState& getRSUClearState()       { return rsuclear_state; }
+      RTC::RegisterState& getDIAGWGSettingsState() { return diagwgsettings_state; }
+      RTC::RegisterState& getRCUSettingsState()    { return rcusettings_state; }
+      RTC::RegisterState& getRCUProtocolState()    { return rcuprotocol_state; }
+      RTC::RegisterState& getCDOState()            { return cdo_state; }
+      RTC::RegisterState& getBSState()             { return bs_state; }
+      RTC::RegisterState& getTDSState()            { return tds_state; }
+
     private:
 
       /**
        * Direct construction not allowed.
        */
       Cache();
+
+      /**
+       * Keep register update state.
+       */
+      RTC::RegisterState rsuclear_state;       // RSU clear state
+      RTC::RegisterState diagwgsettings_state; // DIAG WG settings state
+      RTC::RegisterState rcusettings_state;    // RCU settings state
+      RTC::RegisterState rcuprotocol_state;    // RCU protocol state
+      RTC::RegisterState cdo_state;            // CDO state
+      RTC::RegisterState bs_state;             // BS register state
+      RTC::RegisterState tds_state;            // TDS register state (Clock board)
 
       /*@{*/
       /**

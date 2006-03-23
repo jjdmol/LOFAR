@@ -183,8 +183,8 @@ namespace LOFAR {
        * allow setting the UDP/IP header and some
        * settings to set interleaving of beamlets.
        */
-      static const uint8 CDO_SETTINGS  = 0x00;
-      static const uint8 CDO_HEADER = 0x01;
+      static const uint8 CDO_SETTINGS = 0x00;
+      static const uint8 CDO_HEADER   = 0x01;
 
       static const uint8 BS_NOF_SAMPLES_PER_SYNC = 0x00;
 
@@ -255,13 +255,13 @@ namespace LOFAR {
 
       static const uint16 DIAG_WGX_SIZE         = 12;
       static const uint16 DIAG_WGY_SIZE         = 12;
-      static const uint16 DIAG_WGXWAVE_SIZE     = 1024;
-      static const uint16 DIAG_WGYWAVE_SIZE     = 1024;
-      static const uint16 DIAG_BYPASS_SIZE      = 1;
+      static const uint16 DIAG_WGXWAVE_SIZE     = 4096;
+      static const uint16 DIAG_WGYWAVE_SIZE     = 4096;
+      static const uint16 DIAG_BYPASS_SIZE      = 2;
       static const uint16 DIAG_RESULTS_SIZE     = 4096;
       static const uint16 DIAG_SELFTEST_SIZE    = 4;
       
-      static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16);
+      static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 960?
 
       static const uint16 BF_XROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
       static const uint16 BF_XIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
@@ -272,26 +272,26 @@ namespace LOFAR {
 
       static const uint16 SST_POWER_SIZE        = N_SUBBANDS * N_POL * sizeof(uint32);
 
-      static const uint16 RCU_SETTINGS_SIZE     = 3;
-      static const uint16 RCU_PROTOCOL_SIZE     = 128;
-      static const uint16 RCU_RESULT_SIZE       = 128;
+      static const uint16 RCU_SETTINGS_SIZE     = 2;
+      static const uint16 RCU_PROTOCOL_SIZE     = 512;
+      static const uint16 RCU_RESULT_SIZE       = 512;
 
       static const uint16 CR_CONTROL_SIZE       = 1;
 
-      static const uint16 XST_STATS_SIZE        = (N_LOCAL_XLETS + N_REMOTE_XLETS) * XLET_SIZE;
+      static const uint16 XST_STATS_SIZE        = (N_LOCAL_XLETS + N_REMOTE_XLETS) * XLET_SIZE; // = 3424?
 
       /**
        * The CDO register will be extended to 
        * allow setting the UDP/IP header and some
        * settings to set interleaving of beamlets.
        */
-      static const uint16 CDO_SETTINGS_SIZE     = 16;
-      static const uint16 CDO_HEADER_SIZE    = 32;
+      static const uint16 CDO_SETTINGS_SIZE     = 20;
+      static const uint16 CDO_HEADER_SIZE       = 32;
 
-      static const uint16 BS_NOF_SAMPLES_PER_SYNC_SIZE     = 4;
+      static const uint16 BS_NOF_SAMPLES_PER_SYNC_SIZE = 4;
 
-      static const uint16 TDS_PROTOCOL_SIZE     = 128;
-      static const uint16 TDS_RESULT_SIZE       = 128;
+      static const uint16 TDS_PROTOCOL_SIZE     = 4096;
+      static const uint16 TDS_RESULT_SIZE       = 1024;
 
       /**
        * Placeholder register for future TBB control via the RSP board.

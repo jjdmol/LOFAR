@@ -59,7 +59,7 @@ lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-6_1rc2, 1, GCF/PAL/GCF_Answer.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_1rc2, 1, GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, MAC-RTC-6_0devel1, 1, APL/RTCCommon/Marshalling.h,,)
-lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol,HEAD,1, APL/RSP_Protocol/RSP_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol, MAC-RTC-6_0devel1,1, APL/RSP_Protocol/RSP_Protocol.ph,,)
 
 dnl
 dnl Output Makefiles

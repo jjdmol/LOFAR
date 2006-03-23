@@ -33,6 +33,7 @@
 #include "CDOWrite.h"
 #include "Cache.h"
 
+#define N_CDO_REGISTERS 1 // was 2
 #define BASEUDPPORT 0x10FA // (=4346) start numbering src and dst UDP ports at this number (4346)
 
 using namespace blitz;
@@ -64,10 +65,9 @@ uint32 CDOWrite::string2ip(const char* ipstring)
   return result;
 }
 
-
 CDOWrite::CDOWrite(GCFPortInterface& board_port, int board_id,
 		   const char* srcip, const char* dstip, const char* dstmac)
-  : SyncAction(board_port, board_id, 2)
+  : SyncAction(board_port, board_id, N_CDO_REGISTERS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 
@@ -136,8 +136,16 @@ uint16 CDOWrite::compute_ip_checksum(void* addr, int count)
 
 void CDOWrite::sendrequest()
 {
+  // skip update if the CDO settings have not been modified
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getCDOState().get(getBoardId()))
+  {
+    setContinue(true);
+    return;
+  }
+
   switch (getCurrentIndex()) {
 
+#if 0
   case 0:
     {
       EPACdoSettingsEvent cdo;
@@ -154,8 +162,9 @@ void CDOWrite::sendrequest()
       getBoardPort().send(cdo);
     }
     break;
+#endif
 
-  case 1:
+  case 0:
     {
       LOG_INFO("Setting CDO_HEADER");
 
@@ -189,6 +198,11 @@ GCFEvent::TResult CDOWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   {
     LOG_ERROR("CDOWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
+  }
+
+  if (   ack.hdr.m_fields.addr.pid   == MEPHeader::CDO
+      && ack.hdr.m_fields.addr.regid == MEPHeader::CDO_HEADER) {
+    Cache::getInstance().getCDOState().confirmed(getBoardId());
   }
   
   return GCFEvent::HANDLED;

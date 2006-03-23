@@ -68,7 +68,7 @@ void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
       cache.getWGSettings()()(cache_rcu) = m_event->settings()(0);
 
       if (setModFlag) {
-	cache.getWGSettings().getState().modified(cache_rcu);
+	cache.getCache().getDIAGWGSettingsState().modified(cache_rcu);
       }
     }
   }

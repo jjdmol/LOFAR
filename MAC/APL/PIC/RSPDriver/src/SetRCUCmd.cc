@@ -69,7 +69,8 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
     if (m_event->rcumask[cache_rcu]) {
       cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
       if (setModFlag) {
-        cache.getRCUSettings().getState().modified(cache_rcu);
+        cache.getCache().getRCUSettingsState().modified(cache_rcu);
+        cache.getCache().getRCUProtocolState().modified(cache_rcu);
       }
     }
   }

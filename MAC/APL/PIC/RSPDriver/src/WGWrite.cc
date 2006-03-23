@@ -55,7 +55,7 @@ void WGWrite::sendrequest()
 {
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + (getCurrentIndex() / N_REGISTERS);
 
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBack().getWGSettings().getState().get(global_rcu)) {
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getDIAGWGSettingsState().get(global_rcu)) {
     setContinue(true);
     return;
   }
@@ -145,7 +145,7 @@ GCFEvent::TResult WGWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   }
   
   // change state to indicate that it has been applied in the hardware
-  Cache::getInstance().getBack().getWGSettings().getState().confirmed(getCurrentIndex() / N_REGISTERS);
+  Cache::getInstance().getDIAGWGSettingsState().confirmed(getCurrentIndex() / N_REGISTERS);
 
   return GCFEvent::HANDLED;
 }

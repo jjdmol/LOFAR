@@ -27,6 +27,7 @@
 
 #include <blitz/array.h>
 #include <Common/LofarLogger.h>
+#include <iostream>
 
 namespace LOFAR {
   namespace RTC {
@@ -161,6 +162,10 @@ namespace LOFAR {
 	State get(int i) {
 	  ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
 	  return m_state(i);
+	}
+
+	void print(std::ostream& c) const {
+	  c << m_state << endl;
 	}
 
       private:

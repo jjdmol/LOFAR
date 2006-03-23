@@ -44,7 +44,7 @@ Cache* Cache::m_instance = 0;
  * CacheBuffer implementation
  */
 
-CacheBuffer::CacheBuffer()
+CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 {
   struct timeval tv;
   tv.tv_sec = 0; tv.tv_usec = 0;
@@ -91,17 +91,14 @@ CacheBuffer::CacheBuffer()
   rcumode.setMode(RCUSettings::Control::MODE_OFF);
   m_rcusettings() = rcumode;
   // allocate modified flags for all receivers
-  m_rcusettings.getState().resize(StationSettings::instance()->nrRcus());
 
   // RSU settings
   m_rsusettings().resize(StationSettings::instance()->nrRspBoards());
   RSUSettings::ResetControl 	rsumode;
   rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
   m_rsusettings() = rsumode;
-  m_rsusettings.getState().resize(StationSettings::instance()->nrRspBoards());
 
   m_wgsettings().resize(StationSettings::instance()->nrRcus());
-  m_wgsettings.getState().resize(StationSettings::instance()->nrRcus());
   WGSettings::WGRegisterType init;
   init.freq        = 0;
   init.phase       = 0;
@@ -259,17 +256,32 @@ Cache::Cache() : m_front(0), m_back(0)
   //
   WGSettings::initWaveformPresets();
 
-  m_front = new CacheBuffer(); ASSERT(m_front);
-  m_back = new CacheBuffer();  ASSERT(m_back);
+  m_front = new CacheBuffer(this); ASSERT(m_front);
+  m_back = new CacheBuffer(this);  ASSERT(m_back);
 
   //
   // Make sure initial settings are sent
   //
-  m_back->getWGSettings().getState().modified();
-  m_back->getClocks().getState().modified();
-  m_front->getClocks().getState().modified();
-  m_back->getRCUSettings().getState().modified();
-  m_back->getRSUSettings().getState().modified();
+  getCDOState().resize(StationSettings::instance()->nrRspBoards());
+  getCDOState().modified();
+
+  getDIAGWGSettingsState().resize(StationSettings::instance()->nrRcus());
+  getDIAGWGSettingsState().modified();
+
+  getBSState().resize(StationSettings::instance()->nrRspBoards());
+  getBSState().modified();
+
+  getTDSState().resize(StationSettings::instance()->nrRspBoards());
+  getTDSState().modified();
+
+  getRCUSettingsState().resize(StationSettings::instance()->nrRcus());
+  getRCUSettingsState().modified();
+
+  getRCUProtocolState().resize(StationSettings::instance()->nrRcus());
+  getRCUProtocolState().modified();
+
+  getRSUClearState().resize(StationSettings::instance()->nrRspBoards());
+  getRSUClearState().modified();
 }
 
 Cache::~Cache()
@@ -280,11 +292,24 @@ Cache::~Cache()
 
 void Cache::swapBuffers()
 {
+#if 1
+  cout << "CDO            "; getCDOState().print(cout);
+  cout << "DIAGWGSettings "; getDIAGWGSettingsState().print(cout);
+  cout << "BS             "; getBSState().print(cout);
+  cout << "TDS            "; getTDSState().print(cout);
+  cout << "RCUSettings    "; getRCUSettingsState().print(cout);
+  cout << "RCUProtocol    "; getRCUProtocolState().print(cout);
+  cout << "RSUClear       "; getRSUClearState().print(cout);
+#endif
+
   // clear modified flags on back buffer
-  m_back->getWGSettings().getState().clear();
-  m_back->getClocks().getState().clear();
-  m_back->getRCUSettings().getState().clear();
-  m_back->getRSUSettings().getState().clear();
+  getCDOState().clear();
+  getDIAGWGSettingsState().clear();
+  getBSState().clear();
+  getTDSState().clear();
+  getRCUSettingsState().clear();
+  getRCUProtocolState().clear();
+  getRSUClearState().clear();
 
   CacheBuffer *tmp = m_front;
   m_front = m_back;

@@ -37,8 +37,10 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
+#define TDSRESULTREAD_DELAY 2
+
 TDSResultRead::TDSResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, 1)
+  : SyncAction(board_port, board_id, 1), m_delay(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -51,23 +53,21 @@ TDSResultRead::~TDSResultRead()
 void TDSResultRead::sendrequest()
 {
   // skip update if the Clocks settings have not been modified
-  if (RTC::RegisterState::APPLIED != Cache::getInstance().getBack().getClocks().getState().get(getBoardId()))
+  if (RTC::RegisterState::APPLIED != Cache::getInstance().getTDSState().get(getBoardId()))
   {
     setContinue(true);
     return;
   }
 
-  // delay 2 periods
-  static int delay = 0;
-  if (delay++ < 2) {
+  // delay TDSRESULTREAD_DELAY periods
+  if (m_delay++ < TDSRESULTREAD_DELAY) {
     setContinue(true);
     return;
   }
-  delay = 0;
+  m_delay = 0;
 
-  EPATdsResultEvent tdsresult;
-  tdsresult.hdr.set(MEPHeader::TDS_RESULT_HDR, MEPHeader::DST_RSP, MEPHeader::READ, sizeof(tds_160MHz_result)); // same sizeof for tds_200MHz_result
-  memset(tdsresult.result, 0, MEPHeader::TDS_RESULT_SIZE);
+  EPAReadEvent tdsresult;
+  tdsresult.hdr.set(MEPHeader::TDS_RESULT_HDR);
 
   m_hdr = tdsresult.hdr; // remember header to match with ack
   getBoardPort().send(tdsresult);
@@ -77,6 +77,36 @@ void TDSResultRead::sendrequest_status()
 {
   // intentionally left empty
 }
+
+//
+// Compare n bytes of the two buffers.
+// Return -1 when buffers are identical
+// Return index of first difference, when buffers are different
+//
+static int imemcmp(const void* buf1, const void* buf2, int n)
+{
+  const char* b1 = (char*)buf1;
+  const char* b2 = (char*)buf2;
+
+  register int i = 0;
+  for (i = 0; i < n; i++) if (b1[i] != b2[i]) break;
+  
+  return (i != n ? i : -1);
+}
+
+#if 0
+void printbin(void* buf, int n)
+{
+  unsigned char* c = (unsigned char*)buf;
+  for (int i = 0; i< n; i++) {
+    if (0 == i % 3) printf("\n");
+    printf("%02x ", c[i]);
+  }
+  printf("\n");
+}
+#else
+#define printbin(buf, n) do { } while (0)
+#endif
 
 GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
@@ -94,32 +124,42 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
       return GCFEvent::NOT_HANDLED;
     }
 
-  // TODO? copy bytes to match into tds_periodic_result?
+  int idiff = 0;
 
-  if (Cache::getInstance().getBack().getClocks()()(getBoardId()) == 160) {
+  switch (Cache::getInstance().getBack().getClocks()()(getBoardId())) {
 
-    if (0 == memcmp(tds_160MHz_result, ack.result, sizeof(tds_160MHz_result))) {
-      Cache::getInstance().getBack().getClocks().getState().confirmed(getBoardId());
+  case 160:
+    printbin(tds_160MHz_result, sizeof(tds_160MHz_result));
+    printbin(ack.result, sizeof(tds_160MHz_result));
+    idiff = imemcmp(tds_160MHz_result, ack.result, sizeof(tds_160MHz_result));
+    if (-1 == idiff) {
+      Cache::getInstance().getTDSState().confirmed(getBoardId());
     } else {
-      LOG_ERROR("TDSResultRead::handleack: unexpected I2C result response");
+      LOG_ERROR(formatString("TDSResultRead::handleack (160MHz): unexpected I2C result response, first mismatch @ %d", idiff));
     }
- 
-  } else if (Cache::getInstance().getBack().getClocks()()(getBoardId()) == 200) {
+    break;
 
-    if (0 == memcmp(tds_200MHz_result, ack.result, sizeof(tds_200MHz_result))) {
-      Cache::getInstance().getBack().getClocks().getState().confirmed(getBoardId());
+  case 200:
+    printbin(tds_200MHz_result, sizeof(tds_200MHz_result));
+    printbin(ack.result, sizeof(tds_200MHz_result));
+    idiff = imemcmp(tds_200MHz_result, ack.result, sizeof(tds_200MHz_result));
+    if (-1 == idiff) {
+      Cache::getInstance().getTDSState().confirmed(getBoardId());
     } else {
-      LOG_ERROR("TDSResultRead::handleack: unexpected I2C result response");
+      LOG_ERROR(formatString("TDSResultRead::handleack (200MHz): unexpected I2C result response, first mismatch @ %d", idiff));
     }
+    break;
 
-  } else {
-
-    if (0 == memcmp(tds_off_result, ack.result, sizeof(tds_off_result))) {
-      Cache::getInstance().getBack().getClocks().getState().confirmed(getBoardId());
+  default:
+    printbin(tds_off_result, sizeof(tds_off_result));
+    printbin(ack.result, sizeof(tds_off_result));
+    idiff = imemcmp(tds_off_result, ack.result, sizeof(tds_off_result));
+    if (-1 == idiff) {
+      Cache::getInstance().getTDSState().confirmed(getBoardId());
     } else {
-      LOG_ERROR("TDSResultRead::handleack: unexpected I2C result response");
+      LOG_ERROR(formatString("TDSResultRead::handleack (OFF): unexpected I2C result response, first mismatch @ %d", idiff));
     }
-
+    break;
   }
 
   return GCFEvent::HANDLED;
