@@ -46,8 +46,6 @@ extern "C" {
 
   // void _compute_flags(const inputFlagsType *input, flagsType *flags);
 
-  void _transpose_8x4(i16complex *out, const i16complex *in);
-
   void _transpose_4x8(fcomplex *out,
                       const fcomplex *in,
                       int length,

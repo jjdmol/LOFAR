@@ -68,6 +68,15 @@ float WH_BGL_Processing::thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
 static BGL_Mutex *mutex;
 #endif
 
+static NSTimer computeFlagsTimer("computeFlags", true);
+static NSTimer FIRtimer("FIRtimer", true);
+static NSTimer FFTtimer("FFT", true);
+static NSTimer doPPFtimer("doPPF()", true);
+static NSTimer doCorrelateTimer("doCorrelate()", true);
+static NSTimer weightTimer("weight", true);
+static NSTimer totalTimer("total", true);
+
+
 const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] CACHE_ALIGNED = {
 #if NR_SUBBAND_CHANNELS == 256 && NR_TAPS == 16
   {  0.011659500, -0.011535200,  0.005131880,  0.001219900,
@@ -1130,11 +1139,11 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
   itsBaseFrequency(baseFrequency),
   itsPS(ps)
 {
-  ASSERT(ps.getInt32("BGLProc.NPPFTaps")	 == NR_TAPS);
-  ASSERT(ps.getInt32("FakeData.NStations")	 == NR_STATIONS);
+  ASSERT(ps.getInt32("BGLProc.NPPFTaps")		== NR_TAPS);
+  ASSERT(ps.getInt32("FakeData.NStations")		== NR_STATIONS);
   ASSERT(ps.getInt32("Observation.NSamplesToIntegrate") == SAMPLE_RATE);
-  ASSERT(ps.getInt32("Observation.NPolarisations")	 == NR_POLARIZATIONS);
-  ASSERT(ps.getInt32("Observation.NChannels")		 == NR_SUBBAND_CHANNELS);
+  ASSERT(ps.getInt32("Observation.NPolarisations")	== NR_POLARIZATIONS);
+  ASSERT(ps.getInt32("Observation.NChannels")		== NR_SUBBAND_CHANNELS);
 
 #if !defined C_IMPLEMENTATION
   assert(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
@@ -1209,8 +1218,7 @@ void WH_BGL_Processing::computeFlags()
 
   inputType *input = (inputType *) get_DH_Subband()->getFlags();
 
-  static NSTimer timer("computeFlags", true);
-  timer.start();
+  computeFlagsTimer.start();
 
 #if 1 || defined C_IMPLEMENTATION
   memset(flags, 0, sizeof flags);
@@ -1245,7 +1253,7 @@ void WH_BGL_Processing::computeFlags()
     }
   }
 
-  timer.stop();
+  computeFlagsTimer.stop();
 }
 
 
@@ -1255,9 +1263,9 @@ void WH_BGL_Processing::computeFlags()
 fcomplex WH_BGL_Processing::phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const
 {
   double timeInterpolatedDelay = delay.delayAtBegin + ((double) time / CHANNEL_BANDWIDTH) * (delay.delayAfterEnd - delay.delayAtBegin);
-  double frequency = itsBaseFrequency + chan * CHANNEL_BANDWIDTH;
-  double phaseShift = timeInterpolatedDelay * frequency;
-  double phi = 2.0 * M_PI * phaseShift;
+  double frequency	       = itsBaseFrequency + chan * CHANNEL_BANDWIDTH;
+  double phaseShift	       = timeInterpolatedDelay * frequency;
+  double phi		       = 2.0 * M_PI * phaseShift;
 
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
@@ -1286,10 +1294,7 @@ void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAM
 
 void WH_BGL_Processing::doPPF()
 {
-  static NSTimer timer("doPPF()", true);
-  static NSTimer FIRtimer("FIRtimer", true), fftTimer("FFT", true);
-
-  timer.start();
+  doPPFtimer.start();
 
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
   _bgl_mutex_lock(mutex);
@@ -1324,7 +1329,7 @@ void WH_BGL_Processing::doPPF()
     }
     FIRtimer.stop();
 
-    fftTimer.start();
+    FFTtimer.start();
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
       for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	if (flags[stat][time]) {
@@ -1345,30 +1350,19 @@ void WH_BGL_Processing::doPPF()
 	}
       }
     }
-    fftTimer.stop();
+    FFTtimer.stop();
 #else // assembly implementation
     static fcomplex   tmp1[4][NR_SAMPLES_PER_INTEGRATION] CACHE_ALIGNED;
-    //static i16complex tmp2[NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_TAPS + NR_SAMPLES_PER_INTEGRATION] CACHE_ALIGNED;
     static fcomplex   fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4] CACHE_ALIGNED;
     static fcomplex   fftOutData[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
-    //static NSTimer    trans1timer("trans1timer", true);
-
-#if 0
-    trans1timer.start();
-    for (int time = 0; time < NR_TAPS + NR_SAMPLES_PER_INTEGRATION; time += 8) {
-      _transpose_8x4(&tmp2[0][0][time], &(*input)[stat][time][0][0]);
-    }
-    trans1timer.stop();
-#endif
 
     for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan += 4) {
       for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	for (int ch = 0; ch < 4; ch ++) {
-	  //NSTimer FIRtimer("test", true);
 	  FIRtimer.start();
 	  _filter(0, // itsFIRs[stat][pol][chan + ch].itsDelayLine,
 		  FIR::weights[chan + ch],
-		  &(*input)[stat][0][chan + ch][pol],//&tmp2[chan + ch][pol][0],
+		  &(*input)[stat][0][chan + ch][pol],
 		  tmp1[ch],
 		  NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
 	  FIRtimer.stop();
@@ -1389,7 +1383,7 @@ void WH_BGL_Processing::doPPF()
 #endif
 
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 2) {
-      fftTimer.start();
+      FFTtimer.start();
       for (int t = 0; t < 2; t ++) {
 	if (flags[stat][time + t]) {
 	  _memzero(fftOutData[t], sizeof(fftOutData[t]));
@@ -1405,7 +1399,7 @@ void WH_BGL_Processing::doPPF()
 	  }
 	}
       }
-      fftTimer.stop();
+      FFTtimer.stop();
 
 #if defined DELAY_COMPENSATION
       _phase_shift_and_transpose(&samples[0][stat][time][0],
@@ -1426,7 +1420,7 @@ void WH_BGL_Processing::doPPF()
   _bgl_mutex_unlock(mutex);
 #endif
 
-  timer.stop();
+  doPPFtimer.stop();
 }
 
 
@@ -1446,8 +1440,7 @@ void WH_BGL_Processing::bypassPPF()
 
 void WH_BGL_Processing::doCorrelate()
 {
-  static NSTimer timer("doCorrelate()", true), weightTimer("weight", true);
-  timer.start();
+  doCorrelateTimer.start();
 
   DH_RFI_Mitigation::ChannelFlagsType *RFI_Flags = get_DH_RFI_Mitigation()->getChannelFlags();
   DH_Visibilities::VisibilitiesType   *visibilities = get_DH_Visibilities()->getVisibilities();
@@ -1636,15 +1629,13 @@ invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
   weightTimer.stop();
 #endif  
 
-  timer.stop();
+  doCorrelateTimer.stop();
 }
 
 
 void WH_BGL_Processing::process()
 {
-  static NSTimer timer("total", true);
-
-  timer.start();
+  totalTimer.start();
   computeFlags();
 
 #if NR_SUBBAND_CHANNELS > 1
@@ -1654,7 +1645,7 @@ void WH_BGL_Processing::process()
 #endif
 
   doCorrelate();
-  timer.stop();
+  totalTimer.stop();
 }
 
 
