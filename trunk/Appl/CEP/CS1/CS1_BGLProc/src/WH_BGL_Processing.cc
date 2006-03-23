@@ -1250,6 +1250,7 @@ void WH_BGL_Processing::computeFlags()
 
 
 #if defined DELAY_COMPENSATION
+#if defined C_IMPLEMENTATION
 
 fcomplex WH_BGL_Processing::phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const
 {
@@ -1260,6 +1261,8 @@ fcomplex WH_BGL_Processing::phaseShift(int time, int chan, const DH_Subband::Del
 
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
+
+#else
 
 void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay) const
 {
@@ -1277,6 +1280,7 @@ void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAM
   }
 }
   
+#endif
 #endif
 
 

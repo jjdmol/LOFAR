@@ -110,8 +110,11 @@ class WH_BGL_Processing: public WorkHolder {
     void doCorrelate();
 
 #if defined DELAY_COMPENSATION
+#if defined C_IMPLEMENTATION
     fcomplex phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const;
+#else
     void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay) const;
+#endif
 #endif
 
     /// FIR Filter variables

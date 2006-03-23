@@ -21,6 +21,7 @@
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_CORRELATOR_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_CORRELATOR_H
 
+#if defined HAVE_BGL
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/DH_Visibilities.h>
 
@@ -79,4 +80,5 @@ extern "C" {
 };
 
 }
+#endif
 #endif

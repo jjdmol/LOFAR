@@ -21,6 +21,7 @@
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_FIR_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_FIR_H
 
+#if defined HAVE_BGL
 #include <CS1_Interface/bitset.h>
 #include <CS1_Interface/CS1_Config.h>
 
@@ -66,4 +67,5 @@ extern "C" {
 };
 
 }
+#endif
 #endif
