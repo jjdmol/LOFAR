@@ -34,33 +34,33 @@ $ETHLEN = 1500;
 #
 # Error code
 #
-%IPUPDATE_RESULT = (   0 => "OK IP address updated\n",
-		       8 => "=== ERR  Data receive error\n",
-		     255 => "=== ERR  Unknown error" );
-%SAVE_RESULT     = (   0 => "OK File saved\n",
-		       1 => "=== ERR  File has been saved already\n",
-		       2 => "=== ERR  Memory full\n",
-		       8 => "=== ERR  Data receive error\n",
-		     255 => "=== ERR  Uknown error" );
-%TESTEXEC_RESULT = (   0 => "OK Test Passed\n",
-		       1 => "=== ERR  Test Failed\n",
-		       2 => "=== ERR  Gen file not found\n",
-		       3 => "=== ERR  Incorrect Gen File\n",
-		       4 => "=== ERR  Apl file not found\n",
-		       5 => "=== ERR  Incorrect Apl file\n",
-		       6 => "=== ERR  Cnn file not found\n",
-		       7 => "=== ERR  Incorrect Cnn file\n",
-		       8 => "=== ERR  Data receive error\n",
-		     255 => "=== ERR  Unkown error" );
-%ERASE_RESULT    = (   0 => "OK File erased\n",
-		       1 => "=== ERR  File not found\n",
-		       2 => "=== ERR  Erase Error\n",
-		       8 => "=== ERR  Data receive error\n",
-		     255 => "=== ERR  Unkown error" );
-%LIST_RESULT     = (   0 => "OK Files listed\n",
+%IPUPDATE_RESULT = (   0 => "=== OK IP address updated\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Unknown error" );
+%SAVE_RESULT     = (   0 => "=== OK File saved\n",
+		       1 => "=== ERR File has been saved already\n",
+		       2 => "=== ERR Memory full\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Uknown error" );
+%TESTEXEC_RESULT = (   0 => "=== OK Test Passed\n",
+		       1 => "=== ERR Test Failed\n",
+		       2 => "=== ERR Gen file not found\n",
+		       3 => "=== ERR Incorrect Gen File\n",
+		       4 => "=== ERR Apl file not found\n",
+		       5 => "=== ERR Incorrect Apl file\n",
+		       6 => "=== ERR Cnn file not found\n",
+		       7 => "=== ERR Incorrect Cnn file\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Unkown error" );
+%ERASE_RESULT    = (   0 => "=== OK File erased\n",
+		       1 => "=== ERR File not found\n",
+		       2 => "=== ERR Erase Error\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Unkown error" );
+%LIST_RESULT     = (   0 => "=== OK Files listed\n",
 		       1 => "=== WARN No files found\n",
-		       8 => "=== ERR  Data receive error\n",
-		     255 => "=== ERR  Unkown error" );
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Unkown error" );
 %FILETYPE = ( 0 => "GEN",
 	      1 => "APL",
 	      2 => "CNN" );
@@ -75,7 +75,7 @@ sub checkresponse
     my $response;
 
     (read($sock, $response, 1) == 1)
-	|| die "=== ERR  did not receive response from ECB";
+	|| die "=== ERR Did not receive response from ECB";
     ($response) = unpack("C", $response);
 
     return $response;
@@ -106,13 +106,13 @@ sub readfile
 }
 
 #
-# listfiles($sock)
+# listfiles($sock, $erase)
 #
 sub listfiles
 {
     if (defined($opt_T)) { test_listfiles(); return; }
 
-    my ($sock) = @_;
+    my ($sock, $erase) = @_;
 
     my $header, $response, $totallength, $remaining;
 
@@ -122,12 +122,12 @@ sub listfiles
     print $sock $header;
 
     # read totallength
-    (read($sock, $totallength, 4) == 4) || die "=== ERR  failed to read list result";
+    (read($sock, $totallength, 4) == 4) || die "=== ERR Failed to read list result";
     ($totallength) = unpack("N", $totallength);
 
     # read file list
     (read($sock, $filelist, $totallength) == $totallength)
-	|| die "=== ERR  failed to read file list: $!";
+	|| die "=== ERR Failed to read file list: $!";
 
     # print info for all files
     $remaining=length($filelist);
@@ -138,9 +138,12 @@ sub listfiles
 	($type, $filename, $designname, $length) = unpack("CZ*Z*N", $filelist);
 
 
-#	erase($sock, $filename, $type);
-	print $type;
-	print "\t$FILETYPE{$type}\t$filename\t\t$length\n";
+	if ($erase) {
+	    erase($sock, $filename, $type);
+	    print "$filename erased\n";
+	} else {
+	    print "\t$FILETYPE{$type}\t$filename\t\t$length\n";
+	}
 
 	$remaining -= 1 + (length($filename)+1) + (length($designname)+1) + 4;
 
@@ -175,7 +178,7 @@ sub savefile
     my $filesize, $header;
 
     ($filesize = readfile($filename, $bindata))
-	|| die "=== ERR  failed to read file '$filename': $!";
+	|| die "=== ERR Failed to read file '$filename': $!";
    
     $header = pack($HEADERFORMAT, $SAVE, $filesize);
 
@@ -214,13 +217,13 @@ sub testexec
 
     # read length of test result
     (read($sock, $length, 4) == 4)
-	|| die "=== ERR  failed to read length of test result: $!";
+	|| die "=== ERR Failed to read length of test result: $!";
     ($length) = unpack("N", $length);
 
     # read the test result
     $length -= 1; # leave the result code for later
     (read($sock, $testresult, $length) == $length)
-	|| die "=== ERR  failed to read test result of length $length: $!";
+	|| die "=== ERR Failed to read test result of length $length: $!";
 
     # print testresult
     print STDERR "=== RESULT:\n", $testresult, "\n";
@@ -250,10 +253,11 @@ sub erase
     my $header;
 
     switch ($type) {
-	case 'g' { $type = 0x0 }
-	case 'a' { $type = 0x1 }
-	case 'c' { $type = 0x2 }
-	else     { warn "=== WARN unknown file type '$type'" }
+	case [0..2] { }
+	case 'g'    { $type = 0x0 }
+	case 'a'    { $type = 0x1 }
+	case 'c'    { $type = 0x2 }
+	else        { warn "=== WARN unknown file type '$type'" }
     }
 
     $header = pack($HEADERFORMAT, $ERASE, length($filename)+1);
@@ -285,7 +289,7 @@ sub ipupdate
 
     @bytes = split(/\./, $ipaddress);
 
-    ($#bytes == 3) || die "=== ERR  invalid IP address: $ipaddress";
+    ($#bytes == 3) || die "=== ERR Invalid IP address: $ipaddress";
 
     $newip = pack("CCCC", $bytes[0], $bytes[1], $bytes[2], $bytes[3]);
     $header = pack($HEADERFORMAT, $IPUPDATE, 4);
@@ -316,9 +320,11 @@ sub usage
     print STDERR "  Usage: command is one of the following\n";
     print STDERR "    $me -l                      # List the files saved on the ECB\n";
     print STDERR "    $me -s filename             # Save the specified file to the ECB\n";
-    print STDERR "    $me -g GenFile [-a AplFile] [-c CnnFile] [-e ErrFile] # Execute the specified test\n";
+    print STDERR "    $me -g GenFile [-a AplFile] [-c CnnFile] [-r]\n";
+    print STDERR "            -r print the test output\n";
     print STDERR "    $me -e filename -t[g|a|c]   # Erase the file with the specified type (Gen, Apl, Cnn) from the ECB\n";
     print STDERR "    $me -i A.B.C.D              # Update the ECB IP-address (default is 192.168.1.25)\n";
+    print STDERR "    $me -x                      # Erase all saved files\n";
 
     exit();
 }
@@ -327,14 +333,15 @@ sub main
 {
     my $sock = 0;
 
-    Getopt::Std::getopts("h:p:ls:g:a:c:e:ri:t:T");
+    Getopt::Std::getopts("h:p:ls:g:a:c:e:ri:t:Tx");
 
       # check that at least one argument is present
       usage() if !defined($opt_l)
 	  && !defined($opt_s)
 	  && !defined($opt_g) 
 	  && !defined($opt_e)
-	  && !defined($opt_i);
+	  && !defined($opt_i)
+	  && !defined($opt_x);
 
       # assign default values
       $opt_h = '192.168.1.25' if !defined($opt_h);
@@ -347,7 +354,7 @@ sub main
 					PeerPort => $opt_p,
 					Proto => 'tcp',
 					);
-	  die "=== ERR  could not connect to ($opt_h:$opt_p): $!\n" unless $sock;
+	  die "=== ERR could not connect to ($opt_h:$opt_p): $!\n" unless $sock;
 	  
 	  print STDERR "=== Connected to JTAG ECB on $opt_h:$opt_p\n";
 
@@ -355,7 +362,7 @@ sub main
 	  $sock->autoflush(1);
       }
 
-      if ($opt_l)           { listfiles($sock);                exit(); }
+      if ($opt_l)           { listfiles($sock, false);         exit(); }
       if ($opt_s)           { savefile($sock, $opt_s);         exit(); }
       if ($opt_g)           {
 	  if (defined($opt_r)) { $resultfile = "Test.Err"; }
@@ -364,6 +371,7 @@ sub main
       }
       if ($opt_e && $opt_t) { erase($sock, $opt_e, $opt_t);    exit(); }
       if ($opt_i)           { ipupdate($sock, $opt_i);         exit(); }
+      if ($opt_x)           { listfiles($sock, true);          exit(); }
       
       usage();
       exit();

@@ -1,6 +1,4 @@
-STAT Connected to JTAG ECB on localhost:3800
-STAT Saved files:
-	Type	Filename	Designname	Size
-	0	'GenFile'	'GenDesign0'	123
-	1	'AplFile'	''	456
-	2	'CnnFile'	'CnnDesignName'	789
+=== Connected to JTAG ECB on localhost:3800
+=== Saved files:
+	Type	Filename		Size
+=== ERR Did not receive response from ECB at ./jtagctl line 77.
