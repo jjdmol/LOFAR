@@ -25,7 +25,7 @@
 #ifndef WGSETTINGS_H_
 #define WGSETTINGS_H_
 
-#include <APL/RTCCommon/RegisterState.h>
+//#include <APL/RTCCommon/RegisterState.h>
 
 #include <complex>
 #include <blitz/array.h>
@@ -82,7 +82,7 @@ namespace LOFAR {
       static void initWaveformPresets();
       static blitz::Array<int32, 1> preset(int index);
 
-      RTC::RegisterState& getState() { return m_state; }
+      //RTC::RegisterState& getState() { return m_state; }
 
     public:
       /*@{*/
@@ -97,7 +97,7 @@ namespace LOFAR {
     private:
       blitz::Array<WGRegisterType, 1> m_registers;
       blitz::Array<int32, 2>          m_waveforms;
-      RTC::RegisterState              m_state;
+      //RTC::RegisterState              m_state;
 
       static blitz::Array<int32, 2>   m_presets;
     };

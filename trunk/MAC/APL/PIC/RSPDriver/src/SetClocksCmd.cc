@@ -66,8 +66,9 @@ void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
     if (m_event->rspmask[cache_rsp]) {
       cache.getClocks()()(cache_rsp) = m_event->clocks()(0);
       if (setModFlag) {
-        cache.getClocks().getState().modified(cache_rsp);
-	  }
+        cache.getCache().getBSState().modified(cache_rsp);
+        cache.getCache().getTDSState().modified(cache_rsp);
+      }
     }
   }
 }

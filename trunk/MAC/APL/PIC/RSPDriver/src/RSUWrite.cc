@@ -80,22 +80,21 @@ void RSUWrite::sendrequest()
     first = false;
   }
   else {
-	// cache modified?
-	// TODO: global_rcu should be something different: like global_board.
-    if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBack().getRSUSettings().getState().get(getBoardId())) {
+    // cache modified?
+    if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRSUClearState().get(getBoardId())) {
       setContinue(true);
       return;
     }
 
     // read values from cache
     RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
-	if (s()(getBoardId()).getSync())		reset.reset = g_RSU_RESET_SYNC;
-	else if (s()(getBoardId()).getClear())	reset.reset = g_RSU_RESET_CLEAR;
-	else if (s()(getBoardId()).getReset())	reset.reset = g_RSU_RESET_RESET;
-	else {
+    if (s()(getBoardId()).getSync())		reset.reset = g_RSU_RESET_SYNC;
+    else if (s()(getBoardId()).getClear())	reset.reset = g_RSU_RESET_CLEAR;
+    else if (s()(getBoardId()).getReset())	reset.reset = g_RSU_RESET_RESET;
+    else {
       setContinue(true);
       return;
-	}
+    }
     getBoardPort().send(reset);
   }
 }
@@ -121,7 +120,7 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     return GCFEvent::NOT_HANDLED;
   }
 
-  Cache::getInstance().getBack().getRSUSettings().getState().confirmed(getBoardId());
+  Cache::getInstance().getRSUClearState().confirmed(getBoardId());
 
   return GCFEvent::HANDLED;
 }

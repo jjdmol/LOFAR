@@ -52,7 +52,7 @@ namespace LOFAR {
 };
 
 RCUResultRead::RCUResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL), m_delay(0) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -67,11 +67,18 @@ void RCUResultRead::sendrequest()
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // skip update if the RCU settings have not been applied yet
-  if (RTC::RegisterState::APPLIED != Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))
+  if (RTC::RegisterState::APPLIED != Cache::getInstance().getRCUProtocolState().get(global_rcu))
   {
     setContinue(true);
     return;
   }
+
+  // delay 4 periods
+  if (m_delay++ < 4) {
+    setContinue(true);
+    return;
+  }
+  m_delay = 0;
 
   // set appropriate header
   MEPHeader::FieldsType hdr;
@@ -117,8 +124,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   memcpy(i2c_result + 1, &control, 3);
 
   if (0 == memcmp(i2c_result, ack.result, sizeof(i2c_result))) {
-    uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
-    Cache::getInstance().getBack().getRCUSettings().getState().confirmed(global_rcu);
+    Cache::getInstance().getRCUProtocolState().confirmed(global_rcu);
   } else {
     LOG_ERROR("RCUResultRead::handleack: unexpected I2C result response");
   }

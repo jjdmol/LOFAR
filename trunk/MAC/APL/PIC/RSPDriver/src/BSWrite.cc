@@ -48,7 +48,7 @@ BSWrite::~BSWrite()
 void BSWrite::sendrequest()
 {
   // skip update if the neither of the RCU's settings have been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBack().getClocks().getState().get(getBoardId()))
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBSState().get(getBoardId()))
   {
     setContinue(true);
     return;
@@ -88,10 +88,8 @@ GCFEvent::TResult BSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-#if 0
   // change state to indicate that it has been applied in the hardware
-  Cache::getInstance().getBack().getClocks().getState().applied(getBoardId());
-#endif
+  Cache::getInstance().getBSState().confirmed(getBoardId());
 
   return GCFEvent::HANDLED;
 }

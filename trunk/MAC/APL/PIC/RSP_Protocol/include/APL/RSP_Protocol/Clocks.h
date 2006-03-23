@@ -26,12 +26,13 @@
 #define CLOCKS_H_
 
 #include <APL/RTCCommon/Marshalling.h>
-#include <APL/RTCCommon/RegisterState.h>
+//#include <APL/RTCCommon/RegisterState.h>
 
 #include <complex>
 #include <string>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
+#include <iostream>
 
 namespace LOFAR {
   namespace RSP_Protocol {
@@ -54,10 +55,10 @@ namespace LOFAR {
       void init(int n)
       {
 	m_clocks.resize(n);
-	m_state.resize(n);
+	//m_state.resize(n);
       }
 
-      RTC::RegisterState& getState() { return m_state; }
+      //RTC::RegisterState& getState() { m_state.print(std::cout); return m_state; }
 
     public:
       /*@{*/
@@ -78,7 +79,7 @@ namespace LOFAR {
        */
       blitz::Array<uint32, 1> m_clocks;
 
-      RTC::RegisterState m_state;
+      //RTC::RegisterState m_state;
     };
 
     inline blitz::Array<uint32, 1>& Clocks::operator()() { return m_clocks; }

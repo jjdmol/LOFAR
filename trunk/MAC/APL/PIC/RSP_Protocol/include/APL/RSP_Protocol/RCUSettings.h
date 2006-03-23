@@ -26,7 +26,7 @@
 #define RCUSETTINGS_H_
 
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
-#include <APL/RTCCommon/RegisterState.h>
+//#include <APL/RTCCommon/RegisterState.h>
 
 #include <complex>
 #include <blitz/array.h>
@@ -185,7 +185,7 @@ namespace LOFAR {
       /* get reference settings array */
       blitz::Array<Control, 1>& operator()();
 
-      RTC::RegisterState& getState();
+      //RTC::RegisterState& getState();
 
     public:
 
@@ -201,11 +201,11 @@ namespace LOFAR {
     private:
       blitz::Array<Control, 1> m_registers;
 
-      RTC::RegisterState       m_state;
+      //RTC::RegisterState       m_state;
     };
   
     inline blitz::Array<RCUSettings::Control, 1>& RCUSettings::operator()() { return m_registers; }
-    inline RTC::RegisterState& RCUSettings::getState()                      { return m_state; }
+    //inline RTC::RegisterState& RCUSettings::getState()                      { return m_state; }
 
   };
 }; // namespace LOFAR

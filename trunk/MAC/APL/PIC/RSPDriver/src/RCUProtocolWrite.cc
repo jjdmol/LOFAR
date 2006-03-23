@@ -70,7 +70,7 @@ void RCUProtocolWrite::sendrequest()
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // skip update if the RCU settings have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBack().getRCUSettings().getState().get(global_rcu))
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRCUProtocolState().get(global_rcu))
   {
     setContinue(true);
     return;
@@ -122,7 +122,7 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
   // Mark as register modification as applied
   // Still needs to be confirmed by RCUResultRead
   uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
-  Cache::getInstance().getBack().getRCUSettings().getState().applied(global_rcu);
+  Cache::getInstance().getRCUProtocolState().applied(global_rcu);
 
   return GCFEvent::HANDLED;
 }

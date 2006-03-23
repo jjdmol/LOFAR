@@ -60,6 +60,8 @@ namespace LOFAR {
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+      size_t m_remaining; // how much to write
+      size_t m_offset;    // where to write
     };
   };
 };
