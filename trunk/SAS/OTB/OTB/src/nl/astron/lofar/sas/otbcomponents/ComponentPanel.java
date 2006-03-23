@@ -13,12 +13,11 @@ import org.apache.log4j.Logger;
  */
 public class ComponentPanel extends javax.swing.JPanel {
     
-    static Logger logger = Logger.getLogger(MainPanel.class);
+    static Logger logger = Logger.getLogger(ComponentPanel.class);
     
     /** Creates new form BeanForm */
     public ComponentPanel() {
         initComponents();
-        initialize();
     }
     
     /** This method is called from within the constructor to
@@ -42,7 +41,8 @@ public class ComponentPanel extends javax.swing.JPanel {
         parameterTypeField = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
         jTextArea1 = new javax.swing.JTextArea();
-        buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
+        ComponentCancelButton = new javax.swing.JButton();
+        ComponentSaveButton = new javax.swing.JButton();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -92,26 +92,20 @@ public class ComponentPanel extends javax.swing.JPanel {
         jTextArea1.setToolTipText("Description for this Component");
         jPanel1.add(jTextArea1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 230, 330, 100));
 
-        buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonPanel1ActionPerformed(evt);
-            }
-        });
+        ComponentCancelButton.setText("Cancel");
+        jPanel1.add(ComponentCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 370, -1, -1));
 
-        jPanel1.add(buttonPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 410, 370, 30));
+        ComponentSaveButton.setText("Save");
+        jPanel1.add(ComponentSaveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 370, -1, -1));
 
         add(jPanel1, java.awt.BorderLayout.CENTER);
 
-    }
-    // </editor-fold>//GEN-END:initComponents
-
-    private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        logger.debug("actionPerformed: " + evt);
-    }//GEN-LAST:event_buttonPanel1ActionPerformed
+    }// </editor-fold>//GEN-END:initComponents
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
+    private javax.swing.JButton ComponentCancelButton;
+    private javax.swing.JButton ComponentSaveButton;
     private javax.swing.JTextField defaultValueField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -128,11 +122,7 @@ public class ComponentPanel extends javax.swing.JPanel {
     private javax.swing.JTextField unitField;
     // End of variables declaration//GEN-END:variables
 
-    private void initialize() {
-        this.buttonPanel1.addButton("Cancel");
-        this.buttonPanel1.addButton("Save");
-    }
-    
+       
     /**
      * Holds value of property itsName.
      */
@@ -270,6 +260,18 @@ public class ComponentPanel extends javax.swing.JPanel {
 
         this.itsDescription = itsDescription;
     }
+    
+    
+    
+    /** Enables/disables the buttons
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableButtons(boolean enabled) {
+        ComponentSaveButton.setEnabled(enabled);
+        ComponentCancelButton.setEnabled(enabled);
+    }
+    
 
     /**
      * Utility field used by event firing mechanism.
