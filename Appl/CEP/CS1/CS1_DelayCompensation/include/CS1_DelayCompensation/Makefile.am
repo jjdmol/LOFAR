@@ -1,17 +1,3 @@
-# if HAVE_SHMEM
-# SUBDIRS = shmem .
-# endif
-
-INSTHDRS =
-
-NOINSTHDRS =
-
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+pkginclude_HEADERS = WH_DelayCompensation.h
 
 include $(top_srcdir)/Makefile.common
