@@ -24,7 +24,7 @@ Observation.NChannels = 256
 Observation.NPolarisations=2
 Observation.NSamplesToIntegrate= 196608 #155648
 Observation.NStations=2
-Observation.StationPositions =      # position (lat(rad),long(rad),height(m)) \
+Observation.StationPositions =      \ # position (lat(rad),long(rad),height(m))
 [0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, \
 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, \
 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, \
