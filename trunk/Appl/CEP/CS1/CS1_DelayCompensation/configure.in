@@ -53,7 +53,11 @@ dnl
 lofar_GENERAL
 dnl lofar_BLITZ
 dnl lofar_MPI
-dnl lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-3_1,1,Common/LofarTypedefs.h)
+lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase,LCS-AMC-2_0,1,AMCBase/Converter.h)
+lofar_INTERNAL(LCS/AMC/AMCImpl,AMCImpl,LCS-AMC-2_0,1,AMCImpl/ConverterImpl.h)
+lofar_INTERNAL(CEP/tinyCEP,tinyCEP,CEP-tinyCEP-2_2,1,tinyCEP/WorkHolder.h)
+lofar_INTERNAL(Appl/CEP/CS1/CS1_Interface,CS1_Interface,Appl-CS1-1_0,1,CS1_Interface/CS1_Config.h)
 
 dnl
 dnl Output Makefiles
