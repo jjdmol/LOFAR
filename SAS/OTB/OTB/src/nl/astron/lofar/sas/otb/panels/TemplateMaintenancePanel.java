@@ -92,12 +92,15 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     private void initComponents() {
         jSplitPane1 = new javax.swing.JSplitPane();
         treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
 
         jSplitPane1.setDividerLocation(350);
         jSplitPane1.setLeftComponent(treePanel);
+
+        jSplitPane1.setRightComponent(jTabbedPane1);
 
         add(jSplitPane1, java.awt.BorderLayout.CENTER);
 
@@ -138,6 +141,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JTabbedPane jTabbedPane1;
     private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
 
