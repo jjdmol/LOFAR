@@ -122,7 +122,8 @@ public class MainFrame extends javax.swing.JFrame {
             JMenuItem jMenuItem = null;
             
             JPanel p = (JPanel)Class.forName(pluginName).newInstance();
-            if (! ((IPluginPanel)p).initializePlugin(this)) {
+
+            if ( p == null || ! ((IPluginPanel)p).initializePlugin(this)) {
                 return null;
             }
             String friendlyName = ((IPluginPanel)p).getFriendlyName();

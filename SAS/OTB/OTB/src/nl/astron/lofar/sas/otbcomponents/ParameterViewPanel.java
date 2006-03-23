@@ -289,7 +289,6 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamIndexLabel = new javax.swing.JLabel();
         ParamTypeLabel = new javax.swing.JLabel();
         ParamLimitsLabel = new javax.swing.JLabel();
-        ParamDescriptionLabel = new javax.swing.JLabel();
         ParamIndexText = new javax.swing.JTextField();
         ParamPruningText = new javax.swing.JTextField();
         ParamNameText = new javax.swing.JTextField();
@@ -321,9 +320,7 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamLimitsLabel.setText("Limits :");
         add(ParamLimitsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 225, -1, -1));
 
-        ParamDescriptionLabel.setText("Description :");
-        add(ParamDescriptionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 250, -1, -1));
-
+        ParamIndexText.setEditable(false);
         ParamIndexText.setText("None");
         ParamIndexText.setEnabled(false);
         ParamIndexText.setMaximumSize(new java.awt.Dimension(200, 19));
@@ -331,6 +328,7 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamIndexText.setPreferredSize(new java.awt.Dimension(200, 19));
         add(ParamIndexText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 75, 240, -1));
 
+        ParamPruningText.setEditable(false);
         ParamPruningText.setText("-1");
         ParamPruningText.setToolTipText("Number of Instances for this Node ");
         ParamPruningText.setEnabled(false);
@@ -339,6 +337,7 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamPruningText.setPreferredSize(new java.awt.Dimension(200, 19));
         add(ParamPruningText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 150, 240, -1));
 
+        ParamNameText.setEditable(false);
         ParamNameText.setText("None");
         ParamNameText.setToolTipText("Name for this Node");
         ParamNameText.setEnabled(false);
@@ -355,9 +354,11 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamApplyButton.setEnabled(false);
         add(ParamApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 400, 70, -1));
 
+        ParamDescriptionText.setEditable(false);
         ParamDescriptionText.setRows(3);
+        ParamDescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
         ParamDescriptionText.setEnabled(false);
-        add(ParamDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 275, 530, 80));
+        add(ParamDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 250, 530, 80));
 
         ParamUnitLabel.setText("Unit :");
         add(ParamUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 125, -1, -1));
@@ -375,15 +376,24 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         jLabel1.setText("Parameter View Panel");
         add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(114, 10, 320, 20));
 
+        ParamTypeText.setEnabled(false);
         add(ParamTypeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 100, 240, -1));
 
+        ParamUnitText.setEnabled(false);
         add(ParamUnitText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 125, 240, -1));
 
+        ParamValMomentText.setEditable(false);
+        ParamValMomentText.setText("None");
+        ParamValMomentText.setEnabled(false);
         add(ParamValMomentText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 175, 240, -1));
 
+        ParamLimitsText.setEditable(false);
+        ParamLimitsText.setText("None");
+        ParamLimitsText.setEnabled(false);
         add(ParamLimitsText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 225, 240, -1));
 
         ParamRuntimeModText.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "false", "true" }));
+        ParamRuntimeModText.setEnabled(false);
         add(ParamRuntimeModText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 200, 240, -1));
 
     }// </editor-fold>//GEN-END:initComponents
@@ -396,7 +406,6 @@ public class ParameterViewPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton ParamApplyButton;
     private javax.swing.JButton ParamCancelButton;
-    private javax.swing.JLabel ParamDescriptionLabel;
     private javax.swing.JTextArea ParamDescriptionText;
     private javax.swing.JLabel ParamIndexLabel;
     private javax.swing.JTextField ParamIndexText;

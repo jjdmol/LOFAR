@@ -69,9 +69,12 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
     
     /** Fills the table from the database */
     public boolean fillTable() {
-        
-        try {
-            if (! otdbRmi.getRemoteOTDB().isConnected()) {
+       if (otdbRmi == null) {
+            logger.debug("No active otdbRmi connection");
+            return false;
+       }
+       try {
+            if (otdbRmi.getRemoteOTDB() != null && ! otdbRmi.getRemoteOTDB().isConnected()) {
                 logger.debug("No open connection available");
                 return false;
             }

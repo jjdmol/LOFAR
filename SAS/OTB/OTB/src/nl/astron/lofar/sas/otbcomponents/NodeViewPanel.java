@@ -172,7 +172,6 @@ public class NodeViewPanel extends javax.swing.JPanel {
         NodeIndexLabel = new javax.swing.JLabel();
         NodeInstancesLabel = new javax.swing.JLabel();
         NodeLimitsLabel = new javax.swing.JLabel();
-        NodeDescriptionLabel = new javax.swing.JLabel();
         NodeIndexText = new javax.swing.JTextField();
         NodeInstancesText = new javax.swing.JTextField();
         NodeLimitsText = new javax.swing.JTextField();
@@ -195,9 +194,6 @@ public class NodeViewPanel extends javax.swing.JPanel {
 
         NodeLimitsLabel.setText("Limits :");
         add(NodeLimitsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 120, -1, -1));
-
-        NodeDescriptionLabel.setText("Description :");
-        add(NodeDescriptionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 150, -1, -1));
 
         NodeIndexText.setText("None");
         NodeIndexText.setEnabled(false);
@@ -238,9 +234,10 @@ public class NodeViewPanel extends javax.swing.JPanel {
         NodeApplyButton.setEnabled(false);
         add(NodeApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 280, 70, -1));
 
-        NodeDescriptionText.setRows(3);
-        NodeDescriptionText.setEnabled(false);
-        add(NodeDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 170, 540, 80));
+        NodeDescriptionText.setEditable(false);
+        NodeDescriptionText.setRows(4);
+        NodeDescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
+        add(NodeDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 150, 540, 100));
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Node View Panel");
@@ -252,7 +249,6 @@ public class NodeViewPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton NodeApplyButton;
     private javax.swing.JButton NodeCancelButton;
-    private javax.swing.JLabel NodeDescriptionLabel;
     private javax.swing.JTextArea NodeDescriptionText;
     private javax.swing.JLabel NodeIndexLabel;
     private javax.swing.JTextField NodeIndexText;
