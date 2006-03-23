@@ -55,6 +55,7 @@ function checkresult
     if [ $? -ne 0 ]; then
 	echo "FAIL ($filename)"
 	failcount=$failcount+1
+	diff $filename $filename.ref
     else
 	echo "PASS ($filename)"
 	passcount=$passcount+1
@@ -125,7 +126,7 @@ $JT   -e genfile -tc             > $testname.dat$ref  2>&1
 wait; finalize $testname $ref
 
 #
-# listfiles
+# listfiles (erase=false)
 #
 testname=listfiles
 $STUB -l | $NC | $OD > $testname.stub$ref 2>&1 &
