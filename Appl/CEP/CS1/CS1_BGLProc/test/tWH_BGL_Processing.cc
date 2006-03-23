@@ -80,7 +80,7 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
     i16complex sample = toComplex(phi);
 
     for (int stat = 0; stat < NR_STATIONS; stat ++) {
-      (*samples)[stat][time][0] = time;
+      (*samples)[stat][time][0] = makei16complex(time, 0);
       (*samples)[stat][time][1] = sample;
     }
 
