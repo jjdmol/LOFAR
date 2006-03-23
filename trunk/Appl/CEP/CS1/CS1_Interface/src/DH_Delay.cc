@@ -28,28 +28,39 @@ namespace LOFAR
 
 DH_Delay::DH_Delay(const string &name, uint nrRSPs)
   : DataHolder     (name, "DH_Delay"),
+    itsCoarseDelays(0),
+    itsFineDelaysAtBegin(0),
+    itsFineDelaysAfterEnd(0),
     itsNrRSPs      (nrRSPs)
 {
-  
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 }
   
 DH_Delay::DH_Delay(const DH_Delay &that)
   : DataHolder (that),
+    itsCoarseDelays(that.itsCoarseDelays),
+    itsFineDelaysAtBegin(that.itsFineDelaysAtBegin),
+    itsFineDelaysAfterEnd(that.itsFineDelaysAfterEnd),
     itsNrRSPs  (that.itsNrRSPs)
 {   
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 }
 
 DH_Delay::~DH_Delay()
 {
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 }
 
 DataHolder *DH_Delay::clone() const
 {
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   return new DH_Delay(*this);
 }
 
 void DH_Delay::init()
 {
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
   // add the fields to the data definition
   addField ("CoarseDelay", BlobField<int>(1, itsNrRSPs));
   addField ("FineDelayAtBegin", BlobField<float>(1, itsNrRSPs));
@@ -68,6 +79,7 @@ void DH_Delay::init()
 
 void DH_Delay::fillDataPointers() 
 {
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   itsCoarseDelays = getData<int> ("CoarseDelay");
   itsFineDelaysAtBegin = getData<float> ("FineDelayAtBegin");
   itsFineDelaysAfterEnd = getData<float> ("FineDelayAfterEnd");
@@ -75,36 +87,42 @@ void DH_Delay::fillDataPointers()
 
 int DH_Delay::getCoarseDelay(uint station) const
 { 
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   ASSERTSTR(station < itsNrRSPs, "index is not within range");
   return itsCoarseDelays[station]; 
 }
 
 void DH_Delay::setCoarseDelay(uint station, int delay)
 { 
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   ASSERTSTR(station < itsNrRSPs, "index is not within range");
   itsCoarseDelays[station] = delay;
 }
 
 float DH_Delay::getFineDelayAtBegin(uint station) const
 { 
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   ASSERTSTR(station < itsNrRSPs, "index is not within range");
   return itsFineDelaysAtBegin[station]; 
 }
 
 void DH_Delay::setFineDelayAtBegin(uint station, float delay)
 { 
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   ASSERTSTR(station < itsNrRSPs, "index is not within range");
   itsFineDelaysAtBegin[station] = delay;
 }
 
 float DH_Delay::getFineDelayAfterEnd(uint station) const
 { 
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   ASSERTSTR(station < itsNrRSPs, "index is not within range");
   return itsFineDelaysAfterEnd[station]; 
 }
 
 void DH_Delay::setFineDelayAfterEnd(uint station, float delay)
 { 
+  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
   ASSERTSTR(station < itsNrRSPs, "index is not within range");
   itsFineDelaysAfterEnd[station] = delay;
 }
