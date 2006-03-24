@@ -32,20 +32,18 @@
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
 #include <AMCBase/ConverterClient.h>
+#include <AMCBase/RequestData.h>
+#include <AMCBase/ResultData.h>
 #include <AMCImpl/ConverterImpl.h>    // Only for testing
 #include <Common/LofarLogger.h>
 
 namespace LOFAR 
 {
-  namespace CS1 {
-    
-    using ACC::APS::ParameterSet;
-    using AMC::SkyCoord;
-    using AMC::EarthCoord;
-    using AMC::TimeCoord;
-    using AMC::Converter;
-    using AMC::ConverterClient;
-    using AMC::ConverterImpl;
+  using namespace AMC;
+  using ACC::APS::ParameterSet;
+
+  namespace CS1 
+  {
 
     WH_DelayCompensation::WH_DelayCompensation(const string& name,
                                                const ParameterSet& ps) :
@@ -55,7 +53,8 @@ namespace LOFAR
                  name,                                   // name
                  "WH_DelayCompensation"),                // type
       itsParameterSet(ps),
-      itsConverter(0)
+      itsConverter(0),
+      itsLoopCount(0)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -67,8 +66,9 @@ namespace LOFAR
 
       // Create outgoing dataholders for the delay information; one for each
       // stations (should be one for each RSP board).
-      for (uint i = 0; i < itsNoutputs; ++i) {
-        string str = "DH_Delay_out_" + formatString("02%d", i);
+      for (int i = 0; i < itsNoutputs; ++i) {
+        string str = "DH_Delay_out_" + formatString("%02d", i);
+        LOG_TRACE_LOOP_STR("Creating " << str);
         getDataManager().addOutDataHolder(i, new DH_Delay(str, itsNoutputs));
       }
     }
@@ -84,6 +84,9 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
+      // Set the process loop counter to zero.
+      itsLoopCount = 0;
+      
       // Create the AMC converter.
       ASSERT(!itsConverter);
       itsConverter = createConverter();
@@ -94,6 +97,39 @@ namespace LOFAR
     void WH_DelayCompensation::process()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      // Each integration period, we must send the new CoarseDelay,
+      // FineDelayAtBegin, and FineDelayAfterEnd data for all stations.
+
+      // For the time being we will call itsConverter->j2000ToAzel() every
+      // cycle. This can be made more efficient by precalculating, say, for 30
+      // integration periods, and only call itsConverter->j2000ToAzel() once
+      // every 30 cycles.
+      RequestData request (itsBeamDirections, itsStationPositions, 
+                           itsObservationEpoch[itsLoopCount]);
+      ResultData result;
+      itsConverter->j2000ToAzel(result, request);
+
+      cout.precision(9);
+      cout << "skies = " << endl;
+      for (uint i=0; i<itsBeamDirections.size(); ++i) {
+        cout << "[" << i << "]: " << itsBeamDirections[i] << endl;
+      }
+      cout << "poss = " << endl;
+      for (uint i=0; i<itsStationPositions.size(); ++i) {
+        cout << "[" << i << "]: " << itsStationPositions[i] << endl;
+      }
+      cout << "times = " << endl;
+      cout << "[" << itsLoopCount << "]: " 
+           << itsObservationEpoch[itsLoopCount] << endl;
+      
+      cout << "Conversion result " << itsLoopCount << ": ";
+      for (uint i=0; i<result.skyCoord.size(); ++i) {
+        cout << endl << "[" << i << "]: " << result.skyCoord[i];
+      }
+            
+      // Finally, we must update the process loop counter. 
+      itsLoopCount++;
     }
 
 
@@ -117,10 +153,9 @@ namespace LOFAR
 
     void WH_DelayCompensation::getConverterConfig(const ParameterSet& ps)
     {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       string type = toUpper(ps.getString("DelayComp.ConverterType"));
-      if (type == "IMPL") {
-        itsConverterConfig.type = IMPL;
-      } 
+      if (type == "IMPL") itsConverterConfig.type = IMPL;
       else if (type == "CLIENT") {
         itsConverterConfig.type   = CLIENT;
         itsConverterConfig.server = ps.getString("Connections.AMC.ServerHost");
@@ -135,6 +170,7 @@ namespace LOFAR
 
       // First let's find out how many sources we have.
       uint32 nrBeams = ps.getUint32("Observation.NBeams");
+      LOG_TRACE_VAR_STR(nrBeams << " beam direction(s)");
 
       // What coordinate system is used for these source directions?
       // Currently, we support J2000, ITRF, and AZEL.
@@ -151,7 +187,8 @@ namespace LOFAR
       // consists of two doubles.
       vector<double> dir;
       dir = ps.getDoubleVector("Observation.BeamDirections");
-      ASSERT(dir.size() == 2 * nrBeams);
+      ASSERTSTR(dir.size() == 2 * nrBeams, 
+                dir.size() << " == " << 2 * nrBeams);
       
       // Reserve space in \a itsBeamDirections to avoid reallocations.
       itsBeamDirections.reserve(nrBeams);
@@ -169,7 +206,9 @@ namespace LOFAR
 
       // First, let's find out how many stations we have.
       uint32 nrStations = ps.getUint32("Observation.NStations");
-      ASSERT(nrStations <= NR_STATIONS);
+      LOG_TRACE_VAR_STR(nrStations << " station position(s)");
+      ASSERTSTR(nrStations <= NR_STATIONS, 
+                nrStations << " <= " << NR_STATIONS);
 
       // Station positions must be given in ITRF; there is currently no
       // support in the AMC package to convert between WGS84 and ITRF.
@@ -182,7 +221,9 @@ namespace LOFAR
       // positions are stored as one large vector of doubles.
       vector<double> pos;
       pos = ps.getDoubleVector("Observation.StationPositions");
-      ASSERT(pos.size() == 3 * nrStations);
+      for (uint i=0; i<pos.size(); ++i) cout << "pos["<<i<<"]="<<pos[i]<<endl;
+      ASSERTSTR(pos.size() == 3 * nrStations,
+                pos.size() << " == " << 3 * nrStations);
 
       // Reserve space in \a itsStationPositions to avoid reallocations.
       itsStationPositions.reserve(nrStations);
@@ -190,7 +231,7 @@ namespace LOFAR
       // Split the \a pos vector into separate EarthCoord objects.
       for (uint i = 0; i < nrStations; ++i) {
         itsStationPositions.
-          push_back(EarthCoord(pos[i], pos[i+1], pos[i+2], posType));
+          push_back(EarthCoord(pos[3*i], pos[3*i+1], pos[3*i+2], posType));
       }
     }
 
@@ -205,10 +246,17 @@ namespace LOFAR
       double startTime = ps.getDouble("Observation.StartTime");
       double stopTime  = ps.getDouble("Observation.StopTime");
       double delta     = ps.getDouble("Observation.IntegrationPeriod") / 86400;
-      ASSERT(startTime <= stopTime);
+      ASSERTSTR(startTime <= stopTime, startTime << " <= " << stopTime);
 
+      // Reserve space in \a itsObservationEpoch to avoid reallocations
+      uint sz = uint(ceil((stopTime - startTime) / delta));
+      LOG_TRACE_VAR_STR(sz << " integration period(s)");
+      itsObservationEpoch.reserve(sz);
+      
       // Fill a vector of TimeCoord, with a time interval \a delta, starting
       // at \a startTime and ending at \a stopTime.
+      // \todo The current implementation, using an increment in the for-loop,
+      // introduces a rounding error of approx 1 ms per hour. Too much, IMHO.
       for (double time = startTime; time <= stopTime; time += delta) {
         itsObservationEpoch.push_back(TimeCoord(time));
       }
@@ -217,9 +265,8 @@ namespace LOFAR
 
     Converter* WH_DelayCompensation::createConverter()
     {
-      if (itsConverterConfig.type == IMPL) {
-        return new ConverterImpl();
-      }
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      if (itsConverterConfig.type == IMPL) return new ConverterImpl();
       if (itsConverterConfig.type == CLIENT) {
         return new ConverterClient(itsConverterConfig.server,
                                    itsConverterConfig.port);
