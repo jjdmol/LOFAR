@@ -65,6 +65,9 @@ public class BoardStatus
     public int rcuxErrors;
     
     /** Number of detected errors. */
+    public int rcuyErrors;
+    
+    /** Number of detected errors. */
     public int lcuErrors;
     
     /** Number of detected errors. */
@@ -86,41 +89,73 @@ public class BoardStatus
     public int ap3RiErrors;
     
     /** Number of detected errors. */
-    public int blp0Sync;
+    public SyncStatus blp0Sync;
     
     /** Number of detected errors. */
-    public int blp1Sync;
+    public SyncStatus blp1Sync;
     
     /** Number of detected errors. */
-    public int blp2Sync;
+    public SyncStatus blp2Sync;
     
     /** Number of detected errors. */
-    public int blp3Sync;
+    public SyncStatus blp3Sync;
     
-    /** BLP0 RCY status. */
-    public int blp0Rcu;
+    /** BLP0 RCU status. */
+    public RCUStatus blp0Rcu;
     
-    /** BLP1 RCY status. */
-    public int blp1Rcu;
+    /** BLP1 RCU status. */
+    public RCUStatus blp1Rcu;
     
-    /** BLP2 RCY status. */
-    public int blp2Rcu;
+    /** BLP2 RCU status. */
+    public RCUStatus blp2Rcu;
     
-    /** BLP3 RCY status. */
-    public int blp3Rcu;
+    /** BLP3 RCU status. */
+    public RCUStatus blp3Rcu;
     
     /** Status information from CP. */
-    public int cpStatus;
+    /** RDY - Type of image loaded in FPGA. */
+    public int cpRdy;
+    
+    /** ERR - Configuration result. */
+    public int cpErr;
+    
+    /** APnBP - Type of FPGA that was configured previously. */
+    public int cpFpga;
+    
+    /** IM - Type of image loaded in FPGA. */
+    public int cpIm;
+    
+    /** TRIG - Cause of previous reconfiguration. */
+    public int cpTrig;
     
     /** BLP0 ADC offset values. */
-    public int blp0AdcOffset;
+    public ADOStatus blp0AdcOffset;
     
     /** BLP1 ADC offset values. */
-    public int blp1AdcOffset;
+    public ADOStatus blp1AdcOffset;
     
     /** BLP2 ADC offset values. */
-    public int blp2AdcOffset;
+    public ADOStatus blp2AdcOffset;
     
     /** BLP3 ADC offset values. */
-    public int blp3AdcOffset;    
+    public ADOStatus blp3AdcOffset;    
+    
+    /**
+     * Default Constructor.
+     */
+    public BoardStatus()
+    {
+        blp0Sync = new SyncStatus();
+        blp1Sync = new SyncStatus();
+        blp2Sync = new SyncStatus();
+        blp3Sync = new SyncStatus();
+        blp0Rcu = new RCUStatus();
+        blp1Rcu = new RCUStatus();
+        blp2Rcu = new RCUStatus();
+        blp3Rcu = new RCUStatus();
+        blp0AdcOffset = new ADOStatus();
+        blp1AdcOffset = new ADOStatus();
+        blp2AdcOffset = new ADOStatus();
+        blp3AdcOffset = new ADOStatus();
+    }
 }
