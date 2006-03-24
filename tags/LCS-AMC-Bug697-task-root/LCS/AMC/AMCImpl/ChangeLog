@@ -1,0 +1,458 @@
+2005-12-02 12:06  loose
+
+	* test/tConverter.stdout: BugID: 196
+
+	  Added new output reference file for tConverter test program.
+
+2005-11-30 17:45  loose
+
+	* test/tConverter.cc: BugID: 196
+
+	  Removed one (potentially desastrous) ASSERTSTR.
+
+2005-11-30 12:32  loose
+
+	* src/ConverterImpl.cc, test/tConverter.cc: BugID: 196
+
+	  * All conversion routines to/from ITRF have been implemented.  *
+	  Test program has been rewritten; output has been verified using
+	  the AIPS++   Glish Measures GUI (glish -l measures.g; -
+	  dm.gui()).
+
+2005-11-28 16:39  loose
+
+	* test/tConverter.stdout: BugID: 196
+
+	  Fixed bug in conversion routines. Type field was not properly
+	  updated.
+
+2005-11-28 16:37  loose
+
+	* src/: ConverterImpl.h, AMCServer/ConverterProcess.cc: BugID: 196
+
+	  Added ITRF --> J2000 conversion routines.
+
+2005-11-28 12:14  loose
+
+	* src/AMCServer/ConverterProcess.cc: BugID: 196
+
+	  Added J2000 --> ITRF conversion.
+
+2005-11-23 13:26  loose
+
+	* src/AMCServer/: ConverterProcess.cc, ConverterProcess.h: BugID:
+	  382
+
+	  sendResult() and recvRequest() now return false when the
+	  connection is lost, instead of throwing an exception; a client
+	  hanging up is not such an exceptional case.
+
+2005-11-16 13:38  loose
+
+	* ChangeLog, NEWS, src/AMCServer/ConverterServer.cc: BugID: 444
+
+	  Merged release 1.0 patch 2  with main development line.
+
+2005-11-14 16:50  cvs
+
+	* test/: tConverter.out, tConverterImpl.out: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/AMC/AMCImpl/test
+
+2005-11-14 16:50  cvs
+
+	* test/: tConverter.stdout, tConverterImpl.stdout: %lofarcvsmv%:
+	  Moved from LOFAR/LCS/AMC/AMCImpl/test, creating new revision
+
+2005-11-14 16:50  cvs
+
+	* test/AMCServer/tProcess.out: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/AMC/AMCImpl/test/AMCServer
+
+2005-11-14 16:50  cvs
+
+	* test/AMCServer/tProcess.stdout: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/AMC/AMCImpl/test/AMCServer, creating new revision
+
+2005-10-11 10:09  loose
+
+	* test/tConverter.sh: BugID: 196
+
+	  Use port 31339 for testing, instead of the default port 31337,
+	  which could already be in use.
+
+2005-10-11 10:07  loose
+
+	* test/tConverter.run: BugID: 196
+
+	  `cut' prints the whole line when no separator is present. In
+	  other words, when `tConverter.in' only contains the text
+	  "client", PORT will also be set to "client", instead of the empty
+	  string. `cut -s' avoids this.
+
+2005-10-10 23:16  loose
+
+	* NEWS, ChangeLog: BugID: 444
+
+	  Created patch release 1_0patch2.
+
+2005-10-10 23:01  loose
+
+	* src/AMCServer/ConverterServer.cc: BugID: 444
+
+	  The parent process should delete the dataSocket object; otherwise
+	  we will sooner or later run out of file descriptors.
+
+2005-10-07 14:04  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in,
+	  src/AMCServer/ConverterProcess.cc, test/tConverter.run,
+	  test/tConverter.sh: BugID: 196
+
+	  Development for Bug #196. Branch created at
+	  LCS-AMC-1_0-release-root; merged changes in LCS-AMC-1_0patch1
+	  into this branch.
+
+2005-10-07 13:51  loose
+
+	* test/tConverter.run: BugID: 196
+
+	  Optional port number is now read from the file tConverter.in as
+	  it ought to be.
+
+2005-10-04 11:42  diepen
+
+	* Makefile.am, src/Makefile.am, test/AMCServer/Makefile.am,
+	  test/Makefile.am: BugId: 396 Use $(top_srcdir)/Makefile.common
+
+2005-10-04 11:40  diepen
+
+	* configure.in: BugId: 396 Use lofar_GENERAL
+
+2005-09-28 22:03  loose
+
+	* ChangeLog, NEWS, src/AMCServer/ConverterProcess.cc: BugID: 382
+
+	  Merged release 1.0 patch 1 with main development line.
+
+2005-09-27 16:37  loose
+
+	* ChangeLog, NEWS: BugID: 382
+
+	  Created patch release 1_0patch1.
+
+2005-09-26 09:56  loose
+
+	* src/AMCServer/ConverterProcess.cc: BugID: 382
+
+	  recvRequest() and sendResult() now throw a ServerError exception
+	  when read() or write() fails. This exception is caught in
+	  handleRequests() which then returns.
+
+2005-07-27 17:16  loose
+
+	* src/ConverterImpl.cc, src/ConverterImpl.h, test/Makefile.am,
+	  test/tConverter.cc, test/tConverter.out, test/tConverter.stdout:
+	  BugID: 196
+
+	  * Added conversion routines for J2000 to ITRF conversion of sky
+	  coordinates. Actual conversion has not yet been implemented.
+
+	  * Added support for different types of SkyCoord (J2000, AZEL, and
+	  ITRF) and   EarthCoord (ITRF, WGS84). Modifications are backward
+	  compatible, except for   the output of operator<<(), which now
+	  also prints the type.    Tests have been extended to cover these
+	  different types.
+
+2005-07-08 13:50  loose
+
+	* test/: tConverter.out, tConverter.stdout: %[ER: 214]%
+
+	  Changed value for someTime, because it caused rounding errors in
+	  some cases. Hopefully, these errors are gone now.
+
+2005-07-07 12:57  loose
+
+	* test/tConverter.cc: %[ER: 214]%
+
+	  Changed value for someTime, because it caused rounding errors in
+	  some cases. Hopefully, these errors are gone now.
+
+2005-07-05 16:29  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in,
+	  test/tConverter.run: %[ER: 214]%
+
+	  Merged relevant changes from the 1.0 release branch back into the
+	  main development line.
+
+2005-07-05 09:40  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 0]%
+
+	  Prepare for release 1.0
+
+2005-07-04 11:56  loose
+
+	* src/ConverterImpl.cc, src/ConverterImpl.h, src/Exceptions.h,
+	  src/Makefile.am, src/AMCServer/ConverterProcess.cc,
+	  src/AMCServer/ConverterProcess.h,
+	  src/AMCServer/ConverterServer.cc,
+	  src/AMCServer/ConverterServer.h, src/AMCServer/Process.cc,
+	  src/AMCServer/Process.h, src/AMCServer/amcserver.cc,
+	  src/AMCServer/amcserver.log_prop, test/Makefile.am,
+	  test/tConverter.cc, test/tConverter.log_prop,
+	  test/tConverter.out, test/tConverter.run, test/tConverter.sh,
+	  test/tConverter.stdout, test/tConverterImpl.cc,
+	  test/tConverterImpl.out, test/tConverterImpl.stdout,
+	  test/AMCServer/Makefile.am, test/AMCServer/tProcess.cc,
+	  test/AMCServer/tProcess.out, test/AMCServer/tProcess.sh,
+	  test/AMCServer/tProcess.stdout: %[ER: 231]%
+
+	  Merged changes of ER231 with the main development line.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-03 15:28  loose
+
+	* src/ConverterImpl.cc: %[ER: 231]%
+
+	  Minor code changes.
+
+2005-06-03 15:28  loose
+
+	* src/AMCServer/ConverterServer.h: %[ER: 231]%
+
+	  Improved documentation.
+
+2005-05-27 16:57  coolen
+
+	* configure.in: %[ER: 273]%
+
+	  Changed from lofar_PACKAGE to lofar_INTERNAL.
+
+2005-05-26 12:20  loose
+
+	* src/: ConverterImpl.h, Exceptions.h,
+	  AMCServer/ConverterProcess.h, AMCServer/ConverterServer.h,
+	  AMCServer/Process.h: %[ER: 231]%
+
+	  Improved documentation.
+
+2005-05-25 15:59  loose
+
+	* test/: Makefile.am, tConverter.cc, tConverter.log_prop,
+	  tConverter.out, tConverter.run, tConverter.sh, tConverter.stdout,
+	  tConverterImpl.cc, AMCServer/tClientServer.out,
+	  AMCServer/tClientServer.run, AMCServer/tClientServer.sh,
+	  AMCServer/tConverterClient.cc, AMCServer/tConverterServer.cc:
+	  %[ER: 231]%
+
+	  Merged the tests tConverterImpl and tConverterClient into
+	  tConverter. This makes sense, because both programs shared a lot
+	  of source code and the output of both programs should always be
+	  the same. Whether ConverterImpl or ConverterClient is tested is
+	  now determined by the contents of tConverter.in; this file is
+	  created by tConverter.sh. The tConverterServer program was
+	  promoted to the program `amcserver' and moved into the src
+	  directory tree.
+
+2005-05-25 15:41  loose
+
+	* src/: Makefile.am, AMCServer/amcserver.cc,
+	  AMCServer/amcserver.log_prop: %[ER: 231]%
+
+	  Added amcserver program, which implements an AMC Server process.
+
+2005-05-23 16:56  loose
+
+	* test/: tConverterImpl.out, tConverterImpl.stdout: %[ER: 214]%
+
+	  AIPS++ Measures tables were updated today. This caused some
+	  rounding errors. Hence a new output file.
+
+2005-05-18 16:58  loose
+
+	* test/AMCServer/: Makefile.am, tClientServer.out,
+	  tClientServer.run, tClientServer.sh, tConverterClient.cc,
+	  tConverterServer.out, tConverterServer.run, tConverterServer.sh:
+	  %[ER: 231]%
+
+	  Restructured client/server test. Now both tConverterClient and
+	  tConverterServer are built in the AMCServer test directory.
+	  Although the client can be built using only the AMCBase package,
+	  it cannot run successfully without the server, which obviously
+	  needs the AMCImpl package. The testname has been modified to
+	  "tClientServer".
+
+2005-05-18 15:22  loose
+
+	* test/tConverterImpl.run: %[ER: 231]%
+
+	  We no longer need the .run file, because the AIPS++ environment
+	  is now set by runtest.sh whenever AIPSPP is defined.
+
+2005-05-18 15:20  loose
+
+	* test/Makefile.am: %[ER: 231]%
+
+	  We need to export both LOFARROOT and AIPSPP.
+
+2005-05-18 15:19  loose
+
+	* src/AMCServer/ConverterServer.cc: %[ER: 231]%
+
+	  Added a few trace log messages.
+
+2005-05-13 16:55  loose
+
+	* test/tConverterImpl.run: %[ER: 214]%
+
+	  We do not want the AIPS++ version number in the output file; it
+	  will change over time!
+
+2005-05-13 16:41  loose
+
+	* configure.in, src/Makefile.am, src/AMCServer/Makefile.am: %[ER:
+	  214]%
+
+	  Removed convenience libraries libamcclient in AMCBase/AMCClient
+	  and libamcserver in AMCImpl/AMCServer. They caused too much
+	  trouble during linking.
+
+2005-05-13 11:44  coolen
+
+	* configure.in, src/Makefile.am, src/AMCServer/ConverterProcess.cc,
+	  src/AMCServer/ConverterProcess.h,
+	  src/AMCServer/ConverterServer.cc,
+	  src/AMCServer/ConverterServer.h, src/AMCServer/Makefile.am,
+	  src/AMCServer/Process.cc, src/AMCServer/Process.h,
+	  test/tConverterImpl.cc, test/tConverterImpl.out,
+	  test/tConverterImpl.run, test/tConverterImpl.stdout,
+	  test/AMCServer/Makefile.am, test/AMCServer/tConverterServer.cc,
+	  test/AMCServer/tConverterServer.out,
+	  test/AMCServer/tConverterServer.run,
+	  test/AMCServer/tConverterServer.sh, test/AMCServer/tProcess.cc,
+	  test/AMCServer/tProcess.out, test/AMCServer/tProcess.sh,
+	  test/AMCServer/tProcess.stdout: all changes so far for the
+	  lofar_PACKAGE to lofar_INTERNAL step.  beware!!!  this branch
+	  also contains the ER231 changes , and those are NOT wanted in the
+	  main development tree....  Only take the configure.in stuff
+
+2005-05-09 10:56  coolen
+
+	* configure.in: %[ER: 273]% minor bugs removed && PACKAGE ..
+	  INTERNAL changed in configure.in files
+
+2005-04-04 12:07  loose
+
+	* configure.in: %[ER: 214]%
+
+	  Should have removed src/AMCClient/Makefile and
+	  src/AMCServer/Makefile from AC_OUTPUT, because the associated
+	  Makefile.am were removed.
+
+2005-04-01 18:08  loose
+
+	* configure.in, src/Makefile.am, src/AMCServer/ConverterProcess.cc,
+	  src/AMCServer/ConverterProcess.h,
+	  src/AMCServer/ConverterServer.cc,
+	  src/AMCServer/ConverterServer.h, src/AMCServer/Makefile.am,
+	  src/AMCServer/Process.cc, src/AMCServer/Process.h,
+	  test/tConverterImpl.cc, test/tConverterImpl.out,
+	  test/tConverterImpl.run, test/tConverterImpl.stdout,
+	  test/AMCServer/Makefile.am, test/AMCServer/tConverterServer.cc,
+	  test/AMCServer/tConverterServer.out,
+	  test/AMCServer/tConverterServer.run,
+	  test/AMCServer/tConverterServer.sh, test/AMCServer/tProcess.cc,
+	  test/AMCServer/tProcess.out, test/AMCServer/tProcess.sh,
+	  test/AMCServer/tProcess.stdout: %[ER: 214]%
+
+	  AMC client/server is now (almost) complete. The implementation is
+	  based on the ER231 enhancements made in package LCS/Transport.
+
+	  * Removed DH_Converter class; added DH_Request and DH_Result
+	  classes. It	turned out that we do need separate data holder
+	  classes for request and   result.
+
+	  * Removed convenience libraries libamcclient in AMCBase/AMCClient
+	  and	libamcserver in AMCImpl/AMCServer. They caused too much
+	  trouble during   linking.
+
+	  * Modified both ConverterClient and ConverterServer.
+
+	  * Added class Process that wraps the OS fork() method. Class
+	  ConverterProcess   is derived from this base class.
+
+	  * Added several test programs; the most important being
+	  tConverterClient and	 tConverterServer. The tConverterServer.run
+	  script will try to start both   server and client; the client
+	  then requests some conversions from the   server; the output
+	  returned by the server is then verified.
+
+2005-03-10 09:54  loose
+
+	* src/: ConverterImpl.h, Exceptions.h,
+	  AMCServer/ConverterServer.cc, AMCServer/ConverterServer.h: %[ER:
+	  214]%
+
+	  Alpha version. Parts of client/server have been implemented.
+	  Mostly updated to latest coding standards.
+
+2005-02-25 09:26  loose
+
+	* src/ConverterImpl.cc: %[ER: 214]%
+
+	  Added extra parentheses around the constructors of the
+	  temporaries of Quantity and MVDirection to keep the GCC 3.2
+	  parser happy and unconfused..
+
+2005-02-24 12:27  loose
+
+	* src/AMCServer/: ConverterServer.cc, ConverterServer.h: %[ER:
+	  214]%
+
+	  This class represents the server side of the client/server
+	  implementation of the AMC.
+
+2005-02-24 12:26  loose
+
+	* test/: tConverterImpl.out, tConverterImpl.run,
+	  tConverterImpl.stdout: %[ER: 214]%
+
+	  We do not want the AIPS++ version number in the output file; it
+	  will change over time!
+
+2005-01-12 18:06  loose
+
+	* test/: tConverterImpl.out, tConverterImpl.stdout: %[ER: 214]%
+
+	  Output of operator<<() for TimeCoord has changed.
+
+2005-01-12 18:03  loose
+
+	* src/AMCServer/Makefile.am: %[ER: 214]%
+
+	  Added ConverterServer.
+
+2005-01-12 18:03  loose
+
+	* src/ConverterImpl.cc: %[ER: 214]%
+
+	  AIPS++ Measures now resides in namespace "casa".
+
+2004-12-14 14:08  loose
+
+	* Makefile.am, bootstrap, configure.in, src/ConverterImpl.cc,
+	  src/ConverterImpl.h, src/Exceptions.h, src/Makefile.am,
+	  src/AMCServer/Makefile.am, test/Makefile.am,
+	  test/tConverterImpl.cc, test/tConverterImpl.out,
+	  test/tConverterImpl.run, test/tConverterImpl.sh,
+	  test/tConverterImpl.stdout, test/AMCServer/Makefile.am: %[ER:
+	  214]%
+
+	  Initial version. Stand-alone version is (mostly) implemented.
+	  Client/Server still needs to be done.
+
