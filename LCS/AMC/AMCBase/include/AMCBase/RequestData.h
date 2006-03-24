@@ -79,6 +79,24 @@ namespace LOFAR
       {}
 
       RequestData(const vector<SkyCoord>& sc,
+                  const vector<EarthCoord>& ec,
+                  const TimeCoord& tc) :
+        skyCoord(sc), earthCoord(ec), timeCoord(1, tc)
+      {}
+
+      RequestData(const vector<SkyCoord>& sc,
+                  const EarthCoord& ec,
+                  const vector<TimeCoord>& tc) :
+        skyCoord(sc), earthCoord(1, ec), timeCoord(tc)
+      {}
+
+      RequestData(const SkyCoord& sc,
+                  const vector<EarthCoord>& ec,
+                  const vector<TimeCoord>& tc) :
+        skyCoord(1, sc), earthCoord(ec), timeCoord(tc)
+      {}
+
+      RequestData(const vector<SkyCoord>& sc,
                   const vector<EarthCoord>& ec, 
                   const vector<TimeCoord>& tc) :
         skyCoord(sc), earthCoord(ec), timeCoord(tc)
