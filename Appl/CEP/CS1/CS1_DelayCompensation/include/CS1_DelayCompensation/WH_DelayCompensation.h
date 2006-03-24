@@ -139,6 +139,9 @@ namespace LOFAR
       // Pointer to the Converter we're using.
       AMC::Converter*         itsConverter;
 
+      // Counter used to count the number of times that process() was called.
+      uint                    itsLoopCount;
+      
     };
 
     // @}
