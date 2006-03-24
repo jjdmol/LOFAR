@@ -188,12 +188,12 @@ void doWork()
   int	     nRuns	     = 1;
   const char *env;
 
-  if ((env = getenv("BASE_FREQUENCY")) != 0) {
+  if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
     signalFrequency = atof(env);
     std::cerr << "setting signal frequency to " << env << '\n';
   }
 
-  if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
+  if ((env = getenv("BASE_FREQUENCY")) != 0) {
     baseFrequency = atof(env);
     std::cerr << "setting base frequency to " << env << '\n';
   }
