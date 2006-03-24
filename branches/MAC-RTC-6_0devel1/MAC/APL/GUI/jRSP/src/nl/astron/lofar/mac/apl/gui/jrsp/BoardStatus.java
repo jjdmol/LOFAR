@@ -8,13 +8,13 @@ package nl.astron.lofar.mac.apl.gui.jrsp;
 public class BoardStatus
 {
     /** Measured 1.2 V supply voltage. */
-    public int voltage1V2;
+    public double voltage1V2;
     
     /** Measured 2.5 V supply voltage. */
-    public int voltage2V5;
+    public double voltage2V5;
     
     /** Measured 3.3 V supply voltage. */
-    public int voltage3V3;
+    public double voltage3V3;
     
     /** Current RSP board temperature. */
     public int pcbTemp;
