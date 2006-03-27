@@ -55,6 +55,7 @@ namespace LOFAR
   const std::string& typeName (const uint64*);
   const std::string& typeName (const float*);
   const std::string& typeName (const double*);
+  const std::string& typeName (const i4complex*);
   const std::string& typeName (const i16complex*);
   const std::string& typeName (const u16complex*);
   const std::string& typeName (const fcomplex*);

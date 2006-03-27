@@ -53,10 +53,12 @@
 
 #endif
 
+#include <Common/i4complex.h>
 
 namespace LOFAR
 {
   // Define complex types in LOFAR namespace.
+  using TYPES::i4complex;
   using TYPES::i16complex;
   using TYPES::u16complex;
   using TYPES::fcomplex;

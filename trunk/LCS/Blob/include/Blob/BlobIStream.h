@@ -113,6 +113,7 @@ namespace LOFAR {
       BlobIStream& operator>> (float& value);
       BlobIStream& operator>> (double& value);
       template<class T> BlobIStream& operator>> (std::complex<T>& value);
+      BlobIStream& operator>> (i4complex& value);
       BlobIStream& operator>> (i16complex& value);
       BlobIStream& operator>> (u16complex& value);
       BlobIStream& operator>> (fcomplex& value);
@@ -135,6 +136,7 @@ namespace LOFAR {
       void get (float* values, uint nrval);
       void get (double* values, uint nrval);
       template<class T> void get (std::complex<T>* values, uint nrval);
+      void get (i4complex* values, uint nrval);
       void get (i16complex* values, uint nrval);
       void get (u16complex* values, uint nrval);
       void get (fcomplex* values, uint nrval);

@@ -116,6 +116,7 @@ namespace LOFAR {
       BlobOStream& operator<< (const float& value);
       BlobOStream& operator<< (const double& value);
       template<class T> BlobOStream& operator<< (const std::complex<T>& value);
+      BlobOStream& operator<< (const i4complex& value);
       BlobOStream& operator<< (const i16complex& value);
       BlobOStream& operator<< (const u16complex& value);
       BlobOStream& operator<< (const fcomplex& value);
@@ -139,6 +140,7 @@ namespace LOFAR {
       void put (const float* values, uint nrval);
       void put (const double* values, uint nrval);
       template<class T> void put (const std::complex<T>* values, uint nrval);
+      void put (const i4complex* values, uint nrval);
       void put (const i16complex* values, uint nrval);
       void put (const u16complex* values, uint nrval);
       void put (const fcomplex* values, uint nrval);
