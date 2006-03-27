@@ -121,9 +121,11 @@ namespace LOFAR {
       static const uint8 SERDES    = 0x0D; /* Reserved1                            */
       static const uint8 TDS       = 0x0E; /* Time distribution board    [RSP    ] */
       static const uint8 TBB       = 0x0F; /* Transient Buffer Board     [    BLP] */ /* Is this correct? Should it not be RSP? */
+      static const uint8 CEP       = 0x10; /* CEP management             [RSP    ] */
+      static const uint8 LCU       = 0x11; /* LCU management             [RSP    ] */
 
       static const int MIN_PID = RSR; /* loops over PID should be from */ 
-      static const int MAX_PID = TBB; /* pid = MIN_PID; pid <= MAX_PID */
+      static const int MAX_PID = LCU; /* pid = MIN_PID; pid <= MAX_PID */
       /*@}*/
 
       /*@{*/
