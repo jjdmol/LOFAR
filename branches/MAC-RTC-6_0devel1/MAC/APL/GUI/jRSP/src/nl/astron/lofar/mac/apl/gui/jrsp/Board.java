@@ -7,7 +7,7 @@ package nl.astron.lofar.mac.apl.gui.jrsp;
 public class Board
 {
     private String hostname;
-    private BoardStatus boardStatus;
+    private BoardStatus[] boardStatus;
     
     /**
      * Makes a new instance of the Board class.
@@ -20,7 +20,7 @@ public class Board
     }
     
     // -- NATIVE FUNCTIONS --
-    private native BoardStatus retrieveStatus(String hostname);
+    private native BoardStatus[] retrieveStatus(String hostname);
     
     static
     {
@@ -28,7 +28,7 @@ public class Board
     }
         
     
-    public BoardStatus getStatus()
+    public BoardStatus[] getStatus()
     {
         boardStatus = retrieveStatus(hostname);
         return boardStatus;

@@ -10,9 +10,9 @@ extern "C" {
 /*
  * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
  * Method:    retrieveStatus
- * Signature: (Ljava/lang/String;)Lnl/astron/lofar/mac/apl/gui/jrsp/BoardStatus;
+ * Signature: (Ljava/lang/String;)[Lnl/astron/lofar/mac/apl/gui/jrsp/BoardStatus;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus
+JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus
   (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus

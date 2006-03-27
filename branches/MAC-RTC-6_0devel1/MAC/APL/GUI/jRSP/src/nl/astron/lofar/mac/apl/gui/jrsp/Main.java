@@ -13,7 +13,7 @@ public class Main
     public static void main(String[] args)
     {
         Board b = new Board("localhost");
-        BoardStatus bs = b.getStatus();
+        BoardStatus bs = b.getStatus()[0];
         
         System.out.println("volt 1V2: " + bs.voltage1V2);
         System.out.println("volt 2V5: " + bs.voltage2V5);

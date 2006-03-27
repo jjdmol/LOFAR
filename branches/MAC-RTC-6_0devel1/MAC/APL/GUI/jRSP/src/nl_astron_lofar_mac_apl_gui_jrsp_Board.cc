@@ -7,36 +7,61 @@
 using namespace LOFAR;
 using namespace LOFAR::RSP;
 
-// Testfunctie alvast aangeven
-BoardStatus GetBoardStatus();
+// Define function's
+jobject ConvertBoardStatus(JNIEnv*, BoardStatus&);
+BoardStatus GetDummyBoardStatus(); // Function for testing.
 
 /**
  * Implementation of the JNI method declared in the java file (nl.astron.lofar.mac.apl.gui.jrsp.Board).
  * This function fills a BoardStatus object, that is returned by this method, with data from RSPIO.
- * @param	env	The Java environment interface pointer.
- * @param	obj	The "this" pointer.
- * @return 	status	A instance of the StatusBoard class filled with information.
+ * @param	env		The Java environment interface pointer.
+ * @param	obj		The "this" pointer.
+ * @param	hostname	The name of the RSPBoard that will be connected.
+ * @return 	status		A array of StatusBoard class instances filled with information.
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus(JNIEnv * env, jobject obj, jstring hostname) {
+JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus(JNIEnv * env, jobject obj, jstring hostname) 
+{
 	// Convert the jstring hostname to a C++ string.
-	const char * chars = env->GetStringUTFChars(hostname, 0);
-	const string str (chars);
+	const char * charsHostname = env->GetStringUTFChars(hostname, 0);
+	string strHostname (charsHostname);
 	
-	// Retrieve RSP BoardStatus.
-	BoardStatus * boardStatus;
+	// Use RSPport to get a vector with BoardStatus.
+	vector<BoardStatus> vecBoardStatus;
+
 	if(0)
 	{
-		RSPport IOport(str);
+		RSPport IOport(strHostname);
 		uint32 rcuMask = 0;
-		vector<BoardStatus> vecBoardStatus = IOport.getBoardStatus(rcuMask);
-	
-		boardStatus = &vecBoardStatus[0];
+		vecBoardStatus = IOport.getBoardStatus(rcuMask);
 	}
 	else
 	{
-		boardStatus = &GetBoardStatus();
+		// Add dummy BoardStatus to vector.
+		vecBoardStatus.push_back(GetDummyBoardStatus());
+	}
+	
+	// The jobjectArray that is going to be returned.
+	jobjectArray arrBoardStatus = (jobjectArray)env->NewObjectArray(vecBoardStatus.size(), env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/BoardStatus"), NULL);
+
+	for(uint i=0; i<vecBoardStatus.size(); i++)
+	{
+		env->SetObjectArrayElement(arrBoardStatus, i, ConvertBoardStatus(env, vecBoardStatus[i]));
 	}
 
+	// Free local references.	
+	env->ReleaseStringUTFChars(hostname, charsHostname);
+	
+	return arrBoardStatus;
+}
+
+/**
+ * This method converts an C++ BoardStatus to a Java BoardStatus.
+ * @param	BoardStatus	C++ BoardStatus
+ * @return 	jobject		Java BoardStatus
+ */
+jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
+{
+	// TODO: Deze code buiten deze functie plaatsen zodat het niet vaker dan een keer aangeroepen hoeft te worden.
 	// Get a reference to the class of the status (BoardStatus).
 	jclass clsStatus = env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/BoardStatus");
 	if(clsStatus == NULL)
@@ -99,111 +124,111 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 	// Access fields and fill them
         if(fidVoltage1V2 != 0)
         {
-                env->SetDoubleField(status, fidVoltage1V2, boardStatus->rsp.voltage_1_2 / 192.0 * 2.5);
+                env->SetDoubleField(status, fidVoltage1V2, boardStatus.rsp.voltage_1_2 / 192.0 * 2.5);
         }
         if(fidVoltage2V5 != 0)
         {
-                env->SetDoubleField(status, fidVoltage2V5, boardStatus->rsp.voltage_2_5 / 192.0 * 3.3);
+                env->SetDoubleField(status, fidVoltage2V5, boardStatus.rsp.voltage_2_5 / 192.0 * 3.3);
         }
         if(fidVoltage3V3 != 0)
         {
-                env->SetDoubleField(status, fidVoltage3V3, boardStatus->rsp.voltage_3_3 / 192.0 * 5.0);
+                env->SetDoubleField(status, fidVoltage3V3, boardStatus.rsp.voltage_3_3 / 192.0 * 5.0);
         }
         if(fidPcbTemp != 0)
         {
-                env->SetIntField(status, fidPcbTemp, boardStatus->rsp.pcb_temp);
+                env->SetIntField(status, fidPcbTemp, boardStatus.rsp.pcb_temp);
         }
         if(fidBpTemp != 0)
         {
-                env->SetIntField(status, fidBpTemp, boardStatus->rsp.bp_temp);
+                env->SetIntField(status, fidBpTemp, boardStatus.rsp.bp_temp);
         }
         if(fidAp0Temp != 0)
         {
-                env->SetIntField(status, fidAp0Temp, boardStatus->rsp.ap0_temp);
+                env->SetIntField(status, fidAp0Temp, boardStatus.rsp.ap0_temp);
         }
         if(fidAp1Temp != 0)
         {
-                env->SetIntField(status, fidAp1Temp, boardStatus->rsp.ap1_temp);
+                env->SetIntField(status, fidAp1Temp, boardStatus.rsp.ap1_temp);
         }
         if(fidAp2Temp != 0)
         {
-                env->SetIntField(status, fidAp2Temp, boardStatus->rsp.ap2_temp);
+                env->SetIntField(status, fidAp2Temp, boardStatus.rsp.ap2_temp);
         }
         if(fidAp3Temp != 0)
         {
-                env->SetIntField(status, fidAp3Temp, boardStatus->rsp.ap3_temp);
+                env->SetIntField(status, fidAp3Temp, boardStatus.rsp.ap3_temp);
         }
         if(fidBpClock != 0)
         {
-                env->SetIntField(status, fidBpClock, boardStatus->rsp.bp_clock);
+                env->SetIntField(status, fidBpClock, boardStatus.rsp.bp_clock);
         }
         if(fidNofFrames != 0)
         {
-                env->SetIntField(status, fidNofFrames, boardStatus->eth.nof_frames);
+                env->SetIntField(status, fidNofFrames, boardStatus.eth.nof_frames);
         }
         if(fidNofErrors != 0)
         {
-                env->SetIntField(status, fidNofErrors, boardStatus->eth.nof_errors);
+                env->SetIntField(status, fidNofErrors, boardStatus.eth.nof_errors);
         }
         if(fidLastError != 0)
         {
-                env->SetIntField(status, fidLastError, boardStatus->eth.last_error);
+                env->SetIntField(status, fidLastError, boardStatus.eth.last_error);
         }
         if(fidSeqNr != 0)
         {
-                env->SetIntField(status, fidSeqNr, boardStatus->mep.seqnr);
+                env->SetIntField(status, fidSeqNr, boardStatus.mep.seqnr);
         }
         if(fidError != 0)
         {
-                env->SetIntField(status, fidError, boardStatus->mep.error);
+                env->SetIntField(status, fidError, boardStatus.mep.error);
         }
         if(fidIfUnderTest != 0)
         {
-                env->SetIntField(status, fidIfUnderTest, boardStatus->diag.interface);
+                env->SetIntField(status, fidIfUnderTest, boardStatus.diag.interface);
         }
         if(fidMode != 0)
         {
-                env->SetIntField(status, fidMode, boardStatus->diag.mode);
+                env->SetIntField(status, fidMode, boardStatus.diag.mode);
         }
         if(fidRiErrors != 0)
         {
-                env->SetIntField(status, fidRiErrors, boardStatus->diag.ri_errors);
+                env->SetIntField(status, fidRiErrors, boardStatus.diag.ri_errors);
         }
         if(fidRcuxErrors != 0)
         {
-                env->SetIntField(status, fidRcuxErrors, boardStatus->diag.rcux_errors);
+                env->SetIntField(status, fidRcuxErrors, boardStatus.diag.rcux_errors);
         }
         if(fidRcuyErrors != 0)
         {
-                env->SetIntField(status, fidRcuyErrors, boardStatus->diag.rcuy_errors);
+                env->SetIntField(status, fidRcuyErrors, boardStatus.diag.rcuy_errors);
         }
         if(fidLcuErrors != 0)
         {
-                env->SetIntField(status, fidLcuErrors, boardStatus->diag.lcu_errors);
+                env->SetIntField(status, fidLcuErrors, boardStatus.diag.lcu_errors);
         }
         if(fidCepErrors != 0)
         {
-                env->SetIntField(status, fidCepErrors, boardStatus->diag.cep_errors);
+                env->SetIntField(status, fidCepErrors, boardStatus.diag.cep_errors);
         }
         if(fidSerdesErrors != 0)
         {
-                env->SetIntField(status, fidSerdesErrors, boardStatus->diag.serdes_errors);
+                env->SetIntField(status, fidSerdesErrors, boardStatus.diag.serdes_errors);
         }
         if(fidAp0RiErrors != 0)
         {
-                env->SetIntField(status, fidAp0RiErrors, boardStatus->diag.ap0_ri_errors);
+                env->SetIntField(status, fidAp0RiErrors, boardStatus.diag.ap0_ri_errors);
         }
         if(fidAp1RiErrors != 0)
         {
-                env->SetIntField(status, fidAp1RiErrors, boardStatus->diag.ap1_ri_errors);
+                env->SetIntField(status, fidAp1RiErrors, boardStatus.diag.ap1_ri_errors);
         }
         if(fidAp2RiErrors != 0)
         {
-                env->SetIntField(status, fidAp2RiErrors, boardStatus->diag.ap2_ri_errors);
+                env->SetIntField(status, fidAp2RiErrors, boardStatus.diag.ap2_ri_errors);
         }
         if(fidAp3RiErrors != 0)
         {
-                env->SetIntField(status, fidAp3RiErrors, boardStatus->diag.ap3_ri_errors);
+                env->SetIntField(status, fidAp3RiErrors, boardStatus.diag.ap3_ri_errors);
         }
 	
 	// SyncStatus: blp0Sync - blp3Sync
@@ -218,10 +243,10 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp0Sync = env->GetObjectField(status, fidBlp0Sync);
 		if(fidExtCount != 0 && fidSyncCount != 0 && fidSampleOffset != 0 && fidSliceCount != 0)
 		{
-			env->SetIntField(objBlp0Sync, fidExtCount, boardStatus->ap0_sync.ext_count);
-			env->SetIntField(objBlp0Sync, fidSyncCount, boardStatus->ap0_sync.sync_count);
-			env->SetIntField(objBlp0Sync, fidSampleOffset, boardStatus->ap0_sync.sample_offset);
-			env->SetIntField(objBlp0Sync, fidSliceCount, boardStatus->ap0_sync.slice_count);
+			env->SetIntField(objBlp0Sync, fidExtCount, boardStatus.ap0_sync.ext_count);
+			env->SetIntField(objBlp0Sync, fidSyncCount, boardStatus.ap0_sync.sync_count);
+			env->SetIntField(objBlp0Sync, fidSampleOffset, boardStatus.ap0_sync.sample_offset);
+			env->SetIntField(objBlp0Sync, fidSliceCount, boardStatus.ap0_sync.slice_count);
 		}
 	}
 
@@ -230,10 +255,10 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp1Sync = env->GetObjectField(status, fidBlp1Sync);
 		if(fidExtCount != 0 && fidSyncCount != 0 && fidSampleOffset != 0 && fidSliceCount != 0)
 		{
-			env->SetIntField(objBlp1Sync, fidExtCount, boardStatus->ap1_sync.ext_count);
-			env->SetIntField(objBlp1Sync, fidSyncCount, boardStatus->ap1_sync.sync_count);
-			env->SetIntField(objBlp1Sync, fidSampleOffset, boardStatus->ap1_sync.sample_offset);
-			env->SetIntField(objBlp1Sync, fidSliceCount, boardStatus->ap1_sync.slice_count);
+			env->SetIntField(objBlp1Sync, fidExtCount, boardStatus.ap1_sync.ext_count);
+			env->SetIntField(objBlp1Sync, fidSyncCount, boardStatus.ap1_sync.sync_count);
+			env->SetIntField(objBlp1Sync, fidSampleOffset, boardStatus.ap1_sync.sample_offset);
+			env->SetIntField(objBlp1Sync, fidSliceCount, boardStatus.ap1_sync.slice_count);
 		}
 	}
 
@@ -242,10 +267,10 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp2Sync = env->GetObjectField(status, fidBlp2Sync);
 		if(fidExtCount != 0 && fidSyncCount != 0 && fidSampleOffset != 0 && fidSliceCount != 0)
 		{
-			env->SetIntField(objBlp2Sync, fidExtCount, boardStatus->ap2_sync.ext_count);
-			env->SetIntField(objBlp2Sync, fidSyncCount, boardStatus->ap2_sync.sync_count);
-			env->SetIntField(objBlp2Sync, fidSampleOffset, boardStatus->ap2_sync.sample_offset);
-			env->SetIntField(objBlp2Sync, fidSliceCount, boardStatus->ap2_sync.slice_count);
+			env->SetIntField(objBlp2Sync, fidExtCount, boardStatus.ap2_sync.ext_count);
+			env->SetIntField(objBlp2Sync, fidSyncCount, boardStatus.ap2_sync.sync_count);
+			env->SetIntField(objBlp2Sync, fidSampleOffset, boardStatus.ap2_sync.sample_offset);
+			env->SetIntField(objBlp2Sync, fidSliceCount, boardStatus.ap2_sync.slice_count);
 		}
 	}
 
@@ -254,10 +279,10 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp3Sync = env->GetObjectField(status, fidBlp3Sync);
 		if(fidExtCount != 0 && fidSyncCount != 0 && fidSampleOffset != 0 && fidSliceCount != 0)
 		{
-			env->SetIntField(objBlp3Sync, fidExtCount, boardStatus->ap3_sync.ext_count);
-			env->SetIntField(objBlp3Sync, fidSyncCount, boardStatus->ap3_sync.sync_count);
-			env->SetIntField(objBlp3Sync, fidSampleOffset, boardStatus->ap3_sync.sample_offset);
-			env->SetIntField(objBlp3Sync, fidSliceCount, boardStatus->ap3_sync.slice_count);
+			env->SetIntField(objBlp3Sync, fidExtCount, boardStatus.ap3_sync.ext_count);
+			env->SetIntField(objBlp3Sync, fidSyncCount, boardStatus.ap3_sync.sync_count);
+			env->SetIntField(objBlp3Sync, fidSampleOffset, boardStatus.ap3_sync.sample_offset);
+			env->SetIntField(objBlp3Sync, fidSliceCount, boardStatus.ap3_sync.slice_count);
 		}
 	}
 
@@ -271,8 +296,8 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp0Rcu = env->GetObjectField(status, fidBlp0Rcu);
 		if(fidNofOverflowX != 0 && fidNofOverflowY != 0)
 		{
-			env->SetIntField(objBlp0Rcu, fidNofOverflowX, boardStatus->blp0_rcu.nof_overflowx);
-			env->SetIntField(objBlp0Rcu, fidNofOverflowY, boardStatus->blp0_rcu.nof_overflowy);
+			env->SetIntField(objBlp0Rcu, fidNofOverflowX, boardStatus.blp0_rcu.nof_overflowx);
+			env->SetIntField(objBlp0Rcu, fidNofOverflowY, boardStatus.blp0_rcu.nof_overflowy);
 		}
 	}
 	
@@ -281,8 +306,8 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp1Rcu = env->GetObjectField(status, fidBlp1Rcu);
 		if(fidNofOverflowX != 0 && fidNofOverflowY != 0)
 		{
-			env->SetIntField(objBlp1Rcu, fidNofOverflowX, boardStatus->blp1_rcu.nof_overflowx);
-			env->SetIntField(objBlp1Rcu, fidNofOverflowY, boardStatus->blp1_rcu.nof_overflowy);
+			env->SetIntField(objBlp1Rcu, fidNofOverflowX, boardStatus.blp1_rcu.nof_overflowx);
+			env->SetIntField(objBlp1Rcu, fidNofOverflowY, boardStatus.blp1_rcu.nof_overflowy);
 		}
 	}
 	
@@ -291,8 +316,8 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp2Rcu = env->GetObjectField(status, fidBlp2Rcu);
 		if(fidNofOverflowX != 0 && fidNofOverflowY != 0)
 		{
-			env->SetIntField(objBlp2Rcu, fidNofOverflowX, boardStatus->blp2_rcu.nof_overflowx);
-			env->SetIntField(objBlp2Rcu, fidNofOverflowY, boardStatus->blp2_rcu.nof_overflowy);
+			env->SetIntField(objBlp2Rcu, fidNofOverflowX, boardStatus.blp2_rcu.nof_overflowx);
+			env->SetIntField(objBlp2Rcu, fidNofOverflowY, boardStatus.blp2_rcu.nof_overflowy);
 		}
 	}
 	
@@ -301,30 +326,30 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp3Rcu = env->GetObjectField(status, fidBlp3Rcu);
 		if(fidNofOverflowX != 0 && fidNofOverflowY != 0)
 		{
-			env->SetIntField(objBlp3Rcu, fidNofOverflowX, boardStatus->blp3_rcu.nof_overflowx);
-			env->SetIntField(objBlp3Rcu, fidNofOverflowY, boardStatus->blp3_rcu.nof_overflowy);
+			env->SetIntField(objBlp3Rcu, fidNofOverflowX, boardStatus.blp3_rcu.nof_overflowx);
+			env->SetIntField(objBlp3Rcu, fidNofOverflowY, boardStatus.blp3_rcu.nof_overflowy);
 		}
 	}
 
 	if(fidCpRdy != 0)
 	{
-		env->SetIntField(status, fidCpRdy, boardStatus->cp_status.rdy);
+		env->SetIntField(status, fidCpRdy, boardStatus.cp_status.rdy);
 	}
 	if(fidCpErr != 0)
 	{
-		env->SetIntField(status, fidCpErr, boardStatus->cp_status.err);
+		env->SetIntField(status, fidCpErr, boardStatus.cp_status.err);
 	}
 	if(fidCpFpga != 0)
 	{
-		env->SetIntField(status, fidCpFpga, boardStatus->cp_status.fpga);
+		env->SetIntField(status, fidCpFpga, boardStatus.cp_status.fpga);
 	}
 	if(fidCpIm != 0)
 	{
-		env->SetIntField(status, fidCpIm, boardStatus->cp_status.im);
+		env->SetIntField(status, fidCpIm, boardStatus.cp_status.im);
 	}
 	if(fidCpTrig != 0)
 	{
-		env->SetIntField(status, fidCpTrig, boardStatus->cp_status.trig);
+		env->SetIntField(status, fidCpTrig, boardStatus.cp_status.trig);
 	}
 
 	// ADOStatus: blp0AdcOffset - blp3AdcOffset
@@ -337,8 +362,8 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp0AdcOffset = env->GetObjectField(status, fidBlp0AdcOffset);
 		if(fidAdcOffsetX != 0 && fidAdcOffsetY != 0)
 		{
-			env->SetIntField(objBlp0AdcOffset, fidAdcOffsetX, boardStatus->blp0_adc_offset.adc_offset_x);
-			env->SetIntField(objBlp0AdcOffset, fidAdcOffsetY, boardStatus->blp0_adc_offset.adc_offset_y);
+			env->SetIntField(objBlp0AdcOffset, fidAdcOffsetX, boardStatus.blp0_adc_offset.adc_offset_x);
+			env->SetIntField(objBlp0AdcOffset, fidAdcOffsetY, boardStatus.blp0_adc_offset.adc_offset_y);
 		}
 	}
 	if(fidBlp1AdcOffset != 0)
@@ -346,8 +371,8 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp1AdcOffset = env->GetObjectField(status, fidBlp1AdcOffset);
 		if(fidAdcOffsetX != 0 && fidAdcOffsetY != 0)
 		{
-			env->SetIntField(objBlp1AdcOffset, fidAdcOffsetX, boardStatus->blp1_adc_offset.adc_offset_x);
-			env->SetIntField(objBlp1AdcOffset, fidAdcOffsetY, boardStatus->blp1_adc_offset.adc_offset_y);
+			env->SetIntField(objBlp1AdcOffset, fidAdcOffsetX, boardStatus.blp1_adc_offset.adc_offset_x);
+			env->SetIntField(objBlp1AdcOffset, fidAdcOffsetY, boardStatus.blp1_adc_offset.adc_offset_y);
 		}
 	}
 	if(fidBlp2AdcOffset != 0)
@@ -355,8 +380,8 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp2AdcOffset = env->GetObjectField(status, fidBlp2AdcOffset);
 		if(fidAdcOffsetX != 0 && fidAdcOffsetY != 0)
 		{
-			env->SetIntField(objBlp2AdcOffset, fidAdcOffsetX, boardStatus->blp2_adc_offset.adc_offset_x);
-			env->SetIntField(objBlp2AdcOffset, fidAdcOffsetY, boardStatus->blp2_adc_offset.adc_offset_y);
+			env->SetIntField(objBlp2AdcOffset, fidAdcOffsetX, boardStatus.blp2_adc_offset.adc_offset_x);
+			env->SetIntField(objBlp2AdcOffset, fidAdcOffsetY, boardStatus.blp2_adc_offset.adc_offset_y);
 		}
 	}
 	if(fidBlp3AdcOffset != 0)
@@ -364,20 +389,19 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveSt
 		jobject objBlp3AdcOffset = env->GetObjectField(status, fidBlp3AdcOffset);
 		if(fidAdcOffsetX != 0 && fidAdcOffsetY != 0)
 		{
-			env->SetIntField(objBlp3AdcOffset, fidAdcOffsetX, boardStatus->blp3_adc_offset.adc_offset_x);
-			env->SetIntField(objBlp3AdcOffset, fidAdcOffsetY, boardStatus->blp3_adc_offset.adc_offset_y);
+			env->SetIntField(objBlp3AdcOffset, fidAdcOffsetX, boardStatus.blp3_adc_offset.adc_offset_x);
+			env->SetIntField(objBlp3AdcOffset, fidAdcOffsetY, boardStatus.blp3_adc_offset.adc_offset_y);
 		}
 	}
 
 	// Free local references. 
-	env->ReleaseStringUTFChars(hostname, chars);
 	env->DeleteLocalRef(clsStatus);
 	
 	// Return status.
 	return status;
 }
 
-BoardStatus GetBoardStatus()
+BoardStatus GetDummyBoardStatus()
 {
 	BoardStatus bs;
 
