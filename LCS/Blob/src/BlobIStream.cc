@@ -230,6 +230,11 @@ BlobIStream& BlobIStream::operator>> (double& var)
   }
   return *this;
 }
+BlobIStream& BlobIStream::operator>> (i4complex& var)
+{
+  getBuf (&var, 1);
+  return *this;
+}
 BlobIStream& BlobIStream::operator>> (i16complex& var)
 {
   getBuf (&var, sizeof(var));
@@ -348,6 +353,10 @@ void BlobIStream::get (double* values, uint nrval)
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, values, nrval);
   }
+}
+void BlobIStream::get (i4complex* values, uint nrval)
+{
+  getBuf (values, nrval);
 }
 void BlobIStream::get (i16complex* values, uint nrval)
 {

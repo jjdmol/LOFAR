@@ -16,6 +16,7 @@ pkginclude_HEADERS = \
 	DataFormat.h \
 	Exception.h \
 	hexdump.h \
+	i4complex.h\
 	lofar_algorithm.h \
 	lofar_complex.h \
 	lofar_datetime.h \

@@ -101,6 +101,12 @@ namespace LOFAR
       return str;
     }
 
+  const std::string& typeName (const i4complex*)
+    {
+      static std::string str ("i4complex");
+      return str;
+    }
+
   const std::string& typeName (const i16complex*)
     {
       static std::string str ("i16complex");

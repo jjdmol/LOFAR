@@ -75,6 +75,7 @@ namespace LOFAR
   void dataConvert (DataFormat, uint64* inout, uint nrval);
   void dataConvert (DataFormat, float* inout, uint nrval);
   void dataConvert (DataFormat, double* inout, uint nrval);
+  void dataConvert (DataFormat, i4complex *inout, uint nrval);
   template<class T> void dataConvert (DataFormat, std::complex<T>* inout,
 				      uint nrval);
   LFDC_TMPL_INT void dataConvert (DataFormat, i16complex* inout, uint nrval);
@@ -207,6 +208,8 @@ namespace LOFAR
     { dataConvert32 (fmt, inout, nrval); }
   inline void dataConvert (DataFormat fmt, double* inout, uint nrval)
     { dataConvert64 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, i4complex* inout, uint nrval)
+    {}
   inline void dataConvert (DataFormat fmt, std::complex<int16>* inout, uint nrval)
     { dataConvert16 (fmt, inout, 2*nrval); }
   LFDC_TMPL_INT inline void dataConvert (DataFormat fmt, i16complex* inout, uint nrval)
