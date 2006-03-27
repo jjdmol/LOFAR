@@ -55,11 +55,12 @@ public:
   // Construct the MS with a given name.
   // The timeStep (in sec) is used by the write function
   // to calculate the time from the starting time and the timeCounter.
-  // The antenna positions have to be given in ITRF coordinates.
+  // The antenna positions have to be given in ITRF coordinates as XYZ.
   // So antPos must have shape [3,nantennas].
   MSCreate (const std::string& msName,
 	    double startTime, double timeStep, int nfreq, int ncorr,
-	    int nantennas, const casa::Matrix<double>& antPos);
+	    int nantennas, const casa::Matrix<double>& antPos,
+	    int tileSizeFreq, int tileSizeRest);
 
   // Destructor
   ~MSCreate();
@@ -119,7 +120,8 @@ private:
 
   // Create the MS and fill its subtables as much as possible.
   void createMS (const casa::String& msName, 
-		 const casa::Block<casa::MPosition>& antPos);
+		 const casa::Block<casa::MPosition>& antPos,
+		 int tileSizeFreq, int tileSizeRest);
 
   // Set the band.
   int addBand (int npolarizations, int nchannels,

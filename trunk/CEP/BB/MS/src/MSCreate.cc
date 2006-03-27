@@ -62,7 +62,8 @@ using namespace casa;
 
 MSCreate::MSCreate (const std::string& msName,
 		    double startTime, double timeStep, int nfreq, int ncorr,
-		    int nantennas, const Matrix<double>& antPos)
+		    int nantennas, const Matrix<double>& antPos,
+		    int tileSizeFreq, int tileSizeRest)
 : itsNrBand   (0),
   itsNrField  (0),
   itsNrAnt    (nantennas),
@@ -93,7 +94,7 @@ MSCreate::MSCreate (const std::string& msName,
   itsArrayPos = new MPosition(antMPos[nantennas/2]);
   itsFrame = new MeasFrame(*itsArrayPos);
   // Create the MS.
-  createMS (msName, antMPos);
+  createMS (msName, antMPos, tileSizeFreq, tileSizeRest);
   itsNrPol  = new Block<Int>;
   itsNrChan = new Block<Int>;
   itsPolnr  = new Block<Int>;
@@ -124,7 +125,8 @@ int MSCreate::nrPolarizations() const
 
 
 void MSCreate::createMS (const String& msName,
-			 const Block<MPosition>& antPos)
+			 const Block<MPosition>& antPos,
+			 int tileSizeFreq, int tileSizeRest)
 {
   // Get the MS main default table description.
   TableDesc td = MS::requiredTableDesc();
@@ -152,8 +154,16 @@ void MSCreate::createMS (const String& msName,
   // Store all pol and freq in a single tile.
   // In this way the data appear in separate files that can be mmapped.
   // Flags are stored as bits, so take care each tile has multiple of 8 flags.
-  TiledColumnStMan tiledData("TiledData", IPosition(3,4,1000000,1));
-  TiledColumnStMan tiledFlag("TiledFlag", IPosition(3,4,1000000,8));
+  int tsf = tileSizeFreq;
+  int tsr = tileSizeRest;
+  if (tsf <= 0) {
+    tsf = itsNrFreq;    // default is all channels
+  }
+  if (tsr <= 0) {
+    tsr = std::max (1, 4096/tsf);
+  }
+  TiledColumnStMan tiledData("TiledData", IPosition(3,4,tsf,tsr));
+  TiledColumnStMan tiledFlag("TiledFlag", IPosition(3,4,tsf,8*tsr));
   TiledColumnStMan tiledUVW("TiledUVW", IPosition(3,128));
   newTab.bindAll (incrStMan);
   newTab.bindColumn(MS::columnName(MS::ANTENNA1),stanStMan);
@@ -177,23 +187,25 @@ void MSCreate::createMS (const String& msName,
   fillObservation();
   fillState();
   // Find out which datamanagers contain DATA, FLAG and UVW.
-  // Create symlinks for them.
-  Record dminfo = itsMS->dataManagerInfo();
-  for (uint i=0; i<dminfo.nfields(); ++i) {
-    const Record& dm = dminfo.subRecord(i);
-    String slname;
-    if (dm.asString("NAME") == "TiledData") {
-      slname = "/vis.dat";
-    } else if (dm.asString("NAME") == "TiledFlag") {
-      slname = "/vis.flg";
-    } else if (dm.asString("NAME") == "TiledUVW") {
-      slname = "/vis.uvw";
-    }
-    if (! slname.empty()) {
-      ostringstream ostr;
-      ostr << "table.f" << i << "_TSM0";
-      SymLink sl(msName+slname);
-      sl.create (ostr.str());
+  // Create symlinks for them, but only if no tiling in frequency.
+  if (tsf >= itsNrFreq) {
+    Record dminfo = itsMS->dataManagerInfo();
+    for (uint i=0; i<dminfo.nfields(); ++i) {
+      const Record& dm = dminfo.subRecord(i);
+      String slname;
+      if (dm.asString("NAME") == "TiledData") {
+	slname = "/vis.dat";
+      } else if (dm.asString("NAME") == "TiledFlag") {
+	slname = "/vis.flg";
+      } else if (dm.asString("NAME") == "TiledUVW") {
+	slname = "/vis.uvw";
+      }
+      if (! slname.empty()) {
+	ostringstream ostr;
+	ostr << "table.f" << i << "_TSM0";
+	SymLink sl(msName+slname);
+	sl.create (ostr.str());
+      }
     }
   }
 }
