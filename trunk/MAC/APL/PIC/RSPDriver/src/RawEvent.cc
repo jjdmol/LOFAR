@@ -265,7 +265,21 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
   /* pid = 0x09 (CR) */
   {
-    /* reg = 0x00 (CR_CONTROL) */
+    /* reg = 0x00 (CR_SOFTCLEAR) */
+    { 0,
+      0,
+      EPA_CR_CONTROL, /* WRITE    */
+      0,
+      EPA_WRITEACK,   /* WRITEACK */
+    },
+    /* reg = 0x01 (CR_SOFTSYNC) */
+    { 0,
+      0,
+      EPA_CR_CONTROL, /* WRITE    */
+      0,
+      EPA_WRITEACK,   /* WRITEACK */
+    },
+    /* reg = 0x02 (CR_SOFTDISABLE) */
     { 0,
       0,
       EPA_CR_CONTROL, /* WRITE    */
@@ -273,13 +287,6 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WRITEACK,   /* WRITEACK */
     },
 
-    /* reg = 0x01 (Header) */
-    { 0,
-      EPA_READ,         /* READ     */
-      EPA_CDO_HEADER, /* WRITE    */
-      EPA_CDO_HEADER, /* READACK  */
-      EPA_WRITEACK,     /* WRITEACK */
-    },
   },
 
   /* pid = 0x0A (XST) */
@@ -355,6 +362,13 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_CDO_SETTINGS, /* READACK  */
       EPA_WRITEACK,     /* WRITEACK */
     },
+    /* reg = 0x01 (CDO_HEADER) */
+    { 0,
+      EPA_READ,         /* READ     */
+      EPA_CDO_HEADER, /* WRITE    */
+      EPA_CDO_HEADER, /* READACK  */
+      EPA_WRITEACK,     /* WRITEACK */
+    },
   },
 
   /* pid = 0x0C (BS) */
@@ -400,6 +414,22 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_TBB_CONTROL, /* WRITE    */
       0,
       EPA_WRITEACK,    /* WRITEACK */
+    },
+  },
+
+  /* pid = 0x10 (CEP) */
+  {
+    /* reg = 0x00 (RESERVED) */
+    { 
+      /* RESERVED */
+    },
+  },
+
+  /* pid = 0x11 (LCU) */
+  {
+    /* reg = 0x00 (RESERVED) */
+    { 
+      /* RESERVED */
     },
   },
 
