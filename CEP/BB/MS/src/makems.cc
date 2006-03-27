@@ -133,7 +133,8 @@ void createMS (const string& msName, const Array<double>& antPos,
   double freqRef = (endFreq+startFreq) / 2;
   double timeStep = (endTime-startTime) / ntime;
   MSCreate msmaker(msName, startTime, timeStep, nfreq, 4, antPos.shape()[1],
-		   Matrix<double>(antPos));
+		   Matrix<double>(antPos),
+		   info.getTileSizeFreq(), info.getTileSizeRest());
   msmaker.addBand (4, nfreq, freqRef, freqStep);
   msmaker.addField (ra, dec);
   for (int i=0; i<ntime; ++i) {
@@ -151,7 +152,7 @@ void createMSSeq (const string& msName, int seqnr, const Array<double>& antPos,
   string msNameF = msName + ostr.str();
   createMS (msNameF, antPos, info);
   // Write the description file.
-  writeDesc (msNameF + "/vis.des", false, msNameF, 0, antPos, antNames, info);
+  writeDesc (msNameF + "/vis", false, msNameF, 0, antPos, antNames, info);
 }
 
 void doMaster (bool send)
@@ -175,6 +176,15 @@ void doMaster (bool send)
   int nfreq = params.getInt32 ("NFrequencies");
   int ntime = params.getInt32 ("NTimes");
   int nnode = params.getInt32 ("NParts");
+  // Determine possible tile size. Default is no tiling.
+  int tileSizeFreq = -1;
+  int tileSizeRest = -1;
+  if (params.isDefined ("TileSizeFreq")) {
+    tileSizeFreq = params.getInt32 ("TileSizeFreq");
+  }
+  if (params.isDefined ("TileSizeRest")) {
+    tileSizeRest = params.getInt32 ("TileSizeRest");
+  }
   ASSERT (nnode > 0);
   ASSERT (nfreq >= nnode);
   ASSERT (nfreq%nnode == 0);
@@ -198,6 +208,7 @@ void doMaster (bool send)
   MSMakeConn conn(nnode);
   // Fill the DataHolder as much as possible.
   conn.sender.setTime (startTime, endTime, ntime);
+  conn.sender.setTileSize (tileSizeFreq, tileSizeRest);
   conn.sender.setPos (ra, dec);
   // Write the antPos and MSName in the extra blob.
   conn.sender.fillExtra (msName, antPos, antNames);

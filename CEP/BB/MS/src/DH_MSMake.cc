@@ -61,11 +61,16 @@ namespace LOFAR {
     // Add the fields to the data definition.
     addField ("NFreq", BlobField<int>(1));
     addField ("NTime", BlobField<int>(1));
+    addField ("TileSizeFreq", BlobField<int>(1));
+    addField ("TileSizeRest", BlobField<int>(1));
     addField ("Freqs", BlobField<double>(1, 2));
     addField ("Times", BlobField<double>(1, 2));
     addField ("Pos",   BlobField<double>(1, 2));
     // Create the data blob (which calls fillDataPointers).
     createDataBlock();
+    // Set default tile sizes.
+    *itsTileSizeFreq = -1;
+    *itsTileSizeRest = -1;
   }
 
   void DH_MSMake::fillDataPointers()
@@ -73,6 +78,8 @@ namespace LOFAR {
     // Fill in the pointers.
     itsNFreq = getData<int> ("NFreq");
     itsNTime = getData<int> ("NTime");
+    itsTileSizeFreq = getData<int> ("TileSizeFreq");
+    itsTileSizeRest = getData<int> ("TileSizeRest");
     itsFreqs = getData<double> ("Freqs");
     itsTimes = getData<double> ("Times");
     itsPos   = getData<double> ("Pos");
