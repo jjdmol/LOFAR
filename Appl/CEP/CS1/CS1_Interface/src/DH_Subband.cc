@@ -86,7 +86,7 @@ void DH_Subband::fillDataPointers()
 void DH_Subband::swapBytes()
 {
   // only convert Samples; CEPframe converts Flags and Delays
-  dataConvert(LittleEndian, (i16complex *) itsSamples, nrSamples());
+  dataConvert(LittleEndian, (SampleType *) itsSamples, nrSamples());
 }
 
 }

@@ -38,7 +38,13 @@ class DH_Subband: public DataHolder
 {
 public:
   // Samples
+#if INPUT_TYPE == I4COMPLEX_TYPE
+  typedef i4complex SampleType;
+#elif INPUT_TYPE == I16COMPLEX_TYPE
   typedef i16complex SampleType;
+#else
+#error INPUT_TYPE not supported
+#endif
   typedef SampleType AllSamplesType[NR_STATIONS][NR_INPUT_SAMPLES][NR_POLARIZATIONS];
 
   // Flags

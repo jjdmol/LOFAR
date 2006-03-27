@@ -24,6 +24,7 @@
 #if defined HAVE_BGL
 #include <CS1_Interface/bitset.h>
 #include <CS1_Interface/CS1_Config.h>
+#include <CS1_Interface/DH_Subband.h>
 
 #include <rts.h>
 
@@ -40,7 +41,7 @@ typedef LOFAR::bitset<NR_SAMPLES_PER_INTEGRATION> flagsType[NR_STATIONS];
 extern "C" {
   void _filter(fcomplex delayLine[NR_TAPS],
                const float weights[NR_TAPS],
-               const i16complex samples[],
+               const DH_Subband::SampleType samples[],
                fcomplex out[],
                int nr_samples_div_16);
 
