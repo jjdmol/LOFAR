@@ -47,12 +47,12 @@ namespace LOFAR
 static BGL_Barrier *barrier;
 #endif
 
-inline i16complex toComplex(double phi)
+inline DH_Subband::SampleType toComplex(double phi)
 {
-    double s, c;
+    double s, c, factor = sizeof(DH_Subband::SampleType) == sizeof(i16complex) ? 32767 : 7;
 
     sincos(phi, &s, &c);
-    return makei16complex((int) (32767 * c), (int) (32767 * s));
+    return DH_Subband::SampleType((int) rint(factor * c), (int) rint(factor * s));
 }
 
 
@@ -76,11 +76,11 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
   const double		     phaseShift = 2 * M_PI * distance;
 
   for (int time = 0; time < NR_INPUT_SAMPLES; time ++) {
-    double     phi    = 2 * M_PI * signalFrequency * time / SAMPLE_RATE;
-    i16complex sample = toComplex(phi);
+    double phi = 2 * M_PI * signalFrequency * time / SAMPLE_RATE;
+    DH_Subband::SampleType sample = toComplex(phi);
 
     for (int stat = 0; stat < NR_STATIONS; stat ++) {
-      (*samples)[stat][time][0] = makei16complex(time, 0);
+      (*samples)[stat][time][0] = DH_Subband::SampleType(time, 0);
       (*samples)[stat][time][1] = sample;
     }
 

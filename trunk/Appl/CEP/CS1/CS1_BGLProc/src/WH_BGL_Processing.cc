@@ -1182,7 +1182,11 @@ void WH_BGL_Processing::preprocess()
 #endif
 
   for (int i = 1; i <= NR_SAMPLES_PER_INTEGRATION; i ++) {
+#if INPUT_TYPE == I4COMPLEX_TYPE
+    correlationWeights[i] = 1.0 / i;
+#else
     correlationWeights[i] = 1.0e-6 / i;
+#endif
   }
 
   for (int bl = 0; bl < NR_BASELINES; bl ++) {
@@ -1205,6 +1209,11 @@ inline __complex__ float to_fcomplex(i16complex z)
 #else
 #define to_fcomplex(Z) (static_cast<fcomplex>(Z))
 #endif
+
+inline fcomplex to_fcomplex(i4complex z)
+{
+  return makefcomplex((float) real(z), (float) imag(z));
+}
 
 
 void WH_BGL_Processing::computeFlags()
@@ -1304,7 +1313,7 @@ void WH_BGL_Processing::doPPF()
   get_DH_Subband()->swapBytes();
 #endif
 
-  typedef i16complex inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS];
+  typedef DH_Subband::SampleType inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS];
 
   inputType *input = (inputType *) get_DH_Subband()->getSamples();
 

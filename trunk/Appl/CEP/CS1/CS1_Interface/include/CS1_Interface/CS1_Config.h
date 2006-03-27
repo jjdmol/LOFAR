@@ -25,12 +25,14 @@
 
 /* This is included by C++ and assembly files.  Do not put anything but
    constants here! */
-
+#define INPUT_TYPE		   I16COMPLEX_TYPE
 #define NR_STATIONS		   37
 #define NR_POLARIZATIONS	   2
 #define NR_SUBBAND_CHANNELS	   256
 #define NR_TAPS			   16
 #define SAMPLE_RATE		   196608 /* 155648 */
+
+/* Do not change anything below this line */
 
 #if SAMPLE_RATE % (NR_TAPS * NR_SUBBAND_CHANNELS) != 0
 #error  "Bad value for SAMPLE_RATE"
@@ -40,5 +42,8 @@
 #define NR_SAMPLES_PER_INTEGRATION (SAMPLE_RATE / NR_SUBBAND_CHANNELS)
 #define CHANNEL_BANDWIDTH	   NR_SAMPLES_PER_INTEGRATION
 #define NR_BASELINES		   (NR_STATIONS * (NR_STATIONS + 1) / 2)
+
+#define I4COMPLEX_TYPE		   1
+#define I16COMPLEX_TYPE		   2
 
 #endif

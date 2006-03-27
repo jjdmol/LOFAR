@@ -20,6 +20,7 @@
 #if defined HAVE_BGL
 #include <CS1_Interface/CS1_Config.h>
 
+#define I4COMPLEX_SIZE	 1
 #define I16COMPLEX_SIZE	 4
 #define FCOMPLEX_SIZE	 8
 #define DCOMPLEX_SIZE	16
@@ -189,6 +190,762 @@ L5:
 
 	blr
 
+
+#if INPUT_TYPE == I4COMPLEX_TYPE
+
+.align	5
+fp_table:
+	.long	0x00000000, 0x00000000
+	.long	0x3F800000, 0x00000000
+	.long	0x40000000, 0x00000000
+	.long	0x40400000, 0x00000000
+	.long	0x40800000, 0x00000000
+	.long	0x40A00000, 0x00000000
+	.long	0x40C00000, 0x00000000
+	.long	0x40E00000, 0x00000000
+	.long	0xC1000000, 0x00000000
+	.long	0xC0E00000, 0x00000000
+	.long	0xC0C00000, 0x00000000
+	.long	0xC0A00000, 0x00000000
+	.long	0xC0800000, 0x00000000
+	.long	0xC0400000, 0x00000000
+	.long	0xC0000000, 0x00000000
+	.long	0xBF800000, 0x00000000
+	.long	0x00000000, 0x3F800000
+	.long	0x3F800000, 0x3F800000
+	.long	0x40000000, 0x3F800000
+	.long	0x40400000, 0x3F800000
+	.long	0x40800000, 0x3F800000
+	.long	0x40A00000, 0x3F800000
+	.long	0x40C00000, 0x3F800000
+	.long	0x40E00000, 0x3F800000
+	.long	0xC1000000, 0x3F800000
+	.long	0xC0E00000, 0x3F800000
+	.long	0xC0C00000, 0x3F800000
+	.long	0xC0A00000, 0x3F800000
+	.long	0xC0800000, 0x3F800000
+	.long	0xC0400000, 0x3F800000
+	.long	0xC0000000, 0x3F800000
+	.long	0xBF800000, 0x3F800000
+	.long	0x00000000, 0x40000000
+	.long	0x3F800000, 0x40000000
+	.long	0x40000000, 0x40000000
+	.long	0x40400000, 0x40000000
+	.long	0x40800000, 0x40000000
+	.long	0x40A00000, 0x40000000
+	.long	0x40C00000, 0x40000000
+	.long	0x40E00000, 0x40000000
+	.long	0xC1000000, 0x40000000
+	.long	0xC0E00000, 0x40000000
+	.long	0xC0C00000, 0x40000000
+	.long	0xC0A00000, 0x40000000
+	.long	0xC0800000, 0x40000000
+	.long	0xC0400000, 0x40000000
+	.long	0xC0000000, 0x40000000
+	.long	0xBF800000, 0x40000000
+	.long	0x00000000, 0x40400000
+	.long	0x3F800000, 0x40400000
+	.long	0x40000000, 0x40400000
+	.long	0x40400000, 0x40400000
+	.long	0x40800000, 0x40400000
+	.long	0x40A00000, 0x40400000
+	.long	0x40C00000, 0x40400000
+	.long	0x40E00000, 0x40400000
+	.long	0xC1000000, 0x40400000
+	.long	0xC0E00000, 0x40400000
+	.long	0xC0C00000, 0x40400000
+	.long	0xC0A00000, 0x40400000
+	.long	0xC0800000, 0x40400000
+	.long	0xC0400000, 0x40400000
+	.long	0xC0000000, 0x40400000
+	.long	0xBF800000, 0x40400000
+	.long	0x00000000, 0x40800000
+	.long	0x3F800000, 0x40800000
+	.long	0x40000000, 0x40800000
+	.long	0x40400000, 0x40800000
+	.long	0x40800000, 0x40800000
+	.long	0x40A00000, 0x40800000
+	.long	0x40C00000, 0x40800000
+	.long	0x40E00000, 0x40800000
+	.long	0xC1000000, 0x40800000
+	.long	0xC0E00000, 0x40800000
+	.long	0xC0C00000, 0x40800000
+	.long	0xC0A00000, 0x40800000
+	.long	0xC0800000, 0x40800000
+	.long	0xC0400000, 0x40800000
+	.long	0xC0000000, 0x40800000
+	.long	0xBF800000, 0x40800000
+	.long	0x00000000, 0x40A00000
+	.long	0x3F800000, 0x40A00000
+	.long	0x40000000, 0x40A00000
+	.long	0x40400000, 0x40A00000
+	.long	0x40800000, 0x40A00000
+	.long	0x40A00000, 0x40A00000
+	.long	0x40C00000, 0x40A00000
+	.long	0x40E00000, 0x40A00000
+	.long	0xC1000000, 0x40A00000
+	.long	0xC0E00000, 0x40A00000
+	.long	0xC0C00000, 0x40A00000
+	.long	0xC0A00000, 0x40A00000
+	.long	0xC0800000, 0x40A00000
+	.long	0xC0400000, 0x40A00000
+	.long	0xC0000000, 0x40A00000
+	.long	0xBF800000, 0x40A00000
+	.long	0x00000000, 0x40C00000
+	.long	0x3F800000, 0x40C00000
+	.long	0x40000000, 0x40C00000
+	.long	0x40400000, 0x40C00000
+	.long	0x40800000, 0x40C00000
+	.long	0x40A00000, 0x40C00000
+	.long	0x40C00000, 0x40C00000
+	.long	0x40E00000, 0x40C00000
+	.long	0xC1000000, 0x40C00000
+	.long	0xC0E00000, 0x40C00000
+	.long	0xC0C00000, 0x40C00000
+	.long	0xC0A00000, 0x40C00000
+	.long	0xC0800000, 0x40C00000
+	.long	0xC0400000, 0x40C00000
+	.long	0xC0000000, 0x40C00000
+	.long	0xBF800000, 0x40C00000
+	.long	0x00000000, 0x40E00000
+	.long	0x3F800000, 0x40E00000
+	.long	0x40000000, 0x40E00000
+	.long	0x40400000, 0x40E00000
+	.long	0x40800000, 0x40E00000
+	.long	0x40A00000, 0x40E00000
+	.long	0x40C00000, 0x40E00000
+	.long	0x40E00000, 0x40E00000
+	.long	0xC1000000, 0x40E00000
+	.long	0xC0E00000, 0x40E00000
+	.long	0xC0C00000, 0x40E00000
+	.long	0xC0A00000, 0x40E00000
+	.long	0xC0800000, 0x40E00000
+	.long	0xC0400000, 0x40E00000
+	.long	0xC0000000, 0x40E00000
+	.long	0xBF800000, 0x40E00000
+	.long	0x00000000, 0xC1000000
+	.long	0x3F800000, 0xC1000000
+	.long	0x40000000, 0xC1000000
+	.long	0x40400000, 0xC1000000
+	.long	0x40800000, 0xC1000000
+	.long	0x40A00000, 0xC1000000
+	.long	0x40C00000, 0xC1000000
+	.long	0x40E00000, 0xC1000000
+	.long	0xC1000000, 0xC1000000
+	.long	0xC0E00000, 0xC1000000
+	.long	0xC0C00000, 0xC1000000
+	.long	0xC0A00000, 0xC1000000
+	.long	0xC0800000, 0xC1000000
+	.long	0xC0400000, 0xC1000000
+	.long	0xC0000000, 0xC1000000
+	.long	0xBF800000, 0xC1000000
+	.long	0x00000000, 0xC0E00000
+	.long	0x3F800000, 0xC0E00000
+	.long	0x40000000, 0xC0E00000
+	.long	0x40400000, 0xC0E00000
+	.long	0x40800000, 0xC0E00000
+	.long	0x40A00000, 0xC0E00000
+	.long	0x40C00000, 0xC0E00000
+	.long	0x40E00000, 0xC0E00000
+	.long	0xC1000000, 0xC0E00000
+	.long	0xC0E00000, 0xC0E00000
+	.long	0xC0C00000, 0xC0E00000
+	.long	0xC0A00000, 0xC0E00000
+	.long	0xC0800000, 0xC0E00000
+	.long	0xC0400000, 0xC0E00000
+	.long	0xC0000000, 0xC0E00000
+	.long	0xBF800000, 0xC0E00000
+	.long	0x00000000, 0xC0C00000
+	.long	0x3F800000, 0xC0C00000
+	.long	0x40000000, 0xC0C00000
+	.long	0x40400000, 0xC0C00000
+	.long	0x40800000, 0xC0C00000
+	.long	0x40A00000, 0xC0C00000
+	.long	0x40C00000, 0xC0C00000
+	.long	0x40E00000, 0xC0C00000
+	.long	0xC1000000, 0xC0C00000
+	.long	0xC0E00000, 0xC0C00000
+	.long	0xC0C00000, 0xC0C00000
+	.long	0xC0A00000, 0xC0C00000
+	.long	0xC0800000, 0xC0C00000
+	.long	0xC0400000, 0xC0C00000
+	.long	0xC0000000, 0xC0C00000
+	.long	0xBF800000, 0xC0C00000
+	.long	0x00000000, 0xC0A00000
+	.long	0x3F800000, 0xC0A00000
+	.long	0x40000000, 0xC0A00000
+	.long	0x40400000, 0xC0A00000
+	.long	0x40800000, 0xC0A00000
+	.long	0x40A00000, 0xC0A00000
+	.long	0x40C00000, 0xC0A00000
+	.long	0x40E00000, 0xC0A00000
+	.long	0xC1000000, 0xC0A00000
+	.long	0xC0E00000, 0xC0A00000
+	.long	0xC0C00000, 0xC0A00000
+	.long	0xC0A00000, 0xC0A00000
+	.long	0xC0800000, 0xC0A00000
+	.long	0xC0400000, 0xC0A00000
+	.long	0xC0000000, 0xC0A00000
+	.long	0xBF800000, 0xC0A00000
+	.long	0x00000000, 0xC0800000
+	.long	0x3F800000, 0xC0800000
+	.long	0x40000000, 0xC0800000
+	.long	0x40400000, 0xC0800000
+	.long	0x40800000, 0xC0800000
+	.long	0x40A00000, 0xC0800000
+	.long	0x40C00000, 0xC0800000
+	.long	0x40E00000, 0xC0800000
+	.long	0xC1000000, 0xC0800000
+	.long	0xC0E00000, 0xC0800000
+	.long	0xC0C00000, 0xC0800000
+	.long	0xC0A00000, 0xC0800000
+	.long	0xC0800000, 0xC0800000
+	.long	0xC0400000, 0xC0800000
+	.long	0xC0000000, 0xC0800000
+	.long	0xBF800000, 0xC0800000
+	.long	0x00000000, 0xC0400000
+	.long	0x3F800000, 0xC0400000
+	.long	0x40000000, 0xC0400000
+	.long	0x40400000, 0xC0400000
+	.long	0x40800000, 0xC0400000
+	.long	0x40A00000, 0xC0400000
+	.long	0x40C00000, 0xC0400000
+	.long	0x40E00000, 0xC0400000
+	.long	0xC1000000, 0xC0400000
+	.long	0xC0E00000, 0xC0400000
+	.long	0xC0C00000, 0xC0400000
+	.long	0xC0A00000, 0xC0400000
+	.long	0xC0800000, 0xC0400000
+	.long	0xC0400000, 0xC0400000
+	.long	0xC0000000, 0xC0400000
+	.long	0xBF800000, 0xC0400000
+	.long	0x00000000, 0xC0000000
+	.long	0x3F800000, 0xC0000000
+	.long	0x40000000, 0xC0000000
+	.long	0x40400000, 0xC0000000
+	.long	0x40800000, 0xC0000000
+	.long	0x40A00000, 0xC0000000
+	.long	0x40C00000, 0xC0000000
+	.long	0x40E00000, 0xC0000000
+	.long	0xC1000000, 0xC0000000
+	.long	0xC0E00000, 0xC0000000
+	.long	0xC0C00000, 0xC0000000
+	.long	0xC0A00000, 0xC0000000
+	.long	0xC0800000, 0xC0000000
+	.long	0xC0400000, 0xC0000000
+	.long	0xC0000000, 0xC0000000
+	.long	0xBF800000, 0xC0000000
+	.long	0x00000000, 0xBF800000
+	.long	0x3F800000, 0xBF800000
+	.long	0x40000000, 0xBF800000
+	.long	0x40400000, 0xBF800000
+	.long	0x40800000, 0xBF800000
+	.long	0x40A00000, 0xBF800000
+	.long	0x40C00000, 0xBF800000
+	.long	0x40E00000, 0xBF800000
+	.long	0xC1000000, 0xBF800000
+	.long	0xC0E00000, 0xBF800000
+	.long	0xC0C00000, 0xBF800000
+	.long	0xC0A00000, 0xBF800000
+	.long	0xC0800000, 0xBF800000
+	.long	0xC0400000, 0xBF800000
+	.long	0xC0000000, 0xBF800000
+	.long	0xBF800000, 0xBF800000
+
+.global	_filter
+_filter:
+#	filters all samples for one station, one polarization
+
+#	arguments:
+#	r3 :	  pointer to delay line (fcomplex[16])  NOTE: USE OF THE DELAY
+#		  LINE IS COMMENTED OUT!!!!!!!!!!!!!!!!!!!!
+#	r4 :	  pointer to weights line (const fcomplex[16])
+#	r5 :	  pointer to first sample (const i4complex[16*r7])
+#	r6 :	  pointer to result (fcomplex *)
+#	r7 :	  number of samples / 16
+
+#	internally used:
+#	r9 :	  8
+#	r10 :	  512
+#	r11 :	  8
+#	r16-r31 : heavily prefetched samples
+#	f0-f15 :  delay line (real in primary, imaginary in secondary unit)
+#	f16-f23 : weights (these are real values alternately stored in primary
+#			   and secondary units)
+#	f24-f29 : sums
+
+#	The implementation works on 5 or 6 time samples concurrently, to avoid
+#	stalls in the double hummer.  This unfortunately leads to totally
+#	incomprehensible code.  The loop processes 16 samples at a time.
+#	The input is converted from int4complex to dcomplex by a table lookup.
+
+	subi	1,1,320		# adjust stack pointer
+
+	mtctr	7		# set number of iterations
+
+	la	8,0(1)		# save call-saved registers
+	li	9,DCOMPLEX_SIZE
+	stfpdx	14,0,8
+	stfpdux 15,8,9
+	stfpdux 16,8,9
+	stfpdux 17,8,9
+	stfpdux 18,8,9
+	stfpdux 19,8,9
+	stfpdux 20,8,9
+	stfpdux 21,8,9
+	stfpdux 22,8,9
+	stfpdux 23,8,9
+	stfpdux 24,8,9
+	stfpdux 25,8,9
+	stfpdux 26,8,9
+	stfpdux 27,8,9
+	stfpdux 28,8,9
+	stfpdux 29,8,9
+	stmw	16,256(1)	# save r16 ... r31
+
+	li	9,FCOMPLEX_SIZE
+	li	10,I4COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
+
+	lis	11,fp_table@ha	# load sub_values
+	sub	6,6,9
+	la	11,fp_table@l(11)
+
+#if 0
+	lfpsx	1,0,3		# load delay line
+	lfpsux	2,3,9
+	lfpsux	3,3,9
+	lfpsux	4,3,9
+	lfpsux	5,3,9
+	lfpsux	6,3,9
+	lfpsux	7,3,9
+	lfpsux	8,3,9
+	lfpsux	9,3,9
+	lfpsux	10,3,9
+	lfpsux	11,3,9
+	lfpsux	12,3,9
+	lfpsux	13,3,9
+	lfpsux	14,3,9
+	lfpsux	15,3,9
+#endif
+
+				; lfpsx	  16,0,4 # load weights line
+				; lfpsux  17,4,9
+				; lfpsux  18,4,9
+				; lfpsux  19,4,9
+				; lfpsux  20,4,9
+				; lfpsux  21,4,9
+				; lfpsux  22,4,9
+				; lfpsux  23,4,9
+
+	# convert 15 i4complex numbers to fcomplex
+				; lbzx	17,0,5	# fetch FIR history samples
+				; lbzux	18,5,10
+				; lbzux	19,5,10
+				; lbzux	20,5,10
+				; lbzux	21,5,10
+				; lbzux	22,5,10
+				; lbzux	23,5,10
+				; lbzux	24,5,10
+				; lbzux	25,5,10
+				; lbzux	26,5,10
+				; lbzux	27,5,10
+				; lbzux	28,5,10
+				; lbzux	29,5,10
+				; lbzux	30,5,10
+	slwi	17,17,3		; lbzux	31,5,10
+	slwi	18,18,3		; lfpsx	1,11,17
+	slwi	19,19,3		; lfpsx	2,11,18
+	slwi	20,20,3		; lfpsx	3,11,19
+	slwi	21,21,3		; lfpsx	4,11,20
+	slwi	22,22,3		; lfpsx	5,11,21
+	slwi	23,23,3		; lfpsx	6,11,22
+	slwi	24,24,3		; lfpsx	7,11,23
+	slwi	25,25,3		; lfpsx	8,11,24
+	slwi	26,26,3		; lfpsx	9,11,25
+	slwi	27,27,3		; lfpsx	10,11,26
+	slwi	28,28,3		; lfpsx	11,11,27
+	slwi	29,29,3		; lfpsx	12,11,28
+	slwi	30,30,3		; lfpsx	13,11,29
+	slwi	31,31,3		; lfpsx	14,11,30
+				; lfpsx	15,11,31
+				; lbzux	16,5,10	# prefetch samples
+				; lbzux	17,5,10
+				; lbzux	18,5,10
+				; lbzux	19,5,10
+				; lbzux	20,5,10
+				; lbzux	21,5,10
+				; lbzux	22,5,10
+				; lbzux	23,5,10
+				; lbzux	24,5,10
+				; lbzux	25,5,10
+	# essentially part of loop, but interleaved with
+	# the stores in the tail of the loop
+	fxsmul	 24,16,15	; lbzux	26,5,10
+	fxpmul	 25,17,15	; lbzux	27,5,10
+	fxsmul	 26,17,15	; lbzux	28,5,10
+	fxpmul	 27,18,15	; lbzux	29,5,10
+	fxsmul	 28,18,15	; lbzux	30,5,10
+	fxpmul	 29,19,15	; lbzux	31,5,10
+
+loop:
+	# time steps 0-5
+
+	fxcpmadd 24,17,14,24
+	fxcsmadd 25,17,14,25
+	fxcpmadd 26,18,14,26
+	fxcsmadd 27,18,14,27
+	fxcpmadd 28,19,14,28
+	fxcsmadd 29,19,14,29
+
+	fxcpmadd 24,21,6,24	; slwi	 16,16,3
+	fxcsmadd 25,21,6,25	; lfpsx	 0,11,16
+	fxcpmadd 26,22,6,26	; lbzux	 16,5,10
+	fxcsmadd 27,22,6,27
+	fxcpmadd 28,23,6,28
+	fxcsmadd 29,23,6,29
+
+	fxcpmadd 24,20,8,24
+	fxcsmadd 25,20,8,25
+	fxcpmadd 26,21,8,26
+	fxcsmadd 27,21,8,27
+	fxcpmadd 28,22,8,28
+	fxcsmadd 29,22,8,29
+
+	fxcpmadd 24,16,0,24
+	fxcsmadd 25,16,0,25
+	fxcpmadd 26,17,0,26
+	fxcsmadd 27,17,0,27
+	fxcpmadd 28,18,0,28
+	fxcsmadd 29,18,0,29	; slwi	 17,17,3
+
+	fxcsmadd 24,23,1,24	; lfpsx	 1,11,17
+	fxcpmadd 25,20,9,25	; lbzux	 17,5,10
+	fxcsmadd 26,20,9,26
+	fxcpmadd 27,21,9,27
+	fxcsmadd 28,21,9,28
+	fxcpmadd 29,22,9,29
+
+	fxcsmadd 24,19,9,24
+	fxcpmadd 25,16,1,25
+	fxcsmadd 26,16,1,26
+	fxcpmadd 27,17,1,27
+	fxcsmadd 28,17,1,28
+	fxcpmadd 29,18,1,29
+
+	fxcpmadd 24,23,2,24	; slwi	 18,18,3
+	fxcsmadd 25,23,2,25	; lfpsx	 2,11,18
+	fxcpmadd 26,20,10,26	; lbzux	 18,5,10
+	fxcsmadd 27,20,10,27
+	fxcpmadd 28,21,10,28
+	fxcsmadd 29,21,10,29
+	
+	fxcsmadd 24,20,7,24
+	fxcpmadd 25,21,7,25
+	fxcsmadd 26,21,7,26
+	fxcpmadd 27,22,7,27
+	fxcsmadd 28,22,7,28
+	fxcpmadd 29,23,7,29
+
+	fxcpmadd 24,19,10,24
+	fxcsmadd 25,19,10,25
+	fxcpmadd 26,16,2,26
+	fxcsmadd 27,16,2,27
+	fxcpmadd 28,17,2,28
+	fxcsmadd 29,17,2,29
+
+	fxcsmadd 24,22,3,24
+	fxcpmadd 25,23,3,25	; slwi	 19,19,3
+	fxcsmadd 26,23,3,26	; lfpsx	 3,11,19
+	fxcpmadd 27,20,11,27	; lbzux	 19,5,10
+	fxcsmadd 28,20,11,28
+	fxcpmadd 29,21,11,29
+
+	fxcsmadd 24,18,11,24
+	fxcpmadd 25,19,11,25
+	fxcsmadd 26,19,11,26
+	fxcpmadd 27,16,3,27
+	fxcsmadd 28,16,3,28
+	fxcpmadd 29,17,3,29
+
+	fxcpmadd 24,22,4,24
+	fxcsmadd 25,22,4,25
+	fxcpmadd 26,23,4,26	; slwi	 20,20,3
+	fxcsmadd 27,23,4,27	; lfpsx	 4,11,20
+	fxcpmadd 28,20,12,28	; lbzux	 20,5,10
+	fxcsmadd 29,20,12,29
+
+	fxcpmadd 24,18,12,24
+	fxcsmadd 25,18,12,25
+	fxcpmadd 26,19,12,26
+	fxcsmadd 27,19,12,27
+	fxcpmadd 28,16,4,28
+	fxcsmadd 29,16,4,29
+
+	fxcsmadd 24,21,5,24
+	fxcpmadd 25,22,5,25
+	fxcsmadd 26,22,5,26
+	fxcpmadd 27,23,5,27	; slwi	 21,21,3
+	fxcsmadd 28,23,5,28	; lfpsx	 5,11,21
+	fxcpmadd 29,20,13,29	; lbzux	 21,5,10
+
+	fxcsmadd 24,17,13,24
+	fxcpmadd 25,18,13,25
+	fxcsmadd 26,18,13,26
+	fxcpmadd 27,19,13,27
+	fxcsmadd 28,19,13,28	; stfpsux 24,6,9
+	fxcpmadd 29,16,5,29	; stfpsux 25,6,9
+
+
+	# time steps 6-10
+
+	fxsmul	 24,21,11	; stfpsux 26,6,9
+	fxpmul	 25,22,11	; stfpsux 27,6,9
+	fxsmul	 26,22,11	; stfpsux 28,6,9
+	fxpmul	 27,23,11	; stfpsux 29,6,9
+	fxsmul	 28,23,11
+
+	fxcpmadd 24,17,4,24
+	fxcsmadd 25,17,4,25
+	fxcpmadd 26,18,4,26
+	fxcsmadd 27,18,4,27
+	fxcpmadd 28,19,4,28
+	
+	fxcsmadd 24,20,13,24	; slwi	 22,22,3
+	fxcpmadd 25,21,13,25	; lfpsx	 6,11,22
+	fxcsmadd 26,21,13,26	; lbzux	 22,5,10
+	fxcpmadd 27,22,13,27
+	fxcsmadd 28,22,13,28
+
+	fxcsmadd 24,16,5,24
+	fxcpmadd 25,17,5,25
+	fxcsmadd 26,17,5,26
+	fxcpmadd 27,18,5,27
+	fxcsmadd 28,18,5,28
+	
+	fxcpmadd 24,20,14,24
+	fxcsmadd 25,20,14,25
+	fxcpmadd 26,21,14,26
+	fxcsmadd 27,21,14,27
+	fxcpmadd 28,22,14,28
+
+	fxcpmadd 24,16,6,24
+	fxcsmadd 25,16,6,25
+	fxcpmadd 26,17,6,26
+	fxcsmadd 27,17,6,27
+	fxcpmadd 28,18,6,28	; slwi	 23,23,3
+
+	fxcsmadd 24,23,7,24	; lfpsx	 7,11,23
+	fxcpmadd 25,20,15,25	; lbzux	 23,5,10
+	fxcsmadd 26,20,15,26
+	fxcpmadd 27,21,15,27
+	fxcsmadd 28,21,15,28
+
+	fxcsmadd 24,19,15,24
+	fxcpmadd 25,16,7,25
+	fxcsmadd 26,16,7,26
+	fxcpmadd 27,17,7,27
+	fxcsmadd 28,17,7,28
+
+	fxcpmadd 24,23,8,24	; slwi	 24,24,3
+	fxcsmadd 25,23,8,25	; lfpsx	 8,11,24
+	fxcpmadd 26,20,0,26	; lbzux	 24,5,10
+	fxcsmadd 27,20,0,27
+	fxcpmadd 28,21,0,28
+
+	fxcpmadd 24,19,0,24
+	fxcsmadd 25,19,0,25
+	fxcpmadd 26,16,8,26
+	fxcsmadd 27,16,8,27
+	fxcpmadd 28,17,8,28
+
+	fxcsmadd 24,17,3,24
+	fxcpmadd 25,18,3,25
+	fxcsmadd 26,18,3,26
+	fxcpmadd 27,19,3,27
+	fxcsmadd 28,19,3,28
+
+	fxcsmadd 24,22,9,24
+	fxcpmadd 25,23,9,25	; slwi	 25,25,3
+	fxcsmadd 26,23,9,26	; lfpsx	 9,11,25
+	fxcpmadd 27,20,1,27	; lbzux	 25,5,10
+	fxcsmadd 28,20,1,28
+
+	fxcsmadd 24,18,1,24
+	fxcpmadd 25,19,1,25
+	fxcsmadd 26,19,1,26
+	fxcpmadd 27,16,9,27
+	fxcsmadd 28,16,9,28
+
+	fxcpmadd 24,21,12,24
+	fxcsmadd 25,21,12,25
+	fxcpmadd 26,22,12,26
+	fxcsmadd 27,22,12,27
+	fxcpmadd 28,23,12,28
+
+	fxcpmadd 24,22,10,24
+	fxcsmadd 25,22,10,25
+	fxcpmadd 26,23,10,26	; slwi	 26,26,3
+	fxcsmadd 27,23,10,27	; lfpsx	 10,11,26
+	fxcpmadd 28,20,2,28	; lbzux	 26,5,10
+
+	fxcpmadd 24,18,2,24
+	fxcsmadd 25,18,2,25
+	fxcpmadd 26,19,2,26
+	fxcsmadd 27,19,2,27
+	fxcpmadd 28,16,10,28
+
+
+	# time steps 11-15
+				; stfpsux 24,6,9
+	fxsmul	 24,21,0	; stfpsux 25,6,9
+	fxpmul	 25,22,0	; stfpsux 26,6,9
+	fxsmul	 26,22,0	; stfpsux 27,6,9
+	fxpmul	 27,23,0	; stfpsux 28,6,9
+	fxsmul	 28,23,0
+
+	fxcpmadd 24,17,9,24
+	fxcsmadd 25,17,9,25
+	fxcpmadd 26,18,9,26
+	fxcsmadd 27,18,9,27
+	fxcpmadd 28,19,9,28
+	
+	fxcsmadd 24,20,2,24	; slwi	 27,27,3
+	fxcpmadd 25,21,2,25	; lfpsx	 11,11,27
+	fxcsmadd 26,21,2,26	; lbzux	 27,5,10
+	fxcpmadd 27,22,2,27
+	fxcsmadd 28,22,2,28
+
+	fxcsmadd 24,16,10,24
+	fxcpmadd 25,17,10,25
+	fxcsmadd 26,17,10,26
+	fxcpmadd 27,18,10,27
+	fxcsmadd 28,18,10,28
+
+	fxcpmadd 24,20,3,24
+	fxcsmadd 25,20,3,25
+	fxcpmadd 26,21,3,26
+	fxcsmadd 27,21,3,27
+	fxcpmadd 28,22,3,28
+	
+	fxcpmadd 24,16,11,24
+	fxcsmadd 25,16,11,25
+	fxcpmadd 26,17,11,26
+	fxcsmadd 27,17,11,27
+	fxcpmadd 28,18,11,28	; slwi	 28,28,3
+
+	fxcsmadd 24,23,12,24	; lfpsx	 12,11,28
+	fxcpmadd 25,20,4,25	; lbzux	 28,5,10
+	fxcsmadd 26,20,4,26
+	fxcpmadd 27,21,4,27
+	fxcsmadd 28,21,4,28
+
+	fxcsmadd 24,19,4,24
+	fxcpmadd 25,16,12,25
+	fxcsmadd 26,16,12,26
+	fxcpmadd 27,17,12,27
+	fxcsmadd 28,17,12,28
+
+	fxcpmadd 24,23,13,24	; slwi	 29,29,3
+	fxcsmadd 25,23,13,25	; lfpsx	 13,11,29
+	fxcpmadd 26,20,5,26	; lbzux	 29,5,10
+	fxcsmadd 27,20,5,27
+	fxcpmadd 28,21,5,28
+	
+	fxcsmadd 24,17,8,24
+	fxcpmadd 25,18,8,25
+	fxcsmadd 26,18,8,26
+	fxcpmadd 27,19,8,27
+	fxcsmadd 28,19,8,28
+
+	fxcpmadd 24,19,5,24
+	fxcsmadd 25,19,5,25
+	fxcpmadd 26,16,13,26
+	fxcsmadd 27,16,13,27
+	fxcpmadd 28,17,13,28
+
+	fxcsmadd 24,22,14,24
+	fxcpmadd 25,23,14,25	; slwi	 30,30,3
+	fxcsmadd 26,23,14,26	; lfpsx	 14,11,30
+	fxcpmadd 27,20,6,27	; lbzux	 30,5,10
+	fxcsmadd 28,20,6,28
+	
+	fxcsmadd 24,18,6,24
+	fxcpmadd 25,19,6,25
+	fxcsmadd 26,19,6,26
+	fxcpmadd 27,16,14,27
+	fxcsmadd 28,16,14,28
+
+	fxcpmadd 24,21,1,24
+	fxcsmadd 25,21,1,25
+	fxcpmadd 26,22,1,26
+	fxcsmadd 27,22,1,27
+	fxcpmadd 28,23,1,28
+
+	fxcpmadd 24,22,15,24
+	fxcsmadd 25,22,15,25
+	fxcpmadd 26,23,15,26	; slwi	 31,31,3
+	fxcsmadd 27,23,15,27	; lfpsx	 15,11,31
+	fxcpmadd 28,20,7,28	; lbzux	 31,5,10
+
+	fxcpmadd 24,18,7,24
+	fxcsmadd 25,18,7,25
+	fxcpmadd 26,19,7,26
+	fxcsmadd 27,19,7,27
+	fxcpmadd 28,16,15,28
+
+	fxpmul	 29,19,15	; stfpsux 24,6,9
+	fxsmul	 24,16,15	; stfpsux 25,6,9
+	fxpmul	 25,17,15	; stfpsux 26,6,9
+	fxsmul	 26,17,15	; stfpsux 27,6,9
+	fxpmul	 27,18,15	; stfpsux 28,6,9
+	fxsmul	 28,18,15
+
+	bdnz	loop
+
+#if 0
+	addi	3,3,-120	# store delay line
+	stfpsux	1,3,9
+	stfpsux	2,3,9
+	stfpsux	3,3,9
+	stfpsux	4,3,9
+	stfpsux	5,3,9
+	stfpsux	6,3,9
+	stfpsux	7,3,9
+	stfpsux	8,3,9
+	stfpsux	9,3,9
+	stfpsux	10,3,9
+	stfpsux	11,3,9
+	stfpsux	12,3,9
+	stfpsux	13,3,9
+	stfpsux	14,3,9
+	stfpsux	15,3,9
+#endif
+
+	la	8,0(1)	# restore call-saved registers
+	li	9,DCOMPLEX_SIZE
+
+	lfpdx	14,0,8
+	lfpdux	15,8,9
+	lfpdux	16,8,9
+	lfpdux	17,8,9
+	lfpdux	18,8,9
+	lfpdux	19,8,9
+	lfpdux	20,8,9
+	lfpdux	21,8,9
+	lfpdux	22,8,9
+	lfpdux	23,8,9
+	lfpdux	24,8,9
+	lfpdux	25,8,9
+	lfpdux	26,8,9
+	lfpdux	27,8,9
+	lfpdux	28,8,9
+	lfpdux	29,8,9
+	lmw	16,256(1)	# restore r16 ... r31
+
+	addi	1,1,320		# restore stack pointer
+	blr			# return
+
+#elif INPUT_TYPE == I16COMPLEX_TYPE
 
 .align	5
 sub_value:
@@ -825,6 +1582,9 @@ loop:
 	addi	1,1,400		# restore stack pointer
 	blr			# return
 
+#else
+#error INPUT_TYPE not supported
+#endif
 
 #if 0
 .align 5
