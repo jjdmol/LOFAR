@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_TIMER_H
 #define LOFAR_COMMON_TIMER_H
 
-// \file
+// \fil
 // Very accurate timer for elapsed times.
 
 #include <cstdlib>
