@@ -33,7 +33,7 @@
 #include "CDOWrite.h"
 #include "Cache.h"
 
-#define N_CDO_REGISTERS 1 // was 2
+#define N_CDO_REGISTERS 2
 #define BASEUDPPORT 0x10FA // (=4346) start numbering src and dst UDP ports at this number (4346)
 
 using namespace blitz;
@@ -145,7 +145,6 @@ void CDOWrite::sendrequest()
 
   switch (getCurrentIndex()) {
 
-#if 0
   case 0:
     {
       EPACdoSettingsEvent cdo;
@@ -162,9 +161,8 @@ void CDOWrite::sendrequest()
       getBoardPort().send(cdo);
     }
     break;
-#endif
 
-  case 0:
+  case 1:
     {
       LOG_INFO("Setting CDO_HEADER");
 
@@ -200,8 +198,7 @@ GCFEvent::TResult CDOWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     return GCFEvent::NOT_HANDLED;
   }
 
-  if (   ack.hdr.m_fields.addr.pid   == MEPHeader::CDO
-      && ack.hdr.m_fields.addr.regid == MEPHeader::CDO_HEADER) {
+  if ((N_CDO_REGISTERS-1) == getCurrentIndex()) {
     Cache::getInstance().getCDOState().confirmed(getBoardId());
   }
   
