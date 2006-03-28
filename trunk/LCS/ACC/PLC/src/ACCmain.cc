@@ -39,7 +39,6 @@ namespace LOFAR {
       int ACCmain (int argc, char* argv[], ProcessControl* theProcess) {
 
 	string programName = basename(argv[0]);
-	INIT_LOGGER(programName.c_str());
 
 	try {
 
