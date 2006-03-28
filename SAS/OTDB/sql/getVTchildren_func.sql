@@ -55,7 +55,8 @@ CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
 			   \\\'\\\'::text 
 		FROM   VICtemplate t
 		WHERE  t.treeID = \' || $1 || \'
-		AND	   t.parentID in (\' || $2 || \')\'
+		AND	   t.parentID in (\' || $2 || \')
+		ORDER BY t.leaf, t.name, t.index \'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
