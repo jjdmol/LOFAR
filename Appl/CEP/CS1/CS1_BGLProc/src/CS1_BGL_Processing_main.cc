@@ -21,84 +21,23 @@
 
 #include <lofar_config.h>
 
-// for strncmp
-#include <string.h>
-
-#include <Common/lofar_iostream.h> 
+#include <PLC/ACCmain.h>
 #include <Common/LofarLogger.h>
-#include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
-
-#include <Transport/TH_MPI.h>
 #include <CS1_BGLProc/AH_BGL_Processing.h>
 
-using namespace LOFAR;
 
-int main (int argc, const char** argv) {
+int main(int argc, char **argv) {
   INIT_LOGGER("CS1_BGL_Processing");
 
-#ifdef HAVE_MPI
-  TH_MPI::initMPI(argc, argv);
-#endif
+  // Figuring out nrRuns here is ugly ...
+  LOFAR::ACC::APS::ParameterSet ps("CS1.cfg");
+  int nrSeconds = ps.getInt32("General.NRuns");
+  int nrSlaves	= ps.getInt32("BGLProc.SlavesPerSubband");
+  int nrRuns	= nrSeconds / nrSlaves;
+  ASSERTSTR(nrSeconds % nrSlaves == 0, "General.NRuns should be a multiple of BGLProc.SlavesPerSubband");
 
-  // Check invocation syntax
-  try {
-    if ((argc==3) && (strncmp("ACC", argv[1], 3) == 0)) {
-      LOG_TRACE_FLOW("Main program started by ACC");
-      // we were called by ACC so execute the ACCmain
-      AH_BGL_Processing myAH;
-      ApplicationHolderController myAHController(myAH);
-      myAHController.main(argc, argv);
-    } else {
-      LOG_TRACE_FLOW("Main program not started by ACC");
-      // there are no commandline arguments, so we were not called by ACC
-      AH_BGL_Processing myAH;
-      myAH.setarg(argc, argv);
-      cout << "Reading ParameterSet" << endl;
-      cout.flush();
-      ACC::APS::ParameterSet ps("CS1.cfg");
-      myAH.setParameters(ps);
-      cout << "Starting baseDefine" << endl;
-      cout.flush();
-
-      myAH.baseDefine();
-      cout << "defined" << endl;
-      cout.flush();
-      Profiler::init();
-      int syncState = Profiler::defineState("synchronise", "yellow");
-      myAH.basePrerun();
-      cout << "init done" << endl;
-      cout.flush();
-      Profiler::activate();
-      int nrSeconds = ps.getInt32("General.NRuns");
-      int nrSlaves = ps.getInt32("BGLProc.SlavesPerSubband");
-      ASSERTSTR( (fmod ((float)nrSeconds, (float)nrSlaves)) == 0, 
-		"General.NRuns should be a multiple of BGLProc.SlavesPerSubband");
-      int nrRuns = nrSeconds / nrSlaves;
-      cout << "run " << nrRuns << " time" << endl;
-      cout.flush();
-      Profiler::enterState(syncState);
-      TH_MPI::synchroniseAllProcesses();
-      Profiler::leaveState(syncState);
-      myAH.baseRun(nrRuns);
-      cout << "run complete" << endl;
-      Profiler::enterState(syncState);
-      TH_MPI::synchroniseAllProcesses();
-      Profiler::leaveState(syncState);
-      cout.flush();
-      myAH.baseDump();
-      myAH.baseQuit();
-      Profiler::deActivate();
-    }
-  } catch (Exception& ex) {
-    LOG_FATAL_STR("Caught exception: " << ex << endl);
-    LOG_FATAL_STR(argv[0] << " terminated by exception!");
-    exit(1);
-  } catch (...) {
-    LOG_FATAL_STR("Caught unknown exception, exitting");
-    perror("hopefully this helps:");
-    exit (1);
-  }  
-  LOG_INFO_STR(argv[0] << " terminated normally");
-  return (0);
+  AH_BGL_Processing myAH;
+  ApplicationHolderController myAHController(myAH, nrRuns);
+  return LOFAR::ACC::PLC::ACCmain(argc, argv, &myAHController);
 }
