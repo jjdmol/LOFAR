@@ -54,6 +54,7 @@ CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(40))
 --			   INNER JOIN VICnodedef n on n.nodeID = t.originID
 		WHERE  t.treeID = $1
 		AND	   t.name LIKE $2
+		ORDER BY t.leaf, t.name, t.index
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
