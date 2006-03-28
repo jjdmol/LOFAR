@@ -94,8 +94,8 @@ namespace LOFAR {
       // the object type.
       // The second version also returns the size of this next blob.
       // <group>
-      const std::string& BlobIStream::getNextType();
-      const std::string& BlobIStream::getNextType (uint& size);
+      const std::string& getNextType();
+      const std::string& getNextType(uint& size);
       // </group>
       
       // Get a single value.
