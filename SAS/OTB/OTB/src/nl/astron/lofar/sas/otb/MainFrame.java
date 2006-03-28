@@ -190,9 +190,45 @@ public class MainFrame extends javax.swing.JFrame {
                 }
                 itsPlugins.remove(friendlyName);
             }
+            // set focus to Home
+            showPanel(MainPanel.getFriendlyNameStatic());
         }
         catch(Exception e) {
             logger.fatal(e);
+        }
+    }
+    
+    /** sets the changed flag on a given panel
+     * @param friendlyName  name of the panel
+     * @param flag          state flag
+     */
+    public void setChanged(String friendlyName,boolean flag) {
+        
+        // for now we will need to set the (treeid-less) mainpanel to haschanged
+        // and the panles that are based on the same treeid as the one that fires this
+        String aTreeID="";
+        if (friendlyName.contains("(") && friendlyName.contains(")")) {
+            aTreeID="("+friendlyName.substring(friendlyName.indexOf('('),friendlyName.indexOf(')'))+")";
+        }
+        Iterator it=itsPlugins.keySet().iterator();
+        while (it.hasNext()) {
+            String aKey=(String)it.next();
+            PluginPanelInfo ppi = itsPlugins.get(aKey);
+            if (ppi == null || ppi.panel == null ) {
+                return;
+            }
+            
+            // Check if panelname contains (), if not then change anyway
+            // if so check if treeid is wanted treeid, and if not the same name
+            if (aKey.contains("(") && aKey.contains(")")) {
+                if (aKey.contains(aTreeID) && !aKey.equals(friendlyName)) {
+                    ((IPluginPanel)ppi.panel).setChanged(flag);
+                    logger.debug("Setting changed flag for: "+aKey+" to "+flag);
+                }
+            } else {
+                ((IPluginPanel)ppi.panel).setChanged(flag);     
+                logger.debug("Setting changed flag for: "+aKey+" to "+ flag);
+           }
         }
     }
     
@@ -211,7 +247,7 @@ public class MainFrame extends javax.swing.JFrame {
         }
         itsActivePanel = ppi.panel;
         getContentPane().add(itsActivePanel, java.awt.BorderLayout.CENTER);
-
+        ((IPluginPanel)itsActivePanel).checkChanged();
         itsActivePanel.updateUI();
     }
     

@@ -9,6 +9,7 @@ package nl.astron.lofar.sas.otbcomponents;
 import java.awt.event.ActionListener;
 import java.util.*;
 import javax.swing.*;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -16,16 +17,22 @@ import javax.swing.*;
  */
 public class ButtonPanel extends javax.swing.JPanel {
     
+    static Logger logger = Logger.getLogger(ButtonPanel.class);
+    static String name = "ButtonPanel";
+    
     /** Creates new form BeanForm */
     public ButtonPanel() {
         buttons = new HashMap<String,JButton>();
-        
         initComponents();
+        hasPlaceHolder=true;
     }
 
     /** adds a button to the BeanForm */
     public void addButton(String text) {
-        jPanelButtons.remove(buttonsPlaceHolder);
+        if (hasPlaceHolder) {
+            jPanelButtons.remove(buttonsPlaceHolder);
+            hasPlaceHolder=false;
+        }
         
         JButton jButton = new JButton();
         jButton.setText(text);
@@ -41,13 +48,20 @@ public class ButtonPanel extends javax.swing.JPanel {
         });
         
         buttons.put(text,jButton);
+        jPanelButtons.repaint();
     }
     
     /** sets the visibility state of the button */
     public void setButtonVisible(String button, boolean visible) {
-        //TODO
+        buttons.get(button).setVisible(visible);
+        jPanelButtons.repaint();
     }
     
+    /** sets the enable state of the button */
+    public void setButtonEnabled(String button, boolean enabled) {
+        buttons.get(button).setEnabled(enabled);
+        jPanelButtons.repaint();
+    }
     
     /** remove one button and the actionListeners associated with it
      *
@@ -62,24 +76,37 @@ public class ButtonPanel extends javax.swing.JPanel {
             jPanelButtons.remove(buttons.get(aKey));
             buttons.remove(aKey);            
          }
+         if (buttons.size() == 0) {
+            jPanelButtons.add(buttonsPlaceHolder);
+            hasPlaceHolder=true;
+         }
          jPanelButtons.repaint();
      }
     
-    /** remove all buttons from button panel, restores the buttonplaceholder
+     private void showMap() {
+        Iterator it=buttons.keySet().iterator();
+        while (it.hasNext()) {
+            String key =((String)it.next());
+            System.out.println(key+" <-> "+ buttons.get(key).getText());
+        }    
+     }
+
+     /** remove all buttons from button panel, restores the buttonplaceholder
      *  and removes all actionListeners associated with these buttons.
      */ 
     public void removeAllButtons() {
         Iterator it=buttons.keySet().iterator();
         while (it.hasNext()) {
-            String key=(String)it.next();
-            ActionListener al[]=buttons.get(key).getActionListeners();
-            for (int i=0;i<al.length;i++) {
-                removeActionListener(al[i]);
+            String aKey=(String)it.next();
+            if (buttons.containsKey(aKey)) {
+                ActionListener al[]=buttons.get(aKey).getActionListeners();
+                for (int i=0;i<al.length;i++) {
+                    removeActionListener(al[i]);
+                }
+                jPanelButtons.remove(buttons.get(aKey));
             }
-            jPanelButtons.remove(buttons.get(key));
         }
         buttons.clear();
-        jPanelButtons.add(buttonsPlaceHolder);
         jPanelButtons.repaint();
     }
 
@@ -111,7 +138,7 @@ public class ButtonPanel extends javax.swing.JPanel {
      * Contains all buttons in the form 
      */
     private HashMap<String,JButton> buttons;
-
+    private boolean hasPlaceHolder=false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonsPlaceHolder;
@@ -128,7 +155,7 @@ public class ButtonPanel extends javax.swing.JPanel {
      *
      * @param listener The listener to register.
      */
-    public synchronized void addActionListener(java.awt.event.ActionListener listener) {
+    public void addActionListener(java.awt.event.ActionListener listener) {
 
         if (listenerList == null ) {
             listenerList = new javax.swing.event.EventListenerList();
@@ -141,7 +168,7 @@ public class ButtonPanel extends javax.swing.JPanel {
      *
      * @param listener The listener to remove.
      */
-    public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
+    public void removeActionListener(java.awt.event.ActionListener listener) {
 
         listenerList.remove (java.awt.event.ActionListener.class, listener);
     }

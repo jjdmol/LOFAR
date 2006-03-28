@@ -43,6 +43,25 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         initComponents();
     }
     
+    public void setMainFrame(MainFrame aMainFrame) {
+        if (aMainFrame != null) {
+            itsMainFrame=aMainFrame;
+            itsOtdbRmi=itsMainFrame.getOTDBrmi();
+            initComboLists();
+        } else {
+            logger.debug("No Mainframe supplied");
+        }
+    }
+    
+    public void setParam(jOTDBparam aParam) {
+        if (aParam != null) {
+            itsParam=aParam;
+            initPanel(aParam);
+        } else {
+            logger.debug("No param supplied");
+        }
+    }
+    
     private void initComboLists() {
         DefaultComboBoxModel aTypeModel = new DefaultComboBoxModel();
         TreeMap aTypeMap = itsOtdbRmi.getParamType();

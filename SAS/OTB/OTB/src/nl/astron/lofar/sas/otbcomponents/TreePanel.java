@@ -61,6 +61,7 @@ public class TreePanel extends javax.swing.JPanel {
             }
         });
         jScrollPane1.setViewportView(jTree1);
+        jTree1.setSelectionRow(0);
     }
     
     /** This method is called from within the constructor to
