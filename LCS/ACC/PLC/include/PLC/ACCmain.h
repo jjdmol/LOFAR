@@ -46,10 +46,12 @@ namespace LOFAR
       // Subclass ProcessControl and implement all functions.
       // Implement a real main:
       //
-      //   #include<PLC/ACCmain.h>
-      //   #include<SubClassOfProcessControl.h>
+      //   #include <libgen.h>
+      //   #include <PLC/ACCmain.h>
+      //   #include <SubClassOfProcessControl.h>
       //
-      //   int main(int argv, char* argv[]) {
+      //   int main(int argc, char* argv[]) {
+      //     INIT_LOGGER(basename(argv[0]));
       //     SubClassOfProcessControl myProcess;
       //     return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
       //   }
