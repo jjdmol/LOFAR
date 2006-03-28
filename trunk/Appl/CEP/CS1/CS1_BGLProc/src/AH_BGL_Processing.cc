@@ -109,11 +109,6 @@ void AH_BGL_Processing::define(const LOFAR::KeyValueMap&) {
   int node = 0;
 
   for (int subband = 0; subband < nrSubBands; subband ++) {
-#if defined HAVE_BGL
-    // start each new subband in a new cell
-    node = (node + nrNodesPerCell - 1) & -nrNodesPerCell;
-#endif
-
     for (int slave = 0; slave < slavesPerSubBand; slave ++) {
       WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", baseFreqs[subband], itsParamSet);
       itsWHs.push_back(wh);
