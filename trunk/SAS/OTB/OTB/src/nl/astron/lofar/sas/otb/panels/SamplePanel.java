@@ -43,11 +43,17 @@ public class SamplePanel extends javax.swing.JPanel
     public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
 
+
+        setNewRootNode();
+        return true;
+    }
+    
+    public void setNewRootNode() {
+
         // initialize the tree
         // create a sample root node. This should be retrieved from the OTDB of course.
         jOTDBnode otdbNode = new jOTDBnode(0,0,0,0);
         otdbNode.name = "Node_0";
-
         // put the OTDBnode in a wrapper for the tree
         //OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
         // example of an empty tree
@@ -55,14 +61,28 @@ public class SamplePanel extends javax.swing.JPanel
 
         // and create a new root
         treePanel.newRootNode(otdbTreeNode);
-        
-        return true;
     }
     
     public String getFriendlyName() {
         return getFriendlyNameStatic();
     }
 
+    public boolean hasChanged() {
+        return changed;
+    }
+    
+    public void setChanged(boolean flag) {
+        changed = flag;
+    }
+    
+    public void checkChanged() {
+        if (this.hasChanged()) {
+            this.setNewRootNode();
+            this.setChanged(false);
+        }
+    }
+
+    
     public static String getFriendlyNameStatic() {
         return name;
     }
@@ -342,6 +362,7 @@ public class SamplePanel extends javax.swing.JPanel
     }//GEN-LAST:event_buttonPanelActionPerformed
     
     private MainFrame itsMainFrame;
+    private boolean changed=false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel;

@@ -36,9 +36,11 @@ public class NodeViewPanel extends javax.swing.JPanel {
         initComponents();
     }
     
-    
+    public void setNode(jOTDBnode aNode) {
+        initPanel(aNode);
+    }
 
-    private void initPanel(jOTDBnode aNode) {
+     private void initPanel(jOTDBnode aNode) {
         if (aNode != null) {
             setNodeName(aNode.name);
             setIndex(String.valueOf(aNode.index));

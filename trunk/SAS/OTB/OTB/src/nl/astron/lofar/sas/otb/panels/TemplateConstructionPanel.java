@@ -59,7 +59,22 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
         return true;
     }
     
-        public void setNewRootNode(){
+    public boolean hasChanged() {
+        return changed;
+    }
+    
+    public void setChanged(boolean flag) {
+        changed = flag;
+    }
+    
+   public void checkChanged() {
+        if (this.hasChanged()) {
+            this.setNewRootNode();
+            this.setChanged(false);
+        }
+    }
+    
+    public void setNewRootNode(){
         try {
             jOTDBnode otdbNode=null;
             if (itsTreeID == 0 ) {
@@ -193,6 +208,7 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
 
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;
+    private boolean changed = false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel TreeBasePanel;

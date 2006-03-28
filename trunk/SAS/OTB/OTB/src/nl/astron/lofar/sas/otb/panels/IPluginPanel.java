@@ -17,5 +17,7 @@ package nl.astron.lofar.sas.otb.panels;
 public interface IPluginPanel {
     public boolean initializePlugin(nl.astron.lofar.sas.otb.MainFrame mainframe);
     public String getFriendlyName();
-
+    public boolean hasChanged();
+    public void setChanged(boolean changed);
+    public void checkChanged();
 }

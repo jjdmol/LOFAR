@@ -6,10 +6,14 @@
 
 package nl.astron.lofar.sas.otb.panels;
 
+import java.rmi.RemoteException;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.OTDBtreeNode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 import org.apache.log4j.Logger;
 
 /**
@@ -35,6 +39,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
         itsTreeID=itsMainFrame.getTreeID();
+        parameterViewPanel1.setMainFrame(itsMainFrame);
         
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
@@ -52,7 +57,22 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         setNewRootNode();
 
         return true;
-    }   
+    }
+    
+    public boolean hasChanged() {
+        return changed;
+    }
+    
+    public void setChanged(boolean flag) {
+        changed = flag;
+    }
+    
+    public void checkChanged() {
+        if (this.hasChanged()) {
+            this.setNewRootNode();
+            this.setChanged(false);
+        }
+    }
     
     public void setNewRootNode(){
         try {
@@ -100,10 +120,18 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         setLayout(new java.awt.BorderLayout());
 
         jSplitPane1.setDividerLocation(350);
+        treePanel.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                treePanelValueChanged(evt);
+            }
+        });
+
         jSplitPane1.setLeftComponent(treePanel);
 
+        nodeViewPanel1.setEnabled(false);
         jTabbedPane1.addTab("Node", nodeViewPanel1);
 
+        parameterViewPanel1.setEnabled(false);
         jTabbedPane1.addTab("Param", parameterViewPanel1);
 
         jSplitPane1.setRightComponent(jTabbedPane1);
@@ -120,14 +148,102 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
     }// </editor-fold>//GEN-END:initComponents
 
+    private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
+        logger.debug("treeSelectionEvent: " + evt);
+        changeTreeSelection(((OTDBtreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getOTDBnode());
+    }//GEN-LAST:event_treePanelValueChanged
+
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: "+evt.getActionCommand());
-        if (evt.getActionCommand().equals("Cancel")) {
+        if (evt.getActionCommand().equals("Delete")) {
+            //Check  if the selected node isn't a leaf
+            if (itsSelectedNode != null && !itsSelectedNode.leaf) {
+                try {
+                    if (itsMainFrame.getOTDBrmi().getRemoteMaintenance().deleteNode(itsSelectedNode)) {
+                        logger.debug("Node + children deleted");
+                        setNewRootNode();
+                    }
+                } catch (RemoteException ex) {
+                    logger.debug("Error during deletion of Node: "+ex);
+                }
+            }
+        } else if (evt.getActionCommand().equals("Duplicate")) {
+            
+        } else if (evt.getActionCommand().equals("Info")) {
+            if (itsTreeID > 0) {
+                if (viewInfo() ) {
+                    logger.debug("Tree has been changed, reloading table line");
+                    // flag has to be set that ppl using this treeid should be able to see that it's info has been changed
+                    itsMainFrame.setChanged(this.getFriendlyName(),true);
+                }
+            }
+
+        } else if (evt.getActionCommand().equals("Cancel")) {
             itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
+
+        } else if (evt.getActionCommand().equals("Save")) {
+
+        } else if (evt.getActionCommand().equals("Save & Exit")) {
+
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
+    
+    /** Launch TreeInfoDialog,
+     *
+     * @param  aTreeID  The ID of the chosen tree.
+     */
+    private boolean viewInfo() {
+        //get the selected tree from the database
+        
+        try {
+            jOTDBtree aSelectedTree=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeID, false);
+            
+            if (aSelectedTree != null) {
+                // show treeInfo dialog
+                treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
+                treeInfoDialog.setLocationRelativeTo(this);
+                treeInfoDialog.setVisible(true);
+
+                if (treeInfoDialog.isChanged()) {
+                    logger.debug("tree has been changed and saved");
+                } else {
+                    logger.debug("tree has not been changed");
+                }
+               
+            } else {
+                logger.debug("no tree selected");
+            }
+        } catch (Exception e) {
+            logger.debug("Error in viewInfo: " + e);
+        }
+        return treeInfoDialog.isChanged();
+    }
+
+    private void changeTreeSelection(jOTDBnode aNode) {
+        logger.debug("ChangeSelection for node: " + aNode.name);
+        itsSelectedNode=aNode;
+        if (aNode.leaf) {
+            jOTDBparam aParam = null;
+            try {
+                jTabbedPane1.setSelectedComponent(parameterViewPanel1);
+                aParam = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getParam(itsTreeID, aNode.paramDefID());
+                nodeViewPanel1.setEnabled(false);
+                parameterViewPanel1.setEnabled(true);
+                parameterViewPanel1.setParam(aParam); 
+            } catch (RemoteException ex) {
+                logger.debug("Error during getParam: "+ ex);
+            }
+        } else {
+            // this node is a node
+            jTabbedPane1.setSelectedComponent(nodeViewPanel1);
+            parameterViewPanel1.setEnabled(false);
+            nodeViewPanel1.setEnabled(true);
+            nodeViewPanel1.setNode(aNode);
+            
+        }
+    }
     
     private void initialize() {
         treePanel.setTitle("Template List");
@@ -137,12 +253,21 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         buttonPanel1.addButton("Cancel");
         buttonPanel1.addButton("Save");
         buttonPanel1.addButton("Save & Exit");
+        
+        nodeViewPanel1.enableInstances(true);
+        nodeViewPanel1.enableLimits(true);
+        nodeViewPanel1.enableDescription(true);
+        
+        parameterViewPanel1.enableLimits(true);
+        parameterViewPanel1.enableDescription(true);
     }
     
     private MainFrame itsMainFrame;
-
+    private jOTDBnode itsSelectedNode = null;
+    private TreeInfoDialog treeInfoDialog = null;  
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;
+    private boolean changed = false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
