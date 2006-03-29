@@ -20,6 +20,7 @@
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_File.h>
 #include <Transport/TH_Ethernet.h>
+#include <Transport/TH_Socket.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
 #include <WH_Signal.h>
@@ -71,7 +72,7 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
   int NRSP = itsParamSet.getInt32("Data.NStations");
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
-  bool useEth = itsParamSet.getBool("Generator.UseEth");
+  string outputType = itsParamSet.getString("Generator.outputType");
   vector<string> outFileNames = itsParamSet.getStringVector("Generator.OutputFiles");
   vector<string> interfaces = itsParamSet.getStringVector("Generator.Interfaces");
   vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
@@ -103,13 +104,19 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
 
   for (int s=0; s<NRSP; s++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "FakeStation_%d_of_%d", s, NRSP);
-    if (useEth) {
+    if (outputType == "ETHERNET") {
       // cout<<"interface: "<<interfaces[s]<<" remote: "<<dstMacs[s]<<" own: "<<srcMacs[s]<<endl;
       itsTHs.push_back(new TH_Ethernet(interfaces[s], 
 				       dstMacs[s],
 				       srcMacs[s]));
-    } else {
+    } else if (outputType == "UDP") {
+      vector<string> hostNames = itsParamSet.getStringVector("Generator.DestHosts");
+      vector<string> ports = itsParamSet.getStringVector("Generator.DestPorts");
+      itsTHs.push_back(new TH_Socket(hostNames[s], ports[s], true, Socket::UDP, false));
+    } else if (outputType == "FILE") {
       itsTHs.push_back(new TH_File(outFileNames[s], TH_File::Write));
+    } else {
+      ASSERTSTR(false, "outputType " << outputType << " unknown.");
     }
     ASSERTSTR(itsTHs.back()->init(), "Could not init TransportHolder");
     itsWHs.push_back(new WH_FakeStation(WH_DH_Name,
