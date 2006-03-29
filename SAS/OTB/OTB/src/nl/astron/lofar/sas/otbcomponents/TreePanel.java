@@ -64,6 +64,10 @@ public class TreePanel extends javax.swing.JPanel {
         jTree1.setSelectionRow(0);
     }
     
+    public int[] getSelectedRows() {
+        return jTree1.getSelectionRows();
+    }
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is

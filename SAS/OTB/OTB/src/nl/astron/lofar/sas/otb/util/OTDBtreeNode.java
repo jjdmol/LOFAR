@@ -165,6 +165,9 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
         String name = "";
         if(node != null) {
             name = node.name;
+            if (node.index > 0 && !node.leaf) {
+                name +="["+String.valueOf(node.index)+"]";
+            }
         }
         return name;
     }

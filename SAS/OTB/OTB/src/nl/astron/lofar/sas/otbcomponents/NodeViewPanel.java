@@ -10,6 +10,7 @@ import java.rmi.RemoteException;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.panels.MainPanel;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
 
 /**
@@ -26,8 +27,11 @@ public class NodeViewPanel extends javax.swing.JPanel {
      * @params  aNode   node to obtain the info from
      *
      */
-    public NodeViewPanel(jOTDBnode aNode) {
+    public NodeViewPanel(MainFrame aMainFrame,jOTDBnode aNode) {
         initComponents();
+        itsMainFrame = aMainFrame;
+        itsNode = aNode;
+        itsOtdbRmi=itsMainFrame.getOTDBrmi();
         initPanel(aNode);
     }
     
@@ -36,12 +40,22 @@ public class NodeViewPanel extends javax.swing.JPanel {
         initComponents();
     }
     
+    public void setMainFrame(MainFrame aMainFrame) {
+        if (aMainFrame != null) {
+            itsMainFrame=aMainFrame;
+            itsOtdbRmi=itsMainFrame.getOTDBrmi();
+        } else {
+            logger.debug("No Mainframe supplied");
+        }
+    }
+    
     public void setNode(jOTDBnode aNode) {
         initPanel(aNode);
     }
 
      private void initPanel(jOTDBnode aNode) {
-        if (aNode != null) {
+        itsNode = aNode;
+         if (aNode != null) {
             setNodeName(aNode.name);
             setIndex(String.valueOf(aNode.index));
             setInstances(String.valueOf(aNode.instances));
@@ -162,7 +176,42 @@ public class NodeViewPanel extends javax.swing.JPanel {
         enableButtons(enabled);
     }
     
+    private void saveInput() {
+        // Just check all possible fields that CAN change. The enabled method will take care if they COULD be changed.
+        // this way we keep this panel general for multiple use
+        boolean hasChanged = false;
+        if (itsNode != null) {
+            try {
 
+
+                if (!String.valueOf(itsNode.instances).equals(getInstances())) { 
+                    itsNode.instances=Integer.valueOf(getInstances()).shortValue();
+                    hasChanged=true;
+                }
+
+                if (!itsNode.limits.equals(getLimits())) { 
+                    itsNode.limits=getLimits();
+                    hasChanged=true;
+                }
+
+                if (!itsNode.description.equals(getDescription())) { 
+                    itsNode.description=getDescription();
+                    hasChanged=true;
+                }
+
+                if (hasChanged) {
+                    if (!itsOtdbRmi.getRemoteMaintenance().saveNode(itsNode)) {
+                        logger.error("Saving node failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    }
+                } 
+               
+            } catch (RemoteException ex) {
+                logger.debug("error in Remote connection");
+            }
+        } else {
+            logger.debug("ERROR:  no Param given");
+        }
+    }
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -198,7 +247,6 @@ public class NodeViewPanel extends javax.swing.JPanel {
         add(NodeLimitsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 120, -1, -1));
 
         NodeIndexText.setText("None");
-        NodeIndexText.setEnabled(false);
         NodeIndexText.setMaximumSize(new java.awt.Dimension(200, 19));
         NodeIndexText.setMinimumSize(new java.awt.Dimension(200, 19));
         NodeIndexText.setPreferredSize(new java.awt.Dimension(200, 19));
@@ -206,7 +254,6 @@ public class NodeViewPanel extends javax.swing.JPanel {
 
         NodeInstancesText.setText("-1");
         NodeInstancesText.setToolTipText("Number of Instances for this Node ");
-        NodeInstancesText.setEnabled(false);
         NodeInstancesText.setMaximumSize(new java.awt.Dimension(200, 19));
         NodeInstancesText.setMinimumSize(new java.awt.Dimension(200, 19));
         NodeInstancesText.setPreferredSize(new java.awt.Dimension(200, 19));
@@ -214,7 +261,6 @@ public class NodeViewPanel extends javax.swing.JPanel {
 
         NodeLimitsText.setText("None");
         NodeLimitsText.setToolTipText("Limits for this Node");
-        NodeLimitsText.setEnabled(false);
         NodeLimitsText.setMaximumSize(new java.awt.Dimension(200, 19));
         NodeLimitsText.setMinimumSize(new java.awt.Dimension(200, 19));
         NodeLimitsText.setPreferredSize(new java.awt.Dimension(200, 19));
@@ -222,23 +268,32 @@ public class NodeViewPanel extends javax.swing.JPanel {
 
         NodeNameText.setText("None");
         NodeNameText.setToolTipText("Name for this Node");
-        NodeNameText.setEnabled(false);
         NodeNameText.setMaximumSize(new java.awt.Dimension(440, 19));
         NodeNameText.setMinimumSize(new java.awt.Dimension(440, 19));
         NodeNameText.setPreferredSize(new java.awt.Dimension(440, 19));
         add(NodeNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 240, -1));
 
         NodeCancelButton.setText("Cancel");
-        NodeCancelButton.setEnabled(false);
+        NodeCancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                NodeCancelButtonActionPerformed(evt);
+            }
+        });
+
         add(NodeCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 280, -1, -1));
 
         NodeApplyButton.setText("Apply");
-        NodeApplyButton.setEnabled(false);
+        NodeApplyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                NodeApplyButtonActionPerformed(evt);
+            }
+        });
+
         add(NodeApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 280, 70, -1));
 
-        NodeDescriptionText.setEditable(false);
         NodeDescriptionText.setRows(4);
         NodeDescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
+        NodeDescriptionText.setEnabled(false);
         add(NodeDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 150, 540, 100));
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -246,7 +301,18 @@ public class NodeViewPanel extends javax.swing.JPanel {
         add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 10, 460, 20));
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void NodeApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeApplyButtonActionPerformed
+        saveInput();
+    }//GEN-LAST:event_NodeApplyButtonActionPerformed
+
+    private void NodeCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeCancelButtonActionPerformed
+        initPanel(itsNode);
+    }//GEN-LAST:event_NodeCancelButtonActionPerformed
     
+    jOTDBnode itsNode = null;
+    private MainFrame  itsMainFrame;
+    private OtdbRmi    itsOtdbRmi;   
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton NodeApplyButton;

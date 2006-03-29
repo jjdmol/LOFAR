@@ -137,7 +137,7 @@ public class ParameterViewPanel extends javax.swing.JPanel {
     
     private void setType(short aS) {
         try {
-            this.ParamTypeText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getParamType(itsParam.type));
+            this.ParamTypeText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getParamType(aS));
         } catch (RemoteException e) {
             logger.debug("Error: GetParamType failed " + e);
        }
@@ -158,7 +158,7 @@ public class ParameterViewPanel extends javax.swing.JPanel {
     
     private void setUnit(short aS) {
         try {
-            this.ParamUnitText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getUnit(itsParam.unit));
+            this.ParamUnitText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getUnit(aS));
         } catch (RemoteException e) {
             logger.debug("ERROR: getUnit failed " + e);
         }
@@ -296,6 +296,60 @@ public class ParameterViewPanel extends javax.swing.JPanel {
     }
     
 
+    private void saveInput() {
+        // Just check all possible fields that CAN change. The enabled method will take care if they COULD be changed.
+        // this way we keep this panel general for multiple use
+        boolean hasChanged = false;
+        if (itsParam != null) {
+            try {
+                if (itsParam.type != itsOtdbRmi.getRemoteTypes().getParamType(getType())) { 
+                    itsParam.type=itsOtdbRmi.getRemoteTypes().getParamType(getType());
+                    hasChanged=true;
+                }
+
+                if (itsParam.unit != itsOtdbRmi.getRemoteTypes().getUnit(getUnit())) { 
+                    itsParam.unit=itsOtdbRmi.getRemoteTypes().getUnit(getUnit());
+                    hasChanged=true;
+                }
+
+                if (!String.valueOf(itsParam.pruning).equals(getPruning())) { 
+                    itsParam.pruning=Integer.valueOf(getPruning()).shortValue();
+                    hasChanged=true;
+                }
+
+                if (!String.valueOf(itsParam.valMoment).equals(getValMoment())) { 
+                    itsParam.valMoment=Integer.valueOf(getValMoment()).shortValue();
+                    hasChanged=true;
+                }
+
+                if (itsParam.runtimeMod != getRuntimeMod()) { 
+                    itsParam.runtimeMod=getRuntimeMod();
+                    hasChanged=true;
+                }                
+
+                if (!itsParam.description.equals(getDescription())) { 
+                    itsParam.description=getDescription();
+                    hasChanged=true;
+                }
+
+                if (!itsParam.limits.equals(getLimits())) { 
+                    itsParam.limits=getLimits();
+                    hasChanged=true;
+                }
+                
+                if (hasChanged) {
+                    if (!itsOtdbRmi.getRemoteMaintenance().saveParam(itsParam)) {
+                        logger.error("Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    }
+                } 
+               
+            } catch (RemoteException ex) {
+                logger.debug("error in Remote connection");
+            }
+        } else {
+            logger.debug("ERROR:  no Param given");
+        }
+    }
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -339,44 +393,46 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamLimitsLabel.setText("Limits :");
         add(ParamLimitsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 225, -1, -1));
 
-        ParamIndexText.setEditable(false);
         ParamIndexText.setText("None");
-        ParamIndexText.setEnabled(false);
         ParamIndexText.setMaximumSize(new java.awt.Dimension(200, 19));
         ParamIndexText.setMinimumSize(new java.awt.Dimension(200, 19));
         ParamIndexText.setPreferredSize(new java.awt.Dimension(200, 19));
         add(ParamIndexText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 75, 240, -1));
 
-        ParamPruningText.setEditable(false);
         ParamPruningText.setText("-1");
         ParamPruningText.setToolTipText("Number of Instances for this Node ");
-        ParamPruningText.setEnabled(false);
         ParamPruningText.setMaximumSize(new java.awt.Dimension(200, 19));
         ParamPruningText.setMinimumSize(new java.awt.Dimension(200, 19));
         ParamPruningText.setPreferredSize(new java.awt.Dimension(200, 19));
         add(ParamPruningText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 150, 240, -1));
 
-        ParamNameText.setEditable(false);
         ParamNameText.setText("None");
         ParamNameText.setToolTipText("Name for this Node");
-        ParamNameText.setEnabled(false);
         ParamNameText.setMaximumSize(new java.awt.Dimension(440, 19));
         ParamNameText.setMinimumSize(new java.awt.Dimension(440, 19));
         ParamNameText.setPreferredSize(new java.awt.Dimension(440, 19));
         add(ParamNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 240, -1));
 
         ParamCancelButton.setText("Cancel");
-        ParamCancelButton.setEnabled(false);
+        ParamCancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ParamCancelButtonActionPerformed(evt);
+            }
+        });
+
         add(ParamCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 400, -1, -1));
 
         ParamApplyButton.setText("Apply");
-        ParamApplyButton.setEnabled(false);
+        ParamApplyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ParamApplyButtonActionPerformed(evt);
+            }
+        });
+
         add(ParamApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 400, 70, -1));
 
-        ParamDescriptionText.setEditable(false);
         ParamDescriptionText.setRows(3);
         ParamDescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
-        ParamDescriptionText.setEnabled(false);
         add(ParamDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 250, 530, 80));
 
         ParamUnitLabel.setText("Unit :");
@@ -395,27 +451,31 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         jLabel1.setText("Parameter View Panel");
         add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(114, 10, 320, 20));
 
-        ParamTypeText.setEnabled(false);
+        ParamTypeText.setEditable(true);
         add(ParamTypeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 100, 240, -1));
 
-        ParamUnitText.setEnabled(false);
+        ParamUnitText.setEditable(true);
         add(ParamUnitText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 125, 240, -1));
 
-        ParamValMomentText.setEditable(false);
         ParamValMomentText.setText("None");
-        ParamValMomentText.setEnabled(false);
         add(ParamValMomentText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 175, 240, -1));
 
-        ParamLimitsText.setEditable(false);
         ParamLimitsText.setText("None");
-        ParamLimitsText.setEnabled(false);
         add(ParamLimitsText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 225, 240, -1));
 
+        ParamRuntimeModText.setEditable(true);
         ParamRuntimeModText.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "false", "true" }));
-        ParamRuntimeModText.setEnabled(false);
         add(ParamRuntimeModText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 200, 240, -1));
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void ParamApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamApplyButtonActionPerformed
+        saveInput();
+    }//GEN-LAST:event_ParamApplyButtonActionPerformed
+
+    private void ParamCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamCancelButtonActionPerformed
+        initPanel(itsParam);
+    }//GEN-LAST:event_ParamCancelButtonActionPerformed
     
     private MainFrame  itsMainFrame;
     private OtdbRmi    itsOtdbRmi;
