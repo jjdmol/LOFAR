@@ -172,12 +172,12 @@ public class MainPanel extends javax.swing.JPanel
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         jTabbedPane1 = new javax.swing.JTabbedPane();
+        PICPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         VICPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         TemplatesPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         ComponentsPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         QueryResultsPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         jPanel1 = new javax.swing.JPanel();
-        PICPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
@@ -192,6 +192,14 @@ public class MainPanel extends javax.swing.JPanel
                 jTabbedPane1StateChanged(evt);
             }
         });
+
+        PICPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                PICPanelMouseClicked(evt);
+            }
+        });
+
+        jTabbedPane1.addTab("PIC", PICPanel);
 
         VICPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -227,15 +235,7 @@ public class MainPanel extends javax.swing.JPanel
 
         jTabbedPane1.addTab("Admin", jPanel1);
 
-        PICPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                PICPanelMouseClicked(evt);
-            }
-        });
-
-        jTabbedPane1.addTab("PIC", PICPanel);
-
-        add(jTabbedPane1, java.awt.BorderLayout.NORTH);
+        add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
         buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -332,6 +332,9 @@ public class MainPanel extends javax.swing.JPanel
     private void buttonPanelAction(String aButton) {
         logger.debug("Button pressed: "+aButton+ "  ActiveTab: " + itsTabFocus);
         int treeID=getSelectedTreeID();
+        if (aButton.equals("Quit")) {
+            itsMainFrame.exit();
+        }
         if (itsTabFocus.equals("PIC")) {
             if (treeID > 0) {
                 itsMainFrame.setTreeID(treeID);
@@ -555,7 +558,11 @@ public class MainPanel extends javax.swing.JPanel
         }
         if (itsTabFocus.equals("PIC")) {
             if (treeID>0) {
-                buttonPanel1.setButtonEnabled("Delete",true);
+                if (aTreeState.equals("active")) {
+                    buttonPanel1.setButtonEnabled("Delete",false);
+                } else {
+                    buttonPanel1.setButtonEnabled("Delete",true);                    
+                }
                 buttonPanel1.setButtonEnabled("View",true);
                 buttonPanel1.setButtonEnabled("Info",true);
             } else {
@@ -565,7 +572,12 @@ public class MainPanel extends javax.swing.JPanel
             }
         } else if (itsTabFocus.equals("VIC")) {
             if (treeID>0) {
-                buttonPanel1.setButtonEnabled("Delete",true);
+                if (aTreeState.equals("idle") || aTreeState.endsWith("being specified") || aTreeState.equals("finished")
+                || aTreeState.equals("aborted") || aTreeState.equals("obsolete")) {
+                    buttonPanel1.setButtonEnabled("Delete",true);
+                } else {
+                    buttonPanel1.setButtonEnabled("Delete",false);                    
+                }
                 buttonPanel1.setButtonEnabled("Info",true);
             } else {
                 buttonPanel1.setButtonEnabled("Delete",false);

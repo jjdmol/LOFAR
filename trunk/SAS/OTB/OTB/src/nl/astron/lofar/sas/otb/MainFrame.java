@@ -327,11 +327,16 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemLogoutActionPerformed
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
-        logger.info("Exit requested");
-        setVisible(false);
-        dispose();
+        exit();
     }//GEN-LAST:event_jMenuItemExitActionPerformed
 
+    public void exit() {
+        logger.info("Exit requested");
+        logout();
+        setVisible(false);
+        dispose();        
+    }
+    
     /** Event handler called when a button in the button panel is called
       *
       * @param evt 

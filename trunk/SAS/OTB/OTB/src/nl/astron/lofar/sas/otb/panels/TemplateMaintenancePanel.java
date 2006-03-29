@@ -7,6 +7,7 @@
 package nl.astron.lofar.sas.otb.panels;
 
 import java.rmi.RemoteException;
+import javax.swing.JOptionPane;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
@@ -40,6 +41,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         itsMainFrame = mainframe;
         itsTreeID=itsMainFrame.getTreeID();
         parameterViewPanel1.setMainFrame(itsMainFrame);
+        nodeViewPanel1.setMainFrame(itsMainFrame);
         
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
@@ -55,6 +57,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
  
         // initialize the tree
         setNewRootNode();
+        
+        setFieldValidations();
 
         return true;
     }
@@ -99,7 +103,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         return getFriendlyNameStatic()+"("+itsTreeID+")";
     }
 
-    public static String getFriendlyNameStatic() {
+    public static String getFriendlyNameStatic() { 
         return name;
     }
     
@@ -128,6 +132,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
         jSplitPane1.setLeftComponent(treePanel);
 
+        jTabbedPane1.setEnabled(false);
         nodeViewPanel1.setEnabled(false);
         jTabbedPane1.addTab("Node", nodeViewPanel1);
 
@@ -169,7 +174,25 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 }
             }
         } else if (evt.getActionCommand().equals("Duplicate")) {
-            
+            String answer=JOptionPane.showInputDialog(this,"What is the index for the new subtree?","Enter indexNumber",JOptionPane.QUESTION_MESSAGE);
+            if (answer!=null || !answer.equals("")) {
+                short idx=Integer.valueOf(answer).shortValue();
+                if (idx < 0) {
+                    logger.debug("Index value smaller then 1 not allowed");
+                    return;
+                }
+                try {
+                    int aN=itsMainFrame.getOTDBrmi().getRemoteMaintenance().dupNode(itsTreeID,itsSelectedNode.nodeID(),idx);
+                    if (aN>0) {
+                        logger.debug("Node duplicated");
+                        setNewRootNode();
+                    } else {
+                        logger.debug("Node duplication failed");
+                    }
+              } catch (RemoteException ex) {
+                    logger.debug("Error during duplication of Node: "+ex);
+              }
+            }
         } else if (evt.getActionCommand().equals("Info")) {
             if (itsTreeID > 0) {
                 if (viewInfo() ) {
@@ -179,16 +202,31 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 }
             }
 
-        } else if (evt.getActionCommand().equals("Cancel")) {
+        } else if (evt.getActionCommand().equals("Exit")) {
             itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
-
-        } else if (evt.getActionCommand().equals("Save")) {
-
-        } else if (evt.getActionCommand().equals("Save & Exit")) {
-
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
+    
+    
+    private void setFieldValidations() {
+        parameterViewPanel1.enableParamName(false);
+        parameterViewPanel1.enableIndex(false);
+        parameterViewPanel1.enableType(false);
+        parameterViewPanel1.enableUnit(false);
+        parameterViewPanel1.enablePruning(false);
+        parameterViewPanel1.enableValMoment(false);
+        parameterViewPanel1.enableRuntimeMod(false);
+        parameterViewPanel1.enableLimits(true);
+        parameterViewPanel1.enableDescription(true);                
+        parameterViewPanel1.enableButtons(true);
+        nodeViewPanel1.enableNodeName(false);
+        nodeViewPanel1.enableIndex(false);
+        nodeViewPanel1.enableInstances(true);
+        nodeViewPanel1.enableLimits(true);
+        nodeViewPanel1.enableDescription(true);
+        nodeViewPanel1.enableButtons(true);            
+    }
     
     /** Launch TreeInfoDialog,
      *
@@ -225,23 +263,24 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         logger.debug("ChangeSelection for node: " + aNode.name);
         itsSelectedNode=aNode;
         if (aNode.leaf) {
+            buttonPanel1.setButtonEnabled("Duplicate",false);
             jOTDBparam aParam = null;
             try {
                 jTabbedPane1.setSelectedComponent(parameterViewPanel1);
                 aParam = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getParam(itsTreeID, aNode.paramDefID());
-                nodeViewPanel1.setEnabled(false);
-                parameterViewPanel1.setEnabled(true);
-                parameterViewPanel1.setParam(aParam); 
+                parameterViewPanel1.setParam(aParam);
             } catch (RemoteException ex) {
                 logger.debug("Error during getParam: "+ ex);
             }
         } else {
             // this node is a node
             jTabbedPane1.setSelectedComponent(nodeViewPanel1);
-            parameterViewPanel1.setEnabled(false);
-            nodeViewPanel1.setEnabled(true);
             nodeViewPanel1.setNode(aNode);
-            
+            if (treePanel.getSelectedRows()[0] ==  0) {
+                buttonPanel1.setButtonEnabled("Duplicate",false);
+            } else {
+                buttonPanel1.setButtonEnabled("Duplicate",true);
+            }
         }
     }
     
@@ -250,9 +289,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         buttonPanel1.addButton("Delete");
         buttonPanel1.addButton("Duplicate");
         buttonPanel1.addButton("Info");
-        buttonPanel1.addButton("Cancel");
-        buttonPanel1.addButton("Save");
-        buttonPanel1.addButton("Save & Exit");
+        buttonPanel1.addButton("Exit");
         
         nodeViewPanel1.enableInstances(true);
         nodeViewPanel1.enableLimits(true);
