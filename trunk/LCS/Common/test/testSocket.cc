@@ -30,7 +30,7 @@
 using namespace LOFAR;
 
 static	Socket*		dataSock = 0;
-static	Socket*		testSock;
+static	Socket*		testSock = 0;
 
 
 //
@@ -228,9 +228,19 @@ int main (int32	argc, char*argv[]) {
 		}
 	}
 
-	if (dataSock)
-		delete dataSock;
-	delete testSock;
+	// server has seperate sockets (clients has copied the pointer)
+	if (testSock->isServer()) {
+		if (dataSock) {
+			LOG_TRACE_FLOW("Closing datasocket");
+			delete dataSock;
+			dataSock = 0;
+		}
+	}
+	if (testSock) {
+		LOG_TRACE_FLOW("Closing mainsocket");
+		delete testSock;
+		testSock = 0;
+	}
 
 	return (0);
 }
