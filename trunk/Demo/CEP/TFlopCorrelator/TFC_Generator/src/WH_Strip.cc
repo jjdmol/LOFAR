@@ -120,7 +120,7 @@ void WH_Strip::process()
   //cout<<"yield was called "<< timerCount << " times"<<endl;
 
   cout<<"WH_Strip sending "<<myEthFrame.getPayloadSize()<<" bytes"<<endl;
-  bool ret = itsTH.sendBlocking(myEthFrame.getPayloadp(), myEthFrame.getPayloadSize(), 0);
+  bool ret = itsTH.sendNonBlocking(myEthFrame.getPayloadp(), myEthFrame.getPayloadSize(), 0);
   ASSERTSTR(ret, "TH couldn't send data");
   // we handled one alarm, so decrease it
   theirNoAlarms--;
