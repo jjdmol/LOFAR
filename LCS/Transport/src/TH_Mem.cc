@@ -125,7 +125,7 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag, int nrBytesRead, DataH
   LOG_ERROR("recvBlocking not available without USE_THREADS");
   return false;
 #else
-  LOG_WARN("TH_Mem::recvBlocking().Using blocking in-memory transport can cause a dead-lock.")
+  LOG_WARN("TH_Mem::recvBlocking().Using blocking in-memory transport can cause a dead-lock.");
 
   pthread_mutex_lock(&theirMapLock);
   if (itsFirstCall)
