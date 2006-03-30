@@ -3,8 +3,8 @@ package nl.astron.lofar.mac.apl.gui.jrsp;
 public class RCUStatus
 {
     /** Number of overflow x. */
-    int nofOverflowX;
+    public int nofOverflowX;
     
     /** Number of overflow y. */
-    int nofOverflowY;
+    public int nofOverflowY;
 }
