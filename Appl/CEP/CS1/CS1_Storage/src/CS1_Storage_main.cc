@@ -20,6 +20,17 @@
 
 using namespace LOFAR;
 
+#if 1
+#include<PLC/ACCmain.h>
+
+int main(int argc, char* argv[]) {
+  AH_Storage myAH;
+  ApplicationHolderController myAHC(myAH);
+  return LOFAR::ACC::PLC::ACCmain(argc, argv, &myAHC);
+}
+
+#else
+
 int main (int argc, const char** argv) {
   INIT_LOGGER("CS1_Storage");
 
@@ -66,3 +77,5 @@ int main (int argc, const char** argv) {
   LOG_INFO_STR(argv[0] << " terminated normally");
   return (0);
 }
+
+#endif
