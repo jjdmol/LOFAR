@@ -51,7 +51,7 @@ namespace LOFAR {
 // @{
 //
 // Only initializes the logger module.
-#define INIT_LOGGER(filename) \
+#define INIT_LOGGER(filename) do { \
 	LOFAR::lofarLoggerInitNode(); \
 	LofarInitTracingModule \
 	if (!strstr(filename, ".log_prop")) { \
@@ -59,12 +59,13 @@ namespace LOFAR {
 	} \
 	else  {\
 		log4cplus::PropertyConfigurator::doConfigure(filename); \
-	}
+	} \
+	} while(0)
 
 // After initialisation a thread is started to monitor any changes in the
 // properties file. An intervaltime in millisecs must be provided.
 #ifdef USE_THREADS
-# define INIT_LOGGER_AND_WATCH(filename,watchinterval) \
+# define INIT_LOGGER_AND_WATCH(filename,watchinterval) do { \
 	LOFAR::lofarLoggerInitNode(); \
 	LofarInitTracingModule \
 	if (!strstr(filename, ".log_prop")) { \
@@ -72,7 +73,8 @@ namespace LOFAR {
 	} \
 	else  {\
 		log4cplus::ConfigureAndWatchThread tmpWatchThread(filename,watchinterval); \
-	}
+	} \
+	} while(0)
 #else
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
 #endif
@@ -247,19 +249,20 @@ namespace LOFAR {
 
 // Create a TraceLogger object that will output your message during construct
 // and destruction. Your message is preceeded with "ENTER:" or "EXIT:".
-#define LOG_TRACE_LIFETIME(level,message) \
+#define LOG_TRACE_LIFETIME(level,message) do { \
 	LifetimeLogger _tmpLifetimeTraceObj(level, getLogger().logger(), \
 	LOFAR::formatString("%s:%s", AUTO_FUNCTION_NAME, message), \
-			__FILE__, __LINE__); 
+			__FILE__, __LINE__); \
+	} while(0)
 
 // Create a TraceLogger object that will output your message during construct
 // and destruction. Your message is preceeded with "ENTER:" or "EXIT:".
-#define LOG_TRACE_LIFETIME_STR(level,stream) \
+#define LOG_TRACE_LIFETIME_STR(level,stream) do { \
 	ostringstream	oss; \
 	oss << AUTO_FUNCTION_NAME << ":" << stream; \
 	LifetimeLogger		_tmpLifetimeTraceObj(level, getLogger().logger(), \
 								oss.str(), __FILE__, __LINE__); \
-	}
+	} while(0)
 	
 //# ----------- implementation details tracer part -------------
 
@@ -277,17 +280,19 @@ void	initTraceModule(void);
 
 // \internal
 // Internal macro used by the LOG_TRACE_<level> macros.
-#define LofarLogTrace(level,message) \
+#define LofarLogTrace(level,message) do { \
 	if (getLogger().logger().isEnabledFor(level)) \
-		getLogger().logger().forcedLog(level, message, __FILE__, __LINE__)
+		getLogger().logger().forcedLog(level, message, __FILE__, __LINE__); \
+	} while(0)
 
 // \internal
 // Internal macro used by the LOG_TRACE_<level>_STR macros.
-#define LofarLogTraceStr(level,stream) \
+#define LofarLogTraceStr(level,stream) do { \
 	if (getLogger().logger().isEnabledFor(level)) { \
 		std::ostringstream	oss;	\
 		oss << stream;					\
-		getLogger().logger().forcedLog(level, oss.str(), __FILE__, __LINE__); }
+		getLogger().logger().forcedLog(level, oss.str(), __FILE__, __LINE__); } \
+	} while(0)
 
 // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
@@ -361,15 +366,16 @@ void	initTraceModule(void);
 // \internal
 // \name Internal macro's for standard logging functions
 // @{
-#define LofarLog(level,message) \
-	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE).log(log4cplus::level, message, __FILE__, __LINE__);
+#define LofarLog(level,message) do { \
+	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE).log(log4cplus::level, message, __FILE__, __LINE__); \
+	} while(0)
 
 // \internal
-#define LofarLogStr(level,stream) {		\
+#define LofarLogStr(level,stream) do {		\
 	std::ostringstream	oss;			\
 	oss << stream;						\
-	LofarLog(level,oss.str())			\
-	}
+	LofarLog(level,oss.str());			\
+	} while(0)
 // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 
