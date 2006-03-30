@@ -12,11 +12,13 @@ Connections.Input_Delay.ServerHost     =10.20.98.1
 Connections.Input_BGLProc.ServerHosts  =[10.20.98.4]
 Connections.BGLProc_Storage.ServerHosts=[192.168.100.254]
 Connections.Delay_BGLProc.ServerHost   =10.20.98.1
+Connections.AMC.ServerHost             =127.0.0.1    # where AMC server runs
 
 # The ports for all (socket)connections
 Connections.Input_Delay.Ports    =[7200,7201]
 Connections.Input_BGLProc.Ports  =[8000,8001,8002,8003,8004,8005,8006,8007,8008,8009,8010,8011,8012,8013,8014,8015]
 Connections.BGLProc_Storage.Ports=[8200,8201,8202,8203,8204,8205,8206,8207,8208,8209,8210,8211,8212,8213,8214,8215]
+Connections.AMC.Port             =31337
 
 # The format of the data
 Observation.NSubbands=1
@@ -24,17 +26,19 @@ Observation.NChannels = 256
 Observation.NPolarisations=2
 Observation.NSamplesToIntegrate= 196608 #155648
 Observation.NStations=2
-Observation.StationPositions =      \ # position (lat(rad),long(rad),height(m))
-[0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, \
-1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, \
-0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, \
-1,1,1, 0,0,0, 1,1,1, 2,2,2] 
-Observation.PositionType = ITRF     # position type
-Observation.NBeams = 1              # number of beams used
-Observation.BeamDirections = [0,0]  # pair of RA/DEC per beam (angle in rad)
+Observation.PositionType = ITRF     # should be ITRF
+Observation.StationPositions = [\   # position (lat(rad),long(rad),height(m))
+0.1,         0.796643211, 6368177.29,\ # arbitrary position
+0.111646531, 0.918523043, 6364631.29]   # Dwingeloo observatory
+#0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, \
+#1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1, 0,0,0, 1,1,1]
+Observation.NBeams = 4              # number of beams used
 Observation.DirectionType = J2000   # direction type
-Observation.StartTime = 123         # number of seconds since Jan 1, 1970 (UTC)
-Observation.EndTime   =  1          # number of seconds since Jan 1, 1970 (UTC)
+Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
+1, 0.3, -1, -0.3, 2, 0.1, 1.5, -0.3]  # four arbitrary directions
+Observation.StartTime = 53328.6407291667 # MJD: 2004/11/19 15h22m39s
+Observation.StopTime  = 53328.6823958333 # MJD: 2004/11/19 16h22m39s
+Observation.IntegrationPeriod = 1   # 1 second
 Observation.RefFreqs = [99950592.0, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8]  # the reference frequency for each stored(!) subband (Hz)
 Observation.ChanWidth = 1.0e8       # width of each channel (Hz)
 
@@ -46,6 +50,7 @@ FakeData.NStations=37
 General.NRuns = 30      # Number of seconds to process. NB: must be a multiple of 'BGLProc.SlavesPerSubband'
 
 # Variables for the DelayCompensation
+DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
 
 # Variables for the InputSection
 Input.NPacketsInFrame=125
@@ -53,6 +58,7 @@ Input.SzEPAheader=16
 Input.SzEPApayload=8  # must be a multiple of 8 (Npol * 4) and it must be more than NSubbands * 8
 Input.IPHeaderSize=32
 Input.NSamplesToBuffer=401408
+Input.NRSPBoards=2
 Input.Transport.0.th        = FILE  # should be one of ETHERNET, FILE, SOCKET, NULL
 Input.Transport.0.inputFile = "udp_rsp0.data"
 Input.Transport.1.th        = FILE  # should be one of ETHERNET, FILE, SOCKET, NULL
