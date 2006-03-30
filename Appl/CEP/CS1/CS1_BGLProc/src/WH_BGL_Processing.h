@@ -89,6 +89,11 @@ class WH_BGL_Processing: public WorkHolder {
     DH_Subband *get_DH_Subband() {
       return dynamic_cast<DH_Subband *>(getDataManager().getInHolder(SUBBAND_CHANNEL));
     }
+    // The InHolder of DH_Subband is not automatically read (see setAutoTriggerIn()-call in constructor)
+    // So we have to manually release the InHolder
+    void *release_DH_Subband() {
+      getDataManager().readyWithInHolder(SUBBAND_CHANNEL));
+    }
 
     DH_RFI_Mitigation *get_DH_RFI_Mitigation() {
       return dynamic_cast<DH_RFI_Mitigation *>(getDataManager().getInHolder(RFI_MITIGATION_CHANNEL));

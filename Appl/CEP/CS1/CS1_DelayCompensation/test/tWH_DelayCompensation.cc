@@ -47,7 +47,7 @@ int main (int argc, char* argv[]) {
 
   try {
     //    ... do work ...
-    ParameterSet pset("CS1.cfg");
+    ParameterSet pset("CS1.parset");
     WH_DelayCompensation wh("WH_DelayCompensation", pset);
     wh.basePreprocess();
     wh.baseProcess();

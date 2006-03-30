@@ -37,7 +37,7 @@ int main (int argc, const char** argv) {
 
       AH_Storage myAH;
 
-      ACC::APS::ParameterSet ps("CS1.cfg");
+      ACC::APS::ParameterSet ps("CS1.parset");
       myAH.setParameters(ps);
 
       myAH.setarg(argc, argv);

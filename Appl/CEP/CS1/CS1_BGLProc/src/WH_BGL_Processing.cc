@@ -1150,6 +1150,7 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
 #endif
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
+  getDataManager().setAutoTriggerIn(SUBBAND_CHANNEL, false);
   getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
   getDataManager().addOutDataHolder(VISIBILITIES_CHANNEL, new DH_Visibilities("output", ps));
 }
@@ -1315,17 +1316,15 @@ void WH_BGL_Processing::doPPF()
 
   typedef DH_Subband::SampleType inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS];
 
-  inputType *input = (inputType *) get_DH_Subband()->getSamples();
-
 #if defined DELAY_COMPENSATION
   DH_Subband::AllDelaysType *delays = get_DH_Subband()->getDelays();
 #endif
 
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
+    inputType *input = (inputType *) get_DH_Subband()->getSamples();
 #if defined C_IMPLEMENTATION
     fcomplex fftOutData[NR_SUBBAND_CHANNELS];
     static fcomplex fftInData[NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS];
-
 
     FIRtimer.start();
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
@@ -1423,6 +1422,7 @@ void WH_BGL_Processing::doPPF()
 #endif
     }
 #endif
+    release_DH_Subband();
   }
 
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
@@ -1435,14 +1435,16 @@ void WH_BGL_Processing::doPPF()
 
 void WH_BGL_Processing::bypassPPF()
 {
-  DH_Subband::AllSamplesType *input = get_DH_Subband()->getSamples();
+  DH_Subband::AllSamplesType *input = 0; 
 
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
+    input = get_DH_Subband()->getSamples();
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
       for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	samples[0][stat][time][pol] = to_fcomplex((*input)[stat][time][pol]);
       }
     }
+    release_DH_Subband();
   }
 }
 

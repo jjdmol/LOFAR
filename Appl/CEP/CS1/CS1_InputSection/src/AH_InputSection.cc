@@ -146,7 +146,7 @@ namespace LOFAR {
 	// connect outputs to FIR stub
 	for (int core = 0; core < nCoresPerSubband; core++) {
 #if 1
-	  collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 2);
+	  collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
 	  itsOutputStub->connect(nf,
 			     core,
 			     (collectSteps.back())->getOutDataManager(0), 
