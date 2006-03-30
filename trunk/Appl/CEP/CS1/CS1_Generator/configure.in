@@ -51,9 +51,10 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-dnl lofar_BLITZ
-dnl lofar_MPI
-dnl lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_MPI
+lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
+lofar_INTERNAL(Appl/CEP/CS1/CS1_Interface,CS1_Interface,,1,CS1_Interface/RSPTimeStamp.h,,)
+
 
 dnl
 dnl Output Makefiles

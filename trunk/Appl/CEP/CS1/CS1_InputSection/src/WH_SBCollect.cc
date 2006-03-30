@@ -78,6 +78,31 @@ namespace LOFAR {
 
     void WH_SBCollect::process() 
     { 
+#if 1
+      // now we send every station seperately using the same connection.
+      // this means we send nstations times per process
+
+      RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
+      dimType inStationDim = inMatrix->getDim("Stations");
+
+      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getDataMatrix();
+      dimType outStationDim = outMatrix.getDim("Station");
+
+      RectMatrix<DH_Subband::SampleType>::cursorType outCursor;
+      RectMatrix<DH_RSP::BufferType>::cursorType inCursor;
+
+      // Loop over all inputs (stations)
+      for (int nr=0; nr<itsNinputs; nr++) {
+	outMatrix = &((DH_Subband*)getDataManager().getOutHolder(core))->getDataMatrix();
+	outCursor = outMatrix.getCursor( 0 * outStationDim);
+
+	inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
+	inCursor = inMatrix->getCursor(0*inStationDim);
+	// copy all freq, time and pol from an input to output
+	inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
+	getDataManager().readyWithOutHolder(core);
+      }
+#else
       RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
       RectMatrix<DH_Subband::SampleType>* outMatrix = &((DH_Subband*)getDataManager().getOutHolder(itsCore))->getDataMatrix();
       dimType outStationDim = outMatrix->getDim("Station");
@@ -102,6 +127,7 @@ namespace LOFAR {
 	}
 
       getDataManager().readyWithOutHolder(itsCore);
+#endif
       itsCore ++ ;
       if (itsCore >= itsNoutputs) itsCore = 0;
 

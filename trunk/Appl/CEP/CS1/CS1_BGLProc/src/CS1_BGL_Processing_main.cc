@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
   INIT_LOGGER("CS1_BGL_Processing");
 
   // Figuring out nrRuns here is ugly ...
-  LOFAR::ACC::APS::ParameterSet ps("CS1.cfg");
+  LOFAR::ACC::APS::ParameterSet ps("CS1.parset");
   int nrSeconds = ps.getInt32("General.NRuns");
   int nrSlaves	= ps.getInt32("BGLProc.SlavesPerSubband");
   int nrRuns	= nrSeconds / nrSlaves;

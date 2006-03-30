@@ -31,7 +31,8 @@
 //# Includes
 #include <APS/ParameterSet.h>
 #include <Transport/DataHolder.h>
-#include <TFC_Interface/RSPTimeStamp.h>
+#include <CS1_Interface/RSPTimeStamp.h>
+#include <CS1_Generator/StationData.h>
 
 namespace LOFAR 
 {

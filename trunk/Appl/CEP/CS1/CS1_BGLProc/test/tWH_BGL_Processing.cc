@@ -203,7 +203,7 @@ void doWork()
     std::cerr << "setting nRuns to " << env << '\n';
   }
 
-  ACC::APS::ParameterSet pset("CS1.cfg");
+  ACC::APS::ParameterSet pset("CS1.parset");
   WH_BGL_Processing wh("WH_BGL_Processing", baseFrequency, pset);
 
 #if defined HAVE_MPI

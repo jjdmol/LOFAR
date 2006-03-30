@@ -31,18 +31,15 @@ namespace LOFAR {
   namespace CS1_Generator {
 
     DH_RSP::DH_RSP (const string& name,
-                    const ACC::APS::ParameterSet pset)
+                    const ACC::APS::ParameterSet& pset)
                   : DataHolder       (name, "DH_RSP"),
-                    itsEthernetFrame (0),
-                    itsPSet          (pset)
-    {
-      itsBufSize         = EthernetFrame::getSize(itsPSet);
-    }
+                    itsFrame (0),
+                    itsPSet  (pset)
+    {}
 
     DH_RSP::DH_RSP(const DH_RSP& that)
     : DataHolder         (that),
-      itsEthernetFrame   (0),
-      itsBufSize         (that.itsBufSize),
+      itsFrame   (0),
       itsPSet            (that.itsPSet)
     {}
 
@@ -57,15 +54,15 @@ namespace LOFAR {
     void DH_RSP::init()
     {
       // Add the fields to the data definition.
-      addField ("EthernetFrame", BlobField<char>(1, itsBufSize));
+      addField ("Frame", BlobField<char>(1, Frame::getSize()));
       // Create the data blob
       createDataBlock();
     }
 
     void DH_RSP::fillDataPointers()
     {
-      itsFrame = new Frame(itsPSet, getData<char>("EthernetFrame"), itsBufSize);
-      itsFrame->getData->clear();
+      itsFrame = new Frame(itsPSet, getData<char>("Frame"), itsBufSize);
+      itsFrame->getData()->clear();
     }
   } // namespace CS1_Generator
 } // namespace LOFAR

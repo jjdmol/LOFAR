@@ -29,7 +29,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <otherpackage/file.h>
+#include <Common/lofar_complex.h>
+#include <CS1_Interface/RSPTimeStamp.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR 
 {
@@ -39,7 +41,7 @@ namespace LOFAR
     // \addtogroup CS1_Generator
     // @{
 
-    typedef i16complex::RSPDataType 
+    typedef i16complex RSPDataType;
     
     // Header is the class that represents the header data of the epa packet
     // it contains the following fields:
@@ -51,15 +53,21 @@ namespace LOFAR
     class Header
     {
     public:
-      explicit Header(const char* bufferSpace, const int size) {ASSERTSTR(size == theirSize, "Header did not receive the right amount of memory"); itsBufferp = bufferSpace; itsStationIDp = itsBufferp + theirStatIDOffset; itsSeqIDp = itsBufferp + theirSeqIDOffset; itsBlockIDp = itsBufferp + theirBlockIDoffset;};
+      explicit Header(char* bufferSpace, const int size) {
+	ASSERTSTR(size == theirSize, "Header did not receive the right amount of memory"); 
+	itsBufferp = bufferSpace; 
+	itsStationIDp = reinterpret_cast<int*>(itsBufferp + theirStatIDOffset); 
+	itsSeqIDp = reinterpret_cast<int*>(itsBufferp + theirSeqIDOffset); 
+	itsBlockIDp = reinterpret_cast<int*>(itsBufferp + theirBlockIDOffset);
+      };
       ~Header() {};
 
 //      int32 getProtocol() const;
 //      void setProtocol(int32 newProt);
-      int32 getStationId() const		{ return *itsStationIDp};
-      void setStationId(int32 newSid); 		{ *itsStationIDp = newSid;};
-      RSPTimeStamp getTimeStamp() const;         { return RSPTimeStamp(*itsSeqIDp, *itsBlockIDp);};
-      void setTimeStamp(RSPTimeStamp newStamp);  { *itsSeqIDp = newStamp.getSeqID();  *itsBlockIDp = newStamp.getBlockID();};
+      int32 getStationId() const		{ return *itsStationIDp;};
+      void setStationId(int32 newSid) 		{ *itsStationIDp = newSid;};
+      TimeStamp getTimeStamp() const            { return TimeStamp(*itsSeqIDp, *itsBlockIDp);};
+      void setTimeStamp(TimeStamp newStamp)     { *itsSeqIDp = newStamp.getSeqId();  *itsBlockIDp = newStamp.getBlockId();};
       static int getSize()		        { return theirSize;};
     protected:
       char* itsBufferp;
@@ -76,34 +84,50 @@ namespace LOFAR
     class Data
     {
     public:
-      explicit Data(const RSPDataType* bufferSpace, const int size, const ParameterSet& ps) {itsNPol = ps.getInt32("NPolarisations"); itsNSubband = ps.getInt32("NSubbands"); itsNTimes = ps.getInt32("NTimesPerFrame"); ASSERTSTR(itsNPol * itsNSubband * itsNTimes * sizeof(RSPDataType) == size, "Data did not receive the right amount of memory"); itsBeamlets = bufferSpace; };
+      explicit Data(RSPDataType* bufferSpace, const unsigned int size, const ACC::APS::ParameterSet& ps) {
+	itsNPol = ps.getInt32("NPolarisations"); 
+	itsNSubbands = ps.getInt32("NSubbands"); 
+	itsNTimes = ps.getInt32("NTimesPerFrame"); 
+	ASSERTSTR(itsNPol * itsNSubbands * itsNTimes * sizeof(RSPDataType) == size, "Data did not receive the right amount of memory"); 
+	itsBeamlets = bufferSpace; 
+      };
       ~Data() {};
       
-      RSPDataType& getBeamlet(int seq, int subband, int pol) { return itsBeamlets[pol + subband * itsNPol + seq * itsNPol * itsNSubband]; } const;
-      void clear()       { memset(itsBuffer, 0);};
+      RSPDataType& getBeamlet(int seq, int subband, int pol) const { return itsBeamlets[pol + subband * itsNPol + seq * itsNPol * itsNSubbands]; };
+      void clear()       { memset(itsBeamlets, 0, itsNPol * itsNSubbands * itsNTimes * sizeof(RSPDataType));};
       int getNPols() const {return itsNPol;};
       int getNSubbands() const {return itsNSubbands;};
       int getNTimes() const {return itsNTimes;};
+
+      static int getSize(const ACC::APS::ParameterSet& ps) { 
+	return ps.getInt32("NPolarisations")
+	  * ps.getInt32("NSubbands")
+	  * ps.getInt32("NTimesPerFrame")
+	  * sizeof(RSPDataType); };  
+
     protected:
       RSPDataType* itsBeamlets;
       
       int itsNPol;
-      int itsNSubband;
+      int itsNSubbands;
       int itsNTimes;
-    }
+    };
     
     class Frame
     {
-      Frame(const char* bufferP, const int size, const ParameterSet& ps) : itsHeader(bufferP, Header::getSize()), itsData(bufferP + Header::getSize(), size - Header::getSize(), ps) {};
+    public:
+      Frame(char* bufferP, const int size, const ACC::APS::ParameterSet& ps) : itsHeader(bufferP, Header::getSize()), itsData(reinterpret_cast<RSPDataType*>(bufferP + Header::getSize()), size - Header::getSize(), ps) {};
       ~Frame() {};
       
-      Data* getData() const  { return &itsData;};
-      Header* getHeader() const  { return &itsHeader;};
+      Data* getData() { return &itsData;};
+      Header* getHeader() { return &itsHeader;};
+
+      static int getSize(const ACC::APS::ParameterSet& ps) { return Header::getSize() + Data::getSize(ps);};
       
     private:
       Header itsHeader;
       Data itsData;
-    }
+    };
             
     // @}
 

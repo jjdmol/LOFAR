@@ -45,6 +45,6 @@ Stub_Delay.cc			\
 Stub_RSP.cc
 
 configfilesdir=$(bindir)
-configfiles_DATA=CS1.cfg
+configfiles_DATA=CS1.parset
 
 include $(top_srcdir)/Makefile.common

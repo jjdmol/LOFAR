@@ -131,7 +131,7 @@ int main (int argc, const char** argv){
   INIT_LOGGER("TestStorage");
   try {
     AH_TestStorage test;
-    ACC::APS::ParameterSet ps("CS1.cfg");
+    ACC::APS::ParameterSet ps("CS1.parset");
     test.setParameters(ps);
     test.setarg(argc,argv);
     test.baseDefine();

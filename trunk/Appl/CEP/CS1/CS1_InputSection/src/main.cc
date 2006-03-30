@@ -53,7 +53,7 @@ int main (int argc, const char** argv) {
       // there are no commandline arguments, so we were not called by ACC
       AH_InputSection myAH;
 
-      ACC::APS::ParameterSet ps("CS1.cfg"); 
+      ACC::APS::ParameterSet ps("CS1.parset"); 
       myAH.setParameters(ps);
       
       myAH.setarg(argc, argv);
