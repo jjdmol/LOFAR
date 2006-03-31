@@ -57,10 +57,10 @@ namespace LOFAR
 	{
 	  sprintf(str, "DH_out_%d", i);
 	  getDataManager().addOutDataHolder(i, new DH_Subband(str, itsPS));
-	  getDataManager().setAutoTriggerOut(i, false);
+	  //getDataManager().setAutoTriggerOut(i, false);
 	}
       // Set a round robin output selector
-      //getDataManager().setOutputSelector(new Sel_RoundRobin(itsNoutputs));
+      getDataManager().setOutputSelector(new Sel_RoundRobin(itsNoutputs));
     }
 
     WH_SBCollect::~WH_SBCollect() {
@@ -80,7 +80,7 @@ namespace LOFAR
 
     void WH_SBCollect::process() 
     { 
-#if 1
+#if 0
       // now we send every station seperately using the same connection.
       // this means we send nstations times per process
 
