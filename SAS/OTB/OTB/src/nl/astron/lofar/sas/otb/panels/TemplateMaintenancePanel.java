@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
  * (status usable, being specified and example).
  * or specifying an instrument configuration for an observation request.
  *
- * @author  coolen
+ * @author  Coolen
  */
 public class TemplateMaintenancePanel extends javax.swing.JPanel
         implements IPluginPanel {
@@ -294,9 +294,11 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         nodeViewPanel1.enableInstances(true);
         nodeViewPanel1.enableLimits(true);
         nodeViewPanel1.enableDescription(true);
+        nodeViewPanel1.enableButtons(true);
         
         parameterViewPanel1.enableLimits(true);
         parameterViewPanel1.enableDescription(true);
+        parameterViewPanel1.enableButtons(true);
     }
     
     private MainFrame itsMainFrame;

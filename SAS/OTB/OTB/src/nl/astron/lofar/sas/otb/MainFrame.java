@@ -65,6 +65,11 @@ public class MainFrame extends javax.swing.JFrame {
         public JMenuItem menuItem;
     }
     
+    /** Todo Stub can be used to place ToDo panels on methods that still need to be coded during development */
+    public void ToDo() {
+        JOptionPane.showMessageDialog(this,"This code still needs to be implemented","Warning",JOptionPane.WARNING_MESSAGE);
+    }
+    
     /** Creates new form MainFrame */
     public MainFrame() {
         itsPlugins = new HashMap<String,PluginPanelInfo>();

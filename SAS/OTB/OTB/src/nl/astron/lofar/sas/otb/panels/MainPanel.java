@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author  blaakmeer/coolen
+ * @author  Blaakmeer/Coolen
  */
 public class MainPanel extends javax.swing.JPanel 
                        implements IPluginPanel {
@@ -49,6 +49,8 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("Delete");
             buttonPanel1.setButtonEnabled("Delete",false);
+            buttonPanel1.addButton("View");
+            buttonPanel1.setButtonEnabled("View",false);
         } else if (itsTabFocus.equals("Templates")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("New");
@@ -346,11 +348,38 @@ public class MainPanel extends javax.swing.JPanel
             }
             if (aButton.equals("Query Panel")) {
                 // TODO open Query Panel
-                ToDo();
+                itsMainFrame.ToDo();
             } else if (aButton.equals("New")) {
-                File aFile=getFile("PIC-tree");
-                // TODO go to Resultbrowser panel with new treeid
-                ToDo();
+                if (getFile("PIC-tree")) {
+                    try {
+                        // Create a new Tree from the found file.
+                        int aTreeID=itsMainFrame.getOTDBrmi().getRemoteMaintenance().loadComponentFile(itsNewFile.getPath());
+                        if (aTreeID < 1) {
+                            logger.debug("Error on fileLoad: " + itsNewFile.getPath());
+                        } else {
+                            // set the new created TreeID to active and fill description stuff if needed
+                            itsMainFrame.setTreeID(aTreeID);
+                            if (!itsFileDescription.equals("")) {
+                                if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setDescription(aTreeID,itsFileDescription)) {
+                                    logger.debug("Error during setDescription in Tree "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());
+                                }
+                            }
+                                
+                            if (!itsFileStatus.equals("")) {
+                                if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setTreeState(aTreeID,itsMainFrame.getOTDBrmi().getRemoteTypes().getTreeState(itsFileStatus))) {
+                                    logger.debug("Error during setStatus in Tree "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());
+                                }
+                            }                               
+                        }
+                    } catch (RemoteException ex) {
+                        logger.debug("Error during newPICTree creation: "+ ex);
+                    }
+                    ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", false, true);
+                    if (aP != null) {
+                        itsMainFrame.showPanel(aP.getFriendlyName());
+                    }
+                }
+
             } else if (aButton.equals("Delete")) {
                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
@@ -364,8 +393,10 @@ public class MainPanel extends javax.swing.JPanel
                     }
                 }
             } else if (aButton.equals("View")) {
-                // TODO  goto result browser with selected TreeID
-                ToDo();
+                ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", false, true);
+                if (aP != null) {
+                    itsMainFrame.showPanel(aP.getFriendlyName());
+                }
             } else if (aButton.equals("Info")) {
                 if (itsMainFrame.getTreeID() > 0) {
                     if (viewInfo(itsMainFrame.getTreeID())) {
@@ -385,7 +416,7 @@ public class MainPanel extends javax.swing.JPanel
             }
             if (aButton.equals("Query Panel")) {
                 // TODO open Query Panel
-                ToDo();
+                itsMainFrame.ToDo();
             } else if (aButton.equals("Delete")) {
                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
@@ -397,6 +428,11 @@ public class MainPanel extends javax.swing.JPanel
                     } catch (RemoteException ex) {
                         logger.debug("Remote error during deleteTree: "+ ex);
                     }
+                }
+            } else if (aButton.equals("View")) {
+                ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", false, true);
+                if (aP != null) {
+                    itsMainFrame.showPanel(aP.getFriendlyName());
                 }
             } else if (aButton.equals("Info")) {
                 if (itsMainFrame.getTreeID() > 0) {
@@ -425,7 +461,7 @@ public class MainPanel extends javax.swing.JPanel
                 return;
             }
             if (aButton.equals("Query Panel")) {
-                ToDo();
+                itsMainFrame.ToDo();
             } else if (aButton.equals("New")) {
                 TemplateConstructionPanel aP=(TemplateConstructionPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
                 if (aP != null) {
@@ -435,7 +471,7 @@ public class MainPanel extends javax.swing.JPanel
                 
                 // TODO look if a template was chosen to duplicate first
                 // and set it in the panel
-                ToDo();
+                itsMainFrame.ToDo();
             } else if (aButton.equals("Modify")) {
                 if (aTreeState.equals("idle")) {
                     TemplateConstructionPanel aP =(TemplateConstructionPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateConstructionPanel", false, true);
@@ -458,11 +494,12 @@ public class MainPanel extends javax.swing.JPanel
             }
         } else if (itsTabFocus.equals("Components")) {
             if (aButton.equals("Query Panel")) {
-                ToDo();
+                itsMainFrame.ToDo();
             } else if (aButton.equals("New")) {
-                File aFile=getFile("VIC-component");
-                // TODO Component Maintenance Panel with new id
-                ToDo();
+                if (getFile("VIC-component") ) {
+                    // TODO Component Maintenance Panel with new id
+                }
+                itsMainFrame.ToDo();
             } else if (aButton.equals("Modify")) {
                 ComponentMaintenancePanel aP = (ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
                 if (aP != null) {
@@ -470,7 +507,7 @@ public class MainPanel extends javax.swing.JPanel
                 }
             }
         } else if (itsTabFocus.equals("Query Results")) {
-            ToDo();
+            itsMainFrame.ToDo();
         } else {
             logger.debug("Other command found: "+aButton);
         }
@@ -513,28 +550,38 @@ public class MainPanel extends javax.swing.JPanel
      * @param   aType   PIC-tree or VIC-component
      *
      */
-    private File getFile(String aType) {
-        File aFile=null;
-        String aStatus="";
-        String aDescription="";
+    private boolean getFile(String aType) {
+        File aNewFile=null;
+        String aFileStatus="";
+        String aFileDescription="";
+        
+        // Reset the File info fields
+        itsNewFile = null;
+        itsFileDescription="";
+        itsFileStatus="";
         
         // show login dialog
         loadFileDialog = new LoadFileDialog(itsMainFrame,true,aType);
         loadFileDialog.setLocationRelativeTo(this);
         loadFileDialog.setVisible(true);
         if(loadFileDialog.isOk()) {
-            aDescription = loadFileDialog.getDescription();
-            aStatus = loadFileDialog.getStatus();
-            aFile = loadFileDialog.getFile();       
+            aFileDescription = loadFileDialog.getDescription();
+            aFileStatus = loadFileDialog.getStatus();
+            aNewFile = loadFileDialog.getFile();       
         } else {
             logger.info("No File chosen");
+            return false;
         }
-        if (aFile != null && aFile.exists()) {
-            logger.debug("File to load: " + aFile.getName()); 
-            logger.debug("Status: " + aStatus);
-            logger.debug("Description: "+ aDescription);
+        if (aNewFile != null && aNewFile.exists()) {
+            logger.debug("File to load: " + aNewFile.getName()); 
+            logger.debug("Status: " + aFileStatus);
+            logger.debug("Description: "+ aFileDescription);
+            itsNewFile = aNewFile;
+            itsFileStatus = aFileStatus;
+            itsFileDescription = aFileDescription;
+            return true;
         }
-        return aFile;        
+        return false;
     }
     
     private void validateButtons() {
@@ -606,10 +653,6 @@ public class MainPanel extends javax.swing.JPanel
         } else if (itsTabFocus.equals("Query Results")) {
         }
     }
-   
-    private void ToDo() {
-        JOptionPane.showMessageDialog(this,"This code still needs to be implemented","Warning",JOptionPane.WARNING_MESSAGE);
-    }
     
     private MainFrame      itsMainFrame;
     private String         itsTabFocus="PIC";
@@ -617,6 +660,12 @@ public class MainPanel extends javax.swing.JPanel
     private LoadFileDialog loadFileDialog;
     private TreeInfoDialog treeInfoDialog;
     private boolean        changed=false;
+    
+    // File to be loaded info
+    File itsNewFile=null;
+    String itsFileDescription="";
+    String itsFileStatus = "";
+            
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.TablePanel ComponentsPanel;

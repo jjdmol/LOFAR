@@ -12,7 +12,7 @@ package nl.astron.lofar.sas.otb.panels;
 
 /**
  *
- * @author blaakmeer
+ * @author blaakmeer/coolen
  */
 public interface IPluginPanel {
     public boolean initializePlugin(nl.astron.lofar.sas.otb.MainFrame mainframe);

@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
  */
 public class NodeViewPanel extends javax.swing.JPanel {
     
-    static Logger logger = Logger.getLogger(MainPanel.class);    
+    static Logger logger = Logger.getLogger(NodeViewPanel.class);    
 
    
     /** Creates new form BeanForm based upon aNode
@@ -310,7 +310,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
         initPanel(itsNode);
     }//GEN-LAST:event_NodeCancelButtonActionPerformed
     
-    jOTDBnode itsNode = null;
+    private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
     private OtdbRmi    itsOtdbRmi;   
     
