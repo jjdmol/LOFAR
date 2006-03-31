@@ -323,5 +323,17 @@ void SynchronisityManager::sharePoolManager(int channel)
   }
 }
 
+float SynchronisityManager::getAndResetMaxInBufferUsage(int channel)
+{
+  int    nrBuffers = itsInManagers[channel]->getSize();
+  return nrBuffers == 0 ? 0 : itsInManagers[channel]->getAndResetMaxUsage() / nrBuffers;
+}
+
+float SynchronisityManager::getAndResetMaxOutBufferUsage(int channel)
+{
+  int    nrBuffers = itsInManagers[channel]->getSize();
+  return nrBuffers == 0 ? 0 : itsOutManagers[channel]->getAndResetMaxUsage() /nrBuffers;
+}
+
 
 }

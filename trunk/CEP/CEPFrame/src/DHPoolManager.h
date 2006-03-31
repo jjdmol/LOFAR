@@ -61,6 +61,7 @@ public:
   virtual void preprocess();
   
   virtual int getSize();
+  virtual int getAndResetMaxUsage();
   
   bool getSharing();
   void setSharing(bool share);

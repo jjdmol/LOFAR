@@ -57,6 +57,11 @@ int DHPoolManager::getSize()
   return 1;
 }
 
+int DHPoolManager::getAndResetMaxUsage()
+{
+  return 1;
+}
+
 DataHolder* DHPoolManager::getWriteLockedDH(int* id)
 {
   *id = 0;
