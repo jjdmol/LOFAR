@@ -57,8 +57,10 @@ tribool ApplicationHolderController::define   (ParameterSet ps)
 {
   LOG_TRACE_FLOW("Define called by ACC");
   try {
+    itsAH.setParameters(ps);
     itsAH.baseDefine();
   } catch (Exception&	ex) {
+    LOG_WARN_STR("Exception during define: " << ex.what());
     return false;
   }
   return true;
@@ -70,6 +72,7 @@ tribool ApplicationHolderController::init     ()
     Profiler::init();
     itsAH.basePrerun();
   } catch (Exception&	ex) {
+    LOG_WARN_STR("Exception during init: " << ex.what());
     return false;
   }
   return true;
@@ -79,8 +82,11 @@ tribool ApplicationHolderController::run      ()
   LOG_TRACE_FLOW("Run called by ACC");
   try {
     Profiler::activate();
+    itsAH.baseRun(itsNoRuns);
+    itsNoTotalRuns += itsNoRuns;
     itsIsRunning = true;
   } catch (Exception&	ex) {
+    LOG_WARN_STR("Exception during run: " << ex.what());
     return false;
   }
   return true;
@@ -100,6 +106,7 @@ tribool ApplicationHolderController::quit  	 ()
     itsAH.basePostrun();
     itsAH.baseQuit();
   } catch (Exception&	ex) {
+    LOG_WARN_STR("Exception during quit: " << ex.what());
     return false;
   }
   LOG_TRACE_FLOW("Quit ready");
@@ -131,6 +138,7 @@ tribool ApplicationHolderController::reinit	 (const string&	)
   try {
     itsAH.basePrerun();
   } catch (Exception&	ex) {
+    LOG_WARN_STR("Exception during reinit: " << ex.what());
     return false;
   }
   return true;
