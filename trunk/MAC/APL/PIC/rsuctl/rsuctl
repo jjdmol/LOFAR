@@ -400,8 +400,6 @@ sub main
 
     $raw->ethnew("eth1");
     $raw->ethset(dest => '10:FA:00:00:13:00');
-    #$raw->bset("01234567", 1);
-    #$raw->ethsend;
 
     $payloadlength = 200;
     $framelength = 16 + $payloadlength;
