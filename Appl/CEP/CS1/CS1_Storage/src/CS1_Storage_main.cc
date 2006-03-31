@@ -24,6 +24,7 @@ using namespace LOFAR;
 #include<PLC/ACCmain.h>
 
 int main(int argc, char* argv[]) {
+  INIT_LOGGER("CS1_Storage");
   AH_Storage myAH;
   ApplicationHolderController myAHC(myAH);
   return LOFAR::ACC::PLC::ACCmain(argc, argv, &myAHC);
