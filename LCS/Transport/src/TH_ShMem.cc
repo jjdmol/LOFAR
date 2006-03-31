@@ -171,7 +171,7 @@ void TH_ShMem::ShMemAllocator::deallocate(void* ptr)
 
 void TH_ShMem::recvCommContext(int tag)
 {
-  LOG_TRACE_STAT_STR("TH_Shmem::recvCommContext")
+  LOG_TRACE_STAT_STR("TH_Shmem::recvCommContext");
   // Receive the handle of the commcontext in shared memory
   bool result = itsHelperTH->recvBlocking(&itsCommHandle, 
 					  sizeof(ShMemHandle), tag, 0, 0);  
