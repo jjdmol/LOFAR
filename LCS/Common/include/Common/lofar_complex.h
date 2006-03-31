@@ -60,103 +60,103 @@ namespace LOFAR
   using TYPES::fcomplex;
   using TYPES::dcomplex;
 
-  i4complex makei4complex(i4complex &z) {
+  inline static i4complex makei4complex(i4complex &z) {
     return z;
   }
 
-  i4complex makei4complex(i16complex &z) {
+  inline static i4complex makei4complex(i16complex &z) {
     return makei4complex(real(z), imag(z));
   }
 
-  i4complex makei4complex(u16complex &z) {
+  inline static i4complex makei4complex(u16complex &z) {
     return makei4complex(real(z), imag(z));
   }
 
-  i4complex makei4complex(fcomplex &z) {
+  inline static i4complex makei4complex(fcomplex &z) {
     return makei4complex((int) real(z), (int) imag(z));
   }
 
-  i4complex makei4complex(dcomplex &z) {
+  inline static i4complex makei4complex(dcomplex &z) {
     return makei4complex((int) real(z), (int) imag(z));
   }
 
-  i16complex makei16complex(i4complex &z) {
+  inline static i16complex makei16complex(i4complex &z) {
     return makei16complex(real(z), imag(z));
   }
 
-  i16complex makei16complex(i16complex &z) {
+  inline static i16complex makei16complex(i16complex &z) {
     return z;
   }
 
-  i16complex makei16complex(u16complex &z) {
+  inline static i16complex makei16complex(u16complex &z) {
     return makei16complex(real(z), imag(z));
   }
 
-  i16complex makei16complex(fcomplex &z) {
+  inline static i16complex makei16complex(fcomplex &z) {
     return makei16complex((int) real(z), (int) imag(z));
   }
 
-  i16complex makei16complex(dcomplex &z) {
+  inline static i16complex makei16complex(dcomplex &z) {
     return makei16complex((int) real(z), (int) imag(z));
   }
 
-  u16complex makeu16complex(i4complex &z) {
+  inline static u16complex makeu16complex(i4complex &z) {
     return makeu16complex(real(z), imag(z));
   }
 
-  u16complex makeu16complex(i16complex &z) {
+  inline static u16complex makeu16complex(i16complex &z) {
     return makeu16complex(real(z), imag(z));
   }
 
-  u16complex makeu16complex(u16complex &z) {
+  inline static u16complex makeu16complex(u16complex &z) {
     return z;
   }
 
-  u16complex makeu16complex(fcomplex &z) {
+  inline static u16complex makeu16complex(fcomplex &z) {
     return makeu16complex((unsigned) real(z), (unsigned) imag(z));
   }
 
-  u16complex makeu16complex(dcomplex &z) {
+  inline static u16complex makeu16complex(dcomplex &z) {
     return makeu16complex((unsigned) real(z), (unsigned) imag(z));
   }
 
-  fcomplex makefcomplex(i4complex &z) {
+  inline static fcomplex makefcomplex(i4complex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
-  fcomplex makefcomplex(i16complex &z) {
+  inline static fcomplex makefcomplex(i16complex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
-  fcomplex makefcomplex(u16complex &z) {
+  inline static fcomplex makefcomplex(u16complex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
-  fcomplex makefcomplex(fcomplex &z) {
+  inline static fcomplex makefcomplex(fcomplex &z) {
     return z;
   }
 
-  fcomplex makefcomplex(dcomplex &z) {
+  inline static fcomplex makefcomplex(dcomplex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
-  dcomplex makedcomplex(i4complex &z) {
+  inline static dcomplex makedcomplex(i4complex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 
-  dcomplex makedcomplex(i16complex &z) {
+  inline static dcomplex makedcomplex(i16complex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 
-  dcomplex makedcomplex(u16complex &z) {
+  inline static dcomplex makedcomplex(u16complex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 
-  dcomplex makedcomplex(fcomplex &z) {
+  inline static dcomplex makedcomplex(fcomplex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 
-  dcomplex makedcomplex(dcomplex &z) {
+  inline static dcomplex makedcomplex(dcomplex &z) {
     return z;
   }
 }
