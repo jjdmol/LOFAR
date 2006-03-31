@@ -1201,21 +1201,6 @@ void WH_BGL_Processing::preprocess()
 }
 
 
-#if defined __xlC__
-inline __complex__ float to_fcomplex(i16complex z)
-{
-  return (float) z.real() + 1.0fi * z.imag();
-}
-#else
-#define to_fcomplex(Z) (static_cast<fcomplex>(Z))
-#endif
-
-inline fcomplex to_fcomplex(i4complex z)
-{
-  return makefcomplex((float) real(z), (float) imag(z));
-}
-
-
 void WH_BGL_Processing::computeFlags()
 {
 #if NR_SUBBAND_CHANNELS == 1
@@ -1330,7 +1315,7 @@ void WH_BGL_Processing::doPPF()
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 	for (int time = 0; time < NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION; time ++) {
-	  fcomplex sample = to_fcomplex((*input)[stat][time][chan][pol]);
+	  fcomplex sample = makefcomplex((*input)[stat][time][chan][pol]);
 	  fftInData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample, FIR::weights[chan]);
 	}
       }
@@ -1439,7 +1424,7 @@ void WH_BGL_Processing::bypassPPF()
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
       for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	samples[0][stat][time][pol] = to_fcomplex((*input)[stat][time][pol]);
+	samples[0][stat][time][pol] = makefcomplex((*input)[stat][time][pol]);
       }
     }
   }

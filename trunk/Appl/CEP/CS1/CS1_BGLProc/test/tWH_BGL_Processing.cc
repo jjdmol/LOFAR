@@ -47,12 +47,19 @@ namespace LOFAR
 static BGL_Barrier *barrier;
 #endif
 
+
 inline DH_Subband::SampleType toComplex(double phi)
 {
-    double s, c, factor = sizeof(DH_Subband::SampleType) == sizeof(i16complex) ? 32767 : 7;
+    double s, c;
 
     sincos(phi, &s, &c);
-    return DH_Subband::SampleType((int) rint(factor * c), (int) rint(factor * s));
+#if INPUT_TYPE == I4COMPLEX_TYPE
+    return makei4complex((int) rint(7 * c), (int) rint(7 * s));
+#elif INPUT_TYPE == I16COMPLEX_TYPE
+    return makei16complex((int) rint(32767 * c), (int) rint(32767 * s));
+#else
+#error Unknown INPUT_TYPE
+#endif
 }
 
 
@@ -80,7 +87,13 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
     DH_Subband::SampleType sample = toComplex(phi);
 
     for (int stat = 0; stat < NR_STATIONS; stat ++) {
-      (*samples)[stat][time][0] = DH_Subband::SampleType(time, 0);
+#if INPUT_TYPE == I4COMPLEX_TYPE
+      (*samples)[stat][time][0] = makei4complex(time, 0);
+#elif INPUT_TYPE == I16COMPLEX_TYPE
+      (*samples)[stat][time][0] = makei16complex(time, 0);
+#else
+#error Unknown INPUT_TYPE
+#endif
       (*samples)[stat][time][1] = sample;
     }
 
