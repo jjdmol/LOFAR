@@ -19,6 +19,8 @@
 //#  $Id$
 
 
+#include <lofar_config.h>
+
 #include <CS1_Interface/Stub_RSP.h>
 #include <Transport/TH_Socket.h>
 

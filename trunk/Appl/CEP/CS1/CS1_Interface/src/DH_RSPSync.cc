@@ -19,6 +19,8 @@
 //#  $Id$
 
 
+#include <lofar_config.h>
+
 #include <DH_RSPSync.h>
 #include <Blob/KeyValueMap.h>
 

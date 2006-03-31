@@ -20,6 +20,8 @@
 //#  $Id$
 
 
+#include <lofar_config.h>
+
 #include <DH_RSP.h>
 #include <complex>
 
