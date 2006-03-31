@@ -71,7 +71,6 @@ Stub_BGL::~Stub_BGL()
 void Stub_BGL::connect(unsigned subband, unsigned slave, TinyDataManager &dm, 
 		       unsigned channel)
 {
-#if 1
   size_t index = subband * itsNrSlavesPerSubband + slave;
 
   ASSERTSTR(subband < itsNrSubbands, "subband argument out of bounds; "
@@ -90,7 +89,6 @@ void Stub_BGL::connect(unsigned subband, unsigned slave, TinyDataManager &dm,
     itsConnections[index] = new Connection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index], false);
     dm.setOutConnection(channel, itsConnections[index]);
   }
-#endif
 };
 
 } //namespace
