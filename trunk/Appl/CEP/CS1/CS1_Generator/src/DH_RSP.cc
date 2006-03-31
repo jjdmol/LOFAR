@@ -28,7 +28,7 @@
 #include <CS1_Generator/DH_RSP.h>
 
 namespace LOFAR {
-  namespace CS1_Generator {
+  namespace CS1 {
 
     DH_RSP::DH_RSP (const string& name,
                     const ACC::APS::ParameterSet& pset)
@@ -64,5 +64,5 @@ namespace LOFAR {
       itsFrame = new Frame(itsPSet, getData<char>("Frame"), itsBufSize);
       itsFrame->getData()->clear();
     }
-  } // namespace CS1_Generator
+  } // namespace CS1
 } // namespace LOFAR

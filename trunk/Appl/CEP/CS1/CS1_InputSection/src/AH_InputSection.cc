@@ -35,7 +35,7 @@
 #include <Transport/TH_MPI.h>
 
 namespace LOFAR {
-  namespace CS1_InputSection {
+  namespace CS1 {
 
     AH_InputSection::AH_InputSection() :
       itsOutputStub(0),
@@ -182,5 +182,5 @@ namespace LOFAR {
     void AH_InputSection::quit() {
     }
 
-  } // namespace CS1_InputSection
+  } // namespace CS1
 } // namespace LOFAR

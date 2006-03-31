@@ -34,7 +34,7 @@
 #endif
 
 using namespace LOFAR;
-using namespace LOFAR::CS1_InputSection;
+using namespace LOFAR::CS1;
 
 int main (int argc, const char** argv) {
 

@@ -22,7 +22,7 @@
 
 namespace LOFAR
 {
-  namespace CS1_InputSection
+  namespace CS1
   {
 
     template < class T, class S >
@@ -233,5 +233,5 @@ namespace LOFAR
       itsIsEmpty = true;
     };
 
-  }				// namespace CS1_InputSection
+  }				// namespace CS1
 }				// namespace LOFAR

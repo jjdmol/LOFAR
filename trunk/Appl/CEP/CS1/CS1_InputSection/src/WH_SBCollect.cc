@@ -31,8 +31,10 @@
 #include <Common/hexdump.h>
 #include <tinyCEP/Sel_RoundRobin.h>
 
-namespace LOFAR {
-  namespace CS1_InputSection {
+namespace LOFAR
+{
+  namespace CS1
+  {
 
     WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
 			       const ACC::APS::ParameterSet pset,
@@ -154,5 +156,6 @@ namespace LOFAR {
       sleep(10);
     }  
 
-  } // namespace CS1_InputSection
+  } // namespace CS1
+
 } // namespace LOFAR

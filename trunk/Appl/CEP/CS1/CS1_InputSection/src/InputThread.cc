@@ -31,7 +31,7 @@
 #include <CS1_InputSection/BeamletBuffer.h>
 
 namespace LOFAR {
-  namespace CS1_InputSection {
+  namespace CS1 {
 
     bool InputThread::theirShouldStop = false;
 
@@ -178,5 +178,5 @@ namespace LOFAR {
     ////  return *this;
     ////}
 
-  } // namespace CS1_InputSection
+  } // namespace CS1
 } // namespace LOFAR

@@ -38,7 +38,7 @@
 #include <CS1_InputSection/InputThread.h>
 
 namespace LOFAR {
-  namespace CS1_InputSection {
+  namespace CS1 {
 
     WH_RSPInput::WH_RSPInput(const string& name, 
 			     ACC::APS::ParameterSet& ps,
@@ -313,5 +313,5 @@ namespace LOFAR {
     {
     }
 
-  } // namespace CS1_InputSection
+  } // namespace CS1
 } // namespace LOFAR
