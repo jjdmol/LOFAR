@@ -181,6 +181,10 @@ public: \
 #define TRACE_LEVEL_RTTI			0
 #define TRACE_LEVEL_FLOW			0
 
+#define LofarInitTracingModule
+#define ALLOC_TRACER_CONTEXT 
+#define ALLOC_TRACER_ALIAS(other)
+#define INIT_TRACER_CONTEXT(scope,contextname) 
 #define LOG_TRACE_LIFETIME_STR(level, stream)
 #define LOG_TRACE_LIFETIME(level,message)
 
