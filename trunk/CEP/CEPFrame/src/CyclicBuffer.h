@@ -189,10 +189,7 @@ TYPE& CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
   itsCount++;
 
   // signal that data has become available
-  if (1 == itsCount)
-  {
-    pthread_cond_broadcast(&data_available);
-  }
+  pthread_cond_signal(&data_available);
 
   pthread_mutex_unlock(&buffer_mutex);
 
@@ -254,8 +251,7 @@ const TYPE& CyclicBuffer<TYPE>::GetReadDataItem(int* ID)
   itsCount--;
 
   // signal that space has become available
-
-  pthread_cond_broadcast(&space_available);
+  pthread_cond_signal(&space_available);
 
   pthread_mutex_unlock(&buffer_mutex);
   
