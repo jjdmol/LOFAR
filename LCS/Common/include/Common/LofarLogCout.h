@@ -45,7 +45,7 @@
 //	- INIT_LOGGER_AND_WATCH
 //
 #define INIT_LOGGER(filename) \
-	LOFAR::LFDebug::initLevels (string(filename) + ".debug"); 
+	LOFAR::LFDebug::initLevels (string(filename) + ".debug")
 
 //# Note: 'watch' functionality not available
 #define INIT_LOGGER_AND_WATCH(filename,interval) \
@@ -136,13 +136,15 @@ public: \
 //#
 //# LOG_TRACE_LIFETIME(_STR) (level, message|stream)
 //#
-#define LOG_TRACE_LIFETIME_STR(level, stream) \
-	LFDebug::Tracer objname; \
-    if( LFDebugCheck(level) ) { \
+#define LOG_TRACE_LIFETIME_STR(level, stream) do { \
+	if( LFDebugCheck(level) ) { \
+		LFDebug::Tracer objname; \
 		constructStream(stream) \
 		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
                         AUTO_FUNCTION_NAME, oss.str().c_str(), 0); \
-    }
+	} \
+	} while(0)
+
 #define LOG_TRACE_LIFETIME(level,message) \
 	LOG_TRACE_LIFETIME_STR(level, message)
 
@@ -152,10 +154,6 @@ public: \
 
 #else	// ENABLE_TRACER
 //# define dummies if tracing is disabled
-#define ALLOC_TRACER_CONTEXT 
-#define INIT_TRACE_CONTEXT(scope, contextname) 
-#define ALLOC_TRACER_ALIAS(other) 
-
 #define LOG_TRACE_LOOP(message)
 #define LOG_TRACE_VAR(message)
 #define LOG_TRACE_CALC(message)	
@@ -221,22 +219,22 @@ public: \
 
 #define	cLog(level,levelname,message) \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message << endl;
+		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message << endl
 
-#define cLogstr(level,levelname,stream) { \
+#define cLogstr(level,levelname,stream) do { \
 		constructStream(stream) \
-		cLog(level,levelname,oss.str().c_str()) \
-	}
+		cLog(level,levelname,oss.str().c_str()); \
+	} while(0)
 
 #define	cDebug(level,levelname,message) \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
 		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
-		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << endl;
+		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << endl
 
-#define cDebugstr(level,levelname,stream)  { \
+#define cDebugstr(level,levelname,stream) do { \
 		constructStream(stream) \
-		cDebug(level,levelname,oss.str().c_str()) \
-	}
+		cDebug(level,levelname,oss.str().c_str()); \
+	} while(0)
 
 
 //#-------------------- END OF MACRO DEFINITIONS --------------------#//
