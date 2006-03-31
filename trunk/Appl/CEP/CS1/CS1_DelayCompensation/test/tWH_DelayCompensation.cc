@@ -52,6 +52,7 @@ int main (int argc, char* argv[]) {
     wh.basePreprocess();
     wh.baseProcess();
     wh.basePostprocess();
+    wh.dump();
     LOG_INFO_STR("Shutting down: " << argv[0]);
   }
   catch (LOFAR::Exception& e) {

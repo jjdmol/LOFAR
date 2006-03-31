@@ -45,11 +45,14 @@ namespace LOFAR
   namespace CS1 
   {
 
+    INIT_TRACER_CONTEXT(WH_DelayCompensation, LOFARLOGGER_PACKAGE);
+//     INIT_TRACER_CONTEXT(WH_DelayCompensation, "WH_DelayCompensation");
+
     WH_DelayCompensation::WH_DelayCompensation(const string& name,
                                                const ParameterSet& ps) :
       WorkHolder(0,                                      // inputs
-                 ps.getUint32("Observation.NStations"),  // outputs
-//                  ps.getUint32("Observation.NRSPBoards"), // outputs
+//                  ps.getUint32("Observation.NStations"),  // outputs
+                 ps.getUint32("Input.NRSPBoards"),       // outputs
                  name,                                   // name
                  "WH_DelayCompensation"),                // type
       itsParameterSet(ps),
@@ -91,6 +94,12 @@ namespace LOFAR
       ASSERT(!itsConverter);
       itsConverter = createConverter();
       ASSERT(itsConverter);
+
+      // Calculate the position difference vectors for all station positions
+      // with respect to the reference station (which is, by definition, the
+      // first station). This choice is arbitrary, since we're interested in
+      // path length \e differences only.
+
     }
 
 
@@ -127,7 +136,30 @@ namespace LOFAR
       for (uint i=0; i<result.skyCoord.size(); ++i) {
         cout << endl << "[" << i << "]: " << result.skyCoord[i];
       }
-            
+
+      // Now we must compute the path length difference for beam
+      // \f$\mathbf{b}_i\f$ between station \f$j\f$ at position
+      // \f$\mathbf{p}_j\f$ and the reference station 0 at position
+      // \f$\mathbf{p}_0\f$.
+      // \f[
+      //   d_{ij} - d_{i0} = \mathbf{b}_i \cdot \mathbf{p}_j 
+      //                   - \mathbf{b}_i \cdot \mathbf{p}_0
+      //                   = \mathbf{b}_i \cdot (\mathbf{p}_j - \mathbf{p}_0)
+      // \f]
+      // Hence, we can reduce the number of dot products that must be
+      // calculated if we precalculate the difference vectors \f$\mathbf{p}_j -
+      // \mathbf{p}_0$\f.
+
+      // Once we have the path length differences, convert them to time
+      // differences. This is straight forward, because we can simply divide
+      // the path length difference by the speed of light in vacuum. We don't
+      // need to know the speed of light in the atmosphere, because the AZEL
+      // directions that we've calculated are valid for vacuum (only!).
+
+      // The time differences need to be split into a coarse (sample) delay
+      // and a fine (subsample) delay. The sample rate should be read from the
+      // configuration file.
+
       // Finally, we must update the process loop counter. 
       itsLoopCount++;
     }
@@ -221,7 +253,6 @@ namespace LOFAR
       // positions are stored as one large vector of doubles.
       vector<double> pos;
       pos = ps.getDoubleVector("Observation.StationPositions");
-      for (uint i=0; i<pos.size(); ++i) cout << "pos["<<i<<"]="<<pos[i]<<endl;
       ASSERTSTR(pos.size() == 3 * nrStations,
                 pos.size() << " == " << 3 * nrStations);
 
