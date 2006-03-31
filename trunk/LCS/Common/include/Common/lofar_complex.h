@@ -32,7 +32,7 @@
 //# as such to use it.
 //# Note that ComplexBuiltin.h uses __real__ and __imag__. Maybe they
 //# also need different names for _Complex.
-#if defined __INTEL_COMPILER
+#if defined __INTEL_COMPILER || defined HAVE_BGL
 # define LOFAR_BUILTIN_COMPLEXFP  __complex__
 # include <Common/ComplexBuiltinFP.h>
 # include <Common/ComplexStdInt.h>
@@ -42,10 +42,6 @@
 # define LOFAR_BUILTIN_COMPLEXINT __complex__
 # include <Common/ComplexBuiltinFP.h>
 # include <Common/ComplexBuiltinInt.h>
-#elif defined HAVE_BGL
-# define LOFAR_BUILTIN_COMPLEXFP __complex__
-# include <Common/ComplexBuiltinFP.h>
-# include <Common/ComplexStdInt.h>
 
 #else
 # include <Common/ComplexStdFP.h>
@@ -63,6 +59,106 @@ namespace LOFAR
   using TYPES::u16complex;
   using TYPES::fcomplex;
   using TYPES::dcomplex;
+
+  i4complex makei4complex(i4complex &z) {
+    return z;
+  }
+
+  i4complex makei4complex(i16complex &z) {
+    return makei4complex(real(z), imag(z));
+  }
+
+  i4complex makei4complex(u16complex &z) {
+    return makei4complex(real(z), imag(z));
+  }
+
+  i4complex makei4complex(fcomplex &z) {
+    return makei4complex((int) real(z), (int) imag(z));
+  }
+
+  i4complex makei4complex(dcomplex &z) {
+    return makei4complex((int) real(z), (int) imag(z));
+  }
+
+  i16complex makei16complex(i4complex &z) {
+    return makei16complex(real(z), imag(z));
+  }
+
+  i16complex makei16complex(i16complex &z) {
+    return z;
+  }
+
+  i16complex makei16complex(u16complex &z) {
+    return makei16complex(real(z), imag(z));
+  }
+
+  i16complex makei16complex(fcomplex &z) {
+    return makei16complex((int) real(z), (int) imag(z));
+  }
+
+  i16complex makei16complex(dcomplex &z) {
+    return makei16complex((int) real(z), (int) imag(z));
+  }
+
+  u16complex makeu16complex(i4complex &z) {
+    return makeu16complex(real(z), imag(z));
+  }
+
+  u16complex makeu16complex(i16complex &z) {
+    return makeu16complex(real(z), imag(z));
+  }
+
+  u16complex makeu16complex(u16complex &z) {
+    return z;
+  }
+
+  u16complex makeu16complex(fcomplex &z) {
+    return makeu16complex((unsigned) real(z), (unsigned) imag(z));
+  }
+
+  u16complex makeu16complex(dcomplex &z) {
+    return makeu16complex((unsigned) real(z), (unsigned) imag(z));
+  }
+
+  fcomplex makefcomplex(i4complex &z) {
+    return makefcomplex((float) real(z), (float) imag(z));
+  }
+
+  fcomplex makefcomplex(i16complex &z) {
+    return makefcomplex((float) real(z), (float) imag(z));
+  }
+
+  fcomplex makefcomplex(u16complex &z) {
+    return makefcomplex((float) real(z), (float) imag(z));
+  }
+
+  fcomplex makefcomplex(fcomplex &z) {
+    return z;
+  }
+
+  fcomplex makefcomplex(dcomplex &z) {
+    return makefcomplex((float) real(z), (float) imag(z));
+  }
+
+  dcomplex makedcomplex(i4complex &z) {
+    return makedcomplex((double) real(z), (double) imag(z));
+  }
+
+  dcomplex makedcomplex(i16complex &z) {
+    return makedcomplex((double) real(z), (double) imag(z));
+  }
+
+  dcomplex makedcomplex(u16complex &z) {
+    return makedcomplex((double) real(z), (double) imag(z));
+  }
+
+  dcomplex makedcomplex(fcomplex &z) {
+    return makedcomplex((double) real(z), (double) imag(z));
+  }
+
+  dcomplex makedcomplex(dcomplex &z) {
+    return z;
+  }
 }
 
 
