@@ -117,7 +117,7 @@ namespace LOFAR {
 	comp.addBlock(RSPSteps[r]);
     
 	// Connect the Delay Controller
-	itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
+	// itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
 	if (r!=0) {
 	  itsConnector.connectSteps(RSPSteps[0], nSubbands + r - 1, RSPSteps.back(), 1);
 	}
@@ -146,7 +146,7 @@ namespace LOFAR {
 	// connect outputs to FIR stub
 	for (int core = 0; core < nCoresPerSubband; core++) {
 #if 1
-	  collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
+	  //collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
 	  itsOutputStub->connect(nf,
 			     core,
 			     (collectSteps.back())->getOutDataManager(0), 
