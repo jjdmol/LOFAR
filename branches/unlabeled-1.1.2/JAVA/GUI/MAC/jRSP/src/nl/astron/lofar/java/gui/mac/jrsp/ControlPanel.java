@@ -21,9 +21,7 @@ public class ControlPanel extends JPanel implements ActionListener
      * Creates new form ControlPanel.
      */
     public ControlPanel() 
-    {
-        listenerList = new EventListenerList();
-        
+    {        
         initComponents();
         
         txtHostname.addActionListener(this);

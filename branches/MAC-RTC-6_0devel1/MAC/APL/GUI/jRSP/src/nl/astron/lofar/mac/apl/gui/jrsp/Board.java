@@ -4,7 +4,6 @@ package nl.astron.lofar.mac.apl.gui.jrsp;
  * The Board class is used to connect to the C++ side of the whole jRSP project.
  * 
  * @TODO: The method setHostname should do more things than just change hostName.
- *
  * @author  balken
  */
 public class Board
@@ -15,6 +14,9 @@ public class Board
     /** Array of BoardStatus */
     private BoardStatus[] boardStatus;
     
+    /** Pointer to the RSPport class in C++ */
+    private int ptrRSPport;
+    
     /**
      * Makes a new instance of the Board class.
      * @param   hostname    The hostname of the RSPBoard to connect to.
@@ -22,11 +24,16 @@ public class Board
     public Board(String hostname)
     {
         this.hostname = hostname;
+        ptrRSPport = 0;
+        // @TODO activeren: ptrRSPport = init(hostname);
         boardStatus = null;
     }
     
     // -- START NATIVE FUNCTIONS --
-    private native BoardStatus[] retrieveStatus(String hostname);
+    private native int init(String hostname); // initializes RSPport on the C++ side, for further use.
+    private native void delete(int ptrRSPport); // deletes the RSPport instance on the c++ side.
+    private native BoardStatus[] retrieveStatus(int rcuMask, int ptrRSPport); // retrieves the boards.
+    private native int retrieveNofBoards(int ptrRSPport); // retrieves the number of boards.
     
     static
     {
@@ -48,6 +55,8 @@ public class Board
      */
     public void setHostname(String hostname)
     {
+        // @TODO delete(ptrRSPport);
+        // @TODO ptrRSPport = init(hostname);
         this.hostname = hostname;
     }
     
@@ -57,7 +66,17 @@ public class Board
      */
     public BoardStatus[] getStatus()
     {
-        boardStatus = retrieveStatus(hostname);
+        boardStatus = retrieveStatus(0, ptrRSPport);
         return boardStatus;
+    }
+    
+    /**
+     * Returns the number of boards that can be reached by the RSP driver.
+     * @return  nofBoards   The number of boards.
+     */
+    public int getNofBoards()
+    {
+        //@TODO activeren: return retrieveNofBoards(ptrRSPport);
+        return 2;
     }
 }

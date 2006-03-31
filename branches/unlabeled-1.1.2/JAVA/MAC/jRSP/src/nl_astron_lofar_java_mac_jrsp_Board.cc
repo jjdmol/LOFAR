@@ -10,34 +10,68 @@ using namespace LOFAR::RSP;
 // Define function's
 jobject ConvertBoardStatus(JNIEnv*, BoardStatus&);
 BoardStatus GetDummyBoardStatus(); // Function for testing.
+BoardStatus GetDummyBoardStatus2(); // Function for testing.
+
+/**
+ * Returns a pointer to a new instance of RSPport. The returned pointer can be
+ * used by the other functions to call functions from RSPport without using
+ * a different RSPport.
+ * Every RSPport makes a connection with the RSP driver, so we only want one
+ * RSPport.
+ * @param	env		The java environment interface pointer.
+ * @param	obj		The "this" pointer.
+ * @return	ptrRSPport	Pointer to the RSPport object.
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_init(JNIEnv * env, jobject obj, jstring hostname)
+{
+	// Convert the jstring hostname to a C++ string.
+	const char * charsHostname = env->GetStringUTFChars(hostname, 0);
+	string strHostname (charsHostname);
+
+	RSPport * IOport = new RSPport(strHostname);
+
+	// Free local references.	
+	env->ReleaseStringUTFChars(hostname, charsHostname);
+
+	return (jint)IOport;
+}
+
+/**
+ * Deletes the instance of RSPport we have created in init() based on the jint
+ * we have passed with this method.
+ * @param	env		The Java environment interface pointer.
+ * @param	obj		The "this" pointer.
+ * @param	ptrRSPport	Pointer to the RSPport that will be deleted.
+ */
+JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_delete(JNIEnv * env, jobject obj, jint ptrRSPport) {
+	RSPport * IOport = (RSPport*)ptrRSPport;
+	delete(IOport);
+}
 
 /**
  * Implementation of the JNI method declared in the java file (nl.astron.lofar.mac.apl.gui.jrsp.Board).
  * This function fills a BoardStatus object, that is returned by this method, with data from RSPIO.
  * @param	env		The Java environment interface pointer.
  * @param	obj		The "this" pointer.
- * @param	hostname	The name of the RSPBoard that will be connected.
+ * @param	ptrRSPport	Pointer to the RSPport that should be used.
  * @return 	status		A array of StatusBoard class instances filled with information.
  */
-JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus(JNIEnv * env, jobject obj, jstring hostname) 
+JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
-	// Convert the jstring hostname to a C++ string.
-	const char * charsHostname = env->GetStringUTFChars(hostname, 0);
-	string strHostname (charsHostname);
-	
 	// Use RSPport to get a vector with BoardStatus.
 	vector<BoardStatus> vecBoardStatus;
 
 	if(0)
 	{
-		RSPport IOport(strHostname);
-		uint32 rcuMask = 0;
-		vecBoardStatus = IOport.getBoardStatus(rcuMask);
+		RSPport * IOport = (RSPport*)ptrRSPport;
+		//uint32 rcuMask = 0;
+		vecBoardStatus = IOport->getBoardStatus(rcuMask);
 	}
 	else
 	{
 		// Add dummy BoardStatus to vector.
 		vecBoardStatus.push_back(GetDummyBoardStatus());
+		vecBoardStatus.push_back(GetDummyBoardStatus2());
 	}
 	
 	// The jobjectArray that is going to be returned.
@@ -47,9 +81,6 @@ JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retri
 	{
 		env->SetObjectArrayElement(arrBoardStatus, i, ConvertBoardStatus(env, vecBoardStatus[i]));
 	}
-
-	// Free local references.	
-	env->ReleaseStringUTFChars(hostname, charsHostname);
 	
 	return arrBoardStatus;
 }
@@ -401,6 +432,19 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 	return status;
 }
 
+/**
+ * Returns the number of Boards connected to the RSP driver.
+ * @param	env		The Java environment interface pointer.
+ * @param	obj		The "this" pointer.
+ * @param	ptrRSPport	Pointer to the RSPport that should be used.
+ * @return	nofBoards	Number of boards connected to the RSP driver.
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveNofBoards(JNIEnv * env, jobject obj, jint ptrRSPport)
+{
+	RSPport * IOport = (RSPport*)ptrRSPport;
+	return 1;
+}
+
 BoardStatus GetDummyBoardStatus()
 {
 	BoardStatus bs;
@@ -466,7 +510,7 @@ BoardStatus GetDummyBoardStatus()
 	bs.cp_status.err = 1;
 	bs.cp_status.fpga = 1;
 	bs.cp_status.im = 1;
-	bs.cp_status.trig = 3;
+	bs.cp_status.trig = 4;
 
 	bs.blp0_adc_offset.adc_offset_x = 3;
 	bs.blp0_adc_offset.adc_offset_y = 3;
@@ -475,6 +519,85 @@ BoardStatus GetDummyBoardStatus()
 	bs.blp2_adc_offset.adc_offset_x = 3;
 	bs.blp2_adc_offset.adc_offset_y = 3;
 	bs.blp3_adc_offset.adc_offset_x = 3;
+	bs.blp3_adc_offset.adc_offset_y = 3;
+	
+	return bs;
+}
+
+BoardStatus GetDummyBoardStatus2()
+{
+	BoardStatus bs;
+
+	bs.rsp.voltage_1_2 = 12;
+	bs.rsp.voltage_2_5 = 23;
+	bs.rsp.voltage_3_3 = 51;
+	bs.rsp.pcb_temp = 4;
+	bs.rsp.bp_temp = 5;
+	bs.rsp.ap0_temp = 67;
+	bs.rsp.ap1_temp = 11;
+	bs.rsp.ap2_temp = 3;
+	bs.rsp.ap3_temp = 5;
+	bs.rsp.bp_clock = 8;
+
+	bs.eth.nof_frames = 0;
+	bs.eth.nof_errors = 2;
+	bs.eth.last_error = 1;
+	
+	bs.mep.seqnr = 123;
+	bs.mep.error = 33;
+
+	bs.diag.interface = 45;
+	bs.diag.mode = 6;
+	bs.diag.ri_errors = 7;
+	bs.diag.rcux_errors = 8;
+	bs.diag.rcuy_errors = 9;
+	bs.diag.lcu_errors = 0;
+	bs.diag.cep_errors = 12;
+	bs.diag.serdes_errors = 3;
+	bs.diag.ap0_ri_errors = 4;
+	bs.diag.ap1_ri_errors = 5;
+	bs.diag.ap2_ri_errors = 2;
+	bs.diag.ap3_ri_errors = 0;
+
+	bs.ap0_sync.ext_count = 13;
+	bs.ap0_sync.sync_count = 42;
+	bs.ap0_sync.sample_offset = 5;
+	bs.ap0_sync.slice_count = 65;
+	bs.ap1_sync.ext_count = 7;
+	bs.ap1_sync.sync_count = 9;
+	bs.ap1_sync.sample_offset = 2;
+	bs.ap1_sync.slice_count = 4;
+	bs.ap2_sync.ext_count = 5;
+	bs.ap2_sync.sync_count = 7;
+	bs.ap2_sync.sample_offset = 1;
+	bs.ap2_sync.slice_count = 2;
+	bs.ap3_sync.ext_count = 3;
+	bs.ap3_sync.sync_count = 6;
+	bs.ap3_sync.sample_offset = 8;
+	bs.ap3_sync.slice_count = 9;
+
+	bs.blp0_rcu.nof_overflowx = 10;
+	bs.blp0_rcu.nof_overflowy = 6;
+	bs.blp1_rcu.nof_overflowx = 5;
+	bs.blp1_rcu.nof_overflowy = 4;
+	bs.blp2_rcu.nof_overflowx = 3;
+	bs.blp2_rcu.nof_overflowy = 7;
+	bs.blp3_rcu.nof_overflowx = 1;
+	bs.blp3_rcu.nof_overflowy = 3;
+
+	bs.cp_status.rdy = 1;
+	bs.cp_status.err = 0;
+	bs.cp_status.fpga = 1;
+	bs.cp_status.im = 0;
+	bs.cp_status.trig = 2;
+
+	bs.blp0_adc_offset.adc_offset_x = 666;
+	bs.blp0_adc_offset.adc_offset_y = 12;
+	bs.blp1_adc_offset.adc_offset_x = 13;
+	bs.blp1_adc_offset.adc_offset_y = 34;
+	bs.blp2_adc_offset.adc_offset_x = 89;
+	bs.blp2_adc_offset.adc_offset_y = 6;
+	bs.blp3_adc_offset.adc_offset_x = 54;
 	bs.blp3_adc_offset.adc_offset_y = 3;
 	
 	return bs;

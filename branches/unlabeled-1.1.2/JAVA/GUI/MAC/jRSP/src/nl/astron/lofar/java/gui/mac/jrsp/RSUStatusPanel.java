@@ -8,21 +8,40 @@ import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
  */
 public class RSUStatusPanel extends javax.swing.JPanel {
     
+    /** The messages that can be displayed in the fields */
+    private String[] trigMessages = {"Board reset",
+			             "User reconfiguration request",
+			             "User reset request",
+			             null, // 3 / 011b isn't used.
+			             "Watchdog timer timeout"};
+
+    private String[] imMessages = {"Factory image",
+                        	   "Application image"};
+
+    private String[] fpgaMessages = {"BP was reconfigured",
+                                     "AP was reconfigured"};
+
+    private String[] errMessages = {"Configuration was succesfull",
+                                    "Error occured during configuration"};
+
+    private String[] rdyMessages = {"Configuration ongoing",
+                                    "Configuration done"};
+        
     /** 
      * Creates new form ETHStatusPanel.
      */
     public RSUStatusPanel() 
     {
-        initComponents();
+        initComponents();        
     }
 
     public void initFields(BoardStatus boardStatus)
     {
-        txtRdy.setText(Integer.toString(boardStatus.cpRdy));
-        txtErr.setText(Integer.toString(boardStatus.cpErr));
-        txtFpga.setText(Integer.toString(boardStatus.cpFpga));
-        txtIm.setText(Integer.toString(boardStatus.cpIm));
-        txtTrig.setText(Integer.toString(boardStatus.cpTrig));
+        txtRdy.setText(rdyMessages[boardStatus.cpRdy]);
+        txtErr.setText(errMessages[boardStatus.cpErr]);
+        txtFpga.setText(fpgaMessages[boardStatus.cpFpga]);
+        txtIm.setText(imMessages[boardStatus.cpIm]);
+        txtTrig.setText(trigMessages[boardStatus.cpTrig]);
     }
     
     /** This method is called from within the constructor to

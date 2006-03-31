@@ -1,6 +1,10 @@
 package nl.astron.lofar.mac.apl.gui.jrsp.panels;
 
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import nl.astron.lofar.mac.apl.gui.jrsp.Board;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.panels.IPluginPanel;
@@ -9,7 +13,8 @@ import nl.astron.lofar.sas.otb.panels.IPluginPanel;
  *
  * @author  balken
  */
-public class MainPanel extends JPanel implements IPluginPanel, Runnable
+public class MainPanel extends JPanel 
+        implements IPluginPanel, ListSelectionListener, ChangeListener, Runnable
 {
     /** MainFrame */
     private MainFrame mainFrame;
@@ -40,7 +45,14 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
         changed = false;
         
         initComponents();        
-        controlPanel.setMainPanel(this);
+        
+        listPanel.setTitle("Boards");
+        listPanel.newList(new String[]{""});
+        listPanel.addListSelectionListener(this);
+        
+        jTabbedPane.addChangeListener(this);
+        
+        controlPanel.setMainPanel(this);        
         
         refreshRates = new int[jTabbedPane.getTabCount()];
     }
@@ -96,25 +108,85 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
     /**
      * It is has to be implemented...
      */
-    public void checkChanged()
+    public void checkChanged() { }
+    
+    /**
+     * Gets called when a value changed on the listPanel.
+     * Note: Has *nothing* to do with the above functions.
+     */
+    public void valueChanged(ListSelectionEvent event)
     {
-        
+        updateCurrentPanel();
     }
     
     /**
-     * This method is called to update the current panel, for example when the 
-     * Board has changed.
+     * Invoked when another tab is selected.
+     */
+    public void stateChanged(ChangeEvent event)
+    {
+        // First check if there the refreshThread is running. If so: KILL IT!
+        // Forget the checking part...
+        refreshThread = null;
+                
+        // If the refresh rate of the selected panel is higher than 0, start the
+        // refreshThread else call updateCurrentPanel once.
+        if(refreshRates[jTabbedPane.getSelectedIndex()] > 0)
+        {
+            startRefreshThread();
+        }
+        else
+        {
+            updateCurrentPanel();
+        }
+    }
+    
+    /**
+     * This method is called to update the current panel.
+     * @TODO: get status from the right board
+     * Note: Board has to be set, to be using this function! Quick check is
+     * performed at the beginning of the method.
      */
     public void updateCurrentPanel()
     {
+        if(board == null)
+            return;
+        
         Class selectedClass = jTabbedPane.getSelectedComponent().getClass();
+        
+        int index = listPanel.getSelectedIndex();
+        if(index == -1)
+        {
+            index = 0;
+            listPanel.setSelectedIndex(0);
+        }
         
         // StatusPanel
         // @TODO - change which status is returned based on the selected board!
         if(selectedClass.equals(StatusPanel.class))
         {
-           ((StatusPanel)jTabbedPane.getSelectedComponent()).initFields(board.getStatus()[0]);
+           ((StatusPanel)jTabbedPane.getSelectedComponent()).initFields(board.getStatus()[index]);
         }
+        else if(selectedClass.equals(TijdPanel.class))
+        {
+            ((TijdPanel)jTabbedPane.getSelectedComponent()).updatePanel();
+        }
+    }
+    
+    /**
+     * Updates the list of listItems of the listPanel.
+     * Note: Board has to be set, before you can use this function!
+     */
+    private void updateListPanel()
+    {
+        String[] listItems = new String[board.getNofBoards()];
+        for(int i=0; i<listItems.length; i++)
+        {
+            listItems[i] = Integer.toString(i);
+        }
+        listPanel.newList(listItems);
+        
+        // Sets the selected index to 0 on default.
+        listPanel.setSelectedIndex(0);
     }
     
     /**
@@ -144,13 +216,15 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
         // board. Else change the current board.
         if(board == null)
         {
-            System.out.println("new");
             board = new Board(hostname);
+            // Change listPanel according to the new Board.
+            updateListPanel();
         }
         else if(!hostname.equals(board.getHostname()))
         {
-            System.out.println("not equal");
             board.setHostname(hostname);
+            // Change listPanel according to the altered Board.
+            updateListPanel();
         }
                 
         refreshRates[jTabbedPane.getSelectedIndex()] = refreshRate;
@@ -202,7 +276,6 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
                 // Just ignore it!
             }
             updateCurrentPanel();
-            System.out.println("hallo kijk mij eens wat doen!");
         }
     }
         
@@ -214,29 +287,32 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
         jTabbedPane = new javax.swing.JTabbedPane();
         statusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.StatusPanel();
+        tijdPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.TijdPanel();
         controlPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel();
+        listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel();
 
         jTabbedPane.addTab("Status", statusPanel);
+
+        jTabbedPane.addTab("[TEST] Tijd", tijdPanel);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(treePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 136, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jTabbedPane))
-            .add(controlPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 3071, Short.MAX_VALUE)
+                .add(listPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 139, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(jTabbedPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+            .add(controlPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1258, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                     .add(jTabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, treePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE))
+                    .add(listPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(controlPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
@@ -246,8 +322,9 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel controlPanel;
     private javax.swing.JTabbedPane jTabbedPane;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel listPanel;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.StatusPanel statusPanel;
-    private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.TijdPanel tijdPanel;
     // End of variables declaration//GEN-END:variables
     
 }

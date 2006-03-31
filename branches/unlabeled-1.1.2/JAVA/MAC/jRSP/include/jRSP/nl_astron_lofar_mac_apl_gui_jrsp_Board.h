@@ -9,11 +9,35 @@ extern "C" {
 #endif
 /*
  * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    init
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_init
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    delete
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_delete
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
  * Method:    retrieveStatus
- * Signature: (Ljava/lang/String;)[Lnl/astron/lofar/mac/apl/gui/jrsp/BoardStatus;
+ * Signature: (II)[Lnl/astron/lofar/mac/apl/gui/jrsp/BoardStatus;
  */
 JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    retrieveNofBoards
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveNofBoards
+  (JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }

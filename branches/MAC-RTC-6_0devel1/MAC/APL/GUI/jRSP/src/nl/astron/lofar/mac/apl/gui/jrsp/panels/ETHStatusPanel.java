@@ -8,6 +8,16 @@ import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
  */
 public class ETHStatusPanel extends javax.swing.JPanel {
     
+    /** Messages for last error */
+    String[] lastErrorMessages = {"The ethernet frame was received correctly",
+                                  "Preamble had other value than 0xAA",
+                                  "Frame delimiter had other value than 0xAB",
+                                  "Not enough preamble nibbles",
+                                  "Frame ended during frame header",
+                                  "Calculated CRC does not match received CRC",
+                                  "An odd number of nibbles was received from ethernet",
+                                  "Length specified in the frame size field does not match the real number of received bytes"};
+    
     /** 
      * Creates new form ETHStatusPanel.
      */
@@ -20,7 +30,7 @@ public class ETHStatusPanel extends javax.swing.JPanel {
     {
         txtNofFrames.setText(Integer.toString(boardStatus.nofFrames));
         txtNofErrors.setText(Integer.toString(boardStatus.nofErrors));
-        txtLastError.setText(Integer.toString(boardStatus.lastError));        
+        txtLastError.setText(lastErrorMessages[boardStatus.lastError]);
     }
     
     /** This method is called from within the constructor to

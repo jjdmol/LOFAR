@@ -8,6 +8,17 @@ import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
  */
 public class MEPStatusPanel extends javax.swing.JPanel {
     
+    /** Messages for error */
+    String[] errorMessages = {"The MEP message was processed normally",
+                              "Unknown message type",
+                              "Illigal BLP address",
+                              "Invalid PID",
+                              "Register does not exist",
+                              "Offset too large",
+                              "Message is too large",
+                              "Message CRC error on RSP ring interface",
+                              "No ack message received from BLP"};
+    
     /** 
      * Creates new form MEPStatusPanel.
      */
@@ -19,7 +30,7 @@ public class MEPStatusPanel extends javax.swing.JPanel {
     public void initFields(BoardStatus boardStatus)
     {
         txtSeqNr.setText(Integer.toString(boardStatus.seqNr));
-        txtError.setText(Integer.toString(boardStatus.error));
+        txtError.setText(errorMessages[boardStatus.error]);
     }
     
     /** This method is called from within the constructor to
