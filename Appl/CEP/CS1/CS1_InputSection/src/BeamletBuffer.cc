@@ -31,7 +31,7 @@
 #include <CS1_Interface/RSPTimeStamp.h>
 
 namespace LOFAR {
-  namespace CS1_InputSection {
+  namespace CS1 {
 
     BeamletBuffer::BeamletBuffer(int bufferSize, int nSubbands, int history, int readWriteDelay):
       itsNSubbands(nSubbands),
@@ -141,5 +141,5 @@ namespace LOFAR {
       return realBegin;
     }
 
-  } // namespace CS1_InputSection
+  } // namespace CS1
 } // namespace LOFAR

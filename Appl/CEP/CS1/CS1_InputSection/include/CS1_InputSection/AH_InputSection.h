@@ -37,7 +37,7 @@
 
 namespace LOFAR 
 {
-  namespace CS1_InputSection 
+  namespace CS1 
   {
 
     // \addtogroup CS1_InputSection
@@ -77,7 +77,7 @@ namespace LOFAR
 
     // @}
 
-  } // namespace CS1_InputSection
+  } // namespace CS1
 } // namespace LOFAR
 
 #endif

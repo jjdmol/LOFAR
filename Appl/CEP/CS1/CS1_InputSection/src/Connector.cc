@@ -35,7 +35,7 @@
 #include <Transport/TH_ShMem.h>
 
 namespace LOFAR {
-  namespace CS1_InputSection {
+  namespace CS1 {
 
     Connector::Connector()
     {}
@@ -132,5 +132,5 @@ namespace LOFAR {
     ////  return *this;
     ////}
 
-  } // namespace CS1_InputSection
+  } // namespace CS1
 } // namespace LOFAR

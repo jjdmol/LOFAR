@@ -35,7 +35,7 @@
 
 namespace LOFAR 
 {
-  namespace CS1_InputSection 
+  namespace CS1 
   {
 
     using namespace boost;
@@ -103,7 +103,7 @@ namespace LOFAR
 
     // @}
 
-  } // namespace CS1_InputSection
+  } // namespace CS1
 } // namespace LOFAR
 
 #include <CS1_InputSection/LockedRange.tcc>

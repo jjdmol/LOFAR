@@ -35,7 +35,7 @@
 
 namespace LOFAR 
 {
-  namespace CS1_Generator 
+  namespace CS1 
   {
 
     // \addtogroup CS1_Generator
@@ -131,7 +131,7 @@ namespace LOFAR
             
     // @}
 
-  } // namespace CS1_Generator
+  } // namespace CS1
 } // namespace LOFAR
 
   // @}
