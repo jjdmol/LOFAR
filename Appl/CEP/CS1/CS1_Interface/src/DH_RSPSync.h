@@ -24,8 +24,6 @@
 #define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DH_RSPSYNC_H
 
 
-#include <lofar_config.h>
-
 #include <Transport/DataHolder.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 

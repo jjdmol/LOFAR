@@ -19,6 +19,8 @@
 //#  $Id$
 
 
+#include <lofar_config.h>
+
 #include <CS1_Interface/Stub_BGL_Subband.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>

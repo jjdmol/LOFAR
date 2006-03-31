@@ -19,6 +19,8 @@
 //#  $Id$
 
 
+#include <lofar_config.h>
+
 #include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
 #include <Transport/TH_Null.h>
 #include <Transport/Connection.h>

@@ -25,6 +25,7 @@
 
 #include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR {
 
@@ -40,14 +41,16 @@ public:
   ~Stub_Delay();
 
   // Connect the given objects to the stubs.
-  void connect(int RSP_nr, TinyDataManager &dm, int dhNr);
+  void connect(uint RSP_nr, TinyDataManager &dm, uint dhNr);
 
 private:
   bool			       itsIsInput;  // Is this stub an input for a step
   const ACC::APS::ParameterSet &itsPS;
-  int			       itsNRSP;     // total number of RSPinputs
+  uint			       itsNRSP;     // total number of RSPinputs
+  vector<uint16>               itsPorts;    // ports used to connect to RSPs
   TH_Socket		       **itsTHs;
   Connection		       **itsConnections;
+  ALLOC_TRACER_CONTEXT;
 };
 
 } //namespace

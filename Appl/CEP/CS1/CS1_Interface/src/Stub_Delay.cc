@@ -18,90 +18,96 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 
 #include <CS1_Interface/Stub_Delay.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
 #include <APS/ParameterSet.h>
 
-using namespace LOFAR;
-
 namespace LOFAR { 
 
-Stub_Delay::Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet)
-  : itsIsInput    (isInput),
-    itsPS         (pSet),
-    itsTHs        (0),
-    itsConnections(0)
-{
-  itsNRSP = itsPS.getInt32("Observation.NStations");
-  LOG_TRACE_FLOW_STR("Total number of RSPinputs in the Stub_Delay is " << itsNRSP);
-  ASSERTSTR(itsNRSP >= 0, "Number of RSPinputs in the Stub_Delay must be greater than 0");
-
-  itsTHs = new TH_Socket*[itsNRSP];
-  itsConnections = new Connection*[itsNRSP];
+  INIT_TRACER_CONTEXT(Stub_Delay, LOFARLOGGER_PACKAGE);
   
-  for (int i=0; i<itsNRSP; i++) {
-    itsTHs[i] = 0;
-    itsConnections[i] = 0;
+  Stub_Delay::Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet)
+    : itsIsInput    (isInput),
+      itsPS         (pSet),
+      itsTHs        (0),
+      itsConnections(0)
+  {
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+    itsNRSP = itsPS.getUint32("Input.NRSPBoards");
+    LOG_TRACE_VAR_STR("Input.NRSPBoards = " << itsNRSP);
+
+    itsPorts = itsPS.getUint16Vector("Connections.Input_Delay.Ports");
+    ASSERTSTR(itsPorts.size() == itsNRSP, 
+              itsPorts.size() << " == " << itsNRSP);
+
+    itsTHs = new TH_Socket*[itsNRSP];
+    itsConnections = new Connection*[itsNRSP];
+  
+    for (uint i=0; i<itsNRSP; i++) {
+      itsTHs[i] = 0;
+      itsConnections[i] = 0;
+    }
+  
   }
   
-}
-  
-Stub_Delay::~Stub_Delay()
-{
-  for (int i=0; i<itsNRSP; i++)
+  Stub_Delay::~Stub_Delay()
   {
-    delete itsTHs[i];
-    delete itsConnections[i];
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    for (uint i=0; i<itsNRSP; i++)
+    {
+      delete itsTHs[i];
+      delete itsConnections[i];
+    }
+    delete [] itsTHs;
+    delete [] itsConnections;
   }
-  delete [] itsTHs;
-  delete [] itsConnections;
-}
   
-void Stub_Delay::connect(int RSP_nr, TinyDataManager &dm, int dhNr)
-{
-#if 0
-  DBGASSERTSTR(((RSP_nr >= 0) && (RSP_nr < itsNRSP)),
- 	       "RSP_nr argument out of boundaries; " << RSP_nr << " / " << itsNRSP);
-
-  string service = itsPS.getStringVector("Connections.Input_Delay.Ports")[RSP_nr];
-
-  if (itsIsInput) // on the input side, start client socket
+  void Stub_Delay::connect(uint RSP_nr, TinyDataManager &dm, uint dhNr)
   {
-    DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
-		 " has already been connected.");
-    // Create a client socket
-    string server = itsPS.getString("Connections.Input_Delay.ServerHost");
-    itsTHs[RSP_nr] = new TH_Socket(server,
-				   service,
-				   true,
-				   Socket::TCP,
-				   false);
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-    itsConnections[RSP_nr] = new Connection("toBG", 0, 
-					    dm.getGeneralInHolder(dhNr),
-					    itsTHs[RSP_nr], true);
-    dm.setInConnection(dhNr, itsConnections[RSP_nr]);
-  } 
-  else    // on the delay compensation side, start a server socket
-  {
-    DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub output " << RSP_nr << 
-		 " has already been connected.");
-    // Create a server socket
-    itsTHs[RSP_nr] = new TH_Socket(service,
-				   true,
-				   Socket::TCP,
-				   5,
-				   false);
-    itsConnections[RSP_nr] = new Connection("fromInpSection", 
-					    dm.getGeneralOutHolder(dhNr), 
-					    0, itsTHs[RSP_nr], true);
-    dm.setOutConnection(dhNr, itsConnections[RSP_nr]);
+    ASSERTSTR(RSP_nr < itsNRSP, RSP_nr << " < " << itsNRSP);
+    string service = toString(itsPorts[RSP_nr]);
 
+    if (itsIsInput) // on the input side, start client socket
+    {
+      ASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
+                " has already been connected.");
+      // Create a client socket
+      string server = itsPS.getString("Connections.Input_Delay.ServerHost");
+      string service = toString(itsPorts[RSP_nr]);
+      itsTHs[RSP_nr] = new TH_Socket(server,
+                                     service,
+                                     true,
+                                     Socket::TCP,
+                                     false);
+
+      itsConnections[RSP_nr] = new Connection("toDelayCompensation", 0, 
+                                              dm.getGeneralInHolder(dhNr),
+                                              itsTHs[RSP_nr], true);
+      dm.setInConnection(dhNr, itsConnections[RSP_nr]);
+    } 
+    else    // on the delay compensation side, start a server socket
+    {
+      ASSERTSTR(itsTHs[RSP_nr] == 0, "Stub output " << RSP_nr << 
+                   " has already been connected.");
+      // Create a server socket
+      itsTHs[RSP_nr] = new TH_Socket(service,
+                                     true,
+                                     Socket::TCP,
+                                     5,
+                                     false);
+      itsConnections[RSP_nr] = new Connection("fromInpSection", 
+                                              dm.getGeneralOutHolder(dhNr), 
+                                              0, itsTHs[RSP_nr], true);
+      dm.setOutConnection(dhNr, itsConnections[RSP_nr]);
+
+    }
   }
-#endif  
-};
 
 } //namespace
 
