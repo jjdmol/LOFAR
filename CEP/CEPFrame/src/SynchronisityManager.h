@@ -87,6 +87,11 @@ public:
   void preprocess();
   void postprocess();
 
+  // return usage of buffers on a scale between 0 (nothing used) and 1 (all
+  // buffers used).
+  float getAndResetMaxInBufferUsage(int channel);
+  float getAndResetMaxOutBufferUsage(int channel);
+
 private:
   // Start function for reader thread
 static void* startReaderThread(void* thread_arg);

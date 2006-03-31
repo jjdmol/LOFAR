@@ -84,6 +84,7 @@ class CyclicBuffer
 
   int  GetSize();
   int  GetCount();
+  int  GetAndResetMaxUsage();
 
  private:
 
@@ -97,6 +98,7 @@ class CyclicBuffer
   int itsBodyIdx;
   int itsTailIdx;
   int itsCount;
+  int itsMaxUsage;
 
   pthread_mutex_t buffer_mutex;
   pthread_cond_t  data_available;
@@ -108,7 +110,8 @@ CyclicBuffer<TYPE>::CyclicBuffer() :
     itsHeadIdx(0),
     itsBodyIdx(0),
     itsTailIdx(0),
-    itsCount(0)
+    itsCount(0),
+    itsMaxUsage(0)
 {
   pthread_mutex_init(&buffer_mutex, NULL);
   pthread_cond_init (&data_available,  NULL);
@@ -187,6 +190,10 @@ TYPE& CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
     itsHeadIdx = 0;
   }
   itsCount++;
+  if (itsCount > itsMaxUsage)
+  {
+    itsMaxUsage = itsCount;
+  }
 
   // signal that data has become available
   pthread_cond_signal(&data_available);
@@ -333,6 +340,17 @@ template<class TYPE>
 int CyclicBuffer<TYPE>::GetCount(void)
 {
   return itsCount;
+}
+
+template<class TYPE>
+int CyclicBuffer<TYPE>::GetAndResetMaxUsage(void)
+{
+  pthread_mutex_lock(&buffer_mutex);
+  int maxUsage = itsMaxUsage;
+  itsMaxUsage  = itsCount;
+  pthread_mutex_unlock(&buffer_mutex);
+
+  return maxUsage;
 }
 
 }

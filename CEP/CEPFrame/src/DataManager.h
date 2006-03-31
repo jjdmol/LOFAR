@@ -112,6 +112,11 @@ public:
   // Is data transport of output channel synchronous?
   bool isOutSynchronous(int channel);
 
+  // return usage of buffers on a scale between 0 (nothing used) and 1 (all
+  // buffers used).
+  float getAndResetMaxInBufferUsage(int channel);
+  float getAndResetMaxOutBufferUsage(int channel);
+
 private:
   /// Copy constructor (copy semantics).
   DataManager (const DataManager&);

@@ -441,4 +441,14 @@ bool DataManager::isOutSynchronous(int channel)
   return itsSynMan->isOutSynchronous(channel);
 }
 
+float DataManager::getAndResetMaxInBufferUsage(int channel)
+{
+  return itsSynMan->getAndResetMaxInBufferUsage(channel);
+}
+
+float DataManager::getAndResetMaxOutBufferUsage(int channel)
+{
+  return itsSynMan->getAndResetMaxOutBufferUsage(channel);
+}
+
 }

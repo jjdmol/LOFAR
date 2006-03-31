@@ -65,6 +65,7 @@ public:
   virtual void preprocess();
   
   virtual int getSize();
+  virtual int getAndResetMaxUsage();
 
 private:
   int                       size;     // Size of buffer

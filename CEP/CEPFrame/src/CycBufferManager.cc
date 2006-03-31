@@ -92,4 +92,9 @@ int CycBufferManager::getSize()
   return itsBuf.GetSize();
 }
 
+int CycBufferManager::getAndResetMaxUsage()
+{
+  return itsBuf.GetAndResetMaxUsage();
+}
+
 }
