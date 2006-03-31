@@ -139,7 +139,7 @@ public: \
 #define LOG_TRACE_LIFETIME_STR(level, stream) do { \
 	if( LFDebugCheck(level) ) { \
 		LFDebug::Tracer objname; \
-		constructStream(stream) \
+		constructStream(stream); \
 		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
                         AUTO_FUNCTION_NAME, oss.str().c_str(), 0); \
 	} \
@@ -200,7 +200,7 @@ public: \
 #undef THROW
 // possible object debug status. 
 #define THROW(exc,msg) do { \
-	constructStream(msg) \
+	constructStream(msg); \
 	cLog(1, "EXCEPTION", oss.str()); \
 	throw(exc(oss.str(), __HERE__)); \
 	} while(0)
@@ -215,14 +215,14 @@ public: \
 
 #define	constructStream(stream) \
 	std::ostringstream	oss; \
-	oss << stream;
+	oss << stream
 
 #define	cLog(level,levelname,message) \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
 		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message << endl
 
 #define cLogstr(level,levelname,stream) do { \
-		constructStream(stream) \
+		constructStream(stream); \
 		cLog(level,levelname,oss.str().c_str()); \
 	} while(0)
 
@@ -232,7 +232,7 @@ public: \
 		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << endl
 
 #define cDebugstr(level,levelname,stream) do { \
-		constructStream(stream) \
+		constructStream(stream); \
 		cDebug(level,levelname,oss.str().c_str()); \
 	} while(0)
 
