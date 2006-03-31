@@ -35,12 +35,8 @@
 namespace LOFAR 
 {
   //# Forward declarations
-//   namespace ACC { 
-//     namespace APS { 
-//       class ParameterSet; 
-//     } 
-//   }
-  namespace AMC { 
+  namespace AMC
+  { 
     class Converter; 
     class SkyCoord; 
     class EarthCoord; 
@@ -141,6 +137,9 @@ namespace LOFAR
 
       // Counter used to count the number of times that process() was called.
       uint                    itsLoopCount;
+  
+      // Allocate a tracer context
+      ALLOC_TRACER_CONTEXT;
       
     };
 
