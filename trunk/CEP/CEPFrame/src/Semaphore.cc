@@ -1,4 +1,6 @@
-#include "Semaphore.h"
+#include <lofar_config.h>
+
+#include <Semaphore.h>
 
 
 Semaphore::Semaphore(unsigned level)
