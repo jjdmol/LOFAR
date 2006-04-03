@@ -110,8 +110,8 @@ bool SC_WritePredData::execute()
     corrs = itsArgs.getInt32Vector("correlations");
   }
   // the prediffer needs to know the modelType too
-  msParams["modelType"] = itsArgs.getString("modelType");
-  msParams["calcUVW"] = itsArgs.getString("calcUVW");
+  msParams.add ("modelType", itsArgs.getString("modelType"));
+  msParams.add ("calcUVW", itsArgs.getString("calcUVW"));
   vector<string> pNames;    // Empty vector
   vector<string> exPNames;    // Empty vector
   WOPD->setVarData (msParams, ant, pNames, exPNames, srcs, corrs);

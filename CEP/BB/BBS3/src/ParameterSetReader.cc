@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     cerr<<"Usage: psReader <psFile> <psKey>"<<endl;
   } else {
       ParameterSet ps(argv[1]);
-      cout<<ps[string(argv[2])]<<endl;
+      cout<<ps.getString(argv[2]) <<endl;
   }
   return 0;
 }
