@@ -43,17 +43,6 @@ namespace LOFAR {
   using std::real;
   using std::imag;
   using std::conj;
-  using std::sin;
-  using std::cos;
-  using std::tan;
-  using std::sinh;
-  using std::cosh;
-  using std::tanh;
-  using std::exp;
-  using std::sqrt;
-  using std::pow;
-  using std::log;
-  using std::log;
   using std::abs;
   using std::arg;
 }
