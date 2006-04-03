@@ -66,7 +66,7 @@ WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
   int pols = itsPS.getInt32("Observation.NPolarisations");
   itsNPolSquared = pols*pols;
 
-  int nrSamples = itsPS.getInt32("Observation.NSamplesToIntegrate");
+  int nrSamples = itsPS.getInt32("Observation.NSubbandSamples");
   itsWeightFactor = (float)itsNChannels/(float)nrSamples;  // The inverse of maximum number of valid samples
 
   vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");

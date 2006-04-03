@@ -83,7 +83,7 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
   const double		     phaseShift = 2 * M_PI * distance;
 
   for (int time = 0; time < NR_INPUT_SAMPLES; time ++) {
-    double phi = 2 * M_PI * signalFrequency * time / SAMPLE_RATE;
+    double phi = 2 * M_PI * signalFrequency * time / NR_SUBBAND_SAMPLES;
     DH_Subband::SampleType sample = toComplex(phi);
 
     for (int stat = 0; stat < NR_STATIONS; stat ++) {

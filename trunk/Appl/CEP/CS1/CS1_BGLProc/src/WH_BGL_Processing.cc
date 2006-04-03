@@ -1141,8 +1141,8 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
 {
   ASSERT(ps.getInt32("BGLProc.NPPFTaps")		== NR_TAPS);
   ASSERT(ps.getInt32("FakeData.NStations")		== NR_STATIONS);
-  ASSERT(ps.getInt32("Observation.NSamplesToIntegrate") == SAMPLE_RATE);
   ASSERT(ps.getInt32("Observation.NPolarisations")	== NR_POLARIZATIONS);
+  ASSERT(ps.getInt32("Observation.NSubbandSamples")	== NR_SUBBAND_SAMPLES);
   ASSERT(ps.getInt32("Observation.NChannels")		== NR_SUBBAND_CHANNELS);
 
 #if !defined C_IMPLEMENTATION
@@ -1300,7 +1300,7 @@ void WH_BGL_Processing::doPPF()
 
   typedef DH_Subband::SampleType inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS];
  
- inputType *input = (inputType *) get_DH_Subband()->getSamples();   
+  inputType *input = (inputType *) get_DH_Subband()->getSamples();   
  
 #if defined DELAY_COMPENSATION
   DH_Subband::AllDelaysType *delays = get_DH_Subband()->getDelays();

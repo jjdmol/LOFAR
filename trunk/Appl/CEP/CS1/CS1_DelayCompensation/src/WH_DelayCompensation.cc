@@ -276,7 +276,7 @@ namespace LOFAR
       // The integration period must be specified in seconds.
       double startTime = ps.getDouble("Observation.StartTime");
       double stopTime  = ps.getDouble("Observation.StopTime");
-      double delta     = ps.getDouble("Observation.IntegrationPeriod") / 86400;
+      double delta     = ps.getDouble("Observation.NSubbandSamples") / ps.getDouble("Observation.SampleRate") / 86400;
       ASSERTSTR(startTime <= stopTime, startTime << " <= " << stopTime);
 
       // Reserve space in \a itsObservationEpoch to avoid reallocations
