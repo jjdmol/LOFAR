@@ -30,6 +30,7 @@ pkginclude_HEADERS = \
 	LofarLogCout.h \
 	LofarLogger.h \
 	lofar_map.h \
+	lofar_math.h \
 	lofar_set.h \
 	lofar_sstream.h \
 	lofar_stack.h \
