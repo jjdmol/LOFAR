@@ -25,6 +25,9 @@
 
 // \file
 
+//# Put sin, etc. in LOFAR namespace.
+#include <Common/lofar_math.h>
+
 //# ICC supports builtin complex for floating point types only.
 //# GCC supports it for both floating point and integer types.
 //# Both use __complex__ as the complex type specifier.
@@ -32,10 +35,12 @@
 //# as such to use it.
 //# Note that ComplexBuiltin.h uses __real__ and __imag__. Maybe they
 //# also need different names for _Complex.
+//# Note: include StdInt and BuiltinFP in this order, otherwise the gcc
+//# compiler complains that conj already exists in LOFAR namespace.
 #if defined __INTEL_COMPILER || defined HAVE_BGL
 # define LOFAR_BUILTIN_COMPLEXFP  __complex__
-# include <Common/ComplexBuiltinFP.h>
 # include <Common/ComplexStdInt.h>
+# include <Common/ComplexBuiltinFP.h>
 
 #elif defined __GNUC__ && !defined __INSURE__
 # define LOFAR_BUILTIN_COMPLEXFP  __complex__
