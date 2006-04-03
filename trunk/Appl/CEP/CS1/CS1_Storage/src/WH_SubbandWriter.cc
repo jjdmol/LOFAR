@@ -70,8 +70,12 @@ WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
   itsWeightFactor = (float)itsNChannels/(float)nrSamples;  // The inverse of maximum number of valid samples
 
   vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
-  ASSERTSTR(refFreqs.size() >= itsPS.getInt32("FakeData.NSubbands"), 
+  ASSERTSTR(refFreqs.size() >= itsPS.getInt32("Observation.NSubbands"), 
 	    "Wrong number of refFreqs specified!");
+  for (int i = refFreqs.size(); i < itsPS.getInt32("FakeData.NSubbands"); i++) {
+    refFreqs.push_back(1);
+  }
+
   char str[32];
   for (int i=0; i<itsNinputs; i++) {
     sprintf(str, "DH_in_%d", i);
@@ -124,6 +128,11 @@ void WH_SubbandWriter::preprocess() {
   double startTime = itsPS.getDouble("Observation.StartTime");
   double timeStep = itsPS.getDouble("Observation.IntegrationPeriod");
   vector<double> antPos = itsPS.getDoubleVector("Observation.StationPositions");
+
+  for (int i = antPos.size(); i < 3 * itsNStations; i++) {
+    antPos.push_back(1);
+  }
+
   itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, itsNChannels, 
 			   itsNPolSquared, itsNStations, antPos);
 
