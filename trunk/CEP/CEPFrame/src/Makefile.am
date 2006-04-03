@@ -1,4 +1,5 @@
 pkginclude_HEADERS = \
+Semaphore.h					\
 DH_Example.h					\
 DH_Tester.h					\
 NetworkBuilder.h				\
@@ -11,7 +12,7 @@ WH_Tester.h					\
 DHPoolManager.h					\
 CycBufferManager.h				\
 SynchronisityManager.h				\
-DataManager.h				\
+DataManager.h					\
 Block.h 					\
 BlockRep.h					\
 Composite.h					\
@@ -22,6 +23,7 @@ CyclicBuffer.h
 lib_LTLIBRARIES 	= libcepframe.la
 
 libcepframe_la_SOURCES 	= $(pkginclude_HEADERS) \
+Semaphore.cc					\
 DH_Example.cc					\
 DH_Tester.cc					\
 NetworkBuilder.cc				\

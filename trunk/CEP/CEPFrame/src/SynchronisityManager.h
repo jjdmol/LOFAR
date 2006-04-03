@@ -28,6 +28,8 @@
 
 #include <Transport/DataHolder.h>
 #include <CEPFrame/DHPoolManager.h>
+#include <CEPFrame/Semaphore.h>
+#include <Common/lofar_vector.h>
 #include <pthread.h>
 
 namespace LOFAR
@@ -52,6 +54,8 @@ typedef struct thread_args{
   DHPoolManager*   manager;
   Connection*      conn;
   bool             stopThread;
+  Semaphore	   writeAllowed;
+  thread_args	   *nextWriter;
 }thread_data;
 
 
@@ -83,6 +87,9 @@ public:
   void setOutSynchronous(int channel, bool synchronous, int bufferSize);
   bool isInSynchronous(int channel);
   void setInSynchronous(int channel, bool synchronous, int bufferSize);
+
+  // limit the number of concurrent writers in a group of output channels
+  void setOutRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent);
 
   void preprocess();
   void postprocess();

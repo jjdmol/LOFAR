@@ -427,6 +427,11 @@ void DataManager::setOutBuffer(int channel, bool synchronous, int bufferSize) co
 }
 
 
+void DataManager::setOutRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent)
+{
+  itsSynMan->setOutRoundRobinPolicy(channels, maxConcurrent);
+}
+
 bool DataManager::isInSynchronous(int channel)
 {
   DBGASSERTSTR(channel >= 0, "input channel too low");
