@@ -74,7 +74,7 @@ public:
   // Add the definition of the next field (i.e. beam).
   // The angles have to be given in radians.
   // <br>It returns the id (0-relative seqnr) of the field.
-  int addField (double azimuth, double elevation);
+  int addField (double RA, double DEC);
 
   // Write a data array for the given band, field and frequency channel.
   // The data array is a (3D complex) array with axes polarization, 

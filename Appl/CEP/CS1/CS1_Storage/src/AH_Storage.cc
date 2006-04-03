@@ -39,7 +39,7 @@ void AH_Storage::define(const LOFAR::KeyValueMap&) {
 
   itsStub = new Stub_BGL_Visibilities(false, itsParamSet);
 
-  int nrSubbands = itsParamSet.getInt32("Observation.NSubbands");
+  int nrSubbands = itsParamSet.getInt32("FakeData.NSubbands");
 
   for (int subb=0; subb< nrSubbands; subb++)
   {

@@ -92,11 +92,11 @@ int MSWriter::addBand (int npolarizations, int nchannels,
   return res;
 }
 
-int MSWriter::addField (double azimuth, double elevation)
+int MSWriter::addField (double RA, double DEC)
 {
   int res;
   try {
-    res = itsWriter->addField (azimuth, elevation);
+    res = itsWriter->addField (RA, DEC);
   } catch (AipsError x) {
     cerr << "AIPS exception in MSWriterImpl: " << x.getMesg() << endl;
     exit(0);

@@ -25,8 +25,12 @@ using namespace LOFAR;
 
 int main(int argc, char* argv[]) {
   INIT_LOGGER("CS1_Storage");
+
+  // This shouldn't be done here
+  LOFAR::ACC::APS::ParameterSet ps("CS1.parset");
+  int nrSeconds = ps.getInt32("General.NRuns");
   AH_Storage myAH;
-  ApplicationHolderController myAHC(myAH);
+  ApplicationHolderController myAHC(myAH, nrSeconds);
   return LOFAR::ACC::PLC::ACCmain(argc, argv, &myAHC);
 }
 
