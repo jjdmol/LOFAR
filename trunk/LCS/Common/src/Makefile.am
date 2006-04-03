@@ -8,6 +8,7 @@ libcommon_la_SOURCES 	= \
 	Allocator.cc \
 	DataConvert.cc \
 	Exception.cc \
+	FileLocator.cc \
 	hexdump.cc \
 	LofarLogCout.cc \
 	LofarLogger.cc \
