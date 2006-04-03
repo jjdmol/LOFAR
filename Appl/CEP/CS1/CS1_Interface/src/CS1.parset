@@ -24,7 +24,8 @@ Connections.AMC.Port             =31337
 Observation.NSubbands=1
 Observation.NChannels = 256
 Observation.NPolarisations=2
-Observation.NSamplesToIntegrate= 196608 #155648
+Observation.NSubbandSamples = 196608 #155648
+Observation.SampleRate = 195312.5
 Observation.NStations=2
 Observation.PositionType = ITRF     # should be ITRF
 Observation.StationPositions = [\   # position (lat(rad),long(rad),height(m))
@@ -38,7 +39,6 @@ Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
 1, 0.3, -1, -0.3, 2, 0.1, 1.5, -0.3]  # four arbitrary directions
 Observation.StartTime = 53328.6407291667 # MJD: 2004/11/19 15h22m39s
 Observation.StopTime  = 53328.6823958333 # MJD: 2004/11/19 16h22m39s
-Observation.IntegrationPeriod = 1   # 1 second
 Observation.RefFreqs = [99950592.0, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8]  # the reference frequency for each stored(!) subband (Hz)
 Observation.ChanWidth = 1.0e8       # width of each channel (Hz)
 

@@ -61,7 +61,7 @@ namespace LOFAR {
       // get parameters
       itsNRSPOutputs = ps.getInt32("Observation.NStations");
       itsNSubbands = ps.getInt32("Observation.NSubbands");
-      itsNSamplesPerSec = ps.getInt32("Observation.NSamplesToIntegrate");
+      itsNSamplesPerSec = ps.getInt32("Observation.NSubbandSamples");
       itsNSamplesToCopy = itsNSamplesPerSec + (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Observation.NChannels");
  
       // create incoming dataholder holding the delay information 
