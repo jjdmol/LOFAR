@@ -121,7 +121,12 @@ void WH_Strip::process()
 
   cout<<"WH_Strip sending "<<myEthFrame.getPayloadSize()<<" bytes"<<endl;
   bool ret = itsTH.sendNonBlocking(myEthFrame.getPayloadp(), myEthFrame.getPayloadSize(), 0);
-  ASSERTSTR(ret, "TH couldn't send data");
+  if(!ret) {
+    cerr<<"TH couldn't send data, retrying"<<endl; // This is specifically for UDP sockets that are not really received by another process
+                                                   // The first call gives a 'connection refused' message, but a resend will really send the data
+    ret = itsTH.sendNonBlocking(myEthFrame.getPayloadp(), myEthFrame.getPayloadSize(), 0);
+  }
+
   // we handled one alarm, so decrease it
   theirNoAlarms--;
 }
