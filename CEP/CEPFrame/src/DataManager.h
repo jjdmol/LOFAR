@@ -107,6 +107,9 @@ public:
   void setInBuffer(int channel, bool synchronous, int bufferSize = 0) const;
   void setOutBuffer(int channel, bool synchronous, int bufferSize = 0) const;
 
+  // limit the number of concurrent writers in a group of output channels
+  void setOutRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent);
+
   // Is data transport of input channel synchronous?
   bool isInSynchronous(int channel);
   // Is data transport of output channel synchronous?

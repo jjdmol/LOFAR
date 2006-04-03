@@ -76,6 +76,8 @@ SynchronisityManager::SynchronisityManager (DataManager* dm, int inputs, int out
     itsWritersData[j].manager = 0;
     itsWritersData[j].conn = 0;
     itsWritersData[j].stopThread = true;
+    itsWritersData[j].writeAllowed.up();	// initial semaphore level is 1
+    itsWritersData[j].nextWriter = &itsWritersData[j];	// point to self
   }
 }
 
@@ -87,7 +89,7 @@ SynchronisityManager::~SynchronisityManager()
   for (int i = 0; i < itsNinputs; i++)
   {
     pthread_mutex_lock(&itsReadersData[i].mutex);
-    if (itsReadersData[i].stopThread == false)
+    if (!itsReadersData[i].stopThread)
     {
       itsReadersData[i].stopThread = true;  // Causes reader threads to exit
     }
@@ -98,7 +100,7 @@ SynchronisityManager::~SynchronisityManager()
   for (int j = 0; j < itsNoutputs; j++)
   {
     pthread_mutex_lock(&itsWritersData[j].mutex);
-    if (itsWritersData[j].stopThread == false)
+    if (!itsWritersData[j].stopThread)
     {
       itsWritersData[j].stopThread = true; // Causes writer threads to exit
     }
@@ -109,7 +111,7 @@ SynchronisityManager::~SynchronisityManager()
 
   for (int m = 0; m < itsNoutputs; m++)
   {
-    if (itsOutManagers[m]->getSharing() == false)
+    if (!itsOutManagers[m]->getSharing())
     {
       delete itsOutManagers[m];
     }
@@ -148,8 +150,28 @@ void SynchronisityManager::preprocess()
   }
 }
 
+void SynchronisityManager::setOutRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent)
+{
+  for (unsigned i = 0; i < channels.size(); i ++) {
+    thread_data *data = &itsWritersData[channels[i]];
+    DBGASSERTSTR(data->nextWriter == data, "Round Robin policy of out channel " << channels[i] << " set multiple times");
+    if (i >= maxConcurrent) {
+      data->writeAllowed.down(); // initial semaphore level is 0
+    }
+    data->nextWriter = &itsWritersData[channels[(i + maxConcurrent) % channels.size()]];
+  }
+}
+
 void SynchronisityManager::postprocess()
 {
+}
+
+static bool stopThread(thread_data *data)
+{
+  pthread_mutex_lock(&data->mutex);
+  bool stopThread = data->stopThread;
+  pthread_mutex_unlock(&data->mutex);
+  return stopThread;
 }
 
 void* SynchronisityManager::startReaderThread(void* thread_arg)
@@ -158,69 +180,52 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
   thread_data* data = (thread_data*)thread_arg;
   DHPoolManager* manager = data->manager;
   
-  while (1)
+  while (!stopThread(data))
   {
-    pthread_mutex_lock(&data->mutex);           /// Check stop condition
-    if (data->stopThread == true)
-    {
-      pthread_mutex_unlock(&data->mutex);
-      LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
-      pthread_exit(NULL);
-    }
-    pthread_mutex_unlock(&data->mutex);
-    int id;
     LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to read");
-
+    int id;
     DataHolder* dh = manager->getWriteLockedDH(&id);
-
     Connection* pConn = data->conn;
     pConn->setDestinationDH(dh);           // Set connection to new DataHolder
     pConn->getTransportHolder()->reset();  // Reset TransportHolder
 
-    ASSERTSTR(pConn->read() != Connection::Error,
+    Connection::State result = pConn->read();
+    ASSERTSTR(result != Connection::Error,
 	      "Reader thread encountered error in reading");
-    pthread_mutex_lock(&data->mutex);         /// Check stop condition
-    if (data->stopThread == true)
-    {
-      manager->writeUnlock(id);
-      pthread_mutex_unlock(&data->mutex);
-      LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
-      pthread_exit(NULL);
-    }
-    pthread_mutex_unlock(&data->mutex);
-    
     manager->writeUnlock(id);
   }
+
+  LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
+  pthread_exit(NULL);
 }
 
 void* SynchronisityManager::startWriterThread(void* thread_arg)
 {
   LOG_TRACE_RTTI_STR("In writer thread ID " << pthread_self());
   thread_data* data = (thread_data*)thread_arg;
-
   DHPoolManager* manager = data->manager;
 
-  while (1)
+  while (!stopThread(data))
   {
-    pthread_mutex_lock(&data->mutex);
-    if (data->stopThread == true)               /// Check stop condition
-    {
-      pthread_mutex_unlock(&data->mutex);
-      LOG_TRACE_RTTI_STR("Writer thread " << pthread_self() << " exiting");
-      pthread_exit(NULL);
-    }
-    pthread_mutex_unlock(&data->mutex);
-    int id;
     LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to write");
+    int id;
     DataHolder* dh = manager->getReadLockedDH(&id);
     Connection* pConn = data->conn;
     pConn->setSourceDH(dh);               // Set connection to new DataHolder
     pConn->getTransportHolder()->reset(); // Reset TransportHolder
-    ASSERTSTR(pConn->write()!=Connection::Error,
+    cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " waits for write right\n";
+    data->writeAllowed.down();
+    cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " received write right\n";
+    Connection::State result = pConn->write();
+    ASSERTSTR(result != Connection::Error,
 	      "Writer thread encountered error in writing");
+    cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " releases write right\n";
+    data->nextWriter->writeAllowed.up();
     manager->readUnlock(id);
-  
   }
+
+  LOG_TRACE_RTTI_STR("Writer thread " << pthread_self() << " exiting");
+  pthread_exit(NULL);
 }
 
 void SynchronisityManager::setOutSynchronous(int channel, bool synchronous, int bufferSize)
@@ -229,7 +234,7 @@ void SynchronisityManager::setOutSynchronous(int channel, bool synchronous, int 
   {
     itsOutSynchronisities[channel] = synchronous;
     delete itsOutManagers[channel];
-    if (synchronous == true)
+    if (synchronous)
     {
       itsOutManagers[channel] = new DHPoolManager();
       pthread_mutex_lock(&itsWritersData[channel].mutex); // Stop writer thread
@@ -254,7 +259,7 @@ void SynchronisityManager::setInSynchronous(int channel, bool synchronous, int b
   {
     itsInSynchronisities[channel] = synchronous;
     delete itsInManagers[channel];
-    if (synchronous == true)
+    if (synchronous)
     {
       itsInManagers[channel] = new DHPoolManager();
       pthread_mutex_lock(&itsReadersData[channel].mutex); // Stop reader thread
@@ -277,7 +282,7 @@ void SynchronisityManager::readAsynchronous(int channel)
 {
   pthread_mutex_lock(&itsReadersData[channel].mutex);
 
-  if (itsReadersData[channel].stopThread == true)
+  if (itsReadersData[channel].stopThread)
   {                                            // Thread creation
     itsReadersData[channel].manager = itsInManagers[channel];
     itsReadersData[channel].conn = itsDM->getInConnection(channel);
@@ -293,7 +298,7 @@ void SynchronisityManager::writeAsynchronous(int channel)
 {
   pthread_mutex_lock(&itsWritersData[channel].mutex);
 
-  if (itsWritersData[channel].stopThread == true)
+  if (itsWritersData[channel].stopThread)
   {                                              // Thread creation
     itsWritersData[channel].manager = itsOutManagers[channel];
     itsWritersData[channel].conn = itsDM->getOutConnection(channel);
