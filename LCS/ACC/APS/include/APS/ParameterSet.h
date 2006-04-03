@@ -30,26 +30,13 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <Common/LofarTypes.h>
-#include <Common/lofar_map.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_sstream.h>
-#include <Common/StringUtil.h>
-#include <APS/KVpair.h>
+#include <APS/ParameterSetImpl.h>
 
 namespace LOFAR {
   namespace ACC {
     namespace APS {
 // \addtogroup APS
 // @{
-
-const char PC_QUAL_STABLE[]   = { "stable"        };
-const char PC_QUAL_TEST[]     = { "test"          };
-const char PC_QUAL_DEVELOP[]  =	{ "development"   };
-const char PC_KEY_VERSIONNR[] = { "versionnr"     };
-const char PC_KEY_QUAL[]      =	{ "qualification" };
 
 //# Description of class.
 // The ParameterSet class is a key-value implementation of the type
@@ -59,12 +46,9 @@ const char PC_KEY_QUAL[]      =	{ "qualification" };
 // A couple of getXxx routines are provided to convert the strings to the 
 // desired type.
 //
-class ParameterSet : public map <string, string>
+class ParameterSet
 {
 public:
-	typedef map<string, string>::iterator			iterator;
-	typedef map<string, string>::const_iterator		const_iterator;
-
 	// \name Construction and Destruction
 	// A ParameterSet can be constructed as empty collection, can be
 	// read from a file or copied from another collection. 
@@ -86,6 +70,9 @@ public:
 	ParameterSet& 	operator=(const ParameterSet& that);
 	//@}
 
+
+	// Clear the set.
+	void clear();
 
 	// \name Merging or appending collections
 	// An existing collection can be extended/merged with another collection.
@@ -156,14 +143,7 @@ public:
 	// @{
 
 	// Checks if the given Key is defined in the ParameterSet.
-	bool	isDefined (const string& searchKey) const
-				{ return (find(searchKey) != end()); };
-
-	// Return the 'metadata' from the parameterCollection.
-//	string  getName          () const;
-
-	// Return the 'metadata' from the parameterCollection.
-//	string  getVersionNr     () const;
+	bool	isDefined (const string& searchKey) const;
 
 	// Returns the value as a boolean.
 	bool	getBool  (const string& aKey) const;
@@ -207,141 +187,214 @@ public:
 	// @}
 
 private:
-	// \name Implementation of the 'adopt' methods
-	// The 'adopt' methods are implemented in the addStream method. The 'read'
-	// methods do some preprocessing so the 'adopt' method can use the
-	// \c addStream method.
-	// @{
-	void	readFile   (const string& theFile, const	bool merge);
-	void	readBuffer (const string& theFile, const	bool merge);
-	void	addStream  (istream&	inputStream, const	bool merge);
-	// @}
+	// Construct from an existing impl object.
+	explicit ParameterSet (ParameterSetImpl* set)
+	  { itsSet = set; }
 
-	const_iterator	findKV(const string& aKey) const;
+	// Decrement the refcount and delete the impl if the count is zero.
+	void unlink();
+
+	ParameterSetImpl* itsSet;
 };
 
-//# -------------------- Global functions --------------------
-// Checks if the given string is a valid versionnumber (x.y.z)
-bool	isValidVersionNr   (const string& versionNr);
 
-// Checks if the given string is a valid versionnumber reference. This may be
-// of the form \c x.y.z or the words \c stable, \c test or \c development
-// (defined as \c PC_QUAL_STABLE, \c PC_QUAL_TEST and \c PC_QUAL_DEVELOP).
-bool	isValidVersionNrRef(const string& versionNr);
+inline void	ParameterSet::clear      ()
+{
+	itsSet->clear();
+}
 
-// Returns the value of the given string or 0 if it is not a valid seqnr
-//uint32	seqNr(const string& aString);
+inline void	ParameterSet::adoptFile      (const string&               theFilename)
+{
+	itsSet->adoptFile (theFilename);
+}
 
-// When a hierarchical keyname is passed to \c fullKeyName the methods returns
-// the last part of the keyname. For example:
-// \code
-// moduleName("base.sub.leaf")
-// \endcode
-// returns \c "leaf". When a keyname without dots is passed the whole key
-// is returned.<br>
-// \c moduleName is a kind of \c dirname function for keys.
-string	keyName	   (const string& fullKeyName);
+inline void	ParameterSet::adoptBuffer    (const string&               theBuffer)
+{
+	itsSet->adoptBuffer (theBuffer);
+}
 
-// When a hierarchical keyname is passed to \c moduleName the methods returns
-// all but the last part of the keyname. For example:
-// \code
-// moduleName("base.sub.leaf")
-// \endcode
-// returns \c "base.sub". When a keyname without dots is passed and empty string
-// is returned.<br>
-// \c moduleName is a kind of \c basename function for keys.
-string	moduleName (const string& fullKeyName);
+inline void	ParameterSet::adoptCollection(const ParameterSet&	theCollection)
+{
+	itsSet->adoptCollection (*theCollection.itsSet);
+}
 
-// Returns the raw keypart of a parameterline that contains a key-value pair.
-// The returned string is \e not trimmed for whitespace.
-string	keyPart	   (const string& parameterLine);
+inline void	ParameterSet::writeFile   (const string& theFilename, bool append) const
+{
+	itsSet->writeFile (theFilename, append);
+}
 
-// Returns the raw value-part of a parameterline that contains a key-value pair.
-// This means that the string is \e not trimmed for whitespace and that comments
-// at the end of the line are also returned.<br>
-// It simply returns everything behind the first \c = sign.
-string	valuePart  (const string& parameterLine);
+inline void	ParameterSet::writeBuffer (      string& theBuffer) const
+{
+	itsSet->writeBuffer (theBuffer);
+}
 
-// Returns the value of the index if the string contains an index otherwise
-// 0 is returned. The \c indexMarker argument must be used to pass the two chars
-// that are used to delimeter the index. The index must be a literal value
-// not an expression. For example:
-// \code
-//  indexValue("label{25}andmore", "{}");
-// \endcode
-// returns the value 25. When more indexdelimiters are found in the string the
-// last pair is used.
-int32 	indexValue (const string&	label, char	indexMarker[2]);
+inline ParameterSet	ParameterSet::makeSubset(const string& baseKey,
+								   const string& prefix) const
+{
+	return ParameterSet (itsSet->makeSubset(baseKey, prefix));
+}
 
-vector<char*>	splitVector(char*	target);
-time_t StringToTime_t (const string& aString);
-// @} addgroup
+inline void	ParameterSet::add    (const string& aKey, const string& aValue)
+{
+	itsSet->add (aKey, aValue);
+}
+inline void	ParameterSet::add    (const KVpair& aPair)
+{
+	itsSet->add (aPair);
+}
+
+inline void	ParameterSet::replace(const string& aKey, const string& aValue)
+{
+	itsSet->replace (aKey, aValue);
+}
+inline void	ParameterSet::replace(const KVpair& aPair)
+{
+	itsSet->replace (aPair);
+}
+
+inline void	ParameterSet::remove (const string& aKey)
+{
+	itsSet->remove (aKey);
+}
+
+inline bool	ParameterSet::isDefined (const string& searchKey) const
+{
+	return itsSet->isDefined (searchKey);
+}
+
 
 //#	getBool(key)
 inline bool ParameterSet::getBool(const string& aKey) const
 {
-	return (StringToBool(findKV(aKey)->second));
+	return itsSet->getBool(aKey);
 }
 
 //#	getInt16(key)
 inline int16 ParameterSet::getInt16(const string& aKey) const
 {
-	return (StringToInt16(findKV(aKey)->second));
+	return itsSet->getInt16(aKey);
 }
 
 //#	getUint16(key)
 inline uint16 ParameterSet::getUint16(const string& aKey) const
 {
-	return (StringToUint16(findKV(aKey)->second));
+	return itsSet->getUint16(aKey);
 }
 
 //#	getInt32(key)
 inline int32 ParameterSet::getInt32(const string& aKey) const
 {
-	return (StringToInt32(findKV(aKey)->second));
+	return itsSet->getInt32(aKey);
 }
 
 //#	getUint32(key)
 inline uint32 ParameterSet::getUint32(const string& aKey) const
 {
-	return (StringToUint32(findKV(aKey)->second));
+	return itsSet->getUint32(aKey);
 }
 
 #if HAVE_LONG_LONG
 //#	getInt64(key)
 inline int64 ParameterSet::getInt64(const string& aKey) const
 {
-	return (StringToInt64(findKV(aKey)->second));
+	return itsSet->getInt64(aKey);
 }
 
 //#	getUint64(key)
 inline uint64 ParameterSet::getUint64(const string& aKey) const
 {
-	return (StringToUint64(findKV(aKey)->second));
+	return itsSet->getUint64(aKey);
 }
 #endif
 
 //#	getFloat(key)
 inline float ParameterSet::getFloat (const string& aKey) const
 {
-	return (StringToFloat(findKV(aKey)->second));
+	return itsSet->getFloat(aKey);
 }
 
 //#	getDouble(key)
 inline double ParameterSet::getDouble(const string& aKey) const
 {
-	return (StringToDouble(findKV(aKey)->second));
+	return itsSet->getDouble(aKey);
 }
 //#	getString(key)
 inline string ParameterSet::getString(const string& aKey) const
 {
-	return (findKV(aKey)->second);
+	return itsSet->getString(aKey);
 }
 
 //#	getTime(key)
 inline time_t ParameterSet::getTime(const string& aKey) const
 {
-	return (StringToTime_t(findKV(aKey)->second));
+	return itsSet->getTime(aKey);
+}
+
+//#	getBoolVector(key)
+inline vector<bool> ParameterSet::getBoolVector(const string& aKey) const
+{
+	return itsSet->getBoolVector(aKey);
+}
+
+//#	getInt16Vector(key)
+inline vector<int16> ParameterSet::getInt16Vector(const string& aKey) const
+{
+	return itsSet->getInt16Vector(aKey);
+}
+
+//#	getUint16Vector(key)
+inline vector<uint16> ParameterSet::getUint16Vector(const string& aKey) const
+{
+	return itsSet->getUint16Vector(aKey);
+}
+
+//#	getInt32Vector(key)
+inline vector<int32> ParameterSet::getInt32Vector(const string& aKey) const
+{
+	return itsSet->getInt32Vector(aKey);
+}
+
+//#	getUint32Vector(key)
+inline vector<uint32> ParameterSet::getUint32Vector(const string& aKey) const
+{
+	return itsSet->getUint32Vector(aKey);
+}
+
+#if HAVE_LONG_LONG
+//#	getInt64Vector(key)
+inline vector<int64> ParameterSet::getInt64Vector(const string& aKey) const
+{
+	return itsSet->getInt64Vector(aKey);
+}
+
+//#	getUint64Vector(key)
+inline vector<uint64> ParameterSet::getUint64Vector(const string& aKey) const
+{
+	return itsSet->getUint64Vector(aKey);
+}
+#endif
+
+//#	getFloatVector(key)
+inline vector<float> ParameterSet::getFloatVector(const string& aKey) const
+{
+	return itsSet->getFloatVector(aKey);
+}
+
+//#	getDoubleVector(key)
+inline vector<double> ParameterSet::getDoubleVector(const string& aKey) const
+{
+	return itsSet->getDoubleVector(aKey);
+}
+//#	getStringVector(key)
+inline vector<string> ParameterSet::getStringVector(const string& aKey) const
+{
+	return itsSet->getStringVector(aKey);
+}
+
+//#	getTimeVector(key)
+inline vector<time_t> ParameterSet::getTimeVector(const string& aKey) const
+{
+	return itsSet->getTimeVector(aKey);
 }
 
     } // namespace APS
