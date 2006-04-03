@@ -117,7 +117,7 @@ namespace LOFAR {
 	comp.addBlock(RSPSteps[r]);
     
 	// Connect the Delay Controller
-	// itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
+	itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
 	if (r!=0) {
 	  itsConnector.connectSteps(RSPSteps[0], nSubbands + r - 1, RSPSteps.back(), 1);
 	}
