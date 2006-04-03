@@ -357,16 +357,12 @@ int MSWriterImpl::addPolarization (int npolarizations)
   return rownr;
 }
 
-int MSWriterImpl::addField (double azimuth, double elevation)
+int MSWriterImpl::addField (double RA, double DEC)
 {
-  // Convert AZEL to J2000 RADEC.
-  Quantity qtime(itsStartTime, "s");
-  itsFrame->set (MEpoch(qtime, MEpoch::UTC));
-  MVDirection azel (Quantity(azimuth,"deg"), Quantity(elevation,"deg"));
-  MDirection::Ref inref(MDirection::AZEL, *itsFrame);
-  MDirection indir(azel, inref);
+  MVDirection radec (Quantity(RA,"rad"), Quantity(DEC,"rad"));
+  MDirection indir(radec, MDirection::J2000);
   Vector<MDirection> outdir(1);
-  outdir(0) = MDirection::Convert (indir, MDirection::J2000) ();
+  outdir(0) = indir;
   // Put the direction into the FIELD subtable.
   {
     MSField msfield = itsMS->field();

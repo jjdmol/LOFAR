@@ -79,8 +79,8 @@ public:
   // </group>
 
   // Add the definition of the next field (i.e. beam).
-  // The angles have to be given in degrees.
-  int addField (double azimuth, double elevation);
+  // The angles have to be given in radians.
+  int addField (double RA, double DEC);
 
   // Write a data array for the given band, field and frequency channel.
   // The flag array has the same shape as the data array. Flag==True
