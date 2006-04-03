@@ -30,6 +30,8 @@
 with USE_THREADS
 #endif
 
+#define	BOOST_SP_USE_PTHREADS
+
 #include <boost/thread.hpp>
 
 namespace LOFAR
