@@ -104,10 +104,10 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
     string stratName = "CTRLparams.SC" + string(nrStr) + "params.";
       // Add the dbname if not defined.
     if (! params.isDefined(stratName+"MSDBparams.DBName")) {
-      params[stratName+"MSDBparams.DBName"] = usernm;
+      params.add (stratName+"MSDBparams.DBName", usernm);
     }
     if (! params.isDefined("BBDBname")) {
-      params["BBDBname"] = usernm;
+      params.add ("BBDBname", usernm);
     }
 
     // Read MS description file

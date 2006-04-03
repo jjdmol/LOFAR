@@ -163,8 +163,8 @@ bool SC_CompoundIter::execute()
       corrs = itsArgs.getInt32Vector("correlations");
     }
     // the prediffer needs to know the modelType too
-    msParams["modelType"] = itsArgs.getString("modelType");
-    msParams["calcUVW"] = itsArgs.getString("calcUVW");
+    msParams.add ("modelType", itsArgs.getString("modelType"));
+    msParams.add ("calcUVW", itsArgs.getString("calcUVW"));
     WOPD->setVarData (msParams, ant, pNames, exPNames, srcs, corrs);
     WOPD->setStrategyControllerID(getID());
  

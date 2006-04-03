@@ -103,40 +103,40 @@ makeGsm2
 applyfile
 
 
-echo "Solving phases 1st time ..."
-time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 2 $maxniter $calcuvw $dbtype
-
 # Solve for StokesI as function of freq.
-#echo "Solving fluxes 1st time ..."
-#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "" 1 1 $maxniter $calcuvw $dbtype
+echo "Solving fluxes 1st time ..."
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "" 1 1 $maxniter $calcuvw $dbtype
 
 # Solve for phase
-#echo "Solving phases 1st time ..."
-#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
+echo "Solving phases 1st time ..."
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
 
 # Solve again for StokesI as function of freq.
-#echo "Solving fluxes 2nd time ..."
-#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
+echo "Solving fluxes 2nd time ..."
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
 
 # Solve again for phase
-#echo "Solving phases 2nd time ..."
-#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
+echo "Solving phases 2nd time ..."
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
 
 # Solve again for StokesI as function of freq.
-#echo "Solving fluxes 3rd time ..."
-#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
+echo "Solving fluxes 3rd time ..."
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
 
 # Solve for amplitude in 2 patches.
-#echo "Solving amplitudes ..."
-#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 3 $maxniter $calcuvw $dbtype
+echo "Solving amplitudes ..."
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 3 $maxniter $calcuvw $dbtype
 
 # Subtract the sources.
-#echo "Subtracting sources"
+echo "Subtracting sources"
 # Copy the phase from SG1 to SG2
 #glish copyPhases.g
 # First copy the data column to the corrected-data column.
 #cp 10008336.MS_p1/table.f5_TSM0 10008336.MS_p1/table.f8_TSM1
-#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 10 1 $calcuvw $dbtype
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 10 1 $calcuvw $dbtype
 
+# Correct the residual data for the complex gain at the center.
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 5 1 $calcuvw $dbtype
+  
 # Make the map.
-#glish image343.g
+glish image343.g

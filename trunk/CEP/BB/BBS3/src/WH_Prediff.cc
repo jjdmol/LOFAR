@@ -254,7 +254,7 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
   {
     // Create a Prediffer object
     ParameterSet myargs = args;
-    myargs["DBIsMaster"] = "F";
+    myargs.add ("DBIsMaster", "F");
     BBSTest::ScopedUSRTimer dbStartupTimer("C:DBStartup");
     dbStartupTimer.end();
   
