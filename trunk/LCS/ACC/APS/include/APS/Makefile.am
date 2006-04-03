@@ -1,6 +1,7 @@
 pkginclude_HEADERS = \
 	KVpair.h \
-	ParameterSet.h
+	ParameterSet.h \
+	ParameterSetImpl.h
 
 
 noinst_HEADERS = 

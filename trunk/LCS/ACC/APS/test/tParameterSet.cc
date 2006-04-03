@@ -34,6 +34,7 @@ using namespace LOFAR;
 using namespace LOFAR::ACC::APS;
 
 int main() {
+  try {
 	INIT_LOGGER("tParameterSet");
 
 	cout << "\nReading in parameterfile 'tParameterSet.in_param'\n";
@@ -105,7 +106,7 @@ int main() {
 	}
 
 	cout << "\nFinally write the parameterset to 'newset.stdout'\n";
-	myPS.writeFile("newset.stdout");
+	myPS.writeFile("tParameterSet_tmp.newset.stdout");
 
 	try {
 		cout << "\ntesting getInt32Vector\n";
@@ -120,6 +121,10 @@ int main() {
 		LOG_DEBUG_STR ("Exception:" << ex.what());
 	}
 
-	return 0;
+  } catch (std::exception& ex) {
+    cout << "Unexpected exception: " << ex.what() << endl;
+    return 1;
+  }
+  return 0;
 
 }
