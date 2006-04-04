@@ -45,6 +45,8 @@ namespace LOFAR {
 class FileLocator
 {
 public:
+	#define		BASE_SEARCH_DIR			"./:../:/opt/lofar/"
+
 	typedef list<string>::iterator		iterator;
 
 	// Create a FileLocator without a predefined path.
@@ -55,8 +57,7 @@ public:
 	// ConfigLocator, LogLocator, etc with predefined paths.
 	virtual  ~FileLocator();
 
-	// Functions for managing the search path
-
+	//# Functions for managing the search path
 	// Add the given path(chain) at the end of the current chain.
 	void 	addPathAtBack  (const string& aPath);
 	// Add the given path(chain) at the beginning of the current chain.
@@ -67,6 +68,15 @@ public:
 	bool 	hasPath		   (const string& aPath);
 	// Removes the given path when it is in the registered chain.
 	void	removePath     (const string& aPath);
+
+	//# Functions for managing subpath
+	// Use given subdir when searching the files. First the 'basedir' is
+	// tried, then the 'basedir'/'subdir' is tried.
+	void			setSubdir  (const string&	aSubdir);
+	// Clear the subdir
+	inline void		clearSubdir();
+	// Show the subdir
+	inline string	getSubdir();
 
 	//# Finally where it is all about.
 	// Tries to locate the given filename. When the file is found in the
@@ -79,9 +89,31 @@ private:
 	FileLocator(const FileLocator&	that);
 	FileLocator& operator=(const FileLocator& that);
 
+	// resolv environment variables
+	string resolveInput(const string&	input);
+
 	//# --- Datamembers ---
 	list<string>		itsPaths;
+	string				itsSubdir;
 };
+
+//# ---------- inline functions ----------
+//
+// addSubdir(aSubdir)
+//
+inline void FileLocator::clearSubdir()
+{
+	itsSubdir="";
+}
+
+
+//
+// getSubdir(): subdir
+//
+inline string FileLocator::getSubdir()
+{
+	return (itsSubdir);
+}
 
 
 } // namespace LOFAR
