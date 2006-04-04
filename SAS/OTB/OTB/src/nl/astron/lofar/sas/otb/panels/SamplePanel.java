@@ -59,8 +59,10 @@ public class SamplePanel extends javax.swing.JPanel
         // example of an empty tree
         OTDBtreeNode otdbTreeNode = new OTDBtreeNode();
 
+        itsMainFrame.setHourglassCursor();
         // and create a new root
         treePanel.newRootNode(otdbTreeNode);
+        itsMainFrame.setNormalCursor();
     }
     
     public String getFriendlyName() {

@@ -13,7 +13,8 @@ package nl.astron.lofar.sas.otb.util;
 import nl.astron.lofar.sas.otb.jotdb2.*;
 import java.rmi.Naming;
 import java.util.TreeMap;
-import nl.astron.lofar.sas.otb.panels.MainPanel;
+import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otbcomponents.SetServerDialog;
 import org.apache.log4j.Logger;
 
 /**
@@ -22,20 +23,21 @@ import org.apache.log4j.Logger;
  */
 public class OtdbRmi {
     
-    static Logger logger = Logger.getLogger(MainPanel.class);
+    static Logger logger = Logger.getLogger(OtdbRmi.class);
     static String name = "OtdbRmi";
+    
+    
     public static String RMIServerName      = "lofar17.astron.nl";
-    public static String RMIServerPort      = "1091";
+    public static String RMIServerPort      = "1099";
+
     public static String RMIRegistryName    = jOTDBinterface.SERVICENAME;
     public static String RMIMaintenanceName = jTreeMaintenanceInterface.SERVICENAME;
     public static String RMIValName         = jTreeValueInterface.SERVICENAME;
     public static String RMIConverterName   = jConverterInterface.SERVICENAME; 
-    public static String OTDBUserName       = "paulus";
-    public static String OTDBPassword       = "boskabouter";
-    public static String OTDBDBName         = "coolen";
     
     private static boolean isOpened         = false;
     private static boolean isConnected      = false;
+    private MainFrame itsMainFrame;
     
      // RMI interfaces
     private static jOTDBinterface remoteOTDB;    
@@ -50,9 +52,21 @@ public class OtdbRmi {
     private static TreeMap<Short,String> itsUnits;
     
     /** Creates a new instance of OtdbRmi */
-    public OtdbRmi() {          
+    public OtdbRmi(MainFrame mainFrame) {
+        itsMainFrame=mainFrame;
         isOpened=false;
         isConnected=false;
+        setServer();
+    }
+    
+    public void setServer() {
+        SetServerDialog serverDialog = new SetServerDialog(itsMainFrame,true);
+        serverDialog.setLocationRelativeTo(itsMainFrame);
+        serverDialog.setVisible(true);
+        if(serverDialog.isOk()) {
+            RMIServerName = serverDialog.getServer();
+            RMIServerPort = serverDialog.getPort();
+        }
     }
     
     /**

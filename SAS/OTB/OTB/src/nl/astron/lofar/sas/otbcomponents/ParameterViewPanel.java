@@ -277,6 +277,14 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         this.ParamCancelButton.setEnabled(enabled);
     }
     
+    /** Sets the buttons visible/invisible
+     *
+     * @param   visible     true/false visible/invisible
+     */
+    public void setButtonsVisible(boolean visible) {
+        this.ParamApplyButton.setVisible(visible);
+        this.ParamCancelButton.setVisible(visible);
+    }
     
     /** Enables/disables the complete form
      *
@@ -411,7 +419,7 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamNameText.setMaximumSize(new java.awt.Dimension(440, 19));
         ParamNameText.setMinimumSize(new java.awt.Dimension(440, 19));
         ParamNameText.setPreferredSize(new java.awt.Dimension(440, 19));
-        add(ParamNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 240, -1));
+        add(ParamNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 430, -1));
 
         ParamCancelButton.setText("Cancel");
         ParamCancelButton.addActionListener(new java.awt.event.ActionListener() {

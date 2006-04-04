@@ -30,6 +30,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
 
     /** Creates a new instance of PICtableModel */
     public LogParamTableModel() {
+        data = new Object[0][0];
     }
     
     

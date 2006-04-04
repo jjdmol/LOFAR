@@ -6,6 +6,7 @@
 
 package nl.astron.lofar.sas.otb;
 
+import java.awt.Cursor;
 import java.util.*;
 import javax.swing.*;
 import org.apache.log4j.Logger;
@@ -73,7 +74,7 @@ public class MainFrame extends javax.swing.JFrame {
     /** Creates new form MainFrame */
     public MainFrame() {
         itsPlugins = new HashMap<String,PluginPanelInfo>();
-        itsOtdbRmi = new OtdbRmi();
+        itsOtdbRmi = new OtdbRmi(this);
         itsStorageLocation = new StorageLocation(itsOtdbRmi);
         itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
         itsCurrentTreeID=0;
@@ -264,6 +265,20 @@ public class MainFrame extends javax.swing.JFrame {
         return itsUserAccount;
     }
     
+    /** Sets hourglassCursor
+     *
+     */
+    public void setHourglassCursor() {
+        setCursor(hourglassCursor);
+    }
+    
+    /** Sets NormalCursor
+     *
+     */
+    public void setNormalCursor() {
+        setCursor(normalCursor);
+    }
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -405,19 +420,21 @@ public class MainFrame extends javax.swing.JFrame {
         if(itsActivePanel != null) {
             getContentPane().remove(itsActivePanel);
             itsActivePanel.invalidate();
+            itsActivePanel.updateUI();
+            itsActivePanel = null;
         }
-        itsActivePanel.updateUI();
-        itsActivePanel = null;
         
         // remove all panels
-        while(itsPlugins.size() > 0) {
+        while(itsPlugins != null && itsPlugins.size() > 0) {
             Iterator i = itsPlugins.keySet().iterator();
             if(i.hasNext()) {
                 String friendlyName = (String)i.next();
                 unregisterPlugin(friendlyName);
             }
         }
-        itsPlugins.clear();
+        if (itsPlugins != null) {
+            itsPlugins.clear();
+        }
         itsUserAccount = null;
     }
 
@@ -444,6 +461,10 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
     }
+    
+    Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
+    Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
+    
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar jMenuBarMainFrame;

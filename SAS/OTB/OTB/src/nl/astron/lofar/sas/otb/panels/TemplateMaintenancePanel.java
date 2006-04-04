@@ -92,8 +92,10 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
             // put the OTDBnode in a wrapper for the tree
             OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
 
+            itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(otdbTreeNode);        
+            treePanel.newRootNode(otdbTreeNode);
+            itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
         }

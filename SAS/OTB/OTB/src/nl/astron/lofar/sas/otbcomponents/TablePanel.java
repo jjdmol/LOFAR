@@ -5,6 +5,7 @@
  */
 
 package nl.astron.lofar.sas.otbcomponents;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
 
@@ -46,6 +47,16 @@ public class TablePanel extends javax.swing.JPanel {
      */
     public int getSelectedRow() {
         return jTable1.getSelectedRow();
+    }
+    
+    /** set the selectionmode for this table
+     *
+     *For available selectionmodes see ListSelectionModel.
+     *
+     * @param selectionmode The chosen selectionmode 
+     */
+    public void setSelectionMode(int selectionMode) {
+        jTable1.setSelectionMode(selectionMode);
     }
     
     /** This method is called from within the constructor to

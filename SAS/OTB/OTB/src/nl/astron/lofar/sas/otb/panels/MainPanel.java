@@ -9,6 +9,7 @@ import java.io.File;
 import java.rmi.RemoteException;
 
 import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
 import nl.astron.lofar.sas.otb.*;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.*;
@@ -109,12 +110,16 @@ public class MainPanel extends javax.swing.JPanel
     public void initializeTabs() {
         PICtableModel PICmodel = new PICtableModel(itsMainFrame.getOTDBrmi());
         PICPanel.setTableModel(PICmodel);
+        PICPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
 
         VICtableModel VICmodel = new VICtableModel(itsMainFrame.getOTDBrmi());
         VICPanel.setTableModel(VICmodel);
+        VICPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         TemplatetableModel Templatemodel = new TemplatetableModel(itsMainFrame.getOTDBrmi());
         TemplatesPanel.setTableModel(Templatemodel);
+        TemplatesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         
         //TODO: do the same for the other tabs
@@ -139,6 +144,7 @@ public class MainPanel extends javax.swing.JPanel
     
     public void checkChanged() {
         if (this.hasChanged()) {
+            itsMainFrame.setHourglassCursor();
             if (itsTabFocus.equals("PIC")) {
                 if (!((PICtableModel)PICPanel.getTableModel()).fillTable()) {
                     logger.debug("error filling PICtable");
@@ -154,6 +160,7 @@ public class MainPanel extends javax.swing.JPanel
             }   
             this.setChanged(false);
             this.validateButtons();
+            itsMainFrame.setNormalCursor();
         } 
     }
     
@@ -384,7 +391,9 @@ public class MainPanel extends javax.swing.JPanel
                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
                         if (itsMainFrame.getOTDBrmi().getRemoteMaintenance().deleteTree(treeID)) {
+                            itsMainFrame.setHourglassCursor();
                             ((PICtableModel)PICPanel.getTableModel()).fillTable();
+                            itsMainFrame.setNormalCursor();
                         } else {
                             logger.debug("Failed to delete tree");
                         }
@@ -421,7 +430,9 @@ public class MainPanel extends javax.swing.JPanel
                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
                         if (itsMainFrame.getOTDBrmi().getRemoteMaintenance().deleteTree(treeID)) {
+                            itsMainFrame.setHourglassCursor();
                             ((VICtableModel)VICPanel.getTableModel()).fillTable();
+                            itsMainFrame.setNormalCursor();
                         } else {
                             logger.debug("Failed to delete tree");
                         }
@@ -625,9 +636,11 @@ public class MainPanel extends javax.swing.JPanel
                 } else {
                     buttonPanel1.setButtonEnabled("Delete",false);                    
                 }
+                buttonPanel1.setButtonEnabled("View",true);
                 buttonPanel1.setButtonEnabled("Info",true);
             } else {
                 buttonPanel1.setButtonEnabled("Delete",false);
+                buttonPanel1.setButtonEnabled("View",false);
                 buttonPanel1.setButtonEnabled("Info",false);
             }
         } else if (itsTabFocus.equals("Templates")) {
