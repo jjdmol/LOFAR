@@ -6,7 +6,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-113,0,0,2,115"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-113,0,0,3,-57"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
@@ -54,25 +54,20 @@
                       </Group>
                   </Group>
                   <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
-                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="LogParamNameText" max="32767" attributes="1"/>
-                              <Component id="LogParamStartTimeText" alignment="0" max="32767" attributes="1"/>
-                          </Group>
+                          <Component id="LogParamStartTimeText" min="-2" max="-2" attributes="1"/>
                           <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="102" attributes="0">
-                                  <Component id="LogParamEndTimeLabel" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="LogParamEndTimeText" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <Component id="LogParamRecentOnlyCheckbox" min="-2" max="-2" attributes="0"/>
-                          </Group>
+                          <Component id="LogParamEndTimeLabel" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="LogParamEndTimeText" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="13" max="-2" attributes="0"/>
+                          <Component id="LogParamRecentOnlyCheckbox" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <Component id="logParamApplyButton" alignment="0" min="-2" max="-2" attributes="0"/>
+                      <Component id="LogParamNameText" alignment="0" max="32767" attributes="1"/>
                   </Group>
-                  <EmptySpace pref="194" max="32767" attributes="0"/>
+                  <EmptySpace pref="277" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -82,7 +77,6 @@
                   <EmptySpace min="-2" pref="9" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="LogParamNameLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="LogParamRecentOnlyCheckbox" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="LogParamNameText" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
@@ -91,6 +85,7 @@
                       <Component id="LogParamStartTimeText" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="LogParamEndTimeLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="LogParamEndTimeText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="LogParamRecentOnlyCheckbox" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
@@ -140,28 +135,24 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="2005-12-31 59:59:59.000"/>
             <Property name="toolTipText" type="java.lang.String" value="Give end date/time for log search"/>
-            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="LogParamStartTimeText">
           <Properties>
             <Property name="text" type="java.lang.String" value="2005-01-01 00:00:00.000"/>
             <Property name="toolTipText" type="java.lang.String" value="Give Start date/time for logging"/>
-            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="LogParamNameText">
           <Properties>
             <Property name="editable" type="boolean" value="false"/>
             <Property name="text" type="java.lang.String" value="None"/>
-            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JCheckBox" name="LogParamRecentOnlyCheckbox">
           <Properties>
             <Property name="text" type="java.lang.String" value="Most Recent Only"/>
             <Property name="toolTipText" type="java.lang.String" value="Select to get only the most recent log val"/>
-            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
         </Component>
       </SubComponents>

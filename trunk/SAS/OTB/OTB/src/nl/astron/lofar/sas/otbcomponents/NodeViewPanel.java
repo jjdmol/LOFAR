@@ -162,7 +162,15 @@ public class NodeViewPanel extends javax.swing.JPanel {
         this.NodeCancelButton.setEnabled(enabled);
     }
     
-    
+    /** Sets the buttons visible/invisible
+     *
+     * @param   visible     true/false visible/invisible
+     */
+    public void setButtonsVisible(boolean visible) {
+        this.NodeApplyButton.setVisible(visible);
+        this.NodeCancelButton.setVisible(visible);
+    }
+
     /** Enables/disables the complete form
      *
      * @param   enabled     true/false enabled/disabled
@@ -271,7 +279,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
         NodeNameText.setMaximumSize(new java.awt.Dimension(440, 19));
         NodeNameText.setMinimumSize(new java.awt.Dimension(440, 19));
         NodeNameText.setPreferredSize(new java.awt.Dimension(440, 19));
-        add(NodeNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 240, -1));
+        add(NodeNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 430, -1));
 
         NodeCancelButton.setText("Cancel");
         NodeCancelButton.addActionListener(new java.awt.event.ActionListener() {

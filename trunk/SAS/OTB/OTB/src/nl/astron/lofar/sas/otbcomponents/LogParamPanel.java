@@ -6,9 +6,9 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
+import javax.swing.ListSelectionModel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.LogParamTableModel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
@@ -34,12 +34,19 @@ public class LogParamPanel extends javax.swing.JPanel {
         itsNode = aNode;
         itsOtdbRmi=itsMainFrame.getOTDBrmi();
 
+        initializeTabs();
         initPanel(aNode);
     }
     
     /** Creates new form BeanForm */
     public LogParamPanel() {
         initComponents();
+        initializeTabs();
+    }
+    
+    private void initializeTabs() {
+        LogParamTableModel aModel = new LogParamTableModel();
+        tablePanel1.setTableModel(aModel);
     }
     
     public void setMainFrame(MainFrame aMainFrame) {
@@ -57,12 +64,15 @@ public class LogParamPanel extends javax.swing.JPanel {
     }
 
      private void initPanel(jOTDBnode aNode) {
+        tablePanel1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         itsNode = aNode;
         LogParamTableModel model = new LogParamTableModel();
         tablePanel1.setTableModel(model);
         if (aNode == null ) {
-           logger.debug("ERROR:  empty node supplied");
+            logger.debug("ERROR:  empty node supplied");
+            LogParamNameText.setText("");
         } else {
+            LogParamNameText.setText(aNode.name);
         }
     }
     
@@ -121,19 +131,15 @@ public class LogParamPanel extends javax.swing.JPanel {
 
         LogParamEndTimeText.setText("2005-12-31 59:59:59.000");
         LogParamEndTimeText.setToolTipText("Give end date/time for log search");
-        LogParamEndTimeText.setEnabled(false);
 
         LogParamStartTimeText.setText("2005-01-01 00:00:00.000");
         LogParamStartTimeText.setToolTipText("Give Start date/time for logging");
-        LogParamStartTimeText.setEnabled(false);
 
         LogParamNameText.setEditable(false);
         LogParamNameText.setText("None");
-        LogParamNameText.setEnabled(false);
 
         LogParamRecentOnlyCheckbox.setText("Most Recent Only");
         LogParamRecentOnlyCheckbox.setToolTipText("Select to get only the most recent log val");
-        LogParamRecentOnlyCheckbox.setEnabled(false);
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -150,20 +156,18 @@ public class LogParamPanel extends javax.swing.JPanel {
                         .addContainerGap()
                         .add(logParamCancelButton)))
                 .add(10, 10, 10)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                     .add(jPanel1Layout.createSequentialGroup()
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(LogParamNameText)
-                            .add(LogParamStartTimeText))
+                        .add(LogParamStartTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .add(40, 40, 40)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jPanel1Layout.createSequentialGroup()
-                                .add(LogParamEndTimeLabel)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(LogParamEndTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(LogParamRecentOnlyCheckbox)))
-                    .add(logParamApplyButton))
-                .addContainerGap(194, Short.MAX_VALUE))
+                        .add(LogParamEndTimeLabel)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(LogParamEndTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(13, 13, 13)
+                        .add(LogParamRecentOnlyCheckbox))
+                    .add(logParamApplyButton)
+                    .add(LogParamNameText))
+                .addContainerGap(277, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -171,14 +175,14 @@ public class LogParamPanel extends javax.swing.JPanel {
                 .add(9, 9, 9)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(LogParamNameLabel)
-                    .add(LogParamRecentOnlyCheckbox)
                     .add(LogParamNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(6, 6, 6)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(LogParamStartTimeLabel)
                     .add(LogParamStartTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(LogParamEndTimeLabel)
-                    .add(LogParamEndTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(LogParamEndTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(LogParamRecentOnlyCheckbox))
                 .add(30, 30, 30)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(logParamCancelButton)
@@ -193,9 +197,11 @@ public class LogParamPanel extends javax.swing.JPanel {
         itsStartTime=LogParamStartTimeText.getText();
         itsEndTime=LogParamEndTimeText.getText();
         setMostRecent=LogParamRecentOnlyCheckbox.isSelected();
+        itsMainFrame.setHourglassCursor();
         if (!((LogParamTableModel)tablePanel1.getTableModel()).fillTable(itsMainFrame,itsNode.nodeID(),itsStartTime,itsEndTime,setMostRecent)) {
             logger.debug("Error filling LogParamTableMode");
         }
+        itsMainFrame.setNormalCursor();
     }//GEN-LAST:event_logParamApplyButtonActionPerformed
 
     private void logParamCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logParamCancelButtonActionPerformed

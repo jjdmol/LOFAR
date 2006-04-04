@@ -40,25 +40,27 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     }
         
     public void initialize() {
+        parameterViewPanel1 = new nl.astron.lofar.sas.otbcomponents.ParameterViewPanel();
+//        jTabbedPane1.addTab("Parameter", parameterViewPanel1);
+        
         treePanel.setTitle("Observation Tree");
         buttonPanel1.addButton("Query Panel");
         buttonPanel1.addButton("Info");
         buttonPanel1.addButton("Exit");
-        
-        nodeViewPanel1.enableInstances(true);
-        nodeViewPanel1.enableLimits(true);
-        nodeViewPanel1.enableDescription(true);
-        nodeViewPanel1.enableButtons(true);
-        
-        parameterViewPanel1.enableLimits(true);
-        parameterViewPanel1.enableDescription(true);        
-        parameterViewPanel1.enableButtons(true);
+
+        setFieldValidations();
     }
 
     public boolean initializePlugin(MainFrame mainframe) {
+        if (mainframe == null) {
+            logger.debug("ERROR, no mainframe given");
+            return false;
+        }
+        itsMainFrame=mainframe;
         itsTreeID=itsMainFrame.getTreeID();
         parameterViewPanel1.setMainFrame(itsMainFrame);
         nodeViewPanel1.setMainFrame(itsMainFrame);
+        logParamPanel1.setMainFrame(itsMainFrame);
         
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
@@ -81,7 +83,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     }
         
     public String getFriendlyName() {
-        return getFriendlyNameStatic();
+        return getFriendlyNameStatic()+"("+itsTreeID+")";
     }
 
     public boolean hasChanged() {
@@ -119,33 +121,40 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             // put the OTDBnode in a wrapper for the tree
             OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
 
+            itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(otdbTreeNode);        
+            treePanel.newRootNode(otdbTreeNode);
+            itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
         }
     }
 
-     private void changeTreeSelection(jOTDBnode aNode) {
+    private void changeTreeSelection(jOTDBnode aNode) {
+        // save selected panel 
+        int savedSelection=jTabbedPane1.getSelectedIndex(); 
         logger.debug("ChangeSelection for node: " + aNode.name);
         itsSelectedNode=aNode;
         jOTDBparam aParam = null;
         if (aNode.leaf) {
             try {
-                jTabbedPane1.setSelectedComponent(parameterViewPanel1);
+                jTabbedPane1.removeTabAt(0);
+                jTabbedPane1.insertTab("Parameter",null,parameterViewPanel1,"",0);
                 aParam = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getParam(itsTreeID, aNode.paramDefID());
                 parameterViewPanel1.setParam(aParam);
                 nodeViewPanel1.setAllEnabled(false);
             } catch (RemoteException ex) {
                 logger.debug("Error during getParam: "+ ex);
             }
-        } else {
+         } else {
             // this node is a node
-            jTabbedPane1.setSelectedComponent(nodeViewPanel1);
+            jTabbedPane1.removeTabAt(0);
+            jTabbedPane1.insertTab("  Node   ",null,nodeViewPanel1,"",0);
             nodeViewPanel1.setNode(aNode);
-            parameterViewPanel1.setParam(aParam);
             parameterViewPanel1.setAllEnabled(false);
         }
+        logParamPanel1.setNode(aNode);
+        jTabbedPane1.setSelectedIndex(savedSelection);
     }
     
     private void setFieldValidations() {
@@ -156,15 +165,18 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         parameterViewPanel1.enablePruning(false);
         parameterViewPanel1.enableValMoment(false);
         parameterViewPanel1.enableRuntimeMod(false);
-        parameterViewPanel1.enableLimits(true);
-        parameterViewPanel1.enableDescription(true);                
-        parameterViewPanel1.enableButtons(true);
+        parameterViewPanel1.enableLimits(false);
+        parameterViewPanel1.enableDescription(false);                
+        parameterViewPanel1.enableButtons(false);
+        parameterViewPanel1.setButtonsVisible(false);
+        
         nodeViewPanel1.enableNodeName(false);
         nodeViewPanel1.enableIndex(false);
-        nodeViewPanel1.enableInstances(true);
-        nodeViewPanel1.enableLimits(true);
-        nodeViewPanel1.enableDescription(true);
-        nodeViewPanel1.enableButtons(true);            
+        nodeViewPanel1.enableInstances(false);
+        nodeViewPanel1.enableLimits(false);
+        nodeViewPanel1.enableDescription(false);
+        nodeViewPanel1.enableButtons(false);            
+        nodeViewPanel1.setButtonsVisible(false);
     }     
      
     private boolean viewInfo() {
@@ -201,16 +213,13 @@ public class ResultBrowserPanel extends javax.swing.JPanel
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        java.awt.GridBagConstraints gridBagConstraints;
-
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
         jSplitPane = new javax.swing.JSplitPane();
         treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         nodeViewPanel1 = new nl.astron.lofar.sas.otbcomponents.NodeViewPanel();
-        parameterViewPanel1 = new nl.astron.lofar.sas.otbcomponents.ParameterViewPanel();
         logParamPanel1 = new nl.astron.lofar.sas.otbcomponents.LogParamPanel();
-        tablePanel1 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        jPanel1 = new javax.swing.JPanel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -231,23 +240,24 @@ public class ResultBrowserPanel extends javax.swing.JPanel
 
         jSplitPane.setLeftComponent(treePanel);
 
-        add(jSplitPane, java.awt.BorderLayout.WEST);
-
-        jTabbedPane1.addTab("Node", nodeViewPanel1);
-
-        jTabbedPane1.addTab("Parameter", parameterViewPanel1);
+        jTabbedPane1.addTab("   Node   ", nodeViewPanel1);
 
         jTabbedPane1.addTab("Log", logParamPanel1);
 
-        jTabbedPane1.addTab("Query Results", tablePanel1);
+        jTabbedPane1.addTab("Query Results", jPanel1);
 
-        add(jTabbedPane1, java.awt.BorderLayout.CENTER);
+        jSplitPane.setRightComponent(jTabbedPane1);
+
+        add(jSplitPane, java.awt.BorderLayout.WEST);
 
     }// </editor-fold>//GEN-END:initComponents
 
     private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
         logger.debug("treeSelectionEvent: " + evt);
-        changeTreeSelection(((OTDBtreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getOTDBnode());
+        if (evt != null && evt.getNewLeadSelectionPath() != null && 
+                evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
+            changeTreeSelection(((OTDBtreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getOTDBnode());
+        }
     }//GEN-LAST:event_treePanelValueChanged
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
@@ -275,15 +285,15 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     private TreeInfoDialog treeInfoDialog = null;  
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;    
+    private nl.astron.lofar.sas.otbcomponents.ParameterViewPanel parameterViewPanel1;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JSplitPane jSplitPane;
     private javax.swing.JTabbedPane jTabbedPane1;
     private nl.astron.lofar.sas.otbcomponents.LogParamPanel logParamPanel1;
     private nl.astron.lofar.sas.otbcomponents.NodeViewPanel nodeViewPanel1;
-    private nl.astron.lofar.sas.otbcomponents.ParameterViewPanel parameterViewPanel1;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel1;
     private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
 
