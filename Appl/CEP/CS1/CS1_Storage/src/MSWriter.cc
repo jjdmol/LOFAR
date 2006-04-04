@@ -38,7 +38,7 @@ MSWriter::MSWriter (const char* msName, double startTime, double timeStep,
 		    uint nantennas, const vector<double>& antPos)
 : itsWriter (0)
 {
-  ASSERTSTR(antPos.size() == 3*nantennas, 
+  ASSERTSTR(antPos.size() == 3*nantennas, antPos.size() << " == " << 3*nantennas <<
 	    "Antenna position vector does not have the right size!");
   try {
     itsWriter = new MSWriterImpl (msName, startTime, timeStep, nChan, nPol, 

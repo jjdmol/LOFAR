@@ -126,7 +126,7 @@ void WH_SubbandWriter::preprocess() {
   // create MSWriter object
   string msName = itsPS.getString("Storage.MSName");
   double startTime = itsPS.getDouble("Observation.StartTime");
-  double timeStep = itsPS.getDouble("Observation.IntegrationPeriod");
+  double timeStep = itsPS.getDouble("Observation.SampleRate") * itsPS.getDouble("Observation.NSubbandSamples");
   vector<double> antPos = itsPS.getDoubleVector("Observation.StationPositions");
 
   for (int i = antPos.size(); i < 3 * itsNStations; i++) {
