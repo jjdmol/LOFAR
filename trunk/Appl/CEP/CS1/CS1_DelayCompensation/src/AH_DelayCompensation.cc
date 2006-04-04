@@ -84,7 +84,7 @@ namespace LOFAR
       LOG_TRACE_STAT("Creating stub connections to input section nodes");
       for (uint i = 0; i < nrRSPBoards; ++i) {
         LOG_TRACE_LOOP_STR("Creating stub connection " << i);
-#if 0
+#if 1
         itsStub->connect(i, step.getOutDataManager(i), i);
 #endif
       }
