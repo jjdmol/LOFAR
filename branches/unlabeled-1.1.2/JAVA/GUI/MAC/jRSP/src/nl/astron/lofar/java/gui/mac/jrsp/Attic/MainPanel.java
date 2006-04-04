@@ -1,5 +1,6 @@
 package nl.astron.lofar.mac.apl.gui.jrsp.panels;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -52,8 +53,8 @@ public class MainPanel extends JPanel
         
         jTabbedPane.addChangeListener(this);
         
-        controlPanel.setMainPanel(this);        
-        
+        controlPanel.setMainPanel(this);
+               
         refreshRates = new int[jTabbedPane.getTabCount()];
     }
     
@@ -111,6 +112,15 @@ public class MainPanel extends JPanel
     public void checkChanged() { }
     
     /**
+     * Sets the refresh rate of the currently selected panel.
+     * @param   refreshRat      The new refreshRate for the current panel.
+     */
+    public void setCurrentRefreshRate(int refreshRate)
+    {
+        refreshRates[jTabbedPane.getSelectedIndex()] = refreshRate;
+    }
+    
+    /**
      * Gets called when a value changed on the listPanel.
      * Note: Has *nothing* to do with the above functions.
      */
@@ -124,6 +134,13 @@ public class MainPanel extends JPanel
      */
     public void stateChanged(ChangeEvent event)
     {
+        // Refresh can be only possible if the board is set. If not, the 0 in the
+        // refreshrate textfield looks silly.
+        if(board == null)
+        {
+            return;
+        }
+        
         // First check if there the refreshThread is running. If so: KILL IT!
         // Forget the checking part...
         refreshThread = null;
@@ -138,11 +155,11 @@ public class MainPanel extends JPanel
         {
             updateCurrentPanel();
         }
+        controlPanel.setRefreshRate(refreshRates[jTabbedPane.getSelectedIndex()]);
     }
     
     /**
      * This method is called to update the current panel.
-     * @TODO: get status from the right board
      * Note: Board has to be set, to be using this function! Quick check is
      * performed at the beginning of the method.
      */
@@ -169,6 +186,10 @@ public class MainPanel extends JPanel
         else if(selectedClass.equals(TijdPanel.class))
         {
             ((TijdPanel)jTabbedPane.getSelectedComponent()).updatePanel();
+        }
+        else if(selectedClass.equals(WaveformSettingsPanel.class))
+        {
+            waveformSettingsPanel.setBoard(board);
         }
     }
     
@@ -209,6 +230,7 @@ public class MainPanel extends JPanel
         // @TODO add error message
         if(refreshRate < 0)
         {
+            JOptionPane.showMessageDialog(null, "Only positive values and 0 are valid input for the refresh rate", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }        
         
@@ -266,7 +288,7 @@ public class MainPanel extends JPanel
     {
         Thread thread = Thread.currentThread();
         while(thread == refreshThread)
-        {
+        {            
             try
             {
                 Thread.sleep(refreshRates[jTabbedPane.getSelectedIndex()] * 1000);
@@ -290,6 +312,7 @@ public class MainPanel extends JPanel
         jTabbedPane = new javax.swing.JTabbedPane();
         statusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.StatusPanel();
         tijdPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.TijdPanel();
+        waveformSettingsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsPanel();
         controlPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel();
         listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel();
 
@@ -297,22 +320,26 @@ public class MainPanel extends JPanel
 
         jTabbedPane.addTab("[TEST] Tijd", tijdPanel);
 
+        jTabbedPane.addTab("Waveform Settings", waveformSettingsPanel);
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .add(listPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 139, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(jTabbedPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-            .add(controlPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1258, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jTabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1125, Short.MAX_VALUE))
+            .add(controlPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1270, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jTabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE)
-                    .add(listPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE))
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(12, 12, 12)
+                        .add(jTabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 577, Short.MAX_VALUE))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, listPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 589, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(controlPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
@@ -325,6 +352,7 @@ public class MainPanel extends JPanel
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel listPanel;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.StatusPanel statusPanel;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.TijdPanel tijdPanel;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsPanel waveformSettingsPanel;
     // End of variables declaration//GEN-END:variables
     
 }

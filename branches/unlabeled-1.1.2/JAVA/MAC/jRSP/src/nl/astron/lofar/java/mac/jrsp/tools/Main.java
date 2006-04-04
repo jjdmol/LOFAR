@@ -1,4 +1,6 @@
-package nl.astron.lofar.mac.apl.gui.jrsp;
+package nl.astron.lofar.mac.apl.gui.jrsp.tools;
+
+import nl.astron.lofar.mac.apl.gui.jrsp.*;
 
 /**
  * This class is the main entry point for this project.

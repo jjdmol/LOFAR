@@ -34,6 +34,7 @@ public class Board
     private native void delete(int ptrRSPport); // deletes the RSPport instance on the c++ side.
     private native BoardStatus[] retrieveStatus(int rcuMask, int ptrRSPport); // retrieves the boards.
     private native int retrieveNofBoards(int ptrRSPport); // retrieves the number of boards.
+    private native boolean setWaveformSettings(int rcuMask, int mode, int frequency, int amplitude, int ptrRSPport); // Sets the waveform settings.
     
     static
     {
@@ -78,5 +79,19 @@ public class Board
     {
         //@TODO activeren: return retrieveNofBoards(ptrRSPport);
         return 2;
+    }
+    
+    /**
+     * Sets the waveform settings.
+     * @param   rcuMask
+     * @param   mode
+     * @param   frequency
+     * @param   amplitude
+     */
+    public boolean setWaveformSettings(int rcuMask, int mode, int frequency, int amplitude)
+    {
+        //@TODO remove!
+        System.out.println("RCUMask: "+rcuMask+"\nMode: "+mode+"\nFrequency: "+frequency+"\nAmplitude: "+amplitude);
+        return setWaveformSettings(rcuMask, mode, frequency, amplitude, ptrRSPport);
     }
 }

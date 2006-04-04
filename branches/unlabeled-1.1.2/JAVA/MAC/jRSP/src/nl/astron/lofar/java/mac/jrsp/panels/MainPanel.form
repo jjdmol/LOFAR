@@ -13,18 +13,21 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <Component id="listPanel" min="-2" pref="139" max="-2" attributes="0"/>
-              <EmptySpace max="32767" attributes="0"/>
-              <Component id="jTabbedPane" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="jTabbedPane" pref="1125" max="32767" attributes="0"/>
           </Group>
-          <Component id="controlPanel" alignment="0" pref="1258" max="32767" attributes="0"/>
+          <Component id="controlPanel" alignment="0" pref="1270" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
-              <Group type="103" groupAlignment="1" attributes="0">
-                  <Component id="jTabbedPane" pref="581" max="32767" attributes="0"/>
-                  <Component id="listPanel" alignment="1" pref="581" max="32767" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" attributes="0">
+                      <EmptySpace min="12" pref="12" max="12" attributes="0"/>
+                      <Component id="jTabbedPane" pref="577" max="32767" attributes="0"/>
+                  </Group>
+                  <Component id="listPanel" alignment="1" pref="589" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="controlPanel" min="-2" max="-2" attributes="0"/>
@@ -51,6 +54,15 @@
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="[TEST] Tijd">
                 <Property name="tabTitle" type="java.lang.String" value="[TEST] Tijd"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+        </Component>
+        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsPanel" name="waveformSettingsPanel">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="Waveform Settings">
+                <Property name="tabTitle" type="java.lang.String" value="Waveform Settings"/>
               </JTabbedPaneConstraints>
             </Constraint>
           </Constraints>

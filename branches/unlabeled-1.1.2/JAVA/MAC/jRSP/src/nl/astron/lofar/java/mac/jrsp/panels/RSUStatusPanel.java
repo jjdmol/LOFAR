@@ -37,10 +37,10 @@ public class RSUStatusPanel extends javax.swing.JPanel {
 
     public void initFields(BoardStatus boardStatus)
     {
-        txtRdy.setText(rdyMessages[boardStatus.cpRdy]);
-        txtErr.setText(errMessages[boardStatus.cpErr]);
-        txtFpga.setText(fpgaMessages[boardStatus.cpFpga]);
-        txtIm.setText(imMessages[boardStatus.cpIm]);
+        txtRdy.setText(boardStatus.cpRdy ? rdyMessages[1] : rdyMessages[0]);
+        txtErr.setText(boardStatus.cpErr ? errMessages[1] : errMessages[0]);
+        txtFpga.setText(boardStatus.cpFpga ? fpgaMessages[1] : fpgaMessages[0]);
+        txtIm.setText(boardStatus.cpIm ? imMessages[1] : imMessages[0]);
         txtTrig.setText(trigMessages[boardStatus.cpTrig]);
     }
     
@@ -63,11 +63,11 @@ public class RSUStatusPanel extends javax.swing.JPanel {
         txtTrig = new javax.swing.JTextField();
 
         setBorder(javax.swing.BorderFactory.createTitledBorder("RSU"));
-        lblRdy.setText("RDY");
+        lblRdy.setText("Ready");
 
-        lblErr.setText("ERR");
+        lblErr.setText("Conf. result");
 
-        lblFpga.setText("FPGA");
+        lblFpga.setText("FPGA type");
 
         txtRdy.setEditable(false);
 
@@ -75,11 +75,11 @@ public class RSUStatusPanel extends javax.swing.JPanel {
 
         txtFpga.setEditable(false);
 
-        lblIm.setText("IM");
+        lblIm.setText("Image type");
 
         txtIm.setEditable(false);
 
-        lblTrig.setText("TRIG");
+        lblTrig.setText("Reconf. trigger");
 
         txtTrig.setEditable(false);
 
@@ -88,7 +88,7 @@ public class RSUStatusPanel extends javax.swing.JPanel {
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(82, Short.MAX_VALUE)
+                .addContainerGap(23, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                     .add(lblTrig)
                     .add(lblFpga)
@@ -128,7 +128,7 @@ public class RSUStatusPanel extends javax.swing.JPanel {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(lblTrig)
                     .add(txtTrig, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(15, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
     

@@ -57,7 +57,10 @@ public class ControlPanel extends JPanel implements ActionListener
         // If the source is btnStop, the RefreshThread should be stopped else call initBoard.
         if(e.getSource().equals(btnStop))
         {
+            // Stop the refreshThread and set the refreshRate to 0.
             mainPanel.stopRefreshThread();
+            mainPanel.setCurrentRefreshRate(0);
+            txtRefreshRate.setText("0");
             return;
         }
                 
@@ -76,10 +79,9 @@ public class ControlPanel extends JPanel implements ActionListener
             }
             catch(NumberFormatException exception)
             {
-                // @TODO dit netter oplossen en misschien zelfs in de mainpanel afhandelen.
                 // There wasn't a valid number filled in. Give error message and leave method.
-                System.out.println("Invalid value inserted.");
-                return;
+                // By making refreshRate -1 a error message is given in the mainpanel.
+                refreshRate = -1;
             }
         }
                         
@@ -93,6 +95,15 @@ public class ControlPanel extends JPanel implements ActionListener
     public String getHostname()
     {
         return txtHostname.getText();
+    }
+    
+    /**
+     * Sets the text of the RefreshRate textfield.
+     * @param   refreshRate     The refreshRate to set
+     */
+    public void setRefreshRate(int refreshRate)
+    {
+        txtRefreshRate.setText(Integer.toString(refreshRate));
     }
     
     /** This method is called from within the constructor to

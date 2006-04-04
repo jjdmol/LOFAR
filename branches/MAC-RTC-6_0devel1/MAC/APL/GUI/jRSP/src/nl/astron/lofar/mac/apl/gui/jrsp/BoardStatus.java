@@ -114,16 +114,16 @@ public class BoardStatus
     
     /** Status information from CP. */
     /** RDY - Type of image loaded in FPGA. */
-    public int cpRdy;
+    public boolean cpRdy;
     
     /** ERR - Configuration result. */
-    public int cpErr;
+    public boolean cpErr;
     
     /** APnBP - Type of FPGA that was configured previously. */
-    public int cpFpga;
+    public boolean cpFpga;
     
     /** IM - Type of image loaded in FPGA. */
-    public int cpIm;
+    public boolean cpIm;
     
     /** TRIG - Cause of previous reconfiguration. */
     public int cpTrig;

@@ -39,6 +39,14 @@ JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retri
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveNofBoards
   (JNIEnv *, jobject, jint);
 
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    setWaveformSettings
+ * Signature: (IIIII)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWaveformSettings
+  (JNIEnv *, jobject, jint, jint, jint, jint, jint);
+
 #ifdef __cplusplus
 }
 #endif

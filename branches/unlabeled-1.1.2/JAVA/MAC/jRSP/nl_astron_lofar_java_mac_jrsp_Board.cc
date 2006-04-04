@@ -142,10 +142,10 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
         jfieldID fidBlp1Rcu = env->GetFieldID(clsStatus, "blp1Rcu", "Lnl/astron/lofar/mac/apl/gui/jrsp/RCUStatus;");
         jfieldID fidBlp2Rcu = env->GetFieldID(clsStatus, "blp2Rcu", "Lnl/astron/lofar/mac/apl/gui/jrsp/RCUStatus;");
         jfieldID fidBlp3Rcu = env->GetFieldID(clsStatus, "blp3Rcu", "Lnl/astron/lofar/mac/apl/gui/jrsp/RCUStatus;");
-	jfieldID fidCpRdy = env->GetFieldID(clsStatus, "cpRdy", "I");
-	jfieldID fidCpErr = env->GetFieldID(clsStatus, "cpErr", "I");
-	jfieldID fidCpFpga = env->GetFieldID(clsStatus, "cpFpga", "I");
-	jfieldID fidCpIm = env->GetFieldID(clsStatus, "cpIm", "I");
+	jfieldID fidCpRdy = env->GetFieldID(clsStatus, "cpRdy", "Z");
+	jfieldID fidCpErr = env->GetFieldID(clsStatus, "cpErr", "Z");
+	jfieldID fidCpFpga = env->GetFieldID(clsStatus, "cpFpga", "Z");
+	jfieldID fidCpIm = env->GetFieldID(clsStatus, "cpIm", "Z");
 	jfieldID fidCpTrig = env->GetFieldID(clsStatus, "cpTrig", "I");
 	jfieldID fidBlp0AdcOffset = env->GetFieldID(clsStatus, "blp0AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
 	jfieldID fidBlp1AdcOffset = env->GetFieldID(clsStatus, "blp1AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
@@ -364,19 +364,19 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 
 	if(fidCpRdy != 0)
 	{
-		env->SetIntField(status, fidCpRdy, boardStatus.cp_status.rdy);
+		env->SetBooleanField(status, fidCpRdy, boardStatus.cp_status.rdy);
 	}
 	if(fidCpErr != 0)
 	{
-		env->SetIntField(status, fidCpErr, boardStatus.cp_status.err);
+		env->SetBooleanField(status, fidCpErr, boardStatus.cp_status.err);
 	}
 	if(fidCpFpga != 0)
 	{
-		env->SetIntField(status, fidCpFpga, boardStatus.cp_status.fpga);
+		env->SetBooleanField(status, fidCpFpga, boardStatus.cp_status.fpga);
 	}
 	if(fidCpIm != 0)
 	{
-		env->SetIntField(status, fidCpIm, boardStatus.cp_status.im);
+		env->SetBooleanField(status, fidCpIm, boardStatus.cp_status.im);
 	}
 	if(fidCpTrig != 0)
 	{
@@ -444,6 +444,24 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveNofBo
 	RSPport * IOport = (RSPport*)ptrRSPport;
 	return 1;
 }
+
+/**
+ * Sets the waveform settings.
+ * @param	env
+ * @param	obj
+ * @param	rcuMask
+ * @param	mode
+ * @param	frequency
+ * @param	amplitude
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWaveformSettings(JNIEnv * env, jobject obj, jint rcuMask, jint mode, jint frequency, jint amplitude, jint ptrRSPport)
+{
+	RSPport * IOport = (RSPport*)ptrRSPport;
+	//return IOport->setWaveformSettings(rcuMask, mode, frequency, amplitude);
+	return false;
+}
+
+
 
 BoardStatus GetDummyBoardStatus()
 {
@@ -544,7 +562,7 @@ BoardStatus GetDummyBoardStatus2()
 	bs.eth.last_error = 1;
 	
 	bs.mep.seqnr = 123;
-	bs.mep.error = 33;
+	bs.mep.error = 5;
 
 	bs.diag.interface = 45;
 	bs.diag.mode = 6;

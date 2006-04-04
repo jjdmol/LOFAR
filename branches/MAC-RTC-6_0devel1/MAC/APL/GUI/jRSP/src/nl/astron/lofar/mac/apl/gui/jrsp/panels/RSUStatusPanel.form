@@ -19,7 +19,7 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="1" attributes="0">
-              <EmptySpace pref="82" max="32767" attributes="0"/>
+              <EmptySpace pref="23" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="1" attributes="0">
                   <Component id="lblTrig" alignment="1" min="-2" max="-2" attributes="0"/>
                   <Component id="lblFpga" alignment="1" min="-2" max="-2" attributes="0"/>
@@ -70,7 +70,7 @@
                   <Component id="lblTrig" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtTrig" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="13" max="32767" attributes="0"/>
+              <EmptySpace pref="15" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -78,17 +78,17 @@
   <SubComponents>
     <Component class="javax.swing.JLabel" name="lblRdy">
       <Properties>
-        <Property name="text" type="java.lang.String" value="RDY"/>
+        <Property name="text" type="java.lang.String" value="Ready"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblErr">
       <Properties>
-        <Property name="text" type="java.lang.String" value="ERR"/>
+        <Property name="text" type="java.lang.String" value="Conf. result"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblFpga">
       <Properties>
-        <Property name="text" type="java.lang.String" value="FPGA"/>
+        <Property name="text" type="java.lang.String" value="FPGA type"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtRdy">
@@ -108,7 +108,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="lblIm">
       <Properties>
-        <Property name="text" type="java.lang.String" value="IM"/>
+        <Property name="text" type="java.lang.String" value="Image type"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtIm">
@@ -118,7 +118,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="lblTrig">
       <Properties>
-        <Property name="text" type="java.lang.String" value="TRIG"/>
+        <Property name="text" type="java.lang.String" value="Reconf. trigger"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtTrig">
