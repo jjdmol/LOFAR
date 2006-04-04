@@ -56,69 +56,69 @@ namespace LOFAR
 
       virtual ~ConverterClient();
 
-      virtual SkyCoord j2000ToAzel(const SkyCoord& dir, 
-                                   const EarthCoord& pos, 
-                                   const TimeCoord& time);
+      virtual Direction j2000ToAzel(const Direction& dir, 
+                                   const Position& pos, 
+                                   const Epoch& time);
 
-      virtual vector<SkyCoord> j2000ToAzel (const vector<SkyCoord>& dir,
-                                            const EarthCoord& pos,
-                                            const TimeCoord& time);
+      virtual vector<Direction> j2000ToAzel (const vector<Direction>& dir,
+                                            const Position& pos,
+                                            const Epoch& time);
 
-      virtual vector<SkyCoord> j2000ToAzel (const SkyCoord& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const TimeCoord& time);
+      virtual vector<Direction> j2000ToAzel (const Direction& dir,
+                                            const vector<Position>& pos,
+                                            const Epoch& time);
 
-      virtual vector<SkyCoord> j2000ToAzel (const SkyCoord& dir,
-                                            const EarthCoord& pos,
-                                            const vector<TimeCoord>& time);
+      virtual vector<Direction> j2000ToAzel (const Direction& dir,
+                                            const Position& pos,
+                                            const vector<Epoch>& time);
 
-      virtual vector<SkyCoord> j2000ToAzel (const vector<SkyCoord>& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const vector<TimeCoord>& time);
+      virtual vector<Direction> j2000ToAzel (const vector<Direction>& dir,
+                                            const vector<Position>& pos,
+                                            const vector<Epoch>& time);
 
-      virtual SkyCoord azelToJ2000 (const SkyCoord& dir,
-                                    const EarthCoord& pos,
-                                    const TimeCoord& time);
+      virtual Direction azelToJ2000 (const Direction& dir,
+                                    const Position& pos,
+                                    const Epoch& time);
 
-      virtual vector<SkyCoord> azelToJ2000 (const vector<SkyCoord>& dir,
-                                            const EarthCoord& pos,
-                                            const TimeCoord& time);
+      virtual vector<Direction> azelToJ2000 (const vector<Direction>& dir,
+                                            const Position& pos,
+                                            const Epoch& time);
 
-      virtual vector<SkyCoord> azelToJ2000 (const vector<SkyCoord>& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const vector<TimeCoord>& time);
+      virtual vector<Direction> azelToJ2000 (const vector<Direction>& dir,
+                                            const vector<Position>& pos,
+                                            const vector<Epoch>& time);
 
-      virtual SkyCoord j2000ToItrf(const SkyCoord& dir, 
-                                   const EarthCoord& pos, 
-                                   const TimeCoord& time);
+      virtual Direction j2000ToItrf(const Direction& dir, 
+                                   const Position& pos, 
+                                   const Epoch& time);
 
-      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& dir,
-                                            const EarthCoord& pos,
-                                            const TimeCoord& time);
+      virtual vector<Direction> j2000ToItrf (const vector<Direction>& dir,
+                                            const Position& pos,
+                                            const Epoch& time);
 
-      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const TimeCoord& time);
+      virtual vector<Direction> j2000ToItrf (const Direction& dir,
+                                            const vector<Position>& pos,
+                                            const Epoch& time);
 
-      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& dir,
-                                            const EarthCoord& pos,
-                                            const vector<TimeCoord>& time);
+      virtual vector<Direction> j2000ToItrf (const Direction& dir,
+                                            const Position& pos,
+                                            const vector<Epoch>& time);
 
-      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const vector<TimeCoord>& time);
+      virtual vector<Direction> j2000ToItrf (const vector<Direction>& dir,
+                                            const vector<Position>& pos,
+                                            const vector<Epoch>& time);
 
-      virtual SkyCoord itrfToJ2000 (const SkyCoord& dir,
-                                    const EarthCoord& pos,
-                                    const TimeCoord& time);
+      virtual Direction itrfToJ2000 (const Direction& dir,
+                                    const Position& pos,
+                                    const Epoch& time);
 
-      virtual vector<SkyCoord> itrfToJ2000 (const vector<SkyCoord>& dir,
-                                            const EarthCoord& pos,
-                                            const TimeCoord& time);
+      virtual vector<Direction> itrfToJ2000 (const vector<Direction>& dir,
+                                            const Position& pos,
+                                            const Epoch& time);
 
-      virtual vector<SkyCoord> itrfToJ2000 (const vector<SkyCoord>& dir,
-                                            const vector<EarthCoord>& pos,
-                                            const vector<TimeCoord>& time);
+      virtual vector<Direction> itrfToJ2000 (const vector<Direction>& dir,
+                                            const vector<Position>& pos,
+                                            const vector<Epoch>& time);
 
 
     private:
@@ -130,23 +130,23 @@ namespace LOFAR
 
       // Perform actual conversion by first sending a conversion request to
       // the server and then receiving the conversion result.
-      vector<SkyCoord> doConvert(const ConverterCommand&,
-                                 const vector<SkyCoord>&,
-                                 const vector<EarthCoord>&,
-                                 const vector<TimeCoord>&);
+      vector<Direction> doConvert(const ConverterCommand&,
+                                 const vector<Direction>&,
+                                 const vector<Position>&,
+                                 const vector<Epoch>&);
       
       // Send a conversion command to the server. The input data are stored in
       // three vectors.
       // \return \c true if send was successful; otherwise \c false.
       bool sendRequest(const ConverterCommand&,
-                       const vector<SkyCoord>&,
-                       const vector<EarthCoord>&,
-                       const vector<TimeCoord>&);
+                       const vector<Direction>&,
+                       const vector<Position>&,
+                       const vector<Epoch>&);
       
       // Receive the converted data from the server.
       // \return \c true if receive was successful; otherwise \c false.
       // \note This method is blocking.
-      bool recvResult(vector<SkyCoord>&);
+      bool recvResult(vector<Direction>&);
         
       // Data holder holding the request data to be sent to the server.
       DH_Request itsRequest;

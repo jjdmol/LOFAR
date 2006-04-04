@@ -1,4 +1,4 @@
-//# SkyCoord.h: Class to hold a sky coordinate as 2 angles
+//# Direction.h: Class to hold a sky coordinate as 2 angles
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_AMCBASE_SKYCOORD_H
-#define LOFAR_AMCBASE_SKYCOORD_H
+#ifndef LOFAR_AMCBASE_DIRECTION_H
+#define LOFAR_AMCBASE_DIRECTION_H
 
 // \file
 // Class to hold a sky coordinate as 2 angles
@@ -45,7 +45,7 @@ namespace LOFAR
     // for any pair of sky coordinates (like RA/DEC and AZ/ELEV). The correct
     // interpretation of the coordinates should be done by the user of this
     // class.
-    class SkyCoord
+    class Direction
     {
     public:
       // Types of sky coordinates. Currently, only three types are supported:
@@ -61,15 +61,15 @@ namespace LOFAR
 
       // Default constructor uses 0 for the longitude and latitude, and J2000
       // as reference type.
-      SkyCoord();
+      Direction();
 
       // Create a sky coordinate by giving the longitude \a lon and latitude
       // \a lat in radians and the reference type \a typ.
-      SkyCoord(double lon, double lat, Types typ = J2000);
+      Direction(double lon, double lat, Types typ = J2000);
 
       // Create a sky coordinate from the direction cosines \a xyz and the
       // reference type \a typ.
-      explicit SkyCoord(const vector<double>& xyz, Types typ = J2000);
+      explicit Direction(const vector<double>& xyz, Types typ = J2000);
 
       // Return the sky coordinate as direction cosines.
       vector<double> get() const
@@ -102,12 +102,12 @@ namespace LOFAR
       Types itsType;
     };
 
-    // Output a SkyCoord in ASCII format.
-    ostream& operator<< (ostream&, const SkyCoord&);
+    // Output a Direction in ASCII format.
+    ostream& operator<< (ostream&, const Direction&);
 
-    // Compare two SkyCoord objects for equality. 
+    // Compare two Direction objects for equality. 
     // \note Two invalid objects can \e never be equal.
-    bool operator==(const SkyCoord& lhs, const SkyCoord& rhs);
+    bool operator==(const Direction& lhs, const Direction& rhs);
 
     // @}
 

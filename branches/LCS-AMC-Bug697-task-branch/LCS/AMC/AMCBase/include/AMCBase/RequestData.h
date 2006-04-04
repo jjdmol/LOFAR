@@ -29,9 +29,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
@@ -54,57 +54,57 @@ namespace LOFAR
       RequestData() 
       {}
 
-      RequestData(const SkyCoord& sc,
-                  const EarthCoord& ec,
-                  const TimeCoord& tc) :
-        skyCoord(1, sc), earthCoord(1, ec), timeCoord(1, tc)
+      RequestData(const Direction& dir,
+                  const Position& pos,
+                  const Epoch& epo) :
+        direction(1, dir), position(1, pos), epoch(1, epo)
       {}        
 
-      RequestData(const vector<SkyCoord>& sc,
-                  const EarthCoord& ec,
-                  const TimeCoord& tc) :
-        skyCoord(sc), earthCoord(1, ec), timeCoord(1, tc)
+      RequestData(const vector<Direction>& dir,
+                  const Position& pos,
+                  const Epoch& epo) :
+        direction(dir), position(1, pos), epoch(1, epo)
       {}
 
-      RequestData(const SkyCoord& sc,
-                  const vector<EarthCoord>& ec,
-                  const TimeCoord& tc) :
-        skyCoord(1, sc), earthCoord(ec), timeCoord(1, tc)
+      RequestData(const Direction& dir,
+                  const vector<Position>& pos,
+                  const Epoch& epo) :
+        direction(1, dir), position(pos), epoch(1, epo)
       {}
 
-      RequestData(const SkyCoord& sc,
-                  const EarthCoord& ec,
-                  const vector<TimeCoord>& tc) :
-        skyCoord(1, sc), earthCoord(1, ec), timeCoord(tc)
+      RequestData(const Direction& dir,
+                  const Position& pos,
+                  const vector<Epoch>& epo) :
+        direction(1, dir), position(1, pos), epoch(epo)
       {}
 
-      RequestData(const vector<SkyCoord>& sc,
-                  const vector<EarthCoord>& ec,
-                  const TimeCoord& tc) :
-        skyCoord(sc), earthCoord(ec), timeCoord(1, tc)
+      RequestData(const vector<Direction>& dir,
+                  const vector<Position>& pos,
+                  const Epoch& epo) :
+        direction(dir), position(pos), epoch(1, epo)
       {}
 
-      RequestData(const vector<SkyCoord>& sc,
-                  const EarthCoord& ec,
-                  const vector<TimeCoord>& tc) :
-        skyCoord(sc), earthCoord(1, ec), timeCoord(tc)
+      RequestData(const vector<Direction>& dir,
+                  const Position& pos,
+                  const vector<Epoch>& epo) :
+        direction(dir), position(1, pos), epoch(epo)
       {}
 
-      RequestData(const SkyCoord& sc,
-                  const vector<EarthCoord>& ec,
-                  const vector<TimeCoord>& tc) :
-        skyCoord(1, sc), earthCoord(ec), timeCoord(tc)
+      RequestData(const Direction& dir,
+                  const vector<Position>& pos,
+                  const vector<Epoch>& epo) :
+        direction(1, dir), position(pos), epoch(epo)
       {}
 
-      RequestData(const vector<SkyCoord>& sc,
-                  const vector<EarthCoord>& ec, 
-                  const vector<TimeCoord>& tc) :
-        skyCoord(sc), earthCoord(ec), timeCoord(tc)
+      RequestData(const vector<Direction>& dir,
+                  const vector<Position>& pos, 
+                  const vector<Epoch>& epo) :
+        direction(dir), position(pos), epoch(epo)
       {}
 
-      vector<SkyCoord>   skyCoord;
-      vector<EarthCoord> earthCoord;
-      vector<TimeCoord>  timeCoord;
+      vector<Direction>   direction;
+      vector<Position> position;
+      vector<Epoch>  epoch;
     };
 
     // @}

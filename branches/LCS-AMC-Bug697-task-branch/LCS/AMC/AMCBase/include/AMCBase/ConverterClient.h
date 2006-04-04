@@ -35,7 +35,7 @@
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
 
-// #include <AMCBase/SkyCoord.h>
+// #include <AMCBase/Direction.h>
 // #include <Common/lofar_vector.h>
 
 namespace LOFAR

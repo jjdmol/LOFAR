@@ -37,7 +37,7 @@ namespace LOFAR
   namespace AMC
   {
     //# Forward declarations
-    class SkyCoord;
+    class Direction;
 
     // \addtogroup AMCClient
     // @{
@@ -56,11 +56,11 @@ namespace LOFAR
 
       // Write the conversion result to be sent to the client into the I/O
       // buffers of the DataHolder. 
-      void writeBuf(const vector<SkyCoord>&);
+      void writeBuf(const vector<Direction>&);
       
       // Read the conversion result that was received from the server from the
       // I/O buffers of the DataHolder. 
-      void readBuf(vector<SkyCoord>&);
+      void readBuf(vector<Direction>&);
         
     private:
 

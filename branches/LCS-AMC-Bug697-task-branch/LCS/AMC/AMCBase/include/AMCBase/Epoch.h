@@ -1,4 +1,4 @@
-//# TimeCoord.h: Class to hold a time coordinate as 2 values
+//# Epoch.h: Class to hold a time coordinate as 2 values
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -40,19 +40,19 @@ namespace LOFAR
     // This class represents a moment in time. The time is stored internally
     // using two doubles: the first representing days as Modified Julian Day
     // (MJD); the second representing a fraction of a day. 
-    class TimeCoord
+    class Epoch
     {
     public:
       // Create from the current local date/time.
-      TimeCoord();
+      Epoch();
 
       // Create from the given UTC date and time.
       // Note that days, hours, minutes, and seconds can contain fractions.
-      TimeCoord (int yy, int mm, double dd,
+      Epoch (int yy, int mm, double dd,
                  double h=0, double m=0, double s=0);
 
       // Create from an MJD (with possible fractions of day for high accuracy).
-      explicit TimeCoord (double mjd, double fraction=0);
+      explicit Epoch (double mjd, double fraction=0);
 
       // Get the UTC time in seconds since January 1, 1970 (Unix format).
       double utc() const;
@@ -94,44 +94,44 @@ namespace LOFAR
       // Adjust itsDay and itsFrac such that 0 <= itsFrac < 1.
       void adjust();
 
-      // Add \a t days to the current TimeCoord object.
+      // Add \a t days to the current Epoch object.
       void addTime(double t);
     };
 
     // Output in ASCII (in UTC).
-    ostream& operator<< (ostream&, const TimeCoord&);
+    ostream& operator<< (ostream&, const Epoch&);
 
-    // Compare two TimeCoord objects for equality.
-    // \attention Two TimeCoord objects are considered equal when the absolute
+    // Compare two Epoch objects for equality.
+    // \attention Two Epoch objects are considered equal when the absolute
     // time difference between the two is less than one microsecond.
-    bool operator==(const TimeCoord& lhs, const TimeCoord& rhs);
+    bool operator==(const Epoch& lhs, const Epoch& rhs);
 
     // @}
 
 
     //######################## INLINE FUNCTIONS ########################//
 
-    inline double TimeCoord::utc() const
+    inline double Epoch::utc() const
     {
       return (mjd() - 40587) * 24 * 3600;
     }
 
-    inline double TimeCoord::local() const
+    inline double Epoch::local() const
     {
       return utc() + getUTCDiff();
     }
 
-    inline double TimeCoord::mjd() const
+    inline double Epoch::mjd() const
     {
       return itsDay + itsFrac; 
     }
 
-    inline double TimeCoord::getDay() const
+    inline double Epoch::getDay() const
     {
       return itsDay;
     }
 
-    inline double TimeCoord::getFraction() const
+    inline double Epoch::getFraction() const
     {
       return itsFrac;
     }

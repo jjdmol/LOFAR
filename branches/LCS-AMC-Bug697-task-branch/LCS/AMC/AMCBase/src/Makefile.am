@@ -7,8 +7,8 @@ libamcbase_la_SOURCES = \
 	ConverterStatus.cc \
 	DH_Request.cc \
 	DH_Result.cc \
-	EarthCoord.cc \
-	SkyCoord.cc \
-	TimeCoord.cc
+	Position.cc \
+	Direction.cc \
+	Epoch.cc
 
 include $(top_srcdir)/Makefile.common

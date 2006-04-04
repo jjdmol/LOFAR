@@ -1,4 +1,4 @@
-//# EarthCoord.cc: Class to hold an earth coordinate as lon,lat,height
+//# Direction.cc: Class to hold a sky coordinate as 2 angles
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,39 +24,38 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/EarthCoord.h>
+#include <AMCBase/Direction.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_math.h>
 #include <Common/LofarLogger.h>
 #include <limits>
-
-using namespace std;
 
 namespace LOFAR
 {
   namespace AMC
   {
 
-    EarthCoord::EarthCoord() : 
-      itsXYZ(3, 0.0), itsType(ITRF)
+    Direction::Direction() : 
+      itsXYZ(3, 0.0), itsType(J2000)
     {
+      itsXYZ[0] = 1.0;
     }
-    
 
-    EarthCoord::EarthCoord (double lon, double lat, double h, Types typ) :
+
+    Direction::Direction (double lon, double lat, Types typ) :
       itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
     {
       if (isValid()) {
         double tmp = cos(lat);
-        itsXYZ[0] = h * cos(lon) * tmp;
-        itsXYZ[1] = h * sin(lon) * tmp;
-        itsXYZ[2] = h * sin(lat);
+        itsXYZ[0] = cos(lon) * tmp;
+        itsXYZ[1] = sin(lon) * tmp;
+        itsXYZ[2] = sin(lat);
       }
     }
+    
 
-
-    EarthCoord::EarthCoord(const vector<double>& xyz, Types typ) :
+    Direction::Direction(const vector<double>& xyz, Types typ) : 
       itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
     {
@@ -65,35 +64,14 @@ namespace LOFAR
     }
 
 
-    double EarthCoord::longitude() const
-    {
-      return atan2(itsXYZ[1], itsXYZ[0]);
-    }
-    
-
-    double EarthCoord::latitude() const
-    {
-      double h(height());
-      if (h == 0) return asin(itsXYZ[2]);
-      else return (asin(itsXYZ[2] / h));
-    }
-    
-
-    double EarthCoord::height() const
-    {
-      return sqrt(itsXYZ[0] * itsXYZ[0] + 
-                  itsXYZ[1] * itsXYZ[1] +
-                  itsXYZ[2] * itsXYZ[2]);
-    }
-    
-
-    const string& EarthCoord::showType() const
+    const string& Direction::showType() const
     {
       //# Caution: Always keep this array of strings in sync with the enum
       //#          Types that is defined in the header file!
       static const string types[N_Types+1] = {
+        "J2000",
+        "AZEL",
         "ITRF",
-        "WGS84",
         "<INVALID>"
       };
       if (isValid()) return types[itsType];
@@ -101,17 +79,29 @@ namespace LOFAR
     }
 
 
-    ostream& operator<<(ostream& os, const EarthCoord& pos)
+    double Direction::longitude() const
     {
-      if (!pos.isValid()) 
-        return os << pos.showType();
-      else 
-        return os << "["  << pos.longitude() << ", " << pos.latitude() 
-                  << ", " << pos.height() << "] (" << pos.showType() << ")";
+      return atan2(itsXYZ[1], itsXYZ[0]);
     }
 
 
-    bool operator==(const EarthCoord& lhs, const EarthCoord& rhs)
+    double Direction::latitude() const
+    {
+      return asin(itsXYZ[2]);
+    }
+
+
+    ostream& operator<<(ostream& os, const Direction& sky)
+    {
+      if (!sky.isValid()) 
+        return os << sky.showType();
+      else
+        return os << "[" << sky.longitude() << ", " << sky.latitude()
+                  << "] (" << sky.showType() << ")";
+    }
+
+
+    bool operator==(const Direction& lhs, const Direction& rhs)
     {
       return 
         lhs.isValid() && rhs.isValid() &&
@@ -119,19 +109,6 @@ namespace LOFAR
         lhs.get()     == rhs.get();
     }
 
-
-    double operator*(const EarthCoord& lhs, const EarthCoord& rhs)
-    {
-      double result(0);
-      vector<double> x(lhs.get());
-      vector<double> y(rhs.get());
-      ASSERT(x.size() == y.size());
-      for (uint i = 0; i < x.size(); ++i) {
-        result += x[i] * y[i];
-      }
-      return result;
-    }
-    
   } // namespace AMC
 
 } // namespace LOFAR

@@ -27,9 +27,9 @@
 #include <AMCBase/BlobIO.h>
 #include <AMCBase/ConverterCommand.h>
 #include <AMCBase/ConverterStatus.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <Blob/BlobIBufChar.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOBufChar.h>
@@ -85,20 +85,20 @@ void test(const ConverterStatus& cso)
 }
 
 
-void test(const SkyCoord& sco)
+void test(const Direction& sco)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
-  bos.putStart(typeid(SkyCoord).name(), 1);
+  bos.putStart(typeid(Direction).name(), 1);
   bos << sco;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  SkyCoord sci;
-  bis.getStart(typeid(SkyCoord).name());
+  Direction sci;
+  bis.getStart(typeid(Direction).name());
   bis >> sci;
   bis.getEnd();
 
@@ -106,20 +106,20 @@ void test(const SkyCoord& sco)
 }
 
 
-void test(const EarthCoord& eco)
+void test(const Position& eco)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
-  bos.putStart(typeid(EarthCoord).name(), 1);
+  bos.putStart(typeid(Position).name(), 1);
   bos << eco;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  EarthCoord eci;
-  bis.getStart(typeid(EarthCoord).name());
+  Position eci;
+  bis.getStart(typeid(Position).name());
   bis >> eci;
   bis.getEnd();
 
@@ -127,20 +127,20 @@ void test(const EarthCoord& eco)
 }
 
 
-void test(const TimeCoord& tco)
+void test(const Epoch& tco)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
-  bos.putStart(typeid(TimeCoord).name(), 1);
+  bos.putStart(typeid(Epoch).name(), 1);
   bos << tco;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  TimeCoord tci;
-  bis.getStart(typeid(TimeCoord).name());
+  Epoch tci;
+  bis.getStart(typeid(Epoch).name());
   bis >> tci;
   bis.getEnd();
 
@@ -179,16 +179,16 @@ int main(int /*argc*/, const char* const argv[])
     test(ConverterStatus(static_cast<ConverterStatus::Status>(1000),
                          "Undefined error"));
 
-    test(SkyCoord());
-    test(SkyCoord(0.4, -0.19, SkyCoord::ITRF));
-    test(SkyCoord(-1.2, 2.38, SkyCoord::AZEL));
+    test(Direction());
+    test(Direction(0.4, -0.19, Direction::ITRF));
+    test(Direction(-1.2, 2.38, Direction::AZEL));
 
-    test(EarthCoord());
-    test(EarthCoord(0.25*M_PI, -0.33*M_PI));
-    test(EarthCoord(-0.67*M_PI, 0.75*M_PI, 249.98, EarthCoord::WGS84));
+    test(Position());
+    test(Position(0.25*M_PI, -0.33*M_PI));
+    test(Position(-0.67*M_PI, 0.75*M_PI, 249.98, Position::WGS84));
 
-    test(TimeCoord());
-    test(TimeCoord(0));
+    test(Epoch());
+    test(Epoch(0));
 
   } catch (Exception& e) {
     LOG_ERROR_STR(e);

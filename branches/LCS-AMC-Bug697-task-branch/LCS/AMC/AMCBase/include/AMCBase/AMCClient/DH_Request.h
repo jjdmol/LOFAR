@@ -37,9 +37,9 @@ namespace LOFAR
   namespace AMC
   {
     //# Forward declarations
-    class SkyCoord;
-    class EarthCoord;
-    class TimeCoord;
+    class Direction;
+    class Position;
+    class Epoch;
     class ConverterCommand;
 
     // \addtogroup AMCClient
@@ -61,16 +61,16 @@ namespace LOFAR
       // Write the conversion request to be sent to the server into the I/O
       // buffers of the DataHolder.
       void writeBuf(const ConverterCommand&,
-                    const vector<SkyCoord>&,
-                    const vector<EarthCoord>&,
-                    const vector<TimeCoord>&);
+                    const vector<Direction>&,
+                    const vector<Position>&,
+                    const vector<Epoch>&);
       
       // Read the conversion request that was received from the client from
       // the I/O buffers of the DataHolder.
       void readBuf(ConverterCommand&,
-                   vector<SkyCoord>&,
-                   vector<EarthCoord>&,
-                   vector<TimeCoord>&);
+                   vector<Direction>&,
+                   vector<Position>&,
+                   vector<Epoch>&);
         
     private:
 

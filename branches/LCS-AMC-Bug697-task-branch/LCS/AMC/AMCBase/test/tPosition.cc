@@ -1,4 +1,4 @@
-//#  tEarthCoord.cc: test program for the EarthCoord class
+//#  tPosition.cc: test program for the Position class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/EarthCoord.h>
+#include <AMCBase/Position.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/Numeric.h>
@@ -40,61 +40,61 @@ int main(int, const char* argv[])
   try {
 
     // A default constructed position
-    EarthCoord ec0;
+    Position pos0;
 
     // A "normalized" position in ITRF
-    EarthCoord ec1(0.25*M_PI, -0.33*M_PI, 1);
+    Position pos1(0.25*M_PI, -0.33*M_PI, 1);
 
     // A "denormalized" position in WGS84; latitude angle is larger than
     // pi/2. As a result, the "normalized" latitude should be pi - 0.75 pi,
     // and the longitude should be -0.67 pi + pi.
-    EarthCoord ec2(-0.67*M_PI, 0.75*M_PI, 249.98, EarthCoord::WGS84);
+    Position pos2(-0.67*M_PI, 0.75*M_PI, 249.98, Position::WGS84);
 
     // Invalide coordinate type; xyz-coordinates will be NaN.
-    EarthCoord ec3(0.5*M_PI, 0.2*M_PI, -115.11, 
-                   static_cast<EarthCoord::Types>(1294));
+    Position pos3(0.5*M_PI, 0.2*M_PI, -115.11, 
+                   static_cast<Position::Types>(1294));
 
     // Vector for storing the cartesian coordinates.
     vector<double> p;
 
-    p = ec0.get();
-    ASSERT(ec0.isValid() &&
-           ec0.longitude() == 0 && 
-           ec0.latitude() == 0 && 
-           ec0.height() == 0 &&
-           ec0.type() == EarthCoord::ITRF);
+    p = pos0.get();
+    ASSERT(pos0.isValid() &&
+           pos0.longitude() == 0 && 
+           pos0.latitude() == 0 && 
+           pos0.height() == 0 &&
+           pos0.type() == Position::ITRF);
     ASSERT(p[0] == 0 &&
            p[1] == 0 &&
            p[2] == 0);
 
-    p = ec1.get();
-    ASSERT(ec1.isValid() &&
-           ec1.type() == EarthCoord::ITRF &&
-           Numeric::compare(ec1.longitude(), 0.25*M_PI) && 
-           Numeric::compare(ec1.latitude(), -0.33*M_PI) &&
-           Numeric::compare(ec1.height(), 1));
+    p = pos1.get();
+    ASSERT(pos1.isValid() &&
+           pos1.type() == Position::ITRF &&
+           Numeric::compare(pos1.longitude(), 0.25*M_PI) && 
+           Numeric::compare(pos1.latitude(), -0.33*M_PI) &&
+           Numeric::compare(pos1.height(), 1));
     ASSERT(Numeric::compare(p[0],  0.3599466369818882) &&
            Numeric::compare(p[1],  0.3599466369818882) &&
            Numeric::compare(p[2], -0.8607420270039436));
 
-    p = ec2.get();
-    ASSERTSTR(ec2.isValid() &&
-           ec2.type() == EarthCoord::WGS84 &&
-           Numeric::compare(ec2.longitude(), 0.33*M_PI) && 
-           Numeric::compare(ec2.latitude(), 0.25*M_PI) &&
-           Numeric::compare(ec2.height(), 249.98), ec2);
+    p = pos2.get();
+    ASSERTSTR(pos2.isValid() &&
+           pos2.type() == Position::WGS84 &&
+           Numeric::compare(pos2.longitude(), 0.33*M_PI) && 
+           Numeric::compare(pos2.latitude(), 0.25*M_PI) &&
+           Numeric::compare(pos2.height(), 249.98), pos2);
 
     ASSERT(Numeric::compare(p[0],  89.9794603127324) &&
            Numeric::compare(p[1], 152.1469583062028) &&
            Numeric::compare(p[2], 176.7625531610132));
 
-    p = ec3.get();
-    ASSERT(!ec3.isValid());
+    p = pos3.get();
+    ASSERT(!pos3.isValid());
 
-    cout << "ec0 = " << ec0 << endl;
-    cout << "ec1 = " << ec1 << endl;
-    cout << "ec2 = " << ec2 << endl;
-    cout << "ec3 = " << ec3 << endl;
+    cout << "pos0 = " << pos0 << endl;
+    cout << "pos1 = " << pos1 << endl;
+    cout << "pos2 = " << pos2 << endl;
+    cout << "pos3 = " << pos3 << endl;
 
   }
 

@@ -160,7 +160,7 @@ namespace LOFAR
       // asynchronous communication.
       itsRecvConn.waitForRead();
 
-      // Read the conversion result from the I/O buffer into skyCoord
+      // Read the conversion result from the I/O buffer into direction
       itsResult.readBuf(sts, res);
 
       // When we get here, everything went well.

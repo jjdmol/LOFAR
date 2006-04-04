@@ -1,4 +1,4 @@
-//#  tTimeCoord.cc: test program for the TimeCoord class.
+//#  tEpoch.cc: test program for the Epoch class.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Epoch.h>
 #include <Common/LofarLogger.h>
 #include <cmath>
 #include <iostream>
@@ -41,21 +41,21 @@ int main(int, const char* argv[])
 
   try {
 
-    TimeCoord now, then(0);
+    Epoch now, then(0);
     int yy,mm,dd,h,m;
     double s;
 
-    ASSERT(now == TimeCoord(now.mjd()));
-    ASSERT(now == TimeCoord(now.getDay(), now.getFraction()));
+    ASSERT(now == Epoch(now.mjd()));
+    ASSERT(now == Epoch(now.getDay(), now.getFraction()));
     ASSERT(abs(now.utc() - now.local() + now.getUTCDiff()) < usec);
 
     now.ymd(yy, mm, dd);
     now.hms(h, m, s);
-    ASSERT(now == TimeCoord(yy, mm, dd, h, m, s));
+    ASSERT(now == Epoch(yy, mm, dd, h, m, s));
 
     now.ymd(yy, mm, dd, true); 
     now.hms(h, m, s, true);
-    ASSERT(abs(now.local() - TimeCoord(yy, mm, dd, h, m, s).utc()) < usec);
+    ASSERT(abs(now.local() - Epoch(yy, mm, dd, h, m, s).utc()) < usec);
 
     then.utc(now.utc());
     ASSERT(now == then);
@@ -81,13 +81,13 @@ int main(int, const char* argv[])
 
   cout.precision(12);
   {
-    TimeCoord t(1.9, 0.9);
+    Epoch t(1.9, 0.9);
     cout << "t = " << t << endl;
     cout << "t.getDay() = " << t.getDay() << endl;
     cout << "t.getFraction() = " << t.getFraction() << endl;
   }
   {
-    TimeCoord t(1964, 11, 03, 24, 0, -0.000001);
+    Epoch t(1964, 11, 03, 24, 0, -0.000001);
     cout << "t = " << t << endl;
     cout << "t.getDay() = " << t.getDay() << endl;
     cout << "t.getFraction() = " << t.getFraction() << endl;

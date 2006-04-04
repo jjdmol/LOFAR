@@ -25,9 +25,9 @@
 
 //# Includes
 #include <AMCImpl/ConverterImpl.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <AMCBase/ConverterClient.h>
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
@@ -70,8 +70,8 @@ void checkJ2000ToAzelPreConditions(Converter* conv)
   ResultData result;
   uint count(0);
 
-  // skyCoord type must be J2000
-  request.skyCoord = vector<SkyCoord>(1, SkyCoord(0,0,SkyCoord::AZEL));
+  // direction type must be J2000
+  request.direction = vector<Direction>(1, Direction(0,0,Direction::AZEL));
   try {
     conv->j2000ToAzel(result, request);
   } catch (AssertError&) {
@@ -81,10 +81,10 @@ void checkJ2000ToAzelPreConditions(Converter* conv)
   }
   ASSERT(count == 1);
 
-  // earthCoord types must be equal
-  request.skyCoord = vector<SkyCoord>(1, SkyCoord());
-  request.earthCoord = vector<EarthCoord>(1, EarthCoord());
-  request.earthCoord.push_back(EarthCoord(0,0,0,EarthCoord::WGS84));
+  // position types must be equal
+  request.direction = vector<Direction>(1, Direction());
+  request.position = vector<Position>(1, Position());
+  request.position.push_back(Position(0,0,0,Position::WGS84));
   try {
     conv->j2000ToAzel(result, request);
   } catch (AssertError&) {
@@ -102,8 +102,8 @@ void checkAzelToJ2000PreConditions(Converter* conv)
   ResultData result;
   uint count(0);
 
-  // earthCoord and timeCoord must have equal sizes.
-  request.timeCoord = vector<TimeCoord>(1, TimeCoord());
+  // position and epoch must have equal sizes.
+  request.epoch = vector<Epoch>(1, Epoch());
   try {
     conv->azelToJ2000(result, request);
   } catch (AssertError&) {
@@ -113,10 +113,10 @@ void checkAzelToJ2000PreConditions(Converter* conv)
   }
   ASSERT(count == 1);
 
-  // If earthCoord and timeCoord have sizes unequal to one, then their size
-  // must be equal to the size of skyCoord.
-  request.skyCoord = vector<SkyCoord>(1, SkyCoord());
-  request.timeCoord.clear();
+  // If position and epoch have sizes unequal to one, then their size
+  // must be equal to the size of direction.
+  request.direction = vector<Direction>(1, Direction());
+  request.epoch.clear();
   try {
     conv->azelToJ2000(result, request);
   } catch (AssertError&) {
@@ -126,9 +126,9 @@ void checkAzelToJ2000PreConditions(Converter* conv)
   }
   ASSERT(count == 2);
 
-  // skyCoord type must be AZEL
-  request.earthCoord = vector<EarthCoord>(1, EarthCoord());
-  request.timeCoord = vector<TimeCoord>(1, TimeCoord());
+  // direction type must be AZEL
+  request.position = vector<Position>(1, Position());
+  request.epoch = vector<Epoch>(1, Epoch());
   try {
     conv->azelToJ2000(result, request);
   } catch (AssertError&) {
@@ -138,10 +138,10 @@ void checkAzelToJ2000PreConditions(Converter* conv)
   }
   ASSERT(count == 3);
 
-  // earthCoord types must be equal
-  request.skyCoord = vector<SkyCoord>(2, SkyCoord(0,0,SkyCoord::AZEL));
-  request.earthCoord.push_back(EarthCoord(0,0,0,EarthCoord::WGS84));
-  request.timeCoord.push_back(TimeCoord());
+  // position types must be equal
+  request.direction = vector<Direction>(2, Direction(0,0,Direction::AZEL));
+  request.position.push_back(Position(0,0,0,Position::WGS84));
+  request.epoch.push_back(Epoch());
   try {
     conv->azelToJ2000(result, request);
   } catch (AssertError&) {
@@ -159,8 +159,8 @@ void checkJ2000ToItrfPreConditions(Converter* conv)
   ResultData result;
   uint count(0);
 
-  // skyCoord type must be J2000
-  request.skyCoord = vector<SkyCoord>(1, SkyCoord(0,0,SkyCoord::AZEL));
+  // direction type must be J2000
+  request.direction = vector<Direction>(1, Direction(0,0,Direction::AZEL));
   try {
     conv->j2000ToItrf(result, request);
   } catch (AssertError&) {
@@ -170,10 +170,10 @@ void checkJ2000ToItrfPreConditions(Converter* conv)
   }
   ASSERT(count == 1);
 
-  // earthCoord types must be equal
-  request.skyCoord = vector<SkyCoord>(1, SkyCoord());
-  request.earthCoord = vector<EarthCoord>(1, EarthCoord());
-  request.earthCoord.push_back(EarthCoord(0,0,0,EarthCoord::WGS84));
+  // position types must be equal
+  request.direction = vector<Direction>(1, Direction());
+  request.position = vector<Position>(1, Position());
+  request.position.push_back(Position(0,0,0,Position::WGS84));
   try {
     conv->j2000ToItrf(result, request);
   } catch (AssertError&) {
@@ -191,8 +191,8 @@ void checkItrfToJ2000PreConditions(Converter* conv)
   ResultData result;
   uint count(0);
 
-  // earthCoord and timeCoord must have equal sizes.
-  request.timeCoord = vector<TimeCoord>(1, TimeCoord());
+  // position and epoch must have equal sizes.
+  request.epoch = vector<Epoch>(1, Epoch());
   try {
     conv->itrfToJ2000(result, request);
   } catch (AssertError&) {
@@ -202,10 +202,10 @@ void checkItrfToJ2000PreConditions(Converter* conv)
   }
   ASSERT(count == 1);
 
-  // If earthCoord and timeCoord have sizes unequal to one, then their size
-  // must be equal to the size of skyCoord.
-  request.skyCoord = vector<SkyCoord>(1, SkyCoord());
-  request.timeCoord.clear();
+  // If position and epoch have sizes unequal to one, then their size
+  // must be equal to the size of direction.
+  request.direction = vector<Direction>(1, Direction());
+  request.epoch.clear();
   try {
     conv->itrfToJ2000(result, request);
   } catch (AssertError&) {
@@ -215,9 +215,9 @@ void checkItrfToJ2000PreConditions(Converter* conv)
   }
   ASSERT(count == 2);
 
-  // skyCoord type must be ITRF
-  request.earthCoord = vector<EarthCoord>(1, EarthCoord());
-  request.timeCoord = vector<TimeCoord>(1, TimeCoord());
+  // direction type must be ITRF
+  request.position = vector<Position>(1, Position());
+  request.epoch = vector<Epoch>(1, Epoch());
   try {
     conv->itrfToJ2000(result, request);
   } catch (AssertError&) {
@@ -227,10 +227,10 @@ void checkItrfToJ2000PreConditions(Converter* conv)
   }
   ASSERT(count == 3);
 
-  // earthCoord types must be equal
-  request.skyCoord = vector<SkyCoord>(2, SkyCoord(0,0,SkyCoord::ITRF));
-  request.earthCoord.push_back(EarthCoord(0,0,0,EarthCoord::WGS84));
-  request.timeCoord.push_back(TimeCoord());
+  // position types must be equal
+  request.direction = vector<Direction>(2, Direction(0,0,Direction::ITRF));
+  request.position.push_back(Position(0,0,0,Position::WGS84));
+  request.epoch.push_back(Epoch());
   try {
     conv->itrfToJ2000(result, request);
   } catch (AssertError&) {
@@ -278,27 +278,27 @@ void checkPreConditions(Converter* conv)
 void checkConverter(Converter* conv)
 {
 
-  vector<SkyCoord>   skies(4);
-  vector<EarthCoord> poss(2);
-  vector<TimeCoord>  times(3);
+  vector<Direction>   skies(4);
+  vector<Position> poss(2);
+  vector<Epoch>  times(3);
 
   // Four arbitrary directions (angles in radians).
-  skies[0] = SkyCoord (1, 0.3);
-  skies[1] = SkyCoord (-1, -0.3);
-  skies[2] = SkyCoord (2, 0.1);
-  skies[3] = SkyCoord (1.5, -0.3);
+  skies[0] = Direction (1, 0.3);
+  skies[1] = Direction (-1, -0.3);
+  skies[2] = Direction (2, 0.1);
+  skies[3] = Direction (1.5, -0.3);
 
   poss[0] =  // arbitrary position
-    EarthCoord (0.1, 0.8, 1000, EarthCoord::WGS84);
+    Position (0.1, 0.8, 1000, Position::WGS84);
   poss[1] =  // Dwingeloo observatory
-    EarthCoord (0.111646531, 0.921760253, 25, EarthCoord::WGS84);
+    Position (0.111646531, 0.921760253, 25, Position::WGS84);
 
   times[0] = // arbitrary time (added 0.1 usec to avoid rouding errors)
-    TimeCoord (2004, 11, 19, 15, 22, 39.0000001);
+    Epoch (2004, 11, 19, 15, 22, 39.0000001);
   times[1] = // same arbitrary time + 1 hour
-    TimeCoord (times[0].mjd(), 1./24);
+    Epoch (times[0].mjd(), 1./24);
   times[2] = // same arbitrary time + 1 day
-    TimeCoord (times[0].mjd(), 1.);
+    Epoch (times[0].mjd(), 1.);
 
   RequestData request(skies, poss, times);
 
@@ -313,28 +313,28 @@ void checkConverter(Converter* conv)
   {
     ResultData result;
     conv->j2000ToAzel(result, request);
-    ASSERT (result.skyCoord.size() == 
+    ASSERT (result.direction.size() == 
             skies.size() * poss.size() * times.size());
     cout << "\n**** Convert from J2000 to AZEL and vice versa ****\n";
-    cout << "result = " << result.skyCoord << endl;
+    cout << "result = " << result.direction << endl;
     for (uint i = 0; i < skies.size() * poss.size() * times.size(); i++) {
-      ASSERT (result.skyCoord[i].type() == SkyCoord::AZEL);
+      ASSERT (result.direction[i].type() == Direction::AZEL);
     }
     int inx=0;
     for (uint i = 0; i < times.size(); i++) {
       for (uint j = 0; j < poss.size(); j++) {
-        vector<SkyCoord> sk(skies.size());
+        vector<Direction> sk(skies.size());
         for (uint k = 0; k < skies.size(); k++) {
-          sk[k] = result.skyCoord[inx++];
+          sk[k] = result.direction[inx++];
         }
         // Convert back from AZEL to J2000; should yield original data
         ResultData res2;
         conv->azelToJ2000 (res2, RequestData(sk, poss[j], times[i]));
         for (uint k = 0; k < skies.size(); k++) {
-          ASSERT (res2.skyCoord[k].type() == SkyCoord::J2000);
-          ASSERT (compare(res2.skyCoord[k].longitude(), 
+          ASSERT (res2.direction[k].type() == Direction::J2000);
+          ASSERT (compare(res2.direction[k].longitude(), 
                           skies[k].longitude(), epsilon));
-          ASSERT (compare(res2.skyCoord[k].latitude(), 
+          ASSERT (compare(res2.direction[k].latitude(), 
                           skies[k].latitude(), epsilon));
         }
       }
@@ -345,28 +345,28 @@ void checkConverter(Converter* conv)
   {
     ResultData result;
     conv->j2000ToItrf (result, request);
-    ASSERT (result.skyCoord.size() == 
+    ASSERT (result.direction.size() == 
             skies.size() * poss.size() * times.size());
     cout << "\n**** Convert from J2000 to ITRF and vice versa ****\n";
-    cout << "result = " << result.skyCoord << endl;
+    cout << "result = " << result.direction << endl;
     for (uint i = 0; i < skies.size() * poss.size() * times.size(); i++) {
-      ASSERT (result.skyCoord[i].type() == SkyCoord::ITRF);
+      ASSERT (result.direction[i].type() == Direction::ITRF);
     }
     int inx=0;
     for (uint i = 0; i < times.size(); i++) {
       for (uint j = 0; j < poss.size(); j++) {
-        vector<SkyCoord> sk(skies.size());
+        vector<Direction> sk(skies.size());
         for (uint k = 0; k < skies.size(); k++) {
-          sk[k] = result.skyCoord[inx++];
+          sk[k] = result.direction[inx++];
         }
         // Convert back from ITRF to J2000; should yield original data
         ResultData res2;
         conv->itrfToJ2000 (res2, RequestData(sk, poss[j], times[i]));
         for (uint k = 0; k < skies.size(); k++) {
-          ASSERT (res2.skyCoord[k].type() == SkyCoord::J2000);
-          ASSERT (compare(res2.skyCoord[k].longitude(), 
+          ASSERT (res2.direction[k].type() == Direction::J2000);
+          ASSERT (compare(res2.direction[k].longitude(), 
                           skies[k].longitude(), epsilon));
-          ASSERT (compare(res2.skyCoord[k].latitude(), 
+          ASSERT (compare(res2.direction[k].latitude(), 
                           skies[k].latitude(), epsilon));
         }
       }

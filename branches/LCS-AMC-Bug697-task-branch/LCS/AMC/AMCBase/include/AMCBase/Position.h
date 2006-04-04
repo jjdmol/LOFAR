@@ -1,4 +1,4 @@
-//# EarthCoord.h: Class to hold an earth coordinate as lon,lat,height
+//# Position.h: Class to hold an earth coordinate as lon,lat,height
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -45,7 +45,7 @@ namespace LOFAR
     // any kind of frame (like ITRF and geocentric). The correct
     // interpretation of the coordinates should be done by the user of this
     // class.
-    class EarthCoord
+    class Position
     {
     public:
       // Types of earth coordinates. 
@@ -59,16 +59,16 @@ namespace LOFAR
 
       // Default constructor uses 0 for longitude, latitude and height, and
       // ITRF as reference type.
-      EarthCoord();
+      Position();
       
       // Create an earth coordinate by giving the longitude \a lon and
       // latitude \a lat in radians and the \a h in meters. Reference type can
       // be either ITRF (default), or WGS84.
-      EarthCoord(double lon, double lat, double h = 0, Types typ = ITRF);
+      Position(double lon, double lat, double h = 0, Types typ = ITRF);
 
       // Create an earth coordinate from the cartesian coordinates \a xyz and
       // the reference type \a typ.
-      explicit EarthCoord(const vector<double>& xyz, Types typ = ITRF);
+      explicit Position(const vector<double>& xyz, Types typ = ITRF);
       
       // Return the earth coordinate in cartesian coordinates.
       vector<double> get() const
@@ -103,15 +103,15 @@ namespace LOFAR
       Types itsType;
     };
 
-    // Output an EarthCoord in ASCII format.
-    ostream& operator<< (ostream&, const EarthCoord&);
+    // Output an Position in ASCII format.
+    ostream& operator<< (ostream&, const Position&);
 
-    // Compare two EarthCoord objects for equality.
+    // Compare two Position objects for equality.
     // \note Two invalid objects can \e never be equal.
-    bool operator==(const EarthCoord& lhs, const EarthCoord& rhs);
+    bool operator==(const Position& lhs, const Position& rhs);
 
     // Calculate the dot product of \a lhs and \a rhs
-    double operator*(const EarthCoord& lhs, const EarthCoord& rhs);
+    double operator*(const Position& lhs, const Position& rhs);
       
     // @}
 

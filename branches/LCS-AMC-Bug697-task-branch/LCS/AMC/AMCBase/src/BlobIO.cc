@@ -25,9 +25,9 @@
 
 //# Includes
 #include <AMCBase/BlobIO.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <AMCBase/ConverterCommand.h>
 #include <AMCBase/ConverterStatus.h>
 #include <AMCBase/RequestData.h>
@@ -44,24 +44,24 @@ namespace LOFAR
 
     //# -------  BlobOStream operators  ------- #//
 
-    BlobOStream& operator<<(BlobOStream& bos, const SkyCoord& sc)
+    BlobOStream& operator<<(BlobOStream& bos, const Direction& dir)
     {
-      bos << sc.get()
-          << static_cast<int32>(sc.type());
+      bos << dir.get()
+          << static_cast<int32>(dir.type());
       return bos;
     }
 
-    BlobOStream& operator<<(BlobOStream& bos, const EarthCoord& ec)
+    BlobOStream& operator<<(BlobOStream& bos, const Position& pos)
     {
-      bos << ec.get()
-          << static_cast<int32>(ec.type());
+      bos << pos.get()
+          << static_cast<int32>(pos.type());
       return bos;
     }
 
-    BlobOStream& operator<<(BlobOStream& bos, const TimeCoord& tc)
+    BlobOStream& operator<<(BlobOStream& bos, const Epoch& epo)
     {
-      bos << tc.getDay()
-          << tc.getFraction();
+      bos << epo.getDay()
+          << epo.getFraction();
       return bos;
     }
 
@@ -80,46 +80,46 @@ namespace LOFAR
 
     BlobOStream& operator<<(BlobOStream& bos, const RequestData& req)
     {
-      bos << req.skyCoord
-          << req.earthCoord
-          << req.timeCoord;
+      bos << req.direction
+          << req.position
+          << req.epoch;
       return bos;
     }
 
     BlobOStream& operator<<(BlobOStream& bos, const ResultData& res)
     {
-      bos << res.skyCoord;
+      bos << res.direction;
       return bos;
     }
 
 
     //# -------  BlobIStream operators  ------- #//
 
-    BlobIStream& operator>>(BlobIStream& bis, SkyCoord& sc)
+    BlobIStream& operator>>(BlobIStream& bis, Direction& dir)
     {
       vector<double> xyz(3);
       int32 type;
       bis >> xyz >> type;
-      sc = SkyCoord(xyz, static_cast<SkyCoord::Types>(type));
-      ASSERT(sc.isValid());
+      dir = Direction(xyz, static_cast<Direction::Types>(type));
+      ASSERT(dir.isValid());
       return bis;
     }
 
-    BlobIStream& operator>>(BlobIStream& bis, EarthCoord& ec)
+    BlobIStream& operator>>(BlobIStream& bis, Position& pos)
     {
       vector<double> xyz(3);
       int32 type;
       bis >> xyz >> type;
-      ec = EarthCoord(xyz, static_cast<EarthCoord::Types>(type));
-      ASSERT(ec.isValid());
+      pos = Position(xyz, static_cast<Position::Types>(type));
+      ASSERT(pos.isValid());
       return bis;
     }
 
-    BlobIStream& operator>>(BlobIStream& bis, TimeCoord& tc)
+    BlobIStream& operator>>(BlobIStream& bis, Epoch& epo)
     {
       double day, fraction;
       bis >> day >> fraction;
-      tc = TimeCoord(day, fraction);
+      epo = Epoch(day, fraction);
       return bis;
     }
 
@@ -143,13 +143,13 @@ namespace LOFAR
 
     BlobIStream& operator>>(BlobIStream& bis, RequestData& req)
     {
-      bis >> req.skyCoord >> req.earthCoord >> req.timeCoord;
+      bis >> req.direction >> req.position >> req.epoch;
       return bis;
     }
 
     BlobIStream& operator>>(BlobIStream& bis, ResultData& res)
     {
-      bis >> res.skyCoord;
+      bis >> res.direction;
       return bis;
     }
 

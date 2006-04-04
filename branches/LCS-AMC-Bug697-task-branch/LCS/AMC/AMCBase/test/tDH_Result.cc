@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <AMCBase/ConverterStatus.h>
 #include <AMCBase/DH_Result.h>
-#include <AMCBase/SkyCoord.h>
+#include <AMCBase/Direction.h>
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
 #include <Transport/TH_Mem.h>
@@ -44,12 +44,12 @@ int main(int /*argc*/, const char* const argv[])
 
     ConverterStatus sendStat(ConverterStatus::ERROR, "Uh-oh, oops!");
 
-    vector<SkyCoord> sendSky;
-    sendSky.push_back(SkyCoord());
-    sendSky.push_back(SkyCoord(0.4, -0.19));
+    vector<Direction> sendSky;
+    sendSky.push_back(Direction());
+    sendSky.push_back(Direction(0.4, -0.19));
 
     ConverterStatus recvStat;
-    vector<SkyCoord> recvSky;
+    vector<Direction> recvSky;
 
     TH_Mem aTH;
     DH_Result sendDhRes;
@@ -66,9 +66,9 @@ int main(int /*argc*/, const char* const argv[])
 
     ASSERT(sendStat.get()  == recvStat.get() &&
            sendStat.text() == recvStat.text());
-    ASSERT(sendResData.skyCoord.size() == recvResData.skyCoord.size());
-    for (uint i=0; i < sendResData.skyCoord.size(); ++i) {
-      ASSERT(sendResData.skyCoord[i] == recvResData.skyCoord[i]);
+    ASSERT(sendResData.direction.size() == recvResData.direction.size());
+    for (uint i=0; i < sendResData.direction.size(); ++i) {
+      ASSERT(sendResData.direction[i] == recvResData.direction[i]);
     }
   }
   catch (Exception& e) {

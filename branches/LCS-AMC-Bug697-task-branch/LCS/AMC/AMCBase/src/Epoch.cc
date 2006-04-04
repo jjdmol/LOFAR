@@ -1,4 +1,4 @@
-//# TimeCoord.cc: Class to hold a time coordinate as 2 values
+//# Epoch.cc: Class to hold a time coordinate as 2 values
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Epoch.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 #include <cmath>
@@ -41,7 +41,7 @@ namespace LOFAR
 
     //################  Public functions  ################//
 
-    TimeCoord::TimeCoord()
+    Epoch::Epoch()
     {
       struct timeval tp;
       gettimeofday (&tp, 0);
@@ -58,7 +58,7 @@ namespace LOFAR
     }
 
     // Copied from MVTime in aips++
-    TimeCoord::TimeCoord (int yy, int mm, double dd,
+    Epoch::Epoch (int yy, int mm, double dd,
                           double h, double m, double s)
     {
       if (mm < 3) {
@@ -78,7 +78,7 @@ namespace LOFAR
       adjust();
     }
 
-    TimeCoord::TimeCoord (double mjd, double fraction) :
+    Epoch::Epoch (double mjd, double fraction) :
       itsDay(0), itsFrac(0)
     {
       addTime(mjd);
@@ -91,7 +91,7 @@ namespace LOFAR
 //       itsFrac += fraction - rest;
     }
 
-    void TimeCoord::utc(double s)
+    void Epoch::utc(double s)
     {
       double days = s / secPerDay;
       itsDay = floor(days);
@@ -99,19 +99,19 @@ namespace LOFAR
       itsDay += 40587;
     }
 
-    void TimeCoord::local(double s)
+    void Epoch::local(double s)
     {
       s -= getUTCDiff();
       utc(s);
     }
 
-    void TimeCoord::mjd(double mjd)
+    void Epoch::mjd(double mjd)
     {
       itsDay = floor(mjd);
       itsFrac = mjd - itsDay;
     }
     
-    void TimeCoord::ymd (int& yyyy, int& mm, int& dd, bool local) const
+    void Epoch::ymd (int& yyyy, int& mm, int& dd, bool local) const
     {
       double val = itsDay+itsFrac;
       if (local) {
@@ -140,7 +140,7 @@ namespace LOFAR
       if (mm > 2) yyyy--;
     }
 
-    void TimeCoord::hms (int& h, int& m, double& s, bool local) const
+    void Epoch::hms (int& h, int& m, double& s, bool local) const
     {
       double val = itsDay+itsFrac;
       if (local) {
@@ -155,7 +155,7 @@ namespace LOFAR
       s = 60*(val - m);
     }
 
-    double TimeCoord::getUTCDiff()
+    double Epoch::getUTCDiff()
     {
 #ifdef HAVE_ALTZONE
       return (altzone + timezone);
@@ -173,7 +173,7 @@ namespace LOFAR
 
     //################  Privatefunctions  ################//
 
-    void TimeCoord::adjust()
+    void Epoch::adjust()
     {
       while (itsFrac < 0) {
         itsFrac += 1;
@@ -186,7 +186,7 @@ namespace LOFAR
     }
 
 
-    void TimeCoord::addTime(double t)
+    void Epoch::addTime(double t)
     {
       double d = floor(t);
       itsDay += d;
@@ -196,7 +196,7 @@ namespace LOFAR
 
     //################  Free functions  ################//
 
-    ostream& operator<< (ostream& os, const TimeCoord& time)
+    ostream& operator<< (ostream& os, const Epoch& time)
     {
       int yy,mm,dd,h,m;
       double s;
@@ -212,7 +212,7 @@ namespace LOFAR
       return os;
     }
 
-    bool operator==(const TimeCoord& lhs, const TimeCoord& rhs)
+    bool operator==(const Epoch& lhs, const Epoch& rhs)
     {
       static double usec = 1/usecPerSec;
       return std::abs(lhs.utc() - rhs.utc()) < usec;

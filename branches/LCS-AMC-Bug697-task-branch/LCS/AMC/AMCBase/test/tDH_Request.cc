@@ -26,9 +26,9 @@
 //# Includes
 #include <AMCBase/DH_Request.h>
 #include <AMCBase/ConverterCommand.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
 #include <Transport/TH_Mem.h>
@@ -56,23 +56,23 @@ int main(int /*argc*/, const char* const argv[])
 
     ConverterCommand sendCmd(ConverterCommand::J2000toAZEL);
 
-    vector<SkyCoord> sendSky;
-    sendSky.push_back(SkyCoord());
-    sendSky.push_back(SkyCoord(0.4, -0.19));
+    vector<Direction> sendSky;
+    sendSky.push_back(Direction());
+    sendSky.push_back(Direction(0.4, -0.19));
   
-    vector<EarthCoord> sendEarth;
-    sendEarth.push_back(EarthCoord());
-    sendEarth.push_back(EarthCoord(0.25*M_PI, -0.33*M_PI));
-    sendEarth.push_back(EarthCoord(-0.67*M_PI, 0.75*M_PI, 249.98));
+    vector<Position> sendEarth;
+    sendEarth.push_back(Position());
+    sendEarth.push_back(Position(0.25*M_PI, -0.33*M_PI));
+    sendEarth.push_back(Position(-0.67*M_PI, 0.75*M_PI, 249.98));
   
-    vector<TimeCoord>  sendTime;
-    sendTime.push_back(TimeCoord());
-    sendTime.push_back(TimeCoord(0));
+    vector<Epoch>  sendTime;
+    sendTime.push_back(Epoch());
+    sendTime.push_back(Epoch(0));
 
     ConverterCommand recvCmd;
-    vector<SkyCoord> recvSky;
-    vector<EarthCoord> recvEarth;
-    vector<TimeCoord> recvTime;
+    vector<Direction> recvSky;
+    vector<Position> recvEarth;
+    vector<Epoch> recvTime;
 
     TH_Mem aTH;
     DH_Request sendDhReq;
@@ -88,18 +88,18 @@ int main(int /*argc*/, const char* const argv[])
     recvDhReq.readBuf(recvCmd, recvReqData);
 
     ASSERT(sendCmd == recvCmd);
-    ASSERT(sendReqData.skyCoord.size() == recvReqData.skyCoord.size());
-    for (uint i=0; i < sendReqData.skyCoord.size(); ++i) {
-      ASSERT(sendReqData.skyCoord[i] == recvReqData.skyCoord[i]);
+    ASSERT(sendReqData.direction.size() == recvReqData.direction.size());
+    for (uint i=0; i < sendReqData.direction.size(); ++i) {
+      ASSERT(sendReqData.direction[i] == recvReqData.direction[i]);
     }
-    ASSERT(sendReqData.earthCoord.size() == recvReqData.earthCoord.size());
-    for (uint i=0; i < sendReqData.earthCoord.size(); ++i) {
-      ASSERTSTR(sendReqData.earthCoord[i] == recvReqData.earthCoord[i],
-                setprecision(16) << sendReqData.earthCoord[i].get() << "," << recvReqData.earthCoord[i].get());
+    ASSERT(sendReqData.position.size() == recvReqData.position.size());
+    for (uint i=0; i < sendReqData.position.size(); ++i) {
+      ASSERTSTR(sendReqData.position[i] == recvReqData.position[i],
+                setprecision(16) << sendReqData.position[i].get() << "," << recvReqData.position[i].get());
     }
-    ASSERT(sendReqData.timeCoord.size() == recvReqData.timeCoord.size());
-    for (uint i=0; i < sendReqData.timeCoord.size(); ++i) {
-      ASSERT(sendReqData.timeCoord[i] == recvReqData.timeCoord[i]);
+    ASSERT(sendReqData.epoch.size() == recvReqData.epoch.size());
+    for (uint i=0; i < sendReqData.epoch.size(); ++i) {
+      ASSERT(sendReqData.epoch[i] == recvReqData.epoch[i]);
     }
   }
   catch (Exception& e) {
