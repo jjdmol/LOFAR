@@ -34,9 +34,19 @@
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
+
+ostream& operator<<(ostream& os, const vector<double>& v)
+{
+  os << '[';
+  for (uint i = 0; i < v.size()-1; ++i) {
+    os << v[i] << ", ";
+  }
+  os << v[v.size()-1] << ']' << endl;
+}
 
 int main(int /*argc*/, const char* const argv[])
 {
@@ -84,7 +94,8 @@ int main(int /*argc*/, const char* const argv[])
     }
     ASSERT(sendReqData.earthCoord.size() == recvReqData.earthCoord.size());
     for (uint i=0; i < sendReqData.earthCoord.size(); ++i) {
-      ASSERT(sendReqData.earthCoord[i] == recvReqData.earthCoord[i]);
+      ASSERTSTR(sendReqData.earthCoord[i] == recvReqData.earthCoord[i],
+                setprecision(16) << sendReqData.earthCoord[i].get() << "," << recvReqData.earthCoord[i].get());
     }
     ASSERT(sendReqData.timeCoord.size() == recvReqData.timeCoord.size());
     for (uint i=0; i < sendReqData.timeCoord.size(); ++i) {

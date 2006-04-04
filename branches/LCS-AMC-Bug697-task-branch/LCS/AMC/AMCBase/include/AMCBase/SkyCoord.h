@@ -59,45 +59,44 @@ namespace LOFAR
         N_Types         ///< Number of reference types.
       };
 
-      // Default constructor uses 0 for the angles and J2000 as reference
-      // type.
-      SkyCoord()
-        : itsAngle0(0), itsAngle1(0), itsType(J2000) {}
+      // Default constructor uses 0 for the longitude and latitude, and J2000
+      // as reference type.
+      SkyCoord();
 
-      // Create a sky coordinate by giving the longitude \a angle0 and
-      // latitude \a angle1 in radians and the reference type \a typ.
-      SkyCoord (double angle0, double angle1, Types typ = J2000);
+      // Create a sky coordinate by giving the longitude \a lon and latitude
+      // \a lat in radians and the reference type \a typ.
+      SkyCoord(double lon, double lat, Types typ = J2000);
 
-      // Return angle0 in radians. This could be, for example, right ascension
-      // (RA) or azimuth (AZ).
-      double angle0() const
-      { return itsAngle0; }
+      // Create a sky coordinate from the direction cosines \a xyz and the
+      // reference type \a typ.
+      explicit SkyCoord(const vector<double>& xyz, Types typ = J2000);
 
-      // Return angle1 in radians. This could be, for example, declination
-      // (DEC) or elevation (EL).
-      double angle1() const
-      { return itsAngle1; }
+      // Return the sky coordinate as direction cosines.
+      vector<double> get() const
+      { return itsXYZ; }
 
       // Return the reference type.
       Types type() const
       { return itsType; }
 
-      // Return the reference type as a string.
-      const string& showType() const;
-
       // Return whether sky coordinate type is valid.
       bool isValid() const
       { return itsType != INVALID; }
 
-      // Return the sky coordinate in cartesion coordinates.
-      vector<double> xyz() const;
+      // Return the longitude in radians. This could be, for example, right
+      // ascension (RA) or azimuth (AZ).
+      double longitude() const;
+
+      // Return the latitude in radians. This could be, for example,
+      // declination (DEC) or elevation (EL).
+      double latitude() const;
+
+      // Return the reference type as a string.
+      const string& showType() const;
 
     private:
-      // Angle0 in radians.
-      double itsAngle0;
-
-      // Angle1 in radians.
-      double itsAngle1;
+      // Longitude and latitude are stored internally as direction cosines.
+      vector<double> itsXYZ;
 
       // Type of sky coordinate.
       Types itsType;

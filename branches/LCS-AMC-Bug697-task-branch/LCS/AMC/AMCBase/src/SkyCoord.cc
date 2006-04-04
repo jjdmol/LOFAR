@@ -26,26 +26,43 @@
 //# Includes
 #include <AMCBase/SkyCoord.h>
 #include <Common/lofar_iostream.h>
-#include <cmath>
+#include <Common/lofar_math.h>
+#include <Common/LofarLogger.h>
 #include <limits>
-
-using namespace std;
 
 namespace LOFAR
 {
   namespace AMC
   {
 
-    SkyCoord::SkyCoord (double angle0, double angle1, Types typ)
-      : itsAngle0(angle0), itsAngle1(angle1), itsType(typ)
+    SkyCoord::SkyCoord() : 
+      itsXYZ(3, 0.0), itsType(J2000)
     {
-      if (!(INVALID < typ && typ < N_Types)) {
-        itsAngle0 = numeric_limits<double>::quiet_NaN();
-        itsAngle1 = numeric_limits<double>::quiet_NaN();
-        itsType = INVALID;
+      itsXYZ[0] = 1.0;
+    }
+
+
+    SkyCoord::SkyCoord (double lon, double lat, Types typ) :
+      itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
+      itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
+    {
+      if (isValid()) {
+        double tmp = cos(lat);
+        itsXYZ[0] = cos(lon) * tmp;
+        itsXYZ[1] = sin(lon) * tmp;
+        itsXYZ[2] = sin(lat);
       }
     }
     
+
+    SkyCoord::SkyCoord(const vector<double>& xyz, Types typ) : 
+      itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
+      itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
+    {
+      ASSERT(xyz.size() == 3);
+      if (isValid()) itsXYZ = xyz;
+    }
+
 
     const string& SkyCoord::showType() const
     {
@@ -62,14 +79,15 @@ namespace LOFAR
     }
 
 
-    vector<double> SkyCoord::xyz() const
+    double SkyCoord::longitude() const
     {
-      vector<double> p(3);
-      double tmp = cos(itsAngle1);
-      p[0] = cos(itsAngle0) * tmp;
-      p[1] = sin(itsAngle0) * tmp;
-      p[2] = sin(itsAngle1);
-      return p;
+      return atan2(itsXYZ[1], itsXYZ[0]);
+    }
+
+
+    double SkyCoord::latitude() const
+    {
+      return asin(itsXYZ[2]);
     }
 
 
@@ -78,7 +96,7 @@ namespace LOFAR
       if (!sky.isValid()) 
         return os << sky.showType();
       else
-        return os << "[" << sky.angle0() << ", " << sky.angle1()
+        return os << "[" << sky.longitude() << ", " << sky.latitude()
                   << "] (" << sky.showType() << ")";
     }
 
@@ -87,9 +105,8 @@ namespace LOFAR
     {
       return 
         lhs.isValid() && rhs.isValid() &&
-        lhs.angle0()  == rhs.angle0()  && 
-        lhs.angle1()  == rhs.angle1()  &&
-        lhs.type()    == rhs.type();
+        lhs.type()    == rhs.type()    &&
+        lhs.get()     == rhs.get();
     }
 
   } // namespace AMC

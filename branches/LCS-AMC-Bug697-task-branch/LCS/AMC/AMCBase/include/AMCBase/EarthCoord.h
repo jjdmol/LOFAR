@@ -57,51 +57,47 @@ namespace LOFAR
         N_Types         ///< Number of reference types.
       };
 
-      // Default constructor uses 0 for the values.
-      EarthCoord()
-        : itsLong(0), itsLat(0), itsHeight(0), itsType(ITRF) {}
+      // Default constructor uses 0 for longitude, latitude and height, and
+      // ITRF as reference type.
+      EarthCoord();
+      
+      // Create an earth coordinate by giving the longitude \a lon and
+      // latitude \a lat in radians and the \a h in meters. Reference type can
+      // be either ITRF (default), or WGS84.
+      EarthCoord(double lon, double lat, double h = 0, Types typ = ITRF);
 
-      // Create a earth coordinate by giving the longitude and latitude in
-      // radians and the height in meters. Reference type can be either ITRF
-      // (default), or WGS84.
-      EarthCoord (double longitude, double latitude, double height=0,
-                  Types typ = ITRF);
-
-      // Return the longitude in radians.
-      double longitude() const
-      { return itsLong; }
-
-      // Return the latitude in radians.
-      double latitude() const
-      { return itsLat; }
-
-      // Return the height in meters.
-      double height() const
-      { return itsHeight; }
+      // Create an earth coordinate from the cartesian coordinates \a xyz and
+      // the reference type \a typ.
+      explicit EarthCoord(const vector<double>& xyz, Types typ = ITRF);
+      
+      // Return the earth coordinate in cartesian coordinates.
+      vector<double> get() const
+      { return itsXYZ; }
 
       // Return the reference type.
       Types type() const
       { return itsType; }
 
-      // Return the reference type as a string.
-      const string& showType() const;
-
       // Return whether sky coordinate type is valid.
       bool isValid() const
       { return itsType != INVALID; }
 
-      // Return the earth coordinate in cartesion coordinates.
-      vector<double> xyz() const;
+      // Return the longitude in radians.
+      double longitude() const;
+      
+      // Return the latitude in radians.
+      double latitude() const;
+      
+      // Return the height in meters.
+      double height() const;
+      
+      // Return the reference type as a string.
+      const string& showType() const;
 
     private:
-      // Longitude in radians.
-      double itsLong;
-
-      // Latitude in radians.
-      double itsLat;
-
-      // Height in meters.
-      double itsHeight;
+      // Longitude, latitude and height are stored internally in cartesian
+      // coordinates.
+      vector<double> itsXYZ;
 
       // Type of earth coordinate.
       Types itsType;
@@ -114,6 +110,9 @@ namespace LOFAR
     // \note Two invalid objects can \e never be equal.
     bool operator==(const EarthCoord& lhs, const EarthCoord& rhs);
 
+    // Calculate the dot product of \a lhs and \a rhs
+    double operator*(const EarthCoord& lhs, const EarthCoord& rhs);
+      
     // @}
 
   } // namespace AMC

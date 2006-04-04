@@ -39,6 +39,8 @@ namespace LOFAR
     static const double usecPerSec = double(1000000);
     static const double secPerDay  = double(24*3600);
 
+    //################  Public functions  ################//
+
     TimeCoord::TimeCoord()
     {
       struct timeval tp;
@@ -73,15 +75,20 @@ namespace LOFAR
         leapdays = 2 - leapdays + int(leapdays/4);
       }
       itsDay = int(365.25*yy) + int(30.6001*(mm+1)) + idd - 679006.0 + leapdays;
+      adjust();
     }
 
-    TimeCoord::TimeCoord (double mjd, double fraction)
+    TimeCoord::TimeCoord (double mjd, double fraction) :
+      itsDay(0), itsFrac(0)
     {
-      itsDay = floor(mjd);
-      itsFrac = mjd - itsDay;
-      double rest = floor(fraction);
-      itsDay += rest;
-      itsFrac += fraction - rest;
+      addTime(mjd);
+      addTime(fraction);
+      adjust();
+//       itsDay = floor(mjd);
+//       itsFrac = mjd - itsDay;
+//       double rest = floor(fraction);
+//       itsDay += rest;
+//       itsFrac += fraction - rest;
     }
 
     void TimeCoord::utc(double s)
@@ -148,6 +155,47 @@ namespace LOFAR
       s = 60*(val - m);
     }
 
+    double TimeCoord::getUTCDiff()
+    {
+#ifdef HAVE_ALTZONE
+      return (altzone + timezone);
+#else
+      int dst = 0;
+      time_t tim = time (NULL);
+      struct tm *tm_info = localtime (&tim);
+      if (tm_info->tm_isdst > 0) {
+        dst = 3600;
+      }
+      return dst - timezone;
+#endif
+    }
+
+
+    //################  Privatefunctions  ################//
+
+    void TimeCoord::adjust()
+    {
+      while (itsFrac < 0) {
+        itsFrac += 1;
+        itsDay -= 1;
+      }
+      while (itsFrac >= 1) {
+        itsFrac -= 1;
+        itsDay += 1;
+      }
+    }
+
+
+    void TimeCoord::addTime(double t)
+    {
+      double d = floor(t);
+      itsDay += d;
+      itsFrac += (t-d);
+    }
+
+
+    //################  Free functions  ################//
+
     ostream& operator<< (ostream& os, const TimeCoord& time)
     {
       int yy,mm,dd,h,m;
@@ -170,20 +218,6 @@ namespace LOFAR
       return std::abs(lhs.utc() - rhs.utc()) < usec;
     }
 
-    double TimeCoord::getUTCDiff()
-    {
-#ifdef HAVE_ALTZONE
-      return (altzone + timezone);
-#else
-      int dst = 0;
-      time_t tim = time (NULL);
-      struct tm *tm_info = localtime (&tim);
-      if (tm_info->tm_isdst > 0) {
-        dst = 3600;
-      }
-      return dst - timezone;
-#endif
-    }
 
   } // namespace AMC
 

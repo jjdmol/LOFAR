@@ -7,6 +7,16 @@ check_PROGRAMS			= tSkyCoord \
 				  tDH_Request \
 				  tDH_Result
 
+CHECKTOOLPROGS			= tSkyCoord \
+                  tEarthCoord \
+                  tTimeCoord \
+                  tConverterCommand \
+                  tConverterStatus \
+                  tBlobIO \
+                  tDH_Request \
+                  tDH_Result
+#ENDCHECKTOOLPROGS
+
 tSkyCoord_SOURCES		= tSkyCoord.cc
 tSkyCoord_LDADD			= ../src/libamcbase.la
 tSkyCoord_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)

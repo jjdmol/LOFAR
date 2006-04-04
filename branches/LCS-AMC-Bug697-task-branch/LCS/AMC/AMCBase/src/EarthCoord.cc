@@ -26,7 +26,8 @@
 //# Includes
 #include <AMCBase/EarthCoord.h>
 #include <Common/lofar_iostream.h>
-#include <cmath>
+#include <Common/lofar_math.h>
+#include <Common/LofarLogger.h>
 #include <limits>
 
 using namespace std;
@@ -36,18 +37,55 @@ namespace LOFAR
   namespace AMC
   {
 
-    EarthCoord::EarthCoord (double longitude, double latitude, double height,
-                            Types typ)
-      : itsLong(longitude), itsLat(latitude), itsHeight(height), itsType(typ)
+    EarthCoord::EarthCoord() : 
+      itsXYZ(3, 0.0), itsType(ITRF)
     {
-      if (!(INVALID < typ && typ < N_Types)) {
-        itsLong = numeric_limits<double>::quiet_NaN();
-        itsLat = numeric_limits<double>::quiet_NaN();
-        itsHeight = numeric_limits<double>::quiet_NaN();
-        itsType = INVALID;
+    }
+    
+
+    EarthCoord::EarthCoord (double lon, double lat, double h, Types typ) :
+      itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
+      itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
+    {
+      if (isValid()) {
+        double tmp = cos(lat);
+        itsXYZ[0] = h * cos(lon) * tmp;
+        itsXYZ[1] = h * sin(lon) * tmp;
+        itsXYZ[2] = h * sin(lat);
       }
     }
 
+
+    EarthCoord::EarthCoord(const vector<double>& xyz, Types typ) :
+      itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
+      itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
+    {
+      ASSERT(xyz.size() == 3);
+      if (isValid()) itsXYZ = xyz;
+    }
+
+
+    double EarthCoord::longitude() const
+    {
+      return atan2(itsXYZ[1], itsXYZ[0]);
+    }
+    
+
+    double EarthCoord::latitude() const
+    {
+      double h(height());
+      if (h == 0) return asin(itsXYZ[2]);
+      else return (asin(itsXYZ[2] / h));
+    }
+    
+
+    double EarthCoord::height() const
+    {
+      return sqrt(itsXYZ[0] * itsXYZ[0] + 
+                  itsXYZ[1] * itsXYZ[1] +
+                  itsXYZ[2] * itsXYZ[2]);
+    }
+    
 
     const string& EarthCoord::showType() const
     {
@@ -60,17 +98,6 @@ namespace LOFAR
       };
       if (isValid()) return types[itsType];
       else return types[N_Types];
-    }
-
-
-    vector<double> EarthCoord::xyz() const
-    {
-      vector<double> p(3);
-      double tmp = cos(itsLat);
-      p[0] = itsHeight * cos(itsLong) * tmp;
-      p[1] = itsHeight * sin(itsLong) * tmp;
-      p[2] = itsHeight * sin(itsLat);
-      return p;
     }
 
 
@@ -87,13 +114,24 @@ namespace LOFAR
     bool operator==(const EarthCoord& lhs, const EarthCoord& rhs)
     {
       return 
-        lhs.isValid()   && rhs.isValid()   &&
-        lhs.longitude() == rhs.longitude() &&
-        lhs.latitude()  == rhs.latitude()  &&
-        lhs.height()    == rhs.height()    &&
-        lhs.type()      == rhs.type();
+        lhs.isValid() && rhs.isValid() &&
+        lhs.type()    == rhs.type()    &&
+        lhs.get()     == rhs.get();
     }
 
+
+    double operator*(const EarthCoord& lhs, const EarthCoord& rhs)
+    {
+      double result(0);
+      vector<double> x(lhs.get());
+      vector<double> y(rhs.get());
+      ASSERT(x.size() == y.size());
+      for (uint i = 0; i < x.size(); ++i) {
+        result += x[i] * y[i];
+      }
+      return result;
+    }
+    
   } // namespace AMC
 
 } // namespace LOFAR

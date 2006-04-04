@@ -46,17 +46,14 @@ namespace LOFAR
 
     BlobOStream& operator<<(BlobOStream& bos, const SkyCoord& sc)
     {
-      bos << sc.angle0()
-          << sc.angle1()
+      bos << sc.get()
           << static_cast<int32>(sc.type());
       return bos;
     }
 
     BlobOStream& operator<<(BlobOStream& bos, const EarthCoord& ec)
     {
-      bos << ec.longitude()
-          << ec.latitude()
-          << ec.height()
+      bos << ec.get()
           << static_cast<int32>(ec.type());
       return bos;
     }
@@ -100,21 +97,20 @@ namespace LOFAR
 
     BlobIStream& operator>>(BlobIStream& bis, SkyCoord& sc)
     {
-      double angle0, angle1;
+      vector<double> xyz(3);
       int32 type;
-      bis >> angle0 >> angle1 >> type;
-      sc = SkyCoord(angle0, angle1, static_cast<SkyCoord::Types>(type));
+      bis >> xyz >> type;
+      sc = SkyCoord(xyz, static_cast<SkyCoord::Types>(type));
       ASSERT(sc.isValid());
       return bis;
     }
 
     BlobIStream& operator>>(BlobIStream& bis, EarthCoord& ec)
     {
-      double longitude, latitude, height;
+      vector<double> xyz(3);
       int32 type;
-      bis >> longitude >> latitude >> height >> type;
-      ec = EarthCoord(longitude, latitude, height, 
-                      static_cast<EarthCoord::Types>(type));
+      bis >> xyz >> type;
+      ec = EarthCoord(xyz, static_cast<EarthCoord::Types>(type));
       ASSERT(ec.isValid());
       return bis;
     }

@@ -39,14 +39,25 @@ int main(int, const char* argv[])
 
   try {
 
+    // A default constructed position
     EarthCoord ec0;
+
+    // A "normalized" position in ITRF
     EarthCoord ec1(0.25*M_PI, -0.33*M_PI, 1);
+
+    // A "denormalized" position in WGS84; latitude angle is larger than
+    // pi/2. As a result, the "normalized" latitude should be pi - 0.75 pi,
+    // and the longitude should be -0.67 pi + pi.
     EarthCoord ec2(-0.67*M_PI, 0.75*M_PI, 249.98, EarthCoord::WGS84);
+
+    // Invalide coordinate type; xyz-coordinates will be NaN.
     EarthCoord ec3(0.5*M_PI, 0.2*M_PI, -115.11, 
                    static_cast<EarthCoord::Types>(1294));
+
+    // Vector for storing the cartesian coordinates.
     vector<double> p;
 
-    p = ec0.xyz();
+    p = ec0.get();
     ASSERT(ec0.isValid() &&
            ec0.longitude() == 0 && 
            ec0.latitude() == 0 && 
@@ -56,28 +67,28 @@ int main(int, const char* argv[])
            p[1] == 0 &&
            p[2] == 0);
 
-    p = ec1.xyz();
+    p = ec1.get();
     ASSERT(ec1.isValid() &&
-           ec1.longitude() == 0.25*M_PI && 
-           ec1.latitude() == -0.33*M_PI &&
-           ec1.height() == 1 &&
-           ec1.type() == EarthCoord::ITRF);
+           ec1.type() == EarthCoord::ITRF &&
+           Numeric::compare(ec1.longitude(), 0.25*M_PI) && 
+           Numeric::compare(ec1.latitude(), -0.33*M_PI) &&
+           Numeric::compare(ec1.height(), 1));
     ASSERT(Numeric::compare(p[0],  0.3599466369818882) &&
            Numeric::compare(p[1],  0.3599466369818882) &&
            Numeric::compare(p[2], -0.8607420270039436));
 
-    p = ec2.xyz();
-    ASSERT(ec2.isValid() &&
-           ec2.longitude() == -0.67*M_PI && 
-           ec2.latitude() == 0.75*M_PI &&
-           ec2.height() == 249.98 && 
-           ec2.type() == EarthCoord::WGS84);
+    p = ec2.get();
+    ASSERTSTR(ec2.isValid() &&
+           ec2.type() == EarthCoord::WGS84 &&
+           Numeric::compare(ec2.longitude(), 0.33*M_PI) && 
+           Numeric::compare(ec2.latitude(), 0.25*M_PI) &&
+           Numeric::compare(ec2.height(), 249.98), ec2);
 
     ASSERT(Numeric::compare(p[0],  89.9794603127324) &&
            Numeric::compare(p[1], 152.1469583062028) &&
            Numeric::compare(p[2], 176.7625531610132));
 
-    p = ec3.xyz();
+    p = ec3.get();
     ASSERT(!ec3.isValid());
 
     cout << "ec0 = " << ec0 << endl;

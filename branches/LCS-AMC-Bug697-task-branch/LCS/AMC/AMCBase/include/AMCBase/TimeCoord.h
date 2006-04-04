@@ -90,6 +90,12 @@ namespace LOFAR
     private:
       double itsDay;     //# whole day in MJD
       double itsFrac;    //# Fraction of day
+
+      // Adjust itsDay and itsFrac such that 0 <= itsFrac < 1.
+      void adjust();
+
+      // Add \a t days to the current TimeCoord object.
+      void addTime(double t);
     };
 
     // Output in ASCII (in UTC).
