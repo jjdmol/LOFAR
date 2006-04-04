@@ -4,7 +4,7 @@ LimitExec_SOURCES = LimitExec.cc
 pkgdep_SOURCES    = pkgdep.cc
 
 scriptdir = $(bindir)
-dist_script_SCRIPTS = lofarcvsmv lofarcvsx makedep.sh finddep makedoc
+dist_script_SCRIPTS = lofarcvsmv lofarcvsx makedep.sh finddep makedoc checkrun
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
