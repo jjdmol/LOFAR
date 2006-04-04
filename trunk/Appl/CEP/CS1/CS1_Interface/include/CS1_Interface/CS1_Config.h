@@ -26,7 +26,7 @@
 /* This is included by C++ and assembly files.  Do not put anything but
    constants here! */
 #define INPUT_TYPE		   I16COMPLEX_TYPE
-#define NR_STATIONS		   37
+#define NR_STATIONS		   2
 #define NR_POLARIZATIONS	   2
 #define NR_SUBBAND_SAMPLES	   196608 /* 155648 */
 #define NR_SUBBAND_CHANNELS	   256
