@@ -214,7 +214,8 @@ void doMaster (bool send)
   conn.sender.fillExtra (msName, antPos, antNames);
   // Write the data in the DataHolder and send it to each slave.
   for (int i=0; i<nnode; ++i) {
-    conn.sender.setFreq (startFreq+i*stepFreq, startFreq+(i+1)*stepFreq, nfpn);
+    conn.sender.setFreq (startFreq+i*nfpn*stepFreq,
+			 startFreq+(i+1)*nfpn*stepFreq, nfpn);
     if (send) {
       conn.conns[i]->write();
     } else {
