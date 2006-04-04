@@ -26,23 +26,26 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/FileLocator.h>
+#include <stdlib.h>
 
 namespace LOFAR {
 
 //
 // FileLocator()
 //
-FileLocator::FileLocator()
-{}
+FileLocator::FileLocator() : itsSubdir("")
+{
+	addPathAtBack(resolveInput(BASE_SEARCH_DIR));
+}
 
 //
 // FileLocator(aPath)
 //
 // Construct a FileLocator with a predefined path-chain.
 //
-FileLocator::FileLocator (const string&	aPath)
+FileLocator::FileLocator (const string&	aPath) : itsSubdir("")
 {
-	addPathAtBack(aPath);
+	addPathAtBack(resolveInput(aPath));
 }
 
 //
@@ -59,25 +62,26 @@ FileLocator::~FileLocator()
 //
 void 	FileLocator::addPathAtBack  (const string& aPath)
 {
+	string	thePath=resolveInput(aPath);
 	uint32	start  = 0;
 	uint32	end;
 	uint32	sepPos;
 	bool	last = false;
 	do {
 		// search forwards through the new chain
-		if ((sepPos = aPath.find(":", start)) == string::npos) {
+		if ((sepPos = thePath.find(":", start)) == string::npos) {
 			last = true;
-			end = aPath.size();
+			end = thePath.size();
 		}
 		else {
 			end = sepPos;
 		}
 		// besure path does not end in a '/'
-		if (aPath[end-1] == '/') {
+		if (thePath[end-1] == '/') {
 			end--;
 		}
 		// add path to list.
-		itsPaths.push_back(aPath.substr(start, end-start));
+		itsPaths.push_back(thePath.substr(start, end-start));
 		start = sepPos+1;
 	} while (!last);
 }
@@ -89,13 +93,14 @@ void 	FileLocator::addPathAtBack  (const string& aPath)
 //
 void 	FileLocator::addPathAtFront (const string& aPath)
 {
-	uint32	end = aPath.size()-1;
+	string	thePath=resolveInput(aPath);
+	uint32	end = thePath.size()-1;
 	int32	start;	// note: because rfind = uint32 and sepPos becomes < 0
 	uint32	sepPos;
 	bool	last = false;
 	do {
 		// search backwards in the newchain for ':'
-		if ((sepPos = aPath.rfind(":", end)) == string::npos) {
+		if ((sepPos = thePath.rfind(":", end)) == string::npos) {
 			last = true;
 			start = -1;
 		}
@@ -103,11 +108,11 @@ void 	FileLocator::addPathAtFront (const string& aPath)
 			start = sepPos;
 		}
 		// be sure path does not end in a '/'
-		if (aPath[end] == '/') {
+		if (thePath[end] == '/') {
 			end--;
 		}
 		// add path to list.
-		itsPaths.push_front(aPath.substr(start+1, end-start));
+		itsPaths.push_front(thePath.substr(start+1, end-start));
 		end = sepPos-1;
 	} while (!last);
 }
@@ -149,7 +154,7 @@ bool 	FileLocator::hasPath		(const string& aPath)
 {
 	iterator	iter     = itsPaths.begin();
 	iterator	chainEnd = itsPaths.end();
-	string		path2find(aPath);
+	string		path2find(resolveInput(aPath));
 	
 	// Paths are stored without an trailing /, remove it from argument.
 	if (path2find[path2find.size()-1] == '/') {
@@ -159,6 +164,11 @@ bool 	FileLocator::hasPath		(const string& aPath)
 	while (iter != chainEnd) {
 		if (*iter == path2find) {
 			return (true);
+		}
+		if (!itsSubdir.empty()) {
+			if ((*iter)+itsSubdir == path2find) {
+				return(true);
+			}
 		}
 		++iter;
 	}
@@ -174,7 +184,7 @@ bool 	FileLocator::hasPath		(const string& aPath)
 //
 void	FileLocator::removePath  (const string& aPath)
 {
-	string		path2remove(aPath);
+	string		path2remove(resolveInput(aPath));
 	
 	// Paths are stored without an trailing /, remove it from argument.
 	if (path2remove[path2remove.size()-1] == '/') {
@@ -202,11 +212,20 @@ string	FileLocator::locate		(const string& aFile)
 	iterator	iter     = itsPaths.begin();
 	iterator	chainEnd = itsPaths.end();
 	while (iter != chainEnd) {
-		struct stat		fileStat;
-		string			fullname = *iter + "/" + aFile;
-		int result = stat(fullname.c_str(), &fileStat);
-		if (result == 0) { // found?
-			return (fullname);
+		// when itsSubdir is filled each test much be performed also with subdir
+		for (int32 test = 0; test <= (itsSubdir.empty() ? 0 : 1); test++) {
+			struct stat		fileStat;
+			string			fullname;
+			if (test == 0) {	// basedir?
+				fullname = *iter + "/" + aFile;
+			}
+			else {				// test subdir
+				fullname = *iter + itsSubdir + "/" + aFile;
+			}
+			int result = stat(fullname.c_str(), &fileStat);
+			if (result == 0) { // found?
+				return (fullname);
+			}
 		}
 		++iter;
 	}
@@ -216,5 +235,115 @@ string	FileLocator::locate		(const string& aFile)
 				   ", returning inputname : " << aFile);
 	return (aFile);
 }
+
+//
+// addSubdir(aSubdir)
+//
+void FileLocator::setSubdir(const string&	aSubdir)
+{
+	uint32		start = 0;
+	uint32		end = aSubdir.size();
+
+	if (aSubdir[start] == '/') {
+		start++;
+	}
+
+	if (aSubdir[end] == '/') {
+		end--;
+	}
+
+	itsSubdir = "/"+aSubdir.substr(start, end-start);
+}
+
+
+
+// [private]
+// resolveInput (string)
+//
+// Resolve any environment variables in the inputstring
+//
+string FileLocator::resolveInput(const string&	input)
+{
+	// search for $
+	uint32	dollarPos = input.find("$",0);
+	if (dollarPos == string::npos) {		// no $ found?
+		return (input);						// return original
+	}
+
+	LOG_TRACE_VAR_STR("resolving: " << input);
+
+	// supported syntax: ${abc}|$abc[:|/xyz]
+	// e.g. /dddd/ee:${abc}/bin:/ffff/gg
+	// when $ is detected search for / and :
+	//  /   :    action
+	//	-   -    resolve $..input.size
+	//  -   >0   resolve $..:
+	//   [/>:]   resolve $..:
+	//  >0  -    resolve $../ + add /..input.size
+	//   [/<:]   resolve $../ + add /..:
+	uint32		startPos = 0;
+	string		result;
+	do {
+		result   = input.substr(startPos, dollarPos);	// add part till $
+		startPos = dollarPos+1;
+		uint32	slashPos = input.find("/", dollarPos);
+		uint32	colonPos = input.find(":", dollarPos);
+		uint32	endPos;					// end of path at : or EOS
+		if (colonPos == string::npos) {
+			endPos = input.size();
+		}
+		else {
+			endPos = colonPos;
+		}
+
+		if ((slashPos == string::npos) || (slashPos > colonPos)) {
+			// colon or EOS limits the $var
+			char*	valPtr = 
+						getenv(input.substr(startPos, endPos-startPos).c_str());
+			if (!valPtr) {
+				LOG_WARN_STR("Environment variable " << \
+						input.substr(startPos, endPos-startPos) <<  \
+						" can not be solved, excluding it from search path!");
+			}
+			else {
+				result.append(valPtr);
+				result.append(":");
+			}
+		}
+		else {
+			// slash limits the $var
+			char*	valPtr = 
+					getenv(input.substr(startPos, slashPos-startPos).c_str());
+			if (!valPtr) {
+				LOG_WARN_STR("Environment variable " <<
+						input.substr(startPos, endPos-startPos) <<
+						" can not be solved, excluding it from search path!");
+			}
+			else {
+				// $var ends in / (e.g $abc/bin), resolved path may not contain :
+				ASSERTSTR(strchr(valPtr, ':') == 0,
+					"Environment variable " << 
+					input.substr(startPos, slashPos-startPos) << 
+					" may not contain a ':' --> " << valPtr);
+				
+				result.append(valPtr);
+				result.append(input.substr(slashPos, endPos-slashPos));
+				result.append(":");
+			}
+		}
+		startPos = endPos+1;
+	} while ((dollarPos = input.find("$", startPos)) != string::npos);
+
+	// copy last part of input
+	if (startPos < input.size()) {
+		result.append(input.substr(startPos));
+		result.append(":");
+	}
+
+	LOG_TRACE_VAR_STR("resolved: " << result.substr(0, result.size()-1));
+
+	return (result.substr(0, result.size()-1));	// skip last colon
+}
+
 
 } // namespace LOFAR

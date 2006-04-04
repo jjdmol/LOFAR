@@ -83,6 +83,45 @@ int main (int, char *argv[]) {
 	LOG_INFO ("Searching myself");
 	LOG_INFO_STR ("fullname = " << Locator1.locate(basename(argv[0])));
 
+#if RESOLVE_INPUT_NOT_PRIVATE
+	LOG_INFO_STR("'$iserniet': " <<  Locator1.resolveInput("$iserniet"));
+	LOG_INFO_STR("'$lofarroot': " <<  Locator1.resolveInput("$lofarroot"));
+	LOG_INFO_STR("'$lofarroot/bin': " <<  
+						Locator1.resolveInput("$lofarroot/bin"));
+	LOG_INFO_STR("'/sbin:$lofarroot/bin': " <<  
+						Locator1.resolveInput("/sbin:$lofarroot/bin"));
+	LOG_INFO_STR("'/sbin:$lofarroot/bin:/usr/sbin': " <<  
+						Locator1.resolveInput("/sbin:$lofarroot/bin:/usr/sbin"));
+#endif	
+
+	LOG_INFO ("FOR THE NEXT TESTS THE ENVVAR $lofarroot IS SET TO /opt/lofar");
+	setenv("lofarroot", "/opt/lofar", 1);
+
+	LOG_INFO ("Creating default fileLocator");
+	FileLocator		Locator2;
+	LOG_INFO_STR ("registered path = " << Locator2.getPath());
+
+	path1 = Locator2.hasPath("$lofarroot");
+	path2 = Locator2.hasPath("/opt/lofar/");
+	LOG_INFO (formatString("Path $lofarroot is %sin the chain", path1 ? "" : "NOT "));
+	LOG_INFO (formatString("Path /opt/lofar/ is %sin the chain", path2 ? "" : "NOT "));
+
+	path1 = Locator2.hasPath("$unexisting_envvar");
+	LOG_INFO (formatString("Path $unexisting_envvar is %sin the chain", path1 ? "" : "NOT "));
+
+	LOG_INFO("Setting subdir to 'etc'");
+	Locator2.setSubdir("etc");
+	LOG_INFO_STR ("registered path = " << Locator2.getPath());
+	LOG_INFO_STR ("registered subdir = " << Locator2.getSubdir());
+
+	path1 = Locator2.hasPath("/opt/lofar/etc");
+	LOG_INFO (formatString("Path /opt/lofar/etc is %sin the chain", path1 ? "" : "NOT "));
+
+	LOG_INFO ("Searching file 'ServiceBroker.conf'");
+	LOG_INFO_STR ("fullname = " << Locator2.locate("ServiceBroker.conf"));
+
+	
+
 	LOG_INFO("Normal termination of program");
 	return (0);
 }
