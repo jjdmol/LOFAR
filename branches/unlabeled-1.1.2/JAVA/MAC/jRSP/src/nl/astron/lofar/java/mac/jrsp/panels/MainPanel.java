@@ -7,6 +7,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import nl.astron.lofar.mac.apl.gui.jrsp.Board;
+import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.panels.IPluginPanel;
 
@@ -41,20 +42,27 @@ public class MainPanel extends JPanel
     public MainPanel() 
     {
         mainFrame = null;
-        board = null;
+        board = new Board();
         refreshThread = null;
         changed = false;
         
         initComponents();        
         
+        // listpanel
         listPanel.setTitle("Boards");
-        listPanel.newList(new String[]{""});
         listPanel.addListSelectionListener(this);
         
+        // tabbedpane
         jTabbedPane.addChangeListener(this);
         
+        // controlpanel
         controlPanel.setMainPanel(this);
-               
+        
+        
+        // waveformsettingspanel
+        waveformSettingsPanel.setMainPanel(this);
+        
+        
         refreshRates = new int[jTabbedPane.getTabCount()];
     }
     
@@ -110,6 +118,24 @@ public class MainPanel extends JPanel
      * It is has to be implemented...
      */
     public void checkChanged() { }
+    
+    /**
+     * Returns the index of the current selected board in the ListPanel.
+     * @return  index
+     */
+    public int getSelectedBoardIndex()
+    {
+        return listPanel.getSelectedIndex();
+    }
+    
+    /**
+     * Returns the board.
+     * @return  board
+     */
+    public Board getBoard()
+    {
+        return board;
+    }
     
     /**
      * Sets the refresh rate of the currently selected panel.
@@ -181,7 +207,9 @@ public class MainPanel extends JPanel
         // @TODO - change which status is returned based on the selected board!
         if(selectedClass.equals(StatusPanel.class))
         {
-           ((StatusPanel)jTabbedPane.getSelectedComponent()).initFields(board.getStatus()[index]);
+            RCUMask mask = new RCUMask();
+            mask.setBit(index);
+            ((StatusPanel)jTabbedPane.getSelectedComponent()).initFields(board.getStatus(mask.getMask())[0]);
         }
         else if(selectedClass.equals(TijdPanel.class))
         {
@@ -189,7 +217,7 @@ public class MainPanel extends JPanel
         }
         else if(selectedClass.equals(WaveformSettingsPanel.class))
         {
-            waveformSettingsPanel.setBoard(board);
+            //waveformSettingsPanel.setBoard(board);
         }
     }
     
@@ -236,15 +264,16 @@ public class MainPanel extends JPanel
         
         // If the board is null; there hasn't been a board yet, construct a new
         // board. Else change the current board.
-        if(board == null)
+        if(!board.isConnected())
         {
-            board = new Board(hostname);
+            board.connect(hostname);
             // Change listPanel according to the new Board.
             updateListPanel();
         }
         else if(!hostname.equals(board.getHostname()))
         {
-            board.setHostname(hostname);
+            board.disconnect();
+            board.connect(hostname);
             // Change listPanel according to the altered Board.
             updateListPanel();
         }

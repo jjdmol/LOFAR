@@ -461,8 +461,6 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWavefo
 	return false;
 }
 
-
-
 BoardStatus GetDummyBoardStatus()
 {
 	BoardStatus bs;

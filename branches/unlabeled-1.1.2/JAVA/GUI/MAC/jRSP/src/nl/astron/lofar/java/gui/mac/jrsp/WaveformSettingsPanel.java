@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import nl.astron.lofar.mac.apl.gui.jrsp.Board;
+import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
 
 /**
  * This is the main panel for the WaveformSettings.
@@ -13,14 +14,14 @@ import nl.astron.lofar.mac.apl.gui.jrsp.Board;
 public class WaveformSettingsPanel extends JPanel implements ActionListener
 {
     /** Board instance */
-    private Board board;
+    private MainPanel mainPanel;
     
     /** 
      * Creates new form WaveformSettingsPanel.
      */
     public WaveformSettingsPanel() 
     {
-        board = null;
+        mainPanel = null;
         
         initComponents();
         
@@ -28,21 +29,21 @@ public class WaveformSettingsPanel extends JPanel implements ActionListener
     }
     
     /**
-     * Get board.
-     * @return  board
+     * Get main panel.
+     * @return  mainPanel
      */
-    public Board getBoard()
+    public MainPanel getMainPanel()
     {
-        return board;
+        return mainPanel;
     }
     
     /**
-     * Set board.
-     * @param   board
+     * Set main panel.
+     * @param   mainPanel
      */
-    public void setBoard(Board board)
+    public void setMainPanel(MainPanel mainPanel)
     {
-        this.board = board;
+        this.mainPanel = mainPanel;
     }
     
     /**
@@ -52,28 +53,30 @@ public class WaveformSettingsPanel extends JPanel implements ActionListener
      */
     public void actionPerformed(ActionEvent e)
     {
-        if(board == null)
+        Board board = mainPanel.getBoard();
+        
+        // if the board isn't connected we dont have to perform a action :)
+        if(!board.isConnected())
         {
             return;
         }
         
-        int rcuMask = 0;
-        int mode = 0;
-        int frequency = 0;
-        int amplitude = 0;
+        RCUMask mask = new RCUMask();
+        mask.setBit(mainPanel.getSelectedBoardIndex());
+        int rcuMask = mask.getMask();
+        
         try
         {
-            mode = Integer.parseInt(inputPanel.getMode());
-            frequency = Integer.parseInt(inputPanel.getFrequency());
-            amplitude = Integer.parseInt(inputPanel.getAmplitude());
+            int mode = Integer.parseInt(inputPanel.getMode());
+            int frequency = Integer.parseInt(inputPanel.getFrequency());
+            int amplitude = Integer.parseInt(inputPanel.getAmplitude());
+            
+            board.setWaveformSettings(rcuMask, mode, frequency, amplitude);
         }
         catch(NumberFormatException nfe)
         {
-            JOptionPane.showMessageDialog(null, "Incorrect value discovered. All fields should contain a positive value.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        
-        board.setWaveformSettings(rcuMask, mode, frequency, amplitude);
+            JOptionPane.showMessageDialog(null, "Incorrect value entered. All fields should contain a positive value.", "Error", JOptionPane.ERROR_MESSAGE);
+        }        
     }
     
     /** This method is called from within the constructor to

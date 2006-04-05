@@ -47,6 +47,14 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveNofBo
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWaveformSettings
   (JNIEnv *, jobject, jint, jint, jint, jint, jint);
 
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    testPrintRCUMask
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_testPrintRCUMask
+  (JNIEnv *, jobject, jint);
+
 #ifdef __cplusplus
 }
 #endif

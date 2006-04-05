@@ -14,7 +14,8 @@ public class Main
      */
     public static void main(String[] args)
     {
-        Board b = new Board("localhost");
+        Board b = new Board();
+        b.connect("localhost");
         BoardStatus bs = b.getStatus()[0];
         
         System.out.println("volt 1V2: " + bs.voltage1V2);
@@ -82,6 +83,7 @@ public class Main
         System.out.println("blp3AdcOffset x: " + bs.blp3AdcOffset.adcOffsetX);
         System.out.println("blp3AdcOffset y: " + bs.blp3AdcOffset.adcOffsetY);
         
+        b.disconnect();
         
         /* 
         System.out.println("blp1 sync: " + bs.blp1Sync);
