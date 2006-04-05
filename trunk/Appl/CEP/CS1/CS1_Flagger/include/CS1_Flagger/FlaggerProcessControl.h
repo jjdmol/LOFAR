@@ -34,7 +34,7 @@ namespace WSRT
 
 namespace LOFAR 
 {
-  namespace CS1_Flagger
+  namespace CS1
   {
     class FlaggerProcessControl : public LOFAR::ACC::PLC::ProcessControl
     {
