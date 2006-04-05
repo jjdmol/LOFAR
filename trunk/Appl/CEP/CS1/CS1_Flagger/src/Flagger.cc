@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 {
   try
   {
-    LOFAR::CS1_Flagger::FlaggerProcessControl myProcess;
+    LOFAR::CS1::FlaggerProcessControl myProcess;
     return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
   } //try
   catch(casa::AipsError& err)
