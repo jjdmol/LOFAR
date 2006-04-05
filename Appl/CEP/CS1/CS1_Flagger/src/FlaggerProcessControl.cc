@@ -32,7 +32,7 @@
 
 namespace LOFAR 
 {
-  namespace CS1_Flagger
+  namespace CS1
   {
     //===============>>> FlaggerProcessControl::FlaggerProcessControl  <<<===============
     FlaggerProcessControl::FlaggerProcessControl()
@@ -153,5 +153,5 @@ namespace LOFAR
     tribool FlaggerProcessControl::snapshot(const std::string&)
     { return false;
     }
-  } //namespace CS1_Flagger
+  } //namespace CS1
 }; //namespace LOFAR
