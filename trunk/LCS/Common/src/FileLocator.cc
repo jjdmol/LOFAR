@@ -33,7 +33,7 @@ namespace LOFAR {
 //
 // FileLocator()
 //
-FileLocator::FileLocator() : itsSubdir("")
+FileLocator::FileLocator()
 {
 	addPathAtBack(resolveInput(BASE_SEARCH_DIR));
 }
@@ -43,7 +43,7 @@ FileLocator::FileLocator() : itsSubdir("")
 //
 // Construct a FileLocator with a predefined path-chain.
 //
-FileLocator::FileLocator (const string&	aPath) : itsSubdir("")
+FileLocator::FileLocator (const string&	aPath)
 {
 	addPathAtBack(resolveInput(aPath));
 }
@@ -232,8 +232,8 @@ string	FileLocator::locate		(const string& aFile)
 
 	// not found, return original file
 	LOG_DEBUG_STR ("Filename not found in " << getPath() << 
-				   ", returning inputname : " << aFile);
-	return (aFile);
+				   ", returning empty string");
+	return ("");
 }
 
 //

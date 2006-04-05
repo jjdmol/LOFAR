@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/FileLocator.h>
+#include <Common/lofar_locator.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -119,6 +119,11 @@ int main (int, char *argv[]) {
 
 	LOG_INFO ("Searching file 'ServiceBroker.conf'");
 	LOG_INFO_STR ("fullname = " << Locator2.locate("ServiceBroker.conf"));
+
+	LOG_INFO ("Testing ConfigLocator");
+	ConfigLocator	aCL;
+	LOG_INFO_STR ("registered path = " << aCL.getPath());
+	LOG_INFO_STR ("registered subdir = " << aCL.getSubdir());
 
 	
 
