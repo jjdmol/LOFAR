@@ -103,7 +103,7 @@ private:
 //
 inline void FileLocator::clearSubdir()
 {
-	itsSubdir="";
+	itsSubdir.clear();
 }
 
 

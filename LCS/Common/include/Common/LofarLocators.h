@@ -65,14 +65,14 @@ private:
 class ProgramLocator : public FileLocator
 {
 public:
-	#define		CONFIG_SUB_DIR		"/bin"
+	#define		PROGRAM_SUB_DIR		"/bin"
 
 	// Create a FileLocator without a predefined path.
 	ProgramLocator() 
-		{	itsLocator.setSubdir(CONFIG_SUB_DIR); }
+		{	itsLocator.setSubdir(PROGRAM_SUB_DIR); }
 	// Create a FileLocator with a predefined path.
 	explicit ProgramLocator (const string&	aPath) : itsLocator(aPath) 
-		{ 	itsLocator.setSubdir(CONFIG_SUB_DIR); }
+		{ 	itsLocator.setSubdir(PROGRAM_SUB_DIR); }
 
 private:
 	ProgramLocator(const ProgramLocator&	that);
