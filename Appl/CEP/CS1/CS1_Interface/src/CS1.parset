@@ -45,7 +45,7 @@ FakeData.NSubbands=1
 FakeData.NStations=2
 
 # General Variables
-General.NRuns = 30      # Number of seconds to process. NB: must be a multiple of 'BGLProc.SlavesPerSubband'
+General.NRuns = 3600      # Number of seconds to process. NB: must be a multiple of 'BGLProc.SlavesPerSubband'
 
 # Variables for the DelayCompensation
 DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
@@ -57,12 +57,12 @@ Input.SzEPApayload=8  # must be a multiple of 8 (Npol * 4) and it must be more t
 Input.IPHeaderSize=32
 Input.NSamplesToBuffer=6000000
 Input.NRSPBoards=2
-Input.Transport.0.th        = ETHERNET  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
 Input.Transport.0.inputFile = "udp_rsp0.data"
 Input.Transport.0.interface = eth1
 Input.Transport.0.sourceMac = "00:30:48:2d:00:f7"
 Input.Transport.0.destinationMac = 00:30:48:2b:fc:85 # 00:30:48:2d:01:c1
-Input.Transport.1.th        = ETHERNET  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.1.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
 Input.Transport.1.inputFile = "udp_rsp1.data"
 Input.Transport.1.interface = eth1
 Input.Transport.1.sourceMac = "00:30:48:2d:00:f7"
