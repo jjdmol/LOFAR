@@ -56,13 +56,13 @@ namespace LOFAR
     class BeamletBuffer
     {
     public:
-      BeamletBuffer(int bufferSize, int nSubbands, int history, int readWriteDelay);
+      BeamletBuffer(uint bufferSize, uint nSubbands, uint history, uint readWriteDelay);
       ~BeamletBuffer();
 
       // write elements in the buffer, return value is number of succesfully written elements
-      int writeElements(Beamlet* data, TimeStamp begin, int nElements, int stride);
+      uint writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint stride);
       // get elements out of the buffer, return value is number of valid elements
-      int getElements(vector<Beamlet*> buffers, int& invalidCount, TimeStamp begin, int nElements);
+      uint getElements(vector<Beamlet*> buffers, TimeStamp begin, uint nElements);
 
       TimeStamp startBufferRead();
       TimeStamp startBufferRead(TimeStamp);
@@ -76,18 +76,23 @@ namespace LOFAR
       BeamletBuffer (const BeamletBuffer& that);
       BeamletBuffer& operator= (const BeamletBuffer& that);
 
-      int mapTime2Index(TimeStamp time) { return ((((long long)time.getSeqId()) * ((long long)time.getMaxBlockId())) + time.getBlockId()) % itsSize; };
+      // Needed for mapping a timestamp to a place in the buffer
+      TimeStamp time0;
+      uint mapTime2Index(TimeStamp time) const { return (time - time0) % itsSize; };
 
       //# Datamembers
       vector<Beamlet *> itsSBBuffers;
       bool* itsInvalidFlags;
-      int itsNSubbands;
-      int itsSize;
+      uint itsNSubbands;
+      uint itsSize;
+
+      TimeStamp itsHighestWritten;
       
       LockedRange<TimeStamp, int> itsLockedRange;
 
-      int itsDroppedItems;
-      int itsDummyItems;
+      // These are for statistics
+      uint itsDroppedItems;
+      uint itsDummyItems;
 
       NSTimer itsWriteTimer;
       NSTimer itsReadTimer;
