@@ -545,7 +545,7 @@ void MSCreate::writeTimeStep()
   int rowNumber = itsMS->nrow();
   itsMS->addRow (nrbasel);
   Array<Float> sigma(IPosition(1, shape(0)));
-  sigma = 0;
+  sigma = 1;
   Array<Float> weight(IPosition(1, shape(0)));
   weight = 1;
   Double time = itsStartTime + itsNrTimes*itsTimeStep + itsTimeStep/2;
