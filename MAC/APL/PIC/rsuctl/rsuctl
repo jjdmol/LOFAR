@@ -3,38 +3,97 @@
 #
 # rsuctl # Remote System Update - program firmware in FPGA flash
 #
-# Usage: rsuctl
-#  [-i ifname]        # Ethernet interface name on which to communicate
-#  [-a mac-address]   # IP-address of the target board (default is 10:FA:00:00:FF:FF)
-#  [-e]               # erase the flash
-#  [-x page -t ap|bp] # Load new firmware into the AP from page; 0 <= page < 8
-#  [-w page -t ap|bp -f imagefile [-F]]
-#                     # write the imagefile into specified page of
-#                     # the specified devices
-#  [-v page -t ap|bp -f verifyfile]
-#                     # compare the verifyfile with the contents of the flash
-#  [-r]               # Reset all FPGA's (load factory image)
-#  [-c]               # Clear all FPGA's (restart current image)
-#  [-s]               # Send sync pulse to all FPGA's
+# Usage: rsuctl [options] command
+#
+#   options
+#     [-i ifname]        # Ethernet interface name on which to communicate (default is eth0)
+#     [-m mac-address]   # IP-address of the target board (default is broadcast address 10:FA:00:00:FF:FF)
+#
+#   command (specify at least one of the following)
+#     [-l]               # List the images currently stored in all pages of the flash
+#     [-b imagefile.ttf] # Convert ttf file to imagefile.bin
+#     [-e page]          # Erase the specified page, use -1 for all pages; 0 <= page < 16
+#     [-x page           # Load (execute) new firmware on the specified AP from page; 0 <= page < 16
+#     [-w page -f imagefile.bin]
+#                        # Write the binary imagefile into specified page
+#     [-v page -f imagefile.bin]
+#                        # Verify the contents of the flash page against the binary imagefile
+#     [-d page -f dumpfile.bin]
+#                        # Dump the contents of page to dumpfile.bin
+#     [-r]               # Reset all FPGA's (load factory image)
+#     [-c]               # Clear all FPGA's (restart current image)
+#     [-s]               # Send SYNC pulse to all FPGA's
 #
 
 use Net::RawIP;
-#use IO::Socket;
 use Getopt::Std;
 use File::stat;
+use Time::localtime;
 use Switch;
+use POSIX; # for geteuid()
+
+$g_debug         = 0;  # set to 1 to enable debug output
+$g_packet        = ''; # global packet string
+$g_current_block = ''; # current block being written
+$g_error         = 0;  # global error status 
 
 #
-# Opcodes definitions
+# Definitions
 #
-$IPUPDATE = 0x1;
-$SAVE     = 0x2;
-$TESTEXEC = 0x3;
-$ERASE    = 0x4;
-$LIST     = 0x5;
+$PID_RSR      = 0x01;
+$PID_RSU      = 0x02;
 
-# pack format for the header
-$HEADERFORMAT = "CN"; # C = unsignec char, N = unsigned long in "network" order
+$REG_VERSION      = 0x01;
+$REG_VERSION_SIZE = 2;
+
+$REG_RW       = 0x01;
+$REG_ERASE    = 0x02;
+$REG_RECONFIG = 0x03;
+$REG_CLEAR    = 0x04;
+
+$CMD_ERASE = 0x01;
+
+$CMD_SYNC  = 0x01;
+$CMD_CLEAR = 0x02;
+$CMD_RESET = 0x04;
+
+$MEPHDRSIZE = 16;
+
+$TYPE_READ     = 0x01;
+$TYPE_WRITE    = 0x02;
+$TYPE_READACK  = 0x03;
+$TYPE_WRITEACK = 0x04;
+
+$ADDR_BLP_NONE = 0x00;
+$ADDR_RSP      = 0x01;
+
+$FLASHSIZE         = 64 * 1024 * 1024; # 64MB
+$BLOCKSIZE         = 1024; # block  = 1024 bytes
+$BLOCKS_PER_SECTOR = 128;  # sector = 128 blocks
+$SECTORS_PER_PAGE  = 32;   # page   = 32 sectors
+$BLOCKS_PER_PAGE   = $BLOCKS_PER_SECTOR * $SECTORS_PER_PAGE;
+$PAGES             = 16;
+$PROGRESS_SIZE     = 32;
+
+#
+# pack format for the MEP message
+# 
+# C 0x10 Ethernet Type byte 0
+# C 0xFA Ethernet Type byte 1
+# C TYPE
+# C STATUS
+# S FRAMELENGTH
+# C BLPID
+# C RSP
+# C PID
+# C REGID
+# S OFFSET
+# S PAYLOAD_LENGTH
+# S SEQ_NR
+# S RESERVED
+#
+$MEPSENDFORMAT="CCCCSCCCCSSSS";
+$MEPRECVFORMAT="H28CCSCCCCSSSS";
 
 # ETHLEN = max length of Ethernet payload
 $ETHLEN = 1500;
@@ -42,372 +101,658 @@ $ETHLEN = 1500;
 #
 # Error code
 #
-%IPUPDATE_RESULT = (   0 => "=== OK IP address updated\n",
-		       8 => "=== ERR Data receive error\n",
-		     255 => "=== ERR Unknown error" );
-%SAVE_RESULT     = (   0 => "=== OK File saved\n",
-		       1 => "=== ERR File has been saved already\n",
-		       2 => "=== ERR Memory full\n",
-		       8 => "=== ERR Data receive error\n",
-		     255 => "=== ERR Uknown error" );
-%TESTEXEC_RESULT = (   0 => "=== OK Test Passed\n",
-		       1 => "=== ERR Test Failed\n",
-		       2 => "=== ERR Gen file not found\n",
-		       3 => "=== ERR Incorrect Gen File\n",
-		       4 => "=== ERR Apl file not found\n",
-		       5 => "=== ERR Incorrect Apl file\n",
-		       6 => "=== ERR Cnn file not found\n",
-		       7 => "=== ERR Incorrect Cnn file\n",
-		       8 => "=== ERR Data receive error\n",
-		     255 => "=== ERR Unkown error" );
-%ERASE_RESULT    = (   0 => "=== OK File erased\n",
-		       1 => "=== ERR File not found\n",
-		       2 => "=== ERR Erase Error\n",
-		       8 => "=== ERR Data receive error\n",
-		     255 => "=== ERR Unkown error" );
-%LIST_RESULT     = (   0 => "=== OK Files listed\n",
-		       1 => "=== WARN No files found\n",
-		       8 => "=== ERR Data receive error\n",
-		     255 => "=== ERR Unkown error" );
-%FILETYPE = ( 0 => "GEN",
-	      1 => "APL",
-	      2 => "CNN" );
-
-#
-# checkresponse($sock)
-#
-sub checkresponse
-{
-    my ($sock) = @_;
-
-    my $response;
-
-    (read($sock, $response, 1) == 1)
-	|| die "=== ERR Did not receive response from ECB";
-    ($response) = unpack("C", $response);
-
-    return $response;
-}
-
-#
-# $filesize = readfile($filename, $filedata)
-#
-# Read the entire contents of the specified file into a buffer
-# Returns -1 on error, filesize otherwise
-#
-sub readfile
-{
-    my ($filename) = @_;
-
-    my $inode, $filesize;
-
-    $inode = stat($filename);
-    $filesize = $inode->size;
-
-    open(BINFILE, $filename) || return -1;
-
-    (read(BINFILE, $_[1], $filesize) == $filesize) || return -1;
-
-    close(BINFILE);
-
-    return $filesize;
-}
-
-#
-# listfiles($sock, $erase)
-#
-sub listfiles
-{
-    if (defined($opt_T)) { test_listfiles(); return; }
-
-    my ($sock, $erase) = @_;
-
-    my $header, $response, $totallength, $remaining;
-
-    $header = pack($HEADERFORMAT, $LIST, 0);
-
-    # send the frame
-    print $sock $header;
-
-    # read totallength
-    (read($sock, $totallength, 4) == 4) || die "=== ERR Failed to read list result";
-    ($totallength) = unpack("N", $totallength);
-
-    # read file list
-    (read($sock, $filelist, $totallength) == $totallength)
-	|| die "=== ERR Failed to read file list: $!";
-
-    # print info for all files
-    $remaining=length($filelist);
-    #print STDERR "=== Saved files:\n\tType\tFilename\tDesignname\tSize\n";
-    print STDERR "=== Saved files:\n\tType\tFilename\t\tSize\n";
-    while ($remaining > 0) {
-
-	($type, $filename, $designname, $length) = unpack("CZ*Z*N", $filelist);
-
-
-	if ($erase) {
-	    erase($sock, $filename, $type);
-	    print "$filename erased\n";
-	} else {
-	    print "\t$FILETYPE{$type}\t$filename\t\t$length\n";
-	}
-
-	$remaining -= 1 + (length($filename)+1) + (length($designname)+1) + 4;
-
-	$filelist = substr($filelist, -$remaining, $remaining);
-
-    }
-}
-
-#
-# test_listfiles
-#
-sub test_listfiles
-{
-    my $n1 = "GenFile", $d1 = "GenDesign0";
-    my $n2 = "AplFile", $d2 = "";
-    my $n3 = "CnnFile", $d3 = "CnnDesignName";
- 
-    print pack("NCZ*Z*NCZ*Z*NCZ*Z*N", 7+length($n1)+length($d1)+7+length($n2)+length($d2)+7+length($n3)+length($d3),
-	       0x0, $n1, $d1, 123,
-	       0x1, $n2, $d2, 456,
-	       0x2, $n3, $d3, 789);
-}
-
-#
-# savefile($sock, $filename)
-#
-sub savefile
-{
-    if (defined($opt_T)) { test_savefile(); return; }
-
-    my ($sock, $filename) = @_;
-    my $filesize, $header;
-
-    ($filesize = readfile($filename, $bindata))
-	|| die "=== ERR Failed to read file '$filename': $!";
-   
-    $header = pack($HEADERFORMAT, $SAVE, $filesize);
-
-    # send the frame
-    print $sock $header, $bindata;
-
-    # check the response
-    print STDERR $SAVE_RESULT{checkresponse($sock)};
-}
-
-#
-# test_savefile
-#
-sub test_savefile
-{
-    print pack("C", 0);
-}
-
-#
-# testexec($sock, $genfile, $aplfile, $cnnfile, $errfile)
-#
-sub testexec
-{
-    if (defined($opt_T)) { test_testexec(); return; }
-
-    my ($sock, $genfile, $aplfile, $cnnfile, $errfile) = @_;
-
-    $data = pack("C/a*C/a*C/a*C/a*NNNNNNNN",
-                 $genfile, $aplfile, $cnnfile, $errfile,
-                 0, 0, 0, 0, 0, 0, 0, 0);
-
-    $header = pack($HEADERFORMAT, $TESTEXEC, length($data));
-
-    # send request
-    print $sock $header, $data;
-
-    # read length of test result
-    (read($sock, $length, 4) == 4)
-	|| die "=== ERR Failed to read length of test result: $!";
-    ($length) = unpack("N", $length);
-
-    # read the test result
-    $length -= 1; # leave the result code for later
-    (read($sock, $testresult, $length) == $length)
-	|| die "=== ERR Failed to read test result of length $length: $!";
-
-    # print testresult
-    print STDERR "=== RESULT:\n", $testresult, "\n";
-
-    # check result code
-    print STDERR $TESTEXEC_RESULT{checkresponse($sock)};
-}
-
-#
-# test_testexec
-#
-sub test_testexec
-{
-    $testresult="This is the test result.";
-
-    print pack("NZ*C", length($testresult), $testresult, 0);
-}
-
-#
-# erase($sock, $filename, $type)
-#
-sub erase
-{
-    if (defined($opt_T)) { test_erase(); return; }
-
-    my ($sock, $filename, $type) = @_;
-    my $header;
-
-    switch ($type) {
-	case [0..2] { }
-	case 'g'    { $type = 0x0 }
-	case 'a'    { $type = 0x1 }
-	case 'c'    { $type = 0x2 }
-	else        { warn "=== WARN unknown file type '$type'" }
-    }
-
-    $header = pack($HEADERFORMAT, $ERASE, length($filename)+1);
-
-    # send the header
-    print $sock $header, pack("C", $type), $filename;
-
-    # check the response
-    print STDERR $ERASE_RESULT{checkresponse($sock)};
-}
-
-#
-# test_erase
-#
-sub test_erase
-{
-    print pack("C", 0);
-}
-
-#
-# ipupdate($sock, $ipaddress)
-#
-sub ipupdate
-{
-    if (defined($opt_T)) { test_ipupdate(); return; }
-
-    my ($sock, $ipaddress) = @_;
-    my @bytes, $newip, $header;
-
-    @bytes = split(/\./, $ipaddress);
-
-    ($#bytes == 3) || die "=== ERR Invalid IP address: $ipaddress";
-
-    $newip = pack("CCCC", $bytes[0], $bytes[1], $bytes[2], $bytes[3]);
-    $header = pack($HEADERFORMAT, $IPUPDATE, 4);
-
-    # send the header
-    print $sock $header, $newip;
-
-    # check the response
-    print STDERR $IPUPDATE_RESULT{checkresponse($sock)};
-}
-
-#
-# test_ipupdate
-#
-sub test_ipupdate
-{
-    print pack("C", 0);
-}
+%STATUS = ( 0 => "=== OK",
+	    1 => "=== ERR unknown MEP message type",
+	    2 => "=== ERR illegal BLP address",
+	    3 => "=== ERR invalid PID",
+	    4 => "=== ERR register does not exist",
+	    5 => "=== ERR offset too large",
+	    6 => "=== ERR message is too large",
+	    7 => "=== ERR message corruption during RSP processing",
+	    8 => "=== ERR message lost during RSP processing"
+	    );
 
 #
 # usage
 #
 sub usage
 {
-    my $me = "rsuctl";
+    print STDERR <<END;
 
-    print STDERR "$me [-h hostname] [-p port] command    # Control the JTAG Embedded Controller Board\n";
-    print STDERR "  Usage: command is one of the following\n";
-    print STDERR "    $me -l                      # List the files saved on the ECB\n";
-    print STDERR "    $me -s filename             # Save the specified file to the ECB\n";
-    print STDERR "    $me -g GenFile [-a AplFile] [-c CnnFile] [-r]\n";
-    print STDERR "            -r print the test output\n";
-    print STDERR "    $me -e filename -t[g|a|c]   # Erase the file with the specified type (Gen, Apl, Cnn) from the ECB\n";
-    print STDERR "    $me -i A.B.C.D              # Update the ECB IP-address (default is 192.168.1.25)\n";
-    print STDERR "    $me -x                      # Erase all saved files\n";
+rsuctl # Remote System Update - program firmware in FPGA flash
 
-    exit();
+Usage: rsuctl [options] command
+
+  options
+    [-i ifname]        # Ethernet interface name on which to communicate (default is eth0)
+    [-m mac-address]   # IP-address of the target board (default is broadcast address 10:FA:00:00:FF:FF)
+
+  command (specify at least one of the following)
+    [-l]               # List the images currently stored in all pages of the flash
+    [-b imagefile.ttf] # Convert ttf file to imagefile.bin
+    [-e page]          # Erase the specified page, use -1 for all pages; 0 <= page < 16
+    [-x page           # Load (execute) new firmware on the specified AP from page; 0 <= page < 16
+    [-w page -f imagefile.bin]
+                       # Write the binary imagefile into specified page
+    [-v page -f imagefile.bin]
+                       # Verify the contents of the flash page against the binary imagefile
+    [-d page -f dumpfile.bin]
+                       # Dump the contents of page to dumpfile.bin
+    [-r]               # Reset all FPGA's (load factory image)
+    [-c]               # Clear all FPGA's (restart current image)
+    [-s]               # Send SYNC pulse to all FPGA's
+
+END
+
+    exit;
 }
 
-sub oldmain
+#
+# pack_rsu($type, $regid, $size, $offset)
+#
+# Pack an RSU message
+#
+sub pack_rsu
 {
-    my $sock = 0;
+    my ($type, $regid, $size, $offset) = @_;
 
-    Getopt::Std::getopts("h:p:ls:g:a:c:e:ri:t:Tx");
+    return pack($MEPSENDFORMAT,
+		0x10, 0xFA, $type, 0x00, $MEPHDRSIZE + $size,
+		$ADDR_BLP_NONE, $ADDR_RSP, $PID_RSU, $regid, $offset, $size, 0, 0);
+}
 
-      # check that at least one argument is present
-      usage() if !defined($opt_l)
-	  && !defined($opt_s)
-	  && !defined($opt_g) 
-	  && !defined($opt_e)
-	  && !defined($opt_i)
-	  && !defined($opt_x);
+#
+# pcapcallback, save packet in $g_packet
+#
+# savepacket($handle, $hdr, $packet)
+#
+sub savepacket($$$)
+{
+    my ($handle, $hdr, $packet) = @_;
+    $g_packet = $packet;
+}
 
-      # assign default values
-      $opt_h = '192.168.1.25' if !defined($opt_h);
-      $opt_p = '3800'         if !defined($opt_p);
+#
+# $payload = readresponse($pcap)
+#
+sub readresponse
+{
+    my ($pcap) = @_;
 
-      if (!defined($opt_T)) {
-	  # Create socket to ECB board
-	  $sock = new IO::Socket::INET (
-					PeerAddr => $opt_h,
-					PeerPort => $opt_p,
-					Proto => 'tcp',
-					);
-	  die "=== ERR could not connect to ($opt_h:$opt_p): $!\n" unless $sock;
-	  
-	  print STDERR "=== Connected to JTAG ECB on $opt_h:$opt_p\n";
+    (0 == loop ($pcap, 1, \&savepacket, ''))
+	|| die "Failed to receive response";
 
+    my ($ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved) =
+	unpack($MEPRECVFORMAT, $g_packet);
 
-	  $sock->autoflush(1);
-      }
+    if ($TYPE_WRITEACK != $type && $TYPE_READACK != $type) {
+	$g_error = 1;
+	print STDERR "=== ERR invalid message type: ", $type, "\n";
+    }
+    if ($PID_RSU != $pid && $PID_RSR != $pid) {
+	$g_error = 1;
+	print STDERR "=== ERR invalid pid: ", $pid, "\n";
+    }
+    if ($REG_RW > $regid || $REG_CLEAR < $regid) {
+	$g_error = 1;
+	print STDERR "=== ERR invalid regid: ", $regid, "\n";
+    }
 
-      if ($opt_l)           { listfiles($sock, false);         exit(); }
-      if ($opt_s)           { savefile($sock, $opt_s);         exit(); }
-      if ($opt_g)           {
-	  if (defined($opt_r)) { $resultfile = "Test.Err"; }
-	  testexec($sock, $opt_g, $opt_a, $opt_c, $resultfile);
-	  exit();
-      }
-      if ($opt_e && $opt_t) { erase($sock, $opt_e, $opt_t);    exit(); }
-      if ($opt_i)           { ipupdate($sock, $opt_i);         exit(); }
-      if ($opt_x)           { listfiles($sock, true);          exit(); }
-      
-      usage();
-      exit();
+    printf("0x%s 0x%02x 0x%02x %5d 0x%02x 0x%02x 0x%02x 0x%02x %5d %5d %5d %5d\n",
+	   $ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved) if ($g_debug);
+
+    if (0 != $status) {
+	$g_error = 1;
+	print STDERR "=== FATAL protocol error: status=", $STATUS{$status}, "\n";
+	exit;
+    }
+
+    return substr($g_packet, 14 + $MEPHDRSIZE);
+}
+
+#
+# flash($sock, $pcap, $page, $blockinc, $msg, $cmd, $size, $writecb, $readcb)
+# page = -1 means all pages
+#
+sub flash
+{
+    my ($sock, $pcap, $page, $blockinc, $msg, $cmd, $size, $writecb, $readcb) = @_;
+
+    if ($page < 0) {
+	$startpage = 0;
+	$count = $PAGES;
+    } else {
+	$startpage = $page;
+	$count = 1;
+    }
+    
+    # erase one page
+    for ($page = $startpage; $page < $startpage + $count; $page++) {
+
+	printf STDERR "=== %s page %02d\n", $msg, $page;
+	print STDERR "|" . ("-" x $SECTORS_PER_PAGE) . "|\n ";
+
+	$success = 1;
+	# leave last block for directory entry
+	for ($block = 0; $block < $BLOCKS_PER_PAGE - 1; $block += $blockinc) {
+	    
+	    if ($writecb) {
+		$packet  = pack_rsu($TYPE_WRITE, $cmd, $size,
+				    ($page * $BLOCKS_PER_PAGE) + $block);
+		$packet .= &$writecb($page, $block);
+	    
+		$sock->send_eth_frame($packet);
+		$payload = readresponse($pcap);
+	    }
+
+	    if ($readcb) {
+		$packet  = pack_rsu($TYPE_READ, $cmd, $size,
+				    ($page * $BLOCKS_PER_PAGE) + $block);
+
+		$sock->send_eth_frame($packet);
+		$payload = readresponse($pcap);
+
+		$success = $success && &$readcb($page, $block, $payload);
+	    }
+
+	    if (0 == $block % $BLOCKS_PER_SECTOR) {
+		if ($success) { print STDERR "."; }
+		else          { print STDERR "X"; }
+		$success = 1;
+	    }
+	}
+	print STDERR "\n";
+    }
+}
+
+#
+# writedir($sock, $pcap, $page, $entry)
+# Write the entry to the last block of page $page
+#
+sub writedir
+{
+    my ($sock, $pcap, $page, $entry) = @_;
+
+    die "=== ERR internal error: size of direntry > $BLOCKSIZE" if (length($entry) > $BLOCKSIZE);
+
+    print STDERR "writing dir @", (($page + 1) * $BLOCKS_PER_PAGE) - 1, "\n" if ($g_debug);
+
+    # add zero padding if needed
+    $entry .= pack("C", 0) x ($BLOCKSIZE - length($entry)) if (length($entry) < $BLOCKSIZE);
+
+    # write last block with dir entry
+    $packet  = pack_rsu($TYPE_WRITE, $REG_RW, $BLOCKSIZE,
+			(($page + 1) * $BLOCKS_PER_PAGE) - 1);
+    $packet .= $entry;
+
+    $sock->send_eth_frame($packet);
+    $result = readresponse($pcap);
+}
+
+#
+# readdir($sock, $pcap, $page)
+# Read the directory entry from the specified page
+#
+sub readdirentry($$$)
+{
+    my ($sock, $pcap, $page) = @_;
+
+    my ($packet)  = pack_rsu($TYPE_READ, $REG_RW, $BLOCKSIZE,
+			     (($page + 1) * $BLOCKS_PER_PAGE) -1);
+
+    $sock->send_eth_frame($packet);
+
+    $entry = readresponse($pcap);
+
+    $entry = '<empty>' if (substr($entry,0,1) eq pack("C", 0xff));
+
+    return $entry;
+}
+
+#
+# erasecb($page, $block)
+#
+sub erasecb
+{
+    my ($page, $block) = @_;
+
+    print STDERR "erasecb: $page, $block\n" if ($g_debug);
+}
+
+#
+# erase($sock, $pcap, $page)
+# page = -1 means all pages
+#
+sub erase
+{
+    my ($sock, $pcap, $page) = @_;
+
+    flash($sock, $pcap, $page, $BLOCKS_PER_SECTOR,
+	  "Erasing", $REG_ERASE, $CMD_ERASE, \&erasecb, 0);
+}
+
+#
+# Verify the data
+#
+sub verifycb
+{
+    my ($page, $block, $payload) = @_;
+
+    print STDERR "verifycb: page=$page, block=$block, length(payload)=", length($payload), "\n" if ($g_debug);
+
+    $read = read(IMAGEFILE, $reference_block, $BLOCKSIZE);
+    die "=== ERR internal error reading file" if ($read > $BLOCKSIZE);
+
+    # append zeroes to fill buffer to $BLOCKSIZE
+    $reference_block .= pack("C", 0) x ($BLOCKSIZE - $read);
+
+    if ($payload ne $reference_block) {
+	print STDERR "=== ERR failed to verify block $block in page $page\n" if ($g_debug);
+	$g_error = 1;
+	return 0;
+    }
+
+    return 1;
+}
+
+#
+# verify($sock, $pcap, $page, $filename)
+#
+sub verify
+{
+    my ($sock, $pcap, $page, $filename) = @_;
+
+     flash($sock, $pcap, $page, 1,
+	   "verifying", $REG_RW, 0, 0, \&verifycb);
+}
+
+#
+# Dump the data to file
+#
+sub dumpcb($$$)
+{
+    my ($page, $block, $payload) = @_;
+
+    print STDERR "dumpcb: page=$page, block=$block, length(payload)=", length($payload), "\n" if ($g_debug);
+
+    print DUMPFILE $payload;
+
+    return 1;
+}
+
+#
+# dump($sock, $pcap, $page)
+#
+sub dump($$$)
+{
+    my ($sock, $pcap, $page) = @_;
+
+    flash($sock, $pcap, $page, 1,
+	  "dumping", $REG_RW, 0, 0, \&dumpcb);
+}
+
+#
+# Write the data
+#
+sub writepagecb
+{
+    my ($page, $block) = @_;
+
+    print STDERR "writepagecb: page=$page, block=$block\n" if ($g_debug);
+
+    $read = read(IMAGEFILE, $g_current_block, $BLOCKSIZE);
+    die "=== ERR internal error reading file" if ($read > $BLOCKSIZE);
+
+    # append zeroes to fill buffer to $BLOCKSIZE
+    $g_current_block .= pack("C", 0) x ($BLOCKSIZE - $read);
+
+    return $g_current_block;
+}
+
+#
+# Read and verify the data
+#
+sub readpagecb
+{
+    my ($page, $block, $payload) = @_;
+
+    print STDERR "readpagecb: page=$page, block=$block, length(payload)=", length($payload), "\n" if ($g_debug);
+    
+    if ($payload ne $g_current_block) {
+	print STDERR "=== ERR failed to verify block $block in page $page\n" if ($g_debug);
+	$g_error = 1;
+	return 0;
+    }
+
+    return 1;
+}
+
+#
+# Create a direntry string based on filename
+# direntry($filename)
+#
+sub direntry
+{
+    my ($filename) = @_;
+
+    $stat = stat($filename) || die "=== ERR failed to stat file '$filename'";
+    $datetime = ctime($stat->mtime);
+    chop($datetime);
+
+    # return direntry 'size YYYY mm dd hh:mm filename'
+    return sprintf("%10d %s %s", $stat->size, $datetime, $filename);
+}
+
+#
+# writepage($sock, $pcap, $page, $filename)
+#
+sub writepage
+{
+    my ($sock, $pcap, $page, $filename) = @_;
+
+    flash($sock, $pcap, $page, 1,
+	  "writing", $REG_RW, $BLOCKSIZE, \&writepagecb, \&readpagecb);
+
+    if ($g_error) {
+	# clear directory entry because an error occurred
+	writedir($sock, $pcap, $page, '');
+    } else {
+	writedir($sock, $pcap, $page, direntry($filename));
+    }
+}
+
+#
+# Convert ttf file to binary string
+#
+# ttf2bin($filename)
+#
+sub ttf2bin
+{
+    my ($filename) = @_;
+
+    # check input filename
+    @parts = split(/\./, $filename);
+    die "=== ERR filename '$filename' should end in .ttf" if ($parts[-1] ne "ttf");
+
+    # open input and output files
+    open(TTFFILE, $filename) || die "=== ERR failed to open file $filename";
+    open(BINFILE, ">" . $filename . ".bin");
+
+    # determine number of lines
+    $linecount = 0;
+    while (<TTFFILE>) {	$linecount++; }
+    seek(TTFFILE,0,0); # rewind input file
+	
+    print STDERR "=== Converting '$filename' to '$filename.bin'\n";
+    print STDERR "|" . ("-" x $PROGRESS_SIZE) . "|\n ";
+    $i = 0;
+    $interval = $linecount / $PROGRESS_SIZE;
+    while (<TTFFILE>) {
+	$c = chop;
+	$_ .= $c if ($c != '\n'); # this is needed if the file doesn't end with newline
+
+	@bytes = split(/\,/, $_);
+	foreach $byte (@bytes) {
+	    print BINFILE pack("C", $byte);
+	}
+
+	$i++;
+	print STDERR "." if (0 == $i % $interval);
+    }
+    print STDERR "\n";
+
+    close(TTFFILE);
+    close(BINFILE);
+}
+
+#
+# Read versions of all FPGA's (handy after reconfig, reset, clear, etc)
+# readversions($sock, $pcap)
+#
+sub readversions
+{
+    my ($sock, $pcap) = @_;
+
+    # read BP version
+    $size = $REG_VERSION_SIZE;
+    $packet = pack($MEPSENDFORMAT,
+		   0x10, 0xFA, $TYPE_READ, 0x00, $MEPHDRSIZE + $size,
+		   $ADDR_BLP_NONE, $ADDR_RSP, $PID_RSR, $REG_VERSION, 0, $size, 0, 0);
+    $sock->send_eth_frame($packet);
+    $result = readresponse($pcap);
+
+    ($id, $version) = unpack("CC", $result);
+    $maj = $version >> 4;
+    $min = $version & 15;
+    print STDERR "RSP   version: $id\nBP    version: $maj.$min\n";
+
+    # read AP versions
+    for ($ap = 0; $ap < 4; $ap++) {
+	$packet = pack($MEPSENDFORMAT,
+		       0x10, 0xFA, $TYPE_READ, 0x00, $MEPHDRSIZE + $size,
+		       1 << $ap, 0, $PID_RSR, $REG_VERSION, 0, $size, 0, 0);
+	$sock->send_eth_frame($packet);
+	$result = readresponse($pcap);
+
+	($id, $version) = unpack("CC", $result);
+	$maj = $version >> 4;
+	$min = $version & 15;
+	print STDERR "AP[$id] version: $maj.$min\n";
+    }
+}
+
+#
+# Reconfigure. Load new firmware from flash into FPGA's. After loading
+# has finished, the FPGA will be reset and restart with new firmware.
+#
+# reconfig($sock, $pcap, $page)
+#
+sub reconfig
+{
+    my ($sock, $pcap, $page) = @_;
+
+    $subpage = $page & 7;
+    $fpga    = 1 - ($page >> 3);
+
+    $cmd = ($fpga << 7) | $subpage;
+
+    if (0) {
+	$packet  = pack_rsu($TYPE_WRITE, $REG_RECONFIG, 1, 0);
+	$packet .= pack("C", $cmd);
+	
+	$sock->send_eth_frame($packet);
+	readresponse($pcap);
+	
+	sleep 5;
+    }
+    
+    readversions($sock, $pcap);
+}
+
+#
+# Reset control for all FPGA's
+#
+# clearctl($sock, $pcap, $cmd)
+# valid values for $cmd:  $CMD_SYNC, $CMD_CLEAR, $CMD_RESET
+#
+sub clearctl
+{
+    my ($sock, $pcap, $cmd) = @_;
+
+    $packet  = pack_rsu($TYPE_WRITE, $REG_CLEAR, 1, 0);
+    $packet .= pack("C", $cmd);
+    
+    $sock->send_eth_frame($packet);
+    readresponse($pcap);
+}
+
+#
+# Change range of the page parameter
+# chkpage($page)
+#
+sub chkpage
+{
+    my ($page) = @_;
+
+    die "=== ERR invalid page index $page, should be >= 0 and < $PAGES" if ($page < 0 || $page >= $PAGES);
 }
 
 sub main
 {
-#     use Net::RawIP;
-#     $a = new Net::RawIP;
-#     $a->set({ip => {saddr => 'rs002',daddr => 'rs002'},
-# 	     tcp => {source => 139,dest => 139,psh => 1, syn => 1}});
-#     $a->send;
-#     $a->ethnew("eth0");
-#     $a->ethset(dest =>'10:FA:00:00:13:00'); # ,source => 'rs002');    
-#     $a->ethsend;
+    my $sock = 0;
+
+    Getopt::Std::getopts("i:m:lb:e:x:w:f:Fv:d:t:f:rcsT");
+
+    # check that at least one argument is present
+    usage() if !defined($opt_l)
+	&& !defined($opt_b)
+	&& !defined($opt_e)
+	&& !defined($opt_x)
+	&& !defined($opt_w) 
+	&& !defined($opt_v)
+	&& !defined($opt_d)
+	&& !defined($opt_r)
+	&& !defined($opt_c)
+	&& !defined($opt_s);
     
-    $raw = new Net::RawIP;
+    # assign default values
+    $opt_i = 'eth0'              if !defined($opt_i);
+    $opt_m = 'FF:FF:FF:FF:FF:FF' if !defined($opt_m);
+    
+    # Create socket to the boards
+    if (!defined($opt_b) && !defined($opt_T)) {
 
-    $raw->ethnew("eth1");
-    $raw->ethset(dest => '10:FA:00:00:13:00');
+	die "=== ERR this program needs to run as root to send/recv raw Ethernet frames" if (0 != geteuid());
 
-    $payloadlength = 200;
-    $framelength = 16 + $payloadlength;
+	$sock = new Net::RawIP;
+	$sock->ethnew($opt_i);
+	$sock->ethset(dest => $opt_m);
 
-    $HEADERFORMAT="CCCCSCCCCSSSS";
-    $frame = pack($HEADERFORMAT, 0x10, 0xFA, 0x01, 0x00, $framelength, 0x00, 0x01, 0x01, 0x00, 0, $payloadlength, 0, 0);
+	$TIMEOUT=5;
+	$pcap = $sock->pcapinit($opt_i, "not ether dst $opt_m", $ETHLEN, $TIMEOUT);
 
-    $raw->send_eth_frame($frame);
+	die "=== ERR could not open raw socket to RSP board(s) on $opt_i:$opt_m: $!\n" unless $sock;
+	  
+	print STDERR "=== connected to RSP board(s) on $opt_i:$opt_m\n";
+    }
+
+    if (defined($opt_l)) {
+
+	print STDERR sprintf("\nFactory: ", 0) . readdirentry($sock, $pcap, 0) . "\n";
+	for ($page = 1; $page < $PAGES; $page++) {
+	    print STDERR sprintf("Page %2d: ", $page) . readdirentry($sock, $pcap, $page) . "\n";
+	}
+	
+	return;
+    }
+
+    if (defined($opt_b)) {
+
+	ttf2bin($opt_b);
+
+	return;
+    }
+    
+    if (defined($opt_e)) {
+
+	chkpage($opt_e);
+	erase($sock, $pcap, $opt_e);
+
+	if ($g_error) { print STDERR "=== FAILED\n"; }
+	else          { print STDERR "=== OK\n"; }
+
+	return;
+    }
+    if (defined($opt_x)) {
+
+	chkpage($opt_x);
+	reconfig($sock, $pcap, $opt_x);
+
+	return;
+    }
+    if (defined($opt_w)) {
+
+	# check input file
+	die "=== ERR no image file specified" if (!defined($opt_f));
+	@parts = split(/\./, $opt_f);
+	die "=== ERR filename '$opt_f' should end in .bin" if ($parts[-1] ne "bin");
+
+	chkpage($opt_w);
+
+	open(IMAGEFILE, $opt_f) || die "=== ERR failed to open image file '$opt_f'";
+	erase($sock, $pcap, $opt_w) if (!defined($opt_F));
+	writepage($sock, $pcap, $opt_w, $opt_f);
+	close(IMAGEFILE);
+
+	if ($g_error) { print STDERR "=== FAILED\n"; }
+	else          { print STDERR "=== OK\n"; }
+	return;
+    }
+    if (defined($opt_v)) {
+
+	# check input file
+	die "=== ERR no image file specified" if (!defined($opt_f));
+	@parts = split(/\./, $opt_f);
+	die "=== ERR filename '$opt_f' should end in .bin" if ($parts[-1] ne "bin");
+	
+	chkpage($opt_v);
+
+	open(IMAGEFILE, $opt_f) || die "=== ERR failed to open image file '$opt_f'";
+	verify($sock, $pcap, $opt_v, $opt_f);
+	close(IMAGEFILE);
+
+	if ($g_error) { print STDERR "=== FAILED\n"; }
+	else          { print STDERR "=== OK\n"; }
+	return;
+    }
+    if (defined($opt_d)) {
+
+	die "=== ERR no image file specified" if (!defined($opt_f));
+	@parts = split(/\./, $opt_f);
+	die "=== ERR filename '$opt_f' should end in .bin" if ($parts[-1] ne "bin");
+	
+	chkpage($opt_d);
+
+	open(DUMPFILE, ">$opt_f") || die "=== ERR failed to open file '$opt_f' for writing\n";
+	dump($sock, $pcap, $opt_d);
+	close(DUMPFILE);
+
+	if ($g_error) { print STDERR "=== FAILED\n"; }
+	else          { print STDERR "=== OK\n"; }
+
+	return;
+    }
+    if (defined($opt_r)) {
+
+	clearctl($sock, $pcap, $CMD_RESET);
+	print STDERR "=== waiting 5 seconds after reset\n";
+	sleep 5;
+	readversions($sock, $pcap);
+	if ($g_error) { print STDERR "=== FAILED\n"; }
+	else          { print STDERR "=== OK\n"; }
+
+	return;
+    }
+    if (defined($opt_c)) {
+
+	clearctl($sock, $pcap, $CMD_CLEAR);
+	print STDERR "=== waiting 5 seconds after clear\n";
+	sleep 5;
+	readversions($sock, $pcap);
+	if ($g_error) { print STDERR "=== FAILED\n"; }
+	else          { print STDERR "=== OK\n"; }
+
+	return;
+    }
+    if (defined($opt_s)) {
+
+	clearctl($sock, $pcap, $CMD_SYNC);
+	if ($g_error) { print STDERR "=== FAILED\n"; }
+	else          { print STDERR "=== OK\n"; }
+
+	return;
+    }
+
 }
 
 main();
