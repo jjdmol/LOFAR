@@ -27,7 +27,7 @@ pkginclude_HEADERS = \
 	lofar_iosfwd.h \
 	lofar_iostream.h \
 	lofar_list.h \
-	lofar_locator.h \
+	LofarLocators.h \
 	LofarLog4Cplus.h \
 	LofarLogCout.h \
 	LofarLogger.h \
