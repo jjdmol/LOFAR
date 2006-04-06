@@ -342,7 +342,7 @@ int MSCreate::addField (double ra, double dec)
     msfieldCol.name().put (rownr, "BEAM_" + String::toString(rownr));
     msfieldCol.code().put (rownr, "");
     msfieldCol.time().put (rownr, itsStartTime);
-    msfieldCol.numPoly().put (rownr, 1);
+    msfieldCol.numPoly().put (rownr, 0);
     msfieldCol.delayDirMeasCol().put (rownr, outdir);
     msfieldCol.phaseDirMeasCol().put (rownr, outdir);
     msfieldCol.referenceDirMeasCol().put (rownr, outdir);
@@ -360,11 +360,11 @@ int MSCreate::addField (double ra, double dec)
       mspointingCol.time().put (rownr, itsStartTime);
       mspointingCol.interval().put (rownr, 0.);
       mspointingCol.name().put (rownr, "");
-      mspointingCol.numPoly().put (rownr, 1);
+      mspointingCol.numPoly().put (rownr, 0);
       mspointingCol.timeOrigin().put (rownr, itsStartTime);
       mspointingCol.directionMeasCol().put (rownr, outdir);
       mspointingCol.targetMeasCol().put (rownr, outdir);
-      mspointingCol.tracking().put (rownr, True);
+      mspointingCol.tracking().put (rownr, False);
       rownr++;
     }
   }
