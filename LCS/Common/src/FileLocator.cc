@@ -204,7 +204,11 @@ string	FileLocator::locate		(const string& aFile)
 {
 	// if filename contains a '/', just return the name
 	if (aFile.find("/", 0) != string::npos) {
-		LOG_DEBUG_STR ("Filename contains a /, returning inputname : " << aFile);
+		// DILEMMA: the filelocator is often used to locate the log_prop file.
+		//			using LOG_xxx here will result in an errormessage in that case.
+		// SOLUTION: in global-init.cxx a variable 'initialized' is used in l4cp
+		//			 to keep the state of the log-package. Make this var accessable.
+//		LOG_DEBUG_STR ("Filename contains a /, returning inputname : " << aFile);
 		return (aFile);
 	}
 
@@ -231,8 +235,9 @@ string	FileLocator::locate		(const string& aFile)
 	}
 
 	// not found, return original file
-	LOG_DEBUG_STR ("Filename not found in " << getPath() << 
-				   ", returning empty string");
+	// See DILEMMA.
+//	LOG_DEBUG_STR ("Filename not found in " << getPath() << 
+//				   ", returning empty string");
 	return ("");
 }
 

@@ -1,4 +1,4 @@
-//#  lofar_locator.h: Tries to locate a file in an earlier defined path.
+//#  LofarLocators.h: Tries to locate a file in an earlier defined path.
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_LOCATOR_H
-#define LOFAR_COMMON_LOCATOR_H
+#ifndef LOFAR_COMMON_LOFARLOCATORS_H
+#define LOFAR_COMMON_LOFARLOCATORS_H
 
 // \file 
 // Tries to locate a file in an earlier defined path.

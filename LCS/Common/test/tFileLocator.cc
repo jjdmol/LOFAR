@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/lofar_locator.h>
+#include <Common/LofarLocators.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -43,7 +43,7 @@ int main (int, char *argv[]) {
 	LOG_INFO_STR ("registered path = " << Locator1.getPath());
 
 	LOG_INFO ("Adding '/usr/bin:./' at end of chain");
-	Locator1.addPathAtBack("/usr/bin:./:../");
+	Locator1.addPathAtBack("/usr/bin:./");
 	LOG_INFO_STR ("registered path = " << Locator1.getPath());
 	
 	LOG_INFO ("Adding '/usr/local:/usr/local/bin/' at begin of chain");
