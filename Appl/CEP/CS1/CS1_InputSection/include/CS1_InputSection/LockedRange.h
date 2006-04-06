@@ -43,6 +43,9 @@ namespace LOFAR
     // \addtogroup CS1_InputSection
     // @{
 
+    // This class is a lock that can be done on a range. When the number of items that is locked each time is large
+    // this class is more efficient than a lock per item.
+
     // This class was written in such a way that T can be any type that supports assignment and comparison operators
     // When using this class with integers, beware that the upper value of a range is not included in the range
     // The class S is the result type of a subtraction of two variables of type T
@@ -59,6 +62,7 @@ namespace LOFAR
       T readLock(const T& desiredBegin, const T& desiredEnd);
       void readUnlock(const T& end);
 
+      // get the oldest item in the buffer and stop the buffer from overwriting that item
       T getReadStart();
 
       void clear();

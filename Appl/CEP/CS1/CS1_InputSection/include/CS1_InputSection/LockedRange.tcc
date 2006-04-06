@@ -157,8 +157,8 @@ namespace LOFAR
 
       if (end < begin)
 	end = begin;
-      bool amWaiting = false;
-      while (itsWriteTail - end < itsMin)
+        bool amWaiting = false;
+        while (itsWriteTail - end < itsMin)
 	{
 	  if (!amWaiting)
 	    {
