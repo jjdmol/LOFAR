@@ -28,7 +28,6 @@
 use Net::RawIP;
 use Getopt::Std;
 use File::stat;
-use Time::localtime;
 use Switch;
 use POSIX; # for geteuid()
 
@@ -204,6 +203,7 @@ sub readresponse
     if (0 != $status) {
 	$g_error = 1;
 	print STDERR "=== FATAL protocol error: status=", $STATUS{$status}, "\n";
+	print STDERR "=== Are you using the correct Ethernet interface? Use -i argument to change, e.g. -i eth1\n";
 	exit;
     }
 
@@ -304,7 +304,7 @@ sub readdirentry($$$)
 
     $entry = readresponse($pcap);
 
-    $entry = '<empty>' if (substr($entry,0,1) eq pack("C", 0xff));
+    $entry = '' if (substr($entry,0,1) eq pack("C", 0xff));
 
     return $entry;
 }
@@ -640,7 +640,8 @@ sub main
 
 	print STDERR sprintf("\nFactory: ", 0) . readdirentry($sock, $pcap, 0) . "\n";
 	for ($page = 1; $page < $PAGES; $page++) {
-	    print STDERR sprintf("Page %2d: ", $page) . readdirentry($sock, $pcap, $page) . "\n";
+	    $entry = readdirentry($sock, $pcap, $page);
+	    print STDERR sprintf("Page %2d: %s\n", $page, $entry) if ($entry ne '');
 	}
 	
 	return;
