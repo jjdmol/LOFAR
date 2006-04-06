@@ -1,4 +1,4 @@
-//# Direction.h: Class to hold a sky coordinate as 2 angles
+//# Direction.h: Class representing a direction.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,12 +24,10 @@
 #define LOFAR_AMCBASE_DIRECTION_H
 
 // \file
-// Class to hold a sky coordinate as 2 angles
+// Class representing a direction.
 
-//# Forward Declarations.
-#include <Common/lofar_iosfwd.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+//# Includes
+#include <AMCBase/Position.h>
 
 namespace LOFAR
 {
@@ -39,17 +37,21 @@ namespace LOFAR
     // \addtogroup AMCBase
     // @{
 
-    // This class represents a position in the sky. The position is stored as
-    // a direction using a pair of angles. The context where the object is
-    // used defines the coordinate system and frame, so the class can be used
-    // for any pair of sky coordinates (like RA/DEC and AZ/ELEV). The correct
+    // This class represents a direction on the sky. The direction is stored
+    // in cartesian coordinates as so-called direction cosines. A direction
+    // can be constructed from a pair of angles (longitude and latitude) or a
+    // vector of direction cosines. The context where the object is used
+    // defines the coordinate system and frame, so the class can be used for
+    // any pair of sky coordinates (like RA/DEC and AZ/ELEV). The correct
     // interpretation of the coordinates should be done by the user of this
     // class.
-    class Direction
+    // \note Direction is a specialization of Position, because a direction
+    // vector is in fact a position vector with a unit length.
+    class Direction : public Position
     {
     public:
-      // Types of sky coordinates. Currently, only three types are supported:
-      // J2000, AZEL and ITRF.
+      // Types of direction. Currently, only three types are supported: J2000,
+      // AZEL and ITRF.
       enum Types {
         INVALID = -1,   ///< Used when specified value is out of range.
         J2000,         
@@ -63,50 +65,50 @@ namespace LOFAR
       // as reference type.
       Direction();
 
-      // Create a sky coordinate by giving the longitude \a lon and latitude
-      // \a lat in radians and the reference type \a typ.
+      // Create a direction by giving the longitude \a lon and latitude \a lat
+      // in radians and the reference type \a typ.
       Direction(double lon, double lat, Types typ = J2000);
 
-      // Create a sky coordinate from the direction cosines \a xyz and the
+      // Create a direction from the cartesian coordinates \a xyz and the
       // reference type \a typ.
       explicit Direction(const vector<double>& xyz, Types typ = J2000);
 
-      // Return the sky coordinate as direction cosines.
-      vector<double> get() const
-      { return itsXYZ; }
+//       // Return the direction as direction cosines.
+//       vector<double> get() const
+//       { return itsXYZ; }
 
-      // Return the reference type.
-      Types type() const
-      { return itsType; }
+//       // Return the longitude in radians. This could be, for example, right
+//       // ascension (RA) or azimuth (AZ).
+//       double longitude() const;
 
-      // Return whether sky coordinate type is valid.
-      bool isValid() const
+//       // Return the latitude in radians. This could be, for example,
+//       // declination (DEC) or elevation (EL).
+//       double latitude() const;
+
+      // Return whether direction type is valid.
+      virtual bool isValid() const
       { return itsType != INVALID; }
 
-      // Return the longitude in radians. This could be, for example, right
-      // ascension (RA) or azimuth (AZ).
-      double longitude() const;
+      // Return the direction type as an \c int.
+      virtual int type() const
+      { return itsType; }
 
-      // Return the latitude in radians. This could be, for example,
-      // declination (DEC) or elevation (EL).
-      double latitude() const;
-
-      // Return the reference type as a string.
-      const string& showType() const;
+      // Return the direction type as a string.
+      virtual const string& showType() const;
 
     private:
-      // Longitude and latitude are stored internally as direction cosines.
-      vector<double> itsXYZ;
+//       // Direction is stored internally as direction cosines.
+//       vector<double> itsXYZ;
 
-      // Type of sky coordinate.
+      // Type of direction.
       Types itsType;
     };
 
-    // Output a Direction in ASCII format.
+    // Output a direction in ASCII format.
     ostream& operator<< (ostream&, const Direction&);
 
-    // Compare two Direction objects for equality. 
-    // \note Two invalid objects can \e never be equal.
+    // Compare two directions for equality. 
+    // \note Two invalid directions can \e never be equal.
     bool operator==(const Direction& lhs, const Direction& rhs);
 
     // @}

@@ -85,71 +85,71 @@ void test(const ConverterStatus& cso)
 }
 
 
-void test(const Direction& sco)
+void test(const Direction& dio)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(Direction).name(), 1);
-  bos << sco;
+  bos << dio;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  Direction sci;
+  Direction dii;
   bis.getStart(typeid(Direction).name());
-  bis >> sci;
+  bis >> dii;
   bis.getEnd();
 
-  ASSERTSTR(sci == sco, "sci = " << sci << "; sco = " << sco);
+  ASSERTSTR(dii == dio, "dii = " << dii << "; dio = " << dio);
 }
 
 
-void test(const Position& eco)
+void test(const Position& po)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(Position).name(), 1);
-  bos << eco;
+  bos << po;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  Position eci;
+  Position pi;
   bis.getStart(typeid(Position).name());
-  bis >> eci;
+  bis >> pi;
   bis.getEnd();
 
-  ASSERTSTR(eci == eco, "eci = " << eci << "; eco = " << eco);
+  ASSERTSTR(pi == po, "pi = " << pi << "; po = " << po);
 }
 
 
-void test(const Epoch& tco)
+void test(const Epoch& eo)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(Epoch).name(), 1);
-  bos << tco;
+  bos << eo;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  Epoch tci;
+  Epoch ei;
   bis.getStart(typeid(Epoch).name());
-  bis >> tci;
+  bis >> ei;
   bis.getEnd();
 
   // We must make the detour through the doubles dci and dco, otherwise the
   // comparison will be done directly inside the FPU (using 80 bits instead of
   // 64), which will cause the assert to fail.
-  double dci(tci.mjd());
-  double dco(tco.mjd());
-  ASSERTSTR(dci == dco, "tci = " << tci << "; tco = " << tco);
+  double dci(ei.mjd());
+  double dco(eo.mjd());
+  ASSERTSTR(dci == dco, "ei = " << ei << "; eo = " << eo);
 }
 
 
@@ -184,7 +184,7 @@ int main(int /*argc*/, const char* const argv[])
     test(Direction(-1.2, 2.38, Direction::AZEL));
 
     test(Position());
-    test(Position(0.25*M_PI, -0.33*M_PI));
+    test(Position(0.25*M_PI, -0.33*M_PI, 1));
     test(Position(-0.67*M_PI, 0.75*M_PI, 249.98, Position::WGS84));
 
     test(Epoch());

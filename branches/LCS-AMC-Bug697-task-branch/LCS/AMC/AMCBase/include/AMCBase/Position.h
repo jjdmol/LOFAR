@@ -26,7 +26,7 @@
 // \file
 // Class to hold an earth coordinate as lon,lat,height
 
-//# Forward Declarations.
+//# Includes
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -40,15 +40,16 @@ namespace LOFAR
     // @{
 
     // This class represents a position on earth. The position is stored using
-    // longitude, latitude and height. The context where the object is used
-    // defines the coordinate system and frame, so the class can be used in
-    // any kind of frame (like ITRF and geocentric). The correct
-    // interpretation of the coordinates should be done by the user of this
-    // class.
+    // cartesian coordinates. A position can be constructed from longitude,
+    // latitude and height, or from a vector containing cartesian coordinates
+    // (x,y,z). The context where the object is used defines the coordinate
+    // system and frame, so the class can be used in any kind of frame (like
+    // ITRF and geocentric). The correct interpretation of the coordinates
+    // should be done by the user of this class.
     class Position
     {
     public:
-      // Types of earth coordinates. 
+      // Types of position. 
       enum Types {
         INVALID = -1,   ///< Used when specified value is out of range.
         ITRF,
@@ -60,27 +61,23 @@ namespace LOFAR
       // Default constructor uses 0 for longitude, latitude and height, and
       // ITRF as reference type.
       Position();
-      
-      // Create an earth coordinate by giving the longitude \a lon and
-      // latitude \a lat in radians and the \a h in meters. Reference type can
-      // be either ITRF (default), or WGS84.
-      Position(double lon, double lat, double h = 0, Types typ = ITRF);
 
-      // Create an earth coordinate from the cartesian coordinates \a xyz and
-      // the reference type \a typ.
+      // The destructor must be virtual destructor, because Direction is
+      // derived from Position.
+      virtual ~Position() {}
+
+      // Create a position by giving the longitude \a lon and latitude \a lat
+      // in radians and the \a h in meters. Reference type can be either ITRF
+      // (default), or WGS84.
+      Position(double lon, double lat, double h, Types typ = ITRF);
+
+      // Create a position from the cartesian coordinates \a xyz and the
+      // reference type \a typ.
       explicit Position(const vector<double>& xyz, Types typ = ITRF);
       
-      // Return the earth coordinate in cartesian coordinates.
-      vector<double> get() const
+      // Return the position in cartesian coordinates.
+      const vector<double>& get() const
       { return itsXYZ; }
-
-      // Return the reference type.
-      Types type() const
-      { return itsType; }
-
-      // Return whether sky coordinate type is valid.
-      bool isValid() const
-      { return itsType != INVALID; }
 
       // Return the longitude in radians.
       double longitude() const;
@@ -91,28 +88,45 @@ namespace LOFAR
       // Return the height in meters.
       double height() const;
       
-      // Return the reference type as a string.
-      const string& showType() const;
+      // Calculate the dot product of \c this and \a that.
+      // \note We could have defined a global operator*() taking two Positions
+      // as argument, however, then we wouldn't be able to calculate the dot
+      // product of a Postion and a Direction.
+      double operator*(const Position& that) const;
+
+      // Return whether position type is valid.
+      virtual bool isValid() const
+      { return itsType != INVALID; }
+
+      // Return the position type as an \c int.
+      virtual int type() const
+      { return itsType; }
+
+      // Return the position type as a string.
+      virtual const string& showType() const;
+
+    protected:
+      // Normalize the position vector to unit length. A Position need not be
+      // normalized, but a Direction does. Therefore, this method was made
+      // protected.
+      // \return The original length of the position vector.
+      double normalize();
 
     private:
-      // Longitude, latitude and height are stored internally in cartesian
-      // coordinates.
+      // Position is stored internally in cartesian coordinates.
       vector<double> itsXYZ;
 
       // Type of earth coordinate.
       Types itsType;
     };
 
-    // Output an Position in ASCII format.
+    // Output a psition in ASCII format.
     ostream& operator<< (ostream&, const Position&);
 
-    // Compare two Position objects for equality.
-    // \note Two invalid objects can \e never be equal.
+    // Compare two positions for equality.
+    // \note Two invalid positions can \e never be equal.
     bool operator==(const Position& lhs, const Position& rhs);
 
-    // Calculate the dot product of \a lhs and \a rhs
-    double operator*(const Position& lhs, const Position& rhs);
-      
     // @}
 
   } // namespace AMC

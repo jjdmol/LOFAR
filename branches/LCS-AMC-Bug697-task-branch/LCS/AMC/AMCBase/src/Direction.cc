@@ -36,31 +36,24 @@ namespace LOFAR
   {
 
     Direction::Direction() : 
-      itsXYZ(3, 0.0), itsType(J2000)
+      Position(0.0, 0.0, 1), 
+      itsType(J2000)
     {
-      itsXYZ[0] = 1.0;
     }
 
 
     Direction::Direction (double lon, double lat, Types typ) :
-      itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
+      Position(lon, lat, 1.0),
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
     {
-      if (isValid()) {
-        double tmp = cos(lat);
-        itsXYZ[0] = cos(lon) * tmp;
-        itsXYZ[1] = sin(lon) * tmp;
-        itsXYZ[2] = sin(lat);
-      }
     }
     
 
     Direction::Direction(const vector<double>& xyz, Types typ) : 
-      itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
+      Position(xyz), 
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
     {
-      ASSERT(xyz.size() == 3);
-      if (isValid()) itsXYZ = xyz;
+      normalize();
     }
 
 
@@ -79,16 +72,16 @@ namespace LOFAR
     }
 
 
-    double Direction::longitude() const
-    {
-      return atan2(itsXYZ[1], itsXYZ[0]);
-    }
+//     double Direction::longitude() const
+//     {
+//       return atan2(itsXYZ[1], itsXYZ[0]);
+//     }
 
 
-    double Direction::latitude() const
-    {
-      return asin(itsXYZ[2]);
-    }
+//     double Direction::latitude() const
+//     {
+//       return asin(itsXYZ[2]);
+//     }
 
 
     ostream& operator<<(ostream& os, const Direction& sky)

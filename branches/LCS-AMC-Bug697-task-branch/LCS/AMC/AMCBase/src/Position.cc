@@ -101,6 +101,28 @@ namespace LOFAR
     }
 
 
+    double Position::operator*(const Position& pos) const
+    {
+      double result(0);
+      const vector<double>& xyz = pos.get();
+      for (uint i = 0; i < itsXYZ.size(); ++i) {
+        result += itsXYZ[i] * xyz[i];
+      }
+      return result;
+    }
+    
+
+    double Position::normalize()
+    {
+      double h(height());
+      if (h == 0.0 || h == 1.0) return 1.0;
+      for (uint i = 0; i < itsXYZ.size(); ++i) {
+        itsXYZ[i] /= h;
+      }
+      return h;
+    }
+
+
     ostream& operator<<(ostream& os, const Position& pos)
     {
       if (!pos.isValid()) 
@@ -120,18 +142,6 @@ namespace LOFAR
     }
 
 
-    double operator*(const Position& lhs, const Position& rhs)
-    {
-      double result(0);
-      vector<double> x(lhs.get());
-      vector<double> y(rhs.get());
-      ASSERT(x.size() == y.size());
-      for (uint i = 0; i < x.size(); ++i) {
-        result += x[i] * y[i];
-      }
-      return result;
-    }
-    
   } // namespace AMC
 
 } // namespace LOFAR

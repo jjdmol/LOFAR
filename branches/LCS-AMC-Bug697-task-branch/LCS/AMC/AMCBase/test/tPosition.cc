@@ -29,6 +29,7 @@
 #include <Common/lofar_iostream.h>
 #include <Common/Numeric.h>
 #include <cmath>
+#include <Common/lofar_iomanip.h>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
@@ -57,6 +58,11 @@ int main(int, const char* argv[])
     // Vector for storing the cartesian coordinates.
     vector<double> p;
 
+    cout << "pos0 = " << pos0 << endl;
+    cout << "pos1 = " << pos1 << endl;
+    cout << "pos2 = " << pos2 << endl;
+    cout << "pos3 = " << pos3 << endl;
+
     p = pos0.get();
     ASSERT(pos0.isValid() &&
            pos0.longitude() == 0 && 
@@ -66,6 +72,7 @@ int main(int, const char* argv[])
     ASSERT(p[0] == 0 &&
            p[1] == 0 &&
            p[2] == 0);
+    ASSERT(pos0 * pos0 == 0);
 
     p = pos1.get();
     ASSERT(pos1.isValid() &&
@@ -76,25 +83,34 @@ int main(int, const char* argv[])
     ASSERT(Numeric::compare(p[0],  0.3599466369818882) &&
            Numeric::compare(p[1],  0.3599466369818882) &&
            Numeric::compare(p[2], -0.8607420270039436));
+    ASSERT(Numeric::compare(pos1 * pos1, 1 * 1));
 
     p = pos2.get();
-    ASSERTSTR(pos2.isValid() &&
+    ASSERT(pos2.isValid() &&
            pos2.type() == Position::WGS84 &&
            Numeric::compare(pos2.longitude(), 0.33*M_PI) && 
            Numeric::compare(pos2.latitude(), 0.25*M_PI) &&
-           Numeric::compare(pos2.height(), 249.98), pos2);
-
+           Numeric::compare(pos2.height(), 249.98));
     ASSERT(Numeric::compare(p[0],  89.9794603127324) &&
            Numeric::compare(p[1], 152.1469583062028) &&
            Numeric::compare(p[2], 176.7625531610132));
+    ASSERT(Numeric::compare(pos2 * pos2, 249.98 * 249.98));
 
     p = pos3.get();
-    ASSERT(!pos3.isValid());
+    ASSERT(!pos3.isValid() && 
+           pos3.type() == Position::INVALID &&
+           Numeric::isNan(pos3.longitude()) &&
+           Numeric::isNan(pos3.latitude()) &&
+           Numeric::isNan(pos3.height()));
+    ASSERT(Numeric::isNan(pos3 * pos3));
 
-    cout << "pos0 = " << pos0 << endl;
-    cout << "pos1 = " << pos1 << endl;
-    cout << "pos2 = " << pos2 << endl;
-    cout << "pos3 = " << pos3 << endl;
+    ASSERT(pos0 * pos1 == pos1 * pos0 && pos0 * pos1 == 0);
+    ASSERT(pos0 * pos2 == pos2 * pos0 && pos0 * pos2 == 0);
+    ASSERT(pos0 * pos3 != pos3 * pos0 && Numeric::isNan(pos0 * pos3));
+    ASSERT(pos1 * pos2 == pos2 * pos1 && Numeric::compare(pos1 * pos2, 
+                                                          -64.9943681998483));
+    ASSERT(pos1 * pos3 != pos3 * pos1 && Numeric::isNan(pos1 * pos3));
+    ASSERT(pos2 * pos3 != pos3 * pos2 && Numeric::isNan(pos2 * pos3));
 
   }
 

@@ -6,12 +6,12 @@ pkginclude_HEADERS = \
 	ConverterStatus.h \
 	DH_Request.h \
 	DH_Result.h \
-	Position.h \
-	Exceptions.h \
-	RequestData.h \
-	ResultData.h \
 	Direction.h \
-	Epoch.h
+	Epoch.h \
+	Exceptions.h \
+	Position.h \
+	RequestData.h \
+	ResultData.h
 
 include $(top_srcdir)/Makefile.common
 

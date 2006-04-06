@@ -46,6 +46,7 @@ ostream& operator<<(ostream& os, const vector<double>& v)
     os << v[i] << ", ";
   }
   os << v[v.size()-1] << ']' << endl;
+  return os;
 }
 
 int main(int /*argc*/, const char* const argv[])
@@ -62,7 +63,7 @@ int main(int /*argc*/, const char* const argv[])
   
     vector<Position> sendEarth;
     sendEarth.push_back(Position());
-    sendEarth.push_back(Position(0.25*M_PI, -0.33*M_PI));
+    sendEarth.push_back(Position(0.25*M_PI, -0.33*M_PI, 1));
     sendEarth.push_back(Position(-0.67*M_PI, 0.75*M_PI, 249.98));
   
     vector<Epoch>  sendTime;
