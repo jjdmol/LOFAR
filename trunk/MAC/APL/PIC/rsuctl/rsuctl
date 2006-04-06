@@ -23,6 +23,7 @@
 #     [-r]               # Reset all FPGA's (load factory image)
 #     [-c]               # Clear all FPGA's (restart current image)
 #     [-s]               # Send SYNC pulse to all FPGA's
+#     [-V]               # Read RSU status and RSR versions
 #
 
 use Net::RawIP;
@@ -42,6 +43,8 @@ $g_error         = 0;  # global error status
 $PID_RSR      = 0x01;
 $PID_RSU      = 0x02;
 
+$REG_STATUS       = 0x00;
+$REG_STATUS_SIZE  = 200;
 $REG_VERSION      = 0x01;
 $REG_VERSION_SIZE = 2;
 
@@ -140,6 +143,7 @@ Usage: rsuctl [options] command
     [-r]               # Reset all FPGA's (load factory image)
     [-c]               # Clear all FPGA's (restart current image)
     [-s]               # Send SYNC pulse to all FPGA's
+    [-V]               # Read versions of the FPGA's
 
 END
 
@@ -191,10 +195,6 @@ sub readresponse
     if ($PID_RSU != $pid && $PID_RSR != $pid) {
 	$g_error = 1;
 	print STDERR "=== ERR invalid pid: ", $pid, "\n";
-    }
-    if ($REG_RW > $regid || $REG_CLEAR < $regid) {
-	$g_error = 1;
-	print STDERR "=== ERR invalid regid: ", $regid, "\n";
     }
 
     printf("0x%s 0x%02x 0x%02x %5d 0x%02x 0x%02x 0x%02x 0x%02x %5d %5d %5d %5d\n",
@@ -506,6 +506,31 @@ sub ttf2bin
 }
 
 #
+# Read RSU status from RSR status register
+# readrsustatus($sock, $pcap)
+#
+sub readrsustatus
+{
+    my ($sock, $pcap) = @_;
+
+    $size = $REG_STATUS_SIZE;
+    $packet = pack($MEPSENDFORMAT,
+		   0x10, 0xFA, $TYPE_READ, 0x00, $MEPHDRSIZE + $size,
+		   $ADDR_BLP_NONE, $ADDR_RSP, $PID_RSR, $REG_STATUS, 0, $size, 0, 0);
+    $sock->send_eth_frame($packet);
+    $result = readresponse($pcap);
+
+    $rsustatus = substr($result, 164, 1);
+
+    print STDERR sprintf("\nRSU Status:\n  rdy  : %s\n  err  : %s\n  fpga : %s\n  image: %s\n  trig : %s\n\n",
+			 ('Configuration ongoing', 'Configuration done')[$rsustatus & 1],
+			 ('Configuration successfull', 'Configuration error')[$rsustatus & 2],
+			 ('BP was reconfigured', 'AP was reconfigured')[$rsustatus & 4],
+			 ('Factory image', 'Application image')[$rsustatus & 8],
+			 ('Board reset', 'User reconfig', 'User reset', 'Watchdog')[($rsustatus >> 4) & 7]);
+}
+
+#
 # Read versions of all FPGA's (handy after reconfig, reset, clear, etc)
 # readversions($sock, $pcap)
 #
@@ -556,16 +581,16 @@ sub reconfig
 
     $cmd = ($fpga << 7) | $subpage;
 
-    if (0) {
-	$packet  = pack_rsu($TYPE_WRITE, $REG_RECONFIG, 1, 0);
-	$packet .= pack("C", $cmd);
+    $packet  = pack_rsu($TYPE_WRITE, $REG_RECONFIG, 1, 0);
+    $packet .= pack("C", $cmd);
 	
-	$sock->send_eth_frame($packet);
-	readresponse($pcap);
+    $sock->send_eth_frame($packet);
+    readresponse($pcap);
 	
-	sleep 5;
-    }
-    
+    print STDERR "=== waiting 5 seconds after reconfig\n";
+    sleep 5;
+
+    readrsustatus($sock, $pcap);
     readversions($sock, $pcap);
 }
 
@@ -587,6 +612,16 @@ sub clearctl
 }
 
 #
+# Report result
+# report
+#
+sub report
+{
+    if ($g_error) { print STDERR "\n=== FAILED\n"; }
+    else          { print STDERR "\n=== OK\n";     }
+}
+
+#
 # Change range of the page parameter
 # chkpage($page)
 #
@@ -601,7 +636,7 @@ sub main
 {
     my $sock = 0;
 
-    Getopt::Std::getopts("i:m:lb:e:x:w:f:Fv:d:t:f:rcsT");
+    Getopt::Std::getopts("i:m:lb:e:x:w:f:Fv:d:t:f:rcsV");
 
     # check that at least one argument is present
     usage() if !defined($opt_l)
@@ -613,7 +648,8 @@ sub main
 	&& !defined($opt_d)
 	&& !defined($opt_r)
 	&& !defined($opt_c)
-	&& !defined($opt_s);
+	&& !defined($opt_s)
+	&& !defined($opt_V);
     
     # assign default values
     $opt_i = 'eth0'              if !defined($opt_i);
@@ -643,6 +679,7 @@ sub main
 	    $entry = readdirentry($sock, $pcap, $page);
 	    print STDERR sprintf("Page %2d: %s\n", $page, $entry) if ($entry ne '');
 	}
+	report;
 	
 	return;
     }
@@ -658,9 +695,7 @@ sub main
 
 	chkpage($opt_e);
 	erase($sock, $pcap, $opt_e);
-
-	if ($g_error) { print STDERR "=== FAILED\n"; }
-	else          { print STDERR "=== OK\n"; }
+	report;
 
 	return;
     }
@@ -684,9 +719,8 @@ sub main
 	erase($sock, $pcap, $opt_w) if (!defined($opt_F));
 	writepage($sock, $pcap, $opt_w, $opt_f);
 	close(IMAGEFILE);
+	report;
 
-	if ($g_error) { print STDERR "=== FAILED\n"; }
-	else          { print STDERR "=== OK\n"; }
 	return;
     }
     if (defined($opt_v)) {
@@ -701,9 +735,8 @@ sub main
 	open(IMAGEFILE, $opt_f) || die "=== ERR failed to open image file '$opt_f'";
 	verify($sock, $pcap, $opt_v, $opt_f);
 	close(IMAGEFILE);
+	report;
 
-	if ($g_error) { print STDERR "=== FAILED\n"; }
-	else          { print STDERR "=== OK\n"; }
 	return;
     }
     if (defined($opt_d)) {
@@ -717,9 +750,7 @@ sub main
 	open(DUMPFILE, ">$opt_f") || die "=== ERR failed to open file '$opt_f' for writing\n";
 	dump($sock, $pcap, $opt_d);
 	close(DUMPFILE);
-
-	if ($g_error) { print STDERR "=== FAILED\n"; }
-	else          { print STDERR "=== OK\n"; }
+	report;
 
 	return;
     }
@@ -728,9 +759,9 @@ sub main
 	clearctl($sock, $pcap, $CMD_RESET);
 	print STDERR "=== waiting 5 seconds after reset\n";
 	sleep 5;
+	readrsustatus($sock, $pcap);
 	readversions($sock, $pcap);
-	if ($g_error) { print STDERR "=== FAILED\n"; }
-	else          { print STDERR "=== OK\n"; }
+	report;
 
 	return;
     }
@@ -739,17 +770,25 @@ sub main
 	clearctl($sock, $pcap, $CMD_CLEAR);
 	print STDERR "=== waiting 5 seconds after clear\n";
 	sleep 5;
+	readrsustatus($sock, $pcap);
 	readversions($sock, $pcap);
-	if ($g_error) { print STDERR "=== FAILED\n"; }
-	else          { print STDERR "=== OK\n"; }
+	report;
 
 	return;
     }
     if (defined($opt_s)) {
 
 	clearctl($sock, $pcap, $CMD_SYNC);
-	if ($g_error) { print STDERR "=== FAILED\n"; }
-	else          { print STDERR "=== OK\n"; }
+	report;
+
+	return;
+    }
+    if (defined($opt_V)) {
+
+	print STDERR "\n";
+	readrsustatus($sock, $pcap);
+	readversions($sock, $pcap);
+	report;
 
 	return;
     }
