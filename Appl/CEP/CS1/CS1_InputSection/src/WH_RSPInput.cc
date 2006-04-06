@@ -240,7 +240,7 @@ namespace LOFAR {
       cout<<"reading from buffer"<<endl;cout.flush();
 
       itsBBuffer->getElements(subbandbuffer,
-			      invalidcount, 
+			      //invalidcount, 
 			      delayedstamp, 
 			      itsNSamplesToCopy);
       cout<<"done reading from buffer"<<endl;cout.flush();
