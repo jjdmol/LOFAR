@@ -98,9 +98,6 @@ namespace LOFAR {
 	}	
 
 	// get the actual timestamp of first EPApacket in frame
-	seqid   = ((int*)&recvframe[8])[0];
-	blockid = ((int*)&recvframe[12])[0];
-	actualstamp.setStamp(seqid ,blockid);
 	if (itsArgs.th->getType() == "TH_Null") {
 	  if (!firstloop) {
 	    actualstamp += itsArgs.nPacketsPerFrame; 
@@ -114,6 +111,9 @@ namespace LOFAR {
 #ifdef PACKET_STATISTICS
 	} else {
 	  // firstloop
+	  seqid   = ((int*)&recvframe[8])[0];
+	  blockid = ((int*)&recvframe[12])[0];
+	  actualstamp.setStamp(seqid ,blockid);
 	  if (firstloop) {
 	    expectedstamp.setStamp(seqid, blockid); // init expectedstamp
 	    firstloop = false;

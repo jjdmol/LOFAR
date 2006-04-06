@@ -33,7 +33,7 @@
 namespace LOFAR {
   namespace CS1 {
 
-    BeamletBuffer::BeamletBuffer(int bufferSize, int nSubbands, int history, int readWriteDelay):
+    BeamletBuffer::BeamletBuffer(uint bufferSize, uint nSubbands, uint history, uint readWriteDelay):
       itsNSubbands(nSubbands),
       itsSize(bufferSize),
       itsLockedRange(bufferSize, readWriteDelay, bufferSize - history, 0),
@@ -42,7 +42,7 @@ namespace LOFAR {
       itsWriteTimer("write"),
       itsReadTimer("read")
     {
-      for (int sb = 0; sb < nSubbands; sb ++) {
+      for (uint sb = 0; sb < nSubbands; sb ++) {
 	itsSBBuffers.push_back(new Beamlet[bufferSize]);
       }
       itsInvalidFlags = new bool[bufferSize]; 
@@ -63,60 +63,97 @@ namespace LOFAR {
       delete [] itsInvalidFlags;
     }
 
-    int BeamletBuffer::writeElements(Beamlet* data, TimeStamp begin, int nElements, int stride) {
+    uint BeamletBuffer::writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint stride) {
+      // if this part start beyond itsHighestWritten, there is a gap in the data in the buffer
+      // so set that data to zero and invalidate it.
+      if ((begin > itsHighestWritten) and (itsHighestWritten > TimeStamp())) {
+	TimeStamp realBegin = itsLockedRange.writeLock(itsHighestWritten, begin);
+
+	itsWriteTimer.start();
+	// we skipped a part, so write zeros there
+	uint startI = mapTime2Index(realBegin);
+	uint endI = mapTime2Index(begin);
+
+	if (endI < startI) {
+	  // the data wraps around the allocated memory, so do it in two parts
+	  uint firstChunk = itsSize - startI;
+	  for (uint sb = 0; sb < itsNSubbands; sb++) {
+	    memset(&(itsSBBuffers[sb])[startI], 0, firstChunk * sizeof(Beamlet));
+	    memset(&(itsSBBuffers[sb])[0], 0, endI * sizeof(Beamlet));
+	    
+	    //itsInvalidFlags->clearSlice(startI, firstChunk);
+	    //itsInvalidFlags->clearSlice(0, endI);
+	  }
+	} else {
+	  for (uint sb = 0; sb < itsNSubbands; sb++) {
+	    memset(&(itsSBBuffers[sb])[startI], 0, (endI - startI) * sizeof(Beamlet));	    
+	    //itsInvalidFlags->clearSlice(startI, endI);
+	  }
+	}	
+	itsWriteTimer.stop();
+	itsLockedRange.writeUnlock(begin);
+      }	
+
+      // Now write the normal data
       TimeStamp end = begin + nElements;
       TimeStamp realBegin = itsLockedRange.writeLock(begin, end);
+
       itsDroppedItems += realBegin - begin;
      
       itsWriteTimer.start();
+
       for (TimeStamp i = realBegin; i < end; i++) {
-	for (int sb = 0; sb < itsNSubbands; sb++) {
-	  itsSBBuffers[sb][mapTime2Index(i)] = data[sb];
+	uint index = mapTime2Index(i);
+	for (uint sb = 0; sb < itsNSubbands; sb++) {
+	  itsSBBuffers[sb][index] = data[sb];
 	}
 	data += stride;
-	itsInvalidFlags[mapTime2Index(i)] = false; // these items are not invalid
+	//itsInvalidFlags[index] = false; // these items are not invalid
       }      
       itsWriteTimer.stop();
+      if (itsHighestWritten < end) itsHighestWritten = end;
       itsLockedRange.writeUnlock(end);
       return end - realBegin;
     }
 
-    int BeamletBuffer::getElements(vector<Beamlet*> buffers, int& invalidCount, TimeStamp begin, int nElements) { 
+    uint BeamletBuffer::getElements(vector<Beamlet*> buffers, TimeStamp begin, uint nElements) { //, vector<bitset*> flags
       ASSERTSTR(buffers.size() == itsNSubbands, "BeamletBuffer received wrong number of buffers to write to (in getElements).");
       TimeStamp end = begin + nElements;
       TimeStamp realBegin = itsLockedRange.readLock(begin, end);
       
       itsReadTimer.start();
-      ASSERTSTR(realBegin <= end, "requested data no longer present in buffer");
-      int startI = mapTime2Index(realBegin);
-      int endI = mapTime2Index(end);
+
+      // copy zeros for the part that was already out of the buffer
+      uint chunkSize = realBegin - begin;
+      for (uint sb = 0; sb < itsNSubbands; sb++) {
+	memset(&buffers[sb][0], 0, chunkSize * sizeof(Beamlet));
+	//flags[sb]->clearSlice(0, chunkSize);
+	itsDummyItems += chunkSize;
+      }
+
+      // copy the real data
+      uint startI = mapTime2Index(realBegin);
+      uint endI = mapTime2Index(end);
       if (endI < startI) {
-	  int firstChunk = itsSize - startI;
-	  for (int sb = 0; sb < itsNSubbands; sb++) {
-	    memcpy(&buffers[sb][0], &(itsSBBuffers[sb])[startI], firstChunk * sizeof(Beamlet));
-	    memcpy(&buffers[sb][firstChunk], &(itsSBBuffers[sb])[0], endI * sizeof(Beamlet));
-	  }
-      } else {
-	  for (int sb = 0; sb < itsNSubbands; sb++) {
-	    memcpy(&buffers[sb][0], &itsSBBuffers[sb][startI], (endI - startI) * sizeof(Beamlet));
-	  }	  
-      }
+	// the data wraps around the allocated memory, so copy in two parts
+	uint firstChunk = itsSize - startI;
+	for (uint sb = 0; sb < itsNSubbands; sb++) {
+	  memcpy(&buffers[sb][0], &(itsSBBuffers[sb])[startI], firstChunk * sizeof(Beamlet));
+	  memcpy(&buffers[sb][firstChunk], &(itsSBBuffers[sb])[0], endI * sizeof(Beamlet));
 
-      invalidCount = 0;      
-      for (TimeStamp i = realBegin; i < end; i++) {
-	if (itsInvalidFlags[mapTime2Index(i)]) {
-	  for (int sb = 0; sb < itsNSubbands; sb++) {
-	    // for all invalid subbands set the subband to zero, it will later be copied to the output
-	    memset(&(itsSBBuffers[sb])[mapTime2Index(i)], 0, sizeof(Beamlet));
-	  }
-	  invalidCount += 1;
+	  //flags[sb]->setFlags(itsInvalidFlags[blabla]);
+	  //itsDummyItems += blabla;
 	}
-	// invalidate all positions
-	// TODO: this assumes every item is read exactly once (no more, no less)
-	itsInvalidFlags[mapTime2Index(i)] = true;
+      } else {
+	// copy in one part
+	for (uint sb = 0; sb < itsNSubbands; sb++) {
+	  memcpy(&buffers[sb][0], &itsSBBuffers[sb][startI], (endI - startI) * sizeof(Beamlet));
+	  
+	  //flags[sb]->setFlags(itsInvalidFlags[blabla]);
+	  //itsDummyItems += blabla;
+	}	  
       }
-      itsDummyItems += invalidCount;
-
+      
       itsReadTimer.stop();
       itsLockedRange.readUnlock(end);
       return end - realBegin;
@@ -126,6 +163,8 @@ namespace LOFAR {
       TimeStamp oldest = itsLockedRange.getReadStart();
       TimeStamp fixPoint(oldest.getSeqId() + 1, 0); 
      
+      TimeStamp realBegin = itsLockedRange.readLock(fixPoint, fixPoint);
+      ASSERTSTR(realBegin == fixPoint, "Error in starting up buffer");
       itsLockedRange.readUnlock(fixPoint);
       return fixPoint;
     }
@@ -133,6 +172,7 @@ namespace LOFAR {
     TimeStamp BeamletBuffer::startBufferRead(TimeStamp begin) {
       TimeStamp oldest = itsLockedRange.getReadStart();
       TimeStamp realBegin = itsLockedRange.readLock(begin, begin);
+      ASSERTSTR(realBegin == begin, "Error in starting up buffer");
 
       // if begin is no longer in the buffer the oldest possible beginning is returned
       // if begin is not yet in the buffer readLock waits for it
