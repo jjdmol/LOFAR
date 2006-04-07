@@ -48,7 +48,7 @@ MSWriter::MSWriter (const char* msName, double startTime, double timeStep,
     cerr << "MSWriter exception: " << x.getMesg() << endl;
     exit(0);
   } catch (...) {
-    cerr << "Unexpected MSWriter exception" << endl;
+    cerr << "Unexpected MSWriter exception while creating MSWriterImpl" << endl;
     exit(0);
   }
 }
@@ -68,7 +68,7 @@ int MSWriter::addBand (int npolarizations, int nchannels,
     cerr << "AIPS exception in MSWriterImpl: " << x.getMesg() << endl;
     exit(0);
   } catch (...) {
-    cerr << "Unexpected MSWriter exception" << endl;
+    cerr << "Unexpected MSWriter exception during addBand" << endl;
     exit(0);
   }
   return res;
@@ -86,7 +86,7 @@ int MSWriter::addBand (int npolarizations, int nchannels,
     cerr << "AIPS exception in MSWriterImpl: " << x.getMesg() << endl;
     exit(0);
   } catch (...) {
-    cerr << "Unexpected MSWriter exception" << endl;
+    cerr << "Unexpected MSWriter exception during addBand" << endl;
     exit(0);
   }
   return res;
@@ -101,7 +101,7 @@ int MSWriter::addField (double RA, double DEC)
     cerr << "AIPS exception in MSWriterImpl: " << x.getMesg() << endl;
     exit(0);
   } catch (...) {
-    cerr << "Unexpected MSWriter exception" << endl;
+    cerr << "Unexpected MSWriter exception during addField" << endl;
     exit(0);
   }
   return res;
@@ -119,7 +119,7 @@ void MSWriter::write (int bandId, int fieldId, int channelId,
     cerr << "AIPS exception in MSWriterImpl: " << x.getMesg() << endl;
     exit(0);
   } catch (...) {
-    cerr << "Unexpected MSWriter exception" << endl;
+    cerr << "Unexpected MSWriter exception during write" << endl;
     exit(0);
   }
 }

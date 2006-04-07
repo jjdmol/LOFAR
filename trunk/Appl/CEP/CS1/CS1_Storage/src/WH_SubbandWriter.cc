@@ -74,9 +74,6 @@ WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
   vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
   unsigned nrSubbands = itsPS.getUint32("Observation.NSubbands");
   ASSERTSTR(refFreqs.size() >= nrSubbands, "Wrong number of refFreqs specified!");
-  for (unsigned i = refFreqs.size(); i < nrSubbands; i ++) {
-    refFreqs.push_back(1);
-  }
 
   itsNVisibilities = itsNBaselines * itsNChannels * itsNPolSquared;
 
