@@ -239,8 +239,6 @@ namespace LOFAR
       // First, let's find out how many stations we have.
       uint32 nrStations = ps.getUint32("Observation.NStations");
       LOG_TRACE_VAR_STR(nrStations << " station position(s)");
-      ASSERTSTR(nrStations <= NR_STATIONS, 
-                nrStations << " <= " << NR_STATIONS);
 
       // Station positions must be given in ITRF; there is currently no
       // support in the AMC package to convert between WGS84 and ITRF.
