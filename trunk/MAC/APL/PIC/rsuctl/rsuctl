@@ -244,7 +244,7 @@ sub flash
 	$count = 1;
     }
     
-    # erase one page
+    # process pages
     for ($page = $startpage; $page < $startpage + $count; $page++) {
 
 	printf STDERR "=== %s page %02d\n", $msg, $page;
@@ -344,6 +344,8 @@ sub erasecb
     my ($page, $block) = @_;
 
     print STDERR "erasecb: $page, $block\n" if ($g_debug);
+
+    return pack("C", $CMD_ERASE);
 }
 
 #
@@ -355,7 +357,8 @@ sub erase
     my ($sock, $pcap, $page) = @_;
 
     return flash($sock, $pcap, $page, $BLOCKS_PER_SECTOR,
-		 "Erasing", $REG_ERASE, $CMD_ERASE, \&erasecb, 0);
+		 "erasing", $REG_ERASE, 1,
+		 \&erasecb, 0);
 }
 
 #
@@ -390,7 +393,8 @@ sub verify
     my ($sock, $pcap, $page, $filename) = @_;
 
     return flash($sock, $pcap, $page, 1,
-		 "verifying", $REG_RW, 0, 0, \&verifycb);
+		 "verifying", $REG_RW, $BLOCKSIZE,
+		 0, \&verifycb);
 }
 
 #
@@ -415,7 +419,8 @@ sub dump($$$)
     my ($sock, $pcap, $page) = @_;
 
     return flash($sock, $pcap, $page, 1,
-		 "dumping", $REG_RW, 0, 0, \&dumpcb);
+		 "dumping", $REG_RW, $BLOCKSIZE,
+		 0, \&dumpcb);
 }
 
 #
@@ -478,7 +483,8 @@ sub writepage
     my ($sock, $pcap, $page, $filename) = @_;
 
     $error = flash($sock, $pcap, $page, 1,
-		   "writing", $REG_RW, $BLOCKSIZE, \&writepagecb, \&readpagecb);
+		   "writing", $REG_RW, $BLOCKSIZE,
+		   \&writepagecb, \&readpagecb);
 
     if (!$error) {
 	$error = writedir($sock, $pcap, $page, formatentry($filename));
@@ -716,11 +722,12 @@ sub main
 
 	($entry, $error) = readdirentry($sock, $pcap, 0);
 	if (!$error) {
-	    print STDERR sprintf("\nFactory: ", 0) . $entry . "\n";;
+	    print STDERR sprintf("\nBP Factory: ", 0) . $entry . "\n";;
 	    for ($page = 1; $page < $PAGES; $page++) {
 		($entry, $error) = readdirentry($sock, $pcap, $page);
 		break if $error;
-		print STDERR sprintf("Page %2d: %s\n", $page, $entry) if ($entry ne '');
+		print STDERR sprintf("%s Page %2d: %s\n",
+				     ($page < 8 ?'BP':'AP'), $page, $entry) if ($entry ne '');
 	    }
 	}
 	report($error);
@@ -738,7 +745,7 @@ sub main
     if (defined($opt_e)) {
 
 	chkpage($opt_p);
-	$error = erase($sock, $pcap, $opt_e);
+	$error = erase($sock, $pcap, $opt_p);
 	report($error);
 
 	return;
@@ -746,7 +753,7 @@ sub main
     if (defined($opt_x)) {
 
 	chkpage($opt_p);
-	$error = reconfig($sock, $pcap, $opt_x);
+	$error = reconfig($sock, $pcap, $opt_p);
 	report($error);
 
 	return;
@@ -759,11 +766,11 @@ sub main
 	die "=== ERR filename '$opt_f' should end in .bin" if ($parts[-1] ne "bin");
 
 	chkpage($opt_p);
-	die "=== ERR writing to factory image (page 0) prohibited, use -F to force write to factory image" if (!$opt_F && (0 == $opt_w));
+	die "=== ERR writing to factory image (page 0) prohibited, use -F to force write to factory image" if (!$opt_F && (0 == $opt_p));
 
 	open(IMAGEFILE, $opt_f) || die "=== ERR failed to open image file '$opt_f'";
-	$error = erase($sock, $pcap, $opt_w);
-	$error = writepage($sock, $pcap, $opt_w, $opt_f) if (!$error);
+	$error = erase($sock, $pcap, $opt_p);
+	$error = writepage($sock, $pcap, $opt_p, $opt_f) if (!$error);
 	close(IMAGEFILE);
 	report($error);
 
@@ -779,7 +786,7 @@ sub main
 	chkpage($opt_p);
 
 	open(IMAGEFILE, $opt_f) || die "=== ERR failed to open image file '$opt_f'";
-	$error = verify($sock, $pcap, $opt_v, $opt_f);
+	$error = verify($sock, $pcap, $opt_p, $opt_f);
 	close(IMAGEFILE);
 	report($error);
 
@@ -794,7 +801,7 @@ sub main
 	chkpage($opt_p);
 
 	open(DUMPFILE, ">$opt_f") || die "=== ERR failed to open file '$opt_f' for writing\n";
-	$error = dump($sock, $pcap, $opt_d);
+	$error = dump($sock, $pcap, $opt_p);
 	close(DUMPFILE);
 	report($error);
 
