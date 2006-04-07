@@ -31,8 +31,10 @@ namespace LOFAR
 
 DH_Subband::DH_Subband(const string &name, const ACC::APS::ParameterSet &pSet)
 : DataHolder(name, "DH_Subband"),
+  itsNrStations(pSet.getUint32("Observation.NStations")),
+  itsNrInputSamples(pSet.getUint32("Observation.NSubbandSamples") + (pSet.getUint32("BGLProc.NPPFTaps") - 1) * pSet.getUint32("Observation.NChannels")),
   itsSamples(0),
-  itsMatrix(0),
+  itsSamplesMatrix(0),
   itsFlags(0),
   itsDelays(0)
 {
@@ -40,8 +42,10 @@ DH_Subband::DH_Subband(const string &name, const ACC::APS::ParameterSet &pSet)
 
 DH_Subband::DH_Subband(const DH_Subband &that)
 : DataHolder(that),
+  itsNrStations(that.itsNrStations),
+  itsNrInputSamples(that.itsNrInputSamples),
   itsSamples(that.itsSamples),
-  itsMatrix(that.itsMatrix),
+  itsSamplesMatrix(that.itsSamplesMatrix),
   itsFlags(that.itsFlags),
   itsDelays(that.itsDelays)
 {
@@ -49,7 +53,7 @@ DH_Subband::DH_Subband(const DH_Subband &that)
 
 DH_Subband::~DH_Subband()
 {
-  delete itsMatrix;
+  delete itsSamplesMatrix;
 }
 
 DataHolder *DH_Subband::clone() const
@@ -59,34 +63,34 @@ DataHolder *DH_Subband::clone() const
 
 void DH_Subband::init()
 {
-  addField("Samples", BlobField<uint8>(1, sizeof(SampleType) * nrSamples()), 32);
-  addField("Flags",   BlobField<uint32>(1, sizeof(AllFlagsType) / sizeof(uint32)));
-  addField("Delays",  BlobField<float>(1, sizeof(AllDelaysType) / sizeof(float)));
+  addField("Samples", BlobField<uint8>(1, nrSamples() * sizeof(SampleType)), 32);
+  addField("Flags",   BlobField<uint32>(1, nrFlags() / sizeof(uint32)));
+  addField("Delays",  BlobField<float>(1, nrDelays() * sizeof(DelayIntervalType) / sizeof(float)));
 
   createDataBlock();
 
   vector<DimDef> vdd;
-  vdd.push_back(DimDef("Station",      NR_STATIONS));
-  vdd.push_back(DimDef("Time",	       NR_INPUT_SAMPLES));
+  vdd.push_back(DimDef("Station",      itsNrStations));
+  vdd.push_back(DimDef("Time",	       itsNrInputSamples));
   vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
 
-  itsMatrix = new RectMatrix<SampleType> (vdd);
-  itsMatrix->setBuffer((SampleType *) itsSamples, nrSamples());
+  itsSamplesMatrix = new RectMatrix<SampleType> (vdd);
+  itsSamplesMatrix->setBuffer(itsSamples, nrSamples());
 
   memset(itsFlags, 0, sizeof *itsFlags);
 }
 
 void DH_Subband::fillDataPointers()
 {
-  itsSamples = (AllSamplesType *) getData<uint8> ("Samples");
-  itsFlags   = (AllFlagsType *)   getData<uint32>("Flags");
-  itsDelays  = (AllDelaysType *)  getData<float> ("Delays");
+  itsSamples = (SampleType *)	     getData<uint8> ("Samples");
+  itsFlags   = (uint32 *)	     getData<uint32>("Flags");
+  itsDelays  = (DelayIntervalType *) getData<float> ("Delays");
 }
 
 void DH_Subband::swapBytes()
 {
   // only convert Samples; CEPframe converts Flags and Delays
-  dataConvert(LittleEndian, (SampleType *) itsSamples, nrSamples());
+  dataConvert(LittleEndian, itsSamples, nrSamples());
 }
 
 }

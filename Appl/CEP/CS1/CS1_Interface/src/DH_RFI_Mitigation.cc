@@ -21,8 +21,8 @@
 
 #include <lofar_config.h>
 
+#define BGL_PROCESSING
 #include <DH_RFI_Mitigation.h>
-//#include <ACC/ParameterSet.h>
 
 #include <stdlib.h>
 

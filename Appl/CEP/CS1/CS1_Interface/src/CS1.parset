@@ -40,10 +40,6 @@ Observation.StopTime  = 53328.6823958333 # MJD: 2004/11/19 16h22m39s
 Observation.RefFreqs = [99950592.0, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8, 1.0e8]  # the reference frequency for each stored(!) subband (Hz)
 Observation.ChanWidth = 1.0e8       # width of each channel (Hz)
 
-# The amount of fake data (this includes the normal data, so it should always be more than Data.*)
-FakeData.NSubbands=1
-FakeData.NStations=2
-
 # General Variables
 General.NRuns = 3600      # Number of seconds to process. NB: must be a multiple of 'BGLProc.SlavesPerSubband'
 

@@ -26,22 +26,28 @@
 /* This is included by C++ and assembly files.  Do not put anything but
    constants here! */
 #define INPUT_TYPE		   I16COMPLEX_TYPE
-#define NR_STATIONS		   2
 #define NR_POLARIZATIONS	   2
-#define NR_SUBBAND_SAMPLES	   196608 /* 155648 */
 #define NR_SUBBAND_CHANNELS	   256
 #define NR_TAPS			   16
 
+#if defined BGL_PROCESSING
+#define NR_STATIONS		   2
+#define NR_SUBBAND_SAMPLES	   196608 /* 155648 */
+#endif
+
 /* Do not change anything below this line */
 
+#if defined BGL_PROCESSING
 #if NR_SUBBAND_SAMPLES % (NR_TAPS * NR_SUBBAND_CHANNELS) != 0
 #error  "Bad value for NR_SUBBAND_SAMPLES"
 #endif
 
 #define NR_INPUT_SAMPLES	   ((NR_TAPS - 1) * NR_SUBBAND_CHANNELS + NR_SUBBAND_SAMPLES)
 #define NR_SAMPLES_PER_INTEGRATION (NR_SUBBAND_SAMPLES / NR_SUBBAND_CHANNELS)
-#define CHANNEL_BANDWIDTH	   NR_SAMPLES_PER_INTEGRATION
 #define NR_BASELINES		   (NR_STATIONS * (NR_STATIONS + 1) / 2)
+#endif
+
+#define CHANNEL_BANDWIDTH	   NR_SAMPLES_PER_INTEGRATION
 
 #define I4COMPLEX_TYPE		   1
 #define I16COMPLEX_TYPE		   2

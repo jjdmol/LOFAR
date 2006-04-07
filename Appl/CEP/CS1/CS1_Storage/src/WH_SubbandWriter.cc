@@ -50,6 +50,8 @@ WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
     itsWriter     (0),
     itsBandId     (-1),
     itsTimeCounter(0),
+    itsFlagsBuffer(0),
+    itsWeightsBuffer(0),
     itsWriteTimer ("writing-MS")
 #ifdef USE_MAC_PI
     ,itsPropertySet(0)
@@ -59,7 +61,7 @@ WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-  itsNStations = itsPS.getInt32("FakeData.NStations");
+  itsNStations = itsPS.getInt32("Observation.NStations");
   itsNBaselines = itsNStations * (itsNStations +1)/2;
   itsNChannels = itsPS.getInt32("Observation.NChannels");
   itsNInputsPerSubband = itsNinputs;
@@ -70,11 +72,13 @@ WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
   itsWeightFactor = (float)itsNChannels/(float)nrSamples;  // The inverse of maximum number of valid samples
 
   vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
-  ASSERTSTR(refFreqs.size() >= itsPS.getInt32("Observation.NSubbands"), 
-	    "Wrong number of refFreqs specified!");
-  for (int i = refFreqs.size(); i < itsPS.getInt32("FakeData.NSubbands"); i++) {
+  unsigned nrSubbands = itsPS.getUint32("Observation.NSubbands");
+  ASSERTSTR(refFreqs.size() >= nrSubbands, "Wrong number of refFreqs specified!");
+  for (unsigned i = refFreqs.size(); i < nrSubbands; i ++) {
     refFreqs.push_back(1);
   }
+
+  itsNVisibilities = itsNBaselines * itsNChannels * itsNPolSquared;
 
   char str[32];
   for (int i=0; i<itsNinputs; i++) {
@@ -148,16 +152,16 @@ void WH_SubbandWriter::preprocess() {
   itsFieldId = itsWriter->addField (RA, DEC);
 
   // Allocate buffers
-  bool* flagPtr = (bool*)itsFlagsBuffer;
-  for (int i=0; i < itsNBaselines*itsNChannels*itsNPolSquared; i++)
-  {
-      flagPtr[i] = false;
-  }
-  float* weightPtr = (float*)itsWeightsBuffer;
+  itsFlagsBuffer   = new bool[itsNVisibilities];
+  itsWeightsBuffer = new float[itsNBaselines * itsNChannels];
+
+#if 0
+  memset(itsFlagsBuffer, 0, itsNVisibilities * sizeof(bool));
   for (int j=0; j < itsNBaselines*itsNChannels; j++)
   {
-      weightPtr[j] = 1;
+      itsWeightsBuffer[j] = 1;
   }
+#endif
 }
 
 void WH_SubbandWriter::process() 
@@ -165,38 +169,24 @@ void WH_SubbandWriter::process()
   // Select the next input
   DH_Visibilities* inputDH = (DH_Visibilities*)getDataManager().selectInHolder();
 
-  int dataSize = inputDH->getBufSize();
-    
   // Write 1 DH_Visibilities of size fcomplex[nbaselines][nsubbandchannesl][npol][npol]
   itsWriteTimer.start();
     
-  DH_Visibilities::NrValidSamplesType* valSamples = inputDH->getNrValidSamplesCounted();
-  for (int bl=0; bl < itsNBaselines; bl++)
-  {
-    for (int ch=0; ch < itsNChannels; ch++)
-    {
-      itsWeightsBuffer[bl][ch] = itsWeightFactor * (float)((*valSamples)[bl][ch]);
-      if ((*valSamples)[bl][ch] == 0)
-      {
-	itsFlagsBuffer[bl][ch][0][0] = true;
-	itsFlagsBuffer[bl][ch][0][1] = true;
-	itsFlagsBuffer[bl][ch][1][0] = true;
-	itsFlagsBuffer[bl][ch][1][1] = true;
-      }
-      else
-      {
-	itsFlagsBuffer[bl][ch][0][0] = false;
-	itsFlagsBuffer[bl][ch][0][1] = false;
-	itsFlagsBuffer[bl][ch][1][0] = false;
-	itsFlagsBuffer[bl][ch][1][1] = false;
-      }
-    }
+  DH_Visibilities::NrValidSamplesType *valSamples = &inputDH->getNrValidSamples(0, 0);
+
+  for (int i = 0; i < itsNBaselines * itsNChannels; i ++) {
+    itsWeightsBuffer[i] = itsWeightFactor * valSamples[i];
+    bool flagged = valSamples[i] == 0;
+    itsFlagsBuffer[4 * i    ] = flagged;
+    itsFlagsBuffer[4 * i + 1] = flagged;
+    itsFlagsBuffer[4 * i + 2] = flagged;
+    itsFlagsBuffer[4 * i + 3] = flagged;
   }
   
   itsWriter->write (itsBandId, itsFieldId, 0, itsNChannels,
-		    itsTimeCounter, dataSize,
-		    (fcomplex*)(inputDH->getVisibilities()), (bool*)itsFlagsBuffer,
-		    (float*)itsWeightsBuffer);
+		    itsTimeCounter, itsNVisibilities,
+		    &inputDH->getVisibility(0, 0, 0, 0),
+		    itsFlagsBuffer, itsWeightsBuffer);
   
   itsWriteTimer.stop();
 
@@ -238,5 +228,9 @@ void WH_SubbandWriter::process()
 }
 
 void WH_SubbandWriter::postprocess() {
+  delete [] itsFlagsBuffer;
+  delete [] itsWeightsBuffer;
+  itsFlagsBuffer = 0;
+  itsWeightsBuffer = 0;
   cout<<itsWriteTimer<<endl;
 }

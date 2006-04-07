@@ -73,8 +73,8 @@ extern "C" {
   void _clear_correlation(CorrelatedOutputType *S0_S0);
 
   void _post_process_visibilities(
-	DH_Visibilities::VisibilitiesType *visibilities,
-	DH_Visibilities::NrValidSamplesType *nrValidSamplesCounted,
+	DH_Visibilities::AllVisibilitiesType *visibilities,
+	DH_Visibilities::AllNrValidSamplesType *nrValidSamplesCounted,
 	const float correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1],
 	const float thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS]);
 };

@@ -32,17 +32,8 @@ namespace LOFAR
 class DH_Visibilities: public DataHolder
 {
 public:
-  typedef fcomplex VisibilitiesType[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
-
-#if NR_SAMPLES_PER_INTEGRATION < 256
-  typedef unsigned char CountType;
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
-  typedef unsigned short CountType;
-#else
-  typedef unsigned CountType;
-#endif
-
-  typedef CountType NrValidSamplesType[NR_BASELINES][NR_SUBBAND_CHANNELS];
+  typedef fcomplex	 VisibilityType;
+  typedef unsigned short NrValidSamplesType;
 
   // Constructor with centerFreq being the center frequency of the subband
   explicit DH_Visibilities(const string& name,
@@ -59,40 +50,55 @@ public:
 
   static int baseline(int station1, int station2)
   {
-    DBGASSERTSTR(station2 >= station1, "only lower part of correlation matrix is accessible");
+    DBGASSERT(station1 <= station2);
     return station2 * (station2 + 1) / 2 + station1;
   }
 
-  /// Get write access to the Visibilities.
-  VisibilitiesType* getVisibilities()
-  {
-    return itsVisibilities;
-  }
-
+#if 0
   fcomplex (*getChannels(int station1, int station2)) [NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS]
   {
     return &(*itsVisibilities)[baseline(station1, station2)];
   }
+#endif
 
-  /// Get read access to the Visibilities.
-  const VisibilitiesType* getVisibilities() const
+#if defined BGL_PROCESSING
+  typedef VisibilityType AllVisibilitiesType[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
+  typedef NrValidSamplesType AllNrValidSamplesType[NR_BASELINES][NR_SUBBAND_CHANNELS];
+
+  AllVisibilitiesType* getVisibilities()
   {
-    return itsVisibilities;
+    return (AllVisibilitiesType *) itsVisibilities;
   }
 
-  const NrValidSamplesType *getNrValidSamplesCounted() const
+  const AllVisibilitiesType* getVisibilities() const
   {
-    return itsNrValidSamplesCounted;
+    return (const AllVisibilitiesType *) itsVisibilities;
   }
 
-  NrValidSamplesType *getNrValidSamplesCounted()
+  AllNrValidSamplesType *getNrValidSamples()
   {
-    return itsNrValidSamplesCounted;
+    return (AllNrValidSamplesType *) itsNrValidSamples;
   }
 
-  const size_t getBufSize() const
+  const AllNrValidSamplesType *getNrValidSamples() const
   {
-    return sizeof(VisibilitiesType) / sizeof(fcomplex);
+    return (const AllNrValidSamplesType *) itsNrValidSamples;
+  }
+#endif
+
+  VisibilityType &getVisibility(unsigned baseline, unsigned channel, unsigned pol1, unsigned pol2)
+  {
+    return itsVisibilities[NR_POLARIZATIONS * (NR_POLARIZATIONS * (itsNrChannels * baseline + channel) + pol1) + pol2];
+  }
+
+  NrValidSamplesType &getNrValidSamples(unsigned baseline, unsigned channel)
+  {
+    return itsNrValidSamples[itsNrChannels * baseline + channel];
+  }
+
+  const size_t getNrVisibilities() const
+  {
+    return itsNrBaselines * itsNrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS;
   }
 
   // Test pattern for storage section
@@ -102,14 +108,13 @@ private:
   /// Forbid assignment.
   DH_Visibilities& operator= (const DH_Visibilities&);
 
-  VisibilitiesType   *itsVisibilities;
-  NrValidSamplesType *itsNrValidSamplesCounted;
+  unsigned	     itsNrBaselines, itsNrChannels;
+
+  VisibilityType     *itsVisibilities;
+  NrValidSamplesType *itsNrValidSamples;
 
   void fillDataPointers();
 };
 } // Namespace LOFAR
 
 #endif 
-
-
-
