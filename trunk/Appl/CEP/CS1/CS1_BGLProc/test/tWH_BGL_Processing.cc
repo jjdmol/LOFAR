@@ -135,11 +135,11 @@ void setRFItestPattern(WH_BGL_Processing &wh)
 
 void checkCorrelatorTestPattern(WH_BGL_Processing &wh)
 {
-  DH_Visibilities		      *dh	    = wh.get_DH_Visibilities();
-  DH_Visibilities::VisibilitiesType   *visibilities = dh->getVisibilities();
-  DH_Visibilities::NrValidSamplesType *validSamples = dh->getNrValidSamplesCounted();
+  DH_Visibilities			 *dh	       = wh.get_DH_Visibilities();
+  DH_Visibilities::AllVisibilitiesType   *visibilities = dh->getVisibilities();
+  DH_Visibilities::AllNrValidSamplesType *validSamples = dh->getNrValidSamples();
 
-  static const int		      channels[]    = { 0, 73, 255 };
+  static const int			 channels[]    = { 0, 73, 255 };
 
   for (int stat1 = 0; stat1 < std::min(NR_STATIONS, 8); stat1 ++) {
     for (int stat2 = stat1; stat2 < std::min(NR_STATIONS, 8); stat2 ++) {
@@ -151,7 +151,7 @@ void checkCorrelatorTestPattern(WH_BGL_Processing &wh)
 	for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	  std::cout << " " << (char) ('x' + pol1) << (char) ('x' + pol2) << ':';
 
-	  for (int chidx = 0; chidx < sizeof(channels) / sizeof(int); chidx ++) {
+	  for (size_t chidx = 0; chidx < sizeof(channels) / sizeof(int); chidx ++) {
 	    int ch = channels[chidx];
 
 	    if (ch < NR_SUBBAND_CHANNELS) {

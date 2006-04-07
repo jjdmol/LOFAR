@@ -18,6 +18,7 @@
 #  $Id$
 
 #if defined HAVE_BGL
+#define BGL_PROCESSING
 #include <CS1_Interface/CS1_Config.h>
 
 #define I4COMPLEX_SIZE	 1

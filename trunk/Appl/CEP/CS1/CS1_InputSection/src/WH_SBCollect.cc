@@ -87,7 +87,7 @@ namespace LOFAR
       RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
       dimType inStationDim = inMatrix->getDim("Stations");
 
-      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getDataMatrix();
+      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getSamplesMatrix();
       dimType outStationDim = outMatrix.getDim("Station");
 
       RectMatrix<DH_Subband::SampleType>::cursorType outCursor;
@@ -95,7 +95,7 @@ namespace LOFAR
 
       // Loop over all inputs (stations)
       for (int nr=0; nr<itsNinputs; nr++) {
-	outMatrix = &((DH_Subband*)getDataManager().getOutHolder(core))->getDataMatrix();
+	outMatrix = &((DH_Subband*)getDataManager().getOutHolder(core))->getSamplesMatrix();
 	outCursor = outMatrix.getCursor( 0 * outStationDim);
 
 	inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
@@ -106,7 +106,7 @@ namespace LOFAR
       }
 #else
       RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-      RectMatrix<DH_Subband::SampleType>* outMatrix = &((DH_Subband*)getDataManager().getOutHolder(itsCore))->getDataMatrix();
+      RectMatrix<DH_Subband::SampleType>* outMatrix = &((DH_Subband*)getDataManager().getOutHolder(itsCore))->getSamplesMatrix();
       dimType outStationDim = outMatrix->getDim("Station");
       dimType inStationDim = inMatrix->getDim("Stations");
 
@@ -124,8 +124,8 @@ namespace LOFAR
 	  inMatrix->cpy2Matrix(inCursor, inStationDim, *outMatrix, outCursor, outStationDim, 1);
 	  outMatrix->moveCursor(&outCursor, outStationDim);
 
-	  DH_Subband::AllSamplesType* ptr = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getSamples();
-	  (*ptr)[0][0][0] = makei16complex(1, 2);
+	  //DH_Subband::AllSamplesType* ptr = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getSamples();
+	  //(*ptr)[0][0][0] = makei16complex(1, 2);
 	}
 
       getDataManager().readyWithOutHolder(itsCore);

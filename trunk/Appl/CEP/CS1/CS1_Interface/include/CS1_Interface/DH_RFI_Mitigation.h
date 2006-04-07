@@ -27,6 +27,7 @@
 #include <CS1_Interface/bitset.h>
 #include <Transport/DataHolder.h>
 
+#if defined BGL_PROCESSING
 
 namespace LOFAR
 {
@@ -72,4 +73,5 @@ private:
 
 
 }
+#endif 
 #endif 

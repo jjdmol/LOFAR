@@ -69,7 +69,6 @@ namespace LOFAR {
 #endif
       
       int nSubbands  = itsParamSet.getInt32("Observation.NSubbands");  // number of SubBand filters in the application
-      int nFakeSubbands  = itsParamSet.getInt32("FakeData.NSubbands");  // number of SubBand filters in the application
       int nCoresPerSubband = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
     
       LOG_TRACE_FLOW_STR("Create the top-level composite");
@@ -127,7 +126,7 @@ namespace LOFAR {
 
       LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
       vector<Step*> collectSteps;
-      for (int nf=0; nf < nFakeSubbands; nf++) {
+      for (int nf=0; nf < nSubbands; nf++) {
 	sprintf(nameBuffer, "Collect_node_%d_of_%d", nf, nStations);
 	lastWH = new WH_SBCollect(nameBuffer,      // name
 				  nf,              // Subband ID

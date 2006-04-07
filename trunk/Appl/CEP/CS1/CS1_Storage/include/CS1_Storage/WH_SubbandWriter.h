@@ -69,14 +69,15 @@ class WH_SubbandWriter: public WorkHolder
     int  itsNInputsPerSubband;
     int  itsNChannels;
     int  itsNPolSquared;
+    int	 itsNVisibilities;
 
     MSWriter* itsWriter;
 
     int itsBandId;       // MS ID of frequency band
     int itsFieldId;
     int itsTimeCounter;  // Counts the time
-    bool itsFlagsBuffer[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
-    float itsWeightsBuffer[NR_BASELINES][NR_SUBBAND_CHANNELS];
+    bool *itsFlagsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
+    float *itsWeightsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS];
 
     float itsWeightFactor;
 

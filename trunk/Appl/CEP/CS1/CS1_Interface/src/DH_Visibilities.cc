@@ -28,25 +28,31 @@
 namespace LOFAR
 {
 
-DH_Visibilities::DH_Visibilities (const string& name, const ACC::APS::ParameterSet &pSet)
+DH_Visibilities::DH_Visibilities (const string &name, const ACC::APS::ParameterSet &pSet)
 : DataHolder     (name, "DH_Visibilities"),
   //itsPS         (pSet),
-  itsVisibilities(0)
+  itsVisibilities(0),
+  itsNrValidSamples(0)
 {
 #if 0
   //todo: support for multiple freq channels
    itsNPols = itsPS.getInt32("Observation.NPolarisations");
    itsNCorrs = itsNPols*itsNPols;
-   itsNStations  = itsPS.getInt32("FakeData.NStations");
-   itsNBaselines = itsNStations * (itsNStations + 1)/2;
 #endif
+   itsNrChannels       = pSet.getUint32("Observation.NChannels");
+   unsigned nrStations = pSet.getUint32("Observation.NStations");
+   itsNrBaselines      = nrStations * (nrStations + 1) / 2;
 }   
 
 
-DH_Visibilities::DH_Visibilities(const DH_Visibilities& that)
+DH_Visibilities::DH_Visibilities(const DH_Visibilities &that)
   : DataHolder    (that),
     //itsPS         (that.itsPS),
-    itsVisibilities     (0)
+
+    itsNrBaselines(that.itsNrBaselines),
+    itsNrChannels(that.itsNrChannels),
+    itsVisibilities(0),
+    itsNrValidSamples(0)
 #if 0
     itsNStations  (that.itsNStations),
     itsNBaselines (that.itsNBaselines),
@@ -65,33 +71,29 @@ DataHolder* DH_Visibilities::clone() const
 
 void DH_Visibilities::init()
 {
-  addField("Visibilities", BlobField<fcomplex>(1, getBufSize()), 32);
-  addField("NrValidSamplesCounted", BlobField<CountType>(1, NR_BASELINES * NR_SUBBAND_CHANNELS));
+  addField("Visibilities",   BlobField<fcomplex>(1, getNrVisibilities()), 32);
+  addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels));
 
   createDataBlock();  // calls fillDataPointers
 }
 
 void DH_Visibilities::fillDataPointers() 
 {
-  itsVisibilities = (VisibilitiesType *)getData<fcomplex> ("Visibilities");
-  itsNrValidSamplesCounted = (NrValidSamplesType *)getData<CountType> ("NrValidSamplesCounted");
+  itsVisibilities   = (VisibilityType *)     getData<fcomplex>("Visibilities");
+  itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
 }
 
 void DH_Visibilities::setStorageTestPattern(int factor)
 {
-  for (int bl = 0; bl < NR_BASELINES; bl++)
-  {
-    for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch++)
-    {
+  for (unsigned bl = 0; bl < itsNrBaselines; bl++) {
+    for (unsigned ch = 0; ch < itsNrChannels; ch++) {
       // Set number of valid samples
-      (*itsNrValidSamplesCounted)[bl][ch] = bl*ch;
+      getNrValidSamples(bl, ch) = bl * ch;
 
-      for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++)
-      {
-	for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++)
-	{
-	  // Set visibilities
-	  (*itsVisibilities)[bl][ch][pol1][pol2] = makefcomplex(bl+ch, factor*(pol1+pol2));
+      // Set visibilities
+      for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
+	for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+	  getVisibility(bl, ch, pol1, pol2) = makefcomplex(bl + ch, factor * (pol1 + pol2));
 	}
       }
     }

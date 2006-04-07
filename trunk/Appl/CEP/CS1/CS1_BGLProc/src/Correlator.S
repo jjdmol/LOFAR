@@ -19,6 +19,7 @@
 #  $Id$
 
 #if defined HAVE_BGL
+#define BGL_PROCESSING
 #include <CS1_Interface/CS1_Config.h>
 
 # C[s1][s2][p1][p2][ch] = sum over t of A[ch][s1][p1][t] * ~ A[ch][s2][p2][t]

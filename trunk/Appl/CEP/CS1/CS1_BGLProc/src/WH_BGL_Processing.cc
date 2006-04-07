@@ -30,8 +30,7 @@
 #include <Transport/TH_MPI.h>
 
 #include <fftw.h>
-#include <assert.h>
-#include <complex.h>
+#include <complex>
 #include <cmath>
 
 #include <config.h>
@@ -1140,13 +1139,13 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
   itsPS(ps)
 {
   ASSERT(ps.getInt32("BGLProc.NPPFTaps")		== NR_TAPS);
-  ASSERT(ps.getInt32("FakeData.NStations")		== NR_STATIONS);
+  ASSERT(ps.getInt32("Observation.NStations")		== NR_STATIONS);
   ASSERT(ps.getInt32("Observation.NPolarisations")	== NR_POLARIZATIONS);
   ASSERT(ps.getInt32("Observation.NSubbandSamples")	== NR_SUBBAND_SAMPLES);
   ASSERT(ps.getInt32("Observation.NChannels")		== NR_SUBBAND_CHANNELS);
 
 #if !defined C_IMPLEMENTATION
-  assert(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
+  ASSERT(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
 #endif
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
@@ -1435,15 +1434,15 @@ void WH_BGL_Processing::doCorrelate()
 {
   doCorrelateTimer.start();
 
-  DH_RFI_Mitigation::ChannelFlagsType *RFI_Flags = get_DH_RFI_Mitigation()->getChannelFlags();
-  DH_Visibilities::VisibilitiesType   *visibilities = get_DH_Visibilities()->getVisibilities();
-  DH_Visibilities::NrValidSamplesType *nrValidSamplesCounted = get_DH_Visibilities()->getNrValidSamplesCounted();
+  DH_RFI_Mitigation::ChannelFlagsType	 *RFI_Flags = get_DH_RFI_Mitigation()->getChannelFlags();
+  DH_Visibilities::AllVisibilitiesType	 *visibilities = get_DH_Visibilities()->getVisibilities();
+  DH_Visibilities::AllNrValidSamplesType *nrValidSamples = get_DH_Visibilities()->getNrValidSamples();
 
 #if defined C_IMPLEMENTATION
   for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
     for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {
       for (int stat1 = 0; stat1 <= stat2; stat1 ++) { 
-	int bl = DH_Visibilities::baseline(stat1, stat2), nrValidSamples = 0;
+	int bl = DH_Visibilities::baseline(stat1, stat2), nrValid = 0;
 
 	if (!(*RFI_Flags)[stat1][ch] && !(*RFI_Flags)[stat2][ch]) {
 	  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
@@ -1459,17 +1458,17 @@ void WH_BGL_Processing::doCorrelate()
 	      (*visibilities)[bl][ch][pol1][pol2] = sum;
 	    }
 	  }
-	  nrValidSamples = itsNrValidSamples[bl];
+	  nrValid = itsNrValidSamples[bl];
 	}
 	
-	if (nrValidSamples == 0) {
+	if (nrValid == 0) {
 invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	    for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	      (*visibilities)[bl][ch][pol1][pol2] = makefcomplex(0, 0);
 	    }
 	  }
 	}
-	(*nrValidSamplesCounted)[bl][ch] = nrValidSamples;
+	(*nrValidSamples)[bl][ch] = nrValid;
       }
     }
   }
@@ -1478,7 +1477,7 @@ invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 
   for (int bl = 0; bl < NR_BASELINES; bl ++) {
     for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-      (*nrValidSamplesCounted)[bl][ch] = itsNrValidSamples[bl];
+      (*nrValidSamples)[bl][ch] = itsNrValidSamples[bl];
     }
   }
 
@@ -1494,7 +1493,7 @@ invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	  int bl = stat1 < stat2 ? DH_Visibilities::baseline(stat1, stat2) :
 				   DH_Visibilities::baseline(stat2, stat1);
 	  //_clear_correlation(&(*visibilities)[bl][ch]);
-	  (*nrValidSamplesCounted)[bl][ch] = 0;
+	  (*nrValidSamples)[bl][ch] = 0;
 	}
       }
     }
@@ -1593,7 +1592,7 @@ invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 #if 0
   for (int bl = 0; bl < NR_BASELINES; bl ++) {
     for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-      float weight  = correlationWeights[(*nrValidSamplesCounted)[bl][ch]];
+      float weight  = correlationWeights[(*nrValidSamples)[bl][ch]];
       bool  invalid = false;
 
       for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
@@ -1606,7 +1605,7 @@ invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
       }
 
       if (invalid) {
-	(*nrValidSamplesCounted)[bl][ch] = 0;
+	(*nrValidSamples)[bl][ch] = 0;
 	for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	  for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	    (*visibilities)[bl][ch][pol1][pol2] = makefcomplex(0, 0);
@@ -1616,8 +1615,8 @@ invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
     }
   }
 #else
-  //_weigh_visibilities(visibilities, nrValidSamplesCounted, correlationWeights);
-  _post_process_visibilities(visibilities, nrValidSamplesCounted, correlationWeights, thresholds);
+  //_weigh_visibilities(visibilities, nrValidSamples, correlationWeights);
+  _post_process_visibilities(visibilities, nrValidSamples, correlationWeights, thresholds);
 #endif
   weightTimer.stop();
 #endif  

@@ -32,6 +32,8 @@
 
 #include <tinyCEP/WorkHolder.h>
 #include <CS1_Interface/bitset.h>
+
+#define BGL_PROCESSING	// enable #define of NR_STATIONS etc.
 #include <CS1_Interface/CS1_Config.h>
 
 #include <CS1_Interface/DH_Subband.h>
