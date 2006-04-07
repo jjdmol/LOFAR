@@ -9,6 +9,16 @@ package nl.astron.lofar.mac.apl.gui.jrsp;
  * Then you can call the connect method with the hostname that should be used.
  * At the end you call the disconnect method to end/delete our connection in the
  * native code.
+ * For example, if you want to get the status:
+ * 
+ * String sHostName = %hostname%;
+ * int iRcuMask = %rcumask%;
+ *
+ * Board b = new Board();                         // initialize board
+ * b.connect(sHostName);                          // connect to board @ hostname
+ * BoardStatus[] arrBs = b.getStatus(iRcuMask);   // get the boardStatus
+ * b.disconnect();                                // disconnect the board
+ * 
  *
  * @author  balken
  */

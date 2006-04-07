@@ -8,7 +8,8 @@ import nl.astron.lofar.mac.apl.gui.jrsp.Board;
 import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
 
 /**
- * This is the main panel for the WaveformSettings.
+ * @TODO add comments
+ *
  * @author  balken
  */
 public class WaveformSettingsPanel extends JPanel implements ActionListener
@@ -48,8 +49,6 @@ public class WaveformSettingsPanel extends JPanel implements ActionListener
     
     /**
      * Invoked when a action occured; btnSumbit on the inputpanel pressed.
-     * Note: board has to be set.
-     * @TODO: Set RCUMask
      */
     public void actionPerformed(ActionEvent e)
     {
@@ -71,7 +70,10 @@ public class WaveformSettingsPanel extends JPanel implements ActionListener
             int frequency = Integer.parseInt(inputPanel.getFrequency());
             int amplitude = Integer.parseInt(inputPanel.getAmplitude());
             
-            board.setWaveformSettings(rcuMask, mode, frequency, amplitude);
+            if(!board.setWaveformSettings(rcuMask, mode, frequency, amplitude))
+            {
+                JOptionPane.showMessageDialog(null, "Failed to change the waveform settings.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
         catch(NumberFormatException nfe)
         {

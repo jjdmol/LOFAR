@@ -4,6 +4,8 @@ import javax.swing.border.TitledBorder;
 import nl.astron.lofar.mac.apl.gui.jrsp.RCUStatus;
 
 /**
+ * A panel that displays the RCU status data. This panel is used by the
+ * StatusPanel.
  *
  * @author  balken
  */

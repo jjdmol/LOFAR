@@ -3,6 +3,14 @@ package nl.astron.lofar.mac.apl.gui.jrsp;
 /**
  * This class keeps hold of the Board Status information. All member variables are public so there is no
  * need for getters and setters.
+ * A part of the statusdata is stored in special classes. Theses classes have a
+ * strong resemblance to this class; their member variables are also public.
+ * These classes are instantiated in de constructor of this class, so the user
+ * has easy access and will not encounter any nullpointer exceptions.
+ * @see nl.astron.lofar.mac.apl.gui.jrsp.ADOStatus
+ * @see nl.astron.lofar.mac.apl.gui.jrsp.RCUStatus
+ * @see nl.astron.lofar.mac.apl.gui.jrsp.SyncStatus
+ *
  * @author  balken
  */
 public class BoardStatus

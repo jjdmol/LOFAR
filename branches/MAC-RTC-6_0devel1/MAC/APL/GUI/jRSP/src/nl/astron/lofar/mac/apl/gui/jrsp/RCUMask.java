@@ -1,6 +1,21 @@
 package nl.astron.lofar.mac.apl.gui.jrsp;
 
 /**
+ * The RCUMask can be used to construct or alter a int(eger) rcumask that is
+ * used to determine which boards should be accessed by a function in the Board 
+ * class.
+ * The mask can be set through passing a int or editing every bit indepentedly 
+ * of each other: setMask(int value), setBit(int index) and clearBit(int index).
+ * The methods setBit and clearBit are used to either set or unset (clear) a
+ * bit. 
+ * A method that would flip the bit could be implemented, although it's not used
+ * in the jRSP project at the moment.
+ *
+ * Because it's important that RCUMask doesn't generate false rcumask's a jUnit
+ * testcase has been made that runs several tests on this class. RCUMaskTest,
+ * the test class can be found in the Test Packages.
+ * @see nl.astron.lofar.mac.apl.gui.jrsp.RCUMaskTest
+ *
  * @author balken
  */
 public class RCUMask 

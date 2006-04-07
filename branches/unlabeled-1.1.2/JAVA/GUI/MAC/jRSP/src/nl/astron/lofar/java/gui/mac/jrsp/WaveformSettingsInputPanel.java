@@ -7,6 +7,7 @@ import javax.swing.event.EventListenerList;
 
 /**
  * The input panel for the WaveformSettingsPanel.
+ *
  * @author  balken
  */
 public class WaveformSettingsInputPanel extends JPanel implements ActionListener

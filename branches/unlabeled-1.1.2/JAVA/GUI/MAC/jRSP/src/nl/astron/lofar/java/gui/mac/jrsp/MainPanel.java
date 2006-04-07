@@ -12,6 +12,19 @@ import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.panels.IPluginPanel;
 
 /**
+ * The MainPanel is the GUI entrypoint for the jRSP project. It has a ListPanel
+ * that lists all the available boards, a ControlPanel for editing the hostname
+ * and refreshrate, and a tabbedpane containing the detailed panels for
+ * controlling the boards.
+ * 
+ * To support refresh a thread is needed and therefore MainPanel implements
+ * Runnable. The functions startRefreshThread and stopRefreshThread are used
+ * to start and stop the thread. When the thread is started it will, depending
+ * on the refreshrate, refresh the current panel using the method
+ * updateCurrentPabel.
+ *
+ * The MainPanel implements a ListSelectionListener to react to changes in the
+ * ListPanel and a ChangeListener to react to changes in the tabbedpane.
  *
  * @author  balken
  */

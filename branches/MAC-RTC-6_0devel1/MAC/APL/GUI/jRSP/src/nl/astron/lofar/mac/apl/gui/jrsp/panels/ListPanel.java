@@ -6,9 +6,11 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 /**
- * Panel containing a label and a list.
- *
- * Calls updateCurrentPanel method of MainPanel when a value is changed.
+ * Panel containing a label and a list. Displays a array of Strings and has
+ * methods to return the selected value and index.
+ * This panel is used by the MainPanel to display the boards that are 
+ * accessible.
+ * SelectionListeners can be added to this class.
  *
  * @author  balken
  */

@@ -6,8 +6,12 @@ import javax.swing.JPanel;
 import javax.swing.event.EventListenerList;
 
 /**
- * The ControlPanel is a component used by the MainPanel to get the hostname 
- * that should be used to connect to.
+ * The ControlPanel is a component used by the MainPanel to get the hostname and
+ * refreshrate that should be used to connect. 
+ *
+ * When an action occurs (for example clicking on the connect button) 
+ * ControlPanel calls a function from the MainPanel. Because of that it's
+ * important that setMainPanel is called after initializing the ControlPanel.
  *
  * @author  balken
  */

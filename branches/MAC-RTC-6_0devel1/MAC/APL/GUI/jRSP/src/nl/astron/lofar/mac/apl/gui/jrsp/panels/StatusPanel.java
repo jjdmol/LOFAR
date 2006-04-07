@@ -4,6 +4,17 @@ import javax.swing.JPanel;
 import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
 
 /**
+ * The StatusPanel displays the Status of the RSPboard (BoardStatus) that is 
+ * passed to this class through the initFields() method. It delegates all the 
+ * "displaying" to other panels.
+ * @see ADOStatusPanel
+ * @see DIAGStatusPanel
+ * @see ETHStatusPanel
+ * @see MEPStatusPanel
+ * @see RCUStatusPanel
+ * @see RSPStatusPanel
+ * @see RSUStatusPanel
+ * @see SyncStatusPanel
  *
  * @author  balken
  */

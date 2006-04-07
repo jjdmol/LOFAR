@@ -4,6 +4,8 @@ import javax.swing.border.TitledBorder;
 import nl.astron.lofar.mac.apl.gui.jrsp.SyncStatus;
 
 /**
+ * A panel that displays the ADO status data. This panel is used by the
+ * StatusPanel.
  *
  * @author  balken
  */

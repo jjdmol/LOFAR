@@ -3,6 +3,8 @@ package nl.astron.lofar.mac.apl.gui.jrsp.panels;
 import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
 
 /**
+ * A panel that displays the ADO status data. This panel is used by the
+ * StatusPanel.
  *
  * @author  balken
  */
