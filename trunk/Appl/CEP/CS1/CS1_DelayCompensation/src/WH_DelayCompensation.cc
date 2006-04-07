@@ -25,7 +25,6 @@
 
 //# Includes
 #include <CS1_DelayCompensation/WH_DelayCompensation.h>
-#include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/DH_Delay.h>
 // #include <APS/ParameterSet.h>
 #include <AMCBase/SkyCoord.h>
