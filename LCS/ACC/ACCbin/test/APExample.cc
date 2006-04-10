@@ -133,7 +133,7 @@ LOG_TRACE_VAR_STR("=====" << resultBuffer << "======");
 	}
 
 
-	LOG_INFO_STR(argv[0] << " terminated normally")
+	LOG_INFO_STR(argv[0] << " terminated normally");
 	return (0);
 }
 
