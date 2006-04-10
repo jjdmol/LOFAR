@@ -52,6 +52,7 @@ CREATE OR REPLACE FUNCTION getVCparams(INT4)
 				description
 		FROM	VICparamdef 
 		WHERE	nodeID = $1
+		ORDER BY name
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
