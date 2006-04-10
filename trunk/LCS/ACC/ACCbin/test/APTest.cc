@@ -156,7 +156,7 @@ int main (int argc, char *argv[]) {
 	}
 
 
-	LOG_INFO_STR(argv[0] << " terminated normally")
+	LOG_INFO_STR(argv[0] << " terminated normally");
 	return (0);
 }
 
