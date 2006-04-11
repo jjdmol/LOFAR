@@ -5,10 +5,14 @@
  */
 
 package nl.astron.lofar.sas.otb.panels;
+import java.rmi.RemoteException;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.util.OTDBtreeNode;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
+import nl.astron.lofar.sas.otb.util.ComponentTreeNode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otbcomponents.ComponentPanel;
+import nl.astron.lofar.sas.otbcomponents.VICnodeDefViewPanel;
 import org.apache.log4j.Logger;
 
 /**
@@ -45,6 +49,9 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     
     public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
+        itsComponentID=itsMainFrame.getComponentID();
+        componentPanel1.setMainFrame(itsMainFrame);
+        VICnodeDefViewPanel1.setMainFrame(itsMainFrame);
         
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
@@ -57,26 +64,43 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         if(userAccount.isInstrumentScientist()) {
             // enable/disable certain controls
         }
+        
+        setNewRootNode();
+        setFieldValidations();
         return true;
     }
  
     public void setNewRootNode(){
+        logger.debug("SetNewRootNode for component: "+itsComponentID);
         try {
-            jOTDBnode otdbNode=null;
-            if (itsTreeID == 0 ) {
-                // create a sample root node.
-                otdbNode = new jOTDBnode(0,0,0,0);
-                otdbNode.name = "No TreeSelection";
+            jOTDBparam aParam =null;
+            jVICnodeDef aVICnodeDef=null;
+            if (itsComponentID == 0 ) {
+                // create a sample component param
+                aParam = new jOTDBparam(0,0,0);
+                aParam.name = "No ParamSelection";
             } else {
-                otdbNode = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
+                aVICnodeDef = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
+                if (aVICnodeDef != null) {
+                    // create a fake param to pass to componentTree, to simulate a node param
+                    aParam = new jOTDBparam(0,itsComponentID,0);
+                    aParam.name="#"+aVICnodeDef.name;
+                    aParam.index=0;
+                    aParam.limits="";
+                    aParam.type=-1;
+                    aParam.unit=-1;
+                    aParam.description="";
+                } else {
+                    logger.debug("failed to get ComponentNode");
+                }
             }
         
-            // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+            // put the param in a wrapper for the tree
+            ComponentTreeNode aComponentTreeNode = new ComponentTreeNode(aParam, itsMainFrame.getOTDBrmi());
 
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(otdbTreeNode);
+            treePanel.newRootNode(aComponentTreeNode);
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
@@ -84,12 +108,32 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     }    
     
     public String getFriendlyName() {
-        return getFriendlyNameStatic()+"("+itsTreeID+")";
+        return getFriendlyNameStatic()+"("+itsComponentID+")";
     }
 
     public static String getFriendlyNameStatic() {
         return name;
     }
+    
+    private void changeTreeSelection(jOTDBparam aParam) {
+        logger.debug("ChangeSelection for param: " + aParam.name);
+        itsSelectedParam=aParam;
+        if (treePanel.getSelectedRows()[0] == 0) {
+            try {
+                jVICnodeDef aVICnodeDef = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
+                VICnodeDefViewPanel1.setNode(aVICnodeDef);
+                jSplitPane1.remove(componentPanel1);
+                jSplitPane1.setRightComponent(VICnodeDefViewPanel1);
+            } catch (RemoteException ex) {
+                logger.debug("Error getting VICnodeDef");
+            }
+        } else {
+            jSplitPane1.remove(VICnodeDefViewPanel1);
+            jSplitPane1.setRightComponent(componentPanel1);
+            componentPanel1.setParam(aParam);
+        }
+    }
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -99,15 +143,18 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     private void initComponents() {
         jSplitPane1 = new javax.swing.JSplitPane();
         treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
-        componentPanel1 = new nl.astron.lofar.sas.otbcomponents.ComponentPanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
 
         jSplitPane1.setDividerLocation(450);
-        jSplitPane1.setLeftComponent(treePanel);
+        treePanel.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                treePanelValueChanged(evt);
+            }
+        });
 
-        jSplitPane1.setRightComponent(componentPanel1);
+        jSplitPane1.setLeftComponent(treePanel);
 
         add(jSplitPane1, java.awt.BorderLayout.CENTER);
 
@@ -121,11 +168,56 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
 
     }// </editor-fold>//GEN-END:initComponents
 
+    private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
+        logger.debug("treeSelectionEvent: " + evt);
+        if (evt != null && evt.getNewLeadSelectionPath() != null && 
+                evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
+            changeTreeSelection(((ComponentTreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getOTDBparam());
+        }
+    }//GEN-LAST:event_treePanelValueChanged
+
     private void initialize() {
         treePanel.setTitle("Component List");
         buttonPanel1.addButton("Delete");
         buttonPanel1.addButton("Load");
         buttonPanel1.addButton("Exit");
+        
+        componentPanel1= new ComponentPanel();
+        VICnodeDefViewPanel1 = new VICnodeDefViewPanel();
+        jSplitPane1.setRightComponent(componentPanel1);
+        jSplitPane1.updateUI();
+        
+        //Add Actionlisteners for Component Panel and VICnodeDefPanel
+        componentPanel1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                componentPanel1ActionPerformed(evt);
+            }
+        });
+        VICnodeDefViewPanel1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                VICnodeDefViewPanel1ActionPerformed(evt);
+            }
+        });
+        
+        setFieldValidations();
+    }
+    
+    private void setFieldValidations() {
+        componentPanel1.enableParamName(false);
+        componentPanel1.enableType(false);
+        componentPanel1.enableUnit(false);
+        componentPanel1.enableLimits(true);
+        componentPanel1.enableDescription(true);                
+        componentPanel1.enableButtons(true);
+        componentPanel1.setButtonsVisible(true);
+        
+        VICnodeDefViewPanel1.enableName(false);
+        VICnodeDefViewPanel1.enableVersion(false);
+        VICnodeDefViewPanel1.enableClassif(false);
+        VICnodeDefViewPanel1.enableConstraints(true);
+        VICnodeDefViewPanel1.enableDescription(true);
+        VICnodeDefViewPanel1.enableButtons(true);
+        VICnodeDefViewPanel1.setButtonsVisible(true);
     }
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
@@ -137,15 +229,30 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
-    private MainFrame itsMainFrame;
+    private void VICnodeDefViewPanel1ActionPerformed(java.awt.event.ActionEvent evt) {
+        logger.debug("VICnodeDefActionPerformed: " + evt);
+        // flag has to be set that ppl using this treeid should be able to see that it's info has been changed
+        itsMainFrame.setChanged("Home",true);
+    }
     
-    // keep the TreeId that belongs to this panel
-    private int itsTreeID = 0;   
+    private void componentPanel1ActionPerformed(java.awt.event.ActionEvent evt) {
+        logger.debug("componentActionPerformed: " + evt);
+        // flag has to be set that ppl using this treeid should be able to see that it's info has been changed
+        itsMainFrame.setChanged("Home",true);
+    }
+
+    private MainFrame itsMainFrame;
+    private jOTDBparam itsSelectedParam;
+    
+    // keep the ComponentId that belongs to this panel
+    private int itsComponentID = 0;   
     private boolean changed=false;
+    
+    private nl.astron.lofar.sas.otbcomponents.ComponentPanel componentPanel1;
+    private nl.astron.lofar.sas.otbcomponents.VICnodeDefViewPanel VICnodeDefViewPanel1;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
-    private nl.astron.lofar.sas.otbcomponents.ComponentPanel componentPanel1;
     private javax.swing.JSplitPane jSplitPane1;
     private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables

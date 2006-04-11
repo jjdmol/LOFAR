@@ -151,7 +151,8 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         this.ParamTypeText.setEnabled(enabled);
     }
     
-        /** Returns the Given Unit for this Param */
+   
+    /** Returns the Given Unit for this Param */
     public String getUnit() {
         return (String)this.ParamUnitText.getSelectedItem();
     }

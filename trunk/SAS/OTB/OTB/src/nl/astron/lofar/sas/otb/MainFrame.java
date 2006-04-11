@@ -31,6 +31,7 @@ public class MainFrame extends javax.swing.JFrame {
     private StorageLocation                  itsStorageLocation;
     private MACNavigatorInteraction          itsMACInteraction;
     private int                              itsCurrentTreeID=0;
+    private int                              itsCurrentComponentID=0;
     private static UserAccount               itsUserAccount;
     
     
@@ -105,6 +106,15 @@ public class MainFrame extends javax.swing.JFrame {
         itsCurrentTreeID=aTreeID;
     }
     
+    /** gets the Current ComponentID */
+    public int getComponentID() {
+        return itsCurrentComponentID;
+    }
+    
+    /** sets the Current ComponentID */
+    public void setComponentID(int anID) {
+        itsCurrentComponentID=anID;
+    }
     
     /** Registers the panel with the given name without adding it to the 
       * toolbar or Plugin menu
