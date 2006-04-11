@@ -1,25 +1,267 @@
 /*
- * ComponentPanel.java
+ * ComponentPanel
  *
- * Created on 24 januari 2006, 18:54
+ * Created on 06 April 2006
  */
 
 package nl.astron.lofar.sas.otbcomponents;
-import nl.astron.lofar.sas.otb.panels.MainPanel;
+
+import java.awt.event.ActionEvent;
+import java.rmi.RemoteException;
+import java.util.Iterator;
+import java.util.TreeMap;
+import javax.swing.DefaultComboBoxModel;
+import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
+
 /**
  *
- * @author  Coolen
+ * @author  coolen
  */
 public class ComponentPanel extends javax.swing.JPanel {
     
-    static Logger logger = Logger.getLogger(ComponentPanel.class);
+    static Logger logger = Logger.getLogger(ComponentPanel.class);    
+
+   
+    /** Creates new form BeanForm based upon aParameter
+     *
+     * @params  aParam   Param to obtain the info from
+     *
+     */    
+    public ComponentPanel(MainFrame aMainFrame,jOTDBparam aParam) {
+        initComponents();
+        itsMainFrame = aMainFrame;
+        itsParam = aParam;
+        itsOtdbRmi=itsMainFrame.getOTDBrmi();
+        initComboLists();
+        initPanel(aParam);
+    }
     
     /** Creates new form BeanForm */
     public ComponentPanel() {
         initComponents();
     }
     
+    public void setMainFrame(MainFrame aMainFrame) {
+        if (aMainFrame != null) {
+            itsMainFrame=aMainFrame;
+            itsOtdbRmi=itsMainFrame.getOTDBrmi();
+            initComboLists();
+        } else {
+            logger.debug("No Mainframe supplied");
+        }
+    }
+    
+    public void setParam(jOTDBparam aParam) {
+        if (aParam != null) {
+            itsParam=aParam;
+            initPanel(aParam);
+        } else {
+            logger.debug("No param supplied");
+        }
+    }
+    
+    private void initComboLists() {
+        DefaultComboBoxModel aTypeModel = new DefaultComboBoxModel();
+        TreeMap aTypeMap = itsOtdbRmi.getParamType();
+        Iterator typeIt = aTypeMap.keySet().iterator();
+        while (typeIt.hasNext()) {
+            aTypeModel.addElement((String)aTypeMap.get(typeIt.next()));
+        }
+        ParamTypeText.setModel(aTypeModel);
+        
+        DefaultComboBoxModel aUnitModel = new DefaultComboBoxModel();
+        TreeMap aUnitMap=itsOtdbRmi.getUnit();
+        Iterator unitIt = aUnitMap.keySet().iterator();
+        while (unitIt.hasNext()) {
+            aUnitModel.addElement((String)aUnitMap.get(unitIt.next()));
+        }
+        ParamUnitText.setModel(aUnitModel);
+    }
+
+    private void initPanel(jOTDBparam aParam) {
+        if (aParam != null) {
+            setParamName(aParam.name);
+            setType(aParam.type);
+            setUnit(aParam.unit);
+            setLimits(String.valueOf(aParam.limits));
+            setDescription(aParam.description);
+        } else {
+            logger.debug("ERROR:  no Param given");
+        }
+    }
+    
+    /** Returns the Given Name for this Param */
+    public String getParamName() {
+        return this.ParamNameText.getText();
+    }
+    
+    private void setParamName(String aS) {
+        this.ParamNameText.setText(aS);
+    }
+    
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableParamName(boolean enabled) {
+        this.ParamNameText.setEnabled(enabled);
+    }
+
+    /** Returns the Given Type for this Param */
+    public String getType() {
+        return (String)this.ParamTypeText.getSelectedItem();
+    }
+    
+    private void setType(short aS) {
+        try {
+            this.ParamTypeText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getParamType(aS));
+        } catch (RemoteException e) {
+            logger.debug("Error: GetParamType failed " + e);
+       }
+    }
+    
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableType(boolean enabled) {
+        this.ParamTypeText.setEnabled(enabled);
+    }
+    
+        /** Returns the Given Unit for this Param */
+    public String getUnit() {
+        return (String)this.ParamUnitText.getSelectedItem();
+    }
+    
+    private void setUnit(short aS) {
+        try {
+            this.ParamUnitText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getUnit(aS));
+        } catch (RemoteException e) {
+            logger.debug("ERROR: getUnit failed " + e);
+        }
+    }
+    
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableUnit(boolean enabled) {
+        this.ParamUnitText.setEnabled(enabled);
+    }
+    
+    /** Returns the Given Limits for this Param */
+    public String getLimits() {
+        return this.ParamLimitsText.getText();
+    }
+    
+    private void setLimits(String aS) {
+        this.ParamLimitsText.setText(aS);
+    }
+
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableLimits(boolean enabled) {
+        this.ParamLimitsText.setEnabled(enabled);
+    }
+
+    /** Returns the Given Description for this Param */
+    public String getDescription() {
+        return this.ParamDescriptionText.getText();
+    }
+    
+    private void setDescription(String aS) {
+        this.ParamDescriptionText.setText(aS);
+    }
+    
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableDescription(boolean enabled) {
+        this.ParamDescriptionText.setEnabled(enabled);
+        this.ParamDescriptionText.setEditable(enabled);
+    }
+
+
+    /** Enables/disables the buttons
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableButtons(boolean enabled) {
+        this.ParamApplyButton.setEnabled(enabled);
+        this.ParamCancelButton.setEnabled(enabled);
+    }
+    
+    /** Sets the buttons visible/invisible
+     *
+     * @param   visible     true/false visible/invisible
+     */
+    public void setButtonsVisible(boolean visible) {
+        this.ParamApplyButton.setVisible(visible);
+        this.ParamCancelButton.setVisible(visible);
+    }
+    
+    /** Enables/disables the complete form
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void setAllEnabled(boolean enabled) {
+        enableParamName(enabled);
+        enableType(enabled);
+        enableUnit(enabled);
+        enableLimits(enabled);
+        enableDescription(enabled);
+        enableButtons(enabled);
+    }
+    
+
+    private void saveInput() {
+        // Just check all possible fields that CAN change. The enabled method will take care if they COULD be changed.
+        // this way we keep this panel general for multiple use
+        boolean hasChanged = false;
+        if (itsParam != null) {
+            try {
+                if (itsParam.type != itsOtdbRmi.getRemoteTypes().getParamType(getType())) { 
+                    itsParam.type=itsOtdbRmi.getRemoteTypes().getParamType(getType());
+                    hasChanged=true;
+                }
+
+                if (itsParam.unit != itsOtdbRmi.getRemoteTypes().getUnit(getUnit())) { 
+                    itsParam.unit=itsOtdbRmi.getRemoteTypes().getUnit(getUnit());
+                    hasChanged=true;
+                }
+
+                if (!itsParam.description.equals(getDescription())) { 
+                    itsParam.description=getDescription();
+                    hasChanged=true;
+                }
+
+                if (!itsParam.limits.equals(getLimits())) { 
+                    itsParam.limits=getLimits();
+                    hasChanged=true;
+                }
+                
+                if (hasChanged) {
+                    if (!itsOtdbRmi.getRemoteMaintenance().saveParam(itsParam)) {
+                        logger.error("Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    }
+                    ActionEvent evt = new ActionEvent(this,-1,"component Changed");
+                    this.fireActionListenerActionPerformed(evt); 
+                } 
+               
+            } catch (RemoteException ex) {
+                logger.debug("error in Remote connection");
+            }
+        } else {
+            logger.debug("ERROR:  no Param given");
+        }
+    }
+
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -27,251 +269,146 @@ public class ComponentPanel extends javax.swing.JPanel {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        jLabel6 = new javax.swing.JLabel();
-        jPanel1 = new javax.swing.JPanel();
+        ParamNameLabel = new javax.swing.JLabel();
+        ParamTypeLabel = new javax.swing.JLabel();
+        ParamLimitsLabel = new javax.swing.JLabel();
+        ParamNameText = new javax.swing.JTextField();
+        ParamCancelButton = new javax.swing.JButton();
+        ParamApplyButton = new javax.swing.JButton();
+        ParamDescriptionText = new javax.swing.JTextArea();
+        ParamUnitLabel = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        nameField = new javax.swing.JTextField();
-        limitsField = new javax.swing.JTextField();
-        defaultValueField = new javax.swing.JTextField();
-        unitField = new javax.swing.JTextField();
-        parameterTypeField = new javax.swing.JTextField();
-        jLabel7 = new javax.swing.JLabel();
-        jTextArea1 = new javax.swing.JTextArea();
-        ComponentCancelButton = new javax.swing.JButton();
-        ComponentSaveButton = new javax.swing.JButton();
+        ParamTypeText = new javax.swing.JComboBox();
+        ParamUnitText = new javax.swing.JComboBox();
+        ParamLimitsText = new javax.swing.JTextField();
 
-        setLayout(new java.awt.BorderLayout());
+        ParamNameLabel.setText("Name :");
 
-        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel6.setText("Component View");
-        add(jLabel6, java.awt.BorderLayout.NORTH);
+        ParamTypeLabel.setText("Type :");
 
-        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        ParamLimitsLabel.setText("Limits :");
 
-        jLabel1.setText("Name");
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 100, 20));
+        ParamNameText.setText("None");
+        ParamNameText.setToolTipText("Name for this Node");
+        ParamNameText.setMaximumSize(new java.awt.Dimension(440, 19));
+        ParamNameText.setMinimumSize(new java.awt.Dimension(440, 19));
+        ParamNameText.setPreferredSize(new java.awt.Dimension(440, 19));
 
-        jLabel2.setText("Limits");
-        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 80, 100, 20));
+        ParamCancelButton.setText("Cancel");
+        ParamCancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ParamCancelButtonActionPerformed(evt);
+            }
+        });
 
-        jLabel3.setText("Default Value");
-        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 110, 100, 20));
+        ParamApplyButton.setText("Apply");
+        ParamApplyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ParamApplyButtonActionPerformed(evt);
+            }
+        });
 
-        jLabel4.setText("Unit");
-        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 140, 100, 20));
+        ParamDescriptionText.setRows(3);
+        ParamDescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
 
-        jLabel5.setText("Parameter Type");
-        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 170, 100, 20));
+        ParamUnitLabel.setText("Unit :");
 
-        nameField.setToolTipText("Name of this Component");
-        nameField.setEnabled(false);
-        jPanel1.add(nameField, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 50, 200, 20));
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setText("Component View Panel");
 
-        limitsField.setToolTipText("Limits for this component");
-        limitsField.setEnabled(false);
-        jPanel1.add(limitsField, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 80, 200, -1));
+        ParamTypeText.setEditable(true);
 
-        defaultValueField.setToolTipText("Default Value for this Component");
-        jPanel1.add(defaultValueField, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 110, 200, -1));
+        ParamUnitText.setEditable(true);
 
-        unitField.setToolTipText("Units for this Component");
-        unitField.setEnabled(false);
-        jPanel1.add(unitField, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 140, 200, -1));
+        ParamLimitsText.setText("None");
 
-        parameterTypeField.setToolTipText("Parameter Type for this Component");
-        parameterTypeField.setEnabled(false);
-        jPanel1.add(parameterTypeField, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 170, 200, -1));
-
-        jLabel7.setText("Description");
-        jPanel1.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 200, 100, 20));
-
-        jTextArea1.setToolTipText("Description for this Component");
-        jPanel1.add(jTextArea1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 230, 330, 100));
-
-        ComponentCancelButton.setText("Cancel");
-        jPanel1.add(ComponentCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 370, -1, -1));
-
-        ComponentSaveButton.setText("Save");
-        jPanel1.add(ComponentSaveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 370, -1, -1));
-
-        add(jPanel1, java.awt.BorderLayout.CENTER);
-
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(114, 114, 114)
+                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 320, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+            .add(layout.createSequentialGroup()
+                .add(40, 40, 40)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(ParamCancelButton)
+                        .add(5, 5, 5)
+                        .add(ParamApplyButton))
+                    .add(ParamDescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 530, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(layout.createSequentialGroup()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(ParamLimitsLabel)
+                            .add(ParamUnitLabel)
+                            .add(ParamTypeLabel)
+                            .add(ParamNameLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(20, 20, 20)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(ParamNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 430, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(ParamUnitText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(ParamTypeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(ParamLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                .add(57, 57, 57))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(10, 10, 10)
+                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(20, 20, 20)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ParamNameLabel)
+                    .add(ParamNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(15, 15, 15)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ParamLimitsLabel)
+                    .add(ParamLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(15, 15, 15)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ParamUnitLabel)
+                    .add(ParamUnitText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(11, 11, 11)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(ParamTypeLabel)
+                    .add(ParamTypeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(32, 32, 32)
+                .add(ParamDescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(41, 41, 41)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(ParamCancelButton)
+                    .add(ParamApplyButton))
+                .add(30, 30, 30))
+        );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void ParamApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamApplyButtonActionPerformed
+        saveInput();
+    }//GEN-LAST:event_ParamApplyButtonActionPerformed
+
+    private void ParamCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamCancelButtonActionPerformed
+        initPanel(itsParam);
+    }//GEN-LAST:event_ParamCancelButtonActionPerformed
     
+    private MainFrame  itsMainFrame;
+    private OtdbRmi    itsOtdbRmi;
+    private jOTDBparam itsParam;
+
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton ComponentCancelButton;
-    private javax.swing.JButton ComponentSaveButton;
-    private javax.swing.JTextField defaultValueField;
+    private javax.swing.JButton ParamApplyButton;
+    private javax.swing.JButton ParamCancelButton;
+    private javax.swing.JTextArea ParamDescriptionText;
+    private javax.swing.JLabel ParamLimitsLabel;
+    private javax.swing.JTextField ParamLimitsText;
+    private javax.swing.JLabel ParamNameLabel;
+    private javax.swing.JTextField ParamNameText;
+    private javax.swing.JLabel ParamTypeLabel;
+    private javax.swing.JComboBox ParamTypeText;
+    private javax.swing.JLabel ParamUnitLabel;
+    private javax.swing.JComboBox ParamUnitText;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextField limitsField;
-    private javax.swing.JTextField nameField;
-    private javax.swing.JTextField parameterTypeField;
-    private javax.swing.JTextField unitField;
     // End of variables declaration//GEN-END:variables
-
-       
-    /**
-     * Holds value of property itsName.
-     */
-    private String itsName;
-
-    /**
-     * Getter for property itsName.
-     * @return Value of property itsName.
-     */
-    public String getItsName() {
-
-        return this.itsName;
-    }
-
-    /**
-     * Setter for property itsName.
-     * @param itsName New value of property itsName.
-     */
-    public void setItsName(String itsName) {
-
-        this.itsName = itsName;
-    }
-
-    /**
-     * Holds value of property itsLimits.
-     */
-    private String itsLimits;
-
-    /**
-     * Getter for property itsLimits.
-     * @return Value of property itsLimits.
-     */
-    public String getItsLimits() {
-
-        return this.itsLimits;
-    }
-
-    /**
-     * Setter for property itsLimits.
-     * @param itsLimits New value of property itsLimits.
-     */
-    public void setItsLimits(String itsLimits) {
-
-        this.itsLimits = itsLimits;
-    }
-
-    /**
-     * Holds value of property itsDefaultValue.
-     */
-    private String itsDefaultValue;
-
-    /**
-     * Getter for property itsDefaultValue.
-     * @return Value of property itsDefaultValue.
-     */
-    public String getItsDefaultValue() {
-
-        return this.itsDefaultValue;
-    }
-
-    /**
-     * Setter for property itsDefaultValue.
-     * @param itsDefaultValue New value of property itsDefaultValue.
-     */
-    public void setItsDefaultValue(String itsDefaultValue) {
-
-        this.itsDefaultValue = itsDefaultValue;
-    }
-
-    /**
-     * Holds value of property itsUnit.
-     */
-    private String itsUnit;
-
-    /**
-     * Getter for property itsUnit.
-     * @return Value of property itsUnit.
-     */
-    public String getItsUnit() {
-
-        return this.itsUnit;
-    }
-
-    /**
-     * Setter for property itsUnit.
-     * @param itsUnit New value of property itsUnit.
-     */
-    public void setItsUnit(String itsUnit) {
-
-        this.itsUnit = itsUnit;
-    }
-
-    /**
-     * Holds value of property itsParameterType.
-     */
-    private String itsParameterType;
-
-    /**
-     * Getter for property itsParameterType.
-     * @return Value of property itsParameterType.
-     */
-    public String getItsParameterType() {
-
-        return this.itsParameterType;
-    }
-
-    /**
-     * Setter for property itsParameterType.
-     * @param itsParameterType New value of property itsParameterType.
-     */
-    public void setItsParameterType(String itsParameterType) {
-
-        this.itsParameterType = itsParameterType;
-    }
-
-    /**
-     * Holds value of property itsDescription.
-     */
-    private String itsDescription;
-
-    /**
-     * Getter for property itsDescription.
-     * @return Value of property itsDescription.
-     */
-    public String getItsDescription() {
-
-        return this.itsDescription;
-    }
-
-    /**
-     * Setter for property itsDescription.
-     * @param itsDescription New value of property itsDescription.
-     */
-    public void setItsDescription(String itsDescription) {
-
-        this.itsDescription = itsDescription;
-    }
-    
-    
-    
-    /** Enables/disables the buttons
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableButtons(boolean enabled) {
-        ComponentSaveButton.setEnabled(enabled);
-        ComponentCancelButton.setEnabled(enabled);
-    }
-    
 
     /**
      * Utility field used by event firing mechanism.
@@ -314,5 +451,9 @@ public class ComponentPanel extends javax.swing.JPanel {
             }
         }
     }
+
+
+
+
     
 }

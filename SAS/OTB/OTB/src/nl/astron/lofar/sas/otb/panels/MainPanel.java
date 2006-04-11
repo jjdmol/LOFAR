@@ -121,6 +121,9 @@ public class MainPanel extends javax.swing.JPanel
         TemplatesPanel.setTableModel(Templatemodel);
         TemplatesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
+        ComponentTableModel Componentmodel = new ComponentTableModel(itsMainFrame.getOTDBrmi());
+        ComponentsPanel.setTableModel(Componentmodel);
+        ComponentsPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         //TODO: do the same for the other tabs
     }
@@ -155,7 +158,11 @@ public class MainPanel extends javax.swing.JPanel
                 }            
             } else if (itsTabFocus.equals("Templates")) {
                 if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling templatetable");
+                    logger.debug("error filling templateTable");
+                }
+            } else if (itsTabFocus.equals("Components")) {
+                if (!((ComponentTableModel)ComponentsPanel.getTableModel()).fillTable()) {
+                    logger.debug("error filling ComponentsTable");
                 }
             }   
             this.setChanged(false);
@@ -330,7 +337,17 @@ public class MainPanel extends javax.swing.JPanel
                     logger.debug("Tree not found");
                 }
             }
-        }
+        } else if (itsTabFocus.equals("Components")) {
+            aRow = ComponentsPanel.getSelectedRow();
+            if ( aRow > -1) {
+                // is the node ID in the case of Components
+                treeID = ((Integer)ComponentsPanel.getTableModel().getValueAt(aRow, 0)).intValue();
+                if (treeID > 0) {
+                    itsMainFrame.setComponentID(treeID);
+                } else {
+                    logger.debug("Component not found");
+                }
+            }        }
         return treeID;
     }
     
@@ -508,7 +525,7 @@ public class MainPanel extends javax.swing.JPanel
                 itsMainFrame.ToDo();
             } else if (aButton.equals("New")) {
                 if (getFile("VIC-component") ) {
-                    // TODO Component Maintenance Panel with new id
+                        // Create a new Tree from the found file.
                 }
                 itsMainFrame.ToDo();
             } else if (aButton.equals("Modify")) {
@@ -603,6 +620,7 @@ public class MainPanel extends javax.swing.JPanel
         String aClassif="";
         
         int treeID=getSelectedTreeID();
+        int componentID=itsMainFrame.getComponentID();
         logger.debug("Selected Tree: "+treeID);
         if (treeID > 0) {
             try {
@@ -662,7 +680,11 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Info",false);                
             }
         } else if (itsTabFocus.equals("Components")) {
-            buttonPanel1.setButtonEnabled("Modify",true);
+            if (componentID > 0 ) {
+                buttonPanel1.setButtonEnabled("Modify",true);
+            } else {
+                buttonPanel1.setButtonEnabled("Modify",false);                
+            }
         } else if (itsTabFocus.equals("Query Results")) {
         }
     }
