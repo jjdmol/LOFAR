@@ -208,7 +208,7 @@ namespace LOFAR
     { dataConvert32 (fmt, inout, nrval); }
   inline void dataConvert (DataFormat fmt, double* inout, uint nrval)
     { dataConvert64 (fmt, inout, nrval); }
-  inline void dataConvert (DataFormat fmt, i4complex* inout, uint nrval)
+  inline void dataConvert (DataFormat, i4complex *, uint)
     {}
   inline void dataConvert (DataFormat fmt, std::complex<int16>* inout, uint nrval)
     { dataConvert16 (fmt, inout, 2*nrval); }
