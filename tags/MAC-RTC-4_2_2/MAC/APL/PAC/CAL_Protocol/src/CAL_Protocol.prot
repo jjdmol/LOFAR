@@ -1,0 +1,231 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the Calibration Server Protocol
+//
+autogen definitions protocol;
+
+description = "Protocol for the Calibration Server";
+prefix = "CAL"; // for the signal names
+id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+13)";
+
+// specify extra include files
+// e.g.
+// include = '<sys/time.h>';
+
+include = '<APL/CAL_Protocol/AntennaGains.h>';
+include = '<APL/CAL_Protocol/SubArray.h>';
+include = '<APL/CAL_Protocol/SpectralWindow.h>';
+include = '<APL/RTCCommon/Timestamp.h>';
+
+include = '<bitset>';
+include = '<set>';
+include = '<Common/LofarTypes.h>';
+
+prelude = << PRELUDE_END
+
+enum {
+  SUCCESS = 0,
+  ERR_RANGE,       // range error in message parameters
+  ERR_NO_PARENT,   // no parent antenna array by that name found
+  ERR_NO_SUBARRAY, // no subarray by that name found
+};
+
+//
+// WARNING: Don't modify this struct without modifying
+// it's partner in RSP_Protocol/include/APL/RSP_Protocol/RCUSettings.h
+// Example control values:
+// 
+// LB  10- 90MHz = 0xB9
+// HB 110-190MHz = 0xC6
+// HB 170-230MHz = 0xCE
+// HB 210-250MHx = 0xD6
+//
+typedef union RCUControl
+{
+  struct
+  {
+    uint8 lba_enable:1; // bit 0
+    uint8 hba_enable:1; // bit 1
+    uint8 bandsel:1;    // bit 2
+    uint8 filsel_a:1;   // bit 3
+    uint8 filsel_b:1;   // bit 4
+    uint8 vl_enable:1;  // bit 5
+    uint8 vh_enable:1;  // bit 6
+    uint8 vddvcc_en:1;  // bit 7
+  };
+  uint8 value;
+};
+
+static const int MAX_N_RCUS=256;
+static const int N_SUBBANDS=512;
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+  // TODO: rename to SUBARRAYALLOC
+      signal = START; // start calibration of a subarray
+      dir = IN;
+      param = { // name of the subarray (used as nodeid in key-value logger)
+	    name = "name";
+	    type = "string";
+      };
+      param = { // name of the array of which it is a subarray
+	    name = "parent";
+	    type = "string";
+      };
+      param = { // subset of the receivers (2 receivers per antenna)
+	    name = "subset";
+	    type = "std::bitset<MAX_N_RCUS>";
+      };
+      param = { // nyquist_zone
+	    name = "nyquist_zone";
+	    type = "int";
+      };
+      // sampling_frequency and nyquist_zone determine the spectral window
+
+      param = {
+	    // RCU control byte controls the setting of all
+	    // RCU's for this subarray
+	    name = "rcucontrol";
+	    type = "RCUControl";
+      };
+};
+
+event = {
+  // TODO: rename to SUBARRAYALLOCACK
+      signal = STARTACK;
+      dir = OUT;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+};
+
+event = {
+  // TODO: rename to SUBARRAYFREE
+      signal = STOP; // stop calibration of a subarray
+      dir = IN;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+};
+
+event = {
+  // TODO: rename to SUBARRAYFREEACK
+      signal = STOPACK;
+      dir = OUT;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+};
+
+event = {
+      signal = SUBSCRIBE; // subscribe to antenna gain updates
+      dir = IN;
+      param = { // name of the subarray
+	    name = "name";
+	    type = "string";
+      };
+      param = { // set of subbands
+	    name = "subbandset";
+	    type = "std::bitset<N_SUBBANDS>";
+      };
+};
+
+event = {
+      signal = SUBSCRIBEACK;
+      dir = OUT;
+      // TODO: return name too
+      //      param = { // name of the subarray
+      //	    name = "name";
+      //            type = "string";
+      //      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+      param = {
+	    name = "handle";
+	    type = "uint32";
+      };
+      param = { // return the subarray class
+	    name = "subarray";
+	    type = "CAL::SubArray";
+	    userdefined;
+      };
+};
+
+event = {
+  // TODO: rename to UPDATEGAINS
+      signal = UPDATE; // antenna gains update
+      dir = OUT;
+      param = { // time of the gains
+	    name = "timestamp";
+	    type = "RTC::Timestamp";
+	    userdefined;
+      };
+
+     // status == FAILURE indicates that the subarray was stoppe d
+     // This is not yet implemented.
+     param = { // status
+	    name = "status";
+	    type = "int16";
+      };
+      param = { // handle
+	    name = "handle";
+	    type = "uint32";
+      };
+      // TODO: AntennaGains is not good name, since the gains are
+      // computed for the complete signal path for a receiver.
+      param = { // gains
+	    name = "gains";
+	    type = "CAL::AntennaGains";
+	    userdefined;
+      };
+};
+
+event = {
+      signal = UNSUBSCRIBE; // unsubscribe from updates
+      dir = IN;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "handle";
+	    type = "uint32";
+      };
+};
+
+event = {
+      signal = UNSUBSCRIBEACK;
+      dir = OUT;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+      param = {
+	    name = "handle";
+	    type = "uint32";
+      };
+};
+
