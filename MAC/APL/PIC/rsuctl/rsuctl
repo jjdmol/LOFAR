@@ -14,10 +14,10 @@
 #     [-l]                         # List the images currently stored in all pages of the flash
 #
 #     [-b img.ttf]                 # Convert ttf file to imagefile.bin
-#     [-e -p page]                 # Erase flash page, use -1 for all pages; 0 <= page < 16
-#     [-x -p page                  # Load new firmware from the specified page
+#     [-e -p page [-F]]            # Erase flash page, use -1 for all pages; 0 <= page < 16
+#     [-x -p page                  # Start (load & reset) new firmware from the specified page
 #     [-w -p page -f img.bin [-F]] # Write img.bin into specified page (-F forces write to page 0)
-#     [-v -p page -f img.bin]      # Comparre flash page with img.bin
+#     [-v -p page -f img.bin]      # Compare flash page with img.bin
 #     [-d -p page -f dmp.bin]      # Dump flash page to dmp.bin
 #
 #     [-r] # Reset all FPGA's (load factory image)
@@ -135,10 +135,10 @@ Usage: rsuctl [options] command
     [-l]                         # List the images currently stored in all pages of the flash
 
     [-b img.ttf]                 # Convert ttf file to imagefile.bin
-    [-e -p page]                 # Erase flash page, use -1 for all pages; 0 <= page < 16
-    [-x -p page                  # Load new firmware from the specified page
+    [-e -p page [-F]]            # Erase flash page, use -1 for all pages; 0 <= page < 16
+    [-x -p page                  # Start (load & reset) new firmware from the specified page
     [-w -p page -f img.bin [-F]] # Write img.bin into specified page (-F forces write to page 0)
-    [-v -p page -f img.bin]      # Comparre flash page with img.bin
+    [-v -p page -f img.bin]      # Compare flash page with img.bin
     [-d -p page -f dmp.bin]      # Dump flash page to dmp.bin
 
     [-r] # Reset all FPGA's (load factory image)
@@ -483,7 +483,7 @@ sub writepage
     my ($sock, $pcap, $page, $filename) = @_;
 
     $error = flash($sock, $pcap, $page, 1,
-		   "writing", $REG_RW, $BLOCKSIZE,
+		   "writing and verifying", $REG_RW, $BLOCKSIZE,
 		   \&writepagecb, \&readpagecb);
 
     if (!$error) {
@@ -522,11 +522,14 @@ sub ttf2bin
     print STDERR "|" . ("-" x $PROGRESS_SIZE) . "|\n ";
     $i = 0;
     $interval = $linecount / $PROGRESS_SIZE;
+    $interval = 1 if ($interval < .5);
     while (<TTFFILE>) {
-	$c = chop;
-	$_ .= $c if ($c != '\n'); # this is needed if the file doesn't end with newline
+	chomp; # strip newline if present
+	chop if (substr($_, -1) eq "\r"); # strip DOS carriage return
+	chop if (substr($_, -1) eq ",");  # strip trailing comma
 
-	@bytes = split(/\,/, $_);
+	@bytes = split(/\,/);
+
 	foreach $byte (@bytes) {
 	    print BINFILE pack("C", $byte);
 	}
@@ -557,13 +560,13 @@ sub readrsustatus
     ($result, $error) = readresponse($pcap);
     return $error if $error;
 
-    $rsustatus = substr($result, 164, 1);
+    $rsustatus = unpack("C", substr($result, 164, 1));
 
     print STDERR sprintf("\nRSU Status:\n  rdy  : %s\n  err  : %s\n  fpga : %s\n  image: %s\n  trig : %s\n\n",
 			 ('Configuration ongoing', 'Configuration done')[$rsustatus & 1],
-			 ('Configuration successfull', 'Configuration error')[$rsustatus & 2],
-			 ('BP was reconfigured', 'AP was reconfigured')[$rsustatus & 4],
-			 ('Factory image', 'Application image')[$rsustatus & 8],
+			 ('Configuration successfull', 'Configuration error')[($rsustatus & 2) >> 1],
+			 ('BP was reconfigured', 'AP was reconfigured')[($rsustatus & 4) >> 2],
+			 ('Factory image', 'Application image')[($rsustatus & 8) >> 3],
 			 ('Board reset', 'User reconfig', 'User reset', 'Watchdog')[($rsustatus >> 4) & 7]);
 
     return $error;
@@ -745,6 +748,8 @@ sub main
     if (defined($opt_e)) {
 
 	chkpage($opt_p);
+	die "=== ERR erasing factory image (page 0) prohibited, use -F to force erase of factory image" if (!$opt_F && (0 == $opt_p));
+
 	$error = erase($sock, $pcap, $opt_p);
 	report($error);
 
