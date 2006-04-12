@@ -14,7 +14,7 @@
 #     [-l] # List the images currently stored in all pages of the flash
 #
 #     [-b in.ttf -f out.bin]           # Convert a ttf file to a binary file
-#     [-e -p page [-F]]                # Erase flash page, use -1 for all pages; 0 <= page < 16
+#     [-e -p page [-F]]                # Erase flash page,  0 <= page < 16 (-F forces erase of page 0)
 #     [-x -p page                      # Start (load & reset) new firmware from the specified page
 #     [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
 #     [-v -p page -f image[.ttf]]      # Compare flash page with img.bin
@@ -134,7 +134,7 @@ Usage: rsuctl [options] command
     [-l] # List the images currently stored in all pages of the flash
 
     [-b in.ttf -f out.bin]           # Convert a ttf file to a binary file
-    [-e -p page [-F]]                # Erase flash page, use -1 for all pages; 0 <= page < 16
+    [-e -p page [-F]]                # Erase flash page, 0 <= page < 16 (-F forces erase of page 0)
     [-x -p page                      # Start (load & reset) new firmware from the specified page
     [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
     [-v -p page -f image[.ttf]]      # Compare flash page with img.bin
@@ -228,62 +228,48 @@ sub readresponse
 }
 
 #
-# flash($sock, $pcap, $flashpage, $blockinc, $msg, $cmd, $size, $writecb, $readcb, $image)
-# page = -1 means all pages
+# flash($sock, $pcap, $page, $blockinc, $msg, $cmd, $size, $writecb, $readcb, $image)
 #
 sub flash
 {
-    my ($sock, $pcap, $flashpage, $blockinc, $msg, $cmd, $size, $writecb, $readcb, $image) = @_;
-
-    if ($flashpage < 0) {
-	$startpage = 0;
-	$count = $PAGES;
-    } else {
-	$startpage = $flashpage;
-	$count = 1;
-    }
+    my ($sock, $pcap, $page, $blockinc, $msg, $cmd, $size, $writecb, $readcb, $image) = @_;
     
-    # process pages
-    my ($page);
-    for ($page = $startpage; $page < $startpage + $count; $page++) {
-
-	printf STDERR "=== %s page %02d\n", $msg, $page;
-	print  STDERR "=== |" . ("-" x $SECTORS_PER_PAGE) . "|\n===  ";
-
-	my ($success) = 1;
-	# leave last block for directory entry
-	my ($block);
-	for ($block = 0; $block < $BLOCKS_PER_PAGE - 1; $block += $blockinc) {
+    printf STDERR "=== %s page %02d\n", $msg, $page;
+    print  STDERR "=== |" . ("-" x $SECTORS_PER_PAGE) . "|\n===  ";
+    
+    my ($success) = 1;
+    # leave last block for directory entry
+    my ($block);
+    for ($block = 0; $block < $BLOCKS_PER_PAGE - 1; $block += $blockinc) {
+	
+	if ($writecb) {
+	    $packet  = pack_rsu($TYPE_WRITE, $cmd, $size,
+				($page * $BLOCKS_PER_PAGE) + $block);
+	    $packet .= &$writecb($page, $block, $image);
 	    
-	    if ($writecb) {
-		$packet  = pack_rsu($TYPE_WRITE, $cmd, $size,
-				    ($page * $BLOCKS_PER_PAGE) + $block);
-		$packet .= &$writecb($page, $block, $image);
-	    
-		$sock->send_eth_frame($packet);
-		($payload, $error) = readresponse($pcap);
-		return $error if $error;
-	    }
-
-	    if ($readcb) {
-		$packet  = pack_rsu($TYPE_READ, $cmd, $size,
-				    ($page * $BLOCKS_PER_PAGE) + $block);
-
-		$sock->send_eth_frame($packet);
-		($payload, $error) = readresponse($pcap);
-		return $error if $error;
-
-		$success = &$readcb($page, $block, $payload, $image) && $success;
-	    }
-
-	    if (0 == $block % $BLOCKS_PER_SECTOR) {
-		if ($success) { print STDERR "."; }
-		else          { print STDERR "X"; }
-		$success = 1;
-	    }
+	    $sock->send_eth_frame($packet);
+	    ($payload, $error) = readresponse($pcap);
+	    return $error if $error;
 	}
-	print STDERR "\n";
+	
+	if ($readcb) {
+	    $packet  = pack_rsu($TYPE_READ, $cmd, $size,
+				($page * $BLOCKS_PER_PAGE) + $block);
+	    
+	    $sock->send_eth_frame($packet);
+	    ($payload, $error) = readresponse($pcap);
+	    return $error if $error;
+	    
+	    $success = &$readcb($page, $block, $payload, $image) && $success;
+	}
+	
+	if (0 == $block % $BLOCKS_PER_SECTOR) {
+	    if ($success) { print STDERR "."; }
+	    else          { print STDERR "X"; }
+	    $success = 1;
+	}
     }
+    print STDERR "\n";
 
     return 0;
 }
