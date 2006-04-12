@@ -11,14 +11,14 @@
 #                      # (default is broadcast address FF:FF:FF:FF:FF:FF)
 #
 #   command (specify at least one of the following)
-#     [-l]                         # List the images currently stored in all pages of the flash
+#     [-l] # List the images currently stored in all pages of the flash
 #
-#     [-b img.ttf]                 # Convert ttf file to imagefile.bin
-#     [-e -p page [-F]]            # Erase flash page, use -1 for all pages; 0 <= page < 16
-#     [-x -p page                  # Start (load & reset) new firmware from the specified page
-#     [-w -p page -f img.bin [-F]] # Write img.bin into specified page (-F forces write to page 0)
-#     [-v -p page -f img.bin]      # Compare flash page with img.bin
-#     [-d -p page -f dmp.bin]      # Dump flash page to dmp.bin
+#     [-b in.ttf -f out.bin]           # Convert a ttf file to a binary file
+#     [-e -p page [-F]]                # Erase flash page, use -1 for all pages; 0 <= page < 16
+#     [-x -p page                      # Start (load & reset) new firmware from the specified page
+#     [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
+#     [-v -p page -f image[.ttf]]      # Compare flash page with img.bin
+#     [-d -p page -f dumpfile.bin]     # Dump flash page to dmp.bin
 #
 #     [-r] # Reset all FPGA's (load factory image)
 #     [-c] # Clear all FPGA's (restart current image)
@@ -33,10 +33,9 @@ use File::stat;
 use Switch;
 use POSIX; # for geteuid()
 
-$g_debug         = 0;  # set to 1 to enable debug output
-$g_packet        = ''; # global packet string
-$g_current_block = ''; # current block being written
-$g_error         = 0;  # global error status 
+$g_debug  = 0;  # set to 1 to enable debug output
+$g_packet = ''; # global packet string
+$g_error  = 0;  # global error status 
 
 #
 # Definitions
@@ -132,14 +131,14 @@ Usage: rsuctl [options] command
                      # (default is broadcast address FF:FF:FF:FF:FF:FF)
 
   command (specify at least one of the following)
-    [-l]                         # List the images currently stored in all pages of the flash
+    [-l] # List the images currently stored in all pages of the flash
 
-    [-b img.ttf]                 # Convert ttf file to imagefile.bin
-    [-e -p page [-F]]            # Erase flash page, use -1 for all pages; 0 <= page < 16
-    [-x -p page                  # Start (load & reset) new firmware from the specified page
-    [-w -p page -f img.bin [-F]] # Write img.bin into specified page (-F forces write to page 0)
-    [-v -p page -f img.bin]      # Compare flash page with img.bin
-    [-d -p page -f dmp.bin]      # Dump flash page to dmp.bin
+    [-b in.ttf -f out.bin]           # Convert a ttf file to a binary file
+    [-e -p page [-F]]                # Erase flash page, use -1 for all pages; 0 <= page < 16
+    [-x -p page                      # Start (load & reset) new firmware from the specified page
+    [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
+    [-v -p page -f image[.ttf]]      # Compare flash page with img.bin
+    [-d -p page -f dumpfile.bin]     # Dump flash page to dmp.bin
 
     [-r] # Reset all FPGA's (load factory image)
     [-c] # Clear all FPGA's (restart current image)
@@ -171,7 +170,7 @@ sub pack_rsu
 #
 # savepacket($handle, $hdr, $packet)
 #
-sub savepacket($$$)
+sub savepacket
 {
     my ($handle, $hdr, $packet) = @_;
     $g_packet = $packet;
@@ -215,8 +214,8 @@ sub readresponse
 	print STDERR "=== ERR invalid pid: ", $pid, "\n";
     }
 
-    printf("0x%s 0x%02x 0x%02x %5d 0x%02x 0x%02x 0x%02x 0x%02x %5d %5d %5d %5d\n",
-	   $ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved) if ($g_debug);
+    printf STDERR "0x%s 0x%02x 0x%02x %5d 0x%02x 0x%02x 0x%02x 0x%02x %5d %5d %5d %5d\n",
+    $ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved if ($g_debug);
 
     if (0 != $status) {
 	$error = 1;
@@ -229,35 +228,37 @@ sub readresponse
 }
 
 #
-# flash($sock, $pcap, $page, $blockinc, $msg, $cmd, $size, $writecb, $readcb)
+# flash($sock, $pcap, $flashpage, $blockinc, $msg, $cmd, $size, $writecb, $readcb, $image)
 # page = -1 means all pages
 #
 sub flash
 {
-    my ($sock, $pcap, $page, $blockinc, $msg, $cmd, $size, $writecb, $readcb) = @_;
+    my ($sock, $pcap, $flashpage, $blockinc, $msg, $cmd, $size, $writecb, $readcb, $image) = @_;
 
-    if ($page < 0) {
+    if ($flashpage < 0) {
 	$startpage = 0;
 	$count = $PAGES;
     } else {
-	$startpage = $page;
+	$startpage = $flashpage;
 	$count = 1;
     }
     
     # process pages
+    my ($page);
     for ($page = $startpage; $page < $startpage + $count; $page++) {
 
 	printf STDERR "=== %s page %02d\n", $msg, $page;
-	print STDERR "|" . ("-" x $SECTORS_PER_PAGE) . "|\n ";
+	print  STDERR "=== |" . ("-" x $SECTORS_PER_PAGE) . "|\n===  ";
 
-	$success = 1;
+	my ($success) = 1;
 	# leave last block for directory entry
+	my ($block);
 	for ($block = 0; $block < $BLOCKS_PER_PAGE - 1; $block += $blockinc) {
 	    
 	    if ($writecb) {
 		$packet  = pack_rsu($TYPE_WRITE, $cmd, $size,
 				    ($page * $BLOCKS_PER_PAGE) + $block);
-		$packet .= &$writecb($page, $block);
+		$packet .= &$writecb($page, $block, $image);
 	    
 		$sock->send_eth_frame($packet);
 		($payload, $error) = readresponse($pcap);
@@ -272,7 +273,7 @@ sub flash
 		($payload, $error) = readresponse($pcap);
 		return $error if $error;
 
-		$success = $success && &$readcb($page, $block, $payload);
+		$success = &$readcb($page, $block, $payload, $image) && $success;
 	    }
 
 	    if (0 == $block % $BLOCKS_PER_SECTOR) {
@@ -318,7 +319,7 @@ sub writedir
 # readdir($sock, $pcap, $page)
 # Read the directory entry from the specified page
 #
-sub readdirentry($$$)
+sub readdirentry
 {
     my ($sock, $pcap, $page) = @_;
 
@@ -337,11 +338,11 @@ sub readdirentry($$$)
 }
 
 #
-# erasecb($page, $block)
+# erasecb($page, $block, $image)
 #
 sub erasecb
 {
-    my ($page, $block) = @_;
+    my ($page, $block, $image) = @_;
 
     print STDERR "erasecb: $page, $block\n" if ($g_debug);
 
@@ -358,7 +359,7 @@ sub erase
 
     return flash($sock, $pcap, $page, $BLOCKS_PER_SECTOR,
 		 "erasing", $REG_ERASE, 1,
-		 \&erasecb, 0);
+		 \&erasecb, 0, '');
 }
 
 #
@@ -366,17 +367,16 @@ sub erase
 #
 sub verifycb
 {
-    my ($page, $block, $payload) = @_;
+    my ($page, $block, $payload, $image) = @_;
 
     print STDERR "verifycb: page=$page, block=$block, length(payload)=", length($payload), "\n" if ($g_debug);
 
-    $read = read(IMAGEFILE, $reference_block, $BLOCKSIZE);
-    die "=== ERR internal error reading file" if ($read > $BLOCKSIZE);
+    my ($refblock) = substr($image, $block * $BLOCKSIZE, $BLOCKSIZE);
 
     # append zeroes to fill buffer to $BLOCKSIZE
-    $reference_block .= pack("C", 0) x ($BLOCKSIZE - $read);
+    $refblock .= pack("C", 0) x ($BLOCKSIZE - length($refblock));
 
-    if ($payload ne $reference_block) {
+    if ($payload ne $refblock) {
 	print STDERR "=== ERR failed to verify block $block in page $page\n" if ($g_debug);
 	$g_error = 1;
 	return 0;
@@ -386,23 +386,23 @@ sub verifycb
 }
 
 #
-# verify($sock, $pcap, $page, $filename)
+# verify($sock, $pcap, $page, $image)
 #
 sub verify
 {
-    my ($sock, $pcap, $page, $filename) = @_;
+    my ($sock, $pcap, $page, $image) = @_;
 
     return flash($sock, $pcap, $page, 1,
 		 "verifying", $REG_RW, $BLOCKSIZE,
-		 0, \&verifycb);
+		 0, \&verifycb, $image);
 }
 
 #
 # Dump the data to file
 #
-sub dumpcb($$$)
+sub dumpcb
 {
-    my ($page, $block, $payload) = @_;
+    my ($page, $block, $payload, $image) = @_;
 
     print STDERR "dumpcb: page=$page, block=$block, length(payload)=", length($payload), "\n" if ($g_debug);
 
@@ -420,7 +420,7 @@ sub dump($$$)
 
     return flash($sock, $pcap, $page, 1,
 		 "dumping", $REG_RW, $BLOCKSIZE,
-		 0, \&dumpcb);
+		 0, \&dumpcb, '');
 }
 
 #
@@ -428,17 +428,16 @@ sub dump($$$)
 #
 sub writepagecb
 {
-    my ($page, $block) = @_;
+    my ($page, $block, $image) = @_;
 
     print STDERR "writepagecb: page=$page, block=$block\n" if ($g_debug);
 
-    $read = read(IMAGEFILE, $g_current_block, $BLOCKSIZE);
-    die "=== ERR internal error reading file" if ($read > $BLOCKSIZE);
+    my ($data) = substr($image, $block * $BLOCKSIZE, $BLOCKSIZE);
 
     # append zeroes to fill buffer to $BLOCKSIZE
-    $g_current_block .= pack("C", 0) x ($BLOCKSIZE - $read);
+    $data .= pack("C", 0) x ($BLOCKSIZE - length($data));
 
-    return $g_current_block;
+    return $data;
 }
 
 #
@@ -446,11 +445,16 @@ sub writepagecb
 #
 sub readpagecb
 {
-    my ($page, $block, $payload) = @_;
+    my ($page, $block, $payload, $image) = @_;
 
     print STDERR "readpagecb: page=$page, block=$block, length(payload)=", length($payload), "\n" if ($g_debug);
-    
-    if ($payload ne $g_current_block) {
+
+    my ($refblock) = substr($image, $block * $BLOCKSIZE, $BLOCKSIZE);
+
+    # append zeroes to fill buffer to $BLOCKSIZE
+    $refblock .= pack("C", 0) x ($BLOCKSIZE - length($refblock));
+
+    if ($payload ne $refblock) {
 	print STDERR "=== ERR failed to verify block $block in page $page\n" if ($g_debug);
 	$g_error = 1;
 	return 0;
@@ -476,15 +480,15 @@ sub formatentry
 }
 
 #
-# writepage($sock, $pcap, $page, $filename)
+# writepage($sock, $pcap, $page, $filename, $image)
 #
 sub writepage
 {
-    my ($sock, $pcap, $page, $filename) = @_;
+    my ($sock, $pcap, $page, $filename, $image) = @_;
 
     $error = flash($sock, $pcap, $page, 1,
 		   "writing and verifying", $REG_RW, $BLOCKSIZE,
-		   \&writepagecb, \&readpagecb);
+		   \&writepagecb, \&readpagecb, $image);
 
     if (!$error) {
 	$error = writedir($sock, $pcap, $page, formatentry($filename));
@@ -497,50 +501,80 @@ sub writepage
 }
 
 #
-# Convert ttf file to binary string
+# Read entire ttffile into a string
+# convert it to a binary string and
+# return than string
 #
-# ttf2bin($filename)
+# ttfread($filename)
 #
-sub ttf2bin
+sub fread
 {
     my ($filename) = @_;
-
-    # check input filename
-    @parts = split(/\./, $filename);
-    die "=== ERR filename '$filename' should end in .ttf" if ($parts[-1] ne "ttf");
-
+    local $/;
+    
     # open input and output files
-    open(TTFFILE, $filename) || die "=== ERR failed to open file $filename";
-    open(BINFILE, ">" . $filename . ".bin");
+    open(TTFFILE, $filename) || die "=== ERR failed to open file '$filename'";
+    $ttf = <TTFFILE>;
+    close(TTFFILE);
 
-    # determine number of lines
-    $linecount = 0;
-    while (<TTFFILE>) {	$linecount++; }
-    seek(TTFFILE,0,0); # rewind input file
-	
-    print STDERR "=== Converting '$filename' to '$filename.bin'\n";
-    print STDERR "|" . ("-" x $PROGRESS_SIZE) . "|\n ";
-    $i = 0;
-    $interval = $linecount / $PROGRESS_SIZE;
-    $interval = 1 if ($interval < .5);
-    while (<TTFFILE>) {
-	chomp; # strip newline if present
-	chop if (substr($_, -1) eq "\r"); # strip DOS carriage return
-	chop if (substr($_, -1) eq ",");  # strip trailing comma
+    # replace \r\n, by spaces
+    $ttf =~ tr/\r\n/ /;
 
-	@bytes = split(/\,/);
+    @bytes = split(/,/, $ttf);
+    $result = '';
+    foreach $byte (@bytes) {
+	$result .= pack("C", $byte);
+    }
 
+    # return the binary string
+    return $result;
+}
+
+#
+# Read image from ttf or bin file. If filename ends in .ttf
+# then the file is converted from ttf to bin format first.
+#
+# readimage($filename)
+#
+sub readimage
+{
+    my ($filename) = @_;
+    local $/ = undef; # read entire file
+    
+    # open input and output files
+    die "=== ERR no image file specified" if (!defined($filename));
+    open(IMAGEFILE, $filename) || die "=== ERR failed to open file '$filename'";
+    print STDERR "=== Reading '$filename'\n";
+    $data = <IMAGEFILE>; # read entire file
+    close(IMAGEFILE);
+
+    @parts = split(/\./, $filename);
+    if (@parts[-1] eq "ttf") {
+	# replace \r\n, by spaces
+	$data =~ tr/\r\n/ /;
+
+	@bytes = split(/,/, $data);
+
+	print STDERR "=== Converting '$filename' to binary\n";
+	print STDERR "=== |" . ("-" x $PROGRESS_SIZE) . "|\n===  ";
+
+	$i = 0;
+	$interval = $#bytes / $PROGRESS_SIZE;
+	$interval = 1 if ($interval < .5);
+
+	$bindata = '';
 	foreach $byte (@bytes) {
-	    print BINFILE pack("C", $byte);
+	    $bindata .= pack("C", $byte);
+
+	    $i++;
+	    print STDERR "." if (0 == $i % $interval);
 	}
 
-	$i++;
-	print STDERR "." if (0 == $i % $interval);
+	print STDERR "\n";
+	return $bindata;
     }
-    print STDERR "\n";
 
-    close(TTFFILE);
-    close(BINFILE);
+    return $data;
 }
 
 #
@@ -671,8 +705,8 @@ sub report
 {
     my ($error) = @_;
 
-    if ($error || $g_error) { print STDERR "\n=== FAILED\n"; }
-    else                    { print STDERR "\n=== OK\n";     }
+    if ($error || $g_error) { print STDERR "=== FAILED\n"; }
+    else                    { print STDERR "=== OK\n";     }
 }
 
 #
@@ -740,15 +774,21 @@ sub main
 
     if (defined($opt_b)) {
 
-	ttf2bin($opt_b);
+	$image = readimage($opt_b);
+	die "=== ERR no output file specified" if (!defined($opt_f));
+
+	open(DUMPFILE, ">$opt_f") || die "=== ERR failed to open file '$opt_f' for writing\n";
+	print DUMPFILE $image;
+	close(DUMPFILE);
+	report($error);
 
 	return;
     }
-    
+
     if (defined($opt_e)) {
 
-	chkpage($opt_p);
 	die "=== ERR erasing factory image (page 0) prohibited, use -F to force erase of factory image" if (!$opt_F && (0 == $opt_p));
+	chkpage($opt_p);
 
 	$error = erase($sock, $pcap, $opt_p);
 	report($error);
@@ -765,45 +805,29 @@ sub main
     }
     if (defined($opt_w)) {
 
-	# check input file
-	die "=== ERR no image file specified" if (!defined($opt_f));
-	@parts = split(/\./, $opt_f);
-	die "=== ERR filename '$opt_f' should end in .bin" if ($parts[-1] ne "bin");
-
-	chkpage($opt_p);
 	die "=== ERR writing to factory image (page 0) prohibited, use -F to force write to factory image" if (!$opt_F && (0 == $opt_p));
+	chkpage($opt_p);
 
-	open(IMAGEFILE, $opt_f) || die "=== ERR failed to open image file '$opt_f'";
+	$image = readimage($opt_f);
 	$error = erase($sock, $pcap, $opt_p);
-	$error = writepage($sock, $pcap, $opt_p, $opt_f) if (!$error);
-	close(IMAGEFILE);
+	$error = writepage($sock, $pcap, $opt_p, $opt_f, $image) if (!$error);
 	report($error);
 
 	return;
     }
     if (defined($opt_v)) {
 
-	# check input file
-	die "=== ERR no image file specified" if (!defined($opt_f));
-	@parts = split(/\./, $opt_f);
-	die "=== ERR filename '$opt_f' should end in .bin" if ($parts[-1] ne "bin");
-	
 	chkpage($opt_p);
-
-	open(IMAGEFILE, $opt_f) || die "=== ERR failed to open image file '$opt_f'";
-	$error = verify($sock, $pcap, $opt_p, $opt_f);
-	close(IMAGEFILE);
+	$image = readimage($opt_f);
+	$error = verify($sock, $pcap, $opt_p, $image);
 	report($error);
 
 	return;
     }
     if (defined($opt_d)) {
 
-	die "=== ERR no image file specified" if (!defined($opt_f));
-	@parts = split(/\./, $opt_f);
-	die "=== ERR filename '$opt_f' should end in .bin" if ($parts[-1] ne "bin");
-	
 	chkpage($opt_p);
+	die "=== ERR no image file specified" if (!defined($opt_f));
 
 	open(DUMPFILE, ">$opt_f") || die "=== ERR failed to open file '$opt_f' for writing\n";
 	$error = dump($sock, $pcap, $opt_p);
