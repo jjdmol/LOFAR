@@ -365,12 +365,12 @@ namespace LOFAR {
           m_file=0;
         }
       }
-      void setDuration(uint16 duration)
+      void setDuration(uint32 duration)
       {
         m_duration=duration;
         m_endTime.setNow((double)m_duration);
       }
-      void setIntegration(uint16 integration)
+      void setIntegration(uint32 integration)
       {
         if(integration > 0)
           m_integration=integration;
@@ -408,10 +408,10 @@ namespace LOFAR {
       }
     protected:
       uint32 m_subscriptionHandle;
-      uint16 m_duration;
+      uint32 m_duration;
       RTC::Timestamp m_endTime;
-      uint16 m_integration;
-      uint16 m_nseconds;
+      uint32 m_integration;
+      uint32 m_nseconds;
       string m_directory;
       FILE** m_file; // array of file descriptors, one for each rcu
     private:
