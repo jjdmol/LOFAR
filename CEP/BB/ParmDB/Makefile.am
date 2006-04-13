@@ -5,7 +5,7 @@ DISTCHECK_CONFIGURE_FLAGS=\
 
 EXTRA_DIST = \
       Makefile.common \
-      ParmTable.spec \
+      ParmDB.spec \
       autoconf_share/compiletool
 
 include $(top_srcdir)/Makefile.common

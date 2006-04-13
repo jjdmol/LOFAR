@@ -49,6 +49,7 @@ enum PTCommand {
   CREATE,
   CLOSE,
   CLEAR,
+  RANGE,
   SHOW,
   NAMES,
   NEW,
@@ -111,9 +112,10 @@ void showHelp()
   cerr << " updatedef parmname_pattern valuespec" << endl;
   cerr << " removedef parmname_pattern" << endl;
   cerr << endl;
+  cerr << " range [parmname_pattern]       (show the total domain range)" << endl;
   cerr << " show [parmname_pattern] [domain=...] [parentid=...]" << endl;
   cerr << " names [parmname_pattern]" << endl;
-  cerr << " add parmname valuespec" << endl;
+  cerr << " add parmname domain= valuespec" << endl;
   cerr << " update parmname_pattern [domain=] valuespec" << endl;
   cerr << " remove parmname_pattern [domain=]" << endl;
   cerr << endl;
@@ -124,19 +126,22 @@ void showHelp()
   cerr << " updateold parmname_pattern [domain=] valuespec" << endl;
   cerr << " removeold parmname_pattern [domain=]" << endl;
   cerr << endl;
+  cerr << "  domain gives an N-dim domain (usually n is 2) as:" << endl;
+  cerr << "      domain=[[stx,endx],[sty,endy],...]" << endl;
+  cerr << "   or domain=[st=[stx,sty,...],end=[endx,...] or size=[sizex,...]]" << endl;
   cerr << "  valuespec gives the values of the parameter attributes as" << endl;
   cerr << "   key=value pairs separated by commas." << endl;
   cerr << "  Attributes not given are not changed. Values shown are defaults when adding." << endl;
-  cerr << "   starttime='1858/11/17/00:00:00'" << endl;
-  cerr << "   timestep=1      (seconds)" << endl;
-  cerr << "   startfreq=0     (MHz)" << endl;
-  cerr << "   freqstep=1      (Hz)" << endl;
   cerr << "   values=1              (coefficients)" << endl;
   cerr << "    if multiple coefficients, specify as vector and specify shape" << endl;
-  cerr << "    For example:   values=[1,2,3,4], nx=2" << endl;
   cerr << "    For example:   values=[1,2,3,4], shape=[1,1,2,2]" << endl;
+  cerr << "   mask=                 (mask telling which coefficients are solvable" << endl;
+  cerr << "    default is that c[i,j] with i+j>max(shape) are not solvable" << endl;
+  cerr << "    For example:   values=[0,0,3], mask=[F,F,T], nx=3" << endl;
   cerr << "   pert=1e-6             (perturbation for numerical differentation)" << endl;
   cerr << "   pertrel=T             (perturbation is relative? Use F for angles)" << endl;
+  cerr << "   type='polc'           (funklet type; default is polynomial)" << endl;
+  cerr << "   constants=[]          (possible constant funklet parameters)" << endl;
   cerr << "   offset=[]             (offset for each values dimension)" << endl;
   cerr << "   scale=[]              (scale for each values dimension)" << endl;
   cerr << endl;
@@ -153,7 +158,9 @@ PTCommand getCommand (char*& str)
     str++;
   }
   string sc(sstr, str-sstr);
-  if (sc == "show"  ||  sc == "list") {
+  if (sc == "range") {
+    cmd = RANGE;
+  } else if (sc == "show"  ||  sc == "list") {
     cmd = SHOW;
   } else if (sc == "names") {
     cmd = NAMES;
@@ -287,7 +294,7 @@ Block<bool> getMask (const KeyValueMap& kvmap, const std::string& arrName,
     if (size > 0) res[0] = true;
     return res;
   }
-  vector<double> vec;
+  vector<bool> vec;
   if (value->second.dataType() == KeyValue::DTValueVector) {
     const vector<KeyValue>& vvec = value->second.getVector();
     for (uint i=0; i<vvec.size(); i++) {
@@ -310,7 +317,7 @@ ParmDomain getDomain (const KeyValueMap& kvmap, int size=0)
   vector<double> end;
   if (value != kvmap.end()) {
     bool ok = false;
-    // See if given as domain=[start=[],end=[] or step=[]].
+    // See if given as domain=[start=[],end=[] or size=[]].
     if (value->second.dataType() == KeyValue::DTValueMap) {
       const KeyValueMap& kvm = value->second.getValueMap();
       KeyValueMap::const_iterator key = kvm.find("st");
@@ -735,7 +742,7 @@ void doIt (bool noPrompt)
 	    KeyValueMap kvmap = KeyParser::parse (cstr);
 	    // For list functions the parmname defaults to *.
 	    // Otherwise a parmname or pattern must be given.
-	    if (cmd!=SHOW && cmd!=SHOWDEF && cmd!=SHOWOLD &&
+	    if (cmd!=RANGE && cmd!=SHOW && cmd!=SHOWDEF && cmd!=SHOWOLD &&
 		cmd!=NAMES && cmd!=NAMESDEF && cmd!=NAMESOLD) {
 	      ASSERTSTR (!parmName.empty(), "No parameter name given");
 	    } else if (parmName.empty()) {
@@ -817,8 +824,12 @@ void doIt (bool noPrompt)
 		     << nrparm << " parms)" << endl;
 	      }
 	    } else if (cmd==NAMES || cmd==NAMESOLD || cmd==NAMESDEF)  {
-		// show names matching the pattern.
-		showNames (parmName, cmd);
+	      // show names matching the pattern.
+	      showNames (parmName, cmd);
+	    } else if (cmd == RANGE) {
+	      cout << "Range: ";
+	      showDomain (parmtab->getRange (parmName));
+	      cout << endl;
 	    } else {
 	      cerr << "Unknown command given" << endl;
 	    }

@@ -37,6 +37,7 @@
 #include <tables/Tables/TableLocker.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayUtil.h>
+#include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/BasicMath/Math.h>
@@ -141,6 +142,28 @@ void ParmDBAIPS::clearTables()
     Vector<uInt> rows = itsTables[i].rowNumbers();
     itsTables[i].removeRow(rows);
   }
+}
+
+ParmDomain ParmDBAIPS::getRange (const string& parmNamePattern) const
+{
+  Table table = itsTables[0];
+  TableLocker locker(table, FileLocker::Read);
+  if (!parmNamePattern.empty()  &&  parmNamePattern != "*") {
+    Regex regex(Regex::fromPattern(parmNamePattern));
+    table = table(table.col("NAME") == regex);
+  }
+  if (table.nrow() == 0) {
+    return ParmDomain (0,1,0,1);
+  }
+  ROScalarColumn<double> sxCol(table, "STARTX");
+  ROScalarColumn<double> exCol(table, "ENDX");
+  ROScalarColumn<double> syCol(table, "STARTY");
+  ROScalarColumn<double> eyCol(table, "ENDY");
+  double sx = min(sxCol.getColumn());
+  double ex = max(exCol.getColumn());
+  double sy = min(syCol.getColumn());
+  double ey = max(eyCol.getColumn());
+  return ParmDomain (sx,ex,sy,ey);
 }
 
 void ParmDBAIPS::fillDefMap (map<string,ParmValue>& defMap)
@@ -307,7 +330,7 @@ void ParmDBAIPS::getValues (map<string,ParmValueSet>& result,
   // Only look for values without a parent; thus results of possible refit.
   Table table = itsTables[tabinx];
   TableExprNode expr = makeExpr (table, domain, parentId);
-  if (parmNamePattern != ""  &&  parmNamePattern != "*") {
+  if (!parmNamePattern.empty()  &&  parmNamePattern != "*") {
     Regex regex(Regex::fromPattern(parmNamePattern));
     andExpr (expr, table.col("NAME") == regex);
   }
