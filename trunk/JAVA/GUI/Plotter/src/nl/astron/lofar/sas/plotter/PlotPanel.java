@@ -12,27 +12,33 @@ package nl.astron.lofar.sas.plotter;
 import java.awt.Image;
 import java.awt.PrintJob;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 
 /**
- * @version $Id$
  * @created 11-04-2006, 15:00
  * @author pompert
+ * @version $Id$
+ * @updated 13-apr-2006 11:19:47
  */
-public class PlotPanel {
+public class PlotPanel extends JPanel{
 
-	public PlotController m_PlotController;
+	private PlotController m_PlotController;
+        private JComponent plot;
+        private String currentDataConstraint;
 
 	public PlotPanel(){
-
-	}
+            m_PlotController = new PlotController();
+        }
 
 	public void finalize() throws Throwable {
 
 	}
 
-	public JComponent createPlot(String constraint){
-		return null;
-	}
+	public void createPlot(String constraint){
+            currentDataConstraint = constraint;
+            plot = m_PlotController.createPlot(constraint);
+            this.add(plot);
+        }
 
 	public Image exportImage(){
 		return null;

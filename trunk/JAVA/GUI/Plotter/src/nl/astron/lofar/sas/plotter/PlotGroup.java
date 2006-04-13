@@ -9,24 +9,30 @@
 
 package nl.astron.lofar.sas.plotter;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
  * @created 12-04-2006, 15:00
  * @author pompert
  * @version $Id$
- * @updated 12-apr-2006 15:18:39
+ * @updated 13-apr-2006 11:19:48
  */
 public class PlotGroup{
 
 	public HashSet<IPlot> m_IPlot;
-
+	private HashMap data;
+	
 	public PlotGroup(){
 
 	}
 
 	public void finalize() throws Throwable {
 
+	}
+
+	public HashMap getDataSlice(){
+		return null;
 	}
 
 }
