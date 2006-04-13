@@ -13,11 +13,12 @@ import java.util.HashMap;
 import javax.swing.JComponent;
 
 /**
- * @version $Id$
  * @created 11-04-2006, 15:00
  * @author pompert
+ * @version $Id$
+ * @updated 13-apr-2006 11:19:45
  */
-public interface IPlot {
+public interface IPlot{
 
 	public static final int BAR = 1;
 	public static final int XYLINE = 2;
@@ -31,6 +32,9 @@ public interface IPlot {
 	 * 
 	 */
 	public JComponent createPlot(int type, String name, HashMap data);
-
+        
+        public HashMap getData();
+        
+        public void setData(HashMap newData);
 }
 

@@ -10,15 +10,17 @@
 package nl.astron.lofar.sas.plotter;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
- * @version $Id$
  * @created 11-04-2006, 15:00
  * @author pompert
+ * @version $Id$
+ * @updated 13-apr-2006 11:19:42
  */
-public class PlotDataManager {
+public class PlotDataManager{
 
-	//public ParmDB m_ParmDB;
+	//private ParmDB m_ParmDB;
 
 	public PlotDataManager(){
 
@@ -33,7 +35,17 @@ public class PlotDataManager {
 	 * 
 	 */
 	public HashMap retrieveData(String constraint){
-		return null;
+            
+            HashMap data = new HashMap();
+            String plotTitle = "No Title Specified";
+            String plotSubTitle = "-";
+            String xAxisTitle = "X";
+            String xAxisUnits = "no unit specified";
+            String yAxisTitle = "Y";
+            String yAxisUnits = "no unit specified";
+            HashSet<HashMap> values = new HashSet<HashMap>();
+            
+	    return null;
 	}
 
 	/**
