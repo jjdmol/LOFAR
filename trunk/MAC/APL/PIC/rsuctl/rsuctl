@@ -126,7 +126,7 @@ sub usage
 {
     print STDERR <<END;
 
-rsuctl ($VERSION) # Remote System Update - program firmware in FPGA flash
+# Remote System Update - program firmware in FPGA flash
 
 Usage: rsuctl [options] command
 
@@ -755,6 +755,8 @@ sub main
 {
     my $sock = 0;
 
+    print STDERR "=== rsuctl ($VERSION)\n";
+
     Getopt::Std::getopts("i:m:lbf:o:exwvdp:FrcsPVh");
 
     # check that at least one argument is present
@@ -793,7 +795,7 @@ sub main
 	#
 	# readdirentry for all pages
 
-	print STDERR "\n";
+	print STDERR "=== listing flash contents\n\n";
 	for ($page = 0; $page < $PAGES; $page++) {
 	    ($entry, $error) = readdirentry($sock, $pcap, $page);
 	    break if $error;
