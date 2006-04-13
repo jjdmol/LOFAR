@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-
+$ID = q$\Id$;
 #
 # rsuctl # Remote System Update - program firmware in FPGA flash
 #
@@ -124,7 +124,7 @@ sub usage
 {
     print STDERR <<END;
 
-rsuctl # Remote System Update - program firmware in FPGA flash
+rsuctl (version $ID) # Remote System Update - program firmware in FPGA flash
 
 Usage: rsuctl [options] command
 
