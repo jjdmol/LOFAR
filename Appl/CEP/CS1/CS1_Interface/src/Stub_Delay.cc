@@ -41,8 +41,8 @@ namespace LOFAR {
     LOG_TRACE_VAR_STR("Input.NRSPBoards = " << itsNRSP);
 
     itsPorts = itsPS.getUint16Vector("Connections.Input_Delay.Ports");
-    ASSERTSTR(itsPorts.size() == itsNRSP, 
-              itsPorts.size() << " == " << itsNRSP);
+    ASSERTSTR(itsPorts.size() >= itsNRSP, 
+              itsPorts.size() << " >= " << itsNRSP);
 
     itsTHs = new TH_Socket*[itsNRSP];
     itsConnections = new Connection*[itsNRSP];
