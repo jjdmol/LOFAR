@@ -101,9 +101,6 @@ public:
     return itsNrBaselines * itsNrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS;
   }
 
-  // Test pattern for storage section
-  void setStorageTestPattern(int factor);
-
 private:
   /// Forbid assignment.
   DH_Visibilities& operator= (const DH_Visibilities&);

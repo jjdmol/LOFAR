@@ -83,21 +83,4 @@ void DH_Visibilities::fillDataPointers()
   itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
 }
 
-void DH_Visibilities::setStorageTestPattern(int factor)
-{
-  for (unsigned bl = 0; bl < itsNrBaselines; bl++) {
-    for (unsigned ch = 0; ch < itsNrChannels; ch++) {
-      // Set number of valid samples
-      getNrValidSamples(bl, ch) = bl * ch;
-
-      // Set visibilities
-      for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	  getVisibility(bl, ch, pol1, pol2) = makefcomplex(bl + ch, factor * (pol1 + pol2));
-	}
-      }
-    }
-  }
-}
-
 }

@@ -78,6 +78,27 @@ namespace LOFAR
 
   }
   
+  void AH_TestStorage::setTestPattern(DH_Visibilities &dh, int factor) {
+    unsigned nrPolarizations = itsParamSet.getUint32("Observation.NPolarisations");
+    unsigned nrChannels      = itsParamSet.getUint32("Observation.NChannels");
+    unsigned nrStations      = itsParamSet.getUint32("Observation.NStations");
+    unsigned nrBaselines     = (nrStations + 1) * nrStations / 2;
+
+    for (unsigned bl = 0; bl < nrBaselines; bl++) {
+      for (unsigned ch = 0; ch < nrChannels; ch++) {
+	// Set number of valid samples
+	dh.getNrValidSamples(bl, ch) = bl * ch;
+
+	// Set visibilities
+	for (unsigned pol1 = 0; pol1 < nrPolarizations; pol1 ++) {
+	  for (unsigned pol2 = 0; pol2 < nrPolarizations; pol2 ++) {
+	    dh.getVisibility(bl, ch, pol1, pol2) = makefcomplex(bl + ch, factor * (pol1 + pol2));
+	  }
+	}
+      }
+    }
+  }
+
   void AH_TestStorage::prerun() {
     getComposite().preprocess();
 
@@ -85,7 +106,7 @@ namespace LOFAR
     for (uint i = 0; i < itsInDHs.size(); i++)
     {
       itsInDHs[i]->init();
-      itsInDHs[i]->setStorageTestPattern(i);
+      setTestPattern(*itsInDHs[i], i);
     }
   }
 
