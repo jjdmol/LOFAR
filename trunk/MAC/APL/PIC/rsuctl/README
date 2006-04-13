@@ -10,14 +10,14 @@ Usage
 
 # ./rsuctl -h
 
-rsuctl # Remote System Update - program firmware in FPGA flash
+rsuctl (Revision: 1.15 ) # Remote System Update - program firmware in FPGA flash
 
 Usage: rsuctl [options] command
 
   options
     [-i ifname]      # Ethernet interface name on which to communicate (default is eth1)
     [-m mac-address] # IP-address of the target board
-                     # (default is broadcast address FF:FF:FF:FF:FF:FF)
+                     # (default is broadcast address ff:ff:ff:ff:ff:ff)
 
   command (specify at least one of the following)
     [-l] # List the images currently stored in all pages of the flash
@@ -32,8 +32,11 @@ Usage: rsuctl [options] command
     [-r] # Reset all FPGA's (load factory image)
     [-c] # Clear all FPGA's (restart current image)
     [-s] # Send SYNC pulse to all FPGA's
+
+    [-P] # Ping the board (find board when using broadcast address)
     [-V] # Read RSU status and RSR versions
     [-h] # This help text
+
 
 Introduction
 -------------
@@ -75,7 +78,7 @@ To write a new image to the flash you can use the -w argument, specify
 the destination page (-p) and the file to write.
 
 # ./rsuctl -w -p1 -f bp.ttf
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === Reading 'bp.ttf'
 === Converting 'bp.ttf' to binary
 === |--------------------------------|
@@ -99,7 +102,7 @@ following command writes the banner jpg from www.lofar.org to page
 15.
 
 # ./rsuctl -w -p15 -f lofar.jpg
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === Reading 'lofar.jpg'
 === erasing page 15
 === |--------------------------------|
@@ -116,7 +119,7 @@ To verify that an image in the flash corresponds to a file on disk use
 the -v option.
 
 # ./rsuctl -v -p1 -f bp.ttf
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === Reading 'bp.ttf'
 === Converting 'bp.ttf' to binary
 === |--------------------------------|
@@ -130,7 +133,7 @@ Supplying the wrong reference file might result in the following
 output. 
 
 # ./rsuctl -v -p1 -f bp41.ttf
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === Reading 'bp41.ttf'
 === Converting 'bp41.ttf' to binary
 === |--------------------------------|
@@ -152,7 +155,7 @@ The binary data stored in flash can be dumped to file with the -d
 command.
 
 # ./rsuctl -d -p15 my.jpg
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === Dumping to file 'dump.jpg'
 === dumping page 15
 === |--------------------------------|
@@ -188,18 +191,18 @@ protection of page 0 in the flash can only be disabled by setting the
 right dip switches.
 
 # ./rsuctl -e -p5
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === erasing page 05
 === |--------------------------------|
 ===  ................................
 === OK
 
 # ./rsuctl -e -p0
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === ERR erasing factory image (page 0) prohibited, use -F to force erase of factory image at ./rsuctl line 778.
 
 # ./rsuctl -e -p0 -F
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === erasing page 00
 === |--------------------------------|
 ===  ................................
@@ -212,7 +215,7 @@ To return to the factory default images on all FPGA's use the -r
 command.
 
 # ./rsuctl -r
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === waiting 3 seconds after reset
 === reconfiguring AP's with factory image (page 8)
 === waiting 1 second after AP reconfig
@@ -239,7 +242,7 @@ Clearing FPGA's
 Clearing FPGA's will help resyncing the internal datapaths if needed.
 
 # ./rsuctl -c
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === waiting 3 seconds after clear
 
 RSU Status:
@@ -261,14 +264,14 @@ Send SYNC to all FPGA's
 -----------------------
 
 # ./rsuctl -s
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 === OK
 
 Read RSU status and versions
 ----------------------------
 
 # ./rsuctl -V
-=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
 
 RSU Status:
   rdy  : Configuration done
@@ -285,33 +288,6 @@ AP[2] version: 4.1
 AP[3] version: 4.1
 === OK
 
-Usage
------
 
-# ./rsuctl -h
-Must have EUID == 0 to use Net::RawIP at ./rsuctl line 30
+END OF DOCUMENT
 
-rsuctl # Remote System Update - program firmware in FPGA flash
-
-Usage: rsuctl [options] command
-
-  options
-    [-i ifname]      # Ethernet interface name on which to communicate (default is eth1)
-    [-m mac-address] # IP-address of the target board
-                     # (default is broadcast address FF:FF:FF:FF:FF:FF)
-
-  command (specify at least one of the following)
-    [-l] # List the images currently stored in all pages of the flash
-
-    [-b -f in.ttf -o out.bin]        # Convert a ttf file to a binary file
-    [-e -p page [-F]]                # Erase flash page, 0 <= page < 16 (-F forces erase of page 0)
-    [-x -p page                      # Start (load & reset) new firmware from the specified page
-    [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
-    [-v -p page -f image[.ttf]]      # Compare flash page with img.bin
-    [-d -p page -f dumpfile.bin]     # Dump flash page to dmp.bin
-
-    [-r] # Reset all FPGA's (load factory image)
-    [-c] # Clear all FPGA's (restart current image)
-    [-s] # Send SYNC pulse to all FPGA's
-    [-V] # Read RSU status and RSR versions
-    [-h] # This help text
