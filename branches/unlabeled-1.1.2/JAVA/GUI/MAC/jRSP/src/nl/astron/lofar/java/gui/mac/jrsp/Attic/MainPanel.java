@@ -70,11 +70,10 @@ public class MainPanel extends JPanel
         
         // controlpanel
         controlPanel.setMainPanel(this);
-        
-        
+                
         // waveformsettingspanel
         waveformSettingsPanel.setMainPanel(this);
-        
+        waveformSettingsPanel.init();
         
         refreshRates = new int[jTabbedPane.getTabCount()];
     }

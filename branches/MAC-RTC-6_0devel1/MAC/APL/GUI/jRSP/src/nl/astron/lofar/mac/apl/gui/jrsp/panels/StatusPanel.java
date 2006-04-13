@@ -33,6 +33,9 @@ public class StatusPanel extends JPanel
         blp2RcuStatusPanel.setTitle("BLP2 RCU");
         blp3RcuStatusPanel.setTitle("BLP3 RCU");
         blp0AdoStatusPanel.setTitle("BLP0 ADO");
+        blp1AdoStatusPanel.setTitle("BLP1 ADO");
+        blp2AdoStatusPanel.setTitle("BLP2 ADO");
+        blp3AdoStatusPanel.setTitle("BLP3 ADO");
     }
     
     public void initFields(BoardStatus boardStatus)

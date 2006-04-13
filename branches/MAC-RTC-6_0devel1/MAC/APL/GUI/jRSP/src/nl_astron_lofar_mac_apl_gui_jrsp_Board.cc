@@ -7,6 +7,10 @@
 using namespace LOFAR;
 using namespace LOFAR::RSP;
 
+#include <cstdio>
+#include <iostream>
+using namespace std;
+
 // Define function's
 jobject ConvertBoardStatus(JNIEnv*, BoardStatus&);
 BoardStatus GetDummyBoardStatus(); // Function for testing.
@@ -459,6 +463,37 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWavefo
 	RSPport * IOport = (RSPport*)ptrRSPport;
 	//return IOport->setWaveformSettings(rcuMask, mode, frequency, amplitude);
 	return false;
+}
+
+/**
+ * Returns the subband stats.
+ * @param	env
+ * @param	obj
+ * @param	rcuMask
+ * @param	ptrRSPport
+ * @return			jdoubleArray
+ */
+JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getSubbandStats(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+{
+	int size = 512; // size of the array that will be returned
+	jdoubleArray ret; // the array that will be returned
+
+	// initialize jdoubleArray
+	ret = env->NewDoubleArray(size);
+
+        //vector<double> vecData;
+        FILE * pFile = fopen("/home/balken/20060308_155731_sst_rcu007.dat", "rb");
+	if(pFile != NULL)
+	{
+		double d;
+		for(int i=0; fread(&d, sizeof(double), 1, pFile) == 1; i++) 
+        	{
+			env->SetDoubleArrayRegion(ret, i, 1, &d);
+		}
+        	fclose(pFile);
+	}
+
+        return ret;
 }
 
 BoardStatus GetDummyBoardStatus()

@@ -80,6 +80,7 @@ public class Board
     private native BoardStatus[] retrieveStatus(int rcuMask, int ptrRSPport); // retrieves the boards.
     private native int retrieveNofBoards(int ptrRSPport); // retrieves the number of boards.
     private native boolean setWaveformSettings(int rcuMask, int mode, int frequency, int amplitude, int ptrRSPport); // Sets the waveform settings.
+    private native double[] getSubbandStats(int rcuMask, int ptrRSPport); // retrieves subbandstats
     // End of native functions
     
     static
@@ -127,5 +128,15 @@ public class Board
         //@TODO remove!
         System.out.println("RCUMask: "+rcuMask+"\nMode: "+mode+"\nFrequency: "+frequency+"\nAmplitude: "+amplitude);
         return setWaveformSettings(rcuMask, mode, frequency, amplitude, ptrRSPport);
+    }
+    
+    /**
+     * Returns the subband stats.
+     * @param   rcuMask
+     * @return              array of doubles.
+     */
+    public double[] getSubbandStats(int rcuMask)
+    {
+        return getSubbandStats(rcuMask, ptrRSPport);
     }
 }

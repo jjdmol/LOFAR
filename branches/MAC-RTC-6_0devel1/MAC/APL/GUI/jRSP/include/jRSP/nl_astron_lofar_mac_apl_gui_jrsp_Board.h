@@ -49,11 +49,11 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWavefo
 
 /*
  * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
- * Method:    testPrintRCUMask
- * Signature: (I)V
+ * Method:    getSubbandStats
+ * Signature: (II)[D
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_testPrintRCUMask
-  (JNIEnv *, jobject, jint);
+JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getSubbandStats
+  (JNIEnv *, jobject, jint, jint);
 
 #ifdef __cplusplus
 }

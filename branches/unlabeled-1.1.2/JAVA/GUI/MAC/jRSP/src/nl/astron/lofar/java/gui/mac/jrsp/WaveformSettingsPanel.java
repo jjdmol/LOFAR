@@ -26,7 +26,7 @@ public class WaveformSettingsPanel extends JPanel implements ActionListener
         
         initComponents();
         
-        inputPanel.addActionListener(this);
+        inputPanel.addActionListener(this);       
     }
     
     /**
@@ -46,6 +46,12 @@ public class WaveformSettingsPanel extends JPanel implements ActionListener
     {
         this.mainPanel = mainPanel;
     }
+    
+    public void init()
+    {
+        plotPanel.init(mainPanel.getBoard().getSubbandStats(0));
+    }
+    
     
     /**
      * Invoked when a action occured; btnSumbit on the inputpanel pressed.
@@ -89,24 +95,31 @@ public class WaveformSettingsPanel extends JPanel implements ActionListener
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         inputPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsInputPanel();
+        plotPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsPlotPanel();
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(inputPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(353, Short.MAX_VALUE))
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(inputPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(layout.createSequentialGroup()
+                        .add(74, 74, 74)
+                        .add(plotPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(77, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(274, Short.MAX_VALUE)
+                .add(plotPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 277, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(inputPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
     }// </editor-fold>//GEN-END:initComponents
      
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsInputPanel inputPanel;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsPlotPanel plotPanel;
     // End of variables declaration//GEN-END:variables
 }
