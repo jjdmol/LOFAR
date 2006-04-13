@@ -54,6 +54,11 @@ public:
   virtual void unlock();
   // </group>
 
+  // Get the domain range (time,freq) of the given parameters in the table.
+  // This is the minimum and maximum value of these axes for all parameters.
+  // An empty name pattern is the same as * (all parms).
+  virtual ParmDomain getRange (const std::string& parmNamePattern) const;
+
   // Get the parameter values for the given parameter and domain.
   // Note that the requested domain may contain multiple values.
   // A selection on parentId is done if >= 0.
