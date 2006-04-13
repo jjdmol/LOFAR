@@ -9,25 +9,27 @@
 # The hosts for all (socket)connections
 # Do not change these hosts without changing the machinefile(s). Host on which TFC_DelayCompensation runs.
 Connections.Input_Delay.ServerHost     =192.168.100.254
-Connections.Input_BGLProc.ServerHosts  =[10.20.98.4]
-Connections.BGLProc_Storage.ServerHosts=[192.168.100.254]
+Connections.Input_BGLProc.ServerHosts  =[10.20.98.2, 10.20.98.3, 10.20.98.4, 10.20.98.5]
+Connections.BGLProc_Storage.ServerHosts=[192.168.100.1, 192.168.100.2, 192.168.100.3, 192.168.100.4]
 Connections.AMC.ServerHost             =127.0.0.1    # where AMC server runs
 
 # The ports for all (socket)connections
-Connections.Input_Delay.Ports    =[7200,7201]
+Connections.Input_Delay.Ports    =[7200,7201,7202,7203]
 Connections.Input_BGLProc.Ports  =[8000,8001,8002,8003,8004,8005,8006,8007,8008,8009,8010,8011,8012,8013,8014,8015]
 Connections.BGLProc_Storage.Ports=[8200,8201,8202,8203,8204,8205,8206,8207,8208,8209,8210,8211,8212,8213,8214,8215]
 Connections.AMC.Port             =31337
 
 # The format of the data
-Observation.NSubbands=1
+Observation.NSubbands=4
 Observation.NChannels = 256
 Observation.NPolarisations=2
 Observation.NSubbandSamples = 196608 #155648
 Observation.SampleRate = 195312.5
-Observation.NStations=2
+Observation.NStations=4
 Observation.PositionType = ITRF     # should be ITRF
 Observation.StationPositions = [\   # position (lat(rad),long(rad),height(m))
+0.1,         0.796643211, 6368177.29,\ # arbitrary position
+0.1,         0.796643211, 6368177.29,\ # arbitrary position
 0.1,         0.796643211, 6368177.29,\ # arbitrary position
 0.111646531, 0.918523043, 6364631.29] # Dwingeloo observatory
 
@@ -52,7 +54,7 @@ Input.SzEPAheader=16
 Input.SzEPApayload=8  # must be a multiple of 8 (Npol * 4) and it must be more than NSubbands * 8
 Input.IPHeaderSize=32
 Input.NSamplesToBuffer=6000000
-Input.NRSPBoards=2
+Input.NRSPBoards=4
 Input.Transport.0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
 Input.Transport.0.inputFile = "udp_rsp0.data"
 Input.Transport.0.interface = eth1
@@ -63,6 +65,11 @@ Input.Transport.1.inputFile = "udp_rsp1.data"
 Input.Transport.1.interface = eth1
 Input.Transport.1.sourceMac = "00:30:48:2d:00:f7"
 Input.Transport.1.destinationMac = "00:30:48:2b:fc:85"
+Input.Transport.2.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.3.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.4.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.5.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.6.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
 
 # Variables for BGLProcessing
 # This defines the number of computing "cells" in the application
@@ -74,7 +81,7 @@ BGLProc.SlavesPerSubband = 6
 BGLProc.NPPFTaps = 16
 
 # Variables for Storage
-Storage.MSName = ObservationA.MS
+Storage.MSName = /data2/ObservationA.MS
 Storage.WriteToMAC = F
 
 Data.NStations = 2
