@@ -13,7 +13,7 @@
 #   command (specify at least one of the following)
 #     [-l] # List the images currently stored in all pages of the flash
 #
-#     [-b in.ttf -f out.bin]           # Convert a ttf file to a binary file
+#     [-b -f in.ttf -o out.bin]        # Convert a ttf file to a binary file
 #     [-e -p page [-F]]                # Erase flash page,  0 <= page < 16 (-F forces erase of page 0)
 #     [-x -p page                      # Start (load & reset) new firmware from the specified page
 #     [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
@@ -133,7 +133,7 @@ Usage: rsuctl [options] command
   command (specify at least one of the following)
     [-l] # List the images currently stored in all pages of the flash
 
-    [-b in.ttf -f out.bin]           # Convert a ttf file to a binary file
+    [-b -f in.ttf -o out.bin]        # Convert a ttf file to a binary file
     [-e -p page [-F]]                # Erase flash page, 0 <= page < 16 (-F forces erase of page 0)
     [-x -p page                      # Start (load & reset) new firmware from the specified page
     [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
@@ -653,15 +653,7 @@ sub reconfig
 	
     $sock->send_eth_frame($packet);
     ($response, $error) = readresponse($pcap);
-    return $error if $error;
-	
-    print STDERR "=== waiting 5 seconds after reconfig\n";
-    sleep 5;
-
-    $error = readrsustatus($sock, $pcap);
-    return $error if $error;
-    $error = readversions($sock, $pcap);
-    return $error if $error;
+    return $error;
 }
 
 #
@@ -685,14 +677,19 @@ sub clearctl
 
 #
 # Report result
-# report($error)
+# report($error, $report_ok = false)
 #
 sub report
 {
-    my ($error) = @_;
+    my ($error, $report_ok) = @_;
 
-    if ($error || $g_error) { print STDERR "=== FAILED\n"; }
-    else                    { print STDERR "=== OK\n";     }
+    if ($error || $g_error) {
+	print STDERR "=== FAILED\n";
+	exit 1;
+    }
+    else {
+	print STDERR "=== OK\n" if ($report_ok);
+    }
 }
 
 #
@@ -709,11 +706,24 @@ sub chkpage
     }
 }
 
+#
+# Get rsu status and versions
+# version_cmd($sock, $pcap)
+#
+sub version_cmd
+{
+    my ($sock, $pcap) = @_;
+
+    $error = readrsustatus($sock, $pcap);
+    $error = readversions($sock, $pcap) && $error;
+    return $error;
+}
+
 sub main
 {
     my $sock = 0;
 
-    Getopt::Std::getopts("i:m:lb:exwvdp:f:FrcsVh");
+    Getopt::Std::getopts("i:m:lbf:o:exwvdp:FrcsVh");
 
     # check that at least one argument is present
     usage() if ($opt_h);
@@ -743,120 +753,192 @@ sub main
 
     if (defined($opt_l)) {
 
-	($entry, $error) = readdirentry($sock, $pcap, 0);
-	if (!$error) {
-	    print STDERR sprintf("\nBP Factory: ", 0) . $entry . "\n";;
-	    for ($page = 1; $page < $PAGES; $page++) {
-		($entry, $error) = readdirentry($sock, $pcap, $page);
-		break if $error;
-		print STDERR sprintf("%s Page %2d: %s\n",
-				     ($page < 8 ?'BP':'AP'), $page, $entry) if ($entry ne '');
-	    }
+	# LIST IMAGES IN FLASH
+	#
+	# readdirentry for all pages
+
+	print STDERR "\n";
+	for ($page = 0; $page < $PAGES; $page++) {
+	    ($entry, $error) = readdirentry($sock, $pcap, $page);
+	    break if $error;
+	    print STDERR sprintf("%s %s %2d: %s\n", ($page < 8 ?'BP':'AP'),
+				 (0 == $page % 8 ? 'Factory':'Image  '),
+				 $page, $entry) if ((0 == $page % 8) || $entry ne '');
 	}
-	report($error);
+	print STDERR "\n";
+	report($error, true);
 	
 	return;
     }
 
     if (defined($opt_b)) {
+	
+	# CONVERT TO BINARY
+	#
+	# readimage
 
-	$image = readimage($opt_b);
-	die "=== ERR no output file specified" if (!defined($opt_f));
+	die "=== ERR no input file specified"  if (!defined($opt_f) || ($opt_f eq ""));
+	die "=== ERR no output file specified" if (!defined($opt_o) || ($opt_o eq ""));
+	$image = readimage($opt_f);
 
-	open(DUMPFILE, ">$opt_f") || die "=== ERR failed to open file '$opt_f' for writing\n";
+	open(DUMPFILE, ">$opt_o") || die "=== ERR failed to open file '$opt_o' for writing\n";
 	print DUMPFILE $image;
 	close(DUMPFILE);
-	report($error);
+	report($error, true);
 
 	return;
     }
 
     if (defined($opt_e)) {
 
+	# ERASE
+	#
+	# erase flash page
+
 	die "=== ERR erasing factory image (page 0) prohibited, use -F to force erase of factory image" if (!$opt_F && (0 == $opt_p));
 	chkpage($opt_p);
 
-	$error = erase($sock, $pcap, $opt_p);
-	report($error);
+	report(erase($sock, $pcap, $opt_p), true);
 
 	return;
     }
     if (defined($opt_x)) {
 
+	# RECONFIG
+	#
+	# reconfig BP or AP
+	# if BP wait 3 seconds
+	# clear
+	# wait 3 seconds
+	# read rsustatus & version
+
 	chkpage($opt_p);
-	$error = reconfig($sock, $pcap, $opt_p);
-	report($error);
+	report(reconfig($sock, $pcap, $opt_p));
+	if ($opt_p < 8) {
+	    print STDERR "=== waiting 3 seconds after BP reconfig\n"; sleep 3;
+	}
+	report(clearctl($sock, $pcap, $CMD_CLEAR));
+	report($error) if $error;
+	print STDERR "=== waiting 3 seconds after clear\n";
+	sleep 3;
+	$error = readrsustatus($sock, $pcap);
+	$error = readversions($sock, $pcap) && $error;
+	report($error, true);
 
 	return;
     }
     if (defined($opt_w)) {
 
+	# WRITE
+	#
+	# readimage
+	# erase page
+	# write & verify page
+
 	die "=== ERR writing to factory image (page 0) prohibited, use -F to force write to factory image" if (!$opt_F && (0 == $opt_p));
 	chkpage($opt_p);
 
 	$image = readimage($opt_f);
-	$error = erase($sock, $pcap, $opt_p);
-	$error = writepage($sock, $pcap, $opt_p, $opt_f, $image) if (!$error);
-	report($error);
+	report(erase($sock, $pcap, $opt_p));
+	report(writepage($sock, $pcap, $opt_p, $opt_f, $image), true);
 
 	return;
     }
     if (defined($opt_v)) {
 
+	# VERIFY
+	#
+	# readimage reference
+	# verify flash page against reference
+
 	chkpage($opt_p);
 	$image = readimage($opt_f);
-	$error = verify($sock, $pcap, $opt_p, $image);
-	report($error);
+	report(verify($sock, $pcap, $opt_p, $image), true);
 
 	return;
     }
     if (defined($opt_d)) {
 
+	# DUMP
+	#
+	# dump flash page to file
+
 	chkpage($opt_p);
 	die "=== ERR no image file specified" if (!defined($opt_f));
 
 	open(DUMPFILE, ">$opt_f") || die "=== ERR failed to open file '$opt_f' for writing\n";
+	print STDERR "=== Dumping to file '$opt_f'\n";
 	$error = dump($sock, $pcap, $opt_p);
 	close(DUMPFILE);
-	report($error);
+	report($error, true);
 
 	return;
     }
     if (defined($opt_r)) {
+	
+	# RESET
+	#
+	# send reset
+	# wait 3 seconds
+	# reconfigure AP's with page 8 (factory default for AP's)
+	# if reconfig failed (this can happen when an invalid AP image was loaded previously)
+	#   clear
+	#   wait 3 second
+	#   reconfig again
+	# wait 1 second
+	# send clear
+	# wait 3 seconds
+	# read rsustatus and versions
 
-	clearctl($sock, $pcap, $CMD_RESET);
-	print STDERR "=== waiting 5 seconds after reset\n";
-	sleep 5;
-	$error = readrsustatus($sock, $pcap);
-	$error = readversions($sock, $pcap) if (!$error);
-	report($error);
+	report(clearctl($sock, $pcap, $CMD_RESET));
+	print STDERR "=== waiting 3 seconds after reset\n"; sleep 3;
+	print STDERR "=== reconfiguring AP's with factory image (page 8)\n";
+	$error = reconfig($sock, $pcap, 8);
+	if ($error) {
+	    print STDERR "=== reconfig failed, clearing and waiting 3 seconds\n"; sleep 3;
+	    report(clearctl($sock, $pcap, $CMD_CLEAR));
+	    print STDERR "=== waiting 3 seconds after clear\n"; sleep 3;
+	    print STDERR "=== retry reconfig\n";
+	    report(reconfig($sock, $pcap, 8));
+	}
+	print STDERR "=== waiting 1 second after AP reconfig\n"; sleep 1;
+	report(clearctl($sock, $pcap, $CMD_CLEAR));
+	print STDERR "=== waiting 3 seconds after clear\n"; sleep 3;
+	report(version_cmd($sock, $pcap) && $error, true);
 
 	return;
     }
     if (defined($opt_c)) {
 
-	clearctl($sock, $pcap, $CMD_CLEAR);
-	print STDERR "=== waiting 5 seconds after clear\n";
-	sleep 5;
-	$error = readrsustatus($sock, $pcap);
-	$error = readversions($sock, $pcap) if (!$error);
-	report($error);
+	# CLEAR
+	#
+	# send clear
+	# wait 3 seconds
+	# read rsustatus and versions
+	
+	report(clearctl($sock, $pcap, $CMD_CLEAR));
+	print STDERR "=== waiting 3 seconds after clear\n"; sleep 3;
+	report(version_cmd($sock, $pcap), true);
 
 	return;
     }
     if (defined($opt_s)) {
 
-	$error = clearctl($sock, $pcap, $CMD_SYNC);
-	report($error);
+	# SYNC
+	#
+	# send sync
+
+	report(clearctl($sock, $pcap, $CMD_SYNC), true);
 
 	return;
     }
     if (defined($opt_V)) {
 
-	print STDERR "\n";
-	$error = readrsustatus($sock, $pcap);
-	$error = readversions($sock, $pcap) if (!$error);
-	report($error);
+	# VERSIONS
+	#
+	# read rsustatus and versions
+
+	report(version_cmd($sock, $pcap), true);
 
 	return;
     }
