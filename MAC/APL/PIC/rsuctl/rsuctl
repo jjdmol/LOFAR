@@ -8,7 +8,7 @@ $VERSION = q$Revision$;
 #   options
 #     [-i ifname]      # Ethernet interface name on which to communicate (default is eth1)
 #     [-m mac-address] # IP-address of the target board
-#                      # (default is broadcast address FF:FF:FF:FF:FF:FF)
+#                      # (default is broadcast address ff:ff:ff:ff:ff:ff)
 #
 #   command (specify at least one of the following)
 #     [-l] # List the images currently stored in all pages of the flash
@@ -23,6 +23,8 @@ $VERSION = q$Revision$;
 #     [-r] # Reset all FPGA's (load factory image)
 #     [-c] # Clear all FPGA's (restart current image)
 #     [-s] # Send SYNC pulse to all FPGA's
+#
+#     [-P] # Ping the board (find board when using broadcast address)
 #     [-V] # Read RSU status and RSR versions
 #     [-h] # This help text
 #
@@ -131,7 +133,7 @@ Usage: rsuctl [options] command
   options
     [-i ifname]      # Ethernet interface name on which to communicate (default is eth1)
     [-m mac-address] # IP-address of the target board
-                     # (default is broadcast address FF:FF:FF:FF:FF:FF)
+                     # (default is broadcast address ff:ff:ff:ff:ff:ff)
 
   command (specify at least one of the following)
     [-l] # List the images currently stored in all pages of the flash
@@ -146,6 +148,8 @@ Usage: rsuctl [options] command
     [-r] # Reset all FPGA's (load factory image)
     [-c] # Clear all FPGA's (restart current image)
     [-s] # Send SYNC pulse to all FPGA's
+
+    [-P] # Ping the board (find board when using broadcast address)
     [-V] # Read RSU status and RSR versions
     [-h] # This help text
 
@@ -201,7 +205,7 @@ sub readresponse
     };
     if ($@) {
 	$error = 1;
-	return ('', $error);
+	return ('', $error,'');
     }
     
     my ($ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved) =
@@ -226,7 +230,7 @@ sub readresponse
 	exit;
     }
     
-    return (substr($g_packet, 14 + $MEPHDRSIZE), $error);
+    return (substr($g_packet, 14 + $MEPHDRSIZE), $error, $ethdr);
 }
 
 #
@@ -636,6 +640,32 @@ sub readversions
 }
 
 #
+# Find MAC addresses of active boards
+# ping($sock, $pcap)
+#
+sub ping
+{
+    my ($sock, $pcap) = @_;
+
+    # read BP version
+    $size = $REG_VERSION_SIZE;
+    $packet = pack($MEPSENDFORMAT,
+		   0x10, 0xFA, $TYPE_READ, 0x00, $MEPHDRSIZE + $size,
+		   $ADDR_BLP_NONE, $ADDR_RSP, $PID_RSR, $REG_VERSION, 0, $size, 0, 0);
+    $sock->send_eth_frame($packet);
+    my $error = 0;
+
+    while (!$error) {
+	($result, $error, $ethdr) = readresponse($pcap);
+	$mac = substr($ethdr, 12, 12);
+	$mac =~ s/(..)(..)(..)(..)(..)(..)/$1:$2:$3:$4:$5:$6/;
+	print STDERR "Found RSP board on MAC: ", $mac, "\n" if (!$error);
+    }
+
+    return 0;
+}
+
+#
 # Reconfigure. Load new firmware from flash into FPGA's. After loading
 # has finished, the FPGA will be reset and restart with new firmware.
 #
@@ -725,16 +755,16 @@ sub main
 {
     my $sock = 0;
 
-    Getopt::Std::getopts("i:m:lbf:o:exwvdp:FrcsVh");
+    Getopt::Std::getopts("i:m:lbf:o:exwvdp:FrcsPVh");
 
     # check that at least one argument is present
     usage() if ($opt_h);
     usage() unless ($opt_l || $opt_b || $opt_e || $opt_x || $opt_w || $opt_v ||
-		    $opt_d || $opt_r || $opt_c || $opt_s || $opt_V || $opt_h);
+		    $opt_d || $opt_r || $opt_c || $opt_s || $opt_P || $opt_V || $opt_h);
     
     # assign default values
     $opt_i = 'eth1'              if !defined($opt_i);
-    $opt_m = 'FF:FF:FF:FF:FF:FF' if !defined($opt_m);
+    $opt_m = 'ff:ff:ff:ff:ff:ff' if !defined($opt_m);
     
     # Create socket to the boards
     if (!defined($opt_b)) {
@@ -936,6 +966,12 @@ sub main
 	report(clearctl($sock, $pcap, $CMD_SYNC), true);
 
 	return;
+    }
+    if (defined($opt_P)) {
+
+	report(ping($sock, $pcap), true);
+	return;
+
     }
     if (defined($opt_V)) {
 
