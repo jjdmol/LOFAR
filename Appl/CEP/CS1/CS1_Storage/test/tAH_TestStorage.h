@@ -48,9 +48,10 @@ namespace LOFAR
     virtual void quit();
 
   private:
+    void setTestPattern(DH_Visibilities &, int factor);
+
     vector<DH_Visibilities*> itsInDHs;
     vector<Connection*> itsInConns;
-
   };
 } // namespace LOFAR
 
