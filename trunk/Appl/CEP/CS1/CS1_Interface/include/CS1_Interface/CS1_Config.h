@@ -31,7 +31,7 @@
 #define NR_TAPS			   16
 
 #if defined BGL_PROCESSING
-#define NR_STATIONS		   2
+#define NR_STATIONS		   4
 #define NR_SUBBAND_SAMPLES	   196608 /* 155648 */
 #endif
 
