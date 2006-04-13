@@ -77,6 +77,9 @@ $BLOCKS_PER_PAGE   = $BLOCKS_PER_SECTOR * $SECTORS_PER_PAGE;
 $PAGES             = 16;
 $PROGRESS_SIZE     = 32;
 
+$RESPONSETIMEOUT = 2;
+$TO = 3;
+
 #
 # pack format for the MEP message
 # 
@@ -191,14 +194,13 @@ sub readresponse
 			 POSIX::SigAction->new(sub { die }))
 	    || die "=== ERR error setting SIGALRM handler: $!\n";
 	
-	alarm 5;
+	alarm $RESPONSETIMEOUT;
 	(0 == loop ($pcap, 1, \&savepacket, ''))
 	    || die "=== ERR Failed to receive response";
 	alarm 0;
     };
     if ($@) {
 	$error = 1;
- 	print STDERR "=== ERR timeout waiting for response, is the RSP board connected?\n";
 	return ('', $error);
     }
     
@@ -749,6 +751,10 @@ sub main
 	die "=== ERR could not open raw socket to RSP board(s) on $opt_i:$opt_m: $!\n" unless $sock;
 	  
 	print STDERR "=== connected to RSP board(s) on $opt_i:$opt_m\n";
+
+	print STDERR "=== checking for running RSPDriver\n";
+	($payload, $error) = readresponse($pcap);
+	die "=== RSPDriver appears to be running, stop it first\n" if ($payload ne '');
     }
 
     if (defined($opt_l)) {
@@ -807,20 +813,19 @@ sub main
 	# RECONFIG
 	#
 	# reconfig BP or AP
-	# if BP wait 3 seconds
+	# if BP wait $TO seconds
 	# clear
-	# wait 3 seconds
+	# wait $TO seconds
 	# read rsustatus & version
 
 	chkpage($opt_p);
 	report(reconfig($sock, $pcap, $opt_p));
 	if ($opt_p < 8) {
-	    print STDERR "=== waiting 3 seconds after BP reconfig\n"; sleep 3;
+	    print STDERR "=== waiting $TO seconds after BP reconfig\n"; sleep $TO;
 	}
 	report(clearctl($sock, $pcap, $CMD_CLEAR));
 	report($error) if $error;
-	print STDERR "=== waiting 3 seconds after clear\n";
-	sleep 3;
+	print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
 	$error = readrsustatus($sock, $pcap);
 	$error = readversions($sock, $pcap) && $error;
 	report($error, true);
@@ -879,31 +884,31 @@ sub main
 	# RESET
 	#
 	# send reset
-	# wait 3 seconds
+	# wait $TO seconds
 	# reconfigure AP's with page 8 (factory default for AP's)
 	# if reconfig failed (this can happen when an invalid AP image was loaded previously)
 	#   clear
-	#   wait 3 second
+	#   wait $TO second
 	#   reconfig again
-	# wait 1 second
+	# wait $TO second
 	# send clear
-	# wait 3 seconds
+	# wait $TO seconds
 	# read rsustatus and versions
 
 	report(clearctl($sock, $pcap, $CMD_RESET));
-	print STDERR "=== waiting 3 seconds after reset\n"; sleep 3;
+	print STDERR "=== waiting $TO seconds after reset\n"; sleep $TO;
 	print STDERR "=== reconfiguring AP's with factory image (page 8)\n";
 	$error = reconfig($sock, $pcap, 8);
 	if ($error) {
-	    print STDERR "=== reconfig failed, clearing and waiting 3 seconds\n"; sleep 3;
+	    print STDERR "=== reconfig failed, clearing and waiting $TO seconds\n"; sleep $TO;
 	    report(clearctl($sock, $pcap, $CMD_CLEAR));
-	    print STDERR "=== waiting 3 seconds after clear\n"; sleep 3;
+	    print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
 	    print STDERR "=== retry reconfig\n";
 	    report(reconfig($sock, $pcap, 8));
 	}
-	print STDERR "=== waiting 1 second after AP reconfig\n"; sleep 1;
+	print STDERR "=== waiting $TO second after AP reconfig\n"; sleep $TO;
 	report(clearctl($sock, $pcap, $CMD_CLEAR));
-	print STDERR "=== waiting 3 seconds after clear\n"; sleep 3;
+	print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
 	report(version_cmd($sock, $pcap) && $error, true);
 
 	return;
@@ -913,11 +918,11 @@ sub main
 	# CLEAR
 	#
 	# send clear
-	# wait 3 seconds
+	# wait $TO seconds
 	# read rsustatus and versions
 	
 	report(clearctl($sock, $pcap, $CMD_CLEAR));
-	print STDERR "=== waiting 3 seconds after clear\n"; sleep 3;
+	print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
 	report(version_cmd($sock, $pcap), true);
 
 	return;
