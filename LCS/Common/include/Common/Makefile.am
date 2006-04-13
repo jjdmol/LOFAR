@@ -17,8 +17,9 @@ pkginclude_HEADERS = \
 	Exception.h \
 	FileLocator.h \
 	hexdump.h \
-	i4complex.h\
+	i4complex.h \
 	lofar_algorithm.h \
+	lofar_bitset.h \
 	lofar_complex.h \
 	lofar_datetime.h \
 	lofar_deque.h \
