@@ -90,10 +90,11 @@
 #include <Common/LofarTypes.h>	// for uint32
 #include <cstddef>     // for size_t
 #include <cstring>     // for memset
-#include <Common/lofar_string.h>
+#include <string>
 #include <bits/functexcept.h>   // for invalid_argument, out_of_range,
                                 // overflow_error
-#include <Common_lofar_iostream.h>     // for operator>>() and operator<<()
+#include <ostream>     // for ostream (operator<<)
+#include <istream>     // for istream (operator>>)
 
 
 #define _LOFAR_BITSET_BITS_PER_WORD (CHAR_BIT*sizeof(uint32))
@@ -309,7 +310,7 @@ namespace LOFAR
     {
       for (size_t __i = 1; __i < _Nw; ++__i)
 	if (_M_w[__i])
-	  __throw_overflow_error("bitset -- too large to fit in unsigned uint32");
+	  std::__throw_overflow_error("bitset -- too large to fit in unsigned uint32");
       return _M_w[0];
     }
 
@@ -541,7 +542,7 @@ namespace LOFAR
       // localized to this single should-never-get-this-far function.
       _WordT&
       _M_getword(size_t) const
-      { __throw_out_of_range("bitset -- zero-length"); return *new _WordT; }
+      { std::__throw_out_of_range("bitset -- zero-length"); return *new _WordT; }
 
       _WordT
       _M_hiword() const { return 0; }
@@ -777,14 +778,14 @@ namespace LOFAR
      *                                 which is neither '0' nor '1'.
     */
     template<class _CharT, class _Traits, class _Alloc>
-      explicit bitset(const basic_string<_CharT, _Traits, _Alloc>& __s,
+      explicit bitset(const std::basic_string<_CharT, _Traits, _Alloc>& __s,
 		      size_t __pos = 0) : _Base()
       {
 	if (__pos > __s.size())
-	  __throw_out_of_range("bitset -- initial position is larger than "
+	  std::__throw_out_of_range("bitset -- initial position is larger than "
 	                       "the string itself");
 	_M_copy_from_string(__s, __pos,
-			    basic_string<_CharT, _Traits, _Alloc>::npos);
+			    std::basic_string<_CharT, _Traits, _Alloc>::npos);
       }
 
     /**
@@ -797,11 +798,11 @@ namespace LOFAR
      *                                 which is neither '0' nor '1'.
     */
     template<class _CharT, class _Traits, class _Alloc>
-      bitset(const basic_string<_CharT, _Traits, _Alloc>& __s,
+      bitset(const std::basic_string<_CharT, _Traits, _Alloc>& __s,
 	     size_t __pos, size_t __n) : _Base()
       {
 	if (__pos > __s.size())
-	  __throw_out_of_range("bitset -- initial position is larger than "
+	  std::__throw_out_of_range("bitset -- initial position is larger than "
 	                       "the string itself");
 	_M_copy_from_string(__s, __pos, __n);
       }
@@ -937,7 +938,7 @@ namespace LOFAR
     set(size_t __pos, bool __val = true)
     {
       if (__pos >= _Nb)
-	__throw_out_of_range("bitset -- set() argument too large");
+	std::__throw_out_of_range("bitset -- set() argument too large");
       return _Unchecked_set(__pos, __val);
     }
 
@@ -962,7 +963,7 @@ namespace LOFAR
     reset(size_t __pos)
     {
       if (__pos >= _Nb)
-	__throw_out_of_range("bitset -- reset() argument too large");
+	std::__throw_out_of_range("bitset -- reset() argument too large");
       return _Unchecked_reset(__pos);
     }
 
@@ -986,7 +987,7 @@ namespace LOFAR
     flip(size_t __pos)
     {
       if (__pos >= _Nb)
-	__throw_out_of_range("bitset -- flip() argument too large");
+	std::__throw_out_of_range("bitset -- flip() argument too large");
       return _Unchecked_flip(__pos);
     }
 
@@ -1042,10 +1043,10 @@ namespace LOFAR
      *  @endcode
     */
     template<class _CharT, class _Traits, class _Alloc>
-      basic_string<_CharT, _Traits, _Alloc>
+      std::basic_string<_CharT, _Traits, _Alloc>
       to_string() const
       {
-	basic_string<_CharT, _Traits, _Alloc> __result;
+	std::basic_string<_CharT, _Traits, _Alloc> __result;
 	_M_copy_to_string(__result);
 	return __result;
       }
@@ -1053,12 +1054,12 @@ namespace LOFAR
     // Helper functions for string operations.
     template<class _CharT, class _Traits, class _Alloc>
       void
-      _M_copy_from_string(const basic_string<_CharT,_Traits,_Alloc>& __s,
+      _M_copy_from_string(const std::basic_string<_CharT,_Traits,_Alloc>& __s,
                           size_t, size_t);
 
     template<class _CharT, class _Traits, class _Alloc>
       void
-      _M_copy_to_string(basic_string<_CharT,_Traits,_Alloc>&) const;
+      _M_copy_to_string(std::basic_string<_CharT,_Traits,_Alloc>&) const;
 
     /// Returns the number of bits which are set.
     size_t
@@ -1089,7 +1090,7 @@ namespace LOFAR
     test(size_t __pos) const
     {
       if (__pos >= _Nb)
-	__throw_out_of_range("bitset -- test() argument too large");
+	std::__throw_out_of_range("bitset -- test() argument too large");
       return _Unchecked_test(__pos);
     }
 
@@ -1144,7 +1145,7 @@ namespace LOFAR
   template<size_t _Nb>
     template<class _CharT, class _Traits, class _Alloc>
     void
-    bitset<_Nb>::_M_copy_from_string(const basic_string<_CharT,_Traits,_Alloc>& __s, size_t __pos, size_t __n)
+    bitset<_Nb>::_M_copy_from_string(const std::basic_string<_CharT,_Traits,_Alloc>& __s, size_t __pos, size_t __n)
     {
       reset();
       const size_t __nbits = min(_Nb, min(__n, __s.size() - __pos));
@@ -1158,7 +1159,7 @@ namespace LOFAR
 	      set(__i);
 	      break;
 	    default:
-	      __throw_invalid_argument("bitset -- string contains characters "
+	      std::__throw_invalid_argument("bitset -- string contains characters "
 	                               "which are neither 0 nor 1");
 	    }
 	}
@@ -1167,7 +1168,7 @@ namespace LOFAR
   template<size_t _Nb>
     template<class _CharT, class _Traits, class _Alloc>
     void
-    bitset<_Nb>::_M_copy_to_string(basic_string<_CharT, _Traits, _Alloc>& __s) const
+    bitset<_Nb>::_M_copy_to_string(std::basic_string<_CharT, _Traits, _Alloc>& __s) const
     {
       __s.assign(_Nb, '0');
       for (size_t __i = 0; __i < _Nb; ++__i)
@@ -1223,19 +1224,19 @@ namespace LOFAR
    *  hold.
   */
   template<class _CharT, class _Traits, size_t _Nb>
-    basic_istream<_CharT, _Traits>&
-    operator>>(basic_istream<_CharT, _Traits>& __is, bitset<_Nb>& __x)
+    std::basic_istream<_CharT, _Traits>&
+    operator>>(std::basic_istream<_CharT, _Traits>& __is, bitset<_Nb>& __x)
     {
       typedef typename _Traits::char_type char_type;
-      basic_string<_CharT, _Traits> __tmp;
+      std::basic_string<_CharT, _Traits> __tmp;
       __tmp.reserve(_Nb);
 
       // Skip whitespace
-      typename basic_istream<_CharT, _Traits>::sentry __sentry(__is);
+      typename std::basic_istream<_CharT, _Traits>::sentry __sentry(__is);
       if (__sentry)
 	{
-	  ios_base::iostate  __state = ios_base::goodbit;
-	  basic_streambuf<_CharT, _Traits>* __buf = __is.rdbuf();
+	  std::ios_base::iostate  __state = std::ios_base::goodbit;
+	  std::basic_streambuf<_CharT, _Traits>* __buf = __is.rdbuf();
 	  for (size_t __i = 0; __i < _Nb; ++__i)
 	    {
 	      static typename _Traits::int_type __eof = _Traits::eof();
@@ -1243,7 +1244,7 @@ namespace LOFAR
 	      typename _Traits::int_type __c1 = __buf->sbumpc();
 	      if (_Traits::eq_int_type(__c1, __eof))
 		{
-		  __state |= ios_base::eofbit;
+		  __state |= std::ios_base::eofbit;
 		  break;
 		}
 	      else
@@ -1255,18 +1256,18 @@ namespace LOFAR
 		    __tmp.push_back(__c);
 		  else if (_Traits::eq_int_type(__buf->sputbackc(__c2), __eof))
 		    {
-		      __state |= ios_base::failbit;
+		      __state |= std::ios_base::failbit;
 		      break;
 		    }
 		}
 	    }
 
 	  if (__tmp.empty() && !_Nb)
-	    __state |= ios_base::failbit;
+	    __state |= std::ios_base::failbit;
 	  else
 	    __x._M_copy_from_string(__tmp, static_cast<size_t>(0), _Nb);
 
-	  if (__state != ios_base::goodbit)
+	  if (__state != std::ios_base::goodbit)
 	    __is.setstate(__state);    // may throw an exception
 	}
 
@@ -1274,10 +1275,10 @@ namespace LOFAR
     }
 
   template <class _CharT, class _Traits, size_t _Nb>
-    basic_ostream<_CharT, _Traits>&
-    operator<<(basic_ostream<_CharT, _Traits>& __os, const bitset<_Nb>& __x)
+    std::basic_ostream<_CharT, _Traits>&
+    operator<<(std::basic_ostream<_CharT, _Traits>& __os, const bitset<_Nb>& __x)
     {
-      basic_string<_CharT, _Traits> __tmp;
+      std::basic_string<_CharT, _Traits> __tmp;
       __x._M_copy_to_string(__tmp);
       return __os << __tmp;
     }
