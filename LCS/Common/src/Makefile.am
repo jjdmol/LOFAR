@@ -10,6 +10,7 @@ libcommon_la_SOURCES 	= \
 	Exception.cc \
 	FileLocator.cc \
 	hexdump.cc \
+	lofar_bitset.cc \
 	LofarLogCout.cc \
 	LofarLogger.cc \
 	Numeric.cc \
