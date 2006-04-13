@@ -1,5 +1,5 @@
 # -*- Mode:rpm-spec -*-
-# ParmTable.spec.in
+# ParmDB.spec.in
 #
 
 ##############################################################################
@@ -8,7 +8,7 @@
 #
 ##############################################################################
 
-Summary: ParmTable is ... brief description ...
+Summary: ParmDB is the Paramater Data Base
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
@@ -37,7 +37,9 @@ AutoReqProv: no
 
 %description
 
-ParmTable ... more detailed description ...
+ParmDB is the module containing the classes and functions to handle the
+parameters in the Parameter Data Base. The data base type used is hidden
+from the user.
 
 ##############################################################################
 #
