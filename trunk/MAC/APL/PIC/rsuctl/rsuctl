@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-$ID = q$\Id$;
+$ID = q$Id$;
 #
 # rsuctl # Remote System Update - program firmware in FPGA flash
 #
