@@ -47,19 +47,35 @@ namespace LOFAR
 
       virtual bool init() {return true;};
 
-      virtual bool recvBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0) {return true;};
-      virtual bool sendBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0) {return true;};
+      virtual bool recvBlocking (void*, int, int, int, DataHolder*) 
+      { return true; }
 
-      virtual int32 recvNonBlocking (void* buf, int32 nbytes, int tag, int32 nBytesRead=0, DataHolder* dh=0) {return true;};
-      virtual void waitForReceived(void* buf, int nbytes, int tag) {};
+      virtual bool sendBlocking (void*, int, int, DataHolder*)
+      { return true; }
 
-      virtual bool sendNonBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0) {return true;};
-      virtual void waitForSent(void* buf, int nbytes, int tag) {};
+      virtual int32 recvNonBlocking (void*, int32, int, int32, DataHolder*)
+      { return true; }
 
-      virtual string getType() const {return "TH_Null";};
-      virtual bool isClonable() const {return true;};
-      virtual TransportHolder* clone() const {return new TH_Null();};
-      virtual void reset() {};
+      virtual void waitForReceived(void*, int, int)
+      {}
+
+      virtual bool sendNonBlocking (void*, int, int, DataHolder*)
+      { return true; }
+
+      virtual void waitForSent(void*, int, int)
+      {}
+
+      virtual string getType() const
+      { return "TH_Null"; }
+
+      virtual bool isClonable() const
+      { return true; }
+
+      virtual TransportHolder* clone() const
+      { return new TH_Null(); }
+
+      virtual void reset()
+      {}
 
     private:
       // Copying is not allowed
