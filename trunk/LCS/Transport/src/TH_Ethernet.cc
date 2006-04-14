@@ -107,7 +107,7 @@ string TH_Ethernet::getType() const
   return "TH_Ethernet"; 
 }
 
-bool TH_Ethernet::recvBlocking(void* buf, int nbytes, int tag, int, DataHolder*)
+bool TH_Ethernet::recvBlocking(void* buf, int nbytes, int, int, DataHolder*)
 {  
   if (!itsInitDone) {
     return false;
@@ -164,7 +164,7 @@ void TH_Ethernet::waitForReceived(void*, int32, int32)
 }
 
 
-bool TH_Ethernet::sendBlocking(void* buf, int nbytes, int tag, DataHolder*)
+bool TH_Ethernet::sendBlocking(void* buf, int nbytes, int, DataHolder*)
 {
   if (!itsInitDone) return false;
 
@@ -203,18 +203,18 @@ bool TH_Ethernet::sendBlocking(void* buf, int nbytes, int tag, DataHolder*)
   }
 }
 
-bool TH_Ethernet::sendNonBlocking(void* buf, int nbytes, int tag, DataHolder*)
+bool TH_Ethernet::sendNonBlocking(void*, int, int, DataHolder*)
 {
   LOG_WARN( "TH_Ethernet::sendNonBlocking() is not implemented." );
   return false;
 }
 
-void TH_Ethernet::readTotalMsgLengthBlocking(int tag, int& nrBytes)
+void TH_Ethernet::readTotalMsgLengthBlocking(int, int&)
 {
   LOG_WARN( "TH_Ethernet::readTotalMsgLengthBlocking() is not implemented." );
 }
 
-bool TH_Ethernet::readTotalMsgLengthNonBlocking(int tag, int& nrBytes)
+bool TH_Ethernet::readTotalMsgLengthNonBlocking(int, int&)
 { 
   LOG_WARN( "TH_Ethernet::readTotalMsgLengthNonBlocking() is not implemented." );
   return false;
@@ -372,11 +372,11 @@ void TH_Ethernet::initSendHeader() {
   struct ethhdr* hdr = (struct ethhdr*)itsSendPacket;
 
   unsigned char* dstMac = hdr->h_dest;//[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
-  sscanf(itsDstMac.c_str(), "%x:%x:%x:%x:%x:%x", 
+  sscanf(itsDstMac.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
 	 &dstMac[0],&dstMac[1],&dstMac[2],&dstMac[3],&dstMac[4],&dstMac[5]);
 
   unsigned char* srcMac = hdr->h_source;
-  sscanf(itsSrcMac.c_str(), "%x:%x:%x:%x:%x:%x", 
+  sscanf(itsSrcMac.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
 	 &srcMac[0],&srcMac[1],&srcMac[2],&srcMac[3],&srcMac[4],&srcMac[5]);
 
   hdr->h_proto = htons(itsEthertype);
