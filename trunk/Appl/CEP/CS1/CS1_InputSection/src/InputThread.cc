@@ -63,6 +63,7 @@ namespace LOFAR {
       int frameSize = itsArgs.frameSize;
       // reserve space in case there is an ip header in front of the packet
       char totRecvframe[frameSize + itsArgs.ipHeaderSize];
+      memset(totRecvframe, 0, sizeof(totRecvframe));
       char* recvframe = totRecvframe;
       //      if (itsArgs.th->getType() == "TH_Ethernet") {
 	// only with TH_Ethernet there is an IPHeader
