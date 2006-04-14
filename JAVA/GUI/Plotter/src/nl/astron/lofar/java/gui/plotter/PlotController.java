@@ -40,11 +40,33 @@ public class PlotController{
 	 * 
 	 */
 	public JComponent createPlot(String constraint){
-		IPlot aNewPlot = (IPlot)new SGTPlot();
+        
+            Object aPlotter = null;
+            IPlot aNewPlot = null;
+            try {
+
+                Class implementator = IPlot.class.forName(PlotConstants.FRAMEWORK);
+                aPlotter = implementator.newInstance();
+                aNewPlot = (IPlot)aPlotter;
+            } catch (IllegalAccessException ex) {
+                ex.printStackTrace();
+            } catch (ClassNotFoundException ex) {
+                ex.printStackTrace();
+            } catch (InstantiationException ex) {
+                ex.printStackTrace();
+            } catch (ClassCastException ex) {
+                ex.printStackTrace();
+            }
+            
+            if(aPlotter != null){
+            
                 HashMap retrieveableData = 
-                        m_PlotDataManager.retrieveData(constraint);                               
+                    m_PlotDataManager.retrieveData(constraint);                               
                 return aNewPlot.createPlot(
-                        aNewPlot.XYLINE,"test",retrieveableData);
+                    aNewPlot.XYLINE,"test",retrieveableData);
+                
+            }
+            return null;
 	}
 
 	/**

@@ -53,7 +53,11 @@ public class PlotPanel extends JPanel{
 	}
 
 	public PrintJob printPlot(){
-		return null;
+            
+            return null;
 	}
-
-}
+        
+        public JComponent getPlot(){
+            return plot;
+        }
+ }
