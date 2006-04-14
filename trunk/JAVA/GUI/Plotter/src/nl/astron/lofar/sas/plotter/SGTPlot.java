@@ -18,10 +18,12 @@ package nl.astron.lofar.sas.plotter;
 import gov.noaa.pmel.sgt.dm.SGTMetaData;
 import gov.noaa.pmel.sgt.dm.SimpleLine;
 import gov.noaa.pmel.sgt.swing.JPlotLayout;
+import java.awt.BorderLayout;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 
 /**
  * @created 11-04-2006, 15:00
@@ -38,7 +40,10 @@ public class SGTPlot implements IPlot{
 	}
         
 	public JComponent createPlot(int type, String name, HashMap data){
-	    JPlotLayout aNewPlot = null; 
+	    JPanel keyAndPlotPanel = new JPanel();
+            keyAndPlotPanel.setLayout(new BorderLayout());
+            JPlotLayout aNewPlot = null; 
+            
             if(type==this.XYLINE){
                 aNewPlot = linePlot(name,data);
             }
@@ -48,13 +53,16 @@ public class SGTPlot implements IPlot{
             else if(type==this.SCATTER){
                 aNewPlot = scatterPlot(name,data);
             }
-            return aNewPlot;
+            keyAndPlotPanel.add(aNewPlot,BorderLayout.CENTER);
+            //keyAndPlotPanel.add(aNewPlot.getKeyPane(),BorderLayout.EAST);
+            
+            return keyAndPlotPanel;
 	}
         
         private JPlotLayout linePlot(String name, HashMap data){
             JPlotLayout layout = new JPlotLayout(JPlotLayout.LINE, false, false,
-                    name,null,true);
-            layout.setEditClasses(false);
+                    name,null,false);
+            //layout.setEditClasses(false);
             layout.setBatch(true);
             layout.setId(name);
             
@@ -71,68 +79,75 @@ public class SGTPlot implements IPlot{
                 Iterator it = data.keySet().iterator();
                 while(it.hasNext()){
                     String key = (String)it.next();
-                    if(key.equalsIgnoreCase("DataSetName")){
+                    if(key.equalsIgnoreCase(PlotConstants.DATASETNAME)){
                         plotTitle = (String)data.get(key);
                     }
-                    if(key.equalsIgnoreCase("DataSetSubName")){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASETSUBNAME)){
                         plotSubTitle = (String)data.get(key);
                     }
-                    if(key.equalsIgnoreCase("DataSetXAxisLabel")){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASETXAXISLABEL)){
                         xAxisTitle = (String)data.get(key);
                     }
-                    if(key.equalsIgnoreCase("DataSetXAxisUnit")){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASETXAXISUNIT)){
                         xAxisUnits = (String)data.get(key);
                     }
-                    if(key.equalsIgnoreCase("DataSetYAxisLabel")){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASETYAXISLABEL)){
                         yAxisTitle = (String)data.get(key);
                     }
-                    if(key.equalsIgnoreCase("DataSetYAxisUnit")){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASETYAXISUNIT)){
                         yAxisUnits = (String)data.get(key);
                     }
-                    if(key.equalsIgnoreCase("DataSetValues")){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASETVALUES)){
                         values = (HashSet<HashMap>)data.get(key);
                     }
                 }
                 //Set titles to plot
 
                 layout.setTitles(plotTitle,plotSubTitle,"");
-            
+               
                 //Loop through X and Y Value data
                 if(values != null && values.size()> 0){
 
                     Iterator linesIterator = values.iterator();
                     //Loop through all XY pairs
-                    while(linesIterator.hasNext()){ 
-                        SimpleLine lineData = new SimpleLine();
+                    while(linesIterator.hasNext()){
+                        
+                        double[] xArray = null;
+                        double[] yArray = null;
                         SGTMetaData meta = new SGTMetaData(xAxisTitle,
                                                    xAxisUnits,
                                                    false,
                                                    false);
-                        lineData.setXMetaData(meta);
+                        
                         SGTMetaData ymeta = new SGTMetaData(yAxisTitle,
                                                    yAxisUnits,
                                                    false,
                                                    false);
-                        lineData.setYMetaData(ymeta);
                         String lineLabel = "Unknown value";
                         HashMap line = (HashMap)linesIterator.next();
                         Iterator lineIterator = line.keySet().iterator();
+                        
                         //Retrieve XY pair label and xy values
                         while(lineIterator.hasNext()){ 
                             String key = (String)lineIterator.next();
-                            if(key.equalsIgnoreCase("Label")){
-                            lineLabel = (String)data.get(key);
-                            lineData.setTitle(lineLabel);
+                            if(key.equalsIgnoreCase(PlotConstants.VALUELABEL)){
+                            lineLabel = (String)line.get(key);
+                            
                             }  
-                            if(key.equalsIgnoreCase("XValues")){
-                                lineData.setXArray((double[])data.get(key));
+                            else if(key.equalsIgnoreCase(PlotConstants.XVALUES)){
+                               xArray = (double[])line.get(key);
                             }
-                            if(key.equalsIgnoreCase("YValues")){
-                                lineData.setXArray((double[])data.get(key));
+                            else if(key.equalsIgnoreCase(PlotConstants.YVALUES)){
+                                yArray = (double[])line.get(key);
                             }                   
                         }
+                        SimpleLine lineData = new SimpleLine(
+                                xArray,yArray,lineLabel);
+                        lineData.setXMetaData(meta);
+                        lineData.setYMetaData(ymeta);
+                      
                         //Add line to plot
-                        layout.addData(lineData);
+                        layout.addData(lineData, lineLabel);
                     }
                 }
             }else{

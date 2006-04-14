@@ -9,6 +9,8 @@
 
 package nl.astron.lofar.sas.plotter.test;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import nl.astron.lofar.sas.plotter.PlotPanel;
 
 /**
@@ -22,11 +24,13 @@ public class PlotTestFrame extends javax.swing.JFrame {
     
     /** Creates new form PlotTestFrame */
     public PlotTestFrame() {
-        initComponents();
         testPanel = new PlotPanel();
         testPanel.createPlot("testparam");
-        this.getContentPane().add(testPanel);
-        
+        this.setLayout(new BorderLayout());
+        this.getContentPane().add(testPanel,BorderLayout.CENTER);
+        this.setSize(new Dimension(640,480));
+        initComponents();
+             
     }
     
     /** This method is called from within the constructor to
@@ -36,31 +40,17 @@ public class PlotTestFrame extends javax.swing.JFrame {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                .add(0, 400, Short.MAX_VALUE)
-                );
-        layout.setVerticalGroup(
-                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                .add(0, 300, Short.MAX_VALUE)
-                );
         pack();
-    }
-    // </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>//GEN-END:initComponents
     
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new PlotTestFrame().setVisible(true);
-            }
-        });
+       PlotTestFrame af = new PlotTestFrame();
+       af.setVisible(true);
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
