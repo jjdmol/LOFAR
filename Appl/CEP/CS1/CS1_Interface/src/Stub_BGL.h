@@ -20,42 +20,46 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_BGL_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_BGL_H
+#ifndef LOFAR_CS1_INTERFACE_STUB_BGL_H
+#define LOFAR_CS1_INTERFACE_STUB_BGL_H
 
 #include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
 #include <Transport/Connection.h>
 #include <Transport/TransportHolder.h>
 
-
-namespace LOFAR {
-
-class Stub_BGL
+namespace LOFAR
 {
-  // This is a base class that can be used to make connections from the BGL
-  // application to the outside world.  Details are filled in by derived
-  // classes that must provide the necessary TransportHolders.
+  namespace CS1
+  {
 
-public:
-  Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet);
-  virtual ~Stub_BGL();
+    class Stub_BGL
+    {
+      // This is a base class that can be used to make connections from the BGL
+      // application to the outside world.  Details are filled in by derived
+      // classes that must provide the necessary TransportHolders.
 
-  void connect(unsigned subband, unsigned slave, TinyDataManager &dm,
-	       unsigned channel);
+    public:
+      Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet);
+      virtual ~Stub_BGL();
 
-protected:
-  virtual TransportHolder *newClientTH(unsigned subband, unsigned slave) = 0;
-  virtual TransportHolder *newServerTH(unsigned subband, unsigned slave) = 0;
+      void connect(unsigned subband, unsigned slave, TinyDataManager &dm,
+                   unsigned channel);
 
-  bool		  itsIAmOnBGL, itsIsInput;
-  TransportHolder **itsTHs;
-  Connection	  **itsConnections;
+    protected:
+      virtual TransportHolder *newClientTH(unsigned subband, unsigned slave) = 0;
+      virtual TransportHolder *newServerTH(unsigned subband, unsigned slave) = 0;
 
-  static unsigned itsNrSubbands, itsNrSlavesPerSubband;
-};
+      bool		  itsIAmOnBGL, itsIsInput;
+      TransportHolder **itsTHs;
+      Connection	  **itsConnections;
 
-} //namespace
+      static unsigned itsNrSubbands, itsNrSlavesPerSubband;
+    };
 
-#endif //include guard 
+  } // namespace CS1
+
+} // namespace LOFAR
+
+#endif
 

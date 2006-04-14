@@ -1,5 +1,5 @@
-//  DH_RSPSync.cc: DataHolder used to synchronize incoming RSP data
-//
+//#  DH_RSPSync.cc: DataHolder used to synchronize incoming RSP data
+//#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
@@ -18,46 +18,49 @@
 //#
 //#  $Id$
 
-
 #include <lofar_config.h>
 
-#include <DH_RSPSync.h>
+#include <CS1_Interface/DH_RSPSync.h>
 #include <Blob/KeyValueMap.h>
 
 namespace LOFAR
 {
+  namespace CS1
+  {
 
-DH_RSPSync::DH_RSPSync (const string& name)
-  : DataHolder    (name, "DH_RSPSync")
-{
-}
+    DH_RSPSync::DH_RSPSync (const string& name)
+      : DataHolder    (name, "DH_RSPSync")
+    {
+    }
 
-DH_RSPSync::DH_RSPSync(const DH_RSPSync& that)
-  : DataHolder(that)
-{
-}
+    DH_RSPSync::DH_RSPSync(const DH_RSPSync& that)
+      : DataHolder(that)
+    {
+    }
 
-DH_RSPSync::~DH_RSPSync()
-{
-}
+    DH_RSPSync::~DH_RSPSync()
+    {
+    }
 
-DataHolder* DH_RSPSync::clone() const
-{
-  return new DH_RSPSync(*this);
-}
+    DataHolder* DH_RSPSync::clone() const
+    {
+      return new DH_RSPSync(*this);
+    }
 
-void DH_RSPSync::init()
-{
-  // this could be done nicer, but it works for now because SyncStamp doesn't contain
-  // any pointers
-  addField("RSPsyncStamp", BlobField<char>(1, sizeof(timestamp_t)));
-  createDataBlock();
-  fillDataPointers();
-  itsSyncStamp->setStamp(0, 0);
-}
+    void DH_RSPSync::init()
+    {
+      // this could be done nicer, but it works for now because SyncStamp doesn't contain
+      // any pointers
+      addField("RSPsyncStamp", BlobField<char>(1, sizeof(timestamp_t)));
+      createDataBlock();
+      fillDataPointers();
+      itsSyncStamp->setStamp(0, 0);
+    }
 
-void DH_RSPSync::fillDataPointers() {
-  itsSyncStamp = (timestamp_t*)getData<char> ("RSPsyncStamp");
-}
+    void DH_RSPSync::fillDataPointers() {
+      itsSyncStamp = (timestamp_t*)getData<char> ("RSPsyncStamp");
+    }
 
-}
+  } // namespace CS1
+
+} // namespace LOFAR

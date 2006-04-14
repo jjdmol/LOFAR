@@ -18,7 +18,6 @@
 //#
 //#  $Id$
 
-
 #include <lofar_config.h>
 
 #include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
@@ -26,19 +25,22 @@
 #include <Transport/Connection.h>
 
 
-using namespace LOFAR;
-
-namespace LOFAR { 
-
-TransportHolder *Stub_BGL_RFI_Mitigation::newClientTH(unsigned, unsigned)
+namespace LOFAR
 {
-  return new TH_Null();
-}
+  namespace CS1
+  { 
+
+    TransportHolder *Stub_BGL_RFI_Mitigation::newClientTH(unsigned, unsigned)
+    {
+      return new TH_Null();
+    }
 
 
-TransportHolder *Stub_BGL_RFI_Mitigation::newServerTH(unsigned, unsigned)
-{
-  return new TH_Null();
-}
+    TransportHolder *Stub_BGL_RFI_Mitigation::newServerTH(unsigned, unsigned)
+    {
+      return new TH_Null();
+    }
 
-} //namespace
+  } // namespace CS1
+
+} // namespace LOFAR

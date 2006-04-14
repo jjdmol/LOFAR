@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DH_RSPSYNC_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DH_RSPSYNC_H
+#ifndef LOFAR_CS1_INTERFACE_DH_RSPSYNC_H
+#define LOFAR_CS1_INTERFACE_DH_RSPSYNC_H
 
 
 #include <Transport/DataHolder.h>
@@ -29,44 +29,51 @@
 
 namespace LOFAR
 {
-  class DH_RSPSync: public DataHolder
-{
-public:
+  namespace CS1
+  {
 
-  explicit DH_RSPSync (const string& name);
+    class DH_RSPSync: public DataHolder
+    {
+    public:
 
-  DH_RSPSync(const DH_RSPSync&);
+      explicit DH_RSPSync (const string& name);
 
-  virtual ~DH_RSPSync();
+      DH_RSPSync(const DH_RSPSync&);
 
-  DataHolder* clone() const;
+      virtual ~DH_RSPSync();
 
-  /// Allocate the buffers.
-  virtual void init();
+      DataHolder* clone() const;
 
-  /// Set the sync stamp
-  void setSyncStamp(const timestamp_t syncStamp);
+      /// Allocate the buffers.
+      virtual void init();
 
-  /// Get the sync stamp
-  const timestamp_t getSyncStamp() const;
-  void incrementStamp(const int value);
+      /// Set the sync stamp
+      void setSyncStamp(const timestamp_t syncStamp);
 
-private:
-  /// Forbid assignment.
-  DH_RSPSync& operator= (const DH_RSPSync&);
+      /// Get the sync stamp
+      const timestamp_t getSyncStamp() const;
+      void incrementStamp(const int value);
 
-  timestamp_t*  itsSyncStamp;
+    private:
+      /// Forbid assignment.
+      DH_RSPSync& operator= (const DH_RSPSync&);
 
-  void fillDataPointers();
-};
+      timestamp_t*  itsSyncStamp;
 
-inline void DH_RSPSync::setSyncStamp(const timestamp_t syncStamp)
-  { *itsSyncStamp = syncStamp; }
+      void fillDataPointers();
+    };
+
+    inline void DH_RSPSync::setSyncStamp(const timestamp_t syncStamp)
+    { *itsSyncStamp = syncStamp; }
  
-inline const timestamp_t DH_RSPSync::getSyncStamp() const
-  { return *itsSyncStamp;}
+    inline const timestamp_t DH_RSPSync::getSyncStamp() const
+    { return *itsSyncStamp;}
 
-inline void DH_RSPSync::incrementStamp(const int value)
-  { *itsSyncStamp += value;}
-}
+    inline void DH_RSPSync::incrementStamp(const int value)
+    { *itsSyncStamp += value;}
+
+  } // namespace CS1
+
+} // namespace LOFAR
+
 #endif 

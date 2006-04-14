@@ -20,25 +20,29 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_BGL_RFI_MITIGATION_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_BGL_RFI_MITIGATION_H
+#ifndef LOFAR_CS1_INTERFACE_STUB_BGL_RFI_MITIGATION_H
+#define LOFAR_CS1_INTERFACE_STUB_BGL_RFI_MITIGATION_H
 
 #include <CS1_Interface/Stub_BGL.h>
 
-namespace LOFAR {
-
-class Stub_BGL_RFI_Mitigation : public Stub_BGL
+namespace LOFAR 
 {
-public:
-  Stub_BGL_RFI_Mitigation(bool iAmOnBGL, const ACC::APS::ParameterSet &pSet)
-  : Stub_BGL(iAmOnBGL, iAmOnBGL, pSet) {}
+  namespace CS1
+  {
 
-protected:
-  virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);
-  virtual TransportHolder *newServerTH(unsigned subband, unsigned slave);
-};
+    class Stub_BGL_RFI_Mitigation : public Stub_BGL
+    {
+    public:
+      Stub_BGL_RFI_Mitigation(bool iAmOnBGL, const ACC::APS::ParameterSet &pSet)
+        : Stub_BGL(iAmOnBGL, iAmOnBGL, pSet) {}
 
-} //namespace
+    protected:
+      virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);
+      virtual TransportHolder *newServerTH(unsigned subband, unsigned slave);
+    };
 
-#endif //include guard 
+  } //namespace CS1
 
+} //namespace LOFAR
+
+#endif

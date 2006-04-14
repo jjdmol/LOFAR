@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DH_VISIBILITIES_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DH_VISIBILITIES_H
+#ifndef LOFAR_CS1_INTERFACE_DH_VISIBILITIES_H
+#define LOFAR_CS1_INTERFACE_DH_VISIBILITIES_H
 
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
@@ -29,89 +29,98 @@
 
 namespace LOFAR
 {
-class DH_Visibilities: public DataHolder
-{
-public:
-  typedef fcomplex	 VisibilityType;
-  typedef unsigned short NrValidSamplesType;
-
-  // Constructor with centerFreq being the center frequency of the subband
-  explicit DH_Visibilities(const string& name,
-			   const LOFAR::ACC::APS::ParameterSet &pSet);
-
-  DH_Visibilities(const DH_Visibilities&);
-
-  virtual ~DH_Visibilities();
-
-  DataHolder* clone() const;
-
-  /// Allocate the buffers.
-  virtual void init();
-
-  static int baseline(int station1, int station2)
+  namespace CS1
   {
-    DBGASSERT(station1 <= station2);
-    return station2 * (station2 + 1) / 2 + station1;
-  }
+
+    class DH_Visibilities: public DataHolder
+    {
+    public:
+      typedef fcomplex	 VisibilityType;
+      typedef unsigned short NrValidSamplesType;
+
+      // Constructor with centerFreq being the center frequency of the subband
+      explicit DH_Visibilities(const string& name,
+                               const ACC::APS::ParameterSet &pSet);
+
+      DH_Visibilities(const DH_Visibilities&);
+
+      virtual ~DH_Visibilities();
+
+      DataHolder* clone() const;
+
+      /// Allocate the buffers.
+      virtual void init();
+
+      static int baseline(int station1, int station2)
+      {
+        DBGASSERT(station1 <= station2);
+        return station2 * (station2 + 1) / 2 + station1;
+      }
 
 #if 0
-  fcomplex (*getChannels(int station1, int station2)) [NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS]
-  {
-    return &(*itsVisibilities)[baseline(station1, station2)];
-  }
+      fcomplex (*getChannels(int station1, int station2)) [NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS]
+      {
+        return &(*itsVisibilities)[baseline(station1, station2)];
+      }
 #endif
 
 #if defined BGL_PROCESSING
-  typedef VisibilityType AllVisibilitiesType[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
-  typedef NrValidSamplesType AllNrValidSamplesType[NR_BASELINES][NR_SUBBAND_CHANNELS];
+      typedef VisibilityType AllVisibilitiesType[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
+      typedef NrValidSamplesType AllNrValidSamplesType[NR_BASELINES][NR_SUBBAND_CHANNELS];
 
-  AllVisibilitiesType* getVisibilities()
-  {
-    return (AllVisibilitiesType *) itsVisibilities;
-  }
+      AllVisibilitiesType* getVisibilities()
+      {
+        return (AllVisibilitiesType *) itsVisibilities;
+      }
 
-  const AllVisibilitiesType* getVisibilities() const
-  {
-    return (const AllVisibilitiesType *) itsVisibilities;
-  }
+      const AllVisibilitiesType* getVisibilities() const
+      {
+        return (const AllVisibilitiesType *) itsVisibilities;
+      }
 
-  AllNrValidSamplesType *getNrValidSamples()
-  {
-    return (AllNrValidSamplesType *) itsNrValidSamples;
-  }
+      AllNrValidSamplesType *getNrValidSamples()
+      {
+        return (AllNrValidSamplesType *) itsNrValidSamples;
+      }
 
-  const AllNrValidSamplesType *getNrValidSamples() const
-  {
-    return (const AllNrValidSamplesType *) itsNrValidSamples;
-  }
+      const AllNrValidSamplesType *getNrValidSamples() const
+      {
+        return (const AllNrValidSamplesType *) itsNrValidSamples;
+      }
 #endif
 
-  VisibilityType &getVisibility(unsigned baseline, unsigned channel, unsigned pol1, unsigned pol2)
-  {
-    return itsVisibilities[NR_POLARIZATIONS * (NR_POLARIZATIONS * (itsNrChannels * baseline + channel) + pol1) + pol2];
-  }
+      VisibilityType &getVisibility(unsigned baseline, unsigned channel, unsigned pol1, unsigned pol2)
+      {
+        return itsVisibilities[NR_POLARIZATIONS * (NR_POLARIZATIONS * (itsNrChannels * baseline + channel) + pol1) + pol2];
+      }
 
-  NrValidSamplesType &getNrValidSamples(unsigned baseline, unsigned channel)
-  {
-    return itsNrValidSamples[itsNrChannels * baseline + channel];
-  }
+      NrValidSamplesType &getNrValidSamples(unsigned baseline, unsigned channel)
+      {
+        return itsNrValidSamples[itsNrChannels * baseline + channel];
+      }
 
-  const size_t getNrVisibilities() const
-  {
-    return itsNrBaselines * itsNrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS;
-  }
+      const size_t getNrVisibilities() const
+      {
+        return itsNrBaselines * itsNrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS;
+      }
 
-private:
-  /// Forbid assignment.
-  DH_Visibilities& operator= (const DH_Visibilities&);
+      // Test pattern for storage section
+      void setStorageTestPattern(int factor);
 
-  unsigned	     itsNrBaselines, itsNrChannels;
+    private:
+      /// Forbid assignment.
+      DH_Visibilities& operator= (const DH_Visibilities&);
 
-  VisibilityType     *itsVisibilities;
-  NrValidSamplesType *itsNrValidSamples;
+      unsigned	     itsNrBaselines, itsNrChannels;
 
-  void fillDataPointers();
-};
-} // Namespace LOFAR
+      VisibilityType     *itsVisibilities;
+      NrValidSamplesType *itsNrValidSamples;
+
+      void fillDataPointers();
+    };
+
+  } // namespace CS1
+
+} // namespace LOFAR
 
 #endif 

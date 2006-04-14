@@ -23,6 +23,7 @@
 #ifndef CS1_STORAGE_WH_SUBBANDWRITER_H
 #define CS1_STORAGE_WH_SUBBANDWRITER_H
 
+// \file
 // (Optionally) Writes one subband in a AIPS++ Measurement Set
 
 #include <Blob/KeyValueMap.h>
@@ -36,59 +37,65 @@
 
 namespace LOFAR
 {
-
-class MSWriter;
-
-class WH_SubbandWriter: public WorkHolder
+  namespace CS1
   {
-  public:
+    //# Forward declaration
+    class MSWriter;
 
-    explicit WH_SubbandWriter(const string& name,  int subbandID,
-			      const ACC::APS::ParameterSet& pset);
-    virtual ~WH_SubbandWriter();
+    class WH_SubbandWriter: public WorkHolder
+    {
+    public:
+
+      WH_SubbandWriter(const string& name,  int subbandID,
+                       const ACC::APS::ParameterSet& pset);
+
+      virtual ~WH_SubbandWriter();
     
-    static WorkHolder* construct(const string& name,  int subbandID,
-                                 const ACC::APS::ParameterSet& pset);
-    virtual WH_SubbandWriter* make(const string& name);
+      static WorkHolder* construct(const string& name,  int subbandID,
+                                   const ACC::APS::ParameterSet& pset);
+      virtual WH_SubbandWriter* make(const string& name);
 
-    void preprocess();
+      void preprocess();
 
-    virtual void process();
+      virtual void process();
 
-    void postprocess();
-  private:
-    /// forbid copy constructor
-    WH_SubbandWriter (const WH_SubbandWriter&);
-    /// forbid assignment
-    WH_SubbandWriter& operator= (const WH_SubbandWriter&);
+      void postprocess();
+    private:
+      /// forbid copy constructor
+      WH_SubbandWriter (const WH_SubbandWriter&);
+      /// forbid assignment
+      WH_SubbandWriter& operator= (const WH_SubbandWriter&);
 
-    int  itsSubbandID; // ID of this subband
-    const ACC::APS::ParameterSet itsPS;
-    int  itsNStations;
-    int  itsNBaselines;
-    int  itsNInputsPerSubband;
-    int  itsNChannels;
-    int  itsNPolSquared;
-    int	 itsNVisibilities;
+      int  itsSubbandID; // ID of this subband
+      const ACC::APS::ParameterSet itsPS;
+      int  itsNStations;
+      int  itsNBaselines;
+      int  itsNInputsPerSubband;
+      int  itsNChannels;
+      int  itsNPolSquared;
+      int	 itsNVisibilities;
 
-    MSWriter* itsWriter;
+      MSWriter* itsWriter;
 
-    int itsBandId;       // MS ID of frequency band
-    int itsFieldId;
-    int itsTimeCounter;  // Counts the time
-    bool *itsFlagsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
-    float *itsWeightsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS];
+      int itsBandId;       // MS ID of frequency band
+      int itsFieldId;
+      int itsTimeCounter;  // Counts the time
+      bool *itsFlagsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
+      float *itsWeightsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS];
 
-    float itsWeightFactor;
+      float itsWeightFactor;
 
-    NSTimer itsWriteTimer;
+      NSTimer itsWriteTimer;
 
 #ifdef USE_MAC_PI
-    bool itsWriteToMAC;
-    GCF::CEPPMLlight::CEPPropertySet* itsPropertySet;
-    GCF::Common::GCFPValueArray itsVArray; 
+      bool itsWriteToMAC;
+      GCF::CEPPMLlight::CEPPropertySet* itsPropertySet;
+      GCF::Common::GCFPValueArray itsVArray; 
 #endif
-  };
+    };
+
+  } // namespace CS1
+
 } // namespace LOFAR
 
 #endif

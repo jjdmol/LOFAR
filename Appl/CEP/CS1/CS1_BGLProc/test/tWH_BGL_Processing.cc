@@ -40,9 +40,9 @@
 #include <cstring>
 #include <exception>
 
+using namespace LOFAR;
+using namespace LOFAR::CS1;
 
-namespace LOFAR
-{
 #if defined HAVE_BGL
 static BGL_Barrier *barrier;
 #endif
@@ -241,10 +241,6 @@ void doWork()
   wh.basePostprocess();
 }
 
-} // namespace LOFAR
-
-
-using namespace LOFAR;
 
 int main (int argc, const char **argv)
 {
@@ -252,14 +248,16 @@ int main (int argc, const char **argv)
 
 #if defined HAVE_MPI
   TH_MPI::initMPI(argc, argv);
+#else
+  argc = argc; argv = argv;    // Keep compiler happy ;-)
 #endif
 
   try {
     doWork();
-  } catch (LOFAR::Exception e) {
+  } catch (Exception& e) {
     cerr << "Caught exception: " << e.what() << endl;
     retval = 1;
-  } catch (std::exception e) {
+  } catch (std::exception& e) {
     cerr << "Caught exception: " << e.what() << endl;
     retval = 1;
   } catch (...) {

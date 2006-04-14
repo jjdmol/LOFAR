@@ -13,31 +13,37 @@
 
 #include <CEPFrame/ApplicationHolder.h>
 
-namespace LOFAR {
-
-// This is the ApplicationHolder for the storage section of the CS1 application
-// This applicationholder uses the CEPFrame library and is supposed to
-// connect to the BGLProcessing application Holder (using only tinyCEP). 
-// The interface between these is defined in  the Corr_Stub class.
-// 
-
-class Step;
-class Stub_BGL_Visibilities;
-
-class AH_Storage: public LOFAR::ApplicationHolder
+namespace LOFAR
 {
- public:
-  AH_Storage();
-  virtual ~AH_Storage();
-  virtual void define  (const LOFAR::KeyValueMap&);
-  virtual void prerun  ();
-  virtual void run     (int nsteps);
-  virtual void dump    () const;
-  virtual void quit    ();
- private:
+  class Step;
+  namespace CS1
+  {
 
-  Stub_BGL_Visibilities* itsStub;
+    class Stub_BGL_Visibilities;
 
-};
-}
+    // This is the ApplicationHolder for the storage section of the CS1 application
+    // This applicationholder uses the CEPFrame library and is supposed to
+    // connect to the BGLProcessing application Holder (using only tinyCEP). 
+    // The interface between these is defined in  the Corr_Stub class.
+    // 
+    class AH_Storage: public LOFAR::ApplicationHolder
+    {
+    public:
+      AH_Storage();
+      virtual ~AH_Storage();
+      virtual void define  (const LOFAR::KeyValueMap&);
+      virtual void prerun  ();
+      virtual void run     (int nsteps);
+      virtual void dump    () const;
+      virtual void quit    ();
+    private:
+
+      Stub_BGL_Visibilities* itsStub;
+
+    };
+
+  } // namespace CS1
+
+} // namespace LOFAR
+
 #endif

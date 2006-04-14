@@ -28,7 +28,6 @@
 #include <CS1_DelayCompensation/WH_DelayCompensation.h>
 #include <APS/ParameterSet.h>
 
-using namespace LOFAR;
 using namespace LOFAR::ACC::APS;
 using namespace LOFAR::CS1;
 

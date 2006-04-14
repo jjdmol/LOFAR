@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_CS1_CONFIG_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_CS1_CONFIG_H
+#ifndef LOFAR_CS1_INTERFACE_CS1_CONFIG_H
+#define LOFAR_CS1_INTERFACE_CS1_CONFIG_H
 
 /* This is included by C++ and assembly files.  Do not put anything but
    constants here! */

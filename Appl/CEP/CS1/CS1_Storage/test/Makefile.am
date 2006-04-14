@@ -15,16 +15,10 @@ XFAIL_TESTS           =
 # all files (.run, .stdout, .in, .log_prop, etc.) needed to run tests
 EXTRA_DIST            = $(TESTSCRIPTS)
 
-# Lines to build a test program testprg
-#testprg_SOURCES		= testprg.cc
-#testprg_LDADD			= ../src/libcs1_storage.la
-#testprg_DEPENDENCIES		= ../src/libcs1_storage.la $(LOFAR_DEPEND)
-
-tAH_TestStorage_SOURCES =               \
-tAH_TestStorage.cc                      \
-../src/WH_SubbandWriter.cc              \
-../src/MSWriter.cc                      \
-../src/MSWriterImpl.cc
+tAH_TestStorage_SOURCES		= tAH_TestStorage.cc \
+				  AH_TestStorage.h AH_TestStorage.cc
+tAH_TestStorage_LDADD		= ../src/libcs1_storage.la
+tAH_TestStorage_DEPENDENCIES	= ../src/libcs1_storage.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  srcdir=$(srcdir) \

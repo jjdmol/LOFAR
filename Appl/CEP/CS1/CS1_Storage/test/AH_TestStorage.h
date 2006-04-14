@@ -20,39 +20,43 @@
 //#
 //#  $Id$
 
-#ifndef CS1_TAH_TESTSTORAGE_H
-#define CS1_TAH_TESTSTORAGE_H
+#ifndef LOFAR_CS1_AH_TESTSTORAGE_H
+#define LOFAR_CS1_AH_TESTSTORAGE_H
 
 #include <CEPFrame/ApplicationHolder.h>
-#include <tinyCEP/WorkHolder.h>
-#include <Blob/KeyValueMap.h>
-#include <Transport/Connection.h>
-#include <Transport/TransportHolder.h>
-#include <Transport/DataHolder.h>
 
 namespace LOFAR
 {
-  class DH_Visibilities;
+  //# Forward declarations
+  class KeyValueMap;
+  class Connection;
 
-  class AH_TestStorage: public LOFAR::ApplicationHolder {
+  namespace CS1
+  {
+    class DH_Visibilities;
 
-  public:
-    AH_TestStorage();
-    virtual ~AH_TestStorage();
+    class AH_TestStorage: public LOFAR::ApplicationHolder
+    {
+    public:
+      AH_TestStorage();
+      virtual ~AH_TestStorage();
 
-    virtual void define (const KeyValueMap& kvm);
-    void undefine();
-    virtual void prerun();
-    virtual void run(int nsteps);
-    virtual void postrun();
-    virtual void quit();
+      virtual void define (const KeyValueMap& kvm);
+      void undefine();
+      virtual void prerun();
+      virtual void run(int nsteps);
+      virtual void postrun();
+      virtual void quit();
 
-  private:
-    void setTestPattern(DH_Visibilities &, int factor);
+    private:
+      void setTestPattern(DH_Visibilities &, int factor);
 
-    vector<DH_Visibilities*> itsInDHs;
-    vector<Connection*> itsInConns;
-  };
+      vector<DH_Visibilities*> itsInDHs;
+      vector<Connection*> itsInConns;
+    };
+
+  } // namespace CS1
+
 } // namespace LOFAR
 
 #endif

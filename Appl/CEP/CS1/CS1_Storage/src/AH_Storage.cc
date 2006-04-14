@@ -19,71 +19,76 @@
 #include <CS1_Storage/WH_SubbandWriter.h>
 #include <CEPFrame/Step.h>
 
-using namespace LOFAR;
-
-AH_Storage::AH_Storage() 
-  : itsStub (0)
+namespace LOFAR
 {
-}
-
-AH_Storage::~AH_Storage() {
-}
-
-void AH_Storage::define(const LOFAR::KeyValueMap&) {
-
-  LOG_TRACE_FLOW_STR("Start of AH_Storage::define()");
-
-  LOG_TRACE_FLOW_STR("Create the top-level composite");
-  Composite comp(0, 0, "topComposite");
-  setComposite(comp); // tell the ApplicationHolder this is the top-level composite
-
-  itsStub = new Stub_BGL_Visibilities(false, itsParamSet);
-
-  int nrSubbands = itsParamSet.getInt32("Observation.NSubbands");
-
-  for (int subb=0; subb< nrSubbands; subb++)
+  namespace CS1
   {
-    WH_SubbandWriter wh("storage1", subb, itsParamSet);
-    Step step(wh);
-    comp.addBlock(step);
 
-    step.runOnNode(subb);    // Note: only 1 subband is written on a node
-
-    // Connect to BG output
-    for (int nr=0; nr<step.getNrInputs(); nr++)
+    AH_Storage::AH_Storage() 
+      : itsStub (0)
     {
-      itsStub->connect(subb, nr, step.getInDataManager(nr), nr);
     }
 
-  }
-  LOG_TRACE_FLOW_STR("Finished define()");
+    AH_Storage::~AH_Storage() {
+    }
+
+    void AH_Storage::define(const LOFAR::KeyValueMap&) {
+
+      LOG_TRACE_FLOW_STR("Start of AH_Storage::define()");
+
+      LOG_TRACE_FLOW_STR("Create the top-level composite");
+      Composite comp(0, 0, "topComposite");
+      setComposite(comp); // tell the ApplicationHolder this is the top-level composite
+
+      itsStub = new Stub_BGL_Visibilities(false, itsParamSet);
+
+      int nrSubbands = itsParamSet.getInt32("Observation.NSubbands");
+
+      for (int subb=0; subb< nrSubbands; subb++)
+      {
+        WH_SubbandWriter wh("storage1", subb, itsParamSet);
+        Step step(wh);
+        comp.addBlock(step);
+
+        step.runOnNode(subb);    // Note: only 1 subband is written on a node
+
+        // Connect to BG output
+        for (int nr=0; nr<step.getNrInputs(); nr++)
+        {
+          itsStub->connect(subb, nr, step.getInDataManager(nr), nr);
+        }
+
+      }
+      LOG_TRACE_FLOW_STR("Finished define()");
 
 #ifdef HAVE_MPI
-  ASSERTSTR (TH_MPI::getNumberOfNodes() == 1, "CS1_Storage should be started on just one node");
+      ASSERTSTR (TH_MPI::getNumberOfNodes() == 1, "CS1_Storage should be started on just one node");
 #endif
 
-}
+    }
 
-void AH_Storage::prerun() {
-  getComposite().preprocess();
-}
+    void AH_Storage::prerun() {
+      getComposite().preprocess();
+    }
     
-void AH_Storage::run(int steps) {
-  LOG_TRACE_FLOW_STR("Start AH_Storage::run() "  );
-  for (int i = 0; i < steps; i++) {
-    LOG_TRACE_LOOP_STR("processing run " << i );
-    cout<<"run "<<i+1<<" of "<<steps<<endl;
-    getComposite().process();
-  }
-  LOG_TRACE_FLOW_STR("Finished AH_Storage::run() "  );
-}
+    void AH_Storage::run(int steps) {
+      LOG_TRACE_FLOW_STR("Start AH_Storage::run() "  );
+      for (int i = 0; i < steps; i++) {
+        LOG_TRACE_LOOP_STR("processing run " << i );
+        cout<<"run "<<i+1<<" of "<<steps<<endl;
+        getComposite().process();
+      }
+      LOG_TRACE_FLOW_STR("Finished AH_Storage::run() "  );
+    }
 
-void AH_Storage::dump() const {
-  LOG_TRACE_FLOW_STR("AH_Storage::dump() not implemented"  );
-}
+    void AH_Storage::dump() const {
+      LOG_TRACE_FLOW_STR("AH_Storage::dump() not implemented"  );
+    }
 
-void AH_Storage::quit() {
+    void AH_Storage::quit() {
 
-}
+    }
 
+  } // namespace CS1
 
+} // namespace LOFAR
