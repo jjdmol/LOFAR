@@ -18,42 +18,47 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_AH_BGLPROCESSING_H
-#define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_AH_BGLPROCESSING_H
+#ifndef LOFAR_CS1_BGL_PROC_AH_BGL_PROCESSING_H
+#define LOFAR_CS1_BGL_PROC_AH_BGL_PROCESSING_H
 
 #include <tinyCEP/TinyApplicationHolder.h>
-#include <tinyCEP/WorkHolder.h>
-#include <WH_BGL_Processing.h>
-#include <CS1_Interface/Stub_BGL_Subband.h>
-#include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
-#include <CS1_Interface/Stub_BGL_Visibilities.h>
 
-
-namespace LOFAR {
-
-// Description of class.
-class AH_BGL_Processing: public TinyApplicationHolder
+namespace LOFAR
 {
- public:
-  AH_BGL_Processing();
-  virtual ~AH_BGL_Processing();
-  virtual void undefine();
-  virtual void define(const LOFAR::KeyValueMap&);
-  virtual void init();
-  virtual void run(int nsteps);
-/*   virtual void postrun  (); */
-  virtual void dump() const;
-  virtual void quit();
+  namespace CS1
+  {
+    //# Forward declarations
+    class WH_BGL_Processing;
+    class Stub_BGL_Subband;
+    class Stub_BGL_RFI_Mitigation;
+    class Stub_BGL_Visibilities;
 
- private:
-  static unsigned remapOnTree(unsigned logicalNode);
+    // Description of class.
+    class AH_BGL_Processing: public TinyApplicationHolder
+    {
+    public:
+      AH_BGL_Processing();
+      virtual ~AH_BGL_Processing();
+      virtual void undefine();
+      virtual void define(const KeyValueMap&);
+      virtual void init();
+      virtual void run(int nsteps);
+      /*   virtual void postrun  (); */
+      virtual void dump() const;
+      virtual void quit();
 
-  vector<WH_BGL_Processing *> itsWHs;
+    private:
+      static unsigned remapOnTree(unsigned logicalNode);
 
-  Stub_BGL_Subband	      *itsSubbandStub;
-  Stub_BGL_RFI_Mitigation     *itsRFI_MitigationStub;
-  Stub_BGL_Visibilities	      *itsVisibilitiesStub;
-};
+      vector<WH_BGL_Processing *> itsWHs;
 
-}
+      Stub_BGL_Subband	      *itsSubbandStub;
+      Stub_BGL_RFI_Mitigation     *itsRFI_MitigationStub;
+      Stub_BGL_Visibilities	      *itsVisibilitiesStub;
+    };
+
+  } // namespace CS1
+
+} // namespace LOFAR
+
 #endif

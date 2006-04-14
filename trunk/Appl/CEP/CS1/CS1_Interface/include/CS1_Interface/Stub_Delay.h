@@ -20,39 +20,48 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_DELAY_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_DELAY_H
+#ifndef LOFAR_CS1_INTERFACE_STUB_DELAY_H
+#define LOFAR_CS1_INTERFACE_STUB_DELAY_H
 
 #include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
 #include <Common/lofar_vector.h>
 
-namespace LOFAR {
-
-class TH_Socket;
-class Connection;
-
-class Stub_Delay
+namespace LOFAR
 {
-public:
-  // Create the stub. Get its parameters from the given file name.
-  explicit Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet);
 
-  ~Stub_Delay();
+  class TH_Socket;
+  class Connection;
 
-  // Connect the given objects to the stubs.
-  void connect(uint RSP_nr, TinyDataManager &dm, uint dhNr);
+  namespace CS1
+  {
 
-private:
-  bool			       itsIsInput;  // Is this stub an input for a step
-  const ACC::APS::ParameterSet &itsPS;
-  uint			       itsNRSP;     // total number of RSPinputs
-  vector<uint16>               itsPorts;    // ports used to connect to RSPs
-  TH_Socket		       **itsTHs;
-  Connection		       **itsConnections;
-  ALLOC_TRACER_CONTEXT;
-};
+    class Stub_Delay
+    {
+    public:
+      // Create the stub. Get its parameters from the given file name.
+      explicit Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet);
 
-} //namespace
+      ~Stub_Delay();
 
-#endif // include guard
+      // Connect the given objects to the stubs.
+      void connect(uint RSP_nr, TinyDataManager &dm, uint dhNr);
+
+    private:
+      // Is this stub an input for a step
+      bool			    itsIsInput;
+      const ACC::APS::ParameterSet &itsPS;
+      // total number of RSPinputs
+      uint		            itsNRSP;
+      // ports used to connect to RSPs
+      vector<uint16>                itsPorts;
+      TH_Socket		          **itsTHs;
+      Connection       		  **itsConnections;
+      ALLOC_TRACER_CONTEXT;
+    };
+
+  } // namespace CS1
+
+} // namespace LOFAR
+
+#endif

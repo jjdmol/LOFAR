@@ -20,50 +20,53 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DELAY_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DELAY_H
+#ifndef LOFAR_CS1_INTERFACE_DH_DELAY_H
+#define LOFAR_CS1_INTERFACE_DH_DELAY_H
 
 #include <Transport/DataHolder.h>
 
 namespace LOFAR
 {
+  namespace CS1
+  {
+    class DH_Delay: public DataHolder
+    {
+    public:
+      explicit DH_Delay (const string &name, uint nrRSPs);
 
-class DH_Delay: public DataHolder
-{
-public:
-  explicit DH_Delay (const string &name, uint nrRSPs);
+      DH_Delay(const DH_Delay &);
 
-  DH_Delay(const DH_Delay &);
+      virtual ~DH_Delay();
 
-  virtual ~DH_Delay();
+      DataHolder *clone() const;
 
-  DataHolder *clone() const;
+      // Allocate the buffers.
+      virtual void init();
 
-  // Allocate the buffers.
-  virtual void init();
-
-  // accessor functions to the blob data
-  int   getCoarseDelay(uint station) const;
-  void  setCoarseDelay(uint station, int delay);
-  float getFineDelayAtBegin(uint station) const;
-  void  setFineDelayAtBegin(uint station, float delay);
-  float getFineDelayAfterEnd(uint station) const;
-  void  setFineDelayAfterEnd(uint station, float delay);
+      // accessor functions to the blob data
+      int   getCoarseDelay(uint station) const;
+      void  setCoarseDelay(uint station, int delay);
+      float getFineDelayAtBegin(uint station) const;
+      void  setFineDelayAtBegin(uint station, float delay);
+      float getFineDelayAfterEnd(uint station) const;
+      void  setFineDelayAfterEnd(uint station, float delay);
  
- private:
-  /// Forbid assignment.
-  DH_Delay &operator = (const DH_Delay &);
+    private:
+      /// Forbid assignment.
+      DH_Delay &operator = (const DH_Delay &);
 
-  // Fill the pointers (itsBuffer) to the data in the blob.
-  virtual void fillDataPointers();
+      // Fill the pointers (itsBuffer) to the data in the blob.
+      virtual void fillDataPointers();
 
-  /// pointers to data in the blob
-  int *itsCoarseDelays;
-  float *itsFineDelaysAtBegin;
-  float *itsFineDelaysAfterEnd;
-  uint itsNrRSPs;
-};
+      /// pointers to data in the blob
+      int *itsCoarseDelays;
+      float *itsFineDelaysAtBegin;
+      float *itsFineDelaysAfterEnd;
+      uint itsNrRSPs;
+    };
 
+  } // namespace CS1
 
-}
+} // namespace LOFAR
+
 #endif 

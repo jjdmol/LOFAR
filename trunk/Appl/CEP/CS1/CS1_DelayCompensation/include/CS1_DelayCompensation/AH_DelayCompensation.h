@@ -33,11 +33,11 @@
 
 namespace LOFAR 
 {
-  //# Forward Declarations
-  class Stub_Delay;
-  
   namespace CS1
   {
+    //# Forward Declarations
+    class Stub_Delay;
+  
     // \addtogroup CS1_DelayCompensation
     // @{
 

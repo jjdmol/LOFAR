@@ -20,95 +20,95 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_RSPTIMESTAMP_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_RSPTIMESTAMP_H
+#ifndef LOFAR_CS1_INTERFACE_RSPTIMESTAMP_H
+#define LOFAR_CS1_INTERFACE_RSPTIMESTAMP_H
 
-#include <Common/lofar_iostream.h>
-//#include <math.h>
-
+#include <Common/lofar_iosfwd.h>
 
 namespace LOFAR
 {
-  class TimeStamp {
-  public:
-    TimeStamp(const int seqId = 0, const int blockId = 0);
+  namespace CS1
+  {
+    class TimeStamp {
+    public:
+      TimeStamp(const int seqId = 0, const int blockId = 0);
 
-    // set the Stamp
-    void setStamp(const int seqId, const int blockId);
-    // get sequence ID
-    const int getSeqId () const;
-    // get block ID
-    const int getBlockId () const;
-    static int getMaxBlockId() {return theirMaxBlockId; };
-    static void setMaxBlockId(int nMBID) {theirMaxBlockId = nMBID; };
+      // set the Stamp
+      void setStamp(const int seqId, const int blockId);
+      // get sequence ID
+      const int getSeqId () const;
+      // get block ID
+      const int getBlockId () const;
+      static int getMaxBlockId() {return theirMaxBlockId; };
+      static void setMaxBlockId(int nMBID) {theirMaxBlockId = nMBID; };
 
-    // the blockId restarts at zero at some point. Check if we are there yet
-    void checkOverflow();
+      // the blockId restarts at zero at some point. Check if we are there yet
+      void checkOverflow();
 
-    // increase the value of the stamp
-    void operator+= (const TimeStamp& other);
-    void operator+= (int increment);
-    void operator++ (int);
+      // increase the value of the stamp
+      void operator+= (const TimeStamp& other);
+      void operator+= (int increment);
+      void operator++ (int);
 
-    TimeStamp operator+ (int other) const;
-    long long operator- (const TimeStamp& other) const;
-    TimeStamp operator- (int other) const;
-    bool operator>  (const TimeStamp& other) const;
-    bool operator<  (const TimeStamp& other) const;
-    bool operator>= (const TimeStamp& other) const;
-    bool operator<= (const TimeStamp& other) const;
-    bool operator== (const TimeStamp& other) const;
+      TimeStamp operator+ (int other) const;
+      long long operator- (const TimeStamp& other) const;
+      TimeStamp operator- (int other) const;
+      bool operator>  (const TimeStamp& other) const;
+      bool operator<  (const TimeStamp& other) const;
+      bool operator>= (const TimeStamp& other) const;
+      bool operator<= (const TimeStamp& other) const;
+      bool operator== (const TimeStamp& other) const;
 
-    friend ostream& operator<<(ostream& os, const TimeStamp& ss);
+      friend ostream& operator<<(ostream& os, const TimeStamp& ss);
 
-  private:
-    int itsSeqId;
-    int itsBlockId;
+    private:
+      int itsSeqId;
+      int itsBlockId;
 
-    static int theirMaxBlockId;
-  };
+      static int theirMaxBlockId;
+    };
 
-  typedef TimeStamp timestamp_t;
+    typedef TimeStamp timestamp_t;
 
-  inline void TimeStamp::setStamp(const int seqId, const int blockId)
+    inline void TimeStamp::setStamp(const int seqId, const int blockId)
     { itsSeqId = seqId; itsBlockId = blockId; checkOverflow(); };
   
-  inline const int TimeStamp::getSeqId () const
+    inline const int TimeStamp::getSeqId () const
     { return itsSeqId; }
   
-  inline const int TimeStamp::getBlockId () const
+    inline const int TimeStamp::getBlockId () const
     { return itsBlockId; }
 
-  inline void TimeStamp::operator += (const TimeStamp& other)
+    inline void TimeStamp::operator += (const TimeStamp& other)
     { 
       itsBlockId += other.itsBlockId;
       checkOverflow();
       itsSeqId += other.itsSeqId;
     }
-  inline void TimeStamp::operator += (int increment)
+    inline void TimeStamp::operator += (int increment)
     { 
       itsBlockId += increment;
       checkOverflow();
     }
 
-  inline void TimeStamp::operator ++ (int dummy)
+    inline void TimeStamp::operator ++ (int)
     { 
       itsBlockId ++;
       checkOverflow();
     }
 
-  inline TimeStamp TimeStamp::operator+ (int increment) const
+    inline TimeStamp TimeStamp::operator+ (int increment) const
     { 
       // check overflow is done in the constructor
       return TimeStamp(itsSeqId, itsBlockId + increment);
     }
-  inline TimeStamp TimeStamp::operator- (int decrement) const
+    inline TimeStamp TimeStamp::operator- (int decrement) const
     { 
       // check overflow is done in the constructor
       return TimeStamp(itsSeqId, itsBlockId - decrement);
     }
 
-   inline long long TimeStamp::operator- (const TimeStamp& other) const
+    inline long long TimeStamp::operator- (const TimeStamp& other) const
     { 
       long long seqdecr = itsSeqId - other.itsSeqId;
       int blockdecr = itsBlockId - other.itsBlockId;
@@ -116,32 +116,34 @@ namespace LOFAR
       return  (seqdecr*theirMaxBlockId) + blockdecr;
     }
 
-  inline bool TimeStamp::operator > (const TimeStamp& other) const
+    inline bool TimeStamp::operator > (const TimeStamp& other) const
     { 
       if (itsSeqId > other.itsSeqId) return true;
       if (itsSeqId < other.itsSeqId) return false;
       if (itsBlockId > other.itsBlockId) return true;
       return false;
     }
-  inline bool TimeStamp::operator >= (const TimeStamp& other) const
+    inline bool TimeStamp::operator >= (const TimeStamp& other) const
     { return !operator<(other); }
 
-  inline bool TimeStamp::operator < (const TimeStamp& other) const
+    inline bool TimeStamp::operator < (const TimeStamp& other) const
     { 
       if (itsSeqId < other.itsSeqId) return true;
       if (itsSeqId > other.itsSeqId) return false;
       if (itsBlockId < other.itsBlockId) return true;
       return false;
     }
-  inline bool TimeStamp::operator <= (const TimeStamp& other) const
+    inline bool TimeStamp::operator <= (const TimeStamp& other) const
     { return !operator>(other); }
 
-  inline bool TimeStamp::operator == (const TimeStamp& other) const
+    inline bool TimeStamp::operator == (const TimeStamp& other) const
     { 
       return ((itsSeqId == other.itsSeqId) && (itsBlockId == other.itsBlockId));
     }
 
-}
+  } // namespace CS1
+
+} // namespace LOFAR
 
 #endif
     

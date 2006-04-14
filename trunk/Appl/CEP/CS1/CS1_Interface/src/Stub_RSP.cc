@@ -18,36 +18,36 @@
 //#
 //#  $Id$
 
-
 #include <lofar_config.h>
 
 #include <CS1_Interface/Stub_RSP.h>
 #include <Transport/TH_Socket.h>
 
-
-using namespace LOFAR;
-using namespace LOFAR::ACC::APS;
-
-namespace LOFAR { 
-
-  Stub_RSP::Stub_RSP (bool stubOnServer, const ACC::APS::ParameterSet& ps)
-    : itsStubOnServer (stubOnServer),
-      itsPS(ps)
+namespace LOFAR 
+{ 
+  namespace CS1
   {
-    // todo: add DH_?? for pre-correlation correction factors 
-    //    for (int i=0; i<itsNSBF; i++) {
+    Stub_RSP::Stub_RSP (bool stubOnServer, const ACC::APS::ParameterSet& ps)
+      : itsStubOnServer (stubOnServer),
+        itsPS(ps)
+    {
+      // todo: add DH_?? for pre-correlation correction factors 
+      //    for (int i=0; i<itsNSBF; i++) {
       //      itsSB.push_back(new DH_SubBand("noname",1)); //todo: get correct SubbandID
-    //    }
-  }
+      //    }
+    }
 
-  Stub_RSP::~Stub_RSP()
-  {}
+    Stub_RSP::~Stub_RSP()
+    {}
 
-  void Stub_RSP::connect ()
-  {
-  };
+    void Stub_RSP::connect ()
+    {
+    };
 
-  //todo: add connections for pre-correlation correction DH_?? 
+    //todo: add connections for pre-correlation correction DH_?? 
 
-} //namespace
+  } // namespace CS1
+
+} // namespace LOFAR
+
 

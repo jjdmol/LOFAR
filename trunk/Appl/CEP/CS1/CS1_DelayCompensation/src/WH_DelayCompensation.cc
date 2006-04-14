@@ -299,6 +299,7 @@ namespace LOFAR
         return new ConverterClient(itsConverterConfig.server,
                                    itsConverterConfig.port);
       }
+      return 0;
     }
 
 

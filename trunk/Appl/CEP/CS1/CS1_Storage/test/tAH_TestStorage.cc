@@ -23,130 +23,16 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include "AH_TestStorage.h"
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
-#include <tAH_TestStorage.h>
 #include <CEPFrame/Step.h>
 #include <Transport/TH_Mem.h>
 #include <CS1_Storage/WH_SubbandWriter.h>
 #include <CS1_Interface/DH_Visibilities.h>
 
-namespace LOFAR
-{
-
-  AH_TestStorage::AH_TestStorage()
-  {
-  }
-
-  AH_TestStorage::~AH_TestStorage() {
-    undefine();
-  }
-
-  void AH_TestStorage::define(const KeyValueMap&) {
-
-    LOG_TRACE_FLOW_STR("Start of tAH_Storage::define()");
-
-    LOG_TRACE_FLOW_STR("Create the top-level composite");
-    Composite comp(0, 0, "topComposite");
-    setComposite(comp); // tell the ApplicationHolder this is the top-level composite
-
-    int nrSubbands = itsParamSet.getInt32("Observation.NSubbands");
-
-    for (int subb=0; subb< nrSubbands; subb++)
-    {
-      WH_SubbandWriter wh("storage1", subb, itsParamSet);
-      Step step(wh);
-      comp.addBlock(step);
-      
-      for (int nr=0; nr < step.getNrInputs(); nr++)
-      {
-	DH_Visibilities* inDH = new DH_Visibilities("in_"+nr, itsParamSet);
-	itsInDHs.push_back(inDH);
-
-	Connection* inConn = new Connection("in_"+nr, 
-					    inDH,
-					    step.getInDataManager(nr).getGeneralInHolder(nr),
-					    new TH_Mem(),
-					    false);
-	itsInConns.push_back(inConn);
-	step.getInDataManager(nr).setInConnection(nr, inConn);
-      }
-	 
-    }
-    
-    LOG_TRACE_FLOW_STR("Finished define()");
-
-  }
-  
-  void AH_TestStorage::setTestPattern(DH_Visibilities &dh, int factor) {
-    unsigned nrPolarizations = itsParamSet.getUint32("Observation.NPolarisations");
-    unsigned nrChannels      = itsParamSet.getUint32("Observation.NChannels");
-    unsigned nrStations      = itsParamSet.getUint32("Observation.NStations");
-    unsigned nrBaselines     = (nrStations + 1) * nrStations / 2;
-
-    for (unsigned bl = 0; bl < nrBaselines; bl++) {
-      for (unsigned ch = 0; ch < nrChannels; ch++) {
-	// Set number of valid samples
-	dh.getNrValidSamples(bl, ch) = bl * ch;
-
-	// Set visibilities
-	for (unsigned pol1 = 0; pol1 < nrPolarizations; pol1 ++) {
-	  for (unsigned pol2 = 0; pol2 < nrPolarizations; pol2 ++) {
-	    dh.getVisibility(bl, ch, pol1, pol2) = makefcomplex(bl + ch, factor * (pol1 + pol2));
-	  }
-	}
-      }
-    }
-  }
-
-  void AH_TestStorage::prerun() {
-    getComposite().preprocess();
-
-    // Fill inDHs here
-    for (uint i = 0; i < itsInDHs.size(); i++)
-    {
-      itsInDHs[i]->init();
-      setTestPattern(*itsInDHs[i], i);
-    }
-  }
-
-  void AH_TestStorage::run(int nsteps) {
-
-    for (int i = 0; i < nsteps; i++) {
-      for (uint nrInp = 0; nrInp < itsInConns.size(); nrInp++)
-      {
-	itsInConns[nrInp]->write();
-      }
-
-      LOG_TRACE_LOOP_STR("processing run " << i );
-      cout<<"run "<<i+1<<" of "<<nsteps<<endl;
-      getComposite().process();
-      
-    }    
-  }
-
-  void AH_TestStorage::postrun() {
-    // check outresult here
-    // do an assert or exit(1) if results are not correct
-
-   }
-
-  void AH_TestStorage::undefine() {
-    for (uint i = 0; i < itsInDHs.size(); i++)
-    {
-      delete itsInDHs[i];
-      delete itsInConns[i];
-    }
-    itsInDHs.clear();
-    itsInConns.clear();
-  }  
-
-  void AH_TestStorage::quit() {
-  }
-
-} // namespace LOFAR
-
 using namespace LOFAR;
+using namespace LOFAR::CS1;
 
 int main (int argc, const char** argv){
   INIT_LOGGER("TestStorage");
@@ -163,7 +49,7 @@ int main (int argc, const char** argv){
     test.basePostrun();
     test.baseQuit();
 
-  } catch (LOFAR::Exception e) {
+  } catch (LOFAR::Exception& e) {
     cerr << "Caught exception: "<< e.what() << endl;
     exit(1);
   } catch (...) {

@@ -43,7 +43,6 @@ namespace LOFAR
     class TimeCoord; 
   }
 
-
   namespace CS1 
   {
     // \addtogroup CS1_DelayCompensation

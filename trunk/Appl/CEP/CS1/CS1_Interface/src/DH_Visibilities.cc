@@ -1,5 +1,5 @@
-//  DH_Visibilities.cc:
-//
+//#  DH_Visibilities.cc:
+//#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
@@ -18,69 +18,71 @@
 //#
 //#  $Id$
 
-
 #include <lofar_config.h>
 
 #include <APS/ParameterSet.h>
-
-#include <DH_Visibilities.h>
+#include <CS1_Interface/DH_Visibilities.h>
 
 namespace LOFAR
 {
+  namespace CS1
+  {
 
-DH_Visibilities::DH_Visibilities (const string &name, const ACC::APS::ParameterSet &pSet)
-: DataHolder     (name, "DH_Visibilities"),
-  //itsPS         (pSet),
-  itsVisibilities(0),
-  itsNrValidSamples(0)
-{
+    DH_Visibilities::DH_Visibilities (const string &name, const ACC::APS::ParameterSet &pSet)
+      : DataHolder     (name, "DH_Visibilities"),
+        //itsPS         (pSet),
+        itsVisibilities(0),
+        itsNrValidSamples(0)
+    {
 #if 0
-  //todo: support for multiple freq channels
-   itsNPols = itsPS.getInt32("Observation.NPolarisations");
-   itsNCorrs = itsNPols*itsNPols;
+      //todo: support for multiple freq channels
+      itsNPols = itsPS.getInt32("Observation.NPolarisations");
+      itsNCorrs = itsNPols*itsNPols;
 #endif
-   itsNrChannels       = pSet.getUint32("Observation.NChannels");
-   unsigned nrStations = pSet.getUint32("Observation.NStations");
-   itsNrBaselines      = nrStations * (nrStations + 1) / 2;
-}   
+      itsNrChannels       = pSet.getUint32("Observation.NChannels");
+      unsigned nrStations = pSet.getUint32("Observation.NStations");
+      itsNrBaselines      = nrStations * (nrStations + 1) / 2;
+    }   
 
 
-DH_Visibilities::DH_Visibilities(const DH_Visibilities &that)
-  : DataHolder    (that),
-    //itsPS         (that.itsPS),
+    DH_Visibilities::DH_Visibilities(const DH_Visibilities &that)
+      : DataHolder    (that),
+        //itsPS         (that.itsPS),
 
-    itsNrBaselines(that.itsNrBaselines),
-    itsNrChannels(that.itsNrChannels),
-    itsVisibilities(0),
-    itsNrValidSamples(0)
+        itsNrBaselines(that.itsNrBaselines),
+        itsNrChannels(that.itsNrChannels),
+        itsVisibilities(0),
+        itsNrValidSamples(0)
 #if 0
-    itsNStations  (that.itsNStations),
-    itsNBaselines (that.itsNBaselines),
-    itsNPols      (that.itsNPols),
-    itsNCorrs     (that.itsNCorrs)
+      itsNStations  (that.itsNStations),
+      itsNBaselines (that.itsNBaselines),
+      itsNPols      (that.itsNPols),
+      itsNCorrs     (that.itsNCorrs)
 #endif
-{}
+    {}
 
-DH_Visibilities::~DH_Visibilities()
-{}
+    DH_Visibilities::~DH_Visibilities()
+    {}
 
-DataHolder* DH_Visibilities::clone() const
-{
-  return new DH_Visibilities(*this);
-}
+    DataHolder* DH_Visibilities::clone() const
+    {
+      return new DH_Visibilities(*this);
+    }
 
-void DH_Visibilities::init()
-{
-  addField("Visibilities",   BlobField<fcomplex>(1, getNrVisibilities()), 32);
-  addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels));
+    void DH_Visibilities::init()
+    {
+      addField("Visibilities",   BlobField<fcomplex>(1, getNrVisibilities()), 32);
+      addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels));
 
-  createDataBlock();  // calls fillDataPointers
-}
+      createDataBlock();  // calls fillDataPointers
+    }
 
-void DH_Visibilities::fillDataPointers() 
-{
-  itsVisibilities   = (VisibilityType *)     getData<fcomplex>("Visibilities");
-  itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
-}
+    void DH_Visibilities::fillDataPointers() 
+    {
+      itsVisibilities   = (VisibilityType *)     getData<fcomplex>("Visibilities");
+      itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
+    }
 
-}
+  } // namespace CS1
+  
+} // namespace LOFAR

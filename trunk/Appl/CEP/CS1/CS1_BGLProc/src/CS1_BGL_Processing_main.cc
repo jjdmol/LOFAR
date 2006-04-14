@@ -18,7 +18,6 @@
 //#
 //#  $Id$
 
-
 #include <lofar_config.h>
 
 #include <PLC/ACCmain.h>
@@ -26,12 +25,14 @@
 #include <tinyCEP/ApplicationHolderController.h>
 #include <CS1_BGLProc/AH_BGL_Processing.h>
 
+using namespace LOFAR;
+using namespace LOFAR::CS1;
 
 int main(int argc, char **argv) {
   INIT_LOGGER("CS1_BGL_Processing");
 
   // Figuring out nrRuns here is ugly ...
-  LOFAR::ACC::APS::ParameterSet ps("CS1.parset");
+  ACC::APS::ParameterSet ps("CS1.parset");
   int nrSeconds = ps.getInt32("General.NRuns");
   int nrSlaves	= ps.getInt32("BGLProc.SlavesPerSubband");
   int nrRuns	= nrSeconds / nrSlaves;
@@ -39,5 +40,5 @@ int main(int argc, char **argv) {
 
   AH_BGL_Processing myAH;
   ApplicationHolderController myAHController(myAH, nrRuns);
-  return LOFAR::ACC::PLC::ACCmain(argc, argv, &myAHController);
+  return ACC::PLC::ACCmain(argc, argv, &myAHController);
 }

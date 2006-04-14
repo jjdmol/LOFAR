@@ -20,27 +20,32 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_BGL_VISIBILITIES_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_BGL_VISIBILITIES_H
+#ifndef LOFAR_CS1_INTERFACE_STUB_BGL_VISIBILITIES_H
+#define LOFAR_CS1_INTERFACE_STUB_BGL_VISIBILITIES_H
 
 #include <CS1_Interface/Stub_BGL.h>
 
-namespace LOFAR {
-
-class Stub_BGL_Visibilities : public Stub_BGL
+namespace LOFAR
 {
-public:
-  Stub_BGL_Visibilities(bool iAmOnBGL, const ACC::APS::ParameterSet &);
+  namespace CS1
+  {
 
-protected:
-  virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);
-  virtual TransportHolder *newServerTH(unsigned subband, unsigned slave);
+    class Stub_BGL_Visibilities : public Stub_BGL
+    {
+    public:
+      Stub_BGL_Visibilities(bool iAmOnBGL, const ACC::APS::ParameterSet &);
 
-private:
-  vector<string> servers, services;
-};
+    protected:
+      virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);
+      virtual TransportHolder *newServerTH(unsigned subband, unsigned slave);
 
-} //namespace
+    private:
+      vector<string> servers, services;
+    };
+
+  } //namespace CS1
+
+} //namespace LOFAR
 
 #endif //include guard 
 

@@ -20,32 +20,35 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_RSP_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_STUB_RSP_H
+#ifndef LOFAR_CS1_INTERFACE_STUB_RSP_H
+#define LOFAR_CS1_INTERFACE_STUB_RSP_H
 
-#include <string>
 #include <APS/ParameterSet.h>
 
-
-namespace LOFAR {
-
-class Stub_RSP
+namespace LOFAR 
 {
-public:
-  // Create the stub. Get its parameters from the given file name.
-  explicit Stub_RSP (bool onServer, const ACC::APS::ParameterSet &ps);
+  namespace CS1
+  {
 
-  ~Stub_RSP();
+    class Stub_RSP
+    {
+    public:
+      // Create the stub. Get its parameters from the given file name.
+      explicit Stub_RSP (bool onServer, const ACC::APS::ParameterSet &ps);
 
-  // Connect the given objects to the stubs.
-  void connect ();
+      ~Stub_RSP();
 
-private:
-  bool			       itsStubOnServer;
-  const ACC::APS::ParameterSet &itsPS;
-};
+      // Connect the given objects to the stubs.
+      void connect ();
 
-} //namespace
+    private:
+      bool			       itsStubOnServer;
+      const ACC::APS::ParameterSet &itsPS;
+    };
 
-#endif //include guard 
+  } // namespace CS1
+
+} // namespace LOFAR
+
+#endif
 

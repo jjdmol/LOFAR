@@ -7,7 +7,7 @@ CHECKTOOLPROGS		= tWH_DelayCompensation
 # scripts and possible programs to run tests
 TESTS			= tWH_DelayCompensation.sh
 
-XFAIL_TESTS		=
+XFAIL_TESTS		= 
 
 tWH_DelayCompensation_SOURCES	= tWH_DelayCompensation.cc
 tWH_DelayCompensation_LDADD	= ../src/libcs1_delaycompensation.la

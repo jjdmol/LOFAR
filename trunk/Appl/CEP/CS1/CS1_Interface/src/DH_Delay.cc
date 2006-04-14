@@ -18,113 +18,116 @@
 //#
 //#  $Id$
 
-
 #include <lofar_config.h>
 
 #include <CS1_Interface/DH_Delay.h>
 
 namespace LOFAR
 {
+  namespace CS1
+  {
 
-DH_Delay::DH_Delay(const string &name, uint nrRSPs)
-  : DataHolder     (name, "DH_Delay"),
-    itsCoarseDelays(0),
-    itsFineDelaysAtBegin(0),
-    itsFineDelaysAfterEnd(0),
-    itsNrRSPs      (nrRSPs)
-{
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-}
+    DH_Delay::DH_Delay(const string &name, uint nrRSPs)
+      : DataHolder     (name, "DH_Delay"),
+        itsCoarseDelays(0),
+        itsFineDelaysAtBegin(0),
+        itsFineDelaysAfterEnd(0),
+        itsNrRSPs      (nrRSPs)
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
   
-DH_Delay::DH_Delay(const DH_Delay &that)
-  : DataHolder (that),
-    itsCoarseDelays(that.itsCoarseDelays),
-    itsFineDelaysAtBegin(that.itsFineDelaysAtBegin),
-    itsFineDelaysAfterEnd(that.itsFineDelaysAfterEnd),
-    itsNrRSPs  (that.itsNrRSPs)
-{   
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-}
+    DH_Delay::DH_Delay(const DH_Delay &that)
+      : DataHolder (that),
+        itsCoarseDelays(that.itsCoarseDelays),
+        itsFineDelaysAtBegin(that.itsFineDelaysAtBegin),
+        itsFineDelaysAfterEnd(that.itsFineDelaysAfterEnd),
+        itsNrRSPs  (that.itsNrRSPs)
+    {   
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
 
-DH_Delay::~DH_Delay()
-{
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-}
+    DH_Delay::~DH_Delay()
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
 
-DataHolder *DH_Delay::clone() const
-{
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  return new DH_Delay(*this);
-}
+    DataHolder *DH_Delay::clone() const
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return new DH_Delay(*this);
+    }
 
-void DH_Delay::init()
-{
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    void DH_Delay::init()
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-  // add the fields to the data definition
-  addField ("CoarseDelay", BlobField<int>(1, itsNrRSPs));
-  addField ("FineDelayAtBegin", BlobField<float>(1, itsNrRSPs));
-  addField ("FineDelayAfterEnd", BlobField<float>(1, itsNrRSPs));
+      // add the fields to the data definition
+      addField ("CoarseDelay", BlobField<int>(1, itsNrRSPs));
+      addField ("FineDelayAtBegin", BlobField<float>(1, itsNrRSPs));
+      addField ("FineDelayAfterEnd", BlobField<float>(1, itsNrRSPs));
   
-  // create the data blob
-  createDataBlock();
+      // create the data blob
+      createDataBlock();
 
-  for (uint i=0; i<itsNrRSPs; i++) {
-    itsCoarseDelays[i] = 0;
-    itsFineDelaysAtBegin[i] = 0;
-    itsFineDelaysAfterEnd[i] = 0;
-  }
+      for (uint i=0; i<itsNrRSPs; i++) {
+        itsCoarseDelays[i] = 0;
+        itsFineDelaysAtBegin[i] = 0;
+        itsFineDelaysAfterEnd[i] = 0;
+      }
 
-}
+    }
 
-void DH_Delay::fillDataPointers() 
-{
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  itsCoarseDelays = getData<int> ("CoarseDelay");
-  itsFineDelaysAtBegin = getData<float> ("FineDelayAtBegin");
-  itsFineDelaysAfterEnd = getData<float> ("FineDelayAfterEnd");
-}
+    void DH_Delay::fillDataPointers() 
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      itsCoarseDelays = getData<int> ("CoarseDelay");
+      itsFineDelaysAtBegin = getData<float> ("FineDelayAtBegin");
+      itsFineDelaysAfterEnd = getData<float> ("FineDelayAfterEnd");
+    }
 
-int DH_Delay::getCoarseDelay(uint station) const
-{ 
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  ASSERTSTR(station < itsNrRSPs, "index is not within range");
-  return itsCoarseDelays[station]; 
-}
+    int DH_Delay::getCoarseDelay(uint station) const
+    { 
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      ASSERTSTR(station < itsNrRSPs, "index is not within range");
+      return itsCoarseDelays[station]; 
+    }
 
-void DH_Delay::setCoarseDelay(uint station, int delay)
-{ 
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  ASSERTSTR(station < itsNrRSPs, "index is not within range");
-  itsCoarseDelays[station] = delay;
-}
+    void DH_Delay::setCoarseDelay(uint station, int delay)
+    { 
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      ASSERTSTR(station < itsNrRSPs, "index is not within range");
+      itsCoarseDelays[station] = delay;
+    }
 
-float DH_Delay::getFineDelayAtBegin(uint station) const
-{ 
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  ASSERTSTR(station < itsNrRSPs, "index is not within range");
-  return itsFineDelaysAtBegin[station]; 
-}
+    float DH_Delay::getFineDelayAtBegin(uint station) const
+    { 
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      ASSERTSTR(station < itsNrRSPs, "index is not within range");
+      return itsFineDelaysAtBegin[station]; 
+    }
 
-void DH_Delay::setFineDelayAtBegin(uint station, float delay)
-{ 
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  ASSERTSTR(station < itsNrRSPs, "index is not within range");
-  itsFineDelaysAtBegin[station] = delay;
-}
+    void DH_Delay::setFineDelayAtBegin(uint station, float delay)
+    { 
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      ASSERTSTR(station < itsNrRSPs, "index is not within range");
+      itsFineDelaysAtBegin[station] = delay;
+    }
 
-float DH_Delay::getFineDelayAfterEnd(uint station) const
-{ 
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  ASSERTSTR(station < itsNrRSPs, "index is not within range");
-  return itsFineDelaysAfterEnd[station]; 
-}
+    float DH_Delay::getFineDelayAfterEnd(uint station) const
+    { 
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      ASSERTSTR(station < itsNrRSPs, "index is not within range");
+      return itsFineDelaysAfterEnd[station]; 
+    }
 
-void DH_Delay::setFineDelayAfterEnd(uint station, float delay)
-{ 
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  ASSERTSTR(station < itsNrRSPs, "index is not within range");
-  itsFineDelaysAfterEnd[station] = delay;
-}
+    void DH_Delay::setFineDelayAfterEnd(uint station, float delay)
+    { 
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      ASSERTSTR(station < itsNrRSPs, "index is not within range");
+      itsFineDelaysAfterEnd[station] = delay;
+    }
 
-}  // end namespace
+  } // namespace CS1
+
+}  // namespace LOFAR

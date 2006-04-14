@@ -19,19 +19,20 @@
 #include <CS1_Storage/AH_Storage.h>
 
 using namespace LOFAR;
+using namespace LOFAR::CS1;
 
 #if 1
-#include<PLC/ACCmain.h>
+#include <PLC/ACCmain.h>
 
 int main(int argc, char* argv[]) {
   INIT_LOGGER("CS1_Storage");
 
   // This shouldn't be done here
-  LOFAR::ACC::APS::ParameterSet ps("CS1.parset");
+  ACC::APS::ParameterSet ps("CS1.parset");
   int nrSeconds = ps.getInt32("General.NRuns");
   AH_Storage myAH;
   ApplicationHolderController myAHC(myAH, nrSeconds);
-  return LOFAR::ACC::PLC::ACCmain(argc, argv, &myAHC);
+  return ACC::PLC::ACCmain(argc, argv, &myAHC);
 }
 
 #else

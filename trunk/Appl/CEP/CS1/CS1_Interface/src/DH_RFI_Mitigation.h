@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DH_RFI_MITIGATION_H
-#define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_DH_RFI_MITIGATION_H
+#ifndef LOFAR_CS1_INTERFACE_DH_RFI_MITIGATION_H
+#define LOFAR_CS1_INTERFACE_DH_RFI_MITIGATION_H
 
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/bitset.h>
@@ -31,47 +31,49 @@
 
 namespace LOFAR
 {
-
-class DH_RFI_Mitigation: public DataHolder
-{
-public:
-  typedef LOFAR::bitset<NR_SUBBAND_CHANNELS> ChannelFlagsType[NR_STATIONS];
-
-  explicit DH_RFI_Mitigation(const string& name);
-
-  DH_RFI_Mitigation(const DH_RFI_Mitigation&);
-
-  virtual ~DH_RFI_Mitigation();
-
-  DataHolder *clone() const;
-
-  virtual void init();
-
-  ChannelFlagsType *getChannelFlags()
+  namespace CS1
   {
-    return itsChannelFlags;
+    class DH_RFI_Mitigation: public DataHolder
+    {
+    public:
+      typedef bitset<NR_SUBBAND_CHANNELS> ChannelFlagsType[NR_STATIONS];
+
+      explicit DH_RFI_Mitigation(const string& name);
+
+      DH_RFI_Mitigation(const DH_RFI_Mitigation&);
+
+      virtual ~DH_RFI_Mitigation();
+
+      DataHolder *clone() const;
+
+      virtual void init();
+
+      ChannelFlagsType *getChannelFlags()
+      {
+        return itsChannelFlags;
+      }
+
+      const ChannelFlagsType *getChannelFlags() const
+      {
+        return itsChannelFlags;
+      }
+
+      const size_t nrChannelFlags() const
+      {
+        return NR_STATIONS * NR_SUBBAND_CHANNELS;
+      }
+
+    private:
+      /// Forbid assignment.
+      DH_RFI_Mitigation &operator = (const DH_RFI_Mitigation&);
+
+      ChannelFlagsType *itsChannelFlags;
+
+      void fillDataPointers();
+    };
+
   }
-
-  const ChannelFlagsType *getChannelFlags() const
-  {
-    return itsChannelFlags;
-  }
-
-  const size_t nrChannelFlags() const
-  {
-    return NR_STATIONS * NR_SUBBAND_CHANNELS;
-  }
-
-private:
-  /// Forbid assignment.
-  DH_RFI_Mitigation &operator = (const DH_RFI_Mitigation&);
-
-  ChannelFlagsType *itsChannelFlags;
-
-  void fillDataPointers();
-};
-
-
 }
-#endif 
+#endif /* BGL_PROCESSING */
+
 #endif 
