@@ -1,5 +1,5 @@
 
-bin_PROGRAMS = ApplController ACDaemon
+bin_PROGRAMS = ApplController ACDaemon ACcli
 
 ### ApplController ###
 ApplController_SOURCES      = ACCmdImpl.cc \
@@ -24,6 +24,12 @@ ACDaemon_SOURCES      = ACRequestPool.cc \
 					    ACDaemonMain.cc
 ACDaemon_DEPENDENCIES = $(LOFAR_DEPEND)
 ACDaemon_LDADD        =
+
+
+### ACcli ###
+ACcli_SOURCES      = ACcli.cc
+ACcli_DEPENDENCIES = $(LOFAR_DEPEND)
+ACcli_LDADD        =
 
 include $(top_srcdir)/Makefile.common
 
