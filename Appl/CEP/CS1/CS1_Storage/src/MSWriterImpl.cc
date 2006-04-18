@@ -376,7 +376,7 @@ namespace LOFAR
         msfieldCol.name().put (rownr, "BEAM_" + String::toString(rownr));
         msfieldCol.code().put (rownr, "");
         msfieldCol.time().put (rownr, itsStartTime);
-        msfieldCol.numPoly().put (rownr, 1);
+        msfieldCol.numPoly().put (rownr, 0);
         msfieldCol.delayDirMeasCol().put (rownr, outdir);
         msfieldCol.phaseDirMeasCol().put (rownr, outdir);
         msfieldCol.referenceDirMeasCol().put (rownr, outdir);
@@ -394,11 +394,11 @@ namespace LOFAR
           mspointingCol.time().put (rownr, itsStartTime);
           mspointingCol.interval().put (rownr, 0.);
           mspointingCol.name().put (rownr, "");
-          mspointingCol.numPoly().put (rownr, 1);
+          mspointingCol.numPoly().put (rownr, 0);
           mspointingCol.timeOrigin().put (rownr, itsStartTime);
           mspointingCol.directionMeasCol().put (rownr, outdir);
           mspointingCol.targetMeasCol().put (rownr, outdir);
-          mspointingCol.tracking().put (rownr, True);
+          mspointingCol.tracking().put (rownr, False);
           rownr++;
         }
       }
@@ -595,7 +595,7 @@ namespace LOFAR
 
       defFlags = False;
       Array<Float> sigma(IPosition(1, shape(0)));
-      sigma = 0;
+      sigma = 1;
       //   Array<Float> weight(IPosition(1, shape(0)));
       //   weight = 1;
       Double time = itsStartTime + timeCounter*itsTimeStep;
