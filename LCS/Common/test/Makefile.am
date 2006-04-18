@@ -5,7 +5,7 @@ check_PROGRAMS	      =	testLogger \
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS 	      =	testLogger \
-			tAllocator tDataConvert tFileLocator tStringUtil 
+			tAllocator tDataConvert tFileLocator tStringUtil \
 			tHexdump testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric
 #ENDCHECKTOOLPROGS
