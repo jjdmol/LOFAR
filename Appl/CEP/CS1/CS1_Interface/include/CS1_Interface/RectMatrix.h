@@ -172,10 +172,10 @@ namespace LOFAR
 
 #endif //ENABLE_DBGASSERT
 
-#include <CS1_Interface/RectMatrix.tcc>
-
   } // namespace CS1
 
 } // namespace LOFAR
+
+#include <CS1_Interface/RectMatrix.tcc>
 
 #endif
