@@ -198,6 +198,12 @@ private:
 };
 
 
+// Make one instance of the parameterSet globally accessable.
+ParameterSet* 	globalParameterSet();
+
+//#
+//# ---------- inline functions ----------
+//#
 inline void	ParameterSet::clear      ()
 {
 	itsSet->clear();
