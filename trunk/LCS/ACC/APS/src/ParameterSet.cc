@@ -20,6 +20,10 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
@@ -28,6 +32,17 @@
 namespace LOFAR {
   namespace ACC {
     namespace APS {
+
+//-------------------------- creation and destroy ---------------------------
+static ParameterSet* globalParameterSetInstance = 0;
+
+ParameterSet* globalParameterSet()
+{
+  if (globalParameterSetInstance == 0) {
+    globalParameterSetInstance = new ParameterSet();
+  }
+  return (globalParameterSetInstance);
+}
 
 //-------------------------- creation and destroy ---------------------------
 //
