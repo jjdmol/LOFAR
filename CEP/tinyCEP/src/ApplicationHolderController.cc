@@ -163,10 +163,10 @@ int ApplicationHolderController::main (int argc, const char* argv[]) {
 
     // Now all ACC processes expect "ACC" as first argument
     // So the parameter file is the second argument
-    ASSERTSTR(strncmp(argv[1], "ACC", 3), "Program wasn't started by ACC, but ApplicationHolderController::main was called");
+    ASSERTSTR(strncmp(argv[1], "ACC", 3) == 0, "Program wasn't started by ACC, but ApplicationHolderController::main was called");
     itsOrigParamSet.adoptFile(argv[2]);
     string itsProcID = itsOrigParamSet.getString("process.name");
-    ParameterSet itsParamSet = itsOrigParamSet.makeSubset(itsProcID);
+    ParameterSet itsParamSet = itsOrigParamSet.makeSubset(itsProcID+".");
     itsAH.setParameters(itsParamSet);
 
     if (itsPCcomm == 0) {
