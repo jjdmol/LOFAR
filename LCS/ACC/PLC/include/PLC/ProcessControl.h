@@ -68,7 +68,7 @@ public:
 	// ParameterSet it received during start-up. When everthing seems ok the
 	// process constructs the communication channels for exchanging data
 	// with the other processes. The connection are NOT made in the stage.
-	virtual tribool	define 	 (APS::ParameterSet ps = APS::ParameterSet())  = 0;
+	virtual tribool	define 	 ()  = 0;
 
 	// When a process receives an \c init command it allocates the buffers it
 	// needs an makes the connections with the other processes. When the

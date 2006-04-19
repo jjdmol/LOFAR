@@ -39,7 +39,7 @@ APCmdImpl::APCmdImpl()
 APCmdImpl::~APCmdImpl()
 {}
 
-tribool	APCmdImpl::define 	 (APS::ParameterSet ps)
+tribool	APCmdImpl::define 	 ()
 {
 	LOG_DEBUG("define");
 	return (true);

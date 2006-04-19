@@ -81,13 +81,13 @@ namespace LOFAR {
 	    
 	    if (ps == 0) {
 	      LOG_INFO_STR("Could not find a parameter set.");
-	      LOG_TRACE_FLOW(programName + " starting define");
-	      if (!theProcess->define()) return 1;
 	    } else {
-	      LOG_TRACE_FLOW(programName + " starting define");
-	      if (!theProcess->define(*ps)) return 1;
+	      APS::globalParameterSet()->adoptCollection(*ps);
 	      delete ps;
 	    }
+
+	    LOG_TRACE_FLOW(programName + " starting define");
+	    if (!theProcess->define()) return 1;
 	    LOG_TRACE_FLOW(programName + " initting");
 	    if (!theProcess->init()) return 1;
 	    LOG_TRACE_FLOW(programName + " running");
@@ -107,6 +107,8 @@ namespace LOFAR {
 	    ParameterSet itsOrigParamSet(argv[2]);
 	    string procID = itsOrigParamSet.getString("process.name");
 	    ParameterSet ParamSet = itsOrigParamSet.makeSubset(procID + ".");
+
+	    APS::globalParameterSet()->adoptCollection(ParamSet);
 
 	    ProcControlServer pcServer(ParamSet.getString("ACnode"),
 				       ParamSet.getUint16("ACport"),
