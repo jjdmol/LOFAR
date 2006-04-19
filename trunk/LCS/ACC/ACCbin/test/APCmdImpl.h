@@ -47,7 +47,7 @@ public:
 	virtual ~APCmdImpl();
 
 	// Command to control the application processes.
-	virtual tribool	define 	 (APS::ParameterSet ps);
+	virtual tribool	define 	 ();
 	virtual tribool	init 	 ();
 	virtual tribool	run 	 ();
 	virtual tribool	pause  	 (const	string&		condition);

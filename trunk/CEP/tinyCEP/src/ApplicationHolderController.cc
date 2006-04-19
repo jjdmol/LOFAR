@@ -53,11 +53,11 @@ ApplicationHolderController::ApplicationHolderController(TinyApplicationHolder& 
 ApplicationHolderController::~ApplicationHolderController()
 {};
 
-tribool ApplicationHolderController::define   (ParameterSet ps) 
+tribool ApplicationHolderController::define   () 
 {
   LOG_TRACE_FLOW("Define called by ACC");
   try {
-    itsAH.setParameters(ps);
+    itsAH.setParameters(*globalParameterSet());
     itsAH.baseDefine();
   } catch (Exception&	ex) {
     LOG_WARN_STR("Exception during define: " << ex.what());
@@ -102,6 +102,7 @@ tribool ApplicationHolderController::quit  	 ()
   LOG_TRACE_FLOW("Quit called by ACC");
   try {
     itsIsRunning = false;
+    itsShouldQuit = true;
     Profiler::deActivate();
     itsAH.basePostrun();
     itsAH.baseQuit();
