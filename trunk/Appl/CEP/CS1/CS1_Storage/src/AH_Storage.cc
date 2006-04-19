@@ -62,7 +62,7 @@ namespace LOFAR
       LOG_TRACE_FLOW_STR("Finished define()");
 
 #ifdef HAVE_MPI
-      ASSERTSTR (TH_MPI::getNumberOfNodes() == 1, "CS1_Storage should be started on just one node");
+  ASSERTSTR (TH_MPI::getNumberOfNodes() ==  nrSubbands, "CS1_Storage should be started on as much nodes as there are subbands");
 #endif
 
     }
