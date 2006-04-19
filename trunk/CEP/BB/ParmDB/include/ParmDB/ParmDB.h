@@ -224,9 +224,9 @@ public:
   // Note that the requested domain may contain multiple values.
   // A selection on parentId is done if >= 0.
   ParmValueSet getValues (const std::string& parmName,
-			  const ParmDomain& domain,
-			  int parentId = 0,
-			  ParmDBRep::TableType tableType=ParmDBRep::UseNormal)
+		  const ParmDomain& domain,
+		  int parentId = 0,
+		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal) const
     { return itsRep->getValues (parmName, domain, parentId, tableType); }
 
   // Get the parameter values for the given parameters and domain.
@@ -237,7 +237,7 @@ public:
 		  const std::vector<std::string>& parmNames,
 		  const ParmDomain& domain,
 		  int parentId = 0,
-		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal)
+		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal) const
     { itsRep->getValues (result, parmNames, domain,
 			 parentId, tableType); }
 
@@ -248,7 +248,7 @@ public:
 		  const std::string& parmNamePattern,
 		  const ParmDomain& domain,
 		  int parentId = 0,
-		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal)
+		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal) const
     { itsRep->getValues (result, parmNamePattern, domain,
 			 parentId, tableType); }
 
@@ -274,13 +274,13 @@ public:
     { itsRep->deleteValues (parmNamePattern, domain, parentId, tableType); }
 
   // Get the initial value for the given parameter.
-  ParmValue getDefValue (const std::string& parmName)
+  ParmValue getDefValue (const std::string& parmName) const
     { return itsRep->getDefValue (parmName); }
 
   // Get the default value for the given parameters.
   // Only * and ? should be used in the pattern (no [] and {}).
   void getDefValues (std::map<std::string,ParmValueSet>& result,
-		     const std::string& parmNamePattern)
+		     const std::string& parmNamePattern) const
     { itsRep->getDefValues (result, parmNamePattern); }
 
   // Put the default value for the given parameter.
@@ -293,7 +293,7 @@ public:
 
   // Get the names of all sources in the table.
   std::vector<std::string> getNames (const std::string& pattern,
-		 ParmDBRep::TableType tableType = ParmDBRep::UseNormal)
+		 ParmDBRep::TableType tableType = ParmDBRep::UseNormal) const
     { return itsRep->getNames (pattern, tableType); }
 
   // Clear database or table
