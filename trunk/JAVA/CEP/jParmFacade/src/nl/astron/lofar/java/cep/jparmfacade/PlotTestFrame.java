@@ -27,7 +27,7 @@ public class PlotTestFrame extends javax.swing.JFrame {
         testPanel = new PlotPanel();
         testPanel.createPlot("testparam");
         this.setLayout(new BorderLayout());
-        this.getContentPane().add(testPanel,BorderLayout.CENTER);
+        this.getContentPane().add(testPanel.getPlot(),BorderLayout.CENTER);
         this.setSize(new Dimension(640,480));
         initComponents();
              
