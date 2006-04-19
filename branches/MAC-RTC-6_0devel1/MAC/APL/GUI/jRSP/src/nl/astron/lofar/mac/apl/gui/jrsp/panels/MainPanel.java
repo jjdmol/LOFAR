@@ -1,5 +1,7 @@
 package nl.astron.lofar.mac.apl.gui.jrsp.panels;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
@@ -7,7 +9,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import nl.astron.lofar.mac.apl.gui.jrsp.Board;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
+import nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel;
+import nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.panels.IPluginPanel;
 
@@ -18,18 +21,19 @@ import nl.astron.lofar.sas.otb.panels.IPluginPanel;
  * controlling the boards.
  * 
  * To support refresh a thread is needed and therefore MainPanel implements
- * Runnable. The functions startRefreshThread and stopRefreshThread are used
+ * Runnable. The functions startRefresh and stopRefresh are used
  * to start and stop the thread. When the thread is started it will, depending
  * on the refreshrate, refresh the current panel using the method
  * updateCurrentPabel.
- *
+ * 
  * The MainPanel implements a ListSelectionListener to react to changes in the
  * ListPanel and a ChangeListener to react to changes in the tabbedpane.
- *
- * @author  balken
+ * 
+ * 
+ * @author balken
  */
-public class MainPanel extends JPanel 
-        implements IPluginPanel, ListSelectionListener, ChangeListener, Runnable
+public class MainPanel extends JPanel implements IPluginPanel, 
+        ListSelectionListener, ActionListener, ChangeListener, Runnable
 {
     /** MainFrame */
     private MainFrame mainFrame;
@@ -65,15 +69,16 @@ public class MainPanel extends JPanel
         listPanel.setTitle("Boards");
         listPanel.addListSelectionListener(this);
         
+        // controlpanel
+        controlPanel.addActionListener(this);
+        
         // tabbedpane
         jTabbedPane.addChangeListener(this);
         
-        // controlpanel
-        controlPanel.setMainPanel(this);
-                
-        // waveformsettingspanel
-        waveformSettingsPanel.setMainPanel(this);
-        waveformSettingsPanel.init();
+        // tabpanels        
+        statusPanel.init(this);
+        waveformSettingsPanel.init(this);
+        
         
         refreshRates = new int[jTabbedPane.getTabCount()];
     }
@@ -132,21 +137,21 @@ public class MainPanel extends JPanel
     public void checkChanged() { }
     
     /**
-     * Returns the index of the current selected board in the ListPanel.
-     * @return  index
-     */
-    public int getSelectedBoardIndex()
-    {
-        return listPanel.getSelectedIndex();
-    }
-    
-    /**
      * Returns the board.
      * @return  board
      */
     public Board getBoard()
     {
         return board;
+    }
+    
+    /**
+     * Returns the index of the current selected board in the ListPanel.
+     * @return  index
+     */
+    public int getSelectedBoardIndex()
+    {
+        return listPanel.getSelectedIndex();
     }
     
     /**
@@ -158,43 +163,131 @@ public class MainPanel extends JPanel
         refreshRates[jTabbedPane.getSelectedIndex()] = refreshRate;
     }
     
+    
+    /** LISTENER IMPLEMENTATIONS **/
+    
     /**
-     * Gets called when a value changed on the listPanel.
-     * Note: Has *nothing* to do with the above functions.
+     * Invoked when another board is selected on the listPanel.
      */
-    public void valueChanged(ListSelectionEvent event)
+    public void valueChanged(ListSelectionEvent e)
     {
         updateCurrentPanel();
     }
     
     /**
+     * Invoked when an action is performed by the controlPanel.
+     */
+    public void actionPerformed(ActionEvent e)
+    {
+        switch(controlPanel.getSourceAction(e.getSource()))
+        {
+            case ControlPanel.UPDATE:
+                /*
+                 * Connect/update the board and the current panel.
+                 */
+                updateBoard();
+                controlPanel.setRefreshRate(0);
+                updateCurrentPanel();
+                break;
+            case ControlPanel.REFRESH:
+                /*
+                 * Connect to board and update according to the refreshrate.
+                 * Check if refresh rate is valid. If so set the refreshrate in 
+                 * refreshRates[] and call startRefresh().
+                 */
+                if(controlPanel.getRefreshRate() < 0)
+                {
+                    /*
+                     * The RefreshRate isn't a valid number (either error (-1) 
+                     * or negative number). Display error and quit.
+                     */
+                    JOptionPane.showMessageDialog(this, "Refreshrate may only contain positive numbers and zero.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                updateBoard();
+                refreshRates[jTabbedPane.getSelectedIndex()] = controlPanel.getRefreshRate();
+                startRefresh();                
+                break;
+            case ControlPanel.STOP:
+                /*
+                 * Stop the refresh.
+                 */
+                stopRefresh();
+                break;
+            default:
+                /*
+                 * Do nothing.
+                 */
+                break;                
+        }
+    }
+        
+    /**
      * Invoked when another tab is selected.
      */
-    public void stateChanged(ChangeEvent event)
+    public void stateChanged(ChangeEvent e)
     {
-        // Refresh can be only possible if the board is set. If not, the 0 in the
-        // refreshrate textfield looks silly.
-        if(board == null)
+        /*
+         * Refresh can be only possible if the board is connected. If not, the 0 
+         * in the refreshrate textfield looks silly.
+         */
+        if (!board.isConnected())
         {
             return;
         }
         
-        // First check if there the refreshThread is running. If so: KILL IT!
-        // Forget the checking part...
+        /*
+         * First check if there the refreshThread is running. If so: KILL IT!
+         */
         refreshThread = null;
                 
-        // If the refresh rate of the selected panel is higher than 0, start the
-        // refreshThread else call updateCurrentPanel once.
-        if(refreshRates[jTabbedPane.getSelectedIndex()] > 0)
+        /*
+         * If the refresh rate of the selected panel is higher than 0, start the
+         * refreshThread else call updateCurrentPanel once.
+         */
+        if (refreshRates[jTabbedPane.getSelectedIndex()] > 0)
         {
-            startRefreshThread();
+            startRefresh();
         }
         else
         {
             updateCurrentPanel();
         }
+        
+        /*
+         * Update controlPanel.
+         */         
         controlPanel.setRefreshRate(refreshRates[jTabbedPane.getSelectedIndex()]);
     }
+        
+    /** END OF LISTENER IMPLEMENTATIONS **/
+    
+    /**
+     * Updates or initializes the board by changing the hostname.
+     */
+    public void updateBoard()
+    {
+        if ("".equals(controlPanel.getHostname().trim()))
+        {
+            JOptionPane.showMessageDialog(this, "The hostname can't be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        board.connect(controlPanel.getHostname());
+        
+        /*
+         * Construct a String array for the listpanel.
+         */
+        int nofBoards = board.getNofBoards();        
+        String[] listItems = new String[nofBoards];
+        for (int i = 0; i < nofBoards; i++)
+        {
+            listItems[i] = Integer.toString(i);
+        }
+        
+        listPanel.newList(listItems);
+    }
+    
     
     /**
      * This method is called to update the current panel.
@@ -203,34 +296,34 @@ public class MainPanel extends JPanel
      */
     public void updateCurrentPanel()
     {
-        if(board == null)
+        /*
+         * The board has to be connected to update the panels.
+         */
+        if (!board.isConnected())
+        {
             return;
+        }
         
-        Class selectedClass = jTabbedPane.getSelectedComponent().getClass();
-        
+        /** The index of the selected board in the list panel. */
         int index = listPanel.getSelectedIndex();
+        
         if(index == -1)
         {
+            /* 
+             * When the index is -1. The selected index will be changed. That will
+             * generate a valueChangedEvent. Through the method valueChanged, that
+             * responses to this event, this (updateCurrentPanel() function is 
+             * called again. 
+             */
             index = 0;
             listPanel.setSelectedIndex(0);
+            return;
         }
         
-        // StatusPanel
-        // @TODO - change which status is returned based on the selected board!
-        if(selectedClass.equals(StatusPanel.class))
-        {
-            RCUMask mask = new RCUMask();
-            mask.setBit(index);
-            ((StatusPanel)jTabbedPane.getSelectedComponent()).initFields(board.getStatus(mask.getMask())[0]);
-        }
-        else if(selectedClass.equals(TijdPanel.class))
-        {
-            ((TijdPanel)jTabbedPane.getSelectedComponent()).updatePanel();
-        }
-        else if(selectedClass.equals(WaveformSettingsPanel.class))
-        {
-            //waveformSettingsPanel.setBoard(board);
-        }
+        /*
+         * Update the selected panel.
+         */
+        ((ITabPanel) jTabbedPane.getSelectedComponent()).update();
     }
     
     /**
@@ -250,74 +343,34 @@ public class MainPanel extends JPanel
         listPanel.setSelectedIndex(0);
     }
     
-    /**
-     * This method is invoked when the hostname is entered in the controlpanel
-     * and makes a new Board instance based on the hostname.
-     * @param   hostname    The hostname which will be used in the connection.
-     * @param   refreshRate The number of seconds between the updates of current panel.
-     *
-     * @TODO Implement a error message when the connection fails.
-     */
-    public void initBoard(String hostname, int refreshRate)
-    {
-        // Do nothing if the hostname and refreshrate haven't changed.
-        if(board != null && hostname.equals(board.getHostname()) && refreshRate == refreshRates[jTabbedPane.getSelectedIndex()])
-        {
-            return;
-        }
         
-        // The refreshrate should be 0 or higher.
-        // @TODO add error message
-        if(refreshRate < 0)
-        {
-            JOptionPane.showMessageDialog(null, "Only positive values and 0 are valid input for the refresh rate", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }        
-        
-        // If the board is null; there hasn't been a board yet, construct a new
-        // board. Else change the current board.
-        if(!board.isConnected())
-        {
-            board.connect(hostname);
-            // Change listPanel according to the new Board.
-            updateListPanel();
-        }
-        else if(!hostname.equals(board.getHostname()))
-        {
-            board.disconnect();
-            board.connect(hostname);
-            // Change listPanel according to the altered Board.
-            updateListPanel();
-        }
-                
-        refreshRates[jTabbedPane.getSelectedIndex()] = refreshRate;
-        if(refreshRate == 0)
-        {
-            updateCurrentPanel();
-        }
-        else
-        {
-            // start thread that updates the board.
-            startRefreshThread();
-        }
-    }
-    
     /**
      * Starts the refresh thread.
      */
-    public void startRefreshThread()
+    private void startRefresh()
     {
-        if(refreshThread == null)
+        if (refreshThread == null)
         {
-            refreshThread = new Thread(this, "RefreshThread");
-            refreshThread.start();
+            if (refreshRates[jTabbedPane.getSelectedIndex()] < 1)
+            {
+                /*
+                 * The refreshRate is smaller than 1, thus 0. This means we only
+                 * need one update of the panel.
+                 */                
+                updateCurrentPanel();
+            }
+            else
+            {
+                refreshThread = new Thread(this, "RefreshThread");
+                refreshThread.start();    
+            }            
         }
     }
     
     /**
      * Stops the refresh thread.
      */
-    public void stopRefreshThread()
+    private void stopRefresh()
     {
         refreshThread = null;
     }
@@ -351,15 +404,12 @@ public class MainPanel extends JPanel
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         jTabbedPane = new javax.swing.JTabbedPane();
-        statusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.StatusPanel();
-        tijdPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.TijdPanel();
-        waveformSettingsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsPanel();
+        statusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel();
+        waveformSettingsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel();
         controlPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel();
         listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel();
 
         jTabbedPane.addTab("Status", statusPanel);
-
-        jTabbedPane.addTab("[TEST] Tijd", tijdPanel);
 
         jTabbedPane.addTab("Waveform Settings", waveformSettingsPanel);
 
@@ -391,9 +441,8 @@ public class MainPanel extends JPanel
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel controlPanel;
     private javax.swing.JTabbedPane jTabbedPane;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel listPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.StatusPanel statusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.TijdPanel tijdPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsPanel waveformSettingsPanel;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel statusPanel;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel waveformSettingsPanel;
     // End of variables declaration//GEN-END:variables
     
 }

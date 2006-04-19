@@ -40,7 +40,7 @@
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
       <SubComponents>
-        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.StatusPanel" name="statusPanel">
+        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel" name="statusPanel">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Status">
@@ -49,16 +49,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.TijdPanel" name="tijdPanel">
-          <Constraints>
-            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="[TEST] Tijd">
-                <Property name="tabTitle" type="java.lang.String" value="[TEST] Tijd"/>
-              </JTabbedPaneConstraints>
-            </Constraint>
-          </Constraints>
-        </Component>
-        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.WaveformSettingsPanel" name="waveformSettingsPanel">
+        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel" name="waveformSettingsPanel">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Waveform Settings">

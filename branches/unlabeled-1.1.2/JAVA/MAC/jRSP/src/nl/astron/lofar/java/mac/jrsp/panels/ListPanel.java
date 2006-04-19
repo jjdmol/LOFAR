@@ -115,9 +115,7 @@ public class ListPanel extends JPanel implements ListSelectionListener
                 ((ListSelectionListener)listeners[i+1]).valueChanged(event);
             }
         }
-    }
-        
-    
+    }    
     
     /** This method is called from within the constructor to
      * initialize the form.

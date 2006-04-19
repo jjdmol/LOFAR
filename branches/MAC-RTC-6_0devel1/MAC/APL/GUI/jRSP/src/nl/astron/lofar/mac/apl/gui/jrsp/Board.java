@@ -40,19 +40,46 @@ public class Board
     public Board()
     {
         ptrRSPport = 0;
-        // @TODO activeren: ptrRSPport = init(hostname);
         boardStatus = null;
     }
     
-    // Connect functions
+    
+    /** CONNECT FUNCTIONS **/
+    
     /**
-     * Makes a connection to the RSPdriver via RSPport.
+     * Makes a connection to the RSPdriver via RSPport. Before initializing a 
+     * new RSPport it checks if the hostName is the same as the old one. If so
+     * it will *not* make a new connection.
+     * A existing connection will be disconnected if needed.
+     *
      * @param   hostname    hostname of the board.
      */
     public void connect(String hostname)
     {
+        // Check if there is already a connection
+        if (isConnected())
+        {
+            if (this.hostname.equals(hostname))
+            {
+                /*
+                 * If the hostname is the same we don't need to make a new
+                 * connection and we won't!
+                 */                
+                return;
+            }
+            else
+            {
+                /* 
+                 * When there is a connection and the hostnames don't match
+                 * disconnect the existing connection.
+                 */
+                disconnect();
+            }
+        }
+               
+        this.hostname = hostname;
         ptrRSPport = 1;
-        // ptrRSPport = init(hostname);
+        // @TODO: ptrRSPport = init(hostname);
     }
     
     /**
@@ -60,7 +87,7 @@ public class Board
      */
     public void disconnect()
     {
-        // delete(ptrRSPport);
+        // @TODO: delete(ptrRSPport);
         ptrRSPport = 0;
     }
     
@@ -72,21 +99,24 @@ public class Board
     {
         return (ptrRSPport > 0);
     }
-    // End of connect functions
     
-    // Native functions
+    /** END OF CONNECT FUNCTIONS **/
+    
+    /** NATIVE FUNCTIONS **/
     private native int init(String hostname); // initializes RSPport on the C++ side, for further use.
     private native void delete(int ptrRSPport); // deletes the RSPport instance on the c++ side.
     private native BoardStatus[] retrieveStatus(int rcuMask, int ptrRSPport); // retrieves the boards.
     private native int retrieveNofBoards(int ptrRSPport); // retrieves the number of boards.
     private native boolean setWaveformSettings(int rcuMask, int mode, int frequency, int amplitude, int ptrRSPport); // Sets the waveform settings.
     private native double[] getSubbandStats(int rcuMask, int ptrRSPport); // retrieves subbandstats
-    // End of native functions
-    
+        
     static
     {
         System.loadLibrary("jrsp");
     }
+    
+    /** END OF NATIVE FUNCTIONS **/
+    
     
     /**
      * @return  hostname
@@ -126,7 +156,6 @@ public class Board
     public boolean setWaveformSettings(int rcuMask, int mode, int frequency, int amplitude)
     {
         //@TODO remove!
-        System.out.println("RCUMask: "+rcuMask+"\nMode: "+mode+"\nFrequency: "+frequency+"\nAmplitude: "+amplitude);
         return setWaveformSettings(rcuMask, mode, frequency, amplitude, ptrRSPport);
     }
     

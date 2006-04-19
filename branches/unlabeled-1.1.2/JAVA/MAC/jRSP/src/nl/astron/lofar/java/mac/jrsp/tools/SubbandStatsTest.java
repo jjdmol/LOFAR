@@ -16,12 +16,12 @@ public class SubbandStatsTest
         }
         b.disconnect();
         
-        if(subbandStats != null)
+   /*     if(subbandStats != null)
         {            
             for(int i=0; i<subbandStats.length; i++)
             {
                 System.out.println(i + ": " + subbandStats[i]);
             }
-        }
+        }*/
     }
 }

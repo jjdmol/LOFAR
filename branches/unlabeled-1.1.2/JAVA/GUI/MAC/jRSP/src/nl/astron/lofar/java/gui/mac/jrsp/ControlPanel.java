@@ -6,26 +6,28 @@ import javax.swing.JPanel;
 import javax.swing.event.EventListenerList;
 
 /**
- * The ControlPanel is a component used by the MainPanel to get the hostname and
- * refreshrate that should be used to connect. 
- *
- * When an action occurs (for example clicking on the connect button) 
- * ControlPanel calls a function from the MainPanel. Because of that it's
- * important that setMainPanel is called after initializing the ControlPanel.
+ * The ControlPanel is a component used by the MainPanel to control the board.
  *
  * @author  balken
  */
 public class ControlPanel extends JPanel implements ActionListener
 {
-    /** MainPanel - is used like a sort of ActionListener. All actions call
-                    functions in the MainPanel class. */
-    private MainPanel mainPanel;
+    /** "Constant" variables used to identify the action required. When an
+        action has occured. */
+    public static final int STOP = 0;
+    public static final int UPDATE = 1;
+    public static final int REFRESH = 2;    
+   
+    /** List of ActionListeners listening to this object. */
+    private EventListenerList listenerList; 
     
     /** 
      * Creates new form ControlPanel.
      */
     public ControlPanel() 
-    {        
+    {
+        listenerList = new EventListenerList();
+        
         initComponents();
         
         txtHostname.addActionListener(this);
@@ -34,67 +36,71 @@ public class ControlPanel extends JPanel implements ActionListener
         btnStop.addActionListener(this);
     }
     
-    /**
-     * @return mainPanel
-     */
-    public MainPanel getMainPanel()
+    public void addActionListener(ActionListener l)
     {
-        return mainPanel;
+        listenerList.add(ActionListener.class, l);
+    }
+    
+    public void removeActionListener(ActionListener l)
+    {
+        listenerList.remove(ActionListener.class, l);
     }
     
     /**
-     * Sets the mainPanel.
-     * @param   mainPanel   The new mainPanel to set.
+     * Notify all listeners of the action that has occured.
      */
-    public void setMainPanel(MainPanel mainPanel)
+    public void fireActionPerformed(ActionEvent e)
     {
-        this.mainPanel = mainPanel;
-    }    
-    
+        Object[] listeners = listenerList.getListenerList();
+        
+        for (int i = listeners.length - 2; i >= 0; i -= 2)
+        {
+            if (listeners[i] == ActionListener.class)
+            {
+                ((ActionListener) listeners[i+1]).actionPerformed(e);
+            }
+        }       
+    }
+          
     /**
      * Invoked when an action occurs.
      * @param   e                       ActionEvent
-     * @throws  NumberFormatException   Thrown if txtRefreshRate didn't contain a valid number.
      */
     public void actionPerformed(ActionEvent e)
-    {
-        // If the source is btnStop, the RefreshThread should be stopped else call initBoard.
-        if(e.getSource().equals(btnStop))
-        {
-            // Stop the refreshThread and set the refreshRate to 0.
-            mainPanel.stopRefreshThread();
-            mainPanel.setCurrentRefreshRate(0);
-            txtRefreshRate.setText("0");
-            return;
-        }
-                
-        int refreshRate = 0;
-        
-        // The Refreshrate can be empty but then it has to be set to "0".
-        if("".equals(txtRefreshRate.getText()))
-        {
-            txtRefreshRate.setText("0");
-        }
-        else // parse text from textfield.
-        {
-            try
-            {
-                refreshRate = Integer.parseInt(txtRefreshRate.getText());
-            }
-            catch(NumberFormatException exception)
-            {
-                // There wasn't a valid number filled in. Give error message and leave method.
-                // By making refreshRate -1 a error message is given in the mainpanel.
-                refreshRate = -1;
-            }
-        }
-                        
-        mainPanel.initBoard(txtHostname.getText(), refreshRate);
+    {        
+        fireActionPerformed(e);
     }
     
     /**
+     * Returns the action required by the source object.
+     * This method is called by the MainPanel, when an action occured and wil 
+     * return a int representing the action that has to performed: stopping
+     * the refresh of the current panel in the MainPanel or updating the panel.
+     * @param   o   Object that has "thrown" the ActionEvent, received by the MainPanel.
+     * @return      A int representing the action that has to be taken.
+     */
+    public int getSourceAction(Object o)
+    {
+       if(o.equals(btnStop)) 
+       {
+           // the stop button has been pressed
+           return STOP;
+       } 
+       else if("".equals(txtRefreshRate.getText().trim())) 
+       {
+           // the refreshrate textbox is empty -> single update
+           return UPDATE;
+       }
+       else
+       {
+           // the refreshrate was set but it can be wrong data!
+           return REFRESH;
+       }
+    }
+        
+    /**
      * Return the value of txtHostname.
-     * @return txtHostname.getText();
+     * @return      txtHostname.getText();
      */
     public String getHostname()
     {
@@ -102,7 +108,32 @@ public class ControlPanel extends JPanel implements ActionListener
     }
     
     /**
-     * Sets the text of the RefreshRate textfield.
+     * Sets the value of txtHostname.
+     * @param   s   The new value for txtHostname
+     */
+    public void setHostname(String hostname)
+    {
+        txtHostname.setText(hostname);
+    }
+    
+    /**
+     * Return the value of txtRefreshrate. If txtRefreshrate doesn't hold a
+     * valid number, it will return -1, indicating the error.
+     */
+    public int getRefreshRate()
+    {        
+        try
+        {
+            return Integer.parseInt(txtRefreshRate.getText());
+        }
+        catch(NumberFormatException e)
+        {
+            return -1;
+        }
+    }
+    
+    /**
+     * Sets the text of txtRefreshrate.
      * @param   refreshRate     The refreshRate to set
      */
     public void setRefreshRate(int refreshRate)
