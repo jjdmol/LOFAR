@@ -46,7 +46,9 @@ public class PlotPanel extends JPanel{
                 
                 add(plot);
             } catch (PlotterException ex) {
-                add(new JLabel(ex.getMessage()));
+                plot = new JPanel();
+                plot.add(new JLabel(ex.getMessage()));
+                add(plot);
                 //ex.printStackTrace();
             }
         }
@@ -63,9 +65,6 @@ public class PlotPanel extends JPanel{
                 plot.setSize(width,height);
                 //plot.validate();
                 System.out.println("Width/Height of PlotLayout: "+width2+"/"+height2);
-                //plot.firePropertyChange("Height",height,height2);
-                //plot.firePropertyChange("Width",width,width2);
-                
             }
             public void componentShown(ComponentEvent e){}
         };
@@ -74,7 +73,7 @@ public class PlotPanel extends JPanel{
 		return null;
 	}
 
-	public void exportRoot(){
+	public void exportData(){
 
 	}
 
