@@ -18,12 +18,13 @@ package nl.astron.lofar.sas.plotter;
 import gov.noaa.pmel.sgt.dm.SGTMetaData;
 import gov.noaa.pmel.sgt.dm.SimpleLine;
 import gov.noaa.pmel.sgt.swing.JPlotLayout;
-import java.awt.BorderLayout;
+import gov.noaa.pmel.util.Point2D;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
+import nl.astron.lofar.sas.plotter.exceptions.EmptyDataSetException;
+import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 
 /**
  * @created 11-04-2006, 15:00
@@ -39,9 +40,9 @@ public class SGTPlot implements IPlot{
         
 	}
         
-	public JComponent createPlot(int type, String name, HashMap data){
-	    JPanel keyAndPlotPanel = new JPanel();
-            keyAndPlotPanel.setLayout(new BorderLayout());
+	public JComponent createPlot(int type, String name, HashMap data) throws PlotterException{
+	    //JPanel keyAndPlotPanel = new JPanel();
+            //keyAndPlotPanel.setLayout(new BorderLayout());
             JPlotLayout aNewPlot = null; 
             
             if(type==this.XYLINE){
@@ -53,15 +54,19 @@ public class SGTPlot implements IPlot{
             else if(type==this.SCATTER){
                 aNewPlot = scatterPlot(name,data);
             }
-            keyAndPlotPanel.add(aNewPlot,BorderLayout.CENTER);
-            //keyAndPlotPanel.add(aNewPlot.getKeyPane(),BorderLayout.EAST);
             
-            return keyAndPlotPanel;
+            //keyAndPlotPanel.add(aNewPlot,BorderLayout.CENTER);
+            //JPane keyPane = aNewPlot.getKeyPane();
+            
+            //keyAndPlotPanel.add(keyPane,BorderLayout.SOUTH);
+            
+            return aNewPlot;
 	}
         
-        private JPlotLayout linePlot(String name, HashMap data){
+        private JPlotLayout linePlot(String name, HashMap data) throws PlotterException{
             JPlotLayout layout = new JPlotLayout(JPlotLayout.LINE, false, false,
                     name,null,false);
+            layout.setSize(640,480);
             //layout.setEditClasses(false);
             layout.setBatch(true);
             layout.setId(name);
@@ -79,26 +84,26 @@ public class SGTPlot implements IPlot{
                 Iterator it = data.keySet().iterator();
                 while(it.hasNext()){
                     String key = (String)it.next();
-                    if(key.equalsIgnoreCase(PlotConstants.DATASETNAME)){
+                    if(key.equalsIgnoreCase(PlotConstants.DATASET_NAME)){
                         plotTitle = (String)data.get(key);
                     }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASETSUBNAME)){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_SUBNAME)){
                         plotSubTitle = (String)data.get(key);
                     }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASETXAXISLABEL)){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISLABEL)){
                         xAxisTitle = (String)data.get(key);
                     }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASETXAXISUNIT)){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISUNIT)){
                         xAxisUnits = (String)data.get(key);
                     }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASETYAXISLABEL)){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISLABEL)){
                         yAxisTitle = (String)data.get(key);
                     }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASETYAXISUNIT)){
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISUNIT)){
                         yAxisUnits = (String)data.get(key);
                     }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASETVALUES)){
-                        values = (HashSet<HashMap>)data.get(key);
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
+                       values = (HashSet<HashMap>)data.get(key); 
                     }
                 }
                 //Set titles to plot
@@ -130,14 +135,14 @@ public class SGTPlot implements IPlot{
                         //Retrieve XY pair label and xy values
                         while(lineIterator.hasNext()){ 
                             String key = (String)lineIterator.next();
-                            if(key.equalsIgnoreCase(PlotConstants.VALUELABEL)){
+                            if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
                             lineLabel = (String)line.get(key);
                             
                             }  
-                            else if(key.equalsIgnoreCase(PlotConstants.XVALUES)){
+                            else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
                                xArray = (double[])line.get(key);
                             }
-                            else if(key.equalsIgnoreCase(PlotConstants.YVALUES)){
+                            else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
                                 yArray = (double[])line.get(key);
                             }                   
                         }
@@ -151,19 +156,19 @@ public class SGTPlot implements IPlot{
                     }
                 }
             }else{
-                //throw exception
-                System.out.println("No data in set");
-                System.exit(0);
+                //TODO LOG!
+                throw new EmptyDataSetException();
+                
             }
             
             layout.setBatch(false);
             return layout;
         }
-        private JPlotLayout gridPlot(String name, HashMap data){
+        private JPlotLayout gridPlot(String name, HashMap data) throws PlotterException{
             return null;   
         }
-        private JPlotLayout scatterPlot(String name, HashMap data){
-            return null;   
+        private JPlotLayout scatterPlot(String name, HashMap data) throws PlotterException{
+            return null;
         }       
         public HashMap getData(){
             return data;
