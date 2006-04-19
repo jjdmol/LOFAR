@@ -49,6 +49,9 @@ namespace LOFAR {
 class ParameterSet
 {
 public:
+	typedef ParameterSetImpl::iterator			iterator;
+	typedef ParameterSetImpl::const_iterator		const_iterator;
+
 	// \name Construction and Destruction
 	// A ParameterSet can be constructed as empty collection, can be
 	// read from a file or copied from another collection. 
@@ -68,6 +71,14 @@ public:
 
 	// Copying is allowed.
 	ParameterSet& 	operator=(const ParameterSet& that);
+	//@}
+
+	// Iteration.
+	//@{
+	iterator begin();
+	iterator end();
+	const_iterator begin() const;
+	const_iterator end() const;
 	//@}
 
 
@@ -204,6 +215,23 @@ ParameterSet* 	globalParameterSet();
 //#
 //# ---------- inline functions ----------
 //#
+inline ParameterSet::iterator	ParameterSet::begin      ()
+{
+	return itsSet->begin();
+}
+inline ParameterSet::iterator	ParameterSet::end      ()
+{
+	return itsSet->end();
+}
+inline ParameterSet::const_iterator	ParameterSet::begin      () const
+{
+	return itsSet->begin();
+}
+inline ParameterSet::const_iterator	ParameterSet::end      () const
+{
+	return itsSet->end();
+}
+
 inline void	ParameterSet::clear      ()
 {
 	itsSet->clear();

@@ -113,12 +113,20 @@ int main() {
 		vector<int32> intVector = myPS.getInt32Vector("vtest.intVector1Dim");
 		cout << intVector.size() << " elements in intVector1Dim\n";
 		copy (intVector.begin(), intVector.end(), 
-								std::ostream_iterator<int, char>(cout, ","));
+		      std::ostream_iterator<int, char>(cout, ","));
 		//	cout << intVector << endl;
 		cout << endl;
 	}
 	catch (LOFAR::Exception& ex) {
 		LOG_DEBUG_STR ("Exception:" << ex.what());
+	}
+
+	// Iterate through all keys.
+	cout << endl << "Iterate over all keys ..." << endl;
+	for (ParameterSet::iterator iter = myPS.begin();
+	     iter != myPS.end();
+	     iter++) {
+	  cout << iter->first << endl;
 	}
 
   } catch (std::exception& ex) {
