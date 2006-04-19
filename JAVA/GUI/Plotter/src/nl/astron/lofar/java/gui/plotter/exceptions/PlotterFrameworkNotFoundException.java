@@ -23,7 +23,7 @@ public class PlotterFrameworkNotFoundException extends PlotterException{
         super();
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_FRAMEWORKNOTFOUND;
+        return PlotConstants.EXCEPTION_FRAMEWORK_NOT_FOUND;
     }
     
     

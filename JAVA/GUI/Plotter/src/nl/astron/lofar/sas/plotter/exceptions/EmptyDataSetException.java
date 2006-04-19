@@ -23,7 +23,7 @@ public class EmptyDataSetException extends PlotterException{
         super();
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_EMPTYDATASET;
+        return PlotConstants.EXCEPTION_EMPTY_DATASET;
     }
     
     

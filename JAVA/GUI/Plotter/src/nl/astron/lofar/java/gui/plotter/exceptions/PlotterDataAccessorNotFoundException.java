@@ -1,5 +1,5 @@
 /*
- * PlotterFrameworkNotFoundException.java
+ * PlotterDataAccessorNotFoundException.java
  *
  * Copyright (C) 2006
  * ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -13,17 +13,17 @@ import nl.astron.lofar.sas.plotter.PlotConstants;
 
 /**
  * @version $Id$
- * @created April 18, 2006, 11:02 AM
+ * @created April 19, 2006, 11:02 AM
  * @author pompert
  */
-public class PlotterFrameworkNotFoundException extends PlotterException{
+public class PlotterDataAccessorNotFoundException extends PlotterException{
     
-    /** Creates a new instance of PlotterFrameworkNotFoundException */
-    public PlotterFrameworkNotFoundException() {
+    /** Creates a new instance of PlotterDataAccessorNotFoundException */
+    public PlotterDataAccessorNotFoundException() {
         super();
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_FRAMEWORK_NOT_FOUND;
+        return PlotConstants.EXCEPTION_DATA_ACCESS_NOT_FOUND;
     }
     
     
