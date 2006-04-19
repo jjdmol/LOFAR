@@ -91,24 +91,25 @@ namespace LOFAR
     { 
       std::cout << "Runnning imager please wait..." << std::endl;
       myImager->makeimage(itsImageType, itsImageName);
+      std::cout << "Runnning imager finished." << std::endl;
       return true;
     }
 
     //===============>>> ImagerProcessControl::init  <<<================================
     tribool ImagerProcessControl::init()
     {
-      myMS     = new casa::MeasurementSet(itsMS);
+      myMS     = new casa::MeasurementSet(itsMS, casa::Table::Update);
       myImager = new casa::Imager (*myMS, itsCompress);
       
-      const casa::Vector<casa::Int> myNChannel(itsNChannel);
-      const casa::Vector<casa::Int> myStart(itsStart);
-      const casa::Vector<casa::Int> myStep(itsStep);
+      const casa::Vector<casa::Int> myNChannel(1, itsNChannel);
+      const casa::Vector<casa::Int> myStart(1, itsStart);
+      const casa::Vector<casa::Int> myStep(1, itsStep);
       const casa::String            myMode(itsMode);
       const casa::MRadialVelocity   itsMStart(casa::Quantity(0, "km/s"), casa::MRadialVelocity::DEFAULT); //? unknown what the default should be, AR
       const casa::MRadialVelocity   itsMStep(casa::Quantity(0, "km/s"), casa::MRadialVelocity::DEFAULT); //? unknown what the default should be, AR
-      const casa::Vector<casa::Int> itsSpectralWindowIDs(0); //It's 1 in Glish, but propably 0 in C++
+      const casa::Vector<casa::Int> itsSpectralWindowIDs(1, 0); //It's 1 in Glish, but propably 0 in C++
       int                           itsFieldID(0); //It's 1 in Glish, but propably 0 in C++
-      const casa::Vector<casa::Int> myFieldID(itsFieldID);
+      const casa::Vector<casa::Int> myFieldID(1, itsFieldID);
       myImager->setdata(myMode, myNChannel, myStart, myStep, itsMStart, itsMStep, itsSpectralWindowIDs, myFieldID);
       
       const casa::Quantity          itsCellX(itsCellX, "arcsec");
@@ -120,8 +121,8 @@ namespace LOFAR
       const casa::Quantity          itsShiftY(0, "arcsec");
       int                           itsFacets(0); //It's 1 in Glish, but propably 0 in C++
       const casa::Quantity          itsDistance(0, "m");
-      const casa::Float             itsPaStep(0.0); //? unknown what the default should be, AR
-      const casa::Float             itsPbLimit(0.0); //? unknown what the default should be, AR
+      const casa::Float             itsPaStep(5.0); //? unknown what the default should be, AR
+      const casa::Float             itsPbLimit(0.05); //? unknown what the default should be, AR
       myImager->setimage(itsNX, itsNY, itsCellX, itsCellY, myStokes, itsDoShift, itsPhaseCenter, itsShiftX, itsShiftY,
                          myMode, itsNChannel, itsStart, itsStep, itsMStart, itsMStep, itsSpectralWindowIDs,
                          itsFieldID, itsFacets, itsDistance, itsPaStep, itsPbLimit);
