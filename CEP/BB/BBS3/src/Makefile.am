@@ -63,7 +63,8 @@ MNS/MeqSourceList.h \
 MNS/MeqStatExpr.h \
 MNS/MeqStation.h \
 MNS/MeqStatUVW.h \
-MNS/MeqStoredParmPolc.h
+MNS/MeqStoredParmPolc.h \
+MNS/Pool.h
 
 noinst_HEADERS =
 
