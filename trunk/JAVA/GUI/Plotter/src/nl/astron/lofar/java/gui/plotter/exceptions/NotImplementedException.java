@@ -1,5 +1,5 @@
 /*
- * PlotterFrameworkNotFoundException.java
+ * NotImplementedException.java
  *
  * Copyright (C) 2006
  * ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -13,17 +13,19 @@ import nl.astron.lofar.sas.plotter.PlotConstants;
 
 /**
  * @version $Id$
- * @created April 18, 2006, 11:02 AM
+ * @created April 19, 2006, 11:00 AM
  * @author pompert
  */
-public class PlotterFrameworkNotFoundException extends PlotterException{
+public class NotImplementedException extends PlotterException{
     
-    /** Creates a new instance of PlotterFrameworkNotFoundException */
-    public PlotterFrameworkNotFoundException() {
+    private String message;
+    /** Creates a new instance of NotImplementedException */
+    public NotImplementedException(String message) {
         super();
+        this.message = message;
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_FRAMEWORK_NOT_FOUND;
+        return PlotConstants.EXCEPTION_NOTIMPLEMENTED + message;
     }
     
     

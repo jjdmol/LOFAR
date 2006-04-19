@@ -23,7 +23,7 @@ public class PlotterFrameworkNotCompatibleException extends PlotterException{
         super();
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_FRAMEWORKNOTCOMPATIBLE;
+        return PlotConstants.EXCEPTION_FRAMEWORK_NOT_COMPATIBLE;
     }
     
     
