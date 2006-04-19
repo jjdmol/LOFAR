@@ -11,6 +11,7 @@ package nl.astron.lofar.sas.plotter;
 
 import java.util.HashMap;
 import javax.swing.JComponent;
+import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 
 /**
  * @created 11-04-2006, 15:00
@@ -31,7 +32,7 @@ public interface IPlot{
 	 * @param data
 	 * 
 	 */
-	public JComponent createPlot(int type, String name, HashMap data);
+	public JComponent createPlot(int type, String name, HashMap data) throws PlotterException;
         
         public HashMap getData();
         

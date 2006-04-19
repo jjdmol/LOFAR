@@ -13,6 +13,10 @@ import java.awt.Image;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JComponent;
+import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
+import nl.astron.lofar.sas.plotter.exceptions.PlotterFrameworkInitializationException;
+import nl.astron.lofar.sas.plotter.exceptions.PlotterFrameworkNotCompatibleException;
+import nl.astron.lofar.sas.plotter.exceptions.PlotterFrameworkNotFoundException;
 
 /**
  * @created 11-04-2006, 15:00
@@ -27,35 +31,41 @@ public class PlotController{
 	private IPlot m_IPlot;
 	
 	public PlotController(){
-            m_PlotDataManager = new PlotDataManager();
+            m_PlotDataManager = PlotDataManager.getInstance();
             //Initialise and load plotter classes and data interfaces
 	}
 
 	public void finalize() throws Throwable {
-
+            m_PlotDataManager = null;
+            m_PlotGroup = null;
+            m_IPlot = null;
 	}
 
 	/**
 	 * @param constraint
 	 * 
 	 */
-	public JComponent createPlot(String constraint){
+	public JComponent createPlot(String constraint) throws PlotterException{
         
             Object aPlotter = null;
             IPlot aNewPlot = null;
             try {
 
-                Class implementator = IPlot.class.forName(PlotConstants.FRAMEWORK);
+                Class implementator = PlotController.class.forName(PlotConstants.FRAMEWORK);
                 aPlotter = implementator.newInstance();
                 aNewPlot = (IPlot)aPlotter;
             } catch (IllegalAccessException ex) {
-                ex.printStackTrace();
+                //TODO Log!
+                throw new PlotterFrameworkInitializationException();
             } catch (ClassNotFoundException ex) {
-                ex.printStackTrace();
+                //TODO Log!
+                throw new PlotterFrameworkNotFoundException();
             } catch (InstantiationException ex) {
-                ex.printStackTrace();
+                //TODO Log!
+                throw new PlotterFrameworkInitializationException();
             } catch (ClassCastException ex) {
-                ex.printStackTrace();
+                //TODO LOG!
+                throw new PlotterFrameworkNotCompatibleException();
             }
             
             if(aPlotter != null){
