@@ -6,7 +6,7 @@ AC_INIT(src/BlackBoardDemo.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(BlackBoardDemo, 0.1, no-define)
+AM_INIT_AUTOMAKE(BBS3, 0.1, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -52,7 +52,6 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_AIPSPP(1,"-lmeasures -ltables -lscimath -lscimath_f -lcasa")
 lofar_MPI
 
 lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
@@ -70,6 +69,9 @@ lofar_INTERNAL(CEP/BB/MS,MS,,1,MS/MSDesc.h,bbms)
 
 lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
 lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)
+
+lofar_AIPSPP(1,"-lmeasures -ltables -lscimath -lscimath_f -lcasa")
+lofar_LAPACK(1)
 
 dnl
 dnl Output Makefiles
