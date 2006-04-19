@@ -73,15 +73,12 @@ namespace LOFAR
 
       // Reserve space for the result to avoid resizing of the vector.
       out.direction.reserve(in.direction.size() * 
-                           in.position.size() * 
-                           in.epoch.size());
+                            in.position.size() * 
+                            in.epoch.size());
 
       // Precalculate the positions on earth; they do not change with time.
       vector<MVPosition> pos(in.position.size());
       for (uint i = 0; i < pos.size(); i++) {
-//         pos[i] = MVPosition((Quantity(in.position[i].height(), "m")),
-//                             (Quantity(in.position[i].longitude(), "rad")),
-//                             (Quantity(in.position[i].latitude(), "rad")));
         pos[i] = MVPosition(in.position[i].get());
       }
 
@@ -132,8 +129,6 @@ namespace LOFAR
             for (uint k = 0; k < in.direction.size(); k++) {
 
               // Define the astronomical direction as a J2000 direction.
-//               MVDirection sky(in.direction[k].angle0(), 
-//                               in.direction[k].angle1());
               MVDirection sky(in.direction[k].get());
 
               // Convert this direction, using the conversion engine.
@@ -144,8 +139,7 @@ namespace LOFAR
 
               // Convert to local sky coordinates and add to the return vector.
               out.direction.push_back(Direction(angles(0), angles(1), 
-                                              Direction::AZEL));
-
+                                                Direction::AZEL));
             }
           }
         }
@@ -201,9 +195,6 @@ namespace LOFAR
       // Precalculate the positions on earth; they do not change with time.
       vector<MVPosition> pos(in.position.size());
       for (uint i = 0; i < pos.size(); i++) {
-//         pos[i] = MVPosition((Quantity(in.position[i].height(), "m")),
-//                             (Quantity(in.position[i].longitude(), "rad")),
-//                             (Quantity(in.position[i].latitude(), "rad")));
         pos[i] = MVPosition(in.position[i].get());
       }
 
@@ -245,8 +236,7 @@ namespace LOFAR
           for (uint i = 0; i < in.direction.size(); i++) {
             
             // Define the astronomical direction w.r.t. the reference frame.
-//             MVDirection sky(in.direction[i].angle0(), in.direction[i].angle1()); 
-              MVDirection sky(in.direction[i].get());
+            MVDirection sky(in.direction[i].get());
             
             // Convert this direction, using the conversion engine.
             MDirection dir = conv(sky);
@@ -256,7 +246,7 @@ namespace LOFAR
 
             // Convert to local sky coordinates and add to the return vector.
             out.direction.push_back(Direction(angles(0), angles(1), 
-                                            Direction::J2000));
+                                              Direction::J2000));
           }
         }
 
@@ -275,8 +265,7 @@ namespace LOFAR
             frame.resetPosition(pos[i]);
             
             // Define the astronomical direction w.r.t. the reference frame.
-//             MVDirection sky(in.direction[i].angle0(), in.direction[i].angle1());
-              MVDirection sky(in.direction[i].get());
+            MVDirection sky(in.direction[i].get());
             
             // Convert this direction, using the conversion engine.
             MDirection dir = conv(sky);
@@ -286,8 +275,7 @@ namespace LOFAR
 
             // Convert to local sky coordinates and add to the return vector.
             out.direction.push_back(Direction(angles(0), angles(1), 
-                                            Direction::J2000));
-            
+                                              Direction::J2000));
           }
         }
       }
@@ -329,15 +317,12 @@ namespace LOFAR
 
       // Reserve space for the result to avoid resizing of the vector.
       out.direction.reserve(in.direction.size() * 
-                              in.position.size() * 
-                              in.epoch.size());
+                            in.position.size() * 
+                            in.epoch.size());
 
       // Precalculate the positions on earth; they do not change with time.
       vector<MVPosition> pos(in.position.size());
       for (uint i = 0; i < pos.size(); i++) {
-//         pos[i] = MVPosition((Quantity(in.position[i].height(), "m")),
-//                             (Quantity(in.position[i].longitude(), "rad")),
-//                             (Quantity(in.position[i].latitude(), "rad")));
         pos[i] = MVPosition(in.position[i].get());
       }
 
@@ -388,8 +373,6 @@ namespace LOFAR
             for (uint k = 0; k < in.direction.size(); k++) {
               
               // Define the astronomical direction as a J2000 direction.
-//               MVDirection sky(in.direction[k].angle0(), 
-//                               in.direction[k].angle1());
               MVDirection sky(in.direction[k].get());
 
               // Convert this direction, using the conversion engine.
@@ -400,8 +383,7 @@ namespace LOFAR
 
               // Convert to local sky coordinates and add to the return vector.
               out.direction.push_back(Direction(angles(0), angles(1), 
-                                              Direction::ITRF));
-
+                                                Direction::ITRF));
             }
           }
         }
@@ -457,9 +439,6 @@ namespace LOFAR
       // Precalculate the positions on earth; they do not change with time.
       vector<MVPosition> pos(in.position.size());
       for (uint i = 0; i < pos.size(); i++) {
-//         pos[i] = MVPosition((Quantity(in.position[i].height(), "m")),
-//                             (Quantity(in.position[i].longitude(), "rad")),
-//                             (Quantity(in.position[i].latitude(), "rad")));
         pos[i] = MVPosition(in.position[i].get());
       }
 
@@ -501,8 +480,7 @@ namespace LOFAR
           for (uint i = 0; i < in.direction.size(); i++) {
             
             // Define the astronomical direction w.r.t. the reference frame.
-//             MVDirection sky(in.direction[i].angle0(), in.direction[i].angle1());
-              MVDirection sky(in.direction[i].get());
+            MVDirection sky(in.direction[i].get());
             
             // Convert this direction, using the conversion engine.
             MDirection dir = conv(sky);
@@ -512,7 +490,7 @@ namespace LOFAR
 
             // Convert to local sky coordinates and add to the return vector.
             out.direction.push_back(Direction(angles(0), angles(1), 
-                                            Direction::J2000));
+                                              Direction::J2000));
           }
         }
 
@@ -531,8 +509,7 @@ namespace LOFAR
             frame.resetPosition(pos[i]);
             
             // Define the astronomical direction w.r.t. the reference frame.
-//             MVDirection sky(in.direction[i].angle0(), in.direction[i].angle1());
-              MVDirection sky(in.direction[i].get());
+            MVDirection sky(in.direction[i].get());
             
             // Convert this direction, using the conversion engine.
             MDirection dir = conv(sky);
@@ -542,8 +519,7 @@ namespace LOFAR
 
             // Convert to local sky coordinates and add to the return vector.
             out.direction.push_back(Direction(angles(0), angles(1), 
-                                            Direction::J2000));
-            
+                                              Direction::J2000));
           }
         }
       }

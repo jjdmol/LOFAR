@@ -57,31 +57,31 @@ int main(int /*argc*/, const char* const argv[])
 
     ConverterCommand sendCmd(ConverterCommand::J2000toAZEL);
 
-    vector<Direction> sendSky;
-    sendSky.push_back(Direction());
-    sendSky.push_back(Direction(0.4, -0.19));
+    vector<Direction> sendDirection;
+    sendDirection.push_back(Direction());
+    sendDirection.push_back(Direction(0.4, -0.19));
   
-    vector<Position> sendEarth;
-    sendEarth.push_back(Position());
-    sendEarth.push_back(Position(0.25*M_PI, -0.33*M_PI, 1));
-    sendEarth.push_back(Position(-0.67*M_PI, 0.75*M_PI, 249.98));
+    vector<Position> sendPosition;
+    sendPosition.push_back(Position());
+    sendPosition.push_back(Position(0.25*M_PI, -0.33*M_PI, 1));
+    sendPosition.push_back(Position(-0.67*M_PI, 0.75*M_PI, 249.98));
   
-    vector<Epoch>  sendTime;
-    sendTime.push_back(Epoch());
-    sendTime.push_back(Epoch(0));
+    vector<Epoch>  sendEpoch;
+    sendEpoch.push_back(Epoch());
+    sendEpoch.push_back(Epoch(0));
 
     ConverterCommand recvCmd;
-    vector<Direction> recvSky;
-    vector<Position> recvEarth;
-    vector<Epoch> recvTime;
+    vector<Direction> recvDirection;
+    vector<Position> recvPosition;
+    vector<Epoch> recvEpoch;
 
     TH_Mem aTH;
     DH_Request sendDhReq;
     DH_Request recvDhReq;
     Connection conn("conn", &sendDhReq, &recvDhReq, &aTH, false);
 
-    RequestData sendReqData(sendSky, sendEarth, sendTime);
-    RequestData recvReqData(recvSky, recvEarth, recvTime);
+    RequestData sendReqData(sendDirection, sendPosition, sendEpoch);
+    RequestData recvReqData(recvDirection, recvPosition, recvEpoch);
 
     sendDhReq.writeBuf(sendCmd, sendReqData);
     conn.write();
@@ -95,8 +95,7 @@ int main(int /*argc*/, const char* const argv[])
     }
     ASSERT(sendReqData.position.size() == recvReqData.position.size());
     for (uint i=0; i < sendReqData.position.size(); ++i) {
-      ASSERTSTR(sendReqData.position[i] == recvReqData.position[i],
-                setprecision(16) << sendReqData.position[i].get() << "," << recvReqData.position[i].get());
+      ASSERT(sendReqData.position[i] == recvReqData.position[i]);
     }
     ASSERT(sendReqData.epoch.size() == recvReqData.epoch.size());
     for (uint i=0; i < sendReqData.epoch.size(); ++i) {

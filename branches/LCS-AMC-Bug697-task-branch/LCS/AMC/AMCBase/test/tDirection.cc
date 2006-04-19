@@ -95,13 +95,13 @@ int main(int /*argc*/, const char* argv[])
     cout << "dir2 = " << dir2 << endl;
     cout << "dir3 = " << dir3 << endl;
 
-    Position pos(-1.2, 2.38, Direction::AZEL);
-    cout << "pos.isValid() = " << pos.isValid() << endl;
-    cout << "pos.showType() = " << pos.showType() << endl;
+//     Position pos(-1.2, 2.38, Direction::AZEL);
+//     cout << "pos.isValid() = " << pos.isValid() << endl;
+//     cout << "pos.showType() = " << pos.showType() << endl;
 
-    Direction dir(-1.2, 2.38, Position::ITRF);
-    cout << "dir.isValid() = " << dir.isValid() << endl;
-    cout << "dir.showType() = " << dir.showType() << endl;
+//     Direction dir(-1.2, 2.38, Position::ITRF);
+//     cout << "dir.isValid() = " << dir.isValid() << endl;
+//     cout << "dir.showType() = " << dir.showType() << endl;
 
   }
 

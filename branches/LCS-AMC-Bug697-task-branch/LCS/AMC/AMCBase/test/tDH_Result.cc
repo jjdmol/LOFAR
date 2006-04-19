@@ -42,30 +42,30 @@ int main(int /*argc*/, const char* const argv[])
 
   try {
 
-    ConverterStatus sendStat(ConverterStatus::ERROR, "Uh-oh, oops!");
+    ConverterStatus sendStatus(ConverterStatus::ERROR, "Uh-oh, oops!");
 
-    vector<Direction> sendSky;
-    sendSky.push_back(Direction());
-    sendSky.push_back(Direction(0.4, -0.19));
+    vector<Direction> sendDirection;
+    sendDirection.push_back(Direction());
+    sendDirection.push_back(Direction(0.4, -0.19));
 
-    ConverterStatus recvStat;
-    vector<Direction> recvSky;
+    ConverterStatus recvStatus;
+    vector<Direction> recvDirection;
 
     TH_Mem aTH;
     DH_Result sendDhRes;
     DH_Result recvDhRes;
     Connection conn("conn", &sendDhRes, &recvDhRes, &aTH, false);
     
-    ResultData sendResData(sendSky);
-    ResultData recvResData(recvSky);
+    ResultData sendResData(sendDirection);
+    ResultData recvResData(recvDirection);
 
-    sendDhRes.writeBuf(sendStat, sendResData);
+    sendDhRes.writeBuf(sendStatus, sendResData);
     conn.write();
     conn.read();
-    recvDhRes.readBuf(recvStat, recvResData);
+    recvDhRes.readBuf(recvStatus, recvResData);
 
-    ASSERT(sendStat.get()  == recvStat.get() &&
-           sendStat.text() == recvStat.text());
+    ASSERT(sendStatus.get()  == recvStatus.get() &&
+           sendStatus.text() == recvStatus.text());
     ASSERT(sendResData.direction.size() == recvResData.direction.size());
     for (uint i=0; i < sendResData.direction.size(); ++i) {
       ASSERT(sendResData.direction[i] == recvResData.direction[i]);

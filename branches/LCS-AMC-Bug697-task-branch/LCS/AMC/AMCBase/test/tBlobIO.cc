@@ -41,115 +41,115 @@ using namespace LOFAR;
 using namespace LOFAR::AMC;
 
 
-void test(const ConverterCommand& cco)
+void test(const ConverterCommand& occ)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(ConverterCommand).name(), 1);
-  bos << cco;
+  bos << occ;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  ConverterCommand cci;
+  ConverterCommand icc;
   bis.getStart(typeid(ConverterCommand).name());
-  bis >> cci;
+  bis >> icc;
   bis.getEnd();
 
-  ASSERTSTR(cci == cco, "cci = " << cci << "; cco = " << cco);
+  ASSERTSTR(icc == occ, "icc = " << icc << "; occ = " << occ);
 }
 
 
-void test(const ConverterStatus& cso)
+void test(const ConverterStatus& ocs)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(ConverterStatus).name(), 1);
-  bos << cso;
+  bos << ocs;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  ConverterStatus csi;
+  ConverterStatus ics;
   bis.getStart(typeid(ConverterStatus).name());
-  bis >> csi;
+  bis >> ics;
   bis.getEnd();
 
-  ASSERTSTR(csi.get() == cso.get() && 
-            csi.text() == cso.text(),
-            "csi = " << csi << "; cso = " << cso);
+  ASSERTSTR(ics.get() == ocs.get() && 
+            ics.text() == ocs.text(),
+            "ics = " << ics << "; ocs = " << ocs);
 }
 
 
-void test(const Direction& dio)
+void test(const Direction& od)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(Direction).name(), 1);
-  bos << dio;
+  bos << od;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  Direction dii;
+  Direction id;
   bis.getStart(typeid(Direction).name());
-  bis >> dii;
+  bis >> id;
   bis.getEnd();
 
-  ASSERTSTR(dii == dio, "dii = " << dii << "; dio = " << dio);
+  ASSERTSTR(id == od, "id = " << id << "; od = " << od);
 }
 
 
-void test(const Position& po)
+void test(const Position& op)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(Position).name(), 1);
-  bos << po;
+  bos << op;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  Position pi;
+  Position ip;
   bis.getStart(typeid(Position).name());
-  bis >> pi;
+  bis >> ip;
   bis.getEnd();
 
-  ASSERTSTR(pi == po, "pi = " << pi << "; po = " << po);
+  ASSERTSTR(ip == op, "ip = " << ip << "; op = " << op);
 }
 
 
-void test(const Epoch& eo)
+void test(const Epoch& oe)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(Epoch).name(), 1);
-  bos << eo;
+  bos << oe;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  Epoch ei;
+  Epoch ie;
   bis.getStart(typeid(Epoch).name());
-  bis >> ei;
+  bis >> ie;
   bis.getEnd();
 
   // We must make the detour through the doubles dci and dco, otherwise the
   // comparison will be done directly inside the FPU (using 80 bits instead of
   // 64), which will cause the assert to fail.
-  double dci(ei.mjd());
-  double dco(eo.mjd());
-  ASSERTSTR(dci == dco, "ei = " << ei << "; eo = " << eo);
+  double dci(ie.mjd());
+  double dco(oe.mjd());
+  ASSERTSTR(dci == dco, "ie = " << ie << "; oe = " << oe);
 }
 
 
