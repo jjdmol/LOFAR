@@ -21,7 +21,7 @@ import java.util.HashSet;
 public class PlotGroup{
 
 	public HashSet<IPlot> m_IPlot;
-	private HashMap data;
+	private HashMap<String,Object> data;
 	
 	public PlotGroup(){
 
