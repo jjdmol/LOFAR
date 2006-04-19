@@ -13,6 +13,7 @@ import java.awt.Image;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JComponent;
+import nl.astron.lofar.sas.plotter.exceptions.NotImplementedException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterFrameworkInitializationException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterFrameworkNotCompatibleException;
@@ -69,12 +70,12 @@ public class PlotController{
             }
             
             if(aPlotter != null){
-            
+                
                 HashMap retrieveableData = 
                     m_PlotDataManager.retrieveData(constraint);                               
                 return aNewPlot.createPlot(
                     aNewPlot.XYLINE,"test",retrieveableData);
-                
+                    
             }
             return null;
 	}
@@ -83,23 +84,23 @@ public class PlotController{
 	 * @param constraint
 	 * 
 	 */
-	public Image createPlotImage(String constraint){
-		return null;
+	public Image createPlotImage(String constraint) throws PlotterException{
+            throw new NotImplementedException("Image exportation is not yet implemented in this release."); 
 	}
 
 	/**
 	 * @param data
 	 * 
 	 */
-	public void exportRoot(Map data){
-
+	public void exportData(HashMap data) throws PlotterException{
+            throw new NotImplementedException("Export of data is not yet implemented in this release."); 
 	}
 
 	/**
 	 * @param data
 	 * 
 	 */
-	public JComponent modifyPlot(Map data){
+	public JComponent modifyPlot(HashMap data){
 		return null;
 	}
 
