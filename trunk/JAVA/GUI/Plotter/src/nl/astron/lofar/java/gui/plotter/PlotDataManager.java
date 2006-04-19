@@ -20,14 +20,23 @@ import java.util.HashSet;
  */
 public class PlotDataManager{
 
+        private static PlotDataManager instance = null;
 	//private ParmDB m_ParmDB;
 
-	public PlotDataManager(){
-
+	public static PlotDataManager getInstance(){
+           if(instance == null){
+              instance = new PlotDataManager();    
+           }
+           return instance;
+        }
+      
+        private PlotDataManager(){
+ 
 	}
+        
 
 	public void finalize() throws Throwable {
-
+            instance = null;
 	}
 
 	/**
@@ -36,29 +45,29 @@ public class PlotDataManager{
 	 */
 	public HashMap retrieveData(String constraint){
             //create the hashmap to be returned
-            HashMap data = new HashMap();
+            HashMap<String,Object> data = new HashMap<String,Object>();
             
             String plotTitle = "Testset LOFAR Plotter";
-            data.put(PlotConstants.DATASETNAME,plotTitle);
+            data.put(PlotConstants.DATASET_NAME,plotTitle);
             String plotSubTitle = "Using dummy data";
-            data.put(PlotConstants.DATASETSUBNAME,plotSubTitle);
+            data.put(PlotConstants.DATASET_SUBNAME,plotSubTitle);
             String xAxisTitle = "t";
-            data.put(PlotConstants.DATASETXAXISLABEL,xAxisTitle);
+            data.put(PlotConstants.DATASET_XAXISLABEL,xAxisTitle);
             
             String xAxisUnits = "seconds";
-            data.put(PlotConstants.DATASETXAXISUNIT,xAxisUnits);
+            data.put(PlotConstants.DATASET_XAXISUNIT,xAxisUnits);
             
             String yAxisTitle = "Frequency";
-            data.put(PlotConstants.DATASETYAXISLABEL,yAxisTitle);
+            data.put(PlotConstants.DATASET_YAXISLABEL,yAxisTitle);
             
             String yAxisUnits = "MHz";
-            data.put(PlotConstants.DATASETYAXISUNIT,yAxisUnits);
+            data.put(PlotConstants.DATASET_YAXISUNIT,yAxisUnits);
                         
             HashSet<HashMap> values = new HashSet<HashMap>();
             
-            HashMap aLine = new HashMap();
+            HashMap<String,Object> aLine = new HashMap<String,Object>();
             
-            aLine.put(PlotConstants.VALUELABEL,"Lijntje");
+            aLine.put(PlotConstants.DATASET_VALUELABEL,"Lijntje 1");
              
              double[] xArray = new double[10];
              double[] yArray = new double[10];
@@ -68,13 +77,13 @@ public class PlotDataManager{
                  yArray[i] = Math.random()*100;
              }
              
-             aLine.put(PlotConstants.XVALUES,xArray);
-             aLine.put(PlotConstants.YVALUES,yArray);            
+             aLine.put(PlotConstants.DATASET_XVALUES,xArray);
+             aLine.put(PlotConstants.DATASET_YVALUES,yArray);            
              values.add(aLine);
              
-             HashMap aLine2 = new HashMap();
+             HashMap<String,Object> aLine2 = new HashMap<String,Object>();
             
-             aLine2.put(PlotConstants.VALUELABEL,"Lijntje Twee");
+             aLine2.put(PlotConstants.DATASET_VALUELABEL,"Lijntje 2");
              double[] xArray2 = new double[10];
              double[] yArray2 = new double[10];
              
@@ -100,12 +109,11 @@ public class PlotDataManager{
              yArray2[8] = xArray2[8]*xArray2[8];
              yArray2[9] = xArray2[9]*xArray2[9];
                                        
-             aLine2.put(PlotConstants.XVALUES,xArray2);
-             aLine2.put(PlotConstants.YVALUES,yArray2);            
-             values.add(aLine2);
-                          
-             data.put(PlotConstants.DATASETVALUES,values);
-	    return data;
+             aLine2.put(PlotConstants.DATASET_XVALUES,xArray2);
+             aLine2.put(PlotConstants.DATASET_YVALUES,yArray2);            
+             values.add(aLine2);    
+             data.put(PlotConstants.DATASET_VALUES,values);
+            return data; 
 	}
 
 	/**
