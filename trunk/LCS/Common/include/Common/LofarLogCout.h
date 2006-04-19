@@ -45,7 +45,7 @@
 //	- INIT_LOGGER_AND_WATCH
 //
 #define INIT_LOGGER(filename) \
-	LOFAR::LFDebug::initLevels (string(filename) + ".debug")
+	::LOFAR::LFDebug::initLevels (string(filename) + ".debug")
 
 //# Note: 'watch' functionality not available
 #define INIT_LOGGER_AND_WATCH(filename,interval) \
@@ -210,8 +210,8 @@ public: \
 #define LFDebugCheck(level)	getLFDebugContext().check(level)
 
 #define DebugTestAndLog(level) \
-	if (LFDebugCheck(level) && LOFAR::LFDebug::stream_time()) \
-		LOFAR::LFDebug::getDebugStream()
+	if (LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
+		::LOFAR::LFDebug::getDebugStream()
 
 #define	constructStream(stream) \
 	std::ostringstream	oss; \
@@ -248,7 +248,7 @@ namespace LOFAR
     inline std::ostream & getDebugStream () { return *dbg_stream_p; }
 
     // Typedef the exception type, so we can change whenever needed.
-    EXCEPTION_CLASS(Fail,LOFAR::Exception);
+    EXCEPTION_CLASS(Fail,::LOFAR::Exception);
 
     // sets level of given context
     bool setLevel (const string &context,int level);

@@ -52,7 +52,7 @@ namespace LOFAR {
 //
 // Only initializes the logger module.
 #define INIT_LOGGER(filename) do { \
-	LOFAR::lofarLoggerInitNode(); \
+	::LOFAR::lofarLoggerInitNode(); \
 	LofarInitTracingModule \
 	if (!strstr(filename, ".log_prop")) { \
 		log4cplus::PropertyConfigurator::doConfigure(log4cplus::tstring(filename)+".log_prop"); \
@@ -66,7 +66,7 @@ namespace LOFAR {
 // properties file. An intervaltime in millisecs must be provided.
 #ifdef USE_THREADS
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) do { \
-	LOFAR::lofarLoggerInitNode(); \
+	::LOFAR::lofarLoggerInitNode(); \
 	LofarInitTracingModule \
 	if (!strstr(filename, ".log_prop")) { \
 		log4cplus::ConfigureAndWatchThread tmpWatchThread(log4cplus::tstring(filename)+".log_prop",watchinterval); \
@@ -204,17 +204,17 @@ namespace LOFAR {
 // \warning This macro alters access control! Make sure to reset access
 // control when adding declarations to your class \e after using this macro.
 #define	ALLOC_TRACER_CONTEXT \
-	private:	static		LOFAR::LoggerReference	theirTraceLoggerRef;	\
-	public:		static inline	LOFAR::LoggerReference	&getLogger() \
+	private:	static		::LOFAR::LoggerReference	theirTraceLoggerRef;	\
+	public:		static inline	::LOFAR::LoggerReference	&getLogger() \
 				{ return theirTraceLoggerRef; }	
 
 // Attach a logger to the LoggerReference your defined in 'scope/class'.
 #define INIT_TRACER_CONTEXT(scope,contextname) \
-	::LOFAR::LoggerReference	scope::theirTraceLoggerRef(LOFAR::formatString("TRC.%s",contextname))
+	::LOFAR::LoggerReference	scope::theirTraceLoggerRef(::LOFAR::formatString("TRC.%s",contextname))
 
 // Only defines a function the return the LoggerReference in scope 'scope/class'
 #define ALLOC_TRACER_ALIAS(other) \
-	public:		static inline	LOFAR::LoggerReference	&getLogger() \
+	public:		static inline	::LOFAR::LoggerReference	&getLogger() \
 				{ return other::getLogger(); }	
 // 
 
@@ -251,7 +251,7 @@ namespace LOFAR {
 // and destruction. Your message is preceeded with "ENTER:" or "EXIT:".
 #define LOG_TRACE_LIFETIME(level,message) do { \
 	LifetimeLogger _tmpLifetimeTraceObj(level, getLogger().logger(), \
-	LOFAR::formatString("%s:%s", AUTO_FUNCTION_NAME, message), \
+	::LOFAR::formatString("%s:%s", AUTO_FUNCTION_NAME, message), \
 			__FILE__, __LINE__); \
 	} while(0)
 
@@ -276,7 +276,7 @@ void	initTraceModule(void);
 // \internal
 // Internal macro to define (or not) the initialisation routine of the
 // trace module.
-#define	LofarInitTracingModule	LOFAR::initTraceModule();
+#define	LofarInitTracingModule	::LOFAR::initTraceModule();
 
 // \internal
 // Internal macro used by the LOG_TRACE_<level> macros.
