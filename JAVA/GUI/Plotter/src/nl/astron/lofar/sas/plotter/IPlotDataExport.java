@@ -21,9 +21,10 @@ import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 public interface IPlotDataExport{
     
     /**
-     * @param constraint
+     * @param params
+     * @param data
      */
-    public HashMap exportData(String[] params, HashMap data) throws PlotterException;
+    public void exportData(String[] params, HashMap data) throws PlotterException;
     
 }
 
