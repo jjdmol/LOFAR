@@ -11,6 +11,7 @@ package nl.astron.lofar.sas.plotter.test;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import nl.astron.lofar.sas.plotter.PlotConstants;
 import nl.astron.lofar.sas.plotter.PlotPanel;
 
 /**
@@ -25,9 +26,11 @@ public class PlotTestFrame extends javax.swing.JFrame {
     /** Creates new form PlotTestFrame */
     public PlotTestFrame() {
         testPanel = new PlotPanel();
-        testPanel.createPlot("testparam");
-        this.setLayout(new BorderLayout());
+        //testPanel.createPlot(PlotConstants.PLOT_XYLINE,"line");
+        testPanel.createPlot(PlotConstants.PLOT_GRID,"grid");
+        this.setLayout(new BorderLayout(0,0));
         this.getContentPane().add(testPanel.getPlot(),BorderLayout.CENTER);
+        this.getContentPane().add(testPanel.getLegendForPlot(),BorderLayout.SOUTH);
         this.setSize(new Dimension(640,480));
         initComponents();
              
