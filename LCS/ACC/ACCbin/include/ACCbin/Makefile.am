@@ -13,6 +13,7 @@ noinst_HEADERS = \
 	ItemList.h \
 	ParCollRecord.h \
 	PR_MPI.h \
+	PR_BGL.h \
 	ProcRule.h \
 	ProcRuler.h \
 	PR_Shell.h \
