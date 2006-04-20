@@ -25,7 +25,7 @@ public class NotImplementedException extends PlotterException{
         this.message = message;
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_NOTIMPLEMENTED + message;
+        return PlotConstants.EXCEPTION_NOT_IMPLEMENTED + message;
     }
     
     
