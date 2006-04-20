@@ -36,6 +36,13 @@ public abstract class PlotConstants{
     public static final String DATASET_ZVALUES    = "ZValues";
     public static final String DATASET_VALUELABEL = "DataSetValueLabel";
     
+    //Identifiers for plot types
+    public static final int PLOT_BAR = 1;
+    public static final int PLOT_XYLINE = 2;
+    public static final int PLOT_SCATTER = 3;
+    public static final int PLOT_GRID = 4;
+	
+    
     //Supported plotter framework
     public static final String FRAMEWORK         = "nl.astron.lofar.sas.plotter.PlotSGTImpl";
     
