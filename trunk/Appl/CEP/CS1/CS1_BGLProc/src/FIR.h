@@ -30,46 +30,45 @@
 
 namespace LOFAR
 {
-  namespace CS1
-  {
+namespace CS1
+{
 
-    struct phase_shift {
-      dcomplex v0, dv;
-    };
+struct phase_shift {
+  dcomplex v0, dv;
+};
 
 
-    typedef bitset<NR_SUBBAND_CHANNELS> inputFlagsType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION];
-    typedef bitset<NR_SAMPLES_PER_INTEGRATION> flagsType[NR_STATIONS];
+typedef bitset<NR_SUBBAND_CHANNELS> inputFlagsType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION];
+typedef bitset<NR_SAMPLES_PER_INTEGRATION> flagsType[NR_STATIONS];
 
-    extern "C" {
-      void _filter(fcomplex delayLine[NR_TAPS],
-                   const float weights[NR_TAPS],
-                   const DH_Subband::SampleType samples[],
-                   fcomplex out[],
-                   int nr_samples_div_16);
+extern "C" {
+  void _filter(fcomplex delayLine[NR_TAPS],
+	       const float weights[NR_TAPS],
+	       const DH_Subband::SampleType samples[],
+	       fcomplex out[],
+	       int nr_samples_div_16);
 
-      // void _compute_flags(const inputFlagsType *input, flagsType *flags);
+  // void _compute_flags(const inputFlagsType *input, flagsType *flags);
 
-      void _transpose_4x8(fcomplex *out,
-                          const fcomplex *in,
-                          int length,
-                          int input_stride,
-                          int output_stride);
+  void _transpose_4x8(fcomplex *out,
+		      const fcomplex *in,
+		      int length,
+		      int input_stride,
+		      int output_stride);
 
-      void _phase_shift_and_transpose(fcomplex *out,
-                                      const fcomplex *in,
-                                      const struct phase_shift *);
+  void _phase_shift_and_transpose(fcomplex *out,
+				  const fcomplex *in,
+				  const struct phase_shift *);
 
-      void _fast_memcpy(void *dst, const void *src, size_t bytes);
-      void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
-      void _prefetch(const void *src, size_t count, size_t stride);
+  void _fast_memcpy(void *dst, const void *src, size_t bytes);
+  void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
+  void _prefetch(const void *src, size_t count, size_t stride);
 
-      void _bgl_mutex_lock(BGL_Mutex *), _bgl_mutex_unlock(BGL_Mutex *);
-      unsigned long long _rdtsc();
-    };
+  void _bgl_mutex_lock(BGL_Mutex *), _bgl_mutex_unlock(BGL_Mutex *);
+  unsigned long long _rdtsc();
+};
 
-  } // namespace CS1
-
+} // namespace CS1
 } // namespace LOFAR
 
 #endif

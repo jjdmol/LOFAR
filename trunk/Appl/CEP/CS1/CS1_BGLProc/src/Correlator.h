@@ -26,6 +26,7 @@
 #include <CS1_Interface/DH_Visibilities.h>
 
 namespace LOFAR {
+namespace CS1 {
 
 typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
 typedef fcomplex CorrelatedOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
@@ -79,6 +80,7 @@ extern "C" {
 	const float thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS]);
 };
 
+}
 }
 #endif
 #endif
