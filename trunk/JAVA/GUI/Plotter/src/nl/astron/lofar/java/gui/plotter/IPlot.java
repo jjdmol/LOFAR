@@ -21,11 +21,6 @@ import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
  */
 public interface IPlot{
 
-	public static final int BAR = 1;
-	public static final int XYLINE = 2;
-	public static final int SCATTER = 3;
-	public static final int GRID = 4;
-	
 	/**
 	 * @param type
 	 * @param name
@@ -37,5 +32,7 @@ public interface IPlot{
         public HashMap getData();
         
         public void setData(HashMap newData);
+        
+        public JComponent getLegend(JComponent aPlot) throws PlotterException;
 }
 
