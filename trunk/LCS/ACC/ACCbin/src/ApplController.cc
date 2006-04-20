@@ -28,6 +28,7 @@
 #include <ACCbin/ApplController.h>
 #include <ACCbin/PR_Shell.h>			// TODO: factory!
 #include <ACCbin/PR_MPI.h>				// TODO: factory!
+#include <ACCbin/PR_BGL.h>				// TODO: factory!
 #include <ACCbin/ItemList.h>			// @@
 #include <PLC/ProcControlComm.h>
 
@@ -303,6 +304,8 @@ void ApplController::createParSubsets()
 		  itsProcRuler.add(PR_Shell(nodeName, procName, execName, fileName));
 		} else if (procType == "mpirun" ) {
 		  itsProcRuler.add(PR_MPI(nodeName, procName, execName, fileName, itsProcList->size(), baseProcName));
+		} else if (procType == "bgl" ) {
+		  itsProcRuler.add(PR_BGL(nodeName, procName, execName, fileName, itsProcList->size()));
 		};
 
 		// Remove execute type from processes paramlist

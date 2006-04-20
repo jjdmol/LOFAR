@@ -12,6 +12,7 @@ ApplController_SOURCES      = ACCmdImpl.cc \
 							  ProcRuler.cc \
 							  PR_Shell.cc \
 							  PR_MPI.cc \
+							  PR_BGL.cc \
 							  StateEngine.cc \
 							  ApplController.cc \
 							  ApplControllerMain.cc
