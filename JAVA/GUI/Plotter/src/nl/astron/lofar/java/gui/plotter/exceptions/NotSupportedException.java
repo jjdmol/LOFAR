@@ -25,7 +25,7 @@ public class NotSupportedException extends PlotterException{
         this.message = message;
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_OPERATIONNOTSUPPORTED + message;
+        return PlotConstants.EXCEPTION_OPERATION_NOT_SUPPORTED + message;
     }
     
     
