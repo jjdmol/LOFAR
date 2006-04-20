@@ -25,40 +25,39 @@
 
 namespace LOFAR
 {
-  namespace CS1
-  {
+namespace CS1
+{
     //# Forward declarations
-    class WH_BGL_Processing;
-    class Stub_BGL_Subband;
-    class Stub_BGL_RFI_Mitigation;
-    class Stub_BGL_Visibilities;
+class WH_BGL_Processing;
+class Stub_BGL_Subband;
+class Stub_BGL_RFI_Mitigation;
+class Stub_BGL_Visibilities;
 
     // Description of class.
-    class AH_BGL_Processing: public TinyApplicationHolder
-    {
-    public:
-      AH_BGL_Processing();
-      virtual ~AH_BGL_Processing();
-      virtual void undefine();
-      virtual void define(const KeyValueMap&);
-      virtual void init();
-      virtual void run(int nsteps);
-      /*   virtual void postrun  (); */
-      virtual void dump() const;
-      virtual void quit();
+class AH_BGL_Processing : public TinyApplicationHolder
+{
+  public:
+		 AH_BGL_Processing();
+    virtual	 ~AH_BGL_Processing();
+    virtual void undefine();
+    virtual void define(const KeyValueMap&);
+    virtual void init();
+    virtual void run(int nsteps);
+    /*   virtual void postrun  (); */
+    virtual void dump() const;
+    virtual void quit();
 
-    private:
-      static unsigned remapOnTree(unsigned logicalNode);
+  private:
+    static unsigned remapOnTree(unsigned logicalNode);
 
-      vector<WH_BGL_Processing *> itsWHs;
+    vector<WH_BGL_Processing *> itsWHs;
 
-      Stub_BGL_Subband	      *itsSubbandStub;
-      Stub_BGL_RFI_Mitigation     *itsRFI_MitigationStub;
-      Stub_BGL_Visibilities	      *itsVisibilitiesStub;
-    };
+    Stub_BGL_Subband		*itsSubbandStub;
+    Stub_BGL_RFI_Mitigation     *itsRFI_MitigationStub;
+    Stub_BGL_Visibilities	*itsVisibilitiesStub;
+};
 
-  } // namespace CS1
-
+} // namespace CS1
 } // namespace LOFAR
 
 #endif

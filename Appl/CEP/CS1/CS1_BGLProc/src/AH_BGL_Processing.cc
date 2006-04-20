@@ -46,174 +46,176 @@
 
 namespace LOFAR
 {
-  namespace CS1
-  {
+namespace CS1
+{
 
-    AH_BGL_Processing::AH_BGL_Processing() 
-      : itsWHs(0),
-        itsSubbandStub(0),
-        itsRFI_MitigationStub(0),
-        itsVisibilitiesStub(0)
-    {
-    }
+AH_BGL_Processing::AH_BGL_Processing() 
+  : itsWHs(0),
+    itsSubbandStub(0),
+    itsRFI_MitigationStub(0),
+    itsVisibilitiesStub(0)
+{
+}
 
-    AH_BGL_Processing::~AH_BGL_Processing()
-    {
-      undefine();
-    }
+AH_BGL_Processing::~AH_BGL_Processing()
+{
+  undefine();
+}
 
-    void AH_BGL_Processing::undefine()
-    {
-      for (uint i = 0; i < itsWHs.size(); i ++) {
-        delete itsWHs[i];
-      }
-      itsWHs.clear();
+void AH_BGL_Processing::undefine()
+{
+  for (uint i = 0; i < itsWHs.size(); i ++) {
+    delete itsWHs[i];
+  }
+  itsWHs.clear();
 
-      delete itsSubbandStub;	itsSubbandStub	      = 0;
-      delete itsRFI_MitigationStub;	itsRFI_MitigationStub = 0;
-      delete itsVisibilitiesStub;	itsVisibilitiesStub   = 0;
-    }  
+  delete itsSubbandStub;	itsSubbandStub	      = 0;
+  delete itsRFI_MitigationStub;	itsRFI_MitigationStub = 0;
+  delete itsVisibilitiesStub;	itsVisibilitiesStub   = 0;
+}  
 
-    unsigned AH_BGL_Processing::remapOnTree(unsigned logicalNode)
-    {
-      int mpiNode = ((((logicalNode >> 0) & 1)    ) << 0) |
-        ((((logicalNode >> 5) & 1) ^ 1) << 1) |
-        ((((logicalNode >> 1) & 1)    ) << 2) |
-        ((((logicalNode >> 4) & 1)    ) << 3) |
-        ((((logicalNode >> 2) & 1)    ) << 4) |
-        ((((logicalNode >> 3) & 1)    ) << 5);
+unsigned AH_BGL_Processing::remapOnTree(unsigned logicalNode)
+{
+  int mpiNode = ((((logicalNode >> 0) & 1)    ) << 0) |
+		((((logicalNode >> 5) & 1) ^ 1) << 1) |
+		((((logicalNode >> 1) & 1)    ) << 2) |
+		((((logicalNode >> 4) & 1)    ) << 3) |
+		((((logicalNode >> 2) & 1)    ) << 4) |
+		((((logicalNode >> 3) & 1)    ) << 5);
 
 #if defined HAVE_MPI
-      ASSERTSTR(mpiNode < TH_MPI::getNumberOfNodes(), "not enough MPI nodes allocated");
+  ASSERTSTR(mpiNode < TH_MPI::getNumberOfNodes(), "not enough MPI nodes allocated");
 #endif
-  
-      return mpiNode;
-    }
 
-    void AH_BGL_Processing::define(const KeyValueMap&) {
+  return mpiNode;
+}
 
-      LOG_TRACE_FLOW_STR("Start of AH_BGL_Processing::define()");
+void AH_BGL_Processing::define(const KeyValueMap&) {
 
-      unsigned nrSubBands	    = itsParamSet.getInt32("Observation.NSubbands");
-      vector<double> baseFreqs  = itsParamSet.getDoubleVector("Observation.RefFreqs");
-      unsigned slavesPerSubBand = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
-      unsigned subbandsPerCell  = itsParamSet.getInt32("BGLProc.SubbandsPerCell");
-//       unsigned slavesPerCell    = slavesPerSubBand * subbandsPerCell;
+  LOG_TRACE_FLOW_STR("Start of AH_BGL_Processing::define()");
 
-      ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
-  
-      itsSubbandStub	   = new Stub_BGL_Subband(true, itsParamSet);
-      itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, itsParamSet);
-      itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, itsParamSet);
+  unsigned nrSubBands	    = itsParamSet.getInt32("Observation.NSubbands");
+  vector<double> baseFreqs  = itsParamSet.getDoubleVector("Observation.RefFreqs");
+  unsigned slavesPerSubBand = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
 
 #if defined HAVE_BGL
-      struct BGLPersonality personality;
-      int retval = rts_get_personality(&personality, sizeof personality);
-      ASSERTSTR(retval == 0, "Could not get personality");
-      bool virtualNodeMode = personality.opFlags & BGLPERSONALITY_OPFLAGS_VIRTUALNM;
-      int  nrNodesPerCell  = virtualNodeMode ? 16 : 8;
-
-      ASSERTSTR(slavesPerCell < nrNodesPerCell, "too many slaves per cell");
+  unsigned subbandsPerCell  = itsParamSet.getInt32("BGLProc.SubbandsPerCell");
+  unsigned slavesPerCell    = slavesPerSubBand * subbandsPerCell;
 #endif
 
-      int node = 0;
+  ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
-      for (uint subband = 0; subband < nrSubBands; subband ++) {
-        for (uint slave = 0; slave < slavesPerSubBand; slave ++) {
-          WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", baseFreqs[subband], itsParamSet);
-          itsWHs.push_back(wh);
-          TinyDataManager &dm = wh->getDataManager();
-          itsSubbandStub->connect(subband, slave, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
-          //itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-          itsVisibilitiesStub->connect(subband, slave, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+  itsSubbandStub	   = new Stub_BGL_Subband(true, itsParamSet);
+  itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, itsParamSet);
+  itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, itsParamSet);
 
 #if defined HAVE_BGL
-          // check if current compute cell is full
-          if (node % slavesPerCell == 0) {
-            // advance to next compute cell
-            node = (node + nrNodesPerCell - 1) & -nrNodesPerCell;
-          }
+  struct BGLPersonality personality;
+  int retval = rts_get_personality(&personality, sizeof personality);
+  ASSERTSTR(retval == 0, "Could not get personality");
+  bool virtualNodeMode = personality.opFlags & BGLPERSONALITY_OPFLAGS_VIRTUALNM;
+  int  nrNodesPerCell  = virtualNodeMode ? 16 : 8;
+
+  ASSERTSTR(slavesPerCell < nrNodesPerCell, "too many slaves per cell");
 #endif
 
-          wh->runOnNode(remapOnTree(node ++));
-        }
-      }
+  int node = 0;
 
-#if defined HAVE_MPI
-      ASSERTSTR (node <= TH_MPI::getNumberOfNodes(), "CS1_BGL_Proc needs " << node << " nodes, " << TH_MPI::getNumberOfNodes() << " available");
+  for (uint subband = 0; subband < nrSubBands; subband ++) {
+    for (uint slave = 0; slave < slavesPerSubBand; slave ++) {
+      WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", baseFreqs[subband], itsParamSet);
+      itsWHs.push_back(wh);
+      TinyDataManager &dm = wh->getDataManager();
+      itsSubbandStub->connect(subband, slave, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
+      //itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
+      itsVisibilitiesStub->connect(subband, slave, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+
+#if defined HAVE_BGL
+      // check if current compute cell is full
+      if (node % slavesPerCell == 0) {
+	// advance to next compute cell
+	node = (node + nrNodesPerCell - 1) & -nrNodesPerCell;
+      }
 #endif
-  
-      LOG_TRACE_FLOW_STR("Finished define()");
-    }
 
-    void AH_BGL_Processing::init()
-    {
-      for (uint i = 0; i < itsWHs.size(); i ++) {
-        WH_BGL_Processing *wh = itsWHs[i];
-        wh->basePreprocess();
+      wh->runOnNode(remapOnTree(node ++));
+    }
+  }
 
 #if defined HAVE_MPI
-        if (wh->getNode() == TH_MPI::getCurrentRank()) {
-          DH_RFI_Mitigation			  *dh	 = wh->get_DH_RFI_Mitigation();
-          DH_RFI_Mitigation::ChannelFlagsType *flags = dh->getChannelFlags();
-
-          memset(flags, 0, sizeof(DH_RFI_Mitigation::ChannelFlagsType));
-        }
+  ASSERTSTR (node <= TH_MPI::getNumberOfNodes(), "CS1_BGL_Proc needs " << node << " nodes, " << TH_MPI::getNumberOfNodes() << " available");
 #endif
-      }
 
-      std::cerr << "init done\n";
-      std::cerr.flush();
-    }
-    
-    void AH_BGL_Processing::run(int steps) {
-      LOG_TRACE_FLOW_STR("Start AH_BGL_Processing::run() "  );
-      for (int i = 0; i < steps; i++) {
-        char timer_name[32];
-        sprintf(timer_name, "baseProcess(%d)", i);
-        class NSTimer timer(timer_name, true);
+  LOG_TRACE_FLOW_STR("Finished define()");
+}
 
-        LOG_TRACE_LOOP_STR("processing run " << i );
-        std::cerr << "run " << i << " of " << steps << '\n';
-        std::cerr.flush();
+void AH_BGL_Processing::init()
+{
+  for (uint i = 0; i < itsWHs.size(); i ++) {
+    WH_BGL_Processing *wh = itsWHs[i];
+    wh->basePreprocess();
 
-        timer.start();
-        for (uint j = 0; j < itsWHs.size(); j ++) {
-          itsWHs[j]->baseProcess();
-        }
-        timer.stop();
-
-        std::cerr << "run " << i << " of " << steps << " done\n";
-        std::cerr.flush();
-      }
-      LOG_TRACE_FLOW_STR("Finished AH_BGL_Processing::run() "  );
-    }
-
-    // void AH_BGL_Processing::postrun() {
-    //   vector<WorkHolder*>::iterator it = itsWHs.begin();
-    //   for (; it < itsWHs.end(); it++) {
-    //     (*it)->basePostprocess();
-    //   }
-    // }
-
-
-    void AH_BGL_Processing::dump() const {
-      vector<WH_BGL_Processing *>::const_iterator it;
-      for (it = itsWHs.begin(); it < itsWHs.end(); it++) {
 #if defined HAVE_MPI
-        if ((*it)->getNode() == TH_MPI::getCurrentRank()) {
-          (*it)->dump();
-        }
+    if (wh->getNode() == TH_MPI::getCurrentRank()) {
+      DH_RFI_Mitigation			  *dh	 = wh->get_DH_RFI_Mitigation();
+      DH_RFI_Mitigation::ChannelFlagsType *flags = dh->getChannelFlags();
+
+      memset(flags, 0, sizeof(DH_RFI_Mitigation::ChannelFlagsType));
+    }
+#endif
+  }
+
+  std::cerr << "init done\n";
+  std::cerr.flush();
+}
+
+void AH_BGL_Processing::run(int steps) {
+  LOG_TRACE_FLOW_STR("Start AH_BGL_Processing::run() "  );
+  for (int i = 0; i < steps; i++) {
+    char timer_name[32];
+    sprintf(timer_name, "baseProcess(%d)", i);
+    class NSTimer timer(timer_name, true);
+
+    LOG_TRACE_LOOP_STR("processing run " << i );
+    std::cerr << "run " << i << " of " << steps << '\n';
+    std::cerr.flush();
+
+    timer.start();
+    for (uint j = 0; j < itsWHs.size(); j ++) {
+      itsWHs[j]->baseProcess();
+    }
+    timer.stop();
+
+    std::cerr << "run " << i << " of " << steps << " done\n";
+    std::cerr.flush();
+  }
+  LOG_TRACE_FLOW_STR("Finished AH_BGL_Processing::run() "  );
+}
+
+// void AH_BGL_Processing::postrun() {
+//   vector<WorkHolder*>::iterator it = itsWHs.begin();
+//   for (; it < itsWHs.end(); it++) {
+//     (*it)->basePostprocess();
+//   }
+// }
+
+
+void AH_BGL_Processing::dump() const {
+  vector<WH_BGL_Processing *>::const_iterator it;
+  for (it = itsWHs.begin(); it < itsWHs.end(); it++) {
+#if defined HAVE_MPI
+    if ((*it)->getNode() == TH_MPI::getCurrentRank()) {
+      (*it)->dump();
+    }
 #else
-        (*it)->dump();
+    (*it)->dump();
 #endif
-      }
-    }
+  }
+}
 
-    void AH_BGL_Processing::quit() {
-      undefine();
-    }
+void AH_BGL_Processing::quit() {
+  undefine();
+}
 
-  } // namespace CS1
-
+} // namespace CS1
 } // namespace LOFAR

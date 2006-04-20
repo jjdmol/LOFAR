@@ -123,9 +123,6 @@ namespace LOFAR
 	  // copy all freq, time and pol from an input to output
 	  inMatrix->cpy2Matrix(inCursor, inStationDim, *outMatrix, outCursor, outStationDim, 1);
 	  outMatrix->moveCursor(&outCursor, outStationDim);
-
-	  //DH_Subband::AllSamplesType* ptr = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getSamples();
-	  //(*ptr)[0][0][0] = makei16complex(1, 2);
 	}
 
       getDataManager().readyWithOutHolder(itsCore);

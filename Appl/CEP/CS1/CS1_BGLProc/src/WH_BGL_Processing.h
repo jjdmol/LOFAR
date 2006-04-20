@@ -50,90 +50,90 @@
 
 namespace LOFAR
 {
-  namespace CS1
-  {
+namespace CS1
+{
 
-    class FIR {
-    public:
+class FIR {
+  public:
 #if defined C_IMPLEMENTATION
-      FIR();
+    FIR();
 
-      fcomplex processNextSample(fcomplex sample, const float weights[NR_TAPS]);
+    fcomplex processNextSample(fcomplex sample, const float weights[NR_TAPS]);
 
-      fcomplex itsDelayLine[NR_TAPS];
+    fcomplex itsDelayLine[NR_TAPS];
 #endif
-      static const float weights[NR_SUBBAND_CHANNELS][NR_TAPS];
+    static const float weights[NR_SUBBAND_CHANNELS][NR_TAPS];
+};
+
+class WH_BGL_Processing: public WorkHolder {
+  public:
+    enum inDataHolders {
+      SUBBAND_CHANNEL,
+      RFI_MITIGATION_CHANNEL,
+      NR_IN_CHANNELS
     };
 
-    class WH_BGL_Processing: public WorkHolder {
-    public:
-      enum inDataHolders {
-        SUBBAND_CHANNEL,
-        RFI_MITIGATION_CHANNEL,
-        NR_IN_CHANNELS
-      };
+    enum outDataHolders {
+      VISIBILITIES_CHANNEL,
+      NR_OUT_CHANNELS
+    };
 
-      enum outDataHolders {
-        VISIBILITIES_CHANNEL,
-        NR_OUT_CHANNELS
-      };
+    explicit WH_BGL_Processing(const string &name, double baseFrequency, const ACC::APS::ParameterSet &ps);
+    virtual ~WH_BGL_Processing();
 
-      explicit WH_BGL_Processing(const string &name, double baseFrequency, const ACC::APS::ParameterSet &ps);
-      virtual ~WH_BGL_Processing();
+    static WorkHolder *construct(const string &name, double baseFrequency, const ACC::APS::ParameterSet &);
+    virtual WH_BGL_Processing *make(const string &name);
 
-      static WorkHolder *construct(const string &name, double baseFrequency, const ACC::APS::ParameterSet &);
-      virtual WH_BGL_Processing *make(const string &name);
+    virtual void preprocess();
+    virtual void process();
+    virtual void dump() const;
+    virtual void postprocess();
 
-      virtual void preprocess();
-      virtual void process();
-      virtual void dump() const;
-      virtual void postprocess();
+    DH_Subband *get_DH_Subband() {
+      return dynamic_cast<DH_Subband *>(getDataManager().getInHolder(SUBBAND_CHANNEL));
+    }
 
-      DH_Subband *get_DH_Subband() {
-        return dynamic_cast<DH_Subband *>(getDataManager().getInHolder(SUBBAND_CHANNEL));
-      }
+    DH_RFI_Mitigation *get_DH_RFI_Mitigation() {
+      return dynamic_cast<DH_RFI_Mitigation *>(getDataManager().getInHolder(RFI_MITIGATION_CHANNEL));
+    }
 
-      DH_RFI_Mitigation *get_DH_RFI_Mitigation() {
-        return dynamic_cast<DH_RFI_Mitigation *>(getDataManager().getInHolder(RFI_MITIGATION_CHANNEL));
-      }
+    DH_Visibilities *get_DH_Visibilities() {
+      return dynamic_cast<DH_Visibilities *>(getDataManager().getOutHolder(VISIBILITIES_CHANNEL));
+    }
 
-      DH_Visibilities *get_DH_Visibilities() {
-        return dynamic_cast<DH_Visibilities *>(getDataManager().getOutHolder(VISIBILITIES_CHANNEL));
-      }
+  private:
+    /// forbid copy constructor
+    WH_BGL_Processing(const WH_BGL_Processing&);
 
-    private:
-      /// forbid copy constructor
-      WH_BGL_Processing(const WH_BGL_Processing&);
-    
-      /// forbid assignment
-      WH_BGL_Processing& operator= (const WH_BGL_Processing&);
+    /// forbid assignment
+    WH_BGL_Processing &operator = (const WH_BGL_Processing&);
 
-      void doPPF(), bypassPPF();
-      void computeFlags();
-      void doCorrelate();
+    void doPPF(), bypassPPF();
+    void computeFlags();
+    void doCorrelate();
 
 #if defined DELAY_COMPENSATION
 #if defined C_IMPLEMENTATION
-      fcomplex phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const;
+    fcomplex phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const;
 #else
-      void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay) const;
+    void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay) const;
 #endif
 #endif
 
-      /// FIR Filter variables
-      fftw_plan	    itsFFTWPlan;
-      double	    itsBaseFrequency;
-      const ACC::APS::ParameterSet &itsPS;
-      static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
+    /// FIR Filter variables
+    fftw_plan	    itsFFTWPlan;
+    double	    itsBaseFrequency;
+    const ACC::APS::ParameterSet &itsPS;
+    static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 
-      static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
-      static bitset<NR_SAMPLES_PER_INTEGRATION> flags[NR_STATIONS] CACHE_ALIGNED;
-      static unsigned itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
-      static float    correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
-      static float    thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
-    };
+    static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
+    static bitset<NR_SAMPLES_PER_INTEGRATION> flags[NR_STATIONS] CACHE_ALIGNED;
+    static unsigned itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
+    static float    correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
+    static float    thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
+};
 
-  } // namespace CS1
+} // namespace CS1
 
 } // namespace LOFAR
 
