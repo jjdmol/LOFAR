@@ -32,17 +32,17 @@ public class PlotPanel extends JPanel{
 
 	public PlotPanel(){
             m_PlotController = new PlotController();
-            //addComponentListener(resizeListener);
         }
 
 	public void finalize() throws Throwable {
 
 	}
 
-	public void createPlot(String constraint){
+	public void createPlot(int type, String constraint){
             currentDataConstraint = constraint;
             try {
-                plot = m_PlotController.createPlot(constraint);
+                
+                plot = m_PlotController.createPlot(type,constraint);
                 
                 add(plot);
             } catch (PlotterException ex) {
@@ -53,22 +53,6 @@ public class PlotPanel extends JPanel{
             }
         }
         
-        private ComponentListener resizeListener = new ComponentListener(){
-            public void componentHidden(ComponentEvent e){}
-            public void componentMoved(ComponentEvent e){}
-            public void componentResized(ComponentEvent e){
-                int height = getHeight();
-                int width = getWidth();
-                int height2 = plot.getHeight();
-                int width2 = plot.getWidth();
-                System.out.println("Width/Height of PlotPanel: "+width+"/"+height);
-                plot.setSize(width,height);
-                //plot.validate();
-                System.out.println("Width/Height of PlotLayout: "+width2+"/"+height2);
-            }
-            public void componentShown(ComponentEvent e){}
-        };
-
 	public Image exportImage(){
 		return null;
 	}
@@ -88,6 +72,15 @@ public class PlotPanel extends JPanel{
         
         public JComponent getPlot(){
             return plot;
+        }
+        public JComponent getLegendForPlot(){
+            JComponent legend = null;
+            try {
+                legend = m_PlotController.getLegendForPlot(plot);
+            } catch (PlotterException ex) {
+                legend = new JLabel(ex.getMessage());
+            }
+            return legend;
         }
         
  }
