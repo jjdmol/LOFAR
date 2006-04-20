@@ -11,9 +11,9 @@ package nl.astron.lofar.sas.plotter;
 
 import java.awt.Image;
 import java.util.HashMap;
-import java.util.Map;
 import javax.swing.JComponent;
 import nl.astron.lofar.sas.plotter.exceptions.NotImplementedException;
+import nl.astron.lofar.sas.plotter.exceptions.NotSupportedException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterFrameworkInitializationException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterFrameworkNotCompatibleException;
@@ -43,10 +43,11 @@ public class PlotController{
 	}
 
 	/**
-	 * @param constraint
+         * @param type A plot type (as defined in PlotConstants.PLOT_*)
+	 * @param constraint A data access identifier
 	 * 
 	 */
-	public JComponent createPlot(String constraint) throws PlotterException{
+	public JComponent createPlot(int type, String constraint) throws PlotterException{
         
             Object aPlotter = null;
             IPlot aNewPlot = null;
@@ -70,15 +71,25 @@ public class PlotController{
             }
             
             if(aPlotter != null){
+                if(type == PlotConstants.PLOT_BAR
+                        || type == PlotConstants.PLOT_GRID
+                        || type == PlotConstants.PLOT_SCATTER
+                        || type == PlotConstants.PLOT_XYLINE){
+
+                        HashMap retrieveableData = 
+                            m_PlotDataManager.retrieveData(constraint);                               
+                        m_IPlot = aNewPlot;
+                        return m_IPlot.createPlot(type,"test",retrieveableData);
                 
-                HashMap retrieveableData = 
-                    m_PlotDataManager.retrieveData(constraint);                               
-                return aNewPlot.createPlot(
-                    aNewPlot.XYLINE,"test",retrieveableData);
-                    
+                }else{
+                    throw new NotSupportedException("The requested plot type ("+type+") is not supported by the plotter at this time.");
+                }   
             }
             return null;
 	}
+        public JComponent getLegendForPlot(JComponent aPlot) throws PlotterException{
+            return m_IPlot.getLegend(aPlot);
+        }
 
 	/**
 	 * @param constraint
