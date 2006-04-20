@@ -1,5 +1,7 @@
 check_PROGRAMS        =
 
+AM_CPPFLAGS	      = \$(EXTRA_CPPFLAGS)
+
 # programs to run through supplied checktools
 CHECKTOOLPROGS        =
 #ENDCHECKTOOLPROGS

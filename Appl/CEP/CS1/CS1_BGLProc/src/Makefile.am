@@ -8,6 +8,8 @@ NOINSTHDRS 		=
 
 TCCHDRS 		=
 
+AM_CPPFLAGS		= \$(EXTRA_CPPFLAGS)
+
 pkginclude_HEADERS 	= $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS 		= $(NOINSTHDRS)
