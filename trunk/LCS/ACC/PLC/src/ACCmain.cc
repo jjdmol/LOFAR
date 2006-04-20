@@ -56,6 +56,10 @@ namespace LOFAR {
 	    // also try parts of the program name (splitted with "_")
 	    string pName = programName;
 	    string::size_type pos;
+	    if (argc > 1) {
+	      possibleNames.push_back(argv[1]);
+	    }
+
 	    do {
 	      possibleNames.push_back(pName + ".parset");
 	      //possibleNames.push_back(pName + ".cfg");
@@ -90,8 +94,14 @@ namespace LOFAR {
 	    if (!theProcess->define()) return 1;
 	    LOG_TRACE_FLOW(programName + " initting");
 	    if (!theProcess->init()) return 1;
+
 	    LOG_TRACE_FLOW(programName + " running");
-	    if (!theProcess->run()) return 1;
+	    int noRuns = atoi(argv[argc - 1]);
+	    if (noRuns == 0) noRuns = 1;
+	    for (int run = 0; run < noRuns; run++) {
+	      if (!theProcess->run()) return 1;
+	    }
+
 	    LOG_TRACE_FLOW(programName + " quitting");
 	    if (!theProcess->quit()) return 1;
 	    LOG_TRACE_FLOW(programName + " deleting process");
