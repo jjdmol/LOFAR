@@ -54,13 +54,12 @@ int main (int argc, char* argv[]) {
 		uint32		rcuMask = 0;
 		vector<BoardStatus>	boardArr = IOport.getBoardStatus(rcuMask);
 
-		sleep (2);
-
 //		BoardStatus		bp = sysStat.board()(0);
 		BoardStatus*	bp = &boardArr[0];
 		cout << "voltage 1.2V: " << bp->rsp.voltage_1_2 / 192.0 * 2.5 << endl;
 		cout << "voltage 2.5V: " << bp->rsp.voltage_2_5 / 192.0 * 3.3 << endl;
 		cout << "voltage 3.3V: " << bp->rsp.voltage_3_3 / 192.0 * 5.0 << endl;
+		cout << "cep Errors  : " << bp->diag.cep_errors << endl;
 
 		LOG_INFO_STR("Shutting down: " << argv[0]);
 	}

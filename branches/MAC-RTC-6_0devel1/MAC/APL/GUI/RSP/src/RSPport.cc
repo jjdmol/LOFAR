@@ -35,6 +35,8 @@ namespace LOFAR {
 
 using	GCF::TM::GCFEvent;
 
+static	char		receiveBuffer[24*4096];
+
 //
 // RSPport (host, port)
 //
@@ -59,6 +61,55 @@ RSPport::~RSPport()
 }
 
 //
+// send(Event*)
+//
+void RSPport::send(GCFEvent*	anEvent)
+{
+	// Serialize the message and write buffer to port
+	uint32	packSize;
+	void* buf = anEvent->pack(packSize);
+	int32 btsWritten = itsSocket->write(buf, packSize);
+	ASSERTSTR(btsWritten == (int32)packSize, 
+			  "Only " << btsWritten << " of " << packSize << " bytes written");
+}
+
+//
+// receive() : Event
+//
+GCFEvent&	RSPport::receive()
+{
+	// First read header if answer:
+	// That is signal field + length field.
+	GCFEvent*	header = (GCFEvent*) &receiveBuffer[0];
+	int32		btsRead;
+	btsRead = itsSocket->read((void*) &(header->signal), sizeof(header->signal));
+	ASSERTSTR(btsRead == sizeof(header->signal), "Only " << btsRead << " of " 
+						<< sizeof(header->signal) << " bytes of header read");
+	btsRead = itsSocket->read((void*) &(header->length), sizeof(header->length));
+	ASSERTSTR(btsRead == sizeof(header->length), "Only " << btsRead << " of " 
+						<< sizeof(header->length) << " bytes of header read");
+
+	LOG_DEBUG("Header received");
+
+	// Is there a payload in the message? This should be the case!
+	int32	remainingBytes = header->length;
+	LOG_DEBUG_STR(remainingBytes << " bytes to get next");
+	if (remainingBytes <= 0) {
+		return(*header);
+	}
+
+	// read remainder
+	btsRead = itsSocket->read(&receiveBuffer[sizeof(GCFEvent)], remainingBytes);
+	ASSERTSTR(btsRead == remainingBytes,
+		  "Only " << btsRead << " bytes of msg read: " << remainingBytes);
+
+//	hexdump(receiveBuffer, sizeof(GCFEvent) + remainingBytes);
+
+	// return Eventinformation
+	return (*header);
+}
+
+//
 // getStatus() : struct BoardStatus
 //
 vector<BoardStatus> RSPport::getBoardStatus(uint32	RCUmask)
@@ -68,51 +119,9 @@ vector<BoardStatus> RSPport::getBoardStatus(uint32	RCUmask)
 //	question.rcumask = xxx;
 	question.cache   = 0;
 
-	// Serialize the message and write buffer to port
-	uint32	packSize;
-	void* buf = question.pack(packSize);
-	int32 btsWritten = itsSocket->write(buf, packSize);
-	ASSERTSTR(btsWritten == (int32)packSize, 
-			  "Only " << btsWritten << " of " << packSize << " bytes written");
+	send (&question);
 
-	// First read header if answer:
-	// That is signal field + length field.
-	GCFEvent	header;
-	int32		btsRead;
-	btsRead = itsSocket->read((void*) &header.signal, sizeof(header.signal));
-	ASSERTSTR(btsRead == sizeof(header.signal), "Only " << btsRead << " of " 
-						<< sizeof(header.signal) << " bytes of header read");
-	btsRead = itsSocket->read((void*) &header.length, sizeof(header.length));
-	ASSERTSTR(btsRead == sizeof(header.length), "Only " << btsRead << " of " 
-						<< sizeof(header.length) << " bytes of header read");
-
-	LOG_DEBUG("Header received");
-
-	// Is there a payload in the message? This should be the case!
-	int32	remainingBytes = header.length;
-	LOG_DEBUG_STR(remainingBytes << " bytes to get next");
-	if (remainingBytes <= 0) {
-		vector<BoardStatus>		empty;
-		return(empty);
-	}
-
-	// create a buffer to receive the whole message
-	GCFEvent*	fullAnswer = 0;
-	char*	answerBuf = new char[sizeof(header) + remainingBytes];
-	fullAnswer = (GCFEvent*) answerBuf;
-
-	// copy received header
-	memcpy(answerBuf, &header, sizeof(header));	
-	
-	// read remainder
-	btsRead = itsSocket->read(answerBuf + sizeof(header), remainingBytes);
-	ASSERTSTR(btsRead == remainingBytes,
-		  "Only " << btsRead << " bytes of msg read: " << remainingBytes);
-
-	hexdump(answerBuf + sizeof(header), remainingBytes);
-
-	// Convert is to the right answer class
-	RSPGetstatusackEvent ack(*fullAnswer);
+	RSPGetstatusackEvent ack(receive());
 	
 	// Finally return the info they asked for.
 	vector<BoardStatus>		resultVec;

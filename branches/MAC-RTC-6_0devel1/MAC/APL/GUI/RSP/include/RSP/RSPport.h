@@ -33,6 +33,7 @@
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 namespace LOFAR {
+  using GCF::TM::GCFEvent;
   namespace RSP {
 
 // \addtogroup RSP
@@ -71,6 +72,9 @@ private:
 	RSPport();
 	RSPport (const RSPport& that);
 	RSPport& operator= (const RSPport& that);
+
+	void 		send   (GCFEvent*	anEvent);
+	GCFEvent&	receive();
 
 	//# Datamembers
 	uint16		itsPort;
