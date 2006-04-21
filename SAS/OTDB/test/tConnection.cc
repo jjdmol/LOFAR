@@ -193,6 +193,15 @@ int main (int	argc, char*	argv[]) {
 			showStateList(stateList);
 		}
 
+		LOG_INFO("=== Testing exec-list ===");
+	 	LOG_INFO("getExecutableTrees(3)");
+		treeList = conn.getExecutableTrees(3);
+		if (treeList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showTreeList(treeList);
+		}
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

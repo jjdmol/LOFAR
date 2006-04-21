@@ -5,7 +5,7 @@ check_PROGRAMS				= tPICtree \
 							  tVTtree \
 							  tVHtree \
 							  tVHvalue \
-							  tConnection \ 
+							  tConnection \
 							  tConverter
 
 tPICtree_SOURCES			= tPICtree.cc

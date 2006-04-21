@@ -128,7 +128,6 @@ bool	TreeValue::addKVTparamSet (const ParameterSet&		aPS)
 		result &= addKVT(cleanKey, iter->second, from_time_t(timeval));
 		++iter;
 	}
-
 	return (result);
 }
 
