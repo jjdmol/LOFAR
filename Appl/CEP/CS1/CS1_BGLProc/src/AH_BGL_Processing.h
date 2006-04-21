@@ -23,14 +23,13 @@
 
 #include <tinyCEP/TinyApplicationHolder.h>
 
-namespace LOFAR
-{
-namespace CS1
-{
+namespace LOFAR {
+namespace CS1 {
+
     //# Forward declarations
 class WH_BGL_Processing;
 class Stub_BGL_Subband;
-class Stub_BGL_RFI_Mitigation;
+//class Stub_BGL_RFI_Mitigation;
 class Stub_BGL_Visibilities;
 
     // Description of class.
@@ -53,7 +52,7 @@ class AH_BGL_Processing : public TinyApplicationHolder
     vector<WH_BGL_Processing *> itsWHs;
 
     Stub_BGL_Subband		*itsSubbandStub;
-    Stub_BGL_RFI_Mitigation     *itsRFI_MitigationStub;
+//  Stub_BGL_RFI_Mitigation     *itsRFI_MitigationStub;
     Stub_BGL_Visibilities	*itsVisibilitiesStub;
 };
 

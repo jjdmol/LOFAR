@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#if 0 // currently unused
 #ifndef LOFAR_CS1_INTERFACE_STUB_BGL_RFI_MITIGATION_H
 #define LOFAR_CS1_INTERFACE_STUB_BGL_RFI_MITIGATION_H
 
@@ -45,4 +46,5 @@ namespace LOFAR
 
 } //namespace LOFAR
 
+#endif
 #endif

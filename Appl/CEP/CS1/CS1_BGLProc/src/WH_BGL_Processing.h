@@ -36,7 +36,7 @@
 #include <CS1_Interface/CS1_Config.h>
 
 #include <CS1_Interface/DH_Subband.h>
-#include <CS1_Interface/DH_RFI_Mitigation.h>
+//#include <CS1_Interface/DH_RFI_Mitigation.h>
 #include <CS1_Interface/DH_Visibilities.h>
 
 
@@ -48,10 +48,8 @@
 #endif
 
 
-namespace LOFAR
-{
-namespace CS1
-{
+namespace LOFAR {
+namespace CS1 {
 
 class FIR {
   public:
@@ -69,7 +67,7 @@ class WH_BGL_Processing: public WorkHolder {
   public:
     enum inDataHolders {
       SUBBAND_CHANNEL,
-      RFI_MITIGATION_CHANNEL,
+//    RFI_MITIGATION_CHANNEL,
       NR_IN_CHANNELS
     };
 
@@ -93,9 +91,11 @@ class WH_BGL_Processing: public WorkHolder {
       return dynamic_cast<DH_Subband *>(getDataManager().getInHolder(SUBBAND_CHANNEL));
     }
 
+#if 0
     DH_RFI_Mitigation *get_DH_RFI_Mitigation() {
       return dynamic_cast<DH_RFI_Mitigation *>(getDataManager().getInHolder(RFI_MITIGATION_CHANNEL));
     }
+#endif
 
     DH_Visibilities *get_DH_Visibilities() {
       return dynamic_cast<DH_Visibilities *>(getDataManager().getOutHolder(VISIBILITIES_CHANNEL));
@@ -134,7 +134,6 @@ class WH_BGL_Processing: public WorkHolder {
 };
 
 } // namespace CS1
-
 } // namespace LOFAR
 
 #endif

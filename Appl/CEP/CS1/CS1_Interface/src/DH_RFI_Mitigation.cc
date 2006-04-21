@@ -20,46 +20,44 @@
 
 #include <lofar_config.h>
 
-#define BGL_PROCESSING
+#if 0
 #include <CS1_Interface/DH_RFI_Mitigation.h>
 
-namespace LOFAR
+namespace LOFAR {
+namespace CS1 {
+
+DH_RFI_Mitigation::DH_RFI_Mitigation(const string &name)
+  : DataHolder(name, "DH_RFI_Mitigation"),
+    itsChannelFlags(0)
 {
-  namespace CS1
-  {
+}
 
-    DH_RFI_Mitigation::DH_RFI_Mitigation(const string &name)
-      : DataHolder(name, "DH_RFI_Mitigation"),
-        itsChannelFlags(0)
-    {
-    }
+DH_RFI_Mitigation::DH_RFI_Mitigation(const DH_RFI_Mitigation &that)
+  : DataHolder(that),
+    itsChannelFlags(that.itsChannelFlags)
+{
+}
 
-    DH_RFI_Mitigation::DH_RFI_Mitigation(const DH_RFI_Mitigation &that)
-      : DataHolder(that),
-        itsChannelFlags(that.itsChannelFlags)
-    {
-    }
+DH_RFI_Mitigation::~DH_RFI_Mitigation()
+{
+}
 
-    DH_RFI_Mitigation::~DH_RFI_Mitigation()
-    {
-    }
+DataHolder *DH_RFI_Mitigation::clone() const
+{
+  return new DH_RFI_Mitigation(*this);
+}
 
-    DataHolder *DH_RFI_Mitigation::clone() const
-    {
-      return new DH_RFI_Mitigation(*this);
-    }
+void DH_RFI_Mitigation::init()
+{
+  addField("ChannelFlags", BlobField<uint32>(1, sizeof(ChannelFlagsType) / sizeof(uint32)));
+  createDataBlock();
+}
 
-    void DH_RFI_Mitigation::init()
-    {
-      addField("ChannelFlags", BlobField<uint32>(1, sizeof(ChannelFlagsType) / sizeof(uint32)));
-      createDataBlock();
-    }
+void DH_RFI_Mitigation::fillDataPointers()
+{
+  itsChannelFlags = (ChannelFlagsType *) getData<uint32>("ChannelFlags");
+}
 
-    void DH_RFI_Mitigation::fillDataPointers()
-    {
-      itsChannelFlags = (ChannelFlagsType *) getData<uint32>("ChannelFlags");
-    }
-
-  } // namespace CS1
-
+} // namespace CS1
 } // namespace LOFAR
+#endif
