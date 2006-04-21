@@ -78,6 +78,9 @@ public:
 							       const ptime& beginDate=ptime(min_date_time),
 							       const ptime& endDate=ptime(max_date_time));
 
+	// To get a list of all executable OTDB trees available in the database.
+	vector<OTDBtree> getExecutableTrees(classifType aClassification=TCoperational);
+
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;
 

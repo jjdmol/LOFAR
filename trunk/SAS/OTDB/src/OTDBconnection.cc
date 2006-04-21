@@ -259,6 +259,48 @@ vector<TreeState> OTDBconnection::getStateList(
 }
 
 //
+// getExecutableTrees(classif)
+//
+vector<OTDBtree> OTDBconnection::getExecutableTrees(classifType aClassification)
+{
+	if (!itsIsConnected && !connect()) {
+		vector<OTDBtree> 	empty;
+		return (empty); 
+	}
+
+	LOG_TRACE_FLOW_STR ("OTDB:getExecTrees(" << aClassification << ")");
+	try {
+		// construct a query that calls a stored procedure.
+		work	xAction(*itsConnection, "getExecutableTrees");
+		string	query("SELECT * from getExecutableTrees('" +
+						toString(aClassification) + "')");
+
+		// execute query
+		result	res = xAction.exec(query);
+
+		// show how many records found
+		result::size_type	nrRecords = res.size();
+		LOG_DEBUG_STR (nrRecords << " records in treeList(" 
+									<< aClassification << ")");
+	
+		// copy information to output vector
+		vector<OTDBtree>	resultVec;
+		for (result::size_type i = 0; i < nrRecords; ++i) {
+			resultVec.push_back(OTDBtree(res[i]));
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of getExecutableTrees:")
+					 + ex.what();
+	}
+
+	vector<OTDBtree> 	empty;
+	return (empty);
+}
+
+//
 // print(ostream&): os&
 //
 // Show connection characteristics.
