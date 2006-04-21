@@ -39,13 +39,13 @@ namespace LOFAR {
       itsNoNodes(numberOfNodes)
     {
       // TODO: do somethinig with itsNodeName when ruling the process.
-      itsStartCmd = formatString("./startAP.sh %s %s %s %s %d", 
+      itsStartCmd = formatString("./startBGL.sh %s %s %s %s %d", 
 				 aNodeName.c_str(),
 				 aProcName.c_str(),
 				 aExecName.c_str(),
 				 aParamFile.c_str(),
 				 itsNoNodes);
-      itsStopCmd  = formatString("./stopAP.sh %s %s", 
+      itsStopCmd  = formatString("./stopBGL.sh %s %s", 
 				 aNodeName.c_str(),
 				 aProcName.c_str());
     }
