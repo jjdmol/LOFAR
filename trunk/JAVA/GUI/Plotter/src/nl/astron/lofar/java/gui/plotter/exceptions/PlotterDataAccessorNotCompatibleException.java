@@ -23,7 +23,7 @@ public class PlotterDataAccessorNotCompatibleException extends PlotterException{
         super();
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_DATA_ACCESS_NOT_COMPATIBLE;
+        return super.getMessage() + PlotConstants.EXCEPTION_DATA_ACCESS_NOT_COMPATIBLE;
     }
     
     
