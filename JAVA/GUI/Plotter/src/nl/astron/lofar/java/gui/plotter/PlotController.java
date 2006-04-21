@@ -79,7 +79,7 @@ public class PlotController{
                         HashMap retrieveableData = 
                             m_PlotDataManager.retrieveData(constraint);                               
                         m_IPlot = aNewPlot;
-                        return m_IPlot.createPlot(type,"test",retrieveableData);
+                        return m_IPlot.createPlot(type,constraint,retrieveableData,PlotConstants.PLOT_SEPARATE_LEGEND);
                 
                 }else{
                     throw new NotSupportedException("The requested plot type ("+type+") is not supported by the plotter at this time.");
