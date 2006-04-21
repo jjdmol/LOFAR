@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import javax.swing.JComponent;
 import nl.astron.lofar.sas.plotter.exceptions.EmptyDataSetException;
+import nl.astron.lofar.sas.plotter.exceptions.NotImplementedException;
 import nl.astron.lofar.sas.plotter.exceptions.NotSupportedException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 
@@ -46,18 +47,18 @@ public class PlotSGTImpl implements IPlot{
         
 	}
         
-	public JComponent createPlot(int type, String name, HashMap data) throws PlotterException{
+	public JComponent createPlot(int type, String name, HashMap data, boolean separateLegend) throws PlotterException{
 	    
             JPlotLayout aNewPlot = null; 
             
             if(type==PlotConstants.PLOT_XYLINE){
-                aNewPlot = linePlot(name,data);
+                aNewPlot = linePlot(name,data, separateLegend);
             }
             else if(type==PlotConstants.PLOT_GRID){
-                aNewPlot = gridPlot(name,data);
+                aNewPlot = gridPlot(name,data, separateLegend);
             }
             else if(type==PlotConstants.PLOT_SCATTER){
-                aNewPlot = scatterPlot(name,data);
+                aNewPlot = scatterPlot(name,data, separateLegend);
             }
             //JPanel keyAndPlotPanel = new JPanel();
             //keyAndPlotPanel.add(aNewPlot);
@@ -66,14 +67,18 @@ public class PlotSGTImpl implements IPlot{
             
             //keyAndPlotPanel.add(keyPane,BorderLayout.SOUTH);
             aLayout = aNewPlot;
+            
             return aNewPlot;
 	}
         
-        private JPlotLayout linePlot(String name, HashMap data) throws PlotterException{
+        private JPlotLayout linePlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
             JPlotLayout layout = new JPlotLayout(JPlotLayout.LINE, false, false,
-                    name,null,true);
+                    name,null,separateLegend);
             layout.setSize(640,480);
-            //layout.setEditClasses(false);
+            if(separateLegend){
+               layout.setKeyLayerSizeP(new Dimension2D(6.0, 1.0));
+               layout.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 6.0, 1.0));  
+            }
             layout.setBatch(true);
             layout.setId(name);
             layout.setName(name);
@@ -172,14 +177,22 @@ public class PlotSGTImpl implements IPlot{
             return layout;
         }
         
-        private JPlotLayout gridPlot(String name, HashMap data) throws PlotterException{
+        private JPlotLayout gridPlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
             
             
             JPlotLayout layout = new JPlotLayout(JPlotLayout.GRID, false, false,
-                    name,null,true);
-            layout.setSize(640,480);
-            //layout.setEditClasses(false);
+                    name,null,separateLegend);
             layout.setBatch(true);
+            layout.setSize(640,480);
+            if(separateLegend){
+               layout.setKeyLayerSizeP(new Dimension2D(6.0, 1.0));
+               layout.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 6.0, 1.0));  
+            }else{
+               //layout.setKeyLayerSizeP(new Dimension2D(4.0,1.0));
+               //layout.setKeyBoundsP(new Rectangle2D.Double(0.1, 0.1, 4.0, 1.0));
+               //layout.setKeyAlignment(layout.LEFT,layout.TOP);
+            }
+           
             layout.setId(name);
             
             String plotTitle = "No Title Specified";
@@ -295,8 +308,8 @@ public class PlotSGTImpl implements IPlot{
             layout.setBatch(false);
             return layout; 
         }
-        private JPlotLayout scatterPlot(String name, HashMap data) throws PlotterException{
-            return null;
+        private JPlotLayout scatterPlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
+             throw new NotImplementedException("Scatter plots are not yet implemented in the plotter's SGT plugin."); 
         }       
         public HashMap getData(){
             return data;
@@ -312,9 +325,7 @@ public class PlotSGTImpl implements IPlot{
             try {
                 parentPlot = (JPlotLayout) aPlot;
                 keyPane = parentPlot.getKeyPane();
-                parentPlot.setKeyLayerSizeP(new Dimension2D(6.0, 1.0));
-                parentPlot.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 6.0, 1.0));
-               
+                
                 keyPane.setSize(new Dimension(600,100));
             } catch (ClassCastException e) {
                 throw new NotSupportedException("The plot ("+aPlot.getName()+") is not recognized by the plotter's configured framework (SGT).");
