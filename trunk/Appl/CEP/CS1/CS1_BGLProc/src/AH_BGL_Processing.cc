@@ -29,7 +29,7 @@
 #include <CS1_BGLProc/WH_BGL_Processing.h>
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/Stub_BGL_Subband.h>
-#include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
+//#include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
 #include <CS1_Interface/Stub_BGL_Visibilities.h>
 // tinyCEP
 
@@ -52,7 +52,7 @@ namespace CS1
 AH_BGL_Processing::AH_BGL_Processing() 
   : itsWHs(0),
     itsSubbandStub(0),
-    itsRFI_MitigationStub(0),
+    //itsRFI_MitigationStub(0),
     itsVisibilitiesStub(0)
 {
 }
@@ -70,7 +70,7 @@ void AH_BGL_Processing::undefine()
   itsWHs.clear();
 
   delete itsSubbandStub;	itsSubbandStub	      = 0;
-  delete itsRFI_MitigationStub;	itsRFI_MitigationStub = 0;
+//delete itsRFI_MitigationStub;	itsRFI_MitigationStub = 0;
   delete itsVisibilitiesStub;	itsVisibilitiesStub   = 0;
 }  
 
@@ -106,7 +106,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
   itsSubbandStub	   = new Stub_BGL_Subband(true, itsParamSet);
-  itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, itsParamSet);
+//itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, itsParamSet);
   itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, itsParamSet);
 
 #if defined HAVE_BGL
@@ -127,7 +127,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
       itsWHs.push_back(wh);
       TinyDataManager &dm = wh->getDataManager();
       itsSubbandStub->connect(subband, slave, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
-      //itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
+//    itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
       itsVisibilitiesStub->connect(subband, slave, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
 #if defined HAVE_BGL
@@ -155,7 +155,7 @@ void AH_BGL_Processing::init()
     WH_BGL_Processing *wh = itsWHs[i];
     wh->basePreprocess();
 
-#if defined HAVE_MPI
+#if 0 && defined HAVE_MPI
     if (wh->getNode() == TH_MPI::getCurrentRank()) {
       DH_RFI_Mitigation			  *dh	 = wh->get_DH_RFI_Mitigation();
       DH_RFI_Mitigation::ChannelFlagsType *flags = dh->getChannelFlags();

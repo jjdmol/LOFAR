@@ -1,18 +1,15 @@
 #!/bin/sh
 
-mkdir -p CS1_Interface/build/xlc_bgl CS1_BGLProc/build/xlc_bgl
+STATIONS="4 6 16 24"
+NR_SUBBAND_SAMPLES="196608"
 
-for NR_STATIONS in 4 6 16 24; do
+for NR_STATIONS in $STATIONS; do
   ( 
-    cd CS1_Interface/build/xlc_bgl
-    make clean
-    make install EXTRA_CPPFLAGS="-DNR_STATIONS=$NR_STATIONS -DNR_SUBBAND_SAMPLES=196608"
-  )
-
-  ( 
+    mkdir -p CS1_BGLProc/build/xlc_bgl
     cd CS1_BGLProc/build/xlc_bgl
     make clean
-    make EXTRA_CPPFLAGS="-DNR_STATIONS=$NR_STATIONS -DNR_SUBBAND_SAMPLES=196608"
+    make check EXTRA_CPPFLAGS="-DNR_STATIONS=$NR_STATIONS -DNR_SUBBAND_SAMPLES=$NR_SUBBAND_SAMPLES"
     cp src/CS1_BGL_Processing ../../../../../../installed/xlc_bgl/bin/CS1_BGL_Processing.$NR_STATIONS
   )
+
 done

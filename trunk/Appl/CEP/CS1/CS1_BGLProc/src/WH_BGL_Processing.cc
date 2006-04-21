@@ -1148,7 +1148,7 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
 #endif
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
-  getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
+//getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
   getDataManager().addOutDataHolder(VISIBILITIES_CHANNEL, new DH_Visibilities("output", ps));
 }
 
@@ -1433,8 +1433,12 @@ void WH_BGL_Processing::doCorrelate()
 {
   doCorrelateTimer.start();
 
-  DH_RFI_Mitigation::ChannelFlagsType	 *RFI_Flags = get_DH_RFI_Mitigation()->getChannelFlags();
-  DH_Visibilities::AllVisibilitiesType	 *visibilities = get_DH_Visibilities()->getVisibilities();
+  // Use zeroed space for RFI_Flags since they are currently not in a dataholder
+  static bitset<NR_SUBBAND_CHANNELS> Scratch_RFI_Flags[NR_STATIONS];
+  bitset<NR_SUBBAND_CHANNELS> (*RFI_Flags)[NR_STATIONS] = &Scratch_RFI_Flags;
+
+//DH_RFI_Mitigation::ChannelFlagsType	 *RFI_Flags	 = get_DH_RFI_Mitigation()->getChannelFlags();
+  DH_Visibilities::AllVisibilitiesType	 *visibilities	 = get_DH_Visibilities()->getVisibilities();
   DH_Visibilities::AllNrValidSamplesType *nrValidSamples = get_DH_Visibilities()->getNrValidSamples();
 
 #if defined C_IMPLEMENTATION

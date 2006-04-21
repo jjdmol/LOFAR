@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#if 0 // currently unused
 #ifndef LOFAR_CS1_INTERFACE_DH_RFI_MITIGATION_H
 #define LOFAR_CS1_INTERFACE_DH_RFI_MITIGATION_H
 
@@ -27,53 +28,55 @@
 #include <CS1_Interface/bitset.h>
 #include <Transport/DataHolder.h>
 
-#if defined BGL_PROCESSING
+namespace LOFAR {
+namespace CS1 {
 
-namespace LOFAR
+class DH_RFI_Mitigation: public DataHolder
 {
-  namespace CS1
-  {
-    class DH_RFI_Mitigation: public DataHolder
+  // this class needs additional accessor functions to be useful
+  public:
+#if defined BGL_PROCESSING
+    typedef bitset<NR_SUBBAND_CHANNELS> ChannelFlagsType[NR_STATIONS];
+
+    explicit DH_RFI_Mitigation(const string& name);
+
+    DH_RFI_Mitigation(const DH_RFI_Mitigation&);
+
+    virtual ~DH_RFI_Mitigation();
+
+    DataHolder *clone() const;
+
+    virtual void init();
+
+    ChannelFlagsType *getChannelFlags()
     {
-    public:
-      typedef bitset<NR_SUBBAND_CHANNELS> ChannelFlagsType[NR_STATIONS];
+      return itsChannelFlags;
+    }
 
-      explicit DH_RFI_Mitigation(const string& name);
+    const ChannelFlagsType *getChannelFlags() const
+    {
+      return itsChannelFlags;
+    }
 
-      DH_RFI_Mitigation(const DH_RFI_Mitigation&);
+    const size_t nrChannelFlags() const
+    {
+      return NR_STATIONS * NR_SUBBAND_CHANNELS;
+    }
+#endif
 
-      virtual ~DH_RFI_Mitigation();
+  private:
+    /// Forbid assignment.
+    DH_RFI_Mitigation &operator = (const DH_RFI_Mitigation&);
 
-      DataHolder *clone() const;
+#if defined BGL_PROCESSING
+    ChannelFlagsType *itsChannelFlags;
+#endif
 
-      virtual void init();
+    void fillDataPointers();
+  };
 
-      ChannelFlagsType *getChannelFlags()
-      {
-        return itsChannelFlags;
-      }
+} // namespace CS1
+} // namespace LOFAR
 
-      const ChannelFlagsType *getChannelFlags() const
-      {
-        return itsChannelFlags;
-      }
-
-      const size_t nrChannelFlags() const
-      {
-        return NR_STATIONS * NR_SUBBAND_CHANNELS;
-      }
-
-    private:
-      /// Forbid assignment.
-      DH_RFI_Mitigation &operator = (const DH_RFI_Mitigation&);
-
-      ChannelFlagsType *itsChannelFlags;
-
-      void fillDataPointers();
-    };
-
-  }
-}
 #endif /* BGL_PROCESSING */
-
-#endif 
+#endif

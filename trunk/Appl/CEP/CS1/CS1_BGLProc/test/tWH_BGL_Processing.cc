@@ -121,6 +121,7 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
 }
 
 
+#if 0
 void setRFItestPattern(WH_BGL_Processing &wh)
 {
   DH_RFI_Mitigation::ChannelFlagsType *flags = wh.get_DH_RFI_Mitigation()->getChannelFlags();
@@ -131,6 +132,7 @@ void setRFItestPattern(WH_BGL_Processing &wh)
   (*flags)[2][255] = true;
 #endif
 }
+#endif
 
 
 void checkCorrelatorTestPattern(WH_BGL_Processing &wh)
@@ -225,7 +227,7 @@ void doWork()
 
   wh.basePreprocess();
   setSubbandTestPattern(wh, signalFrequency);
-  setRFItestPattern(wh);
+//setRFItestPattern(wh);
 
 #if defined HAVE_BGL
   if (TH_MPI::getNumberOfNodes() > 1) {

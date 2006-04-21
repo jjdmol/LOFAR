@@ -31,131 +31,128 @@
 #include <APS/ParameterSet.h>
 
 
-namespace LOFAR
-{
-  namespace CS1
-  {
+namespace LOFAR {
+namespace CS1 {
 
-    class DH_Subband: public DataHolder
-    {
-    public:
-      // samples are ALWAYS stored in little endian format !
+class DH_Subband: public DataHolder
+{
+  public:
+    // samples are ALWAYS stored in little endian format !
 
 #if   INPUT_TYPE == I4COMPLEX_TYPE
-      typedef i4complex  SampleType;
+    typedef i4complex  SampleType;
 #elif INPUT_TYPE == I16COMPLEX_TYPE
-      typedef i16complex SampleType;
+    typedef i16complex SampleType;
 #else
 #error INPUT_TYPE not supported
 #endif
 
-      // Fine-grained delays
-      typedef struct {
-        float delayAtBegin, delayAfterEnd;
-      } DelayIntervalType;
+    // Fine-grained delays
+    typedef struct {
+      float delayAtBegin, delayAfterEnd;
+    } DelayIntervalType;
 
-      explicit DH_Subband(const string &name,
-                          const ACC::APS::ParameterSet &pSet); 
+    explicit DH_Subband(const string &name,
+			const ACC::APS::ParameterSet &pSet); 
 
-      DH_Subband(const DH_Subband &);
+    DH_Subband(const DH_Subband &);
 
-      virtual ~DH_Subband();
+    virtual ~DH_Subband();
 
-      DataHolder *clone() const;
+    DataHolder *clone() const;
 
-      virtual void init();
+    virtual void init();
 
-      RectMatrix<SampleType> &getSamplesMatrix() const
-      {
-        return *itsSamplesMatrix;
-      }
+    RectMatrix<SampleType> &getSamplesMatrix() const
+    {
+      return *itsSamplesMatrix;
+    }
 
-      SampleType &getSample(unsigned station, unsigned time, unsigned pol)
-      {
-        return itsSamples[NR_POLARIZATIONS * (itsNrInputSamples * station + time) + pol];
-      }
+    SampleType &getSample(unsigned station, unsigned time, unsigned pol)
+    {
+      return itsSamples[NR_POLARIZATIONS * (itsNrInputSamples * station + time) + pol];
+    }
 
-      const size_t nrSamples() const
-      {
-        return itsNrStations * itsNrInputSamples * NR_POLARIZATIONS;
-      }
+    const size_t nrSamples() const
+    {
+      return itsNrStations * itsNrInputSamples * NR_POLARIZATIONS;
+    }
 
-      DelayIntervalType &getDelay(unsigned station)
-      {
-        return itsDelays[station];
-      }
+    DelayIntervalType &getDelay(unsigned station)
+    {
+      return itsDelays[station];
+    }
 
-      const size_t nrFlags() const
-      {
-        return itsNrStations * ((itsNrInputSamples + 31) & ~31);
-      }
+    const size_t nrFlags() const
+    {
+      return itsNrStations * ((itsNrInputSamples + 31) & ~31);
+    }
 
-      const size_t nrDelays() const
-      {
-        return itsNrStations;
-      }
-  
+    const size_t nrDelays() const
+    {
+      return itsNrStations;
+    }
+
 #if defined BGL_PROCESSING
-      // Samples
-      typedef SampleType AllSamplesType[NR_STATIONS][NR_INPUT_SAMPLES][NR_POLARIZATIONS];
+    // Samples
+    typedef SampleType AllSamplesType[NR_STATIONS][NR_INPUT_SAMPLES][NR_POLARIZATIONS];
 
-      // Flags
-      typedef bitset<NR_INPUT_SAMPLES> AllFlagsType[NR_STATIONS];
+    // Flags
+    typedef bitset<NR_INPUT_SAMPLES> AllFlagsType[NR_STATIONS];
 
-      // Fine-grained delays
-      typedef DelayIntervalType AllDelaysType[NR_STATIONS];
+    // Fine-grained delays
+    typedef DelayIntervalType AllDelaysType[NR_STATIONS];
 
-      AllSamplesType *getSamples()
-      {
-        return (AllSamplesType *) itsSamples;
-      }
+    AllSamplesType *getSamples()
+    {
+      return (AllSamplesType *) itsSamples;
+    }
 
-      const AllSamplesType *getSamples() const
-      {
-        return (const AllSamplesType *) itsSamples;
-      }
+    const AllSamplesType *getSamples() const
+    {
+      return (const AllSamplesType *) itsSamples;
+    }
 
-      AllFlagsType *getFlags()
-      {
-        return (AllFlagsType *) itsFlags;
-      }
+    AllFlagsType *getFlags()
+    {
+      return (AllFlagsType *) itsFlags;
+    }
 
-      const AllFlagsType *getFlags() const
-      {
-        return (const AllFlagsType *) itsFlags;
-      }
+    const AllFlagsType *getFlags() const
+    {
+      return (const AllFlagsType *) itsFlags;
+    }
 
-      AllDelaysType *getDelays()
-      {
-        return (AllDelaysType *) itsDelays;
-      }
+    AllDelaysType *getDelays()
+    {
+      return (AllDelaysType *) itsDelays;
+    }
 
-      const AllDelaysType *getDelays() const
-      {
-        return (const AllDelaysType *) itsDelays;
-      }
+    const AllDelaysType *getDelays() const
+    {
+      return (const AllDelaysType *) itsDelays;
+    }
 #endif
 
-      void swapBytes();
+    void swapBytes();
 
-    private:
-      /// Forbid assignment.
-      DH_Subband &operator = (const DH_Subband &);
+  private:
+    /// Forbid assignment.
+    DH_Subband &operator = (const DH_Subband &);
 
-      unsigned		 itsNrStations;
-      unsigned		 itsNrInputSamples;
+    unsigned		   itsNrStations;
+    unsigned		   itsNrInputSamples;
 
-      SampleType		 *itsSamples;
-      // RectMatrix cannot be used for bitsets, thus not for flags
-      RectMatrix<SampleType> *itsSamplesMatrix;
-      uint32		 *itsFlags;
-      DelayIntervalType	 *itsDelays;
+    SampleType		   *itsSamples;
+    // RectMatrix cannot be used for bitsets, thus not for flags
+    RectMatrix<SampleType> *itsSamplesMatrix;
+    uint32		   *itsFlags;
+    DelayIntervalType	   *itsDelays;
 
-      void fillDataPointers();
-    };
+    void fillDataPointers();
+};
 
-  } // namespace CS1
-
+} // namespace CS1
 } // namespace LOFAR
 
 #endif 

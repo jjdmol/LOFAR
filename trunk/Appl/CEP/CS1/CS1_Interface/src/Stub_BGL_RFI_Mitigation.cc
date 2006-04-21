@@ -20,6 +20,7 @@
 
 #include <lofar_config.h>
 
+#if 0 // currently unused
 #include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
 #include <Transport/TH_Null.h>
 #include <Transport/Connection.h>
@@ -44,3 +45,4 @@ namespace LOFAR
   } // namespace CS1
 
 } // namespace LOFAR
+#endif

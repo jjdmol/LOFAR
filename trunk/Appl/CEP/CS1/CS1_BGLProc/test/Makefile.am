@@ -3,7 +3,7 @@
 check_PROGRAMS = tWH_BGL_Processing #tFFT
 
 
-AM_CPPFLAGS = \$(EXTRA_CPPFLAGS)
+AM_CPPFLAGS = $(EXTRA_CPPFLAGS)
 
 AM_CXXFLAGS = \
 	-I../../../src

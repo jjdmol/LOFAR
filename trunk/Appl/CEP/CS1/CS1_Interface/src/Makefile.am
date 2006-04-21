@@ -1,6 +1,6 @@
 lib_LTLIBRARIES			= libcs1_interface.la
 
-AM_CPPFLAGS			= \$(EXTRA_CPPFLAGS)
+AM_CPPFLAGS			= $(EXTRA_CPPFLAGS)
 
 libcs1_interface_la_SOURCES	= \
 	bitset.cc \
