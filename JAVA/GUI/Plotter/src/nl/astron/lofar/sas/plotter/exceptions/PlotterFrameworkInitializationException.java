@@ -23,7 +23,7 @@ public class PlotterFrameworkInitializationException extends PlotterException{
         super();
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_FRAMEWORK_INIT;
+        return super.getMessage() + PlotConstants.EXCEPTION_FRAMEWORK_INIT;
     }
     
     

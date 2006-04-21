@@ -23,7 +23,7 @@ public class PlotterDataAccessorNotFoundException extends PlotterException{
         super();
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_DATA_ACCESS_NOT_FOUND;
+        return super.getMessage() + PlotConstants.EXCEPTION_DATA_ACCESS_NOT_FOUND;
     }
     
     

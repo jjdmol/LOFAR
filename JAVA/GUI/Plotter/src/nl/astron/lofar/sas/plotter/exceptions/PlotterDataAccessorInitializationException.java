@@ -23,7 +23,7 @@ public class PlotterDataAccessorInitializationException extends PlotterException
         super();
     }
     public String getMessage(){
-        return PlotConstants.EXCEPTION_DATA_ACCESS_INIT;
+        return super.getMessage() + PlotConstants.EXCEPTION_DATA_ACCESS_INIT;
     }
     
     
