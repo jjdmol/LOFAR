@@ -119,7 +119,7 @@ namespace LOFAR
       const casa::MDirection        itsPhaseCenter(0.0); //? unknown what the default should be, AR
       const casa::Quantity          itsShiftX(0, "arcsec");
       const casa::Quantity          itsShiftY(0, "arcsec");
-      int                           itsFacets(0); //It's 1 in Glish, but propably 0 in C++
+      int                           itsFacets(1); //It's 1 in Glish, but propably 0 in C++, or maybe not ?
       const casa::Quantity          itsDistance(0, "m");
       const casa::Float             itsPaStep(5.0); //? unknown what the default should be, AR
       const casa::Float             itsPbLimit(0.05); //? unknown what the default should be, AR
