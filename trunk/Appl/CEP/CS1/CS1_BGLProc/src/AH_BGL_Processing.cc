@@ -100,6 +100,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 
 #if defined HAVE_BGL
   unsigned subbandsPerCell  = itsParamSet.getInt32("BGLProc.SubbandsPerCell");
+  ASSERTSTR(subbandsPerCell == 1, "BGLProc.SubbandsPerCell != 1 not implemented");
   unsigned slavesPerCell    = slavesPerSubBand * subbandsPerCell;
 #endif
 
@@ -113,7 +114,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   struct BGLPersonality personality;
   int retval = rts_get_personality(&personality, sizeof personality);
   ASSERTSTR(retval == 0, "Could not get personality");
-  bool virtualNodeMode = personality.opFlags & BGLPERSONALITY_OPFLAGS_VIRTUALNM;
+  bool virtualNodeMode = (personality.opFlags & BGLPERSONALITY_OPFLAGS_VIRTUALNM) != 0;
   int  nrNodesPerCell  = virtualNodeMode ? 16 : 8;
 
   ASSERTSTR(slavesPerCell < nrNodesPerCell, "too many slaves per cell");
@@ -130,16 +131,13 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 //    itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
       itsVisibilitiesStub->connect(subband, slave, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
-#if defined HAVE_BGL
-      // check if current compute cell is full
-      if (node % slavesPerCell == 0) {
-	// advance to next compute cell
-	node = (node + nrNodesPerCell - 1) & -nrNodesPerCell;
-      }
-#endif
-
       wh->runOnNode(remapOnTree(node ++));
     }
+
+#if defined HAVE_BGL
+    // advance to next compute cell
+    node = (node + nrNodesPerCell - 1) & -nrNodesPerCell;
+#endif
   }
 
 #if defined HAVE_MPI
