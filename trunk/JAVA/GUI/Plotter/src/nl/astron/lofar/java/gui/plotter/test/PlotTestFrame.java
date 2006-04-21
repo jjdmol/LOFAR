@@ -9,8 +9,10 @@
 
 package nl.astron.lofar.sas.plotter.test;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import nl.astron.lofar.sas.plotter.PlotConstants;
 import nl.astron.lofar.sas.plotter.PlotPanel;
 
@@ -26,11 +28,17 @@ public class PlotTestFrame extends javax.swing.JFrame {
     /** Creates new form PlotTestFrame */
     public PlotTestFrame() {
         testPanel = new PlotPanel();
-        //testPanel.createPlot(PlotConstants.PLOT_XYLINE,"line");
-        testPanel.createPlot(PlotConstants.PLOT_GRID,"grid");
-        this.setLayout(new BorderLayout(0,0));
-        this.getContentPane().add(testPanel.getPlot(),BorderLayout.CENTER);
-        this.getContentPane().add(testPanel.getLegendForPlot(),BorderLayout.SOUTH);
+        PlotPanel testPanel2 = new PlotPanel();
+        testPanel.createPlot(PlotConstants.PLOT_XYLINE,"line");
+        testPanel2.createPlot(PlotConstants.PLOT_GRID,"grid");
+        this.setLayout(new GridBagLayout());
+        
+        this.getContentPane().add(testPanel.getPlot(),new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
+        this.getContentPane().add(testPanel.getLegendForPlot(),new GridBagConstraints(0,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
+        this.getContentPane().add(testPanel2.getPlot(),new GridBagConstraints(1,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
+        this.getContentPane().add(testPanel2.getLegendForPlot(),new GridBagConstraints(1,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
+        
+        
         this.setSize(new Dimension(640,480));
         initComponents();
              
