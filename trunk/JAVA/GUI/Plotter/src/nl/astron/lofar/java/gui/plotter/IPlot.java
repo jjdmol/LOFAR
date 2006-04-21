@@ -25,9 +25,9 @@ public interface IPlot{
 	 * @param type
 	 * @param name
 	 * @param data
-	 * 
+	 * @param separateLegend
 	 */
-	public JComponent createPlot(int type, String name, HashMap data) throws PlotterException;
+	public JComponent createPlot(int type, String name, HashMap data, boolean separateLegend) throws PlotterException;
         
         public HashMap getData();
         
