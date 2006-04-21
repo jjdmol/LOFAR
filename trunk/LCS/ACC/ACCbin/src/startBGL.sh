@@ -13,5 +13,8 @@
 
 # start process
 # TODO: in future something like: rsh $1 start_script $2 $3 $4
+
 WRKDIR=`dirname $3`
-/usr/local/bin/submitjob $1 $3 $WRKDIR virtual_node_mode BGLMPI_SIZE=$5 $4 2>&1 | awk '{print $2}' > $2.jobID
+echo "executing /usr/local/bin/submitjob $1 $3 $WRKDIR virtual_node_mode BGLMPI_SIZE=$5 ACC $4" > startBGL.output
+/usr/local/bin/submitjob $1 $3 $WRKDIR virtual_node_mode BGLMPI_SIZE=$5 ACC $4 2>&1 | awk '{split($1, a, "="); print a[2];}' > $2.jobID
+
