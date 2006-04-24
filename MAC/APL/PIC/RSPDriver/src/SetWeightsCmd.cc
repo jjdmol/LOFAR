@@ -74,7 +74,7 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
   getPort()->send(ack);
 }
 
-void SetWeightsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
+void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
   // copy to offset N_LOCAL_XLETS in the cache
   Range dst_range = Range(MEPHeader::N_LOCAL_XLETS,
@@ -88,6 +88,11 @@ void SetWeightsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
     {
       cache.getBeamletWeights()()(0, cache_rcu, dst_range) =
 	m_event->weights()(0, input_rcu, Range::all());
+
+      if (setModFlag) {
+	cache.getCache().getBFState().modified(cache_rcu * MEPHeader::N_PHASE);
+	cache.getCache().getBFState().modified(cache_rcu * MEPHeader::N_PHASE + 1);
+      }
 
       input_rcu++;
     }
