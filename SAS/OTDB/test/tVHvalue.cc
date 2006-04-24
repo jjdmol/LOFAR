@@ -160,9 +160,14 @@ int main (int	argc, char*	argv[]) {
 		OTDBtree	treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 		
+		TreeMaintenance		tm(&conn);
+		LOG_INFO_STR ("Setting tree to active");
+		tm.setTreeState(treeID, TSconv.get("active"));
+		treeInfo = conn.getTreeInfo(treeID);
+		LOG_INFO_STR(treeInfo);
+		
 		LOG_INFO("Trying to set the schedule time to 2006-01-20 12:00:00.000");
 		LOG_INFO("THIS SHOULD FAIL BECAUSE STATUS IS ACTIVE");
-		TreeMaintenance		tm(&conn);
 		if (tm.setSchedule (treeID, time_from_string("2006-01-20 12:00:00.000"),
 								time_from_string("2006-01-20 14:53:12.000"))) {
 			ASSERTSTR(false, "THIS SHOULD HAVE FAILED");
@@ -237,8 +242,8 @@ int main (int	argc, char*	argv[]) {
 		ASSERTSTR(tv.addKVTparamSet(aPS), "Could NOT add the OTDBvalue class");
 		LOG_INFO("ParameterSet added, going to query it");
 
-		LOG_INFO ("Searching Node: Observation.Virt Telescope[4]%");
-		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "Observation.Virt Telescope[4]%");
+		LOG_INFO ("Searching Node: Observation.Virt Telescope%");
+		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "Observation.Virt Telescope%");
 		showNodeList(nodeList);
 
 		nodeIDType		nodeID = nodeList[0].nodeID();

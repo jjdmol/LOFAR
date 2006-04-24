@@ -1,7 +1,7 @@
 --
---  setDescription.sql: function for changing the description of a tree
+--  isTopComponent.sql: gets the topnode of the tree
 --
---  Copyright (C) 2006
+--  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
 --  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
@@ -23,39 +23,34 @@
 --
 
 --
--- setDescription (authToken, treeID, description)
+-- isTopComponent (componentID): bool
 --
--- Authorisation: yes
+-- returns if a component is a topcomponent.
 --
--- Tables:	otdbtree	update
+-- Authorisation: no
+--
+-- Tables:	VICnodedef	read
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION setDescription(INT4, INT4, TEXT)
+CREATE OR REPLACE FUNCTION isTopComponent(INT)
   RETURNS BOOLEAN AS '
 	DECLARE
-		vFunction				INT2 := 1;
-		vIsAuth					BOOLEAN;
-		vAuthToken				ALIAS FOR $1;
-		vCampaignID				campaign.id%TYPE;
-		vDescription			TEXT;
+		vNodeID		VICnodeDEF.nodeID%TYPE;
 
 	BEGIN
-		-- check authorisation(authToken, treeID, func, none)
-		vIsAuth := FALSE;
-		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
-		INTO   vIsAuth;
-		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized.\';
-			RETURN FALSE;
-		END IF;
-
-		-- update the tree
-		vDescription := replace($3, \'\\\'\', \' \');
-		UPDATE	OTDBtree
-		SET		description = vDescription
-		WHERE	treeID = $2;
-
+	  -- do selection
+	  SELECT nodeID
+	  INTO	 vNodeID
+	  FROM   VICnodedef 
+	  WHERE  nodeID = $1
+	  EXCEPT SELECT n.nodeID FROM VICnodeDEF n, VICparamDef p
+			 WHERE substr(p.name,2) = n.name;
+	  IF FOUND THEN
 		RETURN TRUE;
+	  END IF;
+
+	  RETURN FALSE;
 	END;
 ' LANGUAGE plpgsql;
+

@@ -43,6 +43,8 @@ CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(40), INT4,
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
+		vConstraints	TEXT;
+		vDescription	TEXT;
 
 	BEGIN
 		-- check authorisation(authToken, tree, func, parameter)
@@ -63,15 +65,17 @@ CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(40), INT4,
 		AND		classif = $5;
 		IF NOT FOUND THEN
 		  vNodeID := nextval(\'VICnodedefID\');
+		  vConstraints := replace($6, \'\\\'\', \' \');
+		  vDescription := replace($7, \'\\\'\', \' \');
 		  -- create new node
 		  vName := rtrim(translate($3, \'.\', \' \'));	-- replace dot w space
 		  INSERT INTO VICnodedef
-		  VALUES	(vNodeID, vName, $4, $5, $6, $7);
+		  VALUES	(vNodeID, vName, $4, $5, vConstraints, vDescription);
 		ELSE
 		  -- update node
 		  UPDATE VICnodedef
-		  SET	 constraints = $6,
-				 description = $7
+		  SET	 constraints = vConstraints,
+				 description = vDescription
 		  WHERE	 nodeID = vNodeID;
 		END IF;
 

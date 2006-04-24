@@ -39,6 +39,7 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
+		vLimits			TEXT;
 
 	BEGIN
 		-- check authorisation(authToken, tree, func, parameter)
@@ -51,9 +52,10 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		END IF;
 
 		-- get ParentID of node to duplicate
+		vLimits := replace($5, \'\\\'\', \' \');
 		UPDATE	VICtemplate
 		SET		instances = $4,
-				limits    = $5
+				limits    = vLimits
 		WHERE	treeID = $2
 		AND 	nodeID = $3;
 		IF NOT FOUND THEN

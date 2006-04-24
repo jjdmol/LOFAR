@@ -268,6 +268,34 @@ VICnodeDef	TreeMaintenance::getNodeDef (const string&	name,
 }
 
 //
+// isTopComponent (nodeID)
+//
+bool	TreeMaintenance::isTopComponent	(nodeIDType		aNodeID)
+{
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	work	xAction(*(itsConn->getConn()), "isTopComponent");
+	try {
+		result res = xAction.exec("SELECT * from isTopComponent('" +
+								  toString(aNodeID) + "')");
+		bool		isTop;
+		res[0]["isTopComponent"].to(isTop);
+		return (isTop);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during isTopComponent:") + ex.what();
+		LOG_FATAL(ex.what());
+	}
+	return (false);
+
+}
+
+
+//
 // loadComponentFile(treeID, filename): nodeID
 //
 // a VIC tree is build up from single components. The definition of a
