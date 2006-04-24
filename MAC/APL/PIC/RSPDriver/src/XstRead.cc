@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 XstRead::XstRead(GCFPortInterface& board_port, int board_id, int regid)
-  : SyncAction(board_port, board_id, XST_N_FRAGMENTS),
+  : SyncAction(board_port, board_id, 1),
     m_regid(regid)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
@@ -52,14 +52,13 @@ XstRead::~XstRead()
 void XstRead::sendrequest()
 {
   // offset in bytes
-  uint16 offset = (getCurrentIndex() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE;
-
   // firmware now indexes from 1 instead of 0
-  offset += (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) + 1) * MEPHeader::N_LOCAL_XLETS * MEPHeader::N_POL * sizeof(complex<uint32>);
+  //uint16 offset = (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) + 1) * MEPHeader::N_LOCAL_XLETS * MEPHeader::XLET_SIZE;
+  uint16 offset = (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) + 1) * MEPHeader::XLET_SIZE;
 
-  LOG_DEBUG_STR("XstRead::offset=" << offset);
+  LOG_INFO_STR("XstRead::offset=" << offset);
 
-  if (m_regid < MEPHeader::XST_0_X || m_regid > MEPHeader::XST_3_Y)
+  if (m_regid < MEPHeader::XST_0X0 || m_regid > MEPHeader::XST_3Y3)
   {
     LOG_FATAL("invalid regid");
     exit(EXIT_FAILURE);
@@ -68,7 +67,7 @@ void XstRead::sendrequest()
   EPAReadEvent xstread;
 
   xstread.hdr.set(MEPHeader::XST_STATS_HDR, MEPHeader::DST_RSP,
-		  MEPHeader::READ, N_XST_STATS * sizeof(uint32), offset);
+		  MEPHeader::READ, MEPHeader::XST_STATS_SIZE, offset);
   xstread.hdr.m_fields.addr.regid = m_regid;
 
   m_hdr = xstread.hdr;
@@ -132,45 +131,42 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::HANDLED;
   }
 
-  uint16 offset = ((getCurrentIndex() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE) / sizeof(uint32);
-
-  int global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (m_regid/2);
+  int global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (m_regid / MEPHeader::N_POL);
   
-  LOG_DEBUG(formatString("XstRead::handleack: global_blp=%d, offset=%d",
-			 global_blp, offset));
+  LOG_INFO(formatString("XstRead::handleack: global_blp=%d", global_blp));
 
   Array<complex<double>, 4>& cache(Cache::getInstance().getBack().getXCStats()());
 
-  offset /= (MEPHeader::N_PHASEPOL * MEPHeader::N_POL);
-  Range rcu_range(offset, cache.extent(thirdDim)-1);
+  int serdes_lane = m_regid / (MEPHeader::N_POL * StationSettings::instance()->nrBlpsPerBoard());
+  Range blp_target_range(serdes_lane,
+			 MEPHeader::N_REMOTE_XLETS * StationSettings::instance()->nrBlpsPerBoard() - 1,
+			 MEPHeader::N_PHASEPOL);
+		  
+  //Range rcu_range(remote_blp_offset, remote_blp_offset + MEPHeader::N_REMOTE_XLETS - 1);
   
-  LOG_DEBUG_STR(endl << 
+  LOG_INFO_STR(endl << 
 		"global_blp=" << global_blp << endl <<
-		"rcu_range=" << rcu_range << endl <<
-		"xststats.range=" << rcu_range-offset);
+		"blp_target_range=" << blp_target_range << endl <<
+		"xststats.range=" << Range(0, MEPHeader::N_REMOTE_XLETS));
 
-  if (offset <= cache.extent(thirdDim)) {
+  LOG_INFO_STR("xststats shape=" << shape(MEPHeader::N_REMOTE_XLETS, MEPHeader::N_POL));
+  
+  Array<complex<uint32>, 2> xststats((complex<uint32>*)&ack.xst_stat,
+				     shape(MEPHeader::N_REMOTE_XLETS, MEPHeader::N_POL),
+				     neverDeleteData);
+  
+  cache(m_regid % MEPHeader::N_POL, Range::all(), global_blp, blp_target_range) =
+    convert_cuint32_to_cdouble(xststats);
 
-    LOG_DEBUG_STR("xststats shape=" << 
-		  shape(N_XST_STATS / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL),
-			MEPHeader::N_POL));
-
-    Array<complex<uint32>, 2> xststats((complex<uint32>*)&ack.xst_stat,
-				       shape(N_XST_STATS / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL),
-					     MEPHeader::N_POL),
-				       neverDeleteData);
-
-    // convert and reorder dimensions
-    for (int i = offset; i < cache.extent(fourthDim); i++) {
-      for (int j = 0; j < MEPHeader::N_POL; j++) {
-	cache(m_regid % 2, j, global_blp, i)
-	  = convert_cuint32_to_cdouble(xststats(i-offset, j));
-      }
+#if 0
+  // convert and reorder dimensions
+  for (int i = 0; i < MEPHeader::N_REMOTE_XLETS; i++) {
+    for (int j = 0; j < MEPHeader::N_POL; j++) {
+      cache(m_regid % MEPHeader::N_POL, j, global_blp, i + remote_blp_offset)
+	= convert_cuint32_to_cdouble(xststats(i, j));
     }
-
-  } else {
-    LOG_WARN("ignoring EPA_XSTSTATS event, RCUs out of range");
   }
+#endif
 
   return GCFEvent::HANDLED;
 }
