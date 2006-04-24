@@ -169,16 +169,40 @@ namespace LOFAR {
       static const uint8 CR_SOFTSYNC      = 0x01;
       static const uint8 CR_SYNCDISABLE   = 0x02;
 
-      static const uint8 XST_STATS        = 0x00;
-      static const uint8 XST_0_X          = XST_STATS + 0; // 8 registers, two for each AP
-      static const uint8 XST_0_Y          = XST_STATS + 1;
-      static const uint8 XST_1_X          = XST_STATS + 2;
-      static const uint8 XST_1_Y          = XST_STATS + 3;
-      static const uint8 XST_2_X          = XST_STATS + 4;
-      static const uint8 XST_2_Y          = XST_STATS + 5;
-      static const uint8 XST_3_X          = XST_STATS + 6;
-      static const uint8 XST_3_Y          = XST_STATS + 7;
-      static const uint8 XST_NR_STATS     = XST_3_Y + 1;
+      static const uint8 XST_STATS    = 0x00;
+      static const uint8 XST_0X0      = XST_STATS +  0; // 32 registers, two for each AP
+      static const uint8 XST_0Y0      = XST_STATS +  1;
+      static const uint8 XST_1X0      = XST_STATS +  2;
+      static const uint8 XST_1Y0      = XST_STATS +  3;
+      static const uint8 XST_2X0      = XST_STATS +  4;
+      static const uint8 XST_2Y0      = XST_STATS +  5;
+      static const uint8 XST_3X0      = XST_STATS +  6;
+      static const uint8 XST_3Y0      = XST_STATS +  7;
+      static const uint8 XST_0X1      = XST_STATS +  8;
+      static const uint8 XST_0Y1      = XST_STATS +  9;
+      static const uint8 XST_1X1      = XST_STATS + 10;
+      static const uint8 XST_1Y1      = XST_STATS + 11;
+      static const uint8 XST_2X1      = XST_STATS + 12;
+      static const uint8 XST_2Y1      = XST_STATS + 13;
+      static const uint8 XST_3X1      = XST_STATS + 14;
+      static const uint8 XST_3Y1      = XST_STATS + 15;
+      static const uint8 XST_0X2      = XST_STATS + 16; // 8 registers, two for each AP
+      static const uint8 XST_0Y2      = XST_STATS + 17;
+      static const uint8 XST_1X2      = XST_STATS + 18;
+      static const uint8 XST_1Y2      = XST_STATS + 19;
+      static const uint8 XST_2X2      = XST_STATS + 20;
+      static const uint8 XST_2Y2      = XST_STATS + 21;
+      static const uint8 XST_3X2      = XST_STATS + 22;
+      static const uint8 XST_3Y2      = XST_STATS + 23;
+      static const uint8 XST_0X3      = XST_STATS + 24; // 8 registers, two for each AP
+      static const uint8 XST_0Y3      = XST_STATS + 25;
+      static const uint8 XST_1X3      = XST_STATS + 26;
+      static const uint8 XST_1Y3      = XST_STATS + 27;
+      static const uint8 XST_2X3      = XST_STATS + 28;
+      static const uint8 XST_2Y3      = XST_STATS + 29;
+      static const uint8 XST_3X3      = XST_STATS + 30;
+      static const uint8 XST_3Y3      = XST_STATS + 31;
+      static const uint8 XST_NR_STATS = XST_3Y3 + 1;
 
       /**
        * The CDO register will be extended to 
@@ -198,7 +222,7 @@ namespace LOFAR {
        */
       static const uint8 TBB_CONTROL      = 0x00;
 
-      static const int MAX_REGID          = XST_3_Y; // XST_3_Y
+      static const int MAX_REGID          = XST_3Y3; // XST_3Y3
 
       /*@}*/
 
@@ -220,6 +244,8 @@ namespace LOFAR {
        */
       static const uint16 N_SUBBANDS       = 512;
       static const uint16 N_REMOTE_XLETS   = 54; 
+      static const uint16 N_SERDES_LANES   = 4;
+      static const uint16 N_TOTAL_XLETS    = N_SERDES_LANES * N_REMOTE_XLETS;
       static const uint16 N_LOCAL_XLETS    = 4;
       static const uint16 N_BEAMLETS       = 216;
       static const uint16 N_LOCAL_BEAMLETS = 54;
@@ -234,12 +260,6 @@ namespace LOFAR {
       //
       static const uint16 FRAGMENT_SIZE = 1024;
     
-      //
-      // XST register is too large to read in one Ethernet frame
-      // These constants are used to read the fragments.
-      //
-      static const uint16 MAX_XLETS_PER_FRAGMENT = FRAGMENT_SIZE / XLET_SIZE;
-      static const uint16 XST_FRAGMENT_SIZE      = MIN(N_REMOTE_XLETS, MAX_XLETS_PER_FRAGMENT) * XLET_SIZE;
       /*@}*/
 
       
@@ -280,7 +300,8 @@ namespace LOFAR {
 
       static const uint16 CR_CONTROL_SIZE       = 1;
 
-      static const uint16 XST_STATS_SIZE        = (N_LOCAL_XLETS + N_REMOTE_XLETS) * XLET_SIZE; // = 3424?
+      // (N_LOCAL_XLETS + N_REMOTE_XLETS) * XLET_SIZE; // 928 (!= 3424?)
+      static const uint16 XST_STATS_SIZE        = N_REMOTE_XLETS * XLET_SIZE; // 864
 
       /**
        * The CDO register will be extended to 
