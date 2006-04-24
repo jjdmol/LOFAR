@@ -97,7 +97,8 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
 
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
-  Cache::getInstance().getRCUSettingsState().confirmed(global_blp);
+  Cache::getInstance().getRCUSettingsState().confirmed(global_blp * 2);
+  Cache::getInstance().getRCUSettingsState().confirmed(global_blp * 2 + 1);
 
   return GCFEvent::HANDLED;
 }
