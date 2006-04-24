@@ -43,6 +43,8 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(40), INT2,
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
+		vLimits			TEXT;
+		vDescription	TEXT;
 
 	BEGIN
 		-- check authorisation(authToken, tree, func, parameter)
@@ -55,17 +57,19 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(40), INT2,
 		END IF;
 
 		-- check if node exists
-		vName := rtrim(translate ($3, \'.\', \' \'));
+		vName        := rtrim(translate($3, \'.\', \' \'));
+	    vLimits      := replace($9, \'\\\'\', \' \');
+		vDescription := replace($10, \'\\\'\', \' \');
 		SELECT	paramID
 		INTO	vParamID
 		FROM	VICparamDef
 		WHERE	name = vName
 		AND		nodeID = $2;
 		IF NOT FOUND THEN
-		  vParamID := nextval(\'VICparamdefID\');
+		  vParamID     := nextval(\'VICparamdefID\');
 		  -- create new param
 		  INSERT INTO VICparamdef
-		  VALUES	(vParamID, $2, vName, $4, $5, $6, $7, $8, $9, $10);
+		  VALUES	(vParamID, $2, vName, $4, $5, $6, $7, $8, vLimits, vDescription);
 		ELSE
 		  -- update param
 		  UPDATE VICparamdef
@@ -74,8 +78,8 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(40), INT2,
 				 pruning = $6, 
 				 validmoment = $7, 
 				 RTmod = $8, 
-				 limits = $9,
-				 description = $10
+				 limits = vLimits,
+				 description = vDescription
 		  WHERE	 paramID = vParamID;
 		END IF;
 

@@ -146,6 +146,10 @@ int main (int	argc, char*	argv[]) {
 		VICnodeDef	aNode = tm.getComponentNode(topNodeID);
 		LOG_INFO_STR(aNode);
 
+		LOG_INFO("check if node is topNode")
+		bool	isTop = tm.isTopComponent(topNodeID);
+		ASSERTSTR(isTop, "isTopComponent(" << topNodeID << ") returned false");
+
 		LOG_INFO("Getting the list of all components");
 		nodeList = tm.getComponentList("%", false);
 		// note this is the same as : tm.getComponentList();
@@ -217,6 +221,10 @@ int main (int	argc, char*	argv[]) {
 		VICnodeDef	testNode = tm.getComponentNode(ref3);
 		LOG_INFO_STR(testNode);
 	
+		LOG_INFO_STR("check if node ARG is topNode")
+		isTop = tm.isTopComponent(ref3);
+		ASSERTSTR(!isTop, "isTopComponent(" << ref3 << ") returned true");
+
 		LOG_INFO("Modifying description and limits of component node");
 		// note childNode.name, childNode.version and childNode.classif are used in the
 		// database to decide if the node is a new node or an existing node.

@@ -81,6 +81,9 @@ public:
 	// Save new node or update the limits and description fields of the node.
 	bool	saveComponentNode	(VICnodeDef&	aNode);
 
+	// test if component is a top-component
+	bool	isTopComponent		(nodeIDType		aNodeID);
+
 
 	//# --- VIC maintenance : Templates ---
 	// From a component tree a template tree can be constructed. In a template

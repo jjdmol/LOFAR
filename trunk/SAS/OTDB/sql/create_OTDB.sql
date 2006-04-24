@@ -51,6 +51,7 @@
 \i getVCparams_func.sql
 \i buildTemplateTree_func.sql
 \i addComponentToVT_func.sql
+\i isTopComponent_func.sql
 
 -- VIChierarchy
 \i getVHitemList_func.sql
