@@ -1194,6 +1194,17 @@ void WH_BGL_Processing::preprocess()
   }
 
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
+  ASSERT(_FIR_constants_used.input_type			== INPUT_TYPE);
+  ASSERT(_FIR_constants_used.nr_stations		== NR_STATIONS);
+  ASSERT(_FIR_constants_used.nr_samples_per_integration	== NR_SAMPLES_PER_INTEGRATION);
+  ASSERT(_FIR_constants_used.nr_subband_channels	== NR_SUBBAND_CHANNELS);
+  ASSERT(_FIR_constants_used.nr_polarizations		== NR_POLARIZATIONS);
+
+  ASSERT(_correlator_constants_used.nr_stations			== NR_STATIONS);
+  ASSERT(_correlator_constants_used.nr_samples_per_integration	== NR_SAMPLES_PER_INTEGRATION);
+  ASSERT(_correlator_constants_used.nr_subband_channels		== NR_SUBBAND_CHANNELS);
+  ASSERT(_correlator_constants_used.nr_polarizations		== NR_POLARIZATIONS);
+
   mutex = rts_allocate_mutex();
 #endif
 }
@@ -1212,7 +1223,6 @@ void WH_BGL_Processing::computeFlags()
 
   computeFlagsTimer.start();
 
-#if 1 || defined C_IMPLEMENTATION
   memset(flags, 0, sizeof flags);
 
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
@@ -1234,9 +1244,6 @@ void WH_BGL_Processing::computeFlags()
       }
     }
   }
-#else
-  _compute_flags(input, &flags); // broken
-#endif
 #endif
 
   for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {

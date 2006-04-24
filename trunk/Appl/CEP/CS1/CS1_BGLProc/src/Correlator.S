@@ -28,6 +28,15 @@
 #	fxcpnsma 1,16,21,1	# f1r += f21r*f16r, f1i -= f21i*f16r
 #	fxcxma   1,16,21,1	# f1r += f21i*f16i, f1i += f21r*f16i
 
+
+.global _correlator_constants_used
+_correlator_constants_used:
+	.long	NR_STATIONS
+	.long	NR_SAMPLES_PER_INTEGRATION
+	.long	NR_SUBBAND_CHANNELS
+	.long	NR_POLARIZATIONS
+
+
 .align	5
 
 zero:	.long	0,0

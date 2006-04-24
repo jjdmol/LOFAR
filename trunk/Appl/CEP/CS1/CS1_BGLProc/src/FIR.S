@@ -26,6 +26,14 @@
 #define FCOMPLEX_SIZE	 8
 #define DCOMPLEX_SIZE	16
 
+.global	_FIR_constants_used
+_FIR_constants_used:
+	.long	INPUT_TYPE
+	.long	NR_STATIONS
+	.long	NR_SAMPLES_PER_INTEGRATION
+	.long	NR_SUBBAND_CHANNELS
+	.long	NR_POLARIZATIONS
+
 
 .align	5
 .global _bgl_mutex_lock
