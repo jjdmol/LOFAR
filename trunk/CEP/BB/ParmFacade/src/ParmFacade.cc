@@ -41,7 +41,11 @@ namespace ParmDB {
 
   vector<double> ParmFacade::getRange (const string& parmNamePattern) const
   {
-    ParmDomain dom = itsPDB.getRange (parmNamePattern);
+    string pp = parmNamePattern;
+    if (pp.empty()) {
+      pp = "*";
+    }
+    ParmDomain dom = itsPDB.getRange (pp);
     vector<double> res(4);
     res[0] = dom.getStart()[0];
     res[1] = dom.getEnd()[0];
@@ -53,7 +57,11 @@ namespace ParmDB {
   // Get all parameter names in the table.
   vector<string> ParmFacade::getNames (const string& parmNamePattern) const
   {
-    return itsPDB.getNames (parmNamePattern);
+    string pp = parmNamePattern;
+    if (pp.empty()) {
+      pp = "*";
+    }
+    return itsPDB.getNames (pp);
   }
 
   // Get the parameter values for the given parameters and domain.
@@ -62,9 +70,13 @@ namespace ParmDB {
 			  double startx, double endx, int nx,
 			  double starty, double endy, int ny)
   {
+    string pp = parmNamePattern;
+    if (pp.empty()) {
+      pp = "*";
+    }
     // Get the parm values.
     map<string,ParmValueSet> parmValues;
-    itsPDB.getValues (parmValues, parmNamePattern,
+    itsPDB.getValues (parmValues, pp,
 		      ParmDomain(startx, endx, starty, endy));
     // Make a request for the given grid.
     MeqDomain domain(startx, endx, starty, endy);
