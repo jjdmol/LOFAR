@@ -60,6 +60,17 @@ namespace LOFAR {
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+
+      friend class RCUResultRead;
+
+      static const int PROTOCOL_SIZE = 10;
+      static const int RESULT_SIZE   = 6; 
+
+      // construct i2c sequence
+      static uint8 i2c_protocol[PROTOCOL_SIZE];
+
+      // construct expected i2c result
+      static uint8 i2c_result[RESULT_SIZE];
     };
   };
 };

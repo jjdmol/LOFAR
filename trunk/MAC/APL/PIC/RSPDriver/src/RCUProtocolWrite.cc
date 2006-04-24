@@ -39,23 +39,34 @@ using namespace EPA_Protocol;
 
 namespace LOFAR {
   namespace RSP {
-    // construct i2c sequence
-    static uint8 i2c_protocol[] = { 0x0F, // PROTOCOL_C_SEND_BLOCK
-				    0x01, // I2C address for RCU
-				    0x03, // size
-				    0xFF, // <<< replace with data >>>
-				    0xFF, // <<< replace with data >>>
-				    0xFF, // <<< replace with data >>>
-				    0x10, // PROTOCOL_C_RECEIVE_BLOCK
-				    0x01, // I2C adress for RCU
-				    0x03, // requested size
-				    0x13, // PROTOCOL_C_END
+    uint8 RCUProtocolWrite::i2c_protocol[RCUProtocolWrite::PROTOCOL_SIZE] 
+    = { 0x0F, // PROTOCOL_C_SEND_BLOCK
+	0x01, // I2C address for RCU
+	0x03, // size
+	0xFF, // <<< replace with data >>>
+	0xFF, // <<< replace with data >>>
+	0xFF, // <<< replace with data >>>
+	0x10, // PROTOCOL_C_RECEIVE_BLOCK
+	0x01, // I2C adress for RCU
+	0x03, // requested size
+	0x13, // PROTOCOL_C_END
+    };
+
+    uint8 RCUProtocolWrite::i2c_result[RCUProtocolWrite::RESULT_SIZE] 
+    = { 0x00, // PROTOCOL_C_SEND_BLOCK OK
+	0xFF, // <<< replace with expected data >>>
+	0xFF, // <<< replace with expected data >>>
+	0xFF, // <<< replace with expected data >>>
+	0x00, // PROTOCOL_C_RECEIVE_BLOCK OK
+	0x00, // PROTOCOL_C_END OK
     };
   };
 };
 
+#define N_WRITES 2 // 2 writes, one for protocol register, one to clear results register
+
 RCUProtocolWrite::RCUProtocolWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL * N_WRITES) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -67,35 +78,63 @@ RCUProtocolWrite::~RCUProtocolWrite()
 
 void RCUProtocolWrite::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + (getCurrentIndex() / N_WRITES);
 
   // skip update if the RCU settings have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRCUProtocolState().get(global_rcu))
-  {
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRCUProtocolState().get(global_rcu)) {
     setContinue(true);
     return;
   }
 
-  // reverse and copy control bytes into i2c_protocol
-  RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
-  uint32 control = htonl(rcucontrol.getRaw());
-  memcpy(i2c_protocol+3, &control, 3);
+  switch (getCurrentIndex() % N_WRITES) {
+    
+  case 0:
+    {
+      // reverse and copy control bytes into i2c_protocol
+      RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
+      uint32 control = htonl(rcucontrol.getRaw());
+      memcpy(i2c_protocol+3, &control, 3);
 
-  // set appropriate header
-  MEPHeader::FieldsType hdr;
-  if (0 == global_rcu % 2) {
-    hdr = MEPHeader::RCU_PROTOCOLX_HDR;
-  } else {
-    hdr = MEPHeader::RCU_PROTOCOLY_HDR;
-  }
+      // set appropriate header
+      MEPHeader::FieldsType hdr;
+      if (0 == global_rcu % MEPHeader::N_POL) {
+	hdr = MEPHeader::RCU_PROTOCOLX_HDR;
+      } else {
+	hdr = MEPHeader::RCU_PROTOCOLY_HDR;
+      }
 
-  EPARcuProtocolEvent rcuprotocol;
-  rcuprotocol.hdr.set(hdr, 1 << (getCurrentIndex() / MEPHeader::N_POL), MEPHeader::WRITE, sizeof(i2c_protocol));
-  rcuprotocol.protocol.setBuffer(i2c_protocol, sizeof(i2c_protocol));
-  //  memcpy(rcuprotocol.protocol, i2c_protocol, sizeof(i2c_protocol));
+      EPARcuProtocolEvent rcuprotocol;
+      rcuprotocol.hdr.set(hdr, 1 << (getCurrentIndex() / (MEPHeader::N_POL * N_WRITES)), MEPHeader::WRITE, sizeof(i2c_protocol));
+      rcuprotocol.protocol.setBuffer(i2c_protocol, sizeof(i2c_protocol));
   
-  m_hdr = rcuprotocol.hdr; // remember header to match with ack
-  getBoardPort().send(rcuprotocol);
+      m_hdr = rcuprotocol.hdr; // remember header to match with ack
+      getBoardPort().send(rcuprotocol);
+    }
+    break;
+
+  case 1:
+    {
+      EPAWriteEvent rcuresultwrite;
+
+      // set appropriate header
+      uint8 regid = 0;
+      if (0 == (global_rcu % MEPHeader::N_POL)) {
+	regid = MEPHeader::RCU_RESULTX;
+      } else {
+	regid = MEPHeader::RCU_RESULTY;
+      }
+
+      rcuresultwrite.hdr.set(MEPHeader::WRITE, 1 << (getCurrentIndex() / (MEPHeader::N_POL * N_WRITES)),
+			     MEPHeader::RCU, regid, sizeof(i2c_result), 0);
+      uint8 clear[RESULT_SIZE];
+      memset(clear, 0xFF, RESULT_SIZE); // clear result
+      rcuresultwrite.payload.setBuffer(clear, RESULT_SIZE);
+
+      m_hdr = rcuresultwrite.hdr; // remember header to match with ack
+      getBoardPort().send(rcuresultwrite);
+    }
+    break;
+  }
 }
 
 void RCUProtocolWrite::sendrequest_status()
@@ -119,10 +158,14 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
     return GCFEvent::NOT_HANDLED;
   }
 
-  // Mark as register modification as applied
-  // Still needs to be confirmed by RCUResultRead
-  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
-  Cache::getInstance().getRCUProtocolState().applied(global_rcu);
+  if (1 == (getCurrentIndex() % N_WRITES)) {
 
+    // Mark modification as applied when write of RCU result register has completed
+
+    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + (getCurrentIndex() / N_WRITES);
+    Cache::getInstance().getRCUProtocolState().applied(global_rcu);
+
+  }
+  
   return GCFEvent::HANDLED;
 }
