@@ -38,7 +38,7 @@ namespace LOFAR {
       /**
        * Constructors for a BWWrite object.
        */
-      BWWrite(GCFPortInterface& board_port, int board_id, int regid);
+      BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid);
 	  
       /* Destructor for BWWrite. */
       virtual ~BWWrite();
@@ -59,7 +59,12 @@ namespace LOFAR {
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
-      int m_regid;
+      int    m_blp;
+      int    m_regid;
+
+      size_t m_remaining; // how much to write
+      size_t m_offset;    // where to write
+
       EPA_Protocol::MEPHeader m_hdr;
     };
   };

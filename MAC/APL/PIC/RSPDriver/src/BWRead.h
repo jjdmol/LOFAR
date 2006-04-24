@@ -38,7 +38,7 @@ namespace LOFAR {
       /**
        * Constructors for a BWRead object.
        */
-      BWRead(GCFPortInterface& board_port, int board_id, int regid);
+      BWRead(GCFPortInterface& board_port, int board_id, int blp, int regid);
 	  
       /* Destructor for BWRead. */
       virtual ~BWRead();
@@ -59,7 +59,12 @@ namespace LOFAR {
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
+      int m_blp;
       int m_regid;
+
+      size_t m_remaining; // how much to read
+      size_t m_offset;    // where to read
+
       EPA_Protocol::MEPHeader m_hdr;
     };
   };

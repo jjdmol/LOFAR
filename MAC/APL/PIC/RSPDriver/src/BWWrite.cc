@@ -43,9 +43,9 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
-BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int regid)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * BF_N_FRAGMENTS),
-    m_regid(regid)
+BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
+  : SyncAction(board_port, board_id, BF_N_FRAGMENTS),
+    m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -56,10 +56,20 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / BF_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
 
-  // coef int16 offset - divide by N_PHASE to get offset in complex<int16>
-  uint16 offset = ((getCurrentIndex() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
+  // skip update if the BF weights if they have not been modified
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBFState().get(global_blp * MEPHeader::N_PHASEPOL + m_regid))
+  {
+    setContinue(true);
+    return;
+  }
+
+  // reset m_offset and m_remaining for each register
+  if (0 == getCurrentIndex()) {
+    m_remaining = MEPHeader::BF_XROUT_SIZE; // representative for XR, XI, YR, YI size
+    m_offset = 0;
+  }
 
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -73,51 +83,57 @@ void BWWrite::sendrequest()
 			 m_regid));
   
   // send next BF configure message
-  EPABfCoefsEvent bfcoefs;
+  EPABfCoefsWriteEvent bfcoefs;
 
-  uint16 blp = 1 << (getCurrentIndex() / BF_N_FRAGMENTS);
+  size_t size = MIN(MEPHeader::FRAGMENT_SIZE, m_remaining);
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, blp,
-		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
+      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp,
+		      MEPHeader::WRITE, size, m_offset);
       break;
     case MEPHeader::BF_XIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, blp,
-		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
+      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp,
+		      MEPHeader::WRITE, size, m_offset);
       break;
     case MEPHeader::BF_YROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, blp,
-		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
+      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp,
+		      MEPHeader::WRITE, size, m_offset);
       break;
     case MEPHeader::BF_YIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, blp,
-		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
+      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp,
+		      MEPHeader::WRITE, size, m_offset);
       break;
   }
-  
-  // create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
-  Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
-				   shape(N_COEF / MEPHeader::N_PHASEPOL, MEPHeader::N_POL),
-				   neverDeleteData);
 
+  size_t elem_size   = size / (sizeof(complex<uint16>) * MEPHeader::N_POL);
+  size_t elem_offset = m_offset / (sizeof(complex<uint16>) * MEPHeader::N_POL);
+
+  // create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
 #if 0
-  LOG_DEBUG_STR("offset=" << offset << "; global_blp=" << (int)global_blp << "; blp=" << blp);
-  LOG_DEBUG_STR("weights shape=" << weights.shape());
-  LOG_DEBUG_STR("weights range=" << Range(offset / MEPHeader::N_PHASEPOL,
-					  (offset /MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1));
+  Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
+				   shape(elem_size, MEPHeader::N_POL),
+				   neverDeleteData);
+#else
+  Array<complex<int16>, 2> weights(elem_size, MEPHeader::N_POL);
+  bfcoefs.coef.setBuffer(weights.data(), weights.size() * sizeof(complex<uint16>));
 #endif
-  
+
+  Range source_range(elem_offset, elem_offset + elem_size - 1);
+
+  LOG_DEBUG_STR("global_blp=" << (int)global_blp << "; blp=" << m_blp);
+  LOG_DEBUG_STR("weights shape=" << weights.shape());
+  LOG_DEBUG_STR("weights source_range=" << source_range);
+
   // X
-  weights(Range::all(), 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2,
-										  Range(offset / MEPHeader::N_PHASEPOL,
-											(offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1));
+  weights(Range::all(), 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, source_range);
 
   // Y
-  weights(Range::all(), 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1,
-										  Range(offset / MEPHeader::N_PHASEPOL,
-											(offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1));
+  weights(Range::all(), 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, source_range);
 
+  // update m_remaining and m_offset for next write
+  m_remaining -= size;
+  m_offset    += size;
 
   switch (m_regid)
   {
@@ -197,6 +213,11 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   {
     LOG_ERROR("BWWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
+  }
+
+  if ((BF_N_FRAGMENTS - 1) == getCurrentIndex()) {
+    uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
+    Cache::getInstance().getBFState().confirmed(global_blp * MEPHeader::N_PHASEPOL + m_regid);
   }
 
   return GCFEvent::HANDLED;
