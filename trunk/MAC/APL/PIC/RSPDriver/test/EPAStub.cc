@@ -129,43 +129,75 @@ EPAStub::EPAStub(string name)
   m_reg[MEPHeader::CR][MEPHeader::CR_SYNCDISABLE].addr = new char[MEPHeader::CR_CONTROL_SIZE * (GET_CONFIG("EPAStub.N_BLPS", i) + 1)];
   m_reg[MEPHeader::CR][MEPHeader::CR_SYNCDISABLE].size = MEPHeader::CR_CONTROL_SIZE;
 
-  m_reg[MEPHeader::XST][MEPHeader::XST_0_X].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::XST][MEPHeader::XST_0_X].size     = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_0_Y].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::XST][MEPHeader::XST_0_Y].size     = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_1_X].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::XST][MEPHeader::XST_1_X].size     = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_1_Y].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::XST][MEPHeader::XST_1_Y].size     = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_2_X].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::XST][MEPHeader::XST_2_X].size     = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_2_Y].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::XST][MEPHeader::XST_2_Y].size     = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_3_X].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::XST][MEPHeader::XST_3_X].size     = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_3_Y].addr     = new char[MEPHeader::XST_STATS_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
-  m_reg[MEPHeader::XST][MEPHeader::XST_3_Y].size     = MEPHeader::XST_STATS_SIZE;
-
   m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].addr  = new char[MEPHeader::CDO_SETTINGS_SIZE];
   m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].size  = MEPHeader::CDO_SETTINGS_SIZE;
   m_reg[MEPHeader::CDO][MEPHeader::CDO_HEADER].addr    = new char[MEPHeader::CDO_HEADER_SIZE];
   m_reg[MEPHeader::CDO][MEPHeader::CDO_HEADER].size    = MEPHeader::CDO_HEADER_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_0_X].addr       = new char[MEPHeader::XST_STATS_SIZE];
-  m_reg[MEPHeader::XST][MEPHeader::XST_0_X].size       = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_0_Y].addr       = new char[MEPHeader::XST_STATS_SIZE];
-  m_reg[MEPHeader::XST][MEPHeader::XST_0_Y].size       = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_1_X].addr       = new char[MEPHeader::XST_STATS_SIZE];
-  m_reg[MEPHeader::XST][MEPHeader::XST_1_X].size       = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_1_Y].addr       = new char[MEPHeader::XST_STATS_SIZE];
-  m_reg[MEPHeader::XST][MEPHeader::XST_1_Y].size       = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_2_X].addr       = new char[MEPHeader::XST_STATS_SIZE];
-  m_reg[MEPHeader::XST][MEPHeader::XST_2_X].size       = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_2_Y].addr       = new char[MEPHeader::XST_STATS_SIZE];
-  m_reg[MEPHeader::XST][MEPHeader::XST_2_Y].size       = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_3_X].addr       = new char[MEPHeader::XST_STATS_SIZE];
-  m_reg[MEPHeader::XST][MEPHeader::XST_3_X].size       = MEPHeader::XST_STATS_SIZE;
-  m_reg[MEPHeader::XST][MEPHeader::XST_3_Y].addr       = new char[MEPHeader::XST_STATS_SIZE];
-  m_reg[MEPHeader::XST][MEPHeader::XST_3_Y].size       = MEPHeader::XST_STATS_SIZE;
+
+  m_reg[MEPHeader::XST][MEPHeader::XST_0X0].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0X0].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0Y0].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0Y0].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1X0].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1X0].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1Y0].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1Y0].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2X0].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2X0].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2Y0].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2Y0].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3X0].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3X0].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3Y0].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3Y0].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0X1].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0X1].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0Y1].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0Y1].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1X1].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1X1].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1Y1].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1Y1].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2X1].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2X1].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2Y1].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2Y1].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3X1].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3X1].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3Y1].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3Y1].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0X2].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0X2].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0Y2].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0Y2].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1X2].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1X2].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1Y2].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1Y2].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2X2].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2X2].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2Y2].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2Y2].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3X2].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3X2].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3Y2].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3Y2].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0X3].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0X3].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0Y3].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0Y3].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1X3].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1X3].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1Y3].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1Y3].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2X3].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2X3].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2Y3].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2Y3].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3X3].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3X3].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3Y3].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3Y3].size       = MEPHeader::XST_STATS_SIZE;
 
   m_reg[MEPHeader::BS][MEPHeader::BS_NOF_SAMPLES_PER_SYNC].addr  = new char[MEPHeader::BS_NOF_SAMPLES_PER_SYNC_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::BS][MEPHeader::BS_NOF_SAMPLES_PER_SYNC].size  = MEPHeader::BS_NOF_SAMPLES_PER_SYNC_SIZE;
@@ -263,9 +295,7 @@ EPAStub::EPAStub(string name)
 		case MEPHeader::XST:
 		  {
 		    uint32* pu_32 = (uint32*)m_reg[pid][regid].addr;
-		    for (int blp = 0; blp < GET_CONFIG("EPAStub.N_BLPS", i); blp++) {
-		      for (uint32 i = 0; i < size / sizeof(uint32); i++) *pu_32++ = i;
-		    }
+		    for (uint32 i = 0; i < size / sizeof(uint32); i++) *pu_32++ = i;
 		  }
 		  break;
 		}
@@ -456,7 +486,7 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_DIAG_BYPASS:
     case EPA_DIAG_SELFTEST:
     case EPA_SS_SELECT:
-    case EPA_BF_COEFS:
+    case EPA_BF_COEFS_WRITE:
     case EPA_BST_STATS:
     case EPA_SST_STATS:
     case EPA_RCU_SETTINGS:
