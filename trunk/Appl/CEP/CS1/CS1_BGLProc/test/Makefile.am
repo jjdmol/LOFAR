@@ -20,7 +20,7 @@ tWH_BGL_Processing.cc				\
 
 
 CCAS = gcc
-CCASFLAGS = $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/
+CCASFLAGS = $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/ $(EXTRA_CPPFLAGS)
 
 TESTS   = 					\
 tWH_BGL_Processing.sh
