@@ -59,8 +59,11 @@ void GetXCStatsCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  TinyVector<int, 4> s = cache.getXCStats()().shape();
-  s(2) = m_event->rcumask.count() / 2;
+  // TinyVector<int, 4> s = cache.getXCStats()().shape();
+  // s(2) = m_event->rcumask.count() / 2;
+  TinyVector<int, 4> s(MEPHeader::N_POL, MEPHeader::N_POL,
+		       (m_event->rcumask.count() + 1) / MEPHeader::N_POL,
+		       StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
   ack.stats().resize(s);
   
   int result_device = 0;
@@ -68,10 +71,10 @@ void GetXCStatsCmd::ack(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_device])
     {
-      Range all = Range::all();
+      Range blps(0, (StationSettings::instance()->nrRcus() / MEPHeader::N_POL) - 1);
 
-      ack.stats()(result_device % MEPHeader::N_POL, all, result_device / MEPHeader::N_POL, all) 
-	= cache.getXCStats()()(cache_device % MEPHeader::N_POL, all, cache_device / MEPHeader::N_POL, all);
+      ack.stats()(result_device % MEPHeader::N_POL, Range::all(), result_device / MEPHeader::N_POL, blps) 
+	= cache.getXCStats()()(cache_device % MEPHeader::N_POL, Range::all(), cache_device / MEPHeader::N_POL, blps);
       
       result_device++;
     }
