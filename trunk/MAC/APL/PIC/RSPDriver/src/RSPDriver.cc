@@ -111,10 +111,13 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace RTC;
 
-static const EPA_Protocol::CRControl g_CR_CONTROL_SYNC_DIS = { 0, 0, 1, 0 }; // SYNC_DIS flag
-static const EPA_Protocol::RSUReset  g_RSU_RESET_SYNC      = { 1, 0, 0, 0 }; // Soft SYNC
-static const EPA_Protocol::RSUReset  g_RSU_RESET_CLEAR     = { 0, 1, 0, 0 }; // Soft SYNC
-static const EPA_Protocol::RSUReset  g_RSU_RESET_RESET     = { 0, 0, 1, 0 }; // Soft SYNC
+static const uint8 g_CR_SOFTCLEAR   = 0x1;
+static const uint8 g_CR_SOFTSYNC    = 0x1;
+static const uint8 g_CR_SYNCDISABLE = 0x1;
+
+static const EPA_Protocol::RSUReset  g_RSU_RESET_SYNC  = { 1, 0, 0, 0 }; // Send SYNC pulse to all FPGA's
+static const EPA_Protocol::RSUReset  g_RSU_RESET_CLEAR = { 0, 1, 0, 0 }; // Clear all FPGA's
+static const EPA_Protocol::RSUReset  g_RSU_RESET_RESET = { 0, 0, 1, 0 }; // Reset all FPGA's and reconfigure BP with factory image
 
 static int32	g_instancenr = -1;
 static bool	g_daemonize  = false;
@@ -305,6 +308,40 @@ void RSPDriver::addAllSyncActions()
   for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
   {
     /*
+     * Schedule register writes for soft PPS if configured.
+     *
+     * - This means disabling the external sync on all FPGA's
+     *   by broadcasting a CR_CONTROL write.
+     * - Requesting a soft PPS by writing a 1 in the SYNC bit
+     *   of the RSU_RESET register.
+     */  
+    if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
+    {
+      WriteReg* writereg = 0;
+
+      // Disable External Sync for all FPGA's
+      writereg = new WriteReg(m_board[boardid], boardid,
+			      MEPHeader::DST_ALL,
+			      MEPHeader::CR,
+			      MEPHeader::CR_SYNCDISABLE,
+			      MEPHeader::CR_CONTROL_SIZE);
+      ASSERT(writereg);
+      writereg->setSrcAddress((void*)&g_CR_SYNCDISABLE);
+      m_scheduler.addSyncAction(writereg);
+
+      // Send PPS to BP which sends signal to configuration device
+      // which in turn sends a PPS to the AP's
+      writereg = new WriteReg(m_board[boardid], boardid,
+			      MEPHeader::DST_RSP,
+			      MEPHeader::RSU,
+			      MEPHeader::RSU_RESET,
+			      MEPHeader::RSU_RESET_SIZE);
+      ASSERT(writereg);
+      writereg->setSrcAddress((void*)&g_RSU_RESET_SYNC);
+      m_scheduler.addSyncAction(writereg);
+    }
+
+    /*
      * Clear the board if needed
      */
     if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
@@ -342,41 +379,6 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(versionread);
     }
 
-    /*
-     * Schedule register writes for soft PPS if configured.
-     *
-     * - This means disabling the external sync on all FPGA's
-     *   by broadcasting a CR_CONTROL write.
-     * - Requesting a soft PPS by writing a 1 in the SYNC bit
-     *   of the RSU_RESET register.
-     */  
-    if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
-    {
-      WriteReg* writereg = 0;
-#if 0
-      // Disable External Sync for all FPGA's
-      writereg = new WriteReg(m_board[boardid], boardid,
-			      MEPHeader::DST_ALL,
-			      MEPHeader::CR,
-			      MEPHeader::CR_CONTROL,
-			      MEPHeader::CR_CONTROL_SIZE);
-      ASSERT(writereg);
-      writereg->setSrcAddress((void*)&g_CR_CONTROL_SYNC_DIS);      
-      m_scheduler.addSyncAction(writereg);
-#endif
-
-      // Send PPS to BP which sends signal to configuration device
-      // which in turn sends a PPS to the AP's
-      writereg = new WriteReg(m_board[boardid], boardid,
-			      MEPHeader::DST_RSP,
-			      MEPHeader::RSU,
-			      MEPHeader::RSU_RESET,
-			      MEPHeader::RSU_RESET_SIZE);
-      ASSERT(writereg);
-      writereg->setSrcAddress((void*)&g_RSU_RESET_SYNC);
-      m_scheduler.addSyncAction(writereg);
-    }
-
     if (1 == GET_CONFIG("RSPDriver.READ_BST", i))
     {
       BstRead* bstread = 0;
@@ -390,9 +392,9 @@ void RSPDriver::addAllSyncActions()
     {
       XstRead* xstread = 0;
 
-      for (int i = MEPHeader::XST_STATS; i < MEPHeader::XST_NR_STATS; i++)
+      for (int regid = MEPHeader::XST_STATS; regid < MEPHeader::XST_NR_STATS; regid++) //  divide by four as long as only 1 lane supported
       {
-	xstread = new XstRead(m_board[boardid], boardid, i);
+	xstread = new XstRead(m_board[boardid], boardid, regid);
 	ASSERT(xstread);
 	m_scheduler.addSyncAction(xstread);
       }
@@ -485,18 +487,20 @@ void RSPDriver::addAllSyncActions()
 	{
 	  BWWrite* bwsync = 0;
 
-	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XROUT);
-	  ASSERT(bwsync);
-	  m_scheduler.addSyncAction(bwsync);
-	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
-	  ASSERT(bwsync);
-	  m_scheduler.addSyncAction(bwsync);
-	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YROUT);
-	  ASSERT(bwsync);
-	  m_scheduler.addSyncAction(bwsync);
-	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
-	  ASSERT(bwsync);
-	  m_scheduler.addSyncAction(bwsync);
+	  for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
+	    bwsync = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_XROUT);
+	    ASSERT(bwsync);
+	    m_scheduler.addSyncAction(bwsync);
+	    bwsync = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_XIOUT);
+	    ASSERT(bwsync);
+	    m_scheduler.addSyncAction(bwsync);
+	    bwsync = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_YROUT);
+	    ASSERT(bwsync);
+	    m_scheduler.addSyncAction(bwsync);
+	    bwsync = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_YIOUT);
+	    ASSERT(bwsync);
+	    m_scheduler.addSyncAction(bwsync);
+	  }
 	}
       }
       else
@@ -505,18 +509,20 @@ void RSPDriver::addAllSyncActions()
 	{
 	  BWRead* bwsync = 0;
 
-	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XROUT);
-	  ASSERT(bwsync);
-	  m_scheduler.addSyncAction(bwsync);
-	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
-	  ASSERT(bwsync);
-	  m_scheduler.addSyncAction(bwsync);
-	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YROUT);
-	  ASSERT(bwsync);
-	  m_scheduler.addSyncAction(bwsync);
-	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
-	  ASSERT(bwsync);
-	  m_scheduler.addSyncAction(bwsync);
+	  for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
+	    bwsync = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_XROUT);
+	    ASSERT(bwsync);
+	    m_scheduler.addSyncAction(bwsync);
+	    bwsync = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_XIOUT);
+	    ASSERT(bwsync);
+	    m_scheduler.addSyncAction(bwsync);
+	    bwsync = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_YROUT);
+	    ASSERT(bwsync);
+	    m_scheduler.addSyncAction(bwsync);
+	    bwsync = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_YIOUT);
+	    ASSERT(bwsync);
+	    m_scheduler.addSyncAction(bwsync);
+	  }
 	}
       }
     }
