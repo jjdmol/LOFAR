@@ -29,14 +29,21 @@ public class PlotTestFrame extends javax.swing.JFrame {
     public PlotTestFrame() {
         testPanel = new PlotPanel();
         PlotPanel testPanel2 = new PlotPanel();
-        testPanel.createPlot(PlotConstants.PLOT_XYLINE,"line");
-        testPanel2.createPlot(PlotConstants.PLOT_GRID,"grid");
+        
+        //For use with PlotDataAccessTestImpl
+        //testPanel.createPlot(PlotConstants.PLOT_XYLINE,"line");
+        //testPanel2.createPlot(PlotConstants.PLOT_GRID,"grid");
+        
+        //For use with PlotDataAccessParmDBImpl class
+        testPanel.createPlot(PlotConstants.PLOT_XYLINE,"parm1");
+        testPanel2.createPlot(PlotConstants.PLOT_GRID,"parm2");
+        
         this.setLayout(new GridBagLayout());
         
         this.getContentPane().add(testPanel.getPlot(),new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
-        this.getContentPane().add(testPanel.getLegendForPlot(),new GridBagConstraints(0,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
-        this.getContentPane().add(testPanel2.getPlot(),new GridBagConstraints(1,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
-        this.getContentPane().add(testPanel2.getLegendForPlot(),new GridBagConstraints(1,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
+        //this.getContentPane().add(testPanel.getLegendForPlot(),new GridBagConstraints(0,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
+        //this.getContentPane().add(testPanel2.getPlot(),new GridBagConstraints(1,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
+        //this.getContentPane().add(testPanel2.getLegendForPlot(),new GridBagConstraints(1,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
         
         
         this.setSize(new Dimension(640,480));
