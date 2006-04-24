@@ -137,8 +137,7 @@ sub listfiles
 
 	($type, $filename, $designname, $length) = unpack("CZ*Z*N", $filelist);
 
-
-	if ($erase) {
+	if (0) { #true == $erase) {
 	    erase($sock, $filename, $type);
 	    print "$filename erased\n";
 	} else {
