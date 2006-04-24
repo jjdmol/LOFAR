@@ -599,17 +599,39 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
   /* pid = 0x10 (CEP) */
   {
-    /* reg = 0x00 (RESERVED) */
-    { 
-      /* RESERVED */
+    /* reg = 0x00 (MDIO_HEADER) */
+    { 0,
+      EPA_READ,     /* READ */
+      EPA_WRITE,    /* WRITE */
+      EPA_READACK,  /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
+    },
+    
+    /* reg = 0x01 (MDIO_DATA) */
+    { 0,
+      EPA_READ,     /* READ */
+      EPA_WRITE,    /* WRITE */
+      EPA_READACK,  /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
     },
   },
 
   /* pid = 0x11 (LCU) */
   {
-    /* reg = 0x00 (RESERVED) */
-    { 
-      /* RESERVED */
+    /* reg = 0x00 (MDIO_HEADER) */
+    { 0,
+      EPA_READ,     /* READ */
+      EPA_WRITE,    /* WRITE */
+      EPA_READACK,  /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
+    },
+    
+    /* reg = 0x01 (MDIO_DATA) */
+    { 0,
+      EPA_READ,     /* READ */
+      EPA_WRITE,    /* WRITE */
+      EPA_READACK,  /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
     },
   },
 
