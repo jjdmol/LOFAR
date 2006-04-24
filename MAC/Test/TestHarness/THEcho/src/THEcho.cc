@@ -33,6 +33,7 @@
 using std::cout;
 using std::endl;
 using namespace LOFAR;
+using namespace LOFAR::GCF::Common;
 using namespace THEcho;
 
 Echo::Echo(string name) : 

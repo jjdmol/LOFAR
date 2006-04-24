@@ -10,7 +10,7 @@ THPVSSBridge_CPPFLAGS= \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
-THPVSSBridge_SOURCES 		= \
+THPVSSBridge_SOURCES 		= $(BUILT_SOURCES) \
 	PropertyProxy.cc \
 	THPVSSBridge.cc \
 	THPVSSBridgeMain.cc \
@@ -23,12 +23,10 @@ include_HEADERS =
 BUILT_SOURCES = 	\
 	THPVSSBridge_Protocol.ph
 
-EXTRA_DIST =   \
-	THPVSSBridge_Protocol.ph
+EXTRA_DIST =  $(sysconf_DATA)
 
 #in case of make install these files will be copied to the bindir beside the test apps
-configfilesdir=$(bindir)
-configfiles_DATA = \
+sysconf_DATA = \
 	THPVSSBridge.conf \
 	THPVSSBridge.log_prop
 	
