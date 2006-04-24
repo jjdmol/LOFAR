@@ -82,6 +82,8 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
   const double		     distance	= .25; // labda
   const double		     phaseShift = 2 * M_PI * distance;
 
+  memset(delays, 0, sizeof(DH_Subband::AllDelaysType));
+
   for (int time = 0; time < NR_INPUT_SAMPLES; time ++) {
     double phi = 2 * M_PI * signalFrequency * time / NR_SUBBAND_SAMPLES;
     DH_Subband::SampleType sample = toComplex(phi);
