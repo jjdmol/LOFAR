@@ -47,9 +47,12 @@ public abstract class PlotConstants{
     public static final String FRAMEWORK         = "nl.astron.lofar.sas.plotter.PlotSGTImpl";
     
     //Supported plotter data access class
-    //public static final String DATA_ACCESS_CLASS = "nl.astron.lofar.sas.plotter.PlotDataAccessParmDBImpl";
-    public static final String DATA_ACCESS_CLASS = "nl.astron.lofar.sas.plotter.test.PlotDataAccessTestImpl";
+    public static final String DATA_ACCESS_CLASS = "nl.astron.lofar.sas.plotter.PlotDataAccessParmDBImpl";
+    //public static final String DATA_ACCESS_CLASS = "nl.astron.lofar.sas.plotter.test.PlotDataAccessTestImpl";
     
+    //Location of ParmDB table file(s)
+    public static final String DATA_INMEP_FILE_PATH = "/home/pompert/transfer/tParmFacade.in_mep";
+        
     //Supported plotter data export class
     //public static final String DATA_EXPORT_CLASS = "nl.astron.lofar.sas.plotter.PlotDataExportRootImpl";
 
