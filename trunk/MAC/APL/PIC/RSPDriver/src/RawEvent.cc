@@ -170,31 +170,31 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
   {
     /* reg = 0x00 (BF_XROUT) */
     { 0,
-      EPA_READ,     /* READ    */
-      EPA_BF_COEFS, /* WRITE   */
-      EPA_BF_COEFS, /* READACK */
-      EPA_WRITEACK, /* WRITEACK */
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
     },
     /* reg = 0x01 (BF_XIOUT) */
     { 0,
-      EPA_READ,     /* READ    */
-      EPA_BF_COEFS, /* WRITE   */
-      EPA_BF_COEFS, /* READACK */
-      EPA_WRITEACK, /* WRITEACK */
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
     },
     /* reg = 0x02 (BF_YROUT) */
     { 0,
-      EPA_READ,     /* READ    */
-      EPA_BF_COEFS, /* WRITE   */
-      EPA_BF_COEFS, /* READACK */
-      EPA_WRITEACK, /* WRITEACK */
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
     },
     /* reg = 0x03 (BF_YIOUT) */
     { 0,
-      EPA_READ,     /* READ    */
-      EPA_BF_COEFS, /* WRITE   */
-      EPA_BF_COEFS, /* READACK */
-      EPA_WRITEACK, /* WRITEACK */
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
     },
   },
 
@@ -240,10 +240,10 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
     /* reg = 0x02 (RCU_RESULTX) */
     { 0,
-      EPA_READ,        /* READ     */
-      0,
+      EPA_READ,       /* READ     */
+      EPA_RCU_RESULT, /* WRITE    */
       EPA_RCU_RESULT, /* READACK  */
-      0,
+      EPA_WRITEACK,   /* WRITEACK */
     },
 
     /* reg = 0x03 (RCU_PROTOCOLY) */
@@ -256,10 +256,10 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
     /* reg = 0x04 (RCU_RESULTY) */
     { 0,
-      EPA_READ,        /* READ     */
-      0,
+      EPA_READ,       /* READ     */
+      EPA_RCU_RESULT, /* WRITE    */
       EPA_RCU_RESULT, /* READACK  */
-      0,
+      EPA_WRITEACK,   /* WRITEACK */
     },
   },
 
@@ -291,7 +291,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
   /* pid = 0x0A (XST) */
   {
-    /* reg = 0x00 (XST_0_X) */
+    /* reg = 0x00 */
     { 0,
       EPA_READ,      /* READ */
       0,
@@ -299,29 +299,14 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       0,
     },
 
-    /* reg = 0x01 (XST_0_Y) */
+    /* reg = 0x01 */
     { 0,
       EPA_READ,      /* READ */
       0,
       EPA_XST_STATS, /* READACK */
       0,
     },
-    /* reg = 0x02 (XST_1_X) */
-    { 0,
-      EPA_READ,      /* READ */
-      0,
-      EPA_XST_STATS, /* READACK */
-      0,
-    },
-
-    /* reg = 0x03 (XST_1_Y) */
-    { 0,
-      EPA_READ,      /* READ */
-      0,
-      EPA_XST_STATS, /* READACK */
-      0,
-    },
-    /* reg = 0x04 (XST_2_X) */
+    /* reg = 0x02 */
     { 0,
       EPA_READ,      /* READ */
       0,
@@ -329,14 +314,14 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       0,
     },
 
-    /* reg = 0x05 (XST_2_Y) */
+    /* reg = 0x03 */
     { 0,
       EPA_READ,      /* READ */
       0,
       EPA_XST_STATS, /* READACK */
       0,
     },
-    /* reg = 0x06 (XST_3_X) */
+    /* reg = 0x04 */
     { 0,
       EPA_READ,      /* READ */
       0,
@@ -344,7 +329,202 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       0,
     },
 
-    /* reg = 0x07 (XST_3_Y) */
+    /* reg = 0x05 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x06 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x07 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x08 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x09 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x0A */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x0B */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x0C */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x0D */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x0E */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x0F */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x10 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x11 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x12 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x13 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x14 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x15 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x16 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x17 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x18 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x19 */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x1A */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x1B */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x1C */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x1D */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x1E */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x1F */
     { 0,
       EPA_READ,      /* READ */
       0,
@@ -497,6 +677,8 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 	LOG_WARN("Protocol violation: received message other than MEPHeader::READACK or MEPHeader::WRITEACK with error != 0 set.");
       }
     }
+  } else {
+    LOG_WARN("Received message with out-of-range header fields");
   }
   
   if (signal) // signal == 0 indicates unrecognised or invalid MEP message
@@ -532,7 +714,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   }
   else
   {
-    LOG_DEBUG("F_DATAIN: Discarding unknown message.");
+    LOG_WARN("F_DATAIN: Discarding unknown message.");
   }
 
   return status;
