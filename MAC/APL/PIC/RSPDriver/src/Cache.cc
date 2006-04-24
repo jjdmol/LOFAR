@@ -120,8 +120,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 
   m_xcstats().resize(MEPHeader::N_POL,
 		     MEPHeader::N_POL,
-		     StationSettings::instance()->nrBlps(),
-		     StationSettings::instance()->nrBlps());
+		     MEPHeader::N_TOTAL_XLETS,
+		     MEPHeader::N_TOTAL_XLETS);
 
   m_xcstats() = complex<double>(0,0);
 
@@ -271,6 +271,9 @@ Cache::Cache() : m_front(0), m_back(0)
   getBSState().resize(StationSettings::instance()->nrRspBoards());
   getBSState().modified();
 
+  getBFState().resize(StationSettings::instance()->nrRcus() * MEPHeader::N_PHASE); // XR, XI, YR, YI
+  getBFState().modified();
+
   getTDSState().resize(StationSettings::instance()->nrRspBoards());
   getTDSState().modified();
 
@@ -295,6 +298,7 @@ void Cache::swapBuffers()
 #if 1
   cout << "CDO            "; getCDOState().print(cout);
   cout << "DIAGWGSettings "; getDIAGWGSettingsState().print(cout);
+  cout << "BF             "; getBFState().print(cout);
   cout << "BS             "; getBSState().print(cout);
   cout << "TDS            "; getTDSState().print(cout);
   cout << "RCUSettings    "; getRCUSettingsState().print(cout);
@@ -305,6 +309,7 @@ void Cache::swapBuffers()
   // clear modified flags on back buffer
   getCDOState().clear();
   getDIAGWGSettingsState().clear();
+  getBFState().clear();
   getBSState().clear();
   getTDSState().clear();
   getRCUSettingsState().clear();
