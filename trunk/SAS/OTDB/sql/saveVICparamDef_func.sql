@@ -58,8 +58,8 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(40), INT2,
 
 		-- check if node exists
 		vName        := rtrim(translate($3, \'.\', \' \'));
-	    vLimits      := replace($9, \'\\\'\', \' \');
-		vDescription := replace($10, \'\\\'\', \' \');
+	    vLimits      := replace($9, \'\\\'\', \'\');
+		vDescription := replace($10, \'\\\'\', \'\');
 		SELECT	paramID
 		INTO	vParamID
 		FROM	VICparamDef

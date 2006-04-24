@@ -51,7 +51,7 @@ CREATE OR REPLACE FUNCTION setDescription(INT4, INT4, TEXT)
 		END IF;
 
 		-- update the tree
-		vDescription := replace($3, \'\\\'\', \' \');
+		vDescription := replace($3, \'\\\'\', \'\');
 		UPDATE	OTDBtree
 		SET		description = vDescription
 		WHERE	treeID = $2;

@@ -52,7 +52,7 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		END IF;
 
 		-- get ParentID of node to duplicate
-		vLimits := replace($5, \'\\\'\', \' \');
+		vLimits := replace($5, \'\\\'\', \'\');
 		UPDATE	VICtemplate
 		SET		instances = $4,
 				limits    = vLimits

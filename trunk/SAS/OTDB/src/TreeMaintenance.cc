@@ -679,6 +679,12 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 
 	work	xAction(*(itsConn->getConn()), "saveVTnode");
 	try {
+		// remove ' chars from description
+		string	cleanLimits(aNode.limits);
+		uint32	pos = 0;
+		while((pos = cleanLimits.find_first_of("'",pos)) != string::npos) {
+			cleanLimits.erase(pos, 1);
+		}
 		// execute the insert action
 		result res = xAction.exec(
 			 formatString("SELECT updateVTnode(%d,%d,%d,%d::int2,'%s'::text)",
@@ -686,7 +692,7 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 							aNode.treeID(),
 							aNode.nodeID(),
 							aNode.instances,
-							aNode.limits.c_str()));
+							cleanLimits.c_str()));
 
 		// Analyse result
 		bool		updateOK;
@@ -1142,12 +1148,18 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 
 	work 	xAction(*(itsConn->getConn()), "setDescription");
 	try {
+		// remove ' chars from description
+		string	cleanDesc(aDescription);
+		uint32	pos = 0;
+		while((pos = cleanDesc.find_first_of("'",pos)) != string::npos) {
+			cleanDesc.erase(pos, 1);
+		}
 		// construct a query that calls a stored procedure.
 		result	res = xAction.exec(
 			formatString("SELECT setDescription(%d,%d,'%s'::text)",
 				itsConn->getAuthToken(),
 				aTreeID,
-				aDescription.c_str()));
+				cleanDesc.c_str()));
 							
 		// Analyse result.
 		bool		succes;

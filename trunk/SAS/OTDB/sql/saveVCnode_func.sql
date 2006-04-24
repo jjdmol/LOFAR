@@ -65,8 +65,8 @@ CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(40), INT4,
 		AND		classif = $5;
 		IF NOT FOUND THEN
 		  vNodeID := nextval(\'VICnodedefID\');
-		  vConstraints := replace($6, \'\\\'\', \' \');
-		  vDescription := replace($7, \'\\\'\', \' \');
+		  vConstraints := replace($6, \'\\\'\', \'\');	-- remove single quotes
+		  vDescription := replace($7, \'\\\'\', \'\');
 		  -- create new node
 		  vName := rtrim(translate($3, \'.\', \' \'));	-- replace dot w space
 		  INSERT INTO VICnodedef
