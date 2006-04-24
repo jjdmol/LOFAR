@@ -38,7 +38,7 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 BstRead::BstRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, BST_N_FRAGMENTS)
+  : SyncAction(board_port, board_id, 1)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -51,10 +51,8 @@ void BstRead::sendrequest()
 {
   EPAReadEvent bstread;
 
-  uint16 byteoffset = (getCurrentIndex() % BST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
-
   bstread.hdr.set(MEPHeader::BST_POWER_HDR, MEPHeader::DST_RSP,
-		  MEPHeader::READ, N_BST_STATS * sizeof(uint32), byteoffset);
+		  MEPHeader::READ, MEPHeader::BST_POWER_SIZE);
 
   m_hdr = bstread.hdr;
   getBoardPort().send(bstread);
@@ -104,13 +102,10 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint16 offset = ack.hdr.m_fields.offset / sizeof(uint32);
-  
-  LOG_DEBUG(formatString("BstRead::handleack: boardid=%d, offset=%d",
-			 getBoardId(), offset));
+  LOG_DEBUG(formatString("BstRead::handleack: boardid=%d",
+			 getBoardId()));
 
-  Range fragment_range(offset / MEPHeader::N_POL,
-		       (offset / MEPHeader::N_POL) + (N_BST_STATS / MEPHeader::N_POL) - 1);
+  Range fragment_range(0, ((MEPHeader::BST_POWER_SIZE / sizeof(uint32)) / MEPHeader::N_POL) - 1);
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
@@ -121,7 +116,7 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   }
 
   Array<uint32, 2> stats((uint32*)&ack.stat,
-			 shape(N_BST_STATS / MEPHeader::N_POL,
+			 shape((MEPHeader::BST_POWER_SIZE / sizeof(uint32)) / MEPHeader::N_POL,
 			       MEPHeader::N_POL),
 			 neverDeleteData);
 
