@@ -149,8 +149,8 @@ int main (int	argc, char*	argv[]) {
 		OTDBtree	treeInfo = conn.getTreeInfo(VTtreeID);
 		LOG_INFO_STR(treeInfo);
 
-		LOG_INFO ("Changing the description to 'test_tree'");
-		tm.setDescription(VTtreeID, "test_tree");
+		LOG_INFO ("Changing the description to 'it's a test_tree'");
+		tm.setDescription(VTtreeID, "it's a test_tree");
 		treeInfo = conn.getTreeInfo(VTtreeID);
 		LOG_INFO_STR(treeInfo);
 		
@@ -245,7 +245,7 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR(param1);
 		LOG_INFO_STR(param2);
 		param1.limits = "1.33333";
-		param2.limits = "---1---";
+		param2.limits = "-'--1--'-";
 		LOG_INFO_STR("Changing param " << param1.name << " to " << param1.limits);
 		LOG_INFO_STR("Changing param " << param2.name << " to " << param2.limits);
 		tm.saveNode(param1);

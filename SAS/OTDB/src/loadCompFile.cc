@@ -52,6 +52,18 @@ bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 
 	work	xAction(*(itsConn->getConn()), "saveVICparam");
 	try {
+		// remove ' chars from description
+		string	cleanDesc(aParam.description);
+		uint32	pos = 0;
+		while((pos = cleanDesc.find_first_of("'",pos)) != string::npos) {
+			cleanDesc.erase(pos, 1);
+		}
+		// remove ' chars from limits
+		string	cleanLimits(aParam.limits);
+		pos = 0;
+		while((pos = cleanLimits.find_first_of("'",pos)) != string::npos) {
+			cleanLimits.erase(pos, 1);
+		}
 		// execute the insert action
 		result res = xAction.exec(
 			 formatString("SELECT saveVICparamDef(%d,%d,'%s',%d::int2,%d::int2,%d::int2,%d::int2,'%s'::boolean,'%s'::text,'%s'::text)",
@@ -63,8 +75,8 @@ bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 							aParam.pruning,
 							aParam.valMoment,
 							(aParam.runtimeMod ? "TRUE" : "FALSE"),
-							aParam.limits.c_str(),
-							aParam.description.c_str()));
+							cleanLimits.c_str(),
+							cleanDesc.c_str()));
 
 		// Analyse result
 		nodeIDType		vParamID;
@@ -201,6 +213,18 @@ bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
 
 	work	xAction(*(itsConn->getConn()), "saveVCnode");
 	try {
+		// remove ' chars from description
+		string	cleanDesc(aNode.description);
+		uint32	pos = 0;
+		while((pos = cleanDesc.find_first_of("'",pos)) != string::npos) {
+			cleanDesc.erase(pos, 1);
+		}
+		// remove ' chars from limits
+		string	cleanConstraints(aNode.constraints);
+		pos = 0;
+		while((pos = cleanConstraints.find_first_of("'",pos)) != string::npos) {
+			cleanConstraints.erase(pos, 1);
+		}
 		// execute the insert action
 		result res = xAction.exec(
 			 formatString("SELECT saveVCnode(%d,%d,'%s',%d,%d::int2,'%s'::text,'%s'::text)",
@@ -209,8 +233,8 @@ bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
 							aNode.name.c_str(),
 							aNode.version,
 							aNode.classif,
-							aNode.constraints.c_str(),
-							aNode.description.c_str()));
+							cleanConstraints.c_str(),
+							cleanDesc.c_str()));
 
 		// Analyse result
 		nodeIDType		vNodeID;
