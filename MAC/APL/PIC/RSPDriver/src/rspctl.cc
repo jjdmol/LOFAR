@@ -798,19 +798,48 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 						board.diag.serdes_errors, board.diag.ap0_ri_errors,
 						board.diag.ap1_ri_errors, board.diag.ap2_ri_errors,
 						board.diag.ap3_ri_errors));
-		logMessage(cout,formatString("Sync     diff     count   samples    slices"));
+		logMessage(cout,formatString("Sync         diff      count    samples     slices"));
 		for (int blp = 0; blp < 4; blp++) {
 			BSStatus*	bs= &(board.ap0_sync)+blp;
-			logMessage(cout,formatString("%d:  %9ld %9ld %9ld %9ld", 
-						blp, bs->ext_count, bs->sync_count,
-						bs->sample_offset, bs->slice_count));
+			logMessage(cout,formatString("    %d:  %10lu %10lu %10lu %10lu", 
+						     blp, bs->ext_count, bs->sync_count,
+						     bs->sample_offset, bs->slice_count));
 		}
-		logMessage(cout,formatString("Status   pllX      pllY overflowX overflowY"));
+		logMessage(cout,formatString("RCUStatus   pllX       pllY  overflowX  overflowY"));
 		for (int ap = 0; ap < 4; ap++) {
 		        RCUStatus*	as= &(board.blp0_rcu)+ap;
-			logMessage(cout,formatString("%d:  %9ld %9ld %9ld %9ld", 
-								ap, as->pllx, as->plly, 
-								as->nof_overflowx, as->nof_overflowy));
+			logMessage(cout,formatString("    %d: %10ld %10ld %10ld %10ld", 
+						     ap, as->pllx, as->plly, 
+						     as->nof_overflowx, as->nof_overflowy));
+		}
+
+		const char* trig[] = {
+		  "Board Reset",                   // 0x0
+		  "User reconfiguration request",  // 0x1
+		  "User reset request",            // 0x2
+		  "Invalid index",                 // 0x3
+		  "Watchdog timer timeout"         // 0x4
+		};
+
+		logMessage(cout, formatString("RSU Status:"));
+		logMessage(cout, formatString("    Trigger: %s",
+					      (board.cp_status.trig <= 0x4 ? trig[board.cp_status.trig] : "Invalid")));
+		logMessage(cout, formatString("    Image  : %s",
+					      (board.cp_status.im ? "Application image" : "Factory image")));
+		logMessage(cout, formatString("    FPGA   : %s",
+					      (board.cp_status.fpga ? "AP was reconfigured" : "BP was reconfigured")));
+		logMessage(cout, formatString("    Result : %s",
+					      (board.cp_status.fpga ? "ERROR" : "OK")));
+		logMessage(cout, formatString("    Status : %s",
+					      (board.cp_status.rdy ? "DONE" : "IN PROGRESS")));
+
+		logMessage(cout, formatString("ADO Status  adc_offset_x  adc_offset_y (in bits)"));
+		for (int ap = 0; ap < 4; ap++) {
+		  ADOStatus* as= &(board.blp0_adc_offset)+ap;
+		  BSStatus*  bs= &(board.ap0_sync)+ap;
+		  logMessage(cout, formatString("    %d:         %10lu    %10lu", ap,
+						as->adc_offset_x / bs->slice_count / 4,
+						as->adc_offset_y / bs->slice_count / 4));
 		}
 	}
 	break;
