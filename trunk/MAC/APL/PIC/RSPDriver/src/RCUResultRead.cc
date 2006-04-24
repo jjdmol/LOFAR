@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "StationSettings.h"
+#include "RCUProtocolWrite.h"
 #include "RCUResultRead.h"
 #include "Cache.h"
 
@@ -37,22 +38,10 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
-
-namespace LOFAR {
-  namespace RSP {
-    // construct expected i2c result
-    static uint8 i2c_result[] = { 0x00, // PROTOCOL_C_SEND_BLOCK OK
-				  0xFF, // <<< replace with expected data >>>
-				  0xFF, // <<< replace with expected data >>>
-				  0xFF, // <<< replace with expected data >>>
-				  0x00, // PROTOCOL_C_RECEIVE_BLOCK OK
-				  0x00, // PROTOCOL_C_END OK
-    };
-  };
-};
+#define RESULT_DELAY_PERIOD 2
 
 RCUResultRead::RCUResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL), m_delay(0) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -73,23 +62,16 @@ void RCUResultRead::sendrequest()
     return;
   }
 
-  // delay 4 periods
-  if (m_delay++ < 4) {
-    setContinue(true);
-    return;
-  }
-  m_delay = 0;
-
   // set appropriate header
   MEPHeader::FieldsType hdr;
-  if (0 == global_rcu % 2) {
+  if (0 == global_rcu % MEPHeader::N_POL) {
     hdr = MEPHeader::RCU_RESULTX_HDR;
   } else {
     hdr = MEPHeader::RCU_RESULTY_HDR;
   }
 
   EPAReadEvent rcuresult;
-  rcuresult.hdr.set(hdr, 1 << (getCurrentIndex() / MEPHeader::N_POL), MEPHeader::READ, sizeof(i2c_result));
+  rcuresult.hdr.set(hdr, 1 << (getCurrentIndex() / MEPHeader::N_POL), MEPHeader::READ, sizeof(RCUProtocolWrite::i2c_result));
   
   m_hdr = rcuresult.hdr; // remember header to match with ack
   getBoardPort().send(rcuresult);
@@ -121,9 +103,9 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   // reverse and copy control bytes into i2c_result
   RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
   uint32 control = htonl(rcucontrol.getRaw());
-  memcpy(i2c_result + 1, &control, 3);
+  memcpy(RCUProtocolWrite::i2c_result + 1, &control, 3);
 
-  if (0 == memcmp(i2c_result, ack.result, sizeof(i2c_result))) {
+  if (0 == memcmp(RCUProtocolWrite::i2c_result, ack.result, sizeof(RCUProtocolWrite::i2c_result))) {
     Cache::getInstance().getRCUProtocolState().confirmed(global_rcu);
   } else {
     LOG_ERROR("RCUResultRead::handleack: unexpected I2C result response");
