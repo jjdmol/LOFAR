@@ -33,8 +33,8 @@
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/TM/GCF_Control.h>
 
-#include <APLCommon/PropertySetAnswerHandlerInterface.h>
-#include <APLCommon/PropertySetAnswer.h>
+#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
+#include <APL/APLCommon/PropertySetAnswer.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>

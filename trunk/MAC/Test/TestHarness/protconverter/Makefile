@@ -1,5 +1,4 @@
 CFLAGS  += -Wall -ggdb -I../../../../installed/gnu_debug/include
-#CC = gcc
 CC = g++
 
 default: converter
@@ -12,7 +11,7 @@ converter:   protconvert.o
 	@ echo "It's done!"
 
 
-protconvert.o:   protconvert.c GCF_Protocols.h GCF_Event.h
+protconvert.o:   protconvert.c
 	$(CC) $(CFLAGS) -c protconvert.c
 
 # To start over from scratch, type 'make clean'.  This

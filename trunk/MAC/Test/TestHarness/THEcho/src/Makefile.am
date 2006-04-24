@@ -3,7 +3,7 @@ bin_PROGRAMS 		= THEcho
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 THEcho_CPPFLAGS= \
   -Wno-deprecated \
@@ -19,17 +19,14 @@ THEcho_LDADD		=
 	
 include_HEADERS = 
 
-BUILT_SOURCES = 	\
+BUILT_SOURCES = \
 	THEcho_Protocol.ph \
 	THEchoRouting_Protocol.ph
 
-EXTRA_DIST =   \
-	THEcho_Protocol.ph \
-	THEchoRouting_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES)
 
 #in case of make install these files will be copied to the bindir beside the test apps
-configfilesdir=$(bindir)
-configfiles_DATA = \
+sysconf_DATA = \
 	THEcho.conf \
 	THEcho.log_prop
 	

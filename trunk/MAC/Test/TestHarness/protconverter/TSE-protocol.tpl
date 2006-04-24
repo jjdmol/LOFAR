@@ -8,8 +8,8 @@
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
 [+ DEFINE event_parm +]
 	[+ IF (*== (get "type") "[]") +][+ (get "name") +]NOE : t_B4,
-	{ [+ (get "name") +] : [+ (substring (get "type") 0 (string-index (get "type") #\[)) +]}[[+ (get "name") +]NOE][+ ELIF (== (get "type") "string") +][+ (get "name") +]NOC : t_StringLen, 
-	[+ (get "name") +] : t_String[[+ (get "name") +]NOC][+ ELSE +][+ (get "name") +] : [+ CASE (get "type") +][+ == unsigned int +]t_uInt[+ == double +]t_Double[+ == long +]t_Long[+ * +][+ (get "type") +][+ ESAC +][+ ENDIF +][+ ENDDEF +]
+	[+ (get "name") +] : t_[+ (substring (get "type") 0 (string-index (get "type") #\[)) +]Array [ [+ (get "name") +]NOE ][+ ELIF (== (get "type") "string") +][+ (get "name") +]NOC : t_StringLen, 
+	[+ (get "name") +] : t_String[[+ (get "name") +]NOC][+ ELSE +][+ (get "name") +] : [+ CASE (get "type") +][+ == unsigned int +]t_uInt[+ == long +]t_Long[+ * +][+ (get "type") +][+ ESAC +][+ ENDIF +][+ ENDDEF +]
 [+ (out-pop) +]
 //
 //  [+ (base-name) +].[+ (suffix) +]: [+ description +]
@@ -91,8 +91,18 @@ t_B16                 = {  16 }
 t_uInt                =  {   4 }
 t_Long                =  {   4 }
 t_uLong               =  {   4 }
-t_String              = -{ 65535-, ASCII } // (-) indicates little endian, 100- indicates 100 characters or less 
 t_StringLen						=	 {   2 }
+t_String              = -{ 65535-, ASCII } // (-) indicates little endian, 100- indicates 100 characters or less 
+t_doubleArray         = -{ 65535-, ARRAY, 8 } // (-) indicates little endian, 100- indicates 100 characters or less 
+t_uint8Array          = -{ 65535-, ARRAY, 1 } // (-) indicates little endian, 100- indicates 100 characters or less 
+t_int8Array          	= -{ 65535-, ARRAY, 1 } // (-) indicates little endian, 100- indicates 100 characters or less 
+t_int16Array          = -{ 65535-, ARRAY, 2 } // (-) indicates little endian, 100- indicates 100 characters or less	
+t_uint16Array         = -{ 65535-, ARRAY, 2 } // (-) indicates little endian, 100- indicates 100 characters or less
+t_int32Array          = -{ 65535-, ARRAY, 4 } // (-) indicates little endian, 100- indicates 100 characters or less
+t_uint32Array         = -{ 65535-, ARRAY, 4 } // (-) indicates little endian, 100- indicates 100 characters or less
+t_int64Array          = -{ 65535-, ARRAY, 8 } // (-) indicates little endian, 100- indicates 100 characters or less
+t_uint64Array         = -{ 65535-, ARRAY, 8 } // (-) indicates little endian, 100- indicates 100 characters or less
+t_intArray            = -{ 65535-, ARRAY, 4 } // (-) indicates little endian, 100- indicates 100 characters or less
 
 int8 									=  {   1 }
 uint8									=  {   1 }
