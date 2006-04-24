@@ -70,8 +70,11 @@ void UpdXCStatsCmd::complete(CacheBuffer& cache)
   ack.status = SUCCESS;
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
-  TinyVector<int, 4> s = cache.getXCStats()().shape();
-  s(2) = (m_event->rcumask.count()+1) / 2;
+  //  TinyVector<int, 4> s = cache.getXCStats()().shape();
+  // s(2) = m_event->rcumask.count() / 2;
+  TinyVector<int, 4> s(MEPHeader::N_POL, MEPHeader::N_POL,
+		       (m_event->rcumask.count() + 1) / MEPHeader::N_POL,
+		       StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
   ack.stats().resize(s);
   
   int result_rcu = 0;
@@ -79,9 +82,10 @@ void UpdXCStatsCmd::complete(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      Range all = Range::all();
-      ack.stats()(result_rcu % MEPHeader::N_POL, all, result_rcu / MEPHeader::N_POL, all) 
-	= cache.getXCStats()()(cache_rcu % MEPHeader::N_POL, all, cache_rcu / MEPHeader::N_POL, all);
+      Range blps(0, (StationSettings::instance()->nrRcus() / MEPHeader::N_POL) - 1);
+
+      ack.stats()(result_rcu % MEPHeader::N_POL, Range::all(), result_rcu / MEPHeader::N_POL, blps) 
+	= cache.getXCStats()()(cache_rcu % MEPHeader::N_POL, Range::all(), cache_rcu / MEPHeader::N_POL, blps);
       
       result_rcu++;
     }
