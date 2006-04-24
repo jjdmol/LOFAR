@@ -242,8 +242,8 @@ int main (int	argc, char*	argv[]) {
 		ASSERTSTR(tv.addKVTparamSet(aPS), "Could NOT add the OTDBvalue class");
 		LOG_INFO("ParameterSet added, going to query it");
 
-		LOG_INFO ("Searching Node: Observation.Virt Telescope%");
-		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "Observation.Virt Telescope%");
+		LOG_INFO ("Searching Node: Observation.Virt Telescope[4]%");
+		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "Observation.Virt Telescope[4]%");
 		showNodeList(nodeList);
 
 		nodeIDType		nodeID = nodeList[0].nodeID();
