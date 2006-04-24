@@ -64,6 +64,14 @@ extern "C" {
   void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
   void _prefetch(const void *src, size_t count, size_t stride);
 
+  struct {
+    unsigned input_type;
+    unsigned nr_stations;
+    unsigned nr_samples_per_integration;
+    unsigned nr_subband_channels;
+    unsigned nr_polarizations;
+  } _FIR_constants_used;
+
   void _bgl_mutex_lock(BGL_Mutex *), _bgl_mutex_unlock(BGL_Mutex *);
   unsigned long long _rdtsc();
 };
