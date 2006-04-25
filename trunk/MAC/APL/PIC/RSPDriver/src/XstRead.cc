@@ -56,7 +56,7 @@ void XstRead::sendrequest()
   //uint16 offset = (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) + 1) * MEPHeader::N_LOCAL_XLETS * MEPHeader::XLET_SIZE;
   uint16 offset = (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) + 1) * MEPHeader::XLET_SIZE;
 
-  LOG_INFO_STR("XstRead::offset=" << offset);
+  LOG_DEBUG_STR("XstRead::offset=" << offset);
 
   if (m_regid < MEPHeader::XST_0X0 || m_regid > MEPHeader::XST_3Y3)
   {
@@ -133,7 +133,7 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   int global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (m_regid / MEPHeader::N_POL);
   
-  LOG_INFO(formatString("XstRead::handleack: global_blp=%d", global_blp));
+  LOG_DEBUG(formatString("XstRead::handleack: global_blp=%d", global_blp));
 
   Array<complex<double>, 4>& cache(Cache::getInstance().getBack().getXCStats()());
 
@@ -144,12 +144,12 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 		  
   //Range rcu_range(remote_blp_offset, remote_blp_offset + MEPHeader::N_REMOTE_XLETS - 1);
   
-  LOG_INFO_STR(endl << 
+  LOG_DEBUG_STR(endl << 
 		"global_blp=" << global_blp << endl <<
 		"blp_target_range=" << blp_target_range << endl <<
 		"xststats.range=" << Range(0, MEPHeader::N_REMOTE_XLETS));
 
-  LOG_INFO_STR("xststats shape=" << shape(MEPHeader::N_REMOTE_XLETS, MEPHeader::N_POL));
+  LOG_DEBUG_STR("xststats shape=" << shape(MEPHeader::N_REMOTE_XLETS, MEPHeader::N_POL));
   
   Array<complex<uint32>, 2> xststats((complex<uint32>*)&ack.xst_stat,
 				     shape(MEPHeader::N_REMOTE_XLETS, MEPHeader::N_POL),

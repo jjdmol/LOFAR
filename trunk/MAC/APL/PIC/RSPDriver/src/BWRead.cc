@@ -36,8 +36,6 @@
 #include "Cache.h"
 #include "StationSettings.h"
 
-#define N_RETRIES 3
-
 using namespace blitz;
 using namespace LOFAR;
 using namespace RSP;
