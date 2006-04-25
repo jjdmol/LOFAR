@@ -56,9 +56,10 @@ public class jTreeMaintenance
     public native Vector<jOTDBparam> getComponentParams(int aNodeID);
 
     // Save new node or update the limits and description fields of the node
-    public native boolean  saveComponentNode(jVICnodeDef  aNode);
+    public native boolean saveComponentNode(jVICnodeDef  aNode);
 
-
+    // test if component is a top-component
+    public native boolean isTopComponent(int  aNodeID);
 
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template

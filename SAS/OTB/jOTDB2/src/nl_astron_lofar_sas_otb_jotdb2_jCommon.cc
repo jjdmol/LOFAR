@@ -185,6 +185,23 @@ jobject convertOTDBparam (JNIEnv *env, OTDBparam aParam)
   return jOTDBparam;
 }
 
+jobject convertOTDBvalue (JNIEnv *env, OTDBvalue aValue)
+{
+  jobject jvalue;
+  jclass class_jOTDBvalue = env->FindClass ("nl/astron/lofar/sas/otb/jotdb2/jOTDBvalue");
+  jmethodID mid_jOTDBvalue_cons = env->GetMethodID (class_jOTDBvalue, "<init>", "(I)V");
+  jvalue = env->NewObject (class_jOTDBvalue, mid_jOTDBvalue_cons, aValue.nodeID ());
+  
+  jfieldID fid_jOTDBvalue_name = env->GetFieldID (class_jOTDBvalue, "name", "Ljava/lang/String;");
+  jfieldID fid_jOTDBvalue_value = env->GetFieldID (class_jOTDBvalue, "value", "Ljava/lang/String;");
+  jfieldID fid_jOTDBvalue_time = env->GetFieldID (class_jOTDBvalue, "time", "Ljava/lang/String;");
+  
+  env->SetObjectField (jvalue, fid_jOTDBvalue_name, env->NewStringUTF (aValue.name.c_str ()));
+  env->SetObjectField (jvalue, fid_jOTDBvalue_value, env->NewStringUTF (aValue.value.c_str ()));
+  env->SetObjectField (jvalue, fid_jOTDBvalue_time, env->NewStringUTF (to_simple_string(aValue.time).c_str ()));
+  
+  return jvalue;
+}
 
 //
 // java classes ----> c++ classes
@@ -345,7 +362,7 @@ OTDBvalue convertjOTDBvalue (JNIEnv *env, jobject jvalue)
   jfieldID fid_jOTDBvalue_name = env->GetFieldID (class_jOTDBvalue, "name", "Ljava/lang/String;");
   jfieldID fid_jOTDBvalue_value = env->GetFieldID (class_jOTDBvalue, "value", "Ljava/lang/String;");
   jfieldID fid_jOTDBvalue_time = env->GetFieldID (class_jOTDBvalue, "time", "Ljava/lang/String;");
-  jmethodID mid_jOTDBvalue_nodeID = env->GetMethodID (class_jOTDBvalue, "nodeID", "()I");
+  //  jmethodID mid_jOTDBvalue_nodeID = env->GetMethodID (class_jOTDBvalue, "nodeID", "()I");
   
   // Get original OTDB node
   OTDBvalue aValue;// = new OTDBvalue();

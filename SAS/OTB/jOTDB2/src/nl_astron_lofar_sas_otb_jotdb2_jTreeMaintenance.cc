@@ -156,6 +156,17 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
+ * Method:    isTopComponent
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_isTopComponent(JNIEnv *, jobject, jint aNodeID){
+  jboolean success = theirTM->isTopComponent(aNodeID);
+  return success;
+}
+
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
  * Method:    buildTemplateTree
  * Signature: (IS)I
  */

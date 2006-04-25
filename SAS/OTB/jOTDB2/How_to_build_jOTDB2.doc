@@ -1,7 +1,11 @@
 #prepare pre settings:
 
-export CLASSPATH=[pathto]/LOFAR/SAS/OTB/jOTDB2/build/classes:[pathto log4jloggerclasses]
-export LD_LIBRARY_PATH=[pathto]/LOFAR/installed/gnu_debug/lib:/lib:/usr/lib:usr/local/lib
+// set base dir where LOFAR starts
+export LOFARBASE=~
+cd ${LOFARBASE}
+
+export CLASSPATH=${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/build/classes:[pathto log4jloggerclasses]
+export LD_LIBRARY_PATH=${LOFARBASE}/LOFAR/installed/gnu_debug/lib:/lib:/usr/lib:usr/local/lib
 export JAVAHOME=/usr/local/jdk1.5.0_04/
 export PATH=/usr/local/jdk1.5.0_04/bin:$PATH
 
@@ -11,26 +15,26 @@ cvs co LOFAR/SAS/OTB/jOTDB2
 
 #go to 
 
-LOFAR/SAS/OTB/jOTDB2/src/nl/astron/lofar/sas/otb/jotdb2
+cd ${LOFARBASE}LOFAR/SAS/OTB/jOTDB2/src/nl/astron/lofar/sas/otb/jotdb2
 
 #build the java files:
 
-javac -d [pathto]/LOFAR/SAS/OTB/jOTDB2/build/classes *.java
+javac -d ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/build/classes *.java
 
-cd LOFAR/SAS/OTB/jOTDB2/src
+cd ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/src
 
 # build the rmi stubs:
 
-rmic -d[pathto]/LOFAR/SAS/OTB/jOTDB2/build/classes nl.astron.lofar.sas.otb.jotdb2.jConverterAdapter
-rmic -d[pathto]/LOFAR/SAS/OTB/jOTDB2/build/classes nl.astron.lofar.sas.otb.jotdb2.jOTDBadapter
-rmic -d[pathto]/LOFAR/SAS/OTB/jOTDB2/build/classes nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceAdapter
-rmic -d[pathto]/LOFAR/SAS/OTB/jOTDB2/build/classes nl.astron.lofar.sas.otb.jotdb2.jTreeValueAdapter
+rmic -d ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/build/classes nl.astron.lofar.sas.otb.jotdb2.jConverterAdapter
+rmic -d ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/build/classes nl.astron.lofar.sas.otb.jotdb2.jOTDBadapter
+rmic -d ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/build/classes nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceAdapter
+rmic -d ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/build/classes nl.astron.lofar.sas.otb.jotdb2.jTreeValueAdapter
 
 
 # in this case, to be able to use the jar file we need to include the 
 # external packages in the same jar file:
 
-cd [pathto]/LOFAR/SAS/OTB/jOTDB2/build/classes
+cd ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/build/classes
 
 
 jar xvf /usr/local/netbeans-4.1/ide5/modules/ext/AbsoluteLayout.jar
@@ -40,7 +44,7 @@ jar xvf /home/coolen/logging-log4j-1.2.13/dist/lib/log4j-1.2.13.jar
 cp ../../src/nl/astron/lofar/sas/otb/jotdb2/Manifest.txt .
 
 # build the jarfile
-jar -cvfm [pathto]/LOFAR/SAS/OTB/jOTDB2/build/lib/jotdb2.jar ../../src/nl/astron/lofar/sas/otb/jotdb2/Manifest.txt *
+jar -cvfm ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/build/lib/jotdb2.jar ../../src/nl/astron/lofar/sas/otb/jotdb2/Manifest.txt *
 
 
 #the .h files in include and the .cc files in src can be build by rub the normal way.
@@ -51,7 +55,7 @@ jar -cvfm [pathto]/LOFAR/SAS/OTB/jOTDB2/build/lib/jotdb2.jar ../../src/nl/astron
 #The test directory:
 
 
-cd ~/LOFAR/SAS/OTB/jOTDB2/test
+cd ${LOFARBASE}/LOFAR/SAS/OTB/jOTDB2/test
 javac *.java
 
 #to run the tests
