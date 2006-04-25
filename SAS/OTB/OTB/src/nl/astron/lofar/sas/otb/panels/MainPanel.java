@@ -367,6 +367,7 @@ public class MainPanel extends javax.swing.JPanel
         int treeID=getSelectedTreeID();
         if (aButton.equals("Quit")) {
             itsMainFrame.exit();
+            return;
         }
         if (itsTabFocus.equals("PIC")) {
             if (treeID > 0) {
