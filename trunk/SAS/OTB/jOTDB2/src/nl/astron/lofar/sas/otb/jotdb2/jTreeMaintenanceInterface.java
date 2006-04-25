@@ -56,6 +56,9 @@ public interface jTreeMaintenanceInterface extends Remote
     // Save new node or update the limits and description fields of the node
     public boolean  saveComponentNode(jVICnodeDef  aNode) throws RemoteException;
 
+    // test if component is a top-component
+    public boolean isTopComponent(int aNodeID) throws RemoteException;
+
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
     // tree only the structure of the tree is created, there is no replication

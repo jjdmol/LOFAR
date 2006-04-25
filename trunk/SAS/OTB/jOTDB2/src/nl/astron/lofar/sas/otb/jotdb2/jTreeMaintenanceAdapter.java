@@ -77,6 +77,12 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
 	return adaptee.saveComponentNode(aNode);
     }
 
+    // test if component is a top-component
+    public boolean  isTopComponent(int aNodeID) throws RemoteException
+    {
+	return adaptee.isTopComponent(aNodeID);
+    }
+
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
     // tree only the structure of the tree is created, there is no replication
