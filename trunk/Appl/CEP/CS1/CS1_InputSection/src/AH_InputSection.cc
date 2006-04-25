@@ -156,7 +156,7 @@ namespace LOFAR {
       LOG_TRACE_FLOW_STR("Finished define()");
 
 #ifdef HAVE_MPI
-      ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "TFC_InputSection needs "<< lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
+      ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "CS1_InputSection needs "<< lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
 #endif
     }
 
