@@ -34,8 +34,6 @@
 #include "RSUWrite.h"
 #include "Cache.h"
 
-#define N_RETRIES 3
-
 using namespace blitz;
 using namespace LOFAR;
 using namespace RSP;
@@ -63,40 +61,25 @@ void RSUWrite::sendrequest()
   
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
-  //
-  // Send CLEAR on first write
-  //
-  static bool first = true;
-  if (first) {
-    LOG_INFO("Sending CLEAR to all RSP boards");
-
-    reset.reset = g_RSU_RESET_CLEAR;
-    m_hdr = reset.hdr;
-    getBoardPort().send(reset);
-
-    // wait 5.1 seconds to allow the hardware to run selftests
-    usleep(5100000);
-
-    first = false;
+  // cache modified?
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRSUClearState().get(getBoardId())) {
+    setContinue(true);
+    return;
   }
+
+  // read values from cache
+  RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
+  if (s()(getBoardId()).getSync())		reset.reset = g_RSU_RESET_SYNC;
+  else if (s()(getBoardId()).getClear())	reset.reset = g_RSU_RESET_CLEAR;
+  else if (s()(getBoardId()).getReset())	reset.reset = g_RSU_RESET_RESET;
   else {
-    // cache modified?
-    if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRSUClearState().get(getBoardId())) {
-      setContinue(true);
-      return;
-    }
-
-    // read values from cache
-    RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
-    if (s()(getBoardId()).getSync())		reset.reset = g_RSU_RESET_SYNC;
-    else if (s()(getBoardId()).getClear())	reset.reset = g_RSU_RESET_CLEAR;
-    else if (s()(getBoardId()).getReset())	reset.reset = g_RSU_RESET_RESET;
-    else {
-      setContinue(true);
-      return;
-    }
-    getBoardPort().send(reset);
+    Cache::getInstance().getRSUClearState().confirmed(getBoardId());
+    setContinue(true);
+    return;
   }
+
+  m_hdr = reset.hdr;
+  getBoardPort().send(reset);
 }
 
 void RSUWrite::sendrequest_status()
