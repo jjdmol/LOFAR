@@ -22,7 +22,10 @@ import gov.noaa.pmel.sgt.dm.SimpleLine;
 import gov.noaa.pmel.sgt.swing.JPlotLayout;
 import gov.noaa.pmel.util.Dimension2D;
 import gov.noaa.pmel.util.Rectangle2D;
+import gov.noaa.pmel.util.SoTDomain;
+import gov.noaa.pmel.util.SoTRange;
 import java.awt.Dimension;
+import java.beans.PropertyVetoException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -88,11 +91,16 @@ public class PlotSGTImpl implements IPlot{
             String xAxisUnits = "no unit specified";
             String yAxisTitle = "Y";                       
             String yAxisUnits = "no unit specified";
+            double xstart = -1;
+            double xend = -1;
+            double ystart = -1;
+            double yend = -1;
             HashSet<HashMap> values = new HashSet<HashMap>();
             
             //Loop through Metadata and pointers to XY values
             if(data != null && data.keySet().size()>0){
                 Iterator it = data.keySet().iterator();
+                
                 while(it.hasNext()){
                     String key = (String)it.next();
                     if(key.equalsIgnoreCase(PlotConstants.DATASET_NAME)){
@@ -107,15 +115,28 @@ public class PlotSGTImpl implements IPlot{
                     else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISUNIT)){
                         xAxisUnits = (String)data.get(key);
                     }
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_START)){
+                        xstart = Double.parseDouble((String)data.get(key));
+                    }
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_END)){
+                        xend = Double.parseDouble((String)data.get(key));
+                    }
                     else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISLABEL)){
                         yAxisTitle = (String)data.get(key);
                     }
                     else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISUNIT)){
                         yAxisUnits = (String)data.get(key);
                     }
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_START)){
+                        ystart = Double.parseDouble((String)data.get(key));
+                    }
+                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_END)){
+                        yend = Double.parseDouble((String)data.get(key));
+                    }
                     else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
                        values = (HashSet<HashMap>)data.get(key); 
                     }
+                    
                 }
                 //Set titles to plot
 
@@ -162,7 +183,6 @@ public class PlotSGTImpl implements IPlot{
                                 xArray,yArray,lineLabel);
                         lineData.setXMetaData(meta);
                         lineData.setYMetaData(ymeta);
-                      
                         //Add line to plot
                         layout.addData(lineData, lineLabel);
                     }
@@ -171,6 +191,16 @@ public class PlotSGTImpl implements IPlot{
                 //TODO LOG!
                 throw new EmptyDataSetException();
                 
+            }
+            if(xstart!= -1 && xend != -1 && ystart != -1 && yend != -1){
+               
+                layout.setAutoRange(false,false);
+                try {
+                    
+                    layout.setRange(new SoTDomain(new SoTRange.Double(xstart,xend),new SoTRange.Double(ystart,yend)));
+                } catch (PropertyVetoException ex) {
+                    ex.printStackTrace();
+                }
             }
             layout.setName(plotTitle);
             layout.setBatch(false);
