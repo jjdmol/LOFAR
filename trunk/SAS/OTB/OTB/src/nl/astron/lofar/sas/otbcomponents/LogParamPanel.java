@@ -32,7 +32,7 @@ public class LogParamPanel extends javax.swing.JPanel {
         initComponents();
         itsMainFrame = aMainFrame;
         itsNode = aNode;
-        itsOtdbRmi=itsMainFrame.getOTDBrmi();
+        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
 
         initializeTabs();
         initPanel(aNode);
@@ -52,7 +52,7 @@ public class LogParamPanel extends javax.swing.JPanel {
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsOtdbRmi=itsMainFrame.getOTDBrmi();
+            itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
  
         } else {
             logger.debug("No Mainframe supplied");

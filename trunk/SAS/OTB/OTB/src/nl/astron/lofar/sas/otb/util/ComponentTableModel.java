@@ -11,7 +11,6 @@
 package nl.astron.lofar.sas.otb.util;
 
 import java.util.Vector;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
 import org.apache.log4j.Logger;
 
@@ -82,7 +81,7 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             // Get a list of all available Components (topnode)
-            Vector aComponentList=otdbRmi.getRemoteMaintenance().getComponentList("%",true);
+            Vector aComponentList=otdbRmi.getRemoteMaintenance().getComponentList("%",false);
             data = new Object[aComponentList.size()][headers.length];
             logger.debug("Componentlist downloaded. Size: "+aComponentList.size());
            

@@ -31,7 +31,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
         initComponents();
         itsMainFrame = aMainFrame;
         itsNode = aNode;
-        itsOtdbRmi=itsMainFrame.getOTDBrmi();
+        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         initPanel(aNode);
     }
     
@@ -43,7 +43,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsOtdbRmi=itsMainFrame.getOTDBrmi();
+            itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         } else {
             logger.debug("No Mainframe supplied");
         }

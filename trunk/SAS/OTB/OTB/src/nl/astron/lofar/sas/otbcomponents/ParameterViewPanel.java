@@ -33,7 +33,7 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         initComponents();
         itsMainFrame = aMainFrame;
         itsParam = aParam;
-        itsOtdbRmi=itsMainFrame.getOTDBrmi();
+        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         initComboLists();
         initPanel(aParam);
     }
@@ -46,7 +46,7 @@ public class ParameterViewPanel extends javax.swing.JPanel {
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsOtdbRmi=itsMainFrame.getOTDBrmi();
+            itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
             initComboLists();
         } else {
             logger.debug("No Mainframe supplied");

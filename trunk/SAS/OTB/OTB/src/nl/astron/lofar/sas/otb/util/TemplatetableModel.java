@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
  */
 public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"TreeID","OriginalTree","Status","Campaign","MoMID","Description"};
+    private String headers[] = {"TreeID","OriginalTree","Status","Classification","Campaign","MoMID","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
 
@@ -57,9 +57,10 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
             data[row][0]=new Integer(tInfo.treeID());	   
             data[row][1]=new Integer(tInfo.originalTree);	   
             data[row][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
-            data[row][3]=new String(tInfo.campaign);
-            data[row][4]=new Integer(tInfo.momID());
-            data[row][5]=new String(tInfo.description);
+            data[row][3]=new String(otdbRmi.getClassif().get(tInfo.classification));
+            data[row][4]=new String(tInfo.campaign);
+            data[row][5]=new Integer(tInfo.momID());
+            data[row][6]=new String(tInfo.description);
             fireTableDataChanged();
         } catch (Exception e) {
             logger.debug("Remote OTDB via RMI and JNI failed: " + e);
@@ -92,9 +93,10 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
                     data[k][0]=new Integer(tInfo.treeID());	   
                     data[k][1]=new Integer(tInfo.originalTree);	   
 	            data[k][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
-	            data[k][3]=new String(tInfo.campaign);
-	            data[k][4]=new Integer(tInfo.momID());
-	            data[k][5]=new String(tInfo.description);
+                    data[k][3]=new String(otdbRmi.getClassif().get(tInfo.classification));
+	            data[k][4]=new String(tInfo.campaign);
+	            data[k][5]=new Integer(tInfo.momID());
+	            data[k][6]=new String(tInfo.description);
                 }
             }
             fireTableDataChanged();
