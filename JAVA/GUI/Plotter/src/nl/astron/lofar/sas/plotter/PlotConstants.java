@@ -19,14 +19,27 @@ public abstract class PlotConstants{
     //Data Model constants
     
     //Data Model Metadata
-    public static final String DATASET_NAME       = "DataSetName";
-    public static final String DATASET_SUBNAME    = "DataSetSubName";
-    public static final String DATASET_XAXISLABEL = "DataSetXAxisLabel";
-    public static final String DATASET_XAXISUNIT  = "DataSetXAxisUnit";
-    public static final String DATASET_YAXISLABEL = "DataSetYAxisLabel";
-    public static final String DATASET_YAXISUNIT  = "DataSetYAxisUnit";
-    public static final String DATASET_ZAXISLABEL = "DataSetZAxisLabel";
-    public static final String DATASET_ZAXISUNIT  = "DataSetZAxisUnit";
+    public static final String DATASET_NAME              = "DataSetName";
+    public static final String DATASET_SUBNAME           = "DataSetSubName";
+    
+    public static final String DATASET_XAXISLABEL        = "DataSetXAxisLabel";
+    public static final String DATASET_XAXISUNIT         = "DataSetXAxisUnit";
+    public static final String DATASET_XAXISTYPE         = "DataSetXAxisType";
+    public static final String DATASET_XAXIS_RANGE_START = "DataSetXAxisRangeStart";
+    public static final String DATASET_XAXIS_RANGE_END   = "DataSetXAxisRangeEnd";
+    
+    public static final String DATASET_YAXISLABEL        = "DataSetYAxisLabel";
+    public static final String DATASET_YAXISUNIT         = "DataSetYAxisUnit";
+    public static final String DATASET_YAXISTYPE         = "DataSetYAxisType";
+    public static final String DATASET_YAXIS_RANGE_START = "DataSetYAxisRangeStart";
+    public static final String DATASET_YAXIS_RANGE_END   = "DataSetYAxisRangeEnd";
+    
+    public static final String DATASET_ZAXISLABEL        = "DataSetZAxisLabel";
+    public static final String DATASET_ZAXISUNIT         = "DataSetZAxisUnit";
+    public static final String DATASET_ZAXISTYPE         = "DataSetZAxisType";
+    public static final String DATASET_ZAXIS_RANGE_START = "DataSetZAxisRangeStart";
+    public static final String DATASET_ZAXIS_RANGE_END   = "DataSetZAxisRangeEnd";
+    
     public static final String DATASET_VALUES     = "DataSetValues";
     
     //Data Model ValueSets
