@@ -52,8 +52,10 @@ public class ADOStatusPanel extends javax.swing.JPanel
         lblAdcOffsetY.setText("ADC offset Y");
 
         txtAdcOffsetX.setEditable(false);
+        txtAdcOffsetX.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtAdcOffsetY.setEditable(false);
+        txtAdcOffsetY.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -80,7 +82,7 @@ public class ADOStatusPanel extends javax.swing.JPanel
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(lblAdcOffsetY)
                     .add(txtAdcOffsetY, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
     

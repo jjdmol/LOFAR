@@ -92,7 +92,7 @@
                   <Component id="chkBoard2Antenna2" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="chkBoard2Antenna1" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="69" max="32767" attributes="0"/>
+              <EmptySpace pref="71" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>

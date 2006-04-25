@@ -187,7 +187,12 @@ public class MainPanel extends JPanel implements IPluginPanel,
                  */
                 updateBoard();
                 controlPanel.setRefreshRate(0);
-                updateCurrentPanel();
+                /*
+                 * By calling startRefresh we make sure the buttons don't get 
+                 * "locked" because we are waiting for the updateCurrentPanel()
+                 * call that takes time.
+                 */
+                startRefresh(); //updateCurrentPanel();                
                 break;
             case ControlPanel.REFRESH:
                 /*
@@ -203,10 +208,10 @@ public class MainPanel extends JPanel implements IPluginPanel,
                      */
                     JOptionPane.showMessageDialog(this, "Refreshrate may only contain positive numbers and zero.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
-                }
+                }                
                 updateBoard();
                 refreshRates[jTabbedPane.getSelectedIndex()] = controlPanel.getRefreshRate();
-                startRefresh();                
+                startRefresh();
                 break;
             case ControlPanel.STOP:
                 /*
@@ -243,16 +248,14 @@ public class MainPanel extends JPanel implements IPluginPanel,
                 
         /*
          * If the refresh rate of the selected panel is higher than 0, start the
-         * refreshThread else call updateCurrentPanel once.
+         * refreshThread. If refreshrate is 0, then the current panel isn't
+         * updated!
          */
         if (refreshRates[jTabbedPane.getSelectedIndex()] > 0)
         {
             startRefresh();
         }
-        else
-        {
-            updateCurrentPanel();
-        }
+        
         
         /*
          * Update controlPanel.
@@ -267,9 +270,20 @@ public class MainPanel extends JPanel implements IPluginPanel,
      */
     public void updateBoard()
     {
+        /*
+         * If there is no hostname entered display a error.
+         */
         if ("".equals(controlPanel.getHostname().trim()))
-        {
+        {            
             JOptionPane.showMessageDialog(this, "The hostname can't be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        /*
+         * If the board is already connected with the same hostname exit method.
+         */
+        if (board.isConnected() && controlPanel.getHostname().equals(board.getHostname()))
+        {            
             return;
         }
         
@@ -351,19 +365,8 @@ public class MainPanel extends JPanel implements IPluginPanel,
     {
         if (refreshThread == null)
         {
-            if (refreshRates[jTabbedPane.getSelectedIndex()] < 1)
-            {
-                /*
-                 * The refreshRate is smaller than 1, thus 0. This means we only
-                 * need one update of the panel.
-                 */                
-                updateCurrentPanel();
-            }
-            else
-            {
-                refreshThread = new Thread(this, "RefreshThread");
-                refreshThread.start();    
-            }            
+            refreshThread = new Thread(this, "RefreshThread");
+            refreshThread.start();    
         }
     }
     
@@ -392,6 +395,14 @@ public class MainPanel extends JPanel implements IPluginPanel,
                 // Just ignore it!
             }
             updateCurrentPanel();
+            
+            /*
+             * If the refreshRate is smaller than 1, call stopRefresh
+             */
+            if (refreshRates[jTabbedPane.getSelectedIndex()] < 1)
+            {
+                stopRefresh();
+            }
         }
     }
         

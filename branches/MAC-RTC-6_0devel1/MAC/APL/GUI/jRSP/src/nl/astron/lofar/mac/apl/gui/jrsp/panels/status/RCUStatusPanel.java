@@ -52,8 +52,10 @@ public class RCUStatusPanel extends javax.swing.JPanel
         lblNofOverflowY.setText("Nof overflow Y");
 
         txtNofOverflowX.setEditable(false);
+        txtNofOverflowX.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtNofOverflowY.setEditable(false);
+        txtNofOverflowY.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -80,7 +82,7 @@ public class RCUStatusPanel extends javax.swing.JPanel
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(lblNofOverflowY)
                     .add(txtNofOverflowY, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(13, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
     

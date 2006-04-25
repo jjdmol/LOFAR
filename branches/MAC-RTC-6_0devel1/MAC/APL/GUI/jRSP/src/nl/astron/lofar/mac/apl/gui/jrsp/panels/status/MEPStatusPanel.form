@@ -25,9 +25,9 @@
                   <Component id="lblSeqNr" alignment="1" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="txtSeqNr" min="-2" pref="64" max="-2" attributes="0"/>
-                  <Component id="txtError" min="-2" pref="64" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                  <Component id="txtError" max="32767" attributes="1"/>
+                  <Component id="txtSeqNr" alignment="1" pref="282" max="32767" attributes="1"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -37,15 +37,15 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="txtSeqNr" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblSeqNr" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtSeqNr" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="lblError" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtError" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="14" max="32767" attributes="0"/>
+              <EmptySpace pref="17" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -64,6 +64,7 @@
     <Component class="javax.swing.JTextField" name="txtSeqNr">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtError">

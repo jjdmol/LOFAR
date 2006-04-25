@@ -19,17 +19,20 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="1" attributes="0">
-              <EmptySpace pref="43" max="32767" attributes="0"/>
-              <Group type="103" groupAlignment="1" attributes="0">
+              <EmptySpace min="-2" pref="43" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="1" max="-2" attributes="0">
                   <Component id="lblLastError" alignment="1" min="-2" max="-2" attributes="0"/>
-                  <Component id="lblNofErrors" alignment="1" min="-2" max="-2" attributes="0"/>
                   <Component id="lblNofFrames" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Group type="102" alignment="0" attributes="1">
+                      <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
+                      <Component id="lblNofErrors" max="32767" attributes="0"/>
+                  </Group>
               </Group>
-              <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="txtNofFrames" min="-2" pref="64" max="-2" attributes="0"/>
-                  <Component id="txtNofErrors" min="-2" pref="64" max="-2" attributes="0"/>
-                  <Component id="txtLastError" min="-2" pref="64" max="-2" attributes="0"/>
+              <EmptySpace max="32767" attributes="0"/>
+              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                  <Component id="txtNofFrames" max="32767" attributes="1"/>
+                  <Component id="txtNofErrors" alignment="1" max="32767" attributes="1"/>
+                  <Component id="txtLastError" alignment="1" min="-2" pref="282" max="-2" attributes="1"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -39,20 +42,20 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="txtNofFrames" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblNofFrames" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtNofFrames" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="lblNofErrors" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtNofErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblNofErrors" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="lblLastError" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtLastError" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="15" max="32767" attributes="0"/>
+              <EmptySpace pref="17" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -76,11 +79,13 @@
     <Component class="javax.swing.JTextField" name="txtNofFrames">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtNofErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtLastError">

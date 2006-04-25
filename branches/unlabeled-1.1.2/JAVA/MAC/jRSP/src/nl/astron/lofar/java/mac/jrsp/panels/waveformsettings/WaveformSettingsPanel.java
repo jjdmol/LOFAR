@@ -13,7 +13,7 @@ import nl.astron.lofar.mac.apl.gui.jrsp.panels.*;
  *
  * @author  balken
  */
-public class WaveformSettingsPanel extends JPanel implements ITabPanel, ActionListener
+public class WaveformSettingsPanel extends JPanel implements ITabPanel
 {
     /** The main panel. */
     private MainPanel mainPanel;
@@ -27,7 +27,13 @@ public class WaveformSettingsPanel extends JPanel implements ITabPanel, ActionLi
         
         initComponents();
         
-        inputPanel.addActionListener(this);       
+        inputPanel.addActionListener(new InputPanelAction());
+        
+        selectPanel.init(this);
+        selectPanel.addActionListener(new SelectPanelAction());        
+        
+        plotPanel.init(this);
+        
     }
     
     /**
@@ -41,14 +47,6 @@ public class WaveformSettingsPanel extends JPanel implements ITabPanel, ActionLi
     {
         return mainPanel;
     }
-       
-    /**
-     * Returns the plot panel.
-     */
-    public WaveformSettingsPlotPanel getPlotPanel()
-    {
-        return plotPanel;
-    }
         
     /**
      * Initializes this panel and the underlying panels.
@@ -56,51 +54,80 @@ public class WaveformSettingsPanel extends JPanel implements ITabPanel, ActionLi
     public void init(MainPanel mainPanel)
     {
         this.mainPanel = mainPanel;
-        
-        plotPanel.init(mainPanel.getBoard().getSubbandStats(0));
-        selectPanel.init(this);
     }    
     
     /**
      * Method that can be called by the main panel to update this panel.
+     * Be aware of the fact that this function can be called once every second!
      */
     public void update()
     {
+        selectPanel.update();
     }
     
     /**
-     * Invoked when a action occured; btnSumbit on the inputpanel pressed.
+     * Invoked when a action occured at the input panel.
      */
-    public void actionPerformed(ActionEvent e)
+    private class InputPanelAction implements ActionListener
     {
-        Board board = mainPanel.getBoard();
-        
-        // if the board isn't connected we dont have to perform a action :)
-        if(!board.isConnected())
+        public void actionPerformed(ActionEvent e)
         {
-            return;
-        }
-        
-        RCUMask mask = new RCUMask();
-        mask.setBit(mainPanel.getSelectedBoardIndex());
-        int rcuMask = mask.getMask();
-        
-        try
-        {
-            int mode = Integer.parseInt(inputPanel.getMode());
-            int frequency = Integer.parseInt(inputPanel.getFrequency());
-            int amplitude = Integer.parseInt(inputPanel.getAmplitude());
-            
-            if(!board.setWaveformSettings(rcuMask, mode, frequency, amplitude))
+            Board board = mainPanel.getBoard();
+
+            // if the board isn't connected we dont have to perform a action :)
+            if (!board.isConnected())
             {
-                JOptionPane.showMessageDialog(null, "Failed to change the waveform settings.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            RCUMask mask = new RCUMask();
+            mask.setBit(mainPanel.getSelectedBoardIndex());
+            int rcuMask = mask.getMask();
+
+            try
+            {
+                int mode = Integer.parseInt(inputPanel.getMode());
+                int frequency = Integer.parseInt(inputPanel.getFrequency());
+                int amplitude = Integer.parseInt(inputPanel.getAmplitude());
+
+                if (!board.setWaveformSettings(rcuMask, mode, frequency, amplitude))
+                {
+                    JOptionPane.showMessageDialog(null, "Failed to change the waveform settings.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            catch(NumberFormatException nfe)
+            {
+                JOptionPane.showMessageDialog(null, "Incorrect value entered. All fields should contain a positive value.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
-        catch(NumberFormatException nfe)
+    } // InputPanelAction
+    
+    /**
+     * Invoked when a action occured at the selectionPanel.
+     */
+    private class SelectPanelAction implements ActionListener
+    {
+        public void actionPerformed(ActionEvent e)
         {
-            JOptionPane.showMessageDialog(null, "Incorrect value entered. All fields should contain a positive value.", "Error", JOptionPane.ERROR_MESSAGE);
-        }        
-    }
+            int actionSource = Integer.parseInt(e.getActionCommand());
+            
+            int board = actionSource / 10;
+            
+            if (actionSource % 10 == 0)
+            {
+                // actionSource is a combobox
+                
+            }
+            else
+            {
+                // actionSource is a antenna
+                int antenna = actionSource % 10;
+                
+                mainPanel.getBoard(); // jeej! dit mag! te gek man!
+            }
+        }
+    } // SelectPanelAction
+    
     
     /** This method is called from within the constructor to
      * initialize the form.

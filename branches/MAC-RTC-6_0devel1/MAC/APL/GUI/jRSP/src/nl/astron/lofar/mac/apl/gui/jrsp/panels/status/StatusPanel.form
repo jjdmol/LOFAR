@@ -11,83 +11,66 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" attributes="0">
+          <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="1" attributes="0">
-                  <Group type="103" alignment="1" groupAlignment="0" attributes="0">
-                      <Component id="ethStatusPanel" min="-2" max="-2" attributes="0"/>
-                      <Component id="mepStatusPanel" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" attributes="0">
+                      <Component id="rspStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="diagStatusPanel" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="rspStatusPanel" min="-2" max="-2" attributes="0"/>
+                  <Component id="ethStatusPanel" min="-2" max="-2" attributes="0"/>
+                  <Component id="mepStatusPanel" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="diagStatusPanel" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="blp1SyncStatusPanel" min="-2" max="-2" attributes="0"/>
+                  <Component id="blp0SyncStatusPanel" alignment="0" min="-2" max="-2" attributes="0"/>
+                  <Component id="blp2SyncStatusPanel" min="-2" max="-2" attributes="0"/>
+                  <Component id="blp3SyncStatusPanel" min="-2" max="-2" attributes="0"/>
+              </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="blp0SyncStatusPanel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="blp1RcuStatusPanel" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="blp1AdoStatusPanel" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="blp0RcuStatusPanel" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="blp0AdoStatusPanel" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                      </Group>
+                      <Component id="blp1RcuStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="blp1AdoStatusPanel" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="blp1SyncStatusPanel" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="blp2SyncStatusPanel" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="blp3SyncStatusPanel" alignment="0" min="-2" max="-2" attributes="0"/>
-                      </Group>
+                      <Component id="blp0RcuStatusPanel" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="blp2RcuStatusPanel" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="blp2AdoStatusPanel" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="blp3RcuStatusPanel" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="blp3AdoStatusPanel" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Component id="rsuStatusPanel" alignment="0" min="-2" max="-2" attributes="0"/>
-                      </Group>
+                      <Component id="blp0AdoStatusPanel" min="-2" max="-2" attributes="0"/>
                   </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <Component id="blp2RcuStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="blp2AdoStatusPanel" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <Component id="blp3RcuStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="blp3AdoStatusPanel" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <Component id="rsuStatusPanel" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace min="-2" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
-              <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="103" groupAlignment="0" max="-2" attributes="0">
                   <Group type="102" alignment="0" attributes="1">
-                      <Component id="rspStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="rspStatusPanel" max="32767" attributes="1"/>
+                          <Component id="diagStatusPanel" alignment="0" max="32767" attributes="1"/>
+                      </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="ethStatusPanel" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="mepStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <Component id="mepStatusPanel" max="32767" attributes="0"/>
                   </Group>
-                  <Component id="diagStatusPanel" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Component id="blp0SyncStatusPanel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="blp1SyncStatusPanel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="blp2SyncStatusPanel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="blp3SyncStatusPanel" min="-2" max="-2" attributes="0"/>
-                  </Group>
-                  <Group type="102" alignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="1">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="blp0RcuStatusPanel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="blp0AdoStatusPanel" alignment="0" min="-2" max="-2" attributes="0"/>
@@ -111,20 +94,25 @@
                           <Component id="blp3AdoStatusPanel" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="rsuStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <Component id="rsuStatusPanel" max="32767" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <Component id="blp0SyncStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="blp1SyncStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="blp2SyncStatusPanel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="blp3SyncStatusPanel" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
-              <EmptySpace pref="113" max="32767" attributes="0"/>
+              <EmptySpace pref="56" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
   </Layout>
   <SubComponents>
     <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RSPStatusPanel" name="rspStatusPanel">
-    </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ETHStatusPanel" name="ethStatusPanel">
-    </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.MEPStatusPanel" name="mepStatusPanel">
     </Component>
     <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.DIAGStatusPanel" name="diagStatusPanel">
     </Component>
@@ -153,6 +141,10 @@
     <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel" name="blp2AdoStatusPanel">
     </Component>
     <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel" name="blp3AdoStatusPanel">
+    </Component>
+    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ETHStatusPanel" name="ethStatusPanel">
+    </Component>
+    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.MEPStatusPanel" name="mepStatusPanel">
     </Component>
   </SubComponents>
 </Form>

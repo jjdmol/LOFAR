@@ -25,25 +25,25 @@ public class BoardStatus
     public double voltage3V3;
     
     /** Current RSP board temperature. */
-    public int pcbTemp;
+    public short pcbTemp;
     
     /** Current Board Processor temperature. */
-    public int bpTemp;
+    public short bpTemp;
     
     /** Current Antenna Processor 0 temperature. */
-    public int ap0Temp;
+    public short ap0Temp;
     
     /** Current Antenna Processor 1 temperature. */
-    public int ap1Temp;
+    public short ap1Temp;
     
     /** Current Antenna Processor 2 temperature. */
-    public int ap2Temp;
+    public short ap2Temp;
     
     /** Current Antenna Processor 3 temperature. */
-    public int ap3Temp;
+    public short ap3Temp;
     
     /** Current Board Processor system clock speed. */
-    public int bpClock;
+    public short bpClock;
     
     /** Number of eth frames received. */
     public int nofFrames;
@@ -52,19 +52,19 @@ public class BoardStatus
     public int nofErrors;
     
     /** Error status of last received ethernet frame. */
-    public int lastError;
+    public short lastError;
     
     /** Sequence number of previous received message. */
     public int seqNr;
     
     /** Error status of previous received message. */
-    public int error;
+    public short error;
     
     /** Interface under test. */
-    public int ifUnderTest;
+    public short ifUnderTest;
     
     /** Test mode. */
-    public int mode;
+    public short mode;
     
     /** Number of detected errors. */
     public int riErrors;
@@ -134,7 +134,7 @@ public class BoardStatus
     public boolean cpIm;
     
     /** TRIG - Cause of previous reconfiguration. */
-    public int cpTrig;
+    public short cpTrig;
     
     /** BLP0 ADC offset values. */
     public ADOStatus blp0AdcOffset;

@@ -55,6 +55,14 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWavefo
 JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getSubbandStats
   (JNIEnv *, jobject, jint, jint);
 
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    test
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_test
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

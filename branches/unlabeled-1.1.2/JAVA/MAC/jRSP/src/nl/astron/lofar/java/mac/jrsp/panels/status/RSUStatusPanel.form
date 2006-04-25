@@ -28,16 +28,12 @@
                   <Component id="lblIm" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="103" groupAlignment="1" attributes="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="txtRdy" min="-2" pref="64" max="-2" attributes="0"/>
-                          <Component id="txtErr" min="-2" pref="64" max="-2" attributes="0"/>
-                          <Component id="txtFpga" min="-2" pref="64" max="-2" attributes="0"/>
-                      </Group>
-                      <Component id="txtIm" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
-                  </Group>
-                  <Component id="txtTrig" min="-2" pref="64" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                  <Component id="txtFpga" max="32767" attributes="1"/>
+                  <Component id="txtIm" alignment="1" max="32767" attributes="1"/>
+                  <Component id="txtErr" alignment="1" pref="105" max="32767" attributes="1"/>
+                  <Component id="txtRdy" alignment="1" max="32767" attributes="1"/>
+                  <Component id="txtTrig" alignment="1" min="-2" pref="282" max="-2" attributes="1"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -47,8 +43,8 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="txtRdy" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblRdy" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtRdy" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
@@ -62,15 +58,15 @@
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="txtIm" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblIm" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtIm" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="lblTrig" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtTrig" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="16" max="32767" attributes="0"/>
+              <EmptySpace pref="18" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>

@@ -11,7 +11,10 @@ import javax.swing.JPanel;
  * @author balken
  */
 public class WaveformSettingsPlotPanel extends JPanel
-{    	
+{    
+    /** WaveformSettingsPanel. */
+    private WaveformSettingsPanel parent;
+    
     /** SGT zut. */
     private JPlotLayout layout;
        
@@ -33,9 +36,9 @@ public class WaveformSettingsPlotPanel extends JPanel
     /**
      * Initializes this panel.
      */
-    public void init(double[] data)
+    public void init(WaveformSettingsPanel parent)
     {
-        addLine(data, null);
+        this.parent = parent;        
     }
     
     /**

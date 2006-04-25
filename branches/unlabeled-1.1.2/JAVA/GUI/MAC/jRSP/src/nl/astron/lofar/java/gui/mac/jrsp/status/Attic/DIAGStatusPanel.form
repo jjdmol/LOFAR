@@ -132,7 +132,7 @@
                   <Component id="txtAp3RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblAp3RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="13" max="32767" attributes="0"/>
+              <EmptySpace pref="14" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -186,46 +186,55 @@
     <Component class="javax.swing.JTextField" name="txtIfUnderTest">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtMode">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtRiErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtRcuxErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtRcuyErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtLcuErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtCepErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtSerdesErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtAp0RiErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblAp1RiErrors">
@@ -236,6 +245,7 @@
     <Component class="javax.swing.JTextField" name="txtAp1RiErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblAp2RiErrors">
@@ -246,6 +256,7 @@
     <Component class="javax.swing.JTextField" name="txtAp2RiErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblAp3RiErrors">
@@ -256,6 +267,7 @@
     <Component class="javax.swing.JTextField" name="txtAp3RiErrors">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
     </Component>
   </SubComponents>

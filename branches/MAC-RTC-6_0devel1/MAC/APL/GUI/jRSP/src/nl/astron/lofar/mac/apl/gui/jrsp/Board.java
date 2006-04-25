@@ -55,7 +55,7 @@ public class Board
      * @param   hostname    hostname of the board.
      */
     public void connect(String hostname)
-    {
+    {        
         // Check if there is already a connection
         if (isConnected())
         {
@@ -64,7 +64,7 @@ public class Board
                 /*
                  * If the hostname is the same we don't need to make a new
                  * connection and we won't!
-                 */                
+                 */
                 return;
             }
             else
@@ -78,8 +78,7 @@ public class Board
         }
                
         this.hostname = hostname;
-        ptrRSPport = 1;
-        // @TODO: ptrRSPport = init(hostname);
+        ptrRSPport = init(hostname);
     }
     
     /**
@@ -87,8 +86,7 @@ public class Board
      */
     public void disconnect()
     {
-        // @TODO: delete(ptrRSPport);
-        ptrRSPport = 0;
+        delete(ptrRSPport);
     }
     
     /**
@@ -109,6 +107,8 @@ public class Board
     private native int retrieveNofBoards(int ptrRSPport); // retrieves the number of boards.
     private native boolean setWaveformSettings(int rcuMask, int mode, int frequency, int amplitude, int ptrRSPport); // Sets the waveform settings.
     private native double[] getSubbandStats(int rcuMask, int ptrRSPport); // retrieves subbandstats
+    
+    public native int test(); // used to test stuff. @TODO: delete this function.
         
     static
     {

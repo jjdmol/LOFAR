@@ -9,7 +9,7 @@ package nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.*;
+import javax.swing.event.EventListenerList;
 
 /**
  *
@@ -17,8 +17,11 @@ import nl.astron.lofar.mac.apl.gui.jrsp.panels.*;
  */
 public class WaveformSettingsSelectPanel extends JPanel implements ActionListener
 {   
-    // the parent class
+    /** The parent class. */
     private WaveformSettingsPanel parent;
+    
+    /** List of ActionListeners listening to this object. */
+    private EventListenerList listenerList; 
     
     /**
      * 
@@ -26,16 +29,64 @@ public class WaveformSettingsSelectPanel extends JPanel implements ActionListene
      */
     public WaveformSettingsSelectPanel() 
     {
+        listenerList = new EventListenerList();
+        
         initComponents();
         
+        /*
+         * Make comments in english.
+         *
+         * tientallen is het bord 0 (links) of 1 (rechts)
+         * eentallen is welke antenne (op 0 na, is combobox)
+         */
+        
         cmbBoard1.addActionListener(this);
+        cmbBoard1.setActionCommand("0");
         chkBoard1Antenna1.addActionListener(this);
+        chkBoard1Antenna1.setActionCommand("1");
+        chkBoard1Antenna2.addActionListener(this);
+        chkBoard1Antenna2.setActionCommand("2");
+        chkBoard1Antenna3.addActionListener(this);
+        chkBoard1Antenna3.setActionCommand("3");
+        chkBoard1Antenna4.addActionListener(this);
+        chkBoard1Antenna4.setActionCommand("4");
+        chkBoard1Antenna5.addActionListener(this);
+        chkBoard1Antenna5.setActionCommand("5");
+        chkBoard1Antenna6.addActionListener(this);
+        chkBoard1Antenna6.setActionCommand("6");
+        chkBoard1Antenna7.addActionListener(this);
+        chkBoard1Antenna7.setActionCommand("7");
+        chkBoard1Antenna8.addActionListener(this);
+        chkBoard1Antenna8.setActionCommand("8");
+        
+        cmbBoard2.addActionListener(this);
+        cmbBoard2.setActionCommand("10");
+        chkBoard2Antenna1.addActionListener(this);
+        chkBoard2Antenna1.setActionCommand("11");
+        chkBoard2Antenna2.addActionListener(this);
+        chkBoard2Antenna2.setActionCommand("12");
+        chkBoard2Antenna3.addActionListener(this);
+        chkBoard2Antenna3.setActionCommand("13");
+        chkBoard2Antenna4.addActionListener(this);
+        chkBoard2Antenna4.setActionCommand("14");
+        chkBoard2Antenna5.addActionListener(this);
+        chkBoard2Antenna5.setActionCommand("15");
+        chkBoard2Antenna6.addActionListener(this);
+        chkBoard2Antenna6.setActionCommand("16");
+        chkBoard2Antenna7.addActionListener(this);
+        chkBoard2Antenna7.setActionCommand("17");
+        chkBoard2Antenna8.addActionListener(this);
+        chkBoard2Antenna8.setActionCommand("18");
     }
+    
 
     public void init(WaveformSettingsPanel parent)
     {
         this.parent = parent;
-        
+    }
+    
+    public void update()
+    {
         if(parent.getMainPanel().getBoard().isConnected())
         {
             int nofBoards = parent.getMainPanel().getBoard().getNofBoards();
@@ -51,9 +102,39 @@ public class WaveformSettingsSelectPanel extends JPanel implements ActionListene
         }
     }
     
-    public void actionPerformed(ActionEvent event)
+    public void addActionListener(ActionListener l)
     {
-        // @TODO: implement
+        listenerList.add(ActionListener.class, l);
+    }
+    
+    public void removeActionListener(ActionListener l)
+    {
+        listenerList.remove(ActionListener.class, l);
+    }
+    
+    /**
+     * Notify all listeners of the action that has occured.
+     */
+    public void fireActionPerformed(ActionEvent e)
+    {
+        Object[] listeners = listenerList.getListenerList();
+        
+        for (int i = listeners.length - 2; i >= 0; i -= 2)
+        {
+            if (listeners[i] == ActionListener.class)
+            {
+                ((ActionListener) listeners[i+1]).actionPerformed(e);
+            }
+        }       
+    }
+    
+    /**
+     * Invoked when an action occurs.
+     * @param   e                       ActionEvent
+     */
+    public void actionPerformed(ActionEvent e)
+    {        
+        fireActionPerformed(e);
     }
         
     /** This method is called from within the constructor to

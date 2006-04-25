@@ -86,34 +86,46 @@ public class DIAGStatusPanel extends javax.swing.JPanel {
         lblAp0RiErrors.setText("AP0 RI Errors");
 
         txtIfUnderTest.setEditable(false);
+        txtIfUnderTest.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtMode.setEditable(false);
+        txtMode.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtRiErrors.setEditable(false);
+        txtRiErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtRcuxErrors.setEditable(false);
+        txtRcuxErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtRcuyErrors.setEditable(false);
+        txtRcuyErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtLcuErrors.setEditable(false);
+        txtLcuErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtCepErrors.setEditable(false);
+        txtCepErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtSerdesErrors.setEditable(false);
+        txtSerdesErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtAp0RiErrors.setEditable(false);
+        txtAp0RiErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         lblAp1RiErrors.setText("AP1 RI Errors");
 
         txtAp1RiErrors.setEditable(false);
+        txtAp1RiErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         lblAp2RiErrors.setText("AP2 RI Errors");
 
         txtAp2RiErrors.setEditable(false);
+        txtAp2RiErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         lblAp3RiErrors.setText("AP3 RI Errors");
 
         txtAp3RiErrors.setEditable(false);
+        txtAp3RiErrors.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -210,7 +222,7 @@ public class DIAGStatusPanel extends javax.swing.JPanel {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(txtAp3RiErrors, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(lblAp3RiErrors))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(14, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
     

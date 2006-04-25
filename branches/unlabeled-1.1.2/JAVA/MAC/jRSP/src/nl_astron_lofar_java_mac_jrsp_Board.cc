@@ -65,18 +65,8 @@ JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retri
 	// Use RSPport to get a vector with BoardStatus.
 	vector<BoardStatus> vecBoardStatus;
 
-	if(0)
-	{
-		RSPport * IOport = (RSPport*)ptrRSPport;
-		//uint32 rcuMask = 0;
-		vecBoardStatus = IOport->getBoardStatus(rcuMask);
-	}
-	else
-	{
-		// Add dummy BoardStatus to vector.
-		vecBoardStatus.push_back(GetDummyBoardStatus());
-		vecBoardStatus.push_back(GetDummyBoardStatus2());
-	}
+	RSPport * IOport = (RSPport*)ptrRSPport;
+	vecBoardStatus = IOport->getBoardStatus(rcuMask);
 	
 	// The jobjectArray that is going to be returned.
 	jobjectArray arrBoardStatus = (jobjectArray)env->NewObjectArray(vecBoardStatus.size(), env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/BoardStatus"), NULL);
@@ -114,20 +104,20 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 	jfieldID fidVoltage1V2 = env->GetFieldID(clsStatus, "voltage1V2", "D");
         jfieldID fidVoltage2V5 = env->GetFieldID(clsStatus, "voltage2V5", "D");
         jfieldID fidVoltage3V3 = env->GetFieldID(clsStatus, "voltage3V3", "D");
-        jfieldID fidPcbTemp = env->GetFieldID(clsStatus, "pcbTemp", "I");
-        jfieldID fidBpTemp = env->GetFieldID(clsStatus, "bpTemp", "I");
-        jfieldID fidAp0Temp = env->GetFieldID(clsStatus, "ap0Temp", "I");
-        jfieldID fidAp1Temp = env->GetFieldID(clsStatus, "ap1Temp", "I");
-        jfieldID fidAp2Temp = env->GetFieldID(clsStatus, "ap2Temp", "I");
-        jfieldID fidAp3Temp = env->GetFieldID(clsStatus, "ap3Temp", "I");
-        jfieldID fidBpClock = env->GetFieldID(clsStatus, "bpClock", "I");
+        jfieldID fidPcbTemp = env->GetFieldID(clsStatus, "pcbTemp", "S");
+        jfieldID fidBpTemp = env->GetFieldID(clsStatus, "bpTemp", "S");
+        jfieldID fidAp0Temp = env->GetFieldID(clsStatus, "ap0Temp", "S");
+        jfieldID fidAp1Temp = env->GetFieldID(clsStatus, "ap1Temp", "S");
+        jfieldID fidAp2Temp = env->GetFieldID(clsStatus, "ap2Temp", "S");
+        jfieldID fidAp3Temp = env->GetFieldID(clsStatus, "ap3Temp", "S");
+        jfieldID fidBpClock = env->GetFieldID(clsStatus, "bpClock", "S");
         jfieldID fidNofFrames = env->GetFieldID(clsStatus, "nofFrames", "I");
         jfieldID fidNofErrors = env->GetFieldID(clsStatus, "nofErrors", "I");
-        jfieldID fidLastError = env->GetFieldID(clsStatus, "lastError", "I");
+        jfieldID fidLastError = env->GetFieldID(clsStatus, "lastError", "S");
         jfieldID fidSeqNr = env->GetFieldID(clsStatus, "seqNr", "I");
-        jfieldID fidError = env->GetFieldID(clsStatus, "error", "I");
-        jfieldID fidIfUnderTest = env->GetFieldID(clsStatus, "ifUnderTest", "I");
-        jfieldID fidMode = env->GetFieldID(clsStatus, "mode", "I");
+        jfieldID fidError = env->GetFieldID(clsStatus, "error", "S");
+        jfieldID fidIfUnderTest = env->GetFieldID(clsStatus, "ifUnderTest", "S");
+        jfieldID fidMode = env->GetFieldID(clsStatus, "mode", "S");
         jfieldID fidRiErrors = env->GetFieldID(clsStatus, "riErrors", "I");
         jfieldID fidRcuxErrors = env->GetFieldID(clsStatus, "rcuxErrors", "I");
         jfieldID fidRcuyErrors = env->GetFieldID(clsStatus, "rcuyErrors", "I");
@@ -150,7 +140,7 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 	jfieldID fidCpErr = env->GetFieldID(clsStatus, "cpErr", "Z");
 	jfieldID fidCpFpga = env->GetFieldID(clsStatus, "cpFpga", "Z");
 	jfieldID fidCpIm = env->GetFieldID(clsStatus, "cpIm", "Z");
-	jfieldID fidCpTrig = env->GetFieldID(clsStatus, "cpTrig", "I");
+	jfieldID fidCpTrig = env->GetFieldID(clsStatus, "cpTrig", "S");
 	jfieldID fidBlp0AdcOffset = env->GetFieldID(clsStatus, "blp0AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
 	jfieldID fidBlp1AdcOffset = env->GetFieldID(clsStatus, "blp1AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
 	jfieldID fidBlp2AdcOffset = env->GetFieldID(clsStatus, "blp2AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
@@ -171,31 +161,31 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
         }
         if(fidPcbTemp != 0)
         {
-                env->SetIntField(status, fidPcbTemp, boardStatus.rsp.pcb_temp);
+                env->SetShortField(status, fidPcbTemp, boardStatus.rsp.pcb_temp);
         }
         if(fidBpTemp != 0)
         {
-                env->SetIntField(status, fidBpTemp, boardStatus.rsp.bp_temp);
+                env->SetShortField(status, fidBpTemp, boardStatus.rsp.bp_temp);
         }
         if(fidAp0Temp != 0)
         {
-                env->SetIntField(status, fidAp0Temp, boardStatus.rsp.ap0_temp);
+                env->SetShortField(status, fidAp0Temp, boardStatus.rsp.ap0_temp);
         }
         if(fidAp1Temp != 0)
         {
-                env->SetIntField(status, fidAp1Temp, boardStatus.rsp.ap1_temp);
+                env->SetShortField(status, fidAp1Temp, boardStatus.rsp.ap1_temp);
         }
         if(fidAp2Temp != 0)
         {
-                env->SetIntField(status, fidAp2Temp, boardStatus.rsp.ap2_temp);
+                env->SetShortField(status, fidAp2Temp, boardStatus.rsp.ap2_temp);
         }
         if(fidAp3Temp != 0)
         {
-                env->SetIntField(status, fidAp3Temp, boardStatus.rsp.ap3_temp);
+                env->SetShortField(status, fidAp3Temp, boardStatus.rsp.ap3_temp);
         }
         if(fidBpClock != 0)
         {
-                env->SetIntField(status, fidBpClock, boardStatus.rsp.bp_clock);
+                env->SetShortField(status, fidBpClock, boardStatus.rsp.bp_clock);
         }
         if(fidNofFrames != 0)
         {
@@ -207,7 +197,7 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
         }
         if(fidLastError != 0)
         {
-                env->SetIntField(status, fidLastError, boardStatus.eth.last_error);
+                env->SetShortField(status, fidLastError, boardStatus.eth.last_error);
         }
         if(fidSeqNr != 0)
         {
@@ -215,15 +205,15 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
         }
         if(fidError != 0)
         {
-                env->SetIntField(status, fidError, boardStatus.mep.error);
+                env->SetShortField(status, fidError, boardStatus.mep.error);
         }
         if(fidIfUnderTest != 0)
         {
-                env->SetIntField(status, fidIfUnderTest, boardStatus.diag.interface);
+                env->SetShortField(status, fidIfUnderTest, boardStatus.diag.interface);
         }
         if(fidMode != 0)
         {
-                env->SetIntField(status, fidMode, boardStatus.diag.mode);
+                env->SetShortField(status, fidMode, boardStatus.diag.mode);
         }
         if(fidRiErrors != 0)
         {
@@ -384,7 +374,7 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 	}
 	if(fidCpTrig != 0)
 	{
-		env->SetIntField(status, fidCpTrig, boardStatus.cp_status.trig);
+		env->SetShortField(status, fidCpTrig, boardStatus.cp_status.trig);
 	}
 
 	// ADOStatus: blp0AdcOffset - blp3AdcOffset
@@ -495,6 +485,20 @@ JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getSu
 
         return ret;
 }
+
+/**
+ * TEST METHOD, SHOULD BE REMOVED IN FINAL VERSION.
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_test(JNIEnv * env, jobject o)
+{
+	uint32 n = 42;//94967295; // causes warning because of it's size.
+
+	cout << "C++: " << n << endl;
+
+	return n;
+
+	
+} // test()
 
 BoardStatus GetDummyBoardStatus()
 {

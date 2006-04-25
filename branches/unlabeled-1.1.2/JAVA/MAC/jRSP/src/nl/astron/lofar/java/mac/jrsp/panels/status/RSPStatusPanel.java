@@ -1,5 +1,6 @@
 package nl.astron.lofar.mac.apl.gui.jrsp.panels.status;
 
+import java.text.NumberFormat;
 import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
 
 /**
@@ -20,9 +21,12 @@ public class RSPStatusPanel extends javax.swing.JPanel {
 
     public void setFields(BoardStatus boardStatus)
     {
-        txtVoltage1V2.setText(Double.toString(boardStatus.voltage1V2));
-        txtVoltage2V5.setText(Double.toString(boardStatus.voltage2V5));
-        txtVoltage3V3.setText(Double.toString(boardStatus.voltage3V3));
+        NumberFormat nf = NumberFormat.getNumberInstance();
+        nf.setMinimumFractionDigits(2);
+        nf.setMaximumFractionDigits(2);
+        txtVoltage1V2.setText(nf.format(boardStatus.voltage1V2));
+        txtVoltage2V5.setText(nf.format(boardStatus.voltage2V5));
+        txtVoltage3V3.setText(nf.format(boardStatus.voltage3V3));
         txtPcbTemp.setText(Integer.toString(boardStatus.pcbTemp));
         txtBpTemp.setText(Integer.toString(boardStatus.bpTemp));
         txtAp0Temp.setText(Integer.toString(boardStatus.ap0Temp));
@@ -82,24 +86,34 @@ public class RSPStatusPanel extends javax.swing.JPanel {
         lblBpClock.setText("BP clock spd.");
 
         txtVoltage1V2.setEditable(false);
+        txtVoltage1V2.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtVoltage2V5.setEditable(false);
+        txtVoltage2V5.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtVoltage3V3.setEditable(false);
+        txtVoltage3V3.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtPcbTemp.setEditable(false);
+        txtPcbTemp.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtBpTemp.setEditable(false);
+        txtBpTemp.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtAp0Temp.setEditable(false);
+        txtAp0Temp.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtAp1Temp.setEditable(false);
+        txtAp1Temp.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtAp2Temp.setEditable(false);
+        txtAp2Temp.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtAp3Temp.setEditable(false);
+        txtAp3Temp.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtBpClock.setEditable(false);
+        txtBpClock.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -177,7 +191,7 @@ public class RSPStatusPanel extends javax.swing.JPanel {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(lblBpClock)
                     .add(txtBpClock, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(15, Short.MAX_VALUE))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
     
