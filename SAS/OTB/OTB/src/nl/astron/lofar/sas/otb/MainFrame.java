@@ -27,11 +27,9 @@ public class MainFrame extends javax.swing.JFrame {
     // fields declaration
     private HashMap<String,PluginPanelInfo>  itsPlugins;
     private JPanel                           itsActivePanel;
-    private OtdbRmi                          itsOtdbRmi;
     private StorageLocation                  itsStorageLocation;
     private MACNavigatorInteraction          itsMACInteraction;
-    private int                              itsCurrentTreeID=0;
-    private int                              itsCurrentComponentID=0;
+    private SharedVars                       itsSharedVars;
     private static UserAccount               itsUserAccount;
     
     
@@ -75,10 +73,9 @@ public class MainFrame extends javax.swing.JFrame {
     /** Creates new form MainFrame */
     public MainFrame() {
         itsPlugins = new HashMap<String,PluginPanelInfo>();
-        itsOtdbRmi = new OtdbRmi(this);
-        itsStorageLocation = new StorageLocation(itsOtdbRmi);
+        itsSharedVars = new SharedVars(this);
+        itsStorageLocation = new StorageLocation(itsSharedVars.getOTDBrmi());
         itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
-        itsCurrentTreeID=0;
 
         initComponents();
 
@@ -87,34 +84,14 @@ public class MainFrame extends javax.swing.JFrame {
         showPanel(MainPanel.getFriendlyNameStatic());
     }
     
-    /** gets OTDBrmi
-     * OTBrmi holds all JNI/RMI connections
+
+    /** returns the SharedVars Object that holds shared variables
      *
-     * @return the OtdbRmi object
      */
-    public OtdbRmi getOTDBrmi() {
-        return itsOtdbRmi;
+    public SharedVars getSharedVars() {
+        return itsSharedVars;
     }
-    
-    /** gets the Current TreeID */
-    public int getTreeID() {
-        return itsCurrentTreeID;
-    }
-    
-    /** sets the Current TreeID */
-    public void setTreeID(int aTreeID) {
-        itsCurrentTreeID=aTreeID;
-    }
-    
-    /** gets the Current ComponentID */
-    public int getComponentID() {
-        return itsCurrentComponentID;
-    }
-    
-    /** sets the Current ComponentID */
-    public void setComponentID(int anID) {
-        itsCurrentComponentID=anID;
-    }
+
     
     /** Registers the panel with the given name without adding it to the 
       * toolbar or Plugin menu
@@ -221,7 +198,7 @@ public class MainFrame extends javax.swing.JFrame {
     public void setChanged(String friendlyName,boolean flag) {
         
         // for now we will need to set the (treeid-less) mainpanel to haschanged
-        // and the panles that are based on the same treeid as the one that fires this
+        // and the panels that are based on the same treeid as the one that fires this
         String aTreeID="";
         if (friendlyName.contains("(") && friendlyName.contains(")")) {
             aTreeID="("+friendlyName.substring(friendlyName.indexOf('('),friendlyName.indexOf(')'))+")";
@@ -396,15 +373,15 @@ public class MainFrame extends javax.swing.JFrame {
 
                 // create a useraccount object
                 try {
-                    itsUserAccount = new UserAccount(itsOtdbRmi, userName, password);
+                    itsUserAccount = new UserAccount(itsSharedVars.getOTDBrmi(), userName, password);
                     accessAllowed = true;
                     itsMACInteraction.setCurrentUser(userName,password);
                     
                     statusPanelMainFrame.setText(StatusPanel.MIDDLE,userName);
                     
                     // Start the actual RMI connection
-                    if (! itsOtdbRmi.isConnected()) {
-                        if (! itsOtdbRmi.openConnections()) {
+                    if (! itsSharedVars.getOTDBrmi().isConnected()) {
+                        if (! itsSharedVars.getOTDBrmi().openConnections()) {
                             logger.debug("Error: failed to open RMI Connections");
                         }
                     }

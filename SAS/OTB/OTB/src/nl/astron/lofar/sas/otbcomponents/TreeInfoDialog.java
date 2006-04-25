@@ -34,7 +34,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         initComponents();
         itsMainFrame = aMainFrame;
         itsTree = aTree;
-        itsOtdbRmi=itsMainFrame.getOTDBrmi();
+        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         isAdministrator=itsMainFrame.getUserAccount().isAdministrator();
         itsTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);
         // keep the fields that can be changed
@@ -160,22 +160,22 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             if ( !itsClassification.equals(classificationInput.getSelectedItem().toString())) {
                 hasChanged=true;
                 itsTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
-                if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
-                    logger.debug("Error during setClassification: "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());
+                if (!itsOtdbRmi.getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
+                    logger.debug("Error during setClassification: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());
                 }
             }
             if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
                 hasChanged=true;
                 itsTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
-                if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
-                    logger.debug("Error during setTreeState: "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());                      
+                if (!itsOtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
+                    logger.debug("Error during setTreeState: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                      
                 }
             }
             if (!itsDescription.equals(descriptionInput.getText())) {
                 hasChanged=true;
                 itsTree.description = descriptionInput.getText();
-                if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
-                    logger.debug("Error during setDescription: "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());                        
+                if (!itsOtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
+                    logger.debug("Error during setDescription: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
                 }
             }
             // Next for VIC and Templates only
@@ -183,8 +183,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 if (!itsCampaign.equals(campaignInput.getText()) && itsTree.momID() > 0) {
                     hasChanged=true;
                     itsTree.campaign = campaignInput.getText();
-                    if (!itsMainFrame.getOTDBrmi().getRemoteMaintenance().setMomInfo(itsTree.treeID(), itsTree.momID(),itsTree.campaign)) {
-                        logger.debug("Error during setCampaign: "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());                        
+                    if (!itsOtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(), itsTree.momID(),itsTree.campaign)) {
+                        logger.debug("Error during setCampaign: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
                     }
                 }
                 // Next for VIC only
@@ -193,8 +193,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         hasChanged=true;
                         itsTree.starttime = startTimeInput.getText();
                         itsTree.stoptime = stopTimeInput.getText();
-                        if (itsMainFrame.getOTDBrmi().getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
-                            logger.debug("Error during setSchedule: "+itsMainFrame.getOTDBrmi().getRemoteMaintenance().errorMsg());                        
+                        if (itsOtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
+                            logger.debug("Error during setSchedule: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
                         }
                     }
                 }

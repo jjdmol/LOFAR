@@ -37,13 +37,13 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
     /** Fills the table from the database */
     public boolean fillTable(MainFrame aMainFrame,int aNodeID,String aStartTime, String anEndTime,boolean setMostRecent) {
         
-        if (aMainFrame.getOTDBrmi() == null) {
+        if (aMainFrame.getSharedVars().getOTDBrmi() == null) {
             logger.debug("No active otdbRmi connection");
             return false;
         }            
         try {
-            aMainFrame.getOTDBrmi().getRemoteValue().setTreeID(aMainFrame.getTreeID());
-            Vector aLogList=aMainFrame.getOTDBrmi().getRemoteValue().searchInPeriod(aNodeID,1,aStartTime,anEndTime,setMostRecent);
+            aMainFrame.getSharedVars().getOTDBrmi().getRemoteValue().setTreeID(aMainFrame.getSharedVars().getTreeID());
+            Vector aLogList=aMainFrame.getSharedVars().getOTDBrmi().getRemoteValue().searchInPeriod(aNodeID,1,aStartTime,anEndTime,setMostRecent);
             if (aLogList==null || aLogList.size()<1 ) {
                 logger.debug("Failed to get searchInPeriod Match");
                 return false;

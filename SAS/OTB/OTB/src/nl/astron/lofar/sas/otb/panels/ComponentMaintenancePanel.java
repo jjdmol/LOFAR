@@ -49,7 +49,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     
     public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
-        itsComponentID=itsMainFrame.getComponentID();
+        itsComponentID=itsMainFrame.getSharedVars().getComponentID();
         componentPanel1.setMainFrame(itsMainFrame);
         VICnodeDefViewPanel1.setMainFrame(itsMainFrame);
         
@@ -80,7 +80,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
                 aParam = new jOTDBparam(0,0,0);
                 aParam.name = "No ParamSelection";
             } else {
-                aVICnodeDef = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
+                aVICnodeDef = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
                 if (aVICnodeDef != null) {
                     // create a fake param to pass to componentTree, to simulate a node param
                     aParam = new jOTDBparam(0,itsComponentID,0);
@@ -96,7 +96,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
             }
         
             // put the param in a wrapper for the tree
-            ComponentTreeNode aComponentTreeNode = new ComponentTreeNode(aParam, itsMainFrame.getOTDBrmi());
+            ComponentTreeNode aComponentTreeNode = new ComponentTreeNode(aParam, itsMainFrame.getSharedVars().getOTDBrmi());
 
             itsMainFrame.setHourglassCursor();
             // and create a new root
@@ -120,7 +120,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         itsSelectedParam=aParam;
         if (treePanel.getSelectedRows()[0] == 0) {
             try {
-                jVICnodeDef aVICnodeDef = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
+                jVICnodeDef aVICnodeDef = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
                 VICnodeDefViewPanel1.setNode(aVICnodeDef);
                 jSplitPane1.remove(componentPanel1);
                 jSplitPane1.setRightComponent(VICnodeDefViewPanel1);
@@ -178,8 +178,6 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
 
     private void initialize() {
         treePanel.setTitle("Component List");
-        buttonPanel1.addButton("Delete");
-        buttonPanel1.addButton("Load");
         buttonPanel1.addButton("Exit");
         
         componentPanel1= new ComponentPanel();

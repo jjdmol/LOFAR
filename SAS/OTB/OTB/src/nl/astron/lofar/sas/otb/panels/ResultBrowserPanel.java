@@ -57,7 +57,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             return false;
         }
         itsMainFrame=mainframe;
-        itsTreeID=itsMainFrame.getTreeID();
+        itsTreeID=itsMainFrame.getSharedVars().getTreeID();
         parameterViewPanel1.setMainFrame(itsMainFrame);
         nodeViewPanel1.setMainFrame(itsMainFrame);
         logParamPanel1.setMainFrame(itsMainFrame);
@@ -115,11 +115,11 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 otdbNode = new jOTDBnode(0,0,0,0);
                 otdbNode.name = "No TreeSelection";
             } else {
-                otdbNode = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
+                otdbNode = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
             }
         
             // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getSharedVars().getOTDBrmi());
 
             itsMainFrame.setHourglassCursor();
             // and create a new root
@@ -140,7 +140,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             try {
                 jTabbedPane1.removeTabAt(0);
                 jTabbedPane1.insertTab("Parameter",null,parameterViewPanel1,"",0);
-                aParam = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getParam(itsTreeID, aNode.paramDefID());
+                aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsTreeID, aNode.paramDefID());
                 parameterViewPanel1.setParam(aParam);
                 nodeViewPanel1.setAllEnabled(false);
             } catch (RemoteException ex) {
@@ -183,7 +183,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         //get the selected tree from the database
         
         try {
-            jOTDBtree aSelectedTree=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeID, false);
+            jOTDBtree aSelectedTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeID, false);
             
             if (aSelectedTree != null) {
                 // show treeInfo dialog

@@ -46,7 +46,7 @@ public class LoadFileDialog extends javax.swing.JDialog {
         topLabelInput = new javax.swing.JLabel();
         fileNameInput = new javax.swing.JTextField();
         browseButton = new javax.swing.JButton();
-        jLabel2 = new javax.swing.JLabel();
+        statusLabel = new javax.swing.JLabel();
         statusInput = new javax.swing.JComboBox();
         jLabel3 = new javax.swing.JLabel();
         descriptionInput = new javax.swing.JTextArea();
@@ -77,8 +77,8 @@ public class LoadFileDialog extends javax.swing.JDialog {
 
         getContentPane().add(browseButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 40, -1, 20));
 
-        jLabel2.setText("Status:");
-        getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, 20));
+        statusLabel.setText("Status:");
+        getContentPane().add(statusLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, 20));
 
         statusInput.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "idle", "being specified", "specified", "scheduled", "queued", "active", "finished", "aborted", "obsolete" }));
         statusInput.setToolTipText("State Selection");
@@ -112,8 +112,7 @@ public class LoadFileDialog extends javax.swing.JDialog {
         getContentPane().add(loadButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 230, -1, -1));
 
         pack();
-    }
-    // </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>//GEN-END:initComponents
 
     private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
       JFileChooser fc = new JFileChooser();
@@ -149,13 +148,22 @@ public class LoadFileDialog extends javax.swing.JDialog {
     private javax.swing.JButton cancelButton;
     private javax.swing.JTextArea descriptionInput;
     private javax.swing.JTextField fileNameInput;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JButton loadButton;
     private javax.swing.JComboBox statusInput;
+    private javax.swing.JLabel statusLabel;
     private javax.swing.JLabel topLabelInput;
     // End of variables declaration//GEN-END:variables
 
+    /** set Statuslabel/box invisible
+     * 
+     * @param visible  visible/invisible
+     */
+    public void setStatusVisible(boolean visible) {
+        statusLabel.setVisible(visible);
+        statusInput.setVisible(visible);
+    }
+    
     /**
      * Getter for property fileName.
      * @return Value of property fileName.

@@ -39,7 +39,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     
     public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
-        itsTreeID=itsMainFrame.getTreeID();
+        itsTreeID=itsMainFrame.getSharedVars().getTreeID();
         parameterViewPanel1.setMainFrame(itsMainFrame);
         nodeViewPanel1.setMainFrame(itsMainFrame);
         
@@ -86,11 +86,11 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 otdbNode = new jOTDBnode(0,0,0,0);
                 otdbNode.name = "No TreeSelection";
             } else {
-                otdbNode = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
+                otdbNode = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
             }
         
             // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getSharedVars().getOTDBrmi());
 
             itsMainFrame.setHourglassCursor();
             // and create a new root
@@ -167,7 +167,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
             //Check  if the selected node isn't a leaf
             if (itsSelectedNode != null && !itsSelectedNode.leaf) {
                 try {
-                    if (itsMainFrame.getOTDBrmi().getRemoteMaintenance().deleteNode(itsSelectedNode)) {
+                    if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteNode(itsSelectedNode)) {
                         logger.debug("Node + children deleted");
                         setNewRootNode();
                     }
@@ -184,7 +184,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                     return;
                 }
                 try {
-                    int aN=itsMainFrame.getOTDBrmi().getRemoteMaintenance().dupNode(itsTreeID,itsSelectedNode.nodeID(),idx);
+                    int aN=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().dupNode(itsTreeID,itsSelectedNode.nodeID(),idx);
                     if (aN>0) {
                         logger.debug("Node duplicated");
                         setNewRootNode();
@@ -238,7 +238,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         //get the selected tree from the database
         
         try {
-            jOTDBtree aSelectedTree=itsMainFrame.getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeID, false);
+            jOTDBtree aSelectedTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeID, false);
             
             if (aSelectedTree != null) {
                 // show treeInfo dialog
@@ -269,7 +269,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
             jOTDBparam aParam = null;
             try {
                 jTabbedPane1.setSelectedComponent(parameterViewPanel1);
-                aParam = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getParam(itsTreeID, aNode.paramDefID());
+                aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsTreeID, aNode.paramDefID());
                 parameterViewPanel1.setParam(aParam);
             } catch (RemoteException ex) {
                 logger.debug("Error during getParam: "+ ex);

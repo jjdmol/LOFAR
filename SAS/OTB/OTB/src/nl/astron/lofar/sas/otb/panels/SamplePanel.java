@@ -353,7 +353,7 @@ public class SamplePanel extends javax.swing.JPanel
             otdbNode.name = "Node_" + treeCounter++;
 
             // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getSharedVars().getOTDBrmi());
             
             // and create a new root
             treePanel.newRootNode(otdbTreeNode);

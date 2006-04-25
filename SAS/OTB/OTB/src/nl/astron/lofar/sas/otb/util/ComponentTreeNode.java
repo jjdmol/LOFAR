@@ -12,7 +12,6 @@ package nl.astron.lofar.sas.otb.util;
 import javax.swing.tree.*;
 import java.util.Vector;
 import java.util.Enumeration;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
 import org.apache.log4j.Logger;

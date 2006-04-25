@@ -39,7 +39,7 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
 
     public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
-        itsTreeID=itsMainFrame.getTreeID();
+        itsTreeID=itsMainFrame.getSharedVars().getTreeID();
         
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
@@ -82,11 +82,11 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
                 otdbNode = new jOTDBnode(0,0,0,0);
                 otdbNode.name = "No TreeSelection";
             } else {
-                otdbNode = itsMainFrame.getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
+                otdbNode = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
             }
         
             // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
+            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getSharedVars().getOTDBrmi());
 
             itsMainFrame.setHourglassCursor();
             // and create a new root
