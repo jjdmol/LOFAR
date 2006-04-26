@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import nl.astron.lofar.sas.plotter.IPlotDataAccess;
 import nl.astron.lofar.sas.plotter.PlotConstants;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
+import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessException;
 
 /**
  * @created 19-04-2006, 11:00
@@ -34,13 +34,13 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
 	}
 
 	/**
-	 * @param constraint
+	 * @param constraints
 	 * 
 	 */
-	public HashMap retrieveData(String constraint) throws PlotterException{
+	public HashMap retrieveData(String[] constraints) throws PlotterDataAccessException{
             //create the hashmap to be returned
             HashMap<String,Object> data = new HashMap<String,Object>();
-            if(constraint.equalsIgnoreCase("line")){
+            if(constraints[0].equalsIgnoreCase("line")){
 
                 String plotTitle = "Testset LOFAR Plotter | XYLine";
                 data.put(PlotConstants.DATASET_NAME,plotTitle);
@@ -109,7 +109,7 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
                  values.add(aLine2);    
                  data.put(PlotConstants.DATASET_VALUES,values);
             
-            }else if (constraint.equalsIgnoreCase("grid")){
+            }else if (constraints[0].equalsIgnoreCase("grid")){
                 
                 String plotTitle = "Testset LOFAR Plotter | Grid";
                 data.put(PlotConstants.DATASET_NAME,plotTitle);
