@@ -10,7 +10,7 @@
 package nl.astron.lofar.sas.plotter;
 
 import java.util.HashMap;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
+import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessException;
 
 /**
  * @created 19-04-2006, 11:00
@@ -23,7 +23,7 @@ public interface IPlotDataAccess{
     /**
      * @param constraint
      */
-    public HashMap retrieveData(String constraint) throws PlotterException;
+    public HashMap retrieveData(String[] constraints) throws PlotterDataAccessException;
     
 }
 
