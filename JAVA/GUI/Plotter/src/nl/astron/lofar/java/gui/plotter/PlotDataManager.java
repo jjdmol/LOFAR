@@ -44,10 +44,10 @@ public class PlotDataManager{
     }
     
     /**
-     * @param constraint
+     * @param constraints
      *
      */
-    public HashMap retrieveData(String constraint) throws PlotterException{
+    public HashMap retrieveData(String[] constraints) throws PlotterException{
         Object aClass = null;
         IPlotDataAccess aDataAccessor = null;
         try {
@@ -71,7 +71,7 @@ public class PlotDataManager{
         if(aDataAccessor != null){
             
             HashMap retrieveableData =
-                    aDataAccessor.retrieveData(constraint);
+                    aDataAccessor.retrieveData(constraints);
             
             return retrieveableData;
             
