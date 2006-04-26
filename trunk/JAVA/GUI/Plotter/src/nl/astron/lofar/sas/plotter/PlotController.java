@@ -44,10 +44,10 @@ public class PlotController{
 
 	/**
          * @param type A plot type (as defined in PlotConstants.PLOT_*)
-	 * @param constraint A data access identifier
+	 * @param constraints A data access identifier array
 	 * 
 	 */
-	public JComponent createPlot(int type, String constraint) throws PlotterException{
+	public JComponent createPlot(int type, String constraints[]) throws PlotterException{
         
             Object aPlotter = null;
             IPlot aNewPlot = null;
@@ -77,9 +77,9 @@ public class PlotController{
                         || type == PlotConstants.PLOT_XYLINE){
 
                         HashMap retrieveableData = 
-                            m_PlotDataManager.retrieveData(constraint);                               
+                            m_PlotDataManager.retrieveData(constraints);                               
                         m_IPlot = aNewPlot;
-                        return m_IPlot.createPlot(type,constraint,retrieveableData,PlotConstants.PLOT_SEPARATE_LEGEND);
+                        return m_IPlot.createPlot(type,constraints[0],retrieveableData,PlotConstants.PLOT_SEPARATE_LEGEND);
                 
                 }else{
                     throw new NotSupportedException("The requested plot type ("+type+") is not supported by the plotter at this time.");
