@@ -28,29 +28,27 @@ public class PlotPanel extends JPanel{
 
 	private PlotController m_PlotController;
         private JComponent plot;
-        private String currentDataConstraint;
+        private JComponent legend;
+        private String[] currentDataConstraint;
 
 	public PlotPanel(){
             m_PlotController = new PlotController();
         }
 
 	public void finalize() throws Throwable {
-
+            plot = null;
+            legend = null;
+            m_PlotController = null;
+            currentDataConstraint = null;
 	}
 
-	public void createPlot(int type, String constraint){
-            currentDataConstraint = constraint;
-            try {
-                
-                plot = m_PlotController.createPlot(type,constraint);
-                
-                add(plot);
-            } catch (PlotterException ex) {
-                plot = new JPanel();
-                plot.add(new JLabel(ex.getMessage()));
-                add(plot);
-                //ex.printStackTrace();
-            }
+	public void createPlot(int type, String[] constraints) throws PlotterException{
+            plot = null;
+            legend = null;
+            currentDataConstraint = constraints;
+            
+            plot = m_PlotController.createPlot(type,constraints);
+            add(plot);
         }
         
 	public Image exportImage(){
@@ -73,14 +71,12 @@ public class PlotPanel extends JPanel{
         public JComponent getPlot(){
             return plot;
         }
-        public JComponent getLegendForPlot(){
-            JComponent legend = null;
-            try {
-                legend = m_PlotController.getLegendForPlot(plot);
-            } catch (PlotterException ex) {
-                legend = new JLabel(ex.getMessage());
+        public JComponent getLegendForPlot() throws PlotterException{
+            if(legend == null && plot != null){
+               legend = m_PlotController.getLegendForPlot(plot);
             }
             return legend;
+            
         }
         
  }
