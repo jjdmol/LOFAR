@@ -114,7 +114,7 @@ void DH_Subband::fillExtraData()
 {
   BlobOStream& bos = createExtraBlob();
 
-  for (int stat = 0; stat < itsNrStations; stat ++)
+  for (unsigned stat = 0; stat < itsNrStations; stat ++)
     itsFlags[stat].write(bos);
 }
   
@@ -123,7 +123,7 @@ void DH_Subband::getExtraData()
 {
   BlobIStream &bis = getExtraBlob();
   
-  for (int stat = 0; stat < itsNrStations; stat ++)
+  for (unsigned stat = 0; stat < itsNrStations; stat ++)
     itsFlags[stat].read(bis);
 }
 
