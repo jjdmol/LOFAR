@@ -15,16 +15,22 @@
 
 package nl.astron.lofar.sas.plotter;
 
+import gov.noaa.pmel.sgt.CartesianGraph;
 import gov.noaa.pmel.sgt.JPane;
+import gov.noaa.pmel.sgt.LineAttribute;
+import gov.noaa.pmel.sgt.LineCartesianRenderer;
 import gov.noaa.pmel.sgt.dm.SGTMetaData;
 import gov.noaa.pmel.sgt.dm.SimpleGrid;
 import gov.noaa.pmel.sgt.dm.SimpleLine;
 import gov.noaa.pmel.sgt.swing.JPlotLayout;
+import gov.noaa.pmel.sgt.swing.prop.LineAttributeDialog;
 import gov.noaa.pmel.util.Dimension2D;
 import gov.noaa.pmel.util.Rectangle2D;
 import gov.noaa.pmel.util.SoTDomain;
 import gov.noaa.pmel.util.SoTRange;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyVetoException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,6 +51,8 @@ public class PlotSGTImpl implements IPlot{
     
         private HashMap data;
         private JPlotLayout aLayout;
+        private LineAttributeDialog lad;
+        private plotMouseAdapter pma;
         
 	public PlotSGTImpl(){
         
@@ -56,9 +64,23 @@ public class PlotSGTImpl implements IPlot{
             
             if(type==PlotConstants.PLOT_XYLINE){
                 aNewPlot = linePlot(name,data, separateLegend);
+               
+                pma = new plotMouseAdapter();
+                aNewPlot.getKeyPane().addMouseListener(pma);
+            }
+            else if(type==PlotConstants.PLOT_POINTS){
+                aNewPlot = linePlot(name,data, separateLegend);
+                 CartesianGraph aGraph = (CartesianGraph)aNewPlot.getFirstLayer().getGraph();
+                 
+                 LineAttribute marks = (LineAttribute)aGraph.getRenderer().getAttribute();
+                 marks.setStyle(LineAttribute.MARK);
+                 
+                 pma = new plotMouseAdapter();
+                 aNewPlot.getKeyPane().addMouseListener(pma);
             }
             else if(type==PlotConstants.PLOT_GRID){
                 aNewPlot = gridPlot(name,data, separateLegend);
+                 
             }
             else if(type==PlotConstants.PLOT_SCATTER){
                 aNewPlot = scatterPlot(name,data, separateLegend);
@@ -78,6 +100,7 @@ public class PlotSGTImpl implements IPlot{
             JPlotLayout layout = new JPlotLayout(JPlotLayout.LINE, false, false,
                     name,null,separateLegend);
             layout.setSize(640,480);
+            
             if(separateLegend){
                layout.setKeyLayerSizeP(new Dimension2D(6.0, 1.0));
                layout.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 6.0, 1.0));  
@@ -181,9 +204,11 @@ public class PlotSGTImpl implements IPlot{
                         
                         SimpleLine lineData = new SimpleLine(
                                 xArray,yArray,lineLabel);
+                        
                         lineData.setXMetaData(meta);
                         lineData.setYMetaData(ymeta);
                         //Add line to plot
+                        
                         layout.addData(lineData, lineLabel);
                     }
                 }
@@ -338,9 +363,11 @@ public class PlotSGTImpl implements IPlot{
             layout.setBatch(false);
             return layout; 
         }
+        
         private JPlotLayout scatterPlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
              throw new NotImplementedException("Scatter plots are not yet implemented in the plotter's SGT plugin."); 
-        }       
+        }
+        
         public HashMap getData(){
             return data;
         }
@@ -366,5 +393,33 @@ public class PlotSGTImpl implements IPlot{
             return keyPane;
         }
         
+        class plotMouseAdapter extends MouseAdapter{
+            public void mouseReleased(MouseEvent e){
+                Object object = e.getSource();
+                if(object == aLayout.getKeyPane()){
+                    if(e.isPopupTrigger() || e.getClickCount() == 2){
+                        Object obj = aLayout.getKeyPane().getObjectAt(e.getX(),e.getY());
+                        aLayout.getKeyPane().setSelectedObject(obj);
+                        if(obj instanceof LineCartesianRenderer){
+                            LineAttribute attr = ((LineCartesianRenderer)obj).getLineAttribute();
+                            if(lad == null){
+                                lad = new LineAttributeDialog();
+                            }
+                            SimpleLine aLine = (SimpleLine)((LineCartesianRenderer)obj).getLine();
+                            lad.setTitle("Line Attribute Configuration for " + aLine.getTitle());
+                            aLayout.getKeyPane().setBatch(true);
+                            aLayout.getKeyPane().setBatch(false);
+                            lad.setLineAttribute(attr);
+                            
+                            if(!lad.isShowing()){
+                                lad.setVisible(true);
+                            }
+                        }
+                    }
+                }
+                
+            }
+           
+        }
         
 }
