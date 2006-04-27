@@ -1,4 +1,5 @@
-check_PROGRAMS			= tDirection \
+check_PROGRAMS			= tCoord3D \
+				  tDirection \
 				  tPosition \
 				  tEpoch \
 				  tConverterCommand \
@@ -7,26 +8,31 @@ check_PROGRAMS			= tDirection \
 				  tDH_Request \
 				  tDH_Result
 
-CHECKTOOLPROGS			= tDirection \
-                  tPosition \
-                  tEpoch \
-                  tConverterCommand \
-                  tConverterStatus \
-                  tBlobIO \
-                  tDH_Request \
-                  tDH_Result
+CHECKTOOLPROGS			= tCoord3D \
+				  tDirection \
+				  tPosition \
+				  tEpoch \
+				  tConverterCommand \
+				  tConverterStatus \
+				  tBlobIO \
+				  tDH_Request \
+				  tDH_Result
 #ENDCHECKTOOLPROGS
 
+tCoord3D_SOURCES		= tCoord3D.cc
+tCoord3D_LDADD			= ../src/libamcbase.la
+tCoord3D_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
+
 tDirection_SOURCES		= tDirection.cc
-tDirection_LDADD			= ../src/libamcbase.la
+tDirection_LDADD		= ../src/libamcbase.la
 tDirection_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
 
 tPosition_SOURCES		= tPosition.cc
-tPosition_LDADD		= ../src/libamcbase.la
-tPosition_DEPENDENCIES	= ../src/libamcbase.la $(LOFAR_DEPEND)
+tPosition_LDADD			= ../src/libamcbase.la
+tPosition_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
 
-tEpoch_SOURCES		= tEpoch.cc
-tEpoch_LDADD		= ../src/libamcbase.la
+tEpoch_SOURCES			= tEpoch.cc
+tEpoch_LDADD			= ../src/libamcbase.la
 tEpoch_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
 
 tConverterCommand_SOURCES	= tConverterCommand.cc
@@ -49,7 +55,8 @@ tDH_Result_SOURCES		= tDH_Result.cc
 tDH_Result_LDADD		= ../src/libamcbase.la
 tDH_Result_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
 
-TESTS				= tDirection.sh \
+TESTS				= tCoord3D.sh \
+				  tDirection.sh \
 				  tPosition.sh \
 				  tEpoch.sh \
 				  tConverterCommand.sh \

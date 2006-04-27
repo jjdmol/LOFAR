@@ -26,11 +26,6 @@
 //# Includes
 #include <AMCBase/Position.h>
 #include <Common/lofar_iostream.h>
-#include <Common/lofar_math.h>
-#include <Common/LofarLogger.h>
-#include <limits>
-
-using namespace std;
 
 namespace LOFAR
 {
@@ -38,54 +33,25 @@ namespace LOFAR
   {
 
     Position::Position() : 
-      itsXYZ(3, 0.0), itsType(ITRF)
+      Coord3D(vector<double>(3, 0.0)), 
+      itsType(ITRF)
     {
     }
     
 
     Position::Position (double lon, double lat, double h, Types typ) :
-      itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
+      Coord3D(lon, lat, h),
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
     {
-      if (isValid()) {
-        double tmp = cos(lat);
-        itsXYZ[0] = h * cos(lon) * tmp;
-        itsXYZ[1] = h * sin(lon) * tmp;
-        itsXYZ[2] = h * sin(lat);
-      }
     }
 
 
     Position::Position(const vector<double>& xyz, Types typ) :
-      itsXYZ(3, std::numeric_limits<double>::quiet_NaN()), 
+      Coord3D(xyz),
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
     {
-      ASSERT(xyz.size() == 3);
-      if (isValid()) itsXYZ = xyz;
     }
 
-
-    double Position::longitude() const
-    {
-      return atan2(itsXYZ[1], itsXYZ[0]);
-    }
-    
-
-    double Position::latitude() const
-    {
-      double h(height());
-      if (h == 0) return asin(itsXYZ[2]);
-      else return (asin(itsXYZ[2] / h));
-    }
-    
-
-    double Position::height() const
-    {
-      return sqrt(itsXYZ[0] * itsXYZ[0] + 
-                  itsXYZ[1] * itsXYZ[1] +
-                  itsXYZ[2] * itsXYZ[2]);
-    }
-    
 
     const string& Position::showType() const
     {
@@ -98,28 +64,6 @@ namespace LOFAR
       };
       if (isValid()) return types[itsType];
       else return types[N_Types];
-    }
-
-
-    double Position::operator*(const Position& pos) const
-    {
-      double result(0);
-      const vector<double>& xyz = pos.get();
-      for (uint i = 0; i < itsXYZ.size(); ++i) {
-        result += itsXYZ[i] * xyz[i];
-      }
-      return result;
-    }
-    
-
-    double Position::normalize()
-    {
-      double h(height());
-      if (h == 0.0 || h == 1.0) return 1.0;
-      for (uint i = 0; i < itsXYZ.size(); ++i) {
-        itsXYZ[i] /= h;
-      }
-      return h;
     }
 
 

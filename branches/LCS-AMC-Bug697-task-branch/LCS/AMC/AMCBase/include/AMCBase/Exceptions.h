@@ -49,6 +49,10 @@ namespace LOFAR
     // This exception is thrown when a network I/O error occurs
     EXCEPTION_CLASS(IOException, Exception);
 
+    // This exception is thrown when a math error occurs (e.g. division by
+    // zero).
+    EXCEPTION_CLASS(MathException, Exception);
+
     // @}
 
   } // namespace AMC

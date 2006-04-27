@@ -26,9 +26,6 @@
 //# Includes
 #include <AMCBase/Direction.h>
 #include <Common/lofar_iostream.h>
-#include <Common/lofar_math.h>
-#include <Common/LofarLogger.h>
-#include <limits>
 
 namespace LOFAR
 {
@@ -36,21 +33,21 @@ namespace LOFAR
   {
 
     Direction::Direction() : 
-      Position(0.0, 0.0, 1), 
+      Coord3D(0.0, 0.0, 1.0), 
       itsType(J2000)
     {
     }
 
 
     Direction::Direction (double lon, double lat, Types typ) :
-      Position(lon, lat, 1.0),
+      Coord3D(lon, lat, 1.0),
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
     {
     }
     
 
     Direction::Direction(const vector<double>& xyz, Types typ) : 
-      Position(xyz), 
+      Coord3D(xyz), 
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
     {
       normalize();
@@ -72,25 +69,13 @@ namespace LOFAR
     }
 
 
-//     double Direction::longitude() const
-//     {
-//       return atan2(itsXYZ[1], itsXYZ[0]);
-//     }
-
-
-//     double Direction::latitude() const
-//     {
-//       return asin(itsXYZ[2]);
-//     }
-
-
-    ostream& operator<<(ostream& os, const Direction& sky)
+    ostream& operator<<(ostream& os, const Direction& dir)
     {
-      if (!sky.isValid()) 
-        return os << sky.showType();
+      if (!dir.isValid()) 
+        return os << dir.showType();
       else
-        return os << "[" << sky.longitude() << ", " << sky.latitude()
-                  << "] (" << sky.showType() << ")";
+        return os << "[" << dir.longitude() << ", " << dir.latitude()
+                  << "] (" << dir.showType() << ")";
     }
 
 

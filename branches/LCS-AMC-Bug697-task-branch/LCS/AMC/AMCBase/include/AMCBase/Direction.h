@@ -27,7 +27,8 @@
 // Class representing a direction.
 
 //# Includes
-#include <AMCBase/Position.h>
+#include <AMCBase/Coord3D.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -38,20 +39,18 @@ namespace LOFAR
     // @{
 
     // This class represents a direction on the sky. The direction is stored
-    // in cartesian coordinates as so-called direction cosines. A direction
-    // can be constructed from a pair of angles (longitude and latitude) or a
-    // vector of direction cosines. The context where the object is used
-    // defines the coordinate system and frame, so the class can be used for
-    // any pair of sky coordinates (like RA/DEC and AZ/ELEV). The correct
-    // interpretation of the coordinates should be done by the user of this
-    // class.
-    // \note Direction is a specialization of Position, because a direction
-    // vector is in fact a position vector with a unit length.
-    class Direction : public Position
+    // in cartesian coordinates as so-called direction cosines, using the
+    // Coord3D class. A direction can be constructed from a pair of angles
+    // (longitude and latitude) or a vector of direction cosines. The context
+    // where the object is used defines the coordinate system and frame, so
+    // the class can be used for any pair of sky coordinates (like RA/DEC and
+    // AZ/ELEV). The correct interpretation of the coordinates should be done
+    // by the user of this class.
+    class Direction : public Coord3D
     {
     public:
-      // Types of direction. Currently, only three types are supported: J2000,
-      // AZEL and ITRF.
+      // Types of direction. Currently, only three types are supported: \c
+      // J2000, \c AZEL and \c ITRF.
       enum Types {
         INVALID = -1,   ///< Used when specified value is out of range.
         J2000,         
@@ -61,8 +60,8 @@ namespace LOFAR
         N_Types         ///< Number of reference types.
       };
 
-      // Default constructor uses 0 for the longitude and latitude, and J2000
-      // as reference type.
+      // Default constructor uses 0 for the longitude and latitude, and \c
+      // J2000 as reference type.
       Direction();
 
       // Create a direction by giving the longitude \a lon and latitude \a lat
@@ -73,33 +72,18 @@ namespace LOFAR
       // reference type \a typ.
       explicit Direction(const vector<double>& xyz, Types typ = J2000);
 
-//       // Return the direction as direction cosines.
-//       vector<double> get() const
-//       { return itsXYZ; }
-
-//       // Return the longitude in radians. This could be, for example, right
-//       // ascension (RA) or azimuth (AZ).
-//       double longitude() const;
-
-//       // Return the latitude in radians. This could be, for example,
-//       // declination (DEC) or elevation (EL).
-//       double latitude() const;
-
-      // Return whether direction type is valid.
-      virtual bool isValid() const
-      { return itsType != INVALID; }
-
-      // Return the direction type as an \c int.
-      virtual int type() const
+      // Return the reference type.
+      Types type() const
       { return itsType; }
 
+      // Return whether direction type is valid.
+      bool isValid() const
+      { return itsType != INVALID; }
+
       // Return the direction type as a string.
-      virtual const string& showType() const;
+      const string& showType() const;
 
     private:
-//       // Direction is stored internally as direction cosines.
-//       vector<double> itsXYZ;
-
       // Type of direction.
       Types itsType;
     };

@@ -5,10 +5,11 @@ libamcbase_la_SOURCES = \
 	ConverterClient.cc \
 	ConverterCommand.cc \
 	ConverterStatus.cc \
+	Coord3D.cc \
 	DH_Request.cc \
 	DH_Result.cc \
-	Position.cc \
 	Direction.cc \
-	Epoch.cc
+	Epoch.cc \
+	Position.cc
 
 include $(top_srcdir)/Makefile.common

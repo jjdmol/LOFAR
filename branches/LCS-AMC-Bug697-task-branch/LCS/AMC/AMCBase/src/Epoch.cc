@@ -45,21 +45,13 @@ namespace LOFAR
     {
       struct timeval tp;
       gettimeofday (&tp, 0);
-      double sec = tp.tv_sec;
-      sec /= secPerDay;
-      itsDay = floor(sec);
-      itsFrac = sec - itsDay + tp.tv_usec / usecPerSec / secPerDay;
-      if (itsFrac > 1) {
-        itsDay++;
-        itsFrac--;
-      }
+      set(tp.tv_sec / secPerDay);
       // 40587 modified Julian day number = 00:00:00 January 1, 1970, GMT.
       itsDay += 40587;
     }
 
     // Copied from MVTime in aips++
-    Epoch::Epoch (int yy, int mm, double dd,
-                          double h, double m, double s)
+    Epoch::Epoch (int yy, int mm, double dd, double h, double m, double s)
     {
       if (mm < 3) {
         yy--;
@@ -78,24 +70,16 @@ namespace LOFAR
       adjust();
     }
 
-    Epoch::Epoch (double mjd, double fraction) :
-      itsDay(0), itsFrac(0)
+    Epoch::Epoch (double mjd, double fraction)
     {
-      addTime(mjd);
-      addTime(fraction);
+      set(mjd);
+      add(fraction);
       adjust();
-//       itsDay = floor(mjd);
-//       itsFrac = mjd - itsDay;
-//       double rest = floor(fraction);
-//       itsDay += rest;
-//       itsFrac += fraction - rest;
     }
 
     void Epoch::utc(double s)
     {
-      double days = s / secPerDay;
-      itsDay = floor(days);
-      itsFrac = days - itsDay;
+      set(s / secPerDay);
       itsDay += 40587;
     }
 
@@ -105,12 +89,6 @@ namespace LOFAR
       utc(s);
     }
 
-    void Epoch::mjd(double mjd)
-    {
-      itsDay = floor(mjd);
-      itsFrac = mjd - itsDay;
-    }
-    
     void Epoch::ymd (int& yyyy, int& mm, int& dd, bool local) const
     {
       double val = itsDay+itsFrac;
@@ -171,7 +149,7 @@ namespace LOFAR
     }
 
 
-    //################  Privatefunctions  ################//
+    //################  Private functions  ################//
 
     void Epoch::adjust()
     {
@@ -186,11 +164,19 @@ namespace LOFAR
     }
 
 
-    void Epoch::addTime(double t)
+    void Epoch::add(double t)
     {
       double d = floor(t);
       itsDay += d;
       itsFrac += (t-d);
+    }
+
+
+    void Epoch::set(double t)
+    {
+      double d = floor(t);
+      itsDay = d;
+      itsFrac = (t-d);
     }
 
 
@@ -211,6 +197,7 @@ namespace LOFAR
       os.fill(c);
       return os;
     }
+
 
     bool operator==(const Epoch& lhs, const Epoch& rhs)
     {

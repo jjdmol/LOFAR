@@ -29,7 +29,6 @@
 #include <Common/lofar_iostream.h>
 #include <Common/Numeric.h>
 #include <cmath>
-#include <Common/lofar_iomanip.h>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
@@ -98,19 +97,12 @@ int main(int, const char* argv[])
 
     p = pos3.get();
     ASSERT(!pos3.isValid() && 
-           pos3.type() == Position::INVALID &&
-           Numeric::isNan(pos3.longitude()) &&
-           Numeric::isNan(pos3.latitude()) &&
-           Numeric::isNan(pos3.height()));
-    ASSERT(Numeric::isNan(pos3 * pos3));
+           pos3.type() == Position::INVALID);
 
     ASSERT(pos0 * pos1 == pos1 * pos0 && pos0 * pos1 == 0);
     ASSERT(pos0 * pos2 == pos2 * pos0 && pos0 * pos2 == 0);
-    ASSERT(pos0 * pos3 != pos3 * pos0 && Numeric::isNan(pos0 * pos3));
-    ASSERT(pos1 * pos2 == pos2 * pos1 && Numeric::compare(pos1 * pos2, 
-                                                          -64.9943681998483));
-    ASSERT(pos1 * pos3 != pos3 * pos1 && Numeric::isNan(pos1 * pos3));
-    ASSERT(pos2 * pos3 != pos3 * pos2 && Numeric::isNan(pos2 * pos3));
+    ASSERT(pos1 * pos2 == pos2 * pos1 && 
+           Numeric::compare(pos1 * pos2, -64.9943681998483));
 
   }
 

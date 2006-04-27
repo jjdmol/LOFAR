@@ -79,19 +79,5 @@ int main(int, const char* argv[])
     return 1;
   }
 
-  cout.precision(12);
-  {
-    Epoch t(1.9, 0.9);
-    cout << "t = " << t << endl;
-    cout << "t.getDay() = " << t.getDay() << endl;
-    cout << "t.getFraction() = " << t.getFraction() << endl;
-  }
-  {
-    Epoch t(1964, 11, 03, 24, 0, -0.000001);
-    cout << "t = " << t << endl;
-    cout << "t.getDay() = " << t.getDay() << endl;
-    cout << "t.getFraction() = " << t.getFraction() << endl;
-  }
-
   return 0;
 }

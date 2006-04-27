@@ -1,9 +1,10 @@
 pkginclude_HEADERS = \
 	BlobIO.h \
-	Converter.h \
 	ConverterClient.h \
 	ConverterCommand.h \
+	Converter.h \
 	ConverterStatus.h \
+	Coord3D.h \
 	DH_Request.h \
 	DH_Result.h \
 	Direction.h \

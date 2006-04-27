@@ -55,24 +55,34 @@ namespace LOFAR
       explicit Epoch (double mjd, double fraction=0);
 
       // Get the UTC time in seconds since January 1, 1970 (Unix format).
-      double utc() const;
+      double utc() const
+      { return (mjd() - 40587) * 24 * 3600; }
+
       // Set the UTC time in seconds since January 1, 1970 (Unix format).
       void utc(double s);
 
       // Get the local time in seconds since January 1, 1970 (Unix format).
-      double local() const;
+      double local() const
+      { return utc() + getUTCDiff(); }
+
       // Set the local time in seconds since January 1, 1970 (Unix format).
       void local(double s);
 
       // Get the UTC time in MJD.
-      double mjd() const;
+      double mjd() const
+      { return itsDay + itsFrac; }
+
       // Set the UTC time in MJD.
-      void mjd(double mjd);
+      void mjd(double mjd)
+      { set(mjd); }
 
       // Get day as Modified Julian Day (MJD).
-      double getDay() const;
+      double getDay() const
+      { return itsDay; }
+
       // Get fraction of the day.
-      double getFraction() const;
+      double getFraction() const
+      { return itsFrac; }
 
       // Get year, month, day. If \a local is false, return UTC time; else
       // return local time.
@@ -87,6 +97,12 @@ namespace LOFAR
       // So add this value to utc to get local time.
       static double getUTCDiff();
 
+      // Add the epoch \a that to \c this.
+      Epoch& operator+=(const Epoch& that);
+
+      // Subtract the epoch \a that from \c this.
+      Epoch& operator-=(const Epoch& that);
+
     private:
       double itsDay;     //# whole day in MJD
       double itsFrac;    //# Fraction of day
@@ -95,7 +111,11 @@ namespace LOFAR
       void adjust();
 
       // Add \a t days to the current Epoch object.
-      void addTime(double t);
+      void add(double t);
+
+      // Set the current Epoch object to \a t days.
+      void set(double t);
+
     };
 
     // Output in ASCII (in UTC).
@@ -106,36 +126,13 @@ namespace LOFAR
     // time difference between the two is less than one microsecond.
     bool operator==(const Epoch& lhs, const Epoch& rhs);
 
+    // Return the sum of the epochs \a lhs and \a rhs.
+    Epoch operator+(const Epoch& lhs, const Epoch& rhs);
+
+    // Return the difference between the epochs \a lhs and \a rhs.
+    Epoch operator-(const Epoch& lhs, const Epoch& rhs);
+
     // @}
-
-
-    //######################## INLINE FUNCTIONS ########################//
-
-    inline double Epoch::utc() const
-    {
-      return (mjd() - 40587) * 24 * 3600;
-    }
-
-    inline double Epoch::local() const
-    {
-      return utc() + getUTCDiff();
-    }
-
-    inline double Epoch::mjd() const
-    {
-      return itsDay + itsFrac; 
-    }
-
-    inline double Epoch::getDay() const
-    {
-      return itsDay;
-    }
-
-    inline double Epoch::getFraction() const
-    {
-      return itsFrac;
-    }
-
 
   } // namespace AMC
 
