@@ -52,8 +52,9 @@ public abstract class PlotConstants{
     //Identifiers for plot types
     public static final int PLOT_BAR = 1;
     public static final int PLOT_XYLINE = 2;
-    public static final int PLOT_SCATTER = 3;
-    public static final int PLOT_GRID = 4;
+    public static final int PLOT_POINTS = 3;
+    public static final int PLOT_SCATTER = 4;
+    public static final int PLOT_GRID = 5;
     public static final boolean PLOT_SEPARATE_LEGEND = true;
     
     //Supported plotter framework
