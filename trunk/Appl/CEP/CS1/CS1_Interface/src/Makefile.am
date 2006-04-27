@@ -9,6 +9,7 @@ libcs1_interface_la_SOURCES	= \
 	DH_Subband.cc \
 	DH_Visibilities.cc \
 	RSPTimeStamp.cc \
+	SparseSet.cc \
 	Stub_BGL.cc \
 	Stub_BGL_RFI_Mitigation.cc \
 	Stub_BGL_Subband.cc \

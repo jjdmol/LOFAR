@@ -69,6 +69,7 @@ extern "C" {
     unsigned nr_stations;
     unsigned nr_samples_per_integration;
     unsigned nr_subband_channels;
+    unsigned nr_taps;
     unsigned nr_polarizations;
   } _FIR_constants_used;
 

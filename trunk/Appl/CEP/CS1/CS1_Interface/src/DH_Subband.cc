@@ -24,75 +24,117 @@
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
 
-namespace LOFAR
+#if defined SPARSE_FLAGS
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#endif
+
+
+namespace LOFAR {
+namespace CS1 {
+
+DH_Subband::DH_Subband(const string &name, const ACC::APS::ParameterSet &pSet)
+  : DataHolder(name, "DH_Subband"),
+    itsNrStations(pSet.getUint32("Observation.NStations")),
+    itsNrInputSamples(pSet.getUint32("Observation.NSubbandSamples") + (pSet.getUint32("BGLProc.NPPFTaps") - 1) * pSet.getUint32("Observation.NChannels")),
+    itsSamples(0),
+    itsSamplesMatrix(0),
+    itsFlags(0),
+    itsDelays(0)
 {
-  namespace CS1
-  {
+#if defined SPARSE_FLAGS
+  setExtraBlob("Flags", 0);
+#endif
+}
 
-    DH_Subband::DH_Subband(const string &name, const ACC::APS::ParameterSet &pSet)
-      : DataHolder(name, "DH_Subband"),
-        itsNrStations(pSet.getUint32("Observation.NStations")),
-        itsNrInputSamples(pSet.getUint32("Observation.NSubbandSamples") + (pSet.getUint32("BGLProc.NPPFTaps") - 1) * pSet.getUint32("Observation.NChannels")),
-        itsSamples(0),
-        itsSamplesMatrix(0),
-        itsFlags(0),
-        itsDelays(0)
-    {
-    }
+DH_Subband::DH_Subband(const DH_Subband &that)
+  : DataHolder(that),
+    itsNrStations(that.itsNrStations),
+    itsNrInputSamples(that.itsNrInputSamples),
+    itsSamples(that.itsSamples),
+    itsSamplesMatrix(that.itsSamplesMatrix),
+    itsFlags(that.itsFlags),
+    itsDelays(that.itsDelays)
+{
+#if defined SPARSE_FLAGS
+  setExtraBlob("Flags", 0);
+#endif
+}
 
-    DH_Subband::DH_Subband(const DH_Subband &that)
-      : DataHolder(that),
-        itsNrStations(that.itsNrStations),
-        itsNrInputSamples(that.itsNrInputSamples),
-        itsSamples(that.itsSamples),
-        itsSamplesMatrix(that.itsSamplesMatrix),
-        itsFlags(that.itsFlags),
-        itsDelays(that.itsDelays)
-    {
-    }
+DH_Subband::~DH_Subband()
+{
+#if defined SPARSE_FLAGS
+  delete [] itsFlags;
+#endif
+  delete itsSamplesMatrix;
+}
 
-    DH_Subband::~DH_Subband()
-    {
-      delete itsSamplesMatrix;
-    }
+DataHolder *DH_Subband::clone() const
+{
+  return new DH_Subband(*this);
+}
 
-    DataHolder *DH_Subband::clone() const
-    {
-      return new DH_Subband(*this);
-    }
+void DH_Subband::init()
+{
+  addField("Samples", BlobField<uint8>(1, nrSamples() * sizeof(SampleType)), 32);
+  addField("Delays",  BlobField<float>(1, nrDelays() * sizeof(DelayIntervalType) / sizeof(float)));
+#if !defined SPARSE_FLAGS
+  addField("Flags",   BlobField<uint32>(1, nrFlags() / sizeof(uint32)));
+#endif
 
-    void DH_Subband::init()
-    {
-      addField("Samples", BlobField<uint8>(1, nrSamples() * sizeof(SampleType)), 32);
-      addField("Flags",   BlobField<uint32>(1, nrFlags() / sizeof(uint32)));
-      addField("Delays",  BlobField<float>(1, nrDelays() * sizeof(DelayIntervalType) / sizeof(float)));
+  createDataBlock();
 
-      createDataBlock();
+  vector<DimDef> vdd;
+  vdd.push_back(DimDef("Station",      itsNrStations));
+  vdd.push_back(DimDef("Time",	       itsNrInputSamples));
+  vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
 
-      vector<DimDef> vdd;
-      vdd.push_back(DimDef("Station",      itsNrStations));
-      vdd.push_back(DimDef("Time",	       itsNrInputSamples));
-      vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
+  itsSamplesMatrix = new RectMatrix<SampleType> (vdd);
+  itsSamplesMatrix->setBuffer(itsSamples, nrSamples());
 
-      itsSamplesMatrix = new RectMatrix<SampleType> (vdd);
-      itsSamplesMatrix->setBuffer(itsSamples, nrSamples());
+#if defined SPARSE_FLAGS
+  itsFlags   = new SparseSet[itsNrStations];
+  std::cerr << "new SparseSet[" << itsNrStations << "] = " << itsFlags << '\n';
+#endif
+}
 
-      memset(itsFlags, 0, sizeof *itsFlags);
-    }
+void DH_Subband::fillDataPointers()
+{
+  itsSamples = (SampleType *)	     getData<uint8> ("Samples");
+  itsDelays  = (DelayIntervalType *) getData<float> ("Delays");
+#if !defined SPARSE_FLAGS
+  itsFlags   = (uint32 *)	     getData<uint32>("Flags");
+#endif
+}
 
-    void DH_Subband::fillDataPointers()
-    {
-      itsSamples = (SampleType *)	     getData<uint8> ("Samples");
-      itsFlags   = (uint32 *)	     getData<uint32>("Flags");
-      itsDelays  = (DelayIntervalType *) getData<float> ("Delays");
-    }
 
-    void DH_Subband::swapBytes()
-    {
-      // only convert Samples; CEPframe converts Flags and Delays
-      dataConvert(LittleEndian, itsSamples, nrSamples());
-    }
+#if defined SPARSE_FLAGS
 
-  } // namespace CS1
+void DH_Subband::fillExtraData()
+{
+  BlobOStream& bos = createExtraBlob();
 
+  for (int stat = 0; stat < itsNrStations; stat ++)
+    itsFlags[stat].write(bos);
+}
+  
+
+void DH_Subband::getExtraData()
+{
+  BlobIStream &bis = getExtraBlob();
+  
+  for (int stat = 0; stat < itsNrStations; stat ++)
+    itsFlags[stat].read(bis);
+}
+
+#endif
+
+
+void DH_Subband::swapBytes()
+{
+  // only convert Samples; CEPframe converts Flags and Delays
+  dataConvert(LittleEndian, itsSamples, nrSamples());
+}
+
+} // namespace CS1
 } // namespace LOFAR

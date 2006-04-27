@@ -10,6 +10,7 @@ pkginclude_HEADERS = \
 	RectMatrix.h \
 	RSPTimeStamp.h \
 	RectMatrix.tcc \
+	SparseSet.h \
 	Stub_BGL.h \
 	Stub_Delay.h \
 	Stub_BGL_RFI_Mitigation.h \

@@ -105,11 +105,23 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
 #endif
   }
   
+#if defined SPARSE_FLAGS
+  for (int stat = 0; stat < NR_STATIONS; stat ++) {
+    (*flags)[stat].reset();
+  }
+#else
   memset(flags, 0, sizeof(DH_Subband::AllFlagsType));
+#endif
 
-#if 0 && NR_INPUT_SAMPLES >= 17000
+#if 1 && NR_INPUT_SAMPLES >= 17000
+#if defined SPARSE_FLAGS
+  //(*flags)[4].include(14000);
+  //(*flags)[5].include(17000);
+  dh->fillExtraData();
+#else
   (*flags)[4][14000] = true;
   (*flags)[5][17000] = true;
+#endif
 #endif
 
   (std::cerr << "done.\n").flush();

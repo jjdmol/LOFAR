@@ -127,7 +127,11 @@ class WH_BGL_Processing: public WorkHolder {
     static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 
     static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
+#if defined SPARSE_FLAGS
+    static SparseSet WH_BGL_Processing::flags[NR_STATIONS];
+#else
     static bitset<NR_SAMPLES_PER_INTEGRATION> flags[NR_STATIONS] CACHE_ALIGNED;
+#endif
     static unsigned itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
     static float    correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
     static float    thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];

@@ -32,6 +32,7 @@ _FIR_constants_used:
 	.long	NR_STATIONS
 	.long	NR_SAMPLES_PER_INTEGRATION
 	.long	NR_SUBBAND_CHANNELS
+	.long	NR_TAPS
 	.long	NR_POLARIZATIONS
 
 
