@@ -76,7 +76,9 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
 
   DH_Subband		     *dh	= wh.get_DH_Subband();
   DH_Subband::AllSamplesType *samples	= dh->getSamples();
+#if !defined SPARSE_FLAGS
   DH_Subband::AllFlagsType   *flags	= dh->getFlags();
+#endif
   DH_Subband::AllDelaysType  *delays	= dh->getDelays();
 
   const double		     distance	= .25; // labda
@@ -107,16 +109,16 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
   
 #if defined SPARSE_FLAGS
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
-    (*flags)[stat].reset();
+    dh->getFlags(stat).reset();
   }
 #else
   memset(flags, 0, sizeof(DH_Subband::AllFlagsType));
 #endif
 
-#if 1 && NR_INPUT_SAMPLES >= 17000
+#if 1 && NR_INPUT_SAMPLES >= 17000 && NR_STATIONS > 5
 #if defined SPARSE_FLAGS
-  //(*flags)[4].include(14000);
-  //(*flags)[5].include(17000);
+  dh->getFlags(4).include(14000);
+  dh->getFlags(5).include(17000);
   dh->fillExtraData();
 #else
   (*flags)[4][14000] = true;

@@ -1218,16 +1218,18 @@ void WH_BGL_Processing::computeFlags()
   computeFlagsTimer.start();
 
 #if NR_SUBBAND_CHANNELS == 1
+#if defined SPARSE_FLAGS
+#error Not implementated
+#else
   DH_Subband::AllFlagsType *input = get_DH_Subband()->getFlags();
 
   bitset<NR_INPUT_SAMPLES> (&flags)[NR_STATIONS] = *input;
+#endif
 #else
 #if defined SPARSE_FLAGS
-  DH_Subband::AllFlagsType *input = get_DH_Subband()->getFlags();
-
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
     flags[stat].reset();
-    const std::vector<SparseSet::range> &ranges = (*input)[stat].getRanges();
+    const std::vector<SparseSet::range> &ranges = get_DH_Subband()->getFlags(stat).getRanges();
 
     for (std::vector<SparseSet::range>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
       int begin = std::max(0, (int) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
