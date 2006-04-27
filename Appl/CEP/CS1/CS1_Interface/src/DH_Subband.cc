@@ -93,8 +93,7 @@ void DH_Subband::init()
   itsSamplesMatrix->setBuffer(itsSamples, nrSamples());
 
 #if defined SPARSE_FLAGS
-  itsFlags   = new SparseSet[itsNrStations];
-  std::cerr << "new SparseSet[" << itsNrStations << "] = " << itsFlags << '\n';
+  itsFlags = new SparseSet[itsNrStations];
 #endif
 }
 

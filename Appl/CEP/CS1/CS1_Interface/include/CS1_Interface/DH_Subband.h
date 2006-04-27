@@ -78,7 +78,7 @@ class DH_Subband: public DataHolder
       return itsSamples[NR_POLARIZATIONS * (itsNrInputSamples * station + time) + pol];
     }
 
-    const size_t nrSamples() const
+    size_t nrSamples() const
     {
       return itsNrStations * itsNrInputSamples * NR_POLARIZATIONS;
     }
@@ -88,14 +88,24 @@ class DH_Subband: public DataHolder
       return itsDelays[station];
     }
 
-#if !defined SPARSE_FLAGS
-    const size_t nrFlags() const
+#if defined SPARSE_FLAGS
+    SparseSet &getFlags(unsigned station)
+    {
+      return itsFlags[station];
+    }
+
+    const SparseSet &getFlags(unsigned station) const
+    {
+      return itsFlags[station];
+    }
+#else
+    size_t nrFlags() const
     {
       return itsNrStations * ((itsNrInputSamples + 31) & ~31);
     }
 #endif
 
-    const size_t nrDelays() const
+    size_t nrDelays() const
     {
       return itsNrStations;
     }
@@ -103,13 +113,6 @@ class DH_Subband: public DataHolder
 #if defined BGL_PROCESSING
     // Samples
     typedef SampleType AllSamplesType[NR_STATIONS][NR_INPUT_SAMPLES][NR_POLARIZATIONS];
-
-    // Flags
-#if defined SPARSE_FLAGS
-    typedef SparseSet AllFlagsType[NR_STATIONS];
-#else
-    typedef bitset<NR_INPUT_SAMPLES> AllFlagsType[NR_STATIONS];
-#endif
 
     // Fine-grained delays
     typedef DelayIntervalType AllDelaysType[NR_STATIONS];
@@ -122,16 +125,6 @@ class DH_Subband: public DataHolder
     const AllSamplesType *getSamples() const
     {
       return (const AllSamplesType *) itsSamples;
-    }
-
-    AllFlagsType *getFlags()
-    {
-      return (AllFlagsType *) itsFlags;
-    }
-
-    const AllFlagsType *getFlags() const
-    {
-      return (const AllFlagsType *) itsFlags;
     }
 
     AllDelaysType *getDelays()
