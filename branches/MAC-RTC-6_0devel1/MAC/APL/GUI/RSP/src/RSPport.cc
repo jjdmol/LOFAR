@@ -116,8 +116,9 @@ vector<BoardStatus> RSPport::getBoardStatus(uint32	RCUmask)
 {
 	// Construct a query message
 	RSPGetstatusEvent	question;
-//	question.rcumask = xxx;
-	question.cache   = 0;
+	question.timestamp	= RTC::Timestamp(0,0);
+	question.rcumask 	= RCUmask;
+	question.cache   	= false;
 
 	send (&question);
 
@@ -125,7 +126,7 @@ vector<BoardStatus> RSPport::getBoardStatus(uint32	RCUmask)
 	
 	// Finally return the info they asked for.
 	vector<BoardStatus>		resultVec;
-	for (uint32	i = 0; i <= ack.sysstatus.board().size(); i++) {
+	for (int32	i = 0; i <= ack.sysstatus.board().size(); i++) {
 		BoardStatus				test;
 		test = ack.sysstatus.board()(i);
 		resultVec.push_back(test);
@@ -136,25 +137,76 @@ vector<BoardStatus> RSPport::getBoardStatus(uint32	RCUmask)
 //
 // setWaveformSettings
 //
-bool setWaveformSettings(uint32		RCUmask,
-						 uint32		mode,
-						 uint32		frequency,
-						 uint32		amplitude)
+bool RSPport::setWaveformSettings(uint32		RCUmask,
+								  uint32		mode,
+								  uint32		frequency,
+								  uint32		amplitude)
 {
-	// NOT YET IMPLEMENTED
-	return (false);
+#define	SAMPLE_FREQUENCY		160000000L
+
+	// Construct a command
+	RSPSetwgEvent		command;
+	command.timestamp = RTC::Timestamp(0,0);
+	command.rcumask   = RCUmask;
+	command.settings().resize(1);
+	command.settings()(0).freq = (uint32)((frequency * (-1 / SAMPLE_FREQUENCY) + 0.5));
+	command.settings()(0).phase 	  = 0;
+	command.settings()(0).ampl  	  = amplitude;
+	command.settings()(0).nof_samples = 1024;
+
+	if (frequency < 1e-6) {
+		command.settings()(0).mode = WGSettings::MODE_OFF;
+	}
+	else {	// frequency = ok
+		if (mode == 0) {		// forgot to set mode? assume calc mode
+			command.settings()(0).mode = WGSettings::MODE_CALC;
+		}
+		else {
+			command.settings()(0).mode = mode;
+		}
+	}
+	command.settings()(0).preset = 0;		// PRESET_SINE
+
+	send (&command);
+
+	RSPSetwgackEvent	ack(receive());
+
+	return (ack.status == SUCCESS);
 }
 
 //
 // GetSubbandStats returns the signalstrength in each subband.
 //
-vector<double> 	getSubbandStats(uint32	RCUmask)
+vector<double> 	RSPport::getSubbandStats(uint32	RCUmask)
 {
-	// NOT YET IMPLEMENTED
+	// Construct a query message
+	RSPGetstatsEvent		question;
+	question.timestamp	= RTC::Timestamp(0,0);
+	question.rcumask 	= RCUmask;
+	question.cache   	= true;
+	question.type		= Statistics::SUBBAND_POWER;
 
-	vector<double>	empty;
+	// send request
+	send (&question);
 
-	return (empty);
+	// wait for answer
+	RSPGetstatsackEvent ack(receive());
+//	bitset<MAX_N_RCUS>	mask = getRCUMask();
+
+	if (ack.status != SUCCESS) {
+		vector<double>	empty;
+		return (empty);
+	}
+		
+	// Finally return the info they asked for.
+	int32	nrElems = ack.stats().columns();
+	vector<double>		resultVec;
+	resultVec.resize(nrElems);
+	blitz::Array<double,2>&		data = ack.stats();
+	for (int32	i = 0; i < nrElems; i++) {
+		resultVec[i] = data(1,i+1);
+	}
+	return (resultVec);
 }
 
 

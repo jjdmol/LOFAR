@@ -51,7 +51,7 @@ int main (int argc, char* argv[]) {
 	try {
 		RSPport		IOport (argv[1]);
 
-		uint32		rcuMask = 0;
+		uint32		rcuMask = 1;
 		vector<BoardStatus>	boardArr = IOport.getBoardStatus(rcuMask);
 
 //		BoardStatus		bp = sysStat.board()(0);
@@ -60,6 +60,9 @@ int main (int argc, char* argv[]) {
 		cout << "voltage 2.5V: " << bp->rsp.voltage_2_5 / 192.0 * 3.3 << endl;
 		cout << "voltage 3.3V: " << bp->rsp.voltage_3_3 / 192.0 * 5.0 << endl;
 		cout << "cep Errors  : " << bp->diag.cep_errors << endl;
+
+		LOG_INFO_STR("Getting subband statistics");
+		vector<double>	stats = IOport.getSubbandStats(rcuMask);
 
 		LOG_INFO_STR("Shutting down: " << argv[0]);
 	}
