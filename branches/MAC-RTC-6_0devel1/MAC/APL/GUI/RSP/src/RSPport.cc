@@ -142,14 +142,14 @@ bool RSPport::setWaveformSettings(uint32		RCUmask,
 								  uint32		frequency,
 								  uint32		amplitude)
 {
-#define	SAMPLE_FREQUENCY		160000000L
+#define	SAMPLE_FREQUENCY		160.0e6
 
 	// Construct a command
 	RSPSetwgEvent		command;
 	command.timestamp = RTC::Timestamp(0,0);
 	command.rcumask   = RCUmask;
 	command.settings().resize(1);
-	command.settings()(0).freq = (uint32)((frequency * (-1 / SAMPLE_FREQUENCY) + 0.5));
+	command.settings()(0).freq = (uint32)((frequency * -1 / SAMPLE_FREQUENCY) + 0.5);
 	command.settings()(0).phase 	  = 0;
 	command.settings()(0).ampl  	  = (1<<23);
 	command.settings()(0).nof_samples = 1024;
