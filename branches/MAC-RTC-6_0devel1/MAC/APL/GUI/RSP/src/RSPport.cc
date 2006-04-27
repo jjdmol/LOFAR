@@ -139,7 +139,7 @@ vector<BoardStatus> RSPport::getBoardStatus(uint32	RCUmask)
 //
 bool RSPport::setWaveformSettings(uint32		RCUmask,
 								  uint32		mode,
-								  uint32		frequency,
+								  double		frequency,
 								  uint32		amplitude)
 {
 #define	SAMPLE_FREQUENCY		160.0e6

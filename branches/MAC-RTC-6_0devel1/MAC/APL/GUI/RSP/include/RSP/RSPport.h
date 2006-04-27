@@ -61,7 +61,7 @@ public:
 	// Amplitude <= 2.1e9   (2^31)
 	bool setWaveformSettings(uint32		RCUmask,
 							 uint32		mode,
-							 uint32		frequency,
+							 double		frequency,
 							 uint32		amplitude);
 
 	// GetSubbandStats returns the signalstrength in each subband.
