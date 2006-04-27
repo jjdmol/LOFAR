@@ -29,6 +29,7 @@
 
 using namespace LOFAR;
 using namespace LOFAR::RSP;
+using namespace LOFAR::RSP_Protocol;
 
 //
 // MAIN (param1, param2)
@@ -62,7 +63,21 @@ int main (int argc, char* argv[]) {
 		cout << "cep Errors  : " << bp->diag.cep_errors << endl;
 
 		LOG_INFO_STR("Setting waveform generator");
-		IOport.setWaveformSettings(rcuMask, 1, 39.75e6, 8e6);
+		IOport.setWaveformSettings(rcuMask, 1, 39.75e6, 95);
+
+		LOG_INFO_STR("Getting waveform settings");
+		vector<struct WGSettings::WGRegisterType>		wgs;
+		wgs = IOport.getWaveformSettings(rcuMask);
+		for (uint32 i = 0; i < wgs.size(); i++) {
+			cout << formatString("[%02d]: freq=%6d, phase=%3d(%5.3f), ampl=%3d, nof_samples=%6d, mode=%3d]\n",
+					i,
+					wgs[i].freq,
+					wgs[i].phase,
+					(double)wgs[i].phase / 256 * 2 * M_PI,
+					wgs[i].ampl,
+					wgs[i].nof_samples,
+					wgs[i].mode);
+		}
 
 
 		LOG_INFO_STR("Getting subband statistics");

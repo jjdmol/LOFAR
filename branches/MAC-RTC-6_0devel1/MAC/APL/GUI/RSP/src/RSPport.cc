@@ -31,6 +31,8 @@
 #include <RSP/RSPport.h>
 
 namespace LOFAR {
+  using RSP_Protocol::WGSettings;
+
   namespace RSP {
 
 using	GCF::TM::GCFEvent;
@@ -146,13 +148,15 @@ bool RSPport::setWaveformSettings(uint32		RCUmask,
 
 	// Construct a command
 	RSPSetwgEvent		command;
+	double				dblAmpl = amplitude % 100;
 	command.timestamp = RTC::Timestamp(0,0);
 	command.rcumask   = RCUmask;
 	command.settings().resize(1);
-	command.settings()(0).freq = (uint32)
+	command.settings()(0).freq  = (uint32)
 					(((frequency / SAMPLE_FREQUENCY) * ~((uint32)0) ) + 0.5);
-	command.settings()(0).phase 	  = 0;
-	command.settings()(0).ampl  	  = (1<<23);
+	command.settings()(0).phase = 0;
+	command.settings()(0).ampl  = (uint32) 
+					(dblAmpl / 100.0 * (1<<23) + 0,5);
 	command.settings()(0).nof_samples = 1024;
 	if (frequency < 1e-6) {
 		command.settings()(0).mode = WGSettings::MODE_OFF;
@@ -198,19 +202,48 @@ vector<double> 	RSPport::getSubbandStats(uint32	RCUmask)
 		return (empty);
 	}
 		
-	// Finally return the info they asked for.
+	// allocate any array with the right size
 	int32	nrElems = ack.stats().rows() * ack.stats().columns();
-
 	vector<double>		resultVec;
 	resultVec.resize(nrElems);
 
+	// Copy info from blitz to vector.
 	blitz::Array<double,2>&		data = ack.stats();
 	for (int32	i = 0; i < nrElems; i++) {
 		resultVec[i] = data(0,i);
 	}
+
+	// Finally return the info they asked for.
 	return (resultVec);
 }
 
+//
+// getWaveformSettings
+//
+vector<struct WGSettings::WGRegisterType> RSPport::getWaveformSettings(uint32		RCUmask)
+{
+	// Construct a query message
+	RSPGetwgEvent	question;
+	question.timestamp	= RTC::Timestamp(0,0);
+	question.rcumask 	= RCUmask;
+	question.cache   	= true;
+
+	// send question
+	send (&question);
+
+	// Wait for answer
+	RSPGetwgackEvent ack(receive());
+	
+	// Copy info from blitz array to vector
+	vector<struct WGSettings::WGRegisterType>		resultVec;
+	for (int32	i = 0; i <= ack.settings().size(); i++) {
+		resultVec.push_back(ack.settings()(i));
+		resultVec[i].ampl = resultVec[i].ampl * 100 / (1<<23);
+		resultVec[i].freq = (uint32) ((double)resultVec[i].freq / (~(uint32)0) * SAMPLE_FREQUENCY);
+	}
+	// Finally return the info they asked for.
+	return (resultVec);
+}
 
   } // namespace RSP
 } // namespace LOFAR

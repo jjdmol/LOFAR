@@ -31,9 +31,12 @@
 //# Includes
 #include <Common/Net/Socket.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/WGSettings.h>
 
 namespace LOFAR {
   using GCF::TM::GCFEvent;
+  using RSP_Protocol::WGSettings;
+
   namespace RSP {
 
 // \addtogroup RSP
@@ -64,6 +67,10 @@ public:
 							 double		frequency,
 							 uint32		amplitude);
 
+	// Get the settings of the waveform generators.
+	vector<struct WGSettings::WGRegisterType> 
+						getWaveformSettings(uint32		RCUmask);
+
 	// GetSubbandStats returns the signalstrength in each subband.
 	vector<double> 	getSubbandStats(uint32	RCUmask);
 
@@ -80,7 +87,6 @@ private:
 	uint16		itsPort;
 	string		itsHost;
 	Socket*		itsSocket;
-
 };
 
 // @}
