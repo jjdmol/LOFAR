@@ -156,7 +156,7 @@ bool RSPport::setWaveformSettings(uint32		RCUmask,
 					(((frequency / SAMPLE_FREQUENCY) * ~((uint32)0) ) + 0.5);
 	command.settings()(0).phase = 0;
 	command.settings()(0).ampl  = (uint32) 
-					(dblAmpl / 100.0 * (1<<23) + 0,5);
+					(dblAmpl / 100.0 * (1<<23) + 0.5);
 	command.settings()(0).nof_samples = 1024;
 	if (frequency < 1e-6) {
 		command.settings()(0).mode = WGSettings::MODE_OFF;
@@ -236,7 +236,7 @@ vector<struct WGSettings::WGRegisterType> RSPport::getWaveformSettings(uint32		R
 	
 	// Copy info from blitz array to vector
 	vector<struct WGSettings::WGRegisterType>		resultVec;
-	for (int32	i = 0; i <= ack.settings().size(); i++) {
+	for (int32	i = 0; i < ack.settings().size(); i++) {
 		resultVec.push_back(ack.settings()(i));
 		resultVec[i].ampl = resultVec[i].ampl * 100 / (1<<23);
 		resultVec[i].freq = (uint32) ((double)resultVec[i].freq / (~(uint32)0) * SAMPLE_FREQUENCY);
