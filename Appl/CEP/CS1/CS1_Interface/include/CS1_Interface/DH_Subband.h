@@ -23,13 +23,18 @@
 #ifndef LOFAR_CS1_INTERFACE_DH_SUBBAND_H
 #define LOFAR_CS1_INTERFACE_DH_SUBBAND_H
 
+#define SPARSE_FLAGS
+
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/RectMatrix.h>
+#if defined SPARSE_FLAGS
+#include <CS1_Interface/SparseSet.h>
+#else
 #include <CS1_Interface/bitset.h>
+#endif
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <APS/ParameterSet.h>
-
 
 namespace LOFAR {
 namespace CS1 {
@@ -83,10 +88,12 @@ class DH_Subband: public DataHolder
       return itsDelays[station];
     }
 
+#if !defined SPARSE_FLAGS
     const size_t nrFlags() const
     {
       return itsNrStations * ((itsNrInputSamples + 31) & ~31);
     }
+#endif
 
     const size_t nrDelays() const
     {
@@ -98,7 +105,11 @@ class DH_Subband: public DataHolder
     typedef SampleType AllSamplesType[NR_STATIONS][NR_INPUT_SAMPLES][NR_POLARIZATIONS];
 
     // Flags
+#if defined SPARSE_FLAGS
+    typedef SparseSet AllFlagsType[NR_STATIONS];
+#else
     typedef bitset<NR_INPUT_SAMPLES> AllFlagsType[NR_STATIONS];
+#endif
 
     // Fine-grained delays
     typedef DelayIntervalType AllDelaysType[NR_STATIONS];
@@ -136,17 +147,24 @@ class DH_Subband: public DataHolder
 
     void swapBytes();
 
+#if defined SPARSE_FLAGS
+    void		   getExtraData(), fillExtraData();
+#endif
+
   private:
     /// Forbid assignment.
     DH_Subband &operator = (const DH_Subband &);
 
-    unsigned		   itsNrStations;
-    unsigned		   itsNrInputSamples;
+    unsigned		   itsNrStations, itsNrInputSamples;
 
     SampleType		   *itsSamples;
     // RectMatrix cannot be used for bitsets, thus not for flags
     RectMatrix<SampleType> *itsSamplesMatrix;
+#if defined SPARSE_FLAGS
+    SparseSet		   *itsFlags;
+#else
     uint32		   *itsFlags;
+#endif
     DelayIntervalType	   *itsDelays;
 
     void fillDataPointers();

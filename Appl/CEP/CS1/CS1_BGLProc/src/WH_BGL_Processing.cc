@@ -41,10 +41,8 @@
 #include <rts.h>
 #endif
 
-namespace LOFAR
-{
-namespace CS1
-{
+namespace LOFAR {
+namespace CS1 {
 
 #if !defined HAVE_MASS
 
@@ -57,7 +55,11 @@ inline static dcomplex cosisin(double x)
 
 FIR WH_BGL_Processing::itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
+#if defined SPARSE_FLAGS
+SparseSet WH_BGL_Processing::flags[NR_STATIONS];
+#else
 bitset<NR_SAMPLES_PER_INTEGRATION> WH_BGL_Processing::flags[NR_STATIONS] CACHE_ALIGNED;
+#endif
 unsigned WH_BGL_Processing::itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
 float WH_BGL_Processing::correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
 float WH_BGL_Processing::thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
@@ -1145,6 +1147,18 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
 
 #if !defined C_IMPLEMENTATION
   ASSERT(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
+
+  ASSERT(_FIR_constants_used.input_type			== INPUT_TYPE);
+  ASSERT(_FIR_constants_used.nr_stations		== NR_STATIONS);
+  ASSERT(_FIR_constants_used.nr_samples_per_integration	== NR_SAMPLES_PER_INTEGRATION);
+  ASSERT(_FIR_constants_used.nr_subband_channels	== NR_SUBBAND_CHANNELS);
+  ASSERT(_FIR_constants_used.nr_taps			== NR_TAPS);
+  ASSERT(_FIR_constants_used.nr_polarizations		== NR_POLARIZATIONS);
+
+  ASSERT(_correlator_constants_used.nr_stations			== NR_STATIONS);
+  ASSERT(_correlator_constants_used.nr_samples_per_integration	== NR_SAMPLES_PER_INTEGRATION);
+  ASSERT(_correlator_constants_used.nr_subband_channels		== NR_SUBBAND_CHANNELS);
+  ASSERT(_correlator_constants_used.nr_polarizations		== NR_POLARIZATIONS);
 #endif
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
@@ -1194,17 +1208,6 @@ void WH_BGL_Processing::preprocess()
   }
 
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
-  ASSERT(_FIR_constants_used.input_type			== INPUT_TYPE);
-  ASSERT(_FIR_constants_used.nr_stations		== NR_STATIONS);
-  ASSERT(_FIR_constants_used.nr_samples_per_integration	== NR_SAMPLES_PER_INTEGRATION);
-  ASSERT(_FIR_constants_used.nr_subband_channels	== NR_SUBBAND_CHANNELS);
-  ASSERT(_FIR_constants_used.nr_polarizations		== NR_POLARIZATIONS);
-
-  ASSERT(_correlator_constants_used.nr_stations			== NR_STATIONS);
-  ASSERT(_correlator_constants_used.nr_samples_per_integration	== NR_SAMPLES_PER_INTEGRATION);
-  ASSERT(_correlator_constants_used.nr_subband_channels		== NR_SUBBAND_CHANNELS);
-  ASSERT(_correlator_constants_used.nr_polarizations		== NR_POLARIZATIONS);
-
   mutex = rts_allocate_mutex();
 #endif
 }
@@ -1212,16 +1215,31 @@ void WH_BGL_Processing::preprocess()
 
 void WH_BGL_Processing::computeFlags()
 {
+  computeFlagsTimer.start();
+
 #if NR_SUBBAND_CHANNELS == 1
   DH_Subband::AllFlagsType *input = get_DH_Subband()->getFlags();
 
   bitset<NR_INPUT_SAMPLES> (&flags)[NR_STATIONS] = *input;
 #else
+#if defined SPARSE_FLAGS
+  DH_Subband::AllFlagsType *input = get_DH_Subband()->getFlags();
+
+  for (int stat = 0; stat < NR_STATIONS; stat ++) {
+    flags[stat].reset();
+    const std::vector<SparseSet::range> &ranges = (*input)[stat].getRanges();
+
+    for (std::vector<SparseSet::range>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
+      int begin = std::max(0, (int) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
+      int end   = std::min(NR_SAMPLES_PER_INTEGRATION - 1, (int) (it->end - 1) / NR_SUBBAND_CHANNELS);
+
+      flags[stat].include(begin, end);
+    }
+  }
+#else
   typedef bitset<NR_SUBBAND_CHANNELS> inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION];
 
   inputType *input = (inputType *) get_DH_Subband()->getFlags();
-
-  computeFlagsTimer.start();
 
   memset(flags, 0, sizeof flags);
 
@@ -1244,6 +1262,7 @@ void WH_BGL_Processing::computeFlags()
       }
     }
   }
+#endif
 #endif
 
   for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {
@@ -1330,7 +1349,11 @@ void WH_BGL_Processing::doPPF()
     FFTtimer.start();
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
       for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+#if defined SPARSE_FLAGS
+	if (flags[stat].test(time)) {
+#else
 	if (flags[stat][time]) {
+#endif
 	  for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 	    samples[chan][stat][time][pol] = makefcomplex(0, 0);
 	  }
@@ -1380,6 +1403,67 @@ void WH_BGL_Processing::doPPF()
     computePhaseShifts(phaseShifts, (*delays)[stat]);
 #endif
 
+#if defined SPARSE_FLAGS
+    const std::vector<SparseSet::range> &ranges = flags[stat].getRanges();
+    std::vector<SparseSet::range>::const_iterator it = ranges.begin();
+
+    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; it ++) {
+      int firstBad, firstGood;
+
+      if (it != ranges.end()) {
+	firstBad  = it->begin;
+	firstGood = it->end;
+      } else {
+	firstBad  = firstGood = NR_SAMPLES_PER_INTEGRATION;
+      }
+
+      for (; time < firstBad; time ++) {
+	FFTtimer.start();
+	_prefetch(fftInData[time],
+		  sizeof(fcomplex[NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]) / CACHE_LINE_SIZE,
+		  CACHE_LINE_SIZE);
+
+	for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	  fftw_one(itsFFTWPlan,
+		   (fftw_complex *) fftInData[time][pol],
+		   (fftw_complex *) fftOutData[time & 1][pol]);
+	}
+	FFTtimer.stop();
+
+	if (time & 1) {
+#if defined DELAY_COMPENSATION
+	  _phase_shift_and_transpose(&samples[0][stat][time - 1][0],
+				     &fftOutData[0][0][0],
+				     &phaseShifts[time - 1]);
+#else
+	  _transpose_4x8(&samples[0][stat][time - 1][0],
+			 &fftOutData[0][0][0],
+			 NR_SUBBAND_CHANNELS,
+			 sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
+			 sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * NR_STATIONS);
+#endif
+	}
+      }
+
+      for (; time < firstGood; time ++) {
+	_memzero(fftOutData[time & 1], sizeof(fftOutData[time & 1]));
+
+	if (time & 1) {
+#if defined DELAY_COMPENSATION
+	  _phase_shift_and_transpose(&samples[0][stat][time - 1][0],
+				     &fftOutData[0][0][0],
+				     &phaseShifts[time - 1]);
+#else
+	  _transpose_4x8(&samples[0][stat][time - 1][0],
+			 &fftOutData[0][0][0],
+			 NR_SUBBAND_CHANNELS,
+			 sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
+			 sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * NR_STATIONS);
+#endif
+	}
+      }
+    }
+#else // !SPARSE_FLAGS
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 2) {
       FFTtimer.start();
       for (int t = 0; t < 2; t ++) {
@@ -1411,7 +1495,8 @@ void WH_BGL_Processing::doPPF()
 		     sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * NR_STATIONS);
 #endif
     }
-#endif
+#endif // SPARSE_FLAGS
+#endif // C_IMPLEMENTATION
   }
 
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
@@ -1632,6 +1717,11 @@ void WH_BGL_Processing::doCorrelate()
 void WH_BGL_Processing::process()
 {
   totalTimer.start();
+
+#if defined SPARSE_FLAGS
+  get_DH_Subband()->getExtraData();
+#endif
+
   computeFlags();
 
 #if NR_SUBBAND_CHANNELS > 1
@@ -1654,7 +1744,6 @@ void WH_BGL_Processing::postprocess()
 void WH_BGL_Processing::dump() const
 {
 }
-
 
 } // namespace CS1
 } // namespace LOFAR
