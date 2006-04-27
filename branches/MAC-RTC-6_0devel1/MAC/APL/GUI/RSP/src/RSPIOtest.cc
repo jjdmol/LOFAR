@@ -63,7 +63,6 @@ int main (int argc, char* argv[]) {
 
 		LOG_INFO_STR("Getting subband statistics");
 		vector<double>	stats = IOport.getSubbandStats(rcuMask);
-
 		LOG_INFO_STR("Shutting down: " << argv[0]);
 	}
 	catch (LOFAR::Exception& ex) {

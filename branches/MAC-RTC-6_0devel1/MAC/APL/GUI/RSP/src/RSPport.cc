@@ -199,12 +199,14 @@ vector<double> 	RSPport::getSubbandStats(uint32	RCUmask)
 	}
 		
 	// Finally return the info they asked for.
-	int32	nrElems = ack.stats().columns();
+	int32	nrElems = ack.stats().rows() * ack.stats().columns();
+
 	vector<double>		resultVec;
 	resultVec.resize(nrElems);
+
 	blitz::Array<double,2>&		data = ack.stats();
 	for (int32	i = 0; i < nrElems; i++) {
-		resultVec[i] = data(1,i+1);
+		resultVec[i] = data(0,i);
 	}
 	return (resultVec);
 }
