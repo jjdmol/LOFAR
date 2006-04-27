@@ -61,6 +61,10 @@ int main (int argc, char* argv[]) {
 		cout << "voltage 3.3V: " << bp->rsp.voltage_3_3 / 192.0 * 5.0 << endl;
 		cout << "cep Errors  : " << bp->diag.cep_errors << endl;
 
+		LOG_INFO_STR("Setting waveform generator");
+		IOport.setWaveformSettings(rcuMask, 1, 39.75e6, 8e6);
+
+
 		LOG_INFO_STR("Getting subband statistics");
 		vector<double>	stats = IOport.getSubbandStats(rcuMask);
 		LOG_INFO_STR("Shutting down: " << argv[0]);
