@@ -30,31 +30,30 @@
 namespace LOFAR {
   namespace ACC {
 
-    PR_BGL::PR_BGL(const string&  aNodeName,
-		   const string&  aProcName,
-		   const string&  aExecName,
+    PR_BGL::PR_BGL(const string&  aJobName,
+		   const string&  aPartition,
+		   const string&  aExecutable,
+		   const string&  aWorkingDir,
 		   const string&  aParamFile,
 		   const uint numberOfNodes) :
-      ProcRule(aNodeName, aProcName, aExecName, aParamFile),
-      itsNoNodes(numberOfNodes)
+	ProcRule(aPartition, aJobName, aExecutable, aParamFile)
     {
-      // TODO: do somethinig with itsNodeName when ruling the process.
-      itsStartCmd = formatString("./startBGL.sh %s %s %s %s %d", 
-				 aNodeName.c_str(),
-				 aProcName.c_str(),
-				 aExecName.c_str(),
+      itsStartCmd = formatString("./startBGL.sh %s %s %s %s %s %d", 
+				 aJobName.c_str(),
+				 aPartition.c_str(),
+				 aExecutable.c_str(),
+				 aWorkingDir.c_str(),
 				 aParamFile.c_str(),
-				 itsNoNodes);
+				 numberOfNodes);
+
       itsStopCmd  = formatString("./stopBGL.sh %s %s", 
-				 aNodeName.c_str(),
-				 aProcName.c_str());
+				 aPartition.c_str(),
+				 aJobName.c_str());
     }
 
     PR_BGL::PR_BGL(const PR_BGL& other) :
       ProcRule(other)
-    {
-      itsNoNodes = other.itsNoNodes;
-    }
+    {}
 
     bool PR_BGL::start() {
       if (itsIsStarted) {

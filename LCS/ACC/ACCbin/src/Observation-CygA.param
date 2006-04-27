@@ -22,9 +22,9 @@ AC.resultfile =./AC_result.log
 testAppl.versionnr=1.1.10
 #
 AC.process[0].count = 3
-AC.process[1].ID = tPCClient[1]			# tPCclient1
-AC.process[2].ID = tPCClient[2]			# tPCClient2
-AC.process[3].ID = tAnother[1]			# tAnother3
+AC.process[1].ID = tPCClient(1)			# tPCclient1
+AC.process[2].ID = tPCClient(2)			# tPCClient2
+AC.process[3].ID = tAnother(1)			# tAnother3
 #
 # metadata about a proces
 testAppl.tPCClient[0].startstoptype = cmdline
