@@ -211,6 +211,7 @@ public class PlotTestFrame extends javax.swing.JFrame {
                     }
                 }
                 try {
+                   
                     if(exceptionLabel !=null){
                         this.getContentPane().remove(exceptionLabel);
                         exceptionLabel = null;
@@ -220,11 +221,12 @@ public class PlotTestFrame extends javax.swing.JFrame {
                     if(cLegend.isSelected()){
                         this.add(testPanel.getLegendForPlot(),BorderLayout.SOUTH); 
                     }
-                   
+                 
                     plotPresent = true;
                     
                 } catch (PlotterException ex) {
                     exceptionLabel = new JLabel(ex.getMessage());
+                    exceptionLabel.setForeground(Color.RED);
                     this.add(exceptionLabel,BorderLayout.CENTER);
                     plotPresent = false;
                 }
