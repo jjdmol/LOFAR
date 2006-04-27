@@ -151,7 +151,7 @@ bool RSPport::setWaveformSettings(uint32		RCUmask,
 	command.settings().resize(1);
 	command.settings()(0).freq = (uint32)((frequency * (-1 / SAMPLE_FREQUENCY) + 0.5));
 	command.settings()(0).phase 	  = 0;
-	command.settings()(0).ampl  	  = amplitude;
+	command.settings()(0).ampl  	  = (1<<23);
 	command.settings()(0).nof_samples = 1024;
 
 	if (frequency < 1e-6) {
