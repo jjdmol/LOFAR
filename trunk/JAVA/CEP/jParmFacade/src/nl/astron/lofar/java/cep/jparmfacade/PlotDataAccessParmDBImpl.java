@@ -18,7 +18,6 @@ import java.util.TimeZone;
 import java.util.Vector;
 import nl.astron.lofar.java.cep.jparmfacade.jParmFacade;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessException;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 
 /**
  * @created 19-04-2006, 11:00
@@ -85,13 +84,17 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     //endy = Double.parseDouble(paramValues.get(3).toString());
                     //System.out.println("Parameter Range : startx:"+startx+" endx:" +endx+ " starty: "+starty+" endy:"+endy );
                 }
-                /*
+                
                 returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
                 returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
                 returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
                 returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
-                */
-                HashMap<String,Vector<Double>> values = parmDB.getValues((String)names.get(n),startx,endx,numx,starty,endy,numy);
+                HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
+                try {
+                    values = parmDB.getValues((String) names.get(n), startx, endx, numx, starty, endy, numy);
+                } catch (Exception ex) {
+                    throw new PlotterDataAccessException("An invalid call was made to the ParmDB interface. Please check that all variables seem OK. If so, contact support for details.");
+                }
                 
                 Iterator anIterator = values.keySet().iterator();
                 while(anIterator.hasNext()){
@@ -109,16 +112,15 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     
                     for(int i = 0;(i<valueDoubles.size());i++){
                         if(numx > 1){
-                            xArray[i] = startx + ( (endx-startx) / (numx*i+1) );
+                            xArray[i] = startx + (endx-startx) / valueDoubles.size()*(i+0.5);
+                            // original xArray[i] = startx + (endx-startx) / numx*(i+1) ;
                             yArray[i] = valueDoubles.get(i);
                             //System.out.println("xArray["+xArray[i]+"] yArray["+yArray[i]+"]");
                         } else if(numy > 1){
-                            yArray[i] = starty + ( (endy-starty) / (numy*i+1) );
+                            yArray[i] = starty + (endy-starty) / valueDoubles.size()*(i+0.5);
                             xArray[i] = valueDoubles.get(i);
                             //System.out.println("xArray["+xArray[i]+"] yArray["+yArray[i]+"]");
                         }
-                        
-                        
                     }
                     aValueMap.put(PlotConstants.DATASET_XVALUES,xArray);
                     aValueMap.put(PlotConstants.DATASET_YVALUES,yArray);
@@ -128,10 +130,10 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             }
             returnMap.put(PlotConstants.DATASET_VALUES,returnValues);
         
-        }else if (constraints.length != 7){
+        }else if (constraints.length != this.requiredDataConstraints){
             throw new PlotterDataAccessException("An invalid amount of parameters (" +constraints.length+" instead of " +this.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
         }else if (names.size() < 1){
-            throw new PlotterDataAccessException("No results found in the ParmDB table(s) using the given parameter name filter ("+constraints[0]+")");
+            throw new PlotterDataAccessException("No results were found in the ParmDB table(s) using the given parameter name filter ( "+constraints[0]+" )");
         }
         return returnMap;
     }
