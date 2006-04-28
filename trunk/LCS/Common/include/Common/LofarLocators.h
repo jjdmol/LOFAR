@@ -47,18 +47,17 @@ public:
 	#define		CONFIG_SUB_DIR		"/etc"
 
 	// Create a FileLocator without a predefined path.
-	ConfigLocator() 
-		{	itsLocator.setSubdir(CONFIG_SUB_DIR); }
+	ConfigLocator() : FileLocator()
+		{	setSubdir(CONFIG_SUB_DIR); }
 	// Create a FileLocator with a predefined path.
-	explicit ConfigLocator (const string&	aPath) : itsLocator(aPath) 
-		{ 	itsLocator.setSubdir(CONFIG_SUB_DIR); }
+	explicit ConfigLocator (const string&	aPath) : FileLocator(aPath) 
+		{ 	setSubdir(CONFIG_SUB_DIR); }
 
 private:
 	ConfigLocator(const ConfigLocator&	that);
 	ConfigLocator& operator=(const ConfigLocator& that);
 
 	//# --- Datamembers ---
-	FileLocator		itsLocator;
 };
 
 
@@ -68,18 +67,17 @@ public:
 	#define		PROGRAM_SUB_DIR		"/bin"
 
 	// Create a FileLocator without a predefined path.
-	ProgramLocator() 
-		{	itsLocator.setSubdir(PROGRAM_SUB_DIR); }
+	ProgramLocator() : FileLocator()
+		{	setSubdir(PROGRAM_SUB_DIR); }
 	// Create a FileLocator with a predefined path.
-	explicit ProgramLocator (const string&	aPath) : itsLocator(aPath) 
-		{ 	itsLocator.setSubdir(PROGRAM_SUB_DIR); }
+	explicit ProgramLocator (const string&	aPath) : FileLocator(aPath) 
+		{ 	setSubdir(PROGRAM_SUB_DIR); }
 
 private:
 	ProgramLocator(const ProgramLocator&	that);
 	ProgramLocator& operator=(const ProgramLocator& that);
 
 	//# --- Datamembers ---
-	FileLocator		itsLocator;
 };
 
 
