@@ -63,9 +63,9 @@ FileLocator::~FileLocator()
 void 	FileLocator::addPathAtBack  (const string& aPath)
 {
 	string	thePath=resolveInput(aPath);
-	uint32	start  = 0;
-	uint32	end;
-	uint32	sepPos;
+	size_t	start  = 0;
+	size_t	end;
+	size_t	sepPos;
 	bool	last = false;
 	do {
 		// search forwards through the new chain
@@ -94,15 +94,15 @@ void 	FileLocator::addPathAtBack  (const string& aPath)
 void 	FileLocator::addPathAtFront (const string& aPath)
 {
 	string	thePath=resolveInput(aPath);
-	uint32	end = thePath.size()-1;
-	int32	start;	// note: because rfind = uint32 and sepPos becomes < 0
-	uint32	sepPos;
+	size_t	end = thePath.size()-1;
+	size_t	start;
+	size_t	sepPos;
 	bool	last = false;
 	do {
 		// search backwards in the newchain for ':'
 		if ((sepPos = thePath.rfind(":", end)) == string::npos) {
 			last = true;
-			start = -1;
+			start = string::npos;
 		}
 		else {
 			start = sepPos;
@@ -246,8 +246,8 @@ string	FileLocator::locate		(const string& aFile)
 //
 void FileLocator::setSubdir(const string&	aSubdir)
 {
-	uint32		start = 0;
-	uint32		end = aSubdir.size();
+	size_t		start = 0;
+	size_t		end = aSubdir.size();
 
 	if (aSubdir[start] == '/') {
 		start++;
@@ -270,7 +270,7 @@ void FileLocator::setSubdir(const string&	aSubdir)
 string FileLocator::resolveInput(const string&	input)
 {
 	// search for $
-	uint32	dollarPos = input.find("$",0);
+	size_t	dollarPos = input.find("$",0);
 	if (dollarPos == string::npos) {		// no $ found?
 		return (input);						// return original
 	}
@@ -286,14 +286,14 @@ string FileLocator::resolveInput(const string&	input)
 	//   [/>:]   resolve $..:
 	//  >0  -    resolve $../ + add /..input.size
 	//   [/<:]   resolve $../ + add /..:
-	uint32		startPos = 0;
+	size_t		startPos = 0;
 	string		result;
 	do {
 		result   = input.substr(startPos, dollarPos);	// add part till $
 		startPos = dollarPos+1;
-		uint32	slashPos = input.find("/", dollarPos);
-		uint32	colonPos = input.find(":", dollarPos);
-		uint32	endPos;					// end of path at : or EOS
+		size_t	slashPos = input.find("/", dollarPos);
+		size_t	colonPos = input.find(":", dollarPos);
+		size_t	endPos;					// end of path at : or EOS
 		if (colonPos == string::npos) {
 			endPos = input.size();
 		}
