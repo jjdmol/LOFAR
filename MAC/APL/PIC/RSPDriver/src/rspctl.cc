@@ -51,7 +51,7 @@
 //# rspctl --xcsubband=<int>                   # set the subband to cross correlate
 //# rspctl --clocks          [--select=<set>]  # get or set the clock frequency of clocks
 //# rspctl --version         [--select=<set>]  # get version information
-//# rspctl --rspclear		 [--select=<set>]  # clear FPGA registers on rspboards
+//# rspctl --rspclear        [--select=<set>]  # clear FPGA registers on selected rspboards
 //#
 
 #include <lofar_config.h>
@@ -490,14 +490,15 @@ RSUCommand::RSUCommand(GCFPortInterface& port) : Command(port)
 void RSUCommand::send()
 {
   if (getMode()) {
-    // GET
-	// does not exist yet
+    // GET not supported
+    LOG_FATAL("RSUCommand GET not supported");
+    exit(EXIT_FAILURE);
   }
   else {
     // SET
     RSPSetrsuEvent setrsu;
     setrsu.timestamp = Timestamp(0,0);
-    setrsu.rcumask = getRCUMask();
+    setrsu.rspmask = getRSPMask();
 
     setrsu.settings().resize(1);
     setrsu.settings()(0) = m_control;
@@ -559,10 +560,9 @@ void ClocksCommand::send()
   if (getMode())
   {
     // GET
-    RSPGetclocksEvent getclocks;
+    RSPGetclockEvent getclocks;
 
     getclocks.timestamp = Timestamp(0,0);
-    getclocks.rspmask = getRSPMask();
     getclocks.cache = true;
 
     m_rspport.send(getclocks);
@@ -570,12 +570,10 @@ void ClocksCommand::send()
   else
   {
     // SET
-    RSPSetclocksEvent setclocks;
+    RSPSetclockEvent setclocks;
     setclocks.timestamp = Timestamp(0,0);
 
-    setclocks.rspmask = getRSPMask();
-    setclocks.clocks().resize(1);
-    setclocks.clocks()(0) = m_clock;
+    setclocks.clock = m_clock;
 
     m_rspport.send(setclocks);
   }
@@ -585,37 +583,28 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 {
   switch (e.signal)
   {
-    case RSP_GETCLOCKSACK:
+    case RSP_GETCLOCKACK:
     {
-      RSPGetclocksackEvent ack(e);
-      bitset<MAX_N_RSPBOARDS> mask = getRSPMask();
+      RSPGetclockackEvent ack(e);
 
       if (SUCCESS == ack.status)
       {
-        int rspin = 0;
-        for (int rspout = 0; rspout < get_ndevices(); rspout++)
-        {
-
-          if (mask[rspout])
-          {
-            logMessage(cout,formatString("RSP[%02d] clock=%d",rspout, ack.clocks()(rspin++)));
-          }
-        }
+	logMessage(cout,formatString("clock=%d", ack.clock));
       }
       else
       {
-        logMessage(cerr,"Error: RSP_GETCLOCKS command failed.");
+        logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
       }
     }
     break;
 
-    case RSP_SETCLOCKSACK:
+    case RSP_SETCLOCKACK:
     {
-      RSPSetclocksackEvent ack(e);
+      RSPSetclockackEvent ack(e);
 
       if (SUCCESS != ack.status)
       {
-        logMessage(cerr,"Error: RSP_SETCLOCKS command failed.");
+        logMessage(cerr,"Error: RSP_SETCLOCK command failed.");
       }
     }
   }
@@ -625,12 +614,14 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
   return GCFEvent::HANDLED;
 }
 
-WGCommand::WGCommand(GCFPortInterface& port) : Command(port),
-    m_frequency(0.0),
-    m_phase(0),
-    m_amplitude(1<<23),
-	m_mode(0)
+WGCommand::WGCommand(GCFPortInterface& port) :
+  Command(port),
+  m_frequency(0.0),
+  m_phase(0),
+  m_amplitude((uint32)(((double)2047/2048) * (uint32)(1 << 31))),
+  m_mode(0)
 {
+  cout << "amplitude=" << m_amplitude << endl;
 }
 
 void WGCommand::send()
@@ -652,7 +643,8 @@ void WGCommand::send()
     wgset.timestamp = Timestamp(0,0);
     wgset.rcumask = getRCUMask();
     wgset.settings().resize(1);
-    wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / SAMPLE_FREQUENCY) + 0.5);
+    //wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / SAMPLE_FREQUENCY) + 0.5);
+    wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / SAMPLE_FREQUENCY);
     wgset.settings()(0).phase = m_phase;
     wgset.settings()(0).ampl = m_amplitude;
     wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
@@ -665,11 +657,11 @@ void WGCommand::send()
     {
       if (m_mode == 0) { 	/* forget to set mode? assume calc mode */
         wgset.settings()(0).mode = WGSettings::MODE_CALC;
-    	wgset.settings()(0).nof_samples = 1024;
+    	wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
       }
 	  else {
         wgset.settings()(0).mode = m_mode;
-    	wgset.settings()(0).nof_samples = 1024;
+    	wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
       }
     }
     wgset.settings()(0).preset = 0; // or one of PRESET_[SINE|SQUARE|TRIANGLE|RAMP]
@@ -699,7 +691,7 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            logMessage(cout,formatString("RCU[%02d].wg=[freq=%6d, phase=%3d(%5.3f), ampl=%3d, nof_samples=%6d, mode=%3d]",
+            logMessage(cout,formatString("RCU[%02u].wg=[freq=%11u, phase=%3u(%5.3f), ampl=%11u, nof_samples=%6u, mode=%3u]",
                    rcuout,
                    ack.settings()(rcuin).freq,
                    ack.settings()(rcuin).phase,
@@ -1445,7 +1437,7 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
       m_maxrspboards = ack.max_rspboards;
       logMessage(cout,formatString("n_rcus     =%d",m_nrcus));
       logMessage(cout,formatString("n_rspboards=%d of %d",
-										m_nrspboards, m_maxrspboards));
+				   m_nrspboards, m_maxrspboards));
       TRAN(RSPCtl::docommand);
     }
     break;
@@ -1544,8 +1536,8 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETWEIGHTSACK:
     case RSP_GETWGACK:
     case RSP_SETWGACK:
-    case RSP_SETCLOCKSACK:
-    case RSP_GETCLOCKSACK:
+    case RSP_SETCLOCKACK:
+    case RSP_GETCLOCKACK:
     case RSP_GETSTATUSACK:
       status = m_command->ack(e); // handle the acknowledgement
       break;
@@ -1666,7 +1658,7 @@ static void usage()
 #endif
   cout << "rspctl --xcsubband                        # get the subband selection for cross correlation" << endl;
   cout << "rspctl --xcsubband=<int>                  # set the subband to cross correlate" << endl;
-  cout << "rspctl --clocks=<int>    [--select=<set>] # get or set the clock frequency of clocks in Hz" << endl;
+  cout << "rspctl --clocks=<int>                     # get or set the clock frequency of clocks in Hz" << endl;
   cout << "rspctl --version         [--select=<set>] # get version information" << endl;
   cout << "rspctl --rspclear        [--select=<set>] # clear FPGA registers on RSPboard" << endl;
 }

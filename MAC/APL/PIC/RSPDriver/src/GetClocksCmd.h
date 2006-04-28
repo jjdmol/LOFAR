@@ -84,7 +84,7 @@ namespace LOFAR {
     private:
       GetClocksCmd();
 
-      RSPGetclocksEvent* m_event;
+      RSPGetclockEvent* m_event;
     };
   };
 };

@@ -78,7 +78,7 @@ namespace LOFAR {
 
     private:
       UpdClocksCmd();
-      RSPSubclocksEvent* m_event;
+      RSPSubclockEvent* m_event;
     };
   };
 };

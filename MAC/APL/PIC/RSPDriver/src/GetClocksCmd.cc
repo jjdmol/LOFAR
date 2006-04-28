@@ -39,7 +39,7 @@ using namespace RTC;
 
 GetClocksCmd::GetClocksCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPGetclocksEvent(event);
+  m_event = new RSPGetclockEvent(event);
 
   setOperation(oper);
   setPeriod(0);
@@ -53,23 +53,12 @@ GetClocksCmd::~GetClocksCmd()
 
 void GetClocksCmd::ack(CacheBuffer& cache)
 {
-  RSPGetclocksackEvent ack;
+  RSPGetclockackEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.clocks().resize(m_event->rspmask.count());
-  
-  int result_rsp = 0;
-  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++)
-  {
-    if (m_event->rspmask[cache_rsp])
-    {
-      ack.clocks()(result_rsp) = cache.getClocks()()(cache_rsp);
-      
-      result_rsp++;
-    }
-  }
+  ack.clock = cache.getClock();
 
   getPort()->send(ack);
 }
@@ -96,7 +85,7 @@ void GetClocksCmd::setTimestamp(const RTC::Timestamp& timestamp)
 
 bool GetClocksCmd::validate() const
 {
-  return (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards());
+  return (true);
 }
 
 bool GetClocksCmd::readFromCache() const
