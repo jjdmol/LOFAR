@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/Numeric.h>
 #include <Common/LofarLogger.h>
+#include <cstdlib>
 
 namespace LOFAR
 {
@@ -101,8 +102,8 @@ namespace LOFAR
     if (isNegative(lhs) != isNegative(rhs)) return lhs == rhs;
 #endif
 
-    long ilhs = *(long*)&lhs;
-    long irhs = *(long*)&rhs;
+    floatMask_t ilhs = *(floatMask_t*)&lhs;
+    floatMask_t irhs = *(floatMask_t*)&rhs;
 
     // Make \a ilhs and \a irhs lexicographically ordered as twos-complement
     // long.
@@ -111,7 +112,7 @@ namespace LOFAR
 
     // If \a ilhs and \a irhs are less than \a maxUlps apart, then \a lhs and
     // \a rhs are considered equal.
-    return labs(ilhs - irhs) <= maxUlps;
+    return std::abs(ilhs - irhs) <= maxUlps;
 
   }
 
@@ -148,7 +149,7 @@ namespace LOFAR
 
     // If \a ilhs and \a irhs are less than \a maxUlps apart, then \a lhs and
     // \a rhs are considered equal.
-    return llabs(ilhs - irhs) <= maxUlps;
+    return std::llabs(ilhs - irhs) <= maxUlps;
 
   }
   

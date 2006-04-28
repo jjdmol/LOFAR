@@ -36,6 +36,7 @@ using namespace std;
 #define initNumbers(T)                                               \
   LOG_INFO("initNumbers("#T")");                                     \
   typedef Numeric::T##Mask_t mask_t;                                 \
+  ASSERT(sizeof(T) == sizeof(mask_t));				     \
   T zero(0), one(1), two(2);                                         \
   /* Create a negative zero                              */          \
   T negativeZero;                                                    \
@@ -172,7 +173,7 @@ using namespace std;
   /* comparison function should agree upon.                             */ \
                                                                            \
   /* Make sure that zero and negativeZero compare as equal.             */ \
-  ASSERT(Numeric::compare(zero, negativeZero, 0));                         \
+  ASSERT(Numeric::compare(zero, negativeZero, mask_t(0)));                 \
                                                                            \
   /* Make sure that nearby numbers compare as equal.                    */ \
   ASSERT(Numeric::compare(two, nearestTwo));                               \

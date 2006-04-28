@@ -28,9 +28,6 @@
 // \file
 // Compare floating point numbers.
 
-//# Includes
-#include <Common/LofarTypes.h>
-
 // \def USE_INFINITYCHECK
 // Add check for infinity. You will need this check if you don't want infinity
 // to be treated as "close to" \c FLT_MAX.
@@ -60,10 +57,10 @@ namespace LOFAR
   class Numeric
   {
   public:
-    // Mask type used for floats is an unsigned long.
-    typedef long floatMask_t;
-    // Mask type used for doubles is an unsigned long long.
-    typedef longlong doubleMask_t;
+    // Mask type used for floats is a (32-bit) int.
+    typedef int floatMask_t;
+    // Mask type used for doubles is a (64-bit) long long.
+    typedef long long doubleMask_t;
 
     // \return \c true if f < 0; otherwise \c false.
     static bool isNegative(float f);
