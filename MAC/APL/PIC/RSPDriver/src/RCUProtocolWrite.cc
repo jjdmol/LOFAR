@@ -162,7 +162,7 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 
     // Mark modification as applied when write of RCU result register has completed
 
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + (getCurrentIndex() / N_WRITES);
+    uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
     Cache::getInstance().getRCUProtocolState().applied(global_rcu);
 
   }
