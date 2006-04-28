@@ -1721,7 +1721,7 @@ void WH_BGL_Processing::process()
   totalTimer.start();
 
 #if defined SPARSE_FLAGS
-  get_DH_Subband()->getExtraData();
+  //get_DH_Subband()->getExtraData();
 #endif
 
   computeFlags();
