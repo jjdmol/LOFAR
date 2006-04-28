@@ -578,9 +578,11 @@ void RSPDriver::addAllSyncActions()
      */
     if (1 == GET_CONFIG("RSPDriver.WRITE_BS", i))
     {
-      BSWrite* bswrite = new BSWrite(m_board[boardid], boardid);
-      ASSERT(bswrite);
-      m_scheduler.addSyncAction(bswrite);
+      for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
+	BSWrite* bswrite = new BSWrite(m_board[boardid], boardid, blp);
+	ASSERT(bswrite);
+	m_scheduler.addSyncAction(bswrite);
+      }
     }
 
   } // for (boardid...)
@@ -932,20 +934,20 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       rsp_getconfig(event, port);
       break;
 
-    case RSP_SETCLOCKS:
-      rsp_setclocks(event, port);
+    case RSP_SETCLOCK:
+      rsp_setclock(event, port);
       break;
 
-    case RSP_GETCLOCKS:
-      rsp_getclocks(event, port);
+    case RSP_GETCLOCK:
+      rsp_getclock(event, port);
       break;
 
-    case RSP_SUBCLOCKS:
-      rsp_subclocks(event, port);
+    case RSP_SUBCLOCK:
+      rsp_subclock(event, port);
       break;
 
-    case RSP_UNSUBCLOCKS:
-      rsp_unsubclocks(event, port);
+    case RSP_UNSUBCLOCK:
+      rsp_unsubclock(event, port);
       break;
 
     case F_TIMER:
@@ -1876,17 +1878,17 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
-// rsp_setclocks (event, port)
+// rsp_setclock (event, port)
 //
-void RSPDriver::rsp_setclocks(GCFEvent& event, GCFPortInterface& port)
+void RSPDriver::rsp_setclock(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetClocksCmd> command = new SetClocksCmd(event, port, Command::WRITE);
 
   if (!command->validate())
   {
-    LOG_ERROR("SETCLOCKS: invalid parameter");
+    LOG_ERROR("SETCLOCK: invalid parameter");
     
-    RSPSetclocksackEvent ack;
+    RSPSetclockackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
     port.send(ack);
@@ -1908,17 +1910,17 @@ void RSPDriver::rsp_setclocks(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
-// rsp_getclocks (event, port)
+// rsp_getclock (event, port)
 //
-void RSPDriver::rsp_getclocks(GCFEvent& event, GCFPortInterface& port)
+void RSPDriver::rsp_getclock(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetClocksCmd> command = new GetClocksCmd(event, port, Command::READ);
 
   if (!command->validate())
   {
-    LOG_ERROR("GETCLOCKS: invalid parameter");
+    LOG_ERROR("GETCLOCK: invalid parameter");
     
-    RSPGetclocksackEvent ack;
+    RSPGetclockackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
     port.send(ack);
@@ -1939,17 +1941,17 @@ void RSPDriver::rsp_getclocks(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
-// rsp_subclocks (event, port)
+// rsp_subclock (event, port)
 //
-void RSPDriver::rsp_subclocks(GCFEvent& event, GCFPortInterface& port)
+void RSPDriver::rsp_subclock(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<UpdClocksCmd> command = new UpdClocksCmd(event, port, Command::READ);
 
-  RSPSubclocksackEvent ack;
+  RSPSubclockackEvent ack;
 
   if (!command->validate())
   {
-    LOG_ERROR("SUBCLOCKS: invalid parameter");
+    LOG_ERROR("SUBCLOCK: invalid parameter");
     
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = FAILURE;
@@ -1971,13 +1973,13 @@ void RSPDriver::rsp_subclocks(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
-// rsp_unsubclocks (event, port)
+// rsp_unsubclock (event, port)
 //
-void RSPDriver::rsp_unsubclocks(GCFEvent& event, GCFPortInterface& port)
+void RSPDriver::rsp_unsubclock(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubclocksEvent unsub(event);
+  RSPUnsubclockEvent unsub(event);
 
-  RSPUnsubclocksackEvent ack;
+  RSPUnsubclockackEvent ack;
   ack.timestamp = m_scheduler.getCurrentTime();
   ack.status = FAILURE;
   ack.handle = unsub.handle;
@@ -1988,7 +1990,7 @@ void RSPDriver::rsp_unsubclocks(GCFEvent& event, GCFPortInterface& port)
   }
   else
   {
-    LOG_ERROR("UNSUBCLOCKS: failed to remove subscription");
+    LOG_ERROR("UNSUBCLOCK: failed to remove subscription");
   }
 
   port.send(ack);
