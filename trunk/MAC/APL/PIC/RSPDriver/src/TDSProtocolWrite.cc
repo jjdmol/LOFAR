@@ -155,7 +155,7 @@ void TDSProtocolWrite::sendrequest()
 
   size_t size = 0;
 
-  switch (Cache::getInstance().getBack().getClocks()()(getBoardId())) {
+  switch (Cache::getInstance().getBack().getClock()) {
   case 160:
     buf = tds_160MHz;
     if (0 == getCurrentIndex()) {

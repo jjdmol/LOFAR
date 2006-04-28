@@ -126,7 +126,7 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 
   int idiff = 0;
 
-  switch (Cache::getInstance().getBack().getClocks()()(getBoardId())) {
+  switch (Cache::getInstance().getBack().getClock()) {
 
   case 160:
     printbin(tds_160MHz_result, sizeof(tds_160MHz_result));
