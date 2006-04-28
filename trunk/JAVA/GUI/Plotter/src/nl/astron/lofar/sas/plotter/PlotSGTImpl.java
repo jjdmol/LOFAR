@@ -11,11 +11,15 @@
  * E-Mail : Donald.W.Denbo@noaa.gov
  * Website: http://www.epic.noaa.gov/java/sgt
  *
+ * NOTICE :Although this class works with the standard SGT release,
+ *         it is recommended you use the supplied SGT jar file to
+ *         prevent as much bugs as possible.
  */
 
 package nl.astron.lofar.sas.plotter;
 
 import gov.noaa.pmel.sgt.CartesianGraph;
+import gov.noaa.pmel.sgt.DataNotFoundException;
 import gov.noaa.pmel.sgt.JPane;
 import gov.noaa.pmel.sgt.LineAttribute;
 import gov.noaa.pmel.sgt.LineCartesianRenderer;
@@ -63,20 +67,17 @@ public class PlotSGTImpl implements IPlot{
             JPlotLayout aNewPlot = null; 
             
             if(type==PlotConstants.PLOT_XYLINE){
-                aNewPlot = linePlot(name,data, separateLegend);
+                aNewPlot = linePlot(name,data, separateLegend,false);
                
                 pma = new plotMouseAdapter();
                 aNewPlot.getKeyPane().addMouseListener(pma);
+                aNewPlot.addMouseListener(pma);
             }
             else if(type==PlotConstants.PLOT_POINTS){
-                aNewPlot = linePlot(name,data, separateLegend);
-                 CartesianGraph aGraph = (CartesianGraph)aNewPlot.getFirstLayer().getGraph();
-                 
-                 LineAttribute marks = (LineAttribute)aGraph.getRenderer().getAttribute();
-                 marks.setStyle(LineAttribute.MARK);
-                 
+                aNewPlot = linePlot(name,data, separateLegend,true);
                  pma = new plotMouseAdapter();
                  aNewPlot.getKeyPane().addMouseListener(pma);
+                 aNewPlot.addMouseListener(pma);
             }
             else if(type==PlotConstants.PLOT_GRID){
                 aNewPlot = gridPlot(name,data, separateLegend);
@@ -96,7 +97,7 @@ public class PlotSGTImpl implements IPlot{
             return aNewPlot;
 	}
         
-        private JPlotLayout linePlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
+        private JPlotLayout linePlot(String name, HashMap data, boolean separateLegend, boolean showPointsOnly) throws PlotterException{
             JPlotLayout layout = new JPlotLayout(JPlotLayout.LINE, false, false,
                     name,null,separateLegend);
             layout.setSize(640,480);
@@ -208,8 +209,17 @@ public class PlotSGTImpl implements IPlot{
                         lineData.setXMetaData(meta);
                         lineData.setYMetaData(ymeta);
                         //Add line to plot
-                        
                         layout.addData(lineData, lineLabel);
+                       
+                        if(showPointsOnly){
+                            try{
+                                LineAttribute marks;
+                                marks = (LineAttribute) layout.getAttribute(lineData);
+                                marks.setStyle(LineAttribute.MARK);
+                            } catch (DataNotFoundException ex) {
+                                //LOG! ex.printStackTrace();
+                            }
+                        }
                     }
                 }
             }else{
@@ -410,7 +420,6 @@ public class PlotSGTImpl implements IPlot{
                             aLayout.getKeyPane().setBatch(true);
                             aLayout.getKeyPane().setBatch(false);
                             lad.setLineAttribute(attr);
-                            
                             if(!lad.isShowing()){
                                 lad.setVisible(true);
                             }
