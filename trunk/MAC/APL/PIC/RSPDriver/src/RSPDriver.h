@@ -136,10 +136,10 @@ namespace LOFAR {
       void rsp_getversions(GCFEvent& event, GCFPortInterface &port);
 
       void rsp_getconfig(GCFEvent& event, GCFPortInterface &port);
-      void rsp_setclocks(GCFEvent& event, GCFPortInterface &port);
-      void rsp_getclocks(GCFEvent& event, GCFPortInterface &port);
-      void rsp_subclocks(GCFEvent& event, GCFPortInterface &port);
-      void rsp_unsubclocks(GCFEvent& event, GCFPortInterface &port);
+      void rsp_setclock(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getclock(GCFEvent& event, GCFPortInterface &port);
+      void rsp_subclock(GCFEvent& event, GCFPortInterface &port);
+      void rsp_unsubclock(GCFEvent& event, GCFPortInterface &port);
       /*@}*/
 
     private:
