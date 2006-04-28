@@ -47,7 +47,7 @@ public class PlotController{
 	 * @param constraints A data access identifier array
 	 * 
 	 */
-	public JComponent createPlot(int type, String constraints[]) throws PlotterException{
+	public JComponent createPlot(int type, String[] constraints) throws PlotterException{
         
             Object aPlotter = null;
             IPlot aNewPlot = null;
@@ -61,7 +61,7 @@ public class PlotController{
                 throw new PlotterFrameworkInitializationException();
             } catch (ClassNotFoundException ex) {
                 //TODO Log!
-                throw new PlotterFrameworkNotFoundException();
+                throw new PlotterFrameworkNotFoundException("(used:"+ PlotConstants.FRAMEWORK + " )");
             } catch (InstantiationException ex) {
                 //TODO Log!
                 throw new PlotterFrameworkInitializationException();
@@ -74,7 +74,8 @@ public class PlotController{
                 if(type == PlotConstants.PLOT_BAR
                         || type == PlotConstants.PLOT_GRID
                         || type == PlotConstants.PLOT_SCATTER
-                        || type == PlotConstants.PLOT_XYLINE){
+                        || type == PlotConstants.PLOT_XYLINE
+                        || type == PlotConstants.PLOT_POINTS){
 
                         HashMap retrieveableData = 
                             m_PlotDataManager.retrieveData(constraints);                               
