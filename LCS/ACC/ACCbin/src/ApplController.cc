@@ -228,8 +228,6 @@ void ApplController::sendExecutionResult(uint16			result,
 //
 void ApplController::createParSubsets()
 {
-    ofstream logfile;
-    logfile.open('applc.log', ofstream::out);
     // Step 1: A parameterset for a process is constructed from three set:
     // [A] the default params for the set of processes setName[0]
     // [B] for multiple cmdline processes of the same type, the params for a specific process (setName[i]), these overule the previous set
