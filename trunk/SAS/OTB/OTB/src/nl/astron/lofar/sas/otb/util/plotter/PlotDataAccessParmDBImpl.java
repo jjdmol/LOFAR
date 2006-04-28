@@ -28,6 +28,9 @@ import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessException;
 public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     
     public static final int requiredDataConstraints = 7;
+    //Location of ParmDB table file(s)
+    public static final String DATA_INMEP_FILE_PATH = "/home/pompert/transfer/tParmFacade.in_mep";
+      
     private jParmFacade parmDB = null;
     
     static {
@@ -36,7 +39,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     
     
     public PlotDataAccessParmDBImpl(){
-        parmDB = new jParmFacade(PlotConstants.DATA_INMEP_FILE_PATH);
+        parmDB = new jParmFacade(this.DATA_INMEP_FILE_PATH);
     }
     
     
@@ -111,16 +114,8 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     double[] yArray = new double[valueDoubles.size()];
                     
                     for(int i = 0;(i<valueDoubles.size());i++){
-                        if(numx > 1){
-                            xArray[i] = startx + (endx-startx) / valueDoubles.size()*(i+0.5);
-                            // original xArray[i] = startx + (endx-startx) / numx*(i+1) ;
-                            yArray[i] = valueDoubles.get(i);
-                            //System.out.println("xArray["+xArray[i]+"] yArray["+yArray[i]+"]");
-                        } else if(numy > 1){
-                            yArray[i] = starty + (endy-starty) / valueDoubles.size()*(i+0.5);
-                            xArray[i] = valueDoubles.get(i);
-                            //System.out.println("xArray["+xArray[i]+"] yArray["+yArray[i]+"]");
-                        }
+                        xArray[i] = startx + (endx-startx) / valueDoubles.size()*(i+0.5);
+                        yArray[i] = valueDoubles.get(i);
                     }
                     aValueMap.put(PlotConstants.DATASET_XVALUES,xArray);
                     aValueMap.put(PlotConstants.DATASET_YVALUES,yArray);
