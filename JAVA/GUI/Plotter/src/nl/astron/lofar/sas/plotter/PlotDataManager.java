@@ -10,6 +10,8 @@
 package nl.astron.lofar.sas.plotter;
 
 import java.util.HashMap;
+import java.util.Properties;
+import java.util.ResourceBundle;
 import nl.astron.lofar.sas.plotter.exceptions.NotImplementedException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessorInitializationException;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessorNotCompatibleException;
@@ -25,6 +27,8 @@ import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 public class PlotDataManager{
     
     private static PlotDataManager instance = null;
+    private ResourceBundle bundle;
+    private boolean propertyFileOK;
     //private ParmDB m_ParmDB;
     
     public static PlotDataManager getInstance(){
@@ -35,7 +39,15 @@ public class PlotDataManager{
     }
     
     private PlotDataManager(){
-        
+      propertyFileOK = false; 
+      try {
+            bundle = ResourceBundle.getBundle(PlotConstants.RESOURCE_FILE);
+            
+      } catch (Exception iex) {
+           //LOG!
+          //iex.printStackTrace();
+            
+      } 
     }
     
     
@@ -50,16 +62,25 @@ public class PlotDataManager{
     public HashMap retrieveData(String[] constraints) throws PlotterException{
         Object aClass = null;
         IPlotDataAccess aDataAccessor = null;
+        String dataAccessClass = "";
         try {
-            Class implementator = PlotDataManager.class.forName(PlotConstants.DATA_ACCESS_CLASS);
-            aClass = implementator.newInstance();
-            aDataAccessor = (IPlotDataAccess)aClass;
+           dataAccessClass = bundle.getString(("DATA_ACCESS_CLASS"));
+        
+        } catch (Exception iex) {
+           //iex.printStackTrace();
+           throw new PlotterDataAccessorNotFoundException("(No plotter_config.properties file found with a DATA_ACCESS_CLASS variable!)");
+        }
+        try {
+           Class implementator;
+           implementator = PlotDataManager.class.forName(dataAccessClass);
+           aClass = implementator.newInstance();
+           aDataAccessor = (IPlotDataAccess)aClass;
         } catch (IllegalAccessException ex) {
             //TODO Log!
             throw new PlotterDataAccessorInitializationException();
         } catch (ClassNotFoundException ex) {
             //TODO Log!
-            throw new PlotterDataAccessorNotFoundException();
+            throw new PlotterDataAccessorNotFoundException("(used: "+dataAccessClass+" )");
         } catch (InstantiationException ex) {
             //TODO Log!
             throw new PlotterDataAccessorInitializationException();
@@ -80,11 +101,11 @@ public class PlotDataManager{
     }
     
     /**
-     * @param rootParams
+     * @param exportParams
      * @param data
      *
      */
-    public void exportData(String[] rootParams, HashMap data) throws PlotterException{
+    public void exportData(String[] exportParams, HashMap data) throws PlotterException{
         throw new NotImplementedException("Export of data is not yet implemented in this release.");
     }
     
