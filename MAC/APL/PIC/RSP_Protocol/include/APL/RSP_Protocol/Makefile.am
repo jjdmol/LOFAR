@@ -2,7 +2,6 @@ INSTHDRS = \
 	MEPHeader.h \
 	MEPData.h \
 	BeamletWeights.h \
-	Clocks.h \
 	RCUSettings.h \
 	RSUSettings.h \
 	Statistics.h \

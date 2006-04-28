@@ -34,7 +34,6 @@ lib_LTLIBRARIES         = librsp_protocol.la
 librsp_protocol_la_SOURCES = \
 	$(BUILT_SOURCES) \
 	BeamletWeights.cc \
-	Clocks.cc \
 	RCUSettings.cc \
 	RSUSettings.cc \
 	Statistics.cc \

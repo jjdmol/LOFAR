@@ -277,10 +277,10 @@ namespace LOFAR {
 
       static const uint16 DIAG_WGX_SIZE         = 12;
       static const uint16 DIAG_WGY_SIZE         = 12;
-      static const uint16 DIAG_WGXWAVE_SIZE     = 4096;
-      static const uint16 DIAG_WGYWAVE_SIZE     = 4096;
+      static const uint16 DIAG_WGXWAVE_SIZE     = 8192;
+      static const uint16 DIAG_WGYWAVE_SIZE     = 8192;
       static const uint16 DIAG_BYPASS_SIZE      = 2;
-      static const uint16 DIAG_RESULTS_SIZE     = 4096;
+      static const uint16 DIAG_RESULTS_SIZE     = 4096; // also 8192 ?
       static const uint16 DIAG_SELFTEST_SIZE    = 4;
       
       static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 960?
