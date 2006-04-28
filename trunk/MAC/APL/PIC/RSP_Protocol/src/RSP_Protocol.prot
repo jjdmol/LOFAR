@@ -24,7 +24,6 @@ include = '<APL/RSP_Protocol/SystemStatus.h>';
 include = '<APL/RSP_Protocol/Statistics.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
 include = '<APL/RSP_Protocol/Versions.h>';
-include = '<APL/RSP_Protocol/Clocks.h>';
 include = '<APL/RSP_Protocol/MEPHeader.h>';
 
 prelude = << PRELUDE_END
@@ -455,8 +454,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "rcumask";
-    type = "std::bitset<MAX_N_RCUS>";
+    name = "rspmask";
+    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "settings";
@@ -989,7 +988,7 @@ event = {
 };
 
 event = {
-  signal = SETCLOCKS;
+  signal = SETCLOCK;
   dir = IN;
   param = {
     name = "timestamp";
@@ -997,18 +996,13 @@ event = {
     userdefined;
   };
   param = {
-    name = "rspmask";
-    type = "std::bitset<MAX_N_RSPBOARDS>";
-  };
-  param = {
-    name = "clocks";
-    type = "Clocks";
-    userdefined;
+    name = "clock";
+    type = "uint32";
   };
 };
 
 event = {
-  signal = SETCLOCKSACK;
+  signal = SETCLOCKACK;
   dir = OUT;
   param = {
     name = "timestamp";
@@ -1022,16 +1016,12 @@ event = {
 };
   
 event = {
-  signal = GETCLOCKS;
+  signal = GETCLOCK;
   dir = IN;
   param = {
     name = "timestamp";
     type = "RTC::Timestamp";
     userdefined;
-  };
-  param = {
-    name = "rspmask";
-    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "cache";
@@ -1040,7 +1030,7 @@ event = {
 };
 
 event = {
-  signal = GETCLOCKSACK;
+  signal = GETCLOCKACK;
   dir = OUT;
   param = {
     name = "timestamp";
@@ -1052,23 +1042,18 @@ event = {
     type = "int16";
   };
   param = {
-    name = "clocks";
-    type = "Clocks";
-    userdefined;
+    name = "clock";
+    type = "uint32";
   };
 };
 
 event = {
-  signal = SUBCLOCKS;
+  signal = SUBCLOCK;
   dir = IN;
   param = {
     name = "timestamp";
     type = "RTC::Timestamp";
     userdefined;
-  };
-  param = {
-    name = "rspmask";
-    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "period";
@@ -1077,7 +1062,7 @@ event = {
 };
 
 event = {
-  signal = SUBCLOCKSACK;
+  signal = SUBCLOCKACK;
   dir = OUT;
   param = {
     name = "timestamp";
@@ -1095,7 +1080,7 @@ event = {
 };
 
 event = {
-  signal = UPDCLOCKS;
+  signal = UPDCLOCK;
   dir = OUT;
   param = {
     name = "timestamp";
@@ -1111,14 +1096,13 @@ event = {
     type = "uint32";
   };
   param = {
-    name = "clocks";
-    type = "Clocks";
-    userdefined;
+    name = "clock";
+    type = "uint32";
   };
 };
 
 event = {
-  signal = UNSUBCLOCKS;
+  signal = UNSUBCLOCK;
   dir = IN;
   param = {
     name = "handle";
@@ -1127,7 +1111,7 @@ event = {
 };
 
 event = {
-  signal = UNSUBCLOCKSACK;
+  signal = UNSUBCLOCKACK;
   dir = OUT;
   param = {
     name = "timestamp";

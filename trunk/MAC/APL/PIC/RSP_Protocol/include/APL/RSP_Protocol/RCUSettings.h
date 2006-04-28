@@ -73,6 +73,9 @@ namespace LOFAR {
 	  m_value &= ~MODE_MASK;                 // clear mode bits
 	  m_value |= (m_mode[mode % N_MODES] & MODE_MASK); // set new mode bits
 	}
+	bool isModeOff() {
+	  return !(m_value & MODE_MASK);
+	}
 
 	/**
 	 * Set the raw control bytes of a RCU
