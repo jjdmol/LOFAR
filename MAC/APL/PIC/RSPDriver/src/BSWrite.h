@@ -38,7 +38,7 @@ namespace LOFAR {
       /**
        * Constructors for a BSWrite object.
        */
-      BSWrite(GCFPortInterface& board_port, int board_id);
+      BSWrite(GCFPortInterface& board_port, int board_id, int blp);
 
       /* Destructor for BSWrite. */
       virtual ~BSWrite();
@@ -60,6 +60,7 @@ namespace LOFAR {
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+      int m_blp;
     };
   };
 };

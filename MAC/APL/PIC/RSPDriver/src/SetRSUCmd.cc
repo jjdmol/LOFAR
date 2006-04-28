@@ -64,12 +64,14 @@ void SetRSUCmd::ack(CacheBuffer& /*cache*/)
 
 void SetRSUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  for (int boardNr = 0; boardNr < StationSettings::instance()->nrRspBoards(); boardNr++) { 
-    // TODO: don't reset all boards
-    LOG_INFO (formatString("RSUcontrol for board %d", boardNr));
-    cache.getRSUSettings()()(boardNr) = m_event->settings()(0);
-    if (setModFlag) {
-      cache.getCache().getRSUClearState().modified(boardNr);
+  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++) { 
+    if (m_event->rspmask[cache_rsp]) {
+      LOG_INFO (formatString("RSUcontrol for board %d", cache_rsp));
+      cache.getRSUSettings()()(cache_rsp) = m_event->settings()(0);
+
+      if (setModFlag) {
+	cache.getCache().getRSUClearState().modified(cache_rsp);
+      }
     }
   }
 }
@@ -91,7 +93,7 @@ void SetRSUCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetRSUCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards())
+  return ((m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards())
 	  && (1 == m_event->settings().dimensions())
 	  && (1 == m_event->settings().extent(firstDim)));
 }
