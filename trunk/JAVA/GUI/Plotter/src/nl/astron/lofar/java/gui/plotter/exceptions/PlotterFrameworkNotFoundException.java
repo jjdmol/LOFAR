@@ -18,12 +18,14 @@ import nl.astron.lofar.sas.plotter.PlotConstants;
  */
 public class PlotterFrameworkNotFoundException extends PlotterException{
     
+    private String message;
     /** Creates a new instance of PlotterFrameworkNotFoundException */
-    public PlotterFrameworkNotFoundException() {
+    public PlotterFrameworkNotFoundException(String message) {
         super();
+        this.message = message;
     }
     public String getMessage(){
-        return super.getMessage() + PlotConstants.EXCEPTION_FRAMEWORK_NOT_FOUND;
+        return super.getMessage() + PlotConstants.EXCEPTION_FRAMEWORK_NOT_FOUND + " " +message;
     }
     
     
