@@ -60,16 +60,9 @@ public abstract class PlotConstants{
     //Supported plotter framework
     public static final String FRAMEWORK         = "nl.astron.lofar.sas.plotter.PlotSGTImpl";
     
-    //Supported plotter data access class
-    public static final String DATA_ACCESS_CLASS = "nl.astron.lofar.sas.plotter.PlotDataAccessParmDBImpl";
-    //public static final String DATA_ACCESS_CLASS = "nl.astron.lofar.sas.plotter.test.PlotDataAccessTestImpl";
+    //Location of the properties file (minus .properties!) where the data access/export classes are specified
+    public static final String RESOURCE_FILE     = "nl.astron.lofar.sas.plotter.plotter_config";
     
-    //Location of ParmDB table file(s)
-    public static final String DATA_INMEP_FILE_PATH = "/home/pompert/transfer/tParmFacade.in_mep";
-        
-    //Supported plotter data export class
-    //public static final String DATA_EXPORT_CLASS = "nl.astron.lofar.sas.plotter.PlotDataExportRootImpl";
-
     //Exception messages
     public static final String EXCEPTION_GENERIC                = "An internal error occurred. ";
     public static final String EXCEPTION_NOT_IMPLEMENTED         = "The plotter has detected that the feature you requested is not (fully) implemented in this release. ";
@@ -77,11 +70,12 @@ public abstract class PlotConstants{
     
     public static final String EXCEPTION_EMPTY_DATASET           = "An empty data set was passed to the plotter framework. ";
     
-    public static final String EXCEPTION_FRAMEWORK_INIT          = "The plotter framework class specified in the constants file could not be accessed and/or instantiated by the plotter. ";
-    public static final String EXCEPTION_FRAMEWORK_NOT_FOUND      = "The plotter framework class specified in the constants file could not be found by the plotter. ";
-    public static final String EXCEPTION_FRAMEWORK_NOT_COMPATIBLE = "The plotter framework class specified in the constants file does not implement the IPlot interface, and therefore is NOT compatible with the plotter. ";
+    public static final String EXCEPTION_FRAMEWORK_INIT          = "The plotter framework class specified in the constants class or plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
+    public static final String EXCEPTION_FRAMEWORK_NOT_FOUND      = "The plotter framework class specified in the constants class or plotter_config.properties file could not be found by the plotter. ";
+    public static final String EXCEPTION_FRAMEWORK_NOT_COMPATIBLE = "The plotter framework class specified in the constants class or plotter_config.properties file does not implement the IPlot interface, and therefore is NOT compatible with the plotter. ";
     
-    public static final String EXCEPTION_DATA_ACCESS_INIT           = "The plotter data access class specified in the constants file could not be accessed and/or instantiated by the plotter. ";
-    public static final String EXCEPTION_DATA_ACCESS_NOT_FOUND      = "The plotter data access class specified in the constants file could not be found by the plotter. ";
-    public static final String EXCEPTION_DATA_ACCESS_NOT_COMPATIBLE = "The plotter data access class specified in the constants file does not implement the IPlotDataAccess interface, and therefore is NOT compatible with the plotter. ";
+    public static final String EXCEPTION_DATA_ACCESS_INIT           = "The plotter data access class specified in the plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
+    public static final String EXCEPTION_DATA_ACCESS_NOT_FOUND      = "The plotter data access class specified in the plotter_config.properties file could not be found by the plotter. ";
+    public static final String EXCEPTION_DATA_ACCESS_NOT_COMPATIBLE = "The plotter data access class specified in the plotter_config.properties file does not implement the IPlotDataAccess interface, and therefore is NOT compatible with the plotter. ";
+
 }
