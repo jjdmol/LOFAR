@@ -18,12 +18,14 @@ import nl.astron.lofar.sas.plotter.PlotConstants;
  */
 public class PlotterDataAccessorNotFoundException extends PlotterException{
     
+    private String message;
     /** Creates a new instance of PlotterDataAccessorNotFoundException */
-    public PlotterDataAccessorNotFoundException() {
+    public PlotterDataAccessorNotFoundException(String message) {
         super();
+        this.message = message;
     }
     public String getMessage(){
-        return super.getMessage() + PlotConstants.EXCEPTION_DATA_ACCESS_NOT_FOUND;
+        return super.getMessage() + PlotConstants.EXCEPTION_DATA_ACCESS_NOT_FOUND + " " +message;
     }
     
     
