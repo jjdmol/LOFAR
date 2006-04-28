@@ -38,7 +38,7 @@ using namespace RTC;
 
 SetClocksCmd::SetClocksCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPSetclocksEvent(event);
+  m_event = new RSPSetclockEvent(event);
 
   setOperation(oper);
   setPeriod(0);
@@ -52,7 +52,7 @@ SetClocksCmd::~SetClocksCmd()
 
 void SetClocksCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPSetclocksackEvent ack;
+  RSPSetclockackEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status    = SUCCESS;
@@ -62,15 +62,11 @@ void SetClocksCmd::ack(CacheBuffer& /*cache*/)
 
 void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++) {
-    if (m_event->rspmask[cache_rsp]) {
-      cache.getClocks()()(cache_rsp) = m_event->clocks()(0);
-      if (setModFlag) {
-        cache.getCache().getBSState().modified(cache_rsp);
-        cache.getCache().getTDSState().modified(cache_rsp);
-      }
-    }
+  cache.getClock() = m_event->clock;
+  if (setModFlag) {
+    cache.getCache().getBSState().modified();
   }
+  cache.getCache().getTDSState().modified();
 }
 
 void SetClocksCmd::complete(CacheBuffer& /*cache*/)
@@ -90,17 +86,7 @@ void SetClocksCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetClocksCmd::validate() const
 {
-  bool values_ok = true;
-  for (int i = 0; i < m_event->clocks().extent(firstDim); i++) {
-    if (  0 != m_event->clocks()(i) &&
-	160 != m_event->clocks()(i) &&
-	200 != m_event->clocks()(i)) {
-      values_ok = false;
-      break;
-    }
-  }
-  return (values_ok
-	  && (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards())
-	  && (1 == m_event->clocks().dimensions())
-	  && (1 == m_event->clocks().extent(firstDim)));
+  return (0   == m_event->clock ||
+	  160 == m_event->clock ||
+	  200 == m_event->clock);
 }

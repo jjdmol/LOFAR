@@ -60,7 +60,7 @@ namespace LOFAR {
       RSP_Protocol::Statistics&        getBeamletStats();
       RSP_Protocol::XCStatistics&      getXCStats();
       RSP_Protocol::Versions&          getVersions();
-      RSP_Protocol::Clocks&            getClocks();
+      uint32&                          getClock();
       /*@}*/
 
       /**
@@ -89,7 +89,7 @@ namespace LOFAR {
       RSP_Protocol::XCStatistics     m_xcstats;
       RSP_Protocol::SystemStatus     m_systemstatus;
       RSP_Protocol::Versions         m_versions;
-      RSP_Protocol::Clocks           m_clocks;
+      uint32                         m_clock;
 
       Cache* m_cache;
     };

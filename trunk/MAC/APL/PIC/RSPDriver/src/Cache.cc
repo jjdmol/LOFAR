@@ -137,8 +137,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   m_versions.ap().resize(StationSettings::instance()->nrBlps());
   m_versions.ap() = versioninit;
 
-  m_clocks.init(StationSettings::instance()->nrRspBoards());
-  m_clocks() = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
+  m_clock = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
 
   // print sizes of the cache
   LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
@@ -225,9 +224,9 @@ Versions& CacheBuffer::getVersions()
   return m_versions;
 }
 
-Clocks& CacheBuffer::getClocks()
+uint32& CacheBuffer::getClock()
 {
-  return m_clocks;
+  return m_clock;
 }
 
 void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)
@@ -268,7 +267,7 @@ Cache::Cache() : m_front(0), m_back(0)
   getDIAGWGSettingsState().resize(StationSettings::instance()->nrRcus());
   getDIAGWGSettingsState().modified();
 
-  getBSState().resize(StationSettings::instance()->nrRspBoards());
+  getBSState().resize(StationSettings::instance()->nrBlps());
   getBSState().modified();
 
   getBFState().resize(StationSettings::instance()->nrRcus() * MEPHeader::N_PHASE); // XR, XI, YR, YI
@@ -296,25 +295,25 @@ Cache::~Cache()
 void Cache::swapBuffers()
 {
 #if 1
-  cout << "CDO            "; getCDOState().print(cout);
+  cout << "RSUClear       "; getRSUClearState().print(cout);
   cout << "DIAGWGSettings "; getDIAGWGSettingsState().print(cout);
   cout << "BF             "; getBFState().print(cout);
-  cout << "BS             "; getBSState().print(cout);
-  cout << "TDS            "; getTDSState().print(cout);
   cout << "RCUSettings    "; getRCUSettingsState().print(cout);
   cout << "RCUProtocol    "; getRCUProtocolState().print(cout);
-  cout << "RSUClear       "; getRSUClearState().print(cout);
+  cout << "CDO            "; getCDOState().print(cout);
+  cout << "BS             "; getBSState().print(cout);
+  cout << "TDS            "; getTDSState().print(cout);
 #endif
 
   // clear modified flags on back buffer
-  getCDOState().clear();
+  getRSUClearState().clear();
   getDIAGWGSettingsState().clear();
   getBFState().clear();
-  getBSState().clear();
-  getTDSState().clear();
   getRCUSettingsState().clear();
   getRCUProtocolState().clear();
-  getRSUClearState().clear();
+  getCDOState().clear();
+  getBSState().clear();
+  getTDSState().clear();
 
   CacheBuffer *tmp = m_front;
   m_front = m_back;
