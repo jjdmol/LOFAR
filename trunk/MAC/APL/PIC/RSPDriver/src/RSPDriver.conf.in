@@ -213,20 +213,16 @@ RSPDriver.READ_XST=1
 #
 RSPDriver.READ_BF=0
 RSPDriver.READ_SS=0
-RSPDriver.READ_RCU=1
+RSPDriver.READ_RCU=0
 RSPDriver.READ_WG=0
-
-#
-# Set to 1 to force vddvcc_en on RCU to 1 = AD convertor always on
-#
-# Note KJW 2005-12-05: Check whether this is still used/needed.
-#
-RSPDriver.FORCE_VDDVCC_EN=1
 
 #
 # Specify which RSP board is first for cross correlation (indexing from 0)
 #
-RSPDriver.XST_FIRST_RSP_BOARD=0
+# MAC address of first RSP board is 10:FA:00:00:13:00
+# therefor the index of the first RSP board = 0x13 = 19 (decimal)
+#
+RSPDriver.XST_FIRST_RSP_BOARD=19
 
 #
 # Specify the default sampling frequency that should be programmed
