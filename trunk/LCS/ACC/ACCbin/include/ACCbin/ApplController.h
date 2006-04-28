@@ -76,6 +76,9 @@ private:
 							 bool				passOwnership);
 	void startCmdState      ();
 	void createParSubsets   ();
+	// writeParSubset writes the parameterset to a file
+	// it is only meant to avoid code duplication in createParSubsets
+	void writeParSubset(ParameterSet ps, const string& procName, const string& fileName);
 	void writeResultFile    ();
 
 	void checkForACCommands();

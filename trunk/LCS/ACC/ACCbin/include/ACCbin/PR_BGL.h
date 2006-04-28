@@ -41,9 +41,10 @@ namespace LOFAR {
     // Its known how to start and stop a process and knows its current state.
     class PR_BGL : public ProcRule {
     public:
-      PR_BGL(const string& aNodeName, 
-	     const string& aProcName,
-	     const string& aExecName,
+      PR_BGL(const string& aJobName, 
+	     const string& aPartition,
+	     const string& aExecutable,
+	     const string& aWorkingDir,
 	     const string& aParamfile,
 	     const uint numberOfNodes);
 
@@ -64,7 +65,6 @@ namespace LOFAR {
       PR_BGL();
       
       //# --- Datamembers ---
-      uint itsNoNodes;
     };
 
     // @} addgroup
