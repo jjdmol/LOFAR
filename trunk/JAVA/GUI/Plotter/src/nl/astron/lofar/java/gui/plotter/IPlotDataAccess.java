@@ -21,7 +21,8 @@ import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessException;
 public interface IPlotDataAccess{
     
     /**
-     * @param constraint
+     * @param constraints An array of constraints to be passed to the implementating class
+     * @returns HashMap The dataset that has been generated
      */
     public HashMap retrieveData(String[] constraints) throws PlotterDataAccessException;
     
