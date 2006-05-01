@@ -9,12 +9,12 @@
 
 package nl.astron.lofar.sas.plotter;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.PrintJob;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
 
@@ -33,6 +33,8 @@ public class PlotPanel extends JPanel{
 
 	public PlotPanel(){
             m_PlotController = new PlotController();
+            this.setBackground(Color.WHITE);
+            this.setLayout(new BorderLayout());
         }
 
 	public void finalize() throws Throwable {
@@ -48,7 +50,7 @@ public class PlotPanel extends JPanel{
             currentDataConstraint = constraints;
             
             plot = m_PlotController.createPlot(type,constraints);
-            add(plot);
+            this.add(plot,BorderLayout.CENTER);
         }
         
 	public Image exportImage(){
