@@ -68,7 +68,6 @@ GTMETHSocket::~GTMETHSocket()
 
 ssize_t GTMETHSocket::send(void* buf, size_t count)
 {
-  ssize_t result   = 0;
   ssize_t newcount = count;
   memcpy(_sendPacketData, (char*)buf, count);
 
@@ -80,31 +79,47 @@ ssize_t GTMETHSocket::send(void* buf, size_t count)
    */
   if (newcount < ETH_ZLEN - ETH_HLEN) newcount = ETH_ZLEN - ETH_HLEN;
 
-  result = sendto(_fd, 
-                  _sendPacket, 
-                  newcount + sizeof(struct ethhdr), 0,
-                 (struct sockaddr*)&_sockaddr,
-                  sizeof(struct sockaddr_ll));
+  ssize_t written = -1;
+  do {
+    written = sendto(_fd, 
+		     _sendPacket,
+		     newcount + sizeof(struct ethhdr), 0,
+		     (struct sockaddr*)&_sockaddr,
+		     sizeof(struct sockaddr_ll));
 
-  return result - sizeof(struct ethhdr) - (newcount - count);
+    if ( written < 0 && errno != EINTR && errno != EAGAIN ) {
+      LOG_WARN(formatString("send, error: %s", strerror(errno)));
+      return written;
+    }
+  } while (written < 0);
+
+  return written - sizeof(struct ethhdr) - (newcount - count);
 }
 
+/**
+ * recv a maximum of count bytes, return actually returned bytes
+ */
 ssize_t GTMETHSocket::recv(void* buf, size_t count)
 {
-  ssize_t result = -1;
+  ssize_t received = -1;
 
   if (count < ETH_DATA_LEN) return -1;
 
   struct sockaddr_ll recvSockaddr;
   socklen_t recvSockaddrLen = sizeof(struct sockaddr_ll);
-  result = recvfrom(_fd, _recvPacket, ETH_FRAME_LEN,
-       0, (struct sockaddr*)&recvSockaddr, &recvSockaddrLen);
 
-  if (result < 0) return -1;
+  do {
+    received = ::recvfrom(_fd, _recvPacket, count,
+			0, (struct sockaddr*)&recvSockaddr, &recvSockaddrLen);
+    if ( received < 0 && EINTR != errno && EAGAIN != errno ) {
+      LOG_WARN(formatString("recv, error: %s", strerror(errno)));
+      return received;
+    }
+  } while (received < 0);
 
-  memcpy(buf, _recvPacket + sizeof(struct ethhdr), ETH_DATA_LEN);
+  memcpy(buf, _recvPacket + sizeof(struct ethhdr), received);
 
-  return result - sizeof(struct ethhdr);
+  return received - sizeof(struct ethhdr);
 }
 
 int GTMETHSocket::open(const char* ifname,
