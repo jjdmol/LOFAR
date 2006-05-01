@@ -45,7 +45,7 @@
 //	- INIT_LOGGER_AND_WATCH
 //
 #define INIT_LOGGER(filename) \
-	::LOFAR::LFDebug::initLevels (string(filename) + ".debug")
+	::LOFAR::LFDebug::initLevels (::LOFAR::string(filename) + ".debug")
 
 //# Note: 'watch' functionality not available
 #define INIT_LOGGER_AND_WATCH(filename,interval) \
@@ -138,7 +138,7 @@ public: \
 //#
 #define LOG_TRACE_LIFETIME_STR(level, stream) do { \
 	if( LFDebugCheck(level) ) { \
-		LFDebug::Tracer objname; \
+		::LOFAR::LFDebug::Tracer objname; \
 		constructStream(stream); \
 		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
                         AUTO_FUNCTION_NAME, oss.str().c_str(), 0); \
@@ -219,7 +219,8 @@ public: \
 
 #define	cLog(level,levelname,message) \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message << endl
+		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
+		<< std::endl
 
 #define cLogstr(level,levelname,stream) do { \
 		constructStream(stream); \
@@ -229,7 +230,7 @@ public: \
 #define	cDebug(level,levelname,message) \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
 		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
-		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << endl
+		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << std::endl
 
 #define cDebugstr(level,levelname,stream) do { \
 		constructStream(stream); \

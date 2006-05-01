@@ -250,7 +250,7 @@ namespace LOFAR {
 // Create a TraceLogger object that will output your message during construct
 // and destruction. Your message is preceeded with "ENTER:" or "EXIT:".
 #define LOG_TRACE_LIFETIME(level,message) do { \
-	LifetimeLogger _tmpLifetimeTraceObj(level, getLogger().logger(), \
+	::LOFAR::LifetimeLogger _tmpLifetimeTraceObj(level, getLogger().logger(), \
 	::LOFAR::formatString("%s:%s", AUTO_FUNCTION_NAME, message), \
 			__FILE__, __LINE__); \
 	} while(0)
@@ -258,9 +258,9 @@ namespace LOFAR {
 // Create a TraceLogger object that will output your message during construct
 // and destruction. Your message is preceeded with "ENTER:" or "EXIT:".
 #define LOG_TRACE_LIFETIME_STR(level,stream) do { \
-	ostringstream	oss; \
+	std::ostringstream	oss; \
 	oss << AUTO_FUNCTION_NAME << ":" << stream; \
-	LifetimeLogger		_tmpLifetimeTraceObj(level, getLogger().logger(), \
+	::LOFAR::LifetimeLogger	_tmpLifetimeTraceObj(level, getLogger().logger(), \
 								oss.str(), __FILE__, __LINE__); \
 	} while(0)
 	
