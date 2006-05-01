@@ -95,12 +95,12 @@ inline unsigned TimeStamp::getBlockId() const
   return itsTime % theirMaxBlockId;
 }
 
-unsigned TimeStamp::getMaxBlockId()
+inline unsigned TimeStamp::getMaxBlockId()
 {
   return theirMaxBlockId;
 }
 
-void TimeStamp::setMaxBlockId(unsigned nMBID)
+inline void TimeStamp::setMaxBlockId(unsigned nMBID)
 {
   theirMaxBlockId = nMBID;
 }
