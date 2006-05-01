@@ -7,13 +7,13 @@
  *
  */
 
-package nl.astron.lofar.sas.plotter.test;
+package nl.astron.lofar.java.gui.plotter.test;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import nl.astron.lofar.sas.plotter.IPlotDataAccess;
-import nl.astron.lofar.sas.plotter.PlotConstants;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessException;
+import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
+import nl.astron.lofar.java.gui.plotter.PlotConstants;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**
  * @created 19-04-2006, 11:00

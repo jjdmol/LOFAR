@@ -7,10 +7,10 @@
  *
  */
 
-package nl.astron.lofar.sas.plotter;
+package nl.astron.lofar.java.gui.plotter;
 
 import java.util.HashMap;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessException;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**
  * @created 19-04-2006, 11:00

@@ -7,9 +7,9 @@
  *
  */
 
-package nl.astron.lofar.sas.plotter.exceptions;
+package nl.astron.lofar.java.gui.plotter.exceptions;
 
-import nl.astron.lofar.sas.plotter.PlotConstants;
+import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
  * @version $Id$

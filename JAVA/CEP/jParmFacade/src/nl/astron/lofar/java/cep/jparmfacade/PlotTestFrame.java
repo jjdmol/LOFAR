@@ -7,7 +7,7 @@
  *
  */
 
-package nl.astron.lofar.sas.plotter.test;
+package nl.astron.lofar.java.gui.plotter.test;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -15,9 +15,9 @@ import java.awt.Dimension;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import nl.astron.lofar.sas.plotter.PlotConstants;
-import nl.astron.lofar.sas.plotter.PlotPanel;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
+import nl.astron.lofar.java.gui.plotter.PlotConstants;
+import nl.astron.lofar.java.gui.plotter.PlotPanel;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
  * @created 13-04-2006, 13:00
