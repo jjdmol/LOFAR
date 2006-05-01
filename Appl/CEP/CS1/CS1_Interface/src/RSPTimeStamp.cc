@@ -23,37 +23,15 @@
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <Common/lofar_iostream.h>
 
-namespace LOFAR 
+namespace LOFAR {
+namespace CS1 {
+
+unsigned TimeStamp::theirMaxBlockId = 156250;
+
+ostream &operator << (ostream &os, const TimeStamp &ss)
 {
-  namespace CS1
-  {
-    int TimeStamp::theirMaxBlockId = 156250;
+  return os << ss.getSeqId() << " s: " << ss.getBlockId();
+}
 
-    TimeStamp::TimeStamp(const int seqId, const int blockId) 
-      :itsSeqId(seqId),
-       itsBlockId(blockId)
-    {
-      checkOverflow();
-    }
-
-    void TimeStamp::checkOverflow() {
-      if (itsBlockId >= theirMaxBlockId) {
-        int newBlockId = itsBlockId % theirMaxBlockId;
-        itsSeqId += itsBlockId / theirMaxBlockId; 
-        itsBlockId = newBlockId;
-      } else if (itsBlockId < 0) {
-        int newBlockId = (itsBlockId % theirMaxBlockId) + theirMaxBlockId;
-        itsSeqId += -1 + itsBlockId / theirMaxBlockId; 
-        itsBlockId = newBlockId;
-      };
-    }  
-
-    ostream& operator<<(ostream& os, const TimeStamp& ss){
-      os<<ss.itsSeqId<<" s: "<<ss.itsBlockId;
-      return os;
-    }
-
-  } // namespace CS1
-
+} // namespace CS1
 } // namespace LOFAR
-
