@@ -18,7 +18,6 @@
 
 package nl.astron.lofar.sas.plotter;
 
-import gov.noaa.pmel.sgt.CartesianGraph;
 import gov.noaa.pmel.sgt.DataNotFoundException;
 import gov.noaa.pmel.sgt.JPane;
 import gov.noaa.pmel.sgt.LineAttribute;
@@ -70,13 +69,13 @@ public class PlotSGTImpl implements IPlot{
                 aNewPlot = linePlot(name,data, separateLegend,false);
                
                 pma = new plotMouseAdapter();
-                aNewPlot.getKeyPane().addMouseListener(pma);
+                if(aNewPlot.getKeyPane()!= null) aNewPlot.getKeyPane().addMouseListener(pma);
                 aNewPlot.addMouseListener(pma);
             }
             else if(type==PlotConstants.PLOT_POINTS){
                 aNewPlot = linePlot(name,data, separateLegend,true);
                  pma = new plotMouseAdapter();
-                 aNewPlot.getKeyPane().addMouseListener(pma);
+                  if(aNewPlot.getKeyPane()!= null) aNewPlot.getKeyPane().addMouseListener(pma);
                  aNewPlot.addMouseListener(pma);
             }
             else if(type==PlotConstants.PLOT_GRID){
@@ -313,8 +312,9 @@ public class PlotSGTImpl implements IPlot{
 
                     Iterator linesIterator = values.iterator();
                     //Loop through all XY pairs
+                    int lineNumber = 0;
                     while(linesIterator.hasNext()){
-                        
+                        lineNumber++;
                         double[] xArray = null;
                         double[] yArray = null;
                         double[] zArray = null;
@@ -334,7 +334,7 @@ public class PlotSGTImpl implements IPlot{
                                                    false,
                                                    false);
                         
-                        String lineLabel = "Unknown value";
+                        String lineLabel = "Unspecified value "+ lineNumber;
                         HashMap grid = (HashMap)linesIterator.next();
                         Iterator lineIterator = grid.keySet().iterator();
                         
@@ -409,6 +409,7 @@ public class PlotSGTImpl implements IPlot{
                 if(object == aLayout.getKeyPane()){
                     if(e.isPopupTrigger() || e.getClickCount() == 2){
                         Object obj = aLayout.getKeyPane().getObjectAt(e.getX(),e.getY());
+                        
                         aLayout.getKeyPane().setSelectedObject(obj);
                         if(obj instanceof LineCartesianRenderer){
                             LineAttribute attr = ((LineCartesianRenderer)obj).getLineAttribute();
@@ -426,7 +427,25 @@ public class PlotSGTImpl implements IPlot{
                         }
                     }
                 }
-                
+                else if(object == aLayout){
+                    if(e.isPopupTrigger() || e.getClickCount() == 2){
+                        Object obj = aLayout.getObjectAt(e.getX(),e.getY());
+                        
+                        aLayout.setSelectedObject(obj);
+                        if(obj instanceof LineCartesianRenderer){
+                            LineAttribute attr = ((LineCartesianRenderer)obj).getLineAttribute();
+                            if(lad == null){
+                                lad = new LineAttributeDialog();
+                            }
+                            SimpleLine aLine = (SimpleLine)((LineCartesianRenderer)obj).getLine();
+                            lad.setTitle("Line Attribute Configuration for " + aLine.getTitle());
+                            lad.setLineAttribute(attr);
+                            if(!lad.isShowing()){
+                                lad.setVisible(true);
+                            }
+                        }
+                    }
+                }
             }
            
         }
