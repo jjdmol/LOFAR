@@ -36,11 +36,16 @@ namespace LOFAR
 class SparseSet {
   public:
     struct range {
+      range() {}
+      range(unsigned begin, unsigned end) : begin(begin), end(end) {}
       unsigned begin, end;
     };
 
     SparseSet &include(unsigned index);
     SparseSet &include(unsigned first, unsigned last);
+
+    SparseSet &exclude(unsigned index);
+    SparseSet &exclude(unsigned first, unsigned last);
 
     void reset();
 
@@ -65,6 +70,12 @@ class SparseSet {
 inline SparseSet &SparseSet::include(unsigned index)
 {
   return include(index, index);
+}
+
+
+inline SparseSet &SparseSet::exclude(unsigned index)
+{
+  return exclude(index, index);
 }
 
 
