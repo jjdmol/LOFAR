@@ -392,7 +392,7 @@ void RSPDriver::addAllSyncActions()
     {
       XstRead* xstread = 0;
 
-      for (int regid = MEPHeader::XST_STATS; regid < MEPHeader::XST_NR_STATS; regid++) //  divide by four as long as only 1 lane supported
+      for (int regid = MEPHeader::XST_STATS; regid < MEPHeader::XST_NR_STATS; regid++)
       {
 	xstread = new XstRead(m_board[boardid], boardid, regid);
 	ASSERT(xstread);
@@ -600,6 +600,23 @@ void RSPDriver::openBoards()
 }
 
 //
+// Fetch the PPS signal, retry if needed
+//
+int RSPDriver::fetchPPS(pps_info_t* ppsinfo)
+{
+  int result = 0;
+#ifdef HAVE_SYS_TIMEPPS_H
+  do {
+    result = time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, ppsinfo, NULL);
+  } while ((result < 0) && (EINTR == errno || EAGAIN == errno));
+#else
+  LOG_FATAL("fetchPPS should not be called when HAVE_SYS_TIMEPPS_H is not defined");
+  exit(EXIT_FAILURE);
+#endif
+  return result;
+}
+
+//
 // initial(event, port)
 //
 GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
@@ -784,7 +801,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	//
 	// read away most recent timestamp..
 	//
-	if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
+	if ( fetchPPS(&m_ppsinfo) < 0) {
 	    LOG_FATAL_STR("Error clearing startup PPS: " << strerror(errno));
 	    exit(EXIT_FAILURE);
 	}
@@ -792,7 +809,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	//
 	// and wait for next timestamp to get in sync immediately
 	//
-	if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
+	if ( fetchPPS(&m_ppsinfo) < 0 ) {
 	    LOG_FATAL_STR("Error fetching first PPS: " << strerror(errno));
 	    exit(EXIT_FAILURE);
 	}
@@ -971,7 +988,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	  const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
 	  pps_info_t prevppsinfo = m_ppsinfo;
 
-	  if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
+	  if ( fetchPPS(&m_ppsinfo) < 0 ) {
 
 	    LOG_WARN_STR("Error fetching PPS: " << strerror(errno));
 	    
