@@ -7,7 +7,7 @@
  *
  */
 
-package nl.astron.lofar.sas.plotter;
+package nl.astron.lofar.java.gui.plotter;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -17,7 +17,7 @@ import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.Vector;
 import nl.astron.lofar.java.cep.jparmfacade.jParmFacade;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessException;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**
  * @created 19-04-2006, 11:00

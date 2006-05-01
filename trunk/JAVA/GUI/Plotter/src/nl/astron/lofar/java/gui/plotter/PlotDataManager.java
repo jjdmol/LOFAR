@@ -7,16 +7,16 @@
  *
  */
 
-package nl.astron.lofar.sas.plotter;
+package nl.astron.lofar.java.gui.plotter;
 
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import nl.astron.lofar.sas.plotter.exceptions.NotImplementedException;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessorInitializationException;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessorNotCompatibleException;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterDataAccessorNotFoundException;
-import nl.astron.lofar.sas.plotter.exceptions.PlotterException;
+import nl.astron.lofar.java.gui.plotter.exceptions.NotImplementedException;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessorInitializationException;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessorNotCompatibleException;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessorNotFoundException;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
  * @created 11-04-2006, 15:00

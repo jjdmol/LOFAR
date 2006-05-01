@@ -7,7 +7,7 @@
  *
  */
 
-package nl.astron.lofar.sas.plotter;
+package nl.astron.lofar.java.gui.plotter;
 
 import java.util.HashMap;
 import java.util.HashSet;

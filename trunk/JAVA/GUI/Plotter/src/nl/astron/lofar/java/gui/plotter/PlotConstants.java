@@ -7,7 +7,7 @@
  *
  */
 
-package nl.astron.lofar.sas.plotter;
+package nl.astron.lofar.java.gui.plotter;
 
 /**
  * @version $Id$
@@ -58,10 +58,10 @@ public abstract class PlotConstants{
     public static final boolean PLOT_SEPARATE_LEGEND = true;
     
     //Supported plotter framework
-    public static final String FRAMEWORK         = "nl.astron.lofar.sas.plotter.PlotSGTImpl";
+    public static final String FRAMEWORK         = "nl.astron.lofar.java.gui.plotter.PlotSGTImpl";
     
     //Location of the properties file (minus .properties!) where the data access/export classes are specified
-    public static final String RESOURCE_FILE     = "nl.astron.lofar.sas.plotter.plotter_config";
+    public static final String RESOURCE_FILE     = "nl.astron.lofar.java.gui.plotter.plotter_config";
     
     //Exception messages
     public static final String EXCEPTION_GENERIC                = "An internal error occurred. ";
