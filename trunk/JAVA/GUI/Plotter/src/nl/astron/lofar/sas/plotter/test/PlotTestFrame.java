@@ -203,7 +203,7 @@ public class PlotTestFrame extends javax.swing.JFrame {
                 //plotPane.add(testPanel.getPlot(),new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
                 //plotPane.add(testPanel.getLegendForPlot(),new GridBagConstraints(0,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
                 if(plotPresent){
-                    this.getContentPane().remove(testPanel.getPlot());
+                    this.getContentPane().remove(testPanel);
                     try {
                         this.getContentPane().remove(testPanel.getLegendForPlot());
                     } catch (Exception ex) {
@@ -217,7 +217,7 @@ public class PlotTestFrame extends javax.swing.JFrame {
                         exceptionLabel = null;
                     }
                     testPanel.createPlot(PlotConstants.PLOT_XYLINE,argsForController);
-                    this.add(testPanel.getPlot(),BorderLayout.CENTER);
+                    this.add(testPanel,BorderLayout.CENTER);
                     if(cLegend.isSelected()){
                         this.add(testPanel.getLegendForPlot(),BorderLayout.SOUTH); 
                     }
