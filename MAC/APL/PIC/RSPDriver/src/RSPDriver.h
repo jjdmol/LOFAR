@@ -66,6 +66,12 @@ namespace LOFAR {
       void openBoards();
 
       /**
+       * Fetch PPS
+       * This method retries on EINTR or EAGAIN
+       */
+      int fetchPPS(pps_info_t* ppsinfo);
+
+      /**
        * @return true if ready to transition to the enabled
        * state.
        */
