@@ -1233,7 +1233,7 @@ void WH_BGL_Processing::computeFlags()
 
     for (std::vector<SparseSet::range>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
       int begin = std::max(0, (int) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
-      int end   = std::min(NR_SAMPLES_PER_INTEGRATION - 1, (int) (it->end - 1) / NR_SUBBAND_CHANNELS);
+      int end   = std::min(NR_SAMPLES_PER_INTEGRATION, (int) (it->end - 1) / NR_SUBBAND_CHANNELS + 1);
 
       flags[stat].include(begin, end);
     }
@@ -1721,7 +1721,7 @@ void WH_BGL_Processing::process()
   totalTimer.start();
 
 #if defined SPARSE_FLAGS
-  //get_DH_Subband()->getExtraData();
+  get_DH_Subband()->getExtraData();
 #endif
 
   computeFlags();
