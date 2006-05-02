@@ -12,24 +12,7 @@ using namespace LOFAR;
 using namespace std;
 
 
-void printSet(SparseSet &set)
-{
-  const vector<SparseSet::range> ranges = set.getRanges();
-
-  cout << '{';
-
-  for (unsigned i = 0; i < ranges.size(); i ++) {
-    if (i > 0)
-      cout << ',';
-
-    cout << '[' << ranges[i].begin << ',' << (ranges[i].end - 1) << ']';
-  }
-
-  cout << "}\n";
-}
-
-
-bool equal(SparseSet &sset, bitset<BITSET_SIZE> &bset)
+bool equal(const SparseSet &sset, const bitset<BITSET_SIZE> &bset)
 {
   if (sset.count() != bset.count())
     return false;
@@ -44,16 +27,9 @@ bool equal(SparseSet &sset, bitset<BITSET_SIZE> &bset)
 
 int main(void)
 {
-  SparseSet sset;
-  //sset.include(7, 10).include(12, 14).include(20, 22).include(24, 26);
-  //sset.include(10, 30).exclude(15,20);
-  //printSet(sset);
-  //return 0;
-
-  //sset.exclude(0,26);
-  //printSet(sset);
-  //sset.include(1832, 1886);
-  //printSet(sset);
+  //SparseSet sset;
+  //sset.include(7, 11).include(12, 15).include(17).include(20, 23);
+  //std::cout << sset << '\n';
 
   for (unsigned i = 0; i < 1000; i ++) {
     SparseSet		sset, sset_union;
@@ -61,24 +37,24 @@ int main(void)
 
     for (unsigned j = 0; j < 100; j ++) {
       unsigned first = (unsigned) (drand48() * (BITSET_SIZE - 100));
-      unsigned last  = (unsigned) (drand48() * 100) + first;
+      unsigned last  = (unsigned) (drand48() * 100) + first + 1;
 
       if (drand48() > .4) {
 	sset.include(first, last);
 
-	for (unsigned k = first; k <= last; k ++)
+	for (unsigned k = first; k < last; k ++)
 	  bset.set(k);
       } else {
 	sset.exclude(first, last);
 
-	for (unsigned k = first; k <= last; k ++)
+	for (unsigned k = first; k < last; k ++)
 	  bset.reset(k);
       }
 
       assert(equal(sset, bset));
 
       if (drand48() < .1) {
-	sset_union = sset_union | sset;
+	sset_union |= sset;
 	bset_union |= bset;
 	assert(equal(sset_union, bset_union));
 	sset.reset();
@@ -88,10 +64,18 @@ int main(void)
   }
 
   for (int i = 0; i < 23; i ++) {
-    SparseSet		sset;
-    bitset<BITSET_SIZE> bset(0x00727780 >> i);
-    sset.include(7, 10).include(12, 14).include(17).include(20, 22) -= i;
-    assert(equal(sset, bset));
+    {
+      SparseSet		  sset;
+      bitset<BITSET_SIZE> bset(0x00727780 >> i);
+      sset.include(7, 11).include(12, 15).include(17).include(20, 23).exclude(0, i) -= i;
+      assert(equal(sset, bset));
+    }
+    {
+      SparseSet		  sset;
+      bitset<BITSET_SIZE> bset(0x00727780ULL << i);
+      sset.include(7, 11).include(12, 15).include(17).include(20, 23) += i;
+      assert(equal(sset, bset));
+    }
   }
 
   return 0;

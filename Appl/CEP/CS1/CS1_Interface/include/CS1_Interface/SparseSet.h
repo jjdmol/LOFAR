@@ -30,8 +30,7 @@
 #include <vector>
 
 
-namespace LOFAR
-{
+namespace LOFAR {
 
 class SparseSet {
   public:
@@ -41,21 +40,22 @@ class SparseSet {
       unsigned begin, end;
     };
 
-    SparseSet &include(unsigned index);
-    SparseSet &include(unsigned first, unsigned last);
+    SparseSet	&include(unsigned index);
+    SparseSet	&include(unsigned first /* inclusive */, unsigned last /* exclusive */);
 
-    SparseSet &exclude(unsigned index);
-    SparseSet &exclude(unsigned first, unsigned last);
+    SparseSet	&exclude(unsigned index);
+    SparseSet	&exclude(unsigned first /* inclusive */, unsigned last /* exclusive */);
 
-    void reset();
+    void	reset();
 
-    unsigned count() const;
-    bool any(unsigned first, unsigned last) const;
-    bool test(unsigned index) const;
+    unsigned	count() const;
+    bool	test(unsigned index) const;
 
-    SparseSet operator | (const SparseSet &) const;
-    SparseSet &operator -= (size_t count);
-    //SparseSet subset(unsigned first, unsigned last) const; /* not tested */
+    SparseSet	operator | (const SparseSet &) const;
+    SparseSet	&operator |= (const SparseSet &);
+    SparseSet	&operator += (size_t count);
+    SparseSet	&operator -= (size_t count);
+    SparseSet	subset(unsigned first, unsigned last) const;
 
     const std::vector<struct range> &getRanges() const;
 
@@ -66,16 +66,18 @@ class SparseSet {
     std::vector<struct range> ranges;
 };
 
+std::ostream &operator << (std::ostream &str, const SparseSet &set);
+
 
 inline SparseSet &SparseSet::include(unsigned index)
 {
-  return include(index, index);
+  return include(index, index + 1);
 }
 
 
 inline SparseSet &SparseSet::exclude(unsigned index)
 {
-  return exclude(index, index);
+  return exclude(index, index + 1);
 }
 
 
@@ -85,11 +87,24 @@ inline void SparseSet::reset()
 }
 
 
+inline SparseSet &SparseSet::operator |= (const SparseSet &other)
+{
+  ranges = (*this | other).ranges;
+  return *this;
+}
+
+
+inline SparseSet SparseSet::subset(unsigned first, unsigned last) const
+{
+  return SparseSet(*this).exclude(last, ~0U).exclude(0, first);
+}
+
+
 inline const std::vector<struct SparseSet::range> &SparseSet::getRanges() const
 {
   return ranges;
 }
 
-}
+} // namespace LOFAR
 
 #endif

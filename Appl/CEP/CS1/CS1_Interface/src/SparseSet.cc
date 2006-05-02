@@ -26,6 +26,7 @@
 #include <CS1_Interface/SparseSet.h>
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 
 
@@ -49,20 +50,22 @@ struct less_equal {
 
 SparseSet &SparseSet::include(unsigned first, unsigned last)
 {
-  // find two iterators that mark the first resp. last involved ranges
-  range r(first, ++ last);
-  std::pair<std::vector<range>::iterator, std::vector<range>::iterator> iters = equal_range(ranges.begin(), ranges.end(), r, less());
+  if (first < last) {
+    // find two iterators that mark the first resp. last involved ranges
+    range r(first, last);
+    std::pair<std::vector<range>::iterator, std::vector<range>::iterator> iters = equal_range(ranges.begin(), ranges.end(), r, less());
 
-  if (iters.first == iters.second) {
-    // insert new tuple
-    ranges.insert(iters.first, r);
-  } else {
-    // combine with existing tuple(s)
-    iters.first->begin = std::min(first, iters.first->begin);
-    iters.first->end   = std::max(last , iters.second[-1].end);
+    if (iters.first == iters.second) {
+      // insert new tuple
+      ranges.insert(iters.first, r);
+    } else {
+      // combine with existing tuple(s)
+      iters.first->begin = std::min(first, iters.first->begin);
+      iters.first->end   = std::max(last , iters.second[-1].end);
 
-    ranges.erase(iters.first + 1, iters.second);
-  } 
+      ranges.erase(iters.first + 1, iters.second);
+    } 
+  }
 
   return *this;
 }
@@ -70,26 +73,28 @@ SparseSet &SparseSet::include(unsigned first, unsigned last)
 
 SparseSet &SparseSet::exclude(unsigned first, unsigned last)
 {
-  // find two iterators that mark the first resp. last involved ranges
-  // unlike in include(), a range that is adjacent to first or last is not
-  // considered to be involved, hence the use of less_equal()
-  std::pair<std::vector<range>::iterator, std::vector<range>::iterator> iters = equal_range(ranges.begin(), ranges.end(), range(first, ++ last), less_equal());
+  if (first < last) {
+    // find two iterators that mark the first resp. last involved ranges
+    // unlike in include(), a range that is adjacent to first or last is not
+    // considered to be involved, hence the use of less_equal()
+    std::pair<std::vector<range>::iterator, std::vector<range>::iterator> iters = equal_range(ranges.begin(), ranges.end(), range(first, last), less_equal());
 
-  if (iters.first != iters.second) { // check if there are tuples involved
-    if (iters.second - iters.first == 1 && first > iters.first->begin && last < iters.first->end) {
-      // split tuple
-      range r(last, iters.first->end);
-      iters.first->end = first;
-      ranges.insert(iters.second, r);
-    } else {
-      // possibly erase tuples
-      if (first > iters.first->begin)
-	(iters.first ++)->end = first; // adjust first tuple; do not erase
+    if (iters.first != iters.second) { // check if there are tuples involved
+      if (iters.second - iters.first == 1 && first > iters.first->begin && last < iters.first->end) {
+	// split tuple
+	range r(last, iters.first->end);
+	iters.first->end = first;
+	ranges.insert(iters.second, r);
+      } else {
+	// possibly erase tuples
+	if (first > iters.first->begin)
+	  (iters.first ++)->end = first; // adjust first tuple; do not erase
 
-      if (last < iters.second[-1].end)
-	(-- iters.second)->begin = last; // adjust last tuple; do not erase
+	if (last < iters.second[-1].end)
+	  (-- iters.second)->begin = last; // adjust last tuple; do not erase
 
-      ranges.erase(iters.first, iters.second);
+	ranges.erase(iters.first, iters.second);
+      }
     }
   }
 
@@ -155,23 +160,21 @@ SparseSet SparseSet::operator | (const SparseSet &other) const
 }
 
 
+SparseSet &SparseSet::operator += (size_t count)
+{
+  for (std::vector<range>::iterator it = ranges.begin(); it != ranges.end(); it ++)
+    it->begin += count, it->end += count;
+
+  return *this;
+}
+
+
 SparseSet &SparseSet::operator -= (size_t count)
 {
-  // subtract "count" from each range, erasing ranges that become negative
-  std::vector<range>::iterator src = ranges.begin(), dst = src;
+  assert(ranges.size() == 0 || ranges[0].begin >= count);
 
-  while (src != ranges.end() && src->end <= count)
-    ++ src;
-
-  if (src->begin < count)
-    src->begin = count;
-
-  for (; src != ranges.end(); src ++, dst ++) {
-    dst->begin = src->begin - count;
-    dst->end   = src->end   - count;
-  }
-
-  ranges.resize(ranges.size() + dst - src);
+  for (std::vector<range>::iterator it = ranges.begin(); it != ranges.end(); it ++)
+    it->begin -= count, it->end -= count;
 
   return *this;
 }
@@ -193,7 +196,7 @@ void SparseSet::read(BlobIStream &bis)
   bis >> size;
   ranges.resize(size);
 
-  for (std::vector<SparseSet::range>::iterator it = ranges.begin(); it != ranges.end(); it ++) {
+  for (std::vector<range>::iterator it = ranges.begin(); it != ranges.end(); it ++) {
     bis >> begin >> end;
     it->begin = begin;
     it->end   = end;
@@ -201,26 +204,15 @@ void SparseSet::read(BlobIStream &bis)
 }
 
 
-
-#if 0
-SparseSet SparseSet::subset(unsigned first, unsigned last) const
+std::ostream &operator << (std::ostream &str, const SparseSet &set)
 {
-  SparseSet subset;
-  size_t    size = ranges.size();
+  for (std::vector<SparseSet::range>::const_iterator it = set.getRanges().begin(); it != set.getRanges().end(); it ++)
+    if (it->end == it->begin + 1)
+      str << '[' << it->begin << "] ";
+    else
+      str << '[' << it->begin << ".." << it->end << "> ";
 
-  if (size > 0)
-    for (const struct range *range = &ranges[0], *range_end = range + size; range < range_end; range ++)
-      if (first < range->end && last > range->begin) {
-	struct range new_range = {
-	  std::max(first, range->begin) - first,
-	  std::min(last, range->end) - first
-	};
-
-	subset.ranges.push_back(new_range);
-      }
-
-  return subset;
+  return str;
 }
-#endif
 
-}
+} // namespace LOFAR
