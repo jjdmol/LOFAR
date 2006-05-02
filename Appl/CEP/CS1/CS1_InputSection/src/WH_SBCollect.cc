@@ -108,7 +108,6 @@ namespace LOFAR
       RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
       DH_Subband *outHolder = (DH_Subband*) getDataManager().getOutHolder(itsCore);
       RectMatrix<DH_Subband::SampleType>* outMatrix = &outHolder->getSamplesMatrix();
-      outMatrix->setBuffer(&outHolder->getSample(0, 0, 0), outHolder->nrSamples());
 
       dimType outStationDim = outMatrix->getDim("Station");
       dimType inStationDim = inMatrix->getDim("Stations");
@@ -123,13 +122,19 @@ namespace LOFAR
 	{
 	  DH_RSP *inHolder = dynamic_cast<DH_RSP *>(getDataManager().getInHolder(nr));
 	  inMatrix = &inHolder->getDataMatrix();
-	  inMatrix->setBuffer(inHolder->getBuffer(), inHolder->getBufferSize());
 	  inCursor = inMatrix->getCursor(0*inStationDim);
 	  // copy all freq, time and pol from an input to output
 	  inMatrix->cpy2Matrix(inCursor, inStationDim, *outMatrix, outCursor, outStationDim, 1);
 	  outMatrix->moveCursor(&outCursor, outStationDim);
+	  inHolder->getExtraData();
+#if defined SPARSE_FLAGS
+	  outHolder->getFlags(nr) = inHolder->getFlags();
+#endif
 	}
 
+#if defined SPARSE_FLAGS
+      outHolder->fillExtraData();
+#endif
       getDataManager().readyWithOutHolder(itsCore);
 #endif
       itsCore ++ ;

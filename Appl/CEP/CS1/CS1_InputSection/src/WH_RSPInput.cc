@@ -229,18 +229,19 @@ namespace LOFAR {
 
       /* startstamp is the synced and delay-controlled timestamp to 
 	 start from in cyclic buffer */
-      int invalidcount;
-      vector<Beamlet*> subbandbuffer;
+      vector<Beamlet *>   subbandbuffer;
+      vector<SparseSet *> flags;
       for (int s=0; s < itsNSubbands; s++) {
 	rspDHp = (DH_RSP*)getDataManager().getOutHolder(s);
 	subbandbuffer.push_back((Beamlet*)rspDHp->getBuffer());
+	flags.push_back(&rspDHp->getFlags());
       }
       // get the data from the cyclic buffer
       itsGetElemTimer->start();
       cout<<"reading from buffer"<<endl;cout.flush();
 
       itsBBuffer->getElements(subbandbuffer,
-			      //invalidcount, 
+			      flags,
 			      delayedstamp, 
 			      itsNSamplesToCopy);
       cout<<"done reading from buffer"<<endl;cout.flush();
@@ -252,8 +253,8 @@ namespace LOFAR {
     
 	// fill in the data
 	rspDHp->setStationID(itsStationID);
-	rspDHp->setInvalidCount(invalidcount);
 	rspDHp->setTimeStamp(delayedstamp);   
+	rspDHp->fillExtraData();
 	//rspDHp->setDelay(delayDHp->getDelay(itsStationID));
 
 #if 0

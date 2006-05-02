@@ -82,19 +82,18 @@ void DH_Subband::init()
   addField("Flags",   BlobField<uint32>(1, nrFlags() / sizeof(uint32)));
 #endif
 
-  createDataBlock();
-
   vector<DimDef> vdd;
   vdd.push_back(DimDef("Station",      itsNrStations));
   vdd.push_back(DimDef("Time",	       itsNrInputSamples));
   vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
 
   itsSamplesMatrix = new RectMatrix<SampleType> (vdd);
-  itsSamplesMatrix->setBuffer(itsSamples, nrSamples());
 
 #if defined SPARSE_FLAGS
   itsFlags = new SparseSet[itsNrStations];
 #endif
+
+  createDataBlock();
 }
 
 void DH_Subband::fillDataPointers()
@@ -104,6 +103,8 @@ void DH_Subband::fillDataPointers()
 #if !defined SPARSE_FLAGS
   itsFlags   = (uint32 *)	     getData<uint32>("Flags");
 #endif
+
+  itsSamplesMatrix->setBuffer(itsSamples, nrSamples());
 }
 
 

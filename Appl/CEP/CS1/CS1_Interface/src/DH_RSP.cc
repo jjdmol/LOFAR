@@ -33,8 +33,11 @@ namespace LOFAR
                     const ACC::APS::ParameterSet &pset)
       : DataHolder (name, "DH_RSP"),
         itsBuffer  (0),
+	itsFlags   (0),
         itsPSet    (pset)
     {
+      setExtraBlob("Flags", 0);
+
       int resendAmount = (pset.getInt32("BGLProc.NPPFTaps") - 1) * pset.getInt32("Observation.NChannels");
       itsNTimes          = pset.getInt32("Observation.NSubbandSamples") + resendAmount;
       itsNoPolarisations = pset.getInt32("Observation.NPolarisations");
@@ -44,6 +47,7 @@ namespace LOFAR
     DH_RSP::DH_RSP(const DH_RSP& that)
       : DataHolder         (that),
         itsBuffer          (0),
+	itsFlags	   (that.itsFlags),
         itsNTimes          (that.itsNTimes),
         itsNoPolarisations (that.itsNoPolarisations),
         itsBufSize         (that.itsBufSize),
@@ -51,7 +55,9 @@ namespace LOFAR
     {}
 
     DH_RSP::~DH_RSP()
-    {}
+    {
+      delete itsFlags;
+    }
 
     DataHolder* DH_RSP::clone() const
     {
@@ -63,13 +69,9 @@ namespace LOFAR
       // Add the fields to the data definition.
       addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
       addField ("StationID", BlobField<int>(1));
-      addField ("InvalidCount", BlobField<int>(1));
       addField ("Delay", BlobField<int>(1));
       addField ("TimeStamp", BlobField<char>(1, sizeof(timestamp_t)));
   
-      // Create the data blob
-      createDataBlock();
-
       vector<DimDef> vdd;
       // there is one station per dataholder
       vdd.push_back(DimDef("Stations", 1));
@@ -77,20 +79,21 @@ namespace LOFAR
       vdd.push_back(DimDef("Polarisations", itsNoPolarisations));
   
       itsMatrix = new RectMatrix<BufferType> (vdd);
-      itsMatrix->setBuffer(itsBuffer, itsBufSize);
+      itsFlags  = new SparseSet;
+
+      // Create the data blob
+      createDataBlock();
     }
 
     void DH_RSP::fillDataPointers()
     {
       // Fill in the buffer pointer.
       itsBuffer  = getData<BufferType> ("Buffer");
+      itsMatrix->setBuffer(itsBuffer, itsBufSize);
 
       // Fill in the StationID pointer
       itsStationID = getData<int> ("StationID");
   
-      // Fill in the InvalidCount pointer
-      itsInvalidCount = getData<int> ("InvalidCount");
-
       // Fill in the Delay pointer
       itsDelay = getData<int> ("Delay");
   
@@ -99,6 +102,16 @@ namespace LOFAR
 
       // use memset to null the buffer
       memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
+    }
+
+    void DH_RSP::fillExtraData()
+    {
+      itsFlags->write(createExtraBlob());
+    }
+
+    void DH_RSP::getExtraData()
+    {
+      itsFlags->read(getExtraBlob());
     }
 
   } // namespace CS1
