@@ -73,7 +73,8 @@ public class tParmFacade {
             HashMap<String,Vector<Double> > values = aPF.getValues ("*",
 							range.elementAt(0), range.elementAt(1), 4,
 							range.elementAt(2), range.elementAt(3), 2);
-            
+
+         
             Iterator it = values.keySet().iterator();
             while (it.hasNext()) {  
                 String key = (String)it.next();
