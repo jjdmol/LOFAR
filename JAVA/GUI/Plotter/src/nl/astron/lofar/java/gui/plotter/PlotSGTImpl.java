@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import javax.swing.JComponent;
 import nl.astron.lofar.java.gui.plotter.exceptions.EmptyDataSetException;
+import nl.astron.lofar.java.gui.plotter.exceptions.InvalidDataSetException;
 import nl.astron.lofar.java.gui.plotter.exceptions.NotImplementedException;
 import nl.astron.lofar.java.gui.plotter.exceptions.NotSupportedException;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
@@ -67,20 +68,18 @@ public class PlotSGTImpl implements IPlot{
             
             if(type==PlotConstants.PLOT_XYLINE){
                 aNewPlot = linePlot(name,data, separateLegend,false);
-               
                 pma = new plotMouseAdapter();
                 if(aNewPlot.getKeyPane()!= null) aNewPlot.getKeyPane().addMouseListener(pma);
                 aNewPlot.addMouseListener(pma);
             }
             else if(type==PlotConstants.PLOT_POINTS){
                 aNewPlot = linePlot(name,data, separateLegend,true);
-                 pma = new plotMouseAdapter();
-                  if(aNewPlot.getKeyPane()!= null) aNewPlot.getKeyPane().addMouseListener(pma);
-                 aNewPlot.addMouseListener(pma);
+                pma = new plotMouseAdapter();
+                if(aNewPlot.getKeyPane()!= null) aNewPlot.getKeyPane().addMouseListener(pma);
+                aNewPlot.addMouseListener(pma);
             }
             else if(type==PlotConstants.PLOT_GRID){
                 aNewPlot = gridPlot(name,data, separateLegend);
-                 
             }
             else if(type==PlotConstants.PLOT_SCATTER){
                 aNewPlot = scatterPlot(name,data, separateLegend);
@@ -91,6 +90,7 @@ public class PlotSGTImpl implements IPlot{
             //JPane keyPane = aNewPlot.getKeyPane();
             
             //keyAndPlotPanel.add(keyPane,BorderLayout.SOUTH);
+            aNewPlot.setEditClasses(false);
             aLayout = aNewPlot;
             
             return aNewPlot;
@@ -105,139 +105,147 @@ public class PlotSGTImpl implements IPlot{
                layout.setKeyLayerSizeP(new Dimension2D(6.0, 1.0));
                layout.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 6.0, 1.0));  
             }
-            layout.setBatch(true);
-            layout.setId(name);
-            layout.setName(name);
-            String plotTitle = "No Title Specified";
-            String plotSubTitle = "-";
-            String xAxisTitle = "X";
-            String xAxisUnits = "no unit specified";
-            String yAxisTitle = "Y";                       
-            String yAxisUnits = "no unit specified";
-            double xstart = -1;
-            double xend = -1;
-            double ystart = -1;
-            double yend = -1;
-            HashSet<HashMap> values = new HashSet<HashMap>();
-            
-            //Loop through Metadata and pointers to XY values
-            if(data != null && data.keySet().size()>0){
-                Iterator it = data.keySet().iterator();
-                
-                while(it.hasNext()){
-                    String key = (String)it.next();
-                    if(key.equalsIgnoreCase(PlotConstants.DATASET_NAME)){
-                        plotTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_SUBNAME)){
-                        plotSubTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISLABEL)){
-                        xAxisTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISUNIT)){
-                        xAxisUnits = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_START)){
-                        xstart = Double.parseDouble((String)data.get(key));
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_END)){
-                        xend = Double.parseDouble((String)data.get(key));
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISLABEL)){
-                        yAxisTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISUNIT)){
-                        yAxisUnits = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_START)){
-                        ystart = Double.parseDouble((String)data.get(key));
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_END)){
-                        yend = Double.parseDouble((String)data.get(key));
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
-                       values = (HashSet<HashMap>)data.get(key); 
-                    }
-                    
-                }
-                //Set titles to plot
+            try{
+                layout.setBatch(true);
+                layout.setId(name);
+                layout.setName(name);
+                String plotTitle = "No Title Specified";
+                String plotSubTitle = "-";
+                String xAxisTitle = "X";
+                String xAxisUnits = "no unit specified";
+                String yAxisTitle = "Y";                       
+                String yAxisUnits = "no unit specified";
+                double xstart = -1;
+                double xend = -1;
+                double ystart = -1;
+                double yend = -1;
+                HashSet<HashMap> values = new HashSet<HashMap>();
 
-                layout.setTitles(plotTitle,plotSubTitle,"");
-               
-                //Loop through X and Y Value data
-                if(values != null && values.size()> 0){
-
-                    Iterator linesIterator = values.iterator();
-                    //Loop through all XY pairs
-                    while(linesIterator.hasNext()){
-                        
-                        double[] xArray = null;
-                        double[] yArray = null;
-                        SGTMetaData meta = new SGTMetaData(xAxisTitle,
-                                                   xAxisUnits,
-                                                   false,
-                                                   false);
-                        
-                        SGTMetaData ymeta = new SGTMetaData(yAxisTitle,
-                                                   yAxisUnits,
-                                                   false,
-                                                   false);
-                        String lineLabel = "Unknown value";
-                        HashMap line = (HashMap)linesIterator.next();
-                        Iterator lineIterator = line.keySet().iterator();
-                        
-                        //Retrieve XY pair label and xy values
-                        while(lineIterator.hasNext()){ 
-                            String key = (String)lineIterator.next();
-                            if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
-                            lineLabel = (String)line.get(key);
-                            
-                            }  
-                            else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
-                               xArray = (double[])line.get(key);
-                            }
-                            else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
-                                yArray = (double[])line.get(key);
-                            }                   
+                //Loop through Metadata and pointers to XY values
+                if(data != null && data.keySet().size()>0){
+                    Iterator it = data.keySet().iterator();
+                    while(it.hasNext()){
+                        String key = (String)it.next();
+                        if(key.equalsIgnoreCase(PlotConstants.DATASET_NAME)){
+                            plotTitle = (String)data.get(key);
                         }
-                        
-                        SimpleLine lineData = new SimpleLine(
-                                xArray,yArray,lineLabel);
-                        
-                        lineData.setXMetaData(meta);
-                        lineData.setYMetaData(ymeta);
-                        //Add line to plot
-                        layout.addData(lineData, lineLabel);
-                       
-                        if(showPointsOnly){
-                            try{
-                                LineAttribute marks;
-                                marks = (LineAttribute) layout.getAttribute(lineData);
-                                marks.setStyle(LineAttribute.MARK);
-                            } catch (DataNotFoundException ex) {
-                                //LOG! ex.printStackTrace();
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_SUBNAME)){
+                            plotSubTitle = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISLABEL)){
+                            xAxisTitle = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISUNIT)){
+                            xAxisUnits = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_START)){
+                            xstart = Double.parseDouble((String)data.get(key));
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_END)){
+                            xend = Double.parseDouble((String)data.get(key));
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISLABEL)){
+                            yAxisTitle = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISUNIT)){
+                            yAxisUnits = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_START)){
+                            ystart = Double.parseDouble((String)data.get(key));
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_END)){
+                            yend = Double.parseDouble((String)data.get(key));
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
+                           values = (HashSet<HashMap>)data.get(key); 
+                        }else{
+                            throw new InvalidDataSetException("(Metadata was found that is not supported for a Line Plot: "+key.toString()+")");
+                        }
+
+                    }
+                    //Set titles to plot
+
+                    layout.setTitles(plotTitle,plotSubTitle,"");
+
+                    //Loop through X and Y Value data
+                    if(values != null && values.size()> 0){
+
+                        Iterator linesIterator = values.iterator();
+                        //Loop through all XY pairs
+                        while(linesIterator.hasNext()){
+
+                            double[] xArray = null;
+                            double[] yArray = null;
+                            SGTMetaData meta = new SGTMetaData(xAxisTitle,
+                                                       xAxisUnits,
+                                                       false,
+                                                       false);
+
+                            SGTMetaData ymeta = new SGTMetaData(yAxisTitle,
+                                                       yAxisUnits,
+                                                       false,
+                                                       false);
+                            String lineLabel = "Unknown value";
+                            HashMap line = (HashMap)linesIterator.next();
+                            Iterator lineIterator = line.keySet().iterator();
+
+                            //Retrieve XY pair label and xy values
+                            while(lineIterator.hasNext()){ 
+                                String key = (String)lineIterator.next();
+                                if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
+                                lineLabel = (String)line.get(key);
+
+                                }  
+                                else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
+                                   xArray = (double[])line.get(key);
+                                }
+                                else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
+                                    yArray = (double[])line.get(key);
+                                }else{
+                                    throw new InvalidDataSetException("(A value array was found that is not supported for a Line Plot: "+key.toString()+")");
+                                }
+                            }
+
+                            SimpleLine lineData = new SimpleLine(
+                                    xArray,yArray,lineLabel);
+
+                            lineData.setXMetaData(meta);
+                            lineData.setYMetaData(ymeta);
+                            //Add line to plot
+                            layout.addData(lineData, lineLabel);
+
+                            if(showPointsOnly){
+                                try{
+                                    LineAttribute marks;
+                                    marks = (LineAttribute) layout.getAttribute(lineData);
+                                    marks.setStyle(LineAttribute.MARK);
+                                } catch (DataNotFoundException ex) {
+                                    //LOG! ex.printStackTrace();
+                                }
                             }
                         }
                     }
+                }else{
+                    //TODO LOG!
+                    throw new EmptyDataSetException();
+
                 }
-            }else{
-                //TODO LOG!
-                throw new EmptyDataSetException();
-                
-            }
-            if(xstart!= -1 && xend != -1 && ystart != -1 && yend != -1){
-               
-                layout.setAutoRange(false,false);
-                try {
-                    
-                    layout.setRange(new SoTDomain(new SoTRange.Double(xstart,xend),new SoTRange.Double(ystart,yend)));
-                } catch (PropertyVetoException ex) {
-                    ex.printStackTrace();
+                if(xstart!= -1 && xend != -1 && ystart != -1 && yend != -1){
+
+                    layout.setAutoRange(false,false);
+                    try {
+
+                        layout.setRange(new SoTDomain(new SoTRange.Double(xstart,xend),new SoTRange.Double(ystart,yend)));
+                    } catch (PropertyVetoException ex) {
+                        ex.printStackTrace();
+                    }
                 }
+                layout.setName(plotTitle);
+                layout.setBatch(false);
+            }catch(NullPointerException e){
+                    //TODO LOG!
+                    throw new InvalidDataSetException("( The data set provided was not sufficient to build a Line Plot. Please check the log file and/or contact this software's supplier)");
             }
-            layout.setName(plotTitle);
-            layout.setBatch(false);
             return layout;
         }
         
@@ -246,131 +254,137 @@ public class PlotSGTImpl implements IPlot{
             
             JPlotLayout layout = new JPlotLayout(JPlotLayout.GRID, false, false,
                     name,null,separateLegend);
-            layout.setBatch(true);
-            layout.setSize(640,480);
-            if(separateLegend){
-               layout.setKeyLayerSizeP(new Dimension2D(6.0, 1.0));
-               layout.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 6.0, 1.0));  
-            }else{
-               //layout.setKeyLayerSizeP(new Dimension2D(4.0,1.0));
-               //layout.setKeyBoundsP(new Rectangle2D.Double(0.1, 0.1, 4.0, 1.0));
-               //layout.setKeyAlignment(layout.LEFT,layout.TOP);
-            }
-           
-            layout.setId(name);
-            
-            String plotTitle = "No Title Specified";
-            String plotSubTitle = "-";
-            String xAxisTitle = "X";
-            String xAxisUnits = "no unit specified";
-            String yAxisTitle = "Y";                       
-            String yAxisUnits = "no unit specified";
-            String zAxisTitle = "Z";                       
-            String zAxisUnits = "no unit specified";
-            
-            HashSet<HashMap> values = new HashSet<HashMap>();
-            
-            //Loop through Metadata and pointers to XYZ values
-            if(data != null && data.keySet().size()>0){
-                Iterator it = data.keySet().iterator();
-                while(it.hasNext()){
-                    String key = (String)it.next();
-                    if(key.equalsIgnoreCase(PlotConstants.DATASET_NAME)){
-                        plotTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_SUBNAME)){
-                        plotSubTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISLABEL)){
-                        xAxisTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISUNIT)){
-                        xAxisUnits = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISLABEL)){
-                        yAxisTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISUNIT)){
-                        yAxisUnits = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_ZAXISLABEL)){
-                        zAxisTitle = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_ZAXISUNIT)){
-                        zAxisUnits = (String)data.get(key);
-                    }
-                    else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
-                       values = (HashSet<HashMap>)data.get(key); 
-                    }
-                }
-                //Set titles to plot
-
-                layout.setTitles(plotTitle,plotSubTitle,"");
-               
-                //Loop through XYZ Value data
-                if(values != null && values.size()> 0){
-
-                    Iterator linesIterator = values.iterator();
-                    //Loop through all XY pairs
-                    int lineNumber = 0;
-                    while(linesIterator.hasNext()){
-                        lineNumber++;
-                        double[] xArray = null;
-                        double[] yArray = null;
-                        double[] zArray = null;
-                        
-                        SGTMetaData meta = new SGTMetaData(xAxisTitle,
-                                                   xAxisUnits,
-                                                   false,
-                                                   false);
-                        
-                        SGTMetaData ymeta = new SGTMetaData(yAxisTitle,
-                                                   yAxisUnits,
-                                                   false,
-                                                   false);
-                        
-                        SGTMetaData zmeta = new SGTMetaData(zAxisTitle,
-                                                   zAxisUnits,
-                                                   false,
-                                                   false);
-                        
-                        String lineLabel = "Unspecified value "+ lineNumber;
-                        HashMap grid = (HashMap)linesIterator.next();
-                        Iterator lineIterator = grid.keySet().iterator();
-                        
-                        //Retrieve XYZ pair label and xyz values
-                        while(lineIterator.hasNext()){ 
-                            String key = (String)lineIterator.next();
-                            if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
-                            lineLabel = (String)grid.get(key);
-                            
-                            }  
-                            else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
-                               xArray = (double[])grid.get(key);
-                            }
-                            else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
-                                yArray = (double[])grid.get(key);
-                            }
-                            else if(key.equalsIgnoreCase(PlotConstants.DATASET_ZVALUES)){
-                                zArray = (double[])grid.get(key);
-                            } 
-                        }
-                        SimpleGrid gridData = new SimpleGrid(
-                                zArray,xArray,yArray,lineLabel);
-                        gridData.setXMetaData(meta);
-                        gridData.setYMetaData(ymeta);
-                        gridData.setZMetaData(zmeta);
-                        //Add line to plot
-                        layout.addData(gridData, lineLabel);
-                    }
-                }
-            }else{
-                //TODO LOG!
-                throw new EmptyDataSetException();
+            try{
                 
+                layout.setBatch(true);
+                layout.setSize(640,480);
+                if(separateLegend){
+                   layout.setKeyLayerSizeP(new Dimension2D(6.0, 1.0));
+                   layout.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 6.0, 1.0));  
+                }           
+                layout.setId(name);
+
+                String plotTitle = "No Title Specified";
+                String plotSubTitle = "-";
+                String xAxisTitle = "X";
+                String xAxisUnits = "no unit specified";
+                String yAxisTitle = "Y";                       
+                String yAxisUnits = "no unit specified";
+                String zAxisTitle = "Z";                       
+                String zAxisUnits = "no unit specified";
+
+                HashSet<HashMap> values = new HashSet<HashMap>();
+
+                //Loop through Metadata and pointers to XYZ values
+                if(data != null && data.keySet().size()>0){
+                    Iterator it = data.keySet().iterator();
+                    while(it.hasNext()){
+                        String key = (String)it.next();
+                        if(key.equalsIgnoreCase(PlotConstants.DATASET_NAME)){
+                            plotTitle = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_SUBNAME)){
+                            plotSubTitle = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISLABEL)){
+                            xAxisTitle = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISUNIT)){
+                            xAxisUnits = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISLABEL)){
+                            yAxisTitle = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISUNIT)){
+                            yAxisUnits = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_ZAXISLABEL)){
+                            zAxisTitle = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_ZAXISUNIT)){
+                            zAxisUnits = (String)data.get(key);
+                        }
+                        else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
+                           values = (HashSet<HashMap>)data.get(key); 
+                        }else{
+                            throw new InvalidDataSetException("(Metadata was found that is not supported for a Grid Plot: "+key.toString()+")");
+                        }
+                    }
+                    //Set titles to plot
+
+                    layout.setTitles(plotTitle,plotSubTitle,"");
+
+                    //Loop through XYZ Value data
+                    if(values != null && values.size()> 0){
+
+                        Iterator linesIterator = values.iterator();
+                        //Loop through all XY pairs
+                        int lineNumber = 0;
+                        while(linesIterator.hasNext()){
+                            lineNumber++;
+                            double[] xArray = null;
+                            double[] yArray = null;
+                            double[] zArray = null;
+
+                            SGTMetaData meta = new SGTMetaData(xAxisTitle,
+                                                       xAxisUnits,
+                                                       false,
+                                                       false);
+
+                            SGTMetaData ymeta = new SGTMetaData(yAxisTitle,
+                                                       yAxisUnits,
+                                                       false,
+                                                       false);
+
+                            SGTMetaData zmeta = new SGTMetaData(zAxisTitle,
+                                                       zAxisUnits,
+                                                       false,
+                                                       false);
+
+                            String lineLabel = "Unspecified value "+ lineNumber;
+                            HashMap grid = (HashMap)linesIterator.next();
+                            Iterator lineIterator = grid.keySet().iterator();
+
+                            //Retrieve XYZ pair label and xyz values
+                            while(lineIterator.hasNext()){ 
+                                String key = (String)lineIterator.next();
+                                if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
+                                lineLabel = (String)grid.get(key);
+
+                                }  
+                                else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
+                                   xArray = (double[])grid.get(key);
+                                }
+                                else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
+                                    yArray = (double[])grid.get(key);
+                                }
+                                else if(key.equalsIgnoreCase(PlotConstants.DATASET_ZVALUES)){
+                                    zArray = (double[])grid.get(key);
+                                }else{
+                                    throw new InvalidDataSetException("(A value array was found that is not supported for a Grid Plot: "+key.toString()+")");
+                                }
+                            }
+                            SimpleGrid gridData = new SimpleGrid(
+                                    zArray,xArray,yArray,lineLabel);
+                            gridData.setXMetaData(meta);
+                            gridData.setYMetaData(ymeta);
+                            gridData.setZMetaData(zmeta);
+                            //Add line to plot
+                            layout.addData(gridData, lineLabel);
+                        }
+                    }
+                }else{
+                    //TODO LOG!
+                    throw new EmptyDataSetException();
+
+                }
+                layout.setName(plotTitle);
+                layout.setBatch(false);
+            }catch(NullPointerException e){
+                //TODO LOG!
+                throw new InvalidDataSetException("( The data set provided was not sufficient to build a Grid Plot. Please check the log file and/or contact this software's supplier)");
+             
             }
-            layout.setName(plotTitle);
-            layout.setBatch(false);
             return layout; 
         }
         
@@ -392,7 +406,7 @@ public class PlotSGTImpl implements IPlot{
             try {
                 parentPlot = (JPlotLayout) aPlot;
                 keyPane = parentPlot.getKeyPane();
-                
+               
                 keyPane.setSize(new Dimension(600,100));
             } catch (ClassCastException e) {
                 throw new NotSupportedException("The plot ("+aPlot.getName()+") is not recognized by the plotter's configured framework (SGT).");
