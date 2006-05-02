@@ -32,7 +32,7 @@ public class PlotTestFrame extends javax.swing.JFrame {
     
     /** Creates new form PlotTestFrame */
     public PlotTestFrame() {
-        testPanel = new PlotPanel();
+        
         plotPresent = false;
         //For use with PlotDataAccessTestImpl
         //testPanel.createPlot(PlotConstants.PLOT_XYLINE,"line");
@@ -216,6 +216,7 @@ public class PlotTestFrame extends javax.swing.JFrame {
                         this.getContentPane().remove(exceptionLabel);
                         exceptionLabel = null;
                     }
+                    testPanel = new PlotPanel();
                     testPanel.createPlot(PlotConstants.PLOT_XYLINE,argsForController);
                     this.add(testPanel,BorderLayout.CENTER);
                     if(cLegend.isSelected()){
