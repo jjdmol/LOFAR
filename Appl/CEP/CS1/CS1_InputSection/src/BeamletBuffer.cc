@@ -45,7 +45,7 @@ namespace LOFAR {
       for (uint sb = 0; sb < nSubbands; sb ++) {
 	itsSBBuffers.push_back(new Beamlet[bufferSize]);
       }
-      itsInvalidFlags = new bool[bufferSize]; 
+      itsFlags.include(0, bufferSize);
     }
 
     BeamletBuffer::~BeamletBuffer()
@@ -60,10 +60,10 @@ namespace LOFAR {
       for (; bit != itsSBBuffers.end(); bit++) {
 	delete [] *bit;
       }
-      delete [] itsInvalidFlags;
     }
 
-    uint BeamletBuffer::writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint stride) {
+    uint BeamletBuffer::writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint stride)
+    {
       // if this part start beyond itsHighestWritten, there is a gap in the data in the buffer
       // so set that data to zero and invalidate it.
       if ((begin > itsHighestWritten) and (itsHighestWritten > TimeStamp())) {
@@ -77,18 +77,20 @@ namespace LOFAR {
 	if (endI < startI) {
 	  // the data wraps around the allocated memory, so do it in two parts
 	  uint firstChunk = itsSize - startI;
+#if defined USE_DEBUG
 	  for (uint sb = 0; sb < itsNSubbands; sb++) {
 	    memset(&(itsSBBuffers[sb])[startI], 0, firstChunk * sizeof(Beamlet));
 	    memset(&(itsSBBuffers[sb])[0], 0, endI * sizeof(Beamlet));
-	    
-	    //itsInvalidFlags->clearSlice(startI, firstChunk);
-	    //itsInvalidFlags->clearSlice(0, endI);
 	  }
+#endif
+	  itsFlags.include(0, endI).include(startI, firstChunk);
 	} else {
+#if defined USE_DEBUG
 	  for (uint sb = 0; sb < itsNSubbands; sb++) {
 	    memset(&(itsSBBuffers[sb])[startI], 0, (endI - startI) * sizeof(Beamlet));	    
-	    //itsInvalidFlags->clearSlice(startI, endI);
 	  }
+#endif
+	  itsFlags.include(startI, endI);
 	}	
 	itsWriteTimer.stop();
 	itsLockedRange.writeUnlock(begin);
@@ -102,56 +104,90 @@ namespace LOFAR {
      
       itsWriteTimer.start();
 
-      for (TimeStamp i = realBegin; i < end; i++) {
-	uint index = mapTime2Index(i);
-	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  itsSBBuffers[sb][index] = data[sb];
-	}
-	data += stride;
-	//itsInvalidFlags[index] = false; // these items are not invalid
-      }      
+      uint startI = mapTime2Index(realBegin);
+      uint endI = mapTime2Index(end);
+
+      if (endI < startI) {
+	// the data wraps around the allocated memory, so do it in two parts
+	for (uint i = startI; i < itsSize; i ++) {
+	  for (uint sb = 0; sb < itsNSubbands; sb++) {
+	    itsSBBuffers[sb][i] = data[sb];
+	  }
+	  data += stride;
+	}      
+	for (uint i = 0; i < endI; i ++) {
+	  for (uint sb = 0; sb < itsNSubbands; sb++) {
+	    itsSBBuffers[sb][i] = data[sb];
+	  }
+	  data += stride;
+	}      
+	itsFlags.exclude(startI, itsSize).exclude(0, endI);
+      } else {
+	for (uint i = startI; i < endI; i ++) {
+	  for (uint sb = 0; sb < itsNSubbands; sb++) {
+	    itsSBBuffers[sb][i] = data[sb];
+	  }
+	  data += stride;
+	}      
+	itsFlags.exclude(startI, endI);
+      }
+
       itsWriteTimer.stop();
       if (itsHighestWritten < end) itsHighestWritten = end;
       itsLockedRange.writeUnlock(end);
       return end - realBegin;
     }
 
-    uint BeamletBuffer::getElements(vector<Beamlet*> buffers, TimeStamp begin, uint nElements) { //, vector<bitset*> flags
+    uint BeamletBuffer::getElements(vector<Beamlet *> buffers, vector<SparseSet *> dhFlags, TimeStamp begin, uint nElements)
+    {
       ASSERTSTR(buffers.size() == itsNSubbands, "BeamletBuffer received wrong number of buffers to write to (in getElements).");
       TimeStamp end = begin + nElements;
       TimeStamp realBegin = itsLockedRange.readLock(begin, end);
+      SparseSet flags;
       
       itsReadTimer.start();
 
       // copy zeros for the part that was already out of the buffer
-      uint chunkSize = realBegin - begin;
+      uint nInvalid = realBegin - begin;
+#if defined USE_DEBUG
       for (uint sb = 0; sb < itsNSubbands; sb++) {
-	memset(&buffers[sb][0], 0, chunkSize * sizeof(Beamlet));
-	//flags[sb]->clearSlice(0, chunkSize);
-	itsDummyItems += chunkSize;
+	memset(&buffers[sb][0], 0, nInvalid * sizeof(Beamlet));
       }
+#endif
+      // set flags later
+      itsDummyItems += nInvalid * itsNSubbands;
+      flags.include(0, nInvalid);
 
       // copy the real data
       uint startI = mapTime2Index(realBegin);
       uint endI = mapTime2Index(end);
+
       if (endI < startI) {
 	// the data wraps around the allocated memory, so copy in two parts
 	uint firstChunk = itsSize - startI;
-	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  memcpy(&buffers[sb][0], &(itsSBBuffers[sb])[startI], firstChunk * sizeof(Beamlet));
-	  memcpy(&buffers[sb][firstChunk], &(itsSBBuffers[sb])[0], endI * sizeof(Beamlet));
 
-	  //flags[sb]->setFlags(itsInvalidFlags[blabla]);
+	for (uint sb = 0; sb < itsNSubbands; sb++) {
+	  memcpy(&buffers[sb][nInvalid],   &itsSBBuffers[sb][startI], firstChunk * sizeof(Beamlet));
+	  memcpy(&buffers[sb][firstChunk], &itsSBBuffers[sb][0],      endI       * sizeof(Beamlet));
+
 	  //itsDummyItems += blabla;
 	}
+
+	flags |= (itsFlags.subset(0,      endI)    += nInvalid + firstChunk);
+	flags |= (itsFlags.subset(startI, itsSize) -= nInvalid + startI);
       } else {
 	// copy in one part
 	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  memcpy(&buffers[sb][0], &itsSBBuffers[sb][startI], (endI - startI) * sizeof(Beamlet));
-	  
-	  //flags[sb]->setFlags(itsInvalidFlags[blabla]);
+	  memcpy(&buffers[sb][nInvalid], &itsSBBuffers[sb][startI], (endI - startI) * sizeof(Beamlet));
+	  //flags[sb]->setFlags(itsFlags[blabla]);
 	  //itsDummyItems += blabla;
 	}	  
+	flags |= (itsFlags.subset(startI, endI) -= nInvalid + startI);
+      }
+
+      // copy flags
+      for (uint sb = 0; sb < itsNSubbands; sb++) {
+	*dhFlags[sb] = flags;
       }
       
       itsReadTimer.stop();
