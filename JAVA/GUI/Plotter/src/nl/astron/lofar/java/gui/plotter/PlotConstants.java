@@ -69,7 +69,8 @@ public abstract class PlotConstants{
     public static final String EXCEPTION_OPERATION_NOT_SUPPORTED  = "The plotter has detected that the operation you requested is not supported. ";
     
     public static final String EXCEPTION_EMPTY_DATASET           = "An empty data set was passed to the plotter framework. ";
-    
+    public static final String EXCEPTION_INVALID_DATASET           = "An invalid or incomplete data set was passed to the plotter framework. ";
+        
     public static final String EXCEPTION_FRAMEWORK_INIT          = "The plotter framework class specified in the constants class or plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
     public static final String EXCEPTION_FRAMEWORK_NOT_FOUND      = "The plotter framework class specified in the constants class or plotter_config.properties file could not be found by the plotter. ";
     public static final String EXCEPTION_FRAMEWORK_NOT_COMPATIBLE = "The plotter framework class specified in the constants class or plotter_config.properties file does not implement the IPlot interface, and therefore is NOT compatible with the plotter. ";
