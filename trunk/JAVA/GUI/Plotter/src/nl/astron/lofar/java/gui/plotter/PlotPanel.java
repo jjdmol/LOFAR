@@ -45,6 +45,7 @@ public class PlotPanel extends JPanel{
 	}
 
 	public void createPlot(int type, String[] constraints) throws PlotterException{
+            this.removeAll();
             plot = null;
             legend = null;
             currentDataConstraint = constraints;
