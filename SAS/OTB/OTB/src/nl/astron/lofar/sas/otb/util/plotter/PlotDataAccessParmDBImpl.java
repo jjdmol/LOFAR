@@ -55,24 +55,36 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         
         HashMap<String,Object> returnMap = new HashMap<String, Object>();
         HashSet<HashMap> returnValues = new HashSet<HashMap>();
+        Vector names;
+        try{
+            names = parmDB.getNames(constraints[0]);
+        } catch (Exception ex) {
+            throw new PlotterDataAccessException("An invalid getNames() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+        }
         
-        Vector names = parmDB.getNames(constraints[0]);
-        //System.out.println("Parameter Names found for constraint "+constraint+ ": " +names.size()+"x");
-        
-        
-        if(names.size()>=1 && constraints.length == this.requiredDataConstraints){
+        if(names != null && names.size()>=1 && constraints.length == this.requiredDataConstraints){
             returnMap.put(PlotConstants.DATASET_NAME,"Parameter Database Filter : "+constraints[0]);
             TimeZone utcZone = TimeZone.getTimeZone("UTC");
             utcZone.setDefault(utcZone);
             Calendar aCalendar = Calendar.getInstance(utcZone);
             Date utcDate = aCalendar.getTime();
-            
-            returnMap.put(PlotConstants.DATASET_SUBNAME,"Generated at "+ utcDate.toString());
+            int epoch_unix_to_julian = 2440588;
+            double curDate = utcDate.getTime();
+            double millis = (1000*60*60*24);
+            double floorDivide = (curDate >= 0) ? curDate / millis : ((curDate+1)/millis) -1; 
+            double julianDay = epoch_unix_to_julian + floorDivide;
+            double modifiedJulianDay = julianDay - 2400000.5;
+            returnMap.put(PlotConstants.DATASET_SUBNAME,"Generated at "+ utcDate.toString() + " MJD: "+modifiedJulianDay);
             
             for(int n = 0; n < names.size();n++){
-                
-                Vector paramValues = parmDB.getRange(names.get(n).toString());
-                //System.out.println("Parameter Range Values found: "+paramValues.size()+"x");
+                Vector paramValues;
+                try{
+                    paramValues = parmDB.getRange(names.get(n).toString());
+                } catch (Exception ex) {
+                    //TODO LOG
+                    //ex.printStackTrace();
+                    throw new PlotterDataAccessException("An invalid getRange() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                }
                 double startx = Double.parseDouble(constraints[1]);
                 double endx = Double.parseDouble(constraints[2]);
                 double starty = Double.parseDouble(constraints[4]);
@@ -80,7 +92,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 int numx = Integer.parseInt(constraints[3]);
                 int numy = Integer.parseInt(constraints[6]);
                 
-                if(paramValues.size()==4){
+                if(paramValues != null && paramValues.size()==4){
                     //startx = Double.parseDouble(paramValues.get(0).toString());
                     //endx =Double.parseDouble(paramValues.get(1).toString());
                     //starty = Double.parseDouble(paramValues.get(2).toString());
@@ -92,11 +104,12 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
                 returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
                 returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
+                
                 HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
                 try {
                     values = parmDB.getValues((String) names.get(n), startx, endx, numx, starty, endy, numy);
                 } catch (Exception ex) {
-                    throw new PlotterDataAccessException("An invalid call was made to the ParmDB interface. Please check that all variables seem OK. If so, contact support for details.");
+                    throw new PlotterDataAccessException("An invalid getValues() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
                 }
                 
                 Iterator anIterator = values.keySet().iterator();
@@ -132,4 +145,6 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         }
         return returnMap;
     }
+    
+
 }
