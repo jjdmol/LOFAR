@@ -34,6 +34,7 @@
 #include <Common/Timer.h>
 #include <CS1_InputSection/LockedRange.h>
 #include <CS1_Interface/RSPTimeStamp.h>
+#include <CS1_Interface/SparseSet.h>
 
 namespace LOFAR 
 {
@@ -62,7 +63,7 @@ namespace LOFAR
       // write elements in the buffer, return value is number of succesfully written elements
       uint writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint stride);
       // get elements out of the buffer, return value is number of valid elements
-      uint getElements(vector<Beamlet*> buffers, TimeStamp begin, uint nElements);
+      uint getElements(vector<Beamlet *> buffers, vector<SparseSet *>, TimeStamp begin, uint nElements);
 
       TimeStamp startBufferRead();
       TimeStamp startBufferRead(TimeStamp);
@@ -82,7 +83,7 @@ namespace LOFAR
 
       //# Datamembers
       vector<Beamlet *> itsSBBuffers;
-      bool* itsInvalidFlags;
+      SparseSet itsFlags;
       uint itsNSubbands;
       uint itsSize;
 

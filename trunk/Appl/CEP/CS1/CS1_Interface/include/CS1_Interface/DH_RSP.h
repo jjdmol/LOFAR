@@ -28,6 +28,7 @@
 #include <Transport/DataHolder.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/RectMatrix.h>
+#include <CS1_Interface/SparseSet.h>
 
 namespace LOFAR
 {
@@ -54,8 +55,6 @@ namespace LOFAR
       /// Accessor functions
       const int getStationID() const;
       void setStationID(int);
-      const int getInvalidCount() const;
-      void setInvalidCount(int);
       const timestamp_t getTimeStamp() const;
       void setTimeStamp(timestamp_t);
       const int getDelay() const;
@@ -73,6 +72,12 @@ namespace LOFAR
   
       RectMatrix<BufferType>& getDataMatrix() const;
 
+      SparseSet &getFlags();
+      const SparseSet &getFlags() const;
+
+      /// (un)marshall flags into/from blob
+      void getExtraData(), fillExtraData();
+
     private:
       /// Forbid assignment.
       DH_RSP& operator= (const DH_RSP&);
@@ -82,8 +87,8 @@ namespace LOFAR
 
       /// pointers to data in the blob
       BufferType*  itsBuffer;
+      SparseSet *itsFlags;
       int* itsStationID;
-      int* itsInvalidCount;
       int* itsDelay;
       timestamp_t* itsTimeStamp;
 
@@ -111,12 +116,6 @@ namespace LOFAR
     inline void DH_RSP::setStationID(int id)
     { *itsStationID = id; }
 
-    inline const int DH_RSP::getInvalidCount() const
-    { return *itsInvalidCount; }
-
-    inline void DH_RSP::setInvalidCount(int count)
-    { *itsInvalidCount = count; }
-
     inline const timestamp_t DH_RSP::getTimeStamp() const
     { return *itsTimeStamp; }
 
@@ -134,6 +133,12 @@ namespace LOFAR
 
     inline RectMatrix<DH_RSP::BufferType> &DH_RSP::getDataMatrix() const 
     { return *itsMatrix; }
+
+    inline SparseSet &DH_RSP::getFlags()
+    { return *itsFlags; }
+
+    inline const SparseSet &DH_RSP::getFlags() const
+    { return *itsFlags; }
 
   } // namespace CS1
 
