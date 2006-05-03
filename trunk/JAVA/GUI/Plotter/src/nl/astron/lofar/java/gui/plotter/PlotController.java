@@ -1,9 +1,23 @@
 /*
  * PlotController.java
  *
- * Copyright (C) 2006
- * ASTRON (Netherlands Foundation for Research in Astronomy)
- * P.O. Box 2, 7990AA Dwingeloo, The Netherlands, seg@astron.nl
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
 
@@ -30,11 +44,11 @@ public class PlotController{
 	private PlotDataManager m_PlotDataManager;
 	private PlotGroup m_PlotGroup;
 	private IPlot m_IPlot;
-	
+        	
 	public PlotController(){
             m_PlotDataManager = PlotDataManager.getInstance();
             //Initialise and load plotter classes and data interfaces
-	}
+        }
 
 	public void finalize() throws Throwable {
             m_PlotDataManager = null;
@@ -48,26 +62,47 @@ public class PlotController{
 	 * 
 	 */
 	public JComponent createPlot(int type, String[] constraints) throws PlotterException{
-        
+            String plotFrameworkClass = "";
             Object aPlotter = null;
             IPlot aNewPlot = null;
             try {
+               plotFrameworkClass = m_PlotDataManager.getPlotterConfigurationFile().getString(("FRAMEWORK"));
 
-                Class implementator = PlotController.class.forName(PlotConstants.FRAMEWORK);
+            } catch (Exception iex) {
+                //TODO LOG!
+               PlotterFrameworkNotFoundException exx = new PlotterFrameworkNotFoundException("(No plotter_config.properties file found with a FRAMEWORK variable!)");
+               exx.initCause(iex);
+               throw exx; 
+            }
+            
+            try {
+                
+                Class implementator = PlotController.class.forName(plotFrameworkClass);
                 aPlotter = implementator.newInstance();
                 aNewPlot = (IPlot)aPlotter;
             } catch (IllegalAccessException ex) {
                 //TODO Log!
-                throw new PlotterFrameworkInitializationException();
+                PlotterFrameworkInitializationException exx = new PlotterFrameworkInitializationException();
+                exx.initCause(ex);
+                throw exx; 
+                
             } catch (ClassNotFoundException ex) {
                 //TODO Log!
-                throw new PlotterFrameworkNotFoundException("(used:"+ PlotConstants.FRAMEWORK + " )");
+                PlotterFrameworkNotFoundException exx = new PlotterFrameworkNotFoundException("(used:"+ plotFrameworkClass + " )");
+                exx.initCause(ex);
+                throw exx; 
+                
             } catch (InstantiationException ex) {
                 //TODO Log!
-                throw new PlotterFrameworkInitializationException();
+                PlotterFrameworkInitializationException exx = new PlotterFrameworkInitializationException();
+                exx.initCause(ex);
+                throw exx;
+                
             } catch (ClassCastException ex) {
                 //TODO LOG!
-                throw new PlotterFrameworkNotCompatibleException();
+                PlotterFrameworkNotCompatibleException exx = new PlotterFrameworkNotCompatibleException();
+                exx.initCause(ex);
+                throw exx;
             }
             
             if(aPlotter != null){
