@@ -20,16 +20,23 @@ public class WaveformSettingsSelectPanel extends JPanel implements ActionListene
     /** The parent class. */
     private WaveformSettingsPanel parent;
     
-    /** List of ActionListeners listening to this object. */
-    private EventListenerList listenerList; 
+    /** Double array that stores the status of the antennas (shown or not). **/
+    private boolean[][] antennas;
     
     /**
      * 
      * Creates new form WaveformSettingsSelectPanel
      */
     public WaveformSettingsSelectPanel() 
-    {
-        listenerList = new EventListenerList();
+    {        
+        /*
+         * First number is the board it belongs to.
+         * Second number the number of the antenna.
+         * Because the names of the antennas range from 1 to 8, it's clearer
+         * to use 9 values (of which the first (0) is never used) the always
+         * subtracting 1 one the "name".
+         */
+        antennas = new boolean[2][9];
         
         initComponents();
         
@@ -86,10 +93,13 @@ public class WaveformSettingsSelectPanel extends JPanel implements ActionListene
     }
     
     public void update()
-    {
+    {          
         if(parent.getMainPanel().getBoard().isConnected())
         {
-            int nofBoards = parent.getMainPanel().getBoard().getNofBoards();
+            /*
+             * The comboboxes
+             */
+            int nofBoards = parent.getMainPanel().getBoard().getNrRSPBoards();
             
             cmbBoard1.removeAllItems();
             cmbBoard2.removeAllItems();
@@ -99,42 +109,65 @@ public class WaveformSettingsSelectPanel extends JPanel implements ActionListene
                 cmbBoard1.addItem(Integer.toString(i));
                 cmbBoard2.addItem(Integer.toString(i));
             }
+            
+            /*
+             * The plotted lines.
+             */
+            for (int i = 0; i < antennas.length; i++)
+            {
+                for (int j = 0; j < antennas[i].length; j++)
+                {
+                    if (antennas[i][j])
+                    {
+                        // @TODO: edit!
+                        parent.getPlotPanel().removeLine(Integer.toString((i * 10) + j));
+                        parent.getPlotPanel().addLine(parent.getMainPanel().getBoard().getSubbandStats(1), Integer.toString((i * 10) + j));
+                    }                    
+                }
+            } 
         }
     }
-    
-    public void addActionListener(ActionListener l)
-    {
-        listenerList.add(ActionListener.class, l);
-    }
-    
-    public void removeActionListener(ActionListener l)
-    {
-        listenerList.remove(ActionListener.class, l);
-    }
-    
-    /**
-     * Notify all listeners of the action that has occured.
-     */
-    public void fireActionPerformed(ActionEvent e)
-    {
-        Object[] listeners = listenerList.getListenerList();
-        
-        for (int i = listeners.length - 2; i >= 0; i -= 2)
-        {
-            if (listeners[i] == ActionListener.class)
-            {
-                ((ActionListener) listeners[i+1]).actionPerformed(e);
-            }
-        }       
-    }
-    
+       
     /**
      * Invoked when an action occurs.
      * @param   e                       ActionEvent
      */
     public void actionPerformed(ActionEvent e)
-    {        
-        fireActionPerformed(e);
+    {
+        if (!parent.getMainPanel().getBoard().isConnected())
+        {
+            return;
+        }
+        
+        int actionSource = Integer.parseInt(e.getActionCommand());
+
+        int board = actionSource / 10;
+
+        if (actionSource % 10 == 0)
+        {
+            // actionSource is a comboboxg
+
+        }
+        else
+        {
+            // actionSource is a antenna
+            int antenna = actionSource % 10;
+            
+            if (!antennas[board][antenna])
+            {
+                // not displayed in plot
+                parent.getPlotPanel().addLine(parent.getMainPanel().getBoard().getSubbandStats(1), Integer.toString(actionSource));    
+                antennas[board][antenna] = true;
+            }
+            else
+            {
+                // already displayed -> remove
+                parent.getPlotPanel().removeLine(Integer.toString(actionSource));
+                antennas[board][antenna] = false;
+            }
+            
+            
+        }           
     }
         
     /** This method is called from within the constructor to

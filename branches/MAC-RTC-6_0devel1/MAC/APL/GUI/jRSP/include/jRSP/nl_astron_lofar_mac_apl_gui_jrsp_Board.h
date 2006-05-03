@@ -33,19 +33,11 @@ JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retri
 
 /*
  * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
- * Method:    retrieveNofBoards
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveNofBoards
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
  * Method:    setWaveformSettings
- * Signature: (IIIII)Z
+ * Signature: (IIDSII)Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWaveformSettings
-  (JNIEnv *, jobject, jint, jint, jint, jint, jint);
+  (JNIEnv *, jobject, jint, jint, jdouble, jshort, jint, jint);
 
 /*
  * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
@@ -54,6 +46,38 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWavefo
  */
 JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getSubbandStats
   (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    getWaveformSettings
+ * Signature: (II)[Lnl/astron/lofar/mac/apl/gui/jrsp/WGRegisterType;
+ */
+JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getWaveformSettings
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    getNrRCUs
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getNrRCUs
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    getNrRSPBoards
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getNrRSPBoards
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    getMaxRSPBoards
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getMaxRSPBoards
+  (JNIEnv *, jobject, jint);
 
 /*
  * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board

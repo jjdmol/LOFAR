@@ -8,8 +8,6 @@ package nl.astron.lofar.mac.apl.gui.jrsp;
  * of each other: setMask(int value), setBit(int index) and clearBit(int index).
  * The methods setBit and clearBit are used to either set or unset (clear) a
  * bit. 
- * A method that would flip the bit could be implemented, although it's not used
- * in the jRSP project at the moment.
  *
  * Because it's important that RCUMask doesn't generate false rcumask's a jUnit
  * testcase has been made that runs several tests on this class. RCUMaskTest,
@@ -29,6 +27,16 @@ public class RCUMask
     public RCUMask()
     {
         itsMask = 0;
+    }
+    
+    
+    /**
+     * Creates a new instance of RCUMask based on two other RCUMasks (performs
+     * bitwise or on the two board).
+     */
+    public RCUMask(RCUMask one, RCUMask two)
+    {
+        itsMask = one.getMask() | two.getMask();
     }
     
     /**
@@ -86,4 +94,29 @@ public class RCUMask
     {
         itsMask = itsMask & ~(1 << aIndex);
     }
+    
+    /**
+     * Flips the bit specified by the index.
+     * @param   index   Index of the bit to be cleared.
+     */
+    public void flipBit(int aIndex)
+    {
+        if (getBit(aIndex))
+        {
+            clearBit(aIndex);
+        }
+        else
+        {
+            setBit(aIndex);
+        }
+    }
+    
+    /**
+     * Returns 32, the size of a Java integer.
+     */
+    public int getSize()
+    {
+        return 32;
+    }
+    
 }

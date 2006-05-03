@@ -427,19 +427,6 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 }
 
 /**
- * Returns the number of Boards connected to the RSP driver.
- * @param	env		The Java environment interface pointer.
- * @param	obj		The "this" pointer.
- * @param	ptrRSPport	Pointer to the RSPport that should be used.
- * @return	nofBoards	Number of boards connected to the RSP driver.
- */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveNofBoards(JNIEnv * env, jobject obj, jint ptrRSPport)
-{
-	RSPport * IOport = (RSPport*)ptrRSPport;
-	return 1;
-}
-
-/**
  * Sets the waveform settings.
  * @param	env
  * @param	obj
@@ -448,11 +435,10 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveNofBo
  * @param	frequency
  * @param	amplitude
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWaveformSettings(JNIEnv * env, jobject obj, jint rcuMask, jint mode, jint frequency, jint amplitude, jint ptrRSPport)
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWaveformSettings(JNIEnv * env, jobject obj, jint rcuMask, jint mode, jdouble frequency, jshort phase, jint amplitude, jint ptrRSPport)
 {
 	RSPport * IOport = (RSPport*)ptrRSPport;
-	//return IOport->setWaveformSettings(rcuMask, mode, frequency, amplitude);
-	return false;
+	return IOport->setWaveformSettings(rcuMask, mode, frequency, phase, amplitude);
 }
 
 /**
@@ -465,26 +451,117 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWavefo
  */
 JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getSubbandStats(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
-	int size = 512; // size of the array that will be returned
-	jdoubleArray ret; // the array that will be returned
+	RSPport * IOport = (RSPport *) ptrRSPport;
 
-	// initialize jdoubleArray
-	ret = env->NewDoubleArray(size);
+	// get a vector with the subband stats
+	vector<double> vecData = IOport->getSubbandStats(rcuMask);
 
-        //vector<double> vecData;
-        FILE * pFile = fopen("/home/balken/20060308_155731_sst_rcu007.dat", "rb");
-	if(pFile != NULL)
+	// make a jdouble array to return to Java
+	jdoubleArray ret = env->NewDoubleArray(vecData.size());
+
+	// move vecData elements to ret
+	for (int i = 0; i < vecData.size(); i++)
 	{
-		double d;
-		for(int i=0; fread(&d, sizeof(double), 1, pFile) == 1; i++) 
-        	{
-			env->SetDoubleArrayRegion(ret, i, 1, &d);
-		}
-        	fclose(pFile);
+		env->SetDoubleArrayRegion(ret, i, 1, &vecData[i]);
 	}
 
+	// return array
         return ret;
 }
+
+/**
+ * Returns a array of nl.astron.lofar.mac.apl.gui.jrsp.WGRegisterType elements.
+ */
+JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getWaveformSettings(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+{
+	// get pointer to RSPport
+	RSPport * IOport = (RSPport *) ptrRSPport;
+
+	// get vector with register types
+	vector<struct WGSettings::WGRegisterType> vecData = IOport->getWaveformSettings(rcuMask);
+
+	/*
+	 * JNI part
+	 * get class, constructor and field identifiers.
+	 */
+
+	// jni: class
+	jclass clsWGRegisterType = env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/WGRegisterType");
+	if (clsWGRegisterType == NULL) {
+		return NULL;
+	}
+	
+	// jni: constructor
+	static jmethodID midConstructor = env->GetMethodID(clsWGRegisterType, "<init>", "()V");
+	if (midConstructor == NULL) {
+		return NULL;
+	}
+	
+	// jni: fields
+	jfieldID fidMode = env->GetFieldID(clsWGRegisterType, "mode", "S");
+	jfieldID fidPhase = env->GetFieldID(clsWGRegisterType, "phase", "S");
+	jfieldID fidNofSamples = env->GetFieldID(clsWGRegisterType, "nofSamples", "I");
+	jfieldID fidFrequency = env->GetFieldID(clsWGRegisterType, "frequency", "D");
+	jfieldID fidAmplitude = env->GetFieldID(clsWGRegisterType, "amplitude", "J");
+	if (fidMode == 0 || fidPhase == 0 || fidNofSamples == 0 || fidFrequency == 0 || fidAmplitude == 0) {
+		return NULL;
+	}
+
+	// construct return array
+	jobjectArray arrResults = (jobjectArray) env->NewObjectArray(vecData.size(), clsWGRegisterType, NULL);
+
+	// process vector and add itens to array
+	for (int i = 0; i < vecData.size(); i++) {
+		// make new (j)WGRegisterType
+		jobject temp = env->NewObject(clsWGRegisterType, midConstructor, NULL);
+
+		env->SetShortField(temp, fidMode, vecData[i].mode);
+		env->SetShortField(temp, fidPhase, vecData[i].phase);
+		env->SetIntField(temp, fidNofSamples, vecData[i].nof_samples);
+		env->SetDoubleField(temp, fidFrequency, vecData[i].freq);
+		env->SetLongField(temp, fidAmplitude, vecData[i].ampl);
+
+		// add object to return array
+		env->SetObjectArrayElement(arrResults, i, temp);
+	}
+	
+	// return array
+	return arrResults;
+} // getWaveformSettings()
+
+/**
+ * Returns the number of connected RCU's.
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getNrRCUs(JNIEnv * env, jobject obj, jint ptrRSPport)
+{
+	// get pointer to RSPport
+	RSPport * IOport = (RSPport *) ptrRSPport;
+	
+	return IOport->getNrRCUs();
+}
+
+/**
+ * Returns the number of connected boards.
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getNrRSPBoards(JNIEnv * env, jobject obj, jint ptrRSPport)
+{
+	// get pointer to RSPport
+	RSPport * IOport = (RSPport *) ptrRSPport;
+
+	return IOport->getNrRSPboards();
+}
+
+/**
+ * Returns the maximum number of boards that could be connected.
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getMaxRSPBoards(JNIEnv * env, jobject obj, jint ptrRSPport)
+{
+	// get pointer to RSPport
+	RSPport * IOport = (RSPport *) ptrRSPport;
+
+	return IOport->getMaxRSPboards();
+}
+
 
 /**
  * TEST METHOD, SHOULD BE REMOVED IN FINAL VERSION.

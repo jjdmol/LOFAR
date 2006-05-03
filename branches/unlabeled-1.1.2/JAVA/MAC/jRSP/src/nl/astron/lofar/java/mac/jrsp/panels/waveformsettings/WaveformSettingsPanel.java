@@ -2,6 +2,7 @@ package nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import nl.astron.lofar.mac.apl.gui.jrsp.Board;
@@ -30,8 +31,7 @@ public class WaveformSettingsPanel extends JPanel implements ITabPanel
         inputPanel.addActionListener(new InputPanelAction());
         
         selectPanel.init(this);
-        selectPanel.addActionListener(new SelectPanelAction());        
-        
+                
         plotPanel.init(this);
         
     }
@@ -46,6 +46,15 @@ public class WaveformSettingsPanel extends JPanel implements ITabPanel
     MainPanel getMainPanel()
     {
         return mainPanel;
+    }
+    
+    /**
+     * Returns the plot panel.
+     * _Default_ access specifier: method only available within this package.
+     */
+    WaveformSettingsPlotPanel getPlotPanel()
+    {
+        return plotPanel;
     }
         
     /**
@@ -87,10 +96,11 @@ public class WaveformSettingsPanel extends JPanel implements ITabPanel
             try
             {
                 int mode = Integer.parseInt(inputPanel.getMode());
-                int frequency = Integer.parseInt(inputPanel.getFrequency());
+                short phase = 0;
+                double frequency = Double.parseDouble(inputPanel.getFrequency());
                 int amplitude = Integer.parseInt(inputPanel.getAmplitude());
 
-                if (!board.setWaveformSettings(rcuMask, mode, frequency, amplitude))
+                if (!board.setWaveformSettings(rcuMask, mode, frequency, phase, amplitude))
                 {
                     JOptionPane.showMessageDialog(null, "Failed to change the waveform settings.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -101,33 +111,6 @@ public class WaveformSettingsPanel extends JPanel implements ITabPanel
             }
         }
     } // InputPanelAction
-    
-    /**
-     * Invoked when a action occured at the selectionPanel.
-     */
-    private class SelectPanelAction implements ActionListener
-    {
-        public void actionPerformed(ActionEvent e)
-        {
-            int actionSource = Integer.parseInt(e.getActionCommand());
-            
-            int board = actionSource / 10;
-            
-            if (actionSource % 10 == 0)
-            {
-                // actionSource is a combobox
-                
-            }
-            else
-            {
-                // actionSource is a antenna
-                int antenna = actionSource % 10;
-                
-                mainPanel.getBoard(); // jeej! dit mag! te gek man!
-            }
-        }
-    } // SelectPanelAction
-    
     
     /** This method is called from within the constructor to
      * initialize the form.

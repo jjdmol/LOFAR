@@ -129,4 +129,17 @@ public class RCUMaskTest extends TestCase
         }
         assertEquals(0, instance.getMask());        
     }
+    
+    /**
+     * Test of flipBit method, of class nl.astron.lofar.mac.apl.gui.jrsp.RCUMask.
+     */
+    public void testFlipBit() 
+    {
+        System.out.println("flipBit");
+        
+        RCUMask instance = new RCUMask(-1);
+    
+        instance.flipBit(31);
+        assertEquals(Integer.MAX_VALUE, instance.getMask());    
+    }
 }

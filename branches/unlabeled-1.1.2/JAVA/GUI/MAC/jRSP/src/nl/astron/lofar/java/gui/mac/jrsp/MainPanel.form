@@ -49,6 +49,15 @@
             </Constraint>
           </Constraints>
         </Component>
+        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPanel" name="subbandStatsPanel">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="Subband Statistics">
+                <Property name="tabTitle" type="java.lang.String" value="Subband Statistics"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+        </Component>
         <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel" name="waveformSettingsPanel">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">

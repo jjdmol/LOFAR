@@ -77,8 +77,8 @@ public class MainPanel extends JPanel implements IPluginPanel,
         
         // tabpanels        
         statusPanel.init(this);
+        subbandStatsPanel.init(this);
         waveformSettingsPanel.init(this);
-        
         
         refreshRates = new int[jTabbedPane.getTabCount()];
     }
@@ -135,7 +135,7 @@ public class MainPanel extends JPanel implements IPluginPanel,
      * It is has to be implemented...
      */
     public void checkChanged() { }
-    
+      
     /**
      * Returns the board.
      * @return  board
@@ -292,7 +292,7 @@ public class MainPanel extends JPanel implements IPluginPanel,
         /*
          * Construct a String array for the listpanel.
          */
-        int nofBoards = board.getNofBoards();        
+        int nofBoards = board.getNrRSPBoards();
         String[] listItems = new String[nofBoards];
         for (int i = 0; i < nofBoards; i++)
         {
@@ -346,7 +346,7 @@ public class MainPanel extends JPanel implements IPluginPanel,
      */
     private void updateListPanel()
     {
-        String[] listItems = new String[board.getNofBoards()];
+        String[] listItems = new String[board.getNrRSPBoards()];
         for(int i=0; i<listItems.length; i++)
         {
             listItems[i] = Integer.toString(i);
@@ -416,11 +416,14 @@ public class MainPanel extends JPanel implements IPluginPanel,
     private void initComponents() {
         jTabbedPane = new javax.swing.JTabbedPane();
         statusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel();
+        subbandStatsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPanel();
         waveformSettingsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel();
         controlPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel();
         listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel();
 
         jTabbedPane.addTab("Status", statusPanel);
+
+        jTabbedPane.addTab("Subband Statistics", subbandStatsPanel);
 
         jTabbedPane.addTab("Waveform Settings", waveformSettingsPanel);
 
@@ -440,7 +443,7 @@ public class MainPanel extends JPanel implements IPluginPanel,
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
                         .add(12, 12, 12)
-                        .add(jTabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 577, Short.MAX_VALUE))
+                        .add(jTabbedPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 577, Short.MAX_VALUE))
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, listPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 589, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(controlPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -453,6 +456,7 @@ public class MainPanel extends JPanel implements IPluginPanel,
     private javax.swing.JTabbedPane jTabbedPane;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel listPanel;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel statusPanel;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPanel subbandStatsPanel;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel waveformSettingsPanel;
     // End of variables declaration//GEN-END:variables
     

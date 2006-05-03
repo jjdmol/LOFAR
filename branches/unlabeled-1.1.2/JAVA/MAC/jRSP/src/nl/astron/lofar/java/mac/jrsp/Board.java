@@ -104,9 +104,12 @@ public class Board
     private native int init(String hostname); // initializes RSPport on the C++ side, for further use.
     private native void delete(int ptrRSPport); // deletes the RSPport instance on the c++ side.
     private native BoardStatus[] retrieveStatus(int rcuMask, int ptrRSPport); // retrieves the boards.
-    private native int retrieveNofBoards(int ptrRSPport); // retrieves the number of boards.
-    private native boolean setWaveformSettings(int rcuMask, int mode, int frequency, int amplitude, int ptrRSPport); // Sets the waveform settings.
+    private native boolean setWaveformSettings(int rcuMask, int mode, double frequency, short phase, int amplitude, int ptrRSPport); // Sets the waveform settings.
     private native double[] getSubbandStats(int rcuMask, int ptrRSPport); // retrieves subbandstats
+    private native WGRegisterType[] getWaveformSettings(int rcuMask, int ptrRSPport); // returnsd wfsettings
+    public native int getNrRCUs(int ptrRSPport);
+    public native int getNrRSPBoards(int ptrRSPport);
+    public native int getMaxRSPBoards(int ptrRSPport);
     
     public native int test(); // used to test stuff. @TODO: delete this function.
         
@@ -135,17 +138,7 @@ public class Board
         boardStatus = retrieveStatus(rcuMask, ptrRSPport);
         return boardStatus;
     }
-    
-    /**
-     * Returns the number of boards that can be reached by the RSP driver.
-     * @return  nofBoards   The number of boards.
-     */
-    public int getNofBoards()
-    {
-        //@TODO activeren: return retrieveNofBoards(ptrRSPport);
-        return 2;
-    }
-    
+        
     /**
      * Sets the waveform settings.
      * @param   rcuMask
@@ -153,10 +146,15 @@ public class Board
      * @param   frequency
      * @param   amplitude
      */
-    public boolean setWaveformSettings(int rcuMask, int mode, int frequency, int amplitude)
+    public boolean setWaveformSettings(int rcuMask, int mode, double frequency, short phase,  int amplitude)
     {
-        //@TODO remove!
-        return setWaveformSettings(rcuMask, mode, frequency, amplitude, ptrRSPport);
+        // adjust phase from [0-360] to [0-255]
+        int adjPhase = (phase * 255) / 360;
+        
+        // adjust frequency by multiplying with 10e6
+        frequency *= 1e6;
+        
+        return setWaveformSettings(rcuMask, mode, frequency, (short)adjPhase, amplitude, ptrRSPport);
     }
     
     /**
@@ -167,5 +165,37 @@ public class Board
     public double[] getSubbandStats(int rcuMask)
     {
         return getSubbandStats(rcuMask, ptrRSPport);
+    }
+    
+    /**
+     * Returns the waveform settings.     
+     */
+    public WGRegisterType[] getWaveformSettings(int rcuMask)
+    {
+        return getWaveformSettings(rcuMask, ptrRSPport);
+    }
+    
+    /**
+     * Returns number of RCU's connected.
+     */
+    public int getNrRCUs()
+    {
+        return getNrRCUs(ptrRSPport);
+    }
+    
+    /**
+     * Returns the number of boards connected.
+     */
+    public int getNrRSPBoards()
+    {
+        return getNrRSPBoards(ptrRSPport);
+    }
+    
+    /**
+     * Returns the maximum number of boards that could be connected.
+     */
+    public int getMaxRSPBoards()
+    {
+        return getMaxRSPBoards(ptrRSPport);
     }
 }

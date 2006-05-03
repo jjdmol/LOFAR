@@ -4,6 +4,7 @@ import gov.noaa.pmel.sgt.dm.SGTMetaData;
 import gov.noaa.pmel.sgt.dm.SimpleLine;
 import gov.noaa.pmel.sgt.swing.JPlotLayout;
 import gov.noaa.pmel.util.Range2D;
+import java.util.ArrayList;
 import javax.swing.JPanel;
 
 /**
@@ -17,6 +18,8 @@ public class WaveformSettingsPlotPanel extends JPanel
     
     /** SGT zut. */
     private JPlotLayout layout;
+    
+    private ArrayList<String> dataList; /* temp */
        
     /** 
      * Creates a new instance of WaveformSettingsPlotPanel.
@@ -31,6 +34,8 @@ public class WaveformSettingsPlotPanel extends JPanel
         layout.setAutoIntervals(10, layout.getYAutoIntervals() / 2);
         
         add(layout);
+        
+        dataList = new ArrayList<String>(); /* temp */
     }
     
     /**
@@ -40,23 +45,24 @@ public class WaveformSettingsPlotPanel extends JPanel
     {
         this.parent = parent;        
     }
-    
+       
     /**
      * Adds a line, with the points stored in /data/, and /id/ as identifier.
      */
     public void addLine(double[] data, String id)
     {
         double[] xValues = new double[data.length];
-        double[] yValues = new double[data.length];
+        //double[] yValues = new double[data.length];
         
         // process subbandstats data
         for (int i = 0; i < data.length; i ++)
         {
             xValues[i] = i * ( 80.0 / 512);
-            yValues[i] = data[i];
+            //yValues[i] = data[i];
         }
                                 
-        SimpleLine line = new SimpleLine(xValues, yValues, id);
+        //SimpleLine line = new SimpleLine(xValues, yValues, id);
+        SimpleLine line = new SimpleLine(xValues, data, id);
         line.setId(id);
         line.setXMetaData(new SGTMetaData("Frequency", "MHz"));
         line.setYMetaData(new SGTMetaData("y", "y-iets"));
@@ -64,6 +70,7 @@ public class WaveformSettingsPlotPanel extends JPanel
         Range2D tempYRange = layout.getRange().getYRange();
         
         layout.addData(line, id);
+        dataList.add(id); /* temp */
     }
     
     /**
@@ -72,6 +79,5 @@ public class WaveformSettingsPlotPanel extends JPanel
     public void removeLine(String id)
     {
         layout.clear(id);
-    }
-    
+    }    
 }
