@@ -1,9 +1,23 @@
 /*
  * PlotConstants.java
  *
- * Copyright (C) 2006
- * ASTRON (Netherlands Foundation for Research in Astronomy)
- * P.O. Box 2, 7990AA Dwingeloo, The Netherlands, seg@astron.nl
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
 
@@ -56,24 +70,21 @@ public abstract class PlotConstants{
     public static final int PLOT_SCATTER = 4;
     public static final int PLOT_GRID = 5;
     public static final boolean PLOT_SEPARATE_LEGEND = true;
-    
-    //Supported plotter framework
-    public static final String FRAMEWORK         = "nl.astron.lofar.java.gui.plotter.PlotSGTImpl";
-    
-    //Location of the properties file (minus .properties!) where the data access/export classes are specified
+        
+    //Package-like Location of the properties file (minus .properties!) where the data plot/access/export classes are specified
     public static final String RESOURCE_FILE     = "nl.astron.lofar.java.gui.plotter.plotter_config";
     
     //Exception messages
-    public static final String EXCEPTION_GENERIC                = "An internal error occurred. ";
+    public static final String EXCEPTION_GENERIC                = "An error occurred! ";
     public static final String EXCEPTION_NOT_IMPLEMENTED         = "The plotter has detected that the feature you requested is not (fully) implemented in this release. ";
     public static final String EXCEPTION_OPERATION_NOT_SUPPORTED  = "The plotter has detected that the operation you requested is not supported. ";
     
     public static final String EXCEPTION_EMPTY_DATASET           = "An empty data set was passed to the plotter framework. ";
     public static final String EXCEPTION_INVALID_DATASET           = "An invalid or incomplete data set was passed to the plotter framework. ";
         
-    public static final String EXCEPTION_FRAMEWORK_INIT          = "The plotter framework class specified in the constants class or plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
-    public static final String EXCEPTION_FRAMEWORK_NOT_FOUND      = "The plotter framework class specified in the constants class or plotter_config.properties file could not be found by the plotter. ";
-    public static final String EXCEPTION_FRAMEWORK_NOT_COMPATIBLE = "The plotter framework class specified in the constants class or plotter_config.properties file does not implement the IPlot interface, and therefore is NOT compatible with the plotter. ";
+    public static final String EXCEPTION_FRAMEWORK_INIT          = "The plotter framework class specified in the plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
+    public static final String EXCEPTION_FRAMEWORK_NOT_FOUND      = "The plotter framework class specified in the plotter_config.properties file could not be found by the plotter. ";
+    public static final String EXCEPTION_FRAMEWORK_NOT_COMPATIBLE = "The plotter framework class specified in the plotter_config.properties file does not implement the IPlot interface, and therefore is NOT compatible with the plotter. ";
     
     public static final String EXCEPTION_DATA_ACCESS_INIT           = "The plotter data access class specified in the plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
     public static final String EXCEPTION_DATA_ACCESS_NOT_FOUND      = "The plotter data access class specified in the plotter_config.properties file could not be found by the plotter. ";
