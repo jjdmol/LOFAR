@@ -96,6 +96,12 @@ int main (int argc, char *argv[]) {
     printUsage();
   }
 
-  return returnValue;
+  if (returnValue) {
+      // everything ok
+      return 0;
+  } else {
+      // there was an error
+      return 1;
+  };
 }
 
