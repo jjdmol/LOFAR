@@ -1,9 +1,23 @@
 /*
  * PlotDataManager.java
  *
- * Copyright (C) 2006
- * ASTRON (Netherlands Foundation for Research in Astronomy)
- * P.O. Box 2, 7990AA Dwingeloo, The Netherlands, seg@astron.nl
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
 
@@ -27,7 +41,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 public class PlotDataManager{
     
     private static PlotDataManager instance = null;
-    private ResourceBundle bundle;
+    private ResourceBundle plotterConfigurationFile;
     private boolean propertyFileOK;
     //private ParmDB m_ParmDB;
     
@@ -41,7 +55,7 @@ public class PlotDataManager{
     private PlotDataManager(){
       propertyFileOK = false; 
       try {
-            bundle = ResourceBundle.getBundle(PlotConstants.RESOURCE_FILE);
+            plotterConfigurationFile = ResourceBundle.getBundle(PlotConstants.RESOURCE_FILE);
             
       } catch (Exception iex) {
            //LOG!
@@ -64,11 +78,13 @@ public class PlotDataManager{
         IPlotDataAccess aDataAccessor = null;
         String dataAccessClass = "";
         try {
-           dataAccessClass = bundle.getString(("DATA_ACCESS_CLASS"));
+           dataAccessClass = plotterConfigurationFile.getString(("DATA_ACCESS_CLASS"));
         
         } catch (Exception iex) {
-           //iex.printStackTrace();
-           throw new PlotterDataAccessorNotFoundException("(No plotter_config.properties file found with a DATA_ACCESS_CLASS variable!)");
+            //TODO LOG!
+           PlotterDataAccessorNotFoundException exx = new PlotterDataAccessorNotFoundException("(No plotter_config.properties file found with a DATA_ACCESS_CLASS variable!)");
+           exx.initCause(iex);
+           throw exx; 
         }
         try {
            Class implementator;
@@ -77,16 +93,26 @@ public class PlotDataManager{
            aDataAccessor = (IPlotDataAccess)aClass;
         } catch (IllegalAccessException ex) {
             //TODO Log!
-            throw new PlotterDataAccessorInitializationException();
+            PlotterDataAccessorInitializationException exx = new PlotterDataAccessorInitializationException();
+            exx.initCause(ex);
+            throw exx; 
+            
         } catch (ClassNotFoundException ex) {
             //TODO Log!
-            throw new PlotterDataAccessorNotFoundException("(used: "+dataAccessClass+" )");
+            PlotterDataAccessorNotFoundException exx = new PlotterDataAccessorNotFoundException("(used: "+dataAccessClass+" )");
+            exx.initCause(ex);
+            throw exx;           
         } catch (InstantiationException ex) {
             //TODO Log!
-            throw new PlotterDataAccessorInitializationException();
+            PlotterDataAccessorInitializationException exx = new PlotterDataAccessorInitializationException();
+            exx.initCause(ex);
+            throw exx; 
         } catch (ClassCastException ex) {
             //TODO LOG!
-            throw new PlotterDataAccessorNotCompatibleException();
+            PlotterDataAccessorNotCompatibleException exx = new PlotterDataAccessorNotCompatibleException();
+            exx.initCause(ex);
+            throw exx; 
+            
         }
         
         if(aDataAccessor != null){
@@ -107,6 +133,14 @@ public class PlotDataManager{
      */
     public void exportData(String[] exportParams, HashMap data) throws PlotterException{
         throw new NotImplementedException("Export of data is not yet implemented in this release.");
+    }
+    /**
+     * Retrieves the bundle of strings in the plotter_config.properties file.
+     * @returns ResourceBundle the plotter configuration items
+     *
+     */
+    public ResourceBundle getPlotterConfigurationFile(){
+        return plotterConfigurationFile;
     }
     
 }
