@@ -52,6 +52,10 @@ int main (int argc, char* argv[]) {
 	try {
 		RSPport		IOport (argv[1]);
 
+		cout << "RCUs     : " << IOport.getNrRCUs() << endl;
+		cout << "RSPboards: " << IOport.getNrRSPboards() << " of " <<
+				IOport.getMaxRSPboards() << endl;
+
 		uint32		rcuMask = 1;
 		vector<BoardStatus>	boardArr = IOport.getBoardStatus(rcuMask);
 
@@ -63,7 +67,7 @@ int main (int argc, char* argv[]) {
 		cout << "cep Errors  : " << bp->diag.cep_errors << endl;
 
 		LOG_INFO_STR("Setting waveform generator");
-		IOport.setWaveformSettings(rcuMask, 1, 39.75e6, 95);
+		IOport.setWaveformSettings(rcuMask, 1, 39.75e6, 100, 95);
 
 		LOG_INFO_STR("Getting waveform settings");
 		vector<struct WGSettings::WGRegisterType>		wgs;

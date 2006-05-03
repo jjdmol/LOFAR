@@ -43,12 +43,23 @@ static	char		receiveBuffer[24*4096];
 // RSPport (host, port)
 //
 RSPport::RSPport(string	aHostname) :
-	itsPort(24001),		// FOR THE TIME BEING!!!
-	itsHost(aHostname),
-	itsSocket(new Socket("RSPsocket", itsHost, toString(itsPort)))
+	itsPort		   (24001),		// FOR THE TIME BEING!!!
+	itsHost		   (aHostname),
+	itsSocket	   (new Socket("RSPsocket", itsHost, toString(itsPort))),
+	itsNrRCUs 	   (0),
+	itsNrRSPboards (0),
+	itsMaxRSPboards(0)
 {
 	itsSocket->connect(-1);			// try to connect, wait max 1 second
 	itsSocket->setBlocking(true);	// no other tasks, do rest blocking
+
+	RSPGetconfigEvent	getConfig;
+	send(&getConfig);
+
+	RSPGetconfigackEvent ack(receive());
+	itsNrRCUs 		= ack.n_rcus;
+	itsNrRSPboards  = ack.n_rspboards;
+	itsMaxRSPboards = ack.max_rspboards;
 }
 
 //
@@ -142,6 +153,7 @@ vector<BoardStatus> RSPport::getBoardStatus(uint32	RCUmask)
 bool RSPport::setWaveformSettings(uint32		RCUmask,
 								  uint32		mode,
 								  double		frequency,
+								  uint8			phase,
 								  uint32		amplitude)
 {
 #define	SAMPLE_FREQUENCY		160.0e6
@@ -154,7 +166,7 @@ bool RSPport::setWaveformSettings(uint32		RCUmask,
 	command.settings().resize(1);
 	command.settings()(0).freq  = (uint32)
 					(((frequency / SAMPLE_FREQUENCY) * ~((uint32)0) ) + 0.5);
-	command.settings()(0).phase = 0;
+	command.settings()(0).phase = phase;
 	command.settings()(0).ampl  = (uint32) 
 					(dblAmpl / 100.0 * (1<<23) + 0.5);
 	command.settings()(0).nof_samples = 1024;

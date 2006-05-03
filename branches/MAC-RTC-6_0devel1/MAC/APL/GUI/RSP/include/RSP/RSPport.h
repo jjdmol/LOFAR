@@ -65,6 +65,7 @@ public:
 	bool setWaveformSettings(uint32		RCUmask,
 							 uint32		mode,
 							 double		frequency,
+							 uint8		phase,
 							 uint32		amplitude);
 
 	// Get the settings of the waveform generators.
@@ -73,6 +74,11 @@ public:
 
 	// GetSubbandStats returns the signalstrength in each subband.
 	vector<double> 	getSubbandStats(uint32	RCUmask);
+
+	// get info of the environment of the RSPdriver
+	uint32	getNrRCUs()			const	{ return (itsNrRCUs);	}
+	uint32	getNrRSPboards()	const	{ return (itsNrRSPboards);	}
+	uint32	getMaxRSPboards()	const	{ return (itsMaxRSPboards);	}
 
 private:
 	// Copying is not allowed
@@ -87,6 +93,9 @@ private:
 	uint16		itsPort;
 	string		itsHost;
 	Socket*		itsSocket;
+	uint32		itsNrRCUs;
+	uint32		itsNrRSPboards;
+	uint32		itsMaxRSPboards;
 };
 
 // @}
