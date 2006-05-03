@@ -1,19 +1,33 @@
 /*
- * PlotSGTImpl.java
+ *  PlotSGTImpl.java
  *
- * Copyright (C) 2006
- * ASTRON (Netherlands Foundation for Research in Astronomy)
- * P.O. Box 2, 7990AA Dwingeloo, The Netherlands, seg@astron.nl
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *  
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- * This software uses (parts of) the SGT graphics library. 
- * SGT was developed and is maintained by Donald W. Denbo,
- * National Oceanic and Atmospheric Administration.
- * E-Mail : Donald.W.Denbo@noaa.gov
- * Website: http://www.epic.noaa.gov/java/sgt
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- * NOTICE :Although this class works with the standard SGT release,
- *         it is recommended you use the supplied SGT jar file to
- *         prevent as much bugs as possible.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *  This software uses (parts of) the SGT graphics library. 
+ *  SGT was developed and is maintained by Donald W. Denbo,
+ *  National Oceanic and Atmospheric Administration.
+ *  E-Mail : Donald.W.Denbo@noaa.gov
+ *  Website: http://www.epic.noaa.gov/java/sgt
+ *
+ *  NOTICE : Although this class works with the standard SGT release,
+ *           it is recommended you use the supplied SGT jar file to
+ *           prevent as much bugs as possible.
  */
 
 package nl.astron.lofar.java.gui.plotter;
@@ -237,14 +251,17 @@ public class PlotSGTImpl implements IPlot{
 
                         layout.setRange(new SoTDomain(new SoTRange.Double(xstart,xend),new SoTRange.Double(ystart,yend)));
                     } catch (PropertyVetoException ex) {
+                        //TODO LOG!
                         ex.printStackTrace();
                     }
                 }
                 layout.setName(plotTitle);
                 layout.setBatch(false);
             }catch(NullPointerException e){
-                    //TODO LOG!
-                    throw new InvalidDataSetException("( The data set provided was not sufficient to build a Line Plot. Please check the log file and/or contact this software's supplier)");
+                //TODO LOG!
+                InvalidDataSetException exx = new InvalidDataSetException("( The data set provided was not sufficient to build a Line Plot. Please check the log file )");
+                exx.initCause(e);
+                throw exx;    
             }
             return layout;
         }
@@ -382,8 +399,9 @@ public class PlotSGTImpl implements IPlot{
                 layout.setBatch(false);
             }catch(NullPointerException e){
                 //TODO LOG!
-                throw new InvalidDataSetException("( The data set provided was not sufficient to build a Grid Plot. Please check the log file and/or contact this software's supplier)");
-             
+                InvalidDataSetException exx = new InvalidDataSetException("( The data set provided was not sufficient to build a Grid Plot. Please check the log file )");
+                exx.initCause(e);
+                throw exx; 
             }
             return layout; 
         }
@@ -406,14 +424,17 @@ public class PlotSGTImpl implements IPlot{
             try {
                 parentPlot = (JPlotLayout) aPlot;
                 keyPane = parentPlot.getKeyPane();
-               
                 keyPane.setSize(new Dimension(600,100));
             } catch (ClassCastException e) {
-                throw new NotSupportedException("The plot ("+aPlot.getName()+") is not recognized by the plotter's configured framework (SGT).");
+                NotSupportedException exx = new NotSupportedException("The plot ("+aPlot.getName()+") is not recognized by the plotter's configured framework (SGT).");
+                exx.initCause(e);
+                throw exx; 
+               
             } catch (NullPointerException e) {
-                throw new NotSupportedException("The plot ("+aPlot.getName()+") does not have a legend available.");
+                NotSupportedException exx = new NotSupportedException("The plot ("+aPlot.getName()+") does not have a legend available.");
+                exx.initCause(e);
+                throw exx; 
             }
-        
             return keyPane;
         }
         
