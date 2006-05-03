@@ -1,9 +1,23 @@
 /*
  * PlotTestFrame.java
  *
- * Copyright (C) 2006
- * ASTRON (Netherlands Foundation for Research in Astronomy)
- * P.O. Box 2, 7990AA Dwingeloo, The Netherlands, seg@astron.nl
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
 
@@ -12,9 +26,11 @@ package nl.astron.lofar.java.gui.plotter.test;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import javax.swing.ImageIcon;
+import java.awt.Toolkit;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
@@ -27,6 +43,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 public class PlotTestFrame extends javax.swing.JFrame {
     
     private PlotPanel testPanel;
+    JScrollPane legendPane;
     private JLabel exceptionLabel;
     private boolean plotPresent;
     
@@ -203,37 +220,49 @@ public class PlotTestFrame extends javax.swing.JFrame {
                 //plotPane.add(testPanel.getPlot(),new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
                 //plotPane.add(testPanel.getLegendForPlot(),new GridBagConstraints(0,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
                 if(plotPresent){
-                    this.getContentPane().remove(testPanel);
                     try {
-                        this.getContentPane().remove(testPanel.getLegendForPlot());
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                        this.getContentPane().remove(testPanel);
+                        this.getContentPane().remove(legendPane);
+                    }catch(Exception e){
+                        
                     }
                 }
                 try {
-                   
                     if(exceptionLabel !=null){
-                        this.getContentPane().remove(exceptionLabel);
+                        //this.getContentPane().remove(exceptionLabel);
                         exceptionLabel = null;
                     }
                     testPanel = new PlotPanel();
                     testPanel.createPlot(PlotConstants.PLOT_XYLINE,argsForController);
                     this.add(testPanel,BorderLayout.CENTER);
+                    
                     if(cLegend.isSelected()){
-                        this.add(testPanel.getLegendForPlot(),BorderLayout.SOUTH); 
+                        int legendWidth = (int)testPanel.getPreferredSize().getWidth()+10;
+                        int legendHeight =  100;
+                        
+                        legendPane = new JScrollPane(testPanel.getLegendForPlot());
+                        legendPane.setPreferredSize(new Dimension(legendWidth,legendHeight));
+                        legendPane.setBackground(Color.WHITE);
+                        legendPane.getViewport().setBackground(Color.WHITE);
+                        this.add(legendPane,BorderLayout.SOUTH); 
                     }
                  
                     plotPresent = true;
                     
                 } catch (PlotterException ex) {
+                     JOptionPane.showMessageDialog(this, ex.getMessage(),
+                                     "Error detected",
+                                     JOptionPane.ERROR_MESSAGE);
                     exceptionLabel = new JLabel(ex.getMessage());
                     exceptionLabel.setForeground(Color.RED);
-                    this.add(exceptionLabel,BorderLayout.CENTER);
+                    //this.add(exceptionLabel,BorderLayout.CENTER);
                     plotPresent = false;
+                    ex.printStackTrace();
                 }
                 
                 this.pack();
-                
+                Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+                this.setLocation(d.width/2 - this.getWidth()/2, d.height /2 - this.getHeight() /2);
             }
            }
     }//GEN-LAST:event_handlePlotButton
@@ -301,6 +330,8 @@ public class PlotTestFrame extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
        PlotTestFrame af = new PlotTestFrame();
+       Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+       af.setLocation(d.width/2 - af.getWidth()/2, d.height /2 - af.getHeight() /2);
        af.setVisible(true);
     }
     
