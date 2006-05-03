@@ -1,9 +1,23 @@
 /*
  * PlotDataAccessParmDBImpl.java
  *
- * Copyright (C) 2006
- * ASTRON (Netherlands Foundation for Research in Astronomy)
- * P.O. Box 2, 7990AA Dwingeloo, The Netherlands, seg@astron.nl
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
 
@@ -39,7 +53,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     
     
     public PlotDataAccessParmDBImpl(){
-        parmDB = new jParmFacade(this.DATA_INMEP_FILE_PATH);
+         parmDB = new jParmFacade(this.DATA_INMEP_FILE_PATH);
     }
     
     
@@ -59,9 +73,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         try{
             names = parmDB.getNames(constraints[0]);
         } catch (Exception ex) {
-            throw new PlotterDataAccessException("An invalid getNames() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+            //TODO LOG!
+            PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getNames() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+            exx.initCause(ex);
+            throw exx;
         }
-        
         if(names != null && names.size()>=1 && constraints.length == this.requiredDataConstraints){
             returnMap.put(PlotConstants.DATASET_NAME,"Parameter Database Filter : "+constraints[0]);
             TimeZone utcZone = TimeZone.getTimeZone("UTC");
@@ -81,9 +97,10 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 try{
                     paramValues = parmDB.getRange(names.get(n).toString());
                 } catch (Exception ex) {
-                    //TODO LOG
-                    //ex.printStackTrace();
-                    throw new PlotterDataAccessException("An invalid getRange() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                    //TODO LOG!
+                    PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getRange() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                    exx.initCause(ex);
+                    throw exx;
                 }
                 double startx = Double.parseDouble(constraints[1]);
                 double endx = Double.parseDouble(constraints[2]);
@@ -109,7 +126,10 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 try {
                     values = parmDB.getValues((String) names.get(n), startx, endx, numx, starty, endy, numy);
                 } catch (Exception ex) {
-                    throw new PlotterDataAccessException("An invalid getValues() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                    //TODO LOG!
+                    PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getValues() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                    exx.initCause(ex);
+                    throw exx;
                 }
                 
                 Iterator anIterator = values.keySet().iterator();
