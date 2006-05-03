@@ -1,0 +1,9 @@
+# new setup
+OTDBusername		= paulus
+OTDBdatabasename	= boskabouter
+OTDBpassword		= overeem
+OTDBpollInterval	= 5s
+
+QueuePeriod			= 15m
+ClaimPeriod			= 2m
+
