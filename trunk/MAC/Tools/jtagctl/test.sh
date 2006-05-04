@@ -77,6 +77,14 @@ function finalize
 }
 
 #
+# usage
+#
+testname=usage
+$STUB > $testname.stub$ref 2>&1 &
+$JT   > $testname.dat$ref  2>&1
+wait; finalize $testname $ref
+
+#
 # ipupdate
 #
 testname=ipupdate
