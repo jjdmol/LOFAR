@@ -233,7 +233,7 @@ public class PlotTestFrame extends javax.swing.JFrame {
                         exceptionLabel = null;
                     }
                     testPanel = new PlotPanel();
-                    testPanel.createPlot(PlotConstants.PLOT_XYLINE,argsForController);
+                    testPanel.createPlot(PlotConstants.PLOT_XYLINE,true,argsForController);
                     this.add(testPanel,BorderLayout.CENTER);
                     
                     if(cLegend.isSelected()){
