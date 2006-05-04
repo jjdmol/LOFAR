@@ -1,4 +1,6 @@
 === Connected to JTAG ECB on localhost:3800
 === Saved files:
 	Type	Filename		Size
-=== ERR Did not receive response from ECB at ./jtagctl line 77.
+	GEN	GenFile		123
+	APL	AplFile		456
+	CNN	CnnFile		789

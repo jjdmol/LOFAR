@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-
+$VERSION = q$Revision$;
 #
 # jtagctl.pl # Control the JTAG Embedded Controller Board
 #
@@ -40,6 +40,7 @@ $ETHLEN = 1500;
 %SAVE_RESULT     = (   0 => "=== OK File saved\n",
 		       1 => "=== ERR File has been saved already\n",
 		       2 => "=== ERR Memory full\n",
+		       3 => "=== ERR Incorrect file type\n",
 		       8 => "=== ERR Data receive error\n",
 		     255 => "=== ERR Uknown error" );
 %TESTEXEC_RESULT = (   0 => "=== OK Test Passed\n",
@@ -224,8 +225,15 @@ sub testexec
     (read($sock, $testresult, $length) == $length)
 	|| die "=== ERR Failed to read test result of length $length: $!";
 
-    # print testresult
-    print STDERR "=== RESULT:\n", $testresult, "\n";
+    # save test result
+    if (defined($errfile)) {
+	open(ERRFILE, ">$errfile") || die "=== ERR Failed to open $errfile for writing";
+	print ERRFILE $testresult;
+	close(ERRFILE);
+
+	# report
+	print STDERR "=== Wrote result to file '$errfile'\n";
+    }
 
     # check result code
     print STDERR $TESTEXEC_RESULT{checkresponse($sock)};
@@ -238,7 +246,7 @@ sub test_testexec
 {
     $testresult="This is the test result.";
 
-    print pack("NZ*C", length($testresult), $testresult, 0);
+    print pack("NZ*C", length($testresult)+1, $testresult, 0);
 }
 
 #
@@ -313,14 +321,13 @@ sub test_ipupdate
 #
 sub usage
 {
-    my $me = "jtagctl.pl";
+    my $me = "jtagctl";
 
     print STDERR "$me [-h hostname] [-p port] command    # Control the JTAG Embedded Controller Board\n";
     print STDERR "  Usage: command is one of the following\n";
     print STDERR "    $me -l                      # List the files saved on the ECB\n";
     print STDERR "    $me -s filename             # Save the specified file to the ECB\n";
-    print STDERR "    $me -g GenFile [-a AplFile] [-c CnnFile] [-r]\n";
-    print STDERR "            -r print the test output\n";
+    print STDERR "    $me -g GenFile -a AplFile [-c CnnFile] [-r OutputErrFile]\n";
     print STDERR "    $me -e filename -t[g|a|c]   # Erase the file with the specified type (Gen, Apl, Cnn) from the ECB\n";
     print STDERR "    $me -i A.B.C.D              # Update the ECB IP-address (default is 192.168.1.25)\n";
     print STDERR "    $me -x                      # Erase all saved files\n";
@@ -332,7 +339,9 @@ sub main
 {
     my $sock = 0;
 
-    Getopt::Std::getopts("h:p:ls:g:a:c:e:ri:t:Tx");
+    print STDERR "=== jtagctl ($VERSION)\n";
+
+    Getopt::Std::getopts("h:p:ls:g:a:c:e:r:i:t:Tx");
 
       # check that at least one argument is present
       usage() if !defined($opt_l)
@@ -364,8 +373,8 @@ sub main
       if ($opt_l)           { listfiles($sock, false);         exit(); }
       if ($opt_s)           { savefile($sock, $opt_s);         exit(); }
       if ($opt_g)           {
-	  if (defined($opt_r)) { $resultfile = "Test.Err"; }
-	  testexec($sock, $opt_g, $opt_a, $opt_c, $resultfile);
+	  die "=== ERR -a argument is required" if !defined($opt_a);
+	  testexec($sock, $opt_g, $opt_a, $opt_c, $opt_r);
 	  exit();
       }
       if ($opt_e && $opt_t) { erase($sock, $opt_e, $opt_t);    exit(); }
