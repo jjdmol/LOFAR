@@ -42,7 +42,7 @@
 # include <Common/ComplexStdInt.h>
 # include <Common/ComplexBuiltinFP.h>
 
-#elif defined __GNUC__ && !defined __INSURE__
+#elif defined __GNUC__ && __GNUC__ < 4 && !defined __INSURE__
 # define LOFAR_BUILTIN_COMPLEXFP  __complex__
 # define LOFAR_BUILTIN_COMPLEXINT __complex__
 # include <Common/ComplexBuiltinFP.h>
