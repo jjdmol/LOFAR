@@ -76,6 +76,15 @@ public class PlotSGTImpl implements IPlot{
         
 	}
         
+        public void finalize() throws Throwable {
+            data = null;
+            aLayout.getFirstLayer().removeAllChildren();
+            aLayout.removeAll();
+            aLayout = null;
+            lad = null;
+            pma = null;
+	}
+        
 	public JComponent createPlot(int type, String name, HashMap data, boolean separateLegend) throws PlotterException{
 	    
             JPlotLayout aNewPlot = null; 
@@ -104,7 +113,7 @@ public class PlotSGTImpl implements IPlot{
             //JPane keyPane = aNewPlot.getKeyPane();
             
             //keyAndPlotPanel.add(keyPane,BorderLayout.SOUTH);
-            aNewPlot.setEditClasses(false);
+            //aNewPlot.setEditClasses(false);
             aLayout = aNewPlot;
             
             return aNewPlot;
@@ -248,7 +257,6 @@ public class PlotSGTImpl implements IPlot{
 
                     layout.setAutoRange(false,false);
                     try {
-
                         layout.setRange(new SoTDomain(new SoTRange.Double(xstart,xend),new SoTRange.Double(ystart,yend)));
                     } catch (PropertyVetoException ex) {
                         //TODO LOG!
@@ -426,12 +434,12 @@ public class PlotSGTImpl implements IPlot{
                 keyPane = parentPlot.getKeyPane();
                 keyPane.setSize(new Dimension(600,100));
             } catch (ClassCastException e) {
-                NotSupportedException exx = new NotSupportedException("The plot ("+aPlot.getName()+") is not recognized by the plotter's configured framework (SGT).");
+                NotSupportedException exx = new NotSupportedException("The plot ("+aPlot.getName()+") is not recognized by the plotter's configured framework (SGT). A legend can not be generated.");
                 exx.initCause(e);
                 throw exx; 
                
             } catch (NullPointerException e) {
-                NotSupportedException exx = new NotSupportedException("The plot ("+aPlot.getName()+") does not have a legend available.");
+                NotSupportedException exx = new NotSupportedException("The plot ("+aPlot.getName()+") does not have a separate legend available.");
                 exx.initCause(e);
                 throw exx; 
             }
