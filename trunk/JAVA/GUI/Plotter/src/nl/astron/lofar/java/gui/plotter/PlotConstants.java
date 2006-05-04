@@ -69,22 +69,23 @@ public abstract class PlotConstants{
     public static final int PLOT_POINTS = 3;
     public static final int PLOT_SCATTER = 4;
     public static final int PLOT_GRID = 5;
-    public static final boolean PLOT_SEPARATE_LEGEND = true;
         
     //Package-like Location of the properties file (minus .properties!) where the data plot/access/export classes are specified
     public static final String RESOURCE_FILE     = "nl.astron.lofar.java.gui.plotter.plotter_config";
     
     //Exception messages
-    public static final String EXCEPTION_GENERIC                = "An error occurred! ";
-    public static final String EXCEPTION_NOT_IMPLEMENTED         = "The plotter has detected that the feature you requested is not (fully) implemented in this release. ";
-    public static final String EXCEPTION_OPERATION_NOT_SUPPORTED  = "The plotter has detected that the operation you requested is not supported. ";
+    public static final String EXCEPTION_GENERIC                    = "An error occurred! ";
+    public static final String EXCEPTION_NOT_IMPLEMENTED            = "The feature you requested is not (fully) implemented in this release. ";
+    public static final String EXCEPTION_OPERATION_NOT_SUPPORTED    = "The operation you requested is not supported. ";
     
-    public static final String EXCEPTION_EMPTY_DATASET           = "An empty data set was passed to the plotter framework. ";
-    public static final String EXCEPTION_INVALID_DATASET           = "An invalid or incomplete data set was passed to the plotter framework. ";
-        
-    public static final String EXCEPTION_FRAMEWORK_INIT          = "The plotter framework class specified in the plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
-    public static final String EXCEPTION_FRAMEWORK_NOT_FOUND      = "The plotter framework class specified in the plotter_config.properties file could not be found by the plotter. ";
-    public static final String EXCEPTION_FRAMEWORK_NOT_COMPATIBLE = "The plotter framework class specified in the plotter_config.properties file does not implement the IPlot interface, and therefore is NOT compatible with the plotter. ";
+    public static final String EXCEPTION_EMPTY_DATASET              = "An empty data set was passed to the plotter framework. ";
+    public static final String EXCEPTION_INVALID_DATASET            = "An invalid or incomplete data set was passed to the plotter framework. ";
+  
+    public static final String EXCEPTION_RESOURCE_FILE_NOT_FOUND    = "The plotter_config.properties file could not be found by the plotter. Please check your classpath and the location of the file.";
+            
+    public static final String EXCEPTION_FRAMEWORK_INIT             = "The plotter framework class specified in the plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
+    public static final String EXCEPTION_FRAMEWORK_NOT_FOUND        = "The plotter framework class specified in the plotter_config.properties file could not be found by the plotter. ";
+    public static final String EXCEPTION_FRAMEWORK_NOT_COMPATIBLE   = "The plotter framework class specified in the plotter_config.properties file does not implement the IPlot interface, and therefore is NOT compatible with the plotter. ";
     
     public static final String EXCEPTION_DATA_ACCESS_INIT           = "The plotter data access class specified in the plotter_config.properties file could not be accessed and/or instantiated by the plotter. ";
     public static final String EXCEPTION_DATA_ACCESS_NOT_FOUND      = "The plotter data access class specified in the plotter_config.properties file could not be found by the plotter. ";
