@@ -52,7 +52,7 @@ namespace LOFAR
                  double h=0, double m=0, double s=0);
 
       // Create from an MJD (with possible fractions of day for high accuracy).
-      explicit Epoch (double mjd, double fraction=0);
+      Epoch (double mjd, double fraction=0);
 
       // Get the UTC time in seconds since January 1, 1970 (Unix format).
       double utc() const
@@ -121,9 +121,11 @@ namespace LOFAR
     // Output in ASCII (in UTC).
     ostream& operator<< (ostream&, const Epoch&);
 
+    // Compare two Epoch objects. 
+    // \return \c true when \a lhs is less than \a rhs; else \c false.
+    bool operator<(const Epoch& lhs, const Epoch& rhs);
+
     // Compare two Epoch objects for equality.
-    // \attention Two Epoch objects are considered equal when the absolute
-    // time difference between the two is less than one microsecond.
     bool operator==(const Epoch& lhs, const Epoch& rhs);
 
     // Return the sum of the epochs \a lhs and \a rhs.

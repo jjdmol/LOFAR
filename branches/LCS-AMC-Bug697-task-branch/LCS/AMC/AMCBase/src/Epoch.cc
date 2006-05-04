@@ -148,6 +148,19 @@ namespace LOFAR
 #endif
     }
 
+    Epoch& Epoch::operator+=(const Epoch& that)
+    {
+      itsDay += that.itsDay;
+      itsFrac += that.itsFrac;
+      adjust();
+    }
+
+    Epoch& Epoch::operator-=(const Epoch& that)
+    {
+      itsDay -= that.itsDay;
+      itsFrac -= that.itsFrac;
+      adjust();
+    }
 
     //################  Private functions  ################//
 
@@ -199,12 +212,34 @@ namespace LOFAR
     }
 
 
-    bool operator==(const Epoch& lhs, const Epoch& rhs)
+    bool operator<(const Epoch& lhs, const Epoch& rhs)
     {
-      static double usec = 1/usecPerSec;
-      return std::abs(lhs.utc() - rhs.utc()) < usec;
+      return (lhs.getDay() < rhs.getDay() ||
+              (lhs.getDay() == rhs.getDay() &&
+               lhs.getFraction() < rhs.getFraction()));
     }
 
+
+    bool operator==(const Epoch& lhs, const Epoch& rhs)
+    {
+      return (lhs.getDay()      == rhs.getDay() && 
+              lhs.getFraction() == rhs.getFraction());
+    }
+
+
+    Epoch operator+(const Epoch& lhs, const Epoch& rhs)
+    {
+      Epoch tmp(lhs);
+      tmp += rhs;
+      return tmp;
+    }
+
+    Epoch operator-(const Epoch& lhs, const Epoch& rhs)
+    {
+      Epoch tmp(lhs);
+      tmp -= rhs;
+      return tmp;
+    }
 
   } // namespace AMC
 

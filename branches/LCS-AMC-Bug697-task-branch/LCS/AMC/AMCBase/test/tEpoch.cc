@@ -26,12 +26,11 @@
 //# Includes
 #include <AMCBase/Epoch.h>
 #include <Common/LofarLogger.h>
-#include <cmath>
+#include <Common/lofar_math.h>
 #include <iostream>
 
-using namespace LOFAR::AMC;
 using namespace LOFAR;
-using namespace std;
+using namespace LOFAR::AMC;
 
 const double usec = 1e-6; // microsecond expressed in seconds
 
@@ -41,17 +40,17 @@ int main(int, const char* argv[])
 
   try {
 
-    Epoch now, then(0);
+    Epoch now, then(0), delta(1, 0.8);
     int yy,mm,dd,h,m;
     double s;
 
-    ASSERT(now == Epoch(now.mjd()));
     ASSERT(now == Epoch(now.getDay(), now.getFraction()));
+    ASSERT(now.mjd() == Epoch(now.mjd()).mjd());
     ASSERT(abs(now.utc() - now.local() + now.getUTCDiff()) < usec);
 
     now.ymd(yy, mm, dd);
     now.hms(h, m, s);
-    ASSERT(now == Epoch(yy, mm, dd, h, m, s));
+    ASSERT(abs(now.utc() - Epoch(yy, mm, dd, h, m, s).utc()) < usec);
 
     now.ymd(yy, mm, dd, true); 
     now.hms(h, m, s, true);
@@ -72,6 +71,34 @@ int main(int, const char* argv[])
     then.mjd(now.getDay() + now.getFraction());
     ASSERT(abs(then.local() - now.utc() - now.getUTCDiff()) < usec);
     then.mjd(0);
+
+    ASSERT(then < now);
+    ASSERT(!(then == now));
+
+    ASSERT(now + delta == delta + now);
+    ASSERT(now - delta == then - (delta - now));
+
+    then = now + delta;
+    ASSERT(now < then);
+    then = now - delta;
+    ASSERT(then < now);
+
+    then = now;
+    then += delta;
+    ASSERT(now < then);
+    ASSERT(then == now + delta);
+    ASSERT(0 <= then.getFraction() && then.getFraction() < 1);
+
+    then = now;
+    then -= delta;
+    ASSERT(then < now);
+    ASSERT(then == now - delta);
+    ASSERT(0 <= then.getFraction() && then.getFraction() < 1);
+    
+    then = now - 1;
+    ASSERT(now.getDay() - then.getDay() == 1);
+    then += 2;
+    ASSERT(then.getDay() - now.getDay() == 1);
 
   }
   catch (Exception& e) {
