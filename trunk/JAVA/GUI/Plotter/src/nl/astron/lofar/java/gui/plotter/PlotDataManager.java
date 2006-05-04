@@ -24,9 +24,10 @@
 package nl.astron.lofar.java.gui.plotter;
 
 import java.util.HashMap;
-import java.util.Properties;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import nl.astron.lofar.java.gui.plotter.exceptions.NotImplementedException;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterConfigurationNotFoundException;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessorInitializationException;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessorNotCompatibleException;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessorNotFoundException;
@@ -41,10 +42,11 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 public class PlotDataManager{
     
     private static PlotDataManager instance = null;
-    private ResourceBundle plotterConfigurationFile;
-    private boolean propertyFileOK;
-    //private ParmDB m_ParmDB;
-    
+    private static ResourceBundle plotterConfigurationFile;
+  
+    private IPlotDataAccess aDataAccessor;
+    private IPlotDataExport aDataExporter;
+       
     public static PlotDataManager getInstance(){
         if(instance == null){
             instance = new PlotDataManager();
@@ -53,20 +55,13 @@ public class PlotDataManager{
     }
     
     private PlotDataManager(){
-      propertyFileOK = false; 
-      try {
-            plotterConfigurationFile = ResourceBundle.getBundle(PlotConstants.RESOURCE_FILE);
-            
-      } catch (Exception iex) {
-           //LOG!
-          //iex.printStackTrace();
-            
-      } 
+      
+      
     }
-    
-    
     public void finalize() throws Throwable {
         instance = null;
+        plotterConfigurationFile = null;
+        aDataAccessor = null;
     }
     
     /**
@@ -74,47 +69,9 @@ public class PlotDataManager{
      *
      */
     public HashMap retrieveData(String[] constraints) throws PlotterException{
-        Object aClass = null;
-        IPlotDataAccess aDataAccessor = null;
-        String dataAccessClass = "";
-        try {
-           dataAccessClass = plotterConfigurationFile.getString(("DATA_ACCESS_CLASS"));
-        
-        } catch (Exception iex) {
-            //TODO LOG!
-           PlotterDataAccessorNotFoundException exx = new PlotterDataAccessorNotFoundException("(No plotter_config.properties file found with a DATA_ACCESS_CLASS variable!)");
-           exx.initCause(iex);
-           throw exx; 
-        }
-        try {
-           Class implementator;
-           implementator = PlotDataManager.class.forName(dataAccessClass);
-           aClass = implementator.newInstance();
-           aDataAccessor = (IPlotDataAccess)aClass;
-        } catch (IllegalAccessException ex) {
-            //TODO Log!
-            PlotterDataAccessorInitializationException exx = new PlotterDataAccessorInitializationException();
-            exx.initCause(ex);
-            throw exx; 
-            
-        } catch (ClassNotFoundException ex) {
-            //TODO Log!
-            PlotterDataAccessorNotFoundException exx = new PlotterDataAccessorNotFoundException("(used: "+dataAccessClass+" )");
-            exx.initCause(ex);
-            throw exx;           
-        } catch (InstantiationException ex) {
-            //TODO Log!
-            PlotterDataAccessorInitializationException exx = new PlotterDataAccessorInitializationException();
-            exx.initCause(ex);
-            throw exx; 
-        } catch (ClassCastException ex) {
-            //TODO LOG!
-            PlotterDataAccessorNotCompatibleException exx = new PlotterDataAccessorNotCompatibleException();
-            exx.initCause(ex);
-            throw exx; 
-            
-        }
-        
+        if(aDataAccessor == null){
+            initializeDataAccessLayer();
+        }        
         if(aDataAccessor != null){
             
             HashMap retrieveableData =
@@ -136,11 +93,82 @@ public class PlotDataManager{
     }
     /**
      * Retrieves the bundle of strings in the plotter_config.properties file.
-     * @returns ResourceBundle the plotter configuration items
+     * This method is static so other classes can retrieve it , which means that the properties file can be modified
+     * or extended for custom use.
+     *
+     * Important: The location where this method looks for is defined in the variable PlotConstants.RESOURCE_FILE
+     *
+     * Throws a PlotterConfigurationNotFoundException if the file could not be located or loaded.
+     * @return The ResourceBundle of properties present in the plotter_config.properties file
      *
      */
-    public ResourceBundle getPlotterConfigurationFile(){
+    public static ResourceBundle getPlotterConfigurationFile() throws PlotterConfigurationNotFoundException{
+        if(plotterConfigurationFile == null){
+            try {
+                plotterConfigurationFile = ResourceBundle.getBundle(PlotConstants.RESOURCE_FILE);
+            } catch (Exception iex) {
+                //LOG!
+                PlotterConfigurationNotFoundException exx = new PlotterConfigurationNotFoundException();
+                exx.initCause(iex);
+                throw exx;
+                
+            } 
+        }
         return plotterConfigurationFile;
+    }
+    /**
+     * Initializes the data access layer by attempting to create a new instance of the DATA_ACCESS_LAYER variable
+     * in plotter_config.properties.
+     */
+    private void initializeDataAccessLayer() throws PlotterException{
+        Object aClass = null;
+        String dataAccessClass = "";
+        ResourceBundle resources = PlotDataManager.getPlotterConfigurationFile();
+        try {
+            
+                dataAccessClass = resources.getString(("DATA_ACCESS_CLASS"));
+                Class implementator = PlotDataManager.class.forName(dataAccessClass);
+                aClass = implementator.newInstance();
+                aDataAccessor = (IPlotDataAccess)aClass;
+        
+        } catch (IllegalAccessException ex) {
+            //TODO Log!
+            PlotterDataAccessorInitializationException exx = new PlotterDataAccessorInitializationException();
+            exx.initCause(ex);
+            throw exx; 
+        } catch (ClassNotFoundException ex) {
+            //TODO Log!
+            PlotterDataAccessorNotFoundException exx = new PlotterDataAccessorNotFoundException("(used: "+dataAccessClass+" )");
+            exx.initCause(ex);
+            throw exx;  
+        } catch (MissingResourceException iex) {
+            //TODO LOG!
+            PlotterDataAccessorNotFoundException exx = new PlotterDataAccessorNotFoundException("(The property 'DATA_ACCESS_CLASS' was not found in the plotter_config.properties file)");
+            exx.initCause(iex);
+            throw exx; 
+        } catch (InstantiationException ex) {
+            //TODO Log!
+            PlotterDataAccessorInitializationException exx = new PlotterDataAccessorInitializationException();
+            exx.initCause(ex);
+            throw exx; 
+        } catch (ClassCastException ex) {
+            //TODO LOG!
+            PlotterDataAccessorNotCompatibleException exx = new PlotterDataAccessorNotCompatibleException();
+            exx.initCause(ex);
+            throw exx; 
+        } catch (Exception ex) {
+            //TODO Log!
+            PlotterDataAccessorInitializationException exx = new PlotterDataAccessorInitializationException();
+            exx.initCause(ex);
+            throw exx; 
+        }
+    }
+    /**
+     * Initializes the data export layer by attempting to create a new instance of the DATA_EXPORT_LAYER variable
+     * in plotter_config.properties.
+     */
+    private void initializeDataExportLayer() throws PlotterException{
+        throw new NotImplementedException("Data Export Layer initialization has not been implemented yet.");
     }
     
 }
