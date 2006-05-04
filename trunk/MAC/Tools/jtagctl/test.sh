@@ -59,9 +59,8 @@ function checkresult
     else
 	echo "PASS ($filename)"
 	passcount=$passcount+1
+        rm -f $filename
     fi
-
-    rm -f $filename
 }
 
 #
