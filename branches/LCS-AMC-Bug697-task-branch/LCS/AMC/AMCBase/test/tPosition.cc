@@ -101,7 +101,7 @@ int main(int, const char* argv[])
 
     ASSERT(pos0 * pos1 == pos1 * pos0 && pos0 * pos1 == 0);
     ASSERT(pos0 * pos2 == pos2 * pos0 && pos0 * pos2 == 0);
-    ASSERT(Numeric::compare(pos1 * pos2, pos2 * pos1, 0) && 
+    ASSERT(Numeric::compare(pos1 * pos2, pos2 * pos1, 0L) && 
            Numeric::compare(pos1 * pos2, -64.9943681998483));
 
   }
