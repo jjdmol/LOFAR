@@ -28,6 +28,10 @@ import javax.swing.JComponent;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
+ * This interface forms the communications contract between the plotter classes
+ * and any possible plotter graphics framework using a class that implements
+ * this interface.
+ *
  * @created 11-04-2006, 15:00
  * @author pompert
  * @version $Id$
@@ -40,12 +44,15 @@ public interface IPlot{
 	 * @param type Type of plot as dictated by PlotConstants.PLOT_*
 	 * @param name Name to be given to the plot
 	 * @param data The dataset to be used to create the plot
-	 * @param separateLegend Indicates the user's need for a separate legend 
+	 * @param separateLegend Indicates the user's need for a separate legend
+         * @return the JComponent plot generated
+         * @throws PlotterException will be thrown if the plot could not be generated for any reason.
 	 */
 	public JComponent createPlot(int type, String name, HashMap data, boolean separateLegend) throws PlotterException;
         
         /**
-	 * Returns the current dataset used in the plot 
+	 * Returns the current dataset used in the plot
+         * @return the dataset currently in use.
 	 */
         public HashMap getData();
         /**
@@ -54,8 +61,10 @@ public interface IPlot{
 	 */
         public void setData(HashMap newData);
         /**
-         * Create a legend/key using the plot specified
+         * Create a legend/key using the plot specified.
          * @param aPlot A plot JComponent
+         * @return A legend JComponent of plot aPlot
+         * @throws PlotterException will be thrown if the legend could not be generated for the given JComponent.
 	 */
         public JComponent getLegend(JComponent aPlot) throws PlotterException;
 }

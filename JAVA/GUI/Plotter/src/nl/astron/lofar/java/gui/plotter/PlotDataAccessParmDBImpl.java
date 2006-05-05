@@ -34,6 +34,11 @@ import nl.astron.lofar.java.cep.jparmfacade.jParmFacade;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**
+ * This class provides an implementation of IPlotDataAccess for use with LOFAR's
+ *  jParmFacade interface. It manages connections to that interface, and allows
+ * the plotter framework to generate plots of data present in the ParmDB. 
+ *
+ * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacade
  * @created 19-04-2006, 11:00
  * @author pompert
  * @version $Id$
@@ -46,19 +51,38 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     private static final String DATA_INMEP_FILE_PATH = "/home/pompert/transfer/tParmFacade.in_mep";
       
     private static jParmFacade parmDB = null;
-        
+    /**
+     *Creates a new instance of PlotDataAccessParmDBImpl
+     */
     public PlotDataAccessParmDBImpl(){
     
     }
-    
-    
+    /**
+     *Cleans up the instance variables
+     */
     public void finalize() throws Throwable {
         parmDB = null;
 
     }
     
     /**
-     * @param constraints
+     * This method, the most important one, makes a Plotter compliant dataset using
+     * the constraints provided by the PlotPanel, and to do that, it uses the 
+     * jParmFacade interface to get the data.
+     * 
+     *
+     * @param constraints The constraints provided by the PlotPanel. 
+     * These must be modelled as follows:<br><br>
+     * -constraints[0]= the parameter name filter (for example parm*) (String)<br>
+     * -constraints[1]= the startx variable (for example 0) (double)<br>
+     * -constraints[2]= the endx variable (for example 5) (double)<br>
+     * -constraints[3]= the numx variable (for example 5) (int)<br>
+     * -constraints[4]= the starty variable (for example 0) (double)<br>
+     * -constraints[5]= the endy variable (for example 5) (double)<br>
+     * -constraints[6]= the numy variable (for example 5) (int)<br><br>
+     * @return the data set generated
+     * @throws PlotterDataAccessException will be thrown if anything goes wrong 
+     * with the ParmDB interface and calls to it.
      *
      */
     public HashMap retrieveData(String[] constraints) throws PlotterDataAccessException{
@@ -91,7 +115,8 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 double julianDay = epoch_unix_to_julian + floorDivide;
                 double modifiedJulianDay = julianDay - 2400000.5;
                 returnMap.put(PlotConstants.DATASET_SUBNAME,"Generated at "+ utcDate.toString() + " MJD: "+modifiedJulianDay);
-
+                
+                //Every parameter
                 for(int n = 0; n < names.size();n++){
                     Vector paramValues;
                     try{
@@ -131,7 +156,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                         exx.initCause(ex);
                         throw exx;
                     }
-
+                    //Every parameter value
                     Iterator anIterator = values.keySet().iterator();
                     while(anIterator.hasNext()){
                         HashMap<String,Object> aValueMap = new HashMap<String,Object>();
@@ -145,7 +170,8 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                         //System.out.println("Parameter doubles inside " +aValue+": "+valueDoubles.size()+"x");
                         double[] xArray = new double[valueDoubles.size()];
                         double[] yArray = new double[valueDoubles.size()];
-
+                        
+                        //Every parameter value double inside the vector
                         for(int i = 0;(i<valueDoubles.size());i++){
                             xArray[i] = startx + (endx-startx) / valueDoubles.size()*(i+0.5);
                             yArray[i] = valueDoubles.get(i);
@@ -167,6 +193,13 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         
         return returnMap;
     }
+    
+    /**
+     * This method will check if the jParmFacade ParmDB interface is ready, and if not, it will
+     * create a new instance of it.
+     * @throws PlotterDataAccessException will be thrown if the jParmFacade could
+     * not be started, due to missing native libraries or other errors.
+     */
     private static void initiateConnectionToParmDB() throws PlotterDataAccessException{
          if(parmDB == null){
              try {

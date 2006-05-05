@@ -27,6 +27,10 @@ import java.util.HashMap;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**
+ * This interface forms the communications contract between the plotter classes
+ * and any possible data access layer using a class that implements
+ * this interface.
+ *
  * @created 19-04-2006, 11:00
  * @author pompert
  * @version $Id$
@@ -35,8 +39,12 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 public interface IPlotDataAccess{
     
     /**
-     * @param constraints An array of constraints to be passed to the implementating class
-     * @returns HashMap The dataset that has been generated
+     * This method will retrieve data from the data access layer using an array
+     * of strings and it must return a HashMap dataset understandable by the plotter. 
+     * @param constraints An array of String constraints to be passed to the implementing class
+     * @return The dataset that has been generated
+     * @throws PlotterDataAccessException will be thrown if the dataset could not
+     * be generated for any reason, like database exceptions, file errors, etc.
      */
     public HashMap retrieveData(String[] constraints) throws PlotterDataAccessException;
     

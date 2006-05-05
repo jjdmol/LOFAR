@@ -26,6 +26,9 @@ package nl.astron.lofar.java.gui.plotter.exceptions;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
+ * This exception can be thrown when a method or logic is called 
+ * that is not supported for the given arguments. 
+ * Should not occur in production environments!
  * @version $Id$
  * @created April 19, 2006, 11:00 AM
  * @author pompert
@@ -33,11 +36,19 @@ import nl.astron.lofar.java.gui.plotter.PlotConstants;
 public class NotSupportedException extends PlotterException{
     
     private String message;
-    /** Creates a new instance of NotSupportedException */
+    /** 
+     * Creates a new instance of NotSupportedException, using the supplied message
+     * @param message A custom string to be added to the exception message
+     */
     public NotSupportedException(String message) {
         super();
         this.message = message;
     }
+    /** 
+     * Returns the exception message defined in PlotConstants.EXCEPTION_OPERATION_NOT_SUPPORTED
+     * @return the Exception message
+     * @see PlotConstants
+     */
     public String getMessage(){
         return super.getMessage() + PlotConstants.EXCEPTION_OPERATION_NOT_SUPPORTED + message;
     }

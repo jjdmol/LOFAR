@@ -24,6 +24,13 @@
 package nl.astron.lofar.java.gui.plotter;
 
 /**
+ * This abstract class serves the plotter by storing strings often used in a central
+ * and easy to control location. It contains the:<br><br>
+ * - Data model constants (DATASET_*) used by both the Data Access/Export and the Plot framework<br>
+ * - Plot types (PLOT_*) used to centralize the plotter's capabilities<br>
+ * - Plotter Configuration file pointer (RESOURCE_FILE) used to determine the classes to be used for data access/export and graphics plotting<br>
+ * - Exception strings (EXCEPTION_*) that come in handy throughout all classes. Centralized to make easy maintenance.<br>
+ *
  * @version $Id$
  * @created April 14, 2006, 2:24 PM
  * @author pompert

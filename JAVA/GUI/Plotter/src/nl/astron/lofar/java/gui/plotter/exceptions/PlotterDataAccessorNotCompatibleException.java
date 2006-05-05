@@ -26,16 +26,29 @@ package nl.astron.lofar.java.gui.plotter.exceptions;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
+ * This exception can be thrown if a Data Access Layer class, 
+ * as configured in the plotter_config.properties file,
+ * is not compatible with the IPlotDataAccess interface.
  * @version $Id$
  * @created April 19, 2006, 11:02 AM
  * @author pompert
+ * @see nl.astron.lofar.java.gui.plotter.PlotDataManager
+ * @see nl.astron.lofar.java.gui.plotter.IPlotDataAccess
+ * @see PlotConstants
  */
 public class PlotterDataAccessorNotCompatibleException extends PlotterException{
     
-    /** Creates a new instance of PlotterDataAccessorNotCompatibleException */
+    /** 
+     * Creates a new instance of PlotterDataAccessorNotCompatibleException 
+     */
     public PlotterDataAccessorNotCompatibleException() {
         super();
     }
+    /** 
+     * Returns the exception message defined in PlotConstants.EXCEPTION_DATA_ACCESS_NOT_COMPATIBLE
+     * @return the Exception message
+     * @see PlotConstants
+     */
     public String getMessage(){
         return super.getMessage() + PlotConstants.EXCEPTION_DATA_ACCESS_NOT_COMPATIBLE;
     }

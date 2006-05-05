@@ -34,6 +34,11 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessorNotFoundEx
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
+ * This singleton class functions as the gateway between the plotter and configured
+ * data access and export classes. Its function is to instantiate these classes and
+ * make sure that calls are redirected to them. 
+ * It also loads the plotter_config.properties file and makes it available to other classes.
+ * 
  * @created 11-04-2006, 15:00
  * @author pompert
  * @version $Id$
@@ -46,27 +51,45 @@ public class PlotDataManager{
   
     private IPlotDataAccess aDataAccessor;
     private IPlotDataExport aDataExporter;
-       
+    
+    /**
+     * Gets the static instance of PlotDataManager. If it does not yet exist,
+     * it will be created using the constructor.
+     * @return the PlotDataManager instance
+     */
     public static PlotDataManager getInstance(){
         if(instance == null){
             instance = new PlotDataManager();
         }
         return instance;
     }
-    
+    /**
+     * Creates a new instance of PlotDataManager
+     */
     private PlotDataManager(){
       
-      
     }
+    /**
+     * Cleans up the data access/export interfaces and other instance variables
+     */
     public void finalize() throws Throwable {
         instance = null;
         plotterConfigurationFile = null;
         aDataAccessor = null;
+        aDataExporter = null;
     }
     
     /**
-     * @param constraints
-     *
+     * This method makes a Plotter compliant dataset using
+     * the constraints provided by the PlotPanel. It will call the Data Access 
+     * class provided in the plotter_config.properties file.
+     * 
+     * @param constraints The String array containing constraints for the data 
+     * access class 
+     * @return the data set generated
+     * @throws PlotterException will be thrown when an Exception occurs 
+     * inside the Data Access class, or when the Data Access class itself could not
+     * be properly accessed due to errors in the plotter_config.properties file.
      */
     public HashMap retrieveData(String[] constraints) throws PlotterException{
         if(aDataAccessor == null){
@@ -82,11 +105,17 @@ public class PlotDataManager{
         }
         return null;
     }
-    
     /**
-     * @param exportParams
-     * @param data
-     *
+     * This method exports a Plotter compliant dataset using
+     * the parameters provided. It will call the Data Export 
+     * class provided in the plotter_config.properties file.
+     * 
+     * @param exportParams The String array containing parameters for the data 
+     * export class
+     * @param data the data set to be exported
+     * @throws PlotterException will be thrown when an Exception occurs 
+     * inside the Data Export class, or when the Data Export class itself could not
+     * be properly accessed due to errors in the plotter_config.properties file.
      */
     public void exportData(String[] exportParams, HashMap data) throws PlotterException{
         throw new NotImplementedException("Export of data is not yet implemented in this release.");
@@ -97,10 +126,10 @@ public class PlotDataManager{
      * or extended for custom use.
      *
      * Important: The location where this method looks for is defined in the variable PlotConstants.RESOURCE_FILE
-     *
-     * Throws a PlotterConfigurationNotFoundException if the file could not be located or loaded.
+     * 
+     * @see PlotConstants
      * @return The ResourceBundle of properties present in the plotter_config.properties file
-     *
+     * @throws PlotterConfigurationNotFoundException will be thrown if the file could not be located or loaded.
      */
     public static ResourceBundle getPlotterConfigurationFile() throws PlotterConfigurationNotFoundException{
         if(plotterConfigurationFile == null){
@@ -119,6 +148,8 @@ public class PlotDataManager{
     /**
      * Initializes the data access layer by attempting to create a new instance of the DATA_ACCESS_LAYER variable
      * in plotter_config.properties.
+     * @throws PlotterException will be thrown when the Data Access class could not
+     * be properly accessed due to errors in the plotter_config.properties file.
      */
     private void initializeDataAccessLayer() throws PlotterException{
         Object aClass = null;
@@ -166,6 +197,8 @@ public class PlotDataManager{
     /**
      * Initializes the data export layer by attempting to create a new instance of the DATA_EXPORT_LAYER variable
      * in plotter_config.properties.
+     * @throws PlotterException will be thrown when the Data Export class could not
+     * be properly accessed due to errors in the plotter_config.properties file.
      */
     private void initializeDataExportLayer() throws PlotterException{
         throw new NotImplementedException("Data Export Layer initialization has not been implemented yet.");

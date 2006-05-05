@@ -26,6 +26,13 @@ package nl.astron.lofar.java.gui.plotter.exceptions;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
+ * This exception can be thrown when a IPlot implementing class encounters a 
+ * data set being passed to it that doesn't contain fully valid information.<br>
+ * examples are:<br>
+ * -Attempt to build a Grid plot using a Line plot compatible data set<br>
+ * -Incomplete X,Y,Z value arrays that don't match in sizes<br>
+ * -Etc
+ *
  * @version $Id$
  * @created April 18, 2006, 11:02 AM
  * @author pompert
@@ -33,11 +40,19 @@ import nl.astron.lofar.java.gui.plotter.PlotConstants;
 public class InvalidDataSetException extends PlotterException{
     
     private String message;
-    /** Creates a new instance of InvalidDataSetException */
+    /** 
+     * Creates a new instance of InvalidDataSetException, using the supplied message
+     * @param message A custom string to be added to the exception message
+     */
     public InvalidDataSetException(String message) {
         super();
         this.message = message;
     }
+    /** 
+     * Returns the exception message defined in PlotConstants.EXCEPTION_INVALID_DATASET
+     * @return the Exception message
+     * @see PlotConstants
+     */
     public String getMessage(){
         return super.getMessage() + PlotConstants.EXCEPTION_INVALID_DATASET + " "+message;
     }

@@ -26,16 +26,25 @@ package nl.astron.lofar.java.gui.plotter.exceptions;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
+ * This abstract exception forms the base class for every specific exception in the plotter
+ * application.
  * @version $Id$
  * @created April 18, 2006, 11:03 AM
  * @author pompert
  */
-public class PlotterException extends Exception{
+public abstract class PlotterException extends Exception{
     
-    /** Creates a new instance of PlotterFrameworkInitializationException */
+    /** 
+     * Creates a new instance of PlotterException 
+     */
     public PlotterException() {
         super();
     }
+    /** 
+     * Returns the exception message defined in PlotConstants.EXCEPTION_GENERIC
+     * @return the Exception message
+     * @see PlotConstants
+     */
     public String getMessage(){
         return PlotConstants.EXCEPTION_GENERIC;
     }

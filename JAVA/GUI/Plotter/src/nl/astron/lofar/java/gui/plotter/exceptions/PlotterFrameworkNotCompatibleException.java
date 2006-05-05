@@ -26,16 +26,29 @@ package nl.astron.lofar.java.gui.plotter.exceptions;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
+ * This exception can be thrown if a Plotter Framework class, 
+ * as configured in the plotter_config.properties file, 
+ * is not compatible with the IPlot interface.
  * @version $Id$
- * @created April 18, 2006, 11:02 AM
+ * @created April 19, 2006, 11:02 AM
  * @author pompert
+ * @see nl.astron.lofar.java.gui.plotter.IPlot
+ * @see nl.astron.lofar.java.gui.plotter.PlotController
+ * @see PlotConstants
  */
 public class PlotterFrameworkNotCompatibleException extends PlotterException{
     
-    /** Creates a new instance of PlotterFrameworkNotCompatibleException */
+    /** 
+     * Creates a new instance of PlotterFrameworkNotCompatibleException 
+     */
     public PlotterFrameworkNotCompatibleException() {
         super();
     }
+    /** 
+     * Returns the exception message defined in PlotConstants.EXCEPTION_FRAMEWORK_NOT_COMPATIBLE
+     * @return the Exception message
+     * @see PlotConstants
+     */
     public String getMessage(){
         return super.getMessage() + PlotConstants.EXCEPTION_FRAMEWORK_NOT_COMPATIBLE;
     }

@@ -36,9 +36,17 @@ import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
+ * Test Application for jParmFacade-SGT combination of plotting. You MUST have a working
+ * jParmFacade JNI interface towards ParmDB in order to fully use this Test Application
+ * <br><br>
+ * Please check that, in the plotter_config.properties file, the variable DATA_ACCESS_CLASS
+ * is set to nl.astron.lofar.java.gui.plotter.PlotDataAccessParmDBImpl
+ * 
  * @created 13-04-2006, 13:00
  * @author pompert
  * @version $Id$
+ * @see nl.astron.lofar.java.gui.plotter.PlotDataAccessParmDBImpl
+ * @see plotter_config.properties
  */
 public class PlotTestFrame extends javax.swing.JFrame {
     

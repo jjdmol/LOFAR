@@ -27,6 +27,9 @@ import java.util.HashMap;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
+ * This interface forms the communications contract between the plotter classes
+ * and any possible data export layer using a class that implements
+ * this interface.
  * @created 19-04-2006, 11:00
  * @author pompert
  * @version $Id$
@@ -35,9 +38,12 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 public interface IPlotDataExport{
     
     /**
-     * Exports a dataset using a set of parameters
+     * Exports a dataset using a set of String parameters
      * @param params String array containing zero or more arguments for the export class
      * @param data the dataset to be exported
+     * @throws PlotterException will be thrown if the dataset could not
+     * be exported for any reason, like database exceptions, file errors, etc. 
+     * (This exception will be migrated to a more specific PlotterDataExportException)
      */
     public void exportData(String[] params, HashMap data) throws PlotterException;
     
