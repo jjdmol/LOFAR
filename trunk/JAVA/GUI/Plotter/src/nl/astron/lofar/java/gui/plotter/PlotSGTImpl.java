@@ -60,6 +60,15 @@ import nl.astron.lofar.java.gui.plotter.exceptions.NotSupportedException;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
+ * This class provides an implementation of IPlot for use with the SGT package.
+ * It manages the calls to create plots etc. in a way that SGT can support and handle.
+ * <br><br>
+ * This software uses (parts of) the SGT graphics library. 
+ * SGT was developed and is maintained by Donald W. Denbo,
+ * National Oceanic and Atmospheric Administration.
+ * E-Mail : Donald.W.Denbo@noaa.gov
+ * Website: http://www.epic.noaa.gov/java/sgt
+ * <br><br>
  * @created 11-04-2006, 15:00
  * @author pompert
  * @version $Id$
@@ -72,10 +81,15 @@ public class PlotSGTImpl implements IPlot{
         private LineAttributeDialog lad;
         private plotMouseAdapter pma;
         
+        /**
+         * Creates a new instance of PlotSGTImpl
+         */
 	public PlotSGTImpl(){
         
 	}
-        
+        /**
+         * Cleans up the SGT plot(s) present in memory and other instance variables
+         */
         public void finalize() throws Throwable {
             data = null;
             aLayout.getFirstLayer().removeAllChildren();
@@ -84,7 +98,15 @@ public class PlotSGTImpl implements IPlot{
             lad = null;
             pma = null;
 	}
-        
+        /**
+         * Creates a SGT JPlotLayout plot using several key arguments
+	 * @param type Type of plot as dictated by PlotConstants.PLOT_*
+	 * @param name Name to be given to the plot
+	 * @param data The dataset to be used to create the plot
+	 * @param separateLegend Indicates the user's need for a separate legend
+         * @return the JComponent plot generated
+         * @throws PlotterException will be thrown if the plot could not be generated for any reason.
+	 */
 	public JComponent createPlot(int type, String name, HashMap data, boolean separateLegend) throws PlotterException{
 	    
             JPlotLayout aNewPlot = null; 
@@ -118,7 +140,15 @@ public class PlotSGTImpl implements IPlot{
             
             return aNewPlot;
 	}
-        
+        /**
+         * Creates a SGT Line plot using several key arguments
+	 * @param name Name to be given to the plot
+	 * @param data The dataset to be used to create the plot
+	 * @param separateLegend Indicates the user's need for a separate legend
+         * @param showPointsOnly Indicates the user's need for a points only plot
+         * @return the JPlotLayout plot generated
+         * @throws PlotterException will be thrown if the plot could not be generated for any reason.
+	 */
         private JPlotLayout linePlot(String name, HashMap data, boolean separateLegend, boolean showPointsOnly) throws PlotterException{
             JPlotLayout layout = new JPlotLayout(JPlotLayout.LINE, false, false,
                     name,null,separateLegend);
@@ -273,7 +303,14 @@ public class PlotSGTImpl implements IPlot{
             }
             return layout;
         }
-        
+        /**
+         * Creates a SGT Grid plot using several key arguments
+	 * @param name Name to be given to the plot
+	 * @param data The dataset to be used to create the plot
+	 * @param separateLegend Indicates the user's need for a separate legend
+         * @return the JPlotLayout plot generated
+         * @throws PlotterException will be thrown if the plot could not be generated for any reason.
+	 */
         private JPlotLayout gridPlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
             
             
@@ -413,19 +450,39 @@ public class PlotSGTImpl implements IPlot{
             }
             return layout; 
         }
-        
+        /**
+         * Creates a SGT compatible Scatter plot using several key arguments
+	 * @param name Name to be given to the plot
+	 * @param data The dataset to be used to create the plot
+	 * @param separateLegend Indicates the user's need for a separate legend
+         * @return the JPlotLayout plot generated
+         * @throws PlotterException will be thrown if the plot could not be generated for any reason.
+	 */
         private JPlotLayout scatterPlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
              throw new NotImplementedException("Scatter plots are not yet implemented in the plotter's SGT plugin."); 
         }
-        
+        /**
+	 * Returns the current dataset used in the plot
+         * @return the dataset currently in use.
+	 */
         public HashMap getData(){
             return data;
         }
+         /**
+         * Sets the dataset used in the plot 
+         * @param newData A new set of data
+	 */
         public void setData(HashMap newData){
             if(newData!=null){
                 this.data = newData;
             }
         }
+        /**
+         * Create a legend/key using the SGT plot specified.
+         * @param aPlot A plot JComponent (must be a SGT JPlotLayout!)
+         * @return A legend JComponent of plot aPlot
+         * @throws PlotterException will be thrown if the legend could not be generated for the given SGT plot.
+	 */
         public JComponent getLegend(JComponent aPlot) throws PlotterException{
         JPlotLayout parentPlot = null;
         JPane keyPane = null;
@@ -445,8 +502,18 @@ public class PlotSGTImpl implements IPlot{
             }
             return keyPane;
         }
-        
+        /**
+         * This inner class provides the SGT plot with the functionality of editing
+         * line attributes at run time.
+         *
+         */
         class plotMouseAdapter extends MouseAdapter{
+            
+            /**
+             * This method will listen if the user has double clicked on a line 
+             * in the legend of a SGT plot.
+             * @param e the event being fired
+             */
             public void mouseReleased(MouseEvent e){
                 Object object = e.getSource();
                 if(object == aLayout.getKeyPane()){

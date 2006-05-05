@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
+ * This class will serve as a container of plots, 
+ * to be further implemented in future versions.
+ *
  * @created 12-04-2006, 15:00
  * @author pompert
  * @version $Id$
@@ -37,14 +40,21 @@ public class PlotGroup{
 	public HashSet<IPlot> m_IPlot;
 	private HashMap<String,Object> data;
 	
+        /**
+         * Creates a new instance of PlotGroup
+         */
 	public PlotGroup(){
 
 	}
-
+        /**
+         * Cleans up the instance variables
+         */
 	public void finalize() throws Throwable {
 
 	}
-
+        /**
+         * TODO: JavaDoc
+         */
 	public HashMap getDataSlice(){
 		return null;
 	}

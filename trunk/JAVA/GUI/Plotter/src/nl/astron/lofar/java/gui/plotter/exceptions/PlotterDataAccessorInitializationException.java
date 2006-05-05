@@ -26,16 +26,28 @@ package nl.astron.lofar.java.gui.plotter.exceptions;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
+ * This exception can be thrown if a Data Access Layer class, 
+ * as configured in the plotter_config.properties file,
+ * could not be instantiated properly.
  * @version $Id$
  * @created April 19, 2006, 11:02 AM
  * @author pompert
+ * @see nl.astron.lofar.java.gui.plotter.PlotDataManager
+ * @see PlotConstants
  */
 public class PlotterDataAccessorInitializationException extends PlotterException{
     
-    /** Creates a new instance of PlotterDataAccessorInitializationException */
+    /** 
+     * Creates a new instance of PlotterDataAccessorInitializationException
+     */
     public PlotterDataAccessorInitializationException() {
         super();
     }
+    /** 
+     * Returns the exception message defined in PlotConstants.EXCEPTION_DATA_ACCESS_INIT
+     * @return the Exception message
+     * @see PlotConstants
+     */
     public String getMessage(){
         return super.getMessage() + PlotConstants.EXCEPTION_DATA_ACCESS_INIT;
     }

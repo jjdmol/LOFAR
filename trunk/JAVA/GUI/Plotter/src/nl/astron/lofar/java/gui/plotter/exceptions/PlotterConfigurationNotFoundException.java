@@ -26,18 +26,33 @@ package nl.astron.lofar.java.gui.plotter.exceptions;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
+ * This exception can be thrown when the plotter_config.properties file can not
+ * be found anywhere in the Java CLASSPATH.
+ * <br><br>
+ * Note: The PlotConstants.RESOURCE_FILE variable tells the plotter where to
+ * look for the plotter_config.properties file
+ * 
  * @version $Id$
  * @created May 04, 2006, 12:00
  * @author pompert
+ * @see PlotConstants
+ * @see plotter_config.properties
  */
 public class PlotterConfigurationNotFoundException extends PlotterException{
     
    
-    /** Creates a new instance of PlotterConfigurationNotFoundException */
+    /** 
+     * Creates a new instance of PlotterConfigurationNotFoundException
+     */
     public PlotterConfigurationNotFoundException() {
         super();
       
     }
+    /** 
+     * Returns the exception message defined in PlotConstants.EXCEPTION_RESOURCE_FILE_NOT_FOUND
+     * @return the Exception message
+     * @see PlotConstants
+     */
     public String getMessage(){
         return super.getMessage() + PlotConstants.EXCEPTION_RESOURCE_FILE_NOT_FOUND;
     }

@@ -1,5 +1,5 @@
 /*
- * PlotTestFrame.java
+ * PlotTestFrameStandAlone.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,27 +36,26 @@ import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
- * Test Application for jParmFacade-SGT combination of plotting. You MUST have a working
- * jParmFacade JNI interface towards ParmDB in order to fully use this Test Application
- * <br><br>
+ * Test class for TestData-SGT combination of plotting. 
+ * It can be used with no external dependencies.<br><br>
  * Please check that, in the plotter_config.properties file, the variable DATA_ACCESS_CLASS
- * is set to nl.astron.lofar.java.gui.plotter.PlotDataAccessParmDBImpl
+ * is set to nl.astron.lofar.java.gui.plotter.test.PlotDataAccessTestImpl
  * 
- * @created 13-04-2006, 13:00
+ * @created 05-05-2006, 13:00
  * @author pompert
  * @version $Id$
- * @see nl.astron.lofar.java.gui.plotter.PlotDataAccessParmDBImpl
+ * @see PlotDataAccessTestImpl
  * @see plotter_config.properties
  */
-public class PlotTestFrame extends javax.swing.JFrame {
+public class PlotTestFrameStandAlone extends javax.swing.JFrame {
     
     private PlotPanel testPanel;
     JScrollPane legendPane;
     private JLabel exceptionLabel;
     private boolean plotPresent;
     
-    /** Creates new form PlotTestFrame */
-    public PlotTestFrame() {
+    /** Creates new form PlotTestFrameStandAlone */
+    public PlotTestFrameStandAlone() {
         
         plotPresent = false;
         //For use with PlotDataAccessTestImpl
@@ -83,23 +82,8 @@ public class PlotTestFrame extends javax.swing.JFrame {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        java.awt.GridBagConstraints gridBagConstraints;
-
         plotModPanel = new javax.swing.JPanel();
-        lparameterConstraint = new javax.swing.JLabel();
         tparameterConstraint = new javax.swing.JTextField();
-        lstartX = new javax.swing.JLabel();
-        tstartX = new javax.swing.JTextField();
-        lendX = new javax.swing.JLabel();
-        tendX = new javax.swing.JTextField();
-        lnumX = new javax.swing.JLabel();
-        tnumX = new javax.swing.JTextField();
-        lstartY = new javax.swing.JLabel();
-        tstartY = new javax.swing.JTextField();
-        lendY = new javax.swing.JLabel();
-        tendY = new javax.swing.JTextField();
-        lnumY = new javax.swing.JLabel();
-        tnumY = new javax.swing.JTextField();
         cLegend = new javax.swing.JCheckBox();
         jSeparator1 = new javax.swing.JSeparator();
         bplotButton = new javax.swing.JButton();
@@ -109,82 +93,9 @@ public class PlotTestFrame extends javax.swing.JFrame {
         setIconImage(getIconImage());
         plotModPanel.setLayout(new java.awt.GridBagLayout());
 
-        lparameterConstraint.setText("Parameter");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(lparameterConstraint, gridBagConstraints);
-
         tparameterConstraint.setColumns(10);
-        tparameterConstraint.setText("parm*");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(tparameterConstraint, gridBagConstraints);
-
-        lstartX.setText("startx");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(lstartX, gridBagConstraints);
-
-        tstartX.setColumns(3);
-        tstartX.setText("0");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(tstartX, gridBagConstraints);
-
-        lendX.setText("endx");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(lendX, gridBagConstraints);
-
-        tendX.setColumns(3);
-        tendX.setText("5");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(tendX, gridBagConstraints);
-
-        lnumX.setText("numx");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(lnumX, gridBagConstraints);
-
-        tnumX.setColumns(3);
-        tnumX.setText("5");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(tnumX, gridBagConstraints);
-
-        lstartY.setText("starty");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(lstartY, gridBagConstraints);
-
-        tstartY.setColumns(3);
-        tstartY.setText("0");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(tstartY, gridBagConstraints);
-
-        lendY.setText("endy");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(lendY, gridBagConstraints);
-
-        tendY.setColumns(3);
-        tendY.setText("5");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(tendY, gridBagConstraints);
-
-        lnumY.setText("numy");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(lnumY, gridBagConstraints);
-
-        tnumY.setColumns(3);
-        tnumY.setText("5");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = 15;
-        plotModPanel.add(tnumY, gridBagConstraints);
+        tparameterConstraint.setText("line");
+        plotModPanel.add(tparameterConstraint, new java.awt.GridBagConstraints());
 
         cLegend.setText("Legend");
         cLegend.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
@@ -213,18 +124,9 @@ public class PlotTestFrame extends javax.swing.JFrame {
     private void handlePlotButton(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_handlePlotButton
         JButton source = (JButton)evt.getSource();
         if(source == bplotButton){
-            if(checkBoxes() == true){
-                
-                String[] argsForController = new String[7];
+                String[] argsForController = new String[1];
                 argsForController[0] = tparameterConstraint.getText();
-                argsForController[1] = tstartX.getText();
-                argsForController[2] = tendX.getText();
-                argsForController[3] = tnumX.getText();
-                argsForController[4] = tstartY.getText();
-                argsForController[5] = tendY.getText();
-                argsForController[6] = tnumY.getText();
-               
-               
+                               
                 //plotPane.add(testPanel.getPlot(),new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
                 //plotPane.add(testPanel.getLegendForPlot(),new GridBagConstraints(0,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
                 if(plotPresent){
@@ -241,7 +143,11 @@ public class PlotTestFrame extends javax.swing.JFrame {
                         exceptionLabel = null;
                     }
                     testPanel = new PlotPanel();
-                    testPanel.createPlot(PlotConstants.PLOT_XYLINE,true,argsForController);
+                    if(tparameterConstraint.getText().equalsIgnoreCase("line")){
+                        testPanel.createPlot(PlotConstants.PLOT_XYLINE,true,argsForController);
+                    }else if(tparameterConstraint.getText().equalsIgnoreCase("grid")){
+                        testPanel.createPlot(PlotConstants.PLOT_GRID,true,argsForController);
+                    }
                     this.add(testPanel,BorderLayout.CENTER);
                     
                     if(cLegend.isSelected()){
@@ -252,15 +158,15 @@ public class PlotTestFrame extends javax.swing.JFrame {
                         legendPane.setPreferredSize(new Dimension(legendWidth,legendHeight));
                         legendPane.setBackground(Color.WHITE);
                         legendPane.getViewport().setBackground(Color.WHITE);
-                        this.add(legendPane,BorderLayout.SOUTH); 
+                        this.add(legendPane,BorderLayout.SOUTH);
                     }
-                 
+                    
                     plotPresent = true;
                     
                 } catch (PlotterException ex) {
-                     JOptionPane.showMessageDialog(this, ex.getMessage(),
-                                     "Error detected",
-                                     JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, ex.getMessage(),
+                            "Error detected",
+                            JOptionPane.ERROR_MESSAGE);
                     exceptionLabel = new JLabel(ex.getMessage());
                     exceptionLabel.setForeground(Color.RED);
                     //this.add(exceptionLabel,BorderLayout.CENTER);
@@ -272,96 +178,24 @@ public class PlotTestFrame extends javax.swing.JFrame {
                 Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
                 this.setLocation(d.width/2 - this.getWidth()/2, d.height /2 - this.getHeight() /2);
             }
-           }
     }//GEN-LAST:event_handlePlotButton
-    
-    /**
-     * Checks if all input boxes are numerical
-     * @return boolean Result of input validation
-     */
-    private boolean checkBoxes(){
-        boolean numbersOK = true;            
-        double startx = 0;
-        double endx = 0;
-        int numx = 0;
-        double starty = 0;
-        double endy = 0;
-        int numy = 0;
-        try {
-            startx = Double.parseDouble(tstartX.getText());
-            tstartX.setForeground(Color.BLACK);
-        } catch (NumberFormatException ex) {
-            tstartX.setForeground(Color.RED);
-            numbersOK = false;
-        }
-        try {
-            endx = Double.parseDouble(tendX.getText());
-            tendX.setForeground(Color.BLACK);
-        } catch (NumberFormatException ex) {
-            tendX.setForeground(Color.RED);
-            numbersOK = false;
-        }
-        try {
-            numx = Integer.parseInt(tnumX.getText());
-            tnumX.setForeground(Color.BLACK);
-        } catch (NumberFormatException ex) {
-            tnumX.setForeground(Color.RED);
-            numbersOK = false;
-        }
-        try {
-            starty = Double.parseDouble(tstartY.getText());
-            tstartY.setForeground(Color.BLACK);
-        } catch (NumberFormatException ex) {
-            tstartY.setForeground(Color.RED);
-            numbersOK = false;
-        }
-        try {
-            endy = Double.parseDouble(tendY.getText());  
-            tendY.setForeground(Color.BLACK);
-        } catch (NumberFormatException ex) {
-            tendY.setForeground(Color.RED);
-            numbersOK = false;
-        }
-        try {
-            numy = Integer.parseInt(tnumY.getText()); 
-            tnumY.setForeground(Color.BLACK);
-        } catch (NumberFormatException ex) {
-            tnumY.setForeground(Color.RED);
-            numbersOK = false;
-        }
-        return numbersOK;
-    }
-    
-    
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-       PlotTestFrame af = new PlotTestFrame();
+       PlotTestFrameStandAlone af = new PlotTestFrameStandAlone();
        Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
        af.setLocation(d.width/2 - af.getWidth()/2, d.height /2 - af.getHeight() /2);
        af.setVisible(true);
     }
     
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bplotButton;
     private javax.swing.JCheckBox cLegend;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JLabel lendX;
-    private javax.swing.JLabel lendY;
-    private javax.swing.JLabel lnumX;
-    private javax.swing.JLabel lnumY;
-    private javax.swing.JLabel lparameterConstraint;
-    private javax.swing.JLabel lstartX;
-    private javax.swing.JLabel lstartY;
     private javax.swing.JPanel plotModPanel;
-    private javax.swing.JTextField tendX;
-    private javax.swing.JTextField tendY;
-    private javax.swing.JTextField tnumX;
-    private javax.swing.JTextField tnumY;
     private javax.swing.JTextField tparameterConstraint;
-    private javax.swing.JTextField tstartX;
-    private javax.swing.JTextField tstartY;
     // End of variables declaration//GEN-END:variables
     
 }
