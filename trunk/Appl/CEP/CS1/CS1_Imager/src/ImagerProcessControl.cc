@@ -58,31 +58,32 @@ namespace LOFAR
     }
 
     //===============>>> ImagerProcessControl::define  <<<==============================
-    tribool ImagerProcessControl::define(LOFAR::ACC::APS::ParameterSet ParamSet)
+    tribool ImagerProcessControl::define()
     { 
+      LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
       cout << "AIPS++ version: ";
       casa::VersionInfo::report(cout);
       cout  << string(" Imager wrapper by Adriaan Renting for LOFAR CS1 data") << std::endl
             << string("This is experimental software, please report errors or requests to renting@astron.nl") << std::endl
             << string("Documentation can be found at: http://www.astron.nl/aips++/docs/aips++.html") << std::endl;
-      itsMS            = ParamSet.getString("ms");
-      itsCompress      = ParamSet.getBool("compress"); 
-      itsMode          = ParamSet.getString("mode");
-      itsNChannel      = ParamSet.getInt32("nchan");
-      itsStart         = ParamSet.getInt32("start");
-      itsStep          = ParamSet.getInt32("step");
-      itsNX            = ParamSet.getInt32("nx");
-      itsNY            = ParamSet.getInt32("ny");
-      itsCellX         = ParamSet.getInt32("cellx");
-      itsCellY         = ParamSet.getInt32("celly");
-      itsStokes        = ParamSet.getString("stokes");
-      itsWeightType    = ParamSet.getString("weighttype");
-      itsWeightNPixels = ParamSet.getInt32("weightnpixels");
-      itsTile          = ParamSet.getInt32("tile");
-      itsPadding       = ParamSet.getDouble("padding");
-      itsGridFunction  = ParamSet.getString("gridfunction");
-      itsImageType     = ParamSet.getString("imagetype");
-      itsImageName     = ParamSet.getString("imagename");
+      itsMS            = ParamSet->getString("ms");
+      itsCompress      = ParamSet->getBool("compress"); 
+      itsMode          = ParamSet->getString("mode");
+      itsNChannel      = ParamSet->getInt32("nchan");
+      itsStart         = ParamSet->getInt32("start");
+      itsStep          = ParamSet->getInt32("step");
+      itsNX            = ParamSet->getInt32("nx");
+      itsNY            = ParamSet->getInt32("ny");
+      itsCellX         = ParamSet->getInt32("cellx");
+      itsCellY         = ParamSet->getInt32("celly");
+      itsStokes        = ParamSet->getString("stokes");
+      itsWeightType    = ParamSet->getString("weighttype");
+      itsWeightNPixels = ParamSet->getInt32("weightnpixels");
+      itsTile          = ParamSet->getInt32("tile");
+      itsPadding       = ParamSet->getDouble("padding");
+      itsGridFunction  = ParamSet->getString("gridfunction");
+      itsImageType     = ParamSet->getString("imagetype");
+      itsImageName     = ParamSet->getString("imagename");
       return true;
     }
 
