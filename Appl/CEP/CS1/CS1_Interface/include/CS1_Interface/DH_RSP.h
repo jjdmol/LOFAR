@@ -94,6 +94,7 @@ namespace LOFAR
 
       int itsNTimes;
       int itsNoPolarisations;
+      int itsNSubbands;
       unsigned int itsBufSize;
 
       const ACC::APS::ParameterSet &itsPSet;
