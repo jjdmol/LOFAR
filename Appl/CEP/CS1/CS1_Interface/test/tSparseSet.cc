@@ -72,7 +72,7 @@ int main(void)
     }
     {
       SparseSet		  sset;
-      bitset<BITSET_SIZE> bset(0x00727780ULL << i);
+      bitset<BITSET_SIZE> bset(0x00727780ULL); bset <<= i;
       sset.include(7, 11).include(12, 15).include(17).include(20, 23) += i;
       assert(equal(sset, bset));
     }
