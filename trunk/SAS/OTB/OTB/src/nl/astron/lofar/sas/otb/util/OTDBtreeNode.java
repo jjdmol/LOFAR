@@ -94,20 +94,6 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
             return false;
         }
         
-/*        boolean isLeaf = false;
-        try {
-            
-            Vector childs = otdbRmi.getRemoteMaintenance().getItemList(node.treeID(), node.nodeID(), 1);
-            
-            if(childs.size() == 0)
-                isLeaf = true;
-        }
-        catch(Exception e) {
-            logger.fatal("Exception during defineChildNodes: " + e);
-            isLeaf = true;
-        }
-        logger.trace("Exit - isLeaf("+toString()+"): " + isLeaf);
- */
         return node.leaf;
     }
 
@@ -164,7 +150,12 @@ public class OTDBtreeNode extends DefaultMutableTreeNode {
     public String toString() {
         String name = "";
         if(node != null) {
-            name = node.name;
+            String splitName[]=node.name.split("[.]");
+            if (splitName.length >=2) {
+                name=splitName[splitName.length-1];
+            } else {
+                name=node.name;
+            }
             if (node.index > 0 && !node.leaf) {
                 name +="["+String.valueOf(node.index)+"]";
             }
