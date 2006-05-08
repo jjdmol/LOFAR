@@ -50,9 +50,9 @@ namespace LOFAR
       WSRT::MS_File*              myMS;
       WSRT::ComplexMedianFlagger* itsFlagger;
     public:
-      FlaggerProcessControl();
+      FlaggerProcessControl(void);
 
-      ~FlaggerProcessControl();
+      ~FlaggerProcessControl(void);
       // \name Command to control the processes.
       // There are a dozen commands that can be sent to a application process
       // to control its flow. The return values for these command are:<br>
@@ -65,20 +65,20 @@ namespace LOFAR
       // ParameterSet it received during start-up. When everthing seems ok the
       // process constructs the communication channels for exchanging data
       // with the other processes. The connection are NOT made in the stage.
-      tribool define   (LOFAR::ACC::APS::ParameterSet ParamSet);
+      tribool define   (void);
 
       // When a process receives an \c init command it allocates the buffers it
       // needs an makes the connections with the other processes. When the
       // process succeeds in this it is ready for dataprocessing (or whatever
       // task the process has).
-      tribool init     ();
+      tribool init     (void);
 
       // During the \c run phase the process does the work it is designed for.
       // The run phase stays active until another command is send.
-      tribool run      ();
+      tribool run      (void);
 
       tribool pause(const std::string&);
-      tribool quit();
+      tribool quit(void);
       tribool recover(const std::string&);
       tribool reinit(const  std::string&);
       tribool snapshot(const std::string&);
