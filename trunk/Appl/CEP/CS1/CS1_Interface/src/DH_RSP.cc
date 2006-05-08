@@ -41,7 +41,8 @@ namespace LOFAR
       int resendAmount = (pset.getInt32("BGLProc.NPPFTaps") - 1) * pset.getInt32("Observation.NChannels");
       itsNTimes          = pset.getInt32("Observation.NSubbandSamples") + resendAmount;
       itsNoPolarisations = pset.getInt32("Observation.NPolarisations");
-      itsBufSize         = itsNTimes * itsNoPolarisations;
+      itsNSubbands       = pset.getInt32("Observation.NSubbandsPerCell");
+      itsBufSize         = itsNTimes * itsNoPolarisations * itsNSubbands;
     }
 
     DH_RSP::DH_RSP(const DH_RSP& that)
@@ -50,6 +51,7 @@ namespace LOFAR
 	itsFlags	   (that.itsFlags),
         itsNTimes          (that.itsNTimes),
         itsNoPolarisations (that.itsNoPolarisations),
+	itsNSubbands       (that.itsNSubbands),
         itsBufSize         (that.itsBufSize),
         itsPSet            (that.itsPSet)
     {}
@@ -76,6 +78,7 @@ namespace LOFAR
       // there is one station per dataholder
       vdd.push_back(DimDef("Stations", 1));
       vdd.push_back(DimDef("Times", itsNTimes));
+      vdd.push_back(DimDef("Subbands", itsNSubbands));
       vdd.push_back(DimDef("Polarisations", itsNoPolarisations));
   
       itsMatrix = new RectMatrix<BufferType> (vdd);

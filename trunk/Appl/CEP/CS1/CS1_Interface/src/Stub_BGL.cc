@@ -25,72 +25,73 @@
 #include <Transport/Connection.h>
 
 
-namespace LOFAR
-{ 
-  namespace CS1
-  {
+namespace LOFAR { 
+namespace CS1 {
 
-    unsigned Stub_BGL::itsNrSubbands, Stub_BGL::itsNrSlavesPerSubband;
+unsigned Stub_BGL::theirNrSubbands;
+unsigned Stub_BGL::theirNrSubbandsPerCell;
+unsigned Stub_BGL::theirNrNodesPerCell;
 
 
-    Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet)
-      : itsIAmOnBGL(iAmOnBGL),
-        itsIsInput(isInput),
-        itsTHs(0),
-        itsConnections(0)
-    {
-      if (itsNrSubbands == 0) { // first time
-        itsNrSubbands	  = pSet.getInt32("Observation.NSubbands");
-        itsNrSlavesPerSubband = pSet.getInt32("BGLProc.SlavesPerSubband");
-      }
+Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet)
+:
+  itsIAmOnBGL(iAmOnBGL),
+  itsIsInput(isInput),
+  itsTHs(0),
+  itsConnections(0)
+{
+  if (theirNrSubbands == 0) { // first time
+    theirNrSubbands	   = pSet.getInt32("Observation.NSubbands");
+    theirNrSubbandsPerCell = pSet.getInt32("General.NSubbandsPerCell");
+    theirNrNodesPerCell    = pSet.getInt32("BGLProc.NodesPerCell");
+  }
 
-      size_t size = itsNrSubbands * itsNrSlavesPerSubband;
+  size_t size = theirNrSubbands * theirNrNodesPerCell / theirNrSubbandsPerCell;
 
-      itsTHs = new TransportHolder * [size];
-      memset(itsTHs, 0, sizeof(TransportHolder * [size]));
+  itsTHs = new TransportHolder * [size];
+  memset(itsTHs, 0, sizeof(TransportHolder * [size]));
 
-      itsConnections = new Connection * [size];
-      memset(itsConnections, 0, sizeof(TransportHolder * [size]));
+  itsConnections = new Connection * [size];
+  memset(itsConnections, 0, sizeof(TransportHolder * [size]));
+}
+
+
+Stub_BGL::~Stub_BGL()
+{
+  if (itsTHs != 0 && itsConnections != 0) {
+    size_t size = theirNrSubbands * theirNrNodesPerCell / theirNrSubbandsPerCell;
+    for (uint i = 0; i < size; i ++) {
+      delete itsTHs[i];
+      delete itsConnections[i];
     }
 
-
-    Stub_BGL::~Stub_BGL()
-    {
-      if (itsTHs != 0 && itsConnections != 0) {
-        for (uint i = 0; i < itsNrSubbands * itsNrSlavesPerSubband; i ++) {
-          delete itsTHs[i];
-          delete itsConnections[i];
-        }
-
-        delete [] itsTHs;
-        delete [] itsConnections;
-      }
-    }
+    delete [] itsTHs;
+    delete [] itsConnections;
+  }
+}
 
 
-    void Stub_BGL::connect(unsigned subband, unsigned slave, TinyDataManager &dm, 
-                           unsigned channel)
-    {
-      size_t index = subband * itsNrSlavesPerSubband + slave;
+void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel)
+{
+  size_t index = cellNr * theirNrNodesPerCell + nodeNr;
 
-      ASSERTSTR(subband < itsNrSubbands, "subband argument out of bounds; "
-                << subband << " / " << itsNrSubbands);
-      ASSERTSTR(slave < itsNrSlavesPerSubband, "slave argument out of bounds; "
-                << slave << " / " << itsNrSlavesPerSubband);
-      ASSERTSTR(itsTHs[index] == 0, "already connected: subband = "
-                << subband << ", slave = " << slave << ", channel = " << channel);
+  ASSERTSTR(cellNr < (theirNrSubbands / theirNrSubbandsPerCell), "cellNr argument out of bounds; "
+	    << cellNr << " / " << (theirNrSubbands / theirNrSubbandsPerCell));
+  ASSERTSTR(nodeNr < theirNrNodesPerCell, "nodeNr argument out of bounds; "
+	    << nodeNr << " / " << theirNrNodesPerCell);
+  ASSERTSTR(itsTHs[index] == 0, "already connected: cellNr = "
+	    << cellNr << ", nodeNr = " << nodeNr);
 
-      itsTHs[index] = itsIAmOnBGL ? newClientTH(subband, slave) : newServerTH(subband, slave);
+  itsTHs[index] = itsIAmOnBGL ? newClientTH(cellNr, nodeNr) : newServerTH(cellNr, nodeNr);
 
-      if (itsIsInput) {
-        itsConnections[index] = new Connection("output", 0, dm.getGeneralInHolder(channel), itsTHs[index], false);
-        dm.setInConnection(channel, itsConnections[index]);
-      } else {
-        itsConnections[index] = new Connection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index], false);
-        dm.setOutConnection(channel, itsConnections[index]);
-      }
-    };
+  if (itsIsInput) {
+    itsConnections[index] = new Connection("output", 0, dm.getGeneralInHolder(channel), itsTHs[index], false);
+    dm.setInConnection(channel, itsConnections[index]);
+  } else {
+    itsConnections[index] = new Connection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index], false);
+    dm.setOutConnection(channel, itsConnections[index]);
+  }
+};
 
-  } // namespace CS1
-
+} // namespace CS1
 } // namespace LOFAR

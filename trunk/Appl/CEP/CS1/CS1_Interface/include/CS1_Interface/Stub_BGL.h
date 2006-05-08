@@ -43,18 +43,20 @@ namespace LOFAR
       Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet);
       virtual ~Stub_BGL();
 
-      void connect(unsigned subband, unsigned slave, TinyDataManager &dm,
+      void connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm,
                    unsigned channel);
 
     protected:
-      virtual TransportHolder *newClientTH(unsigned subband, unsigned slave) = 0;
-      virtual TransportHolder *newServerTH(unsigned subband, unsigned slave) = 0;
+      virtual TransportHolder *newClientTH(unsigned cellNr, unsigned nodeNr) = 0;
+      virtual TransportHolder *newServerTH(unsigned cellNr, unsigned nodeNr) = 0;
 
       bool		  itsIAmOnBGL, itsIsInput;
       TransportHolder **itsTHs;
       Connection	  **itsConnections;
 
-      static unsigned itsNrSubbands, itsNrSlavesPerSubband;
+      static unsigned theirNrSubbands;
+      static unsigned theirNrSubbandsPerCell;
+      static unsigned theirNrNodesPerCell;
     };
 
   } // namespace CS1
