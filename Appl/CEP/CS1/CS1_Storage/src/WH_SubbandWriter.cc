@@ -44,7 +44,7 @@ namespace LOFAR
 
     WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
                                        const ACC::APS::ParameterSet& pset) 
-      : WorkHolder    (pset.getInt32("BGLProc.SlavesPerSubband"), 
+      : WorkHolder    (pset.getInt32("BGLProc.NodesPerCell"), 
                        0,
                        name,
                        "WH_SubbandWriter"),
