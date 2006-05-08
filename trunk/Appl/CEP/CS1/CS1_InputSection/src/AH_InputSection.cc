@@ -69,7 +69,7 @@ namespace LOFAR {
 #endif
       
       int nSubbands  = itsParamSet.getInt32("Observation.NSubbands");  // number of SubBand filters in the application
-      int nCoresPerSubband = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
+      int nCoresPerSubband = itsParamSet.getInt32("BGLProc.NodesPerCell");
     
       LOG_TRACE_FLOW_STR("Create the top-level composite");
       Composite comp(0, 0, "topComposite");
