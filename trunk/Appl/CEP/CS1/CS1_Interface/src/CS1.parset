@@ -43,6 +43,7 @@ Observation.RefFreqs = [1.0e5, 3.0e5, 5.0e5, 7.0e5, 9.0e5, 11.0e5, 13.0e5, 15.0e
 Observation.ChanWidth = 762.94      # width of each channel (Hz)
 
 # General Variables
+General.SubbandsPerCell = 1
 General.NRuns = 3600      # Number of seconds to process. NB: must be a multiple of 'BGLProc.SlavesPerSubband'
 
 # Variables for the DelayCompensation
@@ -76,8 +77,7 @@ Input.Transport.6.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, N
 # and the number of filters within a cell. 
 # These parameters MUST match the compiled in values in TFC_Config.h
 # Note that some values may differ from values defined in the Input section.
-BGLProc.SubbandsPerCell = 1
-BGLProc.SlavesPerSubband = 6
+BGLProc.NodesPerCell = 16
 BGLProc.NPPFTaps = 16
 
 # Variables for Storage
