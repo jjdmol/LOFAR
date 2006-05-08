@@ -54,16 +54,17 @@ namespace LOFAR
     }
 
     //===============>>> FlaggerProcessControl::define  <<<==============================
-    tribool FlaggerProcessControl::define(LOFAR::ACC::APS::ParameterSet ParamSet)
+    tribool FlaggerProcessControl::define()
     { 
-      itsMS       = ParamSet.getString("ms");
-      itsFlagData = ParamSet.getBool("flagdata"); 
-      itsFlagRMS  = ParamSet.getBool("flagrms");
-      itsExisting = ParamSet.getBool("existing");
-      itsWindow   = ParamSet.getInt32("window");
-      itsCrosspol = ParamSet.getBool("crosspol");
-      itsMin      = ParamSet.getDouble("min");
-      itsMax      = ParamSet.getDouble("max");
+      LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
+      itsMS       = ParamSet->getString("ms");
+      itsFlagData = ParamSet->getBool("flagdata"); 
+      itsFlagRMS  = ParamSet->getBool("flagrms");
+      itsExisting = ParamSet->getBool("existing");
+      itsWindow   = ParamSet->getInt32("window");
+      itsCrosspol = ParamSet->getBool("crosspol");
+      itsMin      = ParamSet->getDouble("min");
+      itsMax      = ParamSet->getDouble("max");
       return true;
     }
 
