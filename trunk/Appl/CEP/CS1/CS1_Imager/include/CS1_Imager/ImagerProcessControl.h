@@ -65,9 +65,9 @@ namespace LOFAR
       casa::MeasurementSet* myMS;
       casa::Imager*         myImager;
     public:
-      ImagerProcessControl();
+      ImagerProcessControl(void);
 
-      ~ImagerProcessControl();
+      ~ImagerProcessControl(void);
       // \name Command to control the processes.
       // There are a dozen commands that can be sent to a application process
       // to control its flow. The return values for these command are:<br>
@@ -80,17 +80,17 @@ namespace LOFAR
       // ParameterSet it received during start-up. When everthing seems ok the
       // process constructs the communication channels for exchanging data
       // with the other processes. The connection are NOT made in the stage.
-      tribool define   (LOFAR::ACC::APS::ParameterSet ParamSet);
+      tribool define   (void);
 
       // When a process receives an \c init command it allocates the buffers it
       // needs an makes the connections with the other processes. When the
       // process succeeds in this it is ready for dataprocessing (or whatever
       // task the process has).
-      tribool init     ();
+      tribool init     (void);
 
       // During the \c run phase the process does the work it is designed for.
       // The run phase stays active until another command is send.
-      tribool run      ();
+      tribool run      (void);
 
       // With the \c pause command the process stops its run phase and starts
       // waiting for another command. The \c condition argument contains the
@@ -103,7 +103,7 @@ namespace LOFAR
       // The process \b must call \c unregisterAtAC at ProcControlServer during 
       // the execution of this command to pass the final results to the 
       // Application Controller.
-      tribool quit();
+      tribool quit(void);
       
       // \c Recover reconstructs the process as it was saved some time earlier.
       // The \c source argument contains the database info the process must use

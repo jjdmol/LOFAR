@@ -37,7 +37,7 @@ namespace LOFAR
   namespace CS1
   {
     //===============>>> ImagerProcessControl::ImagerProcessControl  <<<===============
-    ImagerProcessControl::ImagerProcessControl()
+    ImagerProcessControl::ImagerProcessControl(void)
     : ProcessControl()
     {
       myMS     = NULL;
@@ -45,7 +45,7 @@ namespace LOFAR
     }
 
     //===============>>> ImagerProcessControl::~ImagerProcessControl  <<<==============
-    ImagerProcessControl::~ImagerProcessControl()
+    ImagerProcessControl::~ImagerProcessControl(void)
     {
       if (myMS)
       { delete myMS;
@@ -58,7 +58,7 @@ namespace LOFAR
     }
 
     //===============>>> ImagerProcessControl::define  <<<==============================
-    tribool ImagerProcessControl::define()
+    tribool ImagerProcessControl::define(void)
     { 
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
       cout << "AIPS++ version: ";
@@ -88,7 +88,7 @@ namespace LOFAR
     }
 
     //===============>>> ImagerProcessControl::run  <<<=================================
-    tribool ImagerProcessControl::run()
+    tribool ImagerProcessControl::run(void)
     { 
       std::cout << "Runnning imager please wait..." << std::endl;
       myImager->makeimage(itsImageType, itsImageName);
@@ -97,7 +97,7 @@ namespace LOFAR
     }
 
     //===============>>> ImagerProcessControl::init  <<<================================
-    tribool ImagerProcessControl::init()
+    tribool ImagerProcessControl::init(void)
     {
       myMS     = new casa::MeasurementSet(itsMS, casa::Table::Update);
       myImager = new casa::Imager (*myMS, itsCompress);
@@ -153,7 +153,7 @@ namespace LOFAR
     }
 
     //===============>>> ImagerProcessControl::quit  <<<================================
-    tribool ImagerProcessControl::quit()
+    tribool ImagerProcessControl::quit(void)
     { 
       if (myMS)
       {
