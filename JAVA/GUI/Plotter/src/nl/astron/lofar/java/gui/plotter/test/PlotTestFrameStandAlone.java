@@ -83,9 +83,9 @@ public class PlotTestFrameStandAlone extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         plotModPanel = new javax.swing.JPanel();
-        tparameterConstraint = new javax.swing.JTextField();
-        cLegend = new javax.swing.JCheckBox();
         jSeparator1 = new javax.swing.JSeparator();
+        cParamConstraint = new javax.swing.JComboBox();
+        cLegend = new javax.swing.JCheckBox();
         bplotButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -93,9 +93,12 @@ public class PlotTestFrameStandAlone extends javax.swing.JFrame {
         setIconImage(getIconImage());
         plotModPanel.setLayout(new java.awt.GridBagLayout());
 
-        tparameterConstraint.setColumns(10);
-        tparameterConstraint.setText("line");
-        plotModPanel.add(tparameterConstraint, new java.awt.GridBagConstraints());
+        jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
+        jSeparator1.setMinimumSize(new java.awt.Dimension(50, 10));
+        plotModPanel.add(jSeparator1, new java.awt.GridBagConstraints());
+
+        cParamConstraint.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "line", "grid" }));
+        plotModPanel.add(cParamConstraint, new java.awt.GridBagConstraints());
 
         cLegend.setText("Legend");
         cLegend.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
@@ -103,11 +106,8 @@ public class PlotTestFrameStandAlone extends javax.swing.JFrame {
         cLegend.setMargin(new java.awt.Insets(0, 0, 0, 0));
         plotModPanel.add(cLegend, new java.awt.GridBagConstraints());
 
-        jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
-        jSeparator1.setMinimumSize(new java.awt.Dimension(50, 10));
-        plotModPanel.add(jSeparator1, new java.awt.GridBagConstraints());
-
         bplotButton.setText("Plot");
+        bplotButton.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         bplotButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 handlePlotButton(evt);
@@ -125,7 +125,7 @@ public class PlotTestFrameStandAlone extends javax.swing.JFrame {
         JButton source = (JButton)evt.getSource();
         if(source == bplotButton){
                 String[] argsForController = new String[1];
-                argsForController[0] = tparameterConstraint.getText();
+                argsForController[0] = cParamConstraint.getSelectedItem().toString();
                                
                 //plotPane.add(testPanel.getPlot(),new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
                 //plotPane.add(testPanel.getLegendForPlot(),new GridBagConstraints(0,1,1,1,1,1,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets(0,0,0,0),1,1));
@@ -143,9 +143,9 @@ public class PlotTestFrameStandAlone extends javax.swing.JFrame {
                         exceptionLabel = null;
                     }
                     testPanel = new PlotPanel();
-                    if(tparameterConstraint.getText().equalsIgnoreCase("line")){
+                    if(argsForController[0].equalsIgnoreCase("line")){
                         testPanel.createPlot(PlotConstants.PLOT_XYLINE,true,argsForController);
-                    }else if(tparameterConstraint.getText().equalsIgnoreCase("grid")){
+                    }else if(argsForController[0].equalsIgnoreCase("grid")){
                         testPanel.createPlot(PlotConstants.PLOT_GRID,true,argsForController);
                     }
                     this.add(testPanel,BorderLayout.CENTER);
@@ -193,9 +193,9 @@ public class PlotTestFrameStandAlone extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bplotButton;
     private javax.swing.JCheckBox cLegend;
+    private javax.swing.JComboBox cParamConstraint;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JPanel plotModPanel;
-    private javax.swing.JTextField tparameterConstraint;
     // End of variables declaration//GEN-END:variables
     
 }
