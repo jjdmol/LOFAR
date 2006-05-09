@@ -28,6 +28,7 @@
 #include <CS1_InputSection/AH_InputSection.h>
 #include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
+#include <PLC/ACCmain.h>
 
 #ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
@@ -35,6 +36,17 @@
 
 using namespace LOFAR;
 using namespace LOFAR::CS1;
+
+#if 1
+int main(int argc, char **argv) {
+  INIT_LOGGER("CS1_InputSection");
+
+  AH_InputSection myAH;
+  ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
+  return ACC::PLC::ACCmain(argc, argv, &myAHController);
+}
+
+#else
 
 int main (int argc, const char** argv) {
 
@@ -90,3 +102,4 @@ int main (int argc, const char** argv) {
   LOG_INFO_STR(argv[0] << " terminated normally");
   return (0);
 }
+#endif
