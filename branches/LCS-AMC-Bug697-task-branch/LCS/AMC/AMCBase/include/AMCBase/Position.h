@@ -72,6 +72,25 @@ namespace LOFAR
       // reference type \a typ.
       explicit Position(const vector<double>& xyz, Types typ = ITRF);
       
+      // Create a position from a Coord3D object. We need this constructor,
+      // because we want to be able to do the following:
+      // \code
+      //   Position p1, p2, p3;
+      //   p3 = p1 + p2;
+      // \endcode
+      // However, addition, subtraction, etc. were factored out to the base
+      // class Coord3D. Hence, there's only a
+      // \code
+      //   Coord3D operator+(const Coord3D& lhs, const Coord3D& rhs);
+      // \endcode
+      // So, we must tell the compiler how it can construct a Position from a
+      // Coord3D object.
+      //
+      // \todo This clearly is a `smell' of bad design. In fact Position
+      // should not be implemented in terms of inheritance but of composition;
+      // it is not an <em>is-a</em> relation, but a <em>has-a</em> relation.
+      Position(const Coord3D& that);
+
       // Return the height in meters.
       double height() const
       { return radius(); }

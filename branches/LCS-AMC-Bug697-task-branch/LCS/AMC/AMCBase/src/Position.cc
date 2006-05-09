@@ -53,6 +53,13 @@ namespace LOFAR
     }
 
 
+    Position::Position(const Coord3D& that) :
+      Coord3D(that),
+      itsType(ITRF)
+    {
+    }
+
+
     const string& Position::showType() const
     {
       //# Caution: Always keep this array of strings in sync with the enum
