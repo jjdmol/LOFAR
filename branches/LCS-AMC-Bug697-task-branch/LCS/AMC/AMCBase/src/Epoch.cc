@@ -153,6 +153,7 @@ namespace LOFAR
       itsDay += that.itsDay;
       itsFrac += that.itsFrac;
       adjust();
+      return *this;
     }
 
     Epoch& Epoch::operator-=(const Epoch& that)
@@ -160,6 +161,12 @@ namespace LOFAR
       itsDay -= that.itsDay;
       itsFrac -= that.itsFrac;
       adjust();
+      return *this;
+    }
+
+    Epoch Epoch::operator-() const
+    {
+      return Epoch(-itsDay, -itsFrac);
     }
 
     //################  Private functions  ################//
@@ -212,6 +219,8 @@ namespace LOFAR
     }
 
 
+    //----------------  Comparison operators  ----------------//
+
     bool operator<(const Epoch& lhs, const Epoch& rhs)
     {
       return (lhs.getDay() < rhs.getDay() ||
@@ -219,26 +228,43 @@ namespace LOFAR
                lhs.getFraction() < rhs.getFraction()));
     }
 
+    bool operator>(const Epoch& lhs, const Epoch& rhs)
+    {
+      return rhs < lhs;
+    }
+
+    bool operator<=(const Epoch& lhs, const Epoch& rhs)
+    {
+      return !(rhs < lhs);
+    }
+
+    bool operator>=(const Epoch& lhs, const Epoch& rhs)
+    {
+      return !(lhs < rhs);
+    }
 
     bool operator==(const Epoch& lhs, const Epoch& rhs)
     {
-      return (lhs.getDay()      == rhs.getDay() && 
+      return (lhs.getDay()      == rhs.getDay() &&
               lhs.getFraction() == rhs.getFraction());
     }
 
+    bool operator!=(const Epoch& lhs, const Epoch& rhs)
+    {
+      return !(lhs == rhs);
+    }
+
+
+    //----------------  Numerical operators  ----------------//
 
     Epoch operator+(const Epoch& lhs, const Epoch& rhs)
     {
-      Epoch tmp(lhs);
-      tmp += rhs;
-      return tmp;
+      return Epoch(lhs) += rhs;
     }
 
     Epoch operator-(const Epoch& lhs, const Epoch& rhs)
     {
-      Epoch tmp(lhs);
-      tmp -= rhs;
-      return tmp;
+      return Epoch(lhs) -= rhs;
     }
 
   } // namespace AMC

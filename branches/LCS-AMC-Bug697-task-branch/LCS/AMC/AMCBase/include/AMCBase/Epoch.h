@@ -103,6 +103,9 @@ namespace LOFAR
       // Subtract the epoch \a that from \c this.
       Epoch& operator-=(const Epoch& that);
 
+      // Return the negation of \c this.
+      Epoch operator-() const;
+
     private:
       double itsDay;     //# whole day in MJD
       double itsFrac;    //# Fraction of day
@@ -121,12 +124,15 @@ namespace LOFAR
     // Output in ASCII (in UTC).
     ostream& operator<< (ostream&, const Epoch&);
 
-    // Compare two Epoch objects. 
-    // \return \c true when \a lhs is less than \a rhs; else \c false.
+    // @name Comparison operators
+    // @{
     bool operator<(const Epoch& lhs, const Epoch& rhs);
-
-    // Compare two Epoch objects for equality.
+    bool operator>(const Epoch& lhs, const Epoch& rhs);
+    bool operator<=(const Epoch& lhs, const Epoch& rhs);
+    bool operator>=(const Epoch& lhs, const Epoch& rhs);
     bool operator==(const Epoch& lhs, const Epoch& rhs);
+    bool operator!=(const Epoch& lhs, const Epoch& rhs);
+    // @}
 
     // Return the sum of the epochs \a lhs and \a rhs.
     Epoch operator+(const Epoch& lhs, const Epoch& rhs);

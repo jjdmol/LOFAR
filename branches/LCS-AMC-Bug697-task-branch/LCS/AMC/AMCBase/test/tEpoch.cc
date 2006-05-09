@@ -32,73 +32,103 @@
 using namespace LOFAR;
 using namespace LOFAR::AMC;
 
-const double usec = 1e-6; // microsecond expressed in seconds
+const double usec = 1e-6;   // microsecond expressed in seconds
+const double msec = 1e-3;   // millisecond expressed in seconds
+const double day  = 86400;  // day expressed in seconds
 
 int main(int, const char* argv[])
 {
   INIT_LOGGER(argv[0]);
+  LOG_INFO("Starting up ...");
 
   try {
 
-    Epoch now, then(0), delta(1, 0.8);
+    Epoch t0, t1, t2;
+    Epoch delta(1, 0.8);    // 1.8 days
     int yy,mm,dd,h,m;
     double s;
 
-    ASSERT(now == Epoch(now.getDay(), now.getFraction()));
-    ASSERT(now.mjd() == Epoch(now.mjd()).mjd());
-    ASSERT(abs(now.utc() - now.local() + now.getUTCDiff()) < usec);
+    // Constructors and setters checks
+    LOG_DEBUG("Testing constructors and setters ...");
 
-    now.ymd(yy, mm, dd);
-    now.hms(h, m, s);
-    ASSERT(abs(now.utc() - Epoch(yy, mm, dd, h, m, s).utc()) < usec);
+    ASSERT(t0 == Epoch(t0.getDay(), t0.getFraction()));
+    ASSERT(t0.mjd() == Epoch(t0.mjd()).mjd());
+    ASSERT(abs(t0.utc() - t0.local() + t0.getUTCDiff()) < usec);
 
-    now.ymd(yy, mm, dd, true); 
-    now.hms(h, m, s, true);
-    ASSERT(abs(now.local() - Epoch(yy, mm, dd, h, m, s).utc()) < usec);
+    t0.ymd(yy, mm, dd);
+    t0.hms(h, m, s);
+    ASSERT(abs(t0.utc() - Epoch(yy, mm, dd, h, m, s).utc()) < usec);
 
-    then.utc(now.utc());
-    ASSERT(now == then);
-    then.mjd(0); 
+    t0.ymd(yy, mm, dd, true); 
+    t0.hms(h, m, s, true);
+    ASSERT(abs(t0.local() - Epoch(yy, mm, dd, h, m, s).utc()) < usec);
 
-    then.local(now.local());
-    ASSERT(now == then);
-    then.mjd(0);
+    t1.utc(t0.utc());
+    ASSERT(t0 == t1);
+    t1.mjd(0); 
 
-    then.mjd(now.mjd());
-    ASSERT(abs(then.utc() + then.getUTCDiff() - now.local()) < usec);
-    then.mjd(0);
+    t1.local(t0.local());
+    ASSERT(t0 == t1);
+    t1.mjd(0);
 
-    then.mjd(now.getDay() + now.getFraction());
-    ASSERT(abs(then.local() - now.utc() - now.getUTCDiff()) < usec);
-    then.mjd(0);
+    t1.mjd(t0.mjd());
+    ASSERT(abs(t1.utc() + t1.getUTCDiff() - t0.local()) < usec);
+    t1.mjd(0);
 
-    ASSERT(then < now);
-    ASSERT(!(then == now));
+    t1.mjd(t0.getDay() + t0.getFraction());
+    ASSERT(abs(t1.local() - t0.utc() - t0.getUTCDiff()) < usec);
+    t1.mjd(0);
 
-    ASSERT(now + delta == delta + now);
-    ASSERT(now - delta == then - (delta - now));
+    t1 = t0 + msec/day;     // one millisecond after t0
+    t2 = t0 + day;          // one day after t0
 
-    then = now + delta;
-    ASSERT(now < then);
-    then = now - delta;
-    ASSERT(then < now);
-
-    then = now;
-    then += delta;
-    ASSERT(now < then);
-    ASSERT(then == now + delta);
-    ASSERT(0 <= then.getFraction() && then.getFraction() < 1);
-
-    then = now;
-    then -= delta;
-    ASSERT(then < now);
-    ASSERT(then == now - delta);
-    ASSERT(0 <= then.getFraction() && then.getFraction() < 1);
     
-    then = now - 1;
-    ASSERT(now.getDay() - then.getDay() == 1);
-    then += 2;
-    ASSERT(then.getDay() - now.getDay() == 1);
+    // Sanity check
+    LOG_DEBUG("Performing sanity checks ...");
+
+    ASSERT(0 <= t0.getFraction() && t0.getFraction() < 1);
+    ASSERT(0 <= t1.getFraction() && t1.getFraction() < 1);
+    ASSERT(0 <= t2.getFraction() && t2.getFraction() < 1);
+
+
+    // Comparison checks
+    LOG_DEBUG("Testing comparison operators ...");
+
+    ASSERT(t0 < t1 && t0 < t2 && t1 < t2);
+    ASSERT(t0 <= t0 && t0 <= t1 && t0 <= t2 &&
+           t1 <= t1 && t1 <= t2 && t2 <= t2);
+    ASSERT(t2 > t1 && t2 > t0 && t1 > t0);
+    ASSERT(t2 >= t2 && t2 >= t1 && t2 >= t0 &&
+           t1 >= t1 && t1 >= t0 && t0 >= t0);
+    ASSERT(t0 == t0 && t1 == t1 && t2 == t2);
+    ASSERT(t0 != t1 && t0 != t2 && t1 != t2);
+
+
+    // Numerical checks
+    LOG_DEBUG("Testing numerical operators ...");
+
+    t1 = -t0;
+    ASSERT(t0 > t1);
+    ASSERT(t1.getDay() < 0);
+    ASSERT(0 <= t1.getFraction() && t1.getFraction() < 1);
+
+    ASSERT(t0 + delta == delta + t0);
+    ASSERT(t0 - delta == -(delta - t0));
+
+    t1 = t0;
+    t1 += delta;
+    ASSERT(t0 < t1);
+    ASSERT(t1 == t0 + delta);
+
+    t1 = t0;
+    t1 -= delta;
+    ASSERT(t1 < t0);
+    ASSERT(t1 == t0 - delta);
+    
+    t1 = t0 - 1;
+    ASSERT(t0.getDay() - t1.getDay() == 1);
+    t1 += 2;
+    ASSERT(t1.getDay() - t0.getDay() == 1);
 
   }
   catch (Exception& e) {
@@ -106,5 +136,6 @@ int main(int, const char* argv[])
     return 1;
   }
 
+  LOG_INFO("Program terminated successfully");
   return 0;
 }
