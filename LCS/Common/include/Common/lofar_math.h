@@ -29,6 +29,7 @@
 
 namespace LOFAR
 {
+  using std::abs;
   using std::acos;
   using std::asin;
   using std::atan;
