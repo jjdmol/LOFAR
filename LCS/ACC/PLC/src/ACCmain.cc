@@ -132,6 +132,7 @@ namespace LOFAR {
 	    // Main processing loop
 	    while (1) {
 	      LOG_TRACE_FLOW("Polling ApplController for message");
+	      bool isRunning = false;
 	      if (pcServer.pollForMessage()) {
 		LOG_TRACE_FLOW("Message received from ApplController");
 	  
@@ -142,8 +143,16 @@ namespace LOFAR {
 
 		if (newMsg->getCommand() == ACC::PLC::PCCmdQuit) {
 		  break;
-		}
-	      } 
+		} else if (newMsg->getCommand() == ACC::PLC::PCCmdRun) {
+		  isRunning = true;
+		} else if (newMsg->getCommand() == ACC::PLC::PCCmdPause) {
+		  isRunning = false;
+		}		  
+	      } else if (isRunning == true) {
+		// Call run again.
+		// It is possible that a process doesn't support this. It should check for that itself.
+		theProcess->run();
+	      }
 	    }
     
 	    LOG_INFO_STR("Shutting down: ApplicationController");
