@@ -21,7 +21,7 @@
  *
  */
 
-package nl.astron.lofar.java.gui.plotter;
+package nl.astron.lofar.java.cep.jparmfacade;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -30,7 +30,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.Vector;
-import nl.astron.lofar.java.cep.jparmfacade.jParmFacade;
+import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
+import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**

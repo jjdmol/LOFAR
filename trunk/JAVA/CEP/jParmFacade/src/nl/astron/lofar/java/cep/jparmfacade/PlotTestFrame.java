@@ -21,7 +21,7 @@
  *
  */
 
-package nl.astron.lofar.java.gui.plotter.test;
+package nl.astron.lofar.java.cep.jparmfacade;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
