@@ -78,7 +78,7 @@ public abstract class PlotConstants{
     public static final int PLOT_GRID = 5;
         
     //Package-like Location of the properties file (minus .properties!) where the data plot/access/export classes are specified
-    public static final String RESOURCE_FILE     = "nl.astron.lofar.java.gui.plotter.plotter_config";
+    public static final String RESOURCE_FILE     = "plotter_config";
     
     //Exception messages
     public static final String EXCEPTION_GENERIC                    = "An error occurred! ";
