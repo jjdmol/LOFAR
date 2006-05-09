@@ -68,8 +68,8 @@ namespace LOFAR {
       int lowestFreeNode = 0;
 #endif
       
-      int nSubbands  = itsParamSet.getInt32("Observation.NSubbands");  // number of SubBand filters in the application
-      int nCoresPerSubband = itsParamSet.getInt32("BGLProc.NodesPerCell");
+      int nCells  = itsParamSet.getInt32("Observation.NSubbands") / itsParamSet.getInt32("General.SubbandsPerCell");  // number of SubBand filters in the application
+      int nNodesPerCell = itsParamSet.getInt32("BGLProc.NodesPerCell");
     
       LOG_TRACE_FLOW_STR("Create the top-level composite");
       Composite comp(0, 0, "topComposite");
@@ -118,7 +118,7 @@ namespace LOFAR {
 	// Connect the Delay Controller
 	itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
 	if (r!=0) {
-	  itsConnector.connectSteps(RSPSteps[0], nSubbands + r - 1, RSPSteps.back(), 1);
+	  itsConnector.connectSteps(RSPSteps[0], nCells + r - 1, RSPSteps.back(), 1);
 	}
       }
   
@@ -126,30 +126,29 @@ namespace LOFAR {
 
       LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
       vector<Step*> collectSteps;
-      for (int nf=0; nf < nSubbands; nf++) {
-	sprintf(nameBuffer, "Collect_node_%d_of_%d", nf, nStations);
+      for (int cell=0; cell < nCells; cell++) {
+	sprintf(nameBuffer, "Collect_node_%d_of_%d", cell, nStations);
 	lastWH = new WH_SBCollect(nameBuffer,      // name
-				  nf,              // Subband ID
 				  itsParamSet,
-				  nCoresPerSubband);
+				  nNodesPerCell);
 	collectSteps.push_back(new Step(lastWH, nameBuffer, false));
 	collectSteps.back()->runOnNode(lowestFreeNode++); 
 	comp.addBlock(collectSteps.back());
 
 	// Connect splitters to mergers (transpose)
-	if (nf < nSubbands) { //this is not a fake subband
+	if (cell < nCells) {
 	  for (int st=0; st<nStations; st++) {
-	    itsConnector.connectSteps(RSPSteps[st], nf, collectSteps.back(), st);
+	    itsConnector.connectSteps(RSPSteps[st], cell, collectSteps.back(), st);
 	  }
 	}
 	// connect outputs to FIR stub
-	for (int core = 0; core < nCoresPerSubband; core++) {
+	for (int core = 0; core < nNodesPerCell; core++) {
 #if 1
 	  //collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
-	  itsOutputStub->connect(nf,
-			     core,
-			     (collectSteps.back())->getOutDataManager(0), 
-			     core);
+	  itsOutputStub->connect(cell,
+				 core,
+				 (collectSteps.back())->getOutDataManager(0), 
+				 core);
 #endif
 	}
       }
