@@ -78,3 +78,4 @@ int main (int argc, const char** argv)
   LOG_INFO_STR(argv[0] << " terminated normally");
   return 0;
 }
+#endif
