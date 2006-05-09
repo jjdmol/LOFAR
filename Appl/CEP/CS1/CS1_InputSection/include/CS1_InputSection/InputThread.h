@@ -45,19 +45,15 @@ namespace LOFAR
     // @{
 
     // TODO: this information doesn't have to be in a struct
-    // TODO: lock the appropriate members (theirShouldStop and StationID)
     struct ThreadArgs {
       BeamletBuffer* BBuffer;
       TransportHolder* th; 
-      int* StationIDptr;
-      bool IsMaster;
 
       int frameSize;
       int ipHeaderSize;
       int frameHeaderSize;
-      int nPacketsPerFrame;
-      int packetSize;
-      int nSubbandsPerPacket;
+      int nTimesPerFrame;
+      int nSubbandsPerFrame;
     };
   
     struct PacketStats {

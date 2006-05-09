@@ -49,9 +49,8 @@ General.SubbandsPerCell = 1
 DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
 
 # Variables for the InputSection
-Input.NPacketsInFrame=125
+Input.NTimesInFrame=125
 Input.SzEPAheader=16
-Input.SzEPApayload=8  # must be a multiple of 8 (Npol * 4) and it must be more than NSubbands * 8
 Input.IPHeaderSize=32
 Input.NSamplesToBuffer=6000000
 Input.NRSPBoards=4

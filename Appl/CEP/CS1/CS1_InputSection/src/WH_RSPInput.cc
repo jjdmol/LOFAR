@@ -25,10 +25,10 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <AMCBase/TimeCoord.h>
 #include <CS1_InputSection/WH_RSPInput.h>
 #include <CS1_Interface/DH_RSP.h>
 #include <CS1_Interface/DH_Delay.h>
-#include <CS1_Interface/DH_RSPSync.h>
 #include <Common/hexdump.h>
 #include <Common/Timer.h>
 #include <APS/ParameterSet.h>
@@ -42,16 +42,13 @@ namespace LOFAR {
 
     WH_RSPInput::WH_RSPInput(const string& name, 
 			     ACC::APS::ParameterSet& ps,
-			     TransportHolder& th,
-			     const bool isSyncMaster)
-      : WorkHolder ((isSyncMaster ? 1 : 2), 
-		    ps.getInt32("Observation.NSubbands") + (isSyncMaster ? ps.getInt32("Observation.NStations")-1 : 0) , 
+			     TransportHolder& th)
+      : WorkHolder (1, 
+		    ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / (ps.getInt32("Input.NRSP") * ps.getInt32("General.NSubbandsPerCell")), 
 		    name, 
 		    "WH_RSPInput"),
 	itsTH(th),
 	itsPS (ps),
-	itsSyncMaster(isSyncMaster),
-	itsFirstProcessLoop(true),
 	itsBBuffer(0)
     {
       LOG_TRACE_FLOW_STR("WH_RSPInput constructor");    
@@ -59,34 +56,18 @@ namespace LOFAR {
       char str[32];
 
       // get parameters
-      itsNRSPOutputs = ps.getInt32("Observation.NStations");
-      itsNSubbands = ps.getInt32("Observation.NSubbands");
+      itsNSubbands = ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / ps.getInt32("Input.NRSP");
+      itsNSubbandsPerCell = ps.getInt32("General.SubbandsPerCell");
       itsNSamplesPerSec = ps.getInt32("Observation.NSubbandSamples");
-      itsNSamplesToCopy = itsNSamplesPerSec + (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Observation.NChannels");
+      itsNHistorySamples = (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Observation.NChannels");
  
       // create incoming dataholder holding the delay information 
-      getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));
-      //  getDataManager().setAutoTriggerIn(0, false);
+      getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", ps.getInt32("Input.NRSP")));
  
       // create a outgoing dataholder for each subband
-      for (int s=0; s < itsNSubbands; s++) {
+      for (int s=0; s < itsNoutputs; s++) {
 	snprintf(str, 32, "DH_RSP_out_%d", s);
 	getDataManager().addOutDataHolder(s, new DH_RSP(str, itsPS)); 
-      }
-   
-      // create dataholders for RSPInput synchronization
-      if (itsSyncMaster) {
-	// if we are the sync master we need extra outputs
-	for (int i = 0; i < itsNRSPOutputs-1; i++) {
-	  snprintf(str, 32, "DH_RSPInputSync_out_%d", i);
-	  getDataManager().addOutDataHolder(itsNSubbands + i, new DH_RSPSync(str));
-	  //don't use autotriggering when sending synced stamps to slaves
-	  getDataManager().setAutoTriggerOut(itsNSubbands + i, false);
-	}
-      } else {
-	// if we are a sync slave we need 1 extra input
-	getDataManager().addInDataHolder(1, new DH_RSPSync("DH_RSPSync_in"));
-	getDataManager().setAutoTriggerIn(1, false);
       }
     }
 
@@ -98,16 +79,15 @@ namespace LOFAR {
 
     WorkHolder* WH_RSPInput::construct(const string& name,
 				       ACC::APS::ParameterSet& ps,
-				       TransportHolder& th,
-				       const bool isSyncMaster)
+				       TransportHolder& th)
     {
-      return new WH_RSPInput(name, ps, th, isSyncMaster);
+      return new WH_RSPInput(name, ps, th);
     }
 
 
     WH_RSPInput* WH_RSPInput::make(const string& name)
     {
-      return new WH_RSPInput(name, itsPS, itsTH, itsSyncMaster);
+      return new WH_RSPInput(name, itsPS, itsTH);
     }
 
 
@@ -121,15 +101,12 @@ namespace LOFAR {
       ThreadArgs args;
       args.BBuffer            = itsBBuffer;
       args.th                 = &itsTH;
-      args.StationIDptr       = &itsStationID;
-      args.IsMaster           = itsSyncMaster;
       args.ipHeaderSize       = itsPS.getInt32("Input.IPHeaderSize");
       args.frameHeaderSize    = itsPS.getInt32("Input.SzEPAheader");
-      args.nPacketsPerFrame   = itsPS.getInt32("Input.NPacketsInFrame");
-      args.packetSize         = itsPS.getInt32("Input.SzEPApayload");
-      args.nSubbandsPerPacket = itsNSubbands;
+      args.nTimesPerFrame     = itsPS.getInt32("Input.NTimesInFrame");
+      args.nSubbandsPerFrame  = itsNSubbands;
 
-      args.frameSize          = args.packetSize * args.nPacketsPerFrame + args.frameHeaderSize;
+      args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
 
   
       if ((itsTH.getType() == "TH_File") || (itsTH.getType() == "TH_Null")) {
@@ -150,14 +127,18 @@ namespace LOFAR {
       startThread();
       itsPrePostTimer = new NSTimer("pre/post");
       itsProcessTimer = new NSTimer("process");
-      itsDelayTimer = new NSTimer("delay");
       itsGetElemTimer = new NSTimer("getElem");
       itsTimers.push_back(itsPrePostTimer);
       itsTimers.push_back(itsProcessTimer);
-      itsTimers.push_back(itsDelayTimer);
       itsTimers.push_back(itsGetElemTimer);
       itsPrePostTimer->start();
       cout<<"end of WH_RSPInput::preprocess"<<endl;cout.flush();
+
+      // determine starttime
+      double utc = AMC::TimeCoord(itsPS.getDouble("Observation.StartTime")).utc();
+      int sampleFreq = itsPS.getInt32("Observation.SampleRate");
+      itsSyncedStamp = TimeStamp(static_cast<int>(utc), static_cast<int>((utc - floor(utc)) * sampleFreq));
+      itsBBuffer->startBufferRead(itsSyncedStamp);
     }
 
     void WH_RSPInput::process() 
@@ -168,111 +149,48 @@ namespace LOFAR {
       DH_Delay* delayDHp;
       timestamp_t delayedstamp;
 
-
-      if (itsSyncMaster) {
-
-	if (itsFirstProcessLoop) {
-	  // let the buffer fill
-	  sleep(1);
-
-	  // start the buffer and get the stamp at which we need to start reading
-	  cout<<"master asking buffer for good place to start"<<endl;cout.flush();
-	  itsSyncedStamp = itsBBuffer->startBufferRead();
-	  cout<<"SyncedStamp on master: "<<itsSyncedStamp<<endl; cout.flush();
-      
-	  // we are the master, so send the syncstamp to the slaves
-	  // send the syncstamp to the slaves
-	  itsDelayTimer->start();
-	  for (int i = 1; i < itsNRSPOutputs; i++) {
-	    ((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
-	    // force the write because autotriggering is off 
-	    getDataManager().readyWithOutHolder(itsNSubbands + i - 1);
-	  }
-	  itsFirstProcessLoop = false;
-	  itsDelayTimer->stop();
-
-	} else { // not the first loop
-	  // increase the syncstamp
-	  itsSyncedStamp += itsNSamplesPerSec;
-	}
-
-      } else {  // sync slave
-
-	if (itsFirstProcessLoop) {
-	  // we are a slave so read the syncstamp
-	  itsDelayTimer->start();
-	  cout<<"slave reading from master"<<endl;cout.flush();
-	  DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
-	  getDataManager().readyWithInHolder(1);
-	  dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
-	  itsSyncedStamp = dhp->getSyncStamp(); 
-	  itsDelayTimer->stop();
-	  cout<<"SyncedStamp on slave: "<<itsSyncedStamp<<endl; cout.flush();
-      
-	  // start the buffer and set the stamp at which we need to start reading
-	  itsBBuffer->startBufferRead(itsSyncedStamp);
-	  cout<<"Buffer started on slave"<<endl;cout.flush();
-	  itsFirstProcessLoop = false; 
-
-	} else {  //not the first loop
-	  // increase the syncstamp
-	  itsSyncedStamp += itsNSamplesPerSec;
-	}  
-      }
-
       // delay control
       delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
       // Get delay from the delay controller
-      delayedstamp = itsSyncedStamp + 0; //delayDHp->getDelay(0);    
-      //delayedstamp = itsSyncedStamp;
-
+      delayedstamp = itsSyncedStamp + delayDHp->getCoarseDelay(0);    
 
       /* startstamp is the synced and delay-controlled timestamp to 
 	 start from in cyclic buffer */
       vector<Beamlet *>   subbandbuffer;
-      vector<SparseSet *> flags;
-      for (int s=0; s < itsNSubbands; s++) {
-	rspDHp = (DH_RSP*)getDataManager().getOutHolder(s);
-	subbandbuffer.push_back((Beamlet*)rspDHp->getBuffer());
-	flags.push_back(&rspDHp->getFlags());
+      SparseSet flags;
+
+      // collect pointers to subbands in output dataholders
+      for (int output = 0; output < itsNoutputs; output ++) {
+	rspDHp = (DH_RSP*)getDataManager().getOutHolder(output);
+	for (int subband = 0; subband < itsNSubbandsPerCell; subband++) {
+	  subbandbuffer.push_back((Beamlet*)rspDHp->getBuffer());
+	}
       }
+	  
       // get the data from the cyclic buffer
       itsGetElemTimer->start();
       cout<<"reading from buffer"<<endl;cout.flush();
 
       itsBBuffer->getElements(subbandbuffer,
-			      flags,
-			      delayedstamp, 
-			      itsNSamplesToCopy);
+			      &flags,
+			      delayedstamp - itsNHistorySamples, 
+			      itsNSamplesPerSec + itsNHistorySamples);
       cout<<"done reading from buffer"<<endl;cout.flush();
       itsGetElemTimer->stop();
 
       // fill in the outgoing dataholders
-      for (int s=0; s < itsNSubbands; s++) { 
-	rspDHp = (DH_RSP*)getDataManager().getOutHolder(s);
+      for (int output = 0; output < itsNoutputs; output++) { 
+	rspDHp = (DH_RSP*)getDataManager().getOutHolder(output);
     
 	// fill in the data
+	rspDHp->getFlags() = flags;
 	rspDHp->setStationID(itsStationID);
 	rspDHp->setTimeStamp(delayedstamp);   
 	rspDHp->fillExtraData();
 	//rspDHp->setDelay(delayDHp->getDelay(itsStationID));
-
-#if 0
-	// dump the output (for debugging)
-	if(itsSyncMaster) {
-	  cout << "WH_RSPInput output (stamp: "<<delayedstamp<<"): " << endl;
-	  hexdump(rspDHp->getBuffer(), 200 * sizeof(DH_RSP::BufferType)); 
-	}
-#endif
       }    
 
-#if 0
-      if(itsSyncMaster) {
-	cout<<"master has stamp: "<<delayedstamp<<endl;
-      } else {
-	cout<<"slave has stamp: "<<delayedstamp<<endl;
-      }
-#endif
+      itsSyncedStamp += itsNSamplesPerSec;
       itsProcessTimer->stop();
     }
 
@@ -289,11 +207,9 @@ namespace LOFAR {
 
       delete itsPrePostTimer;
       delete itsProcessTimer;
-      delete itsDelayTimer;
       delete itsGetElemTimer;
       itsPrePostTimer = 0;
       itsProcessTimer = 0;
-      itsDelayTimer = 0;
       itsGetElemTimer = 0;
 
       cout<<"in WH_RSPInput postprocess"<<endl;
