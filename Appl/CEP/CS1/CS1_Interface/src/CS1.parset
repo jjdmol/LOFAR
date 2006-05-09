@@ -44,7 +44,6 @@ Observation.ChanWidth = 762.94      # width of each channel (Hz)
 
 # General Variables
 General.SubbandsPerCell = 1
-General.NRuns = 3600      # Number of seconds to process. NB: must be a multiple of 'BGLProc.SlavesPerSubband'
 
 # Variables for the DelayCompensation
 DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
