@@ -36,16 +36,16 @@ namespace LOFAR
   namespace CS1
   {
 
-    WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
+    WH_SBCollect::WH_SBCollect(const string& name,
 			       const ACC::APS::ParameterSet pset,
 			       const int noutputs) 
-      : WorkHolder   (pset.getInt32("Observation.NStations"), 
-		      noutputs,
-		      name,
-		      "WH_SBCollect"),
-	itsPS        (pset),
-	itsSubBandID (sbID),
-	itsCore(0)
+      : WorkHolder          (pset.getInt32("Observation.NStations"), 
+			     noutputs,
+			     name,
+			     "WH_SBCollect"),
+	itsPS               (pset),
+	itsNStations        (pset.getInt32("Observation.NStations")),
+	itsNSubbandsPerCell (pset.getInt32("General.SubbandsPerCell"))
     {
       char str[32];
       for (int i=0; i<itsNinputs; i++)
@@ -57,7 +57,6 @@ namespace LOFAR
 	{
 	  sprintf(str, "DH_out_%d", i);
 	  getDataManager().addOutDataHolder(i, new DH_Subband(str, itsPS));
-	  //getDataManager().setAutoTriggerOut(i, false);
 	}
       // Set a round robin output selector
       getDataManager().setOutputSelector(new Sel_RoundRobin(itsNoutputs));
@@ -66,79 +65,56 @@ namespace LOFAR
     WH_SBCollect::~WH_SBCollect() {
     }
 
-    WorkHolder* WH_SBCollect::construct(const string& name, int sbID, 
+    WorkHolder* WH_SBCollect::construct(const string& name,
 					const ACC::APS::ParameterSet pset,
 					const int noutputs) 
     {
-      return new WH_SBCollect(name, sbID, pset, noutputs);
+      return new WH_SBCollect(name, pset, noutputs);
     }
 
     WH_SBCollect* WH_SBCollect::make(const string& name)
     {
-      return new WH_SBCollect(name, itsSubBandID, itsPS, itsNoutputs);
+      return new WH_SBCollect(name, itsPS, itsNoutputs);
     }
 
     void WH_SBCollect::process() 
     { 
-#if 0
-      // now we send every station seperately using the same connection.
-      // this means we send nstations times per process
-
-      RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-      dimType inStationDim = inMatrix->getDim("Stations");
-
-      RectMatrix<DH_Subband::SampleType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(itsCore))->getSamplesMatrix();
-      dimType outStationDim = outMatrix.getDim("Station");
-
+      vector<DH_RSP*> inHolders;
+      vector<RectMatrix<DH_RSP::BufferType> *> inMatrices;
+      vector<RectMatrix<DH_RSP::BufferType>::cursorType> inCursors;
       RectMatrix<DH_Subband::SampleType>::cursorType outCursor;
-      RectMatrix<DH_RSP::BufferType>::cursorType inCursor;
 
-      // Loop over all inputs (stations)
-      for (int nr=0; nr<itsNinputs; nr++) {
-	outMatrix = &((DH_Subband*)getDataManager().getOutHolder(core))->getSamplesMatrix();
-	outCursor = outMatrix.getCursor( 0 * outStationDim);
-
-	inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
-	inCursor = inMatrix->getCursor(0*inStationDim);
-	// copy all freq, time and pol from an input to output
-	inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
-	getDataManager().readyWithOutHolder(core);
+      // create cursors to incoming data
+      for (unsigned station = 0; station < itsNStations; station++) {
+	inHolders.push_back(dynamic_cast<DH_RSP *>(getDataManager().getInHolder(station)));
+	dimType inSubbandDim = inMatrices[0]->getDim("Subbands");
+	inCursors.push_back(inHolders.back()->getDataMatrix().getCursor(0*inSubbandDim));
+	inMatrices.push_back(&(inHolders.back()->getDataMatrix()));
       }
-#else
-      RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-      DH_Subband *outHolder = (DH_Subband*) getDataManager().getOutHolder(itsCore);
-      RectMatrix<DH_Subband::SampleType>* outMatrix = &outHolder->getSamplesMatrix();
 
-      dimType outStationDim = outMatrix->getDim("Station");
-      dimType inStationDim = inMatrix->getDim("Stations");
+      // Copy every subband to one BG/L core
+      for (unsigned subband = 0; subband < itsNSubbandsPerCell; subband++) {
+	// ask the round robin selector for the next output
+	DH_Subband *outHolder = (DH_Subband*) getDataManager().selectOutHolder();
+	RectMatrix<DH_Subband::SampleType>* outMatrix = &outHolder->getSamplesMatrix();
+	dimType inSubbandDim = inMatrices[0]->getDim("Subbands");
+	dimType outStationDim = outMatrix->getDim("Station");
+	outCursor = outMatrix->getCursor( 0 * outStationDim);
 
-      RectMatrix<DH_Subband::SampleType>::cursorType outCursor;
-      RectMatrix<DH_RSP::BufferType>::cursorType inCursor;
-
-      outCursor = outMatrix->getCursor( 0 * outStationDim);
-
-      // Loop over all inputs (stations)
-      for (int nr=0; nr<itsNinputs; nr++)
-	{
-	  DH_RSP *inHolder = dynamic_cast<DH_RSP *>(getDataManager().getInHolder(nr));
-	  inMatrix = &inHolder->getDataMatrix();
-	  inCursor = inMatrix->getCursor(0*inStationDim);
-	  // copy all freq, time and pol from an input to output
-	  inMatrix->cpy2Matrix(inCursor, inStationDim, *outMatrix, outCursor, outStationDim, 1);
+	// Copy one subbands from every input
+	for (unsigned station = 0; station < itsNStations; station++) {
+	  inMatrices[station]->cpy2Matrix(inCursors[station], inSubbandDim, *outMatrix, outCursor, outStationDim, 1);
+	  inMatrices[station]->moveCursor(&inCursors[station], inSubbandDim);
 	  outMatrix->moveCursor(&outCursor, outStationDim);
-	  inHolder->getExtraData();
+
 #if defined SPARSE_FLAGS
-	  outHolder->getFlags(nr) = inHolder->getFlags();
+	  // copy other information (delayInfo, flags etc)
+	  // inHolders[station]->getExtraData();
+	  // outHolder->getFlags() = inHolders[station]->getFlags();
+	  outHolder->fillExtraData();
 #endif
 	}
-
-#if defined SPARSE_FLAGS
-      outHolder->fillExtraData();
-#endif
-      getDataManager().readyWithOutHolder(itsCore);
-#endif
-      itsCore ++ ;
-      if (itsCore >= itsNoutputs) itsCore = 0;
+      }
 
 #if 0
       // dump the contents of outDH to stdout

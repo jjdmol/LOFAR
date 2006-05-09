@@ -48,12 +48,12 @@ namespace LOFAR
     class WH_SBCollect : public WorkHolder
     {
     public:
-      explicit WH_SBCollect(const string& name, int sbID, 
+      explicit WH_SBCollect(const string& name,
 			    const ACC::APS::ParameterSet pset,
 			    const int noutputs);
       virtual ~WH_SBCollect();
     
-      static WorkHolder* construct(const string& name, int sbID, 
+      static WorkHolder* construct(const string& name,
 				   const ACC::APS::ParameterSet pset,
 				   const int noutputs);
       virtual WH_SBCollect* make(const string& name);
@@ -68,8 +68,8 @@ namespace LOFAR
 
       //# Datamembers
       ACC::APS::ParameterSet itsPS;
-      int itsSubBandID;
-      int itsCore;
+      unsigned itsNStations;
+      unsigned itsNSubbandsPerCell;
     };
 
     // @}
