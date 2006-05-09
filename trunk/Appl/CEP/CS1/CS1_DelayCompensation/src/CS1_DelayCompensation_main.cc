@@ -18,6 +18,19 @@
 using namespace LOFAR;
 using namespace LOFAR::CS1;
 
+#if 1
+#include <PLC/ACCmain.h>
+
+int main(int argc, char* argv[]) {
+  INIT_LOGGER("CS1_DelayCompensation");
+
+  AH_DelayCompensation myAH;
+  ApplicationHolderController myAHC(myAH, 1); // listen to ACC Controller once every 1 runs.
+  return ACC::PLC::ACCmain(argc, argv, &myAHC);
+}
+
+#else
+
 int main (int argc, const char** argv) 
 {
   INIT_LOGGER("CS1_DelayCompensation");

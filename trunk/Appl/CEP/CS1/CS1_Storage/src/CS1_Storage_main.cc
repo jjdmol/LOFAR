@@ -27,11 +27,8 @@ using namespace LOFAR::CS1;
 int main(int argc, char* argv[]) {
   INIT_LOGGER("CS1_Storage");
 
-  // This shouldn't be done here
-  ACC::APS::ParameterSet ps("CS1.parset");
-  int nrSeconds = ps.getInt32("General.NRuns");
   AH_Storage myAH;
-  ApplicationHolderController myAHC(myAH, nrSeconds);
+  ApplicationHolderController myAHC(myAH, 1); // listen to ACC Controller once every 1 runs.
   return ACC::PLC::ACCmain(argc, argv, &myAHC);
 }
 
