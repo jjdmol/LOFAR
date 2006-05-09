@@ -28,8 +28,7 @@
 namespace LOFAR { 
 namespace CS1 {
 
-unsigned Stub_BGL::theirNrSubbands;
-unsigned Stub_BGL::theirNrSubbandsPerCell;
+unsigned Stub_BGL::theirNrCells;
 unsigned Stub_BGL::theirNrNodesPerCell;
 
 
@@ -40,13 +39,12 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pS
   itsTHs(0),
   itsConnections(0)
 {
-  if (theirNrSubbands == 0) { // first time
-    theirNrSubbands	   = pSet.getInt32("Observation.NSubbands");
-    theirNrSubbandsPerCell = pSet.getInt32("General.NSubbandsPerCell");
+  if (theirNrCells == 0) { // first time
+    theirNrCells	   = pSet.getInt32("Observation.NSubbands") / pSet.getInt32("General.NSubbandsPerCell");
     theirNrNodesPerCell    = pSet.getInt32("BGLProc.NodesPerCell");
   }
 
-  size_t size = theirNrSubbands * theirNrNodesPerCell / theirNrSubbandsPerCell;
+  size_t size = theirNrCells * theirNrNodesPerCell;
 
   itsTHs = new TransportHolder * [size];
   memset(itsTHs, 0, sizeof(TransportHolder * [size]));
@@ -59,7 +57,7 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pS
 Stub_BGL::~Stub_BGL()
 {
   if (itsTHs != 0 && itsConnections != 0) {
-    size_t size = theirNrSubbands * theirNrNodesPerCell / theirNrSubbandsPerCell;
+    size_t size = theirNrCells * theirNrNodesPerCell;
     for (uint i = 0; i < size; i ++) {
       delete itsTHs[i];
       delete itsConnections[i];
@@ -75,8 +73,8 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
 {
   size_t index = cellNr * theirNrNodesPerCell + nodeNr;
 
-  ASSERTSTR(cellNr < (theirNrSubbands / theirNrSubbandsPerCell), "cellNr argument out of bounds; "
-	    << cellNr << " / " << (theirNrSubbands / theirNrSubbandsPerCell));
+  ASSERTSTR(cellNr < (theirNrCells), "cellNr argument out of bounds; "
+	    << cellNr << " / " << theirNrCells);
   ASSERTSTR(nodeNr < theirNrNodesPerCell, "nodeNr argument out of bounds; "
 	    << nodeNr << " / " << theirNrNodesPerCell);
   ASSERTSTR(itsTHs[index] == 0, "already connected: cellNr = "

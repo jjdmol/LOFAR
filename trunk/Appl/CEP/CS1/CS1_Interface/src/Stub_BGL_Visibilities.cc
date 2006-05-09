@@ -35,9 +35,9 @@ namespace LOFAR
         servers(pSet.getStringVector("Connections.BGLProc_Storage.ServerHosts")),
         services(pSet.getStringVector("Connections.BGLProc_Storage.Ports"))
     {
-      ASSERTSTR(itsNrSubbands <= servers.size(),
+      ASSERTSTR(theirNrCells <= servers.size(),
                 "Connections.BGLProc_Storage.ServerHosts does not contain enough hosts");
-      ASSERTSTR(itsNrSlavesPerSubband <= services.size(),
+      ASSERTSTR(theirNrNodesPerCell <= services.size(),
                 "Connections.BGLProc_Storage.Ports does not contain enough ports");
     }
 
