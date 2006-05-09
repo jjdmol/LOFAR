@@ -76,10 +76,10 @@ class WH_BGL_Processing: public WorkHolder {
       NR_OUT_CHANNELS
     };
 
-    explicit WH_BGL_Processing(const string &name, double baseFrequency, const ACC::APS::ParameterSet &ps);
+    explicit WH_BGL_Processing(const string &name, unsigned coreNumber, const ACC::APS::ParameterSet &ps);
     virtual ~WH_BGL_Processing();
 
-    static WorkHolder *construct(const string &name, double baseFrequency, const ACC::APS::ParameterSet &);
+    static WorkHolder *construct(const string &name, unsigned coreNumber, const ACC::APS::ParameterSet &);
     virtual WH_BGL_Processing *make(const string &name);
 
     virtual void preprocess();
@@ -108,22 +108,26 @@ class WH_BGL_Processing: public WorkHolder {
     /// forbid assignment
     WH_BGL_Processing &operator = (const WH_BGL_Processing&);
 
-    void doPPF(), bypassPPF();
+    void doPPF(double baseFrequency), bypassPPF();
     void computeFlags();
     void doCorrelate();
 
 #if defined DELAY_COMPENSATION
 #if defined C_IMPLEMENTATION
-    fcomplex phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const;
+    fcomplex phaseShift(int time, int chan, double baseFrequency, const DH_Subband::DelayIntervalType &delay) const;
 #else
-    void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay) const;
+    void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay, double baseFrequency) const;
 #endif
 #endif
 
     /// FIR Filter variables
     fftw_plan	    itsFFTWPlan;
-    double	    itsBaseFrequency;
+    static vector<double>  itsBaseFrequencies;
+
     const ACC::APS::ParameterSet &itsPS;
+    const unsigned  itsCoreNumber;
+    unsigned        itsFirstSubband, itsCurrentSubband, itsLastSubband;
+
     static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 
     static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
