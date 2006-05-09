@@ -148,9 +148,6 @@ public: \
 #define LOG_TRACE_LIFETIME(level,message) \
 	LOG_TRACE_LIFETIME_STR(level, message)
 
-//# ---------- implementation details tracer part ----------
-#define cTrace(level, message)		cDebug(level, "TRACE" << LOG4CPLUS_LEVEL(level) << " TRC." << getLFDebugContext().name(), message)
-#define cTracestr(level,stream) 	cDebugstr(level, "TRACE" << LOG4CPLUS_LEVEL(level) << " TRC." << getLFDebugContext().name(), stream)
 
 #else	// ENABLE_TRACER
 //# define dummies if tracing is disabled
@@ -210,6 +207,10 @@ public: \
 #define LFDebugCheck(level)	getLFDebugContext().check(level)
 
 #define DebugTestAndLog(level) \
+	if (::LOFAR::LFDebug::LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
+		::LOFAR::LFDebug::getDebugStream()
+
+#define TraceTestAndLog(level) \
 	if (LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
 		::LOFAR::LFDebug::getDebugStream()
 
@@ -224,7 +225,7 @@ public: \
 
 #define cLogstr(level,levelname,stream) do { \
 		constructStream(stream); \
-		cLog(level,levelname,oss.str().c_str()); \
+		cLog(level,levelname,oss.str()); \
 	} while(0)
 
 #define	cDebug(level,levelname,message) \
@@ -234,7 +235,18 @@ public: \
 
 #define cDebugstr(level,levelname,stream) do { \
 		constructStream(stream); \
-		cDebug(level,levelname,oss.str().c_str()); \
+		cDebug(level,levelname,oss.str()); \
+	} while(0)
+
+#define cTrace(level,message) \
+	TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
+		<< " TRC." << getLFDebugContext().name() \
+		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
+		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << std::endl
+
+#define cTracestr(level,stream) do { \
+		constructStream(stream); \
+		cTrace(level,oss.str()); \
 	} while(0)
 
 
