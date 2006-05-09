@@ -44,10 +44,8 @@
 #include <rts.h>
 #endif
 
-namespace LOFAR
-{
-namespace CS1
-{
+namespace LOFAR {
+namespace CS1 {
 
 AH_BGL_Processing::AH_BGL_Processing() 
   : itsWHs(0),
@@ -94,54 +92,64 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGL_Processing::define()");
 
-  unsigned nrSubBands	    = itsParamSet.getInt32("Observation.NSubbands");
-  vector<double> baseFreqs  = itsParamSet.getDoubleVector("Observation.RefFreqs");
-  unsigned slavesPerSubBand = itsParamSet.getInt32("BGLProc.SlavesPerSubband");
+  unsigned nrSubBands	     = itsParamSet.getInt32("Observation.NSubbands");
+  vector<double> baseFreqs   = itsParamSet.getDoubleVector("Observation.RefFreqs");
+  unsigned usedNodesPerCell  = itsParamSet.getInt32("BGLProc.NodesPerCell");
 
 #if defined HAVE_BGL
-  unsigned subbandsPerCell  = itsParamSet.getInt32("BGLProc.SubbandsPerCell");
-  ASSERTSTR(subbandsPerCell == 1, "BGLProc.SubbandsPerCell != 1 not implemented");
-  unsigned slavesPerCell    = slavesPerSubBand * subbandsPerCell;
+  unsigned nrSubbandsPerCell = itsParamSet.getInt32("General.SubbandsPerCell");
 #endif
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
-  itsSubbandStub	   = new Stub_BGL_Subband(true, itsParamSet);
-//itsRFI_MitigationStub	   = new Stub_BGL_RFI_Mitigation(true, itsParamSet);
-  itsVisibilitiesStub	   = new Stub_BGL_Visibilities(true, itsParamSet);
+  //itsSubbandStub	= new Stub_BGL_Subband(true, itsParamSet);
+//itsRFI_MitigationStub	= new Stub_BGL_RFI_Mitigation(true, itsParamSet);
+  //itsVisibilitiesStub	= new Stub_BGL_Visibilities(true, itsParamSet);
 
 #if defined HAVE_BGL
   struct BGLPersonality personality;
   int retval = rts_get_personality(&personality, sizeof personality);
   ASSERTSTR(retval == 0, "Could not get personality");
   bool virtualNodeMode = (personality.opFlags & BGLPERSONALITY_OPFLAGS_VIRTUALNM) != 0;
-  int  nrNodesPerCell  = virtualNodeMode ? 16 : 8;
+  int  physicalNodesPerCell = virtualNodeMode ? 16 : 8;
 
-  ASSERTSTR(slavesPerCell < nrNodesPerCell, "too many slaves per cell");
+  ASSERTSTR(usedNodesPerCell <= physicalNodesPerCell, "too many nodes per cell");
 #endif
 
-  int node = 0;
+  const char *str	  = getenv("FIRST_NODE");
+  unsigned   logicalNode  = str != 0 ? atoi(str) : 0;
+  unsigned   physicalNode = 0;
 
-  for (uint subband = 0; subband < nrSubBands; subband ++) {
-    for (uint slave = 0; slave < slavesPerSubBand; slave ++) {
-      WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", baseFreqs[subband], itsParamSet);
+  ASSERTSTR(logicalNode % usedNodesPerCell == 0, "FIRST_NODE not a multiple of BGLProc.NodesPerCell");
+
+  unsigned firstCell  = logicalNode / usedNodesPerCell;
+  unsigned totalCells = nrSubBands / nrSubbandsPerCell;
+  unsigned maxCells   = TH_MPI::getNumberOfNodes() / physicalNodesPerCell;
+  unsigned lastCell   = firstCell + std::min(totalCells - firstCell, maxCells);
+
+  std::cerr << "totalCells = " << totalCells << ", nrSubbandsPerCell = " << nrSubbandsPerCell << '\n';
+  std::cerr << "firstCell = " << firstCell << ", lastCell = " << lastCell << '\n';
+  for (uint cell = firstCell; cell < lastCell; cell ++) {
+    for (uint core = 0; core < usedNodesPerCell; core ++) {
+      WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", logicalNode, itsParamSet);
       itsWHs.push_back(wh);
       TinyDataManager &dm = wh->getDataManager();
-      itsSubbandStub->connect(subband, slave, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
-//    itsRFI_MitigationStub->connect(subband, slave, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-      itsVisibilitiesStub->connect(subband, slave, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+      //itsSubbandStub->connect(cell, core, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
+//    itsRFI_MitigationStub->connect(cell, core, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
+      //itsVisibilitiesStub->connect(cell, core, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
-      wh->runOnNode(remapOnTree(node ++));
+      ++ logicalNode;
+      wh->runOnNode(remapOnTree(physicalNode ++));
     }
 
 #if defined HAVE_BGL
     // advance to next compute cell
-    node = (node + nrNodesPerCell - 1) & -nrNodesPerCell;
+    physicalNode = (physicalNode + physicalNodesPerCell - 1) & -physicalNodesPerCell;
 #endif
   }
 
 #if defined HAVE_MPI
-  ASSERTSTR (node <= TH_MPI::getNumberOfNodes(), "CS1_BGL_Proc needs " << node << " nodes, " << TH_MPI::getNumberOfNodes() << " available");
+  //ASSERTSTR (physicalNode <= TH_MPI::getNumberOfNodes(), "CS1_BGL_Proc needs " << physicalNode << " nodes, " << TH_MPI::getNumberOfNodes() << " available");
 #endif
 
   LOG_TRACE_FLOW_STR("Finished define()");

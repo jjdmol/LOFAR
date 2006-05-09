@@ -219,6 +219,13 @@ void doWork()
   int	     nRuns	     = 1;
   const char *env;
 
+  ACC::APS::ParameterSet pset("CS1.parset");
+
+  if ((env = getenv("NRUNS")) != 0) {
+    nRuns = atoi(env);
+    std::cerr << "setting nRuns to " << env << '\n';
+  }
+
   if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
     signalFrequency = atof(env);
     std::cerr << "setting signal frequency to " << env << '\n';
@@ -229,13 +236,21 @@ void doWork()
     std::cerr << "setting base frequency to " << env << '\n';
   }
 
-  if ((env = getenv("NRUNS")) != 0) {
-    nRuns = atoi(env);
-    std::cerr << "setting nRuns to " << env << '\n';
+  unsigned nrSubbands	= pset.getUint32("Observation.NSubbands");
+  double   sampleRate	= pset.getDouble("Observation.SampleRate");
+  unsigned nrChannels	= pset.getUint32("Observation.NChannels");
+  double   subbandWidth = sampleRate / nrChannels;
+
+  std::ostringstream baseFrequencyStr;
+  baseFrequencyStr << '[';
+
+  for (int sb = 0; sb < nrSubbands; sb ++) {
+    baseFrequencyStr << (baseFrequency + sb * subbandWidth)
+		     << ((sb == nrSubbands - 1) ? ']' : ',');
   }
 
-  ACC::APS::ParameterSet pset("CS1.parset");
-  WH_BGL_Processing wh("WH_BGL_Processing", baseFrequency, pset);
+  pset.replace(string("Observation.RefFreqs"), baseFrequencyStr.str());
+  WH_BGL_Processing wh("WH_BGL_Processing", 0, pset);
 
 #if defined HAVE_MPI
   wh.runOnNode(TH_MPI::getCurrentRank());

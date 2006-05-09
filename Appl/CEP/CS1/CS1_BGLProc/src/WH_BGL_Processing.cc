@@ -53,6 +53,7 @@ inline static dcomplex cosisin(double x)
 
 #endif
 
+vector<double> WH_BGL_Processing::itsBaseFrequencies;
 FIR WH_BGL_Processing::itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
 #if defined SPARSE_FLAGS
@@ -1133,10 +1134,10 @@ fcomplex FIR::processNextSample(fcomplex sample, const float weights[NR_TAPS])
 #endif
 
 
-WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, const ACC::APS::ParameterSet &ps)
+WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, const ACC::APS::ParameterSet &ps)
   :
   WorkHolder(NR_IN_CHANNELS, NR_OUT_CHANNELS, name, "WH_Correlator"),
-  itsBaseFrequency(baseFrequency),
+  itsCoreNumber(coreNumber),
   itsPS(ps)
 {
   ASSERT(ps.getInt32("BGLProc.NPPFTaps")	    == NR_TAPS);
@@ -1161,6 +1162,17 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, double baseFrequency, c
   ASSERT(_correlator_constants_used.nr_polarizations		== NR_POLARIZATIONS);
 #endif
 
+  if (itsBaseFrequencies.size() == 0)
+    itsBaseFrequencies = ps.getDoubleVector("Observation.RefFreqs");
+
+  unsigned nrSubbands	     = ps.getUint32("Observation.NSubbands");
+  unsigned nrSubbandsPerCell = ps.getUint32("General.SubbandsPerCell");
+  unsigned nrNodesPerCell    = ps.getUint32("BGLProc.NodesPerCell");
+
+  itsFirstSubband   = (coreNumber / nrNodesPerCell) * nrSubbandsPerCell;
+  itsLastSubband    = itsFirstSubband + nrSubbandsPerCell;
+  itsCurrentSubband = itsFirstSubband + coreNumber % nrNodesPerCell % nrSubbandsPerCell;
+
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
 //getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
   getDataManager().addOutDataHolder(VISIBILITIES_CHANNEL, new DH_Visibilities("output", ps));
@@ -1172,20 +1184,21 @@ WH_BGL_Processing::~WH_BGL_Processing()
 }
 
 
-WorkHolder* WH_BGL_Processing::construct(const string &name, double baseFrequency, const ACC::APS::ParameterSet &ps)
+WorkHolder* WH_BGL_Processing::construct(const string &name, unsigned coreNumber, const ACC::APS::ParameterSet &ps)
 {
-  return new WH_BGL_Processing(name, baseFrequency, ps);
+  return new WH_BGL_Processing(name, coreNumber, ps);
 }
 
 
 WH_BGL_Processing* WH_BGL_Processing::make(const string &name)
 {
-  return new WH_BGL_Processing(name, itsBaseFrequency, itsPS);
+  return new WH_BGL_Processing(name, itsCoreNumber, itsPS);
 }
 
 
 void WH_BGL_Processing::preprocess()
 {
+  std::cerr << "node " << TH_MPI::getCurrentRank() << ": " << itsFirstSubband << ' ' << itsCurrentSubband << ' ' << itsLastSubband << '\n';
 #if defined HAVE_BGL && NR_SUBBAND_CHANNELS == 256
   fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 -1 0 1 1 1 352 0) (128 529 -1 0 1 1 0 2817 0) (64 529 -1 0 1 1 0 1409 0) (32 529 -1 0 1 1 0 705 0) (16 529 -1 0 1 1 0 353 0) (8 529 -1 0 1 1 0 177 0) (4 529 -1 0 1 1 0 89 0) (2 529 -1 0 1 1 0 45 0))");
   itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_FORWARD, FFTW_USE_WISDOM);
@@ -1280,10 +1293,10 @@ void WH_BGL_Processing::computeFlags()
 #if defined DELAY_COMPENSATION
 #if defined C_IMPLEMENTATION
 
-fcomplex WH_BGL_Processing::phaseShift(int time, int chan, const DH_Subband::DelayIntervalType &delay) const
+fcomplex WH_BGL_Processing::phaseShift(int time, int chan, double baseFrequency, const DH_Subband::DelayIntervalType &delay) const
 {
   double timeInterpolatedDelay = delay.delayAtBegin + ((double) time / CHANNEL_BANDWIDTH) * (delay.delayAfterEnd - delay.delayAtBegin);
-  double frequency	       = itsBaseFrequency + chan * CHANNEL_BANDWIDTH;
+  double frequency	       = baseFrequency + chan * CHANNEL_BANDWIDTH;
   double phaseShift	       = timeInterpolatedDelay * frequency;
   double phi		       = 2.0 * M_PI * phaseShift;
 
@@ -1292,14 +1305,14 @@ fcomplex WH_BGL_Processing::phaseShift(int time, int chan, const DH_Subband::Del
 
 #else
 
-void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay) const
+void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay, double baseFrequency) const
 {
   double   phiBegin = 2 * M_PI * delay.delayAtBegin;
   double   phiEnd   = 2 * M_PI * delay.delayAfterEnd;
   double   deltaPhi = (phiEnd - phiBegin) / NR_SAMPLES_PER_INTEGRATION;
-  dcomplex v	    = cosisin(phiBegin * itsBaseFrequency);
+  dcomplex v	    = cosisin(phiBegin * baseFrequency);
   dcomplex dv       = cosisin(phiBegin * CHANNEL_BANDWIDTH);
-  dcomplex vf       = cosisin(deltaPhi * itsBaseFrequency);
+  dcomplex vf       = cosisin(deltaPhi * baseFrequency);
   dcomplex dvf      = cosisin(deltaPhi * CHANNEL_BANDWIDTH);
 
   for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
@@ -1312,7 +1325,7 @@ void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAM
 #endif
 
 
-void WH_BGL_Processing::doPPF()
+void WH_BGL_Processing::doPPF(double baseFrequency)
 {
   doPPFtimer.start();
 
@@ -1366,7 +1379,7 @@ void WH_BGL_Processing::doPPF()
 
 	  for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 #if defined DELAY_COMPENSATION
-	    fftOutData[chan] *= phaseShift(time, chan, (*delays)[stat]);
+	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, (*delays)[stat]);
 #endif
 	    samples[chan][stat][time][pol] = fftOutData[chan];
 	  }
@@ -1402,7 +1415,7 @@ void WH_BGL_Processing::doPPF()
 #if defined DELAY_COMPENSATION
     struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION];
 
-    computePhaseShifts(phaseShifts, (*delays)[stat]);
+    computePhaseShifts(phaseShifts, (*delays)[stat], baseFrequency);
 #endif
 
 #if defined SPARSE_FLAGS
@@ -1727,12 +1740,16 @@ void WH_BGL_Processing::process()
   computeFlags();
 
 #if NR_SUBBAND_CHANNELS > 1
-  doPPF();
+  doPPF(itsBaseFrequencies[itsCurrentSubband]);
 #else
   bypassPPF();
 #endif
 
   doCorrelate();
+
+  if (++ itsCurrentSubband == itsLastSubband)
+    itsCurrentSubband = itsFirstSubband;
+
   totalTimer.stop();
 }
 

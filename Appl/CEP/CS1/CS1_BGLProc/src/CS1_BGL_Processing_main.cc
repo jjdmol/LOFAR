@@ -34,9 +34,9 @@ int main(int argc, char **argv) {
   // Figuring out nrRuns here is ugly ...
   ACC::APS::ParameterSet ps("CS1.parset");
   int nrSeconds = ps.getInt32("General.NRuns");
-  int nrSlaves	= ps.getInt32("BGLProc.SlavesPerSubband");
+  int nrSlaves	= ps.getInt32("BGLProc.NodesPerCell");
   int nrRuns	= nrSeconds / nrSlaves;
-  ASSERTSTR(nrSeconds % nrSlaves == 0, "General.NRuns should be a multiple of BGLProc.SlavesPerSubband");
+  ASSERTSTR(nrSeconds % nrSlaves == 0, "General.NRuns should be a multiple of BGLProc.NodesPerCell");
 
   AH_BGL_Processing myAH;
   ApplicationHolderController myAHController(myAH, nrRuns);
