@@ -54,8 +54,7 @@ namespace LOFAR
       TransportHolder **itsTHs;
       Connection	  **itsConnections;
 
-      static unsigned theirNrSubbands;
-      static unsigned theirNrSubbandsPerCell;
+      static unsigned theirNrCells;
       static unsigned theirNrNodesPerCell;
     };
 
