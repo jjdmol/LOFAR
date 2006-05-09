@@ -99,27 +99,16 @@ namespace LOFAR {
 	TransportHolder* lastTH = Connector::readTH(itsParamSet, nameBuffer, true); 
     
 	snprintf(nameBuffer, nameBufferSize, "RSP_Input_node_%d_of_%d", r, nStations);
-	if (r==0) {
-	  lastWH = new WH_RSPInput(nameBuffer,  // create sync master
-				   itsParamSet,
-				   *lastTH,
-				   true);
-	  rspStartNode = lowestFreeNode;
-	} else {
-	  lastWH = new WH_RSPInput(nameBuffer,  // create slave
-				   itsParamSet,
-				   *lastTH,
-				   false);
-	}
+	rspStartNode = lowestFreeNode;
+	lastWH = new WH_RSPInput(nameBuffer,
+				 itsParamSet,
+				 *lastTH);
 	RSPSteps.push_back(new Step(lastWH, nameBuffer, false));
 	RSPSteps[r]->runOnNode(lowestFreeNode++);   
 	comp.addBlock(RSPSteps[r]);
     
 	// Connect the Delay Controller
 	itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
-	if (r!=0) {
-	  itsConnector.connectSteps(RSPSteps[0], nCells + r - 1, RSPSteps.back(), 1);
-	}
       }
   
       LOG_TRACE_FLOW_STR("Create output side interface stubs");

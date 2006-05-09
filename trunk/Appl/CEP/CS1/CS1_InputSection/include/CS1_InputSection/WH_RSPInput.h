@@ -55,14 +55,12 @@ namespace LOFAR
     public:
       explicit WH_RSPInput(const string& name, 
                            ACC::APS::ParameterSet& ps,
-                           TransportHolder& th,
-                           const bool isSyncMaster);
+                           TransportHolder& th);
       virtual ~WH_RSPInput();
     
       static WorkHolder* construct(const string& name, 
                                    ACC::APS::ParameterSet& ps,
-                                   TransportHolder& th,
-				   const bool isSyncMaster);
+                                   TransportHolder& th);
 	
       virtual WH_RSPInput* make(const string& name);
      
@@ -95,16 +93,13 @@ namespace LOFAR
       // Sync Master or slave
       bool itsSyncMaster;
 
-      // detect First process loop
-      bool itsFirstProcessLoop;
-
       // synced stamp
       TimeStamp itsSyncedStamp;
      
-      int itsNRSPOutputs;
       int itsNSubbands;
+      int itsNSubbandsPerCell;
       int itsNSamplesPerSec;
-      int itsNSamplesToCopy;
+      int itsNHistorySamples;
       int itsStationID;
      
       BeamletBuffer* itsBBuffer;
@@ -112,7 +107,6 @@ namespace LOFAR
       vector<NSTimer*> itsTimers;
       NSTimer* itsPrePostTimer;
       NSTimer* itsProcessTimer;
-      NSTimer* itsDelayTimer;
       NSTimer* itsGetElemTimer;
       
     };

@@ -84,7 +84,7 @@ namespace LOFAR {
       ASSERTSTR(itsArgs.th->init(), "Could not init TransportHolder");
 
       // how far is one beamlet of a subband away from the next beamlet of the same subband
-      int strideSize = itsArgs.packetSize / sizeof(Beamlet);
+      int strideSize = itsArgs.nSubbandsPerFrame;
 
       while(!theirShouldStop) {
 	threadTimer.start();
@@ -101,7 +101,7 @@ namespace LOFAR {
 	// get the actual timestamp of first EPApacket in frame
 	if (itsArgs.th->getType() == "TH_Null") {
 	  if (!firstloop) {
-	    actualstamp += itsArgs.nPacketsPerFrame; 
+	    actualstamp += itsArgs.nTimesPerFrame; 
 	  } else {
 	    actualstamp = TimeStamp(0, 0);
 #ifdef PACKET_STATISTICS
@@ -132,15 +132,15 @@ namespace LOFAR {
 	    PacketStats missed = {actualstamp, expectedstamp};
 	    missedStamps.push_back(missed);
 	    // increase the expectedstamp
-	    expectedstamp += itsArgs.nPacketsPerFrame;
+	    expectedstamp += itsArgs.nTimesPerFrame;
 	  } while (actualstamp > expectedstamp);
 	}
 	// increase the expectedstamp
-	expectedstamp += itsArgs.nPacketsPerFrame; 
+	expectedstamp += itsArgs.nTimesPerFrame; 
 #endif
 	writeTimer.start();
 	// expected packet received so write data into corresponding buffer
-	itsArgs.BBuffer->writeElements((Beamlet*)&recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nPacketsPerFrame, strideSize);
+	itsArgs.BBuffer->writeElements((Beamlet*)&recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame, strideSize);
 	writeTimer.stop();
 	threadTimer.stop();
       }

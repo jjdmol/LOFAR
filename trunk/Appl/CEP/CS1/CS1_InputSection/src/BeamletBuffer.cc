@@ -138,12 +138,11 @@ namespace LOFAR {
       return end - realBegin;
     }
 
-    uint BeamletBuffer::getElements(vector<Beamlet *> buffers, vector<SparseSet *> dhFlags, TimeStamp begin, uint nElements)
+    uint BeamletBuffer::getElements(vector<Beamlet *> buffers, SparseSet *flags, TimeStamp begin, uint nElements)
     {
       ASSERTSTR(buffers.size() == itsNSubbands, "BeamletBuffer received wrong number of buffers to write to (in getElements).");
       TimeStamp end = begin + nElements;
       TimeStamp realBegin = itsLockedRange.readLock(begin, end);
-      SparseSet flags;
       
       itsReadTimer.start();
 
@@ -156,7 +155,7 @@ namespace LOFAR {
 #endif
       // set flags later
       itsDummyItems += nInvalid * itsNSubbands;
-      flags.include(0, nInvalid);
+      flags->include(0, nInvalid);
 
       // copy the real data
       uint startI = mapTime2Index(realBegin);
@@ -173,8 +172,8 @@ namespace LOFAR {
 	  //itsDummyItems += blabla;
 	}
 
-	flags |= (itsFlags.subset(0,      endI)    += nInvalid + firstChunk);
-	flags |= (itsFlags.subset(startI, itsSize) -= nInvalid + startI);
+	*flags |= (itsFlags.subset(0,      endI)    += nInvalid + firstChunk);
+	*flags |= (itsFlags.subset(startI, itsSize) -= nInvalid + startI);
       } else {
 	// copy in one part
 	for (uint sb = 0; sb < itsNSubbands; sb++) {
@@ -182,14 +181,9 @@ namespace LOFAR {
 	  //flags[sb]->setFlags(itsFlags[blabla]);
 	  //itsDummyItems += blabla;
 	}	  
-	flags |= (itsFlags.subset(startI, endI) -= nInvalid + startI);
+	*flags |= (itsFlags.subset(startI, endI) -= nInvalid + startI);
       }
-
-      // copy flags
-      for (uint sb = 0; sb < itsNSubbands; sb++) {
-	*dhFlags[sb] = flags;
-      }
-      
+     
       itsReadTimer.stop();
       itsLockedRange.readUnlock(end);
       return end - realBegin;
