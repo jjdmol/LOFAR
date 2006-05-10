@@ -120,8 +120,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 
   m_xcstats().resize(MEPHeader::N_POL,
 		     MEPHeader::N_POL,
-		     MEPHeader::N_TOTAL_XLETS,
-		     MEPHeader::N_TOTAL_XLETS);
+		     StationSettings::instance()->nrBlps(),
+		     StationSettings::instance()->nrBlps());
 
   m_xcstats() = complex<double>(0,0);
 
