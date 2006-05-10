@@ -146,7 +146,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 1) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentIndex(), 0) = complex<int16>(0x4000, 0);
+      weights(getCurrentIndex() + m_blp, 0) = complex<int16>(0x4000, 0);
     }
     break;
 
@@ -159,7 +159,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 1) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentIndex(), 0) = complex<int16>(0, 0x4000);
+      weights(getCurrentIndex() + m_blp, 0) = complex<int16>(0, 0x4000);
     }
     break;
     
@@ -172,7 +172,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 0) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentIndex(), 1) = complex<int16>(0x4000, 0);
+      weights(getCurrentIndex() + m_blp, 1) = complex<int16>(0x4000, 0);
     }
     break;
     
@@ -185,7 +185,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 0) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentIndex(), 1) = complex<int16>(0, 0x4000);
+      weights(getCurrentIndex() + m_blp, 1) = complex<int16>(0, 0x4000);
     }
     break;
   }
