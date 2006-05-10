@@ -58,12 +58,14 @@ void BWWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
 
+#if 0
   // skip update if the BF weights if they have not been modified
   if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBFState().get(global_blp * MEPHeader::N_PHASEPOL + m_regid))
   {
     setContinue(true);
     return;
   }
+#endif
 
   // reset m_offset and m_remaining for each register
   if (0 == getCurrentIndex()) {
@@ -209,15 +211,24 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   
   EPAWriteackEvent ack(event);
 
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
+
   if (!ack.hdr.isValidAck(m_hdr))
   {
+    Cache::getInstance().getBFState().modified(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+
     LOG_ERROR("BWWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
-  }
 
-  if ((BF_N_FRAGMENTS - 1) == getCurrentIndex()) {
-    uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
-    Cache::getInstance().getBFState().confirmed(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+  } else {
+
+    // only mark confirmed when the last fragment has been received OK
+    if ((BF_N_FRAGMENTS - 1) == getCurrentIndex()) {
+      Cache::getInstance().getBFState().confirmed(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+    } else {
+      Cache::getInstance().getBFState().applied(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+    }
+
   }
 
   return GCFEvent::HANDLED;
