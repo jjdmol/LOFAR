@@ -58,14 +58,7 @@ void BWWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
 
-#if 0
-  // skip update if the BF weights if they have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getBFState().get(global_blp * MEPHeader::N_PHASEPOL + m_regid))
-  {
-    setContinue(true);
-    return;
-  }
-#endif
+  // never skip update of beamformer weights, they need to be written every second
 
   // reset m_offset and m_remaining for each register
   if (0 == getCurrentIndex()) {

@@ -122,14 +122,19 @@ namespace LOFAR {
       /**
        * Get register states.
        */
-      RTC::RegisterState& getRSUClearState()       { return rsuclear_state; }
-      RTC::RegisterState& getDIAGWGSettingsState() { return diagwgsettings_state; }
-      RTC::RegisterState& getBFState()             { return bf_state; }
-      RTC::RegisterState& getRCUSettingsState()    { return rcusettings_state; }
-      RTC::RegisterState& getRCUProtocolState()    { return rcuprotocol_state; }
-      RTC::RegisterState& getCDOState()            { return cdo_state; }
-      RTC::RegisterState& getBSState()             { return bs_state; }
-      RTC::RegisterState& getTDSState()            { return tds_state; }
+      RTC::RegisterState& getSysState()              { return sys_state; }
+      RTC::RegisterState& getBFState()               { return bf_state; }
+      RTC::RegisterState& getSSState()               { return ss_state; }
+      RTC::RegisterState& getRCUSettingsState()      { return rcusettings_state; }
+      RTC::RegisterState& getRCUProtocolState()      { return rcuprotocol_state; }
+      RTC::RegisterState& getRSUClearState()         { return rsuclear_state; }
+      RTC::RegisterState& getDIAGWGSettingsState()   { return diagwgsettings_state; }
+      RTC::RegisterState& getSstState()              { return sst_state; }
+      RTC::RegisterState& getBstState()              { return bst_state; }
+      RTC::RegisterState& getXstState()              { return xst_state; }
+      RTC::RegisterState& getCDOState()              { return cdo_state; }
+      RTC::RegisterState& getBSState()               { return bs_state; }
+      RTC::RegisterState& getTDSState()              { return tds_state; }
 
     private:
 
@@ -141,11 +146,16 @@ namespace LOFAR {
       /**
        * Keep register update state.
        */
-      RTC::RegisterState rsuclear_state;       // RSU clear state
-      RTC::RegisterState diagwgsettings_state; // DIAG WG settings state
+      RTC::RegisterState sys_state;            // RSR state
       RTC::RegisterState bf_state;             // BF weights state
+      RTC::RegisterState ss_state;             // SS state
       RTC::RegisterState rcusettings_state;    // RCU settings state
       RTC::RegisterState rcuprotocol_state;    // RCU protocol state
+      RTC::RegisterState rsuclear_state;       // RSU clear state
+      RTC::RegisterState diagwgsettings_state; // DIAG WG settings state
+      RTC::RegisterState sst_state;            // SST state
+      RTC::RegisterState bst_state;            // BST state
+      RTC::RegisterState xst_state;            // XST State
       RTC::RegisterState cdo_state;            // CDO state
       RTC::RegisterState bs_state;             // BS register state
       RTC::RegisterState tds_state;            // TDS register state (Clock board)

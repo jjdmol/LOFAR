@@ -56,6 +56,9 @@ void SSWrite::sendrequest()
   LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
 			 getBoardPort().getName().c_str(),
 			 global_blp));
+
+  // mark modified
+  Cache::getInstance().getSSState().modified(global_blp);
     
   // send subband select message
   EPASsSelectEvent ss;
@@ -89,11 +92,17 @@ GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   EPAWriteackEvent ack(event);
 
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+
   if (!ack.hdr.isValidAck(m_hdr))
   {
+    Cache::getInstance().getSSState().applied(global_blp);
+
     LOG_ERROR("SSWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
+
+  Cache::getInstance().getSSState().confirmed(global_blp);
   
   return GCFEvent::HANDLED;
 }

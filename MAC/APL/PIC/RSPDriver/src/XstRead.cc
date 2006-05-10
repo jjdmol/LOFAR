@@ -60,6 +60,8 @@ void XstRead::sendrequest()
   //
   uint16 offset = GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) * MEPHeader::XLET_SIZE;
 
+  Cache::getInstance().getXstState().modified(getBoardId());
+
   if (m_regid < MEPHeader::XST_STATS || m_regid >= MEPHeader::XST_NR_STATS)
   {
     LOG_FATAL("invalid regid");
@@ -153,12 +155,14 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
+    Cache::getInstance().getXstState().applied(getBoardId());
     LOG_ERROR("XstRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
 
   if (ack.hdr.m_fields.addr.regid >= MEPHeader::XST_NR_STATS)
   {
+    Cache::getInstance().getXstState().applied(getBoardId());
     LOG_ERROR("invalid xst ack");
     return GCFEvent::HANDLED;
   }
@@ -188,6 +192,8 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   // rcu with X cross-correlations
   cache(rcu % MEPHeader::N_POL, 0, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 0));
   cache(rcu % MEPHeader::N_POL, 1, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 1));
+
+  Cache::getInstance().getXstState().confirmed(getBoardId());
 
   return GCFEvent::HANDLED;
 }
