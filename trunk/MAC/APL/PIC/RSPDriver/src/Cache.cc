@@ -261,20 +261,14 @@ Cache::Cache() : m_front(0), m_back(0)
   //
   // Make sure initial settings are sent
   //
-  getCDOState().resize(StationSettings::instance()->nrRspBoards());
-  getCDOState().modified();
-
-  getDIAGWGSettingsState().resize(StationSettings::instance()->nrRcus());
-  getDIAGWGSettingsState().modified();
-
-  getBSState().resize(StationSettings::instance()->nrBlps());
-  getBSState().modified();
+  getSysState().resize(StationSettings::instance()->nrRspBoards());
+  getSysState().modified();
 
   getBFState().resize(StationSettings::instance()->nrRcus() * MEPHeader::N_PHASE); // XR, XI, YR, YI
   getBFState().modified();
 
-  getTDSState().resize(StationSettings::instance()->nrRspBoards());
-  getTDSState().modified();
+  getSSState().resize(StationSettings::instance()->nrBlps());
+  getSSState().modified();
 
   getRCUSettingsState().resize(StationSettings::instance()->nrRcus());
   getRCUSettingsState().modified();
@@ -284,6 +278,27 @@ Cache::Cache() : m_front(0), m_back(0)
 
   getRSUClearState().resize(StationSettings::instance()->nrRspBoards());
   getRSUClearState().modified();
+
+  getDIAGWGSettingsState().resize(StationSettings::instance()->nrRcus());
+  getDIAGWGSettingsState().modified();
+
+  getSstState().resize(StationSettings::instance()->nrBlps());
+  getSstState().modified();
+
+  getBstState().resize(StationSettings::instance()->nrRspBoards());
+  getBstState().modified();
+
+  getXstState().resize(StationSettings::instance()->nrRspBoards());
+  getXstState().modified();
+
+  getCDOState().resize(StationSettings::instance()->nrRspBoards());
+  getCDOState().modified();
+
+  getBSState().resize(StationSettings::instance()->nrBlps());
+  getBSState().modified();
+
+  getTDSState().resize(StationSettings::instance()->nrRspBoards());
+  getTDSState().modified();
 }
 
 Cache::~Cache()
@@ -294,26 +309,36 @@ Cache::~Cache()
 
 void Cache::swapBuffers()
 {
-#if 1
-  cout << "RSUClear       "; getRSUClearState().print(cout);
-  cout << "DIAGWGSettings "; getDIAGWGSettingsState().print(cout);
-  cout << "BF             "; getBFState().print(cout);
-  cout << "RCUSettings    "; getRCUSettingsState().print(cout);
-  cout << "RCUProtocol    "; getRCUProtocolState().print(cout);
-  cout << "CDO            "; getCDOState().print(cout);
-  cout << "BS             "; getBSState().print(cout);
-  cout << "TDS            "; getTDSState().print(cout);
-#endif
-
   // clear modified flags on back buffer
-  getRSUClearState().clear();
-  getDIAGWGSettingsState().clear();
+  getSysState().clear();
   getBFState().clear();
+  getSSState().clear();
   getRCUSettingsState().clear();
   getRCUProtocolState().clear();
+  getRSUClearState().clear();
+  getDIAGWGSettingsState().clear();
+  getSstState().clear();
+  getBstState().clear();
+  getXstState().clear();
   getCDOState().clear();
   getBSState().clear();
   getTDSState().clear();
+
+#if 1
+  cout << "System Status     "; getSysState().print(cout);
+  cout << "BF                "; getBFState().print(cout);
+  cout << "Subband Selection "; getSSState().print(cout);
+  cout << "RCUSettings       "; getRCUSettingsState().print(cout);
+  cout << "RCUProtocol       "; getRCUProtocolState().print(cout);
+  cout << "RSUClear          "; getRSUClearState().print(cout);
+  cout << "DIAGWGSettings    "; getDIAGWGSettingsState().print(cout);
+  cout << "SubbandStats      "; getSstState().print(cout);
+  cout << "BeamletStats      "; getBstState().print(cout);
+  cout << "XCorrelationStats "; getXstState().print(cout);
+  cout << "CDO               "; getCDOState().print(cout);
+  cout << "BS                "; getBSState().print(cout);
+  cout << "TDS               "; getTDSState().print(cout);
+#endif
 
   CacheBuffer *tmp = m_front;
   m_front = m_back;
