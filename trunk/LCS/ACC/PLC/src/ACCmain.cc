@@ -29,6 +29,9 @@
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
 #include <PLC/ProcControlServer.h>
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
 
 namespace LOFAR {
   namespace ACC {
@@ -40,7 +43,12 @@ namespace LOFAR {
 
 	string programName = basename(argv[0]);
 
+#ifdef HAVE_MPI
+	TH_MPI::initMPI(argc, argv);
+#endif
+
 	try {
+
 
 	  // Check invocation syntax
 	  if ((argc!=3) || (strncmp("ACC", argv[1], 3) != 0)) {
@@ -166,6 +174,11 @@ namespace LOFAR {
 	  LOG_FATAL_STR("Caught unknown exception, exitting");
 	  return 1;
 	}  
+
+#ifdef HAVE_MPI
+	TH_MPI::finalize();
+#endif
+
 	LOG_INFO_STR(programName << " terminated normally");
 	return 0;
       }
