@@ -44,7 +44,7 @@ namespace LOFAR {
 	string programName = basename(argv[0]);
 
 #ifdef HAVE_MPI
-	TH_MPI::initMPI(argc, argv);
+	TH_MPI::initMPI(argc, (const char**)argv);
 #endif
 
 	try {
