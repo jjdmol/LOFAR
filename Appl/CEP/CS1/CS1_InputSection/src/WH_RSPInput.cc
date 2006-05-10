@@ -44,7 +44,7 @@ namespace LOFAR {
 			     ACC::APS::ParameterSet& ps,
 			     TransportHolder& th)
       : WorkHolder (1, 
-		    ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / (ps.getInt32("Input.NRSPBoards") * ps.getInt32("General.NSubbandsPerCell")), 
+		    ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / (ps.getInt32("Input.NRSPBoards") * ps.getInt32("General.SubbandsPerCell")), 
 		    name, 
 		    "WH_RSPInput"),
 	itsTH(th),

@@ -108,7 +108,7 @@ namespace LOFAR {
 	comp.addBlock(RSPSteps[r]);
     
 	// Connect the Delay Controller
-	itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
+	//itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
       }
   
       LOG_TRACE_FLOW_STR("Create output side interface stubs");
@@ -131,15 +131,15 @@ namespace LOFAR {
 	  }
 	}
 	// connect outputs to FIR stub
+#if 0
 	for (int core = 0; core < nNodesPerCell; core++) {
-#if 1
 	  //collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
 	  itsOutputStub->connect(cell,
 				 core,
 				 (collectSteps.back())->getOutDataManager(0), 
 				 core);
-#endif
 	}
+#endif
       }
       LOG_TRACE_FLOW_STR("Finished define()");
 
