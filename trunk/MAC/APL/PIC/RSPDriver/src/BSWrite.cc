@@ -55,39 +55,16 @@ void BSWrite::sendrequest()
     return;
   }
 
-  int global_rcu = (getBoardId() * StationSettings::instance()->nrRcus()) + (m_blp * MEPHeader::N_POL);
-
-  cout << "mode(" << global_rcu << ")=" << (int)(Cache::getInstance().getBack().getWGSettings()()(global_rcu).mode) << endl;
-  cout << "mode(" << global_rcu + 1 << ")=" << (int)(Cache::getInstance().getBack().getWGSettings()()(global_rcu + 1).mode) << endl;
-  cout << "off(" << global_rcu << ")=" << (int)(Cache::getInstance().getBack().getRCUSettings()()(global_rcu).isModeOff()) << endl;
-  cout << "off(" << global_rcu +1 << ")=" << (int)(Cache::getInstance().getBack().getRCUSettings()()(global_rcu + 1).isModeOff()) << endl;
-
-  if ((WGSettings::MODE_OFF == Cache::getInstance().getBack().getWGSettings()()(global_rcu).mode) && 
-      (WGSettings::MODE_OFF == Cache::getInstance().getBack().getWGSettings()()(global_rcu + 1).mode) &&
-      Cache::getInstance().getBack().getRCUSettings()()(global_rcu).isModeOff() &&
-      Cache::getInstance().getBack().getRCUSettings()()(global_rcu + 1).isModeOff())
-  {
-    EPABsNofsamplespersyncEvent bs;
+  EPABsNofsamplespersyncEvent bs;
     
-    bs.hdr.set(MEPHeader::BS_NOF_SAMPLES_PER_SYNC_HDR, 1 << m_blp);
-    bs.nof_samples_per_sync_interval = Cache::getInstance().getBack().getClock();
-    
-    LOG_INFO(formatString("setting BS.NOF_SAMPLES_PER_SYNC_INTERVAL to %u on (BP=%u, AP=%u)",
-			  bs.nof_samples_per_sync_interval, getBoardId(), m_blp));
-    
-    m_hdr = bs.hdr;
-    getBoardPort().send(bs);
+  bs.hdr.set(MEPHeader::BS_NOF_SAMPLES_PER_SYNC_HDR, 1 << m_blp);
+  bs.nof_samples_per_sync_interval = Cache::getInstance().getBack().getClock() * (uint32)1.0e6; // convert from MHz to Hz
   
-  } else {
-
-    // refusing to set BS since one of the inputs is still active
-    Cache::getInstance().getBSState().confirmed((getBoardId() * StationSettings::instance()->nrBlps()) + m_blp);
-
-    LOG_WARN_STR(formatString("Refusing to set BS register since on of the RCUs (% 3u,% 3u) is still active.",
-				 global_rcu, global_rcu + 1));
-
-    setContinue(true);
-  }
+  LOG_INFO(formatString("setting BS.NOF_SAMPLES_PER_SYNC_INTERVAL to %u on (BP=%u, AP=%u)",
+			bs.nof_samples_per_sync_interval, getBoardId(), m_blp));
+  
+  m_hdr = bs.hdr;
+  getBoardPort().send(bs);
 }
 
 void BSWrite::sendrequest_status()
