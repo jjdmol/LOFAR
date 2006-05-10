@@ -51,13 +51,16 @@ XstRead::~XstRead()
 
 void XstRead::sendrequest()
 {
-  // offset in bytes
-  //uint16 offset = (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) + 1) * MEPHeader::N_LOCAL_XLETS * MEPHeader::XLET_SIZE;
+  //
+  // The RSP boards are assigned an ID based on the hardware ID of the backplane and their position
+  // within the backplane. For the final station all backplanes will be installed and in use, but
+  // during development we may for example be using only two RSP boards with ID's 18 and 19.
+  // In this case we need to offset cross correlation indexing to access to correct items of the global
+  // cross-correlation array as computed by the firmware.
+  //
   uint16 offset = GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) * MEPHeader::XLET_SIZE;
 
-  LOG_DEBUG_STR("XstRead::offset=" << offset);
-
-  if (m_regid < MEPHeader::XST_0X0 || m_regid > MEPHeader::XST_3Y3)
+  if (m_regid < MEPHeader::XST_STATS || m_regid >= MEPHeader::XST_NR_STATS)
   {
     LOG_FATAL("invalid regid");
     exit(EXIT_FAILURE);
@@ -65,8 +68,11 @@ void XstRead::sendrequest()
 
   EPAReadEvent xstread;
 
-  xstread.hdr.set(MEPHeader::XST_STATS_HDR, MEPHeader::DST_RSP,
-		  MEPHeader::READ, MEPHeader::XST_STATS_SIZE, offset);
+  xstread.hdr.set(MEPHeader::XST_STATS_HDR,
+		  MEPHeader::DST_RSP,
+		  MEPHeader::READ,
+		  StationSettings::instance()->nrRcus() * MEPHeader::XLET_SIZE,
+		  offset);
   xstread.hdr.m_fields.addr.regid = m_regid;
 
   m_hdr = xstread.hdr;
@@ -108,6 +114,33 @@ inline complex<double> convert_cuint32_to_cdouble(complex<uint32> val)
   return complex<double>(val64_re, val64_im);
 }
 
+//
+// The layout of cross-correlations in the register on RSP boards
+//
+//                            LANE0           LANE1           LANE2           LANE3           LANE0           LANE1           LANE2           LANE3
+//                 RCU:    ANT0X   ANT0Y   ANT1X   ANT1Y   ANT2X   ANT2Y   ANT3X   ANT3Y   ANT4X   ANT4Y   ANT5X   ANT5Y   ANT6X   ANT6Y   ANT7X   ANT7Y   .....
+//         RSP0    ANT0X       REG0            REG8            REG16           REG24           REG0            REG8            REG16           REG24
+//                 ANT0Y       REG1            REG9            REG17           REG25           REG1            REG9            REG17           REG25
+//                 ANT1X       REG2            REG10           REG18           REG26           REG2            REG10           REG18           REG26
+//                 ANT1Y       REG3            REG11           REG19           REG27           REG3            REG11           REG19           REG27
+//                 ANT2X       REG4            REG12           REG20           REG28           REG4            REG12           REG20           REG28
+//                 ANT2Y       REG5            REG13           REG21           REG29           REG5            REG13           REG21           REG29
+//                 ANT3X       REG6            REG14           REG22           REG30           REG6            REG14           REG22           REG30
+//                 ANT3Y       REG7            REG15           REG23           REG31           REG7            REG15           REG23           REG31
+//         RSP1    ANT4X       REG0            REG8            REG16           REG24           REG0            REG8            REG16           REG24
+//                 ANT4Y       REG1            REG9            REG17           REG25           REG1            REG9            REG17           REG25
+//                 ANT5X       REG2            REG10           REG18           REG26           REG2            REG10           REG18           REG26
+//                 ANT5Y       REG3            REG11           REG19           REG27           REG3            REG11           REG19           REG27
+//                 ANT6X       REG4            REG12           REG20           REG28           REG4            REG12           REG20           REG28
+//                 ANT6Y       REG5            REG13           REG21           REG29           REG5            REG13           REG21           REG29
+//                 ANT7X       REG6            REG14           REG22           REG30           REG6            REG14           REG22           REG30
+//                 ANT7Y       REG7            REG15           REG23           REG31           REG7            REG15           REG23           REG31
+//         RSP 2
+//         ....
+//
+// For example REG0 contains the correlations of local RCU ANT0X with ANT0X ANT0Y ANT4X ANT4Y ANT8X ANT8Y ANT12X ANT12Y etc.
+//
+
 GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   if (EPA_XST_STATS != event.signal)
@@ -130,42 +163,31 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::HANDLED;
   }
 
-  int global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (m_regid / MEPHeader::N_POL);
-  
-  LOG_DEBUG(formatString("XstRead::handleack: global_blp=%d", global_blp));
+  int nrBlps         = StationSettings::instance()->nrBlps();
+  int nrBlpsPerBoard = StationSettings::instance()->nrBlpsPerBoard();
+
+  //
+  // This register m_regid corresponds to a specific RCU along the vertical axis of
+  // the cross-correlation matrix as it is shown in the the comment above.
+  // The rcu index is a global index into the cross correlation matrix
+  //
+  int rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) +
+    (m_regid % (nrBlpsPerBoard * MEPHeader::N_POL));
 
   Array<complex<double>, 4>& cache(Cache::getInstance().getBack().getXCStats()());
 
-  int serdes_lane = m_regid / (MEPHeader::N_POL * StationSettings::instance()->nrBlpsPerBoard());
-  Range blp_target_range(serdes_lane,
-			 MEPHeader::N_REMOTE_XLETS * StationSettings::instance()->nrBlpsPerBoard() - 1,
-			 MEPHeader::N_PHASEPOL);
-		  
-  //Range rcu_range(remote_blp_offset, remote_blp_offset + MEPHeader::N_REMOTE_XLETS - 1);
-  
-  LOG_DEBUG_STR(endl << 
-		"global_blp=" << global_blp << endl <<
-		"blp_target_range=" << blp_target_range << endl <<
-		"xststats.range=" << Range(0, MEPHeader::N_REMOTE_XLETS));
-
-  LOG_DEBUG_STR("xststats shape=" << shape(MEPHeader::N_REMOTE_XLETS, MEPHeader::N_POL));
-  
   Array<complex<uint32>, 2> xststats((complex<uint32>*)&ack.xst_stat,
-				     shape(MEPHeader::N_REMOTE_XLETS, MEPHeader::N_POL),
+				     shape(nrBlps, MEPHeader::N_POL),
 				     neverDeleteData);
-  
-  cache(m_regid % MEPHeader::N_POL, Range::all(), global_blp, blp_target_range) =
-    convert_cuint32_to_cdouble(xststats);
 
-#if 0
-  // convert and reorder dimensions
-  for (int i = 0; i < MEPHeader::N_REMOTE_XLETS; i++) {
-    for (int j = 0; j < MEPHeader::N_POL; j++) {
-      cache(m_regid % MEPHeader::N_POL, j, global_blp, i + remote_blp_offset)
-	= convert_cuint32_to_cdouble(xststats(i, j));
-    }
-  }
-#endif
+  Range dst_range(m_regid / (nrBlpsPerBoard * MEPHeader::N_POL), nrBlps - 1, nrBlpsPerBoard);
+
+  LOG_INFO_STR(formatString("m_regid=%02d rcu=%03d cache(%02d,Range(0,1),%02d,",
+			    m_regid, rcu, rcu %  MEPHeader::N_POL, rcu / MEPHeader::N_POL) << dst_range << ")");
+
+  // rcu with X cross-correlations
+  cache(rcu % MEPHeader::N_POL, 0, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 0));
+  cache(rcu % MEPHeader::N_POL, 1, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 1));
 
   return GCFEvent::HANDLED;
 }
