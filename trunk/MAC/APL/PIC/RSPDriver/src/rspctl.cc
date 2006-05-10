@@ -830,8 +830,8 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 		  ADOStatus* as= &(board.blp0_adc_offset)+ap;
 		  BSStatus*  bs= &(board.ap0_sync)+ap;
 		  logMessage(cout, formatString("    %d:         %10lu    %10lu", ap,
-						as->adc_offset_x / bs->slice_count / 4,
-						as->adc_offset_y / bs->slice_count / 4));
+						(bs->slice_count > 0 ? as->adc_offset_x / bs->slice_count / 4 : 0),
+						(bs->slice_count > 0 ? as->adc_offset_y / bs->slice_count / 4 : 0)));
 		}
 	}
 	break;
