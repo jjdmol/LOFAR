@@ -44,7 +44,7 @@ namespace LOFAR {
 			     ACC::APS::ParameterSet& ps,
 			     TransportHolder& th)
       : WorkHolder (1, 
-		    ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / (ps.getInt32("Input.NRSP") * ps.getInt32("General.NSubbandsPerCell")), 
+		    ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / (ps.getInt32("Input.NRSPBoards") * ps.getInt32("General.NSubbandsPerCell")), 
 		    name, 
 		    "WH_RSPInput"),
 	itsTH(th),
@@ -56,13 +56,13 @@ namespace LOFAR {
       char str[32];
 
       // get parameters
-      itsNSubbands = ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / ps.getInt32("Input.NRSP");
+      itsNSubbands = ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / ps.getInt32("Input.NRSPBoards");
       itsNSubbandsPerCell = ps.getInt32("General.SubbandsPerCell");
       itsNSamplesPerSec = ps.getInt32("Observation.NSubbandSamples");
       itsNHistorySamples = (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Observation.NChannels");
  
       // create incoming dataholder holding the delay information 
-      getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", ps.getInt32("Input.NRSP")));
+      getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", ps.getInt32("Input.NRSPBoards")));
  
       // create a outgoing dataholder for each subband
       for (int s=0; s < itsNoutputs; s++) {
