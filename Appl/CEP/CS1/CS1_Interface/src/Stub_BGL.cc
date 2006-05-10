@@ -40,7 +40,7 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pS
   itsConnections(0)
 {
   if (theirNrCells == 0) { // first time
-    theirNrCells	   = pSet.getInt32("Observation.NSubbands") / pSet.getInt32("General.NSubbandsPerCell");
+    theirNrCells	   = pSet.getInt32("Observation.NSubbands") / pSet.getInt32("General.SubbandsPerCell");
     theirNrNodesPerCell    = pSet.getInt32("BGLProc.NodesPerCell");
   }
 

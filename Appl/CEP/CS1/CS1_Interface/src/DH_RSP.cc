@@ -41,7 +41,7 @@ namespace LOFAR
       int resendAmount = (pset.getInt32("BGLProc.NPPFTaps") - 1) * pset.getInt32("Observation.NChannels");
       itsNTimes          = pset.getInt32("Observation.NSubbandSamples") + resendAmount;
       itsNoPolarisations = pset.getInt32("Observation.NPolarisations");
-      itsNSubbands       = pset.getInt32("Observation.NSubbandsPerCell");
+      itsNSubbands       = pset.getInt32("General.SubbandsPerCell");
       itsBufSize         = itsNTimes * itsNoPolarisations * itsNSubbands;
     }
 
