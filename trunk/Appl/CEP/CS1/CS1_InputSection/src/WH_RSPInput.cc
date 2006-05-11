@@ -42,12 +42,14 @@ namespace LOFAR {
 
     WH_RSPInput::WH_RSPInput(const string& name, 
 			     ACC::APS::ParameterSet& ps,
-			     TransportHolder& th)
+			     TransportHolder& th,
+			     uint stationNr)
       : WorkHolder (1, 
 		    ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / (ps.getInt32("Input.NRSPBoards") * ps.getInt32("General.SubbandsPerCell")), 
 		    name, 
 		    "WH_RSPInput"),
 	itsTH(th),
+	itsStationNr(stationNr),
 	itsPS (ps),
 	itsBBuffer(0)
     {
@@ -79,15 +81,16 @@ namespace LOFAR {
 
     WorkHolder* WH_RSPInput::construct(const string& name,
 				       ACC::APS::ParameterSet& ps,
-				       TransportHolder& th)
+				       TransportHolder& th,
+				       uint stationNr)
     {
-      return new WH_RSPInput(name, ps, th);
+      return new WH_RSPInput(name, ps, th, stationNr);
     }
 
 
     WH_RSPInput* WH_RSPInput::make(const string& name)
     {
-      return new WH_RSPInput(name, itsPS, itsTH);
+      return new WH_RSPInput(name, itsPS, itsTH, itsStationNr);
     }
 
 
@@ -152,7 +155,7 @@ namespace LOFAR {
       // delay control
       delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
       // Get delay from the delay controller
-      delayedstamp = itsSyncedStamp + delayDHp->getCoarseDelay(0);    
+      delayedstamp = itsSyncedStamp + delayDHp->getCoarseDelay(itsStationNr);    
 
       /* startstamp is the synced and delay-controlled timestamp to 
 	 start from in cyclic buffer */
@@ -185,9 +188,10 @@ namespace LOFAR {
 	// fill in the data
 	rspDHp->getFlags() = flags;
 	rspDHp->setStationID(itsStationID);
-	rspDHp->setTimeStamp(delayedstamp);   
+	rspDHp->setTimeStamp(delayedstamp);
 	rspDHp->fillExtraData();
-	//rspDHp->setDelay(delayDHp->getDelay(itsStationID));
+	rspDHp->setFineDelayAtBegin(delayDHp->getFineDelayAtBegin(itsStationID));
+	rspDHp->setFineDelayAfterEnd(delayDHp->getFineDelayAfterEnd(itsStationID));
       }    
 
       itsSyncedStamp += itsNSamplesPerSec;

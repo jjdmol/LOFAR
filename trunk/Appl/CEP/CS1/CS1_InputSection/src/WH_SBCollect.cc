@@ -107,13 +107,18 @@ namespace LOFAR
 	  inMatrices[station]->moveCursor(&inCursors[station], inSubbandDim);
 	  outMatrix->moveCursor(&outCursor, outStationDim);
 
-#if defined SPARSE_FLAGS
 	  // copy other information (delayInfo, flags etc)
-	  // inHolders[station]->getExtraData();
-	  // outHolder->getFlags() = inHolders[station]->getFlags();
-	  outHolder->fillExtraData();
+	  DH_Subband::DelayIntervalType theDelay = {inHolders[station]->getFineDelayAtBegin(), 
+						    inHolders[station]->getFineDelayAfterEnd()};
+	  outHolder->getDelay(station) = theDelay;
+#if defined SPARSE_FLAGS
+	  inHolders[station]->getExtraData();
+	  outHolder->getFlags(station) = inHolders[station]->getFlags();
 #endif
 	}
+#if defined SPARSE_FLAGS
+	outHolder->fillExtraData();
+#endif
       }
 
 #if 0

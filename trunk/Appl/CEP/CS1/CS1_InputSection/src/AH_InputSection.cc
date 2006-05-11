@@ -95,6 +95,7 @@ namespace LOFAR {
       for (int r=0; r<nStations; r++) {
    
 	// TODO: we could use a connector here too
+	// TODO: support multiple RSP's per station
 	snprintf(nameBuffer, nameBufferSize, "Input.Transport.%d", r);
 	TransportHolder* lastTH = Connector::readTH(itsParamSet, nameBuffer, true); 
     
@@ -102,7 +103,8 @@ namespace LOFAR {
 	rspStartNode = lowestFreeNode;
 	lastWH = new WH_RSPInput(nameBuffer,
 				 itsParamSet,
-				 *lastTH);
+				 *lastTH,
+				 r);
 	RSPSteps.push_back(new Step(lastWH, nameBuffer, false));
 	RSPSteps[r]->runOnNode(lowestFreeNode++);   
 	comp.addBlock(RSPSteps[r]);

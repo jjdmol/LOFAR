@@ -55,12 +55,14 @@ namespace LOFAR
     public:
       explicit WH_RSPInput(const string& name, 
                            ACC::APS::ParameterSet& ps,
-                           TransportHolder& th);
+                           TransportHolder& th,
+			   uint stationNr);
       virtual ~WH_RSPInput();
     
       static WorkHolder* construct(const string& name, 
                                    ACC::APS::ParameterSet& ps,
-                                   TransportHolder& th);
+                                   TransportHolder& th,
+				   uint stationNr);
 	
       virtual WH_RSPInput* make(const string& name);
      
@@ -86,6 +88,7 @@ namespace LOFAR
       boost::thread* itsInputThread;
 
       TransportHolder& itsTH;
+      uint itsStationNr;
       
       // ACC parameters interface
       ACC::APS::ParameterSet &itsPS;
