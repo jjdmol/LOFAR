@@ -34,6 +34,8 @@
 #include <Transport/TransportHolder.h>
 #include <Transport/TH_MPI.h>
 
+#define IS_MULTIPLE(number, bignumber) (floor(bignumber / number) == (1.0 * bignumber / number))
+
 namespace LOFAR {
   namespace CS1 {
 
@@ -80,68 +82,64 @@ namespace LOFAR {
 
       LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
   
-      WorkHolder* lastWH;
-      vector<Step*>        RSPSteps;
 
+      int nRSP = itsParamSet.getInt32("Input.NRSPBoards");
       int nStations = itsParamSet.getInt32("Observation.NStations");
+      int inputCells = nRSP/nStations;
       int nameBufferSize = 40;
       char nameBuffer[nameBufferSize];
-      int rspStartNode;
   
       itsOutputStub = new Stub_BGL_Subband(false, itsParamSet);
       itsInputStub = new Stub_Delay(true, itsParamSet);
 
-
-      for (int r=0; r<nStations; r++) {
-   
-	// TODO: we could use a connector here too
-	// TODO: support multiple RSP's per station
-	snprintf(nameBuffer, nameBufferSize, "Input.Transport.%d", r);
-	TransportHolder* lastTH = Connector::readTH(itsParamSet, nameBuffer, true); 
+      for (int ic = 0; ic < inputCells; ic ++) {
+	WorkHolder* lastWH;
+	vector<Step*>        RSPSteps;
+	for (int station = 0; station < nStations; station ++) {
+	  snprintf(nameBuffer, nameBufferSize, "Input.Transport.station%d.rsp%d", station, ic);
+	  TransportHolder* lastTH = Connector::readTH(itsParamSet, nameBuffer, true); 
     
-	snprintf(nameBuffer, nameBufferSize, "RSP_Input_node_%d_of_%d", r, nStations);
-	rspStartNode = lowestFreeNode;
-	lastWH = new WH_RSPInput(nameBuffer,
-				 itsParamSet,
-				 *lastTH,
-				 r);
-	RSPSteps.push_back(new Step(lastWH, nameBuffer, false));
-	RSPSteps[r]->runOnNode(lowestFreeNode++);   
-	comp.addBlock(RSPSteps[r]);
+	  snprintf(nameBuffer, nameBufferSize, "RSP_Input_node_station%d_cell%d", station, ic);
+	  lastWH = new WH_RSPInput(nameBuffer,
+				   itsParamSet,
+				   *lastTH,
+				   station);
+	  RSPSteps.push_back(new Step(lastWH, nameBuffer, false));
+	  RSPSteps.back()->runOnNode(lowestFreeNode++);   
+	  comp.addBlock(RSPSteps.back());
     
-	// Connect the Delay Controller
-	//itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
-      }
-  
-      LOG_TRACE_FLOW_STR("Create output side interface stubs");
+	  // Connect the Delay Controller
+	  itsInputStub->connect(ic * nStations + station, (RSPSteps.back())->getInDataManager(0), 0);
+	}
+	
 
-      LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
-      vector<Step*> collectSteps;
-      for (int cell=0; cell < nCells; cell++) {
-	sprintf(nameBuffer, "Collect_node_%d_of_%d", cell, nStations);
-	lastWH = new WH_SBCollect(nameBuffer,      // name
-				  itsParamSet,
-				  nNodesPerCell);
-	collectSteps.push_back(new Step(lastWH, nameBuffer, false));
-	collectSteps.back()->runOnNode(lowestFreeNode++); 
-	comp.addBlock(collectSteps.back());
+	LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
+	vector<Step*> collectSteps;
+	for (int cell = 0; cell < nCells / inputCells; cell++) {
+	  sprintf(nameBuffer, "Collect_node_%d_%d", cell, ic);
+	  lastWH = new WH_SBCollect(nameBuffer,      // name
+				    itsParamSet,
+				    nNodesPerCell);
+	  collectSteps.push_back(new Step(lastWH, nameBuffer, false));
+	  collectSteps.back()->runOnNode(lowestFreeNode++); 
+	  comp.addBlock(collectSteps.back());
 
-	// Connect splitters to mergers (transpose)
-	if (cell < nCells) {
-	  for (int st=0; st<nStations; st++) {
-	    itsConnector.connectSteps(RSPSteps[st], cell, collectSteps.back(), st);
+	  // Connect splitters to mergers (transpose)
+	  for (int station = 0; station < nStations; station++) {
+	    itsConnector.connectSteps(RSPSteps[station], cell, collectSteps.back(), station);
 	  }
-	}
-	// connect outputs to FIR stub
-#if 0
-	for (int core = 0; core < nNodesPerCell; core++) {
-	  //collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
-	  itsOutputStub->connect(cell,
-				 core,
-				 (collectSteps.back())->getOutDataManager(0), 
-				 core);
-	}
+
+	  // connect outputs to Subband stub
+#if 1
+	  for (int core = 0; core < nNodesPerCell; core++) {
+	    //collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
+	    itsOutputStub->connect(cell + ic * nCells / inputCells,
+				   core,
+				   (collectSteps.back())->getOutDataManager(0), 
+				   core);
+	  }
 #endif
+	}
       }
       LOG_TRACE_FLOW_STR("Finished define()");
 
