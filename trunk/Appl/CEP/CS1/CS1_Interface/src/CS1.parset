@@ -54,21 +54,21 @@ Input.SzEPAheader=16
 Input.IPHeaderSize=32
 Input.NSamplesToBuffer=6000000
 Input.NRSPBoards=4
-Input.Transport.0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
-Input.Transport.0.inputFile = "udp_rsp0.data"
-Input.Transport.0.interface = eth1
-Input.Transport.0.sourceMac = "00:30:48:2d:00:f7"
-Input.Transport.0.destinationMac = 00:30:48:2b:fc:85 # 00:30:48:2d:01:c1
-Input.Transport.1.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
-Input.Transport.1.inputFile = "udp_rsp1.data"
-Input.Transport.1.interface = eth1
-Input.Transport.1.sourceMac = "00:30:48:2d:00:f7"
-Input.Transport.1.destinationMac = "00:30:48:2b:fc:85"
-Input.Transport.2.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
-Input.Transport.3.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
-Input.Transport.4.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
-Input.Transport.5.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
-Input.Transport.6.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.Station0.rsp0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.Station0.rsp0.inputFile = "udp_rsp0.data"
+Input.Transport.Station0.rsp0.interface = eth1
+Input.Transport.Station0.rsp0.sourceMac = "00:30:48:2d:00:f7"
+Input.Transport.Station0.rsp0.destinationMac = 00:30:48:2b:fc:85 # 00:30:48:2d:01:c1
+Input.Transport.Station1.rsp0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.Station1.rsp0.inputFile = "udp_rsp1.data"
+Input.Transport.Station1.rsp0.interface = eth1
+Input.Transport.Station1.rsp0.sourceMac = "00:30:48:2d:00:f7"
+Input.Transport.Station1.rsp0.destinationMac = "00:30:48:2b:fc:85"
+Input.Transport.Station2.rsp0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.Station3.rsp0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.Station4.rsp0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.Station5.rsp0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
+Input.Transport.Station6.rsp0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
 
 # Variables for BGLProcessing
 # This defines the number of computing "cells" in the application
