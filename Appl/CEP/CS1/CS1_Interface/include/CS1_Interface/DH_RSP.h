@@ -57,8 +57,10 @@ namespace LOFAR
       void setStationID(int);
       const timestamp_t getTimeStamp() const;
       void setTimeStamp(timestamp_t);
-      const int getDelay() const;
-      void setDelay(int);
+      float getFineDelayAtBegin() const;
+      void  setFineDelayAtBegin(float delay);
+      float getFineDelayAfterEnd() const;
+      void  setFineDelayAfterEnd(float delay);
 
       BufferType* getBuffer();
   
@@ -89,7 +91,7 @@ namespace LOFAR
       BufferType*  itsBuffer;
       SparseSet *itsFlags;
       int* itsStationID;
-      int* itsDelay;
+      float* itsDelays;
       timestamp_t* itsTimeStamp;
 
       int itsNTimes;
@@ -123,12 +125,6 @@ namespace LOFAR
     inline void DH_RSP::setTimeStamp(timestamp_t timestamp)
     { *itsTimeStamp = timestamp; }
 
-    inline const int DH_RSP::getDelay() const
-    { return *itsDelay; }
-
-    inline void DH_RSP::setDelay(int delay)
-    { *itsDelay = delay; }
-
     inline void DH_RSP::resetBuffer()
     { memset(itsBuffer, 0, itsBufSize); }
 
@@ -140,6 +136,18 @@ namespace LOFAR
 
     inline const SparseSet &DH_RSP::getFlags() const
     { return *itsFlags; }
+
+    inline float DH_RSP::getFineDelayAtBegin() const
+    { return itsDelays[0]; }
+
+    inline void DH_RSP::setFineDelayAtBegin(float delay)
+    { itsDelays[0] = delay; }
+
+    inline float DH_RSP::getFineDelayAfterEnd() const
+    { return itsDelays[1]; }
+    
+    inline void DH_RSP::setFineDelayAfterEnd(float delay)
+    { itsDelays[1] = delay; }
 
   } // namespace CS1
 
