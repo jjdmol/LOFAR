@@ -135,13 +135,23 @@ namespace LOFAR {
       itsTimers.push_back(itsProcessTimer);
       itsTimers.push_back(itsGetElemTimer);
       itsPrePostTimer->start();
-      cout<<"end of WH_RSPInput::preprocess"<<endl;cout.flush();
 
       // determine starttime
-      double utc = AMC::TimeCoord(itsPS.getDouble("Observation.StartTime")).utc();
-      int sampleFreq = itsPS.getInt32("Observation.SampleRate");
-      itsSyncedStamp = TimeStamp(static_cast<int>(utc), static_cast<int>((utc - floor(utc)) * sampleFreq));
+      double startTime = itsPS.getDouble("Observation.StartTime");
+      if (startTime > 0) {
+	double utc = AMC::TimeCoord(startTime).utc();
+	int sampleFreq = itsPS.getInt32("Observation.SampleRate");
+	int seconds = floor(utc);
+	int samples = (utc - seconds) * sampleFreq;
+
+	itsSyncedStamp = TimeStamp(seconds, samples);
+      } else { 
+	itsSyncedStamp = TimeStamp(0, 0);
+      }
+
+      cout<<"Starting buffer at "<<itsSyncedStamp<<endl;cout.flush();
       itsBBuffer->startBufferRead(itsSyncedStamp);
+      cout<<"end of WH_RSPInput::preprocess"<<endl;cout.flush();
     }
 
     void WH_RSPInput::process() 
