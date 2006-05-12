@@ -385,7 +385,7 @@ void showDomain (const ParmDomain& domain)
   const vector<double>& end = domain.getEnd();
   if (st.size() == 2) {
     cout << " freq=[" << st[0]/1e6 << " MHz +"
-	 << (end[1]-st[0])/1e3 << " KHz]";
+	 << (end[0]-st[0])/1e3 << " KHz]";
     cout << " time=[";
     showTime(cout, st[1]);
     cout << " +" << (end[1]-st[1]) << " sec]";
