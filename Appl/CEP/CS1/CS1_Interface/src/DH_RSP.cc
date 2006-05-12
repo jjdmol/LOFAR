@@ -71,8 +71,8 @@ namespace LOFAR
       // Add the fields to the data definition.
       addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
       addField ("StationID", BlobField<int>(1));
-      addField ("Delay", BlobField<float>(2));
-      addField ("TimeStamp", BlobField<char>(1, sizeof(timestamp_t)));
+      addField ("Delay", BlobField<float>(1, 2));
+      addField ("TimeStamp", BlobField<TimeStamp>(1));
   
       vector<DimDef> vdd;
       // there is one station per dataholder

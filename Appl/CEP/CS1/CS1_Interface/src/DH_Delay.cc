@@ -86,46 +86,46 @@ namespace LOFAR
       itsFineDelaysAfterEnd = getData<float> ("FineDelayAfterEnd");
     }
 
-    int DH_Delay::getCoarseDelay(uint station) const
+    int DH_Delay::getCoarseDelay(uint rspBoard) const
     { 
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(station < itsNrRSPs, "index is not within range");
-      return itsCoarseDelays[station]; 
+      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
+      return itsCoarseDelays[rspBoard]; 
     }
 
-    void DH_Delay::setCoarseDelay(uint station, int delay)
+    void DH_Delay::setCoarseDelay(uint rspBoard, int delay)
     { 
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(station < itsNrRSPs, "index is not within range");
-      itsCoarseDelays[station] = delay;
+      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
+      itsCoarseDelays[rspBoard] = delay;
     }
 
-    float DH_Delay::getFineDelayAtBegin(uint station) const
+    float DH_Delay::getFineDelayAtBegin(uint rspBoard) const
     { 
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(station < itsNrRSPs, "index is not within range");
-      return itsFineDelaysAtBegin[station]; 
+      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
+      return itsFineDelaysAtBegin[rspBoard]; 
     }
 
-    void DH_Delay::setFineDelayAtBegin(uint station, float delay)
+    void DH_Delay::setFineDelayAtBegin(uint rspBoard, float delay)
     { 
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(station < itsNrRSPs, "index is not within range");
-      itsFineDelaysAtBegin[station] = delay;
+      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
+      itsFineDelaysAtBegin[rspBoard] = delay;
     }
 
-    float DH_Delay::getFineDelayAfterEnd(uint station) const
+    float DH_Delay::getFineDelayAfterEnd(uint rspBoard) const
     { 
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(station < itsNrRSPs, "index is not within range");
-      return itsFineDelaysAfterEnd[station]; 
+      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
+      return itsFineDelaysAfterEnd[rspBoard]; 
     }
 
-    void DH_Delay::setFineDelayAfterEnd(uint station, float delay)
+    void DH_Delay::setFineDelayAfterEnd(uint rspBoard, float delay)
     { 
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(station < itsNrRSPs, "index is not within range");
-      itsFineDelaysAfterEnd[station] = delay;
+      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
+      itsFineDelaysAfterEnd[rspBoard] = delay;
     }
 
   } // namespace CS1

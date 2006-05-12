@@ -44,12 +44,12 @@ namespace LOFAR
       virtual void init();
 
       // accessor functions to the blob data
-      int   getCoarseDelay(uint station) const;
-      void  setCoarseDelay(uint station, int delay);
-      float getFineDelayAtBegin(uint station) const;
-      void  setFineDelayAtBegin(uint station, float delay);
-      float getFineDelayAfterEnd(uint station) const;
-      void  setFineDelayAfterEnd(uint station, float delay);
+      int   getCoarseDelay(uint rspBoard) const;
+      void  setCoarseDelay(uint rspBoard, int delay);
+      float getFineDelayAtBegin(uint rspBoard) const;
+      void  setFineDelayAtBegin(uint rspBoard, float delay);
+      float getFineDelayAfterEnd(uint rspBoard) const;
+      void  setFineDelayAfterEnd(uint rspBoard, float delay);
  
     private:
       /// Forbid assignment.
