@@ -15,7 +15,6 @@
 
 namespace LOFAR
 {
-  class Step;
   namespace CS1
   {
 

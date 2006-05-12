@@ -1,4 +1,4 @@
-//#  WH_SubbandWriter.h: Writes one subband in a AIPS++ Measurement Set
+//#  WH_SubbandWriter.h: Write subband(s) in an AIPS++ Measurement Set
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,16 +24,17 @@
 #define CS1_STORAGE_WH_SUBBANDWRITER_H
 
 // \file
-// (Optionally) Writes one subband in a AIPS++ Measurement Set
+// Write subband(s) in an AIPS++ Measurement Set
 
 #include <Blob/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 #include <CS1_Interface/CS1_Config.h>
 #ifdef USE_MAC_PI
-#include <GCF/PALlight/CEPPropertySet.h>
-#include <GCF/GCF_PVDynArr.h>
+# include <GCF/PALlight/CEPPropertySet.h>
+# include <GCF/GCF_PVDynArr.h>
 #endif
 #include <Common/Timer.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
@@ -46,13 +47,15 @@ namespace LOFAR
     {
     public:
 
-      WH_SubbandWriter(const string& name,  int subbandID,
+      WH_SubbandWriter(const string& name,  const vector<uint>& subbandIDs,
                        const ACC::APS::ParameterSet& pset);
 
       virtual ~WH_SubbandWriter();
     
-      static WorkHolder* construct(const string& name,  int subbandID,
+      static WorkHolder* construct(const string& name,  
+                                   const vector<uint>& subbandIDs,
                                    const ACC::APS::ParameterSet& pset);
+
       virtual WH_SubbandWriter* make(const string& name);
 
       void preprocess();
@@ -66,20 +69,21 @@ namespace LOFAR
       /// forbid assignment
       WH_SubbandWriter& operator= (const WH_SubbandWriter&);
 
-      int  itsSubbandID; // ID of this subband
+      const vector<uint> itsSubbandIDs;     ///< IDs of the subband(s)
       const ACC::APS::ParameterSet itsPS;
-      int  itsNStations;
-      int  itsNBaselines;
-      int  itsNInputsPerSubband;
-      int  itsNChannels;
-      int  itsNPolSquared;
-      int	 itsNVisibilities;
+      uint  itsNStations;
+      uint  itsNBaselines;
+      uint  itsNInputsPerSubband;
+      uint  itsNChannels;
+      uint  itsNPolSquared;
+      uint  itsNVisibilities;
 
       MSWriter* itsWriter;
 
-      int itsBandId;       // MS ID of frequency band
-      int itsFieldId;
-      int itsTimeCounter;  // Counts the time
+      uint itsNrSubbandsPerCell; ///< Number of subbands per BG/L cell
+      vector<uint> itsBandIDs;   ///< MS IDs of the frequency bands
+      uint itsFieldID;           ///< MS ID of the field, i.e. the beam.
+      uint itsTimeCounter;       ///< Counts the time
       bool *itsFlagsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
       float *itsWeightsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS];
 
