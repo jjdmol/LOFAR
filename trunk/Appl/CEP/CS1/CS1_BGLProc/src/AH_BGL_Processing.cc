@@ -102,9 +102,9 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
-  //itsSubbandStub	= new Stub_BGL_Subband(true, itsParamSet);
+  itsSubbandStub	= new Stub_BGL_Subband(true, itsParamSet);
 //itsRFI_MitigationStub	= new Stub_BGL_RFI_Mitigation(true, itsParamSet);
-  //itsVisibilitiesStub	= new Stub_BGL_Visibilities(true, itsParamSet);
+  itsVisibilitiesStub	= new Stub_BGL_Visibilities(true, itsParamSet);
 
 #if defined HAVE_BGL
   struct BGLPersonality personality;
@@ -134,9 +134,9 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
       WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", logicalNode, itsParamSet);
       itsWHs.push_back(wh);
       TinyDataManager &dm = wh->getDataManager();
-      //itsSubbandStub->connect(cell, core, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
+      itsSubbandStub->connect(cell, core, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
 //    itsRFI_MitigationStub->connect(cell, core, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-      //itsVisibilitiesStub->connect(cell, core, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+      itsVisibilitiesStub->connect(cell, core, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
       ++ logicalNode;
       wh->runOnNode(remapOnTree(physicalNode ++));
