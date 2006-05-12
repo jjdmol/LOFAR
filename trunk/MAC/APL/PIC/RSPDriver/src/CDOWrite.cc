@@ -137,7 +137,7 @@ uint16 CDOWrite::compute_ip_checksum(void* addr, int count)
 void CDOWrite::sendrequest()
 {
   // skip update if the CDO settings have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getCDOState().get(getBoardId()))
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().cdo().get(getBoardId()))
   {
     setContinue(true);
     return;
@@ -198,8 +198,11 @@ GCFEvent::TResult CDOWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     return GCFEvent::NOT_HANDLED;
   }
 
-  if ((N_CDO_REGISTERS-1) == getCurrentIndex()) {
-    Cache::getInstance().getCDOState().confirmed(getBoardId());
+  if (0 == getCurrentIndex()) {
+    Cache::getInstance().getState().cdo().applied(getBoardId());
+  }
+  if (1 == getCurrentIndex()) {
+    Cache::getInstance().getState().cdo().confirmed(getBoardId());
   }
   
   return GCFEvent::HANDLED;

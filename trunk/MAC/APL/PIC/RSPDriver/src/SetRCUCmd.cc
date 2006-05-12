@@ -70,10 +70,10 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
       cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
       if (setModFlag) {
 	// reset BS if needed
-	cache.getCache().getBSState().modified(cache_rcu / MEPHeader::N_POL);
+	cache.getCache().getState().bs().modified(cache_rcu / MEPHeader::N_POL);
 
-        cache.getCache().getRCUSettingsState().modified(cache_rcu);
-        cache.getCache().getRCUProtocolState().modified(cache_rcu);
+        cache.getCache().getState().rcusettings().modified(cache_rcu);
+        cache.getCache().getState().rcuprotocol().modified(cache_rcu);
       }
     }
   }

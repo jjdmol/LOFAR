@@ -81,7 +81,7 @@ void RCUProtocolWrite::sendrequest()
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + (getCurrentIndex() / N_WRITES);
 
   // skip update if the RCU settings have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRCUProtocolState().get(global_rcu)) {
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().rcuprotocol().get(global_rcu)) {
     setContinue(true);
     return;
   }
@@ -163,7 +163,7 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
     // Mark modification as applied when write of RCU result register has completed
 
     uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
-    Cache::getInstance().getRCUProtocolState().applied(global_rcu);
+    Cache::getInstance().getState().rcuprotocol().applied(global_rcu);
 
   }
   

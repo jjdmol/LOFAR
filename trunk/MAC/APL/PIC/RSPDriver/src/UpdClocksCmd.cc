@@ -73,7 +73,7 @@ void UpdClocksCmd::complete(CacheBuffer& cache)
   // only send ack if clock setting has been applied to all boards
   bool sendack = true;
   for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++) {
-    if (RTC::RegisterState::APPLIED != cache.getCache().getTDSState().get(cache_rsp)) {
+    if (RTC::RegisterState::APPLIED != cache.getCache().getState().tds().get(cache_rsp)) {
       sendack = false;
     }
   }

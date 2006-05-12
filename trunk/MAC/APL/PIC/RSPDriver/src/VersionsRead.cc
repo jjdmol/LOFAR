@@ -60,7 +60,7 @@ void VersionsRead::sendrequest_status()
   // intentionally left empty
 }
 
-GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   if (EPA_RSR_VERSION != event.signal)
   {

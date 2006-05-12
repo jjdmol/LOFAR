@@ -145,7 +145,7 @@ void TDSProtocolWrite::sendrequest()
   void* buf = 0;
 
   // skip update if the Clocks settings have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getTDSState().get(getBoardId()))
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().tds().get(getBoardId()))
   {
     setContinue(true);
     return;
@@ -221,7 +221,7 @@ GCFEvent::TResult TDSProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
   // Mark register modification as applied
   // Still needs to be confirmed by TDSRegisterRead
   if (0 == m_remaining) {
-    Cache::getInstance().getTDSState().applied(getBoardId());
+    Cache::getInstance().getState().tds().applied(getBoardId());
   }
 
   return GCFEvent::HANDLED;

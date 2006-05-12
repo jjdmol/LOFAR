@@ -56,7 +56,7 @@ void RCUResultRead::sendrequest()
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // skip update if the RCU settings have not been applied yet
-  if (RTC::RegisterState::APPLIED != Cache::getInstance().getRCUProtocolState().get(global_rcu))
+  if (RTC::RegisterState::APPLIED != Cache::getInstance().getState().rcuprotocol().get(global_rcu))
   {
     setContinue(true);
     return;
@@ -106,7 +106,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   memcpy(RCUProtocolWrite::i2c_result + 1, &control, 3);
 
   if (0 == memcmp(RCUProtocolWrite::i2c_result, ack.result, sizeof(RCUProtocolWrite::i2c_result))) {
-    Cache::getInstance().getRCUProtocolState().confirmed(global_rcu);
+    Cache::getInstance().getState().rcuprotocol().confirmed(global_rcu);
   } else {
     LOG_ERROR("RCUResultRead::handleack: unexpected I2C result response");
   }

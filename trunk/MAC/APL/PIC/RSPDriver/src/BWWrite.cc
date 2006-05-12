@@ -208,18 +208,22 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getBFState().modified(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+    Cache::getInstance().getState().bf().modified(global_blp * MEPHeader::N_PHASEPOL + m_regid);
 
     LOG_ERROR("BWWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
 
   } else {
 
-    // only mark confirmed when the last fragment has been received OK
-    if ((BF_N_FRAGMENTS - 1) == getCurrentIndex()) {
-      Cache::getInstance().getBFState().confirmed(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+    //
+    // This code assumed that BF_N_FRAGMENTS == 2
+    // First fragment transitions state to applied.
+    // Second (and last) fragment transitions state to confirmed.
+    //
+    if (0 == getCurrentIndex() % BF_N_FRAGMENTS) {
+      Cache::getInstance().getState().bf().applied(global_blp * MEPHeader::N_PHASEPOL + m_regid);
     } else {
-      Cache::getInstance().getBFState().applied(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+      Cache::getInstance().getState().bf().confirmed(global_blp * MEPHeader::N_PHASEPOL + m_regid);
     }
 
   }

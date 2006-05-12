@@ -58,7 +58,7 @@ void SSWrite::sendrequest()
 			 global_blp));
 
   // mark modified
-  Cache::getInstance().getSSState().modified(global_blp);
+  Cache::getInstance().getState().ss().modified(global_blp);
     
   // send subband select message
   EPASsSelectEvent ss;
@@ -96,13 +96,13 @@ GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getSSState().applied(global_blp);
+    Cache::getInstance().getState().ss().applied(global_blp);
 
     LOG_ERROR("SSWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
 
-  Cache::getInstance().getSSState().confirmed(global_blp);
+  Cache::getInstance().getState().ss().confirmed(global_blp);
   
   return GCFEvent::HANDLED;
 }

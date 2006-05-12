@@ -54,7 +54,7 @@ void SstRead::sendrequest()
   EPAReadEvent sstread;
 
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / SST_N_FRAGMENTS);
-  Cache::getInstance().getSstState().modified(global_blp);
+  Cache::getInstance().getState().sst().modified(global_blp);
 
   uint16 byteoffset = (getCurrentIndex() % SST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
 
@@ -107,7 +107,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getSstState().applied(global_blp);
+    Cache::getInstance().getState().sst().applied(global_blp);
     LOG_ERROR("SstRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -124,7 +124,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   
   if (MEPHeader::SST_POWER != ack.hdr.m_fields.addr.regid)
   {
-    Cache::getInstance().getSstState().applied(global_blp);
+    Cache::getInstance().getState().sst().applied(global_blp);
     LOG_ERROR("invalid sst ack");
     return GCFEvent::HANDLED;
   }
@@ -142,7 +142,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   // y-pol subband statistics: copy and convert to double
   cache(global_blp * 2 + 1, fragment_range) = convert_uint32_to_double(stats(Range::all(), 1));
   
-  Cache::getInstance().getSstState().confirmed(global_blp);
+  Cache::getInstance().getState().sst().confirmed(global_blp);
 
   return GCFEvent::HANDLED;
 }
