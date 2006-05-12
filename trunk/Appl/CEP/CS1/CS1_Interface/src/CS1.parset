@@ -28,10 +28,10 @@ Observation.SampleRate = 195312.5
 Observation.NStations=4
 Observation.PositionType = ITRF     # should be ITRF
 Observation.StationPositions = [\   # position (lat(rad),long(rad),height(m))
-0.1,         0.796643211, 6368177.29,\ # arbitrary position
-0.1,         0.796643211, 6368177.29,\ # arbitrary position
-0.1,         0.796643211, 6368177.29,\ # arbitrary position
-0.111646531, 0.918523043, 6364631.29] # Dwingeloo observatory
+0.111646531, 0.918523043, 6364631.29,\ # Dwingeloo observatory
+0.115264453, 0.920340474, 6364573.86,\ # Westerbork observatory
+-2.12003205, 0.709074389, 6370065.17,\ # BIMA observatory
+0.1,         0.796643211, 6368177.29] # arbitrary position
 
 Observation.NBeams = 4              # number of beams used
 Observation.DirectionType = J2000   # direction type
