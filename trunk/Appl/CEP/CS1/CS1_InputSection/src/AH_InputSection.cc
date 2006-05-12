@@ -96,7 +96,7 @@ namespace LOFAR {
 	WorkHolder* lastWH;
 	vector<Step*>        RSPSteps;
 	for (int station = 0; station < nStations; station ++) {
-	  snprintf(nameBuffer, nameBufferSize, "Input.Transport.station%d.rsp%d", station, ic);
+	  snprintf(nameBuffer, nameBufferSize, "Input.Transport.Station%d.Rsp%d", station, ic);
 	  TransportHolder* lastTH = Connector::readTH(itsParamSet, nameBuffer, true); 
     
 	  snprintf(nameBuffer, nameBufferSize, "RSP_Input_node_station%d_cell%d", station, ic);
