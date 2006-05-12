@@ -51,7 +51,7 @@ StatusRead::~StatusRead()
 
 void StatusRead::sendrequest()
 {
-  Cache::getInstance().getXstState().modified(getBoardId());
+  Cache::getInstance().getState().sys().modified(getBoardId());
 
   // send read status request to check status of the write
   EPAReadEvent rspstatus;
@@ -78,7 +78,7 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getXstState().applied(getBoardId());
+    Cache::getInstance().getState().sys().applied(getBoardId());
     LOG_ERROR("StatusRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -110,7 +110,7 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
       LOG_WARN(formatString("RSP[%02d]: slice_count mismatch", getBoardId()));
     }
 
-  Cache::getInstance().getXstState().confirmed(getBoardId());
+  Cache::getInstance().getState().sys().confirmed(getBoardId());
 
   return GCFEvent::HANDLED;
 }

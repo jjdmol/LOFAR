@@ -69,9 +69,9 @@ void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
 
       if (setModFlag) {
 	// reset BS if needed
-	cache.getCache().getBSState().modified(cache_rcu / MEPHeader::N_POL);
+	cache.getCache().getState().bs().modified(cache_rcu / MEPHeader::N_POL);
 
-	cache.getCache().getDIAGWGSettingsState().modified(cache_rcu);
+	cache.getCache().getState().diagwgsettings().modified(cache_rcu);
       }
     }
   }

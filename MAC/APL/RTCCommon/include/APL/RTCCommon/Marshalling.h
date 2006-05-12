@@ -35,7 +35,7 @@
 
 #define MSH_PACK_ARRAY(bufptr, offset, array, datatype)					     \
 do {											     \
-  for (int dim = firstDim; dim < firstDim + (array).dimensions(); dim++)		     \
+  for (int dim = blitz::firstDim; dim < blitz::firstDim + (array).dimensions(); dim++)	     \
   {											     \
     int32 extent = (array).extent(dim);							     \
     memcpy(((char*)(bufptr)) + (offset), &extent, sizeof(int32));			     \
@@ -56,14 +56,14 @@ do {											     \
 
 #define MSH_UNPACK_ARRAY(bufptr, offset, array, datatype, dims)			       \
 do {										       \
-  TinyVector<int, (dims)> extent;						       \
+  blitz::TinyVector<int, (dims)> extent;					       \
 										       \
-  for (int dim = firstDim; dim < firstDim + (dims); dim++)			       \
+  for (int dim = blitz::firstDim; dim < blitz::firstDim + (dims); dim++)	       \
   {										       \
     int32 extenttmp = array.extent(dim);					       \
     memcpy(&extenttmp, ((char*)(bufptr)) + (offset), sizeof(int32));		       \
     offset += sizeof(int32);							       \
-    extent(dim - firstDim) = extenttmp;						       \
+    extent(dim - blitz::firstDim) = extenttmp;					       \
   }										       \
 										       \
   /* resize the array to the correct size */					       \

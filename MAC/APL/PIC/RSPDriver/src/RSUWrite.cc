@@ -62,7 +62,7 @@ void RSUWrite::sendrequest()
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
   // cache modified?
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRSUClearState().get(getBoardId())) {
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().rsuclear().get(getBoardId())) {
     setContinue(true);
     return;
   }
@@ -73,7 +73,6 @@ void RSUWrite::sendrequest()
   else if (s()(getBoardId()).getClear())	reset.reset = g_RSU_RESET_CLEAR;
   else if (s()(getBoardId()).getReset())	reset.reset = g_RSU_RESET_RESET;
   else {
-    Cache::getInstance().getRSUClearState().confirmed(getBoardId());
     setContinue(true);
     return;
   }
@@ -103,7 +102,7 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     return GCFEvent::NOT_HANDLED;
   }
 
-  Cache::getInstance().getRSUClearState().confirmed(getBoardId());
+  Cache::getInstance().getState().rsuclear().confirmed(getBoardId());
 
   return GCFEvent::HANDLED;
 }

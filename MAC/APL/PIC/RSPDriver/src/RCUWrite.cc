@@ -51,8 +51,8 @@ void RCUWrite::sendrequest()
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
   // skip update if the neither of the RCU's settings have been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getRCUSettingsState().get(global_blp * 2)
-      && RTC::RegisterState::MODIFIED != Cache::getInstance().getRCUSettingsState().get(global_blp * 2 + 1)) {
+  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().rcusettings().get(global_blp * 2)
+      && RTC::RegisterState::MODIFIED != Cache::getInstance().getState().rcusettings().get(global_blp * 2 + 1)) {
     setContinue(true);
     return;
   }
@@ -97,8 +97,8 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
 
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
-  Cache::getInstance().getRCUSettingsState().confirmed(global_blp * 2);
-  Cache::getInstance().getRCUSettingsState().confirmed(global_blp * 2 + 1);
+  Cache::getInstance().getState().rcusettings().confirmed(global_blp * 2);
+  Cache::getInstance().getState().rcusettings().confirmed(global_blp * 2 + 1);
 
   return GCFEvent::HANDLED;
 }

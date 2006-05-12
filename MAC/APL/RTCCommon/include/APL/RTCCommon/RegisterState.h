@@ -27,6 +27,7 @@
 
 #include <blitz/array.h>
 #include <Common/LofarLogger.h>
+#include <APL/RTCCommon/Marshalling.h>
 #include <iostream>
 
 namespace LOFAR {
@@ -37,14 +38,14 @@ namespace LOFAR {
       public:
 
 	typedef enum State {
-	  INVALID      = 0,
+	  UNDEFINED    = 0,
 	  NOT_MODIFIED = 1,
 	  MODIFIED     = 2,
 	  APPLIED      = 3,
 	  CONFIRMED    = 4,
 	};
-
-	explicit RegisterState(State state = NOT_MODIFIED)
+	
+	explicit RegisterState(State state = UNDEFINED)
 	  {
 	    m_state.resize(1);
 	    m_state = state;
@@ -147,7 +148,7 @@ namespace LOFAR {
 	  {
 	    if (i < 0) {
 	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
-		if (CONFIRMED == m_state(j)) {
+		if (CONFIRMED == m_state(j) || UNDEFINED == m_state(j)) {
 		  m_state(j) = NOT_MODIFIED;
 		}
 	      }
@@ -164,8 +165,42 @@ namespace LOFAR {
 	  return m_state(i);
 	}
 
-	void print(std::ostream& c) const {
-	  c << m_state << endl;
+	void print(std::ostream& out) const {
+	  for (int i = 0; i < m_state.extent(blitz::firstDim); i++) {
+	    char c;
+	    switch (m_state(i)) {
+	    case UNDEFINED:    c = '?'; break;
+	    case NOT_MODIFIED: c = '.'; break;
+	    case MODIFIED:     c = 'M'; break;
+	    case APPLIED:      c = 'A'; break;
+	    case CONFIRMED:    c = 'C'; break;
+	    default:           c = 'X'; break;
+	    }
+	    out << c;
+	  }
+	  out << "$" << endl;
+	}
+
+      public:
+	/* marshalling methods */
+	unsigned int getSize() {
+	  return MSH_ARRAY_SIZE(m_state, RegisterState);
+	}
+
+	unsigned int pack(void* buffer) {
+	  unsigned int offset = 0;
+
+	  MSH_PACK_ARRAY(buffer, offset, m_state, RegisterState);
+
+	  return offset;
+	}
+
+	unsigned int unpack(void* buffer) {
+	  unsigned int offset = 0;
+
+	  MSH_UNPACK_ARRAY(buffer, offset, m_state, RegisterState, 1);
+
+	  return offset;
 	}
 
       private:

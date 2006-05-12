@@ -24,6 +24,7 @@ include = '<APL/RSP_Protocol/SystemStatus.h>';
 include = '<APL/RSP_Protocol/Statistics.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
 include = '<APL/RSP_Protocol/Versions.h>';
+include = '<APL/RSP_Protocol/AllRegisterState.h>';
 include = '<APL/RSP_Protocol/MEPHeader.h>';
 
 prelude = << PRELUDE_END
@@ -1112,6 +1113,117 @@ event = {
 
 event = {
   signal = UNSUBCLOCKACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = GETREGISTERSTATE;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+};
+
+event = {
+  signal = GETREGISTERSTATEACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "state";
+    type = "AllRegisterState";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBREGISTERSTATE;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBREGISTERSTATEACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UPDREGISTERSTATE;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+  param = {
+    name = "state";
+    type = "AllRegisterState";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBREGISTERSTATE;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBREGISTERSTATEACK;
   dir = OUT;
   param = {
     name = "timestamp";

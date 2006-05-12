@@ -10,6 +10,7 @@ INSTHDRS = \
 	Versions.h \
 	WGSettings.h \
 	XCStatistics.h \
+	AllRegisterState.h \
 	MEPHeader.h \
 	MEPData.h
 

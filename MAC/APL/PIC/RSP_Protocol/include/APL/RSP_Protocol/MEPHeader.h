@@ -195,7 +195,7 @@ namespace LOFAR {
        */
       static const uint8 TBB_CONTROL      = 0x00;
 
-      static const int MAX_REGID          = XST_3Y3; // XST_3Y3
+      static const int MAX_REGID          = XST_NR_STATS - 1;
 
       /*@}*/
 

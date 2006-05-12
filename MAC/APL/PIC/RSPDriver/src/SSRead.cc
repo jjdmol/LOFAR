@@ -50,7 +50,7 @@ SSRead::~SSRead()
 void SSRead::sendrequest()
 {
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
-  Cache::getInstance().getSSState().modified(global_blp);
+  Cache::getInstance().getState().ss().modified(global_blp);
 
   EPAReadEvent ssread;
   ssread.hdr.set(MEPHeader::SS_SELECT_HDR, 1 << getCurrentIndex(),
@@ -79,7 +79,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
   if (!ss.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getSSState().applied(global_blp);
+    Cache::getInstance().getState().ss().applied(global_blp);
     LOG_ERROR("SSRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -115,7 +115,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
       = subbands(Range::all(), 1); // y
   }
 
-  Cache::getInstance().getSSState().confirmed(global_blp);
+  Cache::getInstance().getState().ss().confirmed(global_blp);
 
   return GCFEvent::HANDLED;
 }
