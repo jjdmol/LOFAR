@@ -22,16 +22,21 @@
 
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <Common/lofar_iostream.h>
+#include <Blob/BlobField.tcc>
 
 namespace LOFAR {
-namespace CS1 {
+  namespace CS1 {
 
-unsigned TimeStamp::theirMaxBlockId = 156250;
+    unsigned TimeStamp::theirMaxBlockId = 156250;
 
-ostream &operator << (ostream &os, const TimeStamp &ss)
-{
-  return os << ss.getSeqId() << " s: " << ss.getBlockId();
-}
+    ostream &operator << (ostream &os, const TimeStamp &ss)
+    {
+      return os << ss.getSeqId() << " s: " << ss.getBlockId();
+    }
 
-} // namespace CS1
+  } // namespace CS1
+
+  // This is needed to be able to put the TimeStamp in a Blob
+  template class BlobField<CS1::TimeStamp>;
+
 } // namespace LOFAR
