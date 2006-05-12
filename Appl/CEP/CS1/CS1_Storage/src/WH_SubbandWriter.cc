@@ -25,6 +25,7 @@
 // General includes
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
+#include <Common/lofar_iomanip.h>
 
 // Application specific includes
 #include <CS1_Storage/WH_SubbandWriter.h>
@@ -42,16 +43,16 @@ namespace LOFAR
   namespace CS1
   {
 
-    WH_SubbandWriter::WH_SubbandWriter(const string& name, int subbandID,
+    WH_SubbandWriter::WH_SubbandWriter(const string& name, 
+                                       const vector<uint>& subbandID,
                                        const ACC::APS::ParameterSet& pset) 
-      : WorkHolder    (pset.getInt32("BGLProc.NodesPerCell"), 
+      : WorkHolder    (pset.getUint32("BGLProc.NodesPerCell"), 
                        0,
                        name,
                        "WH_SubbandWriter"),
-        itsSubbandID  (subbandID),
+        itsSubbandIDs  (subbandID),
         itsPS         (pset),
         itsWriter     (0),
-        itsBandId     (-1),
         itsTimeCounter(0),
         itsFlagsBuffer(0),
         itsWeightsBuffer(0),
@@ -64,14 +65,14 @@ namespace LOFAR
 #ifdef USE_MAC_PI
       itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-      itsNStations = itsPS.getInt32("Observation.NStations");
+      itsNStations = itsPS.getUint32("Observation.NStations");
       itsNBaselines = itsNStations * (itsNStations +1)/2;
-      itsNChannels = itsPS.getInt32("Observation.NChannels");
+      itsNChannels = itsPS.getUint32("Observation.NChannels");
       itsNInputsPerSubband = itsNinputs;
-      int pols = itsPS.getInt32("Observation.NPolarisations");
+      uint pols = itsPS.getUint32("Observation.NPolarisations");
       itsNPolSquared = pols*pols;
 
-      int nrSamples = itsPS.getInt32("Observation.NSubbandSamples");
+      uint nrSamples = itsPS.getUint32("Observation.NSubbandSamples");
       itsWeightFactor = (float)itsNChannels/(float)nrSamples;  // The inverse of maximum number of valid samples
 
       vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
@@ -104,18 +105,20 @@ namespace LOFAR
 #endif
     }
 
-    WorkHolder* WH_SubbandWriter::construct(const string& name, int subbandID,
+    WorkHolder* WH_SubbandWriter::construct(const string& name,
+                                            const vector<uint>& subbandIDs,
                                             const ACC::APS::ParameterSet& pset)
     {
-      return new WH_SubbandWriter(name, subbandID, pset);
+      return new WH_SubbandWriter(name, subbandIDs, pset);
     }
 
     WH_SubbandWriter* WH_SubbandWriter::make(const string& name)
     {
-      return new WH_SubbandWriter(name, itsSubbandID, itsPS);
+      return new WH_SubbandWriter(name, itsSubbandIDs, itsPS);
     }
 
-    void WH_SubbandWriter::preprocess() {
+    void WH_SubbandWriter::preprocess() 
+    {
       LOG_TRACE_FLOW("WH_SubbandWriter enabling PropertySet");
 #ifdef USE_MAC_PI
       if (itsWriteToMAC) {
@@ -129,27 +132,64 @@ namespace LOFAR
 
       // create MSWriter object
       string msName = itsPS.getString("Storage.MSName");
+
+#if 0
+      // split name in base part and extension (if any)
+      string::size_type idx = msName.rfind('.');
+      pair<string,string> ms(msName.substr(0,idx),
+                             idx == string::npos ? "" : msName.substr(idx));
+      // insert subband-id into the name
+      ostringstream oss;
+      oss << '.' << setfill('0') << setw(3) << itsSubbandID;
+      // rebuild the MS name string
+      msName = ms.first + oss.str() + ms.second;
+#endif
+      
+      LOG_TRACE_VAR_STR("Creating MS-file \"" << msName << "\"");
+      
       double startTime = itsPS.getDouble("Observation.StartTime");
-      double timeStep = itsPS.getDouble("Observation.SampleRate") * itsPS.getDouble("Observation.NSubbandSamples");
+      LOG_TRACE_VAR_STR("startTime = " << startTime);
+      
+      double timeStep = itsPS.getDouble("Observation.NSubbandSamples") / 
+                        itsPS.getDouble("Observation.SampleRate");
+      LOG_TRACE_VAR_STR("timeStep = " << timeStep);
+      
       vector<double> antPos = itsPS.getDoubleVector("Observation.StationPositions");
-
-      for (int i = antPos.size(); i < 3 * itsNStations; i++) {
-        antPos.push_back(1);
-      }
-
-      itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, itsNChannels, 
-                               itsNPolSquared, itsNStations, antPos);
+      ASSERTSTR(antPos.size() == 3 * itsNStations,
+                antPos.size() << " == " << 3 * itsNStations);
+      
+      itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, 
+                               itsNChannels, itsNPolSquared, itsNStations, 
+                               antPos);
 
       double chanWidth = itsPS.getDouble("Observation.ChanWidth");
+      LOG_TRACE_VAR_STR("chanWidth = " << chanWidth);
+      
       vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
-      // Add the subband
-      itsBandId = itsWriter->addBand (itsNPolSquared, itsNChannels,
-                                      refFreqs[itsSubbandID], chanWidth);
-      vector<double> beamDirections = itsPS.getDoubleVector("Observation.BeamDirections");
-      double RA = beamDirections[0];
-      double DEC = beamDirections[1];
+
+      // Here we should (somehow) derive which subband we're going to write.
+      // At least we know how many subbands we can expect, because that's in
+      // the parameter set file.
+      itsNrSubbandsPerCell = itsPS.getUint32("General.SubbandsPerCell");
+      LOG_TRACE_VAR_STR("General.SubbandsPerCell = " << itsNrSubbandsPerCell);
+
+      // Now we must add \a itsNrSubbandsPerCell to the measurement set. The
+      // correct indices for the reference frequencies are in the vector of
+      // subbandIDs.
+      itsBandIDs.resize(itsNrSubbandsPerCell);
+      for (uint sb = 0; sb < itsNrSubbandsPerCell; ++sb) {
+        itsBandIDs[sb] = itsWriter->addBand (itsNPolSquared, itsNChannels,
+                                             refFreqs[itsSubbandIDs[sb]], 
+                                             chanWidth);
+      }
+      
+      //## TODO: add support for more than 1 beam ##//
+      vector<double> beamDirs = itsPS.getDoubleVector("Observation.BeamDirections");
+      ASSERT(beamDirs.size() == 2 * itsPS.getUint32("Observation.NBeams"));
+      double RA = beamDirs[0];
+      double DEC = beamDirs[1];
       // For nr of beams
-      itsFieldId = itsWriter->addField (RA, DEC);
+      itsFieldID = itsWriter->addField (RA, DEC);
 
       // Allocate buffers
       itsFlagsBuffer   = new bool[itsNVisibilities];
@@ -157,7 +197,7 @@ namespace LOFAR
 
 #if 0
       memset(itsFlagsBuffer, 0, itsNVisibilities * sizeof(bool));
-      for (int j=0; j < itsNBaselines*itsNChannels; j++)
+      for (uint j=0; j < itsNBaselines*itsNChannels; j++)
       {
         itsWeightsBuffer[j] = 1;
       }
@@ -166,75 +206,50 @@ namespace LOFAR
 
     void WH_SubbandWriter::process() 
     {
-      // Select the next input
-      DH_Visibilities* inputDH = (DH_Visibilities*)getDataManager().selectInHolder();
+      // Write the visibilities for all subbands per cell.
+      for (uint sb = 0; sb < itsNrSubbandsPerCell; ++sb) {
+        
+        // Select the next input
+        DH_Visibilities* inputDH = 
+          (DH_Visibilities*)getDataManager().selectInHolder();
 
-      // Write 1 DH_Visibilities of size fcomplex[nbaselines][nsubbandchannesl][npol][npol]
-      itsWriteTimer.start();
-    
-      DH_Visibilities::NrValidSamplesType *valSamples = &inputDH->getNrValidSamples(0, 0);
+        // Write 1 DH_Visibilities of size
+        // fcomplex[nbaselines][nsubbandchannesl][npol][npol]
+        DH_Visibilities::NrValidSamplesType *valSamples = 
+          &inputDH->getNrValidSamples(0, 0);
 
-      for (int i = 0; i < itsNBaselines * itsNChannels; i ++) {
-        itsWeightsBuffer[i] = itsWeightFactor * valSamples[i];
-        bool flagged = valSamples[i] == 0;
-        itsFlagsBuffer[4 * i    ] = flagged;
-        itsFlagsBuffer[4 * i + 1] = flagged;
-        itsFlagsBuffer[4 * i + 2] = flagged;
-        itsFlagsBuffer[4 * i + 3] = flagged;
+        for (uint i = 0; i < itsNBaselines * itsNChannels; i ++) {
+          itsWeightsBuffer[i] = itsWeightFactor * valSamples[i];
+          bool flagged = valSamples[i] == 0;
+          itsFlagsBuffer[4 * i    ] = flagged;
+          itsFlagsBuffer[4 * i + 1] = flagged;
+          itsFlagsBuffer[4 * i + 2] = flagged;
+          itsFlagsBuffer[4 * i + 3] = flagged;
+        }
+  
+        itsWriteTimer.start();
+        itsWriter->write (itsBandIDs[sb], itsFieldID, 0, itsNChannels,
+                          itsTimeCounter, itsNVisibilities,
+                          &inputDH->getVisibility(0, 0, 0, 0),
+                          itsFlagsBuffer, itsWeightsBuffer);
+        itsWriteTimer.stop();
       }
-  
-      itsWriter->write (itsBandId, itsFieldId, 0, itsNChannels,
-                        itsTimeCounter, itsNVisibilities,
-                        &inputDH->getVisibility(0, 0, 0, 0),
-                        itsFlagsBuffer, itsWeightsBuffer);
-  
-      itsWriteTimer.stop();
 
+      // Update the time counter.
       itsTimeCounter++;
-
-#ifdef USE_MAC_PI
-      //   if (itsWriteToMAC) {
-      //     DBGASSERTSTR(itsPropertySet != 0, "no propertySet constructed yet");
-      //     LOG_TRACE_FLOW("WH_SubbandWriter setting properties");
-      //     GCF::Common::GCFPValueArray::iterator it;
-      //     for (it = itsVArray.begin(); it != itsVArray.end(); it++){
-      //       delete *it;
-      //     }
-      //     itsVArray.clear();
-    
-      //     // loop over values
-      //     for (int i=0; i<itsNinputs; i++) {
-      //       inputDH = (DH_VisArray*)getDataManager().getInHolder(i);
-      //       // loop over channels
-      //       for (uint ch = 0; ch < inputDH->getNumVis(); ch++)
-      //       {
-      // 	// loop over baselines
-      // 	for (int s1 = 0; s1 < itsNstations; s1++) {
-      // 	  for (int s2 = 0; s2 <= s1; s2++) {
-      // 	    for (int p = 0; p < itsNpolSquared; p++) {
-      // 	      itsVArray.push_back(new GCF::Common::GCFPVDouble((double)*inputDH->getBufferElement(ch, s1, s2, p)));
-      // 	    }
-      // 	  }
-      // 	}
-      //       }
-      //     }
-
-      //     (*itsPropertySet)["data"].setValue(GCF::Common::GCFPVDynArr(GCF::Common::LPT_DOUBLE, itsVArray));
-      //     (*itsPropertySet)["subband"].setValue(GCF::Common::GCFPVString("1"));
-      //     LOG_TRACE_FLOW("WH_SubbandWriter properties set");
-      //   };
-#endif
-
     }
 
-    void WH_SubbandWriter::postprocess() {
+
+    void WH_SubbandWriter::postprocess() 
+    {
       delete [] itsFlagsBuffer;
       delete [] itsWeightsBuffer;
+      delete itsWriter;
       itsFlagsBuffer = 0;
       itsWeightsBuffer = 0;
       cout<<itsWriteTimer<<endl;
     }
-
+    
   } // namespace CS1
 
 } // namespace LOFAR
