@@ -1137,8 +1137,8 @@ fcomplex FIR::processNextSample(fcomplex sample, const float weights[NR_TAPS])
 WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, const ACC::APS::ParameterSet &ps)
   :
   WorkHolder(NR_IN_CHANNELS, NR_OUT_CHANNELS, name, "WH_Correlator"),
-  itsCoreNumber(coreNumber),
-  itsPS(ps)
+  itsPS(ps),
+  itsCoreNumber(coreNumber)
 {
   ASSERT(ps.getInt32("BGLProc.NPPFTaps")	    == NR_TAPS);
   ASSERT(ps.getInt32("Observation.NStations")	    == NR_STATIONS);
@@ -1165,7 +1165,6 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
   if (itsBaseFrequencies.size() == 0)
     itsBaseFrequencies = ps.getDoubleVector("Observation.RefFreqs");
 
-  unsigned nrSubbands	     = ps.getUint32("Observation.NSubbands");
   unsigned nrSubbandsPerCell = ps.getUint32("General.SubbandsPerCell");
   unsigned nrNodesPerCell    = ps.getUint32("BGLProc.NodesPerCell");
 

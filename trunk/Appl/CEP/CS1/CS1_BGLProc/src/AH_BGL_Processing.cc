@@ -72,20 +72,21 @@ void AH_BGL_Processing::undefine()
   delete itsVisibilitiesStub;	itsVisibilitiesStub   = 0;
 }  
 
-unsigned AH_BGL_Processing::remapOnTree(unsigned logicalNode)
+unsigned AH_BGL_Processing::remapOnTree(unsigned node)
 {
-  int mpiNode = ((((logicalNode >> 0) & 1)    ) << 0) |
-		((((logicalNode >> 5) & 1) ^ 1) << 1) |
-		((((logicalNode >> 1) & 1)    ) << 2) |
-		((((logicalNode >> 4) & 1)    ) << 3) |
-		((((logicalNode >> 2) & 1)    ) << 4) |
-		((((logicalNode >> 3) & 1)    ) << 5);
+#if defined HAVE_BGL
+  static const unsigned char map[] = {
+     2,  3,  6,  7, 18, 19, 22, 23, 34, 35, 38, 39, 50, 51, 54, 55,
+    10, 11, 14, 15, 26, 27, 30, 31, 42, 43, 46, 47, 58, 59, 62, 63,
+     0,  1,  4,  5, 16, 17, 20, 21, 32, 33, 36, 37, 48, 49, 52, 53,
+     8,  9, 12, 13, 24, 25, 28, 29, 40, 41, 44, 45, 56, 57, 60, 61,
+  };
 
-#if defined HAVE_MPI
-  ASSERTSTR(mpiNode < TH_MPI::getNumberOfNodes(), "not enough MPI nodes allocated");
+  node = map[node];
+  ASSERTSTR(node < TH_MPI::getNumberOfNodes(), "not enough MPI nodes allocated");
 #endif
 
-  return mpiNode;
+  return node;
 }
 
 void AH_BGL_Processing::define(const KeyValueMap&) {
@@ -95,10 +96,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   unsigned nrSubBands	     = itsParamSet.getInt32("Observation.NSubbands");
   vector<double> baseFreqs   = itsParamSet.getDoubleVector("Observation.RefFreqs");
   unsigned usedNodesPerCell  = itsParamSet.getInt32("BGLProc.NodesPerCell");
-
-#if defined HAVE_BGL
   unsigned nrSubbandsPerCell = itsParamSet.getInt32("General.SubbandsPerCell");
-#endif
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
@@ -111,9 +109,11 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   int retval = rts_get_personality(&personality, sizeof personality);
   ASSERTSTR(retval == 0, "Could not get personality");
   bool virtualNodeMode = (personality.opFlags & BGLPERSONALITY_OPFLAGS_VIRTUALNM) != 0;
-  int  physicalNodesPerCell = virtualNodeMode ? 16 : 8;
+  unsigned physicalNodesPerCell = virtualNodeMode ? 16 : 8;
 
   ASSERTSTR(usedNodesPerCell <= physicalNodesPerCell, "too many nodes per cell");
+#else
+  unsigned physicalNodesPerCell = usedNodesPerCell;
 #endif
 
   const char *str	  = getenv("FIRST_NODE");
@@ -142,10 +142,8 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
       wh->runOnNode(remapOnTree(physicalNode ++));
     }
 
-#if defined HAVE_BGL
     // advance to next compute cell
     physicalNode = (physicalNode + physicalNodesPerCell - 1) & -physicalNodesPerCell;
-#endif
   }
 
 #if defined HAVE_MPI
