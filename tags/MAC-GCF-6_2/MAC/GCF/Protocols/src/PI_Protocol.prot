@@ -1,0 +1,215 @@
+//
+// Protocol definition for the RTC-PMLlight/Property Interface(MAC/GCF)
+//
+autogen definitions protocol;
+
+description = "Protocol definition for the RTC-PMLlight/Property Interface(MAC/GCF)";
+prefix = "PI"; // for the signal names
+id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 1)";
+// specify extra include files
+// e.g.
+//include = '<sys/time.h>';
+include = '<GCF/GCF_PValue.h>';
+include = '<GCF/GCF_Defines.h>';
+
+prelude = << PRELUDE_END
+
+enum TPIResult 
+{
+  PI_NO_ERROR, 
+  PI_UNKNOWN_ERROR,
+  PI_WRONG_STATE,
+  PI_PS_GONE,
+  PI_MISSING_PROPS,
+  PI_PROP_SET_NOT_EXISTS,
+  PI_PROP_SET_ALREADY_EXISTS,
+  PI_DPTYPE_UNKNOWN,
+  PI_INTERNAL_ERROR,
+  PI_PA_INTERNAL_ERROR,
+  PI_PA_NOTCONNECTED,
+  PI_PROP_NOT_VALID,
+  PI_EMPTY_SCOPE,
+  PI_MACTYPE_UNKNOWN,  
+};
+
+class PValue : public GCF::TM::GCFTransportable
+{
+  public:
+    PValue() : _pValue(0), _unpacked(false) {};
+    PValue(const LOFAR::GCF::Common::GCFPValue& value) : _pValue(&value), _unpacked(false) {};
+
+    virtual ~PValue() 
+    {
+      if (_unpacked) delete _pValue;
+    }
+
+    unsigned int pack(char* buffer)
+    {
+      assert(_pValue);
+      return _pValue->pack(buffer);
+    }
+    unsigned int unpack(char* buffer)
+    {
+      assert(!_pValue);
+      _unpacked = true;
+      _pValue = LOFAR::GCF::Common::GCFPValue::unpackValue(buffer);
+      return _pValue->getSize();
+    }
+    unsigned int getSize()
+    {
+      assert(_pValue);
+      return _pValue->getSize();
+    }
+
+    const LOFAR::GCF::Common::GCFPValue* _pValue;
+
+  private:
+    bool _unpacked;
+};
+PRELUDE_END;
+
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+
+event = {
+	signal = REGISTER_SCOPE;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "type";
+		type = "string";
+	};
+	param = {
+		name = "category";
+		type = "LOFAR::GCF::Common::TPSCategory";
+	};
+};
+
+event = {
+	signal = UNREGISTER_SCOPE;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = SCOPE_REGISTERED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};	
+};
+
+event = {
+	signal = SCOPE_UNREGISTERED;
+	dir = OUT;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+};
+
+event = {
+	signal = LINK_PROP_SET;
+	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = UNLINK_PROP_SET;
+	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = PROP_SET_LINKED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "propList";
+		type = "string";
+	};
+};
+
+event = {
+	signal = PROP_SET_UNLINKED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = VALUE_SET;
+	dir = IN;
+	param = {
+		name = "name";
+		type = "string";
+	};
+	param = {
+		name = "value";
+		type = "PValue";
+		userdefined;
+	};
+};
+
+event = {
+	signal = VALUE_CHANGED;
+	dir = OUT;
+	param = {
+		name = "scopeLength";
+		type = "unsigned short";
+	};
+	param = {
+		name = "name";
+		type = "string";
+	};
+	param = {
+		name = "value";
+		type = "PValue";
+		userdefined;
+	};
+};
