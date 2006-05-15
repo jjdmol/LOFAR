@@ -51,6 +51,8 @@ namespace LOFAR
       ASSERT(nrSubbands > 0);
       uint nrSubbandsPerCell = itsParamSet.getUint32("General.SubbandsPerCell");
       ASSERT(nrSubbandsPerCell > 0);
+      uint nNodesPerCell = itsParamSet.getUint32("BGLProc.NodesPerCell");
+      ASSERT(nNodesPerCell > 0);
 
       // We must derive how many WH_SubbandWriter objects we have to
       // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerCell
@@ -83,7 +85,9 @@ namespace LOFAR
         step.runOnNode(nw);
 
         // Connect to BG output
-        itsStub->connect(nw, nw, step.getInDataManager(nw), nw);
+	for (int core = 0; core < nNodesPerCell; core++) {
+	  itsStub->connect(nw, core, step.getInDataManager(core), core);
+	}	
       }
 
 #ifdef HAVE_MPI
