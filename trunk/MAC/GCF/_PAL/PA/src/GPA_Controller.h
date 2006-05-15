@@ -24,7 +24,6 @@
 #define GPA_CONTROLLER_H
 
 #include <GPA_Defines.h>
-#include <GPA_RequestManager.h>
 #include <GPA_Converter.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_TCPPort.h>
@@ -44,7 +43,7 @@ namespace LOFAR
   namespace PAL 
   {
 
-class GPAPropertySet;
+class GPAPropSetSession;
 
 class GPAController : public TM::GCFTask
 {
@@ -53,45 +52,38 @@ class GPAController : public TM::GCFTask
 		virtual ~GPAController();
   
 	private: // state methods
-		TM::GCFEvent::TResult initial(TM::GCFEvent& e, TM::GCFPortInterface& p);
-		TM::GCFEvent::TResult operational(TM::GCFEvent& e, TM::GCFPortInterface& p);
-    TM::GCFEvent::TResult linking(TM::GCFEvent& e, TM::GCFPortInterface& p);
-    TM::GCFEvent::TResult unlinking(TM::GCFEvent& e, TM::GCFPortInterface& p);
+		TM::GCFEvent::TResult startup_state(TM::GCFEvent& e, TM::GCFPortInterface& p);
+		TM::GCFEvent::TResult waiting_state(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
   private: // helper methods
-    friend class GPAPropertySet;
-    bool mayContinue(TM::GCFEvent& e, TM::GCFPortInterface& p);
-    void sendAndNext(TM::GCFEvent& e);
-    void doNextRequest();    
-    GPAPropertySet* findPropSet(const string& scope) const;
+    friend class GPAPropSetSession;
+    void mayDeleted(GPAPropSetSession& session);
+    GPAPropSetSession* findPropSet(const string& scope) const;
     void acceptConnectRequest(TM::GCFPortInterface& p);
-    void clientPortGone(TM::GCFPortInterface& p);
-    void propSetClientGone(TM::GCFPortInterface& p);
-    void deletePort(TM::GCFPortInterface& p);
     void emptyGarbage();
-    //GCFPVSSPort& getDistPmlPort() { return _distPmlPortProvider;}
+    void closingPortFinished(GPAPropSetSession &pss, TM::GCFPortInterface& p);
+    void propSetIdle(GPAPropSetSession& idlePropSet);    
     
 	private: // data members
-    typedef map<string /*scope*/, GPAPropertySet*> TPropertySets;
-    TPropertySets         _propertySets;
-    list<GPAPropertySet*> _propertySetGarbage;
+    typedef map<string /*scope*/, GPAPropSetSession*> TPropSetSessions;
+    TPropSetSessions         _propSetSessions;
+    list<GPAPropSetSession*> _propSetSessionsGarbage;
     
-		GPARequestManager       _requestManager;
-
     list<TM::GCFPortInterface*> _pmlPorts;		
-    list<TM::GCFPortInterface*> _pmlPortGarbage;
-		TM::GCFTCPPort              _pmlPortProvider;
-    PAL::GCFPVSSPort            _distPmlPortProvider;
+    
+    typedef map<TM::GCFPortInterface* /*pPortToDelete*/, list<GPAPropSetSession*> /*pendingPSs*/> TClosedPorts;
+    // pendingPSs = propsets, which are busy with the close port procedure
+    
+    TClosedPorts      _pmlPortGarbage;
+		TM::GCFTCPPort    _pmlPortProvider;
+    PAL::GCFPVSSPort  _distPmlPortProvider;
     
   private: // admin. data members
-    bool              _isBusy;
-    bool              _isRegistered;
     unsigned long     _garbageTimerId;
-    unsigned int      _counter;  
-    GPAPropertySet*   _pCurPropSet;
+    unsigned long     _queueTimerId;
     GPAConverter      _converter;   
-    bool              _synchronous;
 };
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

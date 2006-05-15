@@ -139,7 +139,7 @@ string GCFPValue::getTypeName() const
     "unsigned", 
     "integer",
     "NO_TYPE", 
-    "blob"
+    "blob",
     "NO_TYPE", 
     "float", 
     "NO_TYPE", 

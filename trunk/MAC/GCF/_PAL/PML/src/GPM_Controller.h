@@ -78,7 +78,7 @@ class GPMController : public TM::GCFTask
        
     void propertiesLinked (const string& scope, TPAResult result);
     void propertiesUnlinked (const string& scope, TPAResult result);
-  
+       
   private:
     friend class GPMHandler;
     GPMController ();
@@ -107,6 +107,8 @@ class GPMController : public TM::GCFTask
     unsigned short registerAction (TAction& action);
     string determineDest(const string& scope) const;
     bool checkDestination(const string& destAddr) const;
+    GCFPropertySet* findPropSetInActionList(unsigned short seqnr) const;
+    GCFMyPropertySet* findMyPropSet(string& scope) const;
 
   private: // data members        
     GCFPort                       _propertyAgent;
@@ -116,7 +118,16 @@ class GPMController : public TM::GCFTask
     TExtPropertySets _extPropertySets;
     typedef map<unsigned short /*seqnr*/, TAction>  TActionSeqList;
     TActionSeqList _actionSeqList;    
+
+    typedef struct
+    {
+      unsigned long linkedTimeOutId;
+      unsigned long lastRetryTimerId;
+    } TLinkTimers;  
     
+    typedef map<GCFMyPropertySet*, TLinkTimers>  TLinkTimerList;
+    TLinkTimerList _linkTimerList;    
+
     GCFPVSSPort       _distPropertyAgent;
     GCFSysConnGuard*  _pSysConnGuard;
 

@@ -47,7 +47,7 @@ class GPARequestManager
 		GPARequestManager();
 		virtual ~GPARequestManager();
 		
-		void registerRequest(TM::GCFPortInterface& requestPort, const TM::GCFEvent& e);
+		void registerRequest(const TM::GCFEvent& e, TM::GCFPortInterface& requestPort);
 		TM::GCFEvent* getOldestRequest();
 		TM::GCFPortInterface* getOldestRequestPort();
     
@@ -61,7 +61,7 @@ class GPARequestManager
 		typedef struct 
 		{
 			TM::GCFPortInterface* pRPort;
-			char* pEvent;
+			const TM::GCFEvent* pEvent;
 		} TRequest;
 		
 		list<TRequest> 	_requests;

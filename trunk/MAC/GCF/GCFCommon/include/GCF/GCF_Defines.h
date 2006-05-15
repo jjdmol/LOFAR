@@ -154,6 +154,9 @@ typedef enum TPSCategory
   // corresponding DP must exists 
   // will be loaded automatically right after handled enable request in the PA
   PS_CAT_PERM_AUTOLOAD,  
+  // corresponding DP does not exists
+  // will be loaded automatically right after handled enable request in the PA
+  PS_CAT_TEMP_AUTOLOAD,  
 };
 
 enum TKVLOrigin 
