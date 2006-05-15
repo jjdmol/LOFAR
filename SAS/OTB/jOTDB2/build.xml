@@ -1,53 +1,76 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See commented blocks below for -->
+<!-- some examples of how to customize the build. -->
+<!-- (If you delete it and reopen the project it will be recreated.) -->
+<project name="jOTDB2" default="default" basedir=".">
+    <description>Builds, tests, and runs the project jOTBD2.</description>
+    <import file="nbproject/build-impl.xml"/>
+    <!--
 
-<!-- build.xml - a simple Ant buildfile -->
-<project name="jOTDB2 Buildfile" default="compile" basedir=".">
+    There exist several targets which are by default empty and which can be 
+    used for execution of your tasks. These targets are usually executed 
+    before and after some main targets. They are: 
 
-  <!-- The directory containing source code -->
-  <property name="src.dir" value="src/nl/astron/lofar/sas/otb/jotdb2"/>
+      -pre-init:                 called before initialization of project properties
+      -post-init:                called after initialization of project properties
+      -pre-compile:              called before javac compilation
+      -post-compile:             called after javac compilation
+      -pre-compile-single:       called before javac compilation of single file
+      -post-compile-single:      called after javac compilation of single file
+      -pre-compile-test:         called before javac compilation of JUnit tests
+      -post-compile-test:        called after javac compilation of JUnit tests
+      -pre-compile-test-single:  called before javac compilation of single JUnit test
+      -post-compile-test-single: called after javac compilation of single JUunit test
+      -pre-jar:                  called before JAR building
+      -post-jar:                 called after JAR building
+      -post-clean:               called after cleaning build products
 
-  <!-- Temporary build directories -->
-  <property name="build.dir" value="build"/>
-  <property name="build.classes" value="${build.dir}/classes"/>
-  <property name="build.lib" value="${build.dir}/lib"/>
+    (Targets beginning with '-' are not intended to be called on their own.)
 
-  <!-- Target to create the build directories prior to the -->
-  <!-- compile target. -->
-  <target name="prepare">
-    <mkdir dir="${build.dir}"/>
-    <mkdir dir="${build.classes}"/>
-    <mkdir dir="${build.lib}"/>
-  </target>
+    Example of inserting an obfuscator after compilation could look like this:
 
-  <target name="clean" description="Remove all generated files.">
-    <delete dir="${build.classes}"/>
-    <delete dir="${build.lib}"/>
-  </target>
+        <target name="-post-compile">
+            <obfuscate>
+                <fileset dir="${build.classes.dir}"/>
+            </obfuscate>
+        </target>
 
-  <target name="compile" depends="prepare"
-          description="Compiles all source code.">
-    <javac srcdir="${src.dir}" destdir="${build.classes}"/>
-    <rmic base="${build.classes}" classname="nl.astron.lofar.sas.otb.jotdb2.jConverterAdapter"/>
-    <rmic base="${build.classes}" classname="nl.astron.lofar.sas.otb.jotdb2.jOTDBadapter"/>
-    <rmic base="${build.classes}" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceAdapter"/>
-    <rmic base="${build.classes}" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeValueAdapter"/>    
-  </target>
+    For list of available properties check the imported 
+    nbproject/build-impl.xml file. 
 
-  <target name="jar" depends="compile"
-          description="Generates jotdb2.jar in the 'dist' directory.">
-    <!-- Exclude unit tests from the final JAR file -->
-    <jar jarfile="${build.lib}/jotdb2.jar" 
-         basedir="${build.classes}"
-         excludes="**/*Test.class"
-	 manifest="${src.dir}/Manifest.txt"/>
-  </target>
 
-  <target name="all" depends="clean,jar"
-          description="Cleans, compiles, then builds the JAR file."/>
-	  
-  <target name="install" depends="jar"
-           description="Copies the generated jotdb2.jar to the installation directory.">
-     <copy file="${build.lib}/jotdb2.jar" todir="../../../installed/gnu_debug/lib/"/>
-  </target>
-  
+    Another way to customize the build is by overriding existing main targets.
+    The targets of interest are: 
+
+      -init-macrodef-javac:     defines macro for javac compilation
+      -init-macrodef-junit:     defines macro for junit execution
+      -init-macrodef-debug:     defines macro for class debugging
+      -init-macrodef-java:      defines macro for class execution
+      -do-jar-with-manifest:    JAR building (if you are using a manifest)
+      -do-jar-without-manifest: JAR building (if you are not using a manifest)
+      run:                      execution of project 
+      -javadoc-build:           Javadoc generation
+      test-report:              JUnit report generation
+
+    An example of overriding the target for project execution could look like this:
+
+        <target name="run" depends="OTB-impl.jar">
+            <exec dir="bin" executable="launcher.exe">
+                <arg file="${dist.jar}"/>
+            </exec>
+        </target>
+
+    Notice that the overridden target depends on the jar target and not only on 
+    the compile target as the regular run target does. Again, for a list of available 
+    properties which you can use, check the target you are overriding in the
+    nbproject/build-impl.xml file. 
+
+    -->
+    
+    <target name="-post-compile">
+       <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jConverterAdapter"/>
+       <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jOTDBadapter"/>
+       <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceAdapter"/>
+       <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeValueAdapter"/>   
+    </target>
 </project>
