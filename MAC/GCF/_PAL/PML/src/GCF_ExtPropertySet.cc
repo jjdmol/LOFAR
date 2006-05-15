@@ -196,26 +196,28 @@ void GCFExtPropertySet::unloaded(TGCFResult result)
 
 void GCFExtPropertySet::serverIsGone()
 {
-  ASSERT(_isLoaded);
-
-  LOG_INFO(formatString ( 
-      "PA-IND: Server for prop. set '%s' is gone",
-      getScope().c_str()));
-  _isLoaded = false;
-
-  GCFExtProperty* pProperty(0);
-  for (TPropertyList::iterator iter = _properties.begin();
-       iter != _properties.end(); ++iter)
+  if (_isLoaded)
   {
-    pProperty = (GCFExtProperty*) iter->second;
-    ASSERT(pProperty);
-    if (pProperty->isSubscribed())
+    LOG_INFO(formatString ( 
+        "PA-IND: Server for prop. set '%s' is gone",
+        getScope().c_str()));
+    _isLoaded = false;
+  
+    GCFExtProperty* pProperty(0);
+    for (TPropertyList::iterator iter = _properties.begin();
+         iter != _properties.end(); ++iter)
     {
-      pProperty->unsubscribe();
+      pProperty = (GCFExtProperty*) iter->second;
+      ASSERT(pProperty);
+      if (pProperty->isSubscribed())
+      {
+        pProperty->unsubscribe();
+      }
     }
+  
+    dispatchAnswer(F_SERVER_GONE, GCF_NO_ERROR);  
   }
-
-  dispatchAnswer(F_SERVER_GONE, GCF_NO_ERROR);  
+  _isBusy = false;
 }
 
 TGCFResult GCFExtPropertySet::requestValue(const string propName) const

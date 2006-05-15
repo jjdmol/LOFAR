@@ -151,7 +151,7 @@ class GCFPortInterface
     
     /** params see constructor */
     virtual void init(GCFTask& task, 
-                      string& name, 
+                      string name, 
                       TPortType type,  
                       int protocol, 
                       bool transportRawData = false)

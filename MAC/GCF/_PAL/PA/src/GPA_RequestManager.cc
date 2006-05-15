@@ -42,36 +42,53 @@ GPARequestManager::~GPARequestManager()
   deleteAllRequests();
 }
 
-void GPARequestManager::registerRequest(GCFPortInterface& requestPort, const GCFEvent& e)
+void GPARequestManager::registerRequest(const GCFEvent& e, GCFPortInterface& requestPort)
 {
-  TRequest request;
-  request.pRPort = &requestPort;
-  request.pEvent = new char[sizeof(e) + e.length];
-  memcpy(request.pEvent, (const char*) &e, sizeof(e) + e.length);
+  TRequest* pRequest;
+  bool alreadyRegistered(false);
+  for (list<TRequest>::iterator iter = _requests.begin();
+       iter != _requests.end(); ++iter)
+  {
+    pRequest = &(*iter);
+    if (pRequest)
+    {
+      if (pRequest->pRPort == &requestPort && (GCFEvent*) (pRequest->pEvent) == &e)
+      {
+        alreadyRegistered = true;
+        break;
+      }
+    }
+  }
 
-  _requests.push_back(request);
+  if (!alreadyRegistered)
+  {
+    TRequest newRequest;
+    newRequest.pRPort = &requestPort;
+    newRequest.pEvent = &e;
+    _requests.push_back(newRequest);
+  }
 }
 
 GCFEvent* GPARequestManager::getOldestRequest()
 {
+  GCFEvent* pRequestEvent(0);
   if (_requests.size() > 0)
   {
     TRequest* pRequest = &_requests.front();
-    return (GCFEvent*) (pRequest->pEvent);
+    pRequestEvent = (GCFEvent*) (pRequest->pEvent);
   }
-  else
-    return 0;  
+  return pRequestEvent;  
 }
 
 GCFPortInterface* GPARequestManager::getOldestRequestPort()
 {
+  GCFPortInterface* pRequestPort(0);
   if (_requests.size() > 0)
   {
     TRequest* pRequest = &_requests.front();
-    return pRequest->pRPort;
+    pRequestPort = pRequest->pRPort;
   }
-  else
-    return 0;  
+  return pRequestPort;  
 }
 
 void GPARequestManager::deleteOldestRequest()
@@ -80,7 +97,9 @@ void GPARequestManager::deleteOldestRequest()
   {
     TRequest* pRequest = &_requests.front();
     if (pRequest->pEvent)
-      delete [] pRequest->pEvent;
+      // constructed in GPAController::waiting_state or 
+      // in case of F_CLOSED: GPAPropSetSession::mayContinue or GPAPropSetSession::defaultHandling 
+      delete pRequest->pEvent;
   }
   
   _requests.pop_front();
@@ -98,7 +117,9 @@ void GPARequestManager::deleteRequestsOfPort(const GCFPortInterface& requestPort
       if (pRequest->pRPort == &requestPort)
       {
         if (pRequest->pEvent)
-          delete [] pRequest->pEvent;
+          // constructed in GPAController::waiting_state or 
+          // in case of F_CLOSED: GPAPropSetSession::mayContinue or GPAPropSetSession::defaultHandling 
+          delete pRequest->pEvent; 
         iter = _requests.erase(iter);
         --iter;
       }
@@ -112,7 +133,9 @@ void GPARequestManager::deleteAllRequests()
        pRequest != _requests.end(); ++pRequest)
   {
     if (pRequest->pEvent)
-      delete [] pRequest->pEvent;
+      // constructed in GPAController::waiting_state or 
+      // in case of F_CLOSED: GPAPropSetSession::mayContinue or GPAPropSetSession::defaultHandling 
+      delete pRequest->pEvent;
   }
   _requests.clear();
 }

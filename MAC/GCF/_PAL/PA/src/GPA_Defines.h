@@ -24,12 +24,28 @@
 #define GPA_DEFINES_H
 
 #include <GCF/GCF_Defines.h>
+#include <GCF/Protocols/PA_Protocol.ph>
 
 namespace LOFAR {
  namespace GCF {
   namespace PAL {
 
 const string PA_TASK_NAME("GCF-PA");
+const string PA_PS_SESSION_TASK_NAME_EXT("_session");
+const string PS_ENABLED_EXT = "__enabled";
+
+#define PS_IS_AUTOLOAD(cat) (cat > PS_CAT_PERMANENT)
+#define PS_IS_TEMPORARY(cat) (cat == PS_CAT_TEMPORARY || cat == PS_CAT_TEMP_AUTOLOAD)
+
+// internal extension of F_PA_PROTOCOL signals
+enum 
+{
+  PA_PROP_SET_DP_CREATED_ID = PA_PROP_SET_GONE_ID + 1,                                 
+  PA_PROP_SET_DP_DELETED_ID
+};
+
+#define PA_PROP_SET_DP_CREATED F_SIGNAL(PA_PROTOCOL, PA_PROP_SET_DP_CREATED_ID, F_IN) 
+#define PA_PROP_SET_DP_DELETED F_SIGNAL(PA_PROTOCOL, PA_PROP_SET_DP_DELETED_ID, F_IN) 
 
   } // namespace PAL
  } // namespace GCF

@@ -70,9 +70,9 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
 GCFMyPropertySet::~GCFMyPropertySet ()
 {
   LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  if (_state != S_DISABLED)
+  if (_state != S_DISABLED && _state != S_DISABLING)
   {
-    // delete this set from the controller permanent
+    // the baseclass deletes this set from the controller permanent
     // this means no response will be send to this object
     // on response of the PA
     ASSERT(_pController);
@@ -273,8 +273,8 @@ bool GCFMyPropertySet::tryLinking()
     {
       GCFMyProperty* pProperty(0);
       TGCFResult result;
-      for(TPropertyList::iterator iter = _properties.begin(); 
-          iter != _properties.end(); ++iter)
+      for (TPropertyList::iterator iter = _properties.begin(); 
+           iter != _properties.end(); ++iter)
       {
         pProperty = (GCFMyProperty*) iter->second;
         ASSERT(pProperty);
@@ -309,14 +309,7 @@ bool GCFMyPropertySet::tryLinking()
         // no more properties needed to be linked 
         // so we can return a response to the controller
         _state = S_LINKED;
-        if (_missing > 0)
-        {
-          _pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
-        }
-        else
-        {        
-          _pController->propertiesLinked(getScope(), PA_NO_ERROR);
-        }
+        _pController->propertiesLinked(getScope(), (_missing > 0 ? PA_MISSING_PROPS : PA_NO_ERROR));
       }
       break;
     }
