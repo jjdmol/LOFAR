@@ -119,11 +119,14 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
 #if defined SPARSE_FLAGS
   dh->getFlags(4).include(14000);
   dh->getFlags(5).include(17000);
-  dh->fillExtraData();
 #else
   (*flags)[4][14000] = true;
   (*flags)[5][17000] = true;
 #endif
+#endif
+
+#if defined SPARSE_FLAGS
+  dh->fillExtraData();
 #endif
 
   (std::cerr << "done.\n").flush();
@@ -244,7 +247,7 @@ void doWork()
   std::ostringstream baseFrequencyStr;
   baseFrequencyStr << '[';
 
-  for (int sb = 0; sb < nrSubbands; sb ++) {
+  for (unsigned sb = 0; sb < nrSubbands; sb ++) {
     baseFrequencyStr << (baseFrequency + sb * subbandWidth)
 		     << ((sb == nrSubbands - 1) ? ']' : ',');
   }
