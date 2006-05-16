@@ -33,9 +33,7 @@ public class SharedVars {
     static Logger logger = Logger.getLogger(SharedVars.class);
     static String name = "SharedVars";
     
-    static{
-        System.loadLibrary("jparmfacade");
-    }    
+      
     
     private MainFrame itsMainFrame=null;
     
@@ -99,6 +97,7 @@ public class SharedVars {
      */
     public static jParmFacade getJParmFacade() {
         if(itsjParmFacade == null){
+            System.loadLibrary("jparmfacade");
             itsjParmFacade = new jParmFacade("/home/pompert/transfer/tParmFacade.in_mep");
         }
         return itsjParmFacade;
