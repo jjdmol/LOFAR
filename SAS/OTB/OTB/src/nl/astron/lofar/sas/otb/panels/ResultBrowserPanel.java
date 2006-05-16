@@ -12,8 +12,9 @@ import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
-import nl.astron.lofar.sas.otb.util.OTDBtreeNode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.jParmDBnode;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 
 
@@ -26,31 +27,31 @@ import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
  *
  * @author Coolen
  */
-public class ResultBrowserPanel extends javax.swing.JPanel 
-                       implements IPluginPanel {
-
+public class ResultBrowserPanel extends javax.swing.JPanel
+        implements IPluginPanel {
+    
     static Logger logger = Logger.getLogger(ResultBrowserPanel.class);
     static String name = "ResultBrowser";
     
-        
+    
     /** Creates new form BeanForm */
     public ResultBrowserPanel() {
         initComponents();
         initialize();
     }
-        
+    
     public void initialize() {
         parameterViewPanel1 = new nl.astron.lofar.sas.otbcomponents.ParameterViewPanel();
 //        jTabbedPane1.addTab("Parameter", parameterViewPanel1);
-        
+        parmDBPlotPanel1 = new nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel();
         treePanel.setTitle("Observation Tree");
         buttonPanel1.addButton("Query Panel");
         buttonPanel1.addButton("Info");
         buttonPanel1.addButton("Exit");
-
+        
         setFieldValidations();
     }
-
+    
     public boolean initializePlugin(MainFrame mainframe) {
         if (mainframe == null) {
             logger.debug("ERROR, no mainframe given");
@@ -59,6 +60,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         itsMainFrame=mainframe;
         itsTreeID=itsMainFrame.getSharedVars().getTreeID();
         parameterViewPanel1.setMainFrame(itsMainFrame);
+        parmDBPlotPanel1.setMainFrame(itsMainFrame);
         nodeViewPanel1.setMainFrame(itsMainFrame);
         logParamPanel1.setMainFrame(itsMainFrame);
         
@@ -73,19 +75,19 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         if(userAccount.isInstrumentScientist()) {
             // enable/disable certain controls
         }
- 
+        
         // initialize the tree
         setNewRootNode();
         
         setFieldValidations();
-
+        
         return true;
     }
-        
+    
     public String getFriendlyName() {
         return getFriendlyNameStatic()+"("+itsTreeID+")";
     }
-
+    
     public boolean hasChanged() {
         return changed;
     }
@@ -100,14 +102,14 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             this.setChanged(false);
         }
     }
-
+    
     
     public static String getFriendlyNameStatic() {
         return name;
     }
     
     public void setNewRootNode() {
-
+        
         try {
             jOTDBnode otdbNode=null;
             if (itsTreeID == 0 ) {
@@ -117,22 +119,20 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             } else {
                 otdbNode = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
             }
-        
-            // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getSharedVars().getOTDBrmi());
-
+            TreeNode rootNode = new TreeNode(otdbNode,otdbNode.name);
+            logger.trace("setNewRootNode: " + otdbNode.name);
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(otdbTreeNode);
+            treePanel.newRootNode(rootNode);
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
         }
     }
-
+    
     private void changeTreeSelection(jOTDBnode aNode) {
-        // save selected panel 
-        int savedSelection=jTabbedPane1.getSelectedIndex(); 
+        // save selected panel
+        int savedSelection=jTabbedPane1.getSelectedIndex();
         logger.debug("ChangeSelection for node: " + aNode.name);
         itsSelectedNode=aNode;
         jOTDBparam aParam = null;
@@ -146,7 +146,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             } catch (RemoteException ex) {
                 logger.debug("Error during getParam: "+ ex);
             }
-         } else {
+        } else {
             // this node is a node
             jTabbedPane1.removeTabAt(0);
             jTabbedPane1.insertTab("  Node   ",null,nodeViewPanel1,"",0);
@@ -166,7 +166,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         parameterViewPanel1.enableValMoment(false);
         parameterViewPanel1.enableRuntimeMod(false);
         parameterViewPanel1.enableLimits(false);
-        parameterViewPanel1.enableDescription(false);                
+        parameterViewPanel1.enableDescription(false);
         parameterViewPanel1.enableButtons(false);
         parameterViewPanel1.setButtonsVisible(false);
         
@@ -175,10 +175,10 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         nodeViewPanel1.enableInstances(false);
         nodeViewPanel1.enableLimits(false);
         nodeViewPanel1.enableDescription(false);
-        nodeViewPanel1.enableButtons(false);            
+        nodeViewPanel1.enableButtons(false);
         nodeViewPanel1.setButtonsVisible(false);
-    }     
-     
+    }
+    
     private boolean viewInfo() {
         //get the selected tree from the database
         
@@ -190,13 +190,13 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
                 treeInfoDialog.setLocationRelativeTo(this);
                 treeInfoDialog.setVisible(true);
-
+                
                 if (treeInfoDialog.isChanged()) {
                     logger.debug("tree has been changed and saved");
                 } else {
                     logger.debug("tree has not been changed");
                 }
-               
+                
             } else {
                 logger.debug("no tree selected");
             }
@@ -205,7 +205,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         }
         return treeInfoDialog.isChanged();
     }
-     
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -251,13 +251,37 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         add(jSplitPane, java.awt.BorderLayout.WEST);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
         logger.debug("treeSelectionEvent: " + evt);
-        if (evt != null && evt.getNewLeadSelectionPath() != null && 
+        if (evt != null && evt.getNewLeadSelectionPath() != null &&
                 evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
-            changeTreeSelection(((OTDBtreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getOTDBnode());
+            
+            TreeNode treeNode = (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
+            
+            if(treeNode.getUserObject() instanceof jOTDBnode){
+                changeTreeSelection((jOTDBnode)treeNode.getUserObject());
+            
+            } else if(treeNode.getUserObject() instanceof jParmDBnode){
+                jParmDBnode selectedNode = (jParmDBnode)treeNode.getUserObject();
+                logger.debug("selected ParmDB node: "+selectedNode.name);
+                
+                int savedSelection=jTabbedPane1.getSelectedIndex();
+                logger.debug("ChangeSelection for node: " + selectedNode.name);
+                //itsSelectedNode=selectedNode;
+                    
+                    jTabbedPane1.removeTabAt(0);
+                    jTabbedPane1.insertTab("ParmDBPlotter",null,parmDBPlotPanel1,"",0);
+                    parmDBPlotPanel1.setParam(selectedNode.nodeID());
+                    
+               
+                //logParamPanel1.setNode(aNode);
+            jTabbedPane1.setSelectedIndex(0);
+            
+            //changeTreeSelection(((ParmDBTreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getParmDBnode());
         }
+        
+    }
     }//GEN-LAST:event_treePanelValueChanged
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
@@ -282,10 +306,11 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     private MainFrame itsMainFrame;
     private boolean changed=false;
     private jOTDBnode itsSelectedNode = null;
-    private TreeInfoDialog treeInfoDialog = null;  
+    private TreeInfoDialog treeInfoDialog = null;
     // keep the TreeId that belongs to this panel
-    private int itsTreeID = 0;    
+    private int itsTreeID = 0;
     private nl.astron.lofar.sas.otbcomponents.ParameterViewPanel parameterViewPanel1;
+    private nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel parmDBPlotPanel1;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
@@ -296,12 +321,12 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     private nl.astron.lofar.sas.otbcomponents.NodeViewPanel nodeViewPanel1;
     private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
-
+    
     /**
      * Utility field used by event firing mechanism.
      */
     private javax.swing.event.EventListenerList listenerList =  null;
-
+    
     /**
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
@@ -310,28 +335,28 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         if (listenerList == null ) {
             listenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        listenerList.add(java.awt.event.ActionListener.class, listener);
     }
-
+    
     /**
      * Removes ActionListener from the list of listeners.
      * @param listener The listener to remove.
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        listenerList.remove(java.awt.event.ActionListener.class, listener);
     }
-
+    
     /**
      * Notifies all registered listeners about the event.
-     * 
+     *
      * @param event The event to be fired
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
         if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        Object[] listeners = listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
-                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);
+                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed(event);
             }
         }
     }

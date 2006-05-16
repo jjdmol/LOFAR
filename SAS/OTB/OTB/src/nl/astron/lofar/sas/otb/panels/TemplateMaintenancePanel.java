@@ -12,8 +12,8 @@ import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
-import nl.astron.lofar.sas.otb.util.OTDBtreeNode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 import org.apache.log4j.Logger;
 
@@ -88,13 +88,11 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
             } else {
                 otdbNode = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
             }
-        
-            // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getSharedVars().getOTDBrmi());
+            TreeNode rootNode = new TreeNode(otdbNode);
 
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(otdbTreeNode);
+            treePanel.newRootNode(rootNode);
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
@@ -157,7 +155,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
     private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
         logger.debug("treeSelectionEvent: " + evt);
-        changeTreeSelection(((OTDBtreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getOTDBnode());
+        TreeNode otdbNode= (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
+        changeTreeSelection((jOTDBnode)otdbNode.getUserObject());
     }//GEN-LAST:event_treePanelValueChanged
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed

@@ -7,8 +7,8 @@
 package nl.astron.lofar.sas.otb.panels;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.util.OTDBtreeNode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
 /**
@@ -86,11 +86,11 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
             }
         
             // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getSharedVars().getOTDBrmi());
+            TreeNode rootNode = new TreeNode(otdbNode);
 
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(otdbTreeNode);
+            treePanel.newRootNode(rootNode);
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
