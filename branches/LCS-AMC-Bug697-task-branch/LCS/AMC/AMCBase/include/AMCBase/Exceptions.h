@@ -53,6 +53,10 @@ namespace LOFAR
     // zero).
     EXCEPTION_CLASS(MathException, Exception);
 
+    // This exception is thrown when there is a mismatch between (coordinate)
+    // reference types.
+    EXCEPTION_CLASS(TypeException, Exception);
+
     // @}
 
   } // namespace AMC

@@ -134,22 +134,6 @@ namespace LOFAR
 
     //## -- Free functions   -- ##//
 
-    Coord3D operator+(const Coord3D& lhs, const Coord3D& rhs)
-    {
-      Coord3D v(lhs);
-      v += rhs;
-      return v;
-    }
-
-
-    Coord3D operator-(const Coord3D& lhs, const Coord3D& rhs)
-    {
-      Coord3D v(lhs);
-      v -= rhs;
-      return v;
-    }
-
-
     double operator*(const Coord3D& lhs, const Coord3D& rhs)
     {
       double sum(0);
@@ -159,34 +143,6 @@ namespace LOFAR
         sum += x[i] * y[i];
       }
       return sum;
-    }
-
-
-    Coord3D operator*(double a, const Coord3D& v)
-    {
-      Coord3D tmp(v);
-      tmp *= a;
-      return tmp;
-    }
-
-
-    Coord3D operator*(const Coord3D& v, double a)
-    {
-      return a * v;
-    }
-
-
-    Coord3D operator/(const Coord3D& v, double a)
-    {
-      Coord3D tmp(v);
-      tmp /= a;
-      return tmp;
-    }
-
-
-    bool operator==(const Coord3D& lhs, const Coord3D& rhs)
-    {
-      return lhs.get() == rhs.get();
     }
 
 

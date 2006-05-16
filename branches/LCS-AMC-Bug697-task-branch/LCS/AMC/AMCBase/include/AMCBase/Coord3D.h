@@ -50,17 +50,13 @@ namespace LOFAR
       // coordinate system.
       Coord3D();
 
-      // The destructor must be virtual destructor, because this class can be
-      // derived from.
-      virtual ~Coord3D() {}
-
       // Create a 3D-coordinate by giving the longitude \a lon and latitude
       // \a lat in radians and the \a r in units of length.
       Coord3D(double lon, double lat, double r);
 
       // Create a 3D-coordinate from the cartesian coordinates \a xyz where
       // \a x, \a y, and \a z are in units of length.
-      explicit Coord3D(const vector<double>& xyz);
+      Coord3D(const vector<double>& xyz);
       
       // Return the 3D-coordinate in cartesian coordinates.
       const vector<double>& get() const
@@ -94,6 +90,7 @@ namespace LOFAR
       Coord3D& operator*=(double a);
 
       // Divide the 3D-coordinate by a scalar \a a.
+      // \throw MathException when \a == 0
       Coord3D& operator/=(double a);
 
     private:
@@ -106,26 +103,33 @@ namespace LOFAR
     };
 
     // Calculate the sum of two 3D-coordinates
-    Coord3D operator+(const Coord3D& lhs, const Coord3D& rhs);
+    inline Coord3D operator+(const Coord3D& lhs, const Coord3D& rhs)
+    { return Coord3D(lhs) += rhs; }
 
     // Calculate the difference between two 3D-coordinates.
-    Coord3D operator-(const Coord3D& lhs, const Coord3D& rhs);
+    inline Coord3D operator-(const Coord3D& lhs, const Coord3D& rhs)
+    { return Coord3D(lhs) -= rhs; }
 
     // Multiply the 3D-coordinate \a v with a scalar \a a.
-    Coord3D operator*(double a, const Coord3D& v);
+    inline Coord3D operator*(double a, const Coord3D& v)
+    { return Coord3D(v) *= a; }
 
     // Multiply the 3D-coordinate \a v with a scalar \a a.
-    Coord3D operator*(const Coord3D& v, double a);
+    inline Coord3D operator*(const Coord3D& v, double a)
+    { return Coord3D(v) *= a; }
 
     // Divide the 3D-coordinate \a v by a scalar \a a.
-    Coord3D operator/(const Coord3D& v, double a);
+    // \throw MathException when \a == 0
+    inline Coord3D operator/(const Coord3D& v, double a)
+    { return Coord3D(v) /= a; }
     
     // Calculate the inner product of two vectors originating at the origin
     // and pointing to 3D-coordinates \a lhs and \a rhs respectively..
     double operator*(const Coord3D& lhs, const Coord3D& rhs);
 
     // Compare two 3D-coordinates for equality.
-    bool operator==(const Coord3D& lhs, const Coord3D& rhs);
+    inline bool operator==(const Coord3D& lhs, const Coord3D& rhs)
+    { return lhs.get() == rhs.get(); }
 
     // Output a 3D-coordinate in ASCII format.
     ostream& operator<< (ostream&, const Coord3D&);

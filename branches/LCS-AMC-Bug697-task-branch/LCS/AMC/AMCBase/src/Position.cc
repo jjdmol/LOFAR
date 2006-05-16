@@ -25,6 +25,8 @@
 
 //# Includes
 #include <AMCBase/Position.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Exceptions.h>
 #include <Common/lofar_iostream.h>
 
 namespace LOFAR
@@ -32,30 +34,25 @@ namespace LOFAR
   namespace AMC
   {
 
+    //## --------  Public member functions  -------- ##//
+
     Position::Position() : 
-      Coord3D(vector<double>(3, 0.0)), 
+      itsCoord(Coord3D()),
       itsType(ITRF)
     {
     }
     
 
     Position::Position (double lon, double lat, double h, Types typ) :
-      Coord3D(lon, lat, h),
+      itsCoord(lon, lat, h),
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
     {
     }
 
 
-    Position::Position(const vector<double>& xyz, Types typ) :
-      Coord3D(xyz),
+    Position::Position(const Coord3D& coord, Types typ) :
+      itsCoord(coord),
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
-    {
-    }
-
-
-    Position::Position(const Coord3D& that) :
-      Coord3D(that),
-      itsType(ITRF)
     {
     }
 
@@ -74,6 +71,62 @@ namespace LOFAR
     }
 
 
+    Position& Position::operator+=(const Position& that)
+    {
+      if (itsType != that.itsType) {
+        THROW (TypeException, showType() << " != " << that.showType());
+      }
+      itsCoord += that.itsCoord;
+      return *this;
+    }
+
+
+    Position& Position::operator-=(const Position& that)
+    {
+      if (itsType != that.itsType) {
+        THROW (TypeException, showType() << " != " << that.showType());
+      }
+      itsCoord -= that.itsCoord;
+      return *this;
+    }
+
+
+    Position& Position::operator*=(double a)
+    {
+      itsCoord *= a;
+      return *this;
+    }
+
+
+    Position& Position::operator/=(double a)
+    {
+      itsCoord /= a;
+      return *this;
+    }
+
+
+    double Position::operator*(const Position& that)
+    {
+      if (itsType != that.itsType) {
+        THROW (TypeException, showType() << " != " << that.showType());
+      }
+      return itsCoord * that.coord();
+    }
+
+
+    double Position::operator*(const Direction& that)
+    {
+      // Here we must convert the type to string before comparing, because
+      // we're comparing Position::Types with Direction::Types.
+      if (showType() != that.showType()) {
+        THROW (TypeException, showType() << " != " << that.showType());
+      }
+      return itsCoord * that.coord();
+    }
+
+
+    //## --------  Global functions  -------- ##//
+
     ostream& operator<<(ostream& os, const Position& pos)
     {
       if (!pos.isValid()) 
@@ -89,7 +142,7 @@ namespace LOFAR
       return 
         lhs.isValid() && rhs.isValid() &&
         lhs.type()    == rhs.type()    &&
-        lhs.get()     == rhs.get();
+        lhs.coord()   == rhs.coord();
     }
 
 

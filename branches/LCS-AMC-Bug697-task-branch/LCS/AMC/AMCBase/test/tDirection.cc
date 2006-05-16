@@ -56,7 +56,7 @@ int main(int /*argc*/, const char* argv[])
     // Vector for storing the direction cosines.
     vector<double> xyz(3);
 
-    xyz = dir0.get();
+    xyz = dir0.coord().get();
     ASSERT(dir0 == Direction(xyz));
     ASSERT(dir0.isValid() && 
            dir0.type() == Direction::J2000 &&
@@ -66,7 +66,7 @@ int main(int /*argc*/, const char* argv[])
            Numeric::compare(xyz[1], 0) && 
            Numeric::compare(xyz[2], 0));
 
-    xyz = dir1.get();
+    xyz = dir1.coord().get();
     ASSERT(dir1 == Direction(xyz, Direction::ITRF));
     ASSERT(dir1.isValid() &&
            dir1.type() == Direction::ITRF &&
@@ -76,7 +76,7 @@ int main(int /*argc*/, const char* argv[])
            Numeric::compare(xyz[1],  0.3824104613794417) &&
            Numeric::compare(xyz[2], -0.1888588949765006));
 
-    xyz = dir2.get();
+    xyz = dir2.coord().get();
     ASSERT(dir2 == Direction(xyz, Direction::AZEL));
     ASSERT(dir2.isValid() &&
            dir2.type() == Direction::AZEL &&
@@ -86,7 +86,7 @@ int main(int /*argc*/, const char* argv[])
            Numeric::compare(xyz[1],  0.6745519909458014) &&
            Numeric::compare(xyz[2],  0.6900749835569364));
 
-    xyz = dir3.get();
+    xyz = dir3.coord().get();
     ASSERT(!(dir3 == Direction(xyz, Direction::INVALID)));
     ASSERT(!dir3.isValid());
 

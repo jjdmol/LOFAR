@@ -25,6 +25,7 @@
 
 //# Includes
 #include <AMCBase/BlobIO.h>
+#include <AMCBase/Coord3D.h>
 #include <AMCBase/Direction.h>
 #include <AMCBase/Position.h>
 #include <AMCBase/Epoch.h>
@@ -44,16 +45,22 @@ namespace LOFAR
 
     //# -------  BlobOStream operators  ------- #//
 
+    BlobOStream& operator<<(BlobOStream& bos, const Coord3D& coord)
+    {
+      bos << coord.get();
+      return bos;
+    }
+
     BlobOStream& operator<<(BlobOStream& bos, const Direction& dir)
     {
-      bos << dir.get()
+      bos << dir.coord()
           << static_cast<int32>(dir.type());
       return bos;
     }
 
     BlobOStream& operator<<(BlobOStream& bos, const Position& pos)
     {
-      bos << pos.get()
+      bos << pos.coord()
           << static_cast<int32>(pos.type());
       return bos;
     }
@@ -95,22 +102,30 @@ namespace LOFAR
 
     //# -------  BlobIStream operators  ------- #//
 
-    BlobIStream& operator>>(BlobIStream& bis, Direction& dir)
+    BlobIStream& operator>>(BlobIStream& bis, Coord3D& coord)
     {
       vector<double> xyz(3);
+      bis >> xyz;
+      coord = Coord3D(xyz);
+      return bis;
+    }
+
+    BlobIStream& operator>>(BlobIStream& bis, Direction& dir)
+    {
+      Coord3D coord;
       int32 type;
-      bis >> xyz >> type;
-      dir = Direction(xyz, static_cast<Direction::Types>(type));
+      bis >> coord >> type;
+      dir = Direction(coord, static_cast<Direction::Types>(type));
       ASSERT(dir.isValid());
       return bis;
     }
 
     BlobIStream& operator>>(BlobIStream& bis, Position& pos)
     {
-      vector<double> xyz(3);
+      Coord3D coord;
       int32 type;
-      bis >> xyz >> type;
-      pos = Position(xyz, static_cast<Position::Types>(type));
+      bis >> coord >> type;
+      pos = Position(coord, static_cast<Position::Types>(type));
       ASSERT(pos.isValid());
       return bis;
     }

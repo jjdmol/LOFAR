@@ -36,6 +36,9 @@ namespace LOFAR
   namespace AMC
   {
 
+    //# Forward declarations
+    class Direction;
+
     // \addtogroup AMCBase
     // @{
 
@@ -47,7 +50,7 @@ namespace LOFAR
     // used in any kind of frame (like ITRF and geocentric). The correct
     // interpretation of the coordinates should be done by the user of this
     // class.
-    class Position : public Coord3D
+    class Position
     {
     public:
       // Types of position. 
@@ -68,33 +71,26 @@ namespace LOFAR
       // ITRF (default), or \c WGS84.
       Position(double lon, double lat, double h, Types typ = ITRF);
 
-      // Create a position from the cartesian coordinates \a xyz and the
-      // reference type \a typ.
-      explicit Position(const vector<double>& xyz, Types typ = ITRF);
+      // Create a position from the 3D-coordinate \a coord and the reference
+      // type \a typ.
+      Position(const Coord3D& coord, Types typ = ITRF);
       
-      // Create a position from a Coord3D object. We need this constructor,
-      // because we want to be able to do the following:
-      // \code
-      //   Position p1, p2, p3;
-      //   p3 = p1 + p2;
-      // \endcode
-      // However, addition, subtraction, etc. were factored out to the base
-      // class Coord3D. Hence, there's only a
-      // \code
-      //   Coord3D operator+(const Coord3D& lhs, const Coord3D& rhs);
-      // \endcode
-      // So, we must tell the compiler how it can construct a Position from a
-      // Coord3D object.
-      //
-      // \todo This clearly is a `smell' of bad design. In fact Position
-      // should not be implemented in terms of inheritance but of composition;
-      // it is not an <em>is-a</em> relation, but a <em>has-a</em> relation.
-      Position(const Coord3D& that);
-
+      // Return the longitude in radians.
+      double longitude() const
+      { return itsCoord.longitude(); }
+      
+      // Return the latitude in radians.
+      double latitude() const
+      { return itsCoord.latitude(); }
+      
       // Return the height in meters.
       double height() const
-      { return radius(); }
+      { return itsCoord.radius(); }
       
+      // Return the position coordinates.
+      const Coord3D& coord() const
+      { return itsCoord; }
+
       // Return the reference type.
       Types type() const
       { return itsType; }
@@ -106,11 +102,64 @@ namespace LOFAR
       // Return the position type as a string.
       const string& showType() const;
 
+      // Add Position \a that to \c this. 
+      // \throw AssertError if the reference types of \c this and \a that
+      // differ.
+      Position& operator+=(const Position& that);
+
+      // Subtract Position \a that from \c this. 
+      // \throw AssertError if the reference types of \c this and \a that
+      // differ.
+     Position& operator-=(const Position& that);
+
+      // Multiply \c this with the scalar \a a.
+      Position& operator*=(double a);
+
+      // Divide \c this by a scalar \a a.
+      Position& operator/=(double a);
+
+      // Calculate the inner product of \c this and the Position \a that.
+      // \throw AssertError if the reference types of \c this and \a that
+      // differ.
+      double operator*(const Position& that);
+
+      // Calculate the inner product of \c this and the Direction \a that.
+      // \throw AssertError if the reference types of \c this and \a that
+      // differ.
+      double operator*(const Direction& that);
+
     private:
+      // The position coordinates.
+      Coord3D itsCoord;
+
       // Reference type of the position coordinates.
       Types itsType;
     };
 
+    // Calculate the sum of two Positions. 
+    // \throw AssertError if the reference types of \c this and \a that
+    // differ.
+    inline Position operator+(const Position& lhs, const Position& rhs)
+    { return Position(lhs) += rhs; }
+
+    // Calculate the difference between two Positions. 
+    // \throw AssertError if the reference types of \c this and \a that
+    // differ.
+    inline Position operator-(const Position& lhs, const Position& rhs)
+    { return Position(lhs) -= rhs; }
+
+    // Multiply the Position \a v with a scalar \a a.
+    inline Position operator*(double a, const Position& v)
+    { return Position(v) *= a; }
+
+    // Multiply the Position \a v with a scalar \a a.
+    inline Position operator*(const Position& v, double a)
+    { return Position(v) *= a; }
+
+    // Divide the Position \a v by a scalar \a a.
+    inline Position operator/(const Position& v, double a)
+    { return Position(v) /= a; }
+    
     // Output a position in ASCII format.
     ostream& operator<< (ostream&, const Position&);
 

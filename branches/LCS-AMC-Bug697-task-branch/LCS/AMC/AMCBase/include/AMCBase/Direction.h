@@ -35,6 +35,9 @@ namespace LOFAR
   namespace AMC
   {
 
+    //# Forward declarations
+    class Position;
+
     // \addtogroup AMCBase
     // @{
 
@@ -46,7 +49,7 @@ namespace LOFAR
     // the class can be used for any pair of sky coordinates (like RA/DEC and
     // AZ/ELEV). The correct interpretation of the coordinates should be done
     // by the user of this class.
-    class Direction : public Coord3D
+    class Direction
     {
     public:
       // Types of direction. Currently, only three types are supported: \c
@@ -68,9 +71,22 @@ namespace LOFAR
       // in radians and the reference type \a typ.
       Direction(double lon, double lat, Types typ = J2000);
 
-      // Create a direction from the cartesian coordinates \a xyz and the
-      // reference type \a typ.
-      explicit Direction(const vector<double>& xyz, Types typ = J2000);
+      // Create a direction from the 3D-coordinate \a coord and the reference
+      // type \a typ. 
+      // \note The direction vector will be normalized.
+      Direction(const Coord3D& coord, Types typ = J2000);
+      
+      // Return the longitude in radians.
+      double longitude() const
+      { return itsCoord.longitude(); }
+      
+      // Return the latitude in radians.
+      double latitude() const
+      { return itsCoord.latitude(); }
+      
+      // Return the direction coordinates.
+      const Coord3D& coord() const
+      { return itsCoord; }
 
       // Return the reference type.
       Types type() const
@@ -83,11 +99,64 @@ namespace LOFAR
       // Return the direction type as a string.
       const string& showType() const;
 
+      // Add Direction \a that to \c this. 
+      // \throw AssertError if the reference types of \c this and \a that
+      // differ.
+      Direction& operator+=(const Direction& that);
+
+      // Subtract Direction \a that from \c this. 
+      // \throw AssertError if the reference types of \c this and \a that
+      // differ.
+      Direction& operator-=(const Direction& that);
+
+      // Multiply \c this with the scalar \a a.
+      Direction& operator*=(double a);
+
+      // Divide \c this by a scalar \a a.
+      Direction& operator/=(double a);
+
+      // Calculate the inner product of \c this and the Direction \a that.
+      // \throw AssertError if the reference types of \c this and \a that
+      // differ.
+      double operator*(const Direction& that);
+
+      // Calculate the inner product of \c this and the Position \a that.
+      // \throw AssertError if the reference types of \c this and \a that
+      // differ.
+      double operator*(const Position& that);
+
     private:
+      // The direction coordinates.
+      Coord3D itsCoord;
+
       // Type of direction.
       Types itsType;
     };
 
+    // Calculate the sum of two Directions. 
+    // \throw AssertError if the reference types of \c this and \a that
+    // differ.
+    inline Direction operator+(const Direction& lhs, const Direction& rhs)
+    { return Direction(lhs) += rhs; }
+
+    // Calculate the difference between two Directions. 
+    // \throw AssertError if the reference types of \c this and \a that
+    // differ.
+    inline Direction operator-(const Direction& lhs, const Direction& rhs)
+    { return Direction(lhs) -= rhs; }
+
+    // Multiply the Direction \a d with a scalar \a a.
+    inline Direction operator*(double a, const Direction& d)
+    { return Direction(d) *= a; }
+
+    // Multiply the Direction \a d with a scalar \a a.
+    inline Direction operator*(const Direction& d, double a)
+    { return Direction(d) *= a; }
+
+    // Divide the Direction \a d by a scalar \a a.
+    inline Direction operator/(const Direction& d, double a)
+    { return Direction(d) /= a; }
+    
     // Output a direction in ASCII format.
     ostream& operator<< (ostream&, const Direction&);
 
