@@ -98,7 +98,11 @@ public class SharedVars {
      * @return the OtdbRmi object
      */
     public static jParmFacade getJParmFacade() {
+        if(itsjParmFacade == null){
+            itsjParmFacade = new jParmFacade("/home/pompert/transfer/tParmFacade.in_mep");
+        }
         return itsjParmFacade;
+        
     }
     
     /**
@@ -114,7 +118,7 @@ public class SharedVars {
                 
         //ParmDB
         
-        itsjParmFacade = new jParmFacade("/home/pompert/transfer/tParmFacade.in_mep");
+        
                     
         itsCurrentTreeID=0;
         itsCurrentComponentID=0;
