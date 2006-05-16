@@ -101,7 +101,7 @@ namespace LOFAR
       itsDelays = getData<float> ("Delay");
   
       // Fill in TimeStamp pointer
-      itsTimeStamp = (timestamp_t*)getData<char> ("TimeStamp");
+      itsTimeStamp = getData<TimeStamp> ("TimeStamp");
 
       // use memset to null the buffer
       memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
