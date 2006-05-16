@@ -23,6 +23,10 @@
 
 #include <tinyCEP/TinyApplicationHolder.h>
 
+#if defined HAVE_BGL
+#include <rts.h>
+#endif
+
 namespace LOFAR {
 namespace CS1 {
 
@@ -47,7 +51,9 @@ class AH_BGL_Processing : public TinyApplicationHolder
     virtual void quit();
 
   private:
-    static unsigned remapOnTree(unsigned logicalNode);
+#if defined HAVE_BGL
+    static unsigned remapOnTree(unsigned cell, unsigned core, struct BGLPersonality &);
+#endif
 
     vector<WH_BGL_Processing *> itsWHs;
 
