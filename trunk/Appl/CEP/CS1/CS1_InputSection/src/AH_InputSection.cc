@@ -105,7 +105,9 @@ namespace LOFAR {
 				   *lastTH,
 				   station);
 	  RSPSteps.push_back(new Step(lastWH, nameBuffer, false));
+#ifdef HAVE_MPI
 	  RSPSteps.back()->runOnNode(lowestFreeNode++);   
+#endif
 	  comp.addBlock(RSPSteps.back());
     
 	  // Connect the Delay Controller
@@ -121,7 +123,9 @@ namespace LOFAR {
 				    itsParamSet,
 				    nNodesPerCell);
 	  collectSteps.push_back(new Step(lastWH, nameBuffer, false));
+#ifdef HAVE_MPI
 	  collectSteps.back()->runOnNode(lowestFreeNode++); 
+#endif
 	  comp.addBlock(collectSteps.back());
 
 	  // Connect splitters to mergers (transpose)
