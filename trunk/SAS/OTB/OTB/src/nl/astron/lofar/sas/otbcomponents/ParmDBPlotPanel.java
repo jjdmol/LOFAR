@@ -11,10 +11,10 @@ import java.awt.Color;
 import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
-import nl.astron.lofar.java.cep.jparmfacade.jParmFacade;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.SharedVars;
 import org.apache.log4j.Logger;
 
 /**
@@ -34,7 +34,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
     public ParmDBPlotPanel(MainFrame aMainFrame,String paramName) {
         initComponents();
         itsMainFrame = aMainFrame;
-        itsFacade = itsMainFrame.getSharedVars().getJParmFacade();
+        
         itsParamName = paramName;
         
         initPanel(paramName);
@@ -48,7 +48,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsFacade=itsMainFrame.getSharedVars().getJParmFacade();
+           
             
         } else {
             logger.debug("No Mainframe supplied");
@@ -69,7 +69,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
                 String[] passToDataAccess = new String[7];
                 
                 Vector paramValues;
-                paramValues = itsFacade.getRange(itsParamName);
+                paramValues = SharedVars.getJParmFacade().getRange(itsParamName);
                 double startx = Double.parseDouble(paramValues.get(0).toString());
                 double endx =Double.parseDouble(paramValues.get(1).toString());
                 double starty = Double.parseDouble(paramValues.get(2).toString());
@@ -251,7 +251,6 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_ParamCancelButtonActionPerformed
     
     private MainFrame  itsMainFrame;
-    private jParmFacade    itsFacade;
     private String itsParamName;
     
     
