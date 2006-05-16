@@ -231,8 +231,14 @@ void TH_MPI::initMPI(int argc, const char *argv[])
 void TH_MPI::finalize()
 {
   LOG_TRACE_RTTI( "TH_MPI finalize()" );
-  /// finalize the MPI communication
-  MPI_Finalize();
+  int finalized = 0;
+  
+  /// Finalize the MPI communication
+  MPI_Finalized(&finalized);
+  if (!finalized)
+  {
+    MPI_Finalize();
+  }
 }
 
 void TH_MPI::synchroniseAllProcesses()
