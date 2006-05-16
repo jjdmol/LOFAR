@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 
 #include <casa/Quanta/MVTime.h>
+#include <casa/Utilities/MUString.h>
 #include <casa/Containers/Block.h>
 #include <iostream>
 #include <string>
@@ -127,7 +128,7 @@ void showHelp()
   cerr << " removeold parmname_pattern [domain=]" << endl;
   cerr << endl;
   cerr << "  domain gives an N-dim domain (usually n is 2) as:" << endl;
-  cerr << "      domain=[[stx,endx],[sty,endy],...]" << endl;
+  cerr << "      domain=[stx,endx,sty,endy,...]" << endl;
   cerr << "   or domain=[st=[stx,sty,...],end=[endx,...] or size=[sizex,...]]" << endl;
   cerr << "  valuespec gives the values of the parameter attributes as" << endl;
   cerr << "   key=value pairs separated by commas." << endl;
@@ -342,13 +343,26 @@ ParmDomain getDomain (const KeyValueMap& kvmap, int size=0)
 	}
       }
     } else {
-      // Given as a vector of doubles (as stx,endx,sty,endy,...).
-      ok = true;
+      // Given as a vector of values (as stx,endx,sty,endy,...).
       vector<double> vec;
-      try {
-	vec = value->second.getVecDouble();
-      } catch (...) {
-	ok = false;
+      ok = true;
+      const vector<KeyValue>& vals = value->second.getVector();
+      for (vector<KeyValue>::const_iterator iter = vals.begin();
+	   iter != vals.end();
+	   iter++) {
+	if (iter->dataType() == KeyValue::DTString) {
+	  MUString str (iter->getString());
+	  Quantity res;
+	  if (MVTime::read (res, str)) {
+	    vec.push_back (res.getValue());
+	  } else {
+	    cout << "Error in interpreting " << iter->getString() << endl;
+	    ok = false;
+	    break;
+	  }
+	} else {
+	  vec.push_back (iter->getDouble());
+	}
       }
       if (ok) {
 	if (vec.size() % 2 != 0) {
@@ -388,7 +402,7 @@ void showDomain (const ParmDomain& domain)
 	 << (end[0]-st[0])/1e3 << " KHz]";
     cout << " time=[";
     showTime(cout, st[1]);
-    cout << " +" << (end[1]-st[1]) << " sec]";
+    cout << " +" << (end[1]-st[1])*86400 << " sec]";
   } else {
     for (uint i=0; i<st.size(); ++i) {
       if (i != 0) cout << ',';
