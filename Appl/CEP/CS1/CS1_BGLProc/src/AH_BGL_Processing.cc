@@ -40,10 +40,6 @@
 
 #include <Blob/KeyValueMap.h>
 
-#if defined HAVE_BGL
-#include <rts.h>
-#endif
-
 namespace LOFAR {
 namespace CS1 {
 
@@ -72,22 +68,43 @@ void AH_BGL_Processing::undefine()
   delete itsVisibilitiesStub;	itsVisibilitiesStub   = 0;
 }  
 
-unsigned AH_BGL_Processing::remapOnTree(unsigned node)
-{
-#if defined HAVE_BGL
-  static const unsigned char map[] = {
-     2,  3,  6,  7, 18, 19, 22, 23, 34, 35, 38, 39, 50, 51, 54, 55,
-    10, 11, 14, 15, 26, 27, 30, 31, 42, 43, 46, 47, 58, 59, 62, 63,
-     0,  1,  4,  5, 16, 17, 20, 21, 32, 33, 36, 37, 48, 49, 52, 53,
-     8,  9, 12, 13, 24, 25, 28, 29, 40, 41, 44, 45, 56, 57, 60, 61,
-  };
 
-  node = map[node];
-  ASSERTSTR(node < TH_MPI::getNumberOfNodes(), "not enough MPI nodes allocated");
-#endif
+#if defined HAVE_BGL
+
+unsigned AH_BGL_Processing::remapOnTree(unsigned cell, unsigned core, struct BGLPersonality &personality)
+{
+  unsigned psetXsize  = personality.getXpsetSize();
+  unsigned psetYsize  = personality.getYpsetSize();
+  unsigned psetZsize  = personality.getZpsetSize();
+
+  unsigned psetXcount = personality.getXsize() / psetXsize;
+  unsigned psetYcount = personality.getYsize() / psetYsize;
+  unsigned psetZcount = personality.getZsize() / psetZsize;
+
+  unsigned xOrigin    = cell			       % psetXcount * psetXsize;
+  unsigned yOrigin    = cell / psetXcount	       % psetYcount * psetYsize;
+  unsigned zOrigin    = cell / psetXcount / psetYcount % psetZcount * psetZsize;
+
+  unsigned psetSize   = personality.numNodesInPset();
+
+  unsigned numProcs, xOffset, yOffset, zOffset, node;
+
+  personality.coordsForPsetRank(core % psetSize, xOffset, yOffset, zOffset);
+
+  unsigned x = xOrigin + xOffset - personality.xPsetOrigin();
+  unsigned y = yOrigin + yOffset - personality.yPsetOrigin();
+  unsigned z = zOrigin + zOffset - personality.zPsetOrigin();
+  unsigned t = core / psetSize;
+
+  rts_rankForCoordinates(x, y, z, t, &node, &numProcs);
+
+  ASSERTSTR(node < TH_MPI::getNumberOfNodes(), "not enough nodes allocated");
 
   return node;
 }
+
+#endif
+
 
 void AH_BGL_Processing::define(const KeyValueMap&) {
 
@@ -108,8 +125,10 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   struct BGLPersonality personality;
   int retval = rts_get_personality(&personality, sizeof personality);
   ASSERTSTR(retval == 0, "Could not get personality");
-  bool virtualNodeMode = (personality.opFlags & BGLPERSONALITY_OPFLAGS_VIRTUALNM) != 0;
-  unsigned physicalNodesPerCell = virtualNodeMode ? 16 : 8;
+  unsigned physicalNodesPerCell = personality.numNodesInPset();
+
+  if (personality.isVirtualNodeMode())
+    physicalNodesPerCell *= 2;
 
   ASSERTSTR(usedNodesPerCell <= physicalNodesPerCell, "too many nodes per cell");
 #else
@@ -118,7 +137,6 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 
   const char *str	  = getenv("FIRST_NODE");
   unsigned   logicalNode  = str != 0 ? atoi(str) : 0;
-  unsigned   physicalNode = 0;
 
   ASSERTSTR(logicalNode % usedNodesPerCell == 0, "FIRST_NODE not a multiple of BGLProc.NodesPerCell");
 
@@ -127,8 +145,8 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   unsigned maxCells   = TH_MPI::getNumberOfNodes() / physicalNodesPerCell;
   unsigned lastCell   = firstCell + std::min(totalCells - firstCell, maxCells);
 
-  std::cerr << "totalCells = " << totalCells << ", nrSubbandsPerCell = " << nrSubbandsPerCell << '\n';
-  std::cerr << "firstCell = " << firstCell << ", lastCell = " << lastCell << '\n';
+  ASSERTSTR(firstCell < lastCell, "not enough nodes specified\n");
+
   for (uint cell = firstCell; cell < lastCell; cell ++) {
     for (uint core = 0; core < usedNodesPerCell; core ++) {
       WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", logicalNode, itsParamSet);
@@ -138,17 +156,14 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 //    itsRFI_MitigationStub->connect(cell, core, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
       itsVisibilitiesStub->connect(cell, core, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
-      ++ logicalNode;
-      wh->runOnNode(remapOnTree(physicalNode ++));
-    }
-
-    // advance to next compute cell
-    physicalNode = (physicalNode + physicalNodesPerCell - 1) & -physicalNodesPerCell;
-  }
-
-#if defined HAVE_MPI
-  //ASSERTSTR (physicalNode <= TH_MPI::getNumberOfNodes(), "CS1_BGL_Proc needs " << physicalNode << " nodes, " << TH_MPI::getNumberOfNodes() << " available");
+#if defined HAVE_BGL
+      wh->runOnNode(remapOnTree(cell - firstCell, core, personality));
+#else
+      wh->runOnNode(logicalNode);
 #endif
+      ++ logicalNode;
+    }
+  }
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }

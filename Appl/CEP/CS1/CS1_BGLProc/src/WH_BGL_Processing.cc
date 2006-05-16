@@ -1197,8 +1197,8 @@ WH_BGL_Processing* WH_BGL_Processing::make(const string &name)
 
 void WH_BGL_Processing::preprocess()
 {
-#ifdef HAVE_MPI
-  std::cerr << "node " << TH_MPI::getCurrentRank() << ": " << itsFirstSubband << ' ' << itsCurrentSubband << ' ' << itsLastSubband << '\n';
+#if defined HAVE_MPI
+  std::cerr << "node " << TH_MPI::getCurrentRank() << " filters subbands " << itsFirstSubband << " to " << itsLastSubband << " starting at " << itsCurrentSubband << '\n';
 #endif
 
 #if defined HAVE_BGL && NR_SUBBAND_CHANNELS == 256
