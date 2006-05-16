@@ -7,7 +7,7 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
 /**
@@ -48,7 +48,7 @@ public class TreePanel extends javax.swing.JPanel {
      *  All event handlers have to be added to the new tree 
      *  @param root  the new root of the tree
      */
-    public void newRootNode(DefaultMutableTreeNode root) {
+    public void newRootNode(TreeNode root) {
         jTree1 = null;
         
         jTree1 = new JTree(root);

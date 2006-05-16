@@ -16,6 +16,7 @@
 
 package nl.astron.lofar.sas.otb;
 
+import nl.astron.lofar.java.cep.jparmfacade.jParmFacade;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
 
@@ -32,6 +33,10 @@ public class SharedVars {
     static Logger logger = Logger.getLogger(SharedVars.class);
     static String name = "SharedVars";
     
+    static{
+        System.loadLibrary("jparmfacade");
+    }    
+    
     private MainFrame itsMainFrame=null;
     
     
@@ -43,8 +48,9 @@ public class SharedVars {
     // holds the current component ID
     private int                              itsCurrentComponentID=0;
     // holds the OtdbRmi Object (RMI/JNI access for OTDB)
-    private OtdbRmi                          itsOtdbRmi=null;
-
+    private static OtdbRmi                          itsOtdbRmi;
+    // holds the jParmFacade Object (JNI access for ParmDB)
+    private static jParmFacade                      itsjParmFacade;
     
     /*
      * PACKAGE SAS
@@ -78,6 +84,23 @@ public class SharedVars {
         return itsOtdbRmi;
     }
     
+    /** gets OTDBrmi
+     * OTBrmi holds all JNI/RMI connections
+     *
+     * @return the OtdbRmi object
+     */
+    public static OtdbRmi getStaticOTDBrmi() {
+        return itsOtdbRmi;
+    }
+     /** gets OTDBrmi
+     * OTBrmi holds all JNI/RMI connections
+     *
+     * @return the OtdbRmi object
+     */
+    public static jParmFacade getJParmFacade() {
+        return itsjParmFacade;
+    }
+    
     /**
      * Creates a new instance of SharedVars
      */
@@ -88,6 +111,11 @@ public class SharedVars {
         // SAS
         //
         itsOtdbRmi = new OtdbRmi(mainFrame);
+                
+        //ParmDB
+        
+        itsjParmFacade = new jParmFacade("/home/pompert/transfer/tParmFacade.in_mep");
+                    
         itsCurrentTreeID=0;
         itsCurrentComponentID=0;
 

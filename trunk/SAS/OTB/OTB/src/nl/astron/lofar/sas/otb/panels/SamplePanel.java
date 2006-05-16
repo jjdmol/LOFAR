@@ -9,7 +9,7 @@ package nl.astron.lofar.sas.otb.panels;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.util.OTDBtreeNode;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 
 
 /**
@@ -57,7 +57,7 @@ public class SamplePanel extends javax.swing.JPanel
         // put the OTDBnode in a wrapper for the tree
         //OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
         // example of an empty tree
-        OTDBtreeNode otdbTreeNode = new OTDBtreeNode();
+        TreeNode otdbTreeNode = new TreeNode(otdbNode);
 
         itsMainFrame.setHourglassCursor();
         // and create a new root
@@ -353,7 +353,7 @@ public class SamplePanel extends javax.swing.JPanel
             otdbNode.name = "Node_" + treeCounter++;
 
             // put the OTDBnode in a wrapper for the tree
-            OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getSharedVars().getOTDBrmi());
+            TreeNode otdbTreeNode = new TreeNode(otdbNode);
             
             // and create a new root
             treePanel.newRootNode(otdbTreeNode);

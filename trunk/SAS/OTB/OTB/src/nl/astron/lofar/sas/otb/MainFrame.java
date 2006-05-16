@@ -74,7 +74,7 @@ public class MainFrame extends javax.swing.JFrame {
     public MainFrame() {
         itsPlugins = new HashMap<String,PluginPanelInfo>();
         itsSharedVars = new SharedVars(this);
-        itsStorageLocation = new StorageLocation(itsSharedVars.getOTDBrmi());
+        itsStorageLocation = new StorageLocation(getSharedVars().getOTDBrmi());
         itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
 
         initComponents();

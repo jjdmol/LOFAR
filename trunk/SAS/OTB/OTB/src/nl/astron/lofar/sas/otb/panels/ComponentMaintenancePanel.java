@@ -9,8 +9,8 @@ import java.rmi.RemoteException;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
-import nl.astron.lofar.sas.otb.util.ComponentTreeNode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import nl.astron.lofar.sas.otbcomponents.ComponentPanel;
 import nl.astron.lofar.sas.otbcomponents.VICnodeDefViewPanel;
 import org.apache.log4j.Logger;
@@ -19,18 +19,18 @@ import org.apache.log4j.Logger;
  *
  * @author  Coolen
  */
-public class ComponentMaintenancePanel extends javax.swing.JPanel  
+public class ComponentMaintenancePanel extends javax.swing.JPanel
         implements IPluginPanel {
     
     static Logger logger = Logger.getLogger(ComponentMaintenancePanel.class);
-    static String name = "Component_Maintenance";   
+    static String name = "Component_Maintenance";
     
     /** Creates new form BeanForm */
     public ComponentMaintenancePanel() {
         initComponents();
         initialize();
     }
- 
+    
     public boolean hasChanged() {
         return changed;
     }
@@ -45,7 +45,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
             this.setChanged(false);
         }
     }
-
+    
     
     public boolean initializePlugin(MainFrame mainframe) {
         itsMainFrame = mainframe;
@@ -69,7 +69,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         setFieldValidations();
         return true;
     }
- 
+    
     public void setNewRootNode(){
         logger.debug("SetNewRootNode for component: "+itsComponentID);
         try {
@@ -94,23 +94,23 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
                     logger.debug("failed to get ComponentNode");
                 }
             }
-        
+            
             // put the param in a wrapper for the tree
-            ComponentTreeNode aComponentTreeNode = new ComponentTreeNode(aParam, itsMainFrame.getSharedVars().getOTDBrmi());
-
+            TreeNode rootNode = new TreeNode(aParam,aParam.name);
+            
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(aComponentTreeNode);
+            treePanel.newRootNode(rootNode);
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
         }
-    }    
+    }
     
     public String getFriendlyName() {
         return getFriendlyNameStatic()+"("+itsComponentID+")";
     }
-
+    
     public static String getFriendlyNameStatic() {
         return name;
     }
@@ -167,15 +167,18 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
         logger.debug("treeSelectionEvent: " + evt);
-        if (evt != null && evt.getNewLeadSelectionPath() != null && 
+        if (evt != null && evt.getNewLeadSelectionPath() != null &&
                 evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
-            changeTreeSelection(((ComponentTreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getOTDBparam());
+            TreeNode componentNode= (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
+            
+            changeTreeSelection((jOTDBparam)componentNode.getUserObject());
+            
         }
     }//GEN-LAST:event_treePanelValueChanged
-
+    
     private void initialize() {
         treePanel.setTitle("Component List");
         buttonPanel1.addButton("Exit");
@@ -205,7 +208,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         componentPanel1.enableType(false);
         componentPanel1.enableUnit(false);
         componentPanel1.enableLimits(true);
-        componentPanel1.enableDescription(true);                
+        componentPanel1.enableDescription(true);
         componentPanel1.enableButtons(true);
         componentPanel1.setButtonsVisible(true);
         
@@ -217,7 +220,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         VICnodeDefViewPanel1.enableButtons(true);
         VICnodeDefViewPanel1.setButtonsVisible(true);
     }
-
+    
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: "+evt.getActionCommand());
@@ -238,12 +241,12 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         // flag has to be set that ppl using this treeid should be able to see that it's info has been changed
         itsMainFrame.setChanged("Home",true);
     }
-
+    
     private MainFrame itsMainFrame;
     private jOTDBparam itsSelectedParam;
     
     // keep the ComponentId that belongs to this panel
-    private int itsComponentID = 0;   
+    private int itsComponentID = 0;
     private boolean changed=false;
     
     private nl.astron.lofar.sas.otbcomponents.ComponentPanel componentPanel1;
@@ -254,45 +257,45 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     private javax.swing.JSplitPane jSplitPane1;
     private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
-
+    
     /**
      * Utility field used by event firing mechanism.
      */
     private javax.swing.event.EventListenerList listenerList =  null;
-
+    
     /**
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
-
+        
         if (listenerList == null ) {
             listenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        listenerList.add(java.awt.event.ActionListener.class, listener);
     }
-
+    
     /**
      * Removes ActionListener from the list of listeners.
      * @param listener The listener to remove.
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
-
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        
+        listenerList.remove(java.awt.event.ActionListener.class, listener);
     }
-
+    
     /**
      * Notifies all registered listeners about the event.
-     * 
+     *
      * @param event The event to be fired
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
-
+        
         if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        Object[] listeners = listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
-                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);
+                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed(event);
             }
         }
     }
