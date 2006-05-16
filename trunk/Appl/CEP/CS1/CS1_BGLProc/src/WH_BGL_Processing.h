@@ -123,6 +123,7 @@ class WH_BGL_Processing: public WorkHolder {
     /// FIR Filter variables
     fftw_plan	    itsFFTWPlan;
     static vector<double>  itsBaseFrequencies;
+    double	    itsChannelBandwidth;
 
     const ACC::APS::ParameterSet &itsPS;
     const unsigned  itsCoreNumber;

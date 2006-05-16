@@ -63,7 +63,7 @@ inline DH_Subband::SampleType toComplex(double phi)
 }
 
 
-void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
+void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency, double sampleRate)
 {
   // Simulate a monochrome complex signal into the PPF, with station 1 at a
   // distance of .25 labda to introduce a delay.  Also, a few samples can be
@@ -87,18 +87,11 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency)
   memset(delays, 0, sizeof(DH_Subband::AllDelaysType));
 
   for (int time = 0; time < NR_INPUT_SAMPLES; time ++) {
-    double phi = 2 * M_PI * signalFrequency * time / NR_SUBBAND_SAMPLES;
+    double phi = 2 * M_PI * signalFrequency * time / sampleRate;
     DH_Subband::SampleType sample = toComplex(phi);
 
     for (int stat = 0; stat < NR_STATIONS; stat ++) {
-#if INPUT_TYPE == I4COMPLEX_TYPE
-      (*samples)[stat][time][0] = makei4complex(time, 0);
-#elif INPUT_TYPE == I16COMPLEX_TYPE
-      (*samples)[stat][time][0] = makei16complex(time, 0);
-#else
-#error Unknown INPUT_TYPE
-#endif
-      (*samples)[stat][time][1] = sample;
+      (*samples)[stat][time][0] = (*samples)[stat][time][1] = sample;
     }
 
 #if NR_STATIONS >= 2 && NR_POLARIZATIONS == 2
@@ -217,32 +210,34 @@ void doWork()
   barrier = rts_allocate_barrier();
 #endif
 
-  double     baseFrequency   = 49938432.0; // 254th Nyquist zone
-  double     signalFrequency = 49994496.0; // channel 73
-  int	     nRuns	     = 1;
-  const char *env;
-
   ACC::APS::ParameterSet pset("CS1.parset");
-
-  if ((env = getenv("NRUNS")) != 0) {
-    nRuns = atoi(env);
-    std::cerr << "setting nRuns to " << env << '\n';
-  }
-
-  if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
-    signalFrequency = atof(env);
-    std::cerr << "setting signal frequency to " << env << '\n';
-  }
-
-  if ((env = getenv("BASE_FREQUENCY")) != 0) {
-    baseFrequency = atof(env);
-    std::cerr << "setting base frequency to " << env << '\n';
-  }
 
   unsigned nrSubbands	= pset.getUint32("Observation.NSubbands");
   double   sampleRate	= pset.getDouble("Observation.SampleRate");
   unsigned nrChannels	= pset.getUint32("Observation.NChannels");
-  double   subbandWidth = sampleRate / nrChannels;
+  double   subbandWidth = sampleRate;
+  double   channelWidth = sampleRate / nrChannels;
+
+  double     baseFrequency   = 254 * sampleRate; // 254th Nyquist zone
+  double     signalFrequency = baseFrequency + 73 * channelWidth; // channel 73
+  int	     nRuns	     = 1;
+  const char *env;
+
+
+  if ((env = getenv("NRUNS")) != 0) {
+    nRuns = atoi(env);
+    std::cout << "setting nRuns to " << env << '\n';
+  }
+
+  if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
+    signalFrequency = atof(env);
+    std::cout << "setting signal frequency to " << env << '\n';
+  }
+
+  if ((env = getenv("BASE_FREQUENCY")) != 0) {
+    baseFrequency = atof(env);
+    std::cout << "setting base frequency to " << env << '\n';
+  }
 
   std::ostringstream baseFrequencyStr;
   baseFrequencyStr << '[';
@@ -260,7 +255,7 @@ void doWork()
 #endif
 
   wh.basePreprocess();
-  setSubbandTestPattern(wh, signalFrequency);
+  setSubbandTestPattern(wh, signalFrequency, sampleRate);
 //setRFItestPattern(wh);
 
 #if defined HAVE_BGL
