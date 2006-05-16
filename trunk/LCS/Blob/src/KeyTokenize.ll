@@ -169,13 +169,13 @@ COMMENT   "#".*"\n"
 	    return LITERAL;
 	  }
 
-"="       { return IS; }
+"="       { KeyParser::position() += yyleng; return IS; }
 
-","       { return COMMA; }
+","       { KeyParser::position() += yyleng; return COMMA; }
 
-"["       { return LBRACKET; }
+"["       { KeyParser::position() += yyleng; return LBRACKET; }
 
-"]"       { return RBRACKET; }
+"]"       { KeyParser::position() += yyleng; return RBRACKET; }
 
  /* Whitespace is skipped */
 {WHITE}   { KeyParser::position() += yyleng; }
