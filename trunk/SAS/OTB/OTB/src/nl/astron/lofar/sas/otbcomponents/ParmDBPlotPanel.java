@@ -8,6 +8,7 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -74,8 +75,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
                 double endx =Double.parseDouble(paramValues.get(1).toString());
                 double starty = Double.parseDouble(paramValues.get(2).toString());
                 double endy = Double.parseDouble(paramValues.get(3).toString());
-                int numx = Integer.parseInt("10");
-                int numy = Integer.parseInt("10");
+                int numx = Integer.parseInt("5");
+                int numy = Integer.parseInt("5");
                 
                 passToDataAccess[0] = itsParamName;
                 passToDataAccess[1] = ""+startx;
@@ -89,7 +90,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
                 plotPanel.removeAll();
                 plotPanel.add(paramPanel,BorderLayout.CENTER);
                 JScrollPane legendPane = new JScrollPane(paramPanel.getLegendForPlot());
-                //legendPane.setPreferredSize(new Dimension(legendWidth,legendHeight));
+                legendPane.setPreferredSize(new Dimension(paramPanel.getWidth()-20,100));
                 legendPane.setBackground(Color.WHITE);
                 legendPane.getViewport().setBackground(Color.WHITE);
                 plotPanel.add(legendPane,BorderLayout.SOUTH);
