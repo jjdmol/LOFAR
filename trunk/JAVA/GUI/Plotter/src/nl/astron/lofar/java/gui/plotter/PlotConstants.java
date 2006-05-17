@@ -70,6 +70,10 @@ public abstract class PlotConstants{
     public static final String DATASET_ZVALUES    = "ZValues";
     public static final String DATASET_VALUELABEL = "DataSetValueLabel";
     
+    public static final String DATASET_AXIS_TYPE_SPATIAL = "SPATIAL";    
+    public static final String DATASET_AXIS_TYPE_MJDTIME = "MJDTIME";
+    public static final String DATASET_AXIS_TYPE_TIME = "TIME";
+    
     //Identifiers for plot types
     public static final int PLOT_BAR = 1;
     public static final int PLOT_XYLINE = 2;

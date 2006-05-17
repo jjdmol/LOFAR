@@ -103,7 +103,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 throw exx;
             }
             if(names != null && names.size()>=1 && constraints.length == this.requiredDataConstraints){
-                returnMap.put(PlotConstants.DATASET_NAME,"Parameter Database Filter : "+constraints[0]);
+                returnMap.put(PlotConstants.DATASET_NAME,"ParmDB dataset '"+constraints[0]+"'");
                 TimeZone utcZone = TimeZone.getTimeZone("UTC");
                 utcZone.setDefault(utcZone);
                 Calendar aCalendar = Calendar.getInstance(utcZone);
@@ -116,6 +116,12 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 double julianDay = epoch_unix_to_julian + floorDivide;
                 double modifiedJulianDay = julianDay - 2400000.5;
                 returnMap.put(PlotConstants.DATASET_SUBNAME,"Generated at "+ utcDate.toString() + " MJD: "+modifiedJulianDay);
+                returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Time");
+                returnMap.put(PlotConstants.DATASET_XAXISUNIT,"not specified");
+                returnMap.put(PlotConstants.DATASET_XAXISTYPE,"SPATIAL");
+                returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Frequency");
+                returnMap.put(PlotConstants.DATASET_YAXISUNIT,"Hz");
+                returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
                 
                 //Every parameter
                 for(int n = 0; n < names.size();n++){
