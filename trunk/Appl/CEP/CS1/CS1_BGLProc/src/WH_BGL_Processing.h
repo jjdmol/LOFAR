@@ -131,7 +131,10 @@ class WH_BGL_Processing: public WorkHolder {
 
     static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 
-    static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
+    // The "| 2" significantly improves transpose speeds for particular numbers
+    // of stations due to cache conflict effects.  The extra memory is not used.
+    static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION | 2][NR_POLARIZATIONS] CACHE_ALIGNED;
+
 #if defined SPARSE_FLAGS
     static SparseSet WH_BGL_Processing::flags[NR_STATIONS];
 #else
