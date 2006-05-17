@@ -128,17 +128,17 @@ public class TreeManager {
             while( e.hasMoreElements()  ) {
                 jOTDBnode item = (jOTDBnode)e.nextElement();
                 logger.trace("Node name selected :"+item.name);
-                
-                aNode.add(new TreeNode(item));
+                TreeNode newNode = new TreeNode(item);
+                aNode.add(newNode);
                 
                 //testcode to add parmdb
                 
-                if(item.name.equalsIgnoreCase("Observation.AO.SO")){
-                    jParmDBnode newNode = new jParmDBnode("ParmDB","BBS");
-                    newNode.name="ParmDB";
-                    TreeNode parmDBnode = new TreeNode(newNode);
+                if(item.name.equalsIgnoreCase("Observation.AO")){
+                    jParmDBnode newPNode = new jParmDBnode("ParmDB","BBS");
+                    newPNode.name="ParmDB";
+                    TreeNode parmDBnode = new TreeNode(newPNode);
                     
-                    aNode.add(parmDBnode);
+                    newNode.add(parmDBnode);
                 }
                 
             }
@@ -205,9 +205,15 @@ public class TreeManager {
             while( e.hasMoreElements()  ) {
                 String aValue = (String)e.nextElement();
                 String splitName[]= aValue.split("[.]");
-                logger.trace("ParmDBtreeNode gets name "+aValue);
+                String parentLevels[] = ((jParmDBnode)aNode.getUserObject()).nodeID().split("[.]");
+                
+                String trace = "ParmDBtreeNode gets name [";
+                for(int i = 0;i<splitName.length;i++){
+                    trace+=","+splitName[i];
+                }
+                logger.trace(trace+"]");
                 if (splitName.length >=2) {
-                    aValue=splitName[0];
+                    aValue=splitName[parentLevels.length-1];
                 }
                 
                 if(!uniqueNames.contains(aValue)){
@@ -219,7 +225,7 @@ public class TreeManager {
                 
                 String childName = (String)e.nextElement();
                 
-                jParmDBnode item = new jParmDBnode(((jParmDBnode)aNode.getUserObject()).name+"."+childName,((jParmDBnode)aNode.getUserObject()).name);
+                jParmDBnode item = new jParmDBnode(((jParmDBnode)aNode.getUserObject()).nodeID()+"."+childName,((jParmDBnode)aNode.getUserObject()).nodeID());
                 //item.leaf=true;
                 item.name = childName;
                 logger.trace("Node name selected : "+item.name);
