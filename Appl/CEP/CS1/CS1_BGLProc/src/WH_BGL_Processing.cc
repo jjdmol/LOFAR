@@ -55,7 +55,7 @@ inline static dcomplex cosisin(double x)
 
 vector<double> WH_BGL_Processing::itsBaseFrequencies;
 FIR WH_BGL_Processing::itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
-fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] CACHE_ALIGNED;
+fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION | 2][NR_POLARIZATIONS] CACHE_ALIGNED;
 #if defined SPARSE_FLAGS
 SparseSet WH_BGL_Processing::flags[NR_STATIONS];
 #else
@@ -1459,7 +1459,7 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 			 &fftOutData[0][0][0],
 			 NR_SUBBAND_CHANNELS,
 			 sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
-			 sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * NR_STATIONS);
+			 sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
 #endif
 	}
       }
@@ -1477,7 +1477,7 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 			 &fftOutData[0][0][0],
 			 NR_SUBBAND_CHANNELS,
 			 sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
-			 sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * NR_STATIONS);
+			 sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
 #endif
 	}
       }
@@ -1511,7 +1511,7 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 		     &fftOutData[0][0][0],
 		     NR_SUBBAND_CHANNELS,
 		     sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
-		     sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * NR_STATIONS);
+		     sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
 #endif
     }
 #endif // SPARSE_FLAGS
