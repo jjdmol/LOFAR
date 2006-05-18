@@ -25,6 +25,7 @@ package nl.astron.lofar.java.gui.plotter.test;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
@@ -80,7 +81,7 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
             String yAxisUnits = "MHz";
             data.put(PlotConstants.DATASET_YAXISUNIT,yAxisUnits);
             
-            HashSet<HashMap> values = new HashSet<HashMap>();
+            LinkedList<HashMap> values = new LinkedList<HashMap>();
             
             HashMap<String,Object> aLine = new HashMap<String,Object>();
             
@@ -156,7 +157,7 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
             data.put(PlotConstants.DATASET_ZAXISUNIT,yAxisUnits);
             
             
-            HashSet<HashMap> values = new HashSet<HashMap>();
+            LinkedList<HashMap> values = new LinkedList<HashMap>();
             
             HashMap<String,Object> aGrid = new HashMap<String,Object>();
             
