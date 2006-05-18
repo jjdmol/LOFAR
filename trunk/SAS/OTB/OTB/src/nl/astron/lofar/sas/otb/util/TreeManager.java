@@ -122,7 +122,7 @@ public class TreeManager {
     private void defineOTDBNodeChildNode(TreeNode aNode){
         try {
             Vector childs =
-                    SharedVars.getStaticOTDBrmi().getRemoteMaintenance().getItemList(((jOTDBnode)aNode.getUserObject()).treeID(), ((jOTDBnode)aNode.getUserObject()).nodeID(), 1);
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(((jOTDBnode)aNode.getUserObject()).treeID(), ((jOTDBnode)aNode.getUserObject()).nodeID(), 1);
             
             Enumeration e = childs.elements();
             while( e.hasMoreElements()  ) {
@@ -164,7 +164,7 @@ public class TreeManager {
         try {
             
             
-            Vector<jVICnodeDef> nodes = SharedVars.getStaticOTDBrmi().getRemoteMaintenance().getComponentList(aNodeName,false);
+            Vector<jVICnodeDef> nodes = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentList(aNodeName,false);
             
             if (nodes.size() > 0) {
                 logger.debug("Found "+ nodes.size()+ " nr of matches for node "+aNodeName);
@@ -173,7 +173,7 @@ public class TreeManager {
                 return;
             }
             
-            Vector<jOTDBparam> params = SharedVars.getStaticOTDBrmi().getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.elementAt(0)).nodeID());
+            Vector<jOTDBparam> params = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.elementAt(0)).nodeID());
             
             Enumeration e = params.elements();
             while( e.hasMoreElements()  ) {
