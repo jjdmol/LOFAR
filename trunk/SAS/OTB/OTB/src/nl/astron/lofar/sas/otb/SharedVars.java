@@ -78,19 +78,10 @@ public class SharedVars {
      *
      * @return the OtdbRmi object
      */
-    public OtdbRmi getOTDBrmi() {
+    public static OtdbRmi getOTDBrmi() {
         return itsOtdbRmi;
     }
-    
     /** gets OTDBrmi
-     * OTBrmi holds all JNI/RMI connections
-     *
-     * @return the OtdbRmi object
-     */
-    public static OtdbRmi getStaticOTDBrmi() {
-        return itsOtdbRmi;
-    }
-     /** gets OTDBrmi
      * OTBrmi holds all JNI/RMI connections
      *
      * @return the OtdbRmi object
