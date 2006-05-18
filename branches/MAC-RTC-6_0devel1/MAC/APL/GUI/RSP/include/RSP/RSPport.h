@@ -75,6 +75,12 @@ public:
 	// GetSubbandStats returns the signalstrength in each subband.
 	vector<double> 	getSubbandStats(uint32	RCUmask);
 
+	// Control commands
+	bool	setFilter	(uint32		RCUmask, int32		filterNr);
+	bool	sendClear	(uint32		RCUmask);
+	bool	sendReset	(uint32		RCUmask);
+	bool	sendSync	(uint32		RCUmask);
+
 	// get info of the environment of the RSPdriver
 	uint32	getNrRCUs()			const	{ return (itsNrRCUs);	}
 	uint32	getNrRSPboards()	const	{ return (itsNrRSPboards);	}
@@ -88,6 +94,8 @@ private:
 
 	void 		send   (GCFEvent*	anEvent);
 	GCFEvent&	receive();
+
+	bool	sendRSUControl (uint32 RCUmask, uint32	controlType);
 
 	//# Datamembers
 	uint16		itsPort;

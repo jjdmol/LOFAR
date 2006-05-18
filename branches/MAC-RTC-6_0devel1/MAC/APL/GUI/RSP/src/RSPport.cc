@@ -34,8 +34,7 @@ namespace LOFAR {
   using RSP_Protocol::WGSettings;
 
   namespace RSP {
-
-using	GCF::TM::GCFEvent;
+  using	GCF::TM::GCFEvent;
 
 static	char		receiveBuffer[24*4096];
 
@@ -256,6 +255,89 @@ vector<struct WGSettings::WGRegisterType> RSPport::getWaveformSettings(uint32		R
 	// Finally return the info they asked for.
 	return (resultVec);
 }
+
+//
+// setFilter
+//
+bool RSPport::setFilter(uint32		RCUmask,
+						int32		filterNr)
+{
+	if (filterNr < 0 || filterNr > 7) {
+		LOG_ERROR ("FilterNr has range [0,7]");
+		return (false);
+	}
+
+	// Construct a command
+	RSPSetrcuEvent		command;
+	command.timestamp = RTC::Timestamp(0,0);
+	command.rcumask   = RCUmask;
+	command.settings().resize(1);		// for the time being
+	command.settings()(0).setMode((RCUSettings::Control::RCUMode) filterNr);
+
+	send (&command);
+
+	RSPSetwgackEvent	ack(receive());
+
+	return (ack.status == SUCCESS);
+}
+
+//
+// sendClear
+//
+bool	RSPport::sendClear	(uint32		RCUmask)
+{
+	// Construct command
+	RSPSetrsuEvent		command;
+	command.timestamp = RTC::Timestamp(0,0);
+	command.rcumask   = RCUmask;
+	command.settings().resize(1);		// for the time being
+	command.settings()(0).setClear(true);
+
+	send (&command);
+
+	RSPSetwgackEvent	ack(receive());
+
+	return (ack.status == SUCCESS);
+}
+
+//
+// sendReset
+//
+bool	RSPport::sendReset	(uint32		RCUmask)
+{
+	// Construct command
+	RSPSetrsuEvent		command;
+	command.timestamp = RTC::Timestamp(0,0);
+	command.rcumask   = RCUmask;
+	command.settings().resize(1);		// for the time being
+	command.settings()(0).setReset(true);
+
+	send (&command);
+
+	RSPSetwgackEvent	ack(receive());
+
+	return (ack.status == SUCCESS);
+}
+
+//
+// sendSync
+//
+bool	RSPport::sendSync	(uint32		RCUmask)
+{
+	// Construct command
+	RSPSetrsuEvent		command;
+	command.timestamp = RTC::Timestamp(0,0);
+	command.rcumask   = RCUmask;
+	command.settings().resize(1);		// for the time being
+	command.settings()(0).setSync(true);
+
+	send (&command);
+
+	RSPSetwgackEvent	ack(receive());
+
+	return (ack.status == SUCCESS);
+}
+
 
   } // namespace RSP
 } // namespace LOFAR

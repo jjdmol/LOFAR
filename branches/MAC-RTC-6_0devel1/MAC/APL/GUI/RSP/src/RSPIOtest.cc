@@ -86,6 +86,13 @@ int main (int argc, char* argv[]) {
 
 		LOG_INFO_STR("Getting subband statistics");
 		vector<double>	stats = IOport.getSubbandStats(rcuMask);
+
+		LOG_INFO_STR("Setting filter to 3");
+//		ASSERTSTR(IOport.setFilter(rcuMask, 3), "Setting filter failed");
+
+		LOG_INFO_STR("Sending clear");
+		ASSERTSTR(IOport.sendClear(rcuMask), "Sending clear failed");
+
 		LOG_INFO_STR("Shutting down: " << argv[0]);
 	}
 	catch (LOFAR::Exception& ex) {
