@@ -26,8 +26,8 @@ package nl.astron.lofar.java.cep.jparmfacade;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.TimeZone;
 import java.util.Vector;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
@@ -91,7 +91,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             this.initiateConnectionToParmDB();
         }
         HashMap<String,Object> returnMap = new HashMap<String, Object>();
-        HashSet<HashMap> returnValues = new HashSet<HashMap>();
+        LinkedList<HashMap> returnValues = new LinkedList<HashMap>();
         if(parmDB != null){
             Vector names;
             try{
