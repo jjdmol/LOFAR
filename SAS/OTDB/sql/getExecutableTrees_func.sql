@@ -65,6 +65,7 @@ CREATE OR REPLACE FUNCTION getExecutableTrees(INT2)
 		WHERE  t.treetype = TThierarchy
 		AND	   t.classif  = $1 
 		AND	   t.state between TSscheduled AND TSactive
+		AND	   t.stoptime > now()
 		ORDER BY t.starttime, t.treeID
 	  LOOP
 		RETURN NEXT vRecord;
