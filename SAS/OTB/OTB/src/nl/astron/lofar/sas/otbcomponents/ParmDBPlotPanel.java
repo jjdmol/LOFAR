@@ -25,8 +25,8 @@ import org.apache.log4j.Logger;
 public class ParmDBPlotPanel extends javax.swing.JPanel {
     
     static Logger logger = Logger.getLogger(ParameterViewPanel.class);
-    
-    
+    JScrollPane legendPane;
+    PlotPanel paramPanel;
     /** Creates new form BeanForm based upon aParameter
      *
      * @params  aParam   Param to obtain the info from
@@ -49,7 +49,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-           
+            
             
         } else {
             logger.debug("No Mainframe supplied");
@@ -64,8 +64,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
                 itsParamName=aParamName.substring(7);
                 itsParamName += "*";
             }
-           
-            PlotPanel paramPanel = new PlotPanel();
+            
+            paramPanel = new PlotPanel();
             try{
                 String[] passToDataAccess = new String[7];
                 
@@ -89,17 +89,17 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
                 paramPanel.createPlot(PlotConstants.PLOT_XYLINE,true,passToDataAccess);
                 plotPanel.removeAll();
                 plotPanel.add(paramPanel,BorderLayout.CENTER);
-                JScrollPane legendPane = new JScrollPane(paramPanel.getLegendForPlot());
-                legendPane.setPreferredSize(new Dimension(paramPanel.getWidth()-20,100));
+                legendPane = new JScrollPane(paramPanel.getLegendForPlot());
+                legendPane.setPreferredSize(new Dimension(paramPanel.getLegendForPlot().getWidth()-20,120));
                 legendPane.setBackground(Color.WHITE);
                 legendPane.getViewport().setBackground(Color.WHITE);
                 plotPanel.add(legendPane,BorderLayout.SOUTH);
                 
                 
             }catch(Exception ex){
-                 JOptionPane.showMessageDialog(itsMainFrame, ex.getMessage(),
-                                     "Error detected",
-                                     JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(itsMainFrame, ex.getMessage(),
+                        "Error detected",
+                        JOptionPane.ERROR_MESSAGE);
                 logger.error("Plotter created an exception :"+ex.getMessage(),ex);
             }
         } else {
@@ -211,7 +211,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
             }
         });
 
-        add(ParamCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 530, -1, -1));
+        add(ParamCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 640, -1, -1));
 
         ParamApplyButton.setText("Apply");
         ParamApplyButton.setEnabled(false);
@@ -221,7 +221,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
             }
         });
 
-        add(ParamApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 530, 70, -1));
+        add(ParamApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 640, 70, -1));
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("ParmDB Plot Panel");
@@ -235,11 +235,11 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
         jTextArea2.setBackground(javax.swing.UIManager.getDefaults().getColor("scrollbar"));
         jTextArea2.setColumns(20);
         jTextArea2.setEditable(false);
-        jTextArea2.setRows(3);
-        jTextArea2.setText("To zoom: Click and hold the left mouse button and select a rectangle.\nTo reset the zoom: Press CTRL-LeftMouseButton to reset the zoom.\nTo change colors/etc: Double-Click on a line in the legend.");
+        jTextArea2.setRows(5);
+        jTextArea2.setText("To zoom: Click and hold the left mouse button and select a rectangle.\nTo reset the zoom: Press CTRL-LeftMouseButton to reset the zoom.\nTo change colors/etc: Double-Click on a line in the legend.\nTo change plot/axis labels and tics/etc: Click on an axis or title and press the right mouse button.");
         jScrollPane2.setViewportView(jTextArea2);
 
-        add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 530, 450, 50));
+        add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 530, 610, 80));
 
     }// </editor-fold>//GEN-END:initComponents
     
