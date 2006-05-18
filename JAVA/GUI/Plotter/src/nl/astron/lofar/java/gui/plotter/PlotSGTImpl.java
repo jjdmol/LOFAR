@@ -47,7 +47,6 @@ import gov.noaa.pmel.util.Rectangle2D;
 import gov.noaa.pmel.util.SoTDomain;
 import gov.noaa.pmel.util.SoTRange;
 import gov.noaa.pmel.util.GeoDate;
-import gov.noaa.pmel.util.Point2D;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -55,6 +54,8 @@ import java.beans.PropertyVetoException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.TreeSet;
 import javax.swing.JComponent;
 import nl.astron.lofar.java.gui.plotter.exceptions.EmptyDataSetException;
 import nl.astron.lofar.java.gui.plotter.exceptions.InvalidDataSetException;
@@ -155,12 +156,9 @@ public class PlotSGTImpl implements IPlot{
         
         try{
             
-            if(separateLegend){
-                layout.setKeyLayerSizeP(new Dimension2D(6.0, 1.0));
-                layout.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 1.0, 1.0));
-                layout.setKeyLocationP(new Point2D.Double(0.0, 0.0));
-            }
+           
             layout.setSize(640,480);
+            
             layout.setId("line_"+name);
             layout.setName("line_"+name);
             layout.setBatch(true);
@@ -176,7 +174,7 @@ public class PlotSGTImpl implements IPlot{
             double xend = -1;
             double ystart = -1;
             double yend = -1;
-            HashSet<HashMap> values = new HashSet<HashMap>();
+            LinkedList<HashMap> values = new LinkedList<HashMap>();
             
             //Loop through Metadata and pointers to XY values
             if(data != null && data.keySet().size()>0){
@@ -218,7 +216,7 @@ public class PlotSGTImpl implements IPlot{
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_END)){
                         yend = Double.parseDouble((String)data.get(key));
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
-                        values = (HashSet<HashMap>)data.get(key);
+                        values = (LinkedList<HashMap>)data.get(key);
                     }else{
                         throw new InvalidDataSetException("(Metadata was found that is not supported for a Line Plot: "+key.toString()+")");
                     }
@@ -313,6 +311,7 @@ public class PlotSGTImpl implements IPlot{
                     ex.printStackTrace();
                 }
             }
+            
             layout.setName(plotTitle);
             layout.setBatch(false);
         }catch(NullPointerException e){
@@ -355,7 +354,7 @@ public class PlotSGTImpl implements IPlot{
             String zAxisTitle = "Z";
             String zAxisUnits = "no unit specified";
             
-            HashSet<HashMap> values = new HashSet<HashMap>();
+            LinkedList<HashMap> values = new LinkedList<HashMap>();
             
             //Loop through Metadata and pointers to XYZ values
             if(data != null && data.keySet().size()>0){
@@ -379,7 +378,7 @@ public class PlotSGTImpl implements IPlot{
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_ZAXISUNIT)){
                         zAxisUnits = (String)data.get(key);
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
-                        values = (HashSet<HashMap>)data.get(key);
+                        values = (LinkedList<HashMap>)data.get(key);
                     }else{
                         throw new InvalidDataSetException("(Metadata was found that is not supported for a Grid Plot: "+key.toString()+")");
                     }
@@ -497,17 +496,24 @@ public class PlotSGTImpl implements IPlot{
         JPane keyPane = null;
         
         try {
-            
             parentPlot = (JPlotLayout) aPlot;
             keyPane = parentPlot.getKeyPane();
             Collection dataQuantity = parentPlot.getData();
-            
+            keyPane.setBatch(true);
             if(parentPlot.getId().indexOf("line_") != -1){
-                //keyPane.setSize(new Dimension(parentPlot.getWidth()-50,(dataQuantity.size()*16)));
-                keyPane.setSize(new Dimension(550,100+dataQuantity.size()*20));
+                if(parentPlot.getData().size() <= 5){
+                    parentPlot.setKeyLayerSizeP(new Dimension2D(6.0,1.0));
+                    parentPlot.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0, 6.0, 1.0));
+                    parentPlot.getKeyPane().setSize(new Dimension(600,100));
+                }else if (parentPlot.getData().size() > 5){
+                    parentPlot.setKeyLayerSizeP(new Dimension2D(6.0,1.0+(0.15*(parentPlot.getData().size()-5))));
+                    parentPlot.setKeyBoundsP(new Rectangle2D.Double(0.0, 1.0+(0.15*(parentPlot.getData().size()-5)), 6.0, 1.0+(0.15*(parentPlot.getData().size()-5))));
+                    parentPlot.getKeyPane().setSize(new Dimension(600,100+(15*(parentPlot.getData().size()-5))));
+                }
             }else if(parentPlot.getId().indexOf("grid_") != -1){
                 keyPane.setSize(new Dimension(600,100));
             }
+            keyPane.setBatch(false);
         } catch (ClassCastException e) {
             NotSupportedException exx = new NotSupportedException("The plot ("+aPlot.getName()+") is not recognized by the plotter's configured framework (SGT). A legend can not be generated.");
             exx.initCause(e);
@@ -546,12 +552,14 @@ public class PlotSGTImpl implements IPlot{
                         }
                         SimpleLine aLine = (SimpleLine)((LineCartesianRenderer)obj).getLine();
                         lad.setTitle("Line Attribute Configuration for " + aLine.getTitle());
-                        aLayout.getKeyPane().setBatch(true);
-                        aLayout.getKeyPane().setBatch(false);
+                        
                         lad.setLineAttribute(attr);
                         if(!lad.isShowing()){
                             lad.setVisible(true);
+                           
                         }
+                        aLayout.getKeyPane().setBatch(true);
+                        aLayout.getKeyPane().setBatch(false);
                     }
                 }
             } else if(object == aLayout){
