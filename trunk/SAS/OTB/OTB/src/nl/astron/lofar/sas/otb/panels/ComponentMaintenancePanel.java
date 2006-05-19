@@ -10,6 +10,7 @@ import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.treemanagers.OTDBParamTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import nl.astron.lofar.sas.otbcomponents.ComponentPanel;
 import nl.astron.lofar.sas.otbcomponents.VICnodeDefViewPanel;
@@ -73,34 +74,13 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     public void setNewRootNode(){
         logger.debug("SetNewRootNode for component: "+itsComponentID);
         try {
-            jOTDBparam aParam =null;
-            jVICnodeDef aVICnodeDef=null;
-            if (itsComponentID == 0 ) {
-                // create a sample component param
-                aParam = new jOTDBparam(0,0,0);
-                aParam.name = "No ParamSelection";
-            } else {
-                aVICnodeDef = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
-                if (aVICnodeDef != null) {
-                    // create a fake param to pass to componentTree, to simulate a node param
-                    aParam = new jOTDBparam(0,itsComponentID,0);
-                    aParam.name="#"+aVICnodeDef.name;
-                    aParam.index=0;
-                    aParam.limits="";
-                    aParam.type=-1;
-                    aParam.unit=-1;
-                    aParam.description="";
-                } else {
-                    logger.debug("failed to get ComponentNode");
-                }
-            }
-            
-            // put the param in a wrapper for the tree
-            TreeNode rootNode = new TreeNode(aParam,aParam.name);
+            OTDBParamTreeManager treeManager = OTDBParamTreeManager.getInstance(itsMainFrame.getUserAccount());
             
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(rootNode);
+            String[] args = new String[1];
+            args[0]= ""+ itsComponentID;            
+            treePanel.newRootNode(treeManager.getRootNode(args));
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);

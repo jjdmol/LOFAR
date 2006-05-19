@@ -7,6 +7,8 @@
 package nl.astron.lofar.sas.otb.panels;
 
 import java.rmi.RemoteException;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
@@ -14,6 +16,8 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.jParmDBnode;
+import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
+import nl.astron.lofar.sas.otb.util.treemanagers.ParmDBTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 
@@ -111,19 +115,32 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     public void setNewRootNode() {
         
         try {
-            jOTDBnode otdbNode=null;
-            if (itsTreeID == 0 ) {
-                // create a sample root node.
-                otdbNode = new jOTDBnode(0,0,0,0);
-                otdbNode.name = "No TreeSelection";
-            } else {
-                otdbNode = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
-            }
-            TreeNode rootNode = new TreeNode(otdbNode,otdbNode.name);
-            logger.trace("setNewRootNode: " + otdbNode.name);
+            OTDBNodeTreeManager treeManager = OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount());
+            treeManager.addTreeModelListener(new TreeModelListener(){
+                public void treeStructureChanged(TreeModelEvent e){}
+                public void treeNodesRemoved(TreeModelEvent e){}
+                public void treeNodesChanged(TreeModelEvent e){}
+                public void treeNodesInserted(TreeModelEvent e){
+                    TreeNode item = (TreeNode)e.getSource();
+                    if(item.getName().equalsIgnoreCase("Observation.AO")){
+                        String[] args = new String[2];
+                        args[0]="ParmDB";
+                        args[1]="BBS";
+                        TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
+                        
+                        item.add(parmDBnode);
+                    }
+                }
+                
+                
+            });
+            
+            
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(rootNode);
+            String[] args = new String[1];
+            args[0]= ""+ itsTreeID;
+            treePanel.newRootNode(treeManager.getRootNode(args));
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
@@ -261,7 +278,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             
             if(treeNode.getUserObject() instanceof jOTDBnode){
                 changeTreeSelection((jOTDBnode)treeNode.getUserObject());
-            
+                
             } else if(treeNode.getUserObject() instanceof jParmDBnode){
                 jParmDBnode selectedNode = (jParmDBnode)treeNode.getUserObject();
                 logger.debug("selected ParmDB node: "+selectedNode.name);
@@ -269,21 +286,19 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 int savedSelection=jTabbedPane1.getSelectedIndex();
                 logger.debug("ChangeSelection for node: " + selectedNode.name);
                 //itsSelectedNode=selectedNode;
-                    
-                    jTabbedPane1.removeTabAt(0);
-                    jTabbedPane1.insertTab("ParmDBPlotter",null,parmDBPlotPanel1,"",0);
-                    parmDBPlotPanel1.setParam(selectedNode.nodeID());
-                    
-               
+                
+                jTabbedPane1.removeTabAt(0);
+                jTabbedPane1.insertTab("ParmDBPlotter",null,parmDBPlotPanel1,"",0);
+                parmDBPlotPanel1.setParam(selectedNode.nodeID());
+                
+                
                 //logParamPanel1.setNode(aNode);
-            jTabbedPane1.setSelectedIndex(0);
+                jTabbedPane1.setSelectedIndex(0);
+            }
             
-            //changeTreeSelection(((ParmDBTreeNode)evt.getNewLeadSelectionPath().getLastPathComponent()).getParmDBnode());
         }
-        
-    }
     }//GEN-LAST:event_treePanelValueChanged
-
+    
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
         
