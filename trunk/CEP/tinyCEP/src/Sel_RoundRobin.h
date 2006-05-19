@@ -29,6 +29,7 @@
 // Implements a Round Robin selection mechanism.
 
 #include "tinyCEP/Selector.h"
+#include <vector>
 
 namespace LOFAR
 {
@@ -43,6 +44,7 @@ class Sel_RoundRobin : public Selector
 {
 public:
   Sel_RoundRobin(unsigned int noOptions);
+  Sel_RoundRobin(std::vector<int> &options);
 
   virtual ~Sel_RoundRobin();
 
@@ -53,6 +55,8 @@ public:
 private:
 
   Sel_RoundRobin(const Sel_RoundRobin&);
+
+  std::vector<int> itsOptions;
 };
 
 // @}

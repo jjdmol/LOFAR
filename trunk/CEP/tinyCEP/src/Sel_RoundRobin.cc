@@ -31,6 +31,14 @@ namespace LOFAR
 
 Sel_RoundRobin::Sel_RoundRobin(unsigned int noOptions)
   :  Selector(noOptions)
+{
+  for (unsigned i = 0; i < noOptions; i ++)
+    itsOptions.push_back(i);
+}
+
+Sel_RoundRobin::Sel_RoundRobin(std::vector<int> &options)
+  :  Selector(options.size()),
+     itsOptions(options)
 {}
 
 Sel_RoundRobin::~Sel_RoundRobin()
@@ -52,7 +60,7 @@ unsigned int Sel_RoundRobin::getNext()
   {
     itsCurrentSelection = 0;
   }
-  return itsCurrentSelection;
+  return itsOptions[itsCurrentSelection];
 }
 
 }
