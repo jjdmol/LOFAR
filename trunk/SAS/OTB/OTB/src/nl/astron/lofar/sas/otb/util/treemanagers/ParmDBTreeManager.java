@@ -105,12 +105,12 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                 logger.trace("Node name selected : "+item.name);
                 ((jParmDBnode)aNode.getUserObject()).leaf=false;
                 TreeNode newNode = new TreeNode(this.instance,item,item.name);
-                
+                aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
                 
                 fireTreeInsertionPerformed(evt);
                 
-                aNode.add(newNode);
+                
             }
             if(uniqueNames.size() == 0){
                 ((jParmDBnode)aNode.getUserObject()).leaf=true;
