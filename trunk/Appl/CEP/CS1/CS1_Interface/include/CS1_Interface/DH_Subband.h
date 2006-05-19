@@ -44,13 +44,7 @@ class DH_Subband: public DataHolder
   public:
     // samples are ALWAYS stored in little endian format !
 
-#if   INPUT_TYPE == I4COMPLEX_TYPE
-    typedef i4complex  SampleType;
-#elif INPUT_TYPE == I16COMPLEX_TYPE
-    typedef i16complex SampleType;
-#else
-#error INPUT_TYPE not supported
-#endif
+    typedef INPUT_SAMPLE_TYPE SampleType;
 
     // Fine-grained delays
     typedef struct {

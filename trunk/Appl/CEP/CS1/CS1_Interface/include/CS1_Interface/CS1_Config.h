@@ -57,4 +57,12 @@
 #define I4COMPLEX_TYPE		   1
 #define I16COMPLEX_TYPE		   2
 
+#if INPUT_TYPE == I4COMPLEX_TYPE
+#define INPUT_SAMPLE_TYPE	   i4complex
+#elif INPUT_TYPE == I16COMPLEX_TYPE
+#define INPUT_SAMPLE_TYPE	   i16complex
+#else
+#error Bad INPUT_TYPE
+#endif
+
 #endif
