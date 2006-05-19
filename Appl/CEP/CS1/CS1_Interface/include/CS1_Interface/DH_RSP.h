@@ -26,6 +26,7 @@
 
 #include <APS/ParameterSet.h>
 #include <Transport/DataHolder.h>
+#include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/RectMatrix.h>
 #include <CS1_Interface/SparseSet.h>
@@ -38,7 +39,7 @@ namespace LOFAR
     class DH_RSP: public DataHolder
     {
     public:
-      typedef i16complex BufferType;
+      typedef INPUT_SAMPLE_TYPE BufferType;
 
       explicit DH_RSP (const string &name,
                        const ACC::APS::ParameterSet &pset);

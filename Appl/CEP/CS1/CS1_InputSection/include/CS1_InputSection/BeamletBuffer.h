@@ -33,6 +33,7 @@
 #include <Common/lofar_complex.h>
 #include <Common/Timer.h>
 #include <CS1_InputSection/LockedRange.h>
+#include <CS1_Interface/DH_RSP.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/SparseSet.h>
 
@@ -45,8 +46,7 @@ namespace LOFAR
     // @{
 
     class Beamlet {
-      i16complex Xpol;
-      i16complex Ypol;
+      DH_RSP::BufferType Xpol, Ypol;
     };
 
     // A BeamletBuffer can hold the beamlets coming from the rspboards
