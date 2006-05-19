@@ -30,6 +30,7 @@
 #include <CS1_Interface/DH_Subband.h>
 #include <Common/hexdump.h>
 #include <tinyCEP/Sel_RoundRobin.h>
+#include <CEPFrame/DataManager.h>
 
 namespace LOFAR
 {
@@ -53,13 +54,16 @@ namespace LOFAR
 	  sprintf(str, "DH_in_%d", i);
 	  getDataManager().addInDataHolder(i, new DH_RSP(str, itsPS));
 	}
+      vector<int> channels;
       for(int i=0;i<itsNoutputs; i++)
 	{
 	  sprintf(str, "DH_out_%d", i);
 	  getDataManager().addOutDataHolder(i, new DH_Subband(str, itsPS));
+	  channels.push_back(i);
 	}
       // Set a round robin output selector
-      getDataManager().setOutputSelector(new Sel_RoundRobin(itsNoutputs));
+      getDataManager().setOutputSelector(new Sel_RoundRobin(channels));
+      dynamic_cast<DataManager *>(&getDataManager())->setOutRoundRobinPolicy(channels, pset.getInt32("BGLProc.MaxConcurrentCommunications"));
     }
 
     WH_SBCollect::~WH_SBCollect() {
