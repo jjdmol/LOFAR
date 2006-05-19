@@ -6,9 +6,8 @@
 
 package nl.astron.lofar.sas.otb.panels;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
+import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -76,22 +75,16 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
     
     public void setNewRootNode(){
         try {
-            jOTDBnode otdbNode=null;
-            if (itsTreeID == 0 ) {
-                // create a sample root node.
-                otdbNode = new jOTDBnode(0,0,0,0);
-                otdbNode.name = "No TreeSelection";
-            } else {
-                otdbNode = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
-            }
-        
-            // put the OTDBnode in a wrapper for the tree
-            TreeNode rootNode = new TreeNode(otdbNode);
-
+            
+            OTDBNodeTreeManager treeManager = OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount());
+            
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            treePanel.newRootNode(rootNode);
+            String[] args = new String[1];
+            args[0]= ""+ itsTreeID;
+            treePanel.newRootNode(treeManager.getRootNode(args));
             itsMainFrame.setNormalCursor();
+            
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
         }
