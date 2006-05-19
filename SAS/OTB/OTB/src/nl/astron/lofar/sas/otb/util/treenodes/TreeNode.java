@@ -11,7 +11,7 @@
 package nl.astron.lofar.sas.otb.util.treenodes;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import nl.astron.lofar.sas.otb.util.TreeManager;
+import nl.astron.lofar.sas.otb.util.treemanagers.ITreeManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -27,37 +27,42 @@ public class TreeNode extends DefaultMutableTreeNode {
     
     public boolean   areChildrenDefined = false;
     private String name;
+    private ITreeManager treeManager;
     
     /**
      * default constructor - creates an empty node.
      */
-    public TreeNode() {
+    public TreeNode(ITreeManager treeManager) {
         name="Default Root TreeNode";
+        this.treeManager = (ITreeManager)treeManager;
     }
     
     /**
      * constructor - creates a TreeNode using the name provided
      */
-    public TreeNode(String name) {
+    public TreeNode(ITreeManager treeManager, String name) {
         this.name=name;
+        this.treeManager = (ITreeManager)treeManager;
     }
     
     /**
-     * constructor - creates a TreeNode using the name provided
+     * constructor - creates a TreeNode using the object provided
      */
-    public TreeNode(Object userObject) {
+    public TreeNode(ITreeManager treeManager, Object userObject) {
         this.userObject=userObject;
+        this.treeManager = (ITreeManager)treeManager;
     }
     /**
-     * constructor - creates a TreeNode using the name provided
+     * constructor - creates a TreeNode using the object and name provided
      */
-    public TreeNode(Object userObject, String name) {
+    public TreeNode(ITreeManager treeManager, Object userObject, String name) {
         this.userObject=userObject;
         this.name=name;
+        this.treeManager = (ITreeManager)treeManager;
     }
     
     public boolean isLeaf() {
-        return TreeManager.getInstance().isNodeLeaf(this);
+        return treeManager.isNodeLeaf(this);
     }
 
     /**
@@ -68,7 +73,7 @@ public class TreeNode extends DefaultMutableTreeNode {
         logger.trace("Entry - getChildCount("+toString()+")");
         
         if (!areChildrenDefined)
-            TreeManager.getInstance().defineChildsForNode(this);
+            ((ITreeManager)treeManager).defineChildsForNode(this);
         int childCount = super.getChildCount();
         
         logger.trace("Exit - getChildCount("+toString()+"): " + childCount);
@@ -80,7 +85,7 @@ public class TreeNode extends DefaultMutableTreeNode {
      * @return the human readable name of the node
      */
     public String toString() {
-        return TreeManager.getInstance().getNameForNode(this);
+        return ((ITreeManager)treeManager).getNameForNode(this);
     }
     
     public String getName(){
