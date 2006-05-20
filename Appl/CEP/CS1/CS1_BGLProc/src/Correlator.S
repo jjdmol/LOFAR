@@ -1070,6 +1070,13 @@ _clear_correlation:
 	blr			# polarizations
 
 
+#define SIZEOF_NR_VALID_SAMPLES 2
+
+#if SIZEOF_NR_VALID_SAMPLES != 1 && SIZEOF_NR_VALID_SAMPLES != 2 && SIZEOF_NR_VALID_SAMPLES != 4
+#error Unsupported SIZEOF_NR_VALID_SAMPLES
+#endif
+
+
 .align	5
 .global	_weigh_visibilities
 _weigh_visibilities:
@@ -1079,24 +1086,18 @@ _weigh_visibilities:
 	mtctr	6
 
 	li	8,8
-#if NR_SAMPLES_PER_INTEGRATION < 256
-	li	7,1
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
-	li	7,2
-#else
-	li	7,4
-#endif
+	li	7,SIZEOF_NR_VALID_SAMPLES
 	sub	3,3,8
 	sub	4,4,7
 	mr	6,3
 
-#if NR_SAMPLES_PER_INTEGRATION < 256
+#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	9,4,7
 	lbzux	10,4,7
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
+#elif SIZEOF_NR_VALID_SAMPLES == 2
 	lhzux	9,4,7
 	lhzux	10,4,7
-#else
+#elif SIZEOF_NR_VALID_SAMPLES == 4
 	lwzux	9,4,7
 	lwzux	10,4,7
 #endif
@@ -1120,9 +1121,9 @@ loop5:
 	fxpmul	2,8,2
 	fxpmul	3,8,3
 
-#if NR_SAMPLES_PER_INTEGRATION < 256
+#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	9,4,7
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
+#elif SIZEOF_NR_VALID_SAMPLES == 2
 	lhzux	9,4,7
 #else
 	lwzux	9,4,7
@@ -1145,11 +1146,11 @@ loop5:
 	lfpsux	3,3,8
 	fxpmul	7,8,7
 
-#if NR_SAMPLES_PER_INTEGRATION < 256
+#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	10,4,7
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
+#elif SIZEOF_NR_VALID_SAMPLES == 2
 	lhzux	10,4,7
-#else
+#elif SIZEOF_NR_VALID_SAMPLES == 4
 	lwzux	10,4,7
 #endif
 
@@ -1179,16 +1180,14 @@ _post_process_visibilities:
 
 	li	0,0
 	li	8,8
-#if NR_SAMPLES_PER_INTEGRATION < 256
+#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbz	11,0(4)		# load nrValidSamples
-	li	9,1
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
+#elif SIZEOF_NR_VALID_SAMPLES == 2
 	lhz	11,0(4)
-	li	9,2
-#else
+#elif SIZEOF_NR_VALID_SAMPLES == 4
 	lwz	11,0(4)
-	li	9,4
 #endif
+	li	9,SIZEOF_NR_VALID_SAMPLES
 	li	10,4
 	lfsx	18,0,6		# load threshold
 	addi	7,3,-8
@@ -1200,11 +1199,11 @@ _post_process_visibilities:
 
 loop6:
 	slwi.	12,11,2		# if 4*nrValidSamples == 0, jump to invalid_2
-#if NR_SAMPLES_PER_INTEGRATION < 256
+#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	11,4,9		# load nrValidSamples
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
+#elif SIZEOF_NR_VALID_SAMPLES == 2
 	lhzux	11,4,9
-#else
+#elif SIZEOF_NR_VALID_SAMPLES == 4
 	lwzux	11,4,9
 #endif
 	beq-	0,invalid_2
@@ -1237,11 +1236,11 @@ loop6:
 
 L7:
 	slwi.	12,11,2		# if 4*nrValidSamples == 0, jump to invalid_4
-#if NR_SAMPLES_PER_INTEGRATION < 256
+#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	11,4,9		# load nrValidSamples
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
+#elif SIZEOF_NR_VALID_SAMPLES == 2
 	lhzux	11,4,9
-#else
+#elif SIZEOF_NR_VALID_SAMPLES == 4
 	lwzux	11,4,9
 #endif
 	beq-	0,invalid_4
@@ -1287,11 +1286,11 @@ end:	li	  11,16		# restore call-saved registers
 	blr
 
 invalid_1:
-#if NR_SAMPLES_PER_INTEGRATION < 256
+#if SIZEOF_NR_VALID_SAMPLES == 1
 	stb	0,-1(4)
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
+#elif SIZEOF_NR_VALID_SAMPLES == 2
 	sth	0,-2(4)
-#else
+#elif SIZEOF_NR_VALID_SAMPLES == 4
 	stw	0,-4(4)
 #endif
 	dcbz	0,7
@@ -1308,11 +1307,11 @@ invalid_2:
 	b	L7
 
 invalid_3:
-#if NR_SAMPLES_PER_INTEGRATION < 256
+#if SIZEOF_NR_VALID_SAMPLES == 1
 	stb	0,-1(4)
-#elif NR_SAMPLES_PER_INTEGRATION < 65536
+#elif SIZEOF_NR_VALID_SAMPLES == 2
 	sth	0,-2(4)
-#else
+#elif SIZEOF_NR_VALID_SAMPLES == 4
 	stw	0,-4(4)
 #endif
 	dcbz	0,7
