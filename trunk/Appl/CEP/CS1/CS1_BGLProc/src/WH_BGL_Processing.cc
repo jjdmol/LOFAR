@@ -1170,9 +1170,10 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
   unsigned nrSubbandsPerCell = ps.getUint32("General.SubbandsPerCell");
   unsigned nrNodesPerCell    = ps.getUint32("BGLProc.NodesPerCell");
 
-  itsFirstSubband   = (coreNumber / nrNodesPerCell) * nrSubbandsPerCell;
-  itsLastSubband    = itsFirstSubband + nrSubbandsPerCell;
-  itsCurrentSubband = itsFirstSubband + coreNumber % nrNodesPerCell % nrSubbandsPerCell;
+  itsFirstSubband     = (coreNumber / nrNodesPerCell) * nrSubbandsPerCell;
+  itsLastSubband      = itsFirstSubband + nrSubbandsPerCell;
+  itsCurrentSubband   = itsFirstSubband + coreNumber % nrNodesPerCell % nrSubbandsPerCell;
+  itsSubbandIncrement = nrNodesPerCell % nrSubbandsPerCell;
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
 //getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
@@ -1200,7 +1201,7 @@ WH_BGL_Processing* WH_BGL_Processing::make(const string &name)
 void WH_BGL_Processing::preprocess()
 {
 #if defined HAVE_MPI
-  std::cerr << "node " << TH_MPI::getCurrentRank() << " filters subbands " << itsFirstSubband << " to " << itsLastSubband << " starting at " << itsCurrentSubband << '\n';
+  std::cerr << "node " << TH_MPI::getCurrentRank() << " filters subbands " << itsFirstSubband << " to " << itsLastSubband << " starting at " << itsCurrentSubband << " with " << itsSubbandIncrement << " as increment\n";
 #endif
 
 #if defined HAVE_BGL && NR_SUBBAND_CHANNELS == 256
@@ -1751,8 +1752,8 @@ void WH_BGL_Processing::process()
 
   doCorrelate();
 
-  if (++ itsCurrentSubband == itsLastSubband)
-    itsCurrentSubband = itsFirstSubband;
+  if ((itsCurrentSubband += itsSubbandIncrement) >= itsLastSubband)
+    itsCurrentSubband -= itsLastSubband - itsFirstSubband;
 
   totalTimer.stop();
 }
