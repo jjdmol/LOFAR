@@ -64,6 +64,11 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
         
         logger.trace("Entry - TreeManager jParmDBnode-defineChildNodes("+toString()+")");
         try {
+             // You must set the flag before defining children if you
+            // use "add" for the new children. Otherwise you get an infinite
+            // recursive loop, since add results in a call to getChildCount.
+            // However, you could use "insert" in such a case.
+            aNode.areChildrenDefined = true;
             Vector childs;
             if(((jParmDBnode)aNode.getUserObject()).name.equalsIgnoreCase("ParmDB")){
                 logger.trace("ParmDBtreeNode calling getNames("+((jParmDBnode)aNode.getUserObject()).nodeID().substring(6)+"*)");
@@ -104,7 +109,7 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                 item.name = childName;
                 logger.trace("Node name selected : "+item.name);
                 ((jParmDBnode)aNode.getUserObject()).leaf=false;
-                TreeNode newNode = new TreeNode(this.instance,item,item.name);
+                TreeNode newNode = new TreeNode(this.instance,item,item.nodeID());
                 aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
                 
