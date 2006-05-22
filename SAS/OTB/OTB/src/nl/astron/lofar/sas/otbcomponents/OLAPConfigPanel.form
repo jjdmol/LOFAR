@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <AuxValues>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+
+  <Layout>
+    <DimensionLayout dim="0">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Component id="jTabbedPane1" alignment="0" pref="843" max="32767" attributes="0"/>
+      </Group>
+    </DimensionLayout>
+    <DimensionLayout dim="1">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Component id="jTabbedPane1" alignment="0" pref="488" max="32767" attributes="0"/>
+      </Group>
+    </DimensionLayout>
+  </Layout>
+  <SubComponents>
+    <Container class="javax.swing.JTabbedPane" name="jTabbedPane1">
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
+      <SubComponents>
+        <Container class="javax.swing.JPanel" name="OLAPSpecificPanel">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="OLAP Specific">
+                <Property name="tabTitle" type="java.lang.String" value="OLAP Specific"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="UseAMCLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="NrNodesCellLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="NrSubbandsCellLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="NrFilterTabsLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="NrBufSecLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="NrSamplesLabel" alignment="0" min="-2" pref="80" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="17" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="UseAMCCheckBox" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                                      <Component id="NrBufSecText" alignment="0" min="0" pref="0" max="32767" attributes="1"/>
+                                      <Component id="NrSamplesText" alignment="0" pref="173" max="32767" attributes="1"/>
+                                  </Group>
+                                  <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                                      <Component id="NrNodesCellText" alignment="0" min="0" pref="0" max="32767" attributes="1"/>
+                                      <Component id="NrSubbandsCellText" alignment="0" pref="174" max="32767" attributes="1"/>
+                                      <Component id="NrFilterTabsText" alignment="1" max="32767" attributes="1"/>
+                                  </Group>
+                              </Group>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="SpecificApplyButton" min="-2" pref="70" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="SpecificCancelButton" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace pref="536" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="NrSamplesLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="NrSamplesText" alignment="3" min="-2" pref="19" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="NrBufSecLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="NrBufSecText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="UseAMCLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="UseAMCCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="NrNodesCellLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="NrNodesCellText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="NrSubbandsCellLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="NrSubbandsCellText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="NrFilterTabsLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="NrFilterTabsText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="46" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="SpecificApplyButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="SpecificCancelButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="305" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Component class="javax.swing.JLabel" name="NrSamplesLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="#Samples :"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="NrSamplesText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Nr of Samples to integrate"/>
+                <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[440, 19]"/>
+                </Property>
+                <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[440, 19]"/>
+                </Property>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[440, 19]"/>
+                </Property>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="NrBufSecLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="#Seconds to buffer :"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="NrBufSecText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Number of seconds that need 2 be buffered"/>
+                <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+                <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="UseAMCLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Use AMC server :"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="UseAMCCheckBox">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Do you want to use an AMC server?"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">
+                    <EmptyBorder bottom="0" left="0" right="0" top="0"/>
+                  </Border>
+                </Property>
+                <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
+                  <Insets value="[0, 0, 0, 0]"/>
+                </Property>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="NrNodesCellLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="#Nodes/cell :"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="NrNodesCellText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Number of Nodes per Cell"/>
+                <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+                <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="NrSubbandsCellLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="#Subbands/cell :"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="NrSubbandsCellText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Number of Subbands per cell"/>
+                <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+                <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 19]"/>
+                </Property>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="NrFilterTabsLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="#Filter tabs :"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="NrFilterTabsText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Number of Filter Tabs for PPFl"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="SpecificCancelButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Cancel"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="SpecificCancelButtonActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="SpecificApplyButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Apply"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="SpecificApplyButtonActionPerformed"/>
+              </Events>
+            </Component>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="OLAPHardwarePanel">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="OLAP Hardware">
+                <Property name="tabTitle" type="java.lang.String" value="OLAP Hardware"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="jLabel1" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel3" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel4" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                                      <Component id="jLabel11" alignment="0" max="32767" attributes="1"/>
+                                      <Component id="jLabel5" alignment="0" max="32767" attributes="1"/>
+                                  </Group>
+                                  <Component id="jLabel6" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel7" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel8" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel10" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="13" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
+                                      <Component id="StorageNodeNamesText" max="32767" attributes="1"/>
+                                      <Component id="InputNodeNamesText" alignment="0" pref="582" max="32767" attributes="1"/>
+                                      <Component id="StorageClusterHostText" alignment="0" min="-2" pref="177" max="-2" attributes="1"/>
+                                      <Component id="DelayCompensationHostText" alignment="0" min="-2" pref="177" max="-2" attributes="1"/>
+                                      <Component id="AMCServerHostText" alignment="0" min="-2" pref="177" max="-2" attributes="1"/>
+                                      <Component id="InputSectionClusterHostText" alignment="0" min="-2" pref="177" max="-2" attributes="1"/>
+                                  </Group>
+                                  <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                                      <Component id="BGLProcStoragePortsText" alignment="0" max="32767" attributes="1"/>
+                                      <Component id="InputBGLProcPortsText" alignment="0" max="32767" attributes="1"/>
+                                      <Component id="DelayInputPortsText" alignment="0" max="32767" attributes="1"/>
+                                      <Component id="AMCServerPortText" alignment="0" max="32767" attributes="1"/>
+                                      <Component id="BGLPartitionText" alignment="0" pref="176" max="32767" attributes="1"/>
+                                  </Group>
+                              </Group>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="HardwareApplyButton" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="HardwareCancelButton" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace pref="94" max="32767" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="AMCServerHostText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="DelayCompensationHostText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="InputSectionClusterHostText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="InputNodeNamesText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="StorageClusterHostText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel11" alignment="3" min="-2" pref="11" max="-2" attributes="0"/>
+                          <Component id="StorageNodeNamesText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel6" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="BGLPartitionText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="AMCServerPortText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel8" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="DelayInputPortsText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="InputBGLProcPortsText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel10" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="BGLProcStoragePortsText" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="HardwareApplyButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="HardwareCancelButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace pref="86" max="32767" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Component class="javax.swing.JLabel" name="jLabel1">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="AMCServer Host:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="AMCServerHostText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Give Machine where AMC server runs (hostname or IP address)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel2">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="DelayCompensation Host:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="DelayCompensationHostText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Machine where DelayCompensation runs (Hostname or IP address)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel3">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="InputSection Cluster Host:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="InputSectionClusterHostText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Cluster for InputSection(Hostname or IP address)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel4">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Input Section Machines:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="InputNodeNamesText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="comma seperated list with all machinenames for InputSection"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel5">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Storage Cluster Host:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="StorageClusterHostText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Cluster for Storage (Hostname or IP address)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel11">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Storage Machines:"/>
+                <Property name="toolTipText" type="java.lang.String" value="null"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="StorageNodeNamesText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="comma seperated list with all machinenames for Storage"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel6">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Partition for BGL_Processing:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="BGLPartitionText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Partition on which BGL_Processing runs."/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel7">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="AMC Server Port:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="AMCServerPortText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Port to reach AMC Server"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel8">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Delay -&gt; Input Ports:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="DelayInputPortsText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Ports to use for Delay -&gt; Input (Range like:  8000-8100 or 8000-  or 8000,8001,8003,8005) "/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel9">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Input -&gt; BGL_Proc Ports:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="InputBGLProcPortsText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Ports to use for Input -&gt; BGL_Proc (Range like:  8000-8100 or 8000-  or 8000,8001,8003,8005)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel10">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="BGL_Proc -&gt; Storage Ports:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="BGLProcStoragePortsText">
+              <Properties>
+                <Property name="toolTipText" type="java.lang.String" value="Ports to use for BGL_Proc -&gt; Storage (Range like:  8000-8100 or 8000-  or 8000,8001,8003,8005)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="HardwareApplyButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Apply"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="HardwareCancelButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Cancel"/>
+              </Properties>
+            </Component>
+          </SubComponents>
+        </Container>
+      </SubComponents>
+    </Container>
+  </SubComponents>
+</Form>
