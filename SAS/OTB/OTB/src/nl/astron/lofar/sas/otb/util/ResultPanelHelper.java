@@ -12,6 +12,7 @@
 package nl.astron.lofar.sas.otb.util;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Vector;
 
 /**
@@ -39,9 +40,9 @@ public class ResultPanelHelper {
         
         //BBS
         itsVector = new Vector<String>();
-        addBasePanels();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.parmDBPlotPanel");
-        itsPanelMap.put("BBS",itsVector);
+        //addBasePanels();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
+        itsPanelMap.put("ParmDB",itsVector);
         
         
     }
@@ -63,7 +64,15 @@ public class ResultPanelHelper {
      * @return the Vector that contains all panels for this key
      */
     public Vector getPanels(String aKey) {
-        return itsPanelMap.get(aKey);
+        Vector returnVector = null;
+        Iterator i = itsPanelMap.keySet().iterator();
+        while(i.hasNext()){
+            String key = (String)i.next();
+            if(aKey.indexOf(key) == 0){
+                returnVector = itsPanelMap.get(key);
+            }
+        }
+        return returnVector;
     }
     
     /**
@@ -73,7 +82,15 @@ public class ResultPanelHelper {
      *@return true if key was available, false if not
      */
     public boolean isKey(String aKey) {
-        return itsPanelMap.containsKey(aKey);
+        boolean returnBool = false;
+        Iterator i = itsPanelMap.keySet().iterator();
+        while(i.hasNext()){
+            String key = (String)i.next();
+            if(aKey.indexOf(key) == 0){
+                returnBool = true;
+            }
+        }
+        return returnBool;
     }
     
     
