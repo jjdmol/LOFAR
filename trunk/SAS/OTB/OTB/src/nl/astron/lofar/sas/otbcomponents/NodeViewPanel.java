@@ -9,17 +9,19 @@ package nl.astron.lofar.sas.otbcomponents;
 import java.rmi.RemoteException;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.panels.MainPanel;
+import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
+import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author  coolen
  */
-public class NodeViewPanel extends javax.swing.JPanel {
+public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
     
     static Logger logger = Logger.getLogger(NodeViewPanel.class);    
+    static String name = "Node";
 
    
     /** Creates new form BeanForm based upon aNode
@@ -30,9 +32,9 @@ public class NodeViewPanel extends javax.swing.JPanel {
     public NodeViewPanel(MainFrame aMainFrame,jOTDBnode aNode) {
         initComponents();
         itsMainFrame = aMainFrame;
-        itsNode = aNode;
+        itsNode=aNode;
         itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
-        initPanel(aNode);
+        initPanel();
     }
     
     /** Creates new form BeanForm */
@@ -49,25 +51,49 @@ public class NodeViewPanel extends javax.swing.JPanel {
         }
     }
     
-    public void setNode(jOTDBnode aNode) {
-        initPanel(aNode);
+    public String getShortName() {
+        return name;
+    }
+    
+    public void setContent(Object anObject) {
+        itsNode=(jOTDBnode)anObject;
+        initPanel();
     }
 
-     private void initPanel(jOTDBnode aNode) {
-        itsNode = aNode;
-         if (aNode != null) {
-            setNodeName(aNode.name);
-            setIndex(String.valueOf(aNode.index));
-            setInstances(String.valueOf(aNode.instances));
-            setLimits(String.valueOf(aNode.limits));
-            setDescription(aNode.description);
+     private void initPanel() {
+        // check access
+        UserAccount userAccount = itsMainFrame.getUserAccount();
+
+        // for now:
+        enableInstances(true);
+        enableLimits(true);
+        enableDescription(true);
+        
+        if(userAccount.isAdministrator()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isAstronomer()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isInstrumentScientist()) {
+            // enable/disable certain controls
+        }
+        
+        
+        
+         if (itsNode != null) {
+            setNodeName(itsNode.name);
+            setIndex(String.valueOf(itsNode.index));
+            setInstances(String.valueOf(itsNode.instances));
+            setLimits(String.valueOf(itsNode.limits));
+            setDescription(itsNode.description);
         } else {
             logger.debug("ERROR:  no node given");
         }
     }
     
     /** Returns the Given Name for this Node */
-    public String getNodeName() {
+    private String getNodeName() {
         return this.NodeNameText.getText();
     }
     
@@ -76,7 +102,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
     }
     
     /** Returns the Given Index for this Node */
-    public String getIndex() {
+    private String getIndex() {
         return this.NodeIndexText.getText();
     }
     
@@ -85,7 +111,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
     }
     
     /** Returns the Given Instances for this Node */
-    public String getInstances() {
+    private String getInstances() {
         return this.NodeInstancesText.getText();
     }
     
@@ -94,7 +120,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
     }
 
     /** Returns the Given Limits for this Node */
-    public String getLimits() {
+    private String getLimits() {
         return this.NodeLimitsText.getText();
     }
     
@@ -103,7 +129,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
     }
 
     /** Returns the Given Description for this Node */
-    public String getDescription() {
+    private String getDescription() {
         return this.NodeDescriptionText.getText();
     }
     
@@ -111,43 +137,23 @@ public class NodeViewPanel extends javax.swing.JPanel {
         this.NodeDescriptionText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableNodeName(boolean enabled) {
+    private void enableNodeName(boolean enabled) {
         this.NodeNameText.setEnabled(enabled);
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableIndex(boolean enabled) {
+    private void enableIndex(boolean enabled) {
         this.NodeIndexText.setEnabled(enabled);
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableInstances(boolean enabled) {
+    private void enableInstances(boolean enabled) {
         this.NodeInstancesText.setEnabled(enabled);
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableLimits(boolean enabled) {
+    private void enableLimits(boolean enabled) {
         this.NodeLimitsText.setEnabled(enabled);
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableDescription(boolean enabled) {
+    private void enableDescription(boolean enabled) {
         this.NodeDescriptionText.setEnabled(enabled);
         this.NodeDescriptionText.setEditable(enabled);
     }
@@ -240,46 +246,36 @@ public class NodeViewPanel extends javax.swing.JPanel {
         NodeDescriptionText = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
 
-        setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
         NodeNameLabel.setText("Name :");
-        add(NodeNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 50, 80, -1));
 
         NodeIndexLabel.setText("Index :");
-        add(NodeIndexLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 70, -1, -1));
 
         NodeInstancesLabel.setText("Instances :");
-        add(NodeInstancesLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 100, -1, -1));
 
         NodeLimitsLabel.setText("Limits :");
-        add(NodeLimitsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 120, -1, -1));
 
         NodeIndexText.setText("None");
         NodeIndexText.setMaximumSize(new java.awt.Dimension(200, 19));
         NodeIndexText.setMinimumSize(new java.awt.Dimension(200, 19));
         NodeIndexText.setPreferredSize(new java.awt.Dimension(200, 19));
-        add(NodeIndexText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 70, 200, -1));
 
         NodeInstancesText.setText("-1");
         NodeInstancesText.setToolTipText("Number of Instances for this Node ");
         NodeInstancesText.setMaximumSize(new java.awt.Dimension(200, 19));
         NodeInstancesText.setMinimumSize(new java.awt.Dimension(200, 19));
         NodeInstancesText.setPreferredSize(new java.awt.Dimension(200, 19));
-        add(NodeInstancesText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 100, 200, -1));
 
         NodeLimitsText.setText("None");
         NodeLimitsText.setToolTipText("Limits for this Node");
         NodeLimitsText.setMaximumSize(new java.awt.Dimension(200, 19));
         NodeLimitsText.setMinimumSize(new java.awt.Dimension(200, 19));
         NodeLimitsText.setPreferredSize(new java.awt.Dimension(200, 19));
-        add(NodeLimitsText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 120, 200, -1));
 
         NodeNameText.setText("None");
         NodeNameText.setToolTipText("Name for this Node");
         NodeNameText.setMaximumSize(new java.awt.Dimension(440, 19));
         NodeNameText.setMinimumSize(new java.awt.Dimension(440, 19));
         NodeNameText.setPreferredSize(new java.awt.Dimension(440, 19));
-        add(NodeNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 430, -1));
 
         NodeCancelButton.setText("Cancel");
         NodeCancelButton.addActionListener(new java.awt.event.ActionListener() {
@@ -288,8 +284,6 @@ public class NodeViewPanel extends javax.swing.JPanel {
             }
         });
 
-        add(NodeCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 280, -1, -1));
-
         NodeApplyButton.setText("Apply");
         NodeApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -297,17 +291,73 @@ public class NodeViewPanel extends javax.swing.JPanel {
             }
         });
 
-        add(NodeApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 280, 70, -1));
-
         NodeDescriptionText.setRows(4);
         NodeDescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
         NodeDescriptionText.setEnabled(false);
-        add(NodeDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 150, 540, 100));
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Node View Panel");
-        add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 10, 460, 20));
 
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(70, 70, 70)
+                        .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 460, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(layout.createSequentialGroup()
+                        .add(40, 40, 40)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(layout.createSequentialGroup()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(NodeIndexLabel)
+                                    .add(NodeNameLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(NodeInstancesLabel)
+                                    .add(NodeLimitsLabel))
+                                .add(20, 20, 20)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(NodeLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(NodeInstancesText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(NodeIndexText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(NodeNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 430, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                            .add(NodeDescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 540, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(layout.createSequentialGroup()
+                                .add(NodeCancelButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(NodeApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
+                .add(390, 390, 390))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(10, 10, 10)
+                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(20, 20, 20)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(NodeNameLabel)
+                    .add(NodeNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(6, 6, 6)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(NodeIndexLabel)
+                    .add(NodeIndexText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(NodeInstancesLabel)
+                    .add(NodeInstancesText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(NodeLimitsLabel)
+                    .add(NodeLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(20, 20, 20)
+                .add(NodeDescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 100, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(25, 25, 25)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(NodeCancelButton)
+                    .add(NodeApplyButton))
+                .addContainerGap())
+        );
     }// </editor-fold>//GEN-END:initComponents
 
     private void NodeApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeApplyButtonActionPerformed
@@ -315,7 +365,7 @@ public class NodeViewPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_NodeApplyButtonActionPerformed
 
     private void NodeCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeCancelButtonActionPerformed
-        initPanel(itsNode);
+        initPanel();
     }//GEN-LAST:event_NodeCancelButtonActionPerformed
     
     private jOTDBnode itsNode = null;

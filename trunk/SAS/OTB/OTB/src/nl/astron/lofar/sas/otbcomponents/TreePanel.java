@@ -91,12 +91,22 @@ public class TreePanel extends javax.swing.JPanel {
                 jTree1ValueChanged(evt);
             }
         });
+        jTree1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jTree1MousePressed(evt);
+            }
+        });
 
         jScrollPane1.setViewportView(jTree1);
 
         add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jTree1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTree1MousePressed
+        logger.debug("mouse pressed event: " + evt);
+        fireMouseListenerMousePressed(evt);
+    }//GEN-LAST:event_jTree1MousePressed
 
     /**
      * Exports the TreeSelection.valueChanged event from tree to the outside world of this panel.
@@ -152,6 +162,100 @@ public class TreePanel extends javax.swing.JPanel {
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==javax.swing.event.TreeSelectionListener.class) {
                 ((javax.swing.event.TreeSelectionListener)listeners[i+1]).valueChanged (event);
+            }
+        }
+    }
+
+    /**
+     * Registers MouseListener to receive events.
+     * @param listener The listener to register.
+     */
+    public synchronized void addMouseListener(java.awt.event.MouseListener listener) {
+        if (listenerList == null ) {
+            listenerList = new javax.swing.event.EventListenerList();
+        }
+        listenerList.add (java.awt.event.MouseListener.class, listener);
+    }
+
+    /**
+     * Removes MouseListener from the list of listeners.
+     * @param listener The listener to remove.
+     */
+    public synchronized void removeMouseListener(java.awt.event.MouseListener listener) {
+        listenerList.remove (java.awt.event.MouseListener.class, listener);
+    }
+
+    /**
+     * Notifies all registered listeners about the event.
+     * 
+     * @param event The event to be fired
+     */
+    private void fireMouseListenerMouseClicked(java.awt.event.MouseEvent event) {
+        if (listenerList == null) return;
+        Object[] listeners = listenerList.getListenerList ();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==java.awt.event.MouseListener.class) {
+                ((java.awt.event.MouseListener)listeners[i+1]).mouseClicked (event);
+            }
+        }
+    }
+
+    /**
+     * Notifies all registered listeners about the event.
+     * 
+     * @param event The event to be fired
+     */
+    private void fireMouseListenerMousePressed(java.awt.event.MouseEvent event) {
+        if (listenerList == null) return;
+        Object[] listeners = listenerList.getListenerList ();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==java.awt.event.MouseListener.class) {
+                ((java.awt.event.MouseListener)listeners[i+1]).mousePressed (event);
+            }
+        }
+    }
+
+    /**
+     * Notifies all registered listeners about the event.
+     * 
+     * @param event The event to be fired
+     */
+    private void fireMouseListenerMouseReleased(java.awt.event.MouseEvent event) {
+        if (listenerList == null) return;
+        Object[] listeners = listenerList.getListenerList ();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==java.awt.event.MouseListener.class) {
+                ((java.awt.event.MouseListener)listeners[i+1]).mouseReleased (event);
+            }
+        }
+    }
+
+    /**
+     * Notifies all registered listeners about the event.
+     * 
+     * @param event The event to be fired
+     */
+    private void fireMouseListenerMouseEntered(java.awt.event.MouseEvent event) {
+        if (listenerList == null) return;
+        Object[] listeners = listenerList.getListenerList ();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==java.awt.event.MouseListener.class) {
+                ((java.awt.event.MouseListener)listeners[i+1]).mouseEntered (event);
+            }
+        }
+    }
+
+    /**
+     * Notifies all registered listeners about the event.
+     * 
+     * @param event The event to be fired
+     */
+    private void fireMouseListenerMouseExited(java.awt.event.MouseEvent event) {
+        if (listenerList == null) return;
+        Object[] listeners = listenerList.getListenerList ();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==java.awt.event.MouseListener.class) {
+                ((java.awt.event.MouseListener)listeners[i+1]).mouseExited (event);
             }
         }
     }

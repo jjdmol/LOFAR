@@ -9,18 +9,20 @@ package nl.astron.lofar.sas.otbcomponents;
 import javax.swing.ListSelectionModel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
+import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.LogParamTableModel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
+import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author  coolen
  */
-public class LogParamPanel extends javax.swing.JPanel {
+public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     
     static Logger logger = Logger.getLogger(LogParamPanel.class);
-    static String name="LogParamPanel";
+    static String name="Log";
 
    
     /** Creates new form BeanForm based upon aNode
@@ -35,7 +37,7 @@ public class LogParamPanel extends javax.swing.JPanel {
         itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
 
         initializeTabs();
-        initPanel(aNode);
+        initPanel();
     }
     
     /** Creates new form BeanForm */
@@ -59,26 +61,104 @@ public class LogParamPanel extends javax.swing.JPanel {
         }
     }
     
-    public void setNode(jOTDBnode aNode) {
-        initPanel(aNode);
+    public String getShortName() {
+        return name;
     }
-
-     private void initPanel(jOTDBnode aNode) {
+    
+    public void setContent(Object anObject) {
+        itsNode=(jOTDBnode)anObject;
+        initPanel();
+    }
+    
+    private void initPanel() {
+        // check access
+        UserAccount userAccount = itsMainFrame.getUserAccount();
+        if(userAccount.isAdministrator()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isAstronomer()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isInstrumentScientist()) {
+            // enable/disable certain controls
+        }
+        
         tablePanel1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        itsNode = aNode;
         LogParamTableModel model = new LogParamTableModel();
         tablePanel1.setTableModel(model);
-        if (aNode == null ) {
+        if (itsNode == null ) {
             logger.debug("ERROR:  empty node supplied");
             LogParamNameText.setText("");
         } else {
-            LogParamNameText.setText(aNode.name);
+            LogParamNameText.setText(itsNode.name);
         }
     }
     
-
+    /** Sets the buttons visible/invisible
+     *
+     * @param   visible     true/false visible/invisible
+     */
+    public void setButtonsVisible(boolean visible) {
+        this.logParamApplyButton.setVisible(visible);
+        this.logParamCancelButton.setVisible(visible);
+    }
     
-
+    /** Enables/disables the buttons
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableButtons(boolean enabled) {
+        this.logParamApplyButton.setEnabled(enabled);
+        this.logParamCancelButton.setEnabled(enabled);
+    }
+    
+    
+    /** Enables/disables the complete form
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void setAllEnabled(boolean enabled) {
+        enableParamName(enabled);
+        enableStartTime(enabled);
+        enableEndTime(enabled);
+        enableRecentOnly(enabled);
+        enableButtons(enabled);
+    }
+    
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableParamName(boolean enabled) {
+        this.LogParamNameText.setEnabled(enabled);
+    }
+    
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableStartTime(boolean enabled) {
+        this.LogParamStartTimeText.setEnabled(enabled);
+    }
+    
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableEndTime(boolean enabled) {
+        this.LogParamEndTimeText.setEnabled(enabled);
+    }
+    
+    /** Enables/disables this inputfield
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableRecentOnly(boolean enabled) {
+        this.LogParamRecentOnlyCheckbox.setEnabled(enabled);
+    }
+    
+    
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -99,13 +179,8 @@ public class LogParamPanel extends javax.swing.JPanel {
         LogParamNameText = new javax.swing.JTextField();
         LogParamRecentOnlyCheckbox = new javax.swing.JCheckBox();
 
-        setLayout(new java.awt.BorderLayout());
-
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Untitled");
-        add(jLabel1, java.awt.BorderLayout.NORTH);
-
-        add(tablePanel1, java.awt.BorderLayout.CENTER);
 
         LogParamNameLabel.setText("Name");
 
@@ -146,28 +221,25 @@ public class LogParamPanel extends javax.swing.JPanel {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel1Layout.createSequentialGroup()
+                .add(14, 14, 14)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(14, 14, 14)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(LogParamStartTimeLabel)
-                            .add(LogParamNameLabel)))
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(logParamCancelButton)))
+                    .add(logParamCancelButton)
+                    .add(LogParamStartTimeLabel)
+                    .add(LogParamNameLabel))
                 .add(10, 10, 10)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(LogParamStartTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(40, 40, 40)
-                        .add(LogParamEndTimeLabel)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(LogParamEndTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(13, 13, 13)
-                        .add(LogParamRecentOnlyCheckbox))
-                    .add(logParamApplyButton)
-                    .add(LogParamNameText))
-                .addContainerGap(277, Short.MAX_VALUE))
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                        .add(jPanel1Layout.createSequentialGroup()
+                            .add(LogParamStartTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(40, 40, 40)
+                            .add(LogParamEndTimeLabel)
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                            .add(LogParamEndTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(13, 13, 13)
+                            .add(LogParamRecentOnlyCheckbox))
+                        .add(LogParamNameText))
+                    .add(logParamApplyButton))
+                .addContainerGap(406, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -189,8 +261,22 @@ public class LogParamPanel extends javax.swing.JPanel {
                     .add(logParamApplyButton))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-        add(jPanel1, java.awt.BorderLayout.SOUTH);
 
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 967, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+            .add(tablePanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 967, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+            .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(jLabel1)
+                .add(tablePanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 519, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+        );
     }// </editor-fold>//GEN-END:initComponents
 
     private void logParamApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logParamApplyButtonActionPerformed
