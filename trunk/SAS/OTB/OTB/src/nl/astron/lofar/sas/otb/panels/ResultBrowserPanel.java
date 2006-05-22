@@ -154,10 +154,10 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         }
     }
     
-    private void changeTreeSelection(jOTDBnode aNode) {
+    private void changeTreeSelection(TreeNode aNode) {
         // save selected panel
         int savedSelection=jTabbedPane1.getSelectedIndex();
-        logger.debug("ChangeSelection for node: " + aNode.name);
+        logger.debug("ChangeSelection for node: " + aNode.getName());
         itsSelectedNode=aNode;
         jOTDBparam aParam = null;
         
@@ -165,13 +165,13 @@ public class ResultBrowserPanel extends javax.swing.JPanel
 
         // Check if the nodename uses specific panels and create them
         Vector aPanelList=null;
-        if (itsPanelHelper.isKey(aNode.name)) {
-            aPanelList=itsPanelHelper.getPanels(aNode.name);
+        if (itsPanelHelper.isKey(aNode.getName())) {
+            aPanelList=itsPanelHelper.getPanels(aNode.getName());
         } else {
             aPanelList=itsPanelHelper.getPanels("*");            
         }
 
-        if (aNode.leaf) {
+        if (aNode.isLeaf()) {
         } else {
         }
         
@@ -182,8 +182,8 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             JPanel p=null;
             String aPanelName= it.next().toString();
             // Check if the wanted panel is the Node or Parameter Panel. if so only add depending on leaf 
-            if ((aPanelName.contains("NodeViewPanel") && aNode.leaf) |
-                    (aPanelName.contains("ParameterViewPanel") && !aNode.leaf)) {
+            if ((aPanelName.contains("NodeViewPanel") && aNode.isLeaf()) |
+                    (aPanelName.contains("ParameterViewPanel") && !aNode.isLeaf())) {
                 skip = true;
             }
             if (!skip) {
@@ -288,27 +288,8 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
             
             TreeNode treeNode = (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
-            
-            if(treeNode.getUserObject() instanceof jOTDBnode){
-                changeTreeSelection((jOTDBnode)treeNode.getUserObject());
-                
-            } else if(treeNode.getUserObject() instanceof jParmDBnode){
-                jParmDBnode selectedNode = (jParmDBnode)treeNode.getUserObject();
-                logger.debug("selected ParmDB node: "+selectedNode.name);
-                
-                int savedSelection=jTabbedPane1.getSelectedIndex();
-                logger.debug("ChangeSelection for node: " + selectedNode.name);
-                //itsSelectedNode=selectedNode;
-                
-                jTabbedPane1.removeTabAt(0);
-                jTabbedPane1.insertTab("ParmDBPlotter",null,parmDBPlotPanel1,"",0);
-                parmDBPlotPanel1.setParam(selectedNode.nodeID());
-                
-                
-                //logParamPanel1.setNode(aNode);
-                jTabbedPane1.setSelectedIndex(0);
-            }
-            
+          
+            changeTreeSelection(treeNode);
         }
     }//GEN-LAST:event_treePanelValueChanged
     
@@ -333,7 +314,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     
     private MainFrame itsMainFrame;
     private boolean changed=false;
-    private jOTDBnode itsSelectedNode = null;
+    private TreeNode itsSelectedNode = null;
     private TreeInfoDialog treeInfoDialog = null;
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;   
