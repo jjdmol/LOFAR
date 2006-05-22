@@ -59,8 +59,6 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         // initialize the tree
         setNewRootNode();
         
-        setFieldValidations();
-
         return true;
     }
     
@@ -205,25 +203,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
     
-    private void setFieldValidations() {
-        parameterViewPanel1.enableParamName(false);
-        parameterViewPanel1.enableIndex(false);
-        parameterViewPanel1.enableType(false);
-        parameterViewPanel1.enableUnit(false);
-        parameterViewPanel1.enablePruning(false);
-        parameterViewPanel1.enableValMoment(false);
-        parameterViewPanel1.enableRuntimeMod(false);
-        parameterViewPanel1.enableLimits(true);
-        parameterViewPanel1.enableDescription(true);                
-        parameterViewPanel1.enableButtons(true);
-        nodeViewPanel1.enableNodeName(false);
-        nodeViewPanel1.enableIndex(false);
-        nodeViewPanel1.enableInstances(true);
-        nodeViewPanel1.enableLimits(true);
-        nodeViewPanel1.enableDescription(true);
-        nodeViewPanel1.enableButtons(true);            
-    }
-    
+   
     /** Launch TreeInfoDialog,
      *
      * @param  aTreeID  The ID of the chosen tree.
@@ -260,18 +240,11 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         itsSelectedNode=aNode;
         if (aNode.leaf) {
             buttonPanel1.setButtonEnabled("Duplicate",false);
-            jOTDBparam aParam = null;
-            try {
-                jTabbedPane1.setSelectedComponent(parameterViewPanel1);
-                aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsTreeID, aNode.paramDefID());
-                parameterViewPanel1.setParam(aParam);
-            } catch (RemoteException ex) {
-                logger.debug("Error during getParam: "+ ex);
-            }
+            parameterViewPanel1.setContent(aNode);
         } else {
             // this node is a node
             jTabbedPane1.setSelectedComponent(nodeViewPanel1);
-            nodeViewPanel1.setNode(aNode);
+            nodeViewPanel1.setContent(aNode);
             if (treePanel.getSelectedRows()[0] ==  0) {
                 buttonPanel1.setButtonEnabled("Duplicate",false);
             } else {
@@ -287,13 +260,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         buttonPanel1.addButton("Info");
         buttonPanel1.addButton("Exit");
         
-        nodeViewPanel1.enableInstances(true);
-        nodeViewPanel1.enableLimits(true);
-        nodeViewPanel1.enableDescription(true);
         nodeViewPanel1.enableButtons(true);
-        
-        parameterViewPanel1.enableLimits(true);
-        parameterViewPanel1.enableDescription(true);
+       
         parameterViewPanel1.enableButtons(true);
     }
     
