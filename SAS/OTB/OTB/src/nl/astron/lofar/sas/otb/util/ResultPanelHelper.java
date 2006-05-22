@@ -4,6 +4,7 @@
  * Created on 16 mei 2006, 11:09
  *
  * This class maintains a list of available panels that can be shown on a given (VIC)name in the ResultBrowser.
+ * In a later stage this should be obtained from the database to make it more solid and dynamic.
  * 
  * 
  */
