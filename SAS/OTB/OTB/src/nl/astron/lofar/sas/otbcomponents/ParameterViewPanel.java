@@ -16,6 +16,7 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
 /**
@@ -77,7 +78,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     public void setContent(Object anObject) {
         if (anObject != null) {
-            itsNode=(jOTDBnode)anObject;
+            TreeNode aNode = (TreeNode)anObject;
+            itsNode = (jOTDBnode)aNode.getUserObject();
+            initPanel();
             getParam(itsNode);
             initPanel();
         } else {
