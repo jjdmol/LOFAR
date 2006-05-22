@@ -13,6 +13,7 @@ import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.LogParamTableModel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
 /**
@@ -66,7 +67,9 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     }
     
     public void setContent(Object anObject) {
-        itsNode=(jOTDBnode)anObject;
+        TreeNode aNode = (TreeNode)anObject;
+        itsNode = (jOTDBnode)aNode.getUserObject();
+       
         initPanel();
     }
     

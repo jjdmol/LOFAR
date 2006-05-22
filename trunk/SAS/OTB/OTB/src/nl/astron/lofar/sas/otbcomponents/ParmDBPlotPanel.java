@@ -16,15 +16,19 @@ import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
+import nl.astron.lofar.sas.otb.util.IViewPanel;
+import nl.astron.lofar.sas.otb.util.jParmDBnode;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author  pompert
  */
-public class ParmDBPlotPanel extends javax.swing.JPanel {
+public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     
-    static Logger logger = Logger.getLogger(ParameterViewPanel.class);
+    static Logger logger = Logger.getLogger(ParmDBPlotPanel.class);
+    static String name="Plotter";
     JScrollPane legendPane;
     PlotPanel paramPanel;
     /** Creates new form BeanForm based upon aParameter
@@ -94,7 +98,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
                 legendPane.setBackground(Color.WHITE);
                 legendPane.getViewport().setBackground(Color.WHITE);
                 plotPanel.add(legendPane,BorderLayout.SOUTH);
-                
+                setParamName(itsParamName);
                 
             }catch(Exception ex){
                 JOptionPane.showMessageDialog(itsMainFrame, ex.getMessage(),
@@ -159,7 +163,16 @@ public class ParmDBPlotPanel extends javax.swing.JPanel {
         enableParamName(enabled);
         
     }
-    
+    public String getShortName() {
+        return name;
+    }
+    public void setContent(Object anObject) {
+        TreeNode aNode = (TreeNode)anObject;
+        jParmDBnode node = (jParmDBnode)aNode.getUserObject();
+        itsParamName = node.nodeID();
+        
+        initPanel(itsParamName);
+    }
     
     private void saveInput() {
         // Just check all possible fields that CAN change. The enabled method will take care if they COULD be changed.
