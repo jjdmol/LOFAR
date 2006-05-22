@@ -34,7 +34,9 @@
 // tinyCEP
 
 // Transporters
+#if defined HAVE_MPI
 #include <Transport/TH_MPI.h>
+#endif
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_Socket.h>
 
@@ -98,7 +100,9 @@ unsigned AH_BGL_Processing::remapOnTree(unsigned cell, unsigned core, struct BGL
 
   rts_rankForCoordinates(x, y, z, t, &node, &numProcs);
 
+#if defined HAVE_MPI
   ASSERTSTR(node < TH_MPI::getNumberOfNodes(), "not enough nodes allocated");
+#endif
 
   return node;
 }
@@ -140,9 +144,14 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 
   ASSERTSTR(logicalNode % usedNodesPerCell == 0, "FIRST_NODE not a multiple of BGLProc.NodesPerCell");
 
+#if defined HAVE_MPI
+  unsigned maxCells   = TH_MPI::getNumberOfNodes() / physicalNodesPerCell;
+#else
+  unsigned maxCells   = 1;
+#endif
+
   unsigned firstCell  = logicalNode / usedNodesPerCell;
   unsigned totalCells = nrSubBands / nrSubbandsPerCell;
-  unsigned maxCells   = TH_MPI::getNumberOfNodes() / physicalNodesPerCell;
   unsigned lastCell   = firstCell + std::min(totalCells - firstCell, maxCells);
 
   ASSERTSTR(firstCell < lastCell, "not enough nodes specified\n");
