@@ -11,20 +11,23 @@ import java.util.Iterator;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
+import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author  coolen
  */
-public class ParameterViewPanel extends javax.swing.JPanel {
+public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel {
     
     static Logger logger = Logger.getLogger(ParameterViewPanel.class);    
-
+    static String name = "Parameter";
    
-    /** Creates new form BeanForm based upon aParameter
+    /** Creates new form based upon aParameter
      *
      * @params  aParam   Param to obtain the info from
      *
@@ -35,9 +38,24 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         itsParam = aParam;
         itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         initComboLists();
-        initPanel(aParam);
+        initPanel();
     }
     
+    /** Creates new form based upon aNode
+     *
+     * @params  aNode   Node to obtain the info from
+     *
+     */    
+    public ParameterViewPanel(MainFrame aMainFrame,jOTDBnode aNode) {
+        initComponents();
+        itsMainFrame = aMainFrame;
+        itsNode = aNode;
+        getParam(itsNode);
+        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
+        initComboLists();
+        initPanel();
+    }
+
     /** Creates new form BeanForm */
     public ParameterViewPanel() {
         initComponents();
@@ -53,13 +71,34 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         }
     }
     
-    public void setParam(jOTDBparam aParam) {
-        if (aParam != null) {
-            itsParam=aParam;
-            initPanel(aParam);
+    public String getShortName() {
+        return name;
+    }
+    
+    public void setContent(Object anObject) {
+        if (anObject != null) {
+            itsNode=(jOTDBnode)anObject;
+            getParam(itsNode);
+            initPanel();
         } else {
-            logger.debug("No param supplied");
+            logger.debug("No node supplied");
         }
+    }
+    
+    private void getParam(jOTDBnode aNode) {
+        if (aNode == null) {
+            logger.debug("ERROR: Empty Node supplied for getParam");
+            return;
+        }
+        itsNode=aNode;
+        try {
+            itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsMainFrame.getSharedVars().getTreeID(),
+                    aNode.paramDefID());
+        } catch (RemoteException ex) {
+            logger.debug("Error during getParam: "+ ex);
+            itsParam=null;
+            return;
+        }        
     }
     
     private void initComboLists() {
@@ -80,24 +119,41 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamUnitText.setModel(aUnitModel);
     }
 
-    private void initPanel(jOTDBparam aParam) {
-        if (aParam != null) {
-            setParamName(aParam.name);
-            setIndex(String.valueOf(aParam.index));
-            setType(aParam.type);
-            setUnit(aParam.unit);
-            setPruning(String.valueOf(aParam.pruning));
-            setValMoment(String.valueOf(aParam.valMoment));
-            setRuntimeMod(aParam.runtimeMod);
-            setLimits(String.valueOf(aParam.limits));
-            setDescription(aParam.description);
+    private void initPanel() {
+    
+        // check access
+        UserAccount userAccount = itsMainFrame.getUserAccount();
+        
+        // For now:
+        enableLimits(true);
+        enableDescription(true);
+        
+        if(userAccount.isAdministrator()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isAstronomer()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isInstrumentScientist()) {
+            // enable/disable certain controls
+        }
+
+        if (itsParam != null) {
+            setParamName(itsParam.name);
+            setIndex(String.valueOf(itsParam.index));
+            setType(itsParam.type);
+            setUnit(itsParam.unit);
+            setPruning(String.valueOf(itsParam.pruning));
+            setValMoment(String.valueOf(itsParam.valMoment));
+            setRuntimeMod(itsParam.runtimeMod);
+            setLimits(String.valueOf(itsParam.limits));
+            setDescription(itsParam.description);
         } else {
             logger.debug("ERROR:  no Param given");
         }
     }
     
-    /** Returns the Given Name for this Param */
-    public String getParamName() {
+    private String getParamName() {
         return this.ParamNameText.getText();
     }
     
@@ -105,16 +161,11 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         this.ParamNameText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableParamName(boolean enabled) {
+    private void enableParamName(boolean enabled) {
         this.ParamNameText.setEnabled(enabled);
     }
 
-    /** Returns the Given Index for this Param */
-    public String getIndex() {
+    private String getIndex() {
         return this.ParamIndexText.getText();
     }
     
@@ -122,16 +173,11 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         this.ParamIndexText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableIndex(boolean enabled) {
+    private void enableIndex(boolean enabled) {
         this.ParamIndexText.setEnabled(enabled);
     }
 
-    /** Returns the Given Type for this Param */
-    public String getType() {
+    private String getType() {
         return (String)this.ParamTypeText.getSelectedItem();
     }
     
@@ -143,17 +189,11 @@ public class ParameterViewPanel extends javax.swing.JPanel {
        }
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableType(boolean enabled) {
+    private void enableType(boolean enabled) {
         this.ParamTypeText.setEnabled(enabled);
     }
     
-   
-    /** Returns the Given Unit for this Param */
-    public String getUnit() {
+    private String getUnit() {
         return (String)this.ParamUnitText.getSelectedItem();
     }
     
@@ -165,16 +205,11 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         }
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableUnit(boolean enabled) {
+    private void enableUnit(boolean enabled) {
         this.ParamUnitText.setEnabled(enabled);
     }
     
-    /** Returns the Given pruning for this Param */
-    public String getPruning() {
+    private String getPruning() {
         return this.ParamPruningText.getText();
     }
     
@@ -182,16 +217,11 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         this.ParamPruningText.setText(aS);    
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enablePruning(boolean enabled) {
+    private void enablePruning(boolean enabled) {
         this.ParamPruningText.setEnabled(enabled);
     }
 
-    /** Returns the Given valMoment for this Param */
-    public String getValMoment() {
+    private String getValMoment() {
         return this.ParamValMomentText.getText();
     }
     
@@ -199,16 +229,11 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         this.ParamValMomentText.setText(aS);    
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableValMoment(boolean enabled) {
+    private void enableValMoment(boolean enabled) {
         this.ParamValMomentText.setEnabled(enabled);
     }
 
-    /** Returns the Given runtimeMod for this Param */
-    public boolean getRuntimeMod() {
+    private boolean getRuntimeMod() {
         if (this.ParamRuntimeModText.getSelectedItem().equals("true")) {
             return true;
         } else {
@@ -224,17 +249,12 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         }
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableRuntimeMod(boolean enabled) {
+    private void enableRuntimeMod(boolean enabled) {
         this.ParamRuntimeModText.setEnabled(enabled);
     }
     
     
-    /** Returns the Given Limits for this Param */
-    public String getLimits() {
+    private String getLimits() {
         return this.ParamLimitsText.getText();
     }
     
@@ -242,16 +262,11 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         this.ParamLimitsText.setText(aS);
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableLimits(boolean enabled) {
+    private void enableLimits(boolean enabled) {
         this.ParamLimitsText.setEnabled(enabled);
     }
 
-    /** Returns the Given Description for this Param */
-    public String getDescription() {
+    private String getDescription() {
         return this.ParamDescriptionText.getText();
     }
     
@@ -259,19 +274,14 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         this.ParamDescriptionText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableDescription(boolean enabled) {
+    private void enableDescription(boolean enabled) {
         this.ParamDescriptionText.setEnabled(enabled);
         this.ParamDescriptionText.setEditable(enabled);
     }
 
-
-    /** Enables/disables the buttons
+    /** Enables the buttons
      *
-     * @param   enabled     true/false enabled/disabled
+     * @param   enabled     true/false enable/disable
      */
     public void enableButtons(boolean enabled) {
         this.ParamApplyButton.setEnabled(enabled);
@@ -388,39 +398,30 @@ public class ParameterViewPanel extends javax.swing.JPanel {
         ParamLimitsText = new javax.swing.JTextField();
         ParamRuntimeModText = new javax.swing.JComboBox();
 
-        setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
         ParamNameLabel.setText("Name :");
-        add(ParamNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 50, 80, -1));
 
         ParamIndexLabel.setText("Index :");
-        add(ParamIndexLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 75, -1, -1));
 
         ParamTypeLabel.setText("Type :");
-        add(ParamTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 100, -1, -1));
 
         ParamLimitsLabel.setText("Limits :");
-        add(ParamLimitsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 225, -1, -1));
 
         ParamIndexText.setText("None");
         ParamIndexText.setMaximumSize(new java.awt.Dimension(200, 19));
         ParamIndexText.setMinimumSize(new java.awt.Dimension(200, 19));
         ParamIndexText.setPreferredSize(new java.awt.Dimension(200, 19));
-        add(ParamIndexText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 75, 240, -1));
 
         ParamPruningText.setText("-1");
         ParamPruningText.setToolTipText("Number of Instances for this Node ");
         ParamPruningText.setMaximumSize(new java.awt.Dimension(200, 19));
         ParamPruningText.setMinimumSize(new java.awt.Dimension(200, 19));
         ParamPruningText.setPreferredSize(new java.awt.Dimension(200, 19));
-        add(ParamPruningText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 150, 240, -1));
 
         ParamNameText.setText("None");
         ParamNameText.setToolTipText("Name for this Node");
         ParamNameText.setMaximumSize(new java.awt.Dimension(440, 19));
         ParamNameText.setMinimumSize(new java.awt.Dimension(440, 19));
         ParamNameText.setPreferredSize(new java.awt.Dimension(440, 19));
-        add(ParamNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 430, -1));
 
         ParamCancelButton.setText("Cancel");
         ParamCancelButton.addActionListener(new java.awt.event.ActionListener() {
@@ -429,8 +430,6 @@ public class ParameterViewPanel extends javax.swing.JPanel {
             }
         });
 
-        add(ParamCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 400, -1, -1));
-
         ParamApplyButton.setText("Apply");
         ParamApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -438,44 +437,116 @@ public class ParameterViewPanel extends javax.swing.JPanel {
             }
         });
 
-        add(ParamApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 400, 70, -1));
-
         ParamDescriptionText.setRows(3);
         ParamDescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
-        add(ParamDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 250, 530, 80));
 
         ParamUnitLabel.setText("Unit :");
-        add(ParamUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 125, -1, -1));
 
         ParamPruningLabel.setText("Pruning :");
-        add(ParamPruningLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 150, -1, -1));
 
         ParamValMomentLabel.setText("ValMoment :");
-        add(ParamValMomentLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 175, -1, -1));
 
         ParamRuntimeModLabel.setText("RuntimeMod :");
-        add(ParamRuntimeModLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 200, -1, -1));
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Parameter View Panel");
-        add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(114, 10, 320, 20));
 
         ParamTypeText.setEditable(true);
-        add(ParamTypeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 100, 240, -1));
 
         ParamUnitText.setEditable(true);
-        add(ParamUnitText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 125, 240, -1));
 
         ParamValMomentText.setText("None");
-        add(ParamValMomentText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 175, 240, -1));
 
         ParamLimitsText.setText("None");
-        add(ParamLimitsText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 225, 240, -1));
 
         ParamRuntimeModText.setEditable(true);
         ParamRuntimeModText.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "false", "true" }));
-        add(ParamRuntimeModText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 200, 240, -1));
 
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(114, 114, 114)
+                        .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 320, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(layout.createSequentialGroup()
+                        .add(40, 40, 40)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(layout.createSequentialGroup()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(ParamIndexLabel)
+                                    .add(ParamNameLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ParamTypeLabel)
+                                    .add(ParamUnitLabel)
+                                    .add(ParamPruningLabel)
+                                    .add(ParamValMomentLabel)
+                                    .add(ParamRuntimeModLabel)
+                                    .add(ParamLimitsLabel))
+                                .add(20, 20, 20)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(ParamLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ParamRuntimeModText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ParamValMomentText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ParamPruningText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ParamUnitText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ParamTypeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ParamNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 430, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ParamIndexText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                            .add(ParamDescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 530, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(layout.createSequentialGroup()
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(ParamCancelButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(ParamApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
+                .add(403, 403, 403))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(10, 10, 10)
+                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(20, 20, 20)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ParamNameLabel)
+                    .add(ParamNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(11, 11, 11)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(ParamIndexLabel)
+                    .add(ParamIndexText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(6, 6, 6)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(ParamTypeLabel)
+                    .add(ParamTypeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(ParamUnitLabel)
+                    .add(ParamUnitText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(ParamPruningLabel)
+                    .add(ParamPruningText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(ParamValMomentLabel)
+                    .add(ParamValMomentText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(ParamRuntimeModLabel)
+                    .add(ParamRuntimeModText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ParamLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(ParamLimitsLabel))
+                .add(19, 19, 19)
+                .add(ParamDescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(30, 30, 30)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ParamApplyButton)
+                    .add(ParamCancelButton))
+                .addContainerGap(26, Short.MAX_VALUE))
+        );
     }// </editor-fold>//GEN-END:initComponents
 
     private void ParamApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamApplyButtonActionPerformed
@@ -483,11 +554,12 @@ public class ParameterViewPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_ParamApplyButtonActionPerformed
 
     private void ParamCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamCancelButtonActionPerformed
-        initPanel(itsParam);
+        initPanel();
     }//GEN-LAST:event_ParamCancelButtonActionPerformed
     
     private MainFrame  itsMainFrame;
     private OtdbRmi    itsOtdbRmi;
+    private jOTDBnode  itsNode;
     private jOTDBparam itsParam;
 
     

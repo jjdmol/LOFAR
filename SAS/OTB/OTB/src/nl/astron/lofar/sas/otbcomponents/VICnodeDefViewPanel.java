@@ -259,52 +259,40 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
         NodeCancelButton = new javax.swing.JButton();
         NodeApplyButton = new javax.swing.JButton();
 
-        setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("VICnodeDef View Panel");
-        add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 10, 460, 20));
 
         NameLabel.setText("Name :");
-        add(NameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 50, 80, -1));
 
         NameText.setText("None");
         NameText.setToolTipText("Name for this Node");
         NameText.setMaximumSize(new java.awt.Dimension(440, 19));
         NameText.setMinimumSize(new java.awt.Dimension(440, 19));
         NameText.setPreferredSize(new java.awt.Dimension(440, 19));
-        add(NameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 430, -1));
 
         VersionLabel.setText("Version :");
-        add(VersionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 80, -1, -1));
 
         VersionText.setText("None");
         VersionText.setToolTipText("Version number for this VICnodeDef");
         VersionText.setMaximumSize(new java.awt.Dimension(200, 19));
         VersionText.setMinimumSize(new java.awt.Dimension(200, 19));
         VersionText.setPreferredSize(new java.awt.Dimension(200, 19));
-        add(VersionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 80, 200, -1));
 
         ClassificationLabel.setText("Classification :");
-        add(ClassificationLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 110, -1, -1));
 
         ClassificationText.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        add(ClassificationText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 110, 200, 20));
 
         ConstraintsLabel.setText("Constraints :");
-        add(ConstraintsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 140, -1, -1));
 
         ConstraintsText.setText("None");
         ConstraintsText.setToolTipText("Limits for this Node");
         ConstraintsText.setMaximumSize(new java.awt.Dimension(200, 19));
         ConstraintsText.setMinimumSize(new java.awt.Dimension(200, 19));
         ConstraintsText.setPreferredSize(new java.awt.Dimension(200, 19));
-        add(ConstraintsText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 140, 430, -1));
 
         DescriptionText.setRows(4);
         DescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
         DescriptionText.setEnabled(false);
-        add(DescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 220, 540, 100));
 
         NodeCancelButton.setText("Cancel");
         NodeCancelButton.addActionListener(new java.awt.event.ActionListener() {
@@ -313,8 +301,6 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
             }
         });
 
-        add(NodeCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 350, -1, -1));
-
         NodeApplyButton.setText("Apply");
         NodeApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -322,8 +308,66 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
             }
         });
 
-        add(NodeApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 350, 70, -1));
-
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(70, 70, 70)
+                        .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 460, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(layout.createSequentialGroup()
+                        .add(40, 40, 40)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(DescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 540, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(layout.createSequentialGroup()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(NameLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(VersionLabel)
+                                    .add(ClassificationLabel)
+                                    .add(ConstraintsLabel))
+                                .add(20, 20, 20)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(ConstraintsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 430, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(ClassificationText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(NameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 430, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(VersionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                            .add(layout.createSequentialGroup()
+                                .add(NodeCancelButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(NodeApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
+                .add(104, 104, 104))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(10, 10, 10)
+                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(20, 20, 20)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(NameLabel)
+                    .add(NameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(VersionLabel)
+                    .add(VersionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ClassificationLabel)
+                    .add(ClassificationText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ConstraintsLabel)
+                    .add(ConstraintsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(27, 27, 27)
+                .add(DescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 100, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(27, 27, 27)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(NodeCancelButton)
+                    .add(NodeApplyButton))
+                .add(37, 37, 37))
+        );
     }// </editor-fold>//GEN-END:initComponents
 
     private void NodeApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeApplyButtonActionPerformed
