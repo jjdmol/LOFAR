@@ -104,33 +104,6 @@ itsStddev : 4.145217827e-05
 itsChi    : 2.733788385e-06
 
 End of first test
-Starting double setEquations test
->>>
-<<<
-use toblob
->>>
-Prediffer settings:
-  msname:    /tmp/diepen.demo
-  mepname:   demo
-  gsmname:   demo_gsm
-  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
-  stchan:    0
-  endchan:   1
-  calcuvw  : 0
-
-<<<
-Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
->>>
-<<<
-iter0:  [2.734004076,0.4538001731,0.6039205533,2.734020405,0.4536930993,0.5974054979,2.733981394,0.4537583416,0.6004018856]
-itsSolFlag: 1
-itsRank   : 9
-itsFit    : 1
-itsMu     : 0.01102832013
-itsStddev : 0.01102832013
-itsChi    : 0.09620446133
-
-End of double setEquations test
 Starting test with two prediffers
 >>>
 <<<

@@ -73,7 +73,6 @@ MeqResult MeqPolc::getResult (const MeqRequest& request,
   if (itsCoeff.nelements() == 1) {
     result.setValue (MeqMatrix(itsCoeff.getDouble()));
     if (makeDiff) {
-      result.setPerturbation (itsScidInx, itsCoeffPert.getDouble());
       result.setPerturbedValue (itsScidInx,
 				MeqMatrix(itsCoeff.getDouble()
 					  + itsCoeffPert.getDouble()));
@@ -106,7 +105,6 @@ MeqResult MeqPolc::getResult (const MeqRequest& request,
 	if (isCoeffSolvable(i)) {
 	  int pinx = pertInx + nr;
 	  nr++;
-	  result.setPerturbation (pinx, pertData[i]);
 	  result.setPerturbedValue (pinx, MeqMatrix(double(0), ndx, ndy));
 	  pertValPtr[i] = result.getPerturbedValueRW(pinx).doubleStorage();
 	} else {
@@ -207,7 +205,6 @@ MeqResult MeqPolc::getAnResult (const MeqRequest& request,
   if (itsCoeff.nelements() == 1) {
     result.setValue (MeqMatrix(itsCoeff.getDouble()));
     if (makeDiff) {
-      result.setPerturbation (itsScidInx, itsCoeffPert.getDouble());
       result.setPerturbedValue (itsScidInx, MeqMatrix(1.));
 // 	cout << "polc " << itsScidInx << ' ' << result.getValue()
 // 	     << result.getPerturbedValue(itsScidInx) << itsCoeffPert
@@ -238,7 +235,6 @@ MeqResult MeqPolc::getAnResult (const MeqRequest& request,
 	if (isCoeffSolvable(i)) {
 	  int pinx = pertInx + nr;
 	  nr++;
-	  result.setPerturbation (pinx, pertData[i]);
 	  result.setPerturbedValue (pinx, MeqMatrix(double(0), ndx, ndy));
 	  pertValPtr[i] = result.getPerturbedValueRW(pinx).doubleStorage();
 	} else {

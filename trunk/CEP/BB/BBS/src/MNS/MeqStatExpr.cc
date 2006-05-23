@@ -124,19 +124,19 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
 	MeqMatrix pdf12 = df12;
 	MeqMatrix pdf21 = df21;
 	MeqMatrix pdf22 = df22;
-	double perturbation;
+	const MeqParmFunklet* perturbedParm;
 	bool eval = false;
 	if (drot.isDefined(spinx)) {
 	  eval = true;
 	  pcosdrot = cos(drot.getPerturbedValue(spinx));
 	  psindrot = sin(drot.getPerturbedValue(spinx));
-	  perturbation = drot.getPerturbation(spinx);
+	  perturbedParm = drot.getPerturbedParm(spinx);
 	}
 	if (dell.isDefined(spinx)) {
 	  eval = true;
 	  pcosdell = cos(dell.getPerturbedValue(spinx));
 	  psindell = sin(dell.getPerturbedValue(spinx));
-	  perturbation = dell.getPerturbation(spinx);
+	  perturbedParm = dell.getPerturbedParm(spinx);
 	}
 	if (eval) {
 	  MeqMatrix cdecdr = pcosdell * pcosdrot;
@@ -152,7 +152,7 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
 	  eval = true;
 	  pcosfrot = cos(frot.getPerturbedValue(spinx));
 	  psinfrot = sin(frot.getPerturbedValue(spinx));
-	  perturbation = frot.getPerturbation(spinx);
+	  perturbedParm = frot.getPerturbedParm(spinx);
 	}
 	if (eval) {
 	  pdf11 = pd11 * pcosfrot + pd12 * psinfrot;
@@ -163,26 +163,26 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
 	bool evalg = eval;
 	if (g1.isDefined(spinx)) {
 	  evalg = true;
-	  perturbation = g1.getPerturbation(spinx);
+	  perturbedParm = g1.getPerturbedParm(spinx);
 	}
 	if (evalg) {
 	  const MeqMatrix& pert = g1.getPerturbedValue(spinx);
 	  result11.setPerturbedValue (spinx, pert * pdf11);
 	  result12.setPerturbedValue (spinx, pert * pdf12);
-	  result11.setPerturbation (spinx, perturbation);
-	  result12.setPerturbation (spinx, perturbation);
+	  result11.setPerturbedParm (spinx, perturbedParm);
+	  result12.setPerturbedParm (spinx, perturbedParm);
 	}
 	evalg = eval;
 	if (g2.isDefined(spinx)) {
 	  evalg = true;
-	  perturbation = g2.getPerturbation(spinx);
+	  perturbedParm = g2.getPerturbedParm(spinx);
 	}
 	if (evalg) {
 	  const MeqMatrix& pert = g2.getPerturbedValue(spinx);
 	  result21.setPerturbedValue (spinx, pert * pdf21);
 	  result22.setPerturbedValue (spinx, pert * pdf22);
-	  result21.setPerturbation (spinx, perturbation);
-	  result22.setPerturbation (spinx, perturbation);
+	  result21.setPerturbedParm (spinx, perturbedParm);
+	  result22.setPerturbedParm (spinx, perturbedParm);
 	}
       }
     }

@@ -73,6 +73,9 @@ public:
   // Get the solvable values for the given fitter (i.e. solve domain).
   const vector<double>& getSolvableValues (uint fitterIndex) const;
 
+  // Get quality for the given fitter (i.e. solve domain).
+  const Quality& getQuality (uint fitterIndex) const;
+
   // Show the relevant info.
   void show (std::ostream&);
 

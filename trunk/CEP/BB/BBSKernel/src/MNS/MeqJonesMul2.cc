@@ -79,45 +79,45 @@ MeqJonesResult MeqJonesMul2::getJResult (const MeqRequest& request)
   result22.setValue (ml21*mr12 + ml22*mr22);
 
   // Determine which values are perturbed and determine the perturbation.
-  double perturbation;
+  const MeqParmFunklet* perturbedParm;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval11 = false;
     bool eval12 = false;
     bool eval21 = false;
     bool eval22 = false;
     if (l11.isDefined(spinx)) {
-      perturbation = l11.getPerturbation(spinx);
+      perturbedParm = l11.getPerturbedParm(spinx);
       eval11 = true;
       eval12 = true;
     } else if (l12.isDefined(spinx)) {
-      perturbation = l12.getPerturbation(spinx);
+      perturbedParm = l12.getPerturbedParm(spinx);
       eval11 = true;
       eval12 = true;
     }
     if (l21.isDefined(spinx)) {
-      perturbation = l21.getPerturbation(spinx);
+      perturbedParm = l21.getPerturbedParm(spinx);
       eval21 = true;
       eval22 = true;
     } else if (l22.isDefined(spinx)) {
-      perturbation = l22.getPerturbation(spinx);
+      perturbedParm = l22.getPerturbedParm(spinx);
       eval21 = true;
       eval22 = true;
     }
     if (r11.isDefined(spinx)) {
-      perturbation = r11.getPerturbation(spinx);
+      perturbedParm = r11.getPerturbedParm(spinx);
       eval11 = true;
       eval21 = true;
     } else if (r21.isDefined(spinx)) {
-      perturbation = r21.getPerturbation(spinx);
+      perturbedParm = r21.getPerturbedParm(spinx);
       eval11 = true;
       eval21 = true;
     }
     if (r12.isDefined(spinx)) {
-      perturbation = r12.getPerturbation(spinx);
+      perturbedParm = r12.getPerturbedParm(spinx);
       eval12 = true;
       eval22 = true;
     } else if (r22.isDefined(spinx)) {
-      perturbation = r22.getPerturbation(spinx);
+      perturbedParm = r22.getPerturbedParm(spinx);
       eval12 = true;
       eval22 = true;
     }
@@ -131,19 +131,19 @@ MeqJonesResult MeqJonesMul2::getJResult (const MeqRequest& request)
       const MeqMatrix& mr21 = r21.getValue();
       const MeqMatrix& mr22 = r22.getValue();
       if (eval11) { 
-	result11.setPerturbation (spinx, perturbation);
+	result11.setPerturbedParm (spinx, perturbedParm);
 	result11.setPerturbedValue (spinx, ml11*mr11 + ml12*mr21);
       }
       if (eval12) {
-	result12.setPerturbation (spinx, perturbation);
+	result12.setPerturbedParm (spinx, perturbedParm);
 	result12.setPerturbedValue (spinx, ml11*mr12 + ml12*mr22);
       }
       if (eval21) {
-	result21.setPerturbation (spinx, perturbation);
+	result21.setPerturbedParm (spinx, perturbedParm);
 	result21.setPerturbedValue (spinx, ml21*mr11 + ml22*mr21);
       }
       if (eval22) {
-	result22.setPerturbation (spinx, perturbation);
+	result22.setPerturbedParm (spinx, perturbedParm);
 	result22.setPerturbedValue (spinx, ml21*mr12 + ml22*mr22);
       }
     }

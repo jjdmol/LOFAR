@@ -30,6 +30,16 @@
 using namespace casa;
 using namespace std;
 
+// Make sorting vector<MPFHolder> possible (on domain).
+// So define operator< for it.
+bool less_mp (LOFAR::MeqFunklet* x, LOFAR::MeqFunklet* y)
+{
+  return (x->domain().startY() < y->domain().startY()  ||
+	  (x->domain().startY() == y->domain().startY()  &&
+	   x->domain().startX() <  y->domain().startX()));
+}
+
+
 namespace LOFAR {
 
 MeqParmFunklet::MeqParmFunklet (const string& name, MeqParmGroup* group,
@@ -55,9 +65,15 @@ void MeqParmFunklet::add (const MeqFunklet& funklet)
 
 MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
 {
+  int nrpert = request.nspid() > 0  ?  itsNrPert : 0;
   // A single funklet can be evaluated immediately.
   if (itsFunklets.size() == 1) {
-    return itsFunklets[0]->getResult (request, itsNrPert, itsPertInx);
+    MeqResult res = itsFunklets[0]->getResult (request,
+					       itsNrPert, itsPertInx);
+    for (int ip=0; ip<nrpert; ip++) {
+      res.setPerturbedParm (itsPertInx+ip, this);
+    }
+    return res;
   }
   // Get the domain, etc.
   const MeqDomain& domain = request.domain();
@@ -74,10 +90,10 @@ MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
   MeqMatrix mat(0., ndx, ndy);
   result.setValue (mat);
   // Create and initialize the perturbed values.
-  int nrpert = request.nspid() > 0  ?  itsNrPert : 0;
   for (int ip=0; ip<nrpert; ip++) {
     MeqMatrix matp(0., ndx, ndy);
     result.setPerturbedValue (itsPertInx+ip, matp);
+    result.setPerturbedParm (itsPertInx+ip, this);
   }
   // Iterate over all funklets.
   // Evaluate one if its domain overlaps the request domain.
@@ -115,7 +131,11 @@ MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
       int nry = endy - sty;
       // If the overlap is full, only this funklet needs to be evaluated.
       if (stx == 0  &&  nrx == ndx  &&  sty == 0  &&  nry == ndy) {
-	return funklet.getResult (request, itsNrPert, itsPertInx);
+	MeqResult res = funklet.getResult (request, itsNrPert, itsPertInx);
+	for (int ip=0; ip<nrpert; ip++) {
+	  res.setPerturbedParm (itsPertInx+ip, this);
+	}
+	return res;
       }
       // Form the request for the overlapping part and evaluate the funklet.
       vector<double> yval(nry);
@@ -147,15 +167,9 @@ MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
       // Copy all perturbed values.
       for (int ip=0; ip<nrpert; ip++) {
 	int pertinx = itsPertInx+ip;
-	if (i == 1) {
-	  result.setPerturbation (pertinx, partRes.getPerturbation(pertinx));
-	} else {
-	  ASSERT (result.getPerturbation(pertinx) ==
-		  partRes.getPerturbation(pertinx));
-	}
-	const MeqMatrix& pertfr = partRes.getPerturbedValue(pertinx);
+	const MeqMatrix& pertfr = partRes.getPerturbedValue (pertinx);
 	const double* pfrom = pertfr.doubleStorage();
-	MeqMatrix& pertto = result.getPerturbedValueRW(pertinx);
+	MeqMatrix& pertto = result.getPerturbedValueRW (pertinx);
 	double* pto = pertto.doubleStorage() + stx + sty*ndx;
 	if (pertfr.nelements() == 1) {
 	  for (int iy=0; iy<nry; iy++) {
@@ -195,7 +209,7 @@ void MeqParmFunklet::fillFunklets
   ParmDB::ParmDomain pdomain(domain.startX(), domain.endX(),
 			     domain.startY(), domain.endY());
   bool found = false;
-  // Try to find the funklet in the parm set.
+  // Try to find the funklets in the parm set.
   map<string,ParmDB::ParmValueSet>::const_iterator pos =
                                                    parmSet.find(getName());
   if (pos != parmSet.end()) {
@@ -210,6 +224,10 @@ void MeqParmFunklet::fillFunklets
       }
       itsDefUsed = false;
       found = true;
+      // Sort the funklets in order of domain.
+      if (vec.size() > 1) {
+	std::sort (itsFunklets.begin(), itsFunklets.end(), &less_mp);
+      }
     }
   }
   if (!found) {
@@ -248,7 +266,7 @@ int MeqParmFunklet::initDomain (const vector<MeqDomain>& solveDomains,
 	       << " mismatch workdomain " << itsWorkDomain
 	       << " given in last fillFunklets");
     // The nr of solve domains should match the nr of funklets.
-    // However, if a default value is used, only one funklet is is use.
+    // However, if a default value is used, only one funklet is in use.
     // In that case more funklets are created if needed.
     if (itsDefUsed  &&  nDomain > 1  &&  itsFunklets.size() != nDomain) {
       ASSERT (itsFunklets.size() == 1);

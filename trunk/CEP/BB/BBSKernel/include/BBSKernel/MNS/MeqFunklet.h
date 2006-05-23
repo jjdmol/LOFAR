@@ -92,9 +92,13 @@ public:
   const vector<bool>& getSolvMask() const
     { return itsParmValue.rep().itsSolvMask; }
 
-  // Get the perturbation.
+  // Get the perturbation factor.
   double getPerturbation() const
     { return itsParmValue.rep().itsPerturbation; }
+
+  // Get the perturbation of the i-th coefficient.
+  double getPerturbation (int i) const
+    { return itsCoeffPert.getDouble (i,0); }
 
   // Set the domain.
   void setDomain (const MeqDomain&);

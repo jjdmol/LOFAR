@@ -102,14 +102,20 @@ public:
   // The default implementation throws a "not implemented" exception.
   void updateFromTable();
 
+  // Get the perturbation index.
+  int getPertInx() const
+    { return itsPertInx; }
+
 private:
   bool                itsDefUsed;  //# true = default is used as initial value
   int                 itsNrPert;   //# Nr of perturbed values for this parm
-  int                 itsPertInx;  //# index of first perturbed value
+                                   //# This is the max nr of scids/funklet
+  int                 itsPertInx;  //# index of first perturbed value in result
   vector<MeqFunklet*> itsFunklets;
   ParmDB::ParmDB*     itsTable;
   MeqDomain           itsWorkDomain;
 };
+
 
 // @}
 

@@ -84,26 +84,26 @@ MeqResultVec MeqDFTPS::getResultVec (const MeqRequest& request)
   }
 
   // Evaluate (if needed) for the perturbed parameter values.
-  double perturbation;
+  const MeqParmFunklet* perturbedParm;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval = false;
     if (lrk.isDefined(spinx)) {
-      perturbation = lrk.getPerturbation(spinx);
+      perturbedParm = lrk.getPerturbedParm(spinx);
       eval = true;
     } else if (mrk.isDefined(spinx)) {
-      perturbation = mrk.getPerturbation(spinx);
+      perturbedParm = mrk.getPerturbedParm(spinx);
       eval = true;
     } else if (nrk.isDefined(spinx)) {
-      perturbation = nrk.getPerturbation(spinx);
+      perturbedParm = nrk.getPerturbedParm(spinx);
       eval = true;
     } else if (resU.isDefined(spinx)) {
-      perturbation = resU.getPerturbation(spinx);
+      perturbedParm = resU.getPerturbedParm(spinx);
       eval = true;
     } else if (resV.isDefined(spinx)) {
-      perturbation = resV.getPerturbation(spinx);
+      perturbedParm = resV.getPerturbedParm(spinx);
       eval = true;
     } else if (resW.isDefined(spinx)) {
-      perturbation = resW.getPerturbation(spinx);
+      perturbedParm = resW.getPerturbedParm(spinx);
       eval = true;
     }
     if (eval) {
@@ -112,7 +112,7 @@ MeqResultVec MeqDFTPS::getResultVec (const MeqRequest& request)
 	    resW.getPerturbedValue(spinx) * 
 	    (nrk.getPerturbedValue(spinx) - 1.)) * wavel0;
       result.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
-      result.setPerturbation (spinx, perturbation);
+      result.setPerturbedParm (spinx, perturbedParm);
       if (calcDelta) {
 	MeqResult& delta = resultVec[1];
 	r1 *= dwavel;

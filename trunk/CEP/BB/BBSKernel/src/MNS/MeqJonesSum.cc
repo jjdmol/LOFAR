@@ -74,28 +74,28 @@ namespace LOFAR {
 	  // So set perturbed in result to sum of main and perturbed.
 	  res11.setPerturbedValue(spinx, res11.getValue() +
 				         er11.getPerturbedValue(spinx));
-	  res11.setPerturbation (spinx, er11.getPerturbation(spinx));
+	  res11.setPerturbedParm (spinx, er11.getPerturbedParm(spinx));
 	}
 	if (res12.isDefined (spinx)) {
 	  res12.getPerturbedValueRW(spinx) += er12.getPerturbedValue(spinx);
 	} else if (er12.isDefined (spinx)) {
 	  res12.setPerturbedValue(spinx, res12.getValue() +
 				         er12.getPerturbedValue(spinx));
-	  res12.setPerturbation (spinx, er12.getPerturbation(spinx));
+	  res12.setPerturbedParm (spinx, er12.getPerturbedParm(spinx));
 	}
 	if (res21.isDefined (spinx)) {
 	  res21.getPerturbedValueRW(spinx) += er21.getPerturbedValue(spinx);
 	} else if (er21.isDefined (spinx)) {
 	  res21.setPerturbedValue(spinx, res21.getValue() +
 				         er21.getPerturbedValue(spinx));
-	  res21.setPerturbation (spinx, er21.getPerturbation(spinx));
+	  res21.setPerturbedParm (spinx, er21.getPerturbedParm(spinx));
 	}
 	if (res22.isDefined (spinx)) {
 	  res22.getPerturbedValueRW(spinx) += er22.getPerturbedValue(spinx);
 	} else if (er22.isDefined (spinx)) {
 	  res22.setPerturbedValue(spinx, res22.getValue() +
 				         er22.getPerturbedValue(spinx));
-	  res22.setPerturbation (spinx, er22.getPerturbation(spinx));
+	  res22.setPerturbedParm (spinx, er22.getPerturbedParm(spinx));
 	}
       }
       // Now add to the main value.

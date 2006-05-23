@@ -66,18 +66,18 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
   resN.setValue (nk);
 
   // Evaluate (if needed) for the perturbed parameter values.
-  double perturbation;
+  const MeqParmFunklet* perturbedParm;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     MeqMatrix pcosdec = cosdec;
     MeqMatrix pradiff = radiff;
     bool eval = false;
     if (rak.isDefined(spinx)) {
-      perturbation = rak.getPerturbation(spinx);
+      perturbedParm = rak.getPerturbedParm(spinx);
       pradiff = rak.getPerturbedValue(spinx) - refRa;
       eval = true;
     }
     if (deck.isDefined(spinx)) {
-      perturbation = deck.getPerturbation(spinx);
+      perturbedParm = deck.getPerturbedParm(spinx);
       pcosdec = cos(deck.getPerturbedValue(spinx));
       eval = true;
     }
@@ -91,11 +91,11 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
 		 << " too far from phaseref " << refRa << ", " << refDec);
       MeqMatrix pnk = sqrt(nks);
       resL.setPerturbedValue (spinx, plk);
-      resL.setPerturbation   (spinx, perturbation);
+      resL.setPerturbedParm   (spinx, perturbedParm);
       resM.setPerturbedValue (spinx, pmk);
-      resM.setPerturbation   (spinx, perturbation);
+      resM.setPerturbedParm   (spinx, perturbedParm);
       resN.setPerturbedValue (spinx, pnk);
-      resN.setPerturbation   (spinx, perturbation);
+      resN.setPerturbedParm   (spinx, perturbedParm);
     }
   }
   return result;
@@ -142,7 +142,7 @@ MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
     resM.setValue (mk);
     resN.setValue (nk);
 
-    // Evaluate (if needed) for the perturbed parameter values.
+    // Evaluate (if needed) for the parameter derivatives.
     // l = cosdec*sinradiff
     // m = sindec*cosdec0 - cosdec*sindec0*cosradiff
     // l'= -sindec*dec'*sinradiff + cosdec*cosradiff*ra'
@@ -159,7 +159,6 @@ MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
     // n = sqrt(1 - l^2 - m^2)
     // n'= 0.5 * 1/sqrt(1 - l^2 - m^2) * (-2*l*l' - 2*m*m')
     //   = (l*l' + m*m') / -n
-    double perturbation;
     MeqMatrix c1 = lk * refSinDec;
     MeqMatrix c2 = cosdec * refCosDec + sindec * refSinDec * cosradiff;
     MeqMatrix c3 = cosdec * cosradiff;

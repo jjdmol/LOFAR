@@ -949,8 +949,8 @@ void MeqMatrixComplexArr::fillRowWithProducts(dcomplex v0, dcomplex factor,
   // However, start may not be a multiple of 2.
   // If not, do the first one without SSE and adjust.
   if (start%2 != 0) {
-    itsReal(start) = real(v0);
-    itsImag(start) = imag(v0);
+    itsReal[start] = real(v0);
+    itsImag[start] = imag(v0);
     v0 *= factor;
     start++;
     nr--;
@@ -958,7 +958,7 @@ void MeqMatrixComplexArr::fillRowWithProducts(dcomplex v0, dcomplex factor,
   // Now do the rest with SSE.
   // Note that nr might not be a multiple of 2, so one value too much might
   // be stored. This is not a problem as long as the array is filled
-  // sequentially.
+  // sequentially (which it is normally).
   // The array always has a multiple of 2 values, so the last chunk will
   // also behave correctly.
   if (nr > 0) {
@@ -970,8 +970,8 @@ void MeqMatrixComplexArr::fillRowWithProducts(dcomplex v0, dcomplex factor,
     __m128d  factor2_r = _mm_set1_pd(real(factor2));
     __m128d  factor2_i = _mm_set1_pd(imag(factor2));
 
-    __m128d *dst_r = (__m128d *) (itsReal[start]);
-    __m128d *dst_i = (__m128d *) (itsImag[start]);
+    __m128d *dst_r = (__m128d *) (itsReal+start);
+    __m128d *dst_i = (__m128d *) (itsImag+start);
 
     for (int i = 0, n = (nr - 1) / 2;; i ++) {
       dst_r[i] = v01_r, dst_i[i] = v01_i;
@@ -984,6 +984,7 @@ void MeqMatrixComplexArr::fillRowWithProducts(dcomplex v0, dcomplex factor,
 			 _mm_mul_pd(v01_i, factor2_i));
       v01_i = _mm_add_pd(_mm_mul_pd(old_v01_r, factor2_i),
 			 _mm_mul_pd(v01_i, factor2_r));
+    }
   }
 #else
   double v0_r = real(v0), v0_i = imag(v0);

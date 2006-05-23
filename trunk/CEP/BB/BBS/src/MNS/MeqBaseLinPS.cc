@@ -73,28 +73,28 @@ MeqJonesResult MeqBaseLinPS::getJResult (const MeqRequest& request)
     resYX.setValue (conj(uvk) * dft.getValue());
     resYY.setValue ((ik.getValue() - qk.getValue()) * dft.getValue());
     // Evaluate (if needed) for the perturbed parameter values.
-    double perturbation;
+    const MeqParmFunklet* perturbedParm;
     for (int spinx=0; spinx<request.nspid(); spinx++) {
       bool eval1 = false;
       bool eval2 = false;
       if (dft.isDefined(spinx)) {
 	eval1 = true;
 	eval2 = true;
-	perturbation = dft.getPerturbation (spinx);
+	perturbedParm = dft.getPerturbedParm (spinx);
       } else {
 	if (ik.isDefined(spinx)) {
 	  eval1 = true;
-	  perturbation = ik.getPerturbation (spinx);
+	  perturbedParm = ik.getPerturbedParm (spinx);
 	} else if (qk.isDefined(spinx)) {
 	  eval1 = true;
-	  perturbation = qk.getPerturbation (spinx);
+	  perturbedParm = qk.getPerturbedParm (spinx);
 	}
 	if (uk.isDefined(spinx)) {
 	  eval2 = true;
-	  perturbation = uk.getPerturbation (spinx);
+	  perturbedParm = uk.getPerturbedParm (spinx);
 	} else if (vk.isDefined(spinx)) {
 	  eval2 = true;
-	  perturbation = vk.getPerturbation (spinx);
+	  perturbedParm = vk.getPerturbedParm (spinx);
 	}
       }
       if (eval1) {
@@ -104,8 +104,8 @@ MeqJonesResult MeqBaseLinPS::getJResult (const MeqRequest& request)
 				 (ikp+qkp) * dft.getPerturbedValue(spinx));
 	resYY.setPerturbedValue (spinx,
 				 (ikp-qkp) * dft.getPerturbedValue(spinx));
-	resXX.setPerturbation (spinx, perturbation);
-	resYY.setPerturbation (spinx, perturbation);
+	resXX.setPerturbedParm (spinx, perturbedParm);
+	resYY.setPerturbedParm (spinx, perturbedParm);
       }
       if (eval2) {
 	MeqMatrix uvk = tocomplex(uk.getPerturbedValue(spinx),
@@ -114,8 +114,8 @@ MeqJonesResult MeqBaseLinPS::getJResult (const MeqRequest& request)
 				 uvk * dft.getPerturbedValue(spinx));
 	resYX.setPerturbedValue (spinx,
 				 conj(uvk) * dft.getPerturbedValue(spinx));
-	resXY.setPerturbation (spinx, perturbation);
-	resYX.setPerturbation (spinx, perturbation);
+	resXY.setPerturbedParm (spinx, perturbedParm);
+	resYX.setPerturbedParm (spinx, perturbedParm);
       }
     }
   }

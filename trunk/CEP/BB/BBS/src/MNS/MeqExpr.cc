@@ -181,7 +181,7 @@ MeqResult MeqExprRep::getResult (const MeqRequest& request)
     }
     if (eval >= 0) {
       // Evaluate the perturbed value and reset the value vector.
-      result.setPerturbation (spinx, res[eval].getPerturbation(spinx));
+      result.setPerturbedParm (spinx, res[eval].getPerturbedParm(spinx));
       result.setPerturbedValue (spinx, getResultValue(mat));
     }
   }
@@ -274,12 +274,12 @@ MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
       result.setPerturbedValue (spinx,
 				tocomplex(real.getPerturbedValue(spinx),
 					  imag.getPerturbedValue(spinx)));
-      result.setPerturbation (spinx, real.getPerturbation(spinx));
+      result.setPerturbedParm (spinx, real.getPerturbedParm(spinx));
     } else if (imag.isDefined(spinx)) {
       result.setPerturbedValue (spinx,
 				tocomplex(real.getPerturbedValue(spinx),
 					  imag.getPerturbedValue(spinx)));
-      result.setPerturbation (spinx, imag.getPerturbation(spinx));
+      result.setPerturbedParm (spinx, imag.getPerturbedParm(spinx));
     }
   }
   result.setValue (tocomplex(real.getValue(), imag.getValue()));
@@ -315,12 +315,12 @@ MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
       result.setPerturbedValue (spinx,
 				ampl.getPerturbedValue(spinx) *
 				tocomplex(cos(ph), sin(ph)));
-      result.setPerturbation (spinx, phase.getPerturbation(spinx));
+      result.setPerturbedParm (spinx, phase.getPerturbedParm(spinx));
     } else if (ampl.isDefined(spinx)) {
       result.setPerturbedValue (spinx,
 				ampl.getPerturbedValue(spinx) *
 				matt.clone());
-      result.setPerturbation (spinx, ampl.getPerturbation(spinx));
+      result.setPerturbedParm (spinx, ampl.getPerturbedParm(spinx));
     }
   }
   result.setValue (matt * ampl.getValue());

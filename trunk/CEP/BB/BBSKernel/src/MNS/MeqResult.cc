@@ -24,13 +24,14 @@
 #include <BBS/MNS/MeqResult.h>
 #include <BBS/MNS/MeqMatrixTmp.h>
 #include <BBS/MNS/Pool.h>
+#include <BBS/MNS/MeqParmFunklet.h>
 
 namespace LOFAR {
 
 Pool<MeqResultRep> MeqResultRep::theirPool;
 #pragma omp threadprivate(MeqResultRep::theirPool)
 
-void *MeqResultRep::operator new(size_t size)
+void *MeqResultRep::operator new(size_t)
 {
   return theirPool.allocate();
 }
@@ -44,11 +45,9 @@ void MeqResultRep::operator delete(void *rep)
 MeqResultRep::MeqResultRep (int nspid)
 : itsCount           (0),
   itsNspid	     (nspid),
-  itsDefPert         (0.),
   itsPerturbedValues (0),
-  itsPerturbation    (0)
-{
-}
+  itsPerturbedParms  (0)
+{}
 
 MeqResultRep::~MeqResultRep()
 {
@@ -58,33 +57,43 @@ MeqResultRep::~MeqResultRep()
 
 void MeqResultRep::clear()
 {
-  if (itsPerturbedValues != 0) {
-    delete itsPerturbedValues;
-    itsPerturbedValues = 0;
-  }
-
-  if (itsPerturbation != 0) {
-    delete itsPerturbation;
-    itsPerturbation = 0;
-  }
+  delete itsPerturbedValues;
+  itsPerturbedValues = 0;
+  delete itsPerturbedParms;
+  itsPerturbedParms = 0;
 }
 
   
+double MeqResultRep::getPerturbation (int i, int j) const
+{
+  const MeqParmFunklet* parm = getPerturbedParm(i);
+  int coeffInx = i - parm->getPertInx();
+  return parm->getFunklets()[j]->getPerturbation (coeffInx);
+}
+
 void MeqResultRep::setPerturbedValue (int i, const MeqMatrix& value)
 {
-  if (itsPerturbedValues == 0) itsPerturbedValues = new map<int, MeqMatrix>;
+  if (itsPerturbedValues == 0) {
+    itsPerturbedValues = new map<int, MeqMatrix>;
+  }
   (*itsPerturbedValues)[i] = value;
 }
 
-void MeqResultRep::show (ostream& os) // const
+void MeqResultRep::setPerturbedParm (int i, const MeqParmFunklet* parm)
+{
+  if (itsPerturbedParms == 0) {
+    itsPerturbedParms = new map<int, const MeqParmFunklet*>;
+  }
+  (*itsPerturbedParms)[i] = parm;
+}
+
+void MeqResultRep::show (ostream& os) const
 {
   os << "Value: " << itsValue << endl;
   for (int i=0; i<itsNspid; i++) {
     if (isDefined(i)) {
-      os << "deriv parm " << i << " with " << (*itsPerturbation)[i] << endl;
+      os << "deriv parm " << i << endl;
       os << "   " << ((*itsPerturbedValues)[i] - itsValue) << endl;
-      os << "   " << ((*itsPerturbedValues)[i] - itsValue) /
-	 (*itsPerturbation)[i] << endl;
     }
   }
 }
