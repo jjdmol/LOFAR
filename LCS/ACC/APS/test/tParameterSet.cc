@@ -38,7 +38,9 @@ int main() {
 	INIT_LOGGER("tParameterSet");
 
 	cout << "\nReading in parameterfile 'tParameterSet.in_param'\n";
+	cout << ">>>\n";
 	ParameterSet		myPS("tParameterSet.in_param");
+	cout << "<<<\n";
 
 	ParameterSet		mySecondSet(myPS);
 
@@ -98,10 +100,12 @@ int main() {
 	cout << mySubset;
 
 	cout << "\nTrying to read a non-existing key\n"; 
+	cout << ">>>\n";
 	try {
 		myPS.getInt32("is.er.niet");
 	}
 	catch (LOFAR::Exception& ex) {
+	  cout << "<<<\n";
 	  cout << "Told you the key didn't exist." << endl;
 	}
 
