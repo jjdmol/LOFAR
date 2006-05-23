@@ -71,7 +71,8 @@ int main (int argc, char* argv[]) {
 
 		LOG_INFO_STR("Getting waveform settings");
 		vector<struct WGSettings::WGRegisterType>		wgs;
-		wgs = IOport.getWaveformSettings(rcuMask);
+//		wgs = IOport.getWaveformSettings(rcuMask);
+		wgs = IOport.getWaveformSettings(7);
 		for (uint32 i = 0; i < wgs.size(); i++) {
 			cout << formatString("[%02d]: freq=%6d, phase=%3d(%5.3f), ampl=%3d, nof_samples=%6d, mode=%3d]\n",
 					i,
