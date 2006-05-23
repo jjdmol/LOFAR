@@ -225,8 +225,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         return name;
     }
     public void setContent(Object anObject) {
-        TreeNode aNode = (TreeNode)anObject;
-        jParmDBnode node = (jParmDBnode)aNode.getUserObject();
+        jParmDBnode node = (jParmDBnode)anObject;
         itsParamName = node.nodeID();
         
         initPanel(itsParamName);
