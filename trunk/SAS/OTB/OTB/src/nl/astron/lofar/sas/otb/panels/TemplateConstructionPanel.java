@@ -80,9 +80,7 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
             
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            String[] args = new String[1];
-            args[0]= ""+ itsTreeID;
-            treePanel.newRootNode(treeManager.getRootNode(args));
+            treePanel.newRootNode(treeManager.getRootNode(itsTreeID));
             itsMainFrame.setNormalCursor();
             
         } catch (Exception e) {

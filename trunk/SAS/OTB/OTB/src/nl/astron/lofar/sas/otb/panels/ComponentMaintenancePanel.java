@@ -77,9 +77,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
             
             itsMainFrame.setHourglassCursor();
             // and create a new root
-            String[] args = new String[1];
-            args[0]= ""+ itsComponentID;            
-            treePanel.newRootNode(treeManager.getRootNode(args));
+            treePanel.newRootNode(treeManager.getRootNode(itsComponentID));
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " + e);
