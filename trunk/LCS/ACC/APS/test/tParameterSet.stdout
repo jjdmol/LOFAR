@@ -1,6 +1,8 @@
 
 Reading in parameterfile 'tParameterSet.in_param'
+>>>
 WARN - Key a.b.c is defined twice. Ignoring first value.
+<<<
 
 Showing some values
 a.b.c=700
@@ -55,7 +57,9 @@ Subset a.b. contains:
 [time3],[15 hour]
 
 Trying to read a non-existing key
+>>>
 DEBUG - Key is.er.niet unknown
+<<<
 Told you the key didn't exist.
 
 Finally write the parameterset to 'newset.stdout'
