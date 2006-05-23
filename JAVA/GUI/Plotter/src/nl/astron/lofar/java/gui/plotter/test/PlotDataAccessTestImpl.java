@@ -24,7 +24,6 @@
 package nl.astron.lofar.java.gui.plotter.test;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
@@ -54,16 +53,17 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
     
     /**
      * This method returns a test data set that can be plotted using the PlotSGTImpl plotter
-     * @param constraints The type of plot you would like to have data for:<br>
+     * @param constraints A String[] containing the type of plot you would like to have data for:<br>
      * -constraints[0] == "line" --> for a XYLINE plot<br>
      * -constraints[0] == "grid" --> for a GRID plot<br><br>
      * @throws PlotterDataAccessException will be thrown if something goes wrong during the making of the
      * test data set (not likely though as no other classes are called!)
      */
-    public HashMap retrieveData(String[] constraints) throws PlotterDataAccessException{
+    public HashMap retrieveData(Object constraints) throws PlotterDataAccessException{
         //create the hashmap to be returned
         HashMap<String,Object> data = new HashMap<String,Object>();
-        if(constraints[0].equalsIgnoreCase("line")){
+        String[] constraintsArray = (String[])constraints;
+        if(constraintsArray[0].equalsIgnoreCase("line")){
             
             String plotTitle = "Testset LOFAR Plotter | XYLine";
             data.put(PlotConstants.DATASET_NAME,plotTitle);
@@ -132,7 +132,7 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
             values.add(aLine2);
             data.put(PlotConstants.DATASET_VALUES,values);
             
-        }else if (constraints[0].equalsIgnoreCase("grid")){
+        }else if (constraintsArray[0].equalsIgnoreCase("grid")){
             
             String plotTitle = "Testset LOFAR Plotter | Grid";
             data.put(PlotConstants.DATASET_NAME,plotTitle);

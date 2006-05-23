@@ -73,7 +73,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * 
      *
      * @param constraints The constraints provided by the PlotPanel. 
-     * These must be modelled as follows:<br><br>
+     * These must be modelled as follows in a String[] :<br><br>
      * -constraints[0]= the parameter name filter (for example parm*) (String)<br>
      * -constraints[1]= the startx variable (for example 0) (double)<br>
      * -constraints[2]= the endx variable (for example 5) (double)<br>
@@ -86,24 +86,25 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * with the ParmDB interface and calls to it.
      *
      */
-    public HashMap retrieveData(String[] constraints) throws PlotterDataAccessException{
+    public HashMap retrieveData(Object constraints) throws PlotterDataAccessException{
         if(parmDB == null){
             this.initiateConnectionToParmDB();
         }
+        String[] constraintsArray = (String[])constraints;
         HashMap<String,Object> returnMap = new HashMap<String, Object>();
         LinkedList<HashMap> returnValues = new LinkedList<HashMap>();
         if(parmDB != null){
             Vector names;
             try{
-                names = parmDB.getNames(constraints[0]);
+                names = parmDB.getNames(constraintsArray[0]);
             } catch (Exception ex) {
                 //TODO LOG!
                 PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getNames() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
                 exx.initCause(ex);
                 throw exx;
             }
-            if(names != null && names.size()>=1 && constraints.length == this.requiredDataConstraints){
-                returnMap.put(PlotConstants.DATASET_NAME,"ParmDB dataset '"+constraints[0]+"'");
+            if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
+                returnMap.put(PlotConstants.DATASET_NAME,"ParmDB dataset '"+constraintsArray[0]+"'");
                 TimeZone utcZone = TimeZone.getTimeZone("UTC");
                 utcZone.setDefault(utcZone);
                 Calendar aCalendar = Calendar.getInstance(utcZone);
@@ -134,12 +135,12 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                         exx.initCause(ex);
                         throw exx;
                     }
-                    double startx = Double.parseDouble(constraints[1]);
-                    double endx = Double.parseDouble(constraints[2]);
-                    double starty = Double.parseDouble(constraints[4]);
-                    double endy = Double.parseDouble(constraints[5]);
-                    int numx = Integer.parseInt(constraints[3]);
-                    int numy = Integer.parseInt(constraints[6]);
+                    double startx = Double.parseDouble(constraintsArray[1]);
+                    double endx = Double.parseDouble(constraintsArray[2]);
+                    double starty = Double.parseDouble(constraintsArray[4]);
+                    double endy = Double.parseDouble(constraintsArray[5]);
+                    int numx = Integer.parseInt(constraintsArray[3]);
+                    int numy = Integer.parseInt(constraintsArray[6]);
 
                     if(paramValues != null && paramValues.size()==4){
                         //startx = Double.parseDouble(paramValues.get(0).toString());
@@ -191,10 +192,10 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 }
                 returnMap.put(PlotConstants.DATASET_VALUES,returnValues);
 
-            }else if (constraints.length != this.requiredDataConstraints){
-                throw new PlotterDataAccessException("An invalid amount of parameters (" +constraints.length+" instead of " +this.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
+            }else if (constraintsArray.length != this.requiredDataConstraints){
+                throw new PlotterDataAccessException("An invalid amount of parameters (" +constraintsArray.length+" instead of " +this.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
             }else if (names.size() < 1){
-                throw new PlotterDataAccessException("No results were found in the ParmDB table(s) using the given parameter name filter ( "+constraints[0]+" )");
+                throw new PlotterDataAccessException("No results were found in the ParmDB table(s) using the given parameter name filter ( "+constraintsArray[0]+" )");
             }
         }
         
