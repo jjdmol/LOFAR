@@ -116,12 +116,12 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
         
         logger.trace("Exit - TreeManager defineChildNodes("+toString()+")");
     }
-    public TreeNode getRootNode(String[] arguments){
+    public TreeNode getRootNode(Object arguments){
         jOTDBparam aParam =null;
         jVICnodeDef aVICnodeDef=null;
         int itsComponentID = 0;
         try {
-            itsComponentID = Integer.parseInt(arguments[0]);
+            itsComponentID = Integer.parseInt(arguments.toString());
         } catch (NumberFormatException ex) {
             logger.error("The OTDBParamTreeManager received an incorrect itsComponentID! ",ex);
         }

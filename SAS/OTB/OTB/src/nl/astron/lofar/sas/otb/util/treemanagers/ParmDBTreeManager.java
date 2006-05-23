@@ -127,9 +127,10 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
         logger.trace("Exit - TreeManager defineChildNodes("+toString()+")");
     }
     
-    public TreeNode getRootNode(String[] arguments){
-        jParmDBnode newPNode = new jParmDBnode(arguments[0],arguments[1]);
-        newPNode.name="ParmDB";
+    public TreeNode getRootNode(Object arguments){
+        String[] argumentArray = (String[])arguments;
+        jParmDBnode newPNode = new jParmDBnode(argumentArray[0],argumentArray[1]);
+        newPNode.name=argumentArray[0];
         TreeNode parmDBnode = new TreeNode(this.instance,newPNode,newPNode.name);
         
         return parmDBnode;

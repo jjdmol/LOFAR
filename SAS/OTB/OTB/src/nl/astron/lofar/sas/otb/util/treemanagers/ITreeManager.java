@@ -26,5 +26,5 @@ public interface ITreeManager {
     
     public void defineChildsForNode(TreeNode aNode);
     
-    public TreeNode getRootNode(String[] arguments);
+    public TreeNode getRootNode(Object arguments);
 }
