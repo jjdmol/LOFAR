@@ -9,6 +9,7 @@
 
 package nl.astron.lofar.sas.otb.util;
 
+import java.awt.Component;
 import nl.astron.lofar.sas.otb.MainFrame;
 
 /**
@@ -22,6 +23,9 @@ public interface IViewPanel {
     public void enableButtons(boolean visible);
     public void setButtonsVisible(boolean visible);
     public String getShortName();
+    public boolean hasPopupMenu();
+    public void createPopupMenu(Component aComponent, int x, int y);
+    public void popupMenuHandler(java.awt.event.ActionEvent evt);
     public void addActionListener(java.awt.event.ActionListener listener);
     public void removeActionListener(java.awt.event.ActionListener listener);
 }

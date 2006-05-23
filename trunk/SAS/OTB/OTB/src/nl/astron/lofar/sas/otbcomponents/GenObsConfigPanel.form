@@ -62,7 +62,7 @@
     <Component class="javax.swing.JLabel" name="jLabel1">
       <Properties>
         <Property name="horizontalAlignment" type="int" value="0"/>
-        <Property name="text" type="java.lang.String" value="Node View Panel"/>
+        <Property name="text" type="java.lang.String" value="Generic Observation Configuration Panel"/>
       </Properties>
     </Component>
   </SubComponents>

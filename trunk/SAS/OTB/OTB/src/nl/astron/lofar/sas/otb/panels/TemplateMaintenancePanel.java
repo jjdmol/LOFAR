@@ -7,11 +7,18 @@
 package nl.astron.lofar.sas.otb.panels;
 
 import java.rmi.RemoteException;
+import java.util.Iterator;
+import java.util.Vector;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
+import nl.astron.lofar.sas.otb.util.IViewPanel;
+import nl.astron.lofar.sas.otb.util.ResultPanelHelper;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
@@ -88,7 +95,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
             treePanel.newRootNode(treeManager.getRootNode(args));
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
-            logger.debug("Exception during setNewRootNode: " + e);
+            logger.debug("Exception during setNewRootNode: " );
+            e.printStackTrace();
         }
     }
     
@@ -98,6 +106,14 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
     public static String getFriendlyNameStatic() { 
         return name;
+    }
+  
+    private void createPopupMenu(java.awt.event.MouseEvent evt) {
+        if (jTabbedPane1.getSelectedComponent() != null) {
+            if (((IViewPanel)jTabbedPane1.getSelectedComponent()).hasPopupMenu()) {
+                ((IViewPanel)jTabbedPane1.getSelectedComponent()).createPopupMenu((JComponent) evt.getSource(), evt.getX(), evt.getY());
+            }
+        }
     }
     
     /** This method is called from within the constructor to
@@ -122,14 +138,16 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 treePanelValueChanged(evt);
             }
         });
+        treePanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                treePanelMousePressed(evt);
+            }
+        });
 
         jSplitPane1.setLeftComponent(treePanel);
 
-        jTabbedPane1.setEnabled(false);
-        nodeViewPanel1.setEnabled(false);
         jTabbedPane1.addTab("Node", nodeViewPanel1);
 
-        parameterViewPanel1.setEnabled(false);
         jTabbedPane1.addTab("Param", parameterViewPanel1);
 
         jSplitPane1.setRightComponent(jTabbedPane1);
@@ -146,10 +164,31 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
     }// </editor-fold>//GEN-END:initComponents
 
+    private void treePanelMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_treePanelMousePressed
+        logger.debug("treeMouseEvent: " + evt.getButton());
+        if (evt == null) {
+            return;
+        }
+        //check if right button was clicked
+        if(SwingUtilities.isRightMouseButton(evt)) {
+            logger.debug("Right Mouse Button clicked"+evt.getSource().toString());
+            createPopupMenu(evt);
+            
+        }
+    }//GEN-LAST:event_treePanelMousePressed
+
     private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
         logger.debug("treeSelectionEvent: " + evt);
-        TreeNode otdbNode= (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
-        changeTreeSelection((jOTDBnode)otdbNode.getUserObject());
+        if (evt != null && evt.getNewLeadSelectionPath() != null &&
+                evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
+            
+            TreeNode treeNode = (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
+            
+            if(treeNode.getUserObject() instanceof jOTDBnode){
+                changeTreeSelection((jOTDBnode)treeNode.getUserObject());
+                
+            }
+        }
     }//GEN-LAST:event_treePanelValueChanged
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
@@ -236,23 +275,74 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     }
 
     private void changeTreeSelection(jOTDBnode aNode) {
+        // save selected panel
+        int savedSelection=jTabbedPane1.getSelectedIndex();
         logger.debug("ChangeSelection for node: " + aNode.name);
         itsSelectedNode=aNode;
-        if (aNode.leaf) {
-            buttonPanel1.setButtonEnabled("Duplicate",false);
-            parameterViewPanel1.setContent(aNode);
+        jOTDBparam aParam = null;
+        
+        jTabbedPane1.removeAll();
+
+        // Check if the nodename uses specific panels and create them
+        Vector aPanelList=null;
+        if (itsPanelHelper.isKey(aNode.name)) {
+            aPanelList=itsPanelHelper.getPanels(aNode.name);
         } else {
-            // this node is a node
-            jTabbedPane1.setSelectedComponent(nodeViewPanel1);
-            nodeViewPanel1.setContent(aNode);
-            if (treePanel.getSelectedRows()[0] ==  0) {
-                buttonPanel1.setButtonEnabled("Duplicate",false);
-            } else {
-                buttonPanel1.setButtonEnabled("Duplicate",true);
+            aPanelList=itsPanelHelper.getPanels("*");            
+        }
+
+        if (aNode.leaf) {
+        } else {
+        }
+        
+        // Loop through all the panels and fill the tabPanel with them
+        Iterator it = aPanelList.iterator();
+        while (it.hasNext()) {
+            boolean skip = false;
+            JPanel p=null;
+            String aPanelName= it.next().toString();
+            // Check if the wanted panel is the Node or Parameter Panel. if so only add depending on leaf 
+            if ((aPanelName.contains("NodeViewPanel") && aNode.leaf) |
+                    (aPanelName.contains("ParameterViewPanel") && !aNode.leaf)) {
+                skip = true;
             }
+            if (!skip) {
+                logger.debug("Getting panel for: "+aPanelName);
+                try {
+                    p = (JPanel) Class.forName(aPanelName).newInstance();
+                } catch (ClassNotFoundException ex) {
+                    logger.debug("Error during getPanel: "+ ex);
+                    return;
+                } catch (InstantiationException ex) {
+                    logger.debug("Error during getPanel: "+ ex);
+                    return;
+                } catch (IllegalAccessException ex) {
+                    logger.debug("Error during getPanel: "+ ex);
+                    return;
+                }
+                if (p!=null) {
+                    jTabbedPane1.addTab(((IViewPanel)p).getShortName(),null,p,"");
+                    ((IViewPanel)p).setMainFrame(itsMainFrame);
+                    ((IViewPanel)p).setContent(aNode);
+                }
+            } else {
+                logger.debug("Skipping panel for: "+aPanelName);
+            }
+        }
+        if (treePanel.getSelectedRows()[0] ==  0) {
+            buttonPanel1.setButtonEnabled("Duplicate",false);
+        } else {
+            buttonPanel1.setButtonEnabled("Duplicate",true);
+        }
+        if (savedSelection > -1 && savedSelection < jTabbedPane1.getComponentCount()) {
+            jTabbedPane1.setSelectedIndex(savedSelection);
+        } else if (jTabbedPane1.getComponentCount() > 0) {
+            jTabbedPane1.setSelectedIndex(0);
         }
     }
     
+
+   
     private void initialize() {
         treePanel.setTitle("Template List");
         buttonPanel1.addButton("Delete");
@@ -271,7 +361,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;
     private boolean changed = false;
-    
+    private ResultPanelHelper itsPanelHelper=ResultPanelHelper.getResultPanelHelper();
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JSplitPane jSplitPane1;

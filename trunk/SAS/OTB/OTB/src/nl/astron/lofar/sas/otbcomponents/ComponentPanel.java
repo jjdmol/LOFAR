@@ -6,37 +6,42 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
+import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author  coolen
  */
-public class ComponentPanel extends javax.swing.JPanel {
+public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
     
     static Logger logger = Logger.getLogger(ComponentPanel.class);    
-
+    static String name="Log";
    
     /** Creates new form BeanForm based upon aParameter
      *
      * @params  aParam   Param to obtain the info from
      *
      */    
-    public ComponentPanel(MainFrame aMainFrame,jOTDBparam aParam) {
+    public ComponentPanel(MainFrame aMainFrame,jOTDBparam aParam){
         initComponents();
         itsMainFrame = aMainFrame;
         itsParam = aParam;
         itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         initComboLists();
-        initPanel(aParam);
+        initPanel();
     }
     
     /** Creates new form BeanForm */
@@ -54,15 +59,64 @@ public class ComponentPanel extends javax.swing.JPanel {
         }
     }
     
-    public void setParam(jOTDBparam aParam) {
-        if (aParam != null) {
-            itsParam=aParam;
-            initPanel(aParam);
+    public String getShortName() {
+        return name;
+   }
+     
+    public void setContent(Object anObject) {
+        if (anObject != null) {
+            itsParam=(jOTDBparam)anObject;
+            initPanel();
         } else {
             logger.debug("No param supplied");
         }
     }
     
+    /** has this panel a popupmenu?
+     *
+     *@returns  false/true depending on the availability of a popupmenu
+     *
+     */
+    public boolean hasPopupMenu() {
+        return false;
+    }
+    
+    
+    /** create popup menu for this panel
+     *
+     *  // build up the menu
+     *  aPopupMenu= new JPopupMenu();
+     *  aMenuItem=new JMenuItem("Choice 1");        
+     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
+     *          popupMenuHandler(evt);
+     *      }
+     *  });
+     *  aMenuItem.setActionCommand("Choice 1");
+     *  aPopupMenu.add(aMenuItem);
+     *  aPopupMenu.setOpaque(true);
+     *
+     *
+     *  aPopupMenu.show(aComponent, x, y );        
+     */
+    public void createPopupMenu(Component aComponent,int x, int y) {
+        JPopupMenu aPopupMenu=null;
+        JMenuItem  aMenuItem=null;
+        
+        //  Fill in menu as in the example above        
+    }
+    
+    /** handles the choice from the popupmenu 
+     *
+     * depending on the choices that are possible for this panel perform the action for it
+     *
+     *      if (evt.getActionCommand().equals("Choice 1")) {
+     *          perform action
+     *      }  
+     */
+    public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+    }        
+        
     private void initComboLists() {
         DefaultComboBoxModel aTypeModel = new DefaultComboBoxModel();
         TreeMap aTypeMap = itsOtdbRmi.getParamType();
@@ -81,20 +135,36 @@ public class ComponentPanel extends javax.swing.JPanel {
         ParamUnitText.setModel(aUnitModel);
     }
 
-    private void initPanel(jOTDBparam aParam) {
-        if (aParam != null) {
-            setParamName(aParam.name);
-            setType(aParam.type);
-            setUnit(aParam.unit);
-            setLimits(String.valueOf(aParam.limits));
-            setDescription(aParam.description);
+    private void initPanel() {
+        // check access
+        UserAccount userAccount = itsMainFrame.getUserAccount();
+        
+        // For now:
+        enableLimits(true);
+        enableDescription(true);
+        
+        if(userAccount.isAdministrator()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isAstronomer()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isInstrumentScientist()) {
+            // enable/disable certain controls
+        }
+        
+        if (itsParam != null) {
+            setParamName(itsParam.name);
+            setType(itsParam.type);
+            setUnit(itsParam.unit);
+            setLimits(String.valueOf(itsParam.limits));
+            setDescription(itsParam.description);
         } else {
             logger.debug("ERROR:  no Param given");
         }
     }
     
-    /** Returns the Given Name for this Param */
-    public String getParamName() {
+    private String getParamName() {
         return this.ParamNameText.getText();
     }
     
@@ -102,16 +172,11 @@ public class ComponentPanel extends javax.swing.JPanel {
         this.ParamNameText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableParamName(boolean enabled) {
+    private void enableParamName(boolean enabled) {
         this.ParamNameText.setEnabled(enabled);
     }
 
-    /** Returns the Given Type for this Param */
-    public String getType() {
+    private String getType() {
         return (String)this.ParamTypeText.getSelectedItem();
     }
     
@@ -123,16 +188,11 @@ public class ComponentPanel extends javax.swing.JPanel {
        }
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableType(boolean enabled) {
+    private void enableType(boolean enabled) {
         this.ParamTypeText.setEnabled(enabled);
     }
     
-        /** Returns the Given Unit for this Param */
-    public String getUnit() {
+    private String getUnit() {
         return (String)this.ParamUnitText.getSelectedItem();
     }
     
@@ -144,16 +204,11 @@ public class ComponentPanel extends javax.swing.JPanel {
         }
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableUnit(boolean enabled) {
+    private void enableUnit(boolean enabled) {
         this.ParamUnitText.setEnabled(enabled);
     }
     
-    /** Returns the Given Limits for this Param */
-    public String getLimits() {
+    private String getLimits() {
         return this.ParamLimitsText.getText();
     }
     
@@ -161,16 +216,11 @@ public class ComponentPanel extends javax.swing.JPanel {
         this.ParamLimitsText.setText(aS);
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableLimits(boolean enabled) {
+    private void enableLimits(boolean enabled) {
         this.ParamLimitsText.setEnabled(enabled);
     }
 
-    /** Returns the Given Description for this Param */
-    public String getDescription() {
+    private String getDescription() {
         return this.ParamDescriptionText.getText();
     }
     
@@ -178,11 +228,7 @@ public class ComponentPanel extends javax.swing.JPanel {
         this.ParamDescriptionText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableDescription(boolean enabled) {
+    private void enableDescription(boolean enabled) {
         this.ParamDescriptionText.setEnabled(enabled);
         this.ParamDescriptionText.setEditable(enabled);
     }
@@ -387,7 +433,7 @@ public class ComponentPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_ParamApplyButtonActionPerformed
 
     private void ParamCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamCancelButtonActionPerformed
-        initPanel(itsParam);
+        initPanel();
     }//GEN-LAST:event_ParamCancelButtonActionPerformed
     
     private MainFrame  itsMainFrame;

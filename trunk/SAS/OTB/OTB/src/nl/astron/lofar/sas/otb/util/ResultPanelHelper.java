@@ -5,6 +5,8 @@
  *
  * This class maintains a list of available panels that can be shown on a given (VIC)name in the ResultBrowser.
  * In a later stage this should be obtained from the database to make it more solid and dynamic.
+ *
+ * Singleton !!
  * 
  * 
  */
@@ -23,10 +25,22 @@ public class ResultPanelHelper {
    
     private HashMap<String,Vector<String> > itsPanelMap;
     private Vector<String> itsVector;
+    private static ResultPanelHelper ref;
     
     /** Creates a new instance of ResultPanelHelper */
-    public ResultPanelHelper() {
+    private ResultPanelHelper() {
         initMap();
+    }
+    
+    public static synchronized ResultPanelHelper getResultPanelHelper() {
+        if (ref== null) {
+            ref = new ResultPanelHelper();
+        }
+        return ref;
+    }
+    
+    public Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException();
     }
     
     private void initMap() {

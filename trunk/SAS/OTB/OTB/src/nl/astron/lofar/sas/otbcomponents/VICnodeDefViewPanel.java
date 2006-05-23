@@ -6,23 +6,29 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
+import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
+import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author  coolen
  */
-public class VICnodeDefViewPanel extends javax.swing.JPanel {
+public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPanel{
     
-    static Logger logger = Logger.getLogger(VICnodeDefViewPanel.class);    
+    static Logger logger = Logger.getLogger(VICnodeDefViewPanel.class); 
+    static String name="VICNodeDef View";
 
    
     /** Creates new form BeanForm based upon aVICnodeDef
@@ -36,7 +42,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
         itsNode = aNode;
         itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         initComboLists();
-        initPanel(aNode);
+        initPanel();
     }
     
     /** Creates new form BeanForm */
@@ -53,11 +59,65 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
             logger.debug("No Mainframe supplied");
         }
     }
-    
-    public void setNode(jVICnodeDef aNode) {
-        initPanel(aNode);
-    }
 
+    /** Returns the shortname of this class */
+    public String getShortName() {
+        return name;
+    }
+    
+    /** Sets the content for this class
+     *
+     * @params anObject  The class that contains the content.
+     */
+    public void setContent(Object anObject) {
+        if (anObject != null) {
+            itsNode=(jVICnodeDef)anObject;
+            initPanel();
+        } else {
+            logger.debug("No node supplied");
+        }
+    }
+    
+    public boolean hasPopupMenu() {
+        return false;
+    }
+    
+    
+    /** create popup menu for this panel
+     *
+     *  // build up the menu
+     *  aPopupMenu= new JPopupMenu();
+     *  aMenuItem=new JMenuItem("Choice 1");        
+     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
+     *          popupMenuHandler(evt);
+     *      }
+     *  });
+     *  aMenuItem.setActionCommand("Choice 1");
+     *  aPopupMenu.add(aMenuItem);
+     *  aPopupMenu.setOpaque(true);
+     *
+     *
+     *  aPopupMenu.show(aComponent, x, y );        
+     */
+    public void createPopupMenu(Component aComponent,int x, int y) {
+        JPopupMenu aPopupMenu=null;
+        JMenuItem  aMenuItem=null;
+        
+        //  Fill in menu as in the example above        
+    }
+    
+    /** handles the choice from the popupmenu 
+     *
+     * depending on the choices that are possible for this panel perform the action for it
+     *
+     *      if (evt.getActionCommand().equals("Choice 1")) {
+     *          perform action
+     *      }  
+     */
+    public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+    } 
+    
     private void initComboLists() {
         DefaultComboBoxModel aClassifModel = new DefaultComboBoxModel();
         TreeMap aClassifMap = itsOtdbRmi.getClassif();
@@ -68,21 +128,32 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
         ClassificationText.setModel(aClassifModel);
     }
      
-    private void initPanel(jVICnodeDef aNode) {
-        itsNode = aNode;
-         if (aNode != null) {
-            setName(aNode.name);
-            setVersion(String.valueOf(aNode.version));
-            setClassif(String.valueOf(aNode.classif));
-            setConstraints(aNode.constraints);
-            setDescription(aNode.description);
+    private void initPanel() {
+        // check access
+        UserAccount userAccount = itsMainFrame.getUserAccount();
+        
+        if(userAccount.isAdministrator()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isAstronomer()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isInstrumentScientist()) {
+            // enable/disable certain controls
+        }
+        
+         if (itsNode != null) {
+            setName(itsNode.name);
+            setVersion(String.valueOf(itsNode.version));
+            setClassif(String.valueOf(itsNode.classif));
+            setConstraints(itsNode.constraints);
+            setDescription(itsNode.description);
         } else {
             logger.debug("ERROR:  no node given");
         }
     }
     
-    /** Returns the Given Name for this Node */
-    public String getNodeName() {
+    private String getNodeName() {
         return this.NameText.getText();
     }
     
@@ -90,16 +161,11 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
         this.NameText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableName(boolean enabled) {
+    private void enableName(boolean enabled) {
         this.NameText.setEnabled(enabled);
     }
     
-    /** Returns the Given Version for this Node */
-    public String getVersion() {
+    private String getVersion() {
         return this.VersionText.getText();
     }
     
@@ -107,17 +173,12 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
         this.VersionText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableVersion(boolean enabled) {
+    private void enableVersion(boolean enabled) {
         this.VersionText.setEnabled(enabled);
     }
     
 
-    /** Returns the Given Classification for this Node */
-    public String getClassif() {
+    private String getClassif() {
         return (String)this.ClassificationText.getSelectedItem();
     }
     
@@ -129,16 +190,11 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
         }
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableClassif(boolean enabled) {
+    private void enableClassif(boolean enabled) {
         this.ClassificationText.setEnabled(enabled);
     }
     
-    /** Returns the Given Constraints for this Node */
-    public String getConstraints() {
+    private String getConstraints() {
         return this.ConstraintsText.getText();
     }
     
@@ -146,16 +202,11 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
         this.ConstraintsText.setText(aS);
     }
 
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableConstraints(boolean enabled) {
+    private void enableConstraints(boolean enabled) {
         this.ConstraintsText.setEnabled(enabled);
     }    
     
-    /** Returns the Given Description for this Node */
-    public String getDescription() {
+    private String getDescription() {
         return this.DescriptionText.getText();
     }
     
@@ -163,11 +214,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
         this.DescriptionText.setText(aS);
     }
     
-    /** Enables/disables this inputfield
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableDescription(boolean enabled) {
+    private void enableDescription(boolean enabled) {
         this.DescriptionText.setEnabled(enabled);
         this.DescriptionText.setEditable(enabled);
     }    
@@ -375,7 +422,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_NodeApplyButtonActionPerformed
 
     private void NodeCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeCancelButtonActionPerformed
-        initPanel(itsNode);
+        initPanel();
     }//GEN-LAST:event_NodeCancelButtonActionPerformed
     
     private jVICnodeDef itsNode = null;

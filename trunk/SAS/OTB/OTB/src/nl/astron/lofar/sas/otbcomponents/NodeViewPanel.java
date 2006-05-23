@@ -6,7 +6,10 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
+import java.awt.Component;
 import java.rmi.RemoteException;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
@@ -57,12 +60,79 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     public void setContent(Object anObject) {
-        TreeNode aNode = (TreeNode)anObject;
-        itsNode = (jOTDBnode)aNode.getUserObject();
+        itsNode = (jOTDBnode)anObject;
         initPanel();
     }
 
-     private void initPanel() {
+    public boolean hasPopupMenu() {
+        return true;
+    }
+    
+    
+    /** create popup menu for this panel
+     *
+     *  // build up the menu
+     *  aPopupMenu= new JPopupMenu();
+     *  aMenuItem=new JMenuItem("Choice 1");        
+     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
+     *          popupMenuHandler(evt);
+     *      }
+     *  });
+     *  aMenuItem.setActionCommand("Choice 1");
+     *  aPopupMenu.add(aMenuItem);
+     *  aPopupMenu.setOpaque(true);
+     *
+     *
+     *  aPopupMenu.show(aComponent, x, y );        
+     */
+    public void createPopupMenu(Component aComponent,int x, int y) {
+        JPopupMenu aPopupMenu=null;
+        JMenuItem  aMenuItem=null;
+        
+        //  Fill in menu as in the example above
+        ///// TEST ONLY /////
+        aPopupMenu= new JPopupMenu();
+        aMenuItem=new JMenuItem("Node Choice 1");        
+        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                popupMenuHandler(evt);
+            }
+        });
+        aMenuItem.setActionCommand("Choice 1");
+        aPopupMenu.add(aMenuItem);
+        
+        aMenuItem=new JMenuItem("Node Choice 2");        
+        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                popupMenuHandler(evt);
+            }
+        });
+        aMenuItem.setActionCommand("Choice 2");
+        aPopupMenu.add(aMenuItem);
+
+        aPopupMenu.setOpaque(true);
+        aPopupMenu.show(aComponent, x, y );          
+        
+    }
+    /** handles the choice from the popupmenu 
+     *
+     * depending on the choices that are possible for this panel perform the action for it
+     *
+     *      if (evt.getActionCommand().equals("Choice 1")) {
+     *          perform action
+     *      }  
+     */
+    public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+        /// TEST ONLY ///
+        if (evt.getActionCommand().equals("Choice 1")) {
+            logger.debug("Node Choice 1 chosen");
+        }  else if (evt.getActionCommand().equals("Choice 2")) {
+            logger.debug("Node Choice 2 chosen");
+        }
+    }
+    
+    private void initPanel() {
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
 
