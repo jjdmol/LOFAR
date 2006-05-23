@@ -40,7 +40,7 @@ using namespace casa;
 void doSubtract (Prediffer& pre1)
 {
   cout << ">>>" << endl;
-  pre1.setDomain (0, 1000, 0., 1e12);
+  pre1.setWorkDomain (0, 1000, 0., 1e12);
   cout << "<<<" << endl;
     
   cout << ">>>" << endl;
@@ -80,8 +80,8 @@ int main (int argc, const char* argv[])
       Table tab(argv[2]);
       ROArrayColumn<Complex> ccol(tab, "CORRECTED_DATA");
       for (uint i=0; i<tab.nrow(); i++) {
-	if (i==0) cout << ccol(i) << endl;
 	if (! allNear (ccol(i), Complex(), 1e-8)) {
+	  cout << ccol(i) << endl;
 	  THROW (LOFAR::Exception, "tSubtract: mismatch in row " << i);
 	}
       }

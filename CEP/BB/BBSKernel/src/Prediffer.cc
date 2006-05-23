@@ -796,6 +796,46 @@ void Prediffer::initSolvableParms (const vector<MeqDomain>& solveDomains)
       }
     }
   }
+  // Determine the fitter indices for the frequency and time axis.
+  // First check if the (local) solve domains are ordered and regular.
+  // Start with finding the number of frequency intervals.
+  for (itsFreqNrFit=1; itsFreqNrFit<localSolveDomains.size(); itsFreqNrFit++) {
+    if (localSolveDomains[itsFreqNrFit].startX() < 
+	localSolveDomains[itsFreqNrFit-1].endX()) {
+      break;
+    }
+  }
+  // Now check if regular in frequency and time.
+  uint timeNrFit = localSolveDomains.size() / itsFreqNrFit;
+  ASSERT (timeNrFit*itsFreqNrFit == localSolveDomains.size());
+  for (uint inxt=0; inxt<timeNrFit; inxt++) {
+    const MeqDomain& first = localSolveDomains[inxt*itsFreqNrFit];
+    for (uint inxf=1; inxf<itsFreqNrFit; inxf++) {
+      const MeqDomain& cur = localSolveDomains[inxt*itsFreqNrFit + inxf];
+      ASSERT (cur.startY() == first.startY()  &&  cur.endY() == first.endY());
+    }
+  }
+  for (uint inxf=0; inxf<itsFreqNrFit; inxf++) {
+    const MeqDomain& first = localSolveDomains[inxf];
+    for (uint inxt=1; inxt<timeNrFit; inxt++) {
+      const MeqDomain& cur = localSolveDomains[inxt*itsFreqNrFit + inxf];
+      ASSERT (cur.startX() == first.startX()  &&  cur.endX() == first.endX());
+    }
+  }
+  // Determine for each frequency point to which fitter it belongs.
+  // For the time axis it is determined by nextDataChunk.
+  int nrchan = itsLastChan-itsFirstChan+1;
+  itsFreqFitInx.resize (nrchan);
+  double step = itsWorkDomain.sizeX() / nrchan;
+  double freq = itsWorkDomain.startX() + step / 2;
+  int interv = 0;
+  for (int i=0; i<nrchan; i++) {
+    if (freq > localSolveDomains[interv].endX()) {
+      interv++;
+    }
+    itsFreqFitInx[i] = interv;
+    freq += step;
+  }
 }
 
 void Prediffer::setWorkDomain (int startChan, int endChan,
@@ -978,7 +1018,7 @@ void Prediffer::mapDataFiles (const string& inColumnName,
 // Currently this function always returns all data in the work domain.
 // In the future it can be made smarter and process less if the work domain
 // is very large.
-bool Prediffer::nextDataChunk()
+bool Prediffer::nextDataChunk (bool useFitters)
 {
   if (itsNrTimesDone >= itsNrTimes) {
     return false;
@@ -1015,6 +1055,20 @@ bool Prediffer::nextDataChunk()
                       itsIntervals[itsTimeIndex + st + nt-1] / 2;
   itsMSMapInfo.setTimes (st, nt);
   itsNrTimesDone += nt;
+  if (useFitters) {
+    // Determine for each time point to which fitter it belongs.
+    const vector<MeqDomain>& localSolveDomains = itsParmData.getDomains();
+    itsTimeFitInx.resize (nt);
+    uint interv = 0;
+    for (int i=0; i<nt; i++) {
+      double time = itsTimes[itsTimeIndex + st + i];
+      while (time > localSolveDomains[interv*itsFreqNrFit].endY()) {
+	interv++;
+	DBGASSERT (interv < localSolveDomains.size()/itsFreqNrFit);
+      }
+      itsTimeFitInx[i] = interv;
+    }
+  }
   return true;
 }
 
@@ -1060,11 +1114,12 @@ void Prediffer::processData (const string& inColumnName,
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
   unsigned int freqOffset = itsFirstChan*itsNCorr;
-
+  // Determine if perturbed values have to be calculated.
+  int nrpert = calcDeriv ? itsNrPert:0;
   // Loop through the domain of the data to be processed.
   // Process as much data as possible (hopefully everything).
   itsNrTimesDone = 0;
-  while (nextDataChunk()) {
+  while (nextDataChunk(nrpert>0)) {
     int nrtimes = itsMSMapInfo.nrTimes();
     // Size the thread private flag buffers.
     if (useFlags) {
@@ -1080,10 +1135,10 @@ void Prediffer::processData (const string& inColumnName,
     // Create a request.
     MeqDomain domain(startFreq, endFreq, itsChunkTimes[0],
 		     itsChunkTimes[itsChunkTimes.size()-1]);
-    MeqRequest request(domain, nrchan, itsChunkTimes, calcDeriv?itsNrPert:0);
+    MeqRequest request(domain, nrchan, itsChunkTimes, nrpert);
     request.setFirstX (itsFirstChan);
     // Loop through all baselines.
-    //static NSTimer timer("Prediffer::fillFitter", true);
+    //static NSTimer timer("Prediffer::fillFitters", true);
     //timer.start();
     if (preCalc) {
       precalcNodes (request);
@@ -1115,7 +1170,7 @@ void Prediffer::processData (const string& inColumnName,
 	if (useFlags) {
 	  flags = &itsFlagVecs[threadNr][0];
 	  for (int i=0; i<itsMSMapInfo.nrTimes(); ++i) {
-	    bitToBool (flags, flagStart, nrchan*itsNCorr,
+	    bitToBool (flags+i*nrchan*itsNCorr, flagStart, nrchan*itsNCorr,
 		       offset + flagStartBit);
 	    offset += itsMSMapInfo.timeSize();
 	  }
@@ -1123,7 +1178,7 @@ void Prediffer::processData (const string& inColumnName,
 	// Call the given member function.
 	(this->*pfunc) (threadNr, arg, idata, odata, flags,
 			request, blindex, false);
-	  ////	    request, blindex, ant1==4&&ant2==8&&tStep<5);
+			///			request, blindex, itsAnt1[bl]==4&&itsAnt2[bl]==8);
       }
     } // end omp parallel
       //timer.stop();
@@ -1152,14 +1207,14 @@ void Prediffer::precalcNodes (const MeqRequest& request)
 
 //----------------------------------------------------------------------
 //
-// ~fillFitter
+// ~fillFitters
 //
 // Fill the fitter with the condition equations for the selected baselines
 // and domain.
 //
 //----------------------------------------------------------------------
-void Prediffer::fillFitter (vector<casa::LSQFit>& fitters,
-			    const string& dataColumnName)
+void Prediffer::fillFitters (vector<casa::LSQFit>& fitters,
+			     const string& dataColumnName)
 {
   // Find all nodes to be precalculated.
   setPrecalcNodes (itsExpr);
@@ -1192,10 +1247,10 @@ void Prediffer::fillFitter (vector<casa::LSQFit>& fitters,
   processData (dataColumnName, "", true, true, true,
 	       &Prediffer::fillEquation, &threadPrivateFitters);
   // Merge the thread-specific fitters into the main ones.
-  for (int j=0; j<nfitter; ++j) {
-    for (int i=1; i<itsNthread; ++i) {
-      fitters[j].merge (*threadPrivateFitters[i][j]);
-      delete threadPrivateFitters[i][j];
+  for (int j=1; j<itsNthread; ++j) {
+    for (int i=0; i<nfitter; ++i) {
+      fitters[i].merge (*threadPrivateFitters[j][i]);
+      delete threadPrivateFitters[j][i];
     }
   }
   BBSTest::Logger::log(itsPredTimer);
@@ -1284,6 +1339,8 @@ void Prediffer::fillEquation (int threadnr, void* arg,
   // If needed, they can be pre-allocated per thread, so there is no
   // malloc needed for each invocation. Currently it is believed that
   // the work domains are so large, that the malloc overhead is negligible.
+  // ON the other hand, there are many baselines and the malloc is done
+  // for each of them.
   vector<uint> indexVec(itsNrPert);
   uint* indices = &indexVec[0];
   vector<const double*> pertRealVec(2*itsNrPert);
@@ -1343,7 +1400,7 @@ void Prediffer::fillEquation (int threadnr, void* arg,
 	  const MeqMatrix& valp = tcres.getPerturbedValue(scinx);
 	  valp.dcomplexStorage (pertReal[nrParamsFound],
 				pertImag[nrParamsFound]);
-	  invPert[nrParamsFound] = 1. / tcres.getPerturbation(scinx);
+	  invPert[nrParamsFound] = 1. / tcres.getPerturbation(scinx, 0);
 	  nrParamsFound++;
 	}
       }
@@ -1351,44 +1408,109 @@ void Prediffer::fillEquation (int threadnr, void* arg,
       if (nrParamsFound > 0) {
 	const fcomplex* cdata  = data;
 	const bool*     cflags = flags;
-	for (int tim=0; tim<nrtime; tim++) {
-	  // Loop through all channels.
-	  if (showd) {
-	    showData (corr, sdch, inc, nrchan, cflags, cdata,
-		      realVals, imagVals);
-	  }
-	  // Get first fitter index for this time line.
-	  int fitInxT = itsTimeFitInx[tim] * itsFreqNrFit;
-	  // Form two equations for each unflagged data point.
-	  int dch = sdch;
-	  for (int ch=0; ch<nrchan; ++ch, dch+=inc) {
-	    if (! cflags[dch]) {
-	      int fitInx = fitInxT + itsFreqFitInx[ch];
-	      double diffr = real(cdata[dch]) - *realVals;
-	      double diffi = imag(cdata[dch]) - *imagVals;
-	      for (int scinx=0; scinx<nrParamsFound; ++scinx) {
-		// Calculate the derivative for real and imag part.
-		double invp = invPert[scinx];
-		resultr[scinx] = (*pertReal[scinx]++ - *realVals) * invp;
-		resulti[scinx] = (*pertImag[scinx]++ - *imagVals) * invp;
-	      }
-	      // Now add the equations to the correct fitter object.
-	      if (nrParamsFound != itsNrPert) {
-		fitters[fitInx]->makeNorm (nrParamsFound, indices,
-					   resultr, 1., diffr);
-		fitters[fitInx]->makeNorm (nrParamsFound, indices,
-					   resulti, 1., diffi);
-	      } else {
-		fitters[fitInx]->makeNorm (resultr, 1., diffr);
-		fitters[fitInx]->makeNorm (resulti, 1., diffi);
-	      }
-	      nreq += 2;
-	      realVals++;
-	      imagVals++;
+	if (fitters.size() == 1) {
+	  // No fitter indexing needed if only one fitter.
+	  for (int tim=0; tim<nrtime; tim++) {
+	    // Loop through all channels.
+	    if (showd) {
+	      showData (corr, sdch, inc, nrchan, cflags, cdata,
+			realVals, imagVals);
 	    }
+	    // Form two equations for each unflagged data point.
+	    int dch = sdch;
+	    for (int ch=0; ch<nrchan; ++ch, dch+=inc) {
+	      if (! cflags[dch]) {
+		double diffr = real(cdata[dch]) - *realVals;
+		double diffi = imag(cdata[dch]) - *imagVals;
+		for (int scinx=0; scinx<nrParamsFound; ++scinx) {
+		  // Calculate the derivative for real and imag part.
+		  double invp = invPert[scinx];
+		  resultr[scinx] = (*pertReal[scinx]++ - *realVals) * invp;
+		  resulti[scinx] = (*pertImag[scinx]++ - *imagVals) * invp;
+		}
+		// Now add the equations to the correct fitter object.
+		if (nrParamsFound != itsNrPert) {
+		  fitters[0]->makeNorm (nrParamsFound, indices,
+					resultr, 1., diffr);
+		  fitters[0]->makeNorm (nrParamsFound, indices,
+					resulti, 1., diffi);
+		} else {
+		  fitters[0]->makeNorm (resultr, 1., diffr);
+		  fitters[0]->makeNorm (resulti, 1., diffi);
+		}
+		if (showd) {
+		  cout << "eq"<<corr<<" ch " << 2*ch << " diff " << diffr;
+		  for (int ii=0; ii<nrParamsFound; ii++) {
+		    cout << ' '<<resultr[ii];
+		  }
+		  cout << endl;
+		  cout << "eq"<<corr<<" ch " << 2*ch+1 << " diff " << diffi;
+		  for (int ii=0; ii<nrParamsFound; ii++) {
+		    cout << ' '<<resulti[ii];
+		  }
+		  cout << endl;
+		}
+		nreq += 2;
+		realVals++;
+		imagVals++;
+	      }
+	    }
+	    cdata  += timeSize;       // next observed data time step
+	    cflags += nrchan*itsNCorr;
 	  }
-	  cdata  += timeSize;       // next observed data time step
-	  cflags += timeSize;
+	} else {
+	  for (int tim=0; tim<nrtime; tim++) {
+	    // Loop through all channels.
+	    if (showd) {
+	      showData (corr, sdch, inc, nrchan, cflags, cdata,
+			realVals, imagVals);
+	    }
+	    // Get first fitter index for this time line.
+	    int fitInxT = itsTimeFitInx[tim] * itsFreqNrFit;
+	    // Form two equations for each unflagged data point.
+	    int dch = sdch;
+	    for (int ch=0; ch<nrchan; ++ch, dch+=inc) {
+	      if (! cflags[dch]) {
+		int fitInx = fitInxT + itsFreqFitInx[ch];
+		double diffr = real(cdata[dch]) - *realVals;
+		double diffi = imag(cdata[dch]) - *imagVals;
+		for (int scinx=0; scinx<nrParamsFound; ++scinx) {
+		  // Calculate the derivative for real and imag part.
+		  double invp = 1. / tcres.getPerturbation(indices[scinx],
+							   fitInx);
+		  resultr[scinx] = (*pertReal[scinx]++ - *realVals) * invp;
+		  resulti[scinx] = (*pertImag[scinx]++ - *imagVals) * invp;
+		}
+		// Now add the equations to the correct fitter object.
+		if (nrParamsFound != itsNrPert) {
+		  fitters[fitInx]->makeNorm (nrParamsFound, indices,
+					     resultr, 1., diffr);
+		  fitters[fitInx]->makeNorm (nrParamsFound, indices,
+					     resulti, 1., diffi);
+		} else {
+		  fitters[fitInx]->makeNorm (resultr, 1., diffr);
+		  fitters[fitInx]->makeNorm (resulti, 1., diffi);
+		}
+		if (showd) {
+		  cout << "eq"<<corr<<" ch " << 2*ch << " diff " << diffr;
+		  for (int ii=0; ii<nrParamsFound; ii++) {
+		    cout << ' '<<resultr[ii];
+		  }
+		  cout << endl;
+		  cout << "eq"<<corr<<" ch " << 2*ch+1 << " diff " << diffi;
+		  for (int ii=0; ii<nrParamsFound; ii++) {
+		    cout << ' '<<resulti[ii];
+		  }
+		  cout << endl;
+		}
+		nreq += 2;
+		realVals++;
+		imagVals++;
+	      }
+	    }
+	    cdata  += timeSize;       // next observed data time step
+	    cflags += nrchan*itsNCorr;
+	  }
 	}
       }
     }
@@ -1595,6 +1717,8 @@ void Prediffer::subtractBL (int, void*,
 						   imagVals[ch]);
 	  }
 	}
+	predReal[corr] += nrchan;
+	predImag[corr] += nrchan;
       }
     }
     dataIn  += timeSize;

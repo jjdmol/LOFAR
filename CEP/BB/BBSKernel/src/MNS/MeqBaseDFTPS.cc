@@ -135,15 +135,15 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
   // Evaluate (if needed) for the perturbed parameter values.
   // Note that we do not have to test for perturbed values in nk,
   // because the left and right value already depend on nk.
-  double perturbation;
+  const MeqParmFunklet* perturbedParm;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval = false;
     if (left.isDefined(spinx)) {
       eval = true;
-      perturbation = left.getPerturbation(spinx);
+      perturbedParm = left.getPerturbedParm(spinx);
     } else if (right.isDefined(spinx)) {
       eval = true;
-      perturbation = right.getPerturbation(spinx);
+      perturbedParm = right.getPerturbedParm(spinx);
     }
     if (eval) {
       MeqMatrix pres(makedcomplex(0,0), request.nx(), request.ny(), false);
@@ -159,7 +159,7 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
 	}
 	pres.fillRowWithProducts(tmpr * conj(tmpl) / tmpnk, factor, iy);
 	result.setPerturbedValue (spinx, pres);
-	result.setPerturbation (spinx, perturbation);
+	result.setPerturbedParm (spinx, perturbedParm);
       }
     }
   }

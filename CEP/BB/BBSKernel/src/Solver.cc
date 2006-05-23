@@ -118,6 +118,14 @@ void Solver::mergeFitters (const vector<LSQFit>& fitters, int prediffer)
     ASSERT (itsFitters[fitInx].fitter.merge (fitters[i],
 					     scidInx.size(), &scidInx[0]));
   }
+  uint rank;
+  double fit;
+  vector<double> sol = itsFitters[0].solvableValues;
+  cout << "after local " << sol << endl;
+  bool solFlag = const_cast<LSQFit&>(fitters[0]).solveLoop (fit, rank,
+				       &(sol[0]),
+				       true);
+  cout << "after local " << sol << endl;
 }
 
 void Solver::initSolvableParmData (int nrPrediffers,
@@ -206,6 +214,12 @@ const vector<double>& Solver::getSolvableValues (uint fitterIndex) const
 {
   ASSERT (fitterIndex < itsFitters.size());
   return itsFitters[fitterIndex].solvableValues;
+}
+
+const Quality& Solver::getQuality (uint fitterIndex) const
+{
+  ASSERT (fitterIndex < itsFitters.size());
+  return itsFitters[fitterIndex].quality;
 }
 
 void Solver::show (ostream& os)

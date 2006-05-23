@@ -144,10 +144,11 @@ public:
   void initSolvableParms (const vector<MeqDomain>& solveDomains);
 
   // Get the equations for all selected baselines and fill the
-  // fitter object with them.
-  // The fitter object gets initialized before being filled.
-  void fillFitter (vector<casa::LSQFit>& fitters,
-		   const string& dataColumnName);
+  // fitter vector with them.
+  // The fitter vector is resized as needed.
+  // All fitter objects are initialized before being filled.
+  void fillFitters (vector<casa::LSQFit>& fitters,
+		    const string& dataColumnName);
 
   // Apply corrections to the data.
   void correctData (const string& inColumnName,
@@ -305,7 +306,7 @@ private:
 
   // Get access to the next data chunk and fill in all pointers.
   // The data pointers are filled in the MMapMSInfo object.
-  bool nextDataChunk();
+  bool nextDataChunk (bool useFitters);
 
   // Do the precalculations for all lower level nodes.
   void precalcNodes (const MeqRequest& request);
@@ -391,10 +392,11 @@ private:
   MMap*          itsWeightMap;     //# Weights file mapped
   bool           itsIsWeightSpec;  //# true = weight per channel
 
-  //# Fitter info set by nextDataChunk.
+  //# Fitter info set by initSolvableParms.
   vector<int> itsFreqFitInx;       //# Fitter for each freq in work domain
+                                   //# for the data in the MS resolution
   vector<int> itsTimeFitInx;       //# Fitter for each time in work domain
-  int         itsFreqNrFit;        //# Nr of fitters in freq direction
+  uint        itsFreqNrFit;        //# Nr of fitters in freq direction
 
   //# Thread private buffers.
   int itsNthread;

@@ -53,7 +53,7 @@ void eval3 (int ncy, int ndx, int ndy, double stepx, double stepy,
   double* value = res.setDoubleFormat (ndx, ndy);
   if (makediff) {
     for (int i=0; i<3*ncy; ++i) {
-      res.setPerturbedDouble (i, ndx, ndy);
+      ///      res.setPerturbedDouble (i, ndx, ndy);
     }
   }
   NSTimer timer1("new");
@@ -170,7 +170,7 @@ void doEval (MeqPolc& polc, const MeqDomain& domain, int nx, int ny)
   for (int i=0; i<nspid; ++i) {
     MeqMatrix coeff = polc.getCoeff().clone();
     double* coeffp = coeff.doubleStorage();
-    coeffp[i] += polc.getPerturbation();
+    coeffp[i] += polc.getPerturbation(i);
     MeqPolc polcp (polc);
     polcp.update (coeff);
     MeqResult resp = polcp.getResult (req, 0, 0);
@@ -214,7 +214,7 @@ void doEval (MeqPolc& polc, const MeqDomain& domain, int nx, int ny)
   ASSERT (compare (res.getValue(), resma.getValue()));
   for (int i=0; i<nspid; ++i) {
     ASSERT (compare (resma.getPerturbedValue(i),
-		     (resm.getPerturbedValue(i) - resm.getValue()) / resm.getPerturbation(i)));
+		     (resm.getPerturbedValue(i) - resm.getValue()) / polc.getPerturbation(i)));
   }
 }
 
@@ -237,7 +237,7 @@ void doIt (MeqPolc& polc)
 
 int main()
 {
-  {
+  try {
     // Always use the entire mask as true.
     bool mask[100];
     for (int i=0; i<100; ++i) {
@@ -271,6 +271,9 @@ int main()
     doIt(polc);
     polc.setCoeff(MeqMatrix(c1, 2, 6), mask);
     doIt(polc);
+  } catch (std::exception& x) {
+    cout << "Caught exception: " << x.what() << endl;
+    return 1;
   }
   cout << "OK" << endl;
   return 0;

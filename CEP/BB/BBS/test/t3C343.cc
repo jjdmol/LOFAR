@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <BBS/Prediffer.h>
 #include <BBS/Solver.h>
-#include <BBS/MNS/MeqStoredParmPolc.h>
+#include <BBS/MNS/MeqParmFunklet.h>
 #include <BBS/BBSTestLogger.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/VectorUtil.h>
@@ -50,32 +50,35 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
 {
   // Set the solvable parameters.
   pre1.clearSolvableParms();
-  pre1.setSolvableParms (solv, vector<string>(), true);
+  pre1.setSolvableParms (solv, vector<string>());
   // Set a domain. Only use center frequencies and all times.
   //pre1.setDomain (1170078125+24*156250, 16*156250, 0., 1e12);
-  pre1.setDomain (4, 59, 0., 1e12);
-  //pre1.setDomain (1170078125+34*156250, 4*156250, 0., 1e12);
-  ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, 0., 1e12);
+  pre1.setWorkDomain (4, 59, 0., 1e12);
+  //pre1.setWorkDomain (1170078125+34*156250, 4*156250, 0., 1e12);
+  ///pre1.setWorkDomain (1.18e9-59.5*156250, 56*156250, 0., 1e12);
+  vector<MeqDomain> solveDomains(1, pre1.getWorkDomain());
+  pre1.initSolvableParms (solveDomains);
 
   // Get the ParmData from the Prediffer and send it to the solver.
   Solver solver;
-  solver.initSolvableParmData (1);
-  solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
-  vector<ParmData> pData = pre1.getSolvableParmData();
+  solver.initSolvableParmData (1, solveDomains, pre1.getWorkDomain());
+  const ParmDataInfo& pData = pre1.getSolvableParmData();
+  solver.setSolvableParmData (pData, 0);
   pre1.showSettings();
   streamsize prec = cout.precision();
-  cout << "Before: " << setprecision(15) << solver.getSolvableValues() << endl;
+  cout << "Before: " << setprecision(15)
+       << solver.getSolvableValues(0) << endl;
 
   for (int it=0; it<maxniter; ++it) {
     // Get the fitter from the prediffer and give them to the solver.
-    casa::LSQFit fitter;
-    pre1.fillFitter (fitter, "DATA");
-    solver.mergeFitter (fitter, 0);
+    vector<casa::LSQFit> fitters;
+    pre1.fillFitters (fitters, "DATA");
+    solver.mergeFitters (fitters, 0);
     // Do the solve.
-    Quality quality;
-    solver.solve (true, quality);
+    solver.solve (true);
     cout << "iter" << it << ":  " << setprecision(15)
-	 << solver.getSolvableValues() << endl;
+	 << solver.getSolvableValues(0) << endl;
+    const Quality& quality = solver.getQuality(0);
     cout << quality << endl;
     cout.precision (prec);
     pre1.updateSolvableParms (solver.getSolvableParmData());
@@ -94,7 +97,7 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
 {
   // Set the solvable parameters.
   pre1.clearSolvableParms();
-  pre1.setSolvableParms (solv, solvexc, true);
+  pre1.setSolvableParms (solv, solvexc);
   // Set start time (take 10 sec into account for first time stamp of 20).
   double timeStart = 4.47203e+09-4260-10;
   double timeLast = timeStart + 43075+25;
@@ -107,29 +110,31 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
   while (timeStart < timeLast) {
     cout << "timecounter=" << counter++ << ' ' << timeStart-st << endl;
     // Set a domain. Use middle 56 channels and a few times per step.
-    ///pre1.setDomain (1170078125+24*156250, 16*156250, timeStart, timeStep);
-    pre1.setDomain (4, 59,timeStart, timeStep);
-    ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
+    ///pre1.setWorkDomain (1170078125+24*156250, 16*156250, timeStart, timeStep);
+    pre1.setWorkDomain (4, 59,timeStart, timeStep);
+    ///pre1.setWorkDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
+    vector<MeqDomain> solveDomains(1, pre1.getWorkDomain());
+    pre1.initSolvableParms (solveDomains);
 
     // Get the ParmData from the Prediffer and send it to the solver.
     Solver solver;
-    solver.initSolvableParmData (1);
+    solver.initSolvableParmData (1, solveDomains, pre1.getWorkDomain());
     solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
-    vector<ParmData> pData = pre1.getSolvableParmData();
     pre1.showSettings();
     streamsize prec = cout.precision();
-    cout << "Before: " << setprecision(15) << solver.getSolvableValues() << endl;
+    cout << "Before: " << setprecision(15)
+	 << solver.getSolvableValues(0) << endl;
 
     for (int it=0; it<maxniter; ++it) {
       // Get the fitter from the prediffer and give them to the solver.
-      casa::LSQFit fitter;
-      pre1.fillFitter (fitter, "DATA");
-      solver.mergeFitter (fitter, 0);
+      vector<casa::LSQFit> fitters;
+      pre1.fillFitters (fitters, "DATA");
+      solver.mergeFitters (fitters, 0);
       // Do the solve.
-      Quality quality;
-      solver.solve (true, quality);
+      solver.solve (true);
       cout << "iter" << it << ":  " << setprecision(15)
-	   << solver.getSolvableValues() << endl;
+	   << solver.getSolvableValues(0) << endl;
+      const Quality& quality = solver.getQuality(0);;
       cout << quality << endl;
       cout.precision (prec);
       pre1.updateSolvableParms (solver.getSolvableParmData());
@@ -155,8 +160,8 @@ void doSubtract (Prediffer& pre1, double timeStep)
   // Loop through all time domains.
   while (timeStart < timeLast) {
     // Set a domain. Use middle 56 channels and 20 times per step.
-    pre1.setDomain (4, 59, timeStart, timeStep);
-    ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
+    pre1.setWorkDomain (4, 59, timeStart, timeStep);
+    ///pre1.setWorkDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
     pre1.showSettings();
     // Subtract the model.
     pre1.subtractData ("DATA", "CORRECTED_DATA");
@@ -175,8 +180,8 @@ void doCorrect (Prediffer& pre1, double timeStep)
   // Loop through all time domains.
   while (timeStart < timeLast) {
     // Set a domain. Use middle 56 channels and 20 times per step.
-    pre1.setDomain (4, 59, timeStart, timeStep);
-    ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
+    pre1.setWorkDomain (4, 59, timeStart, timeStep);
+    ///pre1.setWorkDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
     pre1.showSettings();
     // Subtract the model.
     pre1.correctData ("CORRECTED_DATA", "CORRECTED_DATA");

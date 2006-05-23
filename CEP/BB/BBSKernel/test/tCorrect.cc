@@ -40,7 +40,7 @@ using namespace casa;
 void doCorrect (Prediffer& pre1)
 {
   cout << ">>>" << endl;
-  pre1.setDomain (0, 1000, 0., 1e12);
+  pre1.setWorkDomain (0, 1000, 0., 1e12);
   cout << "<<<" << endl;
     
   cout << ">>>" << endl;
