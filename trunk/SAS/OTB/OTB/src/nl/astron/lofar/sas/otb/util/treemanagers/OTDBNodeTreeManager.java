@@ -108,11 +108,11 @@ public class OTDBNodeTreeManager extends GenericTreeManager implements ITreeMana
             logger.fatal("Exception during TreeManager OTDB-defineChildNodes",e);
         }
     }
-    public TreeNode getRootNode(String[] arguments){
+    public TreeNode getRootNode(Object arguments){
         jOTDBnode otdbNode=null;
         int itsTreeID = 0;
         try {
-            itsTreeID = Integer.parseInt(arguments[0]);
+            itsTreeID = Integer.parseInt(arguments.toString());
         } catch (NumberFormatException ex) {
             logger.error("The OTDBNodeTreeManager received an incorrect TreeID! ",ex);
         }
