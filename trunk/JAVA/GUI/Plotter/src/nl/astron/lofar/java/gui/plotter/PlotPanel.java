@@ -47,7 +47,7 @@ public class PlotPanel extends JPanel{
 	private PlotController m_PlotController;
         private JComponent plot;
         private JComponent legend;
-        private String[] currentDataConstraint;
+        private Object currentDataConstraint;
         
         /**
          * - Constructs a new PlotPanel
@@ -72,7 +72,7 @@ public class PlotPanel extends JPanel{
          * -int type (this is defined by PlotConstants.PLOT_*)
          * -boolean separateLegend (this will tell the plotter that you would like a separate JComponent legend,
          *                          otherwise you will see a legend where the plotter puts it by default.
-         * -String[] constraints (These are the arguments you need for the data access layer to get the data
+         * -Object constraints (These are the arguments you need for the data access layer to get the data
          *                        you want, which can be anything, as long as your configured data access layer
          *                        supports it!)
          * The plot will be added to this class' ContentPane so you can view it directly. It can also be retrieved separately
@@ -85,7 +85,7 @@ public class PlotPanel extends JPanel{
          * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
          * that something has gone wrong.
          */
-	public void createPlot(int type, boolean separateLegend, String[] constraints) throws PlotterException{
+	public void createPlot(int type, boolean separateLegend, Object constraints) throws PlotterException{
             this.removeAll();
             plot = null;
             legend = null;
@@ -96,7 +96,7 @@ public class PlotPanel extends JPanel{
         /**
          * This method will attempt to generate a plot image using several key arguments:
          * -int type (this is defined by PlotConstants.PLOT_*)
-         * -String[] constraints (These are the arguments you need for the data access layer to get the data
+         * -Object constraints (These are the arguments you need for the data access layer to get the data
          *                        you want, which can be anything, as long as your configured data access layer
          *                        supports it!)
          *                         
@@ -107,20 +107,20 @@ public class PlotPanel extends JPanel{
          * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
          * that something has gone wrong.
          */
-	public Image exportImage(int type, String[] constraints) throws PlotterException{
+	public Image exportImage(int type, Object constraints) throws PlotterException{
             return m_PlotController.createPlotImage(constraints);
 	}
         /**
          * This method will attempt to export the data currently in the plot to your configured data export layer using a single argument:
-         * -String[] arguments (These are the arguments you need for the data export layer to export the data
-         *                        you currently have in the plot, and these strings can mean anything, as long as your configured data export layer
+         * -Object arguments (These are the arguments you need for the data export layer to export the data
+         *                        you currently have in the plot, and this can be anything, as long as your configured data export layer
          *                        supports them!)
          * @param arguments The arguments to be passed to the configured data export layer
          * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
          * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
          * that something has gone wrong.
          */
-	public void exportData(String[] arguments) throws PlotterException{
+	public void exportData(Object arguments) throws PlotterException{
             m_PlotController.exportData(arguments);
         }
          /**

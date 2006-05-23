@@ -39,13 +39,13 @@ public interface IPlotDataExport{
     
     /**
      * Exports a dataset using a set of String parameters
-     * @param params String array containing zero or more arguments for the export class
+     * @param params Object containing zero or more arguments for the export class
      * @param data the dataset to be exported
      * @throws PlotterException will be thrown if the dataset could not
      * be exported for any reason, like database exceptions, file errors, etc. 
      * (This exception will be migrated to a more specific PlotterDataExportException)
      */
-    public void exportData(String[] params, HashMap data) throws PlotterException;
+    public void exportData(Object params, HashMap data) throws PlotterException;
     
 }
 
