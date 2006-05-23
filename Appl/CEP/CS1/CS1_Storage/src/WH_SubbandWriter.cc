@@ -162,7 +162,8 @@ namespace LOFAR
                                itsNChannels, itsNPolSquared, itsNStations, 
                                antPos);
 
-      double chanWidth = itsPS.getDouble("Observation.ChanWidth");
+      double chanWidth = itsPS.getDouble("Observation.SampleRate") /
+			 itsPS.getDouble("Observation.NChannels");
       LOG_TRACE_VAR_STR("chanWidth = " << chanWidth);
       
       vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
