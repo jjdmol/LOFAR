@@ -40,7 +40,6 @@ Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
 Observation.StartTime = 53328.6407291667 # MJD: 2004/11/19 15h22m39s
 Observation.StopTime  = 53328.6823958333 # MJD: 2004/11/19 16h22m39s
 Observation.RefFreqs = [1.0e5, 3.0e5, 5.0e5, 7.0e5, 9.0e5, 11.0e5, 13.0e5, 15.0e5]  # the reference frequency for each stored(!) subband (Hz)
-Observation.ChanWidth = 762.94      # width of each channel (Hz)
 
 # General Variables
 General.SubbandsPerCell = 1
