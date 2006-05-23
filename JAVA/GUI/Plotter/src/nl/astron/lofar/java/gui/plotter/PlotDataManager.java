@@ -91,7 +91,7 @@ public class PlotDataManager{
      * inside the Data Access class, or when the Data Access class itself could not
      * be properly accessed due to errors in the plotter_config.properties file.
      */
-    public HashMap retrieveData(String[] constraints) throws PlotterException{
+    public HashMap retrieveData(Object constraints) throws PlotterException{
         if(aDataAccessor == null){
             initializeDataAccessLayer();
         }        
@@ -110,14 +110,14 @@ public class PlotDataManager{
      * the parameters provided. It will call the Data Export 
      * class provided in the plotter_config.properties file.
      * 
-     * @param exportParams The String array containing parameters for the data 
-     * export class
+     * @param exportParams An object containing parameters for the data 
+     * export class.
      * @param data the data set to be exported
      * @throws PlotterException will be thrown when an Exception occurs 
      * inside the Data Export class, or when the Data Export class itself could not
      * be properly accessed due to errors in the plotter_config.properties file.
      */
-    public void exportData(String[] exportParams, HashMap data) throws PlotterException{
+    public void exportData(Object exportParams, HashMap data) throws PlotterException{
         throw new NotImplementedException("Export of data is not yet implemented in this release.");
     }
     /**

@@ -84,7 +84,7 @@ public class PlotController{
          * layer or the Plotter Framework have run into an exception that the 
          * user needs to be aware of.
 	 */
-	public JComponent createPlot(int type, boolean separateLegend, String[] constraints) throws PlotterException{
+	public JComponent createPlot(int type, boolean separateLegend, Object constraints) throws PlotterException{
             String plotFrameworkClass = "";
             Object aPlotter = null;
             IPlot aNewPlot = null;
@@ -137,7 +137,7 @@ public class PlotController{
                         HashMap retrieveableData = 
                             m_PlotDataManager.retrieveData(constraints);                               
                         m_IPlot = aNewPlot;
-                        return m_IPlot.createPlot(type,constraints[0],retrieveableData,separateLegend);
+                        return m_IPlot.createPlot(type,constraints.toString(),retrieveableData,separateLegend);
                 
                 }else{
                     throw new NotSupportedException("The requested plot type ("+type+") is not supported by the plotter at this time.");
@@ -169,18 +169,18 @@ public class PlotController{
          * layer or the Plotter Framework have run into an exception that the 
          * user needs to be aware of.
 	 */
-	public Image createPlotImage(String[] constraints) throws PlotterException{
+	public Image createPlotImage(Object constraints) throws PlotterException{
             throw new NotImplementedException("Image exportation is not yet implemented in this release."); 
 	}
 
 	/**
          * This method will attempt to export a plot using the 
          * Data Export layer specified in the plotter_config.properties file.
-         * @param arguments The array of string arguments to be passed to the data export layer
+         * @param arguments The object containing arguments to be passed to the data export layer
 	 * @throws PlotterException will be thrown when the Data Export 
          * layer has run into an exception that the user needs to be aware of.
 	 */
-	public void exportData(String[] arguments) throws PlotterException{
+	public void exportData(Object arguments) throws PlotterException{
             throw new NotImplementedException("Export of data is not yet implemented in this release."); 
 	}
 
