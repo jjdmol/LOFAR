@@ -6,10 +6,14 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
+import java.awt.Component;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
@@ -62,6 +66,10 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         initComponents();
     }
     
+    /** Sets the Mainframe for this class
+     *  
+     * @params  aMainFrame  Mainframe we need to link to
+     */
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -72,19 +80,95 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         }
     }
     
+    /** Returns the shortname of this class */
     public String getShortName() {
         return name;
     }
     
+    /** Sets the content for this class
+     *
+     * @params anObject  The class that contains the content.
+     */
     public void setContent(Object anObject) {
         if (anObject != null) {
-            TreeNode aNode = (TreeNode)anObject;
-            itsNode = (jOTDBnode)aNode.getUserObject();
-            initPanel();
+            itsNode = (jOTDBnode)anObject;
             getParam(itsNode);
             initPanel();
         } else {
             logger.debug("No node supplied");
+        }
+    }
+    
+    /** has this panel a popupmenu?
+     *
+     *@returns  false/true depending on the availability of a popupmenu
+     *
+     */
+    public boolean hasPopupMenu() {
+        return true;
+    }
+    
+    
+    /** create popup menu for this panel
+     *
+     *  // build up the menu
+     *  aPopupMenu= new JPopupMenu();
+     *  aMenuItem=new JMenuItem("Choice 1");        
+     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
+     *          popupMenuHandler(evt);
+     *      }
+     *  });
+     *  aMenuItem.setActionCommand("Choice 1");
+     *  aPopupMenu.add(aMenuItem);
+     *  aPopupMenu.setOpaque(true);
+     *
+     *
+     *  aPopupMenu.show(aComponent, x, y );        
+     */
+    public void createPopupMenu(Component aComponent,int x, int y) {
+        JPopupMenu aPopupMenu=null;
+        JMenuItem  aMenuItem=null;
+        
+        //  Fill in menu as in the example above  
+        
+        ///// TEST ONLY /////
+        aPopupMenu= new JPopupMenu();
+        aMenuItem=new JMenuItem("Param Choice 1");        
+        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                popupMenuHandler(evt);
+            }
+        });
+        aMenuItem.setActionCommand("Choice 1");
+        aPopupMenu.add(aMenuItem);
+        
+        aMenuItem=new JMenuItem("Param Choice 2");        
+        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                popupMenuHandler(evt);
+            }
+        });
+        aMenuItem.setActionCommand("Choice 2");
+        aPopupMenu.add(aMenuItem);
+
+        aPopupMenu.setOpaque(true);
+        aPopupMenu.show(aComponent, x, y );  
+    }
+    /** handles the choice from the popupmenu 
+     *
+     * depending on the choices that are possible for this panel perform the action for it
+     *
+     *      if (evt.getActionCommand().equals("Choice 1")) {
+     *          perform action
+     *      }  
+     */
+    public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+        /// TEST ONLY ///
+        if (evt.getActionCommand().equals("Choice 1")) {
+            logger.debug("Param Choice 1 chosen");
+        }  else if (evt.getActionCommand().equals("Choice 2")) {
+            logger.debug("Param Choice 2 chosen");
         }
     }
     

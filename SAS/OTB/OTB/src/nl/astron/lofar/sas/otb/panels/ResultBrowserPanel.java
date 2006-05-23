@@ -7,9 +7,15 @@
 package nl.astron.lofar.sas.otb.panels;
 
 
+import java.awt.event.ActionEvent;
 import java.util.Iterator;
 import java.util.Vector;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import org.apache.log4j.Logger;
@@ -50,9 +56,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     }
     
     public void initialize() {
-
-        itsPanelHelper=new ResultPanelHelper();
-        
+       
         /// TOBECHANGED
         parmDBPlotPanel1 = new nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel();
         ///
@@ -209,7 +213,11 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 logger.debug("Skipping panel for: "+aPanelName);
             }
         }
-        jTabbedPane1.setSelectedIndex(savedSelection);
+        if (savedSelection > -1 && savedSelection < jTabbedPane1.getComponentCount()) {
+            jTabbedPane1.setSelectedIndex(savedSelection);
+        } else if (jTabbedPane1.getComponentCount() > 0) {
+            jTabbedPane1.setSelectedIndex(0);
+        }
     }
     
     private boolean viewInfo() {
@@ -239,6 +247,18 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         return treeInfoDialog.isChanged();
     }
     
+    private void createPopupMenu(java.awt.event.MouseEvent evt) {
+        if (jTabbedPane1.getSelectedComponent() != null) {
+            if (((IViewPanel)jTabbedPane1.getSelectedComponent()).hasPopupMenu()) {
+                ((IViewPanel)jTabbedPane1.getSelectedComponent()).createPopupMenu((JComponent) evt.getSource(), evt.getX(), evt.getY());
+            }
+        }
+    }
+    
+    private void popupMenuActionHandler(ActionEvent evt) {
+        logger.debug("PopupMenu choice: "+ evt.getActionCommand());
+    }
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -250,8 +270,6 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         jSplitPane = new javax.swing.JSplitPane();
         treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        logParamPanel1 = new nl.astron.lofar.sas.otbcomponents.LogParamPanel();
-        jPanel1 = new javax.swing.JPanel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -269,18 +287,32 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 treePanelValueChanged(evt);
             }
         });
+        treePanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                treePanelMousePressed(evt);
+            }
+        });
 
         jSplitPane.setLeftComponent(treePanel);
-
-        jTabbedPane1.addTab("Log", logParamPanel1);
-
-        jTabbedPane1.addTab("Query Results", jPanel1);
 
         jSplitPane.setRightComponent(jTabbedPane1);
 
         add(jSplitPane, java.awt.BorderLayout.WEST);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void treePanelMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_treePanelMousePressed
+        logger.debug("treeMouseEvent: " + evt.getButton());
+        if (evt == null) {
+            return;
+        }
+        //check if right button was clicked
+        if(SwingUtilities.isRightMouseButton(evt)) {
+            logger.debug("Right Mouse Button clicked"+evt.getSource().toString());
+            createPopupMenu(evt);
+            
+        }
+    }//GEN-LAST:event_treePanelMousePressed
     
     private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
         logger.debug("treeSelectionEvent: " + evt);
@@ -319,7 +351,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;   
     
-    private ResultPanelHelper itsPanelHelper=null;
+    private ResultPanelHelper itsPanelHelper=ResultPanelHelper.getResultPanelHelper();
 
     /// TOBECHANGED
     private nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel parmDBPlotPanel1;
@@ -327,10 +359,8 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JSplitPane jSplitPane;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private nl.astron.lofar.sas.otbcomponents.LogParamPanel logParamPanel1;
     private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
     

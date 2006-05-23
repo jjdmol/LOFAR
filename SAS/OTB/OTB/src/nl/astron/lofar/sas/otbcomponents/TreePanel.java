@@ -28,7 +28,7 @@ public class TreePanel extends javax.swing.JPanel {
     private String itsTitle;
     
     static Logger logger = Logger.getLogger(TreePanel.class);
-
+    static String name="TreePanel";
     
     /** Creates new form BeanForm */
     public TreePanel() {
@@ -60,12 +60,27 @@ public class TreePanel extends javax.swing.JPanel {
                 jTree1ValueChanged(evt);
             }
         });
+        jTree1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTree1MouseClicked(evt);
+            }
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jTree1MousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                jTree1MouseReleased(evt);
+            }
+        });
         jScrollPane1.setViewportView(jTree1);
         jTree1.setSelectionRow(0);
     }
     
     public int[] getSelectedRows() {
         return jTree1.getSelectionRows();
+    }
+    
+    private void setSelection(java.awt.event.MouseEvent evt) {
+        jTree1.setSelectionPath(jTree1.getPathForLocation(evt.getX(),evt.getY()));
     }
     
     /** This method is called from within the constructor to
@@ -92,8 +107,14 @@ public class TreePanel extends javax.swing.JPanel {
             }
         });
         jTree1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTree1MouseClicked(evt);
+            }
             public void mousePressed(java.awt.event.MouseEvent evt) {
                 jTree1MousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                jTree1MouseReleased(evt);
             }
         });
 
@@ -103,20 +124,29 @@ public class TreePanel extends javax.swing.JPanel {
 
     }// </editor-fold>//GEN-END:initComponents
 
+    private void jTree1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTree1MouseClicked
+        setSelection(evt);
+        fireMouseListenerMouseClicked(evt);
+    }//GEN-LAST:event_jTree1MouseClicked
+
+    private void jTree1ValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_jTree1ValueChanged
+        fireTreeSelectionListenerValueChanged(evt);
+    }//GEN-LAST:event_jTree1ValueChanged
+
+    private void jTree1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTree1MouseReleased
+        setSelection(evt);
+        fireMouseListenerMouseReleased(evt);
+    }//GEN-LAST:event_jTree1MouseReleased
+
     private void jTree1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTree1MousePressed
-        logger.debug("mouse pressed event: " + evt);
+        setSelection(evt);
         fireMouseListenerMousePressed(evt);
     }//GEN-LAST:event_jTree1MousePressed
 
     /**
      * Exports the TreeSelection.valueChanged event from tree to the outside world of this panel.
      * @param evt The TreeSelection event
-     */
-    private void jTree1ValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_jTree1ValueChanged
-        logger.debug("treeselection event: " + evt);
-        fireTreeSelectionListenerValueChanged(evt);
-    }//GEN-LAST:event_jTree1ValueChanged
-    
+     */    
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;

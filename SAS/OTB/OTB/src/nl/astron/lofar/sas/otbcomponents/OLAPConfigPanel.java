@@ -8,8 +8,11 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
+import java.awt.Component;
 import java.util.Iterator;
 import java.util.Vector;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
@@ -60,7 +63,46 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         initPanel();
     }
 
-     private void initPanel() {
+    public boolean hasPopupMenu() {
+        return false;
+    }
+    
+    
+    /** create popup menu for this panel
+     *
+     *  // build up the menu
+     *  aPopupMenu= new JPopupMenu();
+     *  aMenuItem=new JMenuItem("Choice 1");        
+     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
+     *          popupMenuHandler(evt);
+     *      }
+     *  });
+     *  aMenuItem.setActionCommand("Choice 1");
+     *  aPopupMenu.add(aMenuItem);
+     *  aPopupMenu.setOpaque(true);
+     *
+     *
+     *  aPopupMenu.show(aComponent, x, y );        
+     */
+    public void createPopupMenu(Component aComponent,int x, int y) {
+        JPopupMenu aPopupMenu=null;
+        JMenuItem  aMenuItem=null;
+        
+        //  Fill in menu as in the example above        
+    }
+    /** handles the choice from the popupmenu 
+     *
+     * depending on the choices that are possible for this panel perform the action for it
+     *
+     *      if (evt.getActionCommand().equals("Choice 1")) {
+     *          perform action
+     *      }  
+     */
+    public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+    }
+    
+    private void initPanel() {
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
 

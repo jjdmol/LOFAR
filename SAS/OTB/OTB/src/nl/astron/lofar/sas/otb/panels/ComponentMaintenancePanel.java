@@ -67,7 +67,6 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         }
         
         setNewRootNode();
-        setFieldValidations();
         return true;
     }
     
@@ -101,7 +100,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         if (treePanel.getSelectedRows()[0] == 0) {
             try {
                 jVICnodeDef aVICnodeDef = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
-                VICnodeDefViewPanel1.setNode(aVICnodeDef);
+                VICnodeDefViewPanel1.setContent(aVICnodeDef);
                 jSplitPane1.remove(componentPanel1);
                 jSplitPane1.setRightComponent(VICnodeDefViewPanel1);
             } catch (RemoteException ex) {
@@ -110,7 +109,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         } else {
             jSplitPane1.remove(VICnodeDefViewPanel1);
             jSplitPane1.setRightComponent(componentPanel1);
-            componentPanel1.setParam(aParam);
+            componentPanel1.setContent(aParam);
         }
     }
     
@@ -180,26 +179,8 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
             }
         });
         
-        setFieldValidations();
     }
     
-    private void setFieldValidations() {
-        componentPanel1.enableParamName(false);
-        componentPanel1.enableType(false);
-        componentPanel1.enableUnit(false);
-        componentPanel1.enableLimits(true);
-        componentPanel1.enableDescription(true);
-        componentPanel1.enableButtons(true);
-        componentPanel1.setButtonsVisible(true);
-        
-        VICnodeDefViewPanel1.enableName(false);
-        VICnodeDefViewPanel1.enableVersion(false);
-        VICnodeDefViewPanel1.enableClassif(false);
-        VICnodeDefViewPanel1.enableConstraints(true);
-        VICnodeDefViewPanel1.enableDescription(true);
-        VICnodeDefViewPanel1.enableButtons(true);
-        VICnodeDefViewPanel1.setButtonsVisible(true);
-    }
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);

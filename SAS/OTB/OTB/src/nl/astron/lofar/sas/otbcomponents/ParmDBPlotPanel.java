@@ -8,15 +8,19 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.util.Vector;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
+import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.jParmDBnode;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
@@ -60,8 +64,62 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
+    public boolean hasPopupMenu() {
+        return false;
+    }
+    
+    
+    /** create popup menu for this panel
+     *
+     *  // build up the menu
+     *  aPopupMenu= new JPopupMenu();
+     *  aMenuItem=new JMenuItem("Choice 1");        
+     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
+     *          popupMenuHandler(evt);
+     *      }
+     *  });
+     *  aMenuItem.setActionCommand("Choice 1");
+     *  aPopupMenu.add(aMenuItem);
+     *  aPopupMenu.setOpaque(true);
+     *
+     *
+     *  aPopupMenu.show(aComponent, x, y );        
+     */
+    public void createPopupMenu(Component aComponent,int x, int y) {
+        JPopupMenu aPopupMenu=null;
+        JMenuItem  aMenuItem=null;
+        
+        //  Fill in menu as in the example above        
+    }
+    
+    /** handles the choice from the popupmenu 
+     *
+     * depending on the choices that are possible for this panel perform the action for it
+     *
+     *      if (evt.getActionCommand().equals("Choice 1")) {
+     *          perform action
+     *      }  
+     */
+    public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+    }
+    
     private void initPanel(String aParamName) {
-        if (aParamName != null) {
+        // check access
+        UserAccount userAccount = itsMainFrame.getUserAccount();
+        
+        // For now:
+        // give enabled/disabled fields here, can be changed later to choices stored in the database
+        
+        if(userAccount.isAdministrator()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isAstronomer()) {
+            // enable/disable certain controls
+        }
+        if(userAccount.isInstrumentScientist()) {
+            // enable/disable certain controls
+        }        if (aParamName != null) {
             if(aParamName.equalsIgnoreCase("ParmDB")){
                 itsParamName = "*";
             }else{
