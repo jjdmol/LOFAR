@@ -166,7 +166,7 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 
     // Mark modification as applied when write of RCU result register has completed
 
-    Cache::getInstance().getState().rcuprotocol().schedule_read(global_rcu);
+    Cache::getInstance().getState().rcuprotocol().read_schedule(global_rcu);
 
   }
   

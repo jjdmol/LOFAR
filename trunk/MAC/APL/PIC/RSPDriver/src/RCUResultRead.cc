@@ -38,11 +38,8 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
-#define RCURESULTREAD_DELAY 2
-
 RCUResultRead::RCUResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL), // *N_POL for X and Y
-    m_delay(0)
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -61,13 +58,6 @@ void RCUResultRead::sendrequest()
     setContinue(true);
     return;
   }
-
-  // delay TDSRESULTREAD_DELAY periods
-  if (m_delay++ < RCURESULTREAD_DELAY) {
-    setContinue(true);
-    return;
-  }
-  m_delay = 0;
 
   // set appropriate header
   MEPHeader::FieldsType hdr;
