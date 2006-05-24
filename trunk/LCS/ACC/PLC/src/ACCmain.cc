@@ -39,16 +39,43 @@ namespace LOFAR {
 
       using APS::ParameterSet;
 
-      int ACCmain (int argc, char* argv[], ProcessControl* theProcess) {
+      int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
+
+	char** argv = orig_argv;
+
+#ifdef HAVE_MPI
+	TH_MPI::initMPI(argc, orig_argv);
+
+	int myRank = TH_MPI::getCurrentRank();
+
+	// The MPI standard does not demand that the commandline arguments are distributed, so we do it ourselves.
+
+	// Broadcast number of arguments
+	MPI_Bcast(&argc, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	if (myRank != 0) {
+	  argv = new char*[argc];
+	} else {
+	  char** argv = orig_argv;
+	}
+
+	for (int arg = 0; arg < argc; arg++) {
+	  int arglen = 0;
+	  if (myRank == 0) arglen = strlen(argv[arg]) + 1;
+
+	  // Broadcast the length of this argument
+	  MPI_Bcast(&arglen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	  if (myRank != 0) {
+	    argv[arg] = new char[arglen];
+	  }
+	  // Broadcast the argument;
+	  MPI_Bcast(argv[arg], arglen, MPI_BYTE, 0, MPI_COMM_WORLD);	
+	}
+#endif
 
 	string programName = basename(argv[0]);
 
-#ifdef HAVE_MPI
-	TH_MPI::initMPI(argc, (const char**)argv);
-#endif
-
 	try {
-
 
 	  // Check invocation syntax
 	  if ((argc!=3) || (strncmp("ACC", argv[1], 3) != 0)) {
