@@ -203,6 +203,25 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     }
     
     /**
+     * This method updates an already existing Plotter compliant dataset using
+     * the constraints provided by the PlotPanel, and to do that, it uses the 
+     * jParmFacade interface to get the data.
+     * 
+     * @param currentData The current data set to be updated.
+     * @param constraints The update constraints provided by the PlotPanel. 
+     * @return the data set generated
+     * @throws PlotterDataAccessException will be thrown if anything goes wrong 
+     * with the ParmDB interface and calls to it.
+     *
+     */
+    public HashMap updateData(HashMap currentData, Object constraints) throws PlotterDataAccessException{
+        if(parmDB == null){
+            this.initiateConnectionToParmDB();
+        }
+        throw new PlotterDataAccessException("Modifying existing datasets is not supported in "+this.getClass().getName().toString());
+        //Todo: implement!
+    }
+    /**
      * This method will check if the jParmFacade ParmDB interface is ready, and if not, it will
      * create a new instance of it.
      * @throws PlotterDataAccessException will be thrown if the jParmFacade could
