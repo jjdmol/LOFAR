@@ -103,7 +103,7 @@ public:
   // Resets all members which are source or destination specific.
   void reset();
 
-  static void initMPI (int argc, const char *argv[]);
+  static void initMPI (int& argc, char**&argv);
   static void finalize();
   static void waitForBroadCast();
   static void waitForBroadCast (unsigned long& aVar);

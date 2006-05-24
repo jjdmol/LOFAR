@@ -215,7 +215,7 @@ int TH_MPI::getNumberOfNodes()
   return size;
 }
 
-void TH_MPI::initMPI(int argc, const char *argv[])
+void TH_MPI::initMPI(int& argc, char **&argv)
 {
   LOG_TRACE_RTTI( "TH_MPI init()" );
   int initialized = 0;
@@ -224,7 +224,7 @@ void TH_MPI::initMPI(int argc, const char *argv[])
   MPI_Initialized(&initialized);
   if (!initialized)
   {
-    MPI_Init (&argc,(char***)&argv);
+    MPI_Init (&argc,&argv);
   }
 }
 
