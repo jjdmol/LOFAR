@@ -48,5 +48,16 @@ public interface IPlotDataAccess{
      */
     public HashMap retrieveData(Object constraints) throws PlotterDataAccessException;
     
+    /**
+     * This method will update the dataset provided using an object with any
+     * possible information and it must return a HashMap dataset understandable by the plotter. 
+     * @param currentDataSet The dataset to be updated
+     * @param constraints An object with constraints to be passed to the implementing class
+     * @return The dataset that has been generated
+     * @throws PlotterDataAccessException will be thrown if the dataset could not
+     * be generated for any reason, like database exceptions, file errors, etc.
+     */
+    public HashMap updateData(HashMap currentDataSet, Object constraints) throws PlotterDataAccessException;
+    
 }
 

@@ -25,9 +25,9 @@ package nl.astron.lofar.java.gui.plotter;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.PrintJob;
+import java.util.HashMap;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
@@ -75,7 +75,7 @@ public class PlotPanel extends JPanel{
          * -Object constraints (These are the arguments you need for the data access layer to get the data
          *                        you want, which can be anything, as long as your configured data access layer
          *                        supports it!)
-         * The plot will be added to this class' ContentPane so you can view it directly. It can also be retrieved separately
+         * The plot will be added to this class' contents so you can view it directly. It can also be retrieved separately
          * by calling the getPlot() method. 
          *                         
          * @param type The type of plot to be generated (these types are defined in PlotConstants.PLOT_* )
@@ -123,11 +123,30 @@ public class PlotPanel extends JPanel{
 	public void exportData(Object arguments) throws PlotterException{
             m_PlotController.exportData(arguments);
         }
-         /**
-          * TODO: JavaDoc!
-          */
-	public void modifyDataSelection() throws PlotterException{
+        /**
+         * This method will attempt to modify the current plot using one key argument:
+         * -Object newConstraints (These are the arguments you need for the data access layer to get the data
+         *                        you want, which can be anything, as long as your configured data access layer
+         *                        supports it!)
+         * The plot will be updated to this class' contents so you can view it directly. It can also be retrieved separately
+         * by calling the getPlot() method. 
+         *                         
+         * @param newConstraints The arguments to be passed to the configured data access layer
+         * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
+         * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
+         * that something has gone wrong.
+         */
+	public void modifyPlot(Object newConstraints) throws PlotterException{
+            this.removeAll();
+            currentDataConstraint = newConstraints;
+            plot = m_PlotController.modifyPlot(plot, newConstraints);
+            try {
+                legend = m_PlotController.getLegendForPlot(plot);
+            } catch (PlotterException ex) {
 
+            }
+           
+            this.add(plot,BorderLayout.CENTER);
 	}
         /**
          * This method will attempt to print the current plot
@@ -157,6 +176,17 @@ public class PlotPanel extends JPanel{
             }
             return legend;
             
+        }
+        /**
+         * This method will return the dataset for the plot currently in memory.
+         * It will throw a NotSupportedException should the plot not have a dataset available.
+         * @return The plot dataset currently in memory
+         * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
+         * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
+         * that something has gone wrong.
+         */
+        public HashMap getDataForPlot() throws PlotterException{
+            return m_PlotController.getPlotData();            
         }
         
  }

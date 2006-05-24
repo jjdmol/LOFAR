@@ -102,6 +102,20 @@ public class PlotSGTImpl implements IPlot{
         lad = null;
         pma = null;
     }
+    
+    /**
+     * Modifies a given SGT plot using a given dataset.
+     * @param aPlot A plot JComponent
+     * @param data The data to be displayed in the plot.
+     * @return A legend JComponent of plot aPlot
+     * @return the JComponent plot with the new dataset embedded.
+     * @throws PlotterException will be thrown if the plot could not be generated for any reason.
+     */
+    public JComponent modifyPlot(JComponent aPlot, HashMap data) throws PlotterException{
+        throw new NotImplementedException("The Modifying of plots is not yet implemented in the plotter's SGT plugin.");
+    }
+      
+    
     /**
      * Creates a SGT JPlotLayout plot using several key arguments
      * @param type Type of plot as dictated by PlotConstants.PLOT_*

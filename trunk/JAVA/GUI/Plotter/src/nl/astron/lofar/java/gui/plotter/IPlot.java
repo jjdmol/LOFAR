@@ -51,6 +51,16 @@ public interface IPlot{
 	public JComponent createPlot(int type, String name, HashMap data, boolean separateLegend) throws PlotterException;
         
         /**
+         * Modifies a given plot using a given dataset.
+	 * @param aPlot A plot JComponent
+         * @param data The data to be displayed in the plot.
+         * @return A legend JComponent of plot aPlot
+         * @return the JComponent plot with the new dataset embedded.
+         * @throws PlotterException will be thrown if the plot could not be generated for any reason.
+	 */
+	public JComponent modifyPlot(JComponent aPlot, HashMap data) throws PlotterException;
+        
+        /**
 	 * Returns the current dataset used in the plot
          * @return the dataset currently in use.
 	 */
