@@ -33,7 +33,7 @@
 namespace LOFAR {
   namespace CS1 {
 
-    BeamletBuffer::BeamletBuffer(uint bufferSize, uint nSubbands, uint history, uint readWriteDelay):
+    BeamletBuffer::BeamletBuffer(int bufferSize, uint nSubbands, uint history, uint readWriteDelay):
       itsNSubbands(nSubbands),
       itsSize(bufferSize),
       itsLockedRange(bufferSize, readWriteDelay, bufferSize - history, 0),
