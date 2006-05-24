@@ -134,15 +134,18 @@ namespace LOFAR {
 	  }
 
 	  // connect outputs to Subband stub
-#if 1
+	  vector<int> channels;
 	  for (int core = 0; core < nNodesPerCell; core++) {
 	    //collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
+#if 1
 	    itsOutputStub->connect(cell + ic * nCells / inputCells,
 				   core,
 				   (collectSteps.back())->getOutDataManager(0), 
 				   core);
-	  }
 #endif
+	    channels.push_back(core);
+	  }
+	  collectSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
 	}
       }
       LOG_TRACE_FLOW_STR("Finished define()");

@@ -63,7 +63,6 @@ namespace LOFAR
 	}
       // Set a round robin output selector
       getDataManager().setOutputSelector(new Sel_RoundRobin(channels));
-      dynamic_cast<DataManager *>(&getDataManager())->setOutRoundRobinPolicy(channels, pset.getInt32("BGLProc.MaxConcurrentCommunications"));
     }
 
     WH_SBCollect::~WH_SBCollect() {
@@ -88,14 +87,17 @@ namespace LOFAR
       vector<RectMatrix<DH_RSP::BufferType>::cursorType> inCursors;
       RectMatrix<DH_Subband::SampleType>::cursorType outCursor;
 
+      cerr<<"Creating cursors to incoming data"<<endl;
       // create cursors to incoming data
       for (unsigned station = 0; station < itsNStations; station++) {
+	cerr<<"getting DH of station "<<station<<endl;
 	inHolders.push_back(dynamic_cast<DH_RSP *>(getDataManager().getInHolder(station)));
+	inMatrices.push_back(&(inHolders.back()->getDataMatrix()));
 	dimType inSubbandDim = inMatrices[0]->getDim("Subbands");
 	inCursors.push_back(inHolders.back()->getDataMatrix().getCursor(0*inSubbandDim));
-	inMatrices.push_back(&(inHolders.back()->getDataMatrix()));
       }
 
+      cerr<<"Start loop over subbands"<<endl;
       // Copy every subband to one BG/L core
       for (unsigned subband = 0; subband < itsNSubbandsPerCell; subband++) {
 	// ask the round robin selector for the next output
@@ -106,6 +108,7 @@ namespace LOFAR
 	outCursor = outMatrix->getCursor( 0 * outStationDim);
 
 	// Copy one subbands from every input
+	cerr<<"Start loop over stations"<<endl;
 	for (unsigned station = 0; station < itsNStations; station++) {
 	  inMatrices[station]->cpy2Matrix(inCursors[station], inSubbandDim, *outMatrix, outCursor, outStationDim, 1);
 	  inMatrices[station]->moveCursor(&inCursors[station], inSubbandDim);
@@ -115,14 +118,10 @@ namespace LOFAR
 	  DH_Subband::DelayIntervalType theDelay = {inHolders[station]->getFineDelayAtBegin(), 
 						    inHolders[station]->getFineDelayAfterEnd()};
 	  outHolder->getDelay(station) = theDelay;
-#if defined SPARSE_FLAGS
 	  inHolders[station]->getExtraData();
 	  outHolder->getFlags(station) = inHolders[station]->getFlags();
-#endif
 	}
-#if defined SPARSE_FLAGS
 	outHolder->fillExtraData();
-#endif
       }
 
 #if 0
