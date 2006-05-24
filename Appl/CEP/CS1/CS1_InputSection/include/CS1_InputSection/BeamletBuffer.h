@@ -57,7 +57,7 @@ namespace LOFAR
     class BeamletBuffer
     {
     public:
-      BeamletBuffer(uint bufferSize, uint nSubbands, uint history, uint readWriteDelay);
+      BeamletBuffer(int bufferSize, uint nSubbands, uint history, uint readWriteDelay);
       ~BeamletBuffer();
 
       // write elements in the buffer, return value is number of succesfully written elements
@@ -79,13 +79,20 @@ namespace LOFAR
 
       // Needed for mapping a timestamp to a place in the buffer
       TimeStamp time0;
-      uint mapTime2Index(TimeStamp time) const { return (time - time0) % itsSize; };
+      uint mapTime2Index(TimeStamp time) const { 
+	// TODO: this is very slow because of the if and the %
+	if (time > time0) {
+	  return (time - time0) % itsSize;
+	} else {
+	  return (time - time0) % itsSize + itsSize;
+	};
+      }
 
       //# Datamembers
       vector<Beamlet *> itsSBBuffers;
       SparseSet itsFlags;
       uint itsNSubbands;
-      uint itsSize;
+      int itsSize;
 
       TimeStamp itsHighestWritten;
       
