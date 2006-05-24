@@ -105,7 +105,7 @@ namespace LOFAR
 
   protected:
     int    itsArgc;
-    const char** itsArgv;
+    char** itsArgv;
     ACC::APS::ParameterSet itsParamSet;
 
   private:

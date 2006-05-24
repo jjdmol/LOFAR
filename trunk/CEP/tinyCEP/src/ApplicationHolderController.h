@@ -60,7 +60,7 @@ public:
   virtual tribool	reinit	 (const string&	configID) ;
   virtual string askInfo   (const string& 	keylist) ;
   
-  virtual int main(int argc, const char* argv[]);
+  virtual int main(int& argc, char**& argv);
 
 protected:
   TinyApplicationHolder& itsAH;

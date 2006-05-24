@@ -150,7 +150,7 @@ string ApplicationHolderController::askInfo   (const string& )
   return "no info available yet";
 }
 
-int ApplicationHolderController::main (int argc, const char* argv[]) {
+int ApplicationHolderController::main (int& argc, char**& argv) {
   try {
 
 #ifdef HAVE_MPI
