@@ -285,12 +285,12 @@ bool RSPport::setFilter(uint32		RCUmask,
 //
 // sendClear
 //
-bool	RSPport::sendClear	(uint32		RCUmask)
+bool	RSPport::sendClear	(uint32		RSPmask)
 {
 	// Construct command
 	RSPSetrsuEvent		command;
 	command.timestamp = RTC::Timestamp(0,0);
-	command.rcumask   = RCUmask;
+	command.rspmask   = RSPmask;
 	command.settings().resize(1);		// for the time being
 	command.settings()(0).setClear(true);
 
@@ -304,12 +304,12 @@ bool	RSPport::sendClear	(uint32		RCUmask)
 //
 // sendReset
 //
-bool	RSPport::sendReset	(uint32		RCUmask)
+bool	RSPport::sendReset	(uint32		RSPmask)
 {
 	// Construct command
 	RSPSetrsuEvent		command;
 	command.timestamp = RTC::Timestamp(0,0);
-	command.rcumask   = RCUmask;
+	command.rspmask   = RSPmask;
 	command.settings().resize(1);		// for the time being
 	command.settings()(0).setReset(true);
 
@@ -323,12 +323,12 @@ bool	RSPport::sendReset	(uint32		RCUmask)
 //
 // sendSync
 //
-bool	RSPport::sendSync	(uint32		RCUmask)
+bool	RSPport::sendSync	(uint32		RSPmask)
 {
 	// Construct command
 	RSPSetrsuEvent		command;
 	command.timestamp = RTC::Timestamp(0,0);
-	command.rcumask   = RCUmask;
+	command.rspmask   = RSPmask;
 	command.settings().resize(1);		// for the time being
 	command.settings()(0).setSync(true);
 

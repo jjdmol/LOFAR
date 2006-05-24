@@ -71,14 +71,13 @@ int main (int argc, char* argv[]) {
 
 		LOG_INFO_STR("Getting waveform settings");
 		vector<struct WGSettings::WGRegisterType>		wgs;
-//		wgs = IOport.getWaveformSettings(rcuMask);
-		wgs = IOport.getWaveformSettings(7);
+		wgs = IOport.getWaveformSettings(rcuMask);
 		for (uint32 i = 0; i < wgs.size(); i++) {
 			cout << formatString("[%02d]: freq=%6d, phase=%3d(%5.3f), ampl=%3d, nof_samples=%6d, mode=%3d]\n",
 					i,
 					wgs[i].freq,
 					wgs[i].phase,
-					(double)wgs[i].phase / 256 * 2 * M_PI,
+					(double)wgs[i].phase / 256.0 * 2.0 * M_PI,
 					wgs[i].ampl,
 					wgs[i].nof_samples,
 					wgs[i].mode);
@@ -89,7 +88,7 @@ int main (int argc, char* argv[]) {
 		vector<double>	stats = IOport.getSubbandStats(rcuMask);
 
 		LOG_INFO_STR("Setting filter to 3");
-//		ASSERTSTR(IOport.setFilter(rcuMask, 3), "Setting filter failed");
+		ASSERTSTR(IOport.setFilter(rcuMask, 3), "Setting filter failed");
 
 		LOG_INFO_STR("Sending clear");
 		ASSERTSTR(IOport.sendClear(rcuMask), "Sending clear failed");
