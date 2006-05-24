@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
+import nl.astron.lofar.java.gui.plotter.exceptions.NotImplementedException;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**
@@ -208,5 +209,15 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
             data.put(PlotConstants.DATASET_VALUES,values);
         }
         return data;
+    }
+    /**
+     * This method returns a test data set that can be plotted using the PlotSGTImpl plotter
+     * @param currentData The already existing dataset to be updated
+     * @param constraints the information needed to update the dataset
+     * @throws PlotterDataAccessException will be thrown if something goes wrong during the making of the
+     * test data set (not likely though as no other classes are called!)
+     */
+    public HashMap updateData(HashMap currentData, Object constraints) throws PlotterDataAccessException{
+        throw new PlotterDataAccessException("Modifying existing datasets is not supported in "+this.getClass().getName().toString());
     }
 }

@@ -105,6 +105,34 @@ public class PlotDataManager{
         }
         return null;
     }
+    
+    /**
+     * This method updates a Plotter compliant dataset using
+     * the current dataset and new constraints provided by the PlotPanel. 
+     * It will call the Data Access 
+     * class provided in the plotter_config.properties file.
+     * 
+     * @param currentData The current dataset
+     * @param constraints The String array containing update constraints for the data 
+     * access class 
+     * @return the data set generated
+     * @throws PlotterException will be thrown when an Exception occurs 
+     * inside the Data Access class, or when the Data Access class itself could not
+     * be properly accessed due to errors in the plotter_config.properties file.
+     */
+    public HashMap updateData(HashMap currentData, Object constraints) throws PlotterException{
+        if(aDataAccessor == null){
+            initializeDataAccessLayer();
+        }        
+        if(aDataAccessor != null){
+            
+            HashMap retrieveableData =
+                    aDataAccessor.updateData(currentData, constraints);
+            
+            return retrieveableData;
+        }
+        return null;
+    }
     /**
      * This method exports a Plotter compliant dataset using
      * the parameters provided. It will call the Data Export 
