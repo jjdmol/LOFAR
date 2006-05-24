@@ -65,6 +65,8 @@
 #include "SetClocksCmd.h"
 #include "GetClocksCmd.h"
 #include "UpdClocksCmd.h"
+#include "GetRegisterStateCmd.h"
+#include "UpdRegisterStateCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -364,6 +366,7 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
+    // order is important; TDSProtocolWrite should be added before TDSResultRead
     if (1 == GET_CONFIG("RSPDriver.WRITE_TDS_PROTOCOL", i))
     {
       TDSProtocolWrite* tdsprotocolwrite = new TDSProtocolWrite(m_board[boardid], boardid);
@@ -572,6 +575,7 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
+    // order is important; RCUProtocolWrite should go before RCUResultRead
     if (1 == GET_CONFIG("RSPDriver.WRITE_RCU_PROTOCOL", i))
     {
       RCUProtocolWrite* rcuprotocolwrite = new RCUProtocolWrite(m_board[boardid], boardid);
@@ -966,6 +970,18 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 
     case RSP_UNSUBCLOCK:
       rsp_unsubclock(event, port);
+      break;
+     
+    case RSP_GETREGISTERSTATE:
+      rsp_getregisterstate(event, port);
+      break;
+    
+    case RSP_SUBREGISTERSTATE:
+      rsp_subregisterstate(event, port);
+      break;
+    
+    case RSP_UNSUBREGISTERSTATE:
+      rsp_unsubregisterstate(event, port);
       break;
 
     case F_TIMER:
@@ -2009,6 +2025,93 @@ void RSPDriver::rsp_unsubclock(GCFEvent& event, GCFPortInterface& port)
   else
   {
     LOG_ERROR("UNSUBCLOCK: failed to remove subscription");
+  }
+
+  port.send(ack);
+}
+
+//
+// rsp_getregisterstate (event, port)
+//
+void RSPDriver::rsp_getregisterstate(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetRegisterStateCmd> command = new GetRegisterStateCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    LOG_ERROR("GETREGISTERSTATE: invalid parameter");
+    
+    RSPGetregisterstateackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+  
+  // if null timestamp get value from the cache and acknowledge immediately
+  if ( (Timestamp(0,0) == command->getTimestamp())
+       && (true == command->readFromCache()))
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+}
+
+//
+// rsp_subregisterstate (event, port)
+//
+void RSPDriver::rsp_subregisterstate(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<UpdRegisterStateCmd> command = new UpdRegisterStateCmd(event, port, Command::READ);
+
+  RSPSubregisterstateackEvent ack;
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SUBREGISTERSTATE: invalid parameter");
+    
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = FAILURE;
+    ack.handle = 0;
+
+    port.send(ack);
+    return;
+  }
+  else
+  {
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = SUCCESS;
+    ack.handle = (uint32)&(*command);
+    port.send(ack);
+  }
+
+  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+                          Scheduler::PERIODIC);
+}
+
+//
+// rsp_unsubregisterstate (event, port)
+//
+void RSPDriver::rsp_unsubregisterstate(GCFEvent& event, GCFPortInterface& port)
+{
+  RSPUnsubregisterstateEvent unsub(event);
+
+  RSPUnsubregisterstateackEvent ack;
+  ack.timestamp = m_scheduler.getCurrentTime();
+  ack.status = FAILURE;
+  ack.handle = unsub.handle;
+
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
+  {
+    ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBREGISTERSTATE: failed to remove subscription");
   }
 
   port.send(ack);

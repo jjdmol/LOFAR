@@ -405,8 +405,6 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_RSR_STATUS:
     case EPA_RSR_VERSION:
     case EPA_DIAG_RESULTS:
-    case EPA_RCU_RESULT:
-    case EPA_TDS_RESULT:
       {
 	// log invalid write events
 	EPAWriteEvent write(event);
@@ -431,12 +429,14 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_SST_STATS:
     case EPA_RCU_SETTINGS:
     case EPA_RCU_PROTOCOL:
+    case EPA_RCU_RESULT:
     case EPA_CR_CONTROL:
     case EPA_XST_STATS:
     case EPA_CDO_SETTINGS:
     case EPA_CDO_HEADER:
     case EPA_BS_NOFSAMPLESPERSYNC:
     case EPA_TDS_PROTOCOL:
+    case EPA_TDS_RESULT:
     case EPA_TBB_CONTROL:
       {
 	EPAWriteEvent write(event);

@@ -62,7 +62,8 @@ void RSUWrite::sendrequest()
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
   // cache modified?
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().rsuclear().get(getBoardId())) {
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rsuclear().get(getBoardId())) {
+    Cache::getInstance().getState().rsuclear().unmodified(getBoardId());
     setContinue(true);
     return;
   }
@@ -99,10 +100,13 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("RSUWrite::handleack: invalid ack");
+    Cache::getInstance().getState().rsuclear().write_error(getBoardId());
     return GCFEvent::NOT_HANDLED;
   }
 
-  Cache::getInstance().getState().rsuclear().confirmed(getBoardId());
+  Cache::getInstance().getState().rsuclear().write_ack(getBoardId());
+
+  Cache::getInstance().getState().force(); // force read/write of all register after clear
 
   return GCFEvent::HANDLED;
 }

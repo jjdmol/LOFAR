@@ -271,11 +271,6 @@ Cache::~Cache()
 
 void Cache::swapBuffers()
 {
-  // clear modified flags on back buffer
-  getState().clear();
-
-  getState().print(cout);
-
   CacheBuffer *tmp = m_front;
   m_front = m_back;
   m_back  = tmp;

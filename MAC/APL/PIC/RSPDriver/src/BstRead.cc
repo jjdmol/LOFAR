@@ -51,7 +51,7 @@ void BstRead::sendrequest()
 {
   EPAReadEvent bstread;
 
-  Cache::getInstance().getState().bst().modified(getBoardId());
+  Cache::getInstance().getState().bst().read(getBoardId());
 
   bstread.hdr.set(MEPHeader::BST_POWER_HDR, MEPHeader::DST_RSP,
 		  MEPHeader::READ, MEPHeader::BST_POWER_SIZE);
@@ -100,7 +100,7 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getState().bst().applied(getBoardId());
+    Cache::getInstance().getState().bst().read_error(getBoardId());
     LOG_ERROR("BstRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -133,7 +133,7 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   cache(getBoardId() * 2 + 1, fragment_range) =
     convert_uint32_to_double(stats(Range::all(), 1));
   
-  Cache::getInstance().getState().bst().confirmed(getBoardId());
+  Cache::getInstance().getState().bst().read_ack(getBoardId());
 
   return GCFEvent::HANDLED;
 }

@@ -128,6 +128,10 @@ RSPDriver_SOURCES = \
 	GetClocksCmd.cc \
 	UpdClocksCmd.h \
 	UpdClocksCmd.cc \
+	GetRegisterStateCmd.h \
+	GetRegisterStateCmd.cc \
+	UpdRegisterStateCmd.h \
+	UpdRegisterStateCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \

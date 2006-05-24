@@ -65,43 +65,52 @@ namespace LOFAR {
 	  // to force initial update
 	  //
 	  sys_state.resize(nrRspBoards);
-	  sys_state.modified();
-
 	  bf_state.resize(nrRcus * EPA_Protocol::MEPHeader::N_PHASE); // XR, XI, YR, YI
-	  bf_state.modified();
-
 	  ss_state.resize(nrBlps);
-	  ss_state.modified();
-
 	  rcusettings_state.resize(nrRcus);
-	  rcusettings_state.modified();
-
 	  rcuprotocol_state.resize(nrRcus);
-	  rcuprotocol_state.modified();
-
 	  rsuclear_state.resize(nrRspBoards);
-	  rsuclear_state.clear();
-
 	  diagwgsettings_state.resize(nrRcus);
-	  diagwgsettings_state.modified();
-
 	  sst_state.resize(nrBlps);
-	  sst_state.modified();
-
 	  bst_state.resize(nrRspBoards);
-	  bst_state.modified();
-
 	  xst_state.resize(nrRspBoards);
-	  xst_state.modified();
-
 	  cdo_state.resize(nrRspBoards);
-	  cdo_state.modified();
-
 	  bs_state.resize(nrBlps);
-	  bs_state.modified();
-
 	  tds_state.resize(nrRspBoards);
-	  tds_state.modified();
+
+	  force();
+	}
+
+	void force() {
+	  sys_state.read();
+	  bf_state.write();
+	  ss_state.write();
+	  rcusettings_state.write();
+	  rcuprotocol_state.write();
+	  rsuclear_state.write();
+	  diagwgsettings_state.write();
+	  sst_state.read();
+	  bst_state.read();
+	  xst_state.read();
+	  cdo_state.write();
+	  bs_state.write();
+	  tds_state.write();
+	}
+
+	void schedule() {
+	  sys_state.read();
+	  bf_state.write();
+	  ss_state.write();
+	  rcusettings_state.check();
+	  rcuprotocol_state.check();
+	  rsuclear_state.check();
+	  diagwgsettings_state.check();
+	  sst_state.read();
+	  bst_state.read();
+	  xst_state.read();
+	  cdo_state.check();
+	  bs_state.check();
+	  tds_state.check();
 	}
 
 	void clear() {
@@ -123,7 +132,7 @@ namespace LOFAR {
 	void print(std::ostream& out) const {
 	  out << "                  ";
 	  for (int i = 0; i < m_nrcus * EPA_Protocol::MEPHeader::N_POL; i++) {
-	    out << (i % 10);
+	    out << (i % 10) << " ";
 	  }
 	  out << endl;
 	  out << "System Status     "; sys_state.print(out);

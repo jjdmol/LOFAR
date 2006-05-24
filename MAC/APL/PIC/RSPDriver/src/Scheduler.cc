@@ -451,6 +451,9 @@ void Scheduler::resetSync(GCFPortInterface& port)
 
 void Scheduler::completeSync()
 {
+  // print current state for all registers
+  Cache::getInstance().getState().print(cout);
+
   // swap the buffers
   // new data from the boards which was in the back buffers
   // will end up in the front buffers.
@@ -458,6 +461,12 @@ void Scheduler::completeSync()
 
   // complete any outstanding commands
   completeCommands();
+
+  // clear from DONE to IDLE state
+  Cache::getInstance().getState().clear();
+
+  // schedule next update
+  Cache::getInstance().getState().schedule(); // if IDLE transition to READ or CHECK
 }
 
 void Scheduler::completeCommands()

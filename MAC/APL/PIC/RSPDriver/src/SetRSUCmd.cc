@@ -70,7 +70,7 @@ void SetRSUCmd::apply(CacheBuffer& cache, bool setModFlag)
       cache.getRSUSettings()()(cache_rsp) = m_event->settings()(0);
 
       if (setModFlag) {
-	cache.getCache().getState().rsuclear().modified(cache_rsp);
+	cache.getCache().getState().rsuclear().write(cache_rsp);
       }
     }
   }

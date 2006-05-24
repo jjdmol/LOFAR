@@ -58,7 +58,8 @@ void BWWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
 
-  // never skip update of beamformer weights, they need to be written every second
+  // mark as modified, never skip update of beamformer weights, they need to be written every second
+  //Cache::getInstance().getState().bf().write_now(global_blp * MEPHeader::N_PHASEPOL + m_regid);
 
   // reset m_offset and m_remaining for each register
   if (0 == getCurrentIndex()) {
@@ -208,7 +209,7 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getState().bf().modified(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+    Cache::getInstance().getState().bf().write_error(global_blp * MEPHeader::N_PHASEPOL + m_regid);
 
     LOG_ERROR("BWWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
@@ -216,14 +217,10 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   } else {
 
     //
-    // This code assumed that BF_N_FRAGMENTS == 2
-    // First fragment transitions state to applied.
-    // Second (and last) fragment transitions state to confirmed.
+    // Last fragment signals completion
     //
-    if (0 == getCurrentIndex() % BF_N_FRAGMENTS) {
-      Cache::getInstance().getState().bf().applied(global_blp * MEPHeader::N_PHASEPOL + m_regid);
-    } else {
-      Cache::getInstance().getState().bf().confirmed(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+    if (BF_N_FRAGMENTS - 1 == getCurrentIndex()) {
+      Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
     }
 
   }

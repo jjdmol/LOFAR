@@ -55,7 +55,8 @@ void WGWrite::sendrequest()
 {
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + (getCurrentIndex() / N_REGISTERS);
 
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().diagwgsettings().get(global_rcu)) {
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().diagwgsettings().get(global_rcu)) {
+    Cache::getInstance().getState().diagwgsettings().unmodified(global_rcu);
     setContinue(true);
     return;
   }
@@ -141,11 +142,12 @@ GCFEvent::TResult WGWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("WGWrite::handleack: invalid ack");
+  Cache::getInstance().getState().diagwgsettings().write_error(getCurrentIndex() / N_REGISTERS);
     return GCFEvent::NOT_HANDLED;
   }
   
   // change state to indicate that it has been applied in the hardware
-  Cache::getInstance().getState().diagwgsettings().confirmed(getCurrentIndex() / N_REGISTERS);
+  Cache::getInstance().getState().diagwgsettings().write_ack(getCurrentIndex() / N_REGISTERS);
 
   return GCFEvent::HANDLED;
 }

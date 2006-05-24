@@ -145,8 +145,9 @@ void TDSProtocolWrite::sendrequest()
   void* buf = 0;
 
   // skip update if the Clocks settings have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().tds().get(getBoardId()))
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().tds().get(getBoardId()))
   {
+    Cache::getInstance().getState().tds().unmodified(getBoardId());
     setContinue(true);
     return;
   }
@@ -215,13 +216,14 @@ GCFEvent::TResult TDSProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("TDSProtocolWrite::handleack: invalid ack");
+    Cache::getInstance().getState().tds().write_error(getBoardId());
     return GCFEvent::NOT_HANDLED;
   }
 
   // Mark register modification as applied
   // Still needs to be confirmed by TDSRegisterRead
   if (0 == m_remaining) {
-    Cache::getInstance().getState().tds().applied(getBoardId());
+    Cache::getInstance().getState().tds().schedule_read(getBoardId());
   }
 
   return GCFEvent::HANDLED;

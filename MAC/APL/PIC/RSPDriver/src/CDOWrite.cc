@@ -137,8 +137,9 @@ uint16 CDOWrite::compute_ip_checksum(void* addr, int count)
 void CDOWrite::sendrequest()
 {
   // skip update if the CDO settings have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().cdo().get(getBoardId()))
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().cdo().get(getBoardId()))
   {
+    Cache::getInstance().getState().cdo().unmodified(getBoardId());
     setContinue(true);
     return;
   }
@@ -195,14 +196,12 @@ GCFEvent::TResult CDOWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("CDOWrite::handleack: invalid ack");
+    Cache::getInstance().getState().cdo().write_error(getBoardId());
     return GCFEvent::NOT_HANDLED;
   }
 
-  if (0 == getCurrentIndex()) {
-    Cache::getInstance().getState().cdo().applied(getBoardId());
-  }
   if (1 == getCurrentIndex()) {
-    Cache::getInstance().getState().cdo().confirmed(getBoardId());
+    Cache::getInstance().getState().cdo().write_ack(getBoardId());
   }
   
   return GCFEvent::HANDLED;

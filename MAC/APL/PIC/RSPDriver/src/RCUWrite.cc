@@ -51,8 +51,10 @@ void RCUWrite::sendrequest()
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
   // skip update if the neither of the RCU's settings have been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().rcusettings().get(global_blp * 2)
-      && RTC::RegisterState::MODIFIED != Cache::getInstance().getState().rcusettings().get(global_blp * 2 + 1)) {
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rcusettings().get(global_blp * 2)
+      && RTC::RegisterState::WRITE != Cache::getInstance().getState().rcusettings().get(global_blp * 2 + 1)) {
+    Cache::getInstance().getState().rcusettings().unmodified(global_blp * 2);
+    Cache::getInstance().getState().rcusettings().unmodified(global_blp * 2 + 1);
     setContinue(true);
     return;
   }
@@ -89,16 +91,18 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   
   EPAWriteackEvent ack(event);
 
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("RCUWrite::handleack: invalid ack");
+    Cache::getInstance().getState().rcusettings().write_error(global_blp * 2);
+    Cache::getInstance().getState().rcusettings().write_error(global_blp * 2 + 1);
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
-
-  Cache::getInstance().getState().rcusettings().confirmed(global_blp * 2);
-  Cache::getInstance().getState().rcusettings().confirmed(global_blp * 2 + 1);
+  Cache::getInstance().getState().rcusettings().write_ack(global_blp * 2);
+  Cache::getInstance().getState().rcusettings().write_ack(global_blp * 2 + 1);
 
   return GCFEvent::HANDLED;
 }
