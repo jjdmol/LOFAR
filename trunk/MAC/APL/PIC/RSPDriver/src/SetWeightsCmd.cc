@@ -90,8 +90,8 @@ void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 	m_event->weights()(0, input_rcu, Range::all());
 
       if (setModFlag) {
-	cache.getCache().getState().bf().modified(cache_rcu * MEPHeader::N_PHASE);
-	cache.getCache().getState().bf().modified(cache_rcu * MEPHeader::N_PHASE + 1);
+	cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE);
+	cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE + 1);
       }
 
       input_rcu++;

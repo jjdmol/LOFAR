@@ -64,9 +64,9 @@ void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
   cache.getClock() = m_event->clock;
   if (setModFlag) {
-    cache.getCache().getState().bs().modified();
+    cache.getCache().getState().bs().write();
   }
-  cache.getCache().getState().tds().modified();
+  cache.getCache().getState().tds().write();
 }
 
 void SetClocksCmd::complete(CacheBuffer& /*cache*/)

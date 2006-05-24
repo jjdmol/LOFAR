@@ -38,10 +38,11 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
-#define RESULT_DELAY_PERIOD 2
+#define RCURESULTREAD_DELAY 2
 
 RCUResultRead::RCUResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL), // *N_POL for X and Y
+    m_delay(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -56,11 +57,17 @@ void RCUResultRead::sendrequest()
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // skip update if the RCU settings have not been applied yet
-  if (RTC::RegisterState::APPLIED != Cache::getInstance().getState().rcuprotocol().get(global_rcu))
-  {
+  if (RTC::RegisterState::READ != Cache::getInstance().getState().rcuprotocol().get(global_rcu)) {
     setContinue(true);
     return;
   }
+
+  // delay TDSRESULTREAD_DELAY periods
+  if (m_delay++ < RCURESULTREAD_DELAY) {
+    setContinue(true);
+    return;
+  }
+  m_delay = 0;
 
   // set appropriate header
   MEPHeader::FieldsType hdr;
@@ -92,13 +99,14 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   
   EPARcuResultEvent ack(event);
 
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
+
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("RCUResultRead::handleack: invalid ack");
-    return GCFEvent::NOT_HANDLED;
+    Cache::getInstance().getState().rcuprotocol().read_error(global_rcu);
+    return GCFEvent::HANDLED;
   }
-
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
 
   // reverse and copy control bytes into i2c_result
   RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
@@ -106,9 +114,10 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   memcpy(RCUProtocolWrite::i2c_result + 1, &control, 3);
 
   if (0 == memcmp(RCUProtocolWrite::i2c_result, ack.result, sizeof(RCUProtocolWrite::i2c_result))) {
-    Cache::getInstance().getState().rcuprotocol().confirmed(global_rcu);
+    Cache::getInstance().getState().rcuprotocol().read_ack(global_rcu);
   } else {
-    LOG_ERROR("RCUResultRead::handleack: unexpected I2C result response");
+    LOG_WARN("RCUResultRead::handleack: unexpected I2C result response");
+    Cache::getInstance().getState().rcuprotocol().read_error(global_rcu);
   }
 
   return GCFEvent::HANDLED;

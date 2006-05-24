@@ -43,7 +43,7 @@ namespace LOFAR {
   namespace rspctl {
 
     //
-	// class Command :base class for control commands towards the RSPDriver.
+    // class Command :base class for control commands towards the RSPDriver.
     //
     class Command {
     public:
@@ -184,9 +184,9 @@ namespace LOFAR {
       int            m_ndevices;
     };
 
-	//
-	// Class FECommand
-	//
+    //
+    // Class FECommand
+    //
     class FECommand : public Command
     {
     public:
@@ -230,11 +230,11 @@ namespace LOFAR {
       virtual void logMessage(ostream& stream, const string& message)
       {
         if(m_feClient.isConnected())
-        {
-          RSPFEStatusUpdateEvent statusUpdateEvent;
-          statusUpdateEvent.status = message;
-          m_feClient.send(statusUpdateEvent);
-        }
+	  {
+	    RSPFEStatusUpdateEvent statusUpdateEvent;
+	    statusUpdateEvent.status = message;
+	    m_feClient.send(statusUpdateEvent);
+	  }
         stream << message << endl;
       }
 #else
@@ -253,9 +253,9 @@ namespace LOFAR {
       GCFTCPPort m_feClient;
     };
 
-	//
-	// class WeightsCommand
-	//
+    //
+    // class WeightsCommand
+    //
     class WeightsCommand : public Command
     {
     public:
@@ -278,9 +278,9 @@ namespace LOFAR {
       int                  m_type;
     };
 
-	//
-	// class SubbandsCommand
-	//
+    //
+    // class SubbandsCommand
+    //
     class SubbandsCommand : public Command
     {
     public:
@@ -302,9 +302,9 @@ namespace LOFAR {
       int m_type;
     };
 
-	//
-	// class RCUCommand
-	//
+    //
+    // class RCUCommand
+    //
     class RCUCommand : public Command
     {
     public:
@@ -324,9 +324,9 @@ namespace LOFAR {
       RCUSettings::Control m_control;
     };
 
-	//
-	// class RSUCommand
-	//
+    //
+    // class RSUCommand
+    //
     class RSUCommand : public Command
     {
     public:
@@ -346,9 +346,9 @@ namespace LOFAR {
       RSUSettings::ResetControl m_control;
     };
 
-	//
-	// class WGCommand
-	//
+    //
+    // class WGCommand
+    //
     class WGCommand : public Command
     {
     public:
@@ -377,12 +377,12 @@ namespace LOFAR {
       double m_frequency;
       uint8  m_phase;
       uint32 m_amplitude;
-	  uint8	 m_mode;
+      uint8	 m_mode;
     };
 
-	//
-	// class StatisticsBaseCommand
-	//
+    //
+    // class StatisticsBaseCommand
+    //
     class StatisticsBaseCommand : public FECommand
     {
     public:
@@ -427,7 +427,7 @@ namespace LOFAR {
         return m_file[rcu];
       }
     protected:
-      uint32 m_subscriptionHandle;
+      uint32 m_subscriptionhandle;
       uint32 m_duration;
       RTC::Timestamp m_endTime;
       uint32 m_integration;
@@ -437,9 +437,9 @@ namespace LOFAR {
     private:
     };
 
-	//
-	// class Statistics
-	//
+    //
+    // class Statistics
+    //
     class StatisticsCommand : public StatisticsBaseCommand
     {
     public:
@@ -462,9 +462,9 @@ namespace LOFAR {
       blitz::Array<double, 2> m_stats;
     };
 
-	//
-	// class XCStatisticsCommand
-	//
+    //
+    // class XCStatisticsCommand
+    //
     class XCStatisticsCommand : public StatisticsBaseCommand
     {
     public:
@@ -482,26 +482,26 @@ namespace LOFAR {
       blitz::Array<std::complex<double>, 4> m_stats;
     };
 
-	//
-	// class StatusCommand
-	//
+    //
+    // class StatusCommand
+    //
     class StatusCommand : public Command
     {
     public:
-		StatusCommand(GCFPortInterface& port);
-		virtual ~StatusCommand() {}
-		virtual void send();
-		virtual GCFEvent::TResult ack(GCFEvent& e);
-		blitz::Array<SystemStatus, 1>& board() {	// just pass reference to user
-			return m_board;
-		}
+      StatusCommand(GCFPortInterface& port);
+      virtual ~StatusCommand() {}
+      virtual void send();
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+      blitz::Array<SystemStatus, 1>& board() {	// just pass reference to user
+	return m_board;
+      }
     private:
-		blitz::Array<RSP_Protocol::SystemStatus, 1> m_board;
+      blitz::Array<RSP_Protocol::SystemStatus, 1> m_board;
     };
 
-	//
-	// class ClockCommand
-	//
+    //
+    // class ClockCommand
+    //
     class ClocksCommand : public Command
     {
     public:
@@ -519,9 +519,25 @@ namespace LOFAR {
       uint32 m_clock;
     };
 
-	//
-	// class VersionCommand
-	//
+    //
+    // class RegisterStateCommand
+    //
+    class RegisterStateCommand : public Command
+    {
+    public:
+      RegisterStateCommand(GCFPortInterface& port);
+      virtual ~RegisterStateCommand() {}
+      virtual void send();
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+      void stop();
+    protected:
+      uint32 m_subscriptionhandle;
+    private:
+    };
+
+    //
+    // class VersionCommand
+    //
     class VersionCommand : public Command
     {
     public:
@@ -536,9 +552,9 @@ namespace LOFAR {
     /**
      * Controller class for rspctl
      */
-	//
-	// class RSPCtl
-	//
+    //
+    // class RSPCtl
+    //
     class RSPCtl : public GCFTask
     {
     public:
@@ -588,13 +604,13 @@ namespace LOFAR {
       // dimensions of the connected hardware
       int m_nrcus;
       int m_nrspboards;
-	  int m_maxrspboards;
+      int m_maxrspboards;
 
       // commandline parameters
       int    m_argc;
       char** m_argv;
 
-	  int32	 m_instancenr;
+      int32	 m_instancenr;
     };
 
   };

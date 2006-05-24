@@ -52,6 +52,7 @@
 //# rspctl --clocks          [--select=<set>]  # get or set the clock frequency of clocks
 //# rspctl --version         [--select=<set>]  # get version information
 //# rspctl --rspclear        [--select=<set>]  # clear FPGA registers on selected rspboards
+//# rspctl --regstate                          # show update status of all registers once every second
 //#
 
 #include <lofar_config.h>
@@ -100,46 +101,46 @@ static void usage();
  * Function to convert the complex semi-floating point representation used by the
  * EPA firmware to a complex<double>.
  */
-BZ_DECLARE_FUNCTION_RET(convert_to_powerangle, complex<double>)
-inline complex<double> convert_to_powerangle(complex<double> val)
+BZ_DECLARE_FUNCTION_RET(convert_to_amplphase, complex<double>)
+inline complex<double> convert_to_amplphase(complex<double> val)
 {
-  double angle = 0.0;
-  double power = real(val)*real(val) + imag(val)*imag(val);
+  double phase = 0.0;
+  double amplitude = real(val)*real(val) + imag(val)*imag(val);
 
-  if (power > 0.0)
+  if (amplitude > 0.0)
   {
-    power = 12 + 5*log10(power); // adjust scaling to allow comparison to subband statistics
+    amplitude = 12 + 5*log10(amplitude); // adjust scaling to allow comparison to subband statistics
   }
 
   if (0.0 == real(val))
   {
 
     if (imag(val) > 0)
-      angle = 90.0;
+      phase = 90.0;
     else if (imag(val) < 0)
-      angle = 270;
+      phase = 270;
 
   }
   else
   {
 
-    angle = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
+    phase = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
 
     if (real(val) > 0.0)
     {
       if (imag(val) < 0)
-        angle += 360.0;
+        phase += 360.0;
     }
     else
-      angle += 180.0;
+      phase += 180.0;
 
   }
 
-  return complex<double>(power, angle);
+  return complex<double>(amplitude, phase);
 }
 
-BZ_DECLARE_FUNCTION_RET(convert_to_powerangle_from_int16, complex<double>)
-inline complex<double> convert_to_powerangle_from_int16(complex<int16> int16val)
+BZ_DECLARE_FUNCTION_RET(convert_to_amplphase_from_int16, complex<double>)
+inline complex<double> convert_to_amplphase_from_int16(complex<int16> int16val)
 {
   // scale and convert from int16 to double in range (-1,1]
   complex<double> cdval = complex<double>((double)real(int16val)/(1<<14),
@@ -230,7 +231,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 	ackweights.resize(ack.weights().shape());
 
 	// convert to amplitude and angle
-	ackweights = convert_to_powerangle_from_int16(ack.weights());
+	ackweights = convert_to_amplphase_from_int16(ack.weights());
 
 	int rcuin = 0;
 	for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
@@ -614,6 +615,76 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
   return GCFEvent::HANDLED;
 }
 
+//
+// RegisterStateCommand
+//
+RegisterStateCommand::RegisterStateCommand(GCFPortInterface& port) :
+  Command(port), m_subscriptionhandle(0)
+{
+}
+
+void RegisterStateCommand::send()
+{
+  if (getMode())
+  {
+    // GET == SUBSCRIBE
+    RSPSubregisterstateEvent subregstate;
+
+    subregstate.timestamp = Timestamp(0,0);
+    subregstate.period = 1; // once every second
+
+    m_rspport.send(subregstate);
+  }
+  else
+  {
+    // GET not supported
+    LOG_FATAL("RegisterStateCommand: GET not supported");
+    exit(EXIT_FAILURE);
+  }
+}
+
+GCFEvent::TResult RegisterStateCommand::ack(GCFEvent& e)
+{
+  if (RSP_SUBREGISTERSTATEACK == e.signal)
+  {
+    RSPSubregisterstateackEvent ack(e);
+    if (SUCCESS != ack.status)
+    {
+      logMessage(cerr,"Error: RSP_UPDREGISTERSTATE command failed.");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  if (RSP_UPDREGISTERSTATE != e.signal) return GCFEvent::NOT_HANDLED;
+
+  RSPUpdregisterstateEvent upd(e);
+
+  if (SUCCESS == upd.status)
+  {
+    std::ostringstream logStream;
+    logStream << "registerstate update at " << upd.timestamp << endl;
+    upd.state.print(logStream);
+    logMessage(cout,logStream.str());
+  }
+  else 
+  {
+    logMessage(cerr, "Error: register state update failed.");
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+void RegisterStateCommand::stop()
+{
+  if (getMode())
+  {
+    // UNSUBSCRIBE
+    RSPUnsubregisterstateEvent unsubregstate;
+    unsubregstate.handle = m_subscriptionhandle;
+    m_rspport.send(unsubregstate);
+  }
+}
+
 WGCommand::WGCommand(GCFPortInterface& port) :
   Command(port),
   m_frequency(0.0),
@@ -842,7 +913,7 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 }
 
 StatisticsBaseCommand::StatisticsBaseCommand(GCFPortInterface& port) : FECommand(port),
-  m_subscriptionHandle(0),
+  m_subscriptionhandle(0),
   m_duration(0),
   m_endTime(),
   m_integration(1),
@@ -897,7 +968,7 @@ void StatisticsCommand::stop()
   {
     // UNSUBSCRIBE
     RSPUnsubstatsEvent unsubstats;
-    unsubstats.handle = m_subscriptionHandle;
+    unsubstats.handle = m_subscriptionhandle;
     m_rspport.send(unsubstats);
   }
 }
@@ -1145,7 +1216,7 @@ void XCStatisticsCommand::stop()
   {
     // UNSUBSCRIBE
     RSPUnsubxcstatsEvent unsubxcstats;
-    unsubxcstats.handle = m_subscriptionHandle;
+    unsubxcstats.handle = m_subscriptionhandle;
     m_rspport.send(unsubxcstats);
   }
 }
@@ -1185,7 +1256,7 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
     {
       blitz::Array<complex<double>, 4> pastats;
       pastats.resize(m_stats.shape());
-      pastats = convert_to_powerangle(m_stats);
+      pastats = convert_to_amplphase(m_stats);
 
       for (int i = 0; i < pastats.extent(firstDim) * pastats.extent(thirdDim); i++) {
 
@@ -1302,7 +1373,7 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
     }
     else
     {
-      m_subscriptionHandle = ack.handle;
+      m_subscriptionhandle = ack.handle;
     }
 
     return GCFEvent::HANDLED;
@@ -1539,6 +1610,8 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_SETCLOCKACK:
     case RSP_GETCLOCKACK:
     case RSP_GETSTATUSACK:
+    case RSP_SUBREGISTERSTATEACK:
+    case RSP_UPDREGISTERSTATE:
       status = m_command->ack(e); // handle the acknowledgement
       break;
       
@@ -1661,6 +1734,7 @@ static void usage()
   cout << "rspctl --clocks=<int>                     # get or set the clock frequency of clocks in Hz" << endl;
   cout << "rspctl --version         [--select=<set>] # get version information" << endl;
   cout << "rspctl --rspclear        [--select=<set>] # clear FPGA registers on RSPboard" << endl;
+  cout << "rspctl --regstate                         # show update status of all registers once every second" << endl;
 }
 
 Command* RSPCtl::parse_options(int argc, char** argv)
@@ -1704,6 +1778,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "version",        no_argument,       0, 'v' },
 //	  { "rspreset",       optional_argument, 0, 'R' },
 	  { "rspclear",       optional_argument, 0, 'C' },
+	  { "regstate",       no_argument,       0, 'S' },
 	  { "help",           no_argument,       0, 'h' },
 #ifdef ENABLE_RSPFE
 	  { "feport",         required_argument, 0, 'f' },
@@ -2093,6 +2168,14 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		rsucommand->setMode(false);	// is a SET command
 	    rsucommand->control().setClear(true);
+	  }
+	  break;
+
+	case 'S': // --regstate
+	  {
+	    if (command) delete command;
+	    RegisterStateCommand* regstatecommand = new RegisterStateCommand(m_server);
+	    command = regstatecommand;
 	  }
 	  break;
 

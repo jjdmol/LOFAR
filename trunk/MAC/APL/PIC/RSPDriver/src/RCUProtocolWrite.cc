@@ -66,7 +66,7 @@ namespace LOFAR {
 #define N_WRITES 2 // 2 writes, one for protocol register, one to clear results register
 
 RCUProtocolWrite::RCUProtocolWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL * N_WRITES) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrRcusPerBoard() * N_WRITES) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -78,10 +78,11 @@ RCUProtocolWrite::~RCUProtocolWrite()
 
 void RCUProtocolWrite::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + (getCurrentIndex() / N_WRITES);
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
 
   // skip update if the RCU settings have not been modified
-  if (RTC::RegisterState::MODIFIED != Cache::getInstance().getState().rcuprotocol().get(global_rcu)) {
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rcuprotocol().get(global_rcu)) {
+    Cache::getInstance().getState().rcuprotocol().unmodified(global_rcu);
     setContinue(true);
     return;
   }
@@ -152,9 +153,12 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
   
   EPAWriteackEvent ack(event);
 
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
+
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("RCUProtocolWrite::handleack: invalid ack");
+    Cache::getInstance().getState().rcuprotocol().write_error(global_rcu);
     return GCFEvent::NOT_HANDLED;
   }
 
@@ -162,8 +166,7 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 
     // Mark modification as applied when write of RCU result register has completed
 
-    uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
-    Cache::getInstance().getState().rcuprotocol().applied(global_rcu);
+    Cache::getInstance().getState().rcuprotocol().schedule_read(global_rcu);
 
   }
   

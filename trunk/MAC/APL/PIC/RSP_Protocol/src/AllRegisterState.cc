@@ -53,20 +53,19 @@ unsigned int AllRegisterState::pack  (void* buffer)
 {
   unsigned int offset = 0;
 
-  offset = 
-      sys_state.pack(buffer)
-    + bf_state.pack(buffer)
-    + ss_state.pack(buffer)
-    + rcusettings_state.pack(buffer)
-    + rcuprotocol_state.pack(buffer)
-    + rsuclear_state.pack(buffer)
-    + diagwgsettings_state.pack(buffer)
-    + sst_state.pack(buffer)
-    + bst_state.pack(buffer)
-    + xst_state.pack(buffer)
-    + cdo_state.pack(buffer)
-    + bs_state.pack(buffer)
-    + tds_state.pack(buffer);
+  offset += sys_state.pack((char*)buffer + offset);
+  offset += bf_state.pack((char*)buffer + offset);
+  offset += ss_state.pack((char*)buffer + offset);
+  offset += rcusettings_state.pack((char*)buffer + offset);
+  offset += rcuprotocol_state.pack((char*)buffer + offset);
+  offset += rsuclear_state.pack((char*)buffer + offset);
+  offset += diagwgsettings_state.pack((char*)buffer + offset);
+  offset += sst_state.pack((char*)buffer + offset);
+  offset += bst_state.pack((char*)buffer + offset);
+  offset += xst_state.pack((char*)buffer + offset);
+  offset += cdo_state.pack((char*)buffer + offset);
+  offset += bs_state.pack((char*)buffer + offset);
+  offset += tds_state.pack((char*)buffer + offset);
 
   return offset;
 }
@@ -75,20 +74,19 @@ unsigned int AllRegisterState::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  offset = 
-      sys_state.unpack(buffer)
-    + bf_state.unpack(buffer)
-    + ss_state.unpack(buffer)
-    + rcusettings_state.unpack(buffer)
-    + rcuprotocol_state.unpack(buffer)
-    + rsuclear_state.unpack(buffer)
-    + diagwgsettings_state.unpack(buffer)
-    + sst_state.unpack(buffer)
-    + bst_state.unpack(buffer)
-    + xst_state.unpack(buffer)
-    + cdo_state.unpack(buffer)
-    + bs_state.unpack(buffer)
-    + tds_state.unpack(buffer);
+  offset += sys_state.unpack((char*)buffer + offset);
+  offset += bf_state.unpack((char*)buffer + offset);
+  offset += ss_state.unpack((char*)buffer + offset);
+  offset += rcusettings_state.unpack((char*)buffer + offset);
+  offset += rcuprotocol_state.unpack((char*)buffer + offset);
+  offset += rsuclear_state.unpack((char*)buffer + offset);
+  offset += diagwgsettings_state.unpack((char*)buffer + offset);
+  offset += sst_state.unpack((char*)buffer + offset);
+  offset += bst_state.unpack((char*)buffer + offset);
+  offset += xst_state.unpack((char*)buffer + offset);
+  offset += cdo_state.unpack((char*)buffer + offset);
+  offset += bs_state.unpack((char*)buffer + offset);
+  offset += tds_state.unpack((char*)buffer + offset);
 
   return offset;
 }

@@ -1,4 +1,4 @@
-//#  SetWGCmd.cc: implementation of the SetWGCmd class
+//#  UpdRegisterStateCmd.cc: implementation of the UpdRegisterStateCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,7 +28,7 @@
 #include <blitz/array.h>
 
 #include "StationSettings.h"
-#include "SetWGCmd.h"
+#include "UpdRegisterStateCmd.h"
 
 using namespace blitz;
 using namespace LOFAR;
@@ -36,65 +36,54 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-SetWGCmd::SetWGCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdRegisterStateCmd::UpdRegisterStateCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPSetwgEvent(event);
+  m_event = new RSPSubclockEvent(event);
 
   setOperation(oper);
-  setPeriod(0);
+  setPeriod(m_event->period);
   setPort(port);
 }
 
-SetWGCmd::~SetWGCmd()
+UpdRegisterStateCmd::~UpdRegisterStateCmd()
 {
   delete m_event;
 }
 
-void SetWGCmd::ack(CacheBuffer& /*cache*/)
+void UpdRegisterStateCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPSetwgackEvent ack;
+  // intentionally left empty
+}
+
+void UpdRegisterStateCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
+{
+  // no-op
+}
+
+void UpdRegisterStateCmd::complete(CacheBuffer& cache)
+{
+  RSPUpdregisterstateEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
-  
+  ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
+
+  ack.state = cache.getCache().getState();
+
   getPort()->send(ack);
 }
 
-void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
-{
-  for (int cache_rcu = 0;
-       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
-    if (m_event->rcumask[cache_rcu]) {
-      cache.getWGSettings()()(cache_rcu) = m_event->settings()(0);
-
-      if (setModFlag) {
-	// reset BS if needed
-	cache.getCache().getState().bs().write(cache_rcu / MEPHeader::N_POL);
-
-	cache.getCache().getState().diagwgsettings().write(cache_rcu);
-      }
-    }
-  }
-}
-
-void SetWGCmd::complete(CacheBuffer& /*cache*/)
-{
-  LOG_INFO_STR("SetWGCmd completed at time=" << getTimestamp());
-}
-
-const Timestamp& SetWGCmd::getTimestamp() const
+const Timestamp& UpdRegisterStateCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void SetWGCmd::setTimestamp(const Timestamp& timestamp)
+void UpdRegisterStateCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool SetWGCmd::validate() const
+bool UpdRegisterStateCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
-	  && (1 == m_event->settings().dimensions())
-	  && (1 == m_event->settings().extent(firstDim)));
+  return (true);
 }
