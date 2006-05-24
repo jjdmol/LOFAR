@@ -38,11 +38,14 @@ namespace LOFAR {
       public:
 
 	typedef enum State {
-	  UNDEFINED    = 0,
-	  NOT_MODIFIED = 1,
-	  MODIFIED     = 2,
-	  APPLIED      = 3,
-	  CONFIRMED    = 4,
+	  UNDEFINED = 0,
+	  IDLE,
+	  CHECK,
+	  WRITE,
+	  READ,
+	  WRITE_ERROR,
+	  READ_ERROR,
+	  DONE,
 	};
 	
 	explicit RegisterState(State state = UNDEFINED)
@@ -56,109 +59,56 @@ namespace LOFAR {
 	  }
 	
 
-	/**
+	/**                                
 	 * RegisterState state machine.
+	 *                                     read_error
+	 *                                         +---> READ_ERROR
+	 *            reset          read          |
+	 *               \     +--------------->  READ ------+ read_ack
+	 *                \    |                    *        |
+	 *                 *   |           schedule_|read    *       clear
+	 * UNDEFINED ---> IDLE + <---+              |       DONE --------------->+
+	 *                 ^   | not_|modified      |        ^                   |
+	 *                 |   |     |              |        |                   |
+	 *                 |   +--> CHECK------> WRITE ------+                   |
+	 *                 |  check       write    |      write_ack              |
+	 *                 |                       +---> WRITE_ERROR             |
+	 *                 |          write_error                                |
+	 *                 +---------------<-------------------------------------+
 	 *
-	 *                                modified
-	 *   reset ---* NOT_MODIFIED ---------------* MODIFIED  *----- modified
-	 *                   *                        /  |
-	 *                   |    /------------------/   |applied
-	 *            clear  |   /       confirmed       |
-	 *                   |  *                        *
-	 *               CONFIRMED *----------------- APPLIED
-	 *                            confirmed
 	 *
 	 * Rationale:
-	 * When a register is modified, it transitions to the MODIFIED
-	 * state. It can only return to NOT_MODIFIED when cleared from
-	 * the CONFIRMED state. The CONFIRMED state can only be reached
-	 * from the MODIFIED state (with confirmed signal) or via the
-	 * APPLIED state.
+	 * At each update cycle all registers should be in the IDLE state.
+	 * All registers are then moved to the READ or CHEC state depending
+	 * on whether they are R (read) or W (write) registers.
 	 *
-	 * A register that is written and read consequently to check that
-	 * the data was written correctly would therefor transition from
-	 * NOT_MODIFIED, to MODIFIED, the to APPLIED (after the write
-	 * has completed) and then to CONFIRMED when the read result
-	 * matches what was actually written. Only then can the register
-	 * state be cleared to NOT_MODIFIED.
+	 * States:
+	 * UNDEFINED, IDLE, CHECK, WRITE, READ, WRITE_ERROR, READ_ERROR, DONE
+	 *
+	 * Signals:
+	 * read, check, unmodified, write, schedule_read, read_ack, write_ack, read_error, write_error, clear, reset
 	 */
+
 	void resize(int n)
 	  {
 	    m_state.resize(n);
-	    m_state = NOT_MODIFIED;
+	    m_state = IDLE;
 	  }
 
-	void modified(int i = -1)
-	  {
-	    if (i < 0) {
-	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
-		m_state(j) = MODIFIED;
-	      }
-	      return;
-	    }
-	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	    m_state(i) = MODIFIED;
-	  }
+	void tran(State source, State target, int i);
 
-	void reset(int i = -1)
-	  {
-	    if (i < 0) {
-	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
-		m_state(j) = NOT_MODIFIED;
-	      }
-	      return;
-	    }
-	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	    m_state(i) = NOT_MODIFIED;
-	  }
+	void read         (int i = -1) { tran(IDLE,          READ,          i); }
+	void check        (int i = -1) { tran(IDLE,          CHECK,         i); }
+	void unmodified   (int i = -1) { tran(CHECK,         IDLE,          i); }
+	void write        (int i = -1) { tran(CHECK,         WRITE,         i); }
+	void schedule_read(int i = -1) { tran(WRITE,         READ,          i); }
+	void read_ack     (int i = -1) { tran(READ,          DONE,          i); }
+	void write_ack    (int i = -1) { tran(WRITE,         DONE,          i); }
+	void read_error   (int i = -1) { tran(READ,          READ_ERROR,    i); }
+	void write_error  (int i = -1) { tran(WRITE,         WRITE_ERROR,   i); }
 
-	void applied(int i = -1)
-	  {
-	    if (i < 0) {
-	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
-		if (MODIFIED == m_state(j)) {
-		  m_state(j) = APPLIED;
-		}
-	      }
-	      return;
-	    }
-	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	    if (MODIFIED == m_state(i)) {
-	      m_state(i) = APPLIED;
-	    }
-	  }
-
-	void confirmed(int i = -1)
-	  {
-	    if (i < 0) {
-	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
-		if (MODIFIED == m_state(j) || APPLIED == m_state(j)) {
-		  m_state(j) = CONFIRMED;
-		}
-	      }
-	      return;
-	    }
-	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	    if (MODIFIED == m_state(i) || APPLIED == m_state(i)) {
-	      m_state(i) = CONFIRMED;
-	    }
-	  }
-
-	void clear(int i = -1)
-	  {
-	    if (i < 0) {
-	      for (int j = 0; j < m_state.extent(blitz::firstDim); j++) {
-		if (CONFIRMED == m_state(j) || UNDEFINED == m_state(j)) {
-		  m_state(j) = NOT_MODIFIED;
-		}
-	      }
-	      return;
-	    }
-	    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	    if (CONFIRMED == m_state(i)) {
-	      m_state(i) = NOT_MODIFIED;
-	    }
-	  }
+	void clear(int i = -1);
+	void reset(int i = -1);
 
 	State get(int i) {
 	  ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
@@ -167,16 +117,17 @@ namespace LOFAR {
 
 	void print(std::ostream& out) const {
 	  for (int i = 0; i < m_state.extent(blitz::firstDim); i++) {
-	    char c;
 	    switch (m_state(i)) {
-	    case UNDEFINED:    c = '?'; break;
-	    case NOT_MODIFIED: c = '.'; break;
-	    case MODIFIED:     c = 'M'; break;
-	    case APPLIED:      c = 'A'; break;
-	    case CONFIRMED:    c = 'C'; break;
-	    default:           c = 'X'; break;
+	    case UNDEFINED:     out << "? "; break;
+	    case IDLE:          out << ". "; break;
+	    case CHECK:         out << "C "; break;
+	    case WRITE:         out << "W "; break;
+	    case READ:          out << "R "; break;
+	    case READ_ERROR:    out << "ER"; break;
+	    case WRITE_ERROR:   out << "EW"; break;
+	    case DONE:          out << "* "; break;
+	    default:            out << "X "; break;
 	    }
-	    out << c;
 	  }
 	  out << "$" << endl;
 	}
@@ -184,13 +135,13 @@ namespace LOFAR {
       public:
 	/* marshalling methods */
 	unsigned int getSize() {
-	  return MSH_ARRAY_SIZE(m_state, RegisterState);
+	  return MSH_ARRAY_SIZE(m_state, State);
 	}
 
 	unsigned int pack(void* buffer) {
 	  unsigned int offset = 0;
 
-	  MSH_PACK_ARRAY(buffer, offset, m_state, RegisterState);
+	  MSH_PACK_ARRAY(buffer, offset, m_state, State);
 
 	  return offset;
 	}
@@ -198,7 +149,7 @@ namespace LOFAR {
 	unsigned int unpack(void* buffer) {
 	  unsigned int offset = 0;
 
-	  MSH_UNPACK_ARRAY(buffer, offset, m_state, RegisterState, 1);
+	  MSH_UNPACK_ARRAY(buffer, offset, m_state, State, 1);
 
 	  return offset;
 	}
