@@ -36,7 +36,8 @@ void RegisterState::tran(State source, State target, int i)
     ub = m_state.extent(blitz::firstDim);
   } else {
     ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-    lb = ub = i;
+    lb = i;
+    ub = i + 1;
   }
 
   for (int j = lb; j < ub; j++) {
@@ -59,7 +60,8 @@ void RegisterState::clear(int i)
     ub = m_state.extent(blitz::firstDim);
   } else {
     ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-    lb = ub = i;
+    lb = i;
+    ub = i + 1;
   }
    
   for (int j = lb; j < ub; j++) {

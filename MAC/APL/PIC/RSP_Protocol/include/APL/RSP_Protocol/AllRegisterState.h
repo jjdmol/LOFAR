@@ -83,24 +83,24 @@ namespace LOFAR {
 
 	void force() {
 	  sys_state.read();
-	  bf_state.write();
-	  ss_state.write();
-	  rcusettings_state.write();
-	  rcuprotocol_state.write();
-	  rsuclear_state.write();
-	  diagwgsettings_state.write();
+	  bf_state.write_force();
+	  ss_state.write_force();
+	  rcusettings_state.write_force();
+	  rcuprotocol_state.write_force();
+	  rsuclear_state.write_force();
+	  diagwgsettings_state.write_force();
 	  sst_state.read();
 	  bst_state.read();
 	  xst_state.read();
-	  cdo_state.write();
-	  bs_state.write();
-	  tds_state.write();
+	  cdo_state.write_force();
+	  bs_state.write_force();
+	  tds_state.write_force();
 	}
 
 	void schedule() {
 	  sys_state.read();
-	  bf_state.write();
-	  ss_state.write();
+	  bf_state.write_force();
+	  ss_state.write_force();
 	  rcusettings_state.check();
 	  rcuprotocol_state.check();
 	  rsuclear_state.check();

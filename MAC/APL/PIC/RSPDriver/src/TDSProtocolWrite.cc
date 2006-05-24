@@ -223,7 +223,7 @@ GCFEvent::TResult TDSProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
   // Mark register modification as applied
   // Still needs to be confirmed by TDSRegisterRead
   if (0 == m_remaining) {
-    Cache::getInstance().getState().tds().schedule_read(getBoardId());
+    Cache::getInstance().getState().tds().read_schedule(getBoardId());
   }
 
   return GCFEvent::HANDLED;
