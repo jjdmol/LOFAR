@@ -45,7 +45,8 @@ Sel_RoundRobin::~Sel_RoundRobin()
 {}
 
 Sel_RoundRobin::Sel_RoundRobin(const Sel_RoundRobin& that)
-  : Selector(that)
+  : Selector(that),
+    itsOptions(that.itsOptions)
 {}
 
 Selector* Sel_RoundRobin::clone() const
