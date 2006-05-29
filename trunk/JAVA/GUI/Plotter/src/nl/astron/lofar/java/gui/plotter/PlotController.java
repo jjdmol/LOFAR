@@ -51,7 +51,6 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterFrameworkNotFoundExcep
 public class PlotController{
     
     private PlotDataManager m_PlotDataManager;
-    private PlotGroup m_PlotGroup;
     private IPlot m_PlotFrameWork;
     private HashMap<String,Object> m_plotData;
     
@@ -67,7 +66,6 @@ public class PlotController{
      */
     public void finalize() throws Throwable {
         m_PlotDataManager = null;
-        m_PlotGroup = null;
         m_PlotFrameWork = null;
     }
     
