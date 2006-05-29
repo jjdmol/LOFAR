@@ -36,7 +36,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/ACC/APS, APS, ,1, APS/ParameterSet.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, , 1, GCF/GCF_Defines.h,,)
 

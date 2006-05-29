@@ -55,7 +55,7 @@ dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
 lofar_PVSS(1)
-lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/ACC/APS, aps, , 1, APS/ParameterSet.h,,)
 lofar_INTERNAL(SAS/OTDB, otdb, , 1, OTDB/OTDBconnection.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, , 1, GCF/GCF_Defines.h,,)
