@@ -1,0 +1,90 @@
+Modifications made in MAC for CS1
+=================================
+
+GCF/GCFCommon
+=============
+** ParameterSet: changed GCF version of ParameterSet to ACC::APS::ParameterSet.
+		Function GCF::Parameterset::instance --> ParameterSetInstance()
+		Loosing searchPath functionality in ParameterSet, this can be compensated
+		with the new FileLocator classes of LCS/Common.
+** GCF_ServiceInfo.h: Created a file containing all servicenames to be used in MAC
+		as well the well-known portnumber of any ServiceBroker.
+
+APL/APLCommon
+============
+** Added messages FINISH and FINISHED to LDprotocol to allow ObsCntlrs to tell
+		the MACSchedulers that they are ready.
+
+GCF/TM
+======
+** GCF_PortInterface: Added functionality for support of instanceNumbers on
+		ports. Also introduced 'smart' servicenames that are aware of these
+		instanceNumbers.
+		Use the function 'setInstanceNr(int)' on ports that need a different 
+		instancenumber than 0.
+** xxxPortxx: in all xxxPort classes the 'name' parameter in the constructor
+		and the 'init' routine changed to const string&.
+		Modified the 'logic' behind the search for service names and numbers in
+		all kind of configuration files. When using a servicename(see GCFCommon/
+		GCF_ServiceInfo.h> for the name of the port the configfiles are ignored
+		and the ServiceBroker is used immediately.
+** GCF_TimerPort: New porttype for handling timers.
+** ServiceBroker: no longer informs clients about gone services.
+** GCF_Task: uses LofarLocators for log_prop and conf file.
+** GTM_ServiceBroker: does not read ServiceBroker.conf file anymore. Solved major
+		bug in unregistering all ports always. (because of another bug in the
+		GSB_Controller this never lead to problems).
+** GSB_Controller: MAJOR(!) revision of broker after a continuous chain of problems.
+		Cut away almost all crap, no support for multiple hosts anymore.
+
+
+Updated several sources for new ParameterSet.
+
+
+GCF/PAL
+=======
+Updated several sources for new ParameterSet.
+
+
+GCF/PAL/PML
+===========
+** GPMController: uses LofarLocators for parameterfiles.
+
+
+GCF/APL/APLCommon
+=================
+Updated several sources for new ParameterSet.
+Added several ; at end of LOG_xxx statements.
+Added define LOFAR_SHARE_LOCATION /opt/lofar/share in APL_Defines.h
+
+** LogicalDeviceFactoryBase: replaced by LogicalDeviceStarter class that starts
+		a new program in stead of a new task.
+** StartDaemon: works with LogicalDeviceStarter iso LogicalDeviceFactoryBase. 
+		This depends on the define CREATING_TASKS for now.
+** APLUtilities: replaced 'tmpnam' with 'mkstemp' function.
+		Added optional argument to getTempFileName
+
+
+GCF/APL/VIC/VirtualInstrument
+=============================
+** VirtualInstrumentStartDaemonMain: renamed to CCUStartDaemonMain.
+** VirtualInstrument: is now a LogicalDevice program iso the startdaemon.
+** MaintenanceVI: is now a LogicalDevice program iso a task
+** ObservationVI: is now a LogicalDevice program iso a task
+
+GCF/APL/MainCU/src/MACScheduler
+===============================
+Complete new implementation of the MACScheduler: It polls the OTDB itself
+and only controls ObsControllers.
+
+
+PROBLEMS TO SOLVE
+=================
+** BOOST_SP_USE_PTHREADS is now in several .h and .cc file. Like to have a lofar_sharedptr.h.
+** Can logical device use global parameterSet anywhere?
+** Support SHARED LogicalDevices in the LDStartDaemon.
+** GSB_Controller should be made fail save.
+** GTM_ServiceBroker should support multihosts.
+** GCFTasks are not scheduled right when an event is not handled.
+
+
