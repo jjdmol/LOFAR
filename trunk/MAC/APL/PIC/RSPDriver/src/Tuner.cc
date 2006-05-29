@@ -28,6 +28,7 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include <APL/RTCCommon/PSAccess.h>
+#include <APS/ParameterSet.h>
 
 #include <Suite/suite.h>
 #include <iostream>
@@ -503,7 +504,7 @@ int main(int argc, char** argv)
 
   try
     {
-      GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+      ACC::APS::globalParameterSet()->adoptFile("RemoteStation.conf");
     }
   catch (Exception e)
     {

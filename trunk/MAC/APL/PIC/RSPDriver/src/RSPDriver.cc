@@ -26,7 +26,7 @@
 
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RTCCommon/daemonize.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -2174,8 +2174,8 @@ int main(int argc, char** argv)
   LOG_DEBUG ("Reading configuration files");
   try
   {
-    GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+    globalParameterSet()->adoptFile("RSPDriverPorts.conf");
+    globalParameterSet()->adoptFile("RemoteStation.conf");
   }
   catch (Exception e)
   {

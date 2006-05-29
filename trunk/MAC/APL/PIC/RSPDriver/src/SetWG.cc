@@ -27,7 +27,7 @@
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 #include <APL/RTCCommon/PSAccess.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 #include <Suite/suite.h>
 #include <iostream>
@@ -276,8 +276,8 @@ int main(int argc, char** argv)
   //
   try
   {
-    GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+    ACC::APS::globalParameterSet()->adoptFile("RSPDriverPorts.conf");
+    ACC::APS::globalParameterSet()->adoptFile("RemoteStation.conf");
   }
   catch (Exception e)
   {
