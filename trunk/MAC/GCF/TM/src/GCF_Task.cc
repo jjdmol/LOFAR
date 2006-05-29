@@ -30,8 +30,10 @@
 
 #include <GCF/TM/GCF_PortInterface.h>
 
-#include <GCF/ParameterSet.h>
 #include <Common/lofar_fstream.h>
+#include <Common/LofarLocators.h>
+#include <APS/ParameterSet.h>
+using LOFAR::ACC::APS::ParameterSet;
 using std::ifstream;
 
 #include <signal.h>
@@ -68,50 +70,31 @@ GCFTask::~GCFTask()
 
 void GCFTask::init(int argc, char** argv)
 {
-  _argc = argc;
-  _argv = argv;
-  
-  string procName(argv[0]);
-  
-  ifstream    logPropFile;
+	_argc = argc;
+	_argv = argv;
 
-  // Construct the etc path for config files
-  string etcPath(procName);
-  // Find last '/'
-  string::size_type pos = etcPath.rfind('/');
-  if (pos == string::npos) pos = 0; // not found: so erase whole filename
-  else pos++;                       // found : increase pos to avoid erasing the '/' too
-  
-  if (pos == 0 || pos == 1) etcPath = "/etc/"; // no '/' or only one '/' (at the 0 position)
-  else 
-  {
-    etcPath.erase(pos);
-    etcPath += "../etc/"; // becomes e.g. /opt/lofar/bin/../etc/
-  }
-  
-  procName.erase(0, pos); // erase path
-  
-  // Try to open the log_prop file, if process has its own log_prop file then use it in 
-  // the INIT_LOGGER otherwise use the default mac.log_prop
-  string logPropFileName = etcPath + procName + ".log_prop";
-  logPropFile.open(logPropFileName.c_str(), ifstream::in);
-  if (!logPropFile) 
-  {
-    logPropFileName = etcPath + "mac.log_prop";
-  }
-  else
-  {
-    logPropFile.close();
-  }
-  
-  INIT_LOGGER(logPropFileName.c_str());   
+	// Try to open the log_prop file, if process has its own log_prop file then use it
+	// the INIT_LOGGER otherwise use the default mac.log_prop
+	ConfigLocator	aCL;
+	string 			procName(basename(argv[0]));
+	string			logPropFile(procName + ".log_prop");
+	// First try logpropfile <task>.log_prop
+	if (aCL.locate(logPropFile) == "") {
+		// locator could not find it try defaultname
+		logPropFile = "mac.log_prop";
+	}
+	INIT_LOGGER(aCL.locate(logPropFile).c_str());   
+	LOG_DEBUG_STR ("Initialized logsystem with: " << aCL.locate(logPropFile));
 
-  ParameterSet* pParamSet = ParameterSet::instance();
-  pParamSet->setSearchPath(etcPath);
-  pParamSet->adoptFile(procName + ".conf");
+	// Read in the ParameterSet of the task (<task>.conf)
+	ParameterSet*	pParamSet = ACC::APS::globalParameterSet();
+	string			configFile(aCL.locate(procName + ".conf"));
+	LOG_DEBUG_STR ("Using parameterfile: " << configFile);
+	pParamSet->adoptFile(configFile);
 
-  if (_doExit)
-    exit(-1);
+	if (_doExit) {
+		exit(-1);
+	}
 }
 
 void GCFTask::run()

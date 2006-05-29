@@ -48,10 +48,12 @@ class GTMServiceBroker : public TM::GCFTask
     static void release();
 
   public: // member functions
-    void registerService(TM::GCFTCPPort& servicePort);
-    void unregisterService(TM::GCFTCPPort& servicePort);
-    void getServiceinfo (TM::GCFTCPPort& clientPort, const string& remoteServiceName);
-    void deletePort(TM::GCFTCPPort& port);
+    void registerService  (TM::GCFTCPPort&	servicePort);
+    void unregisterService(TM::GCFTCPPort&	servicePort);
+    void getServiceinfo   (TM::GCFTCPPort&	clientPort, 
+						   const string& 	remoteServiceName,
+						   const string&	hostname = "localhost");
+    void deletePort		  (TM::GCFTCPPort&	port);
   
   private:
     friend class GTMSBHandler;
@@ -64,16 +66,18 @@ class GTMServiceBroker : public TM::GCFTask
   private: // helper methods
     typedef struct Action
     {
-      unsigned short action;
-      TM::GCFTCPPort* pPort;
-      string servicename;
+      unsigned short 	action;
+      TM::GCFTCPPort*	pPort;
+      string 			servicename;
+	  string			hostname;
       Action& operator= (const Action& other)
       {        
         if (this != &other)
         {
-          action = other.action;
-          pPort = other.pPort;
-          servicename.replace(0, string::npos, other.servicename);          
+          action 	  = other.action;
+          pPort 	  = other.pPort;
+          servicename = other.servicename;          
+          hostname 	  = other.hostname;
         }
         return *this;
       }      

@@ -25,18 +25,14 @@
 
 #include <GCF/TM/GCF_RawPort.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
+namespace LOFAR {
+ namespace GCF {
 
-  namespace SB
-  {
+  namespace SB {
 class GTMServiceBroker;
   }
   
-  namespace TM 
-  {
+  namespace TM {
 
 // forward declaration
 class GCFTask;
@@ -50,13 +46,13 @@ class GTMTCPSocket;
  */
 class GCFTCPPort : public GCFRawPort
 {
-  public:// consturctors && destructors
+public:// consturctors && destructors
     /// params see constructor of GCFPortInterface    
-    explicit GCFTCPPort (GCFTask& task,
-          	    string name,
-          	    TPortType type,
-                int protocol, 
-                bool transportRawData = false);
+    GCFTCPPort (GCFTask& 		task,
+						 const string&	name,
+						 TPortType 		type,
+						 int 			protocol, 
+						 bool 			transportRawData = false);
     
     /** default constructor 
      * GCFPortInterface params are:
@@ -68,21 +64,21 @@ class GCFTCPPort : public GCFRawPort
      */ 
     GCFTCPPort ();
   
-  private:  
+private:  
     /// copying is not allowed.
     GCFTCPPort (const GCFTCPPort&);
     GCFTCPPort& operator= (const GCFTCPPort&);
 
-  public:
+public:
     /// desctructor
     virtual ~GCFTCPPort ();
   
-  public: // GCFPortInterface overloaded/defined methods
-    void init (GCFTask& task, 
-               string name, 
-               TPortType type, 
-               int protocol, 
-               bool transportRawData = false); 
+public: // GCFPortInterface overloaded/defined methods
+    void init (GCFTask& 	 task, 
+               const string& name, 
+               TPortType 	 type, 
+               int 			 protocol, 
+               bool 		 transportRawData = false); 
 
     /**
      * open/close methods
@@ -96,7 +92,7 @@ class GCFTCPPort : public GCFRawPort
     virtual ssize_t send (GCFEvent& event);
     virtual ssize_t recv (void* buf,
                           size_t count);
-  public: // GCFTCPPort specific methods    
+public: // GCFTCPPort specific methods    
     virtual bool accept (GCFTCPPort& port); 
     // addr is local address if getType == (M)SPP
     // addr is remote addres if getType == SAP
@@ -106,17 +102,17 @@ class GCFTCPPort : public GCFRawPort
     string getHostName();
     unsigned int getPortNumber();
 
-  private: // helper methods
+private: // helper methods
     friend class SB::GTMServiceBroker;
     void serviceRegistered(unsigned int result, unsigned int portNumber);
     void serviceUnregistered();
     void serviceInfo(unsigned int result, unsigned int portNumber, const string& host);
     void serviceGone();
     
-  protected: // data members
+protected: // data members
     GTMTCPSocket*   _pSocket;
 
-  private:
+private:
     bool              _addrIsSet;
     TPeerAddr         _addr;
     string            _host;

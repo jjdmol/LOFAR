@@ -56,10 +56,10 @@ class GCFETHRawPort : public GCFRawPort
    public: // constructors && destructors
 
     /// params see constructor of GCFPortInterface    
-    explicit GCFETHRawPort (GCFTask& task,
-                   string name,
-                   TPortType type, 
-                   bool transportRawData = false);
+    explicit GCFETHRawPort (GCFTask&  task,
+							const     string& name,
+							TPortType type, 
+							bool      transportRawData = false);
     
     /** default constructor
      * GCFPortInterface params are:

@@ -1,9 +1,40 @@
-# new setup
-OTDBusername		= paulus
-OTDBdatabasename	= boskabouter
-OTDBpassword		= overeem
-OTDBpollInterval	= 5s
+# Configuration file for the LDStartDaemon.
+#
+# Define the characteristics from the LogicalDevices the LDSD can start
+# The sequencenumbers in the definition should be contiquous.
+#
+# Note: the types used in this list should correspond with the types
+#		defined in APL/APL/Common/APL_Defines.h
+#
+LogicalDevice.1.type	= OBS_CTRL
+LogicalDevice.1.program = ObservationControl
+LogicalDevice.1.shared	= false
 
-QueuePeriod			= 15m
-ClaimPeriod			= 2m
+LogicalDevice.2.type	= BEAMDIR_CTRL
+LogicalDevice.2.program = BeamDirectionControl
+LogicalDevice.2.shared	= true
+
+LogicalDevice.3.type	= GROUP_CTRL
+LogicalDevice.3.program = RingControl
+LogicalDevice.3.shared	= true
+
+LogicalDevice.4.type	= STS_CTRL
+LogicalDevice.4.program = StationControl
+LogicalDevice.4.shared	= false
+
+LogicalDevice.5.type	= DIGBOARD_CTRL
+LogicalDevice.5.program = DigitalBoardControl
+LogicalDevice.5.shared	= false
+
+LogicalDevice.6.type	= BEAM_CTRL
+LogicalDevice.6.program = BeamControl
+LogicalDevice.6.shared	= true
+
+LogicalDevice.7.type	= CAL_CTRL
+LogicalDevice.7.program = CalibrationControl
+LogicalDevice.7.shared	= true
+
+LogicalDevice.8.type	= STSINFRA_CTRL
+LogicalDevice.8.program = StationInfraControl
+LogicalDevice.8.shared	= true
 

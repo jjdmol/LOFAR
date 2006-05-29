@@ -21,50 +21,60 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLocators.h>
 
 #include "GPM_Controller.h"
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_SysConnGuard.h>
 #include <GCF/Utils.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
 #include <stdio.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-using namespace Common;
-using namespace TM;  
-  namespace PAL
-  {
-static string sPMLTaskName("GCF-PML");
-GPMHandler* GPMHandler::_pInstance = 0;
+namespace LOFAR {
+  namespace GCF {
+	using namespace Common;
+	using namespace TM;  
+	namespace PAL {
+
+static string 	sPMLTaskName("GCF-PML");
+GPMHandler* 	GPMHandler::_pInstance = 0;
 
 void logResult(TPAResult result, GCFPropertySet& propSet);
 
-GPMController::GPMController() :
-  GCFTask((State)&GPMController::initial, sPMLTaskName),
-  _pSysConnGuard(GCFSysConnGuard::instance())
+//
+// GPMController
+//
+GPMController::GPMController() : 
+	GCFTask((State)&GPMController::initial, sPMLTaskName),
+	_pSysConnGuard(GCFSysConnGuard::instance())
 {
-  // register the protocol for debugging purposes
-  registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
+	// register the protocol for debugging purposes
+	registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 
-  // initialize the port
-  _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
+	// initialize the port
+	_propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
 
-  _distPropertyAgent.init(*this, "DPAclient", GCFPortInterface::SAP, PA_PROTOCOL);
-  
-  ParameterSet::instance()->adoptFile("gcf-pml.conf");
-  ParameterSet::instance()->adoptFile("PropertyAgent.conf");
-  _pSysConnGuard->registerTask(*this);
+	_distPropertyAgent.init(*this, "DPAclient", GCFPortInterface::SAP, PA_PROTOCOL);
+
+	// read in the configuration files.
+	ConfigLocator 	aCL;
+	LOG_DEBUG ("Adopting config file: gcf-pml.conf");
+	ACC::APS::globalParameterSet()->adoptFile(aCL.locate("gcf-pml.conf"));
+	LOG_DEBUG ("Adopting config file: PropertyAgent.conf");
+	ACC::APS::globalParameterSet()->adoptFile(aCL.locate("PropertyAgent.conf"));
+
+	_pSysConnGuard->registerTask(*this);
 }
 
+//
+// ~GPMController
+//
 GPMController::~GPMController()
 {
-  _pSysConnGuard->unregisterTask(*this);
+	_pSysConnGuard->unregisterTask(*this);
 }
 
 GPMController* GPMController::instance(bool temporary)

@@ -22,361 +22,320 @@
 
 #include <lofar_config.h>
 
-#include "GSB_Controller.h"
+#include <APS/ParameterSet.h>
+#include <GCF/Utils.h>
+#include <GCF/GCF_ServiceInfo.h>
 #include <../SB_Protocol.ph>
-#include <GCF/ParameterSet.h>
 #include <GSB_Defines.h>
+#include "GSB_Controller.h"
 
-namespace LOFAR 
-{
- namespace GCF 
- {
+namespace LOFAR {
+ namespace GCF {
   using namespace TM;
-  namespace SB 
-  {
+  namespace SB {
 
-static string sSBTaskName("GCF-SB");
+static string sSBTaskName("ServiceBrokerTask");
 
+//
+// xxx
+//
 GSBController::GSBController() : 
-  GCFTask((State)&GSBController::initial, sSBTaskName),
-  _counter(0)
+	GCFTask((State)&GSBController::initial, sSBTaskName)
 {
-  // register the protocol for debugging purposes
-  registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
+	// register the protocol for debugging purposes
+	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
 
-  // initialize the port
-  _brokerProvider.init(*this, "provider", GCFPortInterface::MSPP, SB_PROTOCOL);
-  readRanges();
+	// allocate the listener port
+	itsListener.init(*this, MAC_SVCMASK_SERVICEBROKER, 
+								GCFPortInterface::MSPP, SB_PROTOCOL);
+
+	// read the port range I may use
+	readRanges();
 }
 
+//
+// xxx
+//
 GSBController::~GSBController()
 {
-  cleanupGarbage();
-  LOG_INFO("Deleting ServiceBroker");
+  LOG_DEBUG("Deleting ServiceBroker");
 }
 
-GCFEvent::TResult GSBController::initial(GCFEvent& e, GCFPortInterface& p)
+//
+// initial(event, port)
+//
+GCFEvent::TResult GSBController::initial(GCFEvent& event, GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
-    case F_INIT:
-      break;
+	switch (event.signal) {
+	case F_INIT:
+		break;
 
-    case F_ENTRY:
-    case F_TIMER:
-      _brokerProvider.open();
-      break;
+	case F_ENTRY:
+	case F_TIMER:
+		itsListener.open();		// Open Listener port
+		break;
 
-    case F_CONNECTED:
-      TRAN(GSBController::operational);
-      break;
+	case F_CONNECTED:
+		// Once listener is opened I am operational
+		TRAN(GSBController::operational);
+		break;
 
-    case F_DISCONNECTED:
-      if (&p == &_brokerProvider)
-        _brokerProvider.setTimer(1.0); // try again after 1 second
-      break;
+	case F_DISCONNECTED:
+		if (&port == &itsListener)
+			itsListener.setTimer(1.0); // try again after 1 second
+		break;
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
 
-  return status;
+	return (status);
 }
 
-GCFEvent::TResult GSBController::operational(GCFEvent& e, GCFPortInterface& p)
+//
+// operational(event, port)
+//
+GCFEvent::TResult GSBController::operational(GCFEvent& event, GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
-    case F_CONNECTED:   
-      cleanupGarbage();
-      _brokerClients.push_back(&p);
-      break;
+	switch (event.signal) {
+	case F_CONNECTED:   
+		break;
 
-    case F_ACCEPT_REQ:
-      acceptConnectRequest();
-      break;
+	case F_ACCEPT_REQ:
+		acceptConnectRequest();
+		break;
 
-    case F_DISCONNECTED:      
-      if (&p != &_brokerProvider) p.close();
-      // else //TODO: find out this can realy happend
-      break;
+	case F_DISCONNECTED:      
+		if (&port != &itsListener) {
+			port.close();
+		}
+		// else //TODO: find out this can realy happend
+		break;
 
-    case F_CLOSED:
-      clientGone(p);
-      break;
- 
-    case SB_REGISTER_SERVICE:
-    {
-      SBRegisterServiceEvent request(e);
-      SBServiceRegisteredEvent response;
-      response.seqnr = request.seqnr;
-      if (findService(request.servicename))
-      {
-        LOG_ERROR(formatString(
-            "Service %s already exist", 
-            request.servicename.c_str()));
-        response.result = SB_SERVICE_ALREADY_EXIST;
-      }
-      else
-      {
-        TServiceInfo serviceInfo;
-        serviceInfo.portNumber = claimPortNumber(request.host);
-        if (serviceInfo.portNumber > 0)
-        {
-          LOG_INFO(formatString(
-              "Service %s registered with portnumber %d",
-              request.servicename.c_str(),
-              serviceInfo.portNumber));
-          serviceInfo.host = request.host;
-          serviceInfo.pPortToOwner = &p;
-          _services[request.servicename] = serviceInfo;
-  
-          response.result = SB_NO_ERROR;
-          response.portnumber = serviceInfo.portNumber;
-        }
-        else
-        {
-          LOG_ERROR(formatString(
-              "All available port numbers are claimed (%s)", 
-              request.servicename.c_str()));
-          response.result = SB_NO_FREE_PORTNR;
-        }
-      }
-      p.send(response);
-      break;
-    }
-    case SB_UNREGISTER_SERVICE:
-    {
-      SBUnregisterServiceEvent request(e);
-      TServiceInfo* pServiceInfo = findService(request.servicename);
-      if (pServiceInfo)
-      {
-        LOG_INFO(formatString(
-            "Service %s unregistered", 
-            request.servicename.c_str()));
-        freePort(request.servicename, pServiceInfo);
-        _services.erase(request.servicename);
-      }
-      else
-      {
-        LOG_ERROR(formatString(
-            "Unknown service: %s", 
-            request.servicename.c_str()));
-      }
-      break;
-    }
-    case SB_GET_SERVICEINFO:
-    {
-      SBGetServiceinfoEvent request(e);
-      SBServiceInfoEvent response;
-      response.seqnr = request.seqnr;
-      TServiceInfo* pServiceInfo = findService(request.servicename);
-      if (pServiceInfo)
-      {
-        LOG_INFO(formatString(
-            "Service %s requested on %s:%d", 
-            request.servicename.c_str(),
-            pServiceInfo->host.c_str(),
-            pServiceInfo->portNumber));
-        response.host = pServiceInfo->host;
-        response.portnumber = pServiceInfo->portNumber;
-        response.result = SB_NO_ERROR;
-      }
-      else
-      {
-        LOG_ERROR(formatString(
-            "Unknown service: %s", 
-            request.servicename.c_str()));
-        response.result = SB_UNKNOWN_SERVICE;        
-      }
-      p.send(response);
-      break;
-    }
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+	case F_CLOSED:
+		releasePort(&port);
+		break;
 
-  return status;
+	case SB_REGISTER_SERVICE: {
+		SBRegisterServiceEvent 		request(event);
+		SBServiceRegisteredEvent	response;
+		response.seqnr = request.seqnr;
+
+		// Is Service already registered?
+		if (findService(request.servicename)) {
+			LOG_ERROR(formatString("Service %s already exist", 
+									request.servicename.c_str()));
+			response.result = SB_SERVICE_ALREADY_EXIST;
+		}
+		else {
+			uint16	portNr = claimPortNumber(request.servicename, &port);
+			if (portNr > 0) {
+				response.result 	= SB_NO_ERROR;
+				response.portnumber = portNr;
+			}
+			else {
+				LOG_ERROR(formatString ("All available port numbers are claimed (%s)", 
+										request.servicename.c_str()));
+				response.result = SB_NO_FREE_PORTNR;
+			}
+		}
+		port.send(response);
+		break;
+	}
+
+	case SB_UNREGISTER_SERVICE: {
+		SBUnregisterServiceEvent 	request(event);
+		releaseService(request.servicename);
+		break;
+	}
+
+	case SB_GET_SERVICEINFO: {
+		SBGetServiceinfoEvent 	request(event);
+		SBServiceInfoEvent 		response;
+		response.seqnr = request.seqnr;
+
+		uint16	portNr = findService(request.servicename);
+		if (portNr) {
+			LOG_INFO(formatString ("Serviceinfo for %s is %d", 
+									request.servicename.c_str(), portNr));
+			response.portnumber = portNr;
+			response.hostname	= Common::myHostname();
+			response.result 	= SB_NO_ERROR;
+		}
+		else {
+			LOG_ERROR(formatString ("Unknown service: %s", 
+									request.servicename.c_str()));
+			response.result = SB_UNKNOWN_SERVICE;        
+		}
+		port.send(response);
+		break;
+	}
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
 }
 
+//
+// acceptConnectRequest
+//
 void GSBController::acceptConnectRequest()
 {
-  GTMSBTCPPort* pNewSBClientPort = new GTMSBTCPPort();
-  ASSERT(pNewSBClientPort);
-  pNewSBClientPort->init(*this, "server", GCFPortInterface::SPP, SB_PROTOCOL);
-  _brokerProvider.accept(*pNewSBClientPort);
-  LOG_INFO("A new SB client tries to connect. Accept!!!");
+	LOG_DEBUG ("A new SB client tries to connect. Accept!!!");
+
+	GTMSBTCPPort* 	pNewSBClientPort = new GTMSBTCPPort();
+	ASSERT(pNewSBClientPort);
+
+	pNewSBClientPort->init(*this, "newClient", GCFPortInterface::SPP, SB_PROTOCOL);
+	itsListener.accept(*pNewSBClientPort);
 }
 
-void GSBController::clientGone(GCFPortInterface& p)
-{
-  // first step of what must be done before the closed port can be deleted too
-  LOG_INFO("A SB client is gone, so start the closing sequence!");  
-
-  TServiceInfo* pServiceInfo;
-  list<string> servicesGarbage;
-  // search for all services registered via the closed port
-  for (TServices::iterator sIter = _services.begin();
-       sIter != _services.end(); ++sIter)
-  {
-    pServiceInfo = &sIter->second;
-    if (pServiceInfo->pPortToOwner == &p)
-    {
-      servicesGarbage.push_back(sIter->first);
-      // the involved and claimed portnumbers must be freed
-      freePort(sIter->first, pServiceInfo);
-    }
-  }
-  
-  // delete found services
-  for (list<string>::iterator iter = servicesGarbage.begin();
-       iter != servicesGarbage.end(); ++iter)
-  {
-    _services.erase(*iter);
-  }
-  
-  // move closed port to garbage list
-  _brokerClients.remove(&p);
-  _brokerClientsGarbage.push_back(&p);
-  LOG_INFO("Closing sequence finished!");  
-}
-
-void GSBController::freePort(const string& servicename, TServiceInfo* pServiceInfo)
-{
-  SBServiceGoneEvent indication;
-
-  TPortStates* pPortStates = findHost(pServiceInfo->host);
-  if (pPortStates)
-  {
-    // 1: mark port as not in use
-    (*pPortStates)[pServiceInfo->portNumber] = false;
-    LOG_INFO(formatString(
-          "Portnumber %d freed for use on host '%s'.", 
-         pServiceInfo->portNumber,
-         pServiceInfo->host.c_str()));
-
-    // 2: send to each service client the indication that the service is gone 
-    GCFPortInterface* pPort;
-    indication.servicename = servicename;
-    
-    for (list<GCFPortInterface*>::iterator pIter = _brokerClients.begin();
-         pIter != _brokerClients.end(); ++pIter)
-    {
-      pPort = (*pIter);
-      if (pPort->isConnected())
-      {
-        pPort->send(indication);
-      }
-    }
-  }
-}
-
-void GSBController::cleanupGarbage()
-{
-  GCFPortInterface* pPort;
-  for (list<GCFPortInterface*>::iterator iter = _brokerClientsGarbage.begin();
-       iter != _brokerClientsGarbage.end(); ++iter)
-  {
-    pPort = *iter;
-    delete pPort;    
-  }
-  _brokerClientsGarbage.clear();
-}
-
+//
+// readRanges
+//
 void GSBController::readRanges()
 {
-  ParameterSet rangeSet = ParameterSet::instance()->makeSubset("mac.gcf.sb.range");
-  unsigned short rangeNr(1);
-  unsigned int firstValue(0);
-  unsigned int lastValue(0);
-  string host;
-    
-  string hostParam = formatString("%d.host", rangeNr);  
-  string firstPortNumberParam;  
-  string lastPortNumberParam;
-  while (rangeSet.isDefined(hostParam))
-  {    
-    firstPortNumberParam = formatString("%d.firstPortNumber", rangeNr);  
-    lastPortNumberParam = formatString("%d.lastPortNumber", rangeNr);  
-    host = rangeSet.getString(hostParam);
+	ASSERTSTR (ACC::APS::globalParameterSet()->isDefined("firstPortNumber") && 
+	    	   ACC::APS::globalParameterSet()->isDefined("lastPortNumber"), 
+				"Ranges not specified in ParameterSet");
 
-    try
-    {
-      firstValue = rangeSet.getInt(firstPortNumberParam);
-    }
-    catch (...)
-    {
-      LOG_FATAL(formatString (
-          "No firstPortNumbers defined for range %d in ServiceBroker.conf file.",
-          rangeNr));
-      exit(0);      
-    }
-    
-    try 
-    {
-      lastValue = rangeSet.getInt(lastPortNumberParam);
-    }
-    catch (...)
-    {
-      // if only firstValue is set than one value should be add to the available list
-      lastValue = firstValue;
-    }
-    
-    // swap values if first is higher then lastValue
-    if (firstValue > lastValue) 
-    {
-      unsigned int tmpValue = lastValue;
-      lastValue = firstValue;
-      firstValue = tmpValue;
-    }
-    
-    TPortStates* pPortStates = &_availableHosts[host];
-    for (unsigned int i = firstValue; i <= lastValue; i++)
-    {
-      (*pPortStates)[i] = false;
-    }
-    rangeNr++;
-    hostParam = formatString("%d.host", rangeNr);  
-  }
+	itsLowerLimit = ACC::APS::globalParameterSet()->getUint16("firstPortNumber");
+	itsUpperLimit = ACC::APS::globalParameterSet()->getUint16("lastPortNumber");
+
+	ASSERTSTR(itsLowerLimit < itsUpperLimit, "Invalid portnumber range specified");
+	ASSERTSTR(itsLowerLimit > 1023, "Portnumbers below 1024 may not be used");
+
+	itsNrPorts = itsUpperLimit - itsLowerLimit;
+	ASSERTSTR(itsNrPorts < 1000, 
+							"Range too large, broker can manage only 1000 ports");
+
+	itsServiceList = vector<TServiceInfo> (itsNrPorts);
+	for (uint32 idx = 0; idx < itsNrPorts; idx++) {
+		itsServiceList[idx].portNumber  = 0;
+		itsServiceList[idx].serviceName = "";
+		itsServiceList[idx].ownerPort   = 0;
+	}
+	
+	itsNrFreePorts = itsNrPorts;
+
+	LOG_INFO (formatString("Managing portnumbers %d till %d (%d)", 
+							itsLowerLimit, itsUpperLimit, itsNrPorts));
 }
 
-unsigned int GSBController::claimPortNumber(const string& host)
+//
+// claimPortNumber(serviceName, port)
+//
+uint16 GSBController::claimPortNumber(const string& 		aServiceName,
+									  GCFPortInterface*		aPort)
 {
-  TPortStates* pPortStates = &_availableHosts[host];
-  for (TPortStates::iterator portIter = pPortStates->begin();
-       portIter != pPortStates->end(); ++portIter)
-  {
-    if (!portIter->second)
-    {
-      portIter->second = true; // portNumber is now in use
-      LOG_INFO(formatString(
-            "Portnumber %d claimed on host '%s'.", 
-           portIter->first,
-           host.c_str()));
-      return portIter->first;
-    }
-  }
-  return 0; // no portNumber could be claimed
+	int32	idx = 0;
+
+	if (!itsNrFreePorts) {				// must have room.
+		return (0);
+	}
+
+	while (idx < itsNrPorts) {			// scan whole array
+		if (itsServiceList[idx].portNumber == 0) {
+			itsServiceList[idx].portNumber  = itsLowerLimit + idx;
+			itsServiceList[idx].serviceName = aServiceName;
+			itsServiceList[idx].ownerPort   = aPort;
+			itsNrFreePorts--;
+			LOG_INFO(formatString ("Portnumber %d assigned to '%s'.", 
+								itsServiceList[idx].portNumber, aServiceName.c_str()));
+			LOG_INFO_STR ("Managing " << itsNrPorts - itsNrFreePorts << " ports now");
+			return (itsServiceList[idx].portNumber);
+		}
+		idx++;
+	}
+
+	ASSERTSTR (false, "Major programming error in 'claimPortNumber'!");
 }
 
-GSBController::TServiceInfo* GSBController::findService(const string& servicename)
+//
+// releaseService(servicename)
+//
+void GSBController::releaseService(const string& 		aServiceName)
 {
-  TServices::iterator iter = _services.find(servicename);  
-  return (iter != _services.end() ? &iter->second : 0);
+	if (itsNrFreePorts == itsNrPorts) {	// ready when nothing was claimed.
+		return;
+	}
+
+	uint16	portNr = findService(aServiceName);
+	if (!portNr) {						// unknown service?
+		return;
+	}
+
+	int32 	idx = portNr - itsLowerLimit;		// convert portnr to array index
+
+	LOG_INFO(formatString("Service %s(%d) unregistered", aServiceName.c_str(), portNr));
+	
+	itsServiceList[idx].portNumber  = 0;
+	itsServiceList[idx].serviceName = "";
+	itsServiceList[idx].ownerPort   = 0;
+	itsNrFreePorts++;
+
+	LOG_INFO_STR ("Still managing " << itsNrPorts - itsNrFreePorts << " ports");
 }
 
-GSBController::TPortStates* GSBController::findHost(const string& host)
+//
+// releasePort(port)
+//
+void GSBController::releasePort(GCFPortInterface*	aPort)
 {
-  // 1: find the host
-  TPortHosts::iterator iter = _availableHosts.find(host);
-  return (iter != _availableHosts.end() ? &iter->second : 0);
+	if (!aPort) {						// check args
+		return;
+	}
+
+	int32	idx = 0;
+	int32	nrElems2Check = itsNrPorts - itsNrFreePorts;// prevent checking whole array
+
+	while (idx < itsNrPorts && nrElems2Check > 0) {
+		if (itsServiceList[idx].portNumber) {			// used entry?
+			nrElems2Check--;
+			if (itsServiceList[idx].ownerPort == aPort) {
+				LOG_INFO(formatString("Service %s (%d) unregistered", 
+							itsServiceList[idx].serviceName.c_str(), 
+							itsServiceList[idx].portNumber));
+				itsServiceList[idx].portNumber  = 0;
+				itsServiceList[idx].serviceName = "";
+				itsServiceList[idx].ownerPort   = 0;
+				itsNrFreePorts++;
+			}
+		}
+		idx++;
+	}
+	LOG_INFO_STR ("Still managing " << itsNrPorts - itsNrFreePorts << " ports");
 }
+
+//
+// findService(serviceName)
+//
+uint16 GSBController::findService(const string& aServiceName)
+{
+	int32	idx = 0;
+	int32	nrElems2Check = itsNrPorts - itsNrFreePorts;// prevent checking whole array
+
+	while (idx < itsNrPorts && nrElems2Check > 0) {
+		if (itsServiceList[idx].portNumber) {
+			nrElems2Check--;
+			if (itsServiceList[idx].serviceName == aServiceName) {
+				return (itsServiceList[idx].portNumber);
+			}
+		}
+		idx++;
+	}
+		
+	return (0);
+}
+
   } // namespace SB
  } // namespace GCF
 } // namespace LOFAR

@@ -3,12 +3,12 @@
 
 log4cplus.rootLogger=DEBUG, STDOUT
 
-log4cplus.logger.TRC=TRACE, STDOUT
+log4cplus.logger.TRC=TRACE2, STDOUT
 log4cplus.additivity.TRC=FALSE
 
 log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
 log4cplus.appender.STDOUT.layout=log4cplus::PatternLayout
-log4cplus.appender.STDOUT.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S} %-5p %c{9} - %m [%.25l]%n
+log4cplus.appender.STDOUT.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{9} - %m [%.25l]%n
 log4cplus.appender.STDOUT.logToStdErr=true
 
 log4cplus.appender.FILE=log4cplus::RollingFileAppender

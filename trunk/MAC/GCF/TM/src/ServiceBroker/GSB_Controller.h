@@ -26,17 +26,13 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_SBTCPPort.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM
-  {
-class GCFEvent;
-class GCFPortInterface; 
-  }   
-  namespace SB 
-  {
+namespace LOFAR {
+	namespace GCF {
+		namespace TM {
+			class GCFEvent;
+			class GCFPortInterface; 
+		}   
+		namespace SB {
 
 /**
    This is the main class of the Property Agent. It uses a number of helper 
@@ -47,49 +43,39 @@ class GCFPortInterface;
 
 class GSBController : public TM::GCFTask
 {
-	public:
-		GSBController();
-		virtual ~GSBController();
+public:
+	GSBController();
+	virtual ~GSBController();
   
-	private: // state methods
-		TM::GCFEvent::TResult initial(TM::GCFEvent& e, TM::GCFPortInterface& p);
-		TM::GCFEvent::TResult operational(TM::GCFEvent& e, TM::GCFPortInterface& p);
+private: 
+	// state methods
+	TM::GCFEvent::TResult initial    (TM::GCFEvent& e, TM::GCFPortInterface& p);
+	TM::GCFEvent::TResult operational(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
-  private: // helper methods
-    typedef struct
-    {
-      string host;
-      unsigned int portNumber;
-      TM::GCFPortInterface* pPortToOwner;
+    typedef struct {
+		uint16					portNumber;
+		string					serviceName;
+		TM::GCFPortInterface*	ownerPort;
     } TServiceInfo;
 
-    void acceptConnectRequest();
-    void clientGone(TM::GCFPortInterface& p);
-    void readRanges();
-    unsigned int claimPortNumber(const string& host);
-    void cleanupGarbage();
-    void freePort(const string& servicename, TServiceInfo* pServiceInfo);
+    void 	acceptConnectRequest();
+    void 	readRanges			();
+    uint16	claimPortNumber		(const string& aServiceName, TM::GCFPortInterface* aPort);
+	void	releaseService		(const string& aServiceName);
+	void	releasePort			(TM::GCFPortInterface*	aPort);
+	uint16	findService			(const string& aServiceName);
     
-	private: // data members
-    typedef map<string /*service(task:portname)*/, TServiceInfo> TServices;
-    TServices _services;
-    
-    typedef map<unsigned int /*portnumber*/, bool /*in use or not*/> TPortStates;
-    typedef map<string /*hostname*/, TPortStates> TPortHosts;
-    TPortHosts _availableHosts;
+	//# --- data members ---
+	vector<TServiceInfo>		itsServiceList;		// the administration
+	GTMSBTCPPort				itsListener;		// for all SB protocol messages
 
-    list<TM::GCFPortInterface*> _brokerClients;		
-    list<TM::GCFPortInterface*> _brokerClientsGarbage;
-		GTMSBTCPPort					  _brokerProvider;
+	uint16						itsLowerLimit;		// lowest portnr to assign
+	uint16						itsUpperLimit;		// assign till this number
+	uint16						itsNrPorts;			// number of ports to manage
+	uint16						itsNrFreePorts;		// nr of not-assigned ports
 
-    TServiceInfo* findService(const string& servicename);
-    TPortStates* findHost(const string& host);
-    
-  private: // admin. data members
-    bool                _isBusy;
-    bool                _isRegistered;
-    unsigned int        _counter;  
 };
+
   } // namespace SB
  } // namespace GCF
 } // namespace LOFAR

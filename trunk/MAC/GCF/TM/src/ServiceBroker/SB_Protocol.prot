@@ -27,10 +27,6 @@ event = {
 		name = "servicename";
 		type = "string";
 	};
-	param = {
-		name = "host";
-		type = "string";
-	};
 };
 
 event = {
@@ -51,6 +47,10 @@ event = {
 	};
 	param = {
 		name = "servicename";
+		type = "string";
+	};
+	param = {
+		name = "hostname";
 		type = "string";
 	};
 };
@@ -84,7 +84,7 @@ event = {
 		type = "unsigned int";
 	};
 	param = {
-		name = "host";
+		name = "hostname";
 		type = "string";
 	};
 	param = {

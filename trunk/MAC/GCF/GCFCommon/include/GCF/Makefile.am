@@ -14,7 +14,7 @@ pkginclude_HEADERS = \
 	CmdLine.h \
 	Utils.h \
 	GCF_Defines.h \
-	ParameterSet.h \
+	GCF_ServiceInfo.h \
 	Thread.h \
 	Mutex.h
 

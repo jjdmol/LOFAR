@@ -281,7 +281,7 @@ bool GPIPropertySet::propSetLinkedInClient(const PIPropSetLinkedEvent& responseI
       _state = S_LINKING;
       if (responseIn.result != PI_PS_GONE)
       {
-        Utils::convStringToList(_propsSubscribed, responseIn.propList);
+        Common::convStringToList(_propsSubscribed, responseIn.propList);
         _tmpPIResult = responseIn.result;
         return trySubscribing();
       }

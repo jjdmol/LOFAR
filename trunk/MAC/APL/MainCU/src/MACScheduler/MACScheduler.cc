@@ -24,14 +24,14 @@
 
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
+#include <GCF/GCF_ServiceInfo.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
+#include <GCF/Utils.h>
+#include <APL/APLCommon/APLCommonExceptions.h>
 
-#include "APL/APLCommon/APLUtilities.h"
-#include "APL/APLCommon/APLCommonExceptions.h"
-#include <LogicalDeviceState.h>
 #include "MACSchedulerDefines.h"
 #include "MACScheduler.h"
 
@@ -44,7 +44,7 @@ using namespace std;
 namespace LOFAR {
 	using namespace APLCommon;
 	using namespace ACC::APS;
-	namespace MCU {
+	namespace MainCU {
 	
 //
 // MACScheduler()
@@ -54,17 +54,10 @@ MACScheduler::MACScheduler() :
 	PropertySetAnswerHandlerInterface(),
 	itsPropertySetAnswer(*this),
 	itsPropertySet		(),
-//	itsVISDclientPorts	(),
-//	itsVIparentPortName	(string("VIparent_server")),
-//	itsVIparentPort		(*this, m_VIparentPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
-//	itsVIclientPorts	(),
-//	itsconnectedVIclientPorts(),
-
-	itsObsCntlrMap		(),
-	itsSDclientPort		(0),
-	itsLDserverPort		(0),
+//	itsObsCntlrMap		(),
+	itsDummyPort		(0),
+	itsChildControl		(0),
 	itsSecondTimer		(0),
-	itsSDretryTimer		(0),
 	itsQueuePeriod		(0),
 	itsClaimPeriod		(0),
 	itsOTDBconnection	(0),
@@ -77,14 +70,13 @@ MACScheduler::MACScheduler() :
 	LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
 #endif
 
-	// Log the protocols I use.
-	registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
-	registerProtocol(STARTDAEMON_PROTOCOL, 	 STARTDAEMON_PROTOCOL_signalnames);
-
 	// Readin some parameters from the ParameterSet.
 	itsOTDBpollInterval = globalParameterSet()->getTime("OTDBpollInterval");
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
 	itsClaimPeriod 		= globalParameterSet()->getTime("ClaimPeriod");
+
+	// get pointer to childcontrol task
+	itsChildControl = ChildControl::instance();
 }
 
 
@@ -102,10 +94,6 @@ MACScheduler::~MACScheduler()
 
 	if (itsOTDBconnection) {
 		delete itsOTDBconnection;
-	}
-	if (itsSDclientPort) {
-		itsSDclientPort->close();
-		delete itsSDclientPort;
 	}
 }
 
@@ -177,14 +165,19 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 //
 GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+	LOG_DEBUG ("MACScheduler::initial_state");
+
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-	case F_INIT:
+    case F_INIT:
+		LOG_TRACE_FLOW("initial_state:F_INIT");
    		break;
 
-    case F_ENTRY: {
+	case F_ENTRY: {
+		LOG_TRACE_FLOW("initial_state:F_ENTRY");
 		// Get access to my own propertyset.
+		LOG_DEBUG ("Activating PropertySet");
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(MS_PROPSET_NAME,
 																  MS_PROPSET_TYPE,
 																  PS_CAT_PERMANENT,
@@ -192,6 +185,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		itsPropertySet->enable();
 	  
 		// update PVSS.
+		LOG_TRACE_FLOW ("Updateing state to PVSS");
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("initial"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
       
@@ -201,44 +195,35 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		string DBname 	= pParamSet->getString("OTDBdatabasename");
 		string password	= pParamSet->getString("OTDBpassword");
 
-		itsOTDBconnection= new OTDBconnection(username, DBname, password);
+		LOG_DEBUG ("Trying to connect to the OTDB");
+		itsOTDBconnection= new OTDBconnection(username, password, DBname);
 		ASSERTSTR (itsOTDBconnection, "Memory allocation error (OTDB)");
 		ASSERTSTR (itsOTDBconnection->connect(),
 					"Unable to connect to database " << DBname << " using " <<
 					username << "," << password);
+		LOG_INFO ("Connected to the OTDB");
 
-		// Connect to local startDaemon 
-		itsSDclientPort = new GCFTCPPort(*this, 
-										 "StartDaemon", 
-										 GCFPortInterface::SAP,
-										 STARTDAEMON_PROTOCOL);
-		ASSERTSTR(itsSDclientPort, "Unable to allocate a port for the StartDaemon");
-		itsSDclientPort->open();		// may result in CONN or DISCONN event
+		// Start ChildControl task
+		LOG_DEBUG ("Enabling ChildControltask");
+		itsChildControl->openService(MAC_SVCMASK_SCHEDULERCTRL, 0);
+
+		// need port for timers(!)
+		itsDummyPort = new GCFTimerPort(*this, "MACScheduler:dummy4timers");
+		TRAN(MACScheduler::recover_state);				// go to next state.
 		}
 		break;
-
-	case F_CONNECTED:		// must be from SDclient port.
-		if (itsSDclientPort->isConnected()) {				// connected with SD!
-			itsSDclientPort->cancelTimer(itsSDretryTimer);	// cancel retry timer
-			TRAN(MACScheduler::recover_state);				// go to next state.
-		}
+#if 0
+	case F_CONNECTED:
 		break;
 
-	case F_DISCONNECTED:	// must be from SDclient port.
-		if (!itsSDclientPort->isConnected()) {			// connection with SD failed
-			// tell PVSS what my problem is
-			itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),
+	case F_DISCONNECTED:
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),
 									 GCFPVString("Waiting for StartDaemon"));
-			itsSDretryTimer = itsSDclientPort->setTimer(1.0);	// retry in 1 second.
-		}
 		break;
 	
-	case F_TIMER:								// must be from SDclient port.
-		if (!itsSDclientPort->isConnected()) {	// really not connected?
-			itsSDclientPort->open();			// try again
-		}
+	case F_TIMER:
 		break;
-  
+#endif  
 	default:
 		LOG_DEBUG_STR ("MACScheduler(" << getName() << ")::initial_state, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -256,6 +241,8 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface& port)
 {
+	LOG_DEBUG ("MACScheduler::recover_state");
+
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
@@ -266,13 +253,6 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 		// update PVSS
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("recover"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
-
-		// open server port for ObservationControllers
-		itsLDserverPort = new GCFTCPPort(*this, 
-										 "ObsControllers", 
-										 GCFPortInterface::MSPP,
-										 LOGICALDEVICE_PROTOCOL);
-		itsLDserverPort->open();		// LDprotocol server port
 
 		//
 		// TODO: do recovery
@@ -298,6 +278,8 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& port)
 {
+	LOG_DEBUG ("MACScheduler::active_state");
+
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
@@ -310,25 +292,12 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		// Timers must be connected to ports, so abuse serverPort for second timer.
-		itsSecondTimer = itsLDserverPort->setTimer(1L);
+		itsSecondTimer = itsDummyPort->setTimer(1L);
 		break;
 	}
 
-	case F_ACCEPT_REQ: {
-		// Should be from a just started ObservationController.
-		ASSERTSTR(port.getProtocol() == LOGICALDEVICE_PROTOCOL, 
-										"AcceptReq on port " << port.getName());
-
-			
-		// accept connection and add port to port-vector
-		GCFTCPPort* client(new GCFTCPPort);
-		// reminder: init (task, name, type, protocol [,raw])
-		client->init(*this, "newObsCntlr", GCFPortInterface::SPP, 
-														LOGICALDEVICE_PROTOCOL);
-		itsLDserverPort->accept(*client);
-		itsObsCntlrPorts.push_back(client);		// save client port in stack
+	case F_ACCEPT_REQ:
 		break;
-	}
 
 	case F_CONNECTED:	
 		// Should be from the (lost) connection with the SD
@@ -348,8 +317,10 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 			// time to poll the OTDB?
 			if (time(0) >= itsNextOTDBpolltime) {
 				_doOTDBcheck();
-				// reinit polltime.
+				// reinit polltime at multiple of intervaltime.
+				// (=more change to hit hh.mm:00)
 				itsNextOTDBpolltime = time(0) + itsOTDBpollInterval;
+				itsNextOTDBpolltime -= (itsNextOTDBpolltime % itsOTDBpollInterval);
 			}
 			itsSecondTimer = port.setTimer(1.0);
 		}
@@ -362,30 +333,6 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
-	case LOGICALDEVICE_CONNECT: {
-		// An ObsCntlr has started and reports that it is started
-		LOGICALDEVICEConnectEvent connectEvent(event);
-		GCFTCPPort*	 portPtr(static_cast<GCFTCPPort*>(&port));
-
-		// copy name of controller to portname
-		// does not exist! portPtr->setName(connectEvent.nodeId);
-
-		// construct a controller object.
-		ObsCntlr_t		controller;
-		controller.treeID = atol(connectEvent.nodeId.c_str());
-		controller.port	  = portPtr;
-		controller.state  = LogicalDeviceState::CONNECTED;
-
-		// add it to the map
-		// TODO:
-
-		// report to ObsCntlr that he is registered.
-		LOGICALDEVICEConnectedEvent connectedEvent;
-		connectedEvent.result = LD_RESULT_NO_ERROR;
-		port.send(connectedEvent);
-		break;
-	}
-
 	case LOGICALDEVICE_SCHEDULED: {
 		LOGICALDEVICEScheduledEvent scheduledEvent(event);
 		// ...
@@ -394,49 +341,6 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 
 	case LOGICALDEVICE_SCHEDULECANCELLED: {
 		LOGICALDEVICESchedulecancelledEvent schedulecancelledEvent(event);
-		// ...
-		break;
-	}
-
-	case LOGICALDEVICE_CLAIMED: {
-		LOGICALDEVICEClaimedEvent claimedEvent(event);
-		// ...
-		break;
-	}
-
-	case LOGICALDEVICE_PREPARED: {
-		LOGICALDEVICEPreparedEvent preparedEvent(event);
-		// ...
-		break;
-	}
-
-	case LOGICALDEVICE_RESUMED: {
-		LOGICALDEVICEResumedEvent resumedEvent(event);
-		// ...
-		break;
-	}
-
-	case LOGICALDEVICE_SUSPENDED: {
-		LOGICALDEVICESuspendedEvent suspendedEvent(event);
-		// ...
-		break;
-	}
-
-	case LOGICALDEVICE_RELEASED: {
-		LOGICALDEVICEReleasedEvent releasedEvent(event);
-		// ...
-		break;
-	}
-
-	case LOGICALDEVICE_FINISH: {
-		LOGICALDEVICEFinishEvent finishEvent(event);
-		// ...
-		break;
-	}
-
-	case STARTDAEMON_SCHEDULED:
-	{
-		STARTDAEMONScheduledEvent scheduledEvent(event);
 		// ...
 		break;
 	}
@@ -459,6 +363,67 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 //
 void MACScheduler::_doOTDBcheck()
 {
+	// get new list (list is ordered on starttime)
+	vector<OTDBtree> newTreeList = itsOTDBconnection->getExecutableTrees();
+	if (newTreeList.empty()) {
+		return;
+	}
+
+	LOG_DEBUG(formatString("OTDBCheck:First observation is at %s (tree=%d)", 
+				to_simple_string(newTreeList[0].starttime).c_str(), newTreeList[0].treeID()));
+
+	// walk through the list and bring each observation in the right state when necc.
+	uint32		listSize = newTreeList.size();
+	uint32		idx = 0;
+	ptime		currentTime = from_time_t(time(0));
+	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
+
+	// REO: test pvss appl
+	itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString(to_simple_string(currentTime)));
+
+	while (idx < listSize)  {
+		// timediff = time to go before start of Observation
+		time_duration	timediff = newTreeList[idx].starttime - currentTime;
+		LOG_TRACE_VAR_STR("timediff=" << timediff);
+
+		// when queuetime is not reached yet were are finished with the list.
+		if (timediff > seconds(itsQueuePeriod)) {
+			break;
+		}
+
+		// get current state of Observation
+		string		cntlrName = formatString("ObsCntlr_%d", newTreeList[idx].treeID());
+		LDState::LDstateNr	observationState = itsChildControl->getRequestedState(cntlrName);
+
+		// remember: timediff <= queueperiod
+		if (timediff > seconds(itsClaimPeriod)) {
+			// Observation is somewhere in the queueperiod
+			if (observationState != LDState::CONNECTED) {
+				itsChildControl->startChild(cntlrName, 
+											newTreeList[idx].treeID(), 
+											LDTYPE_OBSERVATIONCTRL, 
+											myHostname());
+				idx++;
+				continue;
+			}
+		}
+
+		if (timediff > seconds(0)) {
+			// Observation is somewhere in the claim period
+			if (observationState != LDState::CLAIMED) {
+//				_claimObservation(&newTreeList[idx]);
+				idx++;
+				continue;
+			}
+		}
+
+		// observation must be running (otherwise it would not be in the newTreeList)
+		if (observationState != LDState::RESUMED) {
+//			_executeObservation(&newTreeList[idx]);
+		}
+	
+		idx++;	
+	}
 
 }
 

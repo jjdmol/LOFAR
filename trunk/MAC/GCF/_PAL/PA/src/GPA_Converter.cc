@@ -24,7 +24,7 @@ bool GPAConverter::uimMsgToGCFEvent(unsigned char* pMsgBuf, unsigned int length,
   string msg((char*) pMsgBuf, length);
   
   list<string> msgItems;
-  Utils::convStringToList(msgItems, msg);
+  Common::convStringToList(msgItems, msg);
   if (msgItems.size() < 5) return false;
   list<string>::iterator curMsgItem = msgItems.begin();
 
@@ -151,7 +151,7 @@ bool GPAConverter::gcfEventToUIMMsg(GCFPVBlob& gcfEvent, GCFPVBlob& uimMsg)
       break;
   }
   string uimMsgString;
-  Utils::convListToString(uimMsgString, uimMsgItems);
+  Common::convListToString(uimMsgString, uimMsgItems);
   uimMsg.setValue(uimMsgString);
   return true;
 }

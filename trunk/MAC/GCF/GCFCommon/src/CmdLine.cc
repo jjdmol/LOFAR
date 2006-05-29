@@ -29,8 +29,8 @@
    See SACmds.h for more info.
 ------------------------------------------------------*/
 
-// if you're using MFC, you'll need to un-comment this line
-// #include "stdafx.h"
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 #include <GCF/CmdLine.h>
 #include <ctype.h>

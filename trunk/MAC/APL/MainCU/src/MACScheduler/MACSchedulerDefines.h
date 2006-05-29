@@ -28,8 +28,8 @@ namespace LOFAR {
 
 #define MS_TASKNAME					"MACScheduler"
 
-#define MS_PROPSET_NAME				"MACScheduler"
-#define MS_PROPSET_TYPE				"TAplMacScheduler"
+#define MS_PROPSET_NAME				"SwCntrl"
+#define MS_PROPSET_TYPE				"MacScheduler"
 
 #define PVSSNAME_MS_QUEUEPERIOD		"QueuePeriod"
 #define PVSSNAME_MS_CLAIMPERIOD		"ClaimPeriod"
@@ -37,9 +37,6 @@ namespace LOFAR {
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"
 #define PVSSNAME_FSM_ERROR			"error"
-
-#define	SN_STARTDAEMON				"StartDaemon"
-#define SN_STARTDAEMON_VERSION		"V1"
 
 }; // MCU
 }; // LOFAR

@@ -29,7 +29,7 @@
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_TCPPort.h>
+#include <GCF/TM/GCF_TimerPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Event.h>
 
@@ -50,13 +50,16 @@
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBnode.h>
 #include <APS/ParameterSet.h>
+#include "ChildControl.h"
+#include "LDState.h"
 
 // forward declaration
 
 namespace LOFAR {
-	namespace MCU {
+	namespace MainCU {
 
-using	GCF::TM::GCFTCPPort;
+using	GCF::TM::GCFTimerPort;
+using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
@@ -102,50 +105,6 @@ private:
    	GCFMyPropertySetPtr           itsPropertySet;
 
 #if 0
-   	typedef GCFTCPPort  		TRemotePort;
-
-   	typedef boost::shared_ptr<GCFTCPPort>  TTCPPortPtr;
-   	typedef boost::shared_ptr<TRemotePort>  		TRemotePortPtr;
-   	typedef vector<TTCPPortPtr>             		TTCPPortVector;
-   	typedef vector<TRemotePortPtr>          		TRemotePortVector;
-   	typedef map<string,TRemotePortPtr>      		TStringRemotePortMap;
-   	typedef map<string,TTCPPortPtr>         		TStringTCPportMap;
-      
-   	bool 	_isServerPort	   (const GCFPortInterface& server, 
-							    const GCFPortInterface& port) const;
-   	bool 	_isVISDclientPort  (const GCFPortInterface& port, 
-							  	string& visd) const;
-   	bool 	_isVIclientPort    (const GCFPortInterface& port) const;
-   	string 	_getVInameFromPort (const GCFPortInterface& port) const;
-   	string 	_getShareLocation  () const;
-
-   	void 	createChildsSections(OTDB::TreeMaintenance& tm, 
-								int32 treeID, 
-								OTDB::nodeIDType topItem, 
-								const string& nodeName, 
-								boost::shared_ptr<ACC::APS::ParameterSet> ps);
-      
-   	void 	_schedule		   (const string& VIrootID, 
-								GCFPortInterface* port=0);
-   	void 	_updateSchedule	   (const string& VIrootID, 
-								GCFPortInterface* port=0);
-   	void 	_cancelSchedule	   (const string& VIrootID, 
-								GCFPortInterface* port=0);
-      
-   	TStringRemotePortMap	m_VISDclientPorts;    // connected VI StartD clients
-   	string					m_VIparentPortName;
-   	TRemotePort				m_VIparentPort;       // parent for VI's
-
-   	// the vector and map both contain the child ports. The vector is used
-   	// to cache the port at the moment of the accept. However, at that moment, 
-   	// the parent does not yet know the ID of that child. The child sends its
-   	// ID in the CONNECT event and when that message is received, the port and ID
-   	// are stored in the TPortMap. The map is used in all communication with the
-   	// childs.
-   	TRemotePortVector		m_VIclientPorts;      // created VI's
-   	TStringRemotePortMap	m_connectedVIclientPorts; // maps node ID's to ports
-#endif
-
 	// Administration of the ObservationControllers
 	typedef struct {
 		OTDB::treeIDType	treeID;		// tree in the OTDB
@@ -156,17 +115,19 @@ private:
 	// Map with all active ObservationControllers.
 	map<GCFTCPPort*, ObsCntlr_t>	itsObsCntlrMap;
 	vector<GCFTCPPort*>				itsObsCntlrPorts;
+#endif
 
 	// Ports for StartDaemon and ObservationControllers.
-   	GCFTCPPort*				itsSDclientPort;		// connection to StartDaemon
-   	GCFTCPPort*				itsLDserverPort;		// listener for ObsControllers
+   	GCFTimerPort*			itsDummyPort;			// for timers
+
+	// pointer to child control task
+	ChildControl*			itsChildControl;
 
 	// Second timer used for internal timing.
 	uint32					itsSecondTimer;			// 1 second hardbeat
-	uint32					itsSDretryTimer;		// for reconnecting to SD
 
 	// Scheduling settings
-	uint32					itsQueuePeriod;			// period between qeueuing and start
+	uint32					itsQueuePeriod;			// period between queueing and start
 	uint32					itsClaimPeriod;			// period between claiming and start
       
 	// OTDB related variables.
@@ -176,6 +137,6 @@ private:
 
 };
 
-  };//MCU
+  };//MainCU
 };//LOFAR
 #endif

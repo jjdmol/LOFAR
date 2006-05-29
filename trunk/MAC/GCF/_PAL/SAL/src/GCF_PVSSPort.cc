@@ -46,11 +46,11 @@ static GCFEvent connectedEvent   (F_CONNECTED);
 static GCFEvent closedEvent      (F_CLOSED);
 GCFPVSSPort::TPVSSPortNrs GCFPVSSPort::_pvssPortNrs;
 
-GCFPVSSPort::GCFPVSSPort(GCFTask& task, 
-                       string name, 
-                       TPortType type, 
-                       int protocol, 
-                       bool transportRawData) 
+GCFPVSSPort::GCFPVSSPort(GCFTask& 		task, 
+						 const string&	name, 
+						 TPortType 		type, 
+						 int 			protocol, 
+						 bool 			transportRawData) 
   : GCFRawPort(task, name, type, protocol, transportRawData),
     _pPortService(0),
     _acceptedPort(false)

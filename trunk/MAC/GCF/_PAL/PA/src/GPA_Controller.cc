@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <GCF/Protocols/PA_Protocol.ph>
 #include <GCF/PAL/GCF_PVSSInfo.h>
-#include <GCF/ParameterSet.h>
 
 namespace LOFAR 
 {

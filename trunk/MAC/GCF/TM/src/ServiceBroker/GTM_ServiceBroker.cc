@@ -21,312 +21,320 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLocators.h>
 
 #include "GTM_ServiceBroker.h"
 #include <SB_Protocol.ph>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <GTM_Defines.h>
 #include "GSB_Defines.h"
 #include <unistd.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
+namespace LOFAR {
+ namespace GCF {
   using namespace TM;
-  namespace SB 
-  {
+  namespace SB {
 
+//
+// Initialize static elements
 static string sSBTaskName("GCF-SB");
 GTMSBHandler* GTMSBHandler::_pInstance = 0;
 
-extern void logResult(TSBResult result, const string& servicename);
-
-GTMSBHandler::GTMSBHandler()
-{
-}
-
-GTMServiceBroker::GTMServiceBroker() :
-  GCFTask((State)&GTMServiceBroker::initial, sSBTaskName)
-{
-  // register the protocol for debugging purposes
-  registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
-
-  // initialize the port
-  _serviceBroker.init(*this, "client", GCFPortInterface::SAP, SB_PROTOCOL);
-  ParameterSet::instance()->adoptFile("ServiceBroker.conf");
-}
-
-GTMServiceBroker::~GTMServiceBroker()
-{
-}
-
-GTMServiceBroker* GTMServiceBroker::instance(bool temporary)
-{
-  if (0 == GTMSBHandler::_pInstance)
-  {    
-    GTMSBHandler::_pInstance = new GTMSBHandler();
-    ASSERT(!GTMSBHandler::_pInstance->mayDeleted());
-    GTMSBHandler::_pInstance->_controller.start();
-  }
-  if (!temporary) GTMSBHandler::_pInstance->use();
-  return &GTMSBHandler::_pInstance->_controller;
-}
-
-void GTMServiceBroker::release()
-{
-  ASSERT(GTMSBHandler::_pInstance);
-  ASSERT(!GTMSBHandler::_pInstance->mayDeleted());
-  GTMSBHandler::_pInstance->leave(); 
-  if (GTMSBHandler::_pInstance->mayDeleted())
-  {
-    delete GTMSBHandler::_pInstance;
-    ASSERT(!GTMSBHandler::_pInstance);
-  }
-}
-
-void GTMServiceBroker::registerService(GCFTCPPort& servicePort)
-{
-  string servicename = formatString("%s:%s", 
-      servicePort.getTask()->getName().c_str(), 
-      servicePort.getRealName().c_str());
-  char hostName[200];
-  gethostname(hostName, 200);
-
-  SBRegisterServiceEvent request;
-
-  TAction action;
-  action.action = request.signal;
-  action.pPort = &servicePort;
-  action.servicename = servicename;
-  
-  request.seqnr = registerAction(action);
-  request.host = hostName;
-  request.servicename = servicename;
-    
-  if (_serviceBroker.isConnected())
-  {
-    _serviceBroker.send(request);
-  }
-}
-
-void GTMServiceBroker::unregisterService(GCFTCPPort& servicePort)
-{
-  string servicename = formatString("%s:%s", 
-      servicePort.getTask()->getName().c_str(), 
-      servicePort.getRealName().c_str());
-
-  SBUnregisterServiceEvent request;
-
-  request.servicename = servicename;
-    
-  if (_serviceBroker.isConnected())
-  {
-    _serviceBroker.send(request);
-  }
-}
-
-void GTMServiceBroker::getServiceinfo(GCFTCPPort& clientPort, const string& remoteServiceName)
-{  
-  SBGetServiceinfoEvent request;
-  TAction action;
-  action.action = request.signal;
-  action.pPort = &clientPort;
-  action.servicename = remoteServiceName;
-  request.seqnr = registerAction(action);
-  request.servicename = remoteServiceName;
-    
-  if (_serviceBroker.isConnected())
-  {
-    _serviceBroker.send(request);
-  }
-}
-
-
-void GTMServiceBroker::deletePort(GCFTCPPort& port)
-{
-  TAction* pAction;
-  unregisterService(port);
-  for (TActionSeqList::iterator iter = _actionSeqList.begin();
-       iter != _actionSeqList.end(); ++iter)
-  {
-    pAction = &iter->second;
-    if (pAction->pPort == &port)
-    {
-      _actionSeqList.erase(iter);
-      break;
-    }
-  }
-  for (TServiceClients::iterator iter = _serviceClients.begin();
-       iter != _serviceClients.end(); ++iter)
-  {
-    list<GCFTCPPort*>* pClientPorts = &iter->second;
-    pClientPorts->remove(&port);
-  }
-}
-
-unsigned short GTMServiceBroker::registerAction(TAction action)
-{
-  unsigned short seqnr(1); // 0 is reserved for internal msg. in SB
-  TActionSeqList::const_iterator iter;
-  do   
-  {
-    seqnr++;
-    iter = _actionSeqList.find(seqnr);
-  } while (iter != _actionSeqList.end());
-
-  _actionSeqList[seqnr] = action; 
-
-  return seqnr;
-}
-
-GCFEvent::TResult GTMServiceBroker::initial(GCFEvent& e, GCFPortInterface& /*p*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  switch (e.signal)
-  {
-    case F_INIT:
-      break;
-
-    case F_ENTRY:
-    case F_TIMER:
-      _serviceBroker.open();
-      break;
-
-    case F_CONNECTED:
-      TRAN(GTMServiceBroker::operational);
-      break;
-
-    case F_DISCONNECTED:
-      _serviceBroker.setTimer(1.0); // try again after 1 second
-      break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult GTMServiceBroker::operational(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_DISCONNECTED:
-      LOG_FATAL("Connection lost to Service Broker deamon");
-      p.close();
-      break;
-    case F_CLOSED:
-      TRAN(GTMServiceBroker::initial);
-      break;
-    case F_ENTRY:
-    {      
-      TAction* pAction(0);
-      TActionSeqList tmpSeqList(_actionSeqList);
-      _actionSeqList.clear();
-      for (TActionSeqList::iterator iter = tmpSeqList.begin();
-           iter != tmpSeqList.end(); ++iter)
-      {
-        pAction = &iter->second;
-        switch (pAction->action)
-        {
-          case SB_REGISTER_SERVICE: registerService(*pAction->pPort); break;
-          case SB_UNREGISTER_SERVICE: unregisterService(*pAction->pPort); break;
-          case SB_GET_SERVICEINFO: getServiceinfo(*pAction->pPort, pAction->servicename); break;
-          default: ASSERT(0);
-        }
-      }
-      
-      break;
-    }  
-    case SB_SERVICE_REGISTERED:
-    {
-      SBServiceRegisteredEvent response(e);
-      TAction* pAction = &_actionSeqList[response.seqnr];
-      if (pAction)
-      {
-        logResult(response.result, pAction->servicename);
-        _actionSeqList.erase(response.seqnr);
-        pAction->pPort->serviceRegistered(response.result, response.portnumber);
-      }
-      break;
-    }
-
-    case SB_SERVICE_INFO:
-    {
-      SBServiceInfoEvent response(e);
-      TAction* pAction = &_actionSeqList[response.seqnr];
-      if (pAction)
-      {
-        logResult(response.result, pAction->servicename);
-        if (response.result == SB_NO_ERROR)
-        {
-          _serviceClients[pAction->servicename].push_back(pAction->pPort);
-        }
-        _actionSeqList.erase(response.seqnr);
-        pAction->pPort->serviceInfo(response.result, response.portnumber, response.host);
-      }
-      break;
-    }
-
-    case SB_SERVICE_GONE:
-    {
-      SBServiceGoneEvent indication(e);
-      TServiceClients::iterator iter = _serviceClients.find(indication.servicename);
-      if (iter != _serviceClients.end())
-      {
-        list<GCFTCPPort*>* pClientPorts = &iter->second;
-        GCFTCPPort* pClientPort;
-        for (list<GCFTCPPort*>::iterator cIter = pClientPorts->begin();
-             cIter != pClientPorts->end(); ++cIter)
-        {
-          pClientPort = *cIter;
-          pClientPort->serviceGone();
-        }
-      }
-      _serviceClients.erase(indication.servicename);
-      
-      break;
-    }
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
+//
+// logResult
+//
 void logResult(TSBResult result, const string& servicename)
 {
-  switch (result)
-  {
+  switch (result) {
     case SB_NO_ERROR:
       break;
     case SB_UNKNOWN_ERROR:
       LOG_FATAL("Unknown error");
       break;
     case SB_SERVICE_ALREADY_EXIST:
-      LOG_ERROR(formatString ( 
-          "Service %s already exist",
-          servicename.c_str()));
+      LOG_ERROR(formatString ( "Service %s already exist", servicename.c_str()));
       break;
     case   SB_NO_FREE_PORTNR:
-      LOG_ERROR(formatString ( 
-          "No free portnumber for this service: %s",
-          servicename.c_str()));
+      LOG_ERROR(formatString ( "No free portnumber for this service: %s", servicename.c_str()));
       break;
     case SB_UNKNOWN_SERVICE:
-      LOG_FATAL(formatString ( 
-          "Unkown remote service: %s",
-          servicename.c_str()));
+      LOG_FATAL(formatString ( "Unknown remote service: %s", servicename.c_str()));
       break;
     default:
       break;
   }
 }
+
+//
+// GTMSBHandler()
+//
+GTMSBHandler::GTMSBHandler()
+{
+}
+
+//
+// GTMServiceBroker()
+//
+GTMServiceBroker::GTMServiceBroker() :
+	GCFTask((State)&GTMServiceBroker::initial, sSBTaskName)
+{
+	// register the protocol for debugging purposes
+	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
+
+	// initialize the port
+	_serviceBroker.init(*this, "client", GCFPortInterface::SAP, SB_PROTOCOL);
+}
+
+//
+// ~GTMServiceBroker()
+//
+GTMServiceBroker::~GTMServiceBroker()
+{
+}
+
+//
+// instance(temp)
+//
+GTMServiceBroker* GTMServiceBroker::instance(bool temporary)
+{
+	if (!GTMSBHandler::_pInstance) {    
+		GTMSBHandler::_pInstance = new GTMSBHandler();
+		ASSERT(!GTMSBHandler::_pInstance->mayDeleted());
+		GTMSBHandler::_pInstance->_controller.start();
+	}
+
+	if (!temporary) { 
+		GTMSBHandler::_pInstance->use();
+	}
+
+	return &GTMSBHandler::_pInstance->_controller;
+}
+
+//
+// release()
+//
+void GTMServiceBroker::release()
+{
+	ASSERT(GTMSBHandler::_pInstance);
+	ASSERT(!GTMSBHandler::_pInstance->mayDeleted());
+	GTMSBHandler::_pInstance->leave(); 
+	if (GTMSBHandler::_pInstance->mayDeleted()) {
+		delete GTMSBHandler::_pInstance;
+		ASSERT(!GTMSBHandler::_pInstance);
+	}
+}
+
+//
+// registerService(servicePort)
+//
+void GTMServiceBroker::registerService(GCFTCPPort& servicePort)
+{
+	string	servicename = servicePort.makeServiceName();
+
+	SBRegisterServiceEvent request;
+
+	TAction action;
+	action.action	   = request.signal;
+	action.pPort	   = &servicePort;
+	action.servicename = servicename;
+
+	request.seqnr		= registerAction(action);
+	request.servicename = servicename;
+
+	if (_serviceBroker.isConnected()) {
+		_serviceBroker.send(request);
+	}
+}
+
+//
+// unregisterService(servicePort)
+//
+void GTMServiceBroker::unregisterService(GCFTCPPort& servicePort)
+{
+	SBUnregisterServiceEvent request;
+
+	request.servicename = servicePort.makeServiceName();
+
+	if (_serviceBroker.isConnected()) {
+		_serviceBroker.send(request);
+	}
+}
+
+//
+// getServiceinfo(clientPort, remoteServiceName);
+//
+void GTMServiceBroker::getServiceinfo(GCFTCPPort& 	clientPort, 
+									  const string& remoteServiceName,
+									  const string&	hostname)
+{  
+	SBGetServiceinfoEvent request;
+
+	TAction action;
+	action.action		= request.signal;
+	action.pPort		= &clientPort;
+	action.servicename  = remoteServiceName;
+
+	request.seqnr		= registerAction(action);
+	request.servicename = remoteServiceName;
+	request.hostname    = hostname;
+
+	if (_serviceBroker.isConnected()) {
+		_serviceBroker.send(request);
+	}
+}
+
+
+//
+// deletePort(port)
+//
+void GTMServiceBroker::deletePort(GCFTCPPort& port)
+{
+	TAction* 	pAction;
+	for (TActionSeqList::iterator iter = _actionSeqList.begin();
+									iter != _actionSeqList.end(); ++iter) {
+		pAction = &iter->second;
+		if (pAction->pPort == &port) {
+			_actionSeqList.erase(iter);
+			break;
+		}
+	}
+
+	for (TServiceClients::iterator iter = _serviceClients.begin();
+									iter != _serviceClients.end(); ++iter) {
+		list<GCFTCPPort*>* pClientPorts = &iter->second;
+		pClientPorts->remove(&port);
+	}
+}
+
+//
+// registerAction(action)
+//
+unsigned short GTMServiceBroker::registerAction(TAction action)
+{
+	unsigned short seqnr(1); // 0 is reserved for internal msg. in SB
+	TActionSeqList::const_iterator iter;
+	do {
+		seqnr++;
+		iter = _actionSeqList.find(seqnr);
+	} while (iter != _actionSeqList.end());
+
+	_actionSeqList[seqnr] = action; 
+
+	return seqnr;
+}
+
+//
+// initial(event, port)
+//
+GCFEvent::TResult GTMServiceBroker::initial(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	switch (e.signal) {
+	case F_INIT:
+		break;
+
+	case F_ENTRY:
+	case F_TIMER:
+		_serviceBroker.open();
+		break;
+
+	case F_CONNECTED:
+		TRAN(GTMServiceBroker::operational);
+		break;
+
+	case F_DISCONNECTED:
+		_serviceBroker.setTimer(1.0); // try again after 1 second
+		break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// operational(event, port)
+//
+GCFEvent::TResult GTMServiceBroker::operational(GCFEvent& e, GCFPortInterface& p)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_DISCONNECTED:
+		LOG_FATAL("Connection lost to Service Broker deamon");
+		p.close();
+		break;
+
+	case F_CLOSED:
+		TRAN(GTMServiceBroker::initial);
+		break;
+
+	case F_ENTRY: {      
+		TAction* pAction(0);
+		TActionSeqList tmpSeqList(_actionSeqList);
+		_actionSeqList.clear();
+		for (TActionSeqList::iterator iter = tmpSeqList.begin();
+										iter != tmpSeqList.end(); ++iter) {
+			pAction = &iter->second;
+			switch (pAction->action) {
+			case SB_REGISTER_SERVICE: 
+				registerService(*pAction->pPort); 
+				break;
+			case SB_UNREGISTER_SERVICE: 
+				unregisterService(*pAction->pPort); 
+				break;
+			case SB_GET_SERVICEINFO: 
+				getServiceinfo(*pAction->pPort, pAction->servicename, pAction->hostname); 
+				break;
+			default: 
+				ASSERT(0);
+			}
+		}
+		break;
+	}  
+
+	case SB_SERVICE_REGISTERED: {
+		SBServiceRegisteredEvent response(e);
+		TAction* pAction = &_actionSeqList[response.seqnr];
+		if (pAction) {
+			logResult(response.result, pAction->servicename);
+			_actionSeqList.erase(response.seqnr);
+			pAction->pPort->serviceRegistered(response.result, response.portnumber);
+		}
+		break;
+	}
+
+	case SB_SERVICE_INFO: {
+		SBServiceInfoEvent response(e);
+		TAction* pAction = &_actionSeqList[response.seqnr];
+		if (pAction) {
+			logResult(response.result, pAction->servicename);
+			if (response.result == SB_NO_ERROR) {
+				_serviceClients[pAction->servicename].push_back(pAction->pPort);
+			}
+			_actionSeqList.erase(response.seqnr);
+			pAction->pPort->serviceInfo(response.result, response.portnumber, response.hostname);
+		}
+		break;
+	}
+
+	case SB_SERVICE_GONE: {
+		SBServiceGoneEvent		indication(e);
+		_serviceClients.erase(indication.servicename);
+		break;
+	}
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+
   } // namespace SB
  } // namespace GCF
 } // namespace LOFAR

@@ -339,7 +339,7 @@ void buildTypeStructTree(const string path,
   {
     if (macValueTypes[elType] != NO_LPT)
     {      
-      if (Utils::isValidPropName(propName.c_str()))
+      if (Common::isValidPropName(propName.c_str()))
       {
         TPropertyInfo propInfo;
         propInfo.propName = propName;

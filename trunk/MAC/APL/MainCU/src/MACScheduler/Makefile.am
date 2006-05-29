@@ -7,14 +7,17 @@ MACScheduler_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 
 MACScheduler_SOURCES		= MACScheduler.cc \
 							  MACSchedulerMain.cc \
-							  LogicalDeviceState.cc
+							  ChildControl.cc \
+							  LDState.cc
+
 MACScheduler_LDADD			= -lpqxx $(LOFAR_DEPEND)
 MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= MACScheduler.h \
 							  MACSchedulerDefines.h
 
-INSTHDRS 					= LogicalDeviceState.h
+INSTHDRS 					= ChildControl.h \
+							  LDState.h
 
 pkginclude_HEADERS 			= $(NOINSTHDRS) $(INSTHDRS)
 
