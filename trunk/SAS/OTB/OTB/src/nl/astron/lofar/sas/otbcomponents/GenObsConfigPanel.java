@@ -191,6 +191,23 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         NodeCancelButton = new javax.swing.JButton();
         NodeApplyButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        NrSubbandsText = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        NrChannelsText = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        NrStationsText = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
+        NrRSPBoardsText = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
+        SampleRateText = new javax.swing.JTextField();
+        jLabel7 = new javax.swing.JLabel();
+        StartTimeText = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        StopTimeText = new javax.swing.JTextField();
+        jLabel9 = new javax.swing.JLabel();
+        MeasurementSetNameText = new javax.swing.JTextField();
+        jLabel10 = new javax.swing.JLabel();
 
         NodeCancelButton.setText("Cancel");
         NodeCancelButton.addActionListener(new java.awt.event.ActionListener() {
@@ -209,31 +226,123 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Generic Observation Configuration Panel");
 
+        jLabel2.setText("#Nr Subbands:");
+
+        NrSubbandsText.setToolTipText("Number of Subbands for this Observation");
+
+        jLabel3.setText("#Nr Channels/Subband:");
+
+        NrChannelsText.setToolTipText("Number of Channels per Subband for this Observation");
+
+        jLabel4.setText("#Nr Stations:");
+
+        NrStationsText.setToolTipText("Number of Stations for this Observation");
+
+        jLabel5.setText("#Nr RSPBoards:");
+
+        NrRSPBoardsText.setToolTipText("Number of RSPBoards for this Observation");
+
+        jLabel6.setText("SampleRate:");
+
+        SampleRateText.setToolTipText("SampleRate for this Observation");
+
+        jLabel7.setText("StartTime:");
+
+        StartTimeText.setToolTipText("StartTime for this Observation");
+
+        jLabel8.setText("StopTime:");
+
+        StopTimeText.setToolTipText("StopTime for this Observation");
+
+        jLabel9.setText("MeasurementSet Name:");
+
+        MeasurementSetNameText.setToolTipText("Name for the MeasurementSet for this Observation");
+
+        jLabel10.setText("jLabel10");
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
+                .add(70, 70, 70)
+                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 460, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(117, Short.MAX_VALUE))
+            .add(layout.createSequentialGroup()
+                .add(47, 47, 47)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel10)
                     .add(layout.createSequentialGroup()
-                        .add(70, 70, 70)
-                        .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 460, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(layout.createSequentialGroup()
-                        .add(40, 40, 40)
                         .add(NodeCancelButton)
-                        .add(15, 15, 15)
-                        .add(NodeApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .add(97, 97, 97))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(NodeApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(layout.createSequentialGroup()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jLabel2)
+                            .add(jLabel3)
+                            .add(jLabel4)
+                            .add(jLabel5)
+                            .add(jLabel7)
+                            .add(jLabel6)
+                            .add(jLabel8)
+                            .add(jLabel9))
+                        .add(16, 16, 16)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(MeasurementSetNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 375, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                .add(StopTimeText)
+                                .add(StartTimeText)
+                                .add(SampleRateText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE)
+                                .add(NrChannelsText)
+                                .add(NrSubbandsText)
+                                .add(NrRSPBoardsText)
+                                .add(NrStationsText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE)))))
+                .addContainerGap(93, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(10, 10, 10)
+                .add(11, 11, 11)
                 .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(250, 250, 250)
+                .add(23, 23, 23)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(NodeApplyButton)
-                    .add(NodeCancelButton)))
+                    .add(jLabel2)
+                    .add(NrSubbandsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel3)
+                    .add(NrChannelsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel4)
+                    .add(NrStationsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel5)
+                    .add(NrRSPBoardsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(SampleRateText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel6))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel7)
+                    .add(StartTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel8)
+                    .add(StopTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel9)
+                    .add(MeasurementSetNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jLabel10)
+                .add(18, 18, 18)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(NodeCancelButton)
+                    .add(NodeApplyButton))
+                .add(166, 166, 166))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -250,9 +359,26 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private OtdbRmi    itsOtdbRmi;   
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField MeasurementSetNameText;
     private javax.swing.JButton NodeApplyButton;
     private javax.swing.JButton NodeCancelButton;
+    private javax.swing.JTextField NrChannelsText;
+    private javax.swing.JTextField NrRSPBoardsText;
+    private javax.swing.JTextField NrStationsText;
+    private javax.swing.JTextField NrSubbandsText;
+    private javax.swing.JTextField SampleRateText;
+    private javax.swing.JTextField StartTimeText;
+    private javax.swing.JTextField StopTimeText;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     // End of variables declaration//GEN-END:variables
 
     /**
