@@ -23,7 +23,8 @@
 
 package nl.astron.lofar.sas.otb.util.plotter;
 
-import java.util.HashMap;
+import java.util.LinkedList;
+import nl.astron.lofar.java.gui.plotter.PlotPanel;
 
 /**
  * @version $Id$
@@ -32,11 +33,119 @@ import java.util.HashMap;
  */
 public class PlotSlotManager{
     
-    private int[] amountOfSlots;
-    private HashMap<int[],PlotSlot> itsPlotSlots;
+    private LinkedList<PlotSlot> itsPlotSlots;
     
     /** Creates a new instance of PlotSlotManager */
-    public PlotSlotManager() {
+    public PlotSlotManager(int amountOfSlots) {
+        itsPlotSlots = new LinkedList<PlotSlot>();
+        for(int i = 1;i<=amountOfSlots;i++){
+            itsPlotSlots.add(new PlotSlot());
+        }
     }
+    public int getAmountOfSlots(){
+        return itsPlotSlots.size();
+    }
+    public void setAmountOfSlots(int amount, boolean force) throws IllegalArgumentException{
+        if(itsPlotSlots.size() < amount){
+            int difference = amount - itsPlotSlots.size();
+            for(int i = 1; i <= difference; i++){
+                itsPlotSlots.add(new PlotSlot());
+            }
+        }else if (itsPlotSlots.size() > amount){
+            int difference = itsPlotSlots.size() - amount;
+            boolean plotInTheWay = false;
+            for(int i = 1; i <= difference; i++){
+                PlotSlot checkPlot = getSlot(amount+i);
+                if(!checkPlot.getLabel().equalsIgnoreCase(PlotSlot.EMPTY_SLOT)){
+                    plotInTheWay = true;
+                }
+            }
+            if(plotInTheWay && !force){
+                String exceptionString = "There is/are plot(s) present in the ";
+                exceptionString+= "last "+difference+" slots. Please clear ";
+                exceptionString+= "these slots manually or use the force argument to ";
+                exceptionString+= "let the application delete them";
+                throw new IllegalArgumentException(exceptionString);
+            }else{
+                for(int i = 1; i <= difference; i++){
+                    itsPlotSlots.removeLast();
+                }
+            }
+        }
+    }
+    public LinkedList<PlotSlot> getSlots(){
+        return itsPlotSlots;
+    }    
+    public PlotSlot getSlot(int index) throws IllegalArgumentException{
+        if(index > 0 && index <= itsPlotSlots.size()){
+            return itsPlotSlots.get(index-1);
+        }else{
+            throw new IllegalArgumentException("There is no PlotSlot in the list(size:"+getAmountOfSlots()+") at index "+index);
+        }
+    }
+    
+    public int getAnAvailableSlotIndex(){
+        int availableSlot = 0;
+        for(PlotSlot slot : itsPlotSlots){
+            if(slot.isEmpty()){
+                availableSlot = itsPlotSlots.indexOf(slot)+1;
+            }
+        }
+        return availableSlot;
+    }
+    
+    public int[] getAvailableSlotIndexes(){
+        int[] availableSlots = null;
+        availableSlots = new int[countAvailableSlots()];
+        int index = 1;
+        for(PlotSlot slot : itsPlotSlots){
+            if(slot.isEmpty()){
+                availableSlots[index] = itsPlotSlots.indexOf(slot)+1;
+                index++;
+            }
+        }
+        
+        return availableSlots;
+    }
+    
+    public boolean areSlotsAvailable(){
+        boolean slotsAvailable = false;
+        for(PlotSlot slot : itsPlotSlots){
+            if(slot.isEmpty()){
+                slotsAvailable = true;
+            }
+        }
+        return slotsAvailable;
+    }
+    public int countAvailableSlots(){
+        int numberOfAvailableSlots = 0;
+        for(PlotSlot slot : itsPlotSlots){
+            if(slot.isEmpty()){
+                numberOfAvailableSlots++;
+            }
+        }
+        return numberOfAvailableSlots;
+    }
+    
+    public void createPlotInSlot(int index, Object constraints){
+        getSlot(index).addPlot(constraints);
+    }
+    
+    public void createPlotInAnyAvailableSlot(Object constraints){
+        getSlot(getAnAvailableSlotIndex()).addPlot(constraints);
+    }
+    
+    public void modifyPlotInSlot(int index, Object constraints){
+        getSlot(index).modifyPlot(constraints);
+    }
+    
+    public void clearSlot(int index){
+        getSlot(index).clearSlot();
+    }
+    
+    public boolean isSlotAvailable(int index){
+        return getSlot(index).isEmpty();
+    }
+    
     
 }
