@@ -23,11 +23,10 @@
 #ifndef APL_DEFINES_H
 #define APL_DEFINES_H
 
-namespace LOFAR
-{
-  
-namespace APLCommon
-{
+namespace LOFAR { 
+namespace APLCommon {
+
+#define	LOFAR_SHARE_LOCATION	"/opt/lofar/share"
 
   enum TLDResult
   {
@@ -45,7 +44,6 @@ namespace APLCommon
     LD_RESULT_SETCLOCKS_ERROR, // error setting td clocks
     LD_RESULT_STARTCAL_ERROR,  // error starting calibration
     LD_RESULT_LOW_PRIORITY,    // a higher priority LD caused a suspend of this LD
-
   };
 
   enum 
@@ -58,36 +56,19 @@ namespace APLCommon
     RS_SUSPECT_IDLE = 0x40000000
   };
 
-  enum TLogicalDeviceTypes 
-  {
-    LDTYPE_NO_TYPE = 0, 
-    LDTYPE_VIRTUALINSTRUMENT = 1, 
-    LDTYPE_VIRTUALTELESCOPE, 
-    LDTYPE_ARRAYRECEPTORGROUP, 
-    LDTYPE_STATIONRECEPTORGROUP, 
-    LDTYPE_ARRAYOPERATIONS, 
-    LDTYPE_STATIONOPERATIONS, 
-    LDTYPE_VIRTUALBACKEND, 
-    LDTYPE_MAINTENANCEVI,
-    LDTYPE_OBSERVATION,
-    LDTYPE_VIRTUALROUTE
-  };
+// Define mnemonics for the supported controller. These names are used
+// to tell LDStartDaemon which program should be started.
+#define	LDTYPE_NO_TYPE				"UNDEFINED"
+#define	LDTYPE_OBSERVATIONCTRL		"OBS_CTRL"
+#define	LDTYPE_BEAMDIRECTIONCTRL	"BEAMDIR_CTRL"
+#define	LDTYPE_GROUPCTRL			"GROUP_CTRL"
+#define	LDTYPE_STATIONCTRL			"STS_CTRL"
+#define	LDTYPE_DIGITALBOARDCTRL		"DIGBOARD_CTRL"
+#define	LDTYPE_BEAMCTRL				"BEAM_CTRL"
+#define	LDTYPE_CALIBRATIONCTRL		"CAL_CTRL"
+#define	LDTYPE_STATIONINFRACTRL		"STSINFRA_CTRL"
 
-  enum TSDResult
-  {
-    SD_RESULT_NO_ERROR = 0, 
-    SD_RESULT_UNSPECIFIED_ERROR, 
-    SD_RESULT_UNSUPPORTED_LD, 
-    SD_RESULT_FILENOTFOUND,
-    SD_RESULT_PARAMETERNOTFOUND,
-    SD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
-    SD_RESULT_UNKNOWN_COMMAND,
-    SD_RESULT_ALREADY_EXISTS,
-    SD_RESULT_LD_NOT_FOUND,
-    SD_RESULT_WRONG_STATE,
-    SD_RESULT_SHUTDOWN,
-    SD_RESULT_WRONG_VERSION,
-  };
+
 
   #define IS_BUSY(s) ((s > 0) && (s != RS_SUSPECT_IDLE))
   #define IS_SUSPECT(s) (s >= RS_SUSPECT_IDLE)
@@ -95,8 +76,7 @@ namespace APLCommon
   #define MAKE_SUSPECT(s) (s |= RS_SUSPECT_IDLE)
   #define MAKE_UNSUSPECT(s) (s &= ~RS_SUSPECT_IDLE)
 
-};
-
-};
+};	// APLCommon
+}; // LOFAR
 
 #endif

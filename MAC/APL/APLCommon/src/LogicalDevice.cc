@@ -19,17 +19,18 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-#undef PACKAGE
-#undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 
 #include <unistd.h>
+#define BOOST_SP_USE_PTHREADS
 #include <boost/shared_array.hpp>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVDynArr.h>
-#include <GCF/ParameterSet.h>
+#include <GCF/Utils.h>
+#include <APS/ParameterSet.h>
 #include "APL/APLCommon/APL_Defines.h"
 #include "APL/APLCommon/APLUtilities.h"
 #include "APL/APLCommon/LogicalDevice.h"
@@ -97,7 +98,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_basePropertySetName(),
   m_detailsPropertySet(),
   m_detailsPropertySetName(),
-  m_parameterSet(),
+  m_parameterSet(LOFAR::ACC::APS::globalParameterSet()),
   m_serverPortName(string("server")),
   m_serverPort(*this, m_serverPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
   m_claimTime(0),
@@ -120,7 +121,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_eventBuffer(),
   m_globalError(LD_RESULT_NO_ERROR),
   m_version(version),
-  m_childTypes(),
+//  m_childTypes(),
   m_childStates(),
   m_resourceAllocator(ResourceAllocator::instance()),
   m_priority(100)
@@ -140,12 +141,15 @@ LogicalDevice::LogicalDevice(const string& taskName,
   
   string psDetailsType("");
   
-  adoptParameterFile(parameterFile);
+	// TRYOUT: every LD is a seperate program that was initialized with GCFTask::init.
+	// Therefore the ParamSet is already read in.
+	LOG_WARN_STR("TRYOUT:not adopting parameterfile: " << parameterFile);
+//  adoptParameterFile(parameterFile);
   
   try {
-    m_priority = m_parameterSet.getUint16("priority");
-    m_basePropertySetName = m_parameterSet.getString("propertysetBaseName");
-    psDetailsType = m_parameterSet.getString("propertysetDetailsType");
+    m_priority 			  = m_parameterSet->getUint16("priority");
+    m_basePropertySetName = m_parameterSet->getString("propertysetBaseName");
+    psDetailsType 		  = m_parameterSet->getString("propertysetDetailsType");
   }
   catch(Exception& e) {
     THROW(APLCommon::ParameterNotFoundException,e.message());
@@ -196,15 +200,16 @@ LogicalDevice::~LogicalDevice()
 //
 void LogicalDevice::adoptParameterFile(const string& parameterFile)
 {
-  try {
-    m_parameterSet.adoptFile(_getShareLocation() + parameterFile);
-  }
-  catch(Exception& e) {
-    THROW(APLCommon::ParameterFileNotFoundException,e.message());
-  }
-  
-  // check version number
-  LOG_WARN("Version checking not implemented: need to get the version from the node in the OTDB database");
+	try {
+		ConfigLocator		aCL;
+		m_parameterSet->adoptFile(aCL.locate(parameterFile));
+	}
+	catch(Exception& e) {
+		THROW(APLCommon::ParameterFileNotFoundException,e.message());
+	}
+
+	// check version number
+	LOG_WARN("Version checking not implemented: need to get the version from the node in the OTDB database");
 #if 0
   try {
     string receivedVersion = m_parameterSet.getString(string("versionnr"));
@@ -323,7 +328,7 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
           // SCHEDULE <fileName>
           if(command==string(LD_COMMAND_SCHEDULE)) {
             if(parameters.size()==1) {
-              m_parameterSet.adoptFile(_getShareLocation() + parameters[0]);
+              m_parameterSet->adoptFile(_getShareLocation() + parameters[0]);
               _schedule();		// distribute claim/prepare/start/stop time to children.
             }
             else {
@@ -420,11 +425,11 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
 //
 // Adds the specified KVpair_from_the_LD_paramterSet to the subset.
 //
-void LogicalDevice::copyParentValue(ACC::APS::ParameterSet& psSubset, const string& key)
+void LogicalDevice::copyParentValue(ParameterSet& psSubset, const string& key)
 {
-  if(m_parameterSet.find(key) != m_parameterSet.end()) {
-    psSubset.add(key,m_parameterSet.getString(key));
-  }
+	if(!m_parameterSet->isDefined(key)) {
+		psSubset.add (key, m_parameterSet->getString(key));
+	}
 }
 
 //
@@ -432,7 +437,7 @@ void LogicalDevice::copyParentValue(ACC::APS::ParameterSet& psSubset, const stri
 //
 // Dummy.
 //
-void LogicalDevice::concreteAddExtraKeys(ACC::APS::ParameterSet& /*psSubset*/)
+void LogicalDevice::concreteAddExtraKeys(ParameterSet& /*psSubset*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // do nothing
@@ -453,52 +458,60 @@ void LogicalDevice::_schedule()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  // (erase and) fill the childTypes and childStates maps
-  TString2LDTypeMap  newChildTypes;
-  TString2LDStateMap newChildStates;
-  // create the childs
-  vector<string> childKeys = _getChildKeys();	// vector with childnames
-  vector<string>::iterator chIt;
-  for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt) {
-    // add new childs
-    if(m_childTypes.find(*chIt) != m_childTypes.end()) {
-	  // child(name) is known in current list, copy Type and State to new Map
-      newChildTypes[*chIt]=m_childTypes[*chIt];
-      newChildStates[*chIt]=m_childStates[*chIt];
-    }
-    else {	// child is new (compared to current map)
-      try {
-		// get <childname>.logicalDeviceType value to know its type
-		// and add the child with this info to the map.
-        string ldTypeString = m_parameterSet.getString((*chIt) + ".logicalDeviceType");
-        TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
-        newChildTypes[*chIt] = ldType;
-        newChildStates[*chIt] = LOGICALDEVICE_STATE_IDLE;
-      }
-      catch(Exception& e) {
-        LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
-      }
-    }
-  } // for
+	// (erase and) fill the childTypes and childStates maps
+	// REO: No longer translation of LDtypeName (parset) and LDtypeValue (APL_Defines).
+	//      Only strings are used now.
+//	TString2LDTypeMap  newChildTypes;
+	TString2LDStateMap newChildStates;
+
+	// create the childs
+	vector<string> childKeys = _getChildKeys();	// vector with childnames
+	vector<string>::iterator chIt;
+	for (chIt=childKeys.begin(); chIt!=childKeys.end();++chIt) {
+		// add new childs
+		if(m_childStates.find(*chIt) != m_childStates.end()) {
+			// child(name) is known in current list, copy Type and State to new Map
+			// newChildTypes[*chIt]=m_childTypes[*chIt];
+			newChildStates[*chIt]=m_childStates[*chIt];
+		}
+		else {	// child is new (compared to current map)
+			try {
+				// get <childname>.logicalDeviceType value to know its type
+				// and add the child with this info to the map.
+				string ldType = m_parameterSet->getString((*chIt) + ".logicalDeviceType");
+//				newChildTypes[*chIt] = ldType;
+				newChildStates[*chIt] = LOGICALDEVICE_STATE_IDLE;
+			}
+			catch(Exception& e) {
+				LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
+			}
+		}
+	} // for
  
-  // Finally replace current maps with the new ones.
-  m_childTypes.clear();
-  m_childStates.clear();
-  m_childTypes = newChildTypes;
-  m_childStates = newChildStates;
+	// Finally replace current maps with the new ones.
+//	m_childTypes.clear();
+	m_childStates.clear();
+//	m_childTypes = newChildTypes;
+	m_childStates = newChildStates;
 
   // adjust scheduling times
   // specified times are in UTC, seconds since 1-1-1970
   time_t timeNow = APLUtilities::getUTCtime();
-  time_t claimTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("claimTime"));
-  time_t prepareTime = APLUtilities::decodeTimeString(m_parameterSet.getString("prepareTime"));
-  time_t startTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("startTime"));
-  time_t stopTime    = APLUtilities::decodeTimeString(m_parameterSet.getString("stopTime"));
+  time_t claimTime   = APLUtilities::decodeTimeString(m_parameterSet->getString("claimTime"));
+  time_t prepareTime = APLUtilities::decodeTimeString(m_parameterSet->getString("prepareTime"));
+  time_t startTime   = APLUtilities::decodeTimeString(m_parameterSet->getString("startTime"));
+  time_t stopTime    = APLUtilities::decodeTimeString(m_parameterSet->getString("stopTime"));
   
   // Update the CLAIM time and timer
-  if(claimTime <= timeNow) { // claim ASAP
+  if(claimTime == INT_MAX) { // wait for signal from Parent
+	LOG_INFO("Claimtime not set, wait for command from parent");
+	m_claimTime = INT_MAX;
+    m_serverPort.cancelTimer(m_claimTimerId);
+  }
+  else if(claimTime <= timeNow) { // claim ASAP
     LOG_INFO("Claiming will be done ASAP");
     m_claimTime = 0;
+    m_serverPort.cancelTimer(m_claimTimerId);
   }
   else if((claimTime >= timeNow && claimTime < m_claimTime) || m_claimTimerId==0) {
     // timerId's can be zero if the LD has been released
@@ -519,10 +532,16 @@ void LogicalDevice::_schedule()
   }
     
   // Update the PREPARE time and timer
-  if(prepareTime <= timeNow) { 
+  if(prepareTime == INT_MAX) {
+	LOG_INFO("Preparetime not set, wait for command from parent");
+	m_prepareTime = INT_MAX;
+    m_serverPort.cancelTimer(m_prepareTimerId);
+  }
+  else if(prepareTime <= timeNow) { 
     // prepare ASAP after claiming
     LOG_INFO("Preparing will be done ASAP after claiming");
     m_prepareTime = 0;
+    m_serverPort.cancelTimer(m_prepareTimerId);
   }
   else if((prepareTime >= timeNow && prepareTime < m_prepareTime) || m_prepareTimerId==0) {
     char timeString1[200];
@@ -542,9 +561,15 @@ void LogicalDevice::_schedule()
   }
 
   // Update the START time and timer
-  if(startTime <= timeNow) {
+  if(startTime == INT_MAX) {
+	LOG_INFO("Starttime not set, wait for command from parent");
+	m_startTime = INT_MAX;
+    m_serverPort.cancelTimer(m_startTimerId);
+  }
+  else if(startTime <= timeNow) {
     LOG_INFO("Starting will be done ASAP after preparing");
     m_startTime = 0;
+    m_serverPort.cancelTimer(m_startTimerId);
   }
   else if((startTime >= timeNow && startTime < m_startTime) || m_startTimerId==0) {
     char timeString1[200];
@@ -564,7 +589,12 @@ void LogicalDevice::_schedule()
   }
 
   // Update the STOP time and timer
-  if((stopTime >= timeNow && stopTime > m_stopTime) || m_stopTimerId==0) {
+  if(stopTime == INT_MAX) {
+	LOG_INFO("Stoptime not set, wait for command from parent");
+	m_stopTime = INT_MAX;
+    m_serverPort.cancelTimer(m_stopTimerId);
+  }
+  else if((stopTime >= timeNow && stopTime > m_stopTime) || m_stopTimerId==0) {
     char timeString1[200];
     char timeString2[200];
     struct tm* tmTime=localtime(&m_stopTime);
@@ -866,32 +896,31 @@ string LogicalDevice::_getConnectedChildName(GCFPortInterface& port)
 //
 // Check if enough LD's of a specific type are in a specific state.
 //
-bool LogicalDevice::_childsInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state)
+bool LogicalDevice::_childsInState(const double requiredPercentage, const string& type, const TLogicalDeviceState& state)
 {
-  double totalLDs(0.0);
-  double ldsInState(0.0);
-  
-  // Loop over childTypes map and check+count childStates.
-  for(TString2LDTypeMap::iterator typesIt = m_childTypes.begin();typesIt != m_childTypes.end();++typesIt) {
-    if(typesIt->second == type || type == LDTYPE_NO_TYPE) {
-      totalLDs += 1.0;
-      TString2LDStateMap::iterator statesIt = m_childStates.find(typesIt->first);
-      if(statesIt != m_childStates.end()) {
-        LOG_DEBUG(formatString("%s is in state %s",typesIt->first.c_str(),_state2String(statesIt->second).c_str()));
-        if(statesIt->second == state) {
-          ldsInState += 1.0;
-        }
-      }
-    }
-  }
-  
-  // Calculate %.
-  double resultingPercentage(0.0);
-  if(totalLDs > 0.0) {
-    resultingPercentage = ldsInState/totalLDs*100.0;
-  }
-  
-  return (resultingPercentage >= requiredPercentage);
+	double totalLDs(0.0);
+	double ldsInState(0.0);
+
+	// Loop over childTypes map and check+count childStates.
+	// REO: No longer translation of LDtypeName (parset) and LDtypeValue (APL_Defines).
+	//      Only strings are used now.
+	for(TString2LDStateMap::iterator statesIt = m_childStates.begin();statesIt != m_childStates.end();++statesIt) {
+		if(statesIt->first == type || type == LDTYPE_NO_TYPE) {
+			totalLDs += 1.0;
+			LOG_DEBUG(formatString("%s is in state %s",statesIt->first.c_str(),_state2String(statesIt->second).c_str()));
+			if(statesIt->second == state) {
+				ldsInState += 1.0;
+			}
+		}
+	}
+
+	// Calculate %.
+	double resultingPercentage(0.0);
+	if(totalLDs > 0.0) {
+		resultingPercentage = ldsInState/totalLDs*100.0;
+	}
+
+	return (resultingPercentage >= requiredPercentage);
 }
 
 //
@@ -899,32 +928,31 @@ bool LogicalDevice::_childsInState(const double requiredPercentage, const TLogic
 //
 // Check if enough LD's of a specific type are not in a specific state
 //
-bool LogicalDevice::_childsNotInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state)
+bool LogicalDevice::_childsNotInState(const double requiredPercentage, const string& type, const TLogicalDeviceState& state)
 {
-  double totalLDs(0.0);
-  double ldsNotInState(0.0);
-  
-  // Loop over childTypes map and check+count childStates.
-  for(TString2LDTypeMap::iterator typesIt = m_childTypes.begin();typesIt != m_childTypes.end();++typesIt) {
-    if(typesIt->second == type || type == LDTYPE_NO_TYPE) {
-      totalLDs += 1.0;
-      TString2LDStateMap::iterator statesIt = m_childStates.find(typesIt->first);
-      if(statesIt != m_childStates.end()) {
-        LOG_DEBUG(formatString("%s is in state %s",typesIt->first.c_str(),_state2String(statesIt->second).c_str()));
-        if(statesIt->second != state) {
-          ldsNotInState += 1.0;
-        }
-      }
-    }
-  }
-  
-  // Calculate %.
-  double resultingPercentage(0.0);
-  if(totalLDs > 0.0) {
-    resultingPercentage = ldsNotInState/totalLDs*100.0;
-  }
-  
-  return (resultingPercentage >= requiredPercentage);
+	double totalLDs(0.0);
+	double ldsNotInState(0.0);
+
+	// Loop over childTypes map and check+count childStates.
+	// REO: No longer translation of LDtypeName (parset) and LDtypeValue (APL_Defines).
+	//      Only strings are used now.
+	for(TString2LDStateMap::iterator statesIt = m_childStates.begin();statesIt != m_childStates.end();++statesIt) {
+		if(statesIt->first == type || type == LDTYPE_NO_TYPE) {
+			totalLDs += 1.0;
+			LOG_DEBUG(formatString("%s is in state %s",statesIt->first.c_str(),_state2String(statesIt->second).c_str()));
+			if(statesIt->second != state) {
+				ldsNotInState += 1.0;
+			}
+		}
+	}
+
+	// Calculate %.
+	double resultingPercentage(0.0);
+	if(totalLDs > 0.0) {
+		resultingPercentage = ldsNotInState/totalLDs*100.0;
+	}
+
+	return (resultingPercentage >= requiredPercentage);
 }
 
 //
@@ -955,13 +983,13 @@ void LogicalDevice::_connectedHandler(GCFPortInterface& port)
 		// Note: Providing the child with a portnumber is not realy necc. (ServiceBroker) [REO]
         string key = (*chIt) + string(".parentPort");
         KVpair kvPair(key,serverPort);
-        m_parameterSet.replace(kvPair);
+        m_parameterSet->replace(kvPair);
       
 		// get the specs from the startDaemon of this child ...
-        string remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
-        string startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
-        uint16 startDaemonPortNr   = m_parameterSet.getUint16((*chIt) + string(".startDaemonPort"));
-        string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
+        string remoteSystemName    = m_parameterSet->getString((*chIt) + string(".remoteSystem"));
+        string startDaemonHostName = m_parameterSet->getString((*chIt) + string(".startDaemonHost"));
+        uint16 startDaemonPortNr   = m_parameterSet->getUint16((*chIt) + string(".startDaemonPort"));
+        string startDaemonTaskName = m_parameterSet->getString((*chIt) + string(".startDaemonTask"));
       
         TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
 		// and open a connection to this startDaemon. In this way we are able the send 'create child'
@@ -979,7 +1007,7 @@ void LogicalDevice::_connectedHandler(GCFPortInterface& port)
           GCFPValueArray refsVector(childRefs->getValue()); // create a copy 
 		  // construct:  <hostname_child>:<psBaseName value>  --> e.g. CCU1:VIC_VI3
           string 		 childPsName = remoteSystemName + string(":") + 
-								m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
+								m_parameterSet->getString((*chIt) + string(".propertysetBaseName"));
 		  // construct:  <childname>=<childPsName>  --> e.g.  VI3=CCU1:VIC_VI3
           GCFPVString    newRef((*chIt) + string("=") + childPsName);
           refsVector.push_back(&newRef);						// add KVpair to child-vector
@@ -1187,11 +1215,11 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
     if(m_eventBuffer.size() > 0) {
       m_retrySendTimerId = 0;
       int32 retryTimeout = 1*60*60; // retry sending buffered events for 1 hour
-      // [REO] NOTE: GCF::ParameterSet is used here!!!!
-      GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+      // [REO] NOTE: GlobalParameterSet is used here!!!!
+      ACC::APS::ParameterSet* pParamSet = ACC::APS::globalParameterSet();
       try {
-        retryTimeout = pParamSet->getInt(string(LD_CONFIG_PREFIX + string("retryTimeout")));
-        retryPeriod  = pParamSet->getInt(LD_CONFIG_PREFIX + string("retryPeriod"));
+        retryTimeout = pParamSet->getInt32(string(LD_CONFIG_PREFIX + string("retryTimeout")));
+        retryPeriod  = pParamSet->getInt32(LD_CONFIG_PREFIX + string("retryPeriod"));
       } 
       catch(Exception& e) {
         LOG_INFO("Using default retry period of 10s");
@@ -1241,11 +1269,11 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
 void LogicalDevice::_connectParent()
 {
   // connect to the parent if it is a new parent
-  string parentTaskName = m_parameterSet.getString("parentTask");
+  string parentTaskName = m_parameterSet->getString("parentTask");
   
   if(m_parentPorts.find(parentTaskName) == m_parentPorts.end()) {  
-    string parentHost     = m_parameterSet.getString("parentHost");//TiMu
-    uint16 parentPort     = m_parameterSet.getUint16("parentPort");//TiMu
+    string parentHost     = m_parameterSet->getString("parentHost");//TiMu
+    uint16 parentPort     = m_parameterSet->getUint16("parentPort");//TiMu
     
     // it is possible that parents do not yet exist while constructing this LD
     // (e.g. SO starts when a station starts, even if there are no CCU's)
@@ -1279,7 +1307,7 @@ vector<string> LogicalDevice::_getChildKeys()
   string childs;
   vector<string> childKeys;
   try {
-    childKeys = m_parameterSet.getStringVector("childs");
+    childKeys = m_parameterSet->getStringVector("childs");
   }
   catch(Exception& e) {
   }
@@ -1320,7 +1348,7 @@ void LogicalDevice::_sendScheduleToClients()
         // extract the parameterset for the child
         string startDaemonKey = it->first;
         TPortSharedPtr startDaemonPort = it->second;
-        ACC::APS::ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
+        ParameterSet psSubset = m_parameterSet->makeSubset(startDaemonKey + string("."));
         
         concreteAddExtraKeys(psSubset);
         
@@ -1333,15 +1361,15 @@ void LogicalDevice::_sendScheduleToClients()
         remove(tempFileName.c_str());
   
         // send the schedule to the startdaemon of the child
-        string ldTypeString = psSubset.getString("logicalDeviceType");
-        TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
-        boost::shared_ptr<STARTDAEMONScheduleEvent> scheduleEvent(new STARTDAEMONScheduleEvent);
-        scheduleEvent->logicalDeviceType = ldType;
-	//        scheduleEvent->taskName = getName() + string(".") + startDaemonKey;
-        scheduleEvent->taskName = startDaemonKey;
-        scheduleEvent->fileName = parameterFileName;
+        string ldType = psSubset.getString("logicalDeviceType");
+        boost::shared_ptr<STARTDAEMONCreateEvent> createEvent(new STARTDAEMONCreateEvent);
+        createEvent->logicalDeviceType = ldType;
+//      createEvent->fileName = parameterFileName;
+        createEvent->taskName 	   = startDaemonKey;
+        createEvent->parentHost    = GCF::Common::myHostname();
+        createEvent->parentService = "TODO";
 
-        _sendEvent(scheduleEvent,*startDaemonPort);
+        _sendEvent(createEvent,*startDaemonPort);
       }
       catch(Exception& e) {
         LOG_FATAL(formatString("(%s) Fatal error while scheduling child",e.message().c_str()));
@@ -1357,7 +1385,7 @@ void LogicalDevice::_sendScheduleToClients()
         // extract the parameterset for the child
         string childKey = it->first;
         if(TPortSharedPtr pChildPort = it->second.lock()) {
-          ACC::APS::ParameterSet psSubset = m_parameterSet.makeSubset(childKey + string("."));
+          ParameterSet psSubset = m_parameterSet->makeSubset(childKey + string("."));
           
           concreteAddExtraKeys(psSubset);
           
@@ -1392,8 +1420,8 @@ void LogicalDevice::_sendScheduleToClients()
 string LogicalDevice::_getShareLocation() const
 {
   string shareLocation("/opt/lofar/MAC/parametersets/");
-  // [REO] NOTE: GCF::ParameterSet is used here!!!!
-  GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+  // [REO] NOTE: GlobalParameterSet is used here!!!!
+  ACC::APS::ParameterSet* pParamSet = ACC::APS::globalParameterSet();
   try {
     string tempShareLocation = pParamSet->getString(LD_CONFIG_PREFIX + string("shareLocation"));
     if(tempShareLocation.length()>0) {
@@ -1531,10 +1559,10 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
 
         // poll retry buffer every 10 seconds
         int32 retryPeriod = 10; // retry sending buffered events every 10 seconds
-        // [REO] NOTE: GCF::ParameterSet is used here!!!!
-        GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+        // [REO] NOTE: GlobalParameterSet is used here!!!!
+        ACC::APS::ParameterSet* pParamSet = ACC::APS::globalParameterSet();
         try {
-          retryPeriod  = pParamSet->getInt(LD_CONFIG_PREFIX + string("retryPeriod"));
+          retryPeriod  = pParamSet->getInt32(LD_CONFIG_PREFIX + string("retryPeriod"));
         }
         catch(Exception& e) {
           LOG_INFO("Using default retry period of 10s");
@@ -1693,7 +1721,7 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
     case LOGICALDEVICE_SCHEDULE: {
       LOGICALDEVICEScheduleEvent scheduleEvent(event);
 
-      m_parameterSet.adoptFile(_getShareLocation() + scheduleEvent.fileName);
+      m_parameterSet->adoptFile(_getShareLocation() + scheduleEvent.fileName);
       _schedule();		// distribute claim/prepare/start/stop time to children.
       // if the claimTime = 0 then claiming is done ASAP
       if(m_claimTime == 0) {
@@ -1925,7 +1953,7 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
     case LOGICALDEVICE_SCHEDULE: {
       LOGICALDEVICEScheduleEvent scheduleEvent(event);
 
-      m_parameterSet.adoptFile(_getShareLocation() + scheduleEvent.fileName);
+      m_parameterSet->adoptFile(_getShareLocation() + scheduleEvent.fileName);
       _schedule();		// distribute claim/prepare/start/stop time to children.
       
       boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
@@ -2427,10 +2455,16 @@ GCFEvent::TResult LogicalDevice::goingdown_state(GCFEvent& event, GCFPortInterfa
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
       LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
 
-      // the startdaemon has created us, so the startdaemon should destroy us.
-      STARTDAEMONDestroyLogicaldeviceEvent destroyEvent;
-      destroyEvent.name = getName();
-      m_startDaemon->dispatch(destroyEvent,port);
+      // if the startdaemon has created us, the startdaemon should destroy us.
+//	  if (m_startDaemon) {
+//		STARTDAEMONDestroyLogicaldeviceEvent destroyEvent;
+//		destroyEvent.name = getName();
+//		m_startDaemon->dispatch(destroyEvent,port);
+//	  }
+//	  else {
+		LOG_DEBUG ("Not created by startdaemon, killing myself");
+		stop();
+//	  }
       break;
     }
   

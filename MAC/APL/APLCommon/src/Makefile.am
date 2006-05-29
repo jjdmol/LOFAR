@@ -16,7 +16,6 @@ libaplcommon_la_SOURCES = \
 	$(DOCHDRS) \
 	APLUtilities.cc \
 	LogicalDevice.cc \
-	StartDaemon.cc \
 	PropertySetAnswer.cc \
 	ResourceAllocator.cc \
 	LogicalDevice_Protocol.cc \

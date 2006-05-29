@@ -23,6 +23,7 @@
 #ifndef RESOURCEALLOCATOR_H
 #define RESOURCEALLOCATOR_H
 
+#define BOOST_SP_USE_PTHREADS
 #include <boost/shared_ptr.hpp>
 #include <set>
 #include <bitset>

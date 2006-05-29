@@ -24,6 +24,7 @@
 #define LogicalDeviceFactoryBase_H
 
 //# Includes
+#define BOOST_SP_USE_PTHREADS
 #include <boost/shared_ptr.hpp>
 
 //# local includes
@@ -32,40 +33,39 @@
 //# Common Includes
 #include <GCF/TM/GCF_Task.h>
 
+
+namespace LOFAR {
+  namespace APLCommon {
+
 // forward declaration
+class LogicalDevice;
 
-namespace LOFAR
+class LogicalDeviceFactoryBase
 {
-  
-namespace APLCommon
-{
-  class LogicalDevice;
-
-  class LogicalDeviceFactoryBase
-  {
-    public:
-
-      LogicalDeviceFactoryBase() {}; 
-      virtual ~LogicalDeviceFactoryBase() {};
+public:
+	// Constructor and desctuctor
+	LogicalDeviceFactoryBase() {}; 
+	virtual ~LogicalDeviceFactoryBase() {};
       
-      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
-                                                                   const string& parameterFile,
-                                                                   GCF::TM::GCFTask* pStartDaemon)=0;
-      virtual bool sharingAllowed()
-      {
-        return false;
-      }
+	// The factory call.
+	virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
+																 const string& parameterFile,
+																 GCF::TM::GCFTask* pStartDaemon)=0;
 
-    protected:
-      // protected copy constructor
-      LogicalDeviceFactoryBase(const LogicalDeviceFactoryBase&);
-      // protected assignment operator
-      LogicalDeviceFactoryBase& operator=(const LogicalDeviceFactoryBase&);
+	virtual bool sharingAllowed() {
+		return (false);
+	}
 
-    private:
-    
-      ALLOC_TRACER_CONTEXT  
-  };
+protected:
+	// protected copy constructor
+	LogicalDeviceFactoryBase(const LogicalDeviceFactoryBase&);
+	// protected assignment operator
+	LogicalDeviceFactoryBase& operator=(const LogicalDeviceFactoryBase&);
+
+private:
+	ALLOC_TRACER_CONTEXT  
+};
+
 };//APLCommon
 };//LOFAR
 #endif

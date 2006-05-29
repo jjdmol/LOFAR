@@ -58,8 +58,6 @@ namespace APLCommon
   
     private:    
       PropertySetAnswerHandlerInterface& m_handler;
-
-      ALLOC_TRACER_CONTEXT  
   };
 };//APLCommon
 };//LOFAR
