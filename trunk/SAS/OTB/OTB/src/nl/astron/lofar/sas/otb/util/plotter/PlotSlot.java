@@ -24,6 +24,9 @@
 package nl.astron.lofar.sas.otb.util.plotter;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
@@ -37,6 +40,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
  */
 public class PlotSlot extends JPanel{
     
+    public static final String EMPTY_SLOT = "Empty Slot";
     private PlotGroup itsPlotGroup;
     private PlotPanel itsPlot;
     private String slotLabel;
@@ -45,8 +49,12 @@ public class PlotSlot extends JPanel{
     public PlotSlot() {
         itsPlotGroup = null;
         itsPlot = new PlotPanel();
-        slotLabel = "Default Slot";
+        setLabel(EMPTY_SLOT);
+        setPreferredSize(new Dimension(320,240));
+        setBackground(Color.WHITE);
+        
         setLayout(new BorderLayout());
+        
     }
     /** 
      * Creates a new instance of PlotSlot using a supplied label
@@ -55,7 +63,8 @@ public class PlotSlot extends JPanel{
      */
     public PlotSlot(String label) {
         this();
-        slotLabel = label;
+        setLabel(label);
+       
     }
     
     public void setLabel(String label){
@@ -68,6 +77,10 @@ public class PlotSlot extends JPanel{
     
     public PlotPanel getPlot(){
         return itsPlot;
+    }
+    
+    public void setPlot(PlotPanel aPlot){
+        itsPlot = aPlot;
     }
     
     public void addPlot(Object constraints){
@@ -96,17 +109,19 @@ public class PlotSlot extends JPanel{
                 ex.printStackTrace();
             }
 
+        }else{
+            addPlot(constraints);
         }
     }
     
-    public void removePlot(){
+    private void removePlot(){
         if(containsPlot()){
             this.remove(itsPlot);
         }
         itsPlot = null;
     }
     
-    public boolean containsPlot(){
+    private boolean containsPlot(){
         return itsPlot != null;
     }
     
@@ -125,6 +140,12 @@ public class PlotSlot extends JPanel{
     public boolean hasPlotGroup(){
         return itsPlotGroup != null;
     }
-    
-    
+    public void clearSlot(){
+        setLabel(EMPTY_SLOT);
+        removePlot();
+    }
+    public boolean isEmpty(){
+        return containsPlot();
+    }
+   
 }
