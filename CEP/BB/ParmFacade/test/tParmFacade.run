@@ -1,3 +1,3 @@
 #!/bin/sh
 
-tParmFacade tParmFacade.in_mep
+$LOFAR_CHECKTOOL tParmFacade tParmFacade.in_mep
