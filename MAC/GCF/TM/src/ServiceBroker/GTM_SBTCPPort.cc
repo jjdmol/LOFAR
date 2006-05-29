@@ -25,120 +25,106 @@
 #include "GTM_SBTCPPort.h"
 #include <GTM_Defines.h>
 #include "GSB_Defines.h"
+#include <GCF/GCF_ServiceInfo.h>
 #include <PortImpl/GTM_TCPServerSocket.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
+namespace LOFAR {
+ namespace GCF {
   using namespace TM;
-  namespace SB 
-  {
+  namespace SB {
 
-GTMSBTCPPort::GTMSBTCPPort(GCFTask& task, 
-                       string name, 
-                       TPortType type, 
-                       int protocol, 
-                       bool transportRawData) 
+//
+// GTMSBTCPPort(task, name, type, protocol, raw)
+//
+GTMSBTCPPort::GTMSBTCPPort(GCFTask& 	 task, 
+						   const string& name, 
+						   TPortType 	 type, 
+						   int 			 protocol, 
+						   bool 		 transportRawData) 
   : GCFTCPPort(task, name, type, protocol, transportRawData)
 {
 }
 
+//
+// GTMSBTCPPort()
+//
 GTMSBTCPPort::GTMSBTCPPort()
     : GCFTCPPort()
 {
 }
 
+//
+// ~GTMSBTCPPort()
+//
 GTMSBTCPPort::~GTMSBTCPPort()
 {
-  if (_pSocket)
-  {
-    delete _pSocket;  
-    _pSocket = 0;  
-  }
+	if (_pSocket) {
+		delete _pSocket;  
+		_pSocket = 0;  
+	}
 }
 
 
+//
+// open()
+//
 bool GTMSBTCPPort::open()
 {
-  if (isConnected())
-  {
-    LOG_ERROR(formatString ( 
-        "Port %s already open.",
-	      _name.c_str()));
-    return false;
-  }
-  else if (!_pSocket)
-  {
-    if (isSlave())
-    {
-      LOG_ERROR(formatString ( 
-          "Port %s not initialised.",
-          _name.c_str()));
-      return false;
-    }
-    else
-    {
-      if (SPP == getType() || MSPP == getType())
-      {
-        _pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
-      }
-      else if (SAP == getType())
-      {
-        _pSocket = new GTMTCPSocket(*this);
-      }
-    }
-  }
-  
-  unsigned int sbPortNumber(0);
-  string sbHost;
-  try 
-  {    
-    sbPortNumber = ParameterSet::instance()->getInt(PARAM_SB_SERVER_PORT);    
-    sbHost = ParameterSet::instance()->getString(PARAM_SB_SERVER_HOST);    
-  }
-  catch (...)
-  {
-    LOG_FATAL("Could not get special portnumber param or host param for the Service Broker");
-    GCFTask::stop();
-    return false;
-  }
-  
-  if (_pSocket->open(sbPortNumber))
-  { 
-    if (SAP == getType())
-    {   
-      if (_pSocket->connect(sbPortNumber, sbHost))
-      {
-        setState(S_CONNECTING);        
-        schedule_connected();
-      }
-      else
-      {
-        setState(S_DISCONNECTING);
-        schedule_disconnected();
-      }
-    } 
-    else if (MSPP == getType())
-    {
-      setState(S_CONNECTING);        
-      schedule_connected();
-    }
-  }
-  else
-  {
-    setState(S_DISCONNECTING);
-    if (SAP == getType())
-    {
-      schedule_disconnected();
-    }
-    else
-    {
-      return false;
-    }
-  }
-  return true;
+	if (isConnected()) {
+		LOG_ERROR(formatString ("Port %s already open.", 
+								makeServiceName().c_str()));
+		return false;
+	}
+
+	if (!_pSocket) {
+		if (isSlave()) {
+			LOG_ERROR(formatString ("Port %s not initialised.", 
+									makeServiceName().c_str()));
+			return false;
+		}
+
+		if (SPP == getType() || MSPP == getType()) {
+			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
+		}
+		else if (SAP == getType()) {
+			_pSocket = new GTMTCPSocket(*this);
+		}
+	}
+
+	uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
+	string 	sbHost     ("localhost");
+	char	hostname[256];
+	if (gethostname(hostname, 256) == 0) {
+		sbHost = hostname;
+	}
+
+	if (_pSocket->open(sbPortNumber)) { 
+		if (SAP == getType()) {   
+			if (_pSocket->connect(sbPortNumber, sbHost)) {
+				setState(S_CONNECTING);        
+				schedule_connected();
+			}
+			else {
+				setState(S_DISCONNECTING);
+				schedule_disconnected();
+			}
+		} 
+		else if (MSPP == getType()) {
+			setState(S_CONNECTING);        
+			schedule_connected();
+		}
+	}
+	else {
+		setState(S_DISCONNECTING);
+		if (SAP == getType()) {
+			schedule_disconnected();
+		}
+		else {
+			return false;
+		}
+	}
+	return true;
 }
   } // namespace SB
  } // namespace GCF

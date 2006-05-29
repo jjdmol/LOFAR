@@ -27,26 +27,23 @@
 
 #include <GCF/GCF_Defines.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace SB 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace SB {
 
 class GCFPValue;
 
-enum TSBResult 
-{
-  SB_NO_ERROR, 
-  SB_UNKNOWN_ERROR,
-  SB_SERVICE_ALREADY_EXIST,
-  SB_NO_FREE_PORTNR,
-  SB_UNKNOWN_SERVICE
+enum TSBResult {
+	SB_NO_ERROR, 
+	SB_UNKNOWN_ERROR,
+	SB_SERVICE_ALREADY_EXIST,
+	SB_NO_FREE_PORTNR,
+	SB_UNKNOWN_SERVICE
 };
 
-#define PARAM_SB_SERVER_PORT "mac.gcf.sb.port"
-#define PARAM_SB_SERVER_HOST "mac.gcf.sb.host"
+//#define PARAM_SB_SERVER_PORT "mac.gcf.sb.port"
+//#define PARAM_SB_SERVER_HOST "mac.gcf.sb.host"
+
   } // namespace SB
  } // namespace GCF
 } // namespace LOFAR

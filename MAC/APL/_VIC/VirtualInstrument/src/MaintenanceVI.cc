@@ -66,7 +66,7 @@ MaintenanceVI::MaintenanceVI(const string& taskName,
   try
   {
     // put resources in a vector
-    m_resources = m_parameterSet.getStringVector(string("resources"));
+    m_resources = m_parameterSet->getStringVector(string("resources"));
   }
   catch(Exception& e)
   {

@@ -2,7 +2,7 @@
 
 # DpType
 TypeName
-TAplMacScheduler.TAplMacScheduler	1#1
+SwCntrl.MacScheduler	1#1
 	state	25#2
 	error	25#3
 	

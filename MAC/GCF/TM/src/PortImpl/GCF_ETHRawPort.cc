@@ -30,7 +30,7 @@
 #include "GTM_ETHSocket.h"
 #include <GTM_Defines.h>
 #include <errno.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR 
 {
@@ -39,10 +39,10 @@ namespace LOFAR
   namespace TM 
   {
 
-GCFETHRawPort::GCFETHRawPort(GCFTask& task,
-                          	 string name,
-                          	 TPortType type, 
-                             bool transportRawData) : 
+GCFETHRawPort::GCFETHRawPort(GCFTask& 		task,
+                          	 const string&	name,
+                          	 TPortType 		type, 
+                             bool 			transportRawData) : 
    GCFRawPort(task, name, type, 0, transportRawData), 
    _pSocket(0), _ethertype(0x0000)
 {
@@ -97,7 +97,7 @@ bool GCFETHRawPort::open()
           PARAM_ETH_IFNAME,
           getTask()->getName().c_str(),
           getRealName().c_str());
-      _ifname += ParameterSet::instance()->getString(ifNameParam);      
+      _ifname += ACC::APS::globalParameterSet()->getString(ifNameParam);      
     }
     catch (...)
     {
@@ -114,7 +114,7 @@ bool GCFETHRawPort::open()
           PARAM_ETH_MACADDR,
           getTask()->getName().c_str(),
           getRealName().c_str());
-      _destMacStr += ParameterSet::instance()->getString(destMacParam);      
+      _destMacStr += ACC::APS::globalParameterSet()->getString(destMacParam);      
     }
     catch (...)
     {
@@ -131,7 +131,7 @@ bool GCFETHRawPort::open()
           PARAM_ETH_ETHERTYPE,
           getTask()->getName().c_str(),
           getRealName().c_str());
-      _ethertype += ParameterSet::instance()->getInt(ethertypeParam);      
+      _ethertype += ACC::APS::globalParameterSet()->getInt32(ethertypeParam);      
     }
     catch (...)
     {

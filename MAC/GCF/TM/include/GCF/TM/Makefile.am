@@ -6,6 +6,7 @@ pkginclude_HEADERS = \
 	GCF_TCPPort.h \
 	GCF_RawPort.h \
 	GCF_Port.h \
+	GCF_TimerPort.h \
 	GCF_PortInterface.h \
 	GCF_Event.h \
 	GCF_Protocols.h \

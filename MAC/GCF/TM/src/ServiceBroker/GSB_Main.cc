@@ -25,9 +25,9 @@
 #include <GSB_Controller.h>
 #include <GCF/TM/GCF_Control.h>
 
-int main(int argC, char *argV[])
+int main(int argc, char *argv[])
 {
-  GCFTask::init(argC, argV);
+  GCFTask::init(argc, argv);
   
   LOG_INFO("MACProcessScope: GCF.SB");
 

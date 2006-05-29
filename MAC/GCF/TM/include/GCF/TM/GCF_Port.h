@@ -49,11 +49,11 @@ class GCFPort : public GCFPortInterface
   public: // constructor && destructor
 
     /// params see constructor of GCFPortInterface
-    explicit GCFPort (GCFTask& containertask, 
-             string& name, 
-             TPortType type, 
-             int protocol, 
-             bool transportRawData = false);
+    explicit GCFPort (GCFTask& 		containertask, 
+					  const string& name, 
+					  TPortType 	type, 
+					  int 			protocol, 
+					  bool 			transportRawData = false);
     
     /** default constructor 
      * GCFPortInterface params are:
@@ -77,11 +77,11 @@ class GCFPort : public GCFPortInterface
   public: // GCFPortInterface overloaded/defined methods
     
     /// params see constructor of GCFPortInterface
-    void init (GCFTask& containertask, 
-               string name, 
-               TPortType type, 
-               int protocol, 
-               bool transportRawData = false);
+    void init (GCFTask& 	 containertask, 
+			   const string& name, 
+			   TPortType 	 type, 
+			   int 			 protocol, 
+			   bool 		 transportRawData = false);
     
     /**
     * open/close methods
@@ -118,9 +118,9 @@ class GCFPort : public GCFPortInterface
 
  
   private: // data members
-    string _remotetask;
-    string _remoteport;
-    GCFPortInterface* _pSlave;
+    string 				_remotetask;
+    string 				_remoteport;
+    GCFPortInterface* 	_pSlave;
 
     friend class GCFRawPort; // to access the setState method of the base class
 };

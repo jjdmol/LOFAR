@@ -60,41 +60,20 @@ typedef struct
  */
 class GCFRawPort : public GCFPortInterface
 {
-  protected: // consturctors && destructors
-    /// params see constructor of GCFPortInterface
-    explicit GCFRawPort (GCFTask& task, 
-                string& name, 
-                TPortType type, 
-                int protocol, 
-                bool transportRawData = false);
+	// NOTE: constructors are protected !!!
 
-    /** default constructor 
-     * GCFPortInterface params are:
-     * pTask => 0
-     * name => ""
-     * type => SAP
-     * protocol => 0
-     * transportRawData => false
-     */ 
-    GCFRawPort();
-    
-  private:  
-    /// copying is not allowed.
-    GCFRawPort (const GCFRawPort&);
-    GCFRawPort& operator= (const GCFRawPort&);
-
-  public:
+public:
     /// desctructor
     virtual ~GCFRawPort ();
   
-  public: // GCFPortInterface overloaded/defined methods
-    
     /// params see constructor of GCFPortInterface
-    void init (GCFTask& task, 
-               string name, 
-               TPortType type, 
-               int protocol, 
-               bool transportRawData = false); 
+    void init (GCFTask& 	 task, 
+               const string& name, 
+               TPortType 	 type, 
+               int 			 protocol, 
+               bool 		 transportRawData = false); 
+
+	// GCFPortInterface overloaded/defined methods
   
     /// these methods implements the final connection with the timer handler 
     /// to realize the timer functionality
@@ -112,9 +91,27 @@ class GCFRawPort : public GCFPortInterface
   			                      void** arg = 0);
   
     virtual int  cancelAllTimers ();
-  
 
-  protected: // helper methods
+protected: 
+	// constructors && destructors
+    /// params see constructor of GCFPortInterface
+    GCFRawPort (GCFTask& 		task, 
+						 const string& 	name, 
+						 TPortType 		type, 
+						 int 			protocol, 
+						 bool 			transportRawData = false);
+
+    /** default constructor 
+     * GCFPortInterface params are:
+     * pTask => 0
+     * name => ""
+     * type => SAP
+     * protocol => 0
+     * transportRawData => false
+     */ 
+    GCFRawPort();
+    
+	// helper methods
     friend class GCFPort; // to access the setMaster method
     friend class GTMTimer;
     friend class GTMFile;
@@ -123,7 +120,6 @@ class GCFRawPort : public GCFPortInterface
     void schedule_close();
     void schedule_connected();
 
-  
     bool                        isSlave () const {return _pMaster != 0;}
     virtual void                setMaster (GCFPort* pMaster) {_pMaster = pMaster;}
 
@@ -134,12 +130,17 @@ class GCFRawPort : public GCFPortInterface
     
     /// returns the original name of the port (given by the user). 
     /// in case it is a slave port an extension is append to the original name 
-    const string&               getRealName() const;  
+    string		                getRealName() const;  
   
-  private: // data member
-    GCFPort* _pMaster;
+private: 
+    /// copying is not allowed.
+    GCFRawPort (const GCFRawPort&);
+    GCFRawPort& operator= (const GCFRawPort&);
 
-  private: // admin. data member
+	// data member
+    GCFPort* 					_pMaster;
+
+	// admin. data member
     GTMTimerHandler*            _pTimerHandler;
 };
   } // namespace TM

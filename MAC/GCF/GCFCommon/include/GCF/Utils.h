@@ -12,24 +12,17 @@ namespace LOFAR
   namespace Common 
   {
 
-class Utils
-{
-  public:
-  
-    Utils();
-    ~Utils();
-       
-    static void convListToString(std::string& listString, 
-                                 const std::list<std::string>& stringList);
-    static void convStringToList(std::list<std::string>& stringList, 
-                                 const std::string& listString);
-    static void convSetToString(std::string& setString, 
-                                const std::set<std::string>& stringSet);
-    static void convStringToSet(std::set<std::string>& stringSet, 
-                                const std::string& setString);
-    static bool isValidPropName(const char* propName);    
-    static bool isValidScope(const char* scopeName);
-};
+void	convListToString(std::string& listString, 
+                         const std::list<std::string>& stringList);
+void	convStringToList(std::list<std::string>& stringList, 
+                         const std::string& listString);
+void	convSetToString(std::string& setString, 
+                        const std::set<std::string>& stringSet);
+void	convStringToSet(std::set<std::string>& stringSet, 
+                        const std::string& setString);
+bool	isValidPropName(const char* propName);    
+bool	isValidScope   (const char* scopeName);
+string 	myHostname	   (bool	giveFullName = false);
 
   } // namespace Common
  } // namespace GCF

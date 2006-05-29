@@ -1,4 +1,4 @@
-//#  LogicalDeviceState.cc: one_line_description
+//#  LDState.cc: one_line_description
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,24 +25,20 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <LogicalDeviceState.h>
+#include <LDState.h>
 
 namespace LOFAR {
   namespace APLCommon {
 
 //
-// LogicalDeviceState()
+// LDState()
 //
-LogicalDeviceState::LogicalDeviceState()
+LDState::LDState()
 {
 	itsStates.resize(LAST_STATE);
 	itsStates[UNKNOWN] 				= "Unknown";
 	itsStates[CONNECT]				= "Connecting";
 	itsStates[CONNECTED]			= "Connected";
-	itsStates[SCHEDULE]				= "Scheduling";
-	itsStates[SCHEDULED]			= "Scheduled";
-	itsStates[CANCEL_SCHEDULE]		= "Canceling Schedule";
-	itsStates[SCHEDULE_CANCELLED]	= "Schedule Cancelled";
 	itsStates[CLAIM]				= "Claiming";
 	itsStates[CLAIMED]				= "Claimed";
 	itsStates[PREPARE]				= "Preparing";
@@ -58,19 +54,25 @@ LogicalDeviceState::LogicalDeviceState()
 }
 
 //
-// ~LogicalDeviceState()
+// ~LDState()
 //
-LogicalDeviceState::~LogicalDeviceState()
+LDState::~LDState()
 {
 }
 
-string	LogicalDeviceState::name(uint16			aStateNr)
+//
+// name(statenr)
+//
+string	LDState::name(uint16			aStateNr)
 { 
 	return (((aStateNr >= UNKNOWN) && (aStateNr < LAST_STATE)) ?
 											itsStates[aStateNr] : "");
 }
 
-uint16	LogicalDeviceState::value(const string&		aStateName)
+//
+// value(name)
+//
+uint16	LDState::value(const string&		aStateName)
 {
 	uint16	i = UNKNOWN;
 	while (i < LAST_STATE) {
@@ -80,7 +82,18 @@ uint16	LogicalDeviceState::value(const string&		aStateName)
 		i++;
 	}
 
-	ASSERTSTR(false, aStateName << " is not a valid LogicalDeviceState");
+	ASSERTSTR(false, aStateName << " is not a valid LDState");
+}
+
+//
+// value(LDstateNr)
+//
+uint16	LDState::value(LDstateNr		aStateNr)
+{
+	ASSERTSTR((aStateNr >= UNKNOWN) && (aStateNr < LAST_STATE), 
+								aStateNr << " is not a valid LDState");
+
+	return ((uint16) aStateNr);
 }
 
   } // namespace APL

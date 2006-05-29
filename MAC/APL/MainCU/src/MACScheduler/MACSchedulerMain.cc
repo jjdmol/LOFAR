@@ -1,6 +1,6 @@
-//#  VirtualInstrumentStartDaemonMain.cc: Main entry for the VirtualInstrument start daemon
+//#  MACSchedulerMain.cc: Main entry for the MACScheduler controller.
 //#
-//#  Copyright (C) 2002-2005
+//#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,20 +19,27 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+//#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
 #include "MACScheduler.h"
 
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::MainCU;
+
 int main(int argc, char* argv[])
 {
-  LOFAR::GCF::TM::GCFTask::init(argc, argv);
-  
-  LOFAR::MCU::MACScheduler ms;
-  ms.start(); // make initial transition
+	GCFTask::init(argc, argv);
 
-  LOFAR::GCF::TM::GCFTask::run();
-    
-  return 0;
+	ChildControl*	cc = ChildControl::instance();
+	cc->start();	// make initial transition
+
+	MACScheduler	ms;
+	ms.start(); // make initial transition
+
+	GCFTask::run();
+
+	return 0;
 }
 

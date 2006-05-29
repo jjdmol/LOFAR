@@ -32,12 +32,9 @@
 #include <fcntl.h>
 #include <errno.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
     
 GTMTCPServerSocket::GTMTCPServerSocket(GCFTCPPort& port, bool isProvider) : 
   GTMTCPSocket(port),
@@ -53,88 +50,70 @@ GTMTCPServerSocket::~GTMTCPServerSocket()
 
 bool GTMTCPServerSocket::open(unsigned int portNumber)
 {
-  bool result(false);
-  if (_fd == -1)
-  {
-    struct sockaddr_in address;
-    int addrLen;
-    int socketFD = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (socketFD > -1)
-    {
-      unsigned int val = 1;
-      struct linger lin = { 1,1 };
+	if (_fd != -1) {
+		if (_pDataSocket != 0) {
+			_pDataSocket->close();
+			return(true);
+		}
+		return (false);
+	}
 
-      if (::setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(val)) < 0)
-      {
-        LOG_WARN(formatString (
-              "Error on setting socket options SO_REUSEADDR: %s",
-              strerror(errno)));
-        return false;
-      }
+	struct sockaddr_in address;
+	int addrLen;
+	int socketFD = ::socket(AF_INET, SOCK_STREAM, 0);
+	if (socketFD == -1) {
+		LOG_WARN(formatString ( "::socket, error: %s", strerror(errno)));
+		return (false);
+	}
+	unsigned int val = 1;
+	struct linger lin = { 1,1 };
 
-      if (::setsockopt(socketFD, SOL_SOCKET, SO_LINGER, (const char*)&lin, sizeof(lin)) < 0)
-      {
-        LOG_WARN(formatString (
-              "Error on setting socket options SO_LINGER: %s",
-              strerror(errno)));
-        return false;
-      }
-      
-      address.sin_family = AF_INET;
-      address.sin_addr.s_addr = htonl(INADDR_ANY);
-      address.sin_port = htons(portNumber);
-      addrLen = sizeof(address);
-      if (bind(socketFD, (struct sockaddr*)&address, addrLen) > -1)
-      {
-        if (listen(socketFD, 5) > -1)
-        {    
-          setFD(socketFD);
-          result = (fcntl(socketFD, F_SETFL, FNDELAY) == 0);            
-        }
-        else
-        {
-          LOG_WARN(formatString (
-                "::listen, error: %s",
-                strerror(errno)));
-        }
-      }
-      else
-      {
-        LOG_WARN(formatString (
-              "::bind, error: %s",
-              strerror(errno)));
-      }
-      if (!result)
-        close();
-    }    
-    else
-    {
-      LOG_WARN(formatString (
-              "::socket, error: %s",
-              strerror(errno)));
-    }
-  }
-  else
-  {
-    if (_pDataSocket != 0)
-    {
-      _pDataSocket->close();
-      result = true;
-    }
-  }
-    
-  return result;
+	if (::setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(val)) < 0) {
+		LOG_WARN(formatString (
+					"Error on setting socket options SO_REUSEADDR: %s",
+					strerror(errno)));
+		return false;
+	}
+
+	if (::setsockopt(socketFD, SOL_SOCKET, SO_LINGER, (const char*)&lin, sizeof(lin)) < 0) {
+		LOG_WARN(formatString (
+					"Error on setting socket options SO_LINGER: %s",
+					strerror(errno)));
+		return false;
+	}
+
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = htonl(INADDR_ANY);
+	address.sin_port = htons(portNumber);
+	addrLen = sizeof(address);
+	if (bind(socketFD, (struct sockaddr*)&address, addrLen) == -1) {
+		LOG_WARN(formatString ( "::bind, error: %s", strerror(errno)));
+		close();
+		return (false);
+	}
+
+	if (listen(socketFD, 5) == -1) {    
+		LOG_WARN(formatString ( "::listen, error: %s", strerror(errno)));
+		close();
+		return (false);
+	}
+
+	setFD(socketFD);
+	if (fcntl(socketFD, F_SETFL, FNDELAY) != 0) {
+		close();
+		return (false);
+	}    
+
+	return (true);
 }
 
 void GTMTCPServerSocket::workProc()
 {
-  if (_isProvider)
-  {
+  if (_isProvider) {
     GCFEvent acceptReqEvent(F_ACCEPT_REQ);
     dispatch(acceptReqEvent);
   }
-  else
-  {
+  else {
     GCFTCPPort* pPort = (GCFTCPPort*)(&_port);
 
     ASSERT(_pDataSocket == 0);
@@ -147,16 +126,12 @@ void GTMTCPServerSocket::workProc()
                  (struct sockaddr*) &clientAddress, 
                  &clAddrLen));
          
-    if (_pDataSocket->getFD() >= 0)
-    {
+    if (_pDataSocket->getFD() >= 0) {
       GCFEvent connectedEvent(F_CONNECTED);
       dispatch(connectedEvent);
     }
-    else
-    {
-      LOG_WARN(formatString (
-          "::accept, error: %s",
-          strerror(errno)));
+    else {
+      LOG_WARN(formatString ( "::accept, error: %s", strerror(errno)));
     }
     
     // because we only accept one connection (SPP), we don't need to listen with
@@ -168,8 +143,7 @@ void GTMTCPServerSocket::workProc()
 bool GTMTCPServerSocket::accept(GTMFile& newSocket)
 {
   bool result(false);
-  if (_isProvider && _pDataSocket == 0)
-  {
+  if (_isProvider && _pDataSocket == 0) {
     struct sockaddr_in clientAddress;
     socklen_t clAddrLen = sizeof(clientAddress);
     int newSocketFD;
@@ -178,8 +152,7 @@ bool GTMTCPServerSocket::accept(GTMFile& newSocket)
                        &clAddrLen);
     
     result = (newSocket.setFD(newSocketFD) > 0);
-    if (!result)
-    {
+    if (!result) {
       LOG_WARN(formatString (
           "::accept, error: %s",
           strerror(errno)));
@@ -193,8 +166,7 @@ bool GTMTCPServerSocket::close()
 {
   bool result(true);
   
-  if (!_isProvider && _pDataSocket != 0)
-  {
+  if (!_isProvider && _pDataSocket != 0) {
     result = _pDataSocket->close();
     delete _pDataSocket;
     _pDataSocket = 0;

@@ -1,28 +1,34 @@
-bin_PROGRAMS = VirtualInstrument
+bin_PROGRAMS = CCUStartDaemon MaintenanceVI VirtualInstrument ObservationVI
 
-VirtualInstrument_CPPFLAGS = \
-	-DBOOST_DISABLE_THREADS \
-	-Wno-deprecated \
-	-fmessage-length=0 \
-	-fdiagnostics-show-location=once
-#  -DUSE_PVSSPORT
+#VirtualInstrument_CPPFLAGS = \
+#	-DBOOST_DISABLE_THREADS \
+#	-Wno-deprecated \
+#	-fmessage-length=0 \
+#	-fdiagnostics-show-location=once
+##  -DUSE_PVSSPORT
 
-VirtualInstrument_LDADD = $(LOFAR_DEPEND)
+CCUStartDaemon_SOURCES 		= CCUStartDaemonMain.cc
+CCUStartDaemon_DEPENDENCIES = $(LOFAR_DEPEND)
+CCUStartDaemon_LDADD 		= 
+
+MaintenanceVI_SOURCES 		= MaintenanceVI.cc MaintenanceVIMain.cc
+MaintenanceVI_DEPENDENCIES = $(LOFAR_DEPEND)
+MaintenanceVI_LDADD 		= 
+
+VirtualInstrument_SOURCES 		= VirtualInstrument.cc VirtualInstrumentMain.cc
 VirtualInstrument_DEPENDENCIES = $(LOFAR_DEPEND)
+VirtualInstrument_LDADD 		= 
 
-VirtualInstrument_SOURCES = \
-  $(DOCHDRS) \
-	VirtualInstrument.cc \
-	MaintenanceVI.cc \
-	ObservationVI.cc \
-	VirtualInstrumentStartDaemonMain.cc
+ObservationVI_SOURCES 		= ObservationVI.cc ObservationVIMain.cc
+ObservationVI_DEPENDENCIES = $(LOFAR_DEPEND)
+ObservationVI_LDADD 		= 
 
-NOINSTHDRS =
-
-INSTHDRS = \
+NOINSTHDRS = \
 	VirtualInstrument.h \
 	MaintenanceVI.h \
 	ObservationVI.h
+
+INSTHDRS = 
 
 pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
 
@@ -39,8 +45,8 @@ configfilesdir=$(bindir)
 configfiles_DATA =
 
 sysconf_DATA = \
-	VirtualInstrument.conf \
-	VirtualInstrument.log_prop
+	CCUStartDaemon.conf \
+	CCUStartDaemon.log_prop
 
 %.log_prop: %.log_prop.in
 	cp $< $@

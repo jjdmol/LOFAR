@@ -1,3 +1,4 @@
+# Executables
 bin_PROGRAMS 				= LDStartDaemon
 
 LDStartDaemon_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
@@ -5,15 +6,18 @@ LDStartDaemon_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-LDStartDaemon_SOURCES		= LDStartDaemon.cc \
+LDStartDaemon_SOURCES		= LogicalDeviceStarter.cc \
+							  LDStartDaemon.cc \
 							  LDStartDaemonMain.cc
-LDStartDaemon_LDADD			= -lpqxx $(LOFAR_DEPEND)
+LDStartDaemon_LDADD			= $(LOFAR_DEPEND) 
 LDStartDaemon_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= LDStartDaemon.h \
-							  LDStartDaemonDefines.h
+							  LogicalDeviceStarter.h
 
 INSTHDRS 					= 
+
+BUILT_SOURCES				= $(ph_HEADERS)
 
 pkginclude_HEADERS 			= $(NOINSTHDRS) $(INSTHDRS)
 

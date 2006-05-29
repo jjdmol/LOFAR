@@ -49,10 +49,10 @@ class GCFDevicePort : public GCFRawPort
     /// params see constructor of GCFPortInterface  
     /// type is always SAP  
     explicit GCFDevicePort (GCFTask& task,
-          	    string name,
-                int protocol, 
+          	    const string& name,
+                int   protocol, 
                 const string& deviceName,
-                bool transportRawData = false);
+                bool  transportRawData = false);
 
     /** @param deviceName name of the file/device to open
      * GCFPortInterface params are:

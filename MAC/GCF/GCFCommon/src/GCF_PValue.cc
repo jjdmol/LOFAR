@@ -31,7 +31,7 @@
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVDynArr.h>
 #include <GCF/GCF_PVBlob.h>
-#include "GCO_Defines.h"
+#include <GCF/GCF_Defines.h>
 
 namespace LOFAR 
 {

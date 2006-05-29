@@ -1,4 +1,4 @@
-//#  LogicalDeviceState.h: one_line_description
+//#  LDState.h: one_line_description
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #ifndef APL_LOGICALDEVICESTATE_H
 #define APL_LOGICALDEVICESTATE_H
 
-// \file LogicalDeviceState.h
+// \file LDState.h
 // one_line_description
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
@@ -41,21 +41,17 @@ namespace LOFAR {
 
 // class_description
 // ...
-class LogicalDeviceState
+class LDState
 {
 public:
-	LogicalDeviceState();
-	~LogicalDeviceState();
+	LDState();
+	~LDState();
 
 	// define enumeration for all states of an LogicalDevice.
 	typedef enum {
 		UNKNOWN = 0,
 		CONNECT,
 		CONNECTED,
-		SCHEDULE,
-		SCHEDULED,
-		CANCEL_SCHEDULE,
-		SCHEDULE_CANCELLED,
 		CLAIM,
 		CLAIMED,
 		PREPARE,
@@ -72,8 +68,9 @@ public:
 	} LDstateNr;
 
 	// conversion routines
-	string	name(uint16			aStateNr);
+	string	name (uint16			aStateNr);
 	uint16	value(const string&		aStateName);
+	uint16	value(LDstateNr			aStateNr);
 
 	// ... example
 	ostream& print (ostream& os) const
@@ -81,8 +78,8 @@ public:
 
 private:
 	// Copying is not allowed
-	LogicalDeviceState(const LogicalDeviceState&	that);
-	LogicalDeviceState& operator=(const LogicalDeviceState& that);
+	LDState(const LDState&	that);
+	LDState& operator=(const LDState& that);
 
 	//# --- Datamembers ---
 	vector<string>		itsStates;
@@ -94,9 +91,9 @@ private:
 //#
 //# operator<<
 //#
-inline ostream& operator<< (ostream& os, const LogicalDeviceState& aLogicalDeviceState)
+inline ostream& operator<< (ostream& os, const LDState& aLDState)
 {	
-	return (aLogicalDeviceState.print(os));
+	return (aLDState.print(os));
 }
 
 

@@ -26,6 +26,7 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
   GCF_Protocols.cc \
   GCF_Task.cc \
   GCF_Event.cc \
+  Port/GCF_PortInterface.cc \
   Port/GCF_Port.cc \
   Port/GCF_RawPort.cc \
   Timer/GTM_Timer.cc \

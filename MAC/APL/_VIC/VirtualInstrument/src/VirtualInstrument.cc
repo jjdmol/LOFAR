@@ -354,9 +354,9 @@ bool VirtualInstrument::_checkQualityRequirements(const TLogicalDeviceState& req
     bool vbQualityOk(false);
     bool vtQualityOk(false);
     bool vrQualityOk(false);
-    double requiredVBavailability = m_parameterSet.getDouble(string("requiredVBavailability"));
-    double requiredVRavailability = m_parameterSet.getDouble(string("requiredVRavailability"));
-    double requiredVTavailability = m_parameterSet.getDouble(string("requiredVTavailability"));
+    double requiredVBavailability = m_parameterSet->getDouble(string("requiredVBavailability"));
+    double requiredVRavailability = m_parameterSet->getDouble(string("requiredVRavailability"));
+    double requiredVTavailability = m_parameterSet->getDouble(string("requiredVTavailability"));
     
     // ALL virtual backend childs must be claimed
     vbQualityOk = _childsInState(requiredVBavailability, LDTYPE_VIRTUALBACKEND, requiredState);

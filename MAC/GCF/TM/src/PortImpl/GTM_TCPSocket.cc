@@ -54,33 +54,27 @@ GTMTCPSocket::~GTMTCPSocket()
 
 ssize_t GTMTCPSocket::send(void* buf, size_t count)
 {
-  if (_fd > -1) 
-  {
+  if (_fd > -1) {
     ssize_t countLeft(count);
     ssize_t written(0);
-    do
-    {
+    do {
       written = ::write(_fd, ((char*)buf) + (count - countLeft), countLeft);
-      if (written == -1)
-      {
-        if (errno != EINTR)
-        {
+      if (written == -1) {
+        if (errno != EINTR) {
           LOG_WARN(LOFAR::formatString (
               "send, error: %s",
               strerror(errno)));
           return -1;
         }
       }
-      else
-      {
+      else {
         countLeft -= written;
       }      
     } while (countLeft > 0);
     
     return count;
   }
-  else
-  {
+  else {
     LOG_WARN("send, error: Socket not opend");
     return -1;
   }
@@ -88,33 +82,27 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
 
 ssize_t GTMTCPSocket::recv(void* buf, size_t count)
 {
-  if (_fd > -1) 
-  {
+  if (_fd > -1) {
     ssize_t countLeft(count);
     ssize_t received(0);
-    do
-    {
+    do {
       received = ::read(_fd, ((char*)buf) + (count - countLeft), countLeft);
-      if (received == -1)
-      {
-        if (errno != EINTR)
-        {
+      if (received == -1) {
+        if (errno != EINTR) {
           LOG_WARN(formatString (
               "recv, error: %s",
               strerror(errno)));
           return -1;
         }
       }
-      else
-      {
+      else {
         countLeft -= received;
       }      
     } while (countLeft > 0);
     
     return count;
   }
-  else
-  {
+  else {
     LOG_WARN("recv, error: Socket not opend");
     return -1;
   }
@@ -124,11 +112,8 @@ bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 {
   ASSERT(_fd == -1);
   _fd = ::socket(AF_INET, SOCK_STREAM, 0);
-  if (_fd < 0)
-  {
-    LOG_WARN(formatString (
-            "::socket, error: %s",
-            strerror(errno)));
+  if (_fd < 0) {
+    LOG_WARN(formatString ( "::socket, error: %s", strerror(errno)));
     close();
   }
   return (_fd > -1);
@@ -137,28 +122,21 @@ bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 bool GTMTCPSocket::connect(unsigned int portNumber, const string& host)  
 {
   bool result(false);
-  if (_fd >= -1)
-  {
+  if (_fd >= -1) {
     struct sockaddr_in serverAddr;
     struct hostent *hostinfo;
     hostinfo = gethostbyname(host.c_str());
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
     serverAddr.sin_port = htons(portNumber);
-    result = (::connect(_fd, 
-                        (struct sockaddr *)&serverAddr, 
-                        sizeof(struct sockaddr_in)) 
-               == 0);
-    if (result)
-    {
+    result = (::connect(_fd, (struct sockaddr *)&serverAddr, 
+									sizeof(struct sockaddr_in)) == 0);
+    if (result) {
       ASSERT(_pHandler);
       _pHandler->registerFile(*this);
     }
-    else
-    {
-      LOG_WARN(formatString (
-              "connect, error: %s",
-              strerror(errno)));
+    else {
+      LOG_WARN(formatString ( "connect, error: %s", strerror(errno)));
       close();
     }
   }

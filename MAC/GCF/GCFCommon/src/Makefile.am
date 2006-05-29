@@ -16,7 +16,6 @@ libgcfcommon_la_SOURCES= $(DOCHDRS) \
 	GCF_PVUnsigned.cc \
 	GCF_PVDynArr.cc \
 	GCF_PVBlob.cc \
-	ParameterSet.cc \
 	Thread.cc
 	
 include $(top_srcdir)/Makefile.common

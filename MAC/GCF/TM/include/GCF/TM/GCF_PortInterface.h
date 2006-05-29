@@ -30,12 +30,9 @@
 #include <Common/lofar_string.h>
 #include <GCF/GCF_Defines.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 // forward declacations
 class GCFTask;
@@ -49,19 +46,16 @@ class GCFEvent;
  */
 class GCFPortInterface
 {
-  public:
-
+public:
     /** port types */
-    typedef enum TPortType
-    {
+    typedef enum TPortType {
         SAP = 1,    /**< Service Access Point              (port connector)*/
         SPP,        /**< Service Provision Point           (port acceptor)*/
         MSPP,       /**< Multi Service Provision Point     (port provider)*/
     };
     
     /** port states */
-    typedef enum TSTATE 
-    { 
+    typedef enum TSTATE { 
       S_DISCONNECTED, 
       S_CONNECTING, 
       S_CONNECTED,
@@ -70,7 +64,7 @@ class GCFPortInterface
     };
    
     /// destructor
-    virtual ~GCFPortInterface () {};
+    virtual ~GCFPortInterface ();
     
     virtual bool close () = 0;
     virtual bool open ()  = 0;
@@ -106,15 +100,21 @@ class GCFPortInterface
     /**
     * Attribute access functions
     */
-    const string&  getName ()     const {return _name;}
-    TPortType      getType ()     const {return _type;}
-    bool           isConnected () const {return _state == S_CONNECTED;}
-    TSTATE         getState ()    const {return _state;}
-    const GCFTask* getTask ()     const {return _pTask;}
-    int            getProtocol () const {return _protocol;}
-    bool           isTransportRawData () const {return _transportRawData;}
+    const string&	getName ()     	const 		{ return _name; }
+    TPortType		getType ()     	const 		{ return _type; }
+    bool			isConnected () 	const 		{ return _state==S_CONNECTED; }
+    TSTATE			getState ()    	const 		{ return _state; }
+    const GCFTask*	getTask ()     	const 		{ return _pTask; }
+    int32			getProtocol () 	const 		{ return _protocol; }
+    bool			isTransportRawData () const { return _transportRawData; }
+	uint32			getInstanceNr()	const 		{ return _instanceNr; }
+	void			setInstanceNr(uint32	nr) { _instanceNr = nr; }
+	string 			makeServiceName() const;
+	bool			usesModernServiceName() const
+					{ return (!_deviceNameMask.empty()); }
 
-  protected: // constructors
+protected: 
+	// constructors
     /**
      * @param pTask task on which the port is adapted
      * @param name name of the port
@@ -125,54 +125,39 @@ class GCFPortInterface
      * not in the received data (unpacked in a GCFEvent) itself. In case of F_DATAIN
      * the user is responsible to flush the data from the incomming event buffer
      */
-    explicit GCFPortInterface (GCFTask* pTask, 
-                      string name, 
-                      TPortType type, 
-                      int protocol, 
-                      bool transportRawData) :
-        _pTask(pTask), 
-        _name(name), 
-        _state(S_DISCONNECTED), 
-        _type(type), 
-        _protocol(protocol),
-        _transportRawData(transportRawData)
-    {
-    }
+    GCFPortInterface (GCFTask* 	 pTask, 
+					   const string& name, 
+					   TPortType 	 type, 
+					   int 		  	 protocol, 
+					   bool 		 transportRawData);
 
-  private:
+	// helper methods    
+    virtual void setState (TSTATE newState) {_state = newState;}
+    
+    /** params see constructor */
+    virtual void init(GCFTask& 		task, 
+					  const string& name, 
+					  TPortType 	type,  
+					  int 			protocol, 
+					  bool 			transportRawData = false);
+
+	// data members
+    GCFTask*	_pTask;
+    string		_name;
+	string		_deviceNameMask;
+    TSTATE		_state;
+    TPortType	_type;
+    int32		_protocol; /**< NOT USED */
+    bool		_transportRawData;
+	uint32		_instanceNr;
+
+private:
     /// default constructor is not allowed
     GCFPortInterface();
     /// copying is not allowed
     GCFPortInterface (GCFPortInterface&);
     GCFPortInterface& operator=(GCFPortInterface&);
 
-  protected: // helper methods    
-    virtual void setState (TSTATE newState) {_state = newState;}
-    
-    /** params see constructor */
-    virtual void init(GCFTask& task, 
-                      string name, 
-                      TPortType type,  
-                      int protocol, 
-                      bool transportRawData = false)
-    {
-      if (_state == S_DISCONNECTED)
-      {
-        _pTask = &task;
-        _name = name;  
-        _type = type;
-        _protocol = protocol;
-        _transportRawData = transportRawData;
-      }
-    }
-
-  protected: // data members
-    GCFTask*  _pTask;
-    string    _name;
-    TSTATE    _state;
-    TPortType _type;
-    int       _protocol; /**< NOT USED */
-    bool      _transportRawData;
 };
   } // namespace TM
  } // namespace GCF

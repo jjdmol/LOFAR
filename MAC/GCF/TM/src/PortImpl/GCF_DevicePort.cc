@@ -27,7 +27,7 @@
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <errno.h>
 
 namespace LOFAR 
@@ -37,11 +37,11 @@ namespace LOFAR
   namespace TM 
   {
 
-GCFDevicePort::GCFDevicePort(GCFTask& task, 
-                       string name,                        
-                       int protocol,
-                       const string& deviceName, 
-                       bool transportRawData) 
+GCFDevicePort::GCFDevicePort(GCFTask& 		task, 
+							 const string&	name,                        
+							 int 			protocol,
+							 const string& 	deviceName, 
+							 bool 			transportRawData) 
   : GCFRawPort(task, name, SAP, protocol, transportRawData),
     _devNameIsSet((deviceName.length() > 0)),
     _pDevice(0),
@@ -110,7 +110,7 @@ bool GCFDevicePort::open()
     {
       // retrieve the device name from the parameter set
       setDeviceName(
-          ParameterSet::instance()->getString(
+          ACC::APS::globalParameterSet()->getString(
               formatString(
                   "mac.ns.%s.%s.deviceName",
                   _pTask->getName().c_str(),

@@ -45,11 +45,11 @@ class GTMSBTCPPort : public TM::GCFTCPPort
 
     /// Construction methods
     /** @param protocol NOT USED */    
-    explicit GTMSBTCPPort (TM::GCFTask& task,
-          	    string name,
-          	    TM::GCFPortInterface::TPortType type,
-                int protocol, 
-                bool transportRawData = false);
+    explicit GTMSBTCPPort (TM::GCFTask& 				   task,
+						   const string& 				   name,
+						   TM::GCFPortInterface::TPortType type,
+						   int 							   protocol, 
+						   bool 						   transportRawData = false);
     explicit GTMSBTCPPort ();
   
     virtual ~GTMSBTCPPort ();

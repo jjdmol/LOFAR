@@ -61,11 +61,11 @@ class GCFPVSSPort : public TM::GCFRawPort
 
     // Construction methods
     // @param protocol NOT USED
-    explicit GCFPVSSPort (TM::GCFTask& task,
-          	    string name,
-          	    TM::GCFPortInterface::TPortType type,
-                int protocol, 
-                bool transportRawData = false);
+    explicit GCFPVSSPort (TM::GCFTask& 						task,
+						  const string& 					name,
+						  TM::GCFPortInterface::TPortType	type,
+						  int 								protocol, 
+						  bool 								transportRawData = false);
 
     explicit GCFPVSSPort ();
   
