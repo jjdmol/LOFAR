@@ -25,13 +25,15 @@
 #ifndef PSACCESS_H_
 #define PSACCESS_H_
 
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
+using LOFAR::ACC::APS::ParameterSet;
+using LOFAR::ACC::APS::globalParameterSet;
 
-#define __psaccess__convert_i getInt
+#define __psaccess__convert_i getInt32
 #define __psaccess__convert_f getFloat
 #define __psaccess__convert_d getDouble
-#define GET_CONFIG(var, type)  (GCF::ParameterSet::instance()->__psaccess__convert_##type(var))
-#define GET_CONFIG_STRING(var) (GCF::ParameterSet::instance()->getString(var).c_str())
-#define GET_CONFIG_PATH()      (GCF::ParameterSet::instance()->getSearchPath())
+#define GET_CONFIG(var, type)  (globalParameterSet()->__psaccess__convert_##type(var))
+#define GET_CONFIG_STRING(var) (globalParameterSet()->getString(var).c_str())
+#define GET_CONFIG_PATH()      (globalParameterSet()->getSearchPath())
 
 #endif /* PSACCESS_H_ */
