@@ -213,3 +213,36 @@ event = {
     type = "APLCommon::TLDResult";
   };
 };
+
+//
+// FINISH - sent by a child to tell its parent it is dying.
+//
+event = {
+  signal = FINISH;
+  dir = IN; // from child to parent
+  param = {
+    name = "treeID";
+    type = "unsigned int";
+  };
+  param = {
+    name = "succesfull";
+    type = "bool";
+  };
+  param = {
+    name = "errorMsg";
+    type = "string";
+  };
+};
+
+//
+// FINISHED - result of the FINISH request
+//
+event = {
+  signal = FINISHED;
+  dir = OUT; // from parent to child
+  param = {
+    name = "result";
+    type = "APLCommon::TLDResult";
+  };
+};
+

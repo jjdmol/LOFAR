@@ -36,39 +36,55 @@
 
 // forward declaration
 
-namespace LOFAR
-{
-  
-namespace APLCommon
-{
+namespace LOFAR { 
+  namespace APLCommon {
 
 class APLUtilities
 {
-  public:
+public:
 
     APLUtilities(); 
     virtual ~APLUtilities();
 
-    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters,const char delimiter=',');
-    static void string2Vector(const string& parametersString, vector<string>& parameters, const char delimiter=','); 
-    static void string2Vector(const string& parametersString, vector<int>& parameters, const char delimiter=','); 
-    static void string2Vector(const string& parametersString, vector<int16>& parameters, const char delimiter=','); 
-    static void vector2String(const vector<int16>& parameters, string& parametersString, const char delimiter=','); 
-    static time_t getUTCtime();
-    static time_t decodeTimeString(const string& timeStr);
-    static int remoteCopy(const string& localFile, const string& remoteHost, const string& remoteFile);
-    static string getTempFileName();
-    static TLogicalDeviceTypes convertLogicalDeviceType(const string& ldTypeString);
-    
-  protected:
+	// Break a PVSS commandstring into a command with args
+    static void		decodeCommand (const string& commandString, 
+								   string& command, 
+								   vector<string>& parameters,
+								   const char delimiter=',');
+
+	// Break a ParameterSet array into a vector of values.
+    static void		string2Vector (const string& parametersString, 
+								   vector<string>& parameters, 
+								   const char delimiter=','); 
+    static void		string2Vector (const string& parametersString, 
+								   vector<int>& parameters, 
+								   const char delimiter=','); 
+    static void		string2Vector (const string& parametersString, 
+								   vector<int16>& parameters, 
+								   const char delimiter=','); 
+	
+	// Construct a ParameterSet array from a vector of strings
+    static void		vector2String (const vector<int16>& parameters, 
+								   string& parametersString, 
+								   const char delimiter=','); 
+
+	// time utilities
+    static time_t	getUTCtime();
+    static time_t	decodeTimeString(const string& timeStr);
+
+	// Copy file to remote machine
+    static int		remoteCopy	  (const string& localFile, 
+								   const string& remoteHost, 
+								   const string& remoteFile);
+    static string	getTempFileName(const string&	format="");
+
+protected:
     // protected copy constructor
     APLUtilities(const APLUtilities&);
     // protected assignment operator
     APLUtilities& operator=(const APLUtilities&);
 
-  private:
-
-    ALLOC_TRACER_CONTEXT  
+private:
 };
 
 };//APL

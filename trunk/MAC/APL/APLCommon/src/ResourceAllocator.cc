@@ -71,26 +71,21 @@ bool ResourceAllocator::claimSO(ResourceAllocator::LogicalDevicePtr ld, uint16 p
   bool allocated=false;
   TSOAllocation allocationRequest(ld, priority, samplingFrequency);
   
-  if(m_allocatedSOSet.size() == 0)
-  {
+  if(m_allocatedSOSet.size() == 0) {
     m_allocatedSOSet.insert(allocationRequest);
     allocated=true;
   }
-  else
-  {
+  else {
     // check required parameters against current parameters
     TSOAllocationSet::iterator currentAllocation = m_allocatedSOSet.begin();
-    if(_matchSOparameters(*currentAllocation, allocationRequest))
-    {
+    if(_matchSOparameters(*currentAllocation, allocationRequest)) {
       // required parameters match. Add the LD to the allocation
       m_allocatedSOSet.insert(allocationRequest);
       allocated=true;
     }
-    else
-    {
+    else {
       // required parameters do not match. Check priority and suspend the lower priority LD's
-      if(priority < currentAllocation->priority)
-      {
+      if(priority < currentAllocation->priority) {
         m_allocatedSOSet.insert(allocationRequest);
         allocated=true;
         
@@ -99,24 +94,18 @@ bool ResourceAllocator::claimSO(ResourceAllocator::LogicalDevicePtr ld, uint16 p
         //    resume lower priority LD's with the same settings
         TSOAllocationSet::iterator it = m_allocatedSOSet.begin();
         ++it; // the first item was just added and has the highest priority.
-        while(it != m_allocatedSOSet.end())
-        {
-          if(_matchSOparameters(allocationRequest, *it)) // *it is now the requested allocation, 
-          {                                              // because the other one has a higher priority
+        while(it != m_allocatedSOSet.end()) {
+          if(_matchSOparameters(allocationRequest, *it)) { // *it is now the requested allocation, 
+                                                           // because the other one has a higher priority
+            LOG_INFO(formatString("Resuming LogicalDevice %s",it->ld->getName().c_str()));
 #ifndef TESTBUILD
-            LOG_INFO(formatString("Resuming LogicalDevice %s",it->ld->getName().c_str()))
             it->ld->resume();
-#else
-            LOG_INFO(formatString("Resuming LogicalDevice"))
 #endif
           }
-          else
-          {
+          else {
+            LOG_INFO(formatString("Suspending LogicalDevice %s",it->ld->getName().c_str()));
 #ifndef TESTBUILD
-            LOG_INFO(formatString("Suspending LogicalDevice %s",it->ld->getName().c_str()))
             it->ld->suspend(LD_RESULT_LOW_PRIORITY);
-#else
-            LOG_INFO(formatString("Suspending LogicalDevice"))
 #endif
           }
           ++it;
@@ -124,8 +113,8 @@ bool ResourceAllocator::claimSO(ResourceAllocator::LogicalDevicePtr ld, uint16 p
       }
     } 
   }
-  LOG_INFO(formatString("Resource claim %sgranted",(allocated?"":"NOT ")))
-  LOG_INFO(formatString("%d SO's allocated",m_allocatedSOSet.size()))
+  LOG_INFO(formatString("Resource claim %sgranted",(allocated?"":"NOT ")));
+  LOG_INFO(formatString("%d SO's allocated",m_allocatedSOSet.size()));
   return allocated;
 }
 
@@ -136,34 +125,29 @@ void ResourceAllocator::releaseSO(ResourceAllocator::LogicalDevicePtr ld)
   // remove the LD from the queue
   bool found(false);
   TSOAllocationSet::iterator it = m_allocatedSOSet.begin();
-  while(!found && it != m_allocatedSOSet.end())
-  {
-    if(it->ld == ld)
-    {
+  while(!found && it != m_allocatedSOSet.end()) {
+    if(it->ld == ld) {
       m_allocatedSOSet.erase(it);
       found = true;
     }
-    else
+    else {
       ++it;
+	}
   }
   
   // resume all LD's with the same samplingfrequency as the highest priority one
   TSOAllocationSet::iterator currentAllocation = m_allocatedSOSet.begin();
   it = m_allocatedSOSet.begin();
-  while(it != m_allocatedSOSet.end())
-  {
-    if(_matchSOparameters(*currentAllocation, *it))
-    {
+  while(it != m_allocatedSOSet.end()) {
+    if(_matchSOparameters(*currentAllocation, *it)) {
+      LOG_INFO(formatString("Resuming LogicalDevice %s",it->ld->getName().c_str()));
 #ifndef TESTBUILD
-      LOG_INFO(formatString("Resuming LogicalDevice %s",it->ld->getName().c_str()))
       it->ld->resume();
-#else
-      LOG_INFO(formatString("Resuming LogicalDevice"))
 #endif
     }
     ++it;
   }
-  LOG_INFO(formatString("%d SO's allocated",m_allocatedSOSet.size()))
+  LOG_INFO(formatString("%d SO's allocated",m_allocatedSOSet.size()));
 }
 
 void ResourceAllocator::logSOallocation() const
@@ -171,8 +155,7 @@ void ResourceAllocator::logSOallocation() const
   stringstream logStream;
   logStream << "SO allocation log" << endl;
   logStream << "LD name, priority, sampling frequency" << endl;
-  for(TSOAllocationSet::iterator it = m_allocatedSOSet.begin(); it != m_allocatedSOSet.end(); ++it)
-  {
+  for(TSOAllocationSet::iterator it = m_allocatedSOSet.begin(); it != m_allocatedSOSet.end(); ++it) {
 #ifndef TESTBUILD
     logStream << it->ld->getName().c_str() << ", ";
 #endif
@@ -195,27 +178,22 @@ bool ResourceAllocator::claimSRG(ResourceAllocator::LogicalDevicePtr ld, uint16 
   bool allocated=false;
   TSRGAllocation allocationRequest(ld, priority, rcuSubset, nyquistZone, rcuControl);
   
-  if(m_allocatedSRGSet.size() == 0)
-  {
+  if(m_allocatedSRGSet.size() == 0) {
     m_allocatedSRGSet.insert(allocationRequest);
     _addSRGallocation(rcuSubset,nyquistZone,rcuControl);
     allocated=true;
   }
-  else
-  {
+  else {
     // check required parameters against current parameters
-    if(_matchSRGparameters(allocationRequest))
-    {
+    if(_matchSRGparameters(allocationRequest)) {
       // required parameters match. Add the LD to the allocation
       m_allocatedSRGSet.insert(allocationRequest);
       _addSRGallocation(rcuSubset,nyquistZone,rcuControl);
       allocated=true;
     }
-    else
-    {
+    else {
       // required parameters do not match. Check priority and suspend the lower priority LD's
-      if(priority < m_allocatedSRGSet.begin()->priority)
-      {
+      if(priority < m_allocatedSRGSet.begin()->priority) {
         m_allocatedSRGSet.insert(allocationRequest);
         m_allocatedSRGRcuSubset = 0;  // rebuild 
         m_allocatedSRGRcuSettingsMap.clear();
@@ -226,25 +204,18 @@ bool ResourceAllocator::claimSRG(ResourceAllocator::LogicalDevicePtr ld, uint16 
         //    resume lower priority LD's with the same settings
         TSRGAllocationSet::iterator it = m_allocatedSRGSet.begin();
         ++it; // the first item was just added and has the highest priority.
-        while(it != m_allocatedSRGSet.end())
-        {
-          if(_matchSRGparameters(*it))
-          {
+        while(it != m_allocatedSRGSet.end()) {
+          if(_matchSRGparameters(*it)) {
+            LOG_INFO(formatString("Resuming LogicalDevice %s",it->ld->getName().c_str()));
 #ifndef TESTBUILD
-            LOG_INFO(formatString("Resuming LogicalDevice %s",it->ld->getName().c_str()))
             it->ld->resume();
-#else
-            LOG_INFO(formatString("Resuming LogicalDevice"))
 #endif
             _addSRGallocation(rcuSubset, nyquistZone, rcuControl);
           }
-          else
-          {
+          else {
+            LOG_INFO(formatString("Suspending LogicalDevice %s",it->ld->getName().c_str()));
 #ifndef TESTBUILD
-            LOG_INFO(formatString("Suspending LogicalDevice %s",it->ld->getName().c_str()))
             it->ld->suspend(LD_RESULT_LOW_PRIORITY);
-#else
-            LOG_INFO(formatString("Suspending LogicalDevice"))
 #endif
           }
           ++it;
@@ -252,8 +223,8 @@ bool ResourceAllocator::claimSRG(ResourceAllocator::LogicalDevicePtr ld, uint16 
       }
     } 
   }
-  LOG_INFO(formatString("Resource claim %sgranted",(allocated?"":"NOT ")))
-  LOG_INFO(formatString("%d SRG's allocated",m_allocatedSRGSet.size()))
+  LOG_INFO(formatString("Resource claim %sgranted",(allocated?"":"NOT ")));
+  LOG_INFO(formatString("%d SRG's allocated",m_allocatedSRGSet.size()));
   return allocated;
 }
 
@@ -264,36 +235,31 @@ void ResourceAllocator::releaseSRG(ResourceAllocator::LogicalDevicePtr ld)
   // remove the LD from the queue
   bool found(false);
   TSRGAllocationSet::iterator it = m_allocatedSRGSet.begin();
-  while(!found && it != m_allocatedSRGSet.end())
-  {
-    if(it->ld == ld)
-    {
+  while(!found && it != m_allocatedSRGSet.end()) {
+    if(it->ld == ld) {
       m_allocatedSRGSet.erase(it);
       found = true;
     }
-    else
+    else {
       ++it;
+	}
   }
   
   // resume all LD's with non-overlapping parameters with the highest priority one
   m_allocatedSRGRcuSubset = 0;
   m_allocatedSRGRcuSettingsMap.clear();
   it = m_allocatedSRGSet.begin();
-  while(it != m_allocatedSRGSet.end())
-  {
-    if(_matchSRGparameters(*it))
-    {
+  while(it != m_allocatedSRGSet.end()) {
+    if(_matchSRGparameters(*it)) {
+      LOG_INFO(formatString("Resuming LogicalDevice %s",it->ld->getName().c_str()));
 #ifndef TESTBUILD
-      LOG_INFO(formatString("Resuming LogicalDevice %s",it->ld->getName().c_str()))
       it->ld->resume();
-#else
-      LOG_INFO(formatString("Resuming LogicalDevice"))
 #endif
       _addSRGallocation(it->rcuSubset, it->nyquistZone, it->rcuControl);
     }
     ++it;
   }
-  LOG_INFO(formatString("%d SRG's allocated",m_allocatedSRGSet.size()))
+  LOG_INFO(formatString("%d SRG's allocated",m_allocatedSRGSet.size()));
 }
 
 void ResourceAllocator::logSRGallocation() const
@@ -301,8 +267,7 @@ void ResourceAllocator::logSRGallocation() const
   stringstream logStream;
   logStream << "SRG allocation log" << endl;
   logStream << "LD name, priority, nyquistZone, rcuControl, rcu subset" << endl;
-  for(TSRGAllocationSet::iterator it = m_allocatedSRGSet.begin(); it != m_allocatedSRGSet.end(); ++it)
-  {
+  for(TSRGAllocationSet::iterator it = m_allocatedSRGSet.begin(); it != m_allocatedSRGSet.end(); ++it) {
 #ifndef TESTBUILD
     logStream << it->ld->getName().c_str() << ", ";
 #endif
@@ -317,18 +282,14 @@ void ResourceAllocator::logSRGallocation() const
 bool ResourceAllocator::_matchSRGparameters(const TSRGAllocation& requested)
 {
   bool match = true;
-  if((requested.rcuSubset & m_allocatedSRGRcuSubset) != 0)
-  {
+  if((requested.rcuSubset & m_allocatedSRGRcuSubset) != 0) {
     // overlapping rcu usage. Check settings
-    for(size_t i=0;match && i < requested.rcuSubset.size();i++)
-    {
+    for(size_t i=0;match && i < requested.rcuSubset.size();i++) {
       // check overlap
-      if(requested.rcuSubset.test(i) && m_allocatedSRGRcuSubset.test(i))
-      {
+      if(requested.rcuSubset.test(i) && m_allocatedSRGRcuSubset.test(i)) {
         // check settings
         if(m_allocatedSRGRcuSettingsMap[i].nyquistZone != requested.nyquistZone ||
-           m_allocatedSRGRcuSettingsMap[i].rcuControl  != requested.rcuControl)
-        {
+           m_allocatedSRGRcuSettingsMap[i].rcuControl  != requested.rcuControl) {
           match = false;
         }
       }
@@ -340,10 +301,8 @@ bool ResourceAllocator::_matchSRGparameters(const TSRGAllocation& requested)
 void ResourceAllocator::_addSRGallocation(TRcuSubset rcuSubset, int16 nyquistZone, uint8 rcuControl)
 {
   m_allocatedSRGRcuSubset |= rcuSubset;
-  for(size_t i=0;i < rcuSubset.size();i++)
-  {
-    if(rcuSubset.test(i))
-    {
+  for(size_t i=0;i < rcuSubset.size();i++) {
+    if(rcuSubset.test(i)) {
       m_allocatedSRGRcuSettingsMap[i] = TRcuSettings(nyquistZone,rcuControl);
     }
   }

@@ -19,18 +19,15 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-#undef PACKAGE
-#undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <unistd.h>
 
-#include <Common/lofar_strstream.h>
+//#include <Common/lofar_strstream.h>
 #include "APL/APLCommon/APLUtilities.h"
 
 using namespace LOFAR;
 using namespace APLCommon;
-
-INIT_TRACER_CONTEXT(APLUtilities,LOFARLOGGER_PACKAGE);
 
 APLUtilities::APLUtilities()
 {
@@ -41,18 +38,19 @@ APLUtilities::~APLUtilities()
 {
 }
 
-void APLUtilities::decodeCommand(const string& commandString, string& command, vector<string>& parameters, const char delimiter)
+void APLUtilities::decodeCommand(const string&		commandString, 
+								 string& 			command, 
+								 vector<string>&	parameters, 
+								 const char 		delimiter)
 {
-  unsigned int delim=commandString.find(' ');
-  if(delim==string::npos) // no space found
-  {
-    command=commandString;
-  }
-  else
-  {
-    command=commandString.substr(0,delim);
-    APLUtilities::string2Vector(commandString.substr(delim+1),parameters,delimiter);
-  }
+	unsigned int delim=commandString.find(' ');
+	if(delim==string::npos) { // no space found
+		command=commandString;
+	}
+	else {
+		command=commandString.substr(0,delim);
+		APLUtilities::string2Vector(commandString.substr(delim+1),parameters,delimiter);
+	}
 }
 
 /*
@@ -163,117 +161,96 @@ time_t APLUtilities::getUTCtime()
 
 time_t APLUtilities::decodeTimeString(const string& timeStr)
 {
-  // specified times are in UTC, seconds since 1-1-1970
-  time_t returnTime=APLUtilities::getUTCtime();
-  string::size_type plusPos = timeStr.find('+');
-  if(plusPos != string::npos)
-  {
-    returnTime += atoi(timeStr.substr(plusPos+1).c_str());
-  }
-  else if(timeStr.find("-1") != string::npos)
-  {
-    returnTime = INT_MAX;
-  }
-  else if(timeStr != string("0"))
-  {
-    returnTime = atoi(timeStr.c_str());
-  }
-  return returnTime;
+	// empty string or -1? -> sometime in the future
+	if (timeStr.empty() || (timeStr.find("-1") != string::npos)) {
+		return (INT_MAX);
+	}
+
+	// does string contain a +? --> add to current time.
+	string::size_type plusPos = timeStr.find('+');
+	if (plusPos != string::npos) {
+		return (APLUtilities::getUTCtime() + atoi(timeStr.substr(plusPos+1).c_str()));
+	}
+
+	// specified times are in UTC, seconds since 1-1-1970
+	time_t	theTime = atoi(timeStr.c_str());
+
+	// is time 0? return current time.
+	if (theTime == 0) {
+		return (getUTCtime());
+	}
+
+	return(atoi(timeStr.c_str()));	// return specified time.
 }
 
-int APLUtilities::remoteCopy(const string& localFile, const string& remoteHost, const string& remoteFile)
+//
+// remoteCopy(localFile, remoteHost, remoteFile)
+//
+int APLUtilities::remoteCopy (const string& localFile, 
+							  const string& remoteHost, 
+							  const string& remoteFile)
 {
-  char tempFileName [L_tmpnam];
-  tmpnam(tempFileName);
+	string		tmpResultFile(getTempFileName());
   
-  string command("scp -Bq "); // -B: batch mode; -q: no progress bar
-  command += localFile + string(" ");
-  command += remoteHost + string(":");
-  command += remoteFile;
-  command += string(" 1>&2 2> ") + string(tempFileName);
-  int result = system(command.c_str());
-  LOG_DEBUG(formatString("copy command: %s",command.c_str()));
+	// -B: batch mode; -q: no progress bar
+	string command(formatString("scp -Bq %s %s:%s 1>&2 2>%s", localFile.c_str(),
+									remoteHost.c_str(), remoteFile.c_str(),
+									tmpResultFile.c_str()));
+	// execute the command.
+	int error = system(command.c_str());
+	LOG_DEBUG(formatString("copy command: %s",command.c_str()));
 
-  if(result != 0)
-  {
-    char outputLine[200];
-    string outputString;
-    FILE* f=fopen(tempFileName,"rt");
-    if(f != NULL)
-    {
-      while(!feof(f))
-      {
-        fgets(outputLine,200,f);
-        if(!feof(f))
-          outputString+=string(outputLine);
-      }
-      fclose(f);
-      LOG_ERROR(formatString("Unable to remote copy %s to %s:%s: %s",localFile.c_str(),remoteHost.c_str(),remoteFile.c_str(),outputString.c_str(),remoteHost.c_str()));
-    }
-  }
-  else
-  {
-    LOG_INFO(formatString("Successfully copied %s to %s:%s",localFile.c_str(),remoteHost.c_str(),remoteFile.c_str()));
-  }
-  remove(tempFileName);
-  return result;
+	if(error == 0) {			
+		LOG_INFO(formatString("Successfully copied %s to %s:%s",
+						localFile.c_str(),remoteHost.c_str(),remoteFile.c_str()));
+	}
+	else {
+		// an error occured, try to reconstruct the message
+		char 	outputLine[200];
+		string 	outputString;
+		FILE* 	f = fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
+		if (f == NULL) {						// oops, problems opening the file
+			LOG_ERROR(
+				formatString("Unable to remote copy %s to %s:%s: reason unknown",
+				localFile.c_str(),remoteHost.c_str(),remoteFile.c_str()));
+		}
+		else {
+			// construct the error message
+			while(!feof(f)) {
+				fgets(outputLine,200,f);
+				if(!feof(f)) {
+					outputString+=string(outputLine);
+				}
+			}
+			fclose(f);
+			LOG_ERROR(formatString("Unable to remote copy %s to %s:%s: %s",
+						localFile.c_str(),remoteHost.c_str(),remoteFile.c_str(),
+						outputString.c_str()));
+		}
+	}
+
+	// remove the temporarely file.
+	remove(tmpResultFile.c_str());
+
+	return (error);
 }
 
-string APLUtilities::getTempFileName()
+//
+// getTempFileName([format])
+//
+string APLUtilities::getTempFileName(const string&	format)
 {
-  char tempFileName [L_tmpnam];
-  tmpnam(tempFileName);
-  return string(tempFileName);
-}
+	char tempFileName [128];
 
-TLogicalDeviceTypes APLUtilities::convertLogicalDeviceType(const string& ldTypeString)
-{
-  TLogicalDeviceTypes ldType = LDTYPE_NO_TYPE;
-  if(ldTypeString == "VIRTUALINSTRUMENT")
-  {
-    ldType = LDTYPE_VIRTUALINSTRUMENT;
-  }
-  else if(ldTypeString == "VIRTUALTELESCOPE")
-  {
-    ldType = LDTYPE_VIRTUALTELESCOPE;
-  }
-  else if(ldTypeString == "ARRAYRECEPTORGROUP")
-  {
-    ldType = LDTYPE_ARRAYRECEPTORGROUP;
-  }
-  else if(ldTypeString == "STATIONRECEPTORGROUP")
-  {
-    ldType = LDTYPE_STATIONRECEPTORGROUP;
-  }
-  else if(ldTypeString == "ARRAYOPERATIONS")
-  {
-    ldType = LDTYPE_ARRAYOPERATIONS;
-  }
-  else if(ldTypeString == "STATIONOPERATIONS")
-  {
-    ldType = LDTYPE_STATIONOPERATIONS;
-  }
-  else if(ldTypeString == "VIRTUALBACKEND")
-  {
-    ldType = LDTYPE_VIRTUALBACKEND;
-  }
-  else if(ldTypeString == "VIRTUALROUTE")
-  {
-    ldType = LDTYPE_VIRTUALROUTE;
-  }
-  else if(ldTypeString == "MAINTENANCEVI")
-  {
-    ldType = LDTYPE_MAINTENANCEVI;
-  }
-  else if(ldTypeString == "OBSERVATION")
-  {
-    ldType = LDTYPE_OBSERVATION;
-  }
-  else
-  {
-    ldType = static_cast<TLogicalDeviceTypes>(atoi(ldTypeString.c_str()));
-    LOG_WARN(formatString("Unknown logical device type '%s'",ldTypeString.c_str()));
-  }
-  return ldType;
+	if (format.find("XXXXXX", 0) != string::npos) {	// did user specify mask?
+		strcpy (tempFileName, format.c_str());		// use user-mask
+	}
+	else {
+		strcpy (tempFileName, "/tmp/MAC_APL_XXXXXX");// use default mask
+	}
+
+	mkstemp(tempFileName);							// let OS invent the name
+
+	return string(tempFileName);
 }
 

@@ -24,6 +24,7 @@
 #define LogicalDevice_H
 
 //# Includes
+#define BOOST_SP_USE_PTHREADS
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -177,7 +178,7 @@ namespace APLCommon
       typedef map<string,TPortSharedPtr>      TPortMap;
       typedef map<string,TPortWeakPtr>        TPortWeakPtrMap;
       typedef vector<TBufferedEventInfo>      TEventBufferVector;
-      typedef map<string,TLogicalDeviceTypes> TString2LDTypeMap;
+//      typedef map<string,TLogicalDeviceTypes> TString2LDTypeMap;
       typedef map<string,TLogicalDeviceState> TString2LDStateMap;
       
       /**
@@ -188,8 +189,8 @@ namespace APLCommon
       bool _isChildPort(GCF::TM::GCFPortInterface& port);
       bool _isChildStartDaemonPort(GCF::TM::GCFPortInterface& port, string& startDaemonKey);
       void _sendToAllChilds(GCFEventSharedPtr eventPtr);
-      bool _childsInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state);
-      bool _childsNotInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state);
+      bool _childsInState(const double requiredPercentage, const string& type, const TLogicalDeviceState& state);
+      bool _childsNotInState(const double requiredPercentage, const string& type, const TLogicalDeviceState& state);
       void _connectedHandler(GCF::TM::GCFPortInterface& port);
       void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
       void _acceptChildConnection();
@@ -246,7 +247,7 @@ namespace APLCommon
       std::string                           m_basePropertySetName;
       GCFMyPropertySetSharedPtr             m_detailsPropertySet;
       std::string                           m_detailsPropertySetName;
-      ACC::APS::ParameterSet                m_parameterSet;
+      ACC::APS::ParameterSet*               m_parameterSet;
 
       string                                m_serverPortName;
       TRemotePort                           m_serverPort; // listening port
@@ -294,7 +295,7 @@ namespace APLCommon
       TLDResult                             m_globalError;
       const string                          m_version;
 
-      TString2LDTypeMap                     m_childTypes;
+//      TString2LDTypeMap                     m_childTypes;
       TString2LDStateMap                    m_childStates;
       
       ResourceAllocator::ResourceAllocatorPtr m_resourceAllocator;

@@ -32,40 +32,38 @@
 
 // forward declaration
 
-namespace LOFAR
-{
-  
-namespace APLCommon
-{
-  template <class T>
-    class LogicalDeviceFactory : public LogicalDeviceFactoryBase
-  {
-    public:
+namespace LOFAR {
+  namespace APLCommon {
 
-      LogicalDeviceFactory() : LogicalDeviceFactoryBase() {}; 
-      virtual ~LogicalDeviceFactory() {};
+template <class T>
+class LogicalDeviceFactory : public LogicalDeviceFactoryBase
+{
+public:
+	// Constructors and Destructors
+	LogicalDeviceFactory() : LogicalDeviceFactoryBase() {}; 
+   	virtual ~LogicalDeviceFactory() {};
       
-      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
-                                                                   const string& parameterFile,
-                                                                   GCF::TM::GCFTask* pStartDaemon)
-      {
-        return boost::shared_ptr<LogicalDevice>(new T(taskName, parameterFile, pStartDaemon));
-      };
+   	virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
+																 const string& parameterFile,
+																 GCF::TM::GCFTask* pStartDaemon)
+	{
+		return boost::shared_ptr<LogicalDevice>(new T(taskName, parameterFile, pStartDaemon));
+	};
 
-      virtual bool sharingAllowed()
-      {
-        return false;
-      }
+	virtual bool sharingAllowed() {
+		return (false);
+   	}
 
-    protected:
-      // protected copy constructor
-      LogicalDeviceFactory(const LogicalDeviceFactory&);
-      // protected assignment operator
-      LogicalDeviceFactory& operator=(const LogicalDeviceFactory&);
+protected:
+	// protected copy constructor
+	LogicalDeviceFactory(const LogicalDeviceFactory&);
+	// protected assignment operator
+	LogicalDeviceFactory& operator=(const LogicalDeviceFactory&);
 
-    private:
+private:
     
-  };
+};
+
 };//APLCommon
 };//LOFAR
 #endif
