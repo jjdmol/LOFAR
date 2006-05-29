@@ -10,10 +10,13 @@
 
 package nl.astron.lofar.sas.otb.util;
 
-import nl.astron.lofar.sas.otb.jotdb2.*;
 import java.rmi.Naming;
 import java.util.TreeMap;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.jotdb2.jConverterInterface;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBinterface;
+import nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceInterface;
+import nl.astron.lofar.sas.otb.jotdb2.jTreeValueInterface;
 import nl.astron.lofar.sas.otbcomponents.SetServerDialog;
 import org.apache.log4j.Logger;
 
