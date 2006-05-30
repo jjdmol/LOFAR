@@ -146,7 +146,7 @@ int main (int	argc, char*	argv[]) {
 		VICnodeDef	aNode = tm.getComponentNode(topNodeID);
 		LOG_INFO_STR(aNode);
 
-		LOG_INFO("check if node is topNode")
+		LOG_INFO("check if node is topNode");
 		bool	isTop = tm.isTopComponent(topNodeID);
 		ASSERTSTR(isTop, "isTopComponent(" << topNodeID << ") returned false");
 
@@ -221,7 +221,7 @@ int main (int	argc, char*	argv[]) {
 		VICnodeDef	testNode = tm.getComponentNode(ref3);
 		LOG_INFO_STR(testNode);
 	
-		LOG_INFO_STR("check if node ARG is topNode")
+		LOG_INFO_STR("check if node ARG is topNode");
 		isTop = tm.isTopComponent(ref3);
 		ASSERTSTR(!isTop, "isTopComponent(" << ref3 << ") returned true");
 
