@@ -7,7 +7,7 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
-import java.awt.GridBagConstraints;
+import java.awt.Dimension;
 import java.util.Vector;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -17,7 +17,6 @@ import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.jParmDBnode;
-import nl.astron.lofar.sas.otb.util.plotter.PlotSlotsPanel;
 import org.apache.log4j.Logger;
 
 /**
@@ -31,8 +30,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     
     private MainFrame  itsMainFrame;
     private String itsParamName;
-    private PlotSlotsPanel itsSlotsPanel;
-    
+        
     /** Creates new form BeanForm based upon aParameter
      *
      * @params  aParam   Param to obtain the info from
@@ -49,24 +47,13 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     /** Creates new form BeanForm */
     public ParmDBPlotPanel() {
         initComponents();
-        itsSlotsPanel = new PlotSlotsPanel();
-        
-        GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.ipadx = 2;
-        gridBagConstraints.ipady = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(1, 1, 0, 0);
-        add(itsSlotsPanel, gridBagConstraints);
         
     }
     
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            
+           
             
         } else {
             logger.debug("No Mainframe supplied");
@@ -74,7 +61,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     public boolean hasPopupMenu() {
-        return false;
+        return true;
     }
     
     
@@ -96,10 +83,21 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
      *  aPopupMenu.show(aComponent, x, y );        
      */
     public void createPopupMenu(Component aComponent,int x, int y) {
-        JPopupMenu aPopupMenu=null;
-        JMenuItem  aMenuItem=null;
-        
-        //  Fill in menu as in the example above        
+       // build up the menu
+       JPopupMenu aPopupMenu = new JPopupMenu();
+       int[] availableSlots = itsSlotsPanel.getAvailableSlotIndexes();
+       for(int i = 0; i < availableSlots.length; i++){
+           JMenuItem aMenuItem=new JMenuItem("Add to slot "+availableSlots[i]);
+           aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+               public void actionPerformed(java.awt.event.ActionEvent evt) {
+                   popupMenuHandler(evt);
+               }
+           });
+           aMenuItem.setActionCommand("Add to slot " +availableSlots[i]);
+           aPopupMenu.add(aMenuItem);
+           aPopupMenu.setOpaque(true);
+       }
+       aPopupMenu.show(aComponent, x, y );     
     }
     
     /** handles the choice from the popupmenu 
@@ -111,7 +109,53 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
      *      }  
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+        logger.debug("PopUp menu Selection made: "+evt.getActionCommand().toString());
+        int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(12));
+        logger.debug("Plot Slot extrapolated: "+slotSelected);
+        itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName));
     }
+    
+    private Object constructPlotterConstraints(String aParamName){
+        String[] passToDataAccess = null; 
+        if (aParamName != null) {
+            String cloneParamName = aParamName.toString();
+            if(cloneParamName.equalsIgnoreCase("ParmDB")){
+                cloneParamName = "*";
+            }else{
+                cloneParamName=cloneParamName.substring(7);
+                cloneParamName += "*";
+            }
+            try{
+                passToDataAccess = new String[7];
+                
+                Vector paramValues;
+                paramValues = SharedVars.getJParmFacade().getRange(cloneParamName);
+                double startx = Double.parseDouble(paramValues.get(0).toString());
+                double endx =Double.parseDouble(paramValues.get(1).toString());
+                double starty = Double.parseDouble(paramValues.get(2).toString());
+                double endy = Double.parseDouble(paramValues.get(3).toString());
+                int numx = Integer.parseInt("5");
+                int numy = Integer.parseInt("5");
+                
+                passToDataAccess[0] = cloneParamName;
+                passToDataAccess[1] = ""+startx;
+                passToDataAccess[2] = ""+endx;
+                passToDataAccess[3] = ""+numx;
+                passToDataAccess[4] = ""+starty;
+                passToDataAccess[5] = ""+endy;
+                passToDataAccess[6] = ""+numy;
+            }catch(Exception ex){
+                JOptionPane.showMessageDialog(itsMainFrame, ex.getMessage(),
+                        "Error detected",
+                        JOptionPane.ERROR_MESSAGE);
+                logger.error("Plotter created an exception :"+ex.getMessage(),ex);
+            }
+        } else {
+            logger.debug("ERROR:  no Param Name given");
+        }
+        return passToDataAccess;
+    }
+    
     
     private void initPanel(String aParamName) {
         // check access
@@ -129,42 +173,6 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         if(userAccount.isInstrumentScientist()) {
             // enable/disable certain controls
         }       
-        
-        if (aParamName != null) {
-            if(aParamName.equalsIgnoreCase("ParmDB")){
-                itsParamName = "*";
-            }else{
-                itsParamName=aParamName.substring(7);
-                itsParamName += "*";
-            }
-            try{
-                String[] passToDataAccess = new String[7];
-                
-                Vector paramValues;
-                paramValues = SharedVars.getJParmFacade().getRange(itsParamName);
-                double startx = Double.parseDouble(paramValues.get(0).toString());
-                double endx =Double.parseDouble(paramValues.get(1).toString());
-                double starty = Double.parseDouble(paramValues.get(2).toString());
-                double endy = Double.parseDouble(paramValues.get(3).toString());
-                int numx = Integer.parseInt("5");
-                int numy = Integer.parseInt("5");
-                
-                passToDataAccess[0] = itsParamName;
-                passToDataAccess[1] = ""+startx;
-                passToDataAccess[2] = ""+endx;
-                passToDataAccess[3] = ""+numx;
-                passToDataAccess[4] = ""+starty;
-                passToDataAccess[5] = ""+endy;
-                passToDataAccess[6] = ""+numy;
-            }catch(Exception ex){
-                JOptionPane.showMessageDialog(itsMainFrame, ex.getMessage(),
-                        "Error detected",
-                        JOptionPane.ERROR_MESSAGE);
-                logger.error("Plotter created an exception :"+ex.getMessage(),ex);
-            }
-        } else {
-            logger.debug("ERROR:  no Param Name given");
-        }
     }
     public void setParam(String aParam) {
         if (aParam != null) {
@@ -174,25 +182,6 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             logger.debug("No param supplied");
         }
     }
-    
-    /** Enables/disables the buttons
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableButtons(boolean enabled) {
-        this.ParamApplyButton.setEnabled(enabled);
-        this.ParamCancelButton.setEnabled(enabled);
-    }
-    
-    /** Sets the buttons visible/invisible
-     *
-     * @param   visible     true/false visible/invisible
-     */
-    public void setButtonsVisible(boolean visible) {
-        this.ParamApplyButton.setVisible(visible);
-        this.ParamCancelButton.setVisible(visible);
-    }
-    
     /** Enables/disables the complete form
      *
      * @param   enabled     true/false enabled/disabled
@@ -207,14 +196,38 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     public void setContent(Object anObject) {
         jParmDBnode node = (jParmDBnode)anObject;
         itsParamName = node.nodeID();
-        
-        initPanel(itsParamName);
+        logger.trace("ParmDB name selected : "+itsParamName);
+        int panelWidth = itsMainFrame.getWidth();
+        int panelHeight = itsMainFrame.getHeight();
+        slotsPane.setMinimumSize(new Dimension(640,480));
+        slotsPane.setPreferredSize(new Dimension(panelWidth-400,panelHeight-300));
+        slotsPane.setSize(new Dimension(panelWidth-400,panelHeight-300));
+        slotsPane.getViewport().setPreferredSize(new Dimension(640,480));
+        itsSlotsPanel.setMinimumSize(new Dimension(640,480));
+        itsSlotsPanel.setPreferredSize(new Dimension(panelWidth-440,panelHeight-340));
+        //initPanel(itsParamName);
     }
     
     private void saveInput() {
         // Just check all possible fields that CAN change. The enabled method will take care if they COULD be changed.
         // this way we keep this panel general for multiple use
         boolean hasChanged = false;
+        
+    }
+    
+    /** Enables/disables the buttons
+     *
+     * @param   enabled     true/false enabled/disabled
+     */
+    public void enableButtons(boolean enabled) {
+        
+    }
+    
+    /** Sets the buttons visible/invisible
+     *
+     * @param   visible     true/false visible/invisible
+     */
+    public void setButtonsVisible(boolean visible) {
         
     }
     
@@ -227,102 +240,89 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
-        ParamCancelButton = new javax.swing.JButton();
-        ParamApplyButton = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jTextArea2 = new javax.swing.JTextArea();
+        contentPanel = new javax.swing.JPanel();
+        lSlotsAmount = new javax.swing.JLabel();
+        cSlotsAmount = new javax.swing.JComboBox();
+        slotsPane = new javax.swing.JScrollPane();
+        itsSlotsPanel = new nl.astron.lofar.sas.otb.util.plotter.PlotSlotsPanel();
+        helpPane = new javax.swing.JScrollPane();
+        tHelp = new javax.swing.JTextArea();
 
-        jTextArea1.setColumns(20);
-        jTextArea1.setRows(5);
-        jScrollPane1.setViewportView(jTextArea1);
+        setLayout(new java.awt.BorderLayout());
 
-        setLayout(new java.awt.GridBagLayout());
+        contentPanel.setLayout(new java.awt.GridBagLayout());
 
-        ParamCancelButton.setText("Cancel");
-        ParamCancelButton.setEnabled(false);
-        ParamCancelButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ParamCancelButtonActionPerformed(evt);
+        lSlotsAmount.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        lSlotsAmount.setLabelFor(cSlotsAmount);
+        lSlotsAmount.setText("Number of Slots");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        contentPanel.add(lSlotsAmount, gridBagConstraints);
+
+        cSlotsAmount.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "1", "4", "9", "16", "25" }));
+        cSlotsAmount.setSelectedIndex(1);
+        cSlotsAmount.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cSlotsAmountItemStateChanged(evt);
             }
         });
 
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 3;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(30, 36, 7, 0);
-        add(ParamCancelButton, gridBagConstraints);
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        contentPanel.add(cSlotsAmount, gridBagConstraints);
 
-        ParamApplyButton.setText("Apply");
-        ParamApplyButton.setEnabled(false);
-        ParamApplyButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ParamApplyButtonActionPerformed(evt);
-            }
-        });
+        slotsPane.setViewportBorder(javax.swing.BorderFactory.createEtchedBorder());
+        slotsPane.setAutoscrolls(true);
+        slotsPane.setMinimumSize(new java.awt.Dimension(640, 480));
+        slotsPane.setPreferredSize(new java.awt.Dimension(640, 480));
+        itsSlotsPanel.setMinimumSize(new java.awt.Dimension(640, 480));
+        itsSlotsPanel.setPreferredSize(new java.awt.Dimension(640, 480));
+        slotsPane.setViewportView(itsSlotsPanel);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 3;
-        gridBagConstraints.gridy = 3;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(30, 5, 7, 9);
-        add(ParamApplyButton, gridBagConstraints);
-
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("ParmDB Plot Panel");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.ipadx = 206;
-        gridBagConstraints.ipady = 5;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(10, 114, 0, 0);
-        add(jLabel1, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        contentPanel.add(slotsPane, gridBagConstraints);
 
-        jTextArea2.setBackground(javax.swing.UIManager.getDefaults().getColor("scrollbar"));
-        jTextArea2.setColumns(20);
-        jTextArea2.setEditable(false);
-        jTextArea2.setRows(5);
-        jTextArea2.setText("To zoom: Click and hold the left mouse button and select a rectangle.\nTo reset the zoom: Press CTRL-LeftMouseButton to reset the zoom.\nTo change colors/etc: Double-Click on a line in the legend.\nTo change plot/axis labels and tics/etc: Click on an axis or title and press the right mouse button.");
-        jScrollPane2.setViewportView(jTextArea2);
+        tHelp.setBackground(javax.swing.UIManager.getDefaults().getColor("Viewport.background"));
+        tHelp.setColumns(20);
+        tHelp.setEditable(false);
+        tHelp.setRows(5);
+        tHelp.setText("To zoom: Click and hold the left mouse button and select a rectangle.\nTo reset the zoom: Press CTRL-LeftMouseButton to reset the zoom.\nTo change colors/etc: Double-Click on a line in the legend.\nTo change plot/axis labels and tics/etc: Click on an axis or title and press the right mouse button.");
+        tHelp.setMinimumSize(new java.awt.Dimension(565, 75));
+        helpPane.setViewportView(tHelp);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
-        gridBagConstraints.gridwidth = 4;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.ipadx = 588;
-        gridBagConstraints.ipady = 58;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(400, 10, 0, 9);
-        add(jScrollPane2, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        contentPanel.add(helpPane, gridBagConstraints);
+
+        add(contentPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-    
-    private void ParamApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamApplyButtonActionPerformed
-        saveInput();
-    }//GEN-LAST:event_ParamApplyButtonActionPerformed
-    
-    private void ParamCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamCancelButtonActionPerformed
-        initPanel(itsParamName);
-    }//GEN-LAST:event_ParamCancelButtonActionPerformed
-    
+
+    private void cSlotsAmountItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cSlotsAmountItemStateChanged
+        itsSlotsPanel.setAmountOfSlots(Integer.parseInt(evt.getItem().toString()),false);
+    }//GEN-LAST:event_cSlotsAmountItemStateChanged
+            
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton ParamApplyButton;
-    private javax.swing.JButton ParamCancelButton;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextArea jTextArea2;
+    private javax.swing.JComboBox cSlotsAmount;
+    private javax.swing.JPanel contentPanel;
+    private javax.swing.JScrollPane helpPane;
+    private nl.astron.lofar.sas.otb.util.plotter.PlotSlotsPanel itsSlotsPanel;
+    private javax.swing.JLabel lSlotsAmount;
+    private javax.swing.JScrollPane slotsPane;
+    private javax.swing.JTextArea tHelp;
     // End of variables declaration//GEN-END:variables
     
     /**

@@ -97,7 +97,7 @@ public class PlotSlotManager{
     public int[] getAvailableSlotIndexes(){
         int[] availableSlots = null;
         availableSlots = new int[countAvailableSlots()];
-        int index = 1;
+        int index = 0;
         for(PlotSlot slot : itsPlotSlots){
             if(slot.isEmpty()){
                 availableSlots[index] = itsPlotSlots.indexOf(slot)+1;

@@ -26,7 +26,6 @@ package nl.astron.lofar.sas.otb.util.plotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
@@ -48,13 +47,13 @@ public class PlotSlot extends JPanel{
     /** Creates a new instance of PlotSlot */
     public PlotSlot() {
         itsPlotGroup = null;
-        itsPlot = new PlotPanel();
+        itsPlot = null;
         setLabel(EMPTY_SLOT);
-        setPreferredSize(new Dimension(320,240));
         setBackground(Color.WHITE);
-        
+        setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        setSize(new Dimension(320,240));
+        setPreferredSize(new Dimension(320,240));
         setLayout(new BorderLayout());
-        
     }
     /** 
      * Creates a new instance of PlotSlot using a supplied label
@@ -75,19 +74,19 @@ public class PlotSlot extends JPanel{
         return slotLabel;
     }
     
-    public PlotPanel getPlot(){
-        return itsPlot;
-    }
-    
     public void setPlot(PlotPanel aPlot){
         itsPlot = aPlot;
     }
     
     public void addPlot(Object constraints){
         removeAll();
-        try {            
+        try {
+            if(itsPlot == null){
+                itsPlot = new PlotPanel();
+            }
             itsPlot.createPlot(PlotConstants.PLOT_XYLINE,true,constraints);
             add(itsPlot,BorderLayout.CENTER);
+           
         } catch (PlotterException ex) {
             JTextArea error = new JTextArea(ex.getMessage());
             error.setColumns(50);
@@ -145,7 +144,7 @@ public class PlotSlot extends JPanel{
         removePlot();
     }
     public boolean isEmpty(){
-        return containsPlot();
+        return !containsPlot();
     }
    
 }
