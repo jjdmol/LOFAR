@@ -1,4 +1,4 @@
-//#  WH_DelayCompensation.cc: one line description
+//#  WH_DelayCompensation.cc: Workholder for the delay compensation.
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,10 +26,9 @@
 //# Includes
 #include <CS1_DelayCompensation/WH_DelayCompensation.h>
 #include <CS1_Interface/DH_Delay.h>
-// #include <APS/ParameterSet.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <AMCBase/ConverterClient.h>
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
@@ -45,26 +44,26 @@ namespace LOFAR
   {
 
     INIT_TRACER_CONTEXT(WH_DelayCompensation, LOFARLOGGER_PACKAGE);
-//     INIT_TRACER_CONTEXT(WH_DelayCompensation, "WH_DelayCompensation");
 
     WH_DelayCompensation::WH_DelayCompensation(const string& name,
                                                const ParameterSet& ps) :
       WorkHolder(0,                                      // inputs
-//                  ps.getUint32("Observation.NStations"),  // outputs
                  ps.getUint32("Input.NRSPBoards"),       // outputs
                  name,                                   // name
                  "WH_DelayCompensation"),                // type
-      itsParameterSet(ps),
+      itsParamSet(ps),
+      itsSampleRate(ps.getDouble("Observation.SampleRate")),
       itsConverter(0),
       itsLoopCount(0)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, name.c_str());
 
-      // Get relevant data from the parameter set and initialize private data.
-      getConverterConfig(ps);
-      getBeamDirections(ps);
-      getStationPositions(ps);
-      getObservationEpoch(ps);
+      // Initialize our private data structures.
+      getConverterConfig(itsParamSet);
+      getBeamDirections(itsParamSet);
+      getStationPositions(itsParamSet);
+      getObservationEpoch(itsParamSet);
+      setPositionDiffs();
 
       // Create outgoing dataholders for the delay information; one for each
       // stations (should be one for each RSP board).
@@ -73,6 +72,7 @@ namespace LOFAR
         LOG_TRACE_LOOP_STR("Creating " << str);
         getDataManager().addOutDataHolder(i, new DH_Delay(str, itsNoutputs));
       }
+
     }
 
 
@@ -84,76 +84,65 @@ namespace LOFAR
 
     void WH_DelayCompensation::preprocess()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
 
-      // Set the process loop counter to zero.
       itsLoopCount = 0;
-      
+
       // Create the AMC converter.
       ASSERT(!itsConverter);
       itsConverter = createConverter();
       ASSERT(itsConverter);
-
-      // Calculate the position difference vectors for all station positions
-      // with respect to the reference station (which is, by definition, the
-      // first station). This choice is arbitrary, since we're interested in
-      // path length \e differences only.
-
     }
 
 
     void WH_DelayCompensation::process()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_FLOW, getName() << 
+                             ", loop count: " << itsLoopCount);
 
       // Each integration period, we must send the new CoarseDelay,
       // FineDelayAtBegin, and FineDelayAfterEnd data for all stations.
 
-      // For the time being we will call itsConverter->j2000ToAzel() every
+      // For the time being we will call itsConverter->j2000ToItrf() every
       // cycle. This can be made more efficient by precalculating, say, for 30
-      // integration periods, and only call itsConverter->j2000ToAzel() once
+      // integration periods, and only call itsConverter->j2000ToItrf() once
       // every 30 cycles.
       RequestData request (itsBeamDirections, itsStationPositions, 
                            itsObservationEpoch[itsLoopCount]);
       ResultData result;
-      itsConverter->j2000ToAzel(result, request);
+      itsConverter->j2000ToItrf(result, request);
 
-      cout.precision(9);
-      cout << "skies = " << endl;
-      for (uint i=0; i<itsBeamDirections.size(); ++i) {
-        cout << "[" << i << "]: " << itsBeamDirections[i] << endl;
+      LOG_TRACE_VAR("Beam directions:");
+      for (uint i = 0; i < itsBeamDirections.size(); ++i) {
+        LOG_TRACE_VAR_STR(" [" << i << "]: " << itsBeamDirections[i]);
       }
-      cout << "poss = " << endl;
-      for (uint i=0; i<itsStationPositions.size(); ++i) {
-        cout << "[" << i << "]: " << itsStationPositions[i] << endl;
+      LOG_TRACE_VAR("Station positions:");
+      for (uint i = 0; i < itsStationPositions.size(); ++i) {
+        LOG_TRACE_VAR_STR(" [" << i << "]: " << itsStationPositions[i]);
       }
-      cout << "times = " << endl;
-      cout << "[" << itsLoopCount << "]: " 
-           << itsObservationEpoch[itsLoopCount] << endl;
+      LOG_TRACE_VAR("Observation epochs:");
+      LOG_TRACE_VAR_STR(" [" << itsLoopCount << "]: " << 
+                        itsObservationEpoch[itsLoopCount]);
       
-      cout << "Conversion result " << itsLoopCount << ": ";
-      for (uint i=0; i<result.skyCoord.size(); ++i) {
-        cout << endl << "[" << i << "]: " << result.skyCoord[i];
+      LOG_TRACE_CALC("Conversion result:");
+      for (uint i = 0; i < result.direction.size(); ++i) {
+        LOG_TRACE_CALC_STR(" [" << i << "]: " << result.direction[i]);
       }
 
-      // Now we must compute the path length difference for beam
-      // \f$\mathbf{b}_i\f$ between station \f$j\f$ at position
-      // \f$\mathbf{p}_j\f$ and the reference station 0 at position
-      // \f$\mathbf{p}_0\f$.
-      // \f[
-      //   d_{ij} - d_{i0} = \mathbf{b}_i \cdot \mathbf{p}_j 
-      //                   - \mathbf{b}_i \cdot \mathbf{p}_0
-      //                   = \mathbf{b}_i \cdot (\mathbf{p}_j - \mathbf{p}_0)
-      // \f]
-      // Hence, we can reduce the number of dot products that must be
-      // calculated if we precalculate the difference vectors \f$\mathbf{p}_j -
-      // \mathbf{p}_0$\f.
+      // First calculate the geometrical delays. Please remember that the
+      // result.direction vector stores the directions per epoch, per
+      // position, per direction. I.e. the first itsBeamDirections.size()
+      // elements contain the converted directions for itsStationPositions[0],
+      // the second for itsStationPositions[1], etc.
+      vector<double> delays(result.direction.size());
 
-      // Once we have the path length differences, convert them to time
-      // differences. This is straight forward, because we can simply divide
-      // the path length difference by the speed of light in vacuum. We don't
-      // need to know the speed of light in the atmosphere, because the AZEL
-      // directions that we've calculated are valid for vacuum (only!).
+      LOG_TRACE_CALC_STR("Geometrical delays:");
+      for (uint i = 0; i < delays.size(); ++i) {
+        uint j = i / itsBeamDirections.size();
+        cout << "*** i = " << i << "; j = " << j << " ***" << endl;
+        delays[i] = (result.direction[i] * itsPositionDiffs[j]) / speedOfLight;
+        LOG_TRACE_CALC_STR(" [" << i << "]: " << delays[i]);
+      }
 
       // The time differences need to be split into a coarse (sample) delay
       // and a fine (subsample) delay. The sample rate should be read from the
@@ -166,7 +155,7 @@ namespace LOFAR
 
     void WH_DelayCompensation::postprocess()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
 
       // Delete the AMC converter
       ASSERT(itsConverter);
@@ -178,7 +167,7 @@ namespace LOFAR
     WH_DelayCompensation* WH_DelayCompensation::make(const string& name)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      return new WH_DelayCompensation(name, itsParameterSet);
+      return new WH_DelayCompensation(name, itsParamSet);
     }
 
 
@@ -205,11 +194,11 @@ namespace LOFAR
 
       // What coordinate system is used for these source directions?
       // Currently, we support J2000, ITRF, and AZEL.
-      SkyCoord::Types dirType(SkyCoord::INVALID);
+      Direction::Types dirType(Direction::INVALID);
       string str = toUpper(ps.getString("Observation.DirectionType"));
-      if      (str == "J2000") dirType = SkyCoord::J2000;
-      else if (str == "ITRF")  dirType = SkyCoord::ITRF;
-      else if (str == "AZEL")  dirType = SkyCoord::AZEL;
+      if      (str == "J2000") dirType = Direction::J2000;
+      else if (str == "ITRF")  dirType = Direction::ITRF;
+      else if (str == "AZEL")  dirType = Direction::AZEL;
       else ASSERTSTR(false, "Observation.BeamDirectionType must be one of "
                      "J2000, ITRF, or AZEL");
 
@@ -224,9 +213,9 @@ namespace LOFAR
       // Reserve space in \a itsBeamDirections to avoid reallocations.
       itsBeamDirections.reserve(nrBeams);
       
-      // Split the \a dir vector into separate SkyCoord objects.
+      // Split the \a dir vector into separate Direction objects.
       for (uint i = 0; i < nrBeams; ++i) {
-        itsBeamDirections.push_back(SkyCoord(dir[2*i], dir[2*i+1], dirType));
+        itsBeamDirections.push_back(Direction(dir[2*i], dir[2*i+1], dirType));
       }
     }
 
@@ -241,9 +230,9 @@ namespace LOFAR
 
       // Station positions must be given in ITRF; there is currently no
       // support in the AMC package to convert between WGS84 and ITRF.
-      EarthCoord::Types posType(EarthCoord::INVALID);
+      Position::Types posType(Position::INVALID);
       string str = toUpper(ps.getString("Observation.PositionType"));
-      if (str == "ITRF") posType = EarthCoord::ITRF;
+      if (str == "ITRF") posType = Position::ITRF;
       else ASSERTSTR(false, "Observation.PositionType must be ITRF");
 
       // Get the antenna positions from the parameter set. The antenna
@@ -256,10 +245,10 @@ namespace LOFAR
       // Reserve space in \a itsStationPositions to avoid reallocations.
       itsStationPositions.reserve(nrStations);
 
-      // Split the \a pos vector into separate EarthCoord objects.
+      // Split the \a pos vector into separate Position objects.
       for (uint i = 0; i < nrStations; ++i) {
         itsStationPositions.
-          push_back(EarthCoord(pos[3*i], pos[3*i+1], pos[3*i+2], posType));
+          push_back(Position(pos[3*i], pos[3*i+1], pos[3*i+2], posType));
       }
     }
 
@@ -271,22 +260,46 @@ namespace LOFAR
       // The observation epoch should be given by a start time and a stop
       // time. Both times must be specified in Modified Julian Date (MJD).
       // The integration period must be specified in seconds.
-      double startTime = ps.getDouble("Observation.StartTime");
-      double stopTime  = ps.getDouble("Observation.StopTime");
-      double delta     = ps.getDouble("Observation.NSubbandSamples") / ps.getDouble("Observation.SampleRate") / 86400;
+      Epoch startTime = ps.getDouble("Observation.StartTime");
+      LOG_TRACE_VAR_STR("startTime = " << startTime);
+      Epoch stopTime  = ps.getDouble("Observation.StopTime");
+      LOG_TRACE_VAR_STR("stopTime = " << stopTime);
+      Epoch stepTime  = ps.getDouble("Observation.NSubbandSamples") / 
+        ps.getDouble("Observation.SampleRate") / 86400;
+      LOG_TRACE_VAR_STR("stepTime = " << stepTime);
+
       ASSERTSTR(startTime <= stopTime, startTime << " <= " << stopTime);
 
       // Reserve space in \a itsObservationEpoch to avoid reallocations
-      uint sz = uint(ceil((stopTime - startTime) / delta));
+      uint sz = uint(ceil((stopTime - startTime).mjd() / stepTime.mjd()));
       LOG_TRACE_VAR_STR(sz << " integration period(s)");
       itsObservationEpoch.reserve(sz);
       
-      // Fill a vector of TimeCoord, with a time interval \a delta, starting
+      // Fill a vector of Epoch, with a time interval \a stepTime, starting
       // at \a startTime and ending at \a stopTime.
-      // \todo The current implementation, using an increment in the for-loop,
-      // introduces a rounding error of approx 1 ms per hour. Too much, IMHO.
-      for (double time = startTime; time <= stopTime; time += delta) {
-        itsObservationEpoch.push_back(TimeCoord(time));
+      for (Epoch time = startTime; time <= stopTime; time += stepTime) {
+        itsObservationEpoch.push_back(Epoch(time));
+//         LOG_TRACE_LOOP_STR("itsObservationEpoch[" << 
+//                            itsObservationEpoch.size()-1 << "] = " <<
+//                            itsObservationEpoch[itsObservationEpoch.size()-1]);
+      }
+    }
+
+
+    void WH_DelayCompensation::setPositionDiffs()
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      // Reserve space in \a itsPositionDiffs to avoid reallocations.
+      itsPositionDiffs.reserve(itsStationPositions.size());
+
+      // Calculate the station to reference station position difference vector
+      // all stations.
+      const Position& p0 = itsStationPositions[0];
+      for (uint i = 0; i < itsStationPositions.size(); ++i) {
+        itsPositionDiffs.push_back(itsStationPositions[i] - p0);
+        LOG_TRACE_LOOP_STR("itsPositionDiffs[" << i << "] = " << 
+                           itsPositionDiffs[i]);
       }
     }
 
