@@ -252,7 +252,7 @@ int main (int	argc, char*	argv[]) {
 		tm.saveNode(param2);
 
 		// Setting nr instances to some nice values
-		LOG_INFO("Setting up tree counts")
+		LOG_INFO("Setting up tree counts");
 		vector<OTDBnode>	aNodeCol = tm.getItemList(VTtreeID, "RFI dete%");
 		aNode = *(aNodeCol.begin());
 		aNode.instances = 40;
