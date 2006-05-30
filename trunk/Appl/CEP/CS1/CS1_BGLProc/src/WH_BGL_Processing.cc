@@ -75,7 +75,7 @@ static NSTimer FFTtimer("FFT", true);
 static NSTimer doPPFtimer("doPPF()", true);
 static NSTimer doCorrelateTimer("doCorrelate()", true);
 static NSTimer weightTimer("weight", true);
-static NSTimer totalTimer("total", true);
+static NSTimer computeTimer("computing", true);
 
 
 const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] CACHE_ALIGNED = {
@@ -1178,6 +1178,8 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
 //getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
   getDataManager().addOutDataHolder(VISIBILITIES_CHANNEL, new DH_Visibilities("output", ps));
+  getDataManager().setAutoTriggerIn(SUBBAND_CHANNEL, false);
+  getDataManager().setAutoTriggerOut(VISIBILITIES_CHANNEL, false);
 }
 
 
@@ -1736,7 +1738,21 @@ void WH_BGL_Processing::doCorrelate()
 
 void WH_BGL_Processing::process()
 {
-  totalTimer.start();
+#if defined HAVE_MPI
+  std::cerr.precision(15);
+  std::cerr << "core " << TH_MPI::getCurrentRank() << ": start reading at " << MPI_Wtime() << '\n';
+#endif
+
+  static NSTimer readTimer("receive timer", true);
+  readTimer.start();
+  getDataManager().readyWithInHolder(SUBBAND_CHANNEL);
+  readTimer.stop();
+
+#if defined HAVE_MPI
+  std::cerr << "core " << TH_MPI::getCurrentRank() << ": start processing at " << MPI_Wtime() << '\n';
+#endif
+
+  computeTimer.start();
 
 #if defined SPARSE_FLAGS
   get_DH_Subband()->getExtraData();
@@ -1755,7 +1771,21 @@ void WH_BGL_Processing::process()
   if ((itsCurrentSubband += itsSubbandIncrement) >= itsLastSubband)
     itsCurrentSubband -= itsLastSubband - itsFirstSubband;
 
-  totalTimer.stop();
+  computeTimer.stop();
+
+#if defined HAVE_MPI
+  std::cerr << "core " << TH_MPI::getCurrentRank() << ": start writing at " << MPI_Wtime() << '\n';
+#endif
+
+  static NSTimer writeTimer("send timer", true);
+  writeTimer.start();
+  getDataManager().readyWithOutHolder(VISIBILITIES_CHANNEL);
+  getDataManager().getOutHolder(VISIBILITIES_CHANNEL);
+  writeTimer.stop();
+
+#if defined HAVE_MPI
+  std::cerr << "core " << TH_MPI::getCurrentRank() << ": start idling at " << MPI_Wtime() << '\n';
+#endif
 }
 
 
