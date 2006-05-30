@@ -38,9 +38,9 @@ namespace LOFAR
   namespace AMC
   { 
     class Converter; 
-    class SkyCoord; 
-    class EarthCoord; 
-    class TimeCoord; 
+    class Direction; 
+    class Position; 
+    class Epoch; 
   }
 
   namespace CS1 
@@ -48,7 +48,36 @@ namespace LOFAR
     // \addtogroup CS1_DelayCompensation
     // @{
 
-    // Description of class.
+    // Speed of light in vacuum, in m/s.
+    const double speedOfLight = 299792458;
+
+    // Workholder for calculating the delay compensation that must be applied
+    // per beam per station. We start by calculating the path length
+    // difference for beam \f$\mathbf{b}_i\f$ between station \f$j\f$ at
+    // position \f$\mathbf{p}_j\f$ and the reference station 0 at position
+    // \f$\mathbf{p}_0\f$.
+    // \f[
+    //   d_{ij} - d_{i0} = \mathbf{b}_i \cdot \mathbf{p}_j 
+    //                   - \mathbf{b}_i \cdot \mathbf{p}_0
+    //                   = \mathbf{b}_i \cdot (\mathbf{p}_j - \mathbf{p}_0)
+    // \f]
+    // The choice of reference station is arbitrary, so we simply choose the
+    // first station from the parameter set. From the equation above it is
+    // clear that we can reduce the number of dot products if we precalculate
+    // the position difference vectors \f$\mathbf{p}_j - \mathbf{p}_0$\f,
+    // which we will store in \c itsPositionDiffs.
+    //
+    // The geometrical delay is easily obtained by dividing the path length
+    // difference by the speed of light in vacuum. We don't need to know the
+    // speed of light in the atmosphere, because the AZEL directions that
+    // we've calculated are valid for vacuum (only!). This is the delay that
+    // must be compensated for.
+    //
+    // The calculated delay compensation must be split into a coarse (whole
+    // sample) delay and a fine (subsample) delay.  The coarse delay will be
+    // applied in the input section as a true time delay, by shifting the
+    // input samples. The fine delay will be applied in the correlator as a
+    // phase shift in each frequency channel.
     class WH_DelayCompensation : public WorkHolder
     {
     public:
@@ -58,7 +87,9 @@ namespace LOFAR
       virtual ~WH_DelayCompensation();
 
       virtual void preprocess();
+
       virtual void process();
+
       virtual void postprocess();
 
     private:
@@ -109,6 +140,15 @@ namespace LOFAR
       // be specified as Modified Julian Date (MJD).
       void getObservationEpoch(const ACC::APS::ParameterSet& ps);
 
+      // Set the station to reference station position differences for all
+      // stations. The choice of reference station is arbitrary (so we choose
+      // station 0). The position differences are stored in \c
+      // itsPositionDiffs. In other words: we store \f$\mathbf{p}_j -
+      // \mathbf{p}_0\f$, where \f$\mathbf{p}_0\f$ is the position of the
+      // reference station and \f$\mathbf{p}_j\f$ is the position of station
+      // \f$j\f$.
+      void setPositionDiffs();
+
       // Create an instance of an AMC converter, using the data in \c
       // itsConverterConfig.
       AMC::Converter* createConverter();
@@ -117,16 +157,10 @@ namespace LOFAR
       // The parameter set, containing all configurable variables.
       // \note Unfortunately we must keep a copy here, because (!@#$%!)
       // make() needs it. Hopefully, we can get rid of it, some day.
-      ACC::APS::ParameterSet  itsParameterSet;
+      ACC::APS::ParameterSet  itsParamSet;
 
-      // Beam directions.
-      vector<AMC::SkyCoord>   itsBeamDirections;
-
-      // Station positions. 
-      vector<AMC::EarthCoord> itsStationPositions;
-
-      // Observation epoch.
-      vector<AMC::TimeCoord>  itsObservationEpoch;
+      // The sample rate in a subband, in samples per second..
+      double                  itsSampleRate;
 
       // Configuration info required to create our AMC Converter
       ConverterConfig         itsConverterConfig;
@@ -137,6 +171,18 @@ namespace LOFAR
       // Counter used to count the number of times that process() was called.
       uint                    itsLoopCount;
   
+      // Beam directions.
+      vector<AMC::Direction>  itsBeamDirections;
+
+      // Station positions. 
+      vector<AMC::Position>   itsStationPositions;
+
+      // Observation epoch.
+      vector<AMC::Epoch>      itsObservationEpoch;
+
+      // Station to reference station position difference vectors.
+      vector<AMC::Position>   itsPositionDiffs;
+
       // Allocate a tracer context
       ALLOC_TRACER_CONTEXT;
       

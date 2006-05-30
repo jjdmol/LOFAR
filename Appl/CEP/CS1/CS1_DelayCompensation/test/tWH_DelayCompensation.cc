@@ -59,6 +59,11 @@ int main (int argc, char* argv[]) {
     LOG_FATAL_STR(argv[0] << " terminated by exception!");
     return 1;
   }
+  catch (std::exception& e) {
+    LOG_FATAL(e.what());
+    LOG_FATAL_STR(argv[0] << " terminated by exception!");
+    return 1;
+  }
 
   LOG_INFO_STR(argv[0] << " terminated normally");
   return (0);
