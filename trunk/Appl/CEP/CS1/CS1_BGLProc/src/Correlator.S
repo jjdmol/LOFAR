@@ -1063,6 +1063,115 @@ loop7:	# loop over time
 	blr			# return
 
 
+#if 0
+.align	5
+.global	_add_correlations
+_add_correlations:
+
+	li	 11,-16		# push call-saved registers
+	subi	 1,1,32
+	stmw	 24,0(1)
+	stfpdux	 14,1,11
+	stfpdux	 15,1,11
+
+	srwi	7,7,1
+	mtctr	7
+
+	li	8,8
+
+	sub	3,3,8
+	sub	4,4,8
+
+	mr	10,3
+
+				; lfpsux	0,3,8
+				; lfpsux	1,3,8
+				; lfpsux	2,3,8
+				; lfpsux	3,3,8
+				; lfpsux	4,3,8
+				; lfpsux	5,3,8
+				; lfpsux	6,3,8
+				; lfpsux	7,3,8
+
+				; lfpsux	8,4,8
+				; lfpsux	9,4,8
+				; lfpsux	10,4,8
+				; lfpsux	11,4,8
+				; lfpsux	12,4,8
+				; lfpsux	13,4,8
+				; lfpsux	14,4,8
+				; lfpsux	15,4,8
+
+0:				
+	fpadd	0,0,8		; lfpsux	8,4,8
+	fpadd	1,1,9		; lfpsux	9,4,8
+	fpadd	2,2,10		; lfpsux	10,4,8
+	fpadd	3,3,11		; lfpsux	11,4,8
+	fpadd	4,4,12		; lfpsux	12,4,8
+	fpadd	5,5,13		; lfpsux	13,4,8
+	fpadd	6,6,14		; lfpsux	14,4,8
+	fpadd	7,7,15		; lfpsux	15,4,8
+
+				; stfpsux	0,10,8
+				; lfpsux	0,3,8
+				; stfpsux	1,10,8
+				; lfpsux	1,3,8
+				; stfpsux	2,10,8
+				; lfpsux	2,3,8
+				; stfpsux	3,10,8
+				; lfpsux	3,3,8
+				; stfpsux	4,10,8
+				; lfpsux	4,3,8
+				; stfpsux	5,10,8
+				; lfpsux	5,3,8
+				; stfpsux	6,10,8
+				; lfpsux	6,3,8
+				; stfpsux	7,10,8
+				; lfpsux	7,3,8
+
+	bdnz	0b
+
+	# now do all nrValidSamples; since overflows should not occur, we
+	# treat two unsigned shorts as one word
+
+	srwi	7,7,2		; lwzx		24,0,5
+	mtctr	7		; lwzx		28,0,6
+	li	9,4		; lwzux		25,5,9
+				; lwzux		29,6,9
+				; lwzux		26,5,9
+				; lwzux		30,6,9
+				; lwzux		27,5,9
+				; lwzux		31,6,9
+
+1:	add	24,24,28	; lwzux		28,6,9
+				; stw		24,-28(5)
+				; lwzux		24,5,9
+
+	add	25,25,29	; lwzux		29,6,9
+				; stw		25,-28(5)
+				; lwzux		25,5,9
+
+	add	26,26,30	; lwzux		30,6,9
+				; stw		26,-28(5)
+				; lwzux		26,5,9
+
+	add	27,27,31	; lwzux		31,6,9
+				; stw		27,-28(5)
+				; lwzux		27,5,9
+
+	bdnz	1b
+
+	li	  11,16		# restore call-saved registers
+	lfpdx	  15,0,1
+	lfpdux	  14,1,11
+
+	lmw	  24,16(1)
+	addi	  1,1,48	# reset stack pointer
+
+	blr			# return
+#endif
+
+
 .align	5
 .global	_clear_correlation
 _clear_correlation:
