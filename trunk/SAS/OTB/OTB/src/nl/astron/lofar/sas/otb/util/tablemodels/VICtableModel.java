@@ -1,5 +1,5 @@
 /*
- * TemplatetableModel.java
+ * VICtableModel.java
  *
  * Created on January 31, 2006, 11:11 AM
  *
@@ -8,10 +8,11 @@
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package nl.astron.lofar.sas.otb.util;
+package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
+import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
 
 /**
@@ -19,17 +20,17 @@ import org.apache.log4j.Logger;
  *
  * @author coolen
  */
-public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
+public class VICtableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"TreeID","OriginalTree","Status","Classification","Campaign","MoMID","Description"};
+    private String headers[] = {"TreeID","OriginalTree","Status","Campaign","MoMID","StartTime","StopTime","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
 
-    static Logger logger = Logger.getLogger(TemplatetableModel.class);
-    static String name = "TemplatetableModel";
-    
+    static Logger logger = Logger.getLogger(VICtableModel.class);
+    static String name = "VICtableModel";
+   
     /** Creates a new instance of PICtableModel */
-    public TemplatetableModel(OtdbRmi otdbRmi) {
+    public VICtableModel(OtdbRmi otdbRmi) {
         this.otdbRmi = otdbRmi;
         fillTable();
     }
@@ -57,10 +58,11 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
             data[row][0]=new Integer(tInfo.treeID());	   
             data[row][1]=new Integer(tInfo.originalTree);	   
             data[row][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
-            data[row][3]=new String(otdbRmi.getClassif().get(tInfo.classification));
-            data[row][4]=new String(tInfo.campaign);
-            data[row][5]=new Integer(tInfo.momID());
-            data[row][6]=new String(tInfo.description);
+            data[row][3]=new String(tInfo.campaign);
+            data[row][4]=new Integer(tInfo.momID());
+            data[row][5]=new String(tInfo.starttime);
+            data[row][6]=new String(tInfo.stoptime);
+            data[row][7]=new String(tInfo.description);
             fireTableDataChanged();
         } catch (Exception e) {
             logger.debug("Remote OTDB via RMI and JNI failed: " + e);
@@ -73,14 +75,14 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
        if (otdbRmi == null) {
             logger.debug("No active otdbRmi connection");
             return false;
-       }
-       try {
+        }        
+        try {
             if (otdbRmi.getRemoteOTDB() != null && ! otdbRmi.getRemoteOTDB().isConnected()) {
                 logger.debug("No open connection available");
                 return false;
             }
-            // Get a Treelist of all available VItemplate's
-            Vector aTreeList=otdbRmi.getRemoteOTDB().getTreeList(otdbRmi.getRemoteTypes().getTreeType("VItemplate"),(short)0);
+            // Get a Treelist of all available VHtree's
+            Vector aTreeList=otdbRmi.getRemoteOTDB().getTreeList(otdbRmi.getRemoteTypes().getTreeType("VHtree"),(short)0);
             data = new Object[aTreeList.size()][headers.length];
             logger.debug("Treelist downloaded. Size: "+aTreeList.size());
            
@@ -93,10 +95,11 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
                     data[k][0]=new Integer(tInfo.treeID());	   
                     data[k][1]=new Integer(tInfo.originalTree);	   
 	            data[k][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
-                    data[k][3]=new String(otdbRmi.getClassif().get(tInfo.classification));
-	            data[k][4]=new String(tInfo.campaign);
-	            data[k][5]=new Integer(tInfo.momID());
-	            data[k][6]=new String(tInfo.description);
+	            data[k][3]=new String(tInfo.campaign);
+	            data[k][4]=new Integer(tInfo.momID());
+	            data[k][5]=new String(tInfo.starttime);
+	            data[k][6]=new String(tInfo.stoptime);
+	            data[k][7]=new String(tInfo.description);
                 }
             }
             fireTableDataChanged();
@@ -105,6 +108,7 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
 	} 
         return true;
     }
+    
     /** Returns the number of rows 
      *  @return Nr of rows 
      */
@@ -127,7 +131,7 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
 
     /** Returns the number of columns 
      * @return  The number of columns
-     */    
+     */
     public int getColumnCount() {
         return headers.length;
     }

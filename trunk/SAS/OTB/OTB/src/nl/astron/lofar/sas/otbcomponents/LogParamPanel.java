@@ -13,7 +13,7 @@ import javax.swing.ListSelectionModel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
-import nl.astron.lofar.sas.otb.util.LogParamTableModel;
+import nl.astron.lofar.sas.otb.util.tablemodels.LogParamTableModel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;

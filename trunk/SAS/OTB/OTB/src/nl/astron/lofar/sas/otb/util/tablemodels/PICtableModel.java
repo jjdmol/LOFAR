@@ -8,10 +8,11 @@
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package nl.astron.lofar.sas.otb.util;
+package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
+import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
 
 /**

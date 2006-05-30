@@ -1,39 +1,41 @@
 /*
- * VICtableModel.java
+ * ComponentTableModel.java
  *
- * Created on January 31, 2006, 11:11 AM
+ * Created on April 4th, 2006, 15:28
  *
  * To change this template, choose Tools | Options and locate the template under
  * the Source Creation and Management node. Right-click the template and choose
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package nl.astron.lofar.sas.otb.util;
+package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.util.Vector;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
+import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
+import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
 
 /**
- * Implements the data model behind the PIC table 
+ * Implements the data model behind the component table 
  *
  * @author coolen
  */
-public class VICtableModel extends javax.swing.table.AbstractTableModel {
+public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"TreeID","OriginalTree","Status","Campaign","MoMID","StartTime","StopTime","Description"};
+    private String headers[] = {"nodeID","Name","Version","Classification","Constraints","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
+    
+    static Logger logger = Logger.getLogger(ComponentTableModel.class);
+    static String name = "ComponentTableModel";
 
-    static Logger logger = Logger.getLogger(VICtableModel.class);
-    static String name = "VICtableModel";
-   
-    /** Creates a new instance of PICtableModel */
-    public VICtableModel(OtdbRmi otdbRmi) {
+    /** Creates a new instance of ComponentTableModel */
+    public ComponentTableModel(OtdbRmi otdbRmi) {
+
         this.otdbRmi = otdbRmi;
         fillTable();
     }
-
+    
     /** Refreshes 1 row from table out of the database
      *
      * @param   row     Rownr that needs to be refreshed
@@ -48,20 +50,18 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
             }
 
             // get TreeID that needs 2b refreshed
-            int aTreeID=((Integer)data[row][0]).intValue();
-            jOTDBtree tInfo=otdbRmi.getRemoteOTDB().getTreeInfo(aTreeID, false);
+            int aNodeID=((Integer)data[row][0]).intValue();
+            jVICnodeDef tInfo=otdbRmi.getRemoteMaintenance().getComponentNode(aNodeID);
             if ( tInfo == null) {
-                logger.debug("Unable to get treeInfo for tree with ID: " + aTreeID);
+                logger.debug("Unable to get ComponentInfo for node with ID: " + aNodeID);
                 return false;
             }
-            data[row][0]=new Integer(tInfo.treeID());	   
-            data[row][1]=new Integer(tInfo.originalTree);	   
-            data[row][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
-            data[row][3]=new String(tInfo.campaign);
-            data[row][4]=new Integer(tInfo.momID());
-            data[row][5]=new String(tInfo.starttime);
-            data[row][6]=new String(tInfo.stoptime);
-            data[row][7]=new String(tInfo.description);
+            data[row][0]=new Integer(tInfo.nodeID());	   
+            data[row][1]=new String(tInfo.name);
+	    data[row][2]=new Integer(tInfo.version);
+            data[row][3]=new String(otdbRmi.getClassif().get(tInfo.classif));
+	    data[row][4]=new String(tInfo.constraints);
+	    data[row][5]=new String(tInfo.description);
             fireTableDataChanged();
         } catch (Exception e) {
             logger.debug("Remote OTDB via RMI and JNI failed: " + e);
@@ -71,34 +71,33 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
     
     /** Fills the table from the database */
     public boolean fillTable() {
+        
        if (otdbRmi == null) {
             logger.debug("No active otdbRmi connection");
             return false;
-        }        
+        }
         try {
             if (otdbRmi.getRemoteOTDB() != null && ! otdbRmi.getRemoteOTDB().isConnected()) {
                 logger.debug("No open connection available");
                 return false;
             }
-            // Get a Treelist of all available VHtree's
-            Vector aTreeList=otdbRmi.getRemoteOTDB().getTreeList(otdbRmi.getRemoteTypes().getTreeType("VHtree"),(short)0);
-            data = new Object[aTreeList.size()][headers.length];
-            logger.debug("Treelist downloaded. Size: "+aTreeList.size());
+            // Get a list of all available Components (topnode)
+            Vector aComponentList=otdbRmi.getRemoteMaintenance().getComponentList("%",false);
+            data = new Object[aComponentList.size()][headers.length];
+            logger.debug("Componentlist downloaded. Size: "+aComponentList.size());
            
-            for (int k=0; k< aTreeList.size();k++) {
-                jOTDBtree tInfo = (jOTDBtree)aTreeList.elementAt(k);
-                if (tInfo.treeID()==0) {
-                    logger.debug("No such tree found!");
+            for (int k=0; k< aComponentList.size();k++) {
+                jVICnodeDef tInfo = (jVICnodeDef)aComponentList.elementAt(k);
+                if (tInfo == null) {
+                    logger.debug("No such component found!");
                 } else {
-                    logger.debug("Gathered info for ID: "+tInfo.treeID());
-                    data[k][0]=new Integer(tInfo.treeID());	   
-                    data[k][1]=new Integer(tInfo.originalTree);	   
-	            data[k][2]=new String(otdbRmi.getTreeState().get(tInfo.state));
-	            data[k][3]=new String(tInfo.campaign);
-	            data[k][4]=new Integer(tInfo.momID());
-	            data[k][5]=new String(tInfo.starttime);
-	            data[k][6]=new String(tInfo.stoptime);
-	            data[k][7]=new String(tInfo.description);
+                    logger.debug("Gathered info for ID: "+tInfo.nodeID());
+                    data[k][0]=new Integer(tInfo.nodeID());	   
+	            data[k][1]=new String(tInfo.name);
+	            data[k][2]=new Integer(tInfo.version);
+                    data[k][3]=new String(otdbRmi.getClassif().get(tInfo.classif));
+	            data[k][4]=new String(tInfo.constraints);
+	            data[k][5]=new String(tInfo.description);
                 }
             }
             fireTableDataChanged();
@@ -107,7 +106,7 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
 	} 
         return true;
     }
-    
+
     /** Returns the number of rows 
      *  @return Nr of rows 
      */
@@ -126,6 +125,7 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
         catch(ArrayIndexOutOfBoundsException e) {
             return null;
         }
+        
     }
 
     /** Returns the number of columns 
