@@ -71,6 +71,14 @@ extern "C" {
 			 CorrelatedOutputType *S1_S2,
 			 CorrelatedOutputType *S2_S2);
 
+#if 0
+  void _add_correlations(DH_Visibilities::AllVisibilitiesType *dstVis,
+			 const DH_Visibilities::AllVisibilitiesType *srcVis,
+			 DH_Visibilities::AllNrValidSamplesType *dstVal,
+			 const DH_Visibilities::AllNrValidSamplesType *srcVal,
+			 unsigned count);
+#endif
+			 
   void _clear_correlation(CorrelatedOutputType *S0_S0);
 
   void _post_process_visibilities(
