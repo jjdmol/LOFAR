@@ -23,6 +23,8 @@
 
 package nl.astron.lofar.sas.otb.util.plotter;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import org.apache.log4j.Logger;
@@ -37,52 +39,85 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
     static Logger logger = Logger.getLogger(PlotSlotsPanel.class);
     static String name = "PlotSlotsPanel";
     private PlotSlotManager itsSlotManager;
-    private int numberOfSlots;
-    
+      
     /** Creates new form BeanForm */
     public PlotSlotsPanel() {
         initComponents();
-        numberOfSlots = 4;
+        int numberOfSlots = 4;
         itsSlotManager = new PlotSlotManager(numberOfSlots);
-        
+        rearrangeSlotGrid();
+    }
+
+    /** adds a button to the BeanForm */
+    public void addPlotToSlot(int index,Object constraints) throws IllegalArgumentException{
+        if(itsSlotManager.isSlotAvailable(index)){
+            itsSlotManager.getSlot(index).addPlot(constraints);
+            rearrangeSlotGrid();
+        }else{
+            throw new IllegalArgumentException("A plot already exists in slot "+index);
+        }
+    }
+    
+    public int getAmountOfSlots(){
+        return itsSlotManager.getAmountOfSlots();
+    }
+    
+    public void setAmountOfSlots(int amount, boolean force) throws IllegalArgumentException{
+        itsSlotManager.setAmountOfSlots(amount,force);
+        rearrangeSlotGrid();
+    }
+    
+    public boolean isSlotAvailable(int index){
+        return itsSlotManager.isSlotAvailable(index);
+    }
+    
+    public int[] getAvailableSlotIndexes(){
+        return itsSlotManager.getAvailableSlotIndexes();
+    }
+    
+    private void rearrangeSlotGrid(){
+        slotsPanel.removeAll();
+        double squareRoot = Math.sqrt(Double.parseDouble(""+itsSlotManager.getAmountOfSlots()));
+        int columnsAndRows = Integer.parseInt(""+(int)squareRoot);
         GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridwidth = itsSlotManager.getAmountOfSlots()/2;
-            gridBagConstraints.gridheight = itsSlotManager.getAmountOfSlots()/2;
+            gridBagConstraints.gridwidth = columnsAndRows;
+            gridBagConstraints.gridheight = columnsAndRows;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-            //gridBagConstraints.insets = new java.awt.Insets(2, 2, 0, 0);
+            gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 0);
         GridBagLayout layout = new GridBagLayout();
         layout.setConstraints(slotsPanel,gridBagConstraints);
-        
-        
+        //320,240 both!
+        slotsPanel.setSize(this.getSize());
+        slotsPanel.setMinimumSize(this.getSize());
+        //setSize(slotsPanel.getSize());
         logger.trace("getting "+itsSlotManager.getAmountOfSlots()+" slots from PlotSlotManager");
         int x = 0;
         int y = 0;
         for(int i = 1; i <= itsSlotManager.getAmountOfSlots(); i++){
-            
-            
-            logger.trace("Adding Slot to grid coordinate ("+x+","+y+")");
+            logger.trace("Setting Slot to grid coordinate ("+x+","+y+")");
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = x;
             gridBagConstraints.gridy = y;
-            //gridBagConstraints.gridwidth = itsSlotManager.getAmountOfSlots()/2;
-            //gridBagConstraints.gridheight = itsSlotManager.getAmountOfSlots()/2;
             gridBagConstraints.ipadx = 0;
             gridBagConstraints.ipady = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-            slotsPanel.add(itsSlotManager.getSlot(i),gridBagConstraints);
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.weighty = 1.0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.CENTER;
+            PlotSlot newSlot = itsSlotManager.getSlot(i);
+            newSlot.setSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+            //
+            newSlot.setMinimumSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+            newSlot.setPreferredSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+            slotsPanel.add(newSlot,gridBagConstraints);            
             x++;
-            if (x == itsSlotManager.getAmountOfSlots()/2){
+            if (x == columnsAndRows){
                 y++;
                 x = 0;
             }
         }
-            
-    }
-
-    /** adds a button to the BeanForm */
-    public void addSlot(String label) {
-        //PlotSlot plotSlot = ne();
-    }
+        slotsPanel.validate();
+     }
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -96,6 +131,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
 
         slotsPanel.setLayout(new java.awt.GridBagLayout());
 
+        slotsPanel.setBackground(new java.awt.Color(255, 255, 255));
         slotsPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         add(slotsPanel, java.awt.BorderLayout.CENTER);
 
