@@ -43,10 +43,6 @@
 using namespace LOFAR;
 using namespace LOFAR::CS1;
 
-#if defined HAVE_BGL
-static BGL_Barrier *barrier;
-#endif
-
 
 inline DH_Subband::SampleType toComplex(double phi)
 {
@@ -206,8 +202,6 @@ void doWork()
   if (personality.getXcoord() != 0 || personality.getYcoord() != 0 || personality.getZcoord() != 0) {
     return;
   }
-
-  barrier = rts_allocate_barrier();
 #endif
 
   ACC::APS::ParameterSet pset("CS1.parset");
@@ -257,12 +251,6 @@ void doWork()
   wh.basePreprocess();
   setSubbandTestPattern(wh, signalFrequency, sampleRate);
 //setRFItestPattern(wh);
-
-#if defined HAVE_BGL
-  if (TH_MPI::getNumberOfNodes() > 1) {
-    BGL_Barrier_Pass(barrier);
-  }
-#endif
 
   for (int i = 0; i < nRuns; i ++) {
     wh.baseProcess();
