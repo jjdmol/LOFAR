@@ -15,19 +15,16 @@ import java.util.Vector;
  * @author coolen
  */
 public class jParmFacade {
+    private String itsParmFacadeDB="";
     
     /** Creates a new instance of jParmFacade */
-    public jParmFacade(String tableName) {
-        try {
-            initParmFacade(tableName);
-        } catch (Exception ex) {
-            System.out.println("Error during init: ");
-            ex.printStackTrace();
-        }
+    public jParmFacade() {
+        itsParmFacadeDB="";
+    }
+    public void setParmFacadeDB(String tableName) {
+        itsParmFacadeDB=tableName;
     }
     
-    // Make a connection to the given ParmTable.
-    private native void initParmFacade (String tableName) throws Exception;
     
     // Get the domain range (as startx,endx,starty,endy) of the given
     // parameters in the table.
