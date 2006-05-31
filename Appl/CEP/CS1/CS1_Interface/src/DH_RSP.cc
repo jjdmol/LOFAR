@@ -77,8 +77,8 @@ namespace LOFAR
       vector<DimDef> vdd;
       // there is one station per dataholder
       vdd.push_back(DimDef("Stations", 1));
-      vdd.push_back(DimDef("Times", itsNTimes));
       vdd.push_back(DimDef("Subbands", itsNSubbands));
+      vdd.push_back(DimDef("Times", itsNTimes));
       vdd.push_back(DimDef("Polarisations", itsNoPolarisations));
   
       itsMatrix = new RectMatrix<BufferType> (vdd);
