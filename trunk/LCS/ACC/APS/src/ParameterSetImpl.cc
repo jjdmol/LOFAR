@@ -869,12 +869,12 @@ string	valuePart   (const string& parameterLine)
 // not an expression.
 int32 	indexValue (const string&	label, char	indexMarker[2])
 {
-	uint32	start = label.find_last_of(indexMarker[0]);
+	string::size_type	start = label.find_last_of(indexMarker[0]);
 	if (start == string::npos) {
 		return (0);
 	}
 
-	uint32	end = label.find(indexMarker[1], start);
+	string::size_type	end = label.find(indexMarker[1], start);
 	if (end == string::npos) {
 		return(0);
 	}
