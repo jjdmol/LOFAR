@@ -209,11 +209,17 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         MeasurementSetNameText1 = new javax.swing.JTextField();
         jLabel20 = new javax.swing.JLabel();
         NrSamplesFrameText = new javax.swing.JTextField();
-        NodeCancelButton1 = new javax.swing.JButton();
-        NodeApplyButton1 = new javax.swing.JButton();
+        NodeCancelButton = new javax.swing.JButton();
+        NodeApplyButton = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
         jPanel3 = new javax.swing.JPanel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTable2 = new javax.swing.JTable();
         jPanel4 = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTable3 = new javax.swing.JTable();
 
         jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel11.setText("Generic Observation Configuration Panel");
@@ -254,17 +260,17 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
 
         NrSamplesFrameText.setToolTipText("Number of samples per frame for this observation");
 
-        NodeCancelButton1.setText("Cancel");
-        NodeCancelButton1.addActionListener(new java.awt.event.ActionListener() {
+        NodeCancelButton.setText("Cancel");
+        NodeCancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                NodeCancelButton1ActionPerformed(evt);
+                NodeCancelButtonActionPerformed(evt);
             }
         });
 
-        NodeApplyButton1.setText("Apply");
-        NodeApplyButton1.addActionListener(new java.awt.event.ActionListener() {
+        NodeApplyButton.setText("Apply");
+        NodeApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                NodeApplyButton1ActionPerformed(evt);
+                NodeApplyButtonActionPerformed(evt);
             }
         });
 
@@ -281,9 +287,9 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
                         .add(47, 47, 47)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(jPanel1Layout.createSequentialGroup()
-                                .add(NodeCancelButton1)
+                                .add(NodeCancelButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(NodeApplyButton1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .add(NodeApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                             .add(jPanel1Layout.createSequentialGroup()
                                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(jLabel12)
@@ -352,45 +358,116 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(NrSamplesFrameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(36, 36, 36)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(NodeCancelButton1)
-                    .add(NodeApplyButton1))
+                    .add(NodeCancelButton)
+                    .add(NodeApplyButton))
                 .add(219, 219, 219))
         );
         jTabbedPane1.addTab("Generic", jPanel1);
+
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Station", "Latitude", "Longitude", "Height"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(jTable1);
 
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 786, Short.MAX_VALUE)
+            .add(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 549, Short.MAX_VALUE)
+            .add(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 527, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jTabbedPane1.addTab("StationPositions", jPanel2);
+
+        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Subband #", "Frequency"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.Double.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPane2.setViewportView(jTable2);
 
         org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 786, Short.MAX_VALUE)
+            .add(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 549, Short.MAX_VALUE)
+            .add(jPanel3Layout.createSequentialGroup()
+                .add(24, 24, 24)
+                .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jTabbedPane1.addTab("Subband Frequencies", jPanel3);
+
+        jTable3.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "RSPBoard#", "MAC addres Sender", "MAC address Receiver"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPane3.setViewportView(jTable3);
 
         org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 786, Short.MAX_VALUE)
+            .add(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jScrollPane3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 549, Short.MAX_VALUE)
+            .add(jPanel4Layout.createSequentialGroup()
+                .add(jScrollPane3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 538, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jTabbedPane1.addTab("RSP MAC addresses", jPanel4);
 
@@ -411,13 +488,13 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void NodeApplyButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeApplyButton1ActionPerformed
+    private void NodeApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeApplyButtonActionPerformed
 // TODO add your handling code here:
-    }//GEN-LAST:event_NodeApplyButton1ActionPerformed
+    }//GEN-LAST:event_NodeApplyButtonActionPerformed
 
-    private void NodeCancelButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeCancelButton1ActionPerformed
+    private void NodeCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeCancelButtonActionPerformed
 // TODO add your handling code here:
-    }//GEN-LAST:event_NodeCancelButton1ActionPerformed
+    }//GEN-LAST:event_NodeCancelButtonActionPerformed
     
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
@@ -425,8 +502,8 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField MeasurementSetNameText1;
-    private javax.swing.JButton NodeApplyButton1;
-    private javax.swing.JButton NodeCancelButton1;
+    private javax.swing.JButton NodeApplyButton;
+    private javax.swing.JButton NodeCancelButton;
     private javax.swing.JTextField NrChannelsText1;
     private javax.swing.JTextField NrRSPBoardsText1;
     private javax.swing.JTextField NrSamplesFrameText;
@@ -449,7 +526,13 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTable jTable1;
+    private javax.swing.JTable jTable2;
+    private javax.swing.JTable jTable3;
     // End of variables declaration//GEN-END:variables
 
     /**
