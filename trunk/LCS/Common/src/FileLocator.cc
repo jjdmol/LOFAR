@@ -63,9 +63,9 @@ FileLocator::~FileLocator()
 void 	FileLocator::addPathAtBack  (const string& aPath)
 {
 	string	thePath=resolveInput(aPath);
-	size_t	start  = 0;
-	size_t	end;
-	size_t	sepPos;
+	string::size_type	start  = 0;
+	string::size_type	end;
+	string::size_type	sepPos;
 	bool	last = false;
 	do {
 		// search forwards through the new chain
@@ -94,9 +94,9 @@ void 	FileLocator::addPathAtBack  (const string& aPath)
 void 	FileLocator::addPathAtFront (const string& aPath)
 {
 	string	thePath=resolveInput(aPath);
-	size_t	end = thePath.size()-1;
-	size_t	start;
-	size_t	sepPos;
+	string::size_type	end = thePath.size()-1;
+	string::size_type	start;
+	string::size_type	sepPos;
 	bool	last = false;
 	do {
 		// search backwards in the newchain for ':'
@@ -246,8 +246,8 @@ string	FileLocator::locate		(const string& aFile)
 //
 void FileLocator::setSubdir(const string&	aSubdir)
 {
-	size_t		start = 0;
-	size_t		end = aSubdir.size();
+	string::size_type		start = 0;
+	string::size_type		end = aSubdir.size();
 
 	if (aSubdir[start] == '/') {
 		start++;
@@ -270,7 +270,7 @@ void FileLocator::setSubdir(const string&	aSubdir)
 string FileLocator::resolveInput(const string&	input)
 {
 	// search for $
-	size_t	dollarPos = input.find("$",0);
+	string::size_type	dollarPos = input.find("$",0);
 	if (dollarPos == string::npos) {		// no $ found?
 		return (input);						// return original
 	}
@@ -286,14 +286,14 @@ string FileLocator::resolveInput(const string&	input)
 	//   [/>:]   resolve $..:
 	//  >0  -    resolve $../ + add /..input.size
 	//   [/<:]   resolve $../ + add /..:
-	size_t		startPos = 0;
+	string::size_type		startPos = 0;
 	string		result;
 	do {
 		result   = input.substr(startPos, dollarPos);	// add part till $
 		startPos = dollarPos+1;
-		size_t	slashPos = input.find("/", dollarPos);
-		size_t	colonPos = input.find(":", dollarPos);
-		size_t	endPos;					// end of path at : or EOS
+		string::size_type	slashPos = input.find("/", dollarPos);
+		string::size_type	colonPos = input.find(":", dollarPos);
+		string::size_type	endPos;					// end of path at : or EOS
 		if (colonPos == string::npos) {
 			endPos = input.size();
 		}
