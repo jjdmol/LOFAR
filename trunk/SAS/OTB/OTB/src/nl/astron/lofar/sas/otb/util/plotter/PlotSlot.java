@@ -26,6 +26,9 @@ package nl.astron.lofar.sas.otb.util.plotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
@@ -43,50 +46,64 @@ public class PlotSlot extends JPanel{
     private PlotGroup itsPlotGroup;
     private PlotPanel itsPlot;
     private String slotLabel;
+    private boolean hasLegend;
+    private JLabel rightClickFacade;
     
     /** Creates a new instance of PlotSlot */
     public PlotSlot() {
         itsPlotGroup = null;
         itsPlot = null;
-        setLabel(EMPTY_SLOT);
+        hasLegend = false;
         setBackground(Color.WHITE);
         setBorder(javax.swing.BorderFactory.createEtchedBorder());
         setSize(new Dimension(320,240));
         setPreferredSize(new Dimension(320,240));
         setLayout(new BorderLayout());
+        rightClickFacade = new JLabel("Empty");
+        setLabel(EMPTY_SLOT);
+        addOptionLabel();
     }
-    /** 
+    /**
      * Creates a new instance of PlotSlot using a supplied label
      * @param name The name to be given to the slot.
-     * 
+     *
      */
     public PlotSlot(String label) {
         this();
         setLabel(label);
-       
     }
     
     public void setLabel(String label){
         slotLabel = label;
+        rightClickFacade.setText(" "+label);
     }
     
     public String getLabel(){
         return slotLabel;
     }
-    
+    public PlotPanel getPlot(){
+        return itsPlot;
+    }
     public void setPlot(PlotPanel aPlot){
-        itsPlot = aPlot;
+         removeAll();
+         itsPlot = aPlot;
+         addOptionLabel();
+         add(itsPlot,BorderLayout.CENTER);
+         if(containsLegend()){
+            addLegend(); 
+         }
     }
     
     public void addPlot(Object constraints){
         removeAll();
+        addOptionLabel();
         try {
             if(itsPlot == null){
                 itsPlot = new PlotPanel();
             }
             itsPlot.createPlot(PlotConstants.PLOT_XYLINE,true,constraints);
             add(itsPlot,BorderLayout.CENTER);
-           
+            
         } catch (PlotterException ex) {
             JTextArea error = new JTextArea(ex.getMessage());
             error.setColumns(50);
@@ -97,17 +114,22 @@ public class PlotSlot extends JPanel{
     
     public void modifyPlot(Object constraints){
         if(containsPlot()){
-         
+            removeAll();
+            addOptionLabel();
             try {
                 itsPlot.modifyPlot(constraints);
                 add(itsPlot,BorderLayout.CENTER);
+                if(containsLegend()){
+                    addLegend(); 
+                }
+                
             } catch (PlotterException ex) {
                 JTextArea error = new JTextArea(ex.getMessage());
                 error.setColumns(50);
                 add(new JTextArea(ex.getMessage()),BorderLayout.CENTER);
                 ex.printStackTrace();
             }
-
+            
         }else{
             addPlot(constraints);
         }
@@ -115,17 +137,75 @@ public class PlotSlot extends JPanel{
     
     private void removePlot(){
         if(containsPlot()){
-            this.remove(itsPlot);
+            this.removeAll();
+            addOptionLabel();
         }
         itsPlot = null;
+        hasLegend = false;
     }
     
-    private boolean containsPlot(){
+    private void addOptionLabel(){
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(new BorderLayout());
+        northPanel.setToolTipText("Right-Click here to customize this slot");
+        northPanel.setBackground(Color.LIGHT_GRAY);
+        rightClickFacade.setForeground(Color.WHITE);
+        northPanel.add(rightClickFacade,BorderLayout.CENTER);
+        add(northPanel,BorderLayout.NORTH);
+    }
+    
+    public void addLegend(){
+        if(itsPlot != null && itsPlot.getPlot() != null){
+            if(!containsLegend()){
+                try {
+                    add(itsPlot.getLegendForPlot(),BorderLayout.SOUTH);
+                    
+                } catch (PlotterException ex) {
+                    JTextArea error = new JTextArea(ex.getMessage());
+                    error.setColumns(50);
+                    add(new JTextArea(ex.getMessage()),BorderLayout.CENTER);
+                    ex.printStackTrace();
+                }
+                hasLegend = true;
+            }else{
+                removeLegend();
+                addLegend();
+            }
+        }
+    }
+    public void removeLegend(){
+        if(containsLegend() && itsPlot != null && itsPlot.getPlot()!= null){
+            removeAll();
+            if(containsPlot()) addOptionLabel();
+            add(itsPlot,BorderLayout.CENTER);
+            hasLegend = false;
+        }
+    }
+    public JComponent getLegend(){
+        JComponent legend = null;
+        if(containsLegend() && itsPlot != null && itsPlot.getPlot()!= null){
+            try{
+                legend = itsPlot.getLegendForPlot();
+            } catch (PlotterException ex) {
+                JTextArea error = new JTextArea(ex.getMessage());
+                error.setColumns(50);
+                legend = error;
+                ex.printStackTrace();
+            }
+        }
+        return legend;
+    }
+    
+    public boolean containsPlot(){
         return itsPlot != null;
     }
     
+    public boolean containsLegend(){
+        return hasLegend;
+    }
+    
     public PlotGroup getPlotGroup(){
-       return itsPlotGroup; 
+        return itsPlotGroup;
     }
     
     public void setPlotGroup(PlotGroup aPlotGroup){
@@ -140,11 +220,10 @@ public class PlotSlot extends JPanel{
         return itsPlotGroup != null;
     }
     public void clearSlot(){
-        setLabel(EMPTY_SLOT);
         removePlot();
     }
     public boolean isEmpty(){
         return !containsPlot();
     }
-   
+    
 }

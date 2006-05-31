@@ -23,10 +23,17 @@
 
 package nl.astron.lofar.sas.otb.util.plotter;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import org.apache.log4j.Logger;
 
 /**
@@ -39,24 +46,32 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
     static Logger logger = Logger.getLogger(PlotSlotsPanel.class);
     static String name = "PlotSlotsPanel";
     private PlotSlotManager itsSlotManager;
+    private PlotSlot selectedSlot;
       
     /** Creates new form BeanForm */
     public PlotSlotsPanel() {
         initComponents();
         int numberOfSlots = 4;
         itsSlotManager = new PlotSlotManager(numberOfSlots);
+        itsSlotManager.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent evt){
+                if(evt.getActionCommand().equals("REFRESH")){
+                    rearrangeSlotGrid();
+                }
+            }            
+        });
         rearrangeSlotGrid();
     }
 
     /** adds a button to the BeanForm */
     public void addPlotToSlot(int index,Object constraints) throws IllegalArgumentException{
         if(itsSlotManager.isSlotAvailable(index)){
-            itsSlotManager.getSlot(index).addPlot(constraints);
-            rearrangeSlotGrid();
+            itsSlotManager.createPlotInSlot(index,constraints);
         }else{
             throw new IllegalArgumentException("A plot already exists in slot "+index);
         }
     }
+    
     
     public int getAmountOfSlots(){
         return itsSlotManager.getAmountOfSlots();
@@ -64,9 +79,8 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
     
     public void setAmountOfSlots(int amount, boolean force) throws IllegalArgumentException{
         itsSlotManager.setAmountOfSlots(amount,force);
-        rearrangeSlotGrid();
     }
-    
+       
     public boolean isSlotAvailable(int index){
         return itsSlotManager.isSlotAvailable(index);
     }
@@ -104,6 +118,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             gridBagConstraints.weighty = 1.0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.CENTER;
             PlotSlot newSlot = itsSlotManager.getSlot(i);
+            newSlot.addMouseListener(new SlotMouseAdapter());
             newSlot.setSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
             //
             newSlot.setMinimumSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
@@ -116,6 +131,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             }
         }
         slotsPanel.validate();
+        //slotsPanel.repaint();
      }
     
     /** This method is called from within the constructor to
@@ -180,6 +196,53 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);
+            }
+        }
+    }
+   
+    /**
+     * This inner class provides the plotter with the functionality of moving slots etc
+     *
+     */
+    class SlotMouseAdapter extends MouseAdapter{
+        public void mouseReleased(MouseEvent e){
+            Object source = e.getSource();
+            if(source instanceof PlotSlot){
+                selectedSlot = (PlotSlot)source;
+                if(SwingUtilities.isRightMouseButton(e) && selectedSlot.containsPlot()){
+                    
+                    JPopupMenu aPopupMenu = new JPopupMenu();
+                    int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
+                    if(availableSlots.length > 0){
+                        JMenuItem aMenuItem=new JMenuItem("Move to ...");
+                      
+                        aMenuItem.addMouseListener(new MouseAdapter(){
+                            public void mouseEntered(MouseEvent e){}
+                            public void mouseExited(MouseEvent e){}
+                            public void mouseReleased(MouseEvent e){
+                                System.out.println("hiero entered");
+                                JPopupMenu moveSlotPopupMenu = new JPopupMenu();
+                                int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
+                                for(int i = 0; i < availableSlots.length; i++){
+                                    JMenuItem subItem=new JMenuItem("Slot "+availableSlots[i]);
+                                    subItem.addActionListener(new java.awt.event.ActionListener() {
+                                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                            itsSlotManager.movePlot(Integer.parseInt(selectedSlot.getLabel()),Integer.parseInt(evt.getActionCommand().substring(5)));
+                                        }
+                                    });
+                                    moveSlotPopupMenu.add(subItem);
+                                }
+                                moveSlotPopupMenu.setOpaque(true);
+                                moveSlotPopupMenu.show(selectedSlot, e.getX(), e.getY());
+                            }
+                        });
+                        
+                        aPopupMenu.add(aMenuItem);
+                        
+                        aPopupMenu.setOpaque(true);
+                        aPopupMenu.show(selectedSlot, e.getX(), e.getY());
+                    }
+                }
             }
         }
     }
