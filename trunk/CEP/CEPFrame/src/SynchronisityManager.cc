@@ -65,6 +65,8 @@ SynchronisityManager::SynchronisityManager (DataManager* dm, int inputs, int out
     itsReadersData[i].manager = 0;
     itsReadersData[i].conn = 0;
     itsReadersData[i].stopThread = true;
+    itsReadersData[i].commAllowed.up();	// initial semaphore level is 1
+    itsReadersData[i].nextThread = &itsReadersData[i];	// point to self
   }
 
   for (int j = 0; j < outputs; j++)
@@ -76,8 +78,8 @@ SynchronisityManager::SynchronisityManager (DataManager* dm, int inputs, int out
     itsWritersData[j].manager = 0;
     itsWritersData[j].conn = 0;
     itsWritersData[j].stopThread = true;
-    itsWritersData[j].writeAllowed.up();	// initial semaphore level is 1
-    itsWritersData[j].nextWriter = &itsWritersData[j];	// point to self
+    itsWritersData[j].commAllowed.up();	// initial semaphore level is 1
+    itsWritersData[j].nextThread = &itsWritersData[j];	// point to self
   }
 }
 
@@ -154,11 +156,23 @@ void SynchronisityManager::setOutRoundRobinPolicy(vector<int> channels, unsigned
 {
   for (unsigned i = 0; i < channels.size(); i ++) {
     thread_data *data = &itsWritersData[channels[i]];
-    DBGASSERTSTR(data->nextWriter == data, "Round Robin policy of out channel " << channels[i] << " set multiple times");
+    DBGASSERTSTR(data->nextThread == data, "Round Robin policy of out channel " << channels[i] << " set multiple times");
     if (i >= maxConcurrent) {
-      data->writeAllowed.down(); // initial semaphore level is 0
+      data->commAllowed.down(); // initial semaphore level is 0
     }
-    data->nextWriter = &itsWritersData[channels[(i + maxConcurrent) % channels.size()]];
+    data->nextThread = &itsWritersData[channels[(i + maxConcurrent) % channels.size()]];
+  }
+}
+
+void SynchronisityManager::setInRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent)
+{
+  for (unsigned i = 0; i < channels.size(); i ++) {
+    thread_data *data = &itsReadersData[channels[i]];
+    DBGASSERTSTR(data->nextThread == data, "Round Robin policy of in channel " << channels[i] << " set multiple times");
+    if (i >= maxConcurrent) {
+      data->commAllowed.down(); // initial semaphore level is 0
+    }
+    data->nextThread = &itsReadersData[channels[(i + maxConcurrent) % channels.size()]];
   }
 }
 
@@ -189,7 +203,12 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
     pConn->setDestinationDH(dh);           // Set connection to new DataHolder
     pConn->getTransportHolder()->reset();  // Reset TransportHolder
 
+    data->commAllowed.down();
+
     Connection::State result = pConn->read();
+
+    data->nextThread->commAllowed.up();
+
     ASSERTSTR(result != Connection::Error,
 	      "Reader thread encountered error in reading");
     manager->writeUnlock(id);
@@ -214,13 +233,13 @@ void* SynchronisityManager::startWriterThread(void* thread_arg)
     pConn->setSourceDH(dh);               // Set connection to new DataHolder
     pConn->getTransportHolder()->reset(); // Reset TransportHolder
     cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " waits for write right\n";
-    data->writeAllowed.down();
+    data->commAllowed.down();
     cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " received write right\n";
     Connection::State result = pConn->write();
     ASSERTSTR(result != Connection::Error,
 	      "Writer thread encountered error in writing");
     cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " releases write right\n";
-    data->nextWriter->writeAllowed.up();
+    data->nextThread->commAllowed.up();
     manager->readUnlock(id);
   }
 
