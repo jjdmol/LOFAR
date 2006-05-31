@@ -307,6 +307,18 @@ void TinyDataManager::setOutputSelector(Selector* selector)
   itsOutputSelector = selector;
 }
 
+Selector* TinyDataManager::getInputSelector()
+{
+  ASSERTSTR(itsInputSelector != 0, "No input selector set");
+  return itsInputSelector;
+}
+
+Selector* TinyDataManager::getOutputSelector()
+{
+  ASSERTSTR(itsOutputSelector != 0, "No output selector set");
+  return itsOutputSelector;
+}
+
 DataHolder* TinyDataManager::selectInHolder()
 {
   ASSERTSTR(itsInputSelector != 0, "No input selector set");

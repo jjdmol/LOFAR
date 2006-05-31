@@ -92,6 +92,8 @@ namespace LOFAR
     // The following methods are used for selecting one of the inputs/outputs
     void setInputSelector(Selector* selector);  // Set an input selector
     void setOutputSelector(Selector* selector);  // Set an output selector
+    Selector* getInputSelector();  // Get the input selector
+    Selector* getOutputSelector();  // Get the output selector
 
     DataHolder* selectInHolder();   // Select an input
     DataHolder* selectOutHolder();  // Select an output
