@@ -30,7 +30,8 @@ namespace LOFAR
 {
 
 Sel_RoundRobin::Sel_RoundRobin(unsigned int noOptions)
-  :  Selector(noOptions)
+  :  Selector(noOptions),
+     itsSelectedIndex(0)
 {
   for (unsigned i = 0; i < noOptions; i ++)
     itsOptions.push_back(i);
@@ -38,7 +39,8 @@ Sel_RoundRobin::Sel_RoundRobin(unsigned int noOptions)
 
 Sel_RoundRobin::Sel_RoundRobin(std::vector<int> &options)
   :  Selector(options.size()),
-     itsOptions(options)
+     itsOptions(options),
+     itsSelectedIndex(0)
 {}
 
 Sel_RoundRobin::~Sel_RoundRobin()
@@ -46,7 +48,8 @@ Sel_RoundRobin::~Sel_RoundRobin()
 
 Sel_RoundRobin::Sel_RoundRobin(const Sel_RoundRobin& that)
   : Selector(that),
-    itsOptions(that.itsOptions)
+    itsOptions(that.itsOptions),
+    itsSelectedIndex(that.itsSelectedIndex)
 {}
 
 Selector* Sel_RoundRobin::clone() const
@@ -56,12 +59,13 @@ Selector* Sel_RoundRobin::clone() const
 
 unsigned int Sel_RoundRobin::getNext()
 {
-  itsCurrentSelection++;
-  if (itsCurrentSelection >= (int)itsNOptions)
+  itsSelectedIndex++;
+  if (itsSelectedIndex >= (int)itsNOptions)
   {
-    itsCurrentSelection = 0;
+      itsSelectedIndex = 0;
   }
-  return itsOptions[itsCurrentSelection];
+  itsCurrentSelection = itsOptions[itsSelectedIndex];
+  return itsCurrentSelection;
 }
 
 }
