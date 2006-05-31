@@ -84,10 +84,16 @@ namespace LOFAR
         // Each writer will run on a separate node.
         step.runOnNode(nw);
 
+	vector<int> channels;
         // Connect to BG output
 	for (int core = 0; core < nNodesPerCell; core++) {
+	  step.getInDataManager(core).setInBuffer(core, false, 10);
 	  itsStub->connect(nw, core, step.getInDataManager(core), core);
+	  channels.push_back(core);
 	}	
+
+	// limit the number of concurrent incoming connections
+	step.getInDataManager(0).setInRoundRobinPolicy(channels, 1);
       }
 
 #ifdef HAVE_MPI
