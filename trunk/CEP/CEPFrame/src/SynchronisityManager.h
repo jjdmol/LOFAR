@@ -54,6 +54,7 @@ typedef struct thread_args{
   DHPoolManager*   manager;
   Connection*      conn;
   bool             stopThread;
+  int              threadnumber;
   Semaphore	   commAllowed;
   thread_args	   *nextThread;
 }thread_data;
