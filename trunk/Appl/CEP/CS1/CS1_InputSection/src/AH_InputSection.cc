@@ -113,7 +113,6 @@ namespace LOFAR {
 	  // Connect the Delay Controller
 	  itsInputStub->connect(ic * nStations + station, (RSPSteps.back())->getInDataManager(0), 0);
 	}
-	
 
 	LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
 	vector<Step*> collectSteps;
@@ -136,7 +135,7 @@ namespace LOFAR {
 	  // connect outputs to Subband stub
 	  vector<int> channels;
 	  for (int core = 0; core < nNodesPerCell; core++) {
-	    //collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
+	    collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 10);
 #if 1
 	    itsOutputStub->connect(cell + ic * nCells / inputCells,
 				   core,
