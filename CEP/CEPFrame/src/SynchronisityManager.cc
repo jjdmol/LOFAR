@@ -34,6 +34,17 @@
 #include <unistd.h>
 #include <CEPFrame/DataManager.h>
 
+
+#ifdef OLAP_CS1_TIMINGS
+// This is used to plot the times that each thread starts writing/reading
+#ifdef HAVE_MPI
+#include <mpi.h>
+#define MPITIMEROUTPUT MPI_Wtime() << ": "
+#else
+#define MPITIMEROUTPUT ""
+#endif
+#endif
+
 namespace LOFAR
 {
 
@@ -65,6 +76,7 @@ SynchronisityManager::SynchronisityManager (DataManager* dm, int inputs, int out
     itsReadersData[i].manager = 0;
     itsReadersData[i].conn = 0;
     itsReadersData[i].stopThread = true;
+    itsReadersData[i].threadnumber = i;
     itsReadersData[i].commAllowed.up();	// initial semaphore level is 1
     itsReadersData[i].nextThread = &itsReadersData[i];	// point to self
   }
@@ -78,6 +90,7 @@ SynchronisityManager::SynchronisityManager (DataManager* dm, int inputs, int out
     itsWritersData[j].manager = 0;
     itsWritersData[j].conn = 0;
     itsWritersData[j].stopThread = true;
+    itsWritersData[j].threadnumber = j;
     itsWritersData[j].commAllowed.up();	// initial semaphore level is 1
     itsWritersData[j].nextThread = &itsWritersData[j];	// point to self
   }
@@ -88,28 +101,6 @@ SynchronisityManager::~SynchronisityManager()
   // Termination of all active reader and writer threads
 
   LOG_TRACE_FLOW("SynchronisityManager destructor");
-  for (int i = 0; i < itsNinputs; i++)
-  {
-    pthread_mutex_lock(&itsReadersData[i].mutex);
-    if (!itsReadersData[i].stopThread)
-    {
-      itsReadersData[i].stopThread = true;  // Causes reader threads to exit
-    }
-    pthread_mutex_unlock(&itsReadersData[i].mutex);
-//      void* thread_res;
-//      pthread_join(itsReaders[i], &thread_res);
-  }
-  for (int j = 0; j < itsNoutputs; j++)
-  {
-    pthread_mutex_lock(&itsWritersData[j].mutex);
-    if (!itsWritersData[j].stopThread)
-    {
-      itsWritersData[j].stopThread = true; // Causes writer threads to exit
-    }
-    pthread_mutex_unlock(&itsWritersData[j].mutex);
-//      void* thread_res;
-//      pthread_join(itsWriters[j], &thread_res);
-  }
 
   for (int m = 0; m < itsNoutputs; m++)
   {
@@ -178,6 +169,32 @@ void SynchronisityManager::setInRoundRobinPolicy(vector<int> channels, unsigned 
 
 void SynchronisityManager::postprocess()
 {
+  for (int i = 0; i < itsNinputs; i++)
+  {
+    if (!itsInSynchronisities[i]) {
+      pthread_mutex_lock(&itsReadersData[i].mutex);
+      if (!itsReadersData[i].stopThread)
+	{
+	  itsReadersData[i].stopThread = true;  // Causes reader threads to exit
+	}
+      pthread_mutex_unlock(&itsReadersData[i].mutex);
+      void* thread_res;
+      pthread_join(itsReaders[i], &thread_res);
+    }
+  }
+  for (int j = 0; j < itsNoutputs; j++)
+  {
+    if(!itsOutSynchronisities[j]) {
+      pthread_mutex_lock(&itsWritersData[j].mutex);
+      if (!itsWritersData[j].stopThread)
+	{
+	  itsWritersData[j].stopThread = true; // Causes writer threads to exit
+	}
+      pthread_mutex_unlock(&itsWritersData[j].mutex);
+      void* thread_res;
+      pthread_join(itsWriters[j], &thread_res);
+    }
+  }
 }
 
 static bool stopThread(thread_data *data)
@@ -190,23 +207,32 @@ static bool stopThread(thread_data *data)
 
 void* SynchronisityManager::startReaderThread(void* thread_arg)
 {
-  LOG_TRACE_RTTI_STR("In reader thread ID " << pthread_self());
+  LOG_TRACE_RTTI_STR("In reader thread ID " << data->threadnumber);
   thread_data* data = (thread_data*)thread_arg;
   DHPoolManager* manager = data->manager;
   
   while (!stopThread(data))
   {
-    LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to read");
+    LOG_TRACE_RTTI_STR("Thread " << data->threadnumber << " attempting to read");
     int id;
     DataHolder* dh = manager->getWriteLockedDH(&id);
     Connection* pConn = data->conn;
     pConn->setDestinationDH(dh);           // Set connection to new DataHolder
     pConn->getTransportHolder()->reset();  // Reset TransportHolder
 
+#ifdef OLAP_CS1_TIMINGS
+    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " waits for read right\n";
+#endif
     data->commAllowed.down();
+#ifdef OLAP_CS1_TIMINGS
+    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " received read right\n";
+#endif
 
     Connection::State result = pConn->read();
 
+#ifdef OLAP_CS1_TIMINGS
+    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " releases read right\n";
+#endif
     data->nextThread->commAllowed.up();
 
     ASSERTSTR(result != Connection::Error,
@@ -214,36 +240,43 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
     manager->writeUnlock(id);
   }
 
-  LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
+  LOG_TRACE_RTTI_STR("Reader thread " << data->threadnumber << " exiting");
   pthread_exit(NULL);
 }
 
 void* SynchronisityManager::startWriterThread(void* thread_arg)
 {
-  LOG_TRACE_RTTI_STR("In writer thread ID " << pthread_self());
+  LOG_TRACE_RTTI_STR("In writer thread ID " << data->threadnumber);
   thread_data* data = (thread_data*)thread_arg;
   DHPoolManager* manager = data->manager;
 
   while (!stopThread(data))
   {
-    LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to write");
+    LOG_TRACE_RTTI_STR("Thread " << data->threadnumber << " attempting to write");
     int id;
     DataHolder* dh = manager->getReadLockedDH(&id);
     Connection* pConn = data->conn;
     pConn->setSourceDH(dh);               // Set connection to new DataHolder
     pConn->getTransportHolder()->reset(); // Reset TransportHolder
-    cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " waits for write right\n";
+
+#ifdef OLAP_CS1_TIMINGS
+    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " waits for write right\n";
+#endif
     data->commAllowed.down();
-    cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " received write right\n";
+#ifdef OLAP_CS1_TIMINGS
+    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " received write right\n";
+#endif
     Connection::State result = pConn->write();
     ASSERTSTR(result != Connection::Error,
 	      "Writer thread encountered error in writing");
-    cerr << /*MPI_Wtime() <<*/ ": thread " << pthread_self() << " releases write right\n";
+#ifdef OLAP_CS1_TIMINGS
+    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " releases write right\n";
+#endif
     data->nextThread->commAllowed.up();
     manager->readUnlock(id);
   }
 
-  LOG_TRACE_RTTI_STR("Writer thread " << pthread_self() << " exiting");
+  LOG_TRACE_RTTI_STR("Writer thread " << data->threadnumber << " exiting");
   pthread_exit(NULL);
 }
 
