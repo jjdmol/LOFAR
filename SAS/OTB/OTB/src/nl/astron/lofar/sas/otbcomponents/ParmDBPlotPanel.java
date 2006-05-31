@@ -9,6 +9,7 @@ package nl.astron.lofar.sas.otbcomponents;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.util.Vector;
+import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -27,10 +28,10 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     
     static Logger logger = Logger.getLogger(ParmDBPlotPanel.class);
     static String name="Plotter";
-    
+    private int successfulNumberOfSlots;
     private MainFrame  itsMainFrame;
     private String itsParamName;
-        
+    
     /** Creates new form BeanForm based upon aParameter
      *
      * @params  aParam   Param to obtain the info from
@@ -40,7 +41,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         initComponents();
         itsMainFrame = aMainFrame;
         itsParamName = paramName;
-        
+        successfulNumberOfSlots=4;
         initPanel(paramName);
     }
     
@@ -53,7 +54,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-           
+            
             
         } else {
             logger.debug("No Mainframe supplied");
@@ -69,7 +70,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
      *
      *  // build up the menu
      *  aPopupMenu= new JPopupMenu();
-     *  aMenuItem=new JMenuItem("Choice 1");        
+     *  aMenuItem=new JMenuItem("Choice 1");
      *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
      *      public void actionPerformed(java.awt.event.ActionEvent evt) {
      *          popupMenuHandler(evt);
@@ -80,33 +81,33 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
      *  aPopupMenu.setOpaque(true);
      *
      *
-     *  aPopupMenu.show(aComponent, x, y );        
+     *  aPopupMenu.show(aComponent, x, y );
      */
     public void createPopupMenu(Component aComponent,int x, int y) {
-       // build up the menu
-       JPopupMenu aPopupMenu = new JPopupMenu();
-       int[] availableSlots = itsSlotsPanel.getAvailableSlotIndexes();
-       for(int i = 0; i < availableSlots.length; i++){
-           JMenuItem aMenuItem=new JMenuItem("Add to slot "+availableSlots[i]);
-           aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-               public void actionPerformed(java.awt.event.ActionEvent evt) {
-                   popupMenuHandler(evt);
-               }
-           });
-           aMenuItem.setActionCommand("Add to slot " +availableSlots[i]);
-           aPopupMenu.add(aMenuItem);
-           aPopupMenu.setOpaque(true);
-       }
-       aPopupMenu.show(aComponent, x, y );     
+        // build up the menu
+        JPopupMenu aPopupMenu = new JPopupMenu();
+        int[] availableSlots = itsSlotsPanel.getAvailableSlotIndexes();
+        for(int i = 0; i < availableSlots.length; i++){
+            JMenuItem aMenuItem=new JMenuItem("Add to slot "+availableSlots[i]);
+            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    popupMenuHandler(evt);
+                }
+            });
+            aMenuItem.setActionCommand("Add to slot " +availableSlots[i]);
+            aPopupMenu.add(aMenuItem);
+            aPopupMenu.setOpaque(true);
+        }
+        aPopupMenu.show(aComponent, x, y );
     }
     
-    /** handles the choice from the popupmenu 
+    /** handles the choice from the popupmenu
      *
      * depending on the choices that are possible for this panel perform the action for it
      *
      *      if (evt.getActionCommand().equals("Choice 1")) {
      *          perform action
-     *      }  
+     *      }
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
         logger.debug("PopUp menu Selection made: "+evt.getActionCommand().toString());
@@ -116,7 +117,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private Object constructPlotterConstraints(String aParamName){
-        String[] passToDataAccess = null; 
+        String[] passToDataAccess = null;
         if (aParamName != null) {
             String cloneParamName = aParamName.toString();
             if(cloneParamName.equalsIgnoreCase("ParmDB")){
@@ -172,7 +173,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         }
         if(userAccount.isInstrumentScientist()) {
             // enable/disable certain controls
-        }       
+        }
     }
     public void setParam(String aParam) {
         if (aParam != null) {
@@ -187,7 +188,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
-       
+        
     }
     
     public String getShortName() {
@@ -205,6 +206,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         slotsPane.getViewport().setPreferredSize(new Dimension(640,480));
         itsSlotsPanel.setMinimumSize(new Dimension(640,480));
         itsSlotsPanel.setPreferredSize(new Dimension(panelWidth-440,panelHeight-340));
+        //itsSlotsPanel.repaint();
         //initPanel(itsParamName);
     }
     
@@ -308,11 +310,45 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         add(contentPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void cSlotsAmountItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cSlotsAmountItemStateChanged
-        itsSlotsPanel.setAmountOfSlots(Integer.parseInt(evt.getItem().toString()),false);
+        int wannaHaveSlots = Integer.parseInt(evt.getItem().toString());
+        
+        System.out.println("current slots: "+ successfulNumberOfSlots);
+        System.out.println("want to have slots: "+ wannaHaveSlots);
+        if(wannaHaveSlots != successfulNumberOfSlots){
+            try {
+                itsSlotsPanel.setAmountOfSlots(wannaHaveSlots,false);
+            } catch (NumberFormatException ex) {
+                //TODO log!
+                ex.printStackTrace();
+            } catch (IllegalArgumentException ex) {
+                //TODO log!
+                //ex.printStackTrace();
+                String[] buttons = {"Clear Slots","Cancel"};
+                int choice =  JOptionPane.showOptionDialog(this,ex.getMessage(), "Plots detected in to be deleted slots", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
+                if(choice == 0){
+                    itsSlotsPanel.setAmountOfSlots(wannaHaveSlots,true);
+                }else{
+                    double squareRoot = Math.sqrt(Double.parseDouble(""+itsSlotsPanel.getAmountOfSlots()));
+                    System.out.println("cancelling : slots was "+ itsSlotsPanel.getAmountOfSlots());
+                    int wishedIndex = (Integer.parseInt(""+(int)squareRoot))-1;
+                    cSlotsAmount.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "1", "4", "9", "16", "25" }));
+                    System.out.println("cancelling : setting combobox to index "+ wishedIndex +" / value "+squareRoot);
+                    cSlotsAmount.addItemListener(new java.awt.event.ItemListener() {
+                        public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                            cSlotsAmountItemStateChanged(evt);
+                        }
+                    });
+                    System.out.println("cancelling : slots will be "+ itsSlotsPanel.getAmountOfSlots());
+                   
+                    cSlotsAmount.setSelectedItem(new String(""+itsSlotsPanel.getAmountOfSlots()));
+                 }
+            }
+        }
+        successfulNumberOfSlots = itsSlotsPanel.getAmountOfSlots();
     }//GEN-LAST:event_cSlotsAmountItemStateChanged
-            
+    
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

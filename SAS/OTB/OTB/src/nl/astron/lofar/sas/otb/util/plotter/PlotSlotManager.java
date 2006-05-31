@@ -23,8 +23,14 @@
 
 package nl.astron.lofar.sas.otb.util.plotter;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.LinkedList;
-import nl.astron.lofar.java.gui.plotter.PlotPanel;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 /**
  * @version $Id$
@@ -34,13 +40,13 @@ import nl.astron.lofar.java.gui.plotter.PlotPanel;
 public class PlotSlotManager{
     
     private LinkedList<PlotSlot> itsPlotSlots;
+    private PlotSlot selectedSlot;
     
     /** Creates a new instance of PlotSlotManager */
     public PlotSlotManager(int amountOfSlots) {
         itsPlotSlots = new LinkedList<PlotSlot>();
-        for(int i = 1;i<=amountOfSlots;i++){
-            itsPlotSlots.add(new PlotSlot());
-        }
+        setAmountOfSlots(amountOfSlots,true);
+        selectedSlot = null;
     }
     public int getAmountOfSlots(){
         return itsPlotSlots.size();
@@ -48,23 +54,28 @@ public class PlotSlotManager{
     public void setAmountOfSlots(int amount, boolean force) throws IllegalArgumentException{
         if(itsPlotSlots.size() < amount){
             int difference = amount - itsPlotSlots.size();
+            int oldAmount = itsPlotSlots.size();
             for(int i = 1; i <= difference; i++){
-                itsPlotSlots.add(new PlotSlot());
+                PlotSlot aNewSlot = new PlotSlot();
+                aNewSlot.setLabel(""+(oldAmount+i));
+                itsPlotSlots.add(aNewSlot);
             }
         }else if (itsPlotSlots.size() > amount){
             int difference = itsPlotSlots.size() - amount;
             boolean plotInTheWay = false;
+            int plotsInTheWay = 0;
             for(int i = 1; i <= difference; i++){
                 PlotSlot checkPlot = getSlot(amount+i);
-                if(!checkPlot.getLabel().equalsIgnoreCase(PlotSlot.EMPTY_SLOT)){
+                if(!checkPlot.isEmpty()){
                     plotInTheWay = true;
+                    plotsInTheWay++;
                 }
             }
             if(plotInTheWay && !force){
-                String exceptionString = "There is/are plot(s) present in the ";
-                exceptionString+= "last "+difference+" slots. Please clear ";
-                exceptionString+= "these slots manually or use the force argument to ";
-                exceptionString+= "let the application delete them";
+                String exceptionString = "There is/are "+plotsInTheWay+" plot(s) present in the ";
+                exceptionString+= "last "+difference+" slots.\n\nPlease clear or move ";
+                exceptionString+= "these plots manually by pressing cancel,\nor let ";
+                exceptionString+= "the application delete them by pressing Clear Slots.";
                 throw new IllegalArgumentException(exceptionString);
             }else{
                 for(int i = 1; i <= difference; i++){
@@ -72,10 +83,11 @@ public class PlotSlotManager{
                 }
             }
         }
+        this.fireSlotsUpdated(amount);
     }
     public LinkedList<PlotSlot> getSlots(){
         return itsPlotSlots;
-    }    
+    }
     public PlotSlot getSlot(int index) throws IllegalArgumentException{
         if(index > 0 && index <= itsPlotSlots.size()){
             return itsPlotSlots.get(index-1);
@@ -129,14 +141,34 @@ public class PlotSlotManager{
     
     public void createPlotInSlot(int index, Object constraints){
         getSlot(index).addPlot(constraints);
+        this.fireSlotsUpdated(index);
+    }
+    public void createLegendInSlot(int index){
+        getSlot(index).addLegend();
+    }
+    public void removeLegendInSlot(int index){
+        getSlot(index).removeLegend();
+    }
+    public JComponent getLegendForSlot(int index){
+        return getSlot(index).getLegend();
     }
     
     public void createPlotInAnyAvailableSlot(Object constraints){
-        getSlot(getAnAvailableSlotIndex()).addPlot(constraints);
+        createPlotInSlot(getAnAvailableSlotIndex(),constraints);
     }
     
     public void modifyPlotInSlot(int index, Object constraints){
         getSlot(index).modifyPlot(constraints);
+    }
+    
+    public void movePlot(int indexFromSlot, int indexToSlot){
+        getSlot(indexToSlot).clearSlot();
+        getSlot(indexToSlot).setPlot(getSlot(indexFromSlot).getPlot());
+        if(getSlot(indexFromSlot).containsLegend()){
+            getSlot(indexToSlot).addLegend();
+        }
+        getSlot(indexFromSlot).clearSlot();
+        this.fireSlotsUpdated(indexFromSlot);
     }
     
     public void clearSlot(int index){
@@ -147,5 +179,50 @@ public class PlotSlotManager{
         return getSlot(index).isEmpty();
     }
     
+    /**
+     * Utility field used by event firing mechanism.
+     */
+    private javax.swing.event.EventListenerList listenerList =  null;
+
+    /**
+     * Registers ActionListener to receive events.
+     *
+     * @param listener The listener to register.
+     */
+    public void addActionListener(java.awt.event.ActionListener listener) {
+
+        if (listenerList == null ) {
+            listenerList = new javax.swing.event.EventListenerList();
+        }
+        listenerList.add (java.awt.event.ActionListener.class, listener);
+    }
+
+    /**
+     * Removes ActionListener from the list of listeners.
+     *
+     * @param listener The listener to remove.
+     */
+    public void removeActionListener(java.awt.event.ActionListener listener) {
+
+        listenerList.remove (java.awt.event.ActionListener.class, listener);
+    }
+
+    /**
+     * Notifies all registered listeners about the event.
+     * 
+     * @param event The event to be fired
+     */
+    private void fireSlotsUpdated(int id) {
+
+        if (listenerList == null) return;
+        Object[] listeners = listenerList.getListenerList ();
+        ActionEvent action = new ActionEvent(this,id,"REFRESH");
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==java.awt.event.ActionListener.class) {
+                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (action);
+            }
+        }
+    }
     
 }
+
