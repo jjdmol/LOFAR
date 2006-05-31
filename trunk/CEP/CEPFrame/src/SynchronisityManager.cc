@@ -207,8 +207,8 @@ static bool stopThread(thread_data *data)
 
 void* SynchronisityManager::startReaderThread(void* thread_arg)
 {
-  LOG_TRACE_RTTI_STR("In reader thread ID " << data->threadnumber);
   thread_data* data = (thread_data*)thread_arg;
+  LOG_TRACE_RTTI_STR("In reader thread ID " << data->threadnumber); 
   DHPoolManager* manager = data->manager;
   
   while (!stopThread(data))
@@ -246,8 +246,8 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
 
 void* SynchronisityManager::startWriterThread(void* thread_arg)
 {
-  LOG_TRACE_RTTI_STR("In writer thread ID " << data->threadnumber);
   thread_data* data = (thread_data*)thread_arg;
+  LOG_TRACE_RTTI_STR("In writer thread ID " << data->threadnumber);
   DHPoolManager* manager = data->manager;
 
   while (!stopThread(data))
