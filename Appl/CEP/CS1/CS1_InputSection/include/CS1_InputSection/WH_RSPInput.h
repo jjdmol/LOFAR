@@ -103,7 +103,6 @@ namespace LOFAR
       int itsNSubbandsPerCell;
       int itsNSamplesPerSec;
       int itsNHistorySamples;
-      int itsStationID;
      
       BeamletBuffer* itsBBuffer;
 
@@ -112,6 +111,14 @@ namespace LOFAR
       NSTimer* itsProcessTimer;
       NSTimer* itsGetElemTimer;
       
+
+      //handle timer alarm
+      static void timerSignal(int signal);    
+      double itsFrequency;
+      static int theirNoRunningWHs;
+      static int theirNoAlarms;
+      static bool theirTimerSet;
+
     };
     
     // @}

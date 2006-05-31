@@ -58,6 +58,7 @@ namespace LOFAR
 				   const int noutputs);
       virtual WH_SBCollect* make(const string& name);
       
+      virtual void preprocess();
       virtual void process();
       virtual void postprocess();
 
@@ -70,6 +71,14 @@ namespace LOFAR
       ACC::APS::ParameterSet itsPS;
       unsigned itsNStations;
       unsigned itsNSubbandsPerCell;
+
+      //handle timer alarm
+      static void timerSignal(int signal);    
+      double itsFrequency;
+      static int theirNoRunningWHs;
+      static int theirNoAlarms;
+      static bool theirTimerSet;
+
     };
 
     // @}

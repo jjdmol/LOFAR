@@ -37,8 +37,20 @@
 #include <CS1_InputSection/BeamletBuffer.h>
 #include <CS1_InputSection/InputThread.h>
 
+// for timer
+#include <signal.h>
+#include <sys/time.h>
+// for rand
+#include <stdlib.h>
+// for sleep (yield)
+#include <boost/thread.hpp>
+
 namespace LOFAR {
   namespace CS1 {
+
+    int WH_RSPInput::theirNoRunningWHs = 0;
+    int WH_RSPInput::theirNoAlarms = 0;
+    bool WH_RSPInput::theirTimerSet = 0;
 
     WH_RSPInput::WH_RSPInput(const string& name, 
 			     ACC::APS::ParameterSet& ps,
@@ -152,6 +164,34 @@ namespace LOFAR {
       cout<<"Starting buffer at "<<itsSyncedStamp<<endl;cout.flush();
       itsBBuffer->startBufferRead(itsSyncedStamp);
       cout<<"end of WH_RSPInput::preprocess"<<endl;cout.flush();
+
+
+      if (!theirTimerSet) {
+#define USE_TIMER 0
+#if USE_TIMER
+	sighandler_t ret = signal(SIGALRM, *WH_RSPInput::timerSignal);
+	ASSERTSTR(ret != SIG_ERR, "WH_RSPInput couldn't set signal handler for timer");    
+	struct itimerval value;
+	memset (&value, 0, sizeof(itimerval));
+
+	__time_t secs = 1;
+	__time_t usecs = 0;
+	// this means 1MHz is the highest frequency
+	value.it_interval.tv_sec = secs;
+	value.it_interval.tv_usec = usecs;
+	value.it_value.tv_sec = sec;
+	value.it_value.tv_usec = usecs;
+	cout << "Setting timer interval to " << secs << "secs and " << usecs << "ms" << endl;
+
+	setitimer(ITIMER_REAL, &value, 0);
+#else
+	theirNoAlarms = -1; //This will make sure data is written at maximum speed
+#endif
+      
+	theirTimerSet = true;
+      }
+      theirNoRunningWHs++;
+
     }
 
     void WH_RSPInput::process() 
@@ -197,19 +237,45 @@ namespace LOFAR {
     
 	// fill in the data
 	rspDHp->getFlags() = flags;
-	rspDHp->setStationID(itsStationID);
+	rspDHp->setStationID(itsStationNr);
 	rspDHp->setTimeStamp(delayedstamp);
 	rspDHp->fillExtraData();
-	rspDHp->setFineDelayAtBegin(delayDHp->getFineDelayAtBegin(itsStationID));
-	rspDHp->setFineDelayAfterEnd(delayDHp->getFineDelayAfterEnd(itsStationID));
+	rspDHp->setFineDelayAtBegin(delayDHp->getFineDelayAtBegin(itsStationNr));
+	rspDHp->setFineDelayAfterEnd(delayDHp->getFineDelayAfterEnd(itsStationNr));
       }    
 
       itsSyncedStamp += itsNSamplesPerSec;
       itsProcessTimer->stop();
+      while (theirNoAlarms == 0) 
+	{
+	  // wait for alarm to go off
+	  boost::thread::yield();
+	};
+      
+      // we handled one alarm, so decrease it
+      theirNoAlarms--;
     }
 
     void WH_RSPInput::postprocess()
     {
+      theirNoRunningWHs--;
+      if (theirNoRunningWHs == 0)
+	{
+	  theirTimerSet = false;
+	  if (itsFrequency != 0) {
+#if USE_TIMER
+	    // unset timer
+	    struct itimerval value;
+	    memset (&value, 0, sizeof(itimerval));
+	    setitimer(ITIMER_REAL, &value, 0);
+	    // remove sig handler
+	    sighandler_t ret = signal(SIGALRM, SIG_DFL);
+	    ASSERTSTR(ret != SIG_ERR, "WH_RSPInput couldn't unset signal handler for timer");    
+#endif
+	  }
+	}
+
+
       sleep(1);
       itsPrePostTimer->stop();
 
@@ -242,6 +308,12 @@ namespace LOFAR {
 
     void WH_RSPInput::dump() const 
     {
+    }
+
+    void WH_RSPInput::timerSignal(int sig)
+    {
+      // set the number of frames that can be sent
+      theirNoAlarms += theirNoRunningWHs;
     }
 
   } // namespace CS1
