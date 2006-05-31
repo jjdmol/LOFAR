@@ -109,6 +109,7 @@ public:
 
   // limit the number of concurrent writers in a group of output channels
   void setOutRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent);
+  void setInRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent);
 
   // Is data transport of input channel synchronous?
   bool isInSynchronous(int channel);

@@ -54,8 +54,8 @@ typedef struct thread_args{
   DHPoolManager*   manager;
   Connection*      conn;
   bool             stopThread;
-  Semaphore	   writeAllowed;
-  thread_args	   *nextWriter;
+  Semaphore	   commAllowed;
+  thread_args	   *nextThread;
 }thread_data;
 
 
@@ -90,6 +90,7 @@ public:
 
   // limit the number of concurrent writers in a group of output channels
   void setOutRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent);
+  void setInRoundRobinPolicy(vector<int> channels, unsigned maxConcurrent);
 
   void preprocess();
   void postprocess();
