@@ -57,6 +57,7 @@ private:
   Sel_RoundRobin(const Sel_RoundRobin&);
 
   std::vector<int> itsOptions;
+  int itsSelectedIndex;
 };
 
 // @}
