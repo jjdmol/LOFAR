@@ -49,15 +49,15 @@ public:
 
 	// define enumeration for all states of an LogicalDevice.
 	typedef enum {
-		UNKNOWN = 0,
+		ANYSTATE = -1,
+		NOSTATE = 0,
 		CONNECT,
 		CONNECTED,
 		CLAIM,
 		CLAIMED,
 		PREPARE,
 		PREPARED,
-		RESUME,
-		RESUMED,
+		ACTIVE,
 		SUSPEND,
 		SUSPENDED,
 		RELEASE,

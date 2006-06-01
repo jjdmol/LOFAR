@@ -36,15 +36,14 @@ namespace LOFAR {
 LDState::LDState()
 {
 	itsStates.resize(LAST_STATE);
-	itsStates[UNKNOWN] 				= "Unknown";
+	itsStates[NOSTATE] 				= "Unknown";
 	itsStates[CONNECT]				= "Connecting";
 	itsStates[CONNECTED]			= "Connected";
 	itsStates[CLAIM]				= "Claiming";
 	itsStates[CLAIMED]				= "Claimed";
 	itsStates[PREPARE]				= "Preparing";
 	itsStates[PREPARED]				= "Prepared";
-	itsStates[RESUME]				= "Resuming";
-	itsStates[RESUMED]				= "Resumed";
+	itsStates[ACTIVE]				= "Active";
 	itsStates[SUSPEND]				= "Suspending";
 	itsStates[SUSPENDED]			= "Suspended";
 	itsStates[RELEASE]				= "Releasing";
@@ -65,7 +64,7 @@ LDState::~LDState()
 //
 string	LDState::name(uint16			aStateNr)
 { 
-	return (((aStateNr >= UNKNOWN) && (aStateNr < LAST_STATE)) ?
+	return (((aStateNr >= NOSTATE) && (aStateNr < LAST_STATE)) ?
 											itsStates[aStateNr] : "");
 }
 
@@ -74,7 +73,7 @@ string	LDState::name(uint16			aStateNr)
 //
 uint16	LDState::value(const string&		aStateName)
 {
-	uint16	i = UNKNOWN;
+	uint16	i = NOSTATE;
 	while (i < LAST_STATE) {
 		if (itsStates[i] == aStateName) {
 			return (i);
@@ -90,7 +89,7 @@ uint16	LDState::value(const string&		aStateName)
 //
 uint16	LDState::value(LDstateNr		aStateNr)
 {
-	ASSERTSTR((aStateNr >= UNKNOWN) && (aStateNr < LAST_STATE), 
+	ASSERTSTR((aStateNr >= NOSTATE) && (aStateNr < LAST_STATE), 
 								aStateNr << " is not a valid LDState");
 
 	return ((uint16) aStateNr);
