@@ -71,8 +71,8 @@ RSPDriver.MAC_ADDR_23=00:00:00:00:00:17
 # Data output payload size.
 # Should eventually be computed dynamically
 # based on settings.
-#
-RSPDriver.OUTPUT_PAYLOAD_SIZE=736
+# now 1744 was 736
+RSPDriver.OUTPUT_PAYLOAD_SIZE=1744
 
 #
 # Destination IP and MAC address for data packets
@@ -198,7 +198,10 @@ RSPDriver.LOOPBACK_MODE=0
 #
 RSPDriver.WRITE_RSU=1
 RSPDriver.WRITE_BS=1
-RSPDriver.WRITE_CDO=0
+RSPDriver.WRITE_CDO=1
+# WRITE_CDO_ONCE, if set to 1 only write CDO register once at startup
+# otherwise rewrite same data every update (= second)
+RSPDriver.WRITE_CDO_ONCE=0
 RSPDriver.READ_STATUS=1
 RSPDriver.WRITE_BF=1
 RSPDriver.WRITE_SS=1

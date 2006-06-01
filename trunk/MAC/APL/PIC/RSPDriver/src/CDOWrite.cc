@@ -136,6 +136,11 @@ uint16 CDOWrite::compute_ip_checksum(void* addr, int count)
 
 void CDOWrite::sendrequest()
 {
+  // write register (with same setting) every second if WRITE_CDO_ONCE == 0
+  if (0 == GET_CONFIG("RSPDriver.WRITE_CDO_ONCE", i)) {
+    Cache::getInstance().getState().cdo().write(getBoardId());
+  }
+
   // skip update if the CDO settings have not been modified
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().cdo().get(getBoardId()))
   {
@@ -153,9 +158,10 @@ void CDOWrite::sendrequest()
       cdo.hdr.set(MEPHeader::CDO_SETTINGS_HDR);
 
       cdo.station_id       = getBoardId() + 1;
-      cdo.configuration_id = 0;
-      cdo.format           = 0;
-      cdo.antenna_id       = 0;
+      // fill in some magic so we recognise these fields easily in tcpdump/ethereal output
+      cdo.configuration_id = 0xBBAA;
+      cdo.format           = 0xDDCC;
+      cdo.antenna_id       = 0xFFEE;
       memcpy(cdo.destination_mac, m_dstmac, ETH_ALEN);
 
       m_hdr = cdo.hdr;
