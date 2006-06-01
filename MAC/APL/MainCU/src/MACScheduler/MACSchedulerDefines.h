@@ -28,8 +28,11 @@ namespace LOFAR {
 
 #define MS_TASKNAME					"MACScheduler"
 
-#define MS_PROPSET_NAME				"SwCntrl"
+#define MS_PROPSET_NAME				"LOFAR_PermSW_MacScheduler"
 #define MS_PROPSET_TYPE				"MacScheduler"
+#define MS_OTDB_CONNECTED			"OTDB.connected"
+#define MS_OTDB_LASTPOLL			"OTDB.lastPoll"
+#define MS_OTDB_POLL_ITV			"OTDB.pollInterval"
 
 #define PVSSNAME_MS_QUEUEPERIOD		"QueuePeriod"
 #define PVSSNAME_MS_CLAIMPERIOD		"ClaimPeriod"

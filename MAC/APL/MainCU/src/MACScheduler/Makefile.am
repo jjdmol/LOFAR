@@ -8,7 +8,8 @@ MACScheduler_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 MACScheduler_SOURCES		= MACScheduler.cc \
 							  MACSchedulerMain.cc \
 							  ChildControl.cc \
-							  LDState.cc
+							  LDState.cc \
+							  Controller.cc
 
 MACScheduler_LDADD			= -lpqxx $(LOFAR_DEPEND)
 MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)

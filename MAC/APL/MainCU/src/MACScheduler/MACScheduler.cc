@@ -25,11 +25,10 @@
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVDouble.h>
-#include <GCF/GCF_PVInteger.h>
+#include <GCF/GCF_PVTypes.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
+#include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 
 #include "MACSchedulerDefines.h"
@@ -180,14 +179,18 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		LOG_DEBUG ("Activating PropertySet");
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(MS_PROPSET_NAME,
 																  MS_PROPSET_TYPE,
-																  PS_CAT_PERMANENT,
+																  PS_CAT_PERM_AUTOLOAD,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
 	  
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("initial"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString  ("initial"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString  (""));
+		itsPropertySet->setValue(string(MS_OTDB_CONNECTED), GCFPVBool    (false));
+		itsPropertySet->setValue(string(MS_OTDB_LASTPOLL),  GCFPVString  (""));
+		itsPropertySet->setValue(string(MS_OTDB_POLL_ITV),  GCFPVUnsigned(itsOTDBpollInterval));
+
       
 		// Try to connect to the SAS database.
 		ACC::APS::ParameterSet* pParamSet = ACC::APS::globalParameterSet();
@@ -202,6 +205,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 					"Unable to connect to database " << DBname << " using " <<
 					username << "," << password);
 		LOG_INFO ("Connected to the OTDB");
+		itsPropertySet->setValue(string(MS_OTDB_CONNECTED),GCFPVBool(true));
 
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControltask");
@@ -217,8 +221,6 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		break;
 
 	case F_DISCONNECTED:
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),
-									 GCFPVString("Waiting for StartDaemon"));
 		break;
 	
 	case F_TIMER:
@@ -379,7 +381,8 @@ void MACScheduler::_doOTDBcheck()
 	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
 
 	// REO: test pvss appl
-	itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString(to_simple_string(currentTime)));
+	itsPropertySet->setValue(string(MS_OTDB_LASTPOLL),
+										GCFPVString(to_simple_string(currentTime)));
 
 	while (idx < listSize)  {
 		// timediff = time to go before start of Observation
@@ -398,11 +401,24 @@ void MACScheduler::_doOTDBcheck()
 		// remember: timediff <= queueperiod
 		if (timediff > seconds(itsClaimPeriod)) {
 			// Observation is somewhere in the queueperiod
-			if (observationState != LDState::CONNECTED) {
-				itsChildControl->startChild(cntlrName, 
-											newTreeList[idx].treeID(), 
+			if (observationState != LDState::CONNECTED) {	// requested a start before?
+				// no, let database construct the parset for the whole observation
+				OTDB::TreeMaintenance	tm(itsOTDBconnection);
+				OTDB::treeIDType		treeID = newTreeList[idx].treeID();
+				OTDBnode				topNode = tm.getTopNode(treeID);
+				string					filename = formatString("%s/Observation_%d", 
+														LOFAR_SHARE_LOCATION, treeID);
+				if (!tm.exportTree(treeID, topNode.nodeID(), filename)) {
+					LOG_ERROR_STR ("Cannot create startup file " << filename << 
+								" for new observation. Observation CANNOT BE STARTED!");
+				}
+				else {
+					// fire request for new controller
+					itsChildControl->startChild(cntlrName, 
+											treeID, 
 											LDTYPE_OBSERVATIONCTRL, 
 											myHostname());
+				}
 				idx++;
 				continue;
 			}
@@ -418,7 +434,7 @@ void MACScheduler::_doOTDBcheck()
 		}
 
 		// observation must be running (otherwise it would not be in the newTreeList)
-		if (observationState != LDState::RESUMED) {
+		if (observationState != LDState::ACTIVE) {
 //			_executeObservation(&newTreeList[idx]);
 		}
 	

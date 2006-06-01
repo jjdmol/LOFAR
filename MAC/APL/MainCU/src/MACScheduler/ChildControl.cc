@@ -149,7 +149,7 @@ bool ChildControl::startChild (const string&		aName,
 	ci.hostname		  = hostname;
 	ci.requestedState = LDState::CONNECTED;
 	ci.requestTime	  = time(0);
-	ci.currentState	  = LDState::UNKNOWN;
+	ci.currentState	  = LDState::NOSTATE;
 	ci.establishTime  = 0;
 	ci.retryTime	  = 0;
 	ci.nrRetries	  = 0;
@@ -222,7 +222,7 @@ LDState::LDstateNr ChildControl::getCurrentState	(const string&	aName)
 {
 	CIiter	controller = findController(aName);
 	if (controller == itsCntlrList.end()) {
-		return (LDState::UNKNOWN);
+		return (LDState::NOSTATE);
 	}
 
 	return (controller->currentState);
@@ -237,7 +237,7 @@ LDState::LDstateNr ChildControl::getRequestedState (const string&	aName)
 {
 	CIiter	controller = findController(aName);
 	if (controller == itsCntlrList.end()) {
-		return (LDState::UNKNOWN);
+		return (LDState::NOSTATE);
 	}
 
 	return (controller->requestedState);
@@ -437,7 +437,7 @@ void ChildControl::_processActionList()
 			}
 			break;
 
-		case LDState::RESUMED:
+		case LDState::ACTIVE:
 			{
 				LOGICALDEVICEResumeEvent		request;
 				controller->port->send(request);
