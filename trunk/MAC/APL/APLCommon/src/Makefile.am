@@ -19,7 +19,8 @@ libaplcommon_la_SOURCES = \
 	PropertySetAnswer.cc \
 	ResourceAllocator.cc \
 	LogicalDevice_Protocol.cc \
-	StartDaemon_Protocol.cc
+	StartDaemon_Protocol.cc \
+	Controller_Protocol.cc
 
 NOINSTHDRS =
 
@@ -37,7 +38,8 @@ EXTRA_DIST =
 phdir=$(includedir)/APL/APLCommon
 ph_HEADERS = \
 	LogicalDevice_Protocol.ph \
-	StartDaemon_Protocol.ph
+	StartDaemon_Protocol.ph \
+	Controller_Protocol.ph
 
 clean-local:
 	rm -f *.ph
