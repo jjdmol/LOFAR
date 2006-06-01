@@ -42,13 +42,15 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         itsMainFrame = aMainFrame;
         itsParamName = paramName;
         successfulNumberOfSlots=4;
+        
         initPanel(paramName);
     }
     
     /** Creates new form BeanForm */
     public ParmDBPlotPanel() {
         initComponents();
-        
+        successfulNumberOfSlots=4;
+        validate();
     }
     
     public void setMainFrame(MainFrame aMainFrame) {
@@ -195,6 +197,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         return name;
     }
     public void setContent(Object anObject) {
+        
         jParmDBnode node = (jParmDBnode)anObject;
         itsParamName = node.nodeID();
         logger.trace("ParmDB name selected : "+itsParamName);
@@ -206,8 +209,6 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         slotsPane.getViewport().setPreferredSize(new Dimension(640,480));
         itsSlotsPanel.setMinimumSize(new Dimension(640,480));
         itsSlotsPanel.setPreferredSize(new Dimension(panelWidth-440,panelHeight-340));
-        //itsSlotsPanel.repaint();
-        //initPanel(itsParamName);
     }
     
     private void saveInput() {
@@ -247,8 +248,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         cSlotsAmount = new javax.swing.JComboBox();
         slotsPane = new javax.swing.JScrollPane();
         itsSlotsPanel = new nl.astron.lofar.sas.otb.util.plotter.PlotSlotsPanel();
-        helpPane = new javax.swing.JScrollPane();
-        tHelp = new javax.swing.JTextArea();
+        bHelp = new javax.swing.JButton();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -285,80 +285,77 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         contentPanel.add(slotsPane, gridBagConstraints);
 
-        tHelp.setBackground(javax.swing.UIManager.getDefaults().getColor("Viewport.background"));
-        tHelp.setColumns(20);
-        tHelp.setEditable(false);
-        tHelp.setRows(5);
-        tHelp.setText("To zoom: Click and hold the left mouse button and select a rectangle.\nTo reset the zoom: Press CTRL-LeftMouseButton to reset the zoom.\nTo change colors/etc: Double-Click on a line in the legend.\nTo change plot/axis labels and tics/etc: Click on an axis or title and press the right mouse button.");
-        tHelp.setMinimumSize(new java.awt.Dimension(565, 75));
-        helpPane.setViewportView(tHelp);
+        bHelp.setText("Help");
+        bHelp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bHelpActionPerformed(evt);
+            }
+        });
 
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        contentPanel.add(helpPane, gridBagConstraints);
+        gridBagConstraints.ipadx = 10;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 0, 20);
+        contentPanel.add(bHelp, gridBagConstraints);
 
         add(contentPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void bHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bHelpActionPerformed
+        String message = "Slots:\nRight-click on the light-gray header of a slot";
+        message+=" to see what you can do with the plot in it.\n\nPlots:\n";
+        message+="To zoom: Click and hold the left mouse button and select a rectangle.";
+        message+="\nTo reset the zoom: Press CTRL-LeftMouseButton to reset the zoom.";
+        message+="\nTo change colors/etc: Double-Click on a line in the legend.\n";
+        message+="To change plot/axis labels and tics/etc: Click on an axis or title";
+        message+=" and press the right mouse button.";
+        
+        JOptionPane.showMessageDialog(null,message, "Help",JOptionPane.INFORMATION_MESSAGE);
+        
+    }//GEN-LAST:event_bHelpActionPerformed
     
     private void cSlotsAmountItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cSlotsAmountItemStateChanged
-        int wannaHaveSlots = Integer.parseInt(evt.getItem().toString());
-        
-        System.out.println("current slots: "+ successfulNumberOfSlots);
-        System.out.println("want to have slots: "+ wannaHaveSlots);
-        if(wannaHaveSlots != successfulNumberOfSlots){
+        int wannaHaveSlots = Integer.parseInt(evt.getItemSelectable().getSelectedObjects()[0].toString());
+        if (wannaHaveSlots != successfulNumberOfSlots){
             try {
+                wannaHaveSlots = Integer.parseInt(evt.getItem().toString());
                 itsSlotsPanel.setAmountOfSlots(wannaHaveSlots,false);
+                successfulNumberOfSlots = itsSlotsPanel.getAmountOfSlots();
             } catch (NumberFormatException ex) {
                 //TODO log!
                 ex.printStackTrace();
             } catch (IllegalArgumentException ex) {
                 //TODO log!
-                //ex.printStackTrace();
                 String[] buttons = {"Clear Slots","Cancel"};
                 int choice =  JOptionPane.showOptionDialog(this,ex.getMessage(), "Plots detected in to be deleted slots", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
                 if(choice == 0){
-                    itsSlotsPanel.setAmountOfSlots(wannaHaveSlots,true);
+                    itsSlotsPanel.setAmountOfSlots(Integer.parseInt(evt.getItem().toString()),true);
+                    successfulNumberOfSlots = itsSlotsPanel.getAmountOfSlots();
                 }else{
-                    double squareRoot = Math.sqrt(Double.parseDouble(""+itsSlotsPanel.getAmountOfSlots()));
-                    System.out.println("cancelling : slots was "+ itsSlotsPanel.getAmountOfSlots());
+                    double squareRoot = Math.sqrt(Double.parseDouble(""+successfulNumberOfSlots));
                     int wishedIndex = (Integer.parseInt(""+(int)squareRoot))-1;
-                    cSlotsAmount.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "1", "4", "9", "16", "25" }));
-                    System.out.println("cancelling : setting combobox to index "+ wishedIndex +" / value "+squareRoot);
-                    cSlotsAmount.addItemListener(new java.awt.event.ItemListener() {
-                        public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                            cSlotsAmountItemStateChanged(evt);
-                        }
-                    });
-                    System.out.println("cancelling : slots will be "+ itsSlotsPanel.getAmountOfSlots());
-                   
-                    cSlotsAmount.setSelectedItem(new String(""+itsSlotsPanel.getAmountOfSlots()));
-                 }
+                    cSlotsAmount.setSelectedItem(new String(""+successfulNumberOfSlots));
+                }
             }
+            
         }
-        successfulNumberOfSlots = itsSlotsPanel.getAmountOfSlots();
     }//GEN-LAST:event_cSlotsAmountItemStateChanged
     
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton bHelp;
     private javax.swing.JComboBox cSlotsAmount;
     private javax.swing.JPanel contentPanel;
-    private javax.swing.JScrollPane helpPane;
     private nl.astron.lofar.sas.otb.util.plotter.PlotSlotsPanel itsSlotsPanel;
     private javax.swing.JLabel lSlotsAmount;
     private javax.swing.JScrollPane slotsPane;
-    private javax.swing.JTextArea tHelp;
     // End of variables declaration//GEN-END:variables
     
     /**
