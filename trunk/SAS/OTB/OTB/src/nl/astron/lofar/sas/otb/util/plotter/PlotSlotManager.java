@@ -39,6 +39,9 @@ import javax.swing.SwingUtilities;
  */
 public class PlotSlotManager{
     
+    public static final String REFRESH_FULL = "REFRESHFULL";
+    public static final String REFRESH_SINGLE = "REFRESHSINGLE";
+   
     private LinkedList<PlotSlot> itsPlotSlots;
     private PlotSlot selectedSlot;
     
@@ -52,38 +55,41 @@ public class PlotSlotManager{
         return itsPlotSlots.size();
     }
     public void setAmountOfSlots(int amount, boolean force) throws IllegalArgumentException{
-        if(itsPlotSlots.size() < amount){
-            int difference = amount - itsPlotSlots.size();
-            int oldAmount = itsPlotSlots.size();
-            for(int i = 1; i <= difference; i++){
-                PlotSlot aNewSlot = new PlotSlot();
-                aNewSlot.setLabel(""+(oldAmount+i));
-                itsPlotSlots.add(aNewSlot);
-            }
-        }else if (itsPlotSlots.size() > amount){
-            int difference = itsPlotSlots.size() - amount;
-            boolean plotInTheWay = false;
-            int plotsInTheWay = 0;
-            for(int i = 1; i <= difference; i++){
-                PlotSlot checkPlot = getSlot(amount+i);
-                if(!checkPlot.isEmpty()){
-                    plotInTheWay = true;
-                    plotsInTheWay++;
-                }
-            }
-            if(plotInTheWay && !force){
-                String exceptionString = "There is/are "+plotsInTheWay+" plot(s) present in the ";
-                exceptionString+= "last "+difference+" slots.\n\nPlease clear or move ";
-                exceptionString+= "these plots manually by pressing cancel,\nor let ";
-                exceptionString+= "the application delete them by pressing Clear Slots.";
-                throw new IllegalArgumentException(exceptionString);
-            }else{
+        if(amount > 0){
+            if(itsPlotSlots.size() < amount){
+                int difference = amount - itsPlotSlots.size();
+                int oldAmount = itsPlotSlots.size();
                 for(int i = 1; i <= difference; i++){
-                    itsPlotSlots.removeLast();
+                    PlotSlot aNewSlot = new PlotSlot();
+                    aNewSlot.setLabel(""+(oldAmount+i));
+                    itsPlotSlots.add(aNewSlot);
+                }
+                this.fireSlotsUpdated(-1); 
+            }else if (itsPlotSlots.size() > amount){
+                int difference = itsPlotSlots.size() - amount;
+                boolean plotInTheWay = false;
+                int plotsInTheWay = 0;
+                for(int i = 1; i <= difference; i++){
+                    PlotSlot checkPlot = getSlot(amount+i);
+                    if(!checkPlot.isEmpty()){
+                        plotInTheWay = true;
+                        plotsInTheWay++;
+                    }
+                }
+                if(plotInTheWay && !force){
+                    String exceptionString = "There is/are "+plotsInTheWay+" plot(s) present in the ";
+                    exceptionString+= "last "+difference+" slots.\n\nPlease clear or move ";
+                    exceptionString+= "these plots manually by pressing cancel,\nor let ";
+                    exceptionString+= "the application delete them by pressing Clear Slots.";
+                    throw new IllegalArgumentException(exceptionString);
+                }else{
+                    for(int i = 1; i <= difference; i++){
+                        itsPlotSlots.removeLast();
+                    }
+                    this.fireSlotsUpdated(-1); 
                 }
             }
         }
-        this.fireSlotsUpdated(amount);
     }
     public LinkedList<PlotSlot> getSlots(){
         return itsPlotSlots;
@@ -141,7 +147,15 @@ public class PlotSlotManager{
     
     public void createPlotInSlot(int index, Object constraints){
         getSlot(index).addPlot(constraints);
-        this.fireSlotsUpdated(index);
+        int currentPlots = 0;
+        for(PlotSlot slot : itsPlotSlots){
+            if(slot.containsPlot()) currentPlots++;
+        }
+        if(currentPlots > 1){
+            fireSlotsUpdated(index);
+        }else{
+            fireSlotsUpdated(-1);
+        }
     }
     public void createLegendInSlot(int index){
         getSlot(index).addLegend();
@@ -159,6 +173,7 @@ public class PlotSlotManager{
     
     public void modifyPlotInSlot(int index, Object constraints){
         getSlot(index).modifyPlot(constraints);
+        this.fireSlotsUpdated(index);
     }
     
     public void movePlot(int indexFromSlot, int indexToSlot){
@@ -169,10 +184,12 @@ public class PlotSlotManager{
         }
         getSlot(indexFromSlot).clearSlot();
         this.fireSlotsUpdated(indexFromSlot);
+        this.fireSlotsUpdated(indexToSlot);
     }
     
     public void clearSlot(int index){
         getSlot(index).clearSlot();
+        this.fireSlotsUpdated(index);
     }
     
     public boolean isSlotAvailable(int index){
@@ -183,43 +200,48 @@ public class PlotSlotManager{
      * Utility field used by event firing mechanism.
      */
     private javax.swing.event.EventListenerList listenerList =  null;
-
+    
     /**
      * Registers ActionListener to receive events.
      *
      * @param listener The listener to register.
      */
     public void addActionListener(java.awt.event.ActionListener listener) {
-
+        
         if (listenerList == null ) {
             listenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        listenerList.add(java.awt.event.ActionListener.class, listener);
     }
-
+    
     /**
      * Removes ActionListener from the list of listeners.
      *
      * @param listener The listener to remove.
      */
     public void removeActionListener(java.awt.event.ActionListener listener) {
-
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        
+        listenerList.remove(java.awt.event.ActionListener.class, listener);
     }
-
+    
     /**
      * Notifies all registered listeners about the event.
-     * 
+     *
      * @param event The event to be fired
      */
     private void fireSlotsUpdated(int id) {
-
+        
         if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
-        ActionEvent action = new ActionEvent(this,id,"REFRESH");
+        Object[] listeners = listenerList.getListenerList();
+        ActionEvent action = null;
+        if(id == -1){
+            action = new ActionEvent(this,id,this.REFRESH_FULL);
+        }else{
+            action = new ActionEvent(this,id,this.REFRESH_SINGLE);
+        }
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
-                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (action);
+                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed(action);
             }
         }
     }

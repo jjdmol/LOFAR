@@ -26,11 +26,14 @@ package nl.astron.lofar.sas.otb.util.plotter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.LinkedList;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
@@ -48,6 +51,8 @@ public class PlotSlot extends JPanel{
     private String slotLabel;
     private boolean hasLegend;
     private JLabel rightClickFacade;
+    private LinkedList<PlotSlotListener> listenerList =  null;
+    private MouseAdapter plotMouseListener;
     
     /** Creates a new instance of PlotSlot */
     public PlotSlot() {
@@ -55,6 +60,11 @@ public class PlotSlot extends JPanel{
         itsPlot = null;
         hasLegend = false;
         setBackground(Color.WHITE);
+        plotMouseListener = new MouseAdapter(){
+            public void mouseReleased(MouseEvent evt){
+                fireContextMenuEvent(evt);
+            }
+        };
         setBorder(javax.swing.BorderFactory.createEtchedBorder());
         setSize(new Dimension(320,240));
         setPreferredSize(new Dimension(320,240));
@@ -71,6 +81,7 @@ public class PlotSlot extends JPanel{
     public PlotSlot(String label) {
         this();
         setLabel(label);
+        rightClickFacade.setText(" "+label);
     }
     
     public void setLabel(String label){
@@ -85,13 +96,13 @@ public class PlotSlot extends JPanel{
         return itsPlot;
     }
     public void setPlot(PlotPanel aPlot){
-         removeAll();
-         itsPlot = aPlot;
-         addOptionLabel();
-         add(itsPlot,BorderLayout.CENTER);
-         if(containsLegend()){
-            addLegend(); 
-         }
+        removeAll();
+        itsPlot = aPlot;
+        addOptionLabel();
+        add(itsPlot,BorderLayout.CENTER);
+        if(containsLegend()){
+            addLegend();
+        }
     }
     
     public void addPlot(Object constraints){
@@ -103,7 +114,6 @@ public class PlotSlot extends JPanel{
             }
             itsPlot.createPlot(PlotConstants.PLOT_XYLINE,true,constraints);
             add(itsPlot,BorderLayout.CENTER);
-            
         } catch (PlotterException ex) {
             JTextArea error = new JTextArea(ex.getMessage());
             error.setColumns(50);
@@ -120,7 +130,7 @@ public class PlotSlot extends JPanel{
                 itsPlot.modifyPlot(constraints);
                 add(itsPlot,BorderLayout.CENTER);
                 if(containsLegend()){
-                    addLegend(); 
+                    addLegend();
                 }
                 
             } catch (PlotterException ex) {
@@ -151,6 +161,8 @@ public class PlotSlot extends JPanel{
         northPanel.setBackground(Color.LIGHT_GRAY);
         rightClickFacade.setForeground(Color.WHITE);
         northPanel.add(rightClickFacade,BorderLayout.CENTER);
+        northPanel.addMouseListener(plotMouseListener);
+        
         add(northPanel,BorderLayout.NORTH);
     }
     
@@ -176,7 +188,7 @@ public class PlotSlot extends JPanel{
     public void removeLegend(){
         if(containsLegend() && itsPlot != null && itsPlot.getPlot()!= null){
             removeAll();
-            if(containsPlot()) addOptionLabel();
+            addOptionLabel();
             add(itsPlot,BorderLayout.CENTER);
             hasLegend = false;
         }
@@ -224,6 +236,45 @@ public class PlotSlot extends JPanel{
     }
     public boolean isEmpty(){
         return !containsPlot();
+    }
+    
+    
+    /**
+     * Registers ActionListener to receive events.
+     *
+     * @param listener The listener to register.
+     */
+    public void addSlotListener(PlotSlotListener listener) {
+        
+        if (listenerList == null ) {
+            listenerList = new LinkedList<PlotSlotListener>();
+        }
+        listenerList.add(listener);
+    }
+    
+    /**
+     * Removes ActionListener from the list of listeners.
+     *
+     * @param listener The listener to remove.
+     */
+    public void removeSlotListener(PlotSlotListener listener) {
+        
+        listenerList.remove(listener);
+    }
+    
+    /**
+     * Notifies all registered listeners about the event.
+     *
+     * @param event The event to be fired
+     */
+    private void fireContextMenuEvent(MouseEvent evt) {
+        if (listenerList != null) {
+            if(SwingUtilities.isRightMouseButton(evt)){
+                for(PlotSlotListener listener : listenerList){
+                    ((PlotSlotListener)listener).slotContextMenuTriggered(this,evt);
+                }
+            }
+        }
     }
     
 }
