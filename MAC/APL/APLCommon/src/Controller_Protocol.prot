@@ -48,24 +48,28 @@ PRELUDE_END;
 // CONNECT - sent by a child after connecting to it's parent to identify itself
 //
 event = {
-  signal = CONNECT;
-  dir = IN; // from child to parent
-  param = {
-    name = "name";
-    type = "string";
-  };
+	signal = CONNECT;
+	dir = IN; // from child to parent
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
 };
 
 //
 // CONNECTED - result of the CONNECT request
 //
 event = {
-  signal = CONNECTED;
-  dir = OUT; // from parent to child
-  param = {
-    name = "result";
-    type = "APLCommon::TLDResult";
-  };
+	signal = CONNECTED;
+	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "APLCommon::TLDResult";
+	};
 };
 
 //
@@ -75,6 +79,10 @@ event = {
 event = {
 	signal = SCHEDULE;
 	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
 	param = {
 		name = "startTime";
 		type = "time_t";
@@ -92,6 +100,10 @@ event = {
 	signal = SCHEDULED;
 	dir = IN; // from child to parent
 	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
 	  name = "result";
 	  type = "APLCommon::TLDResult";
 	};
@@ -103,6 +115,10 @@ event = {
 event = {
 	signal = CLAIM;
 	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
 };
 
 //
@@ -111,10 +127,14 @@ event = {
 event = {
 	signal = CLAIMED;
 	dir = IN; // from child to parent
-  param = {
-    name = "result";
-    type = "APLCommon::TLDResult";
-  };
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+	  name = "result";
+	  type = "APLCommon::TLDResult";
+	};
 };
 
 //
@@ -123,6 +143,10 @@ event = {
 event = {
 	signal = PREPARE;
 	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
 };
 
 //
@@ -131,10 +155,14 @@ event = {
 event = {
 	signal = PREPARED;
 	dir = IN; // from child to parent
-  param = {
-    name = "result";
-    type = "APLCommon::TLDResult";
-  };
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+	  name = "result";
+	  type = "APLCommon::TLDResult";
+	};
 };
 
 //
@@ -143,6 +171,10 @@ event = {
 event = {
 	signal = RESUME;
 	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
 };
 
 //
@@ -151,10 +183,14 @@ event = {
 event = {
 	signal = RESUMED;
 	dir = IN; // from child to parent
-  param = {
-    name = "result";
-    type = "APLCommon::TLDResult";
-  };
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+	  name = "result";
+	  type = "APLCommon::TLDResult";
+	};
 };
 
 //
@@ -163,6 +199,10 @@ event = {
 event = {
 	signal = SUSPEND;
 	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
 };
 
 //
@@ -171,10 +211,14 @@ event = {
 event = {
 	signal = SUSPENDED;
 	dir = IN; // from child to parent
-  param = {
-    name = "result";
-    type = "APLCommon::TLDResult";
-  };
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+	  name = "result";
+	  type = "APLCommon::TLDResult";
+	};
 };
 
 //
@@ -183,6 +227,10 @@ event = {
 event = {
 	signal = RELEASE;
 	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
 };
 
 //
@@ -191,41 +239,53 @@ event = {
 event = {
 	signal = RELEASED;
 	dir = IN; // from child to parent
-  param = {
-    name = "result";
-    type = "APLCommon::TLDResult";
-  };
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+	  name = "result";
+	  type = "APLCommon::TLDResult";
+	};
 };
 
 //
 // FINISH - sent by a child to tell its parent it is dying.
 //
 event = {
-  signal = FINISH;
-  dir = IN; // from child to parent
-  param = {
-    name = "treeID";
-    type = "unsigned int";
-  };
-  param = {
-    name = "succesfull";
-    type = "bool";
-  };
-  param = {
-    name = "errorMsg";
-    type = "string";
-  };
+	signal = FINISH;
+	dir = IN; // from child to parent
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "treeID";
+		type = "unsigned int";
+	};
+	param = {
+		name = "succesfull";
+		type = "bool";
+	};
+	param = {
+		name = "errorMsg";
+		type = "string";
+	};
 };
 
 //
 // FINISHED - result of the FINISH request
 //
 event = {
-  signal = FINISHED;
-  dir = OUT; // from parent to child
-  param = {
-    name = "result";
-    type = "APLCommon::TLDResult";
-  };
+	signal = FINISHED;
+	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+	  name = "result";
+	  type = "APLCommon::TLDResult";
+	};
 };
 
