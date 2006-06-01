@@ -58,8 +58,9 @@ class MyProcess : public Process
 
 int main (int /*argc*/, const char* argv[])
 {
-  INIT_LOGGER (argv[0]);
-
+  string prog(basename(argv[0]));
+  INIT_LOGGER (prog.c_str());
+  
   try {
     MyProcess proc;
     LOG_TRACE_FLOW_STR(AUTO_FUNCTION_NAME 
@@ -87,7 +88,8 @@ int main (int /*argc*/, const char* argv[])
   LOG_TRACE_FLOW_STR(AUTO_FUNCTION_NAME 
                      << ": server woke up"
                      << ", checking state of child processes ...");
-  if (system("ps -C tProcess --no-header -ostate") == -1) {
+  string cmd = "ps -C " + prog + " --no-header -ostate";
+  if (system(cmd.c_str()) == -1) {
     LOG_FATAL_STR("system() command failed: " << strerror(errno));
     return 1;
   }
