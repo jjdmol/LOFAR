@@ -129,8 +129,12 @@ namespace LOFAR
 	itsHeader(bufferP, Header::getSize()), 
 	itsData(reinterpret_cast<RSPDataType*>(bufferP + Header::getSize()), 
 		size - Header::getSize(), 
-		ps) 
-	{};
+		ps),
+	itsBufferp(bufferP),
+	itsSize(size)
+	{
+	  ASSERTSTR(itsSize == Header::getSize() + Data::getSize(ps), itsSize << " == " << Header::getSize() << " + " << Data::getSize(ps));
+	};
       ~Frame() {};
       
       Data* getData() { return &itsData;};
