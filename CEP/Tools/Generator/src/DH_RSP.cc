@@ -54,14 +54,15 @@ namespace LOFAR {
     void DH_RSP::init()
     {
       // Add the fields to the data definition.
-      addField ("Frame", BlobField<char>(1, Frame::getSize(itsPSet)));
+      addField ("Frame", BlobField<char>(1, Frame::getSize(itsPSet.makeSubset("Generator."))));
       // Create the data blob
       createDataBlock();
     }
 
     void DH_RSP::fillDataPointers()
     {
-      itsFrame = new Frame(getData<char>("Frame"), Frame::getSize(itsPSet), itsPSet);
+      ACC::APS::ParameterSet subset = itsPSet.makeSubset("Generator.");
+      itsFrame = new Frame(getData<char>("Frame"), Frame::getSize(subset), subset);
       itsFrame->getData()->clear();
     }
 
