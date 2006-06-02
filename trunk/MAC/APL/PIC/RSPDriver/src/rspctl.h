@@ -217,7 +217,7 @@ namespace LOFAR {
 #ifdef ENABLE_RSPFE
       void connect(GCFTask& task)
       {
-        m_feClient.init(task, "client", GCFPortInterface::SAP, RSPFE_PROTOCOL);
+        m_feClient.init(task, MAC_SVCMASK_RSPCTLFE, GCFPortInterface::SAP, RSPFE_PROTOCOL);
         m_feClient.setHostName(m_host);
         m_feClient.setPortNumber(m_port);
         m_feClient.open();
@@ -502,11 +502,11 @@ namespace LOFAR {
     //
     // class ClockCommand
     //
-    class ClocksCommand : public Command
+    class ClockCommand : public Command
     {
     public:
-      ClocksCommand(GCFPortInterface& port);
-      virtual ~ClocksCommand()
+      ClockCommand(GCFPortInterface& port);
+      virtual ~ClockCommand()
       {}
       virtual void send();
       virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -514,6 +514,26 @@ namespace LOFAR {
       void setClock(uint32 clock)
       {
         m_clock = clock;
+      }
+    private:
+      uint32 m_clock;
+    };
+
+    //
+    // class SubClockCommand
+    //
+    class SubClockCommand : public Command
+    {
+    public:
+      SubClockCommand(GCFPortInterface& port);
+      virtual ~SubClockCommand()
+      {}
+      virtual void send();
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+
+      uint32 getClock() const
+      {
+	return m_clock;
       }
     private:
       uint32 m_clock;
@@ -611,6 +631,8 @@ namespace LOFAR {
       char** m_argv;
 
       int32	 m_instancenr;
+
+      SubClockCommand m_subclock; // always subscribe to clock updates
     };
 
   };
