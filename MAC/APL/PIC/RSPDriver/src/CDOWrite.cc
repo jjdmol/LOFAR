@@ -171,7 +171,7 @@ void CDOWrite::sendrequest()
 
   case 1:
     {
-      LOG_INFO("Setting CDO_HEADER");
+      LOG_DEBUG("Setting CDO_HEADER");
 
       EPAWriteEvent write;
       write.hdr.set(MEPHeader::CDO_HEADER_HDR);
