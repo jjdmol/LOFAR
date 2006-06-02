@@ -79,7 +79,7 @@ namespace LOFAR {
 
     void WH_FakeStation::process() 
     {
-      Frame& myEthFrame = *((DH_RSP*)getDataManager().getInHolder(0))->getFrame();
+      Frame& myEthFrame = *(dynamic_cast<DH_RSP*>(getDataManager().getInHolder(0)))->getFrame();
       TimeStamp myStamp;
 
       Header& myHeader = *myEthFrame.getHeader();

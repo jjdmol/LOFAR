@@ -119,7 +119,7 @@ namespace LOFAR {
 	  value.it_interval.tv_usec = usecs;
 	  value.it_value.tv_sec = secs;
 	  value.it_value.tv_usec = usecs;
-	  cout << "Setting timer interval to " << secs << "secs and " << usecs << "ms" << endl;
+	  cout << "Setting timer interval to " << secs << "secs and " << usecs << "us" << endl;
 
 	  setitimer(ITIMER_REAL, &value, 0);
       
