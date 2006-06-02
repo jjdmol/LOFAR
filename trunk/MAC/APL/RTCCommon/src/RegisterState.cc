@@ -28,6 +28,21 @@ using namespace std;
 using namespace LOFAR;
 using namespace RTC;
 
+RegisterState& RegisterState::operator=(const RegisterState& state)
+{
+  if (this != &state) {
+    m_state.resize(state.m_state.shape());
+    m_state = state.m_state;
+  }
+  return *this;
+}
+
+RegisterState::RegisterState(const RegisterState& state)
+{
+  m_state.resize(state.m_state.shape());
+  m_state = state.m_state;
+}
+
 void RegisterState::tran(State source, State target, int i)
 {
   int lb = 0, ub = 0;
