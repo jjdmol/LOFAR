@@ -16,14 +16,12 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
-	BeamServerPorts.conf \
 	BeamServer.conf \
 	BeamServer.log_prop
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
 sysconf_DATA = \
-	BeamServerPorts.conf \
 	BeamServer.conf \
 	BeamServer.log_prop
 

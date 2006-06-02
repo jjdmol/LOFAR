@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 
 #include <AMCBase/Converter.h>
 #include <AMCBase/SkyCoord.h>
@@ -179,7 +180,8 @@ void Beam::logPointing(Pointing pointing)
 
   static FILE* pipe = 0;
   double hh, mm, ss, deg, degmm, degss;
-  static string pipename = GET_CONFIG_PATH() + "/indi_pipe";
+  ConfigLocator cl;
+  static string pipename = cl.locate("/indi_pipe");
   int retry = 0;
 
   /**
@@ -196,7 +198,7 @@ void Beam::logPointing(Pointing pointing)
     if (!pipe) {
       pipe = fopen(pipename.c_str(), "w+");
       if (!pipe) {
-	LOG_WARN_STR("Could not open '" << GET_CONFIG_PATH() + "/indi_pipe");
+	LOG_WARN_STR("Could not open '" << pipename << "'");
 	return;
       }
       setNonblocking(fileno(pipe));

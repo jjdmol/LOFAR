@@ -23,6 +23,9 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
+
+#include <GCF/GCF_ServiceInfo.h>
 
 #include <APL/RTCCommon/daemonize.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
@@ -46,7 +49,7 @@
 
 #include <blitz/array.h>
 
-#include <AMCBase/AMCClient/ConverterClient.h>
+#include <AMCBase/ConverterClient.h>
 
 using namespace LOFAR;
 using namespace blitz;
@@ -115,9 +118,12 @@ BeamServer::BeamServer(string name, int argc, char** argv)
   if (m_instancenr >= 0) {
     instanceID=formatString("(%d)", m_instancenr);
   }
-  m_acceptor.init(*this, "acceptor"+instanceID, GCFPortInterface::MSPP, BS_PROTOCOL);
-  m_rspdriver.init(*this, "rspdriver"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
-  m_calserver.init(*this, "calserver"+instanceID, GCFPortInterface::SAP, CAL_PROTOCOL);
+//   m_acceptor.init(*this, "acceptor"+instanceID, GCFPortInterface::MSPP, BS_PROTOCOL);
+//   m_rspdriver.init(*this, "rspdriver"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
+//   m_calserver.init(*this, "calserver"+instanceID, GCFPortInterface::SAP, CAL_PROTOCOL);
+  m_acceptor.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::MSPP, BS_PROTOCOL);
+  m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_calserver.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
 }
 
 BeamServer::~BeamServer()
@@ -871,8 +877,8 @@ int main(int argc, char** argv)
 
   try 
   {
-    GCF::ParameterSet::instance()->adoptFile("BeamServerPorts.conf");
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+    ConfigLocator cl;
+    globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));
   }
   catch (Exception e)
   {

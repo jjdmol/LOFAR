@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 
 #include "Beam.h"
 #include "BSTest.h"
@@ -35,7 +36,7 @@
 
 #define CLIENT
 #ifdef CLIENT
-#include <AMCBase/AMCClient/ConverterClient.h>
+#include <AMCBase/ConverterClient.h>
 #else
 #include <AMCImpl/ConverterImpl.h>
 #endif
@@ -338,7 +339,8 @@ int main(int argc, char** argv)
 
   try 
   {
-    GCF::ParameterSet::instance()->adoptFile("BeamServer.conf");
+    ConfigLocator cl;
+    globalParameterSet()->adoptFile(cl.locate("BeamServer.conf"));
   }
   catch (Exception e)
   {

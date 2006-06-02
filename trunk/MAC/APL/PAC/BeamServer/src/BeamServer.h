@@ -29,7 +29,7 @@
 #include "Beamlet.h"
 #include <APL/RTCCommon/Timestamp.h>
 
-#include <AMCBase/AMCClient/ConverterClient.h>
+#include <AMCBase/ConverterClient.h>
 
 #include <GCF/TM/GCF_Control.h>
 
