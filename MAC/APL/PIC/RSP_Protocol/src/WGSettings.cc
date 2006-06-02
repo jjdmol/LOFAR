@@ -49,7 +49,7 @@ void WGSettings::initWaveformPresets()
   {
     WGSettings::m_presets(PRESET_SINE, i) = (int32)(::sin((double)i * 2.0 * M_PI / N_WAVE_SAMPLES) * (1<<15));
   }
-  cout << "sine=" << WGSettings::m_presets(PRESET_SINE, Range::all()) << endl;
+  LOG_DEBUG_STR("sine=" << WGSettings::m_presets(PRESET_SINE, Range::all()));
 
   //
   // Initialize SQUARE waveform
@@ -62,7 +62,7 @@ void WGSettings::initWaveformPresets()
   {
     WGSettings::m_presets(PRESET_SQUARE, i + N_WAVE_SAMPLES / 2) = -(1<<15);
   }
-  cout << "square=" << WGSettings::m_presets(PRESET_SQUARE, Range::all()) << endl;
+  LOG_DEBUG_STR("square=" << WGSettings::m_presets(PRESET_SQUARE, Range::all()));
 
   //
   // Initialize TRIANGLE waveform
@@ -81,7 +81,7 @@ void WGSettings::initWaveformPresets()
     WGSettings::m_presets(PRESET_TRIANGLE, i + 3 * N_WAVE_SAMPLES / 4)
       = -(1<<15) + i * (1<<8);
   }
-  cout << "triangle=" << WGSettings::m_presets(PRESET_TRIANGLE, Range::all()) << endl;
+  LOG_DEBUG_STR("triangle=" << WGSettings::m_presets(PRESET_TRIANGLE, Range::all()));
 
   //
   // Initialize RAMP waveform
@@ -94,7 +94,7 @@ void WGSettings::initWaveformPresets()
   {
     WGSettings::m_presets(PRESET_RAMP, i + N_WAVE_SAMPLES / 2) = -(1<<15) + i * (1<<7);
   }
-  cout << "ramp=" << WGSettings::m_presets(PRESET_RAMP, Range::all()) << endl;
+  LOG_DEBUG_STR("ramp=" << WGSettings::m_presets(PRESET_RAMP, Range::all()));
 }
 
 unsigned int WGSettings::getSize()
