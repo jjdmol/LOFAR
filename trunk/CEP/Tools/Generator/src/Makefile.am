@@ -7,7 +7,8 @@ libgenerator_la_SOURCES = 	Signals.cc \
 				WH_Signal.cc \
 				AH_Recorder.cc \
 				AH_Generator.cc \
-				DH_RSP.cc 
+				DH_RSP.cc \
+				Connector.cc
 
 bin_PROGRAMS = Recorder Generator
 

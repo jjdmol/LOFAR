@@ -29,6 +29,7 @@
 #include <Common/lofar_iostream.h>
 #include <APS/ParameterSet.h>
 #include <CEPFrame/Step.h>
+#include <Generator/Connector.h>
 
 // Transporters
 #include <Transport/TH_Mem.h>
@@ -38,6 +39,7 @@
 #include <tinyCEP/WorkHolder.h>
 #include <Generator/WH_Signal.h>
 #include <Generator/WH_FakeStation.h>
+
 
 namespace LOFAR {
   namespace Generator {
@@ -71,16 +73,9 @@ namespace LOFAR {
       // todo: define this input interface; although there are no
       //       connection involved, we do have to define the port/IP numbering schemes
 
-      int NRSP = itsParamSet.getInt32("Data.NStations");
+      int NRSP = itsParamSet.getInt32("Generator.NStations");
       int WH_DH_NameSize = 40;
       char WH_DH_Name[WH_DH_NameSize];
-      bool useEth = itsParamSet.getBool("Generator.UseEth");
-      vector<string> outFileNames = itsParamSet.getStringVector("Generator.OutputFiles");
-      vector<string> interfaces = itsParamSet.getStringVector("Generator.Interfaces");
-      vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
-      vector<string> srcMacs = itsParamSet.getStringVector("Input.SourceMacs");
-      vector<int32> stationIds = itsParamSet.getInt32Vector("Generator.StationIds");
-      vector<int32> delays = itsParamSet.getInt32Vector("Generator.StationDelays");
   
       snprintf(WH_DH_Name, WH_DH_NameSize, "Signal");
 
@@ -91,20 +86,21 @@ namespace LOFAR {
       comp.addBlock(signalStep);
 
       for (int s=0; s<NRSP; s++) {
-	snprintf(WH_DH_Name, WH_DH_NameSize, "FakeStation_%d_of_%d", s, NRSP);
-	if (useEth) {
-	  // cout<<"interface: "<<interfaces[s]<<" remote: "<<dstMacs[s]<<" own: "<<srcMacs[s]<<endl;
-	  itsTHs.push_back(new TH_Ethernet(interfaces[s], 
-					   dstMacs[s],
-					   srcMacs[s]));
-	} else {
-	  itsTHs.push_back(new TH_File(outFileNames[s], TH_File::Write));
-	}
+	snprintf(WH_DH_Name, WH_DH_NameSize, "Generator.Station%d", s);
+	itsTHs.push_back(Connector::readTH(itsParamSet, WH_DH_Name, false));
+
+	snprintf(WH_DH_Name, WH_DH_NameSize, "Generator.Station%d.ID", s);
+	int stationId = itsParamSet.getInt32(WH_DH_Name);
+
+	snprintf(WH_DH_Name, WH_DH_NameSize, "Generator.Station%d.Delay", s);
+	int delay = itsParamSet.getInt32(WH_DH_Name);
+
 	ASSERTSTR(itsTHs.back()->init(), "Could not init TransportHolder");
+	snprintf(WH_DH_Name, WH_DH_NameSize, "FakeStation_%d_of_%d", s, NRSP);
 	Step stationStep(new WH_FakeStation(WH_DH_Name,
 					    itsParamSet,
-					    stationIds[s],
-					    delays[s],
+					    stationId,
+					    delay,
 					    itsTHs.back()), 
 			 WH_DH_Name);
 	// share input and output DH, no cyclic buffer

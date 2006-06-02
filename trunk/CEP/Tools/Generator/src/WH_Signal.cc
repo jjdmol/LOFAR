@@ -48,7 +48,7 @@ namespace LOFAR {
 	itsPS(ps),
 	itsSignal(0)
     {
-      itsFrequency = ps.getDouble("Generator.OutputRate") / ps.getInt32("Input.NPacketsInFrame");
+      itsFrequency = ps.getDouble("Generator.OutputRate") / ps.getInt32("Generator.NPacketsInFrame");
       double deltaT = 1 / ps.getDouble("Generator.SampleFreq");
 
       string signalType = ps.getString("Generator.SignalType");
