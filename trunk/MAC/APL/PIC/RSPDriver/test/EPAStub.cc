@@ -55,7 +55,7 @@ EPAStub::EPAStub(string name)
 
   LOG_INFO("EPAStub constructor");
   
-  m_client.init(*this, "client", GCFPortInterface::SAP, EPA_PROTOCOL, true /*raw*/);
+  m_client.init(*this, "EPAStub:client", GCFPortInterface::SAP, EPA_PROTOCOL, true /*raw*/);
   m_client.setAddr(GET_CONFIG_STRING("EPAStub.IF_NAME"),
 		   GET_CONFIG_STRING(addrstr));
   m_client.setEtherType(ETHERTYPE_EPA);
@@ -390,7 +390,8 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 	    }
 	  }
       
-	ack.payload.setBuffer(m_reg[pid][regid].addr + offset, payload_length);
+	memcpy(ack.data, m_reg[pid][regid].addr + offset, payload_length);
+	//ack.payload.setBuffer(m_reg[pid][regid].addr + offset, payload_length);
 	ack.hdr.m_fields.frame_length += payload_length;
 
 	port.send(ack);
