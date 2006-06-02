@@ -26,6 +26,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <GCF/GCF_ServiceInfo.h>
+
 #include <Suite/suite.h>
 #include <APL/RSP_Protocol/MEPHeader.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
@@ -47,7 +49,7 @@ EPATest::EPATest(string name, char* subarrayname, int startbeamlet, int nbeamlet
 {
   registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 
-  beam_server.init(*this, "beam_server", GCFPortInterface::SAP, BS_PROTOCOL);
+  beam_server.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::SAP, BS_PROTOCOL);
 }
 
 EPATest::~EPATest()

@@ -29,6 +29,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <GCF/GCF_ServiceInfo.h>
+
 #include <Suite/suite.h>
 #include <APL/RSP_Protocol/MEPHeader.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
@@ -51,7 +53,7 @@ SweepTest::SweepTest(string name, int subband)
 {
   registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 
-  beam_server.init(*this, "beam_server", GCFPortInterface::SAP, BS_PROTOCOL);
+  beam_server.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::SAP, BS_PROTOCOL);
 }
 
 SweepTest::~SweepTest()
