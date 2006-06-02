@@ -24,6 +24,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <GCF/GCF_ServiceInfo.h>
+
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
@@ -51,7 +53,7 @@ RSPTest::RSPTest(string name)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
-  m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_server.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 RSPTest::~RSPTest()
