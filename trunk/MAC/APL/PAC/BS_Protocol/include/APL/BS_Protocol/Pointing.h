@@ -25,12 +25,14 @@
 
 #include <APL/RTCCommon/Timestamp.h>
 
-#include <AMCBase/Converter.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
-
 namespace LOFAR {
+
+  // forward declarations
+  namespace AMC {
+    class Converter;
+    class EarthCoord;
+  };
+
   namespace BS_Protocol {
 
     /**
