@@ -16,10 +16,7 @@ SUFFIXES = .ph
 
 BUILT_SOURCES = \
 	RemoteStation.conf \
-	RSPDriverPorts.conf \
 	RSPDriver.conf \
-	Tuner.conf \
-	SetWG.conf \
 	rspctl.conf \
 	RSPDriver.log_prop \
 	rspctl.log_prop
@@ -32,10 +29,7 @@ EXTRA_DIST = \
 
 sysconf_DATA = \
 	RemoteStation.conf \
-	RSPDriverPorts.conf \
 	RSPDriver.conf \
-	Tuner.conf \
-	SetWG.conf \
 	rspctl.conf \
 	RSPDriver.log_prop \
 	rspctl.log_prop
@@ -68,8 +62,6 @@ bin_SCRIPTS = \
 
 bin_PROGRAMS = \
 	RSPDriver \
-	Tuner \
-	SetWG \
 	rspctl \
 	geni2c
 
@@ -137,6 +129,8 @@ RSPDriver_SOURCES = \
 	SyncAction.cc \
 	WriteReg.h \
 	WriteReg.cc \
+	ReadReg.h \
+	ReadReg.cc \
 	BWWrite.h \
 	BWWrite.cc \
 	BWRead.h \
@@ -182,14 +176,6 @@ RSPDriver_SOURCES = \
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \
 	$(RTCCOMMON_LDADD)
-
-Tuner_SOURCES = \
-	Tuner.h \
-	Tuner.cc
-
-SetWG_SOURCES = \
-	SetWG.h \
-	SetWG.cc
 
 rspctl_SOURCES = \
 	rspctl.h \
