@@ -11,6 +11,7 @@ pkginclude_HEADERS = \
 	GCF_PVUnsigned.h \
 	GCF_PVDynArr.h \
 	GCF_PVBlob.h \
+	GCF_PVTypes.h \
 	CmdLine.h \
 	Utils.h \
 	GCF_Defines.h \
