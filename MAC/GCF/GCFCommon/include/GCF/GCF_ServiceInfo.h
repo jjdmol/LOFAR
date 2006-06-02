@@ -44,6 +44,7 @@ namespace LOFAR {
 #define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3"
 #define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v2"
 #define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2"
+#define MAC_SVCMASK_RSPCTLFE                    "RSPCtlFE%s:acceptor"
 #define MAC_SVCMASK_PROPERTYAGENT		"GCF-PA%s:provider"
 
 // Define names for the daemons
