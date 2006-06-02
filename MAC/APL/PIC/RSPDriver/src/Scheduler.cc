@@ -452,7 +452,9 @@ void Scheduler::resetSync(GCFPortInterface& port)
 void Scheduler::completeSync()
 {
   // print current state for all registers
-  Cache::getInstance().getState().print(cout);
+  ostringstream logStream;
+  Cache::getInstance().getState().print(logStream);
+  LOG_DEBUG_STR(logStream);
 
   // swap the buffers
   // new data from the boards which was in the back buffers
