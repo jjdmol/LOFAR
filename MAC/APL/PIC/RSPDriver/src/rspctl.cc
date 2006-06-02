@@ -58,6 +58,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <GCF/GCF_ServiceInfo.h>
+
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
@@ -84,6 +86,7 @@
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
+using namespace GCFCommon;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace rspctl;
@@ -93,9 +96,10 @@ using namespace RTC;
 static void usage();
 
 //
-// Sample frequency, should be queried from the RSPDriver
+// Sample frequency, as received from the RSPDriver
 //
-#define SAMPLE_FREQUENCY 160.0e6
+#define DEFAULT_SAMPLE_FREQUENCY 160.0e6
+double g_sample_frequency = DEFAULT_SAMPLE_FREQUENCY;
 
 /**
  * Function to convert the complex semi-floating point representation used by the
@@ -550,37 +554,37 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
 }
 
 //
-// ClocksCommand
+// ClockCommand
 //
-ClocksCommand::ClocksCommand(GCFPortInterface& port) : Command(port)
+ClockCommand::ClockCommand(GCFPortInterface& port) : Command(port)
 {
 }
 
-void ClocksCommand::send()
+void ClockCommand::send()
 {
   if (getMode())
   {
     // GET
-    RSPGetclockEvent getclocks;
+    RSPGetclockEvent getclock;
 
-    getclocks.timestamp = Timestamp(0,0);
-    getclocks.cache = true;
+    getclock.timestamp = Timestamp(0,0);
+    getclock.cache = true;
 
-    m_rspport.send(getclocks);
+    m_rspport.send(getclock);
   }
   else
   {
     // SET
-    RSPSetclockEvent setclocks;
-    setclocks.timestamp = Timestamp(0,0);
+    RSPSetclockEvent setclock;
+    setclock.timestamp = Timestamp(0,0);
 
-    setclocks.clock = m_clock;
+    setclock.clock = m_clock;
 
-    m_rspport.send(setclocks);
+    m_rspport.send(setclock);
   }
 }
 
-GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
+GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
 {
   switch (e.signal)
   {
@@ -616,6 +620,72 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 }
 
 //
+// SubClockCommand
+//
+SubClockCommand::SubClockCommand(GCFPortInterface& port) : Command(port)
+{
+}
+
+void SubClockCommand::send()
+{
+  if (getMode())
+  {
+    // Subscribe
+    RSPSubclockEvent subclock;
+
+    subclock.timestamp = Timestamp(0,0);
+    subclock.period = 1; // check for change every second
+
+    m_rspport.send(subclock);
+  }
+  else
+  {
+    // SET not supported
+    LOG_FATAL("SubClockCommand: SET not supported");
+    exit(EXIT_FAILURE);
+  }
+}
+
+GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
+{
+  switch (e.signal)
+  {
+    case RSP_SUBCLOCKACK:
+    {
+      RSPSubclockackEvent ack(e);
+    if (SUCCESS != ack.status)
+    {
+      logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
+      exit(EXIT_FAILURE);
+    }
+    }
+    break;
+
+    case RSP_UPDCLOCK:
+    {
+      RSPUpdclockEvent upd(e);
+
+      if (SUCCESS == upd.status)
+      {
+	logMessage(cout,formatString("Setting new sample frequency: clock=%d", upd.clock));
+	g_sample_frequency = 1.0e6 * upd.clock;
+      }
+      else
+      {
+        logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
+      }
+    }
+    break;
+
+  default:
+    return GCFEvent::NOT_HANDLED;
+    break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+//
 // RegisterStateCommand
 //
 RegisterStateCommand::RegisterStateCommand(GCFPortInterface& port) :
@@ -637,8 +707,8 @@ void RegisterStateCommand::send()
   }
   else
   {
-    // GET not supported
-    LOG_FATAL("RegisterStateCommand: GET not supported");
+    // SET not supported
+    LOG_FATAL("RegisterStateCommand: SET not supported");
     exit(EXIT_FAILURE);
   }
 }
@@ -714,8 +784,8 @@ void WGCommand::send()
     wgset.timestamp = Timestamp(0,0);
     wgset.rcumask = getRCUMask();
     wgset.settings().resize(1);
-    //wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / SAMPLE_FREQUENCY) + 0.5);
-    wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / SAMPLE_FREQUENCY);
+    //wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / g_sample_frequency) + 0.5);
+    wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / g_sample_frequency);
     wgset.settings()(0).phase = m_phase;
     wgset.settings()(0).ampl = m_amplitude;
     wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
@@ -1051,7 +1121,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
   switch (m_type)
   {
     case Statistics::SUBBAND_POWER:
-      gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
+      gnuplot_cmd(handle, "set xrange [0:%f]", g_sample_frequency / 2.0);
       break;
     case Statistics::BEAMLET_POWER:
       gnuplot_cmd(handle, "set xrange [0:%d]", MEPHeader::N_BEAMLETS);
@@ -1080,7 +1150,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
         case Statistics::SUBBAND_POWER:
 	  gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"");
           snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
-                   SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
+                   g_sample_frequency, n_freqbands*2.0, rcuout);
           break;
         case Statistics::BEAMLET_POWER:
 	  gnuplot_cmd(handle, "set xlabel \"Beamlet index\"");
@@ -1434,7 +1504,8 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 
 RSPCtl::RSPCtl(string name, int argc, char** argv)
     : GCFTask((State)&RSPCtl::initial, name), m_command(0),
-    m_nrcus(0), m_nrspboards(0), m_argc(argc), m_argv(argv), m_instancenr(-1)
+      m_nrcus(0), m_nrspboards(0), m_argc(argc), m_argv(argv), m_instancenr(-1),
+      m_subclock(m_server)
 {
 // NOTE: parsing of option should be done BEFORE connecting to the RSPDriver
 // because we must know to which RSPDriver instance we must connect (-In)
@@ -1465,7 +1536,7 @@ RSPCtl::RSPCtl(string name, int argc, char** argv)
 // name that is in the conf files.!!!
 //
 //m_server.init(*this, "server"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
-  m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_server.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 RSPCtl::~RSPCtl()
@@ -1567,6 +1638,8 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
       {
         m_command->send();
       }
+
+      m_subclock.send(); // subscribe to clock updates
     }
     break;
 
@@ -1613,6 +1686,11 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_SUBREGISTERSTATEACK:
     case RSP_UPDREGISTERSTATE:
       status = m_command->ack(e); // handle the acknowledgement
+      break;
+
+    case RSP_UPDCLOCK:
+    case RSP_SUBCLOCKACK:
+      status = m_subclock.ack(e); // handle clock updates
       break;
       
 #ifdef ENABLE_RSPFE
@@ -2137,7 +2215,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  {
 	    if (command)
 	      delete command;
-	    ClocksCommand* clockcommand = new ClocksCommand(m_server);
+	    ClockCommand* clockcommand = new ClockCommand(m_server);
 	    command = clockcommand;
 
 	    command->set_ndevices(m_nrspboards);
