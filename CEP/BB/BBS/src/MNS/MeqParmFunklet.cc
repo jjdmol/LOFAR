@@ -206,6 +206,7 @@ void MeqParmFunklet::fillFunklets
                 (const map<string,ParmDB::ParmValueSet>& parmSet,
 		 const MeqDomain& domain)
 {
+  itsFunklets.clear();
   ParmDB::ParmDomain pdomain(domain.startX(), domain.endX(),
 			     domain.startY(), domain.endY());
   bool found = false;
@@ -225,7 +226,7 @@ void MeqParmFunklet::fillFunklets
       itsDefUsed = false;
       found = true;
       // Sort the funklets in order of domain.
-      if (vec.size() > 1) {
+      if (itsFunklets.size() > 1) {
 	std::sort (itsFunklets.begin(), itsFunklets.end(), &less_mp);
       }
     }
