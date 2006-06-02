@@ -98,11 +98,11 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
   // Set the solvable parameters.
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, solvexc);
-  // Set start time (take 10 sec into account for first time stamp of 20).
-  double timeStart = 4.47203e+09-4260-10;
+  // Set start time (take into account that first time stamp is 20).
+  double timeStart = 4.47203e+09-4260-15-5;
   double timeLast = timeStart + 43075+25;
-  ///  timeLast = timeStart + 120;
-  timeStart -=  30-20;
+    ///double timeLast = timeStart + 120;
+    ///timeStart -=  30-20;
   // Loop through all time domains.
   int counter=0;
   double st=timeStart;
