@@ -23,6 +23,7 @@
 
 package nl.astron.lofar.java.cep.jparmfacade;
 
+import java.rmi.Naming;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,7 +52,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     //Location of ParmDB table file(s)
     private static final String DATA_INMEP_FILE_PATH = "/home/pompert/transfer/tParmFacade.in_mep";
       
-    private static jParmFacade parmDB = null;
+    private static jParmFacadeInterface parmDB = null;
     /**
      *Creates a new instance of PlotDataAccessParmDBImpl
      */
@@ -88,9 +89,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      */
     public HashMap retrieveData(Object constraints) throws PlotterDataAccessException{
         if(parmDB == null){
-            this.initiateConnectionToParmDB();
+            this.initiateConnectionToParmDB(constraints);
         }
-        String[] constraintsArray = (String[])constraints;
+        HashMap<String,Object> parameterConstraints = (HashMap<String,Object>)constraints;
+                
+        String[] constraintsArray = (String[])parameterConstraints.get(new String("PARMDBCONSTRAINTS"));
         HashMap<String,Object> returnMap = new HashMap<String, Object>();
         LinkedList<HashMap> returnValues = new LinkedList<HashMap>();
         if(parmDB != null){
@@ -216,7 +219,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      */
     public HashMap updateData(HashMap currentData, Object constraints) throws PlotterDataAccessException{
         if(parmDB == null){
-            this.initiateConnectionToParmDB();
+            this.initiateConnectionToParmDB(constraints);
         }
         throw new PlotterDataAccessException("Modifying existing datasets is not supported in "+this.getClass().getName().toString());
         //Todo: implement!
@@ -227,11 +230,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * @throws PlotterDataAccessException will be thrown if the jParmFacade could
      * not be started, due to missing native libraries or other errors.
      */
-    private static void initiateConnectionToParmDB() throws PlotterDataAccessException{
-         if(parmDB == null){
-             try {
-                System.loadLibrary("jparmfacade");
-                parmDB = new jParmFacade(PlotDataAccessParmDBImpl.DATA_INMEP_FILE_PATH);
+    private static void initiateConnectionToParmDB(Object constraints) throws PlotterDataAccessException{
+        if(parmDB == null){
+            try {
+                HashMap<String,Object> parameterConstraints = (HashMap<String,Object>)constraints;
+                parmDB = (jParmFacadeInterface)parameterConstraints.get(new String("PARMDBINTERFACE"));   
              } catch (Throwable e) {
                 PlotterDataAccessException exx = new PlotterDataAccessException("The jParmFacade interface could not be initiated. Please check that you have the jParmFacade/ParmDB library somewhere in the java library path");
                 exx.initCause(e);
