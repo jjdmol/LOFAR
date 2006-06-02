@@ -156,7 +156,7 @@ Prediffer::Prediffer(const string& msName,
   itsWeightMap    (0),
   itsIsWeightSpec (false),
   itsPredTimer    ("P:predict", false),
-  itsEqTimer      ("P:saveData", false)
+  itsEqTimer      ("P:eq|save", false)
 {
   LOG_INFO_STR( "Prediffer constructor ("
 		<< "'" << msName   << "', "
@@ -218,12 +218,6 @@ Prediffer::Prediffer(const string& msName,
     fillUVW();
  }
 
-  // initialize the ComplexArr pool with the most frequently used size
-  // itsNrChan is the number of frequency channels
-  // 1 is the number of time steps. This code is limited to one timestep only
-  MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
-  MeqMatrixRealArr::poolActivate(itsNrChan * 1);
-
   // Allocate thread private buffers.
 #if defined _OPENMP
   itsNthread = omp_get_max_threads();
@@ -231,10 +225,10 @@ Prediffer::Prediffer(const string& msName,
   itsNthread = 1;
 #endif
   itsFlagVecs.resize (itsNthread);
-    ///  itsResultVecs.resize (itsNthread);
-    ///  itsDiffVecs.resize (itsNthread);
-    ///  itsIndexVecs.resize (itsNthread);
-    ///  itsOrdFlagVecs.resize (itsNthread);
+  itsResultVecs.resize (itsNthread);
+  itsDiffVecs.resize (itsNthread);
+  itsIndexVecs.resize (itsNthread);
+  ///  itsOrdFlagVecs.resize (itsNthread);
 }
 
 //----------------------------------------------------------------------
@@ -881,11 +875,13 @@ void Prediffer::setWorkDomain (int startChan, int endChan,
   itsNrTimes     = 0;
   while (endIndex < itsTimes.nelements()
 	 && endTime >= itsTimes[endIndex]) {
+    ///cout << "time find " << itsTimes[endIndex]-itsTimes[0] << ' ' << endIndex<<endl;
     ++endIndex;
     ++itsNrTimes;
   }
   ASSERT (itsNrTimes > 0);
   endTime = itsTimes[endIndex-1] + itsIntervals[endIndex-1]/2;
+  ///cout << "time-indices " << itsTimeIndex << ' ' << endIndex << ' ' << itsNrTimes << ' ' << itsTimes[endIndex]-itsTimes[0]<<' '<<endTime-tstart<<' '<<startTime-itsTimes[0]<< ' '<<endTime-itsTimes[0]<<endl;
   
   BBSTest::ScopedTimer parmTimer("P:readparms");
   //  parmTimer.start();
@@ -1121,6 +1117,13 @@ void Prediffer::processData (const string& inColumnName,
   itsNrTimesDone = 0;
   while (nextDataChunk(nrpert>0)) {
     int nrtimes = itsMSMapInfo.nrTimes();
+    // Initialize the ComplexArr pool with the most frequently used size
+    // itsNrChan is the number of frequency channels
+    MeqMatrixComplexArr::poolDeactivate();
+    MeqMatrixRealArr::poolDeactivate();
+    MeqMatrixComplexArr::poolActivate(itsNrChan * nrtimes);
+    MeqMatrixRealArr::poolActivate(itsNrChan * nrtimes);
+
     // Size the thread private flag buffers.
     if (useFlags) {
       for (int i=0; i<itsNthread; ++i) {
@@ -1178,7 +1181,7 @@ void Prediffer::processData (const string& inColumnName,
 	// Call the given member function.
 	(this->*pfunc) (threadNr, arg, idata, odata, flags,
 			request, blindex, false);
-			///			request, blindex, itsAnt1[bl]==4&&itsAnt2[bl]==8);
+			///request, blindex, itsAnt1[bl]==4&&itsAnt2[bl]==8);
       }
     } // end omp parallel
       //timer.stop();
@@ -1235,14 +1238,12 @@ void Prediffer::fillFitters (vector<casa::LSQFit>& fitters,
   }
   // Size the thread private buffers.
   ///int nrchan = itsLastChan-itsFirstChan+1;
-  ///  for (int i=0; i<itsNthread; ++i) {
-    ///    itsResultVecs[i].resize (2*nrchan*itsNrPert);
-    ///    itsDiffVecs[i].resize (2*nrchan);
+  for (int i=0; i<itsNthread; ++i) {
+    itsResultVecs[i].resize (2*itsNrPert);
+    itsDiffVecs[i].resize (3*itsNrPert);
+    itsIndexVecs[i].resize (itsNrPert);
     ///    itsOrdFlagVecs[i].resize (2*nrchan);
-    ///    for (int j=0; j<nfitter; ++j) {
-    ///      itsIndexVecs[i][j].resize (itsNrScids[j]);
-    ///    }
-    ///  }
+  }
   // Process the data and use the flags.
   processData (dataColumnName, "", true, true, true,
 	       &Prediffer::fillEquation, &threadPrivateFitters);
@@ -1341,13 +1342,10 @@ void Prediffer::fillEquation (int threadnr, void* arg,
   // the work domains are so large, that the malloc overhead is negligible.
   // ON the other hand, there are many baselines and the malloc is done
   // for each of them.
-  vector<uint> indexVec(itsNrPert);
-  uint* indices = &indexVec[0];
-  vector<const double*> pertRealVec(2*itsNrPert);
-  const double** pertReal = &pertRealVec[0];
+  uint* indices = &(itsIndexVecs[threadnr][0]);
+  const double** pertReal = &(itsResultVecs[threadnr][0]);
   const double** pertImag = pertReal + itsNrPert;
-  vector<double> resVec(3*itsNrPert);
-  double* invPert = &resVec[0];
+  double* invPert = &(itsDiffVecs[threadnr][0]);
   double* resultr = invPert + itsNrPert;
   double* resulti = resultr + itsNrPert;
   // Get all equations.
@@ -1451,14 +1449,21 @@ void Prediffer::fillEquation (int threadnr, void* arg,
 		  cout << endl;
 		}
 		nreq += 2;
-		realVals++;
-		imagVals++;
+	      } else {
+		for (int scinx=0; scinx<nrParamsFound; ++scinx) {
+		  pertReal[scinx]++;
+		  pertImag[scinx]++;
+		}
 	      }
+	      realVals++;
+	      imagVals++;
 	    }
 	    cdata  += timeSize;       // next observed data time step
 	    cflags += nrchan*itsNCorr;
 	  }
 	} else {
+	  // Multiple fitters, so for each point the correct fitter
+	  // has to be determined.
 	  for (int tim=0; tim<nrtime; tim++) {
 	    // Loop through all channels.
 	    if (showd) {
@@ -1504,9 +1509,14 @@ void Prediffer::fillEquation (int threadnr, void* arg,
 		  cout << endl;
 		}
 		nreq += 2;
-		realVals++;
-		imagVals++;
+	      } else {
+		for (int scinx=0; scinx<nrParamsFound; ++scinx) {
+		  pertReal[scinx]++;
+		  pertImag[scinx]++;
+		}
 	      }
+	      realVals++;
+	      imagVals++;
 	    }
 	    cdata  += timeSize;       // next observed data time step
 	    cflags += nrchan*itsNCorr;
@@ -2100,6 +2110,11 @@ void Prediffer::showSettings() const
     cout << "  stchan:    " << itsFirstChan << endl;
     cout << "  endchan:   " << itsLastChan << endl;
   }
+  cout << "  corr     : " << itsNCorr << "  " << itsCorr[0];
+  for (int i=1; i<itsNCorr; ++i) {
+    cout << ',' << itsCorr[i];
+  }
+  cout << endl;
   cout << "  calcuvw  : " << itsCalcUVW << endl;
   cout << endl;
 }

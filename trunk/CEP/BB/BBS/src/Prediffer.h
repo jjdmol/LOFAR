@@ -400,10 +400,10 @@ private:
 
   //# Thread private buffers.
   int itsNthread;
-  vector<casa::Block<bool> >     itsFlagVecs;
-  ///  vector<casa::Block<double> >   itsResultVecs;
-  ///  vector<casa::Block<double> >   itsDiffVecs;
-  ///  vector<vector<casa::Block<unsigned> > > itsIndexVecs;
+  vector<casa::Block<bool> >      itsFlagVecs;
+  vector<vector<const double*> >  itsResultVecs;
+  vector<vector<double> >         itsDiffVecs;
+  vector<vector<uint> >           itsIndexVecs;
   ///  vector<casa::Block<bool> >     itsOrdFlagVecs;
 
   //# Timers.
