@@ -53,6 +53,7 @@ namespace LOFAR {
 	    m_state.resize(1);
 	    m_state = state;
 	  }
+
 	virtual ~RegisterState()
 	  {
 	    m_state.free();
@@ -134,6 +135,10 @@ namespace LOFAR {
 	}
 
       public:
+	// assignment
+	RegisterState& operator=(const RegisterState& state);
+
+      public:
 	/* marshalling methods */
 	unsigned int getSize() {
 	  return MSH_ARRAY_SIZE(m_state, State);
@@ -156,6 +161,9 @@ namespace LOFAR {
 	}
 
       private:
+	// prevent copy
+	RegisterState(const RegisterState& state);
+
 	/**
 	 * Keep track of the state of the registers. This
 	 * is needed to make sure that a change from the cache
