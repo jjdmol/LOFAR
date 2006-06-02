@@ -153,9 +153,7 @@ bool GTMTCPServerSocket::accept(GTMFile& newSocket)
     
     result = (newSocket.setFD(newSocketFD) > 0);
     if (!result) {
-      LOG_WARN(formatString (
-          "::accept, error: %s",
-          strerror(errno)));
+      LOG_WARN(formatString ("::accept, error: %s", strerror(errno)));
     }
   }
   

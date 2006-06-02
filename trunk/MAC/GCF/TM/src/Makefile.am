@@ -31,15 +31,16 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
   Port/GCF_RawPort.cc \
   Timer/GTM_Timer.cc \
   Timer/GTM_TimerHandler.cc \
-  PortImpl/GCF_TCPPort.cc \
-  PortImpl/GTM_File.cc \
-  PortImpl/GTM_TCPSocket.cc \
-  PortImpl/GTM_TCPServerSocket.cc \
-  PortImpl/GTM_FileHandler.cc \
-  PortImpl/GTM_ETHSocket.cc \
-  PortImpl/GCF_ETHRawPort.cc \
   PortImpl/GCF_DevicePort.cc \
+  PortImpl/GCF_ETHRawPort.cc \
+  PortImpl/GCF_ITCPort.cc \
+  PortImpl/GCF_TCPPort.cc \
   PortImpl/GTM_Device.cc \
+  PortImpl/GTM_ETHSocket.cc \
+  PortImpl/GTM_File.cc \
+  PortImpl/GTM_FileHandler.cc \
+  PortImpl/GTM_TCPServerSocket.cc \
+  PortImpl/GTM_TCPSocket.cc \
   ServiceBroker/GTM_SBTCPPort.cc \
   ServiceBroker/GTM_ServiceBroker.cc \
 	SB_Protocol.cc
