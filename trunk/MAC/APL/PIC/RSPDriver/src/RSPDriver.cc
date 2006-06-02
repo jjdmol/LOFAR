@@ -23,6 +23,9 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
+
+#include <GCF/GCF_ServiceInfo.h>
 
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RTCCommon/daemonize.h>
@@ -86,6 +89,7 @@
 #include "WGRead.h"
 #include "VersionsRead.h"
 #include "WriteReg.h"
+#include "ReadReg.h"
 #include "CDOWrite.h"
 #include "TDSProtocolWrite.h"
 #include "TDSResultRead.h"
@@ -110,6 +114,7 @@
 using namespace blitz;
 using namespace std;
 using namespace LOFAR;
+using namespace GCFCommon;
 using namespace RSP;
 using namespace RTC;
 
@@ -190,22 +195,30 @@ RSPDriver::RSPDriver(string name)
         "--instance option does not match OPERATION_MODE setting");
   LOG_DEBUG_STR (*ssp);
 
+  int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
+  if (mode < SYNC_SOFTWARE || mode > SYNC_PPS) {
+    LOG_FATAL_STR("Invalid SYNC_MODE: " << mode);
+    exit(EXIT_FAILURE);
+  }
+
   // tell broker we are here
   LOG_DEBUG("Registering protocols");
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
+#if 0
   // connect to clock
   LOG_DEBUG("Connecting to clock");
   m_clock.init(*this, "spid", GCFPortInterface::SAP, 0 /*don't care*/, true /*raw*/);
+#endif
 
   // open client port
   LOG_DEBUG("Opening listener for clients");
-  string  acceptorID;
-  if (g_instancenr>=0) {
-    acceptorID = formatString("(%d)", g_instancenr);
-  }
-  m_acceptor.init(*this, "acceptor_v3"+acceptorID, GCFPortInterface::MSPP, RSP_PROTOCOL);
+//   string  acceptorID;
+//   if (g_instancenr>=0) {
+//     acceptorID = formatString("(%d)", g_instancenr);
+//   }
+  m_acceptor.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::MSPP, RSP_PROTOCOL);
 
   // open port with RSP board
   LOG_DEBUG("Connecting to RSPboards");
@@ -271,11 +284,13 @@ bool RSPDriver::isEnabled()
     }
   }
 
+#if 0
   // m_clock is only used in SYNC_PARALLEL
   if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
   {
     enabled = enabled && m_clock.isConnected();
   }
+#endif
   
   return enabled;
 }
@@ -431,6 +446,17 @@ void RSPDriver::addAllSyncActions()
                                         GET_CONFIG_STRING(dstmac));
 
       m_scheduler.addSyncAction(cdowrite);
+
+      if (1 == GET_CONFIG("RSPDriver.READ_CDO", i)) {
+	// Read back CDO header contents
+	ReadReg* readreg = new ReadReg(m_board[boardid], boardid,
+				       MEPHeader::DST_RSP,
+				       MEPHeader::CDO,
+				       MEPHeader::CDO_HEADER,
+				       MEPHeader::CDO_HEADER_SIZE);
+	ASSERT(readreg);
+	m_scheduler.addSyncAction(readreg);
+      }
     }
 
     for (int action = 0; action < 2; action++)
@@ -682,10 +708,12 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 
     case F_ENTRY:
     {
+#if 0
       if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
       {
         if (!m_clock.isConnected()) m_clock.open();
       }
+#endif
       openBoards();
     }
     break;
@@ -717,6 +745,7 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 
     case F_DATAIN:
     {
+#if 0
       if (&port == &m_clock)
       {
         /**
@@ -728,10 +757,13 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
       }
       else
       {
+#endif
         // ignore in this state
         static char buf[ETH_DATA_LEN];
         (void)port.recv(buf, ETH_DATA_LEN);
+#if 0
       }
+#endif
     }
     break;
 
@@ -795,10 +827,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
         m_board[0].setTimer(1.0);
 
         //
-        // periodic timeout on m_clock port
+        // periodic timeout on m_acceptor port
         // to print average nr of updates per second
         //
-        m_clock.setTimer(1.0, 1.0); // every second after 1.0 second
+        m_acceptor.setTimer(1.0, 1.0); // every second after 1.0 second
       }
       else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS)
       {
@@ -849,14 +881,18 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 
     case F_DATAIN:
     {
+#if 0
       if (&port == &m_clock)
       {
         status = clock_tick(port);
       }
       else
       {
+#endif
         status = RawEvent::dispatch(*this, port);
+#if 0
       }
+#endif
     }
     break;
     
@@ -995,7 +1031,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
         if (   (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE)
             || (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST))
         {
-          (void)clock_tick(m_clock); // force clock tick
+          (void)clock_tick(m_acceptor); // force clock tick
         }
         else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS)
         {
@@ -1052,7 +1088,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
           status = m_scheduler.run(timer, port);
         }
       }
-      else if (&port == &m_clock)
+      else if (&port == &m_acceptor)
       {
         // print average number of updates
         cerr << "Updates per second = " << m_update_counter << endl;
@@ -1151,8 +1187,8 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
+#if 0
   uint8 count = '0';
-
   if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
   {
     if (port.recv(&count, sizeof(uint8)) != 1)
@@ -1166,6 +1202,7 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
       LOG_WARN("Got more than one clock pulse: missed real-time deadline");
     }
   }
+#endif
           
   struct timeval now;
   (void)gettimeofday(&now, 0);
@@ -2174,8 +2211,8 @@ int main(int argc, char** argv)
   LOG_DEBUG ("Reading configuration files");
   try
   {
-    globalParameterSet()->adoptFile("RSPDriverPorts.conf");
-    globalParameterSet()->adoptFile("RemoteStation.conf");
+    ConfigLocator cl;
+    globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));
   }
   catch (Exception e)
   {
