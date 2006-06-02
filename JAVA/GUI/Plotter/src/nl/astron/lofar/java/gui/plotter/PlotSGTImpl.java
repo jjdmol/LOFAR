@@ -32,11 +32,17 @@
 
 package nl.astron.lofar.java.gui.plotter;
 
+import gov.noaa.pmel.sgt.AxisNotFoundException;
+import gov.noaa.pmel.sgt.CartesianGraph;
 import gov.noaa.pmel.sgt.DataNotFoundException;
 import gov.noaa.pmel.sgt.JPane;
 import gov.noaa.pmel.sgt.LineAttribute;
 import gov.noaa.pmel.sgt.LineCartesianRenderer;
+import gov.noaa.pmel.sgt.LogAxis;
+import gov.noaa.pmel.sgt.LogTransform;
+import gov.noaa.pmel.sgt.SGLabel;
 import gov.noaa.pmel.sgt.dm.Collection;
+import gov.noaa.pmel.sgt.dm.SGTData;
 import gov.noaa.pmel.sgt.dm.SGTMetaData;
 import gov.noaa.pmel.sgt.dm.SimpleGrid;
 import gov.noaa.pmel.sgt.dm.SimpleLine;
@@ -47,15 +53,17 @@ import gov.noaa.pmel.util.Rectangle2D;
 import gov.noaa.pmel.util.SoTDomain;
 import gov.noaa.pmel.util.SoTRange;
 import gov.noaa.pmel.util.GeoDate;
+import gov.noaa.pmel.util.Point2D;
+import gov.noaa.pmel.util.Range2D;
+import gov.noaa.pmel.util.SoTPoint;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyVetoException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.TreeSet;
 import javax.swing.JComponent;
 import nl.astron.lofar.java.gui.plotter.exceptions.EmptyDataSetException;
 import nl.astron.lofar.java.gui.plotter.exceptions.InvalidDataSetException;
@@ -114,7 +122,7 @@ public class PlotSGTImpl implements IPlot{
     public JComponent modifyPlot(JComponent aPlot, HashMap data) throws PlotterException{
         throw new NotImplementedException("The Modifying of plots is not yet implemented in the plotter's SGT plugin.");
     }
-      
+    
     
     /**
      * Creates a SGT JPlotLayout plot using several key arguments
@@ -170,7 +178,7 @@ public class PlotSGTImpl implements IPlot{
         
         try{
             
-           
+            
             layout.setSize(640,480);
             
             layout.setId("line_"+name);
@@ -201,6 +209,10 @@ public class PlotSGTImpl implements IPlot{
                         plotSubTitle = (String)data.get(key);
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISLABEL)){
                         xAxisTitle = (String)data.get(key);
+                    } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_START)){
+                        xstart = Double.parseDouble((String)data.get(key));
+                    } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_END)){
+                        xend = Double.parseDouble((String)data.get(key));
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISUNIT)){
                         xAxisUnits = (String)data.get(key);
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXISTYPE)){
@@ -209,26 +221,65 @@ public class PlotSGTImpl implements IPlot{
                             //TODO TIME AXIS
                         } else if(xAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_MJDTIME)){
                             //TODO TIME AXIS
+                        } else if(xAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_LOG)){
+                            CartesianGraph gp = (CartesianGraph) layout.getFirstLayer().getGraph();
+                            LogTransform xt = null;
+                            try {
+                                System.out.println("Number of X Axes: "+ gp.getNumberXAxis());
+                                xt = new LogTransform(xstart, xend, gp.getXAxis("Left Axis").getRangeP().start, gp.getXAxis("Left Axis").getRangeP().end);
+                                LogAxis xbot = new LogAxis(xAxisTitle);
+                                xbot.setRangeU(new Range2D(xstart,xend));
+                                xbot.setLocationU(new SoTPoint(gp.getXAxis("Left Axis").getRangeP().start, gp.getYAxis("Bottom Axis").getRangeP().start));
+                                SGLabel xtitle = new SGLabel("xaxis title", xAxisTitle,
+                                                             new Point2D.Double(0.0, 0.0));
+                                xtitle.setHeightP(0.2);
+                                xbot.setTitle(xtitle);
+                                gp.removeAllXAxes();
+                                gp.addXAxis(xbot);
+                            
+                            } catch (AxisNotFoundException ex) {
+                                ex.printStackTrace();
+                            }
+                            gp.setXTransform(xt);
+                            
                         }
-                    } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_START)){
-                        xstart = Double.parseDouble((String)data.get(key));
-                    } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XAXIS_RANGE_END)){
-                        xend = Double.parseDouble((String)data.get(key));
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISLABEL)){
                         yAxisTitle = (String)data.get(key);
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISUNIT)){
                         yAxisUnits = (String)data.get(key);
+                    }else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_START)){
+                        ystart = Double.parseDouble((String)data.get(key));
+                    } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_END)){
+                        yend = Double.parseDouble((String)data.get(key));
+                        
+                        
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISTYPE)){
                         yAxisType = (String)data.get(key);
                         if(yAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_TIME)){
                             //TODO TIME AXIS
                         } else if(yAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_MJDTIME)){
                             //TODO TIME AXIS
+                        } else if(yAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_LOG)){
+                           CartesianGraph gp = (CartesianGraph) layout.getFirstLayer().getGraph();
+                            LogTransform yt = null;
+                            try {
+                                yt = new LogTransform(ystart, yend, gp.getYAxis("Left Axis").getRangeP().start, gp.getYAxis("Left Axis").getRangeP().end);
+                                LogAxis xbot = new LogAxis(xAxisTitle);
+                                xbot.setRangeU(new Range2D(ystart,yend));
+                                xbot.setLocationU(new SoTPoint(gp.getXAxis("Bottom Axis").getRangeP().start, gp.getYAxis("Left Axis").getRangeP().start));
+                                SGLabel ytitle = new SGLabel("yaxis title", yAxisTitle,
+                                                             new Point2D.Double(0.0, 0.0));
+                                ytitle.setHeightP(0.2);
+                                xbot.setTitle(ytitle);
+                                gp.removeAllYAxes();
+                                gp.addYAxis(xbot);
+                            
+                            } catch (AxisNotFoundException ex) {
+                                ex.printStackTrace();
+                            }
+                            gp.setYTransform(yt);
+                            
                         }
-                    } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_START)){
-                        ystart = Double.parseDouble((String)data.get(key));
-                    } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXIS_RANGE_END)){
-                        yend = Double.parseDouble((String)data.get(key));
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
                         values = (LinkedList<HashMap>)data.get(key);
                     }else{
@@ -277,6 +328,8 @@ public class PlotSGTImpl implements IPlot{
                                     for(int i = 0; i<xArray.length;i++){
                                         xArrayDate[i]=new GeoDate(Long.parseLong(Double.toString(xArray[i])));
                                     }
+                                }else if(xAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_LOG)){
+                                    
                                 }
                             } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
                                 yArray = (double[])line.get(key);
@@ -285,6 +338,8 @@ public class PlotSGTImpl implements IPlot{
                                     for(int i = 0; i<yArray.length;i++){
                                         yArrayDate[i]=new GeoDate(Long.parseLong(Double.toString(yArray[i])));
                                     }
+                                }else if(yAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_LOG)){
+                                    
                                 }
                             }else{
                                 throw new InvalidDataSetException("(A value array was found that is not supported for a Line Plot: "+key.toString()+")");
@@ -293,10 +348,9 @@ public class PlotSGTImpl implements IPlot{
                         
                         SimpleLine lineData = new SimpleLine(
                                 xArray,yArray,lineLabel);
-                        
                         lineData.setXMetaData(meta);
                         lineData.setYMetaData(ymeta);
-                        //Add line to plot
+                        
                         layout.addData(lineData, lineLabel);
                         
                         if(showPointsOnly){
@@ -570,7 +624,7 @@ public class PlotSGTImpl implements IPlot{
                         lad.setLineAttribute(attr);
                         if(!lad.isShowing()){
                             lad.setVisible(true);
-                           
+                            
                         }
                         aLayout.getKeyPane().setBatch(true);
                         aLayout.getKeyPane().setBatch(false);
