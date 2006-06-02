@@ -66,6 +66,7 @@ public class jParmFacadeServer {
             
             Registry localRegistry = null;
             int objectPort = 0;
+            boolean currentRMIserver = false;
             
             if (args.length == 2){
                 logger.info("jParmFacadeServer creating a local RMI registry on port "+Registry.REGISTRY_PORT+" ...");
@@ -77,6 +78,7 @@ public class jParmFacadeServer {
                         localRegistry = LocateRegistry.createRegistry(rmiPort.intValue());
                     } catch (RemoteException ex) {
                         localRegistry = LocateRegistry.getRegistry(rmiPort.intValue());
+                        currentRMIserver = true;
                     }
                 if (args.length ==4){
                     Integer rmiObjectsPort = new Integer(args[3]);
@@ -101,9 +103,11 @@ public class jParmFacadeServer {
                 jParmFacadeAdapter.exportObject(jParmFacadeAdapter,objectPort);
             }
             logger.info("jParmFacadeServer publishing service " + jParmFacadeInterface.SERVICENAME + " in local registry...");
-            
-            localRegistry.rebind(jParmFacadeInterface.SERVICENAME, jParmFacadeAdapter);
-            
+            if(currentRMIserver){
+                localRegistry.bind(jParmFacadeInterface.SERVICENAME, jParmFacadeAdapter);
+            }else{
+                localRegistry.rebind(jParmFacadeInterface.SERVICENAME, jParmFacadeAdapter);
+            }           
             logger.info("Published jParmFacadeInterface as service " + jParmFacadeInterface.SERVICENAME + ". Ready...");
             
             String statusmessage = "jParmFacadeserver is ready for incoming calls";
