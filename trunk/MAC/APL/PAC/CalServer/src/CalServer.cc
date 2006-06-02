@@ -23,9 +23,12 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 
 #include <APL/RTCCommon/daemonize.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
+
+#include <GCF/GCF_ServiceInfo.h>
 
 #include "CalServer.h"
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -45,7 +48,7 @@
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/RTCCommon/PSAccess.h>
 
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <fstream>
 #include <signal.h>
 #include <getopt.h>
@@ -122,10 +125,12 @@ CalServer::CalServer(string name, ACCs& accs, int argc, char** argv)
     instanceID = formatString("(%d)", m_instancenr);
   }
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
-  m_acceptor.init(*this, "acceptor_v3"+instanceID, GCFPortInterface::MSPP, CAL_PROTOCOL);
+  //  m_acceptor.init(*this, "acceptor_v3"+instanceID, GCFPortInterface::MSPP, CAL_PROTOCOL);
+  m_acceptor.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::MSPP, CAL_PROTOCOL);
 
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
-  m_rspdriver.init(*this, "rspdriver"+instanceID,  GCFPortInterface::SAP,  RSP_PROTOCOL);
+  //m_rspdriver.init(*this, "rspdriver"+instanceID,  GCFPortInterface::SAP,  RSP_PROTOCOL);
+  m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER,  GCFPortInterface::SAP,  RSP_PROTOCOL);
 }
 
 CalServer::~CalServer()
@@ -176,21 +181,23 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 #ifdef USE_CAL_THREAD
 	  pthread_mutex_lock(&m_globallock); // lock for dipolemodels, and sources
 #endif
+	  
+	  ConfigLocator cl;
 
 	  //
 	  // load the dipole models
 	  //
-	  m_dipolemodels.getAll(GET_CONFIG_PATH() + "/" + GET_CONFIG_STRING("CalServer.DipoleModelFile"));
+	  m_dipolemodels.getAll(cl.locate(GET_CONFIG_STRING("CalServer.DipoleModelFile")));
 
 	  //
 	  // load the source catalog
 	  //
-	  m_sources.getAll(GET_CONFIG_PATH() + "/" + GET_CONFIG_STRING("CalServer.SourceCatalogFile"));
+	  m_sources.getAll(cl.locate(GET_CONFIG_STRING("CalServer.SourceCatalogFile")));
 
 	  //
 	  // Load antenna arrays
 	  //
-	  m_arrays.getAll(GET_CONFIG_PATH() + "/" + GET_CONFIG_STRING("CalServer.AntennaArraysFile"));
+	  m_arrays.getAll(cl.locate(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
 
 	  //
 	  // Setup calibration algorithm
@@ -247,47 +254,40 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	}
 
 	// get initial clock setting
-	RSPGetclocksEvent getclocks;
-	getclocks.timestamp = Timestamp(0,0);
-	getclocks.cache = true;
-	for (int i = 0; i < m_n_rspboards; ++i) {
-	  getclocks.rspmask.set(i);
-	}
+	RSPGetclockEvent getclock;
+	getclock.timestamp = Timestamp(0,0);
+	getclock.cache = true;
 
-	m_rspdriver.send(getclocks);
+	m_rspdriver.send(getclock);
       }
       break;
 
-    case RSP_GETCLOCKSACK:
+    case RSP_GETCLOCKACK:
       {
-	RSPGetclocksackEvent getclocksack(e);
+	RSPGetclockackEvent getclockack(e);
 
-	if (RSP_Protocol::SUCCESS != getclocksack.status) {
+	if (RSP_Protocol::SUCCESS != getclockack.status) {
 	  LOG_FATAL("Failed to get sampling frequency setting");
 	  exit(EXIT_FAILURE);
 	}
 
-	// all clock values should be the same
-	// simply take first value as value
-	m_sampling_frequency = getclocksack.clocks()(0);
+	// get clock value and convert to MHz
+	m_sampling_frequency = getclockack.clock * (uint32)1.0e6;
 
 	LOG_DEBUG_STR("Initial sampling frequency: " << m_sampling_frequency);
 
 	// subscribe to clock change updates
-	RSPSubclocksEvent subclocks;
-	subclocks.timestamp = Timestamp(0,0);
-	for (int i = 0; i < m_n_rspboards; ++i) {
-	  subclocks.rspmask.set(i);
-	}
-	subclocks.period = 1;
+	RSPSubclockEvent subclock;
+	subclock.timestamp = Timestamp(0,0);
+	subclock.period = 1;
 
-	m_rspdriver.send(subclocks);
+	m_rspdriver.send(subclock);
       }
       break;
 
-    case RSP_SUBCLOCKSACK:
+    case RSP_SUBCLOCKACK:
       {
-	RSPSubclocksackEvent ack(e);
+	RSPSubclockackEvent ack(e);
 
 	if (RSP_Protocol::SUCCESS != ack.status) {
 	  LOG_FATAL("Failed to subscribe to clock status updates.");
@@ -352,13 +352,13 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
       }
       break;
       
-    case RSP_UPDCLOCKS:
+    case RSP_UPDCLOCK:
       {
-	RSPUpdclocksEvent updclocks(e);
+	RSPUpdclockEvent updclock(e);
 
 	// all clock values should be the same
 	// simply take first value as value
-	m_sampling_frequency = updclocks.clocks()(0);
+	m_sampling_frequency = updclock.clock * (uint32)1.0e6;
 
 	LOG_DEBUG_STR("New sampling frequency: " << m_sampling_frequency);
       }

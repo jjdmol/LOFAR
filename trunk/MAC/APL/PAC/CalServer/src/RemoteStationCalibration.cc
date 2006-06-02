@@ -159,7 +159,9 @@ const vector<Source> RemoteStationCalibration::make_local_sky_model(const Source
 {
   double obstime = acmtime.sec() + acmtime.usec() / 1e6;
   const std::vector<Source> skymodel = sources.getSources();
+#if 0
   AMC::Converter& converter    = getConverter(); // can be used for coordinate conversions
+#endif
 
   double mjd = 0.0, mjdfraction = 0.0;
   acmtime.convertToMJD(mjd, mjdfraction);
@@ -198,8 +200,11 @@ const vector<Source> RemoteStationCalibration::make_local_sky_model(const Source
       el = ::asin(::sin(delta) * ::sin(delta0) + ::cos(delta0) * ::cos(delta) * ::cos(alpha0 - alpha)),
       az = ::acos((::sin(delta) - ::sin(el) * ::sin(delta0)) / (::cos(el) * ::cos(delta0))) * ((::sin(alpha0 - alpha) < 0) ? -1 : 1);
 
+#if 0
+    // it seems that result is not used!
     SkyCoord result = converter.j2000ToAzel(SkyCoord((skymodel.begin() + idx)->getRA(), (skymodel.begin() + idx)->getDEC()),
 					    EarthCoord(geolon, geolat), TimeCoord(mjd, mjdfraction));
+#endif
 
     if (el > 0)
       local_skymodel.push_back(Source((skymodel.begin() + idx)->getName(), -::cos(el) * ::sin(az), ::cos(el) * ::cos(az), const_cast<blitz::Array<double, 2>&>((skymodel.begin() + idx)->getFluxes())));
