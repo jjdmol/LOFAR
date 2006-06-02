@@ -114,8 +114,9 @@ RSPCtlFE::RSPCtlFE(string name, int argc, char** argv)
       &m_propertySetAnswer));
   m_myPropertySet->enable();
   
-  string servername(formatString("server%d",m_id));
-  m_server.init(*this, servername, GCFPortInterface::SPP, RSPFE_PROTOCOL),
+  //string servername(formatString("server%d",m_id));
+
+  m_server.init(*this, MAC_SVCMASK_RSPCTLFE, GCFPortInterface::SPP, RSPFE_PROTOCOL),
   
   m_rspctlOutputFilename = string(formatString("rspctlfe%doutput.log",m_id));
 }
