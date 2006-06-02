@@ -24,6 +24,8 @@
 // this include needs to be first!
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 
+#include <GCF/GCF_ServiceInfo.h>
+
 #include <APL/RTCCommon/TestSuite.h>
 #include "CalTest.h"
 
@@ -50,7 +52,7 @@ CalTest::CalTest(string name, string arrayname, string parentname, int nantennas
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
-  m_server.init(*this, "server", GCFPortInterface::SAP, CAL_PROTOCOL);
+  m_server.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
 }
 
 CalTest::~CalTest()

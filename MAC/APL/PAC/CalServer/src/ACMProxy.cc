@@ -24,6 +24,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <GCF/GCF_ServiceInfo.h>
+
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 #include "ACMProxy.h"
@@ -32,7 +34,7 @@
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/RTCCommon/PSAccess.h>
 
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 using namespace std;
 using namespace blitz;
@@ -53,7 +55,7 @@ ACMProxy::ACMProxy(string name, ACCs& accs)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
-  m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 ACMProxy::~ACMProxy()

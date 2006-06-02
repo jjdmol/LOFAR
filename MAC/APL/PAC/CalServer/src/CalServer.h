@@ -32,7 +32,7 @@
 #include <APL/CAL_Protocol/SubArray.h>
 
 #include <GCF/TM/GCF_Control.h>
-#include <AMCBase/AMCClient/ConverterClient.h>
+#include <AMCBase/ConverterClient.h>
 
 namespace LOFAR {
   namespace CAL {
