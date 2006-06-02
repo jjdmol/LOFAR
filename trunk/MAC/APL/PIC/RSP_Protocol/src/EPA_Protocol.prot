@@ -342,9 +342,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "payload";
-    type = "MEPData";
-    userdefined;
+    name = "data";
+    type = "uint8[ETH_DATA_LEN]";
   };
 };
 
