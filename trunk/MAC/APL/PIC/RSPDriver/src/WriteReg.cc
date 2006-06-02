@@ -34,8 +34,6 @@
 #include "WriteReg.h"
 #include "Cache.h"
 
-#define N_RETRIES 3
-
 using namespace blitz;
 using namespace LOFAR;
 using namespace RSP;
