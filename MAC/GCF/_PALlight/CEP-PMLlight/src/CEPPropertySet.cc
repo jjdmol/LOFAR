@@ -51,7 +51,7 @@ CEPPropertySet::CEPPropertySet(const char* name,
   CEPProperty* pProperty;
   TPropertyInfo* pPropInfo;
   
-  if (!Utils::isValidScope(_scope.c_str()))
+  if (!isValidScope(_scope.c_str()))
   {
     LOG_WARN(formatString ( 
         "Scope %s meets not the name convention! Set to \"\"",
@@ -583,7 +583,7 @@ void buildTypeStructTree(const string path,
     default:
       if (macValueTypes[elType] != NO_LPT)
       {
-        if (Utils::isValidPropName(propName.c_str()))
+        if (isValidPropName(propName.c_str()))
         {
           // we have a valid propname so add it to the list
           TPropertyInfo propInfo;
