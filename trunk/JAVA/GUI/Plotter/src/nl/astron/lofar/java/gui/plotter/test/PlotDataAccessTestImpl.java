@@ -64,7 +64,49 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
         //create the hashmap to be returned
         HashMap<String,Object> data = new HashMap<String,Object>();
         String[] constraintsArray = (String[])constraints;
-        if(constraintsArray[0].equalsIgnoreCase("line")){
+        
+        if(constraintsArray[0].equalsIgnoreCase("log")){
+            
+            String plotTitle = "Testset Logarithmic Axis";
+            data.put(PlotConstants.DATASET_NAME,plotTitle);
+            String plotSubTitle = "Using PlotDataAccessTestImpl";
+            data.put(PlotConstants.DATASET_SUBNAME,plotSubTitle);
+            String xAxisTitle = "t";
+            data.put(PlotConstants.DATASET_XAXISLABEL,xAxisTitle);
+            
+            String xAxisUnits = "seconds";
+            data.put(PlotConstants.DATASET_XAXISUNIT,xAxisUnits);
+            String yAxisTitle = "Frequency";
+            data.put(PlotConstants.DATASET_YAXISLABEL,yAxisTitle);
+            /*data.put(PlotConstants.DATASET_XAXIS_RANGE_START,"0.0");
+            data.put(PlotConstants.DATASET_XAXIS_RANGE_END,"100.0");
+            data.put(PlotConstants.DATASET_YAXIS_RANGE_START,"1.0");
+            data.put(PlotConstants.DATASET_YAXIS_RANGE_END,"1000000000000000.0");
+            */
+            String yAxisUnits = "MHz";
+            data.put(PlotConstants.DATASET_YAXISUNIT,yAxisUnits);
+            data.put(PlotConstants.DATASET_YAXISTYPE,PlotConstants.DATASET_AXIS_TYPE_LOG);
+            LinkedList<HashMap> values = new LinkedList<HashMap>();
+            
+            HashMap<String,Object> aLine = new HashMap<String,Object>();
+            
+            aLine.put(PlotConstants.DATASET_VALUELABEL,"Lijntje 1");
+            
+            double[] xArray = new double[10];
+            double[] yArray = new double[10];
+            
+            for(int i = 0;i<10;i++){
+                xArray[i] = i*10;
+                yArray[i] = 100^i;
+            }
+            
+            aLine.put(PlotConstants.DATASET_XVALUES,xArray);
+            aLine.put(PlotConstants.DATASET_YVALUES,yArray);
+            values.add(aLine);
+            
+            data.put(PlotConstants.DATASET_VALUES,values);
+        
+        } else if(constraintsArray[0].equalsIgnoreCase("line")){
             
             String plotTitle = "Testset LOFAR Plotter | XYLine";
             data.put(PlotConstants.DATASET_NAME,plotTitle);

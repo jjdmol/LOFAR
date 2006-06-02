@@ -97,7 +97,7 @@ public class PlotTestFrameStandAlone extends javax.swing.JFrame {
         jSeparator1.setMinimumSize(new java.awt.Dimension(50, 10));
         plotModPanel.add(jSeparator1, new java.awt.GridBagConstraints());
 
-        cParamConstraint.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "line", "grid" }));
+        cParamConstraint.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "line", "grid", "log" }));
         plotModPanel.add(cParamConstraint, new java.awt.GridBagConstraints());
 
         cLegend.setText("Legend");
@@ -144,6 +144,9 @@ public class PlotTestFrameStandAlone extends javax.swing.JFrame {
                     }
                     testPanel = new PlotPanel();
                     if(argsForController[0].equalsIgnoreCase("line")){
+                        testPanel.createPlot(PlotConstants.PLOT_XYLINE,true,argsForController);
+                    }
+                    else if(argsForController[0].equalsIgnoreCase("log")){
                         testPanel.createPlot(PlotConstants.PLOT_XYLINE,true,argsForController);
                     }else if(argsForController[0].equalsIgnoreCase("grid")){
                         testPanel.createPlot(PlotConstants.PLOT_GRID,true,argsForController);
