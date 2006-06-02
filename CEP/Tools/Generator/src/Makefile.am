@@ -1,14 +1,13 @@
 
 lib_LTLIBRARIES         = libgenerator.la
 
-libgenerator_la_SOURCES          = RSPTimeStamp.cc \
-		   	           WH_FakeStation.cc \
-				   WH_Signal.cc \
-				   WH_Wrap.cc \
-				   WH_Strip.cc \
-				   AH_Recorder.cc \
-				   AH_Generator.cc \
-				   DH_RSP.cc 
+libgenerator_la_SOURCES = 	Signals.cc \
+				RSPTimeStamp.cc \
+		   	        WH_FakeStation.cc \
+				WH_Signal.cc \
+				AH_Recorder.cc \
+				AH_Generator.cc \
+				DH_RSP.cc 
 
 bin_PROGRAMS = Recorder Generator
 

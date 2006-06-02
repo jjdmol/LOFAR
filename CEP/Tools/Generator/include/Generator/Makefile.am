@@ -2,7 +2,8 @@
 # SUBDIRS = shmem .
 # endif
 
-INSTHDRS          = RSPTimeStamp.h \
+INSTHDRS           = Signals.h \
+	 RSPTimeStamp.h \
 	 WH_FakeStation.h \
 	 WH_Signal.h \
 	 WH_Wrap.h \
