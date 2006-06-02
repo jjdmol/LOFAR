@@ -300,8 +300,8 @@ GCFEvent::TResult GTMServiceBroker::operational(GCFEvent& e, GCFPortInterface& p
 		TAction* pAction = &_actionSeqList[response.seqnr];
 		if (pAction) {
 			logResult(response.result, pAction->servicename);
-			_actionSeqList.erase(response.seqnr);
 			pAction->pPort->serviceRegistered(response.result, response.portnumber);
+			_actionSeqList.erase(response.seqnr);
 		}
 		break;
 	}
@@ -314,8 +314,8 @@ GCFEvent::TResult GTMServiceBroker::operational(GCFEvent& e, GCFPortInterface& p
 			if (response.result == SB_NO_ERROR) {
 				_serviceClients[pAction->servicename].push_back(pAction->pPort);
 			}
-			_actionSeqList.erase(response.seqnr);
 			pAction->pPort->serviceInfo(response.result, response.portnumber, response.hostname);
+			_actionSeqList.erase(response.seqnr);
 		}
 		break;
 	}
