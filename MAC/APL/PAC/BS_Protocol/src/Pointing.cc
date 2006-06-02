@@ -24,6 +24,12 @@
 #include <Common/LofarLogger.h>
 #include <APL/BS_Protocol/Pointing.h>
 
+#include <AMCBase/Converter.h>
+#include <AMCBase/RequestData.h>
+#include <AMCBase/ResultData.h>
+#include <AMCBase/SkyCoord.h>
+#include <AMCBase/EarthCoord.h>
+#include <AMCBase/TimeCoord.h>
 
 using namespace LOFAR;
 using namespace BS_Protocol;
@@ -50,15 +56,23 @@ Pointing Pointing::convertToLMN(Converter* conv, EarthCoord* pos)
     m        = 0.0,
     n        = 0.0;
 
+  RequestData request;
+  ResultData resultdata;
+
   switch (getType()) {
 
   case J2000:
     /* convert J2000 to LMN */
     ASSERT(conv && pos);
     time().convertToMJD(mjd, fraction);
-    
-    result = conv->j2000ToAzel(SkyCoord(angle0(), angle1()), *pos, TimeCoord(mjd, fraction));
 
+    request.skyCoord[0]   = SkyCoord(angle0(), angle1());
+    request.earthCoord[0] = *pos;
+    request.timeCoord[0]  = TimeCoord(mjd, fraction);    
+
+    conv->j2000ToAzel(resultdata, request);
+    result = resultdata.skyCoord[0];
+    
     /* now convert from azel to lmn by falling through to AZEL label */
     /* Note: break intentionally omitted */
 
