@@ -20,9 +20,9 @@
 //#
 
 package nl.astron.lofar.java.cep.jparmfacade;
+import java.rmi.RemoteException;
 import java.rmi.registry.*;
 import java.rmi.server.RMISocketFactory;
-import nl.astron.lofar.sas.otb.jotdb2.jInitCPPLogger;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -44,8 +44,7 @@ public class jParmFacadeServer {
             String logConfig = "jParmFacade.log_prop";
             
             PropertyConfigurator.configure(logConfig);
-            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
-            logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
+            logger.info("jParmFacadeServer started. LogPropFile: "+ logConfig);
             
 //	     if (System.getSecurityManager () == null)
 //	       {
@@ -53,8 +52,8 @@ public class jParmFacadeServer {
 //		  System.setSecurityManager (new RMISecurityManager ());
 //	       }
             
-            if (args.length < 4) {
-                System.out.println("Usage: java -jar jParmFacadeServer.jar <hostname> <rmiportnumber-OPTIONAL> <rmi objects portnumber for firewall/tunneling purposes-OPTIONAL>");
+            if (args.length < 2) {
+                System.out.println("Usage: java -jar jParmFacadeServer.jar <hostname> <parmdb table file> <rmiportnumber-OPTIONAL> <rmi objects portnumber for firewall/tunneling purposes-OPTIONAL>");
                 System.exit(0);
             }
             
@@ -68,15 +67,19 @@ public class jParmFacadeServer {
             Registry localRegistry = null;
             int objectPort = 0;
             
-            if (args.length == 1){
+            if (args.length == 2){
                 logger.info("jParmFacadeServer creating a local RMI registry on port "+Registry.REGISTRY_PORT+" ...");
                 localRegistry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-            }else if (args.length > 1) {
-                Integer rmiPort = new Integer(args[4]);
+            }else if (args.length > 2) {
+                Integer rmiPort = new Integer(args[2]);
                 logger.info("jParmFacadeServer creating a local RMI registry on port "+rmiPort+" ...");
-                localRegistry = LocateRegistry.createRegistry(rmiPort.intValue());
-                if (args.length ==3){
-                    Integer rmiObjectsPort = new Integer(args[5]);
+                    try {
+                        localRegistry = LocateRegistry.createRegistry(rmiPort.intValue());
+                    } catch (RemoteException ex) {
+                        localRegistry = LocateRegistry.getRegistry(rmiPort.intValue());
+                    }
+                if (args.length ==4){
+                    Integer rmiObjectsPort = new Integer(args[3]);
                     logger.info("jParmFacadeServer setting up RMI server objects on port "+rmiObjectsPort+" ...");
                     RMISocketFactory socketFactory = RMISocketFactory.getDefaultSocketFactory();
                     socketFactory.createServerSocket(rmiObjectsPort);
@@ -88,6 +91,9 @@ public class jParmFacadeServer {
             
             // Export jParmFacade
             jParmFacadeAdaptee = new jParmFacade();
+            jParmFacadeAdaptee.setParmFacadeDB(args[1]);
+            logger.info("jParmFacadeServer using database "+args[1]+"...");
+            
             jParmFacadeAdapter = new jParmFacadeAdapter(jParmFacadeAdaptee);
             //A custom port was specified, export the object using the port specified
             if(objectPort!=0){
@@ -102,10 +108,10 @@ public class jParmFacadeServer {
             
             String statusmessage = "jParmFacadeserver is ready for incoming calls";
             if (args.length > 1) {
-                Integer rmiPort = new Integer(args[1]);
+                Integer rmiPort = new Integer(args[2]);
                 statusmessage += " on rmi registry port "+rmiPort;
-                if (args.length ==3){
-                    Integer rmiObjectsPort = new Integer(args[2]);
+                if (args.length ==4){
+                    Integer rmiObjectsPort = new Integer(args[3]);
                     statusmessage += " and rmi server object port "+rmiObjectsPort +". Please tunnel/forward both ports for your client to work";
                 }
             }
