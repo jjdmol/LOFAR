@@ -230,6 +230,45 @@ vector<double> 	RSPport::getSubbandStats(uint32	RCUmask)
 }
 
 //
+// GetBeamletStats returns the signalstrength of each beamlet
+//
+vector<double> 	RSPport::getBeamletStats(uint32	RCUmask)
+{
+	// Construct a query message
+	RSPGetstatsEvent		question;
+	question.timestamp	= RTC::Timestamp(0,0);
+	question.rcumask 	= RCUmask;
+	question.cache   	= true;
+	question.type		= Statistics::BEAMLET_POWER;
+
+	// send request
+	send (&question);
+
+	// wait for answer
+	RSPGetstatsackEvent ack(receive());
+//	bitset<MAX_N_RCUS>	mask = getRCUMask();
+
+	if (ack.status != SUCCESS) {
+		vector<double>	empty;
+		return (empty);
+	}
+		
+	// allocate any array with the right size
+	int32	nrElems = ack.stats().rows() * ack.stats().columns();
+	vector<double>		resultVec;
+	resultVec.resize(nrElems);
+
+	// Copy info from blitz to vector.
+	blitz::Array<double,2>&		data = ack.stats();
+	for (int32	i = 0; i < nrElems; i++) {
+		resultVec[i] = data(0,i);
+	}
+
+	// Finally return the info they asked for.
+	return (resultVec);
+}
+
+//
 // getWaveformSettings
 //
 vector<struct WGSettings::WGRegisterType> RSPport::getWaveformSettings(uint32		RCUmask)

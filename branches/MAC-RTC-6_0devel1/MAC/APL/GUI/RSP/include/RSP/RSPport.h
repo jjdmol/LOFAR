@@ -75,6 +75,9 @@ public:
 	// GetSubbandStats returns the signalstrength in each subband.
 	vector<double> 	getSubbandStats(uint32	RCUmask);
 
+	// GetBeamletStats returns the signalstrength in each beamlet.
+	vector<double> 	getBeamletStats(uint32	RCUmask);
+
 	// Control commands
 	bool	setFilter	(uint32		RCUmask, int32		filterNr);
 	bool	sendClear	(uint32		RCUmask);
