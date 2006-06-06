@@ -24,6 +24,7 @@
 
 #include <BBS/MNS/MeqFunklet.h>
 #include <BBS/MNS/MeqPolc.h>
+#include <BBS/MNS/MeqTabular.h>
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 
@@ -80,11 +81,15 @@ MeqFunklet& MeqFunklet::operator= (const MeqFunklet& that)
 MeqFunklet* MeqFunklet::make (const ParmDB::ParmValue& pvalue,
 			      const string& name)
 {
-  ASSERTSTR (pvalue.rep().itsType=="polc",
-	     "No 'polc' funklet found for parameter " << name);
   ASSERTSTR (pvalue.rep().itsShape.size()==2,
 	     "No 2-dim funklet found for parameter " << name);
-  return new MeqPolc(pvalue);
+  if (pvalue.rep().itsType=="polc") {
+    return new MeqPolc(pvalue);
+  } else if (pvalue.rep().itsType=="polc") {
+    return new MeqTabular(pvalue);
+  }
+  ASSERTSTR (false,
+	     "Unknown funklet found for parameter " << name);
 }
 
 int MeqFunklet::makeSolvable (int scidIndex)
