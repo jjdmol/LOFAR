@@ -64,11 +64,11 @@ int main(int, const char* argv[])
     ASSERT(abs(t0.local() - Epoch(yy, mm, dd, h, m, s).utc()) < usec);
 
     t1.utc(t0.utc());
-    ASSERT(t0 == t1);
+    ASSERT(abs(t0.utc() - t1.utc()) < usec);
     t1.mjd(0); 
 
     t1.local(t0.local());
-    ASSERT(t0 == t1);
+    ASSERT(abs(t0.utc() - t1.utc()) < usec);
     t1.mjd(0);
 
     t1.mjd(t0.mjd());
