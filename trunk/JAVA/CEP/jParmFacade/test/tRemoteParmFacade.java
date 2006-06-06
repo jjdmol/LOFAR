@@ -61,23 +61,32 @@ public class tRemoteParmFacade {
         try {
             // create a jParmFacade
             aPF = (jParmFacadeInterface) Naming.lookup ("rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIValName);
-            aPF.setParmFacadeDB(parmTable);
         
             if (aPF ==  null) {
                 System.out.println("Error starting ParmFacade");
                 return;
             }
-        
+            System.out.println("Working with DB: ");
+            aPF.setParmFacadeDB(parmTable);
+            System.out.println(parmTable);
+            
+            System.out.println("Getting names: ");
             Vector<String> names = aPF.getNames("");
-            System.out.println("Names: " + names);
+            System.out.println("Found " + names);
+            
+            
+            System.out.println("Getting Range: ");
             Vector<Double> range = aPF.getRange("");
-            System.out.println("Range: " + range);
+            System.out.println("Found " + range);
+            
+            
+            System.out.println("Getting Values: ");
             HashMap<String,Vector<Double> > values = aPF.getValues ("*",
 							range.elementAt(0), range.elementAt(1), 4,
 							range.elementAt(2), range.elementAt(3), 2);
 
-         
             Iterator it = values.keySet().iterator();
+            System.out.println("Found: ");
             while (it.hasNext()) {  
                 String key = (String)it.next();
                 System.out.println(key + "  <->  " + values.get(key));
