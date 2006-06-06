@@ -44,7 +44,7 @@ public class jParmFacadeServer {
     public static void main(String[] args)  {
         try {
             String logConfig = "jParmFacade.log_prop";
-            
+
             PropertyConfigurator.configure(logConfig);
             jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
             logger.info("jParmFacadeServer started. LogPropFile: "+ logConfig);
@@ -91,8 +91,7 @@ public class jParmFacadeServer {
             
             // Export jParmFacade
             jParmFacadeAdaptee = new jParmFacade();
-            jParmFacadeAdaptee.setParmFacadeDB(args[1]);
-            logger.info("jParmFacadeServer using database "+args[1]+"...");
+            logger.info("jParmFacadeServer started");
             
             jParmFacadeAdapter = new jParmFacadeAdapter(jParmFacadeAdaptee);
             //A custom port was specified, export the object using the port specified
@@ -110,10 +109,10 @@ public class jParmFacadeServer {
             
             String statusmessage = "jParmFacadeserver is ready for incoming calls";
             if (args.length > 1) {
-                Integer rmiPort = new Integer(args[2]);
+                Integer rmiPort = new Integer(args[1]);
                 statusmessage += " on rmi registry port "+rmiPort;
                 if (args.length ==4){
-                    Integer rmiObjectsPort = new Integer(args[3]);
+                    Integer rmiObjectsPort = new Integer(args[2]);
                     statusmessage += " and rmi server object port "+rmiObjectsPort +". Please tunnel/forward both ports for your client to work";
                 }
             }
