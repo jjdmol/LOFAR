@@ -1,7 +1,7 @@
 /* 
- * tParmFacade.java: test program for class jParmFacade
+ * tRemoteParmFacade.java: test program for class jParmFacade via RMI
  *
- * Created on April 19, 2006, 11:05 AM
+ * Created on June 1, 2006, 11:05 AM
  *
  * Copyright (C) 2006
  * ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,24 +23,25 @@
  *
  */
 
+import java.rmi.Naming;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
-import nl.astron.lofar.java.cep.jparmfacade.jParmFacade;
+import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 
 /**
  *
  * @author coolen
  */
-public class tParmFacade {
-
-    static {
-        System.loadLibrary("jparmfacade");
-    }
- 
+public class tRemoteParmFacade {
+    
+    private static jParmFacadeInterface aPF;
+    public static String RMIServerName      = "lofar17.astron.nl";
+    public static String RMIServerPort      = "10777";
+    public static String RMIValName         = jParmFacadeInterface.SERVICENAME;
 
     public static void main(String[] args) {
-        tParmFacade tPF = new tParmFacade();
+        tRemoteParmFacade tPF = new tRemoteParmFacade();
         String parmTable="tParmFacade.in_mep1";
         
         if (args.length <  1) {
@@ -59,7 +60,7 @@ public class tParmFacade {
         System.out.println("Testing with table: "+parmTable);
         try {
             // create a jParmFacade
-            jParmFacade aPF = new jParmFacade();
+            aPF = (jParmFacadeInterface) Naming.lookup ("rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIValName);
             aPF.setParmFacadeDB(parmTable);
         
             if (aPF ==  null) {

@@ -20,11 +20,12 @@
 //#
 
 package nl.astron.lofar.java.cep.jparmfacade;
-import java.rmi.RemoteException;
 import java.rmi.registry.*;
 import java.rmi.server.RMISocketFactory;
+import nl.astron.lofar.sas.otb.jotdb2.jInitCPPLogger;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+
 
 
 
@@ -35,6 +36,7 @@ public class jParmFacadeServer {
     static
     {
         System.loadLibrary("jparmfacade");
+        System.loadLibrary("jotdb2");
     }
     
     static Logger logger = Logger.getLogger(jParmFacadeServer.class);
@@ -44,6 +46,7 @@ public class jParmFacadeServer {
             String logConfig = "jParmFacade.log_prop";
             
             PropertyConfigurator.configure(logConfig);
+            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
             logger.info("jParmFacadeServer started. LogPropFile: "+ logConfig);
             
 //	     if (System.getSecurityManager () == null)
@@ -52,8 +55,8 @@ public class jParmFacadeServer {
 //		  System.setSecurityManager (new RMISecurityManager ());
 //	       }
             
-            if (args.length < 2) {
-                System.out.println("Usage: java -jar jParmFacadeServer.jar <hostname> <parmdb table file> <rmiportnumber-OPTIONAL> <rmi objects portnumber for firewall/tunneling purposes-OPTIONAL>");
+            if (args.length < 1) {
+                System.out.println("Usage: java -jar jParmFacadeServer.jar <hostname> <rmiportnumber-OPTIONAL> <rmi objects portnumber for firewall/tunneling purposes-OPTIONAL>");
                 System.exit(0);
             }
             
@@ -71,17 +74,12 @@ public class jParmFacadeServer {
             if (args.length == 2){
                 logger.info("jParmFacadeServer creating a local RMI registry on port "+Registry.REGISTRY_PORT+" ...");
                 localRegistry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-            }else if (args.length > 2) {
-                Integer rmiPort = new Integer(args[2]);
+            }else if (args.length > 1) {
+                Integer rmiPort = new Integer(args[1]);
                 logger.info("jParmFacadeServer creating a local RMI registry on port "+rmiPort+" ...");
-                    try {
-                        localRegistry = LocateRegistry.createRegistry(rmiPort.intValue());
-                    } catch (RemoteException ex) {
-                        localRegistry = LocateRegistry.getRegistry(rmiPort.intValue());
-                        currentRMIserver = true;
-                    }
-                if (args.length ==4){
-                    Integer rmiObjectsPort = new Integer(args[3]);
+                localRegistry = LocateRegistry.createRegistry(rmiPort.intValue());
+                if (args.length ==3){
+                    Integer rmiObjectsPort = new Integer(args[2]);
                     logger.info("jParmFacadeServer setting up RMI server objects on port "+rmiObjectsPort+" ...");
                     RMISocketFactory socketFactory = RMISocketFactory.getDefaultSocketFactory();
                     socketFactory.createServerSocket(rmiObjectsPort);
