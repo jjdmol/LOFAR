@@ -27,7 +27,6 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Event.h>
 #include <GCF/TM/GCF_ITCPort.h>
-#include <APL/APLCommon/APL_Defines.h>
 
 namespace LOFAR {
   namespace GCF {
@@ -36,15 +35,15 @@ namespace LOFAR {
 //
 // GCFITCPort(slavetask, thistask, name, type, protocol)
 //
-GCFITCPort::GCFITCPort (GCFTask& 	slaveTask, 
-						GCFTask& 	task, 
-						string& 	name, 
-						TPortType 	type, 
-						int 		protocol) : 
-    GCFRawPort(task, name, type, protocol), 
+GCFITCPort::GCFITCPort (GCFTask& 		containerTask, 
+						GCFTask& 		slaveTask, 
+						const string& 	name, 
+						TPortType 		type, 
+						int 			protocol) : 
+    GCFRawPort(containerTask, name, type, protocol), 
     itsSlaveTask(slaveTask),
-    itsToClientTimerId(),
-    itsToServerTimerId()
+    itsToSlaveTimerId(),
+    itsToContainerTimerId()
 {
 }
 
@@ -110,7 +109,7 @@ ssize_t GCFITCPort::send(GCFEvent& e)
 
 	memcpy(pEventBuffer, packedBuffer, requiredLength);
 	long timerId = setTimer(0, 0, 0, 0, (void*)pEventBuffer);
-	itsToClientTimerId.insert(timerId);
+	itsToSlaveTimerId.insert(timerId);
 
 	return (timerId);
 }
@@ -126,7 +125,7 @@ ssize_t GCFITCPort::sendBack(GCFEvent& e)
 	char* 		pEventBuffer = new char[requiredLength]; // is freed in timer handler
 	memcpy(pEventBuffer, packedBuffer, requiredLength);
 	long timerId = setTimer(0, 0, 0, 0, (void*)pEventBuffer);
-	itsToServerTimerId.insert(timerId);
+	itsToContainerTimerId.insert(timerId);
 
 	return (timerId);
 }
@@ -149,10 +148,10 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 
-		set<long>::iterator clientIt = itsToClientTimerId.find(timerEvent.id);
-		set<long>::iterator serverIt = itsToServerTimerId.find(timerEvent.id);
+		set<long>::iterator clientIt = itsToSlaveTimerId.find(timerEvent.id);
+		set<long>::iterator serverIt = itsToContainerTimerId.find(timerEvent.id);
 
-		if (clientIt != itsToClientTimerId.end() || serverIt != itsToServerTimerId.end()) {
+		if (clientIt != itsToSlaveTimerId.end() || serverIt != itsToContainerTimerId.end()) {
 			// allocate enough memory for the GCFEvent object and all member data
 			// note: real event is in timer-argument field.
 			char* packedBuffer = (char*)timerEvent.arg;
@@ -169,21 +168,21 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 				memcpy(pEventObject+gcfeventlen,packedBuffer+sizeof(signal)+sizeof(length),length);
 
 				// client timer expired? dispatch to slave
-				if (clientIt != itsToClientTimerId.end()) {
+				if (clientIt != itsToSlaveTimerId.end()) {
 					status = itsSlaveTask.dispatch(*pActualEvent, *this);
 					// extra check to see if it still exists:
-					clientIt = itsToClientTimerId.find(timerEvent.id);
-					if (clientIt != itsToClientTimerId.end()) {
-						itsToClientTimerId.erase(clientIt);
+					clientIt = itsToSlaveTimerId.find(timerEvent.id);
+					if (clientIt != itsToSlaveTimerId.end()) {
+						itsToSlaveTimerId.erase(clientIt);
 					}
 				}
 				// server timer expired? dispatch to server
-				else if (serverIt != itsToServerTimerId.end()) {
+				else if (serverIt != itsToContainerTimerId.end()) {
 					status = _pTask->dispatch(*pActualEvent, *this);
 					// extra check to see if it still exists:
-					serverIt = itsToServerTimerId.find(timerEvent.id);
-					if (serverIt != itsToServerTimerId.end()) {
-						itsToServerTimerId.erase(serverIt);
+					serverIt = itsToContainerTimerId.find(timerEvent.id);
+					if (serverIt != itsToContainerTimerId.end()) {
+						itsToContainerTimerId.erase(serverIt);
 					}
 				}        
 				delete[] pEventObject;
