@@ -23,7 +23,7 @@
 #ifndef LOFAR_GCF_TM_GCFITCPORT_H
 #define LOFAR_GCF_TM_GCFITCPORT_H
 
-#include <Common/lofar_set.h>>
+#include <Common/lofar_set.h>
 #include <GCF/TM/GCF_RawPort.h>
 
 namespace LOFAR {
@@ -42,9 +42,9 @@ class GCFITCPort : public GCF::TM::GCFRawPort
 {
 public:
 	// constructor. Note argument 'protocol' is not used.
-	GCFITCPort (GCF::TM::GCFTask&	slaveTask, 
-				GCF::TM::GCFTask&	containertask, 
-				string& 			name, 
+	GCFITCPort (GCF::TM::GCFTask&	containerTask, 
+				GCF::TM::GCFTask&	slaveTask, 
+				const string& 		name, 
 				TPortType 			type, 
 				int 				protocol);
 
@@ -72,8 +72,8 @@ private:
 
 	// datamembers
 	GCFTask&			itsSlaveTask;
-	std::set<long> 		itsToClientTimerId;
-	std::set<long> 		itsToServerTimerId;
+	std::set<long> 		itsToSlaveTimerId;
+	std::set<long> 		itsToContainerTimerId;
 };
 
     }; // TM
