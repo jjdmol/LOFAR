@@ -211,8 +211,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         int panelHeight = itsMainFrame.getHeight();
         slotsPane.setMinimumSize(new Dimension(640,480));
         slotsPane.setPreferredSize(new Dimension(panelWidth-400,panelHeight-300));
-        slotsPane.setSize(new Dimension(panelWidth-400,panelHeight-300));
-        slotsPane.getViewport().setPreferredSize(new Dimension(640,480));
+        //slotsPane.setSize(new Dimension(panelWidth-400,panelHeight-300));
+        slotsPane.getViewport().setPreferredSize(new Dimension(panelWidth-400,panelHeight-300));
         itsSlotsPanel.setMinimumSize(new Dimension(640,480));
         itsSlotsPanel.setPreferredSize(new Dimension(panelWidth-440,panelHeight-340));
     }
