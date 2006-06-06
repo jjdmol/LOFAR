@@ -111,7 +111,7 @@ public class jParmFacadeServer {
             if (args.length > 1) {
                 Integer rmiPort = new Integer(args[1]);
                 statusmessage += " on rmi registry port "+rmiPort;
-                if (args.length ==4){
+                if (args.length ==3){
                     Integer rmiObjectsPort = new Integer(args[2]);
                     statusmessage += " and rmi server object port "+rmiObjectsPort +". Please tunnel/forward both ports for your client to work";
                 }
