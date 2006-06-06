@@ -8,25 +8,21 @@ package nl.astron.lofar.sas.otb.panels;
 
 
 import java.awt.event.ActionEvent;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
 import javax.swing.JComponent;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.ResultPanelHelper;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.jParmDBnode;
 import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
 import nl.astron.lofar.sas.otb.util.treemanagers.ParmDBTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
@@ -138,8 +134,18 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                         args[0]="ParmDB";
                         args[1]="BBS";
                         TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
+                        boolean alreadyPresent = false;
+                        Enumeration children = item.children();
+                        while(children.hasMoreElements() && !alreadyPresent){
+                            TreeNode child = (TreeNode)children.nextElement();
+                            if (child.getName().equals(parmDBnode.getName())){
+                                alreadyPresent=true;
+                            }
+                        }
+                        if(!alreadyPresent){
+                          item.add(parmDBnode);  
+                        }
                         
-                        item.add(parmDBnode);
                     }
                 }
                 
