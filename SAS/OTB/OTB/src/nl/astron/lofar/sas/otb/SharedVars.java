@@ -16,7 +16,8 @@
 
 package nl.astron.lofar.sas.otb;
 
-import nl.astron.lofar.java.cep.jparmfacade.jParmFacade;
+import java.rmi.Naming;
+import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
 
@@ -46,9 +47,9 @@ public class SharedVars {
     // holds the current component ID
     private int                              itsCurrentComponentID=0;
     // holds the OtdbRmi Object (RMI/JNI access for OTDB)
-    private static OtdbRmi                          itsOtdbRmi;
+    private static OtdbRmi                   itsOtdbRmi;
     // holds the jParmFacade Object (JNI access for ParmDB)
-    private static jParmFacade                      itsjParmFacade;
+    private static jParmFacadeInterface      itsjParmFacade;
     
     /*
      * PACKAGE SAS
@@ -81,16 +82,21 @@ public class SharedVars {
     public static OtdbRmi getOTDBrmi() {
         return itsOtdbRmi;
     }
-    /** gets OTDBrmi
-     * OTBrmi holds all JNI/RMI connections
-     *
-     * @return the OtdbRmi object
-     */
-    public static jParmFacade getJParmFacade() {
+    
+    public static jParmFacadeInterface getJParmFacade() {
         if(itsjParmFacade == null){
-            System.loadLibrary("jparmfacade");
-            itsjParmFacade = new jParmFacade("/home/pompert/transfer/tParmFacade.in_mep");
-        }
+            try {
+                String hostname = "localhost";
+                int port = 10668;
+                hostname=getOTDBrmi().RMIServerName;
+                String aRC="rmi://"+hostname+":"+port+"/"+jParmFacadeInterface.SERVICENAME;
+        
+                itsjParmFacade = (jParmFacadeInterface) Naming.lookup (aRC);
+
+             } catch (Throwable e) {
+                logger.error("jParmFacade could not be loaded : "+e.getMessage(),e);
+             } 
+         }
         return itsjParmFacade;
         
     }

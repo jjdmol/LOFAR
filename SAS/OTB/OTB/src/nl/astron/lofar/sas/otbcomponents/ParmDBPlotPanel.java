@@ -8,8 +8,8 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.util.HashMap;
 import java.util.Vector;
-import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -117,10 +117,13 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         logger.debug("Plot Slot extrapolated: "+slotSelected);
         itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName));
     }
-    
+   
     private Object constructPlotterConstraints(String aParamName){
-        String[] passToDataAccess = null;
-        if (aParamName != null) {
+         HashMap<String,Object> parameterConstraints = new HashMap<String,Object>();
+         parameterConstraints.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+         
+         String[] passToDataAccess = null;
+         if (aParamName != null) {
             String cloneParamName = aParamName.toString();
             if(cloneParamName.equalsIgnoreCase("ParmDB")){
                 cloneParamName = "*";
@@ -132,7 +135,9 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 passToDataAccess = new String[7];
                 
                 Vector paramValues;
+                //paramValues = SharedVars.getJParmFacade().getRange(cloneParamName);
                 paramValues = SharedVars.getJParmFacade().getRange(cloneParamName);
+                
                 double startx = Double.parseDouble(paramValues.get(0).toString());
                 double endx =Double.parseDouble(paramValues.get(1).toString());
                 double starty = Double.parseDouble(paramValues.get(2).toString());
@@ -156,7 +161,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         } else {
             logger.debug("ERROR:  no Param Name given");
         }
-        return passToDataAccess;
+        parameterConstraints.put("PARMDBCONSTRAINTS",passToDataAccess);
+        return parameterConstraints;
     }
     
     
