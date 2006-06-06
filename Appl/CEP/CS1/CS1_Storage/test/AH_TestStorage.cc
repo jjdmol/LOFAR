@@ -55,7 +55,8 @@ namespace LOFAR
 
       for (int subb=0; subb< nrSubbands; subb++)
       {
-        WH_SubbandWriter wh("storage1", subb, itsParamSet);
+	vector<uint> subbands; subbands.push_back(subb);
+        WH_SubbandWriter wh("storage1", subbands, itsParamSet);
         Step step(wh);
         comp.addBlock(step);
       
