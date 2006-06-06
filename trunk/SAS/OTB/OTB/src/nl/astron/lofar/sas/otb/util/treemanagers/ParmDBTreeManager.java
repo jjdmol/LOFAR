@@ -71,6 +71,10 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
             aNode.areChildrenDefined = true;
             Vector childs;
             if(((jParmDBnode)aNode.getUserObject()).name.equalsIgnoreCase("ParmDB")){
+                
+                logger.trace("Working with DB: ");
+                SharedVars.getJParmFacade().setParmFacadeDB("/home/pompert/transfer/tParmFacade.in_mep");
+                               
                 logger.trace("ParmDBtreeNode calling getNames("+((jParmDBnode)aNode.getUserObject()).nodeID().substring(6)+"*)");
                 childs = SharedVars.getJParmFacade().getNames(""+((jParmDBnode)aNode.getUserObject()).nodeID().substring(6)+"*");
                 logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
