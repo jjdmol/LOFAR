@@ -39,7 +39,9 @@
 #include <stdlib.h>
 // for sleep (yield)
 #include <boost/thread.hpp>
+#ifdef HAVE_MPI
 #include <mpi.h>
+#endif
 
 namespace LOFAR
 {
