@@ -61,8 +61,6 @@ public class OTDBNodeTreeManager extends GenericTreeManager implements ITreeMana
             if (((jOTDBnode)aNode.getUserObject()).index > 0 && !((jOTDBnode)aNode.getUserObject()).leaf) {
                 name +="["+String.valueOf(((jOTDBnode)aNode.getUserObject()).index)+"]";
             }
-        }else if(aNode.getUserObject()!= null && aNode.getUserObject() instanceof jParmDBnode){
-            name=((jParmDBnode)aNode.getUserObject()).name;
         }
         return name;
     }

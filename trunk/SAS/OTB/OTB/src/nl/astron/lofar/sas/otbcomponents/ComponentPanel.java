@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
@@ -62,6 +63,13 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
     public String getShortName() {
         return name;
    }
+    public boolean isSingleton() {
+        return false;
+    }
+    
+    public JPanel getInstance() {
+        return new ComponentPanel();
+    }
      
     public void setContent(Object anObject) {
         if (anObject != null) {

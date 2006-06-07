@@ -12,6 +12,7 @@ import java.awt.Component;
 import java.util.Iterator;
 import java.util.Vector;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
@@ -62,7 +63,13 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         itsNode=(jOTDBnode)anObject;
         initPanel();
     }
-
+    public boolean isSingleton() {
+        return false;
+    }
+    
+    public JPanel getInstance() {
+        return new OLAPConfigPanel();
+    }
     public boolean hasPopupMenu() {
         return false;
     }

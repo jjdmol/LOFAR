@@ -10,6 +10,7 @@
 package nl.astron.lofar.sas.otb.util;
 
 import java.awt.Component;
+import javax.swing.JPanel;
 import nl.astron.lofar.sas.otb.MainFrame;
 
 /**
@@ -17,6 +18,7 @@ import nl.astron.lofar.sas.otb.MainFrame;
  * @author coolen
  */
 public interface IViewPanel {
+    public JPanel getInstance();
     public void setMainFrame(MainFrame aMainFrame);
     public void setContent(Object anObject);
     public void setAllEnabled(boolean enabled);
@@ -24,6 +26,7 @@ public interface IViewPanel {
     public void setButtonsVisible(boolean visible);
     public String getShortName();
     public boolean hasPopupMenu();
+    public boolean isSingleton();
     public void createPopupMenu(Component aComponent, int x, int y);
     public void popupMenuHandler(java.awt.event.ActionEvent evt);
     public void addActionListener(java.awt.event.ActionListener listener);
