@@ -39,7 +39,8 @@ BlobString::BlobString (bool useString, size_t capacity,
 {
   // Make sure alignment is power of 2.
   if (alignment > 1) {
-    ASSERT ((alignment & (alignment-1)) == 0);
+    ASSERTSTR ((alignment & (alignment-1)) == 0,
+	       "Blob alignment " << alignment << " must be a power of 2");
   }
   reserve (capacity);
   itsCanIncr = canIncreaseCapacity;
