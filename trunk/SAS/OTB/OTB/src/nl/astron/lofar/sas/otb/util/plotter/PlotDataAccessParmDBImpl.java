@@ -307,7 +307,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     }
                     
                     
-                    
+                    /*
                     returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
                     
                     returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
@@ -315,7 +315,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
                     
                     returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
-                    
+                    */
                     
                     
                     HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
