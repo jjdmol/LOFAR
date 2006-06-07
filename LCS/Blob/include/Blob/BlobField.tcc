@@ -39,14 +39,14 @@ namespace LOFAR {
   BlobField<T>::BlobField (uint version)
     : BlobFieldBase (version)
   {
-    setAlignment (sizeof(T));
+    setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
   BlobField<T>::BlobField (uint version, uint32 size0)
     : BlobFieldBase (version, size0)
   {
-    setAlignment (sizeof(T));
+    setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
@@ -54,7 +54,7 @@ namespace LOFAR {
 			   bool fortranOrder)
     : BlobFieldBase (version, size0, size1, fortranOrder)
   {
-    setAlignment (sizeof(T));
+    setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
@@ -62,7 +62,7 @@ namespace LOFAR {
 			   uint32 size2, bool fortranOrder)
     : BlobFieldBase (version, size0, size1, size2, fortranOrder)
   {
-    setAlignment (sizeof(T));
+    setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
@@ -70,7 +70,7 @@ namespace LOFAR {
 			   uint32 size2, uint32 size3, bool fortranOrder)
     : BlobFieldBase (version, size0, size1, size2, size3, fortranOrder)
   {
-    setAlignment (sizeof(T));
+    setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
@@ -78,7 +78,7 @@ namespace LOFAR {
 			   bool fortranOrder)
     : BlobFieldBase (version, shape, fortranOrder)
   {
-    setAlignment (sizeof(T));
+    setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
@@ -86,7 +86,7 @@ namespace LOFAR {
 			   bool fortranOrder)
     : BlobFieldBase (version, shape, ndim, fortranOrder)
   {
-    setAlignment (sizeof(T));
+    setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>

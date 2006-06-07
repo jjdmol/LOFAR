@@ -156,6 +156,10 @@ namespace LOFAR {
       uint getAlignment() const
         { return itsAlignment; }
 
+      // Return the greatest power of 2 that divides the value.
+      // It is used to make the default alignment a power of 2.
+      static uint p2divider (uint value);
+
       // Helper functions for BlobFieldSet.
       // <group>
       // Reserve space for this field in an output blob and set its offset.
@@ -225,8 +229,14 @@ namespace LOFAR {
   //
   // A field can be a scalar or an array of any dimensionality.
   // Care is taken that the field is aligned properly when the blob is created.
-  // By default a field is aligned on a multiple of its element size
-  // (e.g. 8 bytes for a double), but it is possible to specify the alignment.
+  // By default a field is aligned on a multiple of its basic element size
+  // (e.g. 8 bytes for a double), but it is possible to specify the alignment
+  // explicitly (which has to be a power of 2). E.g. to be able to use SSE
+  // instructions an alignment of 16 should be specified explicitly.
+  // The basic element size is the greatest divider of the element size
+  // that is a power of 2. E.g. for an array of structs containing 3 floats,
+  // the element size is 12, but the basic element size is 4.
+  // For a struct containing 2 floats the basic element size would be 8.
   //
   // Because a blob can be used to exchange data between different systems,
   // it must be possible to convert data as needed (for instance from big to
@@ -279,6 +289,10 @@ namespace LOFAR {
       BlobField (uint version, uint32 size0);
       
       // Define a 2-dim array with axes by default in Fortran order.
+      // The default alignment is set to the greatest power of 2 that
+      // divided sizeof(T).
+      // E.g. for a struct containing 3 floats, the default alignment is 4.
+      // For a struct containing 2 floats the default alignment is 8.
       BlobField (uint version, uint32 size0, uint32 size1,
 		 bool fortranOrder = true);
       BlobField (uint version, uint32 size0, uint32 size1, uint32 size2,
