@@ -103,7 +103,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         layout.setConstraints(slotsPanel,gridBagConstraints);
         //320,240 both!
         slotsPanel.setSize(this.getSize());
-        slotsPanel.setMinimumSize(this.getSize());
+        //slotsPanel.setMinimumSize(this.getSize());
         //setSize(slotsPanel.getSize());
         logger.trace("getting "+itsSlotManager.getAmountOfSlots()+" slots from PlotSlotManager");
         int x = 0;
@@ -120,7 +120,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             gridBagConstraints.anchor = java.awt.GridBagConstraints.CENTER;
             PlotSlot newSlot = itsSlotManager.getSlot(i);
             newSlot.addSlotListener(new SlotMouseAdapter());
-            newSlot.setSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+            //newSlot.setSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
             //
             newSlot.setMinimumSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
             newSlot.setPreferredSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
@@ -150,10 +150,12 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
 
         slotsPanel.setBackground(new java.awt.Color(255, 255, 255));
         slotsPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        slotsPanel.setMinimumSize(null);
+        slotsPanel.setPreferredSize(null);
         add(slotsPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-        // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel slotsPanel;
     // End of variables declaration//GEN-END:variables
     

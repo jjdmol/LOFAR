@@ -11,8 +11,8 @@ import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComponent;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
@@ -20,7 +20,6 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
 /**
@@ -84,7 +83,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     public String getShortName() {
         return name;
     }
+    public boolean isSingleton() {
+        return false;
+    }
     
+    public JPanel getInstance() {
+        return new ParameterViewPanel();
+    }
     /** Sets the content for this class
      *
      * @params anObject  The class that contains the content.

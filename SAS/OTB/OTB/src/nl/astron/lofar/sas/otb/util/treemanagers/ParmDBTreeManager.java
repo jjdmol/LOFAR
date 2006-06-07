@@ -48,21 +48,21 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
     
     public String getNameForNode(TreeNode aNode){
         //logger.trace("Parm DB node : "+((jOTDBnode)aNode.getUserObject()).name);
-        String name = ((jParmDBnode)aNode.getUserObject()).name;
+        String name = ((jParmDBnode)aNode.getUserObject()).getName();
         return name;
     }
     
     public boolean isNodeLeaf(TreeNode aNode){
         boolean leaf = false;
         if (aNode.getUserObject() != null) {
-            leaf = ((jParmDBnode)aNode.getUserObject()).leaf;
+            leaf = ((jParmDBnode)aNode.getUserObject()).isLeaf();
         }
         return leaf;
     }
     
     public void defineChildsForNode(TreeNode aNode) {
         
-        logger.trace("Entry - TreeManager jParmDBnode-defineChildNodes("+toString()+")");
+        logger.trace("Entry - TreeManager jParmDBnode-defineChildNodes("+aNode.getName()+" ("+((jParmDBnode)aNode.getUserObject()).getNodeID()+"))");
         try {
              // You must set the flag before defining children if you
             // use "add" for the new children. Otherwise you get an infinite
@@ -70,17 +70,15 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
             // However, you could use "insert" in such a case.
             aNode.areChildrenDefined = true;
             Vector childs;
-            if(((jParmDBnode)aNode.getUserObject()).name.equalsIgnoreCase("ParmDB")){
-                
-                logger.trace("Working with DB: ");
-                SharedVars.getJParmFacade().setParmFacadeDB("/home/pompert/transfer/tParmFacade.in_mep");
-                               
-                logger.trace("ParmDBtreeNode calling getNames("+((jParmDBnode)aNode.getUserObject()).nodeID().substring(6)+"*)");
-                childs = SharedVars.getJParmFacade().getNames(""+((jParmDBnode)aNode.getUserObject()).nodeID().substring(6)+"*");
+            SharedVars.getJParmFacade().setParmFacadeDB(((jParmDBnode)aNode.getUserObject()).getParmDBLocation());
+            logger.trace("Working with DB: "+((jParmDBnode)aNode.getUserObject()).getParmDBLocation());
+            if(((jParmDBnode)aNode.getUserObject()).isRootNode()){
+                logger.trace("ParmDBtreeNode calling getNames("+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(6)+"*)");
+                childs = SharedVars.getJParmFacade().getNames(""+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(6)+"*");
                 logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
             }else{
-                logger.trace("ParmDBtreeNode calling getNames(*"+((jParmDBnode)aNode.getUserObject()).nodeID().substring(7)+".*)");
-                childs = SharedVars.getJParmFacade().getNames("*"+((jParmDBnode)aNode.getUserObject()).nodeID().substring(7)+".*");
+                logger.trace("ParmDBtreeNode calling getNames(*"+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(7)+".*)");
+                childs = SharedVars.getJParmFacade().getNames("*"+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(7)+".*");
                 logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
             }
             Vector<String> uniqueNames = new Vector<String>();
@@ -88,7 +86,7 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
             while( e.hasMoreElements()  ) {
                 String aValue = (String)e.nextElement();
                 String splitName[]= aValue.split("[.]");
-                String parentLevels[] = ((jParmDBnode)aNode.getUserObject()).nodeID().split("[.]");
+                String parentLevels[] = ((jParmDBnode)aNode.getUserObject()).getNodeID().split("[.]");
                 
                 String trace = "ParmDBtreeNode gets name [";
                 for(int i = 0;i<splitName.length;i++){
@@ -108,12 +106,13 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                 
                 String childName = (String)e.nextElement();
                 
-                jParmDBnode item = new jParmDBnode(((jParmDBnode)aNode.getUserObject()).nodeID()+"."+childName,((jParmDBnode)aNode.getUserObject()).nodeID());
+                jParmDBnode item = new jParmDBnode(((jParmDBnode)aNode.getUserObject()).getNodeID()+"."+childName,((jParmDBnode)aNode.getUserObject()).getNodeID());
                 //item.leaf=true;
-                item.name = childName;
-                logger.trace("Node name selected : "+item.name);
-                ((jParmDBnode)aNode.getUserObject()).leaf=false;
-                TreeNode newNode = new TreeNode(this.instance,item,item.nodeID());
+                item.setName(childName);
+                item.setParmDBLocation(((jParmDBnode)aNode.getUserObject()).getParmDBLocation());
+                logger.trace("Node name selected : "+item.getName());
+                ((jParmDBnode)aNode.getUserObject()).setLeaf(false);
+                TreeNode newNode = new TreeNode(this.instance,item,item.getNodeID());
                 aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
                 
@@ -122,7 +121,7 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                 
             }
             if(uniqueNames.size() == 0){
-                ((jParmDBnode)aNode.getUserObject()).leaf=true;
+                ((jParmDBnode)aNode.getUserObject()).setLeaf(true);
             }
             
         } catch(Exception e) {
@@ -133,9 +132,15 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
     
     public TreeNode getRootNode(Object arguments){
         String[] argumentArray = (String[])arguments;
-        jParmDBnode newPNode = new jParmDBnode(argumentArray[0],argumentArray[1]);
-        newPNode.name=argumentArray[0];
-        TreeNode parmDBnode = new TreeNode(this.instance,newPNode,newPNode.name);
+        jParmDBnode newPNode = new jParmDBnode("ParmDB",argumentArray[1]);
+        if(argumentArray.length==3){
+            if(!argumentArray[2].equals("")){
+                newPNode.setParmDBLocation(argumentArray[2]);
+                newPNode.setRootNode(true);
+            }
+        }
+        newPNode.setName(argumentArray[0]);
+        TreeNode parmDBnode = new TreeNode(this.instance,newPNode,newPNode.getName());
         
         return parmDBnode;
     }

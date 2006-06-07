@@ -10,6 +10,7 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
@@ -24,10 +25,10 @@ import org.apache.log4j.Logger;
  */
 public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     
-    static Logger logger = Logger.getLogger(GenObsConfigPanel.class);    
+    static Logger logger = Logger.getLogger(GenObsConfigPanel.class);
     static String name = "GenObsConfig";
-
-   
+    
+    
     /** Creates new form BeanForm based upon aNode
      *
      * @params  aNode   node to obtain the info from
@@ -63,8 +64,14 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         itsNode=(jOTDBnode)anObject;
         initPanel();
     }
-
-     public boolean hasPopupMenu() {
+    public boolean isSingleton() {
+        return false;
+    }
+    
+    public JPanel getInstance() {
+        return new GenObsConfigPanel();
+    }
+    public boolean hasPopupMenu() {
         return false;
     }
     
@@ -73,7 +80,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
      *
      *  // build up the menu
      *  aPopupMenu= new JPopupMenu();
-     *  aMenuItem=new JMenuItem("Choice 1");        
+     *  aMenuItem=new JMenuItem("Choice 1");
      *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
      *      public void actionPerformed(java.awt.event.ActionEvent evt) {
      *          popupMenuHandler(evt);
@@ -84,21 +91,21 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
      *  aPopupMenu.setOpaque(true);
      *
      *
-     *  aPopupMenu.show(aComponent, x, y );        
+     *  aPopupMenu.show(aComponent, x, y );
      */
     public void createPopupMenu(Component aComponent,int x, int y) {
         JPopupMenu aPopupMenu=null;
         JMenuItem  aMenuItem=null;
         
-        //  Fill in menu as in the example above        
+        //  Fill in menu as in the example above
     }
-    /** handles the choice from the popupmenu 
+    /** handles the choice from the popupmenu
      *
      * depending on the choices that are possible for this panel perform the action for it
      *
      *      if (evt.getActionCommand().equals("Choice 1")) {
      *          perform action
-     *      }  
+     *      }
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
     }
@@ -106,7 +113,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private void initPanel() {
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
-
+        
         // for now:
         // set fields that can be changed here for now, later in the useraccount check
         
@@ -123,14 +130,14 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         
         
         
-         if (itsNode != null) {
+        if (itsNode != null) {
             setNodeName(itsNode.name);
         } else {
             logger.debug("ERROR:  no node given");
         }
     }
     
-
+    
     private String getNodeName() {
 //        return this.NodeNameText.getText();
         return "";
@@ -139,11 +146,11 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private void setNodeName(String aS) {
 //        this.NodeNameText.setText(aS);
     }
-        
+    
     private void enableNodeName(boolean enabled) {
 //        this.NodeNameText.setEnabled(enabled);
     }
-
+    
     /** Enables/disables the buttons
      *
      * @param   enabled     true/false enabled/disabled
@@ -161,7 +168,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         this.NodeApplyButton.setVisible(visible);
         this.NodeCancelButton.setVisible(visible);
     }
-
+    
     /** Enables/disables the complete form
      *
      * @param   enabled     true/false enabled/disabled
@@ -176,7 +183,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         // this way we keep this panel general for multiple use
         boolean hasChanged = false;
         if (itsNode != null) {
-
+            
         } else {
             logger.debug("ERROR:  no Param given");
         }
@@ -487,18 +494,18 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 574, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void NodeApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeApplyButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_NodeApplyButtonActionPerformed
-
+    
     private void NodeCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeCancelButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_NodeCancelButtonActionPerformed
     
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
-    private OtdbRmi    itsOtdbRmi;   
+    private OtdbRmi    itsOtdbRmi;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField MeasurementSetNameText1;
@@ -534,51 +541,51 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTable jTable2;
     private javax.swing.JTable jTable3;
     // End of variables declaration//GEN-END:variables
-
+    
     /**
      * Utility field used by event firing mechanism.
      */
     private javax.swing.event.EventListenerList listenerList =  null;
-
+    
     /**
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
-
+        
         if (listenerList == null ) {
             listenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        listenerList.add(java.awt.event.ActionListener.class, listener);
     }
-
+    
     /**
      * Removes ActionListener from the list of listeners.
      * @param listener The listener to remove.
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
-
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        
+        listenerList.remove(java.awt.event.ActionListener.class, listener);
     }
-
+    
     /**
      * Notifies all registered listeners about the event.
-     * 
+     *
      * @param event The event to be fired
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
-
+        
         if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        Object[] listeners = listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
-                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);
+                ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed(event);
             }
         }
     }
-
-
-
-
+    
+    
+    
+    
     
 }

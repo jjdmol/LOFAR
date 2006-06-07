@@ -8,10 +8,12 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Vector;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
@@ -26,6 +28,7 @@ import org.apache.log4j.Logger;
  */
 public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     
+    private static ParmDBPlotPanel instance = null;
     static Logger logger = Logger.getLogger(ParmDBPlotPanel.class);
     static String name="Plotter";
     private int successfulNumberOfSlots;
@@ -42,22 +45,27 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         itsMainFrame = aMainFrame;
         itsParamName = paramName;
         successfulNumberOfSlots=4;
-        
         initPanel(paramName);
     }
     
     /** Creates new form BeanForm */
     public ParmDBPlotPanel() {
-        initComponents();
-        successfulNumberOfSlots=4;
-        validate();
+        
     }
-    
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
+            int panelWidth = itsMainFrame.getWidth();
+            int panelHeight = itsMainFrame.getHeight();
+            slotsPane.setMinimumSize(new Dimension(640,480));
+            slotsPane.setPreferredSize(new Dimension(panelWidth-400,panelHeight-300));
+            //slotsPane.setSize(new Dimension(panelWidth-400,panelHeight-300));
+            slotsPane.getViewport().setPreferredSize(new Dimension(panelWidth-400,panelHeight-300));
+            itsSlotsPanel.setMinimumSize(new Dimension(640,480));
+            itsSlotsPanel.setPreferredSize(new Dimension(panelWidth-440,panelHeight-340));
             
-            
+            successfulNumberOfSlots=4;
+           
         } else {
             logger.debug("No Mainframe supplied");
         }
@@ -67,6 +75,17 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         return true;
     }
     
+    public boolean isSingleton() {
+        return true;
+    }
+    
+    public JPanel getInstance() {
+        if(instance == null){
+            instance = this;
+            initComponents();
+        }        
+        return instance;
+    }
     
     /** create popup menu for this panel
      *
@@ -89,6 +108,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         // build up the menu
         JPopupMenu aPopupMenu = new JPopupMenu();
         int[] availableSlots = itsSlotsPanel.getAvailableSlotIndexes();
+        logger.trace("Available slots to put in popup menu: "+ availableSlots.length);
         for(int i = 0; i < availableSlots.length; i++){
             JMenuItem aMenuItem=new JMenuItem("Add to slot "+availableSlots[i]);
             aMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -205,16 +225,15 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     public void setContent(Object anObject) {
         
         jParmDBnode node = (jParmDBnode)anObject;
-        itsParamName = node.nodeID();
+        try {
+            SharedVars.getJParmFacade().setParmFacadeDB(node.getParmDBLocation());
+        } catch (RemoteException ex) {
+            logger.error("setContent() - jParmFacade RMI error while updating table name ",ex);
+        }
+        itsParamName = node.getNodeID();
         logger.trace("ParmDB name selected : "+itsParamName);
-        int panelWidth = itsMainFrame.getWidth();
-        int panelHeight = itsMainFrame.getHeight();
-        slotsPane.setMinimumSize(new Dimension(640,480));
-        slotsPane.setPreferredSize(new Dimension(panelWidth-400,panelHeight-300));
-        //slotsPane.setSize(new Dimension(panelWidth-400,panelHeight-300));
-        slotsPane.getViewport().setPreferredSize(new Dimension(panelWidth-400,panelHeight-300));
-        itsSlotsPanel.setMinimumSize(new Dimension(640,480));
-        itsSlotsPanel.setPreferredSize(new Dimension(panelWidth-440,panelHeight-340));
+      
+        
     }
     
     private void saveInput() {
@@ -283,9 +302,9 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         slotsPane.setViewportBorder(javax.swing.BorderFactory.createEtchedBorder());
         slotsPane.setAutoscrolls(true);
         slotsPane.setMinimumSize(new java.awt.Dimension(640, 480));
-        slotsPane.setPreferredSize(new java.awt.Dimension(640, 480));
+        slotsPane.setPreferredSize(null);
         itsSlotsPanel.setMinimumSize(new java.awt.Dimension(640, 480));
-        itsSlotsPanel.setPreferredSize(new java.awt.Dimension(640, 480));
+        itsSlotsPanel.setPreferredSize(null);
         slotsPane.setViewportView(itsSlotsPanel);
 
         gridBagConstraints = new java.awt.GridBagConstraints();

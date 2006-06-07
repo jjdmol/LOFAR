@@ -21,33 +21,56 @@
 
 package nl.astron.lofar.sas.otb.util;
 
-public class jParmDBnode implements java.io.Serializable
-{
-    public jParmDBnode (String nodeID, String parentID)
-    {
-	
-	leaf = false;
-	itsNodeID = nodeID;
-	itsParentID = parentID;
-	
-    }
+public class jParmDBnode implements java.io.Serializable {
     
-    public String nodeID()
-    { 
-	return (itsNodeID); 
+    // private members
+    private String name;
+    private boolean leaf;
+    private boolean rootNode;
+    private String itsNodeID;
+    private String itsParentID;
+    private String parmDBlocation;
+    
+    public jParmDBnode(String nodeID, String parentID) {
+        leaf = false;
+        itsNodeID = nodeID;
+        itsParentID = parentID;
+        rootNode = false;
     }
-
-    public String parentID()
-    { 
-	return (itsParentID); 
+    public String getName() {
+        return name;
     }
-
-    public String name;
-    public boolean leaf;
-   // private members
-   
-   private String itsNodeID;
-   
-   private String itsParentID;
-   
+    public void setName(String name) {
+        this.name = name;
+    }
+    public boolean isLeaf() {
+        return leaf;
+    }
+    public void setLeaf(boolean leaf) {
+        this.leaf = leaf;
+    }
+    public boolean isRootNode() {
+        return rootNode;
+    }
+    public void setRootNode(boolean isRootNode) {
+        this.rootNode = isRootNode;
+    } 
+    public String getNodeID() {
+        return (itsNodeID);
+    }
+    public void setNodeID(String nodeId) {
+        itsNodeID = nodeId;
+    }    
+    public String getParentID() {
+        return (itsParentID);
+    }
+    public void setParentID(String parentID) {
+        itsParentID = parentID;
+    }    
+    public String getParmDBLocation() {
+        return (parmDBlocation);
+    }
+    public void setParmDBLocation(String location) {
+        parmDBlocation = location;
+    }
 }

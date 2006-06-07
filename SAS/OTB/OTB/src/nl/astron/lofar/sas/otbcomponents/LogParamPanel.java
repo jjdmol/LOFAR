@@ -8,6 +8,7 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.ListSelectionModel;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -16,7 +17,6 @@ import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.tablemodels.LogParamTableModel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
 /**
@@ -74,7 +74,13 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
        
         initPanel();
     }
+    public boolean isSingleton() {
+        return false;
+    }
     
+    public JPanel getInstance() {
+        return new LogParamPanel();
+    }
     public boolean hasPopupMenu() {
         return false;
     }
