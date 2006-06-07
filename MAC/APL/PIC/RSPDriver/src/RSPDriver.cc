@@ -633,12 +633,12 @@ void RSPDriver::openBoards()
 //
 // Fetch the PPS signal, retry if needed
 //
-int RSPDriver::fetchPPS(pps_info_t* ppsinfo)
+int RSPDriver::fetchPPS()
 {
   int result = 0;
 #ifdef HAVE_SYS_TIMEPPS_H
   do {
-    result = time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, ppsinfo, NULL);
+    result = time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL);
   } while ((result < 0) && (EINTR == errno || EAGAIN == errno));
 #else
   LOG_FATAL("fetchPPS should not be called when HAVE_SYS_TIMEPPS_H is not defined");
@@ -838,7 +838,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
         //
         // read away most recent timestamp..
         //
-        if ( fetchPPS(&m_ppsinfo) < 0) {
+        if ( fetchPPS() < 0) {
             LOG_FATAL_STR("Error clearing startup PPS: " << strerror(errno));
             exit(EXIT_FAILURE);
         }
@@ -846,7 +846,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
         //
         // and wait for next timestamp to get in sync immediately
         //
-        if ( fetchPPS(&m_ppsinfo) < 0 ) {
+        if ( fetchPPS() < 0 ) {
             LOG_FATAL_STR("Error fetching first PPS: " << strerror(errno));
             exit(EXIT_FAILURE);
         }
@@ -1041,7 +1041,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
           const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
           pps_info_t prevppsinfo = m_ppsinfo;
 
-          if ( fetchPPS(&m_ppsinfo) < 0 ) {
+          if ( fetchPPS() < 0 ) {
 
             LOG_WARN_STR("Error fetching PPS: " << strerror(errno));
             
