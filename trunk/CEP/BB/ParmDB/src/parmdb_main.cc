@@ -693,7 +693,7 @@ void updateDefParms (map<string,ParmValueSet>& parmSet, KeyValueMap& kvmap)
 void doIt (bool noPrompt)
 {
   parmtab = 0;
-  int buffersize = 1024;
+  int buffersize = 1024000;
   char cstra[buffersize];
   // Loop until stop is given.
   while (true) {
