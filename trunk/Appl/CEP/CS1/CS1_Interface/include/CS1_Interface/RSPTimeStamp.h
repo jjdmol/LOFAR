@@ -38,7 +38,7 @@ namespace LOFAR {
 
     class TimeStamp {
     public:
-      TimeStamp(long long time = 0);
+      TimeStamp(int64 time = 0);
       TimeStamp(unsigned seqId, unsigned blockId);
 
       TimeStamp	    &setStamp(unsigned seqId, unsigned blockId);
@@ -48,18 +48,18 @@ namespace LOFAR {
       static void     setMaxBlockId(unsigned nMBID);
 
       TimeStamp	    &operator += (const TimeStamp &other);
-      TimeStamp	    &operator += (long long increment);
+      TimeStamp	    &operator += (int64 increment);
       TimeStamp	    &operator -= (const TimeStamp &other);
-      TimeStamp	    &operator -= (long long decrement);
-      TimeStamp	    &operator ++ (int);
+      TimeStamp	    &operator -= (int64 decrement);
+      TimeStamp	     operator ++ (int);
       TimeStamp	    &operator ++ ();
       TimeStamp	    &operator -- (int);
       TimeStamp	    &operator -- ();
 
-      TimeStamp	    operator + (long long other) const;
-      long long	    operator + (const TimeStamp &other) const;
-      TimeStamp	    operator - (long long other) const;
-      long long	    operator - (const TimeStamp &other) const;
+      TimeStamp	    operator + (int64 other) const;
+      int64	    operator + (const TimeStamp &other) const;
+      TimeStamp	    operator - (int64 other) const;
+      int64	    operator - (const TimeStamp &other) const;
 
       bool	    operator >  (const TimeStamp &other) const;
       bool	    operator <  (const TimeStamp &other) const;
@@ -74,7 +74,7 @@ namespace LOFAR {
       friend void ::LOFAR::dataConvert(DataFormat fmt, TimeStamp* inout, uint nrval);
 
     protected:
-      long long		itsTime;
+      int64		itsTime;
       static unsigned	theirMaxBlockId;
     };
 
@@ -92,19 +92,19 @@ namespace LOFAR {
 
     typedef TimeStamp timestamp_t;
 
-    inline TimeStamp::TimeStamp(long long time)
+    inline TimeStamp::TimeStamp(int64 time)
       {
 	itsTime = time;
       }
 
     inline TimeStamp::TimeStamp(unsigned seqId, unsigned blockId)
       {
-	itsTime = (long long) seqId * theirMaxBlockId + blockId;
+	itsTime = (int64) seqId * theirMaxBlockId + blockId;
       }
 
     inline TimeStamp &TimeStamp::setStamp(unsigned seqId, unsigned blockId)
       {
-	itsTime = (long long) seqId * theirMaxBlockId + blockId;
+	itsTime = (int64) seqId * theirMaxBlockId + blockId;
 	return *this;
       }
 
@@ -134,7 +134,7 @@ namespace LOFAR {
 	return *this;
       }
 
-    inline TimeStamp &TimeStamp::operator += (long long increment)
+    inline TimeStamp &TimeStamp::operator += (int64 increment)
       { 
 	itsTime += increment;
 	return *this;
@@ -146,7 +146,7 @@ namespace LOFAR {
 	return *this;
       }
 
-    inline TimeStamp &TimeStamp::operator -= (long long decrement)
+    inline TimeStamp &TimeStamp::operator -= (int64 decrement)
       { 
 	itsTime -= decrement;
 	return *this;
@@ -158,10 +158,11 @@ namespace LOFAR {
 	return *this;
       }
 
-    inline TimeStamp &TimeStamp::operator ++ (int)
+    inline TimeStamp TimeStamp::operator ++ (int)
       { 
+        TimeStamp tmp = *this;
 	++ itsTime;
-	return *this;
+	return tmp;
       }
 
     inline TimeStamp &TimeStamp::operator -- ()
@@ -176,22 +177,22 @@ namespace LOFAR {
 	return *this;
       }
 
-    inline TimeStamp TimeStamp::operator + (long long increment) const
+    inline TimeStamp TimeStamp::operator + (int64 increment) const
       { 
 	return TimeStamp(itsTime + increment);
       }
 
-    inline long long TimeStamp::operator + (const TimeStamp &other) const
+    inline int64 TimeStamp::operator + (const TimeStamp &other) const
       { 
 	return itsTime + other.itsTime;
       }
 
-    inline TimeStamp TimeStamp::operator - (long long decrement) const
+    inline TimeStamp TimeStamp::operator - (int64 decrement) const
       { 
 	return TimeStamp(itsTime - decrement);
       }
 
-    inline long long TimeStamp::operator - (const TimeStamp &other) const
+    inline int64 TimeStamp::operator - (const TimeStamp &other) const
       { 
 	return itsTime - other.itsTime;
       }
