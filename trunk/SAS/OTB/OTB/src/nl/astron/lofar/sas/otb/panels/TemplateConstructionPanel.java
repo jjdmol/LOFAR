@@ -1,7 +1,23 @@
 /*
  * ComponentMaintenancePanel.java
  *
- * Created on 24 januari 2006, 12:47
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package nl.astron.lofar.sas.otb.panels;
@@ -11,8 +27,12 @@ import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
 import org.apache.log4j.Logger;
 
 /**
+ * Initial class to construct templates,  is not needed anymore
  *
+ * @created 24-01-2006, 14:58
  * @author  Coolen
+ * @version $Id$
+ * @updated
  */
 public class TemplateConstructionPanel extends javax.swing.JPanel  
         implements IPluginPanel {
