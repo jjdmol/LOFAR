@@ -155,7 +155,7 @@ void GPMRTController::propertiesLinked(const string& scope,
     PIPropSetLinkedEvent response;
     response.result = result;
     response.scope = scope;
-    Utils::convListToString(response.propList, propsToSubscribe);
+    convListToString(response.propList, propsToSubscribe);
     _propertyInterface.send(response);
   }
 }

@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <KVL_Protocol.ph>
 #include <KVLDefines.h>
 #include <sys/time.h>
@@ -31,6 +31,9 @@
 
 namespace LOFAR 
 {
+  using ACC::APS::ParameterSet;
+  using ACC::APS::globalParameterSet;
+
  namespace GCF 
  {
 using namespace TM;
@@ -59,7 +62,7 @@ GCFKeyValueLogger::GCFKeyValueLogger() :
 
   // initialize the port
   _kvlClientPort.init(*this, "client", GCFPortInterface::SAP, KVL_PROTOCOL);
-  ParameterSet::instance()->adoptFile("KeyValueLoggerDaemon.conf");
+  globalParameterSet()->adoptFile("KeyValueLoggerDaemon.conf");
 }
 
 GCFEvent::TResult GCFKeyValueLogger::initial(GCFEvent& e, GCFPortInterface& /*p*/)
