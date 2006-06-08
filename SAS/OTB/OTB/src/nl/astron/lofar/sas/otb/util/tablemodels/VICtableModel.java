@@ -16,9 +16,15 @@ import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
 
 /**
- * Implements the data model behind the PIC table 
+ * Implements the data model behind the VIC table 
+ *
+ * @created 31-01-2006, 11:11
  *
  * @author coolen
+ *
+ * @version $Id$
+ *
+ * @updated
  */
 public class VICtableModel extends javax.swing.table.AbstractTableModel {
     
