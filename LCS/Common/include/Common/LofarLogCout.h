@@ -136,14 +136,13 @@ public: \
 //#
 //# LOG_TRACE_LIFETIME(_STR) (level, message|stream)
 //#
-#define LOG_TRACE_LIFETIME_STR(level, stream) do { \
+#define LOG_TRACE_LIFETIME_STR(level, stream) \
 	if( LFDebugCheck(level) ) { \
 		::LOFAR::LFDebug::Tracer objname; \
 		constructStream(stream); \
 		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
                         AUTO_FUNCTION_NAME, oss.str().c_str(), 0); \
-	} \
-	} while(0)
+	}
 
 #define LOG_TRACE_LIFETIME(level,message) \
 	LOG_TRACE_LIFETIME_STR(level, message)
