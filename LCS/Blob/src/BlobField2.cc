@@ -161,7 +161,7 @@ namespace LOFAR {
     }
   }
 
-  uint BlobFieldBase::p2divider (uint value)
+  uint BlobFieldBase::p2divider (uint value, uint maxval)
   {
     if ((value & (value-1)) != 0) {
       // No power of 2, so find greatest power of 2 that divides value.
@@ -172,7 +172,7 @@ namespace LOFAR {
 	v /= 2;
       }
     }
-    return value;
+    return std::min (value, maxval);
   }
 
 } // end namespace

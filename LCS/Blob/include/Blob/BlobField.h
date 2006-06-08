@@ -158,7 +158,8 @@ namespace LOFAR {
 
       // Return the greatest power of 2 that divides the value.
       // It is used to make the default alignment a power of 2.
-      static uint p2divider (uint value);
+      // It the result exceeds the maximum, it is set to the maximum.
+      static uint p2divider (uint value, uint maxval=8);
 
       // Helper functions for BlobFieldSet.
       // <group>
@@ -237,6 +238,7 @@ namespace LOFAR {
   // that is a power of 2. E.g. for an array of structs containing 3 floats,
   // the element size is 12, but the basic element size is 4.
   // For a struct containing 2 floats the basic element size would be 8.
+  // The default alignment is maximum 8.
   //
   // Because a blob can be used to exchange data between different systems,
   // it must be possible to convert data as needed (for instance from big to
