@@ -158,7 +158,7 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
             scope.erase(0, sizeof("MACProcessScope:"));
             ltrim(scope);
             rtrim(scope);
-            if (Utils::isValidPropName(scope.c_str()))
+            if (isValidPropName(scope.c_str()))
             {
               // context (can) contain '.' (dots) (KeyValue TreeDB notation)
               key.push_back(scope);

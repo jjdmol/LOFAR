@@ -113,7 +113,7 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
   GCFRTMyProperty* pProperty;
   TPropertyInfo* pPropInfo;
   
-  if (!Utils::isValidScope(_scope.c_str()))
+  if (!isValidScope(_scope.c_str()))
   {
     LOG_WARN(formatString ( 
         "Scope %s meets not the name convention! Set to \"\"",
@@ -644,7 +644,7 @@ void buildTypeStructTree(const string path,
   {
     if (macValueTypes[elType] != NO_LPT)
     {
-      if (Utils::isValidPropName(propName.c_str()))
+      if (isValidPropName(propName.c_str()))
       {
         TPropertyInfo propInfo;
         propInfo.propName = propName;

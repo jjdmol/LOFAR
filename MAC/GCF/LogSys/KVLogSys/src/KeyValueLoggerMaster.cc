@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include "KeyValueLoggerMaster.h"
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>
@@ -36,6 +36,8 @@
 namespace LOFAR 
 {
 using namespace OTDB;  
+using ACC::APS::ParameterSet;
+using ACC::APS::globalParameterSet;
  namespace GCF 
  {
 using namespace TM;
@@ -44,9 +46,9 @@ using namespace TM;
 
 KeyValueLoggerMaster::KeyValueLoggerMaster() :
   GCFTask((State)&KeyValueLoggerMaster::initial, KVL_MASTER_TASK_NAME),
-  _otdb(ParameterSet::instance()->getString("kvlm.otdb.dbusername"), 
-        ParameterSet::instance()->getString("kvlm.otdb.dbpassword"), 
-        ParameterSet::instance()->getString("kvlm.otdb.dbname")),
+  _otdb(globalParameterSet()->getString("kvlm.otdb.dbusername"), 
+        globalParameterSet()->getString("kvlm.otdb.dbpassword"), 
+        globalParameterSet()->getString("kvlm.otdb.dbname")),
   _pTV(0)
 {
   // register the protocol for debugging purposes
