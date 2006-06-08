@@ -11,6 +11,7 @@ import java.awt.Dimension;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Vector;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -65,7 +66,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             itsSlotsPanel.setPreferredSize(new Dimension(panelWidth-440,panelHeight-340));
             
             successfulNumberOfSlots=4;
-           
+            
         } else {
             logger.debug("No Mainframe supplied");
         }
@@ -83,7 +84,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         if(instance == null){
             instance = this;
             initComponents();
-        }        
+        }
         return instance;
     }
     
@@ -107,19 +108,27 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     public void createPopupMenu(Component aComponent,int x, int y) {
         // build up the menu
         JPopupMenu aPopupMenu = new JPopupMenu();
+        
         int[] availableSlots = itsSlotsPanel.getAvailableSlotIndexes();
-        logger.trace("Available slots to put in popup menu: "+ availableSlots.length);
-        for(int i = 0; i < availableSlots.length; i++){
-            JMenuItem aMenuItem=new JMenuItem("Add to slot "+availableSlots[i]);
-            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    popupMenuHandler(evt);
-                }
-            });
-            aMenuItem.setActionCommand("Add to slot " +availableSlots[i]);
-            aPopupMenu.add(aMenuItem);
-            aPopupMenu.setOpaque(true);
+        if(availableSlots.length > 0){
+            JMenu addSlotMenu=new JMenu("Add to slot");
+                
+            logger.trace("Available slots to put in popup menu: "+ availableSlots.length);
+            for(int i = 0; i < availableSlots.length; i++){
+                JMenuItem aMenuItem=new JMenuItem(""+availableSlots[i]);
+                aMenuItem.setActionCommand("Add to slot "+availableSlots[i]);
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                
+                addSlotMenu.add(aMenuItem);
+                
+            }
+            aPopupMenu.add(addSlotMenu);
         }
+        aPopupMenu.setOpaque(true);
         aPopupMenu.show(aComponent, x, y );
     }
     
@@ -133,17 +142,19 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
         logger.debug("PopUp menu Selection made: "+evt.getActionCommand().toString());
-        int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(12));
-        logger.debug("Plot Slot extrapolated: "+slotSelected);
-        itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName));
+        if(evt.getActionCommand().startsWith("Add to slot")){
+            int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(12));
+            logger.debug("Plot Slot extrapolated: "+slotSelected);
+            itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName));
+        }
     }
-   
+    
     private Object constructPlotterConstraints(String aParamName){
-         HashMap<String,Object> parameterConstraints = new HashMap<String,Object>();
-         parameterConstraints.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
-         
-         String[] passToDataAccess = null;
-         if (aParamName != null) {
+        HashMap<String,Object> parameterConstraints = new HashMap<String,Object>();
+        parameterConstraints.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+        
+        String[] passToDataAccess = null;
+        if (aParamName != null) {
             String cloneParamName = aParamName.toString();
             if(cloneParamName.equalsIgnoreCase("ParmDB")){
                 cloneParamName = "*";
@@ -232,7 +243,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         }
         itsParamName = node.getNodeID();
         logger.trace("ParmDB name selected : "+itsParamName);
-      
+        
         
     }
     
@@ -273,6 +284,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         cSlotsAmount = new javax.swing.JComboBox();
         slotsPane = new javax.swing.JScrollPane();
         itsSlotsPanel = new nl.astron.lofar.sas.otb.util.plotter.PlotSlotsPanel();
+        bClearSlots = new javax.swing.JButton();
         bHelp = new javax.swing.JButton();
 
         setLayout(new java.awt.BorderLayout());
@@ -302,7 +314,6 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         slotsPane.setViewportBorder(javax.swing.BorderFactory.createEtchedBorder());
         slotsPane.setAutoscrolls(true);
         slotsPane.setMinimumSize(new java.awt.Dimension(640, 480));
-        slotsPane.setPreferredSize(null);
         itsSlotsPanel.setMinimumSize(new java.awt.Dimension(640, 480));
         itsSlotsPanel.setPreferredSize(null);
         slotsPane.setViewportView(itsSlotsPanel);
@@ -310,10 +321,22 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.gridwidth = 4;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         contentPanel.add(slotsPane, gridBagConstraints);
+
+        bClearSlots.setText("Clear Slots");
+        bClearSlots.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bClearSlotsActionPerformed(evt);
+            }
+        });
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 0, 0);
+        contentPanel.add(bClearSlots, gridBagConstraints);
 
         bHelp.setText("Help");
         bHelp.addActionListener(new java.awt.event.ActionListener() {
@@ -331,7 +354,17 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         add(contentPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
+    private void bClearSlotsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bClearSlotsActionPerformed
+        String message = "Are you sure you want to clear all slots?";
+        String[] buttons = {"Clear Slots","Cancel"};
+        int choice =  JOptionPane.showOptionDialog(this,message, "Please confirm", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
+        if(choice == 0){
+            itsSlotsPanel.clearSlots();
+        }
+        
+    }//GEN-LAST:event_bClearSlotsActionPerformed
+    
     private void bHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bHelpActionPerformed
         String message = "Slots:\nRight-click on the light-gray header of a slot";
         message+=" to see what you can do with the plot in it.\n\nPlots:\n";
@@ -375,6 +408,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton bClearSlots;
     private javax.swing.JButton bHelp;
     private javax.swing.JComboBox cSlotsAmount;
     private javax.swing.JPanel contentPanel;

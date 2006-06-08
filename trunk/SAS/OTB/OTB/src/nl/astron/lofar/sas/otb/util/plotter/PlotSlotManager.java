@@ -186,6 +186,14 @@ public class PlotSlotManager{
         this.fireSlotsUpdated(indexFromSlot);
         this.fireSlotsUpdated(indexToSlot);
     }
+    public void clearSlots(){
+        for(int i = 1; i <= getAmountOfSlots(); i++){
+            PlotSlot aSlot = getSlot(i);
+            aSlot.clearSlot();
+           
+        }
+        fireSlotsUpdated(-1);
+    }
     
     public void clearSlot(int index){
         getSlot(index).clearSlot();
