@@ -49,7 +49,9 @@ int main (int argc, char* argv[]) {
     ParameterSet pset("CS1.parset");
     WH_DelayCompensation wh("WH_DelayCompensation", pset);
     wh.basePreprocess();
-    wh.baseProcess();
+    for (uint i = 0; i < 1000; ++i) {
+      wh.baseProcess();
+    }
     wh.basePostprocess();
     wh.dump();
     LOG_INFO_STR("Shutting down: " << argv[0]);

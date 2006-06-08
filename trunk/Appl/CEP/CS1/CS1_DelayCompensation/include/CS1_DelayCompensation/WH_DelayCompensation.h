@@ -153,36 +153,67 @@ namespace LOFAR
       // itsConverterConfig.
       AMC::Converter* createConverter();
 
+      // Perform the actual coordinate conversion for the epoch after the end
+      // of the current time interval and store the result in
+      // itsResultAfterEnd.
+      // \post itsResultAtBegin contains the data previously contained by
+      // itsResultAfterEnd.
+      void doConvert();
 
+      // Calculate the delays for all stations for the epoch after the end of
+      // the current time interval and store the results in itsDelaysAfterEnd.
+      // \post itsDelaysAtBegin contain the data previously contained by
+      // itsDelaysAtEnd.
+      void calculateDelays();
+      
       // The parameter set, containing all configurable variables.
       // \note Unfortunately we must keep a copy here, because (!@#$%!)
       // make() needs it. Hopefully, we can get rid of it, some day.
-      ACC::APS::ParameterSet  itsParamSet;
+      const ACC::APS::ParameterSet  itsParamSet;
+
+      // Number of beams.
+      const uint                    itsNrBeams;
+      
+      // Number of stations.
+      const uint                    itsNrStations;
+      
+      // Number of delays that will be calculated per epoch. This number is a
+      // run-time constant, because it is equal to the number of beams per
+      // station times the number of stations.
+      const uint                    itsNrDelaysPerEpoch;
 
       // The sample rate in a subband, in samples per second..
-      double                  itsSampleRate;
-
-      // Configuration info required to create our AMC Converter
-      ConverterConfig         itsConverterConfig;
-
-      // Pointer to the Converter we're using.
-      AMC::Converter*         itsConverter;
+      const double                  itsSampleRate;
 
       // Counter used to count the number of times that process() was called.
-      uint                    itsLoopCount;
+      uint                          itsLoopCount;
   
+      // Configuration info required to create our AMC Converter
+      ConverterConfig               itsConverterConfig;
+
+      // Pointer to the Converter we're using.
+      AMC::Converter*               itsConverter;
+
       // Beam directions.
-      vector<AMC::Direction>  itsBeamDirections;
+      vector<AMC::Direction>        itsBeamDirections;
 
       // Station positions. 
-      vector<AMC::Position>   itsStationPositions;
+      vector<AMC::Position>         itsStationPositions;
 
       // Observation epoch.
-      vector<AMC::Epoch>      itsObservationEpoch;
+      vector<AMC::Epoch>            itsObservationEpoch;
 
       // Station to reference station position difference vectors.
-      vector<AMC::Position>   itsPositionDiffs;
+      vector<AMC::Position>         itsPositionDiffs;
 
+      // Delays for all stations for the epoch at the begin of the current
+      // time interval.
+      vector<double>                itsDelaysAtBegin;
+      
+      // Delays for all stations for the epoch after the end of the current
+      // time interval.
+      vector<double>                itsDelaysAfterEnd;
+      
       // Allocate a tracer context
       ALLOC_TRACER_CONTEXT;
       
