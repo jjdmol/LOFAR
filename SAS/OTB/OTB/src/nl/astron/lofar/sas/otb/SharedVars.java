@@ -1,16 +1,24 @@
 /*
  * SharedVars.java
  *
- * Created on April 12, 2006, 1:37 PM
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
- * Class to hold variables that will be used between panels in the mainframe.
- * This ensures that the Mainframe will stay package independend.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- * Programmers that implement panels for other LOFAR packages can enter variables that need to be known
- * between different pannels here. The Mainfram has a method to get this Holder class and so the variabes 
- * will be accessible between packages.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- * Please keep the file organised and cleam, add vars and their accessors under a tag with the package name they belong to
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
  * 
  */
 
@@ -22,8 +30,19 @@ import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
 
 /**
+ * Class to hold variables that will be used between panels in the mainframe.
+ * This ensures that the Mainframe will stay package independend.
  *
+ * Programmers that implement panels for other LOFAR packages can enter variables that need to be known
+ * between different pannels here. The Mainfram has a method to get this Holder class and so the variabels 
+ * will be accessible between packages.
+ *
+ * Please keep the file organised and clean, add vars and their accessors under a tag with the package name they belong to
+ *
+ * @created 12-04-2006, 13:37
  * @author coolen
+ * @version $Id$
+ * @updated
  */
 
 
