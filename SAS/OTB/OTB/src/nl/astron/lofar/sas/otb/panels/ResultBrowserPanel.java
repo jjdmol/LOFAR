@@ -26,6 +26,7 @@ package nl.astron.lofar.sas.otb.panels;
 
 import java.awt.event.ActionEvent;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 import javax.swing.JComponent;
@@ -33,11 +34,13 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
+import nl.astron.lofar.sas.otb.exceptions.ParmDBConfigurationException;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
+import nl.astron.lofar.sas.otb.util.ParmDBConfigurationHelper;
 import nl.astron.lofar.sas.otb.util.ResultPanelHelper;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
@@ -142,42 +145,36 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 public void treeNodesInserted(TreeModelEvent e){
                     TreeNode item = (TreeNode)e.getSource();
                     if(item.getName().equalsIgnoreCase("Observation.AO")){
-                        String[] args = new String[3];
-                        args[0]="ParmDB";
-                        args[1]="BBS";
-                        args[2]="/home/pompert/transfer/tParmFacade.in_mep";
-                        TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
-                        boolean alreadyPresent = false;
-                        Enumeration children = item.children();
-                        while(children.hasMoreElements() && !alreadyPresent){
-                            TreeNode child = (TreeNode)children.nextElement();
-                            if (child.getName().equals(parmDBnode.getName())){
-                                alreadyPresent=true;
+                        try {
+                            
+                            //Sample code to have ParmDB in the tree.
+                            
+                            HashMap<String,String> tables = ParmDBConfigurationHelper.getInstance().getParmDBTables();
+                            Iterator i = tables.keySet().iterator();
+                            while(i.hasNext()){
+                                String[] args = new String[3];
+                                String tableName = (String)i.next();
+                                args[0]= tableName;
+                                args[1]="BBS";
+                                args[2]=tables.get(tableName);
+                                TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
+                                boolean alreadyPresent = false;
+                                Enumeration children = item.children();
+                                while(children.hasMoreElements() && !alreadyPresent){
+                                    TreeNode child = (TreeNode)children.nextElement();
+                                    if (child.getName().equals(parmDBnode.getName())){
+                                        alreadyPresent=true;
+                                    }
+                                }
+                                if(!alreadyPresent){
+                                    item.add(parmDBnode);
+                                }
                             }
+                        } catch (ParmDBConfigurationException ex) {
+                            logger.error(ex.getMessage(),ex);
                         }
-                        if(!alreadyPresent){
-                            item.add(parmDBnode);
-                        }
-                        args = new String[3];
-                        args[0]="ParmDB-2";
-                        args[1]="BBS";
-                        args[2]="/home/pompert/transfer/test2ParmFacade.in_mep";
-                        TreeNode parmDBnode2 =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
-                        boolean alreadyPresent2 = false;
-                        while(children.hasMoreElements() && !alreadyPresent2){
-                            TreeNode child = (TreeNode)children.nextElement();
-                            if (child.getName().equals(parmDBnode2.getName())){
-                                alreadyPresent2=true;
-                            }
-                        }
-                        if(!alreadyPresent2){
-                            item.add(parmDBnode2);
-                        }
-                        
                     }
-                }
-                
-                
+                } 
             });
             
             // and create a new root
@@ -247,7 +244,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                         viewPanel.setMainFrame(itsMainFrame);
                         viewPanel.setContent(aNode.getUserObject());
                     }
-                   
+                    
                 }
             } else {
                 logger.debug("Skipping panel for: "+aPanelName);

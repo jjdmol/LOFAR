@@ -24,8 +24,6 @@
 package nl.astron.lofar.sas.otb.util.plotter;
 
 import java.awt.BorderLayout;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import javax.swing.JDialog;
 
 /**
@@ -47,6 +45,6 @@ public class PlotSlotViewFrame extends JDialog{
         this.getContentPane().add(viewSlot,BorderLayout.CENTER);
         this.setSize(640,480);
         this.setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
+       
     }
-
 }

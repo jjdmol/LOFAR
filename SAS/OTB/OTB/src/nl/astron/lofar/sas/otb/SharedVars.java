@@ -25,8 +25,10 @@
 package nl.astron.lofar.sas.otb;
 
 import java.rmi.Naming;
+import java.util.HashMap;
 import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
+import nl.astron.lofar.sas.otb.util.ParmDBConfigurationHelper;
 import org.apache.log4j.Logger;
 
 /**
@@ -53,13 +55,13 @@ public class SharedVars {
     static Logger logger = Logger.getLogger(SharedVars.class);
     static String name = "SharedVars";
     
-      
+    
     
     private MainFrame itsMainFrame=null;
     
     
-    /* 
-     * PACKAGE SAS 
+    /*
+     * PACKAGE SAS
      */
     // holds the current Tree ID
     private int                              itsCurrentTreeID=0;
@@ -73,7 +75,7 @@ public class SharedVars {
     /*
      * PACKAGE SAS
      */
-        /** gets the Current TreeID */
+    /** gets the Current TreeID */
     public int getTreeID() {
         return itsCurrentTreeID;
     }
@@ -105,21 +107,24 @@ public class SharedVars {
     public static jParmFacadeInterface getJParmFacade() {
         if(itsjParmFacade == null){
             try {
-                String hostname = "localhost";
+                String hostname = getOTDBrmi().RMIServerName;
                 int port = 10668;
-                hostname=getOTDBrmi().RMIServerName;
-                String aRC="rmi://"+hostname+":"+port+"/"+jParmFacadeInterface.SERVICENAME;
-        
-                itsjParmFacade = (jParmFacadeInterface) Naming.lookup (aRC);
-
-             } catch (Throwable e) {
+                    
+                //LOAD XML CONFIG FILE
+                
+                HashMap<String,String> serverConfig = ParmDBConfigurationHelper.getInstance().getParmDBServerInformation();
+                
+                String aRC="rmi://"+serverConfig.get("rmihostname");
+                aRC += ":"+serverConfig.get("rmiport")+"/"+jParmFacadeInterface.SERVICENAME;
+                
+                itsjParmFacade = (jParmFacadeInterface) Naming.lookup(aRC);
+                
+            } catch (Throwable e) {
                 logger.error("jParmFacade could not be loaded : "+e.getMessage(),e);
-             } 
-         }
+            }
+        }
         return itsjParmFacade;
-        
     }
-    
     /**
      * Creates a new instance of SharedVars
      */
@@ -130,14 +135,14 @@ public class SharedVars {
         // SAS
         //
         itsOtdbRmi = new OtdbRmi(mainFrame);
-                
+        
         //ParmDB
         
         
-                    
+        
         itsCurrentTreeID=0;
         itsCurrentComponentID=0;
-
+        
     }
     
 }

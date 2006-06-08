@@ -28,8 +28,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.apache.log4j.Logger;
@@ -54,7 +56,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         itsSlotManager.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent evt){
                 if(evt.getActionCommand().equals(PlotSlotManager.REFRESH_FULL)){
-                   rearrangeSlotGrid();
+                    rearrangeSlotGrid();
                 }
                 if(evt.getActionCommand().equals(PlotSlotManager.REFRESH_SINGLE)){
                     int slotId = evt.getID();
@@ -72,7 +74,10 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             throw new IllegalArgumentException("A plot already exists in slot "+index);
         }
     }
-    
+    public void clearSlots(){
+        itsSlotManager.clearSlots();
+        repaint();
+    }
     
     public int getAmountOfSlots(){
         return itsSlotManager.getAmountOfSlots();
@@ -80,6 +85,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
     
     public void setAmountOfSlots(int amount, boolean force) throws IllegalArgumentException{
         itsSlotManager.setAmountOfSlots(amount,force);
+        
     }
     
     public boolean isSlotAvailable(int index){
@@ -222,7 +228,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                             public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 selectedSlot.removeLegend();
                                 selectedSlot.validate();
-                            
+                                
                             }
                         });
                         aPopupMenu.add(aMenuItem);
@@ -241,40 +247,39 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                     int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
                     if(availableSlots.length > 0){
                         aPopupMenu.addSeparator();
-                        JMenuItem aMenuItem=new JMenuItem("Move to slot ...");
                         
-                        aMenuItem.addMouseListener(new MouseAdapter(){
-                            public void mouseEntered(MouseEvent e){}
-                            public void mouseExited(MouseEvent e){}
-                            public void mouseReleased(MouseEvent e){
-                                JPopupMenu moveSlotPopupMenu = new JPopupMenu();
-                                int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
-                                for(int i = 0; i < availableSlots.length; i++){
-                                    JMenuItem subItem=new JMenuItem("Slot "+availableSlots[i]);
-                                    subItem.addActionListener(new java.awt.event.ActionListener() {
-                                        public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                            itsSlotManager.movePlot(Integer.parseInt(selectedSlot.getLabel()),Integer.parseInt(evt.getActionCommand().substring(5)));
-                                            repaint();
-                                        }
-                                    });
-                                    moveSlotPopupMenu.add(subItem);
+                        JMenu aMenuItem=new JMenu("Move to slot");
+                        
+                        for(int i = 0; i < availableSlots.length; i++){
+                            JMenuItem subItem=new JMenuItem(""+availableSlots[i]);
+                            subItem.setActionCommand(""+availableSlots[i]);
+                            subItem.addActionListener(new java.awt.event.ActionListener() {
+                                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                    itsSlotManager.movePlot(Integer.parseInt(selectedSlot.getLabel()),Integer.parseInt(evt.getActionCommand()));
+                                    repaint();
                                 }
-                                moveSlotPopupMenu.setOpaque(true);
-                                moveSlotPopupMenu.show(selectedSlot, e.getX(), e.getY());
-                            }
-                        });
-                        
+                            });
+                            aMenuItem.add(subItem);
+                        }
                         aPopupMenu.add(aMenuItem);
-                        
-                        
                     }
                     aPopupMenu.addSeparator();
-                    JMenuItem aMenuItem=new JMenuItem("Show in separate window (BETA)");
+                    JMenuItem aMenuItem=new JMenuItem("Show in separate window");
                     aMenuItem.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Viewer for Plot "+selectedSlot.getLabel());
-                                dialog.setVisible(true);
-                                  
+                            PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Viewer for Plot "+selectedSlot.getLabel());
+                            dialog.addWindowListener(new WindowListener(){
+                                public void windowDeactivated(WindowEvent e){}
+                                public void windowActivated(WindowEvent e){}
+                                public void windowClosed(WindowEvent e){
+                                    rearrangeSlotGrid();}
+                                public void windowDeiconified(WindowEvent e){}
+                                public void windowIconified(WindowEvent e){}
+                                public void windowClosing(WindowEvent e){}
+                                public void windowOpened(WindowEvent e){}
+                            });
+                            dialog.setVisible(true);
+                            
                         }
                     });
                     aPopupMenu.add(aMenuItem);
@@ -282,10 +287,10 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                     JMenuItem aMenuItem2=new JMenuItem("Clear Slot");
                     aMenuItem2.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                itsSlotManager.clearSlot(Integer.parseInt(selectedSlot.getLabel()));
-                                selectedSlot.repaint();
-                           }
-                        });
+                            itsSlotManager.clearSlot(Integer.parseInt(selectedSlot.getLabel()));
+                            selectedSlot.repaint();
+                        }
+                    });
                     aPopupMenu.add(aMenuItem2);
                     
                     aPopupMenu.setOpaque(true);
