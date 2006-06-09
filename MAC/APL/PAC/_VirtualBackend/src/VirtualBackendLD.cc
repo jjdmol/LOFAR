@@ -28,6 +28,7 @@
 #include <GCF/GCF_PVChar.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/Utils.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 namespace LOFAR
 {
@@ -107,7 +108,7 @@ GCFEvent::TResult VirtualBackendLD::concrete_idle_state(
         time_t rsto(0);
         try 
         {
-          rsto = m_parameterSet.getTime("rescheduleTimeOut");
+          rsto = m_parameterSet->getTime("rescheduleTimeOut");
         }
         catch (...)
         {
@@ -231,7 +232,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
   _cepAppParams.replace("AC.resultfile", formatString("./ACC-%s_result.param", getName().c_str()));
   
   string processScope("AC.process");
-  uint32 nrProcs = m_parameterSet.getUint32(formatString("%s[0].count", processScope.c_str()));
+  uint32 nrProcs = m_parameterSet->getUint32(formatString("%s[0].count", processScope.c_str()));
 
   _cepAppParams.replace(KVpair("AC.process[0].count", (int32) nrProcs));
   
@@ -242,7 +243,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
   
   for (uint32 i = 1; i <= nrProcs; i++) 
   {
-    procName = m_parameterSet.getString(formatString("%s[%d].ID", processScope.c_str(), i));
+    procName = m_parameterSet->getString(formatString("%s[%d].ID", processScope.c_str(), i));
     
     _cepAppParams.add(formatString("AC.process[%d].ID", i), procName);
     
@@ -252,7 +253,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
     {
       try
       {
-        nodeName = m_parameterSet.getString(formatString("%s.node", procName.c_str()));
+        nodeName = m_parameterSet->getString(formatString("%s.node", procName.c_str()));
         _neededNodes.insert(nodeName);
       }
       catch (...)
@@ -266,9 +267,9 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
         {
           newProcName = procName;
           newProcName.replace(0, strlen("AC"), ldName.c_str(), ldName.length());
-          _cepAppParams.adoptCollection(m_parameterSet.makeSubset(procName, newProcName));
+          _cepAppParams.adoptCollection(m_parameterSet->makeSubset(procName, newProcName));
           processInfoCopied.insert(procName);
-          nodeName = m_parameterSet.getString(formatString("%s[0].node", procName.c_str()));
+          nodeName = m_parameterSet->getString(formatString("%s[0].node", procName.c_str()));
           _neededNodes.insert(nodeName);
         }
       }
@@ -286,8 +287,8 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
       {
         newProcName = procName;
         newProcName.replace(0, strlen("AC"), ldName.c_str(), ldName.length());
-        _cepAppParams.adoptCollection(m_parameterSet.makeSubset(procName, newProcName));
-        nodeName = m_parameterSet.getString(formatString("%s[%d].node", procName.c_str(), j));
+        _cepAppParams.adoptCollection(m_parameterSet->makeSubset(procName, newProcName));
+        nodeName = m_parameterSet->getString(formatString("%s[%d].node", procName.c_str(), j));
         _neededNodes.insert(nodeName);   
       }
       catch (...)
@@ -295,6 +296,31 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
         // skip
       }
     }
+  }
+
+  // write PropertySet info to ACC parameter file
+  try
+  {
+    int i = 0;
+    while(true) // until an exception is thrown because the key does not exist in the parameter file
+    {
+      string cepDpType = m_parameterSet->getString(formatString("cepDpType[%d]", i++));
+      list<TPropertyInfo> propInfo;
+      if(GCF_NO_ERROR == GCFPVSSInfo::getTypeStruct(cepDpType,propInfo))
+      {
+	int element = 0;
+	for(list<TPropertyInfo>::iterator it = propInfo.begin(); it != propInfo.end(); ++it)
+	{
+	  _cepAppParams.add(formatString("cepDpTypes.%s.property[%d].name",cepDpType.c_str(),element),it->propName);
+	  _cepAppParams.add(formatString("cepDpTypes.%s.property[%d].type",cepDpType.c_str(),element),formatString("%d",it->type));
+	  element++;
+	}
+      }
+    }
+  }
+  catch(...)
+  {
+    // key not found. skip
   }
  
   _qualityGuard.monitorNodes(_neededNodes);  
@@ -432,7 +458,7 @@ void VirtualBackendLD::lowQuality(TNodeList& faultyNodes)
 {  
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
   string faultyNodeList;
-  Utils::convSetToString(faultyNodeList, faultyNodes);
+  convSetToString(faultyNodeList, faultyNodes);
   _resultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
   _resultParams.replace(formatString("%s.faultyNodes", getName().c_str()), faultyNodeList);
   switch (getLogicalDeviceState())
@@ -547,7 +573,7 @@ void VirtualBackendLD::appSnapshotDone(uint16 /*result*/)
   time_t rsto(0);
   try 
   {
-    rsto = m_parameterSet.getTime("rescheduleTimeOut");
+    rsto = m_parameterSet->getTime("rescheduleTimeOut");
   }
   catch (...) {}
   _cepApplication.pause(0, rsto, "condition");

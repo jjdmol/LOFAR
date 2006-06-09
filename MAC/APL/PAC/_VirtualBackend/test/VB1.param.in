@@ -15,6 +15,7 @@ prepareTime=+40
 startTime=+115
 stopTime=+10915
 childs=
+cepDpTypes[0]="TTeraFlopCorrelator"
 
 rescheduleTimeOut=20
 
