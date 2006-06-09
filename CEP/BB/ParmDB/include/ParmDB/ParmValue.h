@@ -87,6 +87,7 @@ public:
   // </group>
 
   std::string         itsType;        //# funklet type or expression
+  std::string         itsExpr;        //# parm or functional expression
   std::vector<double> itsConstants;   //# possible funklet constants
   std::vector<double> itsCoeff;
   std::vector<bool>   itsSolvMask;    //# false = coefficient is not solvable
@@ -96,7 +97,8 @@ public:
   ParmDomain          itsDomain;
   std::vector<double> itsOffset;
   std::vector<double> itsScale;
-  double         itsWeight;
+  std::vector<double> itsErrors;
+  double              itsWeight;
   int            itsID;        //# ID if result of a refit
   int            itsParentID;  //# ID of refit result (in old parm records)
   int            itsDBTabRef;  //# Ref to table in database
