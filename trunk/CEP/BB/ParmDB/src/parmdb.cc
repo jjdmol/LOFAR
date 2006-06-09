@@ -145,6 +145,7 @@ void showHelp()
   cerr << "   constants=[]          (possible constant funklet parameters)" << endl;
   cerr << "   offset=[]             (offset for each values dimension)" << endl;
   cerr << "   scale=[]              (scale for each values dimension)" << endl;
+  cerr << "   expr=''               (a functional or parm expression)" << endl;
   cerr << endl;
 }
 
@@ -435,6 +436,9 @@ void showParm (const string& parmName, const ParmValueRep& parm, bool showAll)
 {
   cout << parmName;
   cout << "  type=" << parm.itsType;
+  if (!parm.itsExpr.empty()) {
+    cout << " expr=" << parm.itsExpr;
+  }
   if (parm.itsConstants.size() > 0) {
     cout << " constants=" << parm.itsConstants;
   }
@@ -492,6 +496,11 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
   ParmValueRep& pval = pvalue.rep();
   // Set funklet type with possible constants.
   pval.setType (kvmap.getString("type", "polc"), getArray(kvmap, "constants"));
+  if (pval.itsType == "parmexpr"  ||  pval.itsType == "functional") {
+    pval.itsExpr = kvmap.getString("parmexpr", string());
+    ASSERTSTR (!pval.itsExpr.empty(),
+	       "expr has to be given for parm " << parmName);
+  }
   vector<int> shape;
   // Get the coefficients shape and the data.
   int size = getShape (kvmap, shape);
@@ -529,6 +538,11 @@ void newDefParm (const std::string& parmName, KeyValueMap& kvmap)
   ParmValueRep& pval = pvalue.rep();
   // Set funklet type with possible constants.
   pval.setType (kvmap.getString("type", "polc"), getArray(kvmap, "constants"));
+  if (pval.itsType == "parmexpr"  ||  pval.itsType == "functional") {
+    pval.itsExpr = kvmap.getString("parmexpr", string());
+    ASSERTSTR (!pval.itsExpr.empty(),
+	       "expr has to be given for parm " << parmName);
+  }
   vector<int> shape;
   // Get the coefficients shape and the data.
   int size = getShape (kvmap, shape);

@@ -41,6 +41,8 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/BasicMath/Math.h>
+#include <casa/OS/Time.h>
+#include <casa/Quanta/MVTime.h>
 //# Include this file for automatic instantiation of Vector<vector>.
 #include <casa/Arrays/Vector2.cc>
 
@@ -87,6 +89,7 @@ void ParmDBAIPS::createTables (const string& tableName)
   td.comment() = String("Table containing parameters for ME");
   td.addColumn (ScalarColumnDesc<String>("NAME"));
   td.addColumn (ScalarColumnDesc<String>("TYPE"));
+  td.addColumn (ScalarColumnDesc<String>("EXPRESSION"));
   td.addColumn (ArrayColumnDesc<double> ("CONSTANTS", 1));
   td.addColumn (ScalarColumnDesc<double> ("STARTX", 1));
   td.addColumn (ScalarColumnDesc<double> ("ENDX", 1));
@@ -95,20 +98,22 @@ void ParmDBAIPS::createTables (const string& tableName)
   td.addColumn (ArrayColumnDesc<double> ("START", 1));
   td.addColumn (ArrayColumnDesc<double> ("END", 1));
   td.addColumn (ArrayColumnDesc <double>("VALUES"));
-  td.addColumn (ArrayColumnDesc <double>("ERRORS"));
   td.addColumn (ArrayColumnDesc <bool>  ("SOLVABLE"));
   td.addColumn (ArrayColumnDesc<double> ("OFFSET", 1));
   td.addColumn (ArrayColumnDesc<double> ("SCALE", 1));
   td.addColumn (ScalarColumnDesc<double>("PERTURBATION"));
   td.addColumn (ScalarColumnDesc<bool>  ("PERT_REL"));
+  td.addColumn (ArrayColumnDesc <double>("ERRORS"));
   td.addColumn (ScalarColumnDesc<double>("WEIGHT"));
   td.addColumn (ScalarColumnDesc<int>   ("ID"));
   td.addColumn (ScalarColumnDesc<int>   ("PARENTID"));
+  td.addColumn (ScalarColumnDesc<double>("TIMESTAMP"));
 
   TableDesc tddef("ME default parameter values", TableDesc::Scratch);
   tddef.comment() = String("Table containing default parameters for ME");
   tddef.addColumn (ScalarColumnDesc<String>("NAME"));
   tddef.addColumn (ScalarColumnDesc<String>("TYPE"));
+  tddef.addColumn (ScalarColumnDesc<String>("EXPRESSION"));
   tddef.addColumn (ArrayColumnDesc<double> ("CONSTANTS", 1));
   tddef.addColumn (ArrayColumnDesc <double>("VALUES"));
   tddef.addColumn (ArrayColumnDesc <bool>  ("SOLVABLE"));
@@ -183,16 +188,17 @@ void ParmDBAIPS::extractValues (map<string,ParmValueSet>& result,
   Vector<uInt> rownrs = tab.rowNumbers();
   ROScalarColumn<String> nameCol (tab, "NAME");
   ROScalarColumn<String> typeCol (tab, "TYPE");
-  ROArrayColumn<double> consCol (tab, "CONSTANTS");
+  ROScalarColumn<String> exprCol (tab, "EXPRESSION");
+  ROArrayColumn<double>  consCol (tab, "CONSTANTS");
   ROArrayColumn<double> stCol (tab, "START");
   ROArrayColumn<double> endCol (tab, "END");
   ROArrayColumn<bool> maskCol (tab, "SOLVABLE");
   ROArrayColumn<double> valCol (tab, "VALUES");
-  ///ROArrayColumn<double> errCol (tab, "ERRORS");
   ROArrayColumn<double> offCol (tab, "OFFSET");
   ROArrayColumn<double> scCol (tab, "SCALE");
   ROScalarColumn<double> pertCol (tab, "PERTURBATION");
   ROScalarColumn<bool> prelCol (tab, "PERT_REL");
+  ROArrayColumn<double> errCol (tab, "ERRORS");
   ROScalarColumn<double> weightCol (tab, "WEIGHT");
   ROScalarColumn<int> idCol (tab, "ID");
   ROScalarColumn<int> paridCol (tab, "PARENTID");
@@ -219,6 +225,8 @@ void ParmDBAIPS::extractValues (map<string,ParmValueSet>& result,
     } else {
       pval.setType (typeCol(i));
     }
+    pval.itsExpr     = exprCol(i);
+    pval.itsErrors   = toVector(errCol(i));
     pval.itsWeight   = weightCol(i);
     pval.itsID       = idCol(i);
     pval.itsParentID = paridCol(i);
@@ -245,7 +253,8 @@ ParmValue ParmDBAIPS::extractDefValue (const Table& tab, int row)
   ParmValue pvalue;
   ParmValueRep& result = pvalue.rep();
   ROScalarColumn<String> typeCol (tab, "TYPE");
-  ROArrayColumn<double> consCol (tab, "CONSTANTS");
+  ROScalarColumn<String> exprCol (tab, "EXPRESSION");
+  ROArrayColumn<double>  consCol (tab, "CONSTANTS");
   ROArrayColumn<bool> maskCol (tab, "SOLVABLE");
   ROArrayColumn<double> valCol (tab, "VALUES");
   ROScalarColumn<double> pertCol (tab, "PERTURBATION");
@@ -266,6 +275,7 @@ ParmValue ParmDBAIPS::extractDefValue (const Table& tab, int row)
   } else {
     result.setType (typeCol(row));
   }
+  result.itsExpr     = exprCol(row);
   result.setPerturbation (pertCol(row), prelCol(row));
   result.itsDBTabRef = -1;
   result.itsDBSeqNr  = getParmDBSeqNr();
@@ -455,7 +465,15 @@ void ParmDBAIPS::putOldValue (ParmValueRep& pval,
 			      bool overwriteMask)
 {
   ArrayColumn<double> valCol (table, "VALUES");
+  ArrayColumn<double> errCol (table, "ERRORS");
+  ScalarColumn<double> weightCol (table, "WEIGHT");
+  ScalarColumn<double> timestampCol (table, "TIMESTAMP");
   valCol.put (rownr, fromVector(pval.itsCoeff, pval.itsShape));
+  if (pval.itsErrors.size() > 0  ||  errCol.isDefined(rownr)) {
+    errCol.put (rownr, fromVector(pval.itsErrors));
+  }
+  weightCol.put (rownr, pval.itsWeight);
+  timestampCol.put (rownr, double(MVTime(Time())));
   if (overwriteMask) {
     ArrayColumn<bool> maskCol (table, "SOLVABLE");
     if (pval.itsSolvMask.size() > 0  ||  maskCol.isDefined(rownr)) {
@@ -471,9 +489,10 @@ void ParmDBAIPS::putNewValue (const string& parmName,
   Table& table = itsTables[tabinx];
   uInt rownr = table.nrow();
   table.addRow();
+  ScalarColumn<String> namCol  (table, "NAME");
   ScalarColumn<String> typeCol (table, "TYPE");
-  ArrayColumn<double> consCol (table, "CONSTANTS");
-  ScalarColumn<String> namCol (table, "NAME");
+  ScalarColumn<String> exprCol (table, "EXPRESSION");
+  ArrayColumn<double>  consCol (table, "CONSTANTS");
   ScalarColumn<double> stxCol (table, "STARTX");
   ScalarColumn<double> endxCol (table, "ENDX");
   ScalarColumn<double> styCol (table, "STARTY");
@@ -482,19 +501,21 @@ void ParmDBAIPS::putNewValue (const string& parmName,
   ArrayColumn<double> endCol (table, "END");
   ArrayColumn<bool> maskCol (table, "SOLVABLE");
   ArrayColumn<double> valCol (table, "VALUES");
-  ///ArrayColumn<double> errCol (table, "ERRORS");
   ArrayColumn<double> offCol (table, "OFFSET");
   ArrayColumn<double> scCol (table, "SCALE");
   ScalarColumn<double> pertCol (table, "PERTURBATION");
   ScalarColumn<bool> prelCol (table, "PERT_REL");
+  ArrayColumn<double> errCol (table, "ERRORS");
   ScalarColumn<double> weightCol (table, "WEIGHT");
   ScalarColumn<int> idCol (table, "ID");
   ScalarColumn<int> paridCol (table, "PARENTID");
+  ScalarColumn<double> timestampCol (table, "TIMESTAMP");
   namCol.put (rownr, parmName);
   typeCol.put (rownr, pval.itsType);
   if (pval.itsConstants.size() > 0) {
     consCol.put (rownr, fromVector(pval.itsConstants));
   }
+  exprCol.put (rownr, pval.itsExpr);
   valCol.put (rownr, fromVector(pval.itsCoeff, pval.itsShape));
   if (pval.itsSolvMask.size() > 0) {
     maskCol.put (rownr, fromVector(pval.itsSolvMask, pval.itsShape));
@@ -519,9 +540,11 @@ void ParmDBAIPS::putNewValue (const string& parmName,
   scCol.put (rownr, fromVector(pval.itsScale));
   pertCol.put (rownr, pval.itsPerturbation);
   prelCol.put (rownr, pval.itsIsRelPert);
+  errCol.put (rownr, fromVector(pval.itsErrors));
   weightCol.put (rownr, pval.itsWeight);
   idCol.put (rownr, pval.itsID);
   paridCol.put (rownr, pval.itsParentID);
+  timestampCol.put (rownr, double(MVTime(Time())));
   // ParmValue is now stored here.
   pval.itsDBTabRef = tabinx;
   pval.itsDBRowRef = rownr;
@@ -540,7 +563,8 @@ void ParmDBAIPS::putDefValue (const string& parmName,
   if (sel.nrow() == 1) {
     uInt rownr=0;
     ScalarColumn<String> typeCol (sel, "TYPE");
-    ArrayColumn<double> consCol (sel, "CONSTANTS");
+    ScalarColumn<String> exprCol (sel, "EXPRESSION");
+    ArrayColumn<double>  consCol (sel, "CONSTANTS");
     ArrayColumn<bool> maskCol (sel, "SOLVABLE");
     ArrayColumn<double> valCol (sel, "VALUES");
     ScalarColumn<double> pertCol (sel, "PERTURBATION");
@@ -549,6 +573,7 @@ void ParmDBAIPS::putDefValue (const string& parmName,
     if (pval.itsConstants.size() > 0) {
       consCol.put (rownr, fromVector(pval.itsConstants));
     }
+    exprCol.put (rownr, pval.itsExpr);
     valCol.put (rownr, fromVector(pval.itsCoeff, pval.itsShape));
     if (pval.itsSolvMask.size() > 0  ||  maskCol.isDefined(rownr)) {
       maskCol.put (rownr, fromVector(pval.itsSolvMask, pval.itsShape));
@@ -571,7 +596,8 @@ void ParmDBAIPS::putNewDefValue (const string& parmName,
   table.addRow();
   ScalarColumn<String> namCol (table, "NAME");
   ScalarColumn<String> typeCol (table, "TYPE");
-  ArrayColumn<double> consCol (table, "CONSTANTS");
+  ScalarColumn<String> exprCol (table, "EXPRESSION");
+  ArrayColumn<double>  consCol (table, "CONSTANTS");
   ArrayColumn<bool> maskCol (table, "SOLVABLE");
   ArrayColumn<double> valCol (table, "VALUES");
   ScalarColumn<double> pertCol (table, "PERTURBATION");
@@ -580,6 +606,7 @@ void ParmDBAIPS::putNewDefValue (const string& parmName,
   if (pval.itsConstants.size() > 0) {
     consCol.put (rownr, fromVector(pval.itsConstants));
   }
+  exprCol.put (rownr, pval.itsExpr);
   valCol.put (rownr, fromVector(pval.itsCoeff, pval.itsShape));
   if (pval.itsSolvMask.size() > 0) {
     maskCol.put (rownr, fromVector(pval.itsSolvMask, pval.itsShape));

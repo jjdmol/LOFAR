@@ -50,7 +50,7 @@ ParmValue ParmDBRep::getDefValue (const string& parmName)
     itsDefFilled = true;
   }
   // Try to find the default value.
-  // The parameter name consists of parts (separated by dots), so the
+  // The parameter name consists of parts (separated by colons), so the
   // parameters are categorised in that way.
   // An initial value can be defined for the full name or for a higher
   // category.
@@ -61,7 +61,7 @@ ParmValue ParmDBRep::getDefValue (const string& parmName)
     if (pos != itsDefValues.end()) {
       return pos->second;
     }
-    string::size_type idx = name.rfind ('.');
+    string::size_type idx = name.rfind (':');
     // Exit loop if no more name parts.
     if (idx == string::npos) {
       break;
