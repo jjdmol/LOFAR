@@ -45,6 +45,8 @@ namespace LOFAR
 
     INIT_TRACER_CONTEXT(WH_DelayCompensation, LOFARLOGGER_PACKAGE);
 
+    //##----------------  Public methods  ----------------##//
+
     WH_DelayCompensation::WH_DelayCompensation(const string& name,
                                                const ParameterSet& ps) :
       WorkHolder   (0,                                   // inputs
@@ -54,7 +56,7 @@ namespace LOFAR
       itsParamSet  (ps),
       itsNrBeams   (ps.getUint32("Observation.NBeams")),
       itsNrStations(ps.getUint32("Observation.NStations")),
-      itsNrDelaysPerEpoch(itsNrBeams*itsNrStations),
+      itsNrDelays  (itsNrBeams*itsNrStations),
       itsSampleRate(ps.getDouble("Observation.SampleRate")),
       itsLoopCount (0),
       itsConverter (0)
@@ -73,7 +75,7 @@ namespace LOFAR
       for (int i = 0; i < itsNoutputs; ++i) {
         string str = "DH_Delay_out_" + formatString("%02d", i);
         LOG_TRACE_LOOP_STR("Creating " << str);
-        getDataManager().addOutDataHolder(i, new DH_Delay(str, itsNoutputs));
+	getDataManager().addOutDataHolder(i, new DH_Delay(str, itsNrDelays));
       }
 
     }
@@ -97,8 +99,8 @@ namespace LOFAR
       ASSERT(itsConverter);
 
       // Pre-allocate and initialize storage for the delay vectors.
-      itsDelaysAtBegin.resize(itsNrDelaysPerEpoch);
-      itsDelaysAfterEnd.resize(itsNrDelaysPerEpoch);
+      itsDelaysAtBegin.resize(itsNrDelays);
+      itsDelaysAfterEnd.resize(itsNrDelays);
       
       // Initialize \c itsDelaysAfterEnd with the conversion results for the
       // epoch after the end of the first time interval.
@@ -114,48 +116,47 @@ namespace LOFAR
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_FLOW, "count = " << itsLoopCount);
 
       // Calculate the delays for the epoch after the end of the current time
-      // interval.
+      // interval. Put the results in itsDelaysAtBegin and itsDelaysAfterEnd.
       calculateDelays();
       
-      // The time differences need to be split into a coarse (sample) delay
-      // and a fine (subsample) delay. 
-      vector<int> coarseDelay(itsNrDelaysPerEpoch);
-      vector<float> fineDelayAtBegin(itsNrDelaysPerEpoch);
-      vector<float> fineDelayAfterEnd(itsNrDelaysPerEpoch);
+      // The delays -- split into a coarse (sample) delay and a fine
+      // (subsample) delay -- need to be put into a DelayInfo struct.
+      vector<DH_Delay::DelayInfo> delayInfo(itsNrDelays);
+      for (uint i = 0; i < itsNrDelays; ++i) {
 
-      for (uint i = 0; i < itsNrDelaysPerEpoch; ++i) {
 	// Get delays "at begin" and "after end".
 	double db = itsDelaysAtBegin[i];
 	double de = itsDelaysAfterEnd[i];
 
-	LOG_TRACE_VAR_STR("Beamlet #" << i << ":");
-	
-// 	LOG_TRACE_VAR_STR("itsDelaysAtBegin[" << i << "]  = " <<
-// 			  itsDelaysAtBegin[i]);
-// 	LOG_TRACE_VAR_STR("itsDelaysAfterEnd[" << i << "] = " <<
-// 			  itsDelaysAfterEnd[i]);
-	
 	// The coarse delay will be determined for the center of the current
 	// time interval and will be expressed in \e samples.
-	coarseDelay[i] = (int)floor(0.5 * (db + de) * itsSampleRate + 0.5);
-	double d = coarseDelay[i] / itsSampleRate;
+	delayInfo[i].coarseDelay = 
+	  (int32)floor(0.5 * (db + de) * itsSampleRate + 0.5);
 	
 	// The fine delay will be determined for the boundaries of the current
 	// time interval and will be expressed in seconds.
-	fineDelayAtBegin[i] = (float)(db - d);
-	fineDelayAfterEnd[i] = (float)(de - d);
+	double d = delayInfo[i].coarseDelay / itsSampleRate;
+	delayInfo[i].fineDelayAtBegin  = (float)(db - d);
+	delayInfo[i].fineDelayAfterEnd = (float)(de - d);
 
-	LOG_TRACE_CALC_STR(" coarseDelay       = " << coarseDelay[i]);
-	LOG_TRACE_CALC_STR(" fineDelayAtBegin  = " << fineDelayAtBegin[i]);
-	LOG_TRACE_CALC_STR(" fineDelayAfterEnd = " << fineDelayAfterEnd[i]);
+	LOG_TRACE_CALC_STR("Beamlet #" << i << ":");
+	LOG_TRACE_CALC_STR(" coarseDelay       = " << 
+			   delayInfo[i].coarseDelay);
+	LOG_TRACE_CALC_STR(" fineDelayAtBegin  = " << 
+			   delayInfo[i].fineDelayAtBegin);
+	LOG_TRACE_CALC_STR(" fineDelayAfterEnd = " << 
+			   delayInfo[i].fineDelayAfterEnd);
       }
 
       // We need to send the coarse and fine delay info to all RSP boards.
       for (int rsp = 0; rsp < itsNoutputs; ++rsp) {
-	DH_Delay* dh = (DH_Delay*)getDataManager().getOutHolder(rsp);
-	dh;
+ 	DH_Delay& dh = 
+	  dynamic_cast<DH_Delay&>(*getDataManager().getOutHolder(rsp));
+	for (uint i = 0; i < itsNrDelays; ++i) {
+  	  dh[i] = delayInfo[i];
+	}
       }
-
+      
     }
 
 
@@ -176,6 +177,8 @@ namespace LOFAR
       return new WH_DelayCompensation(name, itsParamSet);
     }
 
+
+    //##----------------  Private methods  ----------------##//
 
     void WH_DelayCompensation::getConverterConfig(const ParameterSet& ps)
     {
@@ -345,8 +348,8 @@ namespace LOFAR
       // Since we've calculated the coordinates for only one epoch, the number
       // of directions in the result vector must be equal to the number of
       // delays per epoch.
-      ASSERTSTR(result.direction.size() == itsNrDelaysPerEpoch,
-		result.direction.size() << " == " << itsNrDelaysPerEpoch);
+      ASSERTSTR(result.direction.size() == itsNrDelays,
+		result.direction.size() << " == " << itsNrDelays);
       
       LOG_TRACE_CALC("Beamlet directions:");
       for (uint i = 0; i < result.direction.size(); ++i) {
@@ -362,8 +365,8 @@ namespace LOFAR
       // itsBeamDirections.size() elements contain the converted directions
       // for itsStationPositions[0], the second for itsStationPositions[1],
       // etc.
-      LOG_TRACE_CALC_STR("Beamlet geometrical delays:");
-      for (uint i = 0; i < itsNrDelaysPerEpoch; ++i) {
+      LOG_TRACE_CALC("Beamlet geometrical delays:");
+      for (uint i = 0; i < itsNrDelays; ++i) {
         uint j = i / itsBeamDirections.size();
         itsDelaysAfterEnd[i] = 
 	  (result.direction[i] * itsPositionDiffs[j]) / speedOfLight;

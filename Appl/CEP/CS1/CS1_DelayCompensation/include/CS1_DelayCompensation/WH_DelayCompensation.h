@@ -180,7 +180,7 @@ namespace LOFAR
       // Number of delays that will be calculated per epoch. This number is a
       // run-time constant, because it is equal to the number of beams per
       // station times the number of stations.
-      const uint                    itsNrDelaysPerEpoch;
+      const uint                    itsNrDelays;
 
       // The sample rate in a subband, in samples per second..
       const double                  itsSampleRate;
