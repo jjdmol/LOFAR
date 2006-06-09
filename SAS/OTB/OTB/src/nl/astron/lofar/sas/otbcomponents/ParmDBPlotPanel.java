@@ -147,6 +147,25 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             }
             aPopupMenu.add(addSlotMenu);
         }
+        int[] occupiedSlots = itsSlotsPanel.getOccupiedSlotIndexes();
+        if(occupiedSlots.length > 0){
+            JMenu addSlotMenu=new JMenu("Add to plot in slot");
+                
+            logger.trace("Occupied slots to put in popup menu: "+ availableSlots.length);
+            for(int i = 0; i < occupiedSlots.length; i++){
+                JMenuItem aMenuItem=new JMenuItem(""+occupiedSlots[i]);
+                aMenuItem.setActionCommand("Add to plot in slot "+occupiedSlots[i]);
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                
+                addSlotMenu.add(aMenuItem);
+                
+            }
+            aPopupMenu.add(addSlotMenu);
+        }
         aPopupMenu.setOpaque(true);
         aPopupMenu.show(aComponent, x, y );
     }
@@ -165,6 +184,11 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(12));
             logger.debug("Plot Slot extrapolated: "+slotSelected);
             itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName));
+        }
+        else if(evt.getActionCommand().startsWith("Add to plot in slot")){
+            int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(20));
+            logger.debug("Plot Slot extrapolated: "+slotSelected);
+            itsSlotsPanel.addDataToPlot(slotSelected,constructPlotterConstraints(itsParamName));
         }
     }
     
@@ -192,8 +216,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 double endx =Double.parseDouble(paramValues.get(1).toString());
                 double starty = Double.parseDouble(paramValues.get(2).toString());
                 double endy = Double.parseDouble(paramValues.get(3).toString());
-                int numx = Integer.parseInt("5");
-                int numy = Integer.parseInt("5");
+                int numx = Integer.parseInt("10");
+                int numy = Integer.parseInt("10");
                 
                 passToDataAccess[0] = cloneParamName;
                 passToDataAccess[1] = ""+startx;

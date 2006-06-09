@@ -116,8 +116,8 @@ public class PlotSlot extends JPanel{
             add(itsPlot,BorderLayout.CENTER);
         } catch (PlotterException ex) {
             JTextArea error = new JTextArea(ex.getMessage());
-            error.setColumns(50);
-            add(new JTextArea(ex.getMessage()),BorderLayout.CENTER);
+            error.setColumns(20);
+            add(error,BorderLayout.CENTER);
             ex.printStackTrace();
         }
     }
@@ -135,8 +135,8 @@ public class PlotSlot extends JPanel{
                 
             } catch (PlotterException ex) {
                 JTextArea error = new JTextArea(ex.getMessage());
-                error.setColumns(50);
-                add(new JTextArea(ex.getMessage()),BorderLayout.CENTER);
+                error.setColumns(20);
+                add(error,BorderLayout.CENTER);
                 ex.printStackTrace();
             }
             
