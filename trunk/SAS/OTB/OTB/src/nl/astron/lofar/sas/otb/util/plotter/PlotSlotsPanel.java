@@ -74,6 +74,15 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             throw new IllegalArgumentException("A plot already exists in slot "+index);
         }
     }
+    /** adds a button to the BeanForm */
+    public void addDataToPlot(int slotIndex,Object constraints) throws IllegalArgumentException{
+        if(itsSlotManager.isSlotOccupied(slotIndex)){
+            itsSlotManager.modifyPlotInSlot(slotIndex,constraints);
+        }else{
+            throw new IllegalArgumentException("A plot was not found in slot "+slotIndex);
+        }
+    }
+    
     public void clearSlots(){
         itsSlotManager.clearSlots();
         repaint();
@@ -94,6 +103,9 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
     
     public int[] getAvailableSlotIndexes(){
         return itsSlotManager.getAvailableSlotIndexes();
+    }
+    public int[] getOccupiedSlotIndexes(){
+        return itsSlotManager.getOccupiedSlotIndexes();
     }
     
     private void rearrangeSlotGrid(){

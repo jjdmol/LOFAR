@@ -125,6 +125,19 @@ public class PlotSlotManager{
         
         return availableSlots;
     }
+    public int[] getOccupiedSlotIndexes(){
+        int[] occupiedSlots = null;
+        occupiedSlots = new int[countOccupiedSlots()];
+        int index = 0;
+        for(PlotSlot slot : itsPlotSlots){
+            if(!slot.isEmpty()){
+                occupiedSlots[index] = itsPlotSlots.indexOf(slot)+1;
+                index++;
+            }
+        }
+        
+        return occupiedSlots;
+    }
     
     public boolean areSlotsAvailable(){
         boolean slotsAvailable = false;
@@ -143,6 +156,15 @@ public class PlotSlotManager{
             }
         }
         return numberOfAvailableSlots;
+    }
+    public int countOccupiedSlots(){
+        int numberOfOccupiedSlots = 0;
+        for(PlotSlot slot : itsPlotSlots){
+            if(!slot.isEmpty()){
+                numberOfOccupiedSlots++;
+            }
+        }
+        return numberOfOccupiedSlots;
     }
     
     public void createPlotInSlot(int index, Object constraints){
@@ -202,6 +224,9 @@ public class PlotSlotManager{
     
     public boolean isSlotAvailable(int index){
         return getSlot(index).isEmpty();
+    }
+    public boolean isSlotOccupied(int index){
+        return !getSlot(index).isEmpty();
     }
     
     /**
