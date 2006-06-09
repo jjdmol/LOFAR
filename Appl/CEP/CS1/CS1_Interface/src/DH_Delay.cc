@@ -21,28 +21,41 @@
 #include <lofar_config.h>
 
 #include <CS1_Interface/DH_Delay.h>
+#include <Common/LofarLogger.h>
+#include <Blob/BlobField.tcc>        // for BlobField template instantiation
 
 namespace LOFAR
 {
+
+  // Data conversion routine for class DelayInfo.
+  void dataConvert(DataFormat fmt, CS1::DH_Delay::DelayInfo* buf, uint nrval)
+  {
+    for (uint i = 0; i < nrval; i++) {
+      dataConvert32    (fmt, &(buf[i].coarseDelay));
+      dataConvertFloat (fmt, &(buf[i].fineDelayAtBegin));
+      dataConvertFloat (fmt, &(buf[i].fineDelayAfterEnd));
+    }
+  }
+    
   namespace CS1
   {
 
-    DH_Delay::DH_Delay(const string &name, uint nrRSPs)
-      : DataHolder     (name, "DH_Delay"),
-        itsCoarseDelays(0),
-        itsFineDelaysAtBegin(0),
-        itsFineDelaysAfterEnd(0),
-        itsNrRSPs      (nrRSPs)
+    // Instantiate the BlobField template.
+    template class BlobField<DH_Delay::DelayInfo>;
+    
+
+    DH_Delay::DH_Delay(const string &name, uint nrDelays)
+      : DataHolder   (name, "DH_Delay"),
+	itsDelays    (0),
+        itsNrDelays(nrDelays)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
   
     DH_Delay::DH_Delay(const DH_Delay &that)
-      : DataHolder (that),
-        itsCoarseDelays(that.itsCoarseDelays),
-        itsFineDelaysAtBegin(that.itsFineDelaysAtBegin),
-        itsFineDelaysAfterEnd(that.itsFineDelaysAfterEnd),
-        itsNrRSPs  (that.itsNrRSPs)
+      : DataHolder   (that),
+	itsDelays    (that.itsDelays),
+        itsNrDelays(that.itsNrDelays)
     {   
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
@@ -52,7 +65,7 @@ namespace LOFAR
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
-    DataHolder *DH_Delay::clone() const
+    DH_Delay *DH_Delay::clone() const
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       return new DH_Delay(*this);
@@ -62,70 +75,35 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // add the fields to the data definition
-      addField ("CoarseDelay", BlobField<int>(1, itsNrRSPs));
-      addField ("FineDelayAtBegin", BlobField<float>(1, itsNrRSPs));
-      addField ("FineDelayAfterEnd", BlobField<float>(1, itsNrRSPs));
-  
+      // Add the fields to the data definition
+      addField ("Delays", BlobField<DelayInfo>(1, itsNrDelays));
+      
       // create the data blob
       createDataBlock();
 
-      for (uint i=0; i<itsNrRSPs; i++) {
-        itsCoarseDelays[i] = 0;
-        itsFineDelaysAtBegin[i] = 0;
-        itsFineDelaysAfterEnd[i] = 0;
+      for (uint i = 0; i < itsNrDelays; i++) {
+	itsDelays[i] = DelayInfo();
       }
 
     }
 
+    DH_Delay::DelayInfo& DH_Delay::operator[](uint idx)
+    {
+      ASSERTSTR(idx < itsNrDelays, "index out of range");
+      return itsDelays[idx];
+    }
+    
+
+    const DH_Delay::DelayInfo& DH_Delay::operator[](uint idx) const
+    {
+      return const_cast<DH_Delay&>(*this).operator[](idx);
+    }
+    
+
     void DH_Delay::fillDataPointers() 
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      itsCoarseDelays = getData<int> ("CoarseDelay");
-      itsFineDelaysAtBegin = getData<float> ("FineDelayAtBegin");
-      itsFineDelaysAfterEnd = getData<float> ("FineDelayAfterEnd");
-    }
-
-    int DH_Delay::getCoarseDelay(uint rspBoard) const
-    { 
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
-      return itsCoarseDelays[rspBoard]; 
-    }
-
-    void DH_Delay::setCoarseDelay(uint rspBoard, int delay)
-    { 
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
-      itsCoarseDelays[rspBoard] = delay;
-    }
-
-    float DH_Delay::getFineDelayAtBegin(uint rspBoard) const
-    { 
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
-      return itsFineDelaysAtBegin[rspBoard]; 
-    }
-
-    void DH_Delay::setFineDelayAtBegin(uint rspBoard, float delay)
-    { 
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
-      itsFineDelaysAtBegin[rspBoard] = delay;
-    }
-
-    float DH_Delay::getFineDelayAfterEnd(uint rspBoard) const
-    { 
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
-      return itsFineDelaysAfterEnd[rspBoard]; 
-    }
-
-    void DH_Delay::setFineDelayAfterEnd(uint rspBoard, float delay)
-    { 
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      ASSERTSTR(rspBoard < itsNrRSPs, "index is not within range");
-      itsFineDelaysAfterEnd[rspBoard] = delay;
+      itsDelays = getData<DelayInfo> ("Delays");
     }
 
   } // namespace CS1

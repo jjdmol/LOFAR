@@ -32,25 +32,33 @@ namespace LOFAR
     class DH_Delay: public DataHolder
     {
     public:
-      explicit DH_Delay (const string &name, uint nrRSPs);
+
+      struct DelayInfo
+      {
+	DelayInfo() :
+	  coarseDelay(0), fineDelayAtBegin(0), fineDelayAfterEnd(0) {}
+	int32 coarseDelay;
+	float fineDelayAtBegin;
+	float fineDelayAfterEnd;
+      };
+      
+      explicit DH_Delay (const string &name, uint nrDelays);
 
       DH_Delay(const DH_Delay &);
 
       virtual ~DH_Delay();
 
-      DataHolder *clone() const;
+      DH_Delay *clone() const;
 
       // Allocate the buffers.
       virtual void init();
 
-      // accessor functions to the blob data
-      int   getCoarseDelay(uint rspBoard) const;
-      void  setCoarseDelay(uint rspBoard, int delay);
-      float getFineDelayAtBegin(uint rspBoard) const;
-      void  setFineDelayAtBegin(uint rspBoard, float delay);
-      float getFineDelayAfterEnd(uint rspBoard) const;
-      void  setFineDelayAfterEnd(uint rspBoard, float delay);
- 
+      // @{
+      // Accessor functions for the C-array of DelayInfo.
+      DelayInfo& operator[](uint idx);
+      const DelayInfo& operator[](uint idx) const;
+      // @}
+
     private:
       /// Forbid assignment.
       DH_Delay &operator = (const DH_Delay &);
@@ -58,15 +66,20 @@ namespace LOFAR
       // Fill the pointers (itsBuffer) to the data in the blob.
       virtual void fillDataPointers();
 
-      /// pointers to data in the blob
-      int *itsCoarseDelays;
-      float *itsFineDelaysAtBegin;
-      float *itsFineDelaysAfterEnd;
-      uint itsNrRSPs;
+      /// Pointer to data in the blob
+      DelayInfo *itsDelays;
+      
+      // Number of DelayInfo objects.
+      uint itsNrDelays;
     };
-
+    
   } // namespace CS1
-
+  
+  // This method is needed to put DH_Delay::DelayInfo into a BlobField.
+  // \note It must be declared and defined in namespace %LOFAR, otherwise name
+  // lookup will fail.
+  void dataConvert(DataFormat fmt, CS1::DH_Delay::DelayInfo* buf, uint nrval);
+  
 } // namespace LOFAR
 
 #endif 
