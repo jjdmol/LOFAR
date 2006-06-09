@@ -1,124 +1,67 @@
-/*
- 
+/* 
  * PlotDataAccessParmDBImpl.java
- 
  *
- 
  *  Copyright (C) 2002-2007
- 
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- 
  *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
- 
- 
- 
+ *
  *  This program is free software; you can redistribute it and/or modify
- 
  *  it under the terms of the GNU General Public License as published by
- 
  *  the Free Software Foundation; either version 2 of the License, or
- 
  *  (at your option) any later version.
- 
  *
- 
  *  This program is distributed in the hope that it will be useful,
- 
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- 
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- 
  *  GNU General Public License for more details.
- 
  *
- 
  *  You should have received a copy of the GNU General Public License
- 
  *  along with this program; if not, write to the Free Software
- 
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- 
  *
- 
  */
-
-
 
 package nl.astron.lofar.java.cep.jparmfacade;
 
-
-
 import java.rmi.Naming;
-
 import java.util.Calendar;
-
 import java.util.Date;
-
 import java.util.HashMap;
-
 import java.util.Iterator;
-
 import java.util.LinkedList;
-
 import java.util.TimeZone;
-
 import java.util.Vector;
-
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
-
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
-
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
-
-
 /**
- *
- * This class provides an implementation of IPlotDataAccess for use with LOFAR's
- *
- *  jParmFacade interface. It manages connections to that interface, and allows
- *
- * the plotter framework to generate plots of data present in the ParmDB.
- *
- *
- *
- * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacade
- *
- * @created 19-04-2006, 11:00
- *
- * @author pompert
- *
- * @version $Id$
- *
- * @updated 19-apr-2006, 11:00
- *
- */
-
+* This class provides an implementation of IPlotDataAccess for use with LOFAR's
+* jParmFacade interface. It manages connections to that interface, and allows
+* the plotter framework to generate plots of data present in the ParmDB.
+*
+* @see nl.astron.lofar.java.cep.jparmfacade.jParmFacade
+* @created 19-04-2006, 11:00
+* @author pompert
+* @version $Id$
+* @updated 19-apr-2006, 11:00
+*/
 public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
-    
-    
-    
-    private static final int requiredDataConstraints = 7;
-    
-    //Location of ParmDB table file(s)
-    
-    private static final String DATA_INMEP_FILE_PATH = "/home/pompert/transfer/tParmFacade.in_mep";
-    
-    
-    
-    private static jParmFacadeInterface parmDB = null;
-    
+   
+   private static final int requiredDataConstraints = 7;
+  
+   //Location of ParmDB table file(s)
+   
+   private static jParmFacadeInterface parmDB = null;
+   
     /**
      *
      *Creates a new instance of PlotDataAccessParmDBImpl
      *
      */
     
-    public PlotDataAccessParmDBImpl(){
-        
-        
-        
-    }
+   public PlotDataAccessParmDBImpl(){
+   }
     
     /**
      *
@@ -127,66 +70,34 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      */
     
     public void finalize() throws Throwable {
-        
-        parmDB = null;
-        
-        
-        
+       parmDB = null;
     }
-    
-    
-    
+ 
     /**
-     *
+  
      * This method, the most important one, makes a Plotter compliant dataset using
-     *
      * the constraints provided by the PlotPanel, and to do that, it uses the
-     *
      * jParmFacade interface to get the data.
      *
-     *
-     *
-     *
-     *
      * @param constraints The constraints provided by the PlotPanel.
-     *
      * These must be modelled as follows in a String[] :<br><br>
-     *
      * -constraints[0]= the parameter name filter (for example parm*) (String)<br>
-     *
      * -constraints[1]= the startx variable (for example 0) (double)<br>
-     *
      * -constraints[2]= the endx variable (for example 5) (double)<br>
-     *
      * -constraints[3]= the numx variable (for example 5) (int)<br>
-     *
      * -constraints[4]= the starty variable (for example 0) (double)<br>
-     *
      * -constraints[5]= the endy variable (for example 5) (double)<br>
-     *
      * -constraints[6]= the numy variable (for example 5) (int)<br><br>
-     *
      * @return the data set generated
-     *
      * @throws PlotterDataAccessException will be thrown if anything goes wrong
-     *
      * with the ParmDB interface and calls to it.
-     *
-     *
-     *
      */
     
     public HashMap retrieveData(Object constraints) throws PlotterDataAccessException{
-        
         if(parmDB == null){
-            
             this.initiateConnectionToParmDB(constraints);
-            
         }
-        
         HashMap<String,Object> parameterConstraints = (HashMap<String,Object>)constraints;
-        
-        
         
         String[] constraintsArray = (String[])parameterConstraints.get(new String("PARMDBCONSTRAINTS"));
         
@@ -309,13 +220,13 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     
                     /*
                     returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
-                    
+                     
                     returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
-                    
+                     
                     returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
-                    
+                     
                     returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
-                    */
+                     */
                     
                     
                     HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
