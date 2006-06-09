@@ -1,9 +1,23 @@
 /*
  * GenObsConfigPanel.java
  *
- *Panel to set some general Observation configuration values
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
- * Created on 18 May 2006, 09:47
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package nl.astron.lofar.sas.otbcomponents;
@@ -12,16 +26,25 @@ import java.awt.Component;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.ListSelectionModel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.tablemodels.RSPMACTableModel;
+import nl.astron.lofar.sas.otb.util.tablemodels.StationPositionsTableModel;
+import nl.astron.lofar.sas.otb.util.tablemodels.SubbandFreqTableModel;
 import org.apache.log4j.Logger;
 
 /**
+ *Panel to set some general Observation configuration values
+ *
+ * @created 18-05-2006, 09:47
  *
  * @author  coolen
+ *
+ * @version $Id$
  */
 public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     
@@ -39,6 +62,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         itsMainFrame = aMainFrame;
         itsNode=aNode;
         itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
+        initializeTabs();
         initPanel();
     }
     
@@ -128,7 +152,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
             // enable/disable certain controls
         }
         
-        
+      
         
         if (itsNode != null) {
             setNodeName(itsNode.name);
@@ -137,6 +161,24 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
+    /** 
+     * Initializes the tab-panels. Each tab has a specific table model that
+     * contains the data for the table in the tab
+     */
+    private void initializeTabs() {
+        StationPositionsTableModel SPModel = new StationPositionsTableModel(itsMainFrame);
+        StationPositionsPanel.setTableModel(SPModel);
+        StationPositionsPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        SubbandFreqTableModel SFModel = new SubbandFreqTableModel(itsMainFrame);
+        SubbandFrequenciesPanel.setTableModel(SFModel);
+        SubbandFrequenciesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        RSPMACTableModel RMAModel = new RSPMACTableModel(itsMainFrame);
+        RSPMACAddressPanel.setTableModel(RMAModel);
+        RSPMACAddressPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+    }
     
     private String getNodeName() {
 //        return this.NodeNameText.getText();
@@ -196,7 +238,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        jPanel1 = new javax.swing.JPanel();
+        GenericPanel = new javax.swing.JPanel();
         jLabel11 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         NrSubbandsText1 = new javax.swing.JTextField();
@@ -218,15 +260,9 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
         NrSamplesFrameText = new javax.swing.JTextField();
         NodeCancelButton = new javax.swing.JButton();
         NodeApplyButton = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
-        jPanel3 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jTable2 = new javax.swing.JTable();
-        jPanel4 = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        jTable3 = new javax.swing.JTable();
+        StationPositionsPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        SubbandFrequenciesPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        RSPMACAddressPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
 
         jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel11.setText("Generic Observation Configuration Panel");
@@ -281,24 +317,24 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel1Layout.createSequentialGroup()
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel1Layout.createSequentialGroup()
+        org.jdesktop.layout.GroupLayout GenericPanelLayout = new org.jdesktop.layout.GroupLayout(GenericPanel);
+        GenericPanel.setLayout(GenericPanelLayout);
+        GenericPanelLayout.setHorizontalGroup(
+            GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(GenericPanelLayout.createSequentialGroup()
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(GenericPanelLayout.createSequentialGroup()
                         .add(70, 70, 70)
                         .add(jLabel11, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 460, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(jPanel1Layout.createSequentialGroup()
+                    .add(GenericPanelLayout.createSequentialGroup()
                         .add(47, 47, 47)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jPanel1Layout.createSequentialGroup()
+                        .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(GenericPanelLayout.createSequentialGroup()
                                 .add(NodeCancelButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(NodeApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(jPanel1Layout.createSequentialGroup()
-                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(GenericPanelLayout.createSequentialGroup()
+                                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(jLabel12)
                                     .add(jLabel13)
                                     .add(jLabel14)
@@ -309,9 +345,9 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
                                     .add(jLabel19)
                                     .add(jLabel20))
                                 .add(16, 16, 16)
-                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(MeasurementSetNameText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 375, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                    .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                    .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                                         .add(StopTimeText1)
                                         .add(StartTimeText1)
                                         .add(SampleRateText1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE)
@@ -322,161 +358,60 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
                                     .add(NrSamplesFrameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 186, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))))
                 .addContainerGap(232, Short.MAX_VALUE))
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel1Layout.createSequentialGroup()
+        GenericPanelLayout.setVerticalGroup(
+            GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(GenericPanelLayout.createSequentialGroup()
                 .add(11, 11, 11)
                 .add(jLabel11, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(23, 23, 23)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel12)
                     .add(NrSubbandsText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel13)
                     .add(NrChannelsText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel14)
                     .add(NrStationsText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel15)
                     .add(NrRSPBoardsText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(SampleRateText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel16))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel17)
                     .add(StartTimeText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel18)
                     .add(StopTimeText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel19)
                     .add(MeasurementSetNameText1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel20)
                     .add(NrSamplesFrameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(36, 36, 36)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(GenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(NodeCancelButton)
                     .add(NodeApplyButton))
                 .add(219, 219, 219))
         );
-        jTabbedPane1.addTab("Generic", jPanel1);
+        jTabbedPane1.addTab("Generic", GenericPanel);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+        jTabbedPane1.addTab("Station Positions", StationPositionsPanel);
 
-            },
-            new String [] {
-                "Station", "Latitude", "Longitude", "Height"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
-            };
+        jTabbedPane1.addTab("Subband Frequencies", SubbandFrequenciesPanel);
 
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        jScrollPane1.setViewportView(jTable1);
-
-        org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 527, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jTabbedPane1.addTab("StationPositions", jPanel2);
-
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Subband #", "Frequency"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.Double.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        jScrollPane2.setViewportView(jTable2);
-
-        org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel3Layout.createSequentialGroup()
-                .add(24, 24, 24)
-                .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jTabbedPane1.addTab("Subband Frequencies", jPanel3);
-
-        jTable3.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "RSPBoard#", "MAC addres Sender", "MAC address Receiver"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.String.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        jScrollPane3.setViewportView(jTable3);
-
-        org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .add(jScrollPane3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel4Layout.createSequentialGroup()
-                .add(jScrollPane3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 538, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jTabbedPane1.addTab("RSP MAC addresses", jPanel4);
+        jTabbedPane1.addTab("RSP MAC Addresses", RSPMACAddressPanel);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -494,6 +429,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 574, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
     
     private void NodeApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeApplyButtonActionPerformed
 // TODO add your handling code here:
@@ -508,6 +444,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private OtdbRmi    itsOtdbRmi;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel GenericPanel;
     private javax.swing.JTextField MeasurementSetNameText1;
     private javax.swing.JButton NodeApplyButton;
     private javax.swing.JButton NodeCancelButton;
@@ -516,9 +453,12 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField NrSamplesFrameText;
     private javax.swing.JTextField NrStationsText1;
     private javax.swing.JTextField NrSubbandsText1;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel RSPMACAddressPanel;
     private javax.swing.JTextField SampleRateText1;
     private javax.swing.JTextField StartTimeText1;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel StationPositionsPanel;
     private javax.swing.JTextField StopTimeText1;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel SubbandFrequenciesPanel;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
@@ -529,17 +469,7 @@ public class GenObsConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel20;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTable jTable2;
-    private javax.swing.JTable jTable3;
     // End of variables declaration//GEN-END:variables
     
     /**
