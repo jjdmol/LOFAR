@@ -32,6 +32,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
@@ -188,7 +189,11 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         else if(evt.getActionCommand().startsWith("Add to plot in slot")){
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(20));
             logger.debug("Plot Slot extrapolated: "+slotSelected);
-            itsSlotsPanel.addDataToPlot(slotSelected,constructPlotterConstraints(itsParamName));
+            Object parameterConstraints =  constructPlotterConstraints(itsParamName);
+            HashMap<String,Object> addData = new HashMap<String,Object>();
+            addData.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+            addData.put(PlotConstants.DATASET_OPERATOR_ADD,parameterConstraints);
+            itsSlotsPanel.addDataToPlot(slotSelected,addData);
         }
     }
     
