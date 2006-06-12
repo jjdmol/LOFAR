@@ -23,7 +23,6 @@
 
 package nl.astron.lofar.java.cep.jparmfacade;
 
-import java.rmi.Naming;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -107,23 +106,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         
         if(parmDB != null){
             
-            Vector names;
-            
-            try{
-                
-                names = parmDB.getNames(constraintsArray[0]);
-                
-            } catch (Exception ex) {
-                
-                //TODO LOG!
-                
-                PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getNames() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
-                
-                exx.initCause(ex);
-                
-                throw exx;
-                
-            }
+            Vector names = getNames(constraintsArray[0]);
             
             if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
                 
@@ -165,141 +148,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
                 
-                
-                
-                //Every parameter
-                
-                for(int n = 0; n < names.size();n++){
-                    
-                    Vector paramValues;
-                    
-                    try{
-                        
-                        paramValues = parmDB.getRange(names.get(n).toString());
-                        
-                    } catch (Exception ex) {
-                        
-                        //TODO LOG!
-                        
-                        PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getRange() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
-                        
-                        exx.initCause(ex);
-                        
-                        throw exx;
-                        
-                    }
-                    
-                    double startx = Double.parseDouble(constraintsArray[1]);
-                    
-                    double endx = Double.parseDouble(constraintsArray[2]);
-                    
-                    double starty = Double.parseDouble(constraintsArray[4]);
-                    
-                    double endy = Double.parseDouble(constraintsArray[5]);
-                    
-                    int numx = Integer.parseInt(constraintsArray[3]);
-                    
-                    int numy = Integer.parseInt(constraintsArray[6]);
-                    
-                    
-                    
-                    if(paramValues != null && paramValues.size()==4){
-                        
-                        //startx = Double.parseDouble(paramValues.get(0).toString());
-                        
-                        //endx =Double.parseDouble(paramValues.get(1).toString());
-                        
-                        //starty = Double.parseDouble(paramValues.get(2).toString());
-                        
-                        //endy = Double.parseDouble(paramValues.get(3).toString());
-                        
-                        //System.out.println("Parameter Range : startx:"+startx+" endx:" +endx+ " starty: "+starty+" endy:"+endy );
-                        
-                    }
-                    
-                    
-                    /*
-                    returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
-                     
-                    returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
-                     
-                    returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
-                     
-                    returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
-                     */
-                    
-                    
-                    HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
-                    
-                    try {
-                        
-                        values = parmDB.getValues((String) names.get(n), startx, endx, numx, starty, endy, numy);
-                        
-                    } catch (Exception ex) {
-                        
-                        //TODO LOG!
-                        
-                        PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getValues() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
-                        
-                        exx.initCause(ex);
-                        
-                        throw exx;
-                        
-                    }
-                    
-                    //Every parameter value
-                    
-                    Iterator anIterator = values.keySet().iterator();
-                    
-                    while(anIterator.hasNext()){
-                        
-                        HashMap<String,Object> aValueMap = new HashMap<String,Object>();
-                        
-                        
-                        
-                        String aValue = (String)anIterator.next();
-                        
-                        //System.out.println("Parameter Value Found: "+aValue);
-                        
-                        
-                        
-                        aValueMap.put(PlotConstants.DATASET_VALUELABEL,aValue);
-                        
-                        
-                        
-                        Vector<Double> valueDoubles = (Vector<Double>)values.get(aValue);
-                        
-                        //System.out.println("Parameter doubles inside " +aValue+": "+valueDoubles.size()+"x");
-                        
-                        double[] xArray = new double[valueDoubles.size()];
-                        
-                        double[] yArray = new double[valueDoubles.size()];
-                        
-                        
-                        
-                        //Every parameter value double inside the vector
-                        
-                        for(int i = 0;(i<valueDoubles.size());i++){
-                            
-                            xArray[i] = startx + (endx-startx) / valueDoubles.size()*(i+0.5);
-                            
-                            yArray[i] = valueDoubles.get(i);
-                            
-                        }
-                        
-                        aValueMap.put(PlotConstants.DATASET_XVALUES,xArray);
-                        
-                        aValueMap.put(PlotConstants.DATASET_YVALUES,yArray);
-                        
-                        returnValues.add(aValueMap);
-                        
-                    }
-                    
-                    
-                    
-                }
-                
-                returnMap.put(PlotConstants.DATASET_VALUES,returnValues);
+                returnMap.put(PlotConstants.DATASET_VALUES,getParmValues(names,constraintsArray));
                 
                 
                 
@@ -354,10 +203,41 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             this.initiateConnectionToParmDB(constraints);
             
         }
+        //try{
+            
+            LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)currentData.get(PlotConstants.DATASET_VALUES);
+            
+            HashMap<String,Object> operatorsOnDataset = (HashMap<String,Object>)constraints;
+            
+            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_ADD)){
+                HashMap<String,Object> addDataSet = (HashMap<String,Object>)operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_ADD);
+                String[] constraintsArray = (String[])addDataSet.get("PARMDBCONSTRAINTS");
+                Vector names = getNames(constraintsArray[0]);
+                
+                if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
+                    //Every parameter
+                    currentValuesInPlot.addAll(getParmValues(names,constraintsArray));
+                }
+            }
+            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
+                
+                String[] constraintsArray = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_MODIFY);
+                //TODO: IMPLEMENT
+                
+            }
+            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
+                
+                String[] toBeDeletedValues = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_DELETE);
+                //TODO: IMPLEMENT
+                
+            }
+        //}catch(Exception e){
+        //    PlotterDataAccessException ex = new PlotterDataAccessException("An error occurred while updating dataset "+currentData.hashCode());
+        //    ex.initCause(e);
+        //    throw ex;
+        //}
         
-        throw new PlotterDataAccessException("Modifying existing datasets is not supported in "+this.getClass().getName().toString());
-        
-        //Todo: implement!
+        return currentData;
         
     }
     
@@ -396,4 +276,142 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         }
         
     }
+    
+    private Vector getNames(String namefilter) throws PlotterDataAccessException{
+        Vector names;
+        
+        try{
+            
+            names = parmDB.getNames(namefilter);
+            
+        } catch (Exception ex) {
+            
+            //TODO LOG!
+            
+            PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getNames() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+            
+            exx.initCause(ex);
+            
+            throw exx;
+            
+        }
+        return names;
+    }
+    
+    
+    private LinkedList<HashMap> getParmValues(Vector names, String[] constraintsArray) throws PlotterDataAccessException{
+        LinkedList<HashMap> returnList = new LinkedList<HashMap>();
+     
+        for(int n = 0; n < names.size();n++){
+            
+            Vector paramValues;
+            
+            try{
+                
+                paramValues = parmDB.getRange(names.get(n).toString());
+                
+                
+            } catch (Exception ex) {
+                
+                //TODO LOG!
+                
+                PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getRange() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                
+                exx.initCause(ex);
+                
+                throw exx;
+                
+            }
+            
+            double startx = Double.parseDouble(constraintsArray[1]);
+            
+            double endx = Double.parseDouble(constraintsArray[2]);
+            
+            double starty = Double.parseDouble(constraintsArray[4]);
+            
+            double endy = Double.parseDouble(constraintsArray[5]);
+            
+            int numx = Integer.parseInt(constraintsArray[3]);
+            
+            int numy = Integer.parseInt(constraintsArray[6]);
+            
+            
+                        /*
+                        returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
+                         
+                        returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
+                         
+                        returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
+                         
+                        returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
+                         */
+            
+            
+            HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
+            
+            try {
+                
+                values = parmDB.getValues((names.get(n)).toString(), startx, endx, numx, starty, endy, numy);
+                
+            } catch (Exception ex) {
+                
+                //TODO LOG!
+                
+                PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getValues() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                
+                exx.initCause(ex);
+                
+                throw exx;
+                
+            }
+            
+            //Every parameter value
+            
+            Iterator anIterator = values.keySet().iterator();
+            
+            while(anIterator.hasNext()){
+                
+                HashMap<String,Object> aValueMap = new HashMap<String,Object>();
+                              
+                String aValue = (String)anIterator.next();
+                
+                //System.out.println("Parameter Value Found: "+aValue);
+                   
+                
+                aValueMap.put(PlotConstants.DATASET_VALUELABEL,aValue);
+                
+                
+                
+                Vector<Double> valueDoubles = (Vector<Double>)values.get(aValue);
+                
+                //System.out.println("Parameter doubles inside " +aValue+": "+valueDoubles.size()+"x");
+                
+                double[] xArray = new double[valueDoubles.size()];
+                
+                double[] yArray = new double[valueDoubles.size()];
+                
+                
+                
+                //Every parameter value double inside the vector
+                
+                for(int i = 0;(i<valueDoubles.size());i++){
+                    
+                    xArray[i] = startx + (endx-startx) / valueDoubles.size()*(i+0.5);
+                    
+                    yArray[i] = valueDoubles.get(i);
+                    
+                }
+                
+                aValueMap.put(PlotConstants.DATASET_XVALUES,xArray);
+                
+                aValueMap.put(PlotConstants.DATASET_YVALUES,yArray);
+                
+                returnList.add(aValueMap);
+                
+            }
+            
+        }
+        return returnList;
+    }
+    
 }
