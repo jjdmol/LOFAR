@@ -76,6 +76,8 @@ class GPIPropertySet : public GCFPropertyProxy
 
     // handling the link request of the PA
     void linkPropSet(const PALinkPropSetEvent& requestIn);
+    // handling the link request of the PA
+    void linkCEPPropSet(const PALinkPropSetEvent& requestIn);
     // PI client reponses the link request
     // @return false if no subscription could be made
     bool propSetLinkedInClient(const PIPropSetLinkedEvent& responseIn);
@@ -86,6 +88,8 @@ class GPIPropertySet : public GCFPropertyProxy
 
     // handling the unlink request of the PA
     void unlinkPropSet(const PAUnlinkPropSetEvent& requestIn);
+    // handling the unlink request of the PA
+    void unlinkCEPPropSet(const PAUnlinkPropSetEvent& requestIn);
     // PI client reponses the unlink request
     void propSetUnlinkedInClient(const PIPropSetUnlinkedEvent& responseIn);
     

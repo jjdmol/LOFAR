@@ -37,6 +37,7 @@
 
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVString.h>
+#include <GCF/GCF_ServiceInfo.h>
 
 #include "rspctlfe.h"
 #include <APL/RSP_Protocol/RSPFE_Protocol.ph>

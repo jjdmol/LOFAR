@@ -26,7 +26,7 @@
 #include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include <stdio.h>
 #include <GCF/Utils.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR 
 {
@@ -49,8 +49,8 @@ GPMRTController::GPMRTController() :
 
   // initialize the port
   _propertyInterface.init(*this, "client", GCFPortInterface::SAP, PI_PROTOCOL);
-  ParameterSet::instance()->adoptFile("gcf-pmllight.conf");
-  ParameterSet::instance()->adoptFile("PropertyInterface.conf");
+  ACC::APS::globalParameterSet()->adoptFile("gcf-pmllight.conf");
+  ACC::APS::globalParameterSet()->adoptFile("PropertyInterface.conf");
 }
 
 GPMRTController* GPMRTController::instance(bool temporary)

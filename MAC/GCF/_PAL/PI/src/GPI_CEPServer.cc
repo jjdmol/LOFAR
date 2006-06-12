@@ -27,6 +27,7 @@
 #include <Blob/BlobOStream.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GPI_TH_Port.h>
+#include "GPI_PropertySet.h"
 #include <Transport/CSConnection.h>
 
 namespace LOFAR 
@@ -81,12 +82,24 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
     case F_TIMER:
     case PA_SCOPE_REGISTERED:
     case PA_SCOPE_UNREGISTERED:
-    case PA_LINK_PROP_SET:
-    case PA_UNLINK_PROP_SET:
       // these message can be still done by the baseclass
       GPIPMLlightServer::operational(e, p);
       break;
      
+    case PA_LINK_PROP_SET:
+    {
+      PALinkPropSetEvent requestIn(e);
+      linkPropSet(requestIn);
+      break;
+    }
+
+    case PA_UNLINK_PROP_SET:
+    {
+      PAUnlinkPropSetEvent requestIn(e);
+      unlinkPropSet(requestIn);
+      break;
+    }
+
     case F_DATAIN:
     {
       // this indicates that there is data received from the CEP-PMLlight port
@@ -238,6 +251,51 @@ void GPICEPServer::sendMsgToClient(GCFEvent& msg)
         x.what()));    
   }
 }
+
+void GPICEPServer::linkPropSet(const PALinkPropSetEvent& requestIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(requestIn.scope);
+  LOG_INFO(formatString ( 
+      "PA-REQ in CEPServer: Link properties on scope %s", 
+      requestIn.scope.c_str()));
+  if (pPropertySet)
+  {
+    pPropertySet->linkCEPPropSet(requestIn);
+  }
+  else
+  {
+    PAPropSetLinkedEvent responseOut;
+    responseOut.result = PA_PS_GONE;
+    responseOut.scope = requestIn.scope;
+    sendMsgToPA(responseOut);
+    LOG_DEBUG(formatString ( 
+        "Property set with scope %d was deleted in the meanwhile", 
+        responseOut.scope.c_str()));
+  }
+}
+
+void GPICEPServer::unlinkPropSet(const PAUnlinkPropSetEvent& requestIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(requestIn.scope);
+  LOG_INFO(formatString ( 
+      "PA-REQ in CEPServer: Unlink properties on scope %s", 
+      requestIn.scope.c_str()));
+  if (pPropertySet)
+  {
+    pPropertySet->unlinkCEPPropSet(requestIn);
+  }
+  else
+  {
+    PAPropSetUnlinkedEvent responseOut;
+    responseOut.result = PA_PS_GONE;
+    responseOut.scope = requestIn.scope;
+    sendMsgToPA(responseOut);
+    LOG_DEBUG(formatString ( 
+        "Property set with scope %d was deleted in the meanwhile", 
+        responseOut.scope.c_str()));
+  }
+}
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

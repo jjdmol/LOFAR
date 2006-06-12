@@ -28,7 +28,6 @@
 #include <GCF/Utils.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
-
 namespace LOFAR 
 {
  namespace GCF 
@@ -272,6 +271,39 @@ void GPIPropertySet::linkPropSet(const PALinkPropSetEvent& requestIn)
   }
 }
 
+void GPIPropertySet::linkCEPPropSet(const PALinkPropSetEvent& requestIn)
+{
+  PAPropSetLinkedEvent errResponse;
+  errResponse.scope = _scope;
+  switch (_state)
+  {
+    case S_ENABLED:
+    {
+      TPAResult result(PA_NO_ERROR);
+      // write __pa_PiLinkPS datapoint
+      setPropValue(PI_LINKPS, requestIn.scope, false);
+
+      _state = S_LINKED;
+      propSetLinkedInPI(result);
+      break;
+    }
+    case S_DISABLED:
+    case S_DISABLING:
+      LOG_DEBUG(formatString ( 
+          "Property set with scope %s is deleting in the meanwhile", 
+          _scope.c_str()));
+      errResponse.result = PA_PS_GONE;   
+      sendMsgToPA(errResponse);
+      break;
+      
+    default:
+      wrongState("linkProperties");
+      errResponse.result = PA_WRONG_STATE;
+      sendMsgToPA(errResponse);
+      break;
+  }
+}
+
 bool GPIPropertySet::propSetLinkedInClient(const PIPropSetLinkedEvent& responseIn)
 {
   switch (_state)
@@ -404,6 +436,42 @@ void GPIPropertySet::unlinkPropSet(const PAUnlinkPropSetEvent& requestIn)
         ASSERT(_counter == 0);
   
         sendMsgToClient(requestOut);
+      }
+      else
+      {
+        propSetUnlinkedInPI(result);
+      }
+      break;  
+    }
+    case S_DISABLED:
+    case S_DISABLING:
+      LOG_DEBUG(formatString ( 
+          "Property set with scope %s is deleted in the meanwhile", 
+          _scope.c_str()));
+      propSetUnlinkedInPI(PA_PS_GONE);
+      break;
+      
+    default:
+      wrongState("unlinkPropSet");
+      propSetUnlinkedInPI(PA_WRONG_STATE);
+      break;
+  }
+}
+
+void GPIPropertySet::unlinkCEPPropSet(const PAUnlinkPropSetEvent& requestIn)
+{
+  switch (_state)
+  {
+    case S_LINKED:
+    {    
+      _state = S_ENABLED;
+      TPAResult result = unsubscribeAllProps();
+      if (result == PA_NO_ERROR)
+      {
+        // write __pa_PiUnlinkPS datapoint
+        setPropValue(PI_UNLINKPS, requestIn.scope, false);
+
+        propSetUnlinkedInPI(result);
       }
       else
       {

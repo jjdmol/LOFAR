@@ -7,6 +7,8 @@ main()
 	types = dpTypes("GCF*");
 	handleType(types, "GCFPaPsEnabled", DPEL_STRING);
 	handleType(types, "GCFPaPsIndication", DPEL_STRING);
+	handleType(types, "GCFPiLinkPS", DPEL_STRING);
+	handleType(types, "GCFPiUnlinkPS", DPEL_STRING);
 	handleType(types, "GCFDistPort", DPEL_BLOB);
 	if (!dpExists("__gcfportAPI_DPAserver"))
 	{
@@ -27,6 +29,8 @@ main()
 	DebugN("Add type " + type);
 	dpCreate("__gcf_wd", type);
 	dpCreate("__pa_PSIndication", "GCFPaPsIndication");
+	dpCreate("__pa_PiLinkPS", "GCFPiLinkPS");
+	dpCreate("__pa_PiUnlinkPS", "GCFPiUnlinkPS");
 }
 
 deleteDPs(string type)
