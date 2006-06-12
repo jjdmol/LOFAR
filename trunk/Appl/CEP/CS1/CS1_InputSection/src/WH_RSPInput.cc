@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Epoch.h>
 #include <CS1_InputSection/WH_RSPInput.h>
 #include <CS1_Interface/DH_RSP.h>
 #include <CS1_Interface/DH_Delay.h>
@@ -151,10 +151,10 @@ namespace LOFAR {
       // determine starttime
       double startTime = itsPS.getDouble("Observation.StartTime");
       if (startTime > 0) {
-	double utc = AMC::TimeCoord(startTime).utc();
+	double utc = AMC::Epoch(startTime).utc();
 	int sampleFreq = itsPS.getInt32("Observation.SampleRate");
-	int seconds = floor(utc);
-	int samples = (utc - seconds) * sampleFreq;
+	int seconds = (int)floor(utc);
+	int samples = (int)((utc - seconds) * sampleFreq);
 
 	itsSyncedStamp = TimeStamp(seconds, samples);
       } else { 
@@ -205,7 +205,7 @@ namespace LOFAR {
       // delay control
       delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
       // Get delay from the delay controller
-      delayedstamp = itsSyncedStamp + delayDHp->getCoarseDelay(itsStationNr);    
+      delayedstamp = itsSyncedStamp + (*delayDHp)[itsStationNr].coarseDelay;
 
       /* startstamp is the synced and delay-controlled timestamp to 
 	 start from in cyclic buffer */
@@ -240,8 +240,9 @@ namespace LOFAR {
 	rspDHp->setStationID(itsStationNr);
 	rspDHp->setTimeStamp(delayedstamp);
 	rspDHp->fillExtraData();
-	rspDHp->setFineDelayAtBegin(delayDHp->getFineDelayAtBegin(itsStationNr));
-	rspDHp->setFineDelayAfterEnd(delayDHp->getFineDelayAfterEnd(itsStationNr));
+ 	rspDHp->setFineDelayAtBegin((*delayDHp)[itsStationNr].fineDelayAtBegin);
+ 	rspDHp->setFineDelayAfterEnd((*delayDHp)[itsStationNr].fineDelayAfterEnd);
+	
       }    
 
       itsSyncedStamp += itsNSamplesPerSec;
