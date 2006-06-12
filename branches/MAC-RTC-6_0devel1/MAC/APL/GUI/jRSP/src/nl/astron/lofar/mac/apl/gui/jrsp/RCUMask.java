@@ -1,22 +1,38 @@
+/*
+ * RCUMask.java
+ *
+ * Copyright (C) 2006
+ * ASTRON (Netherlands Foundation for Research in Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id$
+ */
+
 package nl.astron.lofar.mac.apl.gui.jrsp;
 
+import java.util.BitSet;
+
 /**
- * The RCUMask can be used to construct or alter a int(eger) rcumask that is
- * used to determine which boards should be accessed by a function in the Board 
- * class.
- * The mask can be set through passing a int or editing every bit indepentedly 
- * of each other: setMask(int value), setBit(int index) and clearBit(int index).
- * The methods setBit and clearBit are used to either set or unset (clear) a
- * bit. 
- *
- * Because it's important that RCUMask doesn't generate false rcumask's a jUnit
- * testcase has been made that runs several tests on this class. RCUMaskTest,
- * the test class can be found in the Test Packages.
- * @see nl.astron.lofar.mac.apl.gui.jrsp.RCUMaskTest
+ * RCUMask is used to specify the RCU's that should be affected by a call to the
+ * RSPport on the C++ side.
  *
  * @author balken
  */
-public class RCUMask 
+public class RCUMask// implements IMask
 {
     /** The actual mask */
     int itsMask;
@@ -28,21 +44,22 @@ public class RCUMask
     {
         itsMask = 0;
     }
-    
-    
+        
     /**
      * Creates a new instance of RCUMask based on two other RCUMasks (performs
      * bitwise or on the two board).
+     * @param   one         One of the two RCUMasks used to create a new one.
+     * @param   two         The other of the two masks to create the new one.
      */
     public RCUMask(RCUMask one, RCUMask two)
     {
-        itsMask = one.getMask() | two.getMask();
+        itsMask = one.intValue() | two.intValue();
     }
     
     /**
      * Overloaded constructor that creates a new instance of RCUMask based on
      * the value passed as parameter.
-     * @param   aMask   A already existing mask
+     * @param   aMask       A already existing mask
      */
     public RCUMask(int aMask)
     {
@@ -50,10 +67,10 @@ public class RCUMask
     }
     
     /**
-     * Returns the mask.
-     * @return  itsMask
+     * Represents the Mask as a int value.
+     * @return  The int value representing the Mask
      */
-    public int getMask()
+    public int intValue()
     {
         return itsMask;
     }
@@ -114,9 +131,8 @@ public class RCUMask
     /**
      * Returns 32, the size of a Java integer.
      */
-    public int getSize()
+    public int size()
     {
         return 32;
     }
-    
 }

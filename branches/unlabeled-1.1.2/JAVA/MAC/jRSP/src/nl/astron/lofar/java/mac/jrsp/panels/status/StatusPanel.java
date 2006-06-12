@@ -1,9 +1,34 @@
+/*
+ * StatusPanel.java
+ *
+ * Copyright (C) 2006
+ * ASTRON (Netherlands Foundation for Research in Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id$
+ */
+
 package nl.astron.lofar.mac.apl.gui.jrsp.panels.status;
 
 import javax.swing.JPanel;
 import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
+import nl.astron.lofar.mac.apl.gui.jrsp.RSPMask;
 import nl.astron.lofar.mac.apl.gui.jrsp.panels.*;
+import org.apache.log4j.Logger;
 
 /**
  * The StatusPanel displays the Status of the RSPboard (BoardStatus) that is 
@@ -25,11 +50,17 @@ public class StatusPanel extends JPanel implements ITabPanel
     /** The main panel. */
     private MainPanel mainPanel;
     
+    /** Logger */
+    private Logger itsLogger;
+    
     /** 
      * Creates new form StatusPanel.
      */
     public StatusPanel() 
     {
+        itsLogger = Logger.getLogger(getClass());
+        itsLogger.info("Constructor");
+        
         initComponents();
         
         blp0SyncStatusPanel.setTitle("BLP0 Sync");
@@ -59,11 +90,23 @@ public class StatusPanel extends JPanel implements ITabPanel
     /**
      * Method that can be called by the main panel to update this panel.
      */
-    public void update()
-    {       
-        RCUMask mask = new RCUMask(mainPanel.getSelectedBoardIndex());
-        setFields(mainPanel.getBoard().getStatus(mask.getMask())[0]);
+    public void update(int updateType)
+    {
+        if (!mainPanel.getBoard().isConnected()) {
+            //setFields(null); // clears all the inputfields.
+            return;            
+        }
+        
+        RSPMask mask = new RSPMask(mainPanel.getSelectedBoardIndex());
+        setFields(mainPanel.getBoard().getStatus(mask)[0]);
     }
+    
+    /**
+     * Method that can be called to disable or enable the board.
+     * @param   b       Boolean value used to determine to enable (true) or
+     *                  disable (false).
+     */
+    public void enablePanel(boolean b) {}    
     
     /**
      * Sets the fields on the panel to the right values.
@@ -87,7 +130,7 @@ public class StatusPanel extends JPanel implements ITabPanel
         blp1AdoStatusPanel.setFields(boardStatus.blp1AdcOffset);
         blp2AdoStatusPanel.setFields(boardStatus.blp2AdcOffset);
         blp3AdoStatusPanel.setFields(boardStatus.blp3AdcOffset);
-    }
+    }    
     
     /** This method is called from within the constructor to
      * initialize the form.

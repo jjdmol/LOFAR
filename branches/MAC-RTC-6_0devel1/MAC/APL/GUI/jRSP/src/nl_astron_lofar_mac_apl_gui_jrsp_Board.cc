@@ -13,8 +13,6 @@ using namespace std;
 
 // Define function's
 jobject ConvertBoardStatus(JNIEnv*, BoardStatus&);
-BoardStatus GetDummyBoardStatus(); // Function for testing.
-BoardStatus GetDummyBoardStatus2(); // Function for testing.
 
 /**
  * Returns a pointer to a new instance of RSPport. The returned pointer can be
@@ -32,12 +30,20 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_init(JNIEnv *
 	const char * charsHostname = env->GetStringUTFChars(hostname, 0);
 	string strHostname (charsHostname);
 
-	RSPport * IOport = new RSPport(strHostname);
+	RSPport * IOport;
+	jint ptrRSPport = 0; // the return value, pointer to RSPport.
+
+	try {
+		IOport = new RSPport(strHostname);
+		ptrRSPport = (jint)IOport; // set return value to pointer.
+	} catch (exception &ex) {
+		env->ThrowNew(env->FindClass("java/lang/Exception"), ex.what());
+	}
 
 	// Free local references.	
 	env->ReleaseStringUTFChars(hostname, charsHostname);
 
-	return (jint)IOport;
+	return ptrRSPport;
 }
 
 /**
@@ -562,175 +568,89 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getMaxRSPBoar
 	return IOport->getMaxRSPboards();
 }
 
-
 /**
- * TEST METHOD, SHOULD BE REMOVED IN FINAL VERSION.
+ * Sets filter.
+ * @param env
+ * @param obj
+ * @param rcuMask
+ * @param filterNr    The number of the filter to apply.
+ * @param ptrRSPport  Pointer to the RSPport instance.
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_test(JNIEnv * env, jobject o)
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setFilter(JNIEnv * env, jobject obj, jint rcuMask, jint filterNr, jint ptrRSPport)
 {
-	uint32 n = 42;//94967295; // causes warning because of it's size.
+	// get pointer to RSPport
+	RSPport * IOport = (RSPport *) ptrRSPport;
 
-	cout << "C++: " << n << endl;
-
-	return n;
-
-	
-} // test()
-
-BoardStatus GetDummyBoardStatus()
-{
-	BoardStatus bs;
-
-	bs.rsp.voltage_1_2 = 3;
-	bs.rsp.voltage_2_5 = 3;
-	bs.rsp.voltage_3_3 = 3;
-	bs.rsp.pcb_temp = 3;
-	bs.rsp.bp_temp = 3;
-	bs.rsp.ap0_temp = 3;
-	bs.rsp.ap1_temp = 3;
-	bs.rsp.ap2_temp = 3;
-	bs.rsp.ap3_temp = 3;
-	bs.rsp.bp_clock = 3;
-
-	bs.eth.nof_frames = 3;
-	bs.eth.nof_errors = 3;
-	bs.eth.last_error = 3;
-	
-	bs.mep.seqnr = 3;
-	bs.mep.error = 3;
-
-	bs.diag.interface = 3;
-	bs.diag.mode = 3;
-	bs.diag.ri_errors = 3;
-	bs.diag.rcux_errors = 3;
-	bs.diag.rcuy_errors = 3;
-	bs.diag.lcu_errors = 3;
-	bs.diag.cep_errors = 3;
-	bs.diag.serdes_errors = 3;
-	bs.diag.ap0_ri_errors = 3;
-	bs.diag.ap1_ri_errors = 3;
-	bs.diag.ap2_ri_errors = 3;
-	bs.diag.ap3_ri_errors = 3;
-
-	bs.ap0_sync.ext_count = 3;
-	bs.ap0_sync.sync_count = 3;
-	bs.ap0_sync.sample_offset = 3;
-	bs.ap0_sync.slice_count = 3;
-	bs.ap1_sync.ext_count = 3;
-	bs.ap1_sync.sync_count = 3;
-	bs.ap1_sync.sample_offset = 3;
-	bs.ap1_sync.slice_count = 3;
-	bs.ap2_sync.ext_count = 3;
-	bs.ap2_sync.sync_count = 3;
-	bs.ap2_sync.sample_offset = 3;
-	bs.ap2_sync.slice_count = 3;
-	bs.ap3_sync.ext_count = 3;
-	bs.ap3_sync.sync_count = 3;
-	bs.ap3_sync.sample_offset = 3;
-	bs.ap3_sync.slice_count = 3;
-
-	bs.blp0_rcu.nof_overflowx = 3;
-	bs.blp0_rcu.nof_overflowy = 3;
-	bs.blp1_rcu.nof_overflowx = 3;
-	bs.blp1_rcu.nof_overflowy = 3;
-	bs.blp2_rcu.nof_overflowx = 3;
-	bs.blp2_rcu.nof_overflowy = 3;
-	bs.blp3_rcu.nof_overflowx = 3;
-	bs.blp3_rcu.nof_overflowy = 3;
-
-	bs.cp_status.rdy = 1;
-	bs.cp_status.err = 1;
-	bs.cp_status.fpga = 1;
-	bs.cp_status.im = 1;
-	bs.cp_status.trig = 4;
-
-	bs.blp0_adc_offset.adc_offset_x = 3;
-	bs.blp0_adc_offset.adc_offset_y = 3;
-	bs.blp1_adc_offset.adc_offset_x = 3;
-	bs.blp1_adc_offset.adc_offset_y = 3;
-	bs.blp2_adc_offset.adc_offset_x = 3;
-	bs.blp2_adc_offset.adc_offset_y = 3;
-	bs.blp3_adc_offset.adc_offset_x = 3;
-	bs.blp3_adc_offset.adc_offset_y = 3;
-	
-	return bs;
+	return IOport->setFilter(rcuMask, filterNr);
 }
 
-BoardStatus GetDummyBoardStatus2()
+/**
+ * Sends clear signal to the selected board.
+ * @param env
+ * @param obj
+ * @param rcuMask     A mask holding the selected board.
+ * @param ptrRSPport  Pointer to the RSPport instance
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendClear(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
-	BoardStatus bs;
+	// get pointer to RSPport
+	RSPport * IOport = (RSPport *) ptrRSPport;
 
-	bs.rsp.voltage_1_2 = 12;
-	bs.rsp.voltage_2_5 = 23;
-	bs.rsp.voltage_3_3 = 51;
-	bs.rsp.pcb_temp = 4;
-	bs.rsp.bp_temp = 5;
-	bs.rsp.ap0_temp = 67;
-	bs.rsp.ap1_temp = 11;
-	bs.rsp.ap2_temp = 3;
-	bs.rsp.ap3_temp = 5;
-	bs.rsp.bp_clock = 8;
+	return IOport->sendClear(rcuMask);
+}
 
-	bs.eth.nof_frames = 0;
-	bs.eth.nof_errors = 2;
-	bs.eth.last_error = 1;
-	
-	bs.mep.seqnr = 123;
-	bs.mep.error = 5;
+/**
+ * Sends reset signal to the selected board.
+ * @param env
+ * @param obj
+ * @param rcuMask     A mask holding the selected board.
+ * @param ptrRSPport  Pointer to the RSPport instance
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendReset(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+{
+	// get pointer to RSPport
+	RSPport * IOport = (RSPport *) ptrRSPport;
 
-	bs.diag.interface = 45;
-	bs.diag.mode = 6;
-	bs.diag.ri_errors = 7;
-	bs.diag.rcux_errors = 8;
-	bs.diag.rcuy_errors = 9;
-	bs.diag.lcu_errors = 0;
-	bs.diag.cep_errors = 12;
-	bs.diag.serdes_errors = 3;
-	bs.diag.ap0_ri_errors = 4;
-	bs.diag.ap1_ri_errors = 5;
-	bs.diag.ap2_ri_errors = 2;
-	bs.diag.ap3_ri_errors = 0;
+	return IOport->sendReset(rcuMask);
+}
 
-	bs.ap0_sync.ext_count = 13;
-	bs.ap0_sync.sync_count = 42;
-	bs.ap0_sync.sample_offset = 5;
-	bs.ap0_sync.slice_count = 65;
-	bs.ap1_sync.ext_count = 7;
-	bs.ap1_sync.sync_count = 9;
-	bs.ap1_sync.sample_offset = 2;
-	bs.ap1_sync.slice_count = 4;
-	bs.ap2_sync.ext_count = 5;
-	bs.ap2_sync.sync_count = 7;
-	bs.ap2_sync.sample_offset = 1;
-	bs.ap2_sync.slice_count = 2;
-	bs.ap3_sync.ext_count = 3;
-	bs.ap3_sync.sync_count = 6;
-	bs.ap3_sync.sample_offset = 8;
-	bs.ap3_sync.slice_count = 9;
+/**
+ * Sends sync signal to the selected board.
+ * @param env
+ * @param obj
+ * @param rcuMask     A mask holding the selected board.
+ * @param ptrRSPport  Pointer to the RSPport instance
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendSync(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+{
+	// get pointer to RSPport
+	RSPport * IOport = (RSPport *) ptrRSPport;
 
-	bs.blp0_rcu.nof_overflowx = 10;
-	bs.blp0_rcu.nof_overflowy = 6;
-	bs.blp1_rcu.nof_overflowx = 5;
-	bs.blp1_rcu.nof_overflowy = 4;
-	bs.blp2_rcu.nof_overflowx = 3;
-	bs.blp2_rcu.nof_overflowy = 7;
-	bs.blp3_rcu.nof_overflowx = 1;
-	bs.blp3_rcu.nof_overflowy = 3;
+	return IOport->sendSync(rcuMask);
+}
 
-	bs.cp_status.rdy = 1;
-	bs.cp_status.err = 0;
-	bs.cp_status.fpga = 1;
-	bs.cp_status.im = 0;
-	bs.cp_status.trig = 2;
+/**
+ * @param env
+ * @param obj
+ * @param mask
+ * @param ptrRSPport
+ */
+JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getBeamletStats(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+{
+	RSPport * IOport = (RSPport *) ptrRSPport;
 
-	bs.blp0_adc_offset.adc_offset_x = 666;
-	bs.blp0_adc_offset.adc_offset_y = 12;
-	bs.blp1_adc_offset.adc_offset_x = 13;
-	bs.blp1_adc_offset.adc_offset_y = 34;
-	bs.blp2_adc_offset.adc_offset_x = 89;
-	bs.blp2_adc_offset.adc_offset_y = 6;
-	bs.blp3_adc_offset.adc_offset_x = 54;
-	bs.blp3_adc_offset.adc_offset_y = 3;
-	
-	return bs;
+	// get a vector with the subband stats
+	vector<double> vecData = IOport->getBeamletStats(rcuMask);
+
+	// make a jdouble array to return to Java
+	jdoubleArray ret = env->NewDoubleArray(vecData.size());
+
+	// move vecData elements to ret
+	for (int i = 0; i < vecData.size(); i++)
+	{
+		env->SetDoubleArrayRegion(ret, i, 1, &vecData[i]);
+	}
+
+	// return array
+	return ret;
 }

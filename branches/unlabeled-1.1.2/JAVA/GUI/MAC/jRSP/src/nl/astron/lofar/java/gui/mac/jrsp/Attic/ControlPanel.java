@@ -1,3 +1,27 @@
+/*
+ * ControlPanel.java
+ *
+ * Copyright (C) 2006
+ * ASTRON (Netherlands Foundation for Research in Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id$
+ */
+
 package nl.astron.lofar.mac.apl.gui.jrsp.panels;
 
 import java.awt.event.ActionEvent;
@@ -16,8 +40,13 @@ public class ControlPanel extends JPanel implements ActionListener
         action has occured. */
     public static final int STOP = 0;
     public static final int UPDATE = 1;
-    public static final int REFRESH = 2;    
-   
+    public static final int REFRESH = 2;
+    
+    /** Variables used to identify the title that should be displayed on the
+        connect-button (btnConnect). */
+    public static final int TITLE_CONNECT = 0;
+    public static final int TITLE_REFRESH = 1;
+    
     /** List of ActionListeners listening to this object. */
     private EventListenerList listenerList; 
     
@@ -34,6 +63,11 @@ public class ControlPanel extends JPanel implements ActionListener
         txtRefreshRate.addActionListener(this);
         btnConnect.addActionListener(this);
         btnStop.addActionListener(this);
+        
+        /*
+         * Disable stop-button on default.
+         */
+        setStopButtonEnabled( false );
     }
     
     public void addActionListener(ActionListener l)
@@ -140,6 +174,29 @@ public class ControlPanel extends JPanel implements ActionListener
     {
         txtRefreshRate.setText(Integer.toString(refreshRate));
     }
+    
+    /**
+     * Changes the title on the connect button based on the title passed.
+     * @param title          The title that determines if "Refresh" or
+     *                          "Connect" should be shown.
+     */
+    public void setConnectButtonTitle(int title) {
+        switch(title) {
+            case TITLE_CONNECT:
+                btnConnect.setText("Connect");
+                break;
+            case TITLE_REFRESH:
+                btnConnect.setText("Refresh");
+        }
+    }
+    
+    /**
+     * Enables or disables the stop button.
+     * @param   b           Boolean value. Enable when true, disable when false.
+     */
+    public void setStopButtonEnabled(boolean b) {
+        btnStop.setEnabled(b);
+    }    
     
     /** This method is called from within the constructor to
      * initialize the form.

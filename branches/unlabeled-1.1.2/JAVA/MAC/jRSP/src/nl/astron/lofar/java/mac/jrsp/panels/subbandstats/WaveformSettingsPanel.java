@@ -1,45 +1,59 @@
 /*
  * WaveformSettingsPanel.java
  *
- * Created on May 1, 2006, 11:28 AM
+ * Copyright (C) 2006
+ * ASTRON (Netherlands Foundation for Research in Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id$
  */
 
 package nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats;
 
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
 
 /**
  *
  * @author  balken
  */
-public class WaveformSettingsPanel extends javax.swing.JPanel {
-    
-    private SubbandStatsPanel ssPanel;
-        
+public class WaveformSettingsPanel extends JPanel 
+{       
     /** Creates new form WaveformSettingsPanel */
-    public WaveformSettingsPanel() {
+    public WaveformSettingsPanel() 
+    {
         initComponents();
-        
-        /*
-         * Initialize subpanels.
-         */
-        listPanel.init(this);
     }
     
-    public void init(SubbandStatsPanel ssPanel)
+    /**
+     * Returns the input panel.
+     */
+    public WaveformSettingsInputPanel getInputPanel()
     {
-        this.ssPanel = ssPanel;        
+        return inputPanel;
     }
     
-    public void update()
+    /**
+     * Returns the list panel.
+     */
+    public WaveformSettingsListPanel getListPanel()
     {
-        listPanel.update();
-    }
-    
-    SubbandStatsPanel getSubbandStatsPanel()
-    {
-        return ssPanel;
+        return listPanel;
     }    
     
     /** This method is called from within the constructor to
@@ -50,69 +64,47 @@ public class WaveformSettingsPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         inputPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsInputPanel();
-	inputPanel.addActionListener(new java.awt.event.ActionListener() {
-	    public void actionPerformed(java.awt.event.ActionEvent evt)
-	    {
-	        inputPanelActionPerformed(evt);
-	    }
-	});
-        listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsList();
+        listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsListPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
 
         setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createTitledBorder("Waveform Settings"))));
+
+        jLabel1.setFont(new java.awt.Font("Dialog", 0, 12));
+        jLabel1.setText("The RCU's that have user-defined waveform settings appear in the list below, for easy removing.");
+
+        jLabel2.setFont(new java.awt.Font("Dialog", 0, 12));
+        jLabel2.setText("Using the input-panel to change settings of the RCU's will affect all selected RCU's in the statistics plot's above.");
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(inputPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(inputPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 318, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(listPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 481, Short.MAX_VALUE))
+                .add(listPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+            .add(jLabel1)
+            .add(jLabel2)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                .add(org.jdesktop.layout.GroupLayout.LEADING, listPanel, 0, 0, Short.MAX_VALUE)
-                .add(org.jdesktop.layout.GroupLayout.LEADING, inputPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+            .add(layout.createSequentialGroup()
+                .add(jLabel1)
+                .add(6, 6, 6)
+                .add(jLabel2)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(inputPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(listPanel, 0, 0, Short.MAX_VALUE))
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
     
-    private void inputPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputPanelActionPerformed
-        /*
-         * Make a RCUMask that combines teh RCUMasks of the both plotters.
-         */
-        RCUMask mask = new RCUMask(ssPanel.getPlotLeft().getRCUMask(), ssPanel.getPlotRight().getRCUMask());
-        
-        /*
-         * Call setWaveformSettings. But first parse the mode, freq. and ampl
-         * to int's and a double.
-         */
-        try
-        {
-            int mode = 1; // default value for mode.
-            short phase = Short.parseShort(inputPanel.getPhase());
-            double frequency = Double.parseDouble(inputPanel.getFrequency());
-            int amplitude = Integer.parseInt(inputPanel.getAmplitude());
-
-            if (!ssPanel.getMainPanel().getBoard().setWaveformSettings(mask.getMask(), mode, frequency, phase, amplitude))
-            {
-                JOptionPane.showMessageDialog(null, "Failed to change the waveform settings.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-        catch(NumberFormatException nfe)
-        {
-            JOptionPane.showMessageDialog(null, "Incorrect value entered. All fields should contain a positive value.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-
-        /*
-         * Update whole panel.
-         */
-        ssPanel.update();
-    }//GEN-LAST:event_inputPanelActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsInputPanel inputPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsList listPanel;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsListPanel listPanel;
     // End of variables declaration//GEN-END:variables
-    
 }

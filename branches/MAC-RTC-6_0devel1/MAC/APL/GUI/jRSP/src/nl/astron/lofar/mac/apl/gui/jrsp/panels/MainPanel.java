@@ -1,18 +1,36 @@
+/*
+ * MainPanel.java
+ *
+ * Copyright (C) 2006
+ * ASTRON (Netherlands Foundation for Research in Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id$
+ */
+
 package nl.astron.lofar.mac.apl.gui.jrsp.panels;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Cursor;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import nl.astron.lofar.mac.apl.gui.jrsp.Board;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.panels.IPluginPanel;
+import org.apache.log4j.Logger;
 
 /**
  * The MainPanel is the GUI entrypoint for the jRSP project. It has a ListPanel
@@ -32,14 +50,13 @@ import nl.astron.lofar.sas.otb.panels.IPluginPanel;
  * 
  * @author balken
  */
-public class MainPanel extends JPanel implements IPluginPanel, 
-        ListSelectionListener, ActionListener, ChangeListener, Runnable
+public class MainPanel extends JPanel implements IPluginPanel, Runnable
 {
     /** MainFrame */
-    private MainFrame mainFrame;
+    private MainFrame itsMainFrame;
     
     /** Board */
-    private Board board;
+    private Board itsBoard;
     
     /** Refresh Thread - Thread used to refresh the displayed panel. */
     private Thread refreshThread;
@@ -52,45 +69,44 @@ public class MainPanel extends JPanel implements IPluginPanel,
     
     /** Changed */
     private boolean changed;
-    
+            
+    /** Logger */
+    private Logger itsLogger;
+        
     /** 
      * Creates new form MainPanel.
      */
     public MainPanel() 
     {
-        mainFrame = null;
-        board = new Board();
+        itsLogger = Logger.getLogger(getClass());
+        itsLogger.info("Constructor");
+        
+        itsMainFrame = null;
+        itsBoard = new Board();
         refreshThread = null;
-        changed = false;
+        changed = false;      
         
         initComponents();        
-        
-        // listpanel
-        listPanel.setTitle("Boards");
-        listPanel.addListSelectionListener(this);
-        
-        // controlpanel
-        controlPanel.addActionListener(this);
-        
-        // tabbedpane
-        jTabbedPane.addChangeListener(this);
-        
-        // tabpanels        
-        statusPanel.init(this);
-        subbandStatsPanel.init(this);
-        waveformSettingsPanel.init(this);
-        
+                
+        /*
+         * Call the init() of every component in the jTabbedPane.
+         */
+        for (int i = 0; i < jTabbedPane.getComponentCount(); i++) {
+            ((ITabPanel)jTabbedPane.getComponentAt(i)).init(this);
+        }
+                        
         refreshRates = new int[jTabbedPane.getTabCount()];
     }
     
     /**
-     * Initializes the plugin and receives a refrence to the mainFrame.
-     * @param   mainFrame   Refrence to the MainFrame.
-     * @return  true        Letting the MainFrame know there are no problems.
+     * Initializes the plugin and receives a refrence to the itsMainFrame.
+     * 
+     * @param itsMainFrame   Refrence to the MainFrame.
+     * @return true        Letting the MainFrame know there are no problems.
      */
     public boolean initializePlugin(MainFrame mainFrame)
     {
-        this.mainFrame = mainFrame;
+        this.itsMainFrame = mainFrame;
         
         return true;
     }
@@ -137,17 +153,19 @@ public class MainPanel extends JPanel implements IPluginPanel,
     public void checkChanged() { }
       
     /**
-     * Returns the board.
-     * @return  board
+     * Returns the itsBoard.
+     * 
+     * @return itsBoard
      */
     public Board getBoard()
     {
-        return board;
+        return itsBoard;
     }
     
     /**
-     * Returns the index of the current selected board in the ListPanel.
-     * @return  index
+     * Returns the index of the current selected itsBoard in the ListPanel.
+     * 
+     * @return index
      */
     public int getSelectedBoardIndex()
     {
@@ -161,159 +179,88 @@ public class MainPanel extends JPanel implements IPluginPanel,
     public void setCurrentRefreshRate(int refreshRate)
     {
         refreshRates[jTabbedPane.getSelectedIndex()] = refreshRate;
-    }
-    
-    
-    /** LISTENER IMPLEMENTATIONS **/
+    }  
     
     /**
-     * Invoked when another board is selected on the listPanel.
-     */
-    public void valueChanged(ListSelectionEvent e)
-    {
-        updateCurrentPanel();
-    }
-    
-    /**
-     * Invoked when an action is performed by the controlPanel.
-     */
-    public void actionPerformed(ActionEvent e)
-    {
-        switch(controlPanel.getSourceAction(e.getSource()))
-        {
-            case ControlPanel.UPDATE:
-                /*
-                 * Connect/update the board and the current panel.
-                 */
-                updateBoard();
-                controlPanel.setRefreshRate(0);
-                /*
-                 * By calling startRefresh we make sure the buttons don't get 
-                 * "locked" because we are waiting for the updateCurrentPanel()
-                 * call that takes time.
-                 */
-                startRefresh(); //updateCurrentPanel();                
-                break;
-            case ControlPanel.REFRESH:
-                /*
-                 * Connect to board and update according to the refreshrate.
-                 * Check if refresh rate is valid. If so set the refreshrate in 
-                 * refreshRates[] and call startRefresh().
-                 */
-                if(controlPanel.getRefreshRate() < 0)
-                {
-                    /*
-                     * The RefreshRate isn't a valid number (either error (-1) 
-                     * or negative number). Display error and quit.
-                     */
-                    JOptionPane.showMessageDialog(this, "Refreshrate may only contain positive numbers and zero.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }                
-                updateBoard();
-                refreshRates[jTabbedPane.getSelectedIndex()] = controlPanel.getRefreshRate();
-                startRefresh();
-                break;
-            case ControlPanel.STOP:
-                /*
-                 * Stop the refresh.
-                 */
-                stopRefresh();
-                break;
-            default:
-                /*
-                 * Do nothing.
-                 */
-                break;                
-        }
-    }
-        
-    /**
-     * Invoked when another tab is selected.
-     */
-    public void stateChanged(ChangeEvent e)
-    {
-        /*
-         * Refresh can be only possible if the board is connected. If not, the 0 
-         * in the refreshrate textfield looks silly.
-         */
-        if (!board.isConnected())
-        {
-            return;
-        }
-        
-        /*
-         * First check if there the refreshThread is running. If so: KILL IT!
-         */
-        refreshThread = null;
-                
-        /*
-         * If the refresh rate of the selected panel is higher than 0, start the
-         * refreshThread. If refreshrate is 0, then the current panel isn't
-         * updated!
-         */
-        if (refreshRates[jTabbedPane.getSelectedIndex()] > 0)
-        {
-            startRefresh();
-        }
-        
-        
-        /*
-         * Update controlPanel.
-         */         
-        controlPanel.setRefreshRate(refreshRates[jTabbedPane.getSelectedIndex()]);
-    }
-        
-    /** END OF LISTENER IMPLEMENTATIONS **/
-    
-    /**
-     * Updates or initializes the board by changing the hostname.
+     * Updates or initializes the board by changing the hostname. This method
+     * first checks if the hostname is legal (not equal to ""). The hostname
+     * should be the same as the current, that would result in a unnecassery
+     * connection.
      */
     public void updateBoard()
     {
         /*
-         * If there is no hostname entered display a error.
+         * Retrieve hostname.
          */
-        if ("".equals(controlPanel.getHostname().trim()))
-        {            
+        String hostname = controlPanel.getHostname();
+        
+        /*
+         * Perform checks before connecting: 
+         * - hostname can't be empty
+         * - board should'nt be connected with the same host(name). this check
+         *   prevents the app to reconnect to the board when switching tabs.
+         */
+        if ("".equals(hostname.trim())) {            
             JOptionPane.showMessageDialog(this, "The hostname can't be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        /*
-         * If the board is already connected with the same hostname exit method.
-         */
-        if (board.isConnected() && controlPanel.getHostname().equals(board.getHostname()))
-        {            
+
+        if (itsBoard.isConnected() && hostname.equals(itsBoard.getHostname())) {            
             return;
         }
         
-        board.connect(controlPanel.getHostname());
-        
         /*
-         * Construct a String array for the listpanel.
+         * Check if the board is already connected. If so: disconnect.
          */
-        int nofBoards = board.getNrRSPBoards();
-        String[] listItems = new String[nofBoards];
-        for (int i = 0; i < nofBoards; i++)
-        {
-            listItems[i] = Integer.toString(i);
+        if (itsBoard.isConnected()) {
+            itsBoard.disconnect();
         }
         
-        listPanel.newList(listItems);
-    }
-    
+        /*
+         * Try to connect. On error display message. On success fill the 
+         * listpanel.
+         */
+        try {
+            // display wait cursor to make clear we're connecting
+            setCursor(new Cursor(Cursor.WAIT_CURSOR));
+            itsBoard.connect(hostname);
+            // board is connected, so display default cursor
+            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            
+            /*
+             * Construct a String array for the listpanel.
+             */
+            int nofBoards = itsBoard.getNrRSPBoards();
+            String[] listItems = new String[nofBoards];
+            for (int i = 0; i < nofBoards; i++) {
+                listItems[i] = Integer.toString(i);
+            }
+        
+            listPanel.newList(listItems);            
+        } catch (Exception e) {
+            // show default cursor, identifying we're not connecting anymore
+            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            
+            JOptionPane.showMessageDialog(this, "Could not connect to the board.", "Error", JOptionPane.ERROR_MESSAGE);
+            /*
+             * Connection failed. Update panels to disable everything.
+             */
+            listPanel.newList(new String[0]); // empty listPanel
+            ((ITabPanel)jTabbedPane.getSelectedComponent()).update(ITabPanel.REQUIRED_UPDATE);
+        } 
+    }    
     
     /**
      * This method is called to update the current panel.
      * Note: Board has to be set, to be using this function! Quick check is
      * performed at the beginning of the method.
      */
-    public void updateCurrentPanel()
+    public void updateCurrentPanel(int updateType)
     {
         /*
-         * The board has to be connected to update the panels.
+         * The itsBoard has to be connected to update the panels.
          */
-        if (!board.isConnected())
+        if (!itsBoard.isConnected())
         {
             return;
         }
@@ -337,7 +284,7 @@ public class MainPanel extends JPanel implements IPluginPanel,
         /*
          * Update the selected panel.
          */
-        ((ITabPanel) jTabbedPane.getSelectedComponent()).update();
+        ((ITabPanel) jTabbedPane.getSelectedComponent()).update(updateType);
     }
     
     /**
@@ -346,7 +293,7 @@ public class MainPanel extends JPanel implements IPluginPanel,
      */
     private void updateListPanel()
     {
-        String[] listItems = new String[board.getNrRSPBoards()];
+        String[] listItems = new String[itsBoard.getNrRSPBoards()];
         for(int i=0; i<listItems.length; i++)
         {
             listItems[i] = Integer.toString(i);
@@ -382,19 +329,28 @@ public class MainPanel extends JPanel implements IPluginPanel,
      * Run method.
      */
     public void run()
-    {
+    {        
+        boolean updated = false; // true on updates following the first.
+        
         Thread thread = Thread.currentThread();
+        /*
+         * First perform the update of the panel and then wait. In this order
+         * the user doesn't need to wait for the first batch of data.
+         */
         while(thread == refreshThread)
         {            
-            try
-            {
-                Thread.sleep(refreshRates[jTabbedPane.getSelectedIndex()] * 1000);
+            /*
+             * The first and the following updates are of different types.
+             * Updated is set to true after the first run. That way on the next
+             * update we know we got to refresh and don't need to update every-
+             * thing.
+             */
+            if (!updated) {
+                updateCurrentPanel(ITabPanel.REQUIRED_UPDATE);
+                updated = true;
+            } else {
+                updateCurrentPanel(ITabPanel.REFRESH_UPDATE);
             }
-            catch(InterruptedException e)
-            {
-                // Just ignore it!
-            }
-            updateCurrentPanel();
             
             /*
              * If the refreshRate is smaller than 1, call stopRefresh
@@ -402,6 +358,15 @@ public class MainPanel extends JPanel implements IPluginPanel,
             if (refreshRates[jTabbedPane.getSelectedIndex()] < 1)
             {
                 stopRefresh();
+            }
+            
+            try
+            {
+                Thread.sleep(refreshRates[jTabbedPane.getSelectedIndex()] * 1000);
+            }
+            catch(InterruptedException e)
+            {
+                // Just ignore it!
             }
         }
     }
@@ -417,15 +382,37 @@ public class MainPanel extends JPanel implements IPluginPanel,
         jTabbedPane = new javax.swing.JTabbedPane();
         statusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel();
         subbandStatsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPanel();
-        waveformSettingsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel();
+        itsRSPControlPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.control.RSPControlPanel();
+        beamletStatsPanel1 = new nl.astron.lofar.mac.apl.gui.jrsp.panels.beamletstats.BeamletStatsPanel();
         controlPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel();
         listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel();
+
+        jTabbedPane.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                jTabbedPaneStateChanged(evt);
+            }
+        });
 
         jTabbedPane.addTab("Status", statusPanel);
 
         jTabbedPane.addTab("Subband Statistics", subbandStatsPanel);
 
-        jTabbedPane.addTab("Waveform Settings", waveformSettingsPanel);
+        jTabbedPane.addTab("Control", itsRSPControlPanel);
+
+        jTabbedPane.addTab("Beamlet Statistics", beamletStatsPanel1);
+
+        controlPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                controlPanelActionPerformed(evt);
+            }
+        });
+
+        listPanel.setTitle("Boards");
+        listPanel.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                listPanelValueChanged(evt);
+            }
+        });
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -449,15 +436,132 @@ public class MainPanel extends JPanel implements IPluginPanel,
                 .add(controlPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    /**
+     * Invoked when another tab is selected.
+     * @param   evt     ChangeEvent
+     */
+    private void jTabbedPaneStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPaneStateChanged
+        /*
+         * Refresh can be only possible if the itsBoard is connected. If not, the 0 
+         * in the refreshrate textfield looks silly.
+         */
+        if (!itsBoard.isConnected())
+        {
+            ((ITabPanel)jTabbedPane.getSelectedComponent()).enablePanel(false);
+            return;
+        }
+        
+        /*
+         * First check if there the refreshThread is running. If so: KILL IT!
+         */
+        refreshThread = null;
+                
+        /*
+         * If the refresh rate of the selected panel is higher than 0, start the
+         * refreshThread. If refreshrate is 0, then the current panel isn't
+         * updated!
+         */
+        if (refreshRates[jTabbedPane.getSelectedIndex()] > 0)
+        {
+            startRefresh();
+        }
+        
+        /*
+         * Update controlPanel.
+         */         
+        controlPanel.setRefreshRate(refreshRates[jTabbedPane.getSelectedIndex()]);
+    }//GEN-LAST:event_jTabbedPaneStateChanged
+
+    /**
+     * Called when an action occured on the control panel.
+     * @param   evt     ActionEvent
+     */
+    private void controlPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_controlPanelActionPerformed
+        switch(controlPanel.getSourceAction(evt.getSource()))
+        {
+            case ControlPanel.UPDATE:
+                /*
+                 * Connect/update the itsBoard and the current panel.
+                 */
+                updateBoard();
+                /*
+                 * Only continue if the board is connected.
+                 */
+                if (itsBoard.isConnected()) {
+                    controlPanel.setRefreshRate(0);
+                    controlPanel.setConnectButtonTitle(ControlPanel.TITLE_REFRESH);
+                    /*
+                     * By calling startRefresh we make sure the buttons don't get 
+                     * "locked" because we are waiting for the updateCurrentPanel()
+                     * call that takes time.
+                     */
+                    startRefresh();
+                } else {
+                    controlPanel.setConnectButtonTitle(ControlPanel.TITLE_CONNECT);
+                }
+                break;
+            case ControlPanel.REFRESH:
+                /*
+                 * Connect to itsBoard and update according to the refreshrate.
+                 * Check if refresh rate is valid. If so set the refreshrate in 
+                 * refreshRates[] and call startRefresh().
+                 */
+                if(controlPanel.getRefreshRate() < 0)
+                {
+                    /*
+                     * The RefreshRate isn't a valid number (either error (-1) 
+                     * or negative number). Display error and quit.
+                     */
+                    JOptionPane.showMessageDialog(this, "Refreshrate may only contain positive numbers and zero.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }                
+                updateBoard();
+                /*
+                 * Only continue if the board is connected.
+                 */
+                if (itsBoard.isConnected()) {
+                    refreshRates[jTabbedPane.getSelectedIndex()] = controlPanel.getRefreshRate();
+                    controlPanel.setConnectButtonTitle(ControlPanel.TITLE_REFRESH);
+                    controlPanel.setStopButtonEnabled(true);
+                    startRefresh();
+                } else {
+                    controlPanel.setConnectButtonTitle(ControlPanel.TITLE_CONNECT);
+                    controlPanel.setStopButtonEnabled(false);
+                }                    
+                break;
+            case ControlPanel.STOP:
+                /*
+                 * Stop the refresh.
+                 */
+                stopRefresh();
+                controlPanel.setStopButtonEnabled(false);
+                break;
+            default:
+                /*
+                 * Do nothing.
+                 */
+                break;                
+        }        
+    }//GEN-LAST:event_controlPanelActionPerformed
+
+    /**
+     * Invoked when another itsBoard is selected on the listPanel.
+     * @param   evt     ListSelectionEvent
+     */    
+    private void listPanelValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_listPanelValueChanged
+        updateCurrentPanel(ITabPanel.REQUIRED_UPDATE);           
+    }//GEN-LAST:event_listPanelValueChanged
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.beamletstats.BeamletStatsPanel beamletStatsPanel1;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel controlPanel;
+    private nl.astron.lofar.mac.apl.gui.jrsp.panels.control.RSPControlPanel itsRSPControlPanel;
     private javax.swing.JTabbedPane jTabbedPane;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel listPanel;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel statusPanel;
     private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPanel subbandStatsPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.waveformsettings.WaveformSettingsPanel waveformSettingsPanel;
     // End of variables declaration//GEN-END:variables
     
 }

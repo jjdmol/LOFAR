@@ -9,10 +9,14 @@ public class SubbandStatsTest
         double subbandStats[] = null;
         
         Board b = new Board();
-        b.connect("localhost");
+        try {
+            b.connect("localhost");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         if(b.isConnected())
         {
-            subbandStats = b.getSubbandStats(0);
+
         }
         b.disconnect();
         

@@ -1,3 +1,27 @@
+/*
+ * WaveformSettingsInputPanel.java
+ *
+ * Copyright (C) 2006
+ * ASTRON (Netherlands Foundation for Research in Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id$
+ */
+
 package nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats;
 
 import java.awt.event.ActionEvent;
@@ -49,6 +73,28 @@ public class WaveformSettingsInputPanel extends JPanel implements ActionListener
     public String getAmplitude()
     {
         return txtAmplitude.getText();
+    }
+    
+    /**
+     * Enables or disables the buttons on this panel.
+     * @param   b       Boolean value used to determine to enable (true) or
+     *                  disable (false).
+     */
+    public void enablePanel(boolean b) {
+        /*
+         * Only executed when the panel is to be disabled.
+         * ( enablePanel ( false ) )
+         */
+        if (!b) {
+            txtPhase.setText("");
+            txtFrequency.setText("");
+            txtAmplitude.setText("");
+        }
+        
+        txtPhase.setEnabled(b);
+        txtFrequency.setEnabled(b);
+        txtAmplitude.setEnabled(b);        
+        btnSubmit.setEnabled(b);
     }
         
     /**
@@ -119,12 +165,6 @@ public class WaveformSettingsInputPanel extends JPanel implements ActionListener
 
         lblAmplitude.setText("Amplitude");
 
-        txtPhase.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtPhaseActionPerformed(evt);
-            }
-        });
-
         btnSubmit.setText("OK");
 
         jLabel1.setFont(new java.awt.Font("Dialog", 0, 12));
@@ -187,10 +227,6 @@ public class WaveformSettingsInputPanel extends JPanel implements ActionListener
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void txtPhaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPhaseActionPerformed
-// TODO add your handling code here:
-    }//GEN-LAST:event_txtPhaseActionPerformed
-        
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnSubmit;
     private javax.swing.JLabel jLabel1;

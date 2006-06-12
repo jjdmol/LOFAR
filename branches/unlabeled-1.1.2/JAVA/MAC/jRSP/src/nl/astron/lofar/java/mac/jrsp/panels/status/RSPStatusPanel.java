@@ -1,3 +1,27 @@
+/*
+ * RSPStatusPanel.java
+ *
+ * Copyright (C) 2006
+ * ASTRON (Netherlands Foundation for Research in Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id$
+ */
+
 package nl.astron.lofar.mac.apl.gui.jrsp.panels.status;
 
 import java.text.NumberFormat;
@@ -21,19 +45,32 @@ public class RSPStatusPanel extends javax.swing.JPanel {
 
     public void setFields(BoardStatus boardStatus)
     {
-        NumberFormat nf = NumberFormat.getNumberInstance();
-        nf.setMinimumFractionDigits(2);
-        nf.setMaximumFractionDigits(2);
-        txtVoltage1V2.setText(nf.format(boardStatus.voltage1V2));
-        txtVoltage2V5.setText(nf.format(boardStatus.voltage2V5));
-        txtVoltage3V3.setText(nf.format(boardStatus.voltage3V3));
-        txtPcbTemp.setText(Integer.toString(boardStatus.pcbTemp));
-        txtBpTemp.setText(Integer.toString(boardStatus.bpTemp));
-        txtAp0Temp.setText(Integer.toString(boardStatus.ap0Temp));
-        txtAp1Temp.setText(Integer.toString(boardStatus.ap1Temp));
-        txtAp2Temp.setText(Integer.toString(boardStatus.ap2Temp));
-        txtAp3Temp.setText(Integer.toString(boardStatus.ap3Temp));
-        txtBpClock.setText(Integer.toString(boardStatus.bpClock));
+        if (boardStatus != null) {
+            NumberFormat nf = NumberFormat.getNumberInstance();
+            nf.setMinimumFractionDigits(2);
+            nf.setMaximumFractionDigits(2);
+            txtVoltage1V2.setText(nf.format(boardStatus.voltage1V2));
+            txtVoltage2V5.setText(nf.format(boardStatus.voltage2V5));
+            txtVoltage3V3.setText(nf.format(boardStatus.voltage3V3));
+            txtPcbTemp.setText(Integer.toString(boardStatus.pcbTemp));
+            txtBpTemp.setText(Integer.toString(boardStatus.bpTemp));
+            txtAp0Temp.setText(Integer.toString(boardStatus.ap0Temp));
+            txtAp1Temp.setText(Integer.toString(boardStatus.ap1Temp));
+            txtAp2Temp.setText(Integer.toString(boardStatus.ap2Temp));
+            txtAp3Temp.setText(Integer.toString(boardStatus.ap3Temp));
+            txtBpClock.setText(Integer.toString(boardStatus.bpClock));
+        } else {
+            txtVoltage1V2.setText("");
+            txtVoltage2V5.setText("");
+            txtVoltage3V3.setText("");
+            txtPcbTemp.setText("");
+            txtBpTemp.setText("");
+            txtAp0Temp.setText("");
+            txtAp1Temp.setText("");
+            txtAp2Temp.setText("");
+            txtAp3Temp.setText("");
+            txtBpClock.setText("");
+        }
     }
     
     /** This method is called from within the constructor to

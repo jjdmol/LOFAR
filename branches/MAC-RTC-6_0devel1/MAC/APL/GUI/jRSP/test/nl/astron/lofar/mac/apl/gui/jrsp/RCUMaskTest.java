@@ -1,8 +1,25 @@
 /*
  * RCUMaskTest.java
- * JUnit based test
  *
- * Created on April 5, 2006, 1:14 PM
+ * Copyright (C) 2006
+ * ASTRON (Netherlands Foundation for Research in Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id$
  */
 
 package nl.astron.lofar.mac.apl.gui.jrsp;
@@ -90,25 +107,25 @@ public class RCUMaskTest extends TestCase
         RCUMask instance = new RCUMask();
         
         instance.setBit(0); // 000(...)001 = 1
-        assertEquals(1, instance.getMask());
+        assertEquals(1, instance.intValue());
         
         instance = new RCUMask();
         instance.setBit(31); // 100(...)000 = MIN_VALUE
-        assertEquals(Integer.MIN_VALUE, instance.getMask());
+        assertEquals(Integer.MIN_VALUE, instance.intValue());
         
         instance = new RCUMask();
         for(int i=0; i<32; i++) // 111(...)111 = -1
         {
             instance.setBit(i);
         }
-        assertEquals(-1, instance.getMask());
+        assertEquals(-1, instance.intValue());
         
         instance = new RCUMask();
         for(int i=0; i<31; i++) // 011(...)111 = MAX_VALUE
         {
             instance.setBit(i);
         }
-        assertEquals(Integer.MAX_VALUE, instance.getMask());   
+        assertEquals(Integer.MAX_VALUE, instance.intValue());   
     }
 
     /**
@@ -121,13 +138,13 @@ public class RCUMaskTest extends TestCase
         RCUMask instance = new RCUMask(-1);
     
         instance.clearBit(31);
-        assertEquals(Integer.MAX_VALUE, instance.getMask());
+        assertEquals(Integer.MAX_VALUE, instance.intValue());
         
         for(int i=0; i<32; i++)
         {
             instance.clearBit(i);
         }
-        assertEquals(0, instance.getMask());        
+        assertEquals(0, instance.intValue());        
     }
     
     /**
@@ -140,6 +157,6 @@ public class RCUMaskTest extends TestCase
         RCUMask instance = new RCUMask(-1);
     
         instance.flipBit(31);
-        assertEquals(Integer.MAX_VALUE, instance.getMask());    
+        assertEquals(Integer.MAX_VALUE, instance.intValue());    
     }
 }

@@ -81,11 +81,43 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getMaxRSPBoar
 
 /*
  * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
- * Method:    test
- * Signature: ()I
+ * Method:    setFilter
+ * Signature: (III)Z
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_test
-  (JNIEnv *, jobject);
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setFilter
+  (JNIEnv *, jobject, jint, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    sendClear
+ * Signature: (II)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendClear
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    sendReset
+ * Signature: (II)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendReset
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    sendSync
+ * Signature: (II)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendSync
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_mac_apl_gui_jrsp_Board
+ * Method:    getBeamletStats
+ * Signature: (II)[D
+ */
+JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getBeamletStats
+  (JNIEnv *, jobject, jint, jint);
 
 #ifdef __cplusplus
 }
