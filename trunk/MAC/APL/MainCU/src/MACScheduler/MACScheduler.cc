@@ -30,6 +30,7 @@
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
+#include <APL/APLCommon/Controller_Protocol.ph>
 
 #include "MACSchedulerDefines.h"
 #include "MACScheduler.h"
@@ -56,6 +57,7 @@ MACScheduler::MACScheduler() :
 //	itsObsCntlrMap		(),
 	itsDummyPort		(0),
 	itsChildControl		(0),
+	itsChildPort		(0),
 	itsSecondTimer		(0),
 	itsQueuePeriod		(0),
 	itsClaimPeriod		(0),
@@ -65,17 +67,17 @@ MACScheduler::MACScheduler() :
 {
 	LOG_TRACE_OBJ ("MACscheduler construction");
 
-#ifndef USE_PVSSPORT
-	LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
-#endif
-
 	// Readin some parameters from the ParameterSet.
 	itsOTDBpollInterval = globalParameterSet()->getTime("OTDBpollInterval");
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
 	itsClaimPeriod 		= globalParameterSet()->getTime("ClaimPeriod");
 
-	// get pointer to childcontrol task
+	// attach to child control task
 	itsChildControl = ChildControl::instance();
+	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", 
+									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
+	itsChildPort->open();		// will result in F_CONNECTED
 }
 
 
@@ -164,17 +166,15 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 //
 GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG ("MACScheduler::initial_state");
+	LOG_DEBUG_STR ("MACScheduler::initial_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
     case F_INIT:
-		LOG_TRACE_FLOW("initial_state:F_INIT");
    		break;
 
 	case F_ENTRY: {
-		LOG_TRACE_FLOW("initial_state:F_ENTRY");
 		// Get access to my own propertyset.
 		LOG_DEBUG ("Activating PropertySet");
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(MS_PROPSET_NAME,
@@ -210,13 +210,14 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControltask");
 		itsChildControl->openService(MAC_SVCMASK_SCHEDULERCTRL, 0);
+		itsChildControl->registerCompletionPort(itsChildPort);
 
 		// need port for timers(!)
 		itsDummyPort = new GCFTimerPort(*this, "MACScheduler:dummy4timers");
 		TRAN(MACScheduler::recover_state);				// go to next state.
 		}
 		break;
-#if 0
+
 	case F_CONNECTED:
 		break;
 
@@ -225,9 +226,9 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 	
 	case F_TIMER:
 		break;
-#endif  
+  
 	default:
-		LOG_DEBUG_STR ("MACScheduler(" << getName() << ")::initial_state, default");
+		LOG_DEBUG ("MACScheduler::initial, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -243,7 +244,8 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG ("MACScheduler::recover_state");
+	LOG_DEBUG_STR ("MACScheduler::recover_state:" << evtstr(event)
+												  << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -265,7 +267,7 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 	}
   
 	default:
-		LOG_DEBUG(formatString("MACScheduler(%s)::recover_state, default",getName().c_str()));
+		LOG_DEBUG("MACScheduler::recover_state, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -280,7 +282,8 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG ("MACScheduler::active_state");
+	LOG_DEBUG_STR ("MACScheduler::active:" << evtstr(event)
+										   << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -335,21 +338,28 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
-	case LOGICALDEVICE_SCHEDULED: {
-		LOGICALDEVICEScheduledEvent scheduledEvent(event);
+	case CONTROL_STARTED: {
+		CONTROLStartedEvent	msg(event);
+		if (msg.successful) {
+			LOG_DEBUG_STR("Start of " << msg.cntlrName << " was successful");
+		}
+		else {
+			LOG_ERROR_STR("Observation controller " << msg.cntlrName <<
+						" could n ot be started");
+		}
+		// TODO: do something usefull with this information!
+		break;
+	}
+	case CONTROL_CONNECT: {
+		CONTROLConnectEvent conEvent(event);
+		LOG_DEBUG_STR("Received CONNECT(" << conEvent.cntlrName << ")");
 		// ...
 		break;
 	}
 
-	case LOGICALDEVICE_SCHEDULECANCELLED: {
-		LOGICALDEVICESchedulecancelledEvent schedulecancelledEvent(event);
-		// ...
-		break;
-	}
 
 	default:
-		LOG_DEBUG(formatString("MACScheduler(%s)::active_state, default",
-								getName().c_str()));
+		LOG_DEBUG("MACScheduler::active, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -395,7 +405,7 @@ void MACScheduler::_doOTDBcheck()
 		}
 
 		// get current state of Observation
-		string		cntlrName = formatString("ObsCntlr_%d", newTreeList[idx].treeID());
+		string		cntlrName = formatString("Observation_%d", newTreeList[idx].treeID());
 		LDState::LDstateNr	observationState = itsChildControl->getRequestedState(cntlrName);
 
 		// remember: timediff <= queueperiod
@@ -406,8 +416,8 @@ void MACScheduler::_doOTDBcheck()
 				OTDB::TreeMaintenance	tm(itsOTDBconnection);
 				OTDB::treeIDType		treeID = newTreeList[idx].treeID();
 				OTDBnode				topNode = tm.getTopNode(treeID);
-				string					filename = formatString("%s/Observation_%d", 
-														LOFAR_SHARE_LOCATION, treeID);
+				string					filename = string(LOFAR_SHARE_LOCATION) + 
+																	"/" + cntlrName;
 				if (!tm.exportTree(treeID, topNode.nodeID(), filename)) {
 					LOG_ERROR_STR ("Cannot create startup file " << filename << 
 								" for new observation. Observation CANNOT BE STARTED!");
@@ -415,9 +425,10 @@ void MACScheduler::_doOTDBcheck()
 				else {
 					// fire request for new controller
 					itsChildControl->startChild(cntlrName, 
-											treeID, 
-											LDTYPE_OBSERVATIONCTRL, 
-											myHostname());
+												treeID, 
+												CNTLRTYPE_OBSERVATIONCTRL, 
+												0,		// instanceNr
+												myHostname());
 				}
 				idx++;
 				continue;

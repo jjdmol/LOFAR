@@ -1,6 +1,6 @@
-//#  MACScheduler_Defines.h: preprocessor definitions of various constants
+//#  ObservationControlMain.cc: Main entry for the ObservationControl controller.
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,32 +19,31 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+//#
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
-#ifndef MACScheduler_DEFINES_H
-#define MACScheduler_DEFINES_H
+#include "ObservationControl.h"
 
-namespace LOFAR {
-  namespace MCU {
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::MainCU;
 
-#define MS_TASKNAME					"MACScheduler"
+int main(int argc, char* argv[])
+{
+	// args: cntlrname, parentHost, parentService
+	GCFTask::init(argc, argv);
 
-#define MS_PROPSET_NAME				"LOFAR_PermSW_MacScheduler"
-#define MS_PROPSET_TYPE				"MacScheduler"
-#define MS_OTDB_CONNECTED			"OTDB.connected"
-#define MS_OTDB_LASTPOLL			"OTDB.lastPoll"
-#define MS_OTDB_POLL_ITV			"OTDB.pollInterval"
+	ChildControl*	cc = ChildControl::instance();
+	cc->start();	// make initial transition
 
-#define PVSSNAME_MS_QUEUEPERIOD		"QueuePeriod"
-#define PVSSNAME_MS_CLAIMPERIOD		"ClaimPeriod"
+	ParentControl*	pc = ParentControl::instance();
+	pc->start();	// make initial transition
 
-// next lines should be defined somewhere in Common.
-#define PVSSNAME_FSM_STATE			"state"
-#define PVSSNAME_FSM_ERROR			"error"
+	ObservationControl	oc(argv[1]);
+	oc.start(); // make initial transition
 
-#define OC_PROPSET_NAME				"LOFAR_ObsSW_Observation%d"
-#define OC_PROPSET_TYPE				"Observation"
+	GCFTask::run();
 
-}; // MCU
-}; // LOFAR
+	return 0;
+}
 
-#endif

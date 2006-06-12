@@ -51,6 +51,7 @@ public:
 	typedef enum {
 		ANYSTATE = -1,
 		NOSTATE = 0,
+		CREATED,
 		CONNECT,
 		CONNECTED,
 		CLAIM,

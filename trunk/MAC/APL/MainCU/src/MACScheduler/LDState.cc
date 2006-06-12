@@ -37,6 +37,7 @@ LDState::LDState()
 {
 	itsStates.resize(LAST_STATE);
 	itsStates[NOSTATE] 				= "Unknown";
+	itsStates[CREATED] 				= "Created";
 	itsStates[CONNECT]				= "Connecting";
 	itsStates[CONNECTED]			= "Connected";
 	itsStates[CLAIM]				= "Claiming";
@@ -64,8 +65,7 @@ LDState::~LDState()
 //
 string	LDState::name(uint16			aStateNr)
 { 
-	return (((aStateNr >= NOSTATE) && (aStateNr < LAST_STATE)) ?
-											itsStates[aStateNr] : "");
+	return ((aStateNr < LAST_STATE) ?  itsStates[aStateNr] : "");
 }
 
 //

@@ -30,7 +30,7 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APLUtilities.h>
-#include <APL/APLCommon/LogicalDevice_Protocol.ph>
+#include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
 
 namespace LOFAR {
@@ -61,11 +61,13 @@ ChildControl::ChildControl() :
 	itsStartupRetryInterval	(10),
 	itsMaxStartupRetries	(5),
 	itsCntlrList	 		(),
-	itsActionList	 		()
+	itsActionList	 		(),
+	itsCompletionTimer		(0),
+	itsCompletionPort		(0)
 {
 	// Log the protocols I use.
-	registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
-	registerProtocol(STARTDAEMON_PROTOCOL,   STARTDAEMON_PROTOCOL_signalnames);
+	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
+	registerProtocol(STARTDAEMON_PROTOCOL,STARTDAEMON_PROTOCOL_signalnames);
 
 	// adopt optional redefinition of startup-retry settings
 	if (globalParameterSet()->isDefined("ChildControl.StartupRetryInterval")) {
@@ -127,11 +129,12 @@ void ChildControl::openService(const string&	aServiceName,
 }
 
 //
-// startChild (name, obsId, aCntlType, hostname)
+// startChild (name, obsId, aCntlType, instanceNr, hostname)
 //
 bool ChildControl::startChild (const string&		aName, 
 							   OTDB::treeIDType		anObsID, 
 							   const string&		aCntlrType, 
+							   uint32				instanceNr,
 							   const string&		hostname)
 {
 	// first check if child already exists
@@ -139,10 +142,41 @@ bool ChildControl::startChild (const string&		aName,
 		return (false);
 	}	
 
+	// make sure there is a parameterSet for the program.
+	if (aCntlrType != CNTLRTYPE_OBSERVATIONCTRL) {
+		// search observation-parset for controller name and determine prefix
+		string			baseSetName = formatString("%s/Observation_%d", 
+													LOFAR_SHARE_LOCATION, anObsID);
+		LOG_DEBUG_STR ("Reading parameterfile: " << baseSetName);
+		ParameterSet	wholeSet (baseSetName);
+		ParameterSet::iterator		iter = wholeSet.begin();
+		ParameterSet::iterator		end  = wholeSet.end();
+		while (iter != end) {
+			// search a parameter that is meant for this controller
+			// to determine the position of the controller in the tree.
+			if (keyName(moduleName(iter->first)) == aName) {
+				string	cntlrSetName = formatString("%s/%s", LOFAR_SHARE_LOCATION, 
+															 aName.c_str());
+				LOG_DEBUG_STR("Creating parameterfile: " << cntlrSetName);
+				ParameterSet	cntlrSet = wholeSet.makeSubset(moduleName(iter->first));
+				cntlrSet.add("prefix", moduleName(iter->first));
+				cntlrSet.writeFile (cntlrSetName);
+				break;
+			}
+			iter++;
+		}
+		if (iter == end) {		// could not create a parameterset, report failure.
+			LOG_ERROR_STR("No parameter information found for controller " << aName <<
+						  " in file " << baseSetName << ". Cannot start controller!");
+			return (false);
+		}
+	}
+
 	// Alright, child does not exist yet. 
 	// construct structure with all information
 	ControllerInfo		ci;
 	ci.name			  = aName;
+	ci.instanceNr	  = instanceNr;
 	ci.obsID		  = anObsID;
 	ci.cntlrType	  = aCntlrType;
 	ci.port			  = 0;
@@ -182,7 +216,7 @@ bool ChildControl::requestState	(LDState::LDstateNr	aState,
 {
 	bool	checkName   = (aName != "");
 	bool	checkID     = (anObsID != 0);
-	bool	checkType   = (aCntlrType != LDTYPE_NO_TYPE);
+	bool	checkType   = (aCntlrType != CNTLRTYPE_NO_TYPE);
 	time_t	currentTime = time(0);
 
 //	stateChangeEvent	request;
@@ -253,7 +287,7 @@ uint32 ChildControl::countChilds (OTDB::treeIDType	anObsID,
 								  const string&		aCntlrType)
 {
 	bool	checkID   = (anObsID != 0);
-	bool	checkType = (aCntlrType != LDTYPE_NO_TYPE);
+	bool	checkType = (aCntlrType != CNTLRTYPE_NO_TYPE);
 
 	if (!checkID && !checkType) {
 		return (itsCntlrList.size());
@@ -290,7 +324,7 @@ ChildControl::getPendingRequest (const string&		aName,
 
 	bool	checkName   = (aName != "");
 	bool	checkID     = (anObsID != 0);
-	bool	checkType   = (aCntlrType != LDTYPE_NO_TYPE);
+	bool	checkType   = (aCntlrType != CNTLRTYPE_NO_TYPE);
 
 	const_CIiter	iter  = itsCntlrList.begin();
 	const_CIiter	end   = itsCntlrList.end();
@@ -299,6 +333,37 @@ ChildControl::getPendingRequest (const string&		aName,
 			!(checkID && iter->obsID != anObsID) && 
 		    !(checkType && iter->cntlrType != aCntlrType) &&
 			(iter->requestedState != iter->currentState)) {
+			// add info to vector
+			StateInfo	si;
+			si.name			  = iter->name;
+			si.cntlrType	  = iter->cntlrType;
+			si.isConnected	  = (iter->port != 0);
+			si.requestedState = iter->requestedState;
+			si.requestTime	  = iter->requestTime;
+			si.currentState	  = iter->currentState;
+			si.establishTime  = iter->establishTime;
+			resultVec.push_back(si);
+		}
+		iter++;
+	}	
+
+	return (resultVec);
+}
+
+//
+// getCompletedStates (lastPollTime)
+//
+// Returns a vector with all requests that are completed since lastPollTime
+//
+vector<ChildControl::StateInfo> 
+ChildControl::getCompletedStates (time_t	lastPollTime)
+{
+	vector<ChildControl::StateInfo>	resultVec;
+
+	const_CIiter	iter  = itsCntlrList.begin();
+	const_CIiter	end   = itsCntlrList.end();
+	while (iter != end) {
+		if (iter->establishTime > lastPollTime) {
 			// add info to vector
 			StateInfo	si;
 			si.name			  = iter->name;
@@ -402,18 +467,19 @@ void ChildControl::_processActionList()
 					LOG_DEBUG_STR("Requesting start of " << action->name << " at " 
 																	<< action->hostname);
 					STARTDAEMONCreateEvent		startRequest;
-					startRequest.logicalDeviceType = action->cntlrType;
-					startRequest.taskName 		   = action->name;
-					startRequest.parentHost		   = GCF::Common::myHostname();
-					startRequest.parentService	   = itsListener->makeServiceName();
+					startRequest.cntlrType 	   = action->cntlrType;
+					startRequest.cntlrName 	   = action->name;
+					startRequest.parentHost	   = GCF::Common::myHostname();
+					startRequest.parentService = itsListener->makeServiceName();
 					startDaemon->second->send(startRequest);
 
-					// we don't know if startup is successfull, reschedule startup
-					// over x seconds for safety. Note: when a succesfull startup
+					// we don't know if startup is successful, reschedule startup
+					// over x seconds for safety. Note: when a successful startup
 					// is received the rescheduled action is removed.
-					action->retryTime = time(0) + itsStartupRetryInterval;
-					action->nrRetries++;
-					itsActionList.push_back(*action);	// reschedule
+//					action->retryTime = time(0) + itsStartupRetryInterval;
+//					action->nrRetries++;
+//					itsActionList.push_back(*action);	// reschedule
+//					... Parent is responsible for rescheduling! ...
 				}
 				else {
 					LOG_WARN_STR ("Could not start controller " << action->name << 
@@ -425,28 +491,32 @@ void ChildControl::_processActionList()
 
 		case LDState::CLAIMED:
 			{
-				LOGICALDEVICEClaimEvent		request;
+				CONTROLClaimEvent		request;
+				request.cntlrName = controller->name;
 				controller->port->send(request);
 			}
 			break;
 
 		case LDState::PREPARED:
 			{
-				LOGICALDEVICEPrepareEvent		request;
+				CONTROLPrepareEvent		request;
+				request.cntlrName = controller->name;
 				controller->port->send(request);
 			}
 			break;
 
 		case LDState::ACTIVE:
 			{
-				LOGICALDEVICEResumeEvent		request;
+				CONTROLResumeEvent		request;
+				request.cntlrName = controller->name;
 				controller->port->send(request);
 			}
 			break;
 
 		case LDState::SUSPENDED:
 			{
-				LOGICALDEVICESuspendEvent		request;
+				CONTROLSuspendEvent		request;
+				request.cntlrName = controller->name;
 				controller->port->send(request);
 			}
 			break;
@@ -454,7 +524,8 @@ void ChildControl::_processActionList()
 		case LDState::RELEASED:
 		case LDState::FINISHED:
 			{
-				LOGICALDEVICEReleaseEvent		request;
+				CONTROLReleaseEvent		request;
+				request.cntlrName = controller->name;
 				controller->port->send(request);
 			}
 			break;
@@ -498,7 +569,8 @@ void ChildControl::_removeAction (const string&			aName,
 //
 void ChildControl::_setEstablishedState(const string&		aName,
 										LDState::LDstateNr	newState,
-										time_t				atTime)
+										time_t				atTime,
+										bool				successful)
 {
 	CIiter	controller = findController(aName);
 	if (controller == itsCntlrList.end()) {
@@ -506,8 +578,84 @@ void ChildControl::_setEstablishedState(const string&		aName,
 		return;
 	}
 
-	controller->currentState  = newState;
+	// update controller information
+	if (!(controller->failed = !successful)) {;
+		controller->currentState  = newState;
+	}
 	controller->establishTime = atTime;
+
+	if (itsCompletionTimer) {
+		itsCompletionTimer->setTimer(0.0);
+	}
+
+	if (!itsCompletionPort) {
+		return;
+	}
+
+	LOG_DEBUG_STR("newState=" << newState);
+
+	TLDResult	result = controller->failed ? LD_RESULT_UNSPECIFIED : LD_RESULT_NO_ERROR;
+	switch (newState) {
+	case LDState::CREATED: {
+			CONTROLStartedEvent	msg;
+			msg.cntlrName = controller->name;
+			msg.successful= successful;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	case LDState::CONNECTED: {
+			CONTROLConnectedEvent	msg;
+			msg.cntlrName = controller->name;
+			msg.result    = result;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	case LDState::CLAIMED: {
+			CONTROLClaimedEvent	msg;
+			msg.cntlrName = controller->name;
+			msg.result    = result;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	case LDState::PREPARED: {
+			CONTROLPreparedEvent	msg;
+			msg.cntlrName = controller->name;
+			msg.result    = result;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	case LDState::ACTIVE: {
+			CONTROLResumedEvent	msg;
+			msg.cntlrName = controller->name;
+			msg.result    = result;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	case LDState::SUSPENDED: {
+			CONTROLSuspendedEvent	msg;
+			msg.cntlrName = controller->name;
+			msg.result    = result;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	case LDState::RELEASED: {
+			CONTROLReleasedEvent	msg;
+			msg.cntlrName = controller->name;
+			msg.result    = result;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	case LDState::FINISHED: {
+			CONTROLFinishedEvent	msg;
+			msg.cntlrName = controller->name;
+			msg.result    = result;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	default:
+		// do nothing
+		break;
+	}
 }
 
 // -------------------- STATE MACHINES FOR GCFTASK --------------------
@@ -542,6 +690,7 @@ GCFEvent::TResult	ChildControl::initial (GCFEvent&			event,
 		break;
 
 	case F_DISCONNECTED:
+		port.close();
 		if (&port == itsListener) {
 			port.setTimer(1.0);
 		}
@@ -556,7 +705,7 @@ GCFEvent::TResult	ChildControl::initial (GCFEvent&			event,
 		break;
 
 	default:
-		LOG_DEBUG_STR ("ChildControl(" << getName() << ")::initial, default");
+		LOG_DEBUG ("ChildControl::initial, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -574,7 +723,8 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 											  GCFPortInterface&	port)
 
 {
-	LOG_DEBUG ("ChildControl::operational");
+	LOG_DEBUG_STR ("ChildControl::operational:" << evtstr(event) 
+											    << "@" << port.getName());
 
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
 
@@ -587,14 +737,12 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 
 	case F_ACCEPT_REQ: {
 			// Should be from a just started Child.
-			ASSERTSTR(port.getProtocol() == LOGICALDEVICE_PROTOCOL, 
-											"AcceptReq on port " << port.getName());
-
 			// accept connection and add port to port-vector
 			GCFTCPPort* client(new GCFTCPPort);
+
 			// reminder: init (task, name, type, protocol [,raw])
 			client->init(*this, "newChild", GCFPortInterface::SPP, 
-														LOGICALDEVICE_PROTOCOL);
+														CONTROLLER_PROTOCOL);
 			itsListener->accept(*client);
 
 			// Note: we do not keep an administration of the accepted child
@@ -607,6 +755,8 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		break;
 
 	case F_DISCONNECTED: {
+			port.close();		// always close port
+
 			CIiter		controller = itsCntlrList.begin();
 			CIiter		end		   = itsCntlrList.end();
 			while (controller != end) {
@@ -617,8 +767,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				}
 
 				// found controller, close port
-				port.close();
-				if (controller->currentState == LDState::FINISHED) {	// expected disconnect?
+				if (controller->currentState == LDState::FINISHED) {// expected disconnect?
 					itsCntlrList.erase(controller);			// just remove
 				}
 				else {
@@ -638,31 +787,28 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	case STARTDAEMON_CREATED:	// startDaemon reports startup of program
 		{
 		STARTDAEMONCreatedEvent		result(event);
-		LOG_DEBUG_STR("Startup of " << result.taskName << "ready, result=" 	
+		LOG_DEBUG_STR("Startup of " << result.cntlrName << " ready, result=" 	
 														<< result.result);
-		if (result.result == SD_RESULT_NO_ERROR) {
-			// startup is successfull, remove rescheduled startup.
-			_removeAction(result.taskName, LDState::CONNECTED);
-		}
-		// note: when startup of child failed the state is not updated and the
-		// 		 parent will discover this when checking the pending requests.
+		_setEstablishedState(result.cntlrName, LDState::CREATED, time(0),
+							 result.result == SD_RESULT_NO_ERROR);
 		}
 		break;
 
-	case LOGICALDEVICE_CONNECT:
+	case CONTROL_CONNECT:		// received from just started controller
 		{
-			LOGICALDEVICEConnectEvent		msg(event);
-			LOGICALDEVICEConnectedEvent		answer;
+			CONTROLConnectEvent		msg(event);
+			CONTROLConnectedEvent		answer;
 
-			CIiter	controller = findController(msg.nodeId);
+			CIiter	controller = findController(msg.cntlrName);
 			if (controller == itsCntlrList.end()) {		// not found?
 				LOG_WARN_STR ("CONNECT event received from unknown controller: " <<
-							  msg.nodeId);
+							  msg.cntlrName);
 				answer.result = LD_RESULT_UNSPECIFIED;
 			}
 			else {
-				LOG_DEBUG_STR("CONNECT event received from " << msg.nodeId);
-				_setEstablishedState(msg.nodeId, LDState::CONNECTED, time(0));
+				LOG_DEBUG_STR("CONNECT event received from " << msg.cntlrName);
+				_setEstablishedState(msg.cntlrName, LDState::CONNECTED, time(0), true);
+				// first direct contact with controller, remember port
 				controller->port = &port;
 				answer.result = LD_RESULT_NO_ERROR;
 			}
@@ -670,8 +816,27 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		}
 		break;
 
+	case CONTROL_CLAIMED:
+		break;
+	
+	case CONTROL_PREPARED:
+		break;
+	
+	case CONTROL_RESUMED:
+		break;
+	
+	case CONTROL_SUSPENDED:
+		break;
+	
+	case CONTROL_RELEASED:
+		break;
+	
+	case CONTROL_FINISH:
+		break;
+	
+
 	default:
-		LOG_DEBUG_STR ("ChildControl(" << getName() << ")::operational, default");
+		LOG_DEBUG ("ChildControl::operational, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
