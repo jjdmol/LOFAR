@@ -21,7 +21,7 @@
 //#  $Id$
 autogen definitions protocol;
 
-description = "Protocol for Logical Device StartDaemon servers";
+description = "Protocol for StartDaemons";
 prefix = "STARTDAEMON"; // for the signal names
 id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+2)";
 
@@ -32,12 +32,26 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+2)";
 prelude = << PRELUDE_END
 
 enum {
-    SD_RESULT_UNSPECIFIED_ERROR = -4, 
-    SD_RESULT_UNSUPPORTED_LD, 
-    SD_RESULT_ALREADY_EXISTS,
-    SD_RESULT_LD_NOT_FOUND,
-    SD_RESULT_NO_ERROR 
+    SD_RESULT_NO_ERROR,					// everything went OK
+    SD_RESULT_UNSUPPORTED_TYPE, 		// unknown controller type
+    SD_RESULT_NO_PARAMETERS_FOUND, 		// no parameters for cntlr in observationfile
+	SD_RESULT_PROGRAM_NOT_FOUND,		// executable is not installed
+    SD_RESULT_START_FAILED,				// startup of controller failed
+    SD_RESULT_UNREACHABLE				// SD can not connect to new controller
 };
+
+// The following messages are defined in the startDaemon protocol:
+//
+// CREATE   	(cntlrType, cntlrName, parentHost, parentService)
+// CREATED  	(cntlrType, cntlrName, result)
+// NEWPARENT	(cntlrName, parentHost, parentService)
+// ANNOUNCEMENT (cntlrName)
+//
+// Note: result is uint32, all other arguments are strings.
+//
+// Proposition: cntlrName is uniq 
+//				--> type-based-name + instanceNr + ObsID for standalone controllers
+//				--> type-based-name + instanceNr         for shared controllers
 
 PRELUDE_END;
 
@@ -47,59 +61,72 @@ PRELUDE_END;
 // "dir" can be one of "IN" or "OUT".
 // A "param" has a "name" and a "type".
 //
+
+// request of a controller to start another controller
 event = {
-  signal = CREATE;
-  dir = IN;
-  param = {
-    name = "logicalDeviceType";
-    type = "string";
-  };
-  param = {
-    name = "taskName";
-    type = "string";
-  };
-  param = {
-    name = "parentHost";
-    type = "string";
-  };
-  param = {
-    name = "parentService";
-    type = "string";
-  };
+	signal = CREATE;
+	dir = IN;
+	param = {
+		name = "cntlrType";
+		type = "string";
+	};
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "parentHost";
+		type = "string";
+	};
+	param = {
+		name = "parentService";
+		type = "string";
+	};
 };
 
+// message that report result of the start-up action.
 event = {
-  signal = CREATED;
-  dir = OUT;
-  param = {
-    name = "logicalDeviceType";
-    type = "string";
-  };
-  param = {
-    name = "taskName";
-    type = "string";
-  };
-  param = {
-    name = "result";
-    type = "int32";
-  };
+	signal = CREATED;
+	dir = OUT;
+	param = {
+		name = "cntlrType";
+		type = "string";
+	};
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "int32";
+	};
 };
 
+// send by a SD to tell a controller it should connect to a new parent.
 event = {
-  signal = NEWPARENT;
-  dir = IN;
-  param = {
-    name = "taskName";
-    type = "string";
-  };
-  param = {
-    name = "parentHost";
-    type = "string";
-  };
-  param = {
-    name = "parentService";
-    type = "string";
-  };
+	signal = NEWPARENT;
+	dir = OUT;
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "parentHost";
+		type = "string";
+	};
+	param = {
+		name = "parentService";
+		type = "string";
+	};
 };
 
+// send by an controller at startup to announce that he is on the air.
+event = {
+	signal = ANNOUNCEMENT;
+	dir = IN;
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+};
 

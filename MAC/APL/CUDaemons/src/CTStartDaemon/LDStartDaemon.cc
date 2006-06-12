@@ -26,6 +26,7 @@
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
+#include <APL/APLCommon/Controller_Protocol.ph>
 #include "LogicalDeviceStarter.h"
 #include "LDStartDaemon.h"
 
@@ -41,10 +42,13 @@ namespace LOFAR {
 //
 LDStartDaemon::LDStartDaemon(const string& name) :
 	GCFTask    			((State)&LDStartDaemon::initial_state, name),
+	itsActionList		(),
+	itsActiveCntlrs		(),
 	itsListener			(0),
 	itsListenRetryTimer	(0),
 	itsClients			(),
-	itsStarter 			(0)
+	itsStarter 			(0),
+	itsTimerPort		(0)
 {
 	LOG_TRACE_FLOW(formatString("LDStartDaemon(%s)", getName().c_str()));
 
@@ -55,6 +59,9 @@ LDStartDaemon::LDStartDaemon(const string& name) :
 	itsStarter = new LogicalDeviceStarter(globalParameterSet());
 	ASSERTSTR(itsStarter, "Unable to allocate starter object");
   
+	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+	ASSERTSTR(itsTimerPort, "Unable to allocate timer port");
+
 	registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_signalnames);
 }
 
@@ -74,7 +81,157 @@ LDStartDaemon::~LDStartDaemon()
 	if (itsStarter) {
 		delete itsStarter;
 	}
+
+	if (itsTimerPort) {
+		delete itsTimerPort;
+	}
+
+	itsActionList.clear();
+	itsActiveCntlrs.clear();
+
 }
+
+// -------------------- Internal routines --------------------
+
+//
+// findAction(port)
+//
+LDStartDaemon::actionIter	LDStartDaemon::findAction(GCFPortInterface*		aPort)
+{
+	actionIter		iter = itsActionList.begin();
+	actionIter		end  = itsActionList.end();
+	while (iter != end && iter->parentPort != aPort) {
+		iter++;
+	}
+	return (iter);
+}
+
+
+//
+// findAction(timerID)
+//
+LDStartDaemon::actionIter	LDStartDaemon::findAction(uint32	aTimerID)
+{
+	actionIter		iter = itsActionList.begin();
+	actionIter		end  = itsActionList.end();
+	while (iter != end && iter->timerID != aTimerID) {
+		iter++;
+	}
+	return (iter);
+}
+
+
+//
+// findAction(cntlrName)
+//
+LDStartDaemon::actionIter	LDStartDaemon::findAction(const string&		cntlrName)
+{
+	actionIter		iter = itsActionList.begin();
+	actionIter		end  = itsActionList.end();
+	while (iter != end && iter->cntlrName != cntlrName) {
+		iter++;
+	}
+	return (iter);
+}
+
+
+//
+// findController(port)
+//
+LDStartDaemon::CTiter	LDStartDaemon::findController(GCFPortInterface*		aPort)
+{
+	CTiter		iter = itsActiveCntlrs.begin();
+	CTiter		end  = itsActiveCntlrs.end();
+	while (iter != end && iter->second != aPort) {
+		iter++;
+	}
+	return (iter);
+}
+
+
+//
+// sendCreatedMsg(action, result)
+//
+void LDStartDaemon::sendCreatedMsg(actionIter		action, int32	result)
+{
+	// send customer message that controller is on the air
+	STARTDAEMONCreatedEvent createdEvent;
+	createdEvent.cntlrType = action->cntlrType;
+	createdEvent.cntlrName = action->cntlrName;
+	createdEvent.result	   = result;
+	action->parentPort->send(createdEvent);
+}
+
+
+//
+// sendNewParentAndCreatedMsg()
+//
+void LDStartDaemon::sendNewParentAndCreatedMsg(actionIter		action)
+{
+	// connection with new controller is made, send 'newparent' message
+	STARTDAEMONNewparentEvent	msg;
+	msg.cntlrName	  = action->cntlrName;
+	msg.parentHost	  = action->parentHost;
+	msg.parentService = action->parentService;
+	
+	// map controllername to controllerport
+	CTiter	controller = itsActiveCntlrs.find(msg.cntlrName);
+	ASSERTSTR(isController(controller), msg.cntlrName << 
+										" not found in controller list");
+	controller->second->send(msg);
+	LOG_DEBUG_STR("Sending NewParent(" << msg.cntlrName << "," <<
+						msg.parentHost << "," << msg.parentService << ")");
+
+	// send customer message that controller is on the air
+	sendCreatedMsg(action, SD_RESULT_NO_ERROR);
+	action->parentPort->close();
+}
+
+
+//
+// handleClientDisconnect(port)
+//
+// A disconnect event was receiveed on a client port. Close the port
+// and remove the port from our pool.
+//
+void LDStartDaemon::handleClientDisconnect(GCFPortInterface&	port)
+{
+	// end TCP connection
+	port.close();
+
+	// remove actions on this port
+	actionIter		action = findAction(&port);
+	while (isAction(action)) {
+		itsTimerPort->cancelTimer(action->timerID);
+		LOG_DEBUG_STR ("Disconnect:removing " << action->cntlrName << " from actionlist");
+		itsActionList.erase(action);
+		action = findAction(&port);
+	}
+
+	// cleanup active controller list
+	CTiter	controller = findController(&port);
+	while (isController(controller)) {
+		LOG_DEBUG_STR ("Removing " << controller->first << " from controllerlist");
+		itsActiveCntlrs.erase(controller);
+		controller = findController(&port);
+	}
+
+	// cleanup connection in our pool if it is one of them
+	vector<GCFPortInterface*>::iterator	iter = itsClients.begin();
+	vector<GCFPortInterface*>::iterator	theEnd = itsClients.end();
+
+	while(iter != theEnd) {
+		if (*iter == &port) {
+			LOG_DEBUG_STR ("Erasing client port " << &port);
+			delete *iter;	// ??
+			itsClients.erase(iter);
+			return;
+		}
+		iter++;
+	}
+}
+
+// -------------------- STATE MACHINES --------------------
 
 //
 // initial_state(event, port)
@@ -145,44 +302,132 @@ GCFEvent::TResult LDStartDaemon::operational_state (GCFEvent& event,
 	case F_INIT:
 		break;
   
-	case F_ENTRY: {
+	case F_ENTRY: 
 		break;
-	}
 
 	case F_ACCEPT_REQ: {
 		GCFTCPPort*		newClient = new GCFTCPPort;
-		newClient->init(*this, "client", GCFPortInterface::SPP, 
-										 STARTDAEMON_PROTOCOL);
+		newClient->init(*this, "client", GCFPortInterface::SPP, STARTDAEMON_PROTOCOL);
 		itsListener->accept(*newClient);
-		itsClients.push_back(newClient);
+		itsClients.push_back(newClient);	// remember port for future delete.
 		break;
 	}
 
+	case F_CONNECTED:
+		break;
+
 	case F_DISCONNECTED:
 		ASSERTSTR (&port != itsListener, "Listener port was closed, bailing out!");
-
 		handleClientDisconnect(port);
 		break;
 
 	case F_CLOSED:
 		break;
 
-	case F_TIMER:
+	case F_TIMER: {
+			GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+			actionIter		action = findAction(timerEvent.id);
+			if (isAction(action)) {
+				// controller did not start with required time. report failure.
+				STARTDAEMONCreatedEvent		createdEvent;
+				createdEvent.cntlrType = action->cntlrType;
+				createdEvent.cntlrName = action->cntlrName;
+				createdEvent.result    = SD_RESULT_START_FAILED;
+				action->parentPort->send(createdEvent);
+				LOG_WARN_STR("Timeout in startup of " << action->cntlrName);
+
+				LOG_DEBUG_STR ("Removing " << action->cntlrName << " from actionlist");
+				itsActionList.erase(action);
+			}
+		}
 		break;
 
 	case STARTDAEMON_CREATE: {
-		// [REO] On a schedule-event a LD is created???
 		STARTDAEMONCreateEvent 	createEvent(event);
+		// prepare an answer message
 		STARTDAEMONCreatedEvent createdEvent;
-		createdEvent.logicalDeviceType = createEvent.logicalDeviceType;
-		createdEvent.taskName		   = createEvent.taskName;
-		createdEvent.result = 
-				itsStarter->createLogicalDevice (createEvent.logicalDeviceType,
-												 createEvent.taskName, 
+		createdEvent.cntlrType = createEvent.cntlrType;
+		createdEvent.cntlrName = createEvent.cntlrName;
+
+		// is controller already known?
+		CTiter	controller = itsActiveCntlrs.find(createEvent.cntlrName);
+		if (!isController(controller)) {		// no, controller is not active
+			// Ask starter Object to start the controller.
+			createdEvent.result = 
+					itsStarter->startController (createEvent.cntlrType,
+												 createEvent.cntlrName, 
 												 createEvent.parentHost,
 												 createEvent.parentService);
+			// when creation failed, report it back.
+			if (createdEvent.result != SD_RESULT_NO_ERROR) {
+				LOG_WARN_STR("Startup of " << createEvent.cntlrName << " failed");
+				port.send(createdEvent);
+				break;
+			}
+		}
 
-		port.send(createdEvent);
+		// controller already registered?
+		if (isController(controller) && controller->second != 0) {
+			// send newparent message right away.
+			STARTDAEMONNewparentEvent	npEvent;
+			npEvent.cntlrName     = createEvent.cntlrName;
+			npEvent.parentHost    = createEvent.parentHost;
+			npEvent.parentService = createEvent.parentService;
+			controller->second->send(npEvent);
+			LOG_DEBUG_STR("Sending NewParent(" << npEvent.cntlrName << "," <<
+						npEvent.parentHost << "," << npEvent.parentService << ")");
+			// report result back to caller.
+			createdEvent.result = SD_RESULT_NO_ERROR;
+			port.send(createdEvent);
+			break;
+		}
+
+		// wait for controller to register, add action to actionList
+		action_t			action;
+		action.cntlrName	 = createEvent.cntlrName;
+		action.cntlrType	 = createEvent.cntlrType;
+		action.parentHost	 = createEvent.parentHost;
+		action.parentService = createEvent.parentService;
+		action.parentPort	 = &port;
+		action.timerID		 = itsTimerPort->setTimer(20.0);	// failure over 20 sec
+		LOG_DEBUG_STR ("Adding " << action.cntlrName << " to actionList");
+		itsActionList.push_back(action);
+		break;
+	}
+
+	case STARTDAEMON_ANNOUNCEMENT: {
+		STARTDAEMONAnnouncementEvent	inMsg(event);
+		// known controller?
+		CTiter	controller = itsActiveCntlrs.find(inMsg.cntlrName);
+		// controller already registered?
+		if (isController(controller) && controller->second != 0) {
+			if (controller->second == &port) {	// on same port, no problem
+				LOG_DEBUG_STR ("Double announcement received of " << inMsg.cntlrName);
+				break;
+			}
+			else {								// on other port, report error.
+				LOG_ERROR_STR ("Controller " << inMsg.cntlrName << 
+						  " registered at two ports!!! Ignoring second registration!");
+				break;
+			}
+		}
+
+		// register the controller and its port
+		itsActiveCntlrs[inMsg.cntlrName] = &port; 
+		LOG_DEBUG_STR("Received announcement of " << inMsg.cntlrName << 
+						", adding it to the controllerList");
+
+		// are there a newParent actions waiting?
+		actionIter	action = findAction(inMsg.cntlrName);
+		while (isAction(action)) {
+			// first stop failure-timer
+			itsTimerPort->cancelTimer(action->timerID);
+
+			sendNewParentAndCreatedMsg(action);
+			LOG_DEBUG_STR ("Removing " << action->cntlrName << " from actionlist");
+			itsActionList.erase(action);
+			action = findAction(inMsg.cntlrName);
+		}
 		break;
 	}
 
@@ -193,30 +438,6 @@ GCFEvent::TResult LDStartDaemon::operational_state (GCFEvent& event,
 	}
 
 	return (status);
-}
-
-//
-// handleClientDisconnect(port)
-//
-// A disconnect event was receiveed on a client port. Close the port
-// and remove the port from our pool.
-//
-void LDStartDaemon::handleClientDisconnect(GCFPortInterface&	port)
-{
-	// end TCP connection
-	port.close();
-
-	// cleanup connection in our pool
-	vector<GCFPortInterface*>::iterator	iter = itsClients.begin();
-	vector<GCFPortInterface*>::iterator	theEnd = itsClients.end();
-
-	while(iter != theEnd) {
-		if (*iter == &port) {
-			LOG_DEBUG_STR ("Erasing client port " << &port);
-			itsClients.erase(iter);
-			return;
-		}
-	}
 }
 
 

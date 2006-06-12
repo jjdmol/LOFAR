@@ -3,7 +3,7 @@
 
 log4cplus.rootLogger=DEBUG, STDOUT
 
-log4cplus.logger.TRC=TRACE2, STDOUT
+log4cplus.logger.TRC=TRACE5, STDOUT
 log4cplus.additivity.TRC=FALSE
 
 log4cplus.appender.STDOUT=log4cplus::ConsoleAppender

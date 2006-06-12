@@ -905,7 +905,7 @@ bool LogicalDevice::_childsInState(const double requiredPercentage, const string
 	// REO: No longer translation of LDtypeName (parset) and LDtypeValue (APL_Defines).
 	//      Only strings are used now.
 	for(TString2LDStateMap::iterator statesIt = m_childStates.begin();statesIt != m_childStates.end();++statesIt) {
-		if(statesIt->first == type || type == LDTYPE_NO_TYPE) {
+		if(statesIt->first == type || type == CNTLRTYPE_NO_TYPE) {
 			totalLDs += 1.0;
 			LOG_DEBUG(formatString("%s is in state %s",statesIt->first.c_str(),_state2String(statesIt->second).c_str()));
 			if(statesIt->second == state) {
@@ -937,7 +937,7 @@ bool LogicalDevice::_childsNotInState(const double requiredPercentage, const str
 	// REO: No longer translation of LDtypeName (parset) and LDtypeValue (APL_Defines).
 	//      Only strings are used now.
 	for(TString2LDStateMap::iterator statesIt = m_childStates.begin();statesIt != m_childStates.end();++statesIt) {
-		if(statesIt->first == type || type == LDTYPE_NO_TYPE) {
+		if(statesIt->first == type || type == CNTLRTYPE_NO_TYPE) {
 			totalLDs += 1.0;
 			LOG_DEBUG(formatString("%s is in state %s",statesIt->first.c_str(),_state2String(statesIt->second).c_str()));
 			if(statesIt->second != state) {
@@ -1363,9 +1363,9 @@ void LogicalDevice::_sendScheduleToClients()
         // send the schedule to the startdaemon of the child
         string ldType = psSubset.getString("logicalDeviceType");
         boost::shared_ptr<STARTDAEMONCreateEvent> createEvent(new STARTDAEMONCreateEvent);
-        createEvent->logicalDeviceType = ldType;
+        createEvent->cntlrType 	   = ldType;
 //      createEvent->fileName = parameterFileName;
-        createEvent->taskName 	   = startDaemonKey;
+        createEvent->cntlrName 	   = startDaemonKey;
         createEvent->parentHost    = GCF::Common::myHostname();
         createEvent->parentService = "TODO";
 

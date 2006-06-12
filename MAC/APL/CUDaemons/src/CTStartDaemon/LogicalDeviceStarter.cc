@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
@@ -37,12 +38,11 @@ namespace LOFAR {
 // LogicalDeviceStarter(executablename)
 //
 LogicalDeviceStarter::LogicalDeviceStarter(ParameterSet*	aParSet) :
-	itsProgramList(),
-	itsError 	  ()
+	itsProgramList()
 {
-	string		typeMask   ("LogicalDevice.%d.type");
-	string		programMask("LogicalDevice.%d.program");
-	string		sharedMask ("LogicalDevice.%d.shared");
+	string		typeMask   ("Controller.%d.type");
+	string		programMask("Controller.%d.program");
+	string		sharedMask ("Controller.%d.shared");
 	LDstart_t	startInfo;
 
 	try {
@@ -60,10 +60,10 @@ LogicalDeviceStarter::LogicalDeviceStarter(ParameterSet*	aParSet) :
 		// expected throw: when counter > seqnr used in parameterSet.
 	}
 
-	ASSERTSTR(itsProgramList.size() > 0, "No definition of LogicalDevice found "
+	ASSERTSTR(itsProgramList.size() > 0, "No definitions of Controllers found "
 										 "in the parameterSet.");
 
-	LOG_DEBUG_STR("Found " << itsProgramList.size() << " LogicalDeviceTypes");
+	LOG_DEBUG_STR("Found " << itsProgramList.size() << " ControllerTypes");
 		
 }
 
@@ -72,65 +72,62 @@ LogicalDeviceStarter::LogicalDeviceStarter(ParameterSet*	aParSet) :
 //
 LogicalDeviceStarter::~LogicalDeviceStarter()
 {
+	itsProgramList.clear();
 }
 
 //
 // createLogicalDevice(taskname, paramfile)
 //
-int32 LogicalDeviceStarter::createLogicalDevice(const string&	ldTypeName,
-											    const string&	taskname,
-											    const string&	parentHost,
-											    const string&	parentService)
+int32 LogicalDeviceStarter::startController(const string&	ldTypeName,
+										    const string&	taskname,
+										    const string&	parentHost,
+										    const string&	parentService)
 {
+	// search controller type in table.
 	uint32		nrDevices = itsProgramList.size();
-	uint32		index(0);
-	while (index < nrDevices && itsProgramList[index].name.compare(ldTypeName)){
+	uint32		index	  = 0;
+	while (index < nrDevices && itsProgramList[index].name != ldTypeName){
 		index++;
 	}
+
+	// not found? report problem
 	if (index >= nrDevices) {
-		LOG_DEBUG_STR("No support for starting Logical Devices of the "
+		LOG_DEBUG_STR("No support for starting controller of the "
 					  "type " << ldTypeName << ". See config file.");
-		return (SD_RESULT_UNSUPPORTED_LD);
+		return (SD_RESULT_UNSUPPORTED_TYPE);
 	}
 
-	pid_t	cid;
-	itsError = SD_RESULT_NO_ERROR;
-
-	switch (cid = fork()) {
-		case -1:	// error
-			itsError = errno;
-			LOG_FATAL_STR("fork() for task '" << taskname << 
-						  "' failed with errno: " << errno);
-			return (SD_RESULT_UNSPECIFIED_ERROR);
-			break;
-
-		case 0: {			// child
-			sleep (1);		// give kernel and parent some time
-			setsid();
-			LOG_DEBUG_STR("About to start: " << 
-						  itsProgramList[index].executable <<
-						  " " << taskname << " " << parentHost << 
-						  " " << parentService );
-
-			// Transform into the real program
-			int execError = execl(itsProgramList[index].executable.c_str(), 
-								  itsProgramList[index].executable.c_str(), 
-								  taskname.c_str(), 
-								  parentHost.c_str(), 
-								  parentService.c_str(), 
-								  0L);
-			
-			LOG_FATAL_STR(getpid() << "Transform to " << 
-						  itsProgramList[index].executable << 
-						  " failed()!!! Errno=" << execError);
-			return (SD_RESULT_LD_NOT_FOUND);
-			break;
-		}
-		default:	// parent
-			LOG_DEBUG_STR(getpid() << ": child process created: " << cid);
-			return (cid);		// returning cid of child that will die soon.
-			break;
+	// shared device? report success
+	if (itsProgramList[index].shared) {
+		LOG_DEBUG_STR("Controller of type " << ldTypeName << " is shared, no start.");
+		return (SD_RESULT_NO_ERROR);
 	}
+
+	// locate program.
+	ProgramLocator		PL;
+	string	executable = PL.locate(itsProgramList[index].executable);
+	if (executable.empty()) {
+		LOG_DEBUG_STR("Executable for controller " << ldTypeName << " not found.");
+		return (SD_RESULT_PROGRAM_NOT_FOUND);
+	}
+
+	// construct system command
+	string	startCmd = formatString("./startController.sh %s %s %s %s", 
+									executable.c_str(),
+									taskname.c_str(),
+									parentHost.c_str(),
+									parentService.c_str());
+	LOG_DEBUG_STR("About to start: " << startCmd);
+
+	int32	result = system (startCmd.c_str());
+	LOG_DEBUG_STR ("Result of start = " << result);
+
+	if (result == -1) {
+		return (SD_RESULT_START_FAILED);
+	}
+	
+	return (SD_RESULT_NO_ERROR);
+
 }
 
 

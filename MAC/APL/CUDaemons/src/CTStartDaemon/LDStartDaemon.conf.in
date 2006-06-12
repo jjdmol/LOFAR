@@ -1,40 +1,40 @@
 # Configuration file for the LDStartDaemon.
 #
-# Define the characteristics from the LogicalDevices the LDSD can start
+# Define the characteristics from the Controllers the LDSD can start
 # The sequencenumbers in the definition should be contiquous.
 #
 # Note: the types used in this list should correspond with the types
 #		defined in APL/APL/Common/APL_Defines.h
 #
-LogicalDevice.1.type	= OBS_CTRL
-LogicalDevice.1.program = ObservationControl
-LogicalDevice.1.shared	= false
+Controller.1.type	 = OBS_CTRL
+Controller.1.program = ObservationControl
+Controller.1.shared	 = false
 
-LogicalDevice.2.type	= BEAMDIR_CTRL
-LogicalDevice.2.program = BeamDirectionControl
-LogicalDevice.2.shared	= true
+Controller.2.type	 = BEAMDIR_CTRL
+Controller.2.program = BeamDirectionControl
+Controller.2.shared	 = true
 
-LogicalDevice.3.type	= GROUP_CTRL
-LogicalDevice.3.program = RingControl
-LogicalDevice.3.shared	= true
+Controller.3.type	 = GROUP_CTRL
+Controller.3.program = RingControl
+Controller.3.shared	 = true
 
-LogicalDevice.4.type	= STS_CTRL
-LogicalDevice.4.program = StationControl
-LogicalDevice.4.shared	= false
+Controller.4.type	 = STS_CTRL
+Controller.4.program = StationControl
+Controller.4.shared	 = false
 
-LogicalDevice.5.type	= DIGBOARD_CTRL
-LogicalDevice.5.program = DigitalBoardControl
-LogicalDevice.5.shared	= false
+Controller.5.type	 = DIGBOARD_CTRL
+Controller.5.program = DigitalBoardControl
+Controller.5.shared	 = false
 
-LogicalDevice.6.type	= BEAM_CTRL
-LogicalDevice.6.program = BeamControl
-LogicalDevice.6.shared	= true
+Controller.6.type	 = BEAM_CTRL
+Controller.6.program = BeamControl
+Controller.6.shared	 = true
 
-LogicalDevice.7.type	= CAL_CTRL
-LogicalDevice.7.program = CalibrationControl
-LogicalDevice.7.shared	= true
+Controller.7.type	 = CAL_CTRL
+Controller.7.program = CalibrationControl
+Controller.7.shared	 = true
 
-LogicalDevice.8.type	= STSINFRA_CTRL
-LogicalDevice.8.program = StationInfraControl
-LogicalDevice.8.shared	= true
+Controller.8.type	 = STSINFRA_CTRL
+Controller.8.program = StationInfraControl
+Controller.8.shared	 = true
 

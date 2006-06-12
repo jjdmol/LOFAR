@@ -39,8 +39,9 @@ static	EventPort*		SDport = 0;
 //
 void doSchedule() {
 	STARTDAEMONCreateEvent		event;
-	event.logicalDeviceType	= LDTYPE_OBSERVATIONCTRL;
-	event.taskName			= "testObservation";
+	event.cntlrType			= "OBS_CTRL";
+	event.cntlrName			= "testObservation";
+	event.instanceNr		= 0;
 	event.parentHost 		= "localHost";
 	event.parentService 	= "MacScheduler:v1.0";
 
