@@ -68,12 +68,12 @@ namespace LOFAR
     private:
       // Receive the conversion request from the client.
       bool recvRequest(ConverterCommand&,
-                       vector<SkyCoord>&,
-                       vector<EarthCoord>&,
-                       vector<TimeCoord>&);
+                       vector<Direction>&,
+                       vector<Position>&,
+                       vector<Epoch>&);
 
       // Send the conversion result to the client.
-      bool sendResult(const vector<SkyCoord>&);
+      bool sendResult(const vector<Direction>&);
 
         
       // Data holder holding the request data to be sent to the server.

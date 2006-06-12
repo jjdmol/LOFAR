@@ -123,7 +123,7 @@ namespace LOFAR
       itsRecvConn.waitForRead();
 
       // Read the conversion request from the I/O buffer into \a cmd, \a
-      // skyCoord, \a earthCoord, and \a timeCoord.
+      // direction, \a position, and \a epoch.
       itsRequest.readBuf(command, request);
 
       // Everything went well.

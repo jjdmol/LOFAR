@@ -44,25 +44,25 @@ namespace LOFAR
 
     // This class defines the interface of the diverse AMC Converter classes.
     // All conversion routines operate on a struct RequestData, returning a
-    // struct ResultData. RequestData contains three vectors: \a skyCoord, a
-    // series of sky coordinates; \a earthCoord, a series of earth positions;
-    // and \a timeCoord, a series of points in time. ResultData contains one
-    // vector: \a skyCoord, a series of sky coordinates.
+    // struct ResultData. RequestData contains three vectors: \a direction, a
+    // series of sky coordinates; \a position, a series of earth positions;
+    // and \a epoch, a series of points in time. ResultData contains one
+    // vector: \a direction, a series of sky coordinates.
     //
     // Conversion from J2000 to another coordinate system always produces a
     // vector of sky coordinates that contains all possible combinations of
-    // the elements in the input vectors \a skyCoord, \a earthCoord, and \a
-    // timeCoord. Hence, the output vector contains <tt>skyCoord.size() *
-    // earthCoord.size() * timeCoord.size()</tt> elements, which can be seen
+    // the elements in the input vectors \a direction, \a position, and \a
+    // epoch. Hence, the output vector contains <tt>direction.size() *
+    // position.size() * epoch.size()</tt> elements, which can be seen
     // as a cube with shape <tt>[nsky,npos,ntime]</tt> in Fortran order (i.e.
     // with sky as the most rapidly varying axis).
     //
     // Conversion from another coordinate system to J2000 always produces a
     // vector of sky coordinates that is equal in size to the input vector \a
-    // skyCoord. The input vectors \a earthCoord and \a timeCoord should
-    // either both be equal in size to the input vector \a skyCoord, or both
+    // direction. The input vectors \a position and \a epoch should
+    // either both be equal in size to the input vector \a direction, or both
     // contain exactly one element. In the former case, the conversion routine
-    // will calculate one output skyCoord for each triplet of input sky
+    // will calculate one output direction for each triplet of input sky
     // coordinates, earth positions, and points in time. In the latter case,
     // the conversion routine will convert the input sky coordinates for the
     // given earth position and point in time.
@@ -75,41 +75,41 @@ namespace LOFAR
       // Convert the given equatorial J2000 sky coordinates to
       // azimuth/elevation (in radians) for the given earth positions and
       // points in time.
-      // \pre \a request.skyCoord.type() == SkyCoord::J2000
-      // \post \a result.skyCoord.type() == SkyCoord::AZEL
-      // \post \a result.skyCoord.size() == request.skyCoord.size() *
-      // request.earthCoord.size() * request.timeCoord.size().
+      // \pre \a request.direction.type() == Direction::J2000
+      // \post \a result.direction.type() == Direction::AZEL
+      // \post \a result.direction.size() == request.direction.size() *
+      // request.position.size() * request.epoch.size().
       virtual void j2000ToAzel(ResultData& result, 
                                const RequestData& request) = 0;
       
       // Convert a series of azimuth/elevations for the given earth
       // position(s) and point(s) in time to J2000 ra/dec.
-      // \pre \a request.skyCoord.type() == SkyCoord::AZEL
-      // \pre \a request.earthCoord.size() == 1 || 
-      //         request.earthCoord.size() == request.skyCoord.size()
-      // \pre \a request.earthCoord.size() == request.timeCoord.size()
-      // \post \a result.skyCoord.type() == SkyCoord::J2000
-      // \post \a result.skyCoord.size() == request.skyCoord.size()
+      // \pre \a request.direction.type() == Direction::AZEL
+      // \pre \a request.position.size() == 1 || 
+      //         request.position.size() == request.direction.size()
+      // \pre \a request.position.size() == request.epoch.size()
+      // \post \a result.direction.type() == Direction::J2000
+      // \post \a result.direction.size() == request.direction.size()
       virtual void azelToJ2000(ResultData& result, 
                                const RequestData& request) = 0;
       
       // Convert the given equatorial J2000 sky coordinate to ITRF (in
       // radians) for the given earth positions and points in time.
-      // \pre \a request.skyCoord.type() == SkyCoord::J2000
-      // \post \a result.skyCoord.type() == SkyCoord::ITRF
-      // \post \a result.skyCoord.size() == request.skyCoord.size() *
-      // request.earthCoord.size() * request.timeCoord.size().
+      // \pre \a request.direction.type() == Direction::J2000
+      // \post \a result.direction.type() == Direction::ITRF
+      // \post \a result.direction.size() == request.direction.size() *
+      // request.position.size() * request.epoch.size().
       virtual void j2000ToItrf(ResultData& result, 
                                const RequestData& request) = 0;
 
       // Convert a series of ITRF sky coordinates for the given earth
       // position(s) and point(s) in time to J2000 ra/dec.
-      // \pre \a request.skyCoord.type() == SkyCoord::ITRF
-      // \pre \a request.earthCoord.size() == 1 || 
-      //         request.earthCoord.size() == request.skyCoord.size()
-      // \pre \a request.earthCoord.size() == request.timeCoord.size()
-      // \post \a result.skyCoord.type() == SkyCoord::J2000
-      // \post \a result.skyCoord.size() == request.skyCoord.size()
+      // \pre \a request.direction.type() == Direction::ITRF
+      // \pre \a request.position.size() == 1 || 
+      //         request.position.size() == request.direction.size()
+      // \pre \a request.position.size() == request.epoch.size()
+      // \post \a result.direction.type() == Direction::J2000
+      // \post \a result.direction.size() == request.direction.size()
       virtual void itrfToJ2000(ResultData& result, 
                                const RequestData& request) = 0;
     };

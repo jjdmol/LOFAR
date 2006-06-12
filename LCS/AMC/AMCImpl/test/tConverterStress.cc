@@ -24,9 +24,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
 #include <AMCBase/ConverterClient.h>
@@ -71,9 +71,9 @@ int main(int /*argc*/, const char* const argv[])
   uint fails(0);
   uint runs(100);
 
-  SkyCoord sky(1, 0.3);  // arbitrary source direction
-  EarthCoord earth(0.111646531, 0.921760253, 25, EarthCoord::WGS84); // DWL
-  TimeCoord time(2004, 11, 19, 15, 22, 39);  // arbitrary time
+  Direction sky(1, 0.3);  // arbitrary source direction
+  Position earth(0.111646531, 0.921760253, 25, Position::WGS84); // DWL
+  Epoch time(2004, 11, 19, 15, 22, 39);  // arbitrary time
   RequestData request(sky, earth, time);
   ResultData result;
       

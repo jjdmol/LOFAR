@@ -52,9 +52,9 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(LCS/Common,Common,LCS-Common-3_1,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Blob,Blob,LCS-Blob-1_0,1,Blob/BlobHeader.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_3,1,Transport/TransportHolder.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/TransportHolder.h,,)
 
 dnl
 dnl Output Makefiles

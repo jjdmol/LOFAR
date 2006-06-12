@@ -39,36 +39,36 @@ namespace LOFAR
   namespace AMC
   {
     //# Forward declarations
-    class SkyCoord;
-    class EarthCoord;
-    class TimeCoord;
+    class Direction;
+    class Position;
+    class Epoch;
     class ConverterCommand;
 
     // \addtogroup AMCClient
     // @{
 
-    // Serialize the sky coordinates \a sc to the output blob stream \a bos.
-    BlobOStream& operator<<(BlobOStream& bos, const SkyCoord& sc);
+    // Serialize the sky coordinates \a dir to the output blob stream \a bos.
+    BlobOStream& operator<<(BlobOStream& bos, const Direction& dir);
 
-    // Serialize the earth coordinates \a ec to the output blob stream \a bos.
-    BlobOStream& operator<<(BlobOStream& bos, const EarthCoord& ec);
+    // Serialize the earth coordinates \a pos to the output blob stream \a bos.
+    BlobOStream& operator<<(BlobOStream& bos, const Position& pos);
 
-    // Serialize the time coordinates \a tc to the output blob stream \a bos.
-    BlobOStream& operator<<(BlobOStream& bos, const TimeCoord& tc);
+    // Serialize the time coordinates \a epo to the output blob stream \a bos.
+    BlobOStream& operator<<(BlobOStream& bos, const Epoch& epo);
 
     // Serialize the converter command \a cc to the output blob stream \a bos.
     BlobOStream& operator<<(BlobOStream& bos, const ConverterCommand& cc);
 
-    // De-serialize the input blob stream \a bis to the sky coordinates \a sc.
-    BlobIStream& operator>>(BlobIStream& bis, SkyCoord& sc);
+    // De-serialize the input blob stream \a bis to the sky coordinates \a dir.
+    BlobIStream& operator>>(BlobIStream& bis, Direction& dir);
 
     // De-serialize the input blob stream \a bis to the earth coordinates \a
-    // ec.
-    BlobIStream& operator>>(BlobIStream& bis, EarthCoord& ec);
+    // pos.
+    BlobIStream& operator>>(BlobIStream& bis, Position& pos);
 
     // De-serialize the input blob stream \a bis to the time coordinates \a
-    // tc.
-    BlobIStream& operator>>(BlobIStream& bis, TimeCoord& tc);
+    // epo.
+    BlobIStream& operator>>(BlobIStream& bis, Epoch& epo);
 
     // De-serialize the input blob stream \a bis to the converter command \a
     // cc.

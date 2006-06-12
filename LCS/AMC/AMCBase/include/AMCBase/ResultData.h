@@ -29,7 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <AMCBase/SkyCoord.h>
+#include <AMCBase/Direction.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
@@ -53,15 +53,15 @@ namespace LOFAR
       ResultData()
       {}
 
-      ResultData(const vector<SkyCoord>& sc) :
-        skyCoord(sc)
+      ResultData(const vector<Direction>& dir) :
+        direction(dir)
       {}
 
-      ResultData(const SkyCoord& sc) :
-        skyCoord(1, sc)
+      ResultData(const Direction& dir) :
+        direction(1, dir)
       {}
 
-      vector<SkyCoord> skyCoord;
+      vector<Direction> direction;
     };
 
     // @}

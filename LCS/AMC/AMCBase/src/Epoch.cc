@@ -1,4 +1,4 @@
-//# TimeCoord.cc: Class to hold a time coordinate as 2 values
+//# Epoch.cc: Class to hold a time coordinate as 2 values
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Epoch.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 #include <cmath>
@@ -39,25 +39,19 @@ namespace LOFAR
     static const double usecPerSec = double(1000000);
     static const double secPerDay  = double(24*3600);
 
-    TimeCoord::TimeCoord()
+    //################  Public functions  ################//
+
+    Epoch::Epoch()
     {
       struct timeval tp;
       gettimeofday (&tp, 0);
-      double sec = tp.tv_sec;
-      sec /= secPerDay;
-      itsDay = floor(sec);
-      itsFrac = sec - itsDay + tp.tv_usec / usecPerSec / secPerDay;
-      if (itsFrac > 1) {
-        itsDay++;
-        itsFrac--;
-      }
+      set(tp.tv_sec / secPerDay);
       // 40587 modified Julian day number = 00:00:00 January 1, 1970, GMT.
       itsDay += 40587;
     }
 
     // Copied from MVTime in aips++
-    TimeCoord::TimeCoord (int yy, int mm, double dd,
-                          double h, double m, double s)
+    Epoch::Epoch (int yy, int mm, double dd, double h, double m, double s)
     {
       if (mm < 3) {
         yy--;
@@ -73,38 +67,29 @@ namespace LOFAR
         leapdays = 2 - leapdays + int(leapdays/4);
       }
       itsDay = int(365.25*yy) + int(30.6001*(mm+1)) + idd - 679006.0 + leapdays;
+      adjust();
     }
 
-    TimeCoord::TimeCoord (double mjd, double fraction)
+    Epoch::Epoch (double mjd, double fraction)
     {
-      itsDay = floor(mjd);
-      itsFrac = mjd - itsDay;
-      double rest = floor(fraction);
-      itsDay += rest;
-      itsFrac += fraction - rest;
+      set(mjd);
+      add(fraction);
+      adjust();
     }
 
-    void TimeCoord::utc(double s)
+    void Epoch::utc(double s)
     {
-      double days = s / secPerDay;
-      itsDay = floor(days);
-      itsFrac = days - itsDay;
+      set(s / secPerDay);
       itsDay += 40587;
     }
 
-    void TimeCoord::local(double s)
+    void Epoch::local(double s)
     {
       s -= getUTCDiff();
       utc(s);
     }
 
-    void TimeCoord::mjd(double mjd)
-    {
-      itsDay = floor(mjd);
-      itsFrac = mjd - itsDay;
-    }
-    
-    void TimeCoord::ymd (int& yyyy, int& mm, int& dd, bool local) const
+    void Epoch::ymd (int& yyyy, int& mm, int& dd, bool local) const
     {
       double val = itsDay+itsFrac;
       if (local) {
@@ -133,7 +118,7 @@ namespace LOFAR
       if (mm > 2) yyyy--;
     }
 
-    void TimeCoord::hms (int& h, int& m, double& s, bool local) const
+    void Epoch::hms (int& h, int& m, double& s, bool local) const
     {
       double val = itsDay+itsFrac;
       if (local) {
@@ -148,7 +133,76 @@ namespace LOFAR
       s = 60*(val - m);
     }
 
-    ostream& operator<< (ostream& os, const TimeCoord& time)
+    double Epoch::getUTCDiff()
+    {
+#ifdef HAVE_ALTZONE
+      return (altzone + timezone);
+#else
+      int dst = 0;
+      time_t tim = time (NULL);
+      struct tm *tm_info = localtime (&tim);
+      if (tm_info->tm_isdst > 0) {
+        dst = 3600;
+      }
+      return dst - timezone;
+#endif
+    }
+
+    Epoch& Epoch::operator+=(const Epoch& that)
+    {
+      itsDay += that.itsDay;
+      itsFrac += that.itsFrac;
+      adjust();
+      return *this;
+    }
+
+    Epoch& Epoch::operator-=(const Epoch& that)
+    {
+      itsDay -= that.itsDay;
+      itsFrac -= that.itsFrac;
+      adjust();
+      return *this;
+    }
+
+    Epoch Epoch::operator-() const
+    {
+      return Epoch(-itsDay, -itsFrac);
+    }
+
+    //################  Private functions  ################//
+
+    void Epoch::adjust()
+    {
+      while (itsFrac < 0) {
+        itsFrac += 1;
+        itsDay -= 1;
+      }
+      while (itsFrac >= 1) {
+        itsFrac -= 1;
+        itsDay += 1;
+      }
+    }
+
+
+    void Epoch::add(double t)
+    {
+      double d = floor(t);
+      itsDay += d;
+      itsFrac += (t-d);
+    }
+
+
+    void Epoch::set(double t)
+    {
+      double d = floor(t);
+      itsDay = d;
+      itsFrac = (t-d);
+    }
+
+
+    //################  Free functions  ################//
+
+    ostream& operator<< (ostream& os, const Epoch& time)
     {
       int yy,mm,dd,h,m;
       double s;
@@ -164,25 +218,53 @@ namespace LOFAR
       return os;
     }
 
-    bool operator==(const TimeCoord& lhs, const TimeCoord& rhs)
+
+    //----------------  Comparison operators  ----------------//
+
+    bool operator<(const Epoch& lhs, const Epoch& rhs)
     {
-      static double usec = 1/usecPerSec;
-      return std::abs(lhs.utc() - rhs.utc()) < usec;
+      return (lhs.getDay() < rhs.getDay() ||
+              (lhs.getDay() == rhs.getDay() &&
+               lhs.getFraction() < rhs.getFraction()));
     }
 
-    double TimeCoord::getUTCDiff()
+    bool operator>(const Epoch& lhs, const Epoch& rhs)
     {
-#ifdef HAVE_ALTZONE
-      return (altzone + timezone);
-#else
-      int dst = 0;
-      time_t tim = time (NULL);
-      struct tm *tm_info = localtime (&tim);
-      if (tm_info->tm_isdst > 0) {
-        dst = 3600;
-      }
-      return dst - timezone;
-#endif
+      return rhs < lhs;
+    }
+
+    bool operator<=(const Epoch& lhs, const Epoch& rhs)
+    {
+      return !(rhs < lhs);
+    }
+
+    bool operator>=(const Epoch& lhs, const Epoch& rhs)
+    {
+      return !(lhs < rhs);
+    }
+
+    bool operator==(const Epoch& lhs, const Epoch& rhs)
+    {
+      return (lhs.getDay()      == rhs.getDay() &&
+              lhs.getFraction() == rhs.getFraction());
+    }
+
+    bool operator!=(const Epoch& lhs, const Epoch& rhs)
+    {
+      return !(lhs == rhs);
+    }
+
+
+    //----------------  Numerical operators  ----------------//
+
+    Epoch operator+(const Epoch& lhs, const Epoch& rhs)
+    {
+      return Epoch(lhs) += rhs;
+    }
+
+    Epoch operator-(const Epoch& lhs, const Epoch& rhs)
+    {
+      return Epoch(lhs) -= rhs;
     }
 
   } // namespace AMC

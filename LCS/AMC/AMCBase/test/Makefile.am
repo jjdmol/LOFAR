@@ -1,23 +1,39 @@
-check_PROGRAMS			= tSkyCoord \
-				  tEarthCoord \
-				  tTimeCoord \
+check_PROGRAMS			= tCoord3D \
+				  tDirection \
+				  tPosition \
+				  tEpoch \
 				  tConverterCommand \
 				  tConverterStatus \
 				  tBlobIO \
 				  tDH_Request \
 				  tDH_Result
 
-tSkyCoord_SOURCES		= tSkyCoord.cc
-tSkyCoord_LDADD			= ../src/libamcbase.la
-tSkyCoord_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
+CHECKTOOLPROGS			= tCoord3D \
+				  tDirection \
+				  tPosition \
+				  tEpoch \
+				  tConverterCommand \
+				  tConverterStatus \
+				  tBlobIO \
+				  tDH_Request \
+				  tDH_Result
+#ENDCHECKTOOLPROGS
 
-tEarthCoord_SOURCES		= tEarthCoord.cc
-tEarthCoord_LDADD		= ../src/libamcbase.la
-tEarthCoord_DEPENDENCIES	= ../src/libamcbase.la $(LOFAR_DEPEND)
+tCoord3D_SOURCES		= tCoord3D.cc
+tCoord3D_LDADD			= ../src/libamcbase.la
+tCoord3D_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
 
-tTimeCoord_SOURCES		= tTimeCoord.cc
-tTimeCoord_LDADD		= ../src/libamcbase.la
-tTimeCoord_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
+tDirection_SOURCES		= tDirection.cc
+tDirection_LDADD		= ../src/libamcbase.la
+tDirection_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
+
+tPosition_SOURCES		= tPosition.cc
+tPosition_LDADD			= ../src/libamcbase.la
+tPosition_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
+
+tEpoch_SOURCES			= tEpoch.cc
+tEpoch_LDADD			= ../src/libamcbase.la
+tEpoch_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
 
 tConverterCommand_SOURCES	= tConverterCommand.cc
 tConverterCommand_LDADD		= ../src/libamcbase.la
@@ -39,9 +55,10 @@ tDH_Result_SOURCES		= tDH_Result.cc
 tDH_Result_LDADD		= ../src/libamcbase.la
 tDH_Result_DEPENDENCIES		= ../src/libamcbase.la $(LOFAR_DEPEND)
 
-TESTS				= tSkyCoord.sh \
-				  tEarthCoord.sh \
-				  tTimeCoord.sh \
+TESTS				= tCoord3D.sh \
+				  tDirection.sh \
+				  tPosition.sh \
+				  tEpoch.sh \
 				  tConverterCommand.sh \
 				  tConverterStatus.sh \
 				  tBlobIO.sh \
@@ -52,8 +69,8 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  LOFARROOT=$(LOFARROOT)
 
 EXTRA_DIST			= $(TESTS) \
-				  tSkyCoord.stdout \
-				  tEarthCoord.stdout \
+				  tDirection.stdout \
+				  tPosition.stdout \
 				  tConverterCommand.stdout \
 				  tConverterStatus.stdout
 
