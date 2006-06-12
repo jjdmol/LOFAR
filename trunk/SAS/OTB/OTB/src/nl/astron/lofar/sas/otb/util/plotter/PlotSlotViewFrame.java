@@ -25,6 +25,7 @@ package nl.astron.lofar.sas.otb.util.plotter;
 
 import java.awt.BorderLayout;
 import javax.swing.JDialog;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
  * @version $Id$
@@ -36,15 +37,27 @@ public class PlotSlotViewFrame extends JDialog{
     int plotIndex;
     
     /** Creates a new instance of PlotSlotViewFrame */
-    public PlotSlotViewFrame(PlotSlotManager parent, int index, String title) {
+    public PlotSlotViewFrame(PlotSlotManager parent, int index, String title, boolean showLegendOnly) {
         super();
         plotIndex = index;
         this.getContentPane().setLayout(new BorderLayout());
         setTitle(title);
         PlotSlot viewSlot = parent.getSlot(index);
-        this.getContentPane().add(viewSlot,BorderLayout.CENTER);
-        this.setSize(640,480);
+        if(!showLegendOnly){
+            setTitle(title);
+            this.getContentPane().add(viewSlot,BorderLayout.CENTER);
+            pack();
+        }else{
+            setTitle(title);
+            try {
+                this.getContentPane().add(viewSlot.getPlot().getLegendForPlot(),BorderLayout.CENTER);
+                pack();
+            } catch (PlotterException ex) {
+                ex.printStackTrace();
+            }
+        }
+        
         this.setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
-       
+        
     }
 }
