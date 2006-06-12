@@ -31,8 +31,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import org.apache.log4j.Logger;
 
@@ -226,6 +228,10 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
      *
      */
     class SlotMouseAdapter extends PlotSlotListener{
+        
+        private boolean externalLegendActive = false;
+        private boolean externalViewerActive = false;
+        
         public void slotContextMenuTriggered(PlotSlot aSlot, MouseEvent e){
             Object source = e.getSource();
             if(aSlot instanceof PlotSlot){
@@ -234,7 +240,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                     
                     JPopupMenu aPopupMenu = new JPopupMenu();
                     
-                    if(selectedSlot.containsLegend()){
+                    if(selectedSlot.containsLegend() && !externalLegendActive){
                         JMenuItem aMenuItem=new JMenuItem("Hide Legend");
                         aMenuItem.addActionListener(new java.awt.event.ActionListener() {
                             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -244,67 +250,109 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                             }
                         });
                         aPopupMenu.add(aMenuItem);
-                    }else{
-                        JMenuItem aMenuItem=new JMenuItem("Show Legend");
-                        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    }else if (!externalLegendActive && !externalViewerActive){
+                        JMenu aMenuItem=new JMenu("Show legend");
+                        JMenuItem subMenuItem=new JMenuItem("Inside the slot");
+                        
+                        subMenuItem.addActionListener(new java.awt.event.ActionListener() {
                             public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 selectedSlot.addLegend();
                                 selectedSlot.validate();
                             }
                         });
+                        JMenuItem subMenuItem2=new JMenuItem("In separate window");
+                        subMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+                            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Legend viewer for Plot "+selectedSlot.getLabel(),true);
+                                dialog.addWindowListener(new WindowListener(){
+                                    public void windowDeactivated(WindowEvent e){}
+                                    public void windowActivated(WindowEvent e){}
+                                    public void windowClosed(WindowEvent e){
+                                        rearrangeSlotGrid();
+                                        externalLegendActive = false;}
+                                    public void windowDeiconified(WindowEvent e){}
+                                    public void windowIconified(WindowEvent e){}
+                                    public void windowClosing(WindowEvent e){}
+                                    public void windowOpened(WindowEvent e){}
+                                });
+                                dialog.setVisible(true);
+                                externalLegendActive = true;
+                            }
+                        });
+                        aMenuItem.add(subMenuItem);
+                        aMenuItem.add(subMenuItem2);
                         aPopupMenu.add(aMenuItem);
+                    }else if(externalLegendActive){
+                        JMenuItem subMenuItem=new JMenuItem("Separate Legend Viewer active!");
+                        subMenuItem.setEnabled(false);
+                        aPopupMenu.add(subMenuItem);
+                    }else if(externalViewerActive){
+                        JMenuItem subMenuItem=new JMenuItem("Show Legend");
+                        subMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                selectedSlot.addLegend();
+                                selectedSlot.validate();
+                            }
+                        });
+                        aPopupMenu.add(subMenuItem);
                     }
                     
-                    
-                    int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
-                    if(availableSlots.length > 0){
-                        aPopupMenu.addSeparator();
+                    if(!externalLegendActive && !externalViewerActive){
                         
-                        JMenu aMenuItem=new JMenu("Move to slot");
                         
-                        for(int i = 0; i < availableSlots.length; i++){
-                            JMenuItem subItem=new JMenuItem(""+availableSlots[i]);
-                            subItem.setActionCommand(""+availableSlots[i]);
-                            subItem.addActionListener(new java.awt.event.ActionListener() {
-                                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                    itsSlotManager.movePlot(Integer.parseInt(selectedSlot.getLabel()),Integer.parseInt(evt.getActionCommand()));
-                                    repaint();
-                                }
-                            });
-                            aMenuItem.add(subItem);
-                        }
-                        aPopupMenu.add(aMenuItem);
-                    }
-                    aPopupMenu.addSeparator();
-                    JMenuItem aMenuItem=new JMenuItem("Show in separate window");
-                    aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                        public void actionPerformed(java.awt.event.ActionEvent evt) {
-                            PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Viewer for Plot "+selectedSlot.getLabel());
-                            dialog.addWindowListener(new WindowListener(){
-                                public void windowDeactivated(WindowEvent e){}
-                                public void windowActivated(WindowEvent e){}
-                                public void windowClosed(WindowEvent e){
-                                    rearrangeSlotGrid();}
-                                public void windowDeiconified(WindowEvent e){}
-                                public void windowIconified(WindowEvent e){}
-                                public void windowClosing(WindowEvent e){}
-                                public void windowOpened(WindowEvent e){}
-                            });
-                            dialog.setVisible(true);
+                        int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
+                        if(availableSlots.length > 0){
+                            aPopupMenu.addSeparator();
                             
+                            JMenu aMenuItem=new JMenu("Move to slot");
+                            
+                            for(int i = 0; i < availableSlots.length; i++){
+                                JMenuItem subItem=new JMenuItem(""+availableSlots[i]);
+                                subItem.setActionCommand(""+availableSlots[i]);
+                                subItem.addActionListener(new java.awt.event.ActionListener() {
+                                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                        
+                                        itsSlotManager.movePlot(Integer.parseInt(selectedSlot.getLabel()),Integer.parseInt(evt.getActionCommand()));
+                                        repaint();
+                                        
+                                    }
+                                });
+                                aMenuItem.add(subItem);
+                            }
+                            aPopupMenu.add(aMenuItem);
                         }
-                    });
-                    aPopupMenu.add(aMenuItem);
-                    aPopupMenu.addSeparator();
-                    JMenuItem aMenuItem2=new JMenuItem("Clear Slot");
-                    aMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-                        public void actionPerformed(java.awt.event.ActionEvent evt) {
-                            itsSlotManager.clearSlot(Integer.parseInt(selectedSlot.getLabel()));
-                            selectedSlot.repaint();
-                        }
-                    });
-                    aPopupMenu.add(aMenuItem2);
-                    
+                        
+                        aPopupMenu.addSeparator();
+                        JMenuItem aMenuItem=new JMenuItem("Show in separate window");
+                        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Viewer for Plot "+selectedSlot.getLabel(),false);
+                                dialog.addWindowListener(new WindowListener(){
+                                    public void windowDeactivated(WindowEvent e){}
+                                    public void windowActivated(WindowEvent e){}
+                                    public void windowClosed(WindowEvent e){
+                                        rearrangeSlotGrid();
+                                        externalViewerActive = false;}
+                                    public void windowDeiconified(WindowEvent e){}
+                                    public void windowIconified(WindowEvent e){}
+                                    public void windowClosing(WindowEvent e){}
+                                    public void windowOpened(WindowEvent e){}
+                                });
+                                dialog.setVisible(true);
+                                externalViewerActive=true;
+                            }
+                        });
+                        aPopupMenu.add(aMenuItem);
+                        aPopupMenu.addSeparator();
+                        JMenuItem aMenuItem2=new JMenuItem("Clear Slot");
+                        aMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+                            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                itsSlotManager.clearSlot(Integer.parseInt(selectedSlot.getLabel()));
+                                selectedSlot.repaint();
+                            }
+                        });
+                        aPopupMenu.add(aMenuItem2);
+                    }
                     aPopupMenu.setOpaque(true);
                     aPopupMenu.show(selectedSlot, e.getX(), e.getY());
                 }

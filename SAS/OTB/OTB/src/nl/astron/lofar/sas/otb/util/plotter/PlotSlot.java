@@ -138,8 +138,7 @@ public class PlotSlot extends JPanel{
                 error.setColumns(20);
                 add(error,BorderLayout.CENTER);
                 ex.printStackTrace();
-            }
-            
+            }            
         }else{
             addPlot(constraints);
         }
@@ -195,9 +194,10 @@ public class PlotSlot extends JPanel{
     }
     public JComponent getLegend(){
         JComponent legend = null;
-        if(containsLegend() && itsPlot != null && itsPlot.getPlot()!= null){
+        if(itsPlot != null && itsPlot.getPlot()!= null){
             try{
                 legend = itsPlot.getLegendForPlot();
+                hasLegend = true;
             } catch (PlotterException ex) {
                 JTextArea error = new JTextArea(ex.getMessage());
                 error.setColumns(50);
