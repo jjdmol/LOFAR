@@ -100,9 +100,9 @@ GCFEvent::TResult NodeManager::operational(GCFEvent& e, GCFPortInterface& p)
     {
       NMClaimedEvent inResponse(e);
       TNodeList newClaimedNodes, releasedNodes, faultyNodes;
-      Utils::convStringToSet(newClaimedNodes, inResponse.newClaimedNodes);
-      Utils::convStringToSet(releasedNodes, inResponse.releasedNodes);
-      Utils::convStringToSet(faultyNodes, inResponse.faultyNodes);
+      convStringToSet(newClaimedNodes, inResponse.newClaimedNodes);
+      convStringToSet(releasedNodes, inResponse.releasedNodes);
+      convStringToSet(faultyNodes, inResponse.faultyNodes);
       _interface.nodesClaimed(newClaimedNodes, releasedNodes, faultyNodes);
       break;
     }
@@ -125,7 +125,7 @@ void NodeManager::claimNodes(TNodeList& nodesToClaim)
 {
   NMClaimEvent outRequest;
   
-  Utils::convSetToString(outRequest.nodesToClaim, nodesToClaim);
+  convSetToString(outRequest.nodesToClaim, nodesToClaim);
   if (_nmPort.isConnected())
   {
     _nmPort.send(outRequest);
@@ -136,7 +136,7 @@ void NodeManager::releaseNodes(TNodeList& nodesToRelease)
 {
   NMReleaseEvent outRequest;
   
-  Utils::convSetToString(outRequest.nodesToRelease, nodesToRelease);
+  convSetToString(outRequest.nodesToRelease, nodesToRelease);
   if (_nmPort.isConnected())
   {
     _nmPort.send(outRequest);

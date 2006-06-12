@@ -72,7 +72,7 @@ class GPIPMLlightServer : public TM::GCFTask
     void propSetUnlinked(const PIPropSetUnlinkedEvent& responseIn);
     void valueSet(const PIValueSetEvent& indication);        
      
-	private: // helper methods
+  protected: // helper methods, also used in derived GPICEPServer class
     GPIPropertySet* findPropertySet(const string& scope) const;
     GPIPropertySet* findPropertySet(unsigned int seqnr) const;
         

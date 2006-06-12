@@ -112,7 +112,7 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
       _newClaimedNodes.clear();
       _releasedNodes.clear();
       
-      Utils::convStringToSet(claimNodes, inRequest.nodesToClaim);
+      convStringToSet(claimNodes, inRequest.nodesToClaim);
       
       _nodesToRelease = _curClaimedNodes;
       TNodeList::iterator curClaimedNode;
@@ -164,9 +164,9 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
         // no state value has to be updated so the response can be sent here
         LOG_INFO("Ready with claiming. All requested nodes are already claimed!");
         NMClaimedEvent outResponse;
-        Utils::convSetToString(outResponse.newClaimedNodes, _newClaimedNodes);
-        Utils::convSetToString(outResponse.releasedNodes, _releasedNodes);
-        Utils::convSetToString(outResponse.faultyNodes, _faultyNodes);
+        convSetToString(outResponse.newClaimedNodes, _newClaimedNodes);
+        convSetToString(outResponse.releasedNodes, _releasedNodes);
+        convSetToString(outResponse.faultyNodes, _faultyNodes);
         _nmcPort.send(outResponse);
       }
       else
@@ -179,7 +179,7 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
     {
       NMReleaseEvent inRequest(e);
       TNodeList releaseNodes;
-      Utils::convStringToSet(releaseNodes, inRequest.nodesToRelease);
+      convStringToSet(releaseNodes, inRequest.nodesToRelease);
       for (TNodeList::iterator nodeToRelease = releaseNodes.begin();
           nodeToRelease != releaseNodes.end(); ++nodeToRelease)
       {        
@@ -297,9 +297,9 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
       {
         LOG_INFO("Ready with claiming.");
         NMClaimedEvent outResponse;
-        Utils::convSetToString(outResponse.newClaimedNodes, _newClaimedNodes);
-        Utils::convSetToString(outResponse.releasedNodes, _releasedNodes);
-        Utils::convSetToString(outResponse.faultyNodes, _faultyNodes);
+        convSetToString(outResponse.newClaimedNodes, _newClaimedNodes);
+        convSetToString(outResponse.releasedNodes, _releasedNodes);
+        convSetToString(outResponse.faultyNodes, _faultyNodes);
         _nmcPort.send(outResponse);
         TRAN(NodeManagerClient::operational);
       }

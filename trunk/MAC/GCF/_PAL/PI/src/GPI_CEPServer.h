@@ -50,7 +50,7 @@ class CSConnection;
  
 class GPICEPServer: public GPIPMLlightServer
 {
-	public:
+  public:
 		GPICEPServer (GPIController& controller);
 		virtual ~GPICEPServer ();
    
@@ -59,9 +59,13 @@ class GPICEPServer: public GPIPMLlightServer
     // the CEP-PMLlight) to Blob's (from LCS/Common)
     virtual void sendMsgToClient(TM::GCFEvent& msg);        
       
-	private: // helper methods
+  protected: // event handle methods
+    void linkPropSet(const PALinkPropSetEvent& requestIn);
+    void unlinkPropSet(const PAUnlinkPropSetEvent& requestIn);
+
+  private: // helper methods
         
-	private: // state methods
+  private: // state methods
     // overrides the state method of the baseclass to convert incomming messages
     // from CEP-PMLlight in the right way
     TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
@@ -74,7 +78,7 @@ class GPICEPServer: public GPIPMLlightServer
     GPICEPServer& operator= (const GPICEPServer&);
     // </group>
 
-	private: // data members
+  private: // data members
     DH_PIProtocol   _dhServer;
     CSConnection*   _pReadConn;
     CSConnection*   _pWriteConn;
