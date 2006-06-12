@@ -49,6 +49,14 @@ namespace LOFAR
     // This exception is thrown when a network I/O error occurs
     EXCEPTION_CLASS(IOException, Exception);
 
+    // This exception is thrown when a math error occurs (e.g. division by
+    // zero).
+    EXCEPTION_CLASS(MathException, Exception);
+
+    // This exception is thrown when there is a mismatch between (coordinate)
+    // reference types.
+    EXCEPTION_CLASS(TypeException, Exception);
+
     // @}
 
   } // namespace AMC

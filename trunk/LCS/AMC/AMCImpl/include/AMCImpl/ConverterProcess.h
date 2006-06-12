@@ -40,9 +40,9 @@ namespace LOFAR
 {
   //# Forward declarations.
   class ConverterCommand;
-  class SkyCoord;
-  class EarthCoord;
-  class TimeCoord;
+  class Direction;
+  class Position;
+  class Epoch;
 
   namespace AMC
   {

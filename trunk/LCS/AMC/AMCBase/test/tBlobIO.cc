@@ -27,9 +27,9 @@
 #include <AMCBase/BlobIO.h>
 #include <AMCBase/ConverterCommand.h>
 #include <AMCBase/ConverterStatus.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <Blob/BlobIBufChar.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOBufChar.h>
@@ -41,115 +41,115 @@ using namespace LOFAR;
 using namespace LOFAR::AMC;
 
 
-void test(const ConverterCommand& cco)
+void test(const ConverterCommand& occ)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(ConverterCommand).name(), 1);
-  bos << cco;
+  bos << occ;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  ConverterCommand cci;
+  ConverterCommand icc;
   bis.getStart(typeid(ConverterCommand).name());
-  bis >> cci;
+  bis >> icc;
   bis.getEnd();
 
-  ASSERTSTR(cci == cco, "cci = " << cci << "; cco = " << cco);
+  ASSERTSTR(icc == occ, "icc = " << icc << "; occ = " << occ);
 }
 
 
-void test(const ConverterStatus& cso)
+void test(const ConverterStatus& ocs)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
   bos.putStart(typeid(ConverterStatus).name(), 1);
-  bos << cso;
+  bos << ocs;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  ConverterStatus csi;
+  ConverterStatus ics;
   bis.getStart(typeid(ConverterStatus).name());
-  bis >> csi;
+  bis >> ics;
   bis.getEnd();
 
-  ASSERTSTR(csi.get() == cso.get() && 
-            csi.text() == cso.text(),
-            "csi = " << csi << "; cso = " << cso);
+  ASSERTSTR(ics.get() == ocs.get() && 
+            ics.text() == ocs.text(),
+            "ics = " << ics << "; ocs = " << ocs);
 }
 
 
-void test(const SkyCoord& sco)
+void test(const Direction& od)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
-  bos.putStart(typeid(SkyCoord).name(), 1);
-  bos << sco;
+  bos.putStart(typeid(Direction).name(), 1);
+  bos << od;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  SkyCoord sci;
-  bis.getStart(typeid(SkyCoord).name());
-  bis >> sci;
+  Direction id;
+  bis.getStart(typeid(Direction).name());
+  bis >> id;
   bis.getEnd();
 
-  ASSERTSTR(sci == sco, "sci = " << sci << "; sco = " << sco);
+  ASSERTSTR(id == od, "id = " << id << "; od = " << od);
 }
 
 
-void test(const EarthCoord& eco)
+void test(const Position& op)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
-  bos.putStart(typeid(EarthCoord).name(), 1);
-  bos << eco;
+  bos.putStart(typeid(Position).name(), 1);
+  bos << op;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  EarthCoord eci;
-  bis.getStart(typeid(EarthCoord).name());
-  bis >> eci;
+  Position ip;
+  bis.getStart(typeid(Position).name());
+  bis >> ip;
   bis.getEnd();
 
-  ASSERTSTR(eci == eco, "eci = " << eci << "; eco = " << eco);
+  ASSERTSTR(ip == op, "ip = " << ip << "; op = " << op);
 }
 
 
-void test(const TimeCoord& tco)
+void test(const Epoch& oe)
 {
   BlobOBufChar bob;
   BlobOStream bos(bob);
 
-  bos.putStart(typeid(TimeCoord).name(), 1);
-  bos << tco;
+  bos.putStart(typeid(Epoch).name(), 1);
+  bos << oe;
   bos.putEnd();
 
   BlobIBufChar bib(bob.getBuffer(), bob.size());
   BlobIStream bis(bib);
 
-  TimeCoord tci;
-  bis.getStart(typeid(TimeCoord).name());
-  bis >> tci;
+  Epoch ie;
+  bis.getStart(typeid(Epoch).name());
+  bis >> ie;
   bis.getEnd();
 
   // We must make the detour through the doubles dci and dco, otherwise the
   // comparison will be done directly inside the FPU (using 80 bits instead of
   // 64), which will cause the assert to fail.
-  double dci(tci.mjd());
-  double dco(tco.mjd());
-  ASSERTSTR(dci == dco, "tci = " << tci << "; tco = " << tco);
+  double dci(ie.mjd());
+  double dco(oe.mjd());
+  ASSERTSTR(dci == dco, "ie = " << ie << "; oe = " << oe);
 }
 
 
@@ -179,16 +179,16 @@ int main(int /*argc*/, const char* const argv[])
     test(ConverterStatus(static_cast<ConverterStatus::Status>(1000),
                          "Undefined error"));
 
-    test(SkyCoord());
-    test(SkyCoord(0.4, -0.19, SkyCoord::ITRF));
-    test(SkyCoord(-1.2, 2.38, SkyCoord::AZEL));
+    test(Direction());
+    test(Direction(0.4, -0.19, Direction::ITRF));
+    test(Direction(-1.2, 2.38, Direction::AZEL));
 
-    test(EarthCoord());
-    test(EarthCoord(0.25*M_PI, -0.33*M_PI));
-    test(EarthCoord(-0.67*M_PI, 0.75*M_PI, 249.98, EarthCoord::WGS84));
+    test(Position());
+    test(Position(0.25*M_PI, -0.33*M_PI, 1));
+    test(Position(-0.67*M_PI, 0.75*M_PI, 249.98, Position::WGS84));
 
-    test(TimeCoord());
-    test(TimeCoord(0));
+    test(Epoch());
+    test(Epoch(0));
 
   } catch (Exception& e) {
     LOG_ERROR_STR(e);

@@ -25,9 +25,10 @@
 
 //# Includes
 #include <AMCBase/BlobIO.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Coord3D.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <AMCBase/ConverterCommand.h>
 #include <AMCBase/ConverterStatus.h>
 #include <AMCBase/RequestData.h>
@@ -44,27 +45,30 @@ namespace LOFAR
 
     //# -------  BlobOStream operators  ------- #//
 
-    BlobOStream& operator<<(BlobOStream& bos, const SkyCoord& sc)
+    BlobOStream& operator<<(BlobOStream& bos, const Coord3D& coord)
     {
-      bos << sc.angle0()
-          << sc.angle1()
-          << static_cast<int32>(sc.type());
+      bos << coord.get();
       return bos;
     }
 
-    BlobOStream& operator<<(BlobOStream& bos, const EarthCoord& ec)
+    BlobOStream& operator<<(BlobOStream& bos, const Direction& dir)
     {
-      bos << ec.longitude()
-          << ec.latitude()
-          << ec.height()
-          << static_cast<int32>(ec.type());
+      bos << dir.coord()
+          << static_cast<int32>(dir.type());
       return bos;
     }
 
-    BlobOStream& operator<<(BlobOStream& bos, const TimeCoord& tc)
+    BlobOStream& operator<<(BlobOStream& bos, const Position& pos)
     {
-      bos << tc.getDay()
-          << tc.getFraction();
+      bos << pos.coord()
+          << static_cast<int32>(pos.type());
+      return bos;
+    }
+
+    BlobOStream& operator<<(BlobOStream& bos, const Epoch& epo)
+    {
+      bos << epo.getDay()
+          << epo.getFraction();
       return bos;
     }
 
@@ -83,47 +87,54 @@ namespace LOFAR
 
     BlobOStream& operator<<(BlobOStream& bos, const RequestData& req)
     {
-      bos << req.skyCoord
-          << req.earthCoord
-          << req.timeCoord;
+      bos << req.direction
+          << req.position
+          << req.epoch;
       return bos;
     }
 
     BlobOStream& operator<<(BlobOStream& bos, const ResultData& res)
     {
-      bos << res.skyCoord;
+      bos << res.direction;
       return bos;
     }
 
 
     //# -------  BlobIStream operators  ------- #//
 
-    BlobIStream& operator>>(BlobIStream& bis, SkyCoord& sc)
+    BlobIStream& operator>>(BlobIStream& bis, Coord3D& coord)
     {
-      double angle0, angle1;
-      int32 type;
-      bis >> angle0 >> angle1 >> type;
-      sc = SkyCoord(angle0, angle1, static_cast<SkyCoord::Types>(type));
-      ASSERT(sc.isValid());
+      vector<double> xyz(3);
+      bis >> xyz;
+      coord = Coord3D(xyz);
       return bis;
     }
 
-    BlobIStream& operator>>(BlobIStream& bis, EarthCoord& ec)
+    BlobIStream& operator>>(BlobIStream& bis, Direction& dir)
     {
-      double longitude, latitude, height;
+      Coord3D coord;
       int32 type;
-      bis >> longitude >> latitude >> height >> type;
-      ec = EarthCoord(longitude, latitude, height, 
-                      static_cast<EarthCoord::Types>(type));
-      ASSERT(ec.isValid());
+      bis >> coord >> type;
+      dir = Direction(coord, static_cast<Direction::Types>(type));
+      ASSERT(dir.isValid());
       return bis;
     }
 
-    BlobIStream& operator>>(BlobIStream& bis, TimeCoord& tc)
+    BlobIStream& operator>>(BlobIStream& bis, Position& pos)
+    {
+      Coord3D coord;
+      int32 type;
+      bis >> coord >> type;
+      pos = Position(coord, static_cast<Position::Types>(type));
+      ASSERT(pos.isValid());
+      return bis;
+    }
+
+    BlobIStream& operator>>(BlobIStream& bis, Epoch& epo)
     {
       double day, fraction;
       bis >> day >> fraction;
-      tc = TimeCoord(day, fraction);
+      epo = Epoch(day, fraction);
       return bis;
     }
 
@@ -147,13 +158,13 @@ namespace LOFAR
 
     BlobIStream& operator>>(BlobIStream& bis, RequestData& req)
     {
-      bis >> req.skyCoord >> req.earthCoord >> req.timeCoord;
+      bis >> req.direction >> req.position >> req.epoch;
       return bis;
     }
 
     BlobIStream& operator>>(BlobIStream& bis, ResultData& res)
     {
-      bis >> res.skyCoord;
+      bis >> res.direction;
       return bis;
     }
 

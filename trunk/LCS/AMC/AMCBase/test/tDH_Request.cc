@@ -26,17 +26,28 @@
 //# Includes
 #include <AMCBase/DH_Request.h>
 #include <AMCBase/ConverterCommand.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Direction.h>
+#include <AMCBase/Position.h>
+#include <AMCBase/Epoch.h>
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
+
+ostream& operator<<(ostream& os, const vector<double>& v)
+{
+  os << '[';
+  for (uint i = 0; i < v.size()-1; ++i) {
+    os << v[i] << ", ";
+  }
+  os << v[v.size()-1] << ']' << endl;
+  return os;
+}
 
 int main(int /*argc*/, const char* const argv[])
 {
@@ -46,31 +57,31 @@ int main(int /*argc*/, const char* const argv[])
 
     ConverterCommand sendCmd(ConverterCommand::J2000toAZEL);
 
-    vector<SkyCoord> sendSky;
-    sendSky.push_back(SkyCoord());
-    sendSky.push_back(SkyCoord(0.4, -0.19));
+    vector<Direction> sendDirection;
+    sendDirection.push_back(Direction());
+    sendDirection.push_back(Direction(0.4, -0.19));
   
-    vector<EarthCoord> sendEarth;
-    sendEarth.push_back(EarthCoord());
-    sendEarth.push_back(EarthCoord(0.25*M_PI, -0.33*M_PI));
-    sendEarth.push_back(EarthCoord(-0.67*M_PI, 0.75*M_PI, 249.98));
+    vector<Position> sendPosition;
+    sendPosition.push_back(Position());
+    sendPosition.push_back(Position(0.25*M_PI, -0.33*M_PI, 1));
+    sendPosition.push_back(Position(-0.67*M_PI, 0.75*M_PI, 249.98));
   
-    vector<TimeCoord>  sendTime;
-    sendTime.push_back(TimeCoord());
-    sendTime.push_back(TimeCoord(0));
+    vector<Epoch>  sendEpoch;
+    sendEpoch.push_back(Epoch());
+    sendEpoch.push_back(Epoch(0));
 
     ConverterCommand recvCmd;
-    vector<SkyCoord> recvSky;
-    vector<EarthCoord> recvEarth;
-    vector<TimeCoord> recvTime;
+    vector<Direction> recvDirection;
+    vector<Position> recvPosition;
+    vector<Epoch> recvEpoch;
 
     TH_Mem aTH;
     DH_Request sendDhReq;
     DH_Request recvDhReq;
     Connection conn("conn", &sendDhReq, &recvDhReq, &aTH, false);
 
-    RequestData sendReqData(sendSky, sendEarth, sendTime);
-    RequestData recvReqData(recvSky, recvEarth, recvTime);
+    RequestData sendReqData(sendDirection, sendPosition, sendEpoch);
+    RequestData recvReqData(recvDirection, recvPosition, recvEpoch);
 
     sendDhReq.writeBuf(sendCmd, sendReqData);
     conn.write();
@@ -78,17 +89,17 @@ int main(int /*argc*/, const char* const argv[])
     recvDhReq.readBuf(recvCmd, recvReqData);
 
     ASSERT(sendCmd == recvCmd);
-    ASSERT(sendReqData.skyCoord.size() == recvReqData.skyCoord.size());
-    for (uint i=0; i < sendReqData.skyCoord.size(); ++i) {
-      ASSERT(sendReqData.skyCoord[i] == recvReqData.skyCoord[i]);
+    ASSERT(sendReqData.direction.size() == recvReqData.direction.size());
+    for (uint i=0; i < sendReqData.direction.size(); ++i) {
+      ASSERT(sendReqData.direction[i] == recvReqData.direction[i]);
     }
-    ASSERT(sendReqData.earthCoord.size() == recvReqData.earthCoord.size());
-    for (uint i=0; i < sendReqData.earthCoord.size(); ++i) {
-      ASSERT(sendReqData.earthCoord[i] == recvReqData.earthCoord[i]);
+    ASSERT(sendReqData.position.size() == recvReqData.position.size());
+    for (uint i=0; i < sendReqData.position.size(); ++i) {
+      ASSERT(sendReqData.position[i] == recvReqData.position[i]);
     }
-    ASSERT(sendReqData.timeCoord.size() == recvReqData.timeCoord.size());
-    for (uint i=0; i < sendReqData.timeCoord.size(); ++i) {
-      ASSERT(sendReqData.timeCoord[i] == recvReqData.timeCoord[i]);
+    ASSERT(sendReqData.epoch.size() == recvReqData.epoch.size());
+    for (uint i=0; i < sendReqData.epoch.size(); ++i) {
+      ASSERT(sendReqData.epoch[i] == recvReqData.epoch[i]);
     }
   }
   catch (Exception& e) {
