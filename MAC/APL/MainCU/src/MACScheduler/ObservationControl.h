@@ -1,4 +1,4 @@
-//#  MACScheduler.h: Interface between MAC and SAS.
+//#  ObservationControl.h: Interface between MAC and SAS.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef MACScheduler_H
-#define MACScheduler_H
+#ifndef ObservationControl_H
+#define ObservationControl_H
 
 //# Includes
 #include <boost/shared_ptr.hpp>
@@ -46,11 +46,9 @@
 #include <Common/LofarLogger.h>
 
 //# ACC Includes
-#include <OTDB/OTDBconnection.h>
-#include <OTDB/TreeMaintenance.h>
-#include <OTDB/OTDBnode.h>
 #include <APS/ParameterSet.h>
 #include "ChildControl.h"
+#include "ParentControl.h"
 #include "LDState.h"
 
 // forward declaration
@@ -66,12 +64,12 @@ using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
 
 
-class MACScheduler : public GCFTask,
-							APLCommon::PropertySetAnswerHandlerInterface
+class ObservationControl : public GCFTask,
+						   APLCommon::PropertySetAnswerHandlerInterface
 {
 public:
-	MACScheduler();
-	~MACScheduler();
+	explicit ObservationControl(const string& cntlrName);
+	~ObservationControl();
 
    	// PropertySetAnswerHandlerInterface method
    	virtual void handlePropertySetAnswer(GCFEvent& answer);
@@ -80,23 +78,18 @@ public:
    	GCFEvent::TResult initial_state (GCFEvent& e, 
 									 GCFPortInterface& p);
 	
-	// In this state the last-registered state is compared with the current
-	// database-state and an appropriate recovery is made for each observation.
-   	GCFEvent::TResult recover_state (GCFEvent& e, 
-									 GCFPortInterface& p);
-
-	// Normal control mode. Watching the OTDB and controlling the observations.
+	// Normal control mode. 
    	GCFEvent::TResult active_state  (GCFEvent& e, 
 									 GCFPortInterface& p);
 
 private:
-	// avoid copying
-	MACScheduler(const MACScheduler&);
-   	MACScheduler& operator=(const MACScheduler&);
+	// avoid defaultconstruction and copying
+	ObservationControl();
+	ObservationControl(const ObservationControl&);
+   	ObservationControl& operator=(const ObservationControl&);
 
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
-   	void _doOTDBcheck();
    	boost::shared_ptr<ACC::APS::ParameterSet> 
 		 readObservationParameters (OTDB::treeIDType	ObsTreeID);
 
@@ -118,25 +111,19 @@ private:
 	vector<GCFTCPPort*>				itsObsCntlrPorts;
 #endif
 
-	// Ports for StartDaemon and ObservationControllers.
-   	GCFTimerPort*			itsDummyPort;			// for timers
-
 	// pointer to child control task
 	ChildControl*			itsChildControl;
 	GCFITCPort*				itsChildPort;
 
-	// Second timer used for internal timing.
-	uint32					itsSecondTimer;			// 1 second hardbeat
+	// pointer to parent control task
+	ParentControl*			itsParentControl;
+	GCFITCPort*				itsParentPort;
 
-	// Scheduling settings
-	uint32					itsQueuePeriod;			// period between queueing and start
-	uint32					itsClaimPeriod;			// period between claiming and start
-      
-	// OTDB related variables.
-   	OTDB::OTDBconnection*	itsOTDBconnection;		// connection to the database
-	uint32					itsOTDBpollInterval;	// itv between OTDB polls
-	int32					itsNextOTDBpolltime;	// when next OTDB poll is scheduled
-
+	// ParameterSet variables
+	string					itsTreePrefix;
+	uint32					itsInstanceNr;
+	time_t					itsStartTime;
+	time_t					itsStopTime;
 };
 
   };//MainCU

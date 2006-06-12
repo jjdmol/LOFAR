@@ -32,7 +32,9 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TCPPort.h>
+#include <GCF/TM/GCF_TimerPort.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <OTDB/OTDBtypes.h>
 #include "LDState.h"
@@ -44,6 +46,8 @@ namespace LOFAR {
   using GCF::TM::GCFEvent;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPortInterface;
+  using GCF::TM::GCFITCPort;
+  using GCF::TM::GCFTimerPort;
   using APLCommon::LDState;
   namespace MainCU {
 
@@ -72,6 +76,7 @@ public:
 		time_t				requestTime;	// time of requested state
 		LDState::LDstateNr	currentState;	// currrent (known) state of the controller
 		time_t				establishTime;	// time this state was reached
+		bool				failed;			// the requested state could not be reached
 	} StateInfo;
 
 	// Assign a name to the service the task should offer to the childs
@@ -82,21 +87,33 @@ public:
 	bool		startChild		(const string&		aName, 
 								 OTDB::treeIDType	anObsID, 
 								 const string&		aCntlrType, 
+							     uint32				instanceNr = 0,
 								 const string&		hostname = "localhost");
 	bool		requestState	(LDState::LDstateNr	state, 
 								 const string&		aName, 
 								 OTDB::treeIDType	anObsID = 0, 
-								 const string&		aCntlrType = LDTYPE_NO_TYPE);
+								 const string&		aCntlrType = CNTLRTYPE_NO_TYPE);
 	uint32		countChilds		(OTDB::treeIDType	anObsID = 0, 
-								 const string&		aCntlrType = LDTYPE_NO_TYPE);
+								 const string&		aCntlrType = CNTLRTYPE_NO_TYPE);
 
 	LDState::LDstateNr	getCurrentState		(const string&	aName);
 	LDState::LDstateNr	getRequestedState	(const string&	aName);
 
 	// management info for creator of class.
-	vector<StateInfo> getPendingRequest (const string&		aName, 
-								 		 OTDB::treeIDType	anObsID = 0, 
-								 		 const string&		aCntlrType = LDTYPE_NO_TYPE);
+	vector<StateInfo> getPendingRequest (const string&	  aName, 
+								 		 OTDB::treeIDType anObsID = 0, 
+								 		 const string&	  aCntlrType = CNTLRTYPE_NO_TYPE);
+
+	// The 'parent' task that uses this ChildControl class has three way of getting
+	// informed about the completed actions:
+	// [A] call getCompletedStates at regular intervals.
+	// [B] call setCompletionTimer once and call getCompletedStates when timer expires
+	// [C] call setCompletionPort once and handle the CONTROL events on that port.
+	vector<StateInfo>	getCompletedStates (time_t			lastPollTime);
+	void				registerCompletionTimer (GCFTimerPort*	theTimerPort)
+						{ itsCompletionTimer = theTimerPort; }
+	void				registerCompletionPort  (GCFITCPort*	theITCPort)
+						{ itsCompletionPort = theITCPort; }
 
 private:
 	// Copying is not allowed
@@ -112,13 +129,15 @@ private:
 	void _processActionList();
 	void _setEstablishedState (const string&		aName, 
 							   LDState::LDstateNr	newState,
-							   time_t				atTime);
+							   time_t				atTime,
+							   bool					successful);
 	void _removeAction		  (const string&		aName,
 							   LDState::LDstateNr	requestedState);
 
 	// Define struct for administration of the child controllers.
 	typedef struct ControllerInfo_t {
 		string				name;			// uniq name of the controller
+		uint32				instanceNr;		// for nonshared controllers
 		OTDB::treeIDType	obsID;			// observation tree the cntlr belongs to
 		GCFPortInterface*	port;			// connection with the controller
 		string				cntlrType;		// type of controller (mnemonic)
@@ -127,6 +146,7 @@ private:
 		time_t				requestTime;	// time of requested state
 		LDState::LDstateNr	currentState;	// the state the controller has
 		time_t				establishTime;	// time the current state was reached
+		bool				failed;			// requested state could not be reached
 		time_t				retryTime;		// time the request must be retried
 		uint32				nrRetries;		// nr of retries performed
 	} ControllerInfo;
@@ -143,13 +163,15 @@ private:
 	uint32						itsStartupRetryInterval;
 	uint32						itsMaxStartupRetries;
 
-	list<ControllerInfo>		itsCntlrList;		// administration of child controller
+	list<ControllerInfo>		itsCntlrList;		// admin. of child controllers
 
 	// All actions from the parent task are queued as ControllerInfo objects
 	// and handled in the operational stateMachine.
 	list<ControllerInfo>		itsActionList;		// list of actions to perform.
 	uint32						itsActionTimer;		// ID of actiontimer.
 
+	GCFTimerPort*				itsCompletionTimer;	// to signal parent in situation B
+	GCFITCPort*					itsCompletionPort;	// to signal parent in situation C
 //	...
 
 };

@@ -1,4 +1,4 @@
-bin_PROGRAMS 				= MACScheduler
+bin_PROGRAMS 				= MACScheduler ObservationControl
 
 MACScheduler_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -Wno-deprecated \
@@ -8,16 +8,31 @@ MACScheduler_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 MACScheduler_SOURCES		= MACScheduler.cc \
 							  MACSchedulerMain.cc \
 							  ChildControl.cc \
-							  LDState.cc \
-							  Controller.cc
+							  LDState.cc
+							  ParentControl.cc
 
 MACScheduler_LDADD			= -lpqxx $(LOFAR_DEPEND)
 MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)
+
+ObservationControl_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
+								  -Wno-deprecated \
+								  -fmessage-length=0 \
+								  -fdiagnostics-show-location=once
+
+ObservationControl_SOURCES		= ObservationControl.cc \
+								  ObservationControlMain.cc \
+								  ChildControl.cc \
+								  LDState.cc\
+								  ParentControl.cc
+
+ObservationControl_LDADD		= $(LOFAR_DEPEND)
+ObservationControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= MACScheduler.h \
 							  MACSchedulerDefines.h
 
 INSTHDRS 					= ChildControl.h \
+							  ParentControl.h \
 							  LDState.h
 
 pkginclude_HEADERS 			= $(NOINSTHDRS) $(INSTHDRS)
@@ -31,7 +46,9 @@ configfilesdir=$(bindir)
 configfiles_DATA 	= customPrepPVSSDB.ctl
 
 sysconf_DATA		= MACScheduler.conf \
-					  MACScheduler.log_prop
+					  MACScheduler.log_prop \
+					  ObservationControl.conf \
+					  ObservationControl.log_prop
 
 %.log_prop: %.log_prop.in
 	cp $< $@
