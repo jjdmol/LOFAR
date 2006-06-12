@@ -29,37 +29,38 @@
 //# Includes
 #include <BBS/MNS/MeqFunklet.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
 
 // \ingroup BBS
 // \addtogroup MNS
 // @{
 
-class MeqTabular: public MeqFunklet
-{
-public:
-  // Create an empty object.
-  MeqTabular()
-    {}
+  class MeqTabular: public MeqFunklet
+  {
+  public:
+    // Create an empty object.
+    MeqTabular()
+      {}
 
-  // Create a tabular from a ParmValue object.
-  MeqTabular (const ParmDB::ParmValue&);
+    // Create a tabular from a ParmValue object.
+    MeqTabular (const ParmDB::ParmValue&);
 
-  // Convert a tabular to a ParmValue object.
-  ParmDB::ParmValue toParmValue() const;
+    // Convert a tabular to a ParmValue object.
+    ParmDB::ParmValue toParmValue() const;
 
-  virtual ~MeqTabular();
+    virtual ~MeqTabular();
 
-  // Clone the polc.
-  virtual MeqTabular* clone() const;
+    // Clone the polc.
+    virtual MeqTabular* clone() const;
 
-  // Calculate the value.
-  // Perturbations are not allowed.
-  virtual MeqResult getResult (const MeqRequest&,
-			       int nrpert, int pertInx);
-  virtual MeqResult getAnResult (const MeqRequest&,
-				 int nrpert, int pertInx);
-};
+    // Calculate the value.
+    // Perturbations are not allowed.
+    virtual MeqResult getResult (const MeqRequest&,
+              int nrpert, int pertInx);
+    virtual MeqResult getAnResult (const MeqRequest&,
+          int nrpert, int pertInx);
+  };
 
 // @}
 

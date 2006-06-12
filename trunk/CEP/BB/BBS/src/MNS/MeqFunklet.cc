@@ -85,7 +85,7 @@ MeqFunklet* MeqFunklet::make (const ParmDB::ParmValue& pvalue,
 	     "No 2-dim funklet found for parameter " << name);
   if (pvalue.rep().itsType=="polc") {
     return new MeqPolc(pvalue);
-  } else if (pvalue.rep().itsType=="polc") {
+  } else if (pvalue.rep().itsType=="tabular") {
     return new MeqTabular(pvalue);
   }
   ASSERTSTR (false,

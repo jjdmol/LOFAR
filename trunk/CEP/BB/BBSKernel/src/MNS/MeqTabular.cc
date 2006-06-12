@@ -21,6 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <utility>
 
 #include <BBS/MNS/MeqTabular.h>
 #include <BBS/MNS/MeqRequest.h>
@@ -28,70 +29,209 @@
 #include <BBS/MNS/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
 
+using namespace std;
 using namespace casa;
 
-namespace LOFAR {
-
-
-MeqTabular::MeqTabular (const ParmDB::ParmValue& pvalue)
-: MeqFunklet (pvalue)
+namespace LOFAR
 {
-  const ParmDB::ParmValueRep& pval = pvalue.rep();
-  ASSERTSTR (pval.itsType == "tabular",
-	     "Funklet in ParmValue is not of type 'tabular'");
-}
-
-MeqTabular::~MeqTabular()
-{}
-
-MeqTabular* MeqTabular::clone() const
-{
-  return new MeqTabular(*this);
-}
-
-MeqResult MeqTabular::getResult (const MeqRequest& request,
-				 int nrpert, int pertInx)
-{
-  ASSERTSTR (nrpert == 0,
-	     "A tabular parameter value cannot be solvable");
-  // It is not checked if the domain is valid.
-  // In that way any value can be used for the default domain [-1,1].
-  // Because the values are calculated for the center of each cell,
-  // it is only checked if the centers are in the tabular domain.
-  const MeqDomain& reqDomain = request.domain();
-  MeqResult result(request.nspid());
-  // If there is only one value, the value is independent of x and y.
-  // Make sure it is turned into a scalar value.
-  if (itsCoeff.nelements() == 1) {
-    result.setValue (MeqMatrix(itsCoeff.getDouble()));
-  } else if (itsCoeff.ny() == 1) {
-    // The tabular has multiple values in frequency only.
-    // Get number of steps and values in x and y.
-    int ndx = request.nx();
-    int ndy = request.ny();
-    int ncx = itsCoeff.nx();
-    int ncy = itsCoeff.ny();
-    // Get the step and start values in the domain.
-    double stepdx = (reqDomain.endX() - reqDomain.startX()) / ndx;
-    double stepcx = (domain().endX() - domain().startX()) / ncx;
-    // Evaluate the expression (as double).
-    const double* coeffData = itsCoeff.doubleStorage();
-    // Create matrix for the value itself and keep a pointer to its data.
-    result.setValue (MeqMatrix(double(0), ndx, ndy));
-    double* value = result.getValueRW().doubleStorage();
-    // Iterate over all cells in the frequency domain.
-    double valx = reqDomain.startX();
-    for (int i=0; i<ndx; i++) {
-      valx += stepdx;
-    }
+  MeqTabular::MeqTabular (const ParmDB::ParmValue& pvalue)
+  : MeqFunklet (pvalue)
+  {
+    const ParmDB::ParmValueRep& pval = pvalue.rep();
+    ASSERTSTR (pval.itsType == "tabular",
+        "Funklet in ParmValue is not of type 'tabular'");
   }
-  return result;
-}
 
-MeqResult MeqTabular::getAnResult (const MeqRequest& request,
-				   int nrpert, int pertInx)
-{
-  return getResult (request, nrpert, pertInx);
-}
+  
+  MeqTabular::~MeqTabular()
+  {}
 
+  
+  MeqTabular* MeqTabular::clone() const
+  {
+    return new MeqTabular(*this);
+  }
+
+  // getResult(): resamples the tabular on the requested grid. NOTE: currently, linear interpolation
+  // is used both for upsampling and downsampling. No low pass filter is used prior to downsampling.
+  // Also, when samples outside the input domain are required, they are assumed to have a value of 0.0.
+  // This may or may not be adequate for your specific application.
+  // TODO: split off a 1-D resample method and use seperable interpolation kernels to be able
+  // to easily generalize the resample method to n-D.
+  MeqResult MeqTabular::getResult (const MeqRequest& request,
+          int nrpert, int pertInx)
+  {
+    ASSERTSTR (nrpert == 0,
+        "A tabular parameter value cannot be solvable.");
+
+    ASSERTSTR (itsCoeff.nelements() != 0,
+        "Empty tabular not allowed.");
+    
+    // Get input and output domains.
+    const MeqDomain &inDomain = this->domain();
+    const MeqDomain &outDomain = request.domain();
+
+    // Assume the output domain is contained within the input domain, i.e.:
+    // assume the left boundary of the first output cell lies on or to the
+    // right of the left boundary of the first intput cell and the right boundary
+    // of the last output cell lies on or to the left of the right boundary of the
+    // last intput cell.
+    ASSERTSTR(outDomain.startX() >= inDomain.startX() && outDomain.endX() <= inDomain.endX() && outDomain.startY() >= inDomain.startY() && outDomain.endY() <= inDomain.endY(),
+      "The output domain should be completely contained within the input domain.");
+    
+    // Create result.
+    MeqResult result(request.nspid());
+    
+    // Get the number of cells in the input and output domains.
+    const pair<int, int> inCount(itsCoeff.nx(), itsCoeff.ny());
+    const pair<int, int> outCount(request.nx(), request.ny());
+
+    if (itsCoeff.nelements() == 1)
+    {
+      // If the input is scalar, it represents a constant -> fill the matrix with the input value.
+      result.setValue(MeqMatrix(itsCoeff.getDouble(), outCount.first, outCount.second, true));
+    }
+    else if (itsCoeff.ny() == 1)
+    {
+      // The input is 1-D and is defined along the first (frequency) axis.
+      
+      // Get the scales of input and output domains.
+      const pair<double, double> inScale((inDomain.endX() - inDomain.startX()) / inCount.first, (inDomain.endY() - inDomain.startY()) / inCount.second);
+      const pair<double, double> outScale((outDomain.endX() - outDomain.startX()) / outCount.first, (outDomain.endY() - outDomain.startY()) / outCount.second);
+      const pair<double, double> scaleRatio(outScale.first / inScale.first, outScale.second / inScale.second);
+      
+      // Get pointers to the input and output values.
+      const double* const inValues = itsCoeff.doubleStorage();
+      result.setValue(MeqMatrix(0.0, outCount.first, outCount.second));
+      double* const outValues = result.getValueRW().doubleStorage();
+      
+      // Compute the centers of the first cells of the input and output domains.
+      double inCenter = inDomain.startX() + 0.5 * inScale.first;
+      double outCenter = outDomain.startX() + 0.5 * outScale.first;
+      
+      // If the centers of all input and output cells are perfectly aligned,
+      // just copy the relevant piece of data.
+      if(inScale.first == outScale.first && fmod(outDomain.startX() - inDomain.startX(), inScale.first) == 0.0)
+      {
+        int inStart = (int) ((outCenter - inCenter) / inScale.first);
+        
+        for(int i = 0; i < outCount.first; ++i)
+        {
+          outValues[i] = inValues[i + inStart];
+        }
+      }
+      else
+      {
+        int leftBoundaryCells = 0;
+        int rightBoundaryCells = 0;
+        int outIndex;
+        double offset;
+
+        // Compute the number of boundary cells on the left. This is the number of
+        // output cells of which the center lies to the left of the center of the
+        // first input cell.
+        if(outCenter < inCenter)
+        {
+          leftBoundaryCells = (int) ceil((inCenter - outCenter) / outScale.first);
+        }
+
+        // Compute the number of boundary cells on the right. This is the number of
+        // output cells of which the center lies to the right of the center of the
+        // last input cell.
+        if((outDomain.endX() - 0.5 * outScale.first) > (inDomain.endX() - 0.5 * inScale.first))
+        {
+          rightBoundaryCells = (int) ceil(((outDomain.endX() - 0.5 * outScale.first) - (inDomain.endX() - 0.5 * inScale.first)) / outScale.first);
+        }
+
+        // Compute the values of the left boundary cells. A choice has to be made
+        // regarding the boundary input value. For now, this value is fixed at 0.0.
+        // However, if necessary this can/should be made configurable.
+        for(outIndex = 0; outIndex < leftBoundaryCells; ++outIndex)
+        {
+          offset = 1.0 - (inCenter - outCenter) / inScale.first;
+
+//          ASSERTSTR(offset >= 0.0 && offset <= 1.0, 
+//            "Offset error on left boundary!" << offset << " " << outIndex << " " << leftBoundaryCells << " " << outCenter << " " << inCenter);
+
+          // Compute output value by linear interpolation and store it.
+          outValues[outIndex] = offset * inValues[0];
+          outCenter += outScale.first;
+        }
+
+//        ASSERTSTR(outCenter >= inCenter,
+//          "Center of the first output cell should lie to the right of the center of the first input cell.");
+
+        // Get the index of the first relevant input cell.
+        double inIndex = (outCenter - inCenter) / inScale.first;
+
+        // Compute output values of all non-boundary cells.
+        int index;
+        for(outIndex = leftBoundaryCells; outIndex < outCount.first - rightBoundaryCells; ++outIndex)
+        {
+          // Cell localization.
+          index = (int) inIndex;
+
+          // Recompute cell center.
+          inCenter = inDomain.startX() + index * inScale.first + 0.5 * inScale.first;
+
+          // Compute offset of output center from input cell center.
+          offset = 1.0 - (outCenter - inCenter) / inScale.first;
+//          ASSERTSTR(offset >= 0.0 && offset <= 1.0, "Offset error!");
+
+          // Compute output value by linear interpolation and store it.
+          outValues[outIndex] = offset * inValues[index] + (1.0 - offset) * inValues[index + 1];
+
+          // Update input index.
+          inIndex += scaleRatio.first;
+
+          // Update output cell center.
+          outCenter += outScale.first;
+        }
+
+        // Compute the values of the right boundary cells. A choice has to be made
+        // regarding the boundary input value. For now, this value is fixed at 0.0.
+        // However, if necessary this can/should be made configurable.
+        //index = (int) inIndex;
+        //inCenter = inDomain.startX() + index * inScale.first + 0.5 * inScale.first;
+        inCenter = inDomain.endX() - 0.5 * inScale.first;
+        
+        for(outIndex = outCount.first - rightBoundaryCells; outIndex < outCount.first; ++outIndex)
+        {
+          offset = 1.0 - (outCenter - inCenter) / inScale.first;
+
+//          ASSERTSTR(offset >= 0.0 && offset <= 1.0, 
+//            "Offset error on right boundary!" << outIndex << "," << rightBoundaryCells << ", " << outCenter << ", " << inCenter);
+
+          // Compute output value by linear interpolation and store it.
+          outValues[outIndex] = offset * inValues[inCount.first - 1];
+          outCenter += outScale.first;
+        }
+      }
+      
+      // Distribute the computed values (first row) over the other axis if necessary.
+      // TODO: split this off to a more general method in MeqMatrix?
+      if(outCount.second > 1)
+      {
+        int index = outCount.first;
+        
+        for(int y = 1; y < outCount.second; ++y)
+        {
+          for(int x = 0; x < outCount.first; ++x)
+          {
+            outValues[index] = outValues[x];
+            index++;
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  
+  MeqResult MeqTabular::getAnResult (const MeqRequest& request,
+            int nrpert, int pertInx)
+  {
+    return getResult (request, nrpert, pertInx);
+  }
 }
