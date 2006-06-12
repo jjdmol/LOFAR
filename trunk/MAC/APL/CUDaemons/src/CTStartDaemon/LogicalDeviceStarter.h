@@ -49,12 +49,10 @@ public:
 	explicit LogicalDeviceStarter (ParameterSet*	aParSet);
 	~LogicalDeviceStarter();
 
-	int32 createLogicalDevice (const string&	ldTypeName,
-							   const string&	taskname,
-							   const string& 	parentHost,
-							   const string& 	parentService);
-
-	int32	error()	{ return (itsError); }
+	int32 startController (const string&	ldTypeName,
+						   const string&	taskname,
+						   const string& 	parentHost,
+						   const string& 	parentService);
 
 private:
 	// Copying is not allowed
@@ -71,7 +69,6 @@ private:
 	} LDstart_t;
 
 	vector<LDstart_t>		itsProgramList;
-	int32					itsError;
 };
 
     // @}

@@ -33,7 +33,27 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+3)";
 include = '<APL/APLCommon/APL_Defines.h>';
 
 prelude = << PRELUDE_END
-// define namespace and enumerations here
+
+// The following messages are defined in the Controller protocol:
+//
+// STARTED   (string cntlrName, bool successful)
+// CONNECT   (string cntlrName)
+// CONNECTED (string cntlrName, TLDResult result)
+// SCHEDULE  (string cntlrName, time_t startTime, time_t stopTime)
+// SCHEDULED (string cntlrName, TLDResult result)
+// CLAIM     (string cntlrName)
+// CLAIMED   (string cntlrName, TLDResult result)
+// PREPARE   (string cntlrName)
+// PREPARED  (string cntlrName, TLDResult result)
+// RESUME    (string cntlrName)
+// RESUMED   (string cntlrName, TLDResult result)
+// SUSPEND   (string cntlrName)
+// SUSPENDED (string cntlrName, TLDResult result)
+// RELEASE   (string cntlrName)
+// RELEASED  (string cntlrName, TLDResult result)
+// FINISH    (string cntlrName, uint32 treeID, TLDResult result, string errorMsg)
+// FINISHED  (string cntlrName, TLDResult result)
+//
 
 PRELUDE_END;
 
@@ -43,6 +63,22 @@ PRELUDE_END;
 // "dir" can be one of "IN" or "OUT".
 // A "param" has a "name" and a "type".
 //
+
+//
+// STARTED - sent by a childcontrol when child was started
+//
+event = {
+	signal = STARTED;
+	dir = IN; // from child to parent
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "successful";
+		type = "bool";
+	};
+};
 
 //
 // CONNECT - sent by a child after connecting to it's parent to identify itself
@@ -264,8 +300,8 @@ event = {
 		type = "unsigned int";
 	};
 	param = {
-		name = "succesfull";
-		type = "bool";
+		name = "result";
+		type = "APLCommon::TLDResult";
 	};
 	param = {
 		name = "errorMsg";

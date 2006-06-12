@@ -12,6 +12,8 @@ LDStartDaemon_SOURCES		= LogicalDeviceStarter.cc \
 LDStartDaemon_LDADD			= $(LOFAR_DEPEND) 
 LDStartDaemon_DEPENDENCIES	= $(LOFAR_DEPEND)
 
+bin_SCRIPTS					= startController.sh
+
 NOINSTHDRS 					= LDStartDaemon.h \
 							  LogicalDeviceStarter.h
 
@@ -30,15 +32,12 @@ configfilesdir=$(bindir)
 configfiles_DATA 	= 
 
 sysconf_DATA		= LDStartDaemon.conf \
-					  LDStartDaemon.log_prop
+					  LDStartDaemon.log_prop 
 
 %.log_prop: %.log_prop.in
 	cp $< $@
 
 %.conf: %.conf.in
-	cp $< $@
-
-%.ctl: %.ctl.in
 	cp $< $@
 
 clean-local:

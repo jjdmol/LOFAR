@@ -30,7 +30,7 @@ using namespace LOFAR::GCF::Common;
 
 int main(int argc, char* argv[])
 {
-	signal (SIGCHLD, SIG_IGN);
+//	signal (SIGCHLD, SIG_IGN);
 
 	GCFTask::init(argc, argv);
   

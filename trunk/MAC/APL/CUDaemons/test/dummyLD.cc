@@ -1,5 +1,6 @@
 #include <lofar_config.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main (int argc,	char* argv[]) 
 {
@@ -11,5 +12,7 @@ int main (int argc,	char* argv[])
 
 	printf ("\n");
 
-	return (1);
+	sleep (20);
+
+	return (0);
 }
