@@ -150,10 +150,10 @@ namespace LOFAR
 
       // We need to send the coarse and fine delay info to all RSP boards.
       for (int rsp = 0; rsp < itsNoutputs; ++rsp) {
- 	DH_Delay& dh = 
-	  dynamic_cast<DH_Delay&>(*getDataManager().getOutHolder(rsp));
+	DH_Delay* dh;
+	ASSERT(dh = dynamic_cast<DH_Delay*>(getDataManager().getOutHolder(rsp)));
 	for (uint i = 0; i < itsNrDelays; ++i) {
-  	  dh[i] = delayInfo[i];
+  	  (*dh)[i] = delayInfo[i];
 	}
       }
       
