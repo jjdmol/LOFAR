@@ -75,6 +75,13 @@ public abstract class PlotConstants{
     public static final String DATASET_AXIS_TYPE_TIME = "TIME";
     public static final String DATASET_AXIS_TYPE_LOG = "LOGARITHMIC";
     
+    //Data Model operator identifiers for updating datasets
+    
+    public static final String DATASET_OPERATOR_ADD = "DATASETADD";
+    public static final String DATASET_OPERATOR_MODIFY = "DATASETMODIFY";
+    public static final String DATASET_OPERATOR_DELETE = "DATASETDELETE";
+    public static final String DATASET_OPERATOR_UPDATE = "DATASETUPDATE";
+    
     //Identifiers for plot types
     public static final int PLOT_BAR = 1;
     public static final int PLOT_XYLINE = 2;

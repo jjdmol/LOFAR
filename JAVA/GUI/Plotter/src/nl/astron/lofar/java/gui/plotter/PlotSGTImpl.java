@@ -120,7 +120,79 @@ public class PlotSGTImpl implements IPlot{
      * @throws PlotterException will be thrown if the plot could not be generated for any reason.
      */
     public JComponent modifyPlot(JComponent aPlot, HashMap data) throws PlotterException{
-        throw new NotImplementedException("The Modifying of plots is not yet implemented in the plotter's SGT plugin.");
+        
+        JPlotLayout aNewPlot = (JPlotLayout)aPlot;
+        
+        try{
+            aNewPlot.setBatch(true);
+            CartesianGraph gp  = (CartesianGraph)aNewPlot.getFirstLayer().getGraph();
+            String xAxisTitle = gp.getXAxis("Bottom Axis").getTitle().getText().toString();
+            String yAxisTitle = gp.getYAxis("Left Axis").getTitle().getText().toString();
+            String xAxisUnits = gp.getXAxis("Bottom Axis").getTitle().getText().toString();
+            String yAxisUnits = gp.getYAxis("Left Axis").getTitle().getText().toString();
+            
+            LinkedList<HashMap> values = (LinkedList<HashMap>)data.get(PlotConstants.DATASET_VALUES);
+            //Loop through X and Y Value data
+            if(values != null && values.size()> 0){
+                
+                Iterator linesIterator = values.iterator();
+                //Loop through all XY pairs
+                while(linesIterator.hasNext()){
+                    
+                    double[] xArray = null;
+                    double[] yArray = null;
+                    GeoDate[] xArrayDate = null;
+                    GeoDate[] yArrayDate = null;
+                    SGTMetaData meta = new SGTMetaData(xAxisTitle,
+                            xAxisUnits,
+                            false,
+                            false);
+                    
+                    SGTMetaData ymeta = new SGTMetaData(yAxisTitle,
+                            yAxisUnits,
+                            false,
+                            false);
+                    String lineLabel = "Unknown value";
+                    HashMap line = (HashMap)linesIterator.next();
+                    Iterator lineIterator = line.keySet().iterator();
+                    
+                    //Retrieve XY pair label and xy values
+                    while(lineIterator.hasNext()){
+                        String key = (String)lineIterator.next();
+                        if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
+                            lineLabel = (String)line.get(key);
+                            
+                        } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
+                            xArray = (double[])line.get(key);
+                            
+                        } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
+                            yArray = (double[])line.get(key);
+                        }else{
+                            throw new InvalidDataSetException("(A value array was found that is not supported for a Line Plot: "+key.toString()+")");
+                        }
+                    }
+                    
+                    SimpleLine lineData = new SimpleLine(
+                            xArray,yArray,lineLabel);
+                    lineData.setXMetaData(meta);
+                    lineData.setYMetaData(ymeta);
+                    lineData.setId(lineLabel);
+                    
+                    if(aNewPlot.getData(lineLabel) == null){
+                        aNewPlot.addData(lineData, lineLabel);
+                    }
+                }
+            }
+            aNewPlot.setBatch(false);
+            
+        }catch(Exception e){
+            InvalidDataSetException exx = new InvalidDataSetException("( The data set provided was not sufficient to update the line plot "+aNewPlot.getName()+". Please check the log file )");
+            exx.initCause(e);
+            throw exx;
+        }
+        
+        
+        return aNewPlot;
     }
     
     
@@ -151,14 +223,12 @@ public class PlotSGTImpl implements IPlot{
             aNewPlot = gridPlot(name,data, separateLegend);
         } else if(type==PlotConstants.PLOT_SCATTER){
             aNewPlot = scatterPlot(name,data, separateLegend);
+        } else {
+            aNewPlot = linePlot(name,data, separateLegend,false);
+            pma = new plotMouseAdapter();
+            if(aNewPlot.getKeyPane()!= null) aNewPlot.getKeyPane().addMouseListener(pma);
+            aNewPlot.addMouseListener(pma);
         }
-        //JPanel keyAndPlotPanel = new JPanel();
-        //keyAndPlotPanel.add(aNewPlot);
-        //keyAndPlotPanel.add(aNewPlot,BorderLayout.CENTER);
-        //JPane keyPane = aNewPlot.getKeyPane();
-        
-        //keyAndPlotPanel.add(keyPane,BorderLayout.SOUTH);
-        //aNewPlot.setEditClasses(false);
         aLayout = aNewPlot;
         
         return aNewPlot;
@@ -226,21 +296,21 @@ public class PlotSGTImpl implements IPlot{
                             LogTransform xt = null;
                             try {
                                 System.out.println("Number of X Axes: "+ gp.getNumberXAxis());
-                                xt = new LogTransform(xstart, xend, gp.getXAxis("Left Axis").getRangeP().start, gp.getXAxis("Left Axis").getRangeP().end);
+                                xt = new LogTransform(xstart, xend, gp.getXAxis("Bottom Axis").getRangeP().start, gp.getXAxis("Bottom Axis").getRangeP().end);
+                                gp.setXTransform(xt);
                                 LogAxis xbot = new LogAxis(xAxisTitle);
                                 xbot.setRangeU(new Range2D(xstart,xend));
-                                xbot.setLocationU(new SoTPoint(gp.getXAxis("Left Axis").getRangeP().start, gp.getYAxis("Bottom Axis").getRangeP().start));
+                                xbot.setLocationU(new SoTPoint(gp.getXAxis("Bottom Axis").getRangeP().start, gp.getYAxis("Left Axis").getRangeP().start));
                                 SGLabel xtitle = new SGLabel("xaxis title", xAxisTitle,
-                                                             new Point2D.Double(0.0, 0.0));
+                                        new Point2D.Double(0.0, 0.0));
                                 xtitle.setHeightP(0.2);
                                 xbot.setTitle(xtitle);
                                 gp.removeAllXAxes();
                                 gp.addXAxis(xbot);
-                            
+                                
                             } catch (AxisNotFoundException ex) {
                                 ex.printStackTrace();
                             }
-                            gp.setXTransform(xt);
                             
                         }
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YAXISLABEL)){
@@ -260,24 +330,26 @@ public class PlotSGTImpl implements IPlot{
                         } else if(yAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_MJDTIME)){
                             //TODO TIME AXIS
                         } else if(yAxisType.equals(PlotConstants.DATASET_AXIS_TYPE_LOG)){
-                           CartesianGraph gp = (CartesianGraph) layout.getFirstLayer().getGraph();
+                            CartesianGraph gp = (CartesianGraph) layout.getFirstLayer().getGraph();
                             LogTransform yt = null;
                             try {
                                 yt = new LogTransform(ystart, yend, gp.getYAxis("Left Axis").getRangeP().start, gp.getYAxis("Left Axis").getRangeP().end);
                                 LogAxis xbot = new LogAxis(xAxisTitle);
+                                gp.setYTransform(yt);
                                 xbot.setRangeU(new Range2D(ystart,yend));
                                 xbot.setLocationU(new SoTPoint(gp.getXAxis("Bottom Axis").getRangeP().start, gp.getYAxis("Left Axis").getRangeP().start));
                                 SGLabel ytitle = new SGLabel("yaxis title", yAxisTitle,
-                                                             new Point2D.Double(0.0, 0.0));
+                                        new Point2D.Double(0.0, 0.0));
                                 ytitle.setHeightP(0.2);
                                 xbot.setTitle(ytitle);
                                 gp.removeAllYAxes();
                                 gp.addYAxis(xbot);
-                            
+                                
+                                
                             } catch (AxisNotFoundException ex) {
                                 ex.printStackTrace();
                             }
-                            gp.setYTransform(yt);
+                            
                             
                         }
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
@@ -350,7 +422,7 @@ public class PlotSGTImpl implements IPlot{
                                 xArray,yArray,lineLabel);
                         lineData.setXMetaData(meta);
                         lineData.setYMetaData(ymeta);
-                        
+                        lineData.setId(lineLabel);
                         layout.addData(lineData, lineLabel);
                         
                         if(showPointsOnly){
@@ -507,6 +579,7 @@ public class PlotSGTImpl implements IPlot{
                         gridData.setXMetaData(meta);
                         gridData.setYMetaData(ymeta);
                         gridData.setZMetaData(zmeta);
+                        gridData.setId(lineLabel);
                         //Add line to plot
                         layout.addData(gridData, lineLabel);
                     }
