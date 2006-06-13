@@ -50,6 +50,7 @@ public class PlotSlot extends JPanel{
     private PlotPanel itsPlot;
     private String slotLabel;
     private boolean hasLegend;
+    private boolean isViewedExternally;
     private JLabel rightClickFacade;
     private LinkedList<PlotSlotListener> listenerList =  null;
     private MouseAdapter plotMouseListener;
@@ -91,6 +92,13 @@ public class PlotSlot extends JPanel{
     
     public String getLabel(){
         return slotLabel;
+    }
+    protected void setViewedExternally(boolean viewedExternally){
+       this.isViewedExternally = viewedExternally;
+    }
+    
+    protected boolean isViewedExternally(){
+        return isViewedExternally;
     }
     public PlotPanel getPlot(){
         return itsPlot;

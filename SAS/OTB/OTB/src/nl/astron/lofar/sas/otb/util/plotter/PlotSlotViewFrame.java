@@ -34,7 +34,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
  */
 public class PlotSlotViewFrame extends JDialog{
     
-    int plotIndex;
+    protected int plotIndex;
     
     /** Creates a new instance of PlotSlotViewFrame */
     public PlotSlotViewFrame(PlotSlotManager parent, int index, String title, boolean showLegendOnly) {
