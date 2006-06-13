@@ -5,6 +5,7 @@ pkginclude_HEADERS = \
 	APLCommonExceptions.h \
 	APL_Defines.h \
 	APLUtilities.h \
+	ControllerDefines.h \
 	LogicalDeviceFactoryBase.h \
 	LogicalDeviceFactory.h \
 	LogicalDevice.h \

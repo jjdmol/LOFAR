@@ -1,3 +1,20 @@
+check_PROGRAMS				= tControllerDefines
+
+tControllerDefines_SOURCES	= tControllerDefines.cc
+tControllerDefines_LDADD	= ../src/libaplcommon.la
+tControllerDefines_DEPENCIES= ../src/libaplcommon.la $(LOFAR_DEPEND)
+
+TESTSCRIPTS					= tControllerDefines_test.sh
+
+TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir) \
+							  LOFARROOT=$(LOFARROOT)
+
+TESTS						= $(TESTSCRIPTS)
+
+EXTRA_DIST					= tControllerDefines.log_prop \
+							  ResourceAllocatorTest.log_prop \
+							  $(TESTSCRIPTS)
+
 noinst_PROGRAMS = \
 	ResourceAllocatorTest
 
@@ -22,10 +39,6 @@ INSTHDRS =
 
 pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
 
-sysconf_DATA = \
-	ResourceAllocatorTest.log_prop
-
-EXTRA_DIST = $(BUILT_SOURCES) $(sysconf_data)
 
 %.log_prop: %.log_prop.in
 	cp $< $@
