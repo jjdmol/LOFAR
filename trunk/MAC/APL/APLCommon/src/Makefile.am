@@ -15,6 +15,7 @@ libaplcommon_la_CPPFLAGS = \
 libaplcommon_la_SOURCES = \
 	$(DOCHDRS) \
 	APLUtilities.cc \
+	ControllerDefines.cc \
 	LogicalDevice.cc \
 	PropertySetAnswer.cc \
 	ResourceAllocator.cc \
