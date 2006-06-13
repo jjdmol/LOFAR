@@ -23,6 +23,8 @@
 
 package nl.astron.lofar.sas.otb.util.plotter;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -31,10 +33,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import org.apache.log4j.Logger;
 
@@ -139,12 +141,32 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             gridBagConstraints.weighty = 1.0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.CENTER;
             PlotSlot newSlot = itsSlotManager.getSlot(i);
-            newSlot.addSlotListener(new SlotMouseAdapter());
-            //newSlot.setSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
-            //
-            newSlot.setMinimumSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
-            newSlot.setPreferredSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
-            slotsPanel.add(newSlot,gridBagConstraints);
+            if(!newSlot.isViewedExternally()){
+                newSlot.addSlotListener(new SlotMouseAdapter());
+                //newSlot.setSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+                //
+                newSlot.setMinimumSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+                newSlot.setPreferredSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+                slotsPanel.add(newSlot,gridBagConstraints);
+            }else{
+                JPanel tempPanel = new JPanel();
+                tempPanel.setBackground(Color.WHITE);
+                tempPanel.setLayout(new BorderLayout());
+                tempPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+                tempPanel.setMinimumSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+                tempPanel.setPreferredSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
+                tempPanel.add(new JLabel("External viewer active"),BorderLayout.CENTER);
+                JPanel northPanel = new JPanel();
+                northPanel.setLayout(new BorderLayout());
+                northPanel.setBackground(Color.LIGHT_GRAY);
+                JLabel slotNumber = new JLabel(""+i);
+                slotNumber.setForeground(Color.WHITE);
+                northPanel.add(slotNumber,BorderLayout.CENTER);
+                tempPanel.add(northPanel,BorderLayout.NORTH);
+                
+                slotsPanel.add(tempPanel,gridBagConstraints);
+            }
+            
             x++;
             if (x == columnsAndRows){
                 y++;
@@ -267,12 +289,12 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                                 dialog.addWindowListener(new WindowListener(){
                                     public void windowDeactivated(WindowEvent e){}
                                     public void windowActivated(WindowEvent e){}
-                                    public void windowClosed(WindowEvent e){
-                                        rearrangeSlotGrid();
-                                        externalLegendActive = false;}
+                                    public void windowClosed(WindowEvent e){}
                                     public void windowDeiconified(WindowEvent e){}
                                     public void windowIconified(WindowEvent e){}
-                                    public void windowClosing(WindowEvent e){}
+                                    public void windowClosing(WindowEvent e){
+                                        externalLegendActive = false;
+                                    }
                                     public void windowOpened(WindowEvent e){}
                                 });
                                 dialog.setVisible(true);
@@ -329,10 +351,15 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                                 PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Viewer for Plot "+selectedSlot.getLabel(),false);
                                 dialog.addWindowListener(new WindowListener(){
                                     public void windowDeactivated(WindowEvent e){}
-                                    public void windowActivated(WindowEvent e){}
+                                    public void windowActivated(WindowEvent e){
+                                        PlotSlotViewFrame sourceFrame = (PlotSlotViewFrame)e.getSource();
+                                        itsSlotManager.getSlot(sourceFrame.plotIndex).setViewedExternally(true);
+                                        rearrangeSlotGrid();}
                                     public void windowClosed(WindowEvent e){
+                                        PlotSlotViewFrame sourceFrame = (PlotSlotViewFrame)e.getSource();
+                                        itsSlotManager.getSlot(sourceFrame.plotIndex).setViewedExternally(false);
                                         rearrangeSlotGrid();
-                                        externalViewerActive = false;}
+                                        externalLegendActive = false;}
                                     public void windowDeiconified(WindowEvent e){}
                                     public void windowIconified(WindowEvent e){}
                                     public void windowClosing(WindowEvent e){}
