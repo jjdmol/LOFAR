@@ -1566,7 +1566,7 @@ void WH_BGL_Processing::doCorrelate()
 	    for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	      dcomplex sum = makedcomplex(0, 0);
 	      for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
-		sum += samples[ch][stat1][time][pol1] * ~samples[ch][stat2][time][pol2];
+		sum += samples[ch][stat1][time][pol1] * conj(samples[ch][stat2][time][pol2]);
 	      }
 	      sum *= correlationWeights[itsNrValidSamples[bl]];
 	      if (real(sum) * real(sum) + imag(sum) * imag(sum) > thresholds[bl][ch]) {
