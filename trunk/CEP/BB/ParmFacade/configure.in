@@ -51,7 +51,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(CEP/BB/BBS3,BBS3,,1,BBS3/MNS/MeqFunklet.h)
+lofar_INTERNAL(CEP/BB/BBS,BBS,,1,BBS/MNS/MeqParmFunklet.h)
 lofar_AIPSPP(1,"-ltables -lscimath -lscimath_f -lcasa")
 lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
 lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)

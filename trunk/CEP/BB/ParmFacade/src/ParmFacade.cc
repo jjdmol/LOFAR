@@ -21,13 +21,19 @@
 //# $Id$
 
 #include <ParmFacade/ParmFacade.h>
-#include <BBS3/MNS/MeqRequest.h>
-#include <BBS3/MNS/MeqStoredParmPolc.h>
-#include <BBS3/MNS/MeqResult.h>
-#include <BBS3/MNS/MeqMatrix.h>
+#include <BBS/MNS/MeqRequest.h>
+#include <BBS/MNS/MeqParmFunklet.h>
+#include <BBS/MNS/MeqResult.h>
+#include <BBS/MNS/MeqMatrix.h>
 #include <Common/LofarLogger.h>
 
 using namespace std;
+
+// Create tParmFacade.in_mep with parmdb using:
+//   create tablename='tParmFacade.in_mep'
+//   add parm1 domain=[1,5,4,10],values=2
+//   add parm2 domain=[1,5,4,10],values=[2,0.1],nx=2
+//   add parm3 type='expression',expression='parm1*parm2'
 
 namespace LOFAR {
 namespace ParmDB {
@@ -61,7 +67,7 @@ namespace ParmDB {
     if (pp.empty()) {
       pp = "*";
     }
-    return itsPDB.getNames (pp);
+    return itsPDB.getAllNames (pp);
   }
 
   // Get the parameter values for the given parameters and domain.
@@ -70,35 +76,46 @@ namespace ParmDB {
 			  double startx, double endx, int nx,
 			  double starty, double endy, int ny)
   {
-    string pp = parmNamePattern;
-    if (pp.empty()) {
-      pp = "*";
-    }
+    // Get all parm names.
+    vector<string> names = getNames (parmNamePattern);
     // Get the parm values.
     map<string,ParmValueSet> parmValues;
-    itsPDB.getValues (parmValues, pp,
+    itsPDB.getValues (parmValues, names,
 		      ParmDomain(startx, endx, starty, endy));
-    // Make a request for the given grid.
-    MeqDomain domain(startx, endx, starty, endy);
-    MeqRequest req(domain, nx, ny);
     // The output is returned in a map.
     map<string,vector<double> > out;
     MeqParmGroup parmGroup;
+    map<string,MeqExpr> exprs;
     // Loop through all parameters.
-    for (map<string,ParmValueSet>::const_iterator iter=parmValues.begin();
-	 iter != parmValues.end();
+    for (vector<string>::const_iterator iter=names.begin();
+	 iter != names.end();
 	 iter++) {
+      // Create an expression object.
+      exprs.insert (std::make_pair (*iter,
+				    MeqParmFunklet::create (*iter,
+							    &parmGroup,
+							    &itsPDB)));
+    }
+    // Make a request object for the given grid.
+    MeqDomain domain(startx, endx, starty, endy);
+    MeqRequest req(domain, nx, ny);
+    // Initialize all parameters.
+    const vector<MeqParm*>& parmList = parmGroup.getParms();
+    for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+	 iter != parmList.end();
+	 ++iter) {
+      (*iter)->fillFunklets (parmValues, domain);
+    }
+    // Evaluate all expressions and store the result in the output map.
+    for (map<string,MeqExpr>::iterator iter = exprs.begin();
+	 iter != exprs.end();
+	 ++iter) {
       // Add it to the output map and get a reference to the vector.
       out.insert (std::make_pair (iter->first, vector<double>()));
       map<string,vector<double> >::iterator outiter = out.find (iter->first);
       vector<double>& vec = outiter->second;
-      // Create a ParmFunklet object and fill it.
-      MeqStoredParmPolc* parmp = new MeqStoredParmPolc(iter->first,
-						       &parmGroup, &itsPDB);
-      parmp->fillPolcs (parmValues, domain);
-      MeqExpr expr(parmp);
-      // Evaluate it and get the value.
-      MeqResult resVal = expr.getResult (req);
+      // Get result and put in map.
+      MeqResult resVal = iter->second.getResult (req);
       const MeqMatrix& mat = resVal.getValue();
       const double* ptr = mat.doubleStorage();
       // Store the result in the vector.

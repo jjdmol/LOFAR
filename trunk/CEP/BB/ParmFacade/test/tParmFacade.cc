@@ -29,6 +29,13 @@ using namespace LOFAR;
 using namespace ParmDB;
 using namespace std;
 
+// Create tParmFacade.in_mep with parmdb using:
+//   create tablename='tParmFacade.in_mep'
+//   add parm1 domain=[1,5,4,10],values=2
+//   add parm2 domain=[1,5,4,10],values=[2,0.1],nx=2
+//   adddef parm3 type='parmexpr',expr='parm1*parm2'
+//   adddef parm4 type='parmexpr',expr='parm2*parm3'
+
 
 int main (int argc, const char* argv[])
 {
