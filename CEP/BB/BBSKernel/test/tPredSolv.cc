@@ -209,9 +209,9 @@ int main (int argc, const char* argv[])
       vector<int> corr;
       pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
-      solv[0] = "RA.*";
-      solv[1] = "DEC.*";
-      solv[2] = "StokesI.*";
+      solv[0] = "RA:*";
+      solv[1] = "DEC:*";
+      solv[2] = "StokesI:*";
       doSolve (pre1, solv, 9);
       cout << "End of first test" << endl;
     }
@@ -236,9 +236,9 @@ int main (int argc, const char* argv[])
       pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
       pre2.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
-      solv[0] = "RA.*";
-      solv[1] = "DEC.*";
-      solv[2] = "StokesI.*";
+      solv[0] = "RA:*";
+      solv[1] = "DEC:*";
+      solv[2] = "StokesI:*";
       doSolve2 (pre1, pre2, solv, 1);
       cout << "End of test with two prediffers" << endl;
     }
@@ -257,9 +257,9 @@ int main (int argc, const char* argv[])
       vector<int> antVec2;
       pre1.select (antVec2, antVec2, false, corrVec);    // no autocorrelations
       vector<string> solv(3);
-      solv[0] = "RA.*";
-      solv[1] = "DEC.*";
-      solv[2] = "StokesI.*";
+      solv[0] = "RA:*";
+      solv[1] = "DEC:*";
+      solv[2] = "StokesI:*";
       doSolve (pre1, solv, 5);
       cout << "End of test with 21 antennas" << endl;
     }
@@ -282,9 +282,9 @@ int main (int argc, const char* argv[])
       vector<int> corr;
       pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
-      solv[0] = "RA.*";
-      solv[1] = "DEC.*";
-      solv[2] = "StokesI.*";
+      solv[0] = "RA:*";
+      solv[1] = "DEC:*";
+      solv[2] = "StokesI:*";
       doSolve1 (pre1, solv, 5);
       cout << "End of test with updating parmtable" << endl;
     }

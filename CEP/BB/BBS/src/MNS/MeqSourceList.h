@@ -30,6 +30,7 @@
 #include <BBS/MNS/MeqPointSource.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
 
 namespace LOFAR {
 
@@ -50,28 +51,32 @@ public:
   // Fill the source list from the sources in the parm table.
   MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup* group);
 
-  // Get the number of sources to be used.
-  int size() const
-    { return itsSelected.size(); }
+  ~MeqSourceList();
 
-  // Get the actual source number in the source list.
-  int actualSourceNr (int sourceNr) const
-    { return itsSelected[sourceNr]; }
+  // Get the total number of sources.
+  uint size() const
+    { return itsSources.size(); }
 
-  // Get the i-th selected source.
-  MeqPointSource& operator[] (int i)
-    { return itsSources[itsSelected[i]]; }
+  // Get the i-th source.
+  MeqSource& operator[] (int i)
+    { return *itsSources[i]; }
 
-  // Set the sources to be actually used.
-  // An empty vector selects all sources.
-  void setSelected (const vector<int>&);
-  
+  // Get the source indices in the given group.
+  const vector<int>& getGroup (const string& groupName) const;
+
 private:
-  // Add a source.
-  void add (const MeqPointSource&);
+  // Forbid copies.
+  // <group>
+  MeqSourceList (const MeqSourceList&);
+  MeqSourceList& operator= (const MeqSourceList&);
+  // </group>
 
-  vector<MeqPointSource> itsSources;
-  vector<int>            itsSelected;
+  // Add a source.
+  void add (MeqSource*);
+
+  vector<MeqSource*>       itsSources;
+  map<string,int>          itsNameMap;
+  map<string,vector<int> > itsGroupMap;
 };
 
 // @}

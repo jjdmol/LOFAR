@@ -22,8 +22,11 @@
 
 #include <lofar_config.h>
 #include <BBS/MNS/MeqParmFunklet.h>
+#include <BBS/MNS/MeqParmExpr.h>
 #include <BBS/MNS/MeqPolc.h>
 #include <BBS/ParmData.h>
+#include <ParmDB/ParmValue.h>
+#include <ParmDB/ParmDB.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicMath/Math.h>
 
@@ -49,13 +52,37 @@ MeqParmFunklet::MeqParmFunklet (const string& name, MeqParmGroup* group,
   itsNrPert  (0),
   itsPertInx (-1),
   itsTable   (table)
-{}
+{
+  // See if the parm is a parm-expression.
+  // If so, create parm-funklets for them.
+  
+}
 
 MeqParmFunklet::~MeqParmFunklet()
 {
   for (uint i=0; i<itsFunklets.size(); ++i) {
     delete itsFunklets[i];
   }
+}
+
+MeqExprRep* MeqParmFunklet::create (const string& name,
+				    MeqParmGroup* group,
+				    ParmDB::ParmDB* table)
+{
+  // If the parm is an expression, use that.
+  map<string,ParmDB::ParmValueSet> pset;
+  table->getDefValues (pset, name);
+  if (! pset.empty()) {
+    ParmDB::ParmValueSet& pvset = pset.begin()->second;
+    if (! pvset.getValues().empty()) {
+      ParmDB::ParmValueRep& pv = pvset.getValues()[0].rep();
+      if (pv.itsType == "parmexpr") {
+	return new MeqParmExpr (pv.itsExpr, group, table);
+      }
+    }
+  }
+  // It is a normal funklet.
+  return new MeqParmFunklet (name, group, table);
 }
 
 void MeqParmFunklet::add (const MeqFunklet& funklet)

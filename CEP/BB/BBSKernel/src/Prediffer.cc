@@ -143,6 +143,7 @@ Prediffer::Prediffer(const string& msName,
   itsGSMMEPName   (skyPdm.getTableName()),
   itsGSMMEP       (skyPdm),
   itsCalcUVW      (calcUVW),
+  itsSources      (0),
   itsSrcGrp       (sourceGroups),
   itsNrPert       (0),
   itsNCorr        (0),
@@ -242,6 +243,7 @@ Prediffer::~Prediffer()
 {
   LOG_TRACE_FLOW( "Prediffer destructor" );
 
+  delete itsSources;
   for (vector<MeqStatUVW*>::iterator iter = itsStatUVW.begin();
        iter != itsStatUVW.end();
        iter++) {
@@ -423,16 +425,16 @@ void Prediffer::countBaseCorr()
 //
 // ~getSources
 //
-// Get all sources from the GSM table.
+// Get all sources from the parmtable.
 //
 //----------------------------------------------------------------------
 void Prediffer::getSources()
 {
   // Get the sources from the ParmTable
-  itsSources = MeqSourceList(itsGSMMEP, &itsParmGroup);
-  int nrsrc = itsSources.size();
+  itsSources = new MeqSourceList(itsGSMMEP, &itsParmGroup);
+  int nrsrc = itsSources->size();
   for (int i=0; i<nrsrc; ++i) {
-    itsSources[i].setSourceNr (i);
+    (*itsSources)[i].setSourceNr (i);
   }
   // Make a map for the sources actually used.
   itsSrcNrMap.reserve (nrsrc);
@@ -444,7 +446,6 @@ void Prediffer::getSources()
       vec[0] = i+1;                 // source nrs are 1-relative
       itsSrcGrp[i] = vec;
       itsSrcNrMap.push_back (i);
-      itsSources[i].setGroupNr (i);   // group nrs are 0-relative
     }
   } else {
     for (uint j=0; j<itsSrcGrp.size(); ++j) {
@@ -454,10 +455,7 @@ void Prediffer::getSources()
 	ASSERTSTR (srcs[i] > 0  &&  srcs[i] <= nrsrc,
 		   "Sourcenr " << srcs[i]
 		   << " must be > 0 and <= #sources (=" << nrsrc << ')');
-	ASSERTSTR (itsSources[srcs[i]-1].getGroupNr() < 0,
-		   "Sourcenr " << srcs[i] << " multiply used in groups");
-        itsSources[srcs[i]-1].setGroupNr (j);
-	itsSources[srcs[i]-1].setSourceNr (itsSrcNrMap.size());
+	(*itsSources)[srcs[i]-1].setSourceNr (itsSrcNrMap.size());
 	itsSrcNrMap.push_back (srcs[i]-1);
       }
     }
@@ -467,7 +465,7 @@ void Prediffer::getSources()
   itsLMN.reserve (nrused);
   for (int i=0; i<nrused; ++i) {
     int src = itsSrcNrMap[i];
-    MeqLMN* lmn = new MeqLMN(&(itsSources[src]));
+    MeqLMN* lmn = new MeqLMN(&((*itsSources)[src]));
     lmn->setPhaseRef (&itsPhaseRef);
     itsLMN.push_back (lmn);
   }
@@ -498,11 +496,11 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
   int nrgrp  = itsSrcGrp.size();
   itsStatUVW.reserve (nrstat);
   // EJ is real/imag or ampl/phase
-  string ejname1 = "real.";
-  string ejname2 = "imag.";
+  string ejname1 = "real:";
+  string ejname2 = "imag:";
   if (asAP) {
-    ejname1 = "ampl.";
-    ejname2 = "phase.";
+    ejname1 = "ampl:";
+    ejname2 = "phase:";
   }
   // Vector containing StatExpr-s.
   vector<MeqJonesExpr> statExpr(nrstat);
@@ -523,21 +521,21 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
       uvw = new MeqStatUVW (itsStations[i], &itsPhaseRef);
       // Do pure station parameters only if told so.
       if (useStatParm) {
-	MeqExpr frot (new MeqParmFunklet ("frot." +
-					  itsStations[i]->getName(),
-					  &itsParmGroup, &itsMEP));
-	MeqExpr drot (new MeqParmFunklet ("drot." +
-					  itsStations[i]->getName(),
-					  &itsParmGroup, &itsMEP));
-	MeqExpr dell (new MeqParmFunklet ("dell." +
-					  itsStations[i]->getName(),
-					  &itsParmGroup, &itsMEP));
-	MeqExpr gain11 (new MeqParmFunklet ("gain.11." +
-					    itsStations[i]->getName(),
-					    &itsParmGroup, &itsMEP));
-	MeqExpr gain22 (new MeqParmFunklet ("gain.22." +
-					    itsStations[i]->getName(),
-					    &itsParmGroup, &itsMEP));
+	MeqExpr frot (MeqParmFunklet::create ("frot:" +
+					      itsStations[i]->getName(),
+					      &itsParmGroup, &itsMEP));
+	MeqExpr drot (MeqParmFunklet::create ("drot:" +
+					      itsStations[i]->getName(),
+					      &itsParmGroup, &itsMEP));
+	MeqExpr dell (MeqParmFunklet::create ("dell:" +
+					      itsStations[i]->getName(),
+					      &itsParmGroup, &itsMEP));
+	MeqExpr gain11 (MeqParmFunklet::create ("gain:11:" +
+						itsStations[i]->getName(),
+						&itsParmGroup, &itsMEP));
+	MeqExpr gain22 (MeqParmFunklet::create ("gain:22:" +
+						itsStations[i]->getName(),
+						&itsParmGroup, &itsMEP));
 	statExpr[i] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
 						    gain11, gain22));
       }
@@ -553,22 +551,22 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
       if (useTEJ) {
 	// Make a gain/phase expression per station.
 	string nm = itsStations[i]->getName();
-	MeqExpr ej11r (new MeqParmFunklet ("EJ11." + ejname1 + nm,
-					   &itsParmGroup, &itsMEP));
-	MeqExpr ej11i (new MeqParmFunklet ("EJ11." + ejname2 + nm,
-					   &itsParmGroup, &itsMEP));
-	MeqExpr ej12r (new MeqParmFunklet ("EJ12." + ejname1 + nm,
-					   &itsParmGroup, &itsMEP));
-	MeqExpr ej12i (new MeqParmFunklet ("EJ12." + ejname2 + nm,
-					   &itsParmGroup, &itsMEP));
-	MeqExpr ej21r (new MeqParmFunklet ("EJ21." + ejname1 + nm,
-					   &itsParmGroup, &itsMEP));
-	MeqExpr ej21i (new MeqParmFunklet ("EJ21." + ejname2 + nm,
-					   &itsParmGroup, &itsMEP));
-	MeqExpr ej22r (new MeqParmFunklet ("EJ22." + ejname1 + nm,
-					   &itsParmGroup, &itsMEP));
-	MeqExpr ej22i (new MeqParmFunklet ("EJ22." + ejname2 + nm,
-					   &itsParmGroup, &itsMEP));
+	MeqExpr ej11r (MeqParmFunklet::create ("EJ11:" + ejname1 + nm,
+					       &itsParmGroup, &itsMEP));
+	MeqExpr ej11i (MeqParmFunklet::create ("EJ11:" + ejname2 + nm,
+					       &itsParmGroup, &itsMEP));
+	MeqExpr ej12r (MeqParmFunklet::create ("EJ12:" + ejname1 + nm,
+					       &itsParmGroup, &itsMEP));
+	MeqExpr ej12i (MeqParmFunklet::create ("EJ12:" + ejname2 + nm,
+					       &itsParmGroup, &itsMEP));
+	MeqExpr ej21r (MeqParmFunklet::create ("EJ21:" + ejname1 + nm,
+					       &itsParmGroup, &itsMEP));
+	MeqExpr ej21i (MeqParmFunklet::create ("EJ21:" + ejname2 + nm,
+					       &itsParmGroup, &itsMEP));
+	MeqExpr ej22r (MeqParmFunklet::create ("EJ22:" + ejname1 + nm,
+					       &itsParmGroup, &itsMEP));
+	MeqExpr ej22i (MeqParmFunklet::create ("EJ22:" + ejname2 + nm,
+					       &itsParmGroup, &itsMEP));
 	if (asAP) {
 	  ej11 = new MeqExprAPToComplex (ej11r, ej11i);
 	  ej12 = new MeqExprAPToComplex (ej12r, ej12i);
@@ -589,23 +587,23 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
 	for (int j=0; j<nrgrp; j++) {
 	  ostringstream ostr;
 	  ostr << j+1;
-	  string nm = itsStations[i]->getName() + ".SG" + ostr.str();
-	  MeqExpr ej11r (new MeqParmFunklet ("EJ11." + ejname1 + nm,
-					     &itsParmGroup, &itsMEP));
-	  MeqExpr ej11i (new MeqParmFunklet ("EJ11." + ejname2 + nm,
-					     &itsParmGroup, &itsMEP));
-	  MeqExpr ej12r (new MeqParmFunklet ("EJ12." + ejname1 + nm,
-					     &itsParmGroup, &itsMEP));
-	  MeqExpr ej12i (new MeqParmFunklet ("EJ12." + ejname2 + nm,
-					     &itsParmGroup, &itsMEP));
-	  MeqExpr ej21r (new MeqParmFunklet ("EJ21." + ejname1 + nm,
-					     &itsParmGroup, &itsMEP));
-	  MeqExpr ej21i (new MeqParmFunklet ("EJ21." + ejname2 + nm,
-					     &itsParmGroup, &itsMEP));
-	  MeqExpr ej22r (new MeqParmFunklet ("EJ22." + ejname1 + nm,
-					     &itsParmGroup, &itsMEP));
-	  MeqExpr ej22i (new MeqParmFunklet ("EJ22." + ejname2 + nm,
-					     &itsParmGroup, &itsMEP));
+	  string nm = itsStations[i]->getName() + ":SG" + ostr.str();
+	  MeqExpr ej11r (MeqParmFunklet::create ("EJ11:" + ejname1 + nm,
+						 &itsParmGroup, &itsMEP));
+	  MeqExpr ej11i (MeqParmFunklet::create ("EJ11:" + ejname2 + nm,
+						 &itsParmGroup, &itsMEP));
+	  MeqExpr ej12r (MeqParmFunklet::create ("EJ12:" + ejname1 + nm,
+						 &itsParmGroup, &itsMEP));
+	  MeqExpr ej12i (MeqParmFunklet::create ("EJ12:" + ejname2 + nm,
+						 &itsParmGroup, &itsMEP));
+	  MeqExpr ej21r (MeqParmFunklet::create ("EJ21:" + ejname1 + nm,
+						 &itsParmGroup, &itsMEP));
+	  MeqExpr ej21i (MeqParmFunklet::create ("EJ21:" + ejname2 + nm,
+						 &itsParmGroup, &itsMEP));
+	  MeqExpr ej22r (MeqParmFunklet::create ("EJ22:" + ejname1 + nm,
+						 &itsParmGroup, &itsMEP));
+	  MeqExpr ej22i (MeqParmFunklet::create ("EJ22:" + ejname2 + nm,
+						 &itsParmGroup, &itsMEP));
 	  if (asAP) {
 	    ej11 = new MeqExprAPToComplex (ej11r, ej11i);
 	    ej12 = new MeqExprAPToComplex (ej12r, ej12i);
@@ -661,9 +659,10 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
 	    MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
 					     pdfts[ant2*nrsrc + src],
 					     itsLMN[src]));
-	    vecSrc.push_back (MeqJonesExpr
-			  (new MeqBaseLinPS(expr1,
-					    &(itsSources[itsSrcNrMap[src]]))));
+	    // For the time being only point sources are supported.
+	    MeqPointSource& mps = dynamic_cast<MeqPointSource&>
+					    ((*itsSources)[itsSrcNrMap[src]]);
+	    vecSrc.push_back (MeqJonesExpr (new MeqBaseLinPS(expr1, &mps)));
 	  }
 	  MeqJonesExpr sum;
 	  // Sum all sources in the group.
@@ -1970,28 +1969,28 @@ void Prediffer::fillUVW()
 bool Prediffer::setPeelGroups (const vector<int>& peelGroups,
 			       const vector<int>& extraGroups)
 {
-  vector<int> allNrs;
-  for (uint i=0; i<extraGroups.size(); ++i) {
-    ASSERT (extraGroups[i] >= 0  &&  extraGroups[i] < int(itsSrcGrp.size()));
-    const vector<int>& grp = itsSrcGrp[i];
-    for (uint j=0; j<grp.size(); ++j) {
-      allNrs.push_back (grp[j] - 1);
-    }
-  }
-  vector<int> peelNrs;
-  for (uint i=0; i<peelGroups.size(); ++i) {
-    ASSERT (peelGroups[i] >= 0  &&  peelGroups[i] < int(itsSrcGrp.size()));
-    const vector<int>& grp = itsSrcGrp[peelGroups[i]];
-    for (uint j=0; j<grp.size(); ++j) {
-      peelNrs.push_back (grp[j] - 1);
-      allNrs.push_back (grp[j] - 1);
-    }
-  }
-  LOG_TRACE_OBJ_STR( "peel sources " << peelNrs << "; predict sources "
-		     << allNrs );
-  ASSERT (peelNrs.size() > 0);
-  itsSources.setSelected (allNrs);
-  itsPeelSourceNrs = peelNrs;
+//   vector<int> allNrs;
+//   for (uint i=0; i<extraGroups.size(); ++i) {
+//     ASSERT (extraGroups[i] >= 0  &&  extraGroups[i] < int(itsSrcGrp.size()));
+//     const vector<int>& grp = itsSrcGrp[i];
+//     for (uint j=0; j<grp.size(); ++j) {
+//       allNrs.push_back (grp[j] - 1);
+//     }
+//   }
+//   vector<int> peelNrs;
+//   for (uint i=0; i<peelGroups.size(); ++i) {
+//     ASSERT (peelGroups[i] >= 0  &&  peelGroups[i] < int(itsSrcGrp.size()));
+//     const vector<int>& grp = itsSrcGrp[peelGroups[i]];
+//     for (uint j=0; j<grp.size(); ++j) {
+//       peelNrs.push_back (grp[j] - 1);
+//       allNrs.push_back (grp[j] - 1);
+//     }
+//   }
+//   LOG_TRACE_OBJ_STR( "peel sources " << peelNrs << "; predict sources "
+// 		     << allNrs );
+//   ASSERT (peelNrs.size() > 0);
+//   itsSources.setSelected (allNrs);
+//   itsPeelSourceNrs = peelNrs;
   return true;
 }
 
