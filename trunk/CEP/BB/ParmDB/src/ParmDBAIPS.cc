@@ -226,7 +226,9 @@ void ParmDBAIPS::extractValues (map<string,ParmValueSet>& result,
       pval.setType (typeCol(i));
     }
     pval.itsExpr     = exprCol(i);
-    pval.itsErrors   = toVector(errCol(i));
+    if (errCol.isDefined(i)) {
+      pval.itsErrors = toVector(errCol(i));
+    }
     pval.itsWeight   = weightCol(i);
     pval.itsID       = idCol(i);
     pval.itsParentID = paridCol(i);
@@ -540,7 +542,9 @@ void ParmDBAIPS::putNewValue (const string& parmName,
   scCol.put (rownr, fromVector(pval.itsScale));
   pertCol.put (rownr, pval.itsPerturbation);
   prelCol.put (rownr, pval.itsIsRelPert);
-  errCol.put (rownr, fromVector(pval.itsErrors));
+  if (pval.itsErrors.size() > 0) {
+    errCol.put (rownr, fromVector(pval.itsErrors));
+  }
   weightCol.put (rownr, pval.itsWeight);
   idCol.put (rownr, pval.itsID);
   paridCol.put (rownr, pval.itsParentID);

@@ -149,6 +149,11 @@ public:
   virtual std::vector<std::string> getNames (const std::string& pattern,
 					     ParmDBRep::TableType) = 0;
 
+  // Get the names of all parms (in main and default table)
+  // matching the given (filename like) pattern.
+  std::vector<std::string> getAllNames (const std::string& pattern,
+					ParmDBRep::TableType);
+
   // Clear database or table
   virtual void clearTables() = 0;
 
@@ -291,10 +296,16 @@ public:
   void deleteDefValues (const std::string& parmNamePattern)
     { itsRep->deleteDefValues (parmNamePattern); }
 
-  // Get the names of all sources in the table.
+  // Get the names matching the pattern in the table.
   std::vector<std::string> getNames (const std::string& pattern,
 		 ParmDBRep::TableType tableType = ParmDBRep::UseNormal) const
     { return itsRep->getNames (pattern, tableType); }
+
+  // Get the names matching the pattern in the table.
+  // Also take parmexpr type parameters from the default table.
+  std::vector<std::string> getAllNames (const std::string& pattern,
+		 ParmDBRep::TableType tableType = ParmDBRep::UseNormal) const
+    { return itsRep->getAllNames (pattern, tableType); }
 
   // Clear database or table
   void clearTables()

@@ -23,8 +23,11 @@
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmDBAIPS.h>
 #include <Common/LofarLogger.h>
+#include <casa/Utilities/Regex.h>
+#include <casa/Utilities/GenSort.cc>     // for automatic template
 
 using namespace std;
+using namespace casa;
 
 namespace LOFAR {
 namespace ParmDB {
@@ -71,6 +74,37 @@ ParmValue ParmDBRep::getDefValue (const string& parmName)
   }
   // Nothing found; return an empty ParmValue.
   return ParmValue();
+}
+
+vector<string> ParmDBRep::getAllNames (const string& pattern,
+				       ParmDBRep::TableType tableType)
+{
+  // First get all names for the standard table.
+  vector<string> names = getNames (pattern, tableType);
+  // Now append with names from the default table.
+  // Fill the map with default values if not done yet.
+  if (!itsDefFilled) {
+    fillDefMap (itsDefValues);
+    itsDefFilled = true;
+  }
+  Regex regex(Regex::fromPattern(pattern));
+  for (map<string,ParmValue>::const_iterator iter = itsDefValues.begin();
+       iter != itsDefValues.end();
+       iter++) {
+    if (iter->second.rep().itsType == "parmexpr") {
+      String nm (iter->first);
+      if (nm.matches (regex)) {
+	names.push_back (iter->first);
+      }
+    }
+  }
+  // Now sort the result uniquely.
+  // Most has already been sorted, so use insertion sort.
+  int nr = GenSort<string>::sort (&names[0], names.size(),
+				  Sort::Ascending,
+				  Sort::InsSort|Sort::NoDuplicates);
+  names.resize (nr);
+  return names;
 }
 
 
@@ -154,6 +188,7 @@ ParmDB ParmDB::getParmDB (uint index)
 	     "ParmDB index " << index << " is unknown");
   return ParmDB(theirParmDBs[index]);
 }
+
 
 /*
 vector<ParmDBMeta> ParmDB::getAllParmDBMeta()
