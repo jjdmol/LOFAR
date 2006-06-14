@@ -10,8 +10,8 @@
 
 package nl.astron.lofar.sas.otb.jotdb2;
 
+import java.rmi.RemoteException;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  *
@@ -38,61 +38,181 @@ public class jConverter {
         itsUC  = new jUnitConv();
     }
     
-    public short getClassif(String aConv) { 
-        return itsCC.get(aConv);
+    public short getClassif(String aConv) throws RemoteException{
+        short aS;
+        try {
+            aS=itsCC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getClassif(String) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;        
     }
     
-    public String getClassif(short aConv) {
-        return itsCC.get(aConv);
+    public String getClassif(short aConv) throws RemoteException {
+        String aS=null;
+        try {
+            aS=itsCC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getClassif(Short) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;            
     }
     
-    public HashMap<Short,String> getClassif() {
-        return itsCC.getTypes();
+    public HashMap<Short,String> getClassif() throws RemoteException {
+        HashMap<Short,String> aM=null;
+        try {
+            aM = itsCC.getTypes();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getClassif() error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aM;     
     }
 
-    public short getParamType(String aConv) { 
-        return itsPTC.get(aConv);
+    public short getParamType(String aConv) throws RemoteException { 
+        short aS;
+        try {
+            aS = itsPTC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getParamType(String) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;            
     }
     
-    public String getParamType(short aConv) {
-        return itsPTC.get(aConv);
+    public String getParamType(short aConv) throws RemoteException {
+        String aS=null;
+        try {
+            aS = itsPTC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getParamType(Short) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;
     }
     
-    public HashMap<Short,String> getParamType() {
-        return itsPTC.getTypes();
+    public HashMap<Short,String> getParamType() throws RemoteException {
+        HashMap<Short,String> aM=null;
+        try {
+            aM = itsPTC.getTypes();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getClassif() error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aM;            
     }
-    public short getTreeState(String aConv) { 
-        return itsTSC.get(aConv);
-    }
-    
-    public String getTreeState(short aConv) {
-        return itsTSC.get(aConv);
-    }
-    
-    public HashMap<Short,String> getTreeState() {
-        return itsTSC.getTypes();
-    }
-    public short getTreeType(String aConv) { 
-        return itsTTC.get(aConv);
-    }
-    
-    public String getTreeType(short aConv) {
-        return itsTTC.get(aConv);
-    }
-    
-    public HashMap<Short,String> getTreeType() {
-        return itsTTC.getTypes();
-    }
-    public short getUnit(String aConv) { 
-        return itsUC.get(aConv);
+    public short getTreeState(String aConv) throws RemoteException { 
+        short aS;
+        try {
+            aS = itsTSC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getTreeState(String) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;            
     }
     
-    public String getUnit(short aConv) {
-        return itsUC.get(aConv);
+    public String getTreeState(short aConv) throws RemoteException {
+        String aS=null;
+        try {
+            aS = itsTSC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getTreeState(short) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;            
     }
     
-    public HashMap<Short,String> getUnit() {
-        return itsUC.getTypes();
+    public HashMap<Short,String> getTreeState() throws RemoteException {
+        HashMap<Short,String> aM=null;
+        try {
+            aM = itsTSC.getTypes();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getTreeState() error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aM;            
+    }
+    public short getTreeType(String aConv) throws RemoteException { 
+        short aS;
+        try {
+            aS = itsTTC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getTreeType(String) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;            
+    }
+    
+    public String getTreeType(short aConv) throws RemoteException {
+        String aS=null;
+        try {
+            aS = itsTTC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getTreeType(short) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;            
+    }
+    
+    public HashMap<Short,String> getTreeType() throws RemoteException {
+        HashMap<Short,String> aM=null;
+        try {
+            aM =itsTTC.getTypes();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getTreeType() error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aM;            
+    }
+    public short getUnit(String aConv) throws RemoteException { 
+        short aS;
+        try {
+            aS = itsUC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getUnit(String) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;            
+    }
+    
+    public String getUnit(short aConv) throws RemoteException {
+        String aS=null;
+        try {
+            aS =itsUC.get(aConv);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getUnit(short) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;            
+    }
+    
+    public HashMap<Short,String> getUnit() throws RemoteException {
+        HashMap<Short,String> aM=null;
+        try {
+            aM =itsUC.getTypes();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getUnit() error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aM;            
     }
 
 }

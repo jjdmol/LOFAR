@@ -59,9 +59,9 @@ class tRemoteConnection {
                 System.out.println(tInfo.stoptime);
                 System.out.println(tInfo.treeID());	   
             }
-        } catch (Exception e) {
-            System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-	}
-	
+        } catch (Exception ex) {
+            System.out.println("Error: "+ ex);
+            ex.printStackTrace();
+        }
      }
 }

@@ -26,58 +26,102 @@ import java.util.Vector;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 
-public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface
-{
-   // Constructor
-   public jOTDBadapter (jOTDBconnection adaptee) throws RemoteException
-     {
-	this.adaptee = adaptee;
+public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface {
+    // Constructor
+    public jOTDBadapter (jOTDBconnection adaptee) throws RemoteException   {
+        this.adaptee = adaptee;
      }
    
-   // To test if we are (still) connected.
-   public boolean isConnected () throws RemoteException
-     {
-	return adaptee.isConnected ();
+    // To test if we are (still) connected.
+    public boolean isConnected () throws RemoteException {
+        boolean aB=false;
+        try {
+            aB=adaptee.isConnected ();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI isConnected error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aB;  
      }
    
    // To connect or reconnect in case the connection was lost
-   public boolean connect () throws RemoteException
-     {
-	return adaptee.connect ();
-     }
+   public boolean connect () throws RemoteException {
+        boolean aB=false;
+        try {
+            aB = adaptee.connect ();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI connect error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aB;
+   }
    
    // get OTDBtree of one specific tree
-   public jOTDBtree getTreeInfo (int atreeID,boolean isMomID) throws RemoteException
-     {
-	return adaptee.getTreeInfo (atreeID,isMomID);
+   public jOTDBtree getTreeInfo (int atreeID,boolean isMomID) throws RemoteException {
+        jOTDBtree aT=null;
+        try {
+            aT = adaptee.getTreeInfo (atreeID,isMomID);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getTreeInfo error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aT;  
+
      }
 
      
    
-   // To get a list of all StateChanges
-   public Vector getStateList (int treeID, boolean isMomID, String beginDate, String endDate) throws RemoteException
-     {
+    // To get a list of all StateChanges
+    public Vector getStateList (int treeID, boolean isMomID, String beginDate, String endDate) throws RemoteException {
+        Vector aV=null;
 	try {
-		return adaptee.getStateList (treeID, isMomID, beginDate, endDate);
-	}catch (Exception e){
-		throw new RemoteException();
-	}
+            aV = adaptee.getStateList (treeID, isMomID, beginDate, endDate);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getStateList error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aV;  
      }
       
-   // To get a list of all OTDB trees available in the database.
-   public Vector getTreeList (short treeType, short classifiType) throws RemoteException
-     {
-	return adaptee.getTreeList (treeType, classifiType);
-     }
+    // To get a list of all OTDB trees available in the database.
+    public Vector getTreeList (short treeType, short classifiType) throws RemoteException {
+        Vector aV=null;
+        try {
+            aV = adaptee.getTreeList (treeType, classifiType);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getTreeList error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aV;            
+    }
       
-   public String errorMsg () throws RemoteException
-     {
-	return adaptee.errorMsg ();
-     }
+    public String errorMsg () throws RemoteException {
+        String aS=null;
+        try {
+            aS = adaptee.errorMsg ();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI errorMsg error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;             
+    }
    
-   public  int getAuthToken () throws RemoteException
-     {
-	return adaptee.getAuthToken ();
+    public  int getAuthToken () throws RemoteException {
+        int anI;
+        try {
+            anI = adaptee.getAuthToken ();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getAuthToken error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return anI;              
      }
    	
    protected jOTDBconnection adaptee;   

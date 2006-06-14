@@ -38,40 +38,89 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
 	adaptee.setTreeID(aTreeID);
     }
 
-    public boolean addKVT( String key, String value, String time) throws RemoteException
-    {
-	return adaptee.addKVT( key, value, time) ;
+    public boolean addKVT( String key, String value, String time) throws RemoteException {
+        boolean aB=false;
+        try {
+            aB = adaptee.addKVT( key, value, time) ;
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI addKVT error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aB;            
     }
 
-    public boolean addKVT(jOTDBvalue aKVT) throws RemoteException
-    {
-	return adaptee.addKVT(aKVT);
+    public boolean addKVT(jOTDBvalue aKVT) throws RemoteException {
+        boolean aB=false;
+        try {
+            aB = adaptee.addKVT(aKVT);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI addKVT error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aB;
     }
 
-    public boolean addKVTlist(Vector<jOTDBvalue> aValueList) throws RemoteException
-    {
-	return adaptee.addKVTlist(aValueList);
+    public boolean addKVTlist(Vector<jOTDBvalue> aValueList) throws RemoteException {
+        boolean aB=false;
+        try {
+            aB = adaptee.addKVTlist(aValueList);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI addKVTlist error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aB;            
     }
-    //    public  boolean addKVTparamSet(jParamterSet aPS) throws RemoteException
-    //    {
-    //	return adaptee.addKVTparamSet(aPS);
+    //    public  boolean addKVTparamSet(jParamterSet aPS) throws RemoteException {
+    //        boolean aB=false;
+    //        try {
+    //	          aB = adaptee.addKVTparamSet(aPS);
+    //        } catch (Exception ex) {
+    //            RemoteException anEx=new RemoteException("JNI addKVTparamSet error");
+    //            anEx.initCause(ex);
+    //            throw anEx;            
+    //        }
+    //        return aB;
     //    }
 
 
     public Vector searchInPeriod (int topNode, int depth, String beginDate,
-				  String endDate, boolean mostRecentlyOnly) throws RemoteException
-    {
-	return adaptee.searchInPeriod (topNode, depth, beginDate, endDate, mostRecentlyOnly);
+				  String endDate, boolean mostRecentlyOnly) throws RemoteException {
+        Vector aV=null;
+        try {
+            aV = adaptee.searchInPeriod (topNode, depth, beginDate, endDate, mostRecentlyOnly);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI searchInPeriod error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aV;            
     }
 
-    public Vector<jOTDBvalue> getSchedulableItems (int topNode) throws RemoteException
-    {
-	return adaptee.getSchedulableItems(topNode);
+    public Vector<jOTDBvalue> getSchedulableItems (int topNode) throws RemoteException {
+        Vector<jOTDBvalue> aV=null;
+        try {
+            aV = adaptee.getSchedulableItems(topNode);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getSchedulableItems error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aV;            
     }
 
-    public String  errorMsg() throws RemoteException
-    {
-	return errorMsg();
+    public String  errorMsg() throws RemoteException {
+        String aS=null;
+        try {
+            aS = errorMsg();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI errorMsg error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;
     }
 
     protected jTreeValue adaptee;   

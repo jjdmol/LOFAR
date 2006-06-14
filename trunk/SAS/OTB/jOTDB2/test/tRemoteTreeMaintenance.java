@@ -38,11 +38,10 @@ class tRemoteTreeMaintenance
 			System.out.println ();
 		    }	
 		System.out.println (trees.size () + " records\n");
-	    }
-	catch (Exception e)
-	    {
-		System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-	    }
+        } catch (Exception ex) {
+            System.out.println("Error: "+ ex);
+            ex.printStackTrace();
+        }
     }
 
     public static void showNodeList (Vector nodes) 
@@ -63,11 +62,11 @@ class tRemoteTreeMaintenance
 			System.out.println ();
 		    }	
 		System.out.println (nodes.size () + " records\n");
-	    }
-	catch (Exception e)
-	    {
-		System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-	    }
+        } catch (Exception ex) {
+            System.out.println("Error: "+ ex);
+            ex.printStackTrace();
+        }
+
     }
 
     public static void showValueList (Vector items) 
@@ -86,11 +85,11 @@ class tRemoteTreeMaintenance
 			System.out.println ();
 		    }		
 		System.out.println (items.size() + " records\n");
-	    }
-	catch (Exception e)
-	    {
-		System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-	    }
+        } catch (Exception ex) {
+            System.out.println("Error: "+ ex);
+            ex.printStackTrace();
+        }
+
     }
 
 
@@ -295,11 +294,11 @@ class tRemoteTreeMaintenance
 		 showValueList (valueList);
 	     }
       
-	  }
-	catch (Exception e)
-	    {
-		System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-	    }
+        } catch (Exception ex) {
+            System.out.println("Error: "+ ex);
+            ex.printStackTrace();
+        }
+
 	
      }
 }

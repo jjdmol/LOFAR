@@ -22,13 +22,17 @@
 
 package nl.astron.lofar.sas.otb.jotdb2;
 
+import java.rmi.RemoteException;
+
 
 public class jInitCPPLogger {
-    public jInitCPPLogger(String logName) {
+    public jInitCPPLogger(String logName) throws RemoteException{
         try {
             initLogger(logName);
         } catch (Exception ex) {
-            System.out.println("Error during initLogger :" +ex);
+            RemoteException anEx=new RemoteException("JNI getNames error");
+            anEx.initCause(ex);
+            throw anEx; 
         }
     }
 
