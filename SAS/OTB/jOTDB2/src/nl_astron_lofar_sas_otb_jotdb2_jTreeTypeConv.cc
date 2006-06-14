@@ -44,9 +44,15 @@ extern OTDBconnection* theirConn;
  * Method:    initTreeTypeConv
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_initTreeTypeConv(JNIEnv *, jobject) {
-  
-  treeTypeConv = new TreeTypeConv(theirConn);
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_initTreeTypeConv(JNIEnv *env, jobject) {
+  try {
+    treeTypeConv = new TreeTypeConv(theirConn);
+  } catch (exception &ex) {
+    cout << "Exception during new TreeTypeConv::top" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
 }
 
 /*
@@ -59,9 +65,18 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_get__
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
   
-  short ret = treeTypeConv->get (str);
+  short ret;
+  try {
+    ret= treeTypeConv->get (str);
   
-  env->ReleaseStringUTFChars (aConv, chars);	     
+    env->ReleaseStringUTFChars (aConv, chars);	     
+  } catch (exception &ex) {
+    cout << "Exception during TreeTypeConv::get(" << str << ") " << ex.what() << endl; 
+
+    env->ReleaseStringUTFChars (aConv, chars);	     
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
   
   return ret;
 }
@@ -72,7 +87,15 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_get__
  * Signature: (S)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_get__S(JNIEnv *env, jobject, jshort aConv) {
-  jstring jstr = env->NewStringUTF (treeTypeConv->get(aConv).c_str());
+  jstring jstr;
+  try {
+    jstr= env->NewStringUTF (treeTypeConv->get(aConv).c_str());
+  } catch (exception &ex) {
+    cout << "Exception during TreeTypeConv::get(" << aConv << ") " << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
   return jstr;
 }
 
@@ -97,7 +120,6 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_getT
   shortInit = env->GetMethodID(shortClass, "<init>", "(S)V");
   
 
-
   if ( env->ExceptionOccurred() )
     return 0;
     
@@ -106,21 +128,28 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_getT
   if ( env->ExceptionOccurred() )
     return 0;
  
-  treeTypeConv->top();
-  do {
-    treeType key;
-    string value;
+  try {
 
-    if (treeTypeConv->get(key, value)) {
-      env->CallObjectMethod(result, put, env->NewObject(shortClass,
-							shortInit,
-							(jshort)key), 
-							env->NewStringUTF(value.c_str()));
+    treeTypeConv->top();
+    do {
+      treeType key;
+      string value;
 
-      if ( env->ExceptionOccurred() )
-	return 0;
-   }
-  } while (treeTypeConv->next());
+      if (treeTypeConv->get(key, value)) {
+        env->CallObjectMethod(result, put, env->NewObject(shortClass,
+							  shortInit,
+							  (jshort)key), 
+							  env->NewStringUTF(value.c_str()));
+
+        if ( env->ExceptionOccurred() )
+  	  return 0;
+     }
+    } while (treeTypeConv->next());
+  } catch (exception &ex) {
+    cout << "Exception during TreeTypeConv::getTypes(" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 
   return result;
 
@@ -131,8 +160,15 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_getT
  * Method:    top
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_top(JNIEnv *, jobject) {
-  treeTypeConv->top();
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_top(JNIEnv *env, jobject) {
+  try {
+    treeTypeConv->top();
+  } catch (exception &ex) {
+    cout << "Exception during TreeTypeConv::top(" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
 }
 
 
@@ -141,7 +177,15 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_top(JNI
  * Method:    next
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_next(JNIEnv *, jobject) {
-  jboolean aBool=treeTypeConv->next();
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeTypeConv_next(JNIEnv *env, jobject) {
+  jboolean aBool;
+  try {
+    aBool=treeTypeConv->next();
+  } catch (exception &ex) {
+    cout << "Exception during TreeTypeConv::next(" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
   return aBool;
 }

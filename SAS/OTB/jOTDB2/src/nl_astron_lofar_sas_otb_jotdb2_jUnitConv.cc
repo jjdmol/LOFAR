@@ -44,9 +44,16 @@ extern OTDBconnection* theirConn;
  * Method:    initUnitConv
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_initUnitConv(JNIEnv *, jobject) {
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_initUnitConv(JNIEnv *env, jobject) {
   
-  unitConv = new UnitConv(theirConn);
+  try {
+    unitConv = new UnitConv(theirConn);
+  } catch (exception &ex) {
+    cout << "Exception during new UnitConv" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
 }
 
 /*
@@ -59,9 +66,17 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_get__Ljav
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
   
-  short ret = unitConv->get (str);
+  short ret;
+  try {
+    ret = unitConv->get (str);
   
-  env->ReleaseStringUTFChars (aConv, chars);	     
+    env->ReleaseStringUTFChars (aConv, chars);	     
+  } catch (exception &ex) {
+    cout << "Exception during UnitConv::get(" << str << ") " << ex.what() << endl; 
+
+    env->ReleaseStringUTFChars (aConv, chars);	     
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
   
   return ret;
 }
@@ -72,7 +87,15 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_get__Ljav
  * Signature: (S)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_get__S(JNIEnv *env, jobject, jshort aConv) {
-  jstring jstr = env->NewStringUTF (unitConv->get(aConv).c_str());
+  jstring jstr;
+  try {
+    jstr= env->NewStringUTF (unitConv->get(aConv).c_str());
+  } catch (exception &ex) {
+    cout << "Exception during UnitConv::get(" << aConv << ") " << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
   return jstr;
 }
 
@@ -97,7 +120,6 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_getTypes
   shortInit = env->GetMethodID(shortClass, "<init>", "(S)V");
   
 
-
   if ( env->ExceptionOccurred() )
     return 0;
     
@@ -106,21 +128,28 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_getTypes
   if ( env->ExceptionOccurred() )
     return 0;
  
-  unitConv->top();
-  do {
-    unitType key;
-    string value;
+  try {
+    unitConv->top();
+    do {
+      unitType key;
+      string value;
 
-    if (unitConv->get(key, value)) {
-      env->CallObjectMethod(result, put, env->NewObject(shortClass,
-							shortInit,
-							(jshort)key), 
-							env->NewStringUTF(value.c_str()));
+      if (unitConv->get(key, value)) {
+        env->CallObjectMethod(result, put, env->NewObject(shortClass,
+							  shortInit,
+							  (jshort)key), 
+							  env->NewStringUTF(value.c_str()));
 
-      if ( env->ExceptionOccurred() )
-	return 0;
-   }
-  } while (unitConv->next());
+        if ( env->ExceptionOccurred() )
+	  return 0;
+     }
+    } while (unitConv->next());
+  } catch (exception &ex) {
+    cout << "Exception during UnitConv::getTypes"  << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
 
   return result;
 
@@ -131,8 +160,15 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_getTypes
  * Method:    top
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_top(JNIEnv *, jobject) {
-  unitConv->top();
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_top(JNIEnv *env, jobject) {
+    
+  try {
+    unitConv->top();
+  } catch (exception &ex) {
+    cout << "Exception during UnitConv::top" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 }
 
 
@@ -141,7 +177,15 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_top(JNIEnv 
  * Method:    next
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_next(JNIEnv *, jobject) {
-  jboolean aBool=unitConv->next();
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jUnitConv_next(JNIEnv *env, jobject) {
+  jboolean aBool;
+  try {
+    aBool=unitConv->next();
+  } catch (exception &ex) {
+    cout << "Exception during UnitConv::next" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
   return aBool;
 }

@@ -45,9 +45,15 @@ extern OTDBconnection* theirConn;
  * Method:    initClassifConv
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_initClassifConv(JNIEnv *, jobject) {
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_initClassifConv(JNIEnv *env, jobject) {
   
-  classifConv = new ClassifConv(theirConn);
+  try {
+    classifConv = new ClassifConv(theirConn);
+  } catch (exception &ex) {
+    cout << "Exception during new ClassifConv " << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 }
 
 /*
@@ -59,11 +65,17 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_get__L
   
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
-  
-  short ret = classifConv->get (str);
-  
-  env->ReleaseStringUTFChars (aConv, chars);	     
-  
+  short ret;
+  try {
+    ret = classifConv->get (str);
+    env->ReleaseStringUTFChars (aConv, chars);	     
+  } catch (exception &ex) {
+    cout << "Exception during ClassifConv::get("<< str << ") " << ex.what() << endl;
+    
+    env->ReleaseStringUTFChars (aConv, chars);	     
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+ 
   return ret;
 }
 
@@ -73,7 +85,15 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_get__L
  * Signature: (S)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_get__S(JNIEnv *env, jobject, jshort aConv) {
-  jstring jstr = env->NewStringUTF (classifConv->get(aConv).c_str());
+
+  jstring jstr;
+  try {
+    jstr = env->NewStringUTF (classifConv->get(aConv).c_str());
+  } catch (exception &ex) {
+    cout << "Exception during ClassifConv::get("<< aConv << ") " << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
   return jstr;
 }
 
@@ -82,8 +102,7 @@ JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_get__
  * Method:    getTypes
  * Signature: ()Ljava/util/HashMap;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_getT\
-ypes(JNIEnv *env, jobject) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_getTypes(JNIEnv *env, jobject) {
 
   
   // Construct java Map
@@ -108,22 +127,27 @@ ypes(JNIEnv *env, jobject) {
   if ( env->ExceptionOccurred() )
     return 0;
  
-  classifConv->top();
-  do {
-    classifType key;
-    string value;
+  try {
+    classifConv->top();
+    do {
+      classifType key;
+      string value;
 
-    if (classifConv->get(key, value)) {
-      env->CallObjectMethod(result, put, env->NewObject(shortClass,
-							shortInit,
-							(jshort)key), 
-							env->NewStringUTF(value.c_str()));
+      if (classifConv->get(key, value)) {
+        env->CallObjectMethod(result, put, env->NewObject(shortClass,
+	  						  shortInit,
+							  (jshort)key), 
+							  env->NewStringUTF(value.c_str()));
 
-      if ( env->ExceptionOccurred() )
-	return 0;
-   }
-  } while (classifConv->next());
-
+        if ( env->ExceptionOccurred() )
+  	  return 0;
+      }
+    } while (classifConv->next());
+  } catch (exception &ex) {
+    cout << "Exception during ClassifConv::getTypes " << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
   return result;
 
 }
@@ -133,8 +157,14 @@ ypes(JNIEnv *env, jobject) {
  * Method:    top
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_top(JNIEnv *, jobject) {
-  classifConv->top();
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_top(JNIEnv *env, jobject) {
+  try {
+    classifConv->top();
+  } catch (exception &ex) {
+    cout << "Exception during ClassifConv::top" << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 }
 
 
@@ -143,7 +173,14 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_top(JNIE
  * Method:    next
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_next(JNIEnv *, jobject) {
-  jboolean aBool=classifConv->next();
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jClassifConv_next(JNIEnv *env, jobject) {
+  jboolean aBool;
+  try {
+    aBool=classifConv->next();
+  } catch (exception &ex) {
+    cout << "Exception during ClassifConv::next" << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
   return aBool;
 }

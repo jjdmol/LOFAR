@@ -22,41 +22,48 @@
 package nl.astron.lofar.sas.otb.jotdb2;
 
 import java.util.Vector;
-import java.util.Date;
 
 public class jOTDBconnection
 {
     // Just creates an object and registers the connection parameters.
     public jOTDBconnection (String username, String passwd, String database)
     {
-	initOTDBconnection (username, passwd, database);
+        try {
+            initOTDBconnection (username, passwd, database);
+        } catch (Exception ex) {
+            System.out.println("Error during connection init :" + ex);
+        }
     }
 
    public jOTDBconnection()
      {
-	initOTDBconnection("paulus", "boskabouter", "otdbtest");
+        try {
+            initOTDBconnection("paulus", "boskabouter", "otdbtest");
+        } catch (Exception ex) {
+            System.out.println("Error during connection init :" + ex);
+        }
      }
    
    
     // Create a OTDBconnection instance
-    private native void initOTDBconnection (String username, String passwd, String database);
+    private native void initOTDBconnection (String username, String passwd, String database) throws Exception;
 
     // To test if we are (still) connected.
-    public native boolean isConnected();
+    public native boolean isConnected() throws Exception;
 
     // To connect or reconnect in case the connection was lost
-    public native boolean connect();
+    public native boolean connect() throws Exception;
     
     // get OTDBtree of one specific tree
-    public native jOTDBtree getTreeInfo (int atreeID, boolean isMomID);
+    public native jOTDBtree getTreeInfo (int atreeID, boolean isMomID)throws Exception ;
     
-    public native Vector getStateList(int atreeID, boolean isMomID ,String beginDate, String endDate);
+    public native Vector getStateList(int atreeID, boolean isMomID ,String beginDate, String endDate) throws Exception;
 
 
     // To get a list of all OTDB trees available in the database.
-    public native Vector getTreeList(short treeType, short classifiType);
+    public native Vector getTreeList(short treeType, short classifiType) throws Exception;
     
-    public native String errorMsg();
+    public native String errorMsg() throws Exception;
 
-    public native int getAuthToken();
+    public native int getAuthToken() throws Exception;
 }

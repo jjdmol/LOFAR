@@ -27,18 +27,22 @@ public class jParamTypeConv {
 
     public jParamTypeConv ()
     {
-	initParamTypeConv();
+        try {
+            initParamTypeConv();
+        } catch (Exception ex) {
+            System.out.println("Error during init :"+ex);
+        }
     }
 
-    private native void    initParamTypeConv();
-    public  native short   get(String jarg1);
-    public  native String  get(short jarg1);
+    private native void    initParamTypeConv() throws Exception;
+    public  native short   get(String jarg1) throws Exception;
+    public  native String  get(short jarg1) throws Exception;
 
     // java doesn't implement reference arguments, so the
     // initial call bool get(long type, string typename)
     // can't be made easily here/ Choice has been made to gather the complete
     // list in the c++ wrapper and return it completely here.
-    public  native HashMap<Short,String> getTypes();
-    public  native void    top();
-    public  native boolean next();
+    public  native HashMap<Short,String> getTypes() throws Exception;
+    public  native void    top() throws Exception;
+    public  native boolean next() throws Exception;
 } 

@@ -28,38 +28,41 @@ public class jTreeMaintenance
 
     public jTreeMaintenance ()
     {
-	initTreeMaintenance ();
+        try {
+            initTreeMaintenance ();
+        } catch (Exception ex) {
+            System.out.println("Error during jTreeMaintenance init : " +ex);
+        }
     }
 
-    private native void initTreeMaintenance ();
+    private native void initTreeMaintenance () throws Exception;
 
     //# --- PIC maintenance ---
     // Once in a while a new PIC tree will be loaded from PVSS which manages
     // the master PIC. The master PIC will be in a exported ASCII file, with
     // loadMasterFile this file can be added.
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
-    public native int loadMasterFile (String  filename);
+    public native int loadMasterFile (String  filename) throws Exception;
     
     //# --- VIC maintenance : Components ---
     // A VIC tree is build up from single components. The definitions of the
     // components can loaded from a file with this call
-    public native int loadComponentFile (String filename);
+    public native int loadComponentFile (String filename) throws Exception;
 
     // Find the top-components in the components table.
-    public native Vector<jVICnodeDef> getComponentList (String name , boolean topOnly);
+    public native Vector<jVICnodeDef> getComponentList (String name , boolean topOnly) throws Exception;
 
     // Get the node definition of a VC node
-    public native jVICnodeDef getComponentNode(int aNodeID)
-	;
+    public native jVICnodeDef getComponentNode(int aNodeID) throws Exception;
 
     // Get parameterlist of the component
-    public native Vector<jOTDBparam> getComponentParams(int aNodeID);
+    public native Vector<jOTDBparam> getComponentParams(int aNodeID) throws Exception;
 
     // Save new node or update the limits and description fields of the node
-    public native boolean saveComponentNode(jVICnodeDef  aNode);
+    public native boolean saveComponentNode(jVICnodeDef  aNode) throws Exception;
 
     // test if component is a top-component
-    public native boolean isTopComponent(int  aNodeID);
+    public native boolean isTopComponent(int  aNodeID) throws Exception;
 
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
@@ -67,94 +70,94 @@ public class jTreeMaintenance
     // of nodes on the same level.
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
     // ABOUT TO BECOME OBSOLETE WHEN OTB IS READY
-    public native int buildTemplateTree (int topNodeID, short aClassif);
+    public native int buildTemplateTree (int topNodeID, short aClassif) throws Exception;
 
 
     // Create a new OTDBtree record for an Template tree in the database 
     // and return its treeID.
-    public native int newTemplateTree();
+    public native int newTemplateTree() throws Exception;
 
     // Make a copy of an existing template tree.
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
-    public native int copyTemplateTree (int aTreeID);
+    public native int copyTemplateTree (int aTreeID) throws Exception;
 
     // Get a single node from the VIC template tree
-    public native jOTDBnode getNode (int aTreeID, int aNodeID);
+    public native jOTDBnode getNode (int aTreeID, int aNodeID) throws Exception;
 
     // Get the parameter definition of a node
-    public native jOTDBparam getParam(int aTreeID,int aParamID);
+    public native jOTDBparam getParam(int aTreeID,int aParamID) throws Exception;
 
     // Save the parameter definition
-    public native boolean saveParam(jOTDBparam aParam);
+    public native boolean saveParam(jOTDBparam aParam) throws Exception;
 
     // Get a number of levels of children.
-    public native Vector getItemList (int aTreeID, int topNode, int depth);
+    public native Vector getItemList (int aTreeID, int topNode, int depth) throws Exception;
 
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
-    public native Vector getItemList (int aTreeID, String aNameFragment);
+    public native Vector getItemList (int aTreeID, String aNameFragment) throws Exception;
 
     // Duplicates the given node (and its parameters and children)
     // in the template database. The duplicate gets the new index.
-    public native int dupNode (int aTreeID, int orgNodeID, short newIndex);
+    public native int dupNode (int aTreeID, int orgNodeID, short newIndex) throws Exception;
 
     // Adds the given VIC Component under the given parent of a
     // template tree.
-    public native int addComponent (int compID,int treeID,int parentID);
+    public native int addComponent (int compID,int treeID,int parentID) throws Exception;
  
     // Updates the (vector of) OTDBnodes to the database.
-    public native boolean saveNode (jOTDBnode aNode);
-    public native boolean saveNodeList (Vector aNodeList);
+    public native boolean saveNode (jOTDBnode aNode) throws Exception;
+    public native boolean saveNodeList (Vector aNodeList) throws Exception;
 
     // Updates the (vector of) OTDBnodes to the database.
-    public native boolean deleteNode (jOTDBnode	aNode);
-    public native boolean deleteNodeList (Vector aNodeList);
+    public native boolean deleteNode (jOTDBnode	aNode) throws Exception;
+    public native boolean deleteNodeList (Vector aNodeList) throws Exception;
 
     // Evaluate the constraints from a (sub)tree.
-    public native boolean checkTreeConstraints (int aTreeID, int topNode);
+    public native boolean checkTreeConstraints (int aTreeID, int topNode) throws Exception;
 
 
     //# --- VIC maintenance : Hierarchical trees ---
     // From a template tree a fully instanciated tree can be build.
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
-    public native int instanciateTree (int baseTree);
+    public native int instanciateTree (int baseTree) throws Exception;
 
     // Prune an instanciated tree to get loss of depricated values.
-    public native boolean pruneTree (int aTreeID, short pruningLevel);
+    public native boolean pruneTree (int aTreeID, short pruningLevel) throws Exception;
 
     // Export a VIC (sub)tree to a file. The user may choose in which format
     // the tree is exported: HTML, KeyValue List.
     public native boolean exportTree (int aTreeID,int topItem,String filename,
-                                      int outputFormat,boolean folded);
+                                      int outputFormat,boolean folded) throws Exception;
 
 
     //# --- Finally some general tree maintenance ---
     // Delete a tree (of any kind) from the database.
-    public native boolean deleteTree (int aTreeID);
+    public native boolean deleteTree (int aTreeID) throws Exception;
 
     // Retrieve the topNode of any tree
-    public native jOTDBnode getTopNode (int aTreeID);
+    public native jOTDBnode getTopNode (int aTreeID) throws Exception;
 
     // save modified OTDBtree information
-    public native boolean setMomInfo(int aTreeID, int momID, String campaign);
+    public native boolean setMomInfo(int aTreeID, int momID, String campaign) throws Exception;
     
     // Set the classification of any tree.
-    public native boolean setClassification (int aTreeID, short aClassification);
+    public native boolean setClassification (int aTreeID, short aClassification) throws Exception;
 
     // Set the state of any tree. When changing the state of a tree all
     // constraints/validations for the current type must be fulfilled.
     // When errors occur these can be retrieved with the errorMsg function.
-    public native boolean setTreeState (int aTreeID, short aState);
+    public native boolean setTreeState (int aTreeID, short aState) throws Exception;
 
 
     // Update the description of a tree.
-    public native boolean setDescription(int  aTreeID,String aDescription);
+    public native boolean setDescription(int  aTreeID,String aDescription) throws Exception;
 
     // Set the scheduling times of the tree
-    public native boolean setSchedule(int aTreeID, String aStartTime,String aStopTime);
+    public native boolean setSchedule(int aTreeID, String aStartTime,String aStopTime) throws Exception;
 
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.
-    public native String errorMsg();
+    public native String errorMsg() throws Exception;
 
 
 }

@@ -25,21 +25,18 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <jni.h>
+#include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jCommon.h>
 #include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection.h>
-#include <OTDB/TreeValue.h>
-#include <OTDB/OTDBvalue.h>
+#include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jTreeValue.h>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/date_time/posix_time/time_formatters.hpp>
 #include <boost/date_time/posix_time/time_parsers.hpp>
 #include <string>
 #include <iostream>
-#include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jCommon.h>
-#include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jTreeValue.h>
 
 using namespace boost::posix_time;
 using namespace LOFAR::OTDB;
-using std::string;
-using std::vector;
+using namespace std;
 
 TreeValue* treeval;
 extern OTDBconnection* theirConn;
@@ -65,13 +62,23 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeValue_addKVT
   
   const ptime aTime (time_from_string (aT));
 
-  jboolean succes=treeval->addKVT(aKey,aValue,aTime);
+  jboolean succes;
+  try {
+    succes=treeval->addKVT(aKey,aValue,aTime);
+    
+    env->ReleaseStringUTFChars (key ,ak);
+    env->ReleaseStringUTFChars (val ,av);
+    env->ReleaseStringUTFChars (time ,at);
+    setErrorMsg(env,obj);
+  } catch (exception &ex) {
+    cout << "Exception during treeValue::addKVT(" << aKey << "," << aValue << "," << aTime << ") " << ex.what() << endl; 
 
-  env->ReleaseStringUTFChars (key ,ak);
-  env->ReleaseStringUTFChars (val ,av);
-  env->ReleaseStringUTFChars (time ,at);
+    env->ReleaseStringUTFChars (key ,ak);
+    env->ReleaseStringUTFChars (val ,av);
+    env->ReleaseStringUTFChars (time ,at);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 
-  setErrorMsg(env,obj);
   return succes;
 }
 
@@ -86,9 +93,16 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeValue_addKVT
   setTreeValConnection(env,obj);
 
   OTDBvalue anOTDBvalue = convertjOTDBvalue (env, jOTDBval);
-  jboolean succes = treeval->addKVT(anOTDBvalue);
+  jboolean succes;
+  try {
+    succes = treeval->addKVT(anOTDBvalue);
+    setErrorMsg(env,obj);
+  } catch (exception &ex) {
+    cout << "Exception during treeValue::addKVT" << ex.what() << endl; 
 
-  setErrorMsg(env,obj);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
 
   return succes;
 }
@@ -122,8 +136,16 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeValue_addKVT
   }
 
   setErrorMsg(env,obj);
-  
-  return treeval->addKVTlist(aCValList);
+
+  jboolean succes;
+  try {
+    succes=treeval->addKVTlist(aCValList);
+  } catch (exception &ex) {
+    cout << "Exception during treeValue::addKVTlist" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+  return succes;
 }
 
 /*
@@ -147,26 +169,33 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeValue_searchI
   
   const ptime ts (time_from_string (beginTime));  
   const ptime te (time_from_string (endTime));  
-  
-  vector<OTDBvalue> valueList = treeval->searchInPeriod (topNode, depth, ts, te, mostRecentOnly);
-  vector<OTDBvalue>::iterator valueIterator;
-  
-  
-  // Construct java Vector
   jobject valueVector;
-  jclass class_Vector = env->FindClass("java/util/Vector");
-  jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
-  valueVector = env->NewObject(class_Vector, mid_Vector_cons);
-  jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
   
-  for (valueIterator = valueList.begin(); valueIterator != valueList.end(); valueIterator++)
-    env->CallObjectMethod(valueVector, mid_Vector_add, convertOTDBvalue (env, *valueIterator));
+  try {
+    vector<OTDBvalue> valueList = treeval->searchInPeriod (topNode, depth, ts, te, mostRecentOnly);
+    vector<OTDBvalue>::iterator valueIterator;
   
-  env->ReleaseStringUTFChars (beginDate, bd);
-  env->ReleaseStringUTFChars (endDate, ed);	     
+  
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+    valueVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+  
+    for (valueIterator = valueList.begin(); valueIterator != valueList.end(); valueIterator++)
+      env->CallObjectMethod(valueVector, mid_Vector_add, convertOTDBvalue (env, *valueIterator));
+    
+    env->ReleaseStringUTFChars (beginDate, bd);
+    env->ReleaseStringUTFChars (endDate, ed);	     
+    
+    setErrorMsg(env,obj);
+  } catch (exception &ex) {
+    cout << "Exception during treeValue::searchInPeriod(" << topNode << "," 
+	 << depth << "," << ts << "," << mostRecentOnly << ") "<< ex.what() << endl; 
 
-  setErrorMsg(env,obj);
-  
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+
+  }
   return valueVector;	     
 }
 
@@ -179,23 +208,29 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeValue_getSche
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,obj);
-
-  vector<OTDBvalue> itemList = treeval->getSchedulableItems(aNodeID);
-  vector<OTDBvalue>::iterator itemIterator;
-
-  // Construct java Vector
   jobject itemVector;
-  jclass class_Vector = env->FindClass("java/util/Vector");
-  jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
-  itemVector = env->NewObject(class_Vector, mid_Vector_cons);
-  jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
 
-  for (itemIterator = itemList.begin(); itemIterator != itemList.end(); itemIterator++)
-    env->CallObjectMethod(itemVector, 
-			  mid_Vector_add, 
-			  convertOTDBvalue (env, *itemIterator));
+  try {
+    vector<OTDBvalue> itemList = treeval->getSchedulableItems(aNodeID);
+    vector<OTDBvalue>::iterator itemIterator;
 
-  setErrorMsg(env,obj);
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+    itemVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+
+    for (itemIterator = itemList.begin(); itemIterator != itemList.end(); itemIterator++)
+      env->CallObjectMethod(itemVector, 
+			    mid_Vector_add, 
+			    convertOTDBvalue (env, *itemIterator));
+
+    setErrorMsg(env,obj);
+  } catch (exception &ex) {
+    cout << "Exception during treeValue::getSchedulableItems(" << aNodeID << ") " << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 
   return itemVector;
 }
@@ -213,7 +248,13 @@ void  setTreeValConnection(JNIEnv *env, jobject callerObject) {
   jint aTreeID = env->GetIntField(callerObject,id_treeID);
 
   // create the connection with the c++ TreeVal
-  treeval = new TreeValue(theirConn,aTreeID);
+  try {
+    treeval = new TreeValue(theirConn,aTreeID);
+  } catch (exception &ex) {
+    cout << "Exception during new treeValue" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 }
 
 void setErrorMsg(JNIEnv *env, jobject callerObject) {
@@ -224,7 +265,14 @@ void setErrorMsg(JNIEnv *env, jobject callerObject) {
   jfieldID id_errorMsg = env->GetFieldID (jTreeValue, "itsErrorMsg","Ljava/lang/String;");
 
   // get the ErrorMsg
-  jstring errorMsg=env->NewStringUTF(theirConn->errorMsg().c_str());
+  jstring errorMsg;
+  try {
+    errorMsg=env->NewStringUTF(theirConn->errorMsg().c_str());
+  } catch (exception &ex) {
+    cout << "Exception during errorMsg" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 
   // set the ErrorMsg in the jTreeValue
   env->SetObjectField(callerObject,id_errorMsg,errorMsg);
