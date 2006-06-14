@@ -98,6 +98,12 @@ RSPDriver_SOURCES = \
 	GetRCUCmd.cc \
 	UpdRCUCmd.h \
 	UpdRCUCmd.cc \
+	SetHBACmd.h \
+	SetHBACmd.cc \
+	GetHBACmd.h \
+	GetHBACmd.cc \
+	UpdHBACmd.h \
+	UpdHBACmd.cc \
 	SetRSUCmd.h \
 	SetRSUCmd.cc \
 	SetWGCmd.h \
@@ -171,7 +177,11 @@ RSPDriver_SOURCES = \
 	TDSProtocolWrite.h \
 	TDSi2cdefs.h \
 	TDSResultRead.cc \
-	TDSResultRead.h
+	TDSResultRead.h \
+	HBAProtocolWrite.h \
+	HBAProtocolWrite.cc \
+	HBAResultRead.h \
+	HBAResultRead.cc
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \
