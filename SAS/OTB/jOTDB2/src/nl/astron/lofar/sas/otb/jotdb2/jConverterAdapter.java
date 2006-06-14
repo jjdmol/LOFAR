@@ -36,77 +36,137 @@ public class jConverterAdapter extends UnicastRemoteObject implements jConverter
    
     public short getClassif (String aConv) throws RemoteException
     {
-	return adaptee.getClassif (aConv);
+        try {
+            return adaptee.getClassif (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public String getClassif (short aConv) throws RemoteException
     {
-	return adaptee.getClassif (aConv);
+        try {
+            return adaptee.getClassif (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public HashMap<Short,String> getClassif() throws RemoteException
     {
-        return adaptee.getClassif();
+        try {
+            return adaptee.getClassif();
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public short getParamType (String aConv) throws RemoteException
     {
-	return adaptee.getParamType (aConv);
+        try {
+            return adaptee.getParamType (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
 
     public String getParamType (short aConv) throws RemoteException
     {
-	return adaptee.getParamType (aConv);
+        try {
+            return adaptee.getParamType (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public HashMap<Short,String> getParamType() throws RemoteException
     {
-        return adaptee.getParamType();
+        try {
+            return adaptee.getParamType();
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
 
     public short getTreeState (String aConv) throws RemoteException
     {
-	return adaptee.getTreeState (aConv);
+        try {
+            return adaptee.getTreeState (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public String getTreeState (short aConv) throws RemoteException
     {
-	return adaptee.getTreeState (aConv);
+        try {
+            return adaptee.getTreeState (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public HashMap<Short,String> getTreeState() throws RemoteException
     {
-        return adaptee.getTreeState();
+        try {
+            return adaptee.getTreeState();
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
 
     public short getTreeType (String aConv) throws RemoteException
     {
-	return adaptee.getTreeType (aConv);
+        try {
+            return adaptee.getTreeType (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public String getTreeType (short aConv) throws RemoteException
     {
-	return adaptee.getTreeType (aConv);
+        try {
+            return adaptee.getTreeType (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public HashMap<Short,String> getTreeType() throws RemoteException
     {
-        return adaptee.getTreeType();
+        try {
+            return adaptee.getTreeType();
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
 
     public short getUnit (String aConv) throws RemoteException
     {
-	return adaptee.getUnit (aConv);
+        try {
+            return adaptee.getUnit (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public String getUnit (short aConv) throws RemoteException
     {
-	return adaptee.getUnit (aConv);
+        try {
+            return adaptee.getUnit (aConv);
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
     
     public HashMap<Short,String> getUnit() throws RemoteException
     {
-        return adaptee.getUnit();
+        try {
+            return adaptee.getUnit();
+        } catch (RemoteException ex) {
+            throw ex;
+        }
     }
 
    

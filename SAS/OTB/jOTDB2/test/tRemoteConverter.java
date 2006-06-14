@@ -20,8 +20,7 @@ class tRemoteConverter
     
     public static void main (String[] args)
     {
-	try
-	  {
+	try {
 
 	     System.out.println("Starting... ");
 
@@ -102,12 +101,9 @@ class tRemoteConverter
                 Short key = (Short)it.next();
                 System.out.println(key.toString() + "  <->  " + aM.get(key));
             }
-             
-	  }
-	catch (Exception e)
-	    {
-		System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-	    }
-	
+        } catch (Exception ex) {
+            System.out.println("Error: "+ ex);
+            ex.printStackTrace();
+        }
      }
 }
