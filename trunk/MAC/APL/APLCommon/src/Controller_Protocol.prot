@@ -30,7 +30,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+3)";
 // specify extra include files
 // e.g.
 // include = '<sys/time.h>';
-include = '<APL/APLCommon/APL_Defines.h>';
+include = '<APL/APLCommon/ControllerDefines.h>';
 
 prelude = << PRELUDE_END
 
@@ -38,21 +38,21 @@ prelude = << PRELUDE_END
 //
 // STARTED   (string cntlrName, bool successful)
 // CONNECT   (string cntlrName)
-// CONNECTED (string cntlrName, TLDResult result)
+// CONNECTED (string cntlrName, uint16 result)
 // SCHEDULE  (string cntlrName, time_t startTime, time_t stopTime)
-// SCHEDULED (string cntlrName, TLDResult result)
+// SCHEDULED (string cntlrName, uint16 result)
 // CLAIM     (string cntlrName)
-// CLAIMED   (string cntlrName, TLDResult result)
+// CLAIMED   (string cntlrName, uint16 result)
 // PREPARE   (string cntlrName)
-// PREPARED  (string cntlrName, TLDResult result)
+// PREPARED  (string cntlrName, uint16 result)
 // RESUME    (string cntlrName)
-// RESUMED   (string cntlrName, TLDResult result)
+// RESUMED   (string cntlrName, uint16 result)
 // SUSPEND   (string cntlrName)
-// SUSPENDED (string cntlrName, TLDResult result)
+// SUSPENDED (string cntlrName, uint16 result)
 // RELEASE   (string cntlrName)
-// RELEASED  (string cntlrName, TLDResult result)
-// FINISH    (string cntlrName, uint32 treeID, TLDResult result, string errorMsg)
-// FINISHED  (string cntlrName, TLDResult result)
+// RELEASED  (string cntlrName, uint16 result)
+// FINISH    (string cntlrName, uint32 treeID, uint16 result, string errorMsg)
+// FINISHED  (string cntlrName, uint16 result)
 //
 
 PRELUDE_END;
@@ -104,7 +104,7 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "APLCommon::TLDResult";
+		type = "uint16";
 	};
 };
 
@@ -141,7 +141,7 @@ event = {
 	};
 	param = {
 	  name = "result";
-	  type = "APLCommon::TLDResult";
+	  type = "uint16";
 	};
 };
 
@@ -169,7 +169,7 @@ event = {
 	};
 	param = {
 	  name = "result";
-	  type = "APLCommon::TLDResult";
+	  type = "uint16";
 	};
 };
 
@@ -197,7 +197,7 @@ event = {
 	};
 	param = {
 	  name = "result";
-	  type = "APLCommon::TLDResult";
+	  type = "uint16";
 	};
 };
 
@@ -225,7 +225,7 @@ event = {
 	};
 	param = {
 	  name = "result";
-	  type = "APLCommon::TLDResult";
+	  type = "uint16";
 	};
 };
 
@@ -253,7 +253,7 @@ event = {
 	};
 	param = {
 	  name = "result";
-	  type = "APLCommon::TLDResult";
+	  type = "uint16";
 	};
 };
 
@@ -281,7 +281,7 @@ event = {
 	};
 	param = {
 	  name = "result";
-	  type = "APLCommon::TLDResult";
+	  type = "uint16";
 	};
 };
 
@@ -301,7 +301,7 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "APLCommon::TLDResult";
+		type = "uint16";
 	};
 	param = {
 		name = "errorMsg";
@@ -321,7 +321,7 @@ event = {
 	};
 	param = {
 	  name = "result";
-	  type = "APLCommon::TLDResult";
+	  type = "uint16";
 	};
 };
 

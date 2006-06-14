@@ -15,23 +15,22 @@ EXTRA_DIST					= tControllerDefines.log_prop \
 							  ResourceAllocatorTest.log_prop \
 							  $(TESTSCRIPTS)
 
-noinst_PROGRAMS = \
-	ResourceAllocatorTest
+#noinst_PROGRAMS = ResourceAllocatorTest
 
-ResourceAllocatorTest_CPPFLAGS = \
-	-Wno-deprecated \
-	-fmessage-length=0 \
-	-fdiagnostics-show-location=once \
-	-DTESTBUILD
+#ResourceAllocatorTest_CPPFLAGS = 
+#	-Wno-deprecated 
+#	-fmessage-length=0 
+#	-fdiagnostics-show-location=once 
+#	-DTESTBUILD
 
-ResourceAllocatorTest_SOURCES = \
-	ResourceAllocatorTest.cc \
-	$(top_srcdir)/src/ResourceAllocator.cc
+#ResourceAllocatorTest_SOURCES = 
+#	ResourceAllocatorTest.cc 
+#	$(top_srcdir)/src/ResourceAllocator.cc
 
-ResourceAllocatorTest_LDADD = 
+#ResourceAllocatorTest_LDADD = 
 
-BUILT_SOURCES = \
-	ResourceAllocatorTest.log_prop
+#BUILT_SOURCES = 
+#	ResourceAllocatorTest.log_prop
 
 NOINSTHDRS =
 

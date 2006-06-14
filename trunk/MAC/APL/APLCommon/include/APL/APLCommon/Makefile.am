@@ -6,14 +6,15 @@ pkginclude_HEADERS = \
 	APL_Defines.h \
 	APLUtilities.h \
 	ControllerDefines.h \
-	LogicalDeviceFactoryBase.h \
-	LogicalDeviceFactory.h \
-	LogicalDevice.h \
 	PropertySetAnswer.h \
-	PropertySetAnswerHandlerInterface.h \
-	SharedLogicalDeviceFactory.h \
-	SingleInstanceLogicalDeviceFactory.h \
-	ResourceAllocator.h 
+	PropertySetAnswerHandlerInterface.h 
+
+#	LogicalDeviceFactoryBase.h 
+#	LogicalDeviceFactory.h 
+#	LogicalDevice.h 
+#	SharedLogicalDeviceFactory.h 
+#	SingleInstanceLogicalDeviceFactory.h 
+#	ResourceAllocator.h 
 
 NOINSTHDRS =
 

@@ -28,6 +28,7 @@ namespace APLCommon {
 
 #define	LOFAR_SHARE_LOCATION	"/opt/lofar/share"
 
+#if 0
   enum TLDResult
   {
     LD_RESULT_NO_ERROR = 0, 
@@ -56,26 +57,14 @@ namespace APLCommon {
     RS_SUSPECT_IDLE = 0x40000000
   };
 
-// Define mnemonics for the supported controller. These names are used
-// to tell LDStartDaemon which program should be started.
-#define	CNTLRTYPE_NO_TYPE				"UNDEFINED"
-#define	CNTLRTYPE_SCHEDULERCTRL			"SCHEDULER_CTRL"
-#define	CNTLRTYPE_OBSERVATIONCTRL		"OBS_CTRL"
-#define	CNTLRTYPE_BEAMDIRECTIONCTRL		"BEAMDIR_CTRL"
-#define	CNTLRTYPE_GROUPCTRL				"GROUP_CTRL"
-#define	CNTLRTYPE_STATIONCTRL			"STS_CTRL"
-#define	CNTLRTYPE_DIGITALBOARDCTRL		"DIGBOARD_CTRL"
-#define	CNTLRTYPE_BEAMCTRL				"BEAM_CTRL"
-#define	CNTLRTYPE_CALIBRATIONCTRL		"CAL_CTRL"
-#define	CNTLRTYPE_STATIONINFRACTRL		"STSINFRA_CTRL"
-
-
 
   #define IS_BUSY(s) ((s > 0) && (s != RS_SUSPECT_IDLE))
   #define IS_SUSPECT(s) (s >= RS_SUSPECT_IDLE)
   #define IS_IDLE(s) ((s == 0) || (s == RS_SUSPECT_IDLE))
   #define MAKE_SUSPECT(s) (s |= RS_SUSPECT_IDLE)
   #define MAKE_UNSUSPECT(s) (s &= ~RS_SUSPECT_IDLE)
+
+#endif
 
 };	// APLCommon
 }; // LOFAR

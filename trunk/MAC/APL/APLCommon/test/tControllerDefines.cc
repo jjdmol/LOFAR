@@ -34,24 +34,24 @@ int main (int	argc, char* argv[])
 {
 	INIT_LOGGER(argv[0]);
 	
-	uint16		cntlrType(CNTLRTYPE_STATIONCTRL);
+	uint16		cntlrType(CNTLRTYPE_BEAMCTRL);
 	uint16		instanceNr(8);
 	uint32		obsNr(123);
 
 	string	cntlrName = controllerName(cntlrType, instanceNr, obsNr);
 	LOG_INFO_STR("Controllername = " << cntlrName);
-	ASSERTSTR (cntlrName == "StationControl(123){8}", 
-			"Expecting cntlrName 'StationControl(123){8}' in stead of " << cntlrName);
+	ASSERTSTR (cntlrName == "BeamControl[8]{123}", 
+			"Expecting cntlrName 'BeamControl[8]{123}' in stead of " << cntlrName);
 
 	string	sharedName = sharedControllerName(cntlrName);
 	LOG_INFO_STR("SharedName = " << sharedName);
-	ASSERTSTR (sharedName == "StationControl(123)", 
-			"Expecting sharedName 'StationControl(123)' in stead of " << sharedName);
+	ASSERTSTR (sharedName == "BeamControl{123}", 
+			"Expecting sharedName 'BeamControl{123}' in stead of " << sharedName);
 
 	string	execName = getExecutable(cntlrType);
 	LOG_INFO_STR("Executable = " << execName);
-	ASSERTSTR (execName == "StationControl",
-			"Expecting executable 'StationControl' in stead of " << execName);
+	ASSERTSTR (execName == "BeamControl",
+			"Expecting executable 'BeamControl' in stead of " << execName);
 
 	ASSERTSTR (isSharedController(CNTLRTYPE_GROUPCTRL), 
 			"Expected group controller to be shared.");
