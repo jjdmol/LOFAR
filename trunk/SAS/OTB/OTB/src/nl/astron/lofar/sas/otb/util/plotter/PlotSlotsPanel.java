@@ -33,11 +33,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.HashMap;
+import java.util.LinkedList;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingConstants;
+import nl.astron.lofar.java.gui.plotter.PlotConstants;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
+import nl.astron.lofar.sas.otb.SharedVars;
 import org.apache.log4j.Logger;
 
 /**
@@ -82,6 +88,17 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
     public void addDataToPlot(int slotIndex,Object constraints) throws IllegalArgumentException{
         if(itsSlotManager.isSlotOccupied(slotIndex)){
             itsSlotManager.modifyPlotInSlot(slotIndex,constraints);
+        }else{
+            throw new IllegalArgumentException("A plot was not found in slot "+slotIndex);
+        }
+    }
+    /** adds a button to the BeanForm */
+    public void removeDataInPlot(int slotIndex,String[] dataIdentifiers) throws IllegalArgumentException{
+        if(itsSlotManager.isSlotOccupied(slotIndex)){
+            HashMap<String,Object> removeData = new HashMap<String,Object>();
+            removeData.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+            removeData.put(PlotConstants.DATASET_OPERATOR_DELETE,dataIdentifiers);
+            itsSlotManager.modifyPlotInSlot(slotIndex,removeData);
         }else{
             throw new IllegalArgumentException("A plot was not found in slot "+slotIndex);
         }
@@ -155,7 +172,9 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                 tempPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
                 tempPanel.setMinimumSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
                 tempPanel.setPreferredSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
-                tempPanel.add(new JLabel("External viewer active"),BorderLayout.CENTER);
+                JLabel tempLabel = new JLabel("External viewer active");
+                tempLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                tempPanel.add(tempLabel,BorderLayout.CENTER);
                 JPanel northPanel = new JPanel();
                 northPanel.setLayout(new BorderLayout());
                 northPanel.setBackground(Color.LIGHT_GRAY);
@@ -305,7 +324,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                         aMenuItem.add(subMenuItem2);
                         aPopupMenu.add(aMenuItem);
                     }else if(externalLegendActive){
-                        JMenuItem subMenuItem=new JMenuItem("Separate Legend Viewer active!");
+                        JMenuItem subMenuItem=new JMenuItem("Please close the legend viewer first");
                         subMenuItem.setEnabled(false);
                         aPopupMenu.add(subMenuItem);
                     }else if(externalViewerActive){
@@ -379,6 +398,33 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                             }
                         });
                         aPopupMenu.add(aMenuItem2);
+                        try {
+                            LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)selectedSlot.getPlot().getDataForPlot().get(PlotConstants.DATASET_VALUES);
+                            if(currentValuesInPlot.size()>0){
+                                aPopupMenu.addSeparator();
+                                JMenu aMenu=new JMenu("Remove value from plot");
+                                for(HashMap aValue : currentValuesInPlot){
+                                    String dataValueLabel = (String)aValue.get(PlotConstants.DATASET_VALUELABEL);
+                                    JMenuItem clearValueItem=new JMenuItem(dataValueLabel);
+                                    clearValueItem.setActionCommand(dataValueLabel);
+                                    clearValueItem.addActionListener(new java.awt.event.ActionListener() {
+                                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                            String[] valueArray = new String[1];
+                                            valueArray[0] = evt.getActionCommand();
+                                            removeDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray);
+                                            selectedSlot.repaint();
+                                        }
+                                    });
+                                    aMenu.add(clearValueItem);
+                                    
+                                }
+                                aPopupMenu.add(aMenu);
+                            }
+                        } catch (NumberFormatException ex) {
+                            logger.error("Could not delete data in slot "+selectedSlot.getLabel()+".",ex);
+                        } catch (PlotterException ex) {
+                            logger.error("Could not retrieve the data for slot "+selectedSlot.getLabel()+" to delete specific value(s).",ex);
+                        }
                     }
                     aPopupMenu.setOpaque(true);
                     aPopupMenu.show(selectedSlot, e.getX(), e.getY());

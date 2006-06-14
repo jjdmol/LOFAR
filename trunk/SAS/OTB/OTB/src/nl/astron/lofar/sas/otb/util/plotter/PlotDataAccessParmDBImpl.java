@@ -1,4 +1,4 @@
-/* 
+/*
  * PlotDataAccessParmDBImpl.java
  *
  *  Copyright (C) 2002-2007
@@ -21,46 +21,48 @@
  *
  */
 
-package nl.astron.lofar.java.cep.jparmfacade;
+package nl.astron.lofar.sas.otb.util.plotter;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TimeZone;
 import java.util.Vector;
+import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**
-* This class provides an implementation of IPlotDataAccess for use with LOFAR's
-* jParmFacade interface. It manages connections to that interface, and allows
-* the plotter framework to generate plots of data present in the ParmDB.
-*
-* @see nl.astron.lofar.java.cep.jparmfacade.jParmFacade
-* @created 19-04-2006, 11:00
-* @author pompert
-* @version $Id$
-* @updated 19-apr-2006, 11:00
-*/
+ * This class provides an implementation of IPlotDataAccess for use with LOFAR's
+ * jParmFacade interface. It manages connections to that interface, and allows
+ * the plotter framework to generate plots of data present in the ParmDB.
+ *
+ * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacade
+ * @created 19-04-2006, 11:00
+ * @author pompert
+ * @version $Id$
+ * @updated 19-apr-2006, 11:00
+ */
 public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
-   
-   private static final int requiredDataConstraints = 7;
-  
-   //Location of ParmDB table file(s)
-   
-   private static jParmFacadeInterface parmDB = null;
-   
+    
+    private static final int requiredDataConstraints = 7;
+    
+    //Location of ParmDB table file(s)
+    
+    private static jParmFacadeInterface parmDB = null;
+    
     /**
      *
      *Creates a new instance of PlotDataAccessParmDBImpl
      *
      */
     
-   public PlotDataAccessParmDBImpl(){
-   }
+    public PlotDataAccessParmDBImpl(){
+    }
     
     /**
      *
@@ -69,11 +71,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      */
     
     public void finalize() throws Throwable {
-       parmDB = null;
+        parmDB = null;
     }
- 
+    
     /**
-  
+     *
      * This method, the most important one, makes a Plotter compliant dataset using
      * the constraints provided by the PlotPanel, and to do that, it uses the
      * jParmFacade interface to get the data.
@@ -91,7 +93,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * @throws PlotterDataAccessException will be thrown if anything goes wrong
      * with the ParmDB interface and calls to it.
      */
-    
+    @SuppressWarnings("unchecked")
     public HashMap retrieveData(Object constraints) throws PlotterDataAccessException{
         if(parmDB == null){
             this.initiateConnectionToParmDB(constraints);
@@ -195,7 +197,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      *
      *
      */
-    
+    @SuppressWarnings("unchecked")
     public HashMap updateData(HashMap currentData, Object constraints) throws PlotterDataAccessException{
         
         if(parmDB == null){
@@ -204,33 +206,64 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             
         }
         //try{
+        
+        LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)currentData.get(PlotConstants.DATASET_VALUES);
+        
+        HashMap<String,Object> operatorsOnDataset = (HashMap<String,Object>)constraints;
+        
+        if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_ADD)){
+            HashMap<String,Object> addDataSet = (HashMap<String,Object>)operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_ADD);
+            String[] constraintsArray = (String[])addDataSet.get("PARMDBCONSTRAINTS");
+            Vector names = getNames(constraintsArray[0]);
             
-            LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)currentData.get(PlotConstants.DATASET_VALUES);
+            if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
+                HashSet<HashMap> toBeAddedValueObjects = new HashSet<HashMap>();
+                LinkedList<HashMap> newParmValues = getParmValues(names,constraintsArray);
+                Iterator anIterator = newParmValues.iterator();
+                while(anIterator.hasNext()){
+                    boolean addData = true;
+                    HashMap parmValue = (HashMap)anIterator.next();
+                    Iterator anIterator2 = currentValuesInPlot.iterator();
+                    while(anIterator2.hasNext()){
+                        HashMap parmValue2 = (HashMap)anIterator2.next();
+                        String compareValue = (String)parmValue2.get(PlotConstants.DATASET_VALUELABEL);
+                        if(parmValue.get(PlotConstants.DATASET_VALUELABEL).equals(compareValue)){
+                            addData = false;
+                        }
+                    }
+                    if(addData){
+                        toBeAddedValueObjects.add(parmValue);
+                    }                    
+                }
+                currentValuesInPlot.addAll(toBeAddedValueObjects);
+            }
+        }
+        if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
             
-            HashMap<String,Object> operatorsOnDataset = (HashMap<String,Object>)constraints;
+            String[] constraintsArray = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_MODIFY);
+            //TODO: IMPLEMENT
             
-            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_ADD)){
-                HashMap<String,Object> addDataSet = (HashMap<String,Object>)operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_ADD);
-                String[] constraintsArray = (String[])addDataSet.get("PARMDBCONSTRAINTS");
-                Vector names = getNames(constraintsArray[0]);
-                
-                if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
-                    //Every parameter
-                    currentValuesInPlot.addAll(getParmValues(names,constraintsArray));
+        }
+        if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
+            HashSet<HashMap> toBeDeletedValueObjects = new HashSet<HashMap>();
+            String[] toBeDeletedValues = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_DELETE);
+            for(int i = 0; i < toBeDeletedValues.length; i++){
+                String aValueToBeDeleted = toBeDeletedValues[i];
+                Iterator anIterator = currentValuesInPlot.iterator();
+                while(anIterator.hasNext()){
+                    HashMap<String,Object> dataObject = (HashMap<String,Object>)anIterator.next();
+                    if(dataObject.get(PlotConstants.DATASET_VALUELABEL).equals(aValueToBeDeleted)){
+                        toBeDeletedValueObjects.add(dataObject);
+                    }
                 }
             }
-            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
-                
-                String[] constraintsArray = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_MODIFY);
-                //TODO: IMPLEMENT
-                
+            for(HashMap deleteObject : toBeDeletedValueObjects){
+                currentValuesInPlot.remove(deleteObject);
             }
-            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
-                
-                String[] toBeDeletedValues = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_DELETE);
-                //TODO: IMPLEMENT
-                
-            }
+            
+            //TODO: IMPLEMENT
+            
+        }
         //}catch(Exception e){
         //    PlotterDataAccessException ex = new PlotterDataAccessException("An error occurred while updating dataset "+currentData.hashCode());
         //    ex.initCause(e);
@@ -252,7 +285,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * not be started, due to missing native libraries or other errors.
      *
      */
-    
+    @SuppressWarnings("unchecked")
     private static void initiateConnectionToParmDB(Object constraints) throws PlotterDataAccessException{
         
         if(parmDB == null){
@@ -301,7 +334,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     
     private LinkedList<HashMap> getParmValues(Vector names, String[] constraintsArray) throws PlotterDataAccessException{
         LinkedList<HashMap> returnList = new LinkedList<HashMap>();
-     
+        
         for(int n = 0; n < names.size();n++){
             
             Vector paramValues;
@@ -372,11 +405,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             while(anIterator.hasNext()){
                 
                 HashMap<String,Object> aValueMap = new HashMap<String,Object>();
-                              
+                
                 String aValue = (String)anIterator.next();
                 
                 //System.out.println("Parameter Value Found: "+aValue);
-                   
+                
                 
                 aValueMap.put(PlotConstants.DATASET_VALUELABEL,aValue);
                 
