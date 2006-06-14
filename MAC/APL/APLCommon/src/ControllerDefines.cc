@@ -62,16 +62,21 @@ string	controllerName (uint16		cntlrType,
 	ASSERTSTR (cntlrType != CNTLRTYPE_NO_TYPE && cntlrType < CNTLRTYPE_NR_TYPES,
 			"No controller defined with type: " << cntlrType);
 
-	return (formatString("%s(%d){%d}", controllerTable[cntlrType].cntlrName,
-										ObservationNr, instanceNr));
+	return (formatString("%s[%d]{%d}", controllerTable[cntlrType].cntlrName,
+												instanceNr, ObservationNr));
 }
 
 // Convert the 'non-shared controllername' to the 'shared controller' name.
 string	sharedControllerName (const string&	controllerName)
 {
-	string	cName(controllerName);		// destroyable copy
-	rtrim(cName, "{0123456789}");
-	return (cName);
+	uint16		cntlrType = getControllerType(controllerName);
+	if (!isSharedController(cntlrType)) {
+		return (controllerName);
+	}
+
+	uint32	observationNr = getObservationNr (controllerName);
+	return (formatString("%s{%d}", controllerTable[cntlrType].cntlrName,
+															observationNr));
 }
 
 // Return name of the executable
@@ -93,22 +98,24 @@ bool	isSharedController(uint16		cntlrType)
 }
 
 // Get the ObservationNr from the controllername.
-uint32	getObservationNr (const string&	ObservationName)
+uint32	getObservationNr (const string&	controllerName)
 {
-	return (ACC::APS::indexValue(sharedControllerName(ObservationName), "()"));
+	return (ACC::APS::indexValue(controllerName, "{}"));
 }
 
 // Get the instanceNr from the controllername.
-uint16	getInstanceNr (const string&	ObservationName)
+uint16	getInstanceNr (const string&	controllerName)
 {
-	return (ACC::APS::indexValue(ObservationName, "{}"));
+	string		cntlrName (controllerName);		// destroyable copy
+	rtrim(cntlrName, "{}0123456789");
+	return (ACC::APS::indexValue(cntlrName, "[]"));
 }
 
 // Get the controllerType from the controllername.
 int32	getControllerType	(const string&	controllerName)
 {
 	string	cntlrName(controllerName);		// destroyable copy
-	rtrim(cntlrName, "(){}0123456789");		// cut down to executable name
+	rtrim(cntlrName, "[]{}0123456789");		// cut down to executable name
 	uint32	idx = CNTLRTYPE_NO_TYPE + 1;
 	while (idx < CNTLRTYPE_NR_TYPES) {
 		if (!strcmp (controllerTable[idx].cntlrName, cntlrName.c_str())) {

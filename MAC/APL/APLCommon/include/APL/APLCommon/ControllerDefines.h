@@ -23,6 +23,9 @@
 #ifndef APL_CONTROLLERDEFINES_H
 #define APL_CONTROLLERDEFINES_H
 
+#include <Common/LofarTypes.h>
+#include <Common/lofar_string.h>
+
 namespace LOFAR { 
 namespace APLCommon {
 

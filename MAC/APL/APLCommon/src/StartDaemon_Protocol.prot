@@ -47,7 +47,7 @@ enum {
 // NEWPARENT	(cntlrName, parentHost, parentService)
 // ANNOUNCEMENT (cntlrName)
 //
-// Note: result is uint32, all other arguments are strings.
+// Note: cntlrType and result are uint32, all other arguments are strings.
 //
 // Proposition: cntlrName is uniq 
 //				--> type-based-name + instanceNr + ObsID for standalone controllers
@@ -68,7 +68,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "cntlrType";
-		type = "string";
+		type = "uint16";
 	};
 	param = {
 		name = "cntlrName";
@@ -90,7 +90,7 @@ event = {
 	dir = OUT;
 	param = {
 		name = "cntlrType";
-		type = "string";
+		type = "uint16";
 	};
 	param = {
 		name = "cntlrName";
