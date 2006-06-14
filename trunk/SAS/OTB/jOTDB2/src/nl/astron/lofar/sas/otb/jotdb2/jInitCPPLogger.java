@@ -25,9 +25,13 @@ package nl.astron.lofar.sas.otb.jotdb2;
 
 public class jInitCPPLogger {
     public jInitCPPLogger(String logName) {
-	initLogger(logName);
+        try {
+            initLogger(logName);
+        } catch (Exception ex) {
+            System.out.println("Error during initLogger :" +ex);
+        }
     }
 
-    private native void initLogger(String logName);
+    private native void initLogger(String logName) throws Exception;
 }
 

@@ -44,9 +44,15 @@ extern OTDBconnection* theirConn;
  * Method:    initParamTypeConv
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_initParamTypeConv(JNIEnv *, jobject) {
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_initParamTypeConv(JNIEnv *env , jobject) {
   
-  paramTypeConv = new ParamTypeConv(theirConn);
+  try {
+    paramTypeConv = new ParamTypeConv(theirConn);
+  } catch (exception &ex) {
+    cout << "Exception during new ParamTypeConv) : "<< ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 }
 
 /*
@@ -58,10 +64,18 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get_
   
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
+  short ret;
+
+  try {  
+    ret = paramTypeConv->get (str);
   
-  short ret = paramTypeConv->get (str);
-  
-  env->ReleaseStringUTFChars (aConv, chars);	     
+    env->ReleaseStringUTFChars (aConv, chars);	     
+  } catch (exception &ex) {
+    cout << "Exception during ParamTypeConv::get(" << str << ") "<< ex.what() << endl;
+    
+    env->ReleaseStringUTFChars(aConv,chars);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
   
   return ret;
 }
@@ -72,7 +86,16 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get_
  * Signature: (S)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get__S(JNIEnv *env, jobject, jshort aConv) {
-  jstring jstr = env->NewStringUTF (paramTypeConv->get(aConv).c_str());
+
+  jstring jstr;
+  try {
+    jstr = env->NewStringUTF (paramTypeConv->get(aConv).c_str());
+  } catch (exception &ex) {
+    cout << "Exception during ParamTypeConv::get(" << aConv << ") "<< ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
   return jstr;
 }
 
@@ -106,21 +129,27 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get
   if ( env->ExceptionOccurred() )
     return 0;
  
-  paramTypeConv->top();
-  do {
-    paramType key;
-    string value;
+  try {
+    paramTypeConv->top();
+    do {
+      paramType key;
+      string value;
 
-    if (paramTypeConv->get(key, value)) {
-      env->CallObjectMethod(result, put, env->NewObject(shortClass,
-							shortInit,
-							(jshort)key), 
-							env->NewStringUTF(value.c_str()));
+      if (paramTypeConv->get(key, value)) {
+        env->CallObjectMethod(result, put, env->NewObject(shortClass,
+							  shortInit,
+							  (jshort)key), 
+							  env->NewStringUTF(value.c_str()));
 
-      if ( env->ExceptionOccurred() )
-	return 0;
-   }
-  } while (paramTypeConv->next());
+        if ( env->ExceptionOccurred() )
+	  return 0;
+      }
+    } while (paramTypeConv->next());
+  } catch (exception &ex) {
+    cout << "Exception during ParamTypeConv::getTypes "<< ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
 
   return result;
 
@@ -131,8 +160,15 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_get
  * Method:    top
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_top(JNIEnv *, jobject) {
-  paramTypeConv->top();
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_top(JNIEnv *env, jobject) {
+  try {
+    paramTypeConv->top();
+  } catch (exception &ex) {
+    cout << "Exception during ParamTypeConv::top "<< ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+  
 }
 
 
@@ -141,7 +177,15 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_top(JN
  * Method:    next
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_next(JNIEnv *, jobject) {
-  jboolean aBool=paramTypeConv->next();
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jParamTypeConv_next(JNIEnv *env, jobject) {
+  jboolean aBool;
+  try {
+    aBool=paramTypeConv->next();
+  } catch (exception &ex) {
+    cout << "Exception during ParamTypeConv::next "<< ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
   return aBool;
 }

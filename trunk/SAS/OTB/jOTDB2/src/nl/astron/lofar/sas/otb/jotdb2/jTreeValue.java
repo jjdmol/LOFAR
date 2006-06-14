@@ -43,13 +43,13 @@ public class jTreeValue
     // PVSS will continuously add value-changes to the offline PIC.
     // There two ways PVSS can do this.
     // The function returns false if the PIC node can not be found.
-    public native boolean addKVT( String key, String value, String time);
-    public native boolean addKVT(jOTDBvalue aKVT);
+    public native boolean addKVT( String key, String value, String time) throws Exception;
+    public native boolean addKVT(jOTDBvalue aKVT) throws Exception;
 
     // Note: This form will probably be used by SAS and OTB when committing
     // a list of modified node.
-    public native boolean addKVTlist(Vector<jOTDBvalue> aValueList);
-    //    public native boolean addKVTparamSet(jParamterSet aPS);
+    public native boolean addKVTlist(Vector<jOTDBvalue> aValueList) throws Exception;
+    //    public native boolean addKVTparamSet(jParamterSet aPS) throws Exception;
 
     //# SHM queries
     // With searchInPeriod a list of all valuechanges in the OTDB tree can
@@ -63,14 +63,14 @@ public class jTreeValue
 						     int depth, 
 						     String beginDate, 
 						     String endDate, 
-						     boolean mostRecentlyOnly);
+						     boolean mostRecentlyOnly) throws Exception;
 
     //# SAS queries
     // For scheduling the VIC tree on the OTDB tree SAS must know what
     // resources exist in the OTDB tree. This list can be retrieved with
     // this function.
     // TBW: Is this realy what SAS needs???
-    public native Vector<jOTDBvalue> getSchedulableItems (int topNode);
+    public native Vector<jOTDBvalue> getSchedulableItems (int topNode) throws Exception;
 
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.
