@@ -1,6 +1,6 @@
-package nl.astron.lofar.mac.apl.gui.jrsp.tools;
+package nl.astron.lofar.java.mac.jrsp.tools;
 
-import nl.astron.lofar.mac.apl.gui.jrsp.Board;
+import nl.astron.lofar.java.mac.jrsp.Board;
 
 public class SubbandStatsTest 
 {

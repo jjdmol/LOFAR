@@ -36,17 +36,17 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPlotPanel" name="plotRight">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPlotPanel" name="plotRight">
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="plotRightActionPerformed"/>
       </Events>
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPlotPanel" name="plotLeft">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPlotPanel" name="plotLeft">
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="plotLeftActionPerformed"/>
       </Events>
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsPanel" name="settingsPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsPanel" name="settingsPanel">
     </Component>
   </SubComponents>
 </Form>

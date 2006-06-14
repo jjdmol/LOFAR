@@ -22,12 +22,12 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels;
+package nl.astron.lofar.java.gui.mac.jrsp;
 
 import java.awt.Cursor;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.Board;
+import nl.astron.lofar.java.mac.jrsp.Board;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.panels.IPluginPanel;
 import org.apache.log4j.Logger;
@@ -380,12 +380,12 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         jTabbedPane = new javax.swing.JTabbedPane();
-        statusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel();
-        subbandStatsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPanel();
-        itsRSPControlPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.control.RSPControlPanel();
-        beamletStatsPanel1 = new nl.astron.lofar.mac.apl.gui.jrsp.panels.beamletstats.BeamletStatsPanel();
-        controlPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel();
-        listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel();
+        statusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.StatusPanel();
+        subbandStatsPanel = new nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPanel();
+        itsRSPControlPanel = new nl.astron.lofar.java.gui.mac.jrsp.control.RSPControlPanel();
+        beamletStatsPanel1 = new nl.astron.lofar.java.gui.mac.jrsp.beamletstats.BeamletStatsPanel();
+        controlPanel = new nl.astron.lofar.java.gui.mac.jrsp.ControlPanel();
+        listPanel = new nl.astron.lofar.java.gui.mac.jrsp.ListPanel();
 
         jTabbedPane.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -546,7 +546,7 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
     }//GEN-LAST:event_controlPanelActionPerformed
 
     /**
-     * Invoked when another itsBoard is selected on the listPanel.
+     * Invoked when another board is selected on the listPanel.
      * @param   evt     ListSelectionEvent
      */    
     private void listPanelValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_listPanelValueChanged
@@ -555,13 +555,13 @@ public class MainPanel extends JPanel implements IPluginPanel, Runnable
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.beamletstats.BeamletStatsPanel beamletStatsPanel1;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel controlPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.control.RSPControlPanel itsRSPControlPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.beamletstats.BeamletStatsPanel beamletStatsPanel1;
+    private nl.astron.lofar.java.gui.mac.jrsp.ControlPanel controlPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.control.RSPControlPanel itsRSPControlPanel;
     private javax.swing.JTabbedPane jTabbedPane;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel listPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel statusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPanel subbandStatsPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.ListPanel listPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.StatusPanel statusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPanel subbandStatsPanel;
     // End of variables declaration//GEN-END:variables
     
 }

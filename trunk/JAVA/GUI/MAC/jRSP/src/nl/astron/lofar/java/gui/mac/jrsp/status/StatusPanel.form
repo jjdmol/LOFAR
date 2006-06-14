@@ -112,39 +112,39 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RSPStatusPanel" name="rspStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.RSPStatusPanel" name="rspStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.DIAGStatusPanel" name="diagStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.DIAGStatusPanel" name="diagStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel" name="blp0SyncStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel" name="blp0SyncStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel" name="blp1SyncStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel" name="blp1SyncStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel" name="blp2SyncStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel" name="blp2SyncStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel" name="blp3SyncStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel" name="blp3SyncStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel" name="blp0RcuStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel" name="blp0RcuStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel" name="blp1RcuStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel" name="blp1RcuStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel" name="blp2RcuStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel" name="blp2RcuStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel" name="blp3RcuStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel" name="blp3RcuStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RSUStatusPanel" name="rsuStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.RSUStatusPanel" name="rsuStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel" name="blp0AdoStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel" name="blp0AdoStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel" name="blp1AdoStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel" name="blp1AdoStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel" name="blp2AdoStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel" name="blp2AdoStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel" name="blp3AdoStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel" name="blp3AdoStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ETHStatusPanel" name="ethStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.ETHStatusPanel" name="ethStatusPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.MEPStatusPanel" name="mepStatusPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.MEPStatusPanel" name="mepStatusPanel">
     </Component>
   </SubComponents>
 </Form>

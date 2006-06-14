@@ -175,7 +175,7 @@
         </DimensionLayout>
       </Layout>
       <SubComponents>
-        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.MaskSelectionPanel" name="itsMaskSelectionPanel">
+        <Component class="nl.astron.lofar.java.gui.mac.jrsp.MaskSelectionPanel" name="itsMaskSelectionPanel">
         </Component>
         <Component class="javax.swing.JComboBox" name="cmbRCUMode">
           <Properties>

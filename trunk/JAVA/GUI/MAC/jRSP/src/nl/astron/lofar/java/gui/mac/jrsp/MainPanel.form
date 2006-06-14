@@ -43,7 +43,7 @@
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
       <SubComponents>
-        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.status.StatusPanel" name="statusPanel">
+        <Component class="nl.astron.lofar.java.gui.mac.jrsp.status.StatusPanel" name="statusPanel">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Status">
@@ -52,7 +52,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPanel" name="subbandStatsPanel">
+        <Component class="nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPanel" name="subbandStatsPanel">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Subband Statistics">
@@ -61,7 +61,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.control.RSPControlPanel" name="itsRSPControlPanel">
+        <Component class="nl.astron.lofar.java.gui.mac.jrsp.control.RSPControlPanel" name="itsRSPControlPanel">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Control">
@@ -70,7 +70,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.beamletstats.BeamletStatsPanel" name="beamletStatsPanel1">
+        <Component class="nl.astron.lofar.java.gui.mac.jrsp.beamletstats.BeamletStatsPanel" name="beamletStatsPanel1">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Beamlet Statistics">
@@ -81,12 +81,12 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.ControlPanel" name="controlPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.ControlPanel" name="controlPanel">
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="controlPanelActionPerformed"/>
       </Events>
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.ListPanel" name="listPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.ListPanel" name="listPanel">
       <Properties>
         <Property name="title" type="java.lang.String" value="Boards"/>
       </Properties>

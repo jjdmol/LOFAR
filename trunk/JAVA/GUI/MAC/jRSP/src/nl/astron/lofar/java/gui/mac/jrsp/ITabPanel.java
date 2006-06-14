@@ -22,7 +22,7 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels;
+package nl.astron.lofar.java.gui.mac.jrsp;
 
 /**
  * This interface declares some methods that are needed for interaction with the

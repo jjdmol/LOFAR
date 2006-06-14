@@ -61,12 +61,12 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cmbBoardActionPerformed"/>
       </Events>
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.MaskSelectionPanel" name="itsMaskSelectionPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.MaskSelectionPanel" name="itsMaskSelectionPanel">
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="itsMaskSelectionPanelActionPerformed"/>
       </Events>
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.PlotContainer" name="itsPlotContainer">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.PlotContainer" name="itsPlotContainer">
     </Component>
   </SubComponents>
 </Form>

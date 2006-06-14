@@ -2,7 +2,7 @@
 #include <lofar_config.h>
 
 // Includes
-#include <jRSP/nl_astron_lofar_mac_apl_gui_jrsp_Board.h>
+#include <jRSP/nl_astron_lofar_java_mac_jrsp_Board.h>
 #include <RSP/RSPport.h>
 using namespace LOFAR;
 using namespace LOFAR::RSP;
@@ -24,7 +24,7 @@ jobject ConvertBoardStatus(JNIEnv*, BoardStatus&);
  * @param	obj		The "this" pointer.
  * @return	ptrRSPport	Pointer to the RSPport object.
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_init(JNIEnv * env, jobject obj, jstring hostname)
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_init(JNIEnv * env, jobject obj, jstring hostname)
 {
 	// Convert the jstring hostname to a C++ string.
 	const char * charsHostname = env->GetStringUTFChars(hostname, 0);
@@ -53,20 +53,20 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_init(JNIEnv *
  * @param	obj		The "this" pointer.
  * @param	ptrRSPport	Pointer to the RSPport that will be deleted.
  */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_delete(JNIEnv * env, jobject obj, jint ptrRSPport) {
+JNIEXPORT void JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_delete(JNIEnv * env, jobject obj, jint ptrRSPport) {
 	RSPport * IOport = (RSPport*)ptrRSPport;
 	delete(IOport);
 }
 
 /**
- * Implementation of the JNI method declared in the java file (nl.astron.lofar.mac.apl.gui.jrsp.Board).
+ * Implementation of the JNI method declared in the java file (nl.astron.lofar.java.mac.jrsp.Board).
  * This function fills a BoardStatus object, that is returned by this method, with data from RSPIO.
  * @param	env		The Java environment interface pointer.
  * @param	obj		The "this" pointer.
  * @param	ptrRSPport	Pointer to the RSPport that should be used.
  * @return 	status		A array of StatusBoard class instances filled with information.
  */
-JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retrieveStatus(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_retrieveStatus(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
 	// Use RSPport to get a vector with BoardStatus.
 	vector<BoardStatus> vecBoardStatus;
@@ -75,7 +75,7 @@ JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_retri
 	vecBoardStatus = IOport->getBoardStatus(rcuMask);
 	
 	// The jobjectArray that is going to be returned.
-	jobjectArray arrBoardStatus = (jobjectArray)env->NewObjectArray(vecBoardStatus.size(), env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/BoardStatus"), NULL);
+	jobjectArray arrBoardStatus = (jobjectArray)env->NewObjectArray(vecBoardStatus.size(), env->FindClass("nl/astron/lofar/java/mac/jrsp/BoardStatus"), NULL);
 
 	for(uint i=0; i<vecBoardStatus.size(); i++)
 	{
@@ -94,7 +94,7 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 {
 	// TODO: Deze code buiten deze functie plaatsen zodat het niet vaker dan een keer aangeroepen hoeft te worden.
 	// Get a reference to the class of the status (BoardStatus).
-	jclass clsStatus = env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/BoardStatus");
+	jclass clsStatus = env->FindClass("nl/astron/lofar/java/mac/jrsp/BoardStatus");
 	if(clsStatus == NULL)
 	{
 		return NULL;
@@ -134,23 +134,23 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
         jfieldID fidAp1RiErrors = env->GetFieldID(clsStatus, "ap1RiErrors", "I");
         jfieldID fidAp2RiErrors = env->GetFieldID(clsStatus, "ap2RiErrors", "I");
         jfieldID fidAp3RiErrors = env->GetFieldID(clsStatus, "ap3RiErrors", "I");
-	jfieldID fidBlp0Sync = env->GetFieldID(clsStatus, "blp0Sync", "Lnl/astron/lofar/mac/apl/gui/jrsp/SyncStatus;");
-	jfieldID fidBlp1Sync = env->GetFieldID(clsStatus, "blp1Sync", "Lnl/astron/lofar/mac/apl/gui/jrsp/SyncStatus;");
-	jfieldID fidBlp2Sync = env->GetFieldID(clsStatus, "blp2Sync", "Lnl/astron/lofar/mac/apl/gui/jrsp/SyncStatus;");
-	jfieldID fidBlp3Sync = env->GetFieldID(clsStatus, "blp3Sync", "Lnl/astron/lofar/mac/apl/gui/jrsp/SyncStatus;");
-        jfieldID fidBlp0Rcu = env->GetFieldID(clsStatus, "blp0Rcu", "Lnl/astron/lofar/mac/apl/gui/jrsp/RCUStatus;");
-        jfieldID fidBlp1Rcu = env->GetFieldID(clsStatus, "blp1Rcu", "Lnl/astron/lofar/mac/apl/gui/jrsp/RCUStatus;");
-        jfieldID fidBlp2Rcu = env->GetFieldID(clsStatus, "blp2Rcu", "Lnl/astron/lofar/mac/apl/gui/jrsp/RCUStatus;");
-        jfieldID fidBlp3Rcu = env->GetFieldID(clsStatus, "blp3Rcu", "Lnl/astron/lofar/mac/apl/gui/jrsp/RCUStatus;");
+	jfieldID fidBlp0Sync = env->GetFieldID(clsStatus, "blp0Sync", "Lnl/astron/lofar/java/mac/jrsp/SyncStatus;");
+	jfieldID fidBlp1Sync = env->GetFieldID(clsStatus, "blp1Sync", "Lnl/astron/lofar/java/mac/jrsp/SyncStatus;");
+	jfieldID fidBlp2Sync = env->GetFieldID(clsStatus, "blp2Sync", "Lnl/astron/lofar/java/mac/jrsp/SyncStatus;");
+	jfieldID fidBlp3Sync = env->GetFieldID(clsStatus, "blp3Sync", "Lnl/astron/lofar/java/mac/jrsp/SyncStatus;");
+        jfieldID fidBlp0Rcu = env->GetFieldID(clsStatus, "blp0Rcu", "Lnl/astron/lofar/java/mac/jrsp/RCUStatus;");
+        jfieldID fidBlp1Rcu = env->GetFieldID(clsStatus, "blp1Rcu", "Lnl/astron/lofar/java/mac/jrsp/RCUStatus;");
+        jfieldID fidBlp2Rcu = env->GetFieldID(clsStatus, "blp2Rcu", "Lnl/astron/lofar/java/mac/jrsp/RCUStatus;");
+        jfieldID fidBlp3Rcu = env->GetFieldID(clsStatus, "blp3Rcu", "Lnl/astron/lofar/java/mac/jrsp/RCUStatus;");
 	jfieldID fidCpRdy = env->GetFieldID(clsStatus, "cpRdy", "Z");
 	jfieldID fidCpErr = env->GetFieldID(clsStatus, "cpErr", "Z");
 	jfieldID fidCpFpga = env->GetFieldID(clsStatus, "cpFpga", "Z");
 	jfieldID fidCpIm = env->GetFieldID(clsStatus, "cpIm", "Z");
 	jfieldID fidCpTrig = env->GetFieldID(clsStatus, "cpTrig", "S");
-	jfieldID fidBlp0AdcOffset = env->GetFieldID(clsStatus, "blp0AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
-	jfieldID fidBlp1AdcOffset = env->GetFieldID(clsStatus, "blp1AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
-	jfieldID fidBlp2AdcOffset = env->GetFieldID(clsStatus, "blp2AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
-	jfieldID fidBlp3AdcOffset = env->GetFieldID(clsStatus, "blp3AdcOffset", "Lnl/astron/lofar/mac/apl/gui/jrsp/ADOStatus;");
+	jfieldID fidBlp0AdcOffset = env->GetFieldID(clsStatus, "blp0AdcOffset", "Lnl/astron/lofar/java/mac/jrsp/ADOStatus;");
+	jfieldID fidBlp1AdcOffset = env->GetFieldID(clsStatus, "blp1AdcOffset", "Lnl/astron/lofar/java/mac/jrsp/ADOStatus;");
+	jfieldID fidBlp2AdcOffset = env->GetFieldID(clsStatus, "blp2AdcOffset", "Lnl/astron/lofar/java/mac/jrsp/ADOStatus;");
+	jfieldID fidBlp3AdcOffset = env->GetFieldID(clsStatus, "blp3AdcOffset", "Lnl/astron/lofar/java/mac/jrsp/ADOStatus;");
 
 	// Access fields and fill them
         if(fidVoltage1V2 != 0)
@@ -263,7 +263,7 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
         }
 	
 	// SyncStatus: blp0Sync - blp3Sync
-	jclass clsSyncStatus = env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/SyncStatus");
+	jclass clsSyncStatus = env->FindClass("nl/astron/lofar/java/mac/jrsp/SyncStatus");
 	jfieldID fidExtCount = env->GetFieldID(clsSyncStatus, "extCount", "I");
 	jfieldID fidSyncCount = env->GetFieldID(clsSyncStatus, "syncCount", "I");
 	jfieldID fidSampleOffset = env->GetFieldID(clsSyncStatus, "sampleOffset", "I");
@@ -318,7 +318,7 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 	}
 
 	// RCUStatus: blp0Rcu - blp3Rcu
-	jclass clsRCUStatus = env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/RCUStatus");
+	jclass clsRCUStatus = env->FindClass("nl/astron/lofar/java/mac/jrsp/RCUStatus");
 	jfieldID fidNofOverflowX = env->GetFieldID(clsRCUStatus, "nofOverflowX", "I");
 	jfieldID fidNofOverflowY = env->GetFieldID(clsRCUStatus, "nofOverflowY", "I");
 	
@@ -384,7 +384,7 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
 	}
 
 	// ADOStatus: blp0AdcOffset - blp3AdcOffset
-	jclass clsADOStatus = env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/ADOStatus");
+	jclass clsADOStatus = env->FindClass("nl/astron/lofar/java/mac/jrsp/ADOStatus");
 	jfieldID fidAdcOffsetX = env->GetFieldID(clsADOStatus, "adcOffsetX", "I");
 	jfieldID fidAdcOffsetY = env->GetFieldID(clsADOStatus, "adcOffsetY", "I");
 	
@@ -441,7 +441,7 @@ jobject ConvertBoardStatus(JNIEnv * env, BoardStatus &boardStatus)
  * @param	frequency
  * @param	amplitude
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWaveformSettings(JNIEnv * env, jobject obj, jint rcuMask, jint mode, jdouble frequency, jshort phase, jint amplitude, jint ptrRSPport)
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_setWaveformSettings(JNIEnv * env, jobject obj, jint rcuMask, jint mode, jdouble frequency, jshort phase, jint amplitude, jint ptrRSPport)
 {
 	RSPport * IOport = (RSPport*)ptrRSPport;
 	return IOport->setWaveformSettings(rcuMask, mode, frequency, phase, amplitude);
@@ -455,7 +455,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setWavefo
  * @param	ptrRSPport
  * @return			jdoubleArray
  */
-JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getSubbandStats(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_getSubbandStats(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
 	RSPport * IOport = (RSPport *) ptrRSPport;
 
@@ -476,9 +476,9 @@ JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getSu
 }
 
 /**
- * Returns a array of nl.astron.lofar.mac.apl.gui.jrsp.WGRegisterType elements.
+ * Returns a array of nl.astron.lofar.java.mac.jrsp.WGRegisterType elements.
  */
-JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getWaveformSettings(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_getWaveformSettings(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
 	// get pointer to RSPport
 	RSPport * IOport = (RSPport *) ptrRSPport;
@@ -492,7 +492,7 @@ JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getWa
 	 */
 
 	// jni: class
-	jclass clsWGRegisterType = env->FindClass("nl/astron/lofar/mac/apl/gui/jrsp/WGRegisterType");
+	jclass clsWGRegisterType = env->FindClass("nl/astron/lofar/java/mac/jrsp/WGRegisterType");
 	if (clsWGRegisterType == NULL) {
 		return NULL;
 	}
@@ -538,7 +538,7 @@ JNIEXPORT jobjectArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getWa
 /**
  * Returns the number of connected RCU's.
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getNrRCUs(JNIEnv * env, jobject obj, jint ptrRSPport)
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_getNrRCUs(JNIEnv * env, jobject obj, jint ptrRSPport)
 {
 	// get pointer to RSPport
 	RSPport * IOport = (RSPport *) ptrRSPport;
@@ -549,7 +549,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getNrRCUs(JNI
 /**
  * Returns the number of connected boards.
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getNrRSPBoards(JNIEnv * env, jobject obj, jint ptrRSPport)
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_getNrRSPBoards(JNIEnv * env, jobject obj, jint ptrRSPport)
 {
 	// get pointer to RSPport
 	RSPport * IOport = (RSPport *) ptrRSPport;
@@ -560,7 +560,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getNrRSPBoard
 /**
  * Returns the maximum number of boards that could be connected.
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getMaxRSPBoards(JNIEnv * env, jobject obj, jint ptrRSPport)
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_getMaxRSPBoards(JNIEnv * env, jobject obj, jint ptrRSPport)
 {
 	// get pointer to RSPport
 	RSPport * IOport = (RSPport *) ptrRSPport;
@@ -576,7 +576,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getMaxRSPBoar
  * @param filterNr    The number of the filter to apply.
  * @param ptrRSPport  Pointer to the RSPport instance.
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setFilter(JNIEnv * env, jobject obj, jint rcuMask, jint filterNr, jint ptrRSPport)
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_setFilter(JNIEnv * env, jobject obj, jint rcuMask, jint filterNr, jint ptrRSPport)
 {
 	// get pointer to RSPport
 	RSPport * IOport = (RSPport *) ptrRSPport;
@@ -591,7 +591,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_setFilter
  * @param rcuMask     A mask holding the selected board.
  * @param ptrRSPport  Pointer to the RSPport instance
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendClear(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_sendClear(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
 	// get pointer to RSPport
 	RSPport * IOport = (RSPport *) ptrRSPport;
@@ -606,7 +606,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendClear
  * @param rcuMask     A mask holding the selected board.
  * @param ptrRSPport  Pointer to the RSPport instance
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendReset(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_sendReset(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
 	// get pointer to RSPport
 	RSPport * IOport = (RSPport *) ptrRSPport;
@@ -621,7 +621,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendReset
  * @param rcuMask     A mask holding the selected board.
  * @param ptrRSPport  Pointer to the RSPport instance
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendSync(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_sendSync(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
 	// get pointer to RSPport
 	RSPport * IOport = (RSPport *) ptrRSPport;
@@ -635,7 +635,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_sendSync(
  * @param mask
  * @param ptrRSPport
  */
-JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_mac_apl_gui_jrsp_Board_getBeamletStats(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
+JNIEXPORT jdoubleArray JNICALL Java_nl_astron_lofar_java_mac_jrsp_Board_getBeamletStats(JNIEnv * env, jobject obj, jint rcuMask, jint ptrRSPport)
 {
 	RSPport * IOport = (RSPport *) ptrRSPport;
 

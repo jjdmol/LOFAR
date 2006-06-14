@@ -13,8 +13,8 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="plotContainer" min="-2" max="-2" attributes="0"/>
-              <EmptySpace max="32767" attributes="0"/>
+              <Component id="plotContainer" min="-2" pref="426" max="-2" attributes="0"/>
+              <EmptySpace max="32767" attributes="1"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -22,14 +22,14 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="plotContainer" min="-2" max="-2" attributes="0"/>
-              <EmptySpace max="32767" attributes="0"/>
+              <Component id="plotContainer" min="-2" pref="311" max="-2" attributes="0"/>
+              <EmptySpace max="32767" attributes="1"/>
           </Group>
       </Group>
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.PlotContainer" name="plotContainer">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.PlotContainer" name="plotContainer">
     </Component>
   </SubComponents>
 </Form>

@@ -52,9 +52,9 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsInputPanel" name="inputPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsInputPanel" name="inputPanel">
     </Component>
-    <Component class="nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsListPanel" name="listPanel">
+    <Component class="nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsListPanel" name="listPanel">
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel1">
       <Properties>

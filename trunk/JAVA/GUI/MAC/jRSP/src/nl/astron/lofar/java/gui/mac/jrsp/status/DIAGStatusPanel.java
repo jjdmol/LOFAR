@@ -22,9 +22,9 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.status;
+package nl.astron.lofar.java.gui.mac.jrsp.status;
 
-import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
+import nl.astron.lofar.java.mac.jrsp.BoardStatus;
 
 /**
  * A panel that displays the DIAG status data. This panel is used by the

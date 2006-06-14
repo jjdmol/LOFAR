@@ -22,12 +22,14 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.beamletstats;
+package nl.astron.lofar.java.gui.mac.jrsp.beamletstats;
 
+import java.util.HashMap;
 import javax.swing.JPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.RSPMask;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.ITabPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.MainPanel;
+import nl.astron.lofar.java.gui.mac.jrsp.ITabPanel;
+import nl.astron.lofar.java.gui.mac.jrsp.MainPanel;
+import nl.astron.lofar.java.gui.mac.jrsp.PlotDataModel;
+import nl.astron.lofar.java.mac.jrsp.RSPMask;
 
 /**
  *
@@ -66,9 +68,13 @@ public class BeamletStatsPanel extends JPanel implements ITabPanel {
             RSPMask mask = new RSPMask();
             mask.setBit( itsMainPanel.getSelectedBoardIndex() );
             
-            plotContainer.updatePlot( itsMainPanel.getBoard().getBeamletStats(mask) );
             
-            System.out.println(itsMainPanel.getBoard().getBeamletStats(mask).length);
+            // make hashmap to send type and data to the plotContainer
+            HashMap<String,Object> hm = new HashMap<String,Object>();
+            hm.put("type", PlotDataModel.BEAMLET_STATS);
+            hm.put("data", itsMainPanel.getBoard().getBeamletStats(mask));
+            
+            plotContainer.updatePlot( hm );
         } else {
             enablePanel(false);
         }
@@ -82,8 +88,12 @@ public class BeamletStatsPanel extends JPanel implements ITabPanel {
      */
     public void enablePanel(boolean b) {
         // on disable
-        if (!b) { 
-            plotContainer.updatePlot(new double[216]);
+        if (!b) {
+            // create hashmap to send with updateplot
+            HashMap<String,Object> hm = new HashMap<String,Object>();
+            hm.put("type", PlotDataModel.BEAMLET_STATS);
+            hm.put("data", new double[0]);
+            plotContainer.updatePlot(hm);
         }
     }
     
@@ -94,7 +104,7 @@ public class BeamletStatsPanel extends JPanel implements ITabPanel {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        plotContainer = new nl.astron.lofar.mac.apl.gui.jrsp.panels.PlotContainer();
+        plotContainer = new nl.astron.lofar.java.gui.mac.jrsp.PlotContainer();
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -102,21 +112,21 @@ public class BeamletStatsPanel extends JPanel implements ITabPanel {
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(plotContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(plotContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 426, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(plotContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(plotContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 311, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.PlotContainer plotContainer;
+    private nl.astron.lofar.java.gui.mac.jrsp.PlotContainer plotContainer;
     // End of variables declaration//GEN-END:variables
     
 }

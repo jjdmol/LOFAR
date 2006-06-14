@@ -22,7 +22,7 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp;
+package nl.astron.lofar.java.mac.jrsp;
 
 /**
  * This class is used by BoardStatus to store data about the ADO status.

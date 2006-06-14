@@ -22,10 +22,10 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.status;
+package nl.astron.lofar.java.gui.mac.jrsp.status;
 
 import javax.swing.border.TitledBorder;
-import nl.astron.lofar.mac.apl.gui.jrsp.ADOStatus;
+import nl.astron.lofar.java.mac.jrsp.ADOStatus;
 
 /**
  * A panel that displays the ADO status data. This panel is used by the

@@ -22,7 +22,7 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels;
+package nl.astron.lofar.java.gui.mac.jrsp;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

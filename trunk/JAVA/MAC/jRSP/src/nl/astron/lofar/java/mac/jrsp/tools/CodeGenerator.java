@@ -1,4 +1,4 @@
-package nl.astron.lofar.mac.apl.gui.jrsp.tools;
+package nl.astron.lofar.java.mac.jrsp.tools;
 
 /**
  * This class is just a quick and dirty way of making the jni code.

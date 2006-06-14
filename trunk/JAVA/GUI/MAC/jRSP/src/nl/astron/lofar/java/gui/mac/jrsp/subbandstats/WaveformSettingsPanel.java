@@ -22,11 +22,11 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats;
+package nl.astron.lofar.java.gui.mac.jrsp.subbandstats;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
+import nl.astron.lofar.java.mac.jrsp.RCUMask;
 
 /**
  *
@@ -63,8 +63,8 @@ public class WaveformSettingsPanel extends JPanel
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        inputPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsInputPanel();
-        listPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsListPanel();
+        inputPanel = new nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsInputPanel();
+        listPanel = new nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsListPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
 
@@ -102,9 +102,9 @@ public class WaveformSettingsPanel extends JPanel
     }// </editor-fold>//GEN-END:initComponents
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsInputPanel inputPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsInputPanel inputPanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsListPanel listPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsListPanel listPanel;
     // End of variables declaration//GEN-END:variables
 }
