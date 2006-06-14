@@ -6,9 +6,8 @@ $VERSION = q$Revision$;
 # Usage: rsuctl [options] command
 #
 #   options
-#     [-i ifname]      # Ethernet interface name on which to communicate (default is eth1)
-#     [-m mac-address] # IP-address of the target board
-#                      # (default is broadcast address ff:ff:ff:ff:ff:ff)
+#     [-i ifname]    # Ethernet interface name on which to communicate (default is eth1)
+#     -m mac-address # MAC-address of the target board (Mandatory)
 #
 #   command (specify at least one of the following)
 #     [-l] # List the images currently stored in all pages of the flash
@@ -131,9 +130,8 @@ sub usage
 Usage: rsuctl [options] command
 
   options
-    [-i ifname]      # Ethernet interface name on which to communicate (default is eth1)
-    [-m mac-address] # IP-address of the target board
-                     # (default is broadcast address ff:ff:ff:ff:ff:ff)
+    [-i ifname]    # Ethernet interface name on which to communicate (default is eth1)
+    -m mac-address # MAC-address of the target board (Mandatory)
 
   command (specify at least one of the following)
     [-l] # List the images currently stored in all pages of the flash
@@ -761,12 +759,15 @@ sub main
 
     # check that at least one argument is present
     usage() if ($opt_h);
+    if (!defined($opt_m)) {
+	print STDERR "=== ERR Must specify MAC address using -m option";
+	usage();
+    }
     usage() unless ($opt_l || $opt_b || $opt_e || $opt_x || $opt_w || $opt_v ||
 		    $opt_d || $opt_r || $opt_c || $opt_s || $opt_P || $opt_V || $opt_h);
     
     # assign default values
     $opt_i = 'eth1'              if !defined($opt_i);
-    $opt_m = 'ff:ff:ff:ff:ff:ff' if !defined($opt_m);
     
     # Create socket to the boards
     if (!defined($opt_b)) {
