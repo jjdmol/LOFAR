@@ -36,6 +36,7 @@ import gov.noaa.pmel.sgt.AxisNotFoundException;
 import gov.noaa.pmel.sgt.CartesianGraph;
 import gov.noaa.pmel.sgt.DataNotFoundException;
 import gov.noaa.pmel.sgt.JPane;
+import gov.noaa.pmel.sgt.LayerChild;
 import gov.noaa.pmel.sgt.LineAttribute;
 import gov.noaa.pmel.sgt.LineCartesianRenderer;
 import gov.noaa.pmel.sgt.LogAxis;
@@ -56,12 +57,12 @@ import gov.noaa.pmel.util.GeoDate;
 import gov.noaa.pmel.util.Point2D;
 import gov.noaa.pmel.util.Range2D;
 import gov.noaa.pmel.util.SoTPoint;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyVetoException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import javax.swing.JComponent;
@@ -125,65 +126,100 @@ public class PlotSGTImpl implements IPlot{
         
         try{
             aNewPlot.setBatch(true);
-            CartesianGraph gp  = (CartesianGraph)aNewPlot.getFirstLayer().getGraph();
-            String xAxisTitle = gp.getXAxis("Bottom Axis").getTitle().getText().toString();
-            String yAxisTitle = gp.getYAxis("Left Axis").getTitle().getText().toString();
-            String xAxisUnits = gp.getXAxis("Bottom Axis").getTitle().getText().toString();
-            String yAxisUnits = gp.getYAxis("Left Axis").getTitle().getText().toString();
-            
+            String xAxisTitle = (String)data.get(PlotConstants.DATASET_XAXISLABEL);
+            String xAxisUnits = (String)data.get(PlotConstants.DATASET_XAXISUNIT);
+            String yAxisTitle = (String)data.get(PlotConstants.DATASET_YAXISLABEL);
+            String yAxisUnits = (String)data.get(PlotConstants.DATASET_YAXISUNIT);
+           
             LinkedList<HashMap> values = (LinkedList<HashMap>)data.get(PlotConstants.DATASET_VALUES);
             //Loop through X and Y Value data
-            if(values != null && values.size()> 0){
-                
-                Iterator linesIterator = values.iterator();
-                //Loop through all XY pairs
-                while(linesIterator.hasNext()){
+            //System.out.println("Updating plot "+aNewPlot.getId()+": Old size :"+aNewPlot.getData().size()+" New Size: "+values.size());
+            if(values != null && values.size()>= 0){
+                 
+                if(values.size() >= aNewPlot.getData().size()){
                     
-                    double[] xArray = null;
-                    double[] yArray = null;
-                    GeoDate[] xArrayDate = null;
-                    GeoDate[] yArrayDate = null;
-                    SGTMetaData meta = new SGTMetaData(xAxisTitle,
-                            xAxisUnits,
-                            false,
-                            false);
-                    
-                    SGTMetaData ymeta = new SGTMetaData(yAxisTitle,
-                            yAxisUnits,
-                            false,
-                            false);
-                    String lineLabel = "Unknown value";
-                    HashMap line = (HashMap)linesIterator.next();
-                    Iterator lineIterator = line.keySet().iterator();
-                    
-                    //Retrieve XY pair label and xy values
-                    while(lineIterator.hasNext()){
-                        String key = (String)lineIterator.next();
-                        if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
-                            lineLabel = (String)line.get(key);
-                            
-                        } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
-                            xArray = (double[])line.get(key);
-                            
-                        } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
-                            yArray = (double[])line.get(key);
+                    Iterator linesIterator = values.iterator();
+                    //Loop through all XY pairs
+                    while(linesIterator.hasNext()){
+                        
+                        double[] xArray = null;
+                        double[] yArray = null;
+                        GeoDate[] xArrayDate = null;
+                        GeoDate[] yArrayDate = null;
+                        SGTMetaData meta = new SGTMetaData(xAxisTitle,
+                                xAxisUnits,
+                                false,
+                                false);
+                        
+                        SGTMetaData ymeta = new SGTMetaData(yAxisTitle,
+                                yAxisUnits,
+                                false,
+                                false);
+                        String lineLabel = "Unknown value";
+                        HashMap line = (HashMap)linesIterator.next();
+                        Iterator lineIterator = line.keySet().iterator();
+                        
+                        //Retrieve XY pair label and xy values
+                        while(lineIterator.hasNext()){
+                            String key = (String)lineIterator.next();
+                            if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
+                                lineLabel = (String)line.get(key);
+                                
+                            } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
+                                xArray = (double[])line.get(key);
+                                
+                            } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
+                                yArray = (double[])line.get(key);
+                            }else{
+                                throw new InvalidDataSetException("(A value array was found that is not supported for a Line Plot: "+key.toString()+")");
+                            }
+                        }
+                        
+                        SimpleLine lineData = new SimpleLine(
+                                xArray,yArray,lineLabel);
+                        lineData.setXMetaData(meta);
+                        lineData.setYMetaData(ymeta);
+                        lineData.setId(lineLabel);
+                        
+                        if(aNewPlot.getData(lineLabel) == null){
+                            aNewPlot.addData(lineData, lineLabel);
                         }else{
-                            throw new InvalidDataSetException("(A value array was found that is not supported for a Line Plot: "+key.toString()+")");
+                            SGTData someData = aNewPlot.getData(lineLabel);
+                            someData = lineData;
                         }
                     }
+                }else if(values.size() < aNewPlot.getData().size()){
+                    //System.out.println("Removing from plot...");
                     
-                    SimpleLine lineData = new SimpleLine(
-                            xArray,yArray,lineLabel);
-                    lineData.setXMetaData(meta);
-                    lineData.setYMetaData(ymeta);
-                    lineData.setId(lineLabel);
+                    HashSet<SGTData> toBeDeletedData = new HashSet<SGTData>();
                     
-                    if(aNewPlot.getData(lineLabel) == null){
-                        aNewPlot.addData(lineData, lineLabel);
+                    Iterator anIterator = aNewPlot.getData().iterator();
+                    while(anIterator.hasNext()){
+                        SGTData someData = (SGTData)anIterator.next();
+                        boolean presentInNewData = false;
+                        Iterator linesIterator = values.iterator();
+                        //Loop through all XY pairs
+                        while(linesIterator.hasNext()){
+                            HashMap line = (HashMap)linesIterator.next();
+                            String valueLabel = (String)line.get(PlotConstants.DATASET_VALUELABEL);
+                            if(valueLabel.equalsIgnoreCase(someData.getId())){
+                                presentInNewData = true;
+                            }
+                        }
+                        if(!presentInNewData){
+                            toBeDeletedData.add(someData);
+                        }
+                    }
+                    //System.out.println("Removing "+toBeDeletedData.size()+" value from plot "+aNewPlot.getId());
+                    CartesianGraph gp2 = (CartesianGraph)aNewPlot.getFirstLayer().getGraph();
+                    
+                    for (SGTData aData : toBeDeletedData){
+                        aNewPlot.clear(aData.getId());
                     }
                 }
             }
             aNewPlot.setBatch(false);
+            
             
         }catch(Exception e){
             InvalidDataSetException exx = new InvalidDataSetException("( The data set provided was not sufficient to update the line plot "+aNewPlot.getName()+". Please check the log file )");
