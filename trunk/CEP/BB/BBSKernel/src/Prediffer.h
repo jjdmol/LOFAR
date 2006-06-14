@@ -327,7 +327,7 @@ private:
 
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
 
-  MeqSourceList         itsSources;
+  MeqSourceList*        itsSources;
   vector<vector<int> >  itsSrcGrp;      //# sources in each group
   vector<int>           itsSrcNrMap;    //# map of all srcnr to used srcnr
   vector<int>           itsPeelSourceNrs;

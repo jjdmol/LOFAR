@@ -18,6 +18,7 @@ MNS/MeqDiag.h \
 MNS/MeqDomain.h \
 MNS/MeqExpr.h \
 MNS/MeqFunklet.h \
+MNS/MeqGaussSource.h \
 MNS/MeqJonesCMul2.h \
 MNS/MeqJonesCMul3.h \
 MNS/MeqJonesExpr.h \
@@ -37,6 +38,7 @@ MNS/MeqMatrixRealSca.h \
 MNS/MeqMatrixRep.h \
 MNS/MeqMatrixTmp.h \
 MNS/MeqParm.h \
+MNS/MeqParmExpr.h \
 MNS/MeqParmFunklet.h \
 MNS/MeqParmSingle.h \
 MNS/MeqPhaseRef.h \
@@ -46,6 +48,7 @@ MNS/MeqRequest.h \
 MNS/MeqRequestId.h \
 MNS/MeqResult.h \
 MNS/MeqResultVec.h \
+MNS/MeqSource.h \
 MNS/MeqSourceList.h \
 MNS/MeqStatExpr.h \
 MNS/MeqStation.h \
@@ -74,6 +77,7 @@ MNS/MeqDFTPS.cc \
 MNS/MeqDomain.cc \
 MNS/MeqExpr.cc \
 MNS/MeqFunklet.cc \
+MNS/MeqGaussSource.cc \
 MNS/MeqJonesCMul2.cc \
 MNS/MeqJonesCMul3.cc \
 MNS/MeqJonesExpr.cc \
@@ -92,6 +96,7 @@ MNS/MeqMatrixRealSca.cc \
 MNS/MeqMatrixRep.cc \
 MNS/MeqMatrixTmp.cc \
 MNS/MeqParm.cc \
+MNS/MeqParmExpr.cc \
 MNS/MeqParmFunklet.cc \
 MNS/MeqParmSingle.cc \
 MNS/MeqPhaseRef.cc \
@@ -100,6 +105,7 @@ MNS/MeqPolc.cc \
 MNS/MeqRequest.cc \
 MNS/MeqResult.cc \
 MNS/MeqResultVec.cc \
+MNS/MeqSource.cc \
 MNS/MeqSourceList.cc \
 MNS/MeqStatExpr.cc \
 MNS/MeqStation.cc \

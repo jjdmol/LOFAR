@@ -89,7 +89,8 @@ MeqFunklet* MeqFunklet::make (const ParmDB::ParmValue& pvalue,
     return new MeqTabular(pvalue);
   }
   ASSERTSTR (false,
-	     "Unknown funklet found for parameter " << name);
+	     "Unknown funklet type " << pvalue.rep().itsType
+	     << " found for parameter " << name);
 }
 
 int MeqFunklet::makeSolvable (int scidIndex)

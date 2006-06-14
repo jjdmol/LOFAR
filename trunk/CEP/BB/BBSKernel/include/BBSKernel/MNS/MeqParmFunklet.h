@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQPARMFUNKLET_H)
+#ifndef MNS_MEQPARMFUNKLET_H
 #define MNS_MEQPARMFUNKLET_H
 
 // \file
@@ -57,6 +57,13 @@ public:
 		  ParmDB::ParmDB* table);
 
   virtual ~MeqParmFunklet();
+
+  // Make the correct object depending on the parm type.
+  // For a parm expression a MeqParmExpr object is created, otherwise
+  // a MeqParmFunklet.
+  static MeqExprRep* create (const string& name,
+			     MeqParmGroup* group,
+			     ParmDB::ParmDB* table);
 
   // Get the requested result of the parameter.
   virtual MeqResult getResult (const MeqRequest&);

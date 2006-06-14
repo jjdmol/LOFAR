@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBS/MNS/MeqLMN.h>
-#include <BBS/MNS/MeqPointSource.h>
+#include <BBS/MNS/MeqSource.h>
 #include <BBS/MNS/MeqPhaseRef.h>
 #include <BBS/MNS/MeqRequest.h>
 #include <BBS/MNS/MeqMatrixTmp.h>
@@ -32,7 +32,7 @@
 
 namespace LOFAR {
 
-MeqLMN::MeqLMN (MeqPointSource* source)
+MeqLMN::MeqLMN (MeqSource* source)
 : itsSource    (source)
 {
   addChild (itsSource->getRa());

@@ -37,7 +37,7 @@ namespace LOFAR {
 // @{
 
 //# Forward Declarations
-class MeqPointSource;
+class MeqSource;
 class MeqPhaseRef;
 
 
@@ -45,9 +45,9 @@ class MeqLMN: public MeqExprRep
 {
 public:
   // Construct for the given point source.
-  explicit MeqLMN (MeqPointSource*);
+  explicit MeqLMN (MeqSource*);
 
-  const MeqPointSource& getSource() const
+  const MeqSource& getSource() const
     { return *itsSource; }
 
   // Set the phase reference position.
@@ -60,7 +60,7 @@ public:
   MeqResultVec getAnResultVec (const MeqRequest& request);
 
 private:
-  MeqPointSource*    itsSource;
+  MeqSource*         itsSource;
   const MeqPhaseRef* itsPhaseRef;
 };
 

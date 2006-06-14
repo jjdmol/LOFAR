@@ -20,16 +20,14 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQPOINTSOURCE_H)
+#ifndef MNS_MEQPOINTSOURCE_H
 #define MNS_MEQPOINTSOURCE_H
 
 // \file
 // Class holding a point source
 
 //# Includes
-#include <BBS/MNS/MeqExpr.h>
-#include <BBS/MNS/MeqResult.h>
-#include <BBS/MNS/MeqRequest.h>
+#include <BBS/MNS/MeqSource.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR {
@@ -38,23 +36,16 @@ namespace LOFAR {
 // \addtogroup MNS
 // @{
 
-//# Forward Declarations
-class MeqPhaseRef;
 
-
-class MeqPointSource
+class MeqPointSource: public MeqSource
 {
 public:
-  // The default constructor.
-  MeqPointSource();
-
   MeqPointSource (const string& name,
 		  const MeqExpr& fluxI, const MeqExpr& fluxQ,
 		  const MeqExpr& fluxU, const MeqExpr& fluxV,
 		  const MeqExpr& ra, const MeqExpr& dec);
 
-  const string& getName() const
-    { return itsName; }
+  virtual ~MeqPointSource();
 
   MeqExpr& getI()
     { return itsI; }
@@ -64,37 +55,12 @@ public:
     { return itsU; }
   MeqExpr& getV()
     { return itsV; }
-  MeqExpr& getRa()
-    { return itsRa; }
-  MeqExpr& getDec()
-    { return itsDec; }
-
-  // Get the source nr.
-  int getSourceNr() const
-    { return itsSourceNr; }
-
-  // Get the group nr.
-  int getGroupNr() const
-    { return itsGroupNr; }
-
-  // Set the source nr.
-  void setSourceNr (int sourceNr)
-    { itsSourceNr = sourceNr; }
-
-  // Set the group nr.
-  void setGroupNr (int groupNr)
-    { itsGroupNr = groupNr; }
 
 private:
-  int       itsSourceNr;
-  int       itsGroupNr;
-  string    itsName;
   MeqExpr   itsI;
   MeqExpr   itsQ;
   MeqExpr   itsU;
   MeqExpr   itsV;
-  MeqExpr   itsRa;
-  MeqExpr   itsDec;
 };
 
 // @}
