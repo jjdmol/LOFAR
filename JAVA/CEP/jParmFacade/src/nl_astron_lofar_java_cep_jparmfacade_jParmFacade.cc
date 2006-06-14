@@ -25,6 +25,7 @@
 
 #include <jni.h>
 #include <jParmFacade/nl_astron_lofar_java_cep_jparmfacade_jParmFacade.h>
+#include <jParmFacade/nl_astron_lofar_java_cep_jparmfacade_jCommon.h>
 #include <ParmFacade/ParmFacade.h>
 #include <iostream>
 #include <string>
@@ -34,34 +35,19 @@ using namespace std;
 
 ParmFacade* theirPF;
 
-/*
- * Class:     nl_astron_lofar_java_cep_jparmfacade_jParmFacade
- * Method:    initParmFacade
- * Signature: (Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_initParmFacade(JNIEnv *env, jobject, jstring tableName) {
-  const char* tablename = env->GetStringUTFChars(tableName, 0);
-  const string t(tablename);
-
-  try {
-    theirPF = new ParmFacade(t);
-  } catch (exception &ex) {
-    cout << "Exception during new ParmFacade(" << t << ") : "<< ex.what() << endl;
-    
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }
-  env->ReleaseStringUTFChars(tableName,tablename);
-}
 
 /*
  * Class:     nl_astron_lofar_java_cep_jparmfacade_jParmFacade
  * Method:    getRange
  * Signature: (Ljava/lang/String;)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getRange  (JNIEnv *env, jobject, jstring parmNamePattern) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getRange  (JNIEnv *env, jobject obj, jstring parmNamePattern) {
 
   jboolean isCopy;
   jobject rangeVector;
+
+  // create the connection with the ParmDB
+  setParmDBConnection(env,obj);
 
   const char* pattern = env->GetStringUTFChars (parmNamePattern, &isCopy);
   vector<double> rangeList;
@@ -104,10 +90,13 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_
  * Method:    getNames
  * Signature: (Ljava/lang/String;)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getNames  (JNIEnv *env, jobject, jstring parmNamePattern) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getNames  (JNIEnv *env, jobject obj, jstring parmNamePattern) {
 
   jboolean isCopy;
   jobject nameVector;
+
+  // create the connection with the ParmDB
+  setParmDBConnection(env,obj);
 
   const char* pattern = env->GetStringUTFChars (parmNamePattern, &isCopy);
   vector<string> nameList;
@@ -145,10 +134,14 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_
  * Method:    getValues
  * Signature: (Ljava/lang/String;DDIDDI)Ljava/util/HashMap;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getValues (JNIEnv *env, jobject, jstring parmNamePattern, jdouble startx, jdouble endx, jint nx, jdouble starty, jdouble endy, jint ny) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getValues (JNIEnv *env, jobject obj, jstring parmNamePattern, jdouble startx, jdouble endx, jint nx, jdouble starty, jdouble endy, jint ny) {
 
   jboolean isCopy;
   jobject result;
+
+  // create the connection with the ParmDB
+  setParmDBConnection(env,obj);
+
 
   const char* pattern = env->GetStringUTFChars (parmNamePattern, &isCopy);
   map<string,vector<double> > valMap;
@@ -209,9 +202,30 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_
       //      env->ReleaseStringUTFChars (parmNamePattern, pattern);
       return result;
     }
+
     env->ThrowNew(newExcCls,aStr.c_str());
   }
   
   return result;
+}
+
+
+void  setParmDBConnection(JNIEnv *env, jobject callerObject) {
+
+  // get the  callerclass
+  jclass jPF=env->GetObjectClass(callerObject);
+
+  // get the methodID
+  jfieldID id_PFID = env->GetFieldID (jPF, "itsParmFacadeDB","Ljava/lang/String;");
+
+  // get the value
+  jstring nstr = (jstring)env->GetObjectField (callerObject, id_PFID);
+
+  const char* n = env->GetStringUTFChars (nstr, 0);
+  const string name (n);
+  // create the connection with the c++ ParmFacade
+  cout << "Connect to :" << name << endl;
+  theirPF=new ParmFacade(name);
+  env->ReleaseStringUTFChars (nstr, n);
 }
 
