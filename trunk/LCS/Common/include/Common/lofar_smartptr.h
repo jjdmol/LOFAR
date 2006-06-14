@@ -25,7 +25,9 @@
 
 // \file
 
-#if !defined(USE_THREADS)
+#if defined(USE_THREADS)
+# define BOOST_AC_USE_PTHREADS
+#else
 # define BOOST_DISABLE_THREADS
 #endif
 
