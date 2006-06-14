@@ -1771,7 +1771,8 @@ static void usage()
   cout << "         --rcureset       |" << endl;
   cout << "         --rcuattenuation |" << endl;
   cout << "         --rcuspecinv     |" << endl;
-  cout << "         --rcudelay" << endl;
+  cout << "         --rcudelay       |" << endl;
+  cout << "         --rcuenable      |" << endl;
   cout << "       ]+ [--select=<set>] # control RCU by combining any of these commands with selection" << endl;
   cout << endl;
   cout << "       --rcumode=[0..7] # set the RCU in a specific mode" << endl;
@@ -1788,6 +1789,7 @@ static void usage()
   cout << "       --rcuattenuation=[0..31]  # set the RCU attenuation" << endl;
   cout << "       --rcuspecinv              # enable spectral inversion" << endl;
   cout << "       --rcudelay=[0..127]       # set the delay for rcu's" << endl;
+  cout << "       --rcudelay                # enable input from RCU's" << endl;
   cout << endl;
   cout << "rspctl --wg                  [--select=<set>]  # get waveform generator settings" << endl;
   cout << "rspctl --wg=freq [--phase=..][--select=<set>]  # set waveform generator settings" << endl;
@@ -1845,6 +1847,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "rcuattenuation", required_argument, 0, 'n' },
 	  { "rcuspecinv",     no_argument,       0, 'u' },
 	  { "rcudelay",       required_argument, 0, 'y' },
+          { "rcuenable",      no_argument,       0, 'E' },
 	  { "wg",             optional_argument, 0, 'g' },
 	  { "wgmode",         required_argument, 0, 'G' },
 	  { "phase",          required_argument, 0, 'P' },
@@ -2010,7 +2013,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	case 'e': // --rcureset
 	case 'n': // --rcuattenuation
 	case 'u': // --rcuspecinv
-	case 'y': // --recudelay
+	case 'y': // --rcudelay
+        case 'E': // --rcuenable
 	  {
 	    // instantiate once, then reuse to add control bits
 	    if (!rcumodecommand) {
@@ -2075,7 +2079,12 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      }
 	      rcumodecommand->control().setDelay((uint8)controlopt);
 	      break;
+
+            case 'E': // --rcuenable
+              rcumodecommand->control().setEnable(true);
+              break;
 	    }
+
 	  }
 	  break;
 

@@ -70,25 +70,47 @@ RSPDriver.MAC_ADDR_23=00:00:00:00:00:17
 # Data output payload size.
 # Should eventually be computed dynamically
 # based on settings.
-# now 1744 was 736
-RSPDriver.OUTPUT_PAYLOAD_SIZE=1744
+#
+# Data output payload size.
+# Should eventually be computed dynamically
+# based on settings.
+# c_frame_size  = g_hdr_sz + nof_blocks * (c_block_size + c_epa_hdr_size)
+#               = 16 + 1*(2*2*54 + 8) = 240 words (16 bit)
+# OUTPUT_PAYLOAD_SIZE = (240 - 16)*2 = 448 octets
+#
+RSPDriver.OUTPUT_PAYLOAD_SIZE=448
 
 #
 # Destination IP and MAC address for data packets
 # leaving the RSP board with the given index
 #
+
 #
-# Output to lofar11
+# Output to CEP inputnode 1
 #
 RSPDriver.SRC_IP_ADDR_0=10.1.0.1
 RSPDriver.DST_IP_ADDR_0=192.168.2.111
-RSPDriver.DST_MAC_ADDR_0=00:04:23:B5:C4:6A
+RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
+
 #
-# Output to lofar12
+# Output to CEP inputnode 3
 #
 RSPDriver.SRC_IP_ADDR_1=10.1.0.2
 RSPDriver.DST_IP_ADDR_1=192.168.2.112
-RSPDriver.DST_MAC_ADDR_1=00:04:23:B5:C5:CA
+RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D4
+
+#
+# Output to lofar11
+#
+# RSPDriver.SRC_IP_ADDR_0=10.1.0.1
+# RSPDriver.DST_IP_ADDR_0=192.168.2.111
+# RSPDriver.DST_MAC_ADDR_0=00:04:23:B5:C4:6A
+#
+# Output to lofar12
+#
+# RSPDriver.SRC_IP_ADDR_1=10.1.0.2
+# RSPDriver.DST_IP_ADDR_1=192.168.2.112
+# RSPDriver.DST_MAC_ADDR_1=00:04:23:B5:C5:CA
 
 RSPDriver.SRC_IP_ADDR_2=10.1.0.3
 RSPDriver.DST_IP_ADDR_2=10.2.0.3
@@ -210,12 +232,14 @@ RSPDriver.WRITE_BF=1
 RSPDriver.WRITE_SS=1
 RSPDriver.WRITE_RCU=1
 RSPDriver.WRITE_RCU_PROTOCOL=1
+RSPDriver.WRITE_HBA_PROTOCOL=0
 RSPDriver.WRITE_TDS_PROTOCOL=1
 RSPDriver.READ_SST=1
 RSPDriver.READ_BST=1
 RSPDriver.WRITE_WG=1
 RSPDriver.WRITE_WG_WAVE=0
 RSPDriver.READ_RCU_RESULT=1
+RSPDriver.READ_HBA_RESULT=0
 RSPDriver.READ_TDS_RESULT=1
 RSPDriver.READ_VERSION=1
 RSPDriver.READ_XST=1
