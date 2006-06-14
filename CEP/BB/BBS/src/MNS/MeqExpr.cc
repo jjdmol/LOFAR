@@ -155,7 +155,7 @@ MeqMatrix MeqExprRep::getResultValue (const vector<const MeqMatrix*>&)
 MeqResult MeqExprRep::getResult (const MeqRequest& request)
 {
   // Calculate the result in a generic way.
-  MeqResult result;
+  MeqResult result(request.nspid());
   // First evaluate all children and keep their results.
   // Also keep the main value.
   int nrchild = itsChildren.size();

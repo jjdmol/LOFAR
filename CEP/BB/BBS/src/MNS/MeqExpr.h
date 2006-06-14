@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQEXPR_H)
+#ifndef MNS_MEQEXPR_H
 #define MNS_MEQEXPR_H
 
 // \file
