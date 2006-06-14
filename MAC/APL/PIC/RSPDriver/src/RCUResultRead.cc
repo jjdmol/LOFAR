@@ -39,7 +39,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 RCUResultRead::RCUResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrRcusPerBoard())
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -51,7 +51,7 @@ RCUResultRead::~RCUResultRead()
 
 void RCUResultRead::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
 
   // skip update if the RCU settings have not been applied yet
   if (RTC::RegisterState::READ != Cache::getInstance().getState().rcuprotocol().get(global_rcu)) {
@@ -89,7 +89,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   
   EPARcuResultEvent ack(event);
 
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + getCurrentIndex();
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
 
   if (!ack.hdr.isValidAck(m_hdr))
   {

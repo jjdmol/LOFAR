@@ -73,7 +73,16 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 	cache.getCache().getState().bs().write(cache_rcu / MEPHeader::N_POL);
 
         cache.getCache().getState().rcusettings().write(cache_rcu);
-        cache.getCache().getState().rcuprotocol().write(cache_rcu);
+
+#if 0
+	// HACK HACK, prevent rcuprotocol write when enabling RCU input
+	// assumption is that rcuprotocol has been written previously
+	if (!m_event->settings()(0).getEnable()) {
+#endif
+	  cache.getCache().getState().rcuprotocol().write(cache_rcu);
+#if 0
+	}
+#endif
       }
     }
   }
