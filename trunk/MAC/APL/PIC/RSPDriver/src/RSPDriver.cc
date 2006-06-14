@@ -57,6 +57,9 @@
 #include "SetRCUCmd.h"
 #include "GetRCUCmd.h"
 #include "UpdRCUCmd.h"
+#include "SetHBACmd.h"
+#include "GetHBACmd.h"
+#include "UpdHBACmd.h"
 #include "SetRSUCmd.h"
 #include "SetWGCmd.h"
 #include "GetWGCmd.h"
@@ -80,6 +83,8 @@
 #include "RCUWrite.h"
 #include "RCUProtocolWrite.h"
 #include "RCUResultRead.h"
+#include "HBAProtocolWrite.h"
+#include "HBAResultRead.h"
 #include "RCURead.h"
 #include "StatusRead.h"
 #include "SstRead.h"
@@ -302,7 +307,8 @@ bool RSPDriver::isEnabled()
  * - STATUS (RSP Status): read RSP status info  // StatusRead
  * - BF:      write beamformer weights          // BWWrite
  * - SS:      write subband selection settings  // SSWrite
- * - RCU:     write RCU control settings        // RCUWrite/RCUProtocolWrite
+ * - RCU:     write RCU control settings        // RCUWrite/RCUProtocolWrite/RCUResultRead
+ * - HBA:     write HBA control settings        // HBAProtocolWrite/HBAResultRead
  * - TDS:     write TDS control settings        // TDSProtocolWrite/TDSResultRead
  * - SST:     read subband statistics           // SstRead
  * - BST:     read beamlet statistics           // BstRead
@@ -614,6 +620,22 @@ void RSPDriver::addAllSyncActions()
       RCUResultRead* rcuresultread = new RCUResultRead(m_board[boardid], boardid);
       ASSERT(rcuresultread);
       m_scheduler.addSyncAction(rcuresultread);
+    }
+
+    // order is important; HBAProtocolWrite should go before HBAResultRead,
+    // these two should go before RCUProtocolWrite/RCUResultRead
+    if (1 == GET_CONFIG("RSPDriver.WRITE_HBA_PROTOCOL", i))
+    {
+      HBAProtocolWrite* hbaprotocolwrite = new HBAProtocolWrite(m_board[boardid], boardid);
+      ASSERT(hbaprotocolwrite);
+      m_scheduler.addSyncAction(hbaprotocolwrite);
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_HBA_RESULT", i))
+    {
+      HBAResultRead* hbaresultread = new HBAResultRead(m_board[boardid], boardid);
+      ASSERT(hbaresultread);
+      m_scheduler.addSyncAction(hbaresultread);
     }
 
   } // for (boardid...)
@@ -934,6 +956,22 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       
     case RSP_UNSUBRCU:
       rsp_unsubrcu(event, port);
+      break;
+      
+    case RSP_SETHBA:
+      rsp_sethba(event, port);
+      break;
+
+    case RSP_GETHBA:
+      rsp_gethba(event, port);
+      break;
+      
+    case RSP_SUBHBA:
+      rsp_subhba(event, port);
+      break;
+      
+    case RSP_UNSUBHBA:
+      rsp_unsubhba(event, port);
       break;
       
     case RSP_SETRSU:
@@ -1564,6 +1602,126 @@ void RSPDriver::rsp_unsubrcu(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
+// rsp_sethba(event,port)
+//
+void RSPDriver::rsp_sethba(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<SetHBACmd> command = new SetHBACmd(event, port, Command::WRITE);
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SETHBA: invalid parameter");
+    
+    RSPSethbaackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+
+  // if timestamp == Timestamp(0,0) apply changes immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    LOG_INFO("applying HBA control immediately");
+    command->apply(Cache::getInstance().getFront(), true);
+    command->apply(Cache::getInstance().getBack(), false);
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+  command->ack(Cache::getInstance().getFront());
+}
+
+//
+// rsp_gethba(event,port)
+//
+void RSPDriver::rsp_gethba(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetHBACmd> command = new GetHBACmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    LOG_ERROR("GETHBA: invalid parameter");
+    
+    RSPGethbaackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    ack.settings().resize(1);
+    port.send(ack);
+    return;
+  }
+  
+  // if null timestamp get value from the cache and acknowledge immediately
+  if ( (Timestamp(0,0) == command->getTimestamp())
+       && (true == command->readFromCache()))
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+}
+
+//
+// rsp_subhba(event,port)
+//
+void RSPDriver::rsp_subhba(GCFEvent& event, GCFPortInterface& port)
+{
+  // subscription is done by entering a UpdHBACmd in the periodic queue
+  Ptr<UpdHBACmd> command = new UpdHBACmd(event, port, Command::READ);
+  RSPSubhbaackEvent ack;
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SUBHBA: invalid parameter");
+    
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = FAILURE;
+    ack.handle = 0;
+
+    port.send(ack);
+    return;
+  }
+  else
+  {
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = SUCCESS;
+    ack.handle = (uint32)&(*command);
+    port.send(ack);
+  }
+
+  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+                          Scheduler::PERIODIC);
+}
+
+//
+// rsp_unsubhba(event,port)
+//
+void RSPDriver::rsp_unsubhba(GCFEvent& event, GCFPortInterface& port)
+{
+  RSPUnsubhbaEvent unsub(event);
+
+  RSPUnsubhbaackEvent ack;
+  ack.timestamp = m_scheduler.getCurrentTime();
+  ack.status = FAILURE;
+  ack.handle = unsub.handle;
+
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
+  {
+    ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBHBA: failed to remove subscription");
+  }
+
+  port.send(ack);
+}
+
+//
 // rsp_setrsu(event,port)
 //
 void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
@@ -1572,7 +1730,7 @@ void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
-    LOG_ERROR("SETRCU: invalid parameter");
+    LOG_ERROR("SETRSU: invalid parameter");
     
     RSPSetrsuackEvent ack;
     ack.timestamp = Timestamp(0,0);

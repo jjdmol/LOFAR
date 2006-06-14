@@ -114,7 +114,8 @@ namespace LOFAR {
 	 *
 	 * 0x01000000 PRSG        pseudo random sequence generator on (1), off (0)
 	 * 0x02000000 RESET       on (1) hold board in reset
-	 * 0xFC000000 TBD         reserved
+	 * 0x04000000 ENABLE      enable RCU input
+	 * 0xF8000000 TBD         reserved
 	 */
 	void   setRaw(uint32 raw) { m_value = raw; }
 	uint32 getRaw() const { return m_value; }
@@ -155,8 +156,8 @@ namespace LOFAR {
 	 * Enable (true) or disable (false) spectral inversion.
 	 */
 	void setSpecinv(bool value) {
-	  if (value) m_value |= SPECINV_MASK;  // set RESET bit
-	  else       m_value &= ~SPECINV_MASK; // clear RESET bit
+	  if (value) m_value |= SPECINV_MASK;  // set SPECINV bit
+	  else       m_value &= ~SPECINV_MASK; // clear SPECINV bit
 	}
 	bool getSpecinv() const { return m_value & SPECINV_MASK; }
 
@@ -168,6 +169,15 @@ namespace LOFAR {
 	  m_value |= (value  & DELAY_MASK);
 	}
 	uint8 getDelay() const { return m_value & DELAY_MASK; }
+
+	/**
+	 * Set rcu enable (0 = disable, 1 = enable)
+	 */
+	void setEnable(uint8 value) {
+	  if (value) m_value |= ENABLE_MASK;  // set ENABLE bit
+	  else       m_value &= ~ENABLE_MASK; // clear ENABLE bit
+	}
+	bool getEnable() const { return m_value & ENABLE_MASK; }
 
       private:
 
@@ -181,14 +191,13 @@ namespace LOFAR {
 	static const uint32 RESET_MASK   = 0x02000000;
 	static const uint32 SPECINV_MASK = 0x00000080;
 	static const uint32 DELAY_MASK   = 0x0000007F;
+	static const uint32 ENABLE_MASK  = 0x04000000;
 
 	uint32 m_value;
       };
 
       /* get reference settings array */
       blitz::Array<Control, 1>& operator()();
-
-      //RTC::RegisterState& getState();
 
     public:
 
@@ -203,13 +212,9 @@ namespace LOFAR {
 
     private:
       blitz::Array<Control, 1> m_registers;
-
-      //RTC::RegisterState       m_state;
     };
   
     inline blitz::Array<RCUSettings::Control, 1>& RCUSettings::operator()() { return m_registers; }
-    //inline RTC::RegisterState& RCUSettings::getState()                      { return m_state; }
-
   };
 }; // namespace LOFAR
 

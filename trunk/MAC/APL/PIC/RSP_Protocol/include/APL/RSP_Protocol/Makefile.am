@@ -3,6 +3,7 @@ INSTHDRS = \
 	MEPData.h \
 	BeamletWeights.h \
 	RCUSettings.h \
+	HBASettings.h \
 	RSUSettings.h \
 	Statistics.h \
 	SubbandSelection.h \

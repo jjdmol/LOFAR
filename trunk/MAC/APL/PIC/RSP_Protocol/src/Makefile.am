@@ -35,6 +35,7 @@ librsp_protocol_la_SOURCES = \
 	$(BUILT_SOURCES) \
 	BeamletWeights.cc \
 	RCUSettings.cc \
+	HBASettings.cc \
 	RSUSettings.cc \
 	Statistics.cc \
 	SubbandSelection.cc \

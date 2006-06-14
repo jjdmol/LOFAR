@@ -86,11 +86,15 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
     LOG_WARN_STR("m_subbandselection()=" << m_subbandselection());
   }
 
+  // initialize RCU settings
   m_rcusettings().resize(StationSettings::instance()->nrRcus());
   RCUSettings::Control rcumode;
   rcumode.setMode(RCUSettings::Control::MODE_OFF);
   m_rcusettings() = rcumode;
-  // allocate modified flags for all receivers
+
+  // initialize HBA settings
+  m_hbasettings().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_HBA_DELAYS);
+  m_hbasettings() = 0; // initialize to 0
 
   // RSU settings
   m_rsusettings().resize(StationSettings::instance()->nrRspBoards());
@@ -187,6 +191,11 @@ SubbandSelection& CacheBuffer::getSubbandSelection()
 RCUSettings& CacheBuffer::getRCUSettings()
 {
   return m_rcusettings;
+}
+
+HBASettings& CacheBuffer::getHBASettings()
+{
+  return m_hbasettings;
 }
 
 RSUSettings& CacheBuffer::getRSUSettings()

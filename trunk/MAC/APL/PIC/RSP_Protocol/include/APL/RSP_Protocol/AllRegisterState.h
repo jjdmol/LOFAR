@@ -69,6 +69,7 @@ namespace LOFAR {
 	  ss_state.resize(nrBlps);
 	  rcusettings_state.resize(nrRcus);
 	  rcuprotocol_state.resize(nrRcus);
+	  hbaprotocol_state.resize(nrRcus);
 	  rsuclear_state.resize(nrRspBoards);
 	  diagwgsettings_state.resize(nrRcus);
 	  sst_state.resize(nrBlps);
@@ -87,6 +88,7 @@ namespace LOFAR {
 	  ss_state.write_force();
 	  rcusettings_state.write_force();
 	  rcuprotocol_state.write_force();
+	  hbaprotocol_state.write_force();
 	  rsuclear_state.write_force();
 	  diagwgsettings_state.write_force();
 	  sst_state.read();
@@ -103,6 +105,7 @@ namespace LOFAR {
 	  ss_state.write_force();
 	  rcusettings_state.check();
 	  rcuprotocol_state.check();
+	  hbaprotocol_state.check();
 	  rsuclear_state.check();
 	  diagwgsettings_state.check();
 	  sst_state.read();
@@ -119,6 +122,7 @@ namespace LOFAR {
 	  ss_state.clear();
 	  rcusettings_state.clear();
 	  rcuprotocol_state.clear();
+	  hbaprotocol_state.clear();
 	  rsuclear_state.clear();
 	  diagwgsettings_state.clear();
 	  sst_state.clear();
@@ -140,6 +144,7 @@ namespace LOFAR {
 	  out << "Subband Selection "; ss_state.print(out);
 	  out << "RCUSettings       "; rcusettings_state.print(out);
 	  out << "RCUProtocol       "; rcuprotocol_state.print(out);
+	  out << "HBAProtocol       "; hbaprotocol_state.print(out);
 	  out << "RSUClear          "; rsuclear_state.print(out);
 	  out << "DIAGWGSettings    "; diagwgsettings_state.print(out);
 	  out << "SubbandStats      "; sst_state.print(out);
@@ -170,13 +175,14 @@ namespace LOFAR {
 	RTC::RegisterState& ss()             { return ss_state; }
 	RTC::RegisterState& rcusettings()    { return rcusettings_state; }
 	RTC::RegisterState& rcuprotocol()    { return rcuprotocol_state; }
+	RTC::RegisterState& hbaprotocol()    { return hbaprotocol_state; }
 	RTC::RegisterState& rsuclear()       { return rsuclear_state; }
 	RTC::RegisterState& diagwgsettings() { return diagwgsettings_state; }
 	RTC::RegisterState& sst()            { return sst_state; }
 	RTC::RegisterState& bst()            { return bst_state; }
 	RTC::RegisterState& xst()            { return xst_state; }
 	RTC::RegisterState& cdo()            { return cdo_state; }
-	RTC::RegisterState& bs()            { return bs_state; }
+	RTC::RegisterState& bs()             { return bs_state; }
 	RTC::RegisterState& tds()            { return tds_state; }
 	/*@}*/
 
@@ -186,6 +192,7 @@ namespace LOFAR {
 	RTC::RegisterState ss_state;             // SS state
 	RTC::RegisterState rcusettings_state;    // RCU settings state
 	RTC::RegisterState rcuprotocol_state;    // RCU protocol state
+	RTC::RegisterState hbaprotocol_state;    // HBA protocol state
 	RTC::RegisterState rsuclear_state;       // RSU clear state
 	RTC::RegisterState diagwgsettings_state; // DIAG WG settings state
 	RTC::RegisterState sst_state;            // SST state
