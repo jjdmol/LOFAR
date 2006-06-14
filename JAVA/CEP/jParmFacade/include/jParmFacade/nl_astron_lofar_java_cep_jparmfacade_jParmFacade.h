@@ -9,14 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     nl_astron_lofar_java_cep_jparmfacade_jParmFacade
- * Method:    initParmFacade
- * Signature: (Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_initParmFacade
-  (JNIEnv *, jobject, jstring);
-
-/*
- * Class:     nl_astron_lofar_java_cep_jparmfacade_jParmFacade
  * Method:    getRange
  * Signature: (Ljava/lang/String;)Ljava/util/Vector;
  */
