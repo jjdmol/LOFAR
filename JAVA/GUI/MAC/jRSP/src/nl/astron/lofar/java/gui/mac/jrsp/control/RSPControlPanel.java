@@ -22,13 +22,13 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.control;
+package nl.astron.lofar.java.gui.mac.jrsp.control;
 
 import javax.swing.JOptionPane;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
-import nl.astron.lofar.mac.apl.gui.jrsp.RSPMask;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.ITabPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.MainPanel;
+import nl.astron.lofar.java.mac.jrsp.RCUMask;
+import nl.astron.lofar.java.mac.jrsp.RSPMask;
+import nl.astron.lofar.java.gui.mac.jrsp.ITabPanel;
+import nl.astron.lofar.java.gui.mac.jrsp.MainPanel;
 
 /**
  *
@@ -120,7 +120,7 @@ public class RSPControlPanel extends javax.swing.JPanel implements ITabPanel {
         btnSync = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         RCUModePanel = new javax.swing.JPanel();
-        itsMaskSelectionPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.MaskSelectionPanel();
+        itsMaskSelectionPanel = new nl.astron.lofar.java.gui.mac.jrsp.MaskSelectionPanel();
         cmbRCUMode = new javax.swing.JComboBox();
         lblRCUMode = new javax.swing.JLabel();
         btnSetFilter = new javax.swing.JButton();
@@ -384,12 +384,12 @@ public class RSPControlPanel extends javax.swing.JPanel implements ITabPanel {
     private javax.swing.JButton btnSetFilter;
     private javax.swing.JButton btnSync;
     private javax.swing.JComboBox cmbRCUMode;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.MaskSelectionPanel itsMaskSelectionPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.MaskSelectionPanel itsMaskSelectionPanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel lblRCUMode;
     // End of variables declaration//GEN-END:variables
-    
+
 }

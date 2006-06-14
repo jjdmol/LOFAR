@@ -22,12 +22,12 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.status;
+package nl.astron.lofar.java.gui.mac.jrsp.status;
 
 import javax.swing.JPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.BoardStatus;
-import nl.astron.lofar.mac.apl.gui.jrsp.RSPMask;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.*;
+import nl.astron.lofar.java.mac.jrsp.BoardStatus;
+import nl.astron.lofar.java.mac.jrsp.RSPMask;
+import nl.astron.lofar.java.gui.mac.jrsp.*;
 import org.apache.log4j.Logger;
 
 /**
@@ -139,23 +139,23 @@ public class StatusPanel extends JPanel implements ITabPanel
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        rspStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RSPStatusPanel();
-        diagStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.DIAGStatusPanel();
-        blp0SyncStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel();
-        blp1SyncStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel();
-        blp2SyncStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel();
-        blp3SyncStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel();
-        blp0RcuStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel();
-        blp1RcuStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel();
-        blp2RcuStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel();
-        blp3RcuStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel();
-        rsuStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RSUStatusPanel();
-        blp0AdoStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel();
-        blp1AdoStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel();
-        blp2AdoStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel();
-        blp3AdoStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel();
-        ethStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ETHStatusPanel();
-        mepStatusPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.status.MEPStatusPanel();
+        rspStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.RSPStatusPanel();
+        diagStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.DIAGStatusPanel();
+        blp0SyncStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel();
+        blp1SyncStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel();
+        blp2SyncStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel();
+        blp3SyncStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel();
+        blp0RcuStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel();
+        blp1RcuStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel();
+        blp2RcuStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel();
+        blp3RcuStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel();
+        rsuStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.RSUStatusPanel();
+        blp0AdoStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel();
+        blp1AdoStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel();
+        blp2AdoStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel();
+        blp3AdoStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel();
+        ethStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.ETHStatusPanel();
+        mepStatusPanel = new nl.astron.lofar.java.gui.mac.jrsp.status.MEPStatusPanel();
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -241,22 +241,22 @@ public class StatusPanel extends JPanel implements ITabPanel
     }// </editor-fold>//GEN-END:initComponents
        
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel blp0AdoStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel blp0RcuStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel blp0SyncStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel blp1AdoStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel blp1RcuStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel blp1SyncStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel blp2AdoStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel blp2RcuStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel blp2SyncStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ADOStatusPanel blp3AdoStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RCUStatusPanel blp3RcuStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.SyncStatusPanel blp3SyncStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.DIAGStatusPanel diagStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.ETHStatusPanel ethStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.MEPStatusPanel mepStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RSPStatusPanel rspStatusPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.status.RSUStatusPanel rsuStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel blp0AdoStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel blp0RcuStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel blp0SyncStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel blp1AdoStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel blp1RcuStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel blp1SyncStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel blp2AdoStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel blp2RcuStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel blp2SyncStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.ADOStatusPanel blp3AdoStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.RCUStatusPanel blp3RcuStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.SyncStatusPanel blp3SyncStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.DIAGStatusPanel diagStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.ETHStatusPanel ethStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.MEPStatusPanel mepStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.RSPStatusPanel rspStatusPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.status.RSUStatusPanel rsuStatusPanel;
     // End of variables declaration//GEN-END:variables
 }

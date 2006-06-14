@@ -22,15 +22,16 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels;
+package nl.astron.lofar.java.gui.mac.jrsp;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.util.HashMap;
 import javax.swing.JPanel;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
-import nl.astron.lofar.mac.apl.gui.jrsp.PlotDataModel;
+import org.apache.log4j.Logger;
 
 /**
  * This class is used to make the Plotter scale. It's actually a hack...
@@ -43,18 +44,29 @@ import nl.astron.lofar.mac.apl.gui.jrsp.PlotDataModel;
  */
 public class PlotContainer extends JPanel {
     
+    /** log4j logger. */
+    private Logger itsLogger;
+    
     /** The plotter */
     private PlotPanel itsPlotPanel;
             
     /** Creates a new instance of PlotContainer */
     public PlotContainer() {
+        itsLogger = Logger.getLogger(PlotContainer.class);
+        itsLogger.info("Constructor");
+        
         setBackground(new Color(255, 255, 255)); // make background white        
         setLayout(new BorderLayout());  
         
         itsPlotPanel = new nl.astron.lofar.java.gui.plotter.PlotPanel();
         
-        try {
-            itsPlotPanel.createPlot(PlotConstants.PLOT_XYLINE, true, new double[0]);
+        // create hashmap to send with the createPlot-method
+        HashMap<String,Object> hm = new HashMap<String,Object>();
+        hm.put("type", PlotDataModel.EMPTY);
+        hm.put("data", new double[0]);
+        
+        try {         
+            itsPlotPanel.createPlot(PlotConstants.PLOT_XYLINE, true, hm);
         } catch (PlotterException ex) {
             ex.printStackTrace();
         }
@@ -71,7 +83,7 @@ public class PlotContainer extends JPanel {
      * calling validate() to make the plot change/show.
      * @param   data    Subband statistics data to be shown in the plot.
      */
-    public void updatePlot(double[] data) {                      
+    public void updatePlot(HashMap<String,Object> data) {                      
         try {
             itsPlotPanel.createPlot(PlotConstants.PLOT_XYLINE, true, data);            
         } catch (PlotterException ex) {

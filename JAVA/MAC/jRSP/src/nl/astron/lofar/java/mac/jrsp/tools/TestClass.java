@@ -1,6 +1,7 @@
-package nl.astron.lofar.mac.apl.gui.jrsp.tools;
-import nl.astron.lofar.mac.apl.gui.jrsp.Board;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
+package nl.astron.lofar.java.mac.jrsp.tools;
+
+import nl.astron.lofar.java.mac.jrsp.Board;
+import nl.astron.lofar.java.mac.jrsp.RCUMask;
 
 public class TestClass 
 {

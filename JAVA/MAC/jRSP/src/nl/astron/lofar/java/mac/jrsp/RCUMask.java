@@ -22,7 +22,7 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp;
+package nl.astron.lofar.java.mac.jrsp;
 
 import java.util.BitSet;
 

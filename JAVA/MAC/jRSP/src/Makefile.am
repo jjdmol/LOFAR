@@ -1,6 +1,6 @@
 lib_LTLIBRARIES         = libjrsp.la
 
-libjrsp_la_SOURCES   = $(DOCHDRS) nl_astron_lofar_mac_apl_gui_jrsp_Board.cc 
+libjrsp_la_SOURCES   = $(DOCHDRS) nl_astron_lofar_java_mac_jrsp_Board.cc 
 
 # AM_YFLAGS               = -d -p KeyParse
 # AM_LFLAGS               = -PKeyTokenize

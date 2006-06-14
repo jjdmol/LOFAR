@@ -22,17 +22,17 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats;
+package nl.astron.lofar.java.gui.mac.jrsp.subbandstats;
 
 import com.sun.org.apache.xerces.internal.parsers.JAXPConfiguration;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
-import nl.astron.lofar.mac.apl.gui.jrsp.WGRegisterType;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.ITabPanel;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.MainPanel;
+import nl.astron.lofar.java.mac.jrsp.RCUMask;
+import nl.astron.lofar.java.mac.jrsp.WGRegisterType;
+import nl.astron.lofar.java.gui.mac.jrsp.ITabPanel;
+import nl.astron.lofar.java.gui.mac.jrsp.MainPanel;
 import org.apache.log4j.Logger;
 
 public class SubbandStatsPanel extends JPanel implements ITabPanel 
@@ -188,9 +188,9 @@ public class SubbandStatsPanel extends JPanel implements ITabPanel
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        plotRight = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPlotPanel();
-        plotLeft = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPlotPanel();
-        settingsPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsPanel();
+        plotRight = new nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPlotPanel();
+        plotLeft = new nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPlotPanel();
+        settingsPanel = new nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsPanel();
 
         plotRight.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -360,8 +360,8 @@ itsLogger.debug("inputPanelActionPerformed");
     }    
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPlotPanel plotLeft;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.SubbandStatsPlotPanel plotRight;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.WaveformSettingsPanel settingsPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPlotPanel plotLeft;
+    private nl.astron.lofar.java.gui.mac.jrsp.subbandstats.SubbandStatsPlotPanel plotRight;
+    private nl.astron.lofar.java.gui.mac.jrsp.subbandstats.WaveformSettingsPanel settingsPanel;
     // End of variables declaration//GEN-END:variables
 }

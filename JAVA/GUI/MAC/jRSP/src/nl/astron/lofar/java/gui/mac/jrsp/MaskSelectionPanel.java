@@ -22,12 +22,12 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels;
+package nl.astron.lofar.java.gui.mac.jrsp;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.event.EventListenerList;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
+import nl.astron.lofar.java.mac.jrsp.RCUMask;
 
 /**
  *

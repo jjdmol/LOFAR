@@ -22,10 +22,10 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.status;
+package nl.astron.lofar.java.gui.mac.jrsp.status;
 
 import javax.swing.border.TitledBorder;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUStatus;
+import nl.astron.lofar.java.mac.jrsp.RCUStatus;
 
 /**
  * A panel that displays the RCU status data. This panel is used by the

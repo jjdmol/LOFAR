@@ -22,7 +22,7 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp;
+package nl.astron.lofar.java.mac.jrsp;
 
 /**
  * This class keeps hold of the Board Status information. All member variables are public so there is no

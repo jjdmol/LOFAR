@@ -22,16 +22,18 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats;
+package nl.astron.lofar.java.gui.mac.jrsp.subbandstats;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import javax.swing.JPanel;
 import javax.swing.event.EventListenerList;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
-import nl.astron.lofar.mac.apl.gui.jrsp.RCUMask;
-import nl.astron.lofar.mac.apl.gui.jrsp.panels.MaskSelectionPanel;
+import nl.astron.lofar.java.mac.jrsp.RCUMask;
+import nl.astron.lofar.java.gui.mac.jrsp.MaskSelectionPanel;
+import nl.astron.lofar.java.gui.mac.jrsp.PlotDataModel;
 import org.apache.log4j.Logger;
 
 public class SubbandStatsPlotPanel extends JPanel
@@ -51,6 +53,7 @@ public class SubbandStatsPlotPanel extends JPanel
     public SubbandStatsPlotPanel()
     {
         itsLogger = Logger.getLogger(SubbandStatsPlotPanel.class);
+        itsLogger.info("Constructor");
         itsListenerList = new EventListenerList();
         
         initComponents();
@@ -63,7 +66,12 @@ public class SubbandStatsPlotPanel extends JPanel
      */
     public void updatePlot(double[] ssData)
     {
-        itsPlotContainer.updatePlot(ssData);
+        // create a hashmap to store the type of the graph and the data
+        HashMap<String,Object> hm = new HashMap<String,Object>();
+        hm.put("type",PlotDataModel.SUBBAND_STATS);
+        hm.put("data", ssData);
+        
+        itsPlotContainer.updatePlot(hm);
     }
     
     /**
@@ -187,8 +195,8 @@ public class SubbandStatsPlotPanel extends JPanel
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         cmbBoard = new javax.swing.JComboBox();
-        itsMaskSelectionPanel = new nl.astron.lofar.mac.apl.gui.jrsp.panels.MaskSelectionPanel();
-        itsPlotContainer = new nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.PlotContainer();
+        itsMaskSelectionPanel = new nl.astron.lofar.java.gui.mac.jrsp.MaskSelectionPanel();
+        itsPlotContainer = new nl.astron.lofar.java.gui.mac.jrsp.PlotContainer();
 
         setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createTitledBorder("Subband Statistics Plot")));
         cmbBoard.addActionListener(new java.awt.event.ActionListener() {
@@ -240,7 +248,7 @@ public class SubbandStatsPlotPanel extends JPanel
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox cmbBoard;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.MaskSelectionPanel itsMaskSelectionPanel;
-    private nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats.PlotContainer itsPlotContainer;
+    private nl.astron.lofar.java.gui.mac.jrsp.MaskSelectionPanel itsMaskSelectionPanel;
+    private nl.astron.lofar.java.gui.mac.jrsp.PlotContainer itsPlotContainer;
     // End of variables declaration//GEN-END:variables
 }

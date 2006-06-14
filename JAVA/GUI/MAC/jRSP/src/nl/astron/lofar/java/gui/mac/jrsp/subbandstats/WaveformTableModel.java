@@ -22,12 +22,12 @@
  * $Id$
  */
 
-package nl.astron.lofar.mac.apl.gui.jrsp.panels.subbandstats;
+package nl.astron.lofar.java.gui.mac.jrsp.subbandstats;
 
 import java.util.ArrayList;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
-import nl.astron.lofar.mac.apl.gui.jrsp.WGRegisterType;
+import nl.astron.lofar.java.mac.jrsp.WGRegisterType;
 
 /**
  *
