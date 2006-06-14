@@ -145,7 +145,7 @@ void showHelp()
   cerr << "   constants=[]          (possible constant funklet parameters)" << endl;
   cerr << "   offset=[]             (offset for each values dimension)" << endl;
   cerr << "   scale=[]              (scale for each values dimension)" << endl;
-  cerr << "   expr=''               (a functional or parm expression)" << endl;
+  cerr << "   expr=''               (for type functional or parmexpr)" << endl;
   cerr << endl;
 }
 
@@ -496,8 +496,10 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
   ParmValueRep& pval = pvalue.rep();
   // Set funklet type with possible constants.
   pval.setType (kvmap.getString("type", "polc"), getArray(kvmap, "constants"));
-  if (pval.itsType == "parmexpr"  ||  pval.itsType == "functional") {
-    pval.itsExpr = kvmap.getString("parmexpr", string());
+  ASSERTSTR (pval.itsType != "parmexpr",
+	     "type parmexpr only possible with adddef");  
+  if (pval.itsType == "functional") {
+    pval.itsExpr = kvmap.getString("expr", string());
     ASSERTSTR (!pval.itsExpr.empty(),
 	       "expr has to be given for parm " << parmName);
   }
@@ -539,7 +541,7 @@ void newDefParm (const std::string& parmName, KeyValueMap& kvmap)
   // Set funklet type with possible constants.
   pval.setType (kvmap.getString("type", "polc"), getArray(kvmap, "constants"));
   if (pval.itsType == "parmexpr"  ||  pval.itsType == "functional") {
-    pval.itsExpr = kvmap.getString("parmexpr", string());
+    pval.itsExpr = kvmap.getString("expr", string());
     ASSERTSTR (!pval.itsExpr.empty(),
 	       "expr has to be given for parm " << parmName);
   }
