@@ -5,44 +5,38 @@ SUFFIXES = .ph
 
 lib_LTLIBRARIES = libaplcommon.la
 
-libaplcommon_la_CPPFLAGS = \
-	-DBOOST_DISABLE_THREADS \
-	-Wno-deprecated \
-	-fmessage-length=0 \
-	-fdiagnostics-show-location=once
-#  -DUSE_PVSSPORT
+libaplcommon_la_CPPFLAGS =  -DBOOST_DISABLE_THREADS \
+							-Wno-deprecated \
+							-fmessage-length=0 \
+							-fdiagnostics-show-location=once
 
-libaplcommon_la_SOURCES = \
-	$(DOCHDRS) \
-	APLUtilities.cc \
-	ControllerDefines.cc \
-	PropertySetAnswer.cc \
-	StartDaemon_Protocol.cc \
-	Controller_Protocol.cc
+libaplcommon_la_SOURCES =   $(DOCHDRS) \
+							StartDaemon_Protocol.cc \
+							Controller_Protocol.cc \
+							APLUtilities.cc \
+							ControllerDefines.cc \
+							PropertySetAnswer.cc \
+							CTState.cc \
+							ChildControl.cc \
+							ParentControl.cc
 
-#	LogicalDevice.cc 
-#	ResourceAllocator.cc 
-#	LogicalDevice_Protocol.cc 
 
-NOINSTHDRS =
+NOINSTHDRS 				=
 
-INSTHDRS = 
+INSTHDRS 				= 
 
-pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
+pkginclude_HEADERS 		= $(NOINSTHDRS) $(INSTHDRS)
 
-DOCHDRS = $(pkginclude_HEADERS) $(BUILT_SOURCES)
+DOCHDRS 				= $(pkginclude_HEADERS) $(BUILT_SOURCES)
 
-BUILT_SOURCES = \
-	$(ph_HEADERS)
+BUILT_SOURCES 			= $(ph_HEADERS)
 
-EXTRA_DIST = 
+EXTRA_DIST 				= 
 
-phdir=$(includedir)/APL/APLCommon
-ph_HEADERS = \
-	StartDaemon_Protocol.ph \
-	Controller_Protocol.ph
+phdir					=$(includedir)/APL/APLCommon
 
-#	LogicalDevice_Protocol.ph
+ph_HEADERS 				= StartDaemon_Protocol.ph \
+						  Controller_Protocol.ph
 
 clean-local:
 	rm -f *.ph

@@ -7,7 +7,10 @@ pkginclude_HEADERS = \
 	APLUtilities.h \
 	ControllerDefines.h \
 	PropertySetAnswer.h \
-	PropertySetAnswerHandlerInterface.h 
+	PropertySetAnswerHandlerInterface.h  \
+	CTState.h \
+	ChildControl.h \
+	ParentControl.h
 
 #	LogicalDeviceFactoryBase.h 
 #	LogicalDeviceFactory.h 
