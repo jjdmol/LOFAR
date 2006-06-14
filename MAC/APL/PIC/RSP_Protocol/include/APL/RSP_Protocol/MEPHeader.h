@@ -226,6 +226,8 @@ namespace LOFAR {
       static const uint16 N_PHASE          = 2;                    // number of phases in a complex number
       static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      // number of phase polarizations
       static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
+
+      static const uint16 N_HBA_DELAYS     = 16; // number of High Band antenna delay elements
  
       //
       // Registers too large to send in a single ethernet frame

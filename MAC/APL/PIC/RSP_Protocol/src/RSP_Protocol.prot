@@ -18,6 +18,7 @@ include = '<APL/RTCCommon/Timestamp.h>';
 include = '<APL/RSP_Protocol/BeamletWeights.h>';
 include = '<APL/RSP_Protocol/SubbandSelection.h>';
 include = '<APL/RSP_Protocol/RCUSettings.h>';
+include = '<APL/RSP_Protocol/HBASettings.h>';
 include = '<APL/RSP_Protocol/RSUSettings.h>';
 include = '<APL/RSP_Protocol/WGSettings.h>';
 include = '<APL/RSP_Protocol/SystemStatus.h>';
@@ -1239,3 +1240,163 @@ event = {
     type = "uint32";
   };
 };
+
+//
+// HBA Control
+//
+event = {
+  signal = SETHBA;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "HBASettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETHBA;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "HBASettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBHBA;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UPDHBA;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+  param = {
+    name = "settings";
+    type = "HBASettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBHBA;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+

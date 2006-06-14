@@ -198,9 +198,9 @@ prelude = << PRELUDE_END
   typedef struct RCUHandler
   {
     uint8 input_delay_x:7; // input delay for X-receiver
-    uint8 ffi0         :1;
+    uint8 enable_x     :1; // enable X-receiver data output
     uint8 input_delay_y:7; // input delay for Y-receiver
-    uint8 ffi1         :1;
+    uint8 enable_y     :1; // enable Y-receiver data output
   };
 
   typedef struct CRControl
