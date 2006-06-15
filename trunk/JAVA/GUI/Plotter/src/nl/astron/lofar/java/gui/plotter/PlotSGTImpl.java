@@ -105,6 +105,7 @@ public class PlotSGTImpl implements IPlot{
      */
     public void finalize() throws Throwable {
         data = null;
+        aLayout.clear();
         aLayout.getFirstLayer().removeAllChildren();
         aLayout.removeAll();
         aLayout = null;
