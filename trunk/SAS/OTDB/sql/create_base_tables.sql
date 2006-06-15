@@ -76,7 +76,7 @@ INSERT INTO constr_type VALUES (3, 'exec');
 --
 CREATE TABLE param_type (
 	ID			INT2			NOT NULL,
-	name		VARCHAR(4)		NOT NULL,
+	name		VARCHAR(5)		NOT NULL,
 
 	CONSTRAINT param_type_uniq		UNIQUE (ID),
 	CONSTRAINT param_name_uniq		UNIQUE (name)
@@ -97,6 +97,20 @@ INSERT INTO param_type VALUES (112, 'text');
 INSERT INTO param_type VALUES (113, 'bin');
 INSERT INTO param_type VALUES (114, 'time');
 INSERT INTO param_type VALUES (115, 'date');
+INSERT INTO param_type VALUES (201, 'vbool');
+INSERT INTO param_type VALUES (202, 'vint');
+INSERT INTO param_type VALUES (203, 'vuint');
+INSERT INTO param_type VALUES (204, 'vlong');
+INSERT INTO param_type VALUES (205, 'vulng');
+INSERT INTO param_type VALUES (206, 'vflt');
+INSERT INTO param_type VALUES (207, 'vdbl');
+INSERT INTO param_type VALUES (208, 'vicpx');
+INSERT INTO param_type VALUES (209, 'vlcpx');
+INSERT INTO param_type VALUES (210, 'vfcpx');
+INSERT INTO param_type VALUES (211, 'vdcpx');
+INSERT INTO param_type VALUES (212, 'vtext');
+INSERT INTO param_type VALUES (214, 'vtime');
+INSERT INTO param_type VALUES (215, 'vdate');
 
 --
 -- PVSS type
@@ -106,13 +120,16 @@ INSERT INTO param_type VALUES (115, 'date');
 --
 CREATE TABLE pvss_type (
 	ID			INT2			NOT NULL,
-	name		VARCHAR(4)		NOT NULL REFERENCES param_type(name),
+	name		VARCHAR(5)		NOT NULL REFERENCES param_type(name),
 
 	CONSTRAINT pvss_type_uniq		UNIQUE (ID)
 ) WITHOUT OIDS;
 -- PVSS values
-INSERT INTO pvss_type VALUES ( 6, 'flt');
-INSERT INTO pvss_type VALUES (20, 'uint');
+INSERT INTO pvss_type VALUES ( 4, 'vuint');
+INSERT INTO pvss_type VALUES ( 5, 'vint');
+INSERT INTO pvss_type VALUES ( 6, 'vflt');
+INSERT INTO pvss_type VALUES ( 9, 'vtext');
+INSERT INTO pvss_type VALUES (20, 'int');
 INSERT INTO pvss_type VALUES (21, 'int');
 INSERT INTO pvss_type VALUES (22, 'flt');
 INSERT INTO pvss_type VALUES (23, 'bool');
