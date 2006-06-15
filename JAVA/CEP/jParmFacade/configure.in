@@ -54,7 +54,7 @@ dnl lofar_BLITZ
 dnl lofar_MPI
 lofar_GENERAL
 lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h,,)
-lofar_INTERNAL(CEP/BB/BBS3,BBS3,,1,BBS3/MNS/MeqFunklet.h,,)
+lofar_INTERNAL(CEP/BB/BBS,BBS,,1,BBS/MNS/MeqParmFunklet.h)
 lofar_INTERNAL(CEP/BB/ParmFacade,ParmFacade,,1,ParmFacade/ParmFacade.h,,)
 lofar_INTERNAL(CEP/BB/MS,MS,,1,MS/MSDesc.h,bbms)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h)
