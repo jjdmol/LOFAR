@@ -268,11 +268,12 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
      * This inner class provides the plotter with the functionality of moving slots etc
      *
      */
+    
     class SlotMouseAdapter extends PlotSlotListener{
         
         private boolean externalLegendActive = false;
         private boolean externalViewerActive = false;
-        
+        @SuppressWarnings("unchecked")
         public void slotContextMenuTriggered(PlotSlot aSlot, MouseEvent e){
             Object source = e.getSource();
             if(aSlot instanceof PlotSlot){
