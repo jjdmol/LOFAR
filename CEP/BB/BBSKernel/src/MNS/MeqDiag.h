@@ -38,6 +38,7 @@ namespace LOFAR {
 
 //# Forward Declarations
 class MeqExpr;
+class MeqJonesResult;
 
 // This class is a diagonal node in a Jones matrix expression.
 
@@ -45,8 +46,7 @@ class MeqDiag: public MeqJonesExprRep
 {
 public:
   // Construct from the various subexpressions.
-  MeqDiag (const MeqExpr& xx,
-	   const MeqExpr& yy);
+  MeqDiag (const MeqExpr& xx, const MeqExpr& yy);
 
   virtual ~MeqDiag();
 

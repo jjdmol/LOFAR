@@ -1,4 +1,4 @@
-//# MeqJonesDiag.cc: A diagonal node in a Jones matrix expression.
+//# MeqDiag.cc: A diagonal node in a Jones matrix expression.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,32 +21,32 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
+//#include <Common/Profiling/PerfProfile.h>
 
-#include <BBS/MNS/MeqJonesDiag.h>
+#include <BBS/MNS/MeqDiag.h>
 #include <BBS/MNS/MeqExpr.h>
 
 namespace LOFAR {
 
-MeqJonesDiag::MeqJonesDiag (const MeqExpr& elem11, const MeqExpr& elem22)
-: itsExpr11 (elem11),
-  itsExpr22 (elem22)
+MeqDiag::MeqDiag(const MeqExpr& xx, const MeqExpr& yy)
+: itsXX(xx),
+  itsYY(yy)
 {
-  addChild (itsExpr11);
-  addChild (itsExpr22);
+  addChild(itsXX);
+  addChild(itsYY);
 }
 
-MeqJonesDiag::~MeqJonesDiag()
+MeqDiag::~MeqDiag()
 {}
 
-MeqJonesResult MeqJonesDiag::getJResult (const MeqRequest& request)
+MeqJonesResult MeqDiag::getJResult(const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
+//  PERFPROFILE(__PRETTY_FUNCTION__);
 
   MeqJonesResult res(0);
   {
-    itsExpr11.getResultSynced (request, res.result11());
-    itsExpr22.getResultSynced (request, res.result22());
+    itsXX.getResultSynced(request, res.result11());
+    itsYY.getResultSynced(request, res.result22());
   }
   return res;
 }

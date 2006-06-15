@@ -74,6 +74,7 @@ BBSTestLogger.cc					\
 MNS/MeqBaseDFTPS.cc \
 MNS/MeqBaseLinPS.cc \
 MNS/MeqDFTPS.cc \
+MNS/MeqDiag.cc \
 MNS/MeqDomain.cc \
 MNS/MeqExpr.cc \
 MNS/MeqFunklet.cc \
