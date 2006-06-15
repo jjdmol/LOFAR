@@ -72,6 +72,7 @@ dnl
 AC_OUTPUT(
 src/Makefile
 src/MACScheduler/Makefile
+src/ObservationControl/Makefile
 Makefile
 MainCU.spec
 )
