@@ -74,11 +74,13 @@ RSPDriver.MAC_ADDR_23=00:00:00:00:00:17
 # Data output payload size.
 # Should eventually be computed dynamically
 # based on settings.
-# c_frame_size  = g_hdr_sz + nof_blocks * (c_block_size + c_epa_hdr_size)
-#               = 16 + 1*(2*2*54 + 8) = 240 words (16 bit)
-# OUTPUT_PAYLOAD_SIZE = (240 - 16)*2 = 448 octets
+# c_frame_size  = g_hdr_sz + c_epa_hdr_size + nof_blocks * (c_block_size)
+#               =    16    +      8         +      16    * (   2*2*54   ) = 3480 words (16 bit)
+# OUTPUT_PAYLOAD_SIZE = (3480 - 16) * 2 = 6928 octets
 #
-RSPDriver.OUTPUT_PAYLOAD_SIZE=448
+# Ethernet frame size: 3480*2 + 14 = 6974
+#
+RSPDriver.OUTPUT_PAYLOAD_SIZE=6928
 
 #
 # Destination IP and MAC address for data packets
