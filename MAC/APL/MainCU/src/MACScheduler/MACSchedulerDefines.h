@@ -32,7 +32,7 @@ namespace LOFAR {
 #define MS_PROPSET_TYPE				"MacScheduler"
 #define MS_OTDB_CONNECTED			"OTDB.connected"
 #define MS_OTDB_LASTPOLL			"OTDB.lastPoll"
-#define MS_OTDB_POLL_ITV			"OTDB.pollInterval"
+#define MS_OTDB_POLL_ITV			"OTDB.pollinterval"
 
 #define PVSSNAME_MS_QUEUEPERIOD		"QueuePeriod"
 #define PVSSNAME_MS_CLAIMPERIOD		"ClaimPeriod"

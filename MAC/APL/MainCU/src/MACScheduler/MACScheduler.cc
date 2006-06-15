@@ -26,9 +26,11 @@
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/GCF_PVTypes.h>
+#include <GCF/Protocols/PA_Protocol.ph>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APL_Defines.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 
@@ -55,7 +57,7 @@ MACScheduler::MACScheduler() :
 	itsPropertySetAnswer(*this),
 	itsPropertySet		(),
 //	itsObsCntlrMap		(),
-	itsDummyPort		(0),
+	itsTimerPort		(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
 	itsSecondTimer		(0),
@@ -78,6 +80,12 @@ MACScheduler::MACScheduler() :
 									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
 	itsChildPort->open();		// will result in F_CONNECTED
+
+	// need port for timers
+	itsTimerPort = new GCFTimerPort(*this, "Timerport");
+
+	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
+	registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 }
 
 
@@ -90,7 +98,8 @@ MACScheduler::~MACScheduler()
 
 	if (itsPropertySet) {
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
-		itsPropertySet->disable();
+		// Note: disable is not neccesary because this is always done in destructor
+		//		 of propertyset.
 	}
 
 	if (itsOTDBconnection) {
@@ -104,6 +113,9 @@ MACScheduler::~MACScheduler()
 //
 void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 {
+
+	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
+
 	switch(answer.signal) {
 	case F_MYPS_ENABLED: {
 		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
@@ -111,6 +123,8 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
 										getName().c_str(), pPropAnswer->pScope));
 		}
+		// always let timer expire so main task will continue.
+		itsTimerPort->setTimer(0.0);
 		break;
 	}
 
@@ -166,7 +180,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 //
 GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("MACScheduler::initial_state:" << evtstr(event));
+	LOG_DEBUG_STR ("initial_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -182,7 +196,11 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 																  PS_CAT_PERM_AUTOLOAD,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
+		// Wait for timer that is set in PropertySetAnswer on ENABLED event.
+		}
+		break;
 	  
+	case F_TIMER: {		// must be timer that PropSet is enabled.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString  ("initial"));
@@ -212,8 +230,6 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		itsChildControl->openService(MAC_SVCMASK_SCHEDULERCTRL, 0);
 		itsChildControl->registerCompletionPort(itsChildPort);
 
-		// need port for timers(!)
-		itsDummyPort = new GCFTimerPort(*this, "MACScheduler:dummy4timers");
 		TRAN(MACScheduler::recover_state);				// go to next state.
 		}
 		break;
@@ -224,9 +240,6 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 	case F_DISCONNECTED:
 		break;
 	
-	case F_TIMER:
-		break;
-  
 	default:
 		LOG_DEBUG ("MACScheduler::initial, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -244,8 +257,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("MACScheduler::recover_state:" << evtstr(event)
-												  << "@" << port.getName());
+	LOG_DEBUG_STR ("recover_state:" << evtstr(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -267,7 +279,7 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 	}
   
 	default:
-		LOG_DEBUG("MACScheduler::recover_state, default");
+		LOG_DEBUG("recover_state, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -282,8 +294,7 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("MACScheduler::active:" << evtstr(event)
-										   << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -297,7 +308,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		// Timers must be connected to ports, so abuse serverPort for second timer.
-		itsSecondTimer = itsDummyPort->setTimer(1L);
+		itsSecondTimer = itsTimerPort->setTimer(1L);
 		break;
 	}
 
@@ -345,7 +356,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 		else {
 			LOG_ERROR_STR("Observation controller " << msg.cntlrName <<
-						" could n ot be started");
+						" could not be started");
 		}
 		// TODO: do something usefull with this information!
 		break;
@@ -405,13 +416,14 @@ void MACScheduler::_doOTDBcheck()
 		}
 
 		// get current state of Observation
-		string		cntlrName = formatString("Observation_%d", newTreeList[idx].treeID());
-		LDState::LDstateNr	observationState = itsChildControl->getRequestedState(cntlrName);
+		string		cntlrName = controllerName(CNTLRTYPE_OBSERVATIONCTRL, 
+												0, newTreeList[idx].treeID());
+		CTState::CTstateNr	observationState = itsChildControl->getRequestedState(cntlrName);
 
 		// remember: timediff <= queueperiod
 		if (timediff > seconds(itsClaimPeriod)) {
 			// Observation is somewhere in the queueperiod
-			if (observationState != LDState::CONNECTED) {	// requested a start before?
+			if (observationState != CTState::CONNECTED) {	// requested a start before?
 				// no, let database construct the parset for the whole observation
 				OTDB::TreeMaintenance	tm(itsOTDBconnection);
 				OTDB::treeIDType		treeID = newTreeList[idx].treeID();
@@ -437,7 +449,7 @@ void MACScheduler::_doOTDBcheck()
 
 		if (timediff > seconds(0)) {
 			// Observation is somewhere in the claim period
-			if (observationState != LDState::CLAIMED) {
+			if (observationState != CTState::CLAIMED) {
 //				_claimObservation(&newTreeList[idx]);
 				idx++;
 				continue;
@@ -445,7 +457,7 @@ void MACScheduler::_doOTDBcheck()
 		}
 
 		// observation must be running (otherwise it would not be in the newTreeList)
-		if (observationState != LDState::ACTIVE) {
+		if (observationState != CTState::ACTIVE) {
 //			_executeObservation(&newTreeList[idx]);
 		}
 	

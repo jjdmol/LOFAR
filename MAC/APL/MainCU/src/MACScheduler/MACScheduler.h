@@ -35,10 +35,12 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
-#include "APL/APLCommon/PropertySetAnswerHandlerInterface.h"
-#include "APL/APLCommon/PropertySetAnswer.h"
-#include "APL/APLCommon/APLCommonExceptions.h"
-#include "APL/APLCommon/Controller_Protocol.ph"
+#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
+#include <APL/APLCommon/PropertySetAnswer.h>
+#include <APL/APLCommon/APLCommonExceptions.h>
+#include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/ChildControl.h>
+#include <APL/APLCommon/CTState.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -50,8 +52,6 @@
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBnode.h>
 #include <APS/ParameterSet.h>
-#include "ChildControl.h"
-#include "LDState.h"
 
 // forward declaration
 
@@ -119,7 +119,7 @@ private:
 #endif
 
 	// Ports for StartDaemon and ObservationControllers.
-   	GCFTimerPort*			itsDummyPort;			// for timers
+   	GCFTimerPort*			itsTimerPort;			// for timers
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;
