@@ -64,6 +64,9 @@ namespace LOFAR {
 
 
 
+// Define names for GCF test applications
+#define MAC_SVCMASK_GCFTEST_ST3SERVER            "ST3%s:server"
+#define MAC_SVCMASK_GCFTEST_ST3PROVIDER          "ST3%s:provider"
 
 
 
