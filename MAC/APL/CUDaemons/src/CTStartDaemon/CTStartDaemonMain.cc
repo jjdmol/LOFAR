@@ -1,4 +1,4 @@
-//#  LDStartDaemon.cc: Main entry for the LogicalDevice startdaemon
+//#  CTStartDaemon.cc: Main entry for the LogicalDevice startdaemon
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <signal.h>
 
-#include "LDStartDaemon.h"
+#include "CTStartDaemon.h"
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::Common;
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
 	GCFTask::init(argc, argv);
   
-	CUDaemons::LDStartDaemon sd(string("StartDaemon"));		// give myself a name
+	CUDaemons::CTStartDaemon sd(string("StartDaemon"));		// give myself a name
 
 	sd.start(); // make initial transition
 

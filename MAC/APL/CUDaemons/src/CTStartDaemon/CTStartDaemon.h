@@ -1,4 +1,4 @@
-//#  LDStartDaemon.h: Server class that creates Logical Devices upon request.
+//#  CTStartDaemon.h: Server class that creates Logical Devices upon request.
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef CUDAEMONS_LDSTARTDAEMON_H
-#define CUDAEMONS_LDSTARTDAEMON_H
+#ifndef CUDAEMONS_CTSTARTDAEMON_H
+#define CUDAEMONS_CTSTARTDAEMON_H
 
 //# Includes
 #include <Common/lofar_map.h>
@@ -31,7 +31,6 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Event.h>
 #include <APL/APLCommon/APL_Defines.h>
-#include "LogicalDeviceStarter.h"
 
 
 namespace LOFAR {
@@ -39,11 +38,11 @@ namespace LOFAR {
   using namespace APLCommon;
   namespace CUDaemons {
 
-class LDStartDaemon : public GCFTask
+class CTStartDaemon : public GCFTask
 {
 public:
-	explicit LDStartDaemon(const string& name); 
-	virtual ~LDStartDaemon();
+	explicit CTStartDaemon(const string& name); 
+	virtual ~CTStartDaemon();
 
 private:
 	// The state machines of the StartDaemon
@@ -51,13 +50,13 @@ private:
 	GCFEvent::TResult operational_state (GCFEvent& e, GCFPortInterface& p);
 
 	// protected copy constructor
-	LDStartDaemon(const LDStartDaemon&);
-	LDStartDaemon& operator=(const LDStartDaemon&);
+	CTStartDaemon(const CTStartDaemon&);
+	CTStartDaemon& operator=(const CTStartDaemon&);
 
 	// define a structure for delaying/retrying requests.
 	typedef struct action {
 		string				cntlrName;
-		string				cntlrType;
+		uint16				cntlrType;
 		string				parentHost;
 		string				parentService;
 		GCFPortInterface*	parentPort;
@@ -77,8 +76,13 @@ private:
 	void sendCreatedMsg  (actionIter	action, int32	result);
 	void sendNewParentAndCreatedMsg(actionIter	action);
 	void handleClientDisconnect(GCFPortInterface&	port);
+	int32 startController(uint16			cntlrType,
+						  const string&		cntlrName,
+						  const string&		parentHost,
+						  const string&		parentService);
 
 	// define structure to register controller announcements.
+	//		sharedname, port
 	typedef map<string, GCFPortInterface*>	controllerMap;
 	typedef controllerMap::iterator			CTiter;
 	typedef controllerMap::const_iterator	const_CTiter;
@@ -94,8 +98,6 @@ private:
 	uint32						itsListenRetryTimer;// retry itv for listener
 
 	vector<GCFPortInterface*>	itsClients;			// the command ports
-
-	LogicalDeviceStarter*		itsStarter;			// the starter object
 
 	GCFTimerPort*				itsTimerPort;		// for internal timers
 };
