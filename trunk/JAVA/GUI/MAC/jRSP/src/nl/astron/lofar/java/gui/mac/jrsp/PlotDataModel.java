@@ -102,7 +102,7 @@ public class PlotDataModel implements IPlotDataAccess {
         String yAxisTitle = "";
         returnData.put(PlotConstants.DATASET_YAXISLABEL,yAxisTitle);
         
-        String yAxisUnits = "Db";
+        String yAxisUnits = "dB";
         returnData.put(PlotConstants.DATASET_YAXISUNIT,yAxisUnits);
         
         LinkedList<HashMap> values = new LinkedList<HashMap>();
@@ -144,15 +144,15 @@ public class PlotDataModel implements IPlotDataAccess {
         String plotSubTitle = "";
         returnData.put(PlotConstants.DATASET_SUBNAME,plotSubTitle);
         
-        String xAxisTitle = "Frequency";
+        String xAxisTitle = "Beamlets";
         returnData.put(PlotConstants.DATASET_XAXISLABEL,xAxisTitle);
-        String xAxisUnits = "MHz";
+        String xAxisUnits = "";
         returnData.put(PlotConstants.DATASET_XAXISUNIT,xAxisUnits);
         
         String yAxisTitle = "";
         returnData.put(PlotConstants.DATASET_YAXISLABEL,yAxisTitle);
         
-        String yAxisUnits = "Db";
+        String yAxisUnits = "dB";
         returnData.put(PlotConstants.DATASET_YAXISUNIT,yAxisUnits);
         
         LinkedList<HashMap> values = new LinkedList<HashMap>();
