@@ -1647,7 +1647,8 @@ void RSPDriver::rsp_gethba(GCFEvent& event, GCFPortInterface& port)
     RSPGethbaackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
-    ack.settings().resize(1);
+    ack.settings().resize(1, 1); // create something to pack
+    ack.settings() = 0;
     port.send(ack);
     return;
   }
