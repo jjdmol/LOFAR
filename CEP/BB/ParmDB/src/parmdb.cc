@@ -194,6 +194,8 @@ PTCommand getCommand (char*& str)
     cmd = TOOLD;
   } else if (sc == "open") {
     cmd = OPEN;
+  } else if (sc == "close") {
+    cmd = CLOSE;
   } else if (sc == "clear") {
     cmd = CLEAR;
   } else if (sc == "create") {
