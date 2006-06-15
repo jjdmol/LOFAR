@@ -1,0 +1,18 @@
+# ascii dump of database
+
+# DpType
+#TypeName
+#LOFAR.LOFAR	1#1
+#	state	25#2
+
+TypeName
+ObsSW.ObsSW	1#1
+	state	25#2
+
+TypeName
+ObsCtrl.ObsCtrl	1#1
+	state	25#2
+	error	25#3
+	observationState	25#4
+	
+	
