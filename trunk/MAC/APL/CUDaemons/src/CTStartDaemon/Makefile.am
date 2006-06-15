@@ -1,21 +1,19 @@
 # Executables
-bin_PROGRAMS 				= LDStartDaemon
+bin_PROGRAMS 				= CTStartDaemon
 
-LDStartDaemon_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
+CTStartDaemon_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -Wno-deprecated \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-LDStartDaemon_SOURCES		= LogicalDeviceStarter.cc \
-							  LDStartDaemon.cc \
-							  LDStartDaemonMain.cc
-LDStartDaemon_LDADD			= $(LOFAR_DEPEND) 
-LDStartDaemon_DEPENDENCIES	= $(LOFAR_DEPEND)
+CTStartDaemon_SOURCES		= CTStartDaemon.cc \
+							  CTStartDaemonMain.cc
+CTStartDaemon_LDADD			= $(LOFAR_DEPEND) 
+CTStartDaemon_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 bin_SCRIPTS					= startController.sh
 
-NOINSTHDRS 					= LDStartDaemon.h \
-							  LogicalDeviceStarter.h
+NOINSTHDRS 					= CTStartDaemon.h
 
 INSTHDRS 					= 
 
@@ -31,8 +29,8 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 configfilesdir=$(bindir)
 configfiles_DATA 	= 
 
-sysconf_DATA		= LDStartDaemon.conf \
-					  LDStartDaemon.log_prop 
+sysconf_DATA		= CTStartDaemon.conf \
+					  CTStartDaemon.log_prop 
 
 %.log_prop: %.log_prop.in
 	cp $< $@

@@ -1,4 +1,4 @@
-//#  LDStartDaemon.cc: Program that can start others on command.
+//#  CTStartDaemon.cc: Program that can start others on command.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,44 +21,39 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include "LogicalDeviceStarter.h"
-#include "LDStartDaemon.h"
+#include "CTStartDaemon.h"
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::ACC::APS;
 
 namespace LOFAR {
   namespace CUDaemons {
 
 //
-// LDStartDaemon(taskname)
+// CTStartDaemon(taskname)
 //
-LDStartDaemon::LDStartDaemon(const string& name) :
-	GCFTask    			((State)&LDStartDaemon::initial_state, name),
+CTStartDaemon::CTStartDaemon(const string& name) :
+	GCFTask    			((State)&CTStartDaemon::initial_state, name),
 	itsActionList		(),
 	itsActiveCntlrs		(),
 	itsListener			(0),
 	itsListenRetryTimer	(0),
 	itsClients			(),
-	itsStarter 			(0),
 	itsTimerPort		(0)
 {
-	LOG_TRACE_FLOW(formatString("LDStartDaemon(%s)", getName().c_str()));
+	LOG_TRACE_FLOW(formatString("CTStartDaemon(%s)", getName().c_str()));
 
 	itsListener = new GCFTCPPort(*this, MAC_SVCMASK_STARTDAEMON, 
 								 GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL);
 	ASSERTSTR(itsListener, "Unable to allocate listener port");
 
-	itsStarter = new LogicalDeviceStarter(globalParameterSet());
-	ASSERTSTR(itsStarter, "Unable to allocate starter object");
-  
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 	ASSERTSTR(itsTimerPort, "Unable to allocate timer port");
 
@@ -67,19 +62,15 @@ LDStartDaemon::LDStartDaemon(const string& name) :
 
 
 //
-// ~LDStartDaemon
+// ~CTStartDaemon
 //
-LDStartDaemon::~LDStartDaemon()
+CTStartDaemon::~CTStartDaemon()
 {
-	LOG_TRACE_FLOW(formatString("~LDStartDaemon(%s)", getName().c_str()));
+	LOG_TRACE_FLOW(formatString("~CTStartDaemon(%s)", getName().c_str()));
 
 	if (itsListener) {
 		itsListener->close();
 		delete itsListener;
-	}
-
-	if (itsStarter) {
-		delete itsStarter;
 	}
 
 	if (itsTimerPort) {
@@ -96,7 +87,7 @@ LDStartDaemon::~LDStartDaemon()
 //
 // findAction(port)
 //
-LDStartDaemon::actionIter	LDStartDaemon::findAction(GCFPortInterface*		aPort)
+CTStartDaemon::actionIter	CTStartDaemon::findAction(GCFPortInterface*		aPort)
 {
 	actionIter		iter = itsActionList.begin();
 	actionIter		end  = itsActionList.end();
@@ -110,7 +101,7 @@ LDStartDaemon::actionIter	LDStartDaemon::findAction(GCFPortInterface*		aPort)
 //
 // findAction(timerID)
 //
-LDStartDaemon::actionIter	LDStartDaemon::findAction(uint32	aTimerID)
+CTStartDaemon::actionIter	CTStartDaemon::findAction(uint32	aTimerID)
 {
 	actionIter		iter = itsActionList.begin();
 	actionIter		end  = itsActionList.end();
@@ -124,7 +115,7 @@ LDStartDaemon::actionIter	LDStartDaemon::findAction(uint32	aTimerID)
 //
 // findAction(cntlrName)
 //
-LDStartDaemon::actionIter	LDStartDaemon::findAction(const string&		cntlrName)
+CTStartDaemon::actionIter	CTStartDaemon::findAction(const string&		cntlrName)
 {
 	actionIter		iter = itsActionList.begin();
 	actionIter		end  = itsActionList.end();
@@ -138,7 +129,7 @@ LDStartDaemon::actionIter	LDStartDaemon::findAction(const string&		cntlrName)
 //
 // findController(port)
 //
-LDStartDaemon::CTiter	LDStartDaemon::findController(GCFPortInterface*		aPort)
+CTStartDaemon::CTiter	CTStartDaemon::findController(GCFPortInterface*		aPort)
 {
 	CTiter		iter = itsActiveCntlrs.begin();
 	CTiter		end  = itsActiveCntlrs.end();
@@ -152,7 +143,7 @@ LDStartDaemon::CTiter	LDStartDaemon::findController(GCFPortInterface*		aPort)
 //
 // sendCreatedMsg(action, result)
 //
-void LDStartDaemon::sendCreatedMsg(actionIter		action, int32	result)
+void CTStartDaemon::sendCreatedMsg(actionIter		action, int32	result)
 {
 	// send customer message that controller is on the air
 	STARTDAEMONCreatedEvent createdEvent;
@@ -166,7 +157,7 @@ void LDStartDaemon::sendCreatedMsg(actionIter		action, int32	result)
 //
 // sendNewParentAndCreatedMsg()
 //
-void LDStartDaemon::sendNewParentAndCreatedMsg(actionIter		action)
+void CTStartDaemon::sendNewParentAndCreatedMsg(actionIter		action)
 {
 	// connection with new controller is made, send 'newparent' message
 	STARTDAEMONNewparentEvent	msg;
@@ -175,8 +166,9 @@ void LDStartDaemon::sendNewParentAndCreatedMsg(actionIter		action)
 	msg.parentService = action->parentService;
 	
 	// map controllername to controllerport
-	CTiter	controller = itsActiveCntlrs.find(msg.cntlrName);
-	ASSERTSTR(isController(controller), msg.cntlrName << 
+	string		adminName = sharedControllerName(msg.cntlrName);
+	CTiter	controller = itsActiveCntlrs.find(adminName);
+	ASSERTSTR(isController(controller), adminName << 
 										" not found in controller list");
 	controller->second->send(msg);
 	LOG_DEBUG_STR("Sending NewParent(" << msg.cntlrName << "," <<
@@ -194,7 +186,7 @@ void LDStartDaemon::sendNewParentAndCreatedMsg(actionIter		action)
 // A disconnect event was receiveed on a client port. Close the port
 // and remove the port from our pool.
 //
-void LDStartDaemon::handleClientDisconnect(GCFPortInterface&	port)
+void CTStartDaemon::handleClientDisconnect(GCFPortInterface&	port)
 {
 	// end TCP connection
 	port.close();
@@ -231,6 +223,51 @@ void LDStartDaemon::handleClientDisconnect(GCFPortInterface&	port)
 	}
 }
 
+
+//
+// startController(taskname, paramfile)
+//
+int32 CTStartDaemon::startController(uint16			cntlrType,
+								     const string&	cntlrName,
+								     const string&	parentHost,
+								     const string&	parentService)
+{
+	// not found? report problem
+	if (cntlrType == CNTLRTYPE_NO_TYPE || cntlrType >= CNTLRTYPE_NR_TYPES) {
+		LOG_DEBUG_STR("No support for starting controller of the type " << cntlrType);
+		return (SD_RESULT_UNSUPPORTED_TYPE);
+	}
+
+	// locate program.
+	ProgramLocator		PL;
+	string	executable = PL.locate(getExecutable(cntlrType));
+	if (executable.empty()) {
+		LOG_DEBUG_STR("Executable '" << getExecutable(cntlrType) << "' not found.");
+		return (SD_RESULT_PROGRAM_NOT_FOUND);
+	}
+
+	// construct system command
+	string	startCmd = formatString("./startController.sh %s %s %s %s", 
+									executable.c_str(),
+									cntlrName.c_str(),
+									parentHost.c_str(),
+									parentService.c_str());
+	LOG_DEBUG_STR("About to start: " << startCmd);
+
+	int32	result = system (startCmd.c_str());
+	LOG_DEBUG_STR ("Result of start = " << result);
+
+	if (result == -1) {
+		return (SD_RESULT_START_FAILED);
+	}
+	
+	return (SD_RESULT_NO_ERROR);
+
+}
+
+
+
+
 // -------------------- STATE MACHINES --------------------
 
 //
@@ -238,10 +275,10 @@ void LDStartDaemon::handleClientDisconnect(GCFPortInterface&	port)
 //
 // The only target in this state is to get the listener port on the air.
 //
-GCFEvent::TResult LDStartDaemon::initial_state(GCFEvent& event, 
+GCFEvent::TResult CTStartDaemon::initial_state(GCFEvent& event, 
 											   GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG(formatString("LDStartDaemon(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
+	LOG_DEBUG(formatString("CTStartDaemon(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
   
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal) {
@@ -260,7 +297,7 @@ GCFEvent::TResult LDStartDaemon::initial_state(GCFEvent& event,
 				itsListenRetryTimer = 0;
 			}
 			LOG_DEBUG ("Listener port opened, going to operational mode");
-			TRAN(LDStartDaemon::operational_state);
+			TRAN(CTStartDaemon::operational_state);
 		}
 		break;
 
@@ -276,7 +313,7 @@ GCFEvent::TResult LDStartDaemon::initial_state(GCFEvent& event,
 		break;
 	
 	default:
-		LOG_DEBUG(formatString("LDStartDaemon(%s)::initial_state, default",getName().c_str()));
+		LOG_DEBUG("CTStartDaemon::initial_state, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -290,11 +327,10 @@ GCFEvent::TResult LDStartDaemon::initial_state(GCFEvent& event,
 // This is the normal operational mode. Wait for clients (e.g. MACScheduler) to
 // connect, wait for commands from the clients and handle those.
 //
-GCFEvent::TResult LDStartDaemon::operational_state (GCFEvent& event, 
+GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG(formatString("LDStartDaemon(%s)::operational_state (%s)",
-							getName().c_str(),evtstr(event)));
+	LOG_DEBUG(formatString("operational_state:%s", evtstr(event)));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -349,18 +385,20 @@ GCFEvent::TResult LDStartDaemon::operational_state (GCFEvent& event,
 		createdEvent.cntlrType = createEvent.cntlrType;
 		createdEvent.cntlrName = createEvent.cntlrName;
 
+		// convert fullname used in SD protocol to sharedname for internal admin
+		string	adminName = sharedControllerName(createEvent.cntlrName);
+
 		// is controller already known?
-		CTiter	controller = itsActiveCntlrs.find(createEvent.cntlrName);
+		CTiter	controller = itsActiveCntlrs.find(adminName);
 		if (!isController(controller)) {		// no, controller is not active
 			// Ask starter Object to start the controller.
-			createdEvent.result = 
-					itsStarter->startController (createEvent.cntlrType,
-												 createEvent.cntlrName, 
-												 createEvent.parentHost,
-												 createEvent.parentService);
+			createdEvent.result = startController(createEvent.cntlrType,
+												  adminName, 
+												  createEvent.parentHost,
+												  createEvent.parentService);
 			// when creation failed, report it back.
 			if (createdEvent.result != SD_RESULT_NO_ERROR) {
-				LOG_WARN_STR("Startup of " << createEvent.cntlrName << " failed");
+				LOG_WARN_STR("Startup of " << adminName << " failed");
 				port.send(createdEvent);
 				break;
 			}
@@ -397,7 +435,7 @@ GCFEvent::TResult LDStartDaemon::operational_state (GCFEvent& event,
 
 	case STARTDAEMON_ANNOUNCEMENT: {
 		STARTDAEMONAnnouncementEvent	inMsg(event);
-		// known controller?
+		// known controller? (announcement msg always contains sharedname).
 		CTiter	controller = itsActiveCntlrs.find(inMsg.cntlrName);
 		// controller already registered?
 		if (isController(controller) && controller->second != 0) {
@@ -432,7 +470,7 @@ GCFEvent::TResult LDStartDaemon::operational_state (GCFEvent& event,
 	}
 
 	default:
-		LOG_DEBUG(formatString("LDStartDaemon(%s)::operational_state, default",getName().c_str()));
+		LOG_DEBUG(formatString("CTStartDaemon(%s)::operational_state, default",getName().c_str()));
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
