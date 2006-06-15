@@ -67,7 +67,7 @@ dnl
 AC_OUTPUT(
 src/Makefile
 test/Makefile
-src/LDStartDaemon/Makefile
+src/CTStartDaemon/Makefile
 Makefile
 CUDaemons.spec
 )
