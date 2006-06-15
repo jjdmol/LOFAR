@@ -13,6 +13,7 @@
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
 #include <math.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "TST_Protocol.ph"
 #include <Suite/suite.h>
 
@@ -61,6 +62,19 @@ Application::Application() :
   _propertySetB2.initProperties(propertiesSB2);
   _propertySetB3.initProperties(propertiesSB3);
 }
+
+Application::~Application()
+{
+  // the following values do not end up in the PVSS database
+  TESTC(_propertySetA1.setValue("F.P4", "99") == GCF_NO_ERROR);
+  TESTC(_propertySetE1.setValue("P5", "99") == GCF_NO_ERROR);
+  TESTC(_propertySetXX.setValue("P5", "99") == GCF_NO_ERROR);
+  TESTC(_propertySetB1.setValue("P1", "99") == GCF_NO_ERROR);
+  TESTC(_propertySetB2.setValue("P1", "99") == GCF_NO_ERROR);
+  TESTC(_propertySetB3.setValue("P1", "99") == GCF_NO_ERROR);
+  
+}
+
 
 GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
@@ -224,6 +238,7 @@ GCFEvent::TResult Application::test2_1(GCFEvent& e, GCFPortInterface& p)
       {
         TESTC(strcmp(pResponse->pScope, _propertySetA1.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
+        TESTC(_propertySetA1.setValue("F.P4", "21") == GCF_NO_ERROR);
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetA1.isEnabled());
@@ -300,6 +315,7 @@ GCFEvent::TResult Application::test2_3(GCFEvent& e, GCFPortInterface& p)
       {
         TESTC(strcmp(pResponse->pScope, _propertySetB1.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
+        TESTC(_propertySetB1.setValue("P1", "23") == GCF_NO_ERROR);
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetB1.isEnabled());
@@ -367,6 +383,7 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
           TESTC(strcmp(pResponse->pScope, _propertySetB3.getFullScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(_propertySetB3.isEnabled());
+          TESTC(_propertySetB3.setValue("P1", "25") == GCF_NO_ERROR);
           TESTC_DESCR(GCFPVSSInfo::propExists("A_E__enabled"), "may fail");
         }
       }
@@ -465,6 +482,7 @@ GCFEvent::TResult Application::test3_4(GCFEvent& e, GCFPortInterface& p)
       {
         TESTC(strcmp(pResponse->pScope, _propertySetXX.getFullScope().c_str()) == 0);
         TESTC(pResponse->result != GCF_NO_ERROR);
+        TESTC(_propertySetXX.setValue("P5", "34") == GCF_NO_ERROR);
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(!_propertySetXX.isEnabled());
@@ -650,6 +668,7 @@ GCFEvent::TResult Application::test5_1(GCFEvent& e, GCFPortInterface& /*p*/)
       TESTC(strcmp(pResponse->pScope, _propertySetE1.getFullScope().c_str()) == 0);
       TESTC(strcmp(pResponse->pApcName, "e1") == 0);
       TESTC_ABORT_ON_FAIL(pResponse->result == GCF_NO_ERROR);
+      TESTC(_propertySetE1.setValue("P5", "51") == GCF_NO_ERROR);
 
       TSTTestreadyEvent r;
       r.testnr = 501;
@@ -1070,7 +1089,8 @@ GCFEvent::TResult Application::test6_5(GCFEvent& e, GCFPortInterface& p)
       _counter++;
       if (_counter == 2 )
       {
-        NEXT_TEST(6_6, "Send and receive properties between tasks, test stability and performance");
+//        NEXT_TEST(6_6, "Send and receive properties between tasks, test stability and performance");
+        FINISH;
       }
       break;
     }
@@ -1290,9 +1310,31 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
       {
         _supTask1.getPort().send(r);
       }
-      GCFTask::stop();
+
+      // the following values end up in the PVSS database
+      TESTC(_propertySetA1.setValue("F.P4", "97") == GCF_NO_ERROR);
+      TESTC(_propertySetE1.setValue("P5", "97") == GCF_NO_ERROR);
+      TESTC(_propertySetXX.setValue("P5", "97") == GCF_NO_ERROR);
+      TESTC(_propertySetB1.setValue("P1", "97") == GCF_NO_ERROR);
+      TESTC(_propertySetB2.setValue("P1", "97") == GCF_NO_ERROR);
+      TESTC(_propertySetB3.setValue("P1", "97") == GCF_NO_ERROR);
+      
+      _supTask1.getPort().setTimer(1.0);
       break;
     }
+      
+    case F_TIMER:
+      // the following values do not end up in the PVSS database
+      TESTC(_propertySetA1.setValue("F.P4", "98") == GCF_NO_ERROR);
+      TESTC(_propertySetE1.setValue("P5", "98") == GCF_NO_ERROR);
+      TESTC(_propertySetXX.setValue("P5", "98") == GCF_NO_ERROR);
+      TESTC(_propertySetB1.setValue("P1", "98") == GCF_NO_ERROR);
+      TESTC(_propertySetB2.setValue("P1", "98") == GCF_NO_ERROR);
+      TESTC(_propertySetB3.setValue("P1", "98") == GCF_NO_ERROR);
+      sleep(5);
+      GCFTask::stop();
+      break;
+    
     default:
       status = GCFEvent::NOT_HANDLED;
       break;

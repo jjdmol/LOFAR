@@ -5,6 +5,7 @@
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVString.h>
+#include <GCF/GCF_ServiceInfo.h>
 #include <GCF/PAL/GCF_Property.h>
 #include <GCF/PAL/GCF_ExtProperty.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
@@ -64,7 +65,7 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_INIT:
-      _supTask3.getPort().init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
+      _supTask3.getPort().init(_supTask3, MAC_SVCMASK_GCFTEST_ST3SERVER, GCFPortInterface::SPP, TST_PROTOCOL);
       NEXT_TEST(1_1, "Port connection, one client, one server");
       break;
 
@@ -138,13 +139,13 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
       if (_pSTPort1 == 0)
       {
         _pSTPort1 = new GCFTCPPort();
-        _pSTPort1->init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
+        _pSTPort1->init(_supTask3, MAC_SVCMASK_GCFTEST_ST3SERVER, GCFPortInterface::SPP, TST_PROTOCOL);
         TESTC(_port.accept(*_pSTPort1));
       }
       else
       {
         _pSTPort2 = new GCFTCPPort();
-        _pSTPort2->init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
+        _pSTPort2->init(_supTask3, MAC_SVCMASK_GCFTEST_ST3SERVER, GCFPortInterface::SPP, TST_PROTOCOL);
         TESTC(_port.accept(*_pSTPort2));
       }
       break;
@@ -152,7 +153,7 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED:
       if (closing)
       {
-        _port.init(_supTask3, "provider", GCFPortInterface::MSPP, TST_PROTOCOL);
+        _port.init(_supTask3, MAC_SVCMASK_GCFTEST_ST3PROVIDER, GCFPortInterface::MSPP, TST_PROTOCOL);
         TESTC(_port.open());
         closing = false;
       }
@@ -164,7 +165,7 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CLOSED:
-      _port.init(_supTask3, "provider", GCFPortInterface::MSPP, TST_PROTOCOL);
+      _port.init(_supTask3, MAC_SVCMASK_GCFTEST_ST3PROVIDER, GCFPortInterface::MSPP, TST_PROTOCOL);
       TESTC(_port.open());
       closing = false;
       break;
@@ -973,7 +974,8 @@ GCFEvent::TResult Application::test6_5(GCFEvent& e, GCFPortInterface& /*p*/)
       _counter++;
       if (_counter == 2)
       {
-        NEXT_TEST(6_6, "Send and receive properties between tasks, test stability and performance");
+//        NEXT_TEST(6_6, "Send and receive properties between tasks, test stability and performance");
+        FINISH;
       }
       break;
     }
