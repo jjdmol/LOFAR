@@ -51,8 +51,8 @@ namespace LOFAR
       int          itsStep;
       int          itsNX;
       int          itsNY;
-      int          itsCellX;
-      int          itsCellY;
+      double       itsCellX;
+      double       itsCellY;
       std::string  itsStokes;
       std::string  itsWeightType;
       int          itsWeightNPixels;
