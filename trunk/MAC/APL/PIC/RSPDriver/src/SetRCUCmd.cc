@@ -67,22 +67,24 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
   for (int cache_rcu = 0;
        cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
     if (m_event->rcumask[cache_rcu]) {
+
+      // make change
       cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
+
       if (setModFlag) {
+
 	// reset BS if needed
 	cache.getCache().getState().bs().write(cache_rcu / MEPHeader::N_POL);
 
-        cache.getCache().getState().rcusettings().write(cache_rcu);
-
-#if 0
-	// HACK HACK, prevent rcuprotocol write when enabling RCU input
-	// assumption is that rcuprotocol has been written previously
-	if (!m_event->settings()(0).getEnable()) {
-#endif
-	  cache.getCache().getState().rcuprotocol().write(cache_rcu);
-#if 0
+	// only write RCU Handler settings if modified
+	if (m_event->settings()(0).isHandlerModified()) {
+	  cache.getCache().getState().rcusettings().write(cache_rcu);
 	}
-#endif
+
+	// only write RCU Protocol settings if modified
+	if (m_event->settings()(0).isProtocolModified()) {
+	  cache.getCache().getState().rcuprotocol().write(cache_rcu);
+	}
       }
     }
   }

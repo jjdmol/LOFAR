@@ -46,7 +46,7 @@ namespace LOFAR {
       {
       public:
 
-	Control() : m_value(0x00000000) {}
+	Control() : m_value(0x00000000), m_modified(0x00000000) {}
 
 	// no virtual to prevent creation of virtual pointer table
 	// which adds to the size of the struct
@@ -72,6 +72,7 @@ namespace LOFAR {
 	void setMode(RCUMode mode) {
 	  m_value &= ~MODE_MASK;                 // clear mode bits
 	  m_value |= (m_mode[mode % N_MODES] & MODE_MASK); // set new mode bits
+	  m_modified |= MODE_MASK;
 	}
 	bool isModeOff() {
 	  return !(m_value & MODE_MASK);
@@ -81,8 +82,8 @@ namespace LOFAR {
 	 * Set the raw control bytes of a RCU
 	 * Each RCU has 4 bytes:
 	 *    mask      meaning    explanation
-	 * 0x0000007F INPUT_DELAY Sample delay for the data from the RCU.
-	 * 0x00000080 SPEC_INV    Enable spectral inversion (1) if needed.
+	 * 0x0000007F INPUT_DELAY  Sample delay for the data from the RCU.
+	 * 0x00000080 INPUT_ENABLE Enable RCU input
 	 *
 	 * 0x00000100 LBL-EN      supply LBL antenna on (1) or off (0)
 	 * 0x00000200 LBH-EN      sypply LBH antenna on (1) or off (0)
@@ -114,10 +115,10 @@ namespace LOFAR {
 	 *
 	 * 0x01000000 PRSG        pseudo random sequence generator on (1), off (0)
 	 * 0x02000000 RESET       on (1) hold board in reset
-	 * 0x04000000 ENABLE      enable RCU input
+	 * 0x04000000 SPEC_INV    Enable spectral inversion (1) if needed.
 	 * 0xF8000000 TBD         reserved
 	 */
-	void   setRaw(uint32 raw) { m_value = raw; }
+	void   setRaw(uint32 raw) { m_value = raw; m_modified = 0xFFFFFFFF; }
 	uint32 getRaw() const { return m_value; }
 
 	/**
@@ -126,6 +127,7 @@ namespace LOFAR {
 	void setPRSG(bool value) {
 	  if (value) m_value |= PRSG_MASK;  // set PRSG bit
 	  else       m_value &= ~PRSG_MASK; // clear PRSG bit
+	  m_modified |= PRSG_MASK;
 	}
 	bool getPRSG() const { return (m_value & PRSG_MASK) >> (16 + 8); }
 
@@ -135,6 +137,7 @@ namespace LOFAR {
 	void setReset(bool value) {
 	  if (value) m_value |= RESET_MASK;  // set RESET bit
 	  else       m_value &= ~RESET_MASK; // clear RESET bit
+	  m_modified |= RESET_MASK;
 	}
 	bool getReset() const { return (m_value & RESET_MASK) >> (17 + 8); }
 
@@ -148,7 +151,8 @@ namespace LOFAR {
 
 	  m_value &= ~ATT_MASK;                 // clear mode bits
 	  // cast value to uint32 to allow << 11, set new mode bits
-	  m_value |= (((uint32)value << (11 + 8)) & ATT_MASK);
+	  m_value    |= (((uint32)value << (11 + 8)) & ATT_MASK);
+	  m_modified |= ATT_MASK;
 	}
 	uint8 getAttenuation() const { return (m_value & ATT_MASK) >> (11 + 8); }
 
@@ -158,6 +162,8 @@ namespace LOFAR {
 	void setSpecinv(bool value) {
 	  if (value) m_value |= SPECINV_MASK;  // set SPECINV bit
 	  else       m_value &= ~SPECINV_MASK; // clear SPECINV bit
+
+	  m_modified |= SPECINV_MASK;
 	}
 	bool getSpecinv() const { return m_value & SPECINV_MASK; }
 
@@ -167,6 +173,8 @@ namespace LOFAR {
 	void setDelay(uint8 value) {
 	  m_value &= ~DELAY_MASK;
 	  m_value |= (value  & DELAY_MASK);
+
+	  m_modified |= DELAY_MASK;
 	}
 	uint8 getDelay() const { return m_value & DELAY_MASK; }
 
@@ -176,8 +184,49 @@ namespace LOFAR {
 	void setEnable(uint8 value) {
 	  if (value) m_value |= ENABLE_MASK;  // set ENABLE bit
 	  else       m_value &= ~ENABLE_MASK; // clear ENABLE bit
+
+	  m_modified |= ENABLE_MASK;
 	}
 	bool getEnable() const { return m_value & ENABLE_MASK; }
+
+	/*
+	 * Get RCU handler and RCU protocol settings separately
+	 */
+	bool isHandlerModified()  { return (0 != (m_modified & RCU_HANDLER_MASK));  }
+	bool isProtocolModified() { return (0 != (m_modified & RCU_PROTOCOL_MASK)); }
+
+	/*
+	 * Reset value and modified mask.
+	 */
+	void reset() {
+	  m_value    = 0x00000000;
+	  m_modified = 0x00000000;
+	}
+
+	/*
+	 * Return modification mask
+	 */
+	uint32 getModified() const { return m_modified; }
+
+	/*
+	 * Assignment
+	 */
+	Control& operator=(const Control& rhs) {
+	  if (this != &rhs) { // prevent self-assignment
+	    m_value    &= ~rhs.m_modified;                // clear the modified bits
+	    m_value    |= (rhs.m_value & rhs.m_modified); // set the modified bits with new values
+	    m_modified |= rhs.m_modified;                 // combine the masks
+	  }
+	  return *this;
+	}
+
+	/*
+	 * Copy constructor
+	 */
+	Control(const Control& rhs) {
+	  this->reset(); // reset m_value and m_modified
+	  *this = rhs;
+	}
 
       private:
 
@@ -185,15 +234,19 @@ namespace LOFAR {
 	static const uint32 m_mode[];
 
 	// masks used to set/get bits
+	static const uint32 DELAY_MASK   = 0x0000007F;
+	static const uint32 ENABLE_MASK  = 0x00000080;
 	static const uint32 MODE_MASK    = 0x0007FF00;
 	static const uint32 ATT_MASK     = 0x00F80000;
 	static const uint32 PRSG_MASK    = 0x01000000;
 	static const uint32 RESET_MASK   = 0x02000000;
-	static const uint32 SPECINV_MASK = 0x00000080;
-	static const uint32 DELAY_MASK   = 0x0000007F;
-	static const uint32 ENABLE_MASK  = 0x04000000;
+	static const uint32 SPECINV_MASK = 0x04000000;
+
+	static const uint32 RCU_HANDLER_MASK  = 0x000000FF;
+	static const uint32 RCU_PROTOCOL_MASK = 0xFFFFFF00;
 
 	uint32 m_value;
+	uint32 m_modified; // mask of modified bits
       };
 
       /* get reference settings array */
