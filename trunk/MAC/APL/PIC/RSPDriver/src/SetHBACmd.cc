@@ -65,7 +65,7 @@ void SetHBACmd::apply(CacheBuffer& cache, bool setModFlag)
   for (int cache_rcu = 0;
        cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
     if (m_event->rcumask[cache_rcu]) {
-      cache.getHBASettings()()(cache_rcu) = m_event->settings()(0);
+      cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(0, Range::all());
       if (setModFlag) {
 	// reset BS if needed
 	cache.getCache().getState().bs().write(cache_rcu / MEPHeader::N_POL);
@@ -94,6 +94,7 @@ void SetHBACmd::setTimestamp(const Timestamp& timestamp)
 bool SetHBACmd::validate() const
 {
   return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
-	  && (1 == m_event->settings().dimensions())
-	  && (1 == m_event->settings().extent(firstDim)));
+	  && (2 == m_event->settings().dimensions())
+	  && (1 == m_event->settings().extent(firstDim))
+	  && (MEPHeader::N_HBA_DELAYS == m_event->settings().extent(secondDim)));
 }

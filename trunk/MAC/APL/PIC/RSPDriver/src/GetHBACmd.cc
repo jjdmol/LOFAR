@@ -58,7 +58,7 @@ void GetHBACmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.settings().resize(m_event->rcumask.count());
+  ack.settings().resize(m_event->rcumask.count(), MEPHeader::N_HBA_DELAYS);
   
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
@@ -67,7 +67,7 @@ void GetHBACmd::ack(CacheBuffer& cache)
     {
       if (cache_rcu < StationSettings::instance()->nrRcus())
       {
-	ack.settings()(result_rcu) = cache.getHBASettings()()(cache_rcu);
+	ack.settings()(result_rcu, Range::all()) = cache.getHBASettings()()(cache_rcu, Range::all());
       }
       else
       {
