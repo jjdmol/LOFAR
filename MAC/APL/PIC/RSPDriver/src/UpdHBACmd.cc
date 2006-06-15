@@ -88,7 +88,7 @@ void UpdHBACmd::complete(CacheBuffer& cache)
   ack.handle 	  = (uint32)this; // opaque ptr used to refer to the subscr.
 
   // Allocate room in subbands array
-  ack.settings().resize(m_event->rcumask.count());
+  ack.settings().resize(m_event->rcumask.count(), MEPHeader::N_HBA_DELAYS);
 
   // loop over RCU's to get the results.
   int result_rcu = 0;
@@ -96,7 +96,7 @@ void UpdHBACmd::complete(CacheBuffer& cache)
 
     if (m_event->rcumask[cache_rcu]) {
       if (cache_rcu < StationSettings::instance()->nrRcus()) {
-	ack.settings()(result_rcu)=cache.getHBASettings()()(cache_rcu);
+	ack.settings()(result_rcu, Range::all()) = cache.getHBASettings()()(cache_rcu, Range::all());
       }
       else {
 	LOG_WARN(
