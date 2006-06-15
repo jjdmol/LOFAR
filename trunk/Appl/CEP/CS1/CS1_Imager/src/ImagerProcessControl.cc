@@ -74,8 +74,8 @@ namespace LOFAR
       itsStep          = ParamSet->getInt32("step");
       itsNX            = ParamSet->getInt32("nx");
       itsNY            = ParamSet->getInt32("ny");
-      itsCellX         = ParamSet->getInt32("cellx");
-      itsCellY         = ParamSet->getInt32("celly");
+      itsCellX         = ParamSet->getDouble("cellx");
+      itsCellY         = ParamSet->getDouble("celly");
       itsStokes        = ParamSet->getString("stokes");
       itsWeightType    = ParamSet->getString("weighttype");
       itsWeightNPixels = ParamSet->getInt32("weightnpixels");
@@ -113,8 +113,8 @@ namespace LOFAR
       const casa::Vector<casa::Int> myFieldID(1, itsFieldID);
       myImager->setdata(myMode, myNChannel, myStart, myStep, itsMStart, itsMStep, itsSpectralWindowIDs, myFieldID);
       
-      const casa::Quantity          itsCellX(itsCellX, "arcsec");
-      const casa::Quantity          itsCellY(itsCellY, "arcsec");
+      const casa::Quantity          myCellX(itsCellX, "arcsec");
+      const casa::Quantity          myCellY(itsCellY, "arcsec");
       const casa::String            myStokes(itsStokes);
       bool                          itsDoShift(false);
       const casa::MDirection        itsPhaseCenter(0.0); //? unknown what the default should be, AR
@@ -124,7 +124,7 @@ namespace LOFAR
       const casa::Quantity          itsDistance(0, "m");
       const casa::Float             itsPaStep(5.0); //? unknown what the default should be, AR
       const casa::Float             itsPbLimit(0.05); //? unknown what the default should be, AR
-      myImager->setimage(itsNX, itsNY, itsCellX, itsCellY, myStokes, itsDoShift, itsPhaseCenter, itsShiftX, itsShiftY,
+      myImager->setimage(itsNX, itsNY, myCellX, myCellY, myStokes, itsDoShift, itsPhaseCenter, itsShiftX, itsShiftY,
                          myMode, itsNChannel, itsStart, itsStep, itsMStart, itsMStep, itsSpectralWindowIDs,
                          itsFieldID, itsFacets, itsDistance, itsPaStep, itsPbLimit);
 
