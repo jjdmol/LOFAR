@@ -22,39 +22,6 @@
 //#  $Id$
 //#
 
-//#
-//# Usage:
-//#
-//# rspctl --weights         [--select=<set>]  # get weights
-//# rspctl --weights=value.re[,value.im] [--select=<set>]  # set weights as complex value
-//# rspctl --aweights        [--select=<set> ] # get weights as power and angle
-//# rspctl --aweights=amplitude[,angle] [--select=<set> ]  # set weights as amplitude and angle
-//# rspctl --subbands        [--select=<set>]  # get subband selection
-//# rspctl --subbands=<list> [--select=<set>]  # set subband selection
-//# rspctl --rcu             [--select=<set>]  # get RCU control
-//# rspctl --rcu=0x00000000  [--select=<set>]  # set RCU control
-//# rspctl --wg              [--select=<set>]  # get waveform generator settings
-//# rspctl --wg=freq         [--select=<set>]  # set wg freq is in Hz (float)
-//# rspctl --status          [--select=<set>]  # get status
-//# rspctl --statistics[=(subband|beamlet)]
-//#                          [--select=<set>]
-//#                          [--duration=<seconds>]
-//#                          [--integration=<seconds>]
-//#                          [--directory=<directory>]
-//#                          [--feport=<hostname>:<port>] # get subband (default) or beamlet statistics
-//# rspctl --xcstatistics    [--select=<set>]
-//#                          [--duration=<seconds>]
-//#                          [--integration=<seconds>]
-//#                          [--directory=<directory>]
-//#                          [--feport=<hostname>:<port>]  # get cross correlation statistics
-//# rspctl --xcsubband                         # get the subband selection for cross correlation
-//# rspctl --xcsubband=<int>                   # set the subband to cross correlate
-//# rspctl --clocks          [--select=<set>]  # get or set the clock frequency of clocks
-//# rspctl --version         [--select=<set>]  # get version information
-//# rspctl --rspclear        [--select=<set>]  # clear FPGA registers on selected rspboards
-//# rspctl --regstate                          # show update status of all registers once every second
-//#
-
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
@@ -476,6 +443,106 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
       if (SUCCESS != ack.status)
       {
         logMessage(cerr,"Error: RSP_SETRCU command failed.");
+      }
+    }
+  }
+
+  GCFTask::stop();
+
+  return GCFEvent::HANDLED;
+}
+
+HBACommand::HBACommand(GCFPortInterface& port) : Command(port)
+{
+}
+
+void HBACommand::send()
+{
+  if (getMode())
+  {
+    // GET
+    RSPGethbaEvent gethba;
+
+    gethba.timestamp = Timestamp(0,0);
+    gethba.rcumask = getRCUMask();
+    gethba.cache = true;
+
+    m_rspport.send(gethba);
+  }
+  else
+  {
+    // SET
+    RSPSethbaEvent sethba;
+    sethba.timestamp = Timestamp(0,0);
+    sethba.rcumask = getRCUMask();
+
+    sethba.settings().resize(1, MEPHeader::N_HBA_DELAYS);
+
+    if (1 == m_delaylist.size()) {
+      std::list<int>::iterator it = m_delaylist.begin();
+      sethba.settings()(0, Range::all()) = (*it);
+    } else {
+
+      // clear first
+      sethba.settings()(0) = 0;
+
+      int i = 0;
+      std::list<int>::iterator it;
+      for (it = m_delaylist.begin(); it != m_delaylist.end(); it++, i++) {
+	if (i >= MEPHeader::N_HBA_DELAYS) break;
+	sethba.settings()(0, i) = (*it);
+      }
+    }
+#if 0
+    for (int i = 0; i < sethba.settings().extent(firstDim); i++) {
+      printf("delays(%d)=", i);
+      cout << sethba.settings()(i) << endl;
+    }
+#endif
+
+    m_rspport.send(sethba);
+  }
+}
+
+GCFEvent::TResult HBACommand::ack(GCFEvent& e)
+{
+  switch (e.signal)
+  {
+    case RSP_GETHBAACK:
+    {
+      RSPGethbaackEvent ack(e);
+      bitset<MAX_N_RCUS> mask = getRCUMask();
+
+      cout << "settings().shape()=" << ack.settings().shape() << endl;
+
+      if (SUCCESS == ack.status)
+      {
+        int hbain = 0;
+        for (int hbaout = 0; hbaout < get_ndevices(); hbaout++) {
+
+          if (mask[hbaout]) {
+            logMessage(cout, formatString("HBA[%02d].delays=", hbaout));
+	    for (int i = 0; i < MEPHeader::N_HBA_DELAYS; i++) {
+	      logMessage(cout, formatString("%3d", (int)(ack.settings()(hbain, i))));
+	    }
+	    hbain++;
+          }
+        }
+      }
+      else
+      {
+        logMessage(cerr,"Error: RSP_GETHBA command failed.");
+      }
+    }
+    break;
+
+    case RSP_SETHBAACK:
+    {
+      RSPSethbaackEvent ack(e);
+
+      if (SUCCESS != ack.status)
+      {
+        logMessage(cerr,"Error: RSP_SETHBA command failed.");
       }
     }
   }
@@ -1685,6 +1752,8 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETSTATUSACK:
     case RSP_SUBREGISTERSTATEACK:
     case RSP_UPDREGISTERSTATE:
+    case RSP_SETHBAACK:
+    case RSP_GETHBAACK:
       status = m_command->ack(e); // handle the acknowledgement
       break;
 
@@ -1731,8 +1800,8 @@ static void usage()
   cout << "rspctl --rcu            [--select=<set>]  # show current rcu control setting" << endl;
   cout << "rspctl --rcu=0x00000000 [--select=<set>]  # set the rcu control registers" << endl;
   cout << "     mask      value    " << endl;
-  cout << "  0x0000007F INPUT_DELAY Sample delay for the data from the RCU." << endl;
-  cout << "  0x00000080 SPEC_INV    Enable spectral inversion (1) if needed." << endl;
+  cout << "  0x0000007F INPUT_DELAY  Sample delay for the data from the RCU." << endl;
+  cout << "  0x00000080 INPUT_ENABLE Enable RCU input." << endl;
   cout << endl;
   cout << "  0x00000100 LBL-EN      supply LBL antenna on (1) or off (0)" << endl;
   cout << "  0x00000200 LBH-EN      sypply LBH antenna on (1) or off (0)" << endl;
@@ -1764,7 +1833,8 @@ static void usage()
   cout << endl;
   cout << "  0x01000000 PRSG        pseudo random sequence generator on (1), off (0)" << endl;
   cout << "  0x02000000 RESET       on (1) hold board in reset" << endl;
-  cout << "  0xFC000000 TBD         reserved" << endl;
+  cout << "  0x04000080 SPEC_INV    Enable spectral inversion (1) if needed." << endl;
+  cout << "  0xF8000000 TBD         reserved" << endl;
   cout << endl;
   cout << "rspctl [ --rcumode        |" << endl;
   cout << "         --rcuprsg        |" << endl;
@@ -1773,7 +1843,7 @@ static void usage()
   cout << "         --rcuspecinv     |" << endl;
   cout << "         --rcudelay       |" << endl;
   cout << "         --rcuenable      |" << endl;
-  cout << "       ]+ [--select=<set>] # control RCU by combining any of these commands with selection" << endl;
+  cout << "       ]+ [--select=<set>] # control RCU by combining one or more of these options with RCU selection" << endl;
   cout << endl;
   cout << "       --rcumode=[0..7] # set the RCU in a specific mode" << endl;
   cout << "         Possible values: 0 = OFF" << endl;
@@ -1784,43 +1854,45 @@ static void usage()
   cout << "                          5 = HB 110-190MHz 0x0007A400" << endl;
   cout << "                          6 = HB 170-230MHz 0x00079400" << endl;
   cout << "                          7 = HB 210-270MHz 0x00078400" << endl;
-  cout << "       --rcuprsg                 # turn psrg on" << endl;
-  cout << "       --rcureset                # hold rcu in reset" << endl;
+  cout << "       --rcuprsg[=0]             # turn psrg on (or off)" << endl;
+  cout << "       --rcureset[=0]            # hold rcu in reset (or take out of reset)" << endl;
   cout << "       --rcuattenuation=[0..31]  # set the RCU attenuation" << endl;
-  cout << "       --rcuspecinv              # enable spectral inversion" << endl;
+  cout << "       --rcuspecinv[=0]          # enable (or disable) spectral inversion" << endl;
   cout << "       --rcudelay=[0..127]       # set the delay for rcu's" << endl;
-  cout << "       --rcudelay                # enable input from RCU's" << endl;
+  cout << "       --rcuenable[=0]           # enable (or disable) input from RCU's" << endl;
   cout << endl;
   cout << "rspctl --wg                  [--select=<set>]  # get waveform generator settings" << endl;
   cout << "rspctl --wg=freq [--phase=..][--select=<set>]  # set waveform generator settings" << endl;
-  cout << "rspctl --status         [--select=<set>]  # get status" << endl;
-  cout << "rspctl --statistics[=(subband|beamlet)]   # get subband (default) or beamlet statistics" << endl;
-  cout << "             [--select=<set>]             #" << endl;
-  cout << "             [--duration=<seconds>]       #" << endl;
-  cout << "             [--integration=<seconds>]    #" << endl;
-  cout << "             [--directory=<directory>]    #" << endl;
+  cout << "rspctl --status         [--select=<set>]       # get status" << endl;
+  cout << "rspctl --statistics[=(subband|beamlet)]        # get subband (default) or beamlet statistics" << endl;
+  cout << "             [--select=<set>]                  #" << endl;
+  cout << "             [--duration=<seconds>]            #" << endl;
+  cout << "             [--integration=<seconds>]         #" << endl;
+  cout << "             [--directory=<directory>]         #" << endl;
 #ifdef ENABLE_RSPFE
-  cout << "             [--feport=<hostname>:<port>] #" << endl;
+  cout << "             [--feport=<hostname>:<port>]      #" << endl;
 #endif
-  cout << "rspctl --xcstatistics   [--select=<set>]  # get crosscorrelation statistics" << endl;
-  cout << "             [--duration=<seconds>]       #" << endl;
-  cout << "             [--integration=<seconds>]    #" << endl;
-  cout << "             [--directory=<directory>]    #" << endl;
+  cout << "rspctl --xcstatistics   [--select=<set>]       # get crosscorrelation statistics" << endl;
+  cout << "             [--duration=<seconds>]            #" << endl;
+  cout << "             [--integration=<seconds>]         #" << endl;
+  cout << "             [--directory=<directory>]         #" << endl;
 #ifdef ENABLE_RSPFE
-  cout << "             [--feport=<hostname>:<port>] #" << endl;
+  cout << "             [--feport=<hostname>:<port>]      #" << endl;
 #endif
-  cout << "rspctl --xcsubband                        # get the subband selection for cross correlation" << endl;
-  cout << "rspctl --xcsubband=<int>                  # set the subband to cross correlate" << endl;
-  cout << "rspctl --clocks=<int>                     # get or set the clock frequency of clocks in Hz" << endl;
-  cout << "rspctl --version         [--select=<set>] # get version information" << endl;
-  cout << "rspctl --rspclear        [--select=<set>] # clear FPGA registers on RSPboard" << endl;
-  cout << "rspctl --regstate                         # show update status of all registers once every second" << endl;
+  cout << "rspctl --xcsubband                             # get the subband selection for cross correlation" << endl;
+  cout << "rspctl --xcsubband=<int>                       # set the subband to cross correlate" << endl;
+  cout << "rspctl --clocks[=<int>]                        # get or set the clock frequency of clocks in Hz" << endl;
+  cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or set the 16 delays of one or more HBA's" << endl;
+  cout << "rspctl --version            [--select=<set>]   # get version information" << endl;
+  cout << "rspctl --rspclear           [--select=<set>]   # clear FPGA registers on RSPboard" << endl;
+  cout << "rspctl --regstate                              # show update status of all registers once every second" << endl;
 }
 
 Command* RSPCtl::parse_options(int argc, char** argv)
 {
   Command*    command        = 0;
   RCUCommand* rcumodecommand = 0;
+  HBACommand* hbacommand     = 0;
   list<int> select;
 
   // select all by default
@@ -1842,12 +1914,12 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "subbands",       optional_argument, 0, 's' },
 	  { "rcu",            optional_argument, 0, 'r' },
 	  { "rcumode",        required_argument, 0, 'm' },
-	  { "rcuprsg",        no_argument,       0, 'p' },
-	  { "rcureset",       no_argument,       0, 'e' },
+	  { "rcuprsg",        optional_argument, 0, 'p' },
+	  { "rcureset",       optional_argument, 0, 'e' },
 	  { "rcuattenuation", required_argument, 0, 'n' },
-	  { "rcuspecinv",     no_argument,       0, 'u' },
+	  { "rcuspecinv",     optional_argument, 0, 'u' },
 	  { "rcudelay",       required_argument, 0, 'y' },
-          { "rcuenable",      no_argument,       0, 'E' },
+          { "rcuenable",      optional_argument, 0, 'E' },
 	  { "wg",             optional_argument, 0, 'g' },
 	  { "wgmode",         required_argument, 0, 'G' },
 	  { "phase",          required_argument, 0, 'P' },
@@ -1856,6 +1928,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "xcstatistics",   no_argument,       0, 'x' },
 	  { "xcsubband",      optional_argument, 0, 'z' },
 	  { "clocks",         optional_argument, 0, 'c' },
+	  { "hbadelays",      optional_argument, 0, 'H' },
 	  { "version",        no_argument,       0, 'v' },
 //	  { "rspreset",       optional_argument, 0, 'R' },
 	  { "rspclear",       optional_argument, 0, 'C' },
@@ -2049,11 +2122,19 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      break;
 
 	    case 'p': // --rcuprsg
-	      rcumodecommand->control().setPRSG(true);
+	      if (optarg && !strncmp(optarg, "0", 1)) {
+		rcumodecommand->control().setPRSG(false);
+	      } else {
+		rcumodecommand->control().setPRSG(true);
+	      }
 	      break;
 
 	    case 'e': // --rcureset
-	      rcumodecommand->control().setReset(true);
+	      if (optarg && !strncmp(optarg, "0", 1)) {
+		rcumodecommand->control().setReset(false);
+	      } else {
+		rcumodecommand->control().setReset(true);
+	      }
 	      break;
 
 	    case 'n': // --rcuattenuation
@@ -2067,7 +2148,11 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      break;
 
 	    case 'u': // --rcuspecinv
-	      rcumodecommand->control().setSpecinv(true);
+	      if (optarg && !strncmp(optarg, "0", 1)) {
+		rcumodecommand->control().setSpecinv(false);
+	      } else {
+		rcumodecommand->control().setSpecinv(true);
+	      }
 	      break;
 
 	    case 'y': // --rcudelay
@@ -2081,7 +2166,11 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      break;
 
             case 'E': // --rcuenable
-              rcumodecommand->control().setEnable(true);
+	      if (optarg && !strncmp(optarg, "0", 1)) {
+		rcumodecommand->control().setEnable(false);
+	      } else {
+		rcumodecommand->control().setEnable(true);
+	      }
               break;
 	    }
 
@@ -2273,6 +2362,24 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    VersionCommand* versioncommand = new VersionCommand(m_server);
 	    command = versioncommand;
 	    command->set_ndevices(m_nrspboards);
+	  }
+	  break;
+
+	case 'H':       // --hbadelays
+	  {
+	    if (!hbacommand) {
+	      if (command) delete command;
+	      hbacommand = new HBACommand(m_server);
+	    }
+
+	    command = hbacommand;
+	    command->set_ndevices(m_nrcus);
+
+	    if (optarg) {
+	      hbacommand->setMode(false); // set the HBA delays
+
+	      hbacommand->setDelayList(strtolist(optarg, (uint8)-1));
+	    }
 	  }
 	  break;
 

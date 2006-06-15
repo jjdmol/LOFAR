@@ -88,6 +88,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 
   // initialize RCU settings
   m_rcusettings().resize(StationSettings::instance()->nrRcus());
+
   RCUSettings::Control rcumode;
   rcumode.setMode(RCUSettings::Control::MODE_OFF);
   m_rcusettings() = rcumode;

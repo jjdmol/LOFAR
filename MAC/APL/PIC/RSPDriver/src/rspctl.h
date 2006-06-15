@@ -27,6 +27,7 @@
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
+#include <APL/RSP_Protocol/HBASettings.h>
 #ifdef ENABLE_RSPFE
 #include "RSPFE_Protocol.ph"
 #endif
@@ -322,6 +323,26 @@ namespace LOFAR {
     private:
 
       RCUSettings::Control m_control;
+    };
+
+    //
+    // class HBACommand
+    //
+    class HBACommand : public Command
+    {
+    public:
+      HBACommand(GCFPortInterface& port);
+      virtual ~HBACommand() {}
+      virtual void send();
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+
+      void setDelayList(std::list<int> delaylist) {
+        m_delaylist = delaylist;
+      }
+
+    private:
+
+      std::list<int> m_delaylist;
     };
 
     //
