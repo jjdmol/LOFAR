@@ -59,7 +59,8 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsChildPort		(0),
 	itsParentControl	(0),
 	itsParentPort		(0),
-	itsTimerPort		(0)
+	itsTimerPort		(0),
+	itsState			(CTState::NOSTATE)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -88,6 +89,8 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
+
+	setState(CTState::CREATED);
 }
 
 
@@ -104,6 +107,20 @@ ObservationControl::~ObservationControl()
 	}
 
 	// ...
+}
+
+//
+// setState(CTstateNr)
+//
+void	ObservationControl::setState(CTState::CTstateNr		newState)
+{
+	itsState = newState;
+
+	if (itsPropertySet) {
+		CTState		cts;
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),
+								 GCFPVString(cts.name(newState)));
+	}
 }
 
 
@@ -166,6 +183,17 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 		}
 		break;
 	}  
+
+//	case F_SUBSCRIBED:
+//	case F_UNSUBSCRIBED:
+//	case F_PS_CONFIGURED:
+//	case F_EXTPS_LOADED:
+//	case F_EXTPS_UNLOADED:
+//	case F_MYPS_ENABLED:
+//	case F_MYPS_DISABLED:
+//	case F_VGETRESP:
+//	case F_VCHANGEMSG:
+//	case F_SERVER_GONE:
 
 	default:
 		break;
