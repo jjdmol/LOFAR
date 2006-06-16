@@ -1,0 +1,21 @@
+Generator.NPacketsInFrame = 1
+Generator.OutputRate = 100
+Generator.SampleFreq = 10000
+Generator.NPolarisations = 1
+Generator.NSubbands = 1
+Generator.NTimesPerFrame = 1
+
+Generator.SignalType = MULTICHROME # ZERO, RANDOM, MULTICHROME
+Generator.NFreqs = 1
+Generator.Signals.0.Amplitude = 16384
+Generator.Signals.0.Frequency = 0.01
+Generator.Signals.0.Phase = 0
+
+Generator.NStations = 1
+Generator.Station0.Delay = 0
+Generator.Station0.ID = 0
+Generator.Station0.th = FILE
+Generator.Station0.fileName = "Generator.out"
+Generator.Station0.destinationMac = "00:00:00:00:00:00"
+Generator.Station0.interface = "eth1"
+Generator.Station0.sourceMac = "00:00:00:00:00:00"
