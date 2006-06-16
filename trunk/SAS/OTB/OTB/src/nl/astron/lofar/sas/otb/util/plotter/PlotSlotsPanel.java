@@ -339,57 +339,58 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                         aPopupMenu.add(subMenuItem);
                     }
                     
-                    if(!externalLegendActive && !externalViewerActive){
+                    if(!externalLegendActive){
                         
-                        
-                        int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
-                        if(availableSlots.length > 0){
-                            aPopupMenu.addSeparator();
-                            
-                            JMenu aMenuItem=new JMenu("Move to slot");
-                            
-                            for(int i = 0; i < availableSlots.length; i++){
-                                JMenuItem subItem=new JMenuItem(""+availableSlots[i]);
-                                subItem.setActionCommand(""+availableSlots[i]);
-                                subItem.addActionListener(new java.awt.event.ActionListener() {
-                                    public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                        
-                                        itsSlotManager.movePlot(Integer.parseInt(selectedSlot.getLabel()),Integer.parseInt(evt.getActionCommand()));
-                                        repaint();
-                                        
-                                    }
-                                });
-                                aMenuItem.add(subItem);
+                        if(!externalViewerActive){
+                            int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
+                            if(availableSlots.length > 0){
+                                aPopupMenu.addSeparator();
+                                
+                                JMenu aMenuItem=new JMenu("Move to slot");
+                                
+                                for(int i = 0; i < availableSlots.length; i++){
+                                    JMenuItem subItem=new JMenuItem(""+availableSlots[i]);
+                                    subItem.setActionCommand(""+availableSlots[i]);
+                                    subItem.addActionListener(new java.awt.event.ActionListener() {
+                                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                            
+                                            itsSlotManager.movePlot(Integer.parseInt(selectedSlot.getLabel()),Integer.parseInt(evt.getActionCommand()));
+                                            repaint();
+                                            
+                                        }
+                                    });
+                                    aMenuItem.add(subItem);
+                                }
+                                aPopupMenu.add(aMenuItem);
                             }
+                            
+                            aPopupMenu.addSeparator();
+                            JMenuItem aMenuItem=new JMenuItem("Show in separate window");
+                            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                    PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Viewer for Plot "+selectedSlot.getLabel(),false);
+                                    dialog.addWindowListener(new WindowListener(){
+                                        public void windowDeactivated(WindowEvent e){}
+                                        public void windowActivated(WindowEvent e){
+                                            PlotSlotViewFrame sourceFrame = (PlotSlotViewFrame)e.getSource();
+                                            itsSlotManager.getSlot(sourceFrame.plotIndex).setViewedExternally(true);
+                                            rearrangeSlotGrid();}
+                                        public void windowClosed(WindowEvent e){
+                                            PlotSlotViewFrame sourceFrame = (PlotSlotViewFrame)e.getSource();
+                                            itsSlotManager.getSlot(sourceFrame.plotIndex).setViewedExternally(false);
+                                            rearrangeSlotGrid();
+                                            externalLegendActive = false;}
+                                        public void windowDeiconified(WindowEvent e){}
+                                        public void windowIconified(WindowEvent e){}
+                                        public void windowClosing(WindowEvent e){}
+                                        public void windowOpened(WindowEvent e){}
+                                    });
+                                    dialog.setVisible(true);
+                                    externalViewerActive=true;
+                                }
+                            });
                             aPopupMenu.add(aMenuItem);
                         }
-                        
-                        aPopupMenu.addSeparator();
-                        JMenuItem aMenuItem=new JMenuItem("Show in separate window");
-                        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Viewer for Plot "+selectedSlot.getLabel(),false);
-                                dialog.addWindowListener(new WindowListener(){
-                                    public void windowDeactivated(WindowEvent e){}
-                                    public void windowActivated(WindowEvent e){
-                                        PlotSlotViewFrame sourceFrame = (PlotSlotViewFrame)e.getSource();
-                                        itsSlotManager.getSlot(sourceFrame.plotIndex).setViewedExternally(true);
-                                        rearrangeSlotGrid();}
-                                    public void windowClosed(WindowEvent e){
-                                        PlotSlotViewFrame sourceFrame = (PlotSlotViewFrame)e.getSource();
-                                        itsSlotManager.getSlot(sourceFrame.plotIndex).setViewedExternally(false);
-                                        rearrangeSlotGrid();
-                                        externalLegendActive = false;}
-                                    public void windowDeiconified(WindowEvent e){}
-                                    public void windowIconified(WindowEvent e){}
-                                    public void windowClosing(WindowEvent e){}
-                                    public void windowOpened(WindowEvent e){}
-                                });
-                                dialog.setVisible(true);
-                                externalViewerActive=true;
-                            }
-                        });
-                        aPopupMenu.add(aMenuItem);
                         aPopupMenu.addSeparator();
                         JMenuItem aMenuItem2=new JMenuItem("Clear Slot");
                         aMenuItem2.addActionListener(new java.awt.event.ActionListener() {
