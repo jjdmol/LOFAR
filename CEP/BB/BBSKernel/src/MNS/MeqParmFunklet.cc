@@ -141,7 +141,7 @@ MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
       // Try to find the y values for this domain.
       // Start searching at the end of the previous one.
       sty = endy;
-      if (request.y(sty) > polDom.startY()) {
+      if (sty >= request.ny()  ||  request.y(sty) > polDom.startY()) {
 	sty = 0;                            // restart at begin
       }
       while (request.y(sty) < polDom.startY()) {
@@ -161,10 +161,6 @@ MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
 	return res;
       }
       // Form the request for the overlapping part and evaluate the funklet.
-      vector<double> yval(nry);
-      for (int j=0; j<nry; ++j) {
-	yval[j] = request.y(sty+j);
-      }
       MeqRequest partReq(request, stx, nrx, sty, nry);
       MeqResult partRes = funklet.getResult (partReq, itsNrPert, itsPertInx);
       // Move the values to the correct place in the output result.
