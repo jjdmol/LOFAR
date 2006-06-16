@@ -88,6 +88,7 @@ private:
 	ObservationControl(const ObservationControl&);
    	ObservationControl& operator=(const ObservationControl&);
 
+	void setState(CTState::CTstateNr	newState);
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
    	boost::shared_ptr<ACC::APS::ParameterSet> 
@@ -120,6 +121,8 @@ private:
 	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
+
+	CTState::CTstateNr		itsState;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
