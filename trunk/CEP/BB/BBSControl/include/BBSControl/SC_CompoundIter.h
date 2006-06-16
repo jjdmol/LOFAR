@@ -1,4 +1,4 @@
-//#  SC_WritePredData.h: A strategy to make prediffers write predicted data
+//#  SC_CompoundIter.h: A calibration strategy which sends compound workorders.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,12 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS_SC_WRITEPREDDATA_H
-#define LOFAR_BBS_SC_WRITEPREDDATA_H
+#ifndef LOFAR_BBSCONTROL_SC_COMPOUNDITER_H
+#define LOFAR_BBSCONTROL_SC_COMPOUNDITER_H
 
-// \file
-// A strategy to make prediffers write predicted data
+// \file SC_CompoundIter
+// A calibration strategy which sends compound workorders (multiple iterations).// NB. This strategy only works correctly when Prediffer and Solver run in 
+// separate processes.
 
 //# Includes
 #include <BBSControl/StrategyController.h>
@@ -41,14 +42,14 @@ namespace LOFAR
 
 using ACC::APS::ParameterSet;
 
-class SC_WritePredData : public StrategyController
+class SC_CompoundIter : public StrategyController
 {
 public:
-  SC_WritePredData(Connection* inSolConn, Connection* outWOPDConn, 
+  SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn, 
 	    Connection* outWOSolveConn, int nrPrediffers,
 	    const ParameterSet& args);
 
-  virtual ~SC_WritePredData();
+  virtual ~SC_CompoundIter();
 
   /// Execute the strategy
   virtual bool execute();
@@ -60,22 +61,30 @@ public:
   virtual string getType() const;
 
  private:
-  SC_WritePredData(const SC_WritePredData&);
-  SC_WritePredData& operator=(const SC_WritePredData&);
+  SC_CompoundIter(const SC_CompoundIter&);
+  SC_CompoundIter& operator=(const SC_CompoundIter&);
+
+  void readFinalSolution();
 
   bool         itsFirstCall;
+  int          itsPrevWOID;
   ParameterSet itsArgs;
+  int          itsMaxIterations;
+  double       itsFitCriterion;
+  int          itsCurIter;
   double       itsCurStartTime;
-  bool         itsWriteInDataCol;
+  bool         itsControlParmUpd;    // Does this Controller update the parameters?
+  bool         itsWriteParms;        // Write the parameters in the parmtable at the end of each interval?
   double       itsStartTime;
   double       itsEndTime;
   double       itsTimeLength;
   int          itsStartChannel;
   int          itsEndChannel;
+  bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
 };
 
-inline string SC_WritePredData::getType() const
-{ return "WritePredData"; }
+inline string SC_CompoundIter::getType() const
+{ return "CompoundIter"; }
 
 // @}
 

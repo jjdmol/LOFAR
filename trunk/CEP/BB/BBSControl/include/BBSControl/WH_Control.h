@@ -23,8 +23,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef LOFAR_BBS_WH_CONTROL_H
-#define LOFAR_BBS_WH_CONTROL_H
+#ifndef LOFAR_BBSCONTROL_WH_CONTROL_H
+#define LOFAR_BBSCONTROL_WH_CONTROL_H
 
 // \file
 // This class implements the controller of the blackboard.

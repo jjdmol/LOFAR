@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS_WH_SOLVE_H
-#define LOFAR_BBS_WH_SOLVE_H
+#ifndef LOFAR_BBSCONTROL_WH_SOLVE_H
+#define LOFAR_BBSCONTROL_WH_SOLVE_H
 
 // \file
 // Calculates new parameter values

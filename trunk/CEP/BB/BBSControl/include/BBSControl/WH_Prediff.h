@@ -21,8 +21,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS_WH_PREDIFF_H
-#define LOFAR_BBS_WH_PREDIFF_H
+#ifndef LOFAR_BBSCONTROL_WH_PREDIFF_H
+#define LOFAR_BBSCONTROL_WH_PREDIFF_H
 
 // \file
 // Predicts visibilities and determines difference to measured data.

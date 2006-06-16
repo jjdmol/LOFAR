@@ -1,4 +1,4 @@
-//#  SC_Simple.h: A simple calibration strategy
+//#  SC_WritePredData.h: A strategy to make prediffers write predicted data
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS_SC_SIMPLE_H
-#define LOFAR_BBS_SC_SIMPLE_H
+#ifndef LOFAR_BBSCONTROL_SC_WRITEPREDDATA_H
+#define LOFAR_BBSCONTROL_SC_WRITEPREDDATA_H
 
 // \file
-// A simple calibration strategy
+// A strategy to make prediffers write predicted data
 
 //# Includes
 #include <BBSControl/StrategyController.h>
@@ -41,14 +41,14 @@ namespace LOFAR
 
 using ACC::APS::ParameterSet;
 
-class SC_Simple : public StrategyController
+class SC_WritePredData : public StrategyController
 {
 public:
-  SC_Simple(Connection* inSolConn, Connection* outWOPDConn, 
+  SC_WritePredData(Connection* inSolConn, Connection* outWOPDConn, 
 	    Connection* outWOSolveConn, int nrPrediffers,
 	    const ParameterSet& args);
 
-  virtual ~SC_Simple();
+  virtual ~SC_WritePredData();
 
   /// Execute the strategy
   virtual bool execute();
@@ -60,30 +60,22 @@ public:
   virtual string getType() const;
 
  private:
-  SC_Simple(const SC_Simple&);
-  SC_Simple& operator=(const SC_Simple&);
-
-  void readSolution();
+  SC_WritePredData(const SC_WritePredData&);
+  SC_WritePredData& operator=(const SC_WritePredData&);
 
   bool         itsFirstCall;
-  int          itsPrevWOID;
   ParameterSet itsArgs;
-  int          itsNrIterations;
-  double       itsFitCriterion;
-  int          itsCurIter;
   double       itsCurStartTime;
-  bool         itsControlParmUpd;    // Does this Controller update the parameters?
-  bool         itsWriteParms;        // Write the parameters in the parmtable at the end of each interval?
+  bool         itsWriteInDataCol;
   double       itsStartTime;
   double       itsEndTime;
   double       itsTimeLength;
   int          itsStartChannel;
   int          itsEndChannel;
-  bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
 };
 
-inline string SC_Simple::getType() const
-{ return "Simple"; }
+inline string SC_WritePredData::getType() const
+{ return "WritePredData"; }
 
 // @}
 

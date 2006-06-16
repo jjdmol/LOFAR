@@ -1,0 +1,20 @@
+pkginclude_HEADERS = \
+	BBSStep.h \
+	BlackBoardDemo.h \
+	BlobAipsIO.h \
+	DH_Prediff.h \
+	DH_Solution.h \
+	DH_WOPrediff.h \
+	DH_WOSolve.h \
+	ParmWriter.h \
+	SC_CompoundIter.h \
+	SC_Simple.h \
+	SC_WritePredData.h \
+	StrategyController.h \
+	WH_Control.h \
+	WH_Prediff.h \
+	WH_Solve.h
+
+noinst_HEADERS =
+
+include $(top_srcdir)/Makefile.common

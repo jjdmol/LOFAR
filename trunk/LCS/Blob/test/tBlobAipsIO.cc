@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/BlobAipsIO.h>
+#include <BBSControl/BlobAipsIO.h>
 #include <Blob/BlobOBufChar.h>
 #include <Blob/BlobIBufChar.h>
 #include <Common/LofarLogger.h>

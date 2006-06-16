@@ -23,8 +23,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef LOFAR_BBS_DH_PREDIFF_H
-#define LOFAR_BBS_DH_PREDIFF_H
+#ifndef LOFAR_BBSCONTROL_DH_PREDIFF_H
+#define LOFAR_BBSCONTROL_DH_PREDIFF_H
 
 // \file
 // DataHolder for 'prediffed' data.

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS_STRATEGYCONTROLLER_H
-#define LOFAR_BBS_STRATEGYCONTROLLER_H
+#ifndef LOFAR_BBSCONTROL_STRATEGYCONTROLLER_H
+#define LOFAR_BBSCONTROL_STRATEGYCONTROLLER_H
 
 // \file
 // A base class for all calibration strategies
