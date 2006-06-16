@@ -30,7 +30,7 @@
 #include <BBS/MNS/MeqMatrixComplexArr.h>
 #include <BBS/MNS/Pool.h>
 #include <Common/LofarLogger.h>
-#include <iomanip>
+#include <Common/lofar_iomanip.h>
 
 #if defined TIMER
 #include <Common/Timer.h>
@@ -129,8 +129,8 @@ void MeqMatrixComplexArr::show (ostream& os) const
     if (i > 0) {
       os << ", ";
     }
-    os << '(' << std::setprecision(12) << itsReal[i]
-       << ',' << std::setprecision(12) << itsImag[i] << ')';
+    os << '(' << setprecision(12) << itsReal[i]
+       << ',' << setprecision(12) << itsImag[i] << ')';
   }
   os << ']';
 }
@@ -186,7 +186,7 @@ void MeqMatrixComplexArr::operator delete(void *ptr)
 
 void MeqMatrixComplexArr::poolActivate(int nelements)
 {
-  //std::cerr << "MeqMatrixComplexArr::poolActivate(" << nelements << ")\n";
+  //cerr << "MeqMatrixComplexArr::poolActivate(" << nelements << ")\n";
   if (nelements != poolNElements) {
     poolDeactivate();
     poolNElements = nelements;
