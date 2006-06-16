@@ -39,11 +39,24 @@ namespace LOFAR {
   inline TYPES::dcomplex makedcomplex (double re, double im)
     { return TYPES::dcomplex(re,im); }
 
-  using std::real;
-  using std::imag;
-  using std::conj;
   using std::abs;
   using std::arg;
+  using std::conj;
+  using std::cos;
+  using std::cosh;
+  using std::exp;
+  using std::imag;
+  using std::log;
+  using std::log10;
+  using std::norm;
+  using std::polar;
+  using std::pow;
+  using std::real;
+  using std::sin;
+  using std::sinh;
+  using std::sqrt;
+  using std::tan;
+  using std::tanh;
 }
 
 #endif
