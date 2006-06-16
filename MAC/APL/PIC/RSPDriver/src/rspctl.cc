@@ -401,7 +401,8 @@ void RCUCommand::send()
     setrcu.settings()(0) = m_control;
 
     for (int i = 0; i < setrcu.settings().extent(firstDim); i++) {
-      printf("control(%d)=0x%08x\n", i, setrcu.settings()(i).getRaw());
+      printf("control(%d) =0x%08x\n", i, setrcu.settings()(i).getRaw());
+      printf("modified(%d)=0x%08x\n", i, setrcu.settings()(i).getModified());
     }
 
     m_rspport.send(setrcu);
