@@ -79,8 +79,8 @@ public class jParmFacadeAdapter extends UnicastRemoteObject implements jParmFaca
         try {            
             aM=adaptee.getValues(parmNamePattern,startx,endx,nx,starty,endy,ny);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getValues error");
-            anEx.initCause(ex);
+            RemoteException anEx=new RemoteException("JNI getValues error caused by: " + ex.getMessage());
+            //anEx.initCause(ex);
             throw anEx;            
         }
         return aM;            
