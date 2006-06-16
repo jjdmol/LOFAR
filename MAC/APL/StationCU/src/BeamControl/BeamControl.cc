@@ -98,7 +98,7 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
 	registerProtocol (BS_PROTOCOL, 		   BS_PROTOCOL_signalnames);
 
-	itsState = CTState::CREATED;
+	setState(CTState::CREATED);
 }
 
 
@@ -116,6 +116,21 @@ BeamControl::~BeamControl()
 
 	// ...
 }
+
+//
+// setState(CTstateNr)
+//
+void    ObservationControl::setState(CTState::CTstateNr     newState)
+{
+	itsState = newState;
+
+	if (itsPropertySet) {
+		CTState		cts;
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),
+								 GCFPVString(cts.name(newState)));
+	}
+}   
+
 
 //
 // convertDirection(string) : int32
@@ -288,7 +303,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 									"F_CONNECTED event from port " << port.getNam());
 		itsTimerPort->cancelAllTimers();
 		LOG_DEBUG ("Connected with BeamServer");
-		itsState = CTState::CLAIMED;
+		setState(CTState::CLAIMED);
 		CONTROLClaimedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send(answer);
@@ -312,7 +327,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
-		itsState = CTState::CONNECTED;
+		setState(CTState::CONNECTED);
 		CONTROLConnectedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send(answer);
@@ -329,7 +344,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	case CONTROL_CLAIM: {
 		CONTROLClaimEvent		msg(event);
 		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
-		itsState = CTState::CLAIM;
+		setState(CTState::CLAIM);
 		LOG_DEBUG ("Trying to connect to BeamServer");
 		itsBeamServer->open();		// will result in F_CONN or F_DISCONN
 		break;
@@ -338,8 +353,8 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	case CONTROL_PREPARE: {
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
-		itsState = CTState::PREPARE;
-		itsState = doPrepare (msg.cntlrName) ? CTState::PREPARED : CTState::CLAIMED;
+		setState(CTState::PREPARE);
+		setState(doPrepare (msg.cntlrName) ? CTState::PREPARED : CTState::CLAIMED);
 		CONTROLPreparedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send();
@@ -349,7 +364,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	case CONTROL_RESUME: {
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
-		itsState = CTState::ACTIVE;
+		setState(CTState::ACTIVE);
 		CONTROLResumedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send(answer);
@@ -359,7 +374,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	case CONTROL_SUSPEND: {
 		CONTROLSuspendEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
-		itsState = CTState::SUSPENDED;
+		setState(CTState::SUSPENDED);
 		CONTROLSuspendedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send(answer);
@@ -369,9 +384,9 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
-		itsState = CTState::RELEASE;
+		setState(CTState::RELEASE);
 		doRelease(event);
-		itsState = CTState::RELEASED;
+		setState(CTState::RELEASED);
 		CONTROLReleasedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send(answer);

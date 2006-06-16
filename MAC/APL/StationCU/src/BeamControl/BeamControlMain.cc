@@ -33,9 +33,6 @@ int main(int argc, char* argv[])
 	// args: cntlrname, parentHost, parentService
 	GCFTask::init(argc, argv);
 
-	ChildControl*	cc = ChildControl::instance();
-	cc->start();	// make initial transition
-
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
 
