@@ -26,6 +26,7 @@
 #include <BBS/MNS/MeqPolc.h>
 #include <BBS/MNS/MeqTabular.h>
 #include <Common/LofarLogger.h>
+#include <Common/VectorUtil.h>
 #include <casa/Arrays/Matrix.h>
 
 using namespace casa;
@@ -82,7 +83,9 @@ MeqFunklet* MeqFunklet::make (const ParmDB::ParmValue& pvalue,
 			      const string& name)
 {
   ASSERTSTR (pvalue.rep().itsShape.size()==2,
-	     "No 2-dim funklet found for parameter " << name);
+	     "No 2-dim funklet " << pvalue.rep().itsType << ' '
+	     << pvalue.rep().itsShape
+	     << " found for parameter " << name);
   if (pvalue.rep().itsType=="polc") {
     return new MeqPolc(pvalue);
   } else if (pvalue.rep().itsType=="tabular") {
