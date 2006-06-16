@@ -1,0 +1,11 @@
+create tablename='tparmdb_tmp.pdb'
+adddef abc
+adddef abc
+showdef
+show
+updatedef abc values=2
+showdef
+show
+removedef abc
+showdef
+quit

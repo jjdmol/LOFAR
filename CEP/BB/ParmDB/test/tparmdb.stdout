@@ -1,0 +1,19 @@
+Command: Command: abc  type=polc
+    values:  1  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+Wrote new def record for parameter abc
+Command: Command: abc  type=polc
+    values:  1  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+Command: 0 parms found
+Command: abc  type=polc
+    values:  2  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+Updated 1 default parm value records
+Command: abc  type=polc
+    values:  2  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+Command: 0 parms found
+Command: Deleted 1 default parm value records
+Command: 0 parms found
+Command: 
