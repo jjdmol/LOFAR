@@ -27,6 +27,7 @@
 #include <BBS/FlagsMap.h>
 #include <BBS/MNS/MeqLMN.h>
 #include <BBS/MNS/MeqDFTPS.h>
+#include <BBS/MNS/MeqDiag.h>
 #include <BBS/MNS/MeqBaseDFTPS.h>
 #include <BBS/MNS/MeqBaseLinPS.h>
 #include <BBS/MNS/MeqStatExpr.h>
@@ -187,7 +188,6 @@ Prediffer::Prediffer(const string& msName,
   bool usePEJ = false;
   bool useTEJ = false;
   bool useBandpass = false;
-  ///  bool useBandpass = false;
   vector<string> types = StringUtil::split(modelType, '.');
   for (uint i=0; i<types.size(); ++i) {
     if (types[i] != "") {
@@ -207,7 +207,7 @@ Prediffer::Prediffer(const string& msName,
       }
     }
   }
-  makeLOFARExpr(useTEJ, usePEJ, asAP, useStatParm);
+  makeLOFARExpr(useTEJ, usePEJ, asAP, useStatParm, useBandpass);
 
   // Show frequency domain.
   LOG_INFO_STR( "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
@@ -488,7 +488,7 @@ void Prediffer::getSources()
 //
 //----------------------------------------------------------------------
 void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
-			       bool useStatParm)
+			       bool useStatParm, bool useBandpass)
 {
   // Allocate the vectors holding the expressions.
   int nrstat = itsStations.size();
@@ -512,6 +512,9 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
   vector<MeqJonesExpr> totalEJ(nrstat);
   // Correction per station.
   vector<MeqJonesExpr> corrStat(nrstat);
+  // Bandpass per station.
+  vector<MeqJonesExpr> bandpass(nrstat);
+
   // Fill the vectors for each station.
   for (int i=0; i<nrstat; ++i) {
     MeqStatUVW* uvw = 0;
@@ -538,6 +541,17 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
 						&itsParmGroup, &itsMEP));
 	statExpr[i] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
 						    gain11, gain22));
+      }
+      // Make a bandpass per station
+      if (useBandpass) {
+        string stationName = itsStations[i]->getName();
+        
+        MeqExpr bandpassXX(MeqParmFunklet::create("Bandpass:XX:" + stationName,
+						  &itsParmGroup, &itsMEP));
+        MeqExpr bandpassYY(MeqParmFunklet::create("Bandpass:YY:" + stationName,
+						  &itsParmGroup, &itsMEP));
+        
+        bandpass[i] = new MeqDiag(MeqExpr(bandpassXX), MeqExpr(bandpassYY));
       }
       // Make a DFT per station per source.
       for (int src=0; src<nrsrc; ++src) {
@@ -693,6 +707,11 @@ void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
 				     sumAll,
 				     totalEJ[ant2]);
 	}
+        if (useBandpass) {
+          sumAll = new MeqJonesCMul3(bandpass[ant1],
+                                     sumAll,
+                                     bandpass[ant2]);
+        }
 	if (useStatParm) {
 	  sumAll = new MeqJonesCMul3(statExpr[ant1],
 				     sumAll,

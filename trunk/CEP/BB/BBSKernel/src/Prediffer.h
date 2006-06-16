@@ -230,7 +230,7 @@ private:
   // or ampl/phase.
   // The station parameters are optionally taken into account.
   void makeLOFARExpr (bool usePatchEJ, bool useTotalEJ, bool asAP,
-		      bool useStatParm);
+		      bool useStatParm, bool useBandpass);
 
   // Find all nodes to be precalculated.
   void setPrecalcNodes (vector<MeqJonesExpr>& nodes);
