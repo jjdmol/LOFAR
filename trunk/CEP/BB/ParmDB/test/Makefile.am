@@ -5,7 +5,7 @@ CHECKTOOLPROGS        =
 #ENDCHECKTOOLPROGS
 
 # scripts used to run tests
-TESTSCRIPTS           =
+TESTSCRIPTS           = tparmdb.sh
 
 # scripts and possible programs to run tests
 TESTS	              = $(TESTSCRIPTS)

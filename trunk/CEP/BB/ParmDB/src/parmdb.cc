@@ -691,7 +691,7 @@ void updateDefParm (const string& parmName, ParmValue& pvalue,
     pval.itsWeight = kvmap.getDouble ("weight", 1);
   }
   showParm (parmName, pval, false);
-  parmtab->putValue (parmName, pvalue);
+  parmtab->putDefValue (parmName, pvalue);
 }
 
 void updateDefParms (map<string,ParmValueSet>& parmSet, KeyValueMap& kvmap)
