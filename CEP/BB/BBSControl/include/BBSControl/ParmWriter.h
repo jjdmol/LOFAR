@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BB_BBS_PARMWRITER_H
-#define LOFAR_BB_BBS_PARMWRITER_H
+#ifndef LOFAR_BBSCONTROL_PARMWRITER_H
+#define LOFAR_BBSCONTROL_PARMWRITER_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 

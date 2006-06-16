@@ -198,7 +198,7 @@ void WH_Prediff::process()
 	  BBSTest::ScopedTimer predifTimer("P:prediffer");
 	  dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
 	  vector<casa::LSQFit> fitters;
-	  pred->fillFitter (fitters, "DATA");
+	  pred->fillFitters (fitters, "DATA");
 	  dhRes->setFitters (fitters);
 	  MeqDomain domain = pred->getWorkDomain();
 	  dhRes->setDomain (domain.startX(), domain.endX(),

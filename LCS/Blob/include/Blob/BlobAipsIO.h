@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_BLOBAIPSIO_H
-#define LOFAR_BB_BBS_BLOBAIPSIO_H
+#ifndef LOFAR_BBSCONTROL_BLOBAIPSIO_H
+#define LOFAR_BBSCONTROL_BLOBAIPSIO_H
 
 #include <casa/IO/ByteIO.h>
 #include <Blob/BlobOStream.h>

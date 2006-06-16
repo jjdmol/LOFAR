@@ -1,4 +1,4 @@
-//#  SC_CompoundIter.h: A calibration strategy which sends compound workorders.
+//#  SC_Simple.h: A simple calibration strategy
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,12 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS_SC_COMPOUNDITER_H
-#define LOFAR_BBS_SC_COMPOUNDITER_H
+#ifndef LOFAR_BBSCONTROL_SC_SIMPLE_H
+#define LOFAR_BBSCONTROL_SC_SIMPLE_H
 
-// \file SC_CompoundIter
-// A calibration strategy which sends compound workorders (multiple iterations).// NB. This strategy only works correctly when Prediffer and Solver run in 
-// separate processes.
+// \file
+// A simple calibration strategy
 
 //# Includes
 #include <BBSControl/StrategyController.h>
@@ -42,14 +41,14 @@ namespace LOFAR
 
 using ACC::APS::ParameterSet;
 
-class SC_CompoundIter : public StrategyController
+class SC_Simple : public StrategyController
 {
 public:
-  SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn, 
+  SC_Simple(Connection* inSolConn, Connection* outWOPDConn, 
 	    Connection* outWOSolveConn, int nrPrediffers,
 	    const ParameterSet& args);
 
-  virtual ~SC_CompoundIter();
+  virtual ~SC_Simple();
 
   /// Execute the strategy
   virtual bool execute();
@@ -61,15 +60,15 @@ public:
   virtual string getType() const;
 
  private:
-  SC_CompoundIter(const SC_CompoundIter&);
-  SC_CompoundIter& operator=(const SC_CompoundIter&);
+  SC_Simple(const SC_Simple&);
+  SC_Simple& operator=(const SC_Simple&);
 
-  void readFinalSolution();
+  void readSolution();
 
   bool         itsFirstCall;
   int          itsPrevWOID;
   ParameterSet itsArgs;
-  int          itsMaxIterations;
+  int          itsNrIterations;
   double       itsFitCriterion;
   int          itsCurIter;
   double       itsCurStartTime;
@@ -83,8 +82,8 @@ public:
   bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
 };
 
-inline string SC_CompoundIter::getType() const
-{ return "CompoundIter"; }
+inline string SC_Simple::getType() const
+{ return "Simple"; }
 
 // @}
 

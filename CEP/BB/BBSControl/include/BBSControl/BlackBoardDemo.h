@@ -24,8 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef LOFAR_BBS_BLACKBOARDDEMO_H
-#define LOFAR_BBS_BLACKBOARDDEMO_H
+#ifndef LOFAR_BBSCONTROL_BLACKBOARDDEMO_H
+#define LOFAR_BBSCONTROL_BLACKBOARDDEMO_H
 
 // \file
 // This is an ApplicationHolder class which demonstrates the use of a blackboard control

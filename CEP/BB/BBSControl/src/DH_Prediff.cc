@@ -133,7 +133,7 @@ void DH_Prediff::setFitters (const vector<LSQFit>& fitters)
   BlobAipsIO bio(bos);
   casa::AipsIO aio(&bio);
   aio.putstart ("fitters", 1);
-  aio << fitters.size();
+  aio << static_cast<uInt>(fitters.size());
   for (uint i=0; i<fitters.size(); ++i) {
     fitters[i].toAipsIO (aio);
   }
@@ -149,7 +149,7 @@ bool DH_Prediff::getFitters (vector<LSQFit>& fitters)
     BlobAipsIO bio(bis);
     casa::AipsIO aio(&bio);
     aio.getstart ("fitters");
-    uint sz;
+    uInt sz;
     aio >> sz;
     fitters.resize (sz);
     for (uint i=0; i<sz; ++i) {
@@ -197,7 +197,9 @@ void DH_Prediff::dump() const
 
 void DH_Prediff::clearData()
 {
-  setParmData (ParmDataInfo());
+  // Kludge to get around fact that temporaries must be copy constructable
+  ParmDataInfo dummy;
+  setParmData (dummy);
 }
 
 } // namespace LOFAR

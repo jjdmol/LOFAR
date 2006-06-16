@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_BBSSTEP_H
-#define LOFAR_BB_BBS_BBSSTEP_H
+#ifndef LOFAR_BBSCONTROL_BBSSTEP_H
+#define LOFAR_BBSCONTROL_BBSSTEP_H
 
 // \file
 // The properties for solvable parameters
