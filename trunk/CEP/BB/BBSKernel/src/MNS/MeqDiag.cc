@@ -47,6 +47,8 @@ MeqJonesResult MeqDiag::getJResult(const MeqRequest& request)
   {
     itsXX.getResultSynced(request, res.result11());
     itsYY.getResultSynced(request, res.result22());
+    res.result12().setValue (MeqMatrix(0.));
+    res.result21().setValue (MeqMatrix(0.));
   }
   return res;
 }

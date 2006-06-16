@@ -52,11 +52,7 @@ MeqParmFunklet::MeqParmFunklet (const string& name, MeqParmGroup* group,
   itsNrPert  (0),
   itsPertInx (-1),
   itsTable   (table)
-{
-  // See if the parm is a parm-expression.
-  // If so, create parm-funklets for them.
-  
-}
+{}
 
 MeqParmFunklet::~MeqParmFunklet()
 {
@@ -261,8 +257,9 @@ void MeqParmFunklet::fillFunklets
   if (!found) {
     // No value found, so use a default value.
     ParmDB::ParmValue pval = itsTable->getDefValue (getName());
-    ASSERTSTR (!pval.rep().itsType.empty(),
-	       "No value found for parameter " << getName());
+    ASSERTSTR (!pval.rep().itsShape.empty(),
+	       "No value found for parameter " << getName()
+	       << " in given domain");
     pval.rep().setDomain (pdomain);
     itsFunklets.push_back (MeqFunklet::make (pval, getName()));
     itsDefUsed = true;
