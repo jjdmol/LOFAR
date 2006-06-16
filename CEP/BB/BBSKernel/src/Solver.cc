@@ -98,7 +98,7 @@ void Solver::mergeFitters (const vector<LSQFit>& fitters, int prediffer)
   // Initialize the solvers (needed after a setSolvable).
   if (itsDoSet) {
     for (uint i=0; i<itsFitters.size(); ++i) {
-      itsFitters[i].fitter.set (itsFitters[i].solvableValues.size());
+      itsFitters[i].fitter.set ((uInt)itsFitters[i].solvableValues.size());
       itsFitters[i].nused = 0;
       itsFitters[i].nflagged = 0;
     }
