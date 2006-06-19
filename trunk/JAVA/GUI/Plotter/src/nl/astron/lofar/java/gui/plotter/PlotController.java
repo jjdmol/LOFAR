@@ -155,14 +155,16 @@ public class PlotController{
      * user needs to be aware of.
      */
     public JComponent modifyPlot(JComponent currentPlot, Object newConstraints) throws PlotterException{
-        JComponent newPlotComponent = null;
         if(m_PlotFrameWork == null){
             initializePlotterFramework();
         }
-        m_plotData = m_PlotDataManager.updateData(m_plotData,newConstraints);
-        newPlotComponent = m_PlotFrameWork.modifyPlot(currentPlot,m_plotData);
-        
-        return newPlotComponent;
+        try {
+            m_plotData = m_PlotDataManager.updateData(m_plotData,newConstraints);
+            currentPlot = m_PlotFrameWork.modifyPlot(currentPlot,m_plotData);
+        } catch (PlotterException ex) {
+            throw ex;
+        }       
+        return currentPlot;
     }
     /**
      * This method allows a user to get the dataset for the plot currently in memory.
