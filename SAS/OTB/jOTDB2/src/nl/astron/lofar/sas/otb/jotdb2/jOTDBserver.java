@@ -22,6 +22,8 @@
 package nl.astron.lofar.sas.otb.jotdb2;
 import java.rmi.registry.*;
 import java.rmi.server.RMISocketFactory;
+import nl.astron.lofar.lofarutils.remoteFileAdapter;
+import nl.astron.lofar.lofarutils.remoteFileInterface;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -36,6 +38,7 @@ public class jOTDBserver {
     private static jTreeValueAdapter jTreeValueAdapter;
     private static jConverter jConverterAdaptee;
     private static jConverterAdapter jConverterAdapter;
+    private static remoteFileAdapter remoteFileAdapter;
     
     static
     {
@@ -141,6 +144,23 @@ public class jOTDBserver {
             localRegistry.rebind(jConverterInterface.SERVICENAME, jConverterAdapter);
             
             logger.info("Published jConverterInterface as service " + jConverterInterface.SERVICENAME + ". Ready...");
+
+            // Export remoteFile
+            remoteFileAdapter = new remoteFileAdapter(remoteFileInterface.SERVICENAME);
+            //A custom port was specified, export the object using the port specified
+            if(objectPort!=0){
+                remoteFileAdapter.unexportObject(remoteFileAdapter,true);
+                remoteFileAdapter.exportObject(remoteFileAdapter,objectPort);
+            }
+            logger.info("jOTDBserver publishing service " + remoteFileInterface.SERVICENAME + " in local registry...");
+            localRegistry.rebind(remoteFileInterface.SERVICENAME, remoteFileAdapter);
+            
+            logger.info("Published remoteFileInterface as service " + remoteFileInterface.SERVICENAME + ". Ready...");
+            
+            
+            
+            
+            
             String statusmessage = "jOTDBserver is ready for incoming calls";
             if (args.length > 4) {
                 Integer rmiPort = new Integer(args[4]);
