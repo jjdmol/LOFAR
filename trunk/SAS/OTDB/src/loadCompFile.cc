@@ -356,8 +356,8 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 	while (!inError && inFile.getline(line, maxLineLen)) {
 		lineNr++;
 
-		// skip empty and comment lines
-		if (!line[0] || line[0] == '#') {
+		// skip empty and comment dos lines
+		if (!line[0] || line[0] == '#' || line[0] == 0x0d) {
 			continue;
 		}
 		
