@@ -138,15 +138,15 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 returnMap.put(PlotConstants.DATASET_SUBNAME,"Generated at "+ utcDate.toString() + " MJD: "+modifiedJulianDay);
                 
-                returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Time");
+                returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Frequency");
                 
-                returnMap.put(PlotConstants.DATASET_XAXISUNIT,"not specified");
+                returnMap.put(PlotConstants.DATASET_XAXISUNIT,"(Hz)");
                 
                 returnMap.put(PlotConstants.DATASET_XAXISTYPE,"SPATIAL");
                 
-                returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Frequency");
+                returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Bandpass Gain");
                 
-                returnMap.put(PlotConstants.DATASET_YAXISUNIT,"Hz");
+                returnMap.put(PlotConstants.DATASET_YAXISUNIT,"");
                 
                 returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
                 
@@ -205,7 +205,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             this.initiateConnectionToParmDB(constraints);
             
         }
-        //try{
+        try{
         
         LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)currentData.get(PlotConstants.DATASET_VALUES);
         
@@ -264,11 +264,12 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             //TODO: IMPLEMENT
             
         }
-        //}catch(Exception e){
-        //    PlotterDataAccessException ex = new PlotterDataAccessException("An error occurred while updating dataset "+currentData.hashCode());
-        //    ex.initCause(e);
-        //    throw ex;
-        //}
+        }catch(Exception e){
+            PlotterDataAccessException ex = new PlotterDataAccessException("An error occurred while updating the dataset! : "+e.getMessage());
+            ex.initCause(e);
+            throw ex;
+            
+        }
         
         return currentData;
         
