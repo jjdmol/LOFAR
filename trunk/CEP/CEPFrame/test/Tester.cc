@@ -38,7 +38,7 @@
 
 using namespace LOFAR;
 
-int main (int argc, const char *argv[])
+int main (int argc, char *argv[])
 {
   // Set trace level.
   INIT_LOGGER("Tester.log_prop");

@@ -75,7 +75,7 @@ void doIt (Composite& comp, const std::string& name, int nsteps)
 }
 
 
-int main (int argc, const char *argv[])
+int main (int argc, char *argv[])
 {
 #ifdef HAVE_MPI
   TH_MPI::initMPI(argc, argv);
