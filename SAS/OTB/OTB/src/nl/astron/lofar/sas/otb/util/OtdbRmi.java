@@ -24,6 +24,7 @@ package nl.astron.lofar.sas.otb.util;
 
 import java.rmi.Naming;
 import java.util.TreeMap;
+import nl.astron.lofar.lofarutils.remoteFileInterface;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jConverterInterface;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBinterface;
@@ -43,7 +44,7 @@ import org.apache.log4j.Logger;
  *
  * @version $Id$
  *
- * @updated
+ * @updated coolen 16-06-2006,  added support for remotefiletransfer
  */
 public class OtdbRmi {
     
@@ -58,6 +59,7 @@ public class OtdbRmi {
     public static String RMIMaintenanceName = jTreeMaintenanceInterface.SERVICENAME;
     public static String RMIValName         = jTreeValueInterface.SERVICENAME;
     public static String RMIConverterName   = jConverterInterface.SERVICENAME; 
+    public static String RMIRemoteFileName  = remoteFileInterface.SERVICENAME;
     
     private static boolean isOpened         = false;
     private static boolean isConnected      = false;
@@ -68,6 +70,7 @@ public class OtdbRmi {
     private static jTreeMaintenanceInterface remoteMaintenance;
     private static jTreeValueInterface remoteValue;
     private static jConverterInterface remoteTypes;
+    private static remoteFileInterface remoteFileTrans;
     
     private static TreeMap<Short,String> itsClassifs;
     private static TreeMap<Short,String> itsParamTypes;
@@ -116,6 +119,15 @@ public class OtdbRmi {
     public jTreeValueInterface getRemoteValue() {
 
         return this.remoteValue;
+    }
+
+    /**
+     * Getter for property remoteFileTrans.
+     * @return Value of property remoteValue.
+     */
+    public remoteFileInterface getRemoteFileTrans() {
+
+        return this.remoteFileTrans;
     }
 
     /**
@@ -185,10 +197,12 @@ public class OtdbRmi {
         String aRMS="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIMaintenanceName;
         String aRMV="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIValName;
         String aRMC="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIConverterName;
+        String aRFI="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIRemoteFileName;
+        
 
         isOpened=openRemoteConnection(aRC);
         if (isOpened){
-            if (openRemoteMaintenance(aRMS) && openRemoteValue(aRMV) && openRemoteConverter(aRMC)) {  
+            if (openRemoteMaintenance(aRMS) && openRemoteValue(aRMV) && openRemoteConverter(aRMC) && openRemoteFile(aRFI)) {  
                 logger.debug("Remote connections opened");
                 isConnected=true;
             } else {
@@ -280,6 +294,24 @@ public class OtdbRmi {
         return false;
     }
     
+    private boolean openRemoteFile(String RMIRemoteFileName) {
+        try {
+            logger.debug("OpenRemoteFile for "+RMIRemoteFileName);
+        
+            // create a remote object
+            remoteFileTrans = (remoteFileInterface) Naming.lookup (RMIRemoteFileName);     
+            logger.debug(remoteFileTrans);
+					    
+     	    logger.debug("Connection succesful!");   
+            return true;
+          }
+        catch (Exception e)
+	  {
+	     logger.debug("Getting RemoteFileTransfer via RMI and JNI failed: " + e);
+	  }
+        return false;
+    }
+
     private boolean loadConversionTypes() {
         try {
             logger.debug("Get ConversionTypes");
