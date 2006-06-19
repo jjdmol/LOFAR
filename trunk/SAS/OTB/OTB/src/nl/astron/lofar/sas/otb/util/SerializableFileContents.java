@@ -22,6 +22,12 @@
 
 package nl.astron.lofar.sas.otb.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+
 /**
  * This class provides a way to copy large files over RMI connections.
  * based upoin code found on the java developers network written by ejs.
@@ -34,7 +40,7 @@ package nl.astron.lofar.sas.otb.util;
 
 public class SerializableFileContents implements Serializable
 {
-    public static final long serialVersionUID = ...;
+    public static final long serialVersionUID = -3306792878610064241L;
     private File file;
  
     public SerializableFileContents(File file)

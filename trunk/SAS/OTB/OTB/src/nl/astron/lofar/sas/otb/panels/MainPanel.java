@@ -22,7 +22,11 @@
  */
 
 package nl.astron.lofar.sas.otb.panels;
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.rmi.RemoteException;
 
 import javax.swing.JOptionPane;
@@ -571,25 +575,39 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("New")) {
                 if (getFile("VIC-component") ) {
                     try {
-                        // Create a new Tree from the found file.
-                        int anID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadComponentFile(itsNewFile.getPath());
-                        if (anID < 1) {
-                            logger.debug("Error on ComponentfileLoad: " + itsNewFile.getPath());
-                        } else {
-                            // set the new created fill description stuff if needed
-                            itsMainFrame.getSharedVars().setComponentID(anID);
-                            if (!itsFileDescription.equals("")) {
-                                jVICnodeDef aND=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getComponentNode(anID);
-                                aND.description=itsFileDescription;
-                                if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveComponentNode(aND)) {
-                                    logger.debug("Error during setDescription in Component "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                        // the file obviously resides at the client side, and needs to be transfered to the server side.
+                        byte uldata[] = new byte[(int)itsNewFile.length()]; 
+                        BufferedInputStream input = new BufferedInputStream(new FileInputStream(itsNewFile));   
+                        input.read(uldata,0,uldata.length);
+                        input.close();
+                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().uploadFile(uldata,itsNewFile.getName())) {
+                            logger.debug("upload finished");
+                            // Create a new Tree from the found file.
+                            int anID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadComponentFile(itsNewFile.getName());
+                            if (anID < 1) {
+                                logger.debug("Error on ComponentfileLoad: " + itsNewFile.getPath());
+                            } else {
+                                // set the new created fill description stuff if needed
+                                itsMainFrame.getSharedVars().setComponentID(anID);
+                                if (!itsFileDescription.equals("")) {
+                                    jVICnodeDef aND=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getComponentNode(anID);
+                                    aND.description=itsFileDescription;
+                                    if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveComponentNode(aND)) {
+                                        logger.debug("Error during setDescription in Component "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                                    }
                                 }
+                                // set changed flag to reload mainpanel
+                                itsMainFrame.setChanged(this.getFriendlyName(),true);
+                                checkChanged();
                             }
-                            // set changed flag to reload mainpanel
-                            itsMainFrame.setChanged(this.getFriendlyName(),true);
-                            checkChanged();
+                        } else {
+                            logger.debug("upload failed");
                         }
+                    } catch (FileNotFoundException ex) {
+                        logger.debug("Error during newPICTree creation: "+ ex);
                     } catch (RemoteException ex) {
+                        logger.debug("Error during newPICTree creation: "+ ex);
+                    } catch (IOException ex) {
                         logger.debug("Error during newPICTree creation: "+ ex);
                     }
                     ComponentMaintenancePanel aP=(ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
