@@ -31,6 +31,7 @@ import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
@@ -94,7 +95,7 @@ public class PlotSlot extends JPanel{
         return slotLabel;
     }
     protected void setViewedExternally(boolean viewedExternally){
-       this.isViewedExternally = viewedExternally;
+        this.isViewedExternally = viewedExternally;
     }
     
     protected boolean isViewedExternally(){
@@ -123,30 +124,32 @@ public class PlotSlot extends JPanel{
             itsPlot.createPlot(PlotConstants.PLOT_XYLINE,true,constraints);
             add(itsPlot,BorderLayout.CENTER);
         } catch (PlotterException ex) {
-            JTextArea error = new JTextArea(ex.getMessage());
-            error.setColumns(20);
-            add(error,BorderLayout.CENTER);
-            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, ex.getMessage(),
+                    "Error detected while making the plot",
+                    JOptionPane.ERROR_MESSAGE);
+            itsPlot = null;
+            removeAll();
+            addOptionLabel();
+       
         }
     }
     
     public void modifyPlot(Object constraints){
         if(containsPlot()){
-            removeAll();
-            addOptionLabel();
             try {
                 itsPlot.modifyPlot(constraints);
+                removeAll();
+                addOptionLabel();
                 add(itsPlot,BorderLayout.CENTER);
                 if(containsLegend()){
                     addLegend();
                 }
                 
             } catch (PlotterException ex) {
-                JTextArea error = new JTextArea(ex.getMessage());
-                error.setColumns(20);
-                add(error,BorderLayout.CENTER);
-                ex.printStackTrace();
-            }            
+                 JOptionPane.showMessageDialog(null, ex.getMessage(),
+                    "Error detected while updating the plot",
+                    JOptionPane.ERROR_MESSAGE);
+            }
         }else{
             addPlot(constraints);
         }

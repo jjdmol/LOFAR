@@ -195,7 +195,15 @@ public class PlotSlotManager{
     
     public void modifyPlotInSlot(int index, Object constraints){
         getSlot(index).modifyPlot(constraints);
-        this.fireSlotsUpdated(index);
+        int currentPlots = 0;
+        for(PlotSlot slot : itsPlotSlots){
+            if(slot.containsPlot()) currentPlots++;
+        }
+        if(currentPlots > 1){
+            fireSlotsUpdated(index);
+        }else{
+            fireSlotsUpdated(-1);
+        }
     }
     
     public void movePlot(int indexFromSlot, int indexToSlot){
