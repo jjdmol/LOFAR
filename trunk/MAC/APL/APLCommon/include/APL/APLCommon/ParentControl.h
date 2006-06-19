@@ -36,7 +36,6 @@
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
 #include <APL/APLCommon/APL_Defines.h>
-#include <OTDB/OTDBtypes.h>
 #include "CTState.h"
 
 // Avoid 'using namespace' in headerfiles
