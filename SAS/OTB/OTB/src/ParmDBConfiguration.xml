@@ -11,17 +11,13 @@
         <!-- Only one server can be specified at this time. Please modify this server node if needed -->
         <server id="ParmDB1" name="ParmDB on LOFAR17">
             <connection>                
-                <rmihostname>localhost</rmihostname>
+                <rmihostname>lofar17.astron.nl</rmihostname>
                 <rmiport>10668</rmiport>
             </connection>
             <tables>
                 <table>
-                    <name>ParmDB-TEST1</name>
-                    <location>/home/pompert/transfer/tParmFacade.in_mep</location>
-                </table>
-                <table>
-                    <name>ParmDB-TEST2</name>
-                    <location>/home/pompert/transfer/test2ParmFacade.in_mep</location>
+                    <name>ParmDB - Bandpass data Ger</name>
+                    <location>/data/PSS3/diepen/BBS2/BP/bp1.mep</location>
                 </table>
             </tables>
         </server>
