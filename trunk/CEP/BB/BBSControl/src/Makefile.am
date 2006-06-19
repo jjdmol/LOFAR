@@ -2,6 +2,10 @@ lib_LTLIBRARIES		= libbbscontrol.la
 
 libbbscontrol_la_SOURCES= \
 	BBS.cc \
+	BBSStep.cc \
+	BBSSingleStep.cc \
+	BBSMultiStep.cc \
+	BBSStrategy.cc \
 	BlackBoardDemo.cc \
 	BlobAipsIO.cc \
 	DH_Prediff.cc \
