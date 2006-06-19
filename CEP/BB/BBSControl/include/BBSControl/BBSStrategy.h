@@ -1,4 +1,4 @@
-//# BBSStep.h: The properties for solvable parameters
+//# BBSStrategy.h: The properties for solvable parameters
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,55 +20,55 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSSTEP_H
-#define LOFAR_BBSCONTROL_BBSSTEP_H
+#ifndef LOFAR_BBSCONTROL_BBSSTRATEGY_H
+#define LOFAR_BBSCONTROL_BBSSTRATEGY_H
 
 // \file
 // The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/DataSelection.h>
 #include <APS/ParameterSet.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    //# Forward Declarations.
-    class BBSMultiStep;
+    //# Forward declarations
+    class BBSStep;
 
     // \addtogroup BBS
     // @{
 
-    class BBSStep
+    class BBSStrategy
     {
     public:
-      virtual ~BBSStep() {}
+      // Create a solve strategy for the given work domain.
+      BBSStrategy(const string& aName,
+		  const ACC::APS::ParameterSet& aParamSet);
 
-      // Return a pointer to the current BBSMultiStep. Since the base class is
-      // not a BBSMultiStep, it will return a null pointer.
-      virtual BBSMultiStep* getMultiStep() { return 0; }
+      ~BBSStrategy();
 
-      // Add a BBSStep to the current BBSStep.
-      // \note You can \e only add a BBSStep to a BBSMultiStep. 
-      // \throw AssertError if \c this is not an instance of BBSMultiStep.
-      virtual void addStep(const BBSStep*& aStep);
-
-    protected:
-      BBSStep(const string& aName, 
-	      const ACC::APS::ParameterSet& aParamSet);
+      // Add a BBS step to the solve strategy.
+      void addStep(const BBSStep*& aStep);
 
     private:
-      // Name of this step.
-      string                       itsName;
+      // Name of this strategy.
+      string itsName;
 
-      // Paramter set associated with this step.
+      // Parameter set.
+      // The parameter set contains information about:
+      // - the work domain size (bandwidth f(Hz), time interval t(s)).
+      // - the name(s) of the Measurement Set file(s).
+      // - the initial selection (e.g., should we include autocorrelation data)
+      // - where the BlackBoard database is located (ipaddr/port, etc.)
+      // - where the Parameter database is located; and, more specifically,
+      //   the name(s) of the ME parameter tables.
+      // - the names of the input and output columns in the Measurement Set
+      //   (if needed).
       ACC::APS::ParameterSet itsParamSet;
 
-      // Data selection for this step.
-      DataSelection          itsSelection;
+      // Sequence of steps that comprise this solve strategy.
+      vector<const BBSStep*> itsSteps;
     };
 
     // @}

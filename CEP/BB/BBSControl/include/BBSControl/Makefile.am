@@ -1,5 +1,8 @@
 pkginclude_HEADERS = \
 	BBSStep.h \
+	BBSSingleStep.h \
+	BBSMultiStep.h \
+	BBSStrategy.h \
 	BlackBoardDemo.h \
 	BlobAipsIO.h \
 	DH_Prediff.h \

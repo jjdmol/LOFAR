@@ -1,4 +1,4 @@
-//# BBSStep.h: The properties for solvable parameters
+//# BBSSingleStep.h: The properties for solvable parameters
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,55 +20,36 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSSTEP_H
-#define LOFAR_BBSCONTROL_BBSSTEP_H
+#ifndef LOFAR_BBSCONTROL_BBSSINGLESTEP_H
+#define LOFAR_BBSCONTROL_BBSSINGLESTEP_H
 
 // \file
 // The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/DataSelection.h>
-#include <APS/ParameterSet.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+#include <BBSControl/BBSStep.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
     //# Forward Declarations.
-    class BBSMultiStep;
+    class DataSelection;
+    class SourceGroup;
 
     // \addtogroup BBS
     // @{
 
-    class BBSStep
+    class BBSSingleStep : public BBSStep
     {
     public:
-      virtual ~BBSStep() {}
-
-      // Return a pointer to the current BBSMultiStep. Since the base class is
-      // not a BBSMultiStep, it will return a null pointer.
-      virtual BBSMultiStep* getMultiStep() { return 0; }
-
-      // Add a BBSStep to the current BBSStep.
-      // \note You can \e only add a BBSStep to a BBSMultiStep. 
-      // \throw AssertError if \c this is not an instance of BBSMultiStep.
-      virtual void addStep(const BBSStep*& aStep);
-
-    protected:
-      BBSStep(const string& aName, 
-	      const ACC::APS::ParameterSet& aParamSet);
-
+      BBSSingleStep(const string& aName,
+		    const ACC::APS::ParameterSet& aParamSet);
+		    
     private:
-      // Name of this step.
-      string                       itsName;
-
-      // Paramter set associated with this step.
-      ACC::APS::ParameterSet itsParamSet;
-
-      // Data selection for this step.
-      DataSelection          itsSelection;
+      string              itsName;
+//       DataSelection       itsDataSelection;
+//       vector<SourceGroup> itsSourceGroups;
     };
 
     // @}
