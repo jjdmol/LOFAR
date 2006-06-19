@@ -35,8 +35,8 @@
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
+#include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
-#include <OTDB/OTDBtypes.h>
 #include "CTState.h"
 
 // Avoid 'using namespace' in headerfiles
@@ -92,15 +92,15 @@ public:
 	// ObservationID and controllerType can be combined to select all controllers
 	// of a specific type of a specific observation.
 	bool		startChild		(const string&		aName, 
-								 OTDB::treeIDType	anObsID, 
+								 OTDBtreeIDType		anObsID, 
 								 uint16				aCntlrType, 
 							     uint32				instanceNr = 0,
 								 const string&		hostname = "localhost");
 	bool		requestState	(CTState::CTstateNr	state, 
 								 const string&		aName, 
-								 OTDB::treeIDType	anObsID = 0, 
+								 OTDBtreeIDType		anObsID = 0, 
 								 uint16				aCntlrType = CNTLRTYPE_NO_TYPE);
-	uint32		countChilds		(OTDB::treeIDType	anObsID = 0, 
+	uint32		countChilds		(OTDBtreeIDType		anObsID = 0, 
 								 uint16				aCntlrType = CNTLRTYPE_NO_TYPE);
 
 	CTState::CTstateNr	getCurrentState		(const string&	aName);
@@ -108,7 +108,7 @@ public:
 
 	// management info for creator of class.
 	vector<StateInfo> getPendingRequest (const string&	  aName, 
-								 		 OTDB::treeIDType anObsID = 0, 
+								 		 OTDBtreeIDType   anObsID = 0, 
 								 		 uint16			  aCntlrType = CNTLRTYPE_NO_TYPE);
 
 	// The 'parent' task that uses this ChildControl class has three way of getting
@@ -145,7 +145,7 @@ private:
 	typedef struct ControllerInfo_t {
 		string				name;			// uniq name of the controller
 		uint32				instanceNr;		// for nonshared controllers
-		OTDB::treeIDType	obsID;			// observation tree the cntlr belongs to
+		OTDBtreeIDType		obsID;			// observation tree the cntlr belongs to
 		GCFPortInterface*	port;			// connection with the controller
 		uint16				cntlrType;		// type of controller
 		string				hostname;		// host the controller runs on

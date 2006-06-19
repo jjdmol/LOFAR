@@ -134,7 +134,7 @@ void ChildControl::openService(const string&	aServiceName,
 // startChild (name, obsId, aCntlType, instanceNr, hostname)
 //
 bool ChildControl::startChild (const string&		aName, 
-							   OTDB::treeIDType		anObsID, 
+							   OTDBtreeIDType		anObsID, 
 							   uint16				aCntlrType, 
 							   uint32				instanceNr,
 							   const string&		hostname)
@@ -213,7 +213,7 @@ bool ChildControl::startChild (const string&		aName,
 //
 bool ChildControl::requestState	(CTState::CTstateNr	aState, 
 							 	 const string&		aName, 
-							 	 OTDB::treeIDType	anObsID, 
+							 	 OTDBtreeIDType		anObsID, 
 							 	 uint16				aCntlrType)
 {
 	bool	checkName   = (aName != "");
@@ -284,7 +284,7 @@ CTState::CTstateNr ChildControl::getRequestedState (const string&	aName)
 // Count the number of childs. The count can be limited to an
 // observation or an controllertype or both.
 //
-uint32 ChildControl::countChilds (OTDB::treeIDType	anObsID, 
+uint32 ChildControl::countChilds (OTDBtreeIDType	anObsID, 
 								  uint16			aCntlrType)
 {
 	bool	checkID   = (anObsID != 0);
@@ -318,7 +318,7 @@ uint32 ChildControl::countChilds (OTDB::treeIDType	anObsID,
 //
 vector<ChildControl::StateInfo> 
 ChildControl::getPendingRequest (const string&		aName, 
-								 OTDB::treeIDType	anObsID, 
+								 OTDBtreeIDType		anObsID, 
 								 uint16				aCntlrType)
 {
 	vector<ChildControl::StateInfo>	resultVec;
