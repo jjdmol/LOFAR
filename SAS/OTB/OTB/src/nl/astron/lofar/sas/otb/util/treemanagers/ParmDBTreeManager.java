@@ -47,6 +47,7 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
     
     // Create a Log4J logger instance
     private static Logger logger = Logger.getLogger(OTDBParamTreeManager.class);
+    private static final String PARMDB_TREENODE_SEPARATOR_CHAR = ":";
     private static ParmDBTreeManager instance;
    
     /**
@@ -94,16 +95,16 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                 childs = SharedVars.getJParmFacade().getNames(""+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(6)+"*");
                 logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
             }else{
-                logger.trace("ParmDBtreeNode calling getNames(*"+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(7)+".*)");
-                childs = SharedVars.getJParmFacade().getNames("*"+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(7)+".*");
+                logger.trace("ParmDBtreeNode calling getNames(*"+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(7)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*)");
+                childs = SharedVars.getJParmFacade().getNames("*"+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(7)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*");
                 logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
             }
             Vector<String> uniqueNames = new Vector<String>();
             Enumeration e = childs.elements();
             while( e.hasMoreElements()  ) {
                 String aValue = (String)e.nextElement();
-                String splitName[]= aValue.split("[.]");
-                String parentLevels[] = ((jParmDBnode)aNode.getUserObject()).getNodeID().split("[.]");
+                String splitName[]= aValue.split("["+PARMDB_TREENODE_SEPARATOR_CHAR+"]");
+                String parentLevels[] = ((jParmDBnode)aNode.getUserObject()).getNodeID().split("["+PARMDB_TREENODE_SEPARATOR_CHAR+"]");
                 
                 String trace = "ParmDBtreeNode gets name [";
                 for(int i = 0;i<splitName.length;i++){
@@ -123,7 +124,7 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                 
                 String childName = (String)e.nextElement();
                 
-                jParmDBnode item = new jParmDBnode(((jParmDBnode)aNode.getUserObject()).getNodeID()+"."+childName,((jParmDBnode)aNode.getUserObject()).getNodeID());
+                jParmDBnode item = new jParmDBnode(((jParmDBnode)aNode.getUserObject()).getNodeID()+this.PARMDB_TREENODE_SEPARATOR_CHAR+childName,((jParmDBnode)aNode.getUserObject()).getNodeID());
                 //item.leaf=true;
                 item.setName(childName);
                 item.setParmDBLocation(((jParmDBnode)aNode.getUserObject()).getParmDBLocation());
