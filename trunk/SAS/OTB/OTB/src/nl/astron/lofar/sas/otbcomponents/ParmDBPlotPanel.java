@@ -214,8 +214,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 passToDataAccess = new String[7];
                 
                 Vector paramValues;
-                //paramValues = SharedVars.getJParmFacade().getRange(cloneParamName);
-                paramValues = SharedVars.getJParmFacade().getRange("*");
+                paramValues = SharedVars.getJParmFacade().getRange(cloneParamName);
+                //paramValues = SharedVars.getJParmFacade().getRange("*");
                 
                 double startx = Double.parseDouble(paramValues.get(0).toString());
                 double endx =Double.parseDouble(paramValues.get(1).toString());
