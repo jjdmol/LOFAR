@@ -22,7 +22,7 @@
 
 using namespace LOFAR;
 
-int main (int argc, const char** argv) {
+int main (int argc, char** argv) {
   INIT_LOGGER("TFC_Generator");
 
   // Check invocation syntax
