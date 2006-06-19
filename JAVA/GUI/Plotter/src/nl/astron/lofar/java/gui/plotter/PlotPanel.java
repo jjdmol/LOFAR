@@ -4,7 +4,7 @@
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
  *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -43,150 +43,153 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
  * @updated 13-apr-2006 11:19:47
  */
 public class PlotPanel extends JPanel{
-
-	private PlotController m_PlotController;
-        private JComponent plot;
-        private JComponent legend;
-        private Object currentDataConstraint;
-        
-        /**
-         * - Constructs a new PlotPanel
-         * - Gets a new PlotController to work with
-         */
-	public PlotPanel(){
-            m_PlotController = new PlotController();
-            this.setBackground(Color.WHITE);
-            this.setLayout(new BorderLayout());
-        }
-        /**
-         * cleans up the instance variables
-         */
-	public void finalize() throws Throwable {
-            plot = null;
-            legend = null;
-            m_PlotController = null;
-            currentDataConstraint = null;
-	}
-        /**
-         * This method will attempt to generate a plot using several key arguments:
-         * -int type (this is defined by PlotConstants.PLOT_*)
-         * -boolean separateLegend (this will tell the plotter that you would like a separate JComponent legend,
-         *                          otherwise you will see a legend where the plotter puts it by default.
-         * -Object constraints (These are the arguments you need for the data access layer to get the data
-         *                        you want, which can be anything, as long as your configured data access layer
-         *                        supports it!)
-         * The plot will be added to this class' contents so you can view it directly. It can also be retrieved separately
-         * by calling the getPlot() method. 
-         *                         
-         * @param type The type of plot to be generated (these types are defined in PlotConstants.PLOT_* )
-         * @param separateLegend Tells the plotter if you like a separate legend JComponent, or leave it embedded in the plot itself. Dont forget to call getLegendForPlot() to get the separate legend!
-         * @param constraints The arguments to be passed to the configured data access layer
-         * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
-         * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
-         * that something has gone wrong.
-         */
-	public void createPlot(int type, boolean separateLegend, Object constraints) throws PlotterException{
-            this.removeAll();
-            plot = null;
-            legend = null;
-            currentDataConstraint = constraints;
-            plot = m_PlotController.createPlot(type, separateLegend, constraints);
-            this.add(plot,BorderLayout.CENTER);
-        }
-        /**
-         * This method will attempt to generate a plot image using several key arguments:
-         * -int type (this is defined by PlotConstants.PLOT_*)
-         * -Object constraints (These are the arguments you need for the data access layer to get the data
-         *                        you want, which can be anything, as long as your configured data access layer
-         *                        supports it!)
-         *                         
-         * @param type The type of plot to be generated (these types are defined in PlotConstants.PLOT_* )
-         * @param constraints The arguments to be passed to the configured data access layer
-         * @return The image file which can be saved to a file or used in different software.
-         * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
-         * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
-         * that something has gone wrong.
-         */
-	public Image exportImage(int type, Object constraints) throws PlotterException{
-            return m_PlotController.createPlotImage(constraints);
-	}
-        /**
-         * This method will attempt to export the data currently in the plot to your configured data export layer using a single argument:
-         * -Object arguments (These are the arguments you need for the data export layer to export the data
-         *                        you currently have in the plot, and this can be anything, as long as your configured data export layer
-         *                        supports them!)
-         * @param arguments The arguments to be passed to the configured data export layer
-         * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
-         * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
-         * that something has gone wrong.
-         */
-	public void exportData(Object arguments) throws PlotterException{
-            m_PlotController.exportData(arguments);
-        }
-        /**
-         * This method will attempt to modify the current plot using one key argument:
-         * -Object newConstraints (These are the arguments you need for the data access layer to get the data
-         *                        you want, which can be anything, as long as your configured data access layer
-         *                        supports it!)
-         * The plot will be updated to this class' contents so you can view it directly. It can also be retrieved separately
-         * by calling the getPlot() method. 
-         *                         
-         * @param newConstraints The arguments to be passed to the configured data access layer
-         * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
-         * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
-         * that something has gone wrong.
-         */
-	public void modifyPlot(Object newConstraints) throws PlotterException{
-            this.removeAll();
+    
+    private PlotController m_PlotController;
+    private JComponent plot;
+    private JComponent legend;
+    private Object currentDataConstraint;
+    
+    /**
+     * - Constructs a new PlotPanel
+     * - Gets a new PlotController to work with
+     */
+    public PlotPanel(){
+        m_PlotController = new PlotController();
+        this.setBackground(Color.WHITE);
+        this.setLayout(new BorderLayout());
+    }
+    /**
+     * cleans up the instance variables
+     */
+    public void finalize() throws Throwable {
+        plot = null;
+        legend = null;
+        m_PlotController = null;
+        currentDataConstraint = null;
+    }
+    /**
+     * This method will attempt to generate a plot using several key arguments:
+     * -int type (this is defined by PlotConstants.PLOT_*)
+     * -boolean separateLegend (this will tell the plotter that you would like a separate JComponent legend,
+     *                          otherwise you will see a legend where the plotter puts it by default.
+     * -Object constraints (These are the arguments you need for the data access layer to get the data
+     *                        you want, which can be anything, as long as your configured data access layer
+     *                        supports it!)
+     * The plot will be added to this class' contents so you can view it directly. It can also be retrieved separately
+     * by calling the getPlot() method.
+     *
+     * @param type The type of plot to be generated (these types are defined in PlotConstants.PLOT_* )
+     * @param separateLegend Tells the plotter if you like a separate legend JComponent, or leave it embedded in the plot itself. Dont forget to call getLegendForPlot() to get the separate legend!
+     * @param constraints The arguments to be passed to the configured data access layer
+     * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
+     * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
+     * that something has gone wrong.
+     */
+    public void createPlot(int type, boolean separateLegend, Object constraints) throws PlotterException{
+        this.removeAll();
+        plot = null;
+        legend = null;
+        currentDataConstraint = constraints;
+        plot = m_PlotController.createPlot(type, separateLegend, constraints);
+        this.add(plot,BorderLayout.CENTER);
+    }
+    /**
+     * This method will attempt to generate a plot image using several key arguments:
+     * -int type (this is defined by PlotConstants.PLOT_*)
+     * -Object constraints (These are the arguments you need for the data access layer to get the data
+     *                        you want, which can be anything, as long as your configured data access layer
+     *                        supports it!)
+     *
+     * @param type The type of plot to be generated (these types are defined in PlotConstants.PLOT_* )
+     * @param constraints The arguments to be passed to the configured data access layer
+     * @return The image file which can be saved to a file or used in different software.
+     * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
+     * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
+     * that something has gone wrong.
+     */
+    public Image exportImage(int type, Object constraints) throws PlotterException{
+        return m_PlotController.createPlotImage(constraints);
+    }
+    /**
+     * This method will attempt to export the data currently in the plot to your configured data export layer using a single argument:
+     * -Object arguments (These are the arguments you need for the data export layer to export the data
+     *                        you currently have in the plot, and this can be anything, as long as your configured data export layer
+     *                        supports them!)
+     * @param arguments The arguments to be passed to the configured data export layer
+     * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
+     * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
+     * that something has gone wrong.
+     */
+    public void exportData(Object arguments) throws PlotterException{
+        m_PlotController.exportData(arguments);
+    }
+    /**
+     * This method will attempt to modify the current plot using one key argument:
+     * -Object newConstraints (These are the arguments you need for the data access layer to get the data
+     *                        you want, which can be anything, as long as your configured data access layer
+     *                        supports it!)
+     * The plot will be updated to this class' contents so you can view it directly. It can also be retrieved separately
+     * by calling the getPlot() method.
+     *
+     * @param newConstraints The arguments to be passed to the configured data access layer
+     * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
+     * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
+     * that something has gone wrong.
+     */
+    public void modifyPlot(Object newConstraints) throws PlotterException{
+        try {            
             currentDataConstraint = newConstraints;
             plot = m_PlotController.modifyPlot(plot, newConstraints);
-            try {
-                legend = m_PlotController.getLegendForPlot(plot);
-            } catch (PlotterException ex) {
-
-            }
-           
+            this.removeAll();
             this.add(plot,BorderLayout.CENTER);
-	}
-        /**
-         * This method will attempt to print the current plot
-         */
-	public PrintJob printPlot() throws PlotterException{
             
-            return null;
-	}
-        /**
-         * This method will return the plot currently in memory
-         * @return The plot currently in memory
-         */
-        public JComponent getPlot(){
-            return plot;
+        } catch (PlotterException ex) {
+            throw ex;
         }
-        /**
-         * This method will return the legend for the plot currently in memory.
-         * It will throw a NotSupportedException should the plot not have a separate legend available.
-         * @return The plot legend currently in memory
-         * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
-         * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
-         * that something has gone wrong.
-         */
-        public JComponent getLegendForPlot() throws PlotterException{
-            if(legend == null && plot != null){
-               legend = m_PlotController.getLegendForPlot(plot);
-            }
-            return legend;
-            
-        }
-        /**
-         * This method will return the dataset for the plot currently in memory.
-         * It will throw a NotSupportedException should the plot not have a dataset available.
-         * @return The plot dataset currently in memory
-         * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
-         * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
-         * that something has gone wrong.
-         */
-        public HashMap getDataForPlot() throws PlotterException{
-            return m_PlotController.getPlotData();            
-        }
+        try {
+            legend = m_PlotController.getLegendForPlot(plot);
+        } catch (PlotterException ex) {}
         
- }
+    }
+    /**
+     * This method will attempt to print the current plot
+     */
+    public PrintJob printPlot() throws PlotterException{
+        
+        return null;
+    }
+    /**
+     * This method will return the plot currently in memory
+     * @return The plot currently in memory
+     */
+    public JComponent getPlot(){
+        return plot;
+    }
+    /**
+     * This method will return the legend for the plot currently in memory.
+     * It will throw a NotSupportedException should the plot not have a separate legend available.
+     * @return The plot legend currently in memory
+     * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
+     * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
+     * that something has gone wrong.
+     */
+    public JComponent getLegendForPlot() throws PlotterException{
+        if(legend == null && plot != null){
+            legend = m_PlotController.getLegendForPlot(plot);
+        }
+        return legend;
+        
+    }
+    /**
+     * This method will return the dataset for the plot currently in memory.
+     * It will throw a NotSupportedException should the plot not have a dataset available.
+     * @return The plot dataset currently in memory
+     * @throws PlotterException will be thrown if an Exception is detected in the plotter that the user needs to be aware of.
+     * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
+     * that something has gone wrong.
+     */
+    public HashMap getDataForPlot() throws PlotterException{
+        return m_PlotController.getPlotData();
+    }
+    
+}
