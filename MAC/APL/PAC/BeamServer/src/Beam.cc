@@ -25,9 +25,7 @@
 #include <Common/LofarLocators.h>
 
 #include <AMCBase/Converter.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
+#include <AMCBase/Position.h>
 
 #include <APL/RTCCommon/PSAccess.h>
 #include "Beam.h"
@@ -313,7 +311,7 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
     /* set time and convert to LMN */
     track[t].setTime(begintime + (long)t);
     blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
-    AMC::EarthCoord location(loc(0), loc(1), loc(2));
+    Position location(loc(0), loc(1), loc(2));
     Pointing lmn = track[t].convertToLMN(conv, &location);
 
     /* store in m_lmns and calculate normalized n-coordinate */

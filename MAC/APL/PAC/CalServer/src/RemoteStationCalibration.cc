@@ -31,10 +31,6 @@
 #include <math.h>
 #include "cpplapack.h"
 
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
-
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
@@ -42,7 +38,6 @@ using namespace CAL;
 using namespace RTC;
 using namespace blitz;
 using namespace std;
-//using namespace LOFAR::RSP_Protocol;
 using namespace CPPL;
 using namespace AMC;
 

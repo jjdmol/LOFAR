@@ -30,7 +30,7 @@ namespace LOFAR {
   // forward declarations
   namespace AMC {
     class Converter;
-    class EarthCoord;
+    class Position;
   };
 
   namespace BS_Protocol {
@@ -96,7 +96,7 @@ namespace LOFAR {
 	 * param conv Pointer to the converter (must be != 0 for J2000 type).
 	 * param pos Pointer to position on earth for conversion (must be != 0 for J2000 type).
 	 */
-	Pointing convertToLMN(AMC::Converter* conv, AMC::EarthCoord* pos);
+	Pointing convertToLMN(AMC::Converter* conv, AMC::Position* pos);
 
 	/**
 	 * Compare the time of two pointings.

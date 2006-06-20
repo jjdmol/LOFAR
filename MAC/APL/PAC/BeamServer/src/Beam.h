@@ -32,7 +32,6 @@
 #include <APL/RSP_Protocol/MEPHeader.h>
 #include <time.h>
 #include <AMCBase/Converter.h>
-#include <AMCBase/EarthCoord.h>
 
 #include <queue>
 #include <set>

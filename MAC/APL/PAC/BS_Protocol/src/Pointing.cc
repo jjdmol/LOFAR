@@ -27,9 +27,6 @@
 #include <AMCBase/Converter.h>
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
-#include <AMCBase/SkyCoord.h>
-#include <AMCBase/EarthCoord.h>
-#include <AMCBase/TimeCoord.h>
 
 using namespace LOFAR;
 using namespace BS_Protocol;
@@ -46,9 +43,9 @@ Pointing::Pointing(double angle0, double angle1, RTC::Timestamp time, Type type)
 Pointing::~Pointing()
 {}
 
-Pointing Pointing::convertToLMN(Converter* conv, EarthCoord* pos)
+Pointing Pointing::convertToLMN(Converter* conv, Position* pos)
 {
-  SkyCoord result = SkyCoord(angle0(), angle1()); // start with current coordinates
+  Direction result = Direction(angle0(), angle1()); // start with current coordinates
   double
     mjd      = 0.0,
     fraction = 0.0,
@@ -56,7 +53,7 @@ Pointing Pointing::convertToLMN(Converter* conv, EarthCoord* pos)
     m        = 0.0,
     n        = 0.0;
 
-  RequestData request;
+  RequestData request(Direction(angle0(), angle1()), *pos, Epoch(mjd, fraction));
   ResultData resultdata;
 
   switch (getType()) {
@@ -66,25 +63,23 @@ Pointing Pointing::convertToLMN(Converter* conv, EarthCoord* pos)
     ASSERT(conv && pos);
     time().convertToMJD(mjd, fraction);
 
-    request.skyCoord[0]   = SkyCoord(angle0(), angle1());
-    request.earthCoord[0] = *pos;
-    request.timeCoord[0]  = TimeCoord(mjd, fraction);    
 
     conv->j2000ToAzel(resultdata, request);
-    result = resultdata.skyCoord[0];
+    result = resultdata.direction[0];
     
     /* now convert from azel to lmn by falling through to AZEL label */
     /* Note: break intentionally omitted */
 
   case AZEL:
     /* convert AZEL to LMN */
-    LOG_DEBUG_STR("azel=(" << result.angle0() << ", " << result.angle1() << ")");
+    //LOG_DEBUG_STR("azel=(" << result.angle0() << ", " << result.angle1() << ")");
+    LOG_DEBUG_STR("azel=(" << result.longitude() << ", " << result.latitude() << ")");
 
-    l = -::cos(result.angle1()) * ::sin(result.angle0());
-    m = ::cos(result.angle1()) * ::cos(result.angle0());
-    n = ::sin(result.angle1());
+    l = -::cos(result.latitude()) * ::sin(result.longitude());
+    m = ::cos(result.latitude()) * ::cos(result.longitude());
+    n = ::sin(result.latitude());
     LOG_DEBUG_STR("lmn=(" << l << ", " << m << ", " << n << ")");
-    result = SkyCoord(l,m);
+    result = Direction(l,m);
     break;
 
   case LOFAR_LMN:
@@ -98,8 +93,8 @@ Pointing Pointing::convertToLMN(Converter* conv, EarthCoord* pos)
   }
 
   /* return LOFAR_LMN pointing */
-  return Pointing(result.angle0(),
-		  result.angle1(),
+  return Pointing(result.longitude(),
+		  result.latitude(),
 		  time(),
 		  LOFAR_LMN);
 }
