@@ -10,14 +10,14 @@ pkginclude_HEADERS = \
 	PropertySetAnswerHandlerInterface.h  \
 	CTState.h \
 	ChildControl.h \
-	ParentControl.h
+	ParentControl.h \
+	ResourceAllocator.h 
 
 #	LogicalDeviceFactoryBase.h 
 #	LogicalDeviceFactory.h 
 #	LogicalDevice.h 
 #	SharedLogicalDeviceFactory.h 
 #	SingleInstanceLogicalDeviceFactory.h 
-#	ResourceAllocator.h 
 
 NOINSTHDRS =
 

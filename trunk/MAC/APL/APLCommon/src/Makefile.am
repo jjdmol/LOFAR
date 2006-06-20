@@ -18,7 +18,8 @@ libaplcommon_la_SOURCES =   $(DOCHDRS) \
 							PropertySetAnswer.cc \
 							CTState.cc \
 							ChildControl.cc \
-							ParentControl.cc
+							ParentControl.cc \
+							ResourceAllocator.cc 
 
 
 NOINSTHDRS 				=
