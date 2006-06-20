@@ -415,36 +415,48 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("New")) {
                 if (getFile("PIC-tree")) {
                     try {
-                        // Create a new Tree from the found file.
-                        int aTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadMasterFile(itsNewFile.getPath());
-                        if (aTreeID < 1) {
-                            logger.debug("Error on fileLoad: " + itsNewFile.getPath());
-                        } else {
-                            // set changed flag to reload mainpanel
-                            itsMainFrame.setChanged(this.getFriendlyName(),true);
-                            // set the new created TreeID to active and fill description stuff if needed
-                            itsMainFrame.getSharedVars().setTreeID(aTreeID);
-                            checkChanged();
-                            if (!itsFileDescription.equals("")) {
-                                if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().setDescription(aTreeID,itsFileDescription)) {
-                                    logger.debug("Error during setDescription in Tree "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
-                                }
-                            }
-                                
-                            if (!itsFileStatus.equals("")) {
-                                if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().setTreeState(aTreeID,itsMainFrame.getSharedVars().getOTDBrmi().getRemoteTypes().getTreeState(itsFileStatus))) {
-                                    logger.debug("Error during setStatus in Tree "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
-                                }
-                            }                               
+                       // the file obviously resides at the client side, and needs to be transfered to the server side.
+                       byte uldata[] = new byte[(int)itsNewFile.length()]; 
+                       BufferedInputStream input = new BufferedInputStream(new FileInputStream(itsNewFile));   
+                       input.read(uldata,0,uldata.length);
+                       input.close();
+                       if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().uploadFile(uldata,itsNewFile.getName())) {
+                           logger.debug("upload finished");                       
+                           // Create a new Tree from the found file.
+                           int aTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadMasterFile(itsNewFile.getPath());
+                           if (aTreeID < 1) {
+                               logger.debug("Error on fileLoad: " + itsNewFile.getPath());
+                           } else {
+                               // set changed flag to reload mainpanel
+                               itsMainFrame.setChanged(this.getFriendlyName(),true);
+                               // set the new created TreeID to active and fill description stuff if needed
+                               itsMainFrame.getSharedVars().setTreeID(aTreeID);
+                               checkChanged();
+                               if (!itsFileDescription.equals("")) {
+                                  if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().setDescription(aTreeID,itsFileDescription)) {
+                                     logger.debug("Error during setDescription in Tree "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                                  }
+                               }
+                                  
+                               if (!itsFileStatus.equals("")) {
+                                  if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().setTreeState(aTreeID,itsMainFrame.getSharedVars().getOTDBrmi().getRemoteTypes().getTreeState(itsFileStatus))) {
+                                     logger.debug("Error during setStatus in Tree "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                                  }
+                               }                               
+                           }
+                           ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", false, true);
+                           if (aP != null) {
+                              itsMainFrame.showPanel(aP.getFriendlyName());
+                           }
                         }
-                    } catch (RemoteException ex) {
-                        logger.debug("Error during newPICTree creation: "+ ex);
-                    }
-                    ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", false, true);
-                    if (aP != null) {
-                        itsMainFrame.showPanel(aP.getFriendlyName());
-                    }
-                }
+                   } catch (RemoteException ex) {
+                       logger.debug("Error during newPICTree creation: "+ ex);
+                   } catch (FileNotFoundException ex) {
+                       logger.debug("Error during newPICTree creation: "+ ex);
+                   } catch (IOException ex) {
+                       logger.debug("Error during newPICTree creation: "+ ex);
+                   }
+                }  
 
             } else if (aButton.equals("Delete")) {
                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
@@ -604,11 +616,11 @@ public class MainPanel extends javax.swing.JPanel
                             logger.debug("upload failed");
                         }
                     } catch (FileNotFoundException ex) {
-                        logger.debug("Error during newPICTree creation: "+ ex);
+                        logger.debug("Error during new Component creation: "+ ex);
                     } catch (RemoteException ex) {
-                        logger.debug("Error during newPICTree creation: "+ ex);
+                        logger.debug("Error during new Component creation: "+ ex);
                     } catch (IOException ex) {
-                        logger.debug("Error during newPICTree creation: "+ ex);
+                        logger.debug("Error during new Component creation: "+ ex);
                     }
                     ComponentMaintenancePanel aP=(ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
                     if (aP != null) {
