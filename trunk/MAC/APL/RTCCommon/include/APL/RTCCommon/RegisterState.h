@@ -112,27 +112,8 @@ namespace LOFAR {
 	void clear(int i = -1);
 	void reset(int i = -1);
 
-	State get(int i) {
-	  ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
-	  return m_state(i);
-	}
-
-	void print(std::ostream& out) const {
-	  for (int i = 0; i < m_state.extent(blitz::firstDim); i++) {
-	    switch (m_state(i)) {
-	    case UNDEFINED:     out << "? "; break;
-	    case IDLE:          out << ". "; break;
-	    case CHECK:         out << "C "; break;
-	    case WRITE:         out << "W "; break;
-	    case READ:          out << "R "; break;
-	    case READ_ERROR:    out << "ER"; break;
-	    case WRITE_ERROR:   out << "EW"; break;
-	    case DONE:          out << "* "; break;
-	    default:            out << "X "; break;
-	    }
-	  }
-	  out << "$" << endl;
-	}
+	State get(int i);
+	void print(std::ostream& out) const;
 
       public:
 	// assignment

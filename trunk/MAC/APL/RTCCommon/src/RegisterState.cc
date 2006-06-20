@@ -28,6 +28,30 @@ using namespace std;
 using namespace LOFAR;
 using namespace RTC;
 
+RegisterState::State RegisterState::get(int i)
+{
+  ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+  return m_state(i);
+}
+
+void RegisterState::print(std::ostream& out) const
+{
+  for (int i = 0; i < m_state.extent(blitz::firstDim); i++) {
+    switch (m_state(i)) {
+    case UNDEFINED:     out << "? "; break;
+    case IDLE:          out << ". "; break;
+    case CHECK:         out << "C "; break;
+    case WRITE:         out << "W "; break;
+    case READ:          out << "R "; break;
+    case READ_ERROR:    out << "ER"; break;
+    case WRITE_ERROR:   out << "EW"; break;
+    case DONE:          out << "* "; break;
+    default:            out << "X "; break;
+    }
+  }
+  out << "$" << endl;
+}
+
 RegisterState& RegisterState::operator=(const RegisterState& state)
 {
   if (this != &state) {
