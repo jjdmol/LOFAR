@@ -320,6 +320,40 @@ bool	TreeMaintenance::isTopComponent	(nodeIDType		aNodeID)
 
 
 //
+// deleteComponentNode(nodeID)
+//
+// Delete a component node (when there are no references to it anymore
+//
+bool	TreeMaintenance::deleteComponentNode(nodeIDType		aNodeID)
+{
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	LOG_TRACE_FLOW_STR("TM:deleteComponent(" << aNodeID << ")");
+
+	work	xAction(*(itsConn->getConn()), "deleteVCnode");
+	try {
+		result res = xAction.exec("SELECT * from deleteVCnode(" +
+								  toString(itsConn->getAuthToken()) + "," +
+								  toString(aNodeID) + ")");
+
+		// when something goes wrong an exception is thrown
+		xAction.commit();
+		return (true);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during deleteComponent:") + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
+	return (false);
+
+}
+
+//
 // loadComponentFile(treeID, filename): nodeID
 //
 // a VIC tree is build up from single components. The definition of a

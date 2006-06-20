@@ -84,6 +84,9 @@ public:
 	// test if component is a top-component
 	bool	isTopComponent		(nodeIDType		aNodeID);
 
+	// delete a component node
+	bool	deleteComponentNode	(nodeIDType		aNodeID);
+
 
 	//# --- VIC maintenance : Templates ---
 	// From a component tree a template tree can be constructed. In a template
