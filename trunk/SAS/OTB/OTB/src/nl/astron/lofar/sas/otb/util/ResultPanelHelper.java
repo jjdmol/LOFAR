@@ -75,6 +75,11 @@ public class ResultPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
         itsPanelMap.put("ParmDB",itsVector);
         
+        //OLAP
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.OLAPConfigPanel");
+        itsPanelMap.put("OLAP",itsVector);
+        
         
     }
     
