@@ -47,7 +47,8 @@ unsigned int AllRegisterState::getSize()
     + xst_state.getSize()
     + cdo_state.getSize()
     + bs_state.getSize()
-    + tds_state.getSize();
+    + tds_state.getSize()
+    + rad_state.getSize();
 }
 
 unsigned int AllRegisterState::pack  (void* buffer)
@@ -68,6 +69,7 @@ unsigned int AllRegisterState::pack  (void* buffer)
   offset += cdo_state.pack((char*)buffer + offset);
   offset += bs_state.pack((char*)buffer + offset);
   offset += tds_state.pack((char*)buffer + offset);
+  offset += rad_state.pack((char*)buffer + offset);
 
   return offset;
 }
@@ -90,6 +92,7 @@ unsigned int AllRegisterState::unpack(void *buffer)
   offset += cdo_state.unpack((char*)buffer + offset);
   offset += bs_state.unpack((char*)buffer + offset);
   offset += tds_state.unpack((char*)buffer + offset);
+  offset += rad_state.unpack((char*)buffer + offset);
 
   return offset;
 }

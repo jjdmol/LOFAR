@@ -81,6 +81,8 @@ const MEPHeader::FieldsType MEPHeader::TDS_RESULT_HDR        = { READ,  0, 0, { 
 
 const MEPHeader::FieldsType MEPHeader::TBB_CONTROL_HDR       = { WRITE, 0, 0, { DST_RSP, TBB, TBB_CONTROL }, 0, TBB_CONTROL_SIZE, 0, 0 };
 
+const MEPHeader::FieldsType MEPHeader::RAD_BP_HDR            = { WRITE, 0, 0, { DST_RSP, RAD, RAD_BP }, 0, RAD_BP_SIZE, 0, 0 };
+
 unsigned int MEPHeader::getSize()
 {
   return MEPHeader::SIZE;

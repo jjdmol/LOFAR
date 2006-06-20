@@ -41,7 +41,8 @@ using namespace RTC;
 #define N_REGISTERS 2 // the number of registers to write (DiagWg and DiagWgwave)
 
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL * N_REGISTERS)
+  : SyncAction(board_port, board_id,
+	       StationSettings::instance()->nrRcusPerBoard() * N_REGISTERS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -53,7 +54,9 @@ WGWrite::~WGWrite()
 
 void WGWrite::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) + (getCurrentIndex() / N_REGISTERS);
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) 
+    + (getCurrentIndex() / N_REGISTERS);
+  uint8 blpid = 1 << (getCurrentIndex() / N_REGISTERS / MEPHeader::N_POL);
 
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().diagwgsettings().get(global_rcu)) {
     Cache::getInstance().getState().diagwgsettings().unmodified(global_rcu);
@@ -68,9 +71,9 @@ void WGWrite::sendrequest()
       EPADiagWgEvent wgsettings;
 
       if (0 == global_rcu % MEPHeader::N_POL) {
-	wgsettings.hdr.set(MEPHeader::DIAG_WGX_HDR, 1 << (global_rcu / MEPHeader::N_POL));
+	wgsettings.hdr.set(MEPHeader::DIAG_WGX_HDR, blpid);
       } else {
-	wgsettings.hdr.set(MEPHeader::DIAG_WGY_HDR, 1 << (global_rcu / MEPHeader::N_POL));
+	wgsettings.hdr.set(MEPHeader::DIAG_WGY_HDR, blpid);
       }
 
       WGSettings& w = Cache::getInstance().getBack().getWGSettings();
@@ -99,14 +102,11 @@ void WGWrite::sendrequest()
 
       EPADiagWgwaveEvent wgwave;
 
-      if (0 == global_rcu % MEPHeader::N_POL)
-	{
-	  wgwave.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR, 1 << (global_rcu / MEPHeader::N_POL));
-	}
-      else
-	{
-	  wgwave.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR, 1 << (global_rcu / MEPHeader::N_POL));
-	}
+      if (0 == global_rcu % MEPHeader::N_POL) {
+	wgwave.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR, blpid);
+      } else {
+	wgwave.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR, blpid);
+      }
 
       WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
@@ -139,15 +139,18 @@ GCFEvent::TResult WGWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   EPAWriteackEvent ack(event);
 
+  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) 
+    + (getCurrentIndex() / N_REGISTERS);
+
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("WGWrite::handleack: invalid ack");
-  Cache::getInstance().getState().diagwgsettings().write_error(getCurrentIndex() / N_REGISTERS);
+    Cache::getInstance().getState().diagwgsettings().write_error(global_rcu);
     return GCFEvent::NOT_HANDLED;
   }
   
   // change state to indicate that it has been applied in the hardware
-  Cache::getInstance().getState().diagwgsettings().write_ack(getCurrentIndex() / N_REGISTERS);
+  Cache::getInstance().getState().diagwgsettings().write_ack(global_rcu);
 
   return GCFEvent::HANDLED;
 }

@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-int main(int argc, char** argv)
+int main(int /*argc*/, char** /*argv*/)
 {
   FILE* protocol = 0;
   FILE* result = 0;

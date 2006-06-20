@@ -562,8 +562,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "rcumask";
-    type = "std::bitset<MAX_N_RCUS>";
+    name = "rspmask";
+    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "period";
@@ -648,8 +648,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "rcumask";
-    type = "std::bitset<MAX_N_RCUS>";
+    name = "rspmask";
+    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "cache";

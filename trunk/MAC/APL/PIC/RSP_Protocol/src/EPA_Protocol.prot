@@ -125,8 +125,8 @@ prelude = << PRELUDE_END
 
   typedef struct ADOStatus // total size 8 bytes
   {
-    uint32 adc_offset_x;
-    uint32 adc_offset_y;
+    int32 adc_offset_x;
+    int32 adc_offset_y;
   };
 
   typedef struct BoardStatus // total size 164 bytes
@@ -802,3 +802,18 @@ event = {
     type = "uint8";
   };
 };  
+
+event = {
+  noheader;
+  signal = RAD_BP;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "lanemode";
+    type = "uint32";
+  };
+};

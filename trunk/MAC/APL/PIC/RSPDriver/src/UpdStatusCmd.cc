@@ -68,11 +68,16 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
   ack.status = SUCCESS;
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
-  ack.sysstatus.board().resize(StationSettings::instance()->nrRspBoards());
-  ack.sysstatus.board() = cache.getSystemStatus().board();
+  ack.sysstatus.board().resize(m_event->rspmask.count());
 
-  for (int boardNr = 0; boardNr < StationSettings::instance()->nrRspBoards(); boardNr++) {
-	ack.sysstatus.board()(boardNr) = cache.getSystemStatus().board()(boardNr);
+  int result_rsp = 0;
+  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++)
+  {
+    if (m_event->rspmask[cache_rsp])
+    {
+      ack.sysstatus.board()(result_rsp) = cache.getSystemStatus().board()(cache_rsp);
+      result_rsp++;
+    }
   }
 
   getPort()->send(ack);
@@ -90,6 +95,5 @@ void UpdStatusCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdStatusCmd::validate() const
 {
-	// TODO: should depend on nr_boards (rsp_mask ???)
-	return (true);
+  return (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards());
 }

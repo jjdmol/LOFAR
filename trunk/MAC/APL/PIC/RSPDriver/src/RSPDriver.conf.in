@@ -182,6 +182,37 @@ RSPDriver.DST_IP_ADDR_23=10.2.0.24
 RSPDriver.DST_MAC_ADDR_23=
 
 #
+# Define the end of the four SERDES rings. 
+#
+# Complete beamforming and cross-correlation results
+# will be available on the last RSP board in a ring.
+#
+# Assuming the index of the last RSP board is N, then
+# the ring starts at RSP board (N - 1) % N_RSPBOARDS
+# The specified
+#
+# Note: the specified RSP board index will be taken
+# modulo N_RSPBOARDS to prevent out of range indices.
+#
+RSPDriver.LANE_0_BLET_OUT=1
+RSPDriver.LANE_1_BLET_OUT=1
+RSPDriver.LANE_2_BLET_OUT=1
+RSPDriver.LANE_3_BLET_OUT=1
+RSPDriver.LANE_0_XLET_OUT=1
+RSPDriver.LANE_1_XLET_OUT=1
+RSPDriver.LANE_2_XLET_OUT=1
+RSPDriver.LANE_3_XLET_OUT=1
+
+#
+# Specify the absolute backplane index of the first
+# RSP board.
+#
+# MAC address of first RSP board is 10:FA:00:00:13:00
+# therefor the index of the first RSP board = 0x13 = 19 (decimal)
+#
+RSPDriver.XST_FIRST_RSP_BOARD=18
+
+#
 # Ethernet interface on which to contact the RSP boards.
 # This interface would normally be connected to the switch.
 #
@@ -229,6 +260,7 @@ RSPDriver.WRITE_CDO_ONCE=0
 # This can be used to verify that the UDP/IP header is correctly
 # written to the register.
 RSPDriver.READ_CDO=0
+RSPDriver.WRITE_RAD=1
 RSPDriver.READ_STATUS=1
 RSPDriver.WRITE_BF=1
 RSPDriver.WRITE_SS=1
@@ -247,20 +279,19 @@ RSPDriver.READ_VERSION=1
 RSPDriver.READ_XST=1
 
 #
+# TDS_CONTROL
+#
+# 0x00000001 : Only RSPBoard 0 controls a TDS board
+#
+RSPDriver.TDS_CONTROL=0x00000001
+
+#
 # Optionally read RW-registers.
 #
 RSPDriver.READ_BF=0
 RSPDriver.READ_SS=0
 RSPDriver.READ_RCU=0
 RSPDriver.READ_WG=0
-
-#
-# Specify which RSP board is first for cross correlation (indexing from 0)
-#
-# MAC address of first RSP board is 10:FA:00:00:13:00
-# therefor the index of the first RSP board = 0x13 = 19 (decimal)
-#
-RSPDriver.XST_FIRST_RSP_BOARD=19
 
 #
 # Specify the default sampling frequency that should be programmed

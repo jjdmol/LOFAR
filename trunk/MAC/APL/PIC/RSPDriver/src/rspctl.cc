@@ -67,6 +67,7 @@ static void usage();
 //
 #define DEFAULT_SAMPLE_FREQUENCY 160.0e6
 double g_sample_frequency = DEFAULT_SAMPLE_FREQUENCY;
+bool   g_getclock = false;
 
 /**
  * Function to convert the complex semi-floating point representation used by the
@@ -194,7 +195,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 	  {
 	    std::ostringstream logStream;
 	    logStream << ack.weights()(0, rcuin++, Range::all());
-	    logMessage(cout,formatString("RCU[%02d].weights=%s", rcuout,logStream.str().c_str()));
+	    logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
 	  }
 	}
       } else {
@@ -211,7 +212,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 	  {
 	    std::ostringstream logStream;
 	    logStream << ackweights(0, rcuin++, Range::all());
-	    logMessage(cout,formatString("RCU[%02d].weights=%s", rcuout,logStream.str().c_str()));
+	    logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
 	  }
 	}
       }
@@ -334,9 +335,9 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
             std::ostringstream logStream;
             logStream << ack.subbands()(rcuin++, Range::all());
 	    if (SubbandSelection::BEAMLET == m_type) {
-	      logMessage(cout,formatString("RCU[%02d].subbands=%s", rcuout,logStream.str().c_str()));
+	      logMessage(cout,formatString("RCU[%2d].subbands=%s", rcuout,logStream.str().c_str()));
 	    } else {
-	      logMessage(cout,formatString("RCU[%02d].xcsubbands=%s", rcuout,logStream.str().c_str()));
+	      logMessage(cout,formatString("RCU[%2d].xcsubbands=%s", rcuout,logStream.str().c_str()));
 	    }
           }
         }
@@ -426,7 +427,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            logMessage(cout,formatString("RCU[%02d].control=0x%08x",rcuout, ack.settings()(rcuin++).getRaw()));
+            logMessage(cout,formatString("RCU[%2d].control=0x%08x",rcuout, ack.settings()(rcuin++).getRaw()));
           }
         }
       }
@@ -522,7 +523,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
         for (int hbaout = 0; hbaout < get_ndevices(); hbaout++) {
 
           if (mask[hbaout]) {
-            logMessage(cout, formatString("HBA[%02d].delays=", hbaout));
+            logMessage(cout, formatString("HBA[%2d].delays=", hbaout));
 	    for (int i = 0; i < MEPHeader::N_HBA_DELAYS; i++) {
 	      logMessage(cout, formatString("%3d", (int)(ack.settings()(hbain, i))));
 	    }
@@ -597,7 +598,7 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
         for (int boardout = 0; boardout < get_ndevices(); boardout++) {
 
           if (mask[boardout]) {
-            logMessage(cout,formatString("RSU[%02d].control=0x%08x",boardout, ack.settings()(boardin++).getRaw()));
+            logMessage(cout,formatString("RSU[%2d].control=0x%08x",boardout, ack.settings()(boardin++).getRaw()));
           }
         }
       }
@@ -638,6 +639,10 @@ void ClockCommand::send()
     getclock.timestamp = Timestamp(0,0);
     getclock.cache = true;
 
+    // set flag to tell SubClockCommand to
+    // terminate after receiving RSP_GETCLOCKACK
+    g_getclock = true;
+
     m_rspport.send(getclock);
   }
   else
@@ -658,16 +663,12 @@ GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
   {
     case RSP_GETCLOCKACK:
     {
-      RSPGetclockackEvent ack(e);
-
-      if (SUCCESS == ack.status)
-      {
-	logMessage(cout,formatString("clock=%d", ack.clock));
-      }
-      else
-      {
-        logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
-      }
+      /**
+       * This signal is handled in SubClockCommand.
+       * We should never end up here.
+       */
+      LOG_FATAL("invalid code path");
+      exit(EXIT_FAILURE);
     }
     break;
 
@@ -698,13 +699,13 @@ void SubClockCommand::send()
 {
   if (getMode())
   {
-    // Subscribe
-    RSPSubclockEvent subclock;
+    // Get current clock setting
+    RSPGetclockEvent getclock;
 
-    subclock.timestamp = Timestamp(0,0);
-    subclock.period = 1; // check for change every second
+    getclock.timestamp = Timestamp(0,0);
+    getclock.cache     = true; // get value from cache
 
-    m_rspport.send(subclock);
+    m_rspport.send(getclock);
   }
   else
   {
@@ -718,14 +719,46 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 {
   switch (e.signal)
   {
+    case RSP_GETCLOCKACK:
+    {
+      RSPGetclockackEvent ack(e);
+      if (SUCCESS == ack.status)
+      {
+	g_sample_frequency = 1.0e6 * ack.clock;
+
+	if (g_getclock) {
+
+	  logMessage(cout,formatString("Sample frequency: clock=%dMHz", ack.clock));
+	  GCFTask::stop();
+
+	} else {
+
+	  logMessage(cout,formatString("Received initial sample frequency: clock=%dMHz", ack.clock));
+
+	  // Subscribe to updates from now on
+	  RSPSubclockEvent subclock;
+	  
+	  subclock.timestamp = Timestamp(0,0);
+	  subclock.period = 1; // check for change every second
+	  
+	  m_rspport.send(subclock);
+	}
+      }
+      else
+      {
+        logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
+      }
+    }
+    break;
+
     case RSP_SUBCLOCKACK:
     {
       RSPSubclockackEvent ack(e);
-    if (SUCCESS != ack.status)
-    {
-      logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
-      exit(EXIT_FAILURE);
-    }
+      if (SUCCESS != ack.status)
+      {
+	logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
+	exit(EXIT_FAILURE);
+      }
     }
     break;
 
@@ -735,7 +768,7 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 
       if (SUCCESS == upd.status)
       {
-	logMessage(cout,formatString("Setting new sample frequency: clock=%d", upd.clock));
+	logMessage(cout,formatString("Received new sample frequency: clock=%dMHz", upd.clock));
 	g_sample_frequency = 1.0e6 * upd.clock;
       }
       else
@@ -948,106 +981,144 @@ StatusCommand::StatusCommand(GCFPortInterface& port) :
 
 void StatusCommand::send()
 {
-	if (getMode()) { // GET
-		RSPGetstatusEvent getstatus;
+  if (getMode()) { // GET
+    RSPGetstatusEvent getstatus;
+    
+    getstatus.timestamp = Timestamp(0,0);
+    getstatus.rspmask = getRSPMask();
+    getstatus.cache = true;
 
-		getstatus.timestamp = Timestamp(0,0);
-		getstatus.rcumask = getRCUMask();
-		getstatus.cache = true;
-
-		m_rspport.send(getstatus);
-	}
-	else { // SET
-		logMessage(cerr,"Setting status not yet allowed");
-	}
+    m_rspport.send(getstatus);
+  }
+  else { // SET
+    logMessage(cerr,"Setting status not yet allowed");
+  }
 }
 
 GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 {
-	switch (event.signal) {
-	case RSP_GETSTATUSACK: {
-		RSPGetstatusackEvent ack(event);
-		bitset<MAX_N_RCUS> mask = getRCUMask();
+  switch (event.signal) {
 
-		if (ack.status != SUCCESS) {
-			logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
-			break;
-		}
+  case RSP_GETSTATUSACK: {
 
-		BoardStatus&	board = ack.sysstatus.board()(0);
-		logMessage(cout,formatString("1.2 V: %3.2f , 2.5 V: %3.2f, 3.3 V: %3.2f",
-						(2.5/192.0) * board.rsp.voltage_1_2,
-						(3.3/192.0) * board.rsp.voltage_2_5,
-					        (5.0/192.0) * board.rsp.voltage_3_3));
-		logMessage(cout,formatString("PCB_temp: %2d ",
-					        board.rsp.pcb_temp));
-		logMessage(cout,formatString("BP_temp: %2d , BP_clock: %3d",
-						board.rsp.bp_temp, board.rsp.bp_clock));
-		logMessage(cout,formatString("Temp AP0: %3d , AP1: %3d , AP2: %3d , AP3: %3d", 
-						board.rsp.ap0_temp, board.rsp.ap1_temp, 
-						board.rsp.ap2_temp, board.rsp.ap3_temp));
-		logMessage(cout,formatString("Ethernet nr frames: %ld , nr errors: %ld , last error: %d",
-						board.eth.nof_frames, board.eth.nof_errors,
-						board.eth.last_error));
-		logMessage(cout,formatString("MEP sequencenr: %ld , error: %d",
-						board.mep.seqnr, board.mep.error));
-		logMessage(cout,formatString("Errors ri: %5d ,  rcuX: %5d ,  rcuY: %5d,   lcu: %5d,    cep: %5d",
-						board.diag.ri_errors, board.diag.rcux_errors,
-						board.diag.rcuy_errors, board.diag.lcu_errors,
-					 	board.diag.cep_errors));
-		logMessage(cout,formatString("   serdes: %5d , ap0ri: %5d , ap1ri: %5d, ap2ri: %5d , ap3ri: %5d",
-						board.diag.serdes_errors, board.diag.ap0_ri_errors,
-						board.diag.ap1_ri_errors, board.diag.ap2_ri_errors,
-						board.diag.ap3_ri_errors));
-		logMessage(cout,formatString("Sync         diff      count    samples     slices"));
-		for (int blp = 0; blp < 4; blp++) {
-			BSStatus*	bs= &(board.ap0_sync)+blp;
-			logMessage(cout,formatString("    %d:  %10lu %10lu %10lu %10lu", 
-						     blp, bs->ext_count, bs->sync_count,
-						     bs->sample_offset, bs->slice_count));
-		}
-		logMessage(cout,formatString("RCUStatus   pllX       pllY  overflowX  overflowY"));
-		for (int ap = 0; ap < 4; ap++) {
-		        RCUStatus*	as= &(board.blp0_rcu)+ap;
-			logMessage(cout,formatString("    %d: %10ld %10ld %10ld %10ld", 
-						     ap, as->pllx, as->plly, 
-						     as->nof_overflowx, as->nof_overflowy));
-		}
+    RSPGetstatusackEvent ack(event);
+    bitset<MAX_N_RCUS> mask = getRCUMask();
 
-		const char* trig[] = {
-		  "Board Reset",                   // 0x0
-		  "User reconfiguration request",  // 0x1
-		  "User reset request",            // 0x2
-		  "Invalid index",                 // 0x3
-		  "Watchdog timer timeout"         // 0x4
-		};
+    if (ack.status != SUCCESS) {
+      logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
+      break;
+    }
+		
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout,formatString("RSP[%2d] 1.2 V: %3.2f , 2.5 V: %3.2f, 3.3 V: %3.2f", boardid,
+				   (2.5/192.0) * board.rsp.voltage_1_2,
+				   (3.3/192.0) * board.rsp.voltage_2_5,
+				   (5.0/192.0) * board.rsp.voltage_3_3));
+    }
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout,formatString("RSP[%2d] PCB_temp: %2d , BP_temp: %2d, "
+				   "Temp AP0: %3d , AP1: %3d , AP2: %3d , AP3: %3d",
+				   boardid,
+				   board.rsp.pcb_temp, board.rsp.bp_temp,
+				   board.rsp.ap0_temp, board.rsp.ap1_temp, 
+				   board.rsp.ap2_temp, board.rsp.ap3_temp));
+    }
 
-		logMessage(cout, formatString("RSU Status:"));
-		logMessage(cout, formatString("    Trigger: %s",
-					      (board.cp_status.trig <= 0x4 ? trig[board.cp_status.trig] : "Invalid")));
-		logMessage(cout, formatString("    Image  : %s",
-					      (board.cp_status.im ? "Application image" : "Factory image")));
-		logMessage(cout, formatString("    FPGA   : %s",
-					      (board.cp_status.fpga ? "AP was reconfigured" : "BP was reconfigured")));
-		logMessage(cout, formatString("    Result : %s",
-					      (board.cp_status.fpga ? "ERROR" : "OK")));
-		logMessage(cout, formatString("    Status : %s",
-					      (board.cp_status.rdy ? "DONE" : "IN PROGRESS")));
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout,formatString("RSP[%2d] BP_clock: %3d", boardid, board.rsp.bp_clock));
+    }
 
-		logMessage(cout, formatString("ADO Status  adc_offset_x  adc_offset_y (in bits)"));
-		for (int ap = 0; ap < 4; ap++) {
-		  ADOStatus* as= &(board.blp0_adc_offset)+ap;
-		  BSStatus*  bs= &(board.ap0_sync)+ap;
-		  logMessage(cout, formatString("    %d:         %10lu    %10lu", ap,
-						(bs->slice_count > 0 ? as->adc_offset_x / bs->slice_count / 4 : 0),
-						(bs->slice_count > 0 ? as->adc_offset_y / bs->slice_count / 4 : 0)));
-		}
-	}
-	break;
-	}
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout,formatString("RSP[%2d] Ethernet nr frames: %ld , nr errors: %ld , last error: %d",
+				   boardid,
+				   board.eth.nof_frames, board.eth.nof_errors,
+				   board.eth.last_error));
+    }
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout,formatString("RSP[%2d] MEP sequencenr: %ld , error: %d",
+				   boardid,
+				   board.mep.seqnr, board.mep.error));
+    }
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout,formatString("RSP[%2d] Errors ri: %5d ,  rcuX: %5d ,  rcuY: %5d,   lcu: %5d,    cep: %5d",
+				   boardid,
+				   board.diag.ri_errors, board.diag.rcux_errors,
+				   board.diag.rcuy_errors, board.diag.lcu_errors,
+				   board.diag.cep_errors));
+      logMessage(cout,formatString("RSP[%2d]    serdes: %5d , ap0ri: %5d , ap1ri: %5d, ap2ri: %5d , ap3ri: %5d",
+				   boardid,
+				   board.diag.serdes_errors, board.diag.ap0_ri_errors,
+				   board.diag.ap1_ri_errors, board.diag.ap2_ri_errors,
+				   board.diag.ap3_ri_errors));
+    }
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout,formatString("RSP[%2d] Sync         diff      count    samples     slices", boardid));
+      for (int blp = 0; blp < 4; blp++) {
+	BSStatus*	bs= &(board.ap0_sync)+blp;
+	logMessage(cout,formatString("RSP[%2d]     %d:  %10lu %10lu %10lu %10lu", 
+				     boardid, blp, bs->ext_count, bs->sync_count,
+				     bs->sample_offset, bs->slice_count));
+      }
+    }
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout,formatString("RSP[%2d] RCUStatus   pllX       pllY  overflowX  overflowY", boardid));
+      for (int ap = 0; ap < 4; ap++) {
+	RCUStatus*	as= &(board.blp0_rcu)+ap;
+	logMessage(cout,formatString("RSP[%2d]     %d: %10ld %10ld %10ld %10ld", 
+				     boardid, ap, as->pllx, as->plly, 
+				     as->nof_overflowx, as->nof_overflowy));
+      }
+    }
 
-	GCFTask::stop();
-	return GCFEvent::HANDLED;
+    const char* trig[] = {
+      "Board Reset",                   // 0x0
+      "User reconfiguration request",  // 0x1
+      "User reset request",            // 0x2
+      "Invalid index",                 // 0x3
+      "Watchdog timer timeout"         // 0x4
+    };
+
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout, formatString("RSP[%2d] RSU Status:", boardid));
+      logMessage(cout, formatString("RSP[%2d]     Trigger: %s", boardid,
+				    (board.cp_status.trig <= 0x4 ? trig[board.cp_status.trig] : "Invalid")));
+      logMessage(cout, formatString("RSP[%2d]     Image  : %s", boardid,
+				    (board.cp_status.im ? "Application image" : "Factory image")));
+      logMessage(cout, formatString("RSP[%2d]     FPGA   : %s", boardid,
+				    (board.cp_status.fpga ? "AP was reconfigured" : "BP was reconfigured")));
+      logMessage(cout, formatString("RSP[%2d]     Result : %s", boardid,
+				    (board.cp_status.fpga ? "ERROR" : "OK")));
+      logMessage(cout, formatString("RSP[%2d]     Status : %s", boardid,
+				    (board.cp_status.rdy ? "DONE" : "IN PROGRESS")));
+    }
+
+    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
+      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      logMessage(cout, formatString("RSP[%2d] ADO Status  adc_offset_x  adc_offset_y (in LS bits)", boardid));
+      for (int ap = 0; ap < 4; ap++) {
+	ADOStatus* as= &(board.blp0_adc_offset)+ap;
+	BSStatus*  bs= &(board.ap0_sync)+ap;
+	logMessage(cout, formatString("RSP[%2d]     %d:         %10ld    %10ld",
+				      boardid, ap,
+				      (bs->slice_count > 0 ? as->adc_offset_x / (int32)bs->slice_count / 4 : 0),
+				      (bs->slice_count > 0 ? as->adc_offset_y / (int32)bs->slice_count / 4 : 0)));
+      }
+    }
+  }
+    break;
+  }
+
+  GCFTask::stop();
+  return GCFEvent::HANDLED;
 }
 
 StatisticsBaseCommand::StatisticsBaseCommand(GCFPortInterface& port) : FECommand(port),
@@ -1552,7 +1623,7 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
   {
     for (int rsp=0; rsp < get_ndevices(); rsp++)
     {
-      logMessage(cout,formatString("RSP[%02d] RSP version = %d, BP version = %d.%d, AP version = %d.%d",
+      logMessage(cout,formatString("RSP[%2d] RSP version = %d, BP version = %d.%d, AP version = %d.%d",
                                    rsp,
 				   ack.versions.bp()(rsp).rsp_version,
                                    ack.versions.bp()(rsp).fpga_maj,
@@ -1749,7 +1820,6 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETWGACK:
     case RSP_SETWGACK:
     case RSP_SETCLOCKACK:
-    case RSP_GETCLOCKACK:
     case RSP_GETSTATUSACK:
     case RSP_SUBREGISTERSTATEACK:
     case RSP_UPDREGISTERSTATE:
@@ -1760,6 +1830,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 
     case RSP_UPDCLOCK:
     case RSP_SUBCLOCKACK:
+    case RSP_GETCLOCKACK:
       status = m_subclock.ack(e); // handle clock updates
       break;
       
@@ -1882,7 +1953,7 @@ static void usage()
 #endif
   cout << "rspctl --xcsubband                             # get the subband selection for cross correlation" << endl;
   cout << "rspctl --xcsubband=<int>                       # set the subband to cross correlate" << endl;
-  cout << "rspctl --clocks[=<int>]                        # get or set the clock frequency of clocks in Hz" << endl;
+  cout << "rspctl --clock[=<int>]                         # get or set the clock frequency of clocks in Hz" << endl;
   cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or set the 16 delays of one or more HBA's" << endl;
   cout << "rspctl --version            [--select=<set>]   # get version information" << endl;
   cout << "rspctl --rspclear           [--select=<set>]   # clear FPGA registers on RSPboard" << endl;
@@ -1928,7 +1999,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "statistics",     optional_argument, 0, 't' },
 	  { "xcstatistics",   no_argument,       0, 'x' },
 	  { "xcsubband",      optional_argument, 0, 'z' },
-	  { "clocks",         optional_argument, 0, 'c' },
+	  { "clock",          optional_argument, 0, 'c' },
 	  { "hbadelays",      optional_argument, 0, 'H' },
 	  { "version",        no_argument,       0, 'v' },
 //	  { "rspreset",       optional_argument, 0, 'R' },
@@ -2239,7 +2310,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    StatusCommand* statuscommand = new StatusCommand(m_server);
 	    command = statuscommand;
 
-	    command->set_ndevices(m_nrcus);
+	    command->set_ndevices(m_nrspboards);
 	  }
 	  break;
 
@@ -2310,7 +2381,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
-	case 'c':	// --clocks
+	case 'c':	// --clock
 	  {
 	    if (command)
 	      delete command;

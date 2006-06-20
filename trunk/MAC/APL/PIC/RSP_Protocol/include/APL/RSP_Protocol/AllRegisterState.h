@@ -78,11 +78,28 @@ namespace LOFAR {
 	  cdo_state.resize(nrRspBoards);
 	  bs_state.resize(nrBlps);
 	  tds_state.resize(nrRspBoards);
+	  rad_state.resize(nrRspBoards);
 
 	  force();
 	}
 
 	void force() {
+	  sys_state.reset();
+	  bf_state.reset();
+	  ss_state.reset();
+	  rcusettings_state.reset();
+	  rcuprotocol_state.reset();
+	  hbaprotocol_state.reset();
+	  rsuclear_state.reset();
+	  diagwgsettings_state.reset();
+	  sst_state.reset();
+	  bst_state.reset();
+	  xst_state.reset();
+	  cdo_state.reset();
+	  bs_state.reset();
+	  tds_state.reset();
+	  rad_state.reset();
+
 	  sys_state.read();
 	  bf_state.write_force();
 	  ss_state.write_force();
@@ -97,12 +114,13 @@ namespace LOFAR {
 	  cdo_state.write_force();
 	  bs_state.write_force();
 	  tds_state.write_force();
+	  rad_state.write_force();
 	}
 
 	void schedule() {
 	  sys_state.read();
-	  bf_state.write_force();
-	  ss_state.write_force();
+	  bf_state.write_force(); // always write bf
+	  ss_state.write_force(); // always write ss
 	  rcusettings_state.check();
 	  rcuprotocol_state.check();
 	  hbaprotocol_state.check();
@@ -114,6 +132,7 @@ namespace LOFAR {
 	  cdo_state.check();
 	  bs_state.check();
 	  tds_state.check();
+	  rad_state.check();
 	}
 
 	void clear() {
@@ -131,6 +150,7 @@ namespace LOFAR {
 	  cdo_state.clear();
 	  bs_state.clear();
 	  tds_state.clear();
+	  rad_state.clear();
 	}
 
 	void print(std::ostream& out) const {
@@ -153,6 +173,7 @@ namespace LOFAR {
 	  out << "CDO               "; cdo_state.print(out);
 	  out << "BS                "; bs_state.print(out);
 	  out << "TDS               "; tds_state.print(out);
+	  out << "RAD               "; rad_state.print(out);
 	  out << endl;
 	}
 
@@ -184,6 +205,7 @@ namespace LOFAR {
 	RTC::RegisterState& cdo()            { return cdo_state; }
 	RTC::RegisterState& bs()             { return bs_state; }
 	RTC::RegisterState& tds()            { return tds_state; }
+	RTC::RegisterState& rad()            { return rad_state; }
 	/*@}*/
 
       private:
@@ -201,6 +223,7 @@ namespace LOFAR {
 	RTC::RegisterState cdo_state;            // CDO state
 	RTC::RegisterState bs_state;             // BS register state
 	RTC::RegisterState tds_state;            // TDS register state (Clock board)
+	RTC::RegisterState rad_state;            // RAD register state
 
 	int m_nrcus;
       };

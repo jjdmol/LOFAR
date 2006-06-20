@@ -106,7 +106,11 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
 
   Cache::getInstance().getState().rsuclear().write_ack(getBoardId());
 
-  Cache::getInstance().getState().force(); // force read/write of all register after clear
+  // force read/writeof all registers after clear or reset
+  RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
+  if (s()(getBoardId()).getClear() | s()(getBoardId()).getReset()) {
+    Cache::getInstance().getState().force(); // force read/write of all register after clear
+  }
 
   return GCFEvent::HANDLED;
 }

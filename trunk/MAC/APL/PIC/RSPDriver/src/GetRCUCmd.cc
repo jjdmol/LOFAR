@@ -78,6 +78,7 @@ void GetRCUCmd::ack(CacheBuffer& cache)
       result_rcu++;
     }
   }
+  ASSERT(result_rcu == (int)m_event->rcumask.count());
   
   getPort()->send(ack);
 }
