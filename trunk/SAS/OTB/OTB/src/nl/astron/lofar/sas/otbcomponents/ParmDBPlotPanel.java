@@ -132,7 +132,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         int[] availableSlots = itsSlotsPanel.getAvailableSlotIndexes();
         if(availableSlots.length > 0){
             JMenu addSlotMenu=new JMenu("Add to slot");
-                
+            
             logger.trace("Available slots to put in popup menu: "+ availableSlots.length);
             for(int i = 0; i < availableSlots.length; i++){
                 JMenuItem aMenuItem=new JMenuItem(""+availableSlots[i]);
@@ -151,7 +151,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         int[] occupiedSlots = itsSlotsPanel.getOccupiedSlotIndexes();
         if(occupiedSlots.length > 0){
             JMenu addSlotMenu=new JMenu("Add to plot in slot");
-                
+            
             logger.trace("Occupied slots to put in popup menu: "+ availableSlots.length);
             for(int i = 0; i < occupiedSlots.length; i++){
                 JMenuItem aMenuItem=new JMenuItem(""+occupiedSlots[i]);
@@ -185,8 +185,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(12));
             logger.debug("Plot Slot extrapolated: "+slotSelected);
             itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName));
-        }
-        else if(evt.getActionCommand().startsWith("Add to plot in slot")){
+        } else if(evt.getActionCommand().startsWith("Add to plot in slot")){
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(20));
             logger.debug("Plot Slot extrapolated: "+slotSelected);
             Object parameterConstraints =  constructPlotterConstraints(itsParamName);
@@ -221,6 +220,19 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 double endx =Double.parseDouble(paramValues.get(1).toString());
                 double starty = Double.parseDouble(paramValues.get(2).toString());
                 double endy = Double.parseDouble(paramValues.get(3).toString());
+                
+                if(startx==0.0 && endx==1.0 && starty==0.0 && endy==1.0){
+                    logger.debug("Bypassing getRange() for ParmDB as invalid range was returned for "+cloneParamName+". Getting range for all parms");
+                    paramValues = SharedVars.getJParmFacade().getRange("*");
+                    startx = Double.parseDouble(paramValues.get(0).toString());
+                    endx =Double.parseDouble(paramValues.get(1).toString());
+                    starty = Double.parseDouble(paramValues.get(2).toString());
+                    endy = Double.parseDouble(paramValues.get(3).toString());
+                }
+                
+                
+                
+                
                 int numx = Integer.parseInt("64");
                 int numy = Integer.parseInt("1");
                 

@@ -42,7 +42,7 @@ public class PlotSlotViewFrame extends JDialog{
         plotIndex = index;
         this.getContentPane().setLayout(new BorderLayout());
         setTitle(title);
-        //this.setAlwaysOnTop(true);
+        this.setAlwaysOnTop(true);
         PlotSlot viewSlot = parent.getSlot(index);
         if(!showLegendOnly){
             setTitle(title);
