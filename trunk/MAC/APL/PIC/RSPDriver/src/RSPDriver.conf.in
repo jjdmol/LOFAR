@@ -41,8 +41,8 @@ RSPDriver.SOFTPPS=0
 #RSPDriver.MAC_ADDR_0=00:00:00:00:00:08
 # lofar27:eth2:00:50:04:32:B8:5C
 #RSPDriver.MAC_ADDR_0=00:30:48:2D:82:F6
-RSPDriver.MAC_ADDR_0=10:FA:00:00:13:00
-RSPDriver.MAC_ADDR_1=10:FA:00:00:12:00
+RSPDriver.MAC_ADDR_0=10:FA:00:00:12:00
+RSPDriver.MAC_ADDR_1=10:FA:00:00:13:00
 RSPDriver.MAC_ADDR_2=00:00:00:00:00:03
 RSPDriver.MAC_ADDR_3=00:00:00:00:00:04
 RSPDriver.MAC_ADDR_4=00:00:00:00:00:05
@@ -207,8 +207,8 @@ RSPDriver.LANE_3_XLET_OUT=1
 # Specify the absolute backplane index of the first
 # RSP board.
 #
-# MAC address of first RSP board is 10:FA:00:00:13:00
-# therefor the index of the first RSP board = 0x13 = 19 (decimal)
+# MAC address of first RSP board is 10:FA:00:00:12:00
+# therefor the index of the first RSP board = 0x12 = 18 (decimal)
 #
 RSPDriver.XST_FIRST_RSP_BOARD=18
 

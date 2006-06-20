@@ -693,8 +693,9 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
       && buf.mephdr.type       <= MEPHeader::MAX_TYPE
       && buf.mephdr.addr.pid   >= MEPHeader::MIN_PID
       && buf.mephdr.addr.pid   <= MEPHeader::MAX_PID
-      && buf.mephdr.addr.regid >= MEPHeader::MIN_REGID
       && buf.mephdr.addr.regid <= MEPHeader::MAX_REGID)
+      /* always true due to limited range of datatype
+	 && buf.mephdr.addr.regid >= MEPHeader::MIN_REGID */
   {
     //
     // If no error, lookup signal number, else assign ACK_ERROR signal number

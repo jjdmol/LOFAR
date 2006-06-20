@@ -77,25 +77,28 @@ void RADWrite::sendrequest()
    */
 
   for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
-    uint8 mode = 0x0A; // default is to combine local and remote data
+    uint8 mode = 0x00; // default is to ignore remote data (first board in ring)
 
     int blet_out = GET_CONFIG(formatString("RSPDriver.LANE_%d_BLET_OUT", lane).c_str(), i);
     int xlet_out = GET_CONFIG(formatString("RSPDriver.LANE_%d_XLET_OUT", lane).c_str(), i);
 
-    // if this board is the first in the ring (it is the board before the OUT board)
-    // then set mode to ignore remote data (0b00)
-    if (getBoardId() != (blet_out - 1) % StationSettings::instance()->nrRspBoards()) {
-      mode &= ~0x02;
-    }
-    if (getBoardId() != (xlet_out - 1) % StationSettings::instance()->nrRspBoards()) {
-      mode &= ~0x08;
+    // if there are more than 1 boards and
+    // if this board is not the first board in the ring
+    // it should combine local and remote data
+    if (StationSettings::instance()->nrRspBoards() > 0) {
+      if (getBoardId() != (blet_out + 1) % StationSettings::instance()->nrRspBoards()) {
+	mode |= 0x02;
+      }
+      if (getBoardId() != (xlet_out + 1) % StationSettings::instance()->nrRspBoards()) {
+	mode |= 0x08;
+      }
     }
     
     rad.lanemode |= ((uint32)mode) << (8 * lane);
 
-    LOG_INFO_STR(formatString("rad.lanemode(lane=%d, rspboard=%d)=0x%08x",
-			      lane, getBoardId(), rad.lanemode));
   }
+
+  LOG_INFO_STR(formatString("rad.lanemode(rspboard=%d)=0x%08x", getBoardId(), rad.lanemode));
 
   m_hdr = rad.hdr;
   getBoardPort().send(rad);
