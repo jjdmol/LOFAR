@@ -98,6 +98,7 @@
 #include "CDOWrite.h"
 #include "TDSProtocolWrite.h"
 #include "TDSResultRead.h"
+#include "RADWrite.h"
 
 #include "Cache.h"
 #include "RawEvent.h"
@@ -365,7 +366,7 @@ void RSPDriver::addAllSyncActions()
     }
 
     /*
-     * Clear the board if needed
+     * Clear the board if needed (this needs to be first after SOFT_PPS)
      */
     if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
     {
@@ -463,6 +464,12 @@ void RSPDriver::addAllSyncActions()
 	ASSERT(readreg);
 	m_scheduler.addSyncAction(readreg);
       }
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RAD", i))
+    {
+      RADWrite* radwrite = new RADWrite(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(radwrite);
     }
 
     for (int action = 0; action < 2; action++)

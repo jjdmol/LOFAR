@@ -152,6 +152,24 @@ void TDSProtocolWrite::sendrequest()
     return;
   }
 
+  uint32 tds_control = 0;
+  sscanf(GET_CONFIG_STRING("RSPDriver.TDS_CONTROL"), "%x", &tds_control);
+
+  LOG_INFO_STR(formatString("tds_control=0x%08x", tds_control));
+  if (!(tds_control & (1 << getBoardId()))) {
+    //
+    // RSPDriver.TDS_CONTROL is a bitmask which indicates
+    // which of the 24 RSP boards control the TDS board in
+    // their subrack.
+    //
+    // If the bit corresponding to getBoardId() is not set,
+    // then simply assume that the clocks change has been made (write_ack).
+    //
+    Cache::getInstance().getState().tds().write_ack(getBoardId());
+    setContinue(true);
+    return;
+  }
+
   EPATdsProtocolEvent tdsprotocol;
 
   size_t size = 0;

@@ -55,5 +55,6 @@ unsigned int SystemStatus::unpack(void *buffer)
   unsigned int offset = 0;
   
   MSH_UNPACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus, 1);
+
   return offset;
 }

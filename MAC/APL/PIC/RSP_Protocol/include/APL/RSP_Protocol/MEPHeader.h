@@ -61,6 +61,7 @@ namespace LOFAR {
       static const uint8 READACK    = 0x03;
       static const uint8 WRITEACK   = 0x04;
 
+      static const int MIN_TYPE = READ;
       static const int MAX_TYPE = WRITEACK; /* counting from 0 */
       /*@}*/
 
@@ -123,9 +124,10 @@ namespace LOFAR {
       static const uint8 TBB       = 0x0F; /* Transient Buffer Board     [    BLP] */ /* Is this correct? Should it not be RSP? */
       static const uint8 CEP       = 0x10; /* CEP management             [RSP    ] */
       static const uint8 LCU       = 0x11; /* LCU management             [RSP    ] */
+      static const uint8 RAD       = 0x12; /* RAD management             [RSP    ] */
 
       static const int MIN_PID = RSR; /* loops over PID should be from */ 
-      static const int MAX_PID = LCU; /* pid = MIN_PID; pid <= MAX_PID */
+      static const int MAX_PID = RAD; /* pid = MIN_PID; pid <= MAX_PID */
       /*@}*/
 
       /*@{*/
@@ -195,6 +197,16 @@ namespace LOFAR {
        */
       static const uint8 TBB_CONTROL      = 0x00;
 
+      /**
+       * RAD_BP register controls how local and remove crosslet and
+       * beamlet data from the SERDES lanes is combined on an RSP 
+       * board. This can be used to define logical start and end-points
+       * for the cross-correlation and beamforming data travelling on the
+       * SERDES rings.
+       */
+      static const uint8 RAD_BP           = 0x00;
+
+      static const int MIN_REGID          = 0x00;
       static const int MAX_REGID          = XST_NR_STATS - 1;
 
       /*@}*/
@@ -295,6 +307,11 @@ namespace LOFAR {
        * Placeholder register for future TBB control via the RSP board.
        */
       static const uint16 TBB_CONTROL_SIZE      = 0;
+
+      /**
+       * Size of the RAD_BP register.
+       */
+      static const uint16 RAD_BP_SIZE = 4; // four bytes = 32 bits, 8 bits per lane
 
       /*@}*/
 
@@ -411,6 +428,8 @@ namespace LOFAR {
       static const FieldsType TDS_RESULT_HDR;
 
       static const FieldsType TBB_CONTROL_HDR;
+
+      static const FieldsType RAD_BP_HDR;
       /*@}*/
     };
   };

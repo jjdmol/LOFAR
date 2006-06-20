@@ -635,6 +635,17 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     },
   },
 
+  /* pid = 0x12 (RAD) */
+  {
+    /* reg = 0x00 (RAD_BP) */
+    { 0,
+      0,
+      EPA_RAD_BP,   /* WRITE */
+      0,
+      EPA_WRITEACK, /* WRITEACK */
+    },
+  },
+
 };
 
 typedef struct {
@@ -678,10 +689,12 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   //
   // Decode the header fields
   //
-  if (   buf.mephdr.addr.pid   >= MEPHeader::MIN_PID
+  if (   buf.mephdr.type       >= MEPHeader::MIN_TYPE
+      && buf.mephdr.type       <= MEPHeader::MAX_TYPE
+      && buf.mephdr.addr.pid   >= MEPHeader::MIN_PID
       && buf.mephdr.addr.pid   <= MEPHeader::MAX_PID
-      && buf.mephdr.addr.regid <= MEPHeader::MAX_REGID
-      && buf.mephdr.type       <= MEPHeader::MAX_TYPE)
+      && buf.mephdr.addr.regid >= MEPHeader::MIN_REGID
+      && buf.mephdr.addr.regid <= MEPHeader::MAX_REGID)
   {
     //
     // If no error, lookup signal number, else assign ACK_ERROR signal number

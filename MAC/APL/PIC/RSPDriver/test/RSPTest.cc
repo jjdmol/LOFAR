@@ -420,10 +420,8 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
       RSPGetstatusEvent ss;
 
       ss.timestamp = Timestamp(0,0);
-      ss.rcumask.reset();
-      for (int i = 0; i < N_TEST_RCUS; i++) {
-	ss.rcumask.set(i);
-      }
+      ss.rspmask.reset();
+      ss.rspmask.set(0);
       ss.cache = false;
       
       TESTC_ABORT(m_server.send(ss), RSPTest::final);
@@ -696,10 +694,8 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
       RSPSubstatusEvent substatus;
 
       substatus.timestamp.setNow();
-      substatus.rcumask.reset();
-      for (int i = 0; i < N_TEST_RCUS; i++) {
-	substatus.rcumask.set(i);
-      }
+      substatus.rspmask.reset();
+      substatus.rspmask.set(0);
       substatus.period = 4;
       
       TESTC_ABORT(m_server.send(substatus) > 0, RSPTest::final);

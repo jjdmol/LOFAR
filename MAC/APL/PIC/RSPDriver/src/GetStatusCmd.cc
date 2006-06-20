@@ -57,12 +57,18 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.sysstatus.board().resize(StationSettings::instance()->nrRspBoards());
-  ack.sysstatus.board() = cache.getSystemStatus().board();
+  ack.sysstatus.board().resize(m_event->rspmask.count());
 
-  for (int boardNr = 0; boardNr < StationSettings::instance()->nrRspBoards(); boardNr++) {
-	ack.sysstatus.board()(boardNr) = cache.getSystemStatus().board()(boardNr);
+  int result_rsp = 0;
+  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++)
+  {
+    if (m_event->rspmask[cache_rsp])
+    {
+      ack.sysstatus.board()(result_rsp) = cache.getSystemStatus().board()(cache_rsp);
+      result_rsp++;
+    }
   }
+  ASSERT(result_rsp == (int)m_event->rspmask.count());
 
   getPort()->send(ack);
 }
@@ -89,9 +95,7 @@ void GetStatusCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetStatusCmd::validate() const
 {
-
-  return (true);
-//  return (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards());
+  return (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards());
 }
 
 bool GetStatusCmd::readFromCache() const
@@ -106,17 +110,11 @@ void GetStatusCmd::ack_fail()
   ack.timestamp = Timestamp(0,0);
   ack.status = FAILURE;
 
-#if 1
-  ack.sysstatus.board().resize(0);
-#else
-  ack.sysstatus.board().resize(StationSettings::instance()->nrRspBoards());
-
+  // send back dummy status array
+  ack.sysstatus.board().resize(1);
   BoardStatus boardinit;
-
   memset(&boardinit, 0, sizeof(BoardStatus));
-  
-  ack.sysstatus.board() = boardinit;
-#endif
+  ack.sysstatus.board()(0) = boardinit;
 
   getPort()->send(ack);
 }
