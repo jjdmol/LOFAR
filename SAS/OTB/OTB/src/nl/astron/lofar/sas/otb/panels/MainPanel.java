@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
  * @created 13-01-2006, 14:58
  * @author  Blaakmeer/Coolen
  * @version $Id$
- * @updated
+ * @updated deleteComponentNode added to component panel
  */
 public class MainPanel extends javax.swing.JPanel 
                        implements IPluginPanel {
@@ -93,8 +93,10 @@ public class MainPanel extends javax.swing.JPanel
         } else if (itsTabFocus.equals("Components")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("New");
-            buttonPanel1.addButton("Modify");            
-            buttonPanel1.addButton("Build TemplateTree");            
+            buttonPanel1.addButton("Modify");
+            buttonPanel1.addButton("Delete");
+            buttonPanel1.addButton("Build TemplateTree");
+            buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Build TemplateTree",false);
         } else if (itsTabFocus.equals("Query Results")) {
@@ -654,6 +656,20 @@ public class MainPanel extends javax.swing.JPanel
                 } catch (RemoteException ex) {
                     logger.debug("Remote error during Build TemplateTree: "+ ex);
                 }
+            } else if (aButton.equals("Delete")) {
+                int nodeID=itsMainFrame.getSharedVars().getComponentID();
+                short classifID;
+                try {
+                    if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteComponentNode(nodeID)) {
+                        // set changed flag to reload mainpanel
+                       itsMainFrame.setChanged(this.getFriendlyName(),true);
+                       checkChanged();
+                     } else {
+                        logger.debug("Component not deleted");
+                     }
+                } catch (RemoteException ex) {
+                    logger.debug("Remote error during component deletion: "+ ex);
+                }
             }
         } else if (itsTabFocus.equals("Query Results")) {
             itsMainFrame.ToDo();
@@ -810,6 +826,7 @@ public class MainPanel extends javax.swing.JPanel
         } else if (itsTabFocus.equals("Components")) {
             if (componentID > 0 ) {
                 buttonPanel1.setButtonEnabled("Modify",true);
+                buttonPanel1.setButtonEnabled("Delete",true);
                 try {
                     if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().isTopComponent(componentID)) {
                         buttonPanel1.setButtonEnabled("Build TemplateTree",true);                    
@@ -821,6 +838,7 @@ public class MainPanel extends javax.swing.JPanel
                 }
             } else {
                 buttonPanel1.setButtonEnabled("Modify",false);                
+                buttonPanel1.setButtonEnabled("Delete",false);
             }
         } else if (itsTabFocus.equals("Query Results")) {
         }
