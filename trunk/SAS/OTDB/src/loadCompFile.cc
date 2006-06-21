@@ -64,6 +64,15 @@ bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 		while((pos = cleanLimits.find_first_of("'",pos)) != string::npos) {
 			cleanLimits.erase(pos, 1);
 		}
+
+		LOG_TRACE_FLOW(formatString("saveVCparam(%d,'%s',%d,%d,'%s','%s')",
+							aParam.nodeID(),
+							aParam.name.c_str(),
+							aParam.type,
+							aParam.unit,
+							cleanLimits.c_str(),
+							cleanDesc.c_str()));
+
 		// execute the insert action
 		result res = xAction.exec(
 			 formatString("SELECT saveVICparamDef(%d,%d,'%s',%d::int2,%d::int2,%d::int2,%d::int2,'%s'::boolean,'%s'::text,'%s'::text)",
@@ -112,6 +121,8 @@ VICnodeDef TreeMaintenance::getComponentNode (nodeIDType		aNodeID)
 		return (empty);
 	}
 
+	LOG_TRACE_FLOW_STR ("getVCnode(" << aNodeID << ")" );
+
 	work	xAction(*(itsConn->getConn()), "getVCnode");
 	try {
 		result res = xAction.exec("SELECT * from getVICnodeDef(" +
@@ -141,6 +152,8 @@ vector<OTDBparam> TreeMaintenance::getComponentParams (nodeIDType		aNodeID)
 		itsError = itsConn->errorMsg();
 		return (resultVec);
 	}
+
+	LOG_TRACE_FLOW_STR ("getVCparams(" << aNodeID << ")" );
 
 	work	xAction(*(itsConn->getConn()), "getVCparams");
 	try {
@@ -177,6 +190,8 @@ vector<VICnodeDef>	TreeMaintenance::getComponentList (
 		itsError = itsConn->errorMsg();
 		return (resultVec);
 	}
+
+	LOG_TRACE_FLOW_STR ("getCompList(" << namefragment <<","<< toString(topOnly) << ")" );
 
 	work	xAction(*(itsConn->getConn()), "getCompList");
 	try {
@@ -225,6 +240,11 @@ bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
 		while((pos = cleanConstraints.find_first_of("'",pos)) != string::npos) {
 			cleanConstraints.erase(pos, 1);
 		}
+
+		LOG_DEBUG (formatString("saveComponentNode(%d,'%s',%d,%d,'%s','%s'", 
+							aNode.nodeID(), aNode.name.c_str(), aNode.version,
+							aNode.classif, cleanConstraints.c_str(), cleanDesc.c_str()));
+					
 		// execute the insert action
 		result res = xAction.exec(
 			 formatString("SELECT saveVCnode(%d,%d,'%s',%d,%d::int2,'%s'::text,'%s'::text)",
@@ -272,6 +292,8 @@ VICnodeDef	TreeMaintenance::getNodeDef (const string&	name,
 		return (empty);
 	}
 
+	LOG_TRACE_FLOW_STR("getVCnode(" << name <<","<< version <<","<< classif <<")");
+
 	work	xAction(*(itsConn->getConn()), "getVCnode");
 	try {
 		result res = xAction.exec("SELECT * from getVICnodeDef('" +
@@ -301,6 +323,8 @@ bool	TreeMaintenance::isTopComponent	(nodeIDType		aNodeID)
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
+
+	LOG_TRACE_FLOW_STR ("isTopComponent(" << aNodeID <<")");
 
 	work	xAction(*(itsConn->getConn()), "isTopComponent");
 	try {
@@ -332,7 +356,7 @@ bool	TreeMaintenance::deleteComponentNode(nodeIDType		aNodeID)
 		return (false);
 	}
 
-	LOG_TRACE_FLOW_STR("TM:deleteComponent(" << aNodeID << ")");
+	LOG_TRACE_FLOW_STR("deleteVCnode(" << aNodeID << ")");
 
 	work	xAction(*(itsConn->getConn()), "removeVCnode");
 	try {
