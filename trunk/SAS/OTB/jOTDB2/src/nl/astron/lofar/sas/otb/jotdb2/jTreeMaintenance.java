@@ -64,6 +64,9 @@ public class jTreeMaintenance
     // test if component is a top-component
     public native boolean isTopComponent(int  aNodeID) throws Exception;
 
+    // delete a component node
+    public native boolean deleteComponentNode(int  aNodeID) throws Exception;
+
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
     // tree only the structure of the tree is created, there is no replication

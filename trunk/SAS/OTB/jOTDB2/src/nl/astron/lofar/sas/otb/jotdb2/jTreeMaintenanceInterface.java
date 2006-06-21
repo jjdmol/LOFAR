@@ -59,6 +59,9 @@ public interface jTreeMaintenanceInterface extends Remote
     // test if component is a top-component
     public boolean isTopComponent(int aNodeID) throws RemoteException;
 
+    // delete component node
+    public boolean deleteComponentNode(int aNodeID) throws RemoteException;
+
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
     // tree only the structure of the tree is created, there is no replication
