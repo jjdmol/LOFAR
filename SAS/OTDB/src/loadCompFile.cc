@@ -334,9 +334,9 @@ bool	TreeMaintenance::deleteComponentNode(nodeIDType		aNodeID)
 
 	LOG_TRACE_FLOW_STR("TM:deleteComponent(" << aNodeID << ")");
 
-	work	xAction(*(itsConn->getConn()), "deleteVCnode");
+	work	xAction(*(itsConn->getConn()), "removeVCnode");
 	try {
-		result res = xAction.exec("SELECT * from deleteVCnode(" +
+		result res = xAction.exec("SELECT * from removeVCnode(" +
 								  toString(itsConn->getAuthToken()) + "," +
 								  toString(aNodeID) + ")");
 
