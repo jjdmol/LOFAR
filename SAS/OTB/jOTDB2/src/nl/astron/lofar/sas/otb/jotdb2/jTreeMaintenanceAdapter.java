@@ -132,6 +132,20 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         return aB;              
     }
 
+    // delete a component node
+    public boolean deleteComponentNode(int  aNodeID) throws RemoteException {
+        boolean aB=false;
+        try {
+            aB = adaptee.deleteComponentNode(aNodeID);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI deleteComponentNode error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aB;              
+    }
+    
+
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
     // tree only the structure of the tree is created, there is no replication

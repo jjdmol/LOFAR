@@ -231,6 +231,25 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_
   return succes;
 }
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
+ * Method:    deleteComponentNode
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_deleteComponentNode  (JNIEnv *env, jobject, jint aNodeID) {
+  jboolean succes;
+  try {
+    succes = theirTM->deleteComponentNode(aNodeID);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::deleteComponentNode(" << aNodeID << ") " << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return succes;
+}
+
+
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
