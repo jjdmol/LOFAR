@@ -1,3 +1,6 @@
+Parm expressions: 
+  parm3 using parm1 parm2
+  parm4 using parm1 parm2
 Names: [parm1,parm2,parm3,parm4]
 Range: [1,5,4,10]
 parm1 [2,2,2,2,2,2,2,2]

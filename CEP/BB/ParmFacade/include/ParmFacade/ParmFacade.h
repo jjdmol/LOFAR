@@ -30,6 +30,7 @@
 #include <ParmDB/ParmDB.h>
 #include <vector>
 #include <map>
+#include <set>
 
 
 namespace LOFAR {
@@ -85,8 +86,18 @@ public:
 	       double startx, double endx, int nx,
 	       double starty, double endy, int ny);
 
+  // Get the expressions and the names of their children.
+  const std::map<std::string,std::set<std::string> >& getExprs() const
+    { return itsExprs; }
+
 private:
+  // Process a parmexp and add the children names to the vector.
+  // It is done recursively, so a child can be an expression.
+  void processExpr (const std::map<std::string,ParmValueSet>& defValues, 
+		    const std::string& expr, std::set<std::string>& ch);
+
   ParmDB itsPDB;
+  std::map<std::string,std::set<std::string> > itsExprs;
 };
 
 // @}

@@ -24,6 +24,7 @@
 #include <ParmFacade/ParmFacade.h>
 #include <Common/VectorUtil.h>
 #include <iostream>
+#include <sstream>
 
 using namespace LOFAR;
 using namespace ParmDB;
@@ -41,19 +42,48 @@ int main (int argc, const char* argv[])
 {
   try {
     if (argc < 2) {
-      cerr << "Run as: tParmFacade parmtable"
+      cerr << "Run as: tParmFacade parmtable [pattern nf nt]"
 	   << endl;
       return 1;
     }
-
+    string pattern ="*";
+    int nf = 4;
+    int nt = 2;
+    if (argc > 2) {
+      pattern = argv[2];
+    }
+    if (argc > 3) {
+      istringstream istr(argv[3]);
+      istr >> nf;
+    }
+    if (argc > 4) {
+      istringstream istr(argv[4]);
+      istr >> nt;
+    }
+    // Get values.
     ParmFacade acc(argv[1]);
-    vector<string> names = acc.getNames();
+    {
+      const map<string,set<string> >& exprs = acc.getExprs();
+      cout << "Parm expressions: " << endl;
+      for (map<string,set<string> >::const_iterator iter=exprs.begin();
+	   iter != exprs.end();
+	   iter++) {
+	cout << "  " << iter->first << " using";
+	for (set<string>::const_iterator ch=iter->second.begin();
+	   ch != iter->second.end();
+	   ch++) {
+	  cout << ' ' << *ch;
+	}
+	cout << endl;
+      }
+    }
+    vector<string> names = acc.getNames(pattern);
     cout << "Names: " << names << endl;
-    vector<double> range = acc.getRange();
-    cout << "Range: " << range << endl;
-    map<string,vector<double> > values = acc.getValues ("*",
-							range[0], range[1], 4,
-							range[2], range[3], 2);
+    vector<double> rng = acc.getRange("*");
+    cout << "Range: " << rng << endl;
+    map<string,vector<double> > values = acc.getValues (pattern,
+							rng[0], rng[1], nf,
+    							rng[2], rng[3], nt);
     for (map<string,vector<double> >::const_iterator iter=values.begin();
 	 iter != values.end();
 	 iter++) {
