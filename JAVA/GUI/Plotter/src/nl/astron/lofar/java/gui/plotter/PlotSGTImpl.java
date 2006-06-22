@@ -186,7 +186,28 @@ public class PlotSGTImpl implements IPlot{
                             aNewPlot.addData(lineData, lineLabel);
                         }else{
                             SGTData someData = aNewPlot.getData(lineLabel);
-                            someData = lineData;
+                            //someData = lineData;
+                            aNewPlot.clear(someData.getId());
+                            aNewPlot.addData(lineData,lineLabel);
+                        }
+                    }
+                    Collection presentData = aNewPlot.getData();
+                    Iterator cleanIterator = presentData.iterator();
+                    while(cleanIterator.hasNext()){
+                        boolean presentInUpdatedData = false;
+                        SGTData someData = (SGTData)cleanIterator.next();
+                        
+                        Iterator cleanUpDataIterator = values.iterator();
+                        //Loop through all XY pairs
+                        while(cleanUpDataIterator.hasNext()){
+                            HashMap line = (HashMap)cleanUpDataIterator.next();
+                            String valueLabel = (String)line.get(PlotConstants.DATASET_VALUELABEL);
+                            if(valueLabel.equalsIgnoreCase(someData.getId())){
+                                presentInUpdatedData = true;
+                            }
+                        }
+                        if(!presentInUpdatedData){
+                            aNewPlot.clear(someData.getId());
                         }
                     }
                 }else if(values.size() < aNewPlot.getData().size()){
@@ -220,7 +241,7 @@ public class PlotSGTImpl implements IPlot{
                 }
             }
             aNewPlot.setBatch(false);
-            
+            aNewPlot.resetZoom();
             
         }catch(Exception e){
             InvalidDataSetException exx = new InvalidDataSetException("( The data set provided was not sufficient to update the line plot "+aNewPlot.getName()+". Please check the log file )");
