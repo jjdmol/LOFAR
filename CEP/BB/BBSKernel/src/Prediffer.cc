@@ -808,6 +808,7 @@ void Prediffer::initSolvableParms (const vector<MeqDomain>& solveDomains)
       }
     }
   }
+  ASSERTSTR (itsNrPert > 0, "No parms are set to solvable");
   // Determine the fitter indices for the frequency and time axis.
   // First check if the (local) solve domains are ordered and regular.
   // Start with finding the number of frequency intervals.
