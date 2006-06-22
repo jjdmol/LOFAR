@@ -127,6 +127,7 @@ public class PlotSlot extends JPanel{
             JOptionPane.showMessageDialog(null, ex.getMessage(),
                     "Error detected while making the plot",
                     JOptionPane.ERROR_MESSAGE);
+             ex.printStackTrace();
             itsPlot = null;
             removeAll();
             addOptionLabel();
@@ -138,17 +139,13 @@ public class PlotSlot extends JPanel{
         if(containsPlot()){
             try {
                 itsPlot.modifyPlot(constraints);
-                removeAll();
-                addOptionLabel();
-                add(itsPlot,BorderLayout.CENTER);
-                if(containsLegend()){
-                    addLegend();
-                }
+                validate();
                 
             } catch (PlotterException ex) {
                  JOptionPane.showMessageDialog(null, ex.getMessage(),
                     "Error detected while updating the plot",
                     JOptionPane.ERROR_MESSAGE);
+                 ex.printStackTrace();
             }
         }else{
             addPlot(constraints);
@@ -248,7 +245,13 @@ public class PlotSlot extends JPanel{
     public boolean isEmpty(){
         return !containsPlot();
     }
-    
+    public void printSlot(){
+       try {
+            itsPlot.printPlot(this.hasLegend);
+        } catch (PlotterException ex) {
+            ex.printStackTrace();
+        }
+    }
     
     /**
      * Registers ActionListener to receive events.
@@ -287,5 +290,4 @@ public class PlotSlot extends JPanel{
             }
         }
     }
-    
 }

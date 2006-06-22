@@ -88,15 +88,16 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
             // However, you could use "insert" in such a case.
             aNode.areChildrenDefined = true;
             Vector childs;
-            SharedVars.getJParmFacade().setParmFacadeDB(((jParmDBnode)aNode.getUserObject()).getParmDBLocation());
-            logger.trace("Working with DB: "+((jParmDBnode)aNode.getUserObject()).getParmDBLocation());
+            jParmDBnode containedNode = (jParmDBnode)aNode.getUserObject();
+            SharedVars.getJParmFacade().setParmFacadeDB(containedNode.getParmDBLocation());
+            logger.trace("Working with DB: "+containedNode.getParmDBLocation());
             if(((jParmDBnode)aNode.getUserObject()).isRootNode()){
-                logger.trace("ParmDBtreeNode calling getNames("+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(6)+"*)");
-                childs = SharedVars.getJParmFacade().getNames(""+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(6)+"*");
+                logger.trace("ParmDBtreeNode calling getNames("+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length())+"*)");
+                childs = SharedVars.getJParmFacade().getNames(""+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length())+"*");
                 logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
             }else{
-                logger.trace("ParmDBtreeNode calling getNames(*"+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(7)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*)");
-                childs = SharedVars.getJParmFacade().getNames("*"+((jParmDBnode)aNode.getUserObject()).getNodeID().substring(7)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*");
+                logger.trace("ParmDBtreeNode calling getNames(*"+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length()+1)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*)");
+                childs = SharedVars.getJParmFacade().getNames("*"+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length()+1)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*");
                 logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
             }
             Vector<String> uniqueNames = new Vector<String>();
@@ -104,7 +105,7 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
             while( e.hasMoreElements()  ) {
                 String aValue = (String)e.nextElement();
                 String splitName[]= aValue.split("["+PARMDB_TREENODE_SEPARATOR_CHAR+"]");
-                String parentLevels[] = ((jParmDBnode)aNode.getUserObject()).getNodeID().split("["+PARMDB_TREENODE_SEPARATOR_CHAR+"]");
+                String parentLevels[] = containedNode.getNodeID().split("["+PARMDB_TREENODE_SEPARATOR_CHAR+"]");
                 
                 String trace = "ParmDBtreeNode gets name [";
                 for(int i = 0;i<splitName.length;i++){
@@ -124,10 +125,11 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                 
                 String childName = (String)e.nextElement();
                 
-                jParmDBnode item = new jParmDBnode(((jParmDBnode)aNode.getUserObject()).getNodeID()+this.PARMDB_TREENODE_SEPARATOR_CHAR+childName,((jParmDBnode)aNode.getUserObject()).getNodeID());
+                jParmDBnode item = new jParmDBnode(containedNode.getNodeID()+this.PARMDB_TREENODE_SEPARATOR_CHAR+childName,((jParmDBnode)aNode.getUserObject()).getNodeID());
                 //item.leaf=true;
                 item.setName(childName);
                 item.setParmDBLocation(((jParmDBnode)aNode.getUserObject()).getParmDBLocation());
+                item.setParmDBIdentifier(containedNode.getParmDBIdentifier());
                 logger.trace("Node name selected : "+item.getName());
                 ((jParmDBnode)aNode.getUserObject()).setLeaf(false);
                 TreeNode newNode = new TreeNode(this.instance,item,item.getNodeID());
@@ -150,10 +152,12 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
     
     public TreeNode getRootNode(Object arguments){
         String[] argumentArray = (String[])arguments;
-        jParmDBnode newPNode = new jParmDBnode("ParmDB",argumentArray[1]);
+        jParmDBnode newPNode = new jParmDBnode(argumentArray[0],argumentArray[1]);
+        newPNode.setParmDBIdentifier(argumentArray[0]);
         if(argumentArray.length==3){
             if(!argumentArray[2].equals("")){
                 newPNode.setParmDBLocation(argumentArray[2]);
+                
                 newPNode.setRootNode(true);
             }
         }
