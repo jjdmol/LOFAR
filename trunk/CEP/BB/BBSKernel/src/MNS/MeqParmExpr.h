@@ -41,8 +41,9 @@ class MeqParmGroup;
 
 // MeqParmExpr represents a parm which is an expression of other parms.
 // The current implementation is very limited, as it can only handle
-// the multiplication of two parms. This is sufficient for the first needs.
-// It should be rather simple to make more compilcated expression possible.
+// the multiplication or substraction of two parms.
+// This is sufficient for the first needs.
+// It should be rather simple to make more complicated expressions possible.
 
 class MeqParmExpr: public MeqExprRep
 {
@@ -58,6 +59,7 @@ public:
 private:
   MeqExpr itsExpr1;
   MeqExpr itsExpr2;
+  int     itsType;   // 1=subtract, 2=multiply
 };
 
 // @}
