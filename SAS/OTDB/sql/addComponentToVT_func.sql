@@ -122,6 +122,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4)
 	  vLeaf				BOOLEAN;
 	  vNewNodeID		VICtemplate.nodeID%TYPE;
 	  vNodeName			VICtemplate.name%TYPE;
+	  vVersion			VICnodedef.version%TYPE;
 	  vParentRefID		VICtemplate.originID%TYPE;
 	  vDummy			VICparamDef.paramID%TYPE;
 
@@ -162,8 +163,8 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4)
 	  END IF;
 
 	  -- check if orgNode exists
-	  SELECT name
-	  INTO	 vNodeName
+	  SELECT name, version
+	  INTO	 vNodeName, vVersion
 	  FROM	 VICnodeDef
 	  WHERE	 nodeid = $2;
 	  IF NOT FOUND THEN
@@ -183,9 +184,9 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4)
 		INTO   vDummy
 		FROM   VICparamDef
 		WHERE  nodeID = vParentRefID
-		AND	   name = \'#\' || vNodeName;
+		AND	   name = childNodeName(vNodeName, vVersion);
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Node % can not a child from parent %\', 
+		  RAISE EXCEPTION \'Node % cannot be a child from parent %\', 
 							vNodeName, $4;
 		END IF;
 	  END IF;

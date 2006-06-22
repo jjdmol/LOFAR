@@ -40,6 +40,7 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(40), INT2,
 	DECLARE
 		vParamID		VICparamDef.paramID%TYPE;
 		vName			VICparamDef.name%TYPE;
+		vVersionNr		VICNodeDef.version%TYPE;
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
@@ -56,10 +57,17 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(40), INT2,
 			RETURN FALSE;
 		END IF;
 
-		-- check if node exists
-		vName        := rtrim(translate($3, \'.\', \' \'));
+		-- assure clean input.
+		if substr($3,1,1) = \'#\' THEN
+		  vVersionNr := getVersionNr($3);
+		  vName		 := childNodeName(translate(cleanNodeName($3), \'.\', \' \'), vVersionNr);
+		ELSE
+		  vName        := rtrim(translate($3, \'.\', \' \'));	
+		END IF;
 	    vLimits      := replace($9, \'\\\'\', \'\');
 		vDescription := replace($10, \'\\\'\', \'\');
+
+		-- check if node exists
 		SELECT	paramID
 		INTO	vParamID
 		FROM	VICparamDef

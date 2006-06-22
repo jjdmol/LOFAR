@@ -88,3 +88,104 @@ CREATE OR REPLACE FUNCTION whoIs(INT4)
 ' LANGUAGE plpgsql;
 
 
+--
+-- VersionNrString (versionnr)
+--
+-- Returns a string being the formatted versionnr
+-- 
+-- Authorisation: n/a
+--
+-- Tables:	none
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION VersionNrString(INT4)
+  RETURNS VARCHAR(20) AS '
+	BEGIN
+		RETURN $1/10000 || \'.\' || ($1/100)%100 || \'.\' || $1%100;
+	END;
+' LANGUAGE plpgsql IMMUTABLE;
+
+--
+-- VersionNrValue(versionnr_string)
+--
+-- Returns the integer value of the versionnumberstring
+-- 
+-- Authorisation: n/a
+--
+-- Tables:	none
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION VersionNrValue(VARCHAR(50))
+  RETURNS INT4 AS '
+	DECLARE
+		vRelease		INT4;
+		vUpdate			INT4;
+		vPatch			INT4;
+				
+	BEGIN
+		vRelease := substring($1 from \'([0-9]+)\.[0-9]+\.[0-9]+\');
+		vUpdate  := substring($1 from \'[0-9]+\.([0-9]+)\.[0-9]+\');
+		vPatch   := substring($1 from \'[0-9]+\.[0-9]+\.([0-9]+)\');
+		
+		RETURN vRelease * 10000 + (vUpdate%100)*100 + vPatch%100;
+	END;
+' LANGUAGE plpgsql IMMUTABLE;
+
+--
+-- getVersionNr (nodename)
+--
+-- Returns a string being the formatted versionnr
+-- 
+-- Authorisation: n/a
+--
+-- Tables:	none
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION getVersionNr(VARCHAR(50))
+  RETURNS INT4 AS '
+	BEGIN
+		RETURN VersionNrValue(substring($1 from \'%{#"%#"}\' for \'#\'));
+	END;
+' LANGUAGE plpgsql IMMUTABLE;
+
+--
+-- childNodeName (name, versionnr)
+--
+-- Returns the child node name:
+-- # is added of at begin and versionnr is appended
+-- 
+-- Authorisation: n/a
+--
+-- Tables:	none
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION childNodeName(VARCHAR(50), INT4)
+  RETURNS VARCHAR(50) AS '
+	BEGIN
+		RETURN \'#\' || $1 || \'{\' || VersionNrString($2) || \'}\';
+	END;
+' LANGUAGE plpgsql IMMUTABLE;
+
+--
+-- cleanNodeName (name)
+--
+-- Returns the basic node name:
+-- # is stripped of at begin and trailing {xx} is removed.
+-- 
+-- Authorisation: n/a
+--
+-- Tables:	none
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION cleanNodeName(VARCHAR(50))
+  RETURNS TEXT AS '
+	BEGIN
+		RETURN rtrim(ltrim($1,\'#\'), \'{}0123456789.\');
+	END;
+' LANGUAGE plpgsql IMMUTABLE;
+

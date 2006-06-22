@@ -45,7 +45,7 @@ CREATE OR REPLACE FUNCTION isTopComponent(INT)
 	  FROM   VICnodedef 
 	  WHERE  nodeID = $1
 	  EXCEPT SELECT n.nodeID FROM VICnodeDEF n, VICparamDef p
-			 WHERE substr(p.name,2) = n.name;
+			 WHERE cleanNodeName(p.name) = n.name;
 	  IF FOUND THEN
 		RETURN TRUE;
 	  END IF;
