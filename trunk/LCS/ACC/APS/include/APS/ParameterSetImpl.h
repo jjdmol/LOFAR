@@ -249,7 +249,7 @@ bool	isValidVersionNrRef(const string& versionNr);
 // \endcode
 // returns \c "leaf". When a keyname without dots is passed the whole key
 // is returned.<br>
-// \c moduleName is a kind of \c dirname function for keys.
+// \c keyName is a kind of \c dirname function for keys.
 string	keyName	   (const string& fullKeyName);
 
 // When a hierarchical keyname is passed to \c moduleName the methods returns
