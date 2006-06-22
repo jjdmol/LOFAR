@@ -80,7 +80,10 @@ public:
   // Get the domain range (time,freq) of the given parameters in the table.
   // This is the minimum and maximum value of these axes for all parameters.
   // An empty name pattern is the same as * (all parms).
+  // <group>
   virtual ParmDomain getRange (const std::string& parmNamePattern) const = 0;
+  virtual ParmDomain getRange (const std::vector<std::string>& parmNames) const = 0;
+  // </group>
 
   // Get the parameter values for the given parameter and domain.
   // Note that the requested domain may contain multiple values.
@@ -149,10 +152,14 @@ public:
   virtual std::vector<std::string> getNames (const std::string& pattern,
 					     ParmDBRep::TableType) = 0;
 
-  // Get the names of all parms (in main and default table)
+  // Get the names of all parms in main and expression parms in default table
   // matching the given (filename like) pattern.
   std::vector<std::string> getAllNames (const std::string& pattern,
 					ParmDBRep::TableType);
+
+  // Get the names of all expression parms in default table
+  // matching the given (filename like) pattern.
+  void getExprNames (const std::string& pattern, std::vector<std::string>&);
 
   // Clear database or table
   virtual void clearTables() = 0;
@@ -220,8 +227,12 @@ public:
   // Get the domain range (time,freq) of the given parameters in the table.
   // This is the minimum and maximum value of these axes for all parameters.
   // An empty name pattern is the same as * (all parms).
+  // <group>
   ParmDomain getRange (const std::string& parmNamePattern = "") const
     { return itsRep->getRange (parmNamePattern); }
+  ParmDomain getRange (const std::vector<std::string>& parmNames) const
+    { return itsRep->getRange (parmNames); }
+  // </group>
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
@@ -301,11 +312,15 @@ public:
 		 ParmDBRep::TableType tableType = ParmDBRep::UseNormal) const
     { return itsRep->getNames (pattern, tableType); }
 
-  // Get the names matching the pattern in the table.
-  // Also take parmexpr type parameters from the default table.
+  // Get the names of all parms in main and expression parms in default table
+  // matching the given (filename like) pattern.
   std::vector<std::string> getAllNames (const std::string& pattern,
 		 ParmDBRep::TableType tableType = ParmDBRep::UseNormal) const
     { return itsRep->getAllNames (pattern, tableType); }
+
+  // Get the names of all expression parms in default table
+  // matching the given (filename like) pattern.
+  std::vector<std::string> getExprNames (const std::string& pattern);
 
   // Clear database or table
   void clearTables()

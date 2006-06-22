@@ -242,6 +242,17 @@ std::string getParmName (char*& str)
 }
 
 // Get the shape and return the size.
+int getSize (const vector<int>& shape)
+{
+  int nr = 1;
+  for (uint i=0; i<shape.size(); ++i) {
+    ASSERTSTR (shape[i] > 0, "a shape value must be > 0");
+    nr *= shape[i];
+  }
+  return nr;
+}
+
+// Get the shape and return the size.
 int getShape (const KeyValueMap& kvmap, vector<int>& shape)
 {
   KeyValueMap::const_iterator value = kvmap.find("shape");
@@ -252,12 +263,7 @@ int getShape (const KeyValueMap& kvmap, vector<int>& shape)
     shape[0] = kvmap.getInt ("nx", 1);
     shape[1] = kvmap.getInt ("ny", 1);
   }
-  int nr = 1;
-  for (uint i=0; i<shape.size(); ++i) {
-    ASSERTSTR (shape[i] > 0, "a shape value must be > 0");
-    nr *= shape[i];
-  }
-  return nr;
+  return getSize(shape);
 }
 
 vector<double> getArray (const KeyValueMap& kvmap, const std::string& arrName,
@@ -588,7 +594,13 @@ void updateParm (const string& parmName, ParmValue& pvalue,
     } else {
       pval.setCoeff (&coeff[0], shape);
     }
+  } else if (kvmap.isDefined("mask")) {
+    vector<double> coeff = pval.itsCoeff;
+    vector<int> shape = pval.itsShape;
+    Block<bool> mask = getMask (kvmap, "mask", coeff.size());
+    pval.setCoeff (&coeff[0], mask.storage(), shape);
   }
+
   // Set perturbation for numerical derivatives.
   if (kvmap.isDefined("pert")) {
     double pert = kvmap.getDouble ("pert", 1e-6);
@@ -671,6 +683,11 @@ void updateDefParm (const string& parmName, ParmValue& pvalue,
     } else {
       pval.setCoeff (&coeff[0], shape);
     }
+  } else if (kvmap.isDefined("mask")) {
+    vector<double> coeff = pval.itsCoeff;
+    vector<int> shape = pval.itsShape;
+    Block<bool> mask = getMask (kvmap, "mask", coeff.size());
+    pval.setCoeff (&coeff[0], mask.storage(), shape);
   }
   // Set perturbation for numerical derivatives.
   if (kvmap.isDefined("pert")) {
@@ -717,7 +734,7 @@ void doIt (bool noPrompt)
   while (true) {
     try {
       if (!noPrompt) {
-	cout << "Command: ";
+	cerr << "Command: ";
       }
       char* cstr = cstra;
       if (! cin.getline (cstr, buffersize)) {
