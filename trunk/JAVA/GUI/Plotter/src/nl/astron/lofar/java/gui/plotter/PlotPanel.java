@@ -23,10 +23,17 @@
 
 package nl.astron.lofar.java.gui.plotter;
 
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.PrintJob;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
 import java.util.HashMap;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -42,7 +49,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
  * @version $Id$
  * @updated 13-apr-2006 11:19:47
  */
-public class PlotPanel extends JPanel{
+public class PlotPanel extends JPanel implements Printable{
     
     private PlotController m_PlotController;
     private JComponent plot;
@@ -137,7 +144,7 @@ public class PlotPanel extends JPanel{
      * that something has gone wrong.
      */
     public void modifyPlot(Object newConstraints) throws PlotterException{
-        try {            
+        try {
             currentDataConstraint = newConstraints;
             plot = m_PlotController.modifyPlot(plot, newConstraints);
             this.removeAll();
@@ -154,9 +161,31 @@ public class PlotPanel extends JPanel{
     /**
      * This method will attempt to print the current plot
      */
-    public PrintJob printPlot() throws PlotterException{
-        
-        return null;
+    public void printPlot(boolean printWithLegend) throws PlotterException{
+        PrinterJob printJob = PrinterJob.getPrinterJob();
+        if(printWithLegend){
+           add(getLegendForPlot(),BorderLayout.SOUTH);
+        }
+       
+        PageFormat pf = new PageFormat();
+        pf = printJob.pageDialog(pf);
+        printJob.setPrintable(this,pf);
+        printJob.setJobName("OTB ParmDB Plotter - "+printJob.getUserName());
+        if (printJob.printDialog()){
+            try {
+                System.out.println("Calling PrintJob.print()");
+                printJob.print();
+                System.out.println("End PrintJob.print()");
+            } catch (PrinterException pe) {
+                System.out.println("Error printing: " + pe);
+                
+            }
+        }
+        if(printWithLegend){
+            removeAll();    
+            add(getPlot(),BorderLayout.CENTER);
+            validate();
+        }
     }
     /**
      * This method will return the plot currently in memory
@@ -191,5 +220,33 @@ public class PlotPanel extends JPanel{
     public HashMap getDataForPlot() throws PlotterException{
         return m_PlotController.getPlotData();
     }
-    
+    public int print(Graphics g, PageFormat pf, int pageIndex) {
+        int response = NO_SUCH_PAGE;
+        double pageHeight = pf.getImageableHeight(); //height of printer page
+        double pageWidth = pf.getImageableWidth(); //width of printer page
+        //this.setSize(new Dimension((int)Math.floor(pageWidth),(int)Math.floor(pageHeight)));
+        this.setDoubleBuffered(false);
+        
+        Graphics2D g2 = (Graphics2D) g;
+        // for faster printing, turn off double buffering
+       
+        Dimension d = this.getSize(); //get size of document
+        double panelWidth = d.width; //width in pixels
+        double panelHeight = d.height; //height in pixels
+         
+        double scale = pageWidth / panelWidth;
+        // make sure not print empty pages
+        if (pageIndex > 0) {
+            response = NO_SUCH_PAGE;
+        } else {
+            // shift Graphic to line up with beginning of print-imageable region
+            g2.translate(pf.getImageableX(), pf.getImageableY());
+            // scale the page so the width fits...
+            g2.scale(scale, scale);
+            this.paintAll(g2); //repaint the page for printing
+            this.setDoubleBuffered(true);
+            response = Printable.PAGE_EXISTS;
+        }
+        return response;
+    }
 }
