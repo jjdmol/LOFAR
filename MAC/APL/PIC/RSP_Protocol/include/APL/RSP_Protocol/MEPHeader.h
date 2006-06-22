@@ -233,7 +233,7 @@ namespace LOFAR {
       static const uint16 N_TOTAL_XLETS    = N_SERDES_LANES * N_REMOTE_XLETS;
       static const uint16 N_LOCAL_XLETS    = 4;
       static const uint16 N_BEAMLETS       = 216;
-      static const uint16 N_LOCAL_BEAMLETS = 54;
+      static const uint16 N_LOCAL_BEAMLETS = 54; // N_BEAMLETS / N_SERDES_LANES
       static const uint16 N_POL            = 2;                    // number of polarizations
       static const uint16 N_PHASE          = 2;                    // number of phases in a complex number
       static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      // number of phase polarizations

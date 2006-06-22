@@ -68,13 +68,14 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 
   case SubbandSelection::BEAMLET:
     {
-      dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
+      //dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
+      dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + m_event->subbands().extent(secondDim) - 1);
       for (int cache_rcu = 0;
 	   cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
 	{
 	  if (m_event->rcumask[cache_rcu])
 	    {
-	      cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
+	      cache.getSubbandSelection()()(cache_rcu, Range::all()) = 0;
 	      cache.getSubbandSelection()()(cache_rcu, dst_range)
 		= m_event->subbands()(0, Range::all()) * (int)MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
 	

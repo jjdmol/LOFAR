@@ -68,10 +68,32 @@ void SSWrite::sendrequest()
   Array<uint16, 2> subbands((uint16*)&ss.subbands,
 			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
 			    neverDeleteData);
-    
+
+  // copy crosslet selection
+  Range xlet_range(0, MEPHeader::N_LOCAL_XLETS-1);
+  subbands(xlet_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     xlet_range); // x
+  subbands(xlet_range, 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, xlet_range); // y
+
+  //
   // copy the actual values from the cache
-  subbands(Range::all(), 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     Range::all()); // x
-  subbands(Range::all(), 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, Range::all()); // y
+  // Explain this in more detail
+  for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+
+    int src_offset = lane + MEPHeader::N_LOCAL_XLETS;
+    int dst_offset = (lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES)) + MEPHeader::N_LOCAL_XLETS;
+    
+    // strided source range, stride = nrBlpsPerBoard
+    Range src_range(src_offset, src_offset + MEPHeader::N_BEAMLETS - 1,
+		    StationSettings::instance()->nrBlpsPerBoard());
+    Range dst_range(dst_offset, dst_offset + (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) - 1);
+
+    LOG_INFO_STR("lane=" << lane);
+    LOG_INFO_STR("src_range=" << dst_range);
+    LOG_INFO_STR("dst_range=" << src_range);
+
+    subbands(src_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     dst_range); // x
+    subbands(src_range, 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, dst_range); // y
+  }
 
   m_hdr = ss.hdr;
   getBoardPort().send(ss);
