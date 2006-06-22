@@ -26,8 +26,11 @@
 #include <BBS/MNS/MeqResult.h>
 #include <BBS/MNS/MeqMatrix.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
+#include <casa/Utilities/Regex.h>
 
 using namespace std;
+using namespace casa;
 
 // Create tParmFacade.in_mep with parmdb using:
 //   create tablename='tParmFacade.in_mep'
@@ -40,10 +43,59 @@ namespace ParmDB {
 
   ParmFacade::ParmFacade (const string& tableName)
     : itsPDB(ParmDBMeta("aips", tableName))
-  {}
+  {
+    map<string,ParmValueSet> defValues;
+    itsPDB.getDefValues (defValues, "*");
+    for (map<string,ParmValueSet>::const_iterator iter = defValues.begin();
+	 iter != defValues.end();
+	 iter++) {
+      const ParmValueRep& pval = iter->second.getValues()[0].rep();
+      if (pval.itsType == "parmexpr") {
+	itsExprs[iter->first] = set<string>();
+	// Add the expression to the map.
+	map<string,set<string> >::iterator ch = itsExprs.find(iter->first);
+	// Add all children to the set.
+	processExpr (defValues, pval.itsExpr, ch->second);
+      }
+    }
+  }
 
   ParmFacade::~ParmFacade()
   {}
+
+  void ParmFacade::processExpr (const map<string,ParmValueSet>& defValues, 
+				const string& expr, set<string>& ch)
+  {
+    String str(expr);
+    // Replace function names by a blank..
+    str.gsub (Regex("[a-zA-Z_][a-zA-Z0-9_]* *\\("), " ");
+    // Replace parentheses, commas, and operators by a blank.
+    str.gsub (Regex("[(),*/+^-]") , " ");
+    // Replace multiple blanks by a single one.
+    str.gsub (Regex("  *") , " ");
+    // Now split the string and append to the children set.
+    vector<string> nms = StringUtil::split(str, ' ');
+    for (vector<string>::const_iterator iter=nms.begin();
+	 iter != nms.end();
+	 iter++) {
+      if (! iter->empty()) {
+	// If the name is an expression, process it recursively.
+	bool isExpr = false;
+	map<string,ParmValueSet>::const_iterator def = defValues.find (*iter);
+	if (def != defValues.end()) {
+	  const ParmValueRep& pval = def->second.getValues()[0].rep();
+	  if (pval.itsType == "parmexpr") {
+	    isExpr = true;
+	    processExpr (defValues, pval.itsExpr, ch);
+	  }
+	}
+	if (!isExpr) {
+	  // No expression, so add parm name.
+	  ch.insert (*iter);
+	}
+      }
+    }
+  }
 
   vector<double> ParmFacade::getRange (const string& parmNamePattern) const
   {
@@ -52,6 +104,27 @@ namespace ParmDB {
       pp = "*";
     }
     ParmDomain dom = itsPDB.getRange (pp);
+    // If no domain found, see if the name matches an expression.
+    if (dom.getStart()[0] == 0  &&  dom.getEnd()[0] == 1  &&
+	dom.getStart()[1] == 0  &&  dom.getEnd()[1] == 1) {
+      map<string,set<string> >::const_iterator iter =
+	itsExprs.find (parmNamePattern);
+      if (iter == itsExprs.end()) {
+	// Not found; see if the name is part of an expression name.
+	String pname(parmNamePattern);
+	for (iter=itsExprs.begin(); iter!=itsExprs.end(); iter++) {
+	  if (pname.matches (Regex(iter->first + ".*"))) {
+	    break;
+	  }
+	}
+      }
+      // A match has been found, so get the range of the expression's children.
+      if (iter != itsExprs.end()) {
+	// Copy the set to a vector.
+	vector<string> nams(iter->second.begin(), iter->second.end());
+	dom = itsPDB.getRange (nams);
+      }
+    }
     vector<double> res(4);
     res[0] = dom.getStart()[0];
     res[1] = dom.getEnd()[0];
@@ -78,10 +151,6 @@ namespace ParmDB {
   {
     // Get all parm names.
     vector<string> names = getNames (parmNamePattern);
-    // Get the parm values.
-    map<string,ParmValueSet> parmValues;
-    itsPDB.getValues (parmValues, names,
-		      ParmDomain(startx, endx, starty, endy));
     // The output is returned in a map.
     map<string,vector<double> > out;
     MeqParmGroup parmGroup;
@@ -96,6 +165,10 @@ namespace ParmDB {
 							    &parmGroup,
 							    &itsPDB)));
     }
+    // Get the parm values.
+    map<string,ParmValueSet> parmValues;
+    itsPDB.getValues (parmValues, vector<string>(),
+		      ParmDomain(startx, endx, starty, endy));
     // Make a request object for the given grid.
     MeqDomain domain(startx, endx, starty, endy);
     MeqRequest req(domain, nx, ny);
