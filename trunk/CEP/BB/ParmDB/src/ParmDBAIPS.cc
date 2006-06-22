@@ -157,17 +157,44 @@ ParmDomain ParmDBAIPS::getRange (const string& parmNamePattern) const
     Regex regex(Regex::fromPattern(parmNamePattern));
     table = table(table.col("NAME") == regex);
   }
+  return findRange (table);
+}
+
+ParmDomain ParmDBAIPS::getRange (const vector<string>& parmNames) const
+{
+  Table table = itsTables[0];
+  TableLocker locker(table, FileLocker::Read);
+  if (!parmNames.empty()) {
+    Vector<String> nams(parmNames.size());
+    for (uint i=0; i<parmNames.size(); ++i) {
+      nams(i) = parmNames[i];
+    }
+    table = table(table.col("NAME").in (nams));
+  }
+  return findRange (table);
+}
+
+ParmDomain ParmDBAIPS::findRange (const Table& table) const
+{
   if (table.nrow() == 0) {
     return ParmDomain (0,1,0,1);
   }
-  ROScalarColumn<double> sxCol(table, "STARTX");
-  ROScalarColumn<double> exCol(table, "ENDX");
-  ROScalarColumn<double> syCol(table, "STARTY");
-  ROScalarColumn<double> eyCol(table, "ENDY");
-  double sx = min(sxCol.getColumn());
-  double ex = max(exCol.getColumn());
-  double sy = min(syCol.getColumn());
-  double ey = max(eyCol.getColumn());
+  double sx = -1e30;
+  double ex = 1e30;
+  double sy = -1e30;
+  double ey = 1e30;
+  TableIterator tabIter(table, "NAME");
+  while (! tabIter.pastEnd()) {
+    ROScalarColumn<double> sxCol(tabIter.table(), "STARTX");
+    ROScalarColumn<double> exCol(tabIter.table(), "ENDX");
+    ROScalarColumn<double> syCol(tabIter.table(), "STARTY");
+    ROScalarColumn<double> eyCol(tabIter.table(), "ENDY");
+    sx = max (sx, min(sxCol.getColumn()));
+    ex = min (ex, max(exCol.getColumn()));
+    sy = max (sy, min(syCol.getColumn()));
+    ey = min (ey, max(eyCol.getColumn()));
+    tabIter++;
+  }
   return ParmDomain (sx,ex,sy,ey);
 }
 

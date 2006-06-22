@@ -82,6 +82,19 @@ vector<string> ParmDBRep::getAllNames (const string& pattern,
   // First get all names for the standard table.
   vector<string> names = getNames (pattern, tableType);
   // Now append with names from the default table.
+  getExprNames (pattern, names);
+  // Now sort the result uniquely.
+  // Most has already been sorted, so use insertion sort.
+  int nr = GenSort<string>::sort (&names[0], names.size(),
+				  Sort::Ascending,
+				  Sort::InsSort|Sort::NoDuplicates);
+  names.resize (nr);
+  return names;
+}
+
+void ParmDBRep::getExprNames (const string& pattern,
+			      vector<string>& names)
+{
   // Fill the map with default values if not done yet.
   if (!itsDefFilled) {
     fillDefMap (itsDefValues);
@@ -98,13 +111,6 @@ vector<string> ParmDBRep::getAllNames (const string& pattern,
       }
     }
   }
-  // Now sort the result uniquely.
-  // Most has already been sorted, so use insertion sort.
-  int nr = GenSort<string>::sort (&names[0], names.size(),
-				  Sort::Ascending,
-				  Sort::InsSort|Sort::NoDuplicates);
-  names.resize (nr);
-  return names;
 }
 
 
@@ -187,6 +193,13 @@ ParmDB ParmDB::getParmDB (uint index)
   ASSERTSTR (index < theirParmDBs.size()  &&  theirParmDBs[index] != 0,
 	     "ParmDB index " << index << " is unknown");
   return ParmDB(theirParmDBs[index]);
+}
+
+vector<string> ParmDB::getExprNames (const string& pattern)
+{
+  vector<string> names;
+  itsRep->getExprNames (pattern, names);
+  return names;
 }
 
 

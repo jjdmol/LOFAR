@@ -57,7 +57,10 @@ public:
   // Get the domain range (time,freq) of the given parameters in the table.
   // This is the minimum and maximum value of these axes for all parameters.
   // An empty name pattern is the same as * (all parms).
+  // <group>
   virtual ParmDomain getRange (const std::string& parmNamePattern) const;
+  virtual ParmDomain getRange (const std::vector<std::string>& parmNames) const;
+  // </group>
 
   // Get the parameter values for the given parameter and domain.
   // Note that the requested domain may contain multiple values.
@@ -132,6 +135,9 @@ private:
 
   // Create a parmtable with the given name.
   void createTables (const string& tableName);
+
+  // Find the minmax range in the table.
+  ParmDomain findRange (const casa::Table& table) const;
 
   // Extract the parm values from a table selection with a single parm name.
   // <group>
