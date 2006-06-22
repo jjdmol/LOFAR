@@ -29,10 +29,16 @@ namespace LOFAR {
   MeqParmExpr::MeqParmExpr (const string& expr, MeqParmGroup* group,
 			    ParmDB::ParmDB* table)
   {
-    // Only the multiplication of 2 parms is currently supported.
-    string::size_type idx = expr.find('*');
-    ASSERTSTR (idx != string::npos,
-	       "Currently parmexpr only supports multiplication of two parms");
+    // Only the multiplication or subtraction of 2 parms is supported.
+    string::size_type idx = expr.find('-');
+    itsType = 1;
+    if (idx == string::npos) {
+      idx = expr.find('*');
+      itsType = 2;
+      ASSERTSTR (idx != string::npos,
+		 "Currently parmexpr only supports subtraction or "
+		 "multiplication of two parms");
+    }
     string p1, p2;
     for (string::size_type i=0; i<idx; ++i) {
       if (expr[i] != ' ') {
@@ -57,6 +63,9 @@ namespace LOFAR {
 
   MeqMatrix MeqParmExpr::getResultValue (const vector<const MeqMatrix*>& v)
   {
+    if (itsType == 1) {
+      return *v[0] - *v[1];
+    }
     return *v[0] * *v[1];
   }
 
