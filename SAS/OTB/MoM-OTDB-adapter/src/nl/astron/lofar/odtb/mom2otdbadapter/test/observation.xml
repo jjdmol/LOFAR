@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lofar:observation mom2Id="20" xmlns:lns="http://www.astron.nl/NorthStar-Lofar" xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:ns="http://www.radionet-eu.org/NorthStar" xmlns:persistent="http://www.astron.nl/PersistentObjects" xmlns:user="http://www.astron.nl/useradmin" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2 http://wop17.nfra.nl/twiki/pub/Tools/Schemas/MoM2.xsd http://www.astron.nl/MoM2-Lofar http://wop17.nfra.nl/twiki/pub/Tools/Schemas/LofarMoM2.xsd http://www.radionet-eu.org/NorthStar http://proposal.astron.nl/schemas/NorthStarProposal.xsd http://www.astron.nl/NorthStar-Lofar http://proposal.astron.nl/schemas/LofarProposal.xsd http://www.astron.nl/useradmin http://proposal.astron.nl/schemas/UserAdmin.xsd http://www.astron.nl/PersistentObjects http://proposal.astron.nl/schemas/PersistentObjects.xsd">
+					<name>1: Transient</name>
+					<description>Detailed Array Configuration, 110-130 MHz (160 MHz samplingrate), Transient</description>
+					<currentStatus>
+						<mom2:describedStatus/>
+					</currentStatus>
+					<specificationRemarks>
+						<item>
+							<mom2:specificationRemark>
+								<user xmlns:lns="http://www.astron.nl/NorthStar-Lofar" xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:ns="http://www.radionet-eu.org/NorthStar" xmlns:persistent="http://www.astron.nl/PersistentObjects" xmlns:user="http://www.astron.nl/useradmin" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="2"/>
+								<text>--- Observation specification details from the proposal: ---
+
+</text>
+							</mom2:specificationRemark>
+						</item>
+					</specificationRemarks>
+					<schedulingRemarks>
+						<item>
+							<mom2:schedulingRemark>
+								<user xmlns:lns="http://www.astron.nl/NorthStar-Lofar" xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:ns="http://www.radionet-eu.org/NorthStar" xmlns:persistent="http://www.astron.nl/PersistentObjects" xmlns:user="http://www.astron.nl/useradmin" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="2"/>
+								<text></text>
+							</mom2:schedulingRemark>
+						</item>
+					</schedulingRemarks>
+					<lofar:observationAttributes>
+						<arrayConfiguration>
+							<detailed xmlns:lns="http://www.astron.nl/NorthStar-Lofar" xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:ns="http://www.radionet-eu.org/NorthStar" xmlns:persistent="http://www.astron.nl/PersistentObjects" xmlns:user="http://www.astron.nl/useradmin" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+								<station>Station 1</station>
+								<station>Station 2</station>
+							</detailed>
+						</arrayConfiguration>
+						<srgConfiguration>SA1</srgConfiguration>
+						<bandFilter>110-130 MHz (160 MHz samplingrate)</bandFilter>
+						<subbandPlacement>Scattered</subbandPlacement>
+						<numberOfBands>23</numberOfBands>
+						<startFrequency>23.0</startFrequency>
+						<spacing>8</spacing>
+						<backend>Transient</backend>
+					</lofar:observationAttributes>
+					<children>
+						<item>
+							<lofar:measurement mom2Id="21">
+								<name>m32</name>
+								<description>82800.0 seconds observation of m32</description>
+								<currentStatus>
+									<mom2:describedStatus/>
+								</currentStatus>
+								<lofar:measurementAttributes>
+									<fieldName>m32</fieldName>
+									<ra>10.67425</ra>
+									<dec>40.86516666666667</dec>
+									<coordinateRef>J2000</coordinateRef>
+									<requestedDuration>PT82800.0S</requestedDuration>
+								</lofar:measurementAttributes>
+							</lofar:measurement>
+						</item>
+						<item>
+							<lofar:measurement mom2Id="22">
+								<name>m32</name>
+								<description>82800.0 seconds observation of m32</description>
+								<currentStatus>
+									<mom2:openedStatus/>
+								</currentStatus>
+								<lofar:measurementAttributes>
+									<fieldName>m32</fieldName>
+									<ra>14.67425</ra>
+									<dec>20.86516666666667</dec>
+									<coordinateRef>J2000</coordinateRef>
+									<requestedDuration>PT2800.0S</requestedDuration>
+								</lofar:measurementAttributes>
+							</lofar:measurement>
+						</item>
+					</children>
+				</lofar:observation>
