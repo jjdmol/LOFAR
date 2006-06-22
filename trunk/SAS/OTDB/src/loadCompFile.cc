@@ -191,12 +191,36 @@ vector<VICnodeDef>	TreeMaintenance::getComponentList (
 		return (resultVec);
 	}
 
-	LOG_TRACE_FLOW_STR ("getCompList(" << namefragment <<","<< toString(topOnly) << ")" );
+	// note: namefragement has the syntax: [#]namefragment[{versionnr}][%]
+	//		 always strip off #
+	//		 always remove and convert versionnr
+	string		theName   (namefragment);
+
+	// get the versionnumber if any
+	uint32		theVersion(0);
+	string::size_type   start = theName.find_last_of('{');
+    if (start != string::npos) {
+		string::size_type   end = theName.find('}', start);
+		if (end != string::npos) {
+			theVersion = VersionNr(theName.substr(start+1,end-start));
+		}
+	}
+	// bring back namefragment to its base.
+	ltrim (theName, "#");
+	rtrim (theName, "%{}0123456789.");
+	if (*(namefragment.rbegin()) == '%') {
+		theName.append("%");
+	}
+
+	LOG_TRACE_FLOW_STR ("getCompList(" << theName <<","<< theVersion <<","<< 
+											toString(topOnly) << ")" );
 
 	work	xAction(*(itsConn->getConn()), "getCompList");
 	try {
 		result res = xAction.exec("SELECT * from getVCNodeList('" +
-							  namefragment + "','" + toString(topOnly) + "')");
+												namefragment + "'," + 
+												toString(theVersion) + ",'" +
+												toString(topOnly) + "')");
 		if (res.empty()) {
 			return (resultVec);
 		}
@@ -241,7 +265,7 @@ bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
 			cleanConstraints.erase(pos, 1);
 		}
 
-		LOG_DEBUG (formatString("saveComponentNode(%d,'%s',%d,%d,'%s','%s'", 
+		LOG_DEBUG (formatString("saveComponentNode(%d,'%s',%d,%d,'%s','%s')", 
 							aNode.nodeID(), aNode.name.c_str(), aNode.version,
 							aNode.classif, cleanConstraints.c_str(), cleanDesc.c_str()));
 					
@@ -486,7 +510,8 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			//		 at the parent, telling the number of childs.
 			OTDBparam		AttachedChild;
 			AttachedChild.itsNodeID   = topNodeID;
-			AttachedChild.name 		  = "#" + args[1];
+			AttachedChild.name 		  = formatString("#%s{%s}", args[1].c_str(), 
+																args[2].c_str());
 			AttachedChild.index 	  = 0;		// not used in VICparamdef
 			AttachedChild.type 		  = PTconv.get("int");
 			AttachedChild.unit 		  =	UTconv.get("-");

@@ -23,7 +23,7 @@
 --
 
 --
--- getVCNodeList (namefragment, toponly)
+-- getVCNodeList (namefragment, versionnr, toponly)
 --
 -- Get a list with the top components
 --
@@ -33,19 +33,25 @@
 --
 -- Types:	OTDBnodeDef
 --
-CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(40), BOOLEAN)
+CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(40), INT4, BOOLEAN)
   RETURNS SETOF OTDBnodeDef AS '
 	DECLARE
 		vRecord			RECORD;
 		vRestriction	VARCHAR(200);
 
 	BEGIN
-	  IF $2 = TRUE THEN
-		vRestriction := \' EXCEPT SELECT n.* FROM VICnodeDEF n, VICparamDef p \' ||
-						\' WHERE substr(p.name,2) = n.name\';
+	  IF $2 <> 0 THEN
+		vRestriction := \' AND version = \' || $2;
 	  ELSE
 		vRestriction := \'\';
 	  END IF;
+
+	  IF $3 = TRUE THEN
+		vRestriction := \' EXCEPT SELECT n.* FROM VICnodeDEF n, VICparamDef p \' ||
+						\' WHERE cleanNodeName(p.name) = n.name\';
+	  END IF;
+
+-- RAISE EXCEPTION vRestriction;
 
 	  -- do selection
 	  FOR vRecord IN EXECUTE \'

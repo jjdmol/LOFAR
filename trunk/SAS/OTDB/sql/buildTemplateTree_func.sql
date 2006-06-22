@@ -120,6 +120,7 @@ CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
 	  vNodeID			VICnodeDef.nodeID%TYPE;
 	  vNewNodeID		VICtemplate.nodeID%TYPE;
 	  vDummy			VICtemplate.nodeID%TYPE;
+	  vVersionNr		INT4;
 
 	BEGIN
 	  -- copy node itself
@@ -132,12 +133,14 @@ CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
 		WHERE	nodeID = $1
 		AND		name like \'#%\'
 	  LOOP
+		vVersionNr := getVersionNr(vNode.name);
+		vNode.name := cleanNodeName(vNode.name);
 		-- translate name and versionnumber into node
 		SELECT nodeID
 		INTO   vNodeID
 		FROM   VICnodeDef
-		WHERE  name = substr(vNode.name,2);
---		AND	   version >= ...
+		WHERE  name = vNode.name
+		AND	   version = vVersionNr;
 		vDummy := instanciateVTsubTree(vNodeID, $2, vNewNodeID);
 	  END LOOP;
 
