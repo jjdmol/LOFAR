@@ -287,6 +287,11 @@ void SubbandsCommand::send()
 	      if (i >= MEPHeader::N_BEAMLETS) break;
 	      setsubbands.subbands()(0, i) = (*it);
 	    }
+#if 0
+	  for (; i < MEPHeader::N_BEAMLETS; i++) {
+	    setsubbands.subbands()(0, i) = 0;
+	  }
+#endif
 	}
       }
       break;
@@ -1209,9 +1214,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
       m_stats /= m_integration;
     }
 
-    std::ostringstream logStream;
-    logStream << "statistics update at " << timestamp;
-    logMessage(cout,logStream.str());
+    LOG_DEBUG_STR("statistics update at " << timestamp);
     
     if(m_duration == 0)
     {
@@ -1457,9 +1460,7 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
       m_stats /= m_integration;
     }
 
-    std::ostringstream logStream;
-    logStream << "xcstatistics update at " << timestamp;
-    logMessage(cout,logStream.str());
+    LOG_DEBUG_STR("xcstatistics update at " << timestamp);
     
     if(m_duration == 0)
     {

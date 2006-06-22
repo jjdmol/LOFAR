@@ -169,14 +169,14 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   int nrBlps         = StationSettings::instance()->nrBlps();
   int nrBlpsPerBoard = StationSettings::instance()->nrBlpsPerBoard();
+  int nrRcusPerBoard = StationSettings::instance()->nrRcusPerBoard();
 
   //
   // This register m_regid corresponds to a specific RCU along the vertical axis of
   // the cross-correlation matrix as it is shown in the the comment above.
   // The rcu index is a global index into the cross correlation matrix
   //
-  int rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) +
-    (m_regid % (nrBlpsPerBoard * MEPHeader::N_POL));
+  int rcu = (getBoardId() * nrRcusPerBoard) + (m_regid % nrRcusPerBoard);
 
   Array<complex<double>, 4>& cache(Cache::getInstance().getBack().getXCStats()());
 
@@ -184,7 +184,8 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 				     shape(nrBlps, MEPHeader::N_POL),
 				     neverDeleteData);
 
-  Range dst_range(m_regid / (nrBlpsPerBoard * MEPHeader::N_POL), nrBlps - 1, nrBlpsPerBoard);
+  // strided range, stride = nrBlpsPerBoard
+  Range dst_range(m_regid / nrRcusPerBoard, nrBlps - 1, nrBlpsPerBoard);
 
   LOG_DEBUG_STR(formatString("m_regid=%02d rcu=%03d cache(%02d,Range(0,1),%02d,",
 			     m_regid, rcu, rcu %  MEPHeader::N_POL, rcu / MEPHeader::N_POL) << dst_range << ")");
