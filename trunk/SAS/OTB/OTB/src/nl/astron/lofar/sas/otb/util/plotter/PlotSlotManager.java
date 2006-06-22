@@ -199,11 +199,11 @@ public class PlotSlotManager{
         for(PlotSlot slot : itsPlotSlots){
             if(slot.containsPlot()) currentPlots++;
         }
-        if(currentPlots > 1){
+        /*if(currentPlots > 1){
             fireSlotsUpdated(index);
         }else{
             fireSlotsUpdated(-1);
-        }
+        }*/
     }
     
     public void movePlot(int indexFromSlot, int indexToSlot){

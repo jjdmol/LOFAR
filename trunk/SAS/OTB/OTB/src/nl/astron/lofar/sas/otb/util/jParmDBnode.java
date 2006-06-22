@@ -30,12 +30,14 @@ public class jParmDBnode implements java.io.Serializable {
     private String itsNodeID;
     private String itsParentID;
     private String parmDBlocation;
+    private String tableIdentifier;
     
     public jParmDBnode(String nodeID, String parentID) {
         leaf = false;
         itsNodeID = nodeID;
         itsParentID = parentID;
         rootNode = false;
+        tableIdentifier = "ParmDB";
     }
     public String getName() {
         return name;
@@ -72,5 +74,11 @@ public class jParmDBnode implements java.io.Serializable {
     }
     public void setParmDBLocation(String location) {
         parmDBlocation = location;
+    }
+    public String getParmDBIdentifier() {
+        return tableIdentifier;
+    }
+    public void setParmDBIdentifier(String tableIdentifier) {
+        this.tableIdentifier = tableIdentifier;
     }
 }

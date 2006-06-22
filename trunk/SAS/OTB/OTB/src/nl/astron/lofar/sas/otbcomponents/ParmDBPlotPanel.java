@@ -55,6 +55,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     private int successfulNumberOfSlots;
     private MainFrame  itsMainFrame;
     private String itsParamName;
+    private String itsParamTableName;
     
     /** Creates new form BeanForm based upon aParameter
      *
@@ -184,11 +185,11 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         if(evt.getActionCommand().startsWith("Add to slot")){
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(12));
             logger.debug("Plot Slot extrapolated: "+slotSelected);
-            itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName));
+            itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName,itsParamTableName));
         } else if(evt.getActionCommand().startsWith("Add to plot in slot")){
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(20));
             logger.debug("Plot Slot extrapolated: "+slotSelected);
-            Object parameterConstraints =  constructPlotterConstraints(itsParamName);
+            Object parameterConstraints =  constructPlotterConstraints(itsParamName,itsParamTableName);
             HashMap<String,Object> addData = new HashMap<String,Object>();
             addData.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
             addData.put(PlotConstants.DATASET_OPERATOR_ADD,parameterConstraints);
@@ -196,21 +197,21 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
-    private Object constructPlotterConstraints(String aParamName){
+    private Object constructPlotterConstraints(String aParamName,String itsParamTableName){
         HashMap<String,Object> parameterConstraints = new HashMap<String,Object>();
         parameterConstraints.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
         
         String[] passToDataAccess = null;
         if (aParamName != null) {
             String cloneParamName = aParamName.toString();
-            if(cloneParamName.equalsIgnoreCase("ParmDB")){
+            if(cloneParamName.equalsIgnoreCase(itsParamTableName)){
                 cloneParamName = "*";
             }else{
-                cloneParamName=cloneParamName.substring(7);
+                cloneParamName=cloneParamName.substring(itsParamTableName.length()+1);
                 cloneParamName += "*";
             }
             try{
-                passToDataAccess = new String[7];
+                passToDataAccess = new String[8];
                 
                 Vector paramValues;
                 paramValues = SharedVars.getJParmFacade().getRange(cloneParamName);
@@ -243,6 +244,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 passToDataAccess[4] = ""+starty;
                 passToDataAccess[5] = ""+endy;
                 passToDataAccess[6] = ""+numy;
+                passToDataAccess[7] = itsParamTableName;
             }catch(Exception ex){
                 JOptionPane.showMessageDialog(itsMainFrame, ex.getMessage(),
                         "Error detected",
@@ -298,10 +300,12 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         jParmDBnode node = (jParmDBnode)anObject;
         try {
             SharedVars.getJParmFacade().setParmFacadeDB(node.getParmDBLocation());
+            
         } catch (RemoteException ex) {
             logger.error("setContent() - jParmFacade RMI error while updating table name ",ex);
         }
         itsParamName = node.getNodeID();
+        itsParamTableName = node.getParmDBIdentifier();
         logger.trace("ParmDB name selected : "+itsParamName);
         
         

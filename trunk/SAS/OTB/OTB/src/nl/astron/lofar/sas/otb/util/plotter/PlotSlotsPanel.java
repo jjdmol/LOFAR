@@ -74,6 +74,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                 }
             }
         });
+        rearrangeSlotGrid();
     }
     
     /** adds a button to the BeanForm */
@@ -99,6 +100,17 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             removeData.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
             removeData.put(PlotConstants.DATASET_OPERATOR_DELETE,dataIdentifiers);
             itsSlotManager.modifyPlotInSlot(slotIndex,removeData);
+        }else{
+            throw new IllegalArgumentException("A plot was not found in slot "+slotIndex);
+        }
+    }
+    /** adds a button to the BeanForm */
+    public void alterDataInPlot(int slotIndex,String[] dataIdentifiers, String operation) throws IllegalArgumentException{
+        if(itsSlotManager.isSlotOccupied(slotIndex)){
+            HashMap<String,Object> alterData = new HashMap<String,Object>();
+            alterData.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+            alterData.put(operation,dataIdentifiers);
+            itsSlotManager.modifyPlotInSlot(slotIndex,alterData);
         }else{
             throw new IllegalArgumentException("A plot was not found in slot "+slotIndex);
         }
@@ -216,7 +228,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         add(slotsPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+        // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel slotsPanel;
     // End of variables declaration//GEN-END:variables
     
@@ -400,11 +412,52 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                             }
                         });
                         aPopupMenu.add(aMenuItem2);
+                        JMenuItem aMenuItem3=new JMenuItem("Print Slot");
+                        aMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+                            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                selectedSlot.printSlot();
+                                selectedSlot.validate();
+                            }
+                        });
+                        aPopupMenu.add(aMenuItem3);
+                        
                         try {
                             LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)selectedSlot.getPlot().getDataForPlot().get(PlotConstants.DATASET_VALUES);
                             if(currentValuesInPlot.size()>0){
                                 aPopupMenu.addSeparator();
-                                JMenu aMenu=new JMenu("Remove value from plot");
+                                JMenu aMenu=new JMenu("Modify value(s)");
+                                JMenu subtractMenu=new JMenu("Subtract operations");
+                                
+                                JMenuItem subtractMean=new JMenuItem("Subtract mean(all values) from all values");
+                                subtractMean.setActionCommand("Subtract mean(all values) from all values");
+                                subtractMean.addActionListener(new java.awt.event.ActionListener() {
+                                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                        String[] valueArray = new String[1];
+                                        valueArray[0] = evt.getActionCommand();
+                                        alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES");
+                                    }
+                                });
+                                subtractMenu.add(subtractMean);
+                                JMenu subtractSingleMenu=new JMenu("Subtract mean(all values) from value");
+                                
+                                for(HashMap aValue : currentValuesInPlot){
+                                    String dataValueLabel = (String)aValue.get(PlotConstants.DATASET_VALUELABEL);
+                                    JMenuItem subtractValueItem=new JMenuItem(dataValueLabel);
+                                    subtractValueItem.setActionCommand(dataValueLabel);
+                                    subtractValueItem.addActionListener(new java.awt.event.ActionListener() {
+                                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                            String[] valueArray = new String[1];
+                                            valueArray[0] = evt.getActionCommand();
+                                            alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE");
+                                    
+                                        }
+                                    });
+                                    subtractSingleMenu.add(subtractValueItem);
+                                    
+                                }
+                                subtractMenu.add(subtractSingleMenu);
+                                aMenu.add(subtractMenu);
+                                JMenu aMenu2=new JMenu("Remove value from plot");
                                 for(HashMap aValue : currentValuesInPlot){
                                     String dataValueLabel = (String)aValue.get(PlotConstants.DATASET_VALUELABEL);
                                     JMenuItem clearValueItem=new JMenuItem(dataValueLabel);
@@ -414,12 +467,13 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                                             String[] valueArray = new String[1];
                                             valueArray[0] = evt.getActionCommand();
                                             removeDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray);
-                                            selectedSlot.repaint();
+                                            //selectedSlot.repaint();
                                         }
                                     });
-                                    aMenu.add(clearValueItem);
+                                    aMenu2.add(clearValueItem);
                                     
                                 }
+                                aMenu.add(aMenu2);
                                 aPopupMenu.add(aMenu);
                             }
                         } catch (NumberFormatException ex) {
@@ -427,6 +481,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                         } catch (PlotterException ex) {
                             logger.error("Could not retrieve the data for slot "+selectedSlot.getLabel()+" to delete specific value(s).",ex);
                         }
+                        
                     }
                     aPopupMenu.setOpaque(true);
                     aPopupMenu.show(selectedSlot, e.getX(), e.getY());

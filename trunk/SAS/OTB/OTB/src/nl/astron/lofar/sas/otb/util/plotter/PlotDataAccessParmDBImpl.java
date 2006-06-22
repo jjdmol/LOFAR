@@ -49,7 +49,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
  */
 public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     
-    private static final int requiredDataConstraints = 7;
+    private static final int requiredDataConstraints = 8;
     
     //Location of ParmDB table file(s)
     
@@ -206,64 +206,129 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             
         }
         try{
-        
-        LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)currentData.get(PlotConstants.DATASET_VALUES);
-        
-        HashMap<String,Object> operatorsOnDataset = (HashMap<String,Object>)constraints;
-        
-        if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_ADD)){
-            HashMap<String,Object> addDataSet = (HashMap<String,Object>)operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_ADD);
-            String[] constraintsArray = (String[])addDataSet.get("PARMDBCONSTRAINTS");
-            Vector names = getNames(constraintsArray[0]);
             
-            if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
-                HashSet<HashMap> toBeAddedValueObjects = new HashSet<HashMap>();
-                LinkedList<HashMap> newParmValues = getParmValues(names,constraintsArray);
-                Iterator anIterator = newParmValues.iterator();
-                while(anIterator.hasNext()){
-                    boolean addData = true;
-                    HashMap parmValue = (HashMap)anIterator.next();
-                    Iterator anIterator2 = currentValuesInPlot.iterator();
-                    while(anIterator2.hasNext()){
-                        HashMap parmValue2 = (HashMap)anIterator2.next();
-                        String compareValue = (String)parmValue2.get(PlotConstants.DATASET_VALUELABEL);
-                        if(parmValue.get(PlotConstants.DATASET_VALUELABEL).equals(compareValue)){
-                            addData = false;
+            LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)currentData.get(PlotConstants.DATASET_VALUES);
+            
+            HashMap<String,Object> operatorsOnDataset = (HashMap<String,Object>)constraints;
+            
+            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_ADD)){
+                HashMap<String,Object> addDataSet = (HashMap<String,Object>)operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_ADD);
+                String[] constraintsArray = (String[])addDataSet.get("PARMDBCONSTRAINTS");
+                Vector names = getNames(constraintsArray[0]);
+                
+                if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
+                    HashSet<HashMap> toBeAddedValueObjects = new HashSet<HashMap>();
+                    LinkedList<HashMap> newParmValues = getParmValues(names,constraintsArray);
+                    Iterator anIterator = newParmValues.iterator();
+                    while(anIterator.hasNext()){
+                        boolean addData = true;
+                        HashMap parmValue = (HashMap)anIterator.next();
+                        Iterator anIterator2 = currentValuesInPlot.iterator();
+                        while(anIterator2.hasNext()){
+                            HashMap parmValue2 = (HashMap)anIterator2.next();
+                            String compareValue = (String)parmValue2.get(PlotConstants.DATASET_VALUELABEL);
+                            if(parmValue.get(PlotConstants.DATASET_VALUELABEL).equals(compareValue)){
+                                addData = false;
+                            }
+                        }
+                        if(addData){
+                            toBeAddedValueObjects.add(parmValue);
                         }
                     }
-                    if(addData){
-                        toBeAddedValueObjects.add(parmValue);
-                    }                    
+                    currentValuesInPlot.addAll(toBeAddedValueObjects);
                 }
-                currentValuesInPlot.addAll(toBeAddedValueObjects);
             }
-        }
-        if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
-            
-            String[] constraintsArray = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_MODIFY);
-            //TODO: IMPLEMENT
-            
-        }
-        if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
-            HashSet<HashMap> toBeDeletedValueObjects = new HashSet<HashMap>();
-            String[] toBeDeletedValues = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_DELETE);
-            for(int i = 0; i < toBeDeletedValues.length; i++){
-                String aValueToBeDeleted = toBeDeletedValues[i];
-                Iterator anIterator = currentValuesInPlot.iterator();
-                while(anIterator.hasNext()){
-                    HashMap<String,Object> dataObject = (HashMap<String,Object>)anIterator.next();
-                    if(dataObject.get(PlotConstants.DATASET_VALUELABEL).equals(aValueToBeDeleted)){
-                        toBeDeletedValueObjects.add(dataObject);
+            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
+                
+                String[] constraintsArray = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_MODIFY);
+                
+            }
+            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
+                HashSet<HashMap> toBeDeletedValueObjects = new HashSet<HashMap>();
+                String[] toBeDeletedValues = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_DELETE);
+                for(int i = 0; i < toBeDeletedValues.length; i++){
+                    String aValueToBeDeleted = toBeDeletedValues[i];
+                    Iterator anIterator = currentValuesInPlot.iterator();
+                    while(anIterator.hasNext()){
+                        HashMap<String,Object> dataObject = (HashMap<String,Object>)anIterator.next();
+                        if(dataObject.get(PlotConstants.DATASET_VALUELABEL).equals(aValueToBeDeleted)){
+                            toBeDeletedValueObjects.add(dataObject);
+                        }
+                    }
+                }
+                for(HashMap deleteObject : toBeDeletedValueObjects){
+                    currentValuesInPlot.remove(deleteObject);
+                }
+                
+                
+            }
+            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES")){
+                
+                HashMap firstValue = currentValuesInPlot.getFirst();
+                double[] firstValueYArray =  (double[])firstValue.get(PlotConstants.DATASET_YVALUES);
+                int totalNumberOfYIterations = firstValueYArray.length;
+                
+                for(int yIteration = 0; yIteration < totalNumberOfYIterations; yIteration++){
+                    
+                    double yMeanForIteration = 0.0;
+                    
+                    for(HashMap aValue : currentValuesInPlot){
+                        
+                        double[] yArray =  (double[])aValue.get(PlotConstants.DATASET_YVALUES);
+                        yMeanForIteration +=  yArray[yIteration];
+                        
+                    }
+                    yMeanForIteration = yMeanForIteration / currentValuesInPlot.size();
+                    
+                    for(HashMap aValue : currentValuesInPlot){
+                        
+                        double[] yArray =  (double[])aValue.get(PlotConstants.DATASET_YVALUES);
+                        yArray[yIteration] = yArray[yIteration] - yMeanForIteration;
+                        
+                    }
+                }
+                for(HashMap aValue : currentValuesInPlot){
+                    String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
+                    title += " - mean(all values)";
+                    aValue.put(PlotConstants.DATASET_VALUELABEL,title);
+                }
+                
+                
+            }
+            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE")){
+                String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE");
+                HashMap firstValue = currentValuesInPlot.getFirst();
+                double[] firstValueYArray =  (double[])firstValue.get(PlotConstants.DATASET_YVALUES);
+                int totalNumberOfYIterations = firstValueYArray.length;
+                
+                for(int yIteration = 0; yIteration < totalNumberOfYIterations; yIteration++){
+                    
+                    double yMeanForIteration = 0.0;
+                    
+                    for(HashMap aValue : currentValuesInPlot){
+                        
+                        double[] yArray =  (double[])aValue.get(PlotConstants.DATASET_YVALUES);
+                        yMeanForIteration +=  yArray[yIteration];
+                        
+                    }
+                    yMeanForIteration = yMeanForIteration / currentValuesInPlot.size();
+                    
+                    for(HashMap aValue : currentValuesInPlot){
+                        if(((String)aValue.get(PlotConstants.DATASET_VALUELABEL)).equalsIgnoreCase(toBeSubtractedValues[0])){
+                            double[] yArray =  (double[])aValue.get(PlotConstants.DATASET_YVALUES);
+                            yArray[yIteration] = yArray[yIteration] - yMeanForIteration;
+                        }
+                    }
+                }
+                for(HashMap aValue : currentValuesInPlot){
+                    if(((String)aValue.get(PlotConstants.DATASET_VALUELABEL)).equalsIgnoreCase(toBeSubtractedValues[0])){
+                        String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
+                    title += " - mean(all values)";
+                    aValue.put(PlotConstants.DATASET_VALUELABEL,title);
                     }
                 }
             }
-            for(HashMap deleteObject : toBeDeletedValueObjects){
-                currentValuesInPlot.remove(deleteObject);
-            }
             
-            //TODO: IMPLEMENT
-            
-        }
         }catch(Exception e){
             PlotterDataAccessException ex = new PlotterDataAccessException("An error occurred while updating the dataset! : "+e.getMessage());
             ex.initCause(e);
@@ -412,7 +477,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 //System.out.println("Parameter Value Found: "+aValue);
                 
                 
-                aValueMap.put(PlotConstants.DATASET_VALUELABEL,aValue);
+                aValueMap.put(PlotConstants.DATASET_VALUELABEL,constraintsArray[7]+" - "+aValue);
                 
                 
                 
