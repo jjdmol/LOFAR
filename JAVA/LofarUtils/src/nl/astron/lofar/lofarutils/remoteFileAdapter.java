@@ -64,7 +64,7 @@ public class remoteFileAdapter extends UnicastRemoteObject implements remoteFile
                 return(null);
             }
         } else {
-            System.out.println("RemoteFileImpl: File not found : "+aFileName);
+            System.out.println("RemoteFileAdapter: File not found : "+aFileName);
             return(null);
         }
     }
@@ -82,7 +82,7 @@ public class remoteFileAdapter extends UnicastRemoteObject implements remoteFile
                 output.close();
                 return(true);
             } catch (Exception ex) {
-                System.out.println("RemoteFileImpl: " + ex.getMessage());
+                System.out.println("RemoteFileAdapter: " + ex.getMessage());
                 ex.printStackTrace();
                 return(succes);
             }
