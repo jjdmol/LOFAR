@@ -46,7 +46,7 @@ import org.apache.log4j.Logger;
 public class ParmDBTreeManager extends GenericTreeManager implements ITreeManager{
     
     // Create a Log4J logger instance
-    private static Logger logger = Logger.getLogger(OTDBParamTreeManager.class);
+    private static Logger logger = Logger.getLogger(ParmDBTreeManager.class);
     private static final String PARMDB_TREENODE_SEPARATOR_CHAR = ":";
     private static ParmDBTreeManager instance;
    

@@ -24,13 +24,9 @@
 package nl.astron.lofar.sas.otb.util.plotter;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
+import org.apache.log4j.Logger;
 
 /**
  * @version $Id$
@@ -41,6 +37,8 @@ public class PlotSlotManager{
     
     public static final String REFRESH_FULL = "REFRESHFULL";
     public static final String REFRESH_SINGLE = "REFRESHSINGLE";
+    
+    private static Logger logger = Logger.getLogger(PlotSlotManager.class);
    
     private LinkedList<PlotSlot> itsPlotSlots;
     private PlotSlot selectedSlot;
@@ -81,7 +79,11 @@ public class PlotSlotManager{
                     exceptionString+= "last "+difference+" slots.\n\nPlease clear or move ";
                     exceptionString+= "these plots manually by pressing cancel,\nor let ";
                     exceptionString+= "the application delete them by pressing Clear Slots.";
+                    
+                    logger.info(exceptionString);
                     throw new IllegalArgumentException(exceptionString);
+                    
+                    
                 }else{
                     for(int i = 1; i <= difference; i++){
                         itsPlotSlots.removeLast();
@@ -98,7 +100,10 @@ public class PlotSlotManager{
         if(index > 0 && index <= itsPlotSlots.size()){
             return itsPlotSlots.get(index-1);
         }else{
+            logger.error("There is no PlotSlot in the list(size:"+getAmountOfSlots()+") at index "+index);
             throw new IllegalArgumentException("There is no PlotSlot in the list(size:"+getAmountOfSlots()+") at index "+index);
+            
+            
         }
     }
     
@@ -199,11 +204,6 @@ public class PlotSlotManager{
         for(PlotSlot slot : itsPlotSlots){
             if(slot.containsPlot()) currentPlots++;
         }
-        /*if(currentPlots > 1){
-            fireSlotsUpdated(index);
-        }else{
-            fireSlotsUpdated(-1);
-        }*/
     }
     
     public void movePlot(int indexFromSlot, int indexToSlot){

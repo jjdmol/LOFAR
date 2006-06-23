@@ -38,6 +38,8 @@ import javax.swing.SwingUtilities;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.PlotPanel;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
+import nl.astron.lofar.java.gui.plotter.exceptions.PlotterPrintException;
+import org.apache.log4j.Logger;
 
 /**
  * @version $Id$
@@ -47,6 +49,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 public class PlotSlot extends JPanel{
     
     public static final String EMPTY_SLOT = "Empty Slot";
+    private static Logger logger = Logger.getLogger(PlotSlot.class);
     private PlotGroup itsPlotGroup;
     private PlotPanel itsPlot;
     private String slotLabel;
@@ -127,7 +130,8 @@ public class PlotSlot extends JPanel{
             JOptionPane.showMessageDialog(null, ex.getMessage(),
                     "Error detected while making the plot",
                     JOptionPane.ERROR_MESSAGE);
-             ex.printStackTrace();
+             
+            logger.error(ex);
             itsPlot = null;
             removeAll();
             addOptionLabel();
@@ -145,7 +149,8 @@ public class PlotSlot extends JPanel{
                  JOptionPane.showMessageDialog(null, ex.getMessage(),
                     "Error detected while updating the plot",
                     JOptionPane.ERROR_MESSAGE);
-                 ex.printStackTrace();
+                 
+            logger.error(ex);
             }
         }else{
             addPlot(constraints);
@@ -183,7 +188,8 @@ public class PlotSlot extends JPanel{
                     JTextArea error = new JTextArea(ex.getMessage());
                     error.setColumns(50);
                     add(new JTextArea(ex.getMessage()),BorderLayout.CENTER);
-                    ex.printStackTrace();
+                    
+                    logger.error(ex);
                 }
                 hasLegend = true;
             }else{
@@ -210,7 +216,8 @@ public class PlotSlot extends JPanel{
                 JTextArea error = new JTextArea(ex.getMessage());
                 error.setColumns(50);
                 legend = error;
-                ex.printStackTrace();
+                
+                logger.error(ex);
             }
         }
         return legend;
@@ -248,8 +255,8 @@ public class PlotSlot extends JPanel{
     public void printSlot(){
        try {
             itsPlot.printPlot(this.hasLegend);
-        } catch (PlotterException ex) {
-            ex.printStackTrace();
+        } catch (PlotterPrintException ex) {
+            logger.error(ex);
         }
     }
     

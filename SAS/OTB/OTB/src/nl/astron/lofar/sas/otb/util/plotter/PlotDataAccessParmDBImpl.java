@@ -35,6 +35,7 @@ import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
+import org.apache.log4j.Logger;
 
 /**
  * This class provides an implementation of IPlotDataAccess for use with LOFAR's
@@ -50,6 +51,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     
     private static final int requiredDataConstraints = 8;
+    private static Logger logger = Logger.getLogger(PlotDataAccessParmDBImpl.class);
     
     //Location of ParmDB table file(s)
     
@@ -323,15 +325,17 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 for(HashMap aValue : currentValuesInPlot){
                     if(((String)aValue.get(PlotConstants.DATASET_VALUELABEL)).equalsIgnoreCase(toBeSubtractedValues[0])){
                         String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
-                    title += " - mean(all values)";
-                    aValue.put(PlotConstants.DATASET_VALUELABEL,title);
+                        title += " - mean(all values)";
+                        aValue.put(PlotConstants.DATASET_VALUELABEL,title);
                     }
                 }
             }
             
         }catch(Exception e){
+            
             PlotterDataAccessException ex = new PlotterDataAccessException("An error occurred while updating the dataset! : "+e.getMessage());
             ex.initCause(e);
+            logger.error(ex);
             throw ex;
             
         }
@@ -368,6 +372,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 exx.initCause(e);
                 
+                logger.error(exx);
                 throw exx;
                 
             }
@@ -391,6 +396,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             
             exx.initCause(ex);
             
+            logger.error(exx);
             throw exx;
             
         }
@@ -418,6 +424,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 exx.initCause(ex);
                 
+                logger.error(exx);
                 throw exx;
                 
             }
@@ -460,6 +467,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 exx.initCause(ex);
                 
+            logger.error(exx);
                 throw exx;
                 
             }

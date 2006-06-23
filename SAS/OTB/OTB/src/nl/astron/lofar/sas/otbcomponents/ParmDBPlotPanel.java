@@ -450,8 +450,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 itsSlotsPanel.setAmountOfSlots(wannaHaveSlots,false);
                 successfulNumberOfSlots = itsSlotsPanel.getAmountOfSlots();
             } catch (NumberFormatException ex) {
-                //TODO log!
-                ex.printStackTrace();
+                logger.error(ex);
             } catch (IllegalArgumentException ex) {
                 //TODO log!
                 String[] buttons = {"Clear Slots","Cancel"};
