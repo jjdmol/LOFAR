@@ -353,7 +353,7 @@ public class PlotSGTImpl implements IPlot{
                             CartesianGraph gp = (CartesianGraph) layout.getFirstLayer().getGraph();
                             LogTransform xt = null;
                             try {
-                                System.out.println("Number of X Axes: "+ gp.getNumberXAxis());
+                                //System.out.println("Number of X Axes: "+ gp.getNumberXAxis());
                                 xt = new LogTransform(xstart, xend, gp.getXAxis("Bottom Axis").getRangeP().start, gp.getXAxis("Bottom Axis").getRangeP().end);
                                 gp.setXTransform(xt);
                                 LogAxis xbot = new LogAxis(xAxisTitle);
@@ -764,9 +764,10 @@ public class PlotSGTImpl implements IPlot{
             } else if(object == aLayout){
                 if(e.isPopupTrigger() || e.getClickCount() == 2){
                     Object obj = aLayout.getObjectAt(e.getX(),e.getY());
-                    
                     aLayout.setSelectedObject(obj);
                     if(obj instanceof LineCartesianRenderer){
+                        SGTData data = aLayout.getData((LineCartesianRenderer)obj);
+                    
                         LineAttribute attr = ((LineCartesianRenderer)obj).getLineAttribute();
                         if(lad == null){
                             lad = new LineAttributeDialog();
