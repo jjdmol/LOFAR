@@ -145,6 +145,18 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         return aB;              
     }
     
+    // get full Component Name
+    public String  getFullComponentName(jVICnodeDef  aNode) throws RemoteException {
+        String aS="";
+        try {
+            aS = adaptee.getFullComponentName(aNode);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getFullComponentName error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;              
+    }
 
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
