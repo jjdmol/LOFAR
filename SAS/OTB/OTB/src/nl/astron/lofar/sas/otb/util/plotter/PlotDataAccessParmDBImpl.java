@@ -31,6 +31,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TimeZone;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
@@ -91,6 +93,8 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * -constraints[4]= the starty variable (for example 0) (double)<br>
      * -constraints[5]= the endy variable (for example 5) (double)<br>
      * -constraints[6]= the numy variable (for example 5) (int)<br><br>
+     * -constraints[7]= A string that will be put in front of every value. This<br>
+     * can be a database name, or something else.
      * @return the data set generated
      * @throws PlotterDataAccessException will be thrown if anything goes wrong
      * with the ParmDB interface and calls to it.
@@ -291,7 +295,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 }
                 for(HashMap aValue : currentValuesInPlot){
                     String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
-                    title += " - mean(all values)";
+                    title += " MINUS mean(all values)";
                     aValue.put(PlotConstants.DATASET_VALUELABEL,title);
                 }
                 
@@ -325,17 +329,88 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 for(HashMap aValue : currentValuesInPlot){
                     if(((String)aValue.get(PlotConstants.DATASET_VALUELABEL)).equalsIgnoreCase(toBeSubtractedValues[0])){
                         String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
-                        title += " - mean(all values)";
+                        title += " MINUS mean(all values)";
                         aValue.put(PlotConstants.DATASET_VALUELABEL,title);
                     }
                 }
             }
-            
+            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_LINE")){
+                String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_SUBTRACT_LINE");
+                double[] firstValueYArray =  null;
+                Iterator subtractLineIterator = currentValuesInPlot.iterator();
+                while(subtractLineIterator.hasNext()){
+                    HashMap aValue = (HashMap)subtractLineIterator.next();
+                    String label = (String)aValue.get(PlotConstants.DATASET_VALUELABEL);
+                    if(label.equalsIgnoreCase(toBeSubtractedValues[0])){
+                        double[] originValueYArray = (double[])aValue.get(PlotConstants.DATASET_YVALUES);
+                        //create copy of value array to prevent subtracting by zero
+                        firstValueYArray = new double[originValueYArray.length];
+                        for(int i = 0; i < firstValueYArray.length; i++){
+                            firstValueYArray[i] = originValueYArray[i];
+                        }
+                    }
+                }
+                
+                for(HashMap aValue : currentValuesInPlot){
+                    
+                    double[] yArray =  (double[])aValue.get(PlotConstants.DATASET_YVALUES);
+                    for(int subtractI = 0; subtractI < yArray.length; subtractI++){
+                        yArray[subtractI] =  yArray[subtractI]-firstValueYArray[subtractI];
+                    }
+                    String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
+                    title += " MINUS ("+toBeSubtractedValues[0]+")";
+                    aValue.put(PlotConstants.DATASET_VALUELABEL,title);
+                    
+                }
+            }
+            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_ADD_Y_OFFSET")){
+                String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_ADD_Y_OFFSET");
+                double offset = Double.parseDouble(toBeSubtractedValues[0]);
+                Iterator subtractLineIterator = currentValuesInPlot.iterator();
+                int valueDone = 0;
+                for(HashMap aValue : currentValuesInPlot){
+                    valueDone++;
+                    double[] originValueYArray = (double[])aValue.get(PlotConstants.DATASET_YVALUES);
+                    for(int i = 0;i<originValueYArray.length;i++){
+                        originValueYArray[i] = originValueYArray[i]+(offset*valueDone);
+                    }
+                    String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
+                    title += " OFFSET("+(offset*valueDone)+")";
+                    aValue.put(PlotConstants.DATASET_VALUELABEL,title);
+                }
+            }
+            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_REMOVE_Y_OFFSET")){
+                String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_REMOVE_Y_OFFSET");
+                double offset = Double.parseDouble(toBeSubtractedValues[0]);
+                Iterator subtractLineIterator = currentValuesInPlot.iterator();
+                int valueDone = 0;
+                for(HashMap aValue : currentValuesInPlot){
+                    valueDone++;
+                    double[] originValueYArray = (double[])aValue.get(PlotConstants.DATASET_YVALUES);
+                    for(int i = 0;i<originValueYArray.length;i++){
+                        originValueYArray[i] = originValueYArray[i]-(offset*valueDone);
+                    }
+                    String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
+                    logger.trace("Old title with offset was :"+title);
+                    String offsetString = " OFFSET\\("+(offset*valueDone)+"\\)";
+                    logger.trace("New title will be stripped of : "+offsetString);
+                    Pattern pat=Pattern.compile(offsetString);
+                    
+                    Matcher matcher=pat.matcher(title);
+                    String newTitle = matcher.replaceAll("");
+                    /*int lastIndexOfOffset = title.lastIndexOf("OFFSET ("+(offset*valueDone)+")");
+                    String newTitle = title.substring(0,lastIndexOfOffset);
+                    */
+                    logger.trace("New title without offset is :"+newTitle);
+                    aValue.put(PlotConstants.DATASET_VALUELABEL,newTitle);
+                }
+            }
         }catch(Exception e){
             
             PlotterDataAccessException ex = new PlotterDataAccessException("An error occurred while updating the dataset! : "+e.getMessage());
             ex.initCause(e);
             logger.error(ex);
+            e.printStackTrace();
             throw ex;
             
         }
@@ -467,7 +542,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 exx.initCause(ex);
                 
-            logger.error(exx);
+                logger.error(exx);
                 throw exx;
                 
             }

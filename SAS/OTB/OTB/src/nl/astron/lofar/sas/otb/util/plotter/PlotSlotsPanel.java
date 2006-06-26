@@ -38,6 +38,7 @@ import java.util.LinkedList;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
@@ -228,7 +229,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         add(slotsPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-        // Variables declaration - do not modify//GEN-BEGIN:variables
+            // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel slotsPanel;
     // End of variables declaration//GEN-END:variables
     
@@ -285,6 +286,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         
         private boolean externalLegendActive = false;
         private boolean externalViewerActive = false;
+        private String previousOffset = "1.0";
         @SuppressWarnings("unchecked")
         public void slotContextMenuTriggered(PlotSlot aSlot, MouseEvent e){
             Object source = e.getSource();
@@ -424,22 +426,65 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                         try {
                             LinkedList<HashMap> currentValuesInPlot = (LinkedList<HashMap>)selectedSlot.getPlot().getDataForPlot().get(PlotConstants.DATASET_VALUES);
                             if(currentValuesInPlot.size()>0){
+                                
                                 aPopupMenu.addSeparator();
                                 JMenu aMenu=new JMenu("Modify value(s)");
-                                JMenu subtractMenu=new JMenu("Subtract operations");
-                                
-                                JMenuItem subtractMean=new JMenuItem("Subtract mean(all values) from all values");
-                                subtractMean.setActionCommand("Subtract mean(all values) from all values");
-                                subtractMean.addActionListener(new java.awt.event.ActionListener() {
-                                    public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                        String[] valueArray = new String[1];
-                                        valueArray[0] = evt.getActionCommand();
-                                        alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES");
+                                if(currentValuesInPlot.size()>1){
+                                    double offset = selectedSlot.getOffset();
+                                    if(offset==0.0){
+                                        JMenuItem offSet=new JMenuItem("Add Y-Axis offset");
+                                        offSet.addActionListener(new java.awt.event.ActionListener() {
+                                            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                                String[] valueArray = new String[1];
+                                                String offsetSpecifier = JOptionPane.showInputDialog("Please specify a valid double as an offset. Example: 1 or 2.5",previousOffset);
+                                                if(offsetSpecifier!=null){
+                                                    double offset = 0.0;
+                                                    try {
+                                                        
+                                                        offset = Double.parseDouble(offsetSpecifier);
+                                                        valueArray[0] = offsetSpecifier;
+                                                        alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_ADD_Y_OFFSET");
+                                                        selectedSlot.setOffset(offset);
+                                                        previousOffset = offsetSpecifier;
+                                                    } catch (NumberFormatException ex) {
+                                                        JOptionPane.showMessageDialog(null, "Invalid offset specified!",
+                                                                "Invalid input",
+                                                                JOptionPane.ERROR_MESSAGE);
+                                                        logger.error("User failed to specify a double offset: "+ex.getMessage());
+                                                    }
+                                                }
+                                            }
+                                        });
+                                        aPopupMenu.add(offSet);
+                                    }else{
+                                        JMenuItem offSet=new JMenuItem("Remove Y-Axis offset");
+                                        offSet.setActionCommand(""+offset);
+                                        offSet.addActionListener(new java.awt.event.ActionListener() {
+                                            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                                String[] valueArray = new String[1];
+                                                valueArray[0] = evt.getActionCommand();
+                                                alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_REMOVE_Y_OFFSET");
+                                                selectedSlot.setOffset(0.0);
+                                            }
+                                        });
+                                        aPopupMenu.add(offSet);
                                     }
-                                });
-                                subtractMenu.add(subtractMean);
+                                    
+                                    JMenu subtractMenu=new JMenu("Subtract operations");
+                                    
+                                    JMenuItem subtractMean=new JMenuItem("Subtract mean(all values) from all values");
+                                    subtractMean.setActionCommand("Subtract mean(all values) from all values");
+                                    subtractMean.addActionListener(new java.awt.event.ActionListener() {
+                                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                            String[] valueArray = new String[1];
+                                            valueArray[0] = evt.getActionCommand();
+                                            alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES");
+                                        }
+                                    });
+                                    subtractMenu.add(subtractMean);
+                                /*
                                 JMenu subtractSingleMenu=new JMenu("Subtract mean(all values) from value");
-                                
+                                 
                                 for(HashMap aValue : currentValuesInPlot){
                                     String dataValueLabel = (String)aValue.get(PlotConstants.DATASET_VALUELABEL);
                                     JMenuItem subtractValueItem=new JMenuItem(dataValueLabel);
@@ -449,14 +494,34 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                                             String[] valueArray = new String[1];
                                             valueArray[0] = evt.getActionCommand();
                                             alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE");
-                                    
+                                 
                                         }
                                     });
                                     subtractSingleMenu.add(subtractValueItem);
-                                    
+                                 
                                 }
                                 subtractMenu.add(subtractSingleMenu);
-                                aMenu.add(subtractMenu);
+                                 */
+                                    JMenu subtractValueMenu=new JMenu("Subtract one value from all other values");
+                                    
+                                    for(HashMap aValue : currentValuesInPlot){
+                                        String dataValueLabel = (String)aValue.get(PlotConstants.DATASET_VALUELABEL);
+                                        JMenuItem subtractValueItem=new JMenuItem(dataValueLabel);
+                                        subtractValueItem.setActionCommand(dataValueLabel);
+                                        subtractValueItem.addActionListener(new java.awt.event.ActionListener() {
+                                            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                                String[] valueArray = new String[1];
+                                                valueArray[0] = evt.getActionCommand();
+                                                alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_SUBTRACT_LINE");
+                                                
+                                            }
+                                        });
+                                        subtractValueMenu.add(subtractValueItem);
+                                        
+                                    }
+                                    subtractMenu.add(subtractValueMenu);
+                                    aMenu.add(subtractMenu);
+                                }
                                 JMenu aMenu2=new JMenu("Remove value from plot");
                                 for(HashMap aValue : currentValuesInPlot){
                                     String dataValueLabel = (String)aValue.get(PlotConstants.DATASET_VALUELABEL);
@@ -472,6 +537,14 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                                     });
                                     aMenu2.add(clearValueItem);
                                     
+                                }
+                                currentValuesInPlot = (LinkedList<HashMap>)selectedSlot.getPlot().getDataForPlot().get(PlotConstants.DATASET_VALUES);
+                           
+                                if(currentValuesInPlot.size()==1){
+                                    String[] valueArray = new String[1];
+                                    valueArray[0] = ""+selectedSlot.getOffset();
+                                    alterDataInPlot(Integer.parseInt(selectedSlot.getLabel()),valueArray,"DATASET_OPERATOR_REMOVE_Y_OFFSET");
+                                    selectedSlot.setOffset(0.0);
                                 }
                                 aMenu.add(aMenu2);
                                 aPopupMenu.add(aMenu);
