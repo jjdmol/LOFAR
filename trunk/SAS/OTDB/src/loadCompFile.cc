@@ -301,6 +301,15 @@ bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
 	return (false);
 }
 
+//
+// getfullComponentName(node&)
+//
+// Returns the full componentname including the versionnumber
+string	TreeMaintenance::getFullComponentName(VICnodeDef&	aNode)
+{
+	return(formatString("#%s{%s}", aNode.name.c_str(), VersionNr(aNode.version).c_str()));
+}
+
 // [private]
 // getNodeDef (name, version, classif) : VICnodedef
 //
@@ -495,10 +504,10 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			}
 
 			// Check that module that is referenced exists in the database.
-			VICnodeDef	ChildNode = getNodeDef(args[1], 
+			VICnodeDef	ParentNode = getNodeDef(args[1], 
 											VersionNr(args[2]), 
 											CTconv.get(args[3]));		// private call
-			if (!ChildNode.nodeID()) {
+			if (!ParentNode.nodeID()) {
 				itsError = toString(lineNr) + ": Node " + args[1] +"," +
 									args[2] + "," + args[3] + " not found";
 				LOG_FATAL(itsError);
@@ -510,8 +519,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			//		 at the parent, telling the number of childs.
 			OTDBparam		AttachedChild;
 			AttachedChild.itsNodeID   = topNodeID;
-			AttachedChild.name 		  = formatString("#%s{%s}", args[1].c_str(), 
-																args[2].c_str());
+			AttachedChild.name 		  = getFullComponentName(ParentNode);
 			AttachedChild.index 	  = 0;		// not used in VICparamdef
 			AttachedChild.type 		  = PTconv.get("int");
 			AttachedChild.unit 		  =	UTconv.get("-");
