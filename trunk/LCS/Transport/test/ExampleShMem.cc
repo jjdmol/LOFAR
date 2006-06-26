@@ -242,7 +242,7 @@ void testReset (bool isReceiver)
   }
 }
 
-int main (int argc, const char** argv)
+int main (int argc, char** argv)
 {
   int test=1;
   if (argc > 1  &&  std::string(argv[1]) == "2") {

@@ -255,7 +255,7 @@ void testBidirectional (bool isReceiver)
 }
 
 
-int main (int argc, const char** argv)
+int main (int argc, char** argv)
 {
   INIT_LOGGER("ExampleMPI.log_prop");
   TH_MPI::initMPI (argc, argv);
