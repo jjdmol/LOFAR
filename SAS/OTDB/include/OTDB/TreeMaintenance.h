@@ -87,6 +87,8 @@ public:
 	// delete a component node
 	bool	deleteComponentNode	(nodeIDType		aNodeID);
 
+	// Return the full component name including the versionnumber.
+	string	getFullComponentName (VICnodeDef&	aNode);
 
 	//# --- VIC maintenance : Templates ---
 	// From a component tree a template tree can be constructed. In a template
