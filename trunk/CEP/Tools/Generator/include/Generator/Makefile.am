@@ -6,8 +6,6 @@ INSTHDRS           = Signals.h \
 	 RSPTimeStamp.h \
 	 WH_FakeStation.h \
 	 WH_Signal.h \
-	 WH_Wrap.h \
-	 WH_Strip.h \
 	 AH_Recorder.h \
 	 AH_Generator.h \
 	 DH_RSP.h \
