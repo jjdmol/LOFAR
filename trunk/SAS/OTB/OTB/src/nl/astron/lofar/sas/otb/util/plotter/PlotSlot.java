@@ -54,6 +54,7 @@ public class PlotSlot extends JPanel{
     private PlotPanel itsPlot;
     private String slotLabel;
     private boolean hasLegend;
+    private double offset;
     private boolean isViewedExternally;
     private JLabel rightClickFacade;
     private LinkedList<PlotSlotListener> listenerList =  null;
@@ -64,6 +65,7 @@ public class PlotSlot extends JPanel{
         itsPlotGroup = null;
         itsPlot = null;
         hasLegend = false;
+        offset = 0.0;
         setBackground(Color.WHITE);
         plotMouseListener = new MouseAdapter(){
             public void mouseReleased(MouseEvent evt){
@@ -130,12 +132,12 @@ public class PlotSlot extends JPanel{
             JOptionPane.showMessageDialog(null, ex.getMessage(),
                     "Error detected while making the plot",
                     JOptionPane.ERROR_MESSAGE);
-             
+            
             logger.error(ex);
             itsPlot = null;
             removeAll();
             addOptionLabel();
-       
+            
         }
     }
     
@@ -146,11 +148,11 @@ public class PlotSlot extends JPanel{
                 validate();
                 
             } catch (PlotterException ex) {
-                 JOptionPane.showMessageDialog(null, ex.getMessage(),
-                    "Error detected while updating the plot",
-                    JOptionPane.ERROR_MESSAGE);
-                 
-            logger.error(ex);
+                JOptionPane.showMessageDialog(null, ex.getMessage(),
+                        "Error detected while updating the plot",
+                        JOptionPane.ERROR_MESSAGE);
+                
+                logger.error(ex);
             }
         }else{
             addPlot(constraints);
@@ -164,6 +166,7 @@ public class PlotSlot extends JPanel{
         }
         itsPlot = null;
         hasLegend = false;
+        offset=0.0;
     }
     
     private void addOptionLabel(){
@@ -248,18 +251,24 @@ public class PlotSlot extends JPanel{
     }
     public void clearSlot(){
         removePlot();
+        offset=0.0;
     }
     public boolean isEmpty(){
         return !containsPlot();
     }
     public void printSlot(){
-       try {
+        try {
             itsPlot.printPlot(this.hasLegend);
         } catch (PlotterPrintException ex) {
             logger.error(ex);
         }
     }
-    
+    public double getOffset(){
+        return offset;
+    }
+    public void setOffset(double offset){
+        this.offset = offset;
+    }
     /**
      * Registers ActionListener to receive events.
      *
