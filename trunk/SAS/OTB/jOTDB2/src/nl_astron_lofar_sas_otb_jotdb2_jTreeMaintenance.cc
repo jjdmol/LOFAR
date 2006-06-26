@@ -249,7 +249,25 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_
   return succes;
 }
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
+ * Method:    getFullComponentName
+ * Signature: (Lnl/astron/lofar/sas/otb/jotdb2/jVICnodeDef;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_getFullComponentName  (JNIEnv *env, jobject, jobject jVICnodeDef) {
 
+  jstring jstr;
+  try {
+    VICnodeDef aVICnodeDef = convertjVICnodeDef (env, jVICnodeDef);
+     jstr = env->NewStringUTF(theirTM->getFullComponentName(aVICnodeDef).c_str());
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::getFullComponentName" << ex.what() << endl; 
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+  
+  return jstr;
+}
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
