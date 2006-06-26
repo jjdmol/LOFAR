@@ -51,8 +51,6 @@ CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(40), INT4, BOOLEAN)
 						\' WHERE cleanNodeName(p.name) = n.name\';
 	  END IF;
 
--- RAISE EXCEPTION vRestriction;
-
 	  -- do selection
 	  FOR vRecord IN EXECUTE \'
 		SELECT nodeID,
