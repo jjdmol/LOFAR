@@ -61,6 +61,9 @@ public interface jTreeMaintenanceInterface extends Remote
 
     // delete component node
     public boolean deleteComponentNode(int aNodeID) throws RemoteException;
+    
+    // get full component name
+    public String getFullComponentName(jVICnodeDef aNode) throws RemoteException;
 
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template

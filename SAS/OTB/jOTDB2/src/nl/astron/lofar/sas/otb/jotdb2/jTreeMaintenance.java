@@ -66,6 +66,9 @@ public class jTreeMaintenance
 
     // delete a component node
     public native boolean deleteComponentNode(int  aNodeID) throws Exception;
+    
+    // get full component name (including version in name)
+    public native String getFullComponentName(jVICnodeDef aNode) throws Exception;
 
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
