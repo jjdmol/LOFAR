@@ -218,7 +218,7 @@ vector<VICnodeDef>	TreeMaintenance::getComponentList (
 	work	xAction(*(itsConn->getConn()), "getCompList");
 	try {
 		result res = xAction.exec("SELECT * from getVCNodeList('" +
-												namefragment + "'," + 
+												theName + "'," + 
 												toString(theVersion) + ",'" +
 												toString(topOnly) + "')");
 		if (res.empty()) {
