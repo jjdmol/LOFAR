@@ -112,6 +112,10 @@ namespace LOFAR
     itsArgv = const_cast<char**>(argv);
   }
 
+  void TinyApplicationHolder::setarg (int argc, char** argv) {
+    itsArgc = argc;
+    itsArgv = argv;
+  }
 
   void TinyApplicationHolder::getarg (int* argc, const char** argv[]) {
     *argc = itsArgc;

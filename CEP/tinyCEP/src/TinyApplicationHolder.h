@@ -51,6 +51,7 @@ namespace LOFAR
 /*     virtual TinyApplicationHolder* clone() const = 0; */
 
     void setarg (int argc, const char* argv[]);
+    void setarg (int argc, char* argv[]);
     void getarg (int* argc, const char** argv[]);
  
     /// Set the parameters with an ACC parameterset
