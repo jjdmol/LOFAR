@@ -81,6 +81,14 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
+ * Method:    getFullComponentName
+ * Signature: (Lnl/astron/lofar/sas/otb/jotdb2/jVICnodeDef;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_getFullComponentName
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
  * Method:    buildTemplateTree
  * Signature: (IS)I
  */
