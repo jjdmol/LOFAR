@@ -89,7 +89,9 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.addButton("Duplicate");
             buttonPanel1.setButtonEnabled("Duplicate",false);
             buttonPanel1.addButton("Modify");
+            buttonPanel1.addButton("Instanciate");
             buttonPanel1.setButtonEnabled("Modify",false);
+            buttonPanel1.setButtonEnabled("Instanciate",false);
         } else if (itsTabFocus.equals("Components")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("New");
@@ -195,6 +197,10 @@ public class MainPanel extends javax.swing.JPanel
             } else if (itsTabFocus.equals("Templates")) {
                 if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
                     logger.debug("error filling templateTable");
+                }
+                // VICTree could have been changed also
+                if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
+                    logger.debug("error filling VICTable");
                 }
             } else if (itsTabFocus.equals("Components")) {
                 if (!((ComponentTableModel)ComponentsPanel.getTableModel()).fillTable()) {
@@ -569,12 +575,37 @@ public class MainPanel extends javax.swing.JPanel
                     } catch (RemoteException ex) {
                         logger.debug("Remote error during Build TemplateTree: "+ ex);
                     }
-                }          
+                }
             } else if (aButton.equals("Modify")) {
                 TemplateMaintenancePanel aP =(TemplateMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateMaintenancePanel", false, true);
                 if (aP != null) {
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
+            } else if (aButton.equals("Instanciate")) {
+                if (itsMainFrame.getSharedVars().getTreeID() < 1) {
+                    JOptionPane.showMessageDialog(null,"Select a tree to instanciate first",
+                        "No Tree Selected",
+                        JOptionPane.WARNING_MESSAGE);
+                } else {
+                    try {
+                        int newTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().instanciateTree(itsMainFrame.getSharedVars().getTreeID());
+                        if (newTreeID > 0) {
+                            JOptionPane.showMessageDialog(null,"New VICTree created with ID: "+newTreeID,
+                                "New Tree Message",
+                                JOptionPane.INFORMATION_MESSAGE);
+                            itsMainFrame.getSharedVars().setTreeID(newTreeID);
+                            // set changed flag to reload mainpanel
+                            itsMainFrame.setChanged(this.getFriendlyName(),true);
+                            checkChanged();
+                        } else {
+                            logger.debug("No VIC Tree created!!!");
+                        }
+           
+                    } catch (RemoteException ex) {
+                        logger.debug("Remote error during Build VICTree: "+ ex);
+                    }
+                }
+                
             } else if (aButton.equals("Info")) {
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
                     if (viewInfo(itsMainFrame.getSharedVars().getTreeID()) ) {
@@ -614,6 +645,10 @@ public class MainPanel extends javax.swing.JPanel
                                 itsMainFrame.setChanged(this.getFriendlyName(),true);
                                 checkChanged();
                             }
+                            ComponentMaintenancePanel aP=(ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
+                            if (aP != null) {
+                                itsMainFrame.showPanel(aP.getFriendlyName());
+                            }
                         } else {
                             logger.debug("upload failed");
                         }
@@ -623,10 +658,6 @@ public class MainPanel extends javax.swing.JPanel
                         logger.debug("Error during new Component creation: "+ ex);
                     } catch (IOException ex) {
                         logger.debug("Error during new Component creation: "+ ex);
-                    }
-                    ComponentMaintenancePanel aP=(ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
-                    if (aP != null) {
-                        itsMainFrame.showPanel(aP.getFriendlyName());
                     }
                 }
             } else if (aButton.equals("Modify")) {
@@ -812,7 +843,12 @@ public class MainPanel extends javax.swing.JPanel
                         aTreeState.equals("specified") ||
                         aTreeState.equals("approved")) {
                     buttonPanel1.setButtonEnabled("Duplicate",true);
-                    buttonPanel1.setButtonEnabled("Modify",true);                    
+                    buttonPanel1.setButtonEnabled("Modify",true);
+                    if (aTreeState.equals("approved")) {
+                        buttonPanel1.setButtonEnabled("Instanciate",true);
+                    } else {
+                        buttonPanel1.setButtonEnabled("Instanciate",false);
+                    }
                 } else {
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);                                        
@@ -821,7 +857,8 @@ public class MainPanel extends javax.swing.JPanel
             } else {
                 buttonPanel1.setButtonEnabled("Duplicate",false);
                 buttonPanel1.setButtonEnabled("Modify",false);                    
-                buttonPanel1.setButtonEnabled("Info",false);                
+                buttonPanel1.setButtonEnabled("Info",false);  
+                buttonPanel1.setButtonEnabled("Instanciate",false);
             }
         } else if (itsTabFocus.equals("Components")) {
             if (componentID > 0 ) {
