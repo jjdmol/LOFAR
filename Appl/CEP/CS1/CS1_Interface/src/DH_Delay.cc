@@ -37,12 +37,12 @@ namespace LOFAR
     }
   }
     
+  // Instantiate the BlobField template.
+  template class BlobField<CS1::DH_Delay::DelayInfo>;
+
+    
   namespace CS1
   {
-
-    // Instantiate the BlobField template.
-    template class BlobField<DH_Delay::DelayInfo>;
-    
 
     DH_Delay::DH_Delay(const string &name, uint nrDelays)
       : DataHolder   (name, "DH_Delay"),
