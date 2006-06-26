@@ -457,14 +457,14 @@ bool	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 
 	double directionAngle1(0.0);
 	double directionAngle2(0.0);
-	vector<string> angleTimes;
-	vector<double> angles1;
-	vector<double> angles2;
+	vector<string> sourceTimes;
+	vector<double> declinations;
+	vector<double> rightAscentions;
 
 	try {
-		angleTimes = m_parameterSet.getStringVector(string("angleTimes"));
-		angles1 = m_parameterSet.getDoubleVector(string("angle1"));
-		angles2 = m_parameterSet.getDoubleVector(string("angle2"));
+		sourceTimes = m_parameterSet.getStringVector(string("sourceTimes"));
+		declinations = m_parameterSet.getDoubleVector(string("declination"));
+		rightAscentions = m_parameterSet.getDoubleVector(string("rightAscention"));
 	}
 	catch(Exception &e) {
 	}
@@ -475,21 +475,21 @@ bool	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 	beamPointToEvent.pointing.setType(static_cast<Pointing::Type>
 				(convertDirection(m_parameterSet.getString(string("directionType")))));
 
-	if (angleTimes.size() == 0 || angleTimes.size() != angles1.size() || 
-								  angleTimes.size() != angles2.size()) {
-		// key angleTimes not found: use one fixed angle
-		directionAngle1=m_parameterSet.getDouble(string("angle1"));
-		directionAngle2=m_parameterSet.getDouble(string("angle2"));
+	if (sourceTimes.size() == 0 || sourceTimes.size() != declinations.size() || 
+								  sourceTimes.size() != rightAscentions.size()) {
+		// key sourceTimes not found: use one fixed angle
+		directionAngle1=m_parameterSet.getDouble(string("declination"));
+		directionAngle2=m_parameterSet.getDouble(string("rightAscention"));
 
 		beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
 		beamPointToEvent.pointing.setDirection(directionAngle1,directionAngle2);
 		m_beamServer.send(beamPointToEvent);
 	}
 	else { 	// its a vecor with angles.
-		vector<double>::iterator angle1It = angles1.begin();
-		vector<double>::iterator angle2It = angles2.begin();
-		for (vector<string>::iterator timesIt = angleTimes.begin(); 
-									  timesIt != angleTimes.end(); ++timesIt) { 
+		vector<double>::iterator declination = declinations.begin();
+		vector<double>::iterator angle2It = rightAscentions.begin();
+		for (vector<string>::iterator timesIt = sourceTimes.begin(); 
+									  timesIt != sourceTimes.end(); ++timesIt) { 
 			beamPointToEvent.pointing.setTime(RTC::Timestamp(
 											APLUtilities::decodeTimeString(*timesIt),0));
 			beamPointToEvent.pointing.setDirection(*angle1It++,*angle2It++);
