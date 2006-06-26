@@ -365,7 +365,6 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
 
         DescriptionText.setRows(4);
         DescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
-        DescriptionText.setEnabled(false);
 
         NodeCancelButton.setText("Cancel");
         NodeCancelButton.addActionListener(new java.awt.event.ActionListener() {

@@ -144,7 +144,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     /* Fill the view */
     private void initView() {
-        // prepare a active/obsolete only combobox for special case state changes
+/*        // prepare a active/obsolete only combobox for special case state changes
         DefaultComboBoxModel aModel = (DefaultComboBoxModel)stateInput.getModel();
         aModel.removeAllElements();
         aModel.addElement("active");
@@ -157,7 +157,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         if (itsTreeType.equals("hardware") || itsTreeType.equals("VItemplate")) {
             stateInput.setModel(aModel);
         }
-
+*/
         treeIDInput.setText(String.valueOf(itsTree.treeID()));
         momIDInput.setText(String.valueOf(itsTree.momID()));
         classificationInput.setSelectedItem(itsClassification);

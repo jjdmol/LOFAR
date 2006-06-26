@@ -26,7 +26,6 @@ import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
@@ -107,7 +106,6 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
             
             
             Vector<jVICnodeDef> nodes = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentList(aNodeName,false);
-            
             if (nodes.size() > 0) {
                 logger.debug("Found "+ nodes.size()+ " nr of matches for node "+aNodeName);
             } else {
@@ -116,7 +114,6 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
             }
             
             Vector<jOTDBparam> params = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.elementAt(0)).nodeID());
-            
             Enumeration e = params.elements();
             while( e.hasMoreElements()  ) {
                 jOTDBparam item = (jOTDBparam)e.nextElement();
@@ -149,20 +146,20 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
         } else {
             try {
                 aVICnodeDef = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
+                if (aVICnodeDef != null) {
+                    // create a fake param to pass to componentTree, to simulate a node param
+                    aParam = new jOTDBparam(0,itsComponentID,0);
+                    aParam.name=SharedVars.getOTDBrmi().getRemoteMaintenance().getFullComponentName(aVICnodeDef);
+                    aParam.index=0;
+                    aParam.limits="";
+                    aParam.type=-1;
+                    aParam.unit=-1;
+                    aParam.description="";
+                } else {
+                    logger.debug("failed to get ComponentNode");
+                }
             } catch (RemoteException ex) {
                 logger.fatal("The OTDBParamTreeManager could not build a root node! ",ex);
-            }
-            if (aVICnodeDef != null) {
-                // create a fake param to pass to componentTree, to simulate a node param
-                aParam = new jOTDBparam(0,itsComponentID,0);
-                aParam.name="#"+aVICnodeDef.name;
-                aParam.index=0;
-                aParam.limits="";
-                aParam.type=-1;
-                aParam.unit=-1;
-                aParam.description="";
-            } else {
-                logger.debug("failed to get ComponentNode");
             }
         }
         TreeNode newNode = new TreeNode(this.instance,aParam,aParam.name);
