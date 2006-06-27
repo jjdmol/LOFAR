@@ -23,6 +23,7 @@
 
 package nl.astron.lofar.sas.otb.util.plotter;
 
+import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -244,12 +245,12 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     currentValuesInPlot.addAll(toBeAddedValueObjects);
                 }
             }
-            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
+            else if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
                 
                 String[] constraintsArray = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_MODIFY);
                 
             }
-            if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
+            else if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
                 HashSet<HashMap> toBeDeletedValueObjects = new HashSet<HashMap>();
                 String[] toBeDeletedValues = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_DELETE);
                 for(int i = 0; i < toBeDeletedValues.length; i++){
@@ -265,10 +266,8 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 for(HashMap deleteObject : toBeDeletedValueObjects){
                     currentValuesInPlot.remove(deleteObject);
                 }
-                
-                
             }
-            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES")){
+            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES")){
                 
                 HashMap firstValue = currentValuesInPlot.getFirst();
                 double[] firstValueYArray =  (double[])firstValue.get(PlotConstants.DATASET_YVALUES);
@@ -301,7 +300,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 
             }
-            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE")){
+            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE")){
                 String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE");
                 HashMap firstValue = currentValuesInPlot.getFirst();
                 double[] firstValueYArray =  (double[])firstValue.get(PlotConstants.DATASET_YVALUES);
@@ -334,7 +333,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     }
                 }
             }
-            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_LINE")){
+            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_LINE")){
                 String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_SUBTRACT_LINE");
                 double[] firstValueYArray =  null;
                 Iterator subtractLineIterator = currentValuesInPlot.iterator();
@@ -363,7 +362,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     
                 }
             }
-            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_ADD_Y_OFFSET")){
+            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_ADD_Y_OFFSET")){                
                 String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_ADD_Y_OFFSET");
                 double offset = Double.parseDouble(toBeSubtractedValues[0]);
                 Iterator subtractLineIterator = currentValuesInPlot.iterator();
@@ -375,11 +374,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                         originValueYArray[i] = originValueYArray[i]+(offset*valueDone);
                     }
                     String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
-                    title += " OFFSET("+(offset*valueDone)+")";
+                    title += " OFFSET("+DecimalFormat.getInstance().format(offset*valueDone)+")";
                     aValue.put(PlotConstants.DATASET_VALUELABEL,title);
                 }
             }
-            if(operatorsOnDataset.containsKey("DATASET_OPERATOR_REMOVE_Y_OFFSET")){
+            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_REMOVE_Y_OFFSET")){
                 String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_REMOVE_Y_OFFSET");
                 double offset = Double.parseDouble(toBeSubtractedValues[0]);
                 Iterator subtractLineIterator = currentValuesInPlot.iterator();
@@ -392,7 +391,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     }
                     String title = ((String)aValue.get(PlotConstants.DATASET_VALUELABEL));
                     logger.trace("Old title with offset was :"+title);
-                    String offsetString = " OFFSET\\("+(offset*valueDone)+"\\)";
+                    String offsetString = " OFFSET\\("+DecimalFormat.getInstance().format(offset*valueDone)+"\\)";
                     logger.trace("New title will be stripped of : "+offsetString);
                     Pattern pat=Pattern.compile(offsetString);
                     
