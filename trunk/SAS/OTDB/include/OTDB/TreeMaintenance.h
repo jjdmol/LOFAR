@@ -115,6 +115,10 @@ public:
 	OTDBparam	getParam	(treeIDType		aTreeID,
 							 nodeIDType		aParamID);
 
+	// Get the parameter definition of a node. Will recursively follow the
+	// references in the limits field.
+	OTDBparam	getParam	(const OTDBnode&		aNode);
+
 	// Save the parameter definition
 	bool	saveParam	(OTDBparam&		aParam);
 

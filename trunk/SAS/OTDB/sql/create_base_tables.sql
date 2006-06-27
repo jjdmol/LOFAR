@@ -175,17 +175,18 @@ CREATE TABLE unit (
 	CONSTRAINT unit_id_uniq		UNIQUE (ID),
 	CONSTRAINT unit_name_uniq	UNIQUE (name)
 ) WITHOUT OIDS;
-INSERT INTO unit values (0, '-',		'',		 '',			false);
-INSERT INTO unit values (1, 'ampere',	'A',	 '',			true);
-INSERT INTO unit values (2, 'm/s',		'm/s',	 '',			false);
-INSERT INTO unit values (3, 'dB',		'dB',	 '',			false);
-INSERT INTO unit values (4, 'time4',	'',		 '99:99',		false);
-INSERT INTO unit values (5, 'time6',	'',		 '99:99:99',	false);
-INSERT INTO unit values (6, 'RAM',		'Mb',	 '',			false);
-INSERT INTO unit values (7, 'GFLOP',	'GFLOP', '',			false);
-INSERT INTO unit values (8, 'MB/s',		'MB/s',	 '',			false);
-INSERT INTO unit values (9, 'MHz',		'MHz',	 '',			false);
+INSERT INTO unit values (0,  '-',		'',		 '',			false);
+INSERT INTO unit values (1,  'ampere',	'A',	 '',			true);
+INSERT INTO unit values (2,  'm/s',		'm/s',	 '',			false);
+INSERT INTO unit values (3,  'dB',		'dB',	 '',			false);
+INSERT INTO unit values (4,  'time4',	'',		 '99:99',		false);
+INSERT INTO unit values (5,  'time6',	'',		 '99:99:99',	false);
+INSERT INTO unit values (6,  'RAM',		'Mb',	 '',			false);
+INSERT INTO unit values (7,  'GFLOP',	'GFLOP', '',			false);
+INSERT INTO unit values (8,  'MB/s',	'MB/s',	 '',			false);
+INSERT INTO unit values (9,  'MHz',		'MHz',	 '',			false);
 INSERT INTO unit values (10, 'Hz',		'Hz',	 '',			false);
+INSERT INTO unit values (11, 'kHz',		'kHz',	 '',			false);
 
 --
 -- Treetype table
