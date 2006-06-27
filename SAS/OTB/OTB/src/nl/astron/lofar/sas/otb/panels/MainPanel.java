@@ -689,7 +689,6 @@ public class MainPanel extends javax.swing.JPanel
                 }
             } else if (aButton.equals("Delete")) {
                 int nodeID=itsMainFrame.getSharedVars().getComponentID();
-                short classifID;
                 try {
                     if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteComponentNode(nodeID)) {
                         // set changed flag to reload mainpanel
