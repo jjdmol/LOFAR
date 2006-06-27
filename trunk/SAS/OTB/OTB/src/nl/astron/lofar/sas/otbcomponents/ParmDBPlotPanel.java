@@ -190,10 +190,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(20));
             logger.debug("Plot Slot extrapolated: "+slotSelected);
             Object parameterConstraints =  constructPlotterConstraints(itsParamName,itsParamTableName);
-            HashMap<String,Object> addData = new HashMap<String,Object>();
-            addData.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
-            addData.put(PlotConstants.DATASET_OPERATOR_ADD,parameterConstraints);
-            itsSlotsPanel.addDataToPlot(slotSelected,addData);
+            
+            itsSlotsPanel.alterDataInPlot(slotSelected,parameterConstraints,PlotConstants.DATASET_OPERATOR_ADD);
         }
     }
     
@@ -230,10 +228,6 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                     starty = Double.parseDouble(paramValues.get(2).toString());
                     endy = Double.parseDouble(paramValues.get(3).toString());
                 }
-                
-                
-                
-                
                 int numx = Integer.parseInt("64");
                 int numy = Integer.parseInt("1");
                 

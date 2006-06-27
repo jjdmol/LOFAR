@@ -200,10 +200,6 @@ public class PlotSlotManager{
     
     public void modifyPlotInSlot(int index, Object constraints){
         getSlot(index).modifyPlot(constraints);
-        int currentPlots = 0;
-        for(PlotSlot slot : itsPlotSlots){
-            if(slot.containsPlot()) currentPlots++;
-        }
     }
     
     public void movePlot(int indexFromSlot, int indexToSlot){
