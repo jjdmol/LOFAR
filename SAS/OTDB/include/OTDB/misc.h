@@ -38,6 +38,7 @@ namespace LOFAR {
 
 uint32	VersionNr(const string&		VersString);
 string	VersionNr(int32		VersNumber);
+bool	isReference(const string&	limitsContents);
 
 // @}
   } // namespace OTDB

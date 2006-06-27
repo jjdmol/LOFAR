@@ -464,9 +464,9 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			vector<string>	args = wSpaceSplit(line,6);
 			// syntax: node name version qual node-constraint description
 			// all elements are required
-			if (args.size() < 6) {
+			if (args.size() != 6) {
 				itsError = toString(lineNr) + 
-										": Too less arguments for node-line";
+							": 'node'-line needs 6 columns not " + toString(args.size());
 				LOG_ERROR_STR(itsError);
 				inError = true;
 				break;
@@ -493,11 +493,11 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 		}
 		// -- USES --
 		else if (!args[0].compare("uses")) {
-			vector<string>	args = wSpaceSplit(line,5);
+			vector<string>	args = wSpaceSplit(line,6);
 			// syntax: uses name min_version classif instances
-			if (args.size() < 5) {
+			if (args.size() != 6) {
 				itsError = toString(lineNr) + 
-										": Too less arguments for uses-line";
+							": 'uses'-line needs 6 columns not " + toString(args.size());
 				LOG_FATAL(itsError);
 				inError = true;
 				break;
@@ -527,7 +527,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			AttachedChild.valMoment   = 0;
 			AttachedChild.runtimeMod  = false;
 			AttachedChild.limits	  = args[4];
-			AttachedChild.description = "";
+			AttachedChild.description = args[5];
 			saveParam (AttachedChild);
 		}
 		// -- PAR -- 
@@ -535,18 +535,15 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			vector<string>	args = wSpaceSplit(line,10);
 			// syntax: par name type unit valMoment RTmod pruning 
 			//									value constraint description
-			if (args.size() < 9) {
+			if (args.size() != 10) {
 				itsError = toString(lineNr) + 
-										": Too less arguments for par-line";
+							": 'par'-line needs 10 columns not " + toString(args.size());
 				LOG_FATAL(itsError);
 				inError = true;
 				break;
 			}
 
 			// construct lacking optional arguments
-			while (args.size() < 10) {
-				args.push_back("");
-			}
 			OTDBparam		AttachedChild;
 			AttachedChild.itsNodeID   = topNodeID;
 			AttachedChild.name 		  = args[1];

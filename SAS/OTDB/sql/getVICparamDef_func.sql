@@ -62,4 +62,3 @@ CREATE OR REPLACE FUNCTION getVICParamDef(INT4)
 ' LANGUAGE plpgsql;
 
 
-

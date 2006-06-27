@@ -45,5 +45,10 @@ string	VersionNr(int32		VersNumber)
 									 VersNumber%100));
 }
 
+bool	isReference(const string&	limitsContents)
+{
+	return (limitsContents.find(">>", 0) == 0);
+}
+
   } // namespace OTDB
 } // namespace LOFAR

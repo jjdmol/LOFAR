@@ -26,10 +26,12 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
+#include <Common/lofar_string.h>
 #include <fstream>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBnode.h>
 #include <OTDB/OTDBparam.h>
+#include <OTDB/misc.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -331,6 +333,76 @@ OTDBparam TreeMaintenance::getParam (treeIDType		aTreeID,
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during getOTDBparam:") + ex.what();
+		LOG_FATAL(ex.what());
+	}
+	return (empty);
+}
+
+
+//
+// getParam (nodedef) : OTDBparam
+//
+// Get the parameter definition that defines the value of this node.
+// It defererences recursively the reference in the limits field.
+//
+OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
+{
+	// OTDBparam must be a paramdef.
+	ASSERTSTR(aNode.leaf, "function getParam(node&) only available for nodes");
+
+	// does limit field contain a reference?
+	if (!isReference(aNode.limits)) {						// no, use other function
+		return (getParam(aNode.treeID(), aNode.paramDefID()));
+	}
+
+	// which function should we call?
+	string		functionName("getVICnodeDef");
+	if (aNode.treeID()) {
+		OTDBtree	theTree = itsConn->getTreeInfo(aNode.treeID());
+		if (theTree.type == TThardware) {
+			ASSERTSTR(false, "getParam(nodename.paramname) not yet implemented for PIC trees.");
+			// functionName = "getPICnodeDef";		TODO
+		}
+	}
+
+	// given node is a VICnode containing a parameter reference.
+	// recursively follow the reference until the parameter is reached.
+	OTDBparam	empty;
+	
+	uint32		dotpos; 
+	// make nodeName first part of name, paramName second part and remainder the leftover
+	dotpos = aNode.name.find('.', 0);
+	string		nodeName = aNode.limits.substr(0, dotpos);		// a
+	string		paramName= aNode.limits.substr(dotpos+1);		// b.c.d
+	string		remainder;
+	dotpos = paramName.find('.', 0);
+	if (dotpos != string::npos) {
+		remainder = paramName.substr(dotpos);					// .c.d
+		paramName = paramName.substr(0,dotpos);					// b
+	}
+	else {
+		remainder.clear();
+	}
+
+	// get parameter B of Node A as template node from the database.
+	LOG_TRACE_FLOW_STR("TM:getNode(" << aNode.nodeID() << "," << paramName << ")");
+
+	work	xAction(*(itsConn->getConn()), "getOTDBnode");
+	try {
+		result res = xAction.exec("SELECT * from " + functionName + "(" +
+								  toString(aNode.treeID()) + ",'" + 
+								  nodeName + "','" + 
+								  paramName + "')");
+		if (res.empty()) {
+			return (empty);
+		}
+
+		OTDBnode	derefNode =  OTDBnode(aNode.treeID(), res[0]);
+		derefNode.limits += remainder;		//	add stripped-off part
+		return (getParam(derefNode));
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during getOTDBnode:") + ex.what();
 		LOG_FATAL(ex.what());
 	}
 	return (empty);
