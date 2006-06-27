@@ -34,6 +34,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.exceptions.ParmDBConfigurationException;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -144,7 +145,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 public void treeNodesChanged(TreeModelEvent e){}
                 public void treeNodesInserted(TreeModelEvent e){
                     TreeNode item = (TreeNode)e.getSource();
-                    if(item.getName().equalsIgnoreCase("Observation.AO")){
+                    if (LofarUtils.keyName(item.getName()).equalsIgnoreCase("AO")){
                         try {
                             
                             //Sample code to have ParmDB in the tree.
@@ -196,8 +197,8 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         
         // Check if the nodename uses specific panels and create them
         Vector aPanelList=null;
-        if (itsPanelHelper.isKey(aNode.getName())) {
-            aPanelList=itsPanelHelper.getPanels(aNode.getName());
+        if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.getName()))) {
+            aPanelList=itsPanelHelper.getPanels(LofarUtils.keyName(aNode.getName()));
         } else {
             aPanelList=itsPanelHelper.getPanels("*");
         }
