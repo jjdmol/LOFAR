@@ -350,7 +350,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
 
         NodeInstancesLabel.setText("Instances :");
 
-        NodeLimitsLabel.setText("Limits :");
+        NodeLimitsLabel.setText("Constraints :");
 
         NodeIndexText.setText("None");
         NodeIndexText.setMaximumSize(new java.awt.Dimension(200, 19));

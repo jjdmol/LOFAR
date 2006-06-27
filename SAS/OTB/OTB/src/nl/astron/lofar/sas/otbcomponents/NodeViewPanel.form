@@ -103,7 +103,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="NodeLimitsLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Limits :"/>
+        <Property name="text" type="java.lang.String" value="Constraints :"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="NodeIndexText">

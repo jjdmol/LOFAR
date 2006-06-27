@@ -98,7 +98,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="ParamLimitsLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Limits :"/>
+        <Property name="text" type="java.lang.String" value="Value :"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="ParamNameText">

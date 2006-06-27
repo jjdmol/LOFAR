@@ -515,7 +515,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
 
         ParamTypeLabel.setText("Type :");
 
-        ParamLimitsLabel.setText("Limits :");
+        ParamLimitsLabel.setText("Value :");
 
         ParamIndexText.setText("None");
         ParamIndexText.setMaximumSize(new java.awt.Dimension(200, 19));

@@ -316,7 +316,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
     }
 
     private Vector<Integer> getDelayInputPorts() {
-        String aS[]=this.DelayInputPortsText.getText().split(",");
+        String aS[]=this.DelayInputPortsText.getText().split("[,]");
         Vector<Integer> aV = new Vector<Integer>(aS.length);
         for (int i = 0 ; i< aS.length;i++) {
             aV.add(Integer.valueOf(aS[i]));
