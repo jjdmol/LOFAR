@@ -353,17 +353,39 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_g
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_getParam(JNIEnv *env, jobject, jint treeID, jint paramID ) {
 
-  OTDBparam aNode;
+  OTDBparam aParam;
   try {
-    aNode = theirTM->getParam (treeID, paramID);
+    aParam = theirTM->getParam (treeID, paramID);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::getParam(" << treeID << "," << paramID << ") " << ex.what() << endl; 
 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 
-  return convertOTDBparam (env, aNode);
+  return convertOTDBparam (env, aParam);
 }
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
+ * Method:    getParam
+ * Signature: (Lnl/astron/lofar/sas/otb/jotdb2/jOTDBnode;)Lnl/astron/lofar/sas/o
+tb/jotdb2/jOTDBparam;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_getParam__Lnl_astron_lofar_sas_otb_jotdb2_jOTDBnode_2  (JNIEnv *env , jobject, jobject jOTDBnode) {
+
+  OTDBparam aParam;
+  OTDBnode aNode = convertjOTDBnode (env, jOTDBnode);
+  try {
+    aParam = theirTM->getParam(aNode);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::getParam(OTDBnode) " << ex.what() << endl; 
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+
+  return convertOTDBparam (env, aParam);
+}
+
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance

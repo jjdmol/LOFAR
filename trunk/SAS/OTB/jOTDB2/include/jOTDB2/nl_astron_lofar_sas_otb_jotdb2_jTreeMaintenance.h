@@ -124,8 +124,16 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_g
  * Method:    getParam
  * Signature: (II)Lnl/astron/lofar/sas/otb/jotdb2/jOTDBparam;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_getParam
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_getParam__II
   (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
+ * Method:    getParam
+ * Signature: (Lnl/astron/lofar/sas/otb/jotdb2/jOTDBnode;)Lnl/astron/lofar/sas/otb/jotdb2/jOTDBparam;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_getParam__Lnl_astron_lofar_sas_otb_jotdb2_jOTDBnode_2
+  (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
