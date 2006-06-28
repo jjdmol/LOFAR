@@ -60,6 +60,7 @@ public:
   MSCreate (const std::string& msName,
 	    double startTime, double timeStep, int nfreq, int ncorr,
 	    int nantennas, const casa::Matrix<double>& antPos,
+	    bool writeAutoCorr,
 	    int tileSizeFreq, int tileSizeRest);
 
   // Destructor
@@ -148,6 +149,7 @@ private:
   void updateTimes();
 
   //# Define the data.
+  bool itsWriteAutoCorr;             //# write autocorrelations?
   int itsNrBand;                     //# nr of bands
   int itsNrField;                    //# nr of fields (beams)
   int itsNrAnt;                      //# nr of antennas (stations)

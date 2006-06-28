@@ -56,7 +56,8 @@ namespace LOFAR {
     void setPos (double ra, double dec)
       { itsPos[0]=ra; itsPos[1]=dec; }
     void fillExtra (const string& msName, const casa::Array<double>& antPos,
-		    const casa::Array<casa::String>& antNames);
+		    const casa::Array<casa::String>& antNames,
+		    bool writeAutoCorr);
 
     void getFreq (double& start, double& end, int& n) const
       { start=itsFreqs[0]; end=itsFreqs[1]; n=*itsNFreq; }
@@ -69,7 +70,8 @@ namespace LOFAR {
     void getPos (double& ra, double& dec) const
       { ra=itsPos[0]; dec=itsPos[1]; }
     void getExtra (string& msName, casa::Array<double>& antPos,
-		   casa::Array<casa::String>& antNames);
+		   casa::Array<casa::String>& antNames,
+		   bool& writeAutoCorr);
 
   private:
     // Forbid assignment.
