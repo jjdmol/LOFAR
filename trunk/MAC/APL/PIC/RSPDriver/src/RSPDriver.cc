@@ -370,7 +370,7 @@ void RSPDriver::addAllSyncActions()
      */
     if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
     {
-      RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid);
+      RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid, m_scheduler);
       ASSERT(rsuwrite);
       m_scheduler.addSyncAction(rsuwrite);
     }

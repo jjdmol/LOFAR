@@ -34,6 +34,9 @@
 #include "RSUWrite.h"
 #include "Cache.h"
 
+// nof seconds between clear or reset and forced update of all registers
+#define FORCE_DELAY ((long)3)
+
 using namespace blitz;
 using namespace LOFAR;
 using namespace RSP;
@@ -45,8 +48,8 @@ static const EPA_Protocol::RSUReset  g_RSU_RESET_CLEAR = { 0, 1, 0, 0 }; // CLEA
 static const EPA_Protocol::RSUReset  g_RSU_RESET_RESET = { 0, 0, 1, 0 }; // RESET
 static const EPA_Protocol::RSUReset  g_RSU_RESET_NONE  = { 0, 0, 0, 0 }; // No action
 
-RSUWrite::RSUWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, 1)
+RSUWrite::RSUWrite(GCFPortInterface& board_port, int board_id, const Scheduler& scheduler)
+  : SyncAction(board_port, board_id, 1), m_scheduler(scheduler)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -61,9 +64,17 @@ void RSUWrite::sendrequest()
   
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
+  // force read/writeof if FORCE_DELAY seconds after time mark
+  if (m_mark != Timestamp(0,0) && (m_mark + FORCE_DELAY <= m_scheduler.getCurrentTime())) {
+    
+    Cache::getInstance().getState().force(); // force read/write of all register after clear
+    m_mark = Timestamp(0,0); // reset mark
+  }
+
   // cache modified?
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rsuclear().get(getBoardId())) {
     Cache::getInstance().getState().rsuclear().unmodified(getBoardId());
+
     setContinue(true);
     return;
   }
@@ -105,12 +116,14 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   }
 
   Cache::getInstance().getState().rsuclear().write_ack(getBoardId());
-
-  // force read/writeof all registers after clear or reset
+  
+  // mark time if needed, then force read/write of all register after FORCE_DELAY seconds
   RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
-  if (s()(getBoardId()).getClear() | s()(getBoardId()).getReset()) {
-    Cache::getInstance().getState().force(); // force read/write of all register after clear
+  if (s()(getBoardId()).getClear() || s()(getBoardId()).getReset()) {
+    m_mark = m_scheduler.getCurrentTime();
   }
+
+  Cache::getInstance().getBack().getRSUSettings()()(getBoardId()).setRaw(0); // clear the flags
 
   return GCFEvent::HANDLED;
 }

@@ -97,10 +97,12 @@ GCFEvent::TResult WriteReg::handleack(GCFEvent& event, GCFPortInterface& /*port*
     return GCFEvent::NOT_HANDLED;
   }
 
+#if 0
   //
   // Sleep 73msec after receiving SYNC WRITE_ACK
   //
   usleep(73000);
+#endif
  
   return GCFEvent::HANDLED;
 }

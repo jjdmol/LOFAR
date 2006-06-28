@@ -27,8 +27,10 @@
 
 #include <Common/LofarTypes.h>
 #include <APL/RSP_Protocol/MEPHeader.h>
+#include <APL/RTCCommon/Timestamp.h>
 
 #include "SyncAction.h"
+#include "Scheduler.h"
 
 namespace LOFAR {
   namespace RSP {
@@ -39,7 +41,7 @@ namespace LOFAR {
       /**
        * Constructors for a RSUWrite object.
        */
-      RSUWrite(GCFPortInterface& board_port, int board_id);
+      RSUWrite(GCFPortInterface& board_port, int board_id, const Scheduler& scheduler);
 	  
       /* Destructor for RSUWrite. */
       virtual ~RSUWrite();
@@ -61,6 +63,8 @@ namespace LOFAR {
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+      const Scheduler&        m_scheduler; // for getCurrentTime
+      RTC::Timestamp          m_mark;      // mark time
     };
   };
 };
