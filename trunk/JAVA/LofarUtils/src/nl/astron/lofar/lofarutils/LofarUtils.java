@@ -42,6 +42,9 @@ public abstract class LofarUtils {
     /** Returns the c part of a string a.b.c*/
     static public String keyName(String aName) {
         String aS="";
+        if (aName == null || aName.length() < 1) {
+            return aS;
+        }
 
         String s[] = aName.split("[.]");
         
@@ -55,7 +58,9 @@ public abstract class LofarUtils {
     /** Returns the a.b part of a string a.b.c */
     static public String moduleName(String aName) {
         String aS="";
-        
+        if (aName == null || aName.length() < 1) {
+            return aS;
+        }
         String s[] = aName.split("[.]");
         
         if (s.length>0) {
@@ -67,4 +72,19 @@ public abstract class LofarUtils {
         return aS;        
     }
     
+    /** Returns if the given string is a reference or not 
+     * References are strings that start with >> for now.
+     */
+    static public boolean isReference(String aString) {
+        // since an empty string will return true on the startswith method (see equals(onject) )
+        // we need to check for it first.
+        if (aString == null || aString.length() < 1) {
+            return false;
+        }
+        if (aString.startsWith(">>")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
