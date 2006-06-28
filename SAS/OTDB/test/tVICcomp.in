@@ -49,7 +49,7 @@ node  "AO"        1.0.0  test  'node constraint'  "Array Operations"
 
 #     name          vers    qual    instances
 #------------------------------------------------------------------------------
-uses  'SO'         1.0.0   test    0+
+uses  'SO'         1.0.0   test    0+			"Station Operations"
 
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ node  "ARG"       1.0.0  test  'node constraint'  "Array Receptor Group"
 
 #     name          vers    qual    instances
 #------------------------------------------------------------------------------
-uses  'SRG'        1.0.0   test    0+
+uses  'SRG'        1.0.0   test    0+			"Station Receptor Group"
 
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ node  "VI"        1.0.0  test  'node constraint'  "Virtual Instrument"
 
 #     name          vers    qual    instances
 #------------------------------------------------------------------------------
-uses  'VT'         1.0.0   test    0+
+uses  'VT'         1.0.0   test    0+			"Virtual Telescope"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -212,10 +212,10 @@ node  "Observation" 1.0.0  test  'node constraint'  "Observation"
 
 #     name          vers    qual    instances
 #------------------------------------------------------------------------------
-uses  'AO'         1.0.0   test    0+
-uses  'ARG'        1.0.0   test    0+
-uses  'VI'         1.0.0   test    0+
-uses  'VB'          1.0.0   test    0+
+uses  'AO'         1.0.0   test    0+				"Array Operations"
+uses  'ARG'        1.0.0   test    0+				"Array Receptor Group"
+uses  'VI'         1.0.0   test    0+				"Virtual Instrument"
+uses  'VB'          1.0.0   test    0+				"Virtual Backend"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------

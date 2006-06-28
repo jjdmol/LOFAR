@@ -110,10 +110,10 @@ node	"Virt Backend"	1.0.0	test	'node constraint'	Backend processing
 
 #       name        	vers    qual        instances
 #------------------------------------------------------------------------------
-uses	'RFI detector' 	1.0.0	test		0+
-uses	Correlator 	 	1.0.0	test		0..6144
-uses	Storage	 	 	1.0.0	test		0..1024
-uses	Visualisation	1.0.0	test		0..128
+uses	'RFI detector' 	1.0.0	test		0+				"x"
+uses	Correlator 	 	1.0.0	test		0..6144				"x"
+uses	Storage	 	 	1.0.0	test		0..1024				"x"
+uses	Visualisation	1.0.0	test		0..128				"x"
 
 
 # -- Virtual telescope --
@@ -123,8 +123,8 @@ node	"Virt Telescope" 1.0.0	test	'node constraint'	Looks like ...
 
 #       name        	vers    qual        instances
 #------------------------------------------------------------------------------
-uses	'Rec Group' 	1.0.0	test		1..4
-uses	Beamformer 	 	1.0.0	test		1..8
+uses	'Rec Group' 	1.0.0	test		1..4				"x"
+uses	Beamformer 	 	1.0.0	test		1..8				"x"
 
 
 # -- Observation --
@@ -138,8 +138,8 @@ par	ObservationNr	I	int    -   		0	  0		1+		-	'description'
 
 #       name        	vers    qual        instances
 #------------------------------------------------------------------------------
-uses	'Virt.Backend' 	1.0.0	test		0..1
-uses	Virt.Telescope 	1.0.0	test		0..8
+uses	'Virt.Backend' 	1.0.0	test		0..1				"x"
+uses	Virt.Telescope 	1.0.0	test		0..8				"x"
 
 
 
