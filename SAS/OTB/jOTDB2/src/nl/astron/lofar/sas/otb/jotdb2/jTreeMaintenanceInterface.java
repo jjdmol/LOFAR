@@ -87,7 +87,11 @@ public interface jTreeMaintenanceInterface extends Remote
     // Get the parameter definition of a node
     public jOTDBparam getParam(int aTreeID,int aParamID) throws RemoteException;
 
-    // Save the parameter definition
+    // Get the parameter definition of a node. Will recursively follow the
+    // references in the limits field.
+    public jOTDBparam getParam(jOTDBnode aNode) throws RemoteException;
+    
+// Save the parameter definition
     public boolean saveParam(jOTDBparam aParam) throws RemoteException;
 
     // Get a number of levels of children.
