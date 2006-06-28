@@ -51,7 +51,7 @@ public class jTreeMaintenance
 
     // Find the top-components in the components table.
     public native Vector<jVICnodeDef> getComponentList (String name , boolean topOnly) throws Exception;
-
+    
     // Get the node definition of a VC node
     public native jVICnodeDef getComponentNode(int aNodeID) throws Exception;
 
@@ -92,6 +92,10 @@ public class jTreeMaintenance
 
     // Get the parameter definition of a node
     public native jOTDBparam getParam(int aTreeID,int aParamID) throws Exception;
+    
+    // Get the parameter definition of a node. Will recursively follow the
+    // references in the limits field.
+    public native jOTDBparam getParam(jOTDBnode aNode) throws Exception;
 
     // Save the parameter definition
     public native boolean saveParam(jOTDBparam aParam) throws Exception;

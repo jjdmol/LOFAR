@@ -229,6 +229,20 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         return aP;  
     }
 
+    // Get the parameter definition of a node. Will recursively follow the
+    // references in the limits field.
+    public jOTDBparam getParam(jOTDBnode aNode) throws RemoteException {
+        jOTDBparam aP=null;
+        try {
+            aP = adaptee.getParam(aNode);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getParam(OTDBnode) error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aP;          
+    }
+    
     // Save the parameter definition
     public boolean saveParam(jOTDBparam aParam) throws RemoteException {
         boolean aB=false;
