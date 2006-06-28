@@ -127,6 +127,17 @@ uses	'Rec Group' 	1.0.0	test		1..4				"x"
 uses	Beamformer 	 	1.0.0	test		1..8				"x"
 
 
+# -- Clock200 --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	Clock200 		1.0.0	test	'node constraint'	'200 MHz clock'
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par systemClock		I	dbl	   MHz	 	0	  0		200				-	'systemclock'
+par	channelWidth	I	dbl	   Hz		0	  0		762.939453125	-	'width of the channels'
+par	subbandWidth	I	dbl	   kHz		0	  0		195.3125		-	'width of the 512 subbands'
+
 # -- Observation --
 #       name        	vers    qual	constr. 			descr.
 #------------------------------------------------------------------------------
@@ -134,12 +145,24 @@ node	Observation 	1.0.0	test	'node constraint'	Toplevel node
 
 #    name          dir. type   unit    prun.  vm    value   constr. descr.
 #------------------------------------------------------------------------------
-par	ObservationNr	I	int    -   		0	  0		1+		-	'description'
+par	ObservationNr	I	int    -   		0	  0		1+			-	'description'
+par clock			I	int	   -  		0	  0		>>Clock200	-	'reference to clock'
+par sampleClock		I	int	   -	 	0	  0		>>Observation.clock.systemClock	-	'160 or 200'
 
 #       name        	vers    qual        instances
 #------------------------------------------------------------------------------
 uses	'Virt.Backend' 	1.0.0	test		0..1				"x"
 uses	Virt.Telescope 	1.0.0	test		0..8				"x"
 
+
+# -- TopNode --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	TopNode 	1.0.0	test	'node constraint'	'Toplevel node'
+
+#       name        	vers    qual        instances
+#------------------------------------------------------------------------------
+uses	'Observation' 	1.0.0	test		0..1				"x"
+uses	'Clock200'		1.0.0	test		1					"x"
 
 
