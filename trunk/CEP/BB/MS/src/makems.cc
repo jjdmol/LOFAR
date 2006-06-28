@@ -58,6 +58,7 @@ void writeDesc (const string& fileName, bool writeDess,
 		const string& msName, int nparts,
 		const Array<double>& antPos,
 		const Vector<String>& antNames,
+		bool writeAutoCorr,
 		const DH_MSMake& info)
 {
   MSDesc msd;
@@ -80,6 +81,9 @@ void writeDesc (const string& fileName, bool writeDess,
   // Get nr of stations and baselines.
   uint nstat = antPos.shape()[1];
   int nbl = nstat*(nstat-1)/2;
+  if (writeAutoCorr) {
+    nbl += nstat;
+  }
   msd.antPos = antPos;
   ASSERT (antNames.nelements() == nstat);
   for (uint i=0; i<nstat; ++i) {
@@ -92,7 +96,8 @@ void writeDesc (const string& fileName, bool writeDess,
   msd.ant2.reserve (nbl);
   // Fill the stations of all baselines.
   for (uint i=0; i<nstat; ++i) {
-    for (uint j=i+1; j<nstat; ++j) {
+    uint st = (writeAutoCorr ? i : i+1);
+    for (uint j=st; j<nstat; ++j) {
       msd.ant1.push_back (i);
       msd.ant2.push_back (j);
     }
@@ -122,7 +127,7 @@ void writeDesc (const string& fileName, bool writeDess,
 }
 
 void createMS (const string& msName, const Array<double>& antPos,
-	       const DH_MSMake& info)
+	       bool writeAutoCorr, const DH_MSMake& info)
 {
   double startFreq, endFreq, startTime, endTime, ra, dec;
   int nfreq, ntime;
@@ -133,7 +138,7 @@ void createMS (const string& msName, const Array<double>& antPos,
   double freqRef = (endFreq+startFreq) / 2;
   double timeStep = (endTime-startTime) / ntime;
   MSCreate msmaker(msName, startTime, timeStep, nfreq, 4, antPos.shape()[1],
-		   Matrix<double>(antPos),
+		   Matrix<double>(antPos), writeAutoCorr,
 		   info.getTileSizeFreq(), info.getTileSizeRest());
   msmaker.addBand (4, nfreq, freqRef, freqStep);
   msmaker.addField (ra, dec);
@@ -144,15 +149,17 @@ void createMS (const string& msName, const Array<double>& antPos,
 
 void createMSSeq (const string& msName, int seqnr, const Array<double>& antPos,
 		  const Vector<String>& antNames,
+		  bool writeAutoCorr,
 		  const DH_MSMake& info)
 {
   // Write a part of the entire frequency range.
   ostringstream ostr;
   ostr << "_p" << seqnr;
   string msNameF = msName + ostr.str();
-  createMS (msNameF, antPos, info);
+  createMS (msNameF, antPos, writeAutoCorr, info);
   // Write the description file.
-  writeDesc (msNameF + "/vis", false, msNameF, 0, antPos, antNames, info);
+  writeDesc (msNameF + "/vis", false, msNameF, 0, antPos, antNames,
+	     writeAutoCorr, info);
 }
 
 void doMaster (bool send)
@@ -194,6 +201,7 @@ void doMaster (bool send)
   double endTime = startTime + ntime*stepTime;
 
   // Get the station info from the given antenna table.
+  bool writeAutoCorr = params.getBool ("WriteAutoCorr");
   string msName = params.getString ("MSName");
   string msDesPath = params.getString ("MSDesPath");
   string tabName = params.getString ("AntennaTableName");
@@ -211,7 +219,7 @@ void doMaster (bool send)
   conn.sender.setTileSize (tileSizeFreq, tileSizeRest);
   conn.sender.setPos (ra, dec);
   // Write the antPos and MSName in the extra blob.
-  conn.sender.fillExtra (msName, antPos, antNames);
+  conn.sender.fillExtra (msName, antPos, antNames, writeAutoCorr);
   // Write the data in the DataHolder and send it to each slave.
   for (int i=0; i<nnode; ++i) {
     conn.sender.setFreq (startFreq+i*nfpn*stepFreq,
@@ -219,7 +227,7 @@ void doMaster (bool send)
     if (send) {
       conn.conns[i]->write();
     } else {
-      createMSSeq (msName, i+1, antPos, antNames, conn.sender);
+      createMSSeq (msName, i+1, antPos, antNames, writeAutoCorr, conn.sender);
     }
   }
   // Write the overall description files.
@@ -228,7 +236,7 @@ void doMaster (bool send)
   Path path = Path(mspath.absoluteName());
   string msDesName = msDesPath + "/" + string(path.baseName());
   writeDesc (msDesName, true, path.originalName(), nnode,
-	     antPos, antNames, conn.sender);
+	     antPos, antNames, writeAutoCorr, conn.sender);
 }
 
 void doSlave (int rank)
@@ -244,9 +252,10 @@ void doSlave (int rank)
   Array<double> antPos;
   Array<String> antNamesArr;
   string msName;
-  conn.receiver.getExtra (msName, antPos, antNamesArr);
+  bool writeAutoCorr;
+  conn.receiver.getExtra (msName, antPos, antNamesArr, writeAutoCorr);
   Vector<String> antNames(antNamesArr);
-  createMSSeq (msName, rank, antPos, antNames, conn.receiver);
+  createMSSeq (msName, rank, antPos, antNames, writeAutoCorr, conn.receiver);
 }
 
 

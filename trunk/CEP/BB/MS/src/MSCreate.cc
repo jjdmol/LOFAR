@@ -63,23 +63,25 @@ using namespace casa;
 MSCreate::MSCreate (const std::string& msName,
 		    double startTime, double timeStep, int nfreq, int ncorr,
 		    int nantennas, const Matrix<double>& antPos,
+		    bool writeAutoCorr,
 		    int tileSizeFreq, int tileSizeRest)
-: itsNrBand   (0),
-  itsNrField  (0),
-  itsNrAnt    (nantennas),
-  itsNrFreq   (nfreq),
-  itsNrCorr   (ncorr),
-  itsNrTimes  (0),
-  itsTimeStep (timeStep),
-  itsStartTime(startTime),
-  itsNrPol    (0),
-  itsNrChan   (0),
-  itsPolnr    (0),
-  itsAntBL    (0),
-  itsFrame    (0),
-  itsPhaseDir (0),
-  itsMS       (0),
-  itsMSCol    (0)
+: itsWriteAutoCorr (writeAutoCorr),
+  itsNrBand        (0),
+  itsNrField       (0),
+  itsNrAnt         (nantennas),
+  itsNrFreq        (nfreq),
+  itsNrCorr        (ncorr),
+  itsNrTimes       (0),
+  itsTimeStep      (timeStep),
+  itsStartTime     (startTime),
+  itsNrPol         (0),
+  itsNrChan        (0),
+  itsPolnr         (0),
+  itsAntBL         (0),
+  itsFrame         (0),
+  itsPhaseDir      (0),
+  itsMS            (0),
+  itsMSCol         (0)
 {
   AlwaysAssert (nantennas > 0, AipsError);
   AlwaysAssert (nfreq > 0, AipsError);
@@ -540,6 +542,9 @@ void MSCreate::writeTimeStep()
   Array<Complex> defData(shape);
   defData = Complex();
   int nrbasel = itsNrAnt*(itsNrAnt-1)/2;
+  if (itsWriteAutoCorr) {
+    nrbasel += itsNrAnt;
+  }
 
   // Add the number of rows needed.
   int rowNumber = itsMS->nrow();
@@ -567,7 +572,8 @@ void MSCreate::writeTimeStep()
 
   Vector<double> myuvw(3);
   for (int j=0; j<itsNrAnt; ++j) {
-    for (int i=j+1; i<itsNrAnt; ++i) {
+    int st = (itsWriteAutoCorr ? j : j+1);
+    for (int i=st; i<itsNrAnt; ++i) {
       myuvw = antuvw[i] - antuvw[j];
       itsMSCol->data().put(rowNumber, defData);
       itsMSCol->flag().put(rowNumber, defFlags);
@@ -633,7 +639,8 @@ void MSCreate::writeTimeStep2()
     
   Vector<double> myuvw(3);
   for (int j=0; j<itsNrAnt; ++j) {
-    for (int i=j+1; i<itsNrAnt; ++i) {
+    int st = (itsWriteAutoCorr ? j : j+1);
+    for (int i=st; i<itsNrAnt; ++i) {
       myuvw = antuvw[i] - antuvw[j];
       itsMSCol->flagRow().put (rowNumber, False);
       itsMSCol->time().put (rowNumber, time);
