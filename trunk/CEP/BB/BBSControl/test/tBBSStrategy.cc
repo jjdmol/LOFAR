@@ -30,11 +30,12 @@ using namespace LOFAR::ACC::APS;
 
 int main()
 {
-  INIT_LOGGER("tBBSStrategy");
+  const string progName("tBBSStrategy");
+  INIT_LOGGER(progName.c_str());
 
   try {
 
-    BBSStrategy strategy(ParameterSet("BBSControl.parset"));
+    BBSStrategy strategy(ParameterSet(progName + ".parset"));
     cout << strategy;
 
   } catch (LOFAR::Exception& e) {
