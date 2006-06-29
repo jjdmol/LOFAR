@@ -26,7 +26,7 @@ package nl.astron.lofar.java.gui.plotter.exceptions;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 
 /**
- * This exception can be thrown if a Data Access Layer class encounters an exception that will have to
+ * This exception can be thrown if a Print operation encounters an exception that will have to
  * be logged and/or communicated with the user.
  * @version $Id$
  * @created April 19, 2006, 11:02 AM
