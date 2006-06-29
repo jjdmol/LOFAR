@@ -155,6 +155,16 @@ int main (int	argc, char*	argv[]) {
 		// note this is the same as : tm.getComponentList();
 		showList(nodeList);
 
+		nodeIDType	obsNodeID(0);
+		for (uint32	i = 0; i < nodeList.size(); i++) {
+			if (nodeList[i].name == "Observation") {
+				obsNodeID = nodeList[i].nodeID();
+				LOG_INFO_STR ("Node 'Observation' has ID: " << obsNodeID);
+				break;
+			}
+		}
+		ASSERTSTR(obsNodeID, "Expected 'Observation' in the nodelist");
+
 		LOG_INFO ("Getting the parameters of last topNode");
 		vector<OTDBparam> paramList = tm.getComponentParams(topNodeID);
 		showParams(paramList);
@@ -168,8 +178,8 @@ int main (int	argc, char*	argv[]) {
 		OTDBtree	treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 
-		LOG_INFO("Adding the top component to the tree");
-		nodeIDType	topID = tm.addComponent(topNodeID, treeID, 0); // parent
+		LOG_INFO("Adding the 'observation' component to the tree");
+		nodeIDType	topID = tm.addComponent(obsNodeID, treeID, 0); // parent
 		ASSERTSTR (topID, "Adding topnode to template tree failed");
 		LOG_INFO_STR ("Top component has ID: " << topID);
 
