@@ -238,3 +238,13 @@ par  stations                I    text   -      10    0    '[RS001,CS002]' 			 -
 par  requestedDuration       I    text   -      10    0    '3000' 					 - 		  'NEW for Mom'
 par  measurementMom2Ids      I    text   -      10    0    '[10,45,32]'				 - 		  'NEW for Mom'
 
+
+
+# -- TopNode --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	TopNode 	1.0.0	test	'node constraint'	'Toplevel node'
+
+#       name        	vers    qual        instances
+#------------------------------------------------------------------------------
+uses	'Observation' 	1.0.0	test		0..1				"x"
