@@ -41,10 +41,10 @@ import nl.astron.lofar.sas.otb.util.jParmDBnode;
 import org.apache.log4j.Logger;
 
 /**
+ * This panel contains the ParmDB Plotter and all related functionality
+ *
  * @created 23-04-2006, 15:47
- *
  * @author  pompert
- *
  * @version $Id$
  */
 public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
@@ -57,10 +57,10 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     private String itsParamName;
     private String itsParamTableName;
     
-    /** Creates new form BeanForm based upon aParameter
+    /** Creates new form ParmDBPlotPanel
      *
-     * @params  aParam   Param to obtain the info from
-     *
+     * @param  aMainFrame   The mainframe to be associated with this panel
+     * @param  paramName   a Parameter name to be associated with this panel
      */
     public ParmDBPlotPanel(MainFrame aMainFrame,String paramName) {
         initComponents();
@@ -70,10 +70,14 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         initPanel(paramName);
     }
     
-    /** Creates new form BeanForm */
+    /** Creates new form ParmDBPlotPanel */
     public ParmDBPlotPanel() {
         
     }
+    /**
+     * Sets the mainframe for this panel
+     * @param aMainFrame The mainframe to be associated with this panel
+     */
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -92,15 +96,24 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             logger.debug("No Mainframe supplied");
         }
     }
-    
+    /**
+     * Returns true as this panel needs a Popupmenu in the tree to get its data.
+     * @return true
+     */
     public boolean hasPopupMenu() {
         return true;
     }
-    
+    /**
+     * Returns true as this panel needs support for multiple ParmDB table data selections.
+     * @return true
+     */
     public boolean isSingleton() {
         return true;
     }
-    
+    /**
+     * Returns the static instance of ParmDBPlotPanel, if it does not exist, this method will create one.
+     * @return the ParmDBPlotPanel instance
+     */
     public JPanel getInstance() {
         if(instance == null){
             instance = this;
@@ -111,20 +124,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     
     /** create popup menu for this panel
      *
-     *  // build up the menu
-     *  aPopupMenu= new JPopupMenu();
-     *  aMenuItem=new JMenuItem("Choice 1");
-     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
-     *          popupMenuHandler(evt);
-     *      }
-     *  });
-     *  aMenuItem.setActionCommand("Choice 1");
-     *  aPopupMenu.add(aMenuItem);
-     *  aPopupMenu.setOpaque(true);
-     *
-     *
-     *  aPopupMenu.show(aComponent, x, y );
+     * This popupmenu will show options in which slot the user would like to make a plot in <br>
+     * or add data to an existing plot.
      */
     public void createPopupMenu(Component aComponent,int x, int y) {
         // build up the menu
@@ -174,11 +175,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     
     /** handles the choice from the popupmenu
      *
-     * depending on the choices that are possible for this panel perform the action for it
-     *
-     *      if (evt.getActionCommand().equals("Choice 1")) {
-     *          perform action
-     *      }
+     * This method handles the choice between Adding a plot or Adding data to an existing plot.<br>
+     * It then triggers the PlotSlotsPanel to act on the information.
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
         logger.debug("PopUp menu Selection made: "+evt.getActionCommand().toString());
@@ -189,12 +187,19 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
         } else if(evt.getActionCommand().startsWith("Add to plot in slot")){
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(20));
             logger.debug("Plot Slot extrapolated: "+slotSelected);
-            Object parameterConstraints =  constructPlotterConstraints(itsParamName,itsParamTableName);
-            
+            Object parameterConstraints =  constructPlotterConstraints(itsParamName,itsParamTableName);            
             itsSlotsPanel.alterDataInPlot(slotSelected,parameterConstraints,PlotConstants.DATASET_OPERATOR_ADD);
         }
     }
-    
+    /**
+     * This helper method constructs a HashMap with constraints, <br>
+     * compatible with the retrieveData method and the ADD updateData command used in PlotDataAccessParmDBImpl.
+     *
+     * @param aParamName The parameter name filter to search for in ParmDB
+     * @param itsParamTableName The parameter table name that will be put in front of every ParmDB value for ID purposes.
+     * @see nl.astron.lofar.sas.otb.util.plotter.PlotDataAccessParmDBImpl
+     * @return HashMap<String,Object> object that can be passed on to PlotDataAccessParmDBImpl.
+     */
     private Object constructPlotterConstraints(String aParamName,String itsParamTableName){
         HashMap<String,Object> parameterConstraints = new HashMap<String,Object>();
         parameterConstraints.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
@@ -289,6 +294,10 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     public String getShortName() {
         return name;
     }
+    /**
+     * This method reads the ParmDB location set in the TreeNode that triggers this method.
+     * It then updates the JParmFacade location string so the plotter can find the data it needs.
+     */
     public void setContent(Object anObject) {
         
         jParmDBnode node = (jParmDBnode)anObject;
@@ -448,7 +457,11 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             } catch (IllegalArgumentException ex) {
                 //TODO log!
                 String[] buttons = {"Clear Slots","Cancel"};
-                int choice =  JOptionPane.showOptionDialog(this,ex.getMessage(), "Plots detected in to be deleted slots", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
+                String exceptionString = ex.getMessage();
+                exceptionString+="\n\nPlease clear or move ";
+                exceptionString+= "these plots manually by pressing cancel,\nor let ";
+                exceptionString+= "the application delete them by pressing Clear Slots.";
+                int choice =  JOptionPane.showOptionDialog(this,exceptionString, "Plots detected in to be deleted slots", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
                 if(choice == 0){
                     itsSlotsPanel.setAmountOfSlots(Integer.parseInt(evt.getItem().toString()),true);
                     successfulNumberOfSlots = itsSlotsPanel.getAmountOfSlots();

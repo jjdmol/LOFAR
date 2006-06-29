@@ -26,6 +26,10 @@ package nl.astron.lofar.sas.otb.util.plotter;
 import java.awt.event.MouseEvent;
 
 /**
+ * This class forms a contract between Listeners of a PlotSlot and the PlotSlot itself.<br>
+ * It presently serves to fire events when a slot Context Menu is triggered.
+ * 
+ *
  * @version $Id$
  * @created June 1, 2006, 11:12 AM
  * @author pompert
@@ -37,7 +41,9 @@ public class PlotSlotListener{
      */
     public PlotSlotListener() {
     }
-    
+    /**
+     * Method that listeners can implement when a contextmenu is triggered by the user on a specific slot
+     */
     public void slotContextMenuTriggered(PlotSlot aSlot,MouseEvent evt){
         
     }

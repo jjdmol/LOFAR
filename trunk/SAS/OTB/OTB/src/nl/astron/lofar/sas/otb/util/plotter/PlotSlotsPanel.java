@@ -48,9 +48,14 @@ import nl.astron.lofar.sas.otb.SharedVars;
 import org.apache.log4j.Logger;
 
 /**
+ * This class visually represents the collection of PlotSlots available from the<br>
+ * PlotSlotManager. On top of that the user of this panel can perform standard operations <br>
+ * and operations needed in the LOFAR BBS/ParmBD Plotter system
+ *
  * @version $Id$
  * @created May 29, 2006, 14:12
  * @author pompert
+ * @see PlotSlotManager
  */
 public class PlotSlotsPanel extends javax.swing.JPanel {
     
@@ -59,7 +64,12 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
     private PlotSlotManager itsSlotManager;
     private PlotSlot selectedSlot;
     
-    /** Creates new form BeanForm */
+    
+    /**
+     * Creates a new PlotSlotsPanel. It connects itself to the PlotSlotManager<br>
+     * and adds listeners to that manager so this panel is refreshed whenever something<br>
+     * changes in the PlotSlot collection.
+     */
     public PlotSlotsPanel() {
         initComponents();
         int numberOfSlots = 4;
@@ -77,8 +87,12 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         });
         rearrangeSlotGrid();
     }
-    
-    /** adds a button to the BeanForm */
+    /**
+     * This method will create a plot in the PlotSlot specified using the constraints.<br>
+     * @param index the PlotSlot index in the PlotSlotManager's collection
+     * @param constraints the constraints for the LOFAR Plotter framework to build the plot.
+     * @throws IllegalArgumentException is thrown if a plot already exists in the PlotSlot specified.
+     */
     public void addPlotToSlot(int index,Object constraints) throws IllegalArgumentException{
         if(itsSlotManager.isSlotAvailable(index)){
             itsSlotManager.createPlotInSlot(index,constraints);
@@ -86,7 +100,13 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             throw new IllegalArgumentException("A plot already exists in slot "+index);
         }
     }
-    /** adds a button to the BeanForm */
+    /**
+     * This method will alter a plot in the PlotSlot specified using the update constraints.<br>
+     * @param index the PlotSlot index in PlotSlotManager's collection
+     * @param constraints the constraints for the LOFAR Plotter framework to update the plot.
+     * @operation A string representation of the operation that should be passed to the LOFAR Plotter framework.
+     * @throws IllegalArgumentException is thrown if a plot is not found in the PlotSlot specified.
+     */
     public void alterDataInPlot(int slotIndex,Object constraints, String operation) throws IllegalArgumentException{
         if(itsSlotManager.isSlotOccupied(slotIndex)){
             double offset = itsSlotManager.getSlot(slotIndex).getOffset();
@@ -98,9 +118,9 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                 alterOffset.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
                 alterOffset.put("DATASET_OPERATOR_REMOVE_Y_OFFSET",offsetS);
                 itsSlotManager.modifyPlotInSlot(slotIndex,alterOffset);
-                
+                //update the data identifiers passed as the offset has been removed...Not necessary for additions!
                 if(!operation.equalsIgnoreCase(PlotConstants.DATASET_OPERATOR_ADD)){
-                    //update the data identifiers passed as the offset has been removed...
+                    
                     String[] dataIdentifiers = (String[])constraints;
                     String[] newDataIdentifiers = new String[dataIdentifiers.length];
                     int i=0;
@@ -118,21 +138,21 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                 }
                 
             }
-            //Perform the addition or removal of data in the plot.
+            //Perform the actual addition or removal of data in the plot.
             HashMap<String,Object> alterData = new HashMap<String,Object>();
             alterData.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
             alterData.put(operation,constraints);
             
             itsSlotManager.modifyPlotInSlot(slotIndex,alterData);
             
-            //Reapply the offsets using the new values.
+            //Reapply the offsets using the new values. Skips this step if the user wants to remove the offset.
             if(offset != 0.0 && !operation.equalsIgnoreCase("DATASET_OPERATOR_REMOVE_Y_OFFSET")){
                 HashMap<String,Object> alterOffset = new HashMap<String,Object>();
                 alterOffset.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
                 alterOffset.put("DATASET_OPERATOR_ADD_Y_OFFSET",offsetS);
                 itsSlotManager.modifyPlotInSlot(slotIndex,alterOffset);
             }
-            //Remove the offset if a delete action results in only one value in the plot being left.
+            //Remove any offset if a delete action results in only one value in the plot being left.
             if(operation.equalsIgnoreCase(PlotConstants.DATASET_OPERATOR_DELETE)){
                 LinkedList<HashMap> currentValuesInPlot;
                 try {
@@ -156,34 +176,64 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             throw new IllegalArgumentException("A plot was not found in slot "+slotIndex);
         }
     }
-    
+    /**
+     * This method clears all the PlotSlots in PlotSlotManager's collection
+     */
     public void clearSlots(){
         itsSlotManager.clearSlots();
         repaint();
     }
-    
+    /**
+     * Gets the amount of PlotSlots in PlotSlotManager's collection
+     * @return the amount of PlotSlots in PlotSlotManager's collection
+     */
     public int getAmountOfSlots(){
         return itsSlotManager.getAmountOfSlots();
     }
-    
+    /**
+     * This method sets the amount of PlotSlots in PlotSlotManager's collection. <br><br>
+     * See PlotSlotManager.setAmountOfSlots() for further information.
+     * @param amount The new amount of slots to be managed in PlotSlotManager's collection.
+     * @param force Force the amount on the collection, and delete any PlotSlot in the way.
+     * @throws IllegalArgumentException will be thrown if one or more PlotSlots <br>
+     * are in the way and the force argument is false.
+     * @see PlotSlotManager
+     */
     public void setAmountOfSlots(int amount, boolean force) throws IllegalArgumentException{
         itsSlotManager.setAmountOfSlots(amount,force);
-        
     }
-    
+    /**
+     * This method answers if the PlotSlot specified is available/empty.
+     * @param index the PlotSlot index to check
+     * @return true if the PlotSlot is available
+     * @return false if the PlotSlot is occupied
+     */
     public boolean isSlotAvailable(int index){
         return itsSlotManager.isSlotAvailable(index);
     }
-    
+    /**
+     * This method gets all the indexes in PlotSlotManager's collection where an empty PlotSlot is present.
+     * @return the indexes of the available slots.
+     */
     public int[] getAvailableSlotIndexes(){
         return itsSlotManager.getAvailableSlotIndexes();
     }
+    /**
+     * This method gets all the indexes in PlotSlotManager's collection where a occupied PlotSlot is present.
+     * @return the indexes of the occupied/filled/non-empty slots.
+     */
     public int[] getOccupiedSlotIndexes(){
         return itsSlotManager.getOccupiedSlotIndexes();
     }
-    
+    /**
+     * This helper method refreshes the entire Panel by removing all currently displayed PlotSlots and <br>
+     * retrieving them again from the PlotSlotManager. It then displays them.
+     */
     private void rearrangeSlotGrid(){
         slotsPanel.removeAll();
+        
+        //determine the amount of rows and columns to display the slots. Only supports
+        //amounts that can be square-rooted to a positive integer!
         double squareRoot = Math.sqrt(Double.parseDouble(""+itsSlotManager.getAmountOfSlots()));
         int columnsAndRows = Integer.parseInt(""+(int)squareRoot);
         GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
@@ -193,10 +243,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 0);
         GridBagLayout layout = new GridBagLayout();
         layout.setConstraints(slotsPanel,gridBagConstraints);
-        //320,240 both!
         slotsPanel.setSize(this.getSize());
-        //slotsPanel.setMinimumSize(this.getSize());
-        //setSize(slotsPanel.getSize());
         logger.trace("getting "+itsSlotManager.getAmountOfSlots()+" slots from PlotSlotManager");
         int x = 0;
         int y = 0;
@@ -212,13 +259,15 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             gridBagConstraints.anchor = java.awt.GridBagConstraints.CENTER;
             PlotSlot newSlot = itsSlotManager.getSlot(i);
             if(!newSlot.isViewedExternally()){
+                //Display the slot normally in the panel
+                //Add a slotListener to the slot
                 newSlot.addSlotListener(new SlotMouseAdapter());
-                //newSlot.setSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
-                //
                 newSlot.setMinimumSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
                 newSlot.setPreferredSize(new Dimension(getWidth()/columnsAndRows,getHeight()/columnsAndRows));
                 slotsPanel.add(newSlot,gridBagConstraints);
             }else{
+                //Show a temporary panel as the slot is displayed elsewhere and
+                //could cause display problems if displayed again here.
                 JPanel tempPanel = new JPanel();
                 tempPanel.setBackground(Color.WHITE);
                 tempPanel.setLayout(new BorderLayout());
@@ -245,8 +294,8 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                 x = 0;
             }
         }
+        //Reset the GridBagLayout so a repaint is invoked.
         slotsPanel.validate();
-        //slotsPanel.repaint();
     }
     
     /** This method is called from within the constructor to
@@ -326,10 +375,16 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
         
         private boolean externalLegendActive = false;
         private boolean externalViewerActive = false;
+        //set the default offset to be displayed in the offset dialog
         private String previousOffset = "1.0";
+        /**
+         * This method builds up the Context menu when you right-click on the slot header.<br>
+         *
+         * @param aSlot the slot that was triggered by the user.
+         * @e the MouseEvent itself as it is needed to pinpoint the location on the screen where to display the menu.
+         */
         @SuppressWarnings("unchecked")
         public void slotContextMenuTriggered(PlotSlot aSlot, MouseEvent e){
-            Object source = e.getSource();
             if(aSlot instanceof PlotSlot){
                 selectedSlot = aSlot;
                 if(selectedSlot.containsPlot()){
@@ -347,6 +402,8 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                         });
                         aPopupMenu.add(aMenuItem);
                     }else if (!externalLegendActive && !externalViewerActive){
+                        //Show menu to display a legend inside the slot or in
+                        //a separate window.
                         JMenu aMenuItem=new JMenu("Show legend");
                         JMenuItem subMenuItem=new JMenuItem("Inside the slot");
                         
@@ -379,10 +436,12 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                         aMenuItem.add(subMenuItem2);
                         aPopupMenu.add(aMenuItem);
                     }else if(externalLegendActive){
+                        //Show a warning that you will need to close the legend viewer first.
                         JMenuItem subMenuItem=new JMenuItem("Please close the legend viewer first");
                         subMenuItem.setEnabled(false);
                         aPopupMenu.add(subMenuItem);
                     }else if(externalViewerActive){
+                        //Show the option of showing the legend in the separately viewed PlotSlot
                         JMenuItem subMenuItem=new JMenuItem("Show Legend");
                         subMenuItem.addActionListener(new java.awt.event.ActionListener() {
                             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -394,13 +453,14 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                     }
                     
                     if(!externalLegendActive){
-                        
+                        //Show menu options that work if no external legend is active for this slot.
                         if(!externalViewerActive){
+                            //Show menu options that work if no external window is active for this slot
                             int[] availableSlots = itsSlotManager.getAvailableSlotIndexes();
                             if(availableSlots.length > 0){
                                 aPopupMenu.addSeparator();
                                 
-                                JMenu aMenuItem=new JMenu("Move to slot");
+                                JMenu aMenuItem2=new JMenu("Move to slot");
                                 
                                 for(int i = 0; i < availableSlots.length; i++){
                                     JMenuItem subItem=new JMenuItem(""+availableSlots[i]);
@@ -413,16 +473,16 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                                             
                                         }
                                     });
-                                    aMenuItem.add(subItem);
+                                    aMenuItem2.add(subItem);
                                 }
-                                aPopupMenu.add(aMenuItem);
+                                aPopupMenu.add(aMenuItem2);
                             }
-                            
                             aPopupMenu.addSeparator();
                             JMenuItem aMenuItem=new JMenuItem("Show in separate window");
                             aMenuItem.addActionListener(new java.awt.event.ActionListener() {
                                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                                     PlotSlotViewFrame dialog = new PlotSlotViewFrame(itsSlotManager,Integer.parseInt(selectedSlot.getLabel()),"Viewer for Plot "+selectedSlot.getLabel(),false);
+                                    //Add a listener so the grid of PlotSlots get refreshed when a separate viewer is closed.
                                     dialog.addWindowListener(new WindowListener(){
                                         public void windowDeactivated(WindowEvent e){}
                                         public void windowActivated(WindowEvent e){
