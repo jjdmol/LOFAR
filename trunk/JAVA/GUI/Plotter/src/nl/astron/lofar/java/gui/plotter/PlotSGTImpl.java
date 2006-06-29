@@ -114,7 +114,7 @@ public class PlotSGTImpl implements IPlot{
     }
     
     /**
-     * Modifies a given SGT plot using a given dataset.
+     * Modifies a given SGT plot using a given dataset. All data is updated, including already present data.
      * @param aPlot A plot JComponent
      * @param data The data to be displayed in the plot.
      * @return A legend JComponent of plot aPlot
