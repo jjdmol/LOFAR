@@ -30,6 +30,7 @@
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBnode.h>
+#include <OTDB/OTDBparam.h>
 #include <OTDB/TreeTypeConv.h>
 #include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
@@ -322,6 +323,37 @@ int main (int	argc, char*	argv[]) {
 		ASSERTSTR (tm.deleteTree(VTtreeID), 
 					"Deletion of original tree went wrong:" << tm.errorMsg());
 		LOG_INFO ("Deletion of original tree was succesful");
+
+
+		LOG_INFO_STR("Using copied template tree " << secondVTtreeID << 
+												" for testing recursive dereference");
+
+		LOG_INFO("Searching for node 'Observation'");
+		vector<OTDBnode>	VobsCol = tm.getItemList(secondVTtreeID, "Observation");
+		LOG_INFO_STR("Found " << VobsCol.size() << " nodes");
+		OTDBnode	obsNode = VobsCol[0];
+		
+		LOG_INFO("Getting params of 'Observation' node");
+		vector<OTDBnode> paramList =tm.getItemList(secondVTtreeID, obsNode.nodeID(), 1);
+		showNodeList(paramList);
+		
+		uint32	idx;
+		for (idx = 0; idx < paramList.size(); idx++) {
+			if (paramList[idx].name == "sampleClock") {
+				break;
+			}
+		}
+		ASSERTSTR(idx < paramList.size(), "Parameter 'sampleClock' not found!");
+		LOG_INFO_STR ("Parameter 'sampleClock' has nodeID " << paramList[idx].nodeID());
+
+		LOG_INFO ("Getting raw parameter definition");
+		OTDBparam	rawParam = tm.getParam(paramList[idx].treeID(), paramList[idx].paramDefID());
+		LOG_INFO_STR("Raw pardef = " << rawParam);
+
+		LOG_INFO ("Getting real parameter definition");
+		OTDBparam	realParam = tm.getParam(paramList[idx]);
+		LOG_INFO_STR("Real pardef = " << realParam);
+		
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

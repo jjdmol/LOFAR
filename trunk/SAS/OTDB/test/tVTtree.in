@@ -146,7 +146,7 @@ node	Observation 	1.0.0	test	'node constraint'	Toplevel node
 #    name          dir. type   unit    prun.  vm    value   constr. descr.
 #------------------------------------------------------------------------------
 par	ObservationNr	I	int    -   		0	  0		1+			-	'description'
-par clock			I	int	   -  		0	  0		>>Clock200	-	'reference to clock'
+par clock			I	int	   -  		0	  0		<<Clock200	-	'reference to clock'
 par sampleClock		I	int	   -	 	0	  0		>>Observation.clock.systemClock	-	'160 or 200'
 
 #       name        	vers    qual        instances

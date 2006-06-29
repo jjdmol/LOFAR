@@ -347,6 +347,8 @@ OTDBparam TreeMaintenance::getParam (treeIDType		aTreeID,
 //
 OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
 {
+	LOG_TRACE_VAR_STR ("getParam:" << aNode.name << ":" << aNode.limits);
+
 	// OTDBparam must be a paramdef.
 	ASSERTSTR(aNode.leaf, "function getParam(node&) only available for nodes");
 
@@ -371,8 +373,12 @@ OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
 	
 	uint32		dotpos; 
 	// make nodeName first part of name, paramName second part and remainder the leftover
-	dotpos = aNode.name.find('.', 0);
-	string		nodeName = aNode.limits.substr(0, dotpos);		// a
+	dotpos = aNode.limits.find('.', 0);							// >>a.b.c.d or <<a ?
+	if (dotpos == string::npos) {								// <<a : leave it.
+		return (getParam(aNode));
+	}
+																// >>a.b.c.d
+	string		nodeName = aNode.limits.substr(2, dotpos-2);	// a
 	string		paramName= aNode.limits.substr(dotpos+1);		// b.c.d
 	string		remainder;
 	dotpos = paramName.find('.', 0);
@@ -385,8 +391,10 @@ OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
 	}
 
 	// get parameter B of Node A as template node from the database.
-	LOG_TRACE_FLOW_STR("TM:getNode(" << aNode.nodeID() << "," << paramName << ")");
+	LOG_TRACE_FLOW_STR("TM:getVICnodedef(" << aNode.nodeID() << "," << 
+											  nodeName << "," << paramName << ")");
 
+	OTDBnode	derefNode;
 	work	xAction(*(itsConn->getConn()), "getOTDBnode");
 	try {
 		result res = xAction.exec("SELECT * from " + functionName + "(" +
@@ -397,15 +405,17 @@ OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
 			return (empty);
 		}
 
-		OTDBnode	derefNode =  OTDBnode(aNode.treeID(), res[0]);
+		derefNode =  OTDBnode(aNode.treeID(), res[0]);
 		derefNode.limits += remainder;		//	add stripped-off part
-		return (getParam(derefNode));
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during getOTDBnode:") + ex.what();
 		LOG_FATAL(ex.what());
+		return (empty);
 	}
-	return (empty);
+
+	xAction.commit();
+	return (getParam(derefNode));
 }
 
 

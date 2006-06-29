@@ -185,7 +185,28 @@ CREATE OR REPLACE FUNCTION childNodeName(VARCHAR(50), INT4)
 CREATE OR REPLACE FUNCTION cleanNodeName(VARCHAR(50))
   RETURNS TEXT AS '
 	BEGIN
-		RETURN rtrim(ltrim($1,\'#\'), \'{}0123456789.\');
+		IF substr($1, length($1)) = \'}\' THEN
+			RETURN ltrim(substr($1, 1, strpos($1,\'{\')-1), \'#\');
+		ELSE
+			RETURN ltrim($1,\'#\');
+		END IF;
+	END;
+' LANGUAGE plpgsql IMMUTABLE;
+
+
+--
+-- isReference (name)
+--
+-- Authorisation: n/a
+--
+-- Tables:	none
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION isReference(TEXT)
+  RETURNS BOOLEAN AS '
+	BEGIN
+		RETURN substr($1, 1, 2) = \'>>\';
 	END;
 ' LANGUAGE plpgsql IMMUTABLE;
 

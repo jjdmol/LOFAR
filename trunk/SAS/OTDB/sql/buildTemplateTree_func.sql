@@ -43,6 +43,7 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 		vParam	RECORD;
 
 	BEGIN
+RAISE WARNING \'params:%,%,%\', $1, $2, $3;
 	  FOR vParam IN 
 		SELECT	paramID, name, limits
 		FROM 	VICparamDef
@@ -78,6 +79,7 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
 		vNewNodeID	VICtemplate.nodeID%TYPE;
 
 	BEGIN
+RAISE WARNING \'leafNode:%,%,%\', $1, $2, $3;
 	  SELECT	nodeID, name, constraints
 	  INTO		vNode
 	  FROM 		VICnodeDef
@@ -123,6 +125,8 @@ CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
 	  vVersionNr		INT4;
 
 	BEGIN
+RAISE WARNING \'subTree:%,%,%\', $1, $2, $3;
+
 	  -- copy node itself
 	  vNewNodeID := instanciateVTleafnode($1, $2, $3);
 
@@ -135,6 +139,7 @@ CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
 	  LOOP
 		vVersionNr := getVersionNr(vNode.name);
 		vNode.name := cleanNodeName(vNode.name);
+RAISE WARNING \'subTree2:%,%\', vVersionNr, vNode.name;
 		-- translate name and versionnumber into node
 		SELECT nodeID
 		INTO   vNodeID

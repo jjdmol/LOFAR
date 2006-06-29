@@ -47,7 +47,7 @@ string	VersionNr(int32		VersNumber)
 
 bool	isReference(const string&	limitsContents)
 {
-	return (limitsContents.find(">>", 0) == 0);
+	return ((limitsContents.find(">>", 0) == 0) || (limitsContents.find("<<", 0) == 0));
 }
 
   } // namespace OTDB
