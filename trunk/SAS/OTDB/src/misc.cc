@@ -50,5 +50,46 @@ bool	isReference(const string&	limitsContents)
 	return ((limitsContents.find(">>", 0) == 0) || (limitsContents.find("<<", 0) == 0));
 }
 
+
+uint32	getVersionNrFromName(const string&	aName)
+{
+	string	theName(aName);
+
+	string::size_type   start = theName.find_last_of('{');
+    if (start != string::npos) {
+		string::size_type   end = theName.find('}', start);
+		if (end != string::npos) {
+			return(VersionNr(theName.substr(start+1,end-start)));
+		}
+	}
+	return (0);
+}
+
+// bring back namefragment to its base.
+string cleanNodeName(const string&	aName)
+{
+	string	theName(aName);
+	// note: input has the syntax: [#]namefragment[{versionnr}][%]
+	//		 where namefragment may also contain digits.
+
+	// strip of leading #
+	ltrim (theName, "#");
+
+	// search {
+	string::size_type   start = theName.find_last_of('{');
+    if (start == string::npos) {
+		return (theName);
+	}
+
+	// check for }
+	string::size_type   end = theName.find('}', start);
+	if (end == string::npos) {
+		return (theName);
+	}
+
+	// return everything till {
+	return(theName.substr(0, start));
+}
+
   } // namespace OTDB
 } // namespace LOFAR
