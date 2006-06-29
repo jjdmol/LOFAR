@@ -27,13 +27,16 @@
 // The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/DataSelection.h>
-#include <APS/ParameterSet.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_iosfwd.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
+  //# Forward Declarations.
+  namespace ACC { namespace APS { class ParameterSet; } }
+
   namespace BBS
   {
     //# Forward Declarations.
@@ -45,30 +48,57 @@ namespace LOFAR
     class BBSStep
     {
     public:
-      virtual ~BBSStep() {}
 
-      // Return a pointer to the current BBSMultiStep. Since the base class is
-      // not a BBSMultiStep, it will return a null pointer.
-      virtual BBSMultiStep* getMultiStep() { return 0; }
+      virtual ~BBSStep();
 
-      // Add a BBSStep to the current BBSStep.
-      // \note You can \e only add a BBSStep to a BBSMultiStep. 
-      // \throw AssertError if \c this is not an instance of BBSMultiStep.
-      virtual void addStep(const BBSStep*& aStep);
+      // Return the name of \c this.
+      const string& name() const { return itsName; }
+
+      // Print the contents of \c this into the output stream \a os.
+      virtual void print(ostream& os) const;
+
+//       // Return a pointer to the current BBSMultiStep. Since the base class is
+//       // not a BBSMultiStep, it will return a null pointer.
+//       virtual BBSMultiStep* getMultiStep() { return 0; }
+
+//       // Add a BBSStep to the current BBSStep.
+//       // \note You can \e only add a BBSStep to a BBSMultiStep. 
+//       // \throw AssertError if \c this is not an instance of BBSMultiStep.
+//       virtual void addStep(const BBSStep*& aStep);
+
+      // Create a new step object. The new step can either be a BBSSingleStep
+      // or a BBSMultiStep object. This is determined by examining the
+      // parameter set \a parSet. If this set contains a key
+      // <tt>Step.<em>name</em>.Steps</tt>, then \a aName is a BBSMultiStep,
+      // otherwise it is a SingleStep.
+      static BBSStep* create(const string& name,
+			     const ACC::APS::ParameterSet& parSet);
 
     protected:
-      BBSStep(const string& aName, 
-	      const ACC::APS::ParameterSet& aParamSet);
+      BBSStep(const string& name, 
+	      const ACC::APS::ParameterSet& parSet);
 
     private:
+      // This struct contains two vectors of stations ID's, which, when paired
+      // element-wise, define the baselines to be used in the current step.
+      struct Selection
+      {
+	vector<uint32> station1;
+	vector<uint32> station2;
+      };
+
       // Name of this step.
-      string                       itsName;
+      string                 itsName;
 
-      // Paramter set associated with this step.
-      ACC::APS::ParameterSet itsParamSet;
+      // Selection of baselines for this step.
+      Selection              itsSelection;
 
-      // Data selection for this step.
-      DataSelection          itsSelection;
+      // The sources in the source model.
+      vector<string>         itsSources;
+
+      // Write the contents of a BBSStep to an output stream.
+      friend ostream& operator<<(ostream&, const BBSStep&);
+      friend ostream& operator<<(ostream&, const BBSStep::Selection&); 
     };
 
     // @}

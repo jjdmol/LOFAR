@@ -28,6 +28,7 @@
 
 //# Includes
 #include <BBSControl/BBSStep.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
@@ -39,14 +40,16 @@ namespace LOFAR
     class BBSMultiStep : public BBSStep
     {
     public:
-      BBSMultiStep(const string& aName,
-		   const ACC::APS::ParameterSet& aParamSet);
+      BBSMultiStep(const string& name,
+		   const ACC::APS::ParameterSet& parset);
 
       virtual ~BBSMultiStep();
 
-      virtual BBSMultiStep* getMultiStep() { return this; }
+      virtual void print(ostream& os) const;
 
-      virtual void addStep(const BBSStep*& aStep);
+//       virtual BBSMultiStep* getMultiStep() { return this; }
+
+//       virtual void addStep(const BBSStep*& aStep);
 
     private:
       // Vector holding a sequence of BBSSteps.
