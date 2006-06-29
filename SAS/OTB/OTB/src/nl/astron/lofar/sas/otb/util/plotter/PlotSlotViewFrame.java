@@ -28,15 +28,26 @@ import javax.swing.JDialog;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
 
 /**
+ * This class represents a dialog with which you can display a PlotSlot or legend.
+ *
  * @version $Id$
  * @created June 1, 2006, 2:56 PM
  * @author pompert
  */
 public class PlotSlotViewFrame extends JDialog{
     
+    /**
+     *The index of the PlotSlot currently displayed
+     */
     protected int plotIndex;
     
-    /** Creates a new instance of PlotSlotViewFrame */
+    /** 
+     * Creates a new instance of PlotSlotViewFrame, with several mandatory parameters:<br><br>
+     * @param parent The PlotSlotManager that handles the PlotSlot collection<br>
+     * @param index The index of the PlotSlot this dialog has to display (or its legend)<br>
+     * @param title The title to be displayed in the window bar<br>
+     * @param showLegendOnly Should the dialog only show the legend (true), or the entire slot (false)<br><br>
+     */
     public PlotSlotViewFrame(PlotSlotManager parent, int index, String title, boolean showLegendOnly) {
         super();
         plotIndex = index;

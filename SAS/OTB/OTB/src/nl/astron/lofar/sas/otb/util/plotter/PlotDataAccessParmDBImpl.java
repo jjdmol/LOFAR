@@ -45,7 +45,7 @@ import org.apache.log4j.Logger;
  * jParmFacade interface. It manages connections to that interface, and allows
  * the plotter framework to generate plots of data present in the ParmDB.
  *
- * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacade
+ * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface
  * @created 19-04-2006, 11:00
  * @author pompert
  * @version $Id$
@@ -55,8 +55,6 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     
     private static final int requiredDataConstraints = 8;
     private static Logger logger = Logger.getLogger(PlotDataAccessParmDBImpl.class);
-    
-    //Location of ParmDB table file(s)
     
     private static jParmFacadeInterface parmDB = null;
     
@@ -70,7 +68,6 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     }
     
     /**
-     *
      *Cleans up the instance variables
      *
      */
@@ -85,18 +82,24 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * the constraints provided by the PlotPanel, and to do that, it uses the
      * jParmFacade interface to get the data.
      *
-     * @param constraints The constraints provided by the PlotPanel.
-     * These must be modelled as follows in a String[] :<br><br>
-     * -constraints[0]= the parameter name filter (for example parm*) (String)<br>
-     * -constraints[1]= the startx variable (for example 0) (double)<br>
-     * -constraints[2]= the endx variable (for example 5) (double)<br>
-     * -constraints[3]= the numx variable (for example 5) (int)<br>
-     * -constraints[4]= the starty variable (for example 0) (double)<br>
-     * -constraints[5]= the endy variable (for example 5) (double)<br>
-     * -constraints[6]= the numy variable (for example 5) (int)<br><br>
-     * -constraints[7]= A string that will be put in front of every value. This<br>
-     * can be a database name, or something else.
+     * @param constraints The constraints provided by the PlotPanel.<br><br>
+     *
+     * This object must be modelled as follows:<br><br>
+     *
+     * HashMap<String,Object> constraints (This is the object you pass here)<br>
+     * --(key,value) ("PARMDBINTERFACE",a jParmFacadeInterface instance object)<br>
+     * --(key,value) ("PARMDBCONSTRAINTS",String[] constraints) See below on how to fill the String[]<br>
+     * ----+constraints[0]= the parameter name filter (for example parm*) (String)<br>
+     * ----+constraints[1]= the startx variable (for example 0) (double)<br>
+     * ----+constraints[2]= the endx variable (for example 5) (double)<br>
+     * ----+constraints[3]= the numx variable (for example 5) (int)<br>
+     * ----+constraints[4]= the starty variable (for example 0) (double)<br>
+     * ----+constraints[5]= the endy variable (for example 5) (double)<br>
+     * ----+constraints[6]= the numy variable (for example 5) (int)<br>
+     * ----+constraints[7]= A string that will be put in front of every value. Empty string or null at least!<br>
      * @return the data set generated
+     * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface
+     * @see nl.astron.lofar.java.gui.plotter.PlotConstants
      * @throws PlotterDataAccessException will be thrown if anything goes wrong
      * with the ParmDB interface and calls to it.
      */
@@ -172,36 +175,46 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             }
             
         }
-        
-        
-        
         return returnMap;
-        
     }
-    
-    
-    
     /**
-     *
      * This method updates an already existing Plotter compliant dataset using
-     *
      * the constraints provided by the PlotPanel, and to do that, it uses the
-     *
      * jParmFacade interface to get the data.
-     *
-     *
-     *
      * @param currentData The current data set to be updated.
+     * @param constraints The update constraints provided by the PlotPanel.<br>
+     * This object must be modelled as follows:<br><br>
      *
-     * @param constraints The update constraints provided by the PlotPanel.
-     *
+     * HashMap<String,Object> constraints (This is the object you pass here)<br>
+     * --(key,value) ("PARMDBINTERFACE",a jParmFacadeInterface instance object)<br><br>
+     * --One of the following operators:<br><br>
+     * --(key,value) (PlotConstants.DATASET_OPERATOR_ADD,HashMap<String,Object> addDataSet)<br>
+     * ----addDataSet(key,value) ("PARMDBCONSTRAINTS",String[] constraints) See below on how to fill the String[]<br>
+     * ------+constraints[0]= the parameter name filter (for example parm*) (String)<br>
+     * ------+constraints[1]= the startx variable (for example 0) (double)<br>
+     * ------+constraints[2]= the endx variable (for example 5) (double)<br>
+     * ------+constraints[3]= the numx variable (for example 5) (int)<br>
+     * ------+constraints[4]= the starty variable (for example 0) (double)<br>
+     * ------+constraints[5]= the endy variable (for example 5) (double)<br>
+     * ------+constraints[6]= the numy variable (for example 5) (int)<br>
+     * ------+constraints[7]= A string that will be put in front of every value. Empty string at least!<br>
+     * --(key,value) (PlotConstants.DATASET_OPERATOR_DELETE,String[] dataIdentifiers) See below on how to fill the String[]<br>
+     * ----+dataIdentifiers[0-n]= the parameter name to delete from the plot (String)<br>
+     * --(key,value) ("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES",null)<br>
+     * --(key,value) ("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE",String[] dataIdentifiers) See below on how to fill the String[]<br>
+     * ----+dataIdentifiers[0]= the parameter value from which to subtract the mean from all values(String)<br>
+     * --(key,value) ("DATASET_OPERATOR_SUBTRACT_LINE",String[] dataIdentifiers) See below on how to fill the String[]<br>
+     * ----+dataIdentifiers[0]= the parameter value which you would like to subtract from all other values(String)<br>
+     * --(key,value) ("DATASET_OPERATOR_ADD_Y_OFFSET",String[] offset) See below on how to fill the String[]<br>
+     * ----+offset[0]= the offset value which you would like to add to all values(String representation of double)<br>
+     * --(key,value) ("DATASET_OPERATOR_REMOVE_Y_OFFSET",String[] offset) See below on how to fill the String[]<br>
+     * ----+offset[0]= the offset value which you would like to remove from all values(String representation of double)<br>
+     * <br>
      * @return the data set generated
-     *
+     * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface
+     * @see nl.astron.lofar.java.gui.plotter.PlotConstants
      * @throws PlotterDataAccessException will be thrown if anything goes wrong
-     *
      * with the ParmDB interface and calls to it.
-     *
-     *
      *
      */
     @SuppressWarnings("unchecked")
@@ -244,13 +257,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     }
                     currentValuesInPlot.addAll(toBeAddedValueObjects);
                 }
-            }
-            else if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
+            } else if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
                 
                 String[] constraintsArray = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_MODIFY);
                 
-            }
-            else if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
+            } else if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_DELETE)){
                 HashSet<HashMap> toBeDeletedValueObjects = new HashSet<HashMap>();
                 String[] toBeDeletedValues = (String[])operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_DELETE);
                 for(int i = 0; i < toBeDeletedValues.length; i++){
@@ -266,8 +277,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 for(HashMap deleteObject : toBeDeletedValueObjects){
                     currentValuesInPlot.remove(deleteObject);
                 }
-            }
-            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES")){
+            } else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_ALL_LINES")){
                 
                 HashMap firstValue = currentValuesInPlot.getFirst();
                 double[] firstValueYArray =  (double[])firstValue.get(PlotConstants.DATASET_YVALUES);
@@ -299,8 +309,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 }
                 
                 
-            }
-            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE")){
+            } else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE")){
                 String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_SUBTRACT_MEAN_ALL_LINES_FROM_LINE");
                 HashMap firstValue = currentValuesInPlot.getFirst();
                 double[] firstValueYArray =  (double[])firstValue.get(PlotConstants.DATASET_YVALUES);
@@ -332,8 +341,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                         aValue.put(PlotConstants.DATASET_VALUELABEL,title);
                     }
                 }
-            }
-            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_LINE")){
+            } else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_SUBTRACT_LINE")){
                 String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_SUBTRACT_LINE");
                 double[] firstValueYArray =  null;
                 Iterator subtractLineIterator = currentValuesInPlot.iterator();
@@ -361,8 +369,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     aValue.put(PlotConstants.DATASET_VALUELABEL,title);
                     
                 }
-            }
-            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_ADD_Y_OFFSET")){                
+            } else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_ADD_Y_OFFSET")){
                 String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_ADD_Y_OFFSET");
                 double offset = Double.parseDouble(toBeSubtractedValues[0]);
                 Iterator subtractLineIterator = currentValuesInPlot.iterator();
@@ -377,8 +384,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     title += " OFFSET("+DecimalFormat.getInstance().format(offset*valueDone)+")";
                     aValue.put(PlotConstants.DATASET_VALUELABEL,title);
                 }
-            }
-            else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_REMOVE_Y_OFFSET")){
+            } else if(operatorsOnDataset.containsKey("DATASET_OPERATOR_REMOVE_Y_OFFSET")){
                 String[] toBeSubtractedValues = (String[])operatorsOnDataset.get("DATASET_OPERATOR_REMOVE_Y_OFFSET");
                 double offset = Double.parseDouble(toBeSubtractedValues[0]);
                 Iterator subtractLineIterator = currentValuesInPlot.iterator();
@@ -399,7 +405,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     String newTitle = matcher.replaceAll("");
                     /*int lastIndexOfOffset = title.lastIndexOf("OFFSET ("+(offset*valueDone)+")");
                     String newTitle = title.substring(0,lastIndexOfOffset);
-                    */
+                     */
                     logger.trace("New title without offset is :"+newTitle);
                     aValue.put(PlotConstants.DATASET_VALUELABEL,newTitle);
                 }
@@ -420,14 +426,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     
     /**
      *
-     * This method will check if the jParmFacade ParmDB interface is ready, and if not, it will
+     * This method will check if the jParmFacadeInterface is present<br>
+     * in the constraints object passed to this class through the retrieveData<br>
+     * and updateData methods.
      *
-     * create a new instance of it.
-     *
-     * @throws PlotterDataAccessException will be thrown if the jParmFacade could
-     *
-     * not be started, due to missing native libraries or other errors.
-     *
+     * @throws PlotterDataAccessException will be thrown if the jParmFacadeInterface could not be accessed
      */
     @SuppressWarnings("unchecked")
     private static void initiateConnectionToParmDB(Object constraints) throws PlotterDataAccessException{
@@ -442,7 +445,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
             } catch (Throwable e) {
                 
-                PlotterDataAccessException exx = new PlotterDataAccessException("The jParmFacade interface could not be initiated. Please check that you have the jParmFacade/ParmDB library somewhere in the java library path");
+                PlotterDataAccessException exx = new PlotterDataAccessException("The jParmFacade interface could not be initiated. Please check if you have a working jParmFacade server and interface");
                 
                 exx.initCause(e);
                 
@@ -454,7 +457,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         }
         
     }
-    
+    /**
+     *Helper method that gets a vector of names from the jParmFacade interface
+     *@param namefilter Name filter to be sent to ParmDB.
+     *@return vector of Names
+     */
     private Vector getNames(String namefilter) throws PlotterDataAccessException{
         Vector names;
         
@@ -476,7 +483,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         }
         return names;
     }
-    
+    /**
+     * Helper method that generates a LinkedList with values from the jParmFacade interface
+     * @param names filter to be sent to ParmDB.
+     * @return vector of Names
+     */
     
     private LinkedList<HashMap> getParmValues(Vector names, String[] constraintsArray) throws PlotterDataAccessException{
         LinkedList<HashMap> returnList = new LinkedList<HashMap>();
@@ -491,8 +502,6 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 
             } catch (Exception ex) {
-                
-                //TODO LOG!
                 
                 PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getRange() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
                 
@@ -516,15 +525,15 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             int numy = Integer.parseInt(constraintsArray[6]);
             
             
-                        /*
-                        returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
-                         
-                        returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
-                         
-                        returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
-                         
-                        returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
-                         */
+            /*
+            returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
+             
+            returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
+             
+            returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
+             
+            returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
+             */
             
             
             HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
@@ -558,10 +567,11 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 //System.out.println("Parameter Value Found: "+aValue);
                 
-                
-                aValueMap.put(PlotConstants.DATASET_VALUELABEL,constraintsArray[7]+" - "+aValue);
-                
-                
+                if(constraintsArray[7] == null || constraintsArray[7].equalsIgnoreCase("")){
+                    aValueMap.put(PlotConstants.DATASET_VALUELABEL,aValue);
+                }else{
+                    aValueMap.put(PlotConstants.DATASET_VALUELABEL,constraintsArray[7]+" - "+aValue);
+                }
                 
                 Vector<Double> valueDoubles = (Vector<Double>)values.get(aValue);
                 
