@@ -31,14 +31,13 @@ import nl.astron.lofar.java.gui.plotter.PlotConstants;
  * @version $Id$
  * @created April 19, 2006, 11:02 AM
  * @author pompert
- * @see nl.astron.lofar.java.gui.plotter.IPlotDataAccess
  */
 public class PlotterPrintException extends PlotterException{
     
     private String message;
     
     /** 
-     * Creates a new instance of PlotterDataAccessException, using the supplied message
+     * Creates a new instance of PlotterPrintException, using the supplied message
      * @param message A custom string to be added to the exception message
      */
     public PlotterPrintException(String message) {
