@@ -113,6 +113,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(50), VARCHAR(50))
 		vRecord		RECORD;
 
 	BEGIN
+--RAISE WARNING \'GVND:%,%,%\', $1, $2, $3;
 		SELECT nodeid
 		INTO   vNodeID
 	 	FROM   VICtemplate

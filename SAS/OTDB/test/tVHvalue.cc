@@ -190,13 +190,13 @@ int main (int	argc, char*	argv[]) {
 		TreeValue	tv(&conn, treeID);
 
 		LOG_INFO("Adding a kvt to the VH tree");
-		if (!tv.addKVT("Observation.Virt Backend.Storage[33].Capacity", "200", 
+		if (!tv.addKVT("TopNode.Observation.Virt Backend.Storage[33].Capacity", "200", 
 							time_from_string("2002-01-20 23:59:55.123"))) {
 			LOG_INFO("Could NOT add the key, key unknown?");
 		}
 
 		LOG_INFO("Adding a OTDBvalue class to the VH tree");
-		OTDBvalue	aKVT("Observation.Virt Backend.Storage[33].Capacity", "190", 
+		OTDBvalue	aKVT("TopNode.Observation.Virt Backend.Storage[33].Capacity", "190", 
 						 ptime(microsec_clock::local_time()));
 		if (!tv.addKVT(aKVT)) {
 			LOG_INFO("Could NOT add the OTDBvalue class");
@@ -242,8 +242,8 @@ int main (int	argc, char*	argv[]) {
 		ASSERTSTR(tv.addKVTparamSet(aPS), "Could NOT add the OTDBvalue class");
 		LOG_INFO("ParameterSet added, going to query it");
 
-		LOG_INFO ("Searching Node: Observation.Virt Telescope[4]%");
-		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "Observation.Virt Telescope[4]%");
+		LOG_INFO ("Searching Node: TopNode.Observation.Virt Telescope[4]%");
+		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "TopNode.Observation.Virt Telescope[4]%");
 		showNodeList(nodeList);
 
 		nodeIDType		nodeID = nodeList[0].nodeID();

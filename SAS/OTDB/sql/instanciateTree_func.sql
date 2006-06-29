@@ -25,6 +25,55 @@
 
 --
 -- helper function
+-- resolveVHparam(orgTreeID, paramreference)
+-- 
+-- Recursively follow the limits reference until a 'leaf' is reached.
+--
+-- Authorisation: none
+--
+-- Tables: 	VICtemplate		read
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
+  RETURNS TEXT AS '
+	DECLARE
+		vDotpos		INTEGER;
+		vNodeName	VARCHAR(200);
+		vParamName	VARCHAR(200);
+		vRemainder	VARCHAR(200);
+		vRecord		RECORD;
+
+	BEGIN
+--RAISE WARNING \'resolveVHparam(%,%)\', $1, $2;
+		vDotpos    := strpos($2, \'.\');
+		vNodeName  := substr($2, 3, vDotpos-3);
+		vParamName := substr($2, vDotpos+1);
+		vDotpos    := strpos(vParamName, \'.\');
+		IF vDotpos > 0 THEN
+		  vRemainder := substr(vParamName, vDotPos);
+		  vParamName := substr(vParamName, 1, vDotPos-1);
+		ELSE
+		  vRemainder := \'\';
+		END IF;
+--RAISE WARNING \'resolveVHparam: % : % : %\', vNodeName, vParamName, vRemainder;
+
+		SELECT	*
+		INTO	vRecord
+		FROM	getVICNodeDef ($1, vNodeName, vParamName);
+
+		IF vRemainder = \'\' THEN
+			RETURN	vRecord.limits;
+		ELSE
+			vRecord.limits := vRecord.limits || vRemainder;
+			RETURN	resolveVHparam($1, vRecord.limits);
+		END IF;
+	END;
+' LANGUAGE plpgsql;
+
+
+--
+-- helper function
 -- instanciateVHparams(orgNodeID, newTreeID, newNodeID, basename)
 -- 
 -- Gives the newNodeID in the newTreeID the same parameters as the orgNode.
@@ -44,14 +93,17 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
 
 	BEGIN
 	  FOR vParam IN 
-		SELECT	originID, name, limits
+		SELECT	treeID, originID, name, limits
 		FROM 	VICtemplate
 		WHERE	parentID = $1
 		AND		leaf = TRUE
 	  LOOP
+		IF isReference(vParam.limits) THEN
+		  vParam.limits := resolveVHparam(vParam.treeID, vParam.limits);
+		END IF;
 		INSERT 
 		INTO 	VIChierarchy(treeID, parentID, paramrefID, name, value)
-	    VALUES 	($2, $3, vParam.originID, $4 || vParam.name, vParam.limits);
+	    VALUES  ($2, $3, vParam.originID, $4 || vParam.name, vParam.limits);
 		-- note: nodeId, index and leaf are defaulted.
 	  END LOOP;
 	  RETURN;

@@ -45,6 +45,7 @@ CREATE OR REPLACE FUNCTION searchVHinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTA
 		vQuery		TEXT;
 
 	BEGIN
+--RAISE WARNING \'searchVH:%,%,%,%,%\', $1, $2, $3, $4, $5;
 	  -- Is topNode a node or a parameter?
 	  SELECT leaf, paramRefID, name
 	  INTO	 vLeaf, vParamRefID, vFullname
@@ -78,7 +79,7 @@ CREATE OR REPLACE FUNCTION searchVHinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTA
 						 || chr(39) || $4 || chr(39) 
 				   		 || \' AND \' || chr(39) || $5 || chr(39);
 	  END IF;
-
+--RAISE WARNING \'Query:%\', vQuery;
 	  -- get record in paramref table
 	  FOR vRecord IN EXECUTE \'
 	    SELECT h.nodeID,

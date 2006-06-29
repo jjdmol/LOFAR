@@ -148,7 +148,7 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 		return (resultVec);
 	}
 
-	LOG_TRACE_FLOW_STR("TV:addKVT(" << topNode << "," << depth << "," 
+	LOG_TRACE_FLOW_STR("TV:search(" << topNode << "," << depth << "," 
 									<< to_simple_string(beginDate) << ","
 									<< to_simple_string(endDate) << ","
 									<< toString(mostRecentOnly) << ")");

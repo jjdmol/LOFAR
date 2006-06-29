@@ -32,18 +32,8 @@
 -- Events and Actions
 \i create_event_action.sql
 
--- VICtemplate
-\i create_VIC_tables.sql
-\i hVICsearchParamID_func.sql
-\i getVICparamDef_func.sql
-\i dupVTnode_func.sql
-\i updateVTnode_func.sql
-\i deleteVTnode_func.sql
-\i getVTitemList_func.sql
-\i getVTchildren_func.sql
-\i instanciateTree_func.sql
-
 -- VICcomponent
+\i create_VIC_tables.sql
 \i saveVCnode_func.sql
 \i saveVICparamDef_func.sql
 \i getVICnodeDef_func.sql
@@ -53,6 +43,16 @@
 \i addComponentToVT_func.sql
 \i isTopComponent_func.sql
 \i deleteVCnode_func.sql
+
+-- VICtemplate
+\i hVICsearchParamID_func.sql
+\i getVICparamDef_func.sql
+\i dupVTnode_func.sql
+\i updateVTnode_func.sql
+\i deleteVTnode_func.sql
+\i getVTitemList_func.sql
+\i getVTchildren_func.sql
+\i instanciateTree_func.sql
 
 -- VIChierarchy
 \i getVHitemList_func.sql
