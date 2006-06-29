@@ -194,21 +194,9 @@ vector<VICnodeDef>	TreeMaintenance::getComponentList (
 	// note: namefragement has the syntax: [#]namefragment[{versionnr}][%]
 	//		 always strip off #
 	//		 always remove and convert versionnr
-	string		theName   (namefragment);
-
-	// get the versionnumber if any
-	uint32		theVersion(0);
-	string::size_type   start = theName.find_last_of('{');
-    if (start != string::npos) {
-		string::size_type   end = theName.find('}', start);
-		if (end != string::npos) {
-			theVersion = VersionNr(theName.substr(start+1,end-start));
-		}
-	}
-	// bring back namefragment to its base.
-	ltrim (theName, "#");
-	rtrim (theName, "%{}0123456789.");
-	if (*(namefragment.rbegin()) == '%') {
+	uint32		theVersion = getVersionNrFromName(namefragment);
+	string		theName    = cleanNodeName(namefragment);
+	if ((*(namefragment.rbegin()) == '%') && (*(theName.rbegin()) != '%')) {
 		theName.append("%");
 	}
 
