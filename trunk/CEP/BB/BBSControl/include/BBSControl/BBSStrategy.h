@@ -28,6 +28,10 @@
 
 //# Includes
 #include <APS/ParameterSet.h>
+#include <Common/lofar_iosfwd.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
@@ -42,33 +46,83 @@ namespace LOFAR
     class BBSStrategy
     {
     public:
+
       // Create a solve strategy for the given work domain.
-      BBSStrategy(const string& aName,
-		  const ACC::APS::ParameterSet& aParamSet);
+      BBSStrategy(const ACC::APS::ParameterSet& aParamSet);
 
       ~BBSStrategy();
 
-      // Add a BBS step to the solve strategy.
-      void addStep(const BBSStep*& aStep);
+      // Print the contents of \c this into the output stream \a os.
+      void print(ostream& os) const;
+
+//       // Add a BBS step to the solve strategy.
+//       void addStep(const BBSStep*& aStep);
 
     private:
-      // Name of this strategy.
-      string itsName;
 
-      // Parameter set.
-      // The parameter set contains information about:
-      // - the work domain size (bandwidth f(Hz), time interval t(s)).
-      // - the name(s) of the Measurement Set file(s).
-      // - the initial selection (e.g., should we include autocorrelation data)
-      // - where the BlackBoard database is located (ipaddr/port, etc.)
-      // - where the Parameter database is located; and, more specifically,
-      //   the name(s) of the ME parameter tables.
-      // - the names of the input and output columns in the Measurement Set
-      //   (if needed).
-      ACC::APS::ParameterSet itsParamSet;
+      // The relevant strategy parameters.
+      struct Parameters
+      {
+	string dataBase;	///< name of the parameter database 
+	string instrument;	///< Instrument parameters (MS table)
+	string localSky;	///< Local sky parameters (MS table)
+	string inData;		///< MS column containing the input data
+      };
+
+      // The work domain size is defined by two parameters: bandwidth f(Hz),
+      // and time interval t(s).
+      struct WorkDomainSize
+      {
+	WorkDomainSize() : bandWidth(0), timeInterval(0) {}
+	void print(ostream& os) const;
+	double bandWidth;	///< Bandwidth in Hz.
+	double timeInterval;	///< Time interval is seconds.
+      };
+
+      // Selection type of the correlation products.
+      struct Selection
+      {
+	enum Corr{
+	  ALL,                  ///< Both auto- and cross correlation
+	  CROSS,                ///< Cross correlation only.
+	  AUTO                  ///< Auto correlation only.
+	} corr;
+	Selection(Corr c = ALL) : corr(c) {}
+      };
+
+
+      // Information about the Blackboard database.
+      struct BBDB
+      {
+	BBDB() : port(0) {}
+	string host;          ///< Host name or IP address
+	uint16 port;          ///< Port number
+      };
 
       // Sequence of steps that comprise this solve strategy.
       vector<const BBSStep*> itsSteps;
+
+      // ID's of the stations to use
+      vector<uint32>         itsStations;
+
+      // The work domain size
+      WorkDomainSize         itsDomainSize;
+      
+      // Name of the Measurement Set
+      string                 itsDataSet;
+
+      // Selection type of the correlation products.
+      Selection              itsSelection;
+
+      // Host name of the BlackBoard DataBase.
+      BBDB                   itsBBDB;
+
+      // Write the contents of a BBSStrategy to an output stream.
+      friend ostream& operator<<(ostream&, const BBSStrategy&);
+      friend ostream& operator<<(ostream&, const BBSStrategy::WorkDomainSize&);
+      friend ostream& operator<<(ostream&, const BBSStrategy::Selection&);
+      friend ostream& operator<<(ostream&, const BBSStrategy::BBDB&);
+      
     };
 
     // @}

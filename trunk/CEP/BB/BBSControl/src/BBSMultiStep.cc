@@ -23,21 +23,38 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSMultiStep.h>
+#include <APS/ParameterSet.h>
+#include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h>
 
 namespace LOFAR
 {
+  using ACC::APS::ParameterSet;
+
   namespace BBS
   {
-
-    BBSMultiStep::BBSMultiStep(const string& aName, 
-			       const ACC::APS::ParameterSet& aParamSet) :
-      BBSStep(aName, aParamSet)
+    
+    BBSMultiStep::BBSMultiStep(const string& name,
+			       const ParameterSet& parset) :
+      BBSStep(name, parset)
     {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      // This multistep consists of the following steps.
+      vector<string> steps(parset.getStringVector("Step." + name + ".Steps"));
+
+      // Create a new step for each name in \a steps.
+      for (uint i = 0; i < steps.size(); ++i) {
+	itsSteps.push_back(BBSStep::create(steps[i], parset));
+      }
     }
 
 
     BBSMultiStep::~BBSMultiStep()
     {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      // Clean up all steps.
       for(uint i = 0; i < itsSteps.size(); ++i) {
 	delete itsSteps[i];
       }
@@ -45,10 +62,20 @@ namespace LOFAR
     }
 
 
-    void BBSMultiStep::addStep(const BBSStep*& aStep)
+    void BBSMultiStep::print(ostream& os) const
     {
-      itsSteps.push_back(aStep);
+      BBSStep::print(os);
+      Indent id;  // Add one indentation level
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+	itsSteps[i]->print(os);
+      }
     }
+
+
+//     void BBSMultiStep::addStep(const BBSStep*& aStep)
+//     {
+//       itsSteps.push_back(aStep);
+//     }
 
 
   } // namespace BBS

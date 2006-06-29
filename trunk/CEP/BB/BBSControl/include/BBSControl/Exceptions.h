@@ -1,4 +1,4 @@
-//#  BBSSingleStep.cc: 
+//#  Exceptions.h: definition of the BBSControl specific exception classes.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,36 +20,31 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
+#ifndef LOFAR_BBSCONTROL_EXCEPTIONS_H
+#define LOFAR_BBSCONTROL_EXCEPTIONS_H
 
-#include <BBSControl/BBSSingleStep.h>
-#include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+
+// \file
+// Definition of the BBSControl specific exception classes
+
+//# Includes
+#include <Common/Exception.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
+    // \addtogroup BBS
+    // @{
 
-    BBSSingleStep::BBSSingleStep(const string& name, 
-				 const ACC::APS::ParameterSet& parset) :
-      BBSStep(name, parset)
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    }
+    // This exception is thrown when an error occurs in the BBS control part.
+    EXCEPTION_CLASS(BBSControlException, LOFAR::Exception);
 
-    BBSSingleStep::~BBSSingleStep()
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    }
-
-    void BBSSingleStep::print(ostream& os) const
-    {
-      BBSStep::print(os);
-      Indent id;  // Add one indentation level
-    }
-
+    // @}
 
   } // namespace BBS
-
+  
 } // namespace LOFAR
+
+#endif

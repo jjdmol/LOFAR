@@ -43,11 +43,15 @@ namespace LOFAR
     class BBSSingleStep : public BBSStep
     {
     public:
-      BBSSingleStep(const string& aName,
-		    const ACC::APS::ParameterSet& aParamSet);
-		    
+      BBSSingleStep(const string& name,
+		    const ACC::APS::ParameterSet& parset);
+
+      virtual ~BBSSingleStep();
+
+      virtual void print(ostream& os) const;
+
     private:
-      string              itsName;
+
 //       DataSelection       itsDataSelection;
 //       vector<SourceGroup> itsSourceGroups;
     };

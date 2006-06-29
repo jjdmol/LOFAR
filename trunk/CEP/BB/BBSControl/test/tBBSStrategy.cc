@@ -1,4 +1,4 @@
-//#  BBSSingleStep.cc: 
+//#  tBBSStrategy.cc: test program for the BBSStrategy class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,35 +21,26 @@
 //#  $Id$
 
 #include <lofar_config.h>
-
-#include <BBSControl/BBSSingleStep.h>
+#include <BBSControl/BBSStrategy.h>
 #include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
 
-namespace LOFAR
+using namespace LOFAR;
+using namespace LOFAR::BBS;
+using namespace LOFAR::ACC::APS;
+
+int main()
 {
-  namespace BBS
-  {
+  INIT_LOGGER("tBBSStrategy");
 
-    BBSSingleStep::BBSSingleStep(const string& name, 
-				 const ACC::APS::ParameterSet& parset) :
-      BBSStep(name, parset)
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    }
+  try {
 
-    BBSSingleStep::~BBSSingleStep()
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    }
+    BBSStrategy strategy(ParameterSet("BBSControl.parset"));
+    cout << strategy;
 
-    void BBSSingleStep::print(ostream& os) const
-    {
-      BBSStep::print(os);
-      Indent id;  // Add one indentation level
-    }
+  } catch (LOFAR::Exception& e) {
+    LOG_FATAL_STR(e);
+    return 1;
+  }
 
-
-  } // namespace BBS
-
-} // namespace LOFAR
+  return 0;
+}

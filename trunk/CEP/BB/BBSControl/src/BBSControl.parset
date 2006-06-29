@@ -1,0 +1,48 @@
+Strategy.Steps           = ["xyz1", "xyz2"] # steps
+Strategy.Stations        = [ 0, 1, 2, 3 ]   # ID's of stations to use
+Strategy.DomainSize.Freq = 1e+6             # f(Hz) 
+Strategy.DomainSize.Time = 10               # t(s)
+
+Strategy.DataSet         = "test.ms"        # names of Measurement Sets
+Strategy.Selection       = ALL              # one of AUTO, CROSS, ALL
+Strategy.BBDB.Host       = "127.0.0.1"      # hostname/ipaddr of BB database
+Strategy.BBDB.Port       = 12345            # port used by BB database
+
+Strategy.ParamDB         = ""               # is now an AIPS++ table
+Stragety.Param.Instr     = "test.mep"       # instrument parameters (MS table)
+Strategy.Param.Sky       = "test.gsm"       # sky parameters (MS table)
+Strategy.Param.InData    = "INDATA"         # MS input data column 
+
+
+Step.xyz1.Steps          = ["sl1", "sl2"]
+Step.xyz1.Selection.Station1 = [0, 0, 0, 1, 1, 2] # baselines to use 
+Step.xyz1.Selection.Station2 = [0, 1, 2, 1, 2, 2] # (all if empty)
+Step.xyz1.Sources        = ["3C343"]        # list of sources
+
+Step.xyz2.Steps          = ["sl1", "sl3"]
+Step.xyz2.Selection.Station1 = [0, 0, 1]    # baselines to use
+Step.xyz2.Selection.Station2 = [0, 1, 1]    # (all if empty)
+Step.xyz2.Sources        = ["3C343"]        # sources in the source model
+
+Step.sl1.Selection.Station1 = [0, 1]        # baselines to use
+Step.sl1.Selection.Station2 = [1, 2]        # (all if empty)
+Step.sl1.Sources         = []               # list of sources
+Step.sl1.Operation       = SOLVE          \ # one of SOLVE, SUBTRACT, CORRECT,
+                                            # PREDICT, SHIFT, REFIT
+Step.sl1.WriteMode       = DEFERRED         # one of NONE, DEFERRED, IMMEDIATE
+Step.sl1.OutData         = "OUTDATA"        # MS output data column
+Step.sl1.Solve.MaxIter   = 10               # maximum number of iterations
+Step.sl1.Solve.Epsilon   = 1e-7             # convergence threshold
+Step.sl1.Solve.MinConverged = 0.95          # fraction that must have converged
+Step.sl1.Solve.Params    = [""]             # names of solvable parameters
+Step.sl1.Solve.ExclParams = [""]            # parameters excluded from solve
+Step.sl1.Solve.DomainSize= [ 1000,        \ # f(Hz)
+                             1     ]        # t(s)
+
+Step.sl2.Selection.Station1 = []            # baselines to use
+Step.sl2.Selection.Station2 = []            # (all if empty)
+Step.sl2.Sources         = []               # list of sources
+
+Step.sl3.Selection.Station1 = []            # baselines to use
+Step.sl3.Selection.Station2 = []            # (all if empty)
+Step.sl3.Sources         = []               # list of sources
