@@ -38,6 +38,49 @@ using namespace std;
 //   adddef parm4 type='parmexpr',expr='parm2*parm3'
 
 
+void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
+{
+  // Show all expressions.
+  const map<string,set<string> >& exprs = acc.getExprs();
+  cout << "Parm expressions: " << endl;
+  for (map<string,set<string> >::const_iterator iter=exprs.begin();
+       iter != exprs.end();
+       iter++) {
+    cout << "  " << iter->first << " using";
+    for (set<string>::const_iterator ch=iter->second.begin();
+	 ch != iter->second.end();
+	 ch++) {
+      cout << ' ' << *ch;
+    }
+    cout << endl;
+  }
+  // Now get the values of all parameters.
+  vector<string> names = acc.getNames(pattern);
+  cout << "Names: " << names << endl;
+  vector<double> rng = acc.getRange("*");
+  cout << "Range: " << rng << endl;
+  map<string,vector<double> > values = acc.getValues (pattern,
+						      rng[0], rng[1], nf,
+						      rng[2], rng[3], nt);
+  for (map<string,vector<double> >::const_iterator iter=values.begin();
+       iter != values.end();
+       iter++) {
+    cout <<iter->first << ' ' << iter->second << endl;
+  }
+}
+
+void showHistory (ParmFacade& acc, const string& pattern)
+{
+  map<string,vector<double> > values = acc.getHistory (pattern,
+						       0, 1e25,
+						       0, 1e25);
+  for (map<string,vector<double> >::const_iterator iter=values.begin();
+       iter != values.end();
+       iter++) {
+    cout <<iter->first << ' ' << iter->second << endl;
+  }
+}
+
 int main (int argc, const char* argv[])
 {
   try {
@@ -60,36 +103,14 @@ int main (int argc, const char* argv[])
       istringstream istr(argv[4]);
       istr >> nt;
     }
-    // Get values.
+    // Open the facade.
     ParmFacade acc(argv[1]);
-    {
-      const map<string,set<string> >& exprs = acc.getExprs();
-      cout << "Parm expressions: " << endl;
-      for (map<string,set<string> >::const_iterator iter=exprs.begin();
-	   iter != exprs.end();
-	   iter++) {
-	cout << "  " << iter->first << " using";
-	for (set<string>::const_iterator ch=iter->second.begin();
-	   ch != iter->second.end();
-	   ch++) {
-	  cout << ' ' << *ch;
-	}
-	cout << endl;
-      }
+    if (nf > 0) {
+      // Get values.
+      showValues (acc, pattern, nf, nt);
+    } else {
+      showHistory (acc, pattern);
     }
-    vector<string> names = acc.getNames(pattern);
-    cout << "Names: " << names << endl;
-    vector<double> rng = acc.getRange("*");
-    cout << "Range: " << rng << endl;
-    map<string,vector<double> > values = acc.getValues (pattern,
-							rng[0], rng[1], nf,
-    							rng[2], rng[3], nt);
-    for (map<string,vector<double> >::const_iterator iter=values.begin();
-	 iter != values.end();
-	 iter++) {
-      cout <<iter->first << ' ' << iter->second << endl;
-    }
-
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;
     return 1;
