@@ -50,6 +50,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterPrintException;
  */
 public class PlotPanel extends javax.swing.JPanel implements Printable{
     
+    static String name = "PlotPanel";
     private PlotController m_PlotController;
     private JComponent plot;
     private JComponent legend;
