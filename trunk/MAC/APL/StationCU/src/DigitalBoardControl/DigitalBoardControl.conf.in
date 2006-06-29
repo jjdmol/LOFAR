@@ -1,0 +1,9 @@
+# new setup
+prefix	=	LOFAR.PIC.Ring[1].Station[1].DigBoardCtrl.
+
+instanceNr		= 0
+
+# TODO: use sampleClock setting of PVSS
+sampleClock		= 160
+
+
