@@ -101,6 +101,7 @@ public:
   double              itsWeight;
   int            itsID;        //# ID if result of a refit
   int            itsParentID;  //# ID of refit result (in old parm records)
+  double         itsTimeStamp; //# solve time stamp
   int            itsDBTabRef;  //# Ref to table in database
                                //#   -3 = might be new record; no check partial
                                //#   -2 = might be new record; check on partial

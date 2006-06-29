@@ -229,6 +229,7 @@ void ParmDBAIPS::extractValues (map<string,ParmValueSet>& result,
   ROScalarColumn<double> weightCol (tab, "WEIGHT");
   ROScalarColumn<int> idCol (tab, "ID");
   ROScalarColumn<int> paridCol (tab, "PARENTID");
+  ROScalarColumn<double> timestampCol (tab, "TIMESTAMP");
   for (unsigned int i=0; i<tab.nrow(); i++) {
     ParmValue pvalue;
     ParmValueRep& pval = pvalue.rep();
@@ -256,9 +257,10 @@ void ParmDBAIPS::extractValues (map<string,ParmValueSet>& result,
     if (errCol.isDefined(i)) {
       pval.itsErrors = toVector(errCol(i));
     }
-    pval.itsWeight   = weightCol(i);
-    pval.itsID       = idCol(i);
-    pval.itsParentID = paridCol(i);
+    pval.itsWeight    = weightCol(i);
+    pval.itsID        = idCol(i);
+    pval.itsParentID  = paridCol(i);
+    pval.itsTimeStamp = timestampCol(i);
     // Set the row number as the Ref, so it can be used in the put.
     pval.itsDBTabRef = tabinx;           //# read from given table
     pval.itsDBRowRef = rownrs[i];
@@ -304,10 +306,14 @@ ParmValue ParmDBAIPS::extractDefValue (const Table& tab, int row)
   } else {
     result.setType (typeCol(row));
   }
-  result.itsExpr     = exprCol(row);
+  result.itsExpr      = exprCol(row);
   result.setPerturbation (pertCol(row), prelCol(row));
-  result.itsDBTabRef = -1;
-  result.itsDBSeqNr  = getParmDBSeqNr();
+  result.itsWeight    = 0;
+  result.itsID        = 0;
+  result.itsParentID  = 0;
+  result.itsTimeStamp = 0;
+  result.itsDBTabRef  = -1;
+  result.itsDBSeqNr   = getParmDBSeqNr();
   return pvalue;
 }
 

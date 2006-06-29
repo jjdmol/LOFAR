@@ -537,6 +537,8 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
   }
   // Set weight.
   pval.itsWeight = kvmap.getDouble ("weight", 1);
+  pval.itsID = kvmap.getInt ("id", 0);
+  pval.itsParentID = kvmap.getInt ("parentid", 0);
   showParm (parmName, pval, true);
   parmtab->putValue (parmName, pvalue);
   cout << "Wrote new record for parameter " << parmName << endl;
@@ -622,8 +624,8 @@ void updateParm (const string& parmName, ParmValue& pvalue,
   if (kvmap.isDefined("id")) {
     pval.itsID = kvmap.getInt ("id", 0);
   }
-  if (kvmap.isDefined("parentid")) {
-    pval.itsParentID = kvmap.getInt ("parentid", 0);
+  if (kvmap.isDefined("newparentid")) {
+    pval.itsParentID = kvmap.getInt ("newparentid", 0);
   }
   showParm (parmName, pval, true);
 }
@@ -741,14 +743,18 @@ void doIt (bool noPrompt)
 	cerr << "Error while reading command" << endl;
 	break;
       } 
-      if (cstr[0] == 0) {
-	break;
+      while (*cstr == ' ') {
+	cstr++;
+      }
+      // Skip empty lines and comment lines.
+      if (cstr[0] == 0  ||  cstr[0] == '#') {
+	continue;
       }
       if (cstr[0] == '?') {
 	showHelp();
       } else {
 	PTCommand cmd = getCommand (cstr);
-	ASSERTSTR(cmd!=NOCMD, "invalid command given");
+	ASSERTSTR(cmd!=NOCMD, "invalid command given: " << cstr);
 	if (cmd == QUIT) {
 	  break;
 	}
@@ -823,7 +829,8 @@ void doIt (bool noPrompt)
 		       cmd==TOOLD) {
 	      // Read the given parameters and domains.
 	      ParmDomain domain = getDomain(kvmap);
-	      int parentId = kvmap.getInt ("parentid", -1);
+	      int defaultParentId = (cmd==NEW ? 0 : -1);
+	      int parentId = kvmap.getInt ("parentid", defaultParentId);
 	      map<string,ParmValueSet> parmset;
 	      parmtab->getValues (parmset, parmName, domain, parentId);
 	      int nrparm = parmset.size();
