@@ -145,9 +145,9 @@ namespace ParmDB {
 
   // Get the parameter values for the given parameters and domain.
   map<string, vector<double> >
-    ParmFacade::getValues(const string& parmNamePattern,
-			  double startx, double endx, int nx,
-			  double starty, double endy, int ny)
+    ParmFacade::getValues (const string& parmNamePattern,
+			   double startx, double endx, int nx,
+			   double starty, double endy, int ny)
   {
     // Get all parm names.
     vector<string> names = getNames (parmNamePattern);
@@ -165,7 +165,8 @@ namespace ParmDB {
 							    &parmGroup,
 							    &itsPDB)));
     }
-    // Get the parm values.
+    // Get the parm values of parameters.
+    // All parameters are needed to deal with possible parmexpressions.
     map<string,ParmValueSet> parmValues;
     itsPDB.getValues (parmValues, vector<string>(),
 		      ParmDomain(startx, endx, starty, endy));
@@ -201,6 +202,114 @@ namespace ParmDB {
       }
     }
     return out;
+  }
+
+  // Get the parameter coefficients for the given parameters and domain.
+  map<string, vector<double> >
+    ParmFacade::getHistory (const string& parmNamePattern,
+			    double startx, double endx,
+			    double starty, double endy,
+			    double startSolveTime, double endSolveTime)
+  {
+    // Get parm values (all timestamps).
+    map<string,ParmValueSet> parmValues;
+    itsPDB.getValues (parmValues, parmNamePattern,
+		      ParmDomain(startx, endx, starty, endy),
+		      -1);
+    // The output is returned in a map.
+    map<string,vector<double> > out;
+    // Loop over all parameters and store coefficients in output map.
+    vector<ParmValue> vals;
+    for (map<string,ParmValueSet>::iterator iter = parmValues.begin();
+	 iter != parmValues.end();
+	 iter++) {
+      // Only take timestamps within time range.
+      const vector<ParmValue>& values = iter->second.getValues();
+      vals.clear();
+      vals.reserve (values.size());
+      uint maxNrAxes = 0;
+      for (vector<ParmValue>::const_iterator vit = values.begin();
+	   vit != values.end();
+	   vit++) {
+	if (vit->rep().itsTimeStamp >= startSolveTime  &&
+	    vit->rep().itsTimeStamp <= endSolveTime) {
+	  vals.push_back (*vit);
+	  if (vit->rep().itsDomain.getStart().size() > maxNrAxes) {
+	    maxNrAxes = vit->rep().itsDomain.getStart().size();
+	  }
+	}
+      }
+      if (vals.size() > 0) {
+	// Sort the values of a parm in order of domain and timestamp.
+	sort (vals.begin(), vals.end(), &pvLess);
+	// Collect the coefficients for each domain.
+	// First initialize variables for testing on dmain.
+	uint nrAxes = maxNrAxes+1;
+	vector<double> st;
+	vector<double> en;
+	st.reserve (maxNrAxes);
+	en.reserve (maxNrAxes);
+	vector<double> coeff;
+	string domainString;
+	int nDomain = 0;
+	// Loop over all values and test for a new domain.
+	for (vector<ParmValue>::const_iterator vit = vals.begin();
+	     vit != vals.end();
+	     vit++) {
+	  const ParmDomain& dom = vit->rep().itsDomain;
+	  bool newDomain = false;
+	  if (dom.getStart().size() != nrAxes) {
+	    newDomain = true;
+	  } else {
+	    for (uint i=0; i<dom.getStart().size(); ++i) {
+	      if (dom.getStart()[i] != st[i]  ||  dom.getEnd()[i] != en[i]) {
+		newDomain = true;
+		break;
+	      }
+	    }
+	  }
+	  if (newDomain) {
+	    // A new domain, so add the values to the map (except first time).
+	    if (nDomain > 0) {
+	      out[iter->first + domainString] = coeff;
+	    }
+	    // Reset everything.
+	    nDomain++;
+	    nrAxes = dom.getStart().size();
+	    ostringstream os;
+	    os << ":domain" << nDomain;
+	    domainString = os.str();
+	    st = dom.getStart();
+	    en = dom.getEnd();
+	    coeff.clear();
+	    coeff.push_back (vit->rep().itsCoeff.size());
+	  }
+	  // Append the coefficients to the vector.
+	  coeff.insert (coeff.end(),
+			vit->rep().itsCoeff.begin(),
+			vit->rep().itsCoeff.end());
+	}
+	// Store last domain.
+	out[iter->first + domainString] = coeff;
+      }
+    }
+    return out;
+  }
+
+  // Order parms on domain and timestamp.
+  bool ParmFacade::pvLess (const ParmValue& left, const ParmValue& right)
+  {
+    const ParmDomain& ldom = left.rep().itsDomain;
+    const ParmDomain& rdom = right.rep().itsDomain;
+    if (ldom.getStart().size() < rdom.getStart().size()) return true;
+    if (ldom.getStart().size() > rdom.getStart().size()) return false;
+    for (uint i=0; i<ldom.getStart().size(); ++i) {
+      if (ldom.getStart()[i] < rdom.getStart()[i]) return true;
+      if (ldom.getStart()[i] > rdom.getStart()[i]) return false;
+      if (ldom.getEnd()[i] < rdom.getEnd()[i]) return true;
+      if (ldom.getEnd()[i] > rdom.getEnd()[i]) return false;
+    }
+    return (left.rep().itsTimeStamp < right.rep().itsTimeStamp);
   }
 
 } // namespace ParmDB

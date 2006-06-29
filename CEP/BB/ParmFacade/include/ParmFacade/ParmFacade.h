@@ -1,4 +1,4 @@
-//# ParmFacade.h: Object access the parameter database
+//# ParmFacade.h: Data access the parameter database
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #define LOFAR_PARMFACADE_PARMFACADE_H
 
 // \file
-// Object to hold parameters in a table.
+// Data access the parameter database.
 
 //# Includes
 #include <ParmDB/ParmDB.h>
@@ -52,6 +52,8 @@ namespace ParmDB {
 //      of the domains of the parameters.
 // <li> getValues returns the values of the parameters a calculated on
 //      a grid given by the caller.
+// <li> getHistory returns the coefficients of parameters in a given
+//      time frame. It shows how a solution converges (or diverges).
 // </ul>
 //
 // The parameter names can be given as a pattern. This is the same as a
@@ -81,20 +83,40 @@ public:
   // Get the parameter values for the given parameters and domain.
   // The domain is given by the start and end values, while the grid is
   // given by nx and ny.
+  // The vector values in the map are in fact 2-dim arrays with axes nx and ny.
   std::map<std::string, std::vector<double> >
     getValues (const std::string& parmNamePattern,
 	       double startx, double endx, int nx,
 	       double starty, double endy, int ny);
+
+  // Get the parameter coefficients for the given given parameters and domain
+  // which have been solved in the given time frame. Default is the
+  // entire time frame.
+  // The vector values in the map are in fact 2-dim arrays with shape
+  // [ncoeff, nsolutions]. Because ncoeff and nsolutions are unknown,
+  // for the caller, ncoeff is put in the vector as the first value.
+  // The solutions are in order of timestamp.
+  // A parameter can have multiple solve domains, so a domain name
+  // (:domain<seqnr>) is added to the name to make it unique.
+  std::map<std::string, std::vector<double> >
+    getHistory (const std::string& parmNamePattern,
+		double startx, double endx,
+		double starty, double endy,
+		double startSolveTime=0, double endSolveTime=1e25);
 
   // Get the expressions and the names of their children.
   const std::map<std::string,std::set<std::string> >& getExprs() const
     { return itsExprs; }
 
 private:
-  // Process a parmexp and add the children names to the vector.
+  // Process a parmexpr and add the children names to the vector.
   // It is done recursively, so a child can be an expression.
   void processExpr (const std::map<std::string,ParmValueSet>& defValues, 
 		    const std::string& expr, std::set<std::string>& ch);
+
+  // Compare function for sorting ParmValues in time order.
+  static bool pvLess (const ParmValue& left, const ParmValue& right);
+
 
   ParmDB itsPDB;
   std::map<std::string,std::set<std::string> > itsExprs;
