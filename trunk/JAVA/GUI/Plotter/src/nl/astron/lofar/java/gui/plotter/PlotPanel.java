@@ -223,7 +223,7 @@ public class PlotPanel extends javax.swing.JPanel implements Printable{
      * Please handle this exception in a way that your application does not suffer from it, and make sure the user will be shown a message
      * that something has gone wrong.
      */
-    public HashMap getDataForPlot() throws PlotterException{
+    public HashMap<String,Object> getDataForPlot() throws PlotterException{
         return m_PlotController.getPlotData();
     }
     public int print(Graphics g, PageFormat pf, int pageIndex) {
