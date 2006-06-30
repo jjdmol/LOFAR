@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  CalTest.h: class definition for the CalTest program
+//#  beamctl.h: class definition for the beamctl program
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,73 +22,68 @@
 //#
 //#  $Id$
 
-#ifndef CALTEST_H_
-#define CALTEST_H_
+#ifndef BEAMCTL_H_
+#define BEAMCTL_H_
 
-#include <Suite/test.h>
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarTypes.h>
+#include <APL/RSP_Protocol/RCUSettings.h>
 
 namespace LOFAR
 {
-  namespace CAL
+  namespace BS
     {
 
-      class CalTest : public GCFTask, public Test
+      class beamctl : public GCFTask
 	{
 	public:
 	  /**
-	   * The constructor of the CalTest task.
+	   * The constructor of the beamctl task.
 	   * @param name The name of the task. The name is used for looking
 	   * up connection establishment information using the GTMNameService and
 	   * GTMTopologyService classes.
 	   */
-	  CalTest(string name, string arrayname, string parentname, int nantennas, int nyquistzone, uint32 rcucontrol, int subarrayid);
-	  virtual ~CalTest();
+	  beamctl(string name,
+		  string parent,
+		  const list<int>& rcus,
+		  RSP_Protocol::RCUSettings& rcumode,
+		  const BS_Protocol::Pointing& direction);
+	  virtual ~beamctl();
 
 	  // state methods
 
-	  /**
-	   * The initial and final state.
-	   */
 	  /*@{*/
+	  /**
+	   * The states.
+	   */
 	  GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+	  GCFEvent::TResult create_subarray(GCFEvent& e, GCFPortInterface &p);
+	  GCFEvent::TResult create_beam(GCFEvent& e, GCFPortInterface &p);
 	  GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
 	  /*@}*/
 
-	  /*@{*/
 	  /**
-	   * The test scenarios. Each state represents one test scenario.
-	   * Each successful test transitions to the next test state.
+	   * Return the seleted rcus as bitset<MAX_N_RCUS>
 	   */
-	  GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
-	  /*@}*/
+	  std::bitset<MAX_N_RCUS> getRCUMask() const;
 
-	  /**
-	   * Run the tests.
-	   */
-	  void run();
-
-	private:
-	  // member variables
+	  void mainloop();
 
 	private:
 	  // ports
-	  GCFPort m_server;
+	  GCFPort m_calserver;
+	  GCFPort m_beamserver;
 
-	  LOFAR::uint32 m_handle; // subscription handle
-	  int m_counter1; // general purpose test counter, semantics assigned per test
+	  // handles
+	  uint32 m_beamhandle;
 
-	  string  m_name;        // name of the current array
-	  string  m_arrayname;   // name of the new subarray
-	  string  m_parentname;  // name of the parent array of the subarray
-	  int     m_nantennas;   // number of antennas in the array
-	  int     m_nyquistzone; // nyquistzone of interest
-	  uint32  m_rcucontrol;  // value for RCU control register for RCU's of this subarray
-	  int     m_subarrayid;  // array 0 is full array, 1 is odd antennas (e.g. 1,3,5,etc), 2 is even antennas (e.g. 0,2,5,etc)
+	  string                     m_parent; // name of the full array
+	  list<int>                  m_rcus;   // selection of rcus
+	  RSP_Protocol::RCUSettings& m_rcumode;
+	  BS_Protocol::Pointing      m_direction;
 	};
 
     };
 };
      
-#endif /* CALTEST_H_ */
+#endif /* BEAMCTL_H_ */

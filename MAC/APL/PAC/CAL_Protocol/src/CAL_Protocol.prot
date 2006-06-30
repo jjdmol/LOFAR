@@ -66,8 +66,8 @@ event = {
       param = {
 	    // RCU control byte controls the setting of all
 	    // RCU's for this subarray
-	    name = "rcucontrol";
-	    type = "RSP_Protocol::RCUSettings::Control";
+	    name = "rcumode";
+	    type = "RSP_Protocol::RCUSettings";
       };
 };
 

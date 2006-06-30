@@ -17,13 +17,15 @@ SUFFIXES = .ph
 
 BUILT_SOURCES = \
 	BeamServer.conf \
-	BeamServer.log_prop
+	BeamServer.log_prop \
+	beamctl.conf
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
 sysconf_DATA = \
 	BeamServer.conf \
-	BeamServer.log_prop
+	BeamServer.log_prop \
+	beamctl.conf
 
 %.properties: %.properties.in
 	cp $< $@
@@ -46,7 +48,7 @@ libabsdevel_la_SOURCES = \
 	Beamlet.h \
 	Beamlet.cc
 
-bin_PROGRAMS = BeamServer
+bin_PROGRAMS = BeamServer beamctl
 
 BeamServer_SOURCES = \
 	BeamServer.h \
@@ -57,6 +59,10 @@ BeamServer_LDADD = \
 
 BeamServer_DEPEND = \
 	$(LOFAR_DEPEND)
+
+beamctl_SOURCES = \
+	beamctl.h \
+	beamctl.cc
 
 bin_SCRIPTS = \
 	beamserver

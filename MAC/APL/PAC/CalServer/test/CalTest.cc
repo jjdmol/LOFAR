@@ -46,9 +46,9 @@ using namespace CAL;
 using namespace RTC;
 using namespace CAL_Protocol;
 
-CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint32 rcucontrol, int subarrayid)
+CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int nyquistzone, uint32 rcucontrol, int subarrayid)
   : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0),
-    m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone), m_rcucontrol(rcucontrol), m_subarrayid(subarrayid)
+    m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_nyquistzone(nyquistzone), m_rcucontrol(rcucontrol), m_subarrayid(subarrayid)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
@@ -296,8 +296,8 @@ int main(int argc, char** argv)
   GCFTask::init(argc, argv);
 
   if (argc != 8) {
-    cerr << "usage: CalTest arrayname parentname nantennas samplingfrequency nyquistzone rcucontrol subarray=[0|1|2]" << endl;
-    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8         160000000        1        0x0000037A     0" << endl;
+    cerr << "usage: CalTest arrayname parentname nantennas nyquistzone rcucontrol subarray=[0|1|2]" << endl;
+    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8        1        0x0000037A     0" << endl;
     cerr << "(see AntennaArrays.conf for other configurations)" << endl;
     exit(EXIT_FAILURE);
   }
@@ -307,8 +307,9 @@ int main(int argc, char** argv)
   Suite s("RSPDriver Test driver", &cerr);
 
   int rcucontrol;
-  sscanf(argv[6], "%i", &rcucontrol);
-  s.addTest(new CalTest("CalTest", argv[1], argv[2], int(atof(argv[3])), atoi(argv[4]), atoi(argv[5]), rcucontrol, atoi(argv[7])));
+  sscanf(argv[5], "%i", &rcucontrol);
+  s.addTest(new CalTest("CalTest", argv[1], argv[2], int(atof(argv[3])),
+			atoi(argv[4]), rcucontrol, atoi(argv[6])));
   s.run();
   long nFail = s.report();
   s.free();

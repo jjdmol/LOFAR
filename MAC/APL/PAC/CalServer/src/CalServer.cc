@@ -274,7 +274,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	// get clock value and convert to MHz
 	m_sampling_frequency = getclockack.clock * (uint32)1.0e6;
 
-	LOG_DEBUG_STR("Initial sampling frequency: " << m_sampling_frequency);
+	LOG_INFO_STR("Initial sampling frequency: " << m_sampling_frequency);
 
 	// subscribe to clock change updates
 	RSPSubclockEvent subclock;
@@ -356,11 +356,10 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
       {
 	RSPUpdclockEvent updclock(e);
 
-	// all clock values should be the same
-	// simply take first value as value
+	// use new sampling frequency
 	m_sampling_frequency = updclock.clock * (uint32)1.0e6;
 
-	LOG_DEBUG_STR("New sampling frequency: " << m_sampling_frequency);
+	LOG_INFO_STR("New sampling frequency: " << m_sampling_frequency);
       }
       break;
 
