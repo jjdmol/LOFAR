@@ -50,7 +50,7 @@ import org.apache.log4j.Logger;
 /**
  * This class visually represents the collection of PlotSlots available from the<br>
  * PlotSlotManager. On top of that the user of this panel can perform standard operations <br>
- * and operations needed in the LOFAR BBS/ParmBD Plotter system
+ * and operations needed in the LOFAR BBS/ParmDB Plotter system
  *
  * @version $Id$
  * @created May 29, 2006, 14:12
@@ -107,6 +107,7 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
      * @operation A string representation of the operation that should be passed to the LOFAR Plotter framework.
      * @throws IllegalArgumentException is thrown if a plot is not found in the PlotSlot specified.
      */
+    @SuppressWarnings("unchecked")
     public void alterDataInPlot(int slotIndex,Object constraints, String operation) throws IllegalArgumentException{
         if(itsSlotManager.isSlotOccupied(slotIndex)){
             double offset = itsSlotManager.getSlot(slotIndex).getOffset();
