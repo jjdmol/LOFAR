@@ -115,5 +115,10 @@ MNS/MeqStation.cc \
 MNS/MeqStatUVW.cc \
 MNS/MeqTabular.cc 
 
+bin_PROGRAMS = BBSrun
+
+BBSrun_SOURCES = BBSrun.cc
+BBSrun_LDADD = libbbs.la
+BBSrun_DEPENDENCIES = libbbs.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
