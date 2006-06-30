@@ -42,6 +42,39 @@ const uint32 RCUSettings::Control::m_mode[] = {
   0x00078400, // MODE_HB_210_290MHZ
 };
 
+int RCUSettings::Control::getNyquistZone() const
+{
+  int retval = 0; // default, means undeterminted
+
+  // find the mode
+  int modeindex = 0;
+  for (modeindex = MODE_LBL_HPF10MHZ; modeindex <= MODE_HB_210_290MHZ; modeindex++) {
+    if ((m_value & MODE_MASK) == m_mode[modeindex]) break;
+  }
+  if (modeindex <= MODE_HB_210_290MHZ) {
+    switch (modeindex) {
+    case MODE_OFF:
+    case MODE_LBL_HPF10MHZ:
+    case MODE_LBL_HPF30MHZ:
+    case MODE_LBH_HPF10MHZ:
+    case MODE_LBH_HPF30MHZ:
+      retval = 1;
+      break;
+    case MODE_HB_110_190MHZ:
+      retval = 2;
+      break;
+    case MODE_HB_170_230MHZ:
+    case MODE_HB_210_290MHZ:
+      retval = 3;
+      break;
+    default: retval = 0;
+      break;
+    }
+  }
+
+  return retval;
+}
+
 unsigned int RCUSettings::getSize()
 {
   return MSH_ARRAY_SIZE(m_registers, RCUSettings::Control);

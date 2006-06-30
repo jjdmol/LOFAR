@@ -79,6 +79,16 @@ namespace LOFAR {
 	}
 
 	/**
+	 * Return the number of the Nyquist zone for the
+	 * current receiver setting.
+	 * 0 = indeterminate
+	 * 1 = Nyquist zone I
+	 * 2 = Nyquist zone II
+	 * 3 = Nyquist zone III
+	 */
+	int getNyquistZone() const;
+
+	/**
 	 * Set the raw control bytes of a RCU
 	 * Each RCU has 4 bytes:
 	 *    mask      meaning    explanation
