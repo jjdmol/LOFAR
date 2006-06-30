@@ -57,7 +57,7 @@ public interface IPlotDataAccess{
      * @throws PlotterDataAccessException will be thrown if the dataset could not
      * be generated for any reason, like database exceptions, file errors, etc.
      */
-    public HashMap updateData(HashMap currentDataSet, Object constraints) throws PlotterDataAccessException;
+    public HashMap updateData(HashMap<String,Object> currentDataSet, Object constraints) throws PlotterDataAccessException;
     
 }
 

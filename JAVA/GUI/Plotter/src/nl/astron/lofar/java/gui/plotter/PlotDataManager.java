@@ -91,13 +91,13 @@ public class PlotDataManager{
      * inside the Data Access class, or when the Data Access class itself could not
      * be properly accessed due to errors in the plotter_config.properties file.
      */
-    public HashMap retrieveData(Object constraints) throws PlotterException{
+    public HashMap<String,Object> retrieveData(Object constraints) throws PlotterException{
         if(aDataAccessor == null){
             initializeDataAccessLayer();
         }        
         if(aDataAccessor != null){
             
-            HashMap retrieveableData =
+            HashMap<String,Object> retrieveableData =
                     aDataAccessor.retrieveData(constraints);
             
             return retrieveableData;
@@ -120,16 +120,14 @@ public class PlotDataManager{
      * inside the Data Access class, or when the Data Access class itself could not
      * be properly accessed due to errors in the plotter_config.properties file.
      */
-    public HashMap updateData(HashMap currentData, Object constraints) throws PlotterException{
+    public HashMap<String,Object> updateData(HashMap<String,Object> currentData, Object constraints) throws PlotterException{
         if(aDataAccessor == null){
             initializeDataAccessLayer();
         }        
         if(aDataAccessor != null){
             
-            HashMap retrieveableData =
-                    aDataAccessor.updateData(currentData, constraints);
-            
-            return retrieveableData;
+            return aDataAccessor.updateData(currentData, constraints);
+        
         }
         return null;
     }
@@ -145,7 +143,7 @@ public class PlotDataManager{
      * inside the Data Export class, or when the Data Export class itself could not
      * be properly accessed due to errors in the plotter_config.properties file.
      */
-    public void exportData(Object exportParams, HashMap data) throws PlotterException{
+    public void exportData(Object exportParams, HashMap<String,Object> data) throws PlotterException{
         throw new NotImplementedException("Export of data is not yet implemented in this release.");
     }
     /**

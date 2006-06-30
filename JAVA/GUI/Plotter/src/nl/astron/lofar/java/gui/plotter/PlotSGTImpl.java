@@ -89,7 +89,7 @@ import nl.astron.lofar.java.gui.plotter.exceptions.PlotterException;
  */
 public class PlotSGTImpl implements IPlot{
     
-    private HashMap data;
+    private HashMap<String,Object> data;
     private JPlotLayout aLayout;
     private LineAttributeDialog lad;
     private plotMouseAdapter pma;
@@ -121,7 +121,8 @@ public class PlotSGTImpl implements IPlot{
      * @return the JComponent plot with the new dataset embedded.
      * @throws PlotterException will be thrown if the plot could not be generated for any reason.
      */
-    public JComponent modifyPlot(JComponent aPlot, HashMap data) throws PlotterException{
+    @SuppressWarnings("unchecked")
+    public JComponent modifyPlot(JComponent aPlot, HashMap<String,Object> data) throws PlotterException{
         
         JPlotLayout aNewPlot = (JPlotLayout)aPlot;
         
@@ -131,17 +132,15 @@ public class PlotSGTImpl implements IPlot{
             String xAxisUnits = (String)data.get(PlotConstants.DATASET_XAXISUNIT);
             String yAxisTitle = (String)data.get(PlotConstants.DATASET_YAXISLABEL);
             String yAxisUnits = (String)data.get(PlotConstants.DATASET_YAXISUNIT);
-           
-            LinkedList<HashMap> values = (LinkedList<HashMap>)data.get(PlotConstants.DATASET_VALUES);
+            
+            LinkedList<HashMap<String,Object>> values = (LinkedList<HashMap<String,Object>>)data.get(PlotConstants.DATASET_VALUES);
             //Loop through X and Y Value data
             //System.out.println("Updating plot "+aNewPlot.getId()+": Old size :"+aNewPlot.getData().size()+" New Size: "+values.size());
             if(values != null && values.size()>= 0){
-                 
+                
                 if(values.size() >= aNewPlot.getData().size()){
-                    
-                    Iterator linesIterator = values.iterator();
-                    //Loop through all XY pairs
-                    while(linesIterator.hasNext()){
+                    //loop through all line values
+                    for (HashMap<String,Object> line : values){
                         
                         double[] xArray = null;
                         double[] yArray = null;
@@ -157,12 +156,9 @@ public class PlotSGTImpl implements IPlot{
                                 false,
                                 false);
                         String lineLabel = "Unknown value";
-                        HashMap line = (HashMap)linesIterator.next();
-                        Iterator lineIterator = line.keySet().iterator();
                         
                         //Retrieve XY pair label and xy values
-                        while(lineIterator.hasNext()){
-                            String key = (String)lineIterator.next();
+                        for(String key : line.keySet()){
                             if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
                                 lineLabel = (String)line.get(key);
                                 
@@ -192,6 +188,7 @@ public class PlotSGTImpl implements IPlot{
                         }
                     }
                     Collection presentData = aNewPlot.getData();
+                    
                     Iterator cleanIterator = presentData.iterator();
                     while(cleanIterator.hasNext()){
                         boolean presentInUpdatedData = false;
@@ -219,10 +216,9 @@ public class PlotSGTImpl implements IPlot{
                     while(anIterator.hasNext()){
                         SGTData someData = (SGTData)anIterator.next();
                         boolean presentInNewData = false;
-                        Iterator linesIterator = values.iterator();
+                        
                         //Loop through all XY pairs
-                        while(linesIterator.hasNext()){
-                            HashMap line = (HashMap)linesIterator.next();
+                        for(HashMap<String,Object> line : values){
                             String valueLabel = (String)line.get(PlotConstants.DATASET_VALUELABEL);
                             if(valueLabel.equalsIgnoreCase(someData.getId())){
                                 presentInNewData = true;
@@ -263,7 +259,7 @@ public class PlotSGTImpl implements IPlot{
      * @return the JComponent plot generated
      * @throws PlotterException will be thrown if the plot could not be generated for any reason.
      */
-    public JComponent createPlot(int type, String name, HashMap data, boolean separateLegend) throws PlotterException{
+    public JComponent createPlot(int type, String name, HashMap<String,Object> data, boolean separateLegend) throws PlotterException{
         
         JPlotLayout aNewPlot = null;
         
@@ -300,7 +296,8 @@ public class PlotSGTImpl implements IPlot{
      * @return the JPlotLayout plot generated
      * @throws PlotterException will be thrown if the plot could not be generated for any reason.
      */
-    private JPlotLayout linePlot(String name, HashMap data, boolean separateLegend, boolean showPointsOnly) throws PlotterException{
+    @SuppressWarnings("unchecked")
+    private JPlotLayout linePlot(String name, HashMap<String,Object> data, boolean separateLegend, boolean showPointsOnly) throws PlotterException{
         JPlotLayout layout = new JPlotLayout(JPlotLayout.LINE, false, false,
                 name,null,separateLegend);
         
@@ -328,9 +325,8 @@ public class PlotSGTImpl implements IPlot{
             
             //Loop through Metadata and pointers to XY values
             if(data != null && data.keySet().size()>0){
-                Iterator it = data.keySet().iterator();
-                while(it.hasNext()){
-                    String key = (String)it.next();
+                
+                for(String key : data.keySet()){
                     if(key.equalsIgnoreCase(PlotConstants.DATASET_NAME)){
                         plotTitle = (String)data.get(key);
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_SUBNAME)){
@@ -424,10 +420,8 @@ public class PlotSGTImpl implements IPlot{
                 //Loop through X and Y Value data
                 if(values != null && values.size()> 0){
                     
-                    Iterator linesIterator = values.iterator();
                     //Loop through all XY pairs
-                    while(linesIterator.hasNext()){
-                        
+                    for(HashMap<String,Object> line : values){
                         double[] xArray = null;
                         double[] yArray = null;
                         GeoDate[] xArrayDate = null;
@@ -442,12 +436,9 @@ public class PlotSGTImpl implements IPlot{
                                 false,
                                 false);
                         String lineLabel = "Unknown value";
-                        HashMap line = (HashMap)linesIterator.next();
-                        Iterator lineIterator = line.keySet().iterator();
                         
                         //Retrieve XY pair label and xy values
-                        while(lineIterator.hasNext()){
-                            String key = (String)lineIterator.next();
+                        for(String key : line.keySet()){
                             if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
                                 lineLabel = (String)line.get(key);
                                 
@@ -528,7 +519,8 @@ public class PlotSGTImpl implements IPlot{
      * @return the JPlotLayout plot generated
      * @throws PlotterException will be thrown if the plot could not be generated for any reason.
      */
-    private JPlotLayout gridPlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
+    @SuppressWarnings("unchecked")
+    private JPlotLayout gridPlot(String name, HashMap<String,Object> data, boolean separateLegend) throws PlotterException{
         
         
         JPlotLayout layout = new JPlotLayout(JPlotLayout.GRID, false, false,
@@ -552,13 +544,11 @@ public class PlotSGTImpl implements IPlot{
             String zAxisTitle = "Z";
             String zAxisUnits = "no unit specified";
             
-            LinkedList<HashMap> values = new LinkedList<HashMap>();
+            LinkedList<HashMap<String,Object>> values = new LinkedList<HashMap<String,Object>>();
             
             //Loop through Metadata and pointers to XYZ values
             if(data != null && data.keySet().size()>0){
-                Iterator it = data.keySet().iterator();
-                while(it.hasNext()){
-                    String key = (String)it.next();
+                for(String key : data.keySet()){
                     if(key.equalsIgnoreCase(PlotConstants.DATASET_NAME)){
                         plotTitle = (String)data.get(key);
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_SUBNAME)){
@@ -576,7 +566,7 @@ public class PlotSGTImpl implements IPlot{
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_ZAXISUNIT)){
                         zAxisUnits = (String)data.get(key);
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
-                        values = (LinkedList<HashMap>)data.get(key);
+                        values = (LinkedList<HashMap<String,Object>>)data.get(key);
                     }else{
                         throw new InvalidDataSetException("(Metadata was found that is not supported for a Grid Plot: "+key.toString()+")");
                     }
@@ -587,11 +577,10 @@ public class PlotSGTImpl implements IPlot{
                 
                 //Loop through XYZ Value data
                 if(values != null && values.size()> 0){
-                    
-                    Iterator linesIterator = values.iterator();
-                    //Loop through all XY pairs
                     int lineNumber = 0;
-                    while(linesIterator.hasNext()){
+                    for(HashMap<String,Object> grid : values){
+                        //Loop through all XY pairs
+                        
                         lineNumber++;
                         double[] xArray = null;
                         double[] yArray = null;
@@ -613,15 +602,11 @@ public class PlotSGTImpl implements IPlot{
                                 false);
                         
                         String lineLabel = "Unspecified value "+ lineNumber;
-                        HashMap grid = (HashMap)linesIterator.next();
-                        Iterator lineIterator = grid.keySet().iterator();
                         
                         //Retrieve XYZ pair label and xyz values
-                        while(lineIterator.hasNext()){
-                            String key = (String)lineIterator.next();
+                        for(String key : grid.keySet()){
                             if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUELABEL)){
                                 lineLabel = (String)grid.get(key);
-                                
                             } else if(key.equalsIgnoreCase(PlotConstants.DATASET_XVALUES)){
                                 xArray = (double[])grid.get(key);
                             } else if(key.equalsIgnoreCase(PlotConstants.DATASET_YVALUES)){
@@ -665,21 +650,21 @@ public class PlotSGTImpl implements IPlot{
      * @return the JPlotLayout plot generated
      * @throws PlotterException will be thrown if the plot could not be generated for any reason.
      */
-    private JPlotLayout scatterPlot(String name, HashMap data, boolean separateLegend) throws PlotterException{
+    private JPlotLayout scatterPlot(String name, HashMap<String,Object> data, boolean separateLegend) throws PlotterException{
         throw new NotImplementedException("Scatter plots are not yet implemented in the plotter's SGT plugin.");
     }
     /**
      * Returns the current dataset used in the plot
      * @return the dataset currently in use.
      */
-    public HashMap getData(){
+    public HashMap<String,Object> getData(){
         return data;
     }
     /**
      * Sets the dataset used in the plot
      * @param newData A new set of data
      */
-    public void setData(HashMap newData){
+    public void setData(HashMap<String,Object> newData){
         if(newData!=null){
             this.data = newData;
         }
@@ -690,6 +675,7 @@ public class PlotSGTImpl implements IPlot{
      * @return A legend JComponent of plot aPlot
      * @throws PlotterException will be thrown if the legend could not be generated for the given SGT plot.
      */
+    @SuppressWarnings("unchecked")
     public JComponent getLegend(JComponent aPlot) throws PlotterException{
         JPlotLayout parentPlot = null;
         JPane keyPane = null;
@@ -737,6 +723,7 @@ public class PlotSGTImpl implements IPlot{
          * in the legend of a SGT plot.
          * @param e the event being fired
          */
+        @SuppressWarnings("unchecked")
         public void mouseReleased(MouseEvent e){
             Object object = e.getSource();
             if(object == aLayout.getKeyPane()){
@@ -767,7 +754,7 @@ public class PlotSGTImpl implements IPlot{
                     aLayout.setSelectedObject(obj);
                     if(obj instanceof LineCartesianRenderer){
                         SGTData data = aLayout.getData((LineCartesianRenderer)obj);
-                    
+                        
                         LineAttribute attr = ((LineCartesianRenderer)obj).getLineAttribute();
                         if(lad == null){
                             lad = new LineAttributeDialog();

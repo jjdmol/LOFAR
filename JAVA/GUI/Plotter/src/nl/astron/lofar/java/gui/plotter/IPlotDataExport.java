@@ -45,7 +45,7 @@ public interface IPlotDataExport{
      * be exported for any reason, like database exceptions, file errors, etc. 
      * (This exception will be migrated to a more specific PlotterDataExportException)
      */
-    public void exportData(Object params, HashMap data) throws PlotterException;
+    public void exportData(Object params, HashMap<String,Object> data) throws PlotterException;
     
 }
 

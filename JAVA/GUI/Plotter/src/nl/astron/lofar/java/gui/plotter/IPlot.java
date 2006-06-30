@@ -48,7 +48,7 @@ public interface IPlot{
          * @return the JComponent plot generated
          * @throws PlotterException will be thrown if the plot could not be generated for any reason.
 	 */
-	public JComponent createPlot(int type, String name, HashMap data, boolean separateLegend) throws PlotterException;
+	public JComponent createPlot(int type, String name, HashMap<String,Object> data, boolean separateLegend) throws PlotterException;
         
         /**
          * Modifies a given plot using a given dataset.
@@ -58,7 +58,7 @@ public interface IPlot{
          * @return the JComponent plot with the new dataset embedded.
          * @throws PlotterException will be thrown if the plot could not be generated for any reason.
 	 */
-	public JComponent modifyPlot(JComponent aPlot, HashMap data) throws PlotterException;
+	public JComponent modifyPlot(JComponent aPlot, HashMap<String,Object> data) throws PlotterException;
         
         /**
 	 * Returns the current dataset used in the plot
@@ -69,7 +69,7 @@ public interface IPlot{
          * Sets the dataset used in the plot 
          * @param newData A new set of data
 	 */
-        public void setData(HashMap newData);
+        public void setData(HashMap<String,Object> newData);
         /**
          * Create a legend/key using the plot specified.
          * @param aPlot A plot JComponent
