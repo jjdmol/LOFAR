@@ -54,7 +54,7 @@ lofar_GENERAL
 dnl lofar_BLITZ
 dnl lofar_MPI
 lofar_INTERNAL(LCS/Common, common, , 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(LCS/AMC/AMCBase, AMCBase, , 1, AMCBase/EarthCoord.h,,)
+lofar_INTERNAL(LCS/AMC/AMCBase, AMCBase, , 1, AMCBase/Converter.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, , 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, , 1, GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, , 1, APL/RTCCommon/Marshalling.h,,)
