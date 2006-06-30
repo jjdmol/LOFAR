@@ -61,7 +61,7 @@ public class PlotDataModel implements IPlotDataAccess {
     /**
      * @param constraints
      */
-    public HashMap retrieveData(Object constraints) throws PlotterDataAccessException {
+    public HashMap<String,Object> retrieveData(Object constraints) throws PlotterDataAccessException {
         /*
          * Change constraints to a usefull hashmap.
          */
@@ -85,7 +85,7 @@ public class PlotDataModel implements IPlotDataAccess {
         }        
     }
     
-    public HashMap retrieveDataSubband(double[] data) {
+    public HashMap<String,Object> retrieveDataSubband(double[] data) {
         // Create the hashmap to be returned
         HashMap<String,Object> returnData = new HashMap<String,Object>();
         
@@ -96,16 +96,16 @@ public class PlotDataModel implements IPlotDataAccess {
         
         String xAxisTitle = "Frequency";
         returnData.put(PlotConstants.DATASET_XAXISLABEL,xAxisTitle);
-        String xAxisUnits = "MHz";
+        String xAxisUnits = "(MHz)";
         returnData.put(PlotConstants.DATASET_XAXISUNIT,xAxisUnits);
         
         String yAxisTitle = "";
         returnData.put(PlotConstants.DATASET_YAXISLABEL,yAxisTitle);
         
-        String yAxisUnits = "dB";
+        String yAxisUnits = "(dB)";
         returnData.put(PlotConstants.DATASET_YAXISUNIT,yAxisUnits);
         
-        LinkedList<HashMap> values = new LinkedList<HashMap>();
+        LinkedList<HashMap<String,Object>> values = new LinkedList<HashMap<String,Object>>();
         
         if (data != null && data.length > 0) {
                     /*
@@ -135,7 +135,7 @@ public class PlotDataModel implements IPlotDataAccess {
         return returnData;
     }
     
-    public HashMap retrieveDataBeamlet(double[] data) {
+    public HashMap<String,Object> retrieveDataBeamlet(double[] data) {
         // Create the hashmap to be returned
         HashMap<String,Object> returnData = new HashMap<String,Object>();
         
@@ -155,7 +155,7 @@ public class PlotDataModel implements IPlotDataAccess {
         String yAxisUnits = "dB";
         returnData.put(PlotConstants.DATASET_YAXISUNIT,yAxisUnits);
         
-        LinkedList<HashMap> values = new LinkedList<HashMap>();
+        LinkedList<HashMap<String,Object>> values = new LinkedList<HashMap<String,Object>>();
         
         if (data != null && data.length > 0) {
             /*
@@ -180,7 +180,7 @@ public class PlotDataModel implements IPlotDataAccess {
         return returnData;
     }
     
-    public HashMap retrieveDataEmpty() {
+    public HashMap<String,Object> retrieveDataEmpty() {
         // Create the hashmap to be returned
         HashMap<String,Object> returnData = new HashMap<String,Object>();
         
@@ -206,7 +206,7 @@ public class PlotDataModel implements IPlotDataAccess {
     }
     
 
-    public HashMap updateData(HashMap currentDataSet, Object constraints) throws PlotterDataAccessException {
+    public HashMap<String,Object> updateData(HashMap<String,Object> currentDataSet, Object constraints) throws PlotterDataAccessException {
         return null;
     }
 }
