@@ -39,9 +39,9 @@ typedef dcomplex CalcType;   // data type used for calculations
 //typedef fcomplex CalcType;   // data type used for calculations
 //#define MAKECALCTYPE(re,im) makefcomplex(float(re),float(im))
 
-//typedef dcomplex VisType;    // data type of the data.
+typedef dcomplex VisType;    // data type of the data.
 //#define MAKEVISTYPE(re,im) makedcomplex(double(re),double(im))
-typedef fcomplex VisType;    // data type of the data.
+//typedef fcomplex VisType;    // data type of the data.
 #define MAKEVISTYPE(re,im) makefcomplex(float(re),float(im))
 
 const int ncorr = 4;
