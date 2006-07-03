@@ -36,8 +36,8 @@ TH_File::TH_File():
   itsOutFile(NULL)
 {
   LOG_TRACE_FLOW("TH_File default constructor");
-  sprintf(itsSeparator,"SEPARATOR");
-  itsSepLen = strlen(itsSeparator);
+  sprintf(itsSeparator,"TH_FILE");
+  itsSepLen = strlen(itsSeparator) + 1;
 }
 
 TH_File::TH_File(string aFileName,
@@ -48,8 +48,8 @@ TH_File::TH_File(string aFileName,
   itsOutFile(NULL)
 { 
   LOG_TRACE_FLOW("TH_File constructor"); 
-  sprintf(itsSeparator,"SEPARATOR");
-  itsSepLen = strlen(itsSeparator);
+  sprintf(itsSeparator,"TH_FILE");
+  itsSepLen = strlen(itsSeparator) + 1;
 }
 
 TH_File::~TH_File()
