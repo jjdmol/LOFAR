@@ -37,14 +37,14 @@ void doTest (int nx, int ny)
   dcomplex v0 = makedcomplex(0.5,0.3);
   dcomplex fact = makedcomplex(0.9,0.95);
   for (int i=0; i<ny; ++i) {
-    arr.fillRowWithProducts (v0+i, fact*(0.1+i/10.), i);
+    arr.fillRowWithProducts (v0+double(i), fact*(0.1+i/10.), i);
   }
   cout << arr << endl;
   double* realp;
   double* imagp;
   arr.dcomplexStorage (realp, imagp);
   for (int i=0; i<ny; ++i) {
-    dcomplex v = v0+i;
+    dcomplex v = v0+double(i);
     dcomplex f = fact*(0.1+i/10.);
     for (int j=0; j<nx; ++j) {
       ASSERTSTR (casa::near(real(v),*realp) && casa::near(imag(v),*imagp),
