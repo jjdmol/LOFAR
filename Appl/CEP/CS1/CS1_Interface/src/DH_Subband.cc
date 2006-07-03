@@ -51,10 +51,10 @@ DH_Subband::DH_Subband(const DH_Subband &that)
   : DataHolder(that),
     itsNrStations(that.itsNrStations),
     itsNrInputSamples(that.itsNrInputSamples),
-    itsSamples(that.itsSamples),
-    itsSamplesMatrix(that.itsSamplesMatrix),
-    itsFlags(that.itsFlags),
-    itsDelays(that.itsDelays)
+    itsSamples(0),
+    itsSamplesMatrix(0),
+    itsFlags(0),
+    itsDelays(0)
 {
 #if defined SPARSE_FLAGS
   setExtraBlob("Flags", 0);
