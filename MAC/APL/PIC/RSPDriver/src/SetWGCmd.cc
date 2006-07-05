@@ -68,10 +68,6 @@ void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
       cache.getWGSettings()()(cache_rcu) = m_event->settings()(0);
 
       if (setModFlag) {
-#if 0
-	// reset BS if needed
-	cache.getCache().getState().bs().write(cache_rcu / MEPHeader::N_POL);
-#endif
 	cache.getCache().getState().diagwgsettings().write(cache_rcu);
       }
     }
