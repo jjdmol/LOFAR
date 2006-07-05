@@ -154,8 +154,10 @@ string	stationTypeStr()
 //	@ring@
 //	@arm@
 //	@station@
+//  @instance@
 //
-string	createPropertySetName(const string&		propSetMask)
+string	createPropertySetName(const string&		propSetMask,
+							  uint16			instanceNr)
 {
 	string	psName(propSetMask);		// editable copy
 	uint	pos;
@@ -168,6 +170,15 @@ string	createPropertySetName(const string&		propSetMask)
 	if ((pos = psName.find("@station@")) != string::npos) {
 		psName.replace(pos, 9, myHostname(false));
 	}
+	if ((pos = psName.find("@instance@")) != string::npos) {
+		if (instanceNr) {
+			psName.replace(pos, 10, lexical_cast<string>(instanceNr));
+		}
+		else {
+			psName.replace(pos, 10, "");	
+		}
+	}
+		
 	return (psName);
 }
 
