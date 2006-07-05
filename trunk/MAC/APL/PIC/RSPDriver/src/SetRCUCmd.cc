@@ -73,9 +73,6 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 
       if (setModFlag) {
 
-	// reset BS if needed
-	cache.getCache().getState().bs().write(cache_rcu / MEPHeader::N_POL);
-
 	// only write RCU Handler settings if modified
 	if (m_event->settings()(0).isHandlerModified()) {
 	  cache.getCache().getState().rcusettings().write(cache_rcu);
