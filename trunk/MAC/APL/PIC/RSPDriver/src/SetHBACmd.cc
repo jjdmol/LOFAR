@@ -67,8 +67,10 @@ void SetHBACmd::apply(CacheBuffer& cache, bool setModFlag)
     if (m_event->rcumask[cache_rcu]) {
       cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(0, Range::all());
       if (setModFlag) {
+#if 0
 	// reset BS if needed
 	cache.getCache().getState().bs().write(cache_rcu / MEPHeader::N_POL);
+#endif
 
         cache.getCache().getState().hbaprotocol().write(cache_rcu);
       }

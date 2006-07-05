@@ -390,8 +390,8 @@ void Scheduler::processCommands()
      * Let the commands apply their changes to 
      * the front and back caches.
      */
-    command->apply(Cache::getInstance().getFront());
-    command->apply(Cache::getInstance().getBack());
+    command->apply(Cache::getInstance().getFront(), true);
+    command->apply(Cache::getInstance().getBack(), false);
 
     /* move from the now queue to the done queue */
     m_now_queue.pop();

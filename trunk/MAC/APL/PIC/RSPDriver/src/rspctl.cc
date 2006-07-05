@@ -1258,7 +1258,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
   }
 
   gnuplot_cmd(handle, "set ylabel \"dB\"");
-  gnuplot_cmd(handle, "set yrange [0:150]");
+  gnuplot_cmd(handle, "set yrange [0:160]");
 
   switch (m_type)
   {

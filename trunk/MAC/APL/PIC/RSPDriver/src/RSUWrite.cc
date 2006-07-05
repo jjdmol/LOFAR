@@ -64,9 +64,8 @@ void RSUWrite::sendrequest()
   
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
-  // force read/writeof if FORCE_DELAY seconds after time mark
+  // force read/write if FORCE_DELAY seconds after time mark
   if (m_mark != Timestamp(0,0) && (m_mark + FORCE_DELAY <= m_scheduler.getCurrentTime())) {
-    
     Cache::getInstance().getState().force(); // force read/write of all register after clear
     m_mark = Timestamp(0,0); // reset mark
   }
@@ -81,10 +80,18 @@ void RSUWrite::sendrequest()
 
   // read values from cache
   RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
-  if (s()(getBoardId()).getSync())		reset.reset = g_RSU_RESET_SYNC;
-  else if (s()(getBoardId()).getClear())	reset.reset = g_RSU_RESET_CLEAR;
-  else if (s()(getBoardId()).getReset())	reset.reset = g_RSU_RESET_RESET;
-  else {
+  if (s()(getBoardId()).getSync()) {
+    reset.reset = g_RSU_RESET_SYNC;
+
+  } else if (s()(getBoardId()).getClear()) {
+    Cache::getInstance().reset(); // reset all cache values to default, right before sending clear
+    reset.reset = g_RSU_RESET_CLEAR;
+
+  } else if (s()(getBoardId()).getReset()) {
+    Cache::getInstance().reset(); // reset all cache values to default, right before sending clear
+    reset.reset = g_RSU_RESET_RESET;
+
+  } else {
     setContinue(true);
     return;
   }
