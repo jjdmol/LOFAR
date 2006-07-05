@@ -46,6 +46,43 @@ Cache* Cache::m_instance = 0;
 
 CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 {
+  reset(); // reset by allocating memory and settings default values
+
+  // print sizes of the cache
+  LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
+  LOG_DEBUG_STR("m_subbandselection().size()   =" << m_subbandselection().size()   * sizeof(uint16));
+  LOG_DEBUG_STR("m_rcusettings().size()        =" << m_rcusettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_rsusettings().size()        =" << m_rsusettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_wgsettings().size()         =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
+  LOG_DEBUG_STR("m_subbandstats().size()       =" << m_subbandstats().size()       * sizeof(uint16));
+  LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
+  LOG_DEBUG_STR("m_xcstats().size()            =" << m_xcstats().size()            * sizeof(complex<double>));
+  LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
+  LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
+  LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
+}
+
+CacheBuffer::~CacheBuffer()
+{
+  m_beamletweights().free();
+  m_subbandselection().free();
+  m_rcusettings().free();
+  m_rsusettings().free();
+  m_wgsettings().free();
+  m_wgsettings.waveforms().free();
+  m_subbandstats().free();
+  m_beamletstats().free();
+  m_xcstats().free();
+  m_systemstatus.board().free();
+  m_versions.bp().free();
+  m_versions.ap().free();
+}
+
+void CacheBuffer::reset(void)
+{
+  //
+  // Initialize cache, allocating memory and setting default values
+  //
   struct timeval tv;
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
@@ -143,35 +180,6 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   m_versions.ap() = versioninit;
 
   m_clock = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
-
-  // print sizes of the cache
-  LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
-  LOG_DEBUG_STR("m_subbandselection().size()   =" << m_subbandselection().size()   * sizeof(uint16));
-  LOG_DEBUG_STR("m_rcusettings().size()        =" << m_rcusettings().size()        * sizeof(uint8));
-  LOG_DEBUG_STR("m_rsusettings().size()        =" << m_rsusettings().size()        * sizeof(uint8));
-  LOG_DEBUG_STR("m_wgsettings().size()         =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
-  LOG_DEBUG_STR("m_subbandstats().size()       =" << m_subbandstats().size()       * sizeof(uint16));
-  LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
-  LOG_DEBUG_STR("m_xcstats().size()            =" << m_xcstats().size()            * sizeof(complex<double>));
-  LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
-  LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
-  LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
-}
-
-CacheBuffer::~CacheBuffer()
-{
-  m_beamletweights().free();
-  m_subbandselection().free();
-  m_rcusettings().free();
-  m_rsusettings().free();
-  m_wgsettings().free();
-  m_wgsettings.waveforms().free();
-  m_subbandstats().free();
-  m_beamletstats().free();
-  m_xcstats().free();
-  m_systemstatus.board().free();
-  m_versions.bp().free();
-  m_versions.ap().free();
 }
 
 RTC::Timestamp CacheBuffer::getTimestamp() const
@@ -277,6 +285,12 @@ Cache::~Cache()
 {
   if (m_front) delete m_front;
   if (m_back) delete m_back;
+}
+
+void Cache::reset(void)
+{
+  m_front->reset();
+  m_back->reset();
 }
 
 void Cache::swapBuffers()

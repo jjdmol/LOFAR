@@ -41,9 +41,15 @@ namespace LOFAR {
        * Constructors for a Cache object.
        */
       CacheBuffer(Cache* cache);
-	  
+
       /* Destructor for Cache. */
       virtual ~CacheBuffer();
+
+      /*
+       * Reset cache to default values.
+       * Also called by constructor to initialize the cache.
+       */
+      void reset(void);
 
       /*@{*/
       /**
@@ -109,6 +115,11 @@ namespace LOFAR {
       static Cache& getInstance();
       virtual ~Cache();
       /*@}*/
+
+      /*
+       * Reset cache front and back buffers.
+       */
+      void reset(void);
 
       /**
        * Swap the front and back buffers.
