@@ -1,5 +1,5 @@
 /*
- * PICtableModel.java
+ * LogParamTableModel.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
