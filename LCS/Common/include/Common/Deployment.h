@@ -63,8 +63,9 @@ string	stationTypeStr();	// "", CS, RS, ES
 // @ring@
 // @arm@
 // @station@
+// @instance@
 //
-string	createPropertySetName(const string&		propSetMask);
+string	createPropertySetName(const string&		propSetMask, uint16 instanceNr = 0);
 
 // @}
 } // namespace LOFAR

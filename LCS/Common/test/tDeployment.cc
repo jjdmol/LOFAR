@@ -37,13 +37,18 @@ int main (int, char *argv[]) {
 	// Show operator were are on the air
 	LOG_INFO (formatString("Program %s has started", argv[0]));
 
-	LOG_INFO_STR("Myhostname                        = " << myHostname(false));
-	LOG_INFO_STR("My full hostname                  = " << myHostname(true));
-	LOG_INFO_STR("stationRingNr                     = " << stationRingNr());
-	LOG_INFO_STR("stationArmNr                      = " << stationArmNr());
-	LOG_INFO_STR("stationTypeValue                  = " << stationTypeValue());
-	LOG_INFO_STR("stationTypeStr                    = " << stationTypeStr());
-	LOG_INFO_STR("LOFAR_@ring@_@arm@_@station@_test = " << createPropertySetName ("LOFAR_@ring@_@arm@_@station@_test"));
+	LOG_INFO_STR("Myhostname                         = " << myHostname(false));
+	LOG_INFO_STR("My full hostname                   = " << myHostname(true));
+	LOG_INFO_STR("stationRingNr                      = " << stationRingNr());
+	LOG_INFO_STR("stationArmNr                       = " << stationArmNr());
+	LOG_INFO_STR("stationTypeValue                   = " << stationTypeValue());
+	LOG_INFO_STR("stationTypeStr                     = " << stationTypeStr());
+	LOG_INFO_STR("LOFAR_@ring@_@arm@_@station@_test  = " << 
+				createPropertySetName ("LOFAR_@ring@_@arm@_@station@_test"));
+	LOG_INFO_STR("LOFAR_@instance@_test [instance=0] = " << 
+				createPropertySetName ("LOFAR_@instance@_test", 0));
+	LOG_INFO_STR("LOFAR_@instance@_test [instance=25]= " << 
+				createPropertySetName ("LOFAR_@instance@_test", 25));
 
 	LOG_INFO("Normal termination of program");
 	return (0);
