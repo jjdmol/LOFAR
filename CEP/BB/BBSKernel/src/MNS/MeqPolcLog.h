@@ -1,5 +1,5 @@
-//# MeqPolcLog.h: Univariate or bivariate polynomial. Each axis has an
-//# associated transformation.
+//# MeqPolcLog.h: Univariate or bivariate polynomial with a
+//# logarithmic transform on the frequency axis (log10(f/f0)).
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,14 +25,15 @@
 #define MNS_MEQPOLCLOG_H
 
 // \file
-// Univariate or bivariate polynomial. Each axis has an associated transformation.
-// The following transformations are currently supported:
-//     - linear_axis(a, b)  : x' = (x - a) / b
-//     - log_axis_base10(f0): x' = log10(x / f0)
+// Univariate or bivariate polynomial with a logarithmic transform on the
+// frequency axis (log10(f/f0)).
 // 
-// A polclog always has two constants, one f0 constant for each axis. An f0 value
-// of zero implies that the associated axis is linear. Otherwise, the log_axis_base10
-// transformation is used.
+// In the parmdb, a polclog always has two constants, one f0 constant for
+// each axis. An f0 value of zero implies that the associated axis is linear.
+// Otherwise, the axis is logarithmic (log10(f/f0)). Currently, the MeqPolcLog
+// node only supports a univariate polynomial in frequency with a logarithmic
+// axis, or a bivariate polynomial with a logarithmic frequency axis and a linear
+// time axis. All other configurations will raise an exception.
 //
 // As an example, suppose we have a polclog of which the first axis is logarithmic, and
 // the second is linear. The polynomial is of degree one in both f' and t':
@@ -55,9 +56,6 @@
 
 //# Includes
 #include <BBS/MNS/MeqFunklet.h>
-#include <functional>
-
-using std::unary_function;
 
 namespace LOFAR {
 
@@ -65,37 +63,6 @@ namespace LOFAR {
 // \addtogroup MNS
 // @{
 
-struct linear_axis: public unary_function<double, double>
-{
-  linear_axis(const double _start, const double _size)
-    : start(_start),
-      scale(1.0 / _size)
-  {
-  }
-  
-  double operator()(double x) const
-  {
-    return (x - start) * scale;
-  }
-
-  const double start;
-  const double scale;
-};
-
-struct log_axis_base10: public unary_function<double, double>
-{
-  log_axis_base10(const double _f0)
-    : log_f0(log10(_f0))
-  {
-  }
-  
-  double operator()(double x) const
-  {
-    return log10(x) - log_f0;
-  }
-  
-  const double log_f0;
-};
 
 class MeqPolcLog: public MeqFunklet
 {
@@ -116,28 +83,22 @@ public:
   // Clone the PolcLog.
   virtual MeqPolcLog* clone() const;
 
-  // Calculate the value and possible perturbations.
-  virtual MeqResult getResult (const MeqRequest&,
-        int nrpert, int pertInx);
-  virtual MeqResult getAnResult (const MeqRequest&,
-        int nrpert, int pertInx);
+  // Compute the value, and perturbed values if required.
+  virtual MeqResult getResult(const MeqRequest&, int nrpert, int pertInx);
+  virtual MeqResult getAnResult(const MeqRequest&, int nrpert, int pertInx);
 
 private:
-  template <class AxisTransform>
-  void evaluateUnivariatePolynomial(int axis,
-                                    const MeqRequest &request,
-                                    double* outValues,
-                                    double** const outPerturbedValues,
-                                    bool computePerturbedValues,
-                                    AxisTransform axisTransform);
+  void evalUnivariatePolynomial(const MeqRequest &request,
+                                double* outValues,
+                                double** outPerturbedValues,
+                                const bool computePerturbedValues,
+                                const double log10_f0) const;
   
-  template <class AxisTransformX, class AxisTransformY>                                    
-  void evaluateBivariatePolynomial(const MeqRequest &request,
-                                   double* outValues,
-                                   double** const outPerturbedValues,
-                                   bool computePerturbedValues,
-                                   AxisTransformX axisTransformX,
-                                   AxisTransformY axisTransformY);
+  void evalBivariatePolynomial(const MeqRequest &request,
+                               double* outValues,
+                               double** outPerturbedValues,
+                               const bool computePerturbedValues,
+                               const double log10_f0) const;
 };
 
 // @}

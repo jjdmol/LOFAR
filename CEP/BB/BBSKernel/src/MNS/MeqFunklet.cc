@@ -24,6 +24,7 @@
 
 #include <BBS/MNS/MeqFunklet.h>
 #include <BBS/MNS/MeqPolc.h>
+#include <BBS/MNS/MeqPolcLog.h>
 #include <BBS/MNS/MeqTabular.h>
 #include <Common/LofarLogger.h>
 #include <Common/VectorUtil.h>
@@ -79,21 +80,27 @@ MeqFunklet& MeqFunklet::operator= (const MeqFunklet& that)
   return *this;
 }
 
-MeqFunklet* MeqFunklet::make (const ParmDB::ParmValue& pvalue,
-			      const string& name)
+MeqFunklet* MeqFunklet::make (const ParmDB::ParmValue& pvalue, const string& name)
 {
-  ASSERTSTR (pvalue.rep().itsShape.size()==2,
-	     "No 2-dim funklet " << pvalue.rep().itsType << ' '
-	     << pvalue.rep().itsShape
-	     << " found for parameter " << name);
-  if (pvalue.rep().itsType=="polc") {
+  const ParmDB::ParmValueRep& pval = pvalue.rep();
+  
+  ASSERTSTR(pval.itsShape.size() == 2, 
+    "No 2-dim funklet " << pval.itsType << ' ' << pval.itsShape << " found for parameter " << name);
+  
+  if (pval.itsType=="polc")
+  {
     return new MeqPolc(pvalue);
-  } else if (pvalue.rep().itsType=="tabular") {
+  }
+  else if (pval.itsType=="tabular")
+  {
     return new MeqTabular(pvalue);
   }
-  ASSERTSTR (false,
-	     "Unknown funklet type " << pvalue.rep().itsType
-	     << " found for parameter " << name);
+  else if (pval.itsType=="polclog")
+  {
+    return new MeqPolcLog(pvalue);
+  }
+  
+  ASSERTSTR(false, "Unknown funklet type " << pval.itsType << " found for parameter " << name);
 }
 
 int MeqFunklet::makeSolvable (int scidIndex)
