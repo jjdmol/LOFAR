@@ -14,6 +14,7 @@ pkginclude_HEADERS = \
 	ComplexStdInt.h \
 	DataConvert.h \
 	DataFormat.h \
+	Deployment.h \
 	Exception.h \
 	FileLocator.h \
 	hexdump.h \
