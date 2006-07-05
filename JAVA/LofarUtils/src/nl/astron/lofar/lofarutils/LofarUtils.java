@@ -87,4 +87,32 @@ public abstract class LofarUtils {
             return false;
         }
     }
+    
+    /** converts string to boolean 
+     * t, true returns true
+     * f, false returns false
+     */
+    static public boolean StringToBoolean(String aS) {
+        boolean aB = false;
+        if (aS.equalsIgnoreCase("t") || aS.equalsIgnoreCase("true")) {
+            aB=true;
+        } else if (aS.equalsIgnoreCase("f") || aS.equalsIgnoreCase("false")) {
+            aB=false;
+        } else {
+            System.out.println("getBoolean ERROR: no boolean: " + aS);
+        }
+        return aB;
+    }
+    
+    /** converts boolean to string
+     * false - f
+     * true  - t
+     */
+    static public String BooleanToString(boolean aB) {
+       if (aB) {
+           return "t";
+       } else {
+           return "f";
+       } 
+    }
 }
