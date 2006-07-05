@@ -30,6 +30,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
@@ -197,14 +198,24 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     }
     
     private void getParam(jOTDBnode aNode) {
+        itsParam=null;
+        itsRefParam=null;
         if (aNode == null) {
             logger.debug("ERROR: Empty Node supplied for getParam");
             return;
         }
         itsNode=aNode;
         try {
-            itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsMainFrame.getSharedVars().getTreeID(),
-                    aNode.paramDefID());
+            itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().
+                    getParam(itsMainFrame.getSharedVars().getTreeID(),aNode.paramDefID());
+            if (itsParam != null && LofarUtils.isReference(itsParam.limits)) {
+                itsRefParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode); 
+                this.enableLimits(false);
+                this.ParamLimitsText.setEditable(false);
+            } else {
+                this.enableLimits(true);
+                this.ParamLimitsText.setEditable(true);
+            }
         } catch (RemoteException ex) {
             logger.debug("Error during getParam: "+ ex);
             itsParam=null;
@@ -257,7 +268,11 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             setPruning(String.valueOf(itsParam.pruning));
             setValMoment(String.valueOf(itsParam.valMoment));
             setRuntimeMod(itsParam.runtimeMod);
-            setLimits(String.valueOf(itsParam.limits));
+            if (itsRefParam != null) {
+                setLimits(itsParam.limits + "  :  "+ String.valueOf(itsRefParam.limits));
+            } else {
+                setLimits(String.valueOf(itsParam.limits));                
+            }
             setDescription(itsParam.description);
         } else {
             logger.debug("ERROR:  no Param given");
@@ -672,6 +687,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private OtdbRmi    itsOtdbRmi;
     private jOTDBnode  itsNode;
     private jOTDBparam itsParam;
+    private jOTDBparam itsRefParam;
 
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

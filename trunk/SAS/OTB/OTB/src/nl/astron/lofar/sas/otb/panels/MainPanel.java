@@ -89,8 +89,10 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.addButton("Duplicate");
             buttonPanel1.setButtonEnabled("Duplicate",false);
             buttonPanel1.addButton("Modify");
+            buttonPanel1.addButton("Delete");            
             buttonPanel1.addButton("Instanciate");
             buttonPanel1.setButtonEnabled("Modify",false);
+            buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Instanciate",false);
         } else if (itsTabFocus.equals("Components")) {
             buttonPanel1.addButton("Query Panel");
@@ -581,6 +583,30 @@ public class MainPanel extends javax.swing.JPanel
                 if (aP != null) {
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
+            } else if (aButton.equals("Delete")) {
+                if (itsMainFrame.getSharedVars().getTreeID() < 1) {
+                    JOptionPane.showMessageDialog(null,"Select a tree to delete first",
+                        "No Tree Selected",
+                        JOptionPane.WARNING_MESSAGE);
+                } else {
+                    try {
+                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteTree(itsMainFrame.getSharedVars().getTreeID())) {
+                            JOptionPane.showMessageDialog(null,"Template Tree Deleted",
+                                "Delete Tree Message",
+                                JOptionPane.INFORMATION_MESSAGE);
+                            itsMainFrame.getSharedVars().setTreeID(-1);
+                            // set changed flag to reload mainpanel
+                            itsMainFrame.setChanged(this.getFriendlyName(),true);
+                            checkChanged();
+                        } else {
+                            logger.debug("Template Tree not deleted!!! : "+ itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                        }
+           
+                    } catch (RemoteException ex) {
+                        logger.debug("Remote error during Delete Template Tree: "+ ex);
+                    }
+                }
+                
             } else if (aButton.equals("Instanciate")) {
                 if (itsMainFrame.getSharedVars().getTreeID() < 1) {
                     JOptionPane.showMessageDialog(null,"Select a tree to instanciate first",
@@ -598,7 +624,7 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.debug("No VIC Tree created!!!");
+                            logger.debug("No VIC Tree created!!! : "+ itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
                         }
            
                     } catch (RemoteException ex) {
@@ -853,9 +879,11 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Modify",false);                                        
                 }
                 buttonPanel1.setButtonEnabled("Info",true);
+                buttonPanel1.setButtonEnabled("Delete",true);                
             } else {
                 buttonPanel1.setButtonEnabled("Duplicate",false);
-                buttonPanel1.setButtonEnabled("Modify",false);                    
+                buttonPanel1.setButtonEnabled("Modify",false);
+                buttonPanel1.setButtonEnabled("Delete",false);                
                 buttonPanel1.setButtonEnabled("Info",false);  
                 buttonPanel1.setButtonEnabled("Instanciate",false);
             }

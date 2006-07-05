@@ -120,7 +120,6 @@ public class OTDBNodeTreeManager extends GenericTreeManager implements ITreeMana
                 TreeNode newNode = new TreeNode(this.instance,item,item.name);
                 aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
-                
                 fireTreeInsertionPerformed(evt);
             }
         } catch(Exception e) {
