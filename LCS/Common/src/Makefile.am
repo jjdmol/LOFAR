@@ -7,6 +7,7 @@ lib_LTLIBRARIES 	= libcommon.la
 libcommon_la_SOURCES 	= \
 	Allocator.cc \
 	DataConvert.cc \
+	Deployment.cc \
 	Exception.cc \
 	FileLocator.cc \
 	hexdump.cc \

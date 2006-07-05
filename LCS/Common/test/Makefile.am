@@ -1,6 +1,6 @@
 check_PROGRAMS	      =	testLogger \
-			tAllocator tDataConvert tFileLocator tStringUtil \
-			tHexdump testSocket tComplex tProcess \
+			tAllocator tDataConvert tDeployment tFileLocator \
+			tStringUtil tHexdump testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric
 
 # programs to run through supplied checktools
@@ -49,6 +49,10 @@ tAllocator_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 tDataConvert_SOURCES		= tDataConvert.cc
 tDataConvert_LDADD		= ../src/libcommon.la
 tDataConvert_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tDeployment_SOURCES		= tDeployment.cc
+tDeployment_LDADD		= ../src/libcommon.la
+tDeployment_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 
 tFileLocator_SOURCES		= tFileLocator.cc
 tFileLocator_LDADD		    = ../src/libcommon.la
