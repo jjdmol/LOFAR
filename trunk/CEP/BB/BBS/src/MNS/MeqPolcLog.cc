@@ -34,12 +34,12 @@ using namespace casa;
 namespace LOFAR {
 
 MeqPolcLog::MeqPolcLog(const ParmDB::ParmValue& pvalue)
-: MeqFunklet(pvalue)
+  : MeqFunklet(pvalue)
 {
   const ParmDB::ParmValueRep& pval = pvalue.rep();
   
-  ASSERTSTR(pval.itsType == "polc" || pval.itsType == "polclog",
-    "Funklet in ParmValue is not of type 'polc' or 'polclog'.");
+  ASSERTSTR(pval.itsType == "polclog",
+    "Funklet in ParmValue is not of type 'polclog'.");
        
 //  ASSERTSTR(pval.itsConstants.size() >= 2,
 //    "Not enough f0 constants found in the parmdb for this polclog.");
@@ -54,8 +54,7 @@ MeqPolcLog* MeqPolcLog::clone() const
   return new MeqPolcLog(*this);
 }
 
-MeqResult MeqPolcLog::getResult(const MeqRequest& request,
-			      int nrpert, int pertInx)
+MeqResult MeqPolcLog::getResult(const MeqRequest& request, int nrpert, int pertInx)
 {
   // Assume the output domain is contained within the input domain, i.e.:
   // assume the left boundary of the first output cell lies on or to the
@@ -66,10 +65,16 @@ MeqResult MeqPolcLog::getResult(const MeqRequest& request,
   //          outDomain.startY() >= inDomain.startY() && outDomain.endY() <= inDomain.endY(),
   //          "The output domain should be completely contained within the input domain.");
   
+  // Get the f0 constants from the parmdb.
+  const ParmDB::ParmValueRep &parameters = itsParmValue.rep();
+  ASSERTSTR(parameters.itsConstants.size() >= 2, "No constants found in the parmdb for this polclog.");
+  const double f0[2] = {parameters.itsConstants[0], parameters.itsConstants[1]};
+  ASSERTSTR(f0[0] > 0.0 && f0[1] == 0.0, "A polclog should always be logarithmic in frequency and linear in time.");
   ASSERTSTR(itsCoeff.nelements() > 0, "No coefficients found in the parmdb for this polclog.");
+  ASSERTSTR(itsCoeff.nx() > 1, "A polclog should always depend on frequency. Otherwise, use a polc node instead.");
   
   // Check if any perturbed values need to be computed.
-  bool computePerturbedValues = nrpert > 0 && request.nspid() > 0;
+  const bool computePerturbedValues = nrpert > 0 && request.nspid() > 0;
   
   // Create the result object containing as many spids as needed for
   // this polynomial (but no more).
@@ -115,67 +120,16 @@ MeqResult MeqPolcLog::getResult(const MeqRequest& request,
       }
     }
 
-    // Get the f0 constants from the parmdb.
-    const ParmDB::ParmValueRep &parameters = itsParmValue.rep();
-    const double f0[2] = {parameters.itsConstants[0], parameters.itsConstants[1]};
-    
-    // Get the offsets and sizes of the axes of the input domain.
-    const MeqDomain &inDomain = domain();
-    const double axisOffset[2] = {inDomain.startX(), inDomain.startY()};
-    const double axisSize[2] = {inDomain.endX() - inDomain.startX(), inDomain.endY() - inDomain.startY()};
     
     // Call the appropriate function to evaluate the polynomial.
     if(itsCoeff.ny() == 1)
     {
-      // The polynomial is independent of y.
-      if(f0[0] == 0.0)
-      {
-        // x-axis is linear.
-        evaluateUnivariatePolynomial(0, request, outValues, outPerturbedValues, computePerturbedValues, linear_axis(axisOffset[0], axisSize[0]));
-      }
-      else
-      {
-        // x-axis is logarithmic.
-        evaluateUnivariatePolynomial(0, request, outValues, outPerturbedValues, computePerturbedValues, log_axis_base10(f0[0]));
-      }
-    }
-    else if(itsCoeff.nx() == 1)
-    {
-      // The polynomial is independent of x.
-      if(f0[1] == 0.0)
-      {
-        // y-axis is linear.
-        evaluateUnivariatePolynomial(1, request, outValues, outPerturbedValues, computePerturbedValues, linear_axis(axisOffset[1], axisSize[1]));
-      }
-      else
-      {
-        // y-axis is logarithmic.
-        evaluateUnivariatePolynomial(1, request, outValues, outPerturbedValues, computePerturbedValues, log_axis_base10(f0[1]));
-      }
+      evalUnivariatePolynomial(request, outValues, outPerturbedValues, computePerturbedValues, log10(f0[0]));
     }
     else
     {
-      if(f0[0] == 0.0 && f0[1] == 0.0)
-      {
-        // Both axes are linear.
-        evaluateBivariatePolynomial(request, outValues, outPerturbedValues, computePerturbedValues, linear_axis(axisOffset[0], axisSize[0]), linear_axis(axisOffset[1], axisSize[1]));
-      }
-      else if(f0[0] == 0.0)
-      {
-        // x-axis is linear, y-axis is logarithmic.
-        evaluateBivariatePolynomial(request, outValues, outPerturbedValues, computePerturbedValues, linear_axis(axisOffset[0], axisSize[0]), log_axis_base10(f0[1]));
-      }
-      else if(f0[1] == 0.0)
-      {
-        // x-axis is logarithmic, y-axis is linear.
-        evaluateBivariatePolynomial(request, outValues, outPerturbedValues, computePerturbedValues, log_axis_base10(f0[0]), linear_axis(axisOffset[1], axisSize[1]));
-      }
-      else
-      {
-        // Both axes are logarithmic.
-        evaluateBivariatePolynomial(request, outValues, outPerturbedValues, computePerturbedValues, log_axis_base10(f0[0]), log_axis_base10(f0[1]));
-      }
-    }
+      evalBivariatePolynomial(request, outValues, outPerturbedValues, computePerturbedValues, log10(f0[0]));
+    }    
     
     delete [] outPerturbedValues;
   }
@@ -183,13 +137,12 @@ MeqResult MeqPolcLog::getResult(const MeqRequest& request,
   return result;
 }
 
-template <class AxisTransform>
-void MeqPolcLog::evaluateUnivariatePolynomial(int axis,
-                                              const MeqRequest &request,
-                                              double* outValues,
-                                              double** const outPerturbedValues,
-                                              bool computePerturbedValues,
-                                              AxisTransform axisTransform)
+
+void MeqPolcLog::evalUnivariatePolynomial(const MeqRequest &request,
+                                          double* outValues,
+                                          double** outPerturbedValues,
+                                          const bool computePerturbedValues,
+                                          const double log10_f0) const
 {
   // To avoid confusion, we will not use 'x' and 'y' for the
   // independent and dependent variables. Rather, 'abscissa' is
@@ -199,10 +152,11 @@ void MeqPolcLog::evaluateUnivariatePolynomial(int axis,
   
   // Get the (number of) coefficients in the polynomial and their
   // associated perturbations.
-  const int coefficientCount[2] = {itsCoeff.nx(), itsCoeff.ny()};
+  const int axis = 0;
+  const int order[2] = {itsCoeff.nx(), itsCoeff.ny()};
   const double* const coefficients = itsCoeff.doubleStorage();
   const double* const perturbations = computePerturbedValues ? itsCoeffPert.doubleStorage() : NULL;
-  
+
   // Get the output (request) domain, the number of cells in the output domain,
   // and the offsets and scales of the axes of the output domain.
   const MeqDomain &outDomain = request.domain();
@@ -216,16 +170,16 @@ void MeqPolcLog::evaluateUnivariatePolynomial(int axis,
   for(int i = 0; i < outCount[axis]; i++)
   {
     // Transform the abscissa.
-    double transformedAbscissa = axisTransform(abscissa);
-    
+    double transformedAbscissa = log10(abscissa) - log10_f0;
+
     // Evaluate the polynomial at the transformed abscissa using Horner's rule.
-    double ordinate = coefficients[coefficientCount[axis] - 1];
-    for(int j = coefficientCount[axis] - 2; j >= 0; --j)
+    double ordinate = coefficients[order[axis] - 1];
+    for(int j = order[axis] - 2; j >= 0; --j)
     {
       ordinate *= transformedAbscissa;
       ordinate += coefficients[j];
     }
-    
+
     // DEBUG
     //cout << "abscissa, transformedAbscissa, ordinate: " << abscissa << " " << transformedAbscissa << " " << ordinate << endl;
 
@@ -241,7 +195,7 @@ void MeqPolcLog::evaluateUnivariatePolynomial(int axis,
       double powAbscissa = 1.0;
 
       // Loop over all coefficients.
-      for(int j = 0; j < coefficientCount[axis]; j++)
+      for(int j = 0; j < order[axis]; j++)
       {
         if(outPerturbedValues[j])
         {
@@ -253,7 +207,7 @@ void MeqPolcLog::evaluateUnivariatePolynomial(int axis,
           {
             outPerturbedValues[j][k] = perturbedValue;
           }
-          
+
           outPerturbedValues[j] += outStride[axis];
         }
 
@@ -267,20 +221,24 @@ void MeqPolcLog::evaluateUnivariatePolynomial(int axis,
   }
 }
 
-template <class AxisTransformX, class AxisTransformY>
-void MeqPolcLog::evaluateBivariatePolynomial(const MeqRequest &request,
-                                             double* outValues,
-                                             double** const outPerturbedValues,
-                                             bool computePerturbedValues,
-                                             AxisTransformX axisTransformX,
-                                             AxisTransformY axisTransformY)
+
+void MeqPolcLog::evalBivariatePolynomial(const MeqRequest &request,
+                                         double* outValues,
+                                         double** outPerturbedValues,
+                                         const bool computePerturbedValues,
+                                         const double log10_f0) const
 {
   // Get the (number of) coefficients in the polynomial and their
   // associated perturbations.
-  const int coefficientCount[2] = {itsCoeff.nx(), itsCoeff.ny()};
+  const int order[2] = {itsCoeff.nx(), itsCoeff.ny()};
   const double* const coefficients = itsCoeff.doubleStorage();
   const double* const perturbations = computePerturbedValues ? itsCoeffPert.doubleStorage() : NULL;
 
+  // Get the offsets and sizes of the axes of the input domain.
+  const MeqDomain &inDomain = domain();
+  const double axisOffset[2] = {inDomain.startX(), inDomain.startY()};
+  const double axisSize[2] = {inDomain.endX() - inDomain.startX(), inDomain.endY() - inDomain.startY()};
+  
   // Get the output (request) domain, the number of cells in the output domain, 
   // and the offsets and scales of the axes of the output domain.
   const MeqDomain &outDomain = request.domain();
@@ -290,33 +248,33 @@ void MeqPolcLog::evaluateBivariatePolynomial(const MeqRequest &request,
 
   // Allocate an array for the pre-computed powers of x, needed for the
   // computation of the perturbed values.
-  double * const powersX = computePerturbedValues ? new double[coefficientCount[0]] : NULL;
+  double * const powersX = computePerturbedValues ? new double[order[0]] : NULL;
 
   // Compute the output values, and perturbed values if required.
   double y = outOffset[1];    
   for(int j = 0; j < outCount[1]; j++)
   {
     // Transform the y coordinate.
-    double transformedY = axisTransformY(y);
+    double transformedY = (y - axisOffset[1]) / axisSize[1];
     
     double x = outOffset[0];
     for(int i = 0; i < outCount[0]; i++)
     {
       // Transform the x coordinate.
-      double transformedX = axisTransformX(x);
+      double transformedX = log10(x) - log10_f0;
 
       double powY = 1.0;
       double value = 0.0;
 
       // Compute the value of the polynomial at (transformedX, transformedY)
       // using Horner's rule.
-      for(int cy = 0; cy < coefficientCount[1]; ++cy)
+      for(int cy = 0; cy < order[1]; ++cy)
       {
-        double valueX = coefficients[cy * coefficientCount[0] + coefficientCount[0] - 1];
-        for(int cx = coefficientCount[0] - 2; cx >= 0; --cx)
+        double valueX = coefficients[cy * order[0] + order[0] - 1];
+        for(int cx = order[0] - 2; cx >= 0; --cx)
         {
           valueX *= transformedX;
-          valueX += coefficients[cy * coefficientCount[0] + cx];
+          valueX += coefficients[cy * order[0] + cx];
         }
 
         value += valueX * powY;
@@ -332,7 +290,7 @@ void MeqPolcLog::evaluateBivariatePolynomial(const MeqRequest &request,
       { 
         // Precompute the power of x.
         double powX = 1.0;
-        for(int cx = 0; cx < coefficientCount[0]; ++cx)
+        for(int cx = 0; cx < order[0]; ++cx)
         {
           powersX[cx] = powX;
           powX *= transformedX;
@@ -340,9 +298,9 @@ void MeqPolcLog::evaluateBivariatePolynomial(const MeqRequest &request,
 
         int idx = 0;
         double powY = 1.0;
-        for(int cy = 0; cy < coefficientCount[1]; ++cy)
+        for(int cy = 0; cy < order[1]; ++cy)
         {
-          for(int cx = 0; cx < coefficientCount[0]; ++cx)
+          for(int cx = 0; cx < order[0]; ++cx)
           {
             if(outPerturbedValues[idx])
             {
@@ -373,4 +331,5 @@ MeqResult MeqPolcLog::getAnResult(const MeqRequest& request, int nrpert, int per
   // Not implemented yet.
   return getResult(request, nrpert, pertInx);
 }
+
 }
