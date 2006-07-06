@@ -28,6 +28,7 @@
 #include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "SyncAction.h"
+#include "Scheduler.h"
 
 namespace LOFAR {
   namespace RSP {
@@ -38,7 +39,7 @@ namespace LOFAR {
       /**
        * Constructors for a TDSResultRead object.
        */
-      TDSResultRead(GCFPortInterface& board_port, int board_id);
+      TDSResultRead(GCFPortInterface& board_port, int board_id, const Scheduler& scheduler);
 
       /* Destructor for TDSResultRead. */
       virtual ~TDSResultRead();
@@ -61,6 +62,9 @@ namespace LOFAR {
     private:
       EPA_Protocol::MEPHeader m_hdr;
       int m_delay; // used to delay reading back results
+
+      const Scheduler&        m_scheduler; // for getCurrentTime
+      RTC::Timestamp          m_mark;      // mark time
     };
   };
 };

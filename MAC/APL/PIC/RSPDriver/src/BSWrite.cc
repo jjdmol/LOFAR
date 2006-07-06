@@ -31,12 +31,16 @@
 #include "BSWrite.h"
 #include "Cache.h"
 
+// nof seconds to wait with next action in init sequence
+#define DELAY_NEXT ((long)0)
+
 using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
+using namespace RTC;
 
-BSWrite::BSWrite(GCFPortInterface& board_port, int board_id, int blp)
-  : SyncAction(board_port, board_id, 1), m_blp(blp)
+BSWrite::BSWrite(GCFPortInterface& board_port, int board_id, int blp, const Scheduler& scheduler)
+  : SyncAction(board_port, board_id, 1), m_blp(blp), m_scheduler(scheduler)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -48,6 +52,16 @@ BSWrite::~BSWrite()
 
 void BSWrite::sendrequest()
 {
+
+  // force read/write if DELAY_NEXT seconds after time mark
+  if (m_mark != Timestamp(0,0) && (m_mark + DELAY_NEXT <= m_scheduler.getCurrentTime())) {
+    
+    Cache::getInstance().reset(); // reset all cache values to default
+    Cache::getInstance().getState().force(); // force read/write of all register after clear
+
+    m_mark = Timestamp(0,0); // reset mark
+  }
+
   // skip update if the neither of the RCU's settings have been modified
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bs().get((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp))
   {
@@ -94,6 +108,8 @@ GCFEvent::TResult BSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   // change state to indicate that it has been applied in the hardware
   Cache::getInstance().getState().bs().write_ack((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
+
+  m_mark = m_scheduler.getCurrentTime();
 
   return GCFEvent::HANDLED;
 }

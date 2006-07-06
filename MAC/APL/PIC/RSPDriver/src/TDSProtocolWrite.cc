@@ -159,7 +159,7 @@ void TDSProtocolWrite::sendrequest()
   if (!(tds_control & (1 << getBoardId()))) {
     //
     // RSPDriver.TDS_CONTROL is a bitmask which indicates
-    // which of the 24 RSP boards control the TDS board in
+    // which of the 24 RSP boards control a TDS board in
     // their subrack.
     //
     // If the bit corresponding to getBoardId() is not set,
