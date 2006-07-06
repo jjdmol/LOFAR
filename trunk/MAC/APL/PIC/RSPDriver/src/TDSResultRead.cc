@@ -47,6 +47,8 @@ using namespace RTC;
 TDSResultRead::TDSResultRead(GCFPortInterface& board_port, int board_id, const Scheduler& scheduler)
   : SyncAction(board_port, board_id, 1), m_delay(0), m_scheduler(scheduler)
 {
+  m_mark.resize(StationSettings::instance()->nrRspBoards());
+  m_mark = Timestamp(0,0);
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
@@ -58,7 +60,7 @@ TDSResultRead::~TDSResultRead()
 void TDSResultRead::sendrequest()
 {
   // force read/write if WAIT_AFTER seconds after time mark
-  if (m_mark != Timestamp(0,0) && (m_mark + DELAY_NEXT <= m_scheduler.getCurrentTime())) {
+  if (m_mark(getBoardId()) != Timestamp(0,0) && (m_mark(getBoardId()) + DELAY_NEXT <= m_scheduler.getCurrentTime())) {
     
     // After changing the clock an RSP clear is required.
 
@@ -71,7 +73,7 @@ void TDSResultRead::sendrequest()
     Cache::getInstance().getState().rsuclear().reset(getBoardId());
     Cache::getInstance().getState().rsuclear().write_force(getBoardId());
 
-    m_mark = Timestamp(0,0); // reset mark
+    m_mark(getBoardId()) = Timestamp(0,0); // reset mark
   }
 
   // skip update if the Clocks settings have not been modified
@@ -160,7 +162,7 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
       Cache::getInstance().getState().tds().read_ack(getBoardId());
 
       // mark completion of clock change
-      m_mark = m_scheduler.getCurrentTime();
+      m_mark(getBoardId()) = m_scheduler.getCurrentTime();
 
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (160MHz): unexpected I2C result response, first mismatch @ %d", idiff));
@@ -178,7 +180,7 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
       Cache::getInstance().getState().tds().read_ack(getBoardId());
 
       // mark completion of clock change
-      m_mark = m_scheduler.getCurrentTime();
+      m_mark(getBoardId()) = m_scheduler.getCurrentTime();
 
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (200MHz): unexpected I2C result response, first mismatch @ %d", idiff));
@@ -196,7 +198,7 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
       Cache::getInstance().getState().tds().read_ack(getBoardId());
 
       // mark completion of clock change
-      m_mark = m_scheduler.getCurrentTime();
+      m_mark(getBoardId()) = m_scheduler.getCurrentTime();
 
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (OFF): unexpected I2C result response, first mismatch @ %d", idiff));

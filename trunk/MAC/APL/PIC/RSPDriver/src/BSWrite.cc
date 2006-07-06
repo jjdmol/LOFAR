@@ -42,6 +42,8 @@ using namespace RTC;
 BSWrite::BSWrite(GCFPortInterface& board_port, int board_id, int blp, const Scheduler& scheduler)
   : SyncAction(board_port, board_id, 1), m_blp(blp), m_scheduler(scheduler)
 {
+  m_mark.resize(StationSettings::instance()->nrRspBoards());
+  m_mark = Timestamp(0,0);
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
@@ -54,12 +56,12 @@ void BSWrite::sendrequest()
 {
 
   // force read/write if DELAY_NEXT seconds after time mark
-  if (m_mark != Timestamp(0,0) && (m_mark + DELAY_NEXT <= m_scheduler.getCurrentTime())) {
+  if (m_mark(getBoardId()) != Timestamp(0,0) && (m_mark(getBoardId()) + DELAY_NEXT <= m_scheduler.getCurrentTime())) {
     
     Cache::getInstance().reset(); // reset all cache values to default
     Cache::getInstance().getState().force(); // force read/write of all register after clear
 
-    m_mark = Timestamp(0,0); // reset mark
+    m_mark(getBoardId()) = Timestamp(0,0); // reset mark
   }
 
   // skip update if the neither of the RCU's settings have been modified
@@ -109,7 +111,7 @@ GCFEvent::TResult BSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   // change state to indicate that it has been applied in the hardware
   Cache::getInstance().getState().bs().write_ack((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
 
-  m_mark = m_scheduler.getCurrentTime();
+  m_mark(getBoardId()) = m_scheduler.getCurrentTime();
 
   return GCFEvent::HANDLED;
 }
