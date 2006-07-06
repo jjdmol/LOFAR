@@ -321,7 +321,7 @@ public class PlotSGTImpl implements IPlot{
             double xend = -1;
             double ystart = -1;
             double yend = -1;
-            LinkedList<HashMap> values = new LinkedList<HashMap>();
+            LinkedList<HashMap<String,Object>> values = new LinkedList<HashMap<String,Object>>();
             
             //Loop through Metadata and pointers to XY values
             if(data != null && data.keySet().size()>0){
@@ -407,7 +407,7 @@ public class PlotSGTImpl implements IPlot{
                             
                         }
                     } else if(key.equalsIgnoreCase(PlotConstants.DATASET_VALUES)){
-                        values = (LinkedList<HashMap>)data.get(key);
+                        values = (LinkedList<HashMap<String,Object>>)data.get(key);
                     }else{
                         throw new InvalidDataSetException("(Metadata was found that is not supported for a Line Plot: "+key.toString()+")");
                     }
