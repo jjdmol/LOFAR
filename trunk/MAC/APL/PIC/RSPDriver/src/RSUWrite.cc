@@ -31,11 +31,12 @@
 #include <string.h>
 #include <blitz/array.h>
 
+#include "StationSettings.h"
 #include "RSUWrite.h"
 #include "Cache.h"
 
-// nof seconds between clear or reset and forced update of all registers
-#define FORCE_DELAY ((long)3)
+// nof seconds to wait with writing BS register after RSU clear
+#define WAIT_AFTER ((long)3)
 
 using namespace blitz;
 using namespace LOFAR;
@@ -64,9 +65,14 @@ void RSUWrite::sendrequest()
   
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
-  // force read/write if FORCE_DELAY seconds after time mark
-  if (m_mark != Timestamp(0,0) && (m_mark + FORCE_DELAY <= m_scheduler.getCurrentTime())) {
-    Cache::getInstance().getState().force(); // force read/write of all register after clear
+  // force read/write if WAIT_AFTER seconds after time mark
+  if (m_mark != Timestamp(0,0) && (m_mark + WAIT_AFTER <= m_scheduler.getCurrentTime())) {
+    
+    // next write all BS registers on all AP's of this board
+    for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
+      Cache::getInstance().getState().bs().reset((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + blp);
+      Cache::getInstance().getState().bs().write_force((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + blp);
+    }
     m_mark = Timestamp(0,0); // reset mark
   }
 
@@ -84,11 +90,9 @@ void RSUWrite::sendrequest()
     reset.reset = g_RSU_RESET_SYNC;
 
   } else if (s()(getBoardId()).getClear()) {
-    Cache::getInstance().reset(); // reset all cache values to default, right before sending clear
     reset.reset = g_RSU_RESET_CLEAR;
 
   } else if (s()(getBoardId()).getReset()) {
-    Cache::getInstance().reset(); // reset all cache values to default, right before sending clear
     reset.reset = g_RSU_RESET_RESET;
 
   } else {
@@ -124,7 +128,7 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
 
   Cache::getInstance().getState().rsuclear().write_ack(getBoardId());
   
-  // mark time if needed, then force read/write of all register after FORCE_DELAY seconds
+  // mark time if needed
   RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
   if (s()(getBoardId()).getClear() || s()(getBoardId()).getReset()) {
     m_mark = m_scheduler.getCurrentTime();

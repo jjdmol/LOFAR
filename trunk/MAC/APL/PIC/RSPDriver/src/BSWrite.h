@@ -28,6 +28,7 @@
 #include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "SyncAction.h"
+#include "Scheduler.h"
 
 namespace LOFAR {
   namespace RSP {
@@ -38,7 +39,7 @@ namespace LOFAR {
       /**
        * Constructors for a BSWrite object.
        */
-      BSWrite(GCFPortInterface& board_port, int board_id, int blp);
+      BSWrite(GCFPortInterface& board_port, int board_id, int blp, const Scheduler& scheduler);
 
       /* Destructor for BSWrite. */
       virtual ~BSWrite();
@@ -61,6 +62,8 @@ namespace LOFAR {
     private:
       EPA_Protocol::MEPHeader m_hdr;
       int m_blp;
+      const Scheduler&        m_scheduler; // for getCurrentTime
+      RTC::Timestamp          m_mark;      // mark time
     };
   };
 };

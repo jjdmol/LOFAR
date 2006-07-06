@@ -868,7 +868,7 @@ WGCommand::WGCommand(GCFPortInterface& port) :
   m_amplitude((uint32)(((double)2047/2048) * (uint32)(1 << 31))),
   m_mode(0)
 {
-  cout << "amplitude=" << m_amplitude << endl;
+  //cout << "amplitude=" << m_amplitude << endl;
 }
 
 void WGCommand::send()
@@ -1751,59 +1751,35 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
-  {
-    case F_ENTRY:
     {
-	  // reparse options
-      if (0 == (m_command = parse_options(m_argc, m_argv)))
+    case F_ENTRY:
       {
-        logMessage(cerr,"Warning: no command specified.");
-        exit(EXIT_FAILURE);
+	m_subclock.send(); // subscribe to clock updates
+	// after receiving the clock update execute the actual requested command
       }
-      // check if a connection must be made with a frontend. If so, connect first
-      // and send the command to the rspdriver when connected with the frontend
-      FECommand* feCommand = dynamic_cast<FECommand*>(m_command);
-      if(feCommand != 0)
-      {
-        if(feCommand->isFrontEndSet())
-        {
-          feCommand->connect(*this);
-        }
-        else
-        {
-          m_command->send();
-        }
-      }
-      else
-      {
-        m_command->send();
-      }
-
-      m_subclock.send(); // subscribe to clock updates
-    }
-    break;
+      break;
 
     case F_CONNECTED:
-    {
-      // connection with te frontend! send the command to the rsp driver
-      FECommand* feCommand = dynamic_cast<FECommand*>(m_command);
-      if(feCommand != 0)
       {
-        if(feCommand->isConnected(port))
-        {
-          m_command->send();
-        }
+	// connection with te frontend! send the command to the rsp driver
+	FECommand* feCommand = dynamic_cast<FECommand*>(m_command);
+	if(feCommand != 0)
+	  {
+	    if(feCommand->isConnected(port))
+	      {
+		m_command->send();
+	      }
+	  }
       }
-    }
-    break;
+      break;
     
     case F_DISCONNECTED:
-    {
-      port.close();
-      logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
-      exit(EXIT_FAILURE);
-    }
-    break;
+      {
+	port.close();
+	logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
+	exit(EXIT_FAILURE);
+      }
+      break;
 
     case RSP_GETRCUACK:
     case RSP_SETRCUACK:
@@ -1832,9 +1808,39 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_UPDCLOCK:
     case RSP_SUBCLOCKACK:
     case RSP_GETCLOCKACK:
-      status = m_subclock.ack(e); // handle clock updates
+      {
+	status = m_subclock.ack(e); // handle clock updates
+
+	if (RSP_GETCLOCKACK == e.signal) {
+
+	  // reparse options
+	  if (0 == (m_command = parse_options(m_argc, m_argv)))
+	    {
+	      logMessage(cerr,"Warning: no command specified.");
+	      exit(EXIT_FAILURE);
+	    }
+	  // check if a connection must be made with a frontend. If so, connect first
+	  // and send the command to the rspdriver when connected with the frontend
+	  FECommand* feCommand = dynamic_cast<FECommand*>(m_command);
+	  if(feCommand != 0)
+	    {
+	      if(feCommand->isFrontEndSet())
+		{
+		  feCommand->connect(*this);
+		}
+	      else
+		{
+		  m_command->send();
+		}
+	    }
+	  else
+	    {
+	      m_command->send();
+	    }
+	}
+      }
       break;
-      
+
 #ifdef ENABLE_RSPFE
     case RSPFE_STOP_RSPCTL:
       logMessage(cout,"Rspctl stopped by frontend.");
@@ -1845,9 +1851,9 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 
     default:
       logMessage(cerr,"Error: unhandled event.");
-//      GCFTask::stop(); ignore
+      //      GCFTask::stop(); ignore
       break;
-  }
+    }
 
   return status;
 }

@@ -69,19 +69,19 @@ void StatusRead::sendrequest_status()
 GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   if (EPA_RSR_STATUS != event.signal)
-  {
-    LOG_WARN("StatusRead::handleack: unexpected ack");
-    return GCFEvent::NOT_HANDLED;
-  }
+    {
+      LOG_WARN("StatusRead::handleack: unexpected ack");
+      return GCFEvent::NOT_HANDLED;
+    }
 
   EPARsrStatusEvent ack(event);
 
   if (!ack.hdr.isValidAck(m_hdr))
-  {
-    Cache::getInstance().getState().sys().read_error(getBoardId());
-    LOG_ERROR("StatusRead::handleack: invalid ack");
-    return GCFEvent::NOT_HANDLED;
-  }
+    {
+      Cache::getInstance().getState().sys().read_error(getBoardId());
+      LOG_ERROR("StatusRead::handleack: invalid ack");
+      return GCFEvent::NOT_HANDLED;
+    }
 
   SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
 
@@ -111,6 +111,30 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
     }
 
   Cache::getInstance().getState().sys().read_ack(getBoardId());
+
+  // if cache value different from hardware reported value, make equal
+  switch (ack.board.rsp.bp_clock) {
+
+  case 160:
+  case 200:
+    if (0 == getBoardId()) {
+      if (0 == Cache::getInstance().getBack().getClock()) {
+	LOG_INFO_STR(formatString("Receiving initial clock setting from RSP board: %d MHz. Adjusting cache value.",
+				  ack.board.rsp.bp_clock));
+	Cache::getInstance().getFront().getClock() = ack.board.rsp.bp_clock;
+	Cache::getInstance().getBack().getClock()  = ack.board.rsp.bp_clock;
+      } else if (ack.board.rsp.bp_clock != Cache::getInstance().getBack().getClock()) {
+	LOG_WARN_STR(formatString("Reported clock (%d MHz) is different from cache settings (%d MHz)",
+				  ack.board.rsp.bp_clock, Cache::getInstance().getBack().getClock()));
+      }
+    }
+    break;
+
+  default:
+    LOG_WARN_STR(formatString("Invalid clock setting received from RSP board (%d): %d MHz",
+			      getBoardId(), ack.board.rsp.bp_clock));
+    break;
+  }
 
   return GCFEvent::HANDLED;
 }

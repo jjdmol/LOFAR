@@ -332,6 +332,22 @@ void RSPDriver::addAllSyncActions()
   for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
   {
     /*
+     * Always read status and version first.
+     */
+    if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i))
+    {
+      StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
+      ASSERT(statusread);
+      m_scheduler.addSyncAction(statusread);
+    }
+    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
+    {
+      VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
+      ASSERT(versionread);
+      m_scheduler.addSyncAction(versionread);
+    }
+
+    /*
      * Schedule register writes for soft PPS if configured.
      *
      * - This means disabling the external sync on all FPGA's
@@ -365,29 +381,6 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(writereg);
     }
 
-    /*
-     * Clear the board if needed (this needs to be first after SOFT_PPS)
-     */
-    if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
-    {
-      RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid, m_scheduler);
-      ASSERT(rsuwrite);
-      m_scheduler.addSyncAction(rsuwrite);
-    }
-
-    /*
-     * Set correct number of samples per interval
-     * This needs to be done before RCU and WG registers.
-     */
-    if (1 == GET_CONFIG("RSPDriver.WRITE_BS", i))
-    {
-      for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
-        BSWrite* bswrite = new BSWrite(m_board[boardid], boardid, blp);
-        ASSERT(bswrite);
-        m_scheduler.addSyncAction(bswrite);
-      }
-    }
-
     // order is important; TDSProtocolWrite should be added before TDSResultRead
     if (1 == GET_CONFIG("RSPDriver.WRITE_TDS_PROTOCOL", i))
     {
@@ -398,23 +391,35 @@ void RSPDriver::addAllSyncActions()
 
     if (1 == GET_CONFIG("RSPDriver.READ_TDS_RESULT", i))
     {
-      TDSResultRead* tdsresultread = new TDSResultRead(m_board[boardid], boardid);
+      TDSResultRead* tdsresultread = new TDSResultRead(m_board[boardid], boardid, m_scheduler);
       ASSERT(tdsresultread);
       m_scheduler.addSyncAction(tdsresultread);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i))
+    /*
+     * Clear the board if needed.
+     * This needs to be first after WRITE_TDS_PROTOCOL, but before
+     * WRITE_BS.
+     */
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
     {
-      StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
-      ASSERT(statusread);
-      m_scheduler.addSyncAction(statusread);
+      RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid, m_scheduler);
+      ASSERT(rsuwrite);
+      m_scheduler.addSyncAction(rsuwrite);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
+    /*
+     * Set correct number of samples per interval
+     * This needs to be done before RCU and WG registers,
+     * but after WRITE_TDS_PROTOCOL
+     */
+    if (1 == GET_CONFIG("RSPDriver.WRITE_BS", i))
     {
-      VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
-      ASSERT(versionread);
-      m_scheduler.addSyncAction(versionread);
+      for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
+        BSWrite* bswrite = new BSWrite(m_board[boardid], boardid, blp, m_scheduler);
+        ASSERT(bswrite);
+        m_scheduler.addSyncAction(bswrite);
+      }
     }
 
     if (1 == GET_CONFIG("RSPDriver.READ_BST", i))
