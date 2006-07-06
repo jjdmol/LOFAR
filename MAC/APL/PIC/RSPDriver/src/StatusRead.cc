@@ -119,10 +119,12 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   case 200:
     if (0 == getBoardId()) {
       if (0 == Cache::getInstance().getBack().getClock()) {
+#if 0
 	LOG_INFO_STR(formatString("Receiving initial clock setting from RSP board: %d MHz. Adjusting cache value.",
 				  ack.board.rsp.bp_clock));
 	Cache::getInstance().getFront().getClock() = ack.board.rsp.bp_clock;
 	Cache::getInstance().getBack().getClock()  = ack.board.rsp.bp_clock;
+#endif
       } else if (ack.board.rsp.bp_clock != Cache::getInstance().getBack().getClock()) {
 	LOG_WARN_STR(formatString("Reported clock (%d MHz) is different from cache settings (%d MHz)",
 				  ack.board.rsp.bp_clock, Cache::getInstance().getBack().getClock()));

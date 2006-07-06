@@ -179,7 +179,7 @@ void CacheBuffer::reset(void)
   m_versions.ap().resize(StationSettings::instance()->nrBlps());
   m_versions.ap() = versioninit;
 
-  m_clock = 0; //GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
+  m_clock = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
 }
 
 RTC::Timestamp CacheBuffer::getTimestamp() const

@@ -52,6 +52,8 @@ static const EPA_Protocol::RSUReset  g_RSU_RESET_NONE  = { 0, 0, 0, 0 }; // No a
 RSUWrite::RSUWrite(GCFPortInterface& board_port, int board_id, const Scheduler& scheduler)
   : SyncAction(board_port, board_id, 1), m_scheduler(scheduler)
 {
+  m_mark.resize(StationSettings::instance()->nrRspBoards());
+  m_mark = Timestamp(0,0);
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
@@ -66,14 +68,14 @@ void RSUWrite::sendrequest()
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
   // force read/write if WAIT_AFTER seconds after time mark
-  if (m_mark != Timestamp(0,0) && (m_mark + WAIT_AFTER <= m_scheduler.getCurrentTime())) {
+  if (m_mark(getBoardId()) != Timestamp(0,0) && (m_mark(getBoardId()) + WAIT_AFTER <= m_scheduler.getCurrentTime())) {
     
     // next write all BS registers on all AP's of this board
     for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
       Cache::getInstance().getState().bs().reset((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + blp);
       Cache::getInstance().getState().bs().write_force((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + blp);
     }
-    m_mark = Timestamp(0,0); // reset mark
+    m_mark(getBoardId()) = Timestamp(0,0); // reset mark
   }
 
   // cache modified?
@@ -131,7 +133,7 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   // mark time if needed
   RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
   if (s()(getBoardId()).getClear() || s()(getBoardId()).getReset()) {
-    m_mark = m_scheduler.getCurrentTime();
+    m_mark(getBoardId()) = m_scheduler.getCurrentTime();
   }
 
   Cache::getInstance().getBack().getRSUSettings()()(getBoardId()).setRaw(0); // clear the flags
