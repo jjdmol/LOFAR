@@ -79,10 +79,13 @@ namespace LOFAR {
 	  bs_state.resize(nrBlps);
 	  tds_state.resize(nrRspBoards);
 	  rad_state.resize(nrRspBoards);
-
-	  force();
 	}
 
+	/*
+	 * Force update of some (not all) register.
+	 * Register excluded from update are 
+	 * tds, bs, rsuclear
+	 */
 	void force() {
 	  sys_state.reset();
 	  bf_state.reset();
@@ -106,14 +109,14 @@ namespace LOFAR {
 	  rcusettings_state.write_force();
 	  rcuprotocol_state.write_force();
 	  hbaprotocol_state.write_force();
-	  rsuclear_state.write_force();
+	  rsuclear_state.check();
 	  diagwgsettings_state.write_force();
 	  sst_state.read();
 	  bst_state.read();
 	  xst_state.read();
 	  cdo_state.write_force();
-	  bs_state.write_force();
-	  tds_state.write_force();
+	  bs_state.check();
+	  tds_state.check();
 	  rad_state.write_force();
 	}
 
