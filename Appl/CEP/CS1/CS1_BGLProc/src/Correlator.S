@@ -325,12 +325,12 @@ _correlate_3x2:
 	fpmr	 14,0		; stfpdux	 31,1,12
 	fpmr	 15,0		; li	 11,8
 
-	fpmr	 16,0		; lfpsux	 24,0,3
+	fpmr	 16,0		; lfpsx		 24,0,3
 	fpmr	 17,0		; lfpsux	 25,3,11
-	fpmr	 18,0		; lfpsux	 26,0,4
-	fpmr	 19,0		; lfpsux	 28,0,6
+	fpmr	 18,0		; lfpsx		 26,0,4
+	fpmr	 19,0		; lfpsx		 28,0,6
 	fpmr	 20,0		; lfpsux	 29,6,11
-	fpmr	 21,0		; lfpsux	 30,0,7
+	fpmr	 21,0		; lfpsx		 30,0,7
 	fpmr	 22,0		; sub	 5,5,11
 	fpmr	 23,0
 
