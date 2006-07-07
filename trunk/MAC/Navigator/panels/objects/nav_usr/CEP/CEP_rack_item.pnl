@@ -1,0 +1,218 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,270 103 549 529 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+  DebugN($datapoint);
+ 	if (dpAccessable($datapoint))
+	{
+	  dpConnect(\"setText\", $datapoint+ \".type\");
+		dpConnect(\"setColor\", $datapoint + \".status\");
+		dpConnect(\"setPower\", $datapoint + \".power\");
+  }
+  else
+  {
+    PowerLed.backCol = \"_dpdoesnotexist\";
+    RackItem.backCol = \"_dpdoesnotexist\";
+    PowerLed.backCol = \"_dpdoesnotexist\";
+  }
+}
+
+void setText(string dpe, unsigned type)
+{
+ string aName=\"----------\";
+ string aTypeName=dpTypeName(dpe);
+  
+ if (aTypeName == \"TCepPicPc\")
+ {
+   if (type == 0)
+   {
+   	 aName=\"Input PC\";
+   } 
+   else if (type == 1)
+   {
+     aName=\"Output PC\";
+   } 
+   else if (type == 2)
+   {
+     aName=\"Aux PC\";
+   } 
+   else if (type == 3)
+   {
+     aName=\"Offline PC\";
+   }
+ }
+ else if (aTypeName == \"TCepPicSwitch\")
+ {
+   if (type == 0)
+   {
+   	 aName=\"Input Switch\";
+   } 
+   else if (type == 1)
+   {
+     aName=\"Output Switch\";
+   } 
+   else if (type == 2)
+   {
+     aName=\"Aux Switch\";
+   } 
+   else if (type == 3)
+   {
+     aName=\"Offline Switch\";
+   } 
+   else if (type == 4)
+   {
+     aName=\"Interface Switch\";
+   } 
+   else if (type == 5)
+   {
+     aName=\"Central Lofar Switch\";
+   } 
+   else if (type == 6)
+   {
+     aName=\"Int. Interface Switch\";
+   } 
+   else if (type == 3)
+   {
+     aName=\"Ext. Interface Switch\";
+   }
+ }
+ else if (aTypeName == \"TCepPicFESN\")
+ {
+   if (type == 0)
+   {
+   	 aName=\"Input FE/SN\";
+   } 
+   else if (type == 1)
+   {
+     aName=\"Output FE/SN\";
+   } 
+   else if (type == 2)
+   {
+     aName=\"Aux FE/SN\";
+   } 
+   else if (type == 3)
+   {
+     aName=\"Offline FE/SN\";
+   } 
+   else if (type == 4)
+   {
+     aName=\"BG/L FE/SN\";
+   }
+ }
+ TypeName.text = aName; 
+}
+
+void setColor(string dpe, bool status) 
+{
+  if (status < 0)
+	{
+    RackItem.backCol = \"red\";
+	}
+	else
+	{
+		RackItem.backCol = \"Lofar_device_active\";
+	}
+}
+
+void setPower(string dpe, bool power) 
+{
+  if (!power)
+	{
+    PowerLed.backCol = \"red\";
+	}
+	else
+	{
+		PowerLed.backCol = \"Lofar_device_active\";
+	}
+}
+" 0
+EE E E 1 0 0 0  30 70
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"RackItem"
+""
+1 30 50 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 30 30 230 50
+6 8
+"PowerLed"
+""
+1 37 45 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 37 35 57 45
+2 9
+"TypeName"
+""
+1 90 30 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 92 32 172 48
+0 2 0 "s" 0 0 0 192 0 0  92 32
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 20 ------------------- 
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

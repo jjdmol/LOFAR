@@ -1,0 +1,116 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 100 122 129 N "_3DFace" 1
+"$datapoint"
+EEE E E 1 0 0 0  100 110
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border1"
+""
+1 30 70 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E "// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  ChildPanelOnCentralModal(\"objects/nav_usr/CEP/CEP_rack.pnl\",
+      \"CEP rack view\",
+      makeDynString(\"$datapoint:\" + $datapoint));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {ChildPanelOnParentModal}
+// File {objects/nav_usr/CEP/CEP_rack.pnl}
+// Panel {}
+// Parent {CEP rack view}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// PanelPara1 {$datapoint:$datapoint}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+ 	if (dpAccessable($datapoint))
+	{
+		string query = \"SELECT '_online.._value' FROM '\" + $datapoint + \"_Item*.status' REMOTE ALL\";
+		dpQueryConnectAll(\"computeSumAlert\", true, \"sumAlert\", query);
+  }
+  else
+  {
+    Border1.backCol = \"_dpdoesnotexist\";
+  }
+}
+
+void computeSumAlert(string ident, dyn_dyn_anytype tab)
+{
+	unsigned error = 0;
+ 	for (int z = 2; z <= dynlen(tab); z++)
+	{
+		if (tab[z][2] < 0)
+		{
+			error++;
+			break;
+		}
+	}
+	if (error > 0)
+	{
+    Border1.backCol = \"red\";
+	}
+	else
+	{
+		Border1.backCol = \"Lofar_device_active\";
+	}
+}
+" 0
+ E 0 1 1 0 1 E U  1 E 30 30 70 70
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
