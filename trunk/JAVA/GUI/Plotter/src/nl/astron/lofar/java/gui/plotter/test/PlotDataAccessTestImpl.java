@@ -60,7 +60,7 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
      * @throws PlotterDataAccessException will be thrown if something goes wrong during the making of the
      * test data set (not likely though as no other classes are called!)
      */
-    public HashMap retrieveData(Object constraints) throws PlotterDataAccessException{
+    public HashMap<String,Object> retrieveData(Object constraints) throws PlotterDataAccessException{
         //create the hashmap to be returned
         HashMap<String,Object> data = new HashMap<String,Object>();
         String[] constraintsArray = (String[])constraints;
@@ -259,7 +259,7 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
      * @throws PlotterDataAccessException will be thrown if something goes wrong during the making of the
      * test data set (not likely though as no other classes are called!)
      */
-    public HashMap updateData(HashMap currentData, Object constraints) throws PlotterDataAccessException{
+    public HashMap<String,Object> updateData(HashMap<String,Object> currentData, Object constraints) throws PlotterDataAccessException{
         throw new PlotterDataAccessException("Modifying existing datasets is not supported in "+this.getClass().getName().toString());
     }
 }
