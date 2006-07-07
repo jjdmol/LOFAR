@@ -71,7 +71,7 @@ MeqResult MeqPolcLog::getResult(const MeqRequest& request, int nrpert, int pertI
   const double f0[2] = {parameters.itsConstants[0], parameters.itsConstants[1]};
   ASSERTSTR(f0[0] > 0.0 && f0[1] == 0.0, "A polclog should always be logarithmic in frequency and linear in time.");
   ASSERTSTR(itsCoeff.nelements() > 0, "No coefficients found in the parmdb for this polclog.");
-  ASSERTSTR(itsCoeff.nx() > 1, "A polclog should always depend on frequency. Otherwise, use a polc node instead.");
+  ASSERTSTR(itsCoeff.nelements() == 1 || itsCoeff.nx() > 1, "A polclog should always depend on frequency. Otherwise, use a polc node instead.");
   
   // Check if any perturbed values need to be computed.
   const bool computePerturbedValues = nrpert > 0 && request.nspid() > 0;
@@ -184,9 +184,9 @@ void MeqPolcLog::evalUnivariatePolynomial(const MeqRequest &request,
     //cout << "abscissa, transformedAbscissa, ordinate: " << abscissa << " " << transformedAbscissa << " " << ordinate << endl;
 
     // Distribute the value over the dependent axis.
-    for(int j = 0; j < outCount[1 - axis] * outStride[1 - axis]; j += outStride[1 - axis])
+    for(int j = 0; j < outCount[1 - axis]; ++j)
     {
-      outValues[j] = ordinate;
+      outValues[j * outStride[1 - axis]] = ordinate;
     }
 
     // Compute perturbed values if required.
@@ -203,9 +203,9 @@ void MeqPolcLog::evalUnivariatePolynomial(const MeqRequest &request,
           const double perturbedValue = ordinate + perturbations[j] * powAbscissa;
 
           // Distribute the perturbed value over the dependent axis.
-          for(int k = 0; k < outCount[1 - axis] * outStride[1 - axis]; k += outStride[1 - axis])
+          for(int k = 0; k < outCount[1 - axis]; ++k)
           {
-            outPerturbedValues[j][k] = perturbedValue;
+            outPerturbedValues[j][k * outStride[1 - axis]] = perturbedValue;
           }
 
           outPerturbedValues[j] += outStride[axis];
