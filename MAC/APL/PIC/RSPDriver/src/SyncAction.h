@@ -91,6 +91,16 @@ namespace LOFAR {
        */
       void reset();
 
+      /*
+       * doAtInit
+       *
+       * When passed true, this action is marked as an
+       * initialization action and it is executed during
+       * the initialisation phase. If set to false this action
+       * is skipped during the initialisation phase.
+       */
+      void doAtInit(bool atinit = true) { m_atinit = atinit; }
+
     protected:
       /*@{*/
       /**
@@ -112,6 +122,7 @@ namespace LOFAR {
       int               m_n_indices;
       int               m_current_index;
       int               m_retries;
+      bool              m_atinit;
     };
   };
 };

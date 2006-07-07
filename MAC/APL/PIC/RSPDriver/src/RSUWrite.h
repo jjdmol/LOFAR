@@ -62,9 +62,9 @@ namespace LOFAR {
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
-      EPA_Protocol::MEPHeader         m_hdr;
-      const Scheduler&                m_scheduler; // for getCurrentTime
-      blitz::Array<RTC::Timestamp, 1> m_mark;      // mark time for all boards
+      EPA_Protocol::MEPHeader  m_hdr;
+      const Scheduler&         m_scheduler; // for getCurrentTime
+      RTC::Timestamp           m_mark;      // mark time
     };
   };
 };
