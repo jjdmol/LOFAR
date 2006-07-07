@@ -65,7 +65,7 @@ namespace LOFAR {
     casa::MemoryIO buf(buffer, bufferSize, ByteIO::Update);
     casa::AipsIO aio(&buf);
     aio.putstart ("Fitter", 1);
-    aio << itsFitters.size();
+    aio << (uInt)itsFitters.size();
     casa::Record rec;
     casa::String str;
     for (vector<LSQFit>::const_iterator iter = itsFitters.begin();
