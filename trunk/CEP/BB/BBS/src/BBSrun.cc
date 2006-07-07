@@ -241,7 +241,7 @@ bool doIt (const string& parsetName)
 int main (int argc, const char* argv[])
 {
   if (argc < 2) {
-    cout << "Run as: tBandpass parset-name" << endl;
+    cout << "Run as: BBSrun parset-name" << endl;
     return 1;
   }
   if (doIt (argv[1])) {
