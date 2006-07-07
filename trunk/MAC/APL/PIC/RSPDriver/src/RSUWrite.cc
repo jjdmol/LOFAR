@@ -34,6 +34,7 @@
 #include "StationSettings.h"
 #include "RSUWrite.h"
 #include "Cache.h"
+#include "InitState.h"
 
 // nof seconds to wait with writing BS register after RSU clear
 #define WAIT_AFTER ((long)3)
@@ -52,9 +53,11 @@ static const EPA_Protocol::RSUReset  g_RSU_RESET_NONE  = { 0, 0, 0, 0 }; // No a
 RSUWrite::RSUWrite(GCFPortInterface& board_port, int board_id, const Scheduler& scheduler)
   : SyncAction(board_port, board_id, 1), m_scheduler(scheduler)
 {
-  m_mark.resize(StationSettings::instance()->nrRspBoards());
-  m_mark = Timestamp(0,0);
   memset(&m_hdr, 0, sizeof(MEPHeader));
+  m_mark = Timestamp(0,0);
+
+  // this action should be performed at initialisation
+  doAtInit();
 }
 
 RSUWrite::~RSUWrite()
@@ -67,23 +70,27 @@ void RSUWrite::sendrequest()
   
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
-  // force read/write if WAIT_AFTER seconds after time mark
-  if (m_mark(getBoardId()) != Timestamp(0,0) && (m_mark(getBoardId()) + WAIT_AFTER <= m_scheduler.getCurrentTime())) {
-    
+  if (InitState::instance().getState() == InitState::WRITE_BS &&
+      m_mark != Timestamp(0,0) && m_mark + ((long)3) <= m_scheduler.getCurrentTime()) {
+
     // next write all BS registers on all AP's of this board
     for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
       Cache::getInstance().getState().bs().reset((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + blp);
       Cache::getInstance().getState().bs().write_force((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + blp);
     }
-    m_mark(getBoardId()) = Timestamp(0,0); // reset mark
   }
 
-  // cache modified?
+  // cache modified, or initialising and clock update has completed
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rsuclear().get(getBoardId())) {
     Cache::getInstance().getState().rsuclear().unmodified(getBoardId());
 
     setContinue(true);
     return;
+  }
+
+  if (InitState::instance().getState() == InitState::INIT) {
+    // indicate that we're initialising the hardware
+    InitState::instance().init(InitState::WRITE_RSU);
   }
 
   // read values from cache
@@ -129,12 +136,9 @@ GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   }
 
   Cache::getInstance().getState().rsuclear().write_ack(getBoardId());
-  
-  // mark time if needed
-  RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
-  if (s()(getBoardId()).getClear() || s()(getBoardId()).getReset()) {
-    m_mark(getBoardId()) = m_scheduler.getCurrentTime();
-  }
+
+  InitState::instance().setRSUDone(getBoardId());
+  m_mark = m_scheduler.getCurrentTime();
 
   Cache::getInstance().getBack().getRSUSettings()()(getBoardId()).setRaw(0); // clear the flags
 

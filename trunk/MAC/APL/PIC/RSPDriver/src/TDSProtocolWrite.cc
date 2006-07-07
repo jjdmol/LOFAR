@@ -30,6 +30,7 @@
 #include "TDSProtocolWrite.h"
 #include "TDSi2cdefs.h"
 #include "Cache.h"
+#include "InitState.h"
 
 #include <netinet/in.h>
 
@@ -121,6 +122,9 @@ TDSProtocolWrite::TDSProtocolWrite(GCFPortInterface& board_port, int board_id)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 
+  // this action should be performed at initialisation
+  doAtInit();
+
 #if 0
   // patch the tds_160MHz sequence and its result to check programming PLL
   for (int i = 3; i < TDS_PROGRAMPLLS_SIZE; i += 7) printf("%c", (tds_160MHz[i] & 0x80 ? '#' : '_'));
@@ -152,6 +156,11 @@ void TDSProtocolWrite::sendrequest()
     return;
   }
 
+  // indicate that we're initialising the hardware
+  if (InitState::instance().getState() == InitState::INIT) {
+    InitState::instance().init(InitState::WRITE_TDS);
+  }
+
   uint32 tds_control = 0;
   sscanf(GET_CONFIG_STRING("RSPDriver.TDS_CONTROL"), "%x", &tds_control);
 
@@ -167,6 +176,7 @@ void TDSProtocolWrite::sendrequest()
     //
     Cache::getInstance().getState().tds().write_ack(getBoardId());
     setContinue(true);
+
     return;
   }
 

@@ -133,6 +133,8 @@ RSPDriver_SOURCES = \
 	\
 	SyncAction.h \
 	SyncAction.cc \
+	InitState.h \
+	InitState.cc \
 	WriteReg.h \
 	WriteReg.cc \
 	ReadReg.h \

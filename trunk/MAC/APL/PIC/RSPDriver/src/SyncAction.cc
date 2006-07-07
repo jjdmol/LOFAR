@@ -25,6 +25,8 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include "SyncAction.h"
+#include "Cache.h"
+#include "InitState.h"
 
 using namespace LOFAR;
 using namespace RSP;
@@ -40,7 +42,8 @@ SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_indices
     m_continue(false),
     m_n_indices(n_indices),
     m_current_index(0),
-    m_retries(0)
+    m_retries(0),
+    m_atinit(false)
 {
 }
 
@@ -91,9 +94,18 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       for (;;) {
-	// send initial request
-	setContinue(false); // initialize on each entry
-	sendrequest();
+
+	if (!m_atinit && (InitState::instance().getState() != InitState::INIT)) {
+
+	  // skip this action and continue with the next
+	  setContinue(true); // continue with next action
+
+	} else {
+
+	  // send initial request
+	  setContinue(false); // initialize on each entry
+	  sendrequest();
+	}
 
 	// if sendrequest calls setContinue(true), then no event
 	// has been sent, move on to next index

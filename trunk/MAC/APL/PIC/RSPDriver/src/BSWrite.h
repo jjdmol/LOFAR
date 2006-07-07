@@ -63,7 +63,6 @@ namespace LOFAR {
       EPA_Protocol::MEPHeader m_hdr;
       int m_blp;
       const Scheduler&               m_scheduler; // for getCurrentTime
-      blitz::Array<RTC::Timestamp,1> m_mark;      // mark time for each board
     };
   };
 };

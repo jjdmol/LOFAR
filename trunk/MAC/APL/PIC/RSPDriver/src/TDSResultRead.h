@@ -64,7 +64,6 @@ namespace LOFAR {
       int m_delay; // used to delay reading back results
 
       const Scheduler&                m_scheduler; // for getCurrentTime
-      blitz::Array<RTC::Timestamp, 1> m_mark;      // mark time
     };
   };
 };
