@@ -1,0 +1,18 @@
+user                = 
+instrumentPDB       = 
+skyPDB              = 
+measurementSet      = 
+instrumentModelType = 
+calcUVW             = 
+operation           = 
+columnNameIn        = 
+columnNameOut       = 
+timeDomainSize      = 
+startChan           = 
+endChan             = 
+solvParms           = 
+exclParms           = 
+nrSolveInterval     = 
+nriter              = 
+saveSolution        = 
+
