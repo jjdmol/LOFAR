@@ -1,9 +1,12 @@
-check_PROGRAMS = tFillRow tMeqPolc tMeqTabular tMeqParm tParmMerge \
-tPredSolv tPredict tSubtract tCorrect tPerturbed tMSData tShift \
-t3C343
+check_PROGRAMS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular tMeqParm \
+tParmMerge tPredSolv tPredict tSubtract tCorrect tPerturbed tMSData \
+tShift t3C343
 
 tMeqPolc_SOURCES = tMeqPolc.cc
 tMeqPolc_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+
+tMeqPolcLog_SOURCES = tMeqPolcLog.cc
+tMeqPolcLog_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
 
 tMeqTabular_SOURCES = tMeqTabular.cc
 tMeqTabular_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
@@ -48,10 +51,11 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  MPIBIN=$(MPIBIN) \
 				  AIPSPP=$(AIPSPP)
 
-TESTS = tFillRow.sh tMeqPolc.sh tMeqTabular.sh tMeqParm.sh tParmMerge.sh tMSData.sh tPredict.sh tPerturbed.sh tSubtract.sh tCorrect.sh tPredSolv.sh 
+TESTS = tFillRow.sh tMeqPolc.sh tMeqPolcLog.sh tMeqTabular.sh tMeqParm.sh tParmMerge.sh \
+tMSData.sh tPredict.sh tPerturbed.sh tSubtract.sh tCorrect.sh tPredSolv.sh 
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS = tFillRow tMeqPolc tMeqTabular tMeqParm tParmMerge \
+CHECKTOOLPROGS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular tMeqParm tParmMerge \
 tMSData tPredict tPerturbed tSubtract tCorrect
 #ENDCHECKTOOLPROGS
 
