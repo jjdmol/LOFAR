@@ -44,8 +44,8 @@ using namespace LOFAR::ACC::APS;
 
 
 void predict (Prediffer& prediffer, const MSDesc& msd,
-	      const string& columnName,
-	      double timeStep, int startChan, int endChan)
+              const string& columnName,
+              double timeStep, int startChan, int endChan)
 {
   double time = msd.startTime;
   double endTime = msd.endTime;
@@ -57,8 +57,8 @@ void predict (Prediffer& prediffer, const MSDesc& msd,
 }           
 
 void subtract (Prediffer& prediffer, const MSDesc& msd,
-	       const string& columnNameIn, const string& columnNameOut,
-	       double timeStep, int startChan, int endChan)
+               const string& columnNameIn, const string& columnNameOut,
+               double timeStep, int startChan, int endChan)
 {
   double time = msd.startTime;
   double endTime = msd.endTime;
@@ -70,12 +70,12 @@ void subtract (Prediffer& prediffer, const MSDesc& msd,
 }           
 
 void solve (Prediffer& prediffer, const MSDesc& msd,
-	    const string& columnName,
-	    double timeStep, int startChan, int endChan,
-	    const vector<string>& solvParms, const vector<string>& exclParms,
-	    const vector<int32>& nrinterval,
-	    int maxIterations,
-	    bool saveSolution)
+            const string& columnName,
+            double timeStep, int startChan, int endChan,
+            const vector<string>& solvParms, const vector<string>& exclParms,
+            const vector<int32>& nrinterval,
+            int maxIterations,
+            bool saveSolution)
 {
   prediffer.clearSolvableParms();
   prediffer.setSolvableParms (solvParms, exclParms);
@@ -94,9 +94,9 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
     for (int i=0; i<nrinterval[1]; ++i) {
       double sdFreq = workDomain.startX();
       for (int j=0; j<nrinterval[0]; ++j) {
-	solveDomains.push_back (MeqDomain(sdFreq, sdFreq+stepf,
-					  sdTime, sdTime+stept));
-	sdFreq += stepf;
+        solveDomains.push_back (MeqDomain(sdFreq, sdFreq+stepf,
+                                          sdTime, sdTime+stept));
+        sdFreq += stepf;
       }
       sdTime += stept;
     }
@@ -106,9 +106,10 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
     solver.initSolvableParmData (1, solveDomains, prediffer.getWorkDomain());
     solver.setSolvableParmData (prediffer.getSolvableParmData(), 0);
     prediffer.showSettings();
-    cout << "Before: " << setprecision(10)
-	 << solver.getSolvableValues(0) << endl;
-    
+    solver.show(cout);
+    cout << endl;
+
+    cout << "Before: " << setprecision(10) << solver.getSolvableValues(0) << endl;
     for(int i=0; i<maxIterations; ++i) {
       // Get the fitter data from the prediffer and give it to the solver.
       vector<casa::LSQFit> fitters;
@@ -117,8 +118,12 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
 
       // Do the solve.
       solver.solve(false);
-      cout << "iteration " << i << ":  " << setprecision(10)
-	   << solver.getSolvableValues(0) << endl;
+      cout << "iteration " << i << ":  " << endl;
+      
+      for(int j = 0; j < fitters.size(); ++j)
+      {
+                cout << "    " << setprecision(10) << solver.getSolvableValues(0) << endl;
+      }
       cout << solver.getQuality(0) << endl;
 
       prediffer.updateSolvableParms (solver.getSolvableParmData());
@@ -186,7 +191,7 @@ bool doIt (const string& parsetName)
   string name(measurementSet+"/vis.des");
   std::ifstream istr(name.c_str());
   ASSERTSTR (istr, "File " << measurementSet
-	     << "/vis.des could not be opened");
+             << "/vis.des could not be opened");
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
   MSDesc msd;
@@ -199,10 +204,10 @@ bool doIt (const string& parsetName)
   vector<vector<int> > sourceGroups;
   // Construct prediffer.
   Prediffer prediffer(measurementSet, 
-		      ParmDBMeta("aips", instrumentPDB),
-		      ParmDBMeta("aips", skyPDB),
-		      antennaSelector, instrumentModelType, sourceGroups,
-		      calcUVW);
+                      ParmDBMeta("aips", instrumentPDB),
+                      ParmDBMeta("aips", skyPDB),
+                      antennaSelector, instrumentModelType, sourceGroups,
+                      calcUVW);
   try {
     if (operation == "solve") {
       ASSERT (nrSolveInterval.size()==2);
@@ -213,18 +218,18 @@ bool doIt (const string& parsetName)
       cout << "solve nrintervals      : " << nrSolveInterval << endl;
       cout << "solve nriter           : " << nriter << endl;
       solve (prediffer, msd, columnNameIn,
-	     timeDomainSize, startChan, endChan,
-	     solvParms, exclParms,
-	     nrSolveInterval, nriter, saveSolution);
+             timeDomainSize, startChan, endChan,
+             solvParms, exclParms,
+             nrSolveInterval, nriter, saveSolution);
     } else if (operation == "predict") {
       cout << "output column name     : " << columnNameOut << endl;
       predict (prediffer, msd, columnNameOut,
-	       timeDomainSize, startChan, endChan);
+               timeDomainSize, startChan, endChan);
     } else if (operation == "subtract") {
       cout << "input column name      : " << columnNameIn << endl;
       cout << "output column name     : " << columnNameOut << endl;
       subtract (prediffer, msd, columnNameIn, columnNameOut,
-		timeDomainSize, startChan, endChan);
+                timeDomainSize, startChan, endChan);
     } else {
       cout << "Only operations solve, predict, and subtract are valid" << endl;
       return 1;
@@ -244,6 +249,9 @@ int main (int argc, const char* argv[])
     cout << "Run as: BBSrun parset-name" << endl;
     return 1;
   }
+  
+  INIT_LOGGER("BBSrun.log_prop");
+  
   if (doIt (argv[1])) {
     cout << "OK" << endl;
     return 0; 
