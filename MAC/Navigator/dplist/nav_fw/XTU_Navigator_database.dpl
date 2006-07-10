@@ -417,7 +417,7 @@ __nav_default_viewconfig.configs	GCFNavViewConfiguration		0x101	02.03.2005 07:01
 __nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	01.03.2005 13:28:25.304
 __loglevel.	GCFLogLevel	30000	0x101	05.04.2005 11:43:25.652
 __navigator.viewsPath	GCFNavigator	"nav_fw/"	0x101	07.07.2005 07:19:27.498
-__navigator.resourceRoots	GCFNavigator	"CTU1:PIC", "CTU1:PAC"	0x101	07.07.2005 07:19:49.490
+__navigator.resourceRoots	GCFNavigator	"CTU1:PIC", "CTU1:PAC", "CTU1:LOFAR"	0x101	07.07.2005 07:19:49.490
 __navigator.environmentNames	GCFNavigator	"Personal"	0x101	07.07.2005 07:19:06.338
 __navigator.environmentGroups	GCFNavigator	""	0x101	25.07.2005 08:48:35.944
 __navigator.treeAccess	GCFNavigator	"", "", "", "", "", "", "", "", "*:*", "", "", "", "", "", "", "", ""	0x101	15.07.2005 13:49:56.495
