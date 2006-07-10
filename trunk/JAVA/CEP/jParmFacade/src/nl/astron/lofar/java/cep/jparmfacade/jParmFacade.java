@@ -61,4 +61,11 @@ public class jParmFacade {
             double startx, double endx, int nx,
             double starty, double endy, int ny) throws Exception;
     
+    // Get the parameter values for the given parameters and timeframe.
+    // The domain is given by the start and end values, while the time is
+    // given by startSolvTime and endSolveTime.
+    public native HashMap<String,Vector<Double>> getHistory(String parmNamePattern,
+            double startx, double endx, double starty, 
+            double endy, double startSolveTime, double endSolveTime) throws Exception;
+    
 }

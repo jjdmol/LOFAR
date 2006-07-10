@@ -86,5 +86,21 @@ public class jParmFacadeAdapter extends UnicastRemoteObject implements jParmFaca
         return aM;            
     }
 
+    // Get the parameter values for the given parameters and timeframe.
+    // The domain is given by the start and end values, while the time is
+    // given by startSolvTime and endSolveTime.
+    public HashMap<String,Vector<Double>> getHistory(String parmNamePattern,
+            double startx, double endx, double starty, 
+            double endy, double startSolveTime, double endSolveTime) throws RemoteException {
+        HashMap<String,Vector<Double>> aM=null;
+        try {            
+            aM=adaptee.getHistory(parmNamePattern,startx,endx,starty,endy,startSolveTime,endSolveTime);
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getHistory error caused by: " + ex.getMessage());
+            //anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aM;            
+    }
    protected jParmFacade adaptee;   
 }
