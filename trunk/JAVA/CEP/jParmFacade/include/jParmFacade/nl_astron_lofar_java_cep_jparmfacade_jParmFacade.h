@@ -31,6 +31,14 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getValues
   (JNIEnv *, jobject, jstring, jdouble, jdouble, jint, jdouble, jdouble, jint);
 
+/*
+ * Class:     nl_astron_lofar_java_cep_jparmfacade_jParmFacade
+ * Method:    getHistory
+ * Signature: (Ljava/lang/String;DDIDDI)Ljava/util/HashMap;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getHistory
+  (JNIEnv *, jobject, jstring, jdouble, jdouble, jdouble, jdouble, jdouble, jdouble);
+
 #ifdef __cplusplus
 }
 #endif
