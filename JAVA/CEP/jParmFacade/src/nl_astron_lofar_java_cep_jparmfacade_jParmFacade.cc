@@ -127,8 +127,6 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_
   return nameVector;
 }
 
-
-
 /*
  * Class:     nl_astron_lofar_java_cep_jparmfacade_jParmFacade
  * Method:    getValues
@@ -195,6 +193,86 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_
     cout << "Exception during getValues("<< pattern << "," << startx << ","
 	 << endx << "," << nx << "," << starty << "," << endy << "," << ny 
 	 << ") : "<< ex.what() << endl;
+    string aStr= (string)ex.what();
+    jclass newExcCls = env->FindClass("java/lang/Exception");
+    if (newExcCls == 0) { 
+      cout << "Unable to find the new exception class, give up." << endl;
+      //      env->ReleaseStringUTFChars (parmNamePattern, pattern);
+      return result;
+    }
+
+    env->ThrowNew(newExcCls,aStr.c_str());
+  }
+  
+  return result;
+}
+
+/*
+ * Class:     nl_astron_lofar_java_cep_jparmfacade_jParmFacade
+ * Method:    getHistory
+ * Signature: (Ljava/lang/String;DDIDDI)Ljava/util/HashMap;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_java_cep_jparmfacade_jParmFacade_getHistory (JNIEnv *env, jobject obj, jstring parmNamePattern, jdouble startx, jdouble endx, jdouble starty, jdouble endy, jdouble startSolveTime, jdouble endSolveTime) {
+
+  jboolean isCopy;
+  jobject result;
+
+  // create the connection with the ParmDB
+  setParmDBConnection(env,obj);
+
+
+  const char* pattern = env->GetStringUTFChars (parmNamePattern, &isCopy);
+  map<string,vector<double> > valMap;
+  try {
+    valMap = theirPF->getHistory(pattern,startx,endx,starty,endy,startSolveTime,endSolveTime);
+    env->ReleaseStringUTFChars (parmNamePattern, pattern);
+
+    // Construct java Map
+    jclass mapClass, doubleClass, vectorClass;
+    jmethodID mapInit, mapPut, vectorAdd, doubleInit, vectorInit;
+    
+    mapClass = env->FindClass("java/util/HashMap");
+    mapInit = env->GetMethodID(mapClass, "<init>", "()V");
+    result = env->NewObject(mapClass, mapInit);
+    mapPut= env->GetMethodID(mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+    
+    // Construct java Double
+    jobject jDouble;
+    doubleClass = env->FindClass ("java/lang/Double");
+    doubleInit = env->GetMethodID (doubleClass, "<init>", "(D)V");
+    
+    
+    // Loop through map and convert to HashMap
+    
+    for (map<string,vector<double> >::const_iterator valIter=valMap.begin();
+         valIter != valMap.end();
+         valIter++) {
+      
+      // Construct java Vector
+      jobject valVector;
+      vectorClass = env->FindClass("java/util/Vector");
+      vectorInit = env->GetMethodID(vectorClass, "<init>", "()V");
+      valVector = env->NewObject(vectorClass, vectorInit);
+      vectorAdd = env->GetMethodID(vectorClass, "add", "(Ljava/lang/Object;)Z");
+      
+      
+      for (vector<double>::const_iterator iter=valIter->second.begin();
+	   iter != valIter->second.end();
+	   iter++) {
+	
+        jDouble = env->NewObject (doubleClass, doubleInit, *iter);
+	
+	env->CallObjectMethod(valVector, vectorAdd, jDouble);
+      }
+      
+      
+      env->CallObjectMethod(result, mapPut, env->NewStringUTF(valIter->first.c_str()),valVector);
+      
+    }
+  } catch (exception &ex) {
+    cout << "Exception during getHistory("<< pattern << "," << startx << ","
+	 << endx << "," << starty << "," << endy << "," << startSolveTime << ","
+         << endSolveTime << ") : "<< ex.what() << endl;
     string aStr= (string)ex.what();
     jclass newExcCls = env->FindClass("java/lang/Exception");
     if (newExcCls == 0) { 

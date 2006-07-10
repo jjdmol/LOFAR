@@ -44,11 +44,17 @@ public interface jParmFacadeInterface extends Remote
     // An empty name pattern is the same as * (all parm names).
     public Vector<String> getNames(String parmNamePattern) throws RemoteException;
     
-
     // Get the parameter values for the given parameters and domain.
     // The domain is given by the start and end values, while the grid is
     // given by nx and ny.
     public HashMap<String,Vector<Double>> getValues(String parmNamePattern,
             double startx, double endx, int nx,
             double starty, double endy, int ny) throws RemoteException;
+    
+    // Get the parameter values for the given parameters and timeframe.
+    // The domain is given by the start and end values, while the time is
+    // given by startSolveTime and endSolveTime.
+    public HashMap<String,Vector<Double>> getHistory(String parmNamePattern,
+            double startx, double endx, double starty,
+            double endy, double startSolveTime, double endSolveTime) throws RemoteException;
 }
