@@ -1,5 +1,5 @@
 /*
- * ResultPanelHelper.java
+ * ConfigPanelHelper.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,31 +27,31 @@ import java.util.Iterator;
 import java.util.Vector;
 
 /**
- * This (singleton) class maintains a list of available panels that can be shown on a given (VIC)name in the ResultBrowser.
+ * This (singleton) class maintains a list of available panels that can be shown on a given name in the TemplateMaintenanceBrowser.
  * In a later stage this should be obtained from the database to make it more solid and dynamic.
+ * The panels here are mainly for adding configuration information
  *
- * @created 16-05-2006
+ * @created 11-07-2006
  *
  * @author coolen
  *
  * @version $Id$
  *
- * @updated
  */
-public class ResultPanelHelper {
+public class ConfigPanelHelper {
    
     private HashMap<String,Vector<String> > itsPanelMap;
     private Vector<String> itsVector;
-    private static ResultPanelHelper ref;
+    private static ConfigPanelHelper ref;
     
-    /** Creates a new instance of ResultPanelHelper */
-    private ResultPanelHelper() {
+    /** Creates a new instance of ConfigPanelHelper */
+    private ConfigPanelHelper() {
         initMap();
     }
     
-    public static synchronized ResultPanelHelper getResultPanelHelper() {
+    public static synchronized ConfigPanelHelper getConfigPanelHelper() {
         if (ref== null) {
-            ref = new ResultPanelHelper();
+            ref = new ConfigPanelHelper();
         }
         return ref;
     }
@@ -69,18 +69,16 @@ public class ResultPanelHelper {
         itsPanelMap.put("*",itsVector);
 
         
-        //BBS
+        //OLAP
         itsVector = new Vector<String>();
-        //addBasePanels();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
-        itsPanelMap.put("ParmDB",itsVector);     
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.OLAPConfigPanel");
+        itsPanelMap.put("OLAP",itsVector);
+        
         
     }
     
     
     private void addBasePanels() {
-        //generic logging panel
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.LogParamPanel");
         //generic node panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
         //generic parameter panel
