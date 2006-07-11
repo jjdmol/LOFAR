@@ -375,7 +375,7 @@ OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
 	// make nodeName first part of name, paramName second part and remainder the leftover
 	dotpos = aNode.limits.find('.', 0);							// >>a.b.c.d or <<a ?
 	if (dotpos == string::npos) {								// <<a : leave it.
-		return (getParam(aNode));
+		return (getParam(aNode.treeID(), aNode.paramDefID()));
 	}
 																// >>a.b.c.d
 	string		nodeName = aNode.limits.substr(2, dotpos-2);	// a
