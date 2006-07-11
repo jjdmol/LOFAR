@@ -430,12 +430,13 @@ public class MainPanel extends javax.swing.JPanel
                        BufferedInputStream input = new BufferedInputStream(new FileInputStream(itsNewFile));   
                        input.read(uldata,0,uldata.length);
                        input.close();
-                       if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().uploadFile(uldata,itsNewFile.getName())) {
+                       String aFileName= "/tmp/"+itsMainFrame.getUserAccount().getUserName()+"_"+itsNewFile.getName();
+                       if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().uploadFile(uldata,aFileName)) {
                            logger.debug("upload finished");                       
                            // Create a new Tree from the found file.
-                           int aTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadMasterFile(itsNewFile.getPath());
+                           int aTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadMasterFile(aFileName);
                            if (aTreeID < 1) {
-                               logger.debug("Error on fileLoad: " + itsNewFile.getPath());
+                               logger.debug("Error on fileLoad: " + aFileName);
                            } else {
                                // set changed flag to reload mainpanel
                                itsMainFrame.setChanged(this.getFriendlyName(),true);
@@ -651,10 +652,11 @@ public class MainPanel extends javax.swing.JPanel
                         BufferedInputStream input = new BufferedInputStream(new FileInputStream(itsNewFile));   
                         input.read(uldata,0,uldata.length);
                         input.close();
-                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().uploadFile(uldata,itsNewFile.getName())) {
+                        String aFileName= "/tmp/"+itsMainFrame.getUserAccount().getUserName()+"_"+itsNewFile.getName();
+                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().uploadFile(uldata,aFileName)) {
                             logger.debug("upload finished");
                             // Create a new Tree from the found file.
-                            int anID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadComponentFile(itsNewFile.getName());
+                            int anID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadComponentFile(aFileName);
                             if (anID < 1) {
                                 logger.debug("Error on ComponentfileLoad: " + itsNewFile.getPath());
                             } else {

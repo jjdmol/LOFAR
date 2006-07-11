@@ -29,10 +29,12 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
+import nl.astron.lofar.sas.otb.util.ConfigPanelHelper;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
@@ -300,11 +302,12 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         jTabbedPane1.removeAll();
 
         // Check if the nodename uses specific panels and create them
-        Vector<String> aPanelList=new Vector<String>();
-        //generic node panel
-        aPanelList.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
-        //generic parameter panel
-        aPanelList.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
+        Vector aPanelList=null;
+        if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.name))) {
+            aPanelList=itsPanelHelper.getPanels(LofarUtils.keyName(aNode.name));
+        } else {
+            aPanelList=itsPanelHelper.getPanels("*");
+        }
 
         
         // Loop through all the panels and fill the tabPanel with them
@@ -373,6 +376,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;
     private boolean changed = false;
+    
+    private ConfigPanelHelper itsPanelHelper=ConfigPanelHelper.getConfigPanelHelper();
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;

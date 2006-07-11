@@ -34,7 +34,7 @@ import nl.astron.lofar.sas.otbcomponents.VICnodeDefViewPanel;
 import org.apache.log4j.Logger;
 
 /**
- * Class that will show the components to the user, all component actions can be
+  Class that will show the components to the user, all component actions can be
  * handled from within this Gui panel.
  *
  * @created 24-01-2006
