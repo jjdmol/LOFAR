@@ -1401,7 +1401,11 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 
     for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan += 4) {
       for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+#if defined __GNUC__	// work around bug ???
+	for (register int ch asm ("r28") = 0; ch < 4; ch ++) {
+#else
 	for (int ch = 0; ch < 4; ch ++) {
+#endif
 	  FIRtimer.start();
 	  _filter(0, // itsFIRs[stat][pol][chan + ch].itsDelayLine,
 		  FIR::weights[chan + ch],

@@ -87,7 +87,7 @@ extern "C" {
 	const float correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1],
 	const float thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS]);
 
-  struct {
+  extern struct {
     unsigned nr_stations;
     unsigned nr_samples_per_integration;
     unsigned nr_subband_channels;
