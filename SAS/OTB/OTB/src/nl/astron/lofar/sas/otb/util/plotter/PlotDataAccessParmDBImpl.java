@@ -112,9 +112,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         String[] constraintsArray = (String[])parameterConstraints.get(new String("PARMDBCONSTRAINTS"));
         
         HashMap<String,Object> returnMap = new HashMap<String, Object>();
-        
-        LinkedList<HashMap> returnValues = new LinkedList<HashMap>();
-        
+                
         if(parmDB != null){
             
             Vector names = getNames(constraintsArray[0]);
@@ -158,6 +156,8 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 returnMap.put(PlotConstants.DATASET_YAXISUNIT,"");
                 
                 returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
+                
+                //returnMap.put(PlotConstants.DATASET_VALUES,getParmValues(names,constraintsArray));
                 
                 returnMap.put(PlotConstants.DATASET_VALUES,getParmValues(names,constraintsArray));
                 
@@ -485,8 +485,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * Helper method that generates a LinkedList with values from the jParmFacade interface
      * @param names filter to be sent to ParmDB.
      * @return vector of Names
-     */
-    
+     */    
     private LinkedList<HashMap<String,Object>> getParmValues(Vector names, String[] constraintsArray) throws PlotterDataAccessException{
         LinkedList<HashMap<String,Object>> returnList = new LinkedList<HashMap<String,Object>>();
         
@@ -545,6 +544,122 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 //TODO LOG!
                 
                 PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getValues() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                
+                exx.initCause(ex);
+                
+                logger.error(exx);
+                throw exx;
+                
+            }
+            
+            //Every parameter value
+            for(String aValue : values.keySet()){
+                
+                HashMap<String,Object> aValueMap = new HashMap<String,Object>();
+                
+                logger.debug("Parameter Value Found: "+aValue);
+                
+                if(constraintsArray[7] == null || constraintsArray[7].equalsIgnoreCase("")){
+                    aValueMap.put(PlotConstants.DATASET_VALUELABEL,aValue);
+                }else{
+                    aValueMap.put(PlotConstants.DATASET_VALUELABEL,constraintsArray[7]+" - "+aValue);
+                }
+                
+                Vector<Double> valueDoubles = (Vector<Double>)values.get(aValue);
+                
+                logger.debug("Parameter doubles inside " +aValue+": "+valueDoubles.size()+"x");
+                
+                double[] xArray = new double[valueDoubles.size()];
+                
+                double[] yArray = new double[valueDoubles.size()];
+                
+                
+                
+                //Every parameter value double inside the vector
+                
+                for(int i = 0;(i<valueDoubles.size());i++){
+                    
+                    xArray[i] = startx + (endx-startx) / valueDoubles.size()*(i+0.5);
+                    
+                    yArray[i] = valueDoubles.get(i);
+                    
+                }
+                
+                aValueMap.put(PlotConstants.DATASET_XVALUES,xArray);
+                
+                aValueMap.put(PlotConstants.DATASET_YVALUES,yArray);
+                
+                returnList.add(aValueMap);
+                
+            }
+            
+        }
+        return returnList;
+    }
+    
+    /**
+     * Helper method that generates a LinkedList with values from the jParmFacade interface
+     * @param names filter to be sent to ParmDB.
+     * @return vector of Names
+     */    
+    private LinkedList<HashMap<String,Object>> getParmHistoryValues(Vector names, String[] constraintsArray) throws PlotterDataAccessException{
+        LinkedList<HashMap<String,Object>> returnList = new LinkedList<HashMap<String,Object>>();
+        
+        for(int n = 0; n < names.size();n++){
+            
+            Vector paramValues;
+            
+            try{
+                
+                paramValues = parmDB.getRange(names.get(n).toString());
+                
+                
+            } catch (Exception ex) {
+                
+                PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getRange() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
+                
+                exx.initCause(ex);
+                
+                logger.error(exx);
+                throw exx;
+                
+            }
+            
+            double startx = Double.parseDouble(constraintsArray[1]);
+            
+            double endx = Double.parseDouble(constraintsArray[2]);
+            
+            double starty = Double.parseDouble(constraintsArray[3]);
+            
+            double endy = Double.parseDouble(constraintsArray[4]);
+            
+            double startSolveTime = Double.parseDouble(constraintsArray[5]);
+            
+            double endSolveTime = Double.parseDouble(constraintsArray[6]);
+            
+            
+            /*
+            returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
+             
+            returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_END,Double.toString(endx));
+             
+            returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_START,Double.toString(starty));
+             
+            returnMap.put(PlotConstants.DATASET_YAXIS_RANGE_END,Double.toString(endy));
+             */
+            
+            
+            HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
+            
+            try {
+                
+                values = parmDB.getHistory((names.get(n)).toString(), startx, endx, starty, endy, startSolveTime, endSolveTime);
+                
+            } catch (Exception ex) {
+                
+                //TODO LOG!
+                
+                PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getHistory() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
                 
                 exx.initCause(ex);
                 
