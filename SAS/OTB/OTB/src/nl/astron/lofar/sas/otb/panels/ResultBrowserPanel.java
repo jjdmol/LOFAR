@@ -145,7 +145,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 public void treeNodesChanged(TreeModelEvent e){}
                 public void treeNodesInserted(TreeModelEvent e){
                     TreeNode item = (TreeNode)e.getSource();
-                    if (LofarUtils.keyName(item.getName()).equalsIgnoreCase("AO")){
+                    if (LofarUtils.keyName(item.getName()).equalsIgnoreCase("BBS")){
                         try {
                             
                             //Sample code to have ParmDB in the tree.
