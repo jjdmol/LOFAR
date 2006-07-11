@@ -68,23 +68,21 @@ public class ResultPanelHelper {
         addBasePanels();
         itsPanelMap.put("*",itsVector);
 
-        
-        //BBS
+        //ParmDB
         itsVector = new Vector<String>();
-        //addBasePanels();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
-        itsPanelMap.put("ParmDB",itsVector);     
+        itsPanelMap.put("ParmDB",itsVector);
         
     }
     
     
     private void addBasePanels() {
-        //generic logging panel
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.LogParamPanel");
         //generic node panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
         //generic parameter panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
+        //generic logging panel
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.LogParamPanel");
     }
     
     /**

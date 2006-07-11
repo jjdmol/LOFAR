@@ -67,7 +67,11 @@ public class ConfigPanelHelper {
         itsVector = new Vector<String>();
         addBasePanels();
         itsPanelMap.put("*",itsVector);
-
+        
+        //BBS
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.BBSPanel");
+        itsPanelMap.put("BBS",itsVector);
         
         //OLAP
         itsVector = new Vector<String>();
