@@ -43,6 +43,7 @@ public class UserAccount {
     // fields
     private OtdbRmi itsOtdbRmi;
     private int itsRoleMask;
+    private String itsUserName;
 
     /**
      * Creates a new instance of UserAccount 
@@ -50,6 +51,7 @@ public class UserAccount {
     public UserAccount(OtdbRmi otdbrmi, String userName, String password) throws NoAccessException {
         itsOtdbRmi = otdbrmi;
         itsRoleMask = 0;
+        itsUserName=userName;
         
         // For test purposes only
         if(userName.length() == 0) {
@@ -84,5 +86,13 @@ public class UserAccount {
     public boolean isAstronomer() {
         // access the OTDB and check if the rolemask includes the Astronomer role
         return true;
+    }
+    
+    /** Give back the name of the current user
+     *
+     * @return the name of the current user
+     */
+    public String getUserName() {
+        return itsUserName;
     }
 }
