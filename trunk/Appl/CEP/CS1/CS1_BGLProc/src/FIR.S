@@ -493,7 +493,7 @@ _filter:
 
 	mtctr	7		# set number of iterations
 
-	la	8,0(1)		# save call-saved registers
+	la	8,16(1)		# save call-saved registers
 	li	9,DCOMPLEX_SIZE
 	stfpdx	14,0,8
 	stfpdux 15,8,9
@@ -511,7 +511,7 @@ _filter:
 	stfpdux 27,8,9
 	stfpdux 28,8,9
 	stfpdux 29,8,9
-	stmw	28,208(1)	# save r28 ... r31
+	stmw	28,0(1)		# save r28 ... r31
 
 	# convert 15 i4complex numbers to fcomplex
 	li	10,I4COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
@@ -876,7 +876,7 @@ loop:
 
 	bdnz	loop
 
-	la	8,0(1)	# restore call-saved registers
+	la	8,16(1)	# restore call-saved registers
 	li	9,DCOMPLEX_SIZE
 
 	lfpdx	14,0,8
@@ -895,7 +895,7 @@ loop:
 	lfpdux	27,8,9
 	lfpdux	28,8,9
 	lfpdux	29,8,9
-	lmw	28,208(1)	# restore r28 ... r31
+	lmw	28,0(1)		# restore r28 ... r31
 
 	addi	1,1,272		# restore stack pointer
 	blr			# return
@@ -937,31 +937,30 @@ _filter:
 #	The input is converted from int16complex to dcomplex by black magic,
 #	making the code even harder to understand.
 
-	subi	1,1,352		# adjust stack pointer
-
 	mtctr	7		# set number of iterations
 
-	la	8,32(1)		# save call-saved registers
-	li	9,DCOMPLEX_SIZE
-	stfpdux 14,8,9
-	stfpdux 15,8,9
-	stfpdux 16,8,9
-	stfpdux 17,8,9
-	stfpdux 18,8,9
-	stfpdux 19,8,9
-	stfpdux 20,8,9
-	stfpdux 21,8,9
-	stfpdux 22,8,9
-	stfpdux 23,8,9
-	stfpdux 24,8,9
-	stfpdux 25,8,9
-	stfpdux 26,8,9
-	stfpdux 27,8,9
-	stfpdux 28,8,9
-	stfpdux 29,8,9
-	stfpdux 30,8,9
-	stfpdux 31,8,9
-	stmw	28,286(1)	# save r24 ... r31
+	li	9,-DCOMPLEX_SIZE
+	stfpdux 14,1,9		# save call-saved registers
+	stfpdux 15,1,9
+	stfpdux 16,1,9
+	stfpdux 17,1,9
+	stfpdux 18,1,9
+	stfpdux 19,1,9
+	stfpdux 20,1,9
+	stfpdux 21,1,9
+	stfpdux 22,1,9
+	stfpdux 23,1,9
+	stfpdux 24,1,9
+	stfpdux 25,1,9
+	stfpdux 26,1,9
+	stfpdux 27,1,9
+	stfpdux 28,1,9
+	stfpdux 29,1,9
+	stfpdux 30,1,9
+	stfpdux 31,1,9
+
+	subi	1,1,48
+	stmw	28,16(1)	# save r28 ... r31
 
 	lis	8,sub_value@ha	# load sub_values
 	lis	12,0x0080
@@ -969,20 +968,24 @@ _filter:
 	lfpdx	31,0,8
 
 
-	xor	8,1,5
+	# Avoid that int->fp conversion area is in the same cache way as where
+	# the samples come from.  There are two places that can be used where
+	# the conversion can take place: at 0(sp) or 32(sp).  r8, r7, and r11
+	# contain offsets (w.r.t. sp) to this area.  Note that 16(sp) stores
+	# r28 ... r31
+
+	xor	8,1,5	
 	andi.	0,8,0x01E0
 	li	9,FCOMPLEX_SIZE
 	mfcr	8
 	li	10,I16COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
-	rlwinm	8,8,3,1
+	rlwinm	8,8,8,26,26
 	ori	12,12,0x0080
-	slwi	8,8,5
 	sub	6,6,9
 
 	addi	7,8,14
 	addi	11,8,6
 	stfpdx	31,8,1		# initialize int->fp conversion area
-
 
 #if 0
 	lfpsx	1,0,3		# load delay line
@@ -1495,30 +1498,30 @@ loop:
 	stfpsux	15,3,9
 #endif
 
-	la	8,32(1)	# restore call-saved registers
-	li	9,DCOMPLEX_SIZE
+	li	9,DCOMPLEX_SIZE	# restore call-saved registers
+	lmw	28,16(1)	# restore r28 ... r31
 
-	lfpdux	14,8,9
-	lfpdux	15,8,9
-	lfpdux	16,8,9
-	lfpdux	17,8,9
-	lfpdux	18,8,9
-	lfpdux	19,8,9
-	lfpdux	20,8,9
-	lfpdux	21,8,9
-	lfpdux	22,8,9
-	lfpdux	23,8,9
-	lfpdux	24,8,9
-	lfpdux	25,8,9
-	lfpdux	26,8,9
-	lfpdux	27,8,9
-	lfpdux	28,8,9
-	lfpdux	29,8,9
-	lfpdux	30,8,9
-	lfpdux	31,8,9
-	lmw	28,286(1)	# restore r24 ... r31
+	addi	1,1,48
+	lfpdx	31,0,1
+	lfpdux	30,1,9
+	lfpdux	29,1,9
+	lfpdux	28,1,9
+	lfpdux	27,1,9
+	lfpdux	26,1,9
+	lfpdux	25,1,9
+	lfpdux	24,1,9
+	lfpdux	23,1,9
+	lfpdux	22,1,9
+	lfpdux	21,1,9
+	lfpdux	20,1,9
+	lfpdux	19,1,9
+	lfpdux	18,1,9
+	lfpdux	17,1,9
+	lfpdux	16,1,9
+	lfpdux	15,1,9
+	lfpdux	14,1,9
 
-	addi	1,1,352		# restore stack pointer
+	addi	1,1,16		# restore stack pointer
 	blr			# return
 
 #else

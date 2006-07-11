@@ -64,7 +64,7 @@ extern "C" {
   void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
   void _prefetch(const void *src, size_t count, size_t stride);
 
-  struct {
+  extern struct {
     unsigned input_type;
     unsigned nr_stations;
     unsigned nr_samples_per_integration;
