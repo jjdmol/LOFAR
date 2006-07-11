@@ -73,9 +73,8 @@ public class remoteFileAdapter extends UnicastRemoteObject implements remoteFile
         boolean succes=false;
         if (buffer != null && aFileName.length() > 0) {
             try {
-                File file = new File(aFileName);
-                System.out.println("opening File: "+file.getName());
-                BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(file));
+                System.out.println("opening File: "+aFileName);
+                BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFileName));
                 System.out.println("Received buffer length: "+buffer.length);
                 output.write(buffer,0,buffer.length);
                 output.flush();
