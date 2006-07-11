@@ -350,7 +350,7 @@ OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
 	LOG_TRACE_VAR_STR ("getParam:" << aNode.name << ":" << aNode.limits);
 
 	// OTDBparam must be a paramdef.
-	ASSERTSTR(aNode.leaf, "function getParam(node&) only available for nodes");
+	ASSERTSTR(aNode.leaf, "function getParam(node&) only available for params");
 
 	// does limit field contain a reference?
 	if (!isReference(aNode.limits)) {						// no, use other function
