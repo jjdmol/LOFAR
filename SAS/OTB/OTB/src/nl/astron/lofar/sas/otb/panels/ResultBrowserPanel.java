@@ -67,6 +67,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     
     static Logger logger = Logger.getLogger(ResultBrowserPanel.class);
     static String name = "ResultBrowser";
+    private TreeModelListener parmDBTreelistener;
     
     
     /** Creates new form BeanForm */
@@ -80,6 +81,45 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         buttonPanel1.addButton("Query Panel");
         buttonPanel1.addButton("Info");
         buttonPanel1.addButton("Exit");
+        
+         //Sample code to have ParmDB in the tree.
+                
+        parmDBTreelistener = new TreeModelListener(){
+            public void treeStructureChanged(TreeModelEvent e){}
+            public void treeNodesRemoved(TreeModelEvent e){}
+            public void treeNodesChanged(TreeModelEvent e){}
+            public void treeNodesInserted(TreeModelEvent e){
+                TreeNode item = (TreeNode)e.getSource();
+                if (LofarUtils.keyName(item.getName()).equalsIgnoreCase("BBS")){
+                    try {
+                        
+                        HashMap<String,String> tables = ParmDBConfigurationHelper.getInstance().getParmDBTables();
+                        Iterator i = tables.keySet().iterator();
+                        while(i.hasNext()){
+                            String[] args = new String[3];
+                            String tableName = (String)i.next();
+                            args[0]= tableName;
+                            args[1]="BBS";
+                            args[2]=tables.get(tableName);
+                            TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
+                            boolean alreadyPresent = false;
+                            Enumeration children = item.children();
+                            while(children.hasMoreElements() && !alreadyPresent){
+                                TreeNode child = (TreeNode)children.nextElement();
+                                if (child.getName().equals(parmDBnode.getName())){
+                                    alreadyPresent=true;
+                                }
+                            }
+                            if(!alreadyPresent){
+                                item.add(parmDBnode);
+                            }
+                        }
+                    } catch (ParmDBConfigurationException ex) {
+                        logger.error(ex.getMessage(),ex);
+                    }
+                }
+            }
+        };
         
     }
     
@@ -105,6 +145,8 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         
         // initialize the tree
         setNewRootNode();
+        
+       
         
         return true;
     }
@@ -139,45 +181,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         itsMainFrame.setHourglassCursor();
         try {
             OTDBNodeTreeManager treeManager = OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount());
-            treeManager.addTreeModelListener(new TreeModelListener(){
-                public void treeStructureChanged(TreeModelEvent e){}
-                public void treeNodesRemoved(TreeModelEvent e){}
-                public void treeNodesChanged(TreeModelEvent e){}
-                public void treeNodesInserted(TreeModelEvent e){
-                    TreeNode item = (TreeNode)e.getSource();
-                    if (LofarUtils.keyName(item.getName()).equalsIgnoreCase("BBS")){
-                        try {
-                            
-                            //Sample code to have ParmDB in the tree.
-                            
-                            HashMap<String,String> tables = ParmDBConfigurationHelper.getInstance().getParmDBTables();
-                            Iterator i = tables.keySet().iterator();
-                            while(i.hasNext()){
-                                String[] args = new String[3];
-                                String tableName = (String)i.next();
-                                args[0]= tableName;
-                                args[1]="BBS";
-                                args[2]=tables.get(tableName);
-                                TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
-                                boolean alreadyPresent = false;
-                                Enumeration children = item.children();
-                                while(children.hasMoreElements() && !alreadyPresent){
-                                    TreeNode child = (TreeNode)children.nextElement();
-                                    if (child.getName().equals(parmDBnode.getName())){
-                                        alreadyPresent=true;
-                                    }
-                                }
-                                if(!alreadyPresent){
-                                    item.add(parmDBnode);
-                                }
-                            }
-                        } catch (ParmDBConfigurationException ex) {
-                            logger.error(ex.getMessage(),ex);
-                        }
-                    }
-                } 
-            });
-            
+            treeManager.addTreeModelListener(parmDBTreelistener);
             // and create a new root
             treePanel.newRootNode(treeManager.getRootNode(itsTreeID));
             itsMainFrame.setNormalCursor();
@@ -378,8 +382,12 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 }
             }
         } else if(evt.getActionCommand() == "Exit") {
+            OTDBNodeTreeManager treeManager = OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount());
+            treeManager.removeTreeModelListener(parmDBTreelistener);
+            
             itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
+            
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
