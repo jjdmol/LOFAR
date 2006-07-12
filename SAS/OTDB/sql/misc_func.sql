@@ -210,3 +210,31 @@ CREATE OR REPLACE FUNCTION isReference(TEXT)
 	END;
 ' LANGUAGE plpgsql IMMUTABLE;
 
+--
+-- calcArraySize (arraystring)
+--
+-- Authorisation: n/a
+--
+-- Tables:	none
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION calcArraySize(TEXT)
+  RETURNS TEXT AS '
+	DECLARE
+		vSize		INTEGER;
+		vArray		TEXT;
+
+	BEGIN
+		vArray := ltrim($1,\'[ \');
+		vArray := rtrim(vArray,\'] \');
+		vSize := 0;
+		WHILE length(vArray) > 0 LOOP
+			-- remove element
+			vArray := ltrim(vArray, \'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ "[]{}+%<>.\');
+			vSize := vSize + 1;					-- count element
+			vArray := ltrim(vArray, \',\');		-- strip comma
+		END LOOP;
+		RETURN vSize;
+	END;
+' LANGUAGE plpgsql IMMUTABLE;

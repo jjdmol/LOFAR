@@ -42,31 +42,78 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 		vNodeName	VARCHAR(200);
 		vParamName	VARCHAR(200);
 		vRemainder	VARCHAR(200);
+		vOrgArray	VARCHAR(200);
+		vElem		VARCHAR(100);
+		vAnswer		TEXT;
+		vIsArray	BOOLEAN;
+		vSize		INTEGER;
 		vRecord		RECORD;
 
 	BEGIN
---RAISE WARNING \'resolveVHparam(%,%)\', $1, $2;
-		vDotpos    := strpos($2, \'.\');
-		vNodeName  := substr($2, 3, vDotpos-3);
-		vParamName := substr($2, vDotpos+1);
+		vDotpos    := strpos($2, \'.\');					-- >>a.b.c or <<a
+		IF vDotpos < 1 THEN
+			RETURN $2;
+		END IF;
+		vNodeName  := substr($2, 3, vDotpos-3);				-- a
+		vParamName := substr($2, vDotpos+1);				-- b.c
 		vDotpos    := strpos(vParamName, \'.\');
 		IF vDotpos > 0 THEN
-		  vRemainder := substr(vParamName, vDotPos);
-		  vParamName := substr(vParamName, 1, vDotPos-1);
+		  vRemainder := substr(vParamName, vDotPos);		-- .c
+		  vParamName := substr(vParamName, 1, vDotPos-1);	-- b
 		ELSE
 		  vRemainder := \'\';
 		END IF;
---RAISE WARNING \'resolveVHparam: % : % : %\', vNodeName, vParamName, vRemainder;
+		-- does paramname end in [] ?
+		IF rtrim(vParamName, \'[]\') != vParamName THEN
+			vIsArray := true;
+			vParamName := rtrim(vParamName, \'[]\');
+		ELSE
+			vIsArray := false;
+		END IF;
 
+		-- Get parameter definition
 		SELECT	*
 		INTO	vRecord
 		FROM	getVICNodeDef ($1, vNodeName, vParamName);
+	
+		IF NOT FOUND THEN
+			RAISE EXCEPTION \'Parameter % from Node % not found\', vNodeName, vParamName;
+		END IF;
 
-		IF vRemainder = \'\' THEN
-			RETURN	vRecord.limits;
+		IF vIsArray THEN
+			IF vRemainder = \'\' THEN
+				-- calc size of array
+				RETURN	calcArraySize(vRecord.limits);
+			ELSE
+				-- reference array
+				-- create an array with same size as current vRecord.limits array
+				-- while rereferencing the elements of the vRecord.limits array.
+				vAnswer := \'[\';
+				vOrgArray := btrim(vRecord.limits, \'[] \');
+				vSize := calcArraySize(vRecord.limits);
+				FOR i IN 1..vSize LOOP
+					-- get clean name of element
+					vElem := btrim(split_part(vOrgArray, \',\', i), \' \');
+					-- make sure it begins with <<
+					IF substr(vElem,1,2) != \'<<\' THEN
+						vElem := \'<<\' || vElem;
+					END IF;
+					-- resolve value
+					vElem := resolveVHparam($1, vElem || vRemainder);
+					-- add to array
+					vAnswer := vAnswer || vElem || \',\';
+				END LOOP;
+				-- finish array and return result.
+				vAnswer := rtrim(vAnswer, \',\') || \']\';
+				RETURN	vAnswer;
+			END IF;
 		ELSE
-			vRecord.limits := vRecord.limits || vRemainder;
-			RETURN	resolveVHparam($1, vRecord.limits);
+			IF vRemainder = \'\' THEN
+				RETURN	vRecord.limits;
+			ELSE
+				vRecord.limits := vRecord.limits || vRemainder;
+				RETURN	resolveVHparam($1, vRecord.limits);
+			END IF;
 		END IF;
 	END;
 ' LANGUAGE plpgsql;
