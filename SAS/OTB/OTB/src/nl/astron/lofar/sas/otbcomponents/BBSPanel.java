@@ -290,11 +290,12 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         this.setDetailsButtonsVisible(visible);
     }
     private void enableOverviewButtons(boolean enabled) {
-        this.overviewRevertButton.setEnabled(enabled);
+        this.configurationRevertButton.setEnabled(enabled);
     }
     
     private void setOverviewButtonsVisible(boolean visible) {
-        this.overviewRevertButton.setVisible(visible);    }
+        this.configurationRevertButton.setVisible(visible);    
+    }
     
     private void enableDetailButtons(boolean enabled) {
         this.detailRevertButton.setEnabled(enabled);
@@ -334,15 +335,27 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        BBSOverviewPanel = new javax.swing.JPanel();
-        parm1Label = new javax.swing.JLabel();
-        Parm1Text = new javax.swing.JTextField();
-        parm2Label = new javax.swing.JLabel();
-        parm2Text = new javax.swing.JTextField();
-        checkBox1Label = new javax.swing.JLabel();
-        checkBox1 = new javax.swing.JCheckBox();
-        overviewRevertButton = new javax.swing.JButton();
-        BBSDetailPanel = new javax.swing.JPanel();
+        BBSConfigurationPanel = new javax.swing.JPanel();
+        BBSDatasetLabel = new javax.swing.JLabel();
+        BBSDatasetText = new javax.swing.JTextField();
+        BBDatabasePanel = new javax.swing.JPanel();
+        BBDBDBPasswordLabel1 = new javax.swing.JLabel();
+        BBDBDBPasswordText = new javax.swing.JTextField();
+        BBDBHostLabel = new javax.swing.JLabel();
+        BBDBHostText = new javax.swing.JTextField();
+        BBDBPortText = new javax.swing.JTextField();
+        BBDBPortLabel = new javax.swing.JLabel();
+        BBDBDBNameLabel = new javax.swing.JLabel();
+        BBDBDBNameText = new javax.swing.JTextField();
+        BBDBDBUsernameText = new javax.swing.JTextField();
+        BBDBDBUsernameLabel = new javax.swing.JLabel();
+        ParmDBPanel = new javax.swing.JPanel();
+        ParmDBInstrumentLabel = new javax.swing.JLabel();
+        ParmDBInstrumentText = new javax.swing.JTextField();
+        ParmDBLocalSkyLabel = new javax.swing.JLabel();
+        ParmDBLocalSkyText = new javax.swing.JTextField();
+        configurationRevertButton = new javax.swing.JButton();
+        BBSStrategyPanel = new javax.swing.JPanel();
         detailParm1Label = new javax.swing.JLabel();
         detailParm1Text = new javax.swing.JTextField();
         detailRevertButton = new javax.swing.JButton();
@@ -350,52 +363,102 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         setLayout(new java.awt.BorderLayout());
 
-        BBSOverviewPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        BBSConfigurationPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        parm1Label.setText("Parameter 1 :");
-        BBSOverviewPanel.add(parm1Label, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
+        BBSDatasetLabel.setText("Dataset :");
+        BBSConfigurationPanel.add(BBSDatasetLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
 
-        Parm1Text.setToolTipText("Nr of Samples to integrate");
-        Parm1Text.setMaximumSize(new java.awt.Dimension(440, 19));
-        Parm1Text.setMinimumSize(new java.awt.Dimension(440, 19));
-        Parm1Text.setPreferredSize(new java.awt.Dimension(440, 19));
-        BBSOverviewPanel.add(Parm1Text, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, -1, -1));
+        BBSDatasetText.setToolTipText("Name of the Measurement Set");
+        BBSDatasetText.setMaximumSize(new java.awt.Dimension(440, 19));
+        BBSDatasetText.setMinimumSize(new java.awt.Dimension(440, 19));
+        BBSDatasetText.setPreferredSize(new java.awt.Dimension(440, 19));
+        BBSConfigurationPanel.add(BBSDatasetText, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 30, 220, -1));
 
-        parm2Label.setText("Parameter 2 :");
-        BBSOverviewPanel.add(parm2Label, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, -1, -1));
+        BBDatabasePanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        parm2Text.setToolTipText("Number of seconds that need 2 be buffered");
-        parm2Text.setMaximumSize(new java.awt.Dimension(200, 19));
-        parm2Text.setMinimumSize(new java.awt.Dimension(200, 19));
-        parm2Text.setPreferredSize(new java.awt.Dimension(200, 19));
-        BBSOverviewPanel.add(parm2Text, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 40, 440, -1));
+        BBDatabasePanel.setBorder(javax.swing.BorderFactory.createTitledBorder("BB Database"));
+        BBDBDBPasswordLabel1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        BBDBDBPasswordLabel1.setText("DB Password :");
+        BBDatabasePanel.add(BBDBDBPasswordLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, 100, 20));
 
-        checkBox1Label.setText("Checkbox");
-        BBSOverviewPanel.add(checkBox1Label, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 81, -1));
+        BBDBDBPasswordText.setToolTipText("Database password used by Blackboard DBMS");
+        BBDatabasePanel.add(BBDBDBPasswordText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 140, 220, 20));
 
-        checkBox1.setToolTipText("Do you want to use an AMC server?");
-        checkBox1.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        checkBox1.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        BBSOverviewPanel.add(checkBox1, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 70, -1, -1));
+        BBDBHostLabel.setText("Host : ");
+        BBDatabasePanel.add(BBDBHostLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, -1));
 
-        overviewRevertButton.setText("Revert");
-        overviewRevertButton.addActionListener(new java.awt.event.ActionListener() {
+        BBDBHostText.setToolTipText("Hostname/IP Address of BlackBoard DBMS");
+        BBDBHostText.setMaximumSize(new java.awt.Dimension(200, 19));
+        BBDBHostText.setMinimumSize(new java.awt.Dimension(200, 19));
+        BBDBHostText.setPreferredSize(new java.awt.Dimension(200, 19));
+        BBDatabasePanel.add(BBDBHostText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 20, 220, -1));
+
+        BBDBPortText.setToolTipText("Port used by Blackboard DBMS");
+        BBDatabasePanel.add(BBDBPortText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 50, 60, 20));
+
+        BBDBPortLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        BBDBPortLabel.setText("Port :");
+        BBDatabasePanel.add(BBDBPortLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 81, -1));
+
+        BBDBDBNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        BBDBDBNameLabel.setText("DB Name :");
+        BBDatabasePanel.add(BBDBDBNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, 81, -1));
+
+        BBDBDBNameText.setToolTipText("Database name used by Blackboard DBMS");
+        BBDatabasePanel.add(BBDBDBNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 80, 220, -1));
+
+        BBDBDBUsernameText.setToolTipText("Database username used by Blackboard DBMS");
+        BBDatabasePanel.add(BBDBDBUsernameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 110, 220, 20));
+
+        BBDBDBUsernameLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        BBDBDBUsernameLabel.setText("DB Username :");
+        BBDatabasePanel.add(BBDBDBUsernameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 100, 20));
+
+        BBSConfigurationPanel.add(BBDatabasePanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 350, 170));
+
+        ParmDBPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        ParmDBPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("ParmDB"));
+        ParmDBInstrumentLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        ParmDBInstrumentLabel.setText("Instrument :");
+        ParmDBPanel.add(ParmDBInstrumentLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 100, 20));
+
+        ParmDBInstrumentText.setToolTipText("Instrument parameters (MS table)");
+        ParmDBPanel.add(ParmDBInstrumentText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 20, 220, 20));
+
+        ParmDBLocalSkyLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        ParmDBLocalSkyLabel.setText("Local Sky :");
+        ParmDBPanel.add(ParmDBLocalSkyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 100, 20));
+
+        ParmDBLocalSkyText.setToolTipText("Local sky parameters (MS table)");
+        ParmDBLocalSkyText.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                overviewRevertButtonActionPerformed(evt);
+                ParmDBLocalSkyTextActionPerformed(evt);
             }
         });
 
-        BBSOverviewPanel.add(overviewRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 100, 81, -1));
+        ParmDBPanel.add(ParmDBLocalSkyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 50, 220, 20));
 
-        jTabbedPane1.addTab("BBS Overview", BBSOverviewPanel);
+        BBSConfigurationPanel.add(ParmDBPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 350, 80));
 
-        BBSDetailPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        configurationRevertButton.setText("Revert");
+        configurationRevertButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                configurationRevertButtonActionPerformed(evt);
+            }
+        });
+
+        BBSConfigurationPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 330, 81, -1));
+
+        jTabbedPane1.addTab("Configuration", BBSConfigurationPanel);
+
+        BBSStrategyPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         detailParm1Label.setText("Parameter 1 :");
-        BBSDetailPanel.add(detailParm1Label, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
+        BBSStrategyPanel.add(detailParm1Label, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
 
         detailParm1Text.setToolTipText("Give Machine where AMC server runs (hostname or IP address)");
-        BBSDetailPanel.add(detailParm1Text, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, 440, -1));
+        BBSStrategyPanel.add(detailParm1Text, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, 440, -1));
 
         detailRevertButton.setText("Revert");
         detailRevertButton.addActionListener(new java.awt.event.ActionListener() {
@@ -404,9 +467,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        BBSDetailPanel.add(detailRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, -1, -1));
+        BBSStrategyPanel.add(detailRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, -1, -1));
 
-        jTabbedPane1.addTab("BBS Detail", BBSDetailPanel);
+        jTabbedPane1.addTab("Strategy", BBSStrategyPanel);
 
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
@@ -419,10 +482,14 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void ParmDBLocalSkyTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParmDBLocalSkyTextActionPerformed
+// TODO add your handling code here:
+    }//GEN-LAST:event_ParmDBLocalSkyTextActionPerformed
     
-    private void overviewRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_overviewRevertButtonActionPerformed
+    private void configurationRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationRevertButtonActionPerformed
         this.restoreBBSOverviewPanel();
-    }//GEN-LAST:event_overviewRevertButtonActionPerformed
+    }//GEN-LAST:event_configurationRevertButtonActionPerformed
     
     private void detailRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detailRevertButtonActionPerformed
         this.restoreBBSDetailsPanel();
@@ -468,20 +535,32 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel BBSDetailPanel;
-    private javax.swing.JPanel BBSOverviewPanel;
-    private javax.swing.JTextField Parm1Text;
+    private javax.swing.JLabel BBDBDBNameLabel;
+    private javax.swing.JTextField BBDBDBNameText;
+    private javax.swing.JLabel BBDBDBPasswordLabel1;
+    private javax.swing.JTextField BBDBDBPasswordText;
+    private javax.swing.JLabel BBDBDBUsernameLabel;
+    private javax.swing.JTextField BBDBDBUsernameText;
+    private javax.swing.JLabel BBDBHostLabel;
+    private javax.swing.JTextField BBDBHostText;
+    private javax.swing.JLabel BBDBPortLabel;
+    private javax.swing.JTextField BBDBPortText;
+    private javax.swing.JPanel BBDatabasePanel;
+    private javax.swing.JPanel BBSConfigurationPanel;
+    private javax.swing.JLabel BBSDatasetLabel;
+    private javax.swing.JTextField BBSDatasetText;
+    private javax.swing.JPanel BBSStrategyPanel;
+    private javax.swing.JLabel ParmDBInstrumentLabel;
+    private javax.swing.JTextField ParmDBInstrumentText;
+    private javax.swing.JLabel ParmDBLocalSkyLabel;
+    private javax.swing.JTextField ParmDBLocalSkyText;
+    private javax.swing.JPanel ParmDBPanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
-    private javax.swing.JCheckBox checkBox1;
-    private javax.swing.JLabel checkBox1Label;
+    private javax.swing.JButton configurationRevertButton;
     private javax.swing.JLabel detailParm1Label;
     private javax.swing.JTextField detailParm1Text;
     private javax.swing.JButton detailRevertButton;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JButton overviewRevertButton;
-    private javax.swing.JLabel parm1Label;
-    private javax.swing.JLabel parm2Label;
-    private javax.swing.JTextField parm2Text;
     // End of variables declaration//GEN-END:variables
     
     /**
