@@ -138,6 +138,17 @@ par systemClock		I	dbl	   MHz	 	0	  0		200				-	'systemclock'
 par	channelWidth	I	dbl	   Hz		0	  0		762.939453125	-	'width of the channels'
 par	subbandWidth	I	dbl	   kHz		0	  0		195.3125		-	'width of the 512 subbands'
 
+# -- Clock160 --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	Clock160 		1.0.0	test	'node constraint'	'160 MHz clock'
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par systemClock		I	dbl	   MHz	 	0	  0		160				-	'systemclock'
+par	channelWidth	I	dbl	   Hz		0	  0		610.3515625   	-	'width of the channels'
+par	subbandWidth	I	dbl	   kHz		0	  0		156.25  		-	'width of the 512 subbands'
+
 # -- Observation --
 #       name        	vers    qual	constr. 			descr.
 #------------------------------------------------------------------------------
@@ -164,5 +175,6 @@ node	TopNode 	1.0.0	test	'node constraint'	'Toplevel node'
 #------------------------------------------------------------------------------
 uses	'Observation' 	1.0.0	test		0..1				"x"
 uses	'Clock200'		1.0.0	test		1					"x"
+uses	'Clock160'		1.0.0	test		1					"x"
 
 
