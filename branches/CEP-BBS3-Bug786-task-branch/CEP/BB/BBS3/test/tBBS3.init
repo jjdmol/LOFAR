@@ -1,6 +1,6 @@
 #!/bin/sh
 
-MSDIR=/data/PSS3/diepen/BBS2
+MSDIR=/opt/lofar/data/BBS2
 
 blddir=`pwd | sed -e 's%.*/BBS3/\(build/[^/]*\)/.*%\1%'`
 
