@@ -45,5 +45,5 @@ CTRLparams.SC1params.MSDBparams.DBMasterPort=13157         # port on which the m
 CTRLparams.SC1params.MSDBparams.meqTableName="demo3p-1"    # Meq model table name *       
 CTRLparams.SC1params.MSDBparams.skyTableName="demo3_gsm-1" # Sky model table name *
 #this doesn't have to be defined CTRLparams.SC1params.MSDBparams.sourceGroups = ["srcs=[0,1,2]","srcs=[5,6,7]"]
-CTRLparams.SC1params.MSDBparams.generalMSPath=./
-CTRLparams.SC1params.MSDBparams.subsetMSPath=./
+CTRLparams.SC1params.MSDBparams.generalMSPath=/opt/lofar/data
+CTRLparams.SC1params.MSDBparams.subsetMSPath=/opt/lofar/data

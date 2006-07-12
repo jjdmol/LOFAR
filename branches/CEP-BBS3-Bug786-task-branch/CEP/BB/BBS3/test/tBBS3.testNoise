@@ -49,5 +49,5 @@ CTRLparams.SC1params.MSDBparams.skyTableName="demo3_gsm-1" # Sky model table nam
 #this doesn't have to be defined CTRLparams.SC1params.MSDBparams.sourceGroups = ["srcs=[0,1,2]","srcs=[5,6,7]"]
 
 
-CTRLparams.SC1params.MSDBparams.generalMSPath=./
-CTRLparams.SC1params.MSDBparams.subsetMSPath=./
+CTRLparams.SC1params.MSDBparams.generalMSPath=/opt/lofar/data
+CTRLparams.SC1params.MSDBparams.subsetMSPath=/opt/lofar/data
