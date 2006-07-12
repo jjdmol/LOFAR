@@ -187,48 +187,54 @@ sub savepacket
 sub readresponse
 {
     my ($pcap) = @_;
+    my ($retval) = 0;
 
-    my $error = 0;
+    do { # keep going when we receive invalid messages
+	$retval = 0; # assume success
 
-    eval {
-	use POSIX qw(SIGALRM);
-	POSIX::sigaction(SIGALRM,
-			 POSIX::SigAction->new(sub { die }))
-	    || die "=== ERR error setting SIGALRM handler: $!\n";
-	
+	# wait for message to arrive
+	eval {
+	    use POSIX qw(SIGALRM);
+	    POSIX::sigaction(SIGALRM,
+			     POSIX::SigAction->new(sub { die }))
+		|| die "=== ERR error setting SIGALRM handler: $!\n";
+	    
 	alarm $RESPONSETIMEOUT;
-	(0 == loop ($pcap, 1, \&savepacket, ''))
-	    || die "=== ERR Failed to receive response";
-	alarm 0;
-    };
-    if ($@) {
-	$error = 1;
-	return ('', $error,'');
-    }
-    
-    my ($ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved) =
-	unpack($MEPRECVFORMAT, $g_packet);
+	    (0 == loop ($pcap, 1, \&savepacket, ''))
+		|| die "=== ERR Failed to receive response";
+	    alarm 0;
+	};
+	if ($@) {
+	    $retval = 1; # fatal (timeout)
+	    return ('', $retval, '');
+	}
+	
+	my ($ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved) =
+	    unpack($MEPRECVFORMAT, $g_packet);
+	
+	if ($TYPE_WRITEACK != $type && $TYPE_READACK != $type) {
+	    $retval = 2; # ignore invalid message
+	    print STDERR "ignoring message with invalid TYPE\n" if ($g_debug);
+	}
+	if ($PID_RSU != $pid && $PID_RSR != $pid) {
+	    $retval = 2; # ignore invalid message
+	    print STDERR "ignoring message with invalid PID\n" if ($g_debug);
+	}
+	
+	printf STDERR "0x%s 0x%02x 0x%02x %5d 0x%02x 0x%02x 0x%02x 0x%02x %5d %5d %5d %5d\n",
+	$ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved if ($g_debug);
+	
+	if (0 == $retval && 0 != $status) {
+	    $retval = 1; # fatal
+	    print STDERR "=== FATAL protocol error: status=", $STATUS{$status}, "\n";
+	    print STDERR "=== Are you using the correct Ethernet interface? Use -i argument to change, e.g. -i eth1\n";
+	    exit;
+	}
+    } until ($retval != 2);
+ 
+    return ('', $retval, '') if ($retval);
 
-    if ($TYPE_WRITEACK != $type && $TYPE_READACK != $type) {
-	$error = 1;
-	print STDERR "=== ERR invalid message type: ", $type, "\n";
-    }
-    if ($PID_RSU != $pid && $PID_RSR != $pid) {
-	$error = 1;
-	print STDERR "=== ERR invalid pid: ", $pid, "\n";
-    }
-
-    printf STDERR "0x%s 0x%02x 0x%02x %5d 0x%02x 0x%02x 0x%02x 0x%02x %5d %5d %5d %5d\n",
-    $ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved if ($g_debug);
-
-    if (0 != $status) {
-	$error = 1;
-	print STDERR "=== FATAL protocol error: status=", $STATUS{$status}, "\n";
-	print STDERR "=== Are you using the correct Ethernet interface? Use -i argument to change, e.g. -i eth1\n";
-	exit;
-    }
-    
-    return (substr($g_packet, 14 + $MEPHDRSIZE), $error, $ethdr);
+    return (substr($g_packet, 14 + $MEPHDRSIZE), $retval, $ethdr);
 }
 
 #
@@ -253,7 +259,8 @@ sub flash
 	    
 	    $sock->send_eth_frame($packet);
 	    ($payload, $error) = readresponse($pcap);
-	    return $error if $error;
+
+	    return $error if ($error);
 	}
 	
 	if ($readcb) {
@@ -262,8 +269,8 @@ sub flash
 	    
 	    $sock->send_eth_frame($packet);
 	    ($payload, $error) = readresponse($pcap);
-	    return $error if $error;
-	    
+	    return $error if ($error);
+
 	    $success = &$readcb($page, $block, $payload, $image) && $success;
 	}
 	
@@ -298,8 +305,9 @@ sub writedir
 			(($page + 1) * $BLOCKS_PER_PAGE) - 1);
     $packet .= $entry;
 
-    my $error = 0;
+    my $error = 2;
     $sock->send_eth_frame($packet);
+
     ($result, $error) = readresponse($pcap);
 
     return $error;
