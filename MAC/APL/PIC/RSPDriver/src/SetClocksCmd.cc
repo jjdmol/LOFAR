@@ -63,6 +63,7 @@ void SetClocksCmd::ack(CacheBuffer& /*cache*/)
 void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
   cache.getClock() = m_event->clock;
+  LOG_INFO_STR(formatString("Setting clock to %d MHz @ ", m_event->clock) << getTimestamp());
   if (setModFlag) {
     cache.getCache().getState().tds().write();
   }
@@ -70,7 +71,6 @@ void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
 
 void SetClocksCmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetClocksCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetClocksCmd::getTimestamp() const

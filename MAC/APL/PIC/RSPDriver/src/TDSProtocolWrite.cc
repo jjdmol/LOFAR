@@ -158,7 +158,12 @@ void TDSProtocolWrite::sendrequest()
 
   // indicate that we're initialising the hardware
   if (InitState::instance().getState() == InitState::INIT) {
+
     InitState::instance().init(InitState::WRITE_TDS);
+
+    LOG_INFO_STR(formatString("Sending clock setting via RSP board %d: %d MHz",
+			      getBoardId(), Cache::getInstance().getBack().getClock()));
+
   }
 
   uint32 tds_control = 0;

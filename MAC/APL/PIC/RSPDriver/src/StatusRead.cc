@@ -126,8 +126,8 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
 	Cache::getInstance().getBack().getClock()  = ack.board.rsp.bp_clock;
 #endif
       } else if (ack.board.rsp.bp_clock != Cache::getInstance().getBack().getClock()) {
-	LOG_WARN_STR(formatString("Reported clock (%d MHz) is different from cache settings (%d MHz)",
-				  ack.board.rsp.bp_clock, Cache::getInstance().getBack().getClock()));
+	LOG_WARN_STR(formatString("Reported clock (%d MHz) is different from cache settings (%d MHz) on RSP board %d",
+				  ack.board.rsp.bp_clock, Cache::getInstance().getBack().getClock(), getBoardId()));
       }
     }
     break;
