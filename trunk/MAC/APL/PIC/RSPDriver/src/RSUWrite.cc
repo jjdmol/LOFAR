@@ -37,7 +37,7 @@
 #include "InitState.h"
 
 // nof seconds to wait with writing BS register after RSU clear
-#define WAIT_AFTER ((long)3)
+#define WRITE_BS_DELAY ((long)5)
 
 using namespace blitz;
 using namespace LOFAR;
@@ -71,7 +71,7 @@ void RSUWrite::sendrequest()
   reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
   if (InitState::instance().getState() == InitState::WRITE_BS &&
-      m_mark != Timestamp(0,0) && m_mark + ((long)3) <= m_scheduler.getCurrentTime()) {
+      m_mark != Timestamp(0,0) && m_mark + WRITE_BS_DELAY <= m_scheduler.getCurrentTime()) {
 
     // next write all BS registers on all AP's of this board
     for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {

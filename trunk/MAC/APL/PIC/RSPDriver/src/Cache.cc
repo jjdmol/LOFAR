@@ -48,6 +48,13 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 {
   reset(); // reset by allocating memory and settings default values
 
+  // When the sample frequency (m_clock) is modified the RSP
+  // board goes through a reset. For this reason we reset all
+  // values in the cacht to default (using Cache::reset), but
+  // the value of m_clock should not be reset. For that reason
+  // it is initialized here separately outside reset().
+  m_clock = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
+
   // print sizes of the cache
   LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
   LOG_DEBUG_STR("m_subbandselection().size()   =" << m_subbandselection().size()   * sizeof(uint16));
@@ -178,8 +185,6 @@ void CacheBuffer::reset(void)
   m_versions.bp() = versioninit;
   m_versions.ap().resize(StationSettings::instance()->nrBlps());
   m_versions.ap() = versioninit;
-
-  m_clock = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
 }
 
 RTC::Timestamp CacheBuffer::getTimestamp() const
