@@ -1,73 +1,79 @@
+DataSet                  = "test.ms"        # name of Measurement Set
+
 Strategy.Steps           = ["xyz1", "xyz2"] # steps
 Strategy.Stations        = [ 0, 1, 2, 3 ]   # ID's of stations to use
-Strategy.DomainSize.Freq = 1e+6             # f(Hz) 
-Strategy.DomainSize.Time = 10               # t(s)
+Strategy.InputData       = "INDATA"         # MS input data column 
+Strategy.Correlation.Selection = ALL        # one of AUTO, CROSS, ALL
+Strategy.Correlation.Type = ["XX", "YY"]    # which (cross)correlations to use
+Strategy.WorkDomainSize.Freq = 1e+6         # work domain size: f(Hz) 
+Strategy.WorkDomainSize.Time = 10           # work domain size: t(s)
+Strategy.Integration.Freq = 1;              # integration interval: f(Hz)
+Strategy.Integration.Time = 0.1;            # integration interval: t(s)
 
-Strategy.DataSet         = "test.ms"        # names of Measurement Sets
-Strategy.Selection       = ALL              # one of AUTO, CROSS, ALL
-Strategy.BBDB.Host       = "127.0.0.1"      # hostname/ipaddr of BB database
-Strategy.BBDB.Port       = 12345            # port used by BB database
-
-Strategy.ParamDB         = "AIPS++"         # is now an AIPS++ table
-Strategy.Param.Instr     = "test.mep"       # instrument parameters (MS table)
-Strategy.Param.LocalSky  = "test.gsm"       # local sky parameters (MS table)
-Strategy.Param.InData    = "INDATA"         # MS input data column 
-
+BBDB.Host                = "127.0.0.1"      # hostname/ipaddr of BB DBMS
+BBDB.Port                = 12345            # port used by BB DBMS
+BBDB.DBName              = "blackboard"     # name of the BB database
+BBDB.UserName            = "postgres"       # username for accessing the DBMS
+BBDB.PassWord            = ""               # password for accessing the DBMS
+BBDB.ParmDB.Name         = "parmdb"         # table containing (solved) params.
+BBDB.ParmDB.Type         = "aips"           # "database" used to store params.
+BBDB.ParmDB.Instrument   = "test.mep"       # instrument parameters (MS table)
+BBDB.ParmDB.LocalSky     = "test.gsm"       # local sky parameters (MS table)
 
 Step.xyz1.Steps          = ["sl1", "sl2"]
 Step.xyz1.Selection.Station1 = [0, 0, 0, 1, 1, 2] # baselines to use 
 Step.xyz1.Selection.Station2 = [0, 1, 2, 1, 2, 2] # (all if empty)
 Step.xyz1.Sources        = ["3C343"]        # list of sources
+Step.xyz1.InstrumentModel = ["Bandpass",  \ # Instrument model
+                           "DirGain", "Phase"]
 
 Step.xyz2.Steps          = ["sl1", "sl3"]
 Step.xyz2.Selection.Station1 = [0, 0, 1]    # baselines to use
 Step.xyz2.Selection.Station2 = [0, 1, 1]    # (all if empty)
 Step.xyz2.Sources        = ["3C343"]        # sources in the source model
+Step.xyz2.InstrumentModel = ["Bandpass"]    # Instrument model
 
 Step.sl1.Selection.Station1 = [0, 1]        # baselines to use
 Step.sl1.Selection.Station2 = [1, 2]        # (all if empty)
 Step.sl1.Sources         = []               # list of sources
 Step.sl1.Operation       = SOLVE          \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT
-Step.sl1.WriteMode       = DEFERRED         # one of NONE, DEFERRED, IMMEDIATE
 Step.sl1.OutData         = "OUTDATA1"       # MS output data column
 Step.sl1.Solve.MaxIter   = 10               # maximum number of iterations
 Step.sl1.Solve.Epsilon   = 1e-7             # convergence threshold
 Step.sl1.Solve.MinConverged = 0.95          # fraction that must have converged
-Step.sl1.Solve.Params    = ["a1", "b1"]     # names of solvable parameters
-Step.sl1.Solve.ExclParams = ["c1"]          # parameters excluded from solve
+Step.sl1.Solve.Parms     = ["PHASE:*"]      # names of solvable parameters
+Step.sl1.Solve.ExclParms = [""]             # parameters excluded from solve
 Step.sl1.Solve.DomainSize.Freq = 1000       # f(Hz)
 Step.sl1.Solve.DomainSize.Time = 1          # t(s)
-Step.sl1.InstrumentModels = ["Bandpass", "DirGain", "Phase"]
+Step.sl1.InstrumentModel = ["Bandpass", "Phase"]
 
 Step.sl2.Selection.Station1 = []            # baselines to use
 Step.sl2.Selection.Station2 = []            # (all if empty)
 Step.sl2.Sources         = []               # list of sources
 Step.sl2.Operation       = CORRECT        \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT
-Step.sl2.WriteMode       = NONE             # one of NONE, DEFERRED, IMMEDIATE
 Step.sl2.OutData         = "OUTDATA2"       # MS output data column
 Step.sl2.Solve.MaxIter   = 10               # maximum number of iterations
 Step.sl2.Solve.Epsilon   = 1e-6             # convergence threshold
 Step.sl2.Solve.MinConverged = 0.85          # fraction that must have converged
-Step.sl2.Solve.Params    = ["a2", "b2"]     # names of solvable parameters
-Step.sl2.Solve.ExclParams = ["c2"]          # parameters excluded from solve
+Step.sl2.Solve.Parms     = ["GAIN:*"]       # names of solvable parameters
+Step.sl2.Solve.ExclParms = ["PHASE:*"]      # parameters excluded from solve
 Step.sl2.Solve.DomainSize.Freq = 500        # f(Hz)
 Step.sl2.Solve.DomainSize.Time = 2          # t(s)
-Step.sl2.InstrumentModels = ["DirGain", "Phase"]
+Step.sl2.InstrumentModel = ["DirGain", "Phase"]
 
 Step.sl3.Selection.Station1 = []            # baselines to use
 Step.sl3.Selection.Station2 = []            # (all if empty)
 Step.sl3.Sources         = []               # list of sources
 Step.sl3.Operation       = PREDICT        \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT
-Step.sl3.WriteMode       = NONE             # one of NONE, DEFERRED, IMMEDIATE
 Step.sl3.OutData         = "OUTDATA3"       # MS output data column
 Step.sl3.Solve.MaxIter   = 10               # maximum number of iterations
 Step.sl3.Solve.Epsilon   = 1e-5             # convergence threshold
 Step.sl3.Solve.MinConverged = 0.98          # fraction that must have converged
-Step.sl3.Solve.Params    = ["a3", "b3"]     # names of solvable parameters
-Step.sl3.Solve.ExclParams = ["c3"]          # parameters excluded from solve
+Step.sl3.Solve.Parms     = ["GAIN:*", "PHASE:*"] # names of solvable parameters
+Step.sl3.Solve.ExclParms = [""]             # parameters excluded from solve
 Step.sl3.Solve.DomainSize.Freq = 250        # f(Hz)
 Step.sl3.Solve.DomainSize.Time = 4          # t(s)
-Step.sl3.InstrumentModels = ["Phase"]
+Step.sl3.InstrumentModel = ["Phase"]
