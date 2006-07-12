@@ -27,11 +27,17 @@
 using namespace std;
 using namespace LOFAR;
 using namespace RTC;
+using namespace blitz;
 
-RegisterState::State RegisterState::get(int i)
+RegisterState::State RegisterState::get(int i) const
 {
   ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
   return m_state(i);
+}
+
+int RegisterState::getMatchCount(Range r, State matchstate) const
+{
+  return sum(where(m_state(r) == matchstate, 1, 0));
 }
 
 void RegisterState::print(std::ostream& out) const
