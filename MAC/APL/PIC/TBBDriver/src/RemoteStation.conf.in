@@ -1,0 +1,14 @@
+#
+# Configuration description of the LOFAR remote station TBB boards.
+#
+
+#
+# Number of TBB boards, normal 12
+#
+RS.N_TBBBOARDS=1
+
+#
+# Number of Mp's (Memmory Processors) per TBB board
+#
+RS.N_MPS=4
+
