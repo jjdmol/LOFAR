@@ -15,17 +15,22 @@ BBDB.Port                = 12345            # port used by BB DBMS
 BBDB.DBName              = "blackboard"     # name of the BB database
 BBDB.UserName            = "postgres"       # username for accessing the DBMS
 BBDB.PassWord            = ""               # password for accessing the DBMS
-BBDB.ParmDB.Name         = "parmdb"         # table containing (solved) params.
-BBDB.ParmDB.Type         = "aips"           # "database" used to store params.
-BBDB.ParmDB.Instrument   = "test.mep"       # instrument parameters (MS table)
-BBDB.ParmDB.LocalSky     = "test.gsm"       # local sky parameters (MS table)
+
+ParmDB.Instrument        = "test.mep"       # instrument parameters (MS table)
+ParmDB.LocalSky          = "test.gsm"       # local sky parameters (MS table)
 
 Step.xyz1.Steps          = ["sl1", "sl2"]
 Step.xyz1.Selection.Station1 = [0, 0, 0, 1, 1, 2] # baselines to use 
 Step.xyz1.Selection.Station2 = [0, 1, 2, 1, 2, 2] # (all if empty)
 Step.xyz1.Sources        = ["3C343"]        # list of sources
+Step.xyz1.ExtraSources   = ["M81"]          # list of sources outside patch
 Step.xyz1.InstrumentModel = ["Bandpass",  \ # Instrument model
                            "DirGain", "Phase"]
+Step.xyz1.Integration.Freq = 2;             # integration interval: f(Hz)
+Step.xyz1.Integration.Time = 0.5;           # integration interval: t(s)
+Step.xyz1.Correlation.Selection = CROSS     # one of AUTO, CROSS, ALL
+Step.xyz1.Correlation.Type = ["XX", "XY", \ # which (cross) correlations to use
+                              "YX", "YY"]
 
 Step.xyz2.Steps          = ["sl1", "sl3"]
 Step.xyz2.Selection.Station1 = [0, 0, 1]    # baselines to use
