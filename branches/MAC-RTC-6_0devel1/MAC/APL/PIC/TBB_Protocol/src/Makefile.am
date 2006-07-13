@@ -13,11 +13,14 @@ SUFFIXES = .ph
 	cp $*.ph $(top_builddir)/include/APL/TBB_Protocol
 
 EXTRA_DIST = \
-	TBB_Protocol.prot 
+	TBB_Protocol.prot\
+	TP_Protocol.prot 
 
 BUILT_SOURCES = \
-	TBB_Protocol.ph \
-	TBB_Protocol.cc 
+	TBB_Protocol.ph\
+	TBB_Protocol.cc\
+	TP_Protocol.ph \
+	TP_Protocol.cc 
 
 pkgincludedir=$(includedir)/APL/TBB_Protocol
 pkginclude_HEADERS = \
@@ -26,8 +29,7 @@ pkginclude_HEADERS = \
 lib_LTLIBRARIES         = libtbb_protocol.la
 
 libtbb_protocol_la_SOURCES = \
-	$(BUILT_SOURCES) \
-	TO_BE_DEFINED.cc 
+	$(BUILT_SOURCES) 
 
 clean-local:
 	rm -f *.ph

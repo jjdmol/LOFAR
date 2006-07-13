@@ -8,7 +8,7 @@
 #
 ##############################################################################
 
-Summary: TBB_Protocol contains the library and headers necessary to communicate with the TBBDriver
+Summary:TBB_Protocol contains the library and headers necessary to communicate with the TBB board
 
 %define release @RPM_RELEASE@
 %define version @VERSION@

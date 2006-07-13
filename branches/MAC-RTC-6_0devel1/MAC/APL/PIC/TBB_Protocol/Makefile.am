@@ -1,5 +1,5 @@
 
-SUBDIRS	= src test include
+SUBDIRS	= src
 
 DISTCHECK_CONFIGURE_FLAGS=\
 	--with-common=$(prefix) \
