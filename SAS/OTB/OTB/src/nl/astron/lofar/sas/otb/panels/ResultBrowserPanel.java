@@ -44,8 +44,8 @@ import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.ParmDBConfigurationHelper;
 import nl.astron.lofar.sas.otb.util.ResultPanelHelper;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
 import nl.astron.lofar.sas.otb.util.treemanagers.ParmDBTreeManager;
+import nl.astron.lofar.sas.otb.util.treemanagers.ResultTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 
@@ -180,7 +180,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         
         itsMainFrame.setHourglassCursor();
         try {
-            OTDBNodeTreeManager treeManager = OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount());
+            ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
             treeManager.addTreeModelListener(parmDBTreelistener);
             // and create a new root
             treePanel.newRootNode(treeManager.getRootNode(itsTreeID));
@@ -382,7 +382,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 }
             }
         } else if(evt.getActionCommand() == "Exit") {
-            OTDBNodeTreeManager treeManager = OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount());
+            ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
             treeManager.removeTreeModelListener(parmDBTreelistener);
             
             itsMainFrame.unregisterPlugin(this.getFriendlyName());

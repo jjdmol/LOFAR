@@ -26,7 +26,7 @@ package nl.astron.lofar.sas.otb.panels;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
+import nl.astron.lofar.sas.otb.util.treemanagers.ResultTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 
 
@@ -78,7 +78,7 @@ public class SamplePanel extends javax.swing.JPanel
         // put the OTDBnode in a wrapper for the tree
         //OTDBtreeNode otdbTreeNode = new OTDBtreeNode(otdbNode, itsMainFrame.getOTDBrmi());
         // example of an empty tree
-         OTDBNodeTreeManager treeManager = OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount());
+         ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
           
         TreeNode otdbTreeNode = new TreeNode(treeManager,otdbNode);
 
@@ -376,7 +376,7 @@ public class SamplePanel extends javax.swing.JPanel
             otdbNode.name = "Node_" + treeCounter++;
 
             // put the OTDBnode in a wrapper for the tree
-            TreeNode otdbTreeNode = new TreeNode(OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount()),otdbNode);
+            TreeNode otdbTreeNode = new TreeNode(ResultTreeManager.getInstance(itsMainFrame.getUserAccount()),otdbNode);
             
             // and create a new root
             treePanel.newRootNode(otdbTreeNode);

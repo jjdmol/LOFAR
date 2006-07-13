@@ -26,41 +26,39 @@ import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.jParmDBnode;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
 /**
- * Base OTDBNodeTreeManager Class
+ * Base ResultTreeManager Class
  *
- * @created 26-01-2006, 14:56
+ * @created 13-07-2006, 16:00
  *
- * @author blaakmeer/Coolen
+ * @author pompert
  *
  * @version $Id$
  *
  * @updated
  */
-public class OTDBNodeTreeManager extends GenericTreeManager implements ITreeManager{
+public class ResultTreeManager extends GenericTreeManager implements ITreeManager{
     
     // Create a Log4J logger instance
-    private static Logger logger = Logger.getLogger(OTDBNodeTreeManager.class);
-    private static OTDBNodeTreeManager instance;
+    private static Logger logger = Logger.getLogger(ResultTreeManager.class);
+    private static ResultTreeManager instance;
     
     /**
      * default constructor, protected by a singleton pattern
      */
-    private OTDBNodeTreeManager(UserAccount anAccount) {
+    private ResultTreeManager(UserAccount anAccount) {
         super(anAccount);
     }
     
-    public static OTDBNodeTreeManager getInstance(UserAccount anAccount){
+    public static ResultTreeManager getInstance(UserAccount anAccount){
         if(instance==null){
-            instance = new OTDBNodeTreeManager(anAccount);
+            instance = new ResultTreeManager(anAccount);
         }
         return instance;
     }
@@ -97,7 +95,7 @@ public class OTDBNodeTreeManager extends GenericTreeManager implements ITreeMana
     }
     
     public void defineChildsForNode(TreeNode aNode) {
-        logger.trace("Entry - TreeManager defineChildNodes("+toString()+")");
+        logger.trace("Entry - ResultTreeManager defineChildNodes("+toString()+")");
         
         if (aNode.getUserObject() == null) {
             return;
@@ -123,7 +121,7 @@ public class OTDBNodeTreeManager extends GenericTreeManager implements ITreeMana
                 fireTreeInsertionPerformed(evt);
             }
         } catch(Exception e) {
-            logger.fatal("Exception during TreeManager OTDB-defineChildNodes",e);
+            logger.fatal("Exception during ResultTreeManager-defineChildNodes",e);
         }
     }
     public TreeNode getRootNode(Object arguments){
@@ -132,7 +130,7 @@ public class OTDBNodeTreeManager extends GenericTreeManager implements ITreeMana
         try {
             itsTreeID = Integer.parseInt(arguments.toString());
         } catch (NumberFormatException ex) {
-            logger.error("The OTDBNodeTreeManager received an incorrect TreeID! ",ex);
+            logger.error("The ResultTreeManager received an incorrect TreeID! ",ex);
         }
         
         if (itsTreeID == 0 ) {
@@ -143,7 +141,7 @@ public class OTDBNodeTreeManager extends GenericTreeManager implements ITreeMana
             try {
                 otdbNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
             } catch (RemoteException ex) {
-                logger.fatal("The OTDBNodeTreeManager could not build a root node! ",ex);
+                logger.fatal("The ResultTreeManager could not build a root node! ",ex);
             }
         }
         TreeNode newNode = new TreeNode(this.instance,otdbNode,otdbNode.name);
