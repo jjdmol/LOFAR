@@ -1,0 +1,14 @@
+#
+# Configuration for TPStub
+#
+
+#
+# MAC address of lofar27, eth2, 00:0A:5E:46:5D:ED
+# This sets the destination MAC address of the EPA response events
+#
+TPStub.MAC_ADDR_TBBDRIVER=00:50:04:32:B8:5C
+
+#
+# Interface on which to listen for TBBDriver events
+#
+TPStub.IF_NAME=eth2
