@@ -40,6 +40,7 @@
 import os
 import sys
 import getopt
+import shutil
 
 def usage():
   print "usage: "+sys.argv[0]+" [-h] [-s] packageName [packageName...]"
@@ -116,17 +117,11 @@ def addToLofarconfIn(lofarDir,packageName):
   # add new package to lofarconf.in in Package dir
   #
 
-  os.rename("lofarconf.in","lofarconf.in.old")
-
-  readFile=openFile("lofarconf.in.old","r")
-  writeFile=openFile("lofarconf.in","w")
-  aLine=readFile.readline()
-  while aLine != "":
-    writeFile.write(aLine)
-    aLine=readFile.readline()
-  writeFile.write(packageName+"\t\t\t#short description\n")
-  writeFile.close()
-  readFile.close()
+  if os.path.isfile("lofarconf.in"):
+    shutil.copyfile("lofarconf.in","lofarconf.in.old")
+  f = openFile("lofarconf.in","a")
+  f.write(packageName+"\t\t\t#short description\n")
+  f.close()
 
 def createBootstrap(lofarDir,packageName,dirLevel):
   #
@@ -206,9 +201,12 @@ def main(argv):
   #
   # get Lofar base dir
   #
-  file= os.popen("echo $PWD | sed -e 's%/LOFAR/.*%/LOFAR%'")
-  lofarDir=str.replace(file.readline(),"\n","")
-  file.close()
+  if "LOFARROOT" in os.environ:
+    lofarDir = os.environ["LOFARROOT"] + "/share"
+  else:
+    file= os.popen("echo $PWD | sed -e 's%/LOFAR/.*%/LOFAR%'")
+    lofarDir=str.replace(file.readline(),"\n","")
+    file.close()
 
   # find out the directory sublevel
   dirLevel=len(baseDir.split('/'))-len(lofarDir.split('/'))
