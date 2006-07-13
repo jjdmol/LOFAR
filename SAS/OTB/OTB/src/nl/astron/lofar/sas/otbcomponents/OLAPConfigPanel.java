@@ -27,6 +27,7 @@ import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.lofarutils.LofarUtils;
@@ -102,11 +103,8 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                         
                 // We need to keep all the params needed by this panel
                 if (aNode.leaf) {
-                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());
-                    if (aParam != null && LofarUtils.isReference(aParam.limits)) {
-                        aRefParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
-                    }
-                    setField(aParam,aRefParam);
+                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
+                    setField(aParam,aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("OLAP_HW")) {
                     //we need to get all the childs from this node also.    
                     Vector HWchilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
@@ -119,12 +117,11 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                         
                         // We need to keep all the params needed by this panel
                         if (aHWNode.leaf) {
-                            aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode.treeID(),aHWNode.paramDefID());
-                            if (aParam != null && LofarUtils.isReference(aParam.limits)) {
-                                aRefParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
-                            }
+                            aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
+                        } else {
+                            aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode.treeID(),aHWNode.paramDefID()); 
                         }
-                        setField(aParam,aRefParam);
+                        setField(aParam,aHWNode);
                     }
                 }
             }
@@ -169,8 +166,8 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         JPopupMenu aPopupMenu=null;
         JMenuItem  aMenuItem=null;
         
-        //  Fill in menu as in the example above        
     }
+    
     /** handles the choice from the popupmenu 
      *
      * depending on the choices that are possible for this panel perform the action for it
@@ -188,14 +185,14 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         AMCServerHostText.setText(itsAMCServerHost.limits);
         AMCServerPortText.setText(itsAMCServerPort.limits);
         DelayCompensationHostText.setText(itsDelayCompensationHost.limits);
-        DelayCompensationPortsText.setText(itsDelayCompensationPorts.limits);
+        itsNewDelayCompensationPorts=itsDelayCompensationPorts.limits;
         InputClusterFENText.setText(itsInputClusterFEN.limits);
-        InputBGLHostsText.setText(itsInputBGLHosts.limits);
-        InputBGLPortsText.setText(itsInputBGLPorts.limits);
+        itsNewInputBGLHosts=itsInputBGLHosts.limits;
+        itsNewInputBGLPorts=itsInputBGLPorts.limits;
         StellaFENText.setText(itsStellaFEN.limits);
         StorageClusterFENText.setText(itsStorageClusterFEN.limits);
-        BGLStorageHostsText.setText(itsBGLStorageHosts.limits);
-        BGLStoragePortsText.setText(itsBGLStoragePorts.limits);
+        itsNewBGLStorageHosts=itsBGLStorageHosts.limits;
+        itsNewBGLStoragePorts=itsBGLStoragePorts.limits;
         partitionText.setText(itsPartition.limits);
 
     }
@@ -242,147 +239,94 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     /* Set's the different fields in the GUI */
-    private void setField(jOTDBparam aParam, jOTDBparam aRefParam) {
+    private void setField(jOTDBparam aParam, jOTDBnode aNode) {
         // OLAP_HW settings
         if (aParam==null) {
             return;
         }
-        if (LofarUtils.keyName(aParam.name).equals("AMCServerHost")) {
-            if (aRefParam!=null) {
-                AMCServerHostText.setToolTipText(aRefParam.description);
-                AMCServerHostText.setText(aParam.limits + " : " + aRefParam.limits);
+        boolean isRef = LofarUtils.isReference(aNode.limits);
+        String aKeyName = LofarUtils.keyName(aParam.name);
+        
+        if (aKeyName.equals("AMCServerHost")) {
+            AMCServerHostText.setToolTipText(aParam.description);
+            if (isRef) {
+                AMCServerHostText.setText(aParam.limits + " : " + aNode.limits);
                 AMCServerHostText.setEnabled(false);
                 itsAMCServerHost=null;
             } else {
-                AMCServerHostText.setToolTipText(aParam.description);
                 AMCServerHostText.setText(aParam.limits);
                 AMCServerHostText.setEnabled(true);
                 itsAMCServerHost=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("AMCServerPort")) {
-            if (aRefParam!=null) {
-                AMCServerPortText.setToolTipText(aRefParam.description);
-                AMCServerPortText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("AMCServerPort")) {
+            AMCServerPortText.setToolTipText(aParam.description);
+            if (isRef) {
+                AMCServerPortText.setText(aParam.limits + " : " + aNode.limits);
                 AMCServerPortText.setEnabled(false);
                 itsAMCServerPort=null;
             } else {
-                AMCServerPortText.setToolTipText(aParam.description);
                 AMCServerPortText.setText(aParam.limits);
                 AMCServerPortText.setEnabled(true);
                 itsAMCServerPort=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("DelayCompensationHost")) {
-            if (aRefParam!=null) {
-                DelayCompensationHostText.setToolTipText(aRefParam.description);
-                DelayCompensationHostText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("DelayCompensationHost")) {
+            DelayCompensationHostText.setToolTipText(aParam.description);
+            if (isRef) {
+                DelayCompensationHostText.setText(aParam.limits + " : " + aNode.limits);
                 DelayCompensationHostText.setEnabled(false);
                 itsDelayCompensationHost=null;
             } else {
-                DelayCompensationHostText.setToolTipText(aParam.description);
                 DelayCompensationHostText.setText(aParam.limits);
                 DelayCompensationHostText.setEnabled(true);
                 itsDelayCompensationHost=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("DelayCompensationPorts")) {
-            if (aRefParam!=null) {
-                DelayCompensationPortsText.setToolTipText(aRefParam.description);
-                DelayCompensationPortsText.setText(aParam.limits + " : " + aRefParam.limits);
-                DelayCompensationPortsText.setEnabled(false);
-                itsDelayCompensationPorts=null;
-            } else {
-                DelayCompensationPortsText.setToolTipText(aParam.description);
-                DelayCompensationPortsText.setText(aParam.limits);
-                DelayCompensationPortsText.setEnabled(true);
-                itsDelayCompensationPorts=aParam;
-            }
-        } else if (LofarUtils.keyName(aParam.name).equals("InputClusterFEN")) {
-            if (aRefParam!=null) {
-                InputClusterFENText.setToolTipText(aRefParam.description);
-                InputClusterFENText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("DelayCompensationPorts")) {
+            itsDelayCompensationPorts=aParam;
+        } else if (aKeyName.equals("InputClusterFEN")) {
+            InputClusterFENText.setToolTipText(aParam.description);
+            if (isRef) {
+                InputClusterFENText.setText(aParam.limits + " : " + aNode.limits);
                 InputClusterFENText.setEnabled(false);
                 itsInputClusterFEN=null;
             } else {
-                InputClusterFENText.setToolTipText(aParam.description);
                 InputClusterFENText.setText(aParam.limits);
                 InputClusterFENText.setEnabled(true);
                 itsInputClusterFEN=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("InputBGLHosts")) {
-            if (aRefParam!=null) {
-                InputBGLHostsText.setToolTipText(aRefParam.description);
-                InputBGLHostsText.setText(aParam.limits + " : " + aRefParam.limits);
-                InputBGLHostsText.setEnabled(false);
-                itsInputBGLHosts=null;
-            } else {
-                InputBGLHostsText.setToolTipText(aParam.description);
-                InputBGLHostsText.setText(aParam.limits);
-                InputBGLHostsText.setEnabled(true);
-                itsInputBGLHosts=aParam;
-            }
-        } else if (LofarUtils.keyName(aParam.name).equals("InputBGLPorts")) {
-            if (aRefParam!=null) {
-                InputBGLPortsText.setToolTipText(aRefParam.description);
-                InputBGLPortsText.setText(aParam.limits + " : " + aRefParam.limits);
-                InputBGLPortsText.setEnabled(false);
-                itsInputBGLPorts=null;
-            } else {
-                InputBGLPortsText.setToolTipText(aParam.description);
-                InputBGLPortsText.setText(aParam.limits);
-                InputBGLPortsText.setEnabled(true);
-                itsInputBGLPorts=aParam;
-            }
-        } else if (LofarUtils.keyName(aParam.name).equals("StellaFEN")) {
-            if (aRefParam!=null) {
-                StellaFENText.setToolTipText(aRefParam.description);
-                StellaFENText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("InputBGLHosts")) {
+            itsInputBGLHosts=aParam;
+        } else if (aKeyName.equals("InputBGLPorts")) {
+            itsInputBGLPorts=aParam;
+        } else if (aKeyName.equals("StellaFEN")) {
+            StellaFENText.setToolTipText(aParam.description);
+            if (isRef) {
+                StellaFENText.setText(aParam.limits + " : " + aNode.limits);
                 StellaFENText.setEnabled(false);
                 itsStellaFEN=null;
             } else {
-                StellaFENText.setToolTipText(aParam.description);
                 StellaFENText.setText(aParam.limits);
                 StellaFENText.setEnabled(true);
                 itsStellaFEN=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("StorageClusterFEN")) {
-            if (aRefParam!=null) {
-                StorageClusterFENText.setToolTipText(aRefParam.description);
-                StorageClusterFENText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("StorageClusterFEN")) {
+            StorageClusterFENText.setToolTipText(aParam.description);
+            if (isRef) {
+                StorageClusterFENText.setText(aParam.limits + " : " + aNode.limits);
                 StorageClusterFENText.setEnabled(false);
                 itsStorageClusterFEN=null;
             } else {
-                StorageClusterFENText.setToolTipText(aParam.description);
                 StorageClusterFENText.setText(aParam.limits);
                 StorageClusterFENText.setEnabled(true);
                 itsStorageClusterFEN=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("BGLStorageHosts")) {
-            if (aRefParam!=null) {
-                BGLStorageHostsText.setToolTipText(aRefParam.description);
-                BGLStorageHostsText.setText(aParam.limits + " : " + aRefParam.limits);
-                BGLStorageHostsText.setEnabled(false);
-                itsBGLStorageHosts=null;
-            } else {
-                BGLStorageHostsText.setToolTipText(aParam.description);
-                BGLStorageHostsText.setText(aParam.limits);
-                BGLStorageHostsText.setEnabled(true);
-                itsBGLStorageHosts=aParam;
-            }
-        } else if (LofarUtils.keyName(aParam.name).equals("BGLStoragePorts")) {
-            if (aRefParam!=null) {
-                BGLStoragePortsText.setToolTipText(aRefParam.description);
-                BGLStoragePortsText.setText(aParam.limits + " : " + aRefParam.limits);
-                BGLStoragePortsText.setEnabled(false);
-                itsBGLStoragePorts=null;
-            } else {
-                BGLStoragePortsText.setToolTipText(aParam.description);
-                BGLStoragePortsText.setText(aParam.limits);
-                BGLStoragePortsText.setEnabled(true);
-                itsBGLStoragePorts=aParam;
-            }
-        } else if (LofarUtils.keyName(aParam.name).equals("partition")) {
-            if (aRefParam!=null) {
-                partitionText.setToolTipText(aRefParam.description);
-                partitionText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("BGLStorageHosts")) {
+            itsBGLStorageHosts=aParam;
+        } else if (aKeyName.equals("BGLStoragePorts")) {
+            itsBGLStoragePorts=aParam;
+        } else if (aKeyName.equals("partition")) {
+            partitionText.setToolTipText(aParam.description);
+            if (isRef) {
+                partitionText.setText(aParam.limits + " : " + aNode.limits);
                 partitionText.setEnabled(false);
                 itsPartition=null;
             } else {
@@ -394,79 +338,190 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
 
         // OLAP Specific parameters    
         
-        } else if (LofarUtils.keyName(aParam.name).equals("samplesToIntegrate")) {
-            if (aRefParam!=null) {
-                samplesToIntegrateText.setToolTipText(aRefParam.description);
-                samplesToIntegrateText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("samplesToIntegrate")) {
+            samplesToIntegrateText.setToolTipText(aParam.description);
+            if (isRef) {
+                samplesToIntegrateText.setText(aParam.limits + " : " + aNode.limits);
                 samplesToIntegrateText.setEnabled(false);
                 itsSamplesToIntegrate=null;
             } else {
-                samplesToIntegrateText.setToolTipText(aParam.description);
                 samplesToIntegrateText.setText(aParam.limits);
                 samplesToIntegrateText.setEnabled(true);
                 itsSamplesToIntegrate=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("secondsToBuffer")) {
-            if (aRefParam!=null) {
-                secondsToBufferText.setToolTipText(aRefParam.description);
-                secondsToBufferText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("secondsToBuffer")) {
+            secondsToBufferText.setToolTipText(aParam.description);
+            if (isRef) {
+                secondsToBufferText.setText(aParam.limits + " : " + aNode.limits);
                 secondsToBufferText.setEnabled(false);
                 itsSecondsToBuffer=null;
             } else {
-                secondsToBufferText.setToolTipText(aParam.description);
                 secondsToBufferText.setText(aParam.limits);
                 secondsToBufferText.setEnabled(true);
                 itsSecondsToBuffer=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("useAMCServer")) {
-            if (aRefParam!=null) {
-                useAMCServerCheckBox.setToolTipText(aRefParam.description);
-                useAMCServerCheckBox.setSelected(LofarUtils.StringToBoolean(aRefParam.limits));
+        } else if (aKeyName.equals("useAMCServer")) {
+            useAMCServerCheckBox.setToolTipText(aParam.description);
+            if (isRef) {
+                useAMCServerCheckBox.setSelected(LofarUtils.StringToBoolean(aNode.limits));
                 useAMCServerCheckBox.setEnabled(false);
                 itsUseAMCServer=null;
             } else {
-                useAMCServerCheckBox.setToolTipText(aParam.description);
                 useAMCServerCheckBox.setSelected(LofarUtils.StringToBoolean(aParam.limits));
                 useAMCServerCheckBox.setEnabled(true);
                 itsUseAMCServer=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("nodesPerCell")) {
-            if (aRefParam!=null) {
-                nodesPerCellText.setToolTipText(aRefParam.description);
-                nodesPerCellText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("nodesPerCell")) {
+            nodesPerCellText.setToolTipText(aParam.description);
+            if (isRef) {
+                nodesPerCellText.setText(aParam.limits + " : " + aNode.limits);
                 nodesPerCellText.setEnabled(false);
                 itsNodesPerCell=null;
             } else {
-                nodesPerCellText.setToolTipText(aParam.description);
                 nodesPerCellText.setText(aParam.limits);
                 nodesPerCellText.setEnabled(true);
                 itsNodesPerCell=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("subbandsPerCell")) {
-            if (aRefParam!=null) {
-                subbandsPerCellText.setToolTipText(aRefParam.description);
-                subbandsPerCellText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("subbandsPerCell")) {
+            subbandsPerCellText.setToolTipText(aParam.description);
+            if (isRef) {
+                subbandsPerCellText.setText(aParam.limits + " : " + aNode.limits);
                 subbandsPerCellText.setEnabled(false);
                 itsSubbandsPerCell=null;
             } else {
-                subbandsPerCellText.setToolTipText(aParam.description);
                 subbandsPerCellText.setText(aParam.limits);
                 subbandsPerCellText.setEnabled(true);
                 itsSubbandsPerCell=aParam;
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("ppfTaps")) {
-            if (aRefParam!=null) {
-                ppfTapsText.setToolTipText(aRefParam.description);
-                ppfTapsText.setText(aParam.limits + " : " + aRefParam.limits);
+        } else if (aKeyName.equals("ppfTaps")) {
+            ppfTapsText.setToolTipText(aParam.description);
+            if (isRef) {
+                ppfTapsText.setText(aParam.limits + " : " + aNode.limits);
                 ppfTapsText.setEnabled(false);
                 itsPpfTaps=null;
             } else {
-                ppfTapsText.setToolTipText(aParam.description);
                 ppfTapsText.setText(aParam.limits);
                 ppfTapsText.setEnabled(true);
                 itsPpfTaps=aParam;
             }
-            
+         
+         // Generic Settings used by OLAP
+        } else if (aKeyName.equals("nrSubbands")) {
+            nrSubbandsText.setToolTipText(aParam.description);
+            if (isRef) {
+                nrSubbandsText.setText(aParam.limits + " : " + aNode.limits);
+                nrSubbandsText.setEnabled(false);
+                itsNrSubbands=null;
+            } else {
+                nrSubbandsText.setText(aParam.limits);
+                nrSubbandsText.setEnabled(true);
+                itsNrSubbands=aParam;
+            }
+        } else if (aKeyName.equals("nrChannelsPerSubband")) {
+            nrChannelsPerSubbandText.setToolTipText(aParam.description);
+            if (isRef) {
+                nrChannelsPerSubbandText.setText(aParam.limits + " : " + aNode.limits);
+                nrChannelsPerSubbandText.setEnabled(false);
+                itsNrChannelsPerSubband=null;
+            } else {
+                nrChannelsPerSubbandText.setText(aParam.limits);
+                nrChannelsPerSubbandText.setEnabled(true);
+                itsNrChannelsPerSubband=aParam;
+            }
+        } else if (aKeyName.equals("nrStations")) {
+            nrStationsText.setToolTipText(aParam.description);
+            if (isRef) {
+                nrStationsText.setText(aParam.limits + " : " + aNode.limits);
+                nrStationsText.setEnabled(false);
+                itsNrStations=null;
+            } else {
+                nrStationsText.setText(aParam.limits);
+                nrStationsText.setEnabled(true);
+                itsNrStations=aParam;
+            }
+        } else if (aKeyName.equals("nrRSPBoards")) {
+            nrRSPBoardsText.setToolTipText(aParam.description);
+            if (isRef) {
+                nrRSPBoardsText.setText(aParam.limits + " : " + aNode.limits);
+                nrRSPBoardsText.setEnabled(false);
+                itsNrRSPBoards=null;
+            } else {
+                nrRSPBoardsText.setText(aParam.limits);
+                nrRSPBoardsText.setEnabled(true);
+                itsNrRSPBoards=aParam;
+            }
+        } else if (aKeyName.equals("nrSamplesPerSecond")) {
+            nrSamplesPerSecondText.setToolTipText(aParam.description);
+            if (isRef) {
+                nrSamplesPerSecondText.setText(aParam.limits + " : " + aNode.limits);
+                nrSamplesPerSecondText.setEnabled(false);
+                itsNrSamplesPerSecond=null;
+            } else {
+                nrSamplesPerSecondText.setText(aParam.limits);
+                nrSamplesPerSecondText.setEnabled(true);
+                itsNrSamplesPerSecond=aParam;
+            }
+        } else if (aKeyName.equals("MSName")) {
+            MSNameText.setToolTipText(aParam.description);
+            if (isRef) {
+                MSNameText.setText(aParam.limits + " : " + aNode.limits);
+                MSNameText.setEnabled(false);
+                itsMSName=null;
+            } else {
+                MSNameText.setText(aParam.limits);
+                MSNameText.setEnabled(true);
+                itsMSName=aParam;
+            }
+        } else if (aKeyName.equals("nrSamplesPerEthFrame")) {
+            nrSamplesPerEthFrameText.setToolTipText(aParam.description);
+            if (isRef) {
+                nrSamplesPerEthFrameText.setText(aParam.limits + " : " + aNode.limits);
+                nrSamplesPerEthFrameText.setEnabled(false);
+                itsNrSamplesPerEthFrame=null;
+            } else {
+                nrSamplesPerEthFrameText.setText(aParam.limits);
+                nrSamplesPerEthFrameText.setEnabled(true);
+                itsNrSamplesPerEthFrame=aParam;
+            }
+        } else if (aKeyName.equals("nyguistZone")) {
+            nyguistZoneText.setToolTipText(aParam.description);
+            if (isRef) {
+                nyguistZoneText.setText(aParam.limits + " : " + aNode.limits);
+                nyguistZoneText.setEnabled(false);
+                itsNyguistZone=null;
+            } else {
+                nyguistZoneText.setText(aParam.limits);
+                nyguistZoneText.setEnabled(true);
+                itsNyguistZone=aParam;
+            }
+        } else if (aKeyName.equals("startTime")) {
+            startTimeText.setToolTipText(aParam.description);
+            if (isRef) {
+                startTimeText.setText(aParam.limits + " : " + aNode.limits);
+                startTimeText.setEnabled(false);
+                itsStartTime=null;
+            } else {
+                startTimeText.setText(aParam.limits);
+                startTimeText.setEnabled(true);
+                itsStartTime=aParam;
+            }
+        } else if (aKeyName.equals("stopTime")) {
+            stopTimeText.setToolTipText(aParam.description);
+            if (isRef) {
+                stopTimeText.setText(aParam.limits + " : " + aNode.limits);
+                stopTimeText.setEnabled(false);
+                itsStopTime=null;
+            } else {
+                stopTimeText.setText(aParam.limits);
+                stopTimeText.setEnabled(true);
+                itsStopTime=aParam;
+            }
+        } else if (aKeyName.equals("stsPosition")) {
+            itsStsPosition=aParam;
+        } else if (aKeyName.equals("RSPMACAddresses")) {
+            itsRSPMACAddresses=aParam;
+        } else if (aKeyName.equals("InputNodeMACAddresses")) {
+            itsInputNodeMACAddresses=aParam;
         }
     }
     
@@ -545,20 +600,26 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
             itsDelayCompensationHost.limits=DelayCompensationHostText.getText();
             saveParam(itsDelayCompensationHost);
         }
-        if (itsDelayCompensationPorts != null && !DelayCompensationPortsText.equals(itsDelayCompensationPorts.limits)) {
-            itsDelayCompensationPorts.limits=DelayCompensationPortsText.getText();
+        if (itsDelayCompensationPorts != null &&
+                !itsNewDelayCompensationPorts.equals(itsDelayCompensationPorts.limits) &&
+                itsNewDelayCompensationPorts.length()>0) {
+            itsDelayCompensationPorts.limits=itsNewDelayCompensationPorts;
             saveParam(itsDelayCompensationPorts);
         }
         if (itsInputClusterFEN != null && !InputClusterFENText.equals(itsInputClusterFEN.limits)) {
             itsInputClusterFEN.limits=InputClusterFENText.getText();
             saveParam(itsInputClusterFEN);
         }
-        if (itsInputBGLHosts != null && !InputBGLHostsText.equals(itsInputBGLHosts.limits)) {
-            itsInputBGLHosts.limits=InputBGLHostsText.getText();
+        if (itsInputBGLHosts != null && 
+                !itsNewInputBGLHosts.equals(itsInputBGLHosts.limits) &&
+                itsNewInputBGLHosts.length()>0) {
+            itsInputBGLHosts.limits=itsNewInputBGLHosts;
             saveParam(itsInputBGLHosts);
         }
-        if (itsInputBGLPorts != null && !InputBGLPortsText.equals(itsInputBGLPorts.limits)) {
-            itsInputBGLPorts.limits=InputBGLPortsText.getText();
+        if (itsInputBGLPorts != null &&
+                !itsNewInputBGLPorts.equals(itsInputBGLPorts.limits) &&
+                itsNewInputBGLPorts.length()>0) {
+            itsInputBGLPorts.limits=itsNewInputBGLPorts;
             saveParam(itsInputBGLPorts);
         }
         if (itsStellaFEN != null && !StellaFENText.equals(itsStellaFEN.limits)) {
@@ -569,12 +630,16 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
             itsStorageClusterFEN.limits=StorageClusterFENText.getText();
             saveParam(itsStorageClusterFEN);
         }
-        if (itsBGLStorageHosts != null && !BGLStorageHostsText.equals(itsBGLStorageHosts.limits)) {
-            itsBGLStorageHosts.limits=BGLStorageHostsText.getText();
+        if (itsBGLStorageHosts != null && 
+                !itsNewBGLStorageHosts.equals(itsBGLStorageHosts.limits) &&
+                itsNewBGLStorageHosts.length()>0) {
+            itsBGLStorageHosts.limits=itsNewBGLStorageHosts;
             saveParam(itsBGLStorageHosts);
         }
-        if (itsBGLStoragePorts != null && !BGLStoragePortsText.equals(itsBGLStoragePorts.limits)) {
-            itsBGLStoragePorts.limits=BGLStoragePortsText.getText();
+        if (itsBGLStoragePorts != null &&
+                !itsNewBGLStoragePorts.equals(itsBGLStoragePorts.limits) &&
+                itsNewBGLStoragePorts.length()>0) {
+            itsBGLStoragePorts.limits=itsNewBGLStoragePorts;
             saveParam(itsBGLStoragePorts);
         }
         if (itsPartition != null && !partitionText.equals(itsPartition.limits)) {
@@ -610,6 +675,72 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
 
+    private void editList(String aType) {
+        // Possible buttons so far :
+        // DelayPorts
+        // InputHosts
+        // InputPorts
+        // StorageHosts
+        // StoragePorts
+        
+        // If the panel is still Visible it is probably not saved the last time
+        // if so check if it has changed and if the calling button is not the same as the last time        
+        if (listPanel.isVisible() && listPanel.isNew() && !listPanel.getTitle().equals(aType)) {
+            if (JOptionPane.showConfirmDialog(this,"You didn't save your edit changes last time, are you sure you want to discard them ?",
+                    "Discard list changes",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                
+                // Yes he is sure he wants to discard
+            } else {
+                return;
+            }        
+        }
+        // in all other cases fill the edit pane with the info and set visible
+        
+        String aList="";
+        if (aType.equals("DelayPorts")) {
+            if (itsNewDelayCompensationPorts.length()<1) {
+                aList=itsDelayCompensationPorts.limits;
+            } else {
+                aList=itsNewDelayCompensationPorts;
+            }
+        } else if (aType.equals("InputHosts")) {
+            if (itsNewInputBGLHosts.length()<1) {
+                aList=itsInputBGLHosts.limits;
+            } else {
+                aList=itsNewInputBGLHosts;
+            }
+            
+        } else if (aType.equals("InputPorts")) {
+            if (itsNewInputBGLPorts.length()<1) {
+                aList=itsInputBGLPorts.limits;
+            } else {
+                aList=itsNewInputBGLPorts;
+            }
+            
+        } else if (aType.equals("StorageHosts")) {
+            if (itsNewBGLStorageHosts.length()<1) {
+                aList=itsBGLStorageHosts.limits;
+            } else {
+                aList=itsNewBGLStorageHosts;
+            }
+            
+        } else if (aType.equals("StoragePorts")) {
+            if (itsNewBGLStoragePorts.length()<1) {
+                aList=itsBGLStoragePorts.limits;
+            } else {
+                aList=itsNewBGLStorageHosts;
+            }
+            
+        } else {
+            logger.debug("Wrong ListType received: "+aType);
+            return;
+        }
+        
+        listPanel.setTitle(aType);
+        listPanel.setList(aList);
+        listPanel.validate();
+        listPanel.setVisible(true);
+    } 
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -620,6 +751,32 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private void initComponents() {
         jTabbedPane1 = new javax.swing.JTabbedPane();
         OLAPGenericPanel = new javax.swing.JPanel();
+        jLabel13 = new javax.swing.JLabel();
+        nrSubbandsText = new javax.swing.JTextField();
+        jLabel14 = new javax.swing.JLabel();
+        nrChannelsPerSubbandText = new javax.swing.JTextField();
+        jLabel15 = new javax.swing.JLabel();
+        nrStationsText = new javax.swing.JTextField();
+        jLabel16 = new javax.swing.JLabel();
+        nrRSPBoardsText = new javax.swing.JTextField();
+        jLabel17 = new javax.swing.JLabel();
+        nrSamplesPerSecondText = new javax.swing.JTextField();
+        jLabel18 = new javax.swing.JLabel();
+        MSNameText = new javax.swing.JTextField();
+        jLabel19 = new javax.swing.JLabel();
+        nrSamplesPerEthFrameText = new javax.swing.JTextField();
+        jLabel20 = new javax.swing.JLabel();
+        nyguistZoneText = new javax.swing.JTextField();
+        jLabel21 = new javax.swing.JLabel();
+        startTimeText = new javax.swing.JTextField();
+        jLabel22 = new javax.swing.JLabel();
+        stopTimeText = new javax.swing.JTextField();
+        jLabel23 = new javax.swing.JLabel();
+        viewStationPositions = new javax.swing.JButton();
+        jLabel24 = new javax.swing.JLabel();
+        jLabel25 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
+        viewInputMACAddresses = new javax.swing.JButton();
         OLAPSpecificPanel = new javax.swing.JPanel();
         NrSamplesLabel = new javax.swing.JLabel();
         samplesToIntegrateText = new javax.swing.JTextField();
@@ -635,44 +792,172 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         ppfTapsText = new javax.swing.JTextField();
         SpecificRevertButton = new javax.swing.JButton();
         OLAPHardwarePanel = new javax.swing.JPanel();
+        HardwareRevertButton = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         AMCServerHostText = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        AMCServerPortText = new javax.swing.JTextField();
+        jPanel2 = new javax.swing.JPanel();
+        jLabel5 = new javax.swing.JLabel();
+        StellaFENText = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
+        partitionText = new javax.swing.JTextField();
+        jPanel3 = new javax.swing.JPanel();
         DelayCompensationHostText = new javax.swing.JTextField();
+        DelayPorts = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jPanel4 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         InputClusterFENText = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
-        InputBGLHostsText = new javax.swing.JTextField();
-        jLabel5 = new javax.swing.JLabel();
-        StellaFENText = new javax.swing.JTextField();
-        jLabel11 = new javax.swing.JLabel();
-        BGLStorageHostsText = new javax.swing.JTextField();
-        jLabel6 = new javax.swing.JLabel();
-        partitionText = new javax.swing.JTextField();
-        jLabel7 = new javax.swing.JLabel();
-        AMCServerPortText = new javax.swing.JTextField();
-        jLabel8 = new javax.swing.JLabel();
-        DelayCompensationPortsText = new javax.swing.JTextField();
         jLabel9 = new javax.swing.JLabel();
-        InputBGLPortsText = new javax.swing.JTextField();
-        jLabel10 = new javax.swing.JLabel();
-        BGLStoragePortsText = new javax.swing.JTextField();
-        HardwareRevertButton = new javax.swing.JButton();
+        InputHosts = new javax.swing.JButton();
+        InputPorts = new javax.swing.JButton();
+        jPanel5 = new javax.swing.JPanel();
         jLabel12 = new javax.swing.JLabel();
         StorageClusterFENText = new javax.swing.JTextField();
+        jLabel11 = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
+        StorageHosts = new javax.swing.JButton();
+        StoragePorts = new javax.swing.JButton();
+        listPanel = new nl.astron.lofar.sas.otbcomponents.ListPanel();
+        listPanel.setVisible(false);
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
+
+        jLabel13.setText("#Subbands:");
+
+        jLabel14.setText("#Channels per Subband:");
+
+        jLabel15.setText("#Stations:");
+
+        jLabel16.setText("#RSPBoards:");
+
+        jLabel17.setText("#SamplesPerSecond:");
+
+        jLabel18.setText("MS Name:");
+
+        jLabel19.setText("#Samples per EthernetFrame:");
+
+        jLabel20.setText("Nyguist Zone:");
+
+        jLabel21.setText("Starttime:");
+
+        jLabel22.setText("Stoptime:");
+
+        jLabel23.setText("StationPositions:");
+
+        viewStationPositions.setText("View");
+
+        jLabel24.setText("RSP MAC Addresses:");
+
+        jLabel25.setText("Input Node MAC Addresses:");
+
+        jButton1.setText("View");
+
+        viewInputMACAddresses.setText("View");
+        viewInputMACAddresses.setOpaque(false);
 
         org.jdesktop.layout.GroupLayout OLAPGenericPanelLayout = new org.jdesktop.layout.GroupLayout(OLAPGenericPanel);
         OLAPGenericPanel.setLayout(OLAPGenericPanelLayout);
         OLAPGenericPanelLayout.setHorizontalGroup(
             OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 838, Short.MAX_VALUE)
+            .add(OLAPGenericPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel13)
+                    .add(jLabel14)
+                    .add(jLabel15)
+                    .add(jLabel17)
+                    .add(jLabel16)
+                    .add(jLabel19)
+                    .add(jLabel18)
+                    .add(jLabel20)
+                    .add(jLabel21)
+                    .add(jLabel22)
+                    .add(jLabel23)
+                    .add(jLabel25)
+                    .add(jLabel24))
+                .add(12, 12, 12)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                        .add(stopTimeText)
+                        .add(startTimeText)
+                        .add(MSNameText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
+                        .add(nyguistZoneText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 134, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(nrChannelsPerSubbandText)
+                        .add(nrSubbandsText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE)
+                        .add(nrStationsText)
+                        .add(nrSamplesPerEthFrameText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
+                        .add(nrRSPBoardsText)
+                        .add(nrSamplesPerSecondText))
+                    .add(viewStationPositions)
+                    .add(viewInputMACAddresses)
+                    .add(jButton1))
+                .addContainerGap(1444, Short.MAX_VALUE))
         );
+
+        OLAPGenericPanelLayout.linkSize(new java.awt.Component[] {MSNameText, nrChannelsPerSubbandText, nrRSPBoardsText, nrSamplesPerEthFrameText, nrSamplesPerSecondText, nrStationsText, nrSubbandsText, nyguistZoneText, startTimeText, stopTimeText}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
+
         OLAPGenericPanelLayout.setVerticalGroup(
             OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 528, Short.MAX_VALUE)
+            .add(OLAPGenericPanelLayout.createSequentialGroup()
+                .add(30, 30, 30)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel13)
+                    .add(nrSubbandsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel14)
+                    .add(nrChannelsPerSubbandText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(12, 12, 12)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel15)
+                    .add(nrStationsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(12, 12, 12)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel16)
+                    .add(nrRSPBoardsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel17)
+                    .add(nrSamplesPerSecondText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(9, 9, 9)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel19)
+                    .add(nrSamplesPerEthFrameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(MSNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel18))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel20)
+                    .add(nyguistZoneText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel21)
+                    .add(startTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel22)
+                    .add(stopTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel23)
+                    .add(viewStationPositions, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel24)
+                    .add(jButton1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jLabel25)
+                    .add(viewInputMACAddresses, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(321, Short.MAX_VALUE))
         );
         jTabbedPane1.addTab("Generic", OLAPGenericPanel);
 
@@ -745,7 +1030,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                             .add(samplesToIntegrateText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 234, Short.MAX_VALUE)
                             .add(subbandsPerCellText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)))
                     .add(SpecificRevertButton))
-                .addContainerGap(428, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(1456, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
         OLAPSpecificPanelLayout.setVerticalGroup(
             OLAPSpecificPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -780,50 +1065,6 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         );
         jTabbedPane1.addTab("OLAP Specific", OLAPSpecificPanel);
 
-        jLabel1.setText("AMCServer Host:");
-
-        AMCServerHostText.setToolTipText("Give Machine where AMC server runs (hostname or IP address)");
-
-        jLabel2.setText("DelayCompensation Host:");
-
-        DelayCompensationHostText.setToolTipText("Machine where DelayCompensation runs (Hostname or IP address)");
-
-        jLabel3.setText("Input Cluster FEN :");
-
-        InputClusterFENText.setToolTipText("Cluster for InputSection(Hostname or IP address)");
-
-        jLabel4.setText("Input BGL Hosts :");
-
-        InputBGLHostsText.setToolTipText("comma seperated list with all machinenames for InputSection");
-
-        jLabel5.setText("Stella FEN:");
-
-        StellaFENText.setToolTipText("Cluster for Storage (Hostname or IP address)");
-
-        jLabel11.setText("BGL Storage Hosts :");
-
-        BGLStorageHostsText.setToolTipText("comma seperated list with all machinenames for Storage");
-
-        jLabel6.setText("Partition for BGL_Processing:");
-
-        partitionText.setToolTipText("Partition on which BGL_Processing runs.");
-
-        jLabel7.setText("AMC Server Port:");
-
-        AMCServerPortText.setToolTipText("Port to reach AMC Server");
-
-        jLabel8.setText("Delay Compensation Ports:");
-
-        DelayCompensationPortsText.setToolTipText("Ports to use for Delay -> Input (Range like:  8000-8100 or 8000-  or 8000,8001,8003,8005) ");
-
-        jLabel9.setText("Input BGL Ports:");
-
-        InputBGLPortsText.setToolTipText("Ports to use for Input -> BGL_Proc (Range like:  8000-8100 or 8000-  or 8000,8001,8003,8005)");
-
-        jLabel10.setText("BGL Storage Ports:");
-
-        BGLStoragePortsText.setToolTipText("Ports to use for BGL_Proc -> Storage (Range like:  8000-8100 or 8000-  or 8000,8001,8003,8005)");
-
         HardwareRevertButton.setText("Revert");
         HardwareRevertButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -831,7 +1072,246 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        jLabel12.setText("StorageCluster FEN :");
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "AMC Server", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11)));
+        jLabel1.setText("Host:");
+
+        AMCServerHostText.setToolTipText("Give Machine where AMC server runs (hostname or IP address)");
+
+        jLabel7.setText("Port:");
+
+        AMCServerPortText.setToolTipText("Port to reach AMC Server");
+
+        org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel1)
+                    .add(jLabel7))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 135, Short.MAX_VALUE)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(AMCServerHostText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 215, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(AMCServerPortText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 64, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel1Layout.createSequentialGroup()
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel1)
+                    .add(AMCServerHostText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel7)
+                    .add(AMCServerPortText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Stella", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11)));
+        jLabel5.setText("Front End Node:");
+
+        StellaFENText.setToolTipText("Cluster for Storage (Hostname or IP address)");
+
+        jLabel6.setText("Partition for BGL_Processing:");
+
+        partitionText.setToolTipText("Partition on which BGL_Processing runs.");
+
+        org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel6)
+                    .add(jLabel5))
+                .add(21, 21, 21)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(StellaFENText)
+                    .add(partitionText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE))
+                .add(14, 14, 14))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel5)
+                    .add(StellaFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel6)
+                    .add(partitionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Delay Compensation", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11)));
+        DelayCompensationHostText.setToolTipText("Machine where DelayCompensation runs (Hostname or IP address)");
+
+        DelayPorts.setText("Change/View");
+        DelayPorts.setToolTipText("Change or view the list with portnumbers");
+        DelayPorts.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                DelayPortsActionPerformed(evt);
+            }
+        });
+
+        jLabel2.setText("Host:");
+
+        jLabel8.setText("Ports:");
+
+        org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel2)
+                    .add(jLabel8))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 134, Short.MAX_VALUE)
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(DelayPorts)
+                    .add(DelayCompensationHostText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 213, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel3Layout.createSequentialGroup()
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(DelayCompensationHostText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel2))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(DelayPorts, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel8))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Input Cluster", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11)));
+        jLabel3.setText("FEN :");
+
+        InputClusterFENText.setToolTipText("Cluster for InputSection(Hostname or IP address)");
+
+        jLabel4.setText("Hosts :");
+
+        jLabel9.setText("Ports:");
+
+        InputHosts.setText("Change/View");
+        InputHosts.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                InputHostsActionPerformed(evt);
+            }
+        });
+
+        InputPorts.setText("Change/View");
+        InputPorts.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                InputPortsActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel3)
+                    .add(jLabel4)
+                    .add(jLabel9))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 125, Short.MAX_VALUE)
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(InputHosts)
+                    .add(InputClusterFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 217, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(InputPorts))
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel4Layout.createSequentialGroup()
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel3)
+                    .add(InputClusterFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel4)
+                    .add(InputHosts, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel9)
+                    .add(InputPorts, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Storage Cluster", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11)));
+        jLabel12.setText("FEN :");
+
+        jLabel11.setText("Hosts :");
+
+        jLabel10.setText("Ports:");
+
+        StorageHosts.setText("Change/View");
+        StorageHosts.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                StorageHostsActionPerformed(evt);
+            }
+        });
+
+        StoragePorts.setText("Change/View");
+        StoragePorts.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                StoragePortsActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout jPanel5Layout = new org.jdesktop.layout.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel5Layout.createSequentialGroup()
+                        .add(jLabel12)
+                        .add(112, 112, 112))
+                    .add(jPanel5Layout.createSequentialGroup()
+                        .add(jLabel10)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
+                    .add(jPanel5Layout.createSequentialGroup()
+                        .add(jLabel11, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(StorageHosts)
+                    .add(StorageClusterFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 217, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(StoragePorts))
+                .addContainerGap())
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel5Layout.createSequentialGroup()
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel12)
+                    .add(StorageClusterFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel11)
+                    .add(StorageHosts, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel10)
+                    .add(StoragePorts, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(24, Short.MAX_VALUE))
+        );
+
+        listPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                listPanelActionPerformed(evt);
+            }
+        });
 
         org.jdesktop.layout.GroupLayout OLAPHardwarePanelLayout = new org.jdesktop.layout.GroupLayout(OLAPHardwarePanel);
         OLAPHardwarePanel.setLayout(OLAPHardwarePanelLayout);
@@ -840,135 +1320,37 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
             .add(OLAPHardwarePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jLabel1)
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel7)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel8)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel2)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel3)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel4)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel9)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel5)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel12)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                        .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                            .add(jLabel11, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 139, Short.MAX_VALUE)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
                     .add(OLAPHardwarePanelLayout.createSequentialGroup()
                         .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jLabel6)
-                            .add(jLabel10))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(AMCServerHostText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                        .add(742, 742, 742))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(AMCServerPortText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                        .add(742, 742, 742))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(DelayCompensationHostText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                        .add(742, 742, 742))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(DelayCompensationPortsText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 819, Short.MAX_VALUE)
-                        .add(123, 123, 123))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(InputClusterFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 203, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(739, 739, 739))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(InputBGLHostsText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 819, Short.MAX_VALUE)
-                        .add(123, 123, 123))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(InputBGLPortsText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 819, Short.MAX_VALUE)
-                        .add(123, 123, 123))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(StellaFENText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 201, Short.MAX_VALUE)
-                        .add(741, 741, 741))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(StorageClusterFENText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 201, Short.MAX_VALUE)
-                        .add(741, 741, 741))
-                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(partitionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 206, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, OLAPHardwarePanelLayout.createSequentialGroup()
-                        .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, BGLStoragePortsText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 819, Short.MAX_VALUE)
-                            .add(BGLStorageHostsText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 819, Short.MAX_VALUE))
-                        .add(123, 123, 123))))
-            .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                .add(10, 10, 10)
-                .add(HardwareRevertButton)
-                .addContainerGap(1018, Short.MAX_VALUE))
+                            .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+                            .add(jPanel4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .add(16, 16, 16)
+                        .add(listPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(954, 954, 954))
+                    .add(HardwareRevertButton)))
         );
         OLAPHardwarePanelLayout.setVerticalGroup(
             OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(OLAPHardwarePanelLayout.createSequentialGroup()
-                .add(32, 32, 32)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel1)
-                    .add(AMCServerHostText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel7)
-                    .add(AMCServerPortText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel2)
-                    .add(DelayCompensationHostText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel8)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, DelayCompensationPortsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel3)
-                    .add(InputClusterFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel4)
-                    .add(InputBGLHostsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel9)
-                    .add(InputBGLPortsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel5)
-                    .add(StellaFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel12)
-                    .add(StorageClusterFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel11)
-                    .add(BGLStorageHostsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel10)
-                    .add(BGLStoragePortsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jLabel6)
-                    .add(partitionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(39, 39, 39)
+                .add(24, 24, 24)
+                .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(listPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(OLAPHardwarePanelLayout.createSequentialGroup()
+                        .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .add(20, 20, 20)
                 .add(HardwareRevertButton)
-                .addContainerGap(128, Short.MAX_VALUE))
+                .addContainerGap(131, Short.MAX_VALUE))
         );
         jTabbedPane1.addTab("OLAP Hardware", OLAPHardwarePanel);
 
@@ -983,6 +1365,45 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void listPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_listPanelActionPerformed
+        String aCommand = evt.getActionCommand();
+        String aType = listPanel.getTitle();
+        if (aType.equals("DelayPorts")) {
+            itsNewDelayCompensationPorts=listPanel.getList();
+        } else if (aType.equals("InputHosts")) {
+            itsNewInputBGLHosts=listPanel.getList();
+        } else if (aType.equals("InputPorts")) {
+            itsNewInputBGLPorts=listPanel.getList();
+        } else if (aType.equals("StorageHosts")) {
+            itsNewBGLStorageHosts=listPanel.getList();
+        } else if (aType.equals("StoragePorts")) {
+            itsNewBGLStorageHosts=listPanel.getList();
+        } else {
+            logger.debug("Wrong ListType received: "+aType);
+            return;
+        }       
+    }//GEN-LAST:event_listPanelActionPerformed
+
+    private void StoragePortsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StoragePortsActionPerformed
+        editList("StoragePorts");
+    }//GEN-LAST:event_StoragePortsActionPerformed
+
+    private void StorageHostsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StorageHostsActionPerformed
+        editList("StorageHosts");
+    }//GEN-LAST:event_StorageHostsActionPerformed
+
+    private void InputPortsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_InputPortsActionPerformed
+        editList("InputPorts");
+    }//GEN-LAST:event_InputPortsActionPerformed
+
+    private void InputHostsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_InputHostsActionPerformed
+        editList("InputHosts");
+    }//GEN-LAST:event_InputHostsActionPerformed
+
+    private void DelayPortsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DelayPortsActionPerformed
+        editList("DelayPorts");
+    }//GEN-LAST:event_DelayPortsActionPerformed
 
     private void HardwareRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HardwareRevertButtonActionPerformed
         restoreOLAP_HW();
@@ -1030,19 +1451,45 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBparam itsStorageClusterFEN=null;
     private jOTDBparam itsPartition=null;
     
+    private String itsNewDelayCompensationPorts = "";
+    private String itsNewInputBGLHosts = "";
+    private String itsNewInputBGLPorts = "";
+    private String itsNewBGLStorageHosts = "";
+    private String itsNewBGLStoragePorts = "";
+    
+    // OLAP Generic
+    private jOTDBparam itsNrSubbands = null;
+    private jOTDBparam itsNrChannelsPerSubband = null;
+    private jOTDBparam itsNrStations = null;
+    private jOTDBparam itsNrRSPBoards = null;
+    private jOTDBparam itsNrSamplesPerSecond = null;
+    private jOTDBparam itsMSName = null;
+    private jOTDBparam itsNrSamplesPerEthFrame = null;
+    private jOTDBparam itsNyguistZone = null;
+    private jOTDBparam itsStartTime = null;
+    private jOTDBparam itsStopTime = null;
+    private jOTDBparam itsStsPosition = null;
+    private jOTDBparam itsRSPMACAddresses = null;
+    private jOTDBparam itsInputNodeMACAddresses = null;
+    
+    private String itsNewStsPositions = "";
+    private String itsNewRSPMACAddresses = "";
+    private String itsNewInputNodeMACAddresses = "";
+    
+    
+    
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField AMCServerHostText;
     private javax.swing.JTextField AMCServerPortText;
-    private javax.swing.JTextField BGLStorageHostsText;
-    private javax.swing.JTextField BGLStoragePortsText;
     private javax.swing.JTextField DelayCompensationHostText;
-    private javax.swing.JTextField DelayCompensationPortsText;
+    private javax.swing.JButton DelayPorts;
     private javax.swing.JButton HardwareRevertButton;
-    private javax.swing.JTextField InputBGLHostsText;
-    private javax.swing.JTextField InputBGLPortsText;
     private javax.swing.JTextField InputClusterFENText;
+    private javax.swing.JButton InputHosts;
+    private javax.swing.JButton InputPorts;
+    private javax.swing.JTextField MSNameText;
     private javax.swing.JLabel NrBufSecLabel;
     private javax.swing.JLabel NrFilterTabsLabel;
     private javax.swing.JLabel NrNodesCellLabel;
@@ -1054,13 +1501,29 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton SpecificRevertButton;
     private javax.swing.JTextField StellaFENText;
     private javax.swing.JTextField StorageClusterFENText;
+    private javax.swing.JButton StorageHosts;
+    private javax.swing.JButton StoragePorts;
     private javax.swing.JLabel UseAMCLabel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JLabel jLabel23;
+    private javax.swing.JLabel jLabel24;
+    private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1068,14 +1531,31 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private nl.astron.lofar.sas.otbcomponents.ListPanel listPanel;
     private javax.swing.JTextField nodesPerCellText;
+    private javax.swing.JTextField nrChannelsPerSubbandText;
+    private javax.swing.JTextField nrRSPBoardsText;
+    private javax.swing.JTextField nrSamplesPerEthFrameText;
+    private javax.swing.JTextField nrSamplesPerSecondText;
+    private javax.swing.JTextField nrStationsText;
+    private javax.swing.JTextField nrSubbandsText;
+    private javax.swing.JTextField nyguistZoneText;
     private javax.swing.JTextField partitionText;
     private javax.swing.JTextField ppfTapsText;
     private javax.swing.JTextField samplesToIntegrateText;
     private javax.swing.JTextField secondsToBufferText;
+    private javax.swing.JTextField startTimeText;
+    private javax.swing.JTextField stopTimeText;
     private javax.swing.JTextField subbandsPerCellText;
     private javax.swing.JCheckBox useAMCServerCheckBox;
+    private javax.swing.JButton viewInputMACAddresses;
+    private javax.swing.JButton viewStationPositions;
     // End of variables declaration//GEN-END:variables
 
     /**

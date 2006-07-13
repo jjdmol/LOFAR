@@ -33,7 +33,13 @@
                               </Group>
                               <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="ParamLimitsText" alignment="0" min="-2" pref="240" max="-2" attributes="0"/>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="ParamLimitsText" min="-2" pref="240" max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="23" max="-2" attributes="0"/>
+                                      <Component id="derefLabel" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
+                                      <Component id="derefText" min="-2" pref="365" max="-2" attributes="0"/>
+                                  </Group>
                                   <Component id="ParamRuntimeModText" alignment="0" min="-2" pref="240" max="-2" attributes="0"/>
                                   <Component id="ParamValMomentText" alignment="0" min="-2" pref="240" max="-2" attributes="0"/>
                                   <Component id="ParamPruningText" alignment="0" min="-2" pref="240" max="-2" attributes="0"/>
@@ -53,7 +59,7 @@
                       </Group>
                   </Group>
               </Group>
-              <EmptySpace min="-2" pref="403" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="130" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -101,6 +107,8 @@
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="ParamLimitsText" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="ParamLimitsLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="derefLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="derefText" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="19" max="-2" attributes="0"/>
               <Component id="ParamDescriptionText" min="-2" pref="80" max="-2" attributes="0"/>
@@ -271,6 +279,22 @@
           </StringArray>
         </Property>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="derefLabel">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Deref Value:"/>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="setVisible(false);"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JTextField" name="derefText">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="setVisible(false);"/>
+      </AuxValues>
     </Component>
   </SubComponents>
 </Form>
