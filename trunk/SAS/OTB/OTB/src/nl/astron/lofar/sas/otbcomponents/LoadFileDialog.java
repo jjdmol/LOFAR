@@ -52,6 +52,14 @@ public class LoadFileDialog extends javax.swing.JDialog {
         ok=true;
     }
     
+    public void setType(String aType) {
+        itsType=aType;
+        setTopLabel();
+        getRootPane().setDefaultButton(loadButton);
+        
+        ok=true;
+    }
+    
     /* Sets the top label with the right information */
     private void setTopLabel() {
         this.topLabelInput.setText("Choose a file to create a new "+itsType);
@@ -136,7 +144,9 @@ public class LoadFileDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
-      JFileChooser fc = new JFileChooser();
+        if (fc == null) {
+            fc = new JFileChooser();
+        }
       int returnVal = fc.showOpenDialog(this);
       if (returnVal == JFileChooser.APPROVE_OPTION) {
           itsFile = fc.getSelectedFile();
@@ -161,8 +171,10 @@ public class LoadFileDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_cancelButtonActionPerformed
 
 
-    private File itsFile;
-    private String itsType;
+    private File itsFile    = null;
+    private String itsType  = "";
+    private JFileChooser fc = null;
+    
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton browseButton;

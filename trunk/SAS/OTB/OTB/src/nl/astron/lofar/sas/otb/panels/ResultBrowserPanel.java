@@ -1,5 +1,5 @@
 /*
- * SamplePanel.java
+ * ResultBrowserPanel.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -52,7 +52,12 @@ import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 
 /**
  * This panel contains a TreePanel and some textfields that display information
- * about the selected treenode. Also a log screen to be able to view logging on the
+ * about the selected treenode. 
+ * It is intended to show Observation Trees that are about to run, are running or have run, and thus
+ * are NOT intended to do heavy configuration (allthough there are some possibilities left to do so for the
+ * time being). Configuring jobs needs 2 be done in the Template.
+ *
+ * Also a log screen to be able to view logging on the
  * selected jobs.
  *
  * An event listener was added to catch TreeSelection events from the TreePanel

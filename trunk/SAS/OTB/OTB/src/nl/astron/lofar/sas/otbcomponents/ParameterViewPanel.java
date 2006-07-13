@@ -199,22 +199,16 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void getParam(jOTDBnode aNode) {
         itsParam=null;
-        itsRefParam=null;
         if (aNode == null) {
             logger.debug("ERROR: Empty Node supplied for getParam");
             return;
         }
         itsNode=aNode;
         try {
-            itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().
-                    getParam(itsMainFrame.getSharedVars().getTreeID(),aNode.paramDefID());
-            if (itsParam != null && LofarUtils.isReference(itsParam.limits)) {
-                itsRefParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode); 
-                this.enableLimits(false);
-                this.ParamLimitsText.setEditable(false);
+            if (itsNode.leaf) {
+                itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsNode);
             } else {
-                this.enableLimits(true);
-                this.ParamLimitsText.setEditable(true);
+                itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getParam: "+ ex);
@@ -268,10 +262,15 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             setPruning(String.valueOf(itsParam.pruning));
             setValMoment(String.valueOf(itsParam.valMoment));
             setRuntimeMod(itsParam.runtimeMod);
-            if (itsRefParam != null) {
-                setLimits(itsParam.limits + "  :  "+ String.valueOf(itsRefParam.limits));
+            if (itsParam != null && LofarUtils.isReference(itsNode.limits)) {
+                derefText.setVisible(true);
+                derefLabel.setVisible(true);
+                setLimits(itsNode.limits);
+                setDeref(itsParam.limits);
             } else {
-                setLimits(String.valueOf(itsParam.limits));                
+                derefText.setVisible(false);
+                derefLabel.setVisible(false);
+                setLimits(itsParam.limits);
             }
             setDescription(itsParam.description);
         } else {
@@ -383,13 +382,25 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private String getLimits() {
         return this.ParamLimitsText.getText();
     }
+
+    private String getDeref() {
+        return this.derefText.getText();
+    }
     
     private void setLimits(String aS) {
         this.ParamLimitsText.setText(aS);
     }
 
+    private void setDeref(String aS) {
+        this.derefText.setText(aS);
+    }
+
     private void enableLimits(boolean enabled) {
         this.ParamLimitsText.setEnabled(enabled);
+    }
+
+    private void enableDeref(boolean enabled) {
+        this.derefText.setEnabled(enabled);
     }
 
     private String getDescription() {
@@ -436,6 +447,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         enableValMoment(enabled);
         enableRuntimeMod(enabled);
         enableLimits(enabled);
+        enableDeref(enabled);
         enableDescription(enabled);
         enableButtons(enabled);
     }
@@ -523,6 +535,8 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         ParamValMomentText = new javax.swing.JTextField();
         ParamLimitsText = new javax.swing.JTextField();
         ParamRuntimeModText = new javax.swing.JComboBox();
+        derefLabel = new javax.swing.JLabel();
+        derefText = new javax.swing.JTextField();
 
         ParamNameLabel.setText("Name :");
 
@@ -588,6 +602,12 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         ParamRuntimeModText.setEditable(true);
         ParamRuntimeModText.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "false", "true" }));
 
+        derefLabel.setText("Deref Value:");
+        setVisible(false);
+
+        derefText.setEditable(false);
+        setVisible(false);
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -612,7 +632,12 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                                     .add(ParamLimitsLabel))
                                 .add(20, 20, 20)
                                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(ParamLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(layout.createSequentialGroup()
+                                        .add(ParamLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                        .add(23, 23, 23)
+                                        .add(derefLabel)
+                                        .add(15, 15, 15)
+                                        .add(derefText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 365, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                                     .add(ParamRuntimeModText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                     .add(ParamValMomentText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                     .add(ParamPruningText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -626,7 +651,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                                 .add(ParamCancelButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(ParamApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
-                .add(403, 403, 403))
+                .add(130, 130, 130))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -664,7 +689,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(ParamLimitsText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(ParamLimitsLabel))
+                    .add(ParamLimitsLabel)
+                    .add(derefLabel)
+                    .add(derefText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(19, 19, 19)
                 .add(ParamDescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(30, 30, 30)
@@ -687,7 +714,6 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private OtdbRmi    itsOtdbRmi;
     private jOTDBnode  itsNode;
     private jOTDBparam itsParam;
-    private jOTDBparam itsRefParam;
 
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -710,6 +736,8 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private javax.swing.JComboBox ParamUnitText;
     private javax.swing.JLabel ParamValMomentLabel;
     private javax.swing.JTextField ParamValMomentText;
+    private javax.swing.JLabel derefLabel;
+    private javax.swing.JTextField derefText;
     private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
 

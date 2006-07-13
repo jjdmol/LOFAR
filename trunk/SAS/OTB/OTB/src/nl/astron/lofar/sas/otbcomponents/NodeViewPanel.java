@@ -23,12 +23,19 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.rmi.RemoteException;
+import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -116,31 +123,28 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
         JPopupMenu aPopupMenu=null;
         JMenuItem  aMenuItem=null;
         
-        //  Fill in menu as in the example above
-        ///// TEST ONLY /////
         aPopupMenu= new JPopupMenu();
-        aMenuItem=new JMenuItem("Node Choice 1");        
-        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                popupMenuHandler(evt);
-            }
-        });
-        aMenuItem.setActionCommand("Choice 1");
-        aPopupMenu.add(aMenuItem);
+        // For VIC trees
+        if (itsTreeType.equals("VHtree")) {
+            //  Fill in menu as in the example above
+            aMenuItem=new JMenuItem("Create ParSet File");        
+            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    popupMenuHandler(evt);
+                }
+            });
+            aMenuItem.setActionCommand("Create ParSet File");
+            aPopupMenu.add(aMenuItem);
+            
+        // For template trees
+        } else if (itsTreeType.equals("VItemplate")) {
+                
+        }
         
-        aMenuItem=new JMenuItem("Node Choice 2");        
-        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                popupMenuHandler(evt);
-            }
-        });
-        aMenuItem.setActionCommand("Choice 2");
-        aPopupMenu.add(aMenuItem);
-
         aPopupMenu.setOpaque(true);
-        aPopupMenu.show(aComponent, x, y );          
-        
+        aPopupMenu.show(aComponent, x, y ); 
     }
+
     /** handles the choice from the popupmenu 
      *
      * depending on the choices that are possible for this panel perform the action for it
@@ -150,11 +154,39 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
      *      }  
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
-        /// TEST ONLY ///
-        if (evt.getActionCommand().equals("Choice 1")) {
-            logger.debug("Node Choice 1 chosen");
-        }  else if (evt.getActionCommand().equals("Choice 2")) {
-            logger.debug("Node Choice 2 chosen");
+        if (evt.getActionCommand().equals("Create ParSet File")) {
+            logger.debug("Create ParSet File");
+            int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+            if (fc == null) {
+                fc = new JFileChooser();
+            }
+            // try to get a new filename to write the parsetfile to
+            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File aFile = fc.getSelectedFile();
+                    
+                    // create filename that can be used at the remote site    
+                    String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
+                    
+                    // write the parset
+                    itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
+                    
+                    //obtain the remote file
+                    byte[] dldata = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().downloadFile(aRemoteFileName);
+
+                    BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
+                    output.write(dldata,0,dldata.length);
+                    output.flush();
+                    output.close();
+                    logger.debug("File written to: " + aFile.getPath());
+                } catch (RemoteException ex) {
+                    logger.debug("exportTree failed : " + ex);
+                } catch (FileNotFoundException ex) {
+                    logger.debug("Error during newPICTree creation: "+ ex);
+                } catch (IOException ex) {
+                    logger.debug("Error during newPICTree creation: "+ ex);
+                }
+            }
         }
     }
     
@@ -176,10 +208,18 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
         if(userAccount.isInstrumentScientist()) {
             // enable/disable certain controls
         }
-        
-        
-        
+                
          if (itsNode != null) {
+            try {
+                //figure out the caller
+                jOTDBtree aTree = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
+                itsTreeType=itsOtdbRmi.getTreeType().get(aTree.type);
+            } catch (RemoteException ex) {
+                logger.debug("NodeViewPanel: Error getting treeInfo/treetype" + ex);
+                itsTreeType="";
+            }
+
+
             setNodeName(itsNode.name);
             setIndex(String.valueOf(itsNode.index));
             setInstances(String.valueOf(itsNode.instances));
@@ -466,9 +506,11 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
         initPanel();
     }//GEN-LAST:event_NodeCancelButtonActionPerformed
     
-    private jOTDBnode itsNode = null;
-    private MainFrame  itsMainFrame;
-    private OtdbRmi    itsOtdbRmi;   
+    private jOTDBnode itsNode        = null;
+    private MainFrame  itsMainFrame  = null;
+    private OtdbRmi    itsOtdbRmi    = null;  
+    private String    itsTreeType    = "";
+    private JFileChooser fc          = null;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton NodeApplyButton;

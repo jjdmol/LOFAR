@@ -53,6 +53,15 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         initComponents();
         itsMainFrame = aMainFrame;
         itsTree = aTree;
+        init();        
+    }
+    
+    public void setTree(jOTDBtree aTree) {
+        itsTree = aTree;
+        init();                
+    }
+    
+    private void init() {
         itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         isAdministrator=itsMainFrame.getUserAccount().isAdministrator();
         itsTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);
@@ -67,7 +76,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         initView();
         initFocus();
         getRootPane().setDefaultButton(saveButton);
-        
     }
 
      /**
