@@ -56,9 +56,9 @@ _bgl_mutex_unlock:
 
 .global _rdtsc
 _rdtsc:
-loop6:	mftbu	3
-	mftb	4
-	mftbu	5
+loop6:	mfspr	3,269
+	mfspr	4,268
+	mfspr	5,269
 	cmpw	5,3
 	bne-	loop6
 	blr
