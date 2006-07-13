@@ -181,15 +181,13 @@ INSERT INTO unit values (2,  'm/s',		'm/s',	 '',			false);
 INSERT INTO unit values (3,  'dB',		'dB',	 '',			false);
 INSERT INTO unit values (4,  'time4',	'',		 '99:99',		false);
 INSERT INTO unit values (5,  'time6',	'',		 '99:99:99',	false);
-INSERT INTO unit values (6,  'RAM',		'Mb',	 '',			true);
-INSERT INTO unit values (7,  'GFLOP',	'GFLOP', '',			false);
-INSERT INTO unit values (8,  'MB/s',	'MB/s',	 '',			true);
-INSERT INTO unit values (9,  'Hz',		'Hz',	 '',			true);
-INSERT INTO unit values (10, 'kHz',		'kHz',	 '',			true);
-INSERT INTO unit values (11, 'MHz',		'MHz',	 '',			true);
-INSERT INTO unit values (12, 'KB',		'KB',	 '',			true);
-INSERT INTO unit values (13, 'MB',		'MB',	 '',			true);
-INSERT INTO unit values (14, 'GB',		'GB',	 '',			true);
+INSERT INTO unit values (6,  'RAM',		'MB',	 '',			true);
+INSERT INTO unit values (7,  'DISK',	'GB',	 '',			true);
+INSERT INTO unit values (8,  'GFLOP',	'GFLOP', '',			false);
+INSERT INTO unit values (9,  'MB/s',	'MB/s',	 '',			true);
+INSERT INTO unit values (10, 'Hz',		'Hz',	 '',			true);
+INSERT INTO unit values (11, 'kHz',		'kHz',	 '',			true);
+INSERT INTO unit values (12, 'MHz',		'MHz',	 '',			true);
 
 --
 -- Treetype table
