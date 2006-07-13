@@ -216,9 +216,9 @@ namespace LOFAR {
     asm
     (
 	"0:\n\t"
-	"mftbu %0\n\t"
-	"mftb %1\n\t"
-	"mftbu %2\n\t"
+	"mfspr %0,269\n\t"
+	"mfspr %1,268\n\t"
+	"mfspr %2,269\n\t"
 	"cmpw %2,%0\n\t"
 	"bne 0b\n\t"
 	"subfc %3,%1,%3\n\t"
@@ -301,9 +301,9 @@ namespace LOFAR {
     asm
     (
 	"0:\n\t"
-	"mftbu %0\n\t"
-	"mftb %1\n\t"
-	"mftbu %2\n\t"
+	"mfspr %0,269\n\t"
+	"mfspr %1,268\n\t"
+	"mfspr %2,269\n\t"
 	"cmpw %2,%0\n\t"
 	"bne 0b\n\t"
 	"addc %3,%3,%1\n\t"
