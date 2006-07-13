@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otb.panels;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.treemanagers.OTDBNodeTreeManager;
+import nl.astron.lofar.sas.otb.util.treemanagers.TemplateTreeManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -96,7 +96,7 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
     public void setNewRootNode(){
         try {
             
-            OTDBNodeTreeManager treeManager = OTDBNodeTreeManager.getInstance(itsMainFrame.getUserAccount());
+            TemplateTreeManager treeManager = TemplateTreeManager.getInstance(itsMainFrame.getUserAccount());
             
             itsMainFrame.setHourglassCursor();
             // and create a new root
