@@ -50,6 +50,7 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 		vRecord		RECORD;
 
 	BEGIN
+--RAISE WARNING \'resolve(%,%)\', $1, $2;
 		vDotpos    := strpos($2, \'.\');					-- >>a.b.c or <<a
 		IF vDotpos < 1 THEN
 			RETURN $2;
@@ -95,13 +96,14 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 					-- get clean name of element
 					vElem := btrim(split_part(vOrgArray, \',\', i), \' \');
 					-- make sure it begins with <<
-					IF substr(vElem,1,2) != \'<<\' THEN
-						vElem := \'<<\' || vElem;
+					IF substr(vElem,1,2) != \'>>\' THEN
+						vElem := \'>>\' || vElem;
 					END IF;
 					-- resolve value
 					vElem := resolveVHparam($1, vElem || vRemainder);
 					-- add to array
 					vAnswer := vAnswer || vElem || \',\';
+--RAISE WARNING \'anwser=%\', vAnswer;
 				END LOOP;
 				-- finish array and return result.
 				vAnswer := rtrim(vAnswer, \',\') || \']\';
@@ -144,6 +146,7 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
 		FROM 	VICtemplate
 		WHERE	parentID = $1
 		AND		leaf = TRUE
+		AND		name NOT like \'\\\\%%\'
 	  LOOP
 		IF isReference(vParam.limits) THEN
 		  vParam.limits := resolveVHparam(vParam.treeID, vParam.limits);
