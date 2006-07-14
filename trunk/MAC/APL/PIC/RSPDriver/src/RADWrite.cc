@@ -50,8 +50,7 @@ RADWrite::~RADWrite()
 void RADWrite::sendrequest()
 {
   // skip update if the RAD does not need to be written
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rad().get(getBoardId()))
-  {
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rad().get(getBoardId())) {
     Cache::getInstance().getState().rad().unmodified(getBoardId());
     setContinue(true);
     return;
@@ -85,12 +84,15 @@ void RADWrite::sendrequest()
     // if there are more than 1 boards and
     // if this board is not the first board in the ring
     // it should combine local and remote data
-    if (StationSettings::instance()->nrRspBoards() > 0) {
-      if (getBoardId() != (blet_out + 1) % StationSettings::instance()->nrRspBoards()) {
-	mode |= 0x02;
-      }
-      if (getBoardId() != (xlet_out + 1) % StationSettings::instance()->nrRspBoards()) {
-	mode |= 0x08;
+    // unless disables explicitly from the configuration file
+    if (0 == GET_CONFIG("RSPDriver.IGNORE_REMOTE_DATA", i)) {
+      if (StationSettings::instance()->nrRspBoards() > 0) {
+	if (getBoardId() != (blet_out + 1) % StationSettings::instance()->nrRspBoards()) {
+	  mode |= 0x02;
+	}
+	if (getBoardId() != (xlet_out + 1) % StationSettings::instance()->nrRspBoards()) {
+	  mode |= 0x08;
+	}
       }
     }
     
