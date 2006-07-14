@@ -87,9 +87,9 @@ void SSWrite::sendrequest()
 		    StationSettings::instance()->nrBlpsPerBoard());
     Range dst_range(dst_offset, dst_offset + (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) - 1);
 
-    LOG_INFO_STR("lane=" << lane);
-    LOG_INFO_STR("src_range=" << dst_range);
-    LOG_INFO_STR("dst_range=" << src_range);
+    LOG_DEBUG_STR("lane=" << lane);
+    LOG_DEBUG_STR("src_range=" << dst_range);
+    LOG_DEBUG_STR("dst_range=" << src_range);
 
     subbands(src_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     dst_range); // x
     subbands(src_range, 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, dst_range); // y

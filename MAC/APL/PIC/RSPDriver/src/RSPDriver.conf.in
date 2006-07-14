@@ -194,6 +194,12 @@ RSPDriver.DST_MAC_ADDR_23=
 # Note: the specified RSP board index will be taken
 # modulo N_RSPBOARDS to prevent out of range indices.
 #
+# Setting IGNORE_REMOTE_DATA to 1 will force all boards
+# to ignore remote data. This can be used to check
+# for difference between operation with data from SERDES
+# ring and without.
+#
+RSPDriver.IGNORE_REMOTE_DATA=1
 RSPDriver.LANE_0_BLET_OUT=1
 RSPDriver.LANE_1_BLET_OUT=1
 RSPDriver.LANE_2_BLET_OUT=1
@@ -255,7 +261,7 @@ RSPDriver.WRITE_BS=1
 RSPDriver.WRITE_CDO=1
 # WRITE_CDO_ONCE, if set to 1 only write CDO register once at startup
 # otherwise rewrite same data every update (= second)
-RSPDriver.WRITE_CDO_ONCE=0
+RSPDriver.WRITE_CDO_ONCE=1#0
 # READ_CDO, if set to 1 reads back contents of pid=CDO, regid=0x01
 # This can be used to verify that the UDP/IP header is correctly
 # written to the register.
@@ -281,9 +287,9 @@ RSPDriver.READ_XST=1
 #
 # TDS_CONTROL
 #
-# 0x00000001 : Only RSPBoard 0 controls a TDS board
+# 0x00000002 : Only RSPBoard 1 controls a TDS board
 #
-RSPDriver.TDS_CONTROL=0x00000001
+RSPDriver.TDS_CONTROL=0x00000002
 
 #
 # Optionally read RW-registers.
