@@ -207,7 +207,7 @@ public:
     { return itsRep->getResultVecSynced (request, result); }
   // </group>
 
-private:
+protected:
   MeqExprRep* itsRep;
 };
 

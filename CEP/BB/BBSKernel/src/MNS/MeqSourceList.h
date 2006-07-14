@@ -49,7 +49,7 @@ public:
     {}
 
   // Fill the source list from the sources in the parm table.
-  MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup* group);
+  MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup& group);
 
   ~MeqSourceList();
 
@@ -61,8 +61,15 @@ public:
   MeqSource& operator[] (int i)
     { return *itsSources[i]; }
 
+  // Get the source with the given name.
+  // An exception is thrown if unknown.
+  MeqSource* getSource (const string& name) const;
+
   // Get the source indices in the given group.
   const vector<int>& getGroup (const string& groupName) const;
+
+  // Get all source names.
+  vector<string> getSourceNames() const;
 
 private:
   // Forbid copies.
@@ -74,9 +81,9 @@ private:
   // Add a source.
   void add (MeqSource*);
 
-  vector<MeqSource*>       itsSources;
-  map<string,int>          itsNameMap;
-  map<string,vector<int> > itsGroupMap;
+  vector<MeqSource*>       itsSources;    //# all sources
+  map<string,int>          itsNameMap;    //# map source name to sourcenr
+  map<string,vector<int> > itsGroupMap;   //# map group name to sourcenrs
 };
 
 // @}

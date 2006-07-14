@@ -1,12 +1,18 @@
 #!/bin/sh
 
-\rm -rf /tmp/$USER.demo*
-cp -r /data/PSS3/diepen/BBS2/demo3.MS_p1 /tmp/$USER.demo
-cp -r /data/PSS3/diepen/BBS2/demo3_corr.MEP /tmp/$USER.demo.MEP
-cp -r /data/PSS3/diepen/BBS2/demo3_gsm.MEP_tPredict /tmp/$USER.demo_gsm.MEP
+# Set srcdir if needed.
+# It might not be set if the .run file is executed directly instead of
+# by 'make check'.
+if [ "$srcdir" = "" ]; then
+  srcdir=../../../test
+fi
 
-$LOFAR_CHECKTOOL ./tCorrect $USER /tmp/$USER.demo /tmp/$USER.demo.MEP /tmp/$USER.demo_gsm.MEP
+# Create the ParmDB tables for tCorrect.
+$srcdir/makeDemoParmDBCorr tCorrect
+
+\rm -rf tCorrect_tmp.MS1
+cp -r /data/PSS3/diepen/BBS2/demo3.MS_p1 tCorrect_tmp.MS1
+
+$LOFAR_CHECKTOOL ./tCorrect $USER tCorrect_tmp.MS1 tCorrect_tmp.demo_instr tCorrect_tmp.demo_sky
 status=$?
-#\rm -rf /tmp/$USER.demo*
 exit $status
-

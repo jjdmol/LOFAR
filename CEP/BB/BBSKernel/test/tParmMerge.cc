@@ -44,14 +44,11 @@ void readParms (const MeqDomain& domain,
   ParmDB::ParmDomain pdomain(domain.startX(), domain.endX(),
 			     domain.startY(), domain.endY());
   pdb.getValues (parmValues, emptyvec, pdomain);
-  const vector<MeqParm*>& parmList = parmgroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
+  for (MeqParmGroup::iterator iter = parmgroup.begin();
+       iter != parmgroup.end();
        ++iter)
   {
-    if (*iter) {
-      (*iter)->fillFunklets (parmValues, domain);
-    }
+    iter->second.fillFunklets (parmValues, domain);
   }
 }
 
@@ -60,9 +57,9 @@ void doIt1sd (const ParmDB::ParmDBMeta& pdm)
   cout << endl << "tParmMerge with one Prediffer, one domain ..." << endl;
   ParmDB::ParmDB pdb(pdm);
   MeqParmGroup parmgroup;
-  MeqParmFunklet parm1("parm1", &parmgroup, &pdb);
-  MeqParmFunklet parm2("parm2", &parmgroup, &pdb);
-  MeqParmFunklet parm3("parm2", &parmgroup, &pdb);
+  MeqPExpr parm1 (MeqParmFunklet::create ("parm1", parmgroup, &pdb));
+  MeqPExpr parm2 (MeqParmFunklet::create ("parm2", parmgroup, &pdb));
+  MeqPExpr parm3 (MeqParmFunklet::create ("parm2", parmgroup, &pdb));
   MeqDomain workDomain (1,5, 4,10);
   // Read the parm values for this domain.
   readParms (workDomain, parmgroup, pdb);
@@ -78,18 +75,15 @@ void doIt1sd (const ParmDB::ParmDBMeta& pdm)
   int nrpert = 0;
   vector<int> nrscids (localSolveDomains.size());
   std::fill (nrscids.begin(), nrscids.end(), 0);
-  const vector<MeqParm*>& parmList = parmgroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
+  for (MeqParmGroup::iterator iter = parmgroup.begin();
+       iter != parmgroup.end();
        ++iter)
   {
-    if (*iter) {
-      int nr = (*iter)->initDomain (localSolveDomains, nrpert, nrscids);
-      if (nr > 0) {
-	parmdata.parms().push_back (ParmData((*iter)->getName(),
-					     (*iter)->getParmDBSeqNr(),
-					     (*iter)->getFunklets()));
-      }
+    int nr = iter->second.initDomain (localSolveDomains, nrpert, nrscids);
+    if (nr > 0) {
+      parmdata.parms().push_back (ParmData(iter->second.getName(),
+					   iter->second.getParmDBSeqNr(),
+					   iter->second.getFunklets()));
     }
   }
   parmdata.show (cout);
@@ -105,8 +99,8 @@ void doIt4sd (const ParmDB::ParmDBMeta& pdm)
   cout << endl << "tParmMerge with one Prediffer, four domains ..." << endl;
   ParmDB::ParmDB pdb(pdm);
   MeqParmGroup parmgroup;
-  MeqParmFunklet parm1("parm1d", &parmgroup, &pdb);
-  MeqParmFunklet parm2("parm2d", &parmgroup, &pdb);
+  MeqPExpr parm1 (MeqParmFunklet::create ("parm1d", parmgroup, &pdb));
+  MeqPExpr parm2 (MeqParmFunklet::create ("parm2d", parmgroup, &pdb));
   MeqDomain workDomain (1,5, 4,12);
   // Read the parm values for this domain.
   readParms (workDomain, parmgroup, pdb);
@@ -125,18 +119,15 @@ void doIt4sd (const ParmDB::ParmDBMeta& pdm)
   int nrpert = 0;
   vector<int> nrscids (localSolveDomains.size());
   std::fill (nrscids.begin(), nrscids.end(), 0);
-  const vector<MeqParm*>& parmList = parmgroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
+  for (MeqParmGroup::iterator iter = parmgroup.begin();
+       iter != parmgroup.end();
        ++iter)
   {
-    if (*iter) {
-      int nr = (*iter)->initDomain (localSolveDomains, nrpert, nrscids);
-      if (nr > 0) {
-	parmdata.parms().push_back (ParmData((*iter)->getName(),
-					     (*iter)->getParmDBSeqNr(),
-					     (*iter)->getFunklets()));
-      }
+    int nr = iter->second.initDomain (localSolveDomains, nrpert, nrscids);
+    if (nr > 0) {
+      parmdata.parms().push_back (ParmData(iter->second.getName(),
+					   iter->second.getParmDBSeqNr(),
+					   iter->second.getFunklets()));
     }
   }
   parmdata.show (cout);
@@ -160,9 +151,9 @@ void doIt4sd2pd (const ParmDB::ParmDBMeta& pdm)
 
   // Have each Prediffer have a different group of parms.
   MeqParmGroup parmgroup1;
-  MeqParmFunklet parm11("parm1d", &parmgroup1, &pdb);
-  MeqParmFunklet parm12("parm2d", &parmgroup1, &pdb);
-  MeqParmFunklet parm14("parm4d", &parmgroup1, &pdb);
+  MeqPExpr parm11 (MeqParmFunklet::create ("parm1d", parmgroup1, &pdb));
+  MeqPExpr parm12 (MeqParmFunklet::create ("parm2d", parmgroup1, &pdb));
+  MeqPExpr parm14 (MeqParmFunklet::create ("parm4d", parmgroup1, &pdb));
   MeqDomain workDomain1 (1,5, 4,10);
   // Read the parm values for this domain.
   readParms (workDomain1, parmgroup1, pdb);
@@ -177,26 +168,23 @@ void doIt4sd2pd (const ParmDB::ParmDBMeta& pdm)
   int nrpert1 = 0;
   vector<int> nrscids1 (localSolveDomains1.size());
   std::fill (nrscids1.begin(), nrscids1.end(), 0);
-  const vector<MeqParm*>& parmList1 = parmgroup1.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList1.begin();
-       iter != parmList1.end();
+  for (MeqParmGroup::iterator iter = parmgroup1.begin();
+       iter != parmgroup1.end();
        ++iter)
   {
-    if (*iter) {
-      int nr = (*iter)->initDomain (localSolveDomains1, nrpert1, nrscids1);
-      if (nr > 0) {
-	parmdata1.parms().push_back (ParmData((*iter)->getName(),
-					      (*iter)->getParmDBSeqNr(),
-					      (*iter)->getFunklets()));
-      }
+    int nr = iter->second.initDomain (localSolveDomains1, nrpert1, nrscids1);
+    if (nr > 0) {
+      parmdata1.parms().push_back (ParmData(iter->second.getName(),
+					    iter->second.getParmDBSeqNr(),
+					    iter->second.getFunklets()));
     }
   }
   parmdata1.show (cout);
 
   MeqParmGroup parmgroup2;
-  MeqParmFunklet parm21("parm1d", &parmgroup2, &pdb);
-  MeqParmFunklet parm23("parm3d", &parmgroup2, &pdb);
-  MeqParmFunklet parm24("parm4d", &parmgroup2, &pdb);
+  MeqPExpr parm21 (MeqParmFunklet::create ("parm1d", parmgroup2, &pdb));
+  MeqPExpr parm23 (MeqParmFunklet::create ("parm3d", parmgroup2, &pdb));
+  MeqPExpr parm24 (MeqParmFunklet::create ("parm4d", parmgroup2, &pdb));
   MeqDomain workDomain2 (1,5, 8,12);
   // Read the parm values for this domain.
   readParms (workDomain2, parmgroup2, pdb);
@@ -211,18 +199,15 @@ void doIt4sd2pd (const ParmDB::ParmDBMeta& pdm)
   int nrpert2 = 0;
   vector<int> nrscids2 (localSolveDomains2.size());
   std::fill (nrscids2.begin(), nrscids2.end(), 0);
-  const vector<MeqParm*>& parmList2 = parmgroup2.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList2.begin();
-       iter != parmList2.end();
+  for (MeqParmGroup::iterator iter = parmgroup2.begin();
+       iter != parmgroup2.end();
        ++iter)
   {
-    if (*iter) {
-      int nr = (*iter)->initDomain (localSolveDomains2, nrpert2, nrscids2);
-      if (nr > 0) {
-	parmdata2.parms().push_back (ParmData((*iter)->getName(),
-					      (*iter)->getParmDBSeqNr(),
-					      (*iter)->getFunklets()));
-      }
+    int nr = iter->second.initDomain (localSolveDomains2, nrpert2, nrscids2);
+    if (nr > 0) {
+      parmdata2.parms().push_back (ParmData(iter->second.getName(),
+					    iter->second.getParmDBSeqNr(),
+					    iter->second.getFunklets()));
     }
   }
   parmdata2.show (cout);

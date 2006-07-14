@@ -45,9 +45,8 @@ bool less_mp (LOFAR::MeqFunklet* x, LOFAR::MeqFunklet* y)
 
 namespace LOFAR {
 
-MeqParmFunklet::MeqParmFunklet (const string& name, MeqParmGroup* group,
-				ParmDB::ParmDB* table)
-: MeqParm    (name, group),
+MeqParmFunklet::MeqParmFunklet (const string& name, ParmDB::ParmDB* table)
+: MeqParm    (name),
   itsDefUsed (false),
   itsNrPert  (0),
   itsPertInx (-1),
@@ -56,15 +55,18 @@ MeqParmFunklet::MeqParmFunklet (const string& name, MeqParmGroup* group,
 
 MeqParmFunklet::~MeqParmFunklet()
 {
-  for (uint i=0; i<itsFunklets.size(); ++i) {
-    delete itsFunklets[i];
-  }
+  removeFunklets();
 }
 
-MeqExprRep* MeqParmFunklet::create (const string& name,
-				    MeqParmGroup* group,
-				    ParmDB::ParmDB* table)
+MeqExpr MeqParmFunklet::create (const string& name,
+				 MeqParmGroup& group,
+				 ParmDB::ParmDB* table)
 {
+  // If the parm already exists, return it.
+  MeqParmGroup::iterator pos = group.find (name);
+  if (pos != group.end()) {
+    return pos->second;
+  }
   // If the parm is an expression, use that.
   map<string,ParmDB::ParmValueSet> pset;
   table->getDefValues (pset, name);
@@ -78,7 +80,9 @@ MeqExprRep* MeqParmFunklet::create (const string& name,
     }
   }
   // It is a normal funklet.
-  return new MeqParmFunklet (name, group, table);
+  MeqPExpr expr (new MeqParmFunklet (name, table));
+  group.add (expr);
+  return expr;
 }
 
 void MeqParmFunklet::add (const MeqFunklet& funklet)
@@ -221,11 +225,24 @@ int MeqParmFunklet::getParmDBSeqNr() const
   return itsTable->getParmDBSeqNr();
 }
 
+void MeqParmFunklet::removeFunklets()
+{
+  for (vector<MeqFunklet*>::iterator iter = itsFunklets.begin();
+       iter != itsFunklets.end();
+       iter++) {
+    delete *iter;
+  }
+  itsFunklets.clear();
+}
+
 void MeqParmFunklet::fillFunklets 
                 (const map<string,ParmDB::ParmValueSet>& parmSet,
 		 const MeqDomain& domain)
 {
-  itsFunklets.clear();
+  // Only fill if not filled yet.
+  if (! itsFunklets.empty()) {
+    return;
+  }
   ParmDB::ParmDomain pdomain(domain.startX(), domain.endX(),
 			     domain.startY(), domain.endY());
   bool found = false;
@@ -282,7 +299,7 @@ int MeqParmFunklet::initDomain (const vector<MeqDomain>& solveDomains,
 	       solveDomains[0].endY()>itsWorkDomain.startY() &&
 	       solveDomains[nDomain-1].startX()<itsWorkDomain.endX() &&
 	       solveDomains[nDomain-1].startY()<itsWorkDomain.endY(),
-	       "MeqParmFunklet::initDomain - "
+	       "MeqParmFunklet::initDomain of parm " << getName() << " - "
 	       "solvedomains " << solveDomains[0] << solveDomains[nDomain-1]
 	       << " mismatch workdomain " << itsWorkDomain
 	       << " given in last fillFunklets");

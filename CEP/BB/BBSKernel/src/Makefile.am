@@ -1,12 +1,15 @@
 pkginclude_HEADERS = \
-Quality.h                                       \
-MMap.h						\
-MMapMSInfo.h					\
-FlagsMap.h					\
-Prediffer.h					\
-Solver.h					\
-ParmData.h					\
-ParmWriter.h					\
+Quality.h               \
+MMap.h			\
+MMapMSInfo.h		\
+FlagsMap.h		\
+Prediffer.h		\
+Solver.h		\
+ParmData.h		\
+SolveProp.h		\
+StepProp.h		\
+StrategyProp.h		\
+ParmWriter.h		\
 BBSTestLogger.h
 
 pkginclude_MNSdir = $(pkgincludedir)/MNS
@@ -62,16 +65,18 @@ noinst_HEADERS =
 
 lib_LTLIBRARIES = libbbs.la
 
-libbbs_la_SOURCES  = 					\
-Quality.cc                                              \
-MMap.cc							\
-MMapMSInfo.cc						\
-FlagsMap.cc						\
-Prediffer.cc						\
-Solver.cc						\
-ParmData.cc						\
-ParmWriter.cc						\
-BBSTestLogger.cc					\
+libbbs_la_SOURCES  = 	\
+Quality.cc		\
+MMap.cc			\
+MMapMSInfo.cc		\
+FlagsMap.cc		\
+Prediffer.cc		\
+Solver.cc		\
+StepProp.cc		\
+StrategyProp.cc		\
+ParmData.cc		\
+ParmWriter.cc		\
+BBSTestLogger.cc	\
 MNS/MeqBaseDFTPS.cc \
 MNS/MeqBaseLinPS.cc \
 MNS/MeqDFTPS.cc \

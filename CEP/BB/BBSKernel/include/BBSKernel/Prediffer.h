@@ -30,6 +30,9 @@
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Fitting/LSQFit.h>
 
+#include <BBS/StrategyProp.h>
+#include <BBS/StepProp.h>
+#include <BBS/SolveProp.h>
 #include <BBS/ParmData.h>
 #include <BBS/MMapMSInfo.h>
 #include <BBS/MNS/MeqDomain.h>
@@ -45,6 +48,8 @@
 #include <BBS/MNS/MeqLMN.h>
 #include <BBS/MNS/MeqDFTPS.h>
 #include <ParmDB/ParmDB.h>
+#include <ParmDB/ParmValue.h>
+#include <MS/MSDesc.h>
 
 #include <Common/Timer.h>
 #include <Common/LofarTypes.h>
@@ -84,9 +89,6 @@ public:
   Prediffer (const string& msName,
 	     const ParmDB::ParmDBMeta& meqPtd,
 	     const ParmDB::ParmDBMeta& skyPtd,
-	     const vector<int>& ant,
-	     const string& modelType,
-	     const vector<vector<int> >& sourceGroups,
 	     bool calcUVW);
 
   // Destructor
@@ -101,69 +103,60 @@ public:
   void unlock()
     { itsMEP.unlock(); itsGSMMEP.unlock(); }
 
-  // Make a selection of the MS to be used in the domain iteration.
-  // The size of the antenna vectors is the number of baselines to be used.
-  // They give the first and second antenna (i.e. station) of each baseline.
-  // <br>The correlation vector tells which correlations to use from the data.
-  // 0=XX, 1=XY, 2=YX, 3=YY. An empty vector means all correlations.
-  void select (const vector<int>& ant1, const vector<int>& ant2,
-	       bool useAutoCorrelations, const vector<int>& corr);
+  // Set the strategy properties.
+  // It returns false if no antennas are to be used in this MS part.
+  bool setStrategyProp (const StrategyProp&);
 
-  // Set the work domain (in frequency and time).
-  // If needed the given domain is adjusted to the observation domain.
+  // Set the work domain.
+  // The work domain (in frequency and time) is adjusted to the
+  // observation domain of the MS used.
   // It reads all parms in the given domain.
-  void setWorkDomain (int startChan, int endChan,
+  // It returns false if the given work domain has no overlap with the
+  // MS part handled by this Prediffer
+  // <group>
+  bool setWorkDomain (const MeqDomain&);
+  bool setWorkDomain (int startChan, int endChan,
 		      double startTime, double lengthTime);
+  // </group>
 
-  // Execute the strategy step which defines the tree to be used,
-  // the solvable parameters, the solve domain size,
-  // the data subset to be used, etc.
-  // Hereafter getSolvableParmData can be called.
-  ///  void setStrategyStep (const BBSStep&);
-
-  // Get the actual domain.
+  // Get the actual work domain for this MS (after a setStrategy).
   const MeqDomain& getWorkDomain() const
     { return itsWorkDomain; }
+
+  // Set the properties to be used in the step that will be performed.
+  // It selects the data to be used and it builds the expression tree using
+  // the given instrument and source model.
+  // It returns false if the selection is such that no data is left.
+  bool setStepProp (const StepProp&);
+
+  // Initialize all solvable parameters in the MeqExpr tree for the
+  // given solve domains.
+  // It sets the scids of the solvable parms and fills itsParmData.
+  // It returns false if no solvable parameters are found for this MS.
+  bool setSolveProp (const SolveProp&);
 
   // Return the solvable parms.
   // The parms are in ascending order of spidnr.
   const ParmDataInfo& getSolvableParmData() const
     { return itsParmData; }
 
-  // Make all parameters non-solvable.
-  void clearSolvableParms();
-
-  // Make specific parameters solvable (isSolvable = True) or
-  // non-solvable (False).
-  void setSolvableParms (const vector<string>& parms, 
-			 const vector<string>& excludePatterns);
-
-  // Initialize all solvable parameters in the MeqExpr tree for the
-  // given solve domains.
-  // It sets the scids of the solvable parms and fills itsParmData.
-  void initSolvableParms (const vector<MeqDomain>& solveDomains);
-
   // Get the equations for all selected baselines and fill the
   // fitter vector with them.
   // The fitter vector is resized as needed.
   // All fitter objects are initialized before being filled.
-  void fillFitters (vector<casa::LSQFit>& fitters,
-		    const string& dataColumnName);
+  void fillFitters (vector<casa::LSQFit>& fitters);
+
+  // Shift data to another phase reference position.
+  void shiftData();
 
   // Apply corrections to the data.
-  void correctData (const string& inColumnName,
-		    const string& outColumnName, bool flush=false);
+  void correctData();
 
-  // Subtract the corrupted peel source(s) from the data.
-  void subtractData (const string& inColumnName,
-		     const string& outColumnName, bool flush=false);
+  // Subtract (corrupted) sources from the data.
+  void subtractData();
 
   // Write the predicted data into the .res or .dat file.
-  void writePredictedData (const string& outColumnName);
-
-  // Set the source numbers to use in this peel step.
-  bool setPeelGroups (const vector<int>& peelGroups,
-		      const vector<int>& extraGroups);
+  void writePredictedData();
 
   // There are three ways to update the solvable parms after the solver
   // found a new solution.
@@ -180,6 +173,9 @@ public:
   // Update the solvable parm values (reread from table).
   void updateSolvableParms();
 
+  // Write the solved parms.
+  void writeParms();
+
   // Show the settings of the Prediffer.
   void showSettings() const;
 
@@ -189,12 +185,9 @@ public:
 
   // Get the data and flags for the time domain.
   // This is mainly used for test purposes.
-  void getData (const string& columnName, bool useTree,
+  void getData (bool useTree,
 		casa::Array<casa::Complex>& data,
 		casa::Array<casa::Bool>& flags);
-
-  // Write the solved parms.
-  void writeParms();
 
 private:
   // Copy constructor and assignment are not allowed.
@@ -210,13 +203,20 @@ private:
   void getPhaseRef (double ra, double dec, double startTime);
 
   // Get the station info (position and name).
-  void fillStations (const vector<int>& antnrs);
+  void fillStations();
 
-  // Get all baseline info.
-  void fillBaselines (const vector<int>& antnrs);
+  // Select the stations for a strategy.
+  // False is returned if no stations/baselines are left.
+  bool selectStations (const vector<int>& antnrs, bool useAutoCorr);
 
-  // Count nr of baselines and correlations selected.
-  void countBaseCorr();
+  // Do the selection of baselines and correlations for a step.
+  bool selectStep (const vector<int>& ant1, 
+		   const vector<int>& ant2,
+		   bool useAutoCorrelations,
+		   const vector<bool>& corr);
+
+  // Fill indices and count nr of baselines and correlations selected.
+  bool fillBaseCorr (const casa::Matrix<bool>& blSel);
 
   // Fill all UVW coordinates if they are not calculated.
   void fillUVW();
@@ -225,12 +225,27 @@ private:
   // Also check the source groups.
   void getSources();
 
-  // Create the LOFAR expressions for each baseline.
-  // The EJones (per patch/station) can be expressed as real/imag
-  // or ampl/phase.
+  // Make a selection of the MS to be used in the domain iteration.
+  // The size of the antenna vectors is the number of baselines to be used.
+  // They give the first and second antenna (i.e. station) of each baseline.
+  // <br>The correlation vector has 4 values and tells which correlations
+  // to use from the data.
+  // It returns false if nothing is left after selection.
+  bool select (const vector<int>& ant1, const vector<int>& ant2,
+               bool useAutoCorrelations, const vector<bool>& corr);
+
+  // Make the entire tree.
+  void makeTree (const vector<string>& modelType,
+		 const vector<string>& sourceNames);
+
+  // Create the expressions for each baseline and source(group).
+  // The gains can be expressed as real/imag or ampl/phase.
   // The station parameters are optionally taken into account.
-  void makeLOFARExpr (bool usePatchEJ, bool useTotalEJ, bool asAP,
-		      bool useStatParm, bool useBandpass);
+  void makeLOFARExprs (const vector<MeqSource*>& sources,
+		       const map<string, vector<int> >& groups,
+		       bool useTotalGain, bool usePatchGain,
+		       bool asAP,
+		       bool useDipole, bool useBandpass);
 
   // Find all nodes to be precalculated.
   void setPrecalcNodes (vector<MeqJonesExpr>& nodes);
@@ -262,8 +277,7 @@ private:
 					    int blindex, bool showd);
 
   // Loop through all data and process each baseline by ProcessFuncBL.
-  void processData (const string& inFile, const string& outFile,
-		    bool useFlags, bool preCalc, bool calcDeriv,
+  void processData (bool useFlags, bool preCalc, bool calcDeriv,
 		    ProcessFuncBL func, void* arg);
 
   // Subtract the data of a baseline.
@@ -301,6 +315,14 @@ private:
 		 bool);
   // </group>
 
+  // Make all parameters non-solvable.
+  void clearSolvableParms();
+
+  // Initialize all solvable parameters in the MeqExpr tree for the
+  // given solve domains.
+  // It sets the scids of the solvable parms and fills itsParmData.
+  void initSolvableParms (const vector<MeqDomain>& solveDomains);
+
   // Read the polcs for all parameters for the current work domain.
   void readParms();
 
@@ -328,11 +350,9 @@ private:
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
 
   MeqSourceList*        itsSources;
-  vector<vector<int> >  itsSrcGrp;      //# sources in each group
-  vector<int>           itsSrcNrMap;    //# map of all srcnr to used srcnr
-  vector<int>           itsPeelSourceNrs;
   vector<MeqExpr>       itsLMN;         //# LMN for sources used
-  vector<MeqStation*>   itsStations;
+  vector<MeqStation*>   itsStations;    //# All stations
+  vector<MeqStation*>   itsSelStations; //# Subset of selected stations
   vector<MeqStatUVW*>   itsStatUVW;     //# UVW values per station
   vector<MeqJonesExpr>  itsExpr;        //# solve expression tree per baseline
   vector<vector<MeqExprRep*> > itsPrecalcNodes;  //# nodes to be precalculated
@@ -343,6 +363,7 @@ private:
   string itsInDataColumn;
   string itsOutDataColumn;
 
+  MSDesc itsMSDesc;                   //# description of the MS
   double itsStartFreq;                //# start frequency of observation
   double itsEndFreq;
   double itsStepFreq;
@@ -352,8 +373,6 @@ private:
   bool   itsReverseChan;              //# Channels are in reversed order
   int    itsDataFirstChan;            //# First channel to use in data
                                       //# (can be different if reversed order)
-
-  string itsSolveFileName;            //# Data file used (.dat or .res)
 
   MeqDomain    itsWorkDomain;         //# Current work domain
   vector<int>  itsNrScids;            //# Nr of solvable coeff per solve domain
@@ -365,21 +384,14 @@ private:
   int                  itsNSelCorr;    //# Number of correlations selected
   casa::Vector<double> itsTimes;       //# All times in MS
   casa::Vector<double> itsIntervals;   //# All intervals in MS
-  casa::Matrix<double> itsAntPos;      //# All antenna positions
 
-  //# All bselines in the MS are numbered 0 to itsNrBl-1.
+  //# All baselines in the MS are numbered 0 to itsNrBl-1.
   unsigned int         itsNrBl;        //# Total number of baselines in MS
-  int                  itsNrUsedBl;    //# nr of used baselines
-  vector<int>          itsAnt1;        //# Baseline antenna1 numbers in MS
-  vector<int>          itsAnt2;        //# Baseline antenna2 numbers in MS
-  //# Define the baselines that can be used (thus selected in constructor).
-  //# The baseline index is a sequence number in the itsExpr vector.
-  vector<int>          itsBLUsedInx;   //# map of basel index to basel number
-  casa::Matrix<int>    itsBLIndex;     //# baseline index of antenna pair
-                                       //# -1 means will never be used
+  //# Define the baselines that can be used (thus selected in strategy).
+  //# The seqnr is the sequence number of the baseline in the MS.
+  casa::Matrix<bool>   itsBLSel;       //# Antenna pair selected in strategy?
   //# Define which baselines are selected in the select function.
-  casa::Matrix<bool>   itsBLSelection; //# true = antenna pair is selected
-  vector<int>          itsBLSelInx;    //# indices of selected baselines
+  vector<int>          itsBLInx;       //# Seqnrs of selected baselines
   unsigned int   itsTimeIndex;     //# The index of the current time
   unsigned int   itsNrTimes;       //# The number of times in the time domain
   unsigned int   itsNrTimesDone;   //# Nr of times done after a setDomain
@@ -391,6 +403,9 @@ private:
   FlagsMap*      itsFlagsMap;      //# Flags file mapped
   MMap*          itsWeightMap;     //# Weights file mapped
   bool           itsIsWeightSpec;  //# true = weight per channel
+
+  //# All parm values in current work domain.
+  map<string,ParmDB::ParmValueSet> itsParmValues;
 
   //# Fitter info set by initSolvableParms.
   vector<int> itsFreqFitInx;       //# Fitter for each freq in work domain

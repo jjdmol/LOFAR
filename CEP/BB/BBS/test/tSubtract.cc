@@ -37,16 +37,17 @@ using namespace casa;
 // center frequencies of 137750000-162250000 Hz.
 // There are 5 time stamps of 2 sec in it (centers 2.35208883e9 + 2-10).
 
-void doSubtract (Prediffer& pre1)
+void doSubtract (Prediffer& pre1, const StepProp& stepProp)
 {
   cout << ">>>" << endl;
-  pre1.setWorkDomain (0, 1000, 0., 1e12);
+  ASSERT (pre1.setWorkDomain (0, 1000, 0., 1e12));
+  ASSERT (pre1.setStepProp (stepProp));
   cout << "<<<" << endl;
     
   cout << ">>>" << endl;
   pre1.showSettings();
   cout << "<<<" << endl;
-  pre1.subtractData ("DATA", "CORRECTED_DATA", true);
+  pre1.subtractData();
 }
 
 
@@ -66,14 +67,19 @@ int main (int argc, const char* argv[])
     // Do a subtract.
     {
       cout << "Starting subtract test" << endl;
+      Prediffer pre1(argv[2], meqPdm, skyPdm, false);
       vector<int> antVec(100);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = i;
       }
-      vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], meqPdm, skyPdm, 
-		     antVec, "REALIMAG.TOTALEJ.DIPOLE", srcgrp, false);
-      doSubtract (pre1);
+      StrategyProp stratProp;
+      stratProp.setAntennas (antVec);
+      stratProp.setInColumn ("DATA");
+      ASSERT (pre1.setStrategyProp (stratProp));
+      StepProp stepProp;
+      stepProp.setModel (StringUtil::split("REALIMAG.TOTALGAIN.DIPOLE",'.'));
+      stepProp.setOutColumn ("CORRECTED_DATA");
+      doSubtract (pre1, stepProp);
       cout << "End of subtract test" << endl;
 
       cout << "Check if CORRECTED_DATA is zero" << endl;

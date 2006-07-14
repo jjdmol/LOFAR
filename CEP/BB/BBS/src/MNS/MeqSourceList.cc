@@ -35,7 +35,7 @@ using namespace casa;
 
 namespace LOFAR {
 
-MeqSourceList::MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup* group)
+MeqSourceList::MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup& group)
 {
   // Get the vector of all parms containing a source name.
   // Also get all parms representing a gaussian source.
@@ -83,28 +83,29 @@ MeqSourceList::MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup* group)
   for (int i=0; i<nr; i++) {
     int inx = index(i);
     const string& name = nams[inx];
-    MeqParmFunklet* mr = new MeqParmFunklet("RA:"+name,
-					    group, &parmTable);
-    MeqParmFunklet* md = new MeqParmFunklet("DEC:"+name,
-					    group, &parmTable);
-    MeqParmFunklet* mi = new MeqParmFunklet("StokesI:"+name,
-					    group, &parmTable);
-    MeqParmFunklet* mq = new MeqParmFunklet("StokesQ:"+name,
-					    group, &parmTable);
-    MeqParmFunklet* mu = new MeqParmFunklet("StokesU:"+name,
-					    group, &parmTable);
-    MeqParmFunklet* mv = new MeqParmFunklet("StokesV:"+name,
-					    group, &parmTable);
+    MeqExpr mr = MeqParmFunklet::create ("RA:"+name,
+					 group, &parmTable);
+    MeqExpr md = MeqParmFunklet::create ("DEC:"+name,
+					 group, &parmTable);
+    MeqExpr mi = MeqParmFunklet::create ("StokesI:"+name,
+					 group, &parmTable);
+    MeqExpr mq = MeqParmFunklet::create ("StokesQ:"+name,
+					 group, &parmTable);
+    MeqExpr mu = MeqParmFunklet::create ("StokesU:"+name,
+					 group, &parmTable);
+    MeqExpr mv = MeqParmFunklet::create ("StokesV:"+name,
+					 group, &parmTable);
     if (std::find(gnams.begin(), gnams.end(), name) == gnams.end()) {
-      add (new MeqPointSource(name, mi, mq, mu, mv, mr, md));
+      add (new MeqPointSource(name, "ALL", mi, mq, mu, mv, mr, md));
     } else {
-      MeqParmFunklet* mmin = new MeqParmFunklet("Minor:"+name,
-						group, &parmTable);
-      MeqParmFunklet* mmaj = new MeqParmFunklet("Major:"+name,
-						group, &parmTable);
-      MeqParmFunklet* mphi = new MeqParmFunklet("Phi:"+name,
-						group, &parmTable);
-      add (new MeqGaussSource(name, mi, mq, mu, mv, mr, md, mmin, mmaj, mphi));
+      MeqExpr mmin = MeqParmFunklet::create ("Minor:"+name,
+					     group, &parmTable);
+      MeqExpr mmaj = MeqParmFunklet::create ("Major:"+name,
+					     group, &parmTable);
+      MeqExpr mphi = MeqParmFunklet::create ("Phi:"+name,
+					     group, &parmTable);
+      add (new MeqGaussSource(name, "ALL", mi, mq, mu, mv, mr, md,
+			      mmin, mmaj, mphi));
     }
 //    cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
   }
@@ -119,12 +120,31 @@ MeqSourceList::~MeqSourceList()
   }
 }
 
+MeqSource* MeqSourceList::getSource (const string& name) const
+{
+  map<string,int>::const_iterator pos = itsNameMap.find (name);
+  ASSERTSTR (pos != itsNameMap.end(),
+	     "Source " << name << " is unknown");
+  return itsSources[pos->second];
+}
+
 const vector<int>& MeqSourceList::getGroup (const string& groupName) const
 {
-  map<string,vector<int> >::const_iterator idx = itsGroupMap.find (groupName);
-  ASSERTSTR (idx != itsGroupMap.end(),
+  map<string,vector<int> >::const_iterator pos = itsGroupMap.find (groupName);
+  ASSERTSTR (pos != itsGroupMap.end(),
 	     "Source group " << groupName << " is unknown");
-  return idx->second;
+  return pos->second;
+}
+
+vector<string> MeqSourceList::getSourceNames() const
+{
+  vector<string> result;
+  for (map<string,int>::const_iterator iter=itsNameMap.begin();
+       iter!=itsNameMap.end();
+       iter++) {
+    result.push_back (iter->first);
+  }
+  return result;
 }
 
 void MeqSourceList::add (MeqSource* source)
@@ -137,4 +157,3 @@ void MeqSourceList::add (MeqSource* source)
 }
 
 }
-

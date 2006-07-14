@@ -82,10 +82,9 @@ void doIt (MeqParmFunklet& parm)
 int main()
 {
   try {
-    MeqParmGroup pgroup;
     {
       cout << "\nTest1 with two constant parms" << endl;
-      MeqParmFunklet parm("parm", &pgroup, 0);
+      MeqParmFunklet parm("parm", 0);
       MeqPolc polc;
       polc.setDomain (MeqDomain(2,6, 1,3));
       polc.setCoeff (MeqMatrix(2.));
@@ -97,7 +96,7 @@ int main()
     }
     {
       cout << "\nTest2 with two polynomial parms" << endl;
-      MeqParmFunklet parm("parm", &pgroup, 0);
+      MeqParmFunklet parm("parm", 0);
       vector<MeqPolc> polcs;
       MeqPolc polc;
       polc.setDomain (MeqDomain(2,6, 1,3));

@@ -26,7 +26,7 @@
 
 namespace LOFAR {
 
-  MeqParmExpr::MeqParmExpr (const string& expr, MeqParmGroup* group,
+  MeqParmExpr::MeqParmExpr (const string& expr, MeqParmGroup& group,
 			    ParmDB::ParmDB* table)
   {
     // Only the multiplication or subtraction of 2 parms is supported.
@@ -52,8 +52,8 @@ namespace LOFAR {
     }
     ASSERTSTR (!p1.empty()  &&  !p2.empty(),
 	       "Currently parmexpr only supports multiplication of two parms");
-    itsExpr1 = MeqExpr (MeqParmFunklet::create (p1, group, table));
-    itsExpr2 = MeqExpr (MeqParmFunklet::create (p2, group, table));
+    itsExpr1 = MeqParmFunklet::create (p1, group, table);
+    itsExpr2 = MeqParmFunklet::create (p2, group, table);
     addChild (itsExpr1);
     addChild (itsExpr2);
   }

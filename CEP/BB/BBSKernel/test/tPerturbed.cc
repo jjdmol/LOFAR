@@ -41,19 +41,21 @@ using namespace std;
 // center frequencies of 137750000-162250000 Hz.
 // There are 5 time stamps of 2 sec in it (centers 2.35208883e9 + 2-10).
 
-void doTest (Prediffer& pre1, const vector<string>& solv)
+void doTest (Prediffer& pre1, const StepProp& stepProp,
+	     const vector<string>& solv)
 {
   // Use the prediffer first to calculate the perturbed values.
-  // Set the solvable parameters.
-  pre1.clearSolvableParms();
-  pre1.setSolvableParms (solv, vector<string>());
-  cout << solv << endl;
-  // Set a domain of some channels and all times.
+  // Set a domain of first 4 channels and all times.
+  ASSERT (pre1.setWorkDomain (0, 3, 0., 1e12));
+  ASSERT (pre1.setStepProp (stepProp));
   // Have a single solve domain.
-  pre1.setWorkDomain (0, 3, 0., 1e12);
   vector<MeqDomain> solveDomains(1, pre1.getWorkDomain());
-  // Initialize all parms.
-  pre1.initSolvableParms (solveDomains);
+  // Set the solvable parameters and solve domains.
+  SolveProp sprop;
+  sprop.setParmPatterns (solv);
+  sprop.setDomains (solveDomains);
+  ASSERT (pre1.setSolveProp (sprop));
+  cout << solv << endl;
   // Get the values of the solvable parms.
   Solver solver;
   solver.initSolvableParmData (1, solveDomains, pre1.getWorkDomain());
@@ -145,6 +147,7 @@ int main (int argc, const char* argv[])
     // Read the info for the ParmTables
     ParmDB::ParmDBMeta meqPdm("aips", argv[3]);
     ParmDB::ParmDBMeta skyPdm("aips", argv[4]);
+    Prediffer pre1(argv[2], meqPdm, skyPdm, false);
 
     // Do a solve using the model and a few stations.
     {
@@ -153,14 +156,16 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 4*i;
       }
-      vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], meqPdm, skyPdm, 
-		     antVec, argv[5], srcgrp, false);
+      StrategyProp stratProp;
+      stratProp.setAntennas (antVec);
+      ASSERT (pre1.setStrategyProp (stratProp));
       vector<string> solv(argc-6);
       for (uint i=0; i<solv.size(); ++i) {
 	solv[i] = argv[i+6];
       }
-      doTest (pre1, solv);
+      StepProp stepProp;
+      stepProp.setModel (StringUtil::split(argv[5],'.'));
+      doTest (pre1, stepProp, solv);
       cout << "End of first test" << endl;
     }
   } catch (std::exception& x) {

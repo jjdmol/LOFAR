@@ -1,23 +1,35 @@
 #!/bin/sh
 
-BASEDIR=/data/PSS3/diepen/BBS2
+# Set srcdir if needed.
+# It might not be set if the .run file is executed directly instead of
+# by 'make check'.
+if [ "$srcdir" = "" ]; then
+  srcdir=../../../test
+fi
 
-$LOFAR_CHECKTOOL ./tPerturbed $USER $BASEDIR/demo3.MS_p1 $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP TOTALEJ.REALIMAG 'RA:*' 'DEC:*' 'StokesI:*'
+# Create the ParmDB tables for tPerturbed.
+$srcdir/makeDemoParmDB tPerturbed
+
+echo "run1 ..."
+$LOFAR_CHECKTOOL ./tPerturbed $USER /data/PSS3/diepen/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN.REALIMAG 'RA:*' 'DEC:*' 'StokesI:*'
 status=$?
 
-$LOFAR_CHECKTOOL ./tPerturbed $USER $BASEDIR/demo3.MS_p1 $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP TOTALEJ 'RA:*' 'DEC:*' 'StokesI:*'
+echo "run2 ..."
+$LOFAR_CHECKTOOL ./tPerturbed $USER /data/PSS3/diepen/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN 'RA:*' 'DEC:*' 'StokesI:*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat
 fi
 
-$LOFAR_CHECKTOOL ./tPerturbed $USER $BASEDIR/demo3.MS_p1 $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP TOTALEJ 'EJ*'
+echo "run3 ..."
+$LOFAR_CHECKTOOL ./tPerturbed $USER /data/PSS3/diepen/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN 'gain:*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat
 fi
 
-$LOFAR_CHECKTOOL ./tPerturbed $USER $BASEDIR/demo3.MS_p1 $BASEDIR/demo3.MEP $BASEDIR/demo3p_gsm.MEP TOTALEJ 'RA:*' 'DEC:*' 'StokesI:*'
+echo "run4 ..."
+$LOFAR_CHECKTOOL ./tPerturbed $USER /data/PSS3/diepen/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN 'RA:*' 'DEC:*' 'StokesI:*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat

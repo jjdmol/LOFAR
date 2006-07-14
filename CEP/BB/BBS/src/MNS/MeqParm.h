@@ -31,7 +31,7 @@
 #include <BBS/MNS/MeqResult.h>
 #include <ParmDB/ParmValue.h>
 #include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
 
 namespace LOFAR {
 
@@ -43,6 +43,7 @@ namespace LOFAR {
 class MeqDomain;
 class MeqParmGroup;
 class MeqFunklet;
+class ParmData;
 
 // This class is the (abstract) base class for parameters.
 // The constructor assigns a unique id to the parameter and adds
@@ -53,7 +54,7 @@ class MeqParm : public MeqExprRep
 public:
   // Create a parameter with the given name.
   // Assign a parameter id (a sequence number) to it.
-  explicit MeqParm (const string& name, MeqParmGroup*);
+  explicit MeqParm (const string& name);
 
   virtual ~MeqParm();
 
@@ -67,9 +68,8 @@ public:
   // Get the ParmDB seqnr.
   virtual int getParmDBSeqNr() const;
 
-  // Get the parameter id.
-  unsigned int getParmId() const
-    { return itsParmId; }
+  // Remove all funklets.
+  virtual void removeFunklets();
 
   // Read the polcs for the given domain.
   virtual void fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>&,
@@ -97,50 +97,112 @@ public:
   // Make the new value persistent (for the given domain).
   virtual void save();
 
+  // Functions needed for MeqParmFunklet.
+  // By default they throw an exception.
+  // <group>
+  virtual void update (const ParmData& values);
+  virtual void update (const vector<double>& value);
+  virtual void updateFromTable();
+  // </group>
+
 private:
   // A parm cannot be copied, otherwise problems arise with theirParms.
   MeqParm (const MeqParm&);
   MeqParm& operator= (const MeqParm&);
 
   string        itsName;
-  unsigned int  itsParmId;
   bool          itsIsSolvable;
-  MeqParmGroup* itsGroup;
-
-  // A static vector of pointers to parms.
 };
 
 
 
-class MeqParmGroup
+// Envelope class for MeqParm.
+// It is used by MeqParmGroup to be able to hold reference counts of a MeqParm.
+// It ensures that the underlying MeqExprRep object in MeqExpr is a MeqParm.
+class MeqPExpr : public MeqExpr
 {
 public:
+  // Construct from a MeqParm.
+  MeqPExpr (MeqParm* ptr)
+    : MeqExpr(ptr), itsParmPtr(ptr)
+    {}
+  // Construct from a MeqExpr which must contain a MeqParm.
+  // If not, an exception is thrown.
+  MeqPExpr (const MeqExpr&);
+
+  // Functions used on a MeqParm.
+  // <group>
+  const string& getName() const
+    { return itsParmPtr->getName(); }
+  int getParmDBSeqNr() const
+    { return itsParmPtr->getParmDBSeqNr(); }
+  void removeFunklets()
+    { itsParmPtr->removeFunklets(); }
+  void fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>& parmSet,
+		     const MeqDomain& domain)
+    { itsParmPtr->fillFunklets (parmSet, domain); }
+  int initDomain (const vector<MeqDomain>& solveDomains, int& pertIndex,
+			  vector<int>& scidIndex)
+    { return itsParmPtr->initDomain (solveDomains, pertIndex, scidIndex); }
+  void setSolvable (bool solvable)
+    { itsParmPtr->setSolvable (solvable); }
+  bool isSolvable() const
+    { return itsParmPtr->isSolvable(); }
+  const vector<MeqFunklet*>& getFunklets() const
+    { return itsParmPtr->getFunklets(); }
+  void save()
+    { itsParmPtr->save(); }
+  void update (const ParmData& values)
+    { itsParmPtr->update (values); }
+  void update (const vector<double>& value)
+    { itsParmPtr->update (value); }
+  void updateFromTable()
+    { itsParmPtr->updateFromTable(); }
+  // </group>
+
+private:
+  MeqParm* itsParmPtr;
+};
+
+
+
+class MeqParmGroup 
+{
+public:
+  typedef map<string,MeqPExpr>::const_iterator const_iterator;
+  typedef map<string,MeqPExpr>::iterator iterator;
+
+  // Default constructor.
   MeqParmGroup();
 
-  // Add a Parm object to the list and return its id (seqnr in the list).
-  int add (MeqParm*);
+  // Functions for iteration.
+  // <group>
+  const_iterator begin() const
+    { return itsParms.begin(); }
+  const_iterator end() const
+    { return itsParms.end(); }
+  iterator begin()
+    { return itsParms.begin(); }
+  iterator end()
+    { return itsParms.end(); }
+  // </group>
 
-  // Remove a parm from the list.
-  void remove (int index);
+  // Add a Parm object to the map.
+  void add (const MeqPExpr&);
 
-  // Get the nr of parms in the group.
-  unsigned int nparms() const
-    { return itsNparm; }
-
-  // Get access to the parm list.
-  const vector<MeqParm*>& getParms() const
-    { return itsParms; }
-
-  // Get a particular parm.
-  const MeqParm* getParm (int index) const
-    { return itsParms[index]; }
+  // Find a Parm object.
+  // <group>
+  const_iterator find (const string& name) const
+    { return itsParms.find (name); }
+  iterator find (const string& name)
+    { return itsParms.find (name); }
+  // </group>
 
   // Clear the group and delete all its parms.
   void clear();
 
 private:
-  unsigned int     itsNparm;
-  vector<MeqParm*> itsParms;
+  map<string,MeqPExpr> itsParms;
 };
 
 // @}
