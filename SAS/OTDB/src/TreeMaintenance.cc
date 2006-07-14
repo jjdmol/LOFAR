@@ -353,69 +353,39 @@ OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
 	ASSERTSTR(aNode.leaf, "function getParam(node&) only available for params");
 
 	// does limit field contain a reference?
+	OTDBparam	theParam = getParam(aNode.treeID(), aNode.paramDefID());
 	if (!isReference(aNode.limits)) {						// no, use other function
-		return (getParam(aNode.treeID(), aNode.paramDefID()));
+		return (theParam);
 	}
 
-	// which function should we call?
-	string		functionName("getVICnodeDef");
+	// check tree type
 	if (aNode.treeID()) {
 		OTDBtree	theTree = itsConn->getTreeInfo(aNode.treeID());
 		if (theTree.type == TThardware) {
 			ASSERTSTR(false, "getParam(nodename.paramname) not yet implemented for PIC trees.");
-			// functionName = "getPICnodeDef";		TODO
 		}
-	}
-
-	// given node is a VICnode containing a parameter reference.
-	// recursively follow the reference until the parameter is reached.
-	OTDBparam	empty;
-	
-	uint32		dotpos; 
-	// make nodeName first part of name, paramName second part and remainder the leftover
-	dotpos = aNode.limits.find('.', 0);							// >>a.b.c.d or <<a ?
-	if (dotpos == string::npos) {								// <<a : leave it.
-		return (getParam(aNode.treeID(), aNode.paramDefID()));
-	}
-																// >>a.b.c.d
-	string		nodeName = aNode.limits.substr(2, dotpos-2);	// a
-	string		paramName= aNode.limits.substr(dotpos+1);		// b.c.d
-	string		remainder;
-	dotpos = paramName.find('.', 0);
-	if (dotpos != string::npos) {
-		remainder = paramName.substr(dotpos);					// .c.d
-		paramName = paramName.substr(0,dotpos);					// b
-	}
-	else {
-		remainder.clear();
 	}
 
 	// get parameter B of Node A as template node from the database.
-	LOG_TRACE_FLOW_STR("TM:getVICnodedef(" << aNode.nodeID() << "," << 
-											  nodeName << "," << paramName << ")");
+	LOG_TRACE_FLOW_STR("TM:resolveVHparam(" << aNode.treeID() << "," << aNode.limits << ")"); 
 
-	OTDBnode	derefNode;
-	work	xAction(*(itsConn->getConn()), "getOTDBnode");
+	work	xAction(*(itsConn->getConn()), "resolveVHparam");
 	try {
-		result res = xAction.exec("SELECT * from " + functionName + "(" +
+		result res = xAction.exec("SELECT * from resolveVHparam(" +
 								  toString(aNode.treeID()) + ",'" + 
-								  nodeName + "','" + 
-								  paramName + "')");
-		if (res.empty()) {
-			return (empty);
+								  aNode.limits + "')");
+		if (!res.empty()) {
+			res[0]["resolveVHparam"].to(theParam.limits);
 		}
-
-		derefNode =  OTDBnode(aNode.treeID(), res[0]);
-		derefNode.limits += remainder;		//	add stripped-off part
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during getOTDBnode:") + ex.what();
+		itsError = string("Exception during resolvVHparam:") + ex.what();
 		LOG_FATAL(ex.what());
-		return (empty);
+		return (theParam);
 	}
 
 	xAction.commit();
-	return (getParam(derefNode));
+	return (theParam);
 }
 
 
