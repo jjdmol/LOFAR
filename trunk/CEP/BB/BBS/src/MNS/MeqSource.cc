@@ -27,7 +27,7 @@
 namespace LOFAR {
 
 
-  MeqSource::MeqSource (const string& name, const string& groupName,
+MeqSource::MeqSource (const string& name, const string& groupName,
 		      const MeqExpr& ra, const MeqExpr& dec)
 : itsSourceNr  (-1),
   itsName      (name),

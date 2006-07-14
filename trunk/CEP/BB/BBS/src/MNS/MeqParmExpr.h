@@ -49,7 +49,7 @@ class MeqParmExpr: public MeqExprRep
 {
 public:
   // Create from an expression.
-  MeqParmExpr (const string& expr, MeqParmGroup*, ParmDB::ParmDB* table);
+  MeqParmExpr (const string& expr, MeqParmGroup&, ParmDB::ParmDB* table);
 
   virtual ~MeqParmExpr();
 

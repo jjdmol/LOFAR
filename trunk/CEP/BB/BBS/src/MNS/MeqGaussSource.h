@@ -41,6 +41,7 @@ class MeqGaussSource: public MeqSource
 {
 public:
   MeqGaussSource (const string& name,
+		  const string& groupName,
 		  const MeqExpr& fluxI, const MeqExpr& fluxQ,
 		  const MeqExpr& fluxU, const MeqExpr& fluxV,
 		  const MeqExpr& ra, const MeqExpr& dec,

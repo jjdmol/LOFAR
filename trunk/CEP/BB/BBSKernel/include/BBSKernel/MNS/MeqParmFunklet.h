@@ -53,22 +53,27 @@ class MeqParmFunklet: public MeqParm
 {
 public:
   // Create a stored paramater with the given name and type.
-  MeqParmFunklet (const string& name, MeqParmGroup*,
-		  ParmDB::ParmDB* table);
+  MeqParmFunklet (const string& name, ParmDB::ParmDB* table);
 
   virtual ~MeqParmFunklet();
 
   // Make the correct object depending on the parm type.
   // For a parm expression a MeqParmExpr object is created, otherwise
   // a MeqParmFunklet.
-  static MeqExprRep* create (const string& name,
-			     MeqParmGroup* group,
-			     ParmDB::ParmDB* table);
+  static MeqExpr create (const string& name,
+			 MeqParmGroup& group,
+			 ParmDB::ParmDB* table);
 
   // Get the requested result of the parameter.
   virtual MeqResult getResult (const MeqRequest&);
 
-  // Fill the funklets for the given work domain.
+  // Remove all funklets.
+  virtual void removeFunklets();
+
+  // Fill the funklets from the ParmValues for the given work domain.
+  // Only fill if not filled yet.
+  // It means that clearFunklets need to be called if a new work domain
+  // is to be processed.
   virtual void fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>&,
 			     const MeqDomain&);
 
@@ -97,17 +102,17 @@ public:
   virtual void save();
 
   // Update the solvable parameter with the new value.
-  void update (const ParmData& values);
+  virtual void update (const ParmData& values);
 
   // Update the solvable parameter coefficients with the new values.
   // The vector contains all solvable values; it picks out the values
   // at the spid index of this parameter.
-  void update (const vector<double>& value);
+  virtual void update (const vector<double>& value);
 
   // Update the solvable parameter coefficients with the new values
   // in the table.
   // The default implementation throws a "not implemented" exception.
-  void updateFromTable();
+  virtual void updateFromTable();
 
   // Get the perturbation index.
   int getPertInx() const

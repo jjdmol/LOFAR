@@ -42,7 +42,6 @@
 #include <BBS/MNS/MeqJonesInvert.h>
 #include <BBS/MNS/MeqJonesMMap.h>
 
-#include <MS/MSDesc.h>
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
 #include <Blob/BlobIStream.h>
@@ -91,52 +90,14 @@
 
 using namespace casa;
 
-#if 0
-void *operator new(size_t size)
-{
-    long *ptr = (long *) malloc(size + 24);
-
-    size += 23, size >>= 3;
-    ptr[0] = size;
-    ptr[1] = 0x6161F898097771BC;
-    ptr[size] = 0x6161F898097771BD;
-    return (void *) (ptr + 2);
-}
-
-void operator delete(void *addr)
-{
-    if (addr != 0) {
-	long *ptr = (long *) addr - 2;
-	if (ptr[1] != 0x6161F898097771BC || ptr[ptr[0]] != 0x6161F898097771BD) {
-	    std::cerr << ptr << ": " << ptr[0] << ' ' << ptr[1] << ' ' << ptr[ptr[0]] << '\n';
-	    for (;;);
-	}
-	long value = 0x7777000000000000 + (long) __builtin_return_address(0);
-	for (size_t size = ptr[0], i = 0; i <= size; i ++)
-	    ptr[i] = value;
-	free(ptr);
-    }
-}
-#endif
 
 namespace LOFAR
 {
 
-//----------------------------------------------------------------------
-//
-// Constructor. Initialize a Prediffer object.
-//
-// Create list of stations and list of baselines from MS.
-// Create the MeqExpr tree for the given model type.
-//
-//----------------------------------------------------------------------
 Prediffer::Prediffer(const string& msName,
 		     const ParmDB::ParmDBMeta& meqPdm,
 		     const ParmDB::ParmDBMeta& skyPdm,
-		     const vector<int>& ant,
-		     const string& modelType,
-		     const vector<vector<int> >& sourceGroups,
-		     bool      calcUVW)
+		     bool calcUVW)
   :
   itsMSName       (msName),
   itsMEPName      (meqPdm.getTableName()),
@@ -145,7 +106,6 @@ Prediffer::Prediffer(const string& msName,
   itsGSMMEP       (skyPdm),
   itsCalcUVW      (calcUVW),
   itsSources      (0),
-  itsSrcGrp       (sourceGroups),
   itsNrPert       (0),
   itsNCorr        (0),
   itsNrBl         (0),
@@ -165,60 +125,17 @@ Prediffer::Prediffer(const string& msName,
 		<< "'" << meqPdm.getTableName() << "', "
 		<< "'" << skyPdm.getTableName() << "', "
 		<< itsCalcUVW << ")" );
-
-  // Initially use all correlations.
-  for (int i=0; i<4; ++i) {
-    itsCorr[i] = true;
-  }
-  // Read the meta data and map files.
+  // Read the meta data and map the flags file.
   readDescriptiveData (msName);
-  fillStations (ant);                  // Selected antennas
-  fillBaselines (ant);
+  fillStations();
   itsFlagsMap = new FlagsMap(msName + "/vis.flg", MMap::Read);
-
   // Set the MS info.
   itsMSMapInfo = MMapMSInfo (itsNCorr, itsNrChan, itsNrBl,
 			     itsReverseChan);
-  // Get all sources from the GSM and check the source groups.
-  getSources();
-
-  // Set up the expression tree for all baselines.
-  bool asAP = true;
-  bool useStatParm = false;
-  bool usePEJ = false;
-  bool useTEJ = false;
-  bool useBandpass = false;
-  vector<string> types = StringUtil::split(modelType, '.');
-  for (uint i=0; i<types.size(); ++i) {
-    if (types[i] != "") {
-      if (types[i] == "TOTALEJ") {
-	useTEJ = true;
-      } else if (types[i] == "PATCHEJ") {
-	usePEJ = true;
-      } else if (types[i] == "REALIMAG") {
-	asAP = false;
-      } else if (types[i] == "DIPOLE") {
-	useStatParm = true;
-      } else if (types[i] == "BANDPASS") {
-	useBandpass = true;
-      } else {
-	ASSERTSTR (false, "Modeltype part " << types[i] << " is invalid; "
-		   "valid are TOTALEJ,PATCHEJ,REALIMAG,DIPOLE,BANDPASS");
-      }
-    }
-  }
-  makeLOFARExpr(useTEJ, usePEJ, asAP, useStatParm, useBandpass);
-
-  // Show frequency domain.
-  LOG_INFO_STR( "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
-    itsEndFreq - itsStartFreq << " Hz) " << itsNrChan << " channels of "
-	    << itsStepFreq << " Hz" );
-
-  if (!itsCalcUVW) {
-    // Fill the UVW coordinates from the MS instead of calculating them.
-    fillUVW();
- }
-
+  // Get all sources from the ParmDB.
+  itsSources = new MeqSourceList(itsGSMMEP, itsParmGroup);
+  // Create the UVW nodes and fill them with uvw-s from MS if not calculated.
+  fillUVW();
   // Allocate thread private buffers.
 #if defined _OPENMP
   itsNthread = omp_get_max_threads();
@@ -229,16 +146,234 @@ Prediffer::Prediffer(const string& msName,
   itsResultVecs.resize (itsNthread);
   itsDiffVecs.resize (itsNthread);
   itsIndexVecs.resize (itsNthread);
-  ///  itsOrdFlagVecs.resize (itsNthread);
 }
 
-//----------------------------------------------------------------------
-//
-// ~~Prediffer
-//
-// Destructor for a Prediffer object.
-//
-//----------------------------------------------------------------------
+bool Prediffer::setStrategyProp (const StrategyProp& strat)
+{
+  itsInDataColumn = strat.getInColumn();
+  // Initially use all correlations.
+  for (int i=0; i<itsNCorr; ++i) {
+    itsCorr[i] = true;
+  }
+  strat.expandPatterns (itsMSDesc.antNames);
+  return selectStations (strat.getAntennas(),         // Available antennas
+			 strat.getAutoCorr());
+}
+
+bool Prediffer::setWorkDomain (const MeqDomain& domain)
+{
+  int startChan = int(0.5 + (domain.startX() - itsStartFreq) / itsStepFreq);
+  int endChan   = int(0.5 + (domain.endX() - itsStartFreq) / itsStepFreq) - 1;
+  // Exit if this MS part has no overlap with the freq domain.
+  if (endChan < 0  ||  startChan >= itsNrChan) {
+    return false;
+  }
+  // Determine the first and last channel to process.
+  if (startChan < 0) {
+    itsFirstChan = 0;
+  } else {
+    itsFirstChan = startChan;
+  }
+  if (endChan >= itsNrChan) {
+    itsLastChan = itsNrChan-1;
+  } else {
+    itsLastChan = endChan;
+  }
+  ASSERT (itsFirstChan <= itsLastChan);
+  // Find the times matching the given time interval.
+  double tstart = domain.startY();
+  // Usually the times are processed in sequential order, so we can
+  // continue searching.
+  // Otherwise start the search at the start.
+  itsTimeIndex += itsNrTimes;
+  if (itsTimeIndex >= itsMSDesc.times.size()
+  ||  tstart < itsMSDesc.times[itsTimeIndex]) {
+    itsTimeIndex = 0;
+  }
+  // Find the time matching the start time.
+  while (itsTimeIndex < itsMSDesc.times.size()
+	 &&  tstart > itsMSDesc.times[itsTimeIndex]) {
+    ++itsTimeIndex;
+  }
+  // Exit if no more chunks.
+  if (itsTimeIndex >= itsMSDesc.times.size()) {
+    return false;
+  }
+  BBSTest::Logger::log("BeginOfInterval");
+  // Find the end of the interval.
+  uint endIndex = itsTimeIndex;
+  double startTime = itsMSDesc.times[itsTimeIndex] -
+                     itsMSDesc.exposures[itsTimeIndex]/2;
+  double endTime = domain.endY();
+  itsNrTimes     = 0;
+  while (endIndex < itsMSDesc.times.size()
+	 && endTime >= itsMSDesc.times[endIndex]) {
+    ///cout << "time find " << itsMSDesc.times[endIndex]-itsMSDesc.times[0] << ' ' << endIndex<<endl;
+    ++endIndex;
+    ++itsNrTimes;
+  }
+  ASSERT (itsNrTimes > 0);
+  endTime = itsMSDesc.times[endIndex-1] + itsMSDesc.exposures[endIndex-1]/2;
+  ///cout << "time-indices " << itsTimeIndex << ' ' << endIndex << ' ' << itsNrTimes << ' ' << itsMSDesc.times[endIndex]-itsMSDesc.times[0]<<' '<<endTime-tstart<<' '<<startTime-itsMSDesc.times[0]<< ' '<<endTime-itsMSDesc.times[0]<<endl;
+  
+  BBSTest::ScopedTimer parmTimer("P:readparms");
+  itsWorkDomain = MeqDomain(itsStartFreq + itsFirstChan*itsStepFreq,
+			    itsStartFreq + (itsLastChan+1)*itsStepFreq,
+			    startTime,
+			    endTime);
+  // Read all parameter values which are part of the work domain.
+  readParms();
+  // Show frequency domain.
+  LOG_INFO_STR ("Workdomain: " << itsWorkDomain
+		<< " (channels " << itsFirstChan << '-' << itsLastChan
+		<< " of " << itsStepFreq << " Hz" );
+
+  return true;
+}
+
+bool Prediffer::setWorkDomain (int startChan, int endChan,
+			       double tstart, double tlength)
+{
+  // Determine the first and last channel to process.
+  if (startChan < 0) {
+    startChan = 0;
+  }
+  if (endChan < 0  ||  endChan >= itsNrChan) {
+    endChan = itsNrChan-1;
+  }
+  return setWorkDomain (MeqDomain(itsStartFreq + startChan*itsStepFreq,
+				  itsStartFreq + (endChan+1)*itsStepFreq,
+				  tstart,
+				  tstart+tlength));
+}
+
+bool Prediffer::setStepProp (const StepProp& stepProp)
+{
+  itsOutDataColumn = stepProp.getOutColumn();
+  stepProp.expandPatterns (itsMSDesc.antNames);
+  if (!selectStep (stepProp.getAnt1(), stepProp.getAnt2(),
+		   stepProp.getAutoCorr(),
+		   stepProp.getCorr())) {
+    return false;
+  }
+  // If no sources given, use all sources.
+  if (stepProp.getSources().empty()) {
+    makeTree (stepProp.getModel(), itsSources->getSourceNames());
+  } else {
+    makeTree (stepProp.getModel(), stepProp.getSources());
+  }
+  // Put funklets in parms which are not filled yet.
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
+  {
+    iter->second.fillFunklets (itsParmValues, itsWorkDomain);
+  }
+  return true;
+}
+
+bool Prediffer::setSolveProp (const SolveProp& solveProp)
+{
+  LOG_INFO_STR( "setSolveProp");
+  const vector<string>& parms = solveProp.getParmPatterns();
+  const vector<string>& excludePatterns = solveProp.getExclPatterns();
+  // Convert patterns to regexes.
+  vector<Regex> parmRegex;
+  for (unsigned int i=0; i<parms.size(); i++) {
+    parmRegex.push_back (Regex::fromPattern(parms[i]));
+  }
+  vector<Regex> excludeRegex;
+  for (unsigned int i=0; i<excludePatterns.size(); i++) {
+    excludeRegex.push_back (Regex::fromPattern(excludePatterns[i]));
+  }
+  // Find all parms matching the parms.
+  // Exclude them if matching an excludePattern
+  int nrsolv = 0;
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
+  {
+    String parmName (iter->second.getName());
+    // Loop through all regex-es until a match is found.
+    for (vector<Regex>::iterator incIter = parmRegex.begin();
+	 incIter != parmRegex.end();
+	 incIter++) {
+      if (parmName.matches(*incIter)) {
+	bool parmExc = false;
+	// Test if not excluded.
+	for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
+	     excIter != excludeRegex.end();
+	     excIter++) {
+	  if (parmName.matches(*excIter)) {
+	    parmExc = true;
+	    break;
+	  }
+	}
+	if (!parmExc) {
+	  LOG_TRACE_OBJ_STR( "setSolvable: " << iter->second.getName());
+	  iter->second.setSolvable (true);
+	  nrsolv++;
+	}
+	break;
+      }
+    }
+  }
+  if (nrsolv == 0) {
+    return false;
+  }
+  initSolvableParms (solveProp.getDomains());
+  return itsNrPert>0;
+}
+
+void Prediffer::makeTree (const vector<string>& modelType,
+			  const vector<string>& sourceNames)
+{
+  // Determine which parts of the model to use.
+  bool asAP = true;
+  bool useDipole = false;
+  bool usePatchGain = false;
+  bool useTotalGain = false;
+  bool useBandpass = false;
+  for (uint i=0; i<modelType.size(); ++i) {
+    if (modelType[i] != "") {
+      if (modelType[i] == "TOTALGAIN") {
+	useTotalGain = true;
+      } else if (modelType[i] == "PATCHGAIN") {
+	usePatchGain = true;
+      } else if (modelType[i] == "REALIMAG") {
+	asAP = false;
+      } else if (modelType[i] == "DIPOLE") {
+	useDipole = true;
+      } else if (modelType[i] == "BANDPASS") {
+	useBandpass = true;
+      } else {
+	ASSERTSTR (false, "Modeltype part " << modelType[i] << " is invalid; "
+		   "valid are TOTALGAIN,PATCHGAIN,REALIMAG,DIPOLE,BANDPASS");
+      }
+    }
+  }
+  // Find all sources and groups to use.
+  // Make an LMN node for each source used.
+  int nrsrc = sourceNames.size();
+  vector<MeqSource*> sources;
+  map<string,vector<int> > groups;
+  itsLMN.clear();
+  itsLMN.reserve (nrsrc);
+  for (int i=0; i<nrsrc; ++i) {
+    MeqSource* src = itsSources->getSource (sourceNames[i]);
+    // Add source to list.
+    sources.push_back (src);
+    // Add source index to group.
+    groups[src->getGroupName()].push_back (i);
+    MeqLMN* lmn = new MeqLMN(src);
+    lmn->setPhaseRef (&itsPhaseRef);
+    itsLMN.push_back (lmn);
+  }
+  // Set up the expression tree for all baselines.
+  makeLOFARExprs (sources, groups,
+		  useTotalGain, usePatchGain, asAP, useDipole, useBandpass);
+}
+
 Prediffer::~Prediffer()
 {
   LOG_TRACE_FLOW( "Prediffer destructor" );
@@ -265,13 +400,6 @@ Prediffer::~Prediffer()
   MeqMatrixRealArr::poolDeactivate();
 }
 
-//-------------------------------------------------------------------
-//
-// ~readDescriptiveData
-//
-// Get measurement set description from file
-//
-//-------------------------------------------------------------------
 void Prediffer::readDescriptiveData(const string& fileName)
 {
   // Get meta data from description file.
@@ -280,21 +408,15 @@ void Prediffer::readDescriptiveData(const string& fileName)
   ASSERTSTR (istr, "File " << fileName << "/vis.des could not be opened");
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
-  MSDesc msd;
-  bis >> msd;
-  ASSERTSTR (msd.nchan.size() == 1, "Multiple bands in MS cannot be handled");
-  itsNCorr     = msd.corrTypes.size();
-  itsNrChan    = msd.nchan[0];
-  itsStartFreq = msd.startFreq[0];
-  itsEndFreq   = msd.endFreq[0];
+  bis >> itsMSDesc;
+  ASSERTSTR (itsMSDesc.nchan.size() == 1,
+	     "Multiple bands in MS cannot be handled");
+  itsNCorr     = itsMSDesc.corrTypes.size();
+  itsNrChan    = itsMSDesc.nchan[0];
+  itsStartFreq = itsMSDesc.startFreq[0];
+  itsEndFreq   = itsMSDesc.endFreq[0];
   itsStepFreq  = (itsEndFreq - itsStartFreq)/itsNrChan;
-  itsAnt1      = msd.ant1;
-  itsAnt2      = msd.ant2;
-  itsTimes     = msd.times;
-  itsIntervals = msd.exposures;
-  itsAntPos    = msd.antPos;
-  ASSERT (itsAnt1.size() == itsAnt2.size());
-  itsNrBl = itsAnt1.size();
+  itsNrBl      = itsMSDesc.ant1.size();
   itsReverseChan = itsStartFreq > itsEndFreq;
   if (itsReverseChan) {
     double  tmp  = itsEndFreq;
@@ -302,16 +424,9 @@ void Prediffer::readDescriptiveData(const string& fileName)
     itsStartFreq = tmp;
     itsStepFreq  = std::abs(itsStepFreq);
   }
-  getPhaseRef(msd.ra, msd.dec, msd.startTime);
+  getPhaseRef(itsMSDesc.ra, itsMSDesc.dec, itsMSDesc.startTime);
 }
 
-//----------------------------------------------------------------------
-//                                                                       
-// ~getPhaseRef
-//
-// Get the phase reference of the first field.
-//
-//----------------------------------------------------------------------
 void Prediffer::getPhaseRef(double ra, double dec, double startTime)
 {
   // Use the phase reference of the given J2000 ra/dec.
@@ -321,405 +436,294 @@ void Prediffer::getPhaseRef(double ra, double dec, double startTime)
 }
 
 
-//----------------------------------------------------------------------
-//
-// ~fillStations
-//
-// Fill the station positions and names.
-//
-//----------------------------------------------------------------------
-void Prediffer::fillStations (const vector<int>& antnrs)
+void Prediffer::fillStations()
 {
-  uint nrant = itsAntPos.ncolumn();
+  // Use the array as a 2D one.
+  Matrix<double> antPos (itsMSDesc.antPos);
+  uint nrant = antPos.ncolumn();
   itsStations = vector<MeqStation*>(nrant, (MeqStation*)0);
   // Get all stations actually used.
-  char str[8];
-  for (uint i=0; i<antnrs.size(); i++) {
-    uint ant = antnrs[i];
-    ASSERT (ant < nrant);
-    if (itsStations[ant] == 0) {
-      // Store each position as a constant parameter.
-      // Use the antenna name as the parameter name.
-      Vector<double> antpos = itsAntPos.column(ant);
-      sprintf (str, "%d", ant+1);
-      String name = string("SR") + str;
-      MeqParmSingle* px = new MeqParmSingle("AntPosX." + name,
-					    &itsParmGroup, antpos(0));
-      MeqParmSingle* py = new MeqParmSingle("AntPosY." + name,
-					    &itsParmGroup, antpos(1));
-      MeqParmSingle* pz = new MeqParmSingle("AntPosZ." + name,
-					    &itsParmGroup, antpos(2));
-      itsStations[ant] = new MeqStation(px, py, pz, name);
-    }
+  for (uint ant=0; ant<nrant; ant++) {
+    // Store each position as a constant parameter.
+    // Use the antenna name as the parameter name.
+    Vector<double> antpos = antPos.column(ant);
+    const string& name = itsMSDesc.antNames[ant];
+    MeqParmSingle* px = new MeqParmSingle("AntPosX." + name,
+					  antpos(0));
+    MeqParmSingle* py = new MeqParmSingle("AntPosY." + name,
+					  antpos(1));
+    MeqParmSingle* pz = new MeqParmSingle("AntPosZ." + name,
+					  antpos(2));
+    itsStations[ant] = new MeqStation(px, py, pz, name);
   }
 }
 
-//----------------------------------------------------------------------
-//
-// ~fillBaselines
-//
-// Create objects representing the baseline directions.
-// Create an index giving the baseline index of an ordered antenna pair.
-//
-//----------------------------------------------------------------------
-void Prediffer::fillBaselines (const vector<int>& antnrs)
+bool Prediffer::selectStations (const vector<int>& antnrs, bool useAutoCorr)
 {
-  // Convert antnrs to bools.
-  uint maxAnt = itsStations.size();
-  Block<bool> useAnt(maxAnt, false);
-  for (uint i=0; i<antnrs.size(); i++) {
-    uint ant = antnrs[i];
-    ASSERT (ant < maxAnt);
-    useAnt[ant] = true;
-  }
-  itsNrUsedBl = 0;
-  itsBLIndex.resize (maxAnt, maxAnt);
-  itsBLIndex = -1;
-  itsBLSelection.resize (maxAnt, maxAnt);
-  itsBLSelection = false;
-  itsBLUsedInx.reserve (itsNrBl);
-  
-  for (uint i=0; i<itsNrBl; i++) {
-    uint a1 = itsAnt1[i];
-    uint a2 = itsAnt2[i];
-    ASSERT (a1 < maxAnt  &&  a2 < maxAnt);
-    if (useAnt[a1] && useAnt[a2]) {
-      // Assign a baseline index and set to selected.
-      itsBLSelection(a1,a2) = true;
-      itsBLIndex(a1,a2) = itsNrUsedBl++;
-      itsBLUsedInx.push_back (i);
-    }
-  }
-  countBaseCorr();
-}
-
-//----------------------------------------------------------------------
-//
-// ~countBaseCorr
-//
-// Count the selected nr of baselines and correlations
-//
-//----------------------------------------------------------------------
-void Prediffer::countBaseCorr()
-{
-  itsBLSelInx.resize  (0);
-  itsBLSelInx.reserve (itsNrBl);
-  const bool* sel = itsBLSelection.data();
-  const int*  inx = itsBLIndex.data();
-  for (uint i=0; i<itsBLSelection.nelements(); ++i) {
-    if (sel[i]  &&  inx[i] >= 0) {
-      itsBLSelInx.push_back(inx[i]);
-    }
-  }
-  ASSERTSTR (itsBLSelInx.size() > 0, "No valid baselines selected");
-  int nSelCorr = 0;
-  for (int i=0; i<itsNCorr; ++i) {
-    if (itsCorr[i]) {
-      nSelCorr++;
-    }
-  }
-  ASSERTSTR (nSelCorr > 0, "No valid correlations selected");
-}
-
-//----------------------------------------------------------------------
-//
-// ~getSources
-//
-// Get all sources from the parmtable.
-//
-//----------------------------------------------------------------------
-void Prediffer::getSources()
-{
-  // Get the sources from the ParmTable
-  itsSources = new MeqSourceList(itsGSMMEP, &itsParmGroup);
-  int nrsrc = itsSources->size();
-  for (int i=0; i<nrsrc; ++i) {
-    (*itsSources)[i].setSourceNr (i);
-  }
-  // Make a map for the sources actually used.
-  itsSrcNrMap.reserve (nrsrc);
-  if (itsSrcGrp.size() == 0) {
-    // Set groups if nothing given.
-    itsSrcGrp.resize (nrsrc);
-    vector<int> vec(1);
-    for (int i=0; i<nrsrc; ++i) {
-      vec[0] = i+1;                 // source nrs are 1-relative
-      itsSrcGrp[i] = vec;
-      itsSrcNrMap.push_back (i);
-    }
+  int nrant = itsStations.size();
+  // Get all stations actually used.
+  // Default is all stations.
+  if (antnrs.empty()) {
+    itsSelStations = itsStations;
   } else {
-    for (uint j=0; j<itsSrcGrp.size(); ++j) {
-      vector<int> srcs = itsSrcGrp[j];
-      ASSERTSTR (srcs.size() > 0, "Sourcegroup " << j << " is empty");
-      for (uint i=0; i<srcs.size(); ++i) {
-	ASSERTSTR (srcs[i] > 0  &&  srcs[i] <= nrsrc,
-		   "Sourcenr " << srcs[i]
-		   << " must be > 0 and <= #sources (=" << nrsrc << ')');
-	(*itsSources)[srcs[i]-1].setSourceNr (itsSrcNrMap.size());
-	itsSrcNrMap.push_back (srcs[i]-1);
+    // Set given stations.
+    itsSelStations = vector<MeqStation*>(nrant, (MeqStation*)0);
+    for (uint i=0; i<antnrs.size(); i++) {
+      int ant = antnrs[i];
+      if (ant >= 0  &&  ant < nrant) {
+	itsSelStations[ant] = itsStations[ant];
       }
     }
   }
-  // Make an LMN node for each source used.
-  int nrused = itsSrcNrMap.size();
-  itsLMN.reserve (nrused);
-  for (int i=0; i<nrused; ++i) {
-    int src = itsSrcNrMap[i];
-    MeqLMN* lmn = new MeqLMN(&((*itsSources)[src]));
-    lmn->setPhaseRef (&itsPhaseRef);
-    itsLMN.push_back (lmn);
-  }
-  // Set the peel source nrs initially to the sources.
-  vector<int> peelNrs;
-  for (uint i=0; i<itsSrcGrp.size(); ++i) {
-    const vector<int>& grp = itsSrcGrp[i];
-    for (uint j=0; j<grp.size(); ++j) {
-      peelNrs.push_back (grp[j] - 1);
+  // Fill a a matrix telling for each antenna pair where contained in the MS.
+  // First initialize to not contained.
+  itsBLSel.resize (nrant, nrant);
+  itsBLSel = false;
+  // Set if selected for each baseline in the MS.
+  int nr = 0;
+  for (uint i=0; i<itsMSDesc.ant1.size(); ++i) {
+    int a1 = itsMSDesc.ant1[i];
+    int a2 = itsMSDesc.ant2[i];
+    if (itsSelStations[a1] && itsSelStations[a2]) {
+      if (useAutoCorr  ||  a1 != a2) {
+	itsBLSel(a1,a2) = true;
+	nr++;
+      }
     }
   }
-  itsPeelSourceNrs = peelNrs;
+  return nr>0;
 }
 
-//----------------------------------------------------------------------
-//
-// ~makeLOFARExpr
-//
-// Make the expression tree per baseline for LOFAR.
-//
-//----------------------------------------------------------------------
-void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
-			       bool useStatParm, bool useBandpass)
+void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
+				const map<string, vector<int> >& groups,
+				bool useTotalGain, bool usePatchGain,
+				bool asAP,
+				bool useDipole, bool useBandpass)
 {
   // Allocate the vectors holding the expressions.
   int nrstat = itsStations.size();
-  int nrsrc  = itsSrcNrMap.size();
-  int nrgrp  = itsSrcGrp.size();
-  itsStatUVW.reserve (nrstat);
-  // EJ is real/imag or ampl/phase
-  string ejname1 = "real:";
-  string ejname2 = "imag:";
+  int nrsrc  = sources.size();
+  int nrgrp  = groups.size();
+  // GJ is real/imag or ampl/phase
+  string gjname1 = "real:";
+  string gjname2 = "imag:";
   if (asAP) {
-    ejname1 = "ampl:";
-    ejname2 = "phase:";
+    gjname1 = "ampl:";
+    gjname2 = "phase:";
   }
-  // Vector containing StatExpr-s.
-  vector<MeqJonesExpr> statExpr(nrstat);
+  // Vector containing DipoleExpr-s.
+  vector<MeqJonesExpr> dipoleExpr(nrstat);
   // Vector containing DFTPS-s.
   vector<MeqExpr> pdfts(nrsrc*nrstat);
-  // Vector containing all EJ-s per station per patch.
-  vector<MeqJonesExpr> patchEJ(nrgrp*nrstat);
-  // Vector containing all EJ-s per station.
-  vector<MeqJonesExpr> totalEJ(nrstat);
+  // Vector containing all gains per station per patch.
+  vector<MeqJonesExpr> patchGJ(nrgrp*nrstat);
+  // Vector containing all Gain-s per station.
+  vector<MeqJonesExpr> totalGJ(nrstat);
   // Correction per station.
   vector<MeqJonesExpr> corrStat(nrstat);
   // Bandpass per station.
   vector<MeqJonesExpr> bandpass(nrstat);
 
   // Fill the vectors for each station.
-  for (int i=0; i<nrstat; ++i) {
-    MeqStatUVW* uvw = 0;
+  for (int stat=0; stat<nrstat; ++stat) {
     // Do it only if the station is actually used.
-    if (itsStations[i] != 0) {
-      // Expression to calculate UVW per station
-      uvw = new MeqStatUVW (itsStations[i], &itsPhaseRef);
+    if (itsStations[stat] != 0) {
       // Do pure station parameters only if told so.
-      if (useStatParm) {
+      if (useDipole) {
 	MeqExpr frot (MeqParmFunklet::create ("frot:" +
-					      itsStations[i]->getName(),
-					      &itsParmGroup, &itsMEP));
+					      itsStations[stat]->getName(),
+					      itsParmGroup, &itsMEP));
 	MeqExpr drot (MeqParmFunklet::create ("drot:" +
-					      itsStations[i]->getName(),
-					      &itsParmGroup, &itsMEP));
+					      itsStations[stat]->getName(),
+					      itsParmGroup, &itsMEP));
 	MeqExpr dell (MeqParmFunklet::create ("dell:" +
-					      itsStations[i]->getName(),
-					      &itsParmGroup, &itsMEP));
-	MeqExpr gain11 (MeqParmFunklet::create ("gain:11:" +
-						itsStations[i]->getName(),
-						&itsParmGroup, &itsMEP));
-	MeqExpr gain22 (MeqParmFunklet::create ("gain:22:" +
-						itsStations[i]->getName(),
-						&itsParmGroup, &itsMEP));
-	statExpr[i] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
-						    gain11, gain22));
+					      itsStations[stat]->getName(),
+					      itsParmGroup, &itsMEP));
+	MeqExpr gj11 (MeqParmFunklet::create ("dgain:X:" +
+					      itsStations[stat]->getName(),
+					      itsParmGroup, &itsMEP));
+	MeqExpr gj22 (MeqParmFunklet::create ("dgain:Y:" +
+					      itsStations[stat]->getName(),
+					      itsParmGroup, &itsMEP));
+	dipoleExpr[stat] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
+							 gj11, gj22));
       }
       // Make a bandpass per station
       if (useBandpass) {
-        string stationName = itsStations[i]->getName();
+        string stationName = itsStations[stat]->getName();
+        MeqExpr bandpassXX(MeqParmFunklet::create("bandpass:X:" + stationName,
+						  itsParmGroup, &itsMEP));
+        MeqExpr bandpassYY(MeqParmFunklet::create("bandpass:Y:" + stationName,
+						  itsParmGroup, &itsMEP));
         
-        MeqExpr bandpassXX(MeqParmFunklet::create("Bandpass:XX:" + stationName,
-						  &itsParmGroup, &itsMEP));
-        MeqExpr bandpassYY(MeqParmFunklet::create("Bandpass:YY:" + stationName,
-						  &itsParmGroup, &itsMEP));
-        
-        bandpass[i] = new MeqDiag(MeqExpr(bandpassXX), MeqExpr(bandpassYY));
+        bandpass[stat] = new MeqDiag(MeqExpr(bandpassXX), MeqExpr(bandpassYY));
       }
       // Make a DFT per station per source.
       for (int src=0; src<nrsrc; ++src) {
-	pdfts[i*nrsrc + src] = MeqExpr(new MeqDFTPS (itsLMN[src], uvw));
+	pdfts[stat*nrsrc + src] = MeqExpr(new MeqDFTPS (itsLMN[src],
+							itsStatUVW[stat]));
       }
-      // Make optionally EJones expressions.
-      MeqExprRep* ej11;
-      MeqExprRep* ej12;
-      MeqExprRep* ej21;
-      MeqExprRep* ej22;
-      if (useTEJ) {
+      // Make optionally GJones expressions.
+      MeqExprRep* gj11;
+      MeqExprRep* gj12;
+      MeqExprRep* gj21;
+      MeqExprRep* gj22;
+      if (useTotalGain) {
 	// Make a gain/phase expression per station.
-	string nm = itsStations[i]->getName();
-	MeqExpr ej11r (MeqParmFunklet::create ("EJ11:" + ejname1 + nm,
-					       &itsParmGroup, &itsMEP));
-	MeqExpr ej11i (MeqParmFunklet::create ("EJ11:" + ejname2 + nm,
-					       &itsParmGroup, &itsMEP));
-	MeqExpr ej12r (MeqParmFunklet::create ("EJ12:" + ejname1 + nm,
-					       &itsParmGroup, &itsMEP));
-	MeqExpr ej12i (MeqParmFunklet::create ("EJ12:" + ejname2 + nm,
-					       &itsParmGroup, &itsMEP));
-	MeqExpr ej21r (MeqParmFunklet::create ("EJ21:" + ejname1 + nm,
-					       &itsParmGroup, &itsMEP));
-	MeqExpr ej21i (MeqParmFunklet::create ("EJ21:" + ejname2 + nm,
-					       &itsParmGroup, &itsMEP));
-	MeqExpr ej22r (MeqParmFunklet::create ("EJ22:" + ejname1 + nm,
-					       &itsParmGroup, &itsMEP));
-	MeqExpr ej22i (MeqParmFunklet::create ("EJ22:" + ejname2 + nm,
-					       &itsParmGroup, &itsMEP));
+	string nm = itsStations[stat]->getName();
+	MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
+					       itsParmGroup, &itsMEP));
+	MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
+					       itsParmGroup, &itsMEP));
+	MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
+					       itsParmGroup, &itsMEP));
+	MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
+					       itsParmGroup, &itsMEP));
+	MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
+					       itsParmGroup, &itsMEP));
+	MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
+					       itsParmGroup, &itsMEP));
+	MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
+					       itsParmGroup, &itsMEP));
+	MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
+					       itsParmGroup, &itsMEP));
 	if (asAP) {
-	  ej11 = new MeqExprAPToComplex (ej11r, ej11i);
-	  ej12 = new MeqExprAPToComplex (ej12r, ej12i);
-	  ej21 = new MeqExprAPToComplex (ej21r, ej21i);
-	  ej22 = new MeqExprAPToComplex (ej22r, ej22i);
+	  gj11 = new MeqExprAPToComplex (gj11r, gj11i);
+	  gj12 = new MeqExprAPToComplex (gj12r, gj12i);
+	  gj21 = new MeqExprAPToComplex (gj21r, gj21i);
+	  gj22 = new MeqExprAPToComplex (gj22r, gj22i);
 	} else {
-	  ej11 = new MeqExprToComplex (ej11r, ej11i);
-	  ej12 = new MeqExprToComplex (ej12r, ej12i);
-	  ej21 = new MeqExprToComplex (ej21r, ej21i);
-	  ej22 = new MeqExprToComplex (ej22r, ej22i);
+	  gj11 = new MeqExprToComplex (gj11r, gj11i);
+	  gj12 = new MeqExprToComplex (gj12r, gj12i);
+	  gj21 = new MeqExprToComplex (gj21r, gj21i);
+	  gj22 = new MeqExprToComplex (gj22r, gj22i);
 	}
-	totalEJ[i] = new MeqJonesNode (MeqExpr(ej11), MeqExpr(ej12),
-				       MeqExpr(ej21), MeqExpr(ej22));
-	corrStat[i] = new MeqJonesInvert (totalEJ[i]);
+	totalGJ[stat] = new MeqJonesNode (MeqExpr(gj11), MeqExpr(gj12),
+					  MeqExpr(gj21), MeqExpr(gj22));
+	corrStat[stat] = new MeqJonesInvert (totalGJ[stat]);
       }
-      if (usePEJ) {
+      if (usePatchGain) {
 	// Make a complex gain expression per station per patch.
-	for (int j=0; j<nrgrp; j++) {
-	  ostringstream ostr;
-	  ostr << j+1;
-	  string nm = itsStations[i]->getName() + ":SG" + ostr.str();
-	  MeqExpr ej11r (MeqParmFunklet::create ("EJ11:" + ejname1 + nm,
-						 &itsParmGroup, &itsMEP));
-	  MeqExpr ej11i (MeqParmFunklet::create ("EJ11:" + ejname2 + nm,
-						 &itsParmGroup, &itsMEP));
-	  MeqExpr ej12r (MeqParmFunklet::create ("EJ12:" + ejname1 + nm,
-						 &itsParmGroup, &itsMEP));
-	  MeqExpr ej12i (MeqParmFunklet::create ("EJ12:" + ejname2 + nm,
-						 &itsParmGroup, &itsMEP));
-	  MeqExpr ej21r (MeqParmFunklet::create ("EJ21:" + ejname1 + nm,
-						 &itsParmGroup, &itsMEP));
-	  MeqExpr ej21i (MeqParmFunklet::create ("EJ21:" + ejname2 + nm,
-						 &itsParmGroup, &itsMEP));
-	  MeqExpr ej22r (MeqParmFunklet::create ("EJ22:" + ejname1 + nm,
-						 &itsParmGroup, &itsMEP));
-	  MeqExpr ej22i (MeqParmFunklet::create ("EJ22:" + ejname2 + nm,
-						 &itsParmGroup, &itsMEP));
+	int grp=0;
+	for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
+	     grpiter != groups.end();
+	     grpiter++, grp++) {
+	  string nm = itsStations[stat]->getName() + ":" + grpiter->first;
+	  MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
+						 itsParmGroup, &itsMEP));
+	  MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
+						 itsParmGroup, &itsMEP));
+	  MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
+						 itsParmGroup, &itsMEP));
+	  MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
+						 itsParmGroup, &itsMEP));
+	  MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
+						 itsParmGroup, &itsMEP));
+	  MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
+						 itsParmGroup, &itsMEP));
+	  MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
+						 itsParmGroup, &itsMEP));
+	  MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
+						 itsParmGroup, &itsMEP));
 	  if (asAP) {
-	    ej11 = new MeqExprAPToComplex (ej11r, ej11i);
-	    ej12 = new MeqExprAPToComplex (ej12r, ej12i);
-	    ej21 = new MeqExprAPToComplex (ej21r, ej21i);
-	    ej22 = new MeqExprAPToComplex (ej22r, ej22i);
+	    gj11 = new MeqExprAPToComplex (gj11r, gj11i);
+	    gj12 = new MeqExprAPToComplex (gj12r, gj12i);
+	    gj21 = new MeqExprAPToComplex (gj21r, gj21i);
+	    gj22 = new MeqExprAPToComplex (gj22r, gj22i);
 	  } else {
-	    ej11 = new MeqExprToComplex (ej11r, ej11i);
-	    ej12 = new MeqExprToComplex (ej12r, ej12i);
-	    ej21 = new MeqExprToComplex (ej21r, ej21i);
-	    ej22 = new MeqExprToComplex (ej22r, ej22i);
+	    gj11 = new MeqExprToComplex (gj11r, gj11i);
+	    gj12 = new MeqExprToComplex (gj12r, gj12i);
+	    gj21 = new MeqExprToComplex (gj21r, gj21i);
+	    gj22 = new MeqExprToComplex (gj22r, gj22i);
 	  }
-	  patchEJ[i*nrgrp + j] = new MeqJonesNode (MeqExpr(ej11),
-						   MeqExpr(ej12),
-						   MeqExpr(ej21),
-						   MeqExpr(ej22));
+	  patchGJ[stat*nrgrp + grp] = new MeqJonesNode (MeqExpr(gj11),
+							MeqExpr(gj12),
+							MeqExpr(gj21),
+							MeqExpr(gj22));
 	  // Only AP of first group is used for correction.
-	  if (j == 0) {
-	    corrStat[i] = new MeqJonesInvert (patchEJ[i*nrgrp + j]);
+	  if (grp == 0) {
+	    corrStat[stat] = new MeqJonesInvert (patchGJ[stat*nrgrp + grp]);
 	  }
 	}
       }
     }
-    itsStatUVW.push_back (uvw);
   }    
-
   // Make an expression for each baseline.
-  itsExpr.resize (itsNrUsedBl);
-  itsCorrExpr.resize (itsNrUsedBl);
-  itsCorrMMap.resize (itsNrUsedBl);
-  int nrant = itsBLIndex.nrow();
-  for (int ant2=0; ant2<nrant; ant2++) {
-    for (int ant1=0; ant1<nrant; ant1++) {
-      int blindex = itsBLIndex(ant1,ant2);
-      if (blindex >= 0) {
-	if (usePEJ || useTEJ) {
-	  // Make correction expressions.
-	  itsCorrMMap[blindex] = new MeqJonesMMap (itsMSMapInfo,
-						   itsBLUsedInx[blindex]);
-	  itsCorrExpr[blindex] = new MeqJonesCMul3 (corrStat[ant1],
-						    itsCorrMMap[blindex],
-						    corrStat[ant2]);
-	}
-	// Predict expressions.
-	vector<MeqJonesExpr> vecPatch;
-	// Loop through all source groups.
-	for (int grp=0; grp<nrgrp; ++grp) {
-	  const vector<int>& srcgrp = itsSrcGrp[grp];
-	  vector<MeqJonesExpr> vecSrc;
-	  vecSrc.reserve (srcgrp.size());
-	  for (uint j=0; j<srcgrp.size(); ++j) {
-	    // Create the total DFT per source.
-	    int src = srcgrp[j] - 1;
-	    MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
-					     pdfts[ant2*nrsrc + src],
-					     itsLMN[src]));
-	    // For the time being only point sources are supported.
-	    MeqPointSource& mps = dynamic_cast<MeqPointSource&>
-					    ((*itsSources)[itsSrcNrMap[src]]);
-	    vecSrc.push_back (MeqJonesExpr (new MeqBaseLinPS(expr1, &mps)));
-	  }
-	  MeqJonesExpr sum;
-	  // Sum all sources in the group.
-	  if (vecSrc.size() == 1) {
-	    sum = vecSrc[0];
-	  } else {
-	    sum = MeqJonesExpr (new MeqJonesSum(vecSrc));
-	  }
-	  // Multiply by ionospheric gain/phase per station per patch.
-	  if (usePEJ) {
-	    vecPatch.push_back (new MeqJonesCMul3(patchEJ[ant1*nrgrp + grp],
-						  sum,
-						  patchEJ[ant2*nrgrp + grp]));
-	  } else {
-	    vecPatch.push_back (sum);
-	  }
-	}
-	// Sum all patches.
-	MeqJonesExpr sumAll;
-	if (vecPatch.size() == 1) {
-	  sumAll = vecPatch[0];
-	} else {
-	  sumAll = MeqJonesExpr (new MeqJonesSum(vecPatch));
-	}
-	// Multiply by total gain/phase per station.
-	if (useTEJ) {
-	  sumAll = new MeqJonesCMul3(totalEJ[ant1],
-				     sumAll,
-				     totalEJ[ant2]);
-	}
-        if (useBandpass) {
-          sumAll = new MeqJonesCMul3(bandpass[ant1],
-                                     sumAll,
-                                     bandpass[ant2]);
-        }
-	if (useStatParm) {
-	  sumAll = new MeqJonesCMul3(statExpr[ant1],
-				     sumAll,
-				     statExpr[ant2]);
-	}
-	itsExpr[blindex] = sumAll;
+  int nrusedbl = itsBLInx.size();
+  itsExpr.resize (nrusedbl);
+  itsCorrExpr.resize (nrusedbl);
+  itsCorrMMap.resize (nrusedbl);
+  for (int blindex=0; blindex<nrusedbl; blindex++) {
+    int bl = itsBLInx[blindex];
+    int ant1 = itsMSDesc.ant1[bl];
+    int ant2 = itsMSDesc.ant2[bl];
+    if (usePatchGain || useTotalGain) {
+      // Make correction expressions.
+      itsCorrMMap[blindex] = new MeqJonesMMap (itsMSMapInfo, bl);
+      itsCorrExpr[blindex] = new MeqJonesCMul3 (corrStat[ant1],
+						itsCorrMMap[blindex],
+						corrStat[ant2]);
+    }
+    // Predict expressions.
+    vector<MeqJonesExpr> vecPatch;
+    // Loop through all source groups.
+    int grp=0;
+    for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
+	 grpiter != groups.end();
+	 grpiter++, grp++) {
+      const vector<int>& srcgrp = grpiter->second;;
+      vector<MeqJonesExpr> vecSrc;
+      vecSrc.reserve (srcgrp.size());
+      for (uint j=0; j<srcgrp.size(); ++j) {
+	// Create the total DFT per source.
+	int src = srcgrp[j];
+	MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
+					 pdfts[ant2*nrsrc + src],
+					 itsLMN[src]));
+	// For the time being only point sources are supported.
+	MeqPointSource& mps = dynamic_cast<MeqPointSource&>(*sources[j]);
+	vecSrc.push_back (MeqJonesExpr (new MeqBaseLinPS(expr1, &mps)));
+      }
+      MeqJonesExpr sum;
+      // Sum all sources in the group.
+      if (vecSrc.size() == 1) {
+	sum = vecSrc[0];
+      } else {
+	sum = MeqJonesExpr (new MeqJonesSum(vecSrc));
+      }
+      // Multiply by ionospheric gain/phase per station per patch.
+      if (usePatchGain) {
+	vecPatch.push_back (new MeqJonesCMul3(patchGJ[ant1*nrgrp + grp],
+					      sum,
+					      patchGJ[ant2*nrgrp + grp]));
+      } else {
+	vecPatch.push_back (sum);
       }
     }
+    // Sum all patches.
+    MeqJonesExpr sumAll;
+    if (vecPatch.size() == 1) {
+      sumAll = vecPatch[0];
+    } else {
+      sumAll = MeqJonesExpr (new MeqJonesSum(vecPatch));
+    }
+    // Multiply by total gain/phase per station.
+    if (useTotalGain) {
+      sumAll = new MeqJonesCMul3(totalGJ[ant1],
+				 sumAll,
+				 totalGJ[ant2]);
+    }
+    if (useBandpass) {
+      sumAll = new MeqJonesCMul3(bandpass[ant1],
+				 sumAll,
+				 bandpass[ant2]);
+    }
+    if (useDipole) {
+      sumAll = new MeqJonesCMul3(dipoleExpr[ant1],
+				 sumAll,
+				 dipoleExpr[ant2]);
+    }
+    itsExpr[blindex] = sumAll;
   }
 }
 
@@ -769,21 +773,18 @@ void Prediffer::setPrecalcNodes (vector<MeqJonesExpr>& nodes)
 void Prediffer::readParms()
 {
   // Read all parms for this domain into a single map.
-  map<string,ParmDB::ParmValueSet> parmValues;
+  itsParmValues.clear();
   vector<string> emptyvec;
   ParmDB::ParmDomain pdomain(itsWorkDomain.startX(), itsWorkDomain.endX(),
 			     itsWorkDomain.startY(), itsWorkDomain.endY());
-  itsMEP.getValues (parmValues, emptyvec, pdomain);
-  itsGSMMEP.getValues (parmValues, emptyvec, pdomain);
-
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
+  itsMEP.getValues (itsParmValues, emptyvec, pdomain);
+  itsGSMMEP.getValues (itsParmValues, emptyvec, pdomain);
+  // Remove the funklets from all parms.
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
        ++iter)
   {
-    if (*iter) {
-      (*iter)->fillFunklets (parmValues, itsWorkDomain);
-    }
+    iter->second.removeFunklets();
   }
 }
 
@@ -794,21 +795,18 @@ void Prediffer::initSolvableParms (const vector<MeqDomain>& solveDomains)
   itsNrPert = 0;
   itsNrScids.resize (localSolveDomains.size());
   std::fill (itsNrScids.begin(), itsNrScids.end(), 0);
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
        ++iter)
   {
-    if (*iter) {
-      int nr = (*iter)->initDomain (localSolveDomains, itsNrPert, itsNrScids);
-      if (nr > 0) {
-	itsParmData.parms().push_back (ParmData((*iter)->getName(),
-						(*iter)->getParmDBSeqNr(),
-						(*iter)->getFunklets()));
-      }
+    int nr = iter->second.initDomain (localSolveDomains,
+				      itsNrPert, itsNrScids);
+    if (nr > 0) {
+      itsParmData.parms().push_back (ParmData(iter->second.getName(),
+					      iter->second.getParmDBSeqNr(),
+					      iter->second.getFunklets()));
     }
   }
-  ASSERTSTR (itsNrPert > 0, "No parms are set to solvable");
   // Determine the fitter indices for the frequency and time axis.
   // First check if the (local) solve domains are ordered and regular.
   // Start with finding the number of frequency intervals.
@@ -851,145 +849,14 @@ void Prediffer::initSolvableParms (const vector<MeqDomain>& solveDomains)
   }
 }
 
-void Prediffer::setWorkDomain (int startChan, int endChan,
-			       double tstart, double tlength)
-{
-  // Determine the first and last channel to process.
-  if (startChan < 0) {
-    itsFirstChan = 0;
-  } else {
-    itsFirstChan = startChan;
-  }
-  if (endChan < 0  ||  endChan >= itsNrChan) {
-    itsLastChan = itsNrChan-1;
-  } else {
-    itsLastChan = endChan;
-  }
-  ASSERT (itsFirstChan <= itsLastChan);
-
-  // Find the times matching the given time interval.
-  // Normally the times are in sequential order, so we can continue searching.
-  // Otherwise start the search at the start.
-  itsTimeIndex += itsNrTimes;
-  if (itsTimeIndex >= itsTimes.nelements()
-  ||  tstart < itsTimes[itsTimeIndex]) {
-    itsTimeIndex = 0;
-  }
-  // Find the time matching the start time.
-  while (itsTimeIndex < itsTimes.nelements()
-	 &&  tstart > itsTimes[itsTimeIndex]) {
-    ++itsTimeIndex;
-  }
-  // Exit when no more chunks.
-  if (itsTimeIndex >= itsTimes.nelements()) {
-    return;
-  }
-  
-  BBSTest::Logger::log("BeginOfInterval");
-
-  // Find the end of the interval.
-  uint endIndex = itsTimeIndex;
-  double startTime = itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2;
-  double endTime = tstart + tlength;
-  itsNrTimes     = 0;
-  while (endIndex < itsTimes.nelements()
-	 && endTime >= itsTimes[endIndex]) {
-    ///cout << "time find " << itsTimes[endIndex]-itsTimes[0] << ' ' << endIndex<<endl;
-    ++endIndex;
-    ++itsNrTimes;
-  }
-  ASSERT (itsNrTimes > 0);
-  endTime = itsTimes[endIndex-1] + itsIntervals[endIndex-1]/2;
-  ///cout << "time-indices " << itsTimeIndex << ' ' << endIndex << ' ' << itsNrTimes << ' ' << itsTimes[endIndex]-itsTimes[0]<<' '<<endTime-tstart<<' '<<startTime-itsTimes[0]<< ' '<<endTime-itsTimes[0]<<endl;
-  
-  BBSTest::ScopedTimer parmTimer("P:readparms");
-  //  parmTimer.start();
-  itsWorkDomain = MeqDomain(itsStartFreq + itsFirstChan*itsStepFreq,
-			    itsStartFreq + (itsLastChan+1)*itsStepFreq,
-			    startTime,
-			    endTime);
-  // Read all parameter values which are part of the work domain.
-  readParms();
-  //  parmTimer.stop();
-}
-
-
-//----------------------------------------------------------------------
-//
-// ~clearSolvableParms
-//
-// Clear the solvable flag on all parms (make them non-solvable).
-//
-//----------------------------------------------------------------------
 void Prediffer::clearSolvableParms()
 {
   LOG_TRACE_FLOW( "clearSolvableParms" );
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
-       iter++)
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
   {
-    if (*iter) {
-      (*iter)->setSolvable(false);
-    }
-  }
-}
-
-//----------------------------------------------------------------------
-//
-// ~setSolvableParms
-//
-// Set the solvable flag (true or false) on all parameters whose
-// name matches the parmPatterns pattern.
-//
-//----------------------------------------------------------------------
-void Prediffer::setSolvableParms (const vector<string>& parms,
-				  const vector<string>& excludePatterns)
-{
-  LOG_INFO_STR( "setSolvableParms");
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  // Convert patterns to regexes.
-  vector<Regex> parmRegex;
-  for (unsigned int i=0; i<parms.size(); i++) {
-    parmRegex.push_back (Regex::fromPattern(parms[i]));
-  }
-  vector<Regex> excludeRegex;
-  for (unsigned int i=0; i<excludePatterns.size(); i++) {
-    excludeRegex.push_back (Regex::fromPattern(excludePatterns[i]));
-  }
-  // Find all parms matching the parms.
-  // Exclude them if matching an excludePattern
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
-       iter++)
-  {
-    if (*iter) {
-      String parmName ((*iter)->getName());
-      // Loop through all regex-es until a match is found.
-      for (vector<Regex>::const_iterator incIter = parmRegex.begin();
-	   incIter != parmRegex.end();
-	   incIter++)
-      {
-	if (parmName.matches(*incIter)) {
-	  bool parmExc = false;
-	  // Test if not excluded.
-	  for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
-	       excIter != excludeRegex.end();
-	       excIter++)
-	  {
-	    if (parmName.matches(*excIter)) {
-	      parmExc = true;
-	      break;
-	    }
-	  }
-	  if (!parmExc) {
-	    LOG_TRACE_OBJ_STR( "setSolvable: " << (*iter)->getName());
-	    (*iter)->setSolvable (true);
-	  }
-	  break;
-	}
-      }
-    }
+    iter->second.setSolvable(false);
   }
 }
 
@@ -1063,11 +930,11 @@ bool Prediffer::nextDataChunk (bool useFitters)
   // Fill the time vector.
   itsChunkTimes.resize (nt+1);
   for (int i=0; i<nt; ++i) {
-    itsChunkTimes[i] = itsTimes[itsTimeIndex + st + i] -
-                       itsIntervals[itsTimeIndex + st + i] / 2;
+    itsChunkTimes[i] = itsMSDesc.times[itsTimeIndex + st + i] -
+                       itsMSDesc.exposures[itsTimeIndex + st + i] / 2;
   }
-  itsChunkTimes[nt] = itsTimes[itsTimeIndex + st + nt-1] +
-                      itsIntervals[itsTimeIndex + st + nt-1] / 2;
+  itsChunkTimes[nt] = itsMSDesc.times[itsTimeIndex + st + nt-1] +
+                      itsMSDesc.exposures[itsTimeIndex + st + nt-1] / 2;
   itsMSMapInfo.setTimes (st, nt);
   itsNrTimesDone += nt;
   if (useFitters) {
@@ -1076,7 +943,7 @@ bool Prediffer::nextDataChunk (bool useFitters)
     itsTimeFitInx.resize (nt);
     uint interv = 0;
     for (int i=0; i<nt; i++) {
-      double time = itsTimes[itsTimeIndex + st + i];
+      double time = itsMSDesc.times[itsTimeIndex + st + i];
       while (time > localSolveDomains[interv*itsFreqNrFit].endY()) {
 	interv++;
 	DBGASSERT (interv < localSolveDomains.size()/itsFreqNrFit);
@@ -1116,14 +983,12 @@ void Prediffer::addDataColumn (Table& tab, const string& columnName,
   }
 }
 
-void Prediffer::processData (const string& inColumnName,
-			     const string& outColumnName,
-			     bool useFlags, bool preCalc, bool calcDeriv,
+void Prediffer::processData (bool useFlags, bool preCalc, bool calcDeriv,
 			     ProcessFuncBL pfunc,
 			     void* arg)
 {
   // Map the correct input and output file (if needed).
-  mapDataFiles (inColumnName, outColumnName);
+  mapDataFiles (itsInDataColumn, itsOutDataColumn);
   // Calculate frequency axis info.
   int nrchan = itsLastChan-itsFirstChan+1;
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
@@ -1170,9 +1035,8 @@ void Prediffer::processData (const string& inColumnName,
 #pragma omp parallel
     {
 #pragma omp for schedule(dynamic)
-      for (uint bls=0; bls<itsBLSelInx.size(); ++bls) {
-	int blindex = itsBLSelInx[bls];
-	int bl = itsBLUsedInx[blindex];
+      for (uint blindex=0; blindex<itsBLInx.size(); ++blindex) {
+	int bl = itsBLInx[blindex];
 	// Get pointer to correct data part.
 	unsigned int offset = freqOffset + bl*itsNrChan*itsNCorr;
 	fcomplex* idata = inDataStart + offset;
@@ -1227,16 +1091,7 @@ void Prediffer::precalcNodes (const MeqRequest& request)
   } // end omp parallel
 }
 
-//----------------------------------------------------------------------
-//
-// ~fillFitters
-//
-// Fill the fitter with the condition equations for the selected baselines
-// and domain.
-//
-//----------------------------------------------------------------------
-void Prediffer::fillFitters (vector<casa::LSQFit>& fitters,
-			     const string& dataColumnName)
+void Prediffer::fillFitters (vector<casa::LSQFit>& fitters)
 {
   // Find all nodes to be precalculated.
   setPrecalcNodes (itsExpr);
@@ -1264,7 +1119,7 @@ void Prediffer::fillFitters (vector<casa::LSQFit>& fitters,
     ///    itsOrdFlagVecs[i].resize (2*nrchan);
   }
   // Process the data and use the flags.
-  processData (dataColumnName, "", true, true, true,
+  processData (true, true, true,
 	       &Prediffer::fillEquation, &threadPrivateFitters);
   // Merge the thread-specific fitters into the main ones.
   for (int j=1; j<itsNthread; ++j) {
@@ -1279,75 +1134,67 @@ void Prediffer::fillFitters (vector<casa::LSQFit>& fitters,
   itsEqTimer.reset();
 }
 
-void Prediffer::correctData (const string& inColumnName,
-			     const string& outColumnName, bool flush)
+void Prediffer::correctData()
 {
   // Find all nodes to be precalculated.
   setPrecalcNodes (itsCorrExpr);
-  processData (inColumnName, outColumnName, false, true, false,
+  processData (false, true, false,
 	       &Prediffer::correctBL, 0);
-  if (flush) {
-    itsOutDataMap->flush();
-  }
+  ///  if (flush) {
+    ///    itsOutDataMap->flush();
+    ///  }
 }
 
-void Prediffer::subtractData (const string& inColumnName,
-			      const string& outColumnName, bool flush)
+void Prediffer::subtractData()
 {
   // Find all nodes to be precalculated.
   setPrecalcNodes (itsExpr);
-  processData (inColumnName, outColumnName, false, true, false,
+  processData (false, true, false,
 	       &Prediffer::subtractBL, 0);
-  if (flush) {
-    itsOutDataMap->flush();
-  }
+  ///  if (flush) {
+    ///    itsOutDataMap->flush();
+    ///  }
 }
 
-void Prediffer::writePredictedData (const string& outColumnName)
+void Prediffer::writePredictedData()
 {
   // Find all nodes to be precalculated.
   setPrecalcNodes (itsExpr);
-  processData ("", outColumnName, false, true, false,
+  processData (false, true, false,
 	       &Prediffer::predictBL, 0);
 }
 
-void Prediffer::getData (const string& columnName, bool useTree,
+void Prediffer::getData (bool useTree,
 			 Array<Complex>& dataArr, Array<Bool>& flagArr)
 {
-  int nrchan = itsLastChan-itsFirstChan+1;
-  dataArr.resize (IPosition(4, itsNCorr, nrchan, itsNrUsedBl, itsNrTimes));
-  flagArr.resize (IPosition(4, itsNCorr, nrchan, itsNrUsedBl, itsNrTimes));
+  int nrusedbl = itsBLInx.size();
+  int nrchan   = itsLastChan-itsFirstChan+1;
+  dataArr.resize (IPosition(4, itsNCorr, nrchan, nrusedbl, itsNrTimes));
+  flagArr.resize (IPosition(4, itsNCorr, nrchan, nrusedbl, itsNrTimes));
   pair<Complex*,bool*> p;
   p.first = dataArr.data();
   p.second = flagArr.data();
   if (!useTree) {
-    processData (columnName, "", true, false, false, &Prediffer::getBL, &p);
+    processData (true, false, false, &Prediffer::getBL, &p);
     return;
   }
-  vector<MeqJonesExpr> expr(itsNrUsedBl);
-  for (int i=0; i<itsNrUsedBl; ++i) {
-    expr[i] = new MeqJonesMMap (itsMSMapInfo, itsBLUsedInx[i]);
+  vector<MeqJonesExpr> expr(nrusedbl);
+  for (int i=0; i<nrusedbl; ++i) {
+    expr[i] = new MeqJonesMMap (itsMSMapInfo, itsBLInx[i]);
   }
   pair<pair<Complex*,bool*>*, vector<MeqJonesExpr>*> p1;
   p1.first = &p;
   p1.second = &expr;
-  processData (columnName, "", true, false, false, &Prediffer::getMapBL, &p1);
+  processData (true, false, false, &Prediffer::getMapBL, &p1);
 }
 
-//----------------------------------------------------------------------
-//
-// ~fillEquation
-//
-// Fill the fitter with the equations for the given baseline.
-//
-//----------------------------------------------------------------------
 void Prediffer::fillEquation (int threadnr, void* arg,
 			      const fcomplex* data, fcomplex*,
 			      const bool* flags,
 			      const MeqRequest& request, int blindex,
 			      bool showd)
 {
-  ///int bl = itsBLUsedInx[blindex];
+  ///int bl = itsBLInx[blindex];
   ///int ant1 = itsAnt1[bl];
   ///int ant2 = itsAnt2[bl];
   //static NSTimer fillEquationTimer("fillEquation", true);
@@ -1578,13 +1425,6 @@ void Prediffer::showData (int corr, int sdch, int inc, int nrchan,
   cout << endl;
 }
 
-//----------------------------------------------------------------------
-//
-// ~getResults
-//
-// Get the results for the selected baselines and domain.
-//
-//----------------------------------------------------------------------
 vector<MeqResult> Prediffer::getResults (bool calcDeriv)
 {
   // Find all nodes to be precalculated.
@@ -1596,8 +1436,8 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
   for (unsigned int tStep=0; tStep<itsNrTimes; tStep++)
   {
-    double time = itsTimes[itsTimeIndex+tStep];
-    double interv = itsIntervals[itsTimeIndex+tStep];
+    double time = itsMSDesc.times[itsTimeIndex+tStep];
+    double interv = itsMSDesc.exposures[itsTimeIndex+tStep];
     MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
     MeqRequest request(domain, nrchan, 1, 0);
     if (calcDeriv) {
@@ -1617,8 +1457,7 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
       }
     }
     // Evaluate for all selected baselines.
-    for (uint bls=0; bls<itsBLSelInx.size(); ++bls) {
-      int blindex = itsBLSelInx[bls];
+    for (uint blindex=0; blindex<itsBLInx.size(); ++blindex) {
       // Get the result for this baseline.
       MeqJonesExpr& expr = itsExpr[blindex];
       // This is the actual predict.
@@ -1820,65 +1659,102 @@ void Prediffer::predictBL (int, void*,
 }
 
 
-//----------------------------------------------------------------------
-//
-// ~select
-//
-// Select a subset of the MS data.
-// This selection has to be done before the loop over domains.
-//
-//----------------------------------------------------------------------
-void Prediffer::select (const vector<int>& ant1, 
-			const vector<int>& ant2,
-			bool useAutoCorrelations,
-			const vector<int>& corr)
+bool Prediffer::selectStep (const vector<int>& ant1, 
+			    const vector<int>& ant2,
+			    bool useAutoCorrelations,
+			    const vector<bool>& corr)
 {
+  int nrant = itsBLSel.nrow();
   ASSERT (ant1.size() == ant2.size());
+  Matrix<bool> blSel;
   if (ant1.size() == 0) {
-    // No baselines specified, select all baselines
-    itsBLSelection = true;
+    // No baselines specified, select all baselines in strategy.
+    blSel = itsBLSel;
   } else {
-    itsBLSelection = false;
-    for (unsigned int j=0; j<ant2.size(); j++) {
-      ASSERT(ant2[j] < int(itsBLSelection.nrow()));
-      for (unsigned int i=0; i<ant1.size(); i++) {
-	ASSERT(ant1[i] < int(itsBLSelection.nrow()));
-	itsBLSelection(ant1[i], ant2[j]) = true;     // select this baseline
+    blSel.resize (nrant, nrant);
+    blSel = false;
+    for (uint i=0; i<ant1.size(); i++) {
+      int a1 = ant1[i];
+      int a2 = ant2[i];
+      if (a1 < nrant  &&  a2 < nrant) {
+	blSel(a1, a2) = itsBLSel(a1, a2);
       }
     }
   }
   // Unset auto-correlations if needed.
   if (!useAutoCorrelations) {
-    for (unsigned int i=0; i<itsBLSelection.nrow(); i++) {
-      itsBLSelection(i,i) = false;
+    for (int i=0; i<nrant; i++) {
+      blSel(i,i) = false;
     }
   } 
   // Fill the correlations to use. Use all if vector is empty.
-  // If only 2 corr, YY is the 2nd one.
-  for (int i=0; i<4; ++i) {
+  for (int i=0; i<itsNCorr; ++i) {
     itsCorr[i] = corr.empty();
   }
-  for (uint i=0; i<corr.size(); ++i) {
-    if (corr[i] < 4) {
-      if (itsNCorr == 2  &&  corr[i] == 3) {
-	itsCorr[1] = true;
+  if (corr.size() > 0) {
+    // Some values given; first one is always XX (or LL, etc.)
+    itsCorr[0] = corr[0];
+    if (corr.size() > 1  &&  itsNCorr > 1) {
+      if (corr.size() == 2) {
+	// Two values given; last one is always YY (or RR, etc.)
+	itsCorr[itsNCorr-1] = corr[1];
       } else {
-	itsCorr[corr[i]] = true;
+	// More than 2 must be 4 values.
+	ASSERTSTR (corr.size()==4,
+		   "Correlation selection vector must have 1, 2 or 4 flags");
+	if (itsNCorr == 2) {
+	  itsCorr[1] = corr[3];
+	} else {
+	  itsCorr[1] = corr[1];
+	  itsCorr[2] = corr[2];
+	  itsCorr[3] = corr[3];
+	}
       }
     }
   }
-  countBaseCorr();
+  return fillBaseCorr (blSel);
 }
 
-//----------------------------------------------------------------------
-//
-// ~fillUVW
-//
-// Calculate the station UVW coordinates from the MS.
-//
-//----------------------------------------------------------------------
+bool Prediffer::fillBaseCorr (const Matrix<bool>& blSel)
+{
+  // Count the nr of baselines actually used for this step.
+  // Store the seqnr of all selected baselines.
+  itsBLInx.clear();
+  for (uint i=0; i<itsMSDesc.ant1.size(); ++i) {
+    int a1 = itsMSDesc.ant1[i];
+    int a2 = itsMSDesc.ant2[i];
+    if (blSel(a1,a2)) {
+      itsBLInx.push_back (i);
+    }
+  }
+  // Count the nr of selecteed correlations.
+  int nSelCorr = 0;
+  for (int i=0; i<itsNCorr; ++i) {
+    if (itsCorr[i]) {
+      nSelCorr++;
+    }
+  }
+  return (itsBLInx.size() > 0  &&  nSelCorr > 0);
+}
+
 void Prediffer::fillUVW()
 {
+  // Create the UVW nodes.
+  int nrstat = itsStations.size();
+  itsStatUVW.reserve (nrstat);
+  for (int i=0; i<nrstat; ++i) {
+    MeqStatUVW* uvw = 0;
+    // Do it only if the station is actually used.
+    if (itsStations[i] != 0) {
+      // Expression to calculate UVW per station
+      uvw = new MeqStatUVW (itsStations[i], &itsPhaseRef);
+    }
+    itsStatUVW.push_back (uvw);
+  }
+  if (itsCalcUVW) {
+    return;
+  }
+  // Fill the UVW objects with the uvw-s from the MS.
   LOG_TRACE_RTTI( "get UVW coordinates from MS" );
   int nant = itsStatUVW.size();
   vector<bool> statFnd (nant);
@@ -1889,36 +1765,34 @@ void Prediffer::fillUVW()
   statFnd.assign (statFnd.size(), false);
   int nStatFnd = 0;
   for (unsigned int bl=0; bl<itsNrBl; bl++) {
-    int a1 = itsAnt1[bl];
-    int a2 = itsAnt2[bl];
-    if (itsBLSelection(a1,a2) == true) {
-      if (!statFnd[a1]) {
-	nStatFnd++;
-	statFnd[a1] = true;
-      }
-      if (!statFnd[a2]) {
-	nStatFnd++;
-	statFnd[a2] = true;
-      }
+    int a1 = itsMSDesc.ant1[bl];
+    int a2 = itsMSDesc.ant2[bl];
+    if (!statFnd[a1]) {
+      nStatFnd++;
+      statFnd[a1] = true;
+    }
+    if (!statFnd[a2]) {
+      nStatFnd++;
+      statFnd[a2] = true;
     }
   }
   // Map uvw data into memory
-  size_t nrBytes = itsTimes.nelements() * itsNrBl * 3 * sizeof(double);
+  size_t nrBytes = itsMSDesc.times.size() * itsNrBl * 3 * sizeof(double);
   double* uvwDataPtr = 0;
   MMap* mapPtr = new MMap(itsMSName+"/vis.uvw", MMap::Read);
   mapPtr->mapFile(0, nrBytes);
   uvwDataPtr = (double*)mapPtr->getStart();
 
   // Step time by time through the MS.
-  for (unsigned int tStep=0; tStep < itsTimes.nelements(); tStep++) {
+  for (unsigned int tStep=0; tStep < itsMSDesc.times.size(); tStep++) {
     // Set uvw pointer to beginning of this time
     unsigned int tOffset = tStep * itsNrBl * 3;
     double* uvw = uvwDataPtr + tOffset;
-    double time = itsTimes[tStep];
+    double time = itsMSDesc.times[tStep];
     
     // Set UVW of first station used to 0 (UVW coordinates are relative!).
     statDone.assign (statDone.size(), false);
-    int ant0 = itsAnt1[itsBLUsedInx[0]];
+    int ant0 = itsMSDesc.ant1[0];
     statuvw[3*ant0]   = 0;
     statuvw[3*ant0+1] = 0;
     statuvw[3*ant0+2] = 0;
@@ -1934,41 +1808,39 @@ void Prediffer::fillUVW()
       int nd = 0;
       // Loop over baselines
       for (unsigned int bl=0; bl<itsNrBl; bl++) {
-	int a1 = itsAnt1[bl];
-	int a2 = itsAnt2[bl];
-	if (itsBLSelection(a1,a2)  &&  itsBLIndex(a1,a2) >= 0) {
-	  if (!statDone[a2]) {
-	    if (statDone[a1]) {
-	      statuvw[3*a2]   = uvw[3*bl]   - statuvw[3*a1];
-	      statuvw[3*a2+1] = uvw[3*bl+1] - statuvw[3*a1+1];
-	      statuvw[3*a2+2] = uvw[3*bl+2] - statuvw[3*a1+2];
-	      statDone[a2] = true;
-	      itsStatUVW[a2]->set (time, statuvw[3*a2], statuvw[3*a2+1],
-				   statuvw[3*a2+2]);
+	int a1 = itsMSDesc.ant1[bl];
+	int a2 = itsMSDesc.ant2[bl];
+	if (!statDone[a2]) {
+	  if (statDone[a1]) {
+	    statuvw[3*a2]   = uvw[3*bl]   - statuvw[3*a1];
+	    statuvw[3*a2+1] = uvw[3*bl+1] - statuvw[3*a1+1];
+	    statuvw[3*a2+2] = uvw[3*bl+2] - statuvw[3*a1+2];
+	    statDone[a2] = true;
+	    itsStatUVW[a2]->set (time, statuvw[3*a2], statuvw[3*a2+1],
+				 statuvw[3*a2+2]);
 
 // 	      cout << "itsStatUVW[" << a2 << "] time: " << time << statuvw[3*a2] << " ," << statuvw[3*a2+1] << " ," << statuvw[3*a2+2] << endl;
 
-	      ndone++;
-	      nd++;
-	    }
-	  } else if (!statDone[a1]) {
-	    if (statDone[a2]) {
-	      statuvw[3*a1]   = statuvw[3*a2]   - uvw[3*bl];
-	      statuvw[3*a1+1] = statuvw[3*a2+1] - uvw[3*bl+1];
-	      statuvw[3*a1+2] = statuvw[3*a2+2] - uvw[3*bl+2];
-	      statDone[a1] = true;
-	      itsStatUVW[a1]->set (time, statuvw[3*a1], statuvw[3*a1+1],
+	    ndone++;
+	    nd++;
+	  }
+	} else if (!statDone[a1]) {
+	  if (statDone[a2]) {
+	    statuvw[3*a1]   = statuvw[3*a2]   - uvw[3*bl];
+	    statuvw[3*a1+1] = statuvw[3*a2+1] - uvw[3*bl+1];
+	    statuvw[3*a1+2] = statuvw[3*a2+2] - uvw[3*bl+2];
+	    statDone[a1] = true;
+	    itsStatUVW[a1]->set (time, statuvw[3*a1], statuvw[3*a1+1],
 				   statuvw[3*a1+2]);
 // 	      cout << "itsStatUVW[" << a1 << "] time: " << time << statuvw[3*a1] << " ," << statuvw[3*a1+1] << " ," << statuvw[3*a1+2] << endl;
 
-	      ndone++;
-	      nd++;
-	    }
+	    ndone++;
+	    nd++;
 	  }
-	  if (ndone == nStatFnd) {
-	    break;
-	  }
-	} // End if (itsBLSelection(ant1,ant2) ==...
+	}
+	if (ndone == nStatFnd) {
+	  break;
+	}
       } // End loop baselines
       //	  ASSERT (nd > 0);
     } // End loop stations found
@@ -1978,56 +1850,15 @@ void Prediffer::fillUVW()
   delete mapPtr;
 }
 
-
-//----------------------------------------------------------------------
-//
-// ~peel
-//
-// Define the source numbers to use in a peel step.
-//
-//----------------------------------------------------------------------
-bool Prediffer::setPeelGroups (const vector<int>& peelGroups,
-			       const vector<int>& extraGroups)
-{
-//   vector<int> allNrs;
-//   for (uint i=0; i<extraGroups.size(); ++i) {
-//     ASSERT (extraGroups[i] >= 0  &&  extraGroups[i] < int(itsSrcGrp.size()));
-//     const vector<int>& grp = itsSrcGrp[i];
-//     for (uint j=0; j<grp.size(); ++j) {
-//       allNrs.push_back (grp[j] - 1);
-//     }
-//   }
-//   vector<int> peelNrs;
-//   for (uint i=0; i<peelGroups.size(); ++i) {
-//     ASSERT (peelGroups[i] >= 0  &&  peelGroups[i] < int(itsSrcGrp.size()));
-//     const vector<int>& grp = itsSrcGrp[peelGroups[i]];
-//     for (uint j=0; j<grp.size(); ++j) {
-//       peelNrs.push_back (grp[j] - 1);
-//       allNrs.push_back (grp[j] - 1);
-//     }
-//   }
-//   LOG_TRACE_OBJ_STR( "peel sources " << peelNrs << "; predict sources "
-// 		     << allNrs );
-//   ASSERT (peelNrs.size() > 0);
-//   itsSources.setSelected (allNrs);
-//   itsPeelSourceNrs = peelNrs;
-  return true;
-}
-
 void Prediffer::updateSolvableParms (const vector<double>& values)
 {
   // Iterate through all parms.
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
-       iter++)
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
   {
-    if (*iter) {
-      if ((*iter)->isSolvable()) {
-	MeqParmFunklet* ppc = dynamic_cast<MeqParmFunklet*>(*iter);
-	ASSERT (ppc);
-	ppc->update (values);
-      }
+    if (iter->second.isSolvable()) {
+      iter->second.update (values);
     }
   }
   resetEqLoop();
@@ -2037,26 +1868,21 @@ void Prediffer::updateSolvableParms (const ParmDataInfo& parmDataInfo)
 {
   const vector<ParmData>& parmData = parmDataInfo.parms();
   // Iterate through all parms.
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
-       iter++)
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
   {
-    if (*iter) {
-      if ((*iter)->isSolvable()) {
-	const string& pname = (*iter)->getName();
-	// Update the parameter matching the name.
-	for (vector<ParmData>::const_iterator iterpd = parmData.begin();
-	     iterpd != parmData.end();
-	     iterpd++) {
-	  if (iterpd->getName() == pname) {
-	    MeqParmFunklet* ppc = dynamic_cast<MeqParmFunklet*>(*iter);
-	    ASSERT (ppc);
-	    ppc->update (*iterpd);
-	    break;
-	  }
-	  // A non-matching name is ignored.
+    if (iter->second.isSolvable()) {
+      const string& pname = iter->second.getName();
+      // Update the parameter matching the name.
+      for (vector<ParmData>::const_iterator iterpd = parmData.begin();
+	   iterpd != parmData.end();
+	   iterpd++) {
+	if (iterpd->getName() == pname) {
+	  iter->second.update (*iterpd);
+	  break;
 	}
+	// A non-matching name is ignored.
       }
     }
   }
@@ -2066,23 +1892,18 @@ void Prediffer::updateSolvableParms (const ParmDataInfo& parmDataInfo)
 void Prediffer::updateSolvableParms()
 {
   // Iterate through all parms.
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
-       iter++)
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
   {
-    if (*iter) {
-      if ((*iter)->isSolvable()) {
-	MeqParmFunklet* ppc = dynamic_cast<MeqParmFunklet*>(*iter);
-	ASSERT (ppc);
-	ppc->updateFromTable();
+    if (iter->second.isSolvable()) {
+      iter->second.updateFromTable();
 	
 	//       streamsize prec = cout.precision();
 	//       cout.precision(10);
-	//       cout << "****Read: " << (*iter)->getCoeffValues().getDouble()
-	// 	   << " for parameter " << (*iter)->getName() << endl;
+	//       cout << "****Read: " << iter->second.getCoeffValues().getDouble()
+	// 	   << " for parameter " << iter->second.getName() << endl;
 	//       cout.precision (prec);
-      }
     }
   }
   resetEqLoop();
@@ -2096,16 +1917,12 @@ void Prediffer::writeParms()
 {
   BBSTest::ScopedTimer saveTimer("P:write-parm");
   //  saveTimer.start();
-  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
-       iter++)
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
   {
-    if (*iter) {
-      if ((*iter)->isSolvable()) {
-	(*iter)->save();
-      }
+    if (iter->second.isSolvable()) {
+      iter->second.save();
     }
   }
   //  saveTimer.stop();

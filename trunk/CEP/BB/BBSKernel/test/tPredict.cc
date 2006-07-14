@@ -37,16 +37,17 @@ using namespace casa;
 // center frequencies of 137750000-162250000 Hz.
 // There are 5 time stamps of 2 sec in it (centers 2.35208883e9 + 2-10).
 
-void doPredict (Prediffer& pre1)
+void doPredict (Prediffer& pre1, const StepProp& stepProp)
 {
   cout << ">>>" << endl;
-  pre1.setWorkDomain (0, 1000, 0., 1e12);
+  ASSERT (pre1.setWorkDomain (0, 1000, 0., 1e12));
+  ASSERT (pre1.setStepProp (stepProp));
   cout << "<<<" << endl;
     
   cout << ">>>" << endl;
   pre1.showSettings();
   cout << "<<<" << endl;
-  pre1.writePredictedData ("CORRECTED_DATA");
+  pre1.writePredictedData();
 }
 
 
@@ -62,6 +63,7 @@ int main (int argc, const char* argv[])
     // Read the info for the ParmTables
     ParmDB::ParmDBMeta meqPdm("aips", argv[3]);
     ParmDB::ParmDBMeta skyPdm("aips", argv[4]);
+    Prediffer pre1(argv[2], meqPdm, skyPdm, false);
 
     // Do a predict.
     {
@@ -70,10 +72,13 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = i;
       }
-      vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], meqPdm, skyPdm, 
-		     antVec, "REALIMAG.TOTALEJ.DIPOLE", srcgrp, false);
-      doPredict (pre1);
+      StrategyProp stratProp;
+      stratProp.setAntennas (antVec);
+      ASSERT (pre1.setStrategyProp (stratProp));
+      StepProp stepProp;
+      stepProp.setModel (StringUtil::split("REALIMAG.TOTALGAIN.DIPOLE",'.'));
+      stepProp.setOutColumn ("CORRECTED_DATA");
+      doPredict (pre1, stepProp);
       cout << "End of predict test" << endl;
 
       cout << "Check if DATA and CORRECTED_DATA match" << endl;

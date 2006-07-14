@@ -43,14 +43,18 @@ using namespace casa;
 using namespace std;
 
 void doIt (const string& msName, Prediffer& prediff, const string& column,
-	   int nrant, int stchan, int nrchan, bool useTree)
+	   int nrant, int stchan, int nrchan, bool useTree, bool useAutoCorr)
 {
   cout << "Checking data in " << msName << " for channels " << stchan << '-'
        << stchan+nrchan-1 << endl;
   // Open the table and sort in time,baseline order.
   // Only use antenna < nrant.
   Table tab(msName);
-  Table tabsel = tab(tab.col("ANTENNA1")<nrant && tab.col("ANTENNA2")<nrant);
+  TableExprNode ten = tab.col("ANTENNA1")<nrant && tab.col("ANTENNA2")<nrant;
+  if (!useAutoCorr) {
+    ten = ten && (tab.col("ANTENNA1") != tab.col("ANTENNA2"));
+  }
+  Table tabsel = tab(ten);
   Block<String> sortkeys(3);
   sortkeys[0] = "TIME";
   sortkeys[1] = "ANTENNA1";
@@ -72,10 +76,13 @@ void doIt (const string& msName, Prediffer& prediff, const string& column,
     double time = timeCol(0);
     double interval = intCol(0);
     // Set a domain of some channels and this time.
-    prediff.setWorkDomain (stchan, stchan+nrchan-1,
-			   time-interval/2, interval);
+    ASSERT (prediff.setWorkDomain (stchan, stchan+nrchan-1,
+				   time-interval/2, interval));
+    StepProp stepProp;
+    stepProp.setAutoCorr (useAutoCorr);
+    prediff.setStepProp (stepProp);
     // Get the data and remove the time axis.
-    prediff.getData ("DATA", useTree, data, flags);
+    prediff.getData (useTree, data, flags);
     Array<Complex> data1 = data.nonDegenerate (IPosition(3,0,1,2));
     Array<Bool> flags1 = flags.nonDegenerate (IPosition(3,0,1,2));
     int ncorr = data1.shape()[0];
@@ -125,16 +132,19 @@ int main(int argc, char** argv)
 
     // Fill the antenna numbers.
     vector<int> antVec(nrant);
-    for (uint i=0; i<antVec.size(); ++i) {
+    for (uint i=0; i<nrant; ++i) {
       antVec[i] = i;
     }
-    vector<vector<int> > srcgrp;
-    Prediffer pre (argv[3], meqPdm, skyPdm, 
-		   antVec, "", srcgrp, false);
-    doIt (argv[1], pre, column, nrant, 0, 50, false);
-    doIt (argv[1], pre, column, nrant, 10,10, false);
-    doIt (argv[1], pre, column, nrant, 0, 50, true);
-    doIt (argv[1], pre, column, nrant, 10,11, true);
+    Prediffer pre (argv[3], meqPdm, skyPdm, false);
+    StrategyProp stratProp;
+    stratProp.setAntennas (antVec);
+    stratProp.setAutoCorr (true);
+    ASSERT (pre.setStrategyProp (stratProp));
+    doIt (argv[1], pre, column, nrant, 0, 50, false, true);
+    doIt (argv[1], pre, column, nrant, 10,10, false, false);
+    //doIt (argv[1], pre, column, nrant, 10,2, false, false);
+    doIt (argv[1], pre, column, nrant, 0, 50, true, false);
+    doIt (argv[1], pre, column, nrant, 10,11, true, true);
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;

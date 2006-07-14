@@ -28,25 +28,21 @@
 namespace LOFAR {
 
 
-MeqParm::MeqParm (const string& name, MeqParmGroup* group)
+MeqParm::MeqParm (const string& name)
 : itsName       (name),
-  itsIsSolvable (false),
-  itsGroup      (group)
-{
-  itsParmId = itsGroup->add (this);
-  DBGASSERT (itsGroup->getParm(itsParmId) == this);
-}
+  itsIsSolvable (false)
+{}
 
 MeqParm::~MeqParm()
-{
-  ASSERT (itsGroup->getParm(itsParmId) == this);
-  itsGroup->remove (itsParmId);
-}
+{}
 
 int MeqParm::getParmDBSeqNr() const
 {
   return -1;
 }
+
+void MeqParm::removeFunklets()
+{}
 
 void MeqParm::fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>&,
 			    const MeqDomain&)
@@ -67,54 +63,41 @@ int MeqParm::initDomain (const vector<MeqDomain>&, int&, vector<int>&)
 void MeqParm::save()
 {}
 
+void MeqParm::update (const ParmData&)
+{
+  throw Exception("MeqParm::update ParmData should not be called");
+}
+void MeqParm::update (const vector<double>&)
+{
+  throw Exception("MeqParm::update vector should not be called");
+}
+void MeqParm::updateFromTable()
+{
+  throw Exception("MeqParm::updateFromTable should not be called");
+}
 
+
+
+MeqPExpr::MeqPExpr (const MeqExpr& expr)
+: MeqExpr    (expr),
+  itsParmPtr (0)
+{
+  itsParmPtr = dynamic_cast<MeqParm*>(itsRep);
+  ASSERT (itsParmPtr != 0);
+}
 
 
 MeqParmGroup::MeqParmGroup()
-  : itsNparm (0)
 {}
 
-int MeqParmGroup::add (MeqParm* parmPtr)
+void MeqParmGroup::add (const MeqPExpr& parm)
 {
-  int inx = 0;
-  if (itsNparm == itsParms.size()) {
-    inx = itsParms.size();
-    itsParms.push_back (parmPtr);
-  } else {
-    ASSERT (itsNparm < itsParms.size());
-    bool found = false;
-    for (vector<MeqParm*>::iterator iter=itsParms.begin();
-	 iter != itsParms.end();
-	 iter++, inx++) {
-      if (*iter == 0) {
-	*iter = parmPtr;
-	found = true;
-	break;
-      }
-    }
-    ASSERT (found);
-  }
-  itsNparm++;
-  ASSERT (itsNparm <= itsParms.size());
-  return inx;
-}
-
-void MeqParmGroup::remove (int index)
-{
-  ASSERT (itsNparm <= itsParms.size());
-  itsParms[index] = 0;
-  itsNparm--;
+  itsParms.insert (make_pair (parm.getName(), parm));
 }
 
 void MeqParmGroup::clear()
 {
-  for (uint i=0; i<itsParms.size(); ++i) {
-    if (itsParms[i]) {
-      // Note that the MeqParm destructor calls remove.
-      delete itsParms[i];
-    }
-  }
-  ASSERT (itsNparm == 0);
+  itsParms.clear();
 }
 
 }
