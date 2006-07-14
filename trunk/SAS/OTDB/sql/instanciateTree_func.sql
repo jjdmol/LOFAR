@@ -64,9 +64,9 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 		  vRemainder := \'\';
 		END IF;
 		-- does paramname end in [] ?
-		IF rtrim(vParamName, \'[]\') != vParamName THEN
+		IF rtrim(vParamName, \'[] \') != vParamName THEN
 			vIsArray := true;
-			vParamName := rtrim(vParamName, \'[]\');
+			vParamName := rtrim(vParamName, \'[] \');
 		ELSE
 			vIsArray := false;
 		END IF;
