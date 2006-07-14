@@ -18,12 +18,10 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: BoardCmdHandler.cc,v 1.1 2006/07/13 14:22:09 donker Exp 
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <APL/TBB_Protocol/TP_Protocol.ph>
-#include <APL/TBB_Protocol/TBB_Protocol.ph>
 
 #include "BoardCmdHandler.h"
 
@@ -36,7 +34,7 @@ BoardCmdHandler::BoardCmdHandler()
   : GCFFsm((State)&BoardCmdHandler::tp_send_state),
     m_retries(0),
 		m_nr_of_boards(12)
-{	
+{
 }
 
 BoardCmdHandler::~BoardCmdHandler()
@@ -50,66 +48,20 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
   switch (event.signal)
 	{
   	case F_ENTRY: {
-			m_SendMask = 0;
 		}	break;			
 		
-		case TBB_ALLOC:
-		{
-			TBBAlloc alloc(e);
-			alloc.tbbmask ...
-			}	
-		case TBB_FREE:
-		{
-			TBBFree free(e);
-			free.kljlkjlkj
-					}
-		case TBB_RECORD: 
-		case TBB_STOP:
-		case TBB_TRIGCLR:
-		case TBB_READ:
-		case TBB_UDP:
-		case TBB_VERSION:
-		case TBB_SIZE:
-		case TBB_CLEAR:
-		case TBB_RESET:
-		case TBB_CONFIG:
-		{
-			if(Cmd.isValid(event)) // isValid returns true if event is a valid cmd
-			{
-				m_ClientEvent = event;
-				m_ClientPort = port;
-				m_SendMask = event.tbbmask;
-				m_TpEvent = Cmd.getTpEvent(m_ClientEvent);
-				sendToBoards();
-			}
-		} break;
-		
-		case TBB_ERASEF:
-		case TBB_READF:
-		case TBB_WRITEF:
-		case TBB_READW:
-		case TBB_WRITEW:
-		{
-			if(Cmd.isValid(event)) // isValid returns true if event is a valid cmd
-			{
-				m_ClientEvent = event;
-				m_ClientPort = port;
-				m_SendMask = getMask(event.boardid);
-				m_TpEvent = Cmd.getTpEvent(event);
-				sendToBoards();
-			}
-		} break;
-						
 		default: {
+			if(m_Cmd.isValid(event)) // isValid returns true if event is a valid cmd
+			{
+				m_Cmd.sendTpEvent(board_port);
+				// TODO set timeout timer
+				TRAN(BoardCmdHandler::waitack_state);
+			}
+			else
+			{
 				status = GCFEvent::NOT_HANDLED;
+			}
     } break;
-	}
-	
-	// board_send_mask must be cleared if command tbb_sendack_state is done
-	if(m_SendMask)
-	{
-		// TODO Set time-out Timer
-		TRAN(BoardCmdHandler::waitack_state);
 	}
 	return status;
 }
@@ -122,11 +74,10 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 	switch(event.signal)
 	{
   	case F_ENTRY: {
-			m_RecvMask = 0;
 		}	break;
 		    
 		case F_TIMER: {
-			m_ClienPort.send(getTbbAckEvent());
+			sendTbbAckEvent();
 			TRAN(BoardCmdHandler::send_state);
 		}	break;
 		
@@ -136,7 +87,11 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
     default: {
 			if(Cmd.isValid(event))
 			{
-				saveTpAckEvent(event,port);
+				if(saveTpAckEvent(event,port)) // if saveTpAckEvent() returns true, all data is received
+				{
+					sendTbbAckEvent();
+					TRAN(BoardCmdHandler::send_state);	
+				}
 			}
 			else
 			{
@@ -144,41 +99,17 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 			}
 		}	break;
 	}
-	 
-	if(m_SendMask == m_RecvMask)
-	{
-		m_ClienPort.send(getTbbAckEvent());
-		TRAN(BoardCmdHandler::send_state);
-	}
 	return status;
 }
 
-bool SetCmd(Command cmd)
+void BoardCmdHandler::setBoardPorts(GCFPortInterface& boards)
 {
-	m_cmd = cmd;
+	m_BoardPort = boards;		
 }
 
-void BoardCmdHandler::sendToBoards(void)
+bool BoardCmdHandler::SetCmd(Command cmd)
 {
-	// send command to all the boards in the send-mask
-	for (int boardnr = 0;boardnr < nr_of_boards;boardnr++)
-	{
-		if(user_event.tbbmask & (1 << boardnr))
-		{
-			board_port[boardnr].send(m_TpEvent);
-		}
-	}
+	m_Cmd = cmd;
 }
 
-uint32 BoardCmdHandler::getMask(uint32 boardid)
-{
-	// send command to all the boards in the send-mask
-	for (int boardnr = 0;boardnr < m_nr_of_boards;boardnr++)
-	{
-		if(boardid == board_id[boardnr]))
-		{
-			return (1 << boardnr);
-		}
-	}
-}
 

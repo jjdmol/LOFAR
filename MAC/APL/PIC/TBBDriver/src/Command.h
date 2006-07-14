@@ -42,12 +42,18 @@ namespace LOFAR {
 	  
       // Destructor for Command.
       virtual ~Command();
+			
+			virtual bool isValid(GCFEvent& event);
+			
+			virtual void sendTpEvent(GCFEvent& event, GCFPortInterface& boardport[]);
 
+			virtual void saveTpAckEvent(GCFEvent& event);
 
-
+			virtual void sendTbbAckEvent(void);
+			
     private:
-      GCFEvent*          m_event;
-      GCFPortInterface*  m_port;
+      
+									
     };
   };
 };

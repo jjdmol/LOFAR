@@ -53,29 +53,22 @@ namespace LOFAR {
 				// The states of the statemachine.
 				GCFEvent::TResult send_state(GCFEvent& event, GCFPortInterface& port);
 				GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
-				
-
-				
-				
-
+								
+				void setBoardPorts(GCFPortInterface& m_board);
+				bool SetCmd(Command cmd);
 
 			protected:
 
 			private:
-				void sendToBoards(void);
-				uint32 getMask(uint32 boardid);
+				
 				
 			private:
-				Command						m_cmd;
-				int								nr_of_boards;
-				GCFPortInterface&	board_port[m_nr_of_boards];
-				GCFPortInterface& m_client_port;
-				GCFEvent&					m_client_event;
-				GCFEvent&					m_TpEvent;
-				int								board_id[m_nr_of_boards];
-				uint32						m_SendMask;  /// mask indicates the boards to communicate with
-				uint32						m-RecvMask;																			
-				int								board_retries;
+				int								m_NrOfBoards;
+				GCFPortInterface&	m_BoardPort[m_nr_of_boards];
+				int								m_BoardId[m_nr_of_boards];
+				int								m_BoardRetries;
+				
+				Command						m_Cmd;
 		};
 	};
 };

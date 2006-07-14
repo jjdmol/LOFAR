@@ -35,7 +35,7 @@
 namespace LOFAR {
   namespace TBB {
 
-		class GetVersions : public BoardAction 
+		class VersionCmd : public Command 
 		{
 			public:
 				/// Constructors for a GetVersions object.
@@ -44,41 +44,25 @@ namespace LOFAR {
 				/// Destructor for GetVersions.
 				virtual ~GetVersionsCmd();
 				
-				/// Build the message that will be send to the board
-				///
-				virtual void tp_buildrequest();
+				virtual bool isValid(GCFEvent& event);
 				
-				/// send the message to the given port
-				///
-				virtual void tp_sendrequest(GCFPortInterface& port);
-				
-				/// wait for response from the boards
-				///
-				virtual GCFEvent::TResult tp_handleack(GCFEvent& event, GCFPortInterface& /*port*/);
-						
-				/// Acknowledge the command by sending the appropriate
-				/// response on m_port.
-				virtual void tbb_sendack();
-				
-				/// Make necessary changes to the cache for the next synchronization.
-				/// Any changes will be sent to the RSP boards.
-				virtual void apply();
+				virtual void sendTpEvent(GCFEvent& event, GCFPortInterface& boardport[]);
 
-				/// Complete the command by sending the appropriate response on
-				/// the m_answerport;
-				virtual void complete();
+				virtual void saveTpAckEvent(GCFEvent& event);
 
-
-				/// Validate the event that underlies the command.
-				virtual bool validate() const;
+				virtual void sendTbbAckEvent(void);
 
       
 			private:
-				GetVersions();
-
-				TBBVersionEvent 		tbb_event;
-				TBBVersionackEvent	tbb_ackevent;
-				TPVersionEvent			tp_event;
+				GCFPortInterface*		m_ClientPort;
+				uint32							m_SendMask;  // mask indicates the boards to communicate with
+				uint32							m_RecvMask;  // mask indicates the boards to communicate with
+				
+				uint32	m_boardid[12];
+				uint32	m_swversion[12];
+				uint32	m_boardversion[12];
+				uint32	m_tpversion[12];
+				uint32	m_mpversion[12][4];
 		};
 	};
 };
