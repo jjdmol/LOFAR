@@ -28,11 +28,10 @@
 using namespace LOFAR;
 using namespace TBB;
 
-Command::Command() : m_port(0)
+Command::Command()
 {
 }
 
 Command::~Command()
 {
 }
-

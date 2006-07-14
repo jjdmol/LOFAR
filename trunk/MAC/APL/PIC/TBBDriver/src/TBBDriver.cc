@@ -167,12 +167,14 @@ TBBDriver::TBBDriver(string name)
 		// set ethertype to 0x10FA so Ethereal can decode EPA messages
 		m_board[boardid].setEtherType(ETHERTYPE_TP);
 	 }
+	 BoardCmdHandler bch = new BoardCmdHandler();
+	 bch->setBoardPorts(m_board);
 }
 
 
 TBBDriver::~TBBDriver()
 {
-  //
+	delete bch; // delete BoardCmdHandler
 }
 
 //
@@ -209,54 +211,23 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 			LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
 		}	break;
 		
-		case F_DISCONNECTED: {
-		}	break;
-				
-		case F_TIMER:	{
-		}	break;
-				
 		case F_DATAIN: {
 			status = RawEvent::dispatch(*this, port);	
 		}	break;
 			
-		case F_EXIT: {
-		}	break;
-		
-		case TBB_ALLOC:	
-		case TBB_FREE:
-		case TBB_RECORD: 
-		case TBB_STOP:
-		case TBB_TRIGCLR:
-		case TBB_READ:
-		case TBB_UDP:
-		case TBB_VERSION:
-		case TBB_SIZE:
-		case TBB_CLEAR:
-		case TBB_RESET:
-		case TBB_CONFIG:
-		case TBB_ERASEF:
-		case TBB_READF:
-		case TBB_WRITEF:
-		case TBB_READW:
-		case TBB_WRITEW:
-		{
-			SetTbbCommand(event); 
-			status = BoardAction.dispatch(event,port);
-			 
-			TRAN(TBBDriver::busy_state);
-		} break;
-		
-		case TP_TRIGGER:
-		case TP_ERROR:
-		{
-			SetTpCommand(event);
-			status = ClientAction.dispatch(event,port);
-			
-			TRAN(TBBDriver::busy);
-		}	break;		
-		
 		default: {
-			status = GCFEvent::NOT_HANDLED;
+			if(SetTbbCommand(event))
+			{
+				status = BoardCmdHandler.dispatch(event,port);
+				TRAN(TBBDriver::busy_state);
+			}
+			else if(SetTpCommand(event))
+			{
+				status = ClientCmdHandler.dispatch(event,port);	
+				TRAN(TBBDriver::busy_state);
+			}
+			else
+				status = GCFEvent::NOT_HANDLED;
 		}	break;
 	}
 	return status;
@@ -431,7 +402,7 @@ bool TBBDriver::SetTbbCommand(GCFEvent& event)
 	}
 	if(cmd)
 	{
-		BoardAction.SetCommand(cmd);
+		bch.SetCmd(cmd);
 		return true;
 	}
 	return false;
@@ -453,7 +424,7 @@ bool TBBDriver::SetTpCommand(GCFEvent& event)
 	}
 	if(cmd)
 	{
-		Client.SetCommand(cmd);
+		cch.SetCmd(Command cmd);
 		return true;
 	}
 	return false;

@@ -28,7 +28,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
-#include "GetVersions.h"
+#include "VersionCmd.h"
 
 using namespace blitz;
 using namespace LOFAR;
@@ -37,102 +37,82 @@ using namespace TBB_Protocol;
 using namespace TP_Protocol;
 using namespace RTC;
 
-GetVersions::GetVersions(GCFEvent& event, GCFPortInterface& port)
-	: BoardAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() + 1 /* BP */)
+
+bool VersionCmd::isVallid(GCFEvent& event)
 {
-	// TODO
-}
-
-GetVersions::~GetVersionsCmd()
-{
-	// TODO
-}
-
-
-void GetVersions::tp_buildrequest()
-{
-	tp_event.opcode = VERSION;
-}
-
-void GetVersions::tp_sendrequest(GCFPortInterface& port)
-{
-	port.send(tp_event);
-}
-
-
-GCFEvent::TResult GetVersions::tp_handleack(GCFEvent& event, GCFPortInterface& port)
-{
-	if (TP_VERSION != event.signal)
+	TBBVersionEvent tbbe(event);
+	
+	if((tbbe.signal == TBBVERSION)||(tbbe.signal == TPVERSION))
 	{
-		LOG_WARN("GetVersions::handleack: unexpected ack");
-		return GCFEvent::NOT_HANDLED;
+		return true;
 	}
-  
-	EPARsrVersionEvent ack(event);
+	return false;
+}
 
-	if (!ack.hdr.isValidAck(m_hdr))
+void VersionCmd::sendTpEvent(GCFEvent& event, GCFPortInterface& boardport[])
+{
+	TBBVersionEvent tbbe(event);
+	TPVersionEvent tpe();
+	
+	m_SendMask = tbbe.tbbmask; // for some commands boardid ???
+	m_RecvMask = 0;
+	m_ClientPort = port;
+	
+	tpe.opcode = 0x00000701;
+	tpe.boardid = 0;
+	tpe.swversion = 0;
+	tpe.boardversion = 0;
+	tpe.tpversion = 0;
+	tpe.mpversion[0] = 0;
+	tpe.mpversion[1] = 0;
+	tpe.mpversion[2] = 0;
+	tpe.mpversion[3] = 0;
+	
+	for (int boardnr = 0;boardnr < m_maxboards;boardnr++)
 	{
-		LOG_ERROR("VersionsRead::handleack: invalid ack");
-		return GCFEvent::NOT_HANDLED;
-	}
-
-	if (MEPHeader::DST_RSP == ack.hdr.m_fields.addr.dstid) {
-
-		Cache::getInstance().getBack().getVersions().bp()(getBoardId()) = ack.version;
-
-	} else {
-
-		int ap_index = -1;
-		switch (ack.hdr.m_fields.addr.dstid) {
-			case MEPHeader::DST_BLP0:
-				ap_index = 0;
-				break;
-			case MEPHeader::DST_BLP1:
-				ap_index = 1;
-				break;
-			case MEPHeader::DST_BLP2:
-				ap_index = 2;
-				break;
-			case MEPHeader::DST_BLP3:
-				ap_index = 3;
-				break;
-			default:
-				LOG_WARN("Invalid BLP in EPARsrVersionEvent");
-				break;
-		}
-
-		if (ap_index >= 0) {
-			Cache::getInstance().getBack().getVersions().ap()((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + ap_index)
-					= ack.version;  
+		if(m_SendMask & (1 << boardnr))
+		{
+			boardport[boardnr].send(tpe);
 		}
 	}
-	return GCFEvent::HANDLED;
-}
-
-
-
-void GetVersions::tbb_sendack()
-{
-	tbb_ackevent.status = SUCCESS;
 	
-	tbb_ackevent.tbbversion[tbbnr].boardid = ;
-	tbb_ackevent.tbbversion[tbbnr].swversion = ;
+}
+
+bool VersionCmd::saveTpAckEvent(GCFEvent& event, int boardnr)
+{
+	TPVersionEvent tpe(event);
+	m_RecvMask |= (1 << boardnr);
 	
-	getPort()->send(tbb_ackevent);
+	m_boardid[boardnr] = tpe.boardid;
+	m_swversion[boardnr] = tpe.swversion;
+	m_boardversion[boardnr] = tpe.boardversion;
+	m_tpversion[boardnr] = tpe.tpversion;
+	m_mpversion[boardnr][0] = tpe.mpversion[0];
+	m_mpversion[boardnr][1] = tpe.mpversion[1];
+	m_mpversion[boardnr][2] = tpe.mpversion[2];
+	m_mpversion[boardnr][3] = tpe.mpversion[3];
+	
+	if(m_RecvMask == m_SendMask) 
+	{
+		return true;
+	}
+	return false;
 }
 
-void GetVersionsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
+void VersionCmd::sendTbbAckEvent(void)
 {
-  // intentionally left empty 
+	TBBVersionackEvent tbbe();
+	
+	for(int boardnr = 0;boardnr < 12;boardnr++)
+	{
+		tpe.board[boardnr].boardid = m_boardid[boardnr];
+		tpe.board[boardnr].swversion = m_bswversion[boardnr];
+		tpe.board[boardnr].boardversion = m_boardversion[boardnr];
+		tpe.board[boardnr].tpversion = m_tpversion[boardnr];
+		tpe.board[boardnr].mpversion[0] = m_mpversion[boardnr][0];
+		tpe.board[boardnr].mpversion[1] = m_mpversion[boardnr][1];
+		tpe.board[boardnr].mpversion[2] = m_mpversion[boardnr][2];
+		tpe.board[boardnr].mpversion[3] = m_mpversion[boardnr][3];		
+	}
+	m_ClientPort.send(tpe);
 }
-
-void GetVersionsCmd::complete(CacheBuffer& cache)
-{
-	ack(cache);
-}
-
-bool GetVersionsCmd::validate() const
-{
-	return true;
-}
-
