@@ -29,14 +29,18 @@
 --
 -- Authorisation: yes
 --
--- Tables:	VICtemplate	update
+-- Tables:	VICtemplate		update
+--			VIChierarchy	update
 --
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
   RETURNS BOOLEAN AS '
 	DECLARE
-		vFunction		INT2 := 1;
+		TThardware CONSTANT	INT2 := 10;
+		TTtemplate CONSTANT	INT2 := 20;
+		vFunction  CONSTANT	INT2 := 1;
+		vTreeType		OTDBtree.treetype%TYPE;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
 		vLimits			TEXT;
@@ -51,16 +55,39 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 			RETURN FALSE;
 		END IF;
 
-		-- get ParentID of node to duplicate
-		vLimits := replace($5, \'\\\'\', \'\');
-		UPDATE	VICtemplate
-		SET		instances = $4,
-				limits    = vLimits
-		WHERE	treeID = $2
-		AND 	nodeID = $3;
+		-- get treetype
+		SELECT	treetype
+		INTO	vTreeType
+		FROM	OTDBtree
+		WHERE	treeID = $1;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Node % could not be updated\', $3;
-		  RETURN FALSE;
+		  RAISE EXCEPTION \'Tree % does not exist\', $1;
+		END IF;
+
+		IF vTreeType = TTtemplate THEN
+			-- get ParentID of node to duplicate
+			vLimits := replace($5, \'\\\'\', \'\');
+			UPDATE	VICtemplate
+			SET		instances = $4,
+					limits    = vLimits
+			WHERE	treeID = $2
+			AND 	nodeID = $3;
+			IF NOT FOUND THEN
+			  RAISE EXCEPTION \'Node % of template-tree could not be updated\', $3;
+			  RETURN FALSE;
+			END IF;
+		ELSEIF vTreeType = TTHardware THEN
+			vLimits := replace($5, \'\\\'\', \'\');
+			UPDATE	VIChierarchy
+			SET		limits = vLimits
+			WHERE	treeID = $2
+			AND 	nodeID = $3;
+			IF NOT FOUND THEN
+			  RAISE EXCEPTION \'Node % of VIC-tree could not be updated\', $3;
+			  RETURN FALSE;
+			END IF;
+		ELSE
+			RAISE EXCEPTION \'Nodes of PIC trees can not be updated\';
 		END IF;
 
 		RETURN TRUE;
