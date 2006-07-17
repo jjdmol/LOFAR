@@ -70,6 +70,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     public BBSPanel() {
         initComponents();
         initialize();
+        
     }
     
     public void setMainFrame(MainFrame aMainFrame) {
@@ -360,6 +361,8 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         configurationRevertButton = new javax.swing.JButton();
         configurationSaveButton = new javax.swing.JButton();
         BBSStrategyPanel = new javax.swing.JPanel();
+        strategyScrollPane = new javax.swing.JScrollPane();
+        strategyPanel = new javax.swing.JPanel();
         inputDataLabel = new javax.swing.JLabel();
         inputDataText = new javax.swing.JTextField();
         strategyRevertButton = new javax.swing.JButton();
@@ -403,26 +406,13 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         integrationTimeUnitLabel = new javax.swing.JLabel();
         strategySaveButton = new javax.swing.JButton();
         BBSStepExplorerPanel = new javax.swing.JPanel();
-        BaselineSelectionPanel = new javax.swing.JPanel();
-        baselineStationsScrollPane = new javax.swing.JScrollPane();
-        baselineStationsTable = new javax.swing.JTable();
-        baselineModsPanel = new javax.swing.JPanel();
-        baselineUseAllCheckbox = new javax.swing.JCheckBox();
-        addBaseLineButton = new javax.swing.JButton();
-        modifyBaseLineButton = new javax.swing.JButton();
-        deleteBaseLineButton = new javax.swing.JButton();
+        stepExplorerScrollPanel = new javax.swing.JScrollPane();
+        stepExplorerPanel = new javax.swing.JPanel();
         explorePreviousStepButton = new javax.swing.JButton();
         exploreParentStepButton = new javax.swing.JButton();
         exploreFirstChildStepButton = new javax.swing.JButton();
         exploreNextStepButton = new javax.swing.JButton();
         stepExplorerRevertButton = new javax.swing.JButton();
-        stepExplorerSourcesPanel = new javax.swing.JPanel();
-        stepExplorerSourcesModsPanel = new javax.swing.JPanel();
-        addSourceButton = new javax.swing.JButton();
-        modifySourceButton = new javax.swing.JButton();
-        deleteSourceButton1 = new javax.swing.JButton();
-        stepExplorerSourcesScrollPane = new javax.swing.JScrollPane();
-        stepExplorerSourcesList = new javax.swing.JList();
         stepExplorerInstrumentModelPanel = new javax.swing.JPanel();
         stepExplorerInstrumentModelScrollPane = new javax.swing.JScrollPane();
         stepExplorerInstrumentModelList = new javax.swing.JList();
@@ -448,13 +438,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         seOperationAttributeLabel5 = new javax.swing.JLabel();
         seOperationAttributeText4 = new javax.swing.JTextField();
         seOperationAttributeText5 = new javax.swing.JTextField();
-        seOperationAttributeGroup2 = new javax.swing.JPanel();
-        seOperationAttributeSolvableParmPanel = new javax.swing.JPanel();
-        addSolvableParmButton = new javax.swing.JButton();
-        modifySolvableParmButton = new javax.swing.JButton();
-        deleteSolvableParmButton = new javax.swing.JButton();
-        seSolvableParmScrollPane = new javax.swing.JScrollPane();
-        seSolvableParmList = new javax.swing.JList();
+        seOperationAttributeUnitLabel1 = new javax.swing.JLabel();
+        seOperationAttributeUnitLabel2 = new javax.swing.JLabel();
+        seOperationAttributeGroup4 = new javax.swing.JPanel();
         seOperationAttributeGroup3 = new javax.swing.JPanel();
         stepExplorerSourcesModsPanel2 = new javax.swing.JPanel();
         addSolvableParmButton1 = new javax.swing.JButton();
@@ -462,9 +448,46 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         deleteSolvableParmButton1 = new javax.swing.JButton();
         seSolvableParmScrollPane1 = new javax.swing.JScrollPane();
         seSolvableParmList1 = new javax.swing.JList();
+        seOperationAttributeGroup2 = new javax.swing.JPanel();
+        seOperationAttributeSolvableParmPanel = new javax.swing.JPanel();
+        addSolvableParmButton = new javax.swing.JButton();
+        modifySolvableParmButton = new javax.swing.JButton();
+        deleteSolvableParmButton = new javax.swing.JButton();
+        seSolvableParmScrollPane = new javax.swing.JScrollPane();
+        seSolvableParmList = new javax.swing.JList();
         stepExplorerOutputDataPanel = new javax.swing.JPanel();
         stepExplorerOutputDataText = new javax.swing.JTextField();
         stepExplorerSaveButton = new javax.swing.JButton();
+        baselineGlobalPanel = new javax.swing.JPanel();
+        baseLineCorrelationPanel = new javax.swing.JPanel();
+        blCorrelationSelectionLabel = new javax.swing.JLabel();
+        blCorrelationSelectionBox = new javax.swing.JComboBox();
+        blCorrelationTypeLabel = new javax.swing.JLabel();
+        blCorrelationTypeScrollPane = new javax.swing.JScrollPane();
+        blCorrelationTypeList = new javax.swing.JList();
+        BaselineSelectionPanel = new javax.swing.JPanel();
+        baselineStationsScrollPane = new javax.swing.JScrollPane();
+        baselineStationsTable = new javax.swing.JTable();
+        baselineModsPanel = new javax.swing.JPanel();
+        addBaseLineButton = new javax.swing.JButton();
+        modifyBaseLineButton = new javax.swing.JButton();
+        deleteBaseLineButton = new javax.swing.JButton();
+        baselineUseAllCheckbox = new javax.swing.JCheckBox();
+        stepExplorerGlobalSources = new javax.swing.JPanel();
+        stepExplorerSourcesPanel1 = new javax.swing.JPanel();
+        stepExplorerSourcesModsPanel1 = new javax.swing.JPanel();
+        addSourceButton1 = new javax.swing.JButton();
+        modifySourceButton1 = new javax.swing.JButton();
+        deleteSourceButton2 = new javax.swing.JButton();
+        stepExplorerSourcesScrollPane1 = new javax.swing.JScrollPane();
+        stepExplorerSourcesList1 = new javax.swing.JList();
+        stepExplorerSourcesPanel = new javax.swing.JPanel();
+        stepExplorerSourcesModsPanel = new javax.swing.JPanel();
+        addSourceButton = new javax.swing.JButton();
+        modifySourceButton = new javax.swing.JButton();
+        deleteSourceButton1 = new javax.swing.JButton();
+        stepExplorerSourcesScrollPane = new javax.swing.JScrollPane();
+        stepExplorerSourcesList = new javax.swing.JList();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
@@ -525,7 +548,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         ParmDBPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        ParmDBPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("ParmDB"));
+        ParmDBPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("ParmDB Name"));
         ParmDBPanel.setToolTipText("Information about the parameter databases (e.g. instrument parameters, local sky model).");
         ParmDBInstrumentLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         ParmDBInstrumentLabel.setText("Instrument :");
@@ -569,13 +592,15 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         jTabbedPane1.addTab("Global Settings", BBSGlobalSettingsPanel);
 
-        BBSStrategyPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        BBSStrategyPanel.setLayout(new java.awt.BorderLayout());
 
-        inputDataLabel.setText("Input Data :");
-        BBSStrategyPanel.add(inputDataLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, -1, -1));
+        strategyPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        inputDataLabel.setText("Input Data Column:");
+        strategyPanel.add(inputDataLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, -1, -1));
 
         inputDataText.setToolTipText("Name of the column in the measurement set that contains the input data");
-        BBSStrategyPanel.add(inputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 120, -1));
+        strategyPanel.add(inputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 30, 120, -1));
 
         strategyRevertButton.setText("Revert");
         strategyRevertButton.addActionListener(new java.awt.event.ActionListener() {
@@ -584,11 +609,11 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        BBSStrategyPanel.add(strategyRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 500, -1, -1));
+        strategyPanel.add(strategyRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 500, -1, -1));
 
         stationsPanel.setLayout(new java.awt.BorderLayout());
 
-        stationsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Stations"));
+        stationsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Station Names"));
         stationsPanel.setToolTipText("Identifiers of the participating stations.");
         stationsList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "1", "2", "3", "4", "5" };
@@ -628,7 +653,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         stationsPanel.add(stationsModPanel, java.awt.BorderLayout.SOUTH);
 
-        BBSStrategyPanel.add(stationsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 150, 220, 330));
+        strategyPanel.add(stationsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 150, 220, 330));
 
         stepsPanel.setLayout(new java.awt.BorderLayout());
 
@@ -695,7 +720,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         stepsPanel.add(stepsMoveUpDownPanel, java.awt.BorderLayout.EAST);
 
-        BBSStrategyPanel.add(stepsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 150, 400, 330));
+        strategyPanel.add(stepsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 150, 400, 330));
 
         correlationPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -720,7 +745,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         correlationPanel.add(correlationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 50, 80));
 
-        BBSStrategyPanel.add(correlationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 20, 170, 120));
+        strategyPanel.add(correlationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 20, 170, 120));
 
         workDomainSizePanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -744,7 +769,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         wdsTimeUnitLabel.setText("s");
         workDomainSizePanel.add(wdsTimeUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 50, 10, -1));
 
-        BBSStrategyPanel.add(workDomainSizePanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 60, 220, 80));
+        strategyPanel.add(workDomainSizePanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 60, 220, 80));
 
         integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -766,7 +791,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         integrationTimeUnitLabel.setText("s");
         integrationIntervalPanel.add(integrationTimeUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 50, 10, -1));
 
-        BBSStrategyPanel.add(integrationIntervalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 60, 220, 80));
+        strategyPanel.add(integrationIntervalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 60, 220, 80));
 
         strategySaveButton.setText("Save");
         strategySaveButton.addActionListener(new java.awt.event.ActionListener() {
@@ -775,89 +800,31 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        BBSStrategyPanel.add(strategySaveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 500, -1, -1));
+        strategyPanel.add(strategySaveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 500, -1, -1));
+
+        strategyScrollPane.setViewportView(strategyPanel);
+
+        BBSStrategyPanel.add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
         jTabbedPane1.addTab("Strategy", BBSStrategyPanel);
 
-        BBSStepExplorerPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        BBSStepExplorerPanel.setLayout(new java.awt.BorderLayout());
 
-        BaselineSelectionPanel.setLayout(new java.awt.BorderLayout());
-
-        BaselineSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Baseline Selection"));
-        baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {new Integer(0), new Integer(1)},
-                {new Integer(0), new Integer(2)},
-                {new Integer(0), new Integer(3)},
-                {new Integer(1), new Integer(2)},
-                {new Integer(1), new Integer(3)},
-                {new Integer(2), new Integer(3)}
-            },
-            new String [] {
-                "Station 1", "Station 2"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.Integer.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        baselineStationsTable.setToolTipText("The baselines used");
-        baselineStationsScrollPane.setViewportView(baselineStationsTable);
-
-        BaselineSelectionPanel.add(baselineStationsScrollPane, java.awt.BorderLayout.CENTER);
-
-        baselineModsPanel.setLayout(new java.awt.GridBagLayout());
-
-        baselineUseAllCheckbox.setText("Use all baselines");
-        baselineUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        baselineUseAllCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        baselineUseAllCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                baselineUseAllCheckboxStateChanged(evt);
-            }
-        });
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        baselineModsPanel.add(baselineUseAllCheckbox, gridBagConstraints);
-
-        addBaseLineButton.setText("A");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
-
-        modifyBaseLineButton.setText("M");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        baselineModsPanel.add(modifyBaseLineButton, gridBagConstraints);
-
-        deleteBaseLineButton.setText("D");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        baselineModsPanel.add(deleteBaseLineButton, gridBagConstraints);
-
-        BaselineSelectionPanel.add(baselineModsPanel, java.awt.BorderLayout.SOUTH);
-
-        BBSStepExplorerPanel.add(BaselineSelectionPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 310, 230));
+        stepExplorerPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         explorePreviousStepButton.setText("View previous step");
         explorePreviousStepButton.setEnabled(false);
-        BBSStepExplorerPanel.add(explorePreviousStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, -1, -1));
+        stepExplorerPanel.add(explorePreviousStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, -1, -1));
 
         exploreParentStepButton.setText("View parent multistep");
-        BBSStepExplorerPanel.add(exploreParentStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 10, -1, -1));
+        stepExplorerPanel.add(exploreParentStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 10, -1, -1));
 
         exploreFirstChildStepButton.setText("View first child step");
         exploreFirstChildStepButton.setEnabled(false);
-        BBSStepExplorerPanel.add(exploreFirstChildStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 10, -1, -1));
+        stepExplorerPanel.add(exploreFirstChildStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 10, -1, -1));
 
         exploreNextStepButton.setText("View next step");
-        BBSStepExplorerPanel.add(exploreNextStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 10, -1, -1));
+        stepExplorerPanel.add(exploreNextStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 10, -1, -1));
 
         stepExplorerRevertButton.setText("Revert");
         stepExplorerRevertButton.addActionListener(new java.awt.event.ActionListener() {
@@ -866,40 +833,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        BBSStepExplorerPanel.add(stepExplorerRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 490, -1, -1));
-
-        stepExplorerSourcesPanel.setLayout(new java.awt.BorderLayout());
-
-        stepExplorerSourcesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Sources"));
-        stepExplorerSourcesModsPanel.setLayout(new java.awt.GridBagLayout());
-
-        addSourceButton.setText("A");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel.add(addSourceButton, gridBagConstraints);
-
-        modifySourceButton.setText("M");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel.add(modifySourceButton, gridBagConstraints);
-
-        deleteSourceButton1.setText("D");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel.add(deleteSourceButton1, gridBagConstraints);
-
-        stepExplorerSourcesPanel.add(stepExplorerSourcesModsPanel, java.awt.BorderLayout.SOUTH);
-
-        stepExplorerSourcesList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "3C343", "3C344", "3C345", "3C346" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        stepExplorerSourcesScrollPane.setViewportView(stepExplorerSourcesList);
-
-        stepExplorerSourcesPanel.add(stepExplorerSourcesScrollPane, java.awt.BorderLayout.CENTER);
-
-        BBSStepExplorerPanel.add(stepExplorerSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 50, 160, 230));
+        stepExplorerPanel.add(stepExplorerRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 620, 80, -1));
 
         stepExplorerInstrumentModelPanel.setLayout(new java.awt.BorderLayout());
 
@@ -932,7 +866,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelModsPanel, java.awt.BorderLayout.SOUTH);
 
-        BBSStepExplorerPanel.add(stepExplorerInstrumentModelPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(510, 50, 160, 230));
+        stepExplorerPanel.add(stepExplorerInstrumentModelPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 230, 160, 120));
 
         stepExplorerOperationPanel.setLayout(new java.awt.BorderLayout());
 
@@ -998,11 +932,48 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         seOperationAttributeText5.setText("2");
         seOperationAttributeGroup1.add(seOperationAttributeText5, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 40, 60, -1));
 
-        seOperationAttributesInputPanel.add(seOperationAttributeGroup1, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 10, 160, 70));
+        seOperationAttributeUnitLabel1.setText("Hz");
+        seOperationAttributeGroup1.add(seOperationAttributeUnitLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 20, -1, 20));
+
+        seOperationAttributeUnitLabel2.setText("s");
+        seOperationAttributeGroup1.add(seOperationAttributeUnitLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 40, 20, 20));
+
+        seOperationAttributesInputPanel.add(seOperationAttributeGroup1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 180, 70));
+
+        seOperationAttributeGroup4.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        seOperationAttributeGroup4.setBorder(javax.swing.BorderFactory.createTitledBorder("Parameters"));
+        seOperationAttributeGroup3.setLayout(new java.awt.BorderLayout());
+
+        seOperationAttributeGroup3.setBorder(javax.swing.BorderFactory.createTitledBorder("Excluded"));
+        stepExplorerSourcesModsPanel2.setLayout(new java.awt.GridBagLayout());
+
+        addSolvableParmButton1.setText("A");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel2.add(addSolvableParmButton1, gridBagConstraints);
+
+        modifySolvableParmButton1.setText("M");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel2.add(modifySolvableParmButton1, gridBagConstraints);
+
+        deleteSolvableParmButton1.setText("D");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel2.add(deleteSolvableParmButton1, gridBagConstraints);
+
+        seOperationAttributeGroup3.add(stepExplorerSourcesModsPanel2, java.awt.BorderLayout.SOUTH);
+
+        seSolvableParmScrollPane1.setViewportView(seSolvableParmList1);
+
+        seOperationAttributeGroup3.add(seSolvableParmScrollPane1, java.awt.BorderLayout.CENTER);
+
+        seOperationAttributeGroup4.add(seOperationAttributeGroup3, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 20, 160, 140));
 
         seOperationAttributeGroup2.setLayout(new java.awt.BorderLayout());
 
-        seOperationAttributeGroup2.setBorder(javax.swing.BorderFactory.createTitledBorder("Solvable Parameters"));
+        seOperationAttributeGroup2.setBorder(javax.swing.BorderFactory.createTitledBorder("Solvable"));
         seOperationAttributeSolvableParmPanel.setLayout(new java.awt.GridBagLayout());
 
         addSolvableParmButton.setText("A");
@@ -1031,35 +1002,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         seOperationAttributeGroup2.add(seSolvableParmScrollPane, java.awt.BorderLayout.CENTER);
 
-        seOperationAttributesInputPanel.add(seOperationAttributeGroup2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 110, 160, 230));
+        seOperationAttributeGroup4.add(seOperationAttributeGroup2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 160, 140));
 
-        seOperationAttributeGroup3.setLayout(new java.awt.BorderLayout());
-
-        seOperationAttributeGroup3.setBorder(javax.swing.BorderFactory.createTitledBorder("Excluded Parameters"));
-        stepExplorerSourcesModsPanel2.setLayout(new java.awt.GridBagLayout());
-
-        addSolvableParmButton1.setText("A");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel2.add(addSolvableParmButton1, gridBagConstraints);
-
-        modifySolvableParmButton1.setText("M");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel2.add(modifySolvableParmButton1, gridBagConstraints);
-
-        deleteSolvableParmButton1.setText("D");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel2.add(deleteSolvableParmButton1, gridBagConstraints);
-
-        seOperationAttributeGroup3.add(stepExplorerSourcesModsPanel2, java.awt.BorderLayout.SOUTH);
-
-        seSolvableParmScrollPane1.setViewportView(seSolvableParmList1);
-
-        seOperationAttributeGroup3.add(seSolvableParmScrollPane1, java.awt.BorderLayout.CENTER);
-
-        seOperationAttributesInputPanel.add(seOperationAttributeGroup3, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 110, 160, 230));
+        seOperationAttributesInputPanel.add(seOperationAttributeGroup4, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 10, 350, 170));
 
         seOperationAttributesScrollPane.setViewportView(seOperationAttributesInputPanel);
 
@@ -1067,15 +1012,15 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         stepExplorerOperationPanel.add(stepExplorerOperationAttributesPanel, java.awt.BorderLayout.CENTER);
 
-        BBSStepExplorerPanel.add(stepExplorerOperationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 290, 480, 190));
+        stepExplorerPanel.add(stepExplorerOperationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 360, 670, 250));
 
         stepExplorerOutputDataPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        stepExplorerOutputDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Data"));
+        stepExplorerOutputDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Data Column"));
         stepExplorerOutputDataText.setText("OUTDATA2");
-        stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 140, -1));
+        stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 140, -1));
 
-        BBSStepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(510, 290, 160, 50));
+        stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 230, 160, 120));
 
         stepExplorerSaveButton.setText("Save");
         stepExplorerSaveButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1084,7 +1029,195 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        BBSStepExplorerPanel.add(stepExplorerSaveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(590, 490, -1, -1));
+        stepExplorerPanel.add(stepExplorerSaveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(610, 620, 70, -1));
+
+        baselineGlobalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        baselineGlobalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Baseline"));
+        baseLineCorrelationPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        baseLineCorrelationPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Correlation"));
+        blCorrelationSelectionLabel.setText("Selection :");
+        baseLineCorrelationPanel.add(blCorrelationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
+
+        blCorrelationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AUTO", "CROSS", "ALL" }));
+        blCorrelationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
+        baseLineCorrelationPanel.add(blCorrelationSelectionBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 80, -1));
+
+        blCorrelationTypeLabel.setText("Type :");
+        baseLineCorrelationPanel.add(blCorrelationTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, -1, -1));
+
+        blCorrelationTypeList.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "XX", "XY", "YX", "YY" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        blCorrelationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY. \n\nAs an example, suppose you select 'XX' here and set Selection to AUTO, then the X polarization signal of each station is correlated with itself. However if we set Selection to CROSS, then the X polarization of station A is correlated with the X polarization of station B for each base line.");
+        blCorrelationTypeScrollPane.setViewportView(blCorrelationTypeList);
+
+        baseLineCorrelationPanel.add(blCorrelationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 50, 80));
+
+        baselineGlobalPanel.add(baseLineCorrelationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 180, 170, 120));
+
+        BaselineSelectionPanel.setLayout(new java.awt.BorderLayout());
+
+        BaselineSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Selection"));
+        baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {"0", "1"},
+                {"0", "2"},
+                {"0", "3"},
+                {"1", "0"},
+                {"1", "2"},
+                {"1,2,3", "1,2,3"}
+            },
+            new String [] {
+                "Station 1", "Station 2"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        baselineStationsTable.setToolTipText("The baselines used");
+        baselineStationsScrollPane.setViewportView(baselineStationsTable);
+
+        BaselineSelectionPanel.add(baselineStationsScrollPane, java.awt.BorderLayout.CENTER);
+
+        baselineModsPanel.setLayout(new java.awt.GridBagLayout());
+
+        addBaseLineButton.setText("A");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.ipadx = 7;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
+
+        modifyBaseLineButton.setText("M");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineModsPanel.add(modifyBaseLineButton, gridBagConstraints);
+
+        deleteBaseLineButton.setText("D");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.ipadx = 6;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineModsPanel.add(deleteBaseLineButton, gridBagConstraints);
+
+        baselineUseAllCheckbox.setText("Use all baselines");
+        baselineUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        baselineUseAllCheckbox.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        baselineUseAllCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                baselineUseAllCheckboxStateChanged(evt);
+            }
+        });
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineModsPanel.add(baselineUseAllCheckbox, gridBagConstraints);
+
+        BaselineSelectionPanel.add(baselineModsPanel, java.awt.BorderLayout.SOUTH);
+
+        baselineGlobalPanel.add(BaselineSelectionPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 300, 160));
+
+        stepExplorerPanel.add(baselineGlobalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 40, 320, 310));
+
+        stepExplorerGlobalSources.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        stepExplorerGlobalSources.setBorder(javax.swing.BorderFactory.createTitledBorder("Sources"));
+        stepExplorerSourcesPanel1.setLayout(new java.awt.BorderLayout());
+
+        stepExplorerSourcesPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Predict"));
+        stepExplorerSourcesModsPanel1.setLayout(new java.awt.GridBagLayout());
+
+        addSourceButton1.setText("A");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel1.add(addSourceButton1, gridBagConstraints);
+
+        modifySourceButton1.setText("M");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel1.add(modifySourceButton1, gridBagConstraints);
+
+        deleteSourceButton2.setText("D");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel1.add(deleteSourceButton2, gridBagConstraints);
+
+        stepExplorerSourcesPanel1.add(stepExplorerSourcesModsPanel1, java.awt.BorderLayout.SOUTH);
+
+        stepExplorerSourcesList1.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "3C347", "3C348", "3C349", "3C350" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        stepExplorerSourcesScrollPane1.setViewportView(stepExplorerSourcesList1);
+
+        stepExplorerSourcesPanel1.add(stepExplorerSourcesScrollPane1, java.awt.BorderLayout.CENTER);
+
+        stepExplorerGlobalSources.add(stepExplorerSourcesPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, 150));
+
+        stepExplorerSourcesPanel.setLayout(new java.awt.BorderLayout());
+
+        stepExplorerSourcesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Peel"));
+        stepExplorerSourcesModsPanel.setLayout(new java.awt.GridBagLayout());
+
+        addSourceButton.setText("A");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel.add(addSourceButton, gridBagConstraints);
+
+        modifySourceButton.setText("M");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel.add(modifySourceButton, gridBagConstraints);
+
+        deleteSourceButton1.setText("D");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerSourcesModsPanel.add(deleteSourceButton1, gridBagConstraints);
+
+        stepExplorerSourcesPanel.add(stepExplorerSourcesModsPanel, java.awt.BorderLayout.SOUTH);
+
+        stepExplorerSourcesList.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "3C343", "3C344", "3C345", "3C346" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        stepExplorerSourcesScrollPane.setViewportView(stepExplorerSourcesList);
+
+        stepExplorerSourcesPanel.add(stepExplorerSourcesScrollPane, java.awt.BorderLayout.CENTER);
+
+        stepExplorerGlobalSources.add(stepExplorerSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 20, 150, 150));
+
+        stepExplorerPanel.add(stepExplorerGlobalSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 40, 340, 180));
+
+        stepExplorerScrollPanel.setViewportView(stepExplorerPanel);
+
+        BBSStepExplorerPanel.add(stepExplorerScrollPanel, java.awt.BorderLayout.CENTER);
 
         jTabbedPane1.addTab("Step Explorer", BBSStepExplorerPanel);
 
@@ -1216,12 +1349,20 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton addSolvableParmButton;
     private javax.swing.JButton addSolvableParmButton1;
     private javax.swing.JButton addSourceButton;
+    private javax.swing.JButton addSourceButton1;
     private javax.swing.JButton addStationButton;
     private javax.swing.JButton addStepButton;
+    private javax.swing.JPanel baseLineCorrelationPanel;
+    private javax.swing.JPanel baselineGlobalPanel;
     private javax.swing.JPanel baselineModsPanel;
     private javax.swing.JScrollPane baselineStationsScrollPane;
     private javax.swing.JTable baselineStationsTable;
     private javax.swing.JCheckBox baselineUseAllCheckbox;
+    private javax.swing.JComboBox blCorrelationSelectionBox;
+    private javax.swing.JLabel blCorrelationSelectionLabel;
+    private javax.swing.JLabel blCorrelationTypeLabel;
+    private javax.swing.JList blCorrelationTypeList;
+    private javax.swing.JScrollPane blCorrelationTypeScrollPane;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JButton configurationRevertButton;
     private javax.swing.JButton configurationSaveButton;
@@ -1236,6 +1377,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton deleteSolvableParmButton;
     private javax.swing.JButton deleteSolvableParmButton1;
     private javax.swing.JButton deleteSourceButton1;
+    private javax.swing.JButton deleteSourceButton2;
     private javax.swing.JButton deleteStationButton;
     private javax.swing.JButton exploreFirstChildStepButton;
     private javax.swing.JButton exploreNextStepButton;
@@ -1257,6 +1399,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton modifySolvableParmButton;
     private javax.swing.JButton modifySolvableParmButton1;
     private javax.swing.JButton modifySourceButton;
+    private javax.swing.JButton modifySourceButton1;
     private javax.swing.JButton modifyStepButton;
     private javax.swing.JButton moveStepDownButton;
     private javax.swing.JButton moveStepUpButton;
@@ -1264,6 +1407,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel seOperationAttributeGroup1;
     private javax.swing.JPanel seOperationAttributeGroup2;
     private javax.swing.JPanel seOperationAttributeGroup3;
+    private javax.swing.JPanel seOperationAttributeGroup4;
     private javax.swing.JLabel seOperationAttributeLabel1;
     private javax.swing.JLabel seOperationAttributeLabel2;
     private javax.swing.JLabel seOperationAttributeLabel3;
@@ -1275,6 +1419,8 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField seOperationAttributeText3;
     private javax.swing.JTextField seOperationAttributeText4;
     private javax.swing.JTextField seOperationAttributeText5;
+    private javax.swing.JLabel seOperationAttributeUnitLabel1;
+    private javax.swing.JLabel seOperationAttributeUnitLabel2;
     private javax.swing.JPanel seOperationAttributesInputPanel;
     private javax.swing.JScrollPane seOperationAttributesScrollPane;
     private javax.swing.JList seSolvableParmList;
@@ -1286,6 +1432,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel stationsPanel;
     private javax.swing.JScrollPane stationsScrollPane;
     private javax.swing.JCheckBox stationsUseAllCheckbox;
+    private javax.swing.JPanel stepExplorerGlobalSources;
     private javax.swing.JList stepExplorerInstrumentModelList;
     private javax.swing.JPanel stepExplorerInstrumentModelModsPanel;
     private javax.swing.JPanel stepExplorerInstrumentModelPanel;
@@ -1297,20 +1444,28 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel stepExplorerOperationTypeLabel;
     private javax.swing.JPanel stepExplorerOutputDataPanel;
     private javax.swing.JTextField stepExplorerOutputDataText;
+    private javax.swing.JPanel stepExplorerPanel;
     private javax.swing.JButton stepExplorerRevertButton;
     private javax.swing.JButton stepExplorerSaveButton;
+    private javax.swing.JScrollPane stepExplorerScrollPanel;
     private javax.swing.JList stepExplorerSourcesList;
+    private javax.swing.JList stepExplorerSourcesList1;
     private javax.swing.JPanel stepExplorerSourcesModsPanel;
+    private javax.swing.JPanel stepExplorerSourcesModsPanel1;
     private javax.swing.JPanel stepExplorerSourcesModsPanel2;
     private javax.swing.JPanel stepExplorerSourcesPanel;
+    private javax.swing.JPanel stepExplorerSourcesPanel1;
     private javax.swing.JScrollPane stepExplorerSourcesScrollPane;
+    private javax.swing.JScrollPane stepExplorerSourcesScrollPane1;
     private javax.swing.JPanel stepsModsPanel;
     private javax.swing.JPanel stepsMoveUpDownPanel;
     private javax.swing.JPanel stepsPanel;
     private javax.swing.JScrollPane stepsScrollPane;
     private javax.swing.JTree stepsTree;
+    private javax.swing.JPanel strategyPanel;
     private javax.swing.JButton strategyRevertButton;
     private javax.swing.JButton strategySaveButton;
+    private javax.swing.JScrollPane strategyScrollPane;
     private javax.swing.JLabel wdsFrequencyLabel;
     private javax.swing.JTextField wdsFrequencyText;
     private javax.swing.JLabel wdsFrequencyUnitLabel;
