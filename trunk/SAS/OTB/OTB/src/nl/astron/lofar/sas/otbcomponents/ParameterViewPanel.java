@@ -270,7 +270,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             } else {
                 derefText.setVisible(false);
                 derefLabel.setVisible(false);
-                setLimits(itsParam.limits);
+                setLimits(itsNode.limits);
             }
             setDescription(itsParam.description);
         } else {
@@ -456,47 +456,53 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private void saveInput() {
         // Just check all possible fields that CAN change. The enabled method will take care if they COULD be changed.
         // this way we keep this panel general for multiple use
-        boolean hasChanged = false;
+        boolean nodeHasChanged = false;
+        boolean paramHasChanged = false;
         if (itsParam != null) {
             try {
                 if (itsParam.type != itsOtdbRmi.getRemoteTypes().getParamType(getType())) { 
                     itsParam.type=itsOtdbRmi.getRemoteTypes().getParamType(getType());
-                    hasChanged=true;
+                    paramHasChanged=true;
                 }
 
                 if (itsParam.unit != itsOtdbRmi.getRemoteTypes().getUnit(getUnit())) { 
                     itsParam.unit=itsOtdbRmi.getRemoteTypes().getUnit(getUnit());
-                    hasChanged=true;
+                    paramHasChanged=true;
                 }
 
                 if (!String.valueOf(itsParam.pruning).equals(getPruning())) { 
                     itsParam.pruning=Integer.valueOf(getPruning()).shortValue();
-                    hasChanged=true;
+                    paramHasChanged=true;
                 }
 
                 if (!String.valueOf(itsParam.valMoment).equals(getValMoment())) { 
                     itsParam.valMoment=Integer.valueOf(getValMoment()).shortValue();
-                    hasChanged=true;
+                    paramHasChanged=true;
                 }
 
                 if (itsParam.runtimeMod != getRuntimeMod()) { 
                     itsParam.runtimeMod=getRuntimeMod();
-                    hasChanged=true;
+                    paramHasChanged=true;
                 }                
 
-                if (!itsParam.description.equals(getDescription())) { 
-                    itsParam.description=getDescription();
-                    hasChanged=true;
-                }
-
-                if (!itsParam.limits.equals(getLimits())) { 
-                    itsParam.limits=getLimits();
-                    hasChanged=true;
+                if (!itsNode.description.equals(getDescription())) { 
+                    itsNode.description=getDescription();
+                    nodeHasChanged=true;
                 }
                 
-                if (hasChanged) {
+                if (!itsNode.limits.equals(getLimits())) { 
+                    itsNode.limits=getLimits();
+                    nodeHasChanged=true;
+                }
+                
+                if (paramHasChanged) {
                     if (!itsOtdbRmi.getRemoteMaintenance().saveParam(itsParam)) {
                         logger.error("Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    }
+                } 
+                if (nodeHasChanged) {
+                    if (!itsOtdbRmi.getRemoteMaintenance().saveNode(itsNode)) {
+                        logger.error("Saving node "+itsNode.nodeID()+"failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
                     }
                 } 
                

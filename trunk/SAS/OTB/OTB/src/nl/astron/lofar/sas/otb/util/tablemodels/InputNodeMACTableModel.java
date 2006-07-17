@@ -1,5 +1,5 @@
 /*
- * RSPMACTableModel.java
+ * InputNodeMACTableModel.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,9 +26,9 @@ import nl.astron.lofar.sas.otb.MainFrame;
 import org.apache.log4j.Logger;
 
 /**
- * Implements the data model behind the RSP board MACAddresses table
+ * Implements the data model behind the InputNode MACAddresses table
  *
- * @created 07-06-2006, 13:30
+ * @created 13-07-2006, 11:00
  *
  * @author coolen
  *
@@ -36,22 +36,24 @@ import org.apache.log4j.Logger;
  *
  * @updated
  */
-public class RSPMACTableModel extends javax.swing.table.AbstractTableModel {
+public class InputNodeMACTableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"RSPBoard#","MAC address Sender","MAC address Receiver"};
+    private String headers[] = {"Input Node#","MAC address Sender","MAC address Receiver"};
     private Object data[][];
     
-    static Logger logger = Logger.getLogger(RSPMACTableModel.class);
-    static String name = "RSPMACTableModel";
+    static Logger logger = Logger.getLogger(InputNodeMACTableModel.class);
+    static String name = "InputNodeMACTableModel";
 
     /** Creates a new instance of RSPMACTableModel */
-    public RSPMACTableModel() {
+    public InputNodeMACTableModel() {
         data = new Object[0][0];
     }
     
     
     /** Fills the table from the database */
     public boolean fillTable(String aNameList,String aList) {
+        
+        
         if (aNameList.length()<1 || aList.length() <1) {
             logger.error("No data to make a table from");
             return false;
@@ -60,6 +62,7 @@ public class RSPMACTableModel extends javax.swing.table.AbstractTableModel {
         aNameList = aNameList.replaceAll("[\\[\\]]","");
         aList = aList.replaceAll("[\\[\\]]","");
         
+
         String aNS[]=aNameList.split(",");
         String aS[]=aList.split(",");
         
@@ -71,13 +74,13 @@ public class RSPMACTableModel extends javax.swing.table.AbstractTableModel {
             if (i < aS.length) {
                 data[k][1]= aS[i];            
             } else {
-                logger.debug("Provided RSPMACAddress string to short, adding empty strings");
+                logger.debug("Provided InputMACAddress string to short, adding empty strings");
                 data[k][1] = "";
             }
             if (i+1 < aS.length) {
                 data[k][2]= aS[i+1];
             } else {
-                logger.debug("Provided RSPMACAddress string to short, adding empty strings");
+                logger.debug("Provided InputMACAddress string to short, adding empty strings");
                 data[k][2] = "";                
             }
             i+=2;
