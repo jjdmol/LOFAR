@@ -59,6 +59,19 @@ public class TablePanel extends javax.swing.JPanel {
         jTable1.setSelectionMode(selectionMode);
     }
     
+     public void setWarning(String aWarning) {
+        warningText.setText(aWarning);
+        warningText.setEnabled(false);
+        warningText.setVisible(true);
+    } 
+
+    
+    
+    public void removeWarning() {
+        warningText.setText("");
+        warningText.setEnabled(true);
+        warningText.setVisible(false);
+    }
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -66,10 +79,16 @@ public class TablePanel extends javax.swing.JPanel {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
+        warningText = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
 
         setLayout(new java.awt.BorderLayout());
+
+        warningText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        warningText.setText(" ");
+        setVisible(false);
+        add(warningText, java.awt.BorderLayout.NORTH);
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -102,6 +121,7 @@ public class TablePanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
+    private javax.swing.JLabel warningText;
     // End of variables declaration//GEN-END:variables
 
     /**

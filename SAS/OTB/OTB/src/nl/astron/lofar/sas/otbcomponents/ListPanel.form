@@ -27,22 +27,30 @@
               <EmptySpace min="-2" pref="19" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="ApplyButton" min="-2" max="-2" attributes="0"/>
+                      <Component id="warningText" pref="362" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="CancelButton" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="jScrollPane1" max="32767" attributes="1"/>
-                          <Component id="jTextField2" alignment="0" pref="185" max="32767" attributes="1"/>
-                      </Group>
-                      <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                          <Component id="DownListButton1" max="32767" attributes="1"/>
-                          <Component id="UpListButton1" alignment="0" max="32767" attributes="1"/>
-                          <Component id="ClearListButton1" alignment="1" max="32767" attributes="1"/>
-                          <Component id="DeleteListItemButton1" alignment="0" max="32767" attributes="1"/>
-                          <Component id="AddListItemButton1" alignment="0" pref="76" max="32767" attributes="1"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="1">
+                              <Component id="ApplyButton" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="CancelButton" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="jScrollPane1" max="32767" attributes="1"/>
+                                  <Component id="jTextField2" alignment="0" pref="185" max="32767" attributes="1"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                  <Component id="DownListButton1" max="32767" attributes="1"/>
+                                  <Component id="UpListButton1" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="ClearListButton1" alignment="1" max="32767" attributes="1"/>
+                                  <Component id="DeleteListItemButton1" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="AddListItemButton1" alignment="0" pref="76" max="32767" attributes="1"/>
+                              </Group>
+                          </Group>
                       </Group>
                       <EmptySpace min="-2" pref="71" max="-2" attributes="0"/>
                   </Group>
@@ -77,7 +85,9 @@
                   <Component id="ApplyButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="CancelButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace min="-2" pref="180" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
+              <Component id="warningText" min="-2" pref="23" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="142" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -165,5 +175,13 @@
         </Component>
       </SubComponents>
     </Container>
+    <Component class="javax.swing.JLabel" name="warningText">
+      <Properties>
+        <Property name="horizontalAlignment" type="int" value="0"/>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="setVisible(false);"/>
+      </AuxValues>
+    </Component>
   </SubComponents>
 </Form>
