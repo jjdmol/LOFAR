@@ -49,7 +49,7 @@ import org.apache.log4j.Logger;
  */
 public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     
-    static Logger logger = Logger.getLogger(OLAPConfigPanel.class);
+    static Logger logger = Logger.getLogger(BBSPanel.class);
     static String name = "BBS";
     
     
@@ -88,9 +88,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     public void setContent(Object anObject) {
         itsNode=(jOTDBnode)anObject;
         jOTDBparam aParam=null;
-        jOTDBparam aRefParam=null;
         try {
-            
             //we need to get all the childs from this node.
             Vector childs = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
             
@@ -98,39 +96,20 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             Enumeration e = childs.elements();
             while( e.hasMoreElements()  ) {
                 aParam=null;
-                aRefParam=null;
-                
                 jOTDBnode aNode = (jOTDBnode)e.nextElement();
                 
-                // We need to keep all the params needed by this panel
+                // We need to keep all the nodes needed by this panel
+                // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
-                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());
-                    if (aParam != null && LofarUtils.isReference(aParam.limits)) {
-                        aRefParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
-                    }
-                    setField(aParam,aRefParam);
+                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
+                    setField(aParam,aNode);
+                    
+                    //we need to get all the childs from the following nodes as well.
+                }else if (LofarUtils.keyName(aNode.name).equals("ParmDB")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("BBDB")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 }
-                /*
-                 else if (LofarUtils.keyName(aNode.name).equals("OLAP_HW")) {
-                    //we need to get all the childs from this node also.
-                    Vector HWchilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                  
-                    // get all the params per child
-                    Enumeration e1 = HWchilds.elements();
-                    while( e1.hasMoreElements()  ) {
-                  
-                        jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                  
-                        // We need to keep all the params needed by this panel
-                        if (aHWNode.leaf) {
-                            aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode.treeID(),aHWNode.paramDefID());
-                            if (aParam != null && LofarUtils.isReference(aParam.limits)) {
-                                aRefParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
-                            }
-                        }
-                        setField(aParam,aRefParam);
-                    }
-                }*/
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
@@ -140,6 +119,8 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         
         initPanel();
     }
+    
+    
     public boolean isSingleton() {
         return false;
     }
@@ -150,8 +131,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     public boolean hasPopupMenu() {
         return false;
     }
-    
-    
     /** create popup menu for this panel
      *
      *  // build up the menu
@@ -187,18 +166,60 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     }
     /** Restore original Values in Detauks panel
      */
-    private void restoreBBSDetailsPanel() {
-        /*AMCServerHostText.setText(itsAMCServerHost.limits);
-         */
-        
+    private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
+        jOTDBparam aParam=null;
+        try {
+            Vector HWchilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            // get all the params per child
+            Enumeration e1 = HWchilds.elements();
+            while( e1.hasMoreElements()  ) {
+                
+                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                aParam=null;
+                // We need to keep all the params needed by this panel
+                if (aHWNode.leaf) {
+                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
+                }
+                setField(aParam,aHWNode);
+            }
+        } catch (RemoteException ex) {
+            logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            return;
+        }
     }
     
-    /** Restore original Values in Details panel
+    
+    /** Restore original Values in Global Settings panel
      */
-    private void restoreBBSOverviewPanel() {
-       /*AMCServerHostText.setText(itsAMCServerHost.limits);
-        */
+    private void restoreBBSGlobalSettingsPanel() {
+        
+        // Global Settings parameters
+        this.BBSDatasetText.setText(dataSet.limits);
+        this.BBDBHostText.setText(BBDBHost.limits);
+        this.BBDBPortText.setText(BBDBPort.limits);
+        this.BBDBDBNameText.setText(BBDBDBName.limits);
+        this.BBDBDBUsernameText.setText(BBDBUsername.limits);
+        this.BBDBDBPasswordText.setText(BBDBPassword.limits);
+        
+        this.ParmDBInstrumentText.setText(ParmDBInstrument.limits);
+        this.ParmDBLocalSkyText.setText(ParmDBLocalSky.limits);
+        
     }
+    private void restoreBBSStrategyPanel() {
+        /*
+        AMCServerHostText.setText(itsAMCServerHost.limits);
+        StrategySteps;
+        StrategySteps;
+        StrategyInputData;
+        StrategyCorrelationSelection;
+        StrategyCorrelationType;
+        StrategyWDSFrequency;
+        StrategyWDSTime;
+        StrategyIntegrationFrequency;
+        StrategyIntegrationTime;
+         */
+    }
+    
     
     private void initialize() {
         buttonPanel1.addButton("Save Settings");
@@ -228,49 +249,91 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     /* Set's the different fields in the GUI */
-    private void setField(jOTDBparam aParam, jOTDBparam aRefParam) {
+    private void setField(jOTDBparam aParam, jOTDBnode aNode) {
         // OLAP_HW settings
         if (aParam==null) {
             return;
         }
-        /*
-        if (LofarUtils.keyName(aParam.name).equals("AMCServerHost")) {
-            if (aRefParam!=null) {
-                AMCServerHostText.setToolTipText(aRefParam.description);
-                AMCServerHostText.setText(aParam.limits + " : " + aRefParam.limits);
-                AMCServerHostText.setEnabled(false);
-                itsAMCServerHost=null;
+        boolean isRef = LofarUtils.isReference(aNode.limits);
+        String aKeyName = LofarUtils.keyName(aNode.name);
+        
+        if (aKeyName.equals("DataSet")) {
+            this.BBSDatasetText.setToolTipText(aNode.description);
+            this.dataSet=aNode;
+            if (isRef && aParam != null) {
+                BBSDatasetText.setText(aNode.limits + " : " + aParam.limits);
             } else {
-                AMCServerHostText.setToolTipText(aParam.description);
-                AMCServerHostText.setText(aParam.limits);
-                AMCServerHostText.setEnabled(true);
-                itsAMCServerHost=aParam;
+                BBSDatasetText.setText(aNode.limits);
             }
-        } else if (LofarUtils.keyName(aParam.name).equals("AMCServerPort")) {
-            if (aRefParam!=null) {
-                AMCServerPortText.setToolTipText(aRefParam.description);
-                AMCServerPortText.setText(aParam.limits + " : " + aRefParam.limits);
-                AMCServerPortText.setEnabled(false);
-                itsAMCServerPort=null;
+        }else if (aKeyName.equals("DBName")) {
+            this.BBDBDBNameText.setToolTipText(aNode.description);
+            this.BBDBDBName=aNode;
+            if (isRef && aParam != null) {
+                BBDBDBNameText.setText(aNode.limits + " : " + aParam.limits);
             } else {
-                AMCServerPortText.setToolTipText(aParam.description);
-                AMCServerPortText.setText(aParam.limits);
-                AMCServerPortText.setEnabled(true);
-                itsAMCServerPort=aParam;
+                BBDBDBNameText.setText(aNode.limits);
             }
-        }*/
+        }else if (aKeyName.equals("Host")) {
+            this.BBDBHostText.setToolTipText(aNode.description);
+            this.BBDBHost=aNode;
+            if (isRef && aParam != null) {
+                BBDBHostText.setText(aNode.limits + " : " + aParam.limits);
+            } else {
+                BBDBHostText.setText(aNode.limits);
+            }
+        }else if (aKeyName.equals("Port")) {
+            this.BBDBPortText.setToolTipText(aNode.description);
+            this.BBDBPort=aNode;
+            if (isRef && aParam != null) {
+                BBDBPortText.setText(aNode.limits + " : " + aParam.limits);
+            } else {
+                BBDBPortText.setText(aNode.limits);
+            }
+        }else if (aKeyName.equals("UserName")) {
+            this.BBDBDBUsernameText.setToolTipText(aNode.description);
+            this.BBDBUsername=aNode;
+            if (isRef && aParam != null) {
+                BBDBDBUsernameText.setText(aNode.limits + " : " + aParam.limits);
+            } else {
+                BBDBDBUsernameText.setText(aNode.limits);
+            }
+        }else if (aKeyName.equals("PassWord")) {
+            this.BBDBDBPasswordText.setToolTipText(aNode.description);
+            this.BBDBPassword=aNode;
+            if (isRef && aParam != null) {
+                BBDBDBPasswordText.setText(aNode.limits + " : " + aParam.limits);
+            } else {
+                BBDBDBPasswordText.setText(aNode.limits);
+            }
+        }else if (aKeyName.equals("Instrument")) {
+            this.ParmDBInstrumentText.setToolTipText(aNode.description);
+            this.ParmDBInstrument=aNode;
+            if (isRef && aParam != null) {
+                ParmDBInstrumentText.setText(aNode.limits + " : " + aParam.limits);
+            } else {
+                ParmDBInstrumentText.setText(aNode.limits);
+            }
+        }else if (aKeyName.equals("LocalSky")) {
+            this.ParmDBLocalSkyText.setToolTipText(aNode.description);
+            this.ParmDBLocalSky=aNode;
+            if (isRef && aParam != null) {
+                ParmDBLocalSkyText.setText(aNode.limits + " : " + aParam.limits);
+            } else {
+                ParmDBLocalSkyText.setText(aNode.limits);
+            }
+        }
     }
     
     /** saves the given param back to the database
      */
-    private void saveParam(jOTDBparam aParam) {
-        if (aParam == null) {
+    private void saveNode(jOTDBnode aNode) {
+        if (aNode == null) {
             return;
         }
         try {
-            itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveParam(aParam);
+            itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveNode(aNode);
         } catch (RemoteException ex) {
-            logger.debug("Error: saveParam failed : " + ex);
+            logger.debug("Error: saveNode failed : " + ex);
         }
     }
     
@@ -296,7 +359,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void setOverviewButtonsVisible(boolean visible) {
-        this.configurationRevertButton.setVisible(visible);    
+        this.configurationRevertButton.setVisible(visible);
     }
     
     private void enableDetailButtons(boolean enabled) {
@@ -318,14 +381,32 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void saveInput() {
-        boolean hasChanged = false;
-        
-        // BBS Parameters
-        /*
-        if (itsAMCServerHost != null && !AMCServerHostText.equals(itsAMCServerHost.limits)) {
-            itsAMCServerHost.limits = AMCServerHostText.getText();
-            saveParam(itsAMCServerHost);
-        }*/
+       
+        if (this.dataSet != null && !this.BBSDatasetText.getText().equals(dataSet.limits)) {
+            dataSet.limits = BBSDatasetText.getText();
+            saveNode(dataSet);
+        } else if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
+            BBDBHost.limits = BBDBHostText.getText();
+            saveNode(BBDBHost);
+        } else if (this.BBDBPort != null && !this.BBDBPortText.getText().equals(BBDBPort.limits)) {
+            BBDBPort.limits = BBDBPortText.getText();
+            saveNode(BBDBPort);
+        } else if (this.BBDBDBName != null && !this.BBDBDBNameText.getText().equals(BBDBDBName.limits)) {
+            BBDBDBName.limits = BBDBDBNameText.getText();
+            saveNode(BBDBDBName);
+        } else if (this.BBDBUsername != null && !this.BBDBDBUsernameText.getText().equals(BBDBUsername.limits)) {
+            BBDBUsername.limits = BBDBDBUsernameText.getText();
+            saveNode(BBDBUsername);
+        } else if (this.BBDBPassword != null && !this.BBDBDBPasswordText.getText().equals(BBDBPassword.limits)) {
+            BBDBPassword.limits = BBDBDBPasswordText.getText();
+            saveNode(BBDBPassword);
+        } else if (this.ParmDBInstrument != null && !this.ParmDBInstrumentText.getText().equals(ParmDBInstrument.limits)) {
+            ParmDBInstrument.limits = ParmDBInstrumentText.getText();
+            saveNode(ParmDBInstrument);
+        } else if (this.ParmDBLocalSky != null && !this.ParmDBLocalSkyText.getText().equals(ParmDBLocalSky.limits)) {
+            ParmDBLocalSky.limits = ParmDBLocalSkyText.getText();
+            saveNode(ParmDBLocalSky);
+        }
     }
     
     
@@ -1232,54 +1313,54 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void configurationSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationSaveButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_configurationSaveButtonActionPerformed
-
+    
     private void strategySaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_strategySaveButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_strategySaveButtonActionPerformed
-
+    
     private void stepExplorerSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepExplorerSaveButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_stepExplorerSaveButtonActionPerformed
-
+    
     private void stationsUseAllCheckboxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_stationsUseAllCheckboxStateChanged
-       if(this.stationsUseAllCheckbox.isSelected()){
-           this.stationsList.setBackground(Color.LIGHT_GRAY);
-           this.stationsList.setEnabled(false);
-       }else{
-           this.stationsList.setBackground(Color.WHITE);
-           this.stationsList.setEnabled(true);
-       }
+        if(this.stationsUseAllCheckbox.isSelected()){
+            this.stationsList.setBackground(Color.LIGHT_GRAY);
+            this.stationsList.setEnabled(false);
+        }else{
+            this.stationsList.setBackground(Color.WHITE);
+            this.stationsList.setEnabled(true);
+        }
     }//GEN-LAST:event_stationsUseAllCheckboxStateChanged
-
+    
     private void stepExplorerRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepExplorerRevertButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_stepExplorerRevertButtonActionPerformed
-
+    
     private void baselineUseAllCheckboxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_baselineUseAllCheckboxStateChanged
-       if(baselineUseAllCheckbox.isSelected()){
-           this.baselineStationsTable.setBackground(Color.LIGHT_GRAY);
-           this.baselineStationsTable.setEnabled(false);
-       }else{
-           this.baselineStationsTable.setBackground(Color.WHITE);
-           this.baselineStationsTable.setEnabled(true);
-       }
-      
+        if(baselineUseAllCheckbox.isSelected()){
+            this.baselineStationsTable.setBackground(Color.LIGHT_GRAY);
+            this.baselineStationsTable.setEnabled(false);
+        }else{
+            this.baselineStationsTable.setBackground(Color.WHITE);
+            this.baselineStationsTable.setEnabled(true);
+        }
+        
     }//GEN-LAST:event_baselineUseAllCheckboxStateChanged
-
+    
     private void ParmDBLocalSkyTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParmDBLocalSkyTextActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_ParmDBLocalSkyTextActionPerformed
     
     private void configurationRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationRevertButtonActionPerformed
-        this.restoreBBSOverviewPanel();
+        this.restoreBBSGlobalSettingsPanel();
     }//GEN-LAST:event_configurationRevertButtonActionPerformed
     
     private void strategyRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_strategyRevertButtonActionPerformed
-        this.restoreBBSDetailsPanel();
+        this.restoreBBSStrategyPanel();
     }//GEN-LAST:event_strategyRevertButtonActionPerformed
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
@@ -1291,35 +1372,27 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
     private Vector<jOTDBparam> itsParamList;
-    /*
-    // Generic parameters
-    private jOTDBparam itsRSPBoards;
-    private jOTDBparam itsRSPBoardsPerStation;
-     
-    // OLAP Specific parameters
-    private jOTDBparam itsSamplesToIntegrate;
-    private jOTDBparam itsSecondsToBuffer;
-    private jOTDBparam itsUseAMCServer;
-    private jOTDBparam itsNodesPerCell;
-    private jOTDBparam itsSubbandsPerCell;
-    private jOTDBparam itsPpfTaps;
-     
-     
-    // OLAP_HW parameters
-    private jOTDBparam itsAMCServerHost=null;
-    private jOTDBparam itsAMCServerPort=null;
-    private jOTDBparam itsDelayCompensationHost=null;
-    private jOTDBparam itsDelayCompensationPorts=null;
-    private jOTDBparam itsInputClusterFEN=null;
-    private jOTDBparam itsInputBGLHosts=null;
-    private jOTDBparam itsInputBGLPorts=null;
-    private jOTDBparam itsStellaFEN=null;
-    private jOTDBparam itsBGLStorageHosts=null;
-    private jOTDBparam itsBGLStoragePorts=null;
-    private jOTDBparam itsStorageClusterFEN=null;
-    private jOTDBparam itsPartition=null;
-     */
     
+    // Global Settings parameters
+    private jOTDBnode dataSet;
+    private jOTDBnode StrategySteps;
+    private jOTDBnode StrategyStations;
+    private jOTDBnode StrategyInputData;
+    private jOTDBnode StrategyCorrelationSelection;
+    private jOTDBnode StrategyCorrelationType;
+    private jOTDBnode StrategyWDSFrequency;
+    private jOTDBnode StrategyWDSTime;
+    private jOTDBnode StrategyIntegrationFrequency;
+    private jOTDBnode StrategyIntegrationTime;
+    
+    private jOTDBnode BBDBHost;
+    private jOTDBnode BBDBPort;
+    private jOTDBnode BBDBDBName;
+    private jOTDBnode BBDBUsername;
+    private jOTDBnode BBDBPassword;
+    
+    private jOTDBnode ParmDBInstrument;
+    private jOTDBnode ParmDBLocalSky;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel BBDBDBNameLabel;
