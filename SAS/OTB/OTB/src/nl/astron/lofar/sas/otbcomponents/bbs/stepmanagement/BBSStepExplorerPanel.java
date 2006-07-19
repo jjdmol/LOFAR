@@ -102,7 +102,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
                     aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
-                    setField(aParam,aNode);
+                    setField(itsNode,aParam,aNode);
                     
                     //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).equals("ParmDB")) {
@@ -180,7 +180,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 if (aHWNode.leaf) {
                     aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
                 }
-                setField(aParam,aHWNode);
+                setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
             logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
@@ -234,13 +234,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         }
     }
     /* Set's the different fields in the GUI */
-    private void setField(jOTDBparam aParam, jOTDBnode aNode) {
+    private void setField(jOTDBnode parent, jOTDBparam aParam, jOTDBnode aNode) {
         // OLAP_HW settings
         if (aParam==null) {
             return;
         }
         boolean isRef = LofarUtils.isReference(aNode.limits);
         String aKeyName = LofarUtils.keyName(aNode.name);
+        String parentName = String.valueOf(parent.name);
         /*
         if (aKeyName.equals("DataSet")) {
             this.BBSDatasetText.setToolTipText(aParam.description);
@@ -364,34 +365,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             dataSet.limits = BBSDatasetText.getText();
             logger.trace("Variable BBS ("+dataSet.name+"//"+dataSet.treeID()+"//"+dataSet.nodeID()+"//"+dataSet.parentID()+"//"+dataSet.paramDefID()+") from value ("+BBSDatasetText.getText()+") updated to :"+dataSet.limits);
             saveNode(dataSet);
-        } else if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
+        } 
+        if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
             BBDBHost.limits = BBDBHostText.getText();
             logger.trace("Variable BBS ("+BBDBHost.name+"//"+BBDBHost.treeID()+"//"+BBDBHost.nodeID()+"//"+BBDBHost.parentID()+"//"+BBDBHost.paramDefID()+") updated to :"+BBDBHost.limits);
             saveNode(BBDBHost);
-        } else if (this.BBDBPort != null && !this.BBDBPortText.getText().equals(BBDBPort.limits)) {
-            BBDBPort.limits = BBDBPortText.getText();
-            logger.trace("Variable BBS ("+BBDBPort.name+"//"+BBDBPort.treeID()+"//"+BBDBPort.nodeID()+"//"+BBDBPort.parentID()+"//"+BBDBPort.paramDefID()+") updated to :"+BBDBPort.limits);
-            saveNode(BBDBPort);
-        } else if (this.BBDBDBName != null && !this.BBDBDBNameText.getText().equals(BBDBDBName.limits)) {
-            BBDBDBName.limits = BBDBDBNameText.getText();
-            logger.trace("Variable BBS ("+BBDBDBName.name+"//"+BBDBDBName.treeID()+"//"+BBDBDBName.nodeID()+"//"+BBDBDBName.parentID()+"//"+BBDBDBName.paramDefID()+") updated to :"+BBDBDBName.limits);
-            saveNode(BBDBDBName);
-        } else if (this.BBDBUsername != null && !this.BBDBDBUsernameText.getText().equals(BBDBUsername.limits)) {
-            BBDBUsername.limits = BBDBDBUsernameText.getText();
-            logger.trace("Variable BBS ("+BBDBUsername.name+"//"+BBDBUsername.treeID()+"//"+BBDBUsername.nodeID()+"//"+BBDBUsername.parentID()+"//"+BBDBUsername.paramDefID()+") updated to :"+BBDBUsername.limits);
-            saveNode(BBDBUsername);
-        } else if (this.BBDBPassword != null && !this.BBDBDBPasswordText.getText().equals(BBDBPassword.limits)) {
-            BBDBPassword.limits = BBDBDBPasswordText.getText();
-            logger.trace("Variable BBS ("+BBDBPassword.name+"//"+BBDBPassword.treeID()+"//"+BBDBPassword.nodeID()+"//"+BBDBPassword.parentID()+"//"+BBDBPassword.paramDefID()+") updated to :"+BBDBPassword.limits);
-            saveNode(BBDBPassword);
-        } else if (this.ParmDBInstrument != null && !this.ParmDBInstrumentText.getText().equals(ParmDBInstrument.limits)) {
-            ParmDBInstrument.limits = ParmDBInstrumentText.getText();
-            logger.trace("Variable BBS ("+ParmDBInstrument.name+"//"+ParmDBInstrument.treeID()+"//"+ParmDBInstrument.nodeID()+"//"+ParmDBInstrument.parentID()+"//"+ParmDBInstrument.paramDefID()+") updated to :"+ParmDBInstrument.limits);
-            saveNode(ParmDBInstrument);
-        } else if (this.ParmDBLocalSky != null && !this.ParmDBLocalSkyText.getText().equals(ParmDBLocalSky.limits)) {
-            ParmDBLocalSky.limits = ParmDBLocalSkyText.getText();
-            logger.trace("Variable BBS ("+ParmDBLocalSky.name+"//"+ParmDBLocalSky.treeID()+"//"+ParmDBLocalSky.nodeID()+"//"+ParmDBLocalSky.parentID()+"//"+ParmDBLocalSky.paramDefID()+") updated to :"+ParmDBLocalSky.limits);
-            saveNode(ParmDBLocalSky);
         }*/
     }
     

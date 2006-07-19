@@ -40,7 +40,7 @@ import org.apache.log4j.Logger;
 
 /**
  * Panel for BBS strategy configuration
- * 
+ *
  * @author pompert
  * @version $Id$
  * @created 11-07-2006, 13:37
@@ -100,12 +100,13 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
                     aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
-                    setField(aParam,aNode);
-                    
+                    setField(itsNode,aParam,aNode);
                     //we need to get all the childs from the following nodes as well.
-                }else if (LofarUtils.keyName(aNode.name).equals("ParmDB")) {
+                }else if (LofarUtils.keyName(aNode.name).equals("WorkDomainSize")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                }else if (LofarUtils.keyName(aNode.name).equals("BBDB")) {
+                }else if (LofarUtils.keyName(aNode.name).equals("Integration")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Correlation")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
@@ -178,7 +179,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 if (aHWNode.leaf) {
                     aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
                 }
-                setField(aParam,aHWNode);
+                setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
             logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
@@ -187,18 +188,13 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void restoreBBSStrategyPanel() {
-        /*
-        AMCServerHostText.setText(itsAMCServerHost.limits);
-        StrategySteps;
-        StrategySteps;
-        StrategyInputData;
-        StrategyCorrelationSelection;
-        StrategyCorrelationType;
-        StrategyWDSFrequency;
-        StrategyWDSTime;
-        StrategyIntegrationFrequency;
-        StrategyIntegrationTime;
-         */
+        this.inputDataText.setText(StrategyInputData.limits);
+        this.wdsFrequencyText.setText(StrategyWDSFrequency.limits);
+        this.wdsTimeText.setText(StrategyWDSTime.limits);
+        this.integrationFrequencyText.setText(StrategyIntegrationFrequency.limits);
+        this.integrationTimeText.setText(StrategyIntegrationTime.limits);
+        this.correlationSelectionBox.setSelectedItem(StrategyCorrelationSelection.limits);
+        //TODO: add other values accordingly.
     }
     
     
@@ -230,84 +226,76 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     /* Set's the different fields in the GUI */
-    private void setField(jOTDBparam aParam, jOTDBnode aNode) {
+    private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
         // OLAP_HW settings
         if (aParam==null) {
             return;
         }
         boolean isRef = LofarUtils.isReference(aNode.limits);
         String aKeyName = LofarUtils.keyName(aNode.name);
-        /*
-        if (aKeyName.equals("DataSet")) {
-            this.BBSDatasetText.setToolTipText(aParam.description);
-            this.dataSet=aNode;
-            
-            if (isRef && aParam != null) {
-                this.BBSDatasetDeRefText.setVisible(true);
-                BBSDatasetText.setText(aNode.limits);
-                BBSDatasetDeRefText.setText(aParam.limits);
-            } else {
-                BBSDatasetDeRefText.setVisible(false);
-                BBSDatasetDeRefText.setText("");
-                BBSDatasetText.setText(aNode.limits);
+        String parentName = String.valueOf(parent.name);
+        
+        if(parentName.equals("Strategy")){
+            if (aKeyName.equals("InputData")) {
+                this.inputDataText.setToolTipText(aParam.description);
+                this.StrategyInputData=aNode;
+                
+                if (isRef && aParam != null) {
+                    inputDataText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputDataText.setText(aNode.limits);
+                }
             }
-        }else if (aKeyName.equals("DBName")) {
-            this.BBDBDBNameText.setToolTipText(aParam.description);
-            this.BBDBDBName=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBNameText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBNameText.setText(aNode.limits);
+        } else if(parentName.equals("WorkDomainSize")){
+            if (aKeyName.equals("Freq")) {
+                this.wdsFrequencyText.setToolTipText(aParam.description);
+                this.StrategyWDSFrequency=aNode;
+                
+                if (isRef && aParam != null) {
+                    wdsFrequencyText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    wdsFrequencyText.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("Time")) {
+                this.wdsTimeText.setToolTipText(aParam.description);
+                this.StrategyWDSTime=aNode;
+                
+                if (isRef && aParam != null) {
+                    wdsTimeText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    wdsTimeText.setText(aNode.limits);
+                }
             }
-        }else if (aKeyName.equals("Host")) {
-            this.BBDBHostText.setToolTipText(aParam.description);
-            this.BBDBHost=aNode;
-            if (isRef && aParam != null) {
-                BBDBHostText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBHostText.setText(aNode.limits);
+        } else if(parentName.equals("Integration")){
+            if (aKeyName.equals("Freq")) {
+                this.integrationFrequencyText.setToolTipText(aParam.description);
+                this.StrategyIntegrationFrequency=aNode;
+                
+                if (isRef && aParam != null) {
+                    integrationFrequencyText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    integrationFrequencyText.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("Time")) {
+                this.integrationTimeText.setToolTipText(aParam.description);
+                this.StrategyIntegrationTime=aNode;
+                
+                if (isRef && aParam != null) {
+                    integrationTimeText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    integrationTimeText.setText(aNode.limits);
+                }
             }
-        }else if (aKeyName.equals("Port")) {
-            this.BBDBPortText.setToolTipText(aParam.description);
-            this.BBDBPort=aNode;
-            if (isRef && aParam != null) {
-                BBDBPortText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBPortText.setText(aNode.limits);
+        } else if(parentName.equals("Correlation")){
+            if (aKeyName.equals("Selection")) {
+                this.correlationSelectionBox.setToolTipText(aParam.description);
+                this.StrategyCorrelationSelection=aNode;
+                this.correlationSelectionBox.setSelectedItem(aParam.limits);
+                logger.trace("Correlation selection will be :"+this.correlationSelectionBox.getSelectedItem().toString());
+            } else if (aKeyName.equals("Type")) {
+                //TODO: Implement
             }
-        }else if (aKeyName.equals("UserName")) {
-            this.BBDBDBUsernameText.setToolTipText(aParam.description);
-            this.BBDBUsername=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBUsernameText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBUsernameText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("PassWord")) {
-            this.BBDBDBPasswordText.setToolTipText(aParam.description);
-            this.BBDBPassword=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBPasswordText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBPasswordText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("Instrument")) {
-            this.ParmDBInstrumentText.setToolTipText(aParam.description);
-            this.ParmDBInstrument=aNode;
-            if (isRef && aParam != null) {
-                ParmDBInstrumentText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                ParmDBInstrumentText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("LocalSky")) {
-            this.ParmDBLocalSkyText.setToolTipText(aParam.description);
-            this.ParmDBLocalSky=aNode;
-            if (isRef && aParam != null) {
-                ParmDBLocalSkyText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                ParmDBLocalSkyText.setText(aNode.limits);
-            }
-        }*/
+        }
     }
     
     /** saves the given param back to the database
@@ -367,40 +355,39 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void saveInput() {
-        /*
-        if (this.dataSet != null && !this.BBSDatasetText.getText().equals(dataSet.limits)) {
-            dataSet.limits = BBSDatasetText.getText();
-            logger.trace("Variable BBS ("+dataSet.name+"//"+dataSet.treeID()+"//"+dataSet.nodeID()+"//"+dataSet.parentID()+"//"+dataSet.paramDefID()+") from value ("+BBSDatasetText.getText()+") updated to :"+dataSet.limits);
-            saveNode(dataSet);
-        } else if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
-            BBDBHost.limits = BBDBHostText.getText();
-            logger.trace("Variable BBS ("+BBDBHost.name+"//"+BBDBHost.treeID()+"//"+BBDBHost.nodeID()+"//"+BBDBHost.parentID()+"//"+BBDBHost.paramDefID()+") updated to :"+BBDBHost.limits);
-            saveNode(BBDBHost);
-        } else if (this.BBDBPort != null && !this.BBDBPortText.getText().equals(BBDBPort.limits)) {
-            BBDBPort.limits = BBDBPortText.getText();
-            logger.trace("Variable BBS ("+BBDBPort.name+"//"+BBDBPort.treeID()+"//"+BBDBPort.nodeID()+"//"+BBDBPort.parentID()+"//"+BBDBPort.paramDefID()+") updated to :"+BBDBPort.limits);
-            saveNode(BBDBPort);
-        } else if (this.BBDBDBName != null && !this.BBDBDBNameText.getText().equals(BBDBDBName.limits)) {
-            BBDBDBName.limits = BBDBDBNameText.getText();
-            logger.trace("Variable BBS ("+BBDBDBName.name+"//"+BBDBDBName.treeID()+"//"+BBDBDBName.nodeID()+"//"+BBDBDBName.parentID()+"//"+BBDBDBName.paramDefID()+") updated to :"+BBDBDBName.limits);
-            saveNode(BBDBDBName);
-        } else if (this.BBDBUsername != null && !this.BBDBDBUsernameText.getText().equals(BBDBUsername.limits)) {
-            BBDBUsername.limits = BBDBDBUsernameText.getText();
-            logger.trace("Variable BBS ("+BBDBUsername.name+"//"+BBDBUsername.treeID()+"//"+BBDBUsername.nodeID()+"//"+BBDBUsername.parentID()+"//"+BBDBUsername.paramDefID()+") updated to :"+BBDBUsername.limits);
-            saveNode(BBDBUsername);
-        } else if (this.BBDBPassword != null && !this.BBDBDBPasswordText.getText().equals(BBDBPassword.limits)) {
-            BBDBPassword.limits = BBDBDBPasswordText.getText();
-            logger.trace("Variable BBS ("+BBDBPassword.name+"//"+BBDBPassword.treeID()+"//"+BBDBPassword.nodeID()+"//"+BBDBPassword.parentID()+"//"+BBDBPassword.paramDefID()+") updated to :"+BBDBPassword.limits);
-            saveNode(BBDBPassword);
-        } else if (this.ParmDBInstrument != null && !this.ParmDBInstrumentText.getText().equals(ParmDBInstrument.limits)) {
-            ParmDBInstrument.limits = ParmDBInstrumentText.getText();
-            logger.trace("Variable BBS ("+ParmDBInstrument.name+"//"+ParmDBInstrument.treeID()+"//"+ParmDBInstrument.nodeID()+"//"+ParmDBInstrument.parentID()+"//"+ParmDBInstrument.paramDefID()+") updated to :"+ParmDBInstrument.limits);
-            saveNode(ParmDBInstrument);
-        } else if (this.ParmDBLocalSky != null && !this.ParmDBLocalSkyText.getText().equals(ParmDBLocalSky.limits)) {
-            ParmDBLocalSky.limits = ParmDBLocalSkyText.getText();
-            logger.trace("Variable BBS ("+ParmDBLocalSky.name+"//"+ParmDBLocalSky.treeID()+"//"+ParmDBLocalSky.nodeID()+"//"+ParmDBLocalSky.parentID()+"//"+ParmDBLocalSky.paramDefID()+") updated to :"+ParmDBLocalSky.limits);
-            saveNode(ParmDBLocalSky);
-        }*/
+      
+        if (this.StrategyInputData != null && !this.inputDataText.getText().equals(StrategyInputData.limits)) {
+            StrategyInputData.limits = inputDataText.getText();
+            logger.trace("Variable BBS Strategy ("+StrategyInputData.name+"//"+StrategyInputData.treeID()+"//"+StrategyInputData.nodeID()+"//"+StrategyInputData.parentID()+"//"+StrategyInputData.paramDefID()+") from value ("+inputDataText.getText()+") updated to :"+StrategyInputData.limits);
+            saveNode(StrategyInputData);
+        } 
+        if (this.StrategyWDSFrequency != null && !this.wdsFrequencyText.getText().equals(StrategyWDSFrequency.limits)) {
+            StrategyWDSFrequency.limits = wdsFrequencyText.getText();
+            logger.trace("Variable BBS Strategy ("+StrategyWDSFrequency.name+"//"+StrategyWDSFrequency.treeID()+"//"+StrategyWDSFrequency.nodeID()+"//"+StrategyWDSFrequency.parentID()+"//"+StrategyWDSFrequency.paramDefID()+") updated to :"+StrategyWDSFrequency.limits);
+            saveNode(StrategyWDSFrequency);
+        } 
+        if (this.StrategyWDSTime != null && !this.wdsTimeText.getText().equals(StrategyWDSTime.limits)) {
+            StrategyWDSTime.limits = wdsTimeText.getText();
+            logger.trace("Variable BBS Strategy ("+StrategyWDSTime.name+"//"+StrategyWDSTime.treeID()+"//"+StrategyWDSTime.nodeID()+"//"+StrategyWDSTime.parentID()+"//"+StrategyWDSTime.paramDefID()+") updated to :"+StrategyWDSTime.limits);
+            saveNode(StrategyWDSTime);
+        } 
+        if (this.StrategyIntegrationFrequency != null && !this.integrationFrequencyText.getText().equals(StrategyIntegrationFrequency.limits)) {
+            StrategyIntegrationFrequency.limits = integrationFrequencyText.getText();
+            logger.trace("Variable BBS Strategy ("+StrategyIntegrationFrequency.name+"//"+StrategyIntegrationFrequency.treeID()+"//"+StrategyIntegrationFrequency.nodeID()+"//"+StrategyIntegrationFrequency.parentID()+"//"+StrategyIntegrationFrequency.paramDefID()+") updated to :"+StrategyIntegrationFrequency.limits);
+            saveNode(StrategyIntegrationFrequency);
+        } 
+        if (this.StrategyIntegrationTime != null && !this.integrationTimeText.getText().equals(StrategyIntegrationTime.limits)) {
+            StrategyIntegrationTime.limits = integrationTimeText.getText();
+            logger.trace("Variable BBS Strategy ("+StrategyIntegrationTime.name+"//"+StrategyIntegrationTime.treeID()+"//"+StrategyIntegrationTime.nodeID()+"//"+StrategyIntegrationTime.parentID()+"//"+StrategyIntegrationTime.paramDefID()+") updated to :"+StrategyIntegrationTime.limits);
+            saveNode(StrategyIntegrationTime);
+        }
+        if (this.StrategyCorrelationSelection != null && !this.correlationSelectionBox.getSelectedItem().toString().equals(StrategyCorrelationSelection.limits)) {
+            logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") was :"+StrategyCorrelationSelection.limits);
+            StrategyCorrelationSelection.limits = correlationSelectionBox.getSelectedItem().toString();
+            logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") updated to :"+StrategyCorrelationSelection.limits);
+            saveNode(StrategyCorrelationSelection);
+        }
+        //TODO: Other values accordingly
     }
     
     
@@ -672,13 +659,13 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save Settings") {
             saveInput();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
-                
+    
     private void stationsUseAllCheckboxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_stationsUseAllCheckboxStateChanged
         if(this.stationsUseAllCheckbox.isSelected()){
             this.stationsList.setBackground(Color.LIGHT_GRAY);
@@ -688,11 +675,11 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.stationsList.setEnabled(true);
         }
     }//GEN-LAST:event_stationsUseAllCheckboxStateChanged
-                    
+    
     private void strategyRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_strategyRevertButtonActionPerformed
         this.restoreBBSStrategyPanel();
     }//GEN-LAST:event_strategyRevertButtonActionPerformed
-        
+    
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
     private Vector<jOTDBparam> itsParamList;
