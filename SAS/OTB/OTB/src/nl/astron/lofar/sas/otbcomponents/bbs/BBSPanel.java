@@ -1,5 +1,5 @@
 /*
- * OLAPConficPanel.java
+ *  BBSPanel.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -258,15 +258,20 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         String aKeyName = LofarUtils.keyName(aNode.name);
         
         if (aKeyName.equals("DataSet")) {
-            this.BBSDatasetText.setToolTipText(aNode.description);
+            this.BBSDatasetText.setToolTipText(aParam.description);
             this.dataSet=aNode;
+            
             if (isRef && aParam != null) {
-                BBSDatasetText.setText(aNode.limits + " : " + aParam.limits);
+                this.BBSDatasetDeRefText.setVisible(true);
+                BBSDatasetText.setText(aNode.limits);
+                BBSDatasetDeRefText.setText(aParam.limits);
             } else {
+                BBSDatasetDeRefText.setVisible(false);
+                BBSDatasetDeRefText.setText("");
                 BBSDatasetText.setText(aNode.limits);
             }
         }else if (aKeyName.equals("DBName")) {
-            this.BBDBDBNameText.setToolTipText(aNode.description);
+            this.BBDBDBNameText.setToolTipText(aParam.description);
             this.BBDBDBName=aNode;
             if (isRef && aParam != null) {
                 BBDBDBNameText.setText(aNode.limits + " : " + aParam.limits);
@@ -274,7 +279,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 BBDBDBNameText.setText(aNode.limits);
             }
         }else if (aKeyName.equals("Host")) {
-            this.BBDBHostText.setToolTipText(aNode.description);
+            this.BBDBHostText.setToolTipText(aParam.description);
             this.BBDBHost=aNode;
             if (isRef && aParam != null) {
                 BBDBHostText.setText(aNode.limits + " : " + aParam.limits);
@@ -282,7 +287,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 BBDBHostText.setText(aNode.limits);
             }
         }else if (aKeyName.equals("Port")) {
-            this.BBDBPortText.setToolTipText(aNode.description);
+            this.BBDBPortText.setToolTipText(aParam.description);
             this.BBDBPort=aNode;
             if (isRef && aParam != null) {
                 BBDBPortText.setText(aNode.limits + " : " + aParam.limits);
@@ -290,7 +295,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 BBDBPortText.setText(aNode.limits);
             }
         }else if (aKeyName.equals("UserName")) {
-            this.BBDBDBUsernameText.setToolTipText(aNode.description);
+            this.BBDBDBUsernameText.setToolTipText(aParam.description);
             this.BBDBUsername=aNode;
             if (isRef && aParam != null) {
                 BBDBDBUsernameText.setText(aNode.limits + " : " + aParam.limits);
@@ -298,7 +303,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 BBDBDBUsernameText.setText(aNode.limits);
             }
         }else if (aKeyName.equals("PassWord")) {
-            this.BBDBDBPasswordText.setToolTipText(aNode.description);
+            this.BBDBDBPasswordText.setToolTipText(aParam.description);
             this.BBDBPassword=aNode;
             if (isRef && aParam != null) {
                 BBDBDBPasswordText.setText(aNode.limits + " : " + aParam.limits);
@@ -306,7 +311,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 BBDBDBPasswordText.setText(aNode.limits);
             }
         }else if (aKeyName.equals("Instrument")) {
-            this.ParmDBInstrumentText.setToolTipText(aNode.description);
+            this.ParmDBInstrumentText.setToolTipText(aParam.description);
             this.ParmDBInstrument=aNode;
             if (isRef && aParam != null) {
                 ParmDBInstrumentText.setText(aNode.limits + " : " + aParam.limits);
@@ -314,7 +319,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 ParmDBInstrumentText.setText(aNode.limits);
             }
         }else if (aKeyName.equals("LocalSky")) {
-            this.ParmDBLocalSkyText.setToolTipText(aNode.description);
+            this.ParmDBLocalSkyText.setToolTipText(aParam.description);
             this.ParmDBLocalSky=aNode;
             if (isRef && aParam != null) {
                 ParmDBLocalSkyText.setText(aNode.limits + " : " + aParam.limits);
@@ -343,7 +348,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public void enableButtons(boolean enabled) {
         this.enableOverviewButtons(enabled);
-        this.enableDetailButtons(enabled);
     }
     
     /** Sets the buttons visible/invisible
@@ -352,7 +356,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public void setButtonsVisible(boolean visible) {
         this.setOverviewButtonsVisible(visible);
-        this.setDetailsButtonsVisible(visible);
     }
     private void enableOverviewButtons(boolean enabled) {
         this.configurationRevertButton.setEnabled(enabled);
@@ -362,49 +365,47 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         this.configurationRevertButton.setVisible(visible);
     }
     
-    private void enableDetailButtons(boolean enabled) {
-        this.strategyRevertButton.setEnabled(enabled);
-    }
-    
-    private void setDetailsButtonsVisible(boolean visible) {
-        this.strategyRevertButton.setVisible(visible);
-    }
-    
-    
     /** Enables/disables the complete form
      *
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
         enableOverviewButtons(enabled);
-        enableDetailButtons(enabled);
     }
     
     private void saveInput() {
        
         if (this.dataSet != null && !this.BBSDatasetText.getText().equals(dataSet.limits)) {
             dataSet.limits = BBSDatasetText.getText();
+            logger.trace("Variable BBS ("+dataSet.name+"//"+dataSet.treeID()+"//"+dataSet.nodeID()+"//"+dataSet.parentID()+"//"+dataSet.paramDefID()+") from value ("+BBSDatasetText.getText()+") updated to :"+dataSet.limits);
             saveNode(dataSet);
         } else if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
             BBDBHost.limits = BBDBHostText.getText();
+            logger.trace("Variable BBS ("+BBDBHost.name+"//"+BBDBHost.treeID()+"//"+BBDBHost.nodeID()+"//"+BBDBHost.parentID()+"//"+BBDBHost.paramDefID()+") updated to :"+BBDBHost.limits);
             saveNode(BBDBHost);
         } else if (this.BBDBPort != null && !this.BBDBPortText.getText().equals(BBDBPort.limits)) {
             BBDBPort.limits = BBDBPortText.getText();
+            logger.trace("Variable BBS ("+BBDBPort.name+"//"+BBDBPort.treeID()+"//"+BBDBPort.nodeID()+"//"+BBDBPort.parentID()+"//"+BBDBPort.paramDefID()+") updated to :"+BBDBPort.limits);
             saveNode(BBDBPort);
         } else if (this.BBDBDBName != null && !this.BBDBDBNameText.getText().equals(BBDBDBName.limits)) {
             BBDBDBName.limits = BBDBDBNameText.getText();
+            logger.trace("Variable BBS ("+BBDBDBName.name+"//"+BBDBDBName.treeID()+"//"+BBDBDBName.nodeID()+"//"+BBDBDBName.parentID()+"//"+BBDBDBName.paramDefID()+") updated to :"+BBDBDBName.limits);
             saveNode(BBDBDBName);
         } else if (this.BBDBUsername != null && !this.BBDBDBUsernameText.getText().equals(BBDBUsername.limits)) {
             BBDBUsername.limits = BBDBDBUsernameText.getText();
+            logger.trace("Variable BBS ("+BBDBUsername.name+"//"+BBDBUsername.treeID()+"//"+BBDBUsername.nodeID()+"//"+BBDBUsername.parentID()+"//"+BBDBUsername.paramDefID()+") updated to :"+BBDBUsername.limits);
             saveNode(BBDBUsername);
         } else if (this.BBDBPassword != null && !this.BBDBDBPasswordText.getText().equals(BBDBPassword.limits)) {
             BBDBPassword.limits = BBDBDBPasswordText.getText();
+            logger.trace("Variable BBS ("+BBDBPassword.name+"//"+BBDBPassword.treeID()+"//"+BBDBPassword.nodeID()+"//"+BBDBPassword.parentID()+"//"+BBDBPassword.paramDefID()+") updated to :"+BBDBPassword.limits);
             saveNode(BBDBPassword);
         } else if (this.ParmDBInstrument != null && !this.ParmDBInstrumentText.getText().equals(ParmDBInstrument.limits)) {
             ParmDBInstrument.limits = ParmDBInstrumentText.getText();
+            logger.trace("Variable BBS ("+ParmDBInstrument.name+"//"+ParmDBInstrument.treeID()+"//"+ParmDBInstrument.nodeID()+"//"+ParmDBInstrument.parentID()+"//"+ParmDBInstrument.paramDefID()+") updated to :"+ParmDBInstrument.limits);
             saveNode(ParmDBInstrument);
         } else if (this.ParmDBLocalSky != null && !this.ParmDBLocalSkyText.getText().equals(ParmDBLocalSky.limits)) {
             ParmDBLocalSky.limits = ParmDBLocalSkyText.getText();
+            logger.trace("Variable BBS ("+ParmDBLocalSky.name+"//"+ParmDBLocalSky.treeID()+"//"+ParmDBLocalSky.nodeID()+"//"+ParmDBLocalSky.parentID()+"//"+ParmDBLocalSky.paramDefID()+") updated to :"+ParmDBLocalSky.limits);
             saveNode(ParmDBLocalSky);
         }
     }
@@ -440,52 +441,8 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         ParmDBLocalSkyLabel = new javax.swing.JLabel();
         ParmDBLocalSkyText = new javax.swing.JTextField();
         configurationRevertButton = new javax.swing.JButton();
-        configurationSaveButton = new javax.swing.JButton();
-        BBSStrategyPanel = new javax.swing.JPanel();
-        strategyScrollPane = new javax.swing.JScrollPane();
-        strategyPanel = new javax.swing.JPanel();
-        inputDataLabel = new javax.swing.JLabel();
-        inputDataText = new javax.swing.JTextField();
-        strategyRevertButton = new javax.swing.JButton();
-        stationsPanel = new javax.swing.JPanel();
-        stationsScrollPane = new javax.swing.JScrollPane();
-        stationsList = new javax.swing.JList();
-        stationsModPanel = new javax.swing.JPanel();
-        stationsUseAllCheckbox = new javax.swing.JCheckBox();
-        addStationButton = new javax.swing.JButton();
-        deleteStationButton = new javax.swing.JButton();
-        stepsPanel = new javax.swing.JPanel();
-        stepsScrollPane = new javax.swing.JScrollPane();
-        stepsTree = new javax.swing.JTree();
-        stepsModsPanel = new javax.swing.JPanel();
-        addStepButton = new javax.swing.JButton();
-        removeStepButton = new javax.swing.JButton();
-        modifyStepButton = new javax.swing.JButton();
-        loadTemplateStepButton = new javax.swing.JButton();
-        stepsMoveUpDownPanel = new javax.swing.JPanel();
-        moveStepUpButton = new javax.swing.JButton();
-        moveStepDownButton = new javax.swing.JButton();
-        correlationPanel = new javax.swing.JPanel();
-        correlationSelectionLabel = new javax.swing.JLabel();
-        correlationSelectionBox = new javax.swing.JComboBox();
-        correlationTypeLabel = new javax.swing.JLabel();
-        correlationTypeScrollPane = new javax.swing.JScrollPane();
-        correlationTypeList = new javax.swing.JList();
-        workDomainSizePanel = new javax.swing.JPanel();
-        wdsFrequencyLabel = new javax.swing.JLabel();
-        wdsFrequencyText = new javax.swing.JTextField();
-        wdsFrequencyUnitLabel = new javax.swing.JLabel();
-        wdsTimeLabel = new javax.swing.JLabel();
-        wdsTimeText = new javax.swing.JTextField();
-        wdsTimeUnitLabel = new javax.swing.JLabel();
-        integrationIntervalPanel = new javax.swing.JPanel();
-        integrationFrequencyLabel = new javax.swing.JLabel();
-        integrationFrequencyText = new javax.swing.JTextField();
-        integrationFrequencyUnitLabel = new javax.swing.JLabel();
-        integrationTimeLabel = new javax.swing.JLabel();
-        integrationTimeText = new javax.swing.JTextField();
-        integrationTimeUnitLabel = new javax.swing.JLabel();
-        strategySaveButton = new javax.swing.JButton();
+        BBSDatasetDeRefText = new javax.swing.JTextField();
+        BBSStrategyPanel = new nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel();
         BBSStepExplorerPanel = new javax.swing.JPanel();
         stepExplorerScrollPanel = new javax.swing.JScrollPane();
         stepExplorerPanel = new javax.swing.JPanel();
@@ -662,230 +619,14 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         BBSGlobalSettingsPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 330, 81, -1));
 
-        configurationSaveButton.setText("Save");
-        configurationSaveButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                configurationSaveButtonActionPerformed(evt);
-            }
-        });
-
-        BBSGlobalSettingsPanel.add(configurationSaveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 330, -1, -1));
+        BBSDatasetDeRefText.setEditable(false);
+        BBSDatasetDeRefText.setToolTipText("Dereferenced and actually used value.");
+        BBSDatasetDeRefText.setMaximumSize(new java.awt.Dimension(440, 19));
+        BBSDatasetDeRefText.setMinimumSize(new java.awt.Dimension(440, 19));
+        BBSDatasetDeRefText.setPreferredSize(new java.awt.Dimension(440, 19));
+        BBSGlobalSettingsPanel.add(BBSDatasetDeRefText, new org.netbeans.lib.awtextra.AbsoluteConstraints(360, 30, 180, -1));
 
         jTabbedPane1.addTab("Global Settings", BBSGlobalSettingsPanel);
-
-        BBSStrategyPanel.setLayout(new java.awt.BorderLayout());
-
-        strategyPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        inputDataLabel.setText("Input Data Column:");
-        strategyPanel.add(inputDataLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, -1, -1));
-
-        inputDataText.setToolTipText("Name of the column in the measurement set that contains the input data");
-        strategyPanel.add(inputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 30, 120, -1));
-
-        strategyRevertButton.setText("Revert");
-        strategyRevertButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                strategyRevertButtonActionPerformed(evt);
-            }
-        });
-
-        strategyPanel.add(strategyRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 500, -1, -1));
-
-        stationsPanel.setLayout(new java.awt.BorderLayout());
-
-        stationsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Station Names"));
-        stationsPanel.setToolTipText("Identifiers of the participating stations.");
-        stationsList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "1", "2", "3", "4", "5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        stationsList.setToolTipText("Identifiers of the participating stations.");
-        stationsScrollPane.setViewportView(stationsList);
-
-        stationsPanel.add(stationsScrollPane, java.awt.BorderLayout.CENTER);
-
-        stationsModPanel.setLayout(new java.awt.GridBagLayout());
-
-        stationsUseAllCheckbox.setText("Use all stations");
-        stationsUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        stationsUseAllCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        stationsUseAllCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                stationsUseAllCheckboxStateChanged(evt);
-            }
-        });
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsModPanel.add(stationsUseAllCheckbox, gridBagConstraints);
-
-        addStationButton.setText("A");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsModPanel.add(addStationButton, gridBagConstraints);
-
-        deleteStationButton.setText("D");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsModPanel.add(deleteStationButton, gridBagConstraints);
-
-        stationsPanel.add(stationsModPanel, java.awt.BorderLayout.SOUTH);
-
-        strategyPanel.add(stationsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 150, 220, 330));
-
-        stepsPanel.setLayout(new java.awt.BorderLayout());
-
-        stepsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Steps"));
-        stepsPanel.setToolTipText("The names of the steps that compose the strategy.");
-        stepsPanel.setPreferredSize(new java.awt.Dimension(100, 100));
-        stepsTree.setToolTipText("The names of the steps that compose the strategy.");
-        stepsScrollPane.setViewportView(stepsTree);
-
-        stepsPanel.add(stepsScrollPane, java.awt.BorderLayout.CENTER);
-
-        stepsModsPanel.setLayout(new java.awt.GridBagLayout());
-
-        stepsModsPanel.setMinimumSize(new java.awt.Dimension(100, 30));
-        stepsModsPanel.setPreferredSize(new java.awt.Dimension(100, 30));
-        addStepButton.setText("Add");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepsModsPanel.add(addStepButton, gridBagConstraints);
-
-        removeStepButton.setText("Delete");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepsModsPanel.add(removeStepButton, gridBagConstraints);
-
-        modifyStepButton.setText("Modify");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepsModsPanel.add(modifyStepButton, gridBagConstraints);
-
-        loadTemplateStepButton.setText("Load from template");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 3;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepsModsPanel.add(loadTemplateStepButton, gridBagConstraints);
-
-        stepsPanel.add(stepsModsPanel, java.awt.BorderLayout.SOUTH);
-
-        stepsMoveUpDownPanel.setLayout(new java.awt.GridBagLayout());
-
-        stepsMoveUpDownPanel.setMinimumSize(new java.awt.Dimension(50, 60));
-        stepsMoveUpDownPanel.setPreferredSize(new java.awt.Dimension(50, 60));
-        moveStepUpButton.setText("U");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepsMoveUpDownPanel.add(moveStepUpButton, gridBagConstraints);
-
-        moveStepDownButton.setText("D");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepsMoveUpDownPanel.add(moveStepDownButton, gridBagConstraints);
-
-        stepsPanel.add(stepsMoveUpDownPanel, java.awt.BorderLayout.EAST);
-
-        strategyPanel.add(stepsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 150, 400, 330));
-
-        correlationPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        correlationPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Correlation"));
-        correlationSelectionLabel.setText("Selection :");
-        correlationPanel.add(correlationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
-
-        correlationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AUTO", "CROSS", "ALL" }));
-        correlationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
-        correlationPanel.add(correlationSelectionBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 80, -1));
-
-        correlationTypeLabel.setText("Type :");
-        correlationPanel.add(correlationTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, -1, -1));
-
-        correlationTypeList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "XX", "XY", "YX", "YY" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        correlationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY. \n\nAs an example, suppose you select 'XX' here and set Selection to AUTO, then the X polarization signal of each station is correlated with itself. However if we set Selection to CROSS, then the X polarization of station A is correlated with the X polarization of station B for each base line.");
-        correlationTypeScrollPane.setViewportView(correlationTypeList);
-
-        correlationPanel.add(correlationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 50, 80));
-
-        strategyPanel.add(correlationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 20, 170, 120));
-
-        workDomainSizePanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        workDomainSizePanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Work Domain Size"));
-        workDomainSizePanel.setToolTipText("Size of the work domain in frequency and time. A work domain represents an amount of input data that is loaded into memory and processed as a single block. A large work domain size should reduce the overhead due to disk access.");
-        wdsFrequencyLabel.setText("Frequency :");
-        workDomainSizePanel.add(wdsFrequencyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, -1, -1));
-
-        wdsFrequencyText.setToolTipText("Size of the work domain in frequency");
-        workDomainSizePanel.add(wdsFrequencyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 20, 80, -1));
-
-        wdsFrequencyUnitLabel.setText("Hz");
-        workDomainSizePanel.add(wdsFrequencyUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 20, -1, -1));
-
-        wdsTimeLabel.setText("Time :");
-        workDomainSizePanel.add(wdsTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, -1, -1));
-
-        wdsTimeText.setToolTipText("Size of the work work domain in time");
-        workDomainSizePanel.add(wdsTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 80, -1));
-
-        wdsTimeUnitLabel.setText("s");
-        workDomainSizePanel.add(wdsTimeUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 50, 10, -1));
-
-        strategyPanel.add(workDomainSizePanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 60, 220, 80));
-
-        integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Integration"));
-        integrationIntervalPanel.setToolTipText("Cell size for integration. Allows the user to perform operations on a lower resolution, which should be faster in most cases");
-        integrationFrequencyLabel.setText("Freq. Interval :");
-        integrationIntervalPanel.add(integrationFrequencyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, -1));
-
-        integrationIntervalPanel.add(integrationFrequencyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 20, 70, -1));
-
-        integrationFrequencyUnitLabel.setText("Hz");
-        integrationIntervalPanel.add(integrationFrequencyUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 20, -1, -1));
-
-        integrationTimeLabel.setText("Time Interval :");
-        integrationIntervalPanel.add(integrationTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, -1));
-
-        integrationIntervalPanel.add(integrationTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 50, 70, -1));
-
-        integrationTimeUnitLabel.setText("s");
-        integrationIntervalPanel.add(integrationTimeUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 50, 10, -1));
-
-        strategyPanel.add(integrationIntervalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 60, 220, 80));
-
-        strategySaveButton.setText("Save");
-        strategySaveButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                strategySaveButtonActionPerformed(evt);
-            }
-        });
-
-        strategyPanel.add(strategySaveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 500, -1, -1));
-
-        strategyScrollPane.setViewportView(strategyPanel);
-
-        BBSStrategyPanel.add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
         jTabbedPane1.addTab("Strategy", BBSStrategyPanel);
 
@@ -1313,29 +1054,11 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
     }// </editor-fold>//GEN-END:initComponents
-    
-    private void configurationSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationSaveButtonActionPerformed
-// TODO add your handling code here:
-    }//GEN-LAST:event_configurationSaveButtonActionPerformed
-    
-    private void strategySaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_strategySaveButtonActionPerformed
-// TODO add your handling code here:
-    }//GEN-LAST:event_strategySaveButtonActionPerformed
-    
+            
     private void stepExplorerSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepExplorerSaveButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_stepExplorerSaveButtonActionPerformed
-    
-    private void stationsUseAllCheckboxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_stationsUseAllCheckboxStateChanged
-        if(this.stationsUseAllCheckbox.isSelected()){
-            this.stationsList.setBackground(Color.LIGHT_GRAY);
-            this.stationsList.setEnabled(false);
-        }else{
-            this.stationsList.setBackground(Color.WHITE);
-            this.stationsList.setEnabled(true);
-        }
-    }//GEN-LAST:event_stationsUseAllCheckboxStateChanged
-    
+        
     private void stepExplorerRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepExplorerRevertButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_stepExplorerRevertButtonActionPerformed
@@ -1358,11 +1081,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private void configurationRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationRevertButtonActionPerformed
         this.restoreBBSGlobalSettingsPanel();
     }//GEN-LAST:event_configurationRevertButtonActionPerformed
-    
-    private void strategyRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_strategyRevertButtonActionPerformed
-        this.restoreBBSStrategyPanel();
-    }//GEN-LAST:event_strategyRevertButtonActionPerformed
-    
+        
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save Settings") {
             saveInput();
@@ -1375,15 +1094,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     
     // Global Settings parameters
     private jOTDBnode dataSet;
-    private jOTDBnode StrategySteps;
-    private jOTDBnode StrategyStations;
-    private jOTDBnode StrategyInputData;
-    private jOTDBnode StrategyCorrelationSelection;
-    private jOTDBnode StrategyCorrelationType;
-    private jOTDBnode StrategyWDSFrequency;
-    private jOTDBnode StrategyWDSTime;
-    private jOTDBnode StrategyIntegrationFrequency;
-    private jOTDBnode StrategyIntegrationTime;
     
     private jOTDBnode BBDBHost;
     private jOTDBnode BBDBPort;
@@ -1406,11 +1116,12 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel BBDBPortLabel;
     private javax.swing.JTextField BBDBPortText;
     private javax.swing.JPanel BBDatabasePanel;
+    private javax.swing.JTextField BBSDatasetDeRefText;
     private javax.swing.JLabel BBSDatasetLabel;
     private javax.swing.JTextField BBSDatasetText;
     private javax.swing.JPanel BBSGlobalSettingsPanel;
     private javax.swing.JPanel BBSStepExplorerPanel;
-    private javax.swing.JPanel BBSStrategyPanel;
+    private nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel BBSStrategyPanel;
     private javax.swing.JPanel BaselineSelectionPanel;
     private javax.swing.JLabel ParmDBInstrumentLabel;
     private javax.swing.JTextField ParmDBInstrumentText;
@@ -1423,8 +1134,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton addSolvableParmButton1;
     private javax.swing.JButton addSourceButton;
     private javax.swing.JButton addSourceButton1;
-    private javax.swing.JButton addStationButton;
-    private javax.swing.JButton addStepButton;
     private javax.swing.JPanel baseLineCorrelationPanel;
     private javax.swing.JPanel baselineGlobalPanel;
     private javax.swing.JPanel baselineModsPanel;
@@ -1438,45 +1147,23 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JScrollPane blCorrelationTypeScrollPane;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JButton configurationRevertButton;
-    private javax.swing.JButton configurationSaveButton;
-    private javax.swing.JPanel correlationPanel;
-    private javax.swing.JComboBox correlationSelectionBox;
-    private javax.swing.JLabel correlationSelectionLabel;
-    private javax.swing.JLabel correlationTypeLabel;
-    private javax.swing.JList correlationTypeList;
-    private javax.swing.JScrollPane correlationTypeScrollPane;
     private javax.swing.JButton deleteBaseLineButton;
     private javax.swing.JButton deleteInstrumentModelButton;
     private javax.swing.JButton deleteSolvableParmButton;
     private javax.swing.JButton deleteSolvableParmButton1;
     private javax.swing.JButton deleteSourceButton1;
     private javax.swing.JButton deleteSourceButton2;
-    private javax.swing.JButton deleteStationButton;
     private javax.swing.JButton exploreFirstChildStepButton;
     private javax.swing.JButton exploreNextStepButton;
     private javax.swing.JButton exploreParentStepButton;
     private javax.swing.JButton explorePreviousStepButton;
-    private javax.swing.JLabel inputDataLabel;
-    private javax.swing.JTextField inputDataText;
-    private javax.swing.JLabel integrationFrequencyLabel;
-    private javax.swing.JTextField integrationFrequencyText;
-    private javax.swing.JLabel integrationFrequencyUnitLabel;
-    private javax.swing.JPanel integrationIntervalPanel;
-    private javax.swing.JLabel integrationTimeLabel;
-    private javax.swing.JTextField integrationTimeText;
-    private javax.swing.JLabel integrationTimeUnitLabel;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JButton loadTemplateStepButton;
     private javax.swing.JButton modifyBaseLineButton;
     private javax.swing.JButton modifyInstrumentModelButton;
     private javax.swing.JButton modifySolvableParmButton;
     private javax.swing.JButton modifySolvableParmButton1;
     private javax.swing.JButton modifySourceButton;
     private javax.swing.JButton modifySourceButton1;
-    private javax.swing.JButton modifyStepButton;
-    private javax.swing.JButton moveStepDownButton;
-    private javax.swing.JButton moveStepUpButton;
-    private javax.swing.JButton removeStepButton;
     private javax.swing.JPanel seOperationAttributeGroup1;
     private javax.swing.JPanel seOperationAttributeGroup2;
     private javax.swing.JPanel seOperationAttributeGroup3;
@@ -1500,11 +1187,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JList seSolvableParmList1;
     private javax.swing.JScrollPane seSolvableParmScrollPane;
     private javax.swing.JScrollPane seSolvableParmScrollPane1;
-    private javax.swing.JList stationsList;
-    private javax.swing.JPanel stationsModPanel;
-    private javax.swing.JPanel stationsPanel;
-    private javax.swing.JScrollPane stationsScrollPane;
-    private javax.swing.JCheckBox stationsUseAllCheckbox;
     private javax.swing.JPanel stepExplorerGlobalSources;
     private javax.swing.JList stepExplorerInstrumentModelList;
     private javax.swing.JPanel stepExplorerInstrumentModelModsPanel;
@@ -1530,22 +1212,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel stepExplorerSourcesPanel1;
     private javax.swing.JScrollPane stepExplorerSourcesScrollPane;
     private javax.swing.JScrollPane stepExplorerSourcesScrollPane1;
-    private javax.swing.JPanel stepsModsPanel;
-    private javax.swing.JPanel stepsMoveUpDownPanel;
-    private javax.swing.JPanel stepsPanel;
-    private javax.swing.JScrollPane stepsScrollPane;
-    private javax.swing.JTree stepsTree;
-    private javax.swing.JPanel strategyPanel;
-    private javax.swing.JButton strategyRevertButton;
-    private javax.swing.JButton strategySaveButton;
-    private javax.swing.JScrollPane strategyScrollPane;
-    private javax.swing.JLabel wdsFrequencyLabel;
-    private javax.swing.JTextField wdsFrequencyText;
-    private javax.swing.JLabel wdsFrequencyUnitLabel;
-    private javax.swing.JLabel wdsTimeLabel;
-    private javax.swing.JTextField wdsTimeText;
-    private javax.swing.JLabel wdsTimeUnitLabel;
-    private javax.swing.JPanel workDomainSizePanel;
     // End of variables declaration//GEN-END:variables
     
     /**
