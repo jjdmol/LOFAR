@@ -487,8 +487,6 @@ long treeAddNode(long parentId, int level, string text)
 void treeAddDatapoints(dyn_string names)
 {
   int namesIndex;
-  dyn_dyn_string elementNames;
-  dyn_dyn_int elementTypes;
   dyn_string addedDatapoints;
   string systemName;
   long addedNode = 0;
@@ -510,22 +508,23 @@ void treeAddDatapoints(dyn_string names)
       LOG_TRACE("Added root node: ", addedNode, systemName);
       insertDatapointNodeMapping(addedNode, systemName);
     }  
-    
     // go through the list of datapoint names
+    string aName;
     for (namesIndex = 1; namesIndex <= dynlen(names); namesIndex++)
     {
       dyn_int internalNodeMapping;
       dyn_string internalFullDPName;
+      aName = names[namesIndex];
 
       int pathIndex;
       dyn_string dpPathElements;
       string datapointName;
       int parentId;
       // remove the System part from the datapoint name
-      datapointName = dpSubStr(names[namesIndex], DPSUB_DP);
+      datapointName = dpSubStr(aName, DPSUB_DP);
       if (datapointName == "")
       {
-        datapointName = names[namesIndex];
+        datapointName = aName;
         // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
         int sepPos = strpos(datapointName, ":");
         if (sepPos >= 0)
@@ -536,16 +535,12 @@ void treeAddDatapoints(dyn_string names)
 
       // only add ENABLED datapoints
       dyn_string reference;
-      string dpName = names[namesIndex];
+      string dpName = aName;
       bool dpIsReference = false;
       checkForReference(dpName, reference, dpIsReference);
       if (dpIsReference) //If the dpName is a reference, use the original datapoint
       {
         LOG_DEBUG("DP is reference", dpName, reference[2]);
-      }
-      else
-      {
-        dpName = names[namesIndex];
       }
         
       // split the datapoint path in elements
@@ -590,20 +585,10 @@ void treeAddDatapoints(dyn_string names)
       if (navConfigCheckEnabled(dpName))
       {
         // get the datapoint structure
-        dynClear(elementNames);
-        dynClear(elementTypes);
-        dpIsReference = false;
-        checkForReference(names[namesIndex], reference, dpIsReference);
-        LOG_TRACE("dpTypeGet for: ", names[namesIndex]);
-        int TypeGetError = dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."), elementNames, elementTypes);
-        if (TypeGetError == -1) // the enabled doesn't exist, then the dpTypeName on names[Index]
-        {
-          dpTypeGet(dpTypeName(names[namesIndex]), elementNames, elementTypes);
-        }
-  
-        // add elements of this datapoint, if any, skip system stuff
-        if ((addedNode != 0) && (addingDPpart != systemName) && (dynlen(elementNames) > 1))
-        {
+        dyn_string elements = getDpTypeStructure(dpName);
+        dyn_string splittedElement;
+        if ((addedNode != 0) && (addingDPpart != systemName) && (dynlen(elements) > 1))
+        {          
           int         elementIndex;
           dyn_int     parentIds;
           dyn_string  parentNodes;
@@ -611,33 +596,34 @@ void treeAddDatapoints(dyn_string names)
           parentNodes[1] = "";
           
           string fullDPname;
-          // skip the first element in the array because it contains the datapoint type name
-          for (elementIndex = 2; elementIndex <= dynlen(elementNames); elementIndex++)
+          // skip the first element in the array because it contains the root element
+          for (elementIndex = 2; elementIndex <= dynlen(elements); elementIndex++)
           {
-            // every last item of each array contains an element name (see help on dpTypeGet())
-            // file:///opt/pvss/pvss2_v3.0/help/en_US.iso88591/WebHelp/ControlA_D/dpTypeGet.htm
-            int elementLevel = dynlen(elementNames[elementIndex]) - 1; // how deep is the element?
-            string elementName = elementNames[elementIndex][elementLevel + 1];
+            splittedElement = strsplit(elements[elementIndex], ".");
+            int elementLevel = dynlen(splittedElement) - 1; // how deep is the element?
+            string elementName = splittedElement[elementLevel + 1];
             if ("__" == substr(elementName, 0, 2)) //Check if the elementName contains reference info
             {
               if (strpos(addingDPpart, " ->") < 0)
               {
-	              dyn_string referenceContent;
-	              
-	              dpGet(addingDPpart + "." + elementName, referenceContent);
-	              for (int k = 1; k <= dynlen(referenceContent); k++)
-	              {
-	                dyn_string referenceSplit = strsplit(referenceContent[k], "=");
-	                string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
-	                g_referenceList[dynlen(g_referenceList) + 1] = referenceText + "=" + referenceSplit[2];
-	                names[dynlen(names) + 1] = referenceText;
-	                LOG_TRACE("Add reference: ", names[dynlen(names)]);
-	                // Because this is a reference, the DP's of the branche must be retrieved and
-	                // add to the dyn_string names, for correct build-up of the tree.
-	                dyn_string refResources = navConfigGetResources(referenceText, 2);
-	                dynAppend(names, refResources);
-	              }
-	            }
+                dyn_string referenceContent;
+                if (dpAccessable(addingDPpart + "." + elementName))
+                {
+                  dpGet(addingDPpart + "." + elementName, referenceContent);
+                }
+                for (int k = 1; k <= dynlen(referenceContent); k++)
+                {
+                  dyn_string referenceSplit = strsplit(referenceContent[k], "=");
+                  string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
+                  dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
+                  dynAppend(names, referenceText);
+                  LOG_TRACE("Add reference: ", referenceText);
+                  // Because this is a reference, the DP's of the branche must be retrieved and
+                  // add to the dyn_string names, for correct build-up of the tree.
+                  dyn_string refResources = navConfigGetResources(referenceText, 2);
+                  dynAppend(names, refResources);
+                }
+              }
             }
             else if (g_showDPE) //show elements?
             {            
@@ -662,6 +648,7 @@ void treeAddDatapoints(dyn_string names)
             }
           }
         }
+        
       }
       if (dynlen(internalNodeMapping) != 0)
       { 
@@ -1140,7 +1127,7 @@ void InitializeTree()
     fwTreeView_watchDog(); // prevent memory leak when closing controlling window
   }
   
-  // get top level resources. "" means no parent, 1 means: 1 level deep
+  // get top level resources. "" means root, 1 means: 1 level deep
   dyn_string resources = navConfigGetResources("", 2);
   LOG_DEBUG("adding resources: ", LOG_DYN(resources));
   treeAddDatapoints(resources);
@@ -1446,6 +1433,7 @@ TreeView_OnSelect(unsigned pos)
     }
     else
     {
+      LOG_INFO((parentDatapointIsReference ? "Is reference: " : "No reference: ") + datapointPath);
       navConfigMessageWarning(MESSAGE_DPACCESS); //dp not accessable
     }
   }
@@ -1571,10 +1559,7 @@ void progressBar(float Maximum, float value)
 bool dpIsDistributed(string dpName)
 {
   string dpSystemName = strrtrim(dpSubStr(dpName, DPSUB_SYS), ":");
-  if (getSystemName() == (dpSystemName + ":"))
-    return FALSE;
-  else
-    return TRUE;
+  return (getSystemName() != (dpSystemName + ":"));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1621,49 +1606,55 @@ bool checkDpPermit(string datapointPath)
   return permit;
 }
 
-
+dyn_string queryDatabaseForDpElements(string datapointPath)
+{
+  dyn_string output;
+  int outputCounter = 1;
+  dyn_string dpes = dpNames(dpSubStr(datapointPath, DPSUB_SYS_DP) + ".**;");
+  int dpesLen = dynlen(dpes);
+  for (int j = 1; j <= dpesLen; j++)
+  {
+    if (dpElementType(dpes[j]) != DPEL_TYPEREF && dpElementType(dpes[j]) != DPEL_STRUCT)
+    {
+      output[outputCounter] = dpes[j];
+      outputCounter++;
+    }
+  }
+  return output;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Function queryDatabaseForDP: Query's the (distributed)database according the
 //                         given options
-// [NEW!!]
 // Input: 1. Datapoint name, including systemName
 //        2. Attribute (E.g. "_online.._value")
 //        3. Use function progressBar to display a progressBar
 //
-// Output: dyn_string with the resultsm exlusief the current datapointPath
+// Output: dyn_string with the result including the current datapointPath
 ///////////////////////////////////////////////////////////////////////////
 dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool useProgressBar)
 {
   string tempDP;
-  int j = 1;
   dyn_string output;
   dyn_dyn_anytype tab;
-  string temp;
-  dyn_dyn_string elementNames;
-  dyn_dyn_int elementTypes;
   string datapointPathOriginal = datapointPath;
-  int elementIndex;
   bool dpIsReference = false;
   dyn_string reference;
   string REMOTESYSTEM = "";
-  string firstXResults = "";
 
   checkForReference(datapointPath, reference, dpIsReference);
-  if (dpIsReference && !dpIsDistributed(datapointPath))
+  if (dpIsReference)
   {
-    strreplace(datapointPath, datapointPathOriginal, reference[2]);
-  }  
-  else if (dpIsReference && dpIsDistributed(datapointPath))
-  {
-    strreplace(datapointPath, datapointPathOriginal, reference[2]);
-    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2], DPSUB_SYS), ":") + "'";
+    //strreplace(datapointPath, datapointPathOriginal, reference[2]); //is already done in checkForReference
+    if (dpIsDistributed(datapointPath))
+    {
+      REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2], DPSUB_SYS), ":") + "'";
+    }
   }
-  else if (!dpIsReference && dpIsDistributed(datapointPath))
+  else if (dpIsDistributed(datapointPath))
   {
     REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(datapointPath, DPSUB_SYS), ":") + "'";
   }
-  //DebugN("REMOTESYSTEM:" + REMOTESYSTEM);
   //DebugN("SELECT '" + attribute + "' FROM '" + datapointPath + "*__enabled' " + REMOTESYSTEM);
   dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath + "*__enabled' " + REMOTESYSTEM, tab);
   int maximumCount = dynlen(tab);
@@ -1675,20 +1666,14 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
       strreplace(tempDP, "__enabled.", "");
       if (checkDpPermit(tempDP))
       {
-        strreplace(tempDP, datapointPath, "");
-        if (strpos(tempDP, "_") == 0)
-        {
-          tempDP = strltrim(tempDP, "_");
-        }
         if (tempDP != "")
         {
-          output[j] = tempDP;
-          j++;
+          dynAppend(output, tempDP);
         }
       }
     }
     if (useProgressBar)
-      progressBar(maximumCount, j);
+      progressBar(maximumCount, i);
   }
   if (useProgressBar)
     progressBar(maximumCount, maximumCount);
@@ -1696,32 +1681,25 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
   return output;
 }
 
-
-
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Function queryDatabase: Query's the (distributed)database according the
 //                         given options
 //
-// Input: 1. Datapoint name, including systemName
-//        2. Attribute (E.g. "_online.._value")
-//        3. Search depth (relative, from current position)
-//        4. How many first items must be retrieve via the query!!!
-//        5. Give the number of allowed DP-Types  ### UNDER CONSTRUCTION  ###
-//        6. Use function progressBar to display a progressBar
+// Input: 1. Attribute (E.g. "_online.._value")
+//        2. Datapoint name, including systemName
+//        3. How many first items must be retrieved via the query!!!
+//        4. Search depth (relative, from current position)
+//        5. Use function progressBar to display a progressBar
 //
 // Output: dyn_string with the resultsm exlusief the current datapointPath
 //         
 ///////////////////////////////////////////////////////////////////////////
-dyn_string queryDatabase(string attribute, string datapointPath, int first, int searchDepth, bool useProgressBar, bool singleSearch)
+dyn_string queryDatabase(string attribute, string datapointPath, int first, int searchDepth, bool useProgressBar)
 {
   dyn_string output;
   dyn_dyn_anytype tab;
-  string temp, asterisk = "*";
+  string fullDpName;
   int currentDepth = dynlen(strsplit(datapointPath, "_"));
-  dyn_dyn_string elementNames;
-  dyn_dyn_int elementTypes;
   string datapointPathOriginal = datapointPath;
   int elementIndex;
   int outputCounter = 1;
@@ -1729,60 +1707,63 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
   dyn_string reference;
   string REMOTESYSTEM = "";
   string firstXResults = "";
+  
   checkForReference(datapointPath, reference, dpIsReference);
-  if (dpIsReference && !dpIsDistributed(datapointPath))
+  if (dpIsReference)
   {
-    strreplace(datapointPath, datapointPathOriginal, reference[2]);
-  }  
-  else if (dpIsReference && dpIsDistributed(datapointPath))
+    //strreplace(datapointPath, datapointPathOriginal, reference[2]); //is already done in checkForReference
+    if (dpIsDistributed(datapointPath))
+    {
+      REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2], DPSUB_SYS), ":") + "'";
+    }
+  }
+  else if (dpIsDistributed(datapointPath))
   {
-    strreplace(datapointPath, datapointPathOriginal, reference[2]);
-    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2], DPSUB_SYS), ":") + "'";
+    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(datapointPath, DPSUB_SYS), ":") + "'";
   }
   //How many items must be retrieved (this __enabled and this is a DP-Type)
   if (first > 0)
   {
     firstXResults = " FIRST " + first;
   }
-  if (singleSearch)
-  {
-    asterisk = "";
-  }
-  dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath + "__enabled' " + REMOTESYSTEM + firstXResults, tab);
+  //DebugN("SELECT '" + attribute + "' FROM '" + datapointPath + "__enabled' " + firstXResults + REMOTESYSTEM);
+  dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath + "__enabled' " + firstXResults + REMOTESYSTEM, tab);
   int maximumCount = dynlen(tab);
   int maximumCounter = 0;
   int i = 2;
-  string systemName;
   if (dynlen(tab) >= 2)
   {
-    systemName = strrtrim(dpSubStr(tab[i][1], DPSUB_SYS), ":");
-  for (i = 2; i <= dynlen(tab); i++)
-  {
-    int functionOk;
-    
-    temp = systemName + ":" + substr(dpSubStr(tab[i][1], DPSUB_DP), 0, (strlen(dpSubStr(tab[i][1], DPSUB_DP)) - strlen("__enabled")));
-    if ((dynlen(strsplit(temp, "_")) <= (currentDepth + searchDepth)) || (searchDepth == 0))
+    dyn_dyn_string dds;
+    string fullDpName;
+    int curDPTElevel = 2;
+    int elType, elNTypesItemLen;
+    dyn_string levels;
+    for (i = 2; i <= dynlen(tab); i++)
     {
-      dynClear(elementNames);  //clear the content
-      dynClear(elementTypes);
-      functionOk = dpTypeGet(getDpTypeFromEnabled(tab[i][1]), elementNames, elementTypes);
-      if (functionOk == -1)
-         DebugN("Error in __enabled entry[" + i + "]: " + tab[i][1]);
-      for (elementIndex = 2; elementIndex <= dynlen(elementNames); elementIndex++) 
+      int functionOk;
+      fullDpName = tab[i][1];
+      strreplace(fullDpName, "__enabled.", "");
+
+      if ((dynlen(strsplit(fullDpName, "_")) <= (currentDepth + searchDepth)) || (searchDepth == 0))
       {
-        int elementLevel = dynlen(elementNames[elementIndex]) - 1; // how deep is the element?
-        string elementName = elementNames[elementIndex][elementLevel + 1];
-        output[outputCounter] = temp + "." + elementName;
-        outputCounter++;
+        dyn_string dpes = dpNames(fullDpName + ".**;");
+        int dpesLen = dynlen(dpes);
+        for (int j = 1; j <= dpesLen; j++)
+        {
+          if (dpElementType(dpes[j]) != DPEL_TYPEREF && dpElementType(dpes[j]) != DPEL_STRUCT)
+          {
+            output[outputCounter] = dpes[j];          
+            outputCounter++;
+          }
+        }
       }
-    }
-    maximumCounter++;
-    //if the progressBar must be used
-    if (useProgressBar)
-    {
-      progressBar(maximumCount, maximumCounter);
-    }
-  }//end of for loop
+      maximumCounter++;
+      //if the progressBar must be used
+      if (useProgressBar)
+      {
+        progressBar(maximumCount, maximumCounter);
+      }
+    }//end of for loop
   }//end of if
   //Hide the progress bar
   if (useProgressBar)
@@ -1793,24 +1774,58 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
   return output;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
-// Function getLoadTypeFromEnabled: retrieves information from an __enabled
+// FunctionName: getDpTypeStructure()
+//      
+// Gets the type structure of a DP located on a local system or remote system
+// even if DP does not exists, if not exists than the __enabled DP will be used
+// if DPtype in the __enabled DP has no DP instance than a dummy DP will be created
 //
-// Input: 1. Datapoint name, including systemName
-//
-// Output: load type, stored in the __enabled. auto/perm/temp
-//         
+// Params: dp - DP from which the typestructure is requested
+//              NOTE: The dp param may not contains element, config or attribute tags
+// Returns: a list with the type structure including the root element of the DP
 ///////////////////////////////////////////////////////////////////////////
-string getLoadTypeFromEnabled(string datapointPath)
+dyn_string getDpTypeStructure(string dp)
 {
-  string content;
-  dyn_string contentSplit;
-  dpGet(datapointPath, content);
-  contentSplit = strsplit(content, "|");
-  return contentSplit[1];
+  dyn_string typeStructure = makeDynString();
+  if (dpAccessable(dp))
+  {
+    typeStructure = dpNames(dp + ".**");
+  }
+  else
+  {
+    string systemName;
+    string dpType = getDpTypeFromEnabled(dp);
+    if (dpType != "-1")
+    {      
+      systemName = dpSubStr(dp + "__enabled.", DPSUB_SYS);
+      if (dynlen(dpTypes(dpType, getSystemId(systemName))) == 1)
+      {
+        dyn_string dps = dpNames(systemName + "*", dpType);      
+        if (dynlen(dps) == 0)
+        {
+          LOG_INFO("Create a dummy DP '__dummy_" + dpType + 
+                    "' to get type info for DP '" + dp + 
+                    "' (Type: '" + dpType + "', Sys: '" + systemName + "')");
+          dp = "__dummy_" + dpType; // system name may not be included in name of the DP to be created
+          dpCreate(dp, dpType, getSystemId(systemName));
+          dp = systemName + dp;
+        }
+        else
+        {
+          dp = dps[1];
+        }
+        typeStructure = dpNames(dp + ".**");
+      }
+    }
+  }
+  // the elements of the structure includes the dp name, so the dp has to be cut off here
+  for (int i = 1; i <= dynlen(typeStructure); i++)
+  {
+    typeStructure[i] = substr(typeStructure[i], strlen(dp));
+  }
+  return typeStructure;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Function getDpTypeFromEnabled: retrieves information from an __enabled
@@ -1820,27 +1835,33 @@ string getLoadTypeFromEnabled(string datapointPath)
 // Output: Datapoint type, stored in the __enabled
 //         
 ///////////////////////////////////////////////////////////////////////////
-string getDpTypeFromEnabled(string datapointPath)
+string getDpTypeFromEnabled(string dp)
 {
-  string content;
-  dyn_string contentSplit;
-  dpGet(datapointPath, content);
-  contentSplit = strsplit(content, "|");
-  if (dynlen(contentSplit) < 2)
+  string retDpType;
+  if (dpAccessable(dp))
   {
-    DebugN(contentSplit);
+    retDpType = dpTypeName(dp);
   }
-    
-  if (dynlen(contentSplit) > 1)
+  if (strlen(retDpType) == 0)
   {
-    return contentSplit[2];
+    retDpType = "-1";
+    if (dpAccessable(dp + "__enabled."))
+    {
+      string enabledValue;
+      dyn_string enabledValueSplit;
+      dpGet(dp + "__enabled.", enabledValue);
+      enabledValueSplit = strsplit(enabledValue, "|");
+      if (dynlen(enabledValueSplit) == 2)
+      {
+        retDpType = enabledValueSplit[2];
+      }
+      else
+      {  
+        LOG_WARN("Erronous '" + dp + "__enabled' value: " + enabledValueSplit);
+      }
+    }
   }
-  else
-  {
-    return "-1";
-  }
-//  DebugN("contentSplit[2]:" + contentSplit[2]);
-
+  return retDpType;
 }
 
 

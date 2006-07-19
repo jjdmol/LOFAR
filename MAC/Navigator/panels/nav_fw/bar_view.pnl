@@ -1,144 +1,128 @@
 V 10
 1
 LANG:1 7 barview
-PANEL,418 119 1001 600 N "_3DFace" 2
+PANEL,258 161 1001 600 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-  if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint)) {
+  if ((dpGetElementName($datapoint) == \"\") && dpAccessable($configDatapoint)) 
+  {
     dyn_string aS;
     dynClear(aS);
     dpSet($configDatapoint+\".dpNames\", aS);
     
-    dpConnect(\"showClippings\",$configDatapoint+\".warnLevel\",$configDatapoint+\".alertLevel\");
-    dpConnect(\"makeQueryList\",$configDatapoint+\".queryDP\",
-                              $configDatapoint+\".queryDPE\");
-    dpConnect(\"prepareButtons\",$configDatapoint+\".dpNames\");
-  } else {
-    setValue(\"main_border\",\"visible\",\"false\");
-    setValue(\"main_txt\",\"visible\",\"false\");
-    setValue(\"warn_txt\",\"visible\",\"false\");
-    setValue(\"alert_txt\",\"visible\",\"false\");
+    dpConnect(\"showClippings\", $configDatapoint + \".warnLevel\", $configDatapoint + \".alertLevel\");
+    dpConnect(\"makeQueryList\", $configDatapoint + \".queryDP\",
+                               $configDatapoint + \".queryDPE\");
+    dpConnect(\"prepareButtons\", $configDatapoint + \".dpNames\");
+  } 
+  else 
+  {
+    setValue(\"main_border\", \"visible\", \"false\");
+    setValue(\"main_txt\", \"visible\", \"false\");
+    setValue(\"warn_txt\", \"visible\", \"false\");
+    setValue(\"alert_txt\", \"visible\", \"false\");
   }
-  
 }
-showClippings(string aDp,string warnLevel,string aDp2, string alertLevel) {
-   setValue(\"txt_warn_level\",\"text\",warnLevel+\" %\");
-   setValue(\"txt_alert_level\",\"text\",alertLevel+ \" %\");
 
+showClippings(string aDp, string warnLevel, string aDp2, string alertLevel) 
+{
+   setValue(\"txt_warn_level\", \"text\", warnLevel + \" %\");
+   setValue(\"txt_alert_level\", \"text\", alertLevel + \" %\");
 }
-makeQueryList(string aDP1,string queryDP,string aDP2, string queryDPE) {
- 
 
-  if (queryDP == \"\" && queryDPE == \"\") {
+makeQueryList(string aDP1, string queryDP, string aDP2, string queryDPE) 
+{
+
+  if (queryDP == \"\" && queryDPE == \"\") 
+  {
     ChildPanelOnCentralModal(\"objects/nav_fw/warning_no_query_filled.pnl\",
 		                         \"No query selected\",
 		                         makeDynString(\"\"));   
-	} else {
+	} 
+	else 
+	{
     if (queryDP  == \"\") queryDP = \"*\";
     if (queryDPE == \"\") queryDPE = \"*\";
 
     dyn_string output;
     string attribute = \"_online.._value\";
-    int first=0;
+    int first = 0;
 
     dyn_string outputTemp = queryDatabaseForDP(attribute, $datapoint + queryDP, FALSE);
     // take present datapoint also in elements search
-    if (queryDP==\"*\")  dynInsertAt(outputTemp,$datapoint,1);
+    if (queryDP == \"*\")  dynInsertAt(outputTemp, $datapoint, 1);
 
     dyn_string elementsOutput;
   
     int maximumCount = dynlen(outputTemp);
     string selectionQueryDPE;
-    for(int i=1; i<=dynlen(outputTemp);i++)
+    for (int i = 1; i <= dynlen(outputTemp); i++)
     {
       elementsOutput = queryDatabaseForDpElements(outputTemp[i]);
-      elementsOutput = dynPatternMatch(\".\"+queryDPE+\"*\", elementsOutput);
-      for(int j=1;j<=dynlen(elementsOutput);j++)
+      elementsOutput = dynPatternMatch(\"*.\" + queryDPE + \"*\", elementsOutput);
+      for (int j = 1; j <= dynlen(elementsOutput); j++)
       {
-        output[dynlen(output)+1]= outputTemp[i] + elementsOutput[j];
+        output[dynlen(output) + 1] = elementsOutput[j] + \":_online.._value\";
       }
     }
-    dynClear(dpNamesList);
-    //### adjust data and fill table
-    for(int i=1 ; i<=dynlen(output) ; i++)
-    {
-      string temp =output[i];
-      strreplace(temp, $datapoint, \"\");
-      dpNamesList[i] = $datapoint + temp + \":_online.._value\";
-    }
-    dpSet($configDatapoint+\".dpNames\",dpNamesList); 
+    dpSet($configDatapoint + \".dpNames\", output); 
   }
 }
 
-dyn_string queryDatabaseForDpElements(string datapointPath)
+prepareButtons(string aDp1, dyn_string aDpNamesList) 
 {
-  dyn_string output;
-  dyn_dyn_string elementNames;
-  dyn_dyn_int elementTypes;
-  int elementIndex;
-  int outputCounter=1;
-
-  int functionOk;
-    
-  dynClear(elementNames);  //clear the content
-  dynClear(elementTypes);
-  functionOk = dpTypeGet(getDpTypeFromEnabled(datapointPath+\"__enabled.\"),elementNames,elementTypes);
-  if(functionOk==-1)
+  dpNamesListLen = dynlen(aDpNamesList);
+  if (bottomLineNr + 15 > dpNamesListLen) 
   {
-     DebugN(\"Error in __enabled entry: \" +datapointPath);
-     dpTypeGet(dpTypeName(datapointPath),elementNames,elementTypes);
-  }
-  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+    setValue(\"cmdFastUp\", \"enabled\", false);
+  } 
+  else 
   {
-    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
-    string elementName = elementNames[elementIndex][elementLevel+1];
-    output[outputCounter] = \".\" + elementName;
-    outputCounter++;
-  }
-  return output;
-}
-
-prepareButtons(string aDp1,dyn_string aDpNamesList) {
-  dpNamesListLen=dynlen(aDpNamesList);
-  if (bottomLineNr + 15 > dpNamesListLen) {
-    setValue(\"cmdFastUp\",\"enabled\",false);
-  } else {
-    setValue(\"cmdFastUp\",\"enabled\",true);
+    setValue(\"cmdFastUp\", \"enabled\", true);
   }
   
-  if (bottomLineNr + 1 > dpNamesListLen) {
-    setValue(\"cmdUp\",\"enabled\",false);
-  } else {
-    setValue(\"cmdUp\",\"enabled\",true);
+  if (bottomLineNr + 1 > dpNamesListLen) 
+  {
+    setValue(\"cmdUp\", \"enabled\", false);
+  } 
+  else 
+  {
+    setValue(\"cmdUp\", \"enabled\", true);
   }
   
       
-  if (topLineNr-1 <= 0) {
-    setValue(\"cmdDown\",\"enabled\",false);
-  } else {
-    setValue(\"cmdDown\",\"enabled\",true);
+  if (topLineNr - 1 <= 0) 
+  {
+    setValue(\"cmdDown\", \"enabled\", false);
+  } 
+  else 
+  {
+    setValue(\"cmdDown\", \"enabled\", true);
   }
     
-  if (topLineNr-15 <= 0) {
-    setValue(\"cmdFastDown\",\"enabled\",false);
-  } else {
-    setValue(\"cmdFastDown\",\"enabled\",true);
+  if (topLineNr - 15 <= 0) 
+  {
+    setValue(\"cmdFastDown\", \"enabled\", false);
+  } 
+  else 
+  {
+    setValue(\"cmdFastDown\", \"enabled\", true);
   }
 
-  setValue(\"totalLineNr\",\"text\",dpNamesListLen);
-  setValue(\"topLineNr\",\"text\",topLineNr);
-  setValue(\"bottomLineNr\",\"text\",bottomLineNr);
+  setValue(\"totalLineNr\", \"text\", dpNamesListLen);
+  setValue(\"topLineNr\", \"text\", topLineNr);
+  setValue(\"bottomLineNr\", \"text\", bottomLineNr);
 }" 0
 EE E E 1 -1 -1 0  70 40
 "" 0 1
 E"//Include a library where functions are stored, which you what to use
 #uses \"nav_fw/gcfnav_view.ctl\" 
 dyn_string dpNamesList;
-int topLineNr=1;
-int bottomLineNr=15;
-int dpNamesListLen=0;" 0
+int topLineNr = 1;
+int bottomLineNr =15;
+int dpNamesListLen = 0;" 0
  2
 "CBRef""1"
 "EClose"E
@@ -573,75 +557,75 @@ LANG:1 5 lines
 0
 1 352 9 "" 12
 0
-1 360 11 "" 0
+1 353 11 "" 0
 0
-1 361 11 "" 1
+1 354 11 "" 1
 0
-1 362 11 "" 4
+1 355 11 "" 4
 0
-1 363 11 "" 9
+1 356 11 "" 9
 0
-1 364 11 "" 10
+1 357 11 "" 10
 0
-1 365 11 "" 11
+1 358 11 "" 11
 0
-1 366 11 "" 12
+1 359 11 "" 12
 0
-1 367 12 "" 0
+1 360 12 "" 0
 0
-1 368 12 "" 1
+1 361 12 "" 1
 0
-1 369 12 "" 4
+1 362 12 "" 4
 0
-1 370 12 "" 9
+1 363 12 "" 9
 0
-1 371 12 "" 10
+1 364 12 "" 10
 0
-1 372 12 "" 11
+1 365 12 "" 11
 0
-1 373 12 "" 12
+1 366 12 "" 12
 0
-1 374 13 "" 0
+1 367 13 "" 0
 0
-1 375 13 "" 1
+1 368 13 "" 1
 0
-1 376 13 "" 4
+1 369 13 "" 4
 0
-1 377 13 "" 9
+1 370 13 "" 9
 0
-1 378 13 "" 10
+1 371 13 "" 10
 0
-1 379 13 "" 11
+1 372 13 "" 11
 0
-1 380 13 "" 12
+1 373 13 "" 12
 0
-1 381 14 "" 0
+1 374 14 "" 0
 0
-1 382 14 "" 1
+1 375 14 "" 1
 0
-1 383 14 "" 4
+1 376 14 "" 4
 0
-1 384 14 "" 9
+1 377 14 "" 9
 0
-1 385 14 "" 10
+1 378 14 "" 10
 0
-1 386 14 "" 11
+1 379 14 "" 11
 0
-1 387 14 "" 12
+1 380 14 "" 12
 0
-1 388 15 "" 0
+1 381 15 "" 0
 0
-1 389 15 "" 1
+1 382 15 "" 1
 0
-1 390 15 "" 4
+1 383 15 "" 4
 0
-1 391 15 "" 9
+1 384 15 "" 9
 0
-1 392 15 "" 10
+1 385 15 "" 10
 0
-1 393 15 "" 11
+1 386 15 "" 11
 0
-1 394 15 "" 12
+1 387 15 "" 12
 0
 13 245
 "cmdDown"
@@ -667,21 +651,16 @@ P
 LANG:1 0 
 "main()
 {
-  bool action=false;
-  if (topLineNr-1 > 0) {
+  if (topLineNr - 1 > 0) 
+  {
     topLineNr--;
     bottomLineNr--;
-    action=true;
-  }
-   
-  if (action) {   
-    string aDpName=dpNamesList[dynlen(dpNamesList)];
-    dynRemove(dpNamesList,dynlen(dpNamesList));
-    dynInsertAt(dpNamesList,aDpName,1);
+    string aDpName = dpNamesList[dynlen(dpNamesList)];
+    dynRemove(dpNamesList, dynlen(dpNamesList));
+    dynInsertAt(dpNamesList, aDpName, 1);
  
-    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+    dpSet($configDatapoint + \".dpNames\", dpNamesList);
   }
-
 }" 0
  E E E
 13 247
@@ -709,21 +688,17 @@ LANG:1 0
 "main()
 {
   string aDpName;
-  bool action=false;
-  if (topLineNr-15 > 0) {
-    topLineNr-=15;
-    bottomLineNr-=15;
-    action=true;
-  }
-
-
-  if (action) {   
-    for (int i=0;i<=15;i++) {
-      aDpName=dpNamesList[dynlen(dpNamesList)];
-      dynRemove(dpNamesList,dynlen(dpNamesList));
-      dynInsertAt(dpNamesList,aDpName,1);
+  if (topLineNr - 15 > 0) 
+  {
+    topLineNr -= 15;
+    bottomLineNr -= 15;
+    for (int i = 0; i <= 15; i++) 
+    {
+      aDpName = dpNamesList[dynlen(dpNamesList)];
+      dynRemove(dpNamesList, dynlen(dpNamesList));
+      dynInsertAt(dpNamesList, aDpName, 1);
     }
-    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+    dpSet($configDatapoint + \".dpNames\", dpNamesList);
   }
 }" 0
  E E E
@@ -751,24 +726,20 @@ P
 LANG:1 0 
 "main()
 {
-  bool action=false;
   string aDpName;
 
-  if (bottomLineNr+15 <= dpNamesListLen) {
-    topLineNr+=15;
-    bottomLineNr+=15;
-    action=true;
-  }
-
-   
-  if (action) {   
-    for (int i=0;i<=15;i++) {
-      aDpName=dpNamesList[1];
-      dynRemove(dpNamesList,1);
-      dynAppend(dpNamesList,aDpName);
+  if (bottomLineNr + 15 <= dpNamesListLen) 
+  {
+    topLineNr += 15;
+    bottomLineNr += 15;
+    for (int i = 0; i <= 15; i++) 
+    {
+      aDpName = dpNamesList[1];
+      dynRemove(dpNamesList, 1);
+      dynAppend(dpNamesList, aDpName);
     }
  
-    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+    dpSet($configDatapoint + \".dpNames\", dpNamesList);
   }
 }" 0
  E E E
@@ -796,19 +767,15 @@ P
 LANG:1 0 
 "main()
 {
-  bool action=false;
-  if (bottomLineNr+1 <= dpNamesListLen) {
+  if (bottomLineNr + 1 <= dpNamesListLen)
+  {
     topLineNr++;
     bottomLineNr++;
-    action=true;
-  }
-   
-  if (action) {   
-    string aDpName=dpNamesList[1];
-    dynRemove(dpNamesList,1);
-    dynAppend(dpNamesList,aDpName);
+    string aDpName = dpNamesList[1];
+    dynRemove(dpNamesList, 1);
+    dynAppend(dpNamesList, aDpName);
  
-    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+    dpSet($configDatapoint + \".dpNames\", dpNamesList);
   }
 }
 " 0

@@ -99,6 +99,7 @@ void navPMLterminate(bool inTerminate = false)
 void navPMLloadPropertySet(string datapoint)
 {
   LOG_TRACE("navPMLloadPropertySet", datapoint);
+  navPMLCorrectDp(datapoint);
   if (!navPMLisAutoLoaded(datapoint))
   {
     gcfLoadPS(g_PAclientId, datapoint);
@@ -113,10 +114,11 @@ void navPMLloadPropertySet(string datapoint)
 bool navPMLunloadPropertySet(string datapoint)
 {
   LOG_TRACE("navPMLunloadPropertySet", datapoint);
+  navPMLCorrectDp(datapoint);
   if (dpExists(datapoint))
   {
-  	// in this way the context can be switched from the terminated panel to a still running 
-  	// panel (the navigator)
+    // in this way the context can be switched from the terminated panel to a still running 
+    // panel (the navigator)
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_MESSAGE, "PML_UNLOAD|" + datapoint);
   }
   else
@@ -133,6 +135,7 @@ bool navPMLunloadPropertySet(string datapoint)
 void navPMLconfigurePropertySet(string psScope, string psApcName)
 {
   LOG_TRACE("navPMLconfigurePropertySet", psScope, psApcName);
+  navPMLCorrectDp(psScope);  
   gcfConfigurePS(g_PAclientId, psScope, psApcName);
 }
 
@@ -222,22 +225,38 @@ bool navPMLisTemporary(string datapoint)
   bool temporary = false;
 
   // check if the propertyset is temporary by GCF
-  if (strpos(datapoint, NAVPML_DPNAME_ENABLED) > 0)
+  if (strpos(datapoint, NAVPML_DPNAME_ENABLED) < 0)
   {
-    if (dpAccessable(datapoint))
+    datapoint += NAVPML_DPNAME_ENABLED;
+  }
+  if (dpAccessable(datapoint))
+  {
+    string enabled = "";
+    dpGet(datapoint + ".", enabled);
+    LOG_TRACE("navPMLisTemporary[content enabled]", enabled);
+    if (strpos(enabled, NAVPML_ENABLED_TEMP) == 0 || strpos(enabled, NAVPML_ENABLED_TEMP_AUTOLOADED) == 0)
     {
-      string enabled = "";
-      dpGet(datapoint + ".", enabled);
-      LOG_TRACE("navPMLisTemporary[content enabled]", enabled);
-      if (strpos(enabled, NAVPML_ENABLED_TEMP) == 0 || strpos(enabled, NAVPML_ENABLED_TEMP_AUTOLOADED) == 0)
-      {
-        temporary = true;
-      }
+      temporary = true;
     }
   }
   LOG_TRACE("navPMLisTemporary[T/F]", temporary);
   return temporary;
 }
 
-
+///////////////////////////////////////////////////////////////////////////
+//Function navPMLCorrectDp
+//
+// cut off the elment name path (if specified) and/or NAVPML_DPNAME_ENABLED indicator
+///////////////////////////////////////////////////////////////////////////
+void navPMLCorrectDp(string& dpName)
+{
+  // don't use the PVSS function dpSubStr here, because the dpName could not exists, which than results in an empty string
+  dyn_string splittedDpName = strsplit(dpName, ".");
+  dpName = splittedDpName[1];
+  int enabledPos = strpos(dpName, NAVPML_DPNAME_ENABLED);
+  if (enabledPos > 0)
+  {
+    dpName = substr(dpName, 0, enabledPos);
+  }  
+}
 

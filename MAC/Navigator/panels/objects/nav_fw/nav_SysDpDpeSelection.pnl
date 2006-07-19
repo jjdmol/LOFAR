@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,269 267 672 169 N "_3DFace" 2
+PANEL,394 237 672 169 N "_3DFace" 2
 "$datapoint"
 "$selectedDP"
 EEE E E 1 -1 -1 0  0 0
@@ -34,27 +34,42 @@ E
 "main()
 {
   string attribute = \"_online.._value\";
-	string dpName, tempDpe;
   bool showProgress=TRUE;
   string datapointPath;
   string selectedSystem = list_system.selectedText;
   list_dp.deleteAllItems;
   list_dpe.deleteAllItems;
 
-  if(selectedSystem==getSystemName())
+  if (selectedSystem == getSystemName())
   {
     datapointPath = buildPathFromNode(g_curSelNode);
   }
   else
   {
-   datapointPath = list_system.selectedText;
+    datapointPath = list_system.selectedText;
   }
-  dyn_string output = queryDatabaseForDP(attribute, datapointPath, showProgress);
-  if(list_system.selectedText==getSystemName())
+
+  dyn_string queryRes = queryDatabaseForDP(attribute, datapointPath, showProgress);  
+  string queryItem;
+  for (int i = 1; i <= dynlen(queryRes); i++)
+  {  	
+  	queryItem = strltrim(substr(queryRes[i], strlen(datapointPath)), \"_\");
+  	if (queryItem == \"\")
+  	{
+  		dynRemove(queryRes, i);
+  		i--;
+  	}
+  	else
+  	{
+  		queryRes[i] = queryItem;
+  	}
+  }
+  if (list_system.selectedText == getSystemName())
   {
-    dynInsertAt(output,CURRENT_DP_MESSAGE,1);
+    dynInsertAt(queryRes, CURRENT_DP_MESSAGE, 1);
   }
-  list_dp.items = output;
+  list_dp.items = queryRes;
+  list_dp.selectedPos = 1;
 }" 0
 
 E
@@ -83,9 +98,9 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 	string dpName, tempDpe;
   bool showProgress=TRUE;
   string temp=$selectedDP;
-  dyn_string output;
+  dyn_string queryRes;
   string systemName = dpSubStr($selectedDP, DPSUB_SYS);
-  list_dp.deleteAllItems;
+  this.deleteAllItems;
   //DebugN(\"Within Selection, $selectedDP:\"+$selectedDP);
 
   //[------------------------------------------------------------]
@@ -93,76 +108,75 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
   dyn_int distributedSystems;
   dpGet(\"_DistManager.State.SystemNums\", distributedSystems);
   list_system.appendItem = getSystemName();
-  if(dynlen(distributedSystems)>0)
+  for (int i = 1; i <= dynlen(distributedSystems); i++)
   {
-    for(int i=1; i<=dynlen(distributedSystems); i++)
-    {
-      list_system.appendItem = getSystemName(distributedSystems[i]);
-    }
+    list_system.appendItem = getSystemName(distributedSystems[i]);
   }
 
   // [------------------------------------------------------------]
   // Check for systemName if present, dpName is absolute,
   // otherwise the dpname is relative
-  if(\"\"!=systemName)
+  if (\"\" != systemName)
   {
-    list_system.selectedPos = dynContains(list_system.items, systemName);
+    list_system.selectedText = systemName;
     datapointPath = systemName;
     temp = dpSubStr($selectedDP, DPSUB_DP_EL);
   }
   else
   {
     list_system.selectedPos = 1;
-    datapointPath = $datapoint; //buildPathFromNode(g_curSelNode);
-    if(0==strpos(temp, \"_\"))
-    {
-      temp = substr(temp, 1, strlen(temp));
-    }
+    datapointPath = buildPathFromNode(g_curSelNode);
+    temp = strrtrim(temp, \"_\");
   }
   
-  //list_system.enabled = !isDistributed($datapoint);  Do not enable/disable yet.
-  
-
   ///////////////////////////////
-  output = queryDatabaseForDP(attribute, datapointPath, showProgress);
-  if(list_system.selectedText==getSystemName())
+  queryRes = queryDatabaseForDP(attribute, datapointPath, showProgress);
+  string queryItem;
+  for (int i = 1; i <= dynlen(queryRes); i++)
   {
-    dynInsertAt(output,CURRENT_DP_MESSAGE,1);
+  	queryItem = strltrim(substr(queryRes[i], strlen(datapointPath)), \"_\");
+  	if (queryItem == \"\")
+  	{
+  		dynRemove(queryRes, i);
+  		i--;
+  	}
+  	else
+  	{
+  		queryRes[i] = queryItem;
+  	}
+  }
+  if (list_system.selectedText == getSystemName())
+  {
+    dynInsertAt(queryRes, CURRENT_DP_MESSAGE, 1);
   }
 
+  this.items = queryRes;
 
-  if(temp!=\"\")
+  if (temp != \"\")
   {
     int dotPos = strpos(temp, \".\");
+    tempDpe = substr(temp, dotPos + 1);
     if(dotPos>=1)
     {
-     dyn_string tempSplit = strsplit(temp, \".\");
-     temp = tempSplit[1];
-     if(dynlen(tempSplit)>=2)
-     {
-       tempDpe = tempSplit[2];
-     }
+      temp = substr(temp, 0, dotPos - 1);
     }
     else
     {
-     dyn_string tempSplit = strsplit(temp, \".\");
-     temp = CURRENT_DP_MESSAGE;
-     if(dynlen(tempSplit)>=2)
-     {
-       tempDpe = tempSplit[2];
-     }
+      temp = CURRENT_DP_MESSAGE;
     }
+	  this.selectedText = temp;
+  }
+  else
+  {
+  	this.selectedPos = 1;
   }
 
-  list_dp.items = output;
-  list_dp.selectedPos=dynContains(output, temp);
   
   //If the tempDpe is not empty, fill the list and select
-  if(tempDpe!=\"\")
+  if (tempDpe != \"\")
   {
     NavConfigTrendFillDpeSelection(navViewGetDpFromDpSelectionList($datapoint));
-    dyn_string dpeNames = list_dpe.items;
-    list_dpe.selectedPos = dynContains(dpeNames, tempDpe);
+    list_dpe.selectedText = tempDpe;
   }
   // Button may be used which init is done.
   btn_ok.enabled = TRUE;
@@ -170,50 +184,8 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 
 "main()
 {
-/*  string datapoint;
-
-  if(list_system.selectedText==getSystemName())
-  {
-    if(CURRENT_DP_MESSAGE==list_dp.selectedText)
-    {
-      datapoint = $datapoint;
-    }
-    else
-    {
-      datapoint = $datapoint + \"_\" + list_dp.selectedText;
-    }
-  }
-  else
-  {
-    datapoint = list_system.selectedText + list_dp.selectedText;
-  }
-*/
-
   NavConfigTrendFillDpeSelection(navViewGetDpFromDpSelectionList($datapoint));
-}
-/*
-void NavConfigTrendFillDpeSelection()
-{
-  string selectedDP;
-  dyn_dyn_string elementNames;
-  dyn_dyn_int elementTypes;
-  getValue(\"list_dp\", \"selectedText\", selectedDP);
-  dyn_string output;
-  int elementIndex;
-  list_dpe.deleteAllItems; 
-
-  dpTypeGet(getDpTypeFromEnabled($datapoint + \"_\" + selectedDP+ \"__enabled.\"),elementNames,elementTypes);
-  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
-  {
-    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
-    string elementName = elementNames[elementIndex][elementLevel+1];
-    output[dynlen(output)+1] = elementName;
-  }
-  dynSortAsc(output);
-  list_dpe.items =output;
-  list_dpe.selectedPos=0;
-}
-*/" 0
+}" 0
 
 E
 

@@ -357,17 +357,6 @@ paAlertHdlGetDetail(string dp,int detail,int ranges)
     sprintf(sPrior1,\"%03d_\",iPrior1);
   }
   dl0=text0;dl1=text1;
-/*
-  if (detail==2) setMultiValue(\"ho\"+ds0,\"visible\",(hyst_typ0),
-                               \"o\"+ds0+\"t\",\"visible\",(hyst_typ0));
-  else
-  if (detail==5) setMultiValue(\"hu\"+ds1,\"visible\",(hyst_typ1),
-                               \"u\"+ds1+\"t\",\"visible\",(hyst_typ1));
-  else           setMultiValue(\"hu\"+ds1,\"visible\",(hyst_typ1),
-                               \"u\"+ds1+\"t\",\"visible\",(hyst_typ1),
-                               \"h1\"+ds1,\"visible\",(hyst_typ0),
-                               \"o\"+ds0+\"t\",\"visible\",(hyst_typ0));
-*/
   setMultiValue(\"h\"+ds1,\"state\",0,hyst_typ1,
                 \"ht\"+ds1,\"visible\",hyst_typ1,
                 \"g\"+ds0,\"text\",o_grenz0,
@@ -644,20 +633,6 @@ E
   }
   getValue(\"RB_Bereiche\",\"selectedPos\",ranges);
   ranges++;
-/*!!!
-  dpSetWait($1+\":_alert_hdl.1._type\",(ranges>0)?4:0,
-            $1+\":_alert_hdl.2._type\",(ranges>1)?4:0,
-            $1+\":_alert_hdl.3._type\",(ranges>2)?4:0,
-            $1+\":_alert_hdl.4._type\",(ranges>3)?4:0,
-            $1+\":_alert_hdl.5._type\",(ranges>4)?4:0);
-  err = getLastError(); //testen ob ohne Fehler  
-  if(dynlen(err) > 0)  
-  {  
-    errorDialog(err);  
-    // Dialog mit Fehler aufschalten  
-    throwError(err); // Fehler auf stderr schreiben  
-  } 
-!!!*/
   for(i=1;i<5;i++)
   {
     sprintf(s,\"%d\",i);
@@ -960,31 +935,7 @@ LANG:0 10 �bernehmen
   int drvNum;
   drvNum!= 0; //if you don`t define a driver number you have to initialize the variable with not null.
   int j=1;
-  //dpQuery(\"SELECT '_online.._value' FROM '*' WHERE _DPT = \\\"TLcuPicRCU\\\"\" , tab);//+REMOTESYSTEM
-  /*
-  
-  string REMOTESYSTEM=\"\";
-  string firstXResults = \"\";
-  checkForReference($1, reference, dpIsReference);
-  if(dpIsReference && !dpIsDistributed(datapointPath))
-  {
-    strreplace($1, datapointPathOriginal, reference[2]);
-  }  
-  else if(dpIsReference && dpIsDistributed($1))
-  {
-    strreplace($1, datapointPathOriginal, reference[2]);
-    REMOTESYSTEM = \" REMOTE '\" + strrtrim(dpSubStr(reference[2],DPSUB_SYS),\":\") + \"'\";
-  }
-*/
 
-/*  dpQuery(\"SELECT '_online.._value' FROM '*' WHERE _DPT = \\\"TLcuPicRCU\\\"\" +REMOTESYSTEM, tab);
-  for(int i=2 ; i<=dynlen(tab) ; i++)
-  {
-    tempDP = tab[i][1];
-    out1[j] = dpSubStr(tempDP,DPSUB_DP);
-    j++;
-    progressBar(maximumCount, i);
-  }*/
   bool dpIsReference=false;
   dyn_string reference;
   string datapoint = $1;
@@ -995,14 +946,10 @@ LANG:0 10 �bernehmen
   DebugN(\"########################\");
   DebugN(out1);
 
-  //out2 = dynUnique(out1);
-  
   maximumCount = dynlen(out1);
   for(int i=1; i<=dynlen(out1); i++)  
   {
     
-    //dpCopyConfig(\"STSLCU3:PIC_Rack0_SubRack0_Board0_AP0_RCU0.status\",
-    //             \"STSLCU3:PIC_Rack0_SubRack0_Board0_AP0_RCU1.status\", conf, error, drvNum);
     dpCopyConfig($1, out1[i]+\".status\", conf, error, drvNum);
     if(error!=0) DebugN(i+\"[error]\"+error);
     progressBar(maximumCount, i);

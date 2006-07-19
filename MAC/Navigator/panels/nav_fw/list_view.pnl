@@ -1,12 +1,14 @@
 V 10
 1
 LANG:1 17 NavigatorListView
-PANEL,242 163 950 740 N "_3DFace" 2
+PANEL,460 303 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-	if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint + \".customList\"))
+	dpSet($configDatapoint + \".queryResult\", makeDynString());
+	
+	if ((dpGetElementName($datapoint) == \"\") && dpAccessable($configDatapoint + \".customList\"))
   {
     TableProperties.tableMode(TABLE_SELECT_BROWSE);
     TableProperties.selectByClick(TABLE_SELECT_LINE_COLUMN);
@@ -60,33 +62,33 @@ loadTable(string dp1, bool customList,
   int newSelectionAmount;
   dyn_string output;
   string attribute = \"_online.._value\";
-  string datapointPath = buildPathFromNode(g_curSelNode);
+  string datapointPath = $datapoint;
 	string dpName;
-  int first=0;
-  int searchDepth=0;
-  bool showProgress=FALSE;
-  bool singleElement=TRUE;
+  int first = 0;
+  int searchDepth = 0;
+  bool showProgress = FALSE;
+  bool singleElement = TRUE;
   //Clear the current list and perform a disconnect for the old DP's
-  clearListTable(propNames);
+  clearListTable();
 
   if (!customList)
   {
-    output = queryDatabase(attribute, datapointPath, first, searchDepth, showProgress, singleElement);
+    output = queryDatabase(attribute, datapointPath, first, searchDepth, showProgress);
   }
-  else if (customList)
+  else
   {
     dyn_string outputTemp = queryDatabaseForDP(attribute, datapointPath + selectionQuery, TRUE);
     dyn_string elementsOutput;
     int maximumCount = dynlen(outputTemp);
     string selectionQueryDPE;
-    dpGet($configDatapoint + \".selectionQueryDPE\",selectionQueryDPE);
-    for(int i=1; i<=dynlen(outputTemp);i++)
+    dpGet($configDatapoint + \".selectionQueryDPE\", selectionQueryDPE);
+    for (int i = 1; i <= dynlen(outputTemp); i++)
     {
-      elementsOutput = queryDatabaseForDpElements(+outputTemp[i]+\"__enabled.\");
-      elementsOutput = dynPatternMatch(\".\"+selectionQueryDPE+\"*\", elementsOutput);
-      for(int j=1;j<=dynlen(elementsOutput);j++)
+      elementsOutput = queryDatabaseForDpElements(outputTemp[i]);
+      elementsOutput = dynPatternMatch(\"*.\" + selectionQueryDPE + \"*\", elementsOutput);
+      for (int j = 1; j <= dynlen(elementsOutput); j++)
       {
-        output[dynlen(output)+1]= outputTemp[i] + elementsOutput[j];
+        output[dynlen(output) + 1] = elementsOutput[j];
       }
       progressBar(maximumCount, i);
     }
@@ -94,46 +96,19 @@ loadTable(string dp1, bool customList,
   }
 
   //### adjust data and fill table
-  for(int i=1 ; i<=dynlen(output) ; i++)
+  for(int i = 1; i <= dynlen(output); i++)
   {
-    string temp =output[i];
+    string temp = output[i];
     strreplace(temp, $datapoint, \"\");
-    TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
-    propNames[i] = $datapoint + temp + \":_online.._value\";
+    TableProperties.appendLine(\"propertyName\", temp, \"value\", \"\");
+    propNames[i] = output[i];
   }
   connectTable(propNames);
-}
-
-
-dyn_string queryDatabaseForDpElements(string datapointPath)
-{
-  dyn_string output;
-  string temp;
-  dyn_dyn_string elementNames;
-  dyn_dyn_int elementTypes;
-  int elementIndex;
-  int outputCounter=1;
-
-  int functionOk;
-    
-  dynClear(elementNames);  //clear the content
-  dynClear(elementTypes);
-  functionOk = dpTypeGet(getDpTypeFromEnabled(datapointPath),elementNames,elementTypes);
-  if(functionOk==-1)
-     DebugN(\"Error in __enabled entry: \" +datapointPath);
-  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
-  {
-    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
-    string elementName = elementNames[elementIndex][elementLevel+1];
-    output[outputCounter] = \".\" + elementName;
-    outputCounter++;
-  }
-  return output;
 }" 0
 "main()
 {
   //navPMLunloadPropertySet($datapoint);
-  dpSet($configDatapoint + \".queryResult\", \"\");
+  dpSet($configDatapoint + \".queryResult\", makeDynString());
 }
 
 " 0
@@ -254,7 +229,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 102 22 936 38
+"main()
+{
+
+}" 0
+ E 0 1 1 0 1 E U  0 E 102 22 936 38
 0 2 0 "s" 0 0 0 64 0 0  102 22
  1
 1
@@ -349,11 +328,7 @@ LANG:1 7 Changes
 "TableProperties"
 ""
 1 9 40 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
- E "main()
-{
-DebugN(\"Dubbel klik\");
-}" 0
-
+ E E
 4 0 0 0 0 0
 EE E
 0
@@ -373,7 +348,8 @@ E "main(int row, string column, string value)
   if(column==\"value\")
   {
     dpGet($configDatapoint + \".queryResult\", queryResult);
-    currentDp = substr(queryResult[ConvIndex(row)], 0, strlen(queryResult[ConvIndex(row)]) - strlen(\":_online.._value\"));
+    currentDp = queryResult[ConvIndex(row)];
+    strreplace(currentDp, \":_online.._value\", \"\");
     DebugN(\"## currentDp: \" + currentDp);
     if(elementTypeValid(currentDp))
     {
@@ -515,28 +491,23 @@ T
 LANG:1 5 Query
 "main()
 {
-  dyn_string propNames;
   dyn_string output;
-  dpGet($configDatapoint + \".queryResult\", propNames);
-  clearListTable(propNames);
-  string datapointPath = buildPathFromNode(g_curSelNode);
+  clearListTable();
+  string datapointPath = $datapoint;
   string searchDP, searchDPE, temp;
   
   getValue(\"txt_dp\", \"text\", searchDP);
   getValue(\"txt_dpe\", \"text\", searchDPE);
-  //output = queryDatabase(attribute, datapointPath + searchDP, first, searchDepth, showProgress, singleElement);
-  dyn_string output = queryDatabase(\"_online.._value\",
-                                    datapointPath + searchDP, 0, 0, TRUE, FALSE);
+  dyn_string output = queryDatabase(\"_online.._value\", datapointPath + searchDP, 0, 0, TRUE);
 
-  dyn_string finalOutput = dynPatternMatch(\"*\"+searchDPE,output);
-  for(int i=1 ; i<=dynlen(finalOutput) ; i++)
+  dyn_string finalOutput = dynPatternMatch(\"*.\" + searchDPE + \"*\", output);
+  for(int i = 1 ; i <= dynlen(finalOutput) ; i++)
   {
-    temp =finalOutput[i];
+    temp = finalOutput[i];
     strreplace(temp, $datapoint, \"\");
     TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
-    finalOutput[i] = finalOutput[i] + \":_online.._value\";
+    finalOutput[i] = finalOutput[i];
   }
-  dyn_string propNames;
   connectTable(finalOutput);
 }" 0
  E E E

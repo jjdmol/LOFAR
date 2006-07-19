@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 950 740 N "_3DFace" 2
+PANEL,94 228 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -88,13 +88,11 @@ PANEL,258 138 950 740 N "_3DFace" 2
 ///////////////////////////////////////////////////////////////////////////
 void navViewControlHandleDetails(string datapointDetails)
 {
-  dyn_string elements = navConfigGetElementsFromDp($datapoint+\"_details\");
-  for(int i=1; i<=dynlen(elements); i++)
+  dyn_string elements = navConfigGetElementsFromDp($datapoint+\"_details\", TRUE); 
+  // TRUE == without reference elements
+  for(int i = 1; i <= dynlen(elements); i++)
   {
-    if(strpos(elements[i], \"__\")<0)
-    {
-      dpConnect(\"navViewControlDisplayElement\", datapointDetails + \".\" + elements[i] + \":_online.._value\");
-    }
+    dpConnect(\"navViewControlDisplayElement\", datapointDetails + \".\" + elements[i] + \":_online.._value\");
   }
 }
 
@@ -143,7 +141,13 @@ navViewControlDisplayCommand(string dp1, string command)
   strreplace(elementName, \".\", \"\");
   controllerLog.appendItem = timeToDisplay + \" | \" + elementName + \": \" + command;
 }" 0
-EE E E 1 -1 -1 0  108 128
+"main()
+{
+  //navPMLunloadPropertySet($datapoint + \"_details\");
+  //navPMLunloadPropertySet($datapoint);
+
+}" 0
+E E E 1 -1 -1 0  108 128
 "" 0 1
 E"#uses \"nav_fw/gcfnav-pmlinterface.ctl\"
 #uses \"nav_fw/gcfnav_view.ctl\"

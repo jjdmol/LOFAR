@@ -98,7 +98,7 @@ void TrendConfigApplyTraceSettings()
   if (ScaleMin<ScaleMax)
   {
     dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMax", ScaleMax);
-	dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMin", ScaleMin);
+  dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMin", ScaleMin);
   }
   else
   {
@@ -526,15 +526,6 @@ string navViewAlertGetDpFromColumn(int Row,int Column)
   {
     if ((0 != ColumndpNames[ConvIndex(Row)]) && ("" != ColumndpNames[ConvIndex(Row)]))
     {
-    
-/*      if (1==dynlen(strsplit(ColumndpNames[ConvIndex(Row)], ".")))
-      {
-        connectDatapoint = $datapoint + "." + ColumndpNames[ConvIndex(Row)];
-      }
-      else
-      {
-        connectDatapoint = $datapoint + "_" + ColumndpNames[ConvIndex(Row)];
-      }*/
       connectDatapoint = ColumndpNames[ConvIndex(Row)];
       return connectDatapoint;
     }
@@ -545,8 +536,6 @@ string navViewAlertGetDpFromColumn(int Row,int Column)
   }
   return "";
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: getPropertyNames
@@ -581,16 +570,16 @@ getPropertyNames(string newSelectionQuery, int newSelectionAmount, dyn_string &p
 //
 //  Disconnects the List table and clears the content
 ///////////////////////////////////////////////////////////////////////////////////
-void clearListTable(dyn_string &propNames)
+void clearListTable()
 {
+  dyn_string propNames;
   dpGet($configDatapoint + ".queryResult", propNames);
-  for(int i=1 ; i<=dynlen(propNames); i++)
+  for (int i = 1; i <= dynlen(propNames); i++)
   {
-   navPMLunloadPropertySet(dpSubStr(propNames[i], DPSUB_SYS_DP));
-   dpDisconnect("connectActualValue", propNames[i]);
+    navPMLunloadPropertySet(propNames[i]);
+    dpDisconnect("connectActualValue", propNames[i]);
   }
   TableProperties.deleteAllLines;
-  propNames="";
 }
 
 
@@ -602,9 +591,9 @@ void clearListTable(dyn_string &propNames)
 connectTable(dyn_string propNames)
 {
   dpSet($configDatapoint + ".queryResult", propNames);
-  for(int i=1; i<=dynlen(propNames); i++)
+  for(int i = 1; i <= dynlen(propNames); i++)
   {
-    navPMLloadPropertySet(dpSubStr(propNames[i], DPSUB_SYS_DP));
+    navPMLloadPropertySet(propNames[i]);
     dpConnect("connectActualValue", propNames[i]);
   }
 }
@@ -620,30 +609,31 @@ connectActualValue(string dp1, anytype actualValue)
   dyn_string queryResult; 
   anytype valueString;
   dpGet($configDatapoint + ".queryResult", queryResult);
-  if(elementTypeValid(dp1))
+  int rowNr = dynContains(queryResult, dpSubStr(dp1, DPSUB_SYS_DP_EL)) - 1;
+  if (elementTypeValid(dp1))
   { 
-    if(dpElementType(dp1)==22)
+    if (dpElementType(dp1) == DPEL_FLOAT)
     {
       int floatDecimals;
       dpGet($configDatapoint + ".floatDecimals", floatDecimals);
-      if(floatDecimals<=0)
-        floatDecimals=1;
+      if (floatDecimals <= 0)
+        floatDecimals = 1;
       string newActualValue;
-      sprintf(newActualValue, "%."+floatDecimals+"f", actualValue);
+      sprintf(newActualValue, "%." + floatDecimals + "f", actualValue);
       valueString = newActualValue;
     }
     else
     {
       valueString = actualValue;
     }
-    TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), "value", valueString);
+    TableProperties.cellValueRC(rowNr, "value", valueString);
   }
   else
   {
-    TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), "value", "Cannot display complex type");
-    TableProperties.cellBackColRC((dynContains(queryResult,(dp1))-1), "value", "_3DFace");
+    TableProperties.cellValueRC(rowNr, "value", "Cannot display complex type");
+    TableProperties.cellBackColRC(rowNr, "value", "_3DFace");
   }
-  TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), "unit", dpGetUnit(dp1));
+  TableProperties.cellValueRC(rowNr, "unit", dpGetUnit(dp1));
 }
 
 
@@ -654,12 +644,9 @@ connectActualValue(string dp1, anytype actualValue)
 ///////////////////////////////////////////////////////////////////////////////////
 bool elementTypeValid(string element)
 {
-
-  if ((19==dpElementType(element)) || (20==dpElementType(element)) ||
-      (21==dpElementType(element)) || (22==dpElementType(element)) ||
-      (23==dpElementType(element)) || (24==dpElementType(element)) ||
-      (25==dpElementType(element)) || (26==dpElementType(element)) ||
-      (27==dpElementType(element)) || (41==dpElementType(element)) || (42==dpElementType(element)))
+  if ((DPEL_CHAR == dpElementType(element)) || (DPEL_UINT   == dpElementType(element)) ||
+      (DPEL_INT  == dpElementType(element)) || (DPEL_FLOAT  == dpElementType(element)) ||
+      (DPEL_BOOL == dpElementType(element)) || (DPEL_STRING == dpElementType(element)))
   {
     return TRUE;
   }
@@ -667,7 +654,6 @@ bool elementTypeValid(string element)
   {
     return FALSE;
   }
-
 }
 
 
@@ -860,10 +846,10 @@ void getTrendNumber(string dp1, int &TrendNumber)
 void ConnectTrace(int TraceNumber)
 {
   dpConnect("TracePlot", "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".dpName",
-  										   "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".AutoScale",
-											   "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".ScaleMin",
-											   "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".ScaleMax",
-											   "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".LegendName");
+                         "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".AutoScale",
+                         "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".ScaleMin",
+                         "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".ScaleMax",
+                         "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".LegendName");
 }
 
 
@@ -899,362 +885,11 @@ void getSubviewName(string &subViewName)
 ///////////////////////////////////////////////////////////////////////////////////
 void NavConfigTrendFillDpeSelection(string datapoint)
 {
-  string selectedDP;
-  dyn_dyn_string elementNames;
-  dyn_dyn_int elementTypes;
-  getValue("list_dp", "selectedText", selectedDP);
-  dyn_string output;
-  int elementIndex;
+  string selectedDP = list_dp.selectedText;
   list_dpe.deleteAllItems; 
-  if(selectedDP!="")
+  if (selectedDP != "")
     selectedDP = "_" + selectedDP;
   
-  dpTypeGet(getDpTypeFromEnabled(datapoint + "__enabled."),elementNames,elementTypes);
-  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
-  {
-    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
-    string elementName = elementNames[elementIndex][elementLevel+1];
-    if(!("__"==substr(elementName, 0,2))) //references, dpe starting with __ are not allowed in the list
-    {
-      output[dynlen(output)+1] = elementName;
-    }
-  }
-  dynSortAsc(output);
-  list_dpe.items =output;
-  list_dpe.selectedPos=0;
+  list_dpe.items = navConfigGetElementsFromDp(datapoint, TRUE); // TRUE == without references, refs are not allowed in the list
+  list_dpe.selectedPos = 1;
 }
-
-
-
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-
-//             GARBAGE  GARBAGE  GARBAGE  GARBAGE  GARBAGE  GARBAGE
-//             No longer in use
-/*
-//////////////////////////////////////////////////////////////////////////////////
-// FunctionName: jump2StationSubrackRCU
-//
-// jumps/load the Station_Subrack.pnl
-///////////////////////////////////////////////////////////////////////////////////
-void jump2StationSubrackRCU()
-{
-
-  if(dpAccessable($datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr + "__enabled"))
-  {
-    if ("LOFAR Navigator" == myPanelName())
-    { 
-      //string datapointPath;
-      //convertOriginal2ReferenceDP($datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr, datapointPath);
-      if($referenceDatapoint=="")
-      {
-        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr);
-      }
-      else
-      {
-        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr);
-      }
-    }
-    else
-    {  
-      RootPanelOn("nav_usr/STS/Station_Subrack_RCU.pnl",
-                  "Station - Subrack - RCU",
-                  makeDynString("$datapoint:" + $datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr));
-    }
-  }
-}
-*/
-//////////////////////////////////////////////////////////////////////////////////
-// Function: ProgressBar
-//           With this function a progress bar can be made. The progress is shown
-//           horizontal and is going from the left to the right.
-//           [0                                  100%]
-// 
-//Input: 1. maximum value (range)== 100%
-//       2. current value to show in the progress bar.
-///////////////////////////////////////////////////////////////////////////////////
-/*
-void ProgressBar(float Maximum, float value)
-{
-  float Minimum = 0;
-  int waarde;
-  float positie;
-	if (value>Minimum)
-	{
-    setValue("bar", "visible", TRUE);
-    setValue("bar_border", "visible", TRUE);
-  }
-	
-  setValue("bar", "scale", value/Maximum, 1.0);
-  
-  if (value>=Maximum)
-  {
-    delay(0,200);
-    setValue("bar", "visible", FALSE);
-    setValue("bar_border", "visible", FALSE);
-  }
-}
-*/
-/*
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlot 
-//
-// Input : variable off all the plots, whether they are active or not.
-///////////////////////////////////////////////////////////////////////////
-navViewPlotArrangePlots(string dp1, int dp1Active,
-                        string dp2, int dp2Active,
-                        string dp3, int dp3Active,
-                        string dp4, int dp4Active,
-                        string dp5, int dp5Active,
-                        string dp6, int dp6Active,
-                        string dp7, int dp7Active,
-                        string dp8, int dp8Active)
-{
-  int panelSizeX=930;
-  int panelSizeY=730;
-  int totalActive = dp1Active + dp2Active + dp3Active + dp4Active;
-  
-  setValue("plot_1", "visible", dp1Active );
-  setValue("plot_2", "visible", dp2Active );
-  setValue("plot_3", "visible", dp3Active );
-  setValue("plot_4", "visible", dp4Active );
-
-  //Make a list of all the active plots
-  dyn_string activePlots;
-  if(dp1Active==1)
-    activePlots[dynlen(activePlots)+1] = 1;
-  if(dp2Active==1)
-    activePlots[dynlen(activePlots)+1] = 2;
-  if(dp3Active==1)
-    activePlots[dynlen(activePlots)+1] = 3;
-  if(dp4Active==1)
-    activePlots[dynlen(activePlots)+1] = 4;
-
-  float divider = dynlen(activePlots);
-  if(totalActive>=1)
-  {
-    for(int i=1; i<=dynlen(activePlots); i++)
-    {
-      if(dynlen(activePlots)<5)
-      {
-        setValue("plot_"+activePlots[i], "scale",  1.0, 1.0/divider);
-        setValue("plot_"+activePlots[i], "position", 10, (10 + (i-1)*(panelSizeY/divider)));
-      }
-      else
-      {
-        setValue("plot_"+activePlots[i], "scale",  0.5, 0.25);
-      }
-    }
-    getValue("plot_"+activePlots[1], "size", local_plotSizeX, local_plotSizeY);
-  }
-}
-*/
-
-
-
-
-
-/*
-//////////////////////////////////////////////////////////////////////////////////
-// FunctionName: jump2Station
-//
-// jumps/load the Station.pnl
-///////////////////////////////////////////////////////////////////////////////////
-void jump2Station()
-{
-  if(dpAccessable($datapoint + "_Station01"))
-  {
-    if ("LOFAR Navigator" == myPanelName())
-    {
-      if($referenceDatapoint=="")
-      {
-        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Station01");
-      }
-      else
-      {
-        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Station01");
-      }
-    }
-    else
-    {  
-      RootPanelOn("nav_usr/STS/Station.pnl",
-                  "Station ",
-                  makeDynString("$datapoint:" + $datapoint + "_Station01"));
-    }
-  }
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////
-// FunctionName: jump2StationSubrack
-//
-// jumps/load the Station_Subrack.pnl
-///////////////////////////////////////////////////////////////////////////////////
-void jump2StationSubrack()
-{
-  if(dpAccessable($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr))
-  {
-    if ("LOFAR Navigator" == myPanelName())
-    {
-      DebugN("$referenceDatapoint:"+$referenceDatapoint);
-      DebugN("$datapoint         :"+$datapoint);
-      DebugN("$configDatapoint   :"+$configDatapoint);
-      if($referenceDatapoint=="") //If the datapoint is a reference, use the reference to navigate to!!
-      {
-        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);        
-      }
-      else
-      {
-        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);
-      }
-    }
-    else // Panel is undocked.
-    {  
-      RootPanelOn("nav_usr/STS/Station_Subrack.pnl",
-                  "Station - Subrack",
-                  makeDynString("$datapoint:" + $datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr));
-    }
-  }
-}
-
-*/
-
-/*
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence
-//
-//
-// Input: 1. datapoint name to plot
-// Output: 
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence(string spectrum_data, int plotNumber)
-{   
-
-    file fSpectrum;
-    int timeslot_size = 1;
-  string plotTitle;
-  //write content of string to spectrum[DP_number].dat
-  fSpectrum = fopen(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") +"spectrum" + plotNumber+ ".tmp", "w+");
-  fputs (spectrum_data, fSpectrum );
-  fclose(fSpectrum);
-
-  if (timeslot_size<=1)
-  {
-    system("rm " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
-    system("copy " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".tmp " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
-  }
-  else
-  {
-    system("type " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".tmp >> " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
-  }
-
-  dpGet($configDatapoint + "." + plotNumber + ".title", plotTitle);
-  string timeString = getCurrentTime();
-  plotTitle = plotTitle + " ["+timeString+"]";
-  
-  navViewPlotGenerateGnuPlotScriptFile(plotNumber, plotTitle);
-  navViewPlotGenerateGnuplotOutput(plotNumber);
-  navViewPlotConvertGnuplotOutput(plotNumber);
-  delay(1,0);
-  setValue("plot_" + plotNumber+ "", "fill","[pattern,[tile,bmp,gnuplot" + plotNumber+ ".bmp]]");
-}
-*/
-
-/*
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence4, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence4(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 4);
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence5, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence5(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 5);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence6, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence6(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 6);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence7, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence7(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 7);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence8, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence8(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 8);
-}
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence3, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence3(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 3);
-}
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence1, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence1(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 1);
-}
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlot
-//
-// Input : 1. datapoint name to plot
-// Output: starts a specific plot, given as argument to the general
-//         function
-///////////////////////////////////////////////////////////////////////////
-//navViewPlot(string dp1, string dpName)
-//{
-//  dyn_string dp1Split = strsplit(dp1, ".");
-//  dpConnect("navViewPlotMainPlotSequence" + dp1Split[2], $datapoint+dpName);
-//}
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence2, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence2(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 2);
-}
-*/

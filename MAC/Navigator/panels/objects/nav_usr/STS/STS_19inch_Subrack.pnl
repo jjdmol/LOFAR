@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,722 245 182 113 N "_3DFace" 5
+PANEL,451 120 182 113 N "_3DFace" 5
 "$RackNr"
 "$SubrackNr"
 "$configDatapoint"
@@ -74,7 +74,7 @@ EP_setBackColor()
             $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status:_online.._value\",
             $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_Maintenance.status:_online.._value\",
             $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_online.._value\",
-            $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status:_online.._invalid\");
+            $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
   {

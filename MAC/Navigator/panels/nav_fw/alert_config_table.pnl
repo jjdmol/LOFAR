@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,416 375 950 471 N "_3DFace" 3
+PANEL,388 212 950 471 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
@@ -171,44 +171,6 @@ E
 " 0
  "main()
 {
-  int Row, Column;
-  getValue(\"\", \"currentCell\", Row, Column);
-  //string selectedDP = $datapoint + \"_\" + navViewAlertGetDpFromColumn(Row, Column);
-  if(selectedDP!=\"\")
-  {
-    setValue(\"test\", \"text\", selectedDP);
-  }
-  else
-  {
-    setValue(\"test\", \"text\", \"None\");
-  }
-
-
-/*  
-  dyn_string ColumndpNames;
-  string connectDatapoint;
-
-
-  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
-  if (dynlen(ColumndpNames)>0)
-  {
-    if ((0 != ColumndpNames[ConvIndex(Row)]) && (\"\" != ColumndpNames[ConvIndex(Row)]))
-    {
-      if (1==dynlen(strsplit(ColumndpNames[ConvIndex(Row)], \".\")))
-      {
-        connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex(Row)];
-      }
-      else
-      {
-        connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
-      }
-      setValue(\"test\", \"text\", connectDatapoint);
-    }
-    else
-    {
-      setValue(\"test\", \"text\", \"None\");
-    }
-  }*/
 }
 " 0
 

@@ -221,7 +221,7 @@ void ComboBoxViewsSelectionChanged()
   else if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
-	  LOG_DEBUG("3 selectedPanel:", selectedPanel);
+    LOG_DEBUG("3 selectedPanel:", selectedPanel);
   }
   else if (selectedPanel=="0")
   {
@@ -231,15 +231,15 @@ void ComboBoxViewsSelectionChanged()
   }
   else  //3. The configured panel file for this subview has not been found
   {
-	  string oldSelectedPanel = selectedPanel;
-	  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nopanelfound.pnl",panelParameters);
+    string oldSelectedPanel = selectedPanel;
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nopanelfound.pnl",panelParameters);
     LOG_DEBUG("5. File does not exist:",oldSelectedPanel);
   }            
  
   string datapointTypeName = "";
   if(dpAccessable(g_datapoint+"__enabled"))
   {
-    datapointTypeName = getDpTypeFromEnabled(g_datapoint+"__enabled.");
+    datapointTypeName = getDpTypeFromEnabled(g_datapoint);
   }
   else if(dpAccessable(g_datapoint))
   {
@@ -296,6 +296,7 @@ bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string select
                   "$configDatapoint:" + configDatapoint),
     resultFloat,
     resultString);
+  DebugN(resultFloat);
   success = resultFloat[1];
   nrOfSubViews = resultFloat[2];
   if(success)

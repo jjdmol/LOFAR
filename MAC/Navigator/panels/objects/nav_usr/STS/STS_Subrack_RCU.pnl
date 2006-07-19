@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,306 149 139 149 N "_3DFace" 4
+PANEL,299 108 139 149 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -10,19 +10,16 @@ PANEL,306 149 139 149 N "_3DFace" 4
 {
   //Function: Set background color of RCU
   setValue(\"text_RCUNr\", \"text\", \"RCU\" + $RCUNr );
-  backGround.toolTipText       = $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr;
-  icon_maintenance.toolTipText = $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr;
-  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
-  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr + \"_Maintenance\");
+  string dpRCU = $datapoint + \".AP\"+ $APNr +\".RCU\"+ $RCUNr;
+  backGround.toolTipText       = dpRCU;
+  icon_maintenance.toolTipText = dpRCU;
+  navPMLloadPropertySet(dpRCU);
 
-  if(dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_Maintenance.status:_online.._value\") &&
-  	 dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._value\"))
+  if(dpAccessable( dpRCU +\".status:_online.._value\"))
   {
     dpConnect(\"setBackGroundColorAEM\", 
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_Maintenance.status:_online.._value\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._value\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._invalid\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".functionality:_online.._value\");
+            dpRCU +\".status:_online.._value\",
+            dpRCU +\".functionality:_online.._value\");
   }
   else
   {
@@ -33,19 +30,14 @@ PANEL,306 149 139 149 N "_3DFace" 4
 " 0
 "main()
 {
-  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
-  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr + \"_Maintenance\");
+  navPMLunloadPropertySet($datapoint + \".AP\"+ $APNr +\".RCU\"+ $RCUNr);
 
 }" 0
 E E E 1 -1 -1 0  20 140
 "" 0 1
 EE 2
 "CBRef""1"
-"EClose""main()
-{
-  DebugN(\"By By\");
-}" 0
-
+"EClose"E
 ""
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
@@ -101,7 +93,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board0_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \".AP\"+ $APNr +\".RCU\"+ $RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
  0 1 1 0 1 E U  1 E 40 40 100 110
 2 5
@@ -142,7 +134,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board1_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \".AP\"+ $APNr +\".RCU\"+ $RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
  0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 50 68 90 108
 0

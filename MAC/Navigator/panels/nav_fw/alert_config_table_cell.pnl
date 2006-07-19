@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,461 269 690 283 N "_3DFace" 6
+PANEL,388 212 690 289 N "_3DFace" 6
 "$AreaNr"
 "$Column"
 "$Row"
@@ -10,103 +10,19 @@ PANEL,461 269 690 283 N "_3DFace" 6
 "$selectedDP"
 "main()
 {
-//  startThread(\"FillSelectionList\");
   dyn_string ColumnTitles;
-
+	
   dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
-  if(dynlen(ColumnTitles)>=$Row)
+  if(dynlen(ColumnTitles) > $Row)
   {
-    setValue(\"txt_legendName\", \"text\", ColumnTitles[ConvIndex($Row)]);
+    txt_legendName.text = ColumnTitles[ConvIndex($Row)];
   }
   else
   {
-    setValue(\"txt_legendName\", \"text\", \"\");
+    txt_legendName.text = \"\";
   }
    
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////
-//
-// FunctionName: FillSelectionList
-// Function    : Fills the selection list with retrieved datapoint from the 
-//               PVSS database
- ///////////////////////////////////////////////////////////////////////////////////
- /*
-void FillSelectionList()
-{
-  dyn_dyn_anytype tab;
-  int j=1;
-  int i;
-  int SelectionPosition;
-  string temp, CurrentAlertClass;
-  string value, hulp, EntryForSelectionList, CurrentSelection;
-  dyn_anytype all;
-  dyn_string Items;
- 	bool state;
- 	int TotalDPE;
-  //DebugTN(\"## start dpQuery\");
-  if ($datapoint==\"\")
-  {
-    dpQuery(\"SELECT '_online.._value' FROM 'PIC*' \", tab);
-    dpQuery(\"SELECT '_alert_hdl.._active' FROM 'PIC*' WHERE ('_alert_hdl.._active' > 0)\", tab);
-    DebugN(\"Query is PIC*\");
-  }
-  else
-  {
-   //dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint + \"*' \", tab);
-   dpQuery(\"SELECT '_alert_hdl.._active' FROM '\" + $datapoint + \"*' WHERE ('_alert_hdl.._active' > 0)\", tab);
-  }
-  //DebugTN(\"## stop  dpQuery\");
-  SelectionList1.deleteAllItems();
-  TotalDPE = dynlen(tab);
-  bool AlertActive;
-  for (i=2; i<=TotalDPE ; i++)
-  {
-    if (\"\" != tab[i][1])
-    {
-      //DebugTN(\"-----------------------\");
-      //DebugTN(\"----- get ------\");
-      //getSystemName()+"PIC_WAN_Switch01.status:_alert_hdl.._class"
-      //dpGet(tab[i][1] + \":_alert_hdl.._class\", CurrentAlertClass); // Get the alertclass of the DPE
-      //dpGet(tab[i][1] + \":_alert_hdl.._active\", AlertActive);
-      
-      
-      
-      //DebugTN(\"-- get ready ---\");
-      //if (AlertActive ==TRUE)                                  // If \"\" there is no alertclass
-      //{                                                            // configured!
-        DebugN(\"##alertclass found: \"+i);
-        //////////////////////////////////
-        //string hulp, EntryForSelectionList;
-        //hulp=dpSubStr(tab[i][1]  , DPSUB_DP_EL_CONF_DET_ATT);
-        //EntryForSelectionList = strltrim(hulp, dpSubStr($datapoint, DPSUB_DP_EL));
-        ///////////////////////////////////
-        // Items[j] = tab[i][1];  // this is the old, absolute addition
-        EntryForSelectionList = strltrim(dpSubStr(tab[i][1], DPSUB_DP_EL_CONF_DET_ATT), (dpSubStr($datapoint, DPSUB_DP_EL)+\"_\"));
-        if (0==(strpos (EntryForSelectionList, \"_\")))
-          Items[j] = strltrim(EntryForSelectionList, \"_\");
-        else if (0==(strpos (EntryForSelectionList, \".\")))
-          Items[j] = strltrim(EntryForSelectionList, \".\");
-        else
-          Items[j] = EntryForSelectionList;
-        
-        j++;
-
-      //}
-      ProgressBar(TotalDPE, i);
-    }
-  }
-
-	setValue(\"SelectionList1\", \"items\", Items);  //Insert all items in one time, faster the inserting every item apart
-  //DebugTN(\"## Total: \" + TotalDPE);
-  ProgressBar(TotalDPE, TotalDPE);
-//  SelectionList1.selectedPos(SelectionPosition);
-//	DebugN(\"SelectionPosition: \"+SelectionPosition);
-}
-
-*/
-" 0
+}" 0
 EE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
@@ -374,11 +290,11 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 E
 E
-1 49 0 "" 0
+1 71 0 "" 0
 0
-1 50 0 "" 1
+1 72 0 "" 1
 0
-1 51 0 "" 2
+1 73 0 "" 2
 0
 13 55
 "btn_ok"
@@ -419,12 +335,14 @@ navViewAlertApplyCellSettings(int AreaNr, string RowNumber, string Column)
 
   dyn_string ColumnTitles;
   dpGet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"Titles\", ColumnTitles);
-  if(ColumnTitles[ConvIndex(RowNumber)]!=txt_legendName.text)
+  if (RowNumber < dynlen(ColumnTitles))
   {
-    ColumnTitles[ConvIndex(RowNumber)] = txt_legendName.text;
-    dpSet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"Titles\", ColumnTitles); 
-  }
-
+	  if(ColumnTitles[ConvIndex(RowNumber)] != txt_legendName.text)
+	  {
+	    ColumnTitles[ConvIndex(RowNumber)] = txt_legendName.text;
+	    dpSet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"Titles\", ColumnTitles); 
+	  }
+	}
   ///////////////////////////////////////////////////////////////////////////
   string selectedConfigDpName;
   if(\"\"!=list_dpe.selectedText)
@@ -449,11 +367,14 @@ navViewAlertApplyCellSettings(int AreaNr, string RowNumber, string Column)
     dyn_string ColumndpNames, ColumnTitles;
     dpGet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
     
-    if(ColumndpNames[ConvIndex(RowNumber)]!=selectedConfigDpName)
+    if (RowNumber < dynlen(ColumndpNames))
     {
-      ColumndpNames[ConvIndex(RowNumber)] = selectedConfigDpName;
-      dpSet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
-    }
+	    if(ColumndpNames[ConvIndex(RowNumber)]!=selectedConfigDpName)
+	    {
+	      ColumndpNames[ConvIndex(RowNumber)] = selectedConfigDpName;
+	      dpSet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
+	    }
+	  }
     PanelOff();
   }
   else

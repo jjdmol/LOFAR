@@ -1410,8 +1410,8 @@ displayLD(string dp1, string value)
     //DebugTN(\"Value present\");
     dyn_string splitValue = strsplit(value, \"|\");
     DebugTN(\"splitValue[2]: \"+splitValue[2]);
-    //DebugN(\"GetTypeName:\"+getDpTypeFromEnabled(\"STSLCU1:\"+splitValue[2]+\"__enabled.\"));
-    if((getDpTypeFromEnabled(\"STSLCU1:\"+splitValue[2]+\"__enabled.\")==\"TLcuPacVT\") && (splitValue[1])==\"e\")
+    //DebugN(\"GetTypeName:\"+getDpTypeFromEnabled(\"STSLCU1:\"+splitValue[2]));
+    if((getDpTypeFromEnabled(\"STSLCU1:\"+splitValue[2])==\"TLcuPacVT\") && (splitValue[1])==\"e\")
     {
       //DebugTN(\"dpTypeName:\"+dpTypeName(\"STSLCU1:\"+splitValue[2]));
       DebugTN(\"splitValue[2]:\"+splitValue[2]);
@@ -1477,8 +1477,8 @@ displayLD(string dp1, string value)
     //DebugTN(\"Value present\");
     dyn_string splitValue = strsplit(value, \"|\");
     DebugTN(\"splitValue[2]: \"+splitValue[2]);
-    //DebugN(\"GetTypeName:\"+getDpTypeFromEnabled(\"STSLCU1:\"+splitValue[2]+\"__enabled.\"));
-    if((getDpTypeFromEnabled(\"STSLCU1:\"+splitValue[2]+\"__enabled.\")==\"TLcuPacVT\") && (splitValue[1])==\"e\")
+    //DebugN(\"GetTypeName:\"+getDpTypeFromEnabled(\"STSLCU1:\"+splitValue[2]));
+    if((getDpTypeFromEnabled(\"STSLCU1:\"+splitValue[2])==\"TLcuPacVT\") && (splitValue[1])==\"e\")
     {
       //DebugTN(\"dpTypeName:\"+dpTypeName(\"STSLCU1:\"+splitValue[2]));
       DebugTN(\"splitValue[2]:\"+splitValue[2]);
@@ -1544,7 +1544,7 @@ displayLD(string dp1, string value)
   if((value!=\"\") && strpos(value, \"|\")>0)
   {
     dyn_string splitValue = strsplit(value, \"|\");
-    if((getDpTypeFromEnabled(\"CEPLCU1:\"+splitValue[2]+\"__enabled.\")==\"TAplLogicalDevice\") && (splitValue[1])==\"e\")
+    if((getDpTypeFromEnabled(\"CEPLCU1:\"+splitValue[2])==\"TAplLogicalDevice\") && (splitValue[1])==\"e\")
     {
       navPMLloadPropertySet(\"CEPLCU1:\"+splitValue[2]);   
       bool check = TRUE;
@@ -1607,7 +1607,7 @@ displayLD(string dp1, string value)
   if((value!=\"\") && strpos(value, \"|\")>0)
   {
     dyn_string splitValue = strsplit(value, \"|\");
-    if((getDpTypeFromEnabled(getSystemName()+\"\"+splitValue[2]+\"__enabled.\")==\"TAplLogicalDevice\") && (splitValue[1])==\"e\")
+    if((getDpTypeFromEnabled(getSystemName()+\"\"+splitValue[2])==\"TAplLogicalDevice\") && (splitValue[1])==\"e\")
     {
       navPMLloadPropertySet(getSystemName()+\"\"+splitValue[2]);   
       bool check = TRUE;
