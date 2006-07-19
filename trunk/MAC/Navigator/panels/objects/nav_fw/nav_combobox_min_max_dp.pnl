@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,269 267 95 31 N "_3DFace" 4
+PANEL,394 237 95 31 N "_3DFace" 4
 "$Maximum"
 "$Minimum"
 "$datapoint"
@@ -71,6 +71,7 @@ int fill_combobox()
 	    {
 	      ElementValue = 1;
 	      dpSet($dp, ElementValue);
+	      ComboBox.selectedPos = 1;
 	    }
 	  }
 	}

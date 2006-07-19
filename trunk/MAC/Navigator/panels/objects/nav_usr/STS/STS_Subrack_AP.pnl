@@ -1,23 +1,22 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,306 149 184 193 N "_3DFace" 2
+PANEL,299 108 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
 {
   setValue(\"text_APNr\", \"text\", \"AP\" + $APNr);
-  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr);
-  rect_AP.toolTipText = $datapoint + \"_Board0_AP\"+ $APNr;
-  if(dpAccessable($datapoint + \"_Board0_AP\"+ $APNr +\".temperature:_online.._value\"))
+  string dpAP = $datapoint + \".AP\"+ $APNr;
+  navPMLloadPropertySet(dpAP);
+  rect_AP.toolTipText = dpAP;
+  if(dpAccessable(dpAP +\".temperature:_online.._value\"))
   {
-    dpConnect(\"ControlGUIAP\", $datapoint + \"_Board0_AP\"+ $APNr +\".temperature:_online.._value\",
-                              $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._value\",
-                              $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._invalid\",
-                              $datapoint + \"_Board0_AP\"+ $APNr +\".functionality:_online.._value\");
+    dpConnect(\"ControlGUIAP\", dpAP +\".temperature:_online.._value\",
+                              dpAP +\".status:_online.._value\",
+                              dpAP +\".functionality:_online.._value\");
     setValue(\"output_packetsReceived\", \"editable\", FALSE);
-    dpConnect(\"showVersion\", $datapoint + \"_Board0_AP\"+ $APNr +\".version:_online.._value\",
-                             $datapoint + \"_Board0_AP\"+ $APNr +\".version:_online.._invalid\");
+    dpConnect(\"showVersion\", dpAP +\".version:_online.._value\");
   }
   else
   {
@@ -38,53 +37,44 @@ PANEL,306 149 184 193 N "_3DFace" 2
 /////////////////////////////////////////////////////////////////////
 ControlGUIAP(string dp1, float temperature,
              string dp2, int status,
-             string dp3, bool invalid,
              string dp4, bool functionality)
 {
-  if(!invalid)
+	DebugTN(dp1,temperature,dp2,status,dp4,functionality);
+  // 1. Display the temperature with with format xxx
+  setValue(\"txt_temperature\", \"text\", temperature);
+  setValue(\"txt_temperature\", \"visible\", TRUE);
+
+  // 2. Calculate the Backcolor of the AP
+  if (status >= 0)
   {
-    // 1. Display the temperature with with format xxx
-    setValue(\"txt_temperature\", \"text\", temperature);
-    setValue(\"txt_temperature\", \"visible\", TRUE);
-  
-    // 2. Calculate the Backcolor of the AP
-    if (status >= 0)
-    {
-      setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
-      setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
-    }
-    else if (status < 0)
-	  {
-      setValue(\"rect_AP\", \"backCol\", \"Red\");
-      setValue(\"btn_details\", \"backCol\", \"Red\");
-    }
-    else
-  	{
-      setValue(\"rect_AP\", \"backCol\", \"Red\");
-      setValue(\"btn_details\", \"backCol\", \"Red\");
-    }
-    if(functionality)
-    {
-      setValue(\"rect_AP\", \"foreCol\", \"_WindowText\");
-    	setValue(\"rect_AP\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,1]\");
-    }
-    else
-    {
-      setValue(\"rect_AP\", \"foreCol\", \"Red\");
-    	setValue(\"rect_AP\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,3]\");
-    }
+    setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
+  }
+  else if (status < 0)
+  {
+    setValue(\"rect_AP\", \"backCol\", \"Red\");
+    setValue(\"btn_details\", \"backCol\", \"Red\");
+  }
+  else
+	{
+    setValue(\"rect_AP\", \"backCol\", \"Red\");
+    setValue(\"btn_details\", \"backCol\", \"Red\");
+  }
+  if(functionality)
+  {
+    setValue(\"rect_AP\", \"foreCol\", \"_WindowText\");
+  	setValue(\"rect_AP\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,1]\");
   }
   else
   {
-    setValue(\"rect_AP\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"btn_details\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"txt_temperature\", \"visible\", FALSE);
+    setValue(\"rect_AP\", \"foreCol\", \"Red\");
+  	setValue(\"rect_AP\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,3]\");
   }
 }
 " 0
 "main()
 {
-  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr);
+  navPMLunloadPropertySet($datapoint + \".AP\"+ $APNr);
 }" 0
 E E E 1 -1 -1 0  20 60
 "" 0 1
@@ -382,6 +372,7 @@ LANG:1 0
 E E 
 E"main(int button, bool state)
 {
+	string dpAP = $datapoint + \".AP\"+ $APNr;
   if (button == 0)
   {
     setValue(\"label_errorCount\", \"visible\", state);
@@ -396,9 +387,9 @@ E"main(int button, bool state)
     
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
     {
-      if(!dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\") ||
-         !dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\") ||
-         !dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\"))
+      if(!dpAccessable(dpAP + \".SYNC.sampleCount:_online.._value\") ||
+         !dpAccessable(dpAP + \".SYNC.syncCount:_online.._value\") ||
+         !dpAccessable(dpAP + \".SYNC.errorCount:_online.._value\"))
       {
         setValue(\"output_syncCount\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"output_sampleCount\", \"backCol\", \"_dpdoesnotexist\");
@@ -407,25 +398,22 @@ E"main(int button, bool state)
       }
       else
       {
-        navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus\");
+        navPMLloadPropertySet(dpAP + \".SYNC\");
         setValue(\"output_syncCount\", \"backCol\", \"white\");
         setValue(\"output_sampleCount\", \"backCol\", \"white\");
         setValue(\"output_errorCount\", \"backCol\", \"white\");
-        dpConnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
-                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
-                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\",
-                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._invalid\");
+        dpConnect(\"FPGASyncDetails\", dpAP + \".SYNC.sampleCount:_online.._value\",
+                                     dpAP + \".SYNC.syncCount:_online.._value\",
+                                     dpAP + \".SYNC.errorCount:_online.._value\");
       }
                                    
     }
     else if (state == FALSE)  // if checkbox is NOT checked, show details and connect textbox to the datapoints
     {
-    
-      dpDisconnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
-                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
-                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\",
-                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._invalid\");
-      navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus\");
+      dpConnect(\"FPGASyncDetails\", dpAP + \".SYNC.sampleCount:_online.._value\",
+                                   dpAP + \".SYNC.syncCount:_online.._value\",
+                                   dpAP + \".SYNC.errorCount:_online.._value\");
+      navPMLunloadPropertySet(dpAP + \".SYNC\");
     }
 
       
@@ -435,21 +423,11 @@ E"main(int button, bool state)
 
 FPGASyncDetails(string dp1, int sampleCount,
                 string dp2, int syncCount,
-                string dp3, int errorCount,
-                string dp4, bool invalid)
+                string dp3, int errorCount)
 {
-  if(!invalid)
-  {
-    setValue(\"output_errorCount\" , \"text\", sampleCount);
-    setValue(\"output_sampleCount\", \"text\", syncCount);
-    setValue(\"output_syncCount\"  , \"text\", errorCount);
-  }
-  else
-  {
-    setValue(\"output_errorCount\" , \"text\", \"error\");
-    setValue(\"output_sampleCount\", \"text\", \"error\");
-    setValue(\"output_syncCount\"  , \"text\", \"error\");
-  }
+  setValue(\"output_errorCount\" , \"text\", sampleCount);
+  setValue(\"output_sampleCount\", \"text\", syncCount);
+  setValue(\"output_syncCount\"  , \"text\", errorCount);
 }" 0
 0
 LAYER, 1 

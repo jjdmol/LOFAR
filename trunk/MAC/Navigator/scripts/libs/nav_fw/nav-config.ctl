@@ -25,32 +25,156 @@
 //#
 
 #uses "nav_fw/gcf-util.ctl"
-#uses "nav_fw/gcfnav_view.ctl"
+#uses "nav_fw/nav-view.ctl"
 
-global string   DPNAME_NAVIGATOR                = "__navigator";
-global string   ELNAME_RESOURCEROOTS            = "resourceRoots";
-global string   ELNAME_IGNOREENABLEDROOTS       = "ignoreEnabledRoots";
-global string   ELNAME_ENVIRONMENTNAMES         = "environmentNames";
-global string   ELNAME_ENVIRONMENTGROUPS        = "environmentGroups";
-global string   ELNAME_SELECTEDELEMENT          = "selectedElement";
-global string   ELNAME_SELECTEDVIEWCAPTION      = "selectedViewCaption";
-global string   ELNAME_USECOUNT                 = "useCount";
-global string   ELNAME_VIEWSPATH                = "viewsPath";
-global string   ELNAME_VIEWS                    = "views";
-global string   ELNAME_CAPTION                  = "caption";
-global string   ELNAME_FILENAME                 = "filename";
-global string   ELNAME_CONFIGPANEL              = "configPanel";
-global string   ELNAME_SELECTEDVIEW             = "selectedView";
-global string   ELNAME_SELECTEDSUBVIEW          = "selectedSubView";
-global string   ELNAME_SELECTEDENVIRONMENT      = "selectedEnvironment";
-global string   ELNAME_NROFSUBVIEWS             = "nrOfSubViews";
-global string   ELNAME_SUBVIEWS                 = "subViews";
-global string   ELNAME_CONFIGS                  = "configs";
-global string   ELNAME_TRIGGERUPDATE            = "triggerUpdate";
-global string   ELNAME_NEWDATAPOINT             = "newDatapoint";
-global string   ELNAME_MESSAGE                  = "message";
-global string   DPTYPENAME_NAVIGATOR_INSTANCE   = "GCFNavigatorInstance";
-global int      g_navigatorID = 0;
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetViewConfig
+// 
+// returns the view config datapoint corresponding to the datapointpath
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetViewConfig(string datapointPath)
+{
+  string datapointType;
+  string dpViewConfig = "";
+  string dpNameTemp = datapointPath;
+  bool isReference;
+	
+	int dotPos = strpos(datapointPath, ".");
+	if (dotPos >= 0)
+	{
+		dpNameTemp = substr(datapointPath, 0, strpos(datapointPath, "."));
+	}
+	datapointType = getPropSetType(dpNameTemp);
+  if (datapointType != "")
+  {
+    // find __nav_<datapointType>_viewconfig datapoint
+    dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
+  }
+  else
+  {
+    // a system root node is selected
+    // find __nav<environment>_<systemname>_viewconfig datapoint
+    dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointPath + "_viewconfig";
+  }
+  if (!dpAccessable(dpViewConfig))
+  {
+    LOG_TRACE("navConfigGetViewConfig", "DP does not exist, using default configuration", dpViewConfig);
+    dpViewConfig = "__nav_default_viewconfig";
+  }
+  LOG_TRACE(dpViewConfig);
+  return dpViewConfig;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Functionname: navConfigGetEnvironment
+// Function: 
+// 
+// Input: 1. environmentName:  "" = current environment,
+//                            !"" = given environment
+//        2. userName, in combination with environment Personal:
+//                      "" = current user(name)
+//                     !"" = given user(name)
+// returns the view config datapoint corresponding to the datapointpath
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetEnvironment(string environmentName, string userName)
+{
+  string environment;
+  string environmentOutput;
+  string environmentType;
+  string environmentNumber;
+  dyn_string environmentNames;
+  dpGet(DPNAME_NAVIGATOR + ELNAME_ENVIRONMENTNAMES, environmentNames);
+  
+  if (environmentName == "") // work with the current selected environment
+  {
+    string navInstanceEnvironmentName;
+    dpGet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_SELECTEDENVIRONMENT, navInstanceEnvironmentName);
+    environment = navInstanceEnvironmentName;
+  }
+  else                    // work with a given environment
+  {
+    environment = environmentName;
+  }
+    
+  if (environment == "Personal")
+  {
+    environmentType = "U";
+    if (userName != "") // is userName is given, use it.
+    {
+      environmentNumber = getUserId(userName);
+    }
+    else
+    {
+      environmentNumber = getUserId();
+    }
+  }
+  else
+  {
+    environmentType = "E" ;
+    environmentNumber = dynContains(environmentNames, environment);
+  }
+  environmentOutput = environmentType + strexpand("\\fill{0}", 4 - strlen(environmentNumber)) + environmentNumber;
+  
+  return environmentOutput;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigSetSelectedElement
+// 
+// write the selected element in the configuration
+///////////////////////////////////////////////////////////////////////////
+void navConfigSetSelectedElement(string datapointPath)
+{
+  string dpSelectedElementContainer = DPNAME_NAVIGATOR + g_navigatorID + ELNAME_SELECTEDELEMENT;
+  string dpSelectedElement = datapointPath;
+  if (dpAccessable(dpSelectedElementContainer))
+  {
+    dpSet(dpSelectedElementContainer, dpSelectedElement);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetSelectedView()
+// 
+// returns the caption of the currently selected view
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetSelectedView()
+{
+  string selectedViewCaption = "List";
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID))
+  {
+	  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_SELECTEDVIEWCAPTION, selectedViewCaption);
+	}
+  return selectedViewCaption;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetViews()
+// 
+// returns the views for the specified resource type
+///////////////////////////////////////////////////////////////////////////
+dyn_string navConfigGetViews(string dpViewConfig)
+{
+  dyn_string views;
+  // get the views references for this resource type
+  dpGet(dpViewConfig + ELNAME_VIEWS, views);
+  return views;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetViewCaption
+// 
+// returns the caption of the specified view
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetViewCaption(string dpView)
+{
+  string caption;
+  dpGet(dpView + ELNAME_CAPTION, caption);
+  return caption;
+}
+
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -170,7 +294,7 @@ void navConfigSetNavigatorID(int newID)
   {
     dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
   }
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, 0);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_USECOUNT, 0);
   LOG_DEBUG("Using Navigator ID:", g_navigatorID);
 }
   
@@ -184,9 +308,9 @@ void navConfigIncreaseUseCount()
 {
   // increase usecount
   int usecount = 0;
-  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_USECOUNT, usecount);
   usecount++;
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_USECOUNT, usecount);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -199,11 +323,11 @@ void navConfigDecreaseUseCount()
 {
   // lower usecount of this navigator
   int usecount = 0;
-  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_USECOUNT, usecount);
   usecount--;
   if (usecount > 0)
   {
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_USECOUNT, usecount);
   }
   else
   {
@@ -233,7 +357,7 @@ bool navConfigCheckEnabled(string datapointName)
     // check the ignoreEnabledRoots field
     dyn_string ignoreEnabledDPs;
     dyn_errClass err;
-    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
+    dpGet(DPNAME_NAVIGATOR + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
     // If the datapointName is a reference, use the refernce to check for enabled
     err = getLastError();
     if (dynlen(err) == 0)
@@ -254,45 +378,6 @@ bool navConfigCheckEnabled(string datapointName)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function navConfigSetSelectedElement
-// 
-// write the selected element in the configuration
-///////////////////////////////////////////////////////////////////////////
-void navConfigSetSelectedElement(string datapointPath)
-{
-  string dpSelectedElementContainer = DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDELEMENT;
-  string dpSelectedElement = datapointPath;
-  if (dpAccessable(dpSelectedElementContainer))
-  {
-    dpSet(dpSelectedElementContainer, dpSelectedElement);
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function navConfigGetViewsPath()
-// 
-// returns the relative path where the navigator views are stored
-///////////////////////////////////////////////////////////////////////////
-string navConfigGetViewsPath()
-{
-  string viewsPath = "nav_fw/";
-  dpGet(DPNAME_NAVIGATOR+ "." + ELNAME_VIEWSPATH, viewsPath);
-  return viewsPath;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function navConfigGetSelectedView()
-// 
-// returns the caption of the currently selected view
-///////////////////////////////////////////////////////////////////////////
-string navConfigGetSelectedView()
-{
-  string selectedViewCaption = "List";
-  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDVIEWCAPTION, selectedViewCaption);
-  return selectedViewCaption;
-}
-
-///////////////////////////////////////////////////////////////////////////
 //Function navConfigSetSelectedView()
 // 
 // sets the caption of the currently selected view
@@ -304,34 +389,9 @@ void navConfigSetSelectedView(string datapoint, int viewid)
   if (viewid <= dynlen(views))
   {
     string caption = navConfigGetViewCaption(views[viewid]);
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDVIEWCAPTION, caption);
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_SELECTEDVIEWCAPTION, caption);
   }
-  dpSet(dpViewConfig + "." + ELNAME_SELECTEDVIEW, viewid);
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function navConfigGetViews()
-// 
-// returns the views for the specified resource type
-///////////////////////////////////////////////////////////////////////////
-dyn_string navConfigGetViews(string dpViewConfig)
-{
-  dyn_string views;
-  // get the views references for this resource type
-  dpGet(dpViewConfig + "." + ELNAME_VIEWS, views);
-  return views;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function navConfigGetViewCaption
-// 
-// returns the caption of the specified view
-///////////////////////////////////////////////////////////////////////////
-string navConfigGetViewCaption(string dpView)
-{
-  string caption;
-  dpGet(dpView + "." + ELNAME_CAPTION, caption);
-  return caption;
+  dpSet(dpViewConfig + ELNAME_SELECTEDVIEW, viewid);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -342,7 +402,7 @@ string navConfigGetViewCaption(string dpView)
 string navConfigGetViewConfigPanel(string dpView)
 {
   string configPanel;
-  dpGet(dpView + "." + ELNAME_CONFIGPANEL, configPanel);
+  dpGet(dpView + ELNAME_CONFIGPANEL, configPanel);
   return configPanel;
 }
 
@@ -360,7 +420,6 @@ string navConfigGetViewConfigPanel(string dpView)
 bool checkForReference(string &parentDatapoint, dyn_string &reference, bool &parentDatapointIsReference)
 {
   dyn_string refOut;
-  parentDatapointIsReference = FALSE;
   for (int i = 1; i <= dynlen(g_referenceList); i++)
   {
     refOut = strsplit(g_referenceList[i], "=");
@@ -370,11 +429,11 @@ bool checkForReference(string &parentDatapoint, dyn_string &reference, bool &par
       {
         parentDatapointIsReference = TRUE;
         strreplace(parentDatapoint, refOut[1], refOut[2]);
+        reference = refOut;
         break;
       }
     }
   }
-  reference = refOut;
   return parentDatapointIsReference;
 }
 
@@ -417,7 +476,7 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   {
     maxDepth = depth;
     // read the roots from the configuration
-    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_RESOURCEROOTS, resourceRoots);
+    dpGet(DPNAME_NAVIGATOR + ELNAME_RESOURCEROOTS, resourceRoots);
     err = getLastError();
     if (dynlen(err) > 0)
     {
@@ -471,17 +530,17 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   {
     dyn_string ignoreEnabledDPs;
     dyn_errClass err;
-    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
-    // check the ignoreEnabledRoots field
+    dpGet(DPNAME_NAVIGATOR + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
+		// check the ignoreEnabledRoots field
     err = getLastError();
     if (dynlen(err) == 0)
     { 
-      dyn_string foundIgnoreItems;   
-      for (int n = 1; n <= dynlen(ignoreEnabledDPs); n++)
-      {
-        foundIgnoreItems = dynPatternMatch(ignoreEnabledDPs[n] + "*", checkCollection);
-        dynAppend(newCollection, foundIgnoreItems);
-      }
+    	dyn_string foundIgnoreItems;   
+	    for (int n = 1; n <= dynlen(ignoreEnabledDPs); n++)
+	    {
+	    	foundIgnoreItems = dynPatternMatch(ignoreEnabledDPs[n] + "*", checkCollection);
+	      dynAppend(newCollection, foundIgnoreItems);
+	    }
     }
   }
   ////////////////////////////////////////////////////////////////
@@ -493,21 +552,21 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   
   while (i <= dynlen(allResources))
   {
-    dyn_string dpPathElements = strsplit(allResources[i], "_");
-    string addResource;
-    int d = 1;
-    while (d <= maxDepth && d <= dynlen(dpPathElements))
-    {
-      if (d > 1)
-        addResource += "_";
-      addResource += dpPathElements[d];
-      d++;
-    }
-    if (!dynContains(resources, addResource))
-    {
-      LOG_DEBUG("Adding: ", addResource);
-      dynAppend(resources, addResource);
-    }
+	  dyn_string dpPathElements = strsplit(allResources[i], "_");
+	  string addResource;
+	  int d = 1;
+	  while (d <= maxDepth && d <= dynlen(dpPathElements))
+	  {
+	    if (d > 1)
+	      addResource += "_";
+	    addResource += dpPathElements[d];
+	    d++;
+	  }
+	  if (!dynContains(resources, addResource))
+	  {
+	    LOG_DEBUG("Adding: ", addResource);
+	    dynAppend(resources, addResource);
+	  }
     i++;
   }
   if (parentDatapointIsReference)
@@ -518,58 +577,6 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// Functionname: navConfigGetEnvironment
-// Function: 
-// 
-// Input: 1. environmentName:  "" = current environment,
-//                            !"" = given environment
-//        2. userName, in combination with environment Personal:
-//                      "" = current user(name)
-//                     !"" = given user(name)
-// returns the view config datapoint corresponding to the datapointpath
-///////////////////////////////////////////////////////////////////////////
-string navConfigGetEnvironment(string environmentName, string userName)
-{
-  string environment;
-  string environmentOutput;
-  string environmentType;
-  string environmentNumber;
-  dyn_string environmentNames;
-  dpGet(DPNAME_NAVIGATOR + "." + ELNAME_ENVIRONMENTNAMES, environmentNames);
-  
-  if (environmentName == "") // work with the current selected environment
-  {
-    string navInstanceEnvironmentName;
-    dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, navInstanceEnvironmentName);
-    environment = navInstanceEnvironmentName;
-  }
-  else                    // work with a given environment
-  {
-    environment = environmentName;
-  }
-    
-  if (environment == "Personal")
-  {
-    environmentType = "U";
-    if (userName != "") // is userName is given, use it.
-    {
-      environmentNumber = getUserId(userName);
-    }
-    else
-    {
-      environmentNumber = getUserId();
-    }
-  }
-  else
-  {
-    environmentType = "E" ;
-    environmentNumber = dynContains(environmentNames, environment);
-  }
-  environmentOutput = environmentType + strexpand("\\fill{0}", 4-strlen(environmentNumber)) + environmentNumber;
-  
-  return environmentOutput;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 //Function navConfigfillEnvironmentList
@@ -581,7 +588,7 @@ void navConfigfillEnvironmentList(string dp1, dyn_string environmentNames)
   setValue("", "deleteAllItems");
   string selectedEnvironment;
   int itemCount = 0;
-  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
   
   
   for (int i = 1; i<= dynlen(environmentNames); i++)
@@ -598,7 +605,7 @@ void navConfigfillEnvironmentList(string dp1, dyn_string environmentNames)
   if (itemCount == 0)
   {
     setValue("", "selectedPos", 1);
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, "Personal");
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_SELECTEDENVIRONMENT, "Personal");
   }
 }
 
@@ -618,7 +625,7 @@ string navConfigGetViewConfig(string datapointPath)
   checkForReference(dpNameTemp, reference, isReference);
   if (dpAccessable(dpNameTemp + "__enabled"))
   {
-    datapointType = getDpTypeFromEnabled(dpNameTemp);
+    datapointType = getPropSetType(dpNameTemp);
     // find __nav_<datapointType>_viewconfig datapoint
     dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
   }
@@ -659,12 +666,12 @@ bool navConfigGetViewConfigElements(
   bool success = true;
   dyn_errClass err;
 
-  dpGet(dpViewConfig + "." + ELNAME_SELECTEDVIEW, selectedView,
-        dpViewConfig + "." + ELNAME_SELECTEDSUBVIEW, selectedSubView,
-        dpViewConfig + "." + ELNAME_VIEWS, views,
-        dpViewConfig + "." + ELNAME_NROFSUBVIEWS, nrOfSubViews,
-        dpViewConfig + "." + ELNAME_SUBVIEWS, subViews,
-        dpViewConfig + "." + ELNAME_CONFIGS, configs);
+  dpGet(dpViewConfig + ELNAME_SELECTEDVIEW, selectedView,
+        dpViewConfig + ELNAME_SELECTEDSUBVIEW, selectedSubView,
+        dpViewConfig + ELNAME_VIEWS, views,
+        dpViewConfig + ELNAME_NROFSUBVIEWS, nrOfSubViews,
+        dpViewConfig + ELNAME_SUBVIEWS, subViews,
+        dpViewConfig + ELNAME_CONFIGS, configs);
   
   err = getLastError(); //test whether no errors
   if (dynlen(err) > 0)
@@ -685,7 +692,7 @@ void navConfigSetSelectedSubView(
   int         selectedSubView)
 {
   string dpViewConfig = navConfigGetViewConfig(datapoint);
-  dpSet(dpViewConfig + "." + ELNAME_SELECTEDSUBVIEW, selectedSubView);
+  dpSet(dpViewConfig + ELNAME_SELECTEDSUBVIEW, selectedSubView);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -701,8 +708,8 @@ bool navConfigGetSubViewConfigElements(
   bool success = true;
   dyn_errClass err;
 
-  dpGet(dpSubViewConfig + "." + ELNAME_CAPTION, subViewCaption,
-        dpSubViewConfig + "." + ELNAME_FILENAME, subViewFileName);
+  dpGet(dpSubViewConfig + ELNAME_CAPTION, subViewCaption,
+        dpSubViewConfig + ELNAME_FILENAME, subViewFileName);
   
   err = getLastError(); //test whether no errors
   if (dynlen(err) > 0)
@@ -813,7 +820,7 @@ bool navConfigSanityCheck(string &message)
 ///////////////////////////////////////////////////////////////////////////
 void navConfigSubscribeUpdateTrigger(string callback)
 {
-  dpConnect(callback, false, DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE);
+  dpConnect(callback, false, DPNAME_NAVIGATOR + g_navigatorID + ELNAME_TRIGGERUPDATE);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -825,7 +832,7 @@ void navConfigSubscribeUpdateTrigger(string callback)
 ///////////////////////////////////////////////////////////////////////////
 void navConfigTriggerNavigatorRefresh()
 {
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE, 0);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_TRIGGERUPDATE, 0);
 }
 
 
@@ -841,8 +848,8 @@ void navConfigTriggerNavigatorRefresh()
 ///////////////////////////////////////////////////////////////////////////
 void navConfigTriggerNavigatorRefreshWithDP(string newDatapoint)
 {
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE, 0);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_NEWDATAPOINT, newDatapoint);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_TRIGGERUPDATE, 0);
 }
 
 
@@ -906,7 +913,7 @@ dyn_string environmentsAvailableToUser()
 bool navConfigConfigSubviewPermitted()
 {
   string selectedEnvironment;
-  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
   
   if (dpAccessable($configDatapoint) &&
      dpGetElementName($datapoint) == "" && 
@@ -925,19 +932,15 @@ bool navConfigConfigSubviewPermitted()
 //
 // Fills the dpe selectionlist for a datapoint selection
 ///////////////////////////////////////////////////////////////////////////////////
-dyn_string navConfigGetElementsFromDp(string datapoint, bool withoutRef = FALSE)
+dyn_string navConfigGetElementsFromDp(string datapoint)
 {
   dyn_string output;
   int elementIndex;
 
   dyn_string elements = getDpTypeStructure(datapoint);
-  // skip the first element in the array because it contains the root element  
   for (elementIndex = 2; elementIndex <= dynlen(elements); elementIndex++) 
   {
-    if (!withoutRef || (withoutRef && strpos(elements[elementIndex], ".__") < 1)) 
-    {
-      dynAppend(output, substr(elements[elementIndex], 1)); // cut leading dot (".")
-    }
+    dynAppend(output, substr(elements[elementIndex], 1)); // cut first dot
   }
 
   dynSortAsc(output);
@@ -1011,7 +1014,7 @@ navConfigAddRemoveSubView()
   if ($addView)
   {
     //########################################################
-    if (!dpAccessable(subViewDpName) && !dpAccessable(configDpName))
+    if (!dpAccessable(subViewDpName)&& !dpAccessable(configDpName))
     {
       if (comboCaption.visible == false) // adding new subview
       {

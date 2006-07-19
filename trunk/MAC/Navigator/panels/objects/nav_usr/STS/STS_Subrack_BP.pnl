@@ -1,25 +1,21 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,306 149 328 89 N "_3DFace" 1
+PANEL,299 108 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
+	string dpBP = $datapoint + \".BP\";
   //Load the property set for this datapoint
-  navPMLloadPropertySet($datapoint + \"_Board0_BP\");
-  navPMLloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
-  backGround.toolTipText = $datapoint + \"_Board0_BP\";
-  if(dpAccessable($datapoint + \"_Board0_BP.status:_online.._value\") &&
-     dpAccessable($datapoint + \"_Board0_Maintenance.status:_online.._value\"))
+  navPMLloadPropertySet(dpBP);
+//  navPMLloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
+  backGround.toolTipText = dpBP;
+  if(dpAccessable(dpBP + \".status:_online.._value\"))
   {
-    dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board0_Maintenance.status:_online.._value\",
-					                             $datapoint + \"_Board0_BP.status:_online.._value\",
-					                             $datapoint + \"_Board0_BP.status:_online.._invalid\",
-					                             $datapoint + \"_Board0_BP.functionality:_online.._value\");
-    dpConnect(\"showVersion\", $datapoint + \"_Board0_BP.version:_online.._value\",
-                             $datapoint + \"_Board0_BP.version:_online.._invalid\");
-    dpConnect(\"navViewShowTemp\", $datapoint + \"_Board0_BP.version:_online.._value\",
-                                 $datapoint + \"_Board0_BP.version:_online.._invalid\");
+    dpConnect(\"setBackGroundColorAEM\", dpBP + \".status:_online.._value\",
+					                             dpBP + \".functionality:_online.._value\");
+    dpConnect(\"showVersion\", dpBP + \".version:_online.._value\");
+    dpConnect(\"navViewShowTemp\", dpBP + \".temperature:_online.._value\");
   }
   else
   {
@@ -31,8 +27,8 @@ PANEL,306 149 328 89 N "_3DFace" 1
 " 0
 "main()
 {
-  navPMLloadPropertySet($datapoint + \"_Board1_BP\");
-  navPMLloadPropertySet($datapoint + \"_Board1_BP_Maintenance\");
+  navPMLloadPropertySet($datapoint + \".BP\");
+//  navPMLloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
 
 }" 0
 E E E 1 -1 -1 0  20 60

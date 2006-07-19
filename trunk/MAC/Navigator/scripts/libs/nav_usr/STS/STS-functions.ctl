@@ -120,51 +120,42 @@ void stsSubRackHandleContextMenu()
 //           the "icon_maintenance". Maintenance overrules and error status
 //           of the object
 //
-// Input: 1. maintenance status
-//        2. object status
-//        3. invalid flag
+// Input: 1. object status
+//        2. functionality
 ///////////////////////////////////////////////////////////////////////////////////
-setBackGroundColorAEM(string dp1, unsigned maintenance,
-                      string dp2, int status,
-                      string dp3, bool invalid,
+setBackGroundColorAEM(string dp2, int status,
                       string dp4, bool functionality)
 {
-  
-  if(!invalid) // Datapoint has a valid state.
-  {
-    setValue("icon_maintenance", "visible", (maintenance == 1));
-    //Maintenance has priority above error status
-    if (maintenance == 1)
-    {
-      setValue("backGround", "backCol", "Lofar_maintenance");
-    }
-    else if (status<0)    //object is in error status
-    {
-      setValue("backGround", "backCol", "Red");
-    }
-    else if (status>=0)  //object has a correct status
-    {
-      setValue("backGround", "backCol", "Lofar_device_active");
-    }
-    else // if any other state => givce the color red
-    {
-      setValue("backGround", "backCol", "Red");
-    }
-    if(functionality)
-    {
-      setValue("backGround", "foreCol", "_WindowText");
+  DebugTN(status,functionality);
+	setValue("icon_maintenance", "visible", FALSE); //(maintenance == 1));
+	//Maintenance has priority above error status
+//	if (maintenance == 1)
+//	{
+//	  setValue("backGround", "backCol", "Lofar_maintenance");
+//	}
+//	else if (status<0)    //object is in error status
+  if (status<0)    //object is in error status
+	{
+	  setValue("backGround", "backCol", "Red");
+	}
+	else if (status>=0)  //object has a correct status
+	{
+	  setValue("backGround", "backCol", "Lofar_device_active");
+	}
+	else // if any other state => givce the color red
+	{
+	  setValue("backGround", "backCol", "Red");
+	}
+	if(functionality)
+	{
+	  setValue("backGround", "foreCol", "_WindowText");
 	  setValue("backGround", "border", "[solid,oneColor,JoinMiter,CapNotLast,1]");
-    }
-    else
-    {
-      setValue("backGround", "foreCol", "Red");
-      setValue("backGround", "border", "[solid,oneColor,JoinMiter,CapNotLast,3]");
-    }
-  }
-  else
-  {
-    setValue("backGround", "backCol", "_dpdoesnotexist");
-  }
+	}
+	else
+	{
+	  setValue("backGround", "foreCol", "Red");
+	  setValue("backGround", "border", "[solid,oneColor,JoinMiter,CapNotLast,3]");
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -196,11 +187,8 @@ setBackGroundBorderColor(string dp1, bool functionality)
 // Input : 1. $datapoint.version
 // Output: 1. version displayed in txt_version
 ///////////////////////////////////////////////////////////////////////////
-showVersion(string dp1, string version,
-            string dp2, bool invalid)
+showVersion(string dp1, string version)
 {
-  if(!invalid) // Datapoint has a valid state.
-  {
     if (version !="")
     {
       setValue("txt_version", "text", "ver: " +version);
@@ -209,11 +197,6 @@ showVersion(string dp1, string version,
     {
       setValue("txt_version", "text", "ver: x:x");
     }
-  }
-  else
-  {
-    setValue("txt_version", "text", "ver: x:x");    
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -223,19 +206,11 @@ showVersion(string dp1, string version,
 // Input : 1. $datapoint.temperature [float]
 // Output: 1. temperature displayed in txt_temperature
 ///////////////////////////////////////////////////////////////////////////
-navViewShowTemp(string dp1, float temperature,
-                string dp2, bool invalid)
+navViewShowTemp(string dp1, float temperature)
 {
   //Display the temperature with with format xxx if the datapoint is valid
-  if(!invalid)
-  {
     setValue("txt_temperature", "text", temperature);  
     setValue("txt_temperature", "visible", TRUE);
-  }
-  else
-  {
-    setValue("txt_temperature", "visible", FALSE);  
-  }
 }
 
 

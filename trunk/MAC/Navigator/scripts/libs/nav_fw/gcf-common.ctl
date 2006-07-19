@@ -19,8 +19,7 @@ void gcfStartFollowDistSystems()
 
 void followDistributedSystems(string dp, dyn_int value)
 {
-  while (g_distSysVarSem > 0) // wait until the "semaphore" is freed by the dpAccessable method
-  ;
+  while (g_distSysVarSem > 0) delay(0, 10); // wait until the "semaphore" is freed by the dpAccessable method
   g_distributedSystems = value;
 }
 
@@ -28,15 +27,15 @@ bool dpAccessable(string dpName)
 {
   if (dpExists(dpName))
   {
-	string dpSystemName = strrtrim(dpSubStr(dpName, DPSUB_SYS), ":");
-  	if (getSystemName() == (dpSystemName + ":"))
+    string dpSystemName = strrtrim(dpSubStr(dpName, DPSUB_SYS), ":");
+    if (getSystemName() == (dpSystemName + ":"))
     {
       return TRUE;
     }
     else
     {
-	  g_distSysVarSem++; // set "semaphore"
-	  // check if the dist. system with the systemname from the dpName is reachable
+      g_distSysVarSem++; // set "semaphore"
+      // check if the dist. system with the systemname from the dpName is reachable
       if (dynlen(g_distributedSystems) > 0)
       {
         // Check whether the first part of the dpName is a valid system name 
@@ -46,17 +45,19 @@ bool dpAccessable(string dpName)
         {
           if (getSystemName(g_distributedSystems[i]) == (splitedDPName[1] + ":"))
           {
-		    g_distSysVarSem--; // release "semaphore"
+            g_distSysVarSem--; // release "semaphore"
             return TRUE;
           }          
         }
       }
-	  g_distSysVarSem--; // release "semaphore"
+      g_distSysVarSem--; // release "semaphore"
+	  DebugTN("Not accessible: ",dpName);
       return FALSE;
     }
   }
   else
   {
+	DebugTN("Not existing: ",dpName);
     return FALSE;
   }
 }

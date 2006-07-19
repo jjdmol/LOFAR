@@ -1,20 +1,18 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,306 149 417 182 N "_3DFace" 1
+PANEL,299 108 417 182 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  navPMLloadPropertySet($datapoint + \"_Board0\");
-  navPMLloadPropertySet($datapoint + \"_Board0_Maintenance\");
-  backGround.toolTipText = $datapoint + \"_Board0\";
-  if(dpAccessable($datapoint + \"_Board0.version:_online.._value\") &&
-     dpAccessable($datapoint + \"_Board0_Maintenance.status:_online.._value\"))
+  navPMLloadPropertySet($datapoint);
+//  navPMLloadPropertySet($datapoint + \"_Board0_Maintenance\");
+  backGround.toolTipText = $datapoint;
+  if(dpAccessable($datapoint + \".version:_online.._value\"))
   {
-    dpConnect(\"setBackGroundBorderColor\", $datapoint + \"_Board0_BP.functionality:_online.._value\");
+    dpConnect(\"setBackGroundBorderColor\", $datapoint + \".BP.functionality:_online.._value\");
     
-    dpConnect(\"showVersion\", $datapoint + \"_Board0.version:_online.._value\",
-                             $datapoint + \"_Board0.version:_online.._invalid\");
+    dpConnect(\"showVersion\", $datapoint + \".version:_online.._value\");
   }
   else
   {
@@ -24,7 +22,7 @@ PANEL,306 149 417 182 N "_3DFace" 1
   }
 
 
- dpConnect(\"MaintenanceIcon\", $datapoint + \"_Maintenance.status:_online.._value\");
+// dpConnect(\"MaintenanceIcon\", $datapoint + \"_Maintenance.status:_online.._value\");
  
 }
 
@@ -438,9 +436,9 @@ E"main(int button, bool state)
     
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
     {
-      if(!dpAccessable($datapoint + \"_Board0_ETH.packetsReceived:_online.._value\") ||
-         !dpAccessable($datapoint + \"_Board0_ETH.packetsError:_online.._value\") ||
-         !dpAccessable($datapoint + \"_Board0_ETH.lastError:_online.._value\"))
+      if(!dpAccessable($datapoint + \".Ethernet.packetsReceived:_online.._value\") ||
+         !dpAccessable($datapoint + \".Ethernet.packetsError:_online.._value\") ||
+         !dpAccessable($datapoint + \".Ethernet.lastError:_online.._value\"))
       {
         setValue(\"output_packetsReceived\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"output_packetsError\", \"backCol\", \"_dpdoesnotexist\");
@@ -456,20 +454,18 @@ E"main(int button, bool state)
         setValue(\"output_packetsReceived\", \"backCol\", \"white\");
         setValue(\"output_packetsError\", \"backCol\", \"white\");
         setValue(\"output_lastError\", \"backCol\", \"white\");
-        navPMLloadPropertySet($datapoint + \"_Board0_ETH\");
-        dpConnect(\"BoardETHDetails\", $datapoint + \"_Board0_ETH.packetsReceived:_online.._value\",
-                                     $datapoint + \"_Board0_ETH.packetsError:_online.._value\",
-                                     $datapoint + \"_Board0_ETH.lastError:_online.._value\", 
-                                     $datapoint + \"_Board0_ETH.lastError:_online.._invalid\");
+        navPMLloadPropertySet($datapoint + \".Ethernet\");
+        dpConnect(\"BoardETHDetails\", $datapoint + \".Ethernet.packetsReceived:_online.._value\",
+                                     $datapoint + \".Ethernet.packetsError:_online.._value\",
+                                     $datapoint + \".Ethernet.lastError:_online.._value\");
       }
     }
     else if (state == FALSE)  // if checkbox is NOT checked, show details and connect textbox to the datapoints
     {
-      dpDisconnect(\"BoardETHDetails\", $datapoint + \"_Board0_ETH.packetsReceived:_online.._value\",
-                                      $datapoint + \"_Board0_ETH.packetsError:_online.._value\",
-                                      $datapoint + \"_Board0_ETH.lastError:_online.._value\",
-                                      $datapoint + \"_Board0_ETH.lastError:_online.._invalid\");
-      navPMLunloadPropertySet($datapoint + \"_Board0_ETH\");
+      dpDisconnect(\"BoardETHDetails\", $datapoint + \".Ethernet.packetsReceived:_online.._value\",
+                                      $datapoint + \".Ethernet.packetsError:_online.._value\",
+                                      $datapoint + \".Ethernet.lastError:_online.._value\");
+      navPMLunloadPropertySet($datapoint + \".Ethernet\");
     }
    }
 }
@@ -478,21 +474,11 @@ E"main(int button, bool state)
 
 BoardETHDetails(string dp1, int packetsReceived,
                 string dp2, int packetsError,
-                string dp3, int lastError,
-                string dp4, bool invalid)
+                string dp3, int lastError)
 {
-  if(!invalid)
-  {
     setValue(\"output_packetsReceived\", \"text\", packetsReceived);
     setValue(\"output_packetsError\"   , \"text\", packetsError);
     setValue(\"output_lastError\"      , \"text\", lastError);
-  }
-  else
-  {
-    setValue(\"output_packetsReceived\", \"visible\", !invalid);
-    setValue(\"output_packetsError\"   , \"visible\", !invalid);
-    setValue(\"output_lastError\"      , \"visible\", !invalid);
-  }
 }" 0
 20 19
 "CheckButton1"
@@ -534,8 +520,8 @@ E"main(int button, bool state)
     setValue(\"rect_voltage33\"  , \"visible\", state);
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
     {
-      if(!dpAccessable($datapoint + \"_Board0.voltage15:_online.._value\") ||
-         !dpAccessable($datapoint + \"_Board0.voltage33:_online.._value\"))
+      if(!dpAccessable($datapoint + \".voltage15:_online.._value\") ||
+         !dpAccessable($datapoint + \".voltage33:_online.._value\"))
       {
         setValue(\"rect_voltage15\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"rect_voltage33\", \"backCol\", \"_dpdoesnotexist\");
@@ -547,18 +533,16 @@ E"main(int button, bool state)
       {
         setValue(\"rect_voltage15\", \"backCol\", \"white\");
         setValue(\"rect_voltage33\", \"backCol\", \"white\");
-        navPMLloadPropertySet($datapoint + \"_Board0\");
-        dpConnect(\"BoardETHDetails\", $datapoint + \"_Board0.voltage15:_online.._value\",
-                                     $datapoint + \"_Board0.voltage33:_online.._value\",
-                                     $datapoint + \"_Board0.voltage15:_online.._invalid\");
+        navPMLloadPropertySet($datapoint);
+        dpConnect(\"BoardETHDetails\", $datapoint + \".voltage15:_online.._value\",
+                                     $datapoint + \".voltage33:_online.._value\");
       }
     }
     else   // if checkbox is NOT checked, show details and connect textbox to the datapoints
     {
-      dpDisconnect(\"BoardETHDetails\", $datapoint + \"_Board0.voltage15:_online.._value\",
-                                      $datapoint + \"_Board0.voltage33:_online.._value\",
-                                      $datapoint + \"_Board0.voltage15:_online.._invalid\");
-      navPMLunloadPropertySet($datapoint + \"_Board0\");
+      dpDisconnect(\"BoardETHDetails\", $datapoint + \".voltage15:_online.._value\",
+                                      $datapoint + \".voltage33:_online.._value\");
+      navPMLunloadPropertySet($datapoint);
     }
    }
 }
@@ -569,16 +553,8 @@ BoardETHDetails(string dp1, float voltage15,
                 string dp2, float voltage33,
                 string dp3, bool invalid)
 {
-  if(!invalid)
-  {
     setValue(\"txt_voltage15\"   , \"text\", voltage15);
     setValue(\"txt_voltage33\"   , \"text\", voltage33);
-  }
-  else
-  {
-    setValue(\"txt_voltage15\"   , \"visible\", !invalid);
-    setValue(\"txt_voltage33\"   , \"visible\", !invalid);
-  }
 }" 0
 0
 LAYER, 1 

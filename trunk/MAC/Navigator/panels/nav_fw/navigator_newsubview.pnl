@@ -243,9 +243,10 @@ LANG:1 6 Cancel
   dyn_float dfReturn;  // return fields: [1] = success/failure, [2] = new nr of subviews
   dyn_string dsReturn; // not used
   dfReturn[1] = 0; // 0 = failure, 1 = success
+  dfReturn[2] = 0; // filled to avoid PVSS errors in the calling function
   // write return parameters to the database
-  dpSet(\"_Ui_\" + myManNum() + \".ReturnValue.Float:_original.._value\",dfReturn);
-  dpSet(\"_Ui_\" + myManNum() + \".ReturnValue.Text:_original.._value\",dsReturn);
+  dpSet(\"_Ui_\" + myManNum() + \".ReturnValue.Float:_original.._value\", dfReturn);
+  dpSet(\"_Ui_\" + myManNum() + \".ReturnValue.Text:_original.._value\", dsReturn);
 
   PanelOff();
 }" 0
