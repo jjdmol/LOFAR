@@ -102,14 +102,18 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
                     aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
-                    setField(aParam,aNode);
+                    setField(itsNode,aParam,aNode);
                     
                     //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).equals("ParmDB")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }else if (LofarUtils.keyName(aNode.name).equals("BBDB")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Strategy")) {
+                    this.aBBSStrategyPanel.setMainFrame(this.itsMainFrame);
+                    this.aBBSStrategyPanel.setContent(aNode);
                 }
+                
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
@@ -180,7 +184,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 if (aHWNode.leaf) {
                     aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
                 }
-                setField(aParam,aHWNode);
+                setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
             logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
@@ -205,21 +209,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         this.ParmDBLocalSkyText.setText(ParmDBLocalSky.limits);
         
     }
-    private void restoreBBSStrategyPanel() {
-        /*
-        AMCServerHostText.setText(itsAMCServerHost.limits);
-        StrategySteps;
-        StrategySteps;
-        StrategyInputData;
-        StrategyCorrelationSelection;
-        StrategyCorrelationType;
-        StrategyWDSFrequency;
-        StrategyWDSTime;
-        StrategyIntegrationFrequency;
-        StrategyIntegrationTime;
-         */
-    }
-    
     
     private void initialize() {
         buttonPanel1.addButton("Save Settings");
@@ -249,86 +238,93 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     /* Set's the different fields in the GUI */
-    private void setField(jOTDBparam aParam, jOTDBnode aNode) {
+    private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
         // OLAP_HW settings
         if (aParam==null) {
             return;
         }
         boolean isRef = LofarUtils.isReference(aNode.limits);
         String aKeyName = LofarUtils.keyName(aNode.name);
+        String parentName = String.valueOf(parent.name);
         
-        if (aKeyName.equals("DataSet")) {
-            this.BBSDatasetText.setToolTipText(aParam.description);
-            this.dataSet=aNode;
+        if(parentName.equals("BBS")){
+            if (aKeyName.equals("DataSet")) {
+                this.BBSDatasetText.setToolTipText(aParam.description);
+                this.dataSet=aNode;
+                
+                if (isRef && aParam != null) {
+                    this.BBSDatasetDeRefText.setVisible(true);
+                    BBSDatasetText.setText(aNode.limits);
+                    BBSDatasetDeRefText.setText(aParam.limits);
+                } else {
+                    BBSDatasetDeRefText.setVisible(false);
+                    BBSDatasetDeRefText.setText("");
+                    BBSDatasetText.setText(aNode.limits);
+                }
+            }
+        } else if(parentName.equals("BBDB")){
             
-            if (isRef && aParam != null) {
-                this.BBSDatasetDeRefText.setVisible(true);
-                BBSDatasetText.setText(aNode.limits);
-                BBSDatasetDeRefText.setText(aParam.limits);
-            } else {
-                BBSDatasetDeRefText.setVisible(false);
-                BBSDatasetDeRefText.setText("");
-                BBSDatasetText.setText(aNode.limits);
+            if (aKeyName.equals("DBName")) {
+                this.BBDBDBNameText.setToolTipText(aParam.description);
+                this.BBDBDBName=aNode;
+                if (isRef && aParam != null) {
+                    BBDBDBNameText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    BBDBDBNameText.setText(aNode.limits);
+                }
+            }else if (aKeyName.equals("Host")) {
+                this.BBDBHostText.setToolTipText(aParam.description);
+                this.BBDBHost=aNode;
+                if (isRef && aParam != null) {
+                    BBDBHostText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    BBDBHostText.setText(aNode.limits);
+                }
+            }else if (aKeyName.equals("Port")) {
+                this.BBDBPortText.setToolTipText(aParam.description);
+                this.BBDBPort=aNode;
+                if (isRef && aParam != null) {
+                    BBDBPortText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    BBDBPortText.setText(aNode.limits);
+                }
+            }else if (aKeyName.equals("UserName")) {
+                this.BBDBDBUsernameText.setToolTipText(aParam.description);
+                this.BBDBUsername=aNode;
+                if (isRef && aParam != null) {
+                    BBDBDBUsernameText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    BBDBDBUsernameText.setText(aNode.limits);
+                }
+            }else if (aKeyName.equals("PassWord")) {
+                this.BBDBDBPasswordText.setToolTipText(aParam.description);
+                this.BBDBPassword=aNode;
+                if (isRef && aParam != null) {
+                    BBDBDBPasswordText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    BBDBDBPasswordText.setText(aNode.limits);
+                }
             }
-        }else if (aKeyName.equals("DBName")) {
-            this.BBDBDBNameText.setToolTipText(aParam.description);
-            this.BBDBDBName=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBNameText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBNameText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("Host")) {
-            this.BBDBHostText.setToolTipText(aParam.description);
-            this.BBDBHost=aNode;
-            if (isRef && aParam != null) {
-                BBDBHostText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBHostText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("Port")) {
-            this.BBDBPortText.setToolTipText(aParam.description);
-            this.BBDBPort=aNode;
-            if (isRef && aParam != null) {
-                BBDBPortText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBPortText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("UserName")) {
-            this.BBDBDBUsernameText.setToolTipText(aParam.description);
-            this.BBDBUsername=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBUsernameText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBUsernameText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("PassWord")) {
-            this.BBDBDBPasswordText.setToolTipText(aParam.description);
-            this.BBDBPassword=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBPasswordText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBPasswordText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("Instrument")) {
-            this.ParmDBInstrumentText.setToolTipText(aParam.description);
-            this.ParmDBInstrument=aNode;
-            if (isRef && aParam != null) {
-                ParmDBInstrumentText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                ParmDBInstrumentText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("LocalSky")) {
-            this.ParmDBLocalSkyText.setToolTipText(aParam.description);
-            this.ParmDBLocalSky=aNode;
-            if (isRef && aParam != null) {
-                ParmDBLocalSkyText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                ParmDBLocalSkyText.setText(aNode.limits);
+        } else if(parentName.equals("ParmDB")){
+            if (aKeyName.equals("Instrument")) {
+                this.ParmDBInstrumentText.setToolTipText(aParam.description);
+                this.ParmDBInstrument=aNode;
+                if (isRef && aParam != null) {
+                    ParmDBInstrumentText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    ParmDBInstrumentText.setText(aNode.limits);
+                }
+            }else if (aKeyName.equals("LocalSky")) {
+                this.ParmDBLocalSkyText.setToolTipText(aParam.description);
+                this.ParmDBLocalSky=aNode;
+                if (isRef && aParam != null) {
+                    ParmDBLocalSkyText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    ParmDBLocalSkyText.setText(aNode.limits);
+                }
             }
         }
     }
-    
     /** saves the given param back to the database
      */
     private void saveNode(jOTDBnode aNode) {
@@ -374,36 +370,43 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void saveInput() {
-       
+        
         if (this.dataSet != null && !this.BBSDatasetText.getText().equals(dataSet.limits)) {
             dataSet.limits = BBSDatasetText.getText();
             logger.trace("Variable BBS ("+dataSet.name+"//"+dataSet.treeID()+"//"+dataSet.nodeID()+"//"+dataSet.parentID()+"//"+dataSet.paramDefID()+") from value ("+BBSDatasetText.getText()+") updated to :"+dataSet.limits);
             saveNode(dataSet);
-        } else if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
+        } 
+        if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
             BBDBHost.limits = BBDBHostText.getText();
             logger.trace("Variable BBS ("+BBDBHost.name+"//"+BBDBHost.treeID()+"//"+BBDBHost.nodeID()+"//"+BBDBHost.parentID()+"//"+BBDBHost.paramDefID()+") updated to :"+BBDBHost.limits);
             saveNode(BBDBHost);
-        } else if (this.BBDBPort != null && !this.BBDBPortText.getText().equals(BBDBPort.limits)) {
+        } 
+        if (this.BBDBPort != null && !this.BBDBPortText.getText().equals(BBDBPort.limits)) {
             BBDBPort.limits = BBDBPortText.getText();
             logger.trace("Variable BBS ("+BBDBPort.name+"//"+BBDBPort.treeID()+"//"+BBDBPort.nodeID()+"//"+BBDBPort.parentID()+"//"+BBDBPort.paramDefID()+") updated to :"+BBDBPort.limits);
             saveNode(BBDBPort);
-        } else if (this.BBDBDBName != null && !this.BBDBDBNameText.getText().equals(BBDBDBName.limits)) {
+        } 
+        if (this.BBDBDBName != null && !this.BBDBDBNameText.getText().equals(BBDBDBName.limits)) {
             BBDBDBName.limits = BBDBDBNameText.getText();
             logger.trace("Variable BBS ("+BBDBDBName.name+"//"+BBDBDBName.treeID()+"//"+BBDBDBName.nodeID()+"//"+BBDBDBName.parentID()+"//"+BBDBDBName.paramDefID()+") updated to :"+BBDBDBName.limits);
             saveNode(BBDBDBName);
-        } else if (this.BBDBUsername != null && !this.BBDBDBUsernameText.getText().equals(BBDBUsername.limits)) {
+        } 
+        if (this.BBDBUsername != null && !this.BBDBDBUsernameText.getText().equals(BBDBUsername.limits)) {
             BBDBUsername.limits = BBDBDBUsernameText.getText();
             logger.trace("Variable BBS ("+BBDBUsername.name+"//"+BBDBUsername.treeID()+"//"+BBDBUsername.nodeID()+"//"+BBDBUsername.parentID()+"//"+BBDBUsername.paramDefID()+") updated to :"+BBDBUsername.limits);
             saveNode(BBDBUsername);
-        } else if (this.BBDBPassword != null && !this.BBDBDBPasswordText.getText().equals(BBDBPassword.limits)) {
+        } 
+        if (this.BBDBPassword != null && !this.BBDBDBPasswordText.getText().equals(BBDBPassword.limits)) {
             BBDBPassword.limits = BBDBDBPasswordText.getText();
             logger.trace("Variable BBS ("+BBDBPassword.name+"//"+BBDBPassword.treeID()+"//"+BBDBPassword.nodeID()+"//"+BBDBPassword.parentID()+"//"+BBDBPassword.paramDefID()+") updated to :"+BBDBPassword.limits);
             saveNode(BBDBPassword);
-        } else if (this.ParmDBInstrument != null && !this.ParmDBInstrumentText.getText().equals(ParmDBInstrument.limits)) {
+        } 
+        if (this.ParmDBInstrument != null && !this.ParmDBInstrumentText.getText().equals(ParmDBInstrument.limits)) {
             ParmDBInstrument.limits = ParmDBInstrumentText.getText();
             logger.trace("Variable BBS ("+ParmDBInstrument.name+"//"+ParmDBInstrument.treeID()+"//"+ParmDBInstrument.nodeID()+"//"+ParmDBInstrument.parentID()+"//"+ParmDBInstrument.paramDefID()+") updated to :"+ParmDBInstrument.limits);
             saveNode(ParmDBInstrument);
-        } else if (this.ParmDBLocalSky != null && !this.ParmDBLocalSkyText.getText().equals(ParmDBLocalSky.limits)) {
+        } 
+        if (this.ParmDBLocalSky != null && !this.ParmDBLocalSkyText.getText().equals(ParmDBLocalSky.limits)) {
             ParmDBLocalSky.limits = ParmDBLocalSkyText.getText();
             logger.trace("Variable BBS ("+ParmDBLocalSky.name+"//"+ParmDBLocalSky.treeID()+"//"+ParmDBLocalSky.nodeID()+"//"+ParmDBLocalSky.parentID()+"//"+ParmDBLocalSky.paramDefID()+") updated to :"+ParmDBLocalSky.limits);
             saveNode(ParmDBLocalSky);
@@ -564,7 +567,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-                            
+    
     private void ParmDBLocalSkyTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParmDBLocalSkyTextActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_ParmDBLocalSkyTextActionPerformed
@@ -572,7 +575,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private void configurationRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationRevertButtonActionPerformed
         this.restoreBBSGlobalSettingsPanel();
     }//GEN-LAST:event_configurationRevertButtonActionPerformed
-        
+    
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save Settings") {
             saveInput();
