@@ -883,6 +883,24 @@ int32 	indexValue (const string&	label, char	indexMarker[2])
 
 }
 
+//
+// locateKey(hortKey)
+//
+// Searches for a key ending in the given 'shortkey' and returns it full name.
+string	ParameterSetImpl::locateKey(const string&	shortKey) const
+{
+	const_iterator		iter = begin();
+	const_iterator		eom  = end();
+	while ((iter != eom)) {
+		if (keyName(iter->first) == shortKey) {
+			return (iter->first);
+		}
+		iter++;
+	}
+
+	return ("");
+}
+
     } // namespace APS
   } // namespace ACC
 } // namespace LOFAR

@@ -68,6 +68,9 @@ int main() {
 	cout << "\nThe main ParameterSet contains:\n";
 	cout << myPS;
 
+	cout << "Fullname of 'lange_naam=" << myPS.locateKey("lange_naam") << endl;
+
+
 //	cout << "The name of the ParameterSet = " << myPS.getName() << endl;
 //	cout << "The vers of the ParameterSet = " << myPS.getVersionNr() << endl;
 //	if (isValidVersionNr(myPS.getVersionNr())) {

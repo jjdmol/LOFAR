@@ -156,6 +156,9 @@ public:
 	// Checks if the given Key is defined in the ParameterSet.
 	bool	isDefined (const string& searchKey) const;
 
+	// Searches for a key whose name end in the given shortKey.
+	string	locateKey(const string&	shortKey) const;
+
 	// Returns the value as a boolean.
 	bool	getBool  (const string& aKey) const;
 	int16	getInt16 (const string& aKey) const;
@@ -296,6 +299,10 @@ inline bool	ParameterSet::isDefined (const string& searchKey) const
 	return itsSet->isDefined (searchKey);
 }
 
+inline string	ParameterSet::locateKey(const string&	shortKey) const
+{
+	return (itsSet->locateKey(shortKey));
+}
 
 //#	getBool(key)
 inline bool ParameterSet::getBool(const string& aKey) const

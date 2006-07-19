@@ -35,6 +35,7 @@ The main ParameterSet contains:
 [e.g],[een voorbeeld]
 [egg],[een ei]
 [vtest.intVector1Dim],[[ 3, "20485", 	002, '4904' , 25 ]]
+Fullname of 'lange_naam=a.b.lange_naam
 isValidVersionNr(1.2.3.4)   = 0
 isValidVersionNr(1.2.3)     = 1
 isValidVersionNr(1.2)       = 0

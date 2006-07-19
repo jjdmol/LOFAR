@@ -160,6 +160,9 @@ public:
 	bool	isDefined (const string& searchKey) const
 				{ return (find(searchKey) != end()); };
 
+	// Searches for a key whose name end in the given shortKey.
+	string	locateKey(const string&	shortKey) const;
+
 	// Return the 'metadata' from the parameterCollection.
 //	string  getName          () const;
 
