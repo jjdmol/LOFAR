@@ -681,7 +681,7 @@ void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
 					 pdfts[ant2*nrsrc + src],
 					 itsLMN[src]));
 	// For the time being only point sources are supported.
-	MeqPointSource& mps = dynamic_cast<MeqPointSource&>(*sources[j]);
+	MeqPointSource& mps = dynamic_cast<MeqPointSource&>(*sources[src]);
 	vecSrc.push_back (MeqJonesExpr (new MeqBaseLinPS(expr1, &mps)));
       }
       MeqJonesExpr sum;

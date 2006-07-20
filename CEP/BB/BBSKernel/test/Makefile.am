@@ -1,4 +1,5 @@
-check_PROGRAMS = tFillRow tMeqPolc tMeqTabular tMeqParm tParmMerge \
+check_PROGRAMS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
+tMeqParm tParmMerge \
 tPredSolv tPredict tSubtract tCorrect tPerturbed tMSData tShift tDFT 
 
 tMeqPolc_SOURCES = tMeqPolc.cc
