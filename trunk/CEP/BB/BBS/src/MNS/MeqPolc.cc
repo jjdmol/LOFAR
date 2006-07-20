@@ -89,7 +89,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request,
     int ncy = itsCoeff.ny();
     // Values for x and y are scaled between 0 and 1.
     // Get the step and start values in the domain.
-    double stepx = reqDomain.scaleX() / (domain().scaleX() * ndx);
+    double stepx = reqDomain.sizeX() / (domain().sizeX() * ndx);
     double stx = (reqDomain.startX() - domain().startX()) / domain().sizeX()
                  + stepx/2;
     // Evaluate the expression (as double).
@@ -219,7 +219,7 @@ MeqResult MeqPolc::getAnResult (const MeqRequest& request,
     int ncy = itsCoeff.ny();
     // Values for x and y are scaled between 0 and 1.
     // Get the step and start values in the domain.
-    double stepx = reqDomain.scaleX() / (domain().scaleX() * ndx);
+    double stepx = reqDomain.sizeX() / (domain().sizeX() * ndx);
     double stx = (reqDomain.startX() - domain().startX()) / domain().sizeX()
                  + stepx/2;
     // Evaluate the expression (as double).

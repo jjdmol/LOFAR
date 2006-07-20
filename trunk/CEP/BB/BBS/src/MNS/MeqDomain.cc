@@ -27,33 +27,33 @@
 namespace LOFAR {
 
 MeqDomain::MeqDomain()
-: itsOffsetX (0),
-  itsScaleX  (1),
-  itsOffsetY (0),
-  itsScaleY  (1)
+: itsStartX (0),
+  itsEndX   (1),
+  itsStartY (0),
+  itsEndY   (1)
 {}
 
 MeqDomain::MeqDomain (double startX, double endX,
 		      double startY, double endY)
+: itsStartX (startX),
+  itsEndX   (endX),
+  itsStartY (startY),
+  itsEndY   (endY)
 {
   ASSERTSTR (startX < endX, "MeqDomain: startX " << startX <<
 	     " must be < endX " << endX);
   ASSERTSTR (startY < endY, "MeqDomain: startY " << startY <<
 	     " must be < endY " << endY);
-  itsOffsetX = (endX + startX) * .5;
-  itsScaleX  = (endX - startX) * .5;
-  itsOffsetY = (endY + startY) * .5;
-  itsScaleY  = (endY - startY) * .5;
 }
 
 MeqDomain::MeqDomain (const ParmDB::ParmDomain& pdomain)
 {
   ASSERTSTR (pdomain.getStart().size() == 2,
 	     "BBS only supports 2-dim funklets and domains");
-  itsOffsetX = (pdomain.getEnd()[0] + pdomain.getStart()[0]) * .5;
-  itsScaleX  = (pdomain.getEnd()[0] - pdomain.getStart()[0]) * .5;
-  itsOffsetY = (pdomain.getEnd()[1] + pdomain.getStart()[1]) * .5;
-  itsScaleY  = (pdomain.getEnd()[1] - pdomain.getStart()[1]) * .5;
+  itsStartX = pdomain.getStart()[0];
+  itsEndX   = pdomain.getEnd()[0];
+  itsStartY = pdomain.getStart()[1];
+  itsEndY   = pdomain.getEnd()[1];
 }
 
 ParmDB::ParmDomain MeqDomain::toParmDomain() const
