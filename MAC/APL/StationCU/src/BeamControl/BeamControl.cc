@@ -30,6 +30,7 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
+#include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/BS_Protocol/BS_Protocol.ph>
@@ -40,7 +41,6 @@
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
-using namespace LOFAR::OTDB;
 using namespace std;
 
 namespace LOFAR {
@@ -71,18 +71,11 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	itsStartTime  = globalParameterSet()->getTime  (itsTreePrefix + ".starttime");
 	itsStopTime   = globalParameterSet()->getTime  (itsTreePrefix + ".stoptime");
 
-	// attach to child control task
-	itsChildControl = ChildControl::instance();
-	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
-	itsChildPort->open();		// will result in F_CONNECTED
-
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
 	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
 									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for Parentcontrol");
+	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
 	itsParentPort->open();		// will result in F_CONNECTED
 
 	// need port for timers.
@@ -120,7 +113,7 @@ BeamControl::~BeamControl()
 //
 // setState(CTstateNr)
 //
-void    ObservationControl::setState(CTState::CTstateNr     newState)
+void    BeamControl::setState(CTState::CTstateNr     newState)
 {
 	itsState = newState;
 
@@ -162,8 +155,7 @@ void BeamControl::handlePropertySetAnswer(GCFEvent& answer)
 		break;
 	}
 
-	case F_PS_CONFIGURED:
-	{
+	case F_PS_CONFIGURED: {
 		GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
 		if(pConfAnswer->result == GCF_NO_ERROR) {
 			LOG_DEBUG(formatString("%s : apc %s Loaded",
@@ -183,7 +175,6 @@ void BeamControl::handlePropertySetAnswer(GCFEvent& answer)
 		// GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
 
 		// TODO: implement something usefull.
-		}
 		break;
 	}  
 
@@ -223,9 +214,9 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		LOG_DEBUG ("Activating PropertySet");
-		string	propSetName = formatString(BS_PROPSET_NAME, itsInstanceNr);
+		string	propSetName = formatString(BC_PROPSET_NAME, itsInstanceNr);
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  BS_PROPSET_TYPE,
+																  BC_PROPSET_TYPE,
 																  PS_CAT_TEMPORARY,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
@@ -253,15 +244,15 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 
 	case F_CONNECTED:
 		ASSERTSTR (&port == itsBeamServer, 
-									"F_CONNECTED event from port " << port.getNam());
+									"F_CONNECTED event from port " << port.getName());
 		break;
 
 	case F_DISCONNECTED:
 		port.close();
 		ASSERTSTR (&port == itsBeamServer, 
-								"F_DISCONNECTED event from port " << port.getNam());
+								"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with BeamServer failed, retry in 2 seconds");
-		itsTimerPort.setTimer(2.0);
+		itsTimerPort->setTimer(2.0);
 		break;
 	
 	default:
@@ -298,24 +289,26 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	case F_ACCEPT_REQ:
 		break;
 
-	case F_CONNECTED:
+	case F_CONNECTED: {
 		ASSERTSTR (&port == itsBeamServer, 
-									"F_CONNECTED event from port " << port.getNam());
+									"F_CONNECTED event from port " << port.getName());
 		itsTimerPort->cancelAllTimers();
 		LOG_DEBUG ("Connected with BeamServer");
 		setState(CTState::CLAIMED);
 		CONTROLClaimedEvent		answer;
-		answer.cntlrName = msg.cntlrName;
+//TODO		answer.cntlrName = msg.cntlrName;
 		port.send(answer);
 		break;
+	}
 
-	case F_DISCONNECTED:
+	case F_DISCONNECTED: {
 		port.close();
 		ASSERTSTR (&port == itsBeamServer, 
-								"F_DISCONNECTED event from port " << port.getNam());
+								"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with BeamServer failed, retry in 2 seconds");
-		itsTimerPort.setTimer(2.0);
+		itsTimerPort->setTimer(2.0);
 		break;
+	}
 
 	case F_TIMER: 
 //		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
@@ -354,10 +347,11 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
 		setState(CTState::PREPARE);
-		setState(doPrepare (msg.cntlrName) ? CTState::PREPARED : CTState::CLAIMED);
+		doPrepare (msg.cntlrName);
+		setState(CTState::PREPARED);
 		CONTROLPreparedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
-		port.send();
+		port.send(answer);
 		break;
 	}
 
@@ -420,7 +414,7 @@ void BeamControl::doPrepare(const string&	cntlrName)
 	try {
 		vector<int> subbandsVector;
 		vector<int> beamletsVector;
-		// TODO
+		// TODO	use parameterset of 'cntlrname'
 		APLUtilities::string2Vector(m_parameterSet.getString(string("subbands")),subbandsVector);
 		APLUtilities::string2Vector(m_parameterSet.getString(string("beamlets")),beamletsVector);
 
@@ -447,13 +441,13 @@ bool	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 	// check the beam ID and status of the ACK message
 	BSBeamallocackEvent ackEvent(event);
 	if (ackEvent.status != 0) {
-		errorCode = CT_RESULT_BEAMALLOC_ERROR;
-		LOG_ERROR_STR("Beamlet allocation failed with errorcode: ",ackEvent.status);
+//		errorCode = CT_RESULT_BEAMALLOC_ERROR;
+		LOG_ERROR_STR("Beamlet allocation failed with errorcode: " << ackEvent.status);
 		return (false);
 	}
 
 	// read new angles from parameterfile.
-	m_beamID=ackEvent.handle;
+	m_beamID = ackEvent.handle;
 
 	double directionAngle1(0.0);
 	double directionAngle2(0.0);
@@ -483,17 +477,17 @@ bool	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 
 		beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
 		beamPointToEvent.pointing.setDirection(directionAngle1,directionAngle2);
-		m_beamServer.send(beamPointToEvent);
+		itsBeamServer->send(beamPointToEvent);
 	}
 	else { 	// its a vecor with angles.
 		vector<double>::iterator declination = declinations.begin();
-		vector<double>::iterator angle2It = rightAscentions.begin();
+		vector<double>::iterator rightAscention = rightAscentions.begin();
 		for (vector<string>::iterator timesIt = sourceTimes.begin(); 
 									  timesIt != sourceTimes.end(); ++timesIt) { 
 			beamPointToEvent.pointing.setTime(RTC::Timestamp(
 											APLUtilities::decodeTimeString(*timesIt),0));
-			beamPointToEvent.pointing.setDirection(*angle1It++,*angle2It++);
-			m_beamServer.send(beamPointToEvent);
+			beamPointToEvent.pointing.setDirection(*declination++,*rightAscention++);
+			itsBeamServer->send(beamPointToEvent);
 		}
 	}
 
@@ -506,7 +500,7 @@ bool	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 void BeamControl::doRelease(GCFEvent&	event)
 {
 	BSBeamfreeEvent		beamFreeEvent;
-	beamFreeEvent.handle = ...beamID ...
+//TODO	beamFreeEvent.handle = ...beamID ...
 	itsBeamServer->send(beamFreeEvent);
 }
 
@@ -514,13 +508,13 @@ void BeamControl::doRelease(GCFEvent&	event)
 //
 // handleBeamFreeAck(event)
 //
-bool BeamControlBeamFreeAck(GCFEvent&		event)
+bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 {
-	BSBeamfreeackEvent	ack(event);
-	if (ack.status != 0 || ack.handle != ...beamID...) {
-		errorCode = CT_RESULT_BEAMFREE_ERROR;
-		LOG_ERROR_STR("Beamlet de-allocation failed with errorcode: ", ack.status);
-	}
+//TODO	BSBeamfreeackEvent	ack(event);
+//TODO	if (ack.status != 0 || ack.handle != ...beamID...) {
+//TODO		errorCode = CT_RESULT_BEAMFREE_ERROR;
+//TODO		LOG_ERROR_STR("Beamlet de-allocation failed with errorcode: " << ack.status);
+//TODO	}
 }
 
 // _connectedHandler(port)
