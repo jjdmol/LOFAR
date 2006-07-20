@@ -1,5 +1,5 @@
 # new setup
-prefix	=	LOFAR.PIC.Ring[1].Station[1].DigBoardCtrl.
+prefix	=	LOFAR.PermSW.Ring1.RS102.DigBoardCtrl.
 
 instanceNr		= 0
 

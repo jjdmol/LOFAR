@@ -21,6 +21,7 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Deployment.h>
 
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
@@ -54,8 +55,10 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 	GCFTask 			((State)&DigitalBoardControl::initial_state,cntlrName),
 	PropertySetAnswerHandlerInterface(),
 	itsPropertySetAnswer(*this),
-	itsPropertySet		(),
-	itsPropertySetInitialized (false),
+	itsOwnPropertySet	(),
+	itsExtPropertySet	(),
+	itsOwnPSinitialized (false),
+	itsExtPSinitialized (false),
 //	itsParentControl	(0),
 //	itsParentPort		(0),
 	itsTimerPort		(0),
@@ -87,7 +90,6 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
 	registerProtocol (RSP_PROTOCOL, 	   RSP_PROTOCOL_signalnames);
-
 }
 
 
@@ -100,9 +102,12 @@ DigitalBoardControl::~DigitalBoardControl()
 
 	cancelSubscription();	// tell RSPdriver to stop sending updates.
 
-	if (itsPropertySet) {
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
-		itsPropertySet->disable();
+	if (itsOwnPropertySet) {
+		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
+	}
+
+	if (itsRSPDriver) {
+		itsRSPDriver->close();
 	}
 
 	// ...
@@ -117,7 +122,8 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
 
 	switch(answer.signal) {
-	case F_MYPS_ENABLED: {
+	case F_MYPS_ENABLED: 
+	case F_EXTPS_LOADED: {
 		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
 		if(pPropAnswer->result != GCF_NO_ERROR) {
 			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
@@ -127,30 +133,30 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 		itsTimerPort->setTimer(0.0);
 		break;
 	}
+	
+	case F_VGETRESP: {	// initial get of required clock
+		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+		if (strstr(pPropAnswer->pPropName, PN_STATION_CLOCK) != 0) {
+			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
 
-	case F_PS_CONFIGURED: {
-		GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
-		if(pConfAnswer->result == GCF_NO_ERROR) {
-			LOG_DEBUG(formatString("%s : apc %s Loaded",
-										getName().c_str(), pConfAnswer->pApcName));
-			//apcLoaded();
+			// signal main task we have the value.
+			itsTimerPort->setTimer(0.0);
+			break;
 		}
-		else {
-			LOG_ERROR(formatString("%s : apc %s NOT LOADED",
-										getName().c_str(), pConfAnswer->pApcName));
-		}
-		break;
+		LOG_WARN_STR("Got VGETRESP signal from unknown property " << 
+															pPropAnswer->pPropName);
 	}
 
-	case F_VGETRESP:
 	case F_VCHANGEMSG: {
 		// check which property changed
 		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-		if (strstr(pPropAnswer->pPropName, DB_PROP_CLOCK) != 0) {
-			itsClock = (static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
+		if (strstr(pPropAnswer->pPropName, PN_STATION_CLOCK) != 0) {
+			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
 			sendClockSetting();
+			break;
 		}
-		break;
+		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << 
+															pPropAnswer->pPropName);
 	}
 
 //	case F_SUBSCRIBED:
@@ -161,6 +167,7 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 //	case F_MYPS_ENABLED:
 //	case F_MYPS_DISABLED:
 //	case F_VGETRESP:
+//	case F_VSETRESP:
 //	case F_VCHANGEMSG:
 //	case F_SERVER_GONE:
 
@@ -188,35 +195,60 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		LOG_DEBUG ("Activating PropertySets");
-		string	propSetName = formatString(DB_PROPSET_NAME, itsInstanceNr);
-		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  DB_PROPSET_TYPE,
-																  PS_CAT_PERM_AUTOLOAD,
-																  &itsPropertySetAnswer));
-		itsPropertySet->enable();
+		string	myPropSetName(createPropertySetName(PSN_DIG_BOARD, itsInstanceNr));
+		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
+		itsOwnPropertySet = GCFMyPropertySetPtr(
+								new GCFMyPropertySet(myPropSetName.c_str(),
+													 PST_DIG_BOARD,
+													 PS_CAT_PERM_AUTOLOAD,
+													 &itsPropertySetAnswer));
+		itsOwnPropertySet->enable();		// will result in F_MYPS_ENABLED
 
-		// TODO: load station property set containing the systemClock setting.
+		// When myPropSet is enables we will connect to the external PropertySet
+		// that dictates the systemClock setting.
 
 		// Wait for timer that is set in PropertySetAnswer on ENABLED event
 		}
 		break;
 
 	case F_TIMER:
-		if (!itsPropertySetInitialized) {
-			itsPropertySetInitialized = true;
+		// first timer event if from own propertyset
+		if (!itsOwnPSinitialized) {
+			itsOwnPSinitialized = true;
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
-			itsPropertySet->setValue(DB_PROP_CONNECTED, GCFPVBool(false));
-		  
-			// Start ParentControl task
-//			LOG_DEBUG ("Enabling ParentControl task");
-//			itsParentPort = itsParentControl->registerTask(this);
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+			itsOwnPropertySet->setValue(PN_DB_CONNECTED, GCFPVBool(false));
+			
+			// Now connect to propertyset that dictates the clocksetting
+			string	extPropSetName(createPropertySetName(PSN_STATION_CLOCK, itsInstanceNr));
+			LOG_DEBUG_STR ("Connecting to PropertySet " << extPropSetName);
+			itsExtPropertySet = GCFExtPropertySetPtr(
+									new GCFExtPropertySet(extPropSetName.c_str(),
+														  PST_STATION_CLOCK,
+														  &itsPropertySetAnswer));
+			itsExtPropertySet->load();		// will result in F_EXTPS_LOADED
+			break;
+		}
 
-			LOG_DEBUG ("Going to connect state");
+		// second timer event is from external propertyset
+		if (!itsExtPSinitialized) {
+			itsExtPSinitialized = true;
+
+			GCFProperty*	requiredClockProp = 
+						itsExtPropertySet->getProperty(PN_STATION_CLOCK);
+			ASSERTSTR(requiredClockProp, "Property " << PN_STATION_CLOCK << 
+									" not in propertyset " << PSN_STATION_CLOCK);
+			
+			requiredClockProp->requestValue();
+			break;
+		}
+
+		// third timer event is from retrieving the required clock.
+		if (itsClock) {
+			LOG_DEBUG ("Attached to external propertySet, going to connect state");
 			TRAN(DigitalBoardControl::connect_state);			// go to next state.
 		}
 		break;
@@ -254,8 +286,8 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 
 	case F_ENTRY:
 	case F_TIMER:
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("connecting"));
-		itsPropertySet->setValue(DB_PROP_CONNECTED,  GCFPVBool(false));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("connecting"));
+		itsOwnPropertySet->setValue(PN_DB_CONNECTED,  GCFPVBool(false));
 		itsSubscription = 0;
 		itsRSPDriver->open();		// will result in F_CONN or F_DISCONN
 		break;
@@ -265,7 +297,7 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 									"F_CONNECTED event from port " << port.getName());
 
 		LOG_DEBUG ("Connected with RSPDriver, going to subscription state");
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 		TRAN(DigitalBoardControl::subscribe_state);		// go to next state.
 		break;
 
@@ -274,7 +306,7 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 		ASSERTSTR (&port == itsRSPDriver, 
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with RSPDriver failed, retry in 2 seconds");
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString("connection timeout"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString("connection timeout"));
 		itsTimerPort->setTimer(2.0);
 		break;
 
@@ -305,7 +337,7 @@ GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event,
 
 	case F_ENTRY:
 	case F_TIMER:
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("subscribe on clock"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("subscribe on clock"));
 		requestSubscription();		// will result in RSP_SUBCLOCKACK;
 		break;
 
@@ -317,7 +349,7 @@ GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event,
 		RSPSubclockackEvent	ack(event);
 		if (ack.status != SUCCESS) {
 			LOG_WARN ("Could not get subscribtion on clock, retry in 2 seconds");
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString("subscribe failed"));
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString("subscribe failed"));
 			itsTimerPort->setTimer(2.0);
 			break;
 		}
@@ -325,7 +357,7 @@ GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event,
 		itsSubscription = ack.handle;
 	
 		LOG_DEBUG ("Subscription successful, going to retrieve state");
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		TRAN(DigitalBoardControl::retrieve_state);				// go to next state.
 		}
 		break;
@@ -358,7 +390,7 @@ GCFEvent::TResult DigitalBoardControl::retrieve_state(GCFEvent& event,
 
 	case F_ENTRY:
 	case F_TIMER:
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("retrieve clock"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("retrieve clock"));
 		requestClockSetting();		// will result in RSP_GETCLOCKACK;
 		break;
 
@@ -370,11 +402,11 @@ GCFEvent::TResult DigitalBoardControl::retrieve_state(GCFEvent& event,
 		RSPGetclockackEvent	ack(event);
 		if (ack.status != SUCCESS) {
 			LOG_WARN ("Could not retrieve clocksetting of RSPDriver, retry in 2 seconds");
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString("getclock failed"));
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString("getclock failed"));
 			itsTimerPort->setTimer(2.0);
 			break;
 		}
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 
 		if (ack.clock != itsClock) {
 			LOG_INFO_STR ("StationClock is " << ack.clock << ", required clock is " << itsClock << ", changing StationClock");
@@ -418,7 +450,7 @@ GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event,
 
 	case F_ENTRY:
 	case F_TIMER:
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("set clock"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("set clock"));
 		sendClockSetting();		// will result in RSP_SETCLOCKACK;
 		break;
 
@@ -431,12 +463,12 @@ GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event,
 		if (ack.status != SUCCESS) {
 			LOG_ERROR_STR ("Clock could not be set to " << itsClock << 
 															", retry in 5 seconds.");
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("clockset error"));
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("clockset error"));
 			itsTimerPort->setTimer(5.0);
 			break;
 		}
 		LOG_INFO_STR ("StationClock is set to " << itsClock << ", going to operational state");
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		TRAN(DigitalBoardControl::active_state);				// go to next state.
 		break;
 	}
@@ -468,8 +500,8 @@ GCFEvent::TResult DigitalBoardControl::active_state(GCFEvent& event, GCFPortInte
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("active"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("active"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		break;
 	}
 
@@ -490,14 +522,14 @@ GCFEvent::TResult DigitalBoardControl::active_state(GCFEvent& event, GCFPortInte
 		RSPUpdclockEvent	updateEvent(event);
 		if (updateEvent.status != SUCCESS || updateEvent.clock == 0) {
 			LOG_ERROR_STR ("StationClock has stopped! Going to setClock state to try to solve the problem");
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("Clock stopped"));
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("Clock stopped"));
 			TRAN(DigitalBoardControl::setClock_state);
 			break;
 		}
 
 		if (updateEvent.clock != itsClock) {
 			LOG_ERROR_STR ("CLOCK WAS CHANGED TO " << updateEvent.clock << " BY SOMEONE WHILE CLOCK SHOULD BE " << itsClock << ". CHANGING CLOCK BACK.");
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("Clock unallowed changed"));
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("Clock unallowed changed"));
 			TRAN (DigitalBoardControl::setClock_state);
 		}
 
@@ -523,7 +555,7 @@ void DigitalBoardControl::_disconnectedHandler(GCFPortInterface& port)
 	port.close();
 	if (&port == itsRSPDriver) {
 		LOG_DEBUG("Connection with RSPDriver failed, going to reconnect state");
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("connection lost"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("connection lost"));
 		TRAN (DigitalBoardControl::connect_state);
 	}
 }
