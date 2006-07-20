@@ -32,7 +32,8 @@
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/BS_Protocol/BS_Protocol.ph>
+#include <APL/APLCommon/ControllerDefines.h>
+#include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 #include "CalibrationControl.h"
 #include "CalibrationControlDefines.h"
@@ -40,8 +41,6 @@
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
-using namespace LOFAR::OTDB;
-using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
@@ -78,18 +77,11 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	itsAntennaArray  = globalParameterSet()->getString("antennaArray");
 	itsRCUvector	 = globalParameterSet()->getUint16Vector("rcus");
 
-	// attach to child control task
-	itsChildControl = ChildControl::instance();
-	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
-	itsChildPort->open();		// will result in F_CONNECTED
-
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
 	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
 									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for Parentcontrol");
+	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
 	itsParentPort->open();		// will result in F_CONNECTED
 
 	// need port for timers.
@@ -127,7 +119,7 @@ CalibrationControl::~CalibrationControl()
 //
 // setState(CTstateNr)
 //
-void    ObservationControl::setState(CTState::CTstateNr     newState)
+void    CalibrationControl::setState(CTState::CTstateNr     newState)
 {
 	itsState = newState;
 
@@ -138,17 +130,6 @@ void    ObservationControl::setState(CTState::CTstateNr     newState)
 	}
 }   
 
-
-//
-// convertDirection(string) : int32
-//
-int32 CalibrationControl::convertDirection(const string&	typeName)
-{
-	if (typeName == "J2000") 	{ return (1); }
-	if (typeName == "AZEL") 	{ return (2); }
-	if (typeName == "LMN")	 	{ return (3); }
-	return (2);
-}
 
 //
 // convertBandSelection(string) : uint8
@@ -178,6 +159,8 @@ uint8 CalibrationControl::convertBandSelection(const string&	bandselection)
 //
 bool CalibrationControl::propertySetsAvailable()
 {
+	// TODO: calculate m_n_rcus: racks * subracks ...
+	uint32	m_n_rcus = 192;
 	return (m_rcuFunctionalityMap.size() == m_n_rcus);
 }
 
@@ -255,12 +238,12 @@ void CalibrationControl::handlePropertySetAnswer(GCFEvent& answer)
 										rcu, (functional ? "true" : "false")));
 			}
 			// TODO
-			if (getLogicalDeviceState() == LOGICALDEVICE_STATE_ACTIVE) {
-				// check functionality state of RCU's
-				if (!checkQuality()) {
-					suspend(LD_RESULT_LOW_QUALITY);
-				}
-			}
+//TODO			if (getLogicalDeviceState() == LOGICALDEVICE_STATE_ACTIVE) {
+//TODO				// check functionality state of RCU's
+//TODO				if (!checkQuality()) {
+//TODO					suspend(LD_RESULT_LOW_QUALITY);
+//TODO				}
+//TODO			}
 		}
 		break;
 	}
@@ -301,9 +284,9 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		LOG_DEBUG ("Activating my PropertySet");
-		string	propSetName = formatString(CS_PROPSET_NAME, itsInstanceNr);
+		string	propSetName = formatString(CC_PROPSET_NAME, itsInstanceNr);
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  CS_PROPSET_TYPE,
+																  CC_PROPSET_TYPE,
 																  PS_CAT_TEMPORARY,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
@@ -347,7 +330,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		ASSERTSTR (&port == itsCalServer, 
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with CalServer failed, retry in 2 seconds");
-		itsTimerPort.setTimer(2.0);
+		itsTimerPort->setTimer(2.0);
 		break;
 	
 	default:
@@ -380,8 +363,8 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		loadPVSSpropertySets();							// of all RCU boards
-														// this taes a while so
-		itsPropAvailTimer = itsTimerPort.setTimer(3.0);	// check over 3 seconds
+														// this takes a while so
+		itsPropSetAvailTimer = itsTimerPort->setTimer(3.0);	// check over 3 seconds
 		break;
 	}
 
@@ -390,7 +373,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case F_CONNECTED:
 		ASSERTSTR (&port == itsCalServer, 
-									"F_CONNECTED event from port " << port.getNam());
+									"F_CONNECTED event from port " << port.getName());
 		itsTimerPort->cancelAllTimers();
 		LOG_DEBUG ("Reconnected with CalServer");
 		// TODO: resend all claimes.
@@ -399,9 +382,9 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	case F_DISCONNECTED:
 		port.close();
 		ASSERTSTR (&port == itsCalServer, 
-								"F_DISCONNECTED event from port " << port.getNam());
+								"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with CalServer failed, retry in 2 seconds");
-		itsTimerPort.setTimer(2.0);
+		itsTimerPort->setTimer(2.0);
 		break;
 
 	case F_TIMER:  {
@@ -409,10 +392,10 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		if (timerEvent.id == itsPropSetAvailTimer) {
 			if (propertySetsAvailable()) {
 				LOG_DEBUG("PVSS propertySet are active.");
-				itsPropAvailTimer = 0;
+				itsPropSetAvailTimer = 0;
 			}
 			else {
-				itsPropAvailTimer = itsTimerPort.setTimer(1.0);	// check again later
+				itsPropSetAvailTimer = itsTimerPort->setTimer(1.0);	// check again later
 			}
 		}
 		else {
@@ -449,12 +432,12 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		if (claimResources()) {
 			LOG_DEBUG_STR (msg.cntlrName << ":resources claimed successful");
 			setState(CTState::CLAIMED);
-			answer.result = CT_RESULT_SUCCESS;
+			answer.result = CT_RESULT_NO_ERROR;
 		}
 		else {
 			LOG_ERROR_STR (msg.cntlrName << 
 							":failed to claim resources, staying in idle mode");
-			setSTate(CTState::CONNECTED);
+			setState(CTState::CONNECTED);
 			answer.result = CT_RESULT_CLAIM_FAILED;
 		}
 		itsParentPort.send(answer);
@@ -508,12 +491,12 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		if (ack.status == SUCCESS) {
 			LOG_DEBUG ("Start of CalServer was succesful");
 			setState(CTState::PREPARED);
-			answer.result = CT_RESULT_SUCCESS;
+			answer.result = CT_RESULT_NO_ERROR;
 		}
 		else {
 			LOG_ERROR("Start of calibration failed, staying in CLAIMED mode");
 			setState(CTState::CLAIMED);
-			answer.result = CT_RESULT_START_FAILED;
+			answer.result = CT_RESULT_CALSTART_FAILED;
 		}
 		itsParentPort->send();
 		break;
@@ -525,7 +508,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		if (ack.status == SUCCESS) {
 			LOG_DEBUG ("Calserver successfully stopped");
 			setState(CTState::RELEASED);
-			answer.result = CT_RESULT_SUCCESS;
+			answer.result = CT_RESULT_NO_ERROR;
 		}
 		else {
 			LOG_ERROR("Stop of calibration failed, going to SUSPENDED mode");

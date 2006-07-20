@@ -28,6 +28,7 @@
 
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -39,7 +40,6 @@
 #include <APL/APLCommon/PropertySetAnswer.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
 
@@ -61,7 +61,7 @@ using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
-using	GCF::TM::GCFTask;
+using	APLCommon::ParentControl;
 
 
 class CalibrationControl : public GCFTask,
@@ -90,8 +90,15 @@ private:
 
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
-   	boost::shared_ptr<ACC::APS::ParameterSet> 
-		 readCalParameters (OTDB::treeIDType	ObsTreeID);
+
+	void    setState(CTState::CTstateNr     newState);
+	uint8	convertBandSelection(const string&	bandselection);
+	bool	propertySetsAvailable();
+	int32	getRCUhardwareNr(const string&	propName);
+	void	loadPVSSpropertySets();
+	bool	claimResources();
+	void	startCalServer();
+	void	stopCalServer();
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
 
@@ -127,10 +134,18 @@ private:
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;
 	time_t					itsStopTime;
+	uint32					itsPropSetAvailTimer;
 
 	int16					itsNyquistZone;
 	string					itsBandSelection;
+	string					itsAntennaArray;
 	vector<uint16>			itsRCUvector;
+
+	//TODO
+	typedef map<uint16,bool> TRCUFunctionalityMap;
+	TRCUFunctionalityMap        m_rcuFunctionalityMap;
+	typedef map<uint16,boost::shared_ptr<GCF::PAL::GCFExtPropertySet> > TRCUMap;
+	TRCUMap           			m_rcuMap;
 };
 
   };//StationCU
