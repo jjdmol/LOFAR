@@ -26,12 +26,15 @@
 namespace LOFAR {
   namespace StationCU {
 
-#define DB_TASKNAME					"DigitalBoardCtrl"
+#define PSN_DIG_BOARD				"LOFAR_PermSW_@ring@_@station@_DigBoardCtrl@instance@"
+#define PST_DIG_BOARD				"DigBoardCtrl"
+#define PN_DB_CONNECTED				"connected"
+#define PN_DB_CLOCK					"clock"
 
-#define DB_PROPSET_NAME				"LOFAR_ObsSW_ObsCtrl%d_DigitalBoardCtrl"
-#define DB_PROPSET_TYPE				"DigBrdCtrl"
-#define DB_PROP_CONNECTED			"connected"
-#define DB_PROP_CLOCK				"sampleClock"
+// next three line should be defined elsewhere because we are not the owner.
+#define	PSN_STATION_CLOCK			"LOFAR_PIC_@ring@_@station@_StationClock"
+#define PST_STATION_CLOCK			"StationClock"
+#define PN_STATION_CLOCK			"clock"
 
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"

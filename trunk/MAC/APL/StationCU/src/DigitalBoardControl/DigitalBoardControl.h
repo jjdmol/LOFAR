@@ -28,6 +28,7 @@
 
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -70,6 +71,7 @@ public:
 	explicit DigitalBoardControl(const string& cntlrName);
 	~DigitalBoardControl();
 
+private:
    	// PropertySetAnswerHandlerInterface method
    	virtual void handlePropertySetAnswer(GCFEvent& answer);
 
@@ -81,24 +83,26 @@ public:
    	GCFEvent::TResult setClock_state  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult active_state    (GCFEvent& e, GCFPortInterface& p);
 
-private:
 	// avoid defaultconstruction and copying
 	DigitalBoardControl();
 	DigitalBoardControl(const DigitalBoardControl&);
    	DigitalBoardControl& operator=(const DigitalBoardControl&);
 
    	void _disconnectedHandler(GCFPortInterface& port);
-
-   	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-
-   	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
-   	GCFMyPropertySetPtr           itsPropertySet;
-	bool						  itsPropertySetInitialized;
-
 	void requestSubscription();
 	void cancelSubscription();
 	void requestClockSetting();
 	void sendClockSetting();
+
+	// Data members
+   	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet>  GCFMyPropertySetPtr;
+   	typedef boost::shared_ptr<GCF::PAL::GCFExtPropertySet> GCFExtPropertySetPtr;
+
+   	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
+   	GCFMyPropertySetPtr				itsOwnPropertySet;
+   	GCFExtPropertySetPtr			itsExtPropertySet;
+	bool							itsOwnPSinitialized;
+	bool							itsExtPSinitialized;
 
 	// pointer to parent control task
 //	ParentControl*			itsParentControl;
