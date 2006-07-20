@@ -37,6 +37,7 @@
 #include <GCF/TM/GCF_TimerPort.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/ControllerAdmin.h>
 #include "CTState.h"
 
 // Avoid 'using namespace' in headerfiles
@@ -49,10 +50,9 @@ namespace LOFAR {
   using GCF::TM::GCFITCPort;
   using GCF::TM::GCFTimerPort;
   using APLCommon::CTState;
-  using namespace APLCommon;
-  namespace MainCU {
+  namespace APLCommon {
 
-// \addtogroup MainCU
+// \addtogroup APLCommon
 // @{
 
 //# --- Forward Declarations ---
@@ -134,36 +134,18 @@ private:
 
 	// Internal routines
 	void _processActionList();
+	void _doGarbageCollection();
 	void _setEstablishedState (const string&		aName, 
 							   CTState::CTstateNr	newState,
 							   time_t				atTime,
-							   bool					successful);
+							   uint16				result);
 	void _removeAction		  (const string&		aName,
 							   CTState::CTstateNr	requestedState);
 
-	// Define struct for administration of the child controllers.
-	typedef struct ControllerInfo_t {
-		string				name;			// uniq name of the controller
-		uint32				instanceNr;		// for nonshared controllers
-		OTDBtreeIDType		obsID;			// observation tree the cntlr belongs to
-		GCFPortInterface*	port;			// connection with the controller
-		uint16				cntlrType;		// type of controller
-		string				hostname;		// host the controller runs on
-		CTState::CTstateNr	requestedState;	// the state the controller should have
-		time_t				requestTime;	// time of requested state
-		CTState::CTstateNr	currentState;	// the state the controller has
-		time_t				establishTime;	// time the current state was reached
-		bool				failed;			// requested state could not be reached
-		// --- for use in action list ---
-		time_t				retryTime;		// time the request must be retried
-		uint32				nrRetries;		// nr of retries performed
-	} ControllerInfo;
-	//# Note: retryTime is always set to the time the command should be retried.
-	//# 	  When there is no connection with the child at that moment the retryTime
-	//#		  is set to 0 to indicate that the command is not yet forwarded
-	typedef list<ControllerInfo>::iterator			CIiter;
-	typedef list<ControllerInfo>::const_iterator	const_CIiter;
-	CIiter	findController(const string&	name);
+	#define	findController(cntlrName)	\
+			ControllerAdmin::instance()->findController(cntlrName)
+	typedef		ControllerAdmin::CIiter			CIiter;
+	typedef		ControllerAdmin::const_CIiter	const_CIiter;
 
 	//# --- Datamembers ---
 	GCFTCPPort*					itsListener;		// listener for child controllers
@@ -175,12 +157,15 @@ private:
 	uint32						itsStartupRetryInterval;
 	uint32						itsMaxStartupRetries;
 
-	list<ControllerInfo>		itsCntlrList;		// admin. of child controllers
+	list<ControllerInfo>*		itsCntlrList;		// admin. of child controllers
 
 	// All actions from the parent task are queued as ControllerInfo objects
 	// and handled in the operational stateMachine.
 	list<ControllerInfo>		itsActionList;		// list of actions to perform.
 	uint32						itsActionTimer;		// ID of actiontimer.
+
+	uint32						itsGarbageTimer;	// for garbage collection
+	uint16						itsGarbageInterval;	// seconds between garbage coll.
 
 	GCFTimerPort*				itsCompletionTimer;	// to signal parent in situation B
 	GCFITCPort*					itsCompletionPort;	// to signal parent in situation C
@@ -192,7 +177,7 @@ private:
 //# --- Inline functions ---
 
 // @}
-  } // namespace MainCU
+  } // namespace APLCommon
 } // namespace LOFAR
 
 #endif

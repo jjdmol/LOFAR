@@ -48,9 +48,9 @@ namespace LOFAR {
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPortInterface;
   using APLCommon::CTState;
-  namespace MainCU {
+  namespace APLCommon {
 
-// \addtogroup MainCU
+// \addtogroup APLCommon
 // @{
 
 //# --- Forward Declarations ---
@@ -141,7 +141,7 @@ private:
 //# --- Inline functions ---
 
 // @}
-  } // namespace MainCU
+  } // namespace APLCommon
 } // namespace LOFAR
 
 #endif

@@ -65,7 +65,7 @@ CTState::~CTState()
 //
 string	CTState::name(uint16			aStateNr)
 { 
-	return ((aStateNr < LAST_STATE) ?  itsStates[aStateNr] : "");
+	return ((aStateNr < LAST_STATE) ?  itsStates[aStateNr] : "NoConnection");
 }
 
 //
