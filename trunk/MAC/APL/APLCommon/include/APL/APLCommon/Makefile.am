@@ -9,15 +9,11 @@ pkginclude_HEADERS = \
 	PropertySetAnswer.h \
 	PropertySetAnswerHandlerInterface.h  \
 	CTState.h \
+	ControllerInfo.h \
+	ControllerAdmin.h \
 	ChildControl.h \
 	ParentControl.h \
-	ResourceAllocator.h 
-
-#	LogicalDeviceFactoryBase.h 
-#	LogicalDeviceFactory.h 
-#	LogicalDevice.h 
-#	SharedLogicalDeviceFactory.h 
-#	SingleInstanceLogicalDeviceFactory.h 
+	Observation.h
 
 NOINSTHDRS =
 

@@ -26,8 +26,6 @@
 namespace LOFAR { 
 namespace APLCommon {
 
-#define	LOFAR_SHARE_LOCATION	"/opt/lofar/share"
-
 // Note: To limit the dependenties of SAS/OTDB
 typedef	uint32					OTDBtreeIDType;
 

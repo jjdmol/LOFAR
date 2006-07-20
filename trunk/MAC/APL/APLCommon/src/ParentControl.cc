@@ -35,9 +35,8 @@
 
 namespace LOFAR {
   using namespace GCF::TM;
-  using namespace APLCommon;
   using namespace ACC::APS;
-  namespace MainCU {
+  namespace APLCommon {
 
 typedef struct stateFlow_t {
 	uint16				signal;
@@ -565,5 +564,5 @@ ParentControl::PIiter	ParentControl::findParent(const string&		aName)
 	return (iter);
 }
 
-  } // namespace MainCU
+  } // namespace APLCommon
 } // namespace LOFAR

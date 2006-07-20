@@ -10,16 +10,17 @@ libaplcommon_la_CPPFLAGS =  -DBOOST_DISABLE_THREADS \
 							-fmessage-length=0 \
 							-fdiagnostics-show-location=once
 
-libaplcommon_la_SOURCES =   $(DOCHDRS) \
+libaplcommon_la_SOURCES  =  $(DOCHDRS) \
 							StartDaemon_Protocol.cc \
 							Controller_Protocol.cc \
 							APLUtilities.cc \
 							ControllerDefines.cc \
 							PropertySetAnswer.cc \
 							CTState.cc \
+							ControllerAdmin.cc \
 							ChildControl.cc \
 							ParentControl.cc \
-							ResourceAllocator.cc 
+							Observation.cc
 
 
 NOINSTHDRS 				=

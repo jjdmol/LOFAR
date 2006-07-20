@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/Deployment.h>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
@@ -35,9 +36,8 @@
 
 namespace LOFAR {
   using namespace GCF::TM;
-  using namespace APLCommon;
   using namespace ACC::APS;
-  namespace MainCU {
+  namespace APLCommon {
 
 //-------------------------- creation and destroy ---------------------------
 
@@ -61,8 +61,11 @@ ChildControl::ChildControl() :
 	itsStartDaemonMap		(),
 	itsStartupRetryInterval	(10),
 	itsMaxStartupRetries	(5),
-	itsCntlrList	 		(),
+	itsCntlrList	 		(0),
 	itsActionList	 		(),
+	itsActionTimer			(0),
+	itsGarbageTimer			(0),
+	itsGarbageInterval		(30),		// TODO: set to 300 for real life
 	itsCompletionTimer		(0),
 	itsCompletionPort		(0)
 {
@@ -79,6 +82,12 @@ ChildControl::ChildControl() :
 		itsStartupRetryInterval = globalParameterSet()->
 									getInt32("ChildControl.MaxStartupRetries");
 	}
+	if (globalParameterSet()->isDefined("ChildControl.GarbageCollectionInterval")) {
+		itsGarbageInterval = globalParameterSet()->
+									getInt32("ChildControl.GarbageCollectionInterval");
+	}
+
+	itsCntlrList = &(ControllerAdmin::instance()->itsList);
 }
 
 //
@@ -102,7 +111,7 @@ ChildControl::~ChildControl()
 	itsStartDaemonMap.clear();
 
 	// clear controller list.
-	itsCntlrList.clear();
+	itsCntlrList->clear();
 
 	// clear action list.
 	itsActionList.clear();
@@ -140,7 +149,7 @@ bool ChildControl::startChild (const string&		aName,
 							   const string&		hostname)
 {
 	// first check if child already exists
-	if (findController(aName) != itsCntlrList.end()) {
+	if (findController(aName) != itsCntlrList->end()) {
 		return (false);
 	}	
 
@@ -177,7 +186,7 @@ bool ChildControl::startChild (const string&		aName,
 	// Alright, child does not exist yet. 
 	// construct structure with all information
 	ControllerInfo		ci;
-	ci.name			  = aName;
+	ci.cntlrName	  = aName;
 	ci.instanceNr	  = instanceNr;
 	ci.obsID		  = anObsID;
 	ci.cntlrType	  = aCntlrType;
@@ -191,7 +200,8 @@ bool ChildControl::startChild (const string&		aName,
 	ci.nrRetries	  = 0;
 
 	// Update our administration.
-	itsCntlrList.push_back(ci);
+	itsCntlrList->push_back(ci);
+	LOG_DEBUG_STR("Added " << aName << " to the controllerList");
 
 	// Add it to the action list.
 	itsActionList.push_back(ci);
@@ -221,8 +231,8 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 	bool	checkType   = (aCntlrType != CNTLRTYPE_NO_TYPE);
 	time_t	currentTime = time(0);
 
-	CIiter			iter  = itsCntlrList.begin();
-	const_CIiter	end   = itsCntlrList.end();
+	CIiter			iter  = itsCntlrList->begin();
+	const_CIiter	end   = itsCntlrList->end();
 	while (iter != end) {
 		// count the child when x has to be checked and matches:
 		//  id==id	checkID	count_it
@@ -230,7 +240,7 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 		//	  Y		  N			Y
 		//	  N		  Y			N --> checkID && id!=id
 		//	  N		  N			Y
-		if (!(checkName && iter->name != aName) && 
+		if (!(checkName && iter->cntlrName != aName) && 
 			!(checkID && iter->obsID != anObsID) && 
 		    !(checkType && iter->cntlrType != aCntlrType)) {
 			// send request to child
@@ -256,7 +266,7 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 CTState::CTstateNr ChildControl::getCurrentState	(const string&	aName)
 {
 	CIiter	controller = findController(aName);
-	if (controller == itsCntlrList.end()) {
+	if (controller == itsCntlrList->end()) {
 		return (CTState::NOSTATE);
 	}
 
@@ -271,7 +281,8 @@ CTState::CTstateNr ChildControl::getCurrentState	(const string&	aName)
 CTState::CTstateNr ChildControl::getRequestedState (const string&	aName)
 {
 	CIiter	controller = findController(aName);
-	if (controller == itsCntlrList.end()) {
+	// not found?
+	if (controller == itsCntlrList->end()) {
 		return (CTState::NOSTATE);
 	}
 
@@ -291,12 +302,12 @@ uint32 ChildControl::countChilds (OTDBtreeIDType	anObsID,
 	bool	checkType = (aCntlrType != CNTLRTYPE_NO_TYPE);
 
 	if (!checkID && !checkType) {
-		return (itsCntlrList.size());
+		return (itsCntlrList->size());
 	}
 
 	uint32			count = 0;
-	const_CIiter	iter  = itsCntlrList.begin();
-	const_CIiter	end   = itsCntlrList.end();
+	const_CIiter	iter  = itsCntlrList->begin();
+	const_CIiter	end   = itsCntlrList->end();
 	while (iter != end) {
 		if (!(checkID && iter->obsID != anObsID) && 
 		    !(checkType && iter->cntlrType != aCntlrType)) {
@@ -327,16 +338,16 @@ ChildControl::getPendingRequest (const string&		aName,
 	bool	checkID     = (anObsID != 0);
 	bool	checkType   = (aCntlrType != CNTLRTYPE_NO_TYPE);
 
-	const_CIiter	iter  = itsCntlrList.begin();
-	const_CIiter	end   = itsCntlrList.end();
+	const_CIiter	iter  = itsCntlrList->begin();
+	const_CIiter	end   = itsCntlrList->end();
 	while (iter != end) {
-		if (!(checkName && iter->name != aName) && 
+		if (!(checkName && iter->cntlrName != aName) && 
 			!(checkID && iter->obsID != anObsID) && 
 		    !(checkType && iter->cntlrType != aCntlrType) &&
 			(iter->requestedState != iter->currentState)) {
 			// add info to vector
 			StateInfo	si;
-			si.name			  = iter->name;
+			si.name	 		  = iter->cntlrName;
 			si.cntlrType	  = iter->cntlrType;
 			si.isConnected	  = (iter->port != 0);
 			si.requestedState = iter->requestedState;
@@ -361,13 +372,13 @@ ChildControl::getCompletedStates (time_t	lastPollTime)
 {
 	vector<ChildControl::StateInfo>	resultVec;
 
-	const_CIiter	iter  = itsCntlrList.begin();
-	const_CIiter	end   = itsCntlrList.end();
+	const_CIiter	iter  = itsCntlrList->begin();
+	const_CIiter	end   = itsCntlrList->end();
 	while (iter != end) {
 		if (iter->establishTime > lastPollTime) {
 			// add info to vector
 			StateInfo	si;
-			si.name			  = iter->name;
+			si.name			  = iter->cntlrName;
 			si.cntlrType	  = iter->cntlrType;
 			si.isConnected	  = (iter->port != 0);
 			si.requestedState = iter->requestedState;
@@ -383,20 +394,6 @@ ChildControl::getCompletedStates (time_t	lastPollTime)
 }
 
 // -------------------- PRIVATE ROUTINES --------------------
-
-//
-// findController (name)
-//
-ChildControl::CIiter ChildControl::findController(const string&		aName)
-{
-	CIiter			iter = itsCntlrList.begin();
-	const_CIiter	end  = itsCntlrList.end();
-
-	while (iter != end && iter->name != aName) {
-		iter++;
-	}	
-	return (iter);
-}
 
 //
 // _processActionList()
@@ -427,9 +424,9 @@ void ChildControl::_processActionList()
 		}
 
 		// search if corresponding controller exists
-		CIiter controller = findController(action->name);
-		if (controller == itsCntlrList.end()) {
-			LOG_WARN_STR("Controller " << action->name << 
+		CIiter controller = findController(action->cntlrName);
+		if (controller == itsCntlrList->end()) {
+			LOG_WARN_STR("Controller " << action->cntlrName << 
 						 " not in administration, discarding request for state " << 
 						 action->requestedState);
 			action++;					// hop to next
@@ -465,11 +462,11 @@ void ChildControl::_processActionList()
 
 				// There is an connection with the startDaemon
 				if (action->nrRetries < itsMaxStartupRetries) {	// retries left?
-					LOG_DEBUG_STR("Requesting start of " << action->name << " at " 
+					LOG_DEBUG_STR("Requesting start of " << action->cntlrName << " at " 
 																	<< action->hostname);
 					STARTDAEMONCreateEvent		startRequest;
 					startRequest.cntlrType 	   = action->cntlrType;
-					startRequest.cntlrName 	   = action->name;
+					startRequest.cntlrName 	   = action->cntlrName;
 					startRequest.parentHost	   = GCF::Common::myHostname();
 					startRequest.parentService = itsListener->makeServiceName();
 					startDaemon->second->send(startRequest);
@@ -483,7 +480,7 @@ void ChildControl::_processActionList()
 //					... Parent is responsible for rescheduling! ...
 				}
 				else {
-					LOG_WARN_STR ("Could not start controller " << action->name << 
+					LOG_WARN_STR ("Could not start controller " << action->cntlrName << 
 								  " for observation " << action->obsID << 
 								  ", giving up.");
 				}
@@ -493,7 +490,7 @@ void ChildControl::_processActionList()
 		case CTState::CLAIMED:
 			{
 				CONTROLClaimEvent		request;
-				request.cntlrName = controller->name;
+				request.cntlrName = controller->cntlrName;
 				controller->port->send(request);
 			}
 			break;
@@ -501,7 +498,7 @@ void ChildControl::_processActionList()
 		case CTState::PREPARED:
 			{
 				CONTROLPrepareEvent		request;
-				request.cntlrName = controller->name;
+				request.cntlrName = controller->cntlrName;
 				controller->port->send(request);
 			}
 			break;
@@ -509,7 +506,7 @@ void ChildControl::_processActionList()
 		case CTState::ACTIVE:
 			{
 				CONTROLResumeEvent		request;
-				request.cntlrName = controller->name;
+				request.cntlrName = controller->cntlrName;
 				controller->port->send(request);
 			}
 			break;
@@ -517,7 +514,7 @@ void ChildControl::_processActionList()
 		case CTState::SUSPENDED:
 			{
 				CONTROLSuspendEvent		request;
-				request.cntlrName = controller->name;
+				request.cntlrName = controller->cntlrName;
 				controller->port->send(request);
 			}
 			break;
@@ -526,7 +523,7 @@ void ChildControl::_processActionList()
 		case CTState::FINISHED:
 			{
 				CONTROLReleaseEvent		request;
-				request.cntlrName = controller->name;
+				request.cntlrName = controller->cntlrName;
 				controller->port->send(request);
 			}
 			break;
@@ -555,7 +552,7 @@ void ChildControl::_removeAction (const string&			aName,
 	const_CIiter	end  = itsActionList.end();
 
 	while (iter != end) {
-		if (iter->name == aName && iter->requestedState == requestedState) {
+		if (iter->cntlrName == aName && iter->requestedState == requestedState) {
 			itsActionList.erase(iter);
 			return;
 		}
@@ -573,19 +570,27 @@ void ChildControl::_removeAction (const string&			aName,
 void ChildControl::_setEstablishedState(const string&		aName,
 										CTState::CTstateNr	newState,
 										time_t				atTime,
-										bool				successful)
+										uint16				result)
 {
 	CIiter	controller = findController(aName);
-	if (controller == itsCntlrList.end()) {
+	if (controller == itsCntlrList->end()) {
 		LOG_WARN_STR ("Could not update state of controller " << aName);
 		return;
 	}
 
 	// update controller information
-	if (!(controller->failed = !successful)) {;
+	if (!(controller->failed = (result != CT_RESULT_NO_ERROR))) {
 		controller->currentState  = newState;
 	}
 	controller->establishTime = atTime;
+
+	CTState		CntlrState;
+	LOG_DEBUG_STR("Controller " << aName <<" now in state "<< CntlrState.name(newState));
+
+	// Don't report 'ANYSTATE = lost connection' to the maintask yet.
+	if (newState == CTState::ANYSTATE) {
+		return;
+	}
 
 	// inform user by expiring a timer?
 	if (itsCompletionTimer) {
@@ -597,62 +602,60 @@ void ChildControl::_setEstablishedState(const string&		aName,
 		return;					// no, just return.
 	}
 
-	LOG_DEBUG_STR("newState=" << newState);
-
-	uint16	result = controller->failed ? CT_RESULT_UNSPECIFIED : CT_RESULT_NO_ERROR;
 	switch (newState) {
 	case CTState::CREATED: {
 			CONTROLStartedEvent	msg;
-			msg.cntlrName = controller->name;
-			msg.successful= successful;
+			msg.cntlrName = controller->cntlrName;
+			msg.successful= (result == CT_RESULT_NO_ERROR);
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
 	case CTState::CONNECTED: {
 			CONTROLConnectedEvent	msg;
-			msg.cntlrName = controller->name;
+			msg.cntlrName = controller->cntlrName;
 			msg.result    = result;
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
 	case CTState::CLAIMED: {
 			CONTROLClaimedEvent	msg;
-			msg.cntlrName = controller->name;
+			msg.cntlrName = controller->cntlrName;
 			msg.result    = result;
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
 	case CTState::PREPARED: {
 			CONTROLPreparedEvent	msg;
-			msg.cntlrName = controller->name;
+			msg.cntlrName = controller->cntlrName;
 			msg.result    = result;
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
 	case CTState::ACTIVE: {
 			CONTROLResumedEvent	msg;
-			msg.cntlrName = controller->name;
+			msg.cntlrName = controller->cntlrName;
 			msg.result    = result;
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
 	case CTState::SUSPENDED: {
 			CONTROLSuspendedEvent	msg;
-			msg.cntlrName = controller->name;
+			msg.cntlrName = controller->cntlrName;
 			msg.result    = result;
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
 	case CTState::RELEASED: {
 			CONTROLReleasedEvent	msg;
-			msg.cntlrName = controller->name;
+			msg.cntlrName = controller->cntlrName;
 			msg.result    = result;
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
-	case CTState::FINISHED: {
-			CONTROLFinishedEvent	msg;
-			msg.cntlrName = controller->name;
+	case CTState::FINISH: {
+			CONTROLFinishEvent	msg;
+			msg.cntlrName = controller->cntlrName;
+			msg.treeID	  = controller->obsID;
 			msg.result    = result;
 			itsCompletionPort->sendBack(msg);
 		}
@@ -660,6 +663,46 @@ void ChildControl::_setEstablishedState(const string&		aName,
 	default:
 		// do nothing
 		break;
+	}
+}
+
+//
+// _doGarbageCollection()
+//
+// Walks through the controllerlist and erase disconnected controllers.
+//
+void ChildControl::_doGarbageCollection()
+{
+	LOG_DEBUG ("Garbage collection");
+
+	CIiter			iter  = itsCntlrList->begin();
+	const_CIiter	end   = itsCntlrList->end();
+	while (iter != end) {
+		// Note: Removing a controller is done in two stages.
+		// 1: port == 0: inform main task about removal
+		// 2: port == -1: remove from list
+		// This is necc. because main task may poll childcontrol for results.
+		if (!iter->port) {
+			LOG_DEBUG_STR ("Controller " << iter->cntlrName << 
+							" is still unreachable, informing main task");
+			_setEstablishedState(iter->cntlrName, CTState::FINISH, time(0), 
+													CT_RESULT_LOST_CONNECTION);
+			iter->port = (GCFPortInterface*) -1;
+			// start timer for second stage.
+			if (itsGarbageTimer) {
+				itsTimerPort.cancelTimer(itsGarbageTimer);
+			}
+			itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
+			iter++;
+		} else if (iter->port == (GCFPortInterface*)-1) {
+			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << 
+												" from the controller list");
+			CIiter	iterCopy = iter;
+			iter++;
+			itsCntlrList->erase(iterCopy);
+		} else {
+			iter++;
+		}
 	}
 }
 
@@ -751,7 +794,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 
 			// Note: we do not keep an administration of the accepted child
 			// sockets. Their ports will be in the ControllerList as soon as
-			// they have send a CONNECTED msg.
+			// they have send a CONTROL_CONNECTED msg.
 		}
 		break;
 
@@ -761,8 +804,8 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	case F_DISCONNECTED: {
 			port.close();		// always close port
 
-			CIiter		controller = itsCntlrList.begin();
-			CIiter		end		   = itsCntlrList.end();
+			CIiter		controller = itsCntlrList->begin();
+			CIiter		end		   = itsCntlrList->end();
 			while (controller != end) {
 				// search corresponding controller
 				if (controller->port != &port) {
@@ -772,20 +815,39 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 
 				// found controller, close port
 				if (controller->currentState == CTState::FINISHED) {// expected disconnect?
-					itsCntlrList.erase(controller);			// just remove
+					LOG_DEBUG_STR("Removing " << controller->cntlrName << 
+															" from the controllerList");
+					itsCntlrList->erase(controller);			// just remove
 				}
-				else {
-					LOG_WARN_STR ("Lost connection with controller " << controller->name);
+				else {	// unexpected disconnect give child some time to reconnect(?)
+					LOG_WARN_STR ("Lost connection with controller " << 
+						controller->cntlrName << 
+						" while not in FINISHED state, waiting 5 minutes for reconnect");
+
+					_setEstablishedState(controller->cntlrName, CTState::ANYSTATE, 
+													time(0), CT_RESULT_LOST_CONNECTION);
 					controller->port = 0;
-					// TODO: implement garbage collection
+					if (itsGarbageTimer) {
+						itsTimerPort.cancelTimer(itsGarbageTimer);
+					}
+					itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
 				}
 			}
 		}
 		break;
 
 	case F_TIMER:
-		itsActionTimer = 0;
-		_processActionList();
+		{
+			GCFTimerEvent&      timerEvent = static_cast<GCFTimerEvent&>(event);
+			if (timerEvent.id == itsGarbageTimer) {
+				itsGarbageTimer = 0;
+				_doGarbageCollection();
+			}
+			else {
+				itsActionTimer = 0;
+				_processActionList();
+			}
+		}
 		break;
 
 	case STARTDAEMON_CREATED:	// startDaemon reports startup of program
@@ -794,7 +856,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		LOG_DEBUG_STR("Startup of " << result.cntlrName << " ready, result=" 	
 														<< result.result);
 		_setEstablishedState(result.cntlrName, CTState::CREATED, time(0),
-							 result.result == SD_RESULT_NO_ERROR);
+							 result.result);
 		}
 		break;
 
@@ -804,14 +866,14 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			CONTROLConnectedEvent		answer;
 
 			CIiter	controller = findController(msg.cntlrName);
-			if (controller == itsCntlrList.end()) {		// not found?
+			if (controller == itsCntlrList->end()) {		// not found?
 				LOG_WARN_STR ("CONNECT event received from unknown controller: " <<
 							  msg.cntlrName);
 				answer.result = CT_RESULT_UNSPECIFIED;
 			}
 			else {
 				LOG_DEBUG_STR("CONNECT event received from " << msg.cntlrName);
-				_setEstablishedState(msg.cntlrName, CTState::CONNECTED, time(0), true);
+				_setEstablishedState(msg.cntlrName, CTState::CONNECTED, time(0), CT_RESULT_NO_ERROR);
 				// first direct contact with controller, remember port
 				controller->port = &port;
 				answer.result = CT_RESULT_NO_ERROR;
@@ -823,42 +885,42 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	case CONTROL_CLAIMED: {
 			CONTROLClaimedEvent		result;
 			_setEstablishedState(result.cntlrName, CTState::CLAIMED, time(0),
-								 result.result == CT_RESULT_NO_ERROR);
+								 result.result);
 		}
 		break;
 	
 	case CONTROL_PREPARED: {
 			CONTROLPreparedEvent		result;
 			_setEstablishedState(result.cntlrName, CTState::PREPARED, time(0),
-								 result.result == CT_RESULT_NO_ERROR);
+								 result.result);
 		}
 		break;
 	
 	case CONTROL_RESUMED: {
 			CONTROLResumedEvent		result;
 			_setEstablishedState(result.cntlrName, CTState::ACTIVE, time(0),
-								 result.result == CT_RESULT_NO_ERROR);
+								 result.result);
 		}
 		break;
 	
 	case CONTROL_SUSPENDED: {
 			CONTROLSuspendedEvent		result;
 			_setEstablishedState(result.cntlrName, CTState::SUSPENDED, time(0),
-								 result.result == CT_RESULT_NO_ERROR);
+								 result.result);
 		}
 		break;
 	
 	case CONTROL_RELEASED: {
 			CONTROLReleasedEvent		result;
 			_setEstablishedState(result.cntlrName, CTState::RELEASED, time(0),
-								 result.result == CT_RESULT_NO_ERROR);
+								 result.result);
 		}
 		break;
 	
 	case CONTROL_FINISH: {
 			CONTROLFinishEvent		msg;
 			_setEstablishedState(msg.cntlrName, CTState::FINISHED, time(0),
-								 msg.result == CT_RESULT_NO_ERROR);
+								 msg.result);
 
 			// inform child its shutdown is registered
 			CONTROLFinishedEvent	reply;
@@ -877,5 +939,5 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	return (status);
 }
 
-  } // namespace MainCU
+  } // namespace APLCommon
 } // namespace LOFAR
