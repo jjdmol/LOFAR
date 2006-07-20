@@ -27,9 +27,13 @@ import java.awt.Component;
 import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
@@ -49,7 +53,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     
     static Logger logger = Logger.getLogger(BBSStrategyPanel.class);
     static String name = "BBS Strategy";
-    
     
     /** Creates new form BeanForm based upon aNode
      *
@@ -194,6 +197,17 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         this.integrationFrequencyText.setText(StrategyIntegrationFrequency.limits);
         this.integrationTimeText.setText(StrategyIntegrationTime.limits);
         this.correlationSelectionBox.setSelectedItem(StrategyCorrelationSelection.limits);
+        this.fillSelectionListFromString(correlationTypeList,StrategyCorrelationType.limits,true);
+        if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
+            this.stationsUseAllCheckbox.setSelected(true);
+            stationsList.setModel(new DefaultListModel());
+        }else{
+            this.stationsUseAllCheckbox.setSelected(false);
+            this.fillList(stationsList,StrategyStations.limits,true);
+        }
+        modifyStationText.setText("");
+        addStationButton.setEnabled(false);
+        
         //TODO: add other values accordingly.
     }
     
@@ -245,6 +259,25 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     inputDataText.setText(aNode.limits);
                 }
+            }else if (aKeyName.equals("Stations")) {
+                this.stationsList.setToolTipText(aParam.description);
+                this.StrategyStations = aNode;
+                modifyStationText.setText("");
+                //set the checkbox correctly when no stations are provided in the data
+                if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
+                    this.stationsUseAllCheckbox.setSelected(true);
+                    stationsList.setModel(new DefaultListModel());
+                }else{
+                    this.stationsUseAllCheckbox.setSelected(false);
+                    TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
+                    if (isRef && aParam != null) {
+                        aBorder.setTitle("Station Names (Referenced)");
+                        this.fillList(stationsList,aParam.limits,false);
+                    } else {
+                        aBorder.setTitle("Station Names");
+                        this.fillList(stationsList,aNode.limits,true);
+                    }
+                }
             }
         } else if(parentName.equals("WorkDomainSize")){
             if (aKeyName.equals("Freq")) {
@@ -290,10 +323,16 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             if (aKeyName.equals("Selection")) {
                 this.correlationSelectionBox.setToolTipText(aParam.description);
                 this.StrategyCorrelationSelection=aNode;
-                this.correlationSelectionBox.setSelectedItem(aParam.limits);
+                this.correlationSelectionBox.setSelectedItem(aNode.limits);
                 logger.trace("Correlation selection will be :"+this.correlationSelectionBox.getSelectedItem().toString());
             } else if (aKeyName.equals("Type")) {
-                //TODO: Implement
+                this.correlationTypeList.setToolTipText(aParam.description);
+                this.StrategyCorrelationType=aNode;
+                if (isRef && aParam != null) {
+                    this.fillSelectionListFromString(correlationTypeList,aParam.limits,false);
+                } else {
+                    this.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
+                }
             }
         }
     }
@@ -355,41 +394,152 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void saveInput() {
-      
+        
         if (this.StrategyInputData != null && !this.inputDataText.getText().equals(StrategyInputData.limits)) {
             StrategyInputData.limits = inputDataText.getText();
             logger.trace("Variable BBS Strategy ("+StrategyInputData.name+"//"+StrategyInputData.treeID()+"//"+StrategyInputData.nodeID()+"//"+StrategyInputData.parentID()+"//"+StrategyInputData.paramDefID()+") from value ("+inputDataText.getText()+") updated to :"+StrategyInputData.limits);
             saveNode(StrategyInputData);
-        } 
+        }
         if (this.StrategyWDSFrequency != null && !this.wdsFrequencyText.getText().equals(StrategyWDSFrequency.limits)) {
             StrategyWDSFrequency.limits = wdsFrequencyText.getText();
             logger.trace("Variable BBS Strategy ("+StrategyWDSFrequency.name+"//"+StrategyWDSFrequency.treeID()+"//"+StrategyWDSFrequency.nodeID()+"//"+StrategyWDSFrequency.parentID()+"//"+StrategyWDSFrequency.paramDefID()+") updated to :"+StrategyWDSFrequency.limits);
             saveNode(StrategyWDSFrequency);
-        } 
+        }
         if (this.StrategyWDSTime != null && !this.wdsTimeText.getText().equals(StrategyWDSTime.limits)) {
             StrategyWDSTime.limits = wdsTimeText.getText();
             logger.trace("Variable BBS Strategy ("+StrategyWDSTime.name+"//"+StrategyWDSTime.treeID()+"//"+StrategyWDSTime.nodeID()+"//"+StrategyWDSTime.parentID()+"//"+StrategyWDSTime.paramDefID()+") updated to :"+StrategyWDSTime.limits);
             saveNode(StrategyWDSTime);
-        } 
+        }
         if (this.StrategyIntegrationFrequency != null && !this.integrationFrequencyText.getText().equals(StrategyIntegrationFrequency.limits)) {
             StrategyIntegrationFrequency.limits = integrationFrequencyText.getText();
             logger.trace("Variable BBS Strategy ("+StrategyIntegrationFrequency.name+"//"+StrategyIntegrationFrequency.treeID()+"//"+StrategyIntegrationFrequency.nodeID()+"//"+StrategyIntegrationFrequency.parentID()+"//"+StrategyIntegrationFrequency.paramDefID()+") updated to :"+StrategyIntegrationFrequency.limits);
             saveNode(StrategyIntegrationFrequency);
-        } 
+        }
         if (this.StrategyIntegrationTime != null && !this.integrationTimeText.getText().equals(StrategyIntegrationTime.limits)) {
             StrategyIntegrationTime.limits = integrationTimeText.getText();
             logger.trace("Variable BBS Strategy ("+StrategyIntegrationTime.name+"//"+StrategyIntegrationTime.treeID()+"//"+StrategyIntegrationTime.nodeID()+"//"+StrategyIntegrationTime.parentID()+"//"+StrategyIntegrationTime.paramDefID()+") updated to :"+StrategyIntegrationTime.limits);
             saveNode(StrategyIntegrationTime);
         }
         if (this.StrategyCorrelationSelection != null && !this.correlationSelectionBox.getSelectedItem().toString().equals(StrategyCorrelationSelection.limits)) {
-            logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") was :"+StrategyCorrelationSelection.limits);
             StrategyCorrelationSelection.limits = correlationSelectionBox.getSelectedItem().toString();
-            logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") updated to :"+StrategyCorrelationSelection.limits);
+            logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") updating to :"+StrategyCorrelationSelection.limits);
             saveNode(StrategyCorrelationSelection);
+        }
+        if (this.StrategyCorrelationType != null && !this.createStringFromSelectionList(correlationTypeList,true).equals(StrategyCorrelationType.limits)) {
+            StrategyCorrelationType.limits = createStringFromSelectionList(correlationTypeList,true);
+            logger.trace("Variable BBS Strategy ("+StrategyCorrelationType.name+"//"+StrategyCorrelationType.treeID()+"//"+StrategyCorrelationType.nodeID()+"//"+StrategyCorrelationType.parentID()+"//"+StrategyCorrelationType.paramDefID()+") updating to :"+StrategyCorrelationType.limits);
+            saveNode(StrategyCorrelationType);
+        }
+        //clear the stations if the use all stations checkbox is selected
+        if(this.stationsUseAllCheckbox.isSelected()){
+            stationsList.setModel(new DefaultListModel());
+        }
+        if (this.StrategyStations != null && !this.createList(stationsList,true).equals(StrategyStations.limits)) {
+            StrategyStations.limits = createList(stationsList,true);
+            logger.trace("Variable BBS Strategy ("+StrategyStations.name+"//"+StrategyStations.treeID()+"//"+StrategyStations.nodeID()+"//"+StrategyStations.parentID()+"//"+StrategyStations.paramDefID()+") updating to :"+StrategyStations.limits);
+            saveNode(StrategyStations);
         }
         //TODO: Other values accordingly
     }
+    private String createList(JList aListComponent,boolean createQuotes) {
+        String aList="[";
+        if (aListComponent.getModel().getSize() > 0) {
+            if(createQuotes){
+                aList += "\"";
+            }
+            aList += (String)aListComponent.getModel().getElementAt(0);
+            if(createQuotes){
+                aList += "\"";
+            }
+            for (int i=1; i < aListComponent.getModel().getSize();i++) {
+                aList+= ",";
+                if(createQuotes){
+                    aList += "\"";
+                }
+                aList += aListComponent.getModel().getElementAt(i);
+                if(createQuotes){
+                    aList += "\"";
+                }
+            }
+            
+        }
+        aList+="]";
+        return aList;
+    }
     
+    private void fillList(JList aListComponent,String theList,boolean removeQuotes) {
+        DefaultListModel itsModel = new DefaultListModel();
+        aListComponent.setModel(itsModel);
+        String aList = theList;
+        if (aList.startsWith("[")) {
+            aList = aList.substring(1,aList.length());
+        }
+        if (aList.endsWith("]")) {
+            aList = aList.substring(0,aList.length()-1);
+        }
+        if(!aList.equals("")){
+            String[] aS=aList.split(",");
+            for (int i=0; i< aS.length;i++) {
+                if(removeQuotes){
+                    itsModel.addElement(aS[i].substring(1,aS[i].length()-1));
+                }else{
+                    itsModel.addElement(aS[i]);
+                }
+            }
+            aListComponent.setModel(itsModel);
+        }
+    }
+    
+    private String createStringFromSelectionList(JList aListComponent,boolean createQuotes) {
+        String aList="[";
+        if (aListComponent.getModel().getSize() > 0) {
+            int[] selectedIndices = aListComponent.getSelectedIndices();
+            for (int i=0; i < selectedIndices.length;i++) {
+                if(i>0) aList+= ",";
+                if(createQuotes){
+                    aList += "\"";
+                }
+                aList += aListComponent.getModel().getElementAt(selectedIndices[i]);
+                if(createQuotes){
+                    aList += "\"";
+                }
+            }
+        }
+        aList+="]";
+        return aList;
+    }
+    private void fillSelectionListFromString(JList aListComponent,String theList,boolean removeQuotes) {
+        String aList = theList;
+        if (aList.startsWith("[")) {
+            aList = aList.substring(1,aList.length());
+        }
+        if (aList.endsWith("]")) {
+            aList = aList.substring(0,aList.length()-1);
+        }
+        if(!aList.equals("")){
+            String[] aS=aList.split(",");
+            String[] toBeSelectedValues = new String[aS.length];
+            for (int i=0; i< aS.length;i++) {
+                if(removeQuotes){
+                    toBeSelectedValues[i] = aS[i].substring(1,aS[i].length()-1);
+                }else{
+                    toBeSelectedValues[i] = aS[i];
+                }
+            }
+            int[] toBeSelectedIndices = new int[toBeSelectedValues.length];
+            int aValueIndex = 0;
+            for(String aValue : toBeSelectedValues){
+                for(int in = 0; in < aListComponent.getModel().getSize();in++){
+                    String aCorrType = (String)aListComponent.getModel().getElementAt(in);
+                    if(aValue.equals(aCorrType)){
+                        toBeSelectedIndices[aValueIndex] = in;
+                    }
+                }
+                aValueIndex++;
+            }
+            aListComponent.setSelectedIndices(toBeSelectedIndices);
+        }
+    }
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -413,6 +563,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stationsUseAllCheckbox = new javax.swing.JCheckBox();
         addStationButton = new javax.swing.JButton();
         deleteStationButton = new javax.swing.JButton();
+        modifyStationText = new javax.swing.JTextField();
         stepsPanel = new javax.swing.JPanel();
         stepsScrollPane = new javax.swing.JScrollPane();
         stepsTree = new javax.swing.JTree();
@@ -461,7 +612,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         strategyPanel.add(inputDataLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, -1, -1));
 
         inputDataText.setToolTipText("Name of the column in the measurement set that contains the input data");
-        strategyPanel.add(inputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 30, 120, -1));
+        strategyPanel.add(inputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 30, 170, -1));
 
         strategyRevertButton.setText("Revert");
         strategyRevertButton.addActionListener(new java.awt.event.ActionListener() {
@@ -470,7 +621,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        strategyPanel.add(strategyRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 500, -1, -1));
+        strategyPanel.add(strategyRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 490, -1, -1));
 
         stationsPanel.setLayout(new java.awt.BorderLayout());
 
@@ -482,6 +633,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             public Object getElementAt(int i) { return strings[i]; }
         });
         stationsList.setToolTipText("Identifiers of the participating stations.");
+        stationsList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                stationsListValueChanged(evt);
+            }
+        });
+
         stationsScrollPane.setViewportView(stationsList);
 
         stationsPanel.add(stationsScrollPane, java.awt.BorderLayout.CENTER);
@@ -498,19 +655,53 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         });
 
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stationsModPanel.add(stationsUseAllCheckbox, gridBagConstraints);
 
-        addStationButton.setText("A");
+        addStationButton.setText("+");
+        addStationButton.setEnabled(false);
+        addStationButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addStationButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stationsModPanel.add(addStationButton, gridBagConstraints);
 
-        deleteStationButton.setText("D");
+        deleteStationButton.setText("-");
+        deleteStationButton.setEnabled(false);
+        deleteStationButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteStationButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stationsModPanel.add(deleteStationButton, gridBagConstraints);
+
+        modifyStationText.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                modifyStationTextKeyReleased(evt);
+            }
+        });
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stationsModPanel.add(modifyStationText, gridBagConstraints);
 
         stationsPanel.add(stationsModPanel, java.awt.BorderLayout.SOUTH);
 
@@ -587,14 +778,14 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         correlationPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Correlation"));
         correlationSelectionLabel.setText("Selection :");
-        correlationPanel.add(correlationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
+        correlationPanel.add(correlationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 40, -1, -1));
 
         correlationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AUTO", "CROSS", "ALL" }));
         correlationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
-        correlationPanel.add(correlationSelectionBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 80, -1));
+        correlationPanel.add(correlationSelectionBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 60, 80, -1));
 
         correlationTypeLabel.setText("Type :");
-        correlationPanel.add(correlationTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, -1, -1));
+        correlationPanel.add(correlationTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 20, -1, -1));
 
         correlationTypeList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "XX", "XY", "YX", "YY" };
@@ -604,9 +795,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         correlationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY. \n\nAs an example, suppose you select 'XX' here and set Selection to AUTO, then the X polarization signal of each station is correlated with itself. However if we set Selection to CROSS, then the X polarization of station A is correlated with the X polarization of station B for each base line.");
         correlationTypeScrollPane.setViewportView(correlationTypeList);
 
-        correlationPanel.add(correlationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 50, 80));
+        correlationPanel.add(correlationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 40, 40, 80));
 
-        strategyPanel.add(correlationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 20, 170, 120));
+        strategyPanel.add(correlationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 10, 170, 130));
 
         workDomainSizePanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -659,6 +850,44 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void modifyStationTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_modifyStationTextKeyReleased
+        String toBeAddedStation = modifyStationText.getText();
+        if(!toBeAddedStation.equals("")){
+            this.addStationButton.setEnabled(true);
+        }else{
+            this.addStationButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_modifyStationTextKeyReleased
+
+    private void stationsListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stationsListValueChanged
+        int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
+        if(selectedIndices.length>0){
+            this.deleteStationButton.setEnabled(true);
+        }else{
+            this.deleteStationButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_stationsListValueChanged
+
+    private void deleteStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteStationButtonActionPerformed
+        DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
+        int[] selectedIndices = stationsList.getSelectedIndices();
+        while(selectedIndices.length>0){
+            theStationModel.remove(selectedIndices[0]);
+            selectedIndices = stationsList.getSelectedIndices();
+        }
+        if(theStationModel.size()==0){
+            this.deleteStationButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_deleteStationButtonActionPerformed
+
+    private void addStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addStationButtonActionPerformed
+        String toBeAddedStation = this.modifyStationText.getText();
+        if(!toBeAddedStation.equals("")){
+            DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
+            theStationModel.addElement(toBeAddedStation);
+        }
+    }//GEN-LAST:event_addStationButtonActionPerformed
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save Settings") {
@@ -670,9 +899,14 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         if(this.stationsUseAllCheckbox.isSelected()){
             this.stationsList.setBackground(Color.LIGHT_GRAY);
             this.stationsList.setEnabled(false);
+            this.addStationButton.setEnabled(false);
+            this.deleteStationButton.setEnabled(false);
+            this.modifyStationText.setEnabled(false);
+            
         }else{
             this.stationsList.setBackground(Color.WHITE);
             this.stationsList.setEnabled(true);
+            this.modifyStationText.setEnabled(true);
         }
     }//GEN-LAST:event_stationsUseAllCheckboxStateChanged
     
@@ -716,6 +950,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField integrationTimeText;
     private javax.swing.JLabel integrationTimeUnitLabel;
     private javax.swing.JButton loadTemplateStepButton;
+    private javax.swing.JTextField modifyStationText;
     private javax.swing.JButton modifyStepButton;
     private javax.swing.JButton moveStepDownButton;
     private javax.swing.JButton moveStepUpButton;
