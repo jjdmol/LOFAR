@@ -52,6 +52,8 @@ private:
 	TM::GCFEvent::TResult initial    (TM::GCFEvent& e, TM::GCFPortInterface& p);
 	TM::GCFEvent::TResult operational(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
+	#define	SB_ADMIN_VERSION		0x0100
+
     typedef struct {
 		uint16					portNumber;
 		string					serviceName;
@@ -63,11 +65,22 @@ private:
     uint16	claimPortNumber		(const string& aServiceName, TM::GCFPortInterface* aPort);
 	void	releaseService		(const string& aServiceName);
 	void	releasePort			(TM::GCFPortInterface*	aPort);
-	uint16	findService			(const string& aServiceName);
+	uint16	findService			(const string& aServiceName, bool	usedOnly);
+	void	saveAdministration	(const string&	aFileName);
+	void	loadAdministration	(const string&	aFileName);
+	void 	cleanupOldRegistrations();
+
+	// define conversions between portnumber and index.
+	inline uint16	portNr2Index(uint16		portNumber)
+		{	return (portNumber - itsLowerLimit);	}
+	inline uint16	index2PortNr(uint16		index)
+		{	return (index + itsLowerLimit);	}
     
 	//# --- data members ---
 	vector<TServiceInfo>		itsServiceList;		// the administration
 	GTMSBTCPPort				itsListener;		// for all SB protocol messages
+
+	string						itsAdminFile;		// to survive crashes
 
 	uint16						itsLowerLimit;		// lowest portnr to assign
 	uint16						itsUpperLimit;		// assign till this number

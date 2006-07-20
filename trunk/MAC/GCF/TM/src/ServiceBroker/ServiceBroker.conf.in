@@ -4,3 +4,6 @@
 firstPortNumber	= 24001
 lastPortNumber	= 25000
 
+# optional parameters
+adminFile		= ./SB.admin		# is also the default name
+
