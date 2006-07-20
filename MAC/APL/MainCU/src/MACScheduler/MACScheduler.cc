@@ -21,6 +21,7 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Deployment.h>
 
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
@@ -57,6 +58,7 @@ MACScheduler::MACScheduler() :
 	itsPropertySetAnswer(*this),
 	itsPropertySet		(),
 //	itsObsCntlrMap		(),
+	itsObservations		(),
 	itsTimerPort		(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
@@ -349,7 +351,11 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
+	// -------------------- EVENTS FROM CHILDCONTROL --------------------
+
 	case CONTROL_STARTED: {
+		// Child control received a message from the startDaemon that the
+		// observationController was started (or not)
 		CONTROLStartedEvent	msg(event);
 		if (msg.successful) {
 			LOG_DEBUG_STR("Start of " << msg.cntlrName << " was successful");
@@ -357,18 +363,32 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		else {
 			LOG_ERROR_STR("Observation controller " << msg.cntlrName <<
 						" could not be started");
+			LOG_INFO("Observation will be removed from administration");
+			itsObservations.erase(msg.cntlrName);
 		}
-		// TODO: do something usefull with this information!
 		break;
 	}
+
 	case CONTROL_CONNECT: {
+		// The observationController has registered itself at childControl.
 		CONTROLConnectEvent conEvent(event);
 		LOG_DEBUG_STR("Received CONNECT(" << conEvent.cntlrName << ")");
-		// ...
+		// TODO: do something usefull with this information?
 		break;
 	}
 
+	case CONTROL_FINISH: {
+		// The observationController is going down.
+		CONTROLFinishEvent finishEvent(event);
+		LOG_DEBUG_STR("Received FINISH(" << finishEvent.cntlrName << ")");
+		LOG_DEBUG_STR("Removing observation " << finishEvent.cntlrName << 
+						" from activeList");
+		itsObservations.erase(finishEvent.cntlrName);
+		break;
+	}
 
+	// NOTE: ignore all other CONTROL events, we are not interested in the
+	// states of the Observations. (not our job).
 	default:
 		LOG_DEBUG("MACScheduler::active, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -410,7 +430,7 @@ void MACScheduler::_doOTDBcheck()
 		time_duration	timediff = newTreeList[idx].starttime - currentTime;
 		LOG_TRACE_VAR_STR("timediff=" << timediff);
 
-		// when queuetime is not reached yet were are finished with the list.
+		// when queuetime is not reached yet we are finished with the list.
 		if (timediff > seconds(itsQueuePeriod)) {
 			break;
 		}
@@ -418,343 +438,61 @@ void MACScheduler::_doOTDBcheck()
 		// get current state of Observation
 		string		cntlrName = controllerName(CNTLRTYPE_OBSERVATIONCTRL, 
 												0, newTreeList[idx].treeID());
-		CTState::CTstateNr	observationState = itsChildControl->getRequestedState(cntlrName);
+		CTState::CTstateNr	requestedState= itsChildControl->getRequestedState(cntlrName);
 
-		// remember: timediff <= queueperiod
-		if (timediff > seconds(itsClaimPeriod)) {
-			// Observation is somewhere in the queueperiod
-			if (observationState != CTState::CONNECTED) {	// requested a start before?
-				// no, let database construct the parset for the whole observation
-				OTDB::TreeMaintenance	tm(itsOTDBconnection);
-				OTDB::treeIDType		treeID = newTreeList[idx].treeID();
-				OTDBnode				topNode = tm.getTopNode(treeID);
-				string					filename = string(LOFAR_SHARE_LOCATION) + 
-																	"/" + cntlrName;
-				if (!tm.exportTree(treeID, topNode.nodeID(), filename)) {
-					LOG_ERROR_STR ("Cannot create startup file " << filename << 
-								" for new observation. Observation CANNOT BE STARTED!");
-				}
-				else {
-					// fire request for new controller
-					itsChildControl->startChild(cntlrName, 
-												treeID, 
-												CNTLRTYPE_OBSERVATIONCTRL, 
-												0,		// instanceNr
-												myHostname());
-				}
-				idx++;
-				continue;
+		// When in startup or claimtime we should try to start the controller.
+		if ((timediff > seconds(0)) && (requestedState != CTState::CONNECTED)) {
+			// no, let database construct the parset for the whole observation
+			OTDB::TreeMaintenance	tm(itsOTDBconnection);
+			OTDB::treeIDType		treeID = newTreeList[idx].treeID();
+			OTDBnode				topNode = tm.getTopNode(treeID);
+			string					filename = string(LOFAR_SHARE_LOCATION) + 
+																"/" + cntlrName;
+			if (!tm.exportTree(treeID, topNode.nodeID(), filename)) {
+				LOG_ERROR_STR ("Cannot create startup file " << filename << 
+							" for new observation. Observation CANNOT BE STARTED!");
 			}
+			else {
+				// fire request for new controller, will result in CONTROL_STARTED
+				itsChildControl->startChild(cntlrName, 
+											treeID, 
+											CNTLRTYPE_OBSERVATIONCTRL, 
+											0,		// instanceNr
+											myHostname(true));
+				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
+
+				// register this Observation
+				ParameterSet	obsPS(filename);
+				Observation		newObs(&obsPS);
+				newObs.name   = cntlrName;
+				newObs.treeID = treeID;
+				itsObservations[cntlrName] = newObs;
+				LOG_DEBUG_STR("Observation " << cntlrName << " added to active Observations");
+			}
+			idx++;
+			continue;
 		}
 
-		if (timediff > seconds(0)) {
-			// Observation is somewhere in the claim period
-			if (observationState != CTState::CLAIMED) {
-//				_claimObservation(&newTreeList[idx]);
-				idx++;
-				continue;
+		// in CLAIM period?
+		if ((timediff > seconds(0)) && (timediff <= seconds(itsClaimPeriod))) {
+			// Observation is somewhere in the claim period its should be up by now.
+			if (requestedState != CTState::CLAIMED) {
+				LOG_ERROR_STR("Observation " << cntlrName << 
+							" should have reached the CLAIMING state by now," <<
+							" check state of observation.");
 			}
+			idx++;
+			continue;
 		}
 
 		// observation must be running (otherwise it would not be in the newTreeList)
-		if (observationState != CTState::ACTIVE) {
-//			_executeObservation(&newTreeList[idx]);
-		}
+		// TODO: check if endtime is reached and observation is still running.
 	
 		idx++;	
 	}
 
 }
 
-//
-// readObservationParameters(ObsTreeID)
-//
-// Ask the OTDB to create an ParameterSet of the given Tree.
-//
-boost::shared_ptr<ACC::APS::ParameterSet> 
-	MACScheduler::readObservationParameters(OTDB::treeIDType ObsTreeID)
-{
-	// Convert treeId to nodeID of top node.
-	TreeMaintenance tm(itsOTDBconnection);
-	OTDBnode topNode = tm.getTopNode(ObsTreeID);
-	LOG_INFO_STR(topNode);
-
-	// construct the filename
-	string tempFileName = string(LOFAR_SHARE_LOCATION) + "/Obs_" + toString(ObsTreeID);
-
-	// read the parameterset from the database:
-	LOG_INFO(formatString("Exporting tree %d to '%s'",
-										ObsTreeID, tempFileName.c_str()));
-	if (!tm.exportTree(ObsTreeID, topNode.nodeID(), tempFileName)) {
-		THROW(APLCommon::OTDBException, string("Unable to export tree ") + 
-									toString(ObsTreeID) + " to " + tempFileName);
-	}
-
-	// read file into ParameterSet
-	boost::shared_ptr<ACC::APS::ParameterSet> ps;
-	ps.reset(new ACC::APS::ParameterSet(tempFileName));
-
-//	createChildsSections (tm, ObsTreeID, topNode.nodeID(), string(""), ps);
-
-	return (ps);
-}
-
-#if 0
-
-//
-// _schedule (rootID, port)
-//
-// One way or another they start an observation by creating and modifying a
-// parameterSet, allocation beams?? and sending one startDaemon a schedule event.
-//
-void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* /*port*/)
-{  
-	string shareLocation = _getShareLocation();	//REO
-	try {
-		boost::shared_ptr<ACC::APS::ParameterSet> ps = _readParameterSet(VIrootID);
-
-		// replace the parent port (assigned by the ServiceBroker)
-		unsigned int parentPort = itsVIparentPort.getPortNumber();
-		ACC::APS::KVpair kvPair(string("parentPort"),(int)parentPort);
-		ps->replace(kvPair);
-
-		// get some parameters and write it to the allocated CCU
-		string allocatedCCU = ps->getString("allocatedCCU");
-		string viName = ps->getString("name");
-		string parameterFileName = viName + string(".param");
-
-		// make all relative times absolute
-//		_convertRelativeTimes(ps);
-
-		string ldTypeString = ps->getString("logicalDeviceType");
-		TLogicalDeviceTypes ldTypeRoot = APLUtilities::convertLogicalDeviceType(ldTypeString);
-
-		bool allocationOk = true;
-		TSASResult sasResult(SAS_RESULT_NO_ERROR);
-
-#if 0
-		// find the subbands allocations in VI sections
-		vector<string> childKeys = ps->getStringVector("childs");
-		for(vector<string>::iterator childsIt=childKeys.begin();
-						allocationOk && childsIt!=childKeys.end();++childsIt) {
-			string ldTypeString = ps->getString(*childsIt + ".logicalDeviceType");
-			TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
-			if(ldType == LDTYPE_VIRTUALINSTRUMENT) { //REO
-				// allocate beamlets for VI's
-				allocationOk = _allocateBeamlets(VIrootID, ps, *childsIt);
-				if(!allocationOk) {
-					sasResult = SAS_RESULT_ERROR_BEAMLET_ALLOCATION_FAILED;
-				}
-				else {
-					allocationOk = _allocateLogicalSegments(VIrootID, ps, *childsIt);
-					if(!allocationOk) {
-						sasResult = SAS_RESULT_ERROR_LOGICALSEGMENT_ALLOCATION_FAILED;
-					}
-				}
-			}
-		}
-		if(!allocationOk) {
-			SASResponseEvent sasResponseEvent;
-			sasResponseEvent.result = sasResult;
-			itsPropertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
-		}
-		else
-#endif
-		{
-			string tempFileName = APLUtilities::getTempFileName();
-			ps->writeFile(tempFileName);
-			APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
-			remove(tempFileName.c_str());
-
-			// send the schedule event to the VI-StartDaemon on the CCU
-			STARTDAEMONScheduleEvent sdScheduleEvent;
-			sdScheduleEvent.logicalDeviceType = ldTypeRoot;
-			sdScheduleEvent.taskName = viName;
-			sdScheduleEvent.fileName = parameterFileName;
-
-			TStringRemotePortMap::iterator it = itsVISDclientPorts.find(allocatedCCU);
-			if(it != itsVISDclientPorts.end()) {
-				it->second->send(sdScheduleEvent);
-			}
-			else {
-				SASResponseEvent sasResponseEvent;
-				sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
-				itsPropertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
-			}
-		}        
-	}
-	catch(Exception& e) {
-		LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
-		SASResponseEvent sasResponseEvent;
-		sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
-		itsPropertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
-	}
-	catch(exception& e) {
-		LOG_FATAL(formatString("Error reading schedule parameters: %s",e.what()));
-		SASResponseEvent sasResponseEvent;
-		sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
-		itsPropertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
-	}
-}
-
-
-//
-// _updateSchedule(rootVI, port)
-//
-void MACScheduler::_updateSchedule(const string& VIrootID, GCFPortInterface* port)
-{
-	string shareLocation = _getShareLocation();
-
-	// search the port of the VI
-	try
-	{
-		boost::shared_ptr<ACC::APS::ParameterSet> ps = _readParameterSet(VIrootID);
-
-		// replace the parent port (assigned by the ServiceBroker)
-		unsigned int parentPort = itsVIparentPort.getPortNumber();
-		ACC::APS::KVpair kvPair(string("parentPort"),(int)parentPort);
-		ps->replace(kvPair);
-
-		string allocatedCCU = ps->getString("allocatedCCU");
-		string viName = ps->getString("name");
-		string parameterFileName = viName + string(".param");
-
-		// make all relative times absolute
-		_convertRelativeTimes(ps);
-
-		string tempFileName = APLUtilities::getTempFileName();
-		ps->writeFile(tempFileName);
-		APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
-		remove(tempFileName.c_str());
-
-		// send a SCHEDULE message
-		TStringRemotePortMap::iterator it = itsconnectedVIclientPorts.find(viName);
-		if(it != itsconnectedVIclientPorts.end()) {
-			LOGICALDEVICEScheduleEvent scheduleEvent;
-			scheduleEvent.fileName = parameterFileName;
-
-			it->second->send(scheduleEvent);
-		}
-		else {
-			SASResponseEvent sasResponseEvent;
-			sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
-			itsPropertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
-		}        
-	}
-	catch(Exception& e) {
-		LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
-		SASResponseEvent sasResponseEvent;
-		sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
-		sasResponseEvent.VIrootID = VIrootID;
-
-		if(port != 0) {
-			port->send(sasResponseEvent);      
-		}
-		itsPropertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
-	}
-}
-
-
-//
-// _cancelSchedule(rootVI, port)
-//
-void MACScheduler::_cancelSchedule(const string& VIrootID, GCFPortInterface* /*port*/)
-{
-	string shareLocation = _getShareLocation(); //REO
-
-	// search the port of the VI
-	try {
-		boost::shared_ptr<ACC::APS::ParameterSet> ps = _readParameterSet(VIrootID);
-
-		string viName = ps->getString("name");
-
-		// send a CANCELSCHEDULE message
-		TStringRemotePortMap::iterator it = itsconnectedVIclientPorts.find(viName);
-		if(it != itsconnectedVIclientPorts.end()) {
-			LOGICALDEVICECancelscheduleEvent cancelScheduleEvent;
-			it->second->send(cancelScheduleEvent);
-		}
-		else {
-			SASResponseEvent sasResponseEvent;
-			sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
-			itsPropertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
-		}
-
-	}
-	catch(Exception& e)
-	{
-		LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
-		SASResponseEvent sasResponseEvent;
-		sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
-		itsPropertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
-	}
-}
-
-//
-// _isServerPort(server, port)
-//
-bool MACScheduler::_isServerPort(const GCFPortInterface& server, 
-								 const GCFPortInterface& port) const
-{
-  return (&port == &server); // comparing two pointers. yuck?
-}
-   
-
-//
-// _isVISDclientPort(port, visd)
-//
-bool MACScheduler::_isVISDclientPort(const GCFPortInterface& port, 
-									 string& visd) const
-{
-	bool found=false;
-	TStringRemotePortMap::const_iterator it=itsVISDclientPorts.begin();
-	while(!found && it != itsVISDclientPorts.end()) {
-		found = (&port == it->second.get()); // comparing two pointers. yuck?
-		if(found) {
-			visd = it->first;
-		}
-		++it;
-	}
-	return (found);
-}
-
-
-//
-// _isVIclientPort(port)
-//
-bool MACScheduler::_isVIclientPort(const GCFPortInterface& port) const
-{
-	bool found=false;
-	TRemotePortVector::const_iterator it=itsVIclientPorts.begin();
-	while(!found && it != itsVIclientPorts.end()) {
-		found = (&port == (*it).get()); // comparing two pointers. yuck?
-		++it;
-	}
-	return (found);
-}
-
-
-//
-// _getVInameFromPort(port)
-//
-string MACScheduler::_getVInameFromPort(const GCF::TM::GCFPortInterface& port) const
-{
-	string viName("");
-	if(_isVIclientPort(port)) {
-		bool found = false;
-		TStringRemotePortMap::const_iterator it = itsconnectedVIclientPorts.begin();
-		while(!found && it != itsconnectedVIclientPorts.end()) {
-			found = (&port == it->second.get());
-			if(found) {
-				viName = it->first;
-			}
-			++it;
-		}
-	}
-	return (viName);
-}
-
-#endif
 
 //
 // _connectedHandler(port)
