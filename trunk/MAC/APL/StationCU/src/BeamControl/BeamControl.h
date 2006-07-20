@@ -39,7 +39,6 @@
 #include <APL/APLCommon/PropertySetAnswer.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
 
@@ -62,6 +61,7 @@ using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
+using	APLCommon::ParentControl;
 
 
 class BeamControl : public GCFTask,
@@ -72,7 +72,7 @@ public:
 	~BeamControl();
 
    	// PropertySetAnswerHandlerInterface method
-   	virtual void handlePropertySetAnswer(GCFEvent& answer);
+   	void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, 
@@ -88,10 +88,14 @@ private:
 	BeamControl(const BeamControl&);
    	BeamControl& operator=(const BeamControl&);
 
-   	void _connectedHandler(GCFPortInterface& port);
-   	void _disconnectedHandler(GCFPortInterface& port);
-   	boost::shared_ptr<ACC::APS::ParameterSet> 
-		 readBeamParameters (OTDB::treeIDType	ObsTreeID);
+	int32	convertDirection(const string&	typeName);
+	void	doPrepare(const string&	cntlrName);
+	bool	handleBeamAllocAck(GCFEvent&	event);
+	bool	handleBeamFreeAck(GCFEvent&	event);
+	void	doRelease(GCFEvent&	event);
+   	void	_connectedHandler(GCFPortInterface& port);
+   	void	_disconnectedHandler(GCFPortInterface& port);
+	void	setState(CTState::CTstateNr     newState);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
 
@@ -127,6 +131,10 @@ private:
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;
 	time_t					itsStopTime;
+
+	//TODO
+	ACC::APS::ParameterSet	m_parameterSet;
+	uint32					m_beamID;
 };
 
   };//StationCU
