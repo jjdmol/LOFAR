@@ -95,8 +95,10 @@ MeqSourceList::MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup& group)
 					 group, &parmTable);
     MeqExpr mv = MeqParmFunklet::create ("StokesV:"+name,
 					 group, &parmTable);
+    /// For the time being the group name (patch name) is equal
+    /// to the source name.
     if (std::find(gnams.begin(), gnams.end(), name) == gnams.end()) {
-      add (new MeqPointSource(name, "ALL", mi, mq, mu, mv, mr, md));
+      add (new MeqPointSource(name, name, mi, mq, mu, mv, mr, md));
     } else {
       MeqExpr mmin = MeqParmFunklet::create ("Minor:"+name,
 					     group, &parmTable);
@@ -104,7 +106,7 @@ MeqSourceList::MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup& group)
 					     group, &parmTable);
       MeqExpr mphi = MeqParmFunklet::create ("Phi:"+name,
 					     group, &parmTable);
-      add (new MeqGaussSource(name, "ALL", mi, mq, mu, mv, mr, md,
+      add (new MeqGaussSource(name, name, mi, mq, mu, mv, mr, md,
 			      mmin, mmaj, mphi));
     }
 //    cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
