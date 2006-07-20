@@ -53,7 +53,7 @@ Pointing Pointing::convertToLMN(Converter* conv, Position* pos)
     m        = 0.0,
     n        = 0.0;
 
-  RequestData request(Direction(angle0(), angle1()), *pos, Epoch(mjd, fraction));
+  RequestData request(result, *pos, Epoch(mjd, fraction));
   ResultData resultdata;
 
   switch (getType()) {
