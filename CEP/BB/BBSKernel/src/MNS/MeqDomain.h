@@ -56,47 +56,31 @@ public:
   // Convert to a ParmDomain.
   ParmDB::ParmDomain toParmDomain() const;
 
-  // Get offset and scale value.
-  double offsetX() const
-    { return itsOffsetX; }
-  double scaleX() const
-    { return itsScaleX; }
-  double offsetY() const
-    { return itsOffsetY; }
-  double scaleY() const
-    { return itsScaleY; }
-
-  // Transform a value to its normalized value.
-  double normalizeX (double value) const
-    { return (value - itsOffsetX) / itsScaleX; }
-  double normalizeY (double value) const
-    { return (value - itsOffsetY) / itsScaleY; }
-
   // Get the start, end, and step of the domain.
   double startX() const
-    { return itsOffsetX - itsScaleX; }
+    { return itsStartX; }
   double endX() const
-    { return itsOffsetX + itsScaleX; }
+    { return itsEndX; }
   double sizeX() const
-    { return 2*itsScaleX; }
+    { return itsEndX - itsStartX; }
   double startY() const
-    { return itsOffsetY - itsScaleY; }
+    { return itsStartY; }
   double endY() const
-    { return itsOffsetY + itsScaleY; }
+    { return itsEndY; }
   double sizeY() const
-    { return 2*itsScaleY; }
+    { return itsEndY - itsStartY; }
 
   bool operator== (const MeqDomain& that) const
-  { return itsOffsetX == that.itsOffsetX  &&  itsScaleX == that.itsScaleX
-       &&  itsOffsetY == that.itsOffsetY  &&  itsScaleY == that.itsScaleY; }
+  { return itsStartX == that.itsStartX  &&  itsEndX == that.itsEndX
+       &&  itsStartY == that.itsStartY  &&  itsEndY == that.itsEndY; }
 
   friend std::ostream& operator<< (std::ostream&, const MeqDomain&);
 
 private:
-  double itsOffsetX;
-  double itsScaleX;
-  double itsOffsetY;
-  double itsScaleY;
+  double itsStartX;
+  double itsEndX;
+  double itsStartY;
+  double itsEndY;
 };
 
 // @}
