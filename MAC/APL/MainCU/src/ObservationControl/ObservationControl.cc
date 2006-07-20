@@ -39,7 +39,6 @@
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
-using namespace LOFAR::OTDB;
 using namespace std;
 
 namespace LOFAR {
@@ -314,6 +313,10 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
 		// TODO: do something usefull with this information!
+		CONTROLConnectedEvent	answer;
+		answer.cntlrName = msg.cntlrName;
+		answer.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(answer);
 		break;
 	}
 

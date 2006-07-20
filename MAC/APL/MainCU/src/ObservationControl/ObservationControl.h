@@ -39,6 +39,7 @@
 #include <APL/APLCommon/PropertySetAnswer.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
@@ -62,7 +63,9 @@ using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
-
+using	APLCommon::ChildControl;
+using	APLCommon::ParentControl;
+using	APLCommon::CTState;
 
 class ObservationControl : public GCFTask,
 						   APLCommon::PropertySetAnswerHandlerInterface
@@ -92,7 +95,7 @@ private:
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
    	boost::shared_ptr<ACC::APS::ParameterSet> 
-		 readObservationParameters (OTDB::treeIDType	ObsTreeID);
+		 readObservationParameters (APLCommon::OTDBtreeIDType	ObsTreeID);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
 
