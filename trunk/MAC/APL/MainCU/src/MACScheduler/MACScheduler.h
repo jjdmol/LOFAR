@@ -41,6 +41,7 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/CTState.h>
+#include <APL/APLCommon/Observation.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -64,6 +65,8 @@ using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
+using	APLCommon::ChildControl;
+using	APLCommon::Observation;
 
 
 class MACScheduler : public GCFTask,
@@ -97,26 +100,14 @@ private:
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
    	void _doOTDBcheck();
-   	boost::shared_ptr<ACC::APS::ParameterSet> 
-		 readObservationParameters (OTDB::treeIDType	ObsTreeID);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
 
    	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
    	GCFMyPropertySetPtr           itsPropertySet;
 
-#if 0
-	// Administration of the ObservationControllers
-	typedef struct {
-		OTDB::treeIDType	treeID;		// tree in the OTDB
-		GCFTCPPort*			port;		// TCP connection with controller
-		uint16				state;		// state the controller has
-	} ObsCntlr_t;
-
-	// Map with all active ObservationControllers.
-	map<GCFTCPPort*, ObsCntlr_t>	itsObsCntlrMap;
-	vector<GCFTCPPort*>				itsObsCntlrPorts;
-#endif
+	// Information about the Observations. Not used yet.
+	map<string,Observation>	itsObservations;
 
 	// Ports for StartDaemon and ObservationControllers.
    	GCFTimerPort*			itsTimerPort;			// for timers
