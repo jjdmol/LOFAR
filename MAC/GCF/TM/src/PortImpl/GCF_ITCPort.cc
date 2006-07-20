@@ -77,30 +77,7 @@ bool GCFITCPort::close()
 //
 ssize_t GCFITCPort::send(GCFEvent& e)
 {
-	switch (_type) {
-	case SPP:
-		if (F_EVT_INOUT(e) & F_IN) {
-			LOG_DEBUG(formatString( "Trying to send IN event on SPP "
-						"port '%s'; discarding this event.", _name.c_str()));
-
-			return(-1);
-		}
-		break;
-	
-	case SAP:
-		if (F_EVT_INOUT(e) & F_OUT) {
-			LOG_DEBUG(formatString( "Trying to send OUT event on SAP "
-						"port '%s'; discarding this event.", _name.c_str()));
-			return(-1);
-		}
-		break;
-	
-	case MSPP:
-		LOG_DEBUG(formatString(
-					"Trying to send event by means of the portprovider: %s (MSPP). "
-					"Not supported yet", _name.c_str()));
-		return(-1);
-	}
+	// Note: Skip direction checks on F_IN / F_OUT
 
 	// send event using a timer event to exit the sending tasks event loop
 	uint32		requiredLength;
@@ -119,6 +96,8 @@ ssize_t GCFITCPort::send(GCFEvent& e)
 //
 ssize_t GCFITCPort::sendBack(GCFEvent& e)
 {
+	// Note: Skip direction checks on F_IN / F_OUT
+
 	// send event using a timer event to exit the sending tasks event loop
 	uint32		requiredLength;
 	char* 		packedBuffer = (char*)e.pack(requiredLength);

@@ -33,7 +33,7 @@ using namespace LOFAR::GCF::TM;
 const char* LOFAR::[+ (base-name) +]::[+ protocol_name +]_signalnames[] = 
 {
   "[+ protocol_name +]: invalid signal",[+ FOR event "," +]
-  "[+ signal_name +] ([+ (get "dir") +])"[+ ENDFOR +]
+  "[+ signal_name +]"[+ ENDFOR +]
 };
 [+ ELSE +]
 #ifndef [+ protocol_name +]_H
