@@ -65,7 +65,7 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency, double
   // distance of .25 labda to introduce a delay.  Also, a few samples can be
   // flagged.
 
-  (std::cerr << "setSubbandTestPattern::setTestPattern() ... ").flush();
+  std::cerr << "setSubbandTestPattern::setTestPattern() ... ";
 
   static NSTimer timer("setTestPattern", true);
   timer.start();
@@ -118,10 +118,10 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency, double
   dh->fillExtraData();
 #endif
 
-  (std::cerr << "done.\n").flush();
+  std::cerr << "done.\n";
 
 #if defined WORDS_BIGENDIAN
-  (std::cerr << "swapBytes()\n").flush();
+  std::cerr << "swapBytes()\n";
   dh->swapBytes();
 #endif
 
@@ -220,17 +220,17 @@ void doWork()
 
   if ((env = getenv("NRUNS")) != 0) {
     nRuns = atoi(env);
-    std::cout << "setting nRuns to " << env << '\n';
+    std::clog << "setting nRuns to " << env << '\n';
   }
 
   if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
     signalFrequency = atof(env);
-    std::cout << "setting signal frequency to " << env << '\n';
+    std::clog << "setting signal frequency to " << env << '\n';
   }
 
   if ((env = getenv("BASE_FREQUENCY")) != 0) {
     baseFrequency = atof(env);
-    std::cout << "setting base frequency to " << env << '\n';
+    std::clog << "setting base frequency to " << env << '\n';
   }
 
   std::ostringstream baseFrequencyStr;
@@ -264,6 +264,12 @@ void doWork()
 int main (int argc, char **argv)
 {
   int retval = 0;
+
+#if defined HAVE_BGL
+  // make std::clog line buffered
+  static char buffer[4096];
+  setvbuf(stderr, buffer, _IOLBF, sizeof buffer);
+#endif
 
 #if defined HAVE_MPI
   TH_MPI::initMPI(argc, argv);

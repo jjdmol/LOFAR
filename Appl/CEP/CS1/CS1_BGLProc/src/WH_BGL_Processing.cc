@@ -1203,7 +1203,7 @@ WH_BGL_Processing* WH_BGL_Processing::make(const string &name)
 void WH_BGL_Processing::preprocess()
 {
 #if defined HAVE_MPI
-  std::cerr << "node " << TH_MPI::getCurrentRank() << " filters subbands " << itsFirstSubband << " to " << itsLastSubband << " starting at " << itsCurrentSubband << " with " << itsSubbandIncrement << " as increment\n";
+  std::clog << "node " << TH_MPI::getCurrentRank() << " filters subbands " << itsFirstSubband << " to " << itsLastSubband << " starting at " << itsCurrentSubband << " with " << itsSubbandIncrement << " as increment\n";
 #endif
 
 #if defined HAVE_BGL && NR_SUBBAND_CHANNELS == 256
@@ -1743,24 +1743,26 @@ void WH_BGL_Processing::doCorrelate()
 void WH_BGL_Processing::process()
 {
 #if defined HAVE_MPI
-  std::cerr.precision(15);
-  std::cerr << "core " << TH_MPI::getCurrentRank() << ": start reading at " << MPI_Wtime() << '\n';
+  std::clog.precision(15);
+  std::clog << "core " << TH_MPI::getCurrentRank() << ": start reading at " << MPI_Wtime() << '\n';
 #endif
 
   static NSTimer readTimer("receive timer", true);
   readTimer.start();
   getDataManager().readyWithInHolder(SUBBAND_CHANNEL);
+#if defined SPARSE_FLAGS
+#if defined HAVE_MPI
+  std::clog << "core " << TH_MPI::getCurrentRank() << ": start getting extra data at " << MPI_Wtime() << '\n';
+#endif
+  get_DH_Subband()->getExtraData();
+#endif
   readTimer.stop();
 
 #if defined HAVE_MPI
-  std::cerr << "core " << TH_MPI::getCurrentRank() << ": start processing at " << MPI_Wtime() << '\n';
+  std::clog << "core " << TH_MPI::getCurrentRank() << ": start processing at " << MPI_Wtime() << '\n';
 #endif
 
   computeTimer.start();
-
-#if defined SPARSE_FLAGS
-  get_DH_Subband()->getExtraData();
-#endif
 
   computeFlags();
 
@@ -1778,7 +1780,7 @@ void WH_BGL_Processing::process()
   computeTimer.stop();
 
 #if defined HAVE_MPI
-  std::cerr << "core " << TH_MPI::getCurrentRank() << ": start writing at " << MPI_Wtime() << '\n';
+  std::clog << "core " << TH_MPI::getCurrentRank() << ": start writing at " << MPI_Wtime() << '\n';
 #endif
 
   static NSTimer writeTimer("send timer", true);
@@ -1788,7 +1790,7 @@ void WH_BGL_Processing::process()
   writeTimer.stop();
 
 #if defined HAVE_MPI
-  std::cerr << "core " << TH_MPI::getCurrentRank() << ": start idling at " << MPI_Wtime() << '\n';
+  std::clog << "core " << TH_MPI::getCurrentRank() << ": start idling at " << MPI_Wtime() << '\n';
 #endif
 }
 

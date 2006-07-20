@@ -45,6 +45,20 @@
 namespace LOFAR {
 namespace CS1 {
 
+#if defined HAVE_BGL
+
+static class BlueGeneL_Fixup {
+  public:
+    BlueGeneL_Fixup() {
+      // make std::clog line buffered
+      static char buffer[4096];
+      setvbuf(stderr, buffer, _IOLBF, sizeof buffer);
+    }
+} BlueGeneL_Fixup;
+
+#endif
+
+
 AH_BGL_Processing::AH_BGL_Processing() 
   : itsWHs(0),
     itsSubbandStub(0),
