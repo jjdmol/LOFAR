@@ -134,7 +134,7 @@ namespace LOFAR {
   inline NSTimer::~NSTimer()
   {
     if (print_on_destruction) {
-      print(std::cerr);
+      print(std::clog);
     }
     if (name != 0) {
       free(name);
