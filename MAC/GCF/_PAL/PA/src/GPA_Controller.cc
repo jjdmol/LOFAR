@@ -259,7 +259,7 @@ GCFEvent::TResult GPAController::waiting_state(GCFEvent& e, GCFPortInterface& p)
     case F_TIMER:
     {
       GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
-      LOG_DEBUG(formatString("Timer %d expired.", pTimer->id));
+//      LOG_DEBUG(formatString("Timer %d expired.", pTimer->id));
       if (&p == &_distPmlPortProvider)
       {        
         if (pTimer->id == _garbageTimerId)
