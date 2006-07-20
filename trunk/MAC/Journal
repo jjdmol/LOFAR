@@ -9,11 +9,17 @@ GCF/GCFCommon
 		with the new FileLocator classes of LCS/Common.
 ** GCF_ServiceInfo.h: Created a file containing all servicenames to be used in MAC
 		as well the well-known portnumber of any ServiceBroker.
+** GCF_PVTypes.h: created file that includes all GCF_PVxxx files.
 
 APL/APLCommon
 ============
 ** Added messages FINISH and FINISHED to LDprotocol to allow ObsCntlrs to tell
 		the MACSchedulers that they are ready.
+** Added ANNOUNCEMENT messages to the StartDaemonProtocol to support shared
+		controller. Modified the other message to meet proposition [A].
+** ControllerDefines.h replaces LogicalDevice.h. The file does not only define
+		constants for controllertypes and their errors but also a collection of
+		routines for creating and using controller names. See proposition [A].
 
 GCF/TM
 ======
@@ -51,8 +57,8 @@ GCF/PAL/PML
 ** GPMController: uses LofarLocators for parameterfiles.
 
 
-GCF/APL/APLCommon
-=================
+APL/APLCommon
+=============
 Updated several sources for new ParameterSet.
 Added several ; at end of LOG_xxx statements.
 Added define LOFAR_SHARE_LOCATION /opt/lofar/share in APL_Defines.h
@@ -78,13 +84,27 @@ Complete new implementation of the MACScheduler: It polls the OTDB itself
 and only controls ObsControllers.
 
 
+PROPOSITIONS
+============
+[A]	The (task)names of the controllers are uniq within LOFAR. This means the name
+	must contain the instanceNr of the controller and the observationID.
+	The construction of the controller/task name is supported in the file
+	ControllerDefines. All tasks/programs/jobs/whatever must always use the 
+	name that is returned by the call controllerName(type, iNr, ObsID).
+	(only the startDaemon uses the sharedControllerName).
+	Note: This proposition is used in ParentControl, ChildControl and the base-
+		  source for shared controllers to do their administration.
+
+
 PROBLEMS TO SOLVE
 =================
 ** BOOST_SP_USE_PTHREADS is now in several .h and .cc file. Like to have a lofar_sharedptr.h.
 ** Can logical device use global parameterSet anywhere?
 ** Support SHARED LogicalDevices in the LDStartDaemon.
 ** GSB_Controller should be made fail save.
+** GSB_Controller should assign the portnumbers round robin to maximize the 
+   're-use interval'.
 ** GTM_ServiceBroker should support multihosts.
 ** GCFTasks are not scheduled right when an event is not handled.
-
+** LDStartDaemon: when execv fails child LDSD keeps running.
 

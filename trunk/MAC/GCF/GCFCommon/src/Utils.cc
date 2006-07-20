@@ -143,25 +143,6 @@ bool isValidScope(const char* scopeName)
   return valid;
 }
 
-//
-// myHostname(giveFullname)
-//
-string myHostname(bool	giveFullName)
-{
-	char	fullhostname[300];
-	if (gethostname(fullhostname, 300) != 0) {
-		return ("localhost");
-	}
-
-	if (!giveFullName) {
-		char*	dot = strchr(fullhostname, '.');
-		if (dot) {
-			*dot='\0';
-		}
-	}
-
-	return (fullhostname);
-}
   } // namespace Common
  } // namespace GCF
 } // namespace LOFAR
