@@ -65,12 +65,12 @@ namespace LOFAR {
       char totRecvframe[frameSize + itsArgs.ipHeaderSize];
       memset(totRecvframe, 0, sizeof(totRecvframe));
       char* recvframe = totRecvframe;
-      //      if (itsArgs.th->getType() == "TH_Ethernet") {
+      if (itsArgs.th->getType() == "TH_Ethernet") {
 	// only with TH_Ethernet there is an IPHeader
         // but also when we have recorded it from the rsp boards!
 	recvframe += itsArgs.ipHeaderSize;
 	frameSize += itsArgs.ipHeaderSize;
-	//      };
+      };
     
       vector<NSTimer*> itsTimers;
       NSTimer threadTimer("threadTimer");
@@ -86,6 +86,8 @@ namespace LOFAR {
       // how far is one beamlet of a subband away from the next beamlet of the same subband
       int strideSize = itsArgs.nSubbandsPerFrame;
 
+      bool dataContainsValidStamp = (itsArgs.th->getType() != "TH_Null");
+
       while(!theirShouldStop) {
 	threadTimer.start();
 
@@ -99,7 +101,7 @@ namespace LOFAR {
 	}	
 
 	// get the actual timestamp of first EPApacket in frame
-	if (itsArgs.th->getType() == "TH_Null") {
+	if (!dataContainsValidStamp) {
 	  if (!firstloop) {
 	    actualstamp += itsArgs.nTimesPerFrame; 
 	  } else {
@@ -109,18 +111,19 @@ namespace LOFAR {
 #endif
 	    firstloop = false;
 	  }	  
-#ifdef PACKET_STATISTICS
 	} else {
-	  // firstloop
 	  seqid   = ((int*)&recvframe[8])[0];
 	  blockid = ((int*)&recvframe[12])[0];
 	  actualstamp.setStamp(seqid ,blockid);
+          //cerr<<endl<<"Reading stamp: " << actualstamp<<endl;
+#ifdef PACKET_STATISTICS
 	  if (firstloop) {
+	    // firstloop
 	    expectedstamp.setStamp(seqid, blockid); // init expectedstamp
 	    firstloop = false;
 	  }
 #endif
-	}      
+	}
       
 	// check and process the incoming data
 #ifdef PACKET_STATISTICS
