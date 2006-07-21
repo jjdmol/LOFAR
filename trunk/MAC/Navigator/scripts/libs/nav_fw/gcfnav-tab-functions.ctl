@@ -240,14 +240,23 @@ void ComboBoxViewsSelectionChanged()
   if(dpAccessable(g_datapoint+"__enabled"))
   {
     datapointTypeName = getDpTypeFromEnabled(g_datapoint);
+    DebugTN("get typename from enabled",g_datapoint,datapointTypeName);
   }
   else if(dpAccessable(g_datapoint))
   {
     datapointTypeName = dpTypeName(g_datapoint);
+    DebugTN("get typename not from enabled but it is accessible ",g_datapoint,datapointTypeName);
   }
   else
   {
+    // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
     datapointTypeName = g_datapoint;
+    int sepPos = strpos(datapointTypeName, ":");
+    if (sepPos >= 0)
+    {
+      datapointTypeName = substr(datapointTypeName, sepPos + 1);
+    }
+    DebugTN("datapoint is not enabled and not accessible",g_datapoint,datapointTypeName);
   }
 
   // Load the config panel in the viewTabsCtrl

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,299 108 417 182 N "_3DFace" 1
+PANEL,435 286 417 182 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -301,7 +301,7 @@ LANG:1 4 0.00
 2 22
 "txt_unitVoltage15"
 ""
-1 382 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 382 80 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -321,7 +321,7 @@ LANG:1 1 V
 2 23
 "txt_unitVoltage33"
 ""
-1 382 103 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 382 103 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 EE E
