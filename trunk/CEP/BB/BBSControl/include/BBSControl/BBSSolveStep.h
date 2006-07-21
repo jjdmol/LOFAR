@@ -1,4 +1,4 @@
-//# BBSMultiStep.h: Derived composite class of the BBSStep composite pattern.
+//# BBSSolveStep.h: The properties for solvable parameters
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,15 +20,17 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSMULTISTEP_H
-#define LOFAR_BBSCONTROL_BBSMULTISTEP_H
+#ifndef LOFAR_BBSCONTROL_BBSSOLVESTEP_H
+#define LOFAR_BBSCONTROL_BBSSOLVESTEP_H
 
 // \file
-// Derived composite class of the BBSStep composite pattern.
+// The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/BBSStep.h>
+#include <BBSControl/BBSSingleStep.h>
+#include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -37,23 +39,35 @@ namespace LOFAR
     // \addtogroup BBS
     // @{
 
-    // This is the so-called \e composite class in the composite pattern (see
-    // Gamma, 1995). The composite class contains pointers to zero or more
-    // BBSStep (component) objects.
-    class BBSMultiStep : public BBSStep
+    class BBSSolveStep : public BBSSingleStep
     {
     public:
-      BBSMultiStep(const string& name,
+      BBSSolveStep(const string& name,
 		   const ACC::APS::ParameterSet& parset,
 		   const BBSStep* parent);
 
-      virtual ~BBSMultiStep();
+      virtual ~BBSSolveStep();
 
       virtual void print(ostream& os) const;
 
     private:
-      // Vector holding a sequence of BBSSteps.
-      vector<const BBSStep*> itsSteps;
+      // Solve domain size.
+      struct DomainSize
+      {
+	double bandWidth;           ///< Bandwidth in Hz.
+	double timeInterval;        ///< Time interval in seconds.
+      };
+      uint32 itsMaxIter;            ///< Maximum number of iterations
+      double itsEpsilon;            ///< Convergence threshold
+      double itsMinConverged;       ///< Fraction that must have converged
+      vector<string> itsParms;      ///< Names of the solvable parameters
+      vector<string> itsExclParms;  ///< Parameters to be excluded from solve
+      DomainSize itsDomainSize;     ///< Solve domain size.
+
+      // Write the contents of a BBSSolveStep to an output stream.
+      friend ostream& operator<<(ostream&, const BBSSolveStep&);
+      friend ostream& operator<<(ostream&, const BBSSolveStep::DomainSize&);
+
     };
 
     // @}
@@ -63,3 +77,4 @@ namespace LOFAR
 } // namespace LOFAR
 
 #endif
+

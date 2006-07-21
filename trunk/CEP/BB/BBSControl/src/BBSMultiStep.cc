@@ -25,7 +25,7 @@
 #include <BBSControl/BBSMultiStep.h>
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
+#include <BBSControl/StreamFormatting.h>
 
 namespace LOFAR
 {
@@ -35,8 +35,9 @@ namespace LOFAR
   {
     
     BBSMultiStep::BBSMultiStep(const string& name,
-			       const ParameterSet& parset) :
-      BBSStep(name, parset)
+			       const ParameterSet& parset,
+			       const BBSStep* parent) :
+      BBSStep(name, parset, parent)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -45,7 +46,7 @@ namespace LOFAR
 
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
-	itsSteps.push_back(BBSStep::create(steps[i], parset));
+	itsSteps.push_back(BBSStep::create(steps[i], parset, this));
       }
     }
 
@@ -65,9 +66,9 @@ namespace LOFAR
     void BBSMultiStep::print(ostream& os) const
     {
       BBSStep::print(os);
-      Indent id;  // Add one indentation level
+      Indent id;
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	itsSteps[i]->print(os);
+	os << endl << indent << *itsSteps[i];
       }
     }
 

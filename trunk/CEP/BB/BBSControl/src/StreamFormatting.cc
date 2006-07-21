@@ -1,6 +1,6 @@
-//#  BBSSingleStep.cc: 
+//#  StreamUtil.cc: implementation of the stream utilities.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,47 +20,18 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <BBSControl/BBSSingleStep.h>
-#include <BBSControl/Exceptions.h>
-#include <APS/ParameterSet.h>
-#include <Common/LofarLogger.h>
 #include <BBSControl/StreamFormatting.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    using ACC::APS::ParameterSet;
-    using LOFAR::operator<<;
-
-    BBSSingleStep::BBSSingleStep(const string& name, 
-				 const ParameterSet& parset,
-				 const BBSStep* parent) :
-      BBSStep(name, parset, parent)
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
-      // Create a subset of \a parset, containing only the relevant keys for
-      // the current BBSSingleStep.
-      ParameterSet ps(parset.makeSubset("Step." + name + "."));
-
-      // Get the name of the data column to write to
-      itsOutputData = ps.getString("OutputData");
-    }
-
-    BBSSingleStep::~BBSSingleStep()
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    }
-
-    void BBSSingleStep::print(ostream& os) const
-    {
-      BBSStep::print(os);
-      Indent id;
-      os << endl << indent << "Output data: " << itsOutputData;
-    }
+    // Initialize static variables.
+    uint Indent::lvl = 0;
+    const string Indent::tok = ". ";
 
   } // namespace BBS
 

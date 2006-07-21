@@ -4,8 +4,10 @@ libbbscontrol_la_SOURCES= \
 	BBS.cc \
 	BBSStep.cc \
 	BBSSingleStep.cc \
+	BBSSolveStep.cc \
 	BBSMultiStep.cc \
 	BBSStrategy.cc \
+	BBSStructs.cc \
 	BlackBoardDemo.cc \
 	BlobAipsIO.cc \
 	DH_Prediff.cc \
@@ -18,6 +20,7 @@ libbbscontrol_la_SOURCES= \
 	SC_Simple.cc \
 	SC_WritePredData.cc \
 	StrategyController.cc \
+	StreamFormatting.cc \
 	WH_Control.cc \
 	WH_Prediff.cc \
 	WH_Solve.cc
