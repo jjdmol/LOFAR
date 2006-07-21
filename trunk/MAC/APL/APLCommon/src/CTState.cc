@@ -40,6 +40,8 @@ CTState::CTState()
 	itsStates[CREATED] 				= "Created";
 	itsStates[CONNECT]				= "Connecting";
 	itsStates[CONNECTED]			= "Connected";
+	itsStates[RESYNC]				= "Resyncing";
+	itsStates[RESYNCED]				= "Resynced";
 	itsStates[CLAIM]				= "Claiming";
 	itsStates[CLAIMED]				= "Claimed";
 	itsStates[PREPARE]				= "Preparing";
@@ -63,7 +65,7 @@ CTState::~CTState()
 //
 // name(statenr)
 //
-string	CTState::name(uint16			aStateNr)
+string	CTState::name(uint16			aStateNr) const
 { 
 	return ((aStateNr < LAST_STATE) ?  itsStates[aStateNr] : "NoConnection");
 }
@@ -71,7 +73,7 @@ string	CTState::name(uint16			aStateNr)
 //
 // value(name)
 //
-uint16	CTState::value(const string&		aStateName)
+uint16	CTState::value(const string&		aStateName) const
 {
 	uint16	i = NOSTATE;
 	while (i < LAST_STATE) {
@@ -87,12 +89,26 @@ uint16	CTState::value(const string&		aStateName)
 //
 // value(CTstateNr)
 //
-uint16	CTState::value(CTstateNr		aStateNr)
+uint16	CTState::value(CTstateNr		aStateNr) const
 {
 	ASSERTSTR((aStateNr >= NOSTATE) && (aStateNr < LAST_STATE), 
 								aStateNr << " is not a valid CTState");
 
 	return ((uint16) aStateNr);
+}
+
+//
+// stateNr(uint16)
+//
+CTState::CTstateNr	CTState::stateNr(uint16		someNr) const
+{
+	CTState::CTstateNr		maybeAState = (CTState::CTstateNr) someNr;
+	ASSERTSTR((maybeAState >= NOSTATE) && (maybeAState < LAST_STATE), 
+								someNr << " is not a valid CTState");
+
+	return (maybeAState);
+
+
 }
 
   } // namespace APL

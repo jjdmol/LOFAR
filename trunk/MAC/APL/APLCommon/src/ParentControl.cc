@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/Deployment.h>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
@@ -55,6 +56,7 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_SUSPEND,		CTState::ACTIVE,		CTState::SUSPENDED	},
 	{	CONTROL_RELEASE,		CTState::ANYSTATE,		CTState::RELEASED	},
 	{	CONTROL_FINISHED,		CTState::FINISH,		CTState::FINISHED	},
+	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	0x00,					CTState::NOSTATE,		CTState::NOSTATE	}
 };
 
@@ -163,9 +165,11 @@ CTState::CTstateNr ParentControl::requestedState(uint16	aSignal)
 //
 void ParentControl::doRequestedAction(PIiter	parent)
 {
-	LOG_TRACE_FLOW_STR("doRequestedAction:" << parent->name);
+	CTState	cts;
+	LOG_DEBUG_STR("doRequestedAction:" << parent->name << " : " << 
+			cts.name(parent->currentState) << "-->" << cts.name(parent->requestedState));
 
-	// state alredy reached? make sure the timer is off.
+	// state already reached? make sure the timer is off.
 	if (parent->requestedState == parent->currentState) {
 		parent->nrRetries = -1;
 		itsTimerPort.cancelTimer(parent->timerID);
@@ -198,12 +202,15 @@ void ParentControl::doRequestedAction(PIiter	parent)
 			CONTROLConnectEvent		hello;
 			hello.cntlrName = parent->name;
 			parent->port->send(hello);
+
+			// (re)set the parameters of this connection
 			parent->timerID 	  = 0;
 			parent->nrRetries 	  = -1;
 			parent->currentState  = CTState::CONNECT;
 			parent->establishTime = time(0);
 		}
 		break;
+
 	case CTState::CLAIMED: {
 			CONTROLClaimEvent	request;
 			request.cntlrName = parent->name;
@@ -320,17 +327,27 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 	case F_CONNECTED: {
 			// search which connection is succesfull connected.
 			PIiter		parent = findParent(&port);
-			if (isParent(parent)) {
-				// TODO: should we send an 'alive' msg to our parent
-				// so that recovered(?) parent knows we are still running?
-				// CHECK: is servicemask resolved at each open()?
-
-				// contact with parent is (re)made
-				doRequestedAction(parent);
-			}
-			else {
+			if (!isParent(parent)) {
 				LOG_DEBUG("F_CONNECTED on non-parent port");
+				break;
 			}
+
+			// first connection every made with this controller?
+			if (parent->requestedState == CTState::CONNECTED && 
+							parent->currentState == CTState::CONNECT) {
+				doRequestedAction(parent);	// do queued action if any.
+				break;
+			}
+
+			// Connecting is a reconnect, first resync with parent
+			CTState		cts;
+			LOG_DEBUG_STR ("Sending RESYNC(" << parent->name << "," 
+											<< cts.name(parent->currentState) << ")");
+			CONTROLResyncEvent	resync;
+			resync.cntlrName = parent->name;
+			resync.curState	 = parent->currentState;
+			resync.hostname	 = myHostname(true);
+			port.send(resync);		// will result in CONTROLF_RESYNCED;
 		}
 		break;
 
@@ -395,7 +412,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 			// its the reconnect timer of this parent.
 			if (parent->nrRetries > 0) {
-				parent->port->open();
+				parent->port->open();		// result in F_CONN or F_DISCONN
 				parent->nrRetries--;
 				parent->timerID = 0;
 				if (!parent->nrRetries%60) {
@@ -412,11 +429,25 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		break;
 
 	case STARTDAEMON_NEWPARENT: {
-		// a new parent wants us to connect to it, read info.
+		// a new parent wants us to connect to it,
 		STARTDAEMONNewparentEvent	NPevent(event);
-		ParentInfo_t				parent;
+
+		// Attempt to start me up for the second time??? send resync
+		PIiter	oldParent = findParent(NPevent.cntlrName);
+		if (isParent(oldParent)) {
+			CTState		cts;
+			LOG_DEBUG_STR ("Attempt to start me up twice, just sending RESYNC(" 
+				<< oldParent->name << "," << cts.name(oldParent->currentState) << ")");
+			CONTROLResyncEvent	resync;
+			resync.cntlrName = oldParent->name;
+			resync.curState	 = oldParent->currentState;
+			resync.hostname	 = myHostname(true);
+			port.send(resync);		// will result in CONTROL_RESYNCED;
+			break;
+		}
 
 		// construct the state information the parent think we have.
+		ParentInfo_t			parent;
 		parent.name 		  = NPevent.cntlrName;
 		parent.port			  = new GCFTCPPort(*this, NPevent.parentService,
 									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
@@ -486,6 +517,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		}
 		break;
 
+	case CONTROL_RESYNCED:
 	case CONTROL_CLAIM:
 	case CONTROL_PREPARE:
 	case CONTROL_RESUME:
@@ -495,7 +527,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			// do we know this parent?
 			PIiter		parent = findParent(&port);
-			if (isParent(parent)) {
+			if (!isParent(parent)) {
 				LOG_WARN_STR ("Received " << evtstr(event) << 
 								" event from unknown parent, ignoring");
 				break;
@@ -507,7 +539,11 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 							" event while requested state is " << parent->requestedState);
 			}
 
-			parent->requestedState = requestedState(event.signal);	// use stateFlowTable
+			// When we were resyncing yust continue what we were trying to do.
+			if (event.signal != CONTROL_RESYNCED) {
+				// use stateFlowTable to determine the required state.
+				parent->requestedState = requestedState(event.signal);	
+			}
 			parent->requestTime	   = time(0);
 			doRequestedAction(parent);
 		}

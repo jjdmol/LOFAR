@@ -52,8 +52,10 @@ public:
 		ANYSTATE = -1,
 		NOSTATE = 0,
 		CREATED,
-		CONNECT,
+		CONNECT,		// child to parent
 		CONNECTED,
+		RESYNC,			// child to parent
+		RESYNCED,
 		CLAIM,
 		CLAIMED,
 		PREPARE,
@@ -63,15 +65,16 @@ public:
 		SUSPENDED,
 		RELEASE,
 		RELEASED,
-		FINISH,
+		FINISH,			// child to parent
 		FINISHED,
 		LAST_STATE
 	} CTstateNr;
 
 	// conversion routines
-	string	name (uint16			aStateNr);
-	uint16	value(const string&		aStateName);
-	uint16	value(CTstateNr			aStateNr);
+	string		name   (uint16			aStateNr)   const;
+	uint16		value  (const string&	aStateName) const;
+	uint16		value  (CTstateNr		aStateNr)   const;
+	CTstateNr	stateNr(uint16			someNr)     const;
 
 private:
 	// Copying is not allowed

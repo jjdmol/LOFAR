@@ -39,6 +39,8 @@ prelude = << PRELUDE_END
 // STARTED   (string cntlrName, bool successful)
 // CONNECT   (string cntlrName)
 // CONNECTED (string cntlrName, uint16 result)
+// RESYNC	 (string cntlrName, uint16 curState, string hostname);
+// RESYNCED  (string cntlrName, uint16 result);
 // SCHEDULE  (string cntlrName, time_t startTime, time_t stopTime)
 // SCHEDULED (string cntlrName, uint16 result)
 // CLAIM     (string cntlrName)
@@ -97,6 +99,42 @@ event = {
 //
 event = {
 	signal = CONNECTED;
+	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "uint16";
+	};
+};
+
+//
+// RESYNC - sent by a child after connecting to it's parent was re-established
+//
+event = {
+	signal = RESYNC;
+	dir = IN; // from child to parent
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "curState";
+		type = "uint16";
+	};
+	param = {
+		name = "hostname";
+		type = "string";
+	};
+};
+
+//
+// RESYNCED - result of the RESYNC message
+//
+event = {
+	signal = RESYNCED;
 	dir = OUT; // from parent to child
 	param = {
 		name = "cntlrName";
