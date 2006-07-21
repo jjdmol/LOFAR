@@ -63,7 +63,6 @@ bitset<NR_SAMPLES_PER_INTEGRATION> WH_BGL_Processing::flags[NR_STATIONS] CACHE_A
 #endif
 unsigned WH_BGL_Processing::itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
 float WH_BGL_Processing::correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
-float WH_BGL_Processing::thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
 
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
 static BGL_Mutex *mutex;
@@ -1221,12 +1220,6 @@ void WH_BGL_Processing::preprocess()
 #endif
   }
 
-  for (int bl = 0; bl < NR_BASELINES; bl ++) {
-    for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-      thresholds[bl][ch] = 5.0e37;
-    }
-  }
-
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
   mutex = rts_allocate_mutex();
 #endif
@@ -1573,9 +1566,6 @@ void WH_BGL_Processing::doCorrelate()
 		sum += samples[ch][stat1][time][pol1] * conj(samples[ch][stat2][time][pol2]);
 	      }
 	      sum *= correlationWeights[itsNrValidSamples[bl]];
-	      if (real(sum) * real(sum) + imag(sum) * imag(sum) > thresholds[bl][ch]) {
-		goto invalid; // C++ lacks syntax to break from nested loop
-	      }
 	      (*visibilities)[bl][ch][pol1][pol2] = sum;
 	    }
 	  }
@@ -1583,11 +1573,11 @@ void WH_BGL_Processing::doCorrelate()
 	}
     
 	if (nrValid == 0) {
-	invalid:  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	  for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	    (*visibilities)[bl][ch][pol1][pol2] = makefcomplex(0, 0);
+	  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
+	    for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+	      (*visibilities)[bl][ch][pol1][pol2] = makefcomplex(0, 0);
+	    }
 	  }
-	}
 	}
 	(*nrValidSamples)[bl][ch] = nrValid;
       }
@@ -1707,31 +1697,15 @@ void WH_BGL_Processing::doCorrelate()
 #if 0
   for (int bl = 0; bl < NR_BASELINES; bl ++) {
     for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-      float weight  = correlationWeights[(*nrValidSamples)[bl][ch]];
-      bool  invalid = false;
-
       for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	  fcomplex vis = (*visibilities)[bl][ch][pol1][pol2] * weight;
-
-	  (*visibilities)[bl][ch][pol1][pol2] = vis;
-	  invalid |= real(vis) * real(vis) + imag(vis) * imag(vis) > thresholds[bl][ch];
-	}
-      }
-
-      if (invalid) {
-	(*nrValidSamples)[bl][ch] = 0;
-	for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	  for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	    (*visibilities)[bl][ch][pol1][pol2] = makefcomplex(0, 0);
-	  }
+	  (*visibilities)[bl][ch][pol1][pol2] *= correlationWeights[(*nrValidSamples)[bl][ch]];
 	}
       }
     }
   }
 #else
-  //_weigh_visibilities(visibilities, nrValidSamples, correlationWeights);
-  _post_process_visibilities(visibilities, nrValidSamples, correlationWeights, thresholds);
+  _weigh_visibilities(visibilities, nrValidSamples, correlationWeights);
 #endif
   weightTimer.stop();
 #endif  

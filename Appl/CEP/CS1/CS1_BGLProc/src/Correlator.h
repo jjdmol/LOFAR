@@ -81,11 +81,10 @@ extern "C" {
 			 
   void _clear_correlation(CorrelatedOutputType *S0_S0);
 
-  void _post_process_visibilities(
+  void _weigh_visibilities(
 	DH_Visibilities::AllVisibilitiesType *visibilities,
 	DH_Visibilities::AllNrValidSamplesType *nrValidSamplesCounted,
-	const float correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1],
-	const float thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS]);
+	const float correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1]);
 
   extern struct {
     unsigned nr_stations;
