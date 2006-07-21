@@ -138,8 +138,8 @@ namespace LOFAR
 
       // If defined, get the baseline selection for this step.
       try {
-	itsBaselines.station1 = ps.getUint32Vector("Baselines.Station1");
-	itsBaselines.station2 = ps.getUint32Vector("Baselines.Station2");
+	itsBaselines.station1 = ps.getStringVector("Baselines.Station1");
+	itsBaselines.station2 = ps.getStringVector("Baselines.Station2");
       } catch (APSException&) {}
 
       // If defined, get the correlation selection (ALL, AUTO, or CROSS), and
