@@ -23,15 +23,14 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BlackBoardDemo.h>
+#include <BBS/BBSTestLogger.h>
 #include <MS/MSDesc.h>
-#ifdef HAVE_MPI
-#include <Transport/TH_MPI.h>
-#endif
-#include <Blob/KeyParser.h>
-#include <string>
-#include <iostream>
-#include <fstream>
 
+#ifdef HAVE_MPI
+# include <Transport/TH_MPI.h>
+#endif
+
+#include <Blob/KeyParser.h>
 #include <Blob/BlobOBufChar.h>
 #include <Blob/BlobIBufChar.h>
 #include <Blob/BlobOStream.h>
@@ -39,13 +38,14 @@
 #include <Blob/BlobIBufStream.h>
 #include <Blob/BlobArray.h>
 
+#include <Common/lofar_string.h>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_fstream.h>
+
 #include <casa/Arrays/Matrix.h>
 #include <casa/Quanta/MVTime.h>
 
-#include <BBS/BBSTestLogger.h>
-
 using namespace LOFAR;
-using namespace std;
 using namespace casa;
 
 // This program should be called with input file name(1) and user name(2) as

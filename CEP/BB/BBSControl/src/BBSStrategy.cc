@@ -26,7 +26,7 @@
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/Exceptions.h>
 #include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
+#include <BBSControl/StreamFormatting.h>
 
 namespace LOFAR
 {
@@ -35,42 +35,25 @@ namespace LOFAR
   namespace BBS
   {
 
-    using LOFAR::operator<<;
-
-    ostream& operator<<(ostream& os, const BBSStrategy::WorkDomainSize& wds)
-    {
-      os << indent << "Workdomain size:" << endl;
-      Indent id;  // add an indentation level
-      os << indent << "Bandwidth: " << wds.bandWidth << " (Hz)" << endl
-	 << indent << "Time interval: " << wds.timeInterval << " (s)";
-      return os;
-    }
-
-    ostream& operator<<(ostream& os, const BBSStrategy::Selection& sel)
-    {
-      os << indent << "Selection: ";
-      switch(sel.corr) {
-      case BBSStrategy::Selection::ALL:     os << "ALL";   break;
-      case BBSStrategy::Selection::CROSS:   os << "CROSS"; break;
-      case BBSStrategy::Selection::AUTO:    os << "AUTO";  break;
-      default: os << "*****"; break;
-      }
-      return os;
-    }
-
-    ostream& operator<<(ostream& os, const BBSStrategy::BBDB& bbdb)
-    {
-      os << indent << "Blackboard database:" << endl;
-      Indent id; // add an indentation level
-      os << indent << "Host: " << bbdb.host << endl
-	 << indent << "Port: " << bbdb.port;
-      return os;
-    }
-
+    //##--------   P u b l i c   m e t h o d s   --------##//
 
     BBSStrategy::BBSStrategy(const ParameterSet& aParSet)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      // Get the name of the Measurement Set.
+      itsDataSet = aParSet.getString("DataSet");
+
+      // Retrieve the blackboard related key/value pairs.
+      itsBBDB.host = aParSet.getString("BBDB.Host");
+      itsBBDB.port = aParSet.getUint16("BBDB.Port");
+      itsBBDB.dbName = aParSet.getString("BBDB.DBName");
+      itsBBDB.username = aParSet.getString("BBDB.UserName");
+      itsBBDB.password = aParSet.getString("BBDB.PassWord");
+
+      // Retrieve the parameter database related key/value pairs.
+      itsParmDB.instrument = aParSet.getString("ParmDB.Instrument");
+      itsParmDB.localSky = aParSet.getString("ParmDB.LocalSky");
 
       // Create a subset of \a aParSet, containing only the relevant keys for
       // a Strategy.
@@ -81,30 +64,25 @@ namespace LOFAR
 
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
-	itsSteps.push_back(BBSStep::create(steps[i], aParSet));
+	itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
       }
 
       // ID's of the stations to be used by this strategy.
       itsStations = ps.getUint32Vector("Stations");
 
-      // Get the work domain size for this strategy
-      itsDomainSize.bandWidth = ps.getDouble("DomainSize.Freq");
-      itsDomainSize.timeInterval = ps.getDouble("DomainSize.Time");
 
-      // Get the names of the Measurement Sets
-      itsDataSet = ps.getString("DataSet");
+      // Get the work domain size for this strategy
+      itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");
+      itsDomainSize.timeInterval = ps.getDouble("WorkDomainSize.Time");
 
       // Get the correlation product selection (ALL, AUTO, or CROSS)
-      string sel = ps.getString("Selection");
-      if (sel == "ALL") itsSelection = Selection::ALL;
-      else if (sel == "AUTO") itsSelection = Selection::AUTO;
-      else if (sel == "CROSS") itsSelection = Selection::CROSS;
+      string sel = ps.getString("Correlation.Selection");
+      if      (sel == "ALL")   itsCorrelation.selection = Correlation::ALL;
+      else if (sel == "AUTO")  itsCorrelation.selection = Correlation::AUTO;
+      else if (sel == "CROSS") itsCorrelation.selection = Correlation::CROSS;
       else THROW(BBSControlException, 
 		 "Invalid correlation selection " << sel);
-
-      // Get the hostname/ipaddr and portnr of the Blackboard database
-      itsBBDB.host = ps.getString("BBDB.Host");
-      itsBBDB.port = ps.getUint16("BBDB.Port");
+      itsCorrelation.type = ps.getStringVector("Correlation.Type");
 
     }
 
@@ -123,16 +101,17 @@ namespace LOFAR
 
     void BBSStrategy::print(ostream& os) const
     {
-      os << indent << "Strategy:" << endl;
+      os << endl << indent << "Measurement Set: " << itsDataSet
+	 << endl << indent << itsBBDB
+	 << endl << indent << itsParmDB
+	 << endl << indent << "Strategy:";
       Indent id;
+      os << endl << indent << itsDomainSize
+	 << endl << indent << itsCorrelation
+	 << endl << indent << "Stations: " << itsStations;
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	itsSteps[i]->print(os);
+	os << endl << indent << *itsSteps[i];
       }
-      os << indent << "Stations: " << itsStations << endl
-	 << itsDomainSize << endl
-	 << indent << "Data set: " << itsDataSet << endl
-	 << itsSelection << endl
-	 << itsBBDB << endl;
     }
 
 
@@ -140,6 +119,9 @@ namespace LOFAR
 //     {
 //       itsSteps.push_back(aStep);
 //     }
+
+
+    //##--------   G l o b a l   m e t h o d s   --------##//
 
     ostream& operator<<(ostream& os, const BBSStrategy& bs)
     {

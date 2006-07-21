@@ -1,4 +1,4 @@
-//# BBSSingleStep.h: The properties for solvable parameters
+//# BBSSingleStep.h: Derived leaf class of the BBSStep composite pattern.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #define LOFAR_BBSCONTROL_BBSSINGLESTEP_H
 
 // \file
-// The properties for solvable parameters
+// Derived leaf class of the BBSStep composite pattern.
 
 //# Includes
 #include <BBSControl/BBSStep.h>
@@ -33,28 +33,46 @@ namespace LOFAR
 {
   namespace BBS
   {
-    //# Forward Declarations.
-    class DataSelection;
-    class SourceGroup;
-
     // \addtogroup BBS
     // @{
 
+    // This is a so-called \e leaf class in the BBSStep composite pattern (see
+    // Gamma, 1995).
+    // \note %BBSSingleStep not implemented as a leaf class; it contains a
+    // number of data members that are common to "real" BBSStep leaf classes,
+    // like BBSSolveStep.
     class BBSSingleStep : public BBSStep
     {
     public:
+      // Construct a BBSSingleStep having the name \a name. Configuration
+      // information for this step can be retrieved from the parameter set \a
+      // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
+      // is a pointer to the BBSStep object that is the parent of \c *this.
       BBSSingleStep(const string& name,
-		    const ACC::APS::ParameterSet& parset);
+		    const ACC::APS::ParameterSet& parset,
+		    const BBSStep* parent);
 
       virtual ~BBSSingleStep();
 
+      // Print the contents of \c *this in human readable form.
       virtual void print(ostream& os) const;
 
     private:
+      // Name of the data column to write data to
+      string          itsOutputData;
 
-//       DataSelection       itsDataSelection;
-//       vector<SourceGroup> itsSourceGroups;
     };
+
+    // For the time being we'll define the following steps as typedefs. If,
+    // and when, they need to be "upgraded" to a real class, we can do so,
+    // without affecting code referring to these types.
+    // @{
+    typedef BBSSingleStep BBSSubtractStep;
+    typedef BBSSingleStep BBSCorrectStep;
+    typedef BBSSingleStep BBSPredictStep;
+    typedef BBSSingleStep BBSShiftStep;
+    typedef BBSSingleStep BBSRefitStep;
+    // @}
 
     // @}
     

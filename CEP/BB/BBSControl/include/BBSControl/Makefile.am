@@ -1,8 +1,10 @@
 pkginclude_HEADERS = \
 	BBSStep.h \
 	BBSSingleStep.h \
+	BBSSolveStep.h \
 	BBSMultiStep.h \
 	BBSStrategy.h \
+	BBSStructs.h \
 	BlackBoardDemo.h \
 	BlobAipsIO.h \
 	DH_Prediff.h \
@@ -14,6 +16,7 @@ pkginclude_HEADERS = \
 	SC_Simple.h \
 	SC_WritePredData.h \
 	StrategyController.h \
+	StreamFormatting.h \
 	WH_Control.h \
 	WH_Prediff.h \
 	WH_Solve.h

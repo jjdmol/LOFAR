@@ -25,85 +25,165 @@
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/BBSMultiStep.h>
+#include <BBSControl/BBSSolveStep.h>
+#include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
+#include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
+#include <BBSControl/StreamFormatting.h>
 
 namespace LOFAR
 {
   using ACC::APS::ParameterSet;
+  using ACC::APS::APSException;
 
   namespace BBS
   {
-    using LOFAR::operator<<;
 
-    BBSStep::BBSStep(const string& name, const ParameterSet& parSet) :
-      itsName(name)
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
-      // Create a subset of \a aParSet, containing only the relevant keys for
-      // the current BBSStep.
-      ParameterSet ps(parSet.makeSubset("Step." + name + "."));
-
-      // Get the baseline selection for this step.
-      itsSelection.station1 = ps.getUint32Vector("Selection.Station1");
-      itsSelection.station2 = ps.getUint32Vector("Selection.Station2");
-
-      // Get the sources for the current source model.
-      itsSources = ps.getStringVector("Sources");
-    }
-
+    //##--------   P u b l i c   m e t h o d s   --------##//
 
     BBSStep::~BBSStep()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
-//     void BBSStep::addStep(const BBSStep*&)
-//     {
-//       ASSERTSTR(false, "A BBSStep can only be added to a BBSMultiStep");
-//     }
+
+    void BBSStep::print(ostream& os) const
+    {
+      os << "Step: " << itsName;
+      Indent id;  // add an extra indentation level
+      os << endl << indent << "Full name: " << fullName()
+	 << endl << indent << itsBaselines
+	 << endl << indent << itsCorrelation
+	 << endl << indent << itsIntegration
+	 << endl << indent << "Sources: " << itsSources
+	 << endl << indent << "Extra sources: " << itsExtraSources
+	 << endl << indent << "Instrument models: " << itsInstrumentModels;
+    }
+
+
+    string BBSStep::fullName() const
+    {
+      string name;
+      if (itsParent) name = itsParent->fullName() + ".";
+      name += itsName;
+      return name;
+    }
 
 
     BBSStep* BBSStep::create(const string& name,
-			     const ParameterSet& parSet)
+			     const ParameterSet& parset,
+			     const BBSStep* parent)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // If \a parSet contains a key <tt>Step.<em>name</em>.Steps</tt>, then
+      // If \a parset contains a key <tt>Step.<em>name</em>.Steps</tt>, then
       // \a name is a BBSMultiStep, otherwise it is a SingleStep.
-      if (parSet.isDefined("Step." + name + ".Steps")) {
+      if (parset.isDefined("Step." + name + ".Steps")) {
 	LOG_TRACE_COND_STR(name << " is a MultiStep");
-	return new BBSMultiStep(name, parSet);
+	return new BBSMultiStep(name, parset, parent);
       } else {
 	LOG_TRACE_COND_STR(name << " is a SingleStep");
-	return new BBSSingleStep(name, parSet);
+	// We'll have to figure out what kind of SingleStep we must
+	// create. The key "Operation" contains this information.
+	string oper = toUpper(parset.getString("Step." + name + ".Operation"));
+	LOG_TRACE_COND_STR("Creating a " << oper << " step ...");
+	if      (oper == "SOLVE")
+	  return new BBSSolveStep(name, parset, parent);
+	else if (oper == "SUBTRACT")
+	  return new BBSSubtractStep(name, parset, parent);
+	else if (oper == "CORRECT")
+	  return new BBSCorrectStep(name, parset, parent);
+	else if (oper == "PREDICT")
+	  return new BBSPredictStep(name, parset, parent);
+	else if (oper == "SHIFT")
+	  return new BBSShiftStep(name, parset, parent);
+	else if (oper == "REFIT")
+	  return new BBSRefitStep(name, parset, parent);
+	else THROW (BBSControlException, "Operation \"" << oper << 
+		    "\" is not a valid Step operation");
       }
     }
 
 
-    void BBSStep::print(ostream& os) const
+    //##--------   P r o t e c t e d   m e t h o d s   --------##//
+
+    BBSStep::BBSStep(const string& name, 
+		     const ParameterSet& parset,
+		     const BBSStep* parent)
     {
-      os << indent << "Step: " << itsName << endl;
-      Indent id;  // add an extra indentation level
-      os << itsSelection << endl
-	 << indent << "Sources: " << itsSources << endl;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      // Copy the data members from the parent, if present, so that they have
+      // sensible default values.
+      if (parent) *this = *parent;
+
+      // We must reset these values, because they were overwritten by the
+      // previous data copy.
+      itsName = name;
+      itsParent = parent;
+
+      // Overrride default values for data members of the current BBSStep, if
+      // they're specified in \a parset.
+      setParms(parset.makeSubset("Step." + name + "."));
+
     }
 
+
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+
+    void BBSStep::setParms(const ParameterSet& ps)
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      // If defined, get the baseline selection for this step.
+      try {
+	itsBaselines.station1 = ps.getUint32Vector("Baselines.Station1");
+	itsBaselines.station2 = ps.getUint32Vector("Baselines.Station2");
+      } catch (APSException&) {}
+
+      // If defined, get the correlation selection (ALL, AUTO, or CROSS), and
+      // type (e.g., ["XX", "XY", "YX", "YY"]
+      try {
+	string sel = ps.getString("Correlation.Selection");
+	if      (sel == "ALL")   itsCorrelation.selection = Correlation::ALL;
+	else if (sel == "AUTO")  itsCorrelation.selection = Correlation::AUTO;
+	else if (sel == "CROSS") itsCorrelation.selection = Correlation::CROSS;
+	else THROW(BBSControlException, 
+		   "Invalid correlation selection " << sel);
+	itsCorrelation.type = ps.getStringVector("Correlation.Type");
+      } catch (APSException&) {}
+
+      // If defined, get the integration intervals in frequency (Hz) and
+      // time (s).
+      try {
+	itsIntegration.deltaFreq = ps.getDouble("Integration.Freq");
+	itsIntegration.deltaTime = ps.getDouble("Integration.Time");
+      } catch (APSException&) {}
+
+      // If defined, get the sources for the current patch.
+      try {
+	itsSources = ps.getStringVector("Sources");
+      } catch (APSException&) {}
+
+      // If defined, get the extra source, outside the current patch.
+      try {
+	itsExtraSources = ps.getStringVector("ExtraSources");
+      } catch (APSException&) {}
+
+      // If defined, get the instrument model(s) used.
+      try {
+	itsInstrumentModels = ps.getStringVector("InstrumentModel");
+      } catch (APSException&) {}
+
+    }
+
+
+    //##--------   G l o b a l   m e t h o d s   --------##//
 
     ostream& operator<<(ostream& os, const BBSStep& bs)
     {
       bs.print(os);
-      return os;
-    }
-
-    ostream& operator<<(ostream& os, const BBSStep::Selection& sel)
-    {
-      os << indent << "Selection:" << endl;
-      Indent id;  // add an extra indentation level
-      os << indent << "Station1: " << sel.station1 << endl
-	 << indent << "Station2: " << sel.station2;
       return os;
     }
 

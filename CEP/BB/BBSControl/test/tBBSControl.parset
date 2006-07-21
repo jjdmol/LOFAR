@@ -20,8 +20,8 @@ ParmDB.Instrument        = "test.mep"       # instrument parameters (MS table)
 ParmDB.LocalSky          = "test.gsm"       # local sky parameters (MS table)
 
 Step.xyz1.Steps          = ["sl1", "sl2"]
-Step.xyz1.Selection.Station1 = [0, 0, 0, 1, 1, 2] # baselines to use 
-Step.xyz1.Selection.Station2 = [0, 1, 2, 1, 2, 2] # (all if empty)
+Step.xyz1.Baselines.Station1 = [0, 0, 0, 1, 1, 2] # baselines to use 
+Step.xyz1.Baselines.Station2 = [0, 1, 2, 1, 2, 2] # (all if empty)
 Step.xyz1.Sources        = ["3C343"]        # list of sources
 Step.xyz1.ExtraSources   = ["M81"]          # list of sources outside patch
 Step.xyz1.InstrumentModel = ["Bandpass",  \ # Instrument model
@@ -33,17 +33,16 @@ Step.xyz1.Correlation.Type = ["XX", "XY", \ # which (cross) correlations to use
                               "YX", "YY"]
 
 Step.xyz2.Steps          = ["sl1", "sl3"]
-Step.xyz2.Selection.Station1 = [0, 0, 1]    # baselines to use
-Step.xyz2.Selection.Station2 = [0, 1, 1]    # (all if empty)
+Step.xyz2.Baselines.Station1 = [0, 0, 1]    # baselines to use
+Step.xyz2.Baselines.Station2 = [0, 1, 1]    # (all if empty)
 Step.xyz2.Sources        = ["3C343"]        # sources in the source model
 Step.xyz2.InstrumentModel = ["Bandpass"]    # Instrument model
 
-Step.sl1.Selection.Station1 = [0, 1]        # baselines to use
-Step.sl1.Selection.Station2 = [1, 2]        # (all if empty)
-Step.sl1.Sources         = []               # list of sources
+Step.sl1.Baselines.Station1 = [0, 1]        # baselines to use
+Step.sl1.Baselines.Station2 = [1, 2]        # (all if empty)
 Step.sl1.Operation       = SOLVE          \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT
-Step.sl1.OutData         = "OUTDATA1"       # MS output data column
+Step.sl1.OutputData      = "OUTDATA1"       # MS output data column
 Step.sl1.Solve.MaxIter   = 10               # maximum number of iterations
 Step.sl1.Solve.Epsilon   = 1e-7             # convergence threshold
 Step.sl1.Solve.MinConverged = 0.95          # fraction that must have converged
@@ -53,32 +52,12 @@ Step.sl1.Solve.DomainSize.Freq = 1000       # f(Hz)
 Step.sl1.Solve.DomainSize.Time = 1          # t(s)
 Step.sl1.InstrumentModel = ["Bandpass", "Phase"]
 
-Step.sl2.Selection.Station1 = []            # baselines to use
-Step.sl2.Selection.Station2 = []            # (all if empty)
-Step.sl2.Sources         = []               # list of sources
 Step.sl2.Operation       = CORRECT        \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT
-Step.sl2.OutData         = "OUTDATA2"       # MS output data column
-Step.sl2.Solve.MaxIter   = 10               # maximum number of iterations
-Step.sl2.Solve.Epsilon   = 1e-6             # convergence threshold
-Step.sl2.Solve.MinConverged = 0.85          # fraction that must have converged
-Step.sl2.Solve.Parms     = ["GAIN:*"]       # names of solvable parameters
-Step.sl2.Solve.ExclParms = ["PHASE:*"]      # parameters excluded from solve
-Step.sl2.Solve.DomainSize.Freq = 500        # f(Hz)
-Step.sl2.Solve.DomainSize.Time = 2          # t(s)
+Step.sl2.OutputData      = "OUTDATA2"       # MS output data column
 Step.sl2.InstrumentModel = ["DirGain", "Phase"]
 
-Step.sl3.Selection.Station1 = []            # baselines to use
-Step.sl3.Selection.Station2 = []            # (all if empty)
-Step.sl3.Sources         = []               # list of sources
 Step.sl3.Operation       = PREDICT        \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT
-Step.sl3.OutData         = "OUTDATA3"       # MS output data column
-Step.sl3.Solve.MaxIter   = 10               # maximum number of iterations
-Step.sl3.Solve.Epsilon   = 1e-5             # convergence threshold
-Step.sl3.Solve.MinConverged = 0.98          # fraction that must have converged
-Step.sl3.Solve.Parms     = ["GAIN:*", "PHASE:*"] # names of solvable parameters
-Step.sl3.Solve.ExclParms = [""]             # parameters excluded from solve
-Step.sl3.Solve.DomainSize.Freq = 250        # f(Hz)
-Step.sl3.Solve.DomainSize.Time = 4          # t(s)
+Step.sl3.OutputData      = "OUTDATA3"       # MS output data column
 Step.sl3.InstrumentModel = ["Phase"]
