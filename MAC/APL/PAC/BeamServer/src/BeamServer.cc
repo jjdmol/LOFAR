@@ -114,16 +114,13 @@ BeamServer::BeamServer(string name, int argc, char** argv)
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
-  string	instanceID;
+  string instanceID;
   if (m_instancenr >= 0) {
     instanceID=formatString("(%d)", m_instancenr);
   }
-//   m_acceptor.init(*this, "acceptor"+instanceID, GCFPortInterface::MSPP, BS_PROTOCOL);
-//   m_rspdriver.init(*this, "rspdriver"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
-//   m_calserver.init(*this, "calserver"+instanceID, GCFPortInterface::SAP, CAL_PROTOCOL);
-  m_acceptor.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::MSPP, BS_PROTOCOL);
-  m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
-  m_calserver.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
+  m_acceptor.init(*this, MAC_SVCMASK_BEAMSERVER + instanceID, GCFPortInterface::MSPP, BS_PROTOCOL);
+  m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER + instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_calserver.init(*this, MAC_SVCMASK_CALSERVER + instanceID, GCFPortInterface::SAP, CAL_PROTOCOL);
 }
 
 BeamServer::~BeamServer()

@@ -68,6 +68,7 @@ event = {
 	    // RCU's for this subarray
 	    name = "rcumode";
 	    type = "RSP_Protocol::RCUSettings";
+	    userdefined;
       };
 };
 

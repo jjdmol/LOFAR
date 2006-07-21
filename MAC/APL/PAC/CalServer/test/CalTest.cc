@@ -160,7 +160,8 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  }
 	}
 	start.nyquist_zone = m_nyquistzone;
-	start.rcucontrol.setRaw(m_rcucontrol);
+	start.rcumode().resize(1);
+	start.rcumode()(0).setRaw(m_rcucontrol);
 
 	TESTC_ABORT(m_server.send(start), CalTest::final);
       }
