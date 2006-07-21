@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <APS/ParameterSetImpl.h>
+#include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 
@@ -151,7 +152,7 @@ void ParameterSetImpl::readFile(const	string&	theFilename,
 	// Try to pen the file
 	paramFile.open(theFilename.c_str(), ifstream::in);
 	if (!paramFile) {
-		THROW (Exception, 
+		THROW (APSException, 
 			   formatString("Unable to open file %s", theFilename.c_str()));
 	}
 
@@ -209,7 +210,7 @@ void ParameterSetImpl::addStream(istream&	inputStream, bool	merge)
 			// line must have an equal-character ofcourse.
 			char* separator = strstr(paramLine, "=");
 			if (!separator) {
-				THROW (Exception,formatString("No '=' found in %s", paramLine));
+				THROW (APSException,formatString("No '=' found in %s", paramLine));
 			}
 			*separator= '\0';					// terminate key string
 			valueStr = separator + 1;			// ValueStr starts after = sign
@@ -288,7 +289,7 @@ void ParameterSetImpl::addStream(istream&	inputStream, bool	merge)
 			pair< map<string, string>::iterator, bool>		result;
 			result = insert(std::make_pair(keyStr, valueStr)); 
 			if (!result.second) {
-				THROW (Exception, 
+				THROW (APSException, 
 					   formatString("Key %s double defined?", keyStr));
 			}
 
@@ -310,7 +311,7 @@ ParameterSetImpl::findKV(const string& aKey) const
 {
 	const_iterator	iter = find(aKey);
 	if (iter == end()) {
-		THROW (Exception, formatString("Key %s unknown", aKey.c_str()));
+		THROW (APSException, formatString("Key %s unknown", aKey.c_str()));
 	}
 
 	return (iter);
@@ -326,7 +327,7 @@ void ParameterSetImpl::add(const string& aKey, const string& aValue)
 	result = insert(std::make_pair(aKey, aValue)); 
 
 	if (!result.second) {
-		THROW (Exception, formatString("add:Key %s double defined?", aKey.c_str()));
+		THROW (APSException, formatString("add:Key %s double defined?", aKey.c_str()));
 	}
 }
 
@@ -383,7 +384,7 @@ vector<char*> splitVector(char*	target)
 	// trim target and check array markers
 	uint32			lastPos = rtrim(target = ltrim(target)) - 1;
 	if (target[0] != '[' || target[lastPos] != ']') {
-		THROW (Exception, 
+		THROW (APSException, 
 				formatString("Array %s should be limited with '[' and ']'", 
 				target));
 	}
@@ -412,7 +413,7 @@ vector<char*> splitVector(char*	target)
 				++idx;
 			}
 			if (target[idx] != target[start]) {
-				THROW(Exception,
+				THROW(APSException,
 					formatString("%s: unmatched quote", target+start));
 			}
 			// start and idx now at qoutes of same type, remove both
@@ -677,7 +678,7 @@ void ParameterSetImpl::writeFile(const string&	theFilename,
 	paramFile.open(theFilename.c_str(), 
 				   ofstream::out | (append ? ofstream::app : ofstream::trunc));
 	if (!paramFile) {
-		THROW (Exception, formatString("Unable to open file %s", theFilename.c_str()));
+		THROW (APSException, formatString("Unable to open file %s", theFilename.c_str()));
 	}
 
 	// Write all the pairs to the file
@@ -735,7 +736,7 @@ time_t StringToTime_t (const string& aString)
 	char				unit[1024];
 	unit[0] = '\0';
 	if (sscanf (aString.c_str(), "%ld%s", &theTime, unit) < 1) {
-		THROW (Exception, aString + " is not an time value");
+		THROW (APSException, aString + " is not an time value");
 	}
 
 	switch (unit[0]) {
