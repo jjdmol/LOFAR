@@ -146,19 +146,13 @@ namespace LOFAR {
       
       itsReadTimer.start();
 
-      // copy zeros for the part that was already out of the buffer
       uint nInvalid = realBegin - begin;
-#if defined USE_DEBUG
-      for (uint sb = 0; sb < itsNSubbands; sb++) {
-	memset(&buffers[sb][0], 0, nInvalid * sizeof(Beamlet));
-      }
-#endif
       // set flags later
       itsDummyItems += nInvalid * itsNSubbands;
       flags->include(0, nInvalid);
 
       // copy the real data
-      uint startI = mapTime2Index(realBegin);
+      uint startI = mapTime2Index(begin);
       uint endI = mapTime2Index(end);
 
       if (endI < startI) {
@@ -166,23 +160,31 @@ namespace LOFAR {
 	uint firstChunk = itsSize - startI;
 
 	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  memcpy(&buffers[sb][nInvalid],   &itsSBBuffers[sb][startI], firstChunk * sizeof(Beamlet));
+	  memcpy(&buffers[sb][0]         , &itsSBBuffers[sb][startI], firstChunk * sizeof(Beamlet));
 	  memcpy(&buffers[sb][firstChunk], &itsSBBuffers[sb][0],      endI       * sizeof(Beamlet));
 
 	  //itsDummyItems += blabla;
 	}
 
-	*flags |= (itsFlags.subset(0,      endI)    += nInvalid + firstChunk);
-	*flags |= (itsFlags.subset(startI, itsSize) -= nInvalid + startI);
+	*flags |= (itsFlags.subset(0,      endI)    += firstChunk);
+	*flags |= (itsFlags.subset(startI, itsSize) -= startI);
       } else {
 	// copy in one part
 	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  memcpy(&buffers[sb][nInvalid], &itsSBBuffers[sb][startI], (endI - startI) * sizeof(Beamlet));
+	  memcpy(&buffers[sb][0], &itsSBBuffers[sb][startI], (endI - startI) * sizeof(Beamlet));
 	  //flags[sb]->setFlags(itsFlags[blabla]);
 	  //itsDummyItems += blabla;
 	}	  
-	*flags |= (itsFlags.subset(startI, endI) -= nInvalid + startI);
+	*flags |= (itsFlags.subset(startI, endI) -= startI);
       }
+
+      // copy zeros for the part that was already out of the buffer
+#if defined USE_DEBUG
+      cerr<<"Clearing "<<nInvalid<<" beamlets"<<endl;
+      for (uint sb = 0; sb < itsNSubbands; sb++) {
+	memset(&buffers[sb][0], 0, nInvalid * sizeof(Beamlet));
+      }
+#endif
      
       itsReadTimer.stop();
       itsLockedRange.readUnlock(end);
