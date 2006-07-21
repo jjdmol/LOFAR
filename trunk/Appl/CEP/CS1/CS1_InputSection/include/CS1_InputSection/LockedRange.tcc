@@ -93,6 +93,7 @@ namespace LOFAR
 	  if (!amWaiting)
 	    {
 	      itsWriteLockTimer.stop ();
+	      cout<<"Waiting for space: "<<begin<<" - "<<end<<endl;
 	      itsWaitingForSpaceTimer.start ();
 	      amWaiting = true;
 	    }
@@ -101,6 +102,7 @@ namespace LOFAR
       if (amWaiting)
 	{
 	  itsWaitingForSpaceTimer.stop ();
+	  cout<<"Space available"<<endl;
 	  itsWriteLockTimer.start ();
 	}
 
@@ -157,12 +159,19 @@ namespace LOFAR
 
       if (end < begin)
 	end = begin;
-        bool amWaiting = false;
-        while (itsWriteTail - end < itsMin)
+
+      if (begin > itsReadTail) {
+        itsReadTail = begin;
+        itsSpaceAvailCond.notify_all ();
+      }
+
+      bool amWaiting = false;	
+      while (itsWriteTail - end < itsMin)
 	{
 	  if (!amWaiting)
 	    {
 	      itsReadLockTimer.stop ();
+	      cout<<"Waiting for data: "<<begin<<" - "<<end<<endl;
 	      itsWaitingForDataTimer.start ();
 	      amWaiting = true;
 	    }
@@ -171,6 +180,7 @@ namespace LOFAR
       if (amWaiting)
 	{
 	  itsWaitingForDataTimer.stop ();
+	  cout<<"Data available"<<endl;
 	  itsReadLockTimer.start ();
 	}
       itsReadHead = end;
@@ -199,6 +209,7 @@ namespace LOFAR
 	{
 	  if (!amWaiting)
 	    {
+	      cout<<"Waiting for data (empty)"<<endl;
 	      itsWaitingForDataTimer.start ();
 	      amWaiting = true;
 	    }
@@ -207,6 +218,7 @@ namespace LOFAR
       if (amWaiting)
 	{
 	  itsWaitingForDataTimer.stop ();
+	  cout<<"Data available"<<endl;
 	}
 
       T begin = itsFirstItem;
