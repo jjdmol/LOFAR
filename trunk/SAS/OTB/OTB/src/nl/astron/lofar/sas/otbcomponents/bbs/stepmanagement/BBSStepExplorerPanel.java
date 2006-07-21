@@ -495,14 +495,18 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         exploreNextStepButton.setText("View next step");
         stepExplorerPanel.add(exploreNextStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 10, -1, -1));
 
+        stepExplorerRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         stepExplorerRevertButton.setText("Revert");
+        stepExplorerRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
+        stepExplorerRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
+        stepExplorerRevertButton.setPreferredSize(new java.awt.Dimension(100, 25));
         stepExplorerRevertButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 stepExplorerRevertButtonActionPerformed(evt);
             }
         });
 
-        stepExplorerPanel.add(stepExplorerRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 620, 80, -1));
+        stepExplorerPanel.add(stepExplorerRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 620, 100, -1));
 
         stepExplorerInstrumentModelPanel.setLayout(new java.awt.BorderLayout());
 
@@ -518,24 +522,33 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerInstrumentModelModsPanel.setLayout(new java.awt.GridBagLayout());
 
-        addInstrumentModelButton.setText("A");
+        addInstrumentModelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addInstrumentModelButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addInstrumentModelButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addInstrumentModelButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerInstrumentModelModsPanel.add(addInstrumentModelButton, gridBagConstraints);
 
-        modifyInstrumentModelButton.setText("M");
+        modifyInstrumentModelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifyInstrumentModelButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        modifyInstrumentModelButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        modifyInstrumentModelButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerInstrumentModelModsPanel.add(modifyInstrumentModelButton, gridBagConstraints);
 
-        deleteInstrumentModelButton.setText("D");
+        deleteInstrumentModelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteInstrumentModelButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteInstrumentModelButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteInstrumentModelButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerInstrumentModelModsPanel.add(deleteInstrumentModelButton, gridBagConstraints);
 
         stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelModsPanel, java.awt.BorderLayout.SOUTH);
 
-        stepExplorerPanel.add(stepExplorerInstrumentModelPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 230, 160, 120));
+        stepExplorerPanel.add(stepExplorerInstrumentModelPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(360, 230, 160, 120));
 
         stepExplorerOperationPanel.setLayout(new java.awt.BorderLayout());
 
@@ -617,17 +630,26 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         seOperationAttributeGroup3.setBorder(javax.swing.BorderFactory.createTitledBorder("Excluded"));
         stepExplorerSourcesModsPanel2.setLayout(new java.awt.GridBagLayout());
 
-        addSolvableParmButton1.setText("A");
+        addSolvableParmButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addSolvableParmButton1.setMaximumSize(new java.awt.Dimension(30, 25));
+        addSolvableParmButton1.setMinimumSize(new java.awt.Dimension(30, 25));
+        addSolvableParmButton1.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel2.add(addSolvableParmButton1, gridBagConstraints);
 
-        modifySolvableParmButton1.setText("M");
+        modifySolvableParmButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifySolvableParmButton1.setMaximumSize(new java.awt.Dimension(30, 25));
+        modifySolvableParmButton1.setMinimumSize(new java.awt.Dimension(30, 25));
+        modifySolvableParmButton1.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel2.add(modifySolvableParmButton1, gridBagConstraints);
 
-        deleteSolvableParmButton1.setText("D");
+        deleteSolvableParmButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteSolvableParmButton1.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteSolvableParmButton1.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteSolvableParmButton1.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel2.add(deleteSolvableParmButton1, gridBagConstraints);
@@ -645,17 +667,26 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         seOperationAttributeGroup2.setBorder(javax.swing.BorderFactory.createTitledBorder("Solvable"));
         seOperationAttributeSolvableParmPanel.setLayout(new java.awt.GridBagLayout());
 
-        addSolvableParmButton.setText("A");
+        addSolvableParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addSolvableParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addSolvableParmButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addSolvableParmButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         seOperationAttributeSolvableParmPanel.add(addSolvableParmButton, gridBagConstraints);
 
-        modifySolvableParmButton.setText("M");
+        modifySolvableParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifySolvableParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        modifySolvableParmButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        modifySolvableParmButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         seOperationAttributeSolvableParmPanel.add(modifySolvableParmButton, gridBagConstraints);
 
-        deleteSolvableParmButton.setText("D");
+        deleteSolvableParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteSolvableParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteSolvableParmButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteSolvableParmButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         seOperationAttributeSolvableParmPanel.add(deleteSolvableParmButton, gridBagConstraints);
@@ -681,13 +712,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerOperationPanel.add(stepExplorerOperationAttributesPanel, java.awt.BorderLayout.CENTER);
 
-        stepExplorerPanel.add(stepExplorerOperationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 360, 670, 250));
+        stepExplorerPanel.add(stepExplorerOperationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 360, 680, 250));
 
         stepExplorerOutputDataPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         stepExplorerOutputDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Data Column"));
         stepExplorerOutputDataText.setText("OUTDATA2");
-        stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 140, -1));
+        stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 140, 20));
 
         stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 230, 160, 120));
 
@@ -757,7 +788,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         baselineModsPanel.setLayout(new java.awt.GridBagLayout());
 
-        addBaseLineButton.setText("A");
+        addBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -766,7 +800,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
 
-        modifyBaseLineButton.setText("M");
+        modifyBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifyBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        modifyBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        modifyBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
@@ -774,7 +811,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         baselineModsPanel.add(modifyBaseLineButton, gridBagConstraints);
 
-        deleteBaseLineButton.setText("D");
+        deleteBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 0;
@@ -812,17 +852,26 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerSourcesPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Predict"));
         stepExplorerSourcesModsPanel1.setLayout(new java.awt.GridBagLayout());
 
-        addSourceButton1.setText("A");
+        addSourceButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addSourceButton1.setMaximumSize(new java.awt.Dimension(30, 25));
+        addSourceButton1.setMinimumSize(new java.awt.Dimension(30, 25));
+        addSourceButton1.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel1.add(addSourceButton1, gridBagConstraints);
 
-        modifySourceButton1.setText("M");
+        modifySourceButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifySourceButton1.setMaximumSize(new java.awt.Dimension(30, 25));
+        modifySourceButton1.setMinimumSize(new java.awt.Dimension(30, 25));
+        modifySourceButton1.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel1.add(modifySourceButton1, gridBagConstraints);
 
-        deleteSourceButton2.setText("D");
+        deleteSourceButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteSourceButton2.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteSourceButton2.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteSourceButton2.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel1.add(deleteSourceButton2, gridBagConstraints);
@@ -838,24 +887,33 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerSourcesPanel1.add(stepExplorerSourcesScrollPane1, java.awt.BorderLayout.CENTER);
 
-        stepExplorerGlobalSources.add(stepExplorerSourcesPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, 150));
+        stepExplorerGlobalSources.add(stepExplorerSourcesPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 160, 150));
 
         stepExplorerSourcesPanel.setLayout(new java.awt.BorderLayout());
 
         stepExplorerSourcesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Peel"));
         stepExplorerSourcesModsPanel.setLayout(new java.awt.GridBagLayout());
 
-        addSourceButton.setText("A");
+        addSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addSourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addSourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addSourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel.add(addSourceButton, gridBagConstraints);
 
-        modifySourceButton.setText("M");
+        modifySourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifySourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        modifySourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        modifySourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel.add(modifySourceButton, gridBagConstraints);
 
-        deleteSourceButton1.setText("D");
+        deleteSourceButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteSourceButton1.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteSourceButton1.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteSourceButton1.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerSourcesModsPanel.add(deleteSourceButton1, gridBagConstraints);
@@ -871,9 +929,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerSourcesPanel.add(stepExplorerSourcesScrollPane, java.awt.BorderLayout.CENTER);
 
-        stepExplorerGlobalSources.add(stepExplorerSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 20, 150, 150));
+        stepExplorerGlobalSources.add(stepExplorerSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 20, 160, 150));
 
-        stepExplorerPanel.add(stepExplorerGlobalSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 40, 340, 180));
+        stepExplorerPanel.add(stepExplorerGlobalSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 40, 350, 180));
 
         stepExplorerScrollPanel.setViewportView(stepExplorerPanel);
 
