@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,300 247 950 741 N "_3DFace" 0
+PANEL,296 186 950 741 N "_3DFace" 0
 EEE E E 1 0 0 0  10 10
 "" 0 1
 EE 2
@@ -48,7 +48,7 @@ E E 0 3 2 0 1 E  940 50 10 50
 7 128
 "Ellipse1"
 ""
-1 540 220 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
+1 535 185 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
  E E
 40 0 0 0 0 0
 EE E
@@ -57,11 +57,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 540 220 150 150
+E E 0 3 1 0 1 E U  1 E 535 185 125 125
 4 137
 "Line2"
 ""
-1 540 140 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 537 131 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 49 0 0 0 0 0
 EE E
@@ -70,11 +70,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  540 190 540 140
+E E 0 3 1 0 1 E  537 161 537 131
 4 138
 "Line3"
 ""
-1 15860 420 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 9280 342 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 50 0 0 0 0 0
 EE E
@@ -83,11 +83,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  460 280 530 230
+E E 0 3 1 0 1 E  480 230 520 190
 4 139
 "Line4"
 ""
-1 31750 690 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 12250 466 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 51 0 0 0 0 0
 EE E
@@ -96,11 +96,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  630 280 550 230
+E E 0 3 1 0 1 E  580 220 550 190
 7 129
 "Ellipse2"
 ""
-1 540 110 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 534 104 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 41 0 0 0 0 0
 EE E
@@ -109,11 +109,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 540 110 30 30
+E E 0 3 1 0 1 E U  1 E 534 104 24 24
 7 130
 "Ellipse3"
 ""
-1 542 112 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+1 536 106 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
  E E
 42 0 0 0 0 0
 EE E
@@ -122,11 +122,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 0 1 0 1 E U  1 E 542 112 30 30
+E E 0 1 1 0 1 E U  1 E 536 106 24 24
 7 131
 "Ellipse4"
 ""
-1 540 220 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 534 184 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 43 0 0 0 0 0
 EE E
@@ -135,11 +135,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 540 220 30 30
+E E 0 3 1 0 1 E U  1 E 534 184 24 24
 7 132
 "Ellipse5"
 ""
-1 542 222 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+1 536 186 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
  E E
 44 0 0 0 0 0
 EE E
@@ -148,11 +148,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 0 1 0 1 E U  1 E 542 222 30 30
+E E 0 1 1 0 1 E U  1 E 536 186 24 24
 7 133
 "Ellipse6"
 ""
-1 630 280 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 594 234 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 45 0 0 0 0 0
 EE E
@@ -161,11 +161,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 630 280 30 30
+E E 0 3 1 0 1 E U  1 E 594 234 24 24
 7 134
 "Ellipse7"
 ""
-1 632 282 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+1 596 236 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
  E E
 46 0 0 0 0 0
 EE E
@@ -174,11 +174,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 0 1 0 1 E U  1 E 632 282 30 30
+E E 0 1 1 0 1 E U  1 E 596 236 24 24
 7 135
 "Ellipse8"
 ""
-1 450 280 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 474 234 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 47 0 0 0 0 0
 EE E
@@ -187,11 +187,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 450 280 30 30
+E E 0 3 1 0 1 E U  1 E 474 234 24 24
 7 136
 "Ellipse9"
 ""
-1 452 282 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+1 476 236 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
  E E
 48 0 0 0 0 0
 EE E
@@ -200,7 +200,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 0 1 0 1 E U  1 E 452 282 30 30
+E E 0 1 1 0 1 E U  1 E 476 236 24 24
 0
 LAYER, 1 
 1
@@ -230,12 +230,12 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-2 "Group8" 510 80 572 142
+2 "Group8" 510 80 560 130
 2 130 129
-2 "Group9" 510 190 572 252
+2 "Group9" 510 160 560 210
 2 132 131
-2 "Group10" 600 250 662 312
+2 "Group10" 570 210 620 260
 2 134 133
-2 "Group11" 420 250 482 312
+2 "Group11" 450 210 500 260
 2 136 135
 0
