@@ -86,6 +86,23 @@
 #define TDS_LED_SIZE        7
 #define TDS_LED_RESULT_SIZE 3
 
+// i2c sequences to switch the VCXO's for 160MHZ and 200MHz on or off
+#define TDS_VCXO_OFF \
+      0x06, 0x42 >> 1, 0x02, 0x00, 0x07, 0x42 >> 1, 0x02
+#define TDS_VCXO_OFF_SIZE 7
+
+#define TDS_VCXO_OFF_RESULT \
+      0x00, 0x00, 0x00
+#define TDS_VCXO_OFF_RESULT_SIZE 3
+
+#define TDS_VCXO_ON \
+      0x06, 0x42 >> 1, 0x02, 0x03, 0x07, 0x42 >> 1, 0x02
+#define TDS_VCXO_ON_SIZE 7
+
+#define TDS_VCXO_ON_RESULT \
+      0x00, 0x03, 0x00
+#define TDS_VCXO_ON_RESULT_SIZE 3
+
 // 160MHz to backplane
 //      0x06, 0x42 >> 1, 0x02, 0x03, 0x07, 0x42 >> 1, 0x02,	
 #define TDS_160MHZ						\
@@ -340,13 +357,18 @@ namespace LOFAR {
 
     extern uint8 tds_160MHz_result[  TDS_INIT_RESULT_SIZE
 				   + TDS_PROGRAMPLLS_RESULT_SIZE
+				   + TDS_VCXO_OFF_RESULT_SIZE
+				   + TDS_VCXO_ON_RESULT_SIZE
 				   + TDS_160MHZ_RESULT_SIZE
 				   + TDS_C_END_RESULT_SIZE];
     extern uint8 tds_200MHz_result[  TDS_INIT_RESULT_SIZE
 				   + TDS_PROGRAMPLLS_RESULT_SIZE
+				   + TDS_VCXO_OFF_RESULT_SIZE
+				   + TDS_VCXO_ON_RESULT_SIZE
 				   + TDS_200MHZ_RESULT_SIZE
 				   + TDS_C_END_RESULT_SIZE];
-    extern uint8 tds_off_result[  TDS_OFF_RESULT_SIZE
+    extern uint8 tds_off_result[  TDS_VCXO_OFF_RESULT_SIZE
+				+ TDS_OFF_RESULT_SIZE
 				+ TDS_C_END_RESULT_SIZE];
   };
 };

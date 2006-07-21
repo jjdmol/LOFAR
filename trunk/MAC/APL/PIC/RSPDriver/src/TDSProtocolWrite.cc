@@ -49,12 +49,16 @@ namespace LOFAR {
 
     static uint8 tds_160MHz[  TDS_INIT_SIZE 
 			    + TDS_PROGRAMPLLS_SIZE
+			    + TDS_VCXO_OFF_SIZE
+			    + TDS_VCXO_ON_SIZE
 			    + TDS_160MHZ_SIZE
 			    + TDS_C_END_SIZE] = {
 
 			      // switch to 160MHz to backplane (using 10MHz reference at the front)
 			      TDS_INIT,
 			      TDS_PROGRAMPLLS,
+			      TDS_VCXO_OFF,
+			      TDS_VCXO_ON,
 			      TDS_160MHZ,
 			      TDS_C_END,
 
@@ -63,11 +67,15 @@ namespace LOFAR {
 
     uint8 tds_160MHz_result[  TDS_INIT_RESULT_SIZE
 			    + TDS_PROGRAMPLLS_RESULT_SIZE
+			    + TDS_VCXO_OFF_RESULT_SIZE
+			    + TDS_VCXO_ON_RESULT_SIZE
 			    + TDS_160MHZ_RESULT_SIZE
 			    + TDS_C_END_RESULT_SIZE] = {
 
 			      TDS_INIT_RESULT,
 			      TDS_PROGRAMPLLS_RESULT,
+			      TDS_VCXO_OFF_RESULT,
+			      TDS_VCXO_ON_RESULT,
 			      TDS_160MHZ_RESULT,
 			      TDS_C_END_RESULT,
 
@@ -75,12 +83,16 @@ namespace LOFAR {
 
     static uint8 tds_200MHz[  TDS_INIT_SIZE
 			    + TDS_PROGRAMPLLS_SIZE
+			    + TDS_VCXO_OFF_SIZE
+			    + TDS_VCXO_ON_SIZE
 			    + TDS_200MHZ_SIZE
 			    + TDS_C_END_SIZE] = {
 
 			      // switch to 200MHz to backplane (using 10MHz reference at the front)
 			      TDS_INIT,
 			      TDS_PROGRAMPLLS,
+			      TDS_VCXO_OFF,
+			      TDS_VCXO_ON,
 			      TDS_200MHZ,
 			      TDS_C_END,
 
@@ -88,28 +100,36 @@ namespace LOFAR {
 
     uint8 tds_200MHz_result[  TDS_INIT_RESULT_SIZE
 			    + TDS_PROGRAMPLLS_RESULT_SIZE
+			    + TDS_VCXO_OFF_RESULT_SIZE
+			    + TDS_VCXO_ON_RESULT_SIZE
 			    + TDS_200MHZ_RESULT_SIZE
 			    + TDS_C_END_RESULT_SIZE] = {
 
 			      TDS_INIT_RESULT,
 			      TDS_PROGRAMPLLS_RESULT,
+			      TDS_VCXO_OFF_RESULT,
+			      TDS_VCXO_ON_RESULT,
 			      TDS_200MHZ_RESULT,
 			      TDS_C_END_RESULT,
 
 			    };
 
-    static uint8 tds_off[  TDS_OFF_SIZE
+    static uint8 tds_off[  TDS_VCXO_OFF_SIZE
+			 + TDS_OFF_SIZE
 			 + TDS_C_END_SIZE] = {
 
 			   // switch off clock to backplane, RSP should switch to 125MHz
+			   TDS_VCXO_OFF,
 			   TDS_OFF,
 			   TDS_C_END,
 
 			 };
 
-    uint8 tds_off_result[  TDS_OFF_RESULT_SIZE
+    uint8 tds_off_result[  TDS_VCXO_OFF_RESULT_SIZE
+			 + TDS_OFF_RESULT_SIZE
 			 + TDS_C_END_RESULT_SIZE] = {
 
+			   TDS_VCXO_OFF_RESULT,
 			   TDS_OFF_RESULT,
 			   TDS_C_END_RESULT,
 
