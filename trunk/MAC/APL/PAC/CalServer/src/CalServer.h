@@ -112,11 +112,12 @@ namespace LOFAR {
        */
       double m_sampling_frequency;
 
-      /** remember number of RSP boards for reading the clock */
+      /** remember number of RSP boards and number of rcus */
       int m_n_rspboards;
+      int m_n_rcus;
 
-	  // Which instance of the services we should use.
-	  int32	m_instancenr;
+      // Which instance of the services we should use.
+      int32 m_instancenr;
 
       /**
        * Ports

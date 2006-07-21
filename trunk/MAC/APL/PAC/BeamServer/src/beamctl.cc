@@ -139,7 +139,9 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 	start.parent = m_parent;
 	start.subset = getRCUMask();
 	start.nyquist_zone = m_rcumode()(0).getNyquistZone();
-	start.rcumode = m_rcumode;
+	start.rcumode().resize(1);
+	start.rcumode()(0) = m_rcumode()(0);
+	m_calserver.send(start);
       }
       break;
 
@@ -149,7 +151,7 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 
 	if (ack.name != BEAMCTL_ARRAY || ack.status != CAL_Protocol::SUCCESS) {
 
-	  cerr << "Error: fail to start calibration" << endl;
+	  cerr << "Error: failed to start calibration" << endl;
 	  TRAN(beamctl::final);
 
 	} else {

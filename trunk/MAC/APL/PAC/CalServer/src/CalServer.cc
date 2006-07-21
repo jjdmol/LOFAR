@@ -103,7 +103,7 @@ CalServer::CalServer(string name, ACCs& accs, int argc, char** argv)
   : GCFTask((State)&CalServer::initial, name),
     m_accs(accs), m_cal(0), m_converter(0),
     m_sampling_frequency(0.0),
-    m_n_rspboards(0), m_instancenr(-1)
+    m_n_rspboards(0), m_n_rcus(0), m_instancenr(-1)
 #ifdef USE_CAL_THREAD
     , m_calthread(0)
 #endif
@@ -247,6 +247,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	RSPGetconfigackEvent ack(e);
 	m_n_rspboards = ack.n_rspboards;
+	m_n_rcus = ack.n_rcus;
 	if (ack.n_rcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol())
 	{
 	  LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
@@ -542,6 +543,11 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
     LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
     LOG_DEBUG_STR("positions.shape()" << positions.shape());
 
+    // check start.subset value
+    bitset<RSP_Protocol::MAX_N_RCUS> invalidmask;
+    for (int i = 0; i < m_n_rcus; i++) invalidmask.set(i);
+    invalidmask.flip();
+
     // check dimensions of the various arrays for compatibility
     if (   m_accs.getFront().getACC().extent(firstDim) != GET_CONFIG("CalServer.N_SUBBANDS", i)
 	|| m_accs.getFront().getACC().extent(secondDim) != positions.extent(secondDim)
@@ -555,6 +561,11 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 	ack.status = ERR_RANGE;
       }
+    else if ((start.subset & invalidmask).any())
+      {
+	LOG_ERROR("Invalid subset.");
+	ack.status = ERR_RANGE;
+      }
     else
       {
 	// create subarray to calibrate
@@ -565,7 +576,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 					  m_sampling_frequency,
 					  start.nyquist_zone,
 					  GET_CONFIG("CalServer.N_SUBBANDS", i),
-					  start.rcucontrol.getRaw());
+					  start.rcumode()(0).getRaw());
 	
 	m_subarrays.schedule_add(subarray);
 
@@ -576,9 +587,13 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	//
 	RSPSetrcuEvent setrcu;
 	setrcu.timestamp = Timestamp(0,0); // immediate
-	setrcu.rcumask = start.subset;
+
+	// mask only available RCUs
+	bitset<RSP_Protocol::MAX_N_RCUS> validmask;
+	for (int i = 0; i < m_n_rcus; i++) validmask.set(i);
+	setrcu.rcumask = start.subset & validmask;
 	setrcu.settings().resize(1);
-	setrcu.settings()(0).setRaw(start.rcucontrol.getRaw());
+	setrcu.settings()(0) = start.rcumode()(0);
 
 	m_rspdriver.send(setrcu);
       }
