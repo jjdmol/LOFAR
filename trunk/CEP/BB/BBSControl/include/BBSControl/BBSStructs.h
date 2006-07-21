@@ -91,12 +91,31 @@ namespace LOFAR
       double deltaTime;     ///< time integration interval: t(s)
     };
 
-    // Two vectors of stations ID's, which, when paired element-wise, define
-    // the baselines to be used in the current step.
+    // Two vectors of stations names, which, when paired element-wise, define
+    // the baselines to be used in the current step. Names may contain
+    // wildcards, like \c * and \c ?. If they do, then all possible baselines
+    // will be constructed from the expanded names. Expansion of wildcards
+    // will be done in the BBS kernel.
+    // 
+    // For example, suppose that: 
+    // \verbatim 
+    // station1 = ["CS*", "RS1"]
+    // station2 = ["CS*", "RS2"] 
+    // \endverbatim
+    // Furthermore, suppose that \c CS* expands to \c CS1, \c CS2, and \c
+    // CS3. Then, in the BBS kernel, seven baselines will be constructed:
+    // \verbatim
+    // [ CS1:CS1, CS1:CS2, CS1:CS3, CS2:CS2, CS2:CS3, CS3:CS3, RS1:RS2 ]
+    // \endverbatim
+    // 
+    // \note Station names are \e not expanded by matching with all existing
+    // %LOFAR stations, but only with those that took part in a particular
+    // observation; i.e., only those stations that are mentioned in the \c
+    // ANTENNA table in the Measurement Set.
     struct Baselines
     {
-      vector<uint32> station1;
-      vector<uint32> station2;
+      vector<string> station1;
+      vector<string> station2;
     };
 
 

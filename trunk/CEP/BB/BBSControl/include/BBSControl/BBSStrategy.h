@@ -56,9 +56,6 @@ namespace LOFAR
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
 
-//       // Add a BBS step to the solve strategy.
-//       void addStep(const BBSStep*& aStep);
-
     private:
 
       // Name of the Measurement Set
@@ -73,8 +70,10 @@ namespace LOFAR
       // Sequence of steps that comprise this solve strategy.
       vector<const BBSStep*> itsSteps;
 
-      // ID's of the stations to use
-      vector<uint32>         itsStations;
+      // Names of the stations to use. Names may contains wildcards, like \c *
+      // and \c ?. Expansion of wildcards will be done in the BBS kernel, so
+      // they will be passed unaltered by BBS control.
+      vector<string>         itsStations;
 
       // Name of the MS input data column
       string                 itsInputData;
