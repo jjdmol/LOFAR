@@ -146,6 +146,8 @@ private:
 			ControllerAdmin::instance()->findController(cntlrName)
 	typedef		ControllerAdmin::CIiter			CIiter;
 	typedef		ControllerAdmin::const_CIiter	const_CIiter;
+	bool 	isController  (CIiter		controllerPtr) 
+	{	return (controllerPtr != itsCntlrList->end());	}
 
 	//# --- Datamembers ---
 	GCFTCPPort*					itsListener;		// listener for child controllers

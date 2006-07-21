@@ -882,6 +882,48 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		}
 		break;
 
+	case CONTROL_RESYNC: {	// reconnected child sends it current state.
+			CONTROLResyncEvent		msg(event);
+			CTState					cts;
+
+			CIiter controller = findController(msg.cntlrName);
+			if (!isController(controller)) {
+				// Reconstruct controller info.
+				ControllerInfo		ci;
+				ci.cntlrName	  = msg.cntlrName;
+				ci.instanceNr	  = getInstanceNr(msg.cntlrName);
+				ci.obsID		  = getObservationNr(msg.cntlrName);
+				ci.cntlrType	  = getControllerType(msg.cntlrName);
+				ci.port			  = &port;
+				ci.hostname		  = msg.hostname;
+				ci.requestedState = cts.stateNr(msg.curState);
+				ci.requestTime	  = time(0);
+				ci.currentState	  = cts.stateNr(msg.curState);
+				ci.establishTime  = 0;
+				ci.retryTime	  = 0;
+				ci.nrRetries	  = 0;
+
+				// Update our administration.
+				itsCntlrList->push_back(ci);
+				LOG_DEBUG_STR("Added reconnected " << msg.cntlrName << 
+														" to the controllerList");
+			}
+			else {
+				// Resunc of known controller (strange case!)
+				controller->requestedState = cts.stateNr(msg.curState);
+				controller->currentState   = cts.stateNr(msg.curState);
+				controller->hostname	   = msg.hostname;
+				LOG_DEBUG_STR("Updated info of reconnected controller " << msg.cntlrName);
+			}
+
+			// Finally confirm resync action to child.
+			CONTROLResyncedEvent	answer;
+			answer.cntlrName = msg.cntlrName;
+			answer.result    = CT_RESULT_NO_ERROR;
+			port.send(answer);
+		}
+		break;
+
 	case CONTROL_CLAIMED: {
 			CONTROLClaimedEvent		result;
 			_setEstablishedState(result.cntlrName, CTState::CLAIMED, time(0),
