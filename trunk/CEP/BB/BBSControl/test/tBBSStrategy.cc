@@ -36,7 +36,7 @@ int main()
   try {
 
     BBSStrategy strategy(ParameterSet(progName + ".parset"));
-    cout << strategy;
+    cout << strategy << endl;
 
   } catch (LOFAR::Exception& e) {
     LOG_FATAL_STR(e);

@@ -70,17 +70,24 @@ namespace LOFAR
       // Information about the parameter database.
       ParmDB                 itsParmDB;
 
+      // Sequence of steps that comprise this solve strategy.
+      vector<const BBSStep*> itsSteps;
+
+      // ID's of the stations to use
+      vector<uint32>         itsStations;
+
+      // Name of the MS input data column
+      string                 itsInputData;
+
       // The work domain size
       DomainSize             itsDomainSize;
       
       // Selection type of the correlation products.
       Correlation            itsCorrelation;
 
-      // ID's of the stations to use
-      vector<uint32>         itsStations;
+      // Integration intervals in frequency (Hz) and time (s).
+      Integration            itsIntegration;
 
-      // Sequence of steps that comprise this solve strategy.
-      vector<const BBSStep*> itsSteps;
 
       // Write the contents of a BBSStrategy to an output stream.
       friend ostream& operator<<(ostream&, const BBSStrategy&);

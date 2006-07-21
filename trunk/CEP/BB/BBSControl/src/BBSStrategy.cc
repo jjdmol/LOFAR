@@ -70,6 +70,8 @@ namespace LOFAR
       // ID's of the stations to be used by this strategy.
       itsStations = ps.getUint32Vector("Stations");
 
+      // Get the name of the MS input data column
+      itsInputData = ps.getString("InputData");
 
       // Get the work domain size for this strategy
       itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");
@@ -84,6 +86,9 @@ namespace LOFAR
 		 "Invalid correlation selection " << sel);
       itsCorrelation.type = ps.getStringVector("Correlation.Type");
 
+      // Get the integration intervals in frequency (Hz) and time (s).
+      itsIntegration.deltaFreq = ps.getDouble("Integration.Freq");
+      itsIntegration.deltaTime = ps.getDouble("Integration.Time");
     }
 
 
@@ -106,8 +111,10 @@ namespace LOFAR
 	 << endl << indent << itsParmDB
 	 << endl << indent << "Strategy:";
       Indent id;
-      os << endl << indent << itsDomainSize
+      os << endl << indent << "Input data: " << itsInputData
+	 << endl << indent << itsDomainSize
 	 << endl << indent << itsCorrelation
+	 << endl << indent << itsIntegration
 	 << endl << indent << "Stations: " << itsStations;
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	os << endl << indent << *itsSteps[i];
