@@ -20,12 +20,12 @@ Strategy:
 . Integration:
 . . Delta frequency: 1 (Hz)
 . . Delta time: 0.1 (s)
-. Stations: [ 0 1 2 3 ]
+. Stations: [ CS* RS1* RS2* DE* ]
 . Step: xyz1
 . . Full name: xyz1
 . . Baselines:
-. . . Station1: [ 0 0 0 1 1 2 ]
-. . . Station2: [ 0 1 2 1 2 2 ]
+. . . Station1: [ CS* CS* CS* RS1* RS1* RS2* ]
+. . . Station2: [ CS* RS1* RS2* RS1* RS2* RS2* ]
 . . Correlation:
 . . . Selection: CROSS
 . . . Type:[ XX XY YX YY ]
@@ -38,8 +38,8 @@ Strategy:
 . . Step: sl1
 . . . Full name: xyz1.sl1
 . . . Baselines:
-. . . . Station1: [ 0 1 ]
-. . . . Station2: [ 1 2 ]
+. . . . Station1: [ CS* RS1* ]
+. . . . Station2: [ RS1* RS2* ]
 . . . Correlation:
 . . . . Selection: CROSS
 . . . . Type:[ XX XY YX YY ]
@@ -55,15 +55,15 @@ Strategy:
 . . . . Convergence threshold: 1e-07
 . . . . Min fraction converged: 0.95
 . . . . Solvable parameters: [ PHASE:* ]
-. . . . Excluded parameters: [  ]
+. . . . Excluded parameters: [ ]
 . . . . Domain size: 
 . . . . . Bandwidth: 1000 (Hz)
 . . . . . Time interval: 1 (s)
 . . Step: sl2
 . . . Full name: xyz1.sl2
 . . . Baselines:
-. . . . Station1: [ 0 0 0 1 1 2 ]
-. . . . Station2: [ 0 1 2 1 2 2 ]
+. . . . Station1: [ CS* CS* CS* RS1* RS1* RS2* ]
+. . . . Station2: [ CS* RS1* RS2* RS1* RS2* RS2* ]
 . . . Correlation:
 . . . . Selection: CROSS
 . . . . Type:[ XX XY YX YY ]
@@ -77,8 +77,8 @@ Strategy:
 . Step: xyz2
 . . Full name: xyz2
 . . Baselines:
-. . . Station1: [ 0 0 1 ]
-. . . Station2: [ 0 1 1 ]
+. . . Station1: [ CS* CS* RS1* ]
+. . . Station2: [ CS* RS1* RS1* ]
 . . Correlation:
 . . . Selection: NONE
 . . . Type:[ ]
@@ -91,8 +91,8 @@ Strategy:
 . . Step: sl1
 . . . Full name: xyz2.sl1
 . . . Baselines:
-. . . . Station1: [ 0 1 ]
-. . . . Station2: [ 1 2 ]
+. . . . Station1: [ CS* RS1* ]
+. . . . Station2: [ RS1* RS2* ]
 . . . Correlation:
 . . . . Selection: NONE
 . . . . Type:[ ]
@@ -108,15 +108,15 @@ Strategy:
 . . . . Convergence threshold: 1e-07
 . . . . Min fraction converged: 0.95
 . . . . Solvable parameters: [ PHASE:* ]
-. . . . Excluded parameters: [  ]
+. . . . Excluded parameters: [ ]
 . . . . Domain size: 
 . . . . . Bandwidth: 1000 (Hz)
 . . . . . Time interval: 1 (s)
 . . Step: sl3
 . . . Full name: xyz2.sl3
 . . . Baselines:
-. . . . Station1: [ 0 0 1 ]
-. . . . Station2: [ 0 1 1 ]
+. . . . Station1: [ CS* CS* RS1* ]
+. . . . Station2: [ CS* RS1* RS1* ]
 . . . Correlation:
 . . . . Selection: NONE
 . . . . Type:[ ]
