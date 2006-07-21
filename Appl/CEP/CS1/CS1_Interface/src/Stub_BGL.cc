@@ -83,10 +83,10 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
   itsTHs[index] = itsIAmOnBGL ? newClientTH(cellNr, nodeNr) : newServerTH(cellNr, nodeNr);
 
   if (itsIsInput) {
-    itsConnections[index] = new Connection("output", 0, dm.getGeneralInHolder(channel), itsTHs[index], false);
+    itsConnections[index] = new Connection("output", 0, dm.getGeneralInHolder(channel), itsTHs[index], true);
     dm.setInConnection(channel, itsConnections[index]);
   } else {
-    itsConnections[index] = new Connection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index], false);
+    itsConnections[index] = new Connection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index], true);
     dm.setOutConnection(channel, itsConnections[index]);
   }
 };
