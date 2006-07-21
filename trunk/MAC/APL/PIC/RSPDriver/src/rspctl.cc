@@ -1327,6 +1327,9 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
       time_t seconds = timestamp.sec();
       strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&seconds));
       char fileName[PATH_MAX];
+
+      LOG_INFO_STR("dumping statistics at " << timestring);
+
       switch (m_type)
       {
         case Statistics::SUBBAND_POWER:
@@ -1341,8 +1344,12 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
           exit(EXIT_FAILURE);
           break;
       }
+
+      cerr << "shape(stats)=" << stats(result_rcu, Range::all()).shape() << endl;
+
       FILE* file = getFile(rcuout,fileName);
       if (stats.extent(secondDim)
+          /*!= (int)fwrite(stats(result_rcu, Range::all()).data(), sizeof(double),*/
           != (int)fwrite(stats(result_rcu, Range::all()).data(), sizeof(double),
              stats.extent(secondDim), file))
       {

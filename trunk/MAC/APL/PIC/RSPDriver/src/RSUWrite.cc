@@ -37,7 +37,9 @@
 #include "InitState.h"
 
 // nof seconds to wait with writing BS register after RSU clear
-#define WRITE_BS_DELAY ((long)5)
+// seems that original value 5 was too small, EPA team uses 7
+// we want to be safe, so set it to 10 seconds
+#define WRITE_BS_DELAY ((long)10)
 
 using namespace blitz;
 using namespace LOFAR;

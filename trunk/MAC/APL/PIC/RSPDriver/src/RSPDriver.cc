@@ -220,11 +220,12 @@ RSPDriver::RSPDriver(string name)
 
   // open client port
   LOG_DEBUG("Opening listener for clients");
-//   string  acceptorID;
-//   if (g_instancenr>=0) {
-//     acceptorID = formatString("(%d)", g_instancenr);
-//   }
-  m_acceptor.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::MSPP, RSP_PROTOCOL);
+
+  string acceptorID;
+  if (g_instancenr>=0) {
+    acceptorID = formatString("(%d)", g_instancenr);
+  }
+  m_acceptor.init(*this, MAC_SVCMASK_RSPDRIVER + acceptorID, GCFPortInterface::MSPP, RSP_PROTOCOL);
 
   // open port with RSP board
   LOG_DEBUG("Connecting to RSPboards");
