@@ -8,7 +8,7 @@
 Summary: Synchronizes system time using the Network Time Protocol (NTP).
 Name: ntp
 Version: 4.2.0.lofar
-Release: 3
+Release: 4
 License: distributable
 Group: System Environment/Daemons
 Source0: http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-%{tarversion}.tar.gz
@@ -205,6 +205,12 @@ fi
 
 
 %changelog
+* Fri Jul 21 2006 Klaas Jan Wierenga <wierenga@astron.nl>
+- disabled TRAIM by default (needed for lab setup, should be enable in production)
+- better ntp.conf settings, used suggestions from Tac32 manual
+- now conforms to specification in section 3.1.1. of LOFAR-ASTRON-RPT-051
+  except for TRAIM which is now disabled by default
+
 * Fri Feb 10 2006 Klaas Jan Wierenga <wierenga@astron.nl>
 - Fixed problem with step-tickers
 - increased package Release to 3

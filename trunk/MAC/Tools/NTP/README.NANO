@@ -25,7 +25,7 @@ kernel-2.4.21-NANO.config     # linux kernel configuration file (single CPU)
 kernel-2.4.21-NANO-SMP.config # SMP kernel with NANO support 
                               # WARNING: this kernel hangs after a while when ntpd is started.
 ntp-4.2.0.lofar               # Directory containing all the files necessary to build
-                              # the ntp-4.2.0.lofar-3.i386.rpm which can be installed on the target system
+                              # the ntp-4.2.0.lofar-4.i386.rpm which can be installed on the target system
 
 INSTALL
 =======
@@ -88,17 +88,17 @@ These INSTALL instructions cover points 0) to 3b) of PPSkit-2.1.4/INSTALL.
 
 -----%< end excerpt from PPSkit-2.1.4/INSTALL
 
-5. At step 5) above build the ntp-4.2.0.lofar-3.i386.rpm and install it
+5. At step 5) above build the ntp-4.2.0.lofar-4.i386.rpm and install it
 
 	# !! We assume that the linux-2.4.1-NANO kernel is running at this moment
 
 	> cd ntp-4.2.0.lofar
 	> make srpm
-	> rpmbuild --rebuild ntp-4.2.0.lofar-3.src.rpm
+	> rpmbuild --rebuild ntp-4.2.0.lofar-4.src.rpm
 
 	# assuming you've set up your RPM build environment in $HOME/rpm
 	> cd $HOME/rpm/RPMS/i386
-	> sudo rpm -ivh ntp-4.2.0.lofar-3.i386.rpm
+	> sudo rpm -ivh ntp-4.2.0.lofar-4.i386.rpm
 
 	# That will install and configure NTP on your system
 
