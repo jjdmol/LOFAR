@@ -68,7 +68,7 @@ namespace LOFAR
       }
 
       // ID's of the stations to be used by this strategy.
-      itsStations = ps.getUint32Vector("Stations");
+      itsStations = ps.getStringVector("Stations");
 
       // Get the name of the MS input data column
       itsInputData = ps.getString("InputData");
