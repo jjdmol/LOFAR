@@ -150,16 +150,20 @@ namespace LOFAR {
 
       // determine starttime
       double startTime = itsPS.getDouble("Observation.StartTime");
-      if (startTime > 0) {
-	double utc = AMC::Epoch(startTime).utc();
-	int sampleFreq = itsPS.getInt32("Observation.SampleRate");
-	int seconds = (int)floor(utc);
-	int samples = (int)((utc - seconds) * sampleFreq);
-
-	itsSyncedStamp = TimeStamp(seconds, samples);
+      double utc = 0;
+      if (startTime < 60*60*24*32) {
+	// if starttime is less than a month after the zero point of MJD, 
+	// it is probably not meant as MJD, so take the literal value
+	// This is needed for test purposes until the RSP-boards use utc.
+	utc = startTime;
       } else { 
-	itsSyncedStamp = TimeStamp(0, 0);
+	utc = AMC::Epoch(startTime).utc();
       }
+      int sampleFreq = itsPS.getInt32("Observation.SampleRate");
+      int seconds = (int)floor(utc);
+      int samples = (int)((utc - floor(utc)) * sampleFreq);
+
+      itsSyncedStamp = TimeStamp(seconds, samples);
 
       cout<<"Starting buffer at "<<itsSyncedStamp<<endl;cout.flush();
       itsBBuffer->startBufferRead(itsSyncedStamp);
@@ -196,7 +200,7 @@ namespace LOFAR {
 
     void WH_RSPInput::process() 
     { 
-      cout<<"begin of WH_RSPInput::process"<<endl;cout.flush();
+      //cout<<"begin of WH_RSPInput::process"<<endl;cout.flush();
       itsProcessTimer->start();
       DH_RSP* rspDHp;
       DH_Delay* delayDHp;
@@ -222,7 +226,7 @@ namespace LOFAR {
 	  
       // get the data from the cyclic buffer
       itsGetElemTimer->start();
-      cout<<"reading from buffer"<<endl;cout.flush();
+      //cout<<"reading from buffer"<<endl;cout.flush();
 
       itsBBuffer->getElements(subbandbuffer,
 			      &flags,
@@ -238,12 +242,29 @@ namespace LOFAR {
 	// fill in the data
 	rspDHp->getFlags() = flags;
 	rspDHp->setStationID(itsStationNr);
-	rspDHp->setTimeStamp(delayedstamp);
+	rspDHp->setTimeStamp(delayedstamp - itsNHistorySamples);
 	rspDHp->fillExtraData();
  	rspDHp->setFineDelayAtBegin((*delayDHp)[itsStationNr].fineDelayAtBegin);
  	rspDHp->setFineDelayAfterEnd((*delayDHp)[itsStationNr].fineDelayAfterEnd);
 	
+#if 1
+	// print flags
+	cout<<"WH_RSP out "<<itsStationNr<<" "<<delayedstamp<<" output " << output << " flags: "<< flags <<endl;
+	// printsamples
+#if 0
+	RectMatrix<DH_RSP::BufferType>* matrix = &rspDHp->getDataMatrix();
+	dimType timeDim = matrix->getDim("Times");
+	RectMatrix<DH_RSP::BufferType>::cursorType cursor = matrix->getCursor(0 * timeDim);
+	cout<<"WH_RSP out "<<itsStationNr<<" "<<delayedstamp<<" output " << output << " : ";
+	MATRIX_FOR_LOOP_PART(*matrix, timeDim, cursor, 10) {
+	  cout << matrix->getValue(cursor);
+	}
+	cout<<endl;
+#endif
+#endif
       }    
+
+
 
       itsSyncedStamp += itsNSamplesPerSec;
       itsProcessTimer->stop();
