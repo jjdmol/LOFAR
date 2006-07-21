@@ -33,6 +33,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -614,7 +615,11 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         inputDataText.setToolTipText("Name of the column in the measurement set that contains the input data");
         strategyPanel.add(inputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 30, 170, -1));
 
+        strategyRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         strategyRevertButton.setText("Revert");
+        strategyRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
+        strategyRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
+        strategyRevertButton.setPreferredSize(new java.awt.Dimension(100, 25));
         strategyRevertButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 strategyRevertButtonActionPerformed(evt);
@@ -657,12 +662,17 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stationsModPanel.add(stationsUseAllCheckbox, gridBagConstraints);
 
-        addStationButton.setText("+");
+        addStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addStationButton.setToolTipText("Add the station entered to the list");
         addStationButton.setEnabled(false);
+        addStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addStationButton.setPreferredSize(new java.awt.Dimension(30, 25));
         addStationButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addStationButtonActionPerformed(evt);
@@ -672,11 +682,16 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stationsModPanel.add(addStationButton, gridBagConstraints);
 
-        deleteStationButton.setText("-");
+        deleteStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteStationButton.setToolTipText("Remove the selected Station from the list");
         deleteStationButton.setEnabled(false);
+        deleteStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteStationButton.setPreferredSize(new java.awt.Dimension(30, 25));
         deleteStationButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deleteStationButtonActionPerformed(evt);
@@ -686,6 +701,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stationsModPanel.add(deleteStationButton, gridBagConstraints);
 
@@ -721,29 +737,34 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         stepsModsPanel.setMinimumSize(new java.awt.Dimension(100, 30));
         stepsModsPanel.setPreferredSize(new java.awt.Dimension(100, 30));
-        addStepButton.setText("Add");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepsModsPanel.add(addStepButton, gridBagConstraints);
+        addStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addStepButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        stepsModsPanel.add(addStepButton, new java.awt.GridBagConstraints());
 
-        removeStepButton.setText("Delete");
+        removeStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        removeStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        removeStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        removeStepButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepsModsPanel.add(removeStepButton, gridBagConstraints);
 
-        modifyStepButton.setText("Modify");
+        modifyStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifyStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        modifyStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        modifyStepButton.setPreferredSize(new java.awt.Dimension(30, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepsModsPanel.add(modifyStepButton, gridBagConstraints);
 
-        loadTemplateStepButton.setText("Load from template");
+        loadTemplateStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Open16.gif")));
+        loadTemplateStepButton.setText("Template");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 0;
@@ -754,16 +775,25 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         stepsMoveUpDownPanel.setLayout(new java.awt.GridBagLayout());
 
-        stepsMoveUpDownPanel.setMinimumSize(new java.awt.Dimension(50, 60));
-        stepsMoveUpDownPanel.setPreferredSize(new java.awt.Dimension(50, 60));
-        moveStepUpButton.setText("U");
+        stepsMoveUpDownPanel.setMinimumSize(new java.awt.Dimension(25, 60));
+        stepsMoveUpDownPanel.setOpaque(false);
+        stepsMoveUpDownPanel.setPreferredSize(new java.awt.Dimension(25, 60));
+        moveStepUpButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/navigation/Up16.gif")));
+        moveStepUpButton.setActionCommand("Up");
+        moveStepUpButton.setMaximumSize(new java.awt.Dimension(25, 25));
+        moveStepUpButton.setMinimumSize(new java.awt.Dimension(25, 25));
+        moveStepUpButton.setPreferredSize(new java.awt.Dimension(25, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepsMoveUpDownPanel.add(moveStepUpButton, gridBagConstraints);
 
-        moveStepDownButton.setText("D");
+        moveStepDownButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/navigation/Down16.gif")));
+        moveStepDownButton.setActionCommand("Down");
+        moveStepDownButton.setMaximumSize(new java.awt.Dimension(25, 25));
+        moveStepDownButton.setMinimumSize(new java.awt.Dimension(25, 25));
+        moveStepDownButton.setPreferredSize(new java.awt.Dimension(25, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;

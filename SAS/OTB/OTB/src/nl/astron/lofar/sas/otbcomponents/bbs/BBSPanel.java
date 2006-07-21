@@ -532,14 +532,18 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         BBSGlobalSettingsFieldPanel.add(ParmDBPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 350, 80));
 
+        configurationRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         configurationRevertButton.setText("Revert");
+        configurationRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
+        configurationRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
+        configurationRevertButton.setPreferredSize(new java.awt.Dimension(100, 25));
         configurationRevertButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 configurationRevertButtonActionPerformed(evt);
             }
         });
 
-        BBSGlobalSettingsFieldPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 330, 81, -1));
+        BBSGlobalSettingsFieldPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 330, 100, -1));
 
         BBSDatasetDeRefText.setEditable(false);
         BBSDatasetDeRefText.setToolTipText("Dereferenced and actually used value.");
