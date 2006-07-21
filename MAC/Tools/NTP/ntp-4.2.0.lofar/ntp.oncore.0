@@ -16,13 +16,14 @@ MODE 1
 
 #
 # Geographical position, found by performing a 3D site survey
-# (MODE == 1 and POSN3D enabled). When the position has been established set
+# (MODE == 4 and POSN3D enabled). When the position has been established set
 # MODE to 1 and disable POSN3D. The position that has been determined by the GPS
 # in a site survey can be found in the logfile "/var/log/ntpstats/clockstats".
 #
-LAT  52 48.7697
-LON   6 23.72278
-HTGPS 68.19 m
+
+LAT 52 48.7708
+LON  6 23.72420
+HT  71.05 m
 
 #
 # The DELAY value can be used to compensate for the length of cable between
@@ -39,15 +40,21 @@ ASSERT
 # 20060202 KJW HARDPPS is not supported by the 2.6 kernel
 # HARDPPS
 
-# Dont mask since it messes up TRAIM in our location
-# maybe the antennas should be moved up
-#MASK 10
-#TRAIM OFF
+# Mask 20 degrees to get the best satelites
+MASK 20
+
+#
+# When we have insufficient satelite reception set TRAIM OFF
+#
+# otherwise NTP will not receive sufficient timestamps to lock
+# to GPS clock.
+# In production systems in the field the next line should be commented out
+TRAIM OFF
 
 #
 # Shared memory interface. Not used at the moment.
 #
-# SHMEM /var/log/ntpstats/ONCORE.0
+SHMEM /var/log/ntpstats/ONCORE.0
 
 #
 # Don't enable "POSN3D" because it messes up timing. Only enable this for the
