@@ -82,13 +82,12 @@ class Prediffer
 public:
   // Create Prediffer object for a specific
   // MeaurementSet, MEQ model (with associated MEP database) and skymodel
-  // for the specified data descriptor (i.e. spectral window) and antennas.
-  // The database type (aips or postgres) has to be given.
-  // For postgres the database name has to be given as well.
-  // The UVW coordinates can be recalculated or taken from the MS.
+  // for the specified data descriptor (i.e. spectral window).
+  // The UVW coordinates can be calculated or taken from the MS.
   Prediffer (const string& msName,
 	     const ParmDB::ParmDBMeta& meqPtd,
 	     const ParmDB::ParmDBMeta& skyPtd,
+	     uint ddid,
 	     bool calcUVW);
 
   // Destructor
@@ -198,6 +197,9 @@ private:
 
   // Get measurement set description from file
   void readDescriptiveData (const string& fileName);
+
+  // Process the MS description for the given dd (sectral window).
+  void Prediffer::processMSDesc (uint ddid);
 
   // Get the phase reference position of the first field.
   void getPhaseRef (double ra, double dec, double startTime);

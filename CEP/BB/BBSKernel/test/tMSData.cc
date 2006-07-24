@@ -43,7 +43,8 @@ using namespace casa;
 using namespace std;
 
 void doIt (const string& msName, Prediffer& prediff, const string& column,
-	   int nrant, int stchan, int nrchan, bool useTree, bool useAutoCorr)
+	   int spwid, int nrant, int stchan, int nrchan,
+	   bool useTree, bool useAutoCorr)
 {
   cout << "Checking data in " << msName << " for channels " << stchan << '-'
        << stchan+nrchan-1 << endl;
@@ -51,6 +52,7 @@ void doIt (const string& msName, Prediffer& prediff, const string& column,
   // Only use antenna < nrant.
   Table tab(msName);
   TableExprNode ten = tab.col("ANTENNA1")<nrant && tab.col("ANTENNA2")<nrant;
+  ten = ten && tab.col("DATA_DESC_ID")==spwid;
   if (!useAutoCorr) {
     ten = ten && (tab.col("ANTENNA1") != tab.col("ANTENNA2"));
   }
@@ -97,8 +99,8 @@ void doIt (const string& msName, Prediffer& prediff, const string& column,
 int main(int argc, char** argv)
 {
   try {
-    if (argc < 7) {
-      cout << "Run as:  tMSData ms user msname meqparmtable skyparmtable nrant [datacolumn]" << endl;
+    if (argc < 8) {
+      cout << "Run as:  tMSData ms user msname meqparmtable skyparmtable spwid nrant [datacolumn]" << endl;
       cout << "   datacolumn defaults to MODEL_DATA" << endl;
       return 0;
     }
@@ -119,12 +121,15 @@ int main(int argc, char** argv)
       bis >> msd;
     }
 
+    uint spwid;
+    std::istringstream istr1(argv[6]);
+    istr1 >> spwid;
     uint nrant;
-    std::istringstream istr(argv[6]);
-    istr >> nrant;
+    std::istringstream istr2(argv[7]);
+    istr2 >> nrant;
     string column("MODEL_DATA");
-    if (argc > 7) {
-      column = argv[7];
+    if (argc > 8) {
+      column = argv[8];
     }
     if (nrant > msd.antNames.size()) {
       nrant = msd.antNames.size();
@@ -135,16 +140,16 @@ int main(int argc, char** argv)
     for (uint i=0; i<nrant; ++i) {
       antVec[i] = i;
     }
-    Prediffer pre (argv[3], meqPdm, skyPdm, false);
+    Prediffer pre (argv[3], meqPdm, skyPdm, spwid, false);
     StrategyProp stratProp;
     stratProp.setAntennas (antVec);
     stratProp.setAutoCorr (true);
     ASSERT (pre.setStrategyProp (stratProp));
-    doIt (argv[1], pre, column, nrant, 0, 50, false, true);
-    doIt (argv[1], pre, column, nrant, 10,10, false, false);
-    //doIt (argv[1], pre, column, nrant, 10,2, false, false);
-    doIt (argv[1], pre, column, nrant, 0, 50, true, false);
-    doIt (argv[1], pre, column, nrant, 10,11, true, true);
+    doIt (argv[1], pre, column, spwid, nrant, 0, 50, false, true);
+    doIt (argv[1], pre, column, spwid, nrant, 10,10, false, false);
+    //doIt (argv[1], pre, column, spwid, nrant, 10,2, false, false);
+    doIt (argv[1], pre, column, spwid, nrant, 0, 50, true, false);
+    doIt (argv[1], pre, column, spwid, nrant, 10,11, true, true);
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;

@@ -31,6 +31,8 @@
 
 namespace LOFAR
 {
+  // Forward Declarations.
+  class MSDesc;
 
 // \ addtogroup BBS
 // @{
@@ -40,12 +42,14 @@ namespace LOFAR
 class MMapMSInfo
 {
 public:
-  // Create the object for given nr of correlations in MS
-  // and given size of one time slot (is #corr*#chan*#bl).
-  explicit MMapMSInfo (int nrCorr=0, int nrChan=0, int nrBL=0,
-		       bool reverseChan=false);
+  MMapMSInfo()
+    {}
+
+  // Create the object for the given MS description and dd (spw).
+  MMapMSInfo (const MSDesc& msdesc, uint ddid, bool reverseChan);
 
   // Set pointer to the mapped data chunk that is to be used next.
+  // It adds the offset to get the pointer to the wanted spw.
   // <group>
   void setInData (fcomplex* data)
     { itsInData = data; }
@@ -53,9 +57,9 @@ public:
     { itsOutData = data; }
   // </group>
 
-  // Set the time step in the part mapped in.
-  void setTimes (int timeStep, int nrTimes)
-    { itsTimeStep = timeStep; itsNrTimes = nrTimes; }
+  // Set the time slot in the part mapped in.
+  void setTimes (int timeSlot, int nrTimes)
+    { itsTimeSlot = timeSlot; itsNrTimes = nrTimes; }
 
   // Get the info.
   // <group>
@@ -69,16 +73,18 @@ public:
     { return itsNrTimes; }
   int timeSize() const
     { return itsTimeSize; }
+  int ddOffset() const
+    { return itsDDOffset; }
   int reverseChan() const
     { return itsReverseChan; }
   fcomplex* inData() const
     { return itsInData; }
   fcomplex* outData() const
     { return itsOutData; }
-  int timeStep() const
-    { return itsTimeStep; }
+  int timeSlot() const
+    { return itsTimeSlot; }
   int64 timeOffset() const
-    { return int64(itsTimeStep) * itsTimeSize; }
+    { return int64(itsTimeSlot) * itsTimeSize; }
   // </group>
 
 private:
@@ -89,8 +95,9 @@ private:
   bool      itsReverseChan;
   fcomplex* itsInData;
   fcomplex* itsOutData;
-  int       itsTimeStep;
+  int       itsTimeSlot;
   int       itsNrTimes;
+  int       itsDDOffset;       //# Offset for the dd (spw) to process
 };
 
 // @}

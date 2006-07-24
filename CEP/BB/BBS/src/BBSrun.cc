@@ -202,6 +202,7 @@ bool doIt (const string& parsetName)
   Prediffer prediffer(measurementSet, 
 		      ParmDBMeta("aips", instrumentPDB),
 		      ParmDBMeta("aips", skyPDB),
+		      0,
 		      calcUVW);
   // Set strategy.
   StrategyProp stratProp;

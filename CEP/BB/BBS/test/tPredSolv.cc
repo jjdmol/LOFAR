@@ -197,7 +197,7 @@ int main (int argc, const char* argv[])
     // Do a solve for RA using a few stations.
     {
       cout << "Starting first test" << endl;
-      Prediffer pre1(argv[2], meqPdm, skyPdm, false);
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 0, false);
       vector<int> antVec(10);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
@@ -229,8 +229,8 @@ int main (int argc, const char* argv[])
     // Do a solve using 2 prediffers.
     {
       cout << "Starting test with two prediffers" << endl;
-      Prediffer pre1(argv[2], meqPdm, skyPdm, false);
-      Prediffer pre2(argv[2], meqPdm, skyPdm, false);
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 0, false);
+      Prediffer pre2(argv[2], meqPdm, skyPdm, 0, false);
       vector<int> antVec(10);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
@@ -263,7 +263,7 @@ int main (int argc, const char* argv[])
     // Take more baselines.
     {
       cout << "Starting test with 21 antennas" << endl;
-      Prediffer pre1(argv[2], meqPdm, skyPdm, false);
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 0, false);
       vector<int> antVec(21);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 4*i;
@@ -292,7 +292,7 @@ int main (int argc, const char* argv[])
     // This should be the last one.
     {
       cout << "Starting test with updating parmtable" << endl;
-      Prediffer pre1(argv[2], meqPdm, skyPdm, false);
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 0, false);
       vector<int> antVec(10);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
