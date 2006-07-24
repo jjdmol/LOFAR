@@ -32,8 +32,6 @@ import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -41,6 +39,8 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepTreeManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -114,6 +114,33 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
+            
+            //Add steps that make up the strategy to the steps tree browser
+            Vector steps = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.parentID(), 1);
+            
+            // get all the params per child
+            Enumeration se = steps.elements();
+            while( se.hasMoreElements()  ) {
+                aParam=null;
+                jOTDBnode aNode = (jOTDBnode)se.nextElement();
+                
+                // We need to keep all the nodes needed by this panel
+                // if the node is a leaf we need to get the pointed to value via Param.
+                if (aNode.leaf) {
+                
+                //we need to get all the childs from the following nodes as well.
+                }else if (LofarUtils.keyName(aNode.name).equals("Step")) {
+                    //Add steps to tree
+                    String[] rootNodeArgs = new String[3];
+                    rootNodeArgs[0]= "Strategy Steps";
+                    rootNodeArgs[1]=aNode.name;
+                    rootNodeArgs[2]="";
+                    TreeNode newStepRootNode = BBSStepTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(rootNodeArgs);
+                    this.stepsTreePanel.newRootNode(newStepRootNode);
+                    
+                }
+            }
+            
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
             itsParamList=null;
@@ -335,6 +362,10 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     this.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
                 }
             }
+        } else if(parentName.equals("Step")){
+            //Detected Step node
+            
+            
         }
     }
     
@@ -561,13 +592,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stationsScrollPane = new javax.swing.JScrollPane();
         stationsList = new javax.swing.JList();
         stationsModPanel = new javax.swing.JPanel();
-        stationsUseAllCheckbox = new javax.swing.JCheckBox();
-        addStationButton = new javax.swing.JButton();
-        deleteStationButton = new javax.swing.JButton();
         modifyStationText = new javax.swing.JTextField();
+        stationsButtonPanel = new javax.swing.JPanel();
+        deleteStationButton = new javax.swing.JButton();
+        addStationButton = new javax.swing.JButton();
+        stationsUseAllCheckbox = new javax.swing.JCheckBox();
         stepsPanel = new javax.swing.JPanel();
-        stepsScrollPane = new javax.swing.JScrollPane();
-        stepsTree = new javax.swing.JTree();
         stepsModsPanel = new javax.swing.JPanel();
         addStepButton = new javax.swing.JButton();
         removeStepButton = new javax.swing.JButton();
@@ -576,6 +606,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsMoveUpDownPanel = new javax.swing.JPanel();
         moveStepUpButton = new javax.swing.JButton();
         moveStepDownButton = new javax.swing.JButton();
+        stepsTreePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
         correlationPanel = new javax.swing.JPanel();
         correlationSelectionLabel = new javax.swing.JLabel();
         correlationSelectionBox = new javax.swing.JComboBox();
@@ -648,43 +679,17 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         stationsPanel.add(stationsScrollPane, java.awt.BorderLayout.CENTER);
 
-        stationsModPanel.setLayout(new java.awt.GridBagLayout());
+        stationsModPanel.setLayout(new java.awt.BorderLayout());
 
-        stationsUseAllCheckbox.setText("Use all stations");
-        stationsUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        stationsUseAllCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        stationsUseAllCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                stationsUseAllCheckboxStateChanged(evt);
+        modifyStationText.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                modifyStationTextKeyReleased(evt);
             }
         });
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsModPanel.add(stationsUseAllCheckbox, gridBagConstraints);
+        stationsModPanel.add(modifyStationText, java.awt.BorderLayout.CENTER);
 
-        addStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addStationButton.setToolTipText("Add the station entered to the list");
-        addStationButton.setEnabled(false);
-        addStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        addStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        addStationButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        addStationButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addStationButtonActionPerformed(evt);
-            }
-        });
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsModPanel.add(addStationButton, gridBagConstraints);
+        stationsButtonPanel.setLayout(new java.awt.GridBagLayout());
 
         deleteStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
         deleteStationButton.setToolTipText("Remove the selected Station from the list");
@@ -699,27 +704,46 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         });
 
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsModPanel.add(deleteStationButton, gridBagConstraints);
+        stationsButtonPanel.add(deleteStationButton, gridBagConstraints);
 
-        modifyStationText.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                modifyStationTextKeyReleased(evt);
+        addStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addStationButton.setToolTipText("Add the station entered to the list");
+        addStationButton.setEnabled(false);
+        addStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addStationButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        addStationButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addStationButtonActionPerformed(evt);
             }
         });
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsModPanel.add(modifyStationText, gridBagConstraints);
+        stationsButtonPanel.add(addStationButton, gridBagConstraints);
+
+        stationsModPanel.add(stationsButtonPanel, java.awt.BorderLayout.SOUTH);
 
         stationsPanel.add(stationsModPanel, java.awt.BorderLayout.SOUTH);
+
+        stationsUseAllCheckbox.setText("Use all stations");
+        stationsUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        stationsUseAllCheckbox.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        stationsUseAllCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        stationsUseAllCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                stationsUseAllCheckboxStateChanged(evt);
+            }
+        });
+
+        stationsPanel.add(stationsUseAllCheckbox, java.awt.BorderLayout.NORTH);
 
         strategyPanel.add(stationsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 150, 220, 330));
 
@@ -728,11 +752,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Steps"));
         stepsPanel.setToolTipText("The names of the steps that compose the strategy.");
         stepsPanel.setPreferredSize(new java.awt.Dimension(100, 100));
-        stepsTree.setToolTipText("The names of the steps that compose the strategy.");
-        stepsScrollPane.setViewportView(stepsTree);
-
-        stepsPanel.add(stepsScrollPane, java.awt.BorderLayout.CENTER);
-
         stepsModsPanel.setLayout(new java.awt.GridBagLayout());
 
         stepsModsPanel.setMinimumSize(new java.awt.Dimension(100, 30));
@@ -741,7 +760,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         addStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
         addStepButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        stepsModsPanel.add(addStepButton, new java.awt.GridBagConstraints());
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepsModsPanel.add(addStepButton, gridBagConstraints);
 
         removeStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
         removeStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -801,6 +822,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsMoveUpDownPanel.add(moveStepDownButton, gridBagConstraints);
 
         stepsPanel.add(stepsMoveUpDownPanel, java.awt.BorderLayout.EAST);
+
+        stepsTreePanel.setTitle("Strategy Step Tree");
+        stepsPanel.add(stepsTreePanel, java.awt.BorderLayout.CENTER);
 
         strategyPanel.add(stepsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 150, 400, 330));
 
@@ -880,7 +904,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void modifyStationTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_modifyStationTextKeyReleased
         String toBeAddedStation = modifyStationText.getText();
         if(!toBeAddedStation.equals("")){
@@ -889,7 +913,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.addStationButton.setEnabled(false);
         }
     }//GEN-LAST:event_modifyStationTextKeyReleased
-
+    
     private void stationsListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stationsListValueChanged
         int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
         if(selectedIndices.length>0){
@@ -898,7 +922,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.deleteStationButton.setEnabled(false);
         }
     }//GEN-LAST:event_stationsListValueChanged
-
+    
     private void deleteStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteStationButtonActionPerformed
         DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
         int[] selectedIndices = stationsList.getSelectedIndices();
@@ -910,7 +934,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.deleteStationButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteStationButtonActionPerformed
-
+    
     private void addStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addStationButtonActionPerformed
         String toBeAddedStation = this.modifyStationText.getText();
         if(!toBeAddedStation.equals("")){
@@ -985,6 +1009,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton moveStepDownButton;
     private javax.swing.JButton moveStepUpButton;
     private javax.swing.JButton removeStepButton;
+    private javax.swing.JPanel stationsButtonPanel;
     private javax.swing.JList stationsList;
     private javax.swing.JPanel stationsModPanel;
     private javax.swing.JPanel stationsPanel;
@@ -993,8 +1018,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel stepsModsPanel;
     private javax.swing.JPanel stepsMoveUpDownPanel;
     private javax.swing.JPanel stepsPanel;
-    private javax.swing.JScrollPane stepsScrollPane;
-    private javax.swing.JTree stepsTree;
+    private nl.astron.lofar.sas.otbcomponents.TreePanel stepsTreePanel;
     private javax.swing.JPanel strategyPanel;
     private javax.swing.JButton strategyRevertButton;
     private javax.swing.JScrollPane strategyScrollPane;
