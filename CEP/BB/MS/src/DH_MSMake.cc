@@ -59,6 +59,7 @@ namespace LOFAR {
     // Initialize the fieldset.
     initDataFields();
     // Add the fields to the data definition.
+    addField ("NBand", BlobField<int>(1));
     addField ("NFreq", BlobField<int>(1));
     addField ("NTime", BlobField<int>(1));
     addField ("TileSizeFreq", BlobField<int>(1));
@@ -76,6 +77,7 @@ namespace LOFAR {
   void DH_MSMake::fillDataPointers()
   {
     // Fill in the pointers.
+    itsNBand = getData<int> ("NBand");
     itsNFreq = getData<int> ("NFreq");
     itsNTime = getData<int> ("NTime");
     itsTileSizeFreq = getData<int> ("TileSizeFreq");
