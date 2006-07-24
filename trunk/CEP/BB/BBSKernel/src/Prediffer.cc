@@ -97,6 +97,7 @@ namespace LOFAR
 Prediffer::Prediffer(const string& msName,
 		     const ParmDB::ParmDBMeta& meqPdm,
 		     const ParmDB::ParmDBMeta& skyPdm,
+		     uint ddid,
 		     bool calcUVW)
   :
   itsMSName       (msName),
@@ -127,11 +128,8 @@ Prediffer::Prediffer(const string& msName,
 		<< itsCalcUVW << ")" );
   // Read the meta data and map the flags file.
   readDescriptiveData (msName);
-  fillStations();
+  processMSDesc (ddid);
   itsFlagsMap = new FlagsMap(msName + "/vis.flg", MMap::Read);
-  // Set the MS info.
-  itsMSMapInfo = MMapMSInfo (itsNCorr, itsNrChan, itsNrBl,
-			     itsReverseChan);
   // Get all sources from the ParmDB.
   itsSources = new MeqSourceList(itsGSMMEP, itsParmGroup);
   // Create the UVW nodes and fill them with uvw-s from MS if not calculated.
@@ -400,7 +398,7 @@ Prediffer::~Prediffer()
   MeqMatrixRealArr::poolDeactivate();
 }
 
-void Prediffer::readDescriptiveData(const string& fileName)
+void Prediffer::readDescriptiveData (const string& fileName)
 {
   // Get meta data from description file.
   string name(fileName+"/vis.des");
@@ -409,12 +407,16 @@ void Prediffer::readDescriptiveData(const string& fileName)
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
   bis >> itsMSDesc;
-  ASSERTSTR (itsMSDesc.nchan.size() == 1,
-	     "Multiple bands in MS cannot be handled");
+}
+
+void Prediffer::processMSDesc (uint ddid)
+{
+  ASSERT (ddid < itsMSDesc.nchan.size());
+  // Set the observation info.
   itsNCorr     = itsMSDesc.corrTypes.size();
-  itsNrChan    = itsMSDesc.nchan[0];
-  itsStartFreq = itsMSDesc.startFreq[0];
-  itsEndFreq   = itsMSDesc.endFreq[0];
+  itsNrChan    = itsMSDesc.nchan[ddid];
+  itsStartFreq = itsMSDesc.startFreq[ddid];
+  itsEndFreq   = itsMSDesc.endFreq[ddid];
   itsStepFreq  = (itsEndFreq - itsStartFreq)/itsNrChan;
   itsNrBl      = itsMSDesc.ant1.size();
   itsReverseChan = itsStartFreq > itsEndFreq;
@@ -424,7 +426,12 @@ void Prediffer::readDescriptiveData(const string& fileName)
     itsStartFreq = tmp;
     itsStepFreq  = std::abs(itsStepFreq);
   }
-  getPhaseRef(itsMSDesc.ra, itsMSDesc.dec, itsMSDesc.startTime);
+  // Set the MS info.
+  itsMSMapInfo = MMapMSInfo (itsMSDesc, ddid, itsReverseChan);
+  // Set the phase center info.
+  getPhaseRef (itsMSDesc.ra, itsMSDesc.dec, itsMSDesc.startTime);
+  // Set station info.
+  fillStations();
 }
 
 void Prediffer::getPhaseRef(double ra, double dec, double startTime)
@@ -993,7 +1000,8 @@ void Prediffer::processData (bool useFlags, bool preCalc, bool calcDeriv,
   int nrchan = itsLastChan-itsFirstChan+1;
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
-  unsigned int freqOffset = itsFirstChan*itsNCorr;
+  // Add offset for dd (band) and channel.
+  unsigned int freqOffset = itsFirstChan*itsNCorr + itsMSMapInfo.ddOffset();
   // Determine if perturbed values have to be calculated.
   int nrpert = calcDeriv ? itsNrPert:0;
   // Loop through the domain of the data to be processed.

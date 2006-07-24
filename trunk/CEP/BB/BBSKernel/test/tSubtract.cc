@@ -67,7 +67,7 @@ int main (int argc, const char* argv[])
     // Do a subtract.
     {
       cout << "Starting subtract test" << endl;
-      Prediffer pre1(argv[2], meqPdm, skyPdm, false);
+      Prediffer pre1(argv[2], meqPdm, skyPdm, 0, false);
       vector<int> antVec(100);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = i;

@@ -21,20 +21,31 @@
 //#  $Id$
 
 #include <BBS/MMapMSInfo.h>
+#include <MS/MSDesc.h>
 
 namespace LOFAR
 {
 
-  MMapMSInfo::MMapMSInfo (int nrCorr, int nrChan, int nrBL,
+  MMapMSInfo::MMapMSInfo (const MSDesc& msdesc, uint ddid,
 			  bool reverseChan)
-    : itsNrCorr      (nrCorr),
-      itsNrChan      (nrChan),
-      itsNrBL        (nrBL),
-      itsTimeSize    (nrCorr*nrChan*nrBL),
+    : itsNrCorr      (msdesc.corrTypes.size()),
+      itsNrChan      (msdesc.nchan[ddid]),
+      itsNrBL        (msdesc.ant1.size()),
+      itsTimeSize    (0),
       itsReverseChan (reverseChan),
       itsInData      (0),
       itsOutData     (0),
-      itsTimeStep    (0)
-  {}
+      itsTimeSlot    (0),
+      itsDDOffset    (0)
+  {
+    // Calculate the length of each timeslot.
+    for (uint i=0; i<msdesc.nchan.size(); ++i) {
+      itsTimeSize += itsNrCorr*itsNrBL * msdesc.nchan[i];
+      if (i < ddid) {
+	// Keep the offset for the required spw.
+	itsDDOffset = itsTimeSize;
+      }
+    }
+  }
 
 }

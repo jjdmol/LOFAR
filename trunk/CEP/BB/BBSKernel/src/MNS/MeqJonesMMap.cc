@@ -28,7 +28,7 @@ namespace LOFAR {
 
   MeqJonesMMap::MeqJonesMMap (const MMapMSInfo& info, int blnr)
     : itsInfo     (&info),
-      itsOffsetBL (int64(blnr) * info.nrChan() * info.nrCorr())
+      itsOffsetBL (int64(blnr)*info.nrChan()*info.nrCorr() + info.ddOffset())
   {}
 
   MeqJonesMMap::~MeqJonesMMap()

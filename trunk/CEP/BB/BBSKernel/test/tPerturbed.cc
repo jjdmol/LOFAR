@@ -147,7 +147,7 @@ int main (int argc, const char* argv[])
     // Read the info for the ParmTables
     ParmDB::ParmDBMeta meqPdm("aips", argv[3]);
     ParmDB::ParmDBMeta skyPdm("aips", argv[4]);
-    Prediffer pre1(argv[2], meqPdm, skyPdm, false);
+    Prediffer pre1(argv[2], meqPdm, skyPdm, 0, false);
 
     // Do a solve using the model and a few stations.
     {
