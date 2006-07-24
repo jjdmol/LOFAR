@@ -74,10 +74,20 @@ void writeDesc (const string& fileName, bool writeDess,
   msd.corrTypes.push_back ("XY");
   msd.corrTypes.push_back ("YX");
   msd.corrTypes.push_back ("YY");
-  msd.nchan.resize (1);
-  msd.startFreq.resize (1);
-  msd.endFreq.resize (1);
-  info.getFreq (msd.startFreq[0], msd.endFreq[0], msd.nchan[0]);
+  int nband, nfreq;
+  double sfreq, efreq;
+  info.getFreq (sfreq, efreq, nband, nfreq);
+  msd.nchan.resize (nband);
+  msd.startFreq.resize (nband);
+  msd.endFreq.resize (nband);
+  double stepf = (efreq-sfreq)/nfreq;
+  int nfpb = nfreq/nband;
+  for (int i=0; i<nband; ++i) {
+    msd.startFreq[i] = sfreq;
+    sfreq +=  nfpb*stepf;
+    msd.endFreq[i]   = sfreq;
+    msd.nchan[i]     = nfpb;
+  }
   // Get nr of stations and baselines.
   uint nstat = antPos.shape()[1];
   int nbl = nstat*(nstat-1)/2;
@@ -130,17 +140,21 @@ void createMS (const string& msName, const Array<double>& antPos,
 	       bool writeAutoCorr, const DH_MSMake& info)
 {
   double startFreq, endFreq, startTime, endTime, ra, dec;
-  int nfreq, ntime;
-  info.getFreq (startFreq, endFreq, nfreq);
+  int nband, nfreq, ntime;
+  info.getFreq (startFreq, endFreq, nband, nfreq);
   info.getTime (startTime, endTime, ntime);
   info.getPos (ra, dec);
+  int nfpb = nfreq/nband;
   double freqStep = (endFreq-startFreq) / nfreq;
-  double freqRef = (endFreq+startFreq) / 2;
+  double freqRef  = startFreq + nfpb*freqStep / 2;    // middle of 1st band
   double timeStep = (endTime-startTime) / ntime;
-  MSCreate msmaker(msName, startTime, timeStep, nfreq, 4, antPos.shape()[1],
+  MSCreate msmaker(msName, startTime, timeStep, nfpb, 4, antPos.shape()[1],
 		   Matrix<double>(antPos), writeAutoCorr,
 		   info.getTileSizeFreq(), info.getTileSizeRest());
-  msmaker.addBand (4, nfreq, freqRef, freqStep);
+  for (int i=0; i<nband; ++i) {
+    msmaker.addBand (4, nfpb, freqRef, freqStep);
+    freqRef += nfpb*freqStep;
+  }
   msmaker.addField (ra, dec);
   for (int i=0; i<ntime; ++i) {
     msmaker.writeTimeStep();
@@ -180,6 +194,7 @@ void doMaster (bool send)
   double ra = qn.getValue ("rad");
   ASSERT (MVAngle::read (qn, decStr, true));
   double dec = qn.getValue ("rad");
+  int nband = params.getInt32 ("NBands");
   int nfreq = params.getInt32 ("NFrequencies");
   int ntime = params.getInt32 ("NTimes");
   int nnode = params.getInt32 ("NParts");
@@ -193,7 +208,17 @@ void doMaster (bool send)
     tileSizeRest = params.getInt32 ("TileSizeRest");
   }
   ASSERT (nnode > 0);
+  ASSERT (nband > 0);
+  int nbpn = 1;
+  if (nband > nnode) {
+    ASSERT (nband%nnode == 0);
+    nbpn = nband/nnode;
+  } else {
+    ASSERT (nnode%nband == 0);
+  }
+  ASSERT (nfreq >= nband);
   ASSERT (nfreq >= nnode);
+  ASSERT (nfreq%nband == 0);
   ASSERT (nfreq%nnode == 0);
   ASSERT (stepFreq > 0);
   ASSERT (stepTime > 0);
@@ -223,7 +248,7 @@ void doMaster (bool send)
   // Write the data in the DataHolder and send it to each slave.
   for (int i=0; i<nnode; ++i) {
     conn.sender.setFreq (startFreq+i*nfpn*stepFreq,
-			 startFreq+(i+1)*nfpn*stepFreq, nfpn);
+			 startFreq+(i+1)*nfpn*stepFreq, nbpn, nfpn);
     if (send) {
       conn.conns[i]->write();
     } else {

@@ -196,7 +196,7 @@ void MSCreate::createMS (const String& msName,
       const Record& dm = dminfo.subRecord(i);
       String slname;
       if (dm.asString("NAME") == "TiledData") {
-	slname = "/vis.dat";
+	slname = "/vis.DATA";
       } else if (dm.asString("NAME") == "TiledFlag") {
 	slname = "/vis.flg";
       } else if (dm.asString("NAME") == "TiledUVW") {
@@ -530,13 +530,16 @@ void MSCreate::updateTimes()
 
 void MSCreate::writeTimeStep()
 {
-  // Only one band and field can be used.
-  ASSERT(itsNrBand==1);
+  // Only one field can be used.
   ASSERT(itsNrField==1);
-  const int bandId=0;
   const int fieldId=0;
+  // Make sure all bands are equally sized.
+  for (int i=1; i<itsNrBand; ++i) {
+    ASSERT ((*itsNrPol)[i] == (*itsNrPol)[0]);
+    ASSERT ((*itsNrChan)[i] == (*itsNrChan)[0]);
+  }
   // Find the shape of the data array in each table row.
-  IPosition shape(2, (*itsNrPol)[bandId], (*itsNrChan)[bandId]);
+  IPosition shape(2, (*itsNrPol)[0], (*itsNrChan)[0]);
   Array<Bool> defFlags(shape);
   defFlags = False;
   Array<Complex> defData(shape);
@@ -548,7 +551,7 @@ void MSCreate::writeTimeStep()
 
   // Add the number of rows needed.
   int rowNumber = itsMS->nrow();
-  itsMS->addRow (nrbasel);
+  itsMS->addRow (nrbasel*itsNrBand);
   Array<Float> sigma(IPosition(1, shape(0)));
   sigma = 1;
   Array<Float> weight(IPosition(1, shape(0)));
@@ -571,32 +574,35 @@ void MSCreate::writeTimeStep()
   }
 
   Vector<double> myuvw(3);
-  for (int j=0; j<itsNrAnt; ++j) {
-    int st = (itsWriteAutoCorr ? j : j+1);
-    for (int i=st; i<itsNrAnt; ++i) {
-      myuvw = antuvw[i] - antuvw[j];
-      itsMSCol->data().put(rowNumber, defData);
-      itsMSCol->flag().put(rowNumber, defFlags);
-      itsMSCol->flagRow().put (rowNumber, False);
-      itsMSCol->time().put (rowNumber, time);
-      itsMSCol->antenna1().put (rowNumber, j);
-      itsMSCol->antenna2().put (rowNumber, i);
-      itsMSCol->feed1().put (rowNumber, 0);
-      itsMSCol->feed2().put (rowNumber, 0);
-      itsMSCol->dataDescId().put (rowNumber, bandId);
-      itsMSCol->processorId().put (rowNumber, 0);
-      itsMSCol->fieldId().put (rowNumber, fieldId);
-      itsMSCol->interval().put (rowNumber, itsTimeStep);
-      itsMSCol->exposure().put (rowNumber, itsTimeStep);
-      itsMSCol->timeCentroid().put (rowNumber, time);
-      itsMSCol->scanNumber().put (rowNumber, 0);
-      itsMSCol->arrayId().put (rowNumber, 0);
-      itsMSCol->observationId().put (rowNumber, 0);
-      itsMSCol->stateId().put (rowNumber, 0);
-      itsMSCol->uvw().put (rowNumber, myuvw);
-      itsMSCol->weight().put (rowNumber, weight);
-      itsMSCol->sigma().put (rowNumber, sigma);
-      rowNumber++;
+  for (int band=0; band<itsNrBand; ++band) {
+    defData = Complex(float(band), float(itsNrTimes));
+    for (int j=0; j<itsNrAnt; ++j) {
+      int st = (itsWriteAutoCorr ? j : j+1);
+      for (int i=st; i<itsNrAnt; ++i) {
+	myuvw = antuvw[i] - antuvw[j];
+	itsMSCol->data().put(rowNumber, defData);
+	itsMSCol->flag().put(rowNumber, defFlags);
+	itsMSCol->flagRow().put (rowNumber, False);
+	itsMSCol->time().put (rowNumber, time);
+	itsMSCol->antenna1().put (rowNumber, j);
+	itsMSCol->antenna2().put (rowNumber, i);
+	itsMSCol->feed1().put (rowNumber, 0);
+	itsMSCol->feed2().put (rowNumber, 0);
+	itsMSCol->dataDescId().put (rowNumber, band);
+	itsMSCol->processorId().put (rowNumber, 0);
+	itsMSCol->fieldId().put (rowNumber, fieldId);
+	itsMSCol->interval().put (rowNumber, itsTimeStep);
+	itsMSCol->exposure().put (rowNumber, itsTimeStep);
+	itsMSCol->timeCentroid().put (rowNumber, time);
+	itsMSCol->scanNumber().put (rowNumber, 0);
+	itsMSCol->arrayId().put (rowNumber, 0);
+	itsMSCol->observationId().put (rowNumber, 0);
+	itsMSCol->stateId().put (rowNumber, 0);
+	itsMSCol->uvw().put (rowNumber, myuvw);
+	itsMSCol->weight().put (rowNumber, weight);
+	itsMSCol->sigma().put (rowNumber, sigma);
+	rowNumber++;
+      }
     }
   }
 }

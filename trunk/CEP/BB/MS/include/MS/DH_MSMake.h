@@ -47,8 +47,8 @@ namespace LOFAR {
     virtual void init();
     virtual void fillDataPointers();
 
-    void setFreq (double start, double end, int n)
-      { itsFreqs[0]=start; itsFreqs[1]=end; *itsNFreq=n; }
+    void setFreq (double start, double end, int nband, int nfreq)
+      { itsFreqs[0]=start; itsFreqs[1]=end; *itsNBand=nband; *itsNFreq=nfreq; }
     void setTime (double start, double end, int n)
       { itsTimes[0]=start; itsTimes[1]=end; *itsNTime=n; }
     void setTileSize (int tileSizeFreq, int tileSizeRest)
@@ -59,8 +59,8 @@ namespace LOFAR {
 		    const casa::Array<casa::String>& antNames,
 		    bool writeAutoCorr);
 
-    void getFreq (double& start, double& end, int& n) const
-      { start=itsFreqs[0]; end=itsFreqs[1]; n=*itsNFreq; }
+    void getFreq (double& start, double& end, int& nband, int& nfreq) const
+      { start=itsFreqs[0]; end=itsFreqs[1]; nband=*itsNBand; nfreq=*itsNFreq; }
     void getTime (double& start, double& end, int& n) const
       { start=itsTimes[0]; end=itsTimes[1]; n=*itsNTime; }
     int getTileSizeFreq() const
@@ -77,6 +77,7 @@ namespace LOFAR {
     // Forbid assignment.
     DH_MSMake& operator= (const DH_MSMake&);
 
+    int*    itsNBand;
     int*    itsNFreq;
     int*    itsNTime;
     int*    itsTileSizeFreq;
