@@ -102,5 +102,5 @@ int main(int /*argc*/, const char* argv[])
     return 1;
   }
 
-  return 2;  // forces assay to flag missing .stdout file as an error
+  return 0;
 }
