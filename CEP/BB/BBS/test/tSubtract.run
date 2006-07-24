@@ -11,7 +11,7 @@ fi
 $srcdir/makeDemoParmDBPred tSubtract
 
 \rm -rf tSubtract_tmp.MS1
-cp -r /data/PSS3/diepen/BBS2/demo3.MS_p1 tSubtract_tmp.MS1
+cp -r /opt/lofar/data/BBS2/demo3.MS_p1 tSubtract_tmp.MS1
 
 $LOFAR_CHECKTOOL ./tSubtract $USER tSubtract_tmp.MS1 tSubtract_tmp.demo_instr tSubtract_tmp.demo_sky
 status=$?

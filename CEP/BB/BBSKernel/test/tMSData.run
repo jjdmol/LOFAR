@@ -11,11 +11,11 @@ fi
 $srcdir/makeDemoParmDB tMSData
 
 echo "run1 ..."
-$LOFAR_CHECKTOOL ./tMSData /data/PSS3/diepen/BBS2/demo3.MS $USER /data/PSS3/diepen/BBS2/demo3.MS_p1 tMSData_tmp.demo_instr tMSData_tmp.demo_sky 0 100 MODEL_DATA
+$LOFAR_CHECKTOOL ./tMSData /opt/lofar/data/BBS2/demo3.MS $USER /opt/lofar/data/BBS2/demo3.MS_p1 tMSData_tmp.demo_instr tMSData_tmp.demo_sky 0 100 MODEL_DATA
 status=$?
 
 echo "run2 ..."
-$LOFAR_CHECKTOOL ./tMSData /data/PSS3/diepen/BBS2/3C343/10008336.MS $USER /data/PSS3/diepen/BBS2/3C343/10008336.MS_p1 tMSData_tmp.demo_instr tMSData_tmp.demo_sky 0 14 DATA
+$LOFAR_CHECKTOOL ./tMSData /opt/lofar/data/BBS2/3C343/10008336.MS $USER /opt/lofar/data/BBS2/3C343/10008336.MS_p1 tMSData_tmp.demo_instr tMSData_tmp.demo_sky 0 14 DATA
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat
