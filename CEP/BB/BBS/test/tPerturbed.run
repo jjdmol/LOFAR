@@ -9,6 +9,9 @@ fi
 
 # Create the ParmDB tables for tPerturbed.
 $srcdir/makeDemoParmDB tPerturbed
+if [ $? != 0 ]; then
+  exit 1
+fi
 
 echo "run1 ..."
 $LOFAR_CHECKTOOL ./tPerturbed $USER /opt/lofar/data/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN.REALIMAG 'RA:*' 'DEC:*' 'StokesI:*'

@@ -1,6 +1,6 @@
 check_PROGRAMS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular tMeqParm \
 tParmMerge tPredSolv tPredict tSubtract tCorrect tPerturbed tMSData \
-tShift tDFT 
+tShift
 
 tMeqPolc_SOURCES = tMeqPolc.cc
 tMeqPolc_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
@@ -41,12 +41,10 @@ tMSData_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
 tShift_SOURCES = tShift.cc
 tShift_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
 
-tDFT_SOURCES = tDFT.cc
-tDFT_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
-
 LDADD				= ../src/libbbs.la 
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
+				  prefix=$(prefix) \
 				  srcdir=${srcdir} \
 				  MPIBIN=$(MPIBIN) \
 				  AIPSPP=$(AIPSPP)
