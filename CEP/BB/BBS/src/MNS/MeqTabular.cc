@@ -29,6 +29,8 @@
 #include <BBS/MNS/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
 
+#define MIN(__a, __b)   __a <= __b ? __a : __b;
+ 
 using namespace std;
 using namespace casa;
 
@@ -132,7 +134,7 @@ namespace LOFAR
         // first input cell.
         if(outCenter < inCenter)
         {
-          leftBoundaryCells = (int) ceil((inCenter - outCenter) / outScale.first);
+          leftBoundaryCells = MIN((int) ceil((inCenter - outCenter) / outScale.first), outCount.first);
         }
 
         // Compute the number of boundary cells on the right. This is the number of
@@ -140,7 +142,7 @@ namespace LOFAR
         // last input cell.
         if((outDomain.endX() - 0.5 * outScale.first) > (inDomain.endX() - 0.5 * inScale.first))
         {
-          rightBoundaryCells = (int) ceil(((outDomain.endX() - 0.5 * outScale.first) - (inDomain.endX() - 0.5 * inScale.first)) / outScale.first);
+          rightBoundaryCells = MIN((int) ceil(((outDomain.endX() - 0.5 * outScale.first) - (inDomain.endX() - 0.5 * inScale.first)) / outScale.first), outCount.first);
         }
 
         // Compute the values of the left boundary cells. A choice has to be made
