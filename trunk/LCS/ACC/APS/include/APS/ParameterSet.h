@@ -156,8 +156,9 @@ public:
 	// Checks if the given Key is defined in the ParameterSet.
 	bool	isDefined (const string& searchKey) const;
 
-	// Searches for a key whose name end in the given shortKey.
-	string	locateKey(const string&	shortKey) const;
+	// Searches for a module whose short nam is given and returns it position
+	// in the parameterSet.
+	string	locateModule(const string&	shortName) const;
 
 	// Returns the value as a boolean.
 	bool	getBool  (const string& aKey) const;
@@ -299,9 +300,9 @@ inline bool	ParameterSet::isDefined (const string& searchKey) const
 	return itsSet->isDefined (searchKey);
 }
 
-inline string	ParameterSet::locateKey(const string&	shortKey) const
+inline string	ParameterSet::locateModule(const string&	shortName) const
 {
-	return (itsSet->locateKey(shortKey));
+	return (itsSet->locateModule(shortName));
 }
 
 //#	getBool(key)

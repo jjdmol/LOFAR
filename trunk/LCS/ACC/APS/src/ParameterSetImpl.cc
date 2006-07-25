@@ -885,11 +885,11 @@ int32 	indexValue (const string&	label, char	indexMarker[2])
 }
 
 //
-// locateKey(hortKey)
+// locateModule(shortKey)
 //
 // Searches for a key ending in the given 'shortkey' and returns it full name.
 // e.g: a.b.c.d.param=xxxx --> locateKey(d)-->a.b.c.
-string	ParameterSetImpl::locateKey(const string&	shortKey) const
+string	ParameterSetImpl::locateModule(const string&	shortKey) const
 {
 	const_iterator		iter = begin();
 	const_iterator		eom  = end();
