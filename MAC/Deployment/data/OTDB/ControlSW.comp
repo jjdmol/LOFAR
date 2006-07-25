@@ -1,0 +1,8 @@
+# -- ControlSW --
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  ControlSW    1.0.0  development 'node constraint'  "Control Software"
+uses  BeamControl  1.0.0  development 1                  "BeamController for this Station"		 
