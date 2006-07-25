@@ -26,10 +26,17 @@
 // \file
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <time.h>
 
 namespace LOFAR
 {
   using namespace boost::posix_time;
+
+	// there is no function in boost to convert a ptime to a time_t.
+	inline time_t	to_time_t(ptime aPtime) {
+		struct tm 	stm = to_tm(aPtime);
+		return (mktime(&stm));
+	}
 }
 
 #endif
