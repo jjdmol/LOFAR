@@ -21,50 +21,56 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
+
 public class BBSStepNode implements java.io.Serializable {
     
     // private members
     private String name;
-    private boolean leaf;
     private boolean rootNode;
-    private String itsNodeID;
-    private String itsParentID;
-
+    protected boolean leaf;
+    private BBSStep containedStep;
+    private jOTDBnode representedOTDBnode;
     
-    public BBSStepNode(String nodeID, String parentID) {
-        leaf = false;
-        itsNodeID = nodeID;
-        itsParentID = parentID;
+    public BBSStepNode(BBSStep aBBSStep) {
+        containedStep = aBBSStep;
         rootNode = false;
+        leaf = true;
     }
     public String getName() {
+        if(containedStep!=null){
+            return containedStep.getName();
+        }
         return name;
     }
     public void setName(String name) {
         this.name = name;
     }
     public boolean isLeaf() {
-        return leaf;
-    }
-    public void setLeaf(boolean leaf) {
-        this.leaf = leaf;
+        boolean returnBool = true;
+        if(containedStep != null && !rootNode){
+            returnBool = !containedStep.hasChildSteps();
+        }else{
+            returnBool = leaf;
+        }
+        return returnBool;
     }
     public boolean isRootNode() {
         return rootNode;
     }
     public void setRootNode(boolean isRootNode) {
         this.rootNode = isRootNode;
-    } 
-    public String getNodeID() {
-        return (itsNodeID);
+    }       
+    public BBSStep getContainedStep(){
+        return containedStep;
     }
-    public void setNodeID(String nodeId) {
-        itsNodeID = nodeId;
-    }    
-    public String getParentID() {
-        return (itsParentID);
+    public void setContainedStep(BBSStep containedStep){
+        this.containedStep = containedStep;
     }
-    public void setParentID(String parentID) {
-        itsParentID = parentID;
-    }    
+    public jOTDBnode getOTDBNode(){
+        return representedOTDBnode;
+    }
+    public void setOTDBNode(jOTDBnode representedOTDBnode){
+        this.representedOTDBnode = representedOTDBnode;
+    }
 }

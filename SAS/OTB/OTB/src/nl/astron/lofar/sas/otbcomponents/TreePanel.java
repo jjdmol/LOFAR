@@ -103,6 +103,10 @@ public class TreePanel extends javax.swing.JPanel {
         jTree1.setSelectionPath(jTree1.getPathForLocation(evt.getX(),evt.getY()));
     }
     
+    public JTree getTree(){
+        return jTree1;
+    }
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
