@@ -47,8 +47,8 @@ node   WorkDomainSize     1.0.0  development 'node constraint'  'BBS WorkDomainS
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Freq                    I    text   -      10    0    '1'                  -        'work domain size frequency'
-par  Time                    I    text   -      10    0    '0.1'                -        'work domain size time'
+par  Freq                    I    dbl    Hz     10    0    '1'                  -        'work domain size frequency'
+par  Time                    I    dbl    -      10    0    '0.1'                -        'work domain size time'
 
 # -- BBS Integration Settings
 #
@@ -58,9 +58,8 @@ node   Integration     1.0.0  development 'node constraint'  'BBS Integration se
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Freq                    I    text   -      10    0    '1'                  -        'integration interval frequency'
-par  Time                    I    text   -      10    0    '0.1'                -        'integration interval time'
-
+par  Freq                    I    dbl    Hz     10    0    '1'                  -        'integration interval frequency'
+par  Time                    I    dbl    -      10    0    '0.1'                -        'integration interval time'
 
 # -- BBS Strategy Settings
 #
@@ -70,8 +69,8 @@ node   Strategy     1.0.0  development 'node constraint'  'BBS Strategy'
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Steps                   I    text   -      10    0    '["xyz1","xyz2"]'         -        'The steps contained in this BBS Strategy'
-par  Stations                I    text   -      10    0    '[0,1,2,3]'               -        'Identifiers/names of the stations to be used'
+par  Steps                   I    text   -      10    0    '[]'         -        'The steps contained in this BBS Strategy'
+par  Stations                I    text   -      10    0    '[]'               -        'Identifiers/names of the stations to be used'
 par  InputData               I    text   -      10    0    'INDATA'                  -        'Measurement Set input data column'
 
 #      name        vers   qual        constr.            descr.
@@ -79,20 +78,26 @@ par  InputData               I    text   -      10    0    'INDATA'             
 uses  Correlation     1.0.0  development 1                  'BBS Correlation for this strategy'
 uses  WorkDomainSize  1.0.0  development 1                  'BBS Work Domain Size for this strategy'
 uses  Integration     1.0.0  development 1                  'BBS Integration attributes for this strategy'
+
+# -- BBS Step Container
 #
-#
-#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Step         1.0.0  development 'node constraint'  'BBS Step Container'
+
 # --BBS Global--
+#
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   BBS        	 1.0.0  development 'node constraint'  "BBS"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  DataSet                 I    text   -      10    0    'test.ms'                 -        'Name of the measurement set'
+par  DataSet                 I    text   -      10    0    >>Observation.MSName      -        'Name of the measurement set'
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  BBDB     1.0.0  development 1                  'Blackboard database for BBS'
 uses  ParmDB   1.0.0  development 1                  'ParmDB settings for BBS'
 uses  Strategy 1.0.0  development 1                  'Strategy to be used by BBS'
+uses  Step     1.0.0  development 1                  'Strategy Step Container'
