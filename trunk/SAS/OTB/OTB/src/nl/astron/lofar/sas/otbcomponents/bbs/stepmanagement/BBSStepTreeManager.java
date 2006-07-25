@@ -24,6 +24,9 @@ package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import javax.swing.event.TreeModelEvent;
+import nl.astron.lofar.sas.otb.SharedVars;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.GenericTreeManager;
 import nl.astron.lofar.sas.otb.util.treemanagers.ITreeManager;
@@ -73,62 +76,67 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
     }
     
     public void defineChildsForNode(TreeNode aNode) {
-        /*
-        logger.trace("Entry - TreeManager BBSStepNode-defineChildNodes("+aNode.getName()+" ("+((BBSStepNode)aNode.getUserObject()).getNodeID()+"))");
-        try {
-            // You must set the flag before defining children if you
-            // use "add" for the new children. Otherwise you get an infinite
-            // recursive loop, since add results in a call to getChildCount.
-            // However, you could use "insert" in such a case.
-            aNode.areChildrenDefined = true;
-            Vector childs = null;
-            BBSStepNode containedNode = (BBSStepNode)aNode.getUserObject();
+        
+        if (aNode.getUserObject() == null) {
+            logger.debug("Error - TreeManager BBSStepNode-defineChildNodes("+aNode.getName()+" does not contain a user object)");
+            return;
+        }
+        //BBS Node contained in the TreeNode
+        BBSStepNode containedBBSNode = (BBSStepNode)aNode.getUserObject();
+        //jOTDB Node contained that is needed to fetch child nodes from OTDB
+        
+        jOTDBnode representedOTDBnode = containedBBSNode.getOTDBNode();
+        logger.trace("Entry - TreeManager BBSStepNode-defineChildNodes("+aNode.getName()+" ("+containedBBSNode.getName()+"))");
+        
+        // You must set the flag before defining children if you
+        // use "add" for the new children. Otherwise you get an infinite
+        // recursive loop, since add results in a call to getChildCount.
+        // However, you could use "insert" in such a case.
+        aNode.areChildrenDefined = true;
+        if(containedBBSNode.isRootNode()){
+            //build the tree as a root node is detected
+        }else{
+            //expand the first steps in the tree
+            BBSStep containedBBSStep = containedBBSNode.getContainedStep();
             
-            if(((BBSStepNode)aNode.getUserObject()).isRootNode()){
-                //childs = SharedVars.getJParmFacade().getNames(""+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length())+"*");
-            }else{
-                //childs = SharedVars.getJParmFacade().getNames("*"+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length()+1)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*");
-            }
-            Vector<String> uniqueNames = new Vector<String>();
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
-                String aValue = (String)e.nextElement();
+            for(BBSStep aStep : containedBBSStep.getChildSteps()){
+                logger.trace("Child Node found for BBS Step Tree :"+aStep.getName());
                 
-                
-                BBSStepNode item = new BBSStepNode(containedNode.getNodeID()+this.BBSSTEP_TREENODE_SEPARATOR_CHAR+childName,((BBSStepNode)aNode.getUserObject()).getNodeID());
-                //item.leaf=true;
-                item.setName(childName);
-                logger.trace("Node name selected : "+item.getName());
-                ((jParmDBnode)aNode.getUserObject()).setLeaf(false);
-                TreeNode newNode = new TreeNode(this.instance,item,item.getNodeID());
+                BBSStepNode newPNode = new BBSStepNode(aStep);
+                newPNode.setName(aStep.getName());
+                newPNode.setRootNode(false);                
+                TreeNode newNode = new TreeNode(this.instance,newPNode,newPNode.getName());
                 aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
-                
                 fireTreeInsertionPerformed(evt);
                 
-                
             }
-            if(uniqueNames.size() == 0){
-                ((BBSStepNode)aNode.getUserObject()).setLeaf(true);
-            }
-            
-        } catch(Exception e) {
-            logger.fatal("Exception during TreeManager BBSStepNode-defineChildNodes: " + e);
         }
+        
+        
         logger.trace("Exit - TreeManager defineChildNodes("+toString()+")");
-        */
+        
     }
     
     public TreeNode getRootNode(Object arguments){
-        String[] argumentArray = (String[])arguments;
-        BBSStepNode newPNode = new BBSStepNode(argumentArray[0],argumentArray[1]);
-        if(argumentArray.length==3){
-            if(!argumentArray[2].equals("")){
-                newPNode.setRootNode(true);
-            }
-        }
-        newPNode.setName(argumentArray[0]);
+        Object[] argumentArray = (Object[])arguments;
+        jOTDBnode userObject = (jOTDBnode)argumentArray[1];
+        String title = (String)argumentArray[0];
+        BBSStepNode newPNode = new BBSStepNode(null);
+        newPNode.setRootNode(true);
+        newPNode.setName(title);
+        newPNode.setOTDBNode(userObject);  
+        newPNode.leaf=false;
         TreeNode bbsNode = new TreeNode(this.instance,newPNode,newPNode.getName());
+        
+        BBSStep aStep = new BBSStep("xyz");
+        aStep.addChildStep(new BBSStep("sl1"));
+        aStep.addChildStep(new BBSStep("sl2"));
+        BBSStepNode newPNode2 = new BBSStepNode(aStep);
+        newPNode2.setName(aStep.getName());
+        TreeNode newNode = new TreeNode(this.instance,newPNode2,newPNode2.getName());
+        
+        bbsNode.add(newNode);
         
         return bbsNode;
     }

@@ -33,6 +33,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.border.TitledBorder;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
@@ -40,6 +42,8 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStep;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepNode;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepTreeManager;
 import org.apache.log4j.Logger;
 
@@ -116,8 +120,8 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }
             
             //Add steps that make up the strategy to the steps tree browser
+            //
             Vector steps = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.parentID(), 1);
-            
             // get all the params per child
             Enumeration se = steps.elements();
             while( se.hasMoreElements()  ) {
@@ -131,15 +135,16 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).equals("Step")) {
                     //Add steps to tree
-                    String[] rootNodeArgs = new String[3];
-                    rootNodeArgs[0]= "Strategy Steps";
-                    rootNodeArgs[1]=aNode.name;
-                    rootNodeArgs[2]="";
+                    Object[] rootNodeArgs = new Object[3];
+                    rootNodeArgs[0]= new String("Strategy Steps");
+                    rootNodeArgs[1]=aNode;
                     TreeNode newStepRootNode = BBSStepTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(rootNodeArgs);
                     this.stepsTreePanel.newRootNode(newStepRootNode);
                     
                 }
             }
+            //
+            //End of code that handles step tree browser
             
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
@@ -760,14 +765,27 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         addStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
         addStepButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        addStepButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addStepButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepsModsPanel.add(addStepButton, gridBagConstraints);
 
         removeStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        removeStepButton.setEnabled(false);
         removeStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
         removeStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
         removeStepButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        removeStepButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeStepButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
@@ -775,9 +793,16 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsModsPanel.add(removeStepButton, gridBagConstraints);
 
         modifyStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifyStepButton.setEnabled(false);
         modifyStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
         modifyStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
         modifyStepButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        modifyStepButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                modifyStepButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -786,6 +811,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         loadTemplateStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Open16.gif")));
         loadTemplateStepButton.setText("Template");
+        loadTemplateStepButton.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 0;
@@ -824,6 +850,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsPanel.add(stepsMoveUpDownPanel, java.awt.BorderLayout.EAST);
 
         stepsTreePanel.setTitle("Strategy Step Tree");
+        stepsTreePanel.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                stepsTreePanelValueChanged(evt);
+            }
+        });
+
         stepsPanel.add(stepsTreePanel, java.awt.BorderLayout.CENTER);
 
         strategyPanel.add(stepsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 150, 400, 330));
@@ -904,6 +936,55 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void removeStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeStepButtonActionPerformed
+        TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
+        if(selectedPath != null){
+            
+            TreeNode someTreeNode = (TreeNode)selectedPath.getLastPathComponent();
+            logger.trace("BBS Step Node to be deleted : "+someTreeNode.getName());
+            
+            BBSStepNode bbsNode = (BBSStepNode)someTreeNode.getUserObject();
+            BBSStep aBBSStep = bbsNode.getContainedStep();
+            if(aBBSStep!=null && !bbsNode.isRootNode()){
+                if(aBBSStep.getParentStep()!=null){
+                    aBBSStep.getParentStep().removeChildStep(aBBSStep);
+                }
+                DefaultTreeModel treeModel = (DefaultTreeModel)stepsTreePanel.getTree().getModel();
+                treeModel.removeNodeFromParent(someTreeNode);
+                stepsTreePanel.getTree().removeSelectionPath(selectedPath);
+                stepsTreePanel.getTree().revalidate();
+            }
+            
+        }
+    }//GEN-LAST:event_removeStepButtonActionPerformed
+
+    private void modifyStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_modifyStepButtonActionPerformed
+        TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
+        if(selectedPath != null){
+            TreeNode someBBSStepNode = (TreeNode)selectedPath.getLastPathComponent();
+            logger.trace("BBS Step to be modified : "+someBBSStepNode.getName());
+        }
+    }//GEN-LAST:event_modifyStepButtonActionPerformed
+
+    private void stepsTreePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_stepsTreePanelValueChanged
+        TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
+        if(selectedPath != null){
+            this.modifyStepButton.setEnabled(true);
+            this.removeStepButton.setEnabled(true);
+        }else{
+            this.modifyStepButton.setEnabled(false);
+            this.removeStepButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_stepsTreePanelValueChanged
+
+    private void addStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addStepButtonActionPerformed
+        TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
+        if(selectedPath != null){
+            TreeNode someBBSStepNode = (TreeNode)selectedPath.getLastPathComponent();
+            logger.trace("BBS Step Node to be supplied with child : "+someBBSStepNode.getName());
+        }
+    }//GEN-LAST:event_addStepButtonActionPerformed
     
     private void modifyStationTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_modifyStationTextKeyReleased
         String toBeAddedStation = modifyStationText.getText();
