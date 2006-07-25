@@ -161,6 +161,7 @@ public:
 				{ return (find(searchKey) != end()); };
 
 	// Searches for a key whose name end in the given shortKey.
+	// e.g: a.b.c.d.param=xxx ; locateKey('d') --> 'a.b.c.'
 	string	locateKey(const string&	shortKey) const;
 
 	// Return the 'metadata' from the parameterCollection.
