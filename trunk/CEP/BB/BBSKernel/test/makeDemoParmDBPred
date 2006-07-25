@@ -29,6 +29,7 @@ adddef dgain:Y values=1, perturbation=${pert}
 quit
 EOF
 if [ $? != 0 ]; then
+  cat $1_tmp.outpdb1 > /dev/stderr
   exit 1
 fi
 
@@ -55,3 +56,7 @@ adddef StokesU:SRC3 values=0, perturbation=${pert}
 adddef StokesV:SRC3 values=0, perturbation=${pert}
 quit
 EOF
+if [ $? != 0 ]; then
+  cat $1_tmp.outpdb2 > /dev/stderr
+  exit 1
+fi

@@ -9,6 +9,9 @@ fi
 
 # Create the ParmDB tables for tSubtract.
 $srcdir/makeDemoParmDBPred tSubtract
+if [ $? != 0 ]; then
+  exit 1
+fi
 
 \rm -rf tSubtract_tmp.MS1
 cp -r /opt/lofar/data/BBS2/demo3.MS_p1 tSubtract_tmp.MS1

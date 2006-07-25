@@ -98,6 +98,7 @@ void doIt (const string& msName, Prediffer& prediff, const string& column,
 
 int main(int argc, char** argv)
 {
+  INIT_LOGGER("tMSData");
   try {
     if (argc < 8) {
       cout << "Run as:  tMSData ms user msname meqparmtable skyparmtable spwid nrant [datacolumn]" << endl;
