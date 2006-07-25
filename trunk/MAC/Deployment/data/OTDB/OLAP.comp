@@ -1,0 +1,64 @@
+# -- OLAP_HW--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   OLAP_HW     1.0.0  development 'node constraint'  "OLAP Hardware"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  _hostname               I    text   -      10    0    'INP002'                  -        'host on which OLAP will be started, value is determined by the scheduler'
+par  AMCServerHost           I    text   -      10    0    '192.168.100.254'         -        'ip-address of AMC server'
+par  AMCServerPort           I    int    -      10    0    '8400'                    -        'port on which the AMC server is listening'
+par  DelayCompensationHost   I    text   -      10    0    '192.168.100.254'         -        'ip-address of AMC server'
+par  DelayCompensationPorts  I    text   -      10    0    '[8300, 8301, 8302, 8303, 8304, 8305, 8306, 8307, 8308, 8309, 8310, 8311]' - 'ports on which DelayCompensation is listening'
+par  InputClusterFEN         I    text   -      10    0    '129.125.99.51'           -        'ip-address of input cluster front end'
+par  InputBGLHosts           I    text   -      10    0    '[10.20.98.08, 10.20.98.09, 10.20.98.10, 10.20.98.11, 10.20.98.12, 10.20.98.13, 10.20.98.14, 10.20.98.15, 10.20.98.16, 10.20.98.17, 10.20.98.18, 10.20.98.19]'   - 'hosts on which InputSection is listening'
+par  InputBGLPorts           I    text   -      10    0    '[8000, 8001, 8002, 8003, 8004, 8005, 8006, 8007, 8008, 8009, 8010, 8011]' - 'ports on which InputSection is listening'
+par  StellaFEN               I    text   -      10    0    'bglfen1.service.rug.nl'  -        'ip-address of Stella front end'
+par  BGLStorageHosts         I    text   -      10    0    '[192.168.100.01, 192.168.100.02, 192.168.100.03, 192.168.100.04, 192.168.100.05, 192.168.100.06, 192.168.100.07, 192.168.100.08, 192.168.100.09, 192.168.100.10, 192.168.100.11, 192.168.100.12]' - 'Hosts on which Storage is listening'
+par  BGLStoragePorts         I    text   -      10    0    '[8100, 8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110, 8111]' - 'ports on which Storage is listening'
+par  StorageClusterFEN       I    text   -      10    0    'hpclf1.service.rug.nl'   -        'ip-address of storage cluster front end'
+par  partition               I    text   -      10    0    'R000_64'                 -        'partition to use on Stella'
+
+
+
+# -- OLAP--
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  OLAP         1.0.0  development 'node constraint'  "OLAP"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  samplesToIntegrate      I    int    -      10    0    196608                    -        'number of samples to integrate, is almost equal to sample frequency'
+par  secondsToBuffer         I    flt    -      10    0    30                        -        'number of seconds that should be buffered in the input cluster'
+par  useAMCServer            I    bool   -      10    0    f                         -        'use an AMC server or the AMC implementation that is linked to the executable'
+par  nodesPerCell            I    int    -      10    0    16                        -        'number of BG/L compute cores per compute cell (or pset)'
+par  subbandsPerCell         I    int    -      10    0    4                         -        'number of subbands that is processed per compute cell (or pset)'
+par  ppfTaps                 I    int    -      10    0    16                        -        'number of taps for the digital filter in the PPF'
+
+
+#
+#generic parameters needed by OLAP
+#
+par  nrSubbands              I    int    -      10    0    >>Observation.subbandList[]        - 'number of subbands in this observation'
+par  nrChannelsPerSubband    I    int    -      10    0    >>Observation.channelsPerSubband   - 'number of channels per subband'
+par  nrStations              I    int    -      10    0    >>VirtualInstrument.stationList[]  - 'number of stations in this observation'
+par  nrInputNodes            I    int    -      10    0    >>VirtualInstrument.inputNodeList[] - 'number of input nodes in this observation'
+par  nrRSPBoards             I    int    -      10    0	   8                                  - 'Total Nr of RSPboards'
+par  nrSamplesPerSecond      I    int    -      10    0    >>Observation.clockMode.samplesPerSecond    -  'Samples per second'
+par  MSName                  I    text   -      10    0    >>Observation.MSName               - 'Name for the Measurement set for this Observation'
+par  nrSamplesPerEthFrame    I    int    -      10    0    125                       -        'number of samples the RSP board will put in one ethernet frame'
+par  nyguistZone             I    int    -      10    0    >>Observation.nyguistZone -        'number of the nyguist zone'
+par  startTime               I    dbl    -      10    0    >>Observation.startTime   -        'start time of the observation in GMT'
+par  stopTime                I    dbl    -      10    0    >>Observation.stopTime    -        'stop time of the observation in GMT'
+par  stationList             I    text   -      10    0    >>VirtualInstrument.stationList  - 'Stations taking part in this observation'
+par  stsPosition             I    text   -      10    0    >>VirtualInstrument.stationList[].stsPosition   - 'Station position in longitude, latitude and heigth'
+par  RSPMACAddresses         I    text   -      10    0    >>VirtualInstrument.stationList[].RSPMacAddresses - 'MAC addresses of the RSPBoards' 
+par InputNodeMACAddresses    I    text   -      10    0    >>VirtualInstrument.inputNodeList[].MACAddress  -   'List of all MACaddresses from inputNodes'
+
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  OLAP_HW      1.0.0  development 1                  "Partitions and IP stuff"
+

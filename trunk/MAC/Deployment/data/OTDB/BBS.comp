@@ -1,0 +1,98 @@
+# -- BBS --
+#
+# $Id$
+#
+# -- BBS BBDB Settings
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   BBDB     1.0.0  development 'node constraint'  'BBS Blackboard Database'
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  _hostname               I    text   -      10    0    'IMG002'                  -        'host on which BBS will be started, value is determined by the scheduler'
+par  Host                    I    text   -      10    0    '127.0.0.1'               -        'Host on which the Blackboard database resides'
+par  Port                    I    int    -      10    0    '12345'                   -        'Port on which the Blackboard database is listening'
+par  DBName                  I    text   -      10    0    'blackboard'              -        'Database name with the Black Board tables'
+par  UserName                I    text   -      10    0    'postgres'                -        'Username of the Blackboard database'
+par  PassWord                I    text   -      10    0    ''                        -        'Password of the Blackboard database'
+
+# -- BBS ParmDB Settings
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   ParmDB     1.0.0  development 'node constraint'  'BBS ParmDB identifiers'
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  Instrument              I    text   -      10    0    'test.mep'                -        'name of the AIPS++ table containing the instrument parameters'
+par  LocalSky                I    text   -      10    0    'test.gsm'                -        'name of the AIPS++ table containing the local sky parameters'
+
+# -- BBS Correlation Settings
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Correlation     1.0.0  development 'node constraint'  'BBS Correlation settings'
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  Selection               I    text   -      10    0    'ALL'                -        'one of AUTO,CROSS,ALL'
+par  Type                    I    text   -      10    0    '["XX","YY"]'        -        'which (auto)correlations to use'
+
+# -- BBS Work Domain Size Settings
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   WorkDomainSize     1.0.0  development 'node constraint'  'BBS WorkDomainSize settings'
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  Freq                    I    text   -      10    0    '1'                  -        'work domain size frequency'
+par  Time                    I    text   -      10    0    '0.1'                -        'work domain size time'
+
+# -- BBS Integration Settings
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Integration     1.0.0  development 'node constraint'  'BBS Integration settings'
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  Freq                    I    text   -      10    0    '1'                  -        'integration interval frequency'
+par  Time                    I    text   -      10    0    '0.1'                -        'integration interval time'
+
+
+# -- BBS Strategy Settings
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Strategy     1.0.0  development 'node constraint'  'BBS Strategy'
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  Steps                   I    text   -      10    0    '["xyz1","xyz2"]'         -        'The steps contained in this BBS Strategy'
+par  Stations                I    text   -      10    0    '[0,1,2,3]'               -        'Identifiers/names of the stations to be used'
+par  InputData               I    text   -      10    0    'INDATA'                  -        'Measurement Set input data column'
+
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  Correlation     1.0.0  development 1                  'BBS Correlation for this strategy'
+uses  WorkDomainSize  1.0.0  development 1                  'BBS Work Domain Size for this strategy'
+uses  Integration     1.0.0  development 1                  'BBS Integration attributes for this strategy'
+#
+#
+#
+# --BBS Global--
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   BBS        	 1.0.0  development 'node constraint'  "BBS"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  DataSet                 I    text   -      10    0    'test.ms'                 -        'Name of the measurement set'
+
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  BBDB     1.0.0  development 1                  'Blackboard database for BBS'
+uses  ParmDB   1.0.0  development 1                  'ParmDB settings for BBS'
+uses  Strategy 1.0.0  development 1                  'Strategy to be used by BBS'

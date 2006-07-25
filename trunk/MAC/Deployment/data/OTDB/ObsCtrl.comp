@@ -1,0 +1,16 @@
+#  -- ObsCtrl --
+#
+# Parameter specification of the ObservationController.
+#
+# $Id$
+#
+# -- ObsCtrl--
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  ObsCtrl            1.0.0  development 'node constraint'  "Observation Controller"
+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  heartbeatInterval       I    dbl    -      10    0    10                        -        "Interval (in sec) between to 'sanity checks'"
+
