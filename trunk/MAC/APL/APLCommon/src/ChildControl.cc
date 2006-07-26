@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/Deployment.h>
+#include <Deployment/StationInfo.h>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
@@ -33,8 +33,11 @@
 #include <APL/APLCommon/ChildControl.h>
 #include <Controller_Protocol.ph>
 #include <StartDaemon_Protocol.ph>
+#include <boost/lexical_cast.hpp>
+using namespace boost;
 
 namespace LOFAR {
+  using namespace Deployment;
   using namespace GCF::TM;
   using namespace ACC::APS;
   namespace APLCommon {
@@ -154,34 +157,33 @@ bool ChildControl::startChild (const string&		aName,
 	}	
 
 	// make sure there is a parameterSet for the program.
-	if (aCntlrType != CNTLRTYPE_OBSERVATIONCTRL) {
-		// search observation-parset for controller name and determine prefix
-		string			baseSetName = formatString("%s/Observation_%d", 
-													LOFAR_SHARE_LOCATION, anObsID);
-		LOG_DEBUG_STR ("Reading parameterfile: " << baseSetName);
-		ParameterSet	wholeSet (baseSetName);
-		ParameterSet::iterator		iter = wholeSet.begin();
-		ParameterSet::iterator		end  = wholeSet.end();
-		while (iter != end) {
-			// search a parameter that is meant for this controller
-			// to determine the position of the controller in the tree.
-			if (keyName(moduleName(iter->first)) == aName) {
-				string	cntlrSetName = formatString("%s/%s", LOFAR_SHARE_LOCATION, 
-															 aName.c_str());
-				LOG_DEBUG_STR("Creating parameterfile: " << cntlrSetName);
-				ParameterSet	cntlrSet = wholeSet.makeSubset(moduleName(iter->first));
-				cntlrSet.add("prefix", moduleName(iter->first));
-				cntlrSet.writeFile (cntlrSetName);
-				break;
-			}
-			iter++;
-		}
-		if (iter == end) {		// could not create a parameterset, report failure.
-			LOG_ERROR_STR("No parameter information found for controller " << aName <<
-						  " in file " << baseSetName << ". Cannot start controller!");
-			return (false);
-		}
-	}
+	// search observation-parset for controller name and determine prefix
+	// NOTE: this name must be the same as in the MACScheduler.
+	string	baseSetName = formatString("%s/Observation_%d", LOFAR_SHARE_LOCATION, anObsID);
+	LOG_DEBUG_STR ("Reading parameterfile: " << baseSetName);
+	ParameterSet	wholeSet (baseSetName);
+	string			prefix = wholeSet.getString("prefix");
+
+	// Create a parameterset with software related issues.
+	string	cntlrSetName(formatString("%s/%s", LOFAR_SHARE_LOCATION, aName.c_str()));
+	LOG_DEBUG_STR("Creating parameterfile: " << cntlrSetName);
+	// first add the controller specific stuff
+	string	nodeName(parsetNodeName(aCntlrType));
+	string	position(wholeSet.locateModule(nodeName));
+	LOG_DEBUG_STR("Ctype=" << aCntlrType << ", name=" << nodeName << 
+				  ", position=" << position);
+	ParameterSet	cntlrSet = wholeSet.makeSubset(position+nodeName+".");
+	// always add Observation and all its children to the Parset.
+	cntlrSet.adoptCollection(wholeSet.makeSubset(wholeSet.locateModule("Observation")));
+	// Add some comment lines and some extra fields to the file
+	cntlrSet.add("prefix", prefix+position+nodeName+".");
+	cntlrSet.add("_instanceNr", lexical_cast<string>(instanceNr));
+	cntlrSet.add("_treeID", lexical_cast<string>(anObsID));
+	cntlrSet.add("# modulename", nodeName);
+	cntlrSet.add("# pathname", prefix+position+nodeName+".");
+	cntlrSet.add("# treeID", lexical_cast<string>(anObsID));
+	// Finally write to subset to the file.
+	cntlrSet.writeFile (cntlrSetName);
 
 	// Alright, child does not exist yet. 
 	// construct structure with all information
@@ -467,7 +469,7 @@ void ChildControl::_processActionList()
 					STARTDAEMONCreateEvent		startRequest;
 					startRequest.cntlrType 	   = action->cntlrType;
 					startRequest.cntlrName 	   = action->cntlrName;
-					startRequest.parentHost	   = GCF::Common::myHostname();
+					startRequest.parentHost	   = GCF::Common::myHostname(true);
 					startRequest.parentService = itsListener->makeServiceName();
 					startDaemon->second->send(startRequest);
 

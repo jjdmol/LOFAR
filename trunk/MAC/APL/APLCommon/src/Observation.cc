@@ -51,7 +51,7 @@ Observation::Observation(ACC::APS::ParameterSet*		aParSet) :
 	sampleClock(0)
 {
 	// analyse ParameterSet.
-	string prefix = ACC::APS::moduleName(aParSet->locateKey("Observation"));
+	string prefix = ACC::APS::moduleName(aParSet->locateModule("Observation"));
 	if (aParSet->isDefined(prefix+"name")) {
 		name = aParSet->getTime(prefix+"name");
 	}
