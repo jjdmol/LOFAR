@@ -1270,7 +1270,6 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		}
 
 		xAction.commit();
-		return (true);
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during setSchedule:") + ex.what();
@@ -1278,7 +1277,19 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		return (false);
 	}
 
-	return (false);
+	// update Observation.startTime field
+	vector<OTDBnode>	fieldList = getItemList(aTreeID, "%.Observation.startTime");
+	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.startTime field in tree " << aTreeID);
+	fieldList[0].limits = to_simple_string(aStartTime);
+	saveNode(fieldList[0]);
+
+	// update Observation.stopTime field
+	fieldList = getItemList(aTreeID, "%.Observation.stopTime");
+	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.stopTime field in tree " << aTreeID);
+	fieldList[0].limits = to_simple_string(aStopTime);
+	saveNode(fieldList[0]);
+
+	return (true);
 }
 
 
