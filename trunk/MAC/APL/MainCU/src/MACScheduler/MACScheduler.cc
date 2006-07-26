@@ -21,7 +21,7 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/Deployment.h>
+#include <Deployment/StationInfo.h>
 
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
@@ -42,6 +42,7 @@ using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
 using namespace LOFAR::OTDB;
+using namespace LOFAR::Deployment;
 using namespace std;
 
 namespace LOFAR {
@@ -446,10 +447,11 @@ void MACScheduler::_doOTDBcheck()
 			OTDB::TreeMaintenance	tm(itsOTDBconnection);
 			OTDB::treeIDType		treeID = newTreeList[idx].treeID();
 			OTDBnode				topNode = tm.getTopNode(treeID);
-			string					filename = string(LOFAR_SHARE_LOCATION) + 
-																"/" + cntlrName;
+			// NOTE: this name must be the same as in the ChildControl.
+			string					filename = formatString("%s/Observation_%d", 
+														LOFAR_SHARE_LOCATION, treeID);
 			if (!tm.exportTree(treeID, topNode.nodeID(), filename)) {
-				LOG_ERROR_STR ("Cannot create startup file " << filename << 
+				LOG_ERROR_STR ("Cannot create parset file " << filename << 
 							" for new observation. Observation CANNOT BE STARTED!");
 			}
 			else {
