@@ -89,8 +89,13 @@ void GCFTask::init(int argc, char** argv)
 	// Read in the ParameterSet of the task (<task>.conf)
 	ParameterSet*	pParamSet = ACC::APS::globalParameterSet();
 	string			configFile(aCL.locate(procName + ".conf"));
-	LOG_DEBUG_STR ("Using parameterfile: " << configFile);
-	pParamSet->adoptFile(configFile);
+	if (!configFile.empty()) {
+		LOG_DEBUG_STR ("Using parameterfile: " << configFile);
+		pParamSet->adoptFile(configFile);
+	}
+	else {
+		LOG_DEBUG_STR ("NO DEFAULT PARAMETERSET FOUND");
+	}
 
 	if (_doExit) {
 		exit(-1);

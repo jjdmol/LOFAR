@@ -183,7 +183,7 @@ GCFEvent::TResult GSBController::operational(GCFEvent& event, GCFPortInterface& 
 			LOG_INFO(formatString ("Serviceinfo for %s is %d", 
 									request.servicename.c_str(), portNr));
 			response.portnumber = portNr;
-			response.hostname	= Common::myHostname();
+			response.hostname	= Common::myHostname(true);
 			response.result 	= SB_NO_ERROR;
 		}
 		else {

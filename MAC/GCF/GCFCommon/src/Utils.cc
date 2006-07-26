@@ -7,13 +7,29 @@
 
 using std::set;
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace Common 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace Common {
 
+//
+// myHostname(giveFullname)
+//
+string myHostname(bool	giveFullName)
+{
+	char	fullhostname[300];
+	if (gethostname(fullhostname, 300) != 0) {
+		return ("localhost");
+	}
+
+	if (!giveFullName) {
+		char*	dot = strchr(fullhostname, '.');
+		if (dot) {
+			*dot='\0';
+		}
+	}
+
+	return (fullhostname);
+}
 
 void convListToString(string& listString, 
                                   const list<string>& stringList)
