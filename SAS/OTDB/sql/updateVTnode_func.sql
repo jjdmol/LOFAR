@@ -79,7 +79,7 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		ELSEIF vTreeType = TTHardware THEN
 			vLimits := replace($5, \'\\\'\', \'\');
 			UPDATE	VIChierarchy
-			SET		limits = vLimits
+			SET		value = vLimits
 			WHERE	treeID = $2
 			AND 	nodeID = $3;
 			IF NOT FOUND THEN

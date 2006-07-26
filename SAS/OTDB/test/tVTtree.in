@@ -159,6 +159,8 @@ node	Observation 	1.0.0	test	'node constraint'	Toplevel node
 par	ObservationNr	I	int    -   		0	  0		1+			-	'description'
 par clock			I	int	   -  		0	  0		<<Clock200	-	'reference to clock'
 par sampleClock		I	int	   -	 	0	  0		>>Observation.clock.systemClock	-	'160 or 200'
+par startTime  		I	text   -	 	0	  0		0			-	'yyyy-mm-dd hh:mm:ss'
+par stopTime  		I	text   -	 	0	  0		0			-	'yyyy-mm-dd hh:mm:ss'
 
 #       name        	vers    qual        instances
 #------------------------------------------------------------------------------
