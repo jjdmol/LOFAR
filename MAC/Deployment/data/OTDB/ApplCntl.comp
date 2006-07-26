@@ -1,0 +1,43 @@
+# -- ApplCtrl--
+#
+# $Id$
+#
+
+# -- ACprocess --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  ACCprocess   1.0.0  development 'node constraint'  "Definition of an ACC process"
+
+#    name              dir. type    unit   prun. vm   value     constr.  descr.
+#----------------------------------------------------------------------------------------------------------------------------------
+par  name              I    string  -      10    0    -                   -        "Logical name of the process"
+par  count             I    int     -      10    0    -                   -        "Number of processes to start"
+par  startstopType     I    string  -      10    0    cmdline,mpirun,bgl  -        "Method of starting the proces"
+par  executable        I    string  -      10    0    -                   -        "The name of the executable to start"
+par  hostname          I    string  -      10    0    -                   -        "The hostname of the machine to start the proces on"
+
+
+# -- ApplCtrl --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  ApplCtrl     1.0.0  development 'node constraint'  "The 'ACC' ApplicationController"
+uses  ACCprocess   1.0.0  development 1..100             "Definition of an ACC process"
+
+#    name              dir. type    unit   prun. vm   value     constr.  descr.
+#----------------------------------------------------------------------------------------------------------------------------------
+par  timeout_createsubsets  I    string  -      10    0    3m        -        "Max time the creation of the parametersets may take"
+par  timeout_startup        I    string  -      10    0    2m        -        "Max time the startup of the processes may take"
+par  timeout_define         I    string  -      10    0    40        -        "Max time the definition phase of the processes may take"
+par  timeout_init           I    string  -      10    0    40        -        "Max time the init phase of the processes may take"
+par  timeout_run            I    string  -      10    0    30        -        "Max time it may take before all process are in run-state"
+par  timeout_pause          I    string  -      10    0    50        -        "Max time it may take before all process are paused"
+par  timeout_recover        I    string  -      10    0    50        -        "Max time it may take before all process are recovered"
+par  timeout_snapshot       I    string  -      10    0    30        -        "Max time it may take before all process are saved"
+par  timeout_reinit         I    string  -      10    0    30        -        "Max time the reinit phase of the processes may take"
+par  timeout_info           I    string  -      10    0    30        -        "Max time it may take to give an answer"
+par  timeout_quit           I    string  -      10    0    60        -        "Max time the processes may take to quit"
+par  timeout_kill           I    string  -      10    0    60        -        "Delay after the quit command before the remainng processes are killed""
+
+par  application            I    string  -      10    0    -         -        "Name of the (tree)node that is the process that must be controlled"
+par  resultfile             I    string  -      10    0    ../log/ACC.result  -  "The file the results should be written in."
+
