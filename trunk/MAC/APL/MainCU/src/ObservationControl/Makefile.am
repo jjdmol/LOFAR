@@ -26,16 +26,9 @@ configfilesdir=$(bindir)
 configfiles_DATA 	= 
 #customPrepPVSSDB.ctl
 
-sysconf_DATA		= ObservationControl.conf \
-					  ObservationControl.log_prop
+sysconf_DATA		= ObservationControl.log_prop
 
 %.log_prop: %.log_prop.in
-	cp $< $@
-
-%.conf: %.conf.in
-	cp $< $@
-
-%.ctl: %.ctl.in
 	cp $< $@
 
 clean-local:
