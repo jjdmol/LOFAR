@@ -43,48 +43,53 @@ namespace LOFAR
   {
    //===============>>> BBSProcessControl::predict  <<<==============================
     void BBSProcessControl::predict (Prediffer& prediffer, const MSDesc& msd,
-                                    const string& columnName,
-                                    double timeStep, int startChan, int endChan)
+                                     const StepProp& stepProp,
+                                     double timeStep, int startChan, int endChan)
     {
       double time = msd.startTime;
       double endTime = msd.endTime;
       while (time < endTime) {
         prediffer.setWorkDomain (startChan, endChan, time, time+timeStep);
-        prediffer.writePredictedData (columnName);
+        prediffer.setStepProp (stepProp);
+        prediffer.writePredictedData();
         time += timeStep;
       }
     }           
     
     //===============>>> BBSProcessControl::substract  <<<==============================
     void BBSProcessControl::subtract (Prediffer& prediffer, const MSDesc& msd,
-                                      const string& columnNameIn, const string& columnNameOut,
+                                      const StepProp& stepProp,
                                       double timeStep, int startChan, int endChan)
     {
       double time = msd.startTime;
       double endTime = msd.endTime;
       while (time < endTime) {
         prediffer.setWorkDomain (startChan, endChan, time, time+timeStep);
-        prediffer.subtractData (columnNameIn, columnNameOut, false);
+        prediffer.setStepProp (stepProp);
+        prediffer.subtractData();
         time += timeStep;
       }
     }           
     
     //===============>>> BBSProcessControl::predict  <<<==============================
     void BBSProcessControl::solve (Prediffer& prediffer, const MSDesc& msd,
-                                  const string& columnname,
+                                  const StepProp& stepProp,
                                   double timestep, int startchan, int endchan,
-                                  const vector<string>& solvparms, const vector<string>& exclparms,
+                                  const SolveProp& solveProp,
                                   const vector<int32>& nrinterval,
-                                  int maxiterations,
                                   bool savesolution)
     {
-      prediffer.clearSolvableParms();
-      prediffer.setSolvableParms (solvParms, exclParms);
       double time = msd.startTime;
       double endTime = msd.endTime;
-      while (time < endTime) {
+      SolveProp solProp(solveProp);
+      while (time < endTime) 
+      {
         // Use given channels and time steps.
-        prediffer.setWorkDomain (startChan, endChan, time, time+timestep);
+        // NB. This version of setWorkDomain has the following arguments:
+        //     startChan, endChan
+        //     startTime, lengthTime (!)
+        prediffer.setWorkDomain (startChan, endChan, time, timestep);
+        prediffer.setStepProp (stepProp);
         // Form the solve domains.
         const MeqDomain& workDomain = prediffer.getWorkDomain();
         vector<MeqDomain> solveDomains;
@@ -101,25 +106,26 @@ namespace LOFAR
           }
           sdTime += stept;
         }
-        prediffer.initSolvableParms (solveDomains);
-    
+        solProp.setDomains (solveDomains);
+        prediffer.setSolveProp (solProp);
+ 
         Solver solver;
         solver.initSolvableParmData (1, solveDomains, prediffer.getWorkDomain());
         solver.setSolvableParmData (prediffer.getSolvableParmData(), 0);
         prediffer.showSettings();
         cout << "Before: " << setprecision(10)
-            << solver.getSolvableValues(0) << endl;
-        
-        for(int i=0; i<maxiterations; ++i) {
+             << solver.getSolvableValues(0) << endl;
+    
+        for(int i=0; i<solProp.getMaxIter(); ++i) {
           // Get the fitter data from the prediffer and give it to the solver.
           vector<casa::LSQFit> fitters;
-          prediffer.fillFitters (fitters, columnname);
+          prediffer.fillFitters (fitters);
           solver.mergeFitters (fitters, 0);
     
           // Do the solve.
           solver.solve(false);
           cout << "iteration " << i << ":  " << setprecision(10)
-              << solver.getSolvableValues(0) << endl;
+               << solver.getSolvableValues(0) << endl;
           cout << solver.getQuality(0) << endl;
     
           prediffer.updateSolvableParms (solver.getSolvableParmData());
@@ -151,23 +157,25 @@ namespace LOFAR
       // Read & parse parameters
       try
       {
-        user                = parameters->getString ("user");
-        instrumentPDB       = parameters->getString ("instrument_parmdb");
-        skyPDB              = parameters->getString ("sky_parmdb");
-        measurementSet      = parameters->getString ("measurement_set");
-        instrumentModelType = parameters->getString ("instrument_model");
-        calcUVW             = parameters->getBool ("calculate_UVW");
-        operation           = parameters->getString ("operation");
-        columnNameIn        = parameters->getString ("data_column_in");
-        columnNameOut       = parameters->getString ("data_column_out");
-        timeDomainSize      = parameters->getDouble ("time_domain_size");
-        startChan           = parameters->getInt32 ("start_channel");
-        endChan             = parameters->getInt32 ("end_channel");
-        solvParms           = parameters->getStringVector ("solvable_parms");
-        exclParms           = parameters->getStringVector ("solvable_parms_excluded");
-        nrSolveInterval     = parameters->getInt32Vector ("nr_solve_interval");
-        nriter              = parameters->getInt32 ("nriter");
-        saveSolution        = parameters->getBool ("save_solution");
+        user            = parameters->getString ("user");
+        instrumentPDB   = parameters->getString ("instrumentPDB");
+        skyPDB          = parameters->getString ("skyPDB");
+        measurementSet  = parameters->getString ("measurementSet");
+        instrumentModel = parameters->getString ("instrumentModel");
+        calcUVW         = parameters->getBool ("calcUVW");
+        operation       = parameters->getString ("operation");
+        columnNameIn    = parameters->getString ("columnNameIn");
+        columnNameOut   = parameters->getString ("columnNameOut");
+        timeDomainSize  = parameters->getDouble ("timeDomainSize");
+        startChan       = parameters->getInt32 ("startChan");
+        endChan         = parameters->getInt32 ("endChan");
+        solvParms       = parameters->getStringVector ("solvParms");
+        exclParms       = parameters->getStringVector ("exclParms");
+        antennas        = parameters->getInt32Vector ("antennas");
+        corrs           = parameters->getBoolVector ("corrs");
+        nrSolveInterval = parameters->getInt32Vector ("nrSolveInterval");
+        nriter          = parameters->getInt32 ("nriter");
+        saveSolution    = parameters->getBool ("saveSolution");
       }
       catch (exception& _ex)
       {
@@ -179,7 +187,7 @@ namespace LOFAR
       cout << "instrument ParmDB      : " << instrumentPDB << endl;
       cout << "sky ParmDB             : " << skyPDB << endl;
       cout << "measurement set        : " << measurementSet << endl;
-      cout << "instrument model       : " << instrumentModelType << endl;
+      cout << "instrument model       : " << instrumentModel << endl;
       cout << "calculate UVW          : " << calcUVW << endl;
       cout << "start channel          : " << startChan << endl;
       cout << "end channel            : " << endChan << endl;
@@ -202,18 +210,24 @@ namespace LOFAR
       BlobIStream bis(bbs);
       MSDesc msd;
       bis >> msd;
-      vector<int> antennaSelector(msd.antNames.size());
-      for (uint i=0; i<antennaSelector.size(); ++i) {
-        antennaSelector[i] = i;
-      }
-      vector<vector<int> > sourceGroups;
-      // Construct prediffer.
-      Prediffer prediffer(measurementSet, 
-                          ParmDBMeta("aips", instrumentPDB),
-                          ParmDBMeta("aips", skyPDB),
-                          antennaSelector, instrumentModelType, sourceGroups,
-                          calcUVW);
       try {
+        // Construct prediffer.
+        Prediffer prediffer(measurementSet, 
+                            ParmDBMeta("aips", instrumentPDB),
+                            ParmDBMeta("aips", skyPDB),
+                            0,
+                            calcUVW);
+        // Set strategy.
+        StrategyProp stratProp;
+        stratProp.setAntennas (antennas);
+        stratProp.setCorr (corrs);
+        stratProp.setInColumn (columnNameIn);
+        ASSERT (prediffer.setStrategyProp (stratProp));
+        // Fill step properties.
+        StepProp stepProp;
+        stepProp.setModel (StringUtil::split(instrumentModel,'.'));
+        stepProp.setOutColumn (columnNameOut);
+        
         if (operation == "solve") {
           ASSERT (nrSolveInterval.size()==2);
           ASSERT (nrSolveInterval[0] > 0  &&  nrSolveInterval[1] > 0);
@@ -222,18 +236,22 @@ namespace LOFAR
           cout << "solvable parms excluded: " << exclParms << endl;
           cout << "solve nrintervals      : " << nrSolveInterval << endl;
           cout << "solve nriter           : " << nriter << endl;
-          solve (prediffer, msd, columnNameIn,
-                timeDomainSize, startChan, endChan,
-                solvParms, exclParms,
-                nrSolveInterval, nriter, saveSolution);
+          SolveProp solveProp;
+          solveProp.setParmPatterns (solvParms);
+          solveProp.setExclPatterns (exclParms);
+          solveProp.setMaxIter (nriter);
+          solve (prediffer, msd, stepProp,
+                 timeDomainSize, startChan, endChan,
+                 solveProp,
+                 nrSolveInterval, saveSolution);
         } else if (operation == "predict") {
           cout << "output column name     : " << columnNameOut << endl;
-          predict (prediffer, msd, columnNameOut,
-                  timeDomainSize, startChan, endChan);
+          predict (prediffer, msd, stepProp,
+                   timeDomainSize, startChan, endChan);
         } else if (operation == "subtract") {
           cout << "input column name      : " << columnNameIn << endl;
           cout << "output column name     : " << columnNameOut << endl;
-          subtract (prediffer, msd, columnNameIn, columnNameOut,
+          subtract (prediffer, msd, stepProp,
                     timeDomainSize, startChan, endChan);
         } else {
           cout << "Only operations solve, predict, and subtract are valid" << endl;
@@ -242,7 +260,7 @@ namespace LOFAR
       }
       catch (exception& _ex)
       {
-        cout << "error: " << _ex.what() << endl;
+        cout << "error phase2: " << _ex.what() << endl;
         return false;
       }
       return true;
