@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,293 76 182 113 N "_3DFace" 6
+PANEL,300 211 182 113 N "_3DFace" 6
 "$RSPBoardNr"
 "$RackNr"
 "$SubrackNr"
@@ -11,8 +11,7 @@ PANEL,293 76 182 113 N "_3DFace" 6
 "main()
 {
   EP_setBackColor();	
-//  setValue(\"text_SubrackNr\", \"text\", $SubrackNr );
-	setValue(\"txt_boardName\",\"text\",\"C\"+$RackNr+\".S\"+$SubrackNr+\".B\"+$RSPBoardNr);
+	setValue(\"txt_boardName\",\"text\",\"Board \"+$RSPBoardNr);
   $configDatapoint;
   $referenceDatapoint;
 }
@@ -581,7 +580,7 @@ E E 0 1 1 0 1 E U  0 E 47 33 108 49
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 8 Cx.Sx.Bx
+LANG:1 7 Board x
 0
 LAYER, 1 
 1
