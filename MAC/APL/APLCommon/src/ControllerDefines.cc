@@ -26,29 +26,38 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>					// rtrim
+#include <Deployment/StationInfo.h>
+#include <GCF/Utils.h>							// myHostname
 #include <APS/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 
+#include <boost/config.hpp>
+#include <boost/lexical_cast.hpp>
+using namespace boost;
+
 namespace LOFAR {
+  using namespace Deployment;
+  using namespace GCF::Common;
   namespace APLCommon {
 
 typedef struct cntlrDefinition {
 	char*		cntlrName;
+	char*		parsetName;
 	bool		shared;
 } cntlrDefinition_t;
 
 static cntlrDefinition_t controllerTable[] = {
-	{	"",						false	},
-	{	"MACScheduler", 		false	},
-	{	"ObservationControl", 	false	},
-	{	"BeamDirectionControl",	true	},
-	{	"RingControl", 			true	},
-	{	"StationControl", 		false	},
-	{	"DigitalBoardControl", 	false	},
-	{	"BeamControl", 			true	},
-	{	"CalibrationControl", 	true	},
-	{	"StationInfraControl", 	true	},
-	{	"",						false	}
+	{	"",						"",				false	},
+	{	"MACScheduler", 		"MACScheduler",	false	},
+	{	"ObservationControl", 	"ObsCtrl",		false	},
+	{	"BeamDirectionControl",	"BeamDirCtrl",	true	},
+	{	"RingControl", 			"RingCtrl",		true	},
+	{	"StationControl", 		"StationCtrl",	false	},
+	{	"DigitalBoardControl", 	"DigBoardCtrl",	false	},
+	{	"BeamControl", 			"BeamCtrl",		true	},
+	{	"CalibrationControl", 	"CalCtrl",		true	},
+	{	"StationInfraControl", 	"StsInfraCtrl",	true	},
+	{	"",						"",				false	}
 };
 
 // Construct a uniq controllername from the controllerType, the instanceNr
@@ -64,6 +73,15 @@ string	controllerName (uint16		cntlrType,
 
 	return (formatString("%s[%d]{%d}", controllerTable[cntlrType].cntlrName,
 												instanceNr, ObservationNr));
+}
+
+// Convert a controller type to the coresponding node in the OTDB.
+string	parsetNodeName (uint16		cntlrType)
+{
+	ASSERTSTR (cntlrType != CNTLRTYPE_NO_TYPE && cntlrType < CNTLRTYPE_NR_TYPES,
+			"No controller defined with type: " << cntlrType);
+
+	return (controllerTable[cntlrType].parsetName);
 }
 
 // Convert the 'non-shared controllername' to the 'shared controller' name.
@@ -126,6 +144,51 @@ int32	getControllerType	(const string&	controllerName)
 
 	return (CNTLRTYPE_NO_TYPE);
 }
+
+//
+// createPropertySetName(propSetMask)
+//
+//  A PropSetMask may contain the markers:
+//	@ring@
+//	@arm@
+//	@station@
+//  @instance@
+//	@observation@
+//
+string	createPropertySetName(const string&		propSetMask,
+							  const string&		controllerName)
+{
+	string	psName(propSetMask);		// editable copy
+	uint	pos;
+	if ((pos = psName.find("@ring@")) != string::npos) {
+		psName.replace(pos, 6, string("ring")+lexical_cast<string>(stationRingNr()));
+	}
+	if ((pos = psName.find("@arm@")) != string::npos) {
+		psName.replace(pos, 5, string("arm")+lexical_cast<string>(stationArmNr()));
+	}
+	if ((pos = psName.find("@station@")) != string::npos) {
+		psName.replace(pos, 9, myHostname(false));
+	}
+	if ((pos = psName.find("@instance@")) != string::npos) {
+		uint16	instanceNr = getInstanceNr(controllerName);
+		if (instanceNr) {
+			psName.replace(pos, 10, lexical_cast<string>(instanceNr));
+		}
+		else {
+			psName.replace(pos, 10, "");	
+		}
+	}
+	if ((pos = psName.find("@observation@")) != string::npos) {
+		psName.replace(pos, 13, string("Observation") +
+								lexical_cast<string>(getObservationNr(controllerName)));
+	}
+		
+	return (psName);
+}
+
+
+
+
 
   } // namespace APLCommon
 } // namespace LOFAR

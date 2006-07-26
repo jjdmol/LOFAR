@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/Deployment.h>
+#include <Deployment/StationInfo.h>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
@@ -35,7 +35,9 @@
 #include <StartDaemon_Protocol.ph>
 
 namespace LOFAR {
+  using namespace Deployment;
   using namespace GCF::TM;
+  using namespace GCF::Common;
   using namespace ACC::APS;
   namespace APLCommon {
 

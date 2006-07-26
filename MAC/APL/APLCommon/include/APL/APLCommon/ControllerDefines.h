@@ -65,6 +65,9 @@ string	controllerName (uint16		cntlrType,
 						uint16		instanceNr, 
 						uint32		ObservationNr);
 
+// Convert a controller type to the coresponding node in the OTDB.
+string	parsetNodeName (uint16		cntlrType);
+
 // Convert the 'non-shared controllername' to the 'shared controller' name.
 string	sharedControllerName (const string&	controllerName);
 
@@ -83,6 +86,9 @@ uint16	getInstanceNr (const string&	ObservationName);
 // Get the controllerType from the controllername.
 int32	getControllerType	(const string&	ObservationName);
 
+// Construct PS name solving markers line @observation@, @ring@, etc.
+string	createPropertySetName(const string&		propSetMask,
+							  const string&		controllerName);
 };	// APLCommon
 }; // LOFAR
 
