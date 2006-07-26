@@ -9,6 +9,9 @@ namespace LOFAR {
  namespace GCF {
   namespace Common {
 
+// Returns the full or short version of the hostname
+string myHostname(bool	giveFullName);
+
 void	convListToString(std::string& listString, 
                          const std::list<std::string>& stringList);
 void	convStringToList(std::list<std::string>& stringList, 
