@@ -26,12 +26,14 @@
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
 #include <Deployment/StationInfo.h>
+#include <GCF/Utils.h>
 
 #include <boost/config.hpp>
 #include <boost/lexical_cast.hpp>
 using namespace boost;
 
 namespace LOFAR {
+  using namespace GCF::Common;
   namespace Deployment {
 
 static	char*	stationTypeTable[] = { "CS", "RS", "ES" };
