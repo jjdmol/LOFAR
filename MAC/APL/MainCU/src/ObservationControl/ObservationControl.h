@@ -48,6 +48,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 
 //# ACC Includes
 #include <APS/ParameterSet.h>
@@ -92,8 +93,10 @@ private:
    	ObservationControl& operator=(const ObservationControl&);
 
 	void setState(CTState::CTstateNr	newState);
-   	void _connectedHandler(GCFPortInterface& port);
-   	void _disconnectedHandler(GCFPortInterface& port);
+
+	void	setObservationTimers();
+   	void 	_connectedHandler(GCFPortInterface& port);
+   	void	_disconnectedHandler(GCFPortInterface& port);
    	boost::shared_ptr<ACC::APS::ParameterSet> 
 		 readObservationParameters (APLCommon::OTDBtreeIDType	ObsTreeID);
 
@@ -126,12 +129,21 @@ private:
 	GCFTimerPort*			itsTimerPort;
 
 	CTState::CTstateNr		itsState;
+	
+	// timers for the several stages.
+	uint32					itsClaimTimer;
+	uint32					itsPrepareTimer;
+	uint32					itsStartTimer;
+	uint32					itsStopTimer;
+	uint32					itsHeartBeat;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
-	time_t					itsStartTime;
-	time_t					itsStopTime;
+	uint32					itsClaimPeriod;
+	uint32					itsPreparePeriod;
+	ptime					itsStartTime;
+	ptime					itsStopTime;
 };
 
   };//MainCU

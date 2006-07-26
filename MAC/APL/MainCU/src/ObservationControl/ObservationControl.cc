@@ -32,6 +32,7 @@
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <Deployment/StationInfo.h>
 
 #include "ObservationControl.h"
 #include "ObservationControlDefines.h"
@@ -59,15 +60,31 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0),
-	itsState			(CTState::NOSTATE)
+	itsState			(CTState::NOSTATE),
+	itsClaimTimer		(0),
+	itsPrepareTimer		(0),
+	itsStartTimer		(0),
+	itsStopTimer		(0),
+	itsHeartBeat		(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
+	// First readin our observation related config file.
+	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
+	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
+
 	// Readin some parameters from the ParameterSet.
+	itsStartTime     = time_from_string(globalParameterSet()->
+											 getString("Observation.startTime"));
+	itsStopTime      = time_from_string(globalParameterSet()->
+											 getString("Observation.stopTime"));
+	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
+	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
+
+	// My own parameters
 	itsTreePrefix = globalParameterSet()->getString("prefix");
-	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + ".instanceNr");
-	itsStartTime  = globalParameterSet()->getTime  (itsTreePrefix + ".starttime");
-	itsStopTime   = globalParameterSet()->getTime  (itsTreePrefix + ".stoptime");
+	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
+	itsHeartBeat  = globalParameterSet()->getUint32("heartbeatInterval");
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -115,11 +132,14 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 {
 	itsState = newState;
 
+	CTState		cts;
+	LOG_DEBUG_STR(getName() << " now in state " << cts.name(newState));
+
 	if (itsPropertySet) {
-		CTState		cts;
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),
-								 GCFPVString(cts.name(newState)));
+									 GCFPVString(cts.name(newState)));
 	}
+
 }
 
 
@@ -162,24 +182,40 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 		// check which property changed
 		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
 
-		// TODO: implement something usefull.
-		// change of queueTime
-		if ((strstr(pPropAnswer->pPropName, OC_PROPSET_NAME) != 0) &&
-			(pPropAnswer->pValue->getType() == LPT_INTEGER)) {
-			uint32	newVal = (uint32) ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
-#if 0
-			if (strstr(pPropAnswer->pPropName, PVSSNAME_MS_QUEUEPERIOD) != 0) {
-				LOG_INFO_STR ("Changing QueuePeriod from " << itsQueuePeriod <<
-							  " to " << newVal);
-				itsQueuePeriod = newVal;
-			}
-			else if (strstr(pPropAnswer->pPropName, PVSSNAME_MS_CLAIMPERIOD) != 0) {
+		string PropSetName = createPropertySetName(PSN_OBS_CTRL, getName());
+		if (strstr(pPropAnswer->pPropName, PropSetName.c_str()) == 0) {
+			break;
+		}
+
+		if	(pPropAnswer->pValue->getType() == LPT_INTEGER) {
+			uint32  newVal = (uint32) ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
+
+			if (strstr(pPropAnswer->pPropName, PN_OC_CLAIM_PERIOD) != 0) {
 				LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod <<
 							  " to " << newVal);
 				itsClaimPeriod = newVal;
 			}
-#endif
+			else if (strstr(pPropAnswer->pPropName, PN_OC_PREPARE_PERIOD) != 0) {
+				LOG_INFO_STR ("Changing PreparePeriod from " << itsPreparePeriod <<
+							  " to " << newVal);
+				itsPreparePeriod = newVal;
+			}
 		}
+		else if	(pPropAnswer->pValue->getType() == LPT_STRING) {
+			string  newVal = (string) ((GCFPVString*)pPropAnswer->pValue)->getValue();
+			ptime	newTime = time_from_string(newVal);
+			if (strstr(pPropAnswer->pPropName, PN_OC_START_TIME) != 0) {
+				LOG_INFO_STR ("Changing startTime from " << to_simple_string(itsStartTime)
+							 << " to " << newVal);
+				itsStartTime = newTime;
+			}
+			else if (strstr(pPropAnswer->pPropName, PN_OC_STOP_TIME) != 0) {
+				LOG_INFO_STR ("Changing stopTime from " << to_simple_string(itsStopTime)
+							 << " to " << newVal);
+				itsStopTime = newTime;
+			}
+		}
+		setObservationTimers();
 		break;
 	}  
 
@@ -219,9 +255,9 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		LOG_DEBUG ("Activating PropertySet");
-		string	propSetName = formatString(OC_PROPSET_NAME, itsInstanceNr);
+		string	propSetName(createPropertySetName(PSN_OBS_CTRL, getName()));
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  OC_PROPSET_TYPE,
+																  PST_OBS_CTRL,
 																  PS_CAT_TEMPORARY,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
@@ -279,9 +315,9 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		break;
 
 	case F_ENTRY: {
-		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		// convert times and periods to timersettings.
+		setObservationTimers();
+		itsHeartBeat = itsTimerPort->setTimer(1.0 * itsHeartBeat);
 		break;
 	}
 
@@ -296,9 +332,33 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		_disconnectedHandler(port);
 		break;
 
-	case F_TIMER: 
-//		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+	case F_TIMER:  {
+		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+		if (timerEvent.id == itsClaimTimer) {
+			setState(CTState::CLAIM);
+			itsClaimTimer = 0;
+			// TODO: do something else?
+		}
+		else if (timerEvent.id == itsPrepareTimer) {
+			setState(CTState::PREPARE);
+			itsPrepareTimer = 0;
+			// TODO: do something else?
+		}
+		else if (timerEvent.id == itsStartTimer) {
+			setState(CTState::ACTIVE);
+			itsStartTimer = 0;
+			// TODO: do something else?
+		}
+		else if (timerEvent.id == itsStopTimer) {
+			setState(CTState::FINISH);
+			itsStopTimer = 0;
+			// TODO: do something else?
+		}
+		// some other timer;
+
 		break;
+	}
+	
 
 	// -------------------- EVENT RECEIVED FROM CHILD CONTROL --------------------
 	case CONTROL_STARTED: {
@@ -379,6 +439,68 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	return (status);
 }
 
+//
+// setObservationTimers()
+//
+void ObservationControl::setObservationTimers()
+{
+	//   |                  |  claim   |    prepare   |       observation       |
+	//---+------------------+----------+--------------+-------------------------+-
+	//  now               Tclaim    Tprepare       Tstart                    Tstop
+
+	time_t	now   = to_time_t(second_clock::universal_time());
+	time_t	start = to_time_t(itsStartTime);
+	time_t	stop  = to_time_t(itsStopTime);
+	int32	sec2go;
+
+	// (re)set the claim timer
+	itsTimerPort->cancelTimer(itsClaimTimer);
+	if (itsState < CTState::CLAIM) { 				// claim state not done yet?
+		sec2go = start - now - itsPreparePeriod - itsClaimPeriod;
+		if (sec2go > 0) {
+			itsClaimTimer = itsTimerPort->setTimer(1.0 * sec2go);
+			LOG_DEBUG_STR ("Claimperiod starts over " << sec2go << " seconds");
+		}
+		else {
+			itsClaimTimer = itsTimerPort->setTimer(0.0);
+			LOG_DEBUG_STR ("Claimperiod started " << -sec2go << " seconds AGO!");
+		}
+	}
+		
+	// (re)set the prepare timer
+	itsTimerPort->cancelTimer(itsPrepareTimer);
+	if (itsState < CTState::PREPARE) { 				// prepare state not done yet?
+		sec2go = start - now - itsPreparePeriod;
+		if (sec2go > 0) {
+			itsPrepareTimer = itsTimerPort->setTimer(1.0 * sec2go);
+			LOG_DEBUG_STR ("PreparePeriod starts over " << sec2go << " seconds");
+		}
+		else {
+			itsPrepareTimer = itsTimerPort->setTimer(0.0);
+			LOG_DEBUG_STR ("PreparePeriod started " << -sec2go << " seconds AGO!");
+		}
+	}
+
+	// (re)set the start timer
+	itsTimerPort->cancelTimer(itsStartTimer);
+	if (itsState < CTState::ACTIVE) { 				// not yet active?
+		sec2go = start - now;
+		if (sec2go > 0) {
+			itsStartTimer = itsTimerPort->setTimer(1.0 * sec2go);
+			LOG_DEBUG_STR ("Observation starts over " << sec2go << " seconds");
+		}
+		else {
+			itsStartTimer = itsTimerPort->setTimer(0.0);
+			LOG_DEBUG_STR ("Observation started " << -sec2go << " seconds AGO!");
+		}
+	}
+
+	// always set stoptimer to new value (if stop was reached we would be dead).
+	itsTimerPort->cancelTimer(itsStopTimer);
+	itsStopTimer = itsTimerPort->setTimer(1.0 * stop - now);
+	LOG_DEBUG_STR ("Observation ends over " << (stop-now)/60 << " minutes");
+}
+
 
 //
 // _connectedHandler(port)
@@ -386,6 +508,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 void ObservationControl::_connectedHandler(GCFPortInterface& port)
 {
 }
+
 
 //
 // _disconnectedHandler(port)

@@ -27,10 +27,16 @@ namespace LOFAR {
   namespace MCU {
 
 #define OC_TASKNAME					"ObsCtrl"
-
-#define OC_PROPSET_NAME				"LOFAR_ObsSW_ObsCtrl%d"
-#define OC_PROPSET_TYPE				"ObsCtrl"
 #define OC_OBSERVATIONSTATE			"observationState"
+
+// ObsCtrl
+#define PSN_OBS_CTRL    "LOFAR_ObsSW_@observation@_ObsCtrl"
+#define PST_OBS_CTRL    "ObsCtrl"
+#define PN_OC_CLAIM_PERIOD  "claimPeriod"
+#define PN_OC_PREPARE_PERIOD    "preparePeriod"
+#define PN_OC_START_TIME    "startTime"
+#define PN_OC_STOP_TIME "stopTime"
+
 
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"
