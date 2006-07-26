@@ -466,6 +466,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         deleteSourceButton1 = new javax.swing.JButton();
         stepExplorerSourcesScrollPane = new javax.swing.JScrollPane();
         stepExplorerSourcesList = new javax.swing.JList();
+        stepExplorerStepNameLabel = new javax.swing.JLabel();
+        stepExplorerStepNameText = new javax.swing.JTextField();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -483,14 +485,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         explorePreviousStepButton.setText("View previous step");
         explorePreviousStepButton.setEnabled(false);
-        stepExplorerPanel.add(explorePreviousStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, -1, -1));
+        stepExplorerPanel.add(explorePreviousStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(360, 10, -1, -1));
 
         exploreParentStepButton.setText("View parent multistep");
-        stepExplorerPanel.add(exploreParentStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 10, -1, -1));
+        stepExplorerPanel.add(exploreParentStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 70, -1, -1));
 
         exploreFirstChildStepButton.setText("View first child step");
         exploreFirstChildStepButton.setEnabled(false);
-        stepExplorerPanel.add(exploreFirstChildStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 10, -1, -1));
+        stepExplorerPanel.add(exploreFirstChildStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 40, -1, -1));
 
         exploreNextStepButton.setText("View next step");
         stepExplorerPanel.add(exploreNextStepButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 10, -1, -1));
@@ -933,6 +935,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerPanel.add(stepExplorerGlobalSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 40, 350, 180));
 
+        stepExplorerStepNameLabel.setFont(new java.awt.Font("Dialog", 1, 18));
+        stepExplorerStepNameLabel.setText("Step");
+        stepExplorerPanel.add(stepExplorerStepNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, -1, 30));
+
+        stepExplorerStepNameText.setFont(new java.awt.Font("Dialog", 1, 18));
+        stepExplorerStepNameText.setToolTipText("This is the name of the displayed step");
+        stepExplorerPanel.add(stepExplorerStepNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 10, 250, 30));
+
         stepExplorerScrollPanel.setViewportView(stepExplorerPanel);
 
         BBSStepExplorerPanel.add(stepExplorerScrollPanel, java.awt.BorderLayout.CENTER);
@@ -1063,6 +1073,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JPanel stepExplorerSourcesPanel1;
     private javax.swing.JScrollPane stepExplorerSourcesScrollPane;
     private javax.swing.JScrollPane stepExplorerSourcesScrollPane1;
+    private javax.swing.JLabel stepExplorerStepNameLabel;
+    private javax.swing.JTextField stepExplorerStepNameText;
     // End of variables declaration//GEN-END:variables
     
     /**

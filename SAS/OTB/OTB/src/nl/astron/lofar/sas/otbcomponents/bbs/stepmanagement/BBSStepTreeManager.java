@@ -22,10 +22,9 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
-import java.util.Enumeration;
+import java.rmi.RemoteException;
 import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
-import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.GenericTreeManager;
@@ -81,11 +80,14 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
             logger.debug("Error - TreeManager BBSStepNode-defineChildNodes("+aNode.getName()+" does not contain a user object)");
             return;
         }
+        //get instance to the bbs step tree helper class
+        BBSStepDataManager BBSsdm = BBSStepDataManager.getInstance();
+        
         //BBS Node contained in the TreeNode
         BBSStepNode containedBBSNode = (BBSStepNode)aNode.getUserObject();
         //jOTDB Node contained that is needed to fetch child nodes from OTDB
         
-        jOTDBnode representedOTDBnode = containedBBSNode.getOTDBNode();
+        
         logger.trace("Entry - TreeManager BBSStepNode-defineChildNodes("+aNode.getName()+" ("+containedBBSNode.getName()+"))");
         
         // You must set the flag before defining children if you
@@ -94,7 +96,18 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
         // However, you could use "insert" in such a case.
         aNode.areChildrenDefined = true;
         if(containedBBSNode.isRootNode()){
-            //build the tree as a root node is detected
+            try {
+                //Build the complete BBS Step tree as a root node is detected
+                Vector<BBSStepNode> newPNodes = BBSsdm.buildStepTree(containedBBSNode,true);
+                for(BBSStepNode someNode : newPNodes){
+                    TreeNode newNode = new TreeNode(this.instance,someNode,someNode.getName());
+                    aNode.add(newNode);
+                    defineChildsForNode(newNode);
+                }
+            } catch (RemoteException ex) {
+                logger.error("defineChildNodes("+aNode.getName()+") resulted in an error  while retrieving the BBS strategy step names.",ex);
+        
+            }            
         }else{
             //expand the first steps in the tree
             BBSStep containedBBSStep = containedBBSNode.getContainedStep();
@@ -128,15 +141,6 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
         newPNode.setOTDBNode(userObject);  
         newPNode.leaf=false;
         TreeNode bbsNode = new TreeNode(this.instance,newPNode,newPNode.getName());
-        
-        BBSStep aStep = new BBSStep("xyz");
-        aStep.addChildStep(new BBSStep("sl1"));
-        aStep.addChildStep(new BBSStep("sl2"));
-        BBSStepNode newPNode2 = new BBSStepNode(aStep);
-        newPNode2.setName(aStep.getName());
-        TreeNode newNode = new TreeNode(this.instance,newPNode2,newPNode2.getName());
-        
-        bbsNode.add(newNode);
         
         return bbsNode;
     }
