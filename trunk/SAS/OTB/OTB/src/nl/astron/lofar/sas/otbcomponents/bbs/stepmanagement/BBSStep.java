@@ -127,14 +127,20 @@ public class BBSStep{
     
     public void removeChildStep(BBSStep childStep){
         if(childSteps.contains(childStep)){
-            childStep.setParentStep(null);
             childSteps.remove(childStep);
             childSteps.trimToSize();
+            childStep.setParentStep(null);            
         }        
     }
     
     public boolean hasChildSteps(){
         return childSteps.size()>0;
+    }
+    
+    public void finalize(){
+        if(parentStep!=null){
+            parentStep.removeChildStep(this);
+        }
     }
     
 }

@@ -116,36 +116,8 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }else if (LofarUtils.keyName(aNode.name).equals("Correlation")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                }
+                }           
             }
-            
-            //Add steps that make up the strategy to the steps tree browser
-            //
-            Vector steps = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.parentID(), 1);
-            // get all the params per child
-            Enumeration se = steps.elements();
-            while( se.hasMoreElements()  ) {
-                aParam=null;
-                jOTDBnode aNode = (jOTDBnode)se.nextElement();
-                
-                // We need to keep all the nodes needed by this panel
-                // if the node is a leaf we need to get the pointed to value via Param.
-                if (aNode.leaf) {
-                
-                //we need to get all the childs from the following nodes as well.
-                }else if (LofarUtils.keyName(aNode.name).equals("Step")) {
-                    //Add steps to tree
-                    Object[] rootNodeArgs = new Object[3];
-                    rootNodeArgs[0]= new String("Strategy Steps");
-                    rootNodeArgs[1]=aNode;
-                    TreeNode newStepRootNode = BBSStepTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(rootNodeArgs);
-                    this.stepsTreePanel.newRootNode(newStepRootNode);
-                    
-                }
-            }
-            //
-            //End of code that handles step tree browser
-            
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
             itsParamList=null;
@@ -240,7 +212,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         }
         modifyStationText.setText("");
         addStationButton.setEnabled(false);
-        
+        this.setupStepTree(StrategySteps);
         //TODO: add other values accordingly.
     }
     
@@ -283,6 +255,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         String parentName = String.valueOf(parent.name);
         
         if(parentName.equals("Strategy")){
+            //Setup step tree
+            this.setupStepTree(parent);
+            
             if (aKeyName.equals("InputData")) {
                 this.inputDataText.setToolTipText(aParam.description);
                 this.StrategyInputData=aNode;
@@ -367,10 +342,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     this.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
                 }
             }
-        } else if(parentName.equals("Step")){
-            //Detected Step node
-            
-            
         }
     }
     
@@ -575,6 +546,34 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 aValueIndex++;
             }
             aListComponent.setSelectedIndices(toBeSelectedIndices);
+        }
+    }
+    
+    private void setupStepTree(jOTDBnode strategyRootNode){
+        try {
+            
+            //Add steps that make up the strategy to the steps tree browser
+            //
+            Vector steps = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(strategyRootNode.treeID(), strategyRootNode.parentID(), 1);
+            // get all the params per child
+            Enumeration se = steps.elements();
+            while( se.hasMoreElements()  ) {
+                jOTDBnode aNode2 = (jOTDBnode)se.nextElement();
+                
+                if (aNode2.leaf) {
+                }else if (LofarUtils.keyName(aNode2.name).equals("Step")) {
+                    //Add steps to tree
+                    Object[] rootNodeArgs = new Object[3];
+                    rootNodeArgs[0]= new String("Strategy Steps");
+                    rootNodeArgs[1]=aNode2;
+                    TreeNode newStepRootNode = BBSStepTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(rootNodeArgs);
+                    this.stepsTreePanel.newRootNode(newStepRootNode);
+                    
+                }
+            }
+            StrategySteps = strategyRootNode;
+        } catch (RemoteException ex) {
+            logger.error("Strategy Step Tree could not be built.",ex);
         }
     }
     
@@ -936,7 +935,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void removeStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeStepButtonActionPerformed
         TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
         if(selectedPath != null){
@@ -958,7 +957,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             
         }
     }//GEN-LAST:event_removeStepButtonActionPerformed
-
+    
     private void modifyStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_modifyStepButtonActionPerformed
         TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
         if(selectedPath != null){
@@ -966,18 +965,25 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("BBS Step to be modified : "+someBBSStepNode.getName());
         }
     }//GEN-LAST:event_modifyStepButtonActionPerformed
-
+    
     private void stepsTreePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_stepsTreePanelValueChanged
         TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
         if(selectedPath != null){
-            this.modifyStepButton.setEnabled(true);
-            this.removeStepButton.setEnabled(true);
+            TreeNode someBBSStepNode = (TreeNode)selectedPath.getLastPathComponent();
+            //check if the root node was selected, which should not be editable
+            if(!someBBSStepNode.getName().equals("Strategy Steps")){
+                this.modifyStepButton.setEnabled(true);
+                this.removeStepButton.setEnabled(true);
+            }else{
+                this.modifyStepButton.setEnabled(false);
+                this.removeStepButton.setEnabled(false);
+            }
         }else{
             this.modifyStepButton.setEnabled(false);
             this.removeStepButton.setEnabled(false);
         }
     }//GEN-LAST:event_stepsTreePanelValueChanged
-
+    
     private void addStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addStepButtonActionPerformed
         TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
         if(selectedPath != null){
