@@ -33,59 +33,67 @@
 
 namespace LOFAR
 {
+  namespace BBS
+  {
 
-// \addtogroup BBS
-// @{
+    // \addtogroup BBS
+    // @{
 
-//# Forward Declarations
+    //# Forward Declarations
 
-using ACC::APS::ParameterSet;
+    class SC_Simple : public StrategyController
+    {
+    public:
+      SC_Simple(Connection* inSolConn, Connection* outWOPDConn, 
+		Connection* outWOSolveConn, int nrPrediffers,
+		const ACC::APS::ParameterSet& args);
 
-class SC_Simple : public StrategyController
-{
-public:
-  SC_Simple(Connection* inSolConn, Connection* outWOPDConn, 
-	    Connection* outWOSolveConn, int nrPrediffers,
-	    const ParameterSet& args);
+      virtual ~SC_Simple();
 
-  virtual ~SC_Simple();
+      // Execute the strategy
+      virtual bool execute();
 
-  /// Execute the strategy
-  virtual bool execute();
+      // Preprocess
+      virtual void preprocess();
 
-  /// Postprocess
-  virtual void postprocess();
+      // Postprocess
+      virtual void postprocess();
     
-  /// Get strategy type
-  virtual string getType() const;
+      // Get strategy type
+      virtual string getType() const;
 
- private:
-  SC_Simple(const SC_Simple&);
-  SC_Simple& operator=(const SC_Simple&);
+    private:
+      SC_Simple(const SC_Simple&);
+      SC_Simple& operator=(const SC_Simple&);
 
-  void readSolution();
+      void readSolution();
 
-  bool         itsFirstCall;
-  int          itsPrevWOID;
-  ParameterSet itsArgs;
-  int          itsNrIterations;
-  double       itsFitCriterion;
-  int          itsCurIter;
-  double       itsCurStartTime;
-  bool         itsControlParmUpd;    // Does this Controller update the parameters?
-  bool         itsWriteParms;        // Write the parameters in the parmtable at the end of each interval?
-  double       itsStartTime;
-  double       itsEndTime;
-  double       itsTimeLength;
-  int          itsStartChannel;
-  int          itsEndChannel;
-  bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
-};
+      int          itsPrevWOID;
+      ACC::APS::ParameterSet itsArgs;
+      int          itsNrIterations;
+      double       itsFitCriterion;
+      int          itsCurIter;
+      double       itsCurStartTime;
+      // Does this Controller update the parameters?
+      bool         itsControlParmUpd;
+      // Write the parameters in the parmtable at the end of each interval?
+      bool         itsWriteParms;
+      double       itsStartTime;
+      double       itsEndTime;
+      double       itsTimeLength;
+      int          itsStartChannel;
+      int          itsEndChannel;
+      // Flag indicating whether the previous sent workorder was a "do
+      // nothing"
+      bool         itsSendDoNothingWO;
+    };
 
-inline string SC_Simple::getType() const
-{ return "Simple"; }
+    inline string SC_Simple::getType() const
+    { return "Simple"; }
 
-// @}
+    // @}
+
+  } // namespace BBS
 
 } // namespace LOFAR
 

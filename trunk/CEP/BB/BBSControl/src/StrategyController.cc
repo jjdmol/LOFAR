@@ -28,41 +28,55 @@
 
 namespace LOFAR
 {
+  namespace BBS
+  {
 
-int StrategyController::theirNextSCID=-1;
-int StrategyController::theirNextWOID=-1;
+    int StrategyController::theirNextSCID=-1;
+    int StrategyController::theirNextWOID=-1;
 
-StrategyController::StrategyController(Connection* inSolConn, 
-				       Connection* outWOPDConn, 
-				       Connection* outWOSolveConn,
-				       int nrPrediffers)
-  : itsInSolConn     (inSolConn),
-    itsOutWOPDConn   (outWOPDConn),
-    itsOutWOSolveConn(outWOSolveConn),
-    itsNrPrediffers(nrPrediffers)
+    StrategyController::StrategyController(Connection* inSolConn, 
+					   Connection* outWOPDConn, 
+					   Connection* outWOSolveConn,
+					   int nrPrediffers)
+      : itsInSolConn     (inSolConn),
+	itsOutWOPDConn   (outWOPDConn),
+	itsOutWOSolveConn(outWOSolveConn),
+	itsNrPrediffers(nrPrediffers)
     
-{
-  LOG_TRACE_FLOW("StrategyController constructor");
-  ASSERTSTR(itsInSolConn != 0, "Solution input has not been connected!");
-  ASSERTSTR(itsOutWOPDConn != 0, 
-	    "Output to Prediffer has not been connected!");
-  ASSERTSTR(itsOutWOSolveConn != 0, 
-	    "Output to Solver has not been connected!");
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      ASSERTSTR(itsInSolConn != 0, "Solution input has not been connected!");
+      ASSERTSTR(itsOutWOPDConn != 0, 
+		"Output to Prediffer has not been connected!");
+      ASSERTSTR(itsOutWOSolveConn != 0, 
+		"Output to Solver has not been connected!");
 
-  if (theirNextSCID == -1)       // If first instance of StrategyController
-  {                              // Determine unique scid.
-    TH_DB* thDB = (TH_DB*)(itsOutWOPDConn->getTransportHolder());
-    ASSERT(thDB!=0);
-    theirNextSCID = getPrediffWorkOrder()->getMaxSCID(thDB) + 1;
-    theirNextWOID = getPrediffWorkOrder()->getMaxWOID(thDB) + 1;
-  }
-  itsID = theirNextSCID++;
-}
+      // If first instance of StrategyController, then determine unique scid.
+      if (theirNextSCID == -1)
+      {
+	TH_DB* thDB = (TH_DB*)(itsOutWOPDConn->getTransportHolder());
+	ASSERT(thDB!=0);
+	theirNextSCID = getPrediffWorkOrder()->getMaxSCID(thDB) + 1;
+	theirNextWOID = getPrediffWorkOrder()->getMaxWOID(thDB) + 1;
+      }
+      itsID = theirNextSCID++;
+    }
 
-StrategyController::~StrategyController()
-{
-  LOG_TRACE_FLOW("StrategyController destructor");
-}
+    StrategyController::~StrategyController()
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
 
+    void StrategyController::preprocess()
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
+
+    void StrategyController::postprocess()
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
+
+  } // namespace BBS
 
 } // namespace LOFAR

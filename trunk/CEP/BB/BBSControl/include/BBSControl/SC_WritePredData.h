@@ -33,51 +33,51 @@
 
 namespace LOFAR
 {
+  namespace BBS
+  {
 
-// \addtogroup BBS
-// @{
+    // \addtogroup BBS
+    // @{
 
-//# Forward Declarations
+    class SC_WritePredData : public StrategyController
+    {
+    public:
+      SC_WritePredData(Connection* inSolConn, Connection* outWOPDConn, 
+		       Connection* outWOSolveConn, int nrPrediffers,
+		       const ACC::APS::ParameterSet& args);
 
-using ACC::APS::ParameterSet;
+      virtual ~SC_WritePredData();
 
-class SC_WritePredData : public StrategyController
-{
-public:
-  SC_WritePredData(Connection* inSolConn, Connection* outWOPDConn, 
-	    Connection* outWOSolveConn, int nrPrediffers,
-	    const ParameterSet& args);
+      /// Execute the strategy
+      virtual bool execute();
 
-  virtual ~SC_WritePredData();
-
-  /// Execute the strategy
-  virtual bool execute();
-
-  /// Postprocess
-  virtual void postprocess();
+      /// Postprocess
+      virtual void postprocess();
     
-  /// Get strategy type
-  virtual string getType() const;
+      /// Get strategy type
+      virtual string getType() const;
 
- private:
-  SC_WritePredData(const SC_WritePredData&);
-  SC_WritePredData& operator=(const SC_WritePredData&);
+    private:
+      SC_WritePredData(const SC_WritePredData&);
+      SC_WritePredData& operator=(const SC_WritePredData&);
 
-  bool         itsFirstCall;
-  ParameterSet itsArgs;
-  double       itsCurStartTime;
-  bool         itsWriteInDataCol;
-  double       itsStartTime;
-  double       itsEndTime;
-  double       itsTimeLength;
-  int          itsStartChannel;
-  int          itsEndChannel;
-};
+      bool         itsFirstCall;
+      ACC::APS::ParameterSet itsArgs;
+      double       itsCurStartTime;
+      bool         itsWriteInDataCol;
+      double       itsStartTime;
+      double       itsEndTime;
+      double       itsTimeLength;
+      int          itsStartChannel;
+      int          itsEndChannel;
+    };
 
-inline string SC_WritePredData::getType() const
-{ return "WritePredData"; }
+    inline string SC_WritePredData::getType() const
+    { return "WritePredData"; }
 
-// @}
+    // @}
+
+  } // namespace BBS
 
 } // namespace LOFAR
 

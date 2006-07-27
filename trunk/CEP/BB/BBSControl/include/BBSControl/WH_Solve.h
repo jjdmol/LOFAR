@@ -31,67 +31,75 @@
 
 namespace LOFAR
 {
+  //# Forward Declarations
+  class Solver;
 
-// \addtogroup BBS
-// @{
+  namespace BBS
+  {
+    // \addtogroup BBS
+    // @{
 
-//# Forward Declarations
-class Solver;
-
-// This workholder class solves for a certain domain
-
-class WH_Solve : public LOFAR::WorkHolder
-{
- public:
-  // Construct the workholder and give it a name
-  explicit WH_Solve(const string& name, int nPrediffInputs, 
-		    bool writeIndivParms, 
-		    const string& parmTableName="bbs3parmsolutions");
+    // This workholder class solves for a certain domain
+    class WH_Solve : public LOFAR::WorkHolder
+    {
+    public:
+      // Construct the workholder and give it a name
+      explicit WH_Solve(const string& name, int nPrediffInputs, 
+			bool writeIndivParms, 
+			const string& parmTableName="bbs3parmsolutions");
   
-  // Destructor
-  virtual ~WH_Solve();
+      // Destructor
+      virtual ~WH_Solve();
   
-  // Make a fresh copy of the WH object.
-  virtual WH_Solve* make (const string& name);
+      // Make a fresh copy of the WH object.
+      virtual WH_Solve* make (const string& name);
 
-  // Preprocess
-  virtual void preprocess();
+      // Preprocess
+      virtual void preprocess();
 
-  // Do a process step.
-  virtual void process();
+      // Do a process step.
+      virtual void process();
   
-  // Show the workholder on stdout.
-  virtual void dump() const;
+      // Show the workholder on stdout.
+      virtual void dump() const;
 
- private:
-  typedef map<int, Solver*> SolverMap;
+    private:
+      typedef map<int, Solver*> SolverMap;
 
-  // Forbid copy constructor
-  WH_Solve(const WH_Solve&);
+      // Forbid copy constructor
+      WH_Solve(const WH_Solve&);
 
-  // Forbid assignment
-  WH_Solve& operator= (const WH_Solve&);
+      // Forbid assignment
+      WH_Solve& operator= (const WH_Solve&);
 
-  // Create a Solver object
-  Solver* getSolver(int id);
+      // Create a Solver object
+      Solver* getSolver(int id);
 
-  // Delete a Solver object
-  void deleteSolver(int id);
+      // Delete a Solver object
+      void deleteSolver(int id);
 
-  // Read all Prediffer inputs
-  void readInputs(Solver* solver, bool firstRead);
+      // Read all Prediffer inputs
+      void readInputs(Solver* solver, bool firstRead);
   
-  // Read all Prediffer inputs and set solvable parameter data.
-  void setParmData(Solver* solver);
+      // Read all Prediffer inputs and set solvable parameter data.
+      void setParmData(Solver* solver);
 
-  int         itsNPrediffers;     // Number of Prediffer inputs
-  bool        itsWriteIndivParms; // Write individual parameter solutions in a separate table?
-  SolverMap   itsSolvers;         // Map of Solver objects, each associated
-                                  // with a strategy (controller).
-  string      itsParmTableName;   // Individual parameters table name
-};
+      // Number of Prediffer inputs
+      int         itsNPrediffers;
 
-// @}
+      // Write individual parameter solutions in a separate table?
+      bool        itsWriteIndivParms;
+
+      // Map of Solver objects, each associated with a strategy (controller).
+      SolverMap   itsSolvers;
+
+      // Individual parameters table name
+      string      itsParmTableName;
+    };
+
+    // @}
+
+  } // namespace BBS
 
 } // namespace LOFAR
 

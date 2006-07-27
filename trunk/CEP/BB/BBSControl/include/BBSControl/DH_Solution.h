@@ -33,119 +33,130 @@
 
 namespace LOFAR
 {
+  namespace BBS
+  {
 
-// \addtogroup BBS
-// @{
+    // \addtogroup BBS
+    // @{
 
-/**
-   This class is a DataHolder which holds the parameters solved by
-   a BBS Solver knowledge source.
-*/
+    // This class is a DataHolder which holds the parameters solved by a BBS
+    // Solver knowledge source.
 
-class DH_Solution: public LOFAR::DH_DB
-{
-public:
-  explicit DH_Solution (const string& name="dh_solution", bool writeIndivParms=false,
-			const string& parmTableName="bbs3parmsolutions");
+    class DH_Solution: public LOFAR::DH_DB
+    {
+    public:
+      explicit DH_Solution (const string& name = "dh_solution", 
+			    bool writeIndivParms = false,
+			    const string& parmTableName = "bbs3parmsolutions");
 
-  virtual ~DH_Solution();
+      virtual ~DH_Solution();
 
-  DataHolder* clone() const;
+      DataHolder* clone() const;
 
-  /// Allocate the buffers.
-  virtual void init();
+      /// Allocate the buffers.
+      virtual void init();
 
-  // Data access methods
-  int getWorkOrderID() const;
-  void setWorkOrderID(const int id);
+      // Data access methods
+      int getWorkOrderID() const;
+      void setWorkOrderID(const int id);
 
-  int getIteration() const;
-  void setIteration(int iter);
+      int getIteration() const;
+      void setIteration(int iter);
 
-  void setSolutionID(const int id);  // Set id of solution to retrieve from database
-  int getSolutionID() const;
+      // Set id of solution to retrieve from database
+      void setSolutionID(const int id);
+      int getSolutionID() const;
 
-  Quality getQuality() const;
-  void setQuality(const Quality& quality);
+      Quality getQuality() const;
+      void setQuality(const Quality& quality);
 
-  bool getSolution(ParmDataInfo& pData);
-  void setSolution(const ParmDataInfo& pData);
+      bool getSolution(ParmDataInfo& pData);
+      void setSolution(const ParmDataInfo& pData);
 
-  double getStartFreq() const;
-  double getEndFreq() const;
-  double getStartTime() const;
-  double getEndTime() const;
-  void setDomain(double fStart, double fEnd, double tStart, double tEnd);
+      double getStartFreq() const;
+      double getEndFreq() const;
+      double getStartTime() const;
+      double getEndTime() const;
+      void setDomain(double fStart, double fEnd, double tStart, double tEnd);
 
-  bool hasConverged() const;
-  void setConverged(bool converged);
+      bool hasConverged() const;
+      void setConverged(bool converged);
   
-  // Resets (clears) the contents of its DataPacket 
-  void clearData();
+      // Resets (clears) the contents of its DataPacket 
+      void clearData();
   
-  virtual void dump() const;
+      virtual void dump() const;
 
- protected:
-  virtual string createInsertStatement(TH_DB* th);
+    protected:
+      virtual string createInsertStatement(TH_DB* th);
 
-private:
-  /// Forbid assignment.
-  DH_Solution& operator= (const DH_Solution&);
-  DH_Solution(const DH_Solution&);
+    private:
+      /// Forbid assignment.
+      DH_Solution& operator= (const DH_Solution&);
+      DH_Solution(const DH_Solution&);
 
-  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
-  virtual void fillDataPointers();
+      // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+      virtual void fillDataPointers();
 
-  int*          itsWOID;
-  int*          itsIteration;
-  double*       itsFit;
-  //  int*          itsRank;
-  double*       itsMu;
-  double*       itsStdDev;
-  double*       itsChi;
+      int*          itsWOID;
+      int*          itsIteration;
+      double*       itsFit;
+      //  int*          itsRank;
+      double*       itsMu;
+      double*       itsStdDev;
+      double*       itsChi;
   
-  double*       itsStartFreq;        // Start frequency of the domain
-  double*       itsEndFreq;          // End frequency of the domain
-  double*       itsStartTime;        // Start time of the domain
-  double*       itsEndTime;          // End time of the domain
+      // Start frequency of the domain
+      double*       itsStartFreq;
+      // End frequency of the domain
+      double*       itsEndFreq;
+      // Start time of the domain
+      double*       itsStartTime;
+      // End time of the domain
+      double*       itsEndTime;
 
-  unsigned int* itsHasConverged;     // Does the solution comply with the convergence criterion?
+     // Does the solution comply with the convergence criterion?
+      unsigned int* itsHasConverged;
   
-  bool          itsWriteIndivParms;  // Write parameters individually in a subtable? 
-  string        itsParmTableName;    // Table name of individual parameter storage
-};
+      // Write parameters individually in a subtable? 
+      bool          itsWriteIndivParms;
+      // Table name of individual parameter storage
+      string        itsParmTableName;
+    };
 
-inline int DH_Solution::getWorkOrderID() const
-{ return *itsWOID; }
+    inline int DH_Solution::getWorkOrderID() const
+    { return *itsWOID; }
 
-inline void DH_Solution::setWorkOrderID(const int id)
-{ *itsWOID = id; }
+    inline void DH_Solution::setWorkOrderID(const int id)
+    { *itsWOID = id; }
 
-inline int DH_Solution::getIteration() const
-{ return *itsIteration; }
+    inline int DH_Solution::getIteration() const
+    { return *itsIteration; }
 
-inline void DH_Solution::setIteration(int iter)
-{ *itsIteration = iter; }
+    inline void DH_Solution::setIteration(int iter)
+    { *itsIteration = iter; }
 
-inline double DH_Solution::getStartFreq() const
-{ return *itsStartFreq; }
+    inline double DH_Solution::getStartFreq() const
+    { return *itsStartFreq; }
 
-inline double DH_Solution::getEndFreq() const
-{ return *itsEndFreq; }
+    inline double DH_Solution::getEndFreq() const
+    { return *itsEndFreq; }
 
-inline double DH_Solution::getStartTime() const
-{ return *itsStartTime; }
+    inline double DH_Solution::getStartTime() const
+    { return *itsStartTime; }
 
-inline double DH_Solution::getEndTime() const
-{ return *itsEndTime; }
+    inline double DH_Solution::getEndTime() const
+    { return *itsEndTime; }
 
-inline bool DH_Solution::hasConverged() const
-{ return ((*itsHasConverged==0)?(false):(true)); }
+    inline bool DH_Solution::hasConverged() const
+    { return ((*itsHasConverged==0)?(false):(true)); }
 
-inline void DH_Solution::setConverged(bool converged)
-{ *itsHasConverged = converged; }
+    inline void DH_Solution::setConverged(bool converged)
+    { *itsHasConverged = converged; }
 
-// @}
+    // @}
+
+  } // namespace BBS
 
 } // namespace LOFAR
 
