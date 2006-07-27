@@ -52,6 +52,12 @@ namespace LOFAR
       virtual void print(ostream& os) const;
 
     private:
+      // Check to see if there's an infinite recursion present in the
+      // definition of a BBSMultiStep. This can happen when one of the steps
+      // (identified by the argument \a name) defining the BBSMultiStep refers
+      // directly or indirectly to that same BBSMultiStep. 
+      void infiniteRecursionCheck(const string& name) const;
+
       // Vector holding a sequence of BBSSteps.
       vector<const BBSStep*> itsSteps;
     };
