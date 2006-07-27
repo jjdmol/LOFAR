@@ -215,7 +215,7 @@ RSPDriver.LANE_3_XLET_OUT=1
 # MAC address of first RSP board is 10:FA:00:00:12:00
 # therefor the index of the first RSP board = 0x12 = 18 (decimal)
 #
-RSPDriver.XST_FIRST_RSP_BOARD=18
+RSPDriver.XST_FIRST_RSP_BOARD=16
 
 #
 # Ethernet interface on which to contact the RSP boards.
@@ -272,14 +272,13 @@ RSPDriver.WRITE_SS=1
 RSPDriver.WRITE_RCU=1
 RSPDriver.WRITE_RCU_PROTOCOL=1
 RSPDriver.WRITE_HBA_PROTOCOL=0
-RSPDriver.WRITE_TDS_PROTOCOL=1
+RSPDriver.READWRITE_TDS_PROTOCOL=1
 RSPDriver.READ_SST=1
 RSPDriver.READ_BST=1
 RSPDriver.WRITE_WG=1
 RSPDriver.WRITE_WG_WAVE=0
 RSPDriver.READ_RCU_RESULT=1
 RSPDriver.READ_HBA_RESULT=0
-RSPDriver.READ_TDS_RESULT=1
 RSPDriver.READ_VERSION=1
 RSPDriver.READ_XST=1
 
@@ -288,7 +287,7 @@ RSPDriver.READ_XST=1
 #
 # 0x00000002 : Only RSPBoard 1 controls a TDS board
 #
-RSPDriver.TDS_CONTROL=0x00000002
+RSPDriver.TDS_CONTROL=0x00000001
 
 #
 # Optionally read RW-registers.

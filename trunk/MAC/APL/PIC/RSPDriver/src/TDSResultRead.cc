@@ -84,9 +84,26 @@ void TDSResultRead::sendrequest()
     return;
   }
 
-  EPAReadEvent tdsresult;
-  tdsresult.hdr.set(MEPHeader::TDS_RESULT_HDR);
+  // when in INIT state, clear the TDS result register by
+  // writing 0xFF in all bytes
+  if (InitState::instance().getState() == InitState::INIT) {
 
+    InitState::instance().init(InitState::WRITE_TDS);
+
+    // send write event
+    cerr << "CLEARING TDS_RESULT REGISTER" << endl;
+    EPATdsResultEvent tdsresult;
+    tdsresult.hdr.set(MEPHeader::TDS_RESULT_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE, MEPHeader::TDS_RESULT_SIZE);
+    memset(tdsresult.result, 0xFF, MEPHeader::TDS_RESULT_SIZE);
+    m_hdr = tdsresult.hdr; // remember header to match with ack
+    getBoardPort().send(tdsresult);
+
+    return;
+  }
+
+  // send read event
+  EPATdsResultEvent tdsresult;
+  tdsresult.hdr.set(MEPHeader::TDS_RESULT_HDR, MEPHeader::DST_RSP, MEPHeader::READ, MEPHeader::TDS_RESULT_SIZE);
   m_hdr = tdsresult.hdr; // remember header to match with ack
   getBoardPort().send(tdsresult);
 }
@@ -142,13 +159,17 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
       return GCFEvent::NOT_HANDLED;
     }
 
-  int idiff = 0;
+  // bail out if this is the write ack
+  if (MEPHeader::WRITEACK == ack.hdr.m_fields.type) return GCFEvent::HANDLED;
+
+  int    idiff = 0;
 
   switch (Cache::getInstance().getBack().getClock()) {
 
   case 160:
     printbin(tds_160MHz_result, sizeof(tds_160MHz_result));
     printbin(ack.result, sizeof(tds_160MHz_result));
+
     idiff = imemcmp(tds_160MHz_result, ack.result, sizeof(tds_160MHz_result));
     if (-1 == idiff) {
       Cache::getInstance().getState().tds().read_ack(getBoardId());
@@ -156,7 +177,7 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (160MHz): unexpected I2C result response, first mismatch @ %d", idiff));
 
-      // try to write again
+      // try to read again
       Cache::getInstance().getState().tds().read_error(getBoardId());
     }
     break;
@@ -164,6 +185,7 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   case 200:
     printbin(tds_200MHz_result, sizeof(tds_200MHz_result));
     printbin(ack.result, sizeof(tds_200MHz_result));
+
     idiff = imemcmp(tds_200MHz_result, ack.result, sizeof(tds_200MHz_result));
     if (-1 == idiff) {
       Cache::getInstance().getState().tds().read_ack(getBoardId());
@@ -171,7 +193,7 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (200MHz): unexpected I2C result response, first mismatch @ %d", idiff));
 
-      // try to write again
+      // try to read again
       Cache::getInstance().getState().tds().read_error(getBoardId());
     }
     break;
@@ -186,7 +208,7 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (OFF): unexpected I2C result response, first mismatch @ %d", idiff));
 
-      // try to write again
+      // try to read again
       Cache::getInstance().getState().tds().read_error(getBoardId());
     }
     break;

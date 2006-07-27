@@ -382,20 +382,20 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(writereg);
     }
 
-    // order is important; TDSProtocolWrite should be added before TDSResultRead
-    if (1 == GET_CONFIG("RSPDriver.WRITE_TDS_PROTOCOL", i))
+    // order is important; TDSResultRead should be added before TDSProtocolWrite
+    if (1 == GET_CONFIG("RSPDriver.READWRITE_TDS_PROTOCOL", i))
     {
       TDSProtocolWrite* tdsprotocolwrite = new TDSProtocolWrite(m_board[boardid], boardid);
       ASSERT(tdsprotocolwrite);
       m_scheduler.addSyncAction(tdsprotocolwrite);
     }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_TDS_RESULT", i))
+    if (1 == GET_CONFIG("RSPDriver.READWRITE_TDS_PROTOCOL", i))
     {
       TDSResultRead* tdsresultread = new TDSResultRead(m_board[boardid], boardid, m_scheduler);
       ASSERT(tdsresultread);
       m_scheduler.addSyncAction(tdsresultread);
     }
+
 
     /*
      * Clear the board if needed.
