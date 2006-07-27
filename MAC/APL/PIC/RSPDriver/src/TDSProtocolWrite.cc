@@ -49,16 +49,12 @@ namespace LOFAR {
 
     static uint8 tds_160MHz[  TDS_INIT_SIZE 
 			    + TDS_PROGRAMPLLS_SIZE
-			    + TDS_VCXO_OFF_SIZE
-			    + TDS_VCXO_ON_SIZE
 			    + TDS_160MHZ_SIZE
 			    + TDS_C_END_SIZE] = {
 
 			      // switch to 160MHz to backplane (using 10MHz reference at the front)
 			      TDS_INIT,
 			      TDS_PROGRAMPLLS,
-			      TDS_VCXO_OFF,
-			      TDS_VCXO_ON,
 			      TDS_160MHZ,
 			      TDS_C_END,
 
@@ -67,15 +63,11 @@ namespace LOFAR {
 
     uint8 tds_160MHz_result[  TDS_INIT_RESULT_SIZE
 			    + TDS_PROGRAMPLLS_RESULT_SIZE
-			    + TDS_VCXO_OFF_RESULT_SIZE
-			    + TDS_VCXO_ON_RESULT_SIZE
 			    + TDS_160MHZ_RESULT_SIZE
 			    + TDS_C_END_RESULT_SIZE] = {
 
 			      TDS_INIT_RESULT,
 			      TDS_PROGRAMPLLS_RESULT,
-			      TDS_VCXO_OFF_RESULT,
-			      TDS_VCXO_ON_RESULT,
 			      TDS_160MHZ_RESULT,
 			      TDS_C_END_RESULT,
 
@@ -83,16 +75,12 @@ namespace LOFAR {
 
     static uint8 tds_200MHz[  TDS_INIT_SIZE
 			    + TDS_PROGRAMPLLS_SIZE
-			    + TDS_VCXO_OFF_SIZE
-			    + TDS_VCXO_ON_SIZE
 			    + TDS_200MHZ_SIZE
 			    + TDS_C_END_SIZE] = {
 
 			      // switch to 200MHz to backplane (using 10MHz reference at the front)
 			      TDS_INIT,
 			      TDS_PROGRAMPLLS,
-			      TDS_VCXO_OFF,
-			      TDS_VCXO_ON,
 			      TDS_200MHZ,
 			      TDS_C_END,
 
@@ -100,15 +88,11 @@ namespace LOFAR {
 
     uint8 tds_200MHz_result[  TDS_INIT_RESULT_SIZE
 			    + TDS_PROGRAMPLLS_RESULT_SIZE
-			    + TDS_VCXO_OFF_RESULT_SIZE
-			    + TDS_VCXO_ON_RESULT_SIZE
 			    + TDS_200MHZ_RESULT_SIZE
 			    + TDS_C_END_RESULT_SIZE] = {
 
 			      TDS_INIT_RESULT,
 			      TDS_PROGRAMPLLS_RESULT,
-			      TDS_VCXO_OFF_RESULT,
-			      TDS_VCXO_ON_RESULT,
 			      TDS_200MHZ_RESULT,
 			      TDS_C_END_RESULT,
 
@@ -138,7 +122,7 @@ namespace LOFAR {
 };
 
 TDSProtocolWrite::TDSProtocolWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, TDS_N_CHUNKS), m_remaining(0), m_offset(0) // need 2 messages
+  : SyncAction(board_port, board_id, TDS_N_CHUNKS), m_remaining(0), m_offset(0) // need 2 messages at most
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 
@@ -166,7 +150,7 @@ TDSProtocolWrite::~TDSProtocolWrite()
 
 void TDSProtocolWrite::sendrequest()
 {
-  void* buf = 0;
+  char* buf = 0;
 
   // skip update if the Clocks settings have not been modified
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().tds().get(getBoardId()))
@@ -178,8 +162,6 @@ void TDSProtocolWrite::sendrequest()
 
   // indicate that we're initialising the hardware
   if (InitState::instance().getState() == InitState::INIT) {
-
-    InitState::instance().init(InitState::WRITE_TDS);
 
     LOG_INFO_STR(formatString("Sending clock setting via RSP board %d: %d MHz",
 			      getBoardId(), Cache::getInstance().getBack().getClock()));
@@ -211,7 +193,7 @@ void TDSProtocolWrite::sendrequest()
 
   switch (Cache::getInstance().getBack().getClock()) {
   case 160:
-    buf = tds_160MHz;
+    buf = (char*)tds_160MHz;
     if (0 == getCurrentIndex()) {
       m_remaining = sizeof(tds_160MHz);
       m_offset    = 0;
@@ -221,7 +203,7 @@ void TDSProtocolWrite::sendrequest()
     break;
 
   case 200:
-    buf = tds_200MHz;
+    buf = (char*)tds_200MHz;
     if (0 == getCurrentIndex()) {
       m_remaining = sizeof(tds_200MHz);
       m_offset    = 0;
@@ -231,7 +213,7 @@ void TDSProtocolWrite::sendrequest()
     break;
 
   default:
-    buf = tds_off;
+    buf = (char*)tds_off;
     if (0 == getCurrentIndex()) {
       m_remaining = sizeof(tds_off);
       m_offset    = 0;

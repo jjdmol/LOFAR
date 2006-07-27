@@ -1318,10 +1318,10 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
 {
   bitset<MAX_N_RCUS> mask = getRCUMask();
 
-  int result_rcu=0;
-  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+  int result_device=0;
+  for (int deviceout = 0; deviceout < get_ndevices(); deviceout++)
   {
-    if (mask[rcuout])
+    if (mask[deviceout])
     {
       char timestring[256];
       time_t seconds = timestamp.sec();
@@ -1333,10 +1333,10 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
       switch (m_type)
       {
         case Statistics::SUBBAND_POWER:
-          snprintf(fileName, PATH_MAX, "%s%s_sst_rcu%03d.dat", m_directory.c_str(), timestring, rcuout);
+          snprintf(fileName, PATH_MAX, "%s%s_sst_rcu%03d.dat", m_directory.c_str(), timestring, deviceout);
           break;
         case Statistics::BEAMLET_POWER:
-          snprintf(fileName, PATH_MAX, "%s%s_bst_rcu%03d.dat", m_directory.c_str(), timestring, rcuout);
+          snprintf(fileName, PATH_MAX, "%s%s_bst_%02d%s.dat", m_directory.c_str(), timestring, deviceout/2, deviceout%2?"Y":"X");
           break;
       
         default:
@@ -1345,19 +1345,19 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
           break;
       }
 
-      cerr << "shape(stats)=" << stats(result_rcu, Range::all()).shape() << endl;
+      cerr << "shape(stats)=" << stats(result_device, Range::all()).shape() << endl;
 
-      FILE* file = getFile(rcuout,fileName);
+      FILE* file = getFile(deviceout,fileName);
       if (stats.extent(secondDim)
-          /*!= (int)fwrite(stats(result_rcu, Range::all()).data(), sizeof(double),*/
-          != (int)fwrite(stats(result_rcu, Range::all()).data(), sizeof(double),
+          /*!= (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),*/
+          != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
              stats.extent(secondDim), file))
       {
         logMessage(cerr,formatString("Error: unable to write to file %s",fileName));
         exit(EXIT_FAILURE);
       }
     }
-    result_rcu++;
+    result_device++;
   }
 }
 
