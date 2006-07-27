@@ -26,6 +26,7 @@
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <BBSControl/StreamFormatting.h>
+#include <BBSControl/Exceptions.h>
 
 namespace LOFAR
 {
@@ -46,12 +47,6 @@ namespace LOFAR
 
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
-	// Should add something like BBSStep::infiniteRecursionCheck(name),
-	// which checks, RECURSIVELY, if steps[i] may be used for the step to
-	// be created.
-// 	ASSERTSTR(name != steps[i], 
-// 		  "Infinite recursion detected in BBSStep definition! "
-// 		  "Please check your ParameterSet file");
 	infiniteRecursionCheck(steps[i]);
 	itsSteps.push_back(BBSStep::create(steps[i], parset, this));
       }
@@ -72,6 +67,7 @@ namespace LOFAR
 
     void BBSMultiStep::print(ostream& os) const
     {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       BBSStep::print(os);
       Indent id;
       for (uint i = 0; i < itsSteps.size(); ++i) {
@@ -80,11 +76,18 @@ namespace LOFAR
     }
 
 
-//     void BBSMultiStep::addStep(const BBSStep*& aStep)
-//     {
-//       itsSteps.push_back(aStep);
-//     }
-
+    void BBSMultiStep::infiniteRecursionCheck(const string& name) const
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      if (name == getName()) {
+	THROW (BBSControlException, 
+	       "Infinite recursion detected in defintion of BBSStep \""
+	       << name << "\". Please check your ParameterSet file.");
+      }
+      const BBSMultiStep* parent;
+      if ((parent = dynamic_cast<const BBSMultiStep*>(getParent())) != 0)
+	parent->infiniteRecursionCheck(name);
+    }
 
   } // namespace BBS
 

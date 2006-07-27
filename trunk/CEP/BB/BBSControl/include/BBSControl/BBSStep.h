@@ -67,7 +67,10 @@ namespace LOFAR
       virtual void print(ostream& os) const;
 
       // Return the name of this step.
-      const string& name() const { return itsName; }
+      const string& getName() const { return itsName; }
+
+      // Return a pointer to the parent of this step.
+      const BBSStep* getParent() const { return itsParent; }
 
       // Return the full name of this step. The full name consists of the name
       // of this step, preceeded by that of its parent, etc., separated by
@@ -92,12 +95,6 @@ namespace LOFAR
       BBSStep(const string& name, 
 	      const ACC::APS::ParameterSet& parSet,
 	      const BBSStep* parent);
-
-      // Check to see if there's an infinite recursion present in the
-      // definition of a BBSStep. This can happen when one of the steps
-      // (identified by the argument \a name) defining a BBSMultiStep refers
-      // directly or indirectly to that same BBSMultiStep. 
-      void infiniteRecursionCheck(const string& name) const;
 
     private:
       // Override the default values, "inherited" from the parent step object,
