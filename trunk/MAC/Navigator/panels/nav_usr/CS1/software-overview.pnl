@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,306 279 950 741 N "_3DFace" 0
+PANEL,300 211 950 741 N "_3DFace" 0
 "main()
 {
 	dpConnect(\"updateObservationsTable\",\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\");
@@ -12,6 +12,27 @@ PANEL,306 279 950 741 N "_3DFace" 0
 		true, 
 		\"ControllerStateQuery\",
 		query);
+
+	// initialize the logging table with historical data:
+	dyn_dyn_anytype tab;
+	int z;
+	time tStart;
+	time tStop;
+	tStop = getCurrentTime();
+	tStart = tStop - 3*3600; // three hours of history
+
+	query = \"SELECT ALL '_original.._value' FROM 'LOFAR_PermSW_MACScheduler.logmsg' TIMERANGE(\\\"\" +
+		formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+		formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0)\";
+	dpQuery(query, tab);
+ 
+	for(z=2;z<dynlen(tab);z++)
+	{
+		list_logMACScheduler.appendItem(tab[z][2]);
+	}
+
+	// connect to MACScheduler logging
+	dpConnect(\"updateLogMACScheduler\",\"LOFAR_PermSW_MACScheduler.logmsg:_online.._value\");
 }
 " 0
 EE E E 1 0 0 0  10 10
@@ -24,7 +45,11 @@ E"updateObservationsTable(string dpe, dyn_string dpv)
 		TableObservations.appendLine(\"Observation\",dpv[i]);
 
 		dpConnect(\"updateObservationsTableState\",\"LOFAR_ObsSW_\" + dpv[i] + \".state:_online.._value\");
-
+		dpConnect(\"updateObservationsTableController\",
+							\"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl.claimPeriod:_online.._value\",
+							\"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl.preparePeriod:_online.._value\",
+							\"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl.startTime:_online.._value\",
+							\"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl.stopTime:_online.._value\");
 	}
 }
 
@@ -36,6 +61,25 @@ updateObservationsTableState(string dpe, string dpv)
 		if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\"))
 		{
 			TableObservations.cellValueRC(i,\"Status\",dpv);
+		}
+	}
+
+}
+
+updateObservationsTableController(string dpe1, string claimPeriod, 
+																	string dpe2, string preparePeriod, 
+																	string dpe3, string startTime, 
+																	string dpe4, string stopTime)
+{
+	string dp = dpSubStr(dpe1,DPSUB_DP);
+	for(int i=0; i < TableObservations.lineCount; i++)
+	{
+		if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\")
+		{
+			TableObservations.cellValueRC(i,\"ClaimPeriod\",claimPeriod);
+			TableObservations.cellValueRC(i,\"PreparePeriod\",preparePeriod);
+			TableObservations.cellValueRC(i,\"StartTime\",startTime);
+			TableObservations.cellValueRC(i,\"StopTime\",stopTime);
 		}
 	}
 
@@ -56,6 +100,11 @@ updateControllersTable(string identifier, dyn_dyn_anytype result)
 	}
 }
 
+updateLogMACScheduler(string dpe, string dpv)
+{
+	list_logMACScheduler.appendItem(dpv);
+	list_logMACScheduler.selectedPos(list_logMACScheduler.itemCount()); // show last element at the top of the list
+}
 " 0
  2
 "CBRef""1"
@@ -220,23 +269,31 @@ E "main(int row, string column, string value)
 	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
- 1 0 1 4 4 "Observation" 0 1 0 "s" 1
+ 1 0 1 6 4 "Observation" 0 1 0 "s" 1
 LANG:1 11 Observation
 E1
 LANG:1 0 
- 225 "Start" 0 1 0 "s" 1
-LANG:1 5 Start
+ 225 "ClaimPeriod" 0 1 0 "s" 1
+LANG:1 12 Claim period
 E1
 LANG:1 0 
- 225 "End" 0 1 0 "s" 1
-LANG:1 3 End
+ 100 "PreparePeriod" 0 1 0 "s" 1
+LANG:1 14 Prepare period
 E1
 LANG:1 0 
- 225 "Status" 0 1 0 "s" 1
+ 100 "StartTime" 0 1 0 "s" 1
+LANG:1 10 Start time
+E1
+LANG:1 0 
+ 150 "StopTime" 0 1 0 "s" 1
+LANG:1 9 Stop time
+E1
+LANG:1 0 
+ 150 "Status" 0 1 0 "s" 1
 LANG:1 6 Status
 E1
 LANG:1 0 
- 225 26 26 "" 1 1
+ 180 26 26 "" 1 1
 LANG:1 2 #1
 "" 1 1
 LANG:1 2 #2
@@ -250,7 +307,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 2 1 3 0
 1 0
 17 6
-"SelectionList1"
+"list_logMACScheduler"
 ""
 1 10 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
@@ -271,7 +328,7 @@ E
 
 3 1
 17 7
-"SelectionList2"
+"list_logCQN"
 ""
 1 325 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
@@ -292,7 +349,7 @@ E
 
 3 1
 17 8
-"SelectionList3"
+"list_logSHM"
 ""
 1 640 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
