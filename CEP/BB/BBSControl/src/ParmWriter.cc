@@ -30,89 +30,95 @@
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmValue.h>
 #include <Common/LofarLogger.h>
-#include <iomanip>
-
-
-using namespace std;
+#include <Common/lofar_iomanip.h>
+#include <Common/lofar_map.h>
 
 namespace LOFAR
 {
-ParmWriter::ParmWriter()
-{}
+  namespace BBS
+  {
 
-ParmWriter::~ParmWriter()
-{}
+    
+    ParmWriter::ParmWriter()
+    {}
 
-void ParmWriter::write (const ParmDataInfo& pDataInfo,
-			double fStart, double fEnd,
-			double tStart, double tEnd)
-{
-  const vector<ParmData>& pData = pDataInfo.parms();
-  ParmDB::ParmDomain pdomain(fStart, fEnd, tStart, tEnd);
-  // Store all parameters, all domains in their own ParmTable
-  // Use one ParmTable at the time to avoid reopening the same table.
-  vector<char> done(pData.size(), 0);
-  uint nrDone = 0;
-  while (nrDone < pData.size()) {
-    int lastDBnr = -1;
-    vector<string> parmNames;
-    vector<int>    parmIndex;
-    parmNames.reserve (pData.size());
-    parmIndex.reserve (pData.size());
-    for (uint i=0; i<pData.size(); ++i) {
-      if (done[i] == 0) {
-	if (lastDBnr < 0) {
-	  lastDBnr = pData[i].getParmDBSeqNr();
+    ParmWriter::~ParmWriter()
+    {}
+
+    void ParmWriter::write (const ParmDataInfo& pDataInfo,
+			    double fStart, double fEnd,
+			    double tStart, double tEnd)
+    {
+      const vector<ParmData>& pData = pDataInfo.parms();
+      ParmDB::ParmDomain pdomain(fStart, fEnd, tStart, tEnd);
+      // Store all parameters, all domains in their own ParmTable
+      // Use one ParmTable at the time to avoid reopening the same table.
+      vector<char> done(pData.size(), 0);
+      uint nrDone = 0;
+      while (nrDone < pData.size()) {
+	int lastDBnr = -1;
+	vector<string> parmNames;
+	vector<int>    parmIndex;
+	parmNames.reserve (pData.size());
+	parmIndex.reserve (pData.size());
+	for (uint i=0; i<pData.size(); ++i) {
+	  if (done[i] == 0) {
+	    if (lastDBnr < 0) {
+	      lastDBnr = pData[i].getParmDBSeqNr();
+	    }
+	    if (pData[i].getParmDBSeqNr() == lastDBnr) {
+	      LOG_TRACE_FLOW_STR("Writing parm " << pData[i].getName());
+	      parmNames.push_back (pData[i].getName());
+	      parmIndex.push_back (i);
+	      done[i] = 1;
+	      nrDone++;
+	    }
+	  }
 	}
-	if (pData[i].getParmDBSeqNr() == lastDBnr) {
-	  LOG_TRACE_FLOW_STR("Writing parm " << pData[i].getName() << endl);
-	  parmNames.push_back (pData[i].getName());
-	  parmIndex.push_back (i);
-	  done[i] = 1;
-	  nrDone++;
+	DBGASSERT (lastDBnr >= 0);
+	// Get the ParmDB object for this ParmDB index.
+	// It requires that Prediffer and Controller open the ParmDBs in
+	// the same order.
+	ParmDB::ParmDB pdb = ParmDB::ParmDB::getParmDB (lastDBnr);
+	map<string,ParmDB::ParmValueSet> vals;
+	pdb.getValues (vals, parmNames, pdomain);
+	// Add entries for parms not present in the map.
+	// They are clearly new parms.
+	// Set the value for all parms.
+	for (uint i=0; i<parmNames.size(); i++) {
+	  const ParmData& parmd = pData[parmIndex[i]];
+	  map<string,ParmDB::ParmValueSet>::iterator pos = 
+	    vals.find(parmNames[i]);
+	  if (pos == vals.end()) {
+	    ParmDB::ParmValueSet pset(parmNames[i]);
+	    ParmDB::ParmValue pval = pdb.getDefValue (parmNames[i]);
+	    for (int j=0; j<parmd.size(); ++j) {
+	      //// set correct domain
+	      setCoeff (pval.rep(), parmd.getCoeff(j));
+	      pset.getValues().push_back (pval);
+	    }
+	    vals.insert (make_pair(parmNames[i], pset));
+	  } else {
+	    ASSERT (uint(parmd.size()) == pos->second.getValues().size());
+	    for (int j=0; j<parmd.size(); ++j) {
+	      setCoeff (pos->second.getValues()[j].rep(), parmd.getCoeff(j));
+	    }
+	  }
 	}
+	pdb.putValues (vals);
       }
     }
-    DBGASSERT (lastDBnr >= 0);
-    // Get the ParmDB object for this ParmDB index.
-    // It requires that Prediffer and Controller open the ParmDBs in
-    // the same order.
-    ParmDB::ParmDB pdb = ParmDB::ParmDB::getParmDB (lastDBnr);
-    map<string,ParmDB::ParmValueSet> vals;
-    pdb.getValues (vals, parmNames, pdomain);
-    // Add entries for parms not present in the map.
-    // They are clearly new parms.
-    // Set the value for all parms.
-    for (uint i=0; i<parmNames.size(); i++) {
-      const ParmData& parmd = pData[parmIndex[i]];
-      map<string,ParmDB::ParmValueSet>::iterator pos = vals.find(parmNames[i]);
-      if (pos == vals.end()) {
-	ParmDB::ParmValueSet pset(parmNames[i]);
-	ParmDB::ParmValue pval = pdb.getDefValue (parmNames[i]);
-	for (int j=0; j<parmd.size(); ++j) {
-	  //// set correct domain
-	  setCoeff (pval.rep(), parmd.getCoeff(j));
-	  pset.getValues().push_back (pval);
-	}
-	vals.insert (make_pair(parmNames[i], pset));
-      } else {
-	ASSERT (uint(parmd.size()) == pos->second.getValues().size());
-	for (int j=0; j<parmd.size(); ++j) {
-	  setCoeff (pos->second.getValues()[j].rep(), parmd.getCoeff(j));
-	}
+
+    void ParmWriter::setCoeff (ParmDB::ParmValueRep& pval, 
+			       const MeqMatrix& coeff)
+    {
+      ASSERT (int(pval.itsCoeff.size()) == coeff.nelements());
+      const double* vals = coeff.doubleStorage();
+      for (int i=0; i<coeff.nelements(); ++i) {
+	pval.itsCoeff[i] = vals[i];
       }
     }
-    pdb.putValues (vals);
-  }
-}
 
-void ParmWriter::setCoeff (ParmDB::ParmValueRep& pval, const MeqMatrix& coeff)
-{
-  ASSERT (int(pval.itsCoeff.size()) == coeff.nelements());
-  const double* vals = coeff.doubleStorage();
-  for (int i=0; i<coeff.nelements(); ++i) {
-    pval.itsCoeff[i] = vals[i];
-  }
-}
+  } // namespace BBS
 
 } // namespace LOFAR

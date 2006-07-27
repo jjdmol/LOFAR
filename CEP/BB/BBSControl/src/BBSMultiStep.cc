@@ -46,6 +46,13 @@ namespace LOFAR
 
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
+	// Should add something like BBSStep::infiniteRecursionCheck(name),
+	// which checks, RECURSIVELY, if steps[i] may be used for the step to
+	// be created.
+// 	ASSERTSTR(name != steps[i], 
+// 		  "Infinite recursion detected in BBSStep definition! "
+// 		  "Please check your ParameterSet file");
+	infiniteRecursionCheck(steps[i]);
 	itsSteps.push_back(BBSStep::create(steps[i], parset, this));
       }
     }

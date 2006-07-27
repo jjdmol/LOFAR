@@ -35,90 +35,98 @@
 
 namespace LOFAR
 {
+  namespace BBS
+  {
+    // \addtogroup BBS
+    // @{
 
-// \addtogroup BBS
-// @{
+    //# Forward Declarations
+    class DH_Solution;
+    class DH_WOPrediff;
+    class DH_WOSolve;
 
-//# Forward Declarations
-class DH_Solution;
-class DH_WOPrediff;
-class DH_WOSolve;
+    // This is an abstract base class for all calibration strategy controllers
+    class StrategyController
+    {
+    public:
+      // Creation of a StrategyController with its DataHolders to read and
+      // write.
+      StrategyController(Connection* inSolConn, 
+			 Connection* outWOPDConn, 
+			 Connection* outWOSolveConn,
+			 int nrPrediffers);
 
-/* This is an abstract base class for all calibration strategy controllers
-*/
+      // Destructor
+      virtual ~StrategyController();
 
-class StrategyController
-{
-public:
-  // Creation of a StrategyController with its DataHolders to read and write.
-  StrategyController(Connection* inSolConn, 
-		     Connection* outWOPDConn, 
-		     Connection* outWOSolveConn,
-		     int nrPrediffers);
-
-  // Destructor
-  virtual ~StrategyController();
-
-  /// Execute the strategy
-  virtual bool execute() = 0;
+      // Execute the strategy
+      virtual bool execute() = 0;
    
-  /// Postprocessing, can be used to do some clean-up, saving etc.
-  virtual void postprocess() = 0;
+      // Preprocessing, can be used to initialize and/or load data, etc.
+      virtual void preprocess();
 
-  /// Get strategy implementation type
-  virtual string getType() const = 0;
+      // Postprocessing, can be used to do some clean-up, saving etc.
+      virtual void postprocess();
 
-  /// Get and set in/output dataholders
-  DH_Solution* getSolution() const;
+      // Get strategy implementation type
+      virtual string getType() const = 0;
 
-  DH_WOPrediff* getPrediffWorkOrder() const;
+      // Get and set in/output dataholders
+      DH_Solution* getSolution() const;
 
-  DH_WOSolve* getSolveWorkOrder() const;
+      DH_WOPrediff* getPrediffWorkOrder() const;
 
-  int getID() const;
+      DH_WOSolve* getSolveWorkOrder() const;
 
-  int getNewWorkOrderID();
+      int getID() const;
 
-  int getNumberOfPrediffers() const;
+      int getNewWorkOrderID();
 
-  ParmWriter& getParmWriter();
+      int getNumberOfPrediffers() const;
 
-protected:
-  Connection*   itsInSolConn;
-  Connection*   itsOutWOPDConn;
-  Connection*   itsOutWOSolveConn;
-  int           itsNrPrediffers;
+      ParmWriter& getParmWriter();
+
+    protected:
+      Connection*   itsInSolConn;
+      Connection*   itsOutWOPDConn;
+      Connection*   itsOutWOSolveConn;
+      int           itsNrPrediffers;
  
-private:
-  int           itsID;
-  ParmWriter    itsParmWriter;
+    private:
+      int           itsID;
+      ParmWriter    itsParmWriter;
 
-  static int    theirNextSCID;   // Unique ID for next Strategy Controller instance
-  static int  theirNextWOID;     // Unique ID for next workorder
-};
+      // Unique ID for next Strategy Controller instance
+      static int    theirNextSCID;
 
-inline DH_Solution* StrategyController::getSolution() const
-{ return (DH_Solution*)itsInSolConn->getDataHolder(true); }
+      // Unique ID for next workorder
+      static int  theirNextWOID;
+    };
 
-inline DH_WOPrediff* StrategyController::getPrediffWorkOrder() const
-{ return (DH_WOPrediff*)itsOutWOPDConn->getDataHolder(); }
+    inline DH_Solution* StrategyController::getSolution() const
+    { return (DH_Solution*)itsInSolConn->getDataHolder(true); }
 
-inline DH_WOSolve* StrategyController::getSolveWorkOrder() const
-{ return (DH_WOSolve*)itsOutWOSolveConn->getDataHolder(); }
+    inline DH_WOPrediff* StrategyController::getPrediffWorkOrder() const
+    { return (DH_WOPrediff*)itsOutWOPDConn->getDataHolder(); }
 
-inline int StrategyController::getID() const
-{ return itsID; }
+    inline DH_WOSolve* StrategyController::getSolveWorkOrder() const
+    { return (DH_WOSolve*)itsOutWOSolveConn->getDataHolder(); }
 
-inline int StrategyController::getNewWorkOrderID()
-{ return theirNextWOID++; }
+    inline int StrategyController::getID() const
+    { return itsID; }
 
-inline ParmWriter& StrategyController::getParmWriter()
-{ return itsParmWriter; }
+    inline int StrategyController::getNewWorkOrderID()
+    { return theirNextWOID++; }
 
-inline int StrategyController::getNumberOfPrediffers() const
-{ return itsNrPrediffers; }
+    inline ParmWriter& StrategyController::getParmWriter()
+    { return itsParmWriter; }
 
-// @}
+    inline int StrategyController::getNumberOfPrediffers() const
+    { return itsNrPrediffers; }
+
+    // @}
+
+  } // namespace BBS
 
 } // namespace LOFAR
 

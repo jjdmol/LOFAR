@@ -1,27 +1,24 @@
-//  DH_Prediff.h:  DataHolder for 'prediffed' data
-//
-//  Copyright (C) 2000, 2001
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
-//
-//
-//////////////////////////////////////////////////////////////////////
+//#  DH_Prediff.h:  DataHolder for 'prediffed' data
+//#
+//#  Copyright (C) 2000, 2001
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
 
 #ifndef LOFAR_BBSCONTROL_DH_PREDIFF_H
 #define LOFAR_BBSCONTROL_DH_PREDIFF_H
@@ -33,106 +30,101 @@
 #include <Common/lofar_vector.h>
 
 //# Forward Declarations.
-namespace casa {
-  class LSQFit;
-}
-
-namespace LOFAR {
-  class ParmDataInfo;
-}
-
+namespace casa { class LSQFit; }
 
 namespace LOFAR
 {
-// \addtogroup BBS
-// @{
+  //# Forward Declarations.
+  class ParmDataInfo;
 
-/**
-   This class is a DataHolder which contains the difference between measured
-   and predicted data and derivatives for each solvable parm (spid) for a
-   certain domain [baseline, time, frequency, polarization].
-*/
-class DH_Prediff: public DataHolder
-{
-public:
+  namespace BBS
+  {
+    // \addtogroup BBS
+    // @{
 
-  enum woStatus{New,Assigned,Executed};
+    // This class is a DataHolder which contains the difference between
+    // measured and predicted data and derivatives for each solvable parm
+    // (spid) for a certain domain [baseline, time, frequency, polarization].
+    class DH_Prediff: public DataHolder
+    {
+    public:
 
-  explicit DH_Prediff (const string& name = "dh_prediff");
+      enum woStatus{New,Assigned,Executed};
 
-  DH_Prediff(const DH_Prediff&);
+      explicit DH_Prediff (const string& name = "DH_Prediff");
 
-  virtual ~DH_Prediff();
+      DH_Prediff(const DH_Prediff&);
 
-  DataHolder* clone() const;
+      virtual ~DH_Prediff();
 
-/*   // Create a TPO object and set the table name in it. */
-/*   virtual void initPO (const string& tableName); */
+      DataHolder* clone() const;
 
-  /// Allocate the buffers.
-  virtual void init();
+      // Allocate the buffers.
+      virtual void init();
 
-  void setBufferSize(int size);
-  int getBufferSize();
+      void setBufferSize(int size);
+      int getBufferSize();
 
-  void setDataSize(unsigned int size);
-  unsigned int getDataSize() const;
+      void setDataSize(unsigned int size);
+      unsigned int getDataSize() const;
 
-  double* getDataBuffer();
+      double* getDataBuffer();
 
-  void setParmData (const ParmDataInfo& pdata);
-  bool getParmData (ParmDataInfo& pdata); 
+      void setParmData (const ParmDataInfo& pdata);
+      bool getParmData (ParmDataInfo& pdata); 
 
-  void setFitters (const vector<casa::LSQFit>& fitters);
-  bool getFitters (vector<casa::LSQFit>& fitters);
+      void setFitters (const vector<casa::LSQFit>& fitters);
+      bool getFitters (vector<casa::LSQFit>& fitters);
 
-  double getStartFreq() const;
-  double getEndFreq() const;
-  double getStartTime() const;
-  double getEndTime() const;
-  void setDomain(double fStart, double fEnd, double tStart, double tEnd);
+      double getStartFreq() const;
+      double getEndFreq() const;
+      double getStartTime() const;
+      double getEndTime() const;
+      void setDomain(double fStart, double fEnd, double tStart, double tEnd);
 
-  virtual void dump() const;
+      virtual void dump() const;
 
-  void clearData();
+      void clearData();
 
-private:
-  /// Forbid assignment.
-  DH_Prediff& operator= (const DH_Prediff&);
+    private:
+      /// Forbid assignment.
+      DH_Prediff& operator= (const DH_Prediff&);
 
-  // Fill the pointers to the data in the blob.
-  virtual void fillDataPointers();
+      // Fill the pointers to the data in the blob.
+      virtual void fillDataPointers();
 
-  unsigned int* itsDataSize;    // Number of equations in data buffer
-  double* itsDataBuffer;
-  double* itsStartFreq;        // Start frequency of the domain
-  double* itsEndFreq;          // End frequency of the domain
-  double* itsStartTime;        // Start time of the domain
-  double* itsEndTime;          // End time of the domain
-};
+      unsigned int* itsDataSize;    // Number of equations in data buffer
+      double* itsDataBuffer;
+      double* itsStartFreq;        // Start frequency of the domain
+      double* itsEndFreq;          // End frequency of the domain
+      double* itsStartTime;        // Start time of the domain
+      double* itsEndTime;          // End time of the domain
+    };
 
-inline void DH_Prediff::setDataSize(unsigned int size)
-{ *itsDataSize = size; }
+    inline void DH_Prediff::setDataSize(unsigned int size)
+    { *itsDataSize = size; }
 
-inline unsigned int DH_Prediff::getDataSize() const
-{ return *itsDataSize; }
+    inline unsigned int DH_Prediff::getDataSize() const
+    { return *itsDataSize; }
 
-inline double* DH_Prediff::getDataBuffer()
-{ return itsDataBuffer; }
+    inline double* DH_Prediff::getDataBuffer()
+    { return itsDataBuffer; }
 
-inline double DH_Prediff::getStartFreq() const
-{ return *itsStartFreq; }
+    inline double DH_Prediff::getStartFreq() const
+    { return *itsStartFreq; }
 
-inline double DH_Prediff::getEndFreq() const
-{ return *itsEndFreq; }
+    inline double DH_Prediff::getEndFreq() const
+    { return *itsEndFreq; }
 
-inline double DH_Prediff::getStartTime() const
-{ return *itsStartTime; }
+    inline double DH_Prediff::getStartTime() const
+    { return *itsStartTime; }
 
-inline double DH_Prediff::getEndTime() const
-{ return *itsEndTime; }
+    inline double DH_Prediff::getEndTime() const
+    { return *itsEndTime; }
 
-// @}
+    // @}
+
+  } // namespace BBS
 
 } // namespace LOFAR
 

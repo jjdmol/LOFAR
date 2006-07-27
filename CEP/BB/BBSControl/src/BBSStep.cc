@@ -130,6 +130,17 @@ namespace LOFAR
     }
 
 
+    void BBSStep::infiniteRecursionCheck(const string& name) const
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      if (name == itsName) 
+	THROW (BBSControlException, 
+	       "Infinite recursion detected in defintion of BBSStep \""
+	       << name << "\". Please check your ParameterSet file.");
+      if (itsParent) itsParent->infiniteRecursionCheck(name);
+    }
+
+
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
     void BBSStep::setParms(const ParameterSet& ps)

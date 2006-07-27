@@ -34,82 +34,94 @@
 
 namespace LOFAR
 {
+  //# Forward Declarations
+  class Prediffer;
+  class ParmDataInfo;
 
-using ACC::APS::ParameterSet;
-// \addtogroup BBS
-// @{
+  namespace BBS
+  {
 
-//# Forward Declarations
-class Prediffer;
-class ParmDataInfo;
+    // \addtogroup BBS
+    // @{
 
-  // This workholder class predicts (calculates) visibilities based on current values
-  // of the parameters and determines the difference to the measured data for a 
-  // certain domain.
-class WH_Prediff : public LOFAR::WorkHolder
-{
- public:
-  // Construct the workholder and give it a name
-  explicit WH_Prediff(const string& name, const string& id, const ParameterSet& pset);
+    // This workholder class predicts (calculates) visibilities based on
+    // current values of the parameters and determines the difference to the
+    // measured data for a certain domain.
+    class WH_Prediff : public LOFAR::WorkHolder
+    {
+    public:
+      // Construct the workholder and give it a name
+      explicit WH_Prediff(const string& name, const string& id, 
+			  const ACC::APS::ParameterSet& pset);
   
-  // Destructor
-  virtual ~WH_Prediff();
+      // Destructor
+      virtual ~WH_Prediff();
   
-  // Make a fresh copy of the WH object.
-  virtual WH_Prediff* make (const string& name);
+      // Make a fresh copy of the WH object.
+      virtual WH_Prediff* make (const string& name);
 
-  // Preprocess
-  virtual void preprocess();
+      // Preprocess
+      virtual void preprocess();
 
-  // Do a process step.
-  virtual void process();
+      // Do a process step.
+      virtual void process();
   
-  // Show the workholder on stdout.
-  virtual void dump() const;
+      // Show the workholder on stdout.
+      virtual void dump() const;
 
- private:
-  typedef map<int, Prediffer*> PrediffMap;
+    private:
+      typedef map<int, Prediffer*> PrediffMap;
 
-  // Forbid copy constructor
-  WH_Prediff(const WH_Prediff&);
+      // Forbid copy constructor
+      WH_Prediff(const WH_Prediff&);
 
-  // Forbid assignment
-  WH_Prediff& operator= (const WH_Prediff&);
+      // Forbid assignment
+      WH_Prediff& operator= (const WH_Prediff&);
 
-  // Create a Prediffer object or get it from the Map
-  Prediffer* getPrediffer(int id, 
-			  const ParameterSet& args, 
-			  const vector<int>& antNrs,
-			  bool& isNew);
+      // Create a Prediffer object or get it from the Map
+      Prediffer* getPrediffer(int id, 
+			      const ACC::APS::ParameterSet& args, 
+			      const vector<int>& antNrs,
+			      bool& isNew);
 
-  // Delete the Prediffer object with specified ID
-  void deletePrediffer (int id);
+      // Delete the Prediffer object with specified ID
+      void deletePrediffer (int id);
 
-  // Read the next workorder
-  void readWorkOrder();
+      // Read the next workorder
+      void readWorkOrder();
 
-  // Get the sourceGroups specification.
-  void getSrcGrp (const ParameterSet& args, vector<vector<int> >& srcgrp) const;
+      // Get the sourceGroups specification.
+      void getSrcGrp (const ACC::APS::ParameterSet& args, 
+		      vector<vector<int> >& srcgrp) const;
 
-  // Read a parameter solution with specified workorder id
-  void readSolution(int woid, ParmDataInfo& solVec);
+      // Read a parameter solution with specified workorder id
+      void readSolution(int woid, ParmDataInfo& solVec);
 
-  // Read a parameter solution with specified workorder id and iteration
-  // and return a boolean indicating if this solution has converged.
-  bool readSolution(int woid, int iteration, ParmDataInfo& solVec);
+      // Read a parameter solution with specified workorder id and iteration
+      // and return a boolean indicating if this solution has converged.
+      bool readSolution(int woid, int iteration, ParmDataInfo& solVec);
 
-  static ParmDB::ParmDBMeta makePDM (const string& nameKey,
-				     const ParameterSet& ps);
+      static ParmDB::ParmDBMeta makePDM (const string& nameKey,
+					 const ACC::APS::ParameterSet& ps);
 
-  string       itsID;         // Identification number
-  ParameterSet itsArgs;       // Arguments
-  PrediffMap   itsPrediffs;   // Map of Prediffer objects, each associated
-  // with a strategy (controller)
 
-  bool        itsFirstCall;  // Temporary!!! Needs to be done correctly for multiple strategies
-};
+      // Identification number
+      string       itsID;
+      
+       // Arguments
+      ACC::APS::ParameterSet itsArgs;
+      
+      // Map of Prediffer objects, each associated with a strategy
+      // (controller)
+      PrediffMap   itsPrediffs;
 
-// @}
+      // \attention Needs to be done correctly for multiple strategies!!
+      bool        itsFirstCall;
+    };
+
+    // @}
+
+  } // namespace BBS
 
 } // namespace LOFAR
 

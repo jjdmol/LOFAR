@@ -29,39 +29,41 @@
 // Writes/updates parameters in ParmTables.
 
 //# Includes
-#include <Common/lofar_map.h>
 
 namespace LOFAR
 {
-  // \addtogroup BBS
-  // @{
   //# Forward Declarations
   class ParmDataInfo;
   class MeqMatrix;
-  namespace ParmDB {
-    class ParmValueRep;
-  }
+  namespace ParmDB { class ParmValueRep; }
 
-
-  // Description of class.
-  class ParmWriter
+  namespace BBS
   {
-  public:
-    // Constructor
-    ParmWriter();
+    // \addtogroup BBS
+    // @{
 
-    // Destructor
-    ~ParmWriter();
+    // Description of class.
+    class ParmWriter
+    {
+    public:
+      // Constructor
+      ParmWriter();
 
-    void write (const ParmDataInfo& pData,
-		double fStart, double fEnd, 
-		double tStart, double tEnd);
+      // Destructor
+      ~ParmWriter();
 
-  private:
-    void setCoeff (ParmDB::ParmValueRep& pval, const MeqMatrix& coeff);
-  };
+      void write (const ParmDataInfo& pData,
+		  double fStart, double fEnd, 
+		  double tStart, double tEnd);
 
-  // @}
+    private:
+      void setCoeff (ParmDB::ParmValueRep& pval, const MeqMatrix& coeff);
+    };
+
+    // @}
+
+  } // namespace BBS
+
 } // namespace LOFAR
 
 #endif

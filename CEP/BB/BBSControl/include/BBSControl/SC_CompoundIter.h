@@ -24,7 +24,10 @@
 #define LOFAR_BBSCONTROL_SC_COMPOUNDITER_H
 
 // \file SC_CompoundIter
-// A calibration strategy which sends compound workorders (multiple iterations).// NB. This strategy only works correctly when Prediffer and Solver run in 
+
+// A calibration strategy which sends compound workorders (multiple
+// iterations).
+// \note This strategy only works correctly when Prediffer and Solver run in
 // separate processes.
 
 //# Includes
@@ -34,59 +37,70 @@
 
 namespace LOFAR
 {
+  namespace BBS
+  {
 
-// \addtogroup BBS
-// @{
+    // \addtogroup BBS
+    // @{
 
-//# Forward Declarations
+    //# Forward Declarations
 
-using ACC::APS::ParameterSet;
+    using ACC::APS::ParameterSet;
 
-class SC_CompoundIter : public StrategyController
-{
-public:
-  SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn, 
-	    Connection* outWOSolveConn, int nrPrediffers,
-	    const ParameterSet& args);
+    class SC_CompoundIter : public StrategyController
+    {
+    public:
+      SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn, 
+		      Connection* outWOSolveConn, int nrPrediffers,
+		      const ParameterSet& args);
 
-  virtual ~SC_CompoundIter();
+      virtual ~SC_CompoundIter();
 
-  /// Execute the strategy
-  virtual bool execute();
+      /// Execute the strategy
+      virtual bool execute();
 
-  /// Postprocess
-  virtual void postprocess();
+      /// Postprocess
+      virtual void postprocess();
     
-  /// Get strategy type
-  virtual string getType() const;
+      /// Get strategy type
+      virtual string getType() const;
 
- private:
-  SC_CompoundIter(const SC_CompoundIter&);
-  SC_CompoundIter& operator=(const SC_CompoundIter&);
+    private:
+      SC_CompoundIter(const SC_CompoundIter&);
+      SC_CompoundIter& operator=(const SC_CompoundIter&);
 
-  void readFinalSolution();
+      void readFinalSolution();
 
-  bool         itsFirstCall;
-  int          itsPrevWOID;
-  ParameterSet itsArgs;
-  int          itsMaxIterations;
-  double       itsFitCriterion;
-  int          itsCurIter;
-  double       itsCurStartTime;
-  bool         itsControlParmUpd;    // Does this Controller update the parameters?
-  bool         itsWriteParms;        // Write the parameters in the parmtable at the end of each interval?
-  double       itsStartTime;
-  double       itsEndTime;
-  double       itsTimeLength;
-  int          itsStartChannel;
-  int          itsEndChannel;
-  bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
-};
+      bool         itsFirstCall;
+      int          itsPrevWOID;
+      ParameterSet itsArgs;
+      int          itsMaxIterations;
+      double       itsFitCriterion;
+      int          itsCurIter;
+      double       itsCurStartTime;
 
-inline string SC_CompoundIter::getType() const
-{ return "CompoundIter"; }
+      // Does this Controller update the parameters?
+      bool         itsControlParmUpd;
 
-// @}
+      // Write the parameters in the parmtable at the end of each interval?
+      bool         itsWriteParms;
+      double       itsStartTime;
+      double       itsEndTime;
+      double       itsTimeLength;
+      int          itsStartChannel;
+      int          itsEndChannel;
+
+      // Flag to indicate whether the previous sent workorder was a "do
+      // nothing"
+      bool         itsSendDoNothingWO;
+    };
+
+    inline string SC_CompoundIter::getType() const
+    { return "CompoundIter"; }
+
+    // @}
+
+  } // namespace BBS
 
 } // namespace LOFAR
 
