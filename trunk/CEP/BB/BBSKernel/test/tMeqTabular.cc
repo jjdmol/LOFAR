@@ -319,7 +319,7 @@ int main()
   {
     ok = test_constant() && test_line() && test_sin();
   } catch (std::exception& ex) {
-    cout << "Caught exception: " << ex.what() << endl;
+    cerr << "Caught exception: " << ex.what() << endl;
     return 1;
   }
   

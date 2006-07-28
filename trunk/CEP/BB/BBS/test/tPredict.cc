@@ -94,7 +94,7 @@ int main (int argc, const char* argv[])
     }
 
   } catch (std::exception& x) {
-    cout << "Unexpected exception: " << x.what() << endl;
+    cerr << "Unexpected exception: " << x.what() << endl;
     return 1;
   }
   cout << "OK" << endl;

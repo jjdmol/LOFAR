@@ -50,7 +50,7 @@ void predict (Prediffer& prediffer, const MSDesc& msd,
   double time = msd.startTime;
   double endTime = msd.endTime;
   while (time < endTime) {
-    prediffer.setWorkDomain (startChan, endChan, time, time+timeStep);
+    prediffer.setWorkDomain (startChan, endChan, time, timeStep);
     prediffer.setStepProp (stepProp);
     prediffer.writePredictedData();
     time += timeStep;
@@ -64,7 +64,7 @@ void subtract (Prediffer& prediffer, const MSDesc& msd,
   double time = msd.startTime;
   double endTime = msd.endTime;
   while (time < endTime) {
-    prediffer.setWorkDomain (startChan, endChan, time, time+timeStep);
+    prediffer.setWorkDomain (startChan, endChan, time, timeStep);
     prediffer.setStepProp (stepProp);
     prediffer.subtractData();
     time += timeStep;
@@ -83,7 +83,7 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
   SolveProp solProp(solveProp);
   while (time < endTime) {
     // Use given channels and time steps.
-    prediffer.setWorkDomain (startChan, endChan, time, time+timeStep);
+    prediffer.setWorkDomain (startChan, endChan, time, timeStep);
     prediffer.setStepProp (stepProp);
     // Form the solve domains.
     const MeqDomain& workDomain = prediffer.getWorkDomain();

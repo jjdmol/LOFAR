@@ -21,7 +21,7 @@ if [ $stat != 0 ]; then
   status=$stat
 fi
 
-# Try to do a test with multiple bands by creating an MS with 2 bands..
+# Try to do a test with multiple bands by creating an MS with 2 bands.
 if [ ! -d $HOME/WSRT_ANTENNA ]; then
   exit $status
 fi
