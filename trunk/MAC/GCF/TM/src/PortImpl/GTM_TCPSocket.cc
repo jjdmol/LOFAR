@@ -35,12 +35,9 @@
 #include <stdio.h>
 #include <errno.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 GTMTCPSocket::GTMTCPSocket(GCFTCPPort& port) :
   GTMFile(port)
@@ -52,96 +49,108 @@ GTMTCPSocket::~GTMTCPSocket()
   close();
 }
 
+//
+// send(buf, count)
+//
 ssize_t GTMTCPSocket::send(void* buf, size_t count)
 {
-  if (_fd > -1) {
-    ssize_t countLeft(count);
-    ssize_t written(0);
-    do {
-      written = ::write(_fd, ((char*)buf) + (count - countLeft), countLeft);
-      if (written == -1) {
-        if (errno != EINTR) {
-          LOG_WARN(LOFAR::formatString (
-              "send, error: %s",
-              strerror(errno)));
-          return -1;
-        }
-      }
-      else {
-        countLeft -= written;
-      }      
-    } while (countLeft > 0);
-    
-    return count;
-  }
-  else {
-    LOG_WARN("send, error: Socket not opend");
-    return -1;
-  }
+	if (_fd < 0) {
+		LOG_WARN("send, error: Socket not opened");
+		return (-1);
+	}
+
+	ssize_t countLeft(count);
+	ssize_t written(0);
+	do {
+		written = ::write(_fd, ((char*)buf) + (count - countLeft), countLeft);
+		if (written == -1) {
+			if (errno != EINTR) {
+				LOG_WARN(LOFAR::formatString ( "send, error: %s", strerror(errno)));
+				return -1;
+			}
+		}
+		else {
+			countLeft -= written;
+		}      
+	} while (countLeft > 0);
+
+	return count;
 }
 
+//
+// recv(buf, count)
+//
 ssize_t GTMTCPSocket::recv(void* buf, size_t count)
 {
-  if (_fd > -1) {
-    ssize_t countLeft(count);
-    ssize_t received(0);
-    do {
-      received = ::read(_fd, ((char*)buf) + (count - countLeft), countLeft);
-      if (received == -1) {
-        if (errno != EINTR) {
-          LOG_WARN(formatString (
-              "recv, error: %s",
-              strerror(errno)));
-          return -1;
-        }
-      }
-      else {
-        countLeft -= received;
-      }      
-    } while (countLeft > 0);
-    
-    return count;
-  }
-  else {
-    LOG_WARN("recv, error: Socket not opend");
-    return -1;
-  }
+	if (_fd < 0) {
+		LOG_WARN("recv, error: Socket not opend");
+		return (-1);
+	}
+
+	ssize_t countLeft(count);
+	ssize_t received(0);
+	do {
+		received = ::read(_fd, ((char*)buf) + (count - countLeft), countLeft);
+		if (received == -1) {
+			if (errno != EINTR) {
+				LOG_WARN(formatString ( "recv, error: %s", strerror(errno)));
+				return -1;
+			}
+		}
+		else {
+			countLeft -= received;
+		}      
+	} while (countLeft > 0);
+
+	return count;
 }
 
+//
+// open
+//
 bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 {
-  ASSERT(_fd == -1);
-  _fd = ::socket(AF_INET, SOCK_STREAM, 0);
-  if (_fd < 0) {
-    LOG_WARN(formatString ( "::socket, error: %s", strerror(errno)));
-    close();
-  }
-  return (_fd > -1);
+	LOG_TRACE_COND_STR("open:fd=" << _fd << ", port=" << _port.getName());
+
+	if (_fd >= 0) {		// already open?
+		return (true);
+	}
+
+	_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+	if (_fd < 0) {
+		LOG_WARN(formatString ( "::socket, error: %s", strerror(errno)));
+		close();
+	}
+	return (_fd > -1);
 }
 
+//
+// connect(portnr, host)
+//
 bool GTMTCPSocket::connect(unsigned int portNumber, const string& host)  
 {
-  bool result(false);
-  if (_fd >= -1) {
-    struct sockaddr_in serverAddr;
-    struct hostent *hostinfo;
-    hostinfo = gethostbyname(host.c_str());
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
-    serverAddr.sin_port = htons(portNumber);
-    result = (::connect(_fd, (struct sockaddr *)&serverAddr, 
-									sizeof(struct sockaddr_in)) == 0);
-    if (result) {
-      ASSERT(_pHandler);
-      _pHandler->registerFile(*this);
-    }
-    else {
-      LOG_WARN(formatString ( "connect, error: %s", strerror(errno)));
-      close();
-    }
-  }
-  return result;
+	LOG_TRACE_COND_STR("connect:fd=" << _fd << ", port=" << _port.getName());
+
+	struct sockaddr_in serverAddr;
+	struct hostent *hostinfo;
+	hostinfo = gethostbyname(host.c_str());
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
+	serverAddr.sin_port = htons(portNumber);
+	if (::connect(_fd, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr_in)) != 0) {
+		if (errno != EISCONN) {		// already connected is OK
+			LOG_WARN(formatString ( "connect, error: %s", strerror(errno)));
+			close();
+			return (false);	
+		}
+	}
+
+	ASSERT(_pHandler);
+	_pHandler->registerFile(*this);
+
+	return (true);
 } 
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR
