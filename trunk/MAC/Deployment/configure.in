@@ -63,11 +63,7 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 Makefile
-src/Makefile
-test/Makefile
 data/Makefile
 data/bin/Makefile
-include/Makefile
-include/Deployment/Makefile
 Deployment.spec
 )
