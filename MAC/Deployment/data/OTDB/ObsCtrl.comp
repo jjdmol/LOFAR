@@ -5,12 +5,15 @@
 # $Id$
 #
 # -- ObsCtrl--
-#      name              vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  ObsCtrl            1.0.0  development 'node constraint'  "Observation Controller"
+#      name        vers   qual        constr.     descr.
+#---------------------------------------------------------------------------------------
+node  ObsCtrl      1.0.0  development ''          "Observation Controller"
+uses  OfflineCtrl  1.0.0  development 1           "Controller for the offline datastream"
+uses  OnlineCtrl   1.0.0  development 1           "Controller for the online datastream"
 
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
+par  _hostname               I    text   -      10    0    RS002                     -        "Machine the program should run on"
 par  heartbeatInterval       I    dbl    -      10    0    10                        -        "Interval (in sec) between to 'sanity checks'"
 

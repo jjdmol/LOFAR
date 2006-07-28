@@ -1,4 +1,4 @@
-SUBDIRS=src test include data
+SUBDIRS=data
 
 EXTRA_DIST = \
       Makefile.common \
