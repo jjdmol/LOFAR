@@ -32,7 +32,7 @@
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <Deployment/StationInfo.h>
+#include <APL/APLCommon/StationInfo.h>
 
 #include "ObservationControl.h"
 #include "ObservationControlDefines.h"
@@ -142,6 +142,48 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 
 }
 
+//
+// startChildControllers()
+//
+void ObservationControl::startChildControllers()
+{
+	string	myname   = globalParameterSet()->getString("_moduleName");
+	string	fullname = globalParameterSet()->locateModule(myname)+myname+".";
+	ParameterSet	subset = globalParameterSet()->makeSubset(fullname);
+
+	ParameterSet::const_iterator	iter = subset.begin();
+	ParameterSet::const_iterator	end  = subset.end();
+	string	childname;
+	while (iter != end) {
+		string::size_type pos = iter->first.find(".", 0);
+		if (pos != string::npos && iter->first.substr(0,pos) != childname) {
+			childname = iter->first.substr(0,pos);
+			// collect the information to start the child controller
+			string	childhostname  = subset.getString(childname+"._hostname");
+			uint16	childCntlrType = getControllerType(childname);
+			uint32	treeID         = globalParameterSet()->getUint32("_treeID");
+			uint16	instanceNr	   = 0;		// TODO
+			string	childCntlrName = controllerName(childCntlrType, instanceNr, treeID);
+
+			// child already running???
+			CTState::CTstateNr	requestedState= 
+										itsChildControl->getRequestedState(childCntlrName);
+
+			if (requestedState == CTState::NOSTATE) {
+				// fire request for new controller, will result in CONTROL_STARTED
+				itsChildControl->startChild(childCntlrName, 
+											treeID, 
+											childCntlrType,
+											instanceNr,
+											myHostname(true));
+				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
+
+				LOG_DEBUG_STR("Requested start of " << childCntlrName);
+			}
+		}
+		iter++;
+	}
+}
 
 //
 // handlePropertySetAnswer(answer)
@@ -317,6 +359,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case F_ENTRY: {
 		// convert times and periods to timersettings.
 		setObservationTimers();
+		startChildControllers();
 		itsHeartBeat = itsTimerPort->setTimer(1.0 * itsHeartBeat);
 		break;
 	}
@@ -334,7 +377,10 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case F_TIMER:  {
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-		if (timerEvent.id == itsClaimTimer) {
+		if (timerEvent.id == itsHeartBeat) {
+			// TODO: implement my real task
+		}
+		else if (timerEvent.id == itsClaimTimer) {
 			setState(CTState::CLAIM);
 			itsClaimTimer = 0;
 			// TODO: do something else?
@@ -354,7 +400,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsStopTimer = 0;
 			// TODO: do something else?
 		}
-		// some other timer;
+		// some other timer?
 
 		break;
 	}
@@ -363,8 +409,12 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	// -------------------- EVENT RECEIVED FROM CHILD CONTROL --------------------
 	case CONTROL_STARTED: {
 		CONTROLStartedEvent	msg(event);
-		LOG_DEBUG(formatString("Start of %s was %ssuccessful", msg.cntlrName.c_str(), 
-						msg.successful ? "" : "NOT "));
+		if (msg.successful) {
+			LOG_DEBUG_STR("Start of " << msg.cntlrName << " was successful");
+		}
+		else {
+			LOG_WARN_STR("Start of " << msg.cntlrName << " was NOT successful");
+		}
 		// TODO: do something usefull with this information!
 		break;
 	}

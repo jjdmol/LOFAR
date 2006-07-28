@@ -95,6 +95,7 @@ private:
 	void setState(CTState::CTstateNr	newState);
 
 	void	setObservationTimers();
+	void	startChildControllers();
    	void 	_connectedHandler(GCFPortInterface& port);
    	void	_disconnectedHandler(GCFPortInterface& port);
    	boost::shared_ptr<ACC::APS::ParameterSet> 
