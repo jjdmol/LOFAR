@@ -26,10 +26,10 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>					// rtrim
-#include <Deployment/StationInfo.h>
 #include <GCF/Utils.h>							// myHostname
 #include <APS/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/StationInfo.h>
 
 #include <boost/config.hpp>
 #include <boost/lexical_cast.hpp>
@@ -47,9 +47,13 @@ typedef struct cntlrDefinition {
 } cntlrDefinition_t;
 
 static cntlrDefinition_t controllerTable[] = {
+//		executable				parsetNode		shared
+//----------------------------------------------------------
 	{	"",						"",				false	},
 	{	"MACScheduler", 		"MACScheduler",	false	},
 	{	"ObservationControl", 	"ObsCtrl",		false	},
+	{	"OnlineControl", 		"OnlineCtrl",	false	},
+	{	"OfflineControl", 		"OfflineCtrl",	false	},
 	{	"BeamDirectionControl",	"BeamDirCtrl",	true	},
 	{	"RingControl", 			"RingCtrl",		true	},
 	{	"StationControl", 		"StationCtrl",	false	},
@@ -134,9 +138,19 @@ int32	getControllerType	(const string&	controllerName)
 {
 	string	cntlrName(controllerName);		// destroyable copy
 	rtrim(cntlrName, "[]{}0123456789");		// cut down to executable name
+	// first try on controllername
 	uint32	idx = CNTLRTYPE_NO_TYPE + 1;
 	while (idx < CNTLRTYPE_NR_TYPES) {
 		if (!strcmp (controllerTable[idx].cntlrName, cntlrName.c_str())) {
+			return (idx);
+		}
+		idx++;
+	}
+
+	// not found, may user passed parsetNodename
+	idx = CNTLRTYPE_NO_TYPE + 1;
+	while (idx < CNTLRTYPE_NR_TYPES) {
+		if (!strcmp (controllerTable[idx].parsetName, cntlrName.c_str())) {
 			return (idx);
 		}
 		idx++;

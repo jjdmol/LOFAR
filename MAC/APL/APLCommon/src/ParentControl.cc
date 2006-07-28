@@ -25,12 +25,12 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Deployment/StationInfo.h>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ParentControl.h>
+#include <APL/APLCommon/StationInfo.h>
 #include <Controller_Protocol.ph>
 #include <StartDaemon_Protocol.ph>
 

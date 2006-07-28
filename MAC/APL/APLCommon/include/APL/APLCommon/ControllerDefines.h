@@ -46,6 +46,8 @@ enum	{
 	CNTLRTYPE_NO_TYPE = 0,				// no type defined yet
 	CNTLRTYPE_SCHEDULERCTRL,			// MACscheduler
 	CNTLRTYPE_OBSERVATIONCTRL,			// ObservationControl
+	CNTLRTYPE_ONLINECTRL,				// OnlineControl
+	CNTLRTYPE_OFFLINECTRL,				// OfflineControl
 	CNTLRTYPE_BEAMDIRECTIONCTRL,		// BeamDirectionControl
 	CNTLRTYPE_GROUPCTRL,				// RingControl
 	CNTLRTYPE_STATIONCTRL,				// StationControl
