@@ -119,8 +119,7 @@ bool GCFTCPPort::open()
 {
 	// already connect?
 	if (isConnected()) {
-		LOG_ERROR(formatString("Port %s already open.", 
-							   makeServiceName().c_str()));
+		LOG_ERROR(formatString("Port %s already open.", makeServiceName().c_str()));
 		return (false);
 	}
 
@@ -246,6 +245,7 @@ void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
 void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const string& host)
 {
 	ASSERT(SAP == getType());
+
 	if (result == SB_UNKNOWN_SERVICE) {
 		LOG_DEBUG(formatString ("Cannot connect the local SAP [%s] "
 								"to remote (M)SPP [%s:%s]. Try again!!!",
@@ -259,6 +259,7 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 	if (result == SB_NO_ERROR) {
 		_portNumber = portNumber;
 		_host = host;
+
 		LOG_DEBUG(formatString ("Can now connect the local SAP [%s] "
 								"to remote (M)SPP [%s:%s@%s:%d].",
 								makeServiceName().c_str(),
