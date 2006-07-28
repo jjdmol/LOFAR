@@ -108,7 +108,7 @@ int main()
       doIt (parm);
     }
   } catch (std::exception& x) {
-    cout << "Caught exception: " << x.what() << endl;
+    cerr << "Caught exception: " << x.what() << endl;
     return 1;
   }
 

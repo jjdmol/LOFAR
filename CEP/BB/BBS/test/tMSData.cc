@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     doIt (argv[1], pre, column, spwid, nrant, 0, 50, true, false);
     doIt (argv[1], pre, column, spwid, nrant, 10,11, true, true);
   } catch (exception& x) {
-    cout << "Unexpected expection: " << x.what() << endl;
+    cerr << "Unexpected expection: " << x.what() << endl;
     return 1;
   }
   return 0;

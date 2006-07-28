@@ -272,7 +272,7 @@ int main()
     polc.setCoeff(MeqMatrix(c1, 2, 6), mask);
     doIt(polc);
   } catch (std::exception& x) {
-    cout << "Caught exception: " << x.what() << endl;
+    cerr << "Caught exception: " << x.what() << endl;
     return 1;
   }
   cout << "OK" << endl;
