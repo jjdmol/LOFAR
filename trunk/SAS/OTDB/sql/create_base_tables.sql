@@ -188,6 +188,7 @@ INSERT INTO unit values (9,  'MB/s',	'MB/s',	 '',			true);
 INSERT INTO unit values (10, 'Hz',		'Hz',	 '',			true);
 INSERT INTO unit values (11, 'kHz',		'kHz',	 '',			true);
 INSERT INTO unit values (12, 'MHz',		'MHz',	 '',			true);
+INSERT INTO unit values (13, 'period',  's|m|h', '',			false);
 
 --
 -- Treetype table
