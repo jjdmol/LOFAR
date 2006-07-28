@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,303 205 954 746 N "_3DFace" 3
+PANEL,300 241 954 746 N "_3DFace" 3
 "$configDatapoint"
 "$datapoint"
 "$referenceDatapoint"
@@ -349,19 +349,19 @@ LANG:1 6 Layer8
 3 77 "Group58"
 "objects\\nav_usr\\CS1\\WAN_switch-small-CS1.pnl" 440 41 T 845 1 0 1  -426 99  
 3
-"$Station""CS002"
+"$Station""CS008"
 "$configDatapoint""$configDatapoint"
 "$referenceDatapoint""$referenceDatapoint"
 3 78 "Group60"
 "objects\\nav_usr\\CS1\\WAN_switch-small-CS1.pnl" 440 91 T 846 1 0 1  -426 99  
 3
-"$Station""CS003"
+"$Station""CS010"
 "$configDatapoint""$configDatapoint"
 "$referenceDatapoint""$referenceDatapoint"
 3 80 "Group64"
 "objects\\nav_usr\\CS1\\WAN_switch-small-CS1.pnl" 440 191 T 848 1 0 1  -426 49  
 3
-"$Station""CS010"
+"$Station""CS016"
 "$configDatapoint""$configDatapoint"
 "$referenceDatapoint""$referenceDatapoint"
 3 84 "Group72"

@@ -1,7 +1,8 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,296 186 950 741 N "_3DFace" 0
+PANEL,293 76 950 741 N "_3DFace" 1
+"$referenceDatapoint"
 EEE E E 1 0 0 0  10 10
 "" 0 1
 EE 2
@@ -45,162 +46,197 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 2 0 1 E  940 50 10 50
-7 128
-"Ellipse1"
-""
-1 535 185 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
- E E
-40 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 535 185 125 125
-4 137
+4 89
 "Line2"
 ""
-1 537 131 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 140 600 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
-49 0 0 0 0 0
+56 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  537 161 537 131
-4 138
+E E 0 5 1 0 1 E  140 600 450 450
+4 90
 "Line3"
 ""
-1 9280 342 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 770 600 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
-50 0 0 0 0 0
+57 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  480 230 520 190
-4 139
+E E 0 5 1 0 1 E  770 600 450 450
+4 91
 "Line4"
 ""
-1 12250 466 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 450 190 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
-51 0 0 0 0 0
+58 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  580 220 550 190
-7 129
-"Ellipse2"
-""
-1 534 104 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-41 0 0 0 0 0
-EE E
+E E 0 5 1 0 1 E  450 190 450 490
+1 92 2 "" 0
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 534 104 24 24
-7 130
-"Ellipse3"
-""
-1 536 106 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-42 0 0 0 0 0
-EE E
+1 93 2 "" 1
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 536 106 24 24
-7 131
-"Ellipse4"
-""
-1 534 184 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-43 0 0 0 0 0
-EE E
+1 94 2 "" 2
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 534 184 24 24
-7 132
-"Ellipse5"
-""
-1 536 186 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-44 0 0 0 0 0
-EE E
+1 95 2 "" 3
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 536 186 24 24
-7 133
-"Ellipse6"
-""
-1 594 234 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-45 0 0 0 0 0
-EE E
+1 96 2 "" 4
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 594 234 24 24
-7 134
-"Ellipse7"
-""
-1 596 236 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-46 0 0 0 0 0
-EE E
+1 97 2 "" 5
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 596 236 24 24
-7 135
-"Ellipse8"
-""
-1 474 234 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-47 0 0 0 0 0
-EE E
+1 98 2 "" 6
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 474 234 24 24
-7 136
-"Ellipse9"
-""
-1 476 236 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-48 0 0 0 0 0
-EE E
+1 99 2 "" 7
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 476 236 24 24
+1 100 2 "" 8
+0
+1 101 2 "" 9
+0
+1 102 2 "" 10
+0
+1 103 2 "" 11
+0
+1 104 2 "" 12
+0
+1 105 0 "" 0
+0
+1 106 0 "" 1
+0
+1 107 0 "" 2
+0
+1 108 0 "" 3
+0
+1 109 0 "" 4
+0
+1 110 0 "" 5
+0
+1 111 0 "" 6
+0
+1 112 0 "" 7
+0
+1 113 0 "" 8
+0
+1 114 0 "" 9
+0
+1 115 0 "" 10
+0
+1 116 0 "" 11
+0
+1 117 0 "" 12
+0
+1 118 3 "" 0
+0
+1 119 3 "" 34
+0
+1 120 3 "" 36
+0
+1 121 3 "" 37
+0
+1 122 3 "" 38
+0
+1 123 3 "" 39
+0
+1 124 3 "" 40
+0
+1 125 3 "" 41
+0
+1 126 3 "" 42
+0
+1 127 3 "" 43
+0
+1 128 3 "" 44
+0
+1 129 3 "" 45
+0
+1 130 3 "" 6
+0
+1 131 3 "" 7
+0
+1 132 3 "" 12
+0
+1 133 3 "" 13
+0
+1 134 3 "" 14
+0
+1 135 3 "" 15
+0
+1 136 3 "" 16
+0
+1 137 3 "" 17
+0
+1 138 3 "" 18
+0
+1 139 3 "" 19
+0
+1 140 3 "" 20
+0
+1 141 3 "" 21
+0
+1 142 3 "" 22
+0
+1 143 3 "" 23
+0
+1 144 3 "" 24
+0
+1 145 3 "" 25
+0
+1 146 3 "" 26
+0
+1 147 3 "" 27
+0
+1 148 3 "" 28
+0
+1 149 3 "" 29
+0
+1 150 3 "" 30
+0
+1 151 3 "" 31
+0
+1 152 3 "" 32
+0
+1 153 3 "" 33
+0
+1 154 3 "" 46
+0
+1 155 1 "" 0
+0
+1 156 1 "" 1
+0
+1 157 1 "" 2
+0
+1 158 1 "" 3
+0
+1 159 1 "" 4
+0
+1 160 1 "" 5
+0
+1 161 1 "" 6
+0
+1 162 1 "" 7
+0
+1 163 1 "" 8
+0
+1 164 1 "" 9
+0
+1 165 1 "" 10
+0
+1 166 1 "" 11
+0
+1 167 1 "" 12
+0
 0
 LAYER, 1 
 1
@@ -230,12 +266,24 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-2 "Group8" 510 80 560 130
-2 130 129
-2 "Group9" 510 160 560 210
-2 132 131
-2 "Group10" 570 210 620 260
-2 134 133
-2 "Group11" 450 210 500 260
-2 136 135
+3 2 "Group9"
+"objects\\nav_usr\\CS1\\Station.pnl" 20 460 T 54 1 0 1  431 -304  
+2
+"$Station""CS008"
+"$referenceDatapoint""$referenceDatapoint"
+3 0 ""
+"objects\\nav_usr\\CS1\\Station.pnl" 250 150 T 52 1 0 1  -105 433  
+2
+"$Station""CS001"
+"$referenceDatapoint""$referenceDatapoint"
+3 3 ""
+"objects\\nav_usr\\CS1\\Station-core.pnl" 310 400 T 55 1 0 1  141 48  
+2
+"$Station""CS010"
+"$referenceDatapoint""$referenceDatapoint"
+3 1 "Group7"
+"objects\\nav_usr\\CS1\\Station.pnl" 20 460 T 53 1 0 1  745 123  
+2
+"$Station""CS016"
+"$referenceDatapoint""$referenceDatapoint"
 0
