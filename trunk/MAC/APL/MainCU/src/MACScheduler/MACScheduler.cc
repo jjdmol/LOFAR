@@ -21,7 +21,6 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Deployment/StationInfo.h>
 
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
@@ -32,6 +31,7 @@
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 
