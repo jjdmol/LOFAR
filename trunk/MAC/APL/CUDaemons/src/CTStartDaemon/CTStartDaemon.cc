@@ -387,6 +387,8 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 
 		// convert fullname used in SD protocol to sharedname for internal admin
 		string	adminName = sharedControllerName(createEvent.cntlrName);
+		LOG_DEBUG_STR("request to start: " << createdEvent.cntlrType << "," << 
+								createdEvent.cntlrName << "(" << adminName << ")");
 
 		// is controller already known?
 		CTiter	controller = itsActiveCntlrs.find(adminName);
