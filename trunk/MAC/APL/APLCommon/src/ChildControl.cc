@@ -25,11 +25,11 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Deployment/StationInfo.h>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <Controller_Protocol.ph>
 #include <StartDaemon_Protocol.ph>
@@ -178,9 +178,10 @@ bool ChildControl::startChild (const string&		aName,
 	// Add some comment lines and some extra fields to the file
 	cntlrSet.add("prefix", prefix+position+nodeName+".");
 	cntlrSet.add("_instanceNr", lexical_cast<string>(instanceNr));
+	cntlrSet.add("_moduleName", nodeName);
 	cntlrSet.add("_treeID", lexical_cast<string>(anObsID));
-	cntlrSet.add("# modulename", nodeName);
-	cntlrSet.add("# pathname", prefix+position+nodeName+".");
+	cntlrSet.add("# moduleName", nodeName);
+	cntlrSet.add("# pathName", prefix+position+nodeName+".");
 	cntlrSet.add("# treeID", lexical_cast<string>(anObsID));
 	// Finally write to subset to the file.
 	cntlrSet.writeFile (cntlrSetName);
@@ -441,7 +442,7 @@ void ChildControl::_processActionList()
 		switch (action->requestedState) {
 		case CTState::CONNECTED: 	// start program, wait for CONNECTED msgs of child
 			{
-				// first check if connection if StartDaemon is made
+				// first check if connection with StartDaemon is made
 				SDiter	startDaemon = itsStartDaemonMap.find(action->hostname);
 				if (startDaemon == itsStartDaemonMap.end() || 
 											!startDaemon->second->isConnected()) {
@@ -781,7 +782,8 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	case F_INIT:
 		break;
 
-	case F_ENTRY:
+	case F_ENTRY:	// process actions that where queued during my startup.
+			_processActionList();
 		break;
 
 	case F_ACCEPT_REQ: {

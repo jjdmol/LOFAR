@@ -15,6 +15,7 @@ libaplcommon_la_SOURCES  =  $(DOCHDRS) \
 							Controller_Protocol.cc \
 							APLUtilities.cc \
 							ControllerDefines.cc \
+							StationInfo.cc \
 							PropertySetAnswer.cc \
 							CTState.cc \
 							ControllerAdmin.cc \
