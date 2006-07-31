@@ -40,23 +40,25 @@ public class BBSStep{
     //Step Name
     private String name;
     //Step Baseline Selection
-    private String[] station1Selection;
-    private String[] station2Selection;
+    private Vector<String> station1Selection = null;
+    private Vector<String> station2Selection = null;
     //Step Sources
-    private String[] peelSources;
-    private String[] predictSources;
+    private Vector<String> sources = null;
+    private Vector<String> extraSources = null;
     //Step Instrument Model
-    private String[] instrumentModel;
+    private Vector<String> instrumentModel = null;
     //Step Integration
-    private double integrationFrequency;
-    private double integrationTime;
+    private double integrationFrequency = -1;
+    private double integrationTime = -1;
     //Step Correlation
-    private String correlationSelection;
-    private String[] correlationType;
+    private String correlationSelection = null;
+    private Vector<String> correlationType = null;
     //Step Output Data Column
-    private String outputDataColumn;
+    private String outputDataColumn = null;
     
     //TODO: Step Operation Types
+    
+    
     /** Creates a new instance of BBSStep */
     public BBSStep(String name) {
         this.name=name;
@@ -69,6 +71,114 @@ public class BBSStep{
     }
     
     public void setName(String name){
+        this.name = name;
+    }
+    
+    public Vector<String> getStation1Selection(){
+        if(parentStep!=null && station1Selection == null){
+            return parentStep.getStation1Selection();
+        }
+        return station1Selection;
+    }
+    
+    public void setStation1Selection(Vector<String> station1Selection){
+        this.station1Selection = station1Selection;
+    }
+    public Vector<String> getStation2Selection(){
+        if(parentStep!=null  && station2Selection == null){
+            return parentStep.getStation2Selection();
+        }
+        return station2Selection;
+    }
+    
+    public void setStation2Selection(Vector<String> station2Selection){
+        this.station2Selection = station2Selection;
+    }
+    public Vector<String> getSources(){
+        if(parentStep!=null && sources == null){
+            return parentStep.getSources();
+        }
+        return sources;
+    }
+    
+    public void setSources(Vector<String> sources){
+        this.sources = sources;
+    }
+    
+    public Vector<String> getExtraSources(){
+        if(parentStep!=null && extraSources == null){
+            return parentStep.getExtraSources();
+        }
+        return extraSources;
+    }
+    
+    public void setExtraSources(Vector<String> extraSources){
+        this.extraSources = extraSources;
+    }
+    
+    public Vector<String> getInstrumentModel(){
+        if(parentStep!=null && instrumentModel == null){
+            return parentStep.getInstrumentModel();
+        }
+        return instrumentModel;
+    }
+    
+    public void setInstrumentModel(Vector<String> instrumentModel){
+        this.instrumentModel = instrumentModel;
+    }
+    
+    public double getIntegrationFrequency(){
+        if(parentStep!=null && integrationFrequency == -1){
+            return parentStep.getIntegrationFrequency();
+        }
+        return integrationFrequency;
+    }
+    
+    public void setIntegrationFrequency(double integrationFrequency){
+        this.integrationFrequency = integrationFrequency;
+    }
+    
+    public double getIntegrationTime(){
+        if(parentStep!=null && integrationTime == -1){
+            return parentStep.getIntegrationTime();
+        }
+        return integrationTime;
+    }
+    
+    public void setIntegrationTime(double integrationTime){
+        this.integrationTime = integrationTime;
+    }
+    
+    public String getCorrelationSelection(){
+        if(parentStep!=null && correlationSelection == null){
+            return parentStep.getCorrelationSelection();
+        }
+        return correlationSelection;
+    }
+    
+    public void setCorrelationSelection(String correlationSelection){
+        this.correlationSelection = correlationSelection;
+    }
+    
+    public Vector<String> getCorrelationType(){
+        if(parentStep!=null && correlationType == null){
+            return parentStep.getCorrelationType();
+        }
+        return correlationType;
+    }
+    
+    public void setCorrelationType(Vector<String> correlationType){
+        this.correlationType = correlationType;
+    }
+    
+    public String getOutputDataColumn(){
+        if(parentStep!=null && outputDataColumn == null){
+            return parentStep.getOutputDataColumn();
+        }
+        return outputDataColumn;
+    }
+    
+    public void setOutputDataColumn(String name){
         this.name = name;
     }
     
