@@ -339,15 +339,6 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="nl.astron.lofar.sas.otbcomponents.bbs.BBSStepExplorerPanel" name="aBBSStepExplorerPanel">
-          <Constraints>
-            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="Step Explorer">
-                <Property name="tabTitle" type="java.lang.String" value="Step Explorer"/>
-              </JTabbedPaneConstraints>
-            </Constraint>
-          </Constraints>
-        </Component>
       </SubComponents>
     </Container>
   </SubComponents>

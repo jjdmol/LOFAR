@@ -43,6 +43,7 @@ import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStep;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepInputDialog;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepNode;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepTreeManager;
 import org.apache.log4j.Logger;
@@ -963,6 +964,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         if(selectedPath != null){
             TreeNode someBBSStepNode = (TreeNode)selectedPath.getLastPathComponent();
             logger.trace("BBS Step to be modified : "+someBBSStepNode.getName());
+            if(!someBBSStepNode.getName().equals("Strategy Steps")){
+                 BBSStep theStep = ((BBSStepNode)someBBSStepNode.getUserObject()).getContainedStep();
+                 BBSStepInputDialog bbsStepDialog = new BBSStepInputDialog(this.itsMainFrame,false,theStep);
+                 bbsStepDialog.setTitle("Step Explorer - "+theStep.getName());
+                 bbsStepDialog.setVisible(true);
+            }
         }
     }//GEN-LAST:event_modifyStepButtonActionPerformed
     
@@ -989,6 +996,13 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         if(selectedPath != null){
             TreeNode someBBSStepNode = (TreeNode)selectedPath.getLastPathComponent();
             logger.trace("BBS Step Node to be supplied with child : "+someBBSStepNode.getName());
+            if(!someBBSStepNode.getName().equals("Strategy Steps")){
+                 BBSStepInputDialog bbsStepDialog = new BBSStepInputDialog(this.itsMainFrame,false,null);
+                 bbsStepDialog.setVisible(true);
+            }
+            
+                
+           
         }
     }//GEN-LAST:event_addStepButtonActionPerformed
     

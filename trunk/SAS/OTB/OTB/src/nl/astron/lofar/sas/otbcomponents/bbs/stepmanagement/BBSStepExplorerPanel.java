@@ -36,6 +36,7 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStep;
 import org.apache.log4j.Logger;
 
 /**
@@ -86,37 +87,16 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     }
     
     public void setContent(Object anObject) {
-        itsNode=(jOTDBnode)anObject;
-        jOTDBparam aParam=null;
-        try {
-            //we need to get all the childs from this node.
-            Vector childs = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
-            
-            // get all the params per child
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
-                aParam=null;
-                jOTDBnode aNode = (jOTDBnode)e.nextElement();
-                
-                // We need to keep all the nodes needed by this panel
-                // if the node is a leaf we need to get the pointed to value via Param.
-                if (aNode.leaf) {
-                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
-                    setField(itsNode,aParam,aNode);
-                    
-                    //we need to get all the childs from the following nodes as well.
-                }else if (LofarUtils.keyName(aNode.name).equals("ParmDB")) {
-                    this.retrieveAndDisplayChildDataForNode(aNode);
-                }else if (LofarUtils.keyName(aNode.name).equals("BBDB")) {
-                    this.retrieveAndDisplayChildDataForNode(aNode);
-                }
-            }
-        } catch (RemoteException ex) {
-            logger.debug("Error during getComponentParam: "+ ex);
-            itsParamList=null;
-            return;
-        }
         
+        if(anObject instanceof BBSStep){
+            itsBBSStep=(BBSStep)anObject;
+            fillBBSGui(itsBBSStep);
+            stepExplorerStepNameText.setEditable(false);           
+            
+        }else if(anObject instanceof jOTDBnode){
+            itsNode=(jOTDBnode)anObject;
+            
+        }
         initPanel();
     }
     
@@ -164,50 +144,22 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
     }
-    /** Restore original Values in Detauks panel
-     */
-    private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
-        jOTDBparam aParam=null;
-        try {
-            Vector HWchilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-            // get all the params per child
-            Enumeration e1 = HWchilds.elements();
-            while( e1.hasMoreElements()  ) {
-                
-                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                aParam=null;
-                // We need to keep all the params needed by this panel
-                if (aHWNode.leaf) {
-                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
-                }
-                setField(aNode,aParam,aHWNode);
-            }
-        } catch (RemoteException ex) {
-            logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
-            return;
-        }
-    }
-    
     
     /** Restore original Values in Global Settings panel
      */
     private void restoreBBSStepExplorerPanel() {
-        /*
-        // Global Settings parameters
-        this.BBSDatasetText.setText(dataSet.limits);
-        this.BBDBHostText.setText(BBDBHost.limits);
-        this.BBDBPortText.setText(BBDBPort.limits);
-        this.BBDBDBNameText.setText(BBDBDBName.limits);
-        this.BBDBDBUsernameText.setText(BBDBUsername.limits);
-        this.BBDBDBPasswordText.setText(BBDBPassword.limits);
         
-        this.ParmDBInstrumentText.setText(ParmDBInstrument.limits);
-        this.ParmDBLocalSkyText.setText(ParmDBLocalSky.limits);
-        */
+        // Global Settings parameters
+        if(itsBBSStep != null){
+            this.stepExplorerStepNameText.setText(itsBBSStep.getName());
+        }
     }
     
     private void initialize() {
         buttonPanel1.addButton("Save Settings");
+        if(itsBBSStep == null){
+            stepExplorerStepNameText.setEditable(true);
+        }
     }
     
     private void initPanel() {
@@ -232,100 +184,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         } else {
             logger.debug("ERROR:  no node given");
         }
+        
     }
     /* Set's the different fields in the GUI */
-    private void setField(jOTDBnode parent, jOTDBparam aParam, jOTDBnode aNode) {
-        // OLAP_HW settings
-        if (aParam==null) {
-            return;
-        }
-        boolean isRef = LofarUtils.isReference(aNode.limits);
-        String aKeyName = LofarUtils.keyName(aNode.name);
-        String parentName = String.valueOf(parent.name);
-        /*
-        if (aKeyName.equals("DataSet")) {
-            this.BBSDatasetText.setToolTipText(aParam.description);
-            this.dataSet=aNode;
-            
-            if (isRef && aParam != null) {
-                this.BBSDatasetDeRefText.setVisible(true);
-                BBSDatasetText.setText(aNode.limits);
-                BBSDatasetDeRefText.setText(aParam.limits);
-            } else {
-                BBSDatasetDeRefText.setVisible(false);
-                BBSDatasetDeRefText.setText("");
-                BBSDatasetText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("DBName")) {
-            this.BBDBDBNameText.setToolTipText(aParam.description);
-            this.BBDBDBName=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBNameText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBNameText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("Host")) {
-            this.BBDBHostText.setToolTipText(aParam.description);
-            this.BBDBHost=aNode;
-            if (isRef && aParam != null) {
-                BBDBHostText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBHostText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("Port")) {
-            this.BBDBPortText.setToolTipText(aParam.description);
-            this.BBDBPort=aNode;
-            if (isRef && aParam != null) {
-                BBDBPortText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBPortText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("UserName")) {
-            this.BBDBDBUsernameText.setToolTipText(aParam.description);
-            this.BBDBUsername=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBUsernameText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBUsernameText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("PassWord")) {
-            this.BBDBDBPasswordText.setToolTipText(aParam.description);
-            this.BBDBPassword=aNode;
-            if (isRef && aParam != null) {
-                BBDBDBPasswordText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                BBDBDBPasswordText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("Instrument")) {
-            this.ParmDBInstrumentText.setToolTipText(aParam.description);
-            this.ParmDBInstrument=aNode;
-            if (isRef && aParam != null) {
-                ParmDBInstrumentText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                ParmDBInstrumentText.setText(aNode.limits);
-            }
-        }else if (aKeyName.equals("LocalSky")) {
-            this.ParmDBLocalSkyText.setToolTipText(aParam.description);
-            this.ParmDBLocalSky=aNode;
-            if (isRef && aParam != null) {
-                ParmDBLocalSkyText.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                ParmDBLocalSkyText.setText(aNode.limits);
-            }
-        }*/
-    }
-    
-    /** saves the given param back to the database
-     */
-    private void saveNode(jOTDBnode aNode) {
-        if (aNode == null) {
-            return;
-        }
-        try {
-            itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveNode(aNode);
-        } catch (RemoteException ex) {
-            logger.debug("Error: saveNode failed : " + ex);
-        }
+    private void fillBBSGui(BBSStep theBBSStep) {
+        
+        this.stepExplorerStepNameText.setText(theBBSStep.getName());
+        //TODO: Add variables from BBSStep
     }
     
     /** Enables/disables the buttons
@@ -365,7 +230,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             dataSet.limits = BBSDatasetText.getText();
             logger.trace("Variable BBS ("+dataSet.name+"//"+dataSet.treeID()+"//"+dataSet.nodeID()+"//"+dataSet.parentID()+"//"+dataSet.paramDefID()+") from value ("+BBSDatasetText.getText()+") updated to :"+dataSet.limits);
             saveNode(dataSet);
-        } 
+        }
         if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
             BBDBHost.limits = BBDBHostText.getText();
             logger.trace("Variable BBS ("+BBDBHost.name+"//"+BBDBHost.treeID()+"//"+BBDBHost.nodeID()+"//"+BBDBHost.parentID()+"//"+BBDBHost.paramDefID()+") updated to :"+BBDBHost.limits);
@@ -513,11 +378,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerInstrumentModelPanel.setLayout(new java.awt.BorderLayout());
 
         stepExplorerInstrumentModelPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Instrument Model"));
-        stepExplorerInstrumentModelList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Bandpass", "DirGain", "Phase" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
         stepExplorerInstrumentModelScrollPane.setViewportView(stepExplorerInstrumentModelList);
 
         stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelScrollPane, java.awt.BorderLayout.CENTER);
@@ -719,7 +579,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerOutputDataPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         stepExplorerOutputDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Data Column"));
-        stepExplorerOutputDataText.setText("OUTDATA2");
         stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 140, 20));
 
         stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 230, 160, 120));
@@ -880,11 +739,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerSourcesPanel1.add(stepExplorerSourcesModsPanel1, java.awt.BorderLayout.SOUTH);
 
-        stepExplorerSourcesList1.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "3C347", "3C348", "3C349", "3C350" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
         stepExplorerSourcesScrollPane1.setViewportView(stepExplorerSourcesList1);
 
         stepExplorerSourcesPanel1.add(stepExplorerSourcesScrollPane1, java.awt.BorderLayout.CENTER);
@@ -922,11 +776,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerSourcesPanel.add(stepExplorerSourcesModsPanel, java.awt.BorderLayout.SOUTH);
 
-        stepExplorerSourcesList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "3C343", "3C344", "3C345", "3C346" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
         stepExplorerSourcesScrollPane.setViewportView(stepExplorerSourcesList);
 
         stepExplorerSourcesPanel.add(stepExplorerSourcesScrollPane, java.awt.BorderLayout.CENTER);
@@ -939,6 +788,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerStepNameLabel.setText("Step");
         stepExplorerPanel.add(stepExplorerStepNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, -1, 30));
 
+        stepExplorerStepNameText.setEditable(false);
         stepExplorerStepNameText.setFont(new java.awt.Font("Dialog", 1, 18));
         stepExplorerStepNameText.setToolTipText("This is the name of the displayed step");
         stepExplorerPanel.add(stepExplorerStepNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 10, 250, 30));
@@ -950,7 +800,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         add(BBSStepExplorerPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-                    
+    
     private void stepExplorerRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepExplorerRevertButtonActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_stepExplorerRevertButtonActionPerformed
@@ -965,30 +815,30 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         }
         
     }//GEN-LAST:event_baselineUseAllCheckboxStateChanged
-                
+    
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save Settings") {
             saveInput();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
+    private BBSStep itsBBSStep = null;
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
-    private Vector<jOTDBparam> itsParamList;
     
     /*modify to step explorer panels
     // Global Settings parameters
     private jOTDBnode dataSet;
-    
+     
     private jOTDBnode BBDBHost;
     private jOTDBnode BBDBPort;
     private jOTDBnode BBDBDBName;
     private jOTDBnode BBDBUsername;
     private jOTDBnode BBDBPassword;
-    
+     
     private jOTDBnode ParmDBInstrument;
     private jOTDBnode ParmDBLocalSky;
-    */
+     */
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel BBSStepExplorerPanel;
     private javax.swing.JPanel BaselineSelectionPanel;

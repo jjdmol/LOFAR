@@ -143,11 +143,7 @@
                         <Component class="javax.swing.JList" name="stepExplorerInstrumentModelList">
                           <Properties>
                             <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
-                              <StringArray count="3">
-                                <StringItem index="0" value="Bandpass"/>
-                                <StringItem index="1" value="DirGain"/>
-                                <StringItem index="2" value="Phase"/>
-                              </StringArray>
+                              <StringArray count="0"/>
                             </Property>
                           </Properties>
                         </Component>
@@ -755,9 +751,6 @@
                   </Layout>
                   <SubComponents>
                     <Component class="javax.swing.JTextField" name="stepExplorerOutputDataText">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="OUTDATA2"/>
-                      </Properties>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
                           <AbsoluteConstraints x="10" y="30" width="140" height="20"/>
@@ -1143,12 +1136,7 @@
                             <Component class="javax.swing.JList" name="stepExplorerSourcesList1">
                               <Properties>
                                 <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
-                                  <StringArray count="4">
-                                    <StringItem index="0" value="3C347"/>
-                                    <StringItem index="1" value="3C348"/>
-                                    <StringItem index="2" value="3C349"/>
-                                    <StringItem index="3" value="3C350"/>
-                                  </StringArray>
+                                  <StringArray count="0"/>
                                 </Property>
                               </Properties>
                             </Component>
@@ -1261,12 +1249,7 @@
                             <Component class="javax.swing.JList" name="stepExplorerSourcesList">
                               <Properties>
                                 <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
-                                  <StringArray count="4">
-                                    <StringItem index="0" value="3C343"/>
-                                    <StringItem index="1" value="3C344"/>
-                                    <StringItem index="2" value="3C345"/>
-                                    <StringItem index="3" value="3C346"/>
-                                  </StringArray>
+                                  <StringArray count="0"/>
                                 </Property>
                               </Properties>
                             </Component>
@@ -1291,6 +1274,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="stepExplorerStepNameText">
                   <Properties>
+                    <Property name="editable" type="boolean" value="false"/>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                       <Font name="Dialog" size="18" style="1"/>
                     </Property>

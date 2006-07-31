@@ -53,13 +53,13 @@ public class BBSStepDataManager{
         return instance;
     }
     
-    public Vector<BBSStepNode> buildStepTree(BBSStepNode aRootNode, boolean buildStrategyStepTree) throws RemoteException{
+    public Vector<BBSStepNode> buildStepTree(BBSStepNode stepContainerNode, boolean buildStrategyStepTree) throws RemoteException{
         Vector<BBSStepNode> returnNode = new Vector<BBSStepNode>();
         
         //Fetch the step names that are mentioned in the strategy tree (Strategy.Steps)
         
         //The following otdbnode should be the Step container node (Step)
-        jOTDBnode rootNode = aRootNode.getOTDBNode();
+        jOTDBnode rootNode = stepContainerNode.getOTDBNode();
         
         jOTDBnode strategyStepsParameter=null;
         Vector HWchilds = null;
@@ -142,6 +142,26 @@ public class BBSStepDataManager{
                 strategyStepsParameter = aHWNode;
                 logger.trace("Strategy Steps defined :"+strategyStepsParameter.limits);
             }
+            if (aHWNode.leaf && aHWNode.name.equals("Sources")) {
+                parentNode.setSources(this.getVectorFromString(aHWNode.limits,true));
+                
+            }
+            if (aHWNode.leaf && aHWNode.name.equals("ExtraSources")) {
+                parentNode.setExtraSources(this.getVectorFromString(aHWNode.limits,true));
+                
+            }
+            if (aHWNode.leaf && aHWNode.name.equals("InstrumentModel")) {
+                strategyStepsParameter = aHWNode;
+                
+            }
+            if (aHWNode.leaf && aHWNode.name.equals("Operation")) {
+                strategyStepsParameter = aHWNode;
+               
+            }
+            if (aHWNode.leaf && aHWNode.name.equals("OutData")) {
+                strategyStepsParameter = aHWNode;
+                
+            }
         }
         if(strategyStepsParameter!=null){
             //retrieve the step names mentioned in the strategy steps parameter (Strategy.Steps)
@@ -159,9 +179,10 @@ public class BBSStepDataManager{
                     if (!aHWNode.leaf && strategySteps.contains(aHWNode.name)) {
                         //Create a new step and build it (with its substeps as well)
                         BBSStep newStep = new BBSStep(aHWNode.name);
+                        //build its childsteps recursively
                         buildStep(newStep,aHWNode);
                         parentNode.addChildStep(newStep);
-                        logger.trace("Strategy Step defined : "+newStep.getName());
+                        logger.trace("Step defined : "+newStep.getName());
                     }
                 }
             }

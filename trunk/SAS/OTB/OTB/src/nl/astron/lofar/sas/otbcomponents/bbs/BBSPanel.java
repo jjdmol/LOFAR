@@ -446,7 +446,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         BBSDatasetDeRefText = new javax.swing.JTextField();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
         aBBSStrategyPanel = new nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel();
-        aBBSStepExplorerPanel = new nl.astron.lofar.sas.otbcomponents.bbs.BBSStepExplorerPanel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -566,26 +565,24 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         jTabbedPane1.addTab("Strategy", aBBSStrategyPanel);
 
-        jTabbedPane1.addTab("Step Explorer", aBBSStepExplorerPanel);
-
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-    
+
     private void ParmDBLocalSkyTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParmDBLocalSkyTextActionPerformed
 // TODO add your handling code here:
     }//GEN-LAST:event_ParmDBLocalSkyTextActionPerformed
-    
+
     private void configurationRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationRevertButtonActionPerformed
         this.restoreBBSGlobalSettingsPanel();
     }//GEN-LAST:event_configurationRevertButtonActionPerformed
-    
+
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save Settings") {
             saveInput();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
-    
+                
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
     private Vector<jOTDBparam> itsParamList;
@@ -624,7 +621,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel ParmDBLocalSkyLabel;
     private javax.swing.JTextField ParmDBLocalSkyText;
     private javax.swing.JPanel ParmDBPanel;
-    private nl.astron.lofar.sas.otbcomponents.bbs.BBSStepExplorerPanel aBBSStepExplorerPanel;
     private nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel aBBSStrategyPanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JButton configurationRevertButton;
