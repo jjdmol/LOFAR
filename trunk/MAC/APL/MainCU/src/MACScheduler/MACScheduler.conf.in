@@ -1,4 +1,6 @@
 # new setup
+prefix				= LOFAR.PermSW.MACScheduler
+
 OTDBdatabasename	= overeem
 OTDBusername		= paulus
 OTDBpassword		= boskabouter
