@@ -42,6 +42,7 @@ fi
 rm -rf tBandpass.instrument_model
 parmdb < tBandpass.in_parmdb_$1
 
+
 # check status
 if [ $? != 0 ]; then
     echo "$1: FAIL (creation of instrument model ParmDB failed)"
@@ -83,21 +84,22 @@ if [ $? != 0 ]; then
     return 1
 fi
 
+echo -e "\n\nchecking output..."
+
 # verify output
 RETURN_VALUE=0
 
 # compare with expected output.
-if diff tBandpass.stdout.tmp tBandpass.in_stdout_$1 >> tBandpass.log_$1 2>&1
+if diff tBandpass.stdout.tmp tBandpass.in_stdout_$1
 then
     echo "$1: OK"
 else
     # compare with expected output excluding fractional numbers
     sed -e 's/[0-9]\+\.[0-9]\+/ /g' tBandpass.in_stdout_$1 | sed -e 's/e[+-][0-9]\+/ /g' > tBandpass.in_stdout_$1.strip
     sed -e 's/[0-9]\+\.[0-9]\+/ /g' tBandpass.stdout.tmp | sed -e 's/e[+-][0-9]\+/ /g' > tBandpass.stdout.tmp.strip
-    if diff tBandpass.stdout.tmp.strip tBandpass.in_stdout_$1.strip >> tBandpass.log_$1 2>&1
-    then
+    if diff tBandpass.stdout.tmp.strip tBandpass.in_stdout_$1.strip ; then
         # check if all (fractional) numbers are approximately equal.
-        $lofar_sharedir/checkfloat tBandpass.stdout.tmp tBandpass.in_stdout_$1 $PREC >> tBandpass.log_$1 2>&1
+        $lofar_sharedir/checkfloat tBandpass.stdout.tmp tBandpass.in_stdout_$1 $PREC
 
         if [ $? != 0 ]
         then
