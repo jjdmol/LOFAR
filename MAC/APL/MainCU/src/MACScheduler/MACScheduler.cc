@@ -72,6 +72,8 @@ MACScheduler::MACScheduler() :
 {
 	LOG_TRACE_OBJ ("MACscheduler construction");
 
+	LOG_INFO_STR("MACProcessScope:" << globalParameterSet()->getString("prefix"));
+
 	// Readin some parameters from the ParameterSet.
 	itsOTDBpollInterval = globalParameterSet()->getTime("OTDBpollInterval");
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
