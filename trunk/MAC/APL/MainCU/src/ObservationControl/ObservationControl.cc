@@ -167,7 +167,7 @@ void ObservationControl::startChildControllers()
 
 			// child already running???
 			CTState::CTstateNr	requestedState= 
-										itsChildControl->getRequestedState(childCntlrName);
+									itsChildControl->getRequestedState(childCntlrName);
 
 			if (requestedState == CTState::NOSTATE) {
 				// fire request for new controller, will result in CONTROL_STARTED
@@ -378,27 +378,27 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case F_TIMER:  {
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 		if (timerEvent.id == itsHeartBeat) {
-			// TODO: implement my real task
+			doHeartBeatTask();
 		}
 		else if (timerEvent.id == itsClaimTimer) {
 			setState(CTState::CLAIM);
 			itsClaimTimer = 0;
-			// TODO: do something else?
+			// TODO: do something else?	--> OE 837
 		}
 		else if (timerEvent.id == itsPrepareTimer) {
 			setState(CTState::PREPARE);
 			itsPrepareTimer = 0;
-			// TODO: do something else?
+			// TODO: do something else?	--> OE 837
 		}
 		else if (timerEvent.id == itsStartTimer) {
 			setState(CTState::ACTIVE);
 			itsStartTimer = 0;
-			// TODO: do something else?
+			// TODO: do something else?	--> OE 837
 		}
 		else if (timerEvent.id == itsStopTimer) {
 			setState(CTState::FINISH);
 			itsStopTimer = 0;
-			// TODO: do something else?
+			// TODO: do something else?	--> OE 837
 		}
 		// some other timer?
 
@@ -440,42 +440,42 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case CONTROL_CLAIMED: {
 		CONTROLClaimedEvent		msg(event);
 		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!
+		// TODO: do something usefull with this information!	--> OE 837
 		break;
 	}
 
 	case CONTROL_PREPARED: {
 		CONTROLPreparedEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!
+		// TODO: do something usefull with this information!	--> OE 837
 		break;
 	}
 
 	case CONTROL_RESUMED: {
 		CONTROLResumedEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!
+		// TODO: do something usefull with this information!	--> OE 837
 		break;
 	}
 
 	case CONTROL_SUSPENDED: {
 		CONTROLSuspendedEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!
+		// TODO: do something usefull with this information!	--> OE 837
 		break;
 	}
 
 	case CONTROL_RELEASED: {
 		CONTROLReleasedEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!
+		// TODO: do something usefull with this information!	--> OE 837
 		break;
 	}
 
 	case CONTROL_FINISH: {
 		CONTROLFinishEvent		msg(event);
 		LOG_DEBUG_STR("Received FINISH(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!
+		// TODO: do something usefull with this information!	--> OE 837
 		break;
 	}
 
@@ -551,7 +551,31 @@ void ObservationControl::setObservationTimers()
 	LOG_DEBUG_STR ("Observation ends over " << (stop-now)/60 << " minutes");
 }
 
+//
+//doHeartBeatTask()
+//
+void  ObservationControl::doHeartBeatTask()
+{
+	itsHeartBeat = itsTimerPort->setTimer(1.0 * itsHeartBeat);
+	
+	uint32	nrChilds = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
+	vector<ChildControl::StateInfo>		lateCntlrs = 
+						itsChildControl->getPendingRequest("", 0, CNTLRTYPE_NO_TYPE);
+	if (lateCntlrs.empty()) {
+		LOG_DEBUG_STR("All (" << nrChilds << ") controllers are up to date");
+		return;
+	}
 
+	LOG_DEBUG_STR (lateCntlrs.size() << " controllers are still out of sync");
+	CTState		cts;
+	for (uint32 i = 0; i < lateCntlrs.size(); i++) {
+		ChildControl::StateInfo*	si = &lateCntlrs[i];
+		LOG_DEBUG_STR(si->name << ":" << cts.name(si->currentState) << " iso " 
+									  << cts.name(si->requestedState));
+	}
+
+}
+	
 //
 // _connectedHandler(port)
 //

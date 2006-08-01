@@ -92,10 +92,12 @@ private:
 	ObservationControl(const ObservationControl&);
    	ObservationControl& operator=(const ObservationControl&);
 
-	void setState(CTState::CTstateNr	newState);
-
+	void 	setState(CTState::CTstateNr	newState);
 	void	setObservationTimers();
 	void	startChildControllers();
+
+	void	doHeartBeatTask();
+
    	void 	_connectedHandler(GCFPortInterface& port);
    	void	_disconnectedHandler(GCFPortInterface& port);
    	boost::shared_ptr<ACC::APS::ParameterSet> 
