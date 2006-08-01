@@ -1,6 +1,6 @@
 instrument_parmdb="tBandpass.instrument_model"
 sky_parmdb="tBandpass.sky_model"
-measurement_set="/opt/lofar/data/bandpass_polc_clean_64_1440.MS"
+measurement_set="/opt/lofar/data/bandpass_clean_polc_64_1440.MS"
 instrument_model="BANDPASS"
 calculate_UVW=F
 operation="solve"
