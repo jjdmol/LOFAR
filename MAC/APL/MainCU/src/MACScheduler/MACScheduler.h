@@ -28,6 +28,8 @@
 
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/GCF_PVDynArr.h>
+#include <GCF/GCF_PVString.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -97,6 +99,8 @@ private:
 	MACScheduler(const MACScheduler&);
    	MACScheduler& operator=(const MACScheduler&);
 
+	void _addActiveObservation(const Observation&	newObs);
+	void _removeActiveObservation(const string& name);
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
    	void _doOTDBcheck();
@@ -107,7 +111,8 @@ private:
    	GCFMyPropertySetPtr           itsPropertySet;
 
 	// Information about the Observations. Not used yet.
-	map<string,Observation>	itsObservations;
+	vector<Observation>			itsObservations;
+	GCF::Common::GCFPValueArray	itsPVSSObsList;
 
 	// Ports for StartDaemon and ObservationControllers.
    	GCFTimerPort*			itsTimerPort;			// for timers
