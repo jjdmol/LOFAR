@@ -196,10 +196,15 @@ private:
   // </group>
 
   // Get measurement set description from file
+  // NB. DEPRECATED -- only use for debugging purposes, will
+  // be removed in the next release.
   void readDescriptiveData (const string& fileName);
+  
+  // Read measurement set meta data
+  void readMeasurementSetMetaData(const string& fileName);
 
-  // Process the MS description for the given dd (sectral window).
-  void Prediffer::processMSDesc (uint ddid);
+  // Process the MS description for the given dd (spectral window).
+  void processMSDesc (uint ddid);
 
   // Get the phase reference position of the first field.
   void getPhaseRef (double ra, double dec, double startTime);

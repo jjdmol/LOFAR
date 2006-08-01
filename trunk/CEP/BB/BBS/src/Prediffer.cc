@@ -58,11 +58,10 @@
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/Slicer.h>
 #include <casa/Arrays/Vector.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MeasConvert.h>
+// Vector2.cc: necessary to instantiate .tovector()
+#include <casa/Arrays/Vector2.cc>
 #include <casa/Quanta/MVBaseline.h>
 #include <casa/Quanta/MVPosition.h>
-#include <casa/Utilities/Regex.h>
 #include <casa/OS/Timer.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
@@ -70,10 +69,34 @@
 #include <casa/IO/AipsIO.h>
 #include <casa/IO/MemoryIO.h>
 #include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Regex.h>
+#include <casa/Utilities/GenSort.h>
+
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MeasTable.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/Stokes.h>
+
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
+#include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TiledColumnStMan.h>
+
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSAntenna.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSDataDescription.h>
+#include <ms/MeasurementSets/MSDataDescColumns.h>
+#include <ms/MeasurementSets/MSField.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
+#include <ms/MeasurementSets/MSObservation.h>
+#include <ms/MeasurementSets/MSObsColumns.h>
+#include <ms/MeasurementSets/MSPolarization.h>
+#include <ms/MeasurementSets/MSPolColumns.h>
+#include <ms/MeasurementSets/MSSpectralWindow.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
 
 #include <stdexcept>
 #include <iostream>
@@ -127,8 +150,10 @@ Prediffer::Prediffer(const string& msName,
 		<< "'" << skyPdm.getTableName() << "', "
 		<< itsCalcUVW << ")" );
   // Read the meta data and map the flags file.
-  readDescriptiveData (msName);
-  processMSDesc (ddid);
+  //readDescriptiveData(msName);
+  readMeasurementSetMetaData(msName);
+  processMSDesc(ddid);
+  
   itsFlagsMap = new FlagsMap(msName + "/vis.flg", MMap::Read);
   // Get all sources from the ParmDB.
   itsSources = new MeqSourceList(itsGSMMEP, itsParmGroup);
@@ -400,6 +425,8 @@ Prediffer::~Prediffer()
 
 void Prediffer::readDescriptiveData (const string& fileName)
 {
+  ASSERTSTR(false, "DEPRECATED -- will be removed in next release. Use Prediffer::readMeasurementSetMetaData instead.");
+  
   // Get meta data from description file.
   string name(fileName+"/vis.des");
   std::ifstream istr(name.c_str());
@@ -407,6 +434,204 @@ void Prediffer::readDescriptiveData (const string& fileName)
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
   bis >> itsMSDesc;
+}
+
+void Prediffer::readMeasurementSetMetaData(const string &fileName)
+{
+    MeasurementSet ms(fileName);
+    
+    Path absolutePath = Path(fileName).absoluteName();
+    itsMSDesc.msPath = absolutePath.dirName();
+    itsMSDesc.msName = absolutePath.baseName();
+    
+    itsMSDesc.npart  = 1;
+    
+    /*
+        Get baselines.
+    */
+    Block<String> sortColumns(2);
+    sortColumns[0] = "ANTENNA1";
+    sortColumns[1] = "ANTENNA2";
+    Table uniqueBaselines = ms.sort(sortColumns, Sort::Ascending, Sort::QuickSort + Sort::NoDuplicates);
+    ROScalarColumn<Int> station1Column(uniqueBaselines, "ANTENNA1");
+    ROScalarColumn<Int> station2Column(uniqueBaselines, "ANTENNA2");
+    station1Column.getColumn().tovector(itsMSDesc.ant1);
+    station2Column.getColumn().tovector(itsMSDesc.ant2);
+    
+    /*
+        Get information about frequency grid.
+    */
+    MSDataDescription dataDescription(ms.dataDescription());
+    ROMSDataDescColumns dataDescriptionColumns(dataDescription);
+    MSSpectralWindow spectralWindow(ms.spectralWindow());
+    ROMSSpWindowColumns spectralWindowColumns(spectralWindow);
+    int spectralWindowCount = dataDescription.nrow();
+    
+    itsMSDesc.nchan.resize(spectralWindowCount);
+    itsMSDesc.startFreq.resize(spectralWindowCount);
+    itsMSDesc.endFreq.resize(spectralWindowCount);
+    
+    for(int i = 0; i < spectralWindowCount; i++)
+    {
+        Vector<double> channelFrequency = spectralWindowColumns.chanFreq()(i);
+        Vector<double> channelWidth = spectralWindowColumns.chanWidth()(i);
+        
+        // So far, only equal frequency spacings are possible.
+        ASSERTSTR(allEQ(channelWidth, channelWidth(0)), "Channels must have equal spacings");
+        
+        int channelCount = channelWidth.nelements();
+        itsMSDesc.nchan[i] = channelCount;
+        
+        double step = abs(channelWidth(0));
+        if(channelFrequency(0) > channelFrequency(channelCount - 1))
+        {
+            itsMSDesc.startFreq[i] = channelFrequency(0) + step / 2;
+            itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] - channelCount * step;
+        }
+        else
+        {
+            itsMSDesc.startFreq[i] = channelFrequency(0) - step / 2;
+            itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] + channelCount * step;
+        }
+    }
+    
+    /*
+        Get information about time grid.
+    */
+    ROScalarColumn<double> timeColumn(ms, "TIME");
+    Vector<double> time = timeColumn.getColumn();
+    Vector<uInt> timeIndex;
+    uInt timeCount = GenSortIndirect<double>::sort(timeIndex, time, Sort::Ascending, Sort::InsSort + Sort::NoDuplicates);
+        
+    itsMSDesc.times.resize(timeCount);
+    itsMSDesc.exposures.resize(timeCount);
+    ROScalarColumn<double> exposureColumn(ms, "EXPOSURE");
+    Vector<double> exposure = exposureColumn.getColumn();
+    
+    for(uInt i = 0; i < timeCount; i++)
+    {
+        itsMSDesc.times[i] = time[timeIndex[i]];
+        itsMSDesc.exposures[i] = exposure[timeIndex[i]];
+    }
+    
+    /*
+        Get phase center as RA and DEC (J2000).
+        
+        From AIPS++ note 229 (MeasurementSet definition version 2.0):
+        ---
+        FIELD: Field positions for each source
+        Notes:
+            The FIELD table defines a field position on the sky. For interferometers,
+            this is the correlated field position. For single dishes, this is the
+            nominal pointing direction.    
+        ---
+        
+        The way this column is used by SelfCal seems to have nothing to do with sources.
+        In LOFAR/CEP/BB/MS/src/makemsdesc.cc the following line can be found:
+            MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
+        which should be equivalent to:
+            MDirection phaseRef = mssubc.phaseDirMeas(0);
+        as used in the code below.
+    */
+    MSField field(ms.field());
+    ROMSFieldColumns fieldColumns(field);
+    MDirection phaseCenter = MDirection::Convert(fieldColumns.phaseDirMeas(0), MDirection::J2000)();
+    Quantum<Vector<double> > phaseCenterAngles = phaseCenter.getAngle();
+    itsMSDesc.ra  = phaseCenterAngles.getBaseValue()(0);
+    itsMSDesc.dec = phaseCenterAngles.getBaseValue()(1);
+    
+    /*
+        Get correlation types.
+    */
+    MSPolarization polarization(ms.polarization());
+    ROMSPolarizationColumns polarizationColumn(polarization);
+    Vector<Int> correlationTypes = polarizationColumn.corrType()(0);
+    int correlationTypeCount = correlationTypes.nelements();
+    itsMSDesc.corrTypes.resize(correlationTypeCount);
+    for(int i = 0; i < correlationTypeCount; i++)
+    {
+        itsMSDesc.corrTypes[i] = Stokes::name(Stokes::type(correlationTypes(i)));
+    }
+    
+    /*
+        Get station names and positions in ITRF coordinates.
+    */
+    MSAntenna antenna(ms.antenna());
+    ROMSAntennaColumns antennaColumns(antenna);
+    int antennaCount = antenna.nrow();
+    
+    MVPosition sumVector;
+    itsMSDesc.antNames.resize(antennaCount);
+    itsMSDesc.antPos.resize(IPosition(2, 3, antennaCount));
+    for(int i = 0; i < antennaCount; i++)
+    {
+        itsMSDesc.antNames[i] = antennaColumns.name()(i);
+        MPosition position = antennaColumns.positionMeas()(i);
+        position = MPosition::Convert(position, MPosition::ITRF)();
+        const MVPosition& positionVector = position.getValue();
+        sumVector += positionVector;
+        for(int j = 0; j < 3; j++)
+        {
+            itsMSDesc.antPos(IPosition(2, j, i)) = positionVector(j);
+        }
+    }
+    
+    /*
+        Get the array position in ITRF coordinates, or use the centroid
+        of the station positions if the array position is unknown.
+    */
+    MSObservation observation(ms.observation());
+    ROMSObservationColumns observationColumns(observation);
+    
+    MPosition position;
+    MVPosition positionVector;
+    if(observation.nrow() > 0 && MeasTable::Observatory(position, observationColumns.telescopeName()(0)))
+    {
+        position = MPosition::Convert(position, MPosition::ITRF)();
+        positionVector = position.getValue();
+    }
+    else
+    {
+        positionVector = sumVector * (1.0 / (double) antennaCount);
+    }
+    
+    itsMSDesc.arrayPos.resize(3);
+    for(int i = 0; i < 3; i++)
+    {
+        itsMSDesc.arrayPos[i] = positionVector(i);
+    }
+    
+    /*
+        Determine the startTime and endTime of the observation.
+    */
+    if(observation.nrow() > 0)
+    {
+        Vector<double> times = observationColumns.timeRange()(0);
+        itsMSDesc.startTime = times(0);
+        itsMSDesc.endTime   = times(1);
+    }
+    else
+    {
+        itsMSDesc.startTime = 0.0;
+        itsMSDesc.endTime   = 0.0;
+    }
+    
+    if(itsMSDesc.startTime >= itsMSDesc.endTime)
+    {
+        /*
+          Invalid start / end times; derive from times and interval.
+          Difference between interval and exposure is startup time which
+          is taken into account.
+        */
+        if(timeCount > 0)
+        {
+            ROScalarColumn<double> interval(ms, "INTERVAL");
+            itsMSDesc.startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2 + (interval(0) - itsMSDesc.exposures[0]);
+            itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
+        }
+    }
+    
+    cout << itsMSDesc;
 }
 
 void Prediffer::processMSDesc (uint ddid)
