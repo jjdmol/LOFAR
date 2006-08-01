@@ -58,8 +58,8 @@ MACScheduler::MACScheduler() :
 	PropertySetAnswerHandlerInterface(),
 	itsPropertySetAnswer(*this),
 	itsPropertySet		(),
-//	itsObsCntlrMap		(),
 	itsObservations		(),
+	itsPVSSObsList		(),
 	itsTimerPort		(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
@@ -86,6 +86,8 @@ MACScheduler::MACScheduler() :
 
 	// need port for timers
 	itsTimerPort = new GCFTimerPort(*this, "Timerport");
+
+	itsObservations.reserve(10);		// already reserve memory for 10 observations.
 
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 	registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
@@ -153,7 +155,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 
 		// TODO: implement something usefull.
 		// change of queueTime
-		if ((strstr(pPropAnswer->pPropName, MS_PROPSET_NAME) != 0) &&
+		if ((strstr(pPropAnswer->pPropName, PSN_MAC_SCHEDULER) != 0) &&
 			(pPropAnswer->pValue->getType() == LPT_INTEGER)) {
 			uint32	newVal = (uint32) ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
 			if (strstr(pPropAnswer->pPropName, PVSSNAME_MS_QUEUEPERIOD) != 0) {
@@ -194,8 +196,8 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		LOG_DEBUG ("Activating PropertySet");
-		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(MS_PROPSET_NAME,
-																  MS_PROPSET_TYPE,
+		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(PSN_MAC_SCHEDULER,
+																  PST_MAC_SCHEDULER,
 																  PS_CAT_PERM_AUTOLOAD,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
@@ -206,11 +208,11 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 	case F_TIMER: {		// must be timer that PropSet is enabled.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString  ("initial"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString  (""));
-		itsPropertySet->setValue(string(MS_OTDB_CONNECTED), GCFPVBool    (false));
-		itsPropertySet->setValue(string(MS_OTDB_LASTPOLL),  GCFPVString  (""));
-		itsPropertySet->setValue(string(MS_OTDB_POLL_ITV),  GCFPVUnsigned(itsOTDBpollInterval));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),      GCFPVString  ("initial"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),      GCFPVString  (""));
+		itsPropertySet->setValue(string(PN_MS_OTDB_CONNECTED),    GCFPVBool    (false));
+		itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL),    GCFPVString  (""));
+		itsPropertySet->setValue(string(PN_MS_OTDB_POLLINTERVAL), GCFPVUnsigned(itsOTDBpollInterval));
 
       
 		// Try to connect to the SAS database.
@@ -226,7 +228,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 					"Unable to connect to database " << DBname << " using " <<
 					username << "," << password);
 		LOG_INFO ("Connected to the OTDB");
-		itsPropertySet->setValue(string(MS_OTDB_CONNECTED),GCFPVBool(true));
+		itsPropertySet->setValue(string(PN_MS_OTDB_CONNECTED),GCFPVBool(true));
 
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControltask");
@@ -365,7 +367,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 			LOG_ERROR_STR("Observation controller " << msg.cntlrName <<
 						" could not be started");
 			LOG_INFO("Observation will be removed from administration");
-			itsObservations.erase(msg.cntlrName);
+			_removeActiveObservation(msg.cntlrName);
 		}
 		break;
 	}
@@ -384,7 +386,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		LOG_DEBUG_STR("Received FINISH(" << finishEvent.cntlrName << ")");
 		LOG_DEBUG_STR("Removing observation " << finishEvent.cntlrName << 
 						" from activeList");
-		itsObservations.erase(finishEvent.cntlrName);
+		_removeActiveObservation(finishEvent.cntlrName);
 		break;
 	}
 
@@ -423,7 +425,7 @@ void MACScheduler::_doOTDBcheck()
 	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
 
 	// REO: test pvss appl
-	itsPropertySet->setValue(string(MS_OTDB_LASTPOLL),
+	itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL),
 										GCFPVString(to_simple_string(currentTime)));
 
 	while (idx < listSize)  {
@@ -468,7 +470,7 @@ void MACScheduler::_doOTDBcheck()
 				Observation		newObs(&obsPS);
 				newObs.name   = cntlrName;
 				newObs.treeID = treeID;
-				itsObservations[cntlrName] = newObs;
+				_addActiveObservation(newObs);
 				LOG_DEBUG_STR("Observation " << cntlrName << " added to active Observations");
 			}
 			idx++;
@@ -493,6 +495,63 @@ void MACScheduler::_doOTDBcheck()
 		idx++;	
 	}
 
+}
+
+//
+// _addActiveObservation(name)
+//
+void MACScheduler::_addActiveObservation(const Observation&	newObs)
+{
+	// Observation already in vector?
+	vector<Observation>::iterator	end  = itsObservations.end();
+	vector<Observation>::iterator	iter = itsObservations.begin();
+	while (iter != end) {
+		if (iter->name == newObs.name) {
+			return;
+		}
+	}
+
+	// update own admin and PVSS datapoint
+	itsObservations.push_back(newObs);
+	itsPVSSObsList.push_back(new GCFPVString(newObs.name));
+	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
+
+	LOG_DEBUG_STR("Added observation " << newObs.name << " to active observation-list");
+
+}
+
+
+//
+// _removeActiveObservation(name)
+//
+void MACScheduler::_removeActiveObservation(const string& name)
+{
+	// search observation.
+	vector<Observation>::iterator	end  = itsObservations.end();
+	vector<Observation>::iterator	iter = itsObservations.begin();
+	bool	found(false);
+	while (!found && (iter != end)) {
+		if (iter->name == name) {
+			found = true;
+			itsObservations.erase(iter);
+			LOG_DEBUG_STR("Removed observation " << name << " from active observationList");
+		}
+	}
+
+	if (!found) {
+		return;
+	}
+
+	GCFPValueArray::iterator	pEnd  = itsPVSSObsList.end();
+	GCFPValueArray::iterator	pIter = itsPVSSObsList.begin();
+	while (pIter != pEnd) {
+		if ((static_cast<GCFPVString*>(*pIter))->getValue() == name) {
+			delete 	*pIter;
+			itsPVSSObsList.erase(pIter);
+			break;
+		}
+	}
+	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
 }
 
 
