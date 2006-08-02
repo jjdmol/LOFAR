@@ -71,6 +71,9 @@ namespace LOFAR
       // Get strategy implementation type
       virtual string getType() const = 0;
 
+      // Execute one CEPFrame run of a solve step.
+      virtual void doSolveStep() const;
+
       // Get and set in/output dataholders
       DH_Solution* getSolution() const;
 
@@ -84,7 +87,7 @@ namespace LOFAR
 
       int getNumberOfPrediffers() const;
 
-      ParmWriter& getParmWriter();
+      const ParmWriter& getParmWriter() const;
 
     protected:
       Connection*   itsInSolConn;
@@ -118,7 +121,7 @@ namespace LOFAR
     inline int StrategyController::getNewWorkOrderID()
     { return theirNextWOID++; }
 
-    inline ParmWriter& StrategyController::getParmWriter()
+    inline const ParmWriter& StrategyController::getParmWriter() const
     { return itsParmWriter; }
 
     inline int StrategyController::getNumberOfPrediffers() const

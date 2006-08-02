@@ -51,12 +51,19 @@ namespace LOFAR
 
       virtual void print(ostream& os) const;
 
+      virtual void execute(const StrategyController*) const;
+
     private:
       // Check to see if there's an infinite recursion present in the
       // definition of a BBSMultiStep. This can happen when one of the steps
       // (identified by the argument \a name) defining the BBSMultiStep refers
       // directly or indirectly to that same BBSMultiStep. 
       void infiniteRecursionCheck(const string& name) const;
+
+      // Implementation of getAllSteps() for BBSMultiStep. It retrieves all
+      // steps by calling getAllSteps() on all steps that comprise this
+      // multistep.
+      void doGetAllSteps(vector<const BBSStep*>& steps) const;
 
       // Vector holding a sequence of BBSSteps.
       vector<const BBSStep*> itsSteps;

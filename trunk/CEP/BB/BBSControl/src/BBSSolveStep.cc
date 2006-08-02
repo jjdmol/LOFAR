@@ -27,6 +27,7 @@
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <BBSControl/StreamFormatting.h>
+#include <BBSControl/StrategyController.h>
 
 namespace LOFAR
 {
@@ -78,6 +79,12 @@ namespace LOFAR
 	   << endl << indent << "Excluded parameters: "    << itsExclParms
 	   << endl << indent << itsDomainSize;
       }
+    }
+
+
+    void BBSSolveStep::execute(const StrategyController* sc) const
+    {
+      sc->doSolveStep();
     }
 
 

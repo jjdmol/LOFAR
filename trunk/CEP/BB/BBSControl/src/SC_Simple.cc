@@ -26,8 +26,11 @@
 #include <BBSControl/DH_Solution.h>
 #include <BBSControl/DH_WOPrediff.h>
 #include <BBSControl/DH_WOSolve.h>
+#include <BBSControl/BBSStrategy.h>
+#include <BBSControl/BBSStep.h>
 #include <BBS/BBSTestLogger.h>
 #include <Common/LofarLogger.h>
+#include <unistd.h>                // for usleep()
 
 namespace LOFAR
 {
@@ -83,10 +86,39 @@ namespace LOFAR
       WOSolve->setNewDomain(true);
       WOSolve->setCleanUp(false);
       itsCurStartTime = itsArgs.getDouble ("startTimeSec");
+
+     // Retrieve the parameter set file describing the BBSStrategy to be
+     // used. The name of this file must be specified by the key
+     // "strategyParset".
+     string strategyParset = itsArgs.getString("strategyParset");
+     BBSStrategy strategy(ParameterSet("strategyParset"));
+
+     // Put all the steps that comprise this strategy into our private vector
+     // of BBSSteps.
+     itsSteps = strategy.getAllSteps();
+
+     // Set the current step to the first step of the strategy
+     itsCurrentStep = *itsSteps.begin();
     }
 
     bool SC_Simple::execute()
     {
+      // IF workdomain done THEN
+      //   Set new workdomain. (Re)initialize data structures.
+      //   Make first BBSStep in BBSStrategy current
+      // ENDIF
+      // Call execute() on current BBSStep
+      // IF stop-criterion met THEN
+      //   Goto next BBSStep
+      //   IF all BBSSteps done THEN
+      //     Set workdomain done
+      //   ENDIF
+      // ENDIF
+      
+#if 0
+      itsCurrentStep->execute(this);
+#endif
+      
       BBSTest::ScopedTimer si_exec("C:strategycontroller_execute");
       BBSTest::ScopedTimer getWOTimer("C:getWorkOrders");
       bool finished = false;   // Has this strategy completed?
@@ -114,34 +146,18 @@ namespace LOFAR
 	  readSolution();
 	  readSolTimer.end();
 
-	  // If Controller handles parameter writing
-	  if (itsControlParmUpd)
-	  {
-	    // Controller writes new parameter values directly to the tables
-	    ParmDataInfo pData;
-	    getSolution()->getSolution(pData);
-	    double fStart = getSolution()->getStartFreq();
-	    double fEnd = getSolution()->getEndFreq();
-	    double tStart = getSolution()->getStartTime();
-	    double tEnd = getSolution()->getEndTime();
-	    BBSTest::ScopedTimer st("C:parmwriter");
-	    getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
-	  }
-	  else
-	  {
-	    // Send the (reference to) parameter values to Prediffers.
-	    WOPD->setSolutionID(itsPrevWOID);
-	  }
+	  // If Controller handles parameter writing, then write new parameter
+	  // values directly to the tables; else send the (reference to)
+	  // parameter values to Prediffers.
+	  if (itsControlParmUpd) writeParmData();
+	  else WOPD->setSolutionID(itsPrevWOID);
 	}
      
 	// Take absolute value of fit
-	double fit = getSolution()->getQuality().itsFit;
-	if (fit<0)
-	{
-	  fit = -fit;
-	}
+	double fit = abs(getSolution()->getQuality().itsFit);
 
 	itsSendDoNothingWO = false;
+
 	// If max number of iterations reached, go to next interval. If
 	// solution for this interval is good enough, send "do nothing"
 	// workorders until max number of iterations reached.
@@ -169,17 +185,8 @@ namespace LOFAR
 
 	  // If controller should write params at end of each interval and has
 	  // not already done so...
-	  if (itsWriteParms && (!itsControlParmUpd))
-	  {
-	    ParmDataInfo pData;
-	    getSolution()->getSolution(pData);
-	    double fStart = getSolution()->getStartFreq();
-	    double fEnd = getSolution()->getEndFreq();
-	    double tStart = getSolution()->getStartTime();
-	    double tEnd = getSolution()->getEndTime();
-	    BBSTest::ScopedTimer st("C:parmwriter");
-	    getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
-	  }
+	  if (itsWriteParms && (!itsControlParmUpd)) writeParmData();
+
 	  BBSTest::Logger::log("NextInterval");
 	}
 	else if (fit < itsFitCriterion)
@@ -190,11 +197,77 @@ namespace LOFAR
 	}
       }
 
+      // Get a new work order id
+      int woid = getNewWorkOrderID();
+
+      // Set prediffer workorder data
+      setWOPrediff(woid);
+
+      // Set solver workorder data  
+      setWOSolve(woid);
+
+      return (!finished);
+    }
+
+
+    void SC_Simple::postprocess()
+    {
+      // Only read solution if previous workorder was not a "do nothing"
+      if (itsSendDoNothingWO == false)
+      {
+	// write solution in parmtable
+	if (itsWriteParms || itsControlParmUpd) {
+	  readSolution();
+	  writeParmData();
+	}
+      }
+      BBSTest::Logger::log("End of TestRun");
+    }
+
+
+    void SC_Simple::readSolution()
+    {
+      LOG_TRACE_FLOW("SC_Simple reading solution");
+
+      DH_DB* solPtr = getSolution();
+
+      // Wait for solution
+      bool firstTime = true;
+      ostringstream oss;
+      oss << "SELECT * FROM bbs3solutions WHERE WOID=" << itsPrevWOID;
+      string query(oss.str());
+
+      while (solPtr->queryDB(query, *itsInSolConn) <= 0) {
+	if (firstTime) {
+	  cout << "No solution found by SC_Simple " << getID() 
+	       << ". Waiting for solution..." << endl;
+	  firstTime = false;
+	  // Sleep for 50 ms, in order not to hammer the database.
+	  usleep(50000);
+	}
+      }
+      // getSolution()->dump();
+    }
+
+
+    void SC_Simple::writeParmData() const
+    {
+      ParmDataInfo pData;
+      getSolution()->getSolution(pData);
+      double fStart = getSolution()->getStartFreq();
+      double fEnd = getSolution()->getEndFreq();
+      double tStart = getSolution()->getStartTime();
+      double tEnd = getSolution()->getEndTime();
+      BBSTest::ScopedTimer st("C:parmwriter");
+      getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+    }
+
+    void SC_Simple::setWOPrediff(int woid)
+    {
+      DH_WOPrediff* WOPD = getPrediffWorkOrder();
       WOPD->setDoNothing(itsSendDoNothingWO);
-      WOSolve->setDoNothing(itsSendDoNothingWO);
       if (itsSendDoNothingWO==false)
       {
-	// Set prediffer workorder data
 	WOPD->setStatus(DH_WOPrediff::New);
 	WOPD->setKSType("Prediff1");
 	WOPD->setStartChannel (itsStartChannel);
@@ -224,103 +297,50 @@ namespace LOFAR
 	msParams.add ("calcUVW", itsArgs.getString("calcUVW"));
 	WOPD->setVarData (msParams, ant, pNames, exPNames, srcs, corrs);
       }
-
-      int woid = getNewWorkOrderID();
       WOPD->setWorkOrderID(woid);
       WOPD->setStrategyControllerID(getID());
-      WOPD->setNewDomain(nextInter);
+      WOPD->setNewDomain(itsWorkDomainDone);
 
-      // Set solver workorder data  
+      // Insert WorkOrders into database; 
+      WOPD->insertDB(*itsOutWOPDConn);
+
+      // Send the same workorder to other prediffers (if there's more than 1)
+      int nrPred = getNumberOfPrediffers();
+      for (int i = 2; i <= nrPred; i++)
+      {
+	WOPD->setWorkOrderID(getNewWorkOrderID());
+	ostringstream oss;
+	oss << "Prediff" << i;
+	WOPD->setKSType(oss.str());
+	WOPD->insertDB(*itsOutWOPDConn);
+      }
+
+    }
+
+
+    void SC_Simple::setWOSolve(int woid)
+    {
+      DH_WOSolve* WOSolve = getSolveWorkOrder();
+      WOSolve->setDoNothing(itsSendDoNothingWO);
       WOSolve->setStatus(DH_WOSolve::New);
       WOSolve->setKSType("Solver");
       WOSolve->setUseSVD (itsArgs.getBool ("useSVD"));
       WOSolve->setIteration(itsCurIter);
 
+      // We need to set the work-id of the solver equal to that of the
+      // prediffer (for reasons that elude me (GML)).
       WOSolve->setWorkOrderID(woid);
 
       // Remember the issued workorder id
       itsPrevWOID = WOSolve->getWorkOrderID();
 
       WOSolve->setStrategyControllerID(getID());
-      WOSolve->setNewDomain(nextInter);
+      WOSolve->setNewDomain(itsWorkDomainDone);
 
-      // Temporarily show on cout
-      //  cout << "!!!!!!! Sent workorders: " << endl;
-      //WOPD->dump();
-      //WOSolve->dump();
-
-      //  cout << "!!!!!!! " << endl;
-
-      // Insert WorkOrders into database
-      BBSTest::ScopedTimer st("C:putWOinDB");
-      WOPD->insertDB(*itsOutWOPDConn);
-
-      // Send workorders the same workorders to other prediffers (if there are
-      // more than 1)
-      int nrPred = getNumberOfPrediffers();
-      for (int i = 2; i <= nrPred; i++)
-      {
-	WOPD->setWorkOrderID(getNewWorkOrderID());
-	char str[32];
-	sprintf(str, "%i", i);
-	WOPD->setKSType("Prediff"+string(str));
-	WOPD->insertDB(*itsOutWOPDConn);
-      }
-
+      // Insert workorder into the database
       WOSolve->insertDB(*itsOutWOSolveConn);
-
-      return (!finished);
     }
 
-    void SC_Simple::postprocess()
-    {
-      // Only read solution if previous workorder was not a "do nothing"
-      if (itsSendDoNothingWO == false)
-      {
-	// write solution in parmtable
-	if (itsWriteParms || itsControlParmUpd)
-	{
-	  readSolution();
-	  // Controller writes found parameter values in the tables
-	  ParmDataInfo pData;
-	  getSolution()->getSolution(pData);
-	  double fStart = getSolution()->getStartFreq();
-	  double fEnd = getSolution()->getEndFreq();
-	  double tStart = getSolution()->getStartTime();
-	  double tEnd = getSolution()->getEndTime();
-	  BBSTest::ScopedTimer st("C:parmwriter");
-	  getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
-	}
-      }
-      BBSTest::Logger::log("End of TestRun");
-    }
-
-    void SC_Simple::readSolution()
-    {
-      LOG_TRACE_FLOW("SC_Simple reading solution");
-
-      DH_DB* solPtr = getSolution();
-
-      // Wait for solution
-      bool firstTime = true;
-      int id = itsPrevWOID;
-      char str[64];
-      sprintf(str, "SELECT * FROM bbs3solutions WHERE WOID=%i", id);
-      string query(str);
-
-      while (solPtr->queryDB(query, *itsInSolConn) <= 0)
-      {
-	if (firstTime)
-	{
-	  cout << "No solution found by SC_Simple " << getID() 
-	       << ". Waiting for solution..." << endl;
-	  firstTime = false;
-	}
-      }
-
-      //getSolution()->dump();
-
-    }
 
   } // namespace BBS
 

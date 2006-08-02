@@ -54,10 +54,11 @@ namespace LOFAR
 
       void write (const ParmDataInfo& pData,
 		  double fStart, double fEnd, 
-		  double tStart, double tEnd);
+		  double tStart, double tEnd) const;
 
     private:
-      void setCoeff (ParmDB::ParmValueRep& pval, const MeqMatrix& coeff);
+      void setCoeff (LOFAR::ParmDB::ParmValueRep& pval, 
+		     const MeqMatrix& coeff) const;
     };
 
     // @}

@@ -122,10 +122,15 @@ namespace LOFAR
     }
 
 
-//     void BBSStrategy::addStep(const BBSStep*& aStep)
-//     {
-//       itsSteps.push_back(aStep);
-//     }
+    vector<const BBSStep*> BBSStrategy::getAllSteps() const
+    {
+      vector<const BBSStep*> steps;
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
+	steps.insert(steps.end(), substeps.begin(), substeps.end());
+      }
+      return steps;
+    }
 
 
     //##--------   G l o b a l   m e t h o d s   --------##//

@@ -42,6 +42,7 @@ namespace LOFAR
   {
     //# Forward Declarations.
     class BBSMultiStep;
+    class StrategyController;
 
     // \addtogroup BBS
     // @{
@@ -62,20 +63,30 @@ namespace LOFAR
       // is not present, then the value will be that of the parent BBSStep
       // object.
 
-      // Print the contents of \c *this in human readable form into the output
-      // stream \a os.
-      virtual void print(ostream& os) const;
-
       // Return the name of this step.
       const string& getName() const { return itsName; }
-
-      // Return a pointer to the parent of this step.
-      const BBSStep* getParent() const { return itsParent; }
 
       // Return the full name of this step. The full name consists of the name
       // of this step, preceeded by that of its parent, etc., separated by
       // dots.
-      string fullName() const;
+      string getFullName() const;
+
+      // Return a pointer to the parent of this step.
+      const BBSStep* getParent() const { return itsParent; }
+
+      // Get all steps that this step consists of. The result will be a vector
+      // containing pointers to all steps, sorted pre-order depth-first.
+      //
+      // \todo Instead of making getAllSteps() a member function, returning a
+      // vector of BBSStep*, it would be better to have a BBSStepIterator
+      // class that can be used to iterate over the all steps. I had some
+      // trouble getting that thingy working, so, due to time constraints, I
+      // implemented things the ugly way.
+      vector<const BBSStep*> getAllSteps() const;
+
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
+      virtual void print(ostream& os) const;
 
       // Create a new step object. The new step can either be a BBSSingleStep
       // or a BBSMultiStep object. This is determined by examining the
@@ -86,6 +97,20 @@ namespace LOFAR
       static BBSStep* create(const string& name,
 			     const ACC::APS::ParameterSet& parSet,
 			     const BBSStep* parent = 0);
+
+      // Execute will do a callback to a member function of \a sc. Which
+      // member function will be called depends on the runtime type of the
+      // BBSStep that's being executed. For example, a BBSSolveStep will call
+      // \a sc->doSolveStep().
+      //
+      // \note The current "double dispatch" implementation is (probably)
+      // temporary. Once the "old" BBS3 control part has been rewritten it
+      // will likely be removed.
+      //
+      // \attention StrategyController has \e nothing to do with a
+      // BBSStrategy. The name is just a remnant of the "old" BBS3 code. Much
+      // of this code will be rewritten after CS1.
+      virtual void execute(const StrategyController* sc) const = 0;
 
     protected:
       // Construct a BBSStep. \a name identifies the step name in the
@@ -100,6 +125,11 @@ namespace LOFAR
       // Override the default values, "inherited" from the parent step object,
       // for those members that are specified in \a parSet.
       void setParms(const ACC::APS::ParameterSet& parSet);
+
+      // Implementation of getAllSteps(). The default implementation adds \c
+      // this to the vector \a steps.
+      // \note This method must be overridden by BBSMultiStep.
+      virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
 
       // Name of this step.
       string                 itsName;
