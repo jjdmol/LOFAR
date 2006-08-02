@@ -47,7 +47,7 @@ namespace LOFAR
 
     void ParmWriter::write (const ParmDataInfo& pDataInfo,
 			    double fStart, double fEnd,
-			    double tStart, double tEnd)
+			    double tStart, double tEnd) const
     {
       const vector<ParmData>& pData = pDataInfo.parms();
       ParmDB::ParmDomain pdomain(fStart, fEnd, tStart, tEnd);
@@ -110,7 +110,7 @@ namespace LOFAR
     }
 
     void ParmWriter::setCoeff (ParmDB::ParmValueRep& pval, 
-			       const MeqMatrix& coeff)
+			       const MeqMatrix& coeff) const
     {
       ASSERT (int(pval.itsCoeff.size()) == coeff.nelements());
       const double* vals = coeff.doubleStorage();

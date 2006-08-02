@@ -40,6 +40,7 @@ namespace LOFAR
     // @{
 
     //# Forward Declarations
+    class BBSStep;
 
     class SC_Simple : public StrategyController
     {
@@ -62,11 +63,33 @@ namespace LOFAR
       // Get strategy type
       virtual string getType() const;
 
+      virtual void doSolveStep() const;
+
     private:
       SC_Simple(const SC_Simple&);
       SC_Simple& operator=(const SC_Simple&);
 
       void readSolution();
+
+      // Write parameter values to the ParmDB tables.
+      void writeParmData() const;
+
+      // Create a new prediffer workorder and insert it into the database. The
+      // work order ID \a woid will be used as key in the database.
+      void setWOPrediff(int woid);
+
+      // Create a new solver workorder and insert it into the database. The
+      // work order ID \a woid will be used as key in the database.
+      void setWOSolve(int woid);
+
+      // Vector of all BBSSteps to be executed.
+      vector<const BBSStep*> itsSteps;
+
+      // The BBSStep currently being executed.
+      const BBSStep*         itsCurrentStep;
+
+      // Indicate whether we're done with the current work domain.
+      bool                   itsWorkDomainDone;
 
       int          itsPrevWOID;
       ACC::APS::ParameterSet itsArgs;

@@ -22,11 +22,6 @@
 
 #include <lofar_config.h>
 
-#include <cstdio>
-#include <cstdlib>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_string.h>
-
 #include <APS/ParameterSet.h>
 #include <CEPFrame/Step.h>
 #include <tinyCEP/Profiler.h>
@@ -38,6 +33,9 @@
 #include <BBSControl/WH_Prediff.h>
 #include <BBSControl/WH_Solve.h>
 #include <Common/lofar_sstream.h>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_string.h>
+
 
 #ifdef HAVE_MPI
 # include <Transport/TH_MPI.h>

@@ -22,6 +22,8 @@
 
 #include <lofar_config.h>
 #include <BBSControl/BBSStrategy.h>
+#include <BBSControl/BBSStep.h>
+#include <BBSControl/BBSMultiStep.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
@@ -37,6 +39,12 @@ int main()
 
     BBSStrategy strategy(ParameterSet(progName + ".parset"));
     cout << strategy << endl;
+
+//     vector<const BBSStep*> steps = strategy.getAllSteps();
+//     cout << "This strategy contains " << steps.size() << " steps:" << endl;
+//     for (uint i = 0; i < steps.size(); ++i) {
+//       cout << "  " << steps[i]->getName() << endl;
+//     }
 
   } catch (LOFAR::Exception& e) {
     LOG_FATAL_STR(e);

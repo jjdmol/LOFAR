@@ -50,6 +50,8 @@ namespace LOFAR
 
       virtual void print(ostream& os) const;
 
+      virtual void execute(const StrategyController* sc) const;
+
     private:
       // Solve domain size.
       struct DomainSize

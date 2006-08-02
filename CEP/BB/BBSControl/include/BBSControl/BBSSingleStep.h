@@ -57,6 +57,8 @@ namespace LOFAR
       // Print the contents of \c *this in human readable form.
       virtual void print(ostream& os) const;
 
+      virtual void execute(const StrategyController*) const;
+
     private:
       // Name of the data column to write data to
       string          itsOutputData;

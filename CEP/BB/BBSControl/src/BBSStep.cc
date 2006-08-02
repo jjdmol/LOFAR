@@ -48,11 +48,20 @@ namespace LOFAR
     }
 
 
+    string BBSStep::getFullName() const
+    {
+      string name;
+      if (itsParent) name = itsParent->getFullName() + ".";
+      name += itsName;
+      return name;
+    }
+
+
     void BBSStep::print(ostream& os) const
     {
       os << "Step: " << itsName;
       Indent id;  // add an extra indentation level
-      os << endl << indent << "Full name: " << fullName()
+      os << endl << indent << "Full name: " << getFullName()
 	 << endl << indent << itsBaselines
 	 << endl << indent << itsCorrelation
 	 << endl << indent << itsIntegration
@@ -62,12 +71,11 @@ namespace LOFAR
     }
 
 
-    string BBSStep::fullName() const
+    vector<const BBSStep*> BBSStep::getAllSteps() const
     {
-      string name;
-      if (itsParent) name = itsParent->fullName() + ".";
-      name += itsName;
-      return name;
+      vector<const BBSStep*> steps;
+      doGetAllSteps(steps);
+      return steps;
     }
 
 
@@ -178,6 +186,12 @@ namespace LOFAR
 
     }
 
+
+    void BBSStep::doGetAllSteps(vector<const BBSStep*>& steps) const
+    {
+      steps.push_back(this);
+    }
+    
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 

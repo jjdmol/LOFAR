@@ -56,6 +56,13 @@ namespace LOFAR
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
 
+      // Return the steps that this strategy consists of. Multisteps are
+      // expanded recursively until only single steps remain. Expansion is
+      // done in pre-order, depth-first.
+      // \todo Do we really want to implement such "iterator-like behaviour"
+      // in this class?
+      vector<const BBSStep*> getAllSteps() const;
+
     private:
 
       // Name of the Measurement Set

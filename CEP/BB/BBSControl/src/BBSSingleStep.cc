@@ -50,16 +50,24 @@ namespace LOFAR
       itsOutputData = ps.getString("OutputData");
     }
 
+
     BBSSingleStep::~BBSSingleStep()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
+
 
     void BBSSingleStep::print(ostream& os) const
     {
       BBSStep::print(os);
       Indent id;
       os << endl << indent << "Output data: " << itsOutputData;
+    }
+
+
+    void BBSSingleStep::execute(const StrategyController*) const
+    {
+      THROW(BBSControlException, "Not yet implemented");
     }
 
   } // namespace BBS

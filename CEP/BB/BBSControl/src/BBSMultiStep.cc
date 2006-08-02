@@ -76,6 +76,21 @@ namespace LOFAR
     }
 
 
+    void BBSMultiStep::execute(const StrategyController*) const
+    {
+      THROW(BBSControlException, "Cannot call execute() on a multi-step");
+    }
+
+
+    void BBSMultiStep::doGetAllSteps(vector<const BBSStep*>& steps) const
+    {
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
+	steps.insert(steps.end(), substeps.begin(), substeps.end());
+      }
+    }
+    
+
     void BBSMultiStep::infiniteRecursionCheck(const string& name) const
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
