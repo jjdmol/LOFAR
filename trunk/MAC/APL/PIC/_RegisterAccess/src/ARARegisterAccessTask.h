@@ -143,10 +143,9 @@ namespace ARA
           GCF::PAL::GCFMyPropertySet::TDefaultUse defaultUse = GCF::PAL::GCFMyPropertySet::USE_MY_DEFAULTS);
 
       void updateBoardProperties(string scope,
-                                 uint8  voltage_15,
-                                 uint8  voltage_33,
-                                 uint8  ffi0,
-                                 uint8  ffi1,
+                                 uint8  voltage_1_2,
+                                 uint8  voltage_2_5,
+                                 uint8  voltage_3_3,
                                  double timestamp);
       /**
        * update eth properties based on status bits
@@ -249,6 +248,7 @@ namespace ARA
       int               m_n_aps_per_board;
       int               m_n_rcus_per_ap;
       int               m_n_rcus;
+      int               m_n_rspboards;
       int               m_status_update_interval;
       int               m_stats_update_interval;
       bool              m_centralized_stats;

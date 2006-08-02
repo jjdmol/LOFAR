@@ -26,7 +26,8 @@
 
 #include <GCF/PAL/GCF_ExtProperty.h>
 #include <GCF/GCF_PVUnsigned.h>
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
+#include <Common/LofarLocators.h>
 
 #include "ARAPhysicalModel.h"
 #include "ARAPropertyDefines.h"
@@ -35,6 +36,7 @@
 using namespace std;
 using namespace boost;
 
+using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
@@ -51,13 +53,22 @@ ARAPhysicalModel::ARAPhysicalModel() :
 {
   int rack,subrack,board,ap,rcu;
 
-  ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("RegisterAccess.conf"));
+  try
+  {
+    ConfigLocator cl;
+    globalParameterSet()->adoptFile(cl.locate("RegisterAccess.conf"));
+  }
+  catch (Exception e)
+  {
+    LOG_ERROR_STR("Failed to load configuration files: " << e.text());
+    exit(EXIT_FAILURE);
+  }
 
-  int n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
-  int n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
-  int n_boards_per_subrack  = ParameterSet::instance()->getInt(PARAM_N_BOARDS_PER_SUBRACK);
-  int n_aps_per_board       = ParameterSet::instance()->getInt(PARAM_N_APS_PER_BOARD);
-  int n_rcus_per_ap         = ParameterSet::instance()->getInt(PARAM_N_RCUS_PER_AP);
+  int n_racks               = globalParameterSet()->getInt32(PARAM_N_RACKS);
+  int n_subracks_per_rack   = globalParameterSet()->getInt32(PARAM_N_SUBRACKS_PER_RACK);
+  int n_boards_per_subrack  = globalParameterSet()->getInt32(PARAM_N_BOARDS_PER_SUBRACK);
+  int n_aps_per_board       = globalParameterSet()->getInt32(PARAM_N_APS_PER_BOARD);
+  int n_rcus_per_ap         = globalParameterSet()->getInt32(PARAM_N_RCUS_PER_AP);
 
   char tempString[200];
   vector<string> childrenPIC,childrenRack,childrenSubRack,childrenBoard;

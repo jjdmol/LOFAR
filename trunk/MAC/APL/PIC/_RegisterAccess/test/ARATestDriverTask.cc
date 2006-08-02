@@ -23,6 +23,7 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 
@@ -36,9 +37,10 @@
 #include <Common/lofar_sstream.h>
 #include <time.h>
 
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
+using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
@@ -85,13 +87,22 @@ ARATestDriverTask::ARATestDriverTask() :
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
-  ParameterSet::instance()->adoptFile("RegisterAccess.conf");
+  try
+  {
+    ConfigLocator cl;
+    globalParameterSet()->adoptFile(cl.locate("RegisterAccess.conf"));
+  }
+  catch (Exception e)
+  {
+    LOG_ERROR_STR("Failed to load configuration files: " << e.text());
+    exit(EXIT_FAILURE);
+  }
 
-  n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
-  n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
-  n_boards_per_subrack  = ParameterSet::instance()->getInt(PARAM_N_BOARDS_PER_SUBRACK);
-  n_aps_per_board       = ParameterSet::instance()->getInt(PARAM_N_APS_PER_BOARD);
-  n_rcus_per_ap         = ParameterSet::instance()->getInt(PARAM_N_RCUS_PER_AP);
+  n_racks               = globalParameterSet()->getInt32(PARAM_N_RACKS);
+  n_subracks_per_rack   = globalParameterSet()->getInt32(PARAM_N_SUBRACKS_PER_RACK);
+  n_boards_per_subrack  = globalParameterSet()->getInt32(PARAM_N_BOARDS_PER_SUBRACK);
+  n_aps_per_board       = globalParameterSet()->getInt32(PARAM_N_APS_PER_BOARD);
+  n_rcus_per_ap         = globalParameterSet()->getInt32(PARAM_N_RCUS_PER_AP);
   n_rcus                = n_rcus_per_ap*
                               n_aps_per_board*
                               n_boards_per_subrack*
@@ -99,7 +110,6 @@ ARATestDriverTask::ARATestDriverTask() :
                               n_racks;
   
   m_systemStatus.board().resize(n_boards_per_subrack);
-  m_systemStatus.rcu().resize(n_rcus);
 
   EPA_Protocol::BoardStatus boardStatus;
   memset(&boardStatus,0,sizeof(boardStatus));
@@ -107,7 +117,6 @@ ARATestDriverTask::ARATestDriverTask() :
 
   EPA_Protocol::RCUStatus rcuStatus;
   memset(&rcuStatus,0,sizeof(rcuStatus));
-  m_systemStatus.rcu()(blitz::Range::all()) = rcuStatus;
   
   m_stats().resize(n_rcus,MEPHeader::N_BEAMLETS);
   m_xcstats().resize(n_pols,n_pols,n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board,n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board);
@@ -573,8 +582,6 @@ void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
   
   LOG_INFO(formatString("updateAPstatus hier?? %d (rack=%d,subrack=%d,board=%d,ap=%d)", ++testI,rack,subrack,board,ap));
 
-  EPA_Protocol::FPGAStatus fpgaStatus = m_systemStatus.board()(board-1).fpga;
-
   // layout fpga status: 
   // 15..9 8       7........0       
   // ----- alive   temperature
@@ -585,13 +592,13 @@ void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
     if(ap==1)
-      m_systemStatus.board()(board-1).fpga.ap0_temp = (uint8)(pvDouble.getValue()*100);
+      m_systemStatus.board()(board-1).rsp.ap0_temp = (uint8)(pvDouble.getValue()*100);
     else if(ap==2)
-      m_systemStatus.board()(board-1).fpga.ap1_temp = (uint8)(pvDouble.getValue()*100);
+      m_systemStatus.board()(board-1).rsp.ap1_temp = (uint8)(pvDouble.getValue()*100);
     else if(ap==3)
-      m_systemStatus.board()(board-1).fpga.ap2_temp = (uint8)(pvDouble.getValue()*100);
+      m_systemStatus.board()(board-1).rsp.ap2_temp = (uint8)(pvDouble.getValue()*100);
     else
-        m_systemStatus.board()(board-1).fpga.ap3_temp = (uint8)(pvDouble.getValue()*100);
+        m_systemStatus.board()(board-1).rsp.ap3_temp = (uint8)(pvDouble.getValue()*100);
   }
   if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
   {
@@ -615,8 +622,6 @@ void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
 //  int subrack = hardwareIndexes[1];
   int board   = hardwareIndexes[2];
 
-  EPA_Protocol::FPGAStatus fpgaStatus = m_systemStatus.board()(board-1).fpga;
-
   // layout fpga status: 
   // 15..9 8       7........0       
   // ----- alive   temperature
@@ -626,7 +631,7 @@ void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
   }
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
-    m_systemStatus.board()(board-1).fpga.bp_temp = (uint8)(pvDouble.getValue()*100);
+    m_systemStatus.board()(board-1).rsp.bp_temp = (uint8)(pvDouble.getValue()*100);
   }
   if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
   {
@@ -634,10 +639,11 @@ void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
   }
 }
 
-void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue)
+void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* /*pvalue*/)
 {
   LOG_INFO(formatString("updateRCUstatus %s", propName.c_str()));
   
+/*
   GCFPVBool pvBool;
   GCFPVUnsigned pvUnsigned;
   pvBool.copy(*pvalue);
@@ -732,6 +738,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
+*/
 }
 
 void ARATestDriverTask::sendToAll(GCFEvent& event)
@@ -752,7 +759,6 @@ void ARATestDriverTask::updateSystemStatus()
   updStatusEvent.status=SUCCESS;
   updStatusEvent.handle=1; // ignore
   updStatusEvent.sysstatus.board().reference(m_systemStatus.board().copy());
-  updStatusEvent.sysstatus.rcu().reference(m_systemStatus.rcu().copy());
 
   sendToAll(updStatusEvent);
 }
@@ -971,16 +977,12 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       ack.status = SUCCESS;
     
       ack.sysstatus.board().resize(1);
-      ack.sysstatus.rcu().resize(8);
     
       BoardStatus boardinit;
-      RCUStatus rcuinit;
     
       memset(&boardinit, 0, sizeof(BoardStatus));
-      memset(&rcuinit, 0, sizeof(RCUStatus));
       
       ack.sysstatus.board() = boardinit;
-      ack.sysstatus.rcu()   = rcuinit;
     
       port.send(ack);
       break;      
@@ -1127,18 +1129,17 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       RSPGetversionEvent getversion(event);
       
       RSP_Protocol::Versions versions;
-      versions.rsp().resize(n_racks*n_subracks_per_rack*n_boards_per_subrack);
       versions.bp().resize(n_racks*n_subracks_per_rack*n_boards_per_subrack);
       versions.ap().resize(n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board);
       for(int board=0;board<n_racks*n_subracks_per_rack*n_boards_per_subrack;board++)
       {
-        versions.rsp()(board) = (board+1);
-        LOG_INFO(formatString("board[%d].version = 0x%x",board,versions.rsp()(board)));
-        versions.bp()(board) = (board+1)*8;
+        versions.bp()(board).fpga_min = (board+1)*8;
+        versions.bp()(board).fpga_maj = (board+1)*8;
         LOG_INFO(formatString("bp[%d].version = 0x%x",board,versions.bp()(board)));
         for(int ap=0;ap<EPA_Protocol::N_AP; ap++)
         {
-          versions.ap()(board * EPA_Protocol::N_AP + ap) = ((board+1)<<4)+ap;
+          versions.ap()(board * EPA_Protocol::N_AP + ap).fpga_min = ((board+1)<<4)+ap;
+          versions.ap()(board * EPA_Protocol::N_AP + ap).fpga_maj = ((board+1)<<4)+ap;
           LOG_INFO(formatString("ap[%d][%d].version = 0x%x",board,ap,versions.ap()(board * EPA_Protocol::N_AP + ap)));
         }
       }
@@ -1146,7 +1147,6 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       RSPGetversionackEvent ack;
       ack.timestamp.setNow(600.0);
       ack.status = SUCCESS;
-      ack.versions.rsp().reference(versions.rsp().copy());
       ack.versions.bp().reference(versions.bp().copy());
       ack.versions.ap().reference(versions.ap().copy());
       
@@ -1159,11 +1159,12 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       RSPGetconfigackEvent ack;
       ack.n_rcus=n_rcus;
       ack.n_rspboards=n_boards_per_subrack*n_subracks_per_rack*n_racks;
-      ack.n_tdboards=1;
+      ack.max_rspboards=1;
       port.send(ack);
       break;
     }
     
+/*
     case RSP_SETCLOCKS:
     {
       RSPSetclocksackEvent ack;
@@ -1172,6 +1173,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       port.send(ack);
       break;
     }
+*/
     
     case RSP_SETRCU:
     {
