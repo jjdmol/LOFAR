@@ -36,10 +36,10 @@ const int STATUS_OK = 0;
 const int STATUS_ERROR = 1;
 
 /*
-const int N_RACKS               = 1; // 6
-const int N_SUBRACKS_PER_RACK   = 1; // 4
-const int N_BOARDS_PER_SUBRACK  = 1;
-const int N_APS_PER_BOARD       = 1;
+const int N_RACKS               = 3; // 6
+const int N_SUBRACKS_PER_RACK   = 2; // 4
+const int N_BOARDS_PER_SUBRACK  = 4;
+const int N_APS_PER_BOARD       = 4;
 const int N_RCUS_PER_AP         = 2;
 const int N_RCUS                = N_RCUS_PER_AP*
                                   N_APS_PER_BOARD*
@@ -73,42 +73,42 @@ const char APC_MEPStatus[]      = "ApcMEPStatusType";
 const char APC_SYNCStatus[]     = "ApcSYNCStatusType";
 const char APC_BoardRCUStatus[] = "ApcBoardRCUStatusType";
 
-const char SCOPE_PIC[] =                                              "PIC";
-const char SCOPE_PIC_RackN[] =                                        "PIC_Rack%d";
-const char SCOPE_PIC_RackN_SubRackN[] =                               "PIC_Rack%d_SubRack%d";
-const char SCOPE_PIC_RackN_SubRackN_BoardN[] =                        "PIC_Rack%d_SubRack%d_Board%d";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus[] =              "PIC_Rack%d_SubRack%d_Board%d_MEPStatus";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_ETH[] =                    "PIC_Rack%d_SubRack%d_Board%d_ETH";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_BP[] =                     "PIC_Rack%d_SubRack%d_Board%d_BP";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN[] =                    "PIC_Rack%d_SubRack%d_Board%d_AP%d";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus[] =         "PIC_Rack%d_SubRack%d_Board%d_AP%d_SYNCStatus";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus[] =     "PIC_Rack%d_SubRack%d_Board%d_AP%d_BoardRCUStatus";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN[] =               "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA[] =           "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_LFA";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA[] =           "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_HFA";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics[] = "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_ADCStatistics";
-const char SCOPE_PIC_Maintenance[] =                                  "PIC_Maintenance";
-const char SCOPE_PIC_RackN_Maintenance[] =                            "PIC_Rack%d_Maintenance";
-const char SCOPE_PIC_RackN_SubRackN_Maintenance[] =                   "PIC_Rack%d_SubRack%d_Maintenance";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance[] =            "PIC_Rack%d_SubRack%d_Board%d_Maintenance";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance[] =   "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_Maintenance";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance[] =  "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_LFA_Maintenance";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance[] =  "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_HFA_Maintenance";
-const char SCOPE_PIC_RackN_Alert[] =                                  "PIC_Rack%d_Alert";
-const char SCOPE_PIC_RackN_SubRackN_Alert[] =                         "PIC_Rack%d_SubRack%d_Alert";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%d_SubRack%d_Board%d_Alert";
-const char SCOPE_PIC_Command[] =                                      "PIC_Command";
-const char SCOPE_PIC_RackN_SubRackN_Command[] =                       "PIC_Rack%d_SubRack%d_Command";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_Command[] =                "PIC_Rack%d_SubRack%d_Board%d_Command";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Command[] =       "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_Command";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Command[] =   "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_HFA_Command";
+const char SCOPE_PIC[] =                                              "LOFAR_PIC";
+const char SCOPE_PIC_RackN[] =                                        "LOFAR_PIC_Cabinet%d";
+const char SCOPE_PIC_RackN_SubRackN[] =                               "LOFAR_PIC_Cabinet%d_SubRack%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN[] =                        "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus[] =              "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.MEPStatus";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_ETH[] =                    "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.ETH";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_BP[] =                     "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.BP";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN[] =                    "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus[] =         "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.SYNCStatus";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus[] =     "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.BoardRCUStatus";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN[] =               "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA[] =           "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d.LFA";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA[] =           "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d.HFA";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics[] = "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d.ADCStatistics";
+const char SCOPE_PIC_Maintenance[] =                                  "LOFAR_PIC_Maintenance";
+const char SCOPE_PIC_RackN_Maintenance[] =                            "LOFAR_PIC_Cabinet%d_Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_Maintenance[] =                   "LOFAR_PIC_Cabinet%d_SubRack%d_Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance[] =            "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance[] =   "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d.Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance[] =  "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d.LFA.Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance[] =  "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d.HFA.Maintenance";
+const char SCOPE_PIC_RackN_Alert[] =                                  "LOFAR_PIC_Cabinet%d_Alert";
+const char SCOPE_PIC_RackN_SubRackN_Alert[] =                         "LOFAR_PIC_Cabinet%d_SubRack%d_Alert";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.Alert";
+const char SCOPE_PIC_Command[] =                                      "LOFAR_PIC_Command";
+const char SCOPE_PIC_RackN_SubRackN_Command[] =                       "LOFAR_PIC_Cabinet%d_SubRack%d_Command";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_Command[] =                "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.Command";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Command[] =       "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d.Command";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Command[] =   "LOFAR_PIC_Cabinet%d_SubRack%d_RSPBoard%d.AP%d.RCU%d.HFA.Command";
 
-const char TYPE_LCU_PIC[]               = "TLcuPic";
-const char TYPE_LCU_PIC_Maintenance[]   = "TLcuPicMaintenance";
-const char TYPE_LCU_PIC_Rack[]          = "TLcuPicRack";
-const char TYPE_LCU_PIC_Alert[]         = "TLcuPicAlert";
-const char TYPE_LCU_PIC_SubRack[]       = "TLcuPicSubRack";
-const char TYPE_LCU_PIC_Board[]         = "TLcuPicBoard";
+const char TYPE_LCU_PIC[]               = "PIC";
+const char TYPE_LCU_PIC_Maintenance[]   = "Maintenance";
+const char TYPE_LCU_PIC_Rack[]          = "Cabinet";
+const char TYPE_LCU_PIC_Alert[]         = "Alert";
+const char TYPE_LCU_PIC_SubRack[]       = "SubRack";
+const char TYPE_LCU_PIC_Board[]         = "RSPBoard";
 const char TYPE_LCU_PIC_MEPStatus[]     = "TLcuPicMEPStatus";
 const char TYPE_LCU_PIC_SYNCStatus[]    = "TLcuPicSYNCStatus";
 const char TYPE_LCU_PIC_BoardRCUStatus[]= "TLcuPicBoardRCUStatus";
@@ -145,7 +145,8 @@ const GCF::Common::TPSCategory PSCAT_LCU_PIC_Command       = GCF::Common::PS_CAT
 #define PROPNAME_COMMAND         "command"
 #define PROPNAME_RESULT          "result"
 #define PROPNAME_RESULT_CODE     "resultCode"
-#define PROPNAME_VOLTAGE15       "voltage15"
+#define PROPNAME_VOLTAGE12       "voltage12"
+#define PROPNAME_VOLTAGE25       "voltage25"
 #define PROPNAME_VOLTAGE33       "voltage33"
 #define PROPNAME_FRAMESRECEIVED  "packetsReceived"
 #define PROPNAME_FRAMESERROR     "packetsError"
@@ -252,7 +253,8 @@ PROPERTYCONFIG_END
 PROPERTYCONFIG_BEGIN(PROPS_Board)
 PROPERTYCONFIG_ITEM(PROPNAME_STATUS, GCF_READWRITE_PROP, "0")
 PROPERTYCONFIG_ITEM(PROPNAME_FUNCTIONALITY, GCF_READABLE_PROP, "true")
-PROPERTYCONFIG_ITEM(PROPNAME_VOLTAGE15, GCF_READABLE_PROP, "0")
+PROPERTYCONFIG_ITEM(PROPNAME_VOLTAGE12, GCF_READABLE_PROP, "0")
+PROPERTYCONFIG_ITEM(PROPNAME_VOLTAGE25, GCF_READABLE_PROP, "0")
 PROPERTYCONFIG_ITEM(PROPNAME_VOLTAGE33, GCF_READABLE_PROP, "0")
 PROPERTYCONFIG_ITEM(PROPNAME_FFI0, GCF_READABLE_PROP, "0")
 PROPERTYCONFIG_ITEM(PROPNAME_FFI1, GCF_READABLE_PROP, "0")
