@@ -369,7 +369,7 @@ __nav_view_list.caption	GCFNavView	"List"	0x101	17.02.2005 10:35:48.746
 __nav_view_list.configPanel	GCFNavView	"nav_fw/list_config.pnl"	0x101	17.02.2005 10:35:48.746
 __nav_view_plot.caption	GCFNavView	"Plot"	0x101	17.02.2005 10:35:48.756
 __nav_view_plot.configPanel	GCFNavView	"nav_fw/plot_config.pnl"	0x101	17.02.2005 10:35:48.756
-__nav_SingleElement_Trend.1.Trace1.dpName	GCFNavSubViewConfigTrend	"PIC_Stations_Station01_Rack1_SubRack1_Board1.status"	0x101	15.04.2005 07:24:24.371
+__nav_SingleElement_Trend.1.Trace1.dpName	GCFNavSubViewConfigTrend	"CS010:LOFAR_PIC_Cabinet0_SubRack0_RSPBoard0.state"	0x101	15.04.2005 07:24:24.371
 __nav_SingleElement_Trend.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 10:35:48.776
 __nav_SingleElement_Trend.1.Trace1.ScaleMin	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 10:35:48.786
 __nav_SingleElement_Trend.1.Trace1.ScaleMax	GCFNavSubViewConfigTrend	100	0x101	17.02.2005 10:35:48.786
@@ -417,7 +417,7 @@ __nav_default_viewconfig.configs	GCFNavViewConfiguration		0x101	02.03.2005 07:01
 __nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	01.03.2005 13:28:25.304
 __loglevel.	GCFLogLevel	30000	0x101	05.04.2005 11:43:25.652
 __navigator.viewsPath	GCFNavigator	"nav_fw/"	0x101	07.07.2005 07:19:27.498
-__navigator.resourceRoots	GCFNavigator	"CTU1:PIC", "CTU1:PAC", "CTU1:LOFAR"	0x101	07.07.2005 07:19:49.490
+__navigator.resourceRoots	GCFNavigator	"CCU1:PIC", "CCU1:PAC", "CCU1:LOFAR"	0x101	07.07.2005 07:19:49.490
 __navigator.environmentNames	GCFNavigator	"Personal"	0x101	07.07.2005 07:19:06.338
 __navigator.environmentGroups	GCFNavigator	""	0x101	25.07.2005 08:48:35.944
 __navigator.treeAccess	GCFNavigator	"", "", "", "", "", "", "", "", "*:*", "", "", "", "", "", "", "", ""	0x101	15.07.2005 13:49:56.495

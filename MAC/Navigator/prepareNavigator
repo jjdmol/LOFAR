@@ -26,4 +26,4 @@ PVSS00pmon -currentproj -stopWait
 
 echo "PVSS00NG         |   once |      30 |        3 |        1 |" >> config/progs
 echo "PVSS00NV         | always |      30 |        3 |        2 |-p vision/login.pnl -iconBar -menuBar" >> config/progs
-echo "PVSS00NV         | manual |      30 |        3 |        2 |-p nav_fw/EnableTool.pnl -iconBar -menuBar" >> config/progs
+echo "PVSS00NV         | manual |      30 |        3 |        2 |-p nav_fw/tools/EnableTool.pnl -iconBar -menuBar" >> config/progs
