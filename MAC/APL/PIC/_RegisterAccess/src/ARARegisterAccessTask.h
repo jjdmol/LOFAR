@@ -220,6 +220,8 @@ namespace ARA
       void _setFunctionalitySubRack(int rack,int subrack,bool functional);
       void _setFunctionalityRack(int rack,bool functional);
       void _setFunctionalityStation(bool functional);
+      void _splitScope(const string& scope,string& datapoint,string& datapointElement);
+      string _getElementPrefix(const string& datapointElement);
       
       // member variables
       ARAAnswer   m_answer;
