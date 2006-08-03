@@ -44,8 +44,8 @@ using namespace LOFAR::ACC::APS;
 
 
 void predict (Prediffer& prediffer, const MSDesc& msd,
-	      const StepProp& stepProp,
-	      double timeStep, int startChan, int endChan)
+          const StepProp& stepProp,
+          double timeStep, int startChan, int endChan)
 {
   double time = msd.startTime;
   double endTime = msd.endTime;
@@ -55,11 +55,11 @@ void predict (Prediffer& prediffer, const MSDesc& msd,
     prediffer.writePredictedData();
     time += timeStep;
   }
-}           
+}
 
 void subtract (Prediffer& prediffer, const MSDesc& msd,
-	       const StepProp& stepProp,
-	       double timeStep, int startChan, int endChan)
+           const StepProp& stepProp,
+           double timeStep, int startChan, int endChan)
 {
   double time = msd.startTime;
   double endTime = msd.endTime;
@@ -69,14 +69,14 @@ void subtract (Prediffer& prediffer, const MSDesc& msd,
     prediffer.subtractData();
     time += timeStep;
   }
-}           
+}
 
 void solve (Prediffer& prediffer, const MSDesc& msd,
-	    const StepProp& stepProp,
-	    double timeStep, int startChan, int endChan,
-	    const SolveProp& solveProp,
-	    const vector<int32>& nrinterval,
-	    bool saveSolution)
+        const StepProp& stepProp,
+        double timeStep, int startChan, int endChan,
+        const SolveProp& solveProp,
+        const vector<int32>& nrinterval,
+        bool saveSolution)
 {
   double time = msd.startTime;
   double endTime = msd.endTime;
@@ -95,9 +95,9 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
     for (int i=0; i<nrinterval[1]; ++i) {
       double sdFreq = workDomain.startX();
       for (int j=0; j<nrinterval[0]; ++j) {
-	solveDomains.push_back (MeqDomain(sdFreq, sdFreq+stepf,
-					  sdTime, sdTime+stept));
-	sdFreq += stepf;
+    solveDomains.push_back (MeqDomain(sdFreq, sdFreq+stepf,
+                      sdTime, sdTime+stept));
+    sdFreq += stepf;
       }
       sdTime += stept;
     }
@@ -109,8 +109,8 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
     solver.setSolvableParmData (prediffer.getSolvableParmData(), 0);
     prediffer.showSettings();
     cout << "Before: " << setprecision(10)
-	 << solver.getSolvableValues(0) << endl;
-    
+     << solver.getSolvableValues(0) << endl;
+
     for(int i=0; i<solProp.getMaxIter(); ++i) {
       // Get the fitter data from the prediffer and give it to the solver.
       vector<casa::LSQFit> fitters;
@@ -120,7 +120,7 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
       // Do the solve.
       solver.solve(false);
       cout << "iteration " << i << ":  " << setprecision(10)
-	   << solver.getSolvableValues(0) << endl;
+       << solver.getSolvableValues(0) << endl;
       cout << solver.getQuality(0) << endl;
 
       prediffer.updateSolvableParms (solver.getSolvableParmData());
@@ -145,12 +145,12 @@ bool doIt (const string& parsetName)
   vector<bool> corrs;
   int startChan, endChan, nriter;
   bool calcUVW, saveSolution;
-  
+
   // Read & parse parameters
   try
   {
     ParameterSet parameters(parsetName);
-    
+
     user = parameters.getString ("user");
     instrumentPDB = parameters.getString ("instrument_parmdb");
     skyPDB = parameters.getString ("sky_parmdb");
@@ -176,7 +176,7 @@ bool doIt (const string& parsetName)
     cout << "Parameter read or parse error: " << _ex.what() << endl;
     return false;
   }
-  
+
   cout << "user                   : " << user << endl;
   cout << "instrument ParmDB      : " << instrumentPDB << endl;
   cout << "sky ParmDB             : " << skyPDB << endl;
@@ -187,23 +187,23 @@ bool doIt (const string& parsetName)
   cout << "end channel            : " << endChan << endl;
   cout << "operation              : " << operation << endl;
   cout << "time domain size       : " << timeDomainSize << endl;
-  
+
   // Get meta data from description file.
   string name(measurementSet+"/vis.des");
   std::ifstream istr(name.c_str());
   ASSERTSTR (istr, "File " << measurementSet
-	     << "/vis.des could not be opened");
+         << "/vis.des could not be opened");
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
   MSDesc msd;
   bis >> msd;
 
   // Construct prediffer.
-  Prediffer prediffer(measurementSet, 
-		      ParmDBMeta("aips", instrumentPDB),
-		      ParmDBMeta("aips", skyPDB),
-		      0,
-		      calcUVW);
+  Prediffer prediffer(measurementSet,
+              ParmDBMeta("aips", instrumentPDB),
+              ParmDBMeta("aips", skyPDB),
+              0,
+              calcUVW);
   // Set strategy.
   StrategyProp stratProp;
   stratProp.setAntennas (antennas);
@@ -228,27 +228,37 @@ bool doIt (const string& parsetName)
       solveProp.setExclPatterns (exclParms);
       solveProp.setMaxIter (nriter);
       solve (prediffer, msd, stepProp,
-	     timeDomainSize, startChan, endChan,
-	     solveProp,
-	     nrSolveInterval, saveSolution);
+         timeDomainSize, startChan, endChan,
+         solveProp,
+         nrSolveInterval, saveSolution);
     } else if (operation == "predict") {
       cout << "output column name     : " << columnNameOut << endl;
       predict (prediffer, msd, stepProp,
-	       timeDomainSize, startChan, endChan);
+           timeDomainSize, startChan, endChan);
     } else if (operation == "subtract") {
       cout << "input column name      : " << columnNameIn << endl;
       cout << "output column name     : " << columnNameOut << endl;
       subtract (prediffer, msd, stepProp,
-		timeDomainSize, startChan, endChan);
+        timeDomainSize, startChan, endChan);
     } else {
       cout << "Only operations solve, predict, and subtract are valid" << endl;
       return 1;
     }
   }
+  catch (LOFAR::Exception& _ex)
+  {
+      cout << "error: " << _ex.message() << endl;
+      return false;
+  }
   catch (exception& _ex)
   {
     cout << "error: " << _ex.what() << endl;
     return false;
+  }
+  catch (...)
+  {
+      cout << "unknown exception caught..." << endl;
+      return false;
   }
   return true;
 }
@@ -261,7 +271,7 @@ int main (int argc, const char* argv[])
   }
   if (doIt (argv[1])) {
     cout << "OK" << endl;
-    return 0; 
+    return 0;
   }
   return 1;
 }
