@@ -69,8 +69,8 @@ node   Strategy     1.0.0  development 'node constraint'  'BBS Strategy'
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Steps                   I    text   -      10    0    '[]'         -        'The steps contained in this BBS Strategy'
-par  Stations                I    text   -      10    0    '[]'               -        'Identifiers/names of the stations to be used'
+par  Steps                   I    text   -      10    0    '[]'                      -        'The steps contained in this BBS Strategy'
+par  Stations                I    text   -      10    0    '[]'                      -        'Identifiers/names of the stations to be used'
 par  InputData               I    text   -      10    0    'INDATA'                  -        'Measurement Set input data column'
 
 #      name        vers   qual        constr.            descr.
@@ -79,11 +79,46 @@ uses  Correlation     1.0.0  development 1                  'BBS Correlation for
 uses  WorkDomainSize  1.0.0  development 1                  'BBS Work Domain Size for this strategy'
 uses  Integration     1.0.0  development 1                  'BBS Integration attributes for this strategy'
 
-# -- BBS Step Container
+# -- BBS Step Template Baselines definition
 #
+#      name           vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Baselines 1.0.0  development 'node constraint'  'Template BBS Step Baselines'
+
+#    name                   dir. type   unit   prun. vm   value              constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par    Station1             I    text   -      10    0    '[]'               -        'The stations to be used in the baselines'
+par    Station2             I    text   -      10    0    '[]'               -        'The stations to be used in the baselines'
+
+
+# -- BBS Step Template definition
+#
+#      name           vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   DefaultBBSStep 1.0.0  development 'node constraint'  'Template BBS Step'
+
+#    name                   dir. type   unit   prun. vm   value              constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par    Steps                I    text   -      10    0    '[]'               -        'The steps contained in this BBS Step'
+par    Sources              I    text   -      10    0    '[]'               -        'List of sources'
+par    ExtraSources         I    text   -      10    0    '[]'               -        'List of extra sources'
+par    InstrumentModel      I    text   -      10    0    '[]'               -        'Instrument Model'
+par    OutputData           I    text   -      10    0    ''                 -        'OutputData Column'
+par    Operation            I    text   -      10    0    'SOLVE'            -        'Operation to be performed in this BBS Step'
+
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   Step         1.0.0  development 'node constraint'  'BBS Step Container'
+uses  Baselines       1.0.0  development 1                  'BBS Baseline settings for this step'
+uses  Correlation     1.0.0  development 1                  'BBS Correlation settings for this step'
+uses  Integration     1.0.0  development 1                  'BBS Integration attributes for this step'
+
+
+# -- BBS Step Container
+#
+#      name            vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Step            1.0.0  development 'node constraint'  'BBS Step Container'
+uses  DefaultBBSStep  1.0.0  development 1                  'BBS Template Step'
 
 # --BBS Global--
 #
