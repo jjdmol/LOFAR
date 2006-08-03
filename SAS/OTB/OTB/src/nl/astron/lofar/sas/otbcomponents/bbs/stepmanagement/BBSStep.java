@@ -25,6 +25,7 @@ package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
 import java.util.HashMap;
 import java.util.Vector;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 
 /**
  * @version $Id$
@@ -37,6 +38,8 @@ public class BBSStep{
     private BBSStep parentStep;
     //Contained substeps
     private Vector<BBSStep> childSteps;
+    //pointer to the Step Container in OTDB
+    private jOTDBnode stepContainerNode = null;
     //Step Name
     private String name;
     //Step Baseline Selection
@@ -178,8 +181,8 @@ public class BBSStep{
         return outputDataColumn;
     }
     
-    public void setOutputDataColumn(String name){
-        this.name = name;
+    public void setOutputDataColumn(String outputDataColumn){
+        this.outputDataColumn = outputDataColumn;
     }
     
     public BBSStep getParentStep(){
@@ -190,8 +193,16 @@ public class BBSStep{
         this.parentStep = parentStep;
     }
     
+    public jOTDBnode getStepContainerPointer(){
+        return stepContainerNode;
+    }
+    
+    public void setStepContainerPointer(jOTDBnode stepContainerNode){
+        this.stepContainerNode = stepContainerNode;
+    }
+    
     public boolean hasParentStep(){
-        return parentStep == null;
+        return parentStep != null;
     }
     
     public Vector<BBSStep> getChildSteps(){
@@ -251,6 +262,5 @@ public class BBSStep{
         if(parentStep!=null){
             parentStep.removeChildStep(this);
         }
-    }
-    
+    }    
 }

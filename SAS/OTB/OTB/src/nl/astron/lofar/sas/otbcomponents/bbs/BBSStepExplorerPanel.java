@@ -24,19 +24,16 @@ package nl.astron.lofar.sas.otbcomponents.bbs;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.rmi.RemoteException;
-import java.util.Enumeration;
-import java.util.Vector;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStep;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepDataManager;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepNode;
 import org.apache.log4j.Logger;
 
 /**
@@ -87,15 +84,25 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     }
     
     public void setContent(Object anObject) {
-        
-        if(anObject instanceof BBSStep){
-            itsBBSStep=(BBSStep)anObject;
-            fillBBSGui(itsBBSStep);
-            stepExplorerStepNameText.setEditable(false);           
-            
-        }else if(anObject instanceof jOTDBnode){
+        if(anObject instanceof jOTDBnode){
             itsNode=(jOTDBnode)anObject;
+        }
+        initPanel();
+    }
+    public void setBBSStepContent(BBSStep itsStep,BBSStep itsParentBBSStep) {
+        
+        if(itsStep != null && itsParentBBSStep == null){
+            //modify a step
+            fillBBSGui(itsStep);
+            stepExplorerStepNameText.setEditable(false);
+            itsBBSStep = itsStep;
             
+        }else if(itsStep == null && itsParentBBSStep != null){
+            //creating a new step under a given parent step
+            this.itsParentBBSStep = itsParentBBSStep;
+            
+        }else if (itsStep ==null && itsParentBBSStep == null){
+            //assume a new strategy step will be generated
         }
         initPanel();
     }
@@ -178,11 +185,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         if(userAccount.isInstrumentScientist()) {
             // enable/disable certain controls
         }
-        if (itsNode != null) {
+        if (itsBBSStep != null) {
             // [TODO]
             // Fill from existing cfg needed ????
         } else {
-            logger.debug("ERROR:  no node given");
+            logger.debug("ERROR:  no BBS Step given");
         }
         
     }
@@ -190,6 +197,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private void fillBBSGui(BBSStep theBBSStep) {
         
         this.stepExplorerStepNameText.setText(theBBSStep.getName());
+        if(theBBSStep.getOutputDataColumn() != null){
+            this.stepExplorerOutputDataText.setText(theBBSStep.getOutputDataColumn());
+        }else{
+            this.stepExplorerOutputDataText.setText("");
+        }
         //TODO: Add variables from BBSStep
     }
     
@@ -225,17 +237,32 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     }
     
     private void saveInput() {
-        /*
-        if (this.dataSet != null && !this.BBSDatasetText.getText().equals(dataSet.limits)) {
-            dataSet.limits = BBSDatasetText.getText();
-            logger.trace("Variable BBS ("+dataSet.name+"//"+dataSet.treeID()+"//"+dataSet.nodeID()+"//"+dataSet.parentID()+"//"+dataSet.paramDefID()+") from value ("+BBSDatasetText.getText()+") updated to :"+dataSet.limits);
-            saveNode(dataSet);
+        
+        //new BBS step to be added
+        if(itsBBSStep == null && itsParentBBSStep != null){
+            if(!this.stepExplorerStepNameText.getText().equals("")){
+                itsBBSStep = new BBSStep(this.stepExplorerStepNameText.getText());
+                itsBBSStep.setParentStep(itsParentBBSStep);
+                itsParentBBSStep.addChildStep(itsBBSStep);
+            }
+        }else if(itsBBSStep == null && itsParentBBSStep == null){
+            //adding new BBS Step to a strategy
+            if(!this.stepExplorerStepNameText.getText().equals("")){
+                itsBBSStep = new BBSStep(this.stepExplorerStepNameText.getText());
+            }
         }
-        if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
-            BBDBHost.limits = BBDBHostText.getText();
-            logger.trace("Variable BBS ("+BBDBHost.name+"//"+BBDBHost.treeID()+"//"+BBDBHost.nodeID()+"//"+BBDBHost.parentID()+"//"+BBDBHost.paramDefID()+") updated to :"+BBDBHost.limits);
-            saveNode(BBDBHost);
-        }*/
+        if(itsBBSStep != null){
+            BBSStep containedStep = itsBBSStep;
+            //update all fields in the BBS Step object
+            containedStep.setOutputDataColumn(stepExplorerOutputDataText.getText());
+            
+            //persist the BBS Step
+            BBSStepDataManager.getInstance().persistStep(containedStep);
+            
+        }else{
+            //warning
+        }
+        
     }
     
     
@@ -313,7 +340,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         baselineStationsTable = new javax.swing.JTable();
         baselineModsPanel = new javax.swing.JPanel();
         addBaseLineButton = new javax.swing.JButton();
-        modifyBaseLineButton = new javax.swing.JButton();
         deleteBaseLineButton = new javax.swing.JButton();
         baselineUseAllCheckbox = new javax.swing.JCheckBox();
         stepExplorerGlobalSources = new javax.swing.JPanel();
@@ -616,12 +642,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         BaselineSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Selection"));
         baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {"0", "1"},
-                {"0", "2"},
-                {"0", "3"},
-                {"1", "0"},
-                {"1", "2"},
-                {"1,2,3", "1,2,3"}
+
             },
             new String [] {
                 "Station 1", "Station 2"
@@ -630,16 +651,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             Class[] types = new Class [] {
                 java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                false, false
-            };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
             }
         });
         baselineStationsTable.setToolTipText("The baselines used");
@@ -660,17 +674,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
-
-        modifyBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
-        modifyBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        modifyBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        modifyBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        baselineModsPanel.add(modifyBaseLineButton, gridBagConstraints);
 
         deleteBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
         deleteBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -710,7 +713,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerGlobalSources.setBorder(javax.swing.BorderFactory.createTitledBorder("Sources"));
         stepExplorerSourcesPanel1.setLayout(new java.awt.BorderLayout());
 
-        stepExplorerSourcesPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Predict"));
         stepExplorerSourcesModsPanel1.setLayout(new java.awt.GridBagLayout());
 
         addSourceButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
@@ -747,7 +749,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerSourcesPanel.setLayout(new java.awt.BorderLayout());
 
-        stepExplorerSourcesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Peel"));
+        stepExplorerSourcesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Extra"));
         stepExplorerSourcesModsPanel.setLayout(new java.awt.GridBagLayout());
 
         addSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
@@ -780,7 +782,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerSourcesPanel.add(stepExplorerSourcesScrollPane, java.awt.BorderLayout.CENTER);
 
-        stepExplorerGlobalSources.add(stepExplorerSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 20, 160, 150));
+        stepExplorerGlobalSources.add(stepExplorerSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 10, 160, 160));
 
         stepExplorerPanel.add(stepExplorerGlobalSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 40, 350, 180));
 
@@ -823,6 +825,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
     private BBSStep itsBBSStep = null;
+    private BBSStep itsParentBBSStep = null;
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
     
@@ -870,7 +873,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JButton exploreNextStepButton;
     private javax.swing.JButton exploreParentStepButton;
     private javax.swing.JButton explorePreviousStepButton;
-    private javax.swing.JButton modifyBaseLineButton;
     private javax.swing.JButton modifyInstrumentModelButton;
     private javax.swing.JButton modifySolvableParmButton;
     private javax.swing.JButton modifySolvableParmButton1;
