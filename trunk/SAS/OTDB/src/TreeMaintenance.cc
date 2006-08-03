@@ -662,9 +662,10 @@ nodeIDType	TreeMaintenance::dupNode(treeIDType		aTreeID,
 
 // Adds the given component under the parent of the template tree.
 // Checks if this is allowed in the Component definition.
-nodeIDType	TreeMaintenance::addComponent (nodeIDType	compID,
-										   treeIDType	treeID,
-										   nodeIDType	parentID)
+nodeIDType	TreeMaintenance::addComponent (nodeIDType		compID,
+										   treeIDType		treeID,
+										   nodeIDType		parentID,
+										   const string&	newName)
 {
 	// Check Connection
 	if (!itsConn->connect()) {
@@ -674,17 +675,19 @@ nodeIDType	TreeMaintenance::addComponent (nodeIDType	compID,
 
 	LOG_TRACE_FLOW_STR("TM:addComponent(" << compID << "," 
 										  << treeID << ","
-										  << parentID << ")");
+										  << parentID << ","
+										  << newName << ")");
 
 	work	xAction(*(itsConn->getConn()), "addComponentToVT");
 	try {
 		// execute the insert action
 		result res = xAction.exec(
-					 formatString("SELECT addComponentToVT(%d,%d,%d,%d)",
+					 formatString("SELECT addComponentToVT(%d,%d,%d,%d,'%s')",
 						itsConn->getAuthToken(),
 						compID,
 						treeID,
-						parentID));
+						parentID,
+					    newName.c_str()));
 
 		// Analyse result
 		nodeIDType		nodeID;

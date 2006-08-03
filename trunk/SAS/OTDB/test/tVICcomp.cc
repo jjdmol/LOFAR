@@ -198,6 +198,11 @@ int main (int	argc, char*	argv[]) {
 		ASSERTSTR (child1, "Adding topnode to template tree failed");
 		LOG_INFO_STR ("child component (VI) got ID: " << child1);
 		
+		LOG_INFO("Adding good child (VI) to topNode as 'Vicky'");
+		nodeIDType	child3 = tm.addComponent(ref1, treeID, topID, "Vicky"); 
+		ASSERTSTR (child3, "Adding topnode to template tree failed");
+		LOG_INFO_STR ("child component (Vicky) got ID: " << child3);
+		
 		LOG_INFO("Tryin to add a bad child(SRG) to the topNode");
 		found = false;
 		nodeIDType	ref2;

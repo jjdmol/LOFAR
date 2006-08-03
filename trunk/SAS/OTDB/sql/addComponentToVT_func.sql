@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 
 --
 -- helper function
--- instanciateVTleafNode(orgNodeID, newTreeID, newParentID):newNodeID
+-- instanciateVTleafNode(orgNodeID, newTreeID, newParentID, newName):newNodeID
 --
 -- Constructs a VT node from the given VC nodeID.
 -- 
@@ -71,14 +71,14 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
+CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(80))
   RETURNS INT4 AS '
 	DECLARE
 		vNode		RECORD;
 		vNewNodeID	VICtemplate.nodeID%TYPE;
 
 	BEGIN
-	  SELECT	nodeID, name, constraints
+	  SELECT	nodeID, constraints
 	  INTO		vNode
 	  FROM 		VICnodeDef
 	  WHERE		nodeID = $1;
@@ -88,7 +88,7 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
 	  INTO	 VICtemplate(treeID, nodeID, parentID, originID, 
 						 name, leaf, instances, limits)
 	  VALUES ($2, vNewNodeID, $3, vNode.nodeID,  
-			  vNode.name, false, 1, vNode.constraints);
+			  $4, false, 1, vNode.constraints);
 	  -- note: nodeId and index are defaulted.
 
 	  PERFORM instanciateVTparams($1, $2, vNewNodeID);
@@ -98,7 +98,7 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
 ' LANGUAGE plpgsql;
 
 
--- addComponentToVT(authToken, orgNodeID, newTreeID, newParentID): newNodeID
+-- addComponentToVT(authToken, orgNodeID, newTreeID, newParentID, newName): newNodeID
 -- 
 -- Add the given component under the given parentNode of a template
 -- tree.
@@ -111,7 +111,7 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4)
+CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(80))
   RETURNS INT4 AS '
 	DECLARE
 	  vFunction  		CONSTANT INT2 := 1;
@@ -125,6 +125,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4)
 	  vVersion			VICnodedef.version%TYPE;
 	  vParentRefID		VICtemplate.originID%TYPE;
 	  vDummy			VICparamDef.paramID%TYPE;
+	  vNewName			VARCHAR(80);
 
 	BEGIN
 	  -- check authorisation(authToken, treeID, func, dummy)
@@ -190,9 +191,16 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4)
 							vNodeName, $4;
 		END IF;
 	  END IF;
+
+	  -- if no newname was specified use existing one
+	  IF length($5) < 2 THEN
+		vNewName = vNodeName;
+	  ELSE
+		vNewName = $5;
+	  END IF;
 	  
-	  -- finally copy the node (orgNode, tree, parent)
-	  vNewNodeID := instanciateVTleafnode($2, $3, $4);
+	  -- finally copy the node (orgNode, tree, parent, newname)
+	  vNewNodeID := instanciateVTleafnode($2, $3, $4, vNewName);
 
 	  RETURN vNewNodeID;
 	END;
