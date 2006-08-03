@@ -72,7 +72,7 @@ MACScheduler::MACScheduler() :
 {
 	LOG_TRACE_OBJ ("MACscheduler construction");
 
-	LOG_INFO_STR("MACProcessScope:" << globalParameterSet()->getString("prefix"));
+	LOG_INFO_STR("MACProcessScope: " << globalParameterSet()->getString("prefix"));
 
 	// Readin some parameters from the ParameterSet.
 	itsOTDBpollInterval = globalParameterSet()->getTime("OTDBpollInterval");
@@ -464,7 +464,8 @@ void MACScheduler::_doOTDBcheck()
 											treeID, 
 											CNTLRTYPE_OBSERVATIONCTRL, 
 											0,		// instanceNr
-											myHostname(true));
+											"rs001");
+//											myHostname(true));
 				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
 
 				// register this Observation
@@ -511,6 +512,7 @@ void MACScheduler::_addActiveObservation(const Observation&	newObs)
 		if (iter->name == newObs.name) {
 			return;
 		}
+		iter++;
 	}
 
 	// update own admin and PVSS datapoint
@@ -538,6 +540,7 @@ void MACScheduler::_removeActiveObservation(const string& name)
 			itsObservations.erase(iter);
 			LOG_DEBUG_STR("Removed observation " << name << " from active observationList");
 		}
+		iter++;
 	}
 
 	if (!found) {
@@ -552,6 +555,7 @@ void MACScheduler::_removeActiveObservation(const string& name)
 			itsPVSSObsList.erase(pIter);
 			break;
 		}
+		pIter++;
 	}
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
 }
