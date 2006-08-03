@@ -140,7 +140,8 @@ public:
 	// template tree.
 	nodeIDType	addComponent (nodeIDType	compID,
 							  treeIDType	treeID,
-							  nodeIDType	parentID);
+							  nodeIDType	parentID,
+							  const string&	newName="");
 
 	// Updates the (vector of) OTDBnodes to the database.
 	bool	saveNode    (OTDBnode&			aNode);
