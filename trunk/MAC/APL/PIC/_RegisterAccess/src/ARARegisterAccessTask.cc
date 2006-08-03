@@ -255,9 +255,6 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
       int rack;
       int subrack;
       int board;
-      int ap;
-      int rcu;
-      int globalRcuNr(0);
       
       m_n_racks               = globalParameterSet()->getInt32(PARAM_N_RACKS);
       m_n_subracks_per_rack   = globalParameterSet()->getInt32(PARAM_N_SUBRACKS_PER_RACK);
@@ -302,6 +299,7 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
+/*
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
@@ -349,6 +347,7 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
                 addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
               }
             }
+*/
           }
         }  
       
@@ -1418,24 +1417,26 @@ void RegisterAccessTask::updateBoardProperties(string scope,
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     double v12 = static_cast<double>(voltage_1_2) * (2.5/192.0);
     GCFPVDouble pvDouble12(v12);
-    it->second->setValueTimed(string(PROPNAME_VOLTAGE12),pvDouble12,timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VOLTAGE12),pvDouble12,timestamp);
     
     double v25 = static_cast<double>(voltage_2_5) * (3.3/192.0);
     GCFPVDouble pvDouble25(v25);
-    it->second->setValueTimed(string(PROPNAME_VOLTAGE25),pvDouble25,timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VOLTAGE25),pvDouble25,timestamp);
     
     double v33 = static_cast<double>(voltage_3_3) * (5.0/192.0);
     GCFPVDouble pvDouble33(v33);
-    it->second->setValueTimed(string(PROPNAME_VOLTAGE33),pvDouble33, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VOLTAGE33),pvDouble33, timestamp);
   }
 }
 
@@ -1453,30 +1454,32 @@ void RegisterAccessTask::updateETHproperties(string scope,
   // layout eth status: 
   // 31......24  23.....16  15........8  7........0       
   // #RX[15..8]  #RX[7..0]  #Err[15..8]  #Err[7..0]  
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     GCFPVUnsigned pvTemp(frames);
-    it->second->setValueTimed(string(PROPNAME_FRAMESRECEIVED),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FRAMESRECEIVED),pvTemp, timestamp);
     
     pvTemp.setValue(errors);
-    it->second->setValueTimed(string(PROPNAME_FRAMESERROR),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FRAMESERROR),pvTemp, timestamp);
 
     pvTemp.setValue(lastError);
-    it->second->setValueTimed(string(PROPNAME_LASTERROR),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_LASTERROR),pvTemp, timestamp);
 
     pvTemp.setValue(ffi0);
-    it->second->setValueTimed(string(PROPNAME_FFI0),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FFI0),pvTemp, timestamp);
 
     pvTemp.setValue(ffi1);
-    it->second->setValueTimed(string(PROPNAME_FFI1),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FFI1),pvTemp, timestamp);
 
     pvTemp.setValue(ffi2);
-    it->second->setValueTimed(string(PROPNAME_FFI2),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FFI2),pvTemp, timestamp);
   }
 }
 
@@ -1490,21 +1493,23 @@ void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     GCFPVUnsigned pvTemp(seqnr);
-    it->second->setValueTimed(string(PROPNAME_SEQNR),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_SEQNR),pvTemp, timestamp);
     
     pvTemp.setValue(error);
-    it->second->setValueTimed(string(PROPNAME_ERROR),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_ERROR),pvTemp, timestamp);
 
     pvTemp.setValue(ffi0);
-    it->second->setValueTimed(string(PROPNAME_FFI0),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FFI0),pvTemp, timestamp);
   }
 }
 
@@ -1515,21 +1520,23 @@ void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 sample_c
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     GCFPVUnsigned pvTemp(sample_count);
-    it->second->setValueTimed(string(PROPNAME_SAMPLECOUNT),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_SAMPLECOUNT),pvTemp, timestamp);
     
     pvTemp.setValue(sync_count);
-    it->second->setValueTimed(string(PROPNAME_SYNCCOUNT),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_SYNCCOUNT),pvTemp, timestamp);
 
     pvTemp.setValue(error_count);
-    it->second->setValueTimed(string(PROPNAME_ERRORCOUNT),pvTemp, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_ERRORCOUNT),pvTemp, timestamp);
   }
 }
                                              
@@ -1537,10 +1544,12 @@ void RegisterAccessTask::updateFPGAboardProperties(string scope, double /*timest
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
@@ -1552,15 +1561,17 @@ void RegisterAccessTask::updateFPGAproperties(string scope, uint8 temp,
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     GCFPVDouble pvDouble(static_cast<double>(temp));
-    it->second->setValueTimed(string(PROPNAME_TEMPERATURE),pvDouble, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_TEMPERATURE),pvDouble, timestamp);
   }
 }
 
@@ -1570,17 +1581,19 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  ffi0,
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     GCFPVUnsigned pvUns(ffi0);
-    it->second->setValueTimed(string(PROPNAME_FFI0),pvUns, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FFI0),pvUns, timestamp);
     pvUns.setValue(ffi1);
-    it->second->setValueTimed(string(PROPNAME_FFI1),pvUns, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FFI1),pvUns, timestamp);
   }
 }
 
@@ -1592,10 +1605,12 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status, double t
   // 7         6         5         4        3        2       1          0
   // VDDVCCEN VHENABLE VLENABLE FILSEL1 FILSEL0 BANDSEL HBAENABLE LBAENABLE
     
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
@@ -1603,56 +1618,56 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status, double t
     GCFPVBool pvBoolVddVccEn(tempStatus);
     if(pvBoolVddVccEn.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VDDVCCEN)))->getValue())
     {
-      it->second->setValueTimed(string(PROPNAME_VDDVCCEN),pvBoolVddVccEn, timestamp);
+      it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VDDVCCEN),pvBoolVddVccEn, timestamp);
     }
     
     tempStatus = (status >> 6) & 0x01;
     GCFPVBool pvBoolVhEnable(tempStatus);
     if(pvBoolVhEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VHENABLE)))->getValue())
     {
-      it->second->setValueTimed(string(PROPNAME_VHENABLE),pvBoolVhEnable, timestamp);
+      it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VHENABLE),pvBoolVhEnable, timestamp);
     }
     
     tempStatus = (status >> 5) & 0x01;
     GCFPVBool pvBoolVlEnable(tempStatus);
     if(pvBoolVlEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VLENABLE)))->getValue())
     {
-      it->second->setValueTimed(string(PROPNAME_VLENABLE),pvBoolVlEnable, timestamp);
+      it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VLENABLE),pvBoolVlEnable, timestamp);
     }
     
     tempStatus = (status >> 4) & 0x01;
     GCFPVBool pvBoolFilSel1(tempStatus);
     if(pvBoolFilSel1.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSEL1)))->getValue())
     {
-      it->second->setValueTimed(string(PROPNAME_FILSEL1),pvBoolFilSel1, timestamp);
+      it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FILSEL1),pvBoolFilSel1, timestamp);
     }
     
     tempStatus = (status >> 3) & 0x01;
     GCFPVBool pvBoolFilSel0(tempStatus);
     if(pvBoolFilSel0.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSEL0)))->getValue())
     {
-      it->second->setValueTimed(string(PROPNAME_FILSEL0),pvBoolFilSel0, timestamp);
+      it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FILSEL0),pvBoolFilSel0, timestamp);
     }
     
     tempStatus = (status >> 2) & 0x01;
     GCFPVBool pvBoolBandSel(tempStatus);
     if(pvBoolBandSel.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_BANDSEL)))->getValue())
     {
-      it->second->setValueTimed(string(PROPNAME_BANDSEL),pvBoolBandSel, timestamp);
+      it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_BANDSEL),pvBoolBandSel, timestamp);
     }
     
     tempStatus = (status >> 1) & 0x01;
     GCFPVBool pvBoolHBAEnable(tempStatus);
     if(pvBoolHBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_HBAENABLE)))->getValue())
     {
-      it->second->setValueTimed(string(PROPNAME_HBAENABLE),pvBoolHBAEnable, timestamp);
+      it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_HBAENABLE),pvBoolHBAEnable, timestamp);
     }
     
     tempStatus = (status >> 0) & 0x01;
     GCFPVBool pvBoolLBAEnable(tempStatus);
     if(pvBoolLBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_LBAENABLE)))->getValue())
     {
-      it->second->setValueTimed(string(PROPNAME_LBAENABLE),pvBoolLBAEnable, timestamp);
+      it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_LBAENABLE),pvBoolLBAEnable, timestamp);
     }
   }
 }
@@ -1661,16 +1676,18 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 /*status*/,
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     LOG_WARN("ignoring status field in BoardRCUStatus");
     GCFPVUnsigned pvUns(nof_overflow);
-    it->second->setValueTimed(string(PROPNAME_NOFOVERFLOW),pvUns, timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_NOFOVERFLOW),pvUns, timestamp);
   }
 }
 
@@ -1678,15 +1695,17 @@ void RegisterAccessTask::updateVersion(string scope, string version, double time
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  string datapoint,datapointElement;
+  _splitScope(scope,datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     GCFPVString pvString(version);
-    it->second->setValueTimed(string(PROPNAME_VERSION),pvString,timestamp);
+    it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VERSION),pvString,timestamp);
   }    
 }
 
@@ -2500,17 +2519,19 @@ void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsH
       int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
       getRCURelativeNumbers(rcu,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
-      TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(scopeString);
+      string datapoint,datapointElement;
+      _splitScope(string(scopeString),datapoint,datapointElement);
+      TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(datapoint);
       if(propSetIt != m_myPropertySetMap.end())
       {
         if(statsHandle == m_subStatsHandleSubbandPower)
         {
-          TGCFResult res = propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
+          TGCFResult res = propSetIt->second->setValue(_getElementPrefix(datapointElement)+string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
           LOG_DEBUG(formatString("Writing subband statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
         }
         else if(statsHandle == m_subStatsHandleBeamletPower)
         {
-          TGCFResult res = propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
+          TGCFResult res = propSetIt->second->setValue(_getElementPrefix(datapointElement)+string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
           LOG_DEBUG(formatString("Writing beamlet statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
         }
       }
@@ -2739,17 +2760,19 @@ int RegisterAccessTask::_isDefect(char* scopeString)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
   int isDefect(1);
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(string(scopeString));
+  string datapoint,datapointElement;
+  _splitScope(string(scopeString),datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-    LOG_FATAL(formatString("PropertySet not found: %s",scopeString));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
-    boost::shared_ptr<GCFPVInteger> pvStatus(static_cast<GCFPVInteger*>(it->second->getValue(PROPNAME_STATUS)));
+    boost::shared_ptr<GCFPVInteger> pvStatus(static_cast<GCFPVInteger*>(it->second->getValue(_getElementPrefix(datapointElement)+string(PROPNAME_STATUS))));
     if(!pvStatus)
     {
-      LOG_FATAL(formatString("PropertySet not found: %s",scopeString));
+      LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
     }
     else
     {
@@ -2770,15 +2793,17 @@ void RegisterAccessTask::_setFunctionality(char* scopeString, bool functional)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %s=%s",getName().c_str(),scopeString,(functional?"true":"false")).c_str());
   
-  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(string(scopeString));
+  string datapoint,datapointElement;
+  _splitScope(string(scopeString),datapoint,datapointElement);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
   if(it == m_myPropertySetMap.end())
   {
-    LOG_FATAL(formatString("PropertySet not found: %s",scopeString));
+    LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
   else
   {
     GCFPVBool pvBool(functional);
-    it->second->setValue(PROPNAME_FUNCTIONALITY,pvBool);
+    it->second->setValue(_getElementPrefix(datapointElement)+string(PROPNAME_FUNCTIONALITY),pvBool);
   }
 }
 
@@ -2874,6 +2899,29 @@ void RegisterAccessTask::_setFunctionalityStation(bool functional)
   {
     _setFunctionalityRack(r,false);
   }
+}
+
+void RegisterAccessTask::_splitScope(const string& scope,string& datapoint,string& datapointElement)
+{
+  string::size_type splitPoint = scope.find('.');
+  datapoint = scope;
+  datapointElement = "";
+  
+  if(splitPoint != string::npos)
+  {
+    datapoint = scope.substr(0,splitPoint);
+    datapointElement = scope.substr(splitPoint+1);
+  }
+}
+
+string RegisterAccessTask::_getElementPrefix(const string& datapointElement)
+{
+  string elPrefix = "";
+  if(datapointElement.length() > 0)
+  {
+    elPrefix = datapointElement + string(".");
+  }
+  return elPrefix;
 }
 
 } // namespace ARA
