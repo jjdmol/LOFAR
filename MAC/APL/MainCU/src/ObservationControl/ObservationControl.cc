@@ -87,7 +87,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsHeartBeat  = globalParameterSet()->getUint32("heartbeatInterval");
 
 	// Inform Logging manager who we are
-	LOG_INFO_STR("MACProcessScope:" << itsTreePrefix + cntlrName);
+	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
