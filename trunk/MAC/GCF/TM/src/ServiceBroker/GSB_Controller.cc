@@ -169,7 +169,13 @@ GCFEvent::TResult GSBController::operational(GCFEvent& event, GCFPortInterface& 
 
 	case SB_UNREGISTER_SERVICE: {
 		SBUnregisterServiceEvent 	request(event);
+		SBServiceUnregisteredEvent	response;
+		response.seqnr = request.seqnr;
+		
 		releaseService(request.servicename);
+
+		response.result = SB_NO_ERROR;
+		port.send(response);
 		break;
 	}
 
@@ -183,7 +189,7 @@ GCFEvent::TResult GSBController::operational(GCFEvent& event, GCFPortInterface& 
 			LOG_INFO(formatString ("Serviceinfo for %s is %d", 
 									request.servicename.c_str(), portNr));
 			response.portnumber = portNr;
-			response.hostname	= Common::myHostname(true);
+			response.hostname	= Common::myHostname(false);
 			response.result 	= SB_NO_ERROR;
 		}
 		else {
@@ -195,6 +201,15 @@ GCFEvent::TResult GSBController::operational(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
+	case SB_REREGISTER_SERVICE: {
+		SBReregisterServiceEvent 	request(event);
+		SBServiceReregisteredEvent	response;
+		response.seqnr  	 = request.seqnr;
+		response.servicename = request.servicename;
+		response.result 	 = reRegisterService(request.servicename, request.portnumber, &port);
+		port.send(response);
+		break;
+	}
 	default:
 		status = GCFEvent::NOT_HANDLED;
 		break;
@@ -259,7 +274,7 @@ void GSBController::readRanges()
 }
 
 //
-// claimPortNumber(serviceName, port)
+// claimPortNumber(servicename, port)
 //
 uint16 GSBController::claimPortNumber(const string& 		aServiceName,
 									  GCFPortInterface*		aPort)
@@ -296,6 +311,56 @@ uint16 GSBController::claimPortNumber(const string& 		aServiceName,
 	saveAdministration	(itsAdminFile);			// to survive crashes
 
 	return (itsServiceList[idx].portNumber);
+}
+
+//
+// reRegisterService(servicename, portnr)
+//
+TSBResult GSBController::reRegisterService(const string& servicename, uint16 oldPortNr,
+											GCFPortInterface*	thePort)
+{
+	int32	idx = 0;
+	int32	nrElems2Check = itsNrPorts - itsNrFreePorts;// prevent checking whole array
+
+	while (idx < itsNrPorts && nrElems2Check > 0) {
+		if (itsServiceList[idx].portNumber) {
+			nrElems2Check--;
+			if (itsServiceList[idx].serviceName == servicename) {
+				if (!itsServiceList[idx].ownerPort && itsServiceList[idx].portNumber == oldPortNr) {
+					itsServiceList[idx].ownerPort = thePort;
+					LOG_INFO_STR("Service " << servicename << " confirmed at " << oldPortNr);
+					saveAdministration	(itsAdminFile);			// to survive crashes
+					return (SB_NO_ERROR);
+				}
+				else {
+					LOG_ERROR_STR("Recovering of service " << servicename << " at " <<
+								oldPortNr << " not possible. Service was at " << 
+								itsServiceList[idx].portNumber);
+					return (SB_CANT_RECOVER);
+				}
+			}
+		}
+		idx++;
+	}
+
+	// service not in our admin anymore, try to fullfill the question.
+	idx = portNr2Index(oldPortNr);		// convert portnr to array index
+	if (itsServiceList[idx].ownerPort == 0) {	// still free?
+		// assign port to service
+		itsServiceList[idx].portNumber  = oldPortNr;
+		itsServiceList[idx].serviceName = servicename;
+		itsServiceList[idx].ownerPort   = thePort;
+		itsNrFreePorts--;
+
+		LOG_INFO_STR("Service " << servicename << " reregistered at " << oldPortNr);
+		saveAdministration	(itsAdminFile);			// to survive crashes
+		return (SB_NO_ERROR);
+	}
+
+	LOG_ERROR_STR("Recovering of service " << servicename << " at " <<
+				oldPortNr << " not possible. Portnr taken by " << 
+				itsServiceList[idx].serviceName);
+	return (SB_CANT_RECOVER);
 }
 
 //
@@ -362,7 +427,7 @@ void GSBController::releasePort(GCFPortInterface*	aPort)
 }
 
 //
-// findService(serviceName)
+// findService(servicename)
 //
 uint16 GSBController::findService(const string& aServiceName, bool usedOnly)
 {
@@ -405,13 +470,18 @@ void GSBController::saveAdministration(const string&	aFileName)
 
 	uint16	writeVersion = SB_ADMIN_VERSION;
 	uint16	count		 = itsNrPorts - itsNrFreePorts;
-	outFile << writeVersion << count << itsLowerLimit << itsUpperLimit;
-
+	outFile.write((char*)&writeVersion,  sizeof(writeVersion));
+	outFile.write((char*)&count, 		 sizeof(count));
+	outFile.write((char*)&itsLowerLimit, sizeof(itsLowerLimit));
+	outFile.write((char*)&itsUpperLimit, sizeof(itsUpperLimit));
+	
 	uint16	idx = 0;
 	while (idx < itsNrPorts && count > 0) {
 		if (itsServiceList[idx].portNumber) {
 			// note: the TCPport is not saved because it can not be restored.
-			outFile << itsServiceList[idx].portNumber << itsServiceList[idx].serviceName;
+			outFile.write((char*)&itsServiceList[idx].portNumber, 
+						   sizeof(itsServiceList[idx].portNumber));
+			outFile << itsServiceList[idx].serviceName;
 			count--;
 		}
 		idx++;
@@ -436,24 +506,28 @@ void GSBController::loadAdministration(const string&	aFileName)
 	uint16	count;				// nr of entries in the file
 	uint16	lowerLimit;			// range settings
 	uint16	upperLimit;
-	inFile >> readVersion >> count >> lowerLimit >> upperLimit;
+	inFile.read((char*)&readVersion, sizeof(readVersion));
+	inFile.read((char*)&count,		 sizeof(count));
+	inFile.read((char*)&lowerLimit,  sizeof(lowerLimit));
+	inFile.read((char*)&upperLimit,  sizeof(upperLimit));
 
 	LOG_DEBUG_STR ("Loading " << count << " old registrations from file " << aFileName);
 
 	while (count) {
 		uint16	portNumber;
-		string	serviceName;
-		inFile >> portNumber >> serviceName;
+		string	servicename;
+		inFile.read((char*)&portNumber, sizeof(portNumber));
+		inFile >> servicename;
 		if (portNumber < itsLowerLimit || portNumber >= itsUpperLimit) {
 			LOG_DEBUG_STR ("Portnumber " << portNumber 
 										 << " not in current range, ignoring");
 		}
 		else {
 			itsServiceList[portNr2Index(portNumber)].portNumber  = portNumber;
-			itsServiceList[portNr2Index(portNumber)].serviceName = serviceName;
+			itsServiceList[portNr2Index(portNumber)].serviceName = servicename;
 			itsServiceList[portNr2Index(portNumber)].ownerPort   = 0;
 			itsNrFreePorts--;
-			LOG_DEBUG_STR ("Loading " << serviceName << "@" << portNumber);	
+			LOG_DEBUG_STR ("Loading " << servicename << "@" << portNumber);	
 		}
 		count--;
 	}

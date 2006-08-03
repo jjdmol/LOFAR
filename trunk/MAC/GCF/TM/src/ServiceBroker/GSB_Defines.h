@@ -31,18 +31,17 @@ namespace LOFAR {
  namespace GCF {
   namespace SB {
 
-class GCFPValue;
+//class GCFPValue;
 
 enum TSBResult {
 	SB_NO_ERROR, 
 	SB_UNKNOWN_ERROR,
 	SB_SERVICE_ALREADY_EXIST,
 	SB_NO_FREE_PORTNR,
-	SB_UNKNOWN_SERVICE
+	SB_UNKNOWN_SERVICE,
+	SB_NO_CONNECTION,
+	SB_CANT_RECOVER
 };
-
-//#define PARAM_SB_SERVER_PORT "mac.gcf.sb.port"
-//#define PARAM_SB_SERVER_HOST "mac.gcf.sb.host"
 
   } // namespace SB
  } // namespace GCF

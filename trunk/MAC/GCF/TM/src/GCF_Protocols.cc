@@ -37,9 +37,9 @@ namespace LOFAR
 const char* F_FSM_PROTOCOL_names[] =
 {
   "F_FSM_PROTOCOL: invalid signal",
-  "F_ENTRY (IN)",
-  "F_EXIT (IN)",
-  "F_INIT (IN)",
+  "F_ENTRY",
+  "F_EXIT",
+  "F_INIT",
 };
 
 /**
@@ -48,15 +48,15 @@ const char* F_FSM_PROTOCOL_names[] =
 const char* F_PORT_PROTOCOL_names[] =
 {
   "F_PORT_PROTOCOL: invalid signal",
-  "F_CONNECT (OUT)",
-  "F_CONNECTED (IN)",
-  "F_DISCONNECTED (IN)",
-  "F_CLOSED (IN)",
-  "F_TIMER (IN)",
-  "F_DATAIN (IN)",
-  "F_DATAOUT (IN)",
-  "F_RAW_DATA (IN_OUT)",
-  "F_ACCEPT_REQ (IN)",
+  "F_CONNECT",
+  "F_CONNECTED",
+  "F_DISCONNECTED",
+  "F_CLOSED",
+  "F_TIMER",
+  "F_DATAIN",
+  "F_DATAOUT",
+  "F_RAW_DATA",
+  "F_ACCEPT_REQ",
 };
   } // namespace TM
  } // namespace GCF

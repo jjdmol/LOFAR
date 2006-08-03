@@ -36,6 +36,7 @@ namespace LOFAR {
   using namespace ACC::APS;
   namespace GCF {
     using namespace SB;
+    using namespace Common;
     namespace TM {
 
 
@@ -50,6 +51,8 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
   : GCFRawPort(task, name, type, protocol, transportRawData),
     _pSocket(0),
     _addrIsSet(false),
+	_addr(),
+	_host(myHostname(false)),
     _portNumber(0),
     _broker(0)
 {
@@ -62,12 +65,14 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
 }
 
 //
-// GCFTCPPorT()
+// GCFTCPPort()
 //
 GCFTCPPort::GCFTCPPort()
     : GCFRawPort(),
     _pSocket(0),
     _addrIsSet(false),
+	_addr(),
+	_host(myHostname(false)),
     _portNumber(0),
     _broker(0)
 {
@@ -102,7 +107,7 @@ void GCFTCPPort::init(GCFTask& 		task,
     _state = S_DISCONNECTED;
     GCFRawPort::init(task, name, type, protocol, transportRawData);
     _portNumber = 0;
-    _host       = "";
+    _host       = myHostname(false);
     _addrIsSet  = false;
     if (_pSocket) {
 		delete _pSocket;
@@ -143,7 +148,7 @@ bool GCFTCPPort::open()
 	setState(S_CONNECTING);
 
 	if (getType() == SAP) {						// client socket?
-		if (_host != "" && _portNumber != 0) {	// dest. overruled by user?
+		if (_portNumber != 0) {					// dest. overruled by user?
 			// Try to 'open' en 'connect' to port
 			serviceInfo(SB_NO_ERROR, _portNumber, _host);
 			return (true);
@@ -178,7 +183,7 @@ bool GCFTCPPort::open()
 			_broker = GTMServiceBroker::instance();
 		}
 		ASSERT(_broker);
-		_broker->getServiceinfo(*this, remoteServiceName);
+		_broker->getServiceinfo(*this, remoteServiceName, _host);
 		// a (dis)connect event will be scheduled
 		return (true);
 	}
@@ -278,7 +283,7 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 // Note: Is also called by the GTM_ServiceBroker
 void GCFTCPPort::serviceGone()
 {
-	_host = "";
+	_host = myHostname(false);
 	_portNumber = 0;
 }
 
@@ -353,7 +358,7 @@ void GCFTCPPort::setAddr(const TPeerAddr& addr)
 
 	// Is new address different from current address?
 	if (_addr.taskname != addr.taskname || _addr.portname != addr.portname) {
-		_host = "";					// clear current settings
+		_host = myHostname(false);					// clear current settings
 		_portNumber = 0;
 	}
 	_addr = addr;

@@ -24,6 +24,8 @@
 #define GCF_TCPPORT_H
 
 #include <GCF/TM/GCF_RawPort.h>
+#include <GCF/TM/GCF_TimerPort.h>
+#include <GCF/Utils.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -122,7 +124,13 @@ private:
 
 inline void GCFTCPPort::setHostName(const string& hostname)
 {
-  _host = hostname;
+	// assure that hostname is never filled with localname.
+	if (hostname.empty() || hostname == "localhost") {
+		_host = Common::myHostname(false);
+	}
+	else {
+		_host = hostname;
+	}
 }
 
 inline void GCFTCPPort::setPortNumber(unsigned int portNumber)
