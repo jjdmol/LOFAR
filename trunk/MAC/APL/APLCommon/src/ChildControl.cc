@@ -186,6 +186,11 @@ bool ChildControl::startChild (const string&		aName,
 	// Finally write to subset to the file.
 	cntlrSet.writeFile (cntlrSetName);
 
+	// When program must run on another system scp file to that system
+	if (hostname != GCF::Common::myHostname(false)) {
+		APLUtilities::remoteCopy(cntlrSetName, hostname, cntlrSetName);
+	}
+
 	// Alright, child does not exist yet. 
 	// construct structure with all information
 	ControllerInfo		ci;
