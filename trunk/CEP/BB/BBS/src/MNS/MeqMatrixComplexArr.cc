@@ -47,8 +47,8 @@ namespace LOFAR {
 // or less elements.
 static Pool<MeqMatrixComplexArr>    pool;
 #pragma omp threadprivate(pool)
-static size_t			    poolArraySize;
-static int			    poolNElements = 0;
+static size_t               poolArraySize;
+static int              poolNElements = 0;
 
 MeqMatrixComplexArr::MeqMatrixComplexArr (int nx, int ny)
 : MeqMatrixRep (nx, ny, ComplexArray)
@@ -138,7 +138,7 @@ void MeqMatrixComplexArr::show (ostream& os) const
 size_t MeqMatrixComplexArr::memSize(int nelements)
 {
   return ((sizeof(MeqMatrixComplexArr) + 7) & ~7) + 16 +
-	 2 * sizeof(double [(nelements + 1) & ~1]);
+     2 * sizeof(double [(nelements + 1) & ~1]);
 }
 
 void *MeqMatrixComplexArr::operator new(size_t, int nx, int ny)
@@ -173,10 +173,13 @@ void MeqMatrixComplexArr::operator delete(void *ptr)
   timer.start();
 #endif
 
-  if (((MeqMatrixComplexArr *) ptr)->nelements() <= poolNElements) {
-    pool.deallocate((MeqMatrixComplexArr *) ptr);
-  } else {
+  if(poolNElements == 0 || ((MeqMatrixComplexArr *) ptr)->nelements() < poolNElements)
+  {
     free(ptr);
+  }
+  else
+  {
+    pool.deallocate((MeqMatrixComplexArr *) ptr);
   }
 
 #if defined TIMER
@@ -210,12 +213,12 @@ MeqMatrixRep* MeqMatrixComplexArr::add (MeqMatrixRep& right, bool rightTmp)
   return right.addRep (*this, rightTmp);
 }
 MeqMatrixRep* MeqMatrixComplexArr::subtract (MeqMatrixRep& right,
-					     bool rightTmp)
+                         bool rightTmp)
 {
   return right.subRep (*this, rightTmp);
 }
 MeqMatrixRep* MeqMatrixComplexArr::multiply (MeqMatrixRep& right,
-					     bool rightTmp)
+                         bool rightTmp)
 {
   return right.mulRep (*this, rightTmp);
 }
@@ -233,7 +236,7 @@ void MeqMatrixComplexArr::dcomplexStorage(const double *&realPtr, const double *
 double MeqMatrixComplexArr::getDouble (int x, int y) const
 {
   ASSERTSTR (itsImag[offset(x,y)]==0,
-	     "MeqMatrix: dcomplex->double conversion not possible");
+         "MeqMatrix: dcomplex->double conversion not possible");
   return itsReal[offset(x,y)];
 }
 
@@ -842,8 +845,8 @@ MeqMatrixRep* MeqMatrixComplexArr::min()
     for (int i=1; i<n; i++) {
       double avs = itsReal[i] * itsReal[i] + itsImag[i] * itsImag[i];
       if (avs < absval_sqr) {
-	re = itsReal[i], im = itsImag[i];
-	absval_sqr = avs;
+    re = itsReal[i], im = itsImag[i];
+    absval_sqr = avs;
       }
     }
   }
@@ -872,8 +875,8 @@ MeqMatrixRep* MeqMatrixComplexArr::max()
     for (int i=1; i<n; i++) {
       double avs = itsReal[i] * itsReal[i] + itsImag[i] * itsImag[i];
       if (avs > absval_sqr) {
-	re = itsReal[i], im = itsImag[i];
-	absval_sqr = avs;
+    re = itsReal[i], im = itsImag[i];
+    absval_sqr = avs;
       }
     }
   }
@@ -936,7 +939,7 @@ MeqMatrixRep* MeqMatrixComplexArr::sum()
 }
 
 void MeqMatrixComplexArr::fillRowWithProducts(dcomplex v0, dcomplex factor,
-					      int row)
+                          int row)
 {
 #if defined TIMER
   static NSTimer timer("fillWithProducts CA", true);
@@ -981,9 +984,9 @@ void MeqMatrixComplexArr::fillRowWithProducts(dcomplex v0, dcomplex factor,
       __m128d old_v01_r = v01_r;
 
       v01_r = _mm_sub_pd(_mm_mul_pd(v01_r, factor2_r),
-			 _mm_mul_pd(v01_i, factor2_i));
+             _mm_mul_pd(v01_i, factor2_i));
       v01_i = _mm_add_pd(_mm_mul_pd(old_v01_r, factor2_i),
-			 _mm_mul_pd(v01_i, factor2_r));
+             _mm_mul_pd(v01_i, factor2_r));
     }
   }
 #else
