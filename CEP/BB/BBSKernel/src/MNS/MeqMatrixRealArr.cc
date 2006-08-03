@@ -49,8 +49,8 @@ namespace LOFAR {
 // or less elements.
 static Pool<MeqMatrixRealArr> pool;
 #pragma omp threadprivate(pool)
-static size_t		      poolArraySize;
-static int		      poolNElements = 0;
+static size_t             poolArraySize;
+static int            poolNElements = 0;
 
 
 MeqMatrixRealArr::MeqMatrixRealArr (int nx, int ny)
@@ -100,10 +100,13 @@ void MeqMatrixRealArr::operator delete(void *ptr)
   timer.start();
 #endif
 
-  if (((MeqMatrixRealArr *) ptr)->nelements() <= poolNElements) {
-    pool.deallocate((MeqMatrixRealArr *) ptr);
-  } else {
+  if(poolNElements == 0 || ((MeqMatrixRealArr *) ptr)->nelements() < poolNElements)
+  {
     free(ptr);
+  }
+  else
+  {
+    pool.deallocate((MeqMatrixRealArr *) ptr);
   }
 
 #if defined TIMER
@@ -282,7 +285,7 @@ MeqMatrixRep* MeqMatrixRealArr::addRep(MeqMatrixComplexSca& left, bool)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return v;
 }
 
@@ -302,7 +305,7 @@ MeqMatrixRep* MeqMatrixRealArr::addRep(MeqMatrixComplexArr& left, bool)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return &left;
 }
 
@@ -363,7 +366,7 @@ MeqMatrixRep* MeqMatrixRealArr::subRep(MeqMatrixComplexSca& left, bool)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return v;
 }
 
@@ -383,7 +386,7 @@ MeqMatrixRep* MeqMatrixRealArr::subRep(MeqMatrixComplexArr& left, bool)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return &left;
 }
 
@@ -444,7 +447,7 @@ MeqMatrixRep* MeqMatrixRealArr::mulRep(MeqMatrixComplexSca& left, bool)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return v;
 }
 
@@ -465,7 +468,7 @@ MeqMatrixRep* MeqMatrixRealArr::mulRep(MeqMatrixComplexArr& left, bool)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return &left;
 }
 
@@ -527,7 +530,7 @@ MeqMatrixRep* MeqMatrixRealArr::divRep(MeqMatrixComplexSca& left, bool)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return v;
 }
 
@@ -549,7 +552,7 @@ MeqMatrixRep* MeqMatrixRealArr::divRep(MeqMatrixComplexArr& left, bool)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return &left;
 }
 
@@ -579,7 +582,7 @@ MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealSca& left)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return v;
 }
 MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealArr& left)
@@ -610,7 +613,7 @@ MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealArr& left)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return v;
 }
 
@@ -633,7 +636,7 @@ MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealSca& left)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return v;
 }
 MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealArr& left)
@@ -656,7 +659,7 @@ MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealArr& left)
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return v;
 }
 
@@ -676,7 +679,7 @@ MeqMatrixRep* MeqMatrixRealArr::negate()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return this;
 }
 
@@ -695,7 +698,7 @@ MeqMatrixRep* MeqMatrixRealArr::sin()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return this;
 }
 
@@ -714,7 +717,7 @@ MeqMatrixRep* MeqMatrixRealArr::cos()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return this;
 }
 
@@ -733,7 +736,7 @@ MeqMatrixRep* MeqMatrixRealArr::exp()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return this;
 }
 
@@ -752,7 +755,7 @@ MeqMatrixRep* MeqMatrixRealArr::sqr()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return this;
 }
 
@@ -771,7 +774,7 @@ MeqMatrixRep* MeqMatrixRealArr::sqrt()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return this;
 }
 
@@ -793,7 +796,7 @@ MeqMatrixRep* MeqMatrixRealArr::min()
     val = itsValue[0];
     for (int i=1; i<n; i++) {
       if (itsValue[i] < val) {
-	val = itsValue[i];
+    val = itsValue[i];
       }
     }
   }
@@ -802,7 +805,7 @@ MeqMatrixRep* MeqMatrixRealArr::min()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return result;
 }
 
@@ -820,7 +823,7 @@ MeqMatrixRep* MeqMatrixRealArr::max()
     val = itsValue[0];
     for (int i=1; i<n; i++) {
       if (itsValue[i] > val) {
-	val = itsValue[i];
+    val = itsValue[i];
       }
     }
   }
@@ -829,7 +832,7 @@ MeqMatrixRep* MeqMatrixRealArr::max()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return result;
 }
 
@@ -851,7 +854,7 @@ MeqMatrixRep* MeqMatrixRealArr::mean()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return result;
 }
 
@@ -873,7 +876,7 @@ MeqMatrixRep* MeqMatrixRealArr::sum()
 #if defined TIMER
   timer.stop();
 #endif
-  
+
   return result;
 }
 
