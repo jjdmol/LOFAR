@@ -25,6 +25,7 @@
 
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_SBTCPPort.h>
+#include "GSB_Defines.h"
 
 namespace LOFAR {
 	namespace GCF {
@@ -60,15 +61,18 @@ private:
 		TM::GCFPortInterface*	ownerPort;
     } TServiceInfo;
 
-    void 	acceptConnectRequest();
-    void 	readRanges			();
-    uint16	claimPortNumber		(const string& aServiceName, TM::GCFPortInterface* aPort);
-	void	releaseService		(const string& aServiceName);
-	void	releasePort			(TM::GCFPortInterface*	aPort);
-	uint16	findService			(const string& aServiceName, bool	usedOnly);
-	void	saveAdministration	(const string&	aFileName);
-	void	loadAdministration	(const string&	aFileName);
-	void 	cleanupOldRegistrations();
+    void 	  acceptConnectRequest  ();
+    void 	  readRanges			();
+    uint16	  claimPortNumber		(const string& aServiceName, 
+									 TM::GCFPortInterface* aPort);
+	TSBResult reRegisterService	    (const string& aServicename, uint16	portnr, 
+									 TM::GCFPortInterface*	aPort);
+	void	  releaseService		 (const string& aServiceName);
+	void	  releasePort			 (TM::GCFPortInterface*	aPort);
+	uint16	  findService			 (const string& aServiceName, bool	usedOnly);
+	void	  saveAdministration	 (const string&	aFileName);
+	void	  loadAdministration	 (const string&	aFileName);
+	void 	  cleanupOldRegistrations();
 
 	// define conversions between portnumber and index.
 	inline uint16	portNr2Index(uint16		portNumber)

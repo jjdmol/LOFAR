@@ -93,15 +93,15 @@ bool GTMSBTCPPort::open()
 	}
 
 	uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
-	string 	sbHost     ("localhost");
-	char	hostname[256];
-	if (gethostname(hostname, 256) == 0) {
-		sbHost = hostname;
-	}
+//	string 	sbHost     ("localhost");
+//	char	hostname[256];
+//	if (gethostname(hostname, 256) == 0) {
+//		sbHost = hostname;
+//	}
 
 	if (_pSocket->open(sbPortNumber)) { 
 		if (SAP == getType()) {   
-			if (_pSocket->connect(sbPortNumber, sbHost)) {
+			if (_pSocket->connect(sbPortNumber, getHostName())) {
 				setState(S_CONNECTING);        
 				schedule_connected();
 			}

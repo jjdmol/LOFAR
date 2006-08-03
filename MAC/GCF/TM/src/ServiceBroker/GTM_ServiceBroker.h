@@ -24,16 +24,15 @@
 #ifndef GTM_SERVICEBROKER_H
 #define GTM_SERVICEBROKER_H
 
+#include <Common/lofar_map.h>
+#include <Common/lofar_list.h>
 #include <GCF/TM/GCF_Task.h>
 #include "GTM_SBTCPPort.h"
 #include <GCF/TM/GCF_Handler.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {  
-  namespace SB 
-  {
+namespace LOFAR {
+ namespace GCF {  
+  namespace SB {
 
 /**
 */
@@ -42,67 +41,91 @@ class GTMSBHandler;
 
 class GTMServiceBroker : public TM::GCFTask
 {
-  public:
+public:
     ~GTMServiceBroker ();
     static GTMServiceBroker* instance(bool temporary = false);
     static void release();
 
-  public: // member functions
+	// member functions
     void registerService  (TM::GCFTCPPort&	servicePort);
     void unregisterService(TM::GCFTCPPort&	servicePort);
     void getServiceinfo   (TM::GCFTCPPort&	clientPort, 
 						   const string& 	remoteServiceName,
-						   const string&	hostname = "localhost");
+						   const string&	hostname);
     void deletePort		  (TM::GCFTCPPort&	port);
   
-  private:
+private:
     friend class GTMSBHandler;
     GTMServiceBroker ();
 
-  private: // state methods
-    GCFEvent::TResult initial   (TM::GCFEvent& e, TM::GCFPortInterface& p);
+	// state methods
     GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
         
-  private: // helper methods
-    typedef struct Action
-    {
-      unsigned short 	action;
-      TM::GCFTCPPort*	pPort;
-      string 			servicename;
-	  string			hostname;
-      Action& operator= (const Action& other)
-      {        
-        if (this != &other)
-        {
-          action 	  = other.action;
-          pPort 	  = other.pPort;
-          servicename = other.servicename;          
-          hostname 	  = other.hostname;
-        }
-        return *this;
-      }      
-    } TAction;
-    unsigned short registerAction (TAction action);
+	// helper structures and classes
+    typedef struct action_t {
+		uint16				seqnr;
+		uint16 				type;
+		TM::GCFTCPPort*		pPort;
+		string 				servicename;
+		string				hostname;
+		time_t				timestamp;
+		action_t& operator= (const action_t& other) {        
+			if (this != &other) {
+				seqnr		= other.seqnr;
+				type		= other.type;
+				pPort		= other.pPort;
+				servicename = other.servicename;          
+				hostname	= other.hostname;
+				timestamp	= other.timestamp;
+			}
+			return (*this);
+		}      
+    } Action;
+	typedef struct service_t {
+		string		servicename;
+		uint16		portNr;
+		service_t(string s, uint16 p) : servicename(s), portNr(p) {};
+		service_t() 				  : servicename(),  portNr(0) {};
+	} KnownService;
+    typedef list<Action>								actionList_t;
+	typedef	map<string /*hostname*/, GTMSBTCPPort*>		brokerMap_t;
+	typedef	map<GCFTCPPort*,         KnownService>		serviceMap_t;
+	typedef actionList_t::iterator			ALiter;
+	typedef brokerMap_t::iterator			BMiter;
+	typedef serviceMap_t::iterator			SMiter;
 
-  private: // data members        
-    GTMSBTCPPort _serviceBroker;
+	// helper methods
+	void	_deleteService     (GCFTCPPort&			aPort);
+    uint16	_registerAction    (Action 				action);
+	void	_doActionList	   (const string&		hostname);
+	ALiter	_findAction		   (uint16				seqnr);
+	BMiter	_getBroker		   (const string&		hostname);
+	void	_reconnectBrokers  ();
+	void	_checkActionList   (const string&		hostname);
+	void	_reRegisterServices(GCFPortInterface*	brokerPort);
+	string	_actionName		   (uint16				actionType) const;
+	void	_logResult		   (uint16				result, 
+							    const string& 		servicename, 
+							    const string& 		hostname) const;
 
-  private: // admin members  
-    typedef map<unsigned short /*seqnr*/, TAction>  TActionSeqList;
-    TActionSeqList _actionSeqList;    
-    typedef map<string /*remoteservicename*/, list<TM::GCFTCPPort*> >  TServiceClients;
-    TServiceClients _serviceClients;    
+	// data members        
+	uint16				itsSeqnr;			// for actionlist.
+	int32				itsMaxResponse;		// never let client wait longer.
+	GCFTimerPort		itsTimerPort;		// for reconnecting to brokers
+	brokerMap_t			itsBrokerMap;		// connections to all Brokers
+    actionList_t 		itsActionList;    	// deferred actions
+	serviceMap_t		itsServiceMap;		// services I registered
+
 };
 
 class GTMSBHandler : public TM::GCFHandler
 {
-  public:
-    
+public:
     ~GTMSBHandler() { _pInstance = 0; }
     void workProc() {}
     void stop () {}
     
-  private:
+private:
     friend class GTMServiceBroker;
     GTMSBHandler();
 
