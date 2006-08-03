@@ -21,12 +21,17 @@ import nl.astron.lofar.sas.otb.MainFrame;
 public class BBSStepInputDialog extends javax.swing.JDialog {
     
     /** Creates new form BBSStepInputDialog */
-    public BBSStepInputDialog(MainFrame parent, boolean modal, BBSStep tobeDisplayedBBSStep) {
+    public BBSStepInputDialog(MainFrame parent, boolean modal, BBSStep tobeDisplayedBBSStep,BBSStep parentBBSStep) {
         super(parent, modal);
         initComponents();
         this.sePanel.setMainFrame(parent);
-        this.sePanel.setContent(tobeDisplayedBBSStep);
-        
+        if (tobeDisplayedBBSStep != null && parentBBSStep == null) {
+            this.sePanel.setBBSStepContent(tobeDisplayedBBSStep,null);
+        } else if(tobeDisplayedBBSStep == null && parentBBSStep != null){
+            this.sePanel.setBBSStepContent(null,parentBBSStep);
+        }else if(tobeDisplayedBBSStep == null && parentBBSStep == null){
+            this.sePanel.setBBSStepContent(null,null);
+        }
     }
     
     /** This method is called from within the constructor to
@@ -65,7 +70,7 @@ public class BBSStepInputDialog extends javax.swing.JDialog {
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new BBSStepInputDialog(null, true,null).setVisible(true);
+                new BBSStepInputDialog(null, true,null,null).setVisible(true);
             }
         });
     }

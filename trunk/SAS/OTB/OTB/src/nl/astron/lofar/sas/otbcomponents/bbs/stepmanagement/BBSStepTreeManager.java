@@ -101,6 +101,7 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
                 Vector<BBSStepNode> newPNodes = BBSsdm.buildStepTree(containedBBSNode,true);
                 for(BBSStepNode someNode : newPNodes){
                     TreeNode newNode = new TreeNode(this.instance,someNode,someNode.getName());
+                    
                     aNode.add(newNode);
                     defineChildsForNode(newNode);
                 }

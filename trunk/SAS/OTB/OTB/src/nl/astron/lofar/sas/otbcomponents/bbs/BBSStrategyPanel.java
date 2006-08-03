@@ -172,8 +172,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
     }
-    /** Restore original Values in Detauks panel
-     */
+    
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
@@ -966,10 +965,11 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("BBS Step to be modified : "+someBBSStepNode.getName());
             if(!someBBSStepNode.getName().equals("Strategy Steps")){
                  BBSStep theStep = ((BBSStepNode)someBBSStepNode.getUserObject()).getContainedStep();
-                 BBSStepInputDialog bbsStepDialog = new BBSStepInputDialog(this.itsMainFrame,false,theStep);
+                 BBSStepInputDialog bbsStepDialog = new BBSStepInputDialog(this.itsMainFrame,true,theStep,null);
                  bbsStepDialog.setTitle("Step Explorer - "+theStep.getName());
                  bbsStepDialog.setVisible(true);
             }
+            this.setupStepTree(StrategySteps);
         }
     }//GEN-LAST:event_modifyStepButtonActionPerformed
     
@@ -997,10 +997,14 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             TreeNode someBBSStepNode = (TreeNode)selectedPath.getLastPathComponent();
             logger.trace("BBS Step Node to be supplied with child : "+someBBSStepNode.getName());
             if(!someBBSStepNode.getName().equals("Strategy Steps")){
-                 BBSStepInputDialog bbsStepDialog = new BBSStepInputDialog(this.itsMainFrame,false,null);
+                 BBSStep theStep = ((BBSStepNode)someBBSStepNode.getUserObject()).getContainedStep();
+                 BBSStepInputDialog bbsStepDialog = new BBSStepInputDialog(this.itsMainFrame,true,null,theStep);
+                 bbsStepDialog.setVisible(true);
+            }else{
+                 BBSStepInputDialog bbsStepDialog = new BBSStepInputDialog(this.itsMainFrame,true,null,null);
                  bbsStepDialog.setVisible(true);
             }
-            
+            this.setupStepTree(StrategySteps);
                 
            
         }

@@ -25,10 +25,12 @@ package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
 import java.rmi.RemoteException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
 import org.apache.log4j.Logger;
 
 /**
@@ -40,6 +42,8 @@ public class BBSStepDataManager{
     
     private static BBSStepDataManager instance;
     private static Logger logger = Logger.getLogger(BBSStepDataManager.class);
+    private static jOTDBnode stepContainerNode = null;
+    private static Vector OTDBcomponentCache = null;
     
     /** Creates a new instance of BBSStepDataManager */
     private BBSStepDataManager() {
@@ -60,30 +64,9 @@ public class BBSStepDataManager{
         
         //The following otdbnode should be the Step container node (Step)
         jOTDBnode rootNode = stepContainerNode.getOTDBNode();
+        this.setStepContainerNode(rootNode);
+        jOTDBnode strategyStepsParameter = this.getStrategyStepsNode(rootNode);
         
-        jOTDBnode strategyStepsParameter=null;
-        Vector HWchilds = null;
-        if(buildStrategyStepTree){
-            //retrieve 2 levels of parameters to locate Strategy.Steps
-            //using the parent node of Step, which is the BBS root node itself
-            HWchilds = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(rootNode.treeID(), rootNode.parentID(), 2);
-        }else{
-            //retrieve all subnodes of the node given to look for Step.XXX.Steps
-            HWchilds = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(rootNode.treeID(), rootNode.nodeID(), 1);
-        }
-        // get all the params per child
-        Enumeration e1 = HWchilds.elements();
-        while( e1.hasMoreElements()  ) {
-            
-            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-            strategyStepsParameter=null;
-            //retrieving Strategy.Steps
-            if (aHWNode.leaf && aHWNode.name.equals("Steps")) {
-                strategyStepsParameter = aHWNode;
-                logger.trace("Strategy Steps defined :"+strategyStepsParameter.limits);
-                break;
-            }
-        }
         if(strategyStepsParameter!=null){
             //retrieve the step names mentioned in the strategy steps parameter (Strategy.Steps)
             Vector<String> strategySteps = this.getVectorFromString(strategyStepsParameter.limits,true);
@@ -107,6 +90,8 @@ public class BBSStepDataManager{
                     if (strategySteps.contains(aHWNode.name)) {
                         //Create a new step and build it (with its substeps as well)
                         BBSStep newStep = new BBSStep(aHWNode.name);
+                        newStep.setStepContainerPointer(rootNode);
+                        
                         buildStep(newStep,aHWNode);
                         BBSStepNode newChildStepNode = new BBSStepNode(newStep);
                         
@@ -116,7 +101,7 @@ public class BBSStepDataManager{
                     }
                 }
             }
-        }        
+        }
         return returnNode;
     }
     
@@ -137,32 +122,69 @@ public class BBSStepDataManager{
             
             jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
             strategyStepsParameter=null;
-            //retrieving Strategy.Steps
+            //retrieving Steps
             if (aHWNode.leaf && aHWNode.name.equals("Steps")) {
                 strategyStepsParameter = aHWNode;
                 logger.trace("Strategy Steps defined :"+strategyStepsParameter.limits);
-            }
-            if (aHWNode.leaf && aHWNode.name.equals("Sources")) {
+            } else if (aHWNode.leaf && aHWNode.name.equals("Sources")) {
                 parentNode.setSources(this.getVectorFromString(aHWNode.limits,true));
                 
-            }
-            if (aHWNode.leaf && aHWNode.name.equals("ExtraSources")) {
+            } else if (aHWNode.leaf && aHWNode.name.equals("ExtraSources")) {
                 parentNode.setExtraSources(this.getVectorFromString(aHWNode.limits,true));
                 
-            }
-            if (aHWNode.leaf && aHWNode.name.equals("InstrumentModel")) {
-                strategyStepsParameter = aHWNode;
+            } else if (aHWNode.leaf && aHWNode.name.equals("InstrumentModel")) {
+                parentNode.setInstrumentModel(this.getVectorFromString(aHWNode.limits,true));
                 
+            } else if (aHWNode.leaf && aHWNode.name.equals("OutputData")) {
+                parentNode.setOutputDataColumn(aHWNode.limits);
             }
-            if (aHWNode.leaf && aHWNode.name.equals("Operation")) {
-                strategyStepsParameter = aHWNode;
-               
-            }
-            if (aHWNode.leaf && aHWNode.name.equals("OutData")) {
-                strategyStepsParameter = aHWNode;
+            //Set the following values
+            else if (aHWNode.leaf && aHWNode.name.equals("Operation")) {
                 
+                //SET OPERATION!!
+                
+            } else if (!aHWNode.leaf && aHWNode.name.equals("Correlation")) {
+                Vector correlationParms = this.retrieveChildDataForNode(aHWNode);
+                
+                Enumeration ce = correlationParms.elements();
+                while( ce.hasMoreElements()  ) {
+                    jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                    
+                    if (aHWNode.leaf && aHWNode.name.equals("Selection")) {
+                        parentNode.setCorrelationSelection(aHWNode.limits);
+                    } else if (aHWNode.leaf && aHWNode.name.equals("Type")) {
+                        parentNode.setCorrelationType(this.getVectorFromString(aHWNode.limits,true));
+                    }
+                }
+            } else if (!aHWNode.leaf && aHWNode.name.equals("Baselines")) {
+                Vector baselinesParms = this.retrieveChildDataForNode(aHWNode);
+                
+                Enumeration ce = baselinesParms.elements();
+                while( ce.hasMoreElements()  ) {
+                    jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                    
+                    if (aHWNode.leaf && aHWNode.name.equals("Station1")) {
+                        parentNode.setStation1Selection(this.getVectorFromString(aHWNode.limits,true));
+                    } else if (aHWNode.leaf && aHWNode.name.equals("Station2")) {
+                        parentNode.setStation2Selection(this.getVectorFromString(aHWNode.limits,true));
+                    }
+                }
+            } else if (!aHWNode.leaf && aHWNode.name.equals("Integration")) {
+                Vector baselinesParms = this.retrieveChildDataForNode(aHWNode);
+                
+                Enumeration ce = baselinesParms.elements();
+                while( ce.hasMoreElements()  ) {
+                    jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                    
+                    if (aHWNode.leaf && aHWNode.name.equals("Time")) {
+                        parentNode.setIntegrationTime(Double.parseDouble(aHWNode.limits));
+                    } else if (aHWNode.leaf && aHWNode.name.equals("Freq")) {
+                        parentNode.setIntegrationFrequency(Double.parseDouble(aHWNode.limits));
+                    }
+                }
             }
         }
+        
         if(strategyStepsParameter!=null){
             //retrieve the step names mentioned in the strategy steps parameter (Strategy.Steps)
             Vector<String> strategySteps = this.getVectorFromString(strategyStepsParameter.limits,true);
@@ -179,6 +201,8 @@ public class BBSStepDataManager{
                     if (!aHWNode.leaf && strategySteps.contains(aHWNode.name)) {
                         //Create a new step and build it (with its substeps as well)
                         BBSStep newStep = new BBSStep(aHWNode.name);
+                        newStep.setStepContainerPointer(parentNode.getStepContainerPointer());
+                        
                         //build its childsteps recursively
                         buildStep(newStep,aHWNode);
                         parentNode.addChildStep(newStep);
@@ -188,14 +212,210 @@ public class BBSStepDataManager{
             }
         }
     }
-    
-    public void persistStepTree(BBSStepNode aBBSStepTree, boolean isStrategyStepTree){
+    public void persistStep(BBSStep aBBSStep){
+        jOTDBnode stepsNode = aBBSStep.getStepContainerPointer();
+        if(stepsNode == null){
+            stepsNode = this.getStepContainerNode();
+        }
+        String name = aBBSStep.getName();
+        boolean isStrategyStep = !aBBSStep.hasParentStep();
+        jOTDBnode existingStepNode = null;
+        
+        //check if the step is present in the Step Container
+        Vector stepsVector =  retrieveChildDataForNode(stepsNode);
+        Enumeration se = stepsVector.elements();
+        //loop through steps
+        
+        
+        while( se.hasMoreElements()  ) {
+            jOTDBnode aHWNode = (jOTDBnode)se.nextElement();
+            /* ENABLE WHEN RENAMING COMPONENTS WORKS
+             if(aHWNode.name.equals("DefaultBBSStep")){
+                try {
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                } catch (RemoteException ex) {
+                     logger.debug("PersistStep(): Unable to delete the default Template Step from the Step Container: "+aBBSStep.getName());
+                }
+            }*/
+            //limiting the search for steps that are mentioned in the strategy steps parameter (Strategy.Steps)
+            if (!aHWNode.leaf && aHWNode.name.equals(aBBSStep.getName())) {
+                existingStepNode = aHWNode;
+                logger.trace("PersistStep(): Step found in Step Container: "+aBBSStep.getName());
+            }
+        }
+        
+        //Update the existing step node
+        if(existingStepNode != null){
+            
+            HashMap<String,String> unprocessedParms = new HashMap<String,String>();
+            
+            unprocessedParms.put("OutputData",aBBSStep.getOutputDataColumn());
+            unprocessedParms.put("Sources",aBBSStep.getOutputDataColumn());
+            unprocessedParms.put("ExtraSources",aBBSStep.getOutputDataColumn());
+            unprocessedParms.put("InstrumentModel",aBBSStep.getOutputDataColumn());
+            //do other parms
+            
+            //retrieve all existing step parameters
+            Vector stepParametersVector = retrieveChildDataForNode(existingStepNode);
+            Enumeration spe = stepParametersVector.elements();
+            
+            while( spe.hasMoreElements()  ) {
+                jOTDBnode aHWNode = (jOTDBnode)spe.nextElement();
+                if (aHWNode.leaf && aHWNode.name.equals("OutputData")){
+                    if(!aHWNode.limits.equals(aBBSStep.getOutputDataColumn())){
+                        aHWNode.limits=aBBSStep.getOutputDataColumn();
+                        try {
+                            if(aBBSStep.getParentStep() != null &&
+                                    aBBSStep.getOutputDataColumn().equals(aBBSStep.getParentStep().getOutputDataColumn())){
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                            }else{
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                            }
+                        } catch (RemoteException ex) {
+                            logger.error("PersistStep(): Step-OutData could not be updated ",ex);
+                        }
+                    }
+                    unprocessedParms.remove("OutputData");
+                }
+                //do other parms that are left over
+            }
+            for(String key : unprocessedParms.keySet()){
+                try {
+                    int newNodeID = SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(this.getComponentForNode(key),existingStepNode.treeID(),existingStepNode.nodeID());
+                    jOTDBnode newStepNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getNode(existingStepNode.treeID(),newNodeID);
+                    newStepNode.limits = unprocessedParms.get(key);
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(newStepNode);
+                } catch (RemoteException ex) {
+                    logger.error("PersistStep(): Step "+existingStepNode.name+"could not be filled with missing parameters!",ex);
+                }
+                
+                
+            }
+            
+            //Insert a new step node
+        }else{
+            try {
+                //new step has to be generated and persisted.
+                
+                //fetch list of components that contains the BBS Step tree items
+                int stepTemplateNodeId = this.getComponentForNode("DefaultBBSStep");
+                int stepTemplateCorrelationNodeId = this.getComponentForNode("Correlation");
+                int stepTemplateBaselinesNodeId = this.getComponentForNode("Baselines");
+                int stepTemplateIntegrationNodeId = this.getComponentForNode("Integration");
+                
+                if(stepTemplateNodeId!=0){
+                    //copy the template step tree
+                    int newStepNodeID = SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateNodeId,stepContainerNode.treeID(),stepContainerNode.nodeID());
+                    
+                    //fetch the generated node as the step node
+                    jOTDBnode newStepNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
+                    
+                    //add the subcomponents for the step as well (correlation, integration and baselines)
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateBaselinesNodeId,stepContainerNode.treeID(),newStepNode.nodeID());
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateCorrelationNodeId,stepContainerNode.treeID(),newStepNode.nodeID());
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateIntegrationNodeId,stepContainerNode.treeID(),newStepNode.nodeID());
+                    
+                    //update the node name
+                    newStepNode.name = aBBSStep.getName();
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(newStepNode);
+                    newStepNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
+                    Vector stepParametersVector = retrieveChildDataForNode(newStepNode);
+                    Enumeration spe = stepParametersVector.elements();
+                    
+                    while( spe.hasMoreElements()  ) {
+                        jOTDBnode aHWNode = (jOTDBnode)spe.nextElement();
+                        
+                        if(aHWNode.name.equals("OutputData")){
+                            aHWNode.limits = aBBSStep.getOutputDataColumn();
+                            if(aBBSStep.getParentStep() != null &&
+                                    aBBSStep.getOutputDataColumn().equals(aBBSStep.getParentStep().getOutputDataColumn())){
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                            }else{
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                            }
+                        }
+                        
+                    }
+                    
+                }
+            } catch (RemoteException ex) {
+                logger.error("PersistStep(): New step could not be generated using the DefaultBBSStep template as a component",ex);
+            }
+            
+        }
+        
+        //update references to this step
+        jOTDBnode parentStepsNode = null;
+        
+        if(isStrategyStep){
+            parentStepsNode = this.getStrategyStepsNode(this.getStepContainerNode());
+        }else{
+            //update the references in the parent step to contain the new step.
+            BBSStep parentBBSStep = aBBSStep.getParentStep();
+            
+            try {
+                //Get all the steps present in the BBS Step Container and limit to the step defined as the step parent.
+                Vector parentParmVector = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(this.getStepContainerNode().treeID(), this.getStepContainerNode().nodeID(), 1);
+                Enumeration ppe = parentParmVector.elements();
+                jOTDBnode parentStepNode = null;
+                //loop through steps
+                while( ppe.hasMoreElements()  ) {
+                    jOTDBnode aHWNode = (jOTDBnode)ppe.nextElement();
+                    if(aHWNode.name.equals(parentBBSStep.getName())){
+                        parentStepNode = aHWNode;
+                    }
+                }
+                if(parentStepNode!=null){
+                    Vector parentParmsVector = this.retrieveChildDataForNode(parentStepNode);
+                    Enumeration ppse = parentParmsVector.elements();
+                    //loop through steps
+                    while( ppse.hasMoreElements()  ) {
+                        jOTDBnode aHWNode = (jOTDBnode)ppse.nextElement();
+                        if(aHWNode.name.equals("Steps")){
+                            parentStepsNode = aHWNode;
+                        }
+                    }
+                }
+                
+                
+            } catch (RemoteException ex) {
+                logger.error("persistStep() : Step could not be linked to its Parent Step!",ex);
+            }
+            
+        }
+        if(parentStepsNode!=null){
+            
+            Vector<String> oldList = getVectorFromString(parentStepsNode.limits,true);
+            boolean exists = false;
+            for(String aStrategyStepString : oldList){
+                if(aStrategyStepString.equalsIgnoreCase(aBBSStep.getName())){
+                    exists=true;
+                }
+            }
+            if(!exists){
+                oldList.add(aBBSStep.getName());
+            }
+            String newList = this.getStringFromVector(oldList,true);
+            if(!parentStepsNode.limits.equals(newList)){
+                parentStepsNode.limits=newList;
+                try{
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(parentStepsNode);
+                } catch (RemoteException ex) {
+                    logger.error("persistStep() : Step could not be linked to its Parent Step/Strategy!",ex);
+                }
+            }
+        }
         
     }
     
-    public void persistStep(BBSStepNode aBBSStepTree, boolean isStrategyStep){
+    private void deleteStep(BBSStep aStep){
         
     }
+    
+    public boolean stepExists(BBSStep aStep){
+        return false;
+    }
+    
     private Vector<String> getVectorFromString(String theList,boolean removeQuotes) {
         Vector<String> listItems = new Vector<String>();
         String aList = theList;
@@ -235,5 +455,65 @@ public class BBSStepDataManager{
         }
         aList+="]";
         return aList;
+    }
+    private Vector retrieveChildDataForNode(jOTDBnode aNode){
+        Vector HWchilds = new Vector();
+        try {
+            HWchilds = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            // get all the params per child
+        } catch (RemoteException ex) {
+            logger.error("Error during retrieveChildDataForNode!", ex);
+        }
+        return HWchilds;
+    }
+    private jOTDBnode getStrategyStepsNode(jOTDBnode stepContainerNode){
+        jOTDBnode strategyStepsParameter=null;
+        try {
+            Vector HWchilds = null;
+            HWchilds = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(stepContainerNode.treeID(), stepContainerNode.parentID(), 2);
+            // get all the params per child
+            Enumeration e1 = HWchilds.elements();
+            while( e1.hasMoreElements()  ) {
+                
+                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                strategyStepsParameter=null;
+                //retrieving Strategy.Steps
+                if (aHWNode.leaf && aHWNode.name.equals("Steps")) {
+                    strategyStepsParameter = aHWNode;
+                    logger.trace("Strategy Steps defined :"+strategyStepsParameter.limits);
+                    break;
+                }
+            }
+        } catch (RemoteException ex) {
+            logger.error("Error during getStrategyStepsNode()!", ex);
+        }
+        return strategyStepsParameter;
+    }
+    private synchronized jOTDBnode getStepContainerNode(){
+        return this.stepContainerNode;
+    }
+    
+    private void setStepContainerNode(jOTDBnode rootNode){
+        this.stepContainerNode = rootNode;
+    }
+    
+    private int getComponentForNode(String nodeName){
+        
+        int returnId = 0;
+        try {
+            if(this.OTDBcomponentCache==null){
+                OTDBcomponentCache = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentList("%",false);
+            }
+            Enumeration ce = OTDBcomponentCache.elements();
+            while (ce.hasMoreElements()){
+                jVICnodeDef aDef = (jVICnodeDef)ce.nextElement();
+                if(aDef.name.equals(nodeName)){
+                    returnId = aDef.nodeID();
+                }
+            }
+        } catch (RemoteException ex) {
+            logger.error("Could not load component node for node "+nodeName+" !",ex);
+        }
+        return returnId;
     }
 }
