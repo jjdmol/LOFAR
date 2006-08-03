@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <APL/APLCommon/Observation.h>
 
 namespace LOFAR {
@@ -53,22 +54,22 @@ Observation::Observation(ACC::APS::ParameterSet*		aParSet) :
 	// analyse ParameterSet.
 	string prefix = ACC::APS::moduleName(aParSet->locateModule("Observation"));
 	if (aParSet->isDefined(prefix+"name")) {
-		name = aParSet->getTime(prefix+"name");
+		name = aParSet->getString(prefix+"name");
 	}
 	if (aParSet->isDefined(prefix+"treeID")) {
-		treeID = aParSet->getTime(prefix+"treeID");
+		treeID = aParSet->getInt32(prefix+"treeID");
 	}
 	if (aParSet->isDefined(prefix+"startTime")) {
-		startTime = aParSet->getTime(prefix+"startTime");
+		startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
 	}
 	if (aParSet->isDefined(prefix+"stopTime")) {
-		stopTime = aParSet->getTime(prefix+"stopTime");
+		stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
 	}
 	if (aParSet->isDefined(prefix+"nyquistZone")) {
-		nyquistZone = aParSet->getTime(prefix+"nyquistZone");
+		nyquistZone = aParSet->getInt16(prefix+"nyquistZone");
 	}
 	if (aParSet->isDefined(prefix+"sampleClock")) {
-		sampleClock = aParSet->getTime(prefix+"sampleClock");
+		sampleClock = aParSet->getUint32(prefix+"sampleClock");
 	}
 	if (aParSet->isDefined(prefix+"subbandList")) {
 		subbands = aParSet->getInt16Vector(prefix+"subbandList");
