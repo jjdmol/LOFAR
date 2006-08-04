@@ -66,6 +66,7 @@ dnl
 AC_OUTPUT(
 src/Makefile
 include/Makefile
+include/jOTDB2/Makefile
 test/Makefile
 Makefile
 )
