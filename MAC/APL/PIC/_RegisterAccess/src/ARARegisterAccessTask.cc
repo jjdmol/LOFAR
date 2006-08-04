@@ -526,7 +526,7 @@ GCFEvent::TResult RegisterAccessTask::getVersion_state(GCFEvent& e, GCFPortInter
 	updateVersion(scopeString,string(version),double(ack.timestamp));
 
 	sprintf(version,"%d.%d",ack.versions.bp()(board).fpga_maj,ack.versions.bp()(board).fpga_min);
-	LOG_INFO(formatString("bp[%d].version = %s",version));
+	LOG_INFO(formatString("bp.version = %s",version));
 	sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
 	updateVersion(scopeString,string(version),double(ack.timestamp));
 
