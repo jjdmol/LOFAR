@@ -19,6 +19,10 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+
+// NOTE: Although the CTStartDaemon does NOT depend on PVSS it needs the PVSS libs
+//		 during compiling because APLCommon depends on PVSS
+
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
@@ -26,8 +30,8 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
-#include <APL/APLCommon/Controller_Protocol.ph>
 #include "CTStartDaemon.h"
 
 using namespace LOFAR::GCF::Common;
