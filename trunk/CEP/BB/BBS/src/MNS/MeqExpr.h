@@ -63,7 +63,14 @@ public:
 
   // Increment nr of parents.
   void incrNParents()
-    { itsNParents++; }
+  {
+      itsNParents++;
+  }
+
+  void decrNParents()
+  {
+      itsNParents--;
+  }
 
   // Recursively set the lowest and highest level of the node as used
   // in the tree.
