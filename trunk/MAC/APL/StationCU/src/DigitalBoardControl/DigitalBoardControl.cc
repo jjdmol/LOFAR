@@ -21,7 +21,6 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/Deployment.h>
 
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
@@ -34,6 +33,7 @@
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/APLCommon/StationInfo.h>
 
 #include "DigitalBoardControl.h"
 #include "DigitalBoardControlDefines.h"
@@ -59,8 +59,6 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 	itsExtPropertySet	(),
 	itsOwnPSinitialized (false),
 	itsExtPSinitialized (false),
-//	itsParentControl	(0),
-//	itsParentPort		(0),
 	itsTimerPort		(0),
 	itsRSPDriver		(0)
 {
@@ -68,14 +66,9 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
-	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + ".instanceNr");
+	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + "_instanceNr");
 
-	// attach to parent control task
-//	itsParentControl = ParentControl::instance();
-//	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
-//									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-//	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
-//	itsParentPort->open();		// will result in F_CONNECTED
+	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -136,7 +129,7 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 	
 	case F_VGETRESP: {	// initial get of required clock
 		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-		if (strstr(pPropAnswer->pPropName, PN_STATION_CLOCK) != 0) {
+		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
 			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
 
 			// signal main task we have the value.
@@ -150,7 +143,7 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 	case F_VCHANGEMSG: {
 		// check which property changed
 		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-		if (strstr(pPropAnswer->pPropName, PN_STATION_CLOCK) != 0) {
+		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
 			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
 			sendClockSetting();
 			break;
@@ -195,16 +188,16 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		string	myPropSetName(createPropertySetName(PSN_DIG_BOARD, itsInstanceNr));
+		string	myPropSetName(createPropertySetName(PSN_DIG_BOARD_CTRL, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
 		itsOwnPropertySet = GCFMyPropertySetPtr(
 								new GCFMyPropertySet(myPropSetName.c_str(),
-													 PST_DIG_BOARD,
+													 PST_DIG_BOARD_CTRL,
 													 PS_CAT_PERM_AUTOLOAD,
 													 &itsPropertySetAnswer));
 		itsOwnPropertySet->enable();		// will result in F_MYPS_ENABLED
 
-		// When myPropSet is enables we will connect to the external PropertySet
+		// When myPropSet is enabled we will connect to the external PropertySet
 		// that dictates the systemClock setting.
 
 		// Wait for timer that is set in PropertySetAnswer on ENABLED event
@@ -212,7 +205,7 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 		break;
 
 	case F_TIMER:
-		// first timer event if from own propertyset
+		// first timer event is from own propertyset
 		if (!itsOwnPSinitialized) {
 			itsOwnPSinitialized = true;
 
@@ -220,10 +213,10 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
 			itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
 			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
-			itsOwnPropertySet->setValue(PN_DB_CONNECTED, GCFPVBool(false));
+			itsOwnPropertySet->setValue(PN_DBC_CONNECTED, GCFPVBool(false));
 			
 			// Now connect to propertyset that dictates the clocksetting
-			string	extPropSetName(createPropertySetName(PSN_STATION_CLOCK, itsInstanceNr));
+			string	extPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
 			LOG_DEBUG_STR ("Connecting to PropertySet " << extPropSetName);
 			itsExtPropertySet = GCFExtPropertySetPtr(
 									new GCFExtPropertySet(extPropSetName.c_str(),
@@ -238,8 +231,8 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 			itsExtPSinitialized = true;
 
 			GCFProperty*	requiredClockProp = 
-						itsExtPropertySet->getProperty(PN_STATION_CLOCK);
-			ASSERTSTR(requiredClockProp, "Property " << PN_STATION_CLOCK << 
+						itsExtPropertySet->getProperty(PN_SC_CLOCK);
+			ASSERTSTR(requiredClockProp, "Property " << PN_SC_CLOCK << 
 									" not in propertyset " << PSN_STATION_CLOCK);
 			
 			requiredClockProp->requestValue();
@@ -287,7 +280,7 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 	case F_ENTRY:
 	case F_TIMER:
 		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("connecting"));
-		itsOwnPropertySet->setValue(PN_DB_CONNECTED,  GCFPVBool(false));
+		itsOwnPropertySet->setValue(PN_DBC_CONNECTED,  GCFPVBool(false));
 		itsSubscription = 0;
 		itsRSPDriver->open();		// will result in F_CONN or F_DISCONN
 		break;
