@@ -106,7 +106,7 @@ public interface jTreeMaintenanceInterface extends Remote
 
     // Adds the given VIC Component under the given parent of a
     // template tree.
-    public int addComponent (int compID,int treeID,int parentID) throws RemoteException;
+    public int addComponent (int compID,int treeID,int parentID, String newName) throws RemoteException;
 
     // Updates the (vector of) OTDBnodes to the database.
     public boolean saveNode (jOTDBnode aNode) throws RemoteException;

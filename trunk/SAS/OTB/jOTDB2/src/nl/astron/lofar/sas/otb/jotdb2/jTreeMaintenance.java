@@ -112,7 +112,7 @@ public class jTreeMaintenance
 
     // Adds the given VIC Component under the given parent of a
     // template tree.
-    public native int addComponent (int compID,int treeID,int parentID) throws Exception;
+    public native int addComponent (int compID,int treeID,int parentID, String newName) throws Exception;
  
     // Updates the (vector of) OTDBnodes to the database.
     public native boolean saveNode (jOTDBnode aNode) throws Exception;

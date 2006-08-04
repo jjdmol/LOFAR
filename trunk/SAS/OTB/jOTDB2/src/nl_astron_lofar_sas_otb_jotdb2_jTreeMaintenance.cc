@@ -498,13 +498,18 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_dupN
  * Method:    addComponent
  * Signature: (III)I
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_addComponent(JNIEnv *env, jobject, jint compID, jint treeID, jint nodeID) {
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_addComponent(JNIEnv *env, jobject, jint compID, jint treeID, jint nodeID, jstring newName) {
 
   jint anID;
+  
+  const char* nN = env->GetStringUTFChars (newName, 0);
+  const string newNameForComponent (nN);
+
+
   try {
-    anID=theirTM->addComponent(compID,treeID,nodeID);
+    anID=theirTM->addComponent(compID,treeID,nodeID,newNameForComponent);
   } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::addComponent(" << compID << "," << treeID << "," << nodeID << ") " << ex.what() << endl; 
+    cout << "Exception during TreeMaintenance::addComponent(" << compID << "," << treeID << "," << nodeID << "," << newNameForComponent << ") " << ex.what() << endl; 
 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }

@@ -298,10 +298,10 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
    
     // Adds the given VIC Component under the given parent of a
     // template tree.
-    public int addComponent (int compID,int treeID,int parentID) throws RemoteException {
+    public int addComponent (int compID,int treeID,int parentID, String newName) throws RemoteException {
         int anI;
         try {
-            anI = adaptee.addComponent(compID,treeID,parentID);
+            anI = adaptee.addComponent(compID,treeID,parentID, newName);
         } catch (Exception ex) {
             RemoteException anEx=new RemoteException("JNI addComponent error");
             anEx.initCause(ex);
