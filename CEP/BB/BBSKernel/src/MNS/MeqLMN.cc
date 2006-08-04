@@ -35,8 +35,14 @@ namespace LOFAR {
 MeqLMN::MeqLMN (MeqSource* source)
 : itsSource    (source)
 {
-  addChild (itsSource->getRa());
-  addChild (itsSource->getDec());
+    addChild (itsSource->getRa());
+    addChild (itsSource->getDec());
+}
+
+MeqLMN::~MeqLMN()
+{
+    itsSource->getRa().itsRep->decrNParents();
+    itsSource->getDec().itsRep->decrNParents();
 }
 
 MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
@@ -59,7 +65,7 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
                  cosdec * refSinDec * cos(radiff);
   MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
   ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
-	     << " too far from phaseref " << refRa << ", " << refDec);
+         << " too far from phaseref " << refRa << ", " << refDec);
   MeqMatrix nk = sqrt(nks);
   resL.setValue (lk);
   resM.setValue (mk);
@@ -84,11 +90,11 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
     if (eval) {
       MeqMatrix plk = pcosdec * sin(pradiff);
       MeqMatrix pmk = sin(deck.getPerturbedValue(spinx)) * refCosDec -
-	   pcosdec * refSinDec * cos(pradiff);
+       pcosdec * refSinDec * cos(pradiff);
       MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(plk) - sqr(pmk);
       ASSERTSTR (min(nks).getDouble() > 0, "perturbed source "
-		 << itsSource->getSourceNr()
-		 << " too far from phaseref " << refRa << ", " << refDec);
+         << itsSource->getSourceNr()
+         << " too far from phaseref " << refRa << ", " << refDec);
       MeqMatrix pnk = sqrt(nks);
       resL.setPerturbedValue (spinx, plk);
       resL.setPerturbedParm   (spinx, perturbedParm);
@@ -122,7 +128,7 @@ MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
                    cosdec * refSinDec * cos(radiff);
     MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
     ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
-	       << " too far from phaseref " << refRa << ", " << refDec);
+           << " too far from phaseref " << refRa << ", " << refDec);
     MeqMatrix nk = sqrt(nks);
     resL.setValue (lk);
     resM.setValue (mk);
@@ -136,7 +142,7 @@ MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
                    cosdec * refSinDec * cosradiff;
     MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
     ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
-	       << " too far from phaseref " << refRa << ", " << refDec);
+           << " too far from phaseref " << refRa << ", " << refDec);
     MeqMatrix nk = sqrt(nks);
     resL.setValue (lk);
     resM.setValue (mk);
@@ -167,31 +173,31 @@ MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
     MeqMatrix mn = -mk / nk;
     for (int spinx=0; spinx<request.nspid(); spinx++) {
       if (rak.isDefined(spinx)) {
-	const MeqMatrix& dra = raRes.getPerturbedValue (spinx);
-	if (deck.isDefined(spinx)) {
-	  // Both are defined, so we have to evaluate all.
-	  const MeqMatrix& ddec = deRes.getPerturbedValue (spinx);
-	  MeqMatrix dl = c3*dra + c4*ddec;
-	  MeqMatrix dm = c1*dra + c2*ddec;
-	  resL.setPerturbedValue (spinx, dl);
-	  resM.setPerturbedValue (spinx, dm);
-	  resN.setPerturbedValue (spinx, ln*dl + mn*dm);
-	} else {
-	  // no derivative in dec, so ddec=0.
-	  MeqMatrix dl = c3*dra;
-	  MeqMatrix dm = c1*dra;
-	  resL.setPerturbedValue (spinx, dl);
-	  resM.setPerturbedValue (spinx, dm);
-	  resN.setPerturbedValue (spinx, ln*dl + mn*dm);
-	}
+    const MeqMatrix& dra = raRes.getPerturbedValue (spinx);
+    if (deck.isDefined(spinx)) {
+      // Both are defined, so we have to evaluate all.
+      const MeqMatrix& ddec = deRes.getPerturbedValue (spinx);
+      MeqMatrix dl = c3*dra + c4*ddec;
+      MeqMatrix dm = c1*dra + c2*ddec;
+      resL.setPerturbedValue (spinx, dl);
+      resM.setPerturbedValue (spinx, dm);
+      resN.setPerturbedValue (spinx, ln*dl + mn*dm);
+    } else {
+      // no derivative in dec, so ddec=0.
+      MeqMatrix dl = c3*dra;
+      MeqMatrix dm = c1*dra;
+      resL.setPerturbedValue (spinx, dl);
+      resM.setPerturbedValue (spinx, dm);
+      resN.setPerturbedValue (spinx, ln*dl + mn*dm);
+    }
       } else if (deck.isDefined(spinx)) {
-	// no derivative in ra, so dra=0.
-	const MeqMatrix& ddec = deRes.getPerturbedValue (spinx);
-	MeqMatrix dl = c4*ddec;
-	MeqMatrix dm = c2*ddec;
-	resL.setPerturbedValue (spinx, dl);
-	resM.setPerturbedValue (spinx, dm);
-	resN.setPerturbedValue (spinx, ln*dl + mn*dm);
+    // no derivative in ra, so dra=0.
+    const MeqMatrix& ddec = deRes.getPerturbedValue (spinx);
+    MeqMatrix dl = c4*ddec;
+    MeqMatrix dm = c2*ddec;
+    resL.setPerturbedValue (spinx, dl);
+    resM.setPerturbedValue (spinx, dm);
+    resN.setPerturbedValue (spinx, ln*dl + mn*dm);
       }
     }
   }

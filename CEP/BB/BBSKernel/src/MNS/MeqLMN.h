@@ -47,6 +47,8 @@ public:
   // Construct for the given point source.
   explicit MeqLMN (MeqSource*);
 
+  ~MeqLMN();
+
   const MeqSource& getSource() const
     { return *itsSource; }
 
