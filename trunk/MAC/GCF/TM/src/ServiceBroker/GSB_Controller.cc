@@ -481,7 +481,11 @@ void GSBController::saveAdministration(const string&	aFileName)
 			// note: the TCPport is not saved because it can not be restored.
 			outFile.write((char*)&itsServiceList[idx].portNumber, 
 						   sizeof(itsServiceList[idx].portNumber));
-			outFile << itsServiceList[idx].serviceName;
+			uint16	size = itsServiceList[idx].serviceName.length() + 1;	// save 0 also
+			char	srvName[256];
+			strcpy (srvName, itsServiceList[idx].serviceName.c_str());
+			outFile.write((char*)&size, sizeof(size));
+			outFile.write(srvName, size);
 			count--;
 		}
 		idx++;
@@ -515,9 +519,13 @@ void GSBController::loadAdministration(const string&	aFileName)
 
 	while (count) {
 		uint16	portNumber;
-		string	servicename;
 		inFile.read((char*)&portNumber, sizeof(portNumber));
-		inFile >> servicename;
+
+		uint16	size;
+		char	servicename[256];
+		inFile.read((char*)&size, sizeof(size));
+		inFile.read(servicename, size);
+
 		if (portNumber < itsLowerLimit || portNumber >= itsUpperLimit) {
 			LOG_DEBUG_STR ("Portnumber " << portNumber 
 										 << " not in current range, ignoring");
