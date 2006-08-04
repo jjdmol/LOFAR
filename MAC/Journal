@@ -40,9 +40,14 @@ GCF/TM
 ** GTM_ServiceBroker: does not read ServiceBroker.conf file anymore. Solved major
 		bug in unregistering all ports always. (because of another bug in the
 		GSB_Controller this never lead to problems).
+		Major revision in order to allow connections to ServiceBrokers on other
+		machines also. Now uses map with connections to all SB's
 ** GSB_Controller: MAJOR(!) revision of broker after a continuous chain of problems.
 		Cut away almost all crap, no support for multiple hosts anymore.
-
+		Made SB failsave: SB keep admin of disk and reads it in on startup. Number
+		that are readin from this file are not used the first 5 minutes.
+** SB_protocol.prot: introduced REREGISTER events to inform a restarted serviceBroker
+		what ports are still in use.
 
 Updated several sources for new ParameterSet.
 
