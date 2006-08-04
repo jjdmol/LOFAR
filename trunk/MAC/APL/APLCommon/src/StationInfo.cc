@@ -42,25 +42,13 @@ static	char*	stationTypeTable[] = { "CS", "RS", "ES" };
 // stationRingNr()
 //
 // Syntax of hostname: <stationType><arm><ring>
-//	with: stationType = CS | RS | ES<countrycode>
+//	with: stationType = CS | RS | <countrycode>
 //		  arm = 1..5   [ 1 digit  ]
 //		  ring = 1..9  [ 2 digits ]
 //
 uint16	stationRingNr()
 {
-	string	hostname(myHostname(false));		// RS999, CS999, ESXX999
-	string	stationType(stationTypeStr());		// RS, CS, ES
-	if (stationType == "CS") {
-		return (lexical_cast<uint16>(hostname.substr(3,2)));
-	}
-	if (stationType == "RS") {
-		return (lexical_cast<uint16>(hostname.substr(3,2)));
-	}
-	if (stationType == "ES") {
-		return (lexical_cast<uint16>(hostname.substr(5,2)));
-	}
-
-	return (0);
+	return (lexical_cast<uint16>(myHostname(false).substr(3,2)));
 }
 
 //
@@ -73,19 +61,7 @@ uint16	stationRingNr()
 //
 uint16	stationArmNr()
 {
-	string	hostname(myHostname(false));		// RS999, CS999, ESXX999
-	string	stationType(stationTypeStr());		// RS, CS, ES
-	if (stationType == "CS") {
-		return (lexical_cast<uint16>(hostname.substr(2,1)));
-	}
-	if (stationType == "RS") {
-		return (lexical_cast<uint16>(hostname.substr(2,1)));
-	}
-	if (stationType == "ES") {
-		return (lexical_cast<uint16>(hostname.substr(3,1)));
-	}
-
-	return (0);
+	return (lexical_cast<uint16>(myHostname(false).substr(2,1)));
 }
 
 //
@@ -98,15 +74,12 @@ uint16	stationArmNr()
 //
 int16	stationTypeValue()
 {
-	string	stsType(toUpper(myHostname(false).substr(0,2)));	// RS, CS, ES
+	string	stsType(toUpper(myHostname(false).substr(0,2)));	// RS, CS, xx
 	if (stsType == "CS") {
 		return (0);
 	}
 	if (stsType == "RS") {
 		return (1);
-	}
-	if (stsType == "ES") {
-		return (2);
 	}
 
 	return (-1);
@@ -124,7 +97,7 @@ string	stationTypeStr()
 {
 	int16	stsType = stationTypeValue();
 	if (stsType < 0) {
-		return ("");
+		return ("ES");
 	}
 
 	return (stationTypeTable[stsType]);

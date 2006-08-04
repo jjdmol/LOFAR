@@ -174,6 +174,12 @@ string	createPropertySetName(const string&		propSetMask,
 {
 	string	psName(propSetMask);		// editable copy
 	uint	pos;
+	// when name contains @station@ cut of everything before and replace it with 
+	// stationname+:  -> LOFAR_PIC_@ring@_@station@_CalCtrl_xxx --> CS010:CalCtrl_xxx
+	if ((pos = psName.find("@station@_")) != string::npos) {
+		psName.replace(1, pos+10, myHostname(false)+":");
+	}
+
 	if ((pos = psName.find("@ring@")) != string::npos) {
 		psName.replace(pos, 6, string("ring")+lexical_cast<string>(stationRingNr()));
 	}
