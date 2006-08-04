@@ -173,7 +173,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_dupN
  * Signature: (III)I
  */
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_addComponent
-  (JNIEnv *, jobject, jint, jint, jint);
+  (JNIEnv *, jobject, jint, jint, jint, jstring);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
