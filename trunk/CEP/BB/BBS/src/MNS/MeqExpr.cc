@@ -28,6 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 //#include <Common/Timer.h>
+#include <iomanip>
 
 namespace LOFAR {
 
@@ -51,9 +52,29 @@ MeqExprRep::~MeqExprRep()
 void MeqExprRep::addChild (MeqExpr& child)
 {
   MeqExprRep* childRep = child.itsRep;
-  ASSERT (childRep != 0);
+  ASSERT (childRep != 0);\
+
   itsChildren.push_back (childRep);
   childRep->incrNParents();
+}
+
+void MeqExprRep::removeChild(MeqExpr &child)
+{
+    MeqExprRep* childRep = child.itsRep;
+    ASSERT(childRep != 0);
+
+    std::vector<MeqExprRep*>::iterator it;
+    for(it = itsChildren.begin(); it < itsChildren.end(); ++it)
+    {
+        if((*it) == childRep)
+        {
+            break;
+        }
+    }
+    ASSERT(it != itsChildren.end());
+
+    itsChildren.erase(it);
+    childRep->decrNParents();
 }
 
 int MeqExprRep::setLevel (int level)
@@ -84,20 +105,20 @@ void MeqExprRep::clearDone()
 }
 
 void MeqExprRep::getCachingNodes (std::vector<MeqExprRep*>& nodes,
-				  int level, bool all)
+                  int level, bool all)
 {
   if (itsLevelDone != level) {
     if (itsMaxLevel == level) {
       // Possibly add this node.
       if (all  ||  itsNParents > 1) {
-	nodes.push_back (this);
+    nodes.push_back (this);
       }
     } else if (itsMaxLevel < level) {
       // Handling the children is needed.
       for (uint i=0; i<itsChildren.size(); ++i) {
-	if (itsChildren[i]->levelDone() != level) {
-	  itsChildren[i]->getCachingNodes (nodes, level, all);
-	}
+    if (itsChildren[i]->levelDone() != level) {
+      itsChildren[i]->getCachingNodes (nodes, level, all);
+    }
       }
     }
     itsLevelDone = level;
@@ -116,7 +137,7 @@ void MeqExprRep::precalculate (const MeqRequest& request)
 }
 
 const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
-					 MeqResult& result)
+                     MeqResult& result)
 {
   // The value has to be calculated.
   // Do not cache if no multiple parents.
@@ -134,7 +155,7 @@ const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
   //timer.start();
 #if defined _OPENMP
 #pragma omp critical(calcResult)
-  if (itsReqId != request.getId())	// retry test in critical section
+  if (itsReqId != request.getId())  // retry test in critical section
 #endif
   {
     if (!itsResult) itsResult = new MeqResult;
@@ -149,7 +170,7 @@ const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
 MeqMatrix MeqExprRep::getResultValue (const vector<const MeqMatrix*>&)
 {
   THROW (LOFAR::Exception,
-	 "MeqExpr::getResult(Value) not implemented in derived class");
+     "MeqExpr::getResult(Value) not implemented in derived class");
 }
 
 MeqResult MeqExprRep::getResult (const MeqRequest& request)
@@ -172,11 +193,11 @@ MeqResult MeqExprRep::getResult (const MeqRequest& request)
     int eval = -1;
     for (int i=0; i<nrchild; ++i) {
       if (res[i].isDefined(spinx)) {
-	// Perturbed, so set value to the perturbed one.
-	mat[i] = &res[i].getPerturbedValue(spinx);
-	eval = i;
+    // Perturbed, so set value to the perturbed one.
+    mat[i] = &res[i].getPerturbedValue(spinx);
+    eval = i;
       } else {
-	mat[i] = &res[i].getValue();
+    mat[i] = &res[i].getValue();
       }
     }
     if (eval >= 0) {
@@ -189,8 +210,8 @@ MeqResult MeqExprRep::getResult (const MeqRequest& request)
 }
 
 const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
-					       MeqResultVec& result,
-					       bool useCache)
+                           MeqResultVec& result,
+                           bool useCache)
 {
   // The value has to be calculated.
   // Do not cache if no multiple parents.
@@ -208,7 +229,7 @@ const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
   //timer.start();
 #if defined _OPENMP
 #pragma omp critical(calcResult)
-  if (itsReqId != request.getId())	// retry test in critical section
+  if (itsReqId != request.getId())  // retry test in critical section
 #endif
   {
     if (!itsResVec) itsResVec = new MeqResultVec;
@@ -226,8 +247,6 @@ MeqResultVec MeqExprRep::getResultVec (const MeqRequest& request)
   res[0] = getResult (request);
   return res;
 }
-
-
 
 MeqExpr::MeqExpr (const MeqExpr& that)
 : itsRep (that.itsRep)
@@ -248,10 +267,8 @@ MeqExpr& MeqExpr::operator= (const MeqExpr& that)
   return *this;
 }
 
-
-
 MeqExprToComplex::MeqExprToComplex (const MeqExpr& real,
-				    const MeqExpr& imag)
+                    const MeqExpr& imag)
   : itsReal(real),
     itsImag(imag)
 {
@@ -272,13 +289,13 @@ MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     if (real.isDefined(spinx)) {
       result.setPerturbedValue (spinx,
-				tocomplex(real.getPerturbedValue(spinx),
-					  imag.getPerturbedValue(spinx)));
+                tocomplex(real.getPerturbedValue(spinx),
+                      imag.getPerturbedValue(spinx)));
       result.setPerturbedParm (spinx, real.getPerturbedParm(spinx));
     } else if (imag.isDefined(spinx)) {
       result.setPerturbedValue (spinx,
-				tocomplex(real.getPerturbedValue(spinx),
-					  imag.getPerturbedValue(spinx)));
+                tocomplex(real.getPerturbedValue(spinx),
+                      imag.getPerturbedValue(spinx)));
       result.setPerturbedParm (spinx, imag.getPerturbedParm(spinx));
     }
   }
@@ -286,11 +303,8 @@ MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
   return result;
 }
 
-
-
-
 MeqExprAPToComplex::MeqExprAPToComplex (const MeqExpr& ampl,
-					const MeqExpr& phase)
+                    const MeqExpr& phase)
   : itsAmpl (ampl),
     itsPhase(phase)
 {
@@ -313,13 +327,13 @@ MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
     if (phase.isDefined(spinx)) {
       const MeqMatrix& ph = phase.getPerturbedValue(spinx);
       result.setPerturbedValue (spinx,
-				ampl.getPerturbedValue(spinx) *
-				tocomplex(cos(ph), sin(ph)));
+                ampl.getPerturbedValue(spinx) *
+                tocomplex(cos(ph), sin(ph)));
       result.setPerturbedParm (spinx, phase.getPerturbedParm(spinx));
     } else if (ampl.isDefined(spinx)) {
       result.setPerturbedValue (spinx,
-				ampl.getPerturbedValue(spinx) *
-				matt.clone());
+                ampl.getPerturbedValue(spinx) *
+                matt.clone());
       result.setPerturbedParm (spinx, ampl.getPerturbedParm(spinx));
     }
   }
