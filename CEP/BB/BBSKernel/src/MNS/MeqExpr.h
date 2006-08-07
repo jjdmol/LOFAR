@@ -33,6 +33,11 @@
 #include <BBS/MNS/MeqResultVec.h>
 #include <vector>
 
+#ifdef EXPR_GRAPH
+    #include <string>
+    #include <iostream>
+#endif
+
 namespace LOFAR {
 //# Forward Declarations.
 class MeqExpr;
@@ -88,7 +93,7 @@ public:
   // All nodes or only nodes with multiple parents can be retrieved.
   // It is used to find the nodes with results to be cached.
   void getCachingNodes (std::vector<MeqExprRep*>& nodes,
-			int level, bool all=false);
+            int level, bool all=false);
 
   // Get the single result of the expression for the given domain.
   // The return value is a reference to the true result. This can either
@@ -97,9 +102,9 @@ public:
   // If the result is stored in the cache, it is done in a thread-safe way.
   // Note that a cache is used if the expression has multiple parents.
   const MeqResult& getResultSynced (const MeqRequest& request,
-				    MeqResult& result)
+                    MeqResult& result)
     { return itsReqId == request.getId()  ?
-	*itsResult : calcResult(request,result); }
+    *itsResult : calcResult(request,result); }
 
   // Get the actual result.
   // The default implementation throw an exception.
@@ -108,9 +113,9 @@ public:
   // Get the multi result of the expression for the given domain.
   // The default implementation calls getResult.
   const MeqResultVec& getResultVecSynced (const MeqRequest& request,
-					  MeqResultVec& result)
+                      MeqResultVec& result)
     { return itsReqId == request.getId()  ?
-	*itsResVec : calcResultVec(request,result); }
+    *itsResVec : calcResultVec(request,result); }
   virtual MeqResultVec getResultVec (const MeqRequest&);
   // </group>
 
@@ -120,7 +125,8 @@ public:
 protected:
   // Add a child to this node.
   // It also increases NParents in the child.
-  void addChild (MeqExpr&);
+  void addChild(MeqExpr&);
+  void removeChild(MeqExpr &child);
 
 private:
   // Forbid copy and assignment.
@@ -131,7 +137,7 @@ private:
   // <group>
   const MeqResult& calcResult (const MeqRequest&, MeqResult&);
   const MeqResultVec& calcResultVec (const MeqRequest&, MeqResultVec&,
-				     bool useCache=false);
+                     bool useCache=false);
   // </group>
 
   // Let a derived class calculate the resulting value.
@@ -191,7 +197,7 @@ public:
   // By default only nodes with multiple parents are retrieved.
   // It is used to find the nodes with results to be cached.
   void getCachingNodes (std::vector<MeqExprRep*>& nodes,
-		       int level, bool all=false)
+               int level, bool all=false)
     { itsRep->getCachingNodes (nodes, level, all); }
 
   // Precalculate the result and store it in the cache.
@@ -205,20 +211,18 @@ public:
   const MeqResult getResult (const MeqRequest& request)
     { return itsRep->getResult (request); }
   const MeqResult& getResultSynced (const MeqRequest& request,
-				    MeqResult& result)
+                    MeqResult& result)
     { return itsRep->getResultSynced (request, result); }
   const MeqResultVec getResultVec (const MeqRequest& request)
     { return itsRep->getResultVec (request); }
   const MeqResultVec& getResultVecSynced (const MeqRequest& request,
-					  MeqResultVec& result)
+                      MeqResultVec& result)
     { return itsRep->getResultVecSynced (request, result); }
   // </group>
 
 protected:
   MeqExprRep* itsRep;
 };
-
-
 
 class MeqExprToComplex: public MeqExprRep
 {
@@ -245,6 +249,7 @@ public:
 
   virtual MeqResult getResult (const MeqRequest&);
 
+private:
   MeqExpr itsAmpl;
   MeqExpr itsPhase;
 };

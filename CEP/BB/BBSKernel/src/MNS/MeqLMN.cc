@@ -35,14 +35,14 @@ namespace LOFAR {
 MeqLMN::MeqLMN (MeqSource* source)
 : itsSource    (source)
 {
-    addChild (itsSource->getRa());
-    addChild (itsSource->getDec());
+    addChild(itsSource->getRa());
+    addChild(itsSource->getDec());
 }
 
 MeqLMN::~MeqLMN()
 {
-    itsSource->getRa().itsRep->decrNParents();
-    itsSource->getDec().itsRep->decrNParents();
+    removeChild(itsSource->getRa());
+    removeChild(itsSource->getDec());
 }
 
 MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
