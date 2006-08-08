@@ -24,6 +24,7 @@ package nl.astron.lofar.sas.otbcomponents.bbs;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.event.ActionEvent;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -33,7 +34,6 @@ import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStep;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepDataManager;
-import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepNode;
 import org.apache.log4j.Logger;
 
 /**
@@ -200,6 +200,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         if(theBBSStep.getOutputDataColumn() != null){
             this.stepExplorerOutputDataText.setText(theBBSStep.getOutputDataColumn());
         }else{
+            
             this.stepExplorerOutputDataText.setText("");
         }
         //TODO: Add variables from BBSStep
@@ -236,33 +237,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         enableStepExplorerButtons(enabled);
     }
     
-    private void saveInput() {
-        
-        //new BBS step to be added
-        if(itsBBSStep == null && itsParentBBSStep != null){
-            if(!this.stepExplorerStepNameText.getText().equals("")){
-                itsBBSStep = new BBSStep(this.stepExplorerStepNameText.getText());
-                itsBBSStep.setParentStep(itsParentBBSStep);
-                itsParentBBSStep.addChildStep(itsBBSStep);
-            }
-        }else if(itsBBSStep == null && itsParentBBSStep == null){
-            //adding new BBS Step to a strategy
-            if(!this.stepExplorerStepNameText.getText().equals("")){
-                itsBBSStep = new BBSStep(this.stepExplorerStepNameText.getText());
-            }
-        }
-        if(itsBBSStep != null){
-            BBSStep containedStep = itsBBSStep;
-            //update all fields in the BBS Step object
-            containedStep.setOutputDataColumn(stepExplorerOutputDataText.getText());
-            
-            //persist the BBS Step
-            BBSStepDataManager.getInstance().persistStep(containedStep);
-            
-        }else{
-            //warning
-        }
-        
+    private void saveInput(BBSStep aStep) {
+        aStep.setOutputDataColumn(stepExplorerOutputDataText.getText());
+        //add other variables
     }
     
     
@@ -820,7 +797,52 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save Settings") {
-            saveInput();
+            
+            //perform input validation on step name
+            
+            boolean warning = false;
+            //modifying a step
+            if(itsBBSStep != null){
+                //update all fields in the BBS Step object
+                saveInput(itsBBSStep);
+                
+                //persist the BBS Step
+                
+                //BBSStepDataManager.getInstance().updateStep(itsBBSStep);
+                
+            }else{
+                
+                //new BBS step to be added
+                if(itsBBSStep == null && itsParentBBSStep != null){
+                    if(!this.stepExplorerStepNameText.getText().equals("")){
+                        itsBBSStep = new BBSStep(this.stepExplorerStepNameText.getText());
+                        itsBBSStep.setParentStep(itsParentBBSStep);
+                        itsParentBBSStep.addChildStep(itsBBSStep);
+                    }
+                }else if(itsBBSStep == null && itsParentBBSStep == null){
+                    //adding new BBS Step to a strategy
+                    if(!this.stepExplorerStepNameText.getText().equals("")){
+                        itsBBSStep = new BBSStep(this.stepExplorerStepNameText.getText());
+                        BBSStepDataManager.getInstance().getStrategy().addChildStep(itsBBSStep);
+                    }
+                }
+                if(itsBBSStep != null){
+                    //update all fields in the BBS Step object
+                    saveInput(itsBBSStep);
+                    //persist the BBS Step
+                    
+                    //BBSStepDataManager.getInstance().addStep(itsBBSStep);
+                    
+                }else{
+                    //warning
+                }
+            }
+            
+            if(!warning){
+                //tell parents that panel is ready to close...
+                ActionEvent closeEvt = new ActionEvent(this,1,"ReadyToClose");
+                fireActionListenerActionPerformed(closeEvt);
+            }
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
