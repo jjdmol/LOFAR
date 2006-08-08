@@ -40,7 +40,10 @@ SyntaxError()
 	echo ""
 	echo "Syntax: $(basename $0) [-d destdir] target(s)"
 	echo "        destdir    Relative directory where the resultfiles are placed"
-	echo "        targets	 PVSS | OBS | C++"
+	echo "        targets    PVSS | OBS | C++"
+	echo "                   PVSS: fixed datapoints"
+	echo "                   OBS : Observation datapoints"
+	echo "                   C++ : C++ headerfiles"
 	echo ""
 	exit 1
 }
@@ -255,22 +258,37 @@ create_dpt_file()
 					PVSStype["intArr"]	 = "5"
 					PVSStype["floatArr"] = "6"
 					PVSStype["doubleArr"]= "6"
+					tabs="										"
+					oldnode[1]=""
+					prevlevel=0
 				} 
 				{
-					dotpos=index($1,".");
-					if (dotpos>0) {
-						newnode=substr($1,0,dotpos-1)
-						if (newnode != oldnode) {
-							print "	"newnode"	1#"elemNr ;
-							elemNr++;
-							oldnode = newnode;
+					nodename = $1
+					level = 0
+					do {
+						dotpos=index(nodename,".");
+						if (dotpos > 0) {
+							level++;
+							newnode[level]=substr(nodename,0,dotpos-1);
+							nodename = substr(nodename,dotpos+1);
+							dotpos   = index(nodename,".");
 						}
-						print "		"substr($1,dotpos+1)"	"PVSStype[$2]"#"elemNr
+					} while (dotpos > 0);
+					
+					if (newnode[level] != oldnode[level]) {
+						print substr(tabs, 0, level) newnode[level]"	1#"elemNr;
+						elemNr++;
+						oldnode[level] = newnode[level];
 					}
-					else {
-						print "	"$1"	"PVSStype[$2]"#"elemNr
-					}
+					print substr(tabs, 0, level+1) nodename"	"PVSStype[$2]"#"elemNr
 					elemNr++;
+
+					if (level < prevlevel) {
+						for (l = prevlevel; l > level; l--) {
+							oldnode[l]=""
+						}
+					}
+					prevlevel = level;
 				}'
 		fi
 		echo ""
