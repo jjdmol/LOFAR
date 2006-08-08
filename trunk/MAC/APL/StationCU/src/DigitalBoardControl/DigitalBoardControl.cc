@@ -26,6 +26,7 @@
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
+#include <GCF/PAL/GCF_Answer.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Protocols/PA_Protocol.ph>
@@ -66,7 +67,9 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
-	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + "_instanceNr");
+	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + "instanceNr");
+// for now
+itsClock = globalParameterSet()->getUint32(itsTreePrefix + "sampleClock");
 
 	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
 
@@ -83,6 +86,7 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
 	registerProtocol (RSP_PROTOCOL, 	   RSP_PROTOCOL_signalnames);
+	registerProtocol (F_PML_PROTOCOL, 	   F_PML_PROTOCOL_signalnames);
 }
 
 
@@ -112,7 +116,7 @@ DigitalBoardControl::~DigitalBoardControl()
 //
 void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 {
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
+	LOG_DEBUG_STR ("handlePropertySetAnswer:" << eventstr(answer));
 
 	switch(answer.signal) {
 	case F_MYPS_ENABLED: 
@@ -123,7 +127,9 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 										getName().c_str(), pPropAnswer->pScope));
 		}
 		// always let timer expire so main task will continue.
-		itsTimerPort->setTimer(0.0);
+		LOG_DEBUG_STR("Property set " << pPropAnswer->pScope << 
+													" enabled, continuing main task");
+		itsTimerPort->setTimer(0.5);
 		break;
 	}
 	
@@ -133,7 +139,8 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
 
 			// signal main task we have the value.
-			itsTimerPort->setTimer(0.0);
+			LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
+			itsTimerPort->setTimer(0.5);
 			break;
 		}
 		LOG_WARN_STR("Got VGETRESP signal from unknown property " << 
@@ -145,6 +152,7 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
 		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
 			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
+			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
 			sendClockSetting();
 			break;
 		}
@@ -178,7 +186,7 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventstr(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -189,6 +197,7 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		string	myPropSetName(createPropertySetName(PSN_DIG_BOARD_CTRL, getName()));
+myPropSetName=myPropSetName.substr(6);
 		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
 		itsOwnPropertySet = GCFMyPropertySetPtr(
 								new GCFMyPropertySet(myPropSetName.c_str(),
@@ -217,6 +226,7 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 			
 			// Now connect to propertyset that dictates the clocksetting
 			string	extPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
+extPropSetName= extPropSetName.substr(6);
 			LOG_DEBUG_STR ("Connecting to PropertySet " << extPropSetName);
 			itsExtPropertySet = GCFExtPropertySetPtr(
 									new GCFExtPropertySet(extPropSetName.c_str(),
@@ -269,7 +279,7 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("connect:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("connect:" << eventstr(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -320,7 +330,7 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("subscribe:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("subscribe:" << eventstr(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -373,7 +383,7 @@ GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event,
 GCFEvent::TResult DigitalBoardControl::retrieve_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("retrieve:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("retrieve:" << eventstr(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -433,7 +443,7 @@ GCFEvent::TResult DigitalBoardControl::retrieve_state(GCFEvent& event,
 GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("setClock:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("setClock:" << eventstr(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -483,7 +493,7 @@ GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event,
 //
 GCFEvent::TResult DigitalBoardControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << eventstr(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
