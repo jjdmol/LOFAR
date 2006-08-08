@@ -177,7 +177,7 @@ string	createPropertySetName(const string&		propSetMask,
 	// when name contains @station@ cut of everything before and replace it with 
 	// stationname+:  -> LOFAR_PIC_@ring@_@station@_CalCtrl_xxx --> CS010:CalCtrl_xxx
 	if ((pos = psName.find("@station@_")) != string::npos) {
-		psName.replace(1, pos+10, myHostname(false)+":");
+		psName.replace(0, pos+10, PVSSDatabaseName() + ":");
 	}
 
 	if ((pos = psName.find("@ring@")) != string::npos) {
@@ -185,9 +185,6 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 	if ((pos = psName.find("@arm@")) != string::npos) {
 		psName.replace(pos, 5, string("arm")+lexical_cast<string>(stationArmNr()));
-	}
-	if ((pos = psName.find("@station@")) != string::npos) {
-		psName.replace(pos, 9, myHostname(false));
 	}
 	if ((pos = psName.find("@instance@")) != string::npos) {
 		uint16	instanceNr = getInstanceNr(controllerName);
