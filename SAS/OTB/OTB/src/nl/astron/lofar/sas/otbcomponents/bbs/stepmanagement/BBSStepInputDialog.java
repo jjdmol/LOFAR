@@ -6,6 +6,8 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import nl.astron.lofar.sas.otb.MainFrame;
 
 
@@ -25,6 +27,13 @@ public class BBSStepInputDialog extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
         this.sePanel.setMainFrame(parent);
+        this.sePanel.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent evt){
+                if(evt.getActionCommand().equalsIgnoreCase("ReadyToClose")){
+                    closeDialog();
+                }
+            }
+        });
         if (tobeDisplayedBBSStep != null && parentBBSStep == null) {
             this.sePanel.setBBSStepContent(tobeDisplayedBBSStep,null);
         } else if(tobeDisplayedBBSStep == null && parentBBSStep != null){
@@ -73,6 +82,10 @@ public class BBSStepInputDialog extends javax.swing.JDialog {
                 new BBSStepInputDialog(null, true,null,null).setVisible(true);
             }
         });
+    }
+    
+    public void closeDialog(){
+        this.setVisible(false);
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

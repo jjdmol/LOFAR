@@ -35,7 +35,9 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 public class BBSStep{
     
     //Possible parent step
-    private BBSStep parentStep;
+    private BBSStep parentStep = null;
+    //Pointer to BBS Strategy
+    private BBSStrategy itsStrategy = null;
     //Contained substeps
     private Vector<BBSStep> childSteps;
     //pointer to the Step Container in OTDB
@@ -240,12 +242,13 @@ public class BBSStep{
         childStep.setParentStep(this);
         childSteps.add(index,childStep);
     }
-    public void removeChildStepAtIndex(int index){
-        childSteps.get(index).setParentStep(null);
-        childSteps.remove(index);
+    public void removeAllChildSteps(){
+        for(BBSStep childStep : this.childSteps){
+            childStep.removeAllChildSteps();
+            removeChildStep(childStep);
+        }
         childSteps.trimToSize();
-    }
-    
+    }    
     public void removeChildStep(BBSStep childStep){
         if(childSteps.contains(childStep)){
             childSteps.remove(childStep);
@@ -262,5 +265,18 @@ public class BBSStep{
         if(parentStep!=null){
             parentStep.removeChildStep(this);
         }
-    }    
+    }
+    
+    public String toString(){
+        return getName();
+    }
+    
+    public BBSStrategy getStrategy(){
+        return itsStrategy;
+    }
+    
+    public void setStrategy(BBSStrategy itsStrategy){
+        this.itsStrategy = itsStrategy;
+    }
+    
 }
