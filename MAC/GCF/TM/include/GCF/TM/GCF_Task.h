@@ -113,6 +113,7 @@ class GCFTask : public GCFFsm
 
     /// returns the "define" of a signal ID as a string    
     const char* evtstr(const GCFEvent& e) const;
+    string eventstr(const GCFEvent& e) const;
 
   protected:
     /**

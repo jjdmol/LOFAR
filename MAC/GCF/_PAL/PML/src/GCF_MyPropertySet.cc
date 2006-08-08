@@ -29,13 +29,13 @@
 #include <GCF/Utils.h>
 #include <GCF/GCF_Defines.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
+namespace LOFAR {
+ namespace GCF {
 using namespace Common;  
-  namespace PAL
-  {
+  namespace PAL {
+//
+// GCFMyPropertySet(name, type, cat, answer* usedDlts)
+//
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    const char* type, 
                                    TPSCategory category,
@@ -48,9 +48,11 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
   _counter(0),
   _missing(0)
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
+  LOG_DEBUG(formatString("GCFMyPropertySet()(scope=%s,type=%s)",
+								getScope().c_str(), getType().c_str()));
   loadPropSetIntoRam();
 }
+
 
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    const char* type, 
@@ -85,37 +87,37 @@ GCFProperty* GCFMyPropertySet::createPropObject(const TPropertyInfo& propInfo)
   return new GCFMyProperty(propInfo, *this);
 }
   
+//
+// enable
+//
 TGCFResult GCFMyPropertySet::enable ()
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  TGCFResult result(GCF_NO_ERROR);
-    
-  LOG_INFO(LOFAR::formatString ( 
-      "REQ: Enable property set '%s'",
-      getScope().c_str()));
-  if (_state != S_DISABLED)
-  {
-    wrongState("enable");
-    result = GCF_WRONG_STATE;
-  }
-  else
-  {
-    ASSERT(_pController);
-    TPMResult pmResult = _pController->registerScope(*this);
-    
-    if (pmResult == PM_NO_ERROR)
-    {
-      _state = S_ENABLING;
-    }
-    else if (pmResult == PM_SCOPE_ALREADY_EXISTS)
-    {
-      LOG_ERROR(LOFAR::formatString ( 
-          "Property set with scope %s already exists in this Application",
-          getScope().c_str()));    
-      result = GCF_SCOPE_ALREADY_REG;
-    }
-  }
-  return result;
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+											getScope().c_str(), getType().c_str()));
+
+	// PS should be in disabled state
+ 	if (_state != S_DISABLED) {		
+		wrongState("enable");
+		return(GCF_WRONG_STATE);
+	}
+
+	// register PS
+	ASSERT(_pController);
+	TPMResult pmResult = _pController->registerScope(*this);
+
+	if (pmResult == PM_NO_ERROR) {
+		_state = S_ENABLING;
+		return (GCF_NO_ERROR);
+	}
+
+	if (pmResult == PM_SCOPE_ALREADY_EXISTS) {
+		LOG_ERROR(LOFAR::formatString ( 
+				  "Property set with scope %s already exists in this Application",
+				  getScope().c_str()));    
+		return (GCF_SCOPE_ALREADY_REG);
+	}
+
+	return (GCF_NO_ERROR);
 }
 
 TGCFResult GCFMyPropertySet::disable ()
@@ -190,38 +192,43 @@ GCFPValue* GCFMyPropertySet::getOldValue (const string propName)
   }
 }                                         
           
+//
+// scopeRegistered(result)
+//
 void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  ASSERT(_state == S_ENABLING);
-  LOG_INFO(LOFAR::formatString ( 
-      "PA-RESP: Property set '%s' is enabled%s",
-      getScope().c_str(), 
-      (result == GCF_NO_ERROR ? "" : " (with errors)")));
-  if (result == GCF_NO_ERROR)
-  {
-    _state = S_ENABLED;
-  }
-  else
-  {
-    _state = S_DISABLED;
-  }
+	LOG_DEBUG(formatString("scopeRegistered(scope=%s,type=%s)", getScope().c_str(), 
+																getType().c_str()));
 
-  dispatchAnswer(F_MYPS_ENABLED, result);
+	ASSERT(_state == S_ENABLING);
+	LOG_INFO(LOFAR::formatString ("PA-RESP: Property set '%s' is enabled%s", 
+				getScope().c_str(), (result == GCF_NO_ERROR ? "" : " (with errors)")));
+
+	if (result == GCF_NO_ERROR) {
+		_state = S_ENABLED;
+	}
+	else {
+		_state = S_DISABLED;
+	}
+
+	dispatchAnswer(F_MYPS_ENABLED, result);
 }
 
+//
+// scopeUnregistered(result)
+//
 void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  ASSERT(_state == S_DISABLING);
-   
-  LOG_INFO(LOFAR::formatString ( 
-      "Property set '%s' is disabled%s",
-      getScope().c_str(), 
-      (result == GCF_NO_ERROR ? "" : " (with errors)")));
+	LOG_DEBUG(formatString("scopeUnregistered(scope=%s,type=%s)", getScope().c_str(),
+																getType().c_str()));
+	ASSERT(_state == S_DISABLING);
 
-  _state = S_DISABLED;
-  dispatchAnswer(F_MYPS_DISABLED, result);
+	LOG_INFO(LOFAR::formatString("Property set '%s' is disabled%s", getScope().c_str(), 
+								(result == GCF_NO_ERROR ? "" : " (with errors)")));
+
+	_state = S_DISABLED;
+
+	dispatchAnswer(F_MYPS_DISABLED, result);
 }
 
 bool GCFMyPropertySet::linkProperties()

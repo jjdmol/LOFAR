@@ -32,15 +32,15 @@
 #include <GPM_Defines.h>
 #include <GPM_Controller.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
+namespace LOFAR {
+ namespace GCF {
 using namespace Common;  
-  namespace PAL
-  {
+  namespace PAL {
 const TPropertyInfo dummyPropInfo("DUMMY", LPT_BOOL);
 
+//
+// GCFPropertySet (name, type, answer*)
+//
 GCFPropertySet::GCFPropertySet (const char* name,
                                 const char* type,
                                 GCFAnswer* pAnswerObj) : 
@@ -51,27 +51,31 @@ GCFPropertySet::GCFPropertySet (const char* name,
   _dummyProperty(dummyPropInfo, this),
   _isBusy(false)  
 {
-  if (!Common::isValidScope(_scope.c_str()))
-  {
-    LOG_WARN(LOFAR::formatString ( 
-        "Scope %s meets not the name convention! Set to \"\"",
-        _scope.c_str()));
-    _scope = "";
-  }
-  _pController = GPMController::instance();
-  ASSERT(_pController);
+	LOG_TRACE_FLOW(formatString("GCFPropertySet()(%s,%s)", name, type));
+
+	if (!Common::isValidScope(_scope.c_str())) {
+		LOG_WARN(LOFAR::formatString("Scope %s meets not the name convention! Set to \"\"",
+									_scope.c_str()));
+		_scope = "";
+	}
+
+	_pController = GPMController::instance();
+	ASSERT(_pController);
 }
 
+//
+// ~GCFPropertySet
+//
 GCFPropertySet::~GCFPropertySet()
 {
-  clearAllProperties();
-  _dummyProperty.resetPropSetRef();
+	clearAllProperties();
+	_dummyProperty.resetPropSetRef();
 
-  ASSERT(_pController);
-  
-  _pController->deletePropSet(*this); 
-  GPMController::release();  
-  _pController = 0;  
+	ASSERT(_pController);
+
+	_pController->deletePropSet(*this); 
+	GPMController::release();  
+	_pController = 0;  
 }
 
 void GCFPropertySet::loadPropSetIntoRam()

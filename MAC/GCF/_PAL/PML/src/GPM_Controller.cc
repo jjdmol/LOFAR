@@ -225,34 +225,33 @@ void GPMController::deletePropSet(const GCFPropertySet& propSet)
   }
 }
 
+//
+// registerScope(propSet)
+//
 TPMResult GPMController::registerScope(GCFMyPropertySet& propSet)
 {
-  TPMResult result(PM_NO_ERROR);
-  TMyPropertySets::iterator iter = _myPropertySets.find(propSet.getScope());
-  if (iter != _myPropertySets.end())
-  {
-    result = PM_SCOPE_ALREADY_EXISTS;
-  }
-  else
-  {
-    PARegisterScopeEvent request;
-  
-    TAction action;
-    action.pPropSet = &propSet;
-    action.signal = request.signal;
-    
-    request.seqnr = registerAction(action);
-    
-    if (_distPropertyAgent.isConnected() && _propertyAgent.isConnected())
-    {
-      _myPropertySets[propSet.getScope()] = &propSet;
-      request.scope = propSet.getScope();
-      request.type = propSet.getType();
-      request.category = propSet.getCategory();
-      _propertyAgent.send(request);
-    }
-  }
-  return result;
+	// propery already registered??
+	if (_myPropertySets.find(propSet.getScope()) != _myPropertySets.end()) {
+		return(PM_SCOPE_ALREADY_EXISTS);
+	}
+
+	// prepare event and save in actionlist.
+	PARegisterScopeEvent request;
+	TAction 			 action;
+	action.pPropSet = &propSet;
+	action.signal   = request.signal;
+	request.seqnr   = registerAction(action);
+
+	// send event when connection is established.
+	if (_distPropertyAgent.isConnected() && _propertyAgent.isConnected()) {
+		_myPropertySets[propSet.getScope()] = &propSet;
+		request.scope    = propSet.getScope();
+		request.type     = propSet.getType();
+		request.category = propSet.getCategory();
+		_propertyAgent.send(request);
+	}
+
+	return (PM_NO_ERROR);
 }
 
 TPMResult GPMController::unregisterScope(GCFMyPropertySet& propSet)
@@ -404,11 +403,9 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& p)
       result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPS_ENABLE_ERROR);
       GCFMyPropertySet* pPropertySet = (GCFMyPropertySet*) findPropSetInActionList(response.seqnr);
       _actionSeqList.erase(response.seqnr);
-      if (pPropertySet)
-      {
+      if (pPropertySet) {
         logResult(response.result, *pPropertySet);
-        if (result != GCF_NO_ERROR)
-        {
+        if (result != GCF_NO_ERROR) {
           _myPropertySets.erase(pPropertySet->getScope());
         }        
         pPropertySet->scopeRegistered(result);
