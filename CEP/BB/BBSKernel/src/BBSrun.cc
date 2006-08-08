@@ -88,9 +88,8 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
     // Form the solve domains.
     const MeqDomain& workDomain = prediffer.getWorkDomain();
     vector<MeqDomain> solveDomains;
-    double freq = workDomain.startX();
-    double stepf = (workDomain.endX() - freq) / nrinterval[0];
-    double stept = (workDomain.endY() - time) / nrinterval[1];
+    double stepf = (workDomain.endX() - workDomain.startX()) / nrinterval[0];
+    double stept = (workDomain.endY() - workDomain.startY()) / nrinterval[1];
     double sdTime = workDomain.startY();
     for (int i=0; i<nrinterval[1]; ++i) {
       double sdFreq = workDomain.startX();
