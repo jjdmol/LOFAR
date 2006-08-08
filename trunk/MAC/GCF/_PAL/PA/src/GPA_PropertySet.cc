@@ -44,49 +44,45 @@ const char* PS_CAT_NAMES[] =
   "temp-autoloaded",
 };
 
+//
+// enable (psname, pstype, category)
+//
 TPAResult GPAPropertySet::enable(string& name, string& type, Common::TPSCategory category)
 {
-  TPAResult paResult(PA_NO_ERROR);
+	_name = name;
+	_type = type;
+	_category = category;
 
-  _name = name;
-  _type = type;
-  _category = category;
-  
-  if (!GCFPVSSInfo::typeExists(_type))
-  {
-    LOG_INFO(formatString (
-        "Type %s is not knwon in the PVSS DB!",
-        _type.c_str()));
-    paResult = PA_DPTYPE_UNKNOWN;
-  }
-  else if (GCFPVSSInfo::propExists(_name) && PS_IS_TEMPORARY(_category))
-  {
-    LOG_INFO("DP for temporary prop. set may not already exists!");
-    paResult = PA_PROP_SET_ALREADY_EXISTS;
-  }
-  else if (!GCFPVSSInfo::propExists(_name) && !PS_IS_TEMPORARY(_category))
-  {
-    LOG_INFO("DP for permanent prop. set must already exists");
-    paResult = PA_PROP_SET_NOT_EXISTS;
-  }
-  else if (GCFPVSSInfo::propExists(_name + PS_ENABLED_EXT))
-  {
-    LOG_ERROR("Framework DP, for enabled PS, may not already exists before enabling it!");
-    paResult = PA_PROP_SET_ALREADY_EXISTS;
-  }
-  else
-  {
-    TSAResult saResult(SA_NO_ERROR);
-    if ((saResult = dpCreate(_name + string(PS_ENABLED_EXT), string("GCFPaPsEnabled"))) != SA_NO_ERROR)
-    {
-      if (saResult == SA_DPTYPE_UNKNOWN)
-      {
-        LOG_FATAL("Please check the existens of dpType 'GCFPaPsEnabled' in PVSS DB!!!");
-      }
-      paResult = PA_INTERNAL_ERROR;
-    }
-  }
-  return paResult;
+	if (!GCFPVSSInfo::typeExists(_type)) {
+		LOG_INFO(formatString ( "Type %s is not knwon in the PVSS DB!", _type.c_str()));
+		return(PA_DPTYPE_UNKNOWN);
+	}
+
+	if (GCFPVSSInfo::propExists(_name) && PS_IS_TEMPORARY(_category)) {
+		LOG_INFO("DP for temporary prop. set may not already exists!");
+		return (PA_PROP_SET_ALREADY_EXISTS);
+	}
+
+	if (!GCFPVSSInfo::propExists(_name) && !PS_IS_TEMPORARY(_category)) {
+		LOG_INFO("DP for permanent prop. set must already exists");
+		return(PA_PROP_SET_NOT_EXISTS);
+	}
+
+	if (GCFPVSSInfo::propExists(_name + PS_ENABLED_EXT)) {
+		LOG_ERROR("Framework DP, for enabled PS, may not already exists before enabling it!");
+		return(PA_PROP_SET_ALREADY_EXISTS);
+	}
+
+	TSAResult saResult(dpCreate(_name+string(PS_ENABLED_EXT), string("GCFPaPsEnabled")));
+	if (saResult == SA_NO_ERROR) {
+		return (PA_NO_ERROR);
+	}
+
+	if (saResult == SA_DPTYPE_UNKNOWN) {
+		LOG_FATAL("Please check the existens of dpType 'GCFPaPsEnabled' in PVSS DB!!!");
+	}
+
+	return (PA_INTERNAL_ERROR);
 }
 
 TPAResult GPAPropertySet::disable(bool& mustWait)
@@ -96,33 +92,22 @@ TPAResult GPAPropertySet::disable(bool& mustWait)
   _counter = 0;
   GCFPVString indication("d|" + _name);
   dpeSet("__pa_PSIndication", indication, 0.0, false);
-  if (GCFPVSSInfo::propExists(_name + PS_ENABLED_EXT))
-  {
-    LOG_DEBUG(formatString (
-        "DP %s%s must be removed!",
-        _name.c_str(), PS_ENABLED_EXT.c_str()));
-    if (dpDelete(_name + PS_ENABLED_EXT) != SA_NO_ERROR)
-    {
+  if (GCFPVSSInfo::propExists(_name + PS_ENABLED_EXT)) {
+    LOG_DEBUG(formatString("DP %s%s must be removed!", _name.c_str(), PS_ENABLED_EXT.c_str()));
+    if (dpDelete(_name + PS_ENABLED_EXT) != SA_NO_ERROR) {
       paResult = PA_INTERNAL_ERROR;
     }
-    else
-    {
+    else {
       _counter += 1;
     }
   }
-  if (PS_IS_TEMPORARY(_category))
-  {
-    if (GCFPVSSInfo::propExists(_name))
-    {
-      LOG_DEBUG(formatString (
-          "DP %s still exists! Will be removed too!",
-          _name.c_str()));
-      if (dpDelete(_name) != SA_NO_ERROR)
-      {
+  if (PS_IS_TEMPORARY(_category)) {
+    if (GCFPVSSInfo::propExists(_name)) {
+      LOG_DEBUG(formatString("DP %s still exists! Will be removed too!", _name.c_str()));
+      if (dpDelete(_name) != SA_NO_ERROR) {
         paResult = PA_INTERNAL_ERROR;
       }          
-      else
-      {
+      else {
         _counter += 1;
       }
     }

@@ -199,8 +199,20 @@ const char* GCFTask::evtstr(const GCFEvent& e)  const
   {
     signame = (iter->second)[F_EVT_SIGNAL(e)];
   }
-
   return (signame?signame:unknown);
+}
+
+//
+// eventstr(event&)
+//
+string GCFTask::eventstr(const GCFEvent& e)  const
+{
+	TProtocols::const_iterator iter = _protocols.find(F_EVT_PROTOCOL(e));
+	if (iter != _protocols.end()) {
+		return ((iter->second)[F_EVT_SIGNAL(e)]);
+	}
+
+	return (formatString("unknown signal(p=%d, s=%d)", F_EVT_PROTOCOL(e), F_EVT_SIGNAL(e)));
 }
 
 void GCFTask::signalHandler(int sig)

@@ -146,12 +146,10 @@ GCFEvent::TResult GPAController::waiting_state(GCFEvent& e, GCFPortInterface& p)
     case PA_LOAD_PROP_SET:
     {
       PALoadPropSetEvent* pRequest = new PALoadPropSetEvent(e);
-      LOG_DEBUG(formatString("Try to load prop. set '%s'...",
-          pRequest->scope.c_str()));
+      LOG_DEBUG(formatString("Try to load prop. set '%s'...", pRequest->scope.c_str()));
       pEvent = pRequest;
       pPropSetSession = findPropSet(pRequest->scope);
-      if (!pPropSetSession)
-      {
+      if (!pPropSetSession) {
         LOG_DEBUG(formatString("Prop. set '%s' not exists. Not loaded!!!",
             pRequest->scope.c_str()));
         PAPropSetLoadedEvent response;
@@ -164,12 +162,10 @@ GCFEvent::TResult GPAController::waiting_state(GCFEvent& e, GCFPortInterface& p)
     case PA_UNLOAD_PROP_SET:
     {      
       PAUnloadPropSetEvent* pRequest = new PAUnloadPropSetEvent(e);
-      LOG_DEBUG(formatString("Try to unload prop. set '%s'...",
-          pRequest->scope.c_str()));
+      LOG_DEBUG(formatString("Try to unload prop. set '%s'...", pRequest->scope.c_str()));
       pEvent = pRequest;
       pPropSetSession = findPropSet(pRequest->scope);
-      if (!pPropSetSession)
-      {
+      if (!pPropSetSession) {
         LOG_DEBUG(formatString("Prop. set '%s' not exists. Not unloaded!!!",
             pRequest->scope.c_str()));
         PAPropSetUnloadedEvent response;
@@ -182,12 +178,10 @@ GCFEvent::TResult GPAController::waiting_state(GCFEvent& e, GCFPortInterface& p)
     case PA_CONF_PROP_SET:
     {      
       PAConfPropSetEvent* pRequest = new PAConfPropSetEvent(e);
-      LOG_DEBUG(formatString("Try to configure prop. set '%s'...",
-          pRequest->scope.c_str()));
+      LOG_DEBUG(formatString("Try to configure prop. set '%s'...", pRequest->scope.c_str()));
       pEvent = pRequest;
       pPropSetSession = findPropSet(pRequest->scope);
-      if (!pPropSetSession)
-      {
+      if (!pPropSetSession) {
         LOG_DEBUG(formatString("Prop. set '%s' not exists. Not configured!!!",
             pRequest->scope.c_str()));
         PAPropSetConfEvent response;
@@ -201,11 +195,9 @@ GCFEvent::TResult GPAController::waiting_state(GCFEvent& e, GCFPortInterface& p)
     case PA_REGISTER_SCOPE:
     {
       PARegisterScopeEvent* pRequest = new PARegisterScopeEvent(e);
-      LOG_DEBUG(formatString("Try to enable prop. set '%s'...",
-          pRequest->scope.c_str()));
+      LOG_DEBUG(formatString("Try to enable prop. set '%s'...", pRequest->scope.c_str()));
       pPropSetSession = findPropSet(pRequest->scope);
-      if (pPropSetSession)
-      {
+      if (pPropSetSession) {
         LOG_DEBUG(formatString("Prop. set '%s' already exists. Not enabled again!!!",
             pRequest->scope.c_str()));
         PAScopeRegisteredEvent response;
@@ -213,8 +205,7 @@ GCFEvent::TResult GPAController::waiting_state(GCFEvent& e, GCFPortInterface& p)
         response.result = PA_PROP_SET_ALREADY_EXISTS;
         p.send(response);
       }
-      else
-      {
+      else {
         LOG_DEBUG(formatString("Create the prop. set session: '%s_session'.",
             pRequest->scope.c_str()));
         pEvent = pRequest;
