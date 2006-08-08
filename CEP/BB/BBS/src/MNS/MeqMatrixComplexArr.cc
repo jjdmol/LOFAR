@@ -150,10 +150,14 @@ void *MeqMatrixComplexArr::operator new(size_t, int nx, int ny)
 
   void *ptr;
 
-  if (nx * ny <= poolNElements) {
+  if (nx * ny == poolNElements)
+  {
+    // Allocate memory from the pool.
     ptr = pool.allocate(poolArraySize);
-  } else {
-    // Array is larger than arrays in pool, so allocate it separately.
+  }
+  else
+  {
+    // The number of elements in the matrix is non-standard -> allocate it separately.
     // Still use new to get enough memory for alignment.
     ptr = malloc(memSize(nx * ny));
   }
@@ -173,12 +177,15 @@ void MeqMatrixComplexArr::operator delete(void *ptr)
   timer.start();
 #endif
 
-  if(poolNElements == 0 || ((MeqMatrixComplexArr *) ptr)->nelements() < poolNElements)
+  if(poolNElements == 0 || ((MeqMatrixComplexArr *) ptr)->nelements() != poolNElements)
   {
+    // Pool is deactivated or the number of elements in the matrix is non-standard.
+    // -> use standard free()
     free(ptr);
   }
   else
   {
+    // Return memory to the pool.
     pool.deallocate((MeqMatrixComplexArr *) ptr);
   }
 
