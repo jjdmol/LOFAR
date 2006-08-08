@@ -62,6 +62,7 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
     }
     
     public String getNameForNode(TreeNode aNode){
+        //add operation type to the name
         String name = ((BBSStepNode)aNode.getUserObject()).getName();
         return name;
     }
@@ -96,29 +97,27 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
         // However, you could use "insert" in such a case.
         aNode.areChildrenDefined = true;
         if(containedBBSNode.isRootNode()){
-            try {
-                //Build the complete BBS Step tree as a root node is detected
-                Vector<BBSStepNode> newPNodes = BBSsdm.buildStepTree(containedBBSNode,true);
-                for(BBSStepNode someNode : newPNodes){
-                    TreeNode newNode = new TreeNode(this.instance,someNode,someNode.getName());
-                    
-                    aNode.add(newNode);
-                    defineChildsForNode(newNode);
-                }
-            } catch (RemoteException ex) {
-                logger.error("defineChildNodes("+aNode.getName()+") resulted in an error  while retrieving the BBS strategy step names.",ex);
-        
-            }            
+            jOTDBnode rootNode = containedBBSNode.getOTDBNode();
+            BBSsdm.setStepContainerNode(rootNode);
+            
+            //retrieve the strategy steps
+            BBSStrategy theStrategy = BBSsdm.getStrategy();
+            
+            for(BBSStep childStep : theStrategy.getChildSteps()){
+                BBSStepNode newChildStepNode = new BBSStepNode(childStep);
+                TreeNode newNode = new TreeNode(this.instance,newChildStepNode,newChildStepNode.getName());
+                aNode.add(newNode);
+            }
         }else{
             //expand the first steps in the tree
             BBSStep containedBBSStep = containedBBSNode.getContainedStep();
             
             for(BBSStep aStep : containedBBSStep.getChildSteps()){
                 logger.trace("Child Node found for BBS Step Tree :"+aStep.getName());
-                
+                aStep.setParentStep(containedBBSStep);
                 BBSStepNode newPNode = new BBSStepNode(aStep);
                 newPNode.setName(aStep.getName());
-                newPNode.setRootNode(false);                
+                newPNode.setRootNode(false);
                 TreeNode newNode = new TreeNode(this.instance,newPNode,newPNode.getName());
                 aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
@@ -139,7 +138,7 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
         BBSStepNode newPNode = new BBSStepNode(null);
         newPNode.setRootNode(true);
         newPNode.setName(title);
-        newPNode.setOTDBNode(userObject);  
+        newPNode.setOTDBNode(userObject);
         newPNode.leaf=false;
         TreeNode bbsNode = new TreeNode(this.instance,newPNode,newPNode.getName());
         
