@@ -25,10 +25,13 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <GCF/Utils.h>		// myHostname
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/StationInfo.h>
 
 using namespace LOFAR;
 using namespace LOFAR::APLCommon;
+using namespace LOFAR::Deployment;
 
 int main (int	argc, char* argv[]) 
 {
@@ -77,6 +80,16 @@ int main (int	argc, char* argv[])
 	LOG_INFO_STR("InstanceNr of shared name   = " << getInstanceNr(sharedName));
 	LOG_INFO_STR("CntlrType of shared name    = " << getControllerType(sharedName));
 	LOG_INFO_STR("Sharedname of shared name   = " << sharedControllerName(sharedName));
+
+
+	LOG_INFO_STR("myHostname = " << GCF::Common::myHostname(false));
+	LOG_INFO_STR("ringNumber = " << stationRingNr());
+	LOG_INFO_STR("armNumber  = " << stationArmNr());
+	LOG_INFO_STR("PVSSDBname = " << PVSSDatabaseName());
+	LOG_INFO_STR("PropSetName(LOFAR_PermSW_@ring@_@station@_DigBoardCtrl@instance@) = " << createPropertySetName("LOFAR_PermSW_@ring@_@station@_DigBoardCtrl@instance@", "DigitalBoardControl"));
+
+
+
 
 	return (0);
 }

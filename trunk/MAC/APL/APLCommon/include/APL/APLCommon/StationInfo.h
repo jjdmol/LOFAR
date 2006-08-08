@@ -46,15 +46,17 @@ namespace LOFAR {
 //
 // Nameconventions dictate that the hostname has the following syntax:
 //
-// Syntax of hostname: <stationType><arm><ring>
+// Syntax of hostname: <stationType><arm><ring><CUtype>
 //	with: stationType = CS | RS | ES<countrycode>
 //		  arm = 1..5   [ 1 digit  ]
 //		  ring = 1..9  [ 2 digits ]
+//		  CUType = C | W
 //
-uint16	stationRingNr();	// 0..99; 0 = error
-uint16	stationArmNr();		// 0..5	; 0 = error
-int16	stationTypeValue();	//-1..2 : for resp. error, CS, RS, ES
-string	stationTypeStr();	// "", CS, RS, ES
+uint16	stationRingNr();		// 0..99; 0 = error
+uint16	stationArmNr();			// 0..5	; 0 = error
+int16	stationTypeValue();		//-1..2 : for resp. error, CS, RS, ES
+string	stationTypeStr();		// "", CS, RS, ES
+string	PVSSDatabaseName();		// hostname w/o CUtype
 
 
 // @}

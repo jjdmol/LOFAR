@@ -85,6 +85,7 @@ int16	stationTypeValue()
 	return (-1);
 }
 
+
 //
 // stationTypeStr()
 //
@@ -102,6 +103,23 @@ string	stationTypeStr()
 
 	return (stationTypeTable[stsType]);
 }
+
+
+//
+// PVSSDatabaseName
+//
+string	PVSSDatabaseName()
+{
+	string hostname(myHostname(false));
+
+	// hostname is like <stationtype><arm><ring><CUtype>
+	// where CUtype = C or W
+	// strip off CUtype is any to get the PVSS database name
+	rtrim(hostname, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+
+	return (hostname);
+}
+
 
   } // namespace Deployment
 } // namespace LOFAR
