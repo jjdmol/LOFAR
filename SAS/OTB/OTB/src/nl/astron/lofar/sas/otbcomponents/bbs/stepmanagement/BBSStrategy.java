@@ -60,25 +60,11 @@ public class BBSStrategy{
         }
         return returnStep;
     }
-    
-    public BBSStep getChildStepAtIndex(int index) throws IllegalArgumentException{
-        BBSStep returnStep = null;
-        
-        if(childSteps.elementAt(index)!=null){
-            returnStep = childSteps.get(index);
-        }else{
-            throw new IllegalArgumentException("No Child Step was found at index: "+index);
-        }
-        return returnStep;
-    }
     public void addChildStep(BBSStep childStep){
         childSteps.add(childStep);
         childStep.setStrategy(this);
     }
-    public void setChildStepAtIndex(BBSStep childStep, int index){
-        childSteps.add(index,childStep);
-    }
-     public void removeAllChildSteps(){
+    public void removeAllChildSteps(){
         for(BBSStep childStep : this.childSteps){
             childStep.removeAllChildSteps();
             removeChildStep(childStep);
@@ -89,11 +75,41 @@ public class BBSStrategy{
         if(childSteps.contains(childStep)){
             childSteps.remove(childStep);
             childSteps.trimToSize();
-            childStep.setParentStep(null);            
-        }        
+            childStep.setParentStep(null);
+        }
     }
     
+    public void moveChildStep(BBSStep childStep, int newIndex){
+        if(hasChildStep(childStep) && childSteps.size()>newIndex && newIndex >= 0){
+            childSteps.remove(childStep);
+            childSteps.add(newIndex,childStep);
+        }
+    }
     public boolean hasChildSteps(){
         return childSteps.size()>0;
+    }
+    public boolean hasChildStep(BBSStep aChildStep){
+        return childSteps.contains(aChildStep);
+    }
+    public void cascadingStepInsertion(String parent,BBSStep child){
+        //strategy step
+        if(parent==null){
+            addChildStep(child);
+        }else{
+            for(BBSStep childStep : this.childSteps){
+                childStep.cascadingStepInsertion(parent,child);
+            }
+        }
+    }
+    
+    public void cascadingStepDeletion(BBSStep parent,BBSStep child){
+        //strategy step
+        if(parent==null){
+            addChildStep(child);
+        }else{
+            for(BBSStep childStep : this.childSteps){
+                childStep.cascadingStepDeletion(parent,child);
+            }
+        }
     }
 }

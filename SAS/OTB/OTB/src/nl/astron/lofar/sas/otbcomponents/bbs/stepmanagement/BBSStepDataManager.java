@@ -42,14 +42,14 @@ public class BBSStepDataManager{
     
     private static BBSStepDataManager instance;
     private static Logger logger = Logger.getLogger(BBSStepDataManager.class);
-    private jOTDBnode stepContainerNode = null;
+    private static jOTDBnode stepContainerNode = null;
     private static Vector OTDBcomponentCache = null;
     private BBSStrategy theStrategy = null;
-    private HashSet<BBSStep> stepsCollection = null;
+    private static HashMap<String,BBSStepData> stepsCollection = null;
     
     /** Creates a new instance of BBSStepDataManager */
     private BBSStepDataManager() {
-        stepsCollection = new HashSet<BBSStep>();
+        stepsCollection = new HashMap<String,BBSStepData> ();
     }
     
     public static synchronized BBSStepDataManager getInstance(){
@@ -66,28 +66,31 @@ public class BBSStepDataManager{
     
     public Vector<String> getStepNames(){
         Vector<String> returnVector = new Vector<String>();
-        for(BBSStep aStep : stepsCollection){
-            returnVector.add(aStep.getName());
+        for(String aStep : stepsCollection.keySet()){
+            returnVector.add(aStep);
         }
         return returnVector;
     }
     
     public boolean stepExists(String name){
         boolean exists = false;
-        for(BBSStep existingStep : this.stepsCollection){
-            if(existingStep.getName().equalsIgnoreCase(name)){
+        for(String existingStep : this.stepsCollection.keySet()){
+            if(existingStep.equalsIgnoreCase(name)){
                 exists=true;
             }
         }
         return exists;
     }
-    
-    public BBSStep getStep(String name){
-        BBSStep returnStep = null;
-        for(BBSStep aStep : stepsCollection){
-            if(aStep.getName().equalsIgnoreCase(name)){
-                returnStep = aStep;
+    public BBSStepData getStepData(String name){
+        BBSStepData returnStep = null;
+        for(String aStep : stepsCollection.keySet()){
+            if(aStep.equalsIgnoreCase(name)){
+                returnStep = stepsCollection.get(name);
             }
+        }
+        if(returnStep == null){
+            returnStep = new BBSStepData();
+            stepsCollection.put(name,returnStep);
         }
         return returnStep;
     }
@@ -100,6 +103,9 @@ public class BBSStepDataManager{
     }
     
     public void generateStrategyFromOTDB(){
+        
+        //clear the steps collection to make sure only steps are in there that are present in the OTDB
+        this.stepsCollection.clear();
         
         theStrategy = new BBSStrategy();
         
@@ -124,7 +130,6 @@ public class BBSStepDataManager{
                             if (aHWNode.name.equals(aStep)) {
                                 //Create a new step and build it (with its substeps as well)
                                 BBSStep newStep = new BBSStep(aHWNode.name);
-                                newStep.setStepContainerPointer(rootNode);
                                 newStep.setStrategy(theStrategy);
                                 newStep.setParentStep(null);
                                 buildStep(newStep,aHWNode);
@@ -144,18 +149,15 @@ public class BBSStepDataManager{
         deleteAllSteps();
         
         for(BBSStep aStep : theStrategy.getChildSteps()){
-            
             persistStep(aStep);
-            
         }
-        
+        generateStrategyFromOTDB();
     }
     
     private void buildStep(BBSStep parentNode, jOTDBnode parentOTDBnode) throws RemoteException{
         
-        //
-        //TODO:add variables to step
-        //
+        //create a StepData object to fill the variables
+        BBSStepData stepDataObject = getStepData(parentNode.getName());
         
         //Add substeps
         jOTDBnode strategyStepsParameter=null;
@@ -166,6 +168,8 @@ public class BBSStepDataManager{
         Enumeration e1 = HWchilds.elements();
         while( e1.hasMoreElements()  ) {
             
+            
+            
             jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
             strategyStepsParameter=null;
             //retrieving Steps
@@ -174,19 +178,19 @@ public class BBSStepDataManager{
                 logger.trace("Strategy Steps defined :"+strategyStepsParameter.limits);
             } else if (aHWNode.leaf && aHWNode.name.equals("Sources")) {
                 if(!aHWNode.limits.equals("")){
-                    parentNode.setSources(this.getVectorFromString(aHWNode.limits,true));
+                    stepDataObject.setSources(this.getVectorFromString(aHWNode.limits,true));
                 }
             } else if (aHWNode.leaf && aHWNode.name.equals("ExtraSources")) {
                 if(!aHWNode.limits.equals("")){
-                    parentNode.setExtraSources(this.getVectorFromString(aHWNode.limits,true));
+                    stepDataObject.setExtraSources(this.getVectorFromString(aHWNode.limits,true));
                 }
             } else if (aHWNode.leaf && aHWNode.name.equals("InstrumentModel")) {
                 if(!aHWNode.limits.equals("")){
-                    parentNode.setInstrumentModel(this.getVectorFromString(aHWNode.limits,true));
+                    stepDataObject.setInstrumentModel(this.getVectorFromString(aHWNode.limits,true));
                 }
             } else if (aHWNode.leaf && aHWNode.name.equals("OutputData")) {
                 if(!aHWNode.limits.equals("")){
-                    parentNode.setOutputDataColumn(aHWNode.limits);
+                    stepDataObject.setOutputDataColumn(aHWNode.limits);
                 }
             }
             //Set the following values
@@ -203,11 +207,11 @@ public class BBSStepDataManager{
                     
                     if (aHWNode.leaf && aHWNode.name.equals("Selection")) {
                         if(!aHWNode.limits.equals("")){
-                            parentNode.setCorrelationSelection(aHWNode.limits);
+                            stepDataObject.setCorrelationSelection(aHWNode.limits);
                         }
                     } else if (aHWNode.leaf && aHWNode.name.equals("Type")) {
                         if(!aHWNode.limits.equals("")){
-                            parentNode.setCorrelationType(this.getVectorFromString(aHWNode.limits,true));
+                            stepDataObject.setCorrelationType(this.getVectorFromString(aHWNode.limits,true));
                         }
                     }
                 }
@@ -220,11 +224,11 @@ public class BBSStepDataManager{
                     
                     if (aHWNode.leaf && aHWNode.name.equals("Station1")) {
                         if(!aHWNode.limits.equals("")){
-                            parentNode.setStation1Selection(this.getVectorFromString(aHWNode.limits,true));
+                            stepDataObject.setStation1Selection(this.getVectorFromString(aHWNode.limits,true));
                         }
                     } else if (aHWNode.leaf && aHWNode.name.equals("Station2")) {
                         if(!aHWNode.limits.equals("")){
-                            parentNode.setStation2Selection(this.getVectorFromString(aHWNode.limits,true));
+                            stepDataObject.setStation2Selection(this.getVectorFromString(aHWNode.limits,true));
                         }
                     }
                 }
@@ -237,11 +241,11 @@ public class BBSStepDataManager{
                     
                     if (aHWNode.leaf && aHWNode.name.equals("Time")) {
                         if(!aHWNode.limits.equals("")){
-                            parentNode.setIntegrationTime(Double.parseDouble(aHWNode.limits));
+                            stepDataObject.setIntegrationTime(Double.parseDouble(aHWNode.limits));
                         }
                     } else if (aHWNode.leaf && aHWNode.name.equals("Freq")) {
                         if(!aHWNode.limits.equals("")){
-                            parentNode.setIntegrationFrequency(Double.parseDouble(aHWNode.limits));
+                            stepDataObject.setIntegrationFrequency(Double.parseDouble(aHWNode.limits));
                         }
                     }
                 }
@@ -265,11 +269,10 @@ public class BBSStepDataManager{
                         if (!aHWNode.leaf && aHWNode.name.equals(aStep)) {
                             //Create a new step and build it (with its substeps as well)
                             BBSStep newStep = new BBSStep(aHWNode.name);
-                            newStep.setStepContainerPointer(parentNode.getStepContainerPointer());
+                            
+                            newStep.setStrategy(parentNode.getStrategy());
                             //build its childsteps recursively
                             buildStep(newStep,aHWNode);
-                            newStep.setStrategy(parentNode.getStrategy());
-                            assertStepIsInCollection(newStep);
                             parentNode.addChildStep(newStep);
                             logger.trace("Step defined : "+newStep.getName());
                         }
@@ -280,7 +283,7 @@ public class BBSStepDataManager{
     }
     
     private void persistStep(BBSStep aBBSStep){
-        jOTDBnode stepsNode = aBBSStep.getStepContainerPointer();
+        jOTDBnode stepsNode = this.getStepContainerNode();
         if(stepsNode == null){
             stepsNode = this.getStepContainerNode();
         }
@@ -339,21 +342,74 @@ public class BBSStepDataManager{
                     Vector stepParametersVector = retrieveChildDataForNode(newStepNode);
                     Enumeration spe = stepParametersVector.elements();
                     
+                    BBSStepData currentDataForStep = getStepData(aBBSStep.getName());
+                    
+                    
                     while( spe.hasMoreElements()  ) {
                         jOTDBnode aHWNode = (jOTDBnode)spe.nextElement();
                         
-                        if(aHWNode.name.equals("OutputData")){
-                            aHWNode.limits = aBBSStep.getOutputDataColumn();
-                            
-                            if(aBBSStep.getParentStep() != null && aBBSStep.getOutputDataColumn() != null &&
-                                    aBBSStep.getOutputDataColumn().equals(aBBSStep.getParentStep().getOutputDataColumn())){
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
-                            }else if ( aBBSStep.getOutputDataColumn() != null){
+                        //do all BBS Step parameters
+                        
+                        //sources
+                        if(aHWNode.name.equals("Sources")){
+                            if(aBBSStep.getParentStep() != null){
+                                BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
+                                Vector<String> newString = currentDataForStep.getSources();
+                                if(currentDataForStep.getSources() != null && currentDataForParentStep.getSources() != null){
+                                    if(currentDataForStep.getSources().equals(currentDataForParentStep.getSources())) {
+                                        newString = null;
+                                    }
+                                }
+                                currentDataForStep.setSources(newString);
+                            }
+                            if ( currentDataForStep.getSources() != null){
+                                aHWNode.limits = this.getStringFromVector(currentDataForStep.getSources(),true);
                                 SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
                             }else{
                                 SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
+                        //extra sources
+                        else if(aHWNode.name.equals("ExtraSources")){
+                            if(aBBSStep.getParentStep() != null){
+                                BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
+                                Vector<String> newString = currentDataForStep.getExtraSources();
+                                if(currentDataForStep.getExtraSources() != null && currentDataForParentStep.getExtraSources() != null){
+                                    if(currentDataForStep.getExtraSources().equals(currentDataForParentStep.getExtraSources())) {
+                                        newString = null;
+                                    }
+                                }
+                                currentDataForStep.setExtraSources(newString);
+                            }
+                            if ( currentDataForStep.getExtraSources() != null){
+                                aHWNode.limits = this.getStringFromVector(currentDataForStep.getExtraSources(),true);
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                            }else{
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                            }
+                        }
+                        
+                        //output data column
+                        else if(aHWNode.name.equals("OutputData")){
+                            if(aBBSStep.getParentStep() != null){
+                                BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
+                                String newString = currentDataForStep.getOutputDataColumn();
+                                if(currentDataForStep.getOutputDataColumn() != null && currentDataForParentStep.getOutputDataColumn() != null){
+                                    if(currentDataForStep.getOutputDataColumn().equals(currentDataForParentStep.getOutputDataColumn())) {
+                                        newString = null;
+                                    }
+                                }
+                                currentDataForStep.setOutputDataColumn(newString);
+                            }
+                            if ( currentDataForStep.getOutputDataColumn() != null){
+                                aHWNode.limits = currentDataForStep.getOutputDataColumn();
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                            }else{
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                            }
+                        }
+                        
+                        //instrument data model
                         
                     }
                     
@@ -405,23 +461,33 @@ public class BBSStepDataManager{
         }
         if(parentStepsNode!=null){
             
-            Vector<String> oldList = getVectorFromString(parentStepsNode.limits,true);
-            
-            oldList.add(aBBSStep.getName());
-            
-            String newList = this.getStringFromVector(oldList,true);
-            if(!parentStepsNode.limits.equals(newList)){
+             //determine the Parent children as defined by the BBS Step Parent object
+             Vector<BBSStep> currentParentChildren = new Vector<BBSStep>();
+             if(isStrategyStep){
+                currentParentChildren = aBBSStep.getStrategy().getChildSteps();
+             }else{
+                currentParentChildren = aBBSStep.getParentStep().getChildSteps();
+             }
+             Vector<String> currentParentChildrenList = new Vector<String>();
+             for(BBSStep someStep : currentParentChildren){
+                 currentParentChildrenList.add(someStep.getName());
+             }            
+             
+             Vector<String> oldList = getVectorFromString(parentStepsNode.limits,true);
+             
+             if(!oldList.equals(currentParentChildrenList)){
+                 oldList.add(aBBSStep.getName());
+             }
+             String newList = this.getStringFromVector(oldList,true);
+             if(!parentStepsNode.limits.equals(newList)){
                 parentStepsNode.limits=newList;
                 try{
                     SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(parentStepsNode);
                 } catch (RemoteException ex) {
                     logger.error("persistStep() : Step could not be linked to its Parent Step/Strategy!",ex);
                 }
-            }
+             }
         }
-        
-        //make sure that the step to be persisted is in the collection managed by this class...
-        this.assertStepIsInCollection(aBBSStep);
         
         //do the child steps
         
@@ -430,10 +496,8 @@ public class BBSStepDataManager{
         }
         
     }
-
+    
     private void deleteAllSteps(){
-        
-        this.stepsCollection.clear();
         
         jOTDBnode parentStepsNode = this.getStrategyStepsNode(this.getStepContainerNode());
         
@@ -556,18 +620,6 @@ public class BBSStepDataManager{
         return returnId;
     }
     
-    private void assertStepIsInCollection(BBSStep aStep){
-        boolean exists = false;
-        for(BBSStep existingStep : this.stepsCollection){
-            if(existingStep.getName().equalsIgnoreCase(aStep.getName())){
-                exists=true;
-            }
-        }
-        if(!exists){
-            stepsCollection.add(aStep);
-        }
-    }
-            
     private synchronized jOTDBnode getStepContainerNode(){
         return this.stepContainerNode;
     }
