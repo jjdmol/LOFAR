@@ -35,8 +35,6 @@ public class BBSStep implements Cloneable, Comparable{
     
     //Possible parent step
     private BBSStep parentStep = null;
-    //Pointer to BBS Strategy
-    private BBSStrategy itsStrategy = null;
     //Contained substeps
     private Vector<BBSStep> childSteps;
     //Step Name
@@ -92,25 +90,9 @@ public class BBSStep implements Cloneable, Comparable{
     public void removeAllChildSteps(){
         for(BBSStep childStep : this.childSteps){
             childStep.removeAllChildSteps();
-            removeChildStep(childStep);
         }
-        childSteps.trimToSize();
+        childSteps.clear();
     }
-    public void removeChildStep(BBSStep childStep){
-        if(childSteps.contains(childStep)){
-            childSteps.remove(childStep);
-            childSteps.trimToSize();
-            childStep.setParentStep(null);
-        }
-    }
-    
-    public void moveChildStep(BBSStep childStep, int newIndex){
-        if(hasChildStep(childStep) && childSteps.size()>newIndex && newIndex >= 0){
-            childSteps.remove(childStep);
-            childSteps.add(newIndex,childStep);
-        }
-    }
-    
     public boolean hasChildSteps(){
         return childSteps.size()>0;
     }
@@ -118,23 +100,8 @@ public class BBSStep implements Cloneable, Comparable{
     public boolean hasChildStep(BBSStep aChildStep){
         return childSteps.contains(aChildStep);
     }
-    
-    public void finalize(){
-        if(parentStep!=null){
-            parentStep.removeChildStep(this);
-        }
-    }
-    
     public String toString(){
         return getName();
-    }
-    
-    public BBSStrategy getStrategy(){
-        return itsStrategy;
-    }
-    
-    public void setStrategy(BBSStrategy itsStrategy){
-        this.itsStrategy = itsStrategy;
     }
     
     public int compareTo(Object otherObject){
@@ -151,7 +118,6 @@ public class BBSStep implements Cloneable, Comparable{
     public BBSStep clone(){
         BBSStep newStep = new BBSStep(getName());
         newStep.setParentStep(null);
-        newStep.setStrategy(this.getStrategy());
         for(BBSStep childStep : this.getChildSteps()){
             BBSStep newChildStep = childStep.clone();
             newChildStep.setParentStep(newStep);
@@ -161,7 +127,7 @@ public class BBSStep implements Cloneable, Comparable{
     }
     public void cascadingStepInsertion(String parent,BBSStep child){
         
-        if(parent.equals(this.getName())){
+        if(parent != null && parent.equals(this.getName())){
             BBSStep newStep = child.clone();
             addChildStep(newStep);
         }
@@ -171,13 +137,36 @@ public class BBSStep implements Cloneable, Comparable{
         
     }
     
-    public void cascadingStepDeletion(BBSStep parent,BBSStep child){
+    public void cascadingStepDeletion(BBSStep parent,BBSStep child, int indexOfChild){
         
-        if(parent.equals(this.getName())){
-            removeChildStep(child);
+        if(parent != null && parent.getName().equals(this.getName())){
+            if(indexOfChild >= 0 && indexOfChild < childSteps.size()){
+                BBSStep currentStepInIndex = childSteps.get(indexOfChild);
+                if(child.getName().equals(currentStepInIndex.getName())){
+                    this.childSteps.removeElementAt(indexOfChild);
+                    childSteps.trimToSize();
+                }
+            }
         }
         for(BBSStep childStep : this.childSteps){
-            childStep.cascadingStepDeletion(parent,child);
+            childStep.cascadingStepDeletion(parent,child,indexOfChild);
+        }
+        
+    }
+    public void cascadingStepMove(BBSStep parent,BBSStep child, int oldIndexOfChild, int newIndexOfChild){
+        
+        if(parent != null && parent.getName().equals(this.getName())){
+            if(oldIndexOfChild >= 0 && oldIndexOfChild < childSteps.size()){
+                BBSStep currentStepInIndex = childSteps.get(oldIndexOfChild);
+                if(child.getName().equals(currentStepInIndex.getName())){
+                    this.childSteps.removeElementAt(oldIndexOfChild);
+                    this.childSteps.add(newIndexOfChild,currentStepInIndex);
+                    childSteps.trimToSize();
+                }
+            }
+        }
+        for(BBSStep childStep : this.childSteps){
+            childStep.cascadingStepMove(parent,child,oldIndexOfChild,newIndexOfChild);
         }
         
     }

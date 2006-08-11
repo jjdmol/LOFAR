@@ -219,8 +219,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 if(stepParentData.getSources() != null && stepParentData.getSources().size()>0){
                     this.fillList(this.stepExplorerNSourcesList,stepParentData.getSources());
                     stepExplorerNSourcesList.setBackground(INHERITED_FROM_PARENT);
-                }
-                else{
+                } else{
                     this.fillList(this.stepExplorerNSourcesList,new Vector<String>());
                 }
             }else{
@@ -228,7 +227,22 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             }
         }
         //extra sources
-        
+        stepExplorerESourcesList.setBackground(NOT_INHERITED_FROM_PARENT);
+        if(stepData.getExtraSources() != null && stepData.getExtraSources().size()>0){
+            this.fillList(this.stepExplorerESourcesList,stepData.getExtraSources());
+        }else{
+            if(theBBSStep.hasParentStep()){
+                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
+                if(stepParentData.getExtraSources() != null && stepParentData.getExtraSources().size()>0){
+                    this.fillList(this.stepExplorerESourcesList,stepParentData.getExtraSources());
+                    stepExplorerESourcesList.setBackground(INHERITED_FROM_PARENT);
+                } else{
+                    this.fillList(this.stepExplorerESourcesList,new Vector<String>());
+                }
+            }else{
+                this.fillList(this.stepExplorerESourcesList,new Vector<String>());
+            }
+        }
         //output data column
         stepExplorerOutputDataText.setBackground(NOT_INHERITED_FROM_PARENT);
         if(stepData.getOutputDataColumn() != null){
@@ -246,7 +260,22 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         }
         
         //instrument model
-        
+        stepExplorerInstrumentModelList.setBackground(NOT_INHERITED_FROM_PARENT);
+        if(stepData.getInstrumentModel() != null && stepData.getInstrumentModel().size()>0){
+            this.fillList(this.stepExplorerInstrumentModelList,stepData.getInstrumentModel());
+        }else{
+            if(theBBSStep.hasParentStep()){
+                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
+                if(stepParentData.getInstrumentModel() != null && stepParentData.getInstrumentModel().size()>0){
+                    this.fillList(this.stepExplorerInstrumentModelList,stepParentData.getInstrumentModel());
+                    stepExplorerInstrumentModelList.setBackground(INHERITED_FROM_PARENT);
+                } else{
+                    this.fillList(this.stepExplorerInstrumentModelList,new Vector<String>());
+                }
+            }else{
+                this.fillList(this.stepExplorerInstrumentModelList,new Vector<String>());
+            }
+        }
         //add other variables
         
         
@@ -269,11 +298,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         this.setStepExplorerButtonsVisible(visible);
     }
     private void enableStepExplorerButtons(boolean enabled) {
-
+        
     }
     
     private void setStepExplorerButtonsVisible(boolean visible) {
-
+        
     }
     
     /** Enables/disables the complete form
@@ -289,9 +318,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         Vector<String> currentNSources = aStepData.getSources();
         if(!createList(stepExplorerNSourcesList).equals(aStepData.getSources())){
             aStepData.setSources(createList(stepExplorerNSourcesList));
-        }        
+        }
         //extra sources
-        
+        Vector<String> currentESources = aStepData.getExtraSources();
+        if(!createList(stepExplorerESourcesList).equals(aStepData.getExtraSources())){
+            aStepData.setExtraSources(createList(stepExplorerESourcesList));
+        }
         //output data column
         if(stepExplorerOutputDataText.getText().equals("")){
             aStepData.setOutputDataColumn(null);
@@ -299,7 +331,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             aStepData.setOutputDataColumn(stepExplorerOutputDataText.getText());
         }
         //instrument model
-        
+        Vector<String> currentInstrumentModel = aStepData.getInstrumentModel();
+        if(!createList(stepExplorerInstrumentModelList).equals(aStepData.getInstrumentModel())){
+            aStepData.setInstrumentModel(createList(stepExplorerInstrumentModelList));
+        }
         //add other variables
     }
     
@@ -359,14 +394,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         BBSStepExplorerPanel = new javax.swing.JPanel();
         stepExplorerScrollPanel = new javax.swing.JScrollPane();
         stepExplorerPanel = new javax.swing.JPanel();
+        stepExplorerStepNameLabel = new javax.swing.JLabel();
+        stepExplorerStepNameText = new javax.swing.JTextField();
         stepExplorerRevertButton = new javax.swing.JButton();
-        stepExplorerInstrumentModelPanel = new javax.swing.JPanel();
-        stepExplorerInstrumentModelScrollPane = new javax.swing.JScrollPane();
-        stepExplorerInstrumentModelList = new javax.swing.JList();
-        stepExplorerInstrumentModelModsPanel = new javax.swing.JPanel();
-        addInstrumentModelButton = new javax.swing.JButton();
-        modifyInstrumentModelButton = new javax.swing.JButton();
-        deleteInstrumentModelButton = new javax.swing.JButton();
         stepExplorerOperationPanel = new javax.swing.JPanel();
         stepExplorerOperationTypeHeaderPanel = new javax.swing.JPanel();
         stepExplorerOperationTypeLabel = new javax.swing.JLabel();
@@ -418,7 +448,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         addBaseLineButton = new javax.swing.JButton();
         deleteBaseLineButton = new javax.swing.JButton();
         baselineUseAllCheckbox = new javax.swing.JCheckBox();
-        stepExplorerGlobalSources = new javax.swing.JPanel();
+        stepExplorerNSources = new javax.swing.JPanel();
         stepExplorerNSourcesPanel = new javax.swing.JPanel();
         stepExplorerNSourcesScrollPane = new javax.swing.JScrollPane();
         stepExplorerNSourcesList = new javax.swing.JList();
@@ -427,15 +457,24 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerNSourcesButtonPanel = new javax.swing.JPanel();
         deleteNSourceButton = new javax.swing.JButton();
         addNSourceButton = new javax.swing.JButton();
-        stepExplorerStepNameLabel = new javax.swing.JLabel();
-        stepExplorerStepNameText = new javax.swing.JTextField();
-        stepExplorerSourcesPanel = new javax.swing.JPanel();
-        stepExplorerSourcesModsPanel = new javax.swing.JPanel();
-        addSourceButton = new javax.swing.JButton();
-        modifySourceButton = new javax.swing.JButton();
-        deleteSourceButton1 = new javax.swing.JButton();
-        stepExplorerSourcesScrollPane = new javax.swing.JScrollPane();
-        stepExplorerSourcesList = new javax.swing.JList();
+        stepExplorerESources = new javax.swing.JPanel();
+        stepExplorerESourcesPanel = new javax.swing.JPanel();
+        stepExplorerESourcesScrollPane = new javax.swing.JScrollPane();
+        stepExplorerESourcesList = new javax.swing.JList();
+        stepExplorerESourcesEditPanel = new javax.swing.JPanel();
+        stepExplorerModifyESourceText = new javax.swing.JTextField();
+        stepExplorerESourcesButtonPanel = new javax.swing.JPanel();
+        deleteESourceButton = new javax.swing.JButton();
+        addESourceButton = new javax.swing.JButton();
+        stepExplorerInstrumentModel = new javax.swing.JPanel();
+        stepExplorerInstrumentModelPanel = new javax.swing.JPanel();
+        stepExplorerInstrumentModelScrollPane = new javax.swing.JScrollPane();
+        stepExplorerInstrumentModelList = new javax.swing.JList();
+        stepExplorerInstrumentModelEditPanel = new javax.swing.JPanel();
+        stepExplorerModifyInstrumentModelText = new javax.swing.JTextField();
+        stepExplorerInstrumentModelButtonPanel = new javax.swing.JPanel();
+        deleteInstrumentModelButton = new javax.swing.JButton();
+        addInstrumentModelButton = new javax.swing.JButton();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -451,6 +490,21 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        stepExplorerStepNameLabel.setFont(new java.awt.Font("Dialog", 1, 18));
+        stepExplorerStepNameLabel.setText("Step");
+        stepExplorerPanel.add(stepExplorerStepNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, -1, 30));
+
+        stepExplorerStepNameText.setEditable(false);
+        stepExplorerStepNameText.setFont(new java.awt.Font("Dialog", 1, 18));
+        stepExplorerStepNameText.setToolTipText("This is the name of the displayed step");
+        stepExplorerStepNameText.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                stepExplorerStepNameTextKeyReleased(evt);
+            }
+        });
+
+        stepExplorerPanel.add(stepExplorerStepNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 10, 260, 30));
+
         stepExplorerRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         stepExplorerRevertButton.setText("Revert");
         stepExplorerRevertButton.setEnabled(false);
@@ -463,44 +517,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             }
         });
 
-        stepExplorerPanel.add(stepExplorerRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 620, 100, -1));
-
-        stepExplorerInstrumentModelPanel.setLayout(new java.awt.BorderLayout());
-
-        stepExplorerInstrumentModelPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Instrument Model"));
-        stepExplorerInstrumentModelScrollPane.setViewportView(stepExplorerInstrumentModelList);
-
-        stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelScrollPane, java.awt.BorderLayout.CENTER);
-
-        stepExplorerInstrumentModelModsPanel.setLayout(new java.awt.GridBagLayout());
-
-        addInstrumentModelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addInstrumentModelButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        addInstrumentModelButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        addInstrumentModelButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerInstrumentModelModsPanel.add(addInstrumentModelButton, gridBagConstraints);
-
-        modifyInstrumentModelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
-        modifyInstrumentModelButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        modifyInstrumentModelButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        modifyInstrumentModelButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerInstrumentModelModsPanel.add(modifyInstrumentModelButton, gridBagConstraints);
-
-        deleteInstrumentModelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteInstrumentModelButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        deleteInstrumentModelButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        deleteInstrumentModelButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerInstrumentModelModsPanel.add(deleteInstrumentModelButton, gridBagConstraints);
-
-        stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelModsPanel, java.awt.BorderLayout.SOUTH);
-
-        stepExplorerPanel.add(stepExplorerInstrumentModelPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 200, 180, 150));
+        stepExplorerPanel.add(stepExplorerRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 640, 100, -1));
 
         stepExplorerOperationPanel.setLayout(new java.awt.BorderLayout());
 
@@ -664,14 +681,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerOperationPanel.add(stepExplorerOperationAttributesPanel, java.awt.BorderLayout.CENTER);
 
-        stepExplorerPanel.add(stepExplorerOperationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 370, 700, 240));
+        stepExplorerPanel.add(stepExplorerOperationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 390, 700, 240));
 
         stepExplorerOutputDataPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         stepExplorerOutputDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Data Column"));
         stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 140, 20));
 
-        stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 200, 180, 70));
+        stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 200, 180, 70));
 
         baselineGlobalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -770,11 +787,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         baselineGlobalPanel.add(BaselineSelectionPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 300, 160));
 
-        stepExplorerPanel.add(baselineGlobalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 320, 310));
+        stepExplorerPanel.add(baselineGlobalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 320, 340));
 
-        stepExplorerGlobalSources.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        stepExplorerNSources.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        stepExplorerGlobalSources.setBorder(javax.swing.BorderFactory.createTitledBorder("Sources"));
+        stepExplorerNSources.setBorder(javax.swing.BorderFactory.createTitledBorder("Sources"));
         stepExplorerNSourcesPanel.setLayout(new java.awt.BorderLayout());
 
         stepExplorerNSourcesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
@@ -841,61 +858,155 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerNSourcesPanel.add(stepExplorerNSourcesEditPanel, java.awt.BorderLayout.SOUTH);
 
-        stepExplorerGlobalSources.add(stepExplorerNSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 160, 150));
+        stepExplorerNSources.add(stepExplorerNSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 160, 150));
 
-        stepExplorerPanel.add(stepExplorerGlobalSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 0, 180, 190));
+        stepExplorerPanel.add(stepExplorerNSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 0, 180, 190));
 
-        stepExplorerStepNameLabel.setFont(new java.awt.Font("Dialog", 1, 18));
-        stepExplorerStepNameLabel.setText("Step");
-        stepExplorerPanel.add(stepExplorerStepNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, -1, 30));
+        stepExplorerESources.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        stepExplorerStepNameText.setEditable(false);
-        stepExplorerStepNameText.setFont(new java.awt.Font("Dialog", 1, 18));
-        stepExplorerStepNameText.setToolTipText("This is the name of the displayed step");
-        stepExplorerStepNameText.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                stepExplorerStepNameTextKeyReleased(evt);
+        stepExplorerESources.setBorder(javax.swing.BorderFactory.createTitledBorder("Extra Sources"));
+        stepExplorerESourcesPanel.setLayout(new java.awt.BorderLayout());
+
+        stepExplorerESourcesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                stepExplorerESourcesListValueChanged(evt);
             }
         });
 
-        stepExplorerPanel.add(stepExplorerStepNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 10, 260, 30));
+        stepExplorerESourcesScrollPane.setViewportView(stepExplorerESourcesList);
 
-        stepExplorerSourcesPanel.setLayout(new java.awt.BorderLayout());
+        stepExplorerESourcesPanel.add(stepExplorerESourcesScrollPane, java.awt.BorderLayout.CENTER);
 
-        stepExplorerSourcesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Extra Sources"));
-        stepExplorerSourcesModsPanel.setLayout(new java.awt.GridBagLayout());
+        stepExplorerESourcesEditPanel.setLayout(new java.awt.BorderLayout());
 
-        addSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addSourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        addSourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        addSourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        stepExplorerModifyESourceText.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                stepExplorerModifyESourceTextKeyReleased(evt);
+            }
+        });
+
+        stepExplorerESourcesEditPanel.add(stepExplorerModifyESourceText, java.awt.BorderLayout.CENTER);
+
+        stepExplorerESourcesButtonPanel.setLayout(new java.awt.GridBagLayout());
+
+        deleteESourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteESourceButton.setToolTipText("Remove the selected Station from the list");
+        deleteESourceButton.setEnabled(false);
+        deleteESourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteESourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteESourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        deleteESourceButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteESourceButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel.add(addSourceButton, gridBagConstraints);
+        stepExplorerESourcesButtonPanel.add(deleteESourceButton, gridBagConstraints);
 
-        modifySourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
-        modifySourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        modifySourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        modifySourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        addESourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addESourceButton.setToolTipText("Add the station entered to the list");
+        addESourceButton.setEnabled(false);
+        addESourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addESourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addESourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        addESourceButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addESourceButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel.add(modifySourceButton, gridBagConstraints);
+        stepExplorerESourcesButtonPanel.add(addESourceButton, gridBagConstraints);
 
-        deleteSourceButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteSourceButton1.setMaximumSize(new java.awt.Dimension(30, 25));
-        deleteSourceButton1.setMinimumSize(new java.awt.Dimension(30, 25));
-        deleteSourceButton1.setPreferredSize(new java.awt.Dimension(30, 25));
+        stepExplorerESourcesEditPanel.add(stepExplorerESourcesButtonPanel, java.awt.BorderLayout.SOUTH);
+
+        stepExplorerESourcesPanel.add(stepExplorerESourcesEditPanel, java.awt.BorderLayout.SOUTH);
+
+        stepExplorerESources.add(stepExplorerESourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 160, 150));
+
+        stepExplorerPanel.add(stepExplorerESources, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 0, 180, 190));
+
+        stepExplorerInstrumentModel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        stepExplorerInstrumentModel.setBorder(javax.swing.BorderFactory.createTitledBorder("Instrument Model"));
+        stepExplorerInstrumentModelPanel.setLayout(new java.awt.BorderLayout());
+
+        stepExplorerInstrumentModelList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                stepExplorerInstrumentModelListValueChanged(evt);
+            }
+        });
+
+        stepExplorerInstrumentModelScrollPane.setViewportView(stepExplorerInstrumentModelList);
+
+        stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelScrollPane, java.awt.BorderLayout.CENTER);
+
+        stepExplorerInstrumentModelEditPanel.setLayout(new java.awt.BorderLayout());
+
+        stepExplorerModifyInstrumentModelText.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                stepExplorerModifyInstrumentModelTextKeyReleased(evt);
+            }
+        });
+
+        stepExplorerInstrumentModelEditPanel.add(stepExplorerModifyInstrumentModelText, java.awt.BorderLayout.CENTER);
+
+        stepExplorerInstrumentModelButtonPanel.setLayout(new java.awt.GridBagLayout());
+
+        deleteInstrumentModelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteInstrumentModelButton.setToolTipText("Remove the selected Station from the list");
+        deleteInstrumentModelButton.setEnabled(false);
+        deleteInstrumentModelButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteInstrumentModelButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteInstrumentModelButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        deleteInstrumentModelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteInstrumentModelButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel.add(deleteSourceButton1, gridBagConstraints);
+        stepExplorerInstrumentModelButtonPanel.add(deleteInstrumentModelButton, gridBagConstraints);
 
-        stepExplorerSourcesPanel.add(stepExplorerSourcesModsPanel, java.awt.BorderLayout.SOUTH);
+        addInstrumentModelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addInstrumentModelButton.setToolTipText("Add the station entered to the list");
+        addInstrumentModelButton.setEnabled(false);
+        addInstrumentModelButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addInstrumentModelButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addInstrumentModelButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        addInstrumentModelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addInstrumentModelButtonActionPerformed(evt);
+            }
+        });
 
-        stepExplorerSourcesScrollPane.setViewportView(stepExplorerSourcesList);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        stepExplorerInstrumentModelButtonPanel.add(addInstrumentModelButton, gridBagConstraints);
 
-        stepExplorerSourcesPanel.add(stepExplorerSourcesScrollPane, java.awt.BorderLayout.CENTER);
+        stepExplorerInstrumentModelEditPanel.add(stepExplorerInstrumentModelButtonPanel, java.awt.BorderLayout.SOUTH);
 
-        stepExplorerPanel.add(stepExplorerSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 0, 180, 190));
+        stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelEditPanel, java.awt.BorderLayout.SOUTH);
+
+        stepExplorerInstrumentModel.add(stepExplorerInstrumentModelPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 160, 150));
+
+        stepExplorerPanel.add(stepExplorerInstrumentModel, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 200, 180, 190));
 
         stepExplorerScrollPanel.setViewportView(stepExplorerPanel);
 
@@ -905,6 +1016,86 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
     }// </editor-fold>//GEN-END:initComponents
 
+    private void addInstrumentModelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addInstrumentModelButtonActionPerformed
+    String toBeAddedInstrumentModel = this.stepExplorerModifyInstrumentModelText.getText();
+        if(!toBeAddedInstrumentModel.equals("")){
+            DefaultListModel theStationModel = (DefaultListModel)stepExplorerInstrumentModelList.getModel();
+            theStationModel.addElement(toBeAddedInstrumentModel);
+            stepExplorerInstrumentModelList.setBackground(NOT_INHERITED_FROM_PARENT);
+        }
+    }//GEN-LAST:event_addInstrumentModelButtonActionPerformed
+
+    private void deleteInstrumentModelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteInstrumentModelButtonActionPerformed
+        DefaultListModel theSourceModel = (DefaultListModel)stepExplorerInstrumentModelList.getModel();
+        int[] selectedIndices = stepExplorerInstrumentModelList.getSelectedIndices();
+        while(selectedIndices.length>0){
+            theSourceModel.remove(selectedIndices[0]);
+            selectedIndices = stepExplorerInstrumentModelList.getSelectedIndices();
+            stepExplorerInstrumentModelList.setBackground(NOT_INHERITED_FROM_PARENT);
+        }
+        if(theSourceModel.size()==0){
+            this.deleteInstrumentModelButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_deleteInstrumentModelButtonActionPerformed
+
+    private void stepExplorerModifyInstrumentModelTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_stepExplorerModifyInstrumentModelTextKeyReleased
+        String toBeAddedInstrumentModel = stepExplorerModifyInstrumentModelText.getText();
+        if(!toBeAddedInstrumentModel.equals("")){
+            this.addInstrumentModelButton.setEnabled(true);
+        }else{
+            this.addInstrumentModelButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_stepExplorerModifyInstrumentModelTextKeyReleased
+
+    private void stepExplorerInstrumentModelListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerInstrumentModelListValueChanged
+        int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
+        if(selectedIndices.length>0){
+            this.deleteInstrumentModelButton.setEnabled(true);
+        }else{
+            this.deleteInstrumentModelButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_stepExplorerInstrumentModelListValueChanged
+    
+    private void addESourceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addESourceButtonActionPerformed
+        String toBeAddedESource = this.stepExplorerModifyESourceText.getText();
+        if(!toBeAddedESource.equals("")){
+            DefaultListModel theStationModel = (DefaultListModel)stepExplorerESourcesList.getModel();
+            theStationModel.addElement(toBeAddedESource);
+            stepExplorerESourcesList.setBackground(NOT_INHERITED_FROM_PARENT);
+        }
+    }//GEN-LAST:event_addESourceButtonActionPerformed
+    
+    private void deleteESourceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteESourceButtonActionPerformed
+        DefaultListModel theSourceModel = (DefaultListModel)stepExplorerESourcesList.getModel();
+        int[] selectedIndices = stepExplorerESourcesList.getSelectedIndices();
+        while(selectedIndices.length>0){
+            theSourceModel.remove(selectedIndices[0]);
+            selectedIndices = stepExplorerESourcesList.getSelectedIndices();
+            stepExplorerESourcesList.setBackground(NOT_INHERITED_FROM_PARENT);
+        }
+        if(theSourceModel.size()==0){
+            this.deleteESourceButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_deleteESourceButtonActionPerformed
+    
+    private void stepExplorerModifyESourceTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_stepExplorerModifyESourceTextKeyReleased
+        String toBeAddedESource = stepExplorerModifyESourceText.getText();
+        if(!toBeAddedESource.equals("")){
+            this.addESourceButton.setEnabled(true);
+        }else{
+            this.addESourceButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_stepExplorerModifyESourceTextKeyReleased
+    
+    private void stepExplorerESourcesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerESourcesListValueChanged
+        int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
+        if(selectedIndices.length>0){
+            this.deleteESourceButton.setEnabled(true);
+        }else{
+            this.deleteESourceButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_stepExplorerESourcesListValueChanged
+    
     private void stepExplorerNSourcesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerNSourcesListValueChanged
         int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
         if(selectedIndices.length>0){
@@ -997,16 +1188,15 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                         }else if(choice == 1){
                             //existing BBS step to be added
                             if(itsParentBBSStep != null){
-                                itsBBSStep = new BBSStep(newStepName);
-                                itsBBSStep.setStrategy(BBSStepDataManager.getInstance().getStrategy());
+                                itsBBSStep = BBSStepDataManager.getInstance().getBBSStep(itsParentBBSStep,newStepName);
                                 itsBBSStep.setParentStep(itsParentBBSStep);
                                 BBSStepDataManager.getInstance().getStrategy().cascadingStepInsertion(itsParentBBSStep.getName(),itsBBSStep);
-                                
+                                BBSStepDataManager.getInstance().assureBBSStepIsInCollection(itsParentBBSStep);
                             }else{
                                 //adding new BBS Step to a strategy
                                 
-                                itsBBSStep = new BBSStep(newStepName);
-                                BBSStepDataManager.getInstance().getStrategy().addChildStep(itsBBSStep);
+                                itsBBSStep = BBSStepDataManager.getInstance().getBBSStep(null,newStepName);
+                                BBSStepDataManager.getInstance().getStrategy().cascadingStepInsertion(null,itsBBSStep);
                                 
                             }
                             warning=true;
@@ -1031,15 +1221,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                     
                     //new BBS step to be added
                     if(itsBBSStep == null && itsParentBBSStep != null){
-                        itsBBSStep = new BBSStep(this.stepExplorerStepNameText.getText());
-                        itsBBSStep.setStrategy(BBSStepDataManager.getInstance().getStrategy());
-                        itsBBSStep.setParentStep(itsParentBBSStep);
+                        itsBBSStep = BBSStepDataManager.getInstance().getBBSStep(itsParentBBSStep,this.stepExplorerStepNameText.getText());
                         BBSStepDataManager.getInstance().getStrategy().cascadingStepInsertion(itsParentBBSStep.getName(),itsBBSStep);
+                        BBSStepDataManager.getInstance().assureBBSStepIsInCollection(itsParentBBSStep);
                         
                     }else if(itsBBSStep == null && itsParentBBSStep == null){
                         //adding new BBS Step to a strategy
-                        itsBBSStep = new BBSStep(this.stepExplorerStepNameText.getText());
-                        BBSStepDataManager.getInstance().getStrategy().addChildStep(itsBBSStep);
+                        itsBBSStep = BBSStepDataManager.getInstance().getBBSStep(null,this.stepExplorerStepNameText.getText());
+                        BBSStepDataManager.getInstance().getStrategy().cascadingStepInsertion(null,itsBBSStep);
                         
                     }
                     if(itsBBSStep != null){
@@ -1068,11 +1257,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JPanel BBSStepExplorerPanel;
     private javax.swing.JPanel BaselineSelectionPanel;
     private javax.swing.JButton addBaseLineButton;
+    private javax.swing.JButton addESourceButton;
     private javax.swing.JButton addInstrumentModelButton;
     private javax.swing.JButton addNSourceButton;
     private javax.swing.JButton addSolvableParmButton;
     private javax.swing.JButton addSolvableParmButton1;
-    private javax.swing.JButton addSourceButton;
     private javax.swing.JPanel baseLineCorrelationPanel;
     private javax.swing.JPanel baselineGlobalPanel;
     private javax.swing.JPanel baselineModsPanel;
@@ -1086,15 +1275,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JScrollPane blCorrelationTypeScrollPane;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JButton deleteBaseLineButton;
+    private javax.swing.JButton deleteESourceButton;
     private javax.swing.JButton deleteInstrumentModelButton;
     private javax.swing.JButton deleteNSourceButton;
     private javax.swing.JButton deleteSolvableParmButton;
     private javax.swing.JButton deleteSolvableParmButton1;
-    private javax.swing.JButton deleteSourceButton1;
-    private javax.swing.JButton modifyInstrumentModelButton;
     private javax.swing.JButton modifySolvableParmButton;
     private javax.swing.JButton modifySolvableParmButton1;
-    private javax.swing.JButton modifySourceButton;
     private javax.swing.JPanel seOperationAttributeGroup1;
     private javax.swing.JPanel seOperationAttributeGroup2;
     private javax.swing.JPanel seOperationAttributeGroup3;
@@ -1118,12 +1305,22 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JList seSolvableParmList1;
     private javax.swing.JScrollPane seSolvableParmScrollPane;
     private javax.swing.JScrollPane seSolvableParmScrollPane1;
-    private javax.swing.JPanel stepExplorerGlobalSources;
+    private javax.swing.JPanel stepExplorerESources;
+    private javax.swing.JPanel stepExplorerESourcesButtonPanel;
+    private javax.swing.JPanel stepExplorerESourcesEditPanel;
+    private javax.swing.JList stepExplorerESourcesList;
+    private javax.swing.JPanel stepExplorerESourcesPanel;
+    private javax.swing.JScrollPane stepExplorerESourcesScrollPane;
+    private javax.swing.JPanel stepExplorerInstrumentModel;
+    private javax.swing.JPanel stepExplorerInstrumentModelButtonPanel;
+    private javax.swing.JPanel stepExplorerInstrumentModelEditPanel;
     private javax.swing.JList stepExplorerInstrumentModelList;
-    private javax.swing.JPanel stepExplorerInstrumentModelModsPanel;
     private javax.swing.JPanel stepExplorerInstrumentModelPanel;
     private javax.swing.JScrollPane stepExplorerInstrumentModelScrollPane;
+    private javax.swing.JTextField stepExplorerModifyESourceText;
+    private javax.swing.JTextField stepExplorerModifyInstrumentModelText;
     private javax.swing.JTextField stepExplorerModifyNSourceText;
+    private javax.swing.JPanel stepExplorerNSources;
     private javax.swing.JPanel stepExplorerNSourcesButtonPanel;
     private javax.swing.JPanel stepExplorerNSourcesEditPanel;
     private javax.swing.JList stepExplorerNSourcesList;
@@ -1139,11 +1336,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JPanel stepExplorerPanel;
     private javax.swing.JButton stepExplorerRevertButton;
     private javax.swing.JScrollPane stepExplorerScrollPanel;
-    private javax.swing.JList stepExplorerSourcesList;
-    private javax.swing.JPanel stepExplorerSourcesModsPanel;
     private javax.swing.JPanel stepExplorerSourcesModsPanel2;
-    private javax.swing.JPanel stepExplorerSourcesPanel;
-    private javax.swing.JScrollPane stepExplorerSourcesScrollPane;
     private javax.swing.JLabel stepExplorerStepNameLabel;
     private javax.swing.JTextField stepExplorerStepNameText;
     // End of variables declaration//GEN-END:variables

@@ -62,23 +62,13 @@ public class BBSStrategy{
     }
     public void addChildStep(BBSStep childStep){
         childSteps.add(childStep);
-        childStep.setStrategy(this);
     }
     public void removeAllChildSteps(){
         for(BBSStep childStep : this.childSteps){
             childStep.removeAllChildSteps();
-            removeChildStep(childStep);
         }
-        childSteps.trimToSize();
+        childSteps.clear();
     }
-    public void removeChildStep(BBSStep childStep){
-        if(childSteps.contains(childStep)){
-            childSteps.remove(childStep);
-            childSteps.trimToSize();
-            childStep.setParentStep(null);
-        }
-    }
-    
     public void moveChildStep(BBSStep childStep, int newIndex){
         if(hasChildStep(childStep) && childSteps.size()>newIndex && newIndex >= 0){
             childSteps.remove(childStep);
@@ -102,14 +92,36 @@ public class BBSStrategy{
         }
     }
     
-    public void cascadingStepDeletion(BBSStep parent,BBSStep child){
+    public void cascadingStepDeletion(BBSStep parent,BBSStep child, int indexOfChild){
         //strategy step
-        if(parent==null){
-            addChildStep(child);
-        }else{
-            for(BBSStep childStep : this.childSteps){
-                childStep.cascadingStepDeletion(parent,child);
+       if(parent==null){
+            if(indexOfChild >= 0 && indexOfChild < childSteps.size()){
+                BBSStep currentStepInIndex = childSteps.get(indexOfChild);
+                if(child.getName().equals(currentStepInIndex.getName())){
+                    this.childSteps.removeElementAt(indexOfChild);
+                    childSteps.trimToSize();
+                }
             }
         }
+        for(BBSStep childStep : this.childSteps){
+            childStep.cascadingStepDeletion(parent,child,indexOfChild);
+        }
+    }
+    public void cascadingStepMove(BBSStep parent,BBSStep child, int oldIndexOfChild, int newIndexOfChild){
+        
+        if(parent == null){
+            if(oldIndexOfChild >= 0 && oldIndexOfChild < childSteps.size()){
+                BBSStep currentStepInIndex = childSteps.get(oldIndexOfChild);
+                if(child.getName().equals(currentStepInIndex.getName())){
+                    this.childSteps.removeElementAt(oldIndexOfChild);
+                    this.childSteps.add(newIndexOfChild,currentStepInIndex);
+                    childSteps.trimToSize();
+                }
+            }
+        }
+        for(BBSStep childStep : this.childSteps){
+            childStep.cascadingStepMove(parent,child,oldIndexOfChild,newIndexOfChild);
+        }
+        
     }
 }
