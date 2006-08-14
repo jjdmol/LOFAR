@@ -208,6 +208,10 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         this.wdsTimeText.setText(StrategyWDSTime.limits);
         this.integrationFrequencyText.setText(StrategyIntegrationFrequency.limits);
         this.integrationTimeText.setText(StrategyIntegrationTime.limits);
+        wdsFrequencyText.setBackground(Color.WHITE);
+        wdsTimeText.setBackground(Color.WHITE);
+        integrationFrequencyText.setBackground(Color.WHITE);
+        integrationTimeText.setBackground(Color.WHITE);
         this.correlationSelectionBox.setSelectedItem(StrategyCorrelationSelection.limits);
         this.fillSelectionListFromString(correlationTypeList,StrategyCorrelationType.limits,true);
         if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
@@ -229,6 +233,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     
     private void initialize() {
         this.buttonPanel1.addButton("Save Settings");
+        this.stationsList.setModel(new DefaultListModel());
     }
     
     private void initPanel() {
@@ -1267,10 +1272,58 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save Settings") {
-            saveInput();
-            BBSStepDataManager.getInstance().persistStrategy();
-            this.setupStepTree(StrategySteps);
-            this.setupStepsList(BBSStepDataManager.getInstance().getStepNames());
+            boolean warning = false;
+            //perform input validation on the double values in the form
+            String integrationTime = this.integrationTimeText.getText();
+            String integrationFrequency = this.integrationFrequencyText.getText();
+            String wdsTime = this.wdsTimeText.getText();
+            String wdsFrequency = this.wdsFrequencyText.getText();
+            
+            if(!integrationTime.equals("")){
+                try {
+                    Double itime = Double.parseDouble(integrationTime);
+                    integrationTimeText.setBackground(Color.WHITE);
+                } catch (NumberFormatException ex) {
+                    integrationTimeText.setBackground(Color.RED);
+                    warning=true;
+                }
+            }
+            if(!integrationFrequency.equals("")){
+                try {
+                    Double itime = Double.parseDouble(integrationFrequency);
+                    integrationFrequencyText.setBackground(Color.WHITE);
+                } catch (NumberFormatException ex) {
+                    warning=true;
+                    integrationFrequencyText.setBackground(Color.RED);
+                }
+            }
+            if(!wdsFrequency.equals("")){
+                try {
+                    Double itime = Double.parseDouble(wdsFrequency);
+                    wdsFrequencyText.setBackground(Color.WHITE);
+                } catch (NumberFormatException ex) {
+                    warning=true;
+                    wdsFrequencyText.setBackground(Color.RED);
+                }
+            }
+            if(!wdsTime.equals("")){
+                try {
+                    Double itime = Double.parseDouble(wdsTime);
+                    wdsTimeText.setBackground(Color.WHITE);
+                } catch (NumberFormatException ex) {
+                    warning=true;
+                    wdsTimeText.setBackground(Color.RED);
+                }
+            }
+            if(!warning){
+                itsMainFrame.setHourglassCursor();
+                saveInput();
+                BBSStepDataManager.getInstance().persistStrategy();
+                this.setupStepTree(StrategySteps);
+                this.setupStepsList(BBSStepDataManager.getInstance().getStepNames());
+                itsMainFrame.setNormalCursor();
+            }
+            
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
@@ -1290,7 +1343,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_stationsUseAllCheckboxStateChanged
     
     private void strategyRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_strategyRevertButtonActionPerformed
+        itsMainFrame.setHourglassCursor();
         this.restoreBBSStrategyPanel();
+        itsMainFrame.setNormalCursor();
     }//GEN-LAST:event_strategyRevertButtonActionPerformed
     
     private jOTDBnode itsNode = null;
