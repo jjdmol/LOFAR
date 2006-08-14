@@ -42,8 +42,8 @@ public class BBSStepData{
     //Step Instrument Model
     private Vector<String> instrumentModel = null;
     //Step Integration
-    private double integrationFrequency = -1;
-    private double integrationTime = -1;
+    private double integrationFrequency = -1.0;
+    private double integrationTime = -1.0;
     //Step Correlation
     private String correlationSelection = null;
     private Vector<String> correlationType = null;
