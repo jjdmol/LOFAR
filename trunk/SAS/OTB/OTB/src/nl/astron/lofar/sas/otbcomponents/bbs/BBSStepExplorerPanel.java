@@ -174,9 +174,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     
     private void initialize() {
         buttonPanel1.addButton("Save step and close");
+        buttonPanel1.addButton("Close");
         if(itsBBSStep == null){
             stepExplorerStepNameText.setEditable(true);
         }
+        this.stepExplorerNSourcesList.setModel(new DefaultListModel());
+        this.stepExplorerESourcesList.setModel(new DefaultListModel());
+        this.stepExplorerInstrumentModelList.setModel(new DefaultListModel());
     }
     
     private void initPanel() {
@@ -276,6 +280,68 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 this.fillList(this.stepExplorerInstrumentModelList,new Vector<String>());
             }
         }
+        //integration
+        //time
+        this.integrationTimeText.setBackground(NOT_INHERITED_FROM_PARENT);
+        if(stepData.getIntegrationTime() != -1.0){
+            this.integrationTimeText.setText(""+stepData.getIntegrationTime());
+        }else{
+            if(theBBSStep.hasParentStep()){
+                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
+                if(stepParentData.getIntegrationTime() != -1.0){
+                    this.integrationTimeText.setText(""+stepParentData.getIntegrationTime());
+                    integrationTimeText.setBackground(INHERITED_FROM_PARENT);
+                }
+            }else{
+                this.integrationTimeText.setText("");
+            }
+        }
+        //frequency
+        this.integrationFrequencyText.setBackground(NOT_INHERITED_FROM_PARENT);
+        if(stepData.getIntegrationFrequency() != -1.0){
+            this.integrationFrequencyText.setText(""+stepData.getIntegrationFrequency());
+        }else{
+            if(theBBSStep.hasParentStep()){
+                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
+                if(stepParentData.getIntegrationFrequency() != -1.0){
+                    this.integrationFrequencyText.setText(""+stepParentData.getIntegrationFrequency());
+                    integrationFrequencyText.setBackground(INHERITED_FROM_PARENT);
+                }
+            }else{
+                this.integrationFrequencyText.setText("");
+            }
+        }
+        //correlation
+        //type
+        this.stepExplorerCorrelationTypeList.setBackground(NOT_INHERITED_FROM_PARENT);
+        if(stepData.getCorrelationType() != null){
+            this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,stepData.getCorrelationType());
+        }else{
+            if(theBBSStep.hasParentStep()){
+                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
+                if(stepParentData.getCorrelationType() != null){
+                    this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,stepParentData.getCorrelationType());
+                    stepExplorerCorrelationTypeList.setBackground(INHERITED_FROM_PARENT);
+                }
+            }else{
+                this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,new Vector<String>());
+            }
+        }
+        //selection
+        this.stepExplorerCorrelationSelectionBox.setBackground(NOT_INHERITED_FROM_PARENT);
+        if(stepData.getCorrelationSelection() != null){
+            this.stepExplorerCorrelationSelectionBox.setSelectedItem(stepData.getCorrelationSelection());
+        }else{
+            if(theBBSStep.hasParentStep()){
+                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
+                if(stepParentData.getCorrelationSelection() != null){
+                    this.stepExplorerCorrelationSelectionBox.setSelectedItem(stepParentData.getCorrelationSelection());
+                    stepExplorerCorrelationSelectionBox.setBackground(INHERITED_FROM_PARENT);
+                }
+            }else{
+                this.stepExplorerCorrelationSelectionBox.setSelectedIndex(0);
+            }
+        }
         //add other variables
         
         
@@ -319,10 +385,16 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         if(!createList(stepExplorerNSourcesList).equals(aStepData.getSources())){
             aStepData.setSources(createList(stepExplorerNSourcesList));
         }
+        if(aStepData.getSources()!= null && aStepData.getSources().size()==0){
+            aStepData.setSources(null);
+        }
         //extra sources
         Vector<String> currentESources = aStepData.getExtraSources();
         if(!createList(stepExplorerESourcesList).equals(aStepData.getExtraSources())){
             aStepData.setExtraSources(createList(stepExplorerESourcesList));
+        }
+        if(aStepData.getExtraSources()!= null && aStepData.getExtraSources().size()==0){
+            aStepData.setExtraSources(null);
         }
         //output data column
         if(stepExplorerOutputDataText.getText().equals("")){
@@ -335,6 +407,37 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         if(!createList(stepExplorerInstrumentModelList).equals(aStepData.getInstrumentModel())){
             aStepData.setInstrumentModel(createList(stepExplorerInstrumentModelList));
         }
+        if(aStepData.getInstrumentModel()!= null && aStepData.getInstrumentModel().size()==0){
+            aStepData.setInstrumentModel(null);
+        }
+        //Integration
+        //Time
+        if(this.integrationTimeText.getText().equals("")){
+            aStepData.setIntegrationTime(-1.0);
+        }else{
+            aStepData.setIntegrationTime(Double.parseDouble(integrationTimeText.getText()));
+        }
+        //Frequency
+        if(this.integrationFrequencyText.getText().equals("")){
+            aStepData.setIntegrationFrequency(-1.0);
+        }else{
+            aStepData.setIntegrationFrequency(Double.parseDouble(integrationFrequencyText.getText()));
+        }
+        //Correlation
+        //Type
+        Vector<String> currentCTypes = createVectorFromSelectionList(this.stepExplorerCorrelationTypeList);
+        if(!currentCTypes.equals(aStepData.getCorrelationType())){
+            aStepData.setCorrelationType(currentCTypes);
+        }
+        if(aStepData.getCorrelationType()!= null && aStepData.getCorrelationType().size()==0){
+            aStepData.setCorrelationType(null);
+        }
+        //Selection
+        String selectedCSelection = this.stepExplorerCorrelationSelectionBox.getSelectedItem().toString();
+        if(!selectedCSelection.equals(aStepData.getCorrelationSelection())){
+            aStepData.setCorrelationSelection(selectedCSelection);
+        }
+        
         //add other variables
     }
     
@@ -434,20 +537,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         seSolvableParmList = new javax.swing.JList();
         stepExplorerOutputDataPanel = new javax.swing.JPanel();
         stepExplorerOutputDataText = new javax.swing.JTextField();
-        baselineGlobalPanel = new javax.swing.JPanel();
-        baseLineCorrelationPanel = new javax.swing.JPanel();
-        blCorrelationSelectionLabel = new javax.swing.JLabel();
-        blCorrelationSelectionBox = new javax.swing.JComboBox();
-        blCorrelationTypeLabel = new javax.swing.JLabel();
-        blCorrelationTypeScrollPane = new javax.swing.JScrollPane();
-        blCorrelationTypeList = new javax.swing.JList();
-        BaselineSelectionPanel = new javax.swing.JPanel();
-        baselineStationsScrollPane = new javax.swing.JScrollPane();
-        baselineStationsTable = new javax.swing.JTable();
-        baselineModsPanel = new javax.swing.JPanel();
-        addBaseLineButton = new javax.swing.JButton();
-        deleteBaseLineButton = new javax.swing.JButton();
-        baselineUseAllCheckbox = new javax.swing.JCheckBox();
         stepExplorerNSources = new javax.swing.JPanel();
         stepExplorerNSourcesPanel = new javax.swing.JPanel();
         stepExplorerNSourcesScrollPane = new javax.swing.JScrollPane();
@@ -475,6 +564,26 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerInstrumentModelButtonPanel = new javax.swing.JPanel();
         deleteInstrumentModelButton = new javax.swing.JButton();
         addInstrumentModelButton = new javax.swing.JButton();
+        stepExplorerCorrelationPanel = new javax.swing.JPanel();
+        stepExplorerCorrelationSelectionLabel = new javax.swing.JLabel();
+        stepExplorerCorrelationSelectionBox = new javax.swing.JComboBox();
+        stepExplorerCorrelationTypeLabel = new javax.swing.JLabel();
+        stepExplorerCorrelationTypeScrollPane = new javax.swing.JScrollPane();
+        stepExplorerCorrelationTypeList = new javax.swing.JList();
+        integrationIntervalPanel = new javax.swing.JPanel();
+        integrationFrequencyLabel = new javax.swing.JLabel();
+        integrationFrequencyText = new javax.swing.JTextField();
+        integrationFrequencyUnitLabel = new javax.swing.JLabel();
+        integrationTimeLabel = new javax.swing.JLabel();
+        integrationTimeText = new javax.swing.JTextField();
+        integrationTimeUnitLabel = new javax.swing.JLabel();
+        BaselineSelectionPanel = new javax.swing.JPanel();
+        baselineStationsScrollPane = new javax.swing.JScrollPane();
+        baselineStationsTable = new javax.swing.JTable();
+        baselineModsPanel = new javax.swing.JPanel();
+        addBaseLineButton = new javax.swing.JButton();
+        deleteBaseLineButton = new javax.swing.JButton();
+        baselineUseAllCheckbox = new javax.swing.JCheckBox();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -681,113 +790,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerOperationPanel.add(stepExplorerOperationAttributesPanel, java.awt.BorderLayout.CENTER);
 
-        stepExplorerPanel.add(stepExplorerOperationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 390, 700, 240));
+        stepExplorerPanel.add(stepExplorerOperationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 400, 700, 240));
 
         stepExplorerOutputDataPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         stepExplorerOutputDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Data Column"));
         stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 140, 20));
 
-        stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 200, 180, 70));
-
-        baselineGlobalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        baselineGlobalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Baseline"));
-        baseLineCorrelationPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        baseLineCorrelationPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Correlation"));
-        blCorrelationSelectionLabel.setText("Selection :");
-        baseLineCorrelationPanel.add(blCorrelationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
-
-        blCorrelationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AUTO", "CROSS", "ALL" }));
-        blCorrelationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
-        baseLineCorrelationPanel.add(blCorrelationSelectionBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 80, -1));
-
-        blCorrelationTypeLabel.setText("Type :");
-        baseLineCorrelationPanel.add(blCorrelationTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, -1, -1));
-
-        blCorrelationTypeList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "XX", "XY", "YX", "YY" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        blCorrelationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY. \n\nAs an example, suppose you select 'XX' here and set Selection to AUTO, then the X polarization signal of each station is correlated with itself. However if we set Selection to CROSS, then the X polarization of station A is correlated with the X polarization of station B for each base line.");
-        blCorrelationTypeScrollPane.setViewportView(blCorrelationTypeList);
-
-        baseLineCorrelationPanel.add(blCorrelationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 50, 80));
-
-        baselineGlobalPanel.add(baseLineCorrelationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 180, 170, 120));
-
-        BaselineSelectionPanel.setLayout(new java.awt.BorderLayout());
-
-        BaselineSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Selection"));
-        baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Station 1", "Station 2"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        baselineStationsTable.setToolTipText("The baselines used");
-        baselineStationsScrollPane.setViewportView(baselineStationsTable);
-
-        BaselineSelectionPanel.add(baselineStationsScrollPane, java.awt.BorderLayout.CENTER);
-
-        baselineModsPanel.setLayout(new java.awt.GridBagLayout());
-
-        addBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        addBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        addBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.ipadx = 7;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
-
-        deleteBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        deleteBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        deleteBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 3;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.ipadx = 6;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        baselineModsPanel.add(deleteBaseLineButton, gridBagConstraints);
-
-        baselineUseAllCheckbox.setText("Use all baselines");
-        baselineUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        baselineUseAllCheckbox.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        baselineUseAllCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                baselineUseAllCheckboxStateChanged(evt);
-            }
-        });
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        baselineModsPanel.add(baselineUseAllCheckbox, gridBagConstraints);
-
-        BaselineSelectionPanel.add(baselineModsPanel, java.awt.BorderLayout.SOUTH);
-
-        baselineGlobalPanel.add(BaselineSelectionPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 300, 160));
-
-        stepExplorerPanel.add(baselineGlobalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 320, 340));
+        stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 330, 180, 60));
 
         stepExplorerNSources.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -1008,6 +1018,123 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerPanel.add(stepExplorerInstrumentModel, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 200, 180, 190));
 
+        stepExplorerCorrelationPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        stepExplorerCorrelationPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Correlation"));
+        stepExplorerCorrelationSelectionLabel.setText("Selection :");
+        stepExplorerCorrelationPanel.add(stepExplorerCorrelationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
+
+        stepExplorerCorrelationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AUTO", "CROSS", "ALL" }));
+        stepExplorerCorrelationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
+        stepExplorerCorrelationPanel.add(stepExplorerCorrelationSelectionBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 80, -1));
+
+        stepExplorerCorrelationTypeLabel.setText("Type :");
+        stepExplorerCorrelationPanel.add(stepExplorerCorrelationTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, -1, -1));
+
+        stepExplorerCorrelationTypeList.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "XX", "XY", "YX", "YY" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        stepExplorerCorrelationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY. \n\nAs an example, suppose you select 'XX' here and set Selection to AUTO, then the X polarization signal of each station is correlated with itself. However if we set Selection to CROSS, then the X polarization of station A is correlated with the X polarization of station B for each base line.");
+        stepExplorerCorrelationTypeScrollPane.setViewportView(stepExplorerCorrelationTypeList);
+
+        stepExplorerCorrelationPanel.add(stepExplorerCorrelationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 50, 80));
+
+        stepExplorerPanel.add(stepExplorerCorrelationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 200, 180, 120));
+
+        integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Integration"));
+        integrationIntervalPanel.setToolTipText("Cell size for integration. Allows the user to perform operations on a lower resolution, which should be faster in most cases");
+        integrationFrequencyLabel.setText("Freq. Interval :");
+        integrationIntervalPanel.add(integrationFrequencyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 20, -1, -1));
+
+        integrationIntervalPanel.add(integrationFrequencyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 20, 70, -1));
+
+        integrationFrequencyUnitLabel.setText("Hz");
+        integrationIntervalPanel.add(integrationFrequencyUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 20, -1, -1));
+
+        integrationTimeLabel.setText("Time Interval :");
+        integrationIntervalPanel.add(integrationTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 50, -1, -1));
+
+        integrationIntervalPanel.add(integrationTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 50, 70, -1));
+
+        integrationTimeUnitLabel.setText("s");
+        integrationIntervalPanel.add(integrationTimeUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 50, 10, -1));
+
+        stepExplorerPanel.add(integrationIntervalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 310, 320, 80));
+
+        BaselineSelectionPanel.setLayout(new java.awt.BorderLayout());
+
+        BaselineSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Baseline Selection"));
+        baselineStationsScrollPane.setPreferredSize(new java.awt.Dimension(453, 250));
+        baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Station 1", "Station 2"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        baselineStationsTable.setToolTipText("The baselines used");
+        baselineStationsScrollPane.setViewportView(baselineStationsTable);
+
+        BaselineSelectionPanel.add(baselineStationsScrollPane, java.awt.BorderLayout.CENTER);
+
+        baselineModsPanel.setLayout(new java.awt.GridBagLayout());
+
+        addBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.ipadx = 7;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
+
+        deleteBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.ipadx = 6;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineModsPanel.add(deleteBaseLineButton, gridBagConstraints);
+
+        baselineUseAllCheckbox.setText("Use all baselines");
+        baselineUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        baselineUseAllCheckbox.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        baselineUseAllCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                baselineUseAllCheckboxStateChanged(evt);
+            }
+        });
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineModsPanel.add(baselineUseAllCheckbox, gridBagConstraints);
+
+        BaselineSelectionPanel.add(baselineModsPanel, java.awt.BorderLayout.SOUTH);
+
+        stepExplorerPanel.add(BaselineSelectionPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 320, 250));
+
         stepExplorerScrollPanel.setViewportView(stepExplorerPanel);
 
         BBSStepExplorerPanel.add(stepExplorerScrollPanel, java.awt.BorderLayout.CENTER);
@@ -1015,16 +1142,16 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         add(BBSStepExplorerPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void addInstrumentModelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addInstrumentModelButtonActionPerformed
-    String toBeAddedInstrumentModel = this.stepExplorerModifyInstrumentModelText.getText();
+        String toBeAddedInstrumentModel = this.stepExplorerModifyInstrumentModelText.getText();
         if(!toBeAddedInstrumentModel.equals("")){
             DefaultListModel theStationModel = (DefaultListModel)stepExplorerInstrumentModelList.getModel();
             theStationModel.addElement(toBeAddedInstrumentModel);
             stepExplorerInstrumentModelList.setBackground(NOT_INHERITED_FROM_PARENT);
         }
     }//GEN-LAST:event_addInstrumentModelButtonActionPerformed
-
+    
     private void deleteInstrumentModelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteInstrumentModelButtonActionPerformed
         DefaultListModel theSourceModel = (DefaultListModel)stepExplorerInstrumentModelList.getModel();
         int[] selectedIndices = stepExplorerInstrumentModelList.getSelectedIndices();
@@ -1037,7 +1164,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             this.deleteInstrumentModelButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteInstrumentModelButtonActionPerformed
-
+    
     private void stepExplorerModifyInstrumentModelTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_stepExplorerModifyInstrumentModelTextKeyReleased
         String toBeAddedInstrumentModel = stepExplorerModifyInstrumentModelText.getText();
         if(!toBeAddedInstrumentModel.equals("")){
@@ -1046,7 +1173,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             this.addInstrumentModelButton.setEnabled(false);
         }
     }//GEN-LAST:event_stepExplorerModifyInstrumentModelTextKeyReleased
-
+    
     private void stepExplorerInstrumentModelListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerInstrumentModelListValueChanged
         int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
         if(selectedIndices.length>0){
@@ -1167,9 +1294,35 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save step and close") {
             boolean warning = false;
+            //perform input validation on the double values in the form
+            String integrationTime = this.integrationTimeText.getText();
+            String integrationFrequency = this.integrationFrequencyText.getText();
+            
+            if(!integrationTime.equals("")){
+                try {
+                    Double itime = Double.parseDouble(integrationTime);
+                    integrationTimeText.setBackground(Color.WHITE);
+                } catch (NumberFormatException ex) {
+                    integrationTimeText.setBackground(Color.RED);
+                    warning=true;
+                }
+            }
+            if(!integrationFrequency.equals("")){
+                 try {
+                    Double itime = Double.parseDouble(integrationFrequency);
+                    integrationFrequencyText.setBackground(Color.WHITE);
+                } catch (NumberFormatException ex) {
+                    warning=true;
+                    integrationFrequencyText.setBackground(Color.RED);
+                }
+            }
+            
             //perform input validation on step name if a new step is entered
-            if(itsBBSStep == null){
+            if(itsBBSStep == null && !warning){
+                integrationTimeText.setBackground(Color.WHITE);
+                integrationFrequencyText.setBackground(Color.WHITE);
                 String newStepName = this.stepExplorerStepNameText.getText();
+                
                 if(newStepName.equals("")){
                     warning=true;
                     stepExplorerStepNameText.setBackground(Color.RED);
@@ -1239,12 +1392,15 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                         //warning
                     }
                 }
-                
-                
                 //tell parents that panel is ready to close...
                 ActionEvent closeEvt = new ActionEvent(this,1,"ReadyToClose");
                 fireActionListenerActionPerformed(closeEvt);
             }
+        }
+        if(evt.getActionCommand() == "Close"){
+            //tell parents that panel is ready to close...
+            ActionEvent closeEvt = new ActionEvent(this,1,"ReadyToClose");
+            fireActionListenerActionPerformed(closeEvt);
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
@@ -1262,17 +1418,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JButton addNSourceButton;
     private javax.swing.JButton addSolvableParmButton;
     private javax.swing.JButton addSolvableParmButton1;
-    private javax.swing.JPanel baseLineCorrelationPanel;
-    private javax.swing.JPanel baselineGlobalPanel;
     private javax.swing.JPanel baselineModsPanel;
     private javax.swing.JScrollPane baselineStationsScrollPane;
     private javax.swing.JTable baselineStationsTable;
     private javax.swing.JCheckBox baselineUseAllCheckbox;
-    private javax.swing.JComboBox blCorrelationSelectionBox;
-    private javax.swing.JLabel blCorrelationSelectionLabel;
-    private javax.swing.JLabel blCorrelationTypeLabel;
-    private javax.swing.JList blCorrelationTypeList;
-    private javax.swing.JScrollPane blCorrelationTypeScrollPane;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JButton deleteBaseLineButton;
     private javax.swing.JButton deleteESourceButton;
@@ -1280,6 +1429,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JButton deleteNSourceButton;
     private javax.swing.JButton deleteSolvableParmButton;
     private javax.swing.JButton deleteSolvableParmButton1;
+    private javax.swing.JLabel integrationFrequencyLabel;
+    private javax.swing.JTextField integrationFrequencyText;
+    private javax.swing.JLabel integrationFrequencyUnitLabel;
+    private javax.swing.JPanel integrationIntervalPanel;
+    private javax.swing.JLabel integrationTimeLabel;
+    private javax.swing.JTextField integrationTimeText;
+    private javax.swing.JLabel integrationTimeUnitLabel;
     private javax.swing.JButton modifySolvableParmButton;
     private javax.swing.JButton modifySolvableParmButton1;
     private javax.swing.JPanel seOperationAttributeGroup1;
@@ -1305,6 +1461,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JList seSolvableParmList1;
     private javax.swing.JScrollPane seSolvableParmScrollPane;
     private javax.swing.JScrollPane seSolvableParmScrollPane1;
+    private javax.swing.JPanel stepExplorerCorrelationPanel;
+    private javax.swing.JComboBox stepExplorerCorrelationSelectionBox;
+    private javax.swing.JLabel stepExplorerCorrelationSelectionLabel;
+    private javax.swing.JLabel stepExplorerCorrelationTypeLabel;
+    private javax.swing.JList stepExplorerCorrelationTypeList;
+    private javax.swing.JScrollPane stepExplorerCorrelationTypeScrollPane;
     private javax.swing.JPanel stepExplorerESources;
     private javax.swing.JPanel stepExplorerESourcesButtonPanel;
     private javax.swing.JPanel stepExplorerESourcesEditPanel;
