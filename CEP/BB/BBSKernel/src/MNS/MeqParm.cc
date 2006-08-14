@@ -45,7 +45,7 @@ void MeqParm::removeFunklets()
 {}
 
 void MeqParm::fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>&,
-			    const MeqDomain&)
+                const MeqDomain&)
 {}
 
 const vector<MeqFunklet*>& MeqParm::getFunklets() const
@@ -76,7 +76,12 @@ void MeqParm::updateFromTable()
   throw Exception("MeqParm::updateFromTable should not be called");
 }
 
-
+#ifdef EXPR_GRAPH
+std::string MeqParm::getLabel()
+{
+    return std::string("MeqParm\\n" + (itsIsSolvable ? std::string("[*]") : std::string("[ ]")) + " " + itsName);
+}
+#endif
 
 MeqPExpr::MeqPExpr (const MeqExpr& expr)
 : MeqExpr    (expr),

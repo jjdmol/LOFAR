@@ -31,7 +31,7 @@ using namespace casa;
 namespace LOFAR {
 
 MeqBaseDFTPS::MeqBaseDFTPS (const MeqExpr& left, const MeqExpr& right,
-			    const MeqExpr& lmn)
+                const MeqExpr& lmn)
   : itsLeft  (left),
     itsRight (right),
     itsLMN   (lmn)
@@ -55,7 +55,7 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
   const MeqResultVec& lmn = itsLMN.getResultVecSynced (request, lmnRes);
   const MeqResult& nk = lmn[2];
   DBGASSERT (nk.getValue().nelements() == request.ny()  ||
-	     nk.getValue().nelements() == 1);
+         nk.getValue().nelements() == 1);
   // Calculate the left and right station Jones matrix elements.
   // A delta in the station source predict is only available if multiple
   // frequency channels are used.
@@ -148,22 +148,29 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
     if (eval) {
       MeqMatrix pres(makedcomplex(0,0), request.nx(), request.ny(), false);
       for (int iy=0; iy<request.ny(); ++iy) {
-	dcomplex tmpl = left.getPerturbedValue(spinx).getDComplex(0,iy);
-	dcomplex tmpr = right.getPerturbedValue(spinx).getDComplex(0,iy);
-	double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
-	dcomplex factor;
-	if (multFreq) {
-	  dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex(0,iy);
-	  dcomplex deltar = rightDelta.getPerturbedValue(spinx).getDComplex(0,iy);
-	  factor = deltar * conj(deltal);
-	}
-	pres.fillRowWithProducts(tmpr * conj(tmpl) / tmpnk, factor, iy);
-	result.setPerturbedValue (spinx, pres);
-	result.setPerturbedParm (spinx, perturbedParm);
+    dcomplex tmpl = left.getPerturbedValue(spinx).getDComplex(0,iy);
+    dcomplex tmpr = right.getPerturbedValue(spinx).getDComplex(0,iy);
+    double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
+    dcomplex factor;
+    if (multFreq) {
+      dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex(0,iy);
+      dcomplex deltar = rightDelta.getPerturbedValue(spinx).getDComplex(0,iy);
+      factor = deltar * conj(deltal);
+    }
+    pres.fillRowWithProducts(tmpr * conj(tmpl) / tmpnk, factor, iy);
+    result.setPerturbedValue (spinx, pres);
+    result.setPerturbedParm (spinx, perturbedParm);
       }
     }
   }
   return result;
 }
+
+#ifdef EXPR_GRAPH
+std::string MeqBaseDFTPS::getLabel()
+{
+    return std::string("MeqBaseDFTPS\\nBaseline DFT of a point source");
+}
+#endif
 
 }

@@ -75,7 +75,7 @@ MeqResultVec MeqDFTPS::getResultVec (const MeqRequest& request)
   // Note that both UVW and LMN are scalars or vectors in time.
   // They always have nx==1 in their MeqMatrices.
   MeqMatrix r1 = (u*lrk.getValue() + v*mrk.getValue() +
-		  w*(nrk.getValue() - 1.)) * wavel0;
+          w*(nrk.getValue() - 1.)) * wavel0;
   result.setValue (tocomplex(cos(r1), sin(r1)));
   if (calcDelta) {
     MeqResult& delta = resultVec[1];
@@ -108,19 +108,26 @@ MeqResultVec MeqDFTPS::getResultVec (const MeqRequest& request)
     }
     if (eval) {
       r1 = (resU.getPerturbedValue(spinx) * lrk.getPerturbedValue(spinx) +
-	    resV.getPerturbedValue(spinx) * mrk.getPerturbedValue(spinx) +
-	    resW.getPerturbedValue(spinx) * 
-	    (nrk.getPerturbedValue(spinx) - 1.)) * wavel0;
+        resV.getPerturbedValue(spinx) * mrk.getPerturbedValue(spinx) +
+        resW.getPerturbedValue(spinx) *
+        (nrk.getPerturbedValue(spinx) - 1.)) * wavel0;
       result.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
       result.setPerturbedParm (spinx, perturbedParm);
       if (calcDelta) {
-	MeqResult& delta = resultVec[1];
-	r1 *= dwavel;
-	delta.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
+    MeqResult& delta = resultVec[1];
+    r1 *= dwavel;
+    delta.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
       }
     }
   }
   return resultVec;
 }
+
+#ifdef EXPR_GRAPH
+std::string MeqDFTPS::getLabel()
+{
+    return std::string("MeqDFTPS\\nStation DFT of a point source\\n" + itsUVW->getStation()->getName());
+}
+#endif
 
 }

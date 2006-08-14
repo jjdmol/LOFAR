@@ -41,10 +41,10 @@ class MeqPointSource: public MeqSource
 {
 public:
   MeqPointSource (const string& name,
-		  const string& groupName,
-		  const MeqExpr& fluxI, const MeqExpr& fluxQ,
-		  const MeqExpr& fluxU, const MeqExpr& fluxV,
-		  const MeqExpr& ra, const MeqExpr& dec);
+          const string& groupName,
+          const MeqExpr& fluxI, const MeqExpr& fluxQ,
+          const MeqExpr& fluxU, const MeqExpr& fluxV,
+          const MeqExpr& ra, const MeqExpr& dec);
 
   virtual ~MeqPointSource();
 

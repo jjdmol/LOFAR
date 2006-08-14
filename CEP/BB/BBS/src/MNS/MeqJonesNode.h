@@ -48,7 +48,7 @@ class MeqJonesNode: public MeqJonesExprRep
 public:
   // Construct from four Jones elements.
   MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
-		const MeqExpr& elem21, const MeqExpr& elem22);
+        const MeqExpr& elem21, const MeqExpr& elem22);
 
   virtual ~MeqJonesNode();
 
@@ -56,6 +56,10 @@ public:
   virtual MeqJonesResult getJResult (const MeqRequest&);
 
 private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   MeqExpr itsExpr11;
   MeqExpr itsExpr12;
   MeqExpr itsExpr21;

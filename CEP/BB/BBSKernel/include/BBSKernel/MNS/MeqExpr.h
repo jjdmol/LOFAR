@@ -122,6 +122,11 @@ public:
   // Precalculate the result and store it in the cache.
   virtual void precalculate (const MeqRequest&);
 
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+  void writeExpressionGraph(std::ostream &os);
+#endif
+
 protected:
   // Add a child to this node.
   // It also increases NParents in the child.
@@ -220,6 +225,13 @@ public:
     { return itsRep->getResultVecSynced (request, result); }
   // </group>
 
+#ifdef EXPR_GRAPH
+  void writeExpressionGraph(std::ostream &os)
+  {
+      itsRep->writeExpressionGraph(os);
+  }
+#endif
+
 protected:
   MeqExprRep* itsRep;
 };
@@ -234,6 +246,10 @@ public:
   virtual MeqResult getResult (const MeqRequest&);
 
 private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   MeqExpr itsReal;
   MeqExpr itsImag;
 };
@@ -250,6 +266,10 @@ public:
   virtual MeqResult getResult (const MeqRequest&);
 
 private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   MeqExpr itsAmpl;
   MeqExpr itsPhase;
 };

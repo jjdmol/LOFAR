@@ -28,7 +28,7 @@
 namespace LOFAR {
 
 MeqJonesNode::MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
-			    const MeqExpr& elem21, const MeqExpr& elem22)
+                const MeqExpr& elem21, const MeqExpr& elem22)
 : itsExpr11 (elem11),
   itsExpr12 (elem12),
   itsExpr21 (elem21),
@@ -54,5 +54,12 @@ MeqJonesResult MeqJonesNode::getJResult (const MeqRequest& request)
   }
   return res;
 }
+
+#ifdef EXPR_GRAPH
+std::string MeqJonesNode::getLabel()
+{
+    return std::string("MeqJonesNode\\n2x2 Jones matrix");
+}
+#endif
 
 }

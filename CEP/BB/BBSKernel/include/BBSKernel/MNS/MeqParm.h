@@ -73,11 +73,11 @@ public:
 
   // Read the polcs for the given domain.
   virtual void fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>&,
-			     const MeqDomain&);
+                 const MeqDomain&);
 
   // Initialize the solvable parameter for the given domain.
   virtual int initDomain (const vector<MeqDomain>&, int& pertIndex,
-			  vector<int>& scidIndex);
+              vector<int>& scidIndex);
 
   // Make parameter solvable, thus perturbed values have to be calculated.
   // spidIndex is the index of the first spid of this parm.
@@ -110,6 +110,10 @@ private:
   MeqParm (const MeqParm&);
   MeqParm& operator= (const MeqParm&);
 
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   string        itsName;
   bool          itsIsSolvable;
 };
@@ -139,10 +143,10 @@ public:
   void removeFunklets()
     { itsParmPtr->removeFunklets(); }
   void fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>& parmSet,
-		     const MeqDomain& domain)
+             const MeqDomain& domain)
     { itsParmPtr->fillFunklets (parmSet, domain); }
   int initDomain (const vector<MeqDomain>& solveDomains, int& pertIndex,
-			  vector<int>& scidIndex)
+              vector<int>& scidIndex)
     { return itsParmPtr->initDomain (solveDomains, pertIndex, scidIndex); }
   void setSolvable (bool solvable)
     { itsParmPtr->setSolvable (solvable); }
@@ -166,7 +170,7 @@ private:
 
 
 
-class MeqParmGroup 
+class MeqParmGroup
 {
 public:
   typedef map<string,MeqPExpr>::const_iterator const_iterator;

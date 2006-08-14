@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 
 #include <BBS/MNS/MeqStatUVW.h>
-#include <BBS/MNS/MeqStation.h>
 #include <BBS/MNS/MeqPhaseRef.h>
 #include <BBS/MNS/MeqRequest.h>
 #include <BBS/MNS/MeqExpr.h>
@@ -41,7 +40,7 @@ using namespace casa;
 namespace LOFAR {
 
 MeqStatUVW::MeqStatUVW (MeqStation* station,
-			const MeqPhaseRef* phaseRef)
+            const MeqPhaseRef* phaseRef)
 : itsStation   (station),
   itsPhaseRef  (phaseRef),
   itsU         (0),
@@ -98,8 +97,8 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   // Get position relative to center to keep values small.
   const MVPosition& mvcpos = itsPhaseRef->earthPosition().getValue();
   MVPosition mvpos(posx.getValue().getDouble() - mvcpos(0),
-		   posy.getValue().getDouble() - mvcpos(1),
-		   posz.getValue().getDouble() - mvcpos(2));
+           posy.getValue().getDouble() - mvcpos(1),
+           posz.getValue().getDouble() - mvcpos(2));
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
   LOG_TRACE_FLOW_STR ("mbl " << mbl);

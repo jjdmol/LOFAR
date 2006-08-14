@@ -57,7 +57,7 @@ MeqJonesResult MeqBaseLinPS::getJResult (const MeqRequest& request)
     MeqResult& resXY = result.result12();
     MeqResult& resYX = result.result21();
     MeqResult& resYY = result.result22();
-    // Calculate the source fluxes. 
+    // Calculate the source fluxes.
     MeqResult ikBuf, qkBuf, ukBuf, vkBuf;
     const MeqResult& ik = itsSource->getI().getResultSynced (request, ikBuf);
     const MeqResult& qk = itsSource->getQ().getResultSynced (request, qkBuf);
@@ -78,49 +78,56 @@ MeqJonesResult MeqBaseLinPS::getJResult (const MeqRequest& request)
       bool eval1 = false;
       bool eval2 = false;
       if (dft.isDefined(spinx)) {
-	eval1 = true;
-	eval2 = true;
-	perturbedParm = dft.getPerturbedParm (spinx);
+    eval1 = true;
+    eval2 = true;
+    perturbedParm = dft.getPerturbedParm (spinx);
       } else {
-	if (ik.isDefined(spinx)) {
-	  eval1 = true;
-	  perturbedParm = ik.getPerturbedParm (spinx);
-	} else if (qk.isDefined(spinx)) {
-	  eval1 = true;
-	  perturbedParm = qk.getPerturbedParm (spinx);
-	}
-	if (uk.isDefined(spinx)) {
-	  eval2 = true;
-	  perturbedParm = uk.getPerturbedParm (spinx);
-	} else if (vk.isDefined(spinx)) {
-	  eval2 = true;
-	  perturbedParm = vk.getPerturbedParm (spinx);
-	}
+    if (ik.isDefined(spinx)) {
+      eval1 = true;
+      perturbedParm = ik.getPerturbedParm (spinx);
+    } else if (qk.isDefined(spinx)) {
+      eval1 = true;
+      perturbedParm = qk.getPerturbedParm (spinx);
+    }
+    if (uk.isDefined(spinx)) {
+      eval2 = true;
+      perturbedParm = uk.getPerturbedParm (spinx);
+    } else if (vk.isDefined(spinx)) {
+      eval2 = true;
+      perturbedParm = vk.getPerturbedParm (spinx);
+    }
       }
       if (eval1) {
-	const MeqMatrix& ikp = ik.getPerturbedValue(spinx);
-	const MeqMatrix& qkp = qk.getPerturbedValue(spinx);
-	resXX.setPerturbedValue (spinx,
-				 (ikp+qkp) * dft.getPerturbedValue(spinx));
-	resYY.setPerturbedValue (spinx,
-				 (ikp-qkp) * dft.getPerturbedValue(spinx));
-	resXX.setPerturbedParm (spinx, perturbedParm);
-	resYY.setPerturbedParm (spinx, perturbedParm);
+    const MeqMatrix& ikp = ik.getPerturbedValue(spinx);
+    const MeqMatrix& qkp = qk.getPerturbedValue(spinx);
+    resXX.setPerturbedValue (spinx,
+                 (ikp+qkp) * dft.getPerturbedValue(spinx));
+    resYY.setPerturbedValue (spinx,
+                 (ikp-qkp) * dft.getPerturbedValue(spinx));
+    resXX.setPerturbedParm (spinx, perturbedParm);
+    resYY.setPerturbedParm (spinx, perturbedParm);
       }
       if (eval2) {
-	MeqMatrix uvk = tocomplex(uk.getPerturbedValue(spinx),
-				  vk.getPerturbedValue(spinx));
-	resXY.setPerturbedValue (spinx,
-				 uvk * dft.getPerturbedValue(spinx));
-	resYX.setPerturbedValue (spinx,
-				 conj(uvk) * dft.getPerturbedValue(spinx));
-	resXY.setPerturbedParm (spinx, perturbedParm);
-	resYX.setPerturbedParm (spinx, perturbedParm);
+    MeqMatrix uvk = tocomplex(uk.getPerturbedValue(spinx),
+                  vk.getPerturbedValue(spinx));
+    resXY.setPerturbedValue (spinx,
+                 uvk * dft.getPerturbedValue(spinx));
+    resYX.setPerturbedValue (spinx,
+                 conj(uvk) * dft.getPerturbedValue(spinx));
+    resXY.setPerturbedParm (spinx, perturbedParm);
+    resYX.setPerturbedParm (spinx, perturbedParm);
       }
     }
   }
   //timer.stop();
   return result;
 }
+
+#ifdef EXPR_GRAPH
+std::string MeqBaseLinPS::getLabel()
+{
+    return std::string("MeqBaseLinPS\\nPrediction of a linearly polarized point source\\n" + itsSource->getName() + " (" + itsSource->getGroupName() + ")");
+}
+#endif
 
 }

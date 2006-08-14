@@ -33,7 +33,7 @@
 #include <BBS/MNS/MeqDFTPS.h>
 
 namespace LOFAR {
-  
+
 // \ingroup BBS
 // \addtogroup MNS
 // @{
@@ -45,13 +45,17 @@ class MeqBaseLinPS: public MeqJonesExprRep
 {
 public:
   MeqBaseLinPS (const MeqExpr& dft, MeqPointSource* src);
-       
+
   ~MeqBaseLinPS();
 
   // Calculate the results for the given domain.
   virtual MeqJonesResult getJResult (const MeqRequest&);
 
 private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   MeqExpr         itsDFT;
   MeqPointSource* itsSource;
 };
