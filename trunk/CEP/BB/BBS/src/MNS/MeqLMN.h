@@ -62,6 +62,10 @@ public:
   MeqResultVec getAnResultVec (const MeqRequest& request);
 
 private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   MeqSource*         itsSource;
   const MeqPhaseRef* itsPhaseRef;
 };

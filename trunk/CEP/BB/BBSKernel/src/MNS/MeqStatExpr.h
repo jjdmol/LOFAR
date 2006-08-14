@@ -46,10 +46,10 @@ class MeqStatExpr: public MeqJonesExprRep
 public:
   // Construct from the various subexpressions.
   MeqStatExpr (const MeqExpr& faradayRotation,
-	       const MeqExpr& dipoleRotation,
-	       const MeqExpr& dipoleEllipticity,
-	       const MeqExpr& gain1,
-	       const MeqExpr& gain2);
+           const MeqExpr& dipoleRotation,
+           const MeqExpr& dipoleEllipticity,
+           const MeqExpr& gain1,
+           const MeqExpr& gain2);
 
   virtual ~MeqStatExpr();
 

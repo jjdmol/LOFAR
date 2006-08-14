@@ -27,10 +27,10 @@
 namespace LOFAR {
 
 MeqPointSource::MeqPointSource (const string& name,
-				const string& groupName,
-				const MeqExpr& fluxI, const MeqExpr& fluxQ,
-				const MeqExpr& fluxU, const MeqExpr& fluxV,
-				const MeqExpr& ra, const MeqExpr& dec)
+                const string& groupName,
+                const MeqExpr& fluxI, const MeqExpr& fluxQ,
+                const MeqExpr& fluxU, const MeqExpr& fluxV,
+                const MeqExpr& ra, const MeqExpr& dec)
 : MeqSource (name, groupName, ra, dec),
   itsI      (fluxI),
   itsQ      (fluxQ),

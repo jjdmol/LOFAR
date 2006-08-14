@@ -29,6 +29,7 @@
 //# Includes
 #include <BBS/MNS/MeqResult.h>
 #include <BBS/MNS/MeqRequest.h>
+#include <BBS/MNS/MeqStation.h>
 #include <Common/lofar_map.h>
 #include <measures/Measures/MeasFrame.h>
 
@@ -66,6 +67,11 @@ public:
 
   // Set the UVW coordinate for the given time.
   void set (double time, double u, double v, double w);
+
+  const MeqStation *getStation() const
+  {
+      return itsStation;
+  }
 
 private:
   struct MeqTime

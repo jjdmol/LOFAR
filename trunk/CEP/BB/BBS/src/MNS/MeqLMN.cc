@@ -204,4 +204,11 @@ MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
   return result;
 }
 
+#ifdef EXPR_GRAPH
+std::string MeqLMN::getLabel()
+{
+    return std::string("MeqLMN\\nImage plane coordinates of a point source\\n" + itsSource->getName() + " (" + itsSource->getGroupName() + ")");
+}
+#endif
+
 }

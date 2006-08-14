@@ -41,8 +41,8 @@ using namespace casa;
 namespace LOFAR {
 
 MeqJonesCMul3::MeqJonesCMul3 (const MeqJonesExpr& left,
-			      const MeqJonesExpr& mid,
-			      const MeqJonesExpr& right)
+                  const MeqJonesExpr& mid,
+                  const MeqJonesExpr& right)
 : itsLeft  (left),
   itsMid   (mid),
   itsRight (right)
@@ -164,11 +164,11 @@ v21_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r11_r),_mm_mul_pd(t21_r,r11_i))
 v22_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t21_r,r21_r),_mm_mul_pd(t21_i,r21_i)),_mm_add_pd(_mm_mul_pd(t22_r,r22_r),_mm_mul_pd(t22_i,r22_i)));
 v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r21_r),_mm_mul_pd(t21_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t22_i,r22_r),_mm_mul_pd(t22_r,r22_i)));
   }
-  
+
   result11.setValue (v11);
   result12.setValue (v12);
   result21.setValue (v21);
-  result22.setValue (v22); 
+  result22.setValue (v22);
 
   // Determine which values are perturbed and determine the perturbation.
   const MeqParmFunklet* perturbedParm;
@@ -194,40 +194,40 @@ v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r21_r),_mm_mul_pd(t21_r,r21_i))
       eval12 = eval21 = eval22 = true;
     } else {
       if (l11.isDefined(spinx)) {
-	perturbedParm = l11.getPerturbedParm(spinx);
-	eval11 = true;
-	eval12 = true;
+    perturbedParm = l11.getPerturbedParm(spinx);
+    eval11 = true;
+    eval12 = true;
       } else if (l12.isDefined(spinx)) {
-	perturbedParm = l12.getPerturbedParm(spinx);
-	eval11 = true;
-	eval12 = true;
+    perturbedParm = l12.getPerturbedParm(spinx);
+    eval11 = true;
+    eval12 = true;
       }
       if (l21.isDefined(spinx)) {
-	perturbedParm = l21.getPerturbedParm(spinx);
-	eval21 = true;
-	eval22 = true;
+    perturbedParm = l21.getPerturbedParm(spinx);
+    eval21 = true;
+    eval22 = true;
       } else if (l22.isDefined(spinx)) {
-	perturbedParm = l22.getPerturbedParm(spinx);
-	eval21 = true;
-	eval22 = true;
+    perturbedParm = l22.getPerturbedParm(spinx);
+    eval21 = true;
+    eval22 = true;
       }
       if (r11.isDefined(spinx)) {
-	perturbedParm = r11.getPerturbedParm(spinx);
-	eval11 = true;
-	eval21 = true;
+    perturbedParm = r11.getPerturbedParm(spinx);
+    eval11 = true;
+    eval21 = true;
       } else if (r12.isDefined(spinx)) {
-	perturbedParm = r12.getPerturbedParm(spinx);
-	eval11 = true;
-	eval21 = true;
+    perturbedParm = r12.getPerturbedParm(spinx);
+    eval11 = true;
+    eval21 = true;
       }
       if (r21.isDefined(spinx)) {
-	perturbedParm = r21.getPerturbedParm(spinx);
-	eval12 = true;
-	eval22 = true;
+    perturbedParm = r21.getPerturbedParm(spinx);
+    eval12 = true;
+    eval22 = true;
       } else if (r22.isDefined(spinx)) {
-	perturbedParm = r22.getPerturbedParm(spinx);
-	eval12 = true;
-	eval22 = true;
+    perturbedParm = r22.getPerturbedParm(spinx);
+    eval12 = true;
+    eval22 = true;
       }
     }
     if (eval11 || eval12 || eval21 || eval22) {
@@ -245,41 +245,41 @@ v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r21_r),_mm_mul_pd(t21_r,r21_i))
       const MeqMatrix& mr22 = r22.getPerturbedValue(spinx);
 
       if (eval11 || eval12) {
-	v = ml11.getDComplex();
-	__m128d l11_r = _mm_set1_pd(real(v)), l11_i = _mm_set1_pd(imag(v));
-	v = ml12.getDComplex();
-	__m128d l12_r = _mm_set1_pd(real(v)), l12_i = _mm_set1_pd(imag(v));
+    v = ml11.getDComplex();
+    __m128d l11_r = _mm_set1_pd(real(v)), l11_i = _mm_set1_pd(imag(v));
+    v = ml12.getDComplex();
+    __m128d l12_r = _mm_set1_pd(real(v)), l12_i = _mm_set1_pd(imag(v));
 
-	__m128d *m11_r, *m11_i;
-	mm11.dcomplexStorage((const double *&) m11_r, (const double *&) m11_i);
-	__m128d *m12_r, *m12_i;
-	mm12.dcomplexStorage((const double *&) m12_r, (const double *&) m12_i);
-	__m128d *m21_r, *m21_i;
-	mm21.dcomplexStorage((const double *&) m21_r, (const double *&) m21_i);
-	__m128d *m22_r, *m22_i;
-	mm22.dcomplexStorage((const double *&) m22_r, (const double *&) m22_i);
+    __m128d *m11_r, *m11_i;
+    mm11.dcomplexStorage((const double *&) m11_r, (const double *&) m11_i);
+    __m128d *m12_r, *m12_i;
+    mm12.dcomplexStorage((const double *&) m12_r, (const double *&) m12_i);
+    __m128d *m21_r, *m21_i;
+    mm21.dcomplexStorage((const double *&) m21_r, (const double *&) m21_i);
+    __m128d *m22_r, *m22_i;
+    mm22.dcomplexStorage((const double *&) m22_r, (const double *&) m22_i);
 
-	if (eval11 && eval12) {
-	  v = mr11.getDComplex();
-	  __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
-	  v = mr12.getDComplex();
-	  __m128d r12_r = _mm_set1_pd(real(v)), r12_i = _mm_set1_pd(imag(v));
-	  v = mr21.getDComplex();
-	  __m128d r21_r = _mm_set1_pd(real(v)), r21_i = _mm_set1_pd(imag(v));
-	  v = mr22.getDComplex();
-	  __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
+    if (eval11 && eval12) {
+      v = mr11.getDComplex();
+      __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
+      v = mr12.getDComplex();
+      __m128d r12_r = _mm_set1_pd(real(v)), r12_i = _mm_set1_pd(imag(v));
+      v = mr21.getDComplex();
+      __m128d r21_r = _mm_set1_pd(real(v)), r21_i = _mm_set1_pd(imag(v));
+      v = mr22.getDComplex();
+      __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
 
-	  MeqMatrix &v11 = result11.getPerturbedValueRW(spinx);
-	  MeqMatrix &v12 = result12.getPerturbedValueRW(spinx);
-	  v11.setDCMat(nx, ny);
-	  v12.setDCMat(nx, ny);
+      MeqMatrix &v11 = result11.getPerturbedValueRW(spinx);
+      MeqMatrix &v12 = result12.getPerturbedValueRW(spinx);
+      v11.setDCMat(nx, ny);
+      v12.setDCMat(nx, ny);
 
-	  __m128d *v11_r, *v11_i;
-	  v11.dcomplexStorage((const double *&) v11_r, (const double *&) v11_i);
-	  __m128d *v12_r, *v12_i;
-	  v12.dcomplexStorage((const double *&) v12_r, (const double *&) v12_i);
+      __m128d *v11_r, *v11_i;
+      v11.dcomplexStorage((const double *&) v11_r, (const double *&) v11_i);
+      __m128d *v12_r, *v12_i;
+      v12.dcomplexStorage((const double *&) v12_r, (const double *&) v12_i);
 
-	  for (int _i = 0; _i < n; _i ++) {
+      for (int _i = 0; _i < n; _i ++) {
 t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r[_i]),_mm_mul_pd(l11_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r[_i]),_mm_mul_pd(l12_i,m21_i[_i])));
 t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i[_i]),_mm_mul_pd(l11_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i[_i]),_mm_mul_pd(l12_i,m21_r[_i])));
 t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r[_i]),_mm_mul_pd(l11_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r[_i]),_mm_mul_pd(l12_i,m22_i[_i])));
@@ -288,45 +288,45 @@ v11_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i))
 v11_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
 v12_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
 v12_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
-	  }
+      }
 
-	  result11.setPerturbedParm (spinx, perturbedParm);
-	  result12.setPerturbedParm (spinx, perturbedParm);
-	} else if (eval11) {
-	  v = mr11.getDComplex();
-	  __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
-	  v = mr12.getDComplex();
-	  __m128d r12_r = _mm_set1_pd(real(v)), r12_i = _mm_set1_pd(imag(v));
+      result11.setPerturbedParm (spinx, perturbedParm);
+      result12.setPerturbedParm (spinx, perturbedParm);
+    } else if (eval11) {
+      v = mr11.getDComplex();
+      __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
+      v = mr12.getDComplex();
+      __m128d r12_r = _mm_set1_pd(real(v)), r12_i = _mm_set1_pd(imag(v));
 
-	  MeqMatrix &v11 = result11.getPerturbedValueRW(spinx);
-	  v11.setDCMat(nx, ny);
+      MeqMatrix &v11 = result11.getPerturbedValueRW(spinx);
+      v11.setDCMat(nx, ny);
 
-	  __m128d *v11_r, *v11_i;
-	  v11.dcomplexStorage((const double *&) v11_r, (const double *&) v11_i);
+      __m128d *v11_r, *v11_i;
+      v11.dcomplexStorage((const double *&) v11_r, (const double *&) v11_i);
 
-	  for (int _i = 0; _i < n; _i ++) {
+      for (int _i = 0; _i < n; _i ++) {
 t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r[_i]),_mm_mul_pd(l11_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r[_i]),_mm_mul_pd(l12_i,m21_i[_i])));
 t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i[_i]),_mm_mul_pd(l11_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i[_i]),_mm_mul_pd(l12_i,m21_r[_i])));
 t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r[_i]),_mm_mul_pd(l11_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r[_i]),_mm_mul_pd(l12_i,m22_i[_i])));
 t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i[_i]),_mm_mul_pd(l11_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i[_i]),_mm_mul_pd(l12_i,m22_r[_i])));
 v11_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
 v11_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
-	  }
+      }
 
-	  result11.setPerturbedParm (spinx, perturbedParm);
-	} else /*if (eval12)*/ {
-	  v = mr21.getDComplex();
-	  __m128d r21_r = _mm_set1_pd(real(v)), r21_i = _mm_set1_pd(imag(v));
-	  v = mr22.getDComplex();
-	  __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
+      result11.setPerturbedParm (spinx, perturbedParm);
+    } else /*if (eval12)*/ {
+      v = mr21.getDComplex();
+      __m128d r21_r = _mm_set1_pd(real(v)), r21_i = _mm_set1_pd(imag(v));
+      v = mr22.getDComplex();
+      __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
 
-	  MeqMatrix &v12 = result12.getPerturbedValueRW(spinx);
-	  v12.setDCMat(nx, ny);
+      MeqMatrix &v12 = result12.getPerturbedValueRW(spinx);
+      v12.setDCMat(nx, ny);
 
-	  __m128d *v12_r, *v12_i;
-	  v12.dcomplexStorage((const double *&) v12_r, (const double *&) v12_i);
+      __m128d *v12_r, *v12_i;
+      v12.dcomplexStorage((const double *&) v12_r, (const double *&) v12_i);
 
-	  for (int _i = 0; _i < n; _i ++) {
+      for (int _i = 0; _i < n; _i ++) {
 t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r[_i]),_mm_mul_pd(l11_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r[_i]),_mm_mul_pd(l12_i,m21_i[_i])));
 t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i[_i]),_mm_mul_pd(l11_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i[_i]),_mm_mul_pd(l12_i,m21_r[_i])));
 t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r[_i]),_mm_mul_pd(l11_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r[_i]),_mm_mul_pd(l12_i,m22_i[_i])));
@@ -335,46 +335,46 @@ v12_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i))
 v12_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
       }
 
-	  result12.setPerturbedParm (spinx, perturbedParm);
-	}
+      result12.setPerturbedParm (spinx, perturbedParm);
+    }
       }
 
       if (eval21 || eval22) {
-	v = ml21.getDComplex();
-	__m128d l21_r = _mm_set1_pd(real(v)), l21_i = _mm_set1_pd(imag(v));
-	v = ml22.getDComplex();
-	__m128d l22_r = _mm_set1_pd(real(v)), l22_i = _mm_set1_pd(imag(v));
+    v = ml21.getDComplex();
+    __m128d l21_r = _mm_set1_pd(real(v)), l21_i = _mm_set1_pd(imag(v));
+    v = ml22.getDComplex();
+    __m128d l22_r = _mm_set1_pd(real(v)), l22_i = _mm_set1_pd(imag(v));
 
-	__m128d *m11_r, *m11_i;
-	mm11.dcomplexStorage((const double *&) m11_r, (const double *&) m11_i);
-	__m128d *m12_r, *m12_i;
-	mm12.dcomplexStorage((const double *&) m12_r, (const double *&) m12_i);
-	__m128d *m21_r, *m21_i;
-	mm21.dcomplexStorage((const double *&) m21_r, (const double *&) m21_i);
-	__m128d *m22_r, *m22_i;
-	mm22.dcomplexStorage((const double *&) m22_r, (const double *&) m22_i);
+    __m128d *m11_r, *m11_i;
+    mm11.dcomplexStorage((const double *&) m11_r, (const double *&) m11_i);
+    __m128d *m12_r, *m12_i;
+    mm12.dcomplexStorage((const double *&) m12_r, (const double *&) m12_i);
+    __m128d *m21_r, *m21_i;
+    mm21.dcomplexStorage((const double *&) m21_r, (const double *&) m21_i);
+    __m128d *m22_r, *m22_i;
+    mm22.dcomplexStorage((const double *&) m22_r, (const double *&) m22_i);
 
-	if (eval21 && eval22) {
-	  v = mr11.getDComplex();
-	  __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
-	  v = mr12.getDComplex();
-	  __m128d r12_r = _mm_set1_pd(real(v)), r12_i = _mm_set1_pd(imag(v));
-	  v = mr21.getDComplex();
-	  __m128d r21_r = _mm_set1_pd(real(v)), r21_i = _mm_set1_pd(imag(v));
-	  v = mr22.getDComplex();
-	  __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
+    if (eval21 && eval22) {
+      v = mr11.getDComplex();
+      __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
+      v = mr12.getDComplex();
+      __m128d r12_r = _mm_set1_pd(real(v)), r12_i = _mm_set1_pd(imag(v));
+      v = mr21.getDComplex();
+      __m128d r21_r = _mm_set1_pd(real(v)), r21_i = _mm_set1_pd(imag(v));
+      v = mr22.getDComplex();
+      __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
 
-	  MeqMatrix &v21 = result21.getPerturbedValueRW(spinx);
-	  MeqMatrix &v22 = result22.getPerturbedValueRW(spinx);
-	  v21.setDCMat(nx, ny);
-	  v22.setDCMat(nx, ny);
+      MeqMatrix &v21 = result21.getPerturbedValueRW(spinx);
+      MeqMatrix &v22 = result22.getPerturbedValueRW(spinx);
+      v21.setDCMat(nx, ny);
+      v22.setDCMat(nx, ny);
 
-	  __m128d *v21_r, *v21_i;
-	  v21.dcomplexStorage((const double *&) v21_r, (const double *&) v21_i);
-	  __m128d *v22_r, *v22_i;
-	  v22.dcomplexStorage((const double *&) v22_r, (const double *&) v22_i);
+      __m128d *v21_r, *v21_i;
+      v21.dcomplexStorage((const double *&) v21_r, (const double *&) v21_i);
+      __m128d *v22_r, *v22_i;
+      v22.dcomplexStorage((const double *&) v22_r, (const double *&) v22_i);
 
-	  for (int _i = 0; _i < n; _i ++) {
+      for (int _i = 0; _i < n; _i ++) {
 t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r[_i]),_mm_mul_pd(l21_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r[_i]),_mm_mul_pd(l22_i,m21_i[_i])));
 t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i[_i]),_mm_mul_pd(l21_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i[_i]),_mm_mul_pd(l22_i,m21_r[_i])));
 t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r[_i]),_mm_mul_pd(l21_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r[_i]),_mm_mul_pd(l22_i,m22_i[_i])));
@@ -383,23 +383,23 @@ v21_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i))
 v21_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
 v22_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
 v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
-	  }
+      }
 
-	  result21.setPerturbedParm (spinx, perturbedParm);
-	  result22.setPerturbedParm (spinx, perturbedParm);
-	} else if (eval21) {
-	  v = mr11.getDComplex();
-	  __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
-	  v = mr12.getDComplex();
-	  __m128d r12_r = _mm_set1_pd(real(v)), r12_i = _mm_set1_pd(imag(v));
+      result21.setPerturbedParm (spinx, perturbedParm);
+      result22.setPerturbedParm (spinx, perturbedParm);
+    } else if (eval21) {
+      v = mr11.getDComplex();
+      __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
+      v = mr12.getDComplex();
+      __m128d r12_r = _mm_set1_pd(real(v)), r12_i = _mm_set1_pd(imag(v));
 
-	  MeqMatrix &v21 = result21.getPerturbedValueRW(spinx);
-	  v21.setDCMat(nx, ny);
+      MeqMatrix &v21 = result21.getPerturbedValueRW(spinx);
+      v21.setDCMat(nx, ny);
 
-	  __m128d *v21_r, *v21_i;
-	  v21.dcomplexStorage((const double *&) v21_r, (const double *&) v21_i);
+      __m128d *v21_r, *v21_i;
+      v21.dcomplexStorage((const double *&) v21_r, (const double *&) v21_i);
 
-	  for (int _i = 0; _i < n; _i ++) {
+      for (int _i = 0; _i < n; _i ++) {
 t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r[_i]),_mm_mul_pd(l21_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r[_i]),_mm_mul_pd(l22_i,m21_i[_i])));
 t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i[_i]),_mm_mul_pd(l21_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i[_i]),_mm_mul_pd(l22_i,m21_r[_i])));
 t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r[_i]),_mm_mul_pd(l21_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r[_i]),_mm_mul_pd(l22_i,m22_i[_i])));
@@ -408,30 +408,30 @@ v21_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i))
 v21_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
 }
 
-	  result21.setPerturbedParm (spinx, perturbedParm);
-	} else /*if (eval22)*/ {
-	  v = mr21.getDComplex();
-	  __m128d r21_r = _mm_set1_pd(real(v)), r21_i = _mm_set1_pd(imag(v));
-	  v = mr22.getDComplex();
-	  __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
+      result21.setPerturbedParm (spinx, perturbedParm);
+    } else /*if (eval22)*/ {
+      v = mr21.getDComplex();
+      __m128d r21_r = _mm_set1_pd(real(v)), r21_i = _mm_set1_pd(imag(v));
+      v = mr22.getDComplex();
+      __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
 
-	  MeqMatrix &v22 = result22.getPerturbedValueRW(spinx);
-	  v22.setDCMat(nx, ny);
+      MeqMatrix &v22 = result22.getPerturbedValueRW(spinx);
+      v22.setDCMat(nx, ny);
 
-	  __m128d *v22_r, *v22_i;
-	  v22.dcomplexStorage((const double *&) v22_r, (const double *&) v22_i);
+      __m128d *v22_r, *v22_i;
+      v22.dcomplexStorage((const double *&) v22_r, (const double *&) v22_i);
 
-	  for (int _i = 0; _i < n; _i ++) {
+      for (int _i = 0; _i < n; _i ++) {
 t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r[_i]),_mm_mul_pd(l21_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r[_i]),_mm_mul_pd(l22_i,m21_i[_i])));
 t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i[_i]),_mm_mul_pd(l21_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i[_i]),_mm_mul_pd(l22_i,m21_r[_i])));
 t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r[_i]),_mm_mul_pd(l21_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r[_i]),_mm_mul_pd(l22_i,m22_i[_i])));
 t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i[_i]),_mm_mul_pd(l21_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i[_i]),_mm_mul_pd(l22_i,m22_r[_i])));
 v22_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
 v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
-	}
+    }
 
-	  result22.setPerturbedParm (spinx, perturbedParm);
-	}
+      result22.setPerturbedParm (spinx, perturbedParm);
+    }
       }
     }
   }
@@ -484,13 +484,13 @@ MeqJonesResult MeqJonesCMul3::getJResult (const MeqRequest& request)
       mm11.rep()->type == MeqMatrixRep::ComplexArray &&
       mr11.rep()->type == MeqMatrixRep::ComplexScalar)
     getResultSSE2(result11, result12, result21, result22,
-		  request,
-		  l11, l12, l21, l22,
-		  m11, m12, m21, m22,
-		  r11, r12, r21, r22,
-		  ml11, ml12, ml21, ml22,
-		  mm11, mm12, mm21, mm22,
-		  mr11, mr12, mr21, mr22);
+          request,
+          l11, l12, l21, l22,
+          m11, m12, m21, m22,
+          r11, r12, r21, r22,
+          ml11, ml12, ml21, ml22,
+          mm11, mm12, mm21, mm22,
+          mr11, mr12, mr21, mr22);
   else {
 #endif
     MeqMatrix t11(ml11*mm11 + ml12*mm21);
@@ -510,96 +510,96 @@ MeqJonesResult MeqJonesCMul3::getJResult (const MeqRequest& request)
       bool eval21 = false;
       bool eval22 = false;
       if (m11.isDefined(spinx)) {
-	eval11 = true;
-	perturbedParm = m11.getPerturbedParm(spinx);
+    eval11 = true;
+    perturbedParm = m11.getPerturbedParm(spinx);
       } else if (m12.isDefined(spinx)) {
-	eval11 = true;
-	perturbedParm = m12.getPerturbedParm(spinx);
+    eval11 = true;
+    perturbedParm = m12.getPerturbedParm(spinx);
       } else if (m21.isDefined(spinx)) {
-	eval11 = true;
-	perturbedParm = m21.getPerturbedParm(spinx);
+    eval11 = true;
+    perturbedParm = m21.getPerturbedParm(spinx);
       } else if (m22.isDefined(spinx)) {
-	eval11 = true;
-	perturbedParm = m22.getPerturbedParm(spinx);
+    eval11 = true;
+    perturbedParm = m22.getPerturbedParm(spinx);
       }
       if (eval11) {
-	eval12 = eval21 = eval22 = true;
+    eval12 = eval21 = eval22 = true;
       } else {
-	if (l11.isDefined(spinx)) {
-	  perturbedParm = l11.getPerturbedParm(spinx);
-	  eval11 = true;
-	  eval12 = true;
-	} else if (l12.isDefined(spinx)) {
-	  perturbedParm = l12.getPerturbedParm(spinx);
-	  eval11 = true;
-	  eval12 = true;
-	}
-	if (l21.isDefined(spinx)) {
-	  perturbedParm = l21.getPerturbedParm(spinx);
-	  eval21 = true;
-	  eval22 = true;
-	} else if (l22.isDefined(spinx)) {
-	  perturbedParm = l22.getPerturbedParm(spinx);
-	  eval21 = true;
-	  eval22 = true;
-	}
-	if (r11.isDefined(spinx)) {
-	  perturbedParm = r11.getPerturbedParm(spinx);
-	  eval11 = true;
-	  eval21 = true;
-	} else if (r12.isDefined(spinx)) {
-	  perturbedParm = r12.getPerturbedParm(spinx);
-	  eval11 = true;
-	  eval21 = true;
-	}
-	if (r21.isDefined(spinx)) {
-	  perturbedParm = r21.getPerturbedParm(spinx);
-	  eval12 = true;
-	  eval22 = true;
-	} else if (r22.isDefined(spinx)) {
-	  perturbedParm = r22.getPerturbedParm(spinx);
-	  eval12 = true;
-	  eval22 = true;
-	}
+    if (l11.isDefined(spinx)) {
+      perturbedParm = l11.getPerturbedParm(spinx);
+      eval11 = true;
+      eval12 = true;
+    } else if (l12.isDefined(spinx)) {
+      perturbedParm = l12.getPerturbedParm(spinx);
+      eval11 = true;
+      eval12 = true;
+    }
+    if (l21.isDefined(spinx)) {
+      perturbedParm = l21.getPerturbedParm(spinx);
+      eval21 = true;
+      eval22 = true;
+    } else if (l22.isDefined(spinx)) {
+      perturbedParm = l22.getPerturbedParm(spinx);
+      eval21 = true;
+      eval22 = true;
+    }
+    if (r11.isDefined(spinx)) {
+      perturbedParm = r11.getPerturbedParm(spinx);
+      eval11 = true;
+      eval21 = true;
+    } else if (r12.isDefined(spinx)) {
+      perturbedParm = r12.getPerturbedParm(spinx);
+      eval11 = true;
+      eval21 = true;
+    }
+    if (r21.isDefined(spinx)) {
+      perturbedParm = r21.getPerturbedParm(spinx);
+      eval12 = true;
+      eval22 = true;
+    } else if (r22.isDefined(spinx)) {
+      perturbedParm = r22.getPerturbedParm(spinx);
+      eval12 = true;
+      eval22 = true;
+    }
       }
       if (eval11 || eval12 || eval21 || eval22) {
-	const MeqMatrix& ml11 = l11.getPerturbedValue(spinx);
-	const MeqMatrix& ml12 = l12.getPerturbedValue(spinx);
-	const MeqMatrix& ml21 = l21.getPerturbedValue(spinx);
-	const MeqMatrix& ml22 = l22.getPerturbedValue(spinx);
-	const MeqMatrix& mm11 = m11.getPerturbedValue(spinx);
-	const MeqMatrix& mm12 = m12.getPerturbedValue(spinx);
-	const MeqMatrix& mm21 = m21.getPerturbedValue(spinx);
-	const MeqMatrix& mm22 = m22.getPerturbedValue(spinx);
-	const MeqMatrix& mr11 = r11.getPerturbedValue(spinx);
-	const MeqMatrix& mr12 = r12.getPerturbedValue(spinx);
-	const MeqMatrix& mr21 = r21.getPerturbedValue(spinx);
-	const MeqMatrix& mr22 = r22.getPerturbedValue(spinx);
+    const MeqMatrix& ml11 = l11.getPerturbedValue(spinx);
+    const MeqMatrix& ml12 = l12.getPerturbedValue(spinx);
+    const MeqMatrix& ml21 = l21.getPerturbedValue(spinx);
+    const MeqMatrix& ml22 = l22.getPerturbedValue(spinx);
+    const MeqMatrix& mm11 = m11.getPerturbedValue(spinx);
+    const MeqMatrix& mm12 = m12.getPerturbedValue(spinx);
+    const MeqMatrix& mm21 = m21.getPerturbedValue(spinx);
+    const MeqMatrix& mm22 = m22.getPerturbedValue(spinx);
+    const MeqMatrix& mr11 = r11.getPerturbedValue(spinx);
+    const MeqMatrix& mr12 = r12.getPerturbedValue(spinx);
+    const MeqMatrix& mr21 = r21.getPerturbedValue(spinx);
+    const MeqMatrix& mr22 = r22.getPerturbedValue(spinx);
 
-	if (eval11 || eval12) {
-	  MeqMatrix t11(ml11*mm11 + ml12*mm21);
-	  MeqMatrix t12(ml11*mm12 + ml12*mm22);
-	  if (eval11) { 
-	    result11.setPerturbedParm (spinx, perturbedParm);
-	    result11.setPerturbedValue (spinx, t11*conj(mr11) + t12*conj(mr12));
-	  }
-	  if (eval12) {
-	    result12.setPerturbedParm (spinx, perturbedParm);
-	    result12.setPerturbedValue (spinx, t11*conj(mr21) + t12*conj(mr22));
-	  }
-	}
-	if (eval21 || eval22) {
-	  MeqMatrix t21(ml21*mm11 + ml22*mm21);
-	  MeqMatrix t22(ml21*mm12 + ml22*mm22);
-	  if (eval21) {
-	    result21.setPerturbedParm (spinx, perturbedParm);
-	    result21.setPerturbedValue (spinx, t21*conj(mr11) + t22*conj(mr12));
-	  }
-	  if (eval22) {
-	    result22.setPerturbedParm (spinx, perturbedParm);
-	    result22.setPerturbedValue (spinx, t21*conj(mr21) + t22*conj(mr22));
-	  }
-	}
+    if (eval11 || eval12) {
+      MeqMatrix t11(ml11*mm11 + ml12*mm21);
+      MeqMatrix t12(ml11*mm12 + ml12*mm22);
+      if (eval11) {
+        result11.setPerturbedParm (spinx, perturbedParm);
+        result11.setPerturbedValue (spinx, t11*conj(mr11) + t12*conj(mr12));
+      }
+      if (eval12) {
+        result12.setPerturbedParm (spinx, perturbedParm);
+        result12.setPerturbedValue (spinx, t11*conj(mr21) + t12*conj(mr22));
+      }
+    }
+    if (eval21 || eval22) {
+      MeqMatrix t21(ml21*mm11 + ml22*mm21);
+      MeqMatrix t22(ml21*mm12 + ml22*mm22);
+      if (eval21) {
+        result21.setPerturbedParm (spinx, perturbedParm);
+        result21.setPerturbedValue (spinx, t21*conj(mr11) + t22*conj(mr12));
+      }
+      if (eval22) {
+        result22.setPerturbedParm (spinx, perturbedParm);
+        result22.setPerturbedValue (spinx, t21*conj(mr21) + t22*conj(mr22));
+      }
+    }
       }
     }
 #if defined __SSE2__
@@ -609,5 +609,12 @@ MeqJonesResult MeqJonesCMul3::getJResult (const MeqRequest& request)
 // timer.stop();
   return result;
 }
+
+#ifdef EXPR_GRAPH
+std::string MeqJonesCMul3::getLabel()
+{
+    return std::string("MeqJonesCMul3\\nJones expression A * B * (C*)");
+}
+#endif
 
 }

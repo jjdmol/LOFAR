@@ -55,8 +55,8 @@ namespace LOFAR {
     res22.setValue (MeqMatrix(makedcomplex(0,0), nx, ny));
     // Loop through all expressions.
     for (std::vector<MeqJonesExpr>::iterator iter=itsExpr.begin();
-	 iter != itsExpr.end();
-	 ++iter) {
+     iter != itsExpr.end();
+     ++iter) {
       MeqJonesResult erBuf;
       const MeqJonesResult& er = iter->getResultSynced (request, erBuf);
       const MeqResult& er11 = er.getResult11();
@@ -65,38 +65,38 @@ namespace LOFAR {
       const MeqResult& er22 = er.getResult22();
       // First handle the perturbed values.
       for (int spinx=0; spinx<request.nspid(); ++spinx) {
-	// If the value is already perturbed in the result, add the
-	// perturbed value from the expression.
-	if (res11.isDefined (spinx)) {
-	  res11.getPerturbedValueRW(spinx) += er11.getPerturbedValue(spinx);
-	} else if (er11.isDefined (spinx)) {
-	  // Otherwise if expression is perturbed, it is the first one.
-	  // So set perturbed in result to sum of main and perturbed.
-	  res11.setPerturbedValue(spinx, res11.getValue() +
-				         er11.getPerturbedValue(spinx));
-	  res11.setPerturbedParm (spinx, er11.getPerturbedParm(spinx));
-	}
-	if (res12.isDefined (spinx)) {
-	  res12.getPerturbedValueRW(spinx) += er12.getPerturbedValue(spinx);
-	} else if (er12.isDefined (spinx)) {
-	  res12.setPerturbedValue(spinx, res12.getValue() +
-				         er12.getPerturbedValue(spinx));
-	  res12.setPerturbedParm (spinx, er12.getPerturbedParm(spinx));
-	}
-	if (res21.isDefined (spinx)) {
-	  res21.getPerturbedValueRW(spinx) += er21.getPerturbedValue(spinx);
-	} else if (er21.isDefined (spinx)) {
-	  res21.setPerturbedValue(spinx, res21.getValue() +
-				         er21.getPerturbedValue(spinx));
-	  res21.setPerturbedParm (spinx, er21.getPerturbedParm(spinx));
-	}
-	if (res22.isDefined (spinx)) {
-	  res22.getPerturbedValueRW(spinx) += er22.getPerturbedValue(spinx);
-	} else if (er22.isDefined (spinx)) {
-	  res22.setPerturbedValue(spinx, res22.getValue() +
-				         er22.getPerturbedValue(spinx));
-	  res22.setPerturbedParm (spinx, er22.getPerturbedParm(spinx));
-	}
+    // If the value is already perturbed in the result, add the
+    // perturbed value from the expression.
+    if (res11.isDefined (spinx)) {
+      res11.getPerturbedValueRW(spinx) += er11.getPerturbedValue(spinx);
+    } else if (er11.isDefined (spinx)) {
+      // Otherwise if expression is perturbed, it is the first one.
+      // So set perturbed in result to sum of main and perturbed.
+      res11.setPerturbedValue(spinx, res11.getValue() +
+                         er11.getPerturbedValue(spinx));
+      res11.setPerturbedParm (spinx, er11.getPerturbedParm(spinx));
+    }
+    if (res12.isDefined (spinx)) {
+      res12.getPerturbedValueRW(spinx) += er12.getPerturbedValue(spinx);
+    } else if (er12.isDefined (spinx)) {
+      res12.setPerturbedValue(spinx, res12.getValue() +
+                         er12.getPerturbedValue(spinx));
+      res12.setPerturbedParm (spinx, er12.getPerturbedParm(spinx));
+    }
+    if (res21.isDefined (spinx)) {
+      res21.getPerturbedValueRW(spinx) += er21.getPerturbedValue(spinx);
+    } else if (er21.isDefined (spinx)) {
+      res21.setPerturbedValue(spinx, res21.getValue() +
+                         er21.getPerturbedValue(spinx));
+      res21.setPerturbedParm (spinx, er21.getPerturbedParm(spinx));
+    }
+    if (res22.isDefined (spinx)) {
+      res22.getPerturbedValueRW(spinx) += er22.getPerturbedValue(spinx);
+    } else if (er22.isDefined (spinx)) {
+      res22.setPerturbedValue(spinx, res22.getValue() +
+                         er22.getPerturbedValue(spinx));
+      res22.setPerturbedParm (spinx, er22.getPerturbedParm(spinx));
+    }
       }
       // Now add to the main value.
       res11.getValueRW() += er11.getValue();
@@ -107,4 +107,10 @@ namespace LOFAR {
     return res;
   }
 
+#ifdef EXPR_GRAPH
+std::string MeqJonesSum::getLabel()
+{
+    return std::string("MeqJonesSum\\nSum of Jones matrices");
+}
+#endif
 }

@@ -52,8 +52,7 @@ MeqExprRep::~MeqExprRep()
 void MeqExprRep::addChild (MeqExpr& child)
 {
   MeqExprRep* childRep = child.itsRep;
-  ASSERT (childRep != 0);\
-
+  ASSERT (childRep != 0);
   itsChildren.push_back (childRep);
   childRep->incrNParents();
 }
@@ -248,6 +247,26 @@ MeqResultVec MeqExprRep::getResultVec (const MeqRequest& request)
   return res;
 }
 
+#ifdef EXPR_GRAPH
+std::string MeqExprRep::getLabel()
+{
+    return std::string("MeqExprRep base class");
+}
+
+void MeqExprRep::writeExpressionGraph(std::ostream &os)
+{
+    os << "id" << std::hex << this << " [label=\"" << getLabel() << "\"];" << std::endl;
+
+    std::vector<MeqExprRep*>::const_iterator it;
+    for(it = itsChildren.begin(); it != itsChildren.end(); ++it)
+    {
+          os << "id" << std::hex << (*it) << " -> " << "id" << std::hex << this << ";" << std::endl;
+          (*it)->writeExpressionGraph(os);
+    }
+}
+#endif
+
+
 MeqExpr::MeqExpr (const MeqExpr& that)
 : itsRep (that.itsRep)
 {
@@ -303,6 +322,13 @@ MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
   return result;
 }
 
+#ifdef EXPR_GRAPH
+std::string MeqExprToComplex::getLabel()
+{
+    return std::string("MeqExprToComplex\\nreal / imaginary");
+}
+#endif
+
 MeqExprAPToComplex::MeqExprAPToComplex (const MeqExpr& ampl,
                     const MeqExpr& phase)
   : itsAmpl (ampl),
@@ -340,5 +366,12 @@ MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
   result.setValue (matt * ampl.getValue());
   return result;
 }
+
+#ifdef EXPR_GRAPH
+std::string MeqExprAPToComplex::getLabel()
+{
+    return std::string("MeqExprToComplex\\namplitude / phase");
+}
+#endif
 
 }

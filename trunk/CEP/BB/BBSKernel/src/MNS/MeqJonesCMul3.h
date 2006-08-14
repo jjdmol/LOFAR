@@ -42,8 +42,8 @@ class MeqJonesCMul3: public MeqJonesExprRep
 {
 public:
   MeqJonesCMul3 (const MeqJonesExpr& left,
-		 const MeqJonesExpr& mid,
-		 const MeqJonesExpr& right);
+         const MeqJonesExpr& mid,
+         const MeqJonesExpr& right);
 
   ~MeqJonesCMul3();
 
@@ -51,6 +51,10 @@ public:
   MeqJonesResult getJResult (const MeqRequest&);
 
 private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   MeqJonesExpr itsLeft;
   MeqJonesExpr itsMid;
   MeqJonesExpr itsRight;

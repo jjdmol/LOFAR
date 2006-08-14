@@ -54,6 +54,10 @@ public:
   virtual MeqResultVec getResultVec (const MeqRequest&);
 
 private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   MeqExpr     itsLMN;
   MeqStatUVW* itsUVW;
 };

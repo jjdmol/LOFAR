@@ -1,4 +1,4 @@
-//# MeqJonesSum.h: A summation of MeqJonesExpr 
+//# MeqJonesSum.h: A summation of MeqJonesExpr
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -51,6 +51,10 @@ public:
   virtual MeqJonesResult getJResult (const MeqRequest&);
 
 private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
   std::vector<MeqJonesExpr> itsExpr;
 };
 
