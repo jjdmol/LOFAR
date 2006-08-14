@@ -85,10 +85,10 @@ public:
   // for the specified data descriptor (i.e. spectral window).
   // The UVW coordinates can be calculated or taken from the MS.
   Prediffer (const string& msName,
-	     const ParmDB::ParmDBMeta& meqPtd,
-	     const ParmDB::ParmDBMeta& skyPtd,
-	     uint ddid,
-	     bool calcUVW);
+         const ParmDB::ParmDBMeta& meqPtd,
+         const ParmDB::ParmDBMeta& skyPtd,
+         uint ddid,
+         bool calcUVW);
 
   // Destructor
   ~Prediffer();
@@ -115,7 +115,7 @@ public:
   // <group>
   bool setWorkDomain (const MeqDomain&);
   bool setWorkDomain (int startChan, int endChan,
-		      double startTime, double lengthTime);
+              double startTime, double lengthTime);
   // </group>
 
   // Get the actual work domain for this MS (after a setStrategy).
@@ -175,6 +175,10 @@ public:
   // Write the solved parms.
   void writeParms();
 
+#ifdef EXPR_GRAPH
+  void writeExpressionGraph(const std::string &fileName, int baselineIndex);
+#endif
+
   // Show the settings of the Prediffer.
   void showSettings() const;
 
@@ -185,8 +189,8 @@ public:
   // Get the data and flags for the time domain.
   // This is mainly used for test purposes.
   void getData (bool useTree,
-		casa::Array<casa::Complex>& data,
-		casa::Array<casa::Bool>& flags);
+        casa::Array<casa::Complex>& data,
+        casa::Array<casa::Bool>& flags);
 
 private:
   // Copy constructor and assignment are not allowed.
@@ -199,7 +203,7 @@ private:
   // NB. DEPRECATED -- only use for debugging purposes, will
   // be removed in the next release.
   void readDescriptiveData (const string& fileName);
-  
+
   // Read measurement set meta data
   void readMeasurementSetMetaData(const string& fileName);
 
@@ -217,10 +221,10 @@ private:
   bool selectStations (const vector<int>& antnrs, bool useAutoCorr);
 
   // Do the selection of baselines and correlations for a step.
-  bool selectStep (const vector<int>& ant1, 
-		   const vector<int>& ant2,
-		   bool useAutoCorrelations,
-		   const vector<bool>& corr);
+  bool selectStep (const vector<int>& ant1,
+           const vector<int>& ant2,
+           bool useAutoCorrelations,
+           const vector<bool>& corr);
 
   // Fill indices and count nr of baselines and correlations selected.
   bool fillBaseCorr (const casa::Matrix<bool>& blSel);
@@ -243,26 +247,26 @@ private:
 
   // Make the entire tree.
   void makeTree (const vector<string>& modelType,
-		 const vector<string>& sourceNames);
+         const vector<string>& sourceNames);
 
   // Create the expressions for each baseline and source(group).
   // The gains can be expressed as real/imag or ampl/phase.
   // The station parameters are optionally taken into account.
   void makeLOFARExprs (const vector<MeqSource*>& sources,
-		       const map<string, vector<int> >& groups,
-		       bool useTotalGain, bool usePatchGain,
-		       bool asAP,
-		       bool useDipole, bool useBandpass);
+               const map<string, vector<int> >& groups,
+               bool useTotalGain, bool usePatchGain,
+               bool asAP,
+               bool useDipole, bool useBandpass);
 
   // Find all nodes to be precalculated.
   void setPrecalcNodes (vector<MeqJonesExpr>& nodes);
 
   // Fill the fitter with the equations for the given baseline.
   void fillEquation (int threadnr, void* arg,
-		     const fcomplex* dataIn, fcomplex* dummy,
-		     const bool* flags,
-		     const MeqRequest& request, int blindex,
-		     bool showd=false);
+             const fcomplex* dataIn, fcomplex* dummy,
+             const bool* flags,
+             const MeqRequest& request, int blindex,
+             bool showd=false);
 
   // Reset the loop variables for the getEquations loop.
   void resetEqLoop();
@@ -273,53 +277,53 @@ private:
 
   // Add a data column to the table and create a symlink for it.
   void addDataColumn (casa::Table& tab, const string& columnName,
-		      const string& symlinkName);
+              const string& symlinkName);
 
   // Define the signature of a function processing a baseline.
   typedef void (Prediffer::*ProcessFuncBL) (int threadnr, void* arg,
-					    const fcomplex* dataIn,
-					    fcomplex* dataOut,
-					    const bool* flags,
-					    const MeqRequest& request,
-					    int blindex, bool showd);
+                        const fcomplex* dataIn,
+                        fcomplex* dataOut,
+                        const bool* flags,
+                        const MeqRequest& request,
+                        int blindex, bool showd);
 
   // Loop through all data and process each baseline by ProcessFuncBL.
   void processData (bool useFlags, bool preCalc, bool calcDeriv,
-		    ProcessFuncBL func, void* arg);
+            ProcessFuncBL func, void* arg);
 
   // Subtract the data of a baseline.
   void subtractBL (int threadnr, void* arg,
-		   const fcomplex* dataIn, fcomplex* dataOut,
-		   const bool* flags,
-		   const MeqRequest& request, int blindex,
-		   bool showd);
+           const fcomplex* dataIn, fcomplex* dataOut,
+           const bool* flags,
+           const MeqRequest& request, int blindex,
+           bool showd);
 
   // Correct the data of a baseline.
   void correctBL (int threadnr, void* arg,
-		  const fcomplex* dataIn, fcomplex* dataOut,
-		  const bool* flags,
-		  const MeqRequest& request, int blindex,
-		  bool showd);
+          const fcomplex* dataIn, fcomplex* dataOut,
+          const bool* flags,
+          const MeqRequest& request, int blindex,
+          bool showd);
 
   // Write the predicted data of a baseline.
   void predictBL (int threadnr, void* arg,
-		  const fcomplex* dummy, fcomplex* dataOut,
-		  const bool* flags,
-		  const MeqRequest& request, int blindex,
-		  bool showd);
+          const fcomplex* dummy, fcomplex* dataOut,
+          const bool* flags,
+          const MeqRequest& request, int blindex,
+          bool showd);
 
   // Get the data of a single baseline.
   // <group>
   void getBL (int threadnr, void* arg,
-	      const fcomplex* data, fcomplex*,
-	      const bool* flags,
-	      const MeqRequest&, int blindex,
-	      bool);
+          const fcomplex* data, fcomplex*,
+          const bool* flags,
+          const MeqRequest&, int blindex,
+          bool);
   void getMapBL (int threadnr, void* arg,
-		 const fcomplex* data, fcomplex*,
-		 const bool* flags,
-		 const MeqRequest& request, int blindex,
-		 bool);
+         const fcomplex* data, fcomplex*,
+         const bool* flags,
+         const MeqRequest& request, int blindex,
+         bool);
   // </group>
 
   // Make all parameters non-solvable.
@@ -342,9 +346,8 @@ private:
 
   // Show the data on cout.
   void showData (int corr, int sdch, int inc, int nrchan,
-		 const bool* flags, const fcomplex* data,
-		 const double* realData, const double* imagData);
-
+         const bool* flags, const fcomplex* data,
+         const double* realData, const double* imagData);
 
   string                itsMSName;      //# Measurement set name
   string                itsMEPName;     //# Common parmtable name
@@ -384,7 +387,7 @@ private:
   MeqDomain    itsWorkDomain;         //# Current work domain
   vector<int>  itsNrScids;            //# Nr of solvable coeff per solve domain
   int          itsNrPert;             //# Nr of perturbed values in result
-  ParmDataInfo itsParmData;           //# solvable parm info. 
+  ParmDataInfo itsParmData;           //# solvable parm info.
 
   bool                 itsCorr[4];     //# Correlations to use
   int                  itsNCorr;       //# Number of correlations (XX, etc.)
