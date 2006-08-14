@@ -78,11 +78,6 @@ public class ConfigPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel");
         itsPanelMap.put("Strategy",itsVector);
         
-        //BBS Step Explorer
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStepExplorerPanel");
-        itsPanelMap.put("Step",itsVector);
-        
         //OLAP
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.OLAPConfigPanel");
