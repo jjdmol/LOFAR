@@ -118,10 +118,10 @@ namespace LOFAR
 {
 
 Prediffer::Prediffer(const string& msName,
-		     const ParmDB::ParmDBMeta& meqPdm,
-		     const ParmDB::ParmDBMeta& skyPdm,
-		     uint ddid,
-		     bool calcUVW)
+             const ParmDB::ParmDBMeta& meqPdm,
+             const ParmDB::ParmDBMeta& skyPdm,
+             uint ddid,
+             bool calcUVW)
   :
   itsMSName       (msName),
   itsMEPName      (meqPdm.getTableName()),
@@ -145,15 +145,15 @@ Prediffer::Prediffer(const string& msName,
   itsEqTimer      ("P:eq|save", false)
 {
   LOG_INFO_STR( "Prediffer constructor ("
-		<< "'" << msName   << "', "
-		<< "'" << meqPdm.getTableName() << "', "
-		<< "'" << skyPdm.getTableName() << "', "
-		<< itsCalcUVW << ")" );
+        << "'" << msName   << "', "
+        << "'" << meqPdm.getTableName() << "', "
+        << "'" << skyPdm.getTableName() << "', "
+        << itsCalcUVW << ")" );
   // Read the meta data and map the flags file.
   //readDescriptiveData(msName);
   readMeasurementSetMetaData(msName);
   processMSDesc(ddid);
-  
+
   itsFlagsMap = new FlagsMap(msName + "/vis.flg", MMap::Read);
   // Get all sources from the ParmDB.
   itsSources = new MeqSourceList(itsGSMMEP, itsParmGroup);
@@ -180,7 +180,7 @@ bool Prediffer::setStrategyProp (const StrategyProp& strat)
   }
   strat.expandPatterns (itsMSDesc.antNames);
   return selectStations (strat.getAntennas(),         // Available antennas
-			 strat.getAutoCorr());
+             strat.getAutoCorr());
 }
 
 bool Prediffer::setWorkDomain (const MeqDomain& domain)
@@ -215,7 +215,7 @@ bool Prediffer::setWorkDomain (const MeqDomain& domain)
   }
   // Find the time matching the start time.
   while (itsTimeIndex < itsMSDesc.times.size()
-	 &&  tstart > itsMSDesc.times[itsTimeIndex]) {
+     &&  tstart > itsMSDesc.times[itsTimeIndex]) {
     ++itsTimeIndex;
   }
   // Exit if no more chunks.
@@ -230,7 +230,7 @@ bool Prediffer::setWorkDomain (const MeqDomain& domain)
   double endTime = domain.endY();
   itsNrTimes     = 0;
   while (endIndex < itsMSDesc.times.size()
-	 && endTime >= itsMSDesc.times[endIndex]) {
+     && endTime >= itsMSDesc.times[endIndex]) {
     ///cout << "time find " << itsMSDesc.times[endIndex]-itsMSDesc.times[0] << ' ' << endIndex<<endl;
     ++endIndex;
     ++itsNrTimes;
@@ -238,24 +238,24 @@ bool Prediffer::setWorkDomain (const MeqDomain& domain)
   ASSERT (itsNrTimes > 0);
   endTime = itsMSDesc.times[endIndex-1] + itsMSDesc.exposures[endIndex-1]/2;
   ///cout << "time-indices " << itsTimeIndex << ' ' << endIndex << ' ' << itsNrTimes << ' ' << itsMSDesc.times[endIndex]-itsMSDesc.times[0]<<' '<<endTime-tstart<<' '<<startTime-itsMSDesc.times[0]<< ' '<<endTime-itsMSDesc.times[0]<<endl;
-  
+
   BBSTest::ScopedTimer parmTimer("P:readparms");
   itsWorkDomain = MeqDomain(itsStartFreq + itsFirstChan*itsStepFreq,
-			    itsStartFreq + (itsLastChan+1)*itsStepFreq,
-			    startTime,
-			    endTime);
+                itsStartFreq + (itsLastChan+1)*itsStepFreq,
+                startTime,
+                endTime);
   // Read all parameter values which are part of the work domain.
   readParms();
   // Show frequency domain.
   LOG_INFO_STR ("Workdomain: " << itsWorkDomain
-		<< " (channels " << itsFirstChan << '-' << itsLastChan
-		<< " of " << itsStepFreq << " Hz" );
+        << " (channels " << itsFirstChan << '-' << itsLastChan
+        << " of " << itsStepFreq << " Hz" );
 
   return true;
 }
 
 bool Prediffer::setWorkDomain (int startChan, int endChan,
-			       double tstart, double tlength)
+                   double tstart, double tlength)
 {
   // Determine the first and last channel to process.
   if (startChan < 0) {
@@ -265,9 +265,9 @@ bool Prediffer::setWorkDomain (int startChan, int endChan,
     endChan = itsNrChan-1;
   }
   return setWorkDomain (MeqDomain(itsStartFreq + startChan*itsStepFreq,
-				  itsStartFreq + (endChan+1)*itsStepFreq,
-				  tstart,
-				  tstart+tlength));
+                  itsStartFreq + (endChan+1)*itsStepFreq,
+                  tstart,
+                  tstart+tlength));
 }
 
 bool Prediffer::setStepProp (const StepProp& stepProp)
@@ -275,8 +275,8 @@ bool Prediffer::setStepProp (const StepProp& stepProp)
   itsOutDataColumn = stepProp.getOutColumn();
   stepProp.expandPatterns (itsMSDesc.antNames);
   if (!selectStep (stepProp.getAnt1(), stepProp.getAnt2(),
-		   stepProp.getAutoCorr(),
-		   stepProp.getCorr())) {
+           stepProp.getAutoCorr(),
+           stepProp.getCorr())) {
     return false;
   }
   // If no sources given, use all sources.
@@ -319,25 +319,25 @@ bool Prediffer::setSolveProp (const SolveProp& solveProp)
     String parmName (iter->second.getName());
     // Loop through all regex-es until a match is found.
     for (vector<Regex>::iterator incIter = parmRegex.begin();
-	 incIter != parmRegex.end();
-	 incIter++) {
+     incIter != parmRegex.end();
+     incIter++) {
       if (parmName.matches(*incIter)) {
-	bool parmExc = false;
-	// Test if not excluded.
-	for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
-	     excIter != excludeRegex.end();
-	     excIter++) {
-	  if (parmName.matches(*excIter)) {
-	    parmExc = true;
-	    break;
-	  }
-	}
-	if (!parmExc) {
-	  LOG_TRACE_OBJ_STR( "setSolvable: " << iter->second.getName());
-	  iter->second.setSolvable (true);
-	  nrsolv++;
-	}
-	break;
+    bool parmExc = false;
+    // Test if not excluded.
+    for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
+         excIter != excludeRegex.end();
+         excIter++) {
+      if (parmName.matches(*excIter)) {
+        parmExc = true;
+        break;
+      }
+    }
+    if (!parmExc) {
+      LOG_TRACE_OBJ_STR( "setSolvable: " << iter->second.getName());
+      iter->second.setSolvable (true);
+      nrsolv++;
+    }
+    break;
       }
     }
   }
@@ -349,7 +349,7 @@ bool Prediffer::setSolveProp (const SolveProp& solveProp)
 }
 
 void Prediffer::makeTree (const vector<string>& modelType,
-			  const vector<string>& sourceNames)
+              const vector<string>& sourceNames)
 {
   // Determine which parts of the model to use.
   bool asAP = true;
@@ -360,18 +360,18 @@ void Prediffer::makeTree (const vector<string>& modelType,
   for (uint i=0; i<modelType.size(); ++i) {
     if (modelType[i] != "") {
       if (modelType[i] == "TOTALGAIN") {
-	useTotalGain = true;
+    useTotalGain = true;
       } else if (modelType[i] == "PATCHGAIN") {
-	usePatchGain = true;
+    usePatchGain = true;
       } else if (modelType[i] == "REALIMAG") {
-	asAP = false;
+    asAP = false;
       } else if (modelType[i] == "DIPOLE") {
-	useDipole = true;
+    useDipole = true;
       } else if (modelType[i] == "BANDPASS") {
-	useBandpass = true;
+    useBandpass = true;
       } else {
-	ASSERTSTR (false, "Modeltype part " << modelType[i] << " is invalid; "
-		   "valid are TOTALGAIN,PATCHGAIN,REALIMAG,DIPOLE,BANDPASS");
+    ASSERTSTR (false, "Modeltype part " << modelType[i] << " is invalid; "
+           "valid are TOTALGAIN,PATCHGAIN,REALIMAG,DIPOLE,BANDPASS");
       }
     }
   }
@@ -394,7 +394,7 @@ void Prediffer::makeTree (const vector<string>& modelType,
   }
   // Set up the expression tree for all baselines.
   makeLOFARExprs (sources, groups,
-		  useTotalGain, usePatchGain, asAP, useDipole, useBandpass);
+          useTotalGain, usePatchGain, asAP, useDipole, useBandpass);
 }
 
 Prediffer::~Prediffer()
@@ -426,7 +426,7 @@ Prediffer::~Prediffer()
 void Prediffer::readDescriptiveData (const string& fileName)
 {
   ASSERTSTR(false, "DEPRECATED -- will be removed in next release. Use Prediffer::readMeasurementSetMetaData instead.");
-  
+
   // Get meta data from description file.
   string name(fileName+"/vis.des");
   std::ifstream istr(name.c_str());
@@ -439,13 +439,13 @@ void Prediffer::readDescriptiveData (const string& fileName)
 void Prediffer::readMeasurementSetMetaData(const string &fileName)
 {
     MeasurementSet ms(fileName);
-    
+
     Path absolutePath = Path(fileName).absoluteName();
     itsMSDesc.msPath = absolutePath.dirName();
     itsMSDesc.msName = absolutePath.baseName();
-    
+
     itsMSDesc.npart  = 1;
-    
+
     /*
         Get baselines.
     */
@@ -457,7 +457,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     ROScalarColumn<Int> station2Column(uniqueBaselines, "ANTENNA2");
     station1Column.getColumn().tovector(itsMSDesc.ant1);
     station2Column.getColumn().tovector(itsMSDesc.ant2);
-    
+
     /*
         Get information about frequency grid.
     */
@@ -466,22 +466,22 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     MSSpectralWindow spectralWindow(ms.spectralWindow());
     ROMSSpWindowColumns spectralWindowColumns(spectralWindow);
     int spectralWindowCount = dataDescription.nrow();
-    
+
     itsMSDesc.nchan.resize(spectralWindowCount);
     itsMSDesc.startFreq.resize(spectralWindowCount);
     itsMSDesc.endFreq.resize(spectralWindowCount);
-    
+
     for(int i = 0; i < spectralWindowCount; i++)
     {
         Vector<double> channelFrequency = spectralWindowColumns.chanFreq()(i);
         Vector<double> channelWidth = spectralWindowColumns.chanWidth()(i);
-        
+
         // So far, only equal frequency spacings are possible.
         ASSERTSTR(allEQ(channelWidth, channelWidth(0)), "Channels must have equal spacings");
-        
+
         int channelCount = channelWidth.nelements();
         itsMSDesc.nchan[i] = channelCount;
-        
+
         double step = abs(channelWidth(0));
         if(channelFrequency(0) > channelFrequency(channelCount - 1))
         {
@@ -494,7 +494,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
             itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] + channelCount * step;
         }
     }
-    
+
     /*
         Get information about time grid.
     */
@@ -502,30 +502,30 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     Vector<double> time = timeColumn.getColumn();
     Vector<uInt> timeIndex;
     uInt timeCount = GenSortIndirect<double>::sort(timeIndex, time, Sort::Ascending, Sort::InsSort + Sort::NoDuplicates);
-        
+
     itsMSDesc.times.resize(timeCount);
     itsMSDesc.exposures.resize(timeCount);
     ROScalarColumn<double> exposureColumn(ms, "EXPOSURE");
     Vector<double> exposure = exposureColumn.getColumn();
-    
+
     for(uInt i = 0; i < timeCount; i++)
     {
         itsMSDesc.times[i] = time[timeIndex[i]];
         itsMSDesc.exposures[i] = exposure[timeIndex[i]];
     }
-    
+
     /*
         Get phase center as RA and DEC (J2000).
-        
+
         From AIPS++ note 229 (MeasurementSet definition version 2.0):
         ---
         FIELD: Field positions for each source
         Notes:
             The FIELD table defines a field position on the sky. For interferometers,
             this is the correlated field position. For single dishes, this is the
-            nominal pointing direction.    
+            nominal pointing direction.
         ---
-        
+
         The way this column is used by SelfCal seems to have nothing to do with sources.
         In LOFAR/CEP/BB/MS/src/makemsdesc.cc the following line can be found:
             MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
@@ -539,7 +539,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     Quantum<Vector<double> > phaseCenterAngles = phaseCenter.getAngle();
     itsMSDesc.ra  = phaseCenterAngles.getBaseValue()(0);
     itsMSDesc.dec = phaseCenterAngles.getBaseValue()(1);
-    
+
     /*
         Get correlation types.
     */
@@ -552,14 +552,14 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     {
         itsMSDesc.corrTypes[i] = Stokes::name(Stokes::type(correlationTypes(i)));
     }
-    
+
     /*
         Get station names and positions in ITRF coordinates.
     */
     MSAntenna antenna(ms.antenna());
     ROMSAntennaColumns antennaColumns(antenna);
     int antennaCount = antenna.nrow();
-    
+
     MVPosition sumVector;
     itsMSDesc.antNames.resize(antennaCount);
     itsMSDesc.antPos.resize(IPosition(2, 3, antennaCount));
@@ -575,14 +575,14 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
             itsMSDesc.antPos(IPosition(2, j, i)) = positionVector(j);
         }
     }
-    
+
     /*
         Get the array position in ITRF coordinates, or use the centroid
         of the station positions if the array position is unknown.
     */
     MSObservation observation(ms.observation());
     ROMSObservationColumns observationColumns(observation);
-    
+
     MPosition position;
     MVPosition positionVector;
     if(observation.nrow() > 0 && MeasTable::Observatory(position, observationColumns.telescopeName()(0)))
@@ -594,13 +594,13 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     {
         positionVector = sumVector * (1.0 / (double) antennaCount);
     }
-    
+
     itsMSDesc.arrayPos.resize(3);
     for(int i = 0; i < 3; i++)
     {
         itsMSDesc.arrayPos[i] = positionVector(i);
     }
-    
+
     /*
         Determine the startTime and endTime of the observation.
     */
@@ -615,7 +615,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
         itsMSDesc.startTime = 0.0;
         itsMSDesc.endTime   = 0.0;
     }
-    
+
     if(itsMSDesc.startTime >= itsMSDesc.endTime)
     {
         /*
@@ -630,7 +630,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
             itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
         }
     }
-    
+
     cout << itsMSDesc;
 }
 
@@ -681,11 +681,11 @@ void Prediffer::fillStations()
     Vector<double> antpos = antPos.column(ant);
     const string& name = itsMSDesc.antNames[ant];
     MeqParmSingle* px = new MeqParmSingle("AntPosX." + name,
-					  antpos(0));
+                      antpos(0));
     MeqParmSingle* py = new MeqParmSingle("AntPosY." + name,
-					  antpos(1));
+                      antpos(1));
     MeqParmSingle* pz = new MeqParmSingle("AntPosZ." + name,
-					  antpos(2));
+                      antpos(2));
     itsStations[ant] = new MeqStation(px, py, pz, name);
   }
 }
@@ -703,7 +703,7 @@ bool Prediffer::selectStations (const vector<int>& antnrs, bool useAutoCorr)
     for (uint i=0; i<antnrs.size(); i++) {
       int ant = antnrs[i];
       if (ant >= 0  &&  ant < nrant) {
-	itsSelStations[ant] = itsStations[ant];
+    itsSelStations[ant] = itsStations[ant];
       }
     }
   }
@@ -718,8 +718,8 @@ bool Prediffer::selectStations (const vector<int>& antnrs, bool useAutoCorr)
     int a2 = itsMSDesc.ant2[i];
     if (itsSelStations[a1] && itsSelStations[a2]) {
       if (useAutoCorr  ||  a1 != a2) {
-	itsBLSel(a1,a2) = true;
-	nr++;
+    itsBLSel(a1,a2) = true;
+    nr++;
       }
     }
   }
@@ -727,10 +727,10 @@ bool Prediffer::selectStations (const vector<int>& antnrs, bool useAutoCorr)
 }
 
 void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
-				const map<string, vector<int> >& groups,
-				bool useTotalGain, bool usePatchGain,
-				bool asAP,
-				bool useDipole, bool useBandpass)
+                const map<string, vector<int> >& groups,
+                bool useTotalGain, bool usePatchGain,
+                bool asAP,
+                bool useDipole, bool useBandpass)
 {
   // Allocate the vectors holding the expressions.
   int nrstat = itsStations.size();
@@ -762,38 +762,38 @@ void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
     if (itsStations[stat] != 0) {
       // Do pure station parameters only if told so.
       if (useDipole) {
-	MeqExpr frot (MeqParmFunklet::create ("frot:" +
-					      itsStations[stat]->getName(),
-					      itsParmGroup, &itsMEP));
-	MeqExpr drot (MeqParmFunklet::create ("drot:" +
-					      itsStations[stat]->getName(),
-					      itsParmGroup, &itsMEP));
-	MeqExpr dell (MeqParmFunklet::create ("dell:" +
-					      itsStations[stat]->getName(),
-					      itsParmGroup, &itsMEP));
-	MeqExpr gj11 (MeqParmFunklet::create ("dgain:X:" +
-					      itsStations[stat]->getName(),
-					      itsParmGroup, &itsMEP));
-	MeqExpr gj22 (MeqParmFunklet::create ("dgain:Y:" +
-					      itsStations[stat]->getName(),
-					      itsParmGroup, &itsMEP));
-	dipoleExpr[stat] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
-							 gj11, gj22));
+    MeqExpr frot (MeqParmFunklet::create ("frot:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, &itsMEP));
+    MeqExpr drot (MeqParmFunklet::create ("drot:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, &itsMEP));
+    MeqExpr dell (MeqParmFunklet::create ("dell:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, &itsMEP));
+    MeqExpr gj11 (MeqParmFunklet::create ("dgain:X:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, &itsMEP));
+    MeqExpr gj22 (MeqParmFunklet::create ("dgain:Y:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, &itsMEP));
+    dipoleExpr[stat] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
+                             gj11, gj22));
       }
       // Make a bandpass per station
       if (useBandpass) {
         string stationName = itsStations[stat]->getName();
         MeqExpr bandpassXX(MeqParmFunklet::create("bandpass:X:" + stationName,
-						  itsParmGroup, &itsMEP));
+                          itsParmGroup, &itsMEP));
         MeqExpr bandpassYY(MeqParmFunklet::create("bandpass:Y:" + stationName,
-						  itsParmGroup, &itsMEP));
-        
+                          itsParmGroup, &itsMEP));
+
         bandpass[stat] = new MeqDiag(MeqExpr(bandpassXX), MeqExpr(bandpassYY));
       }
       // Make a DFT per station per source.
       for (int src=0; src<nrsrc; ++src) {
-	pdfts[stat*nrsrc + src] = MeqExpr(new MeqDFTPS (itsLMN[src],
-							itsStatUVW[stat]));
+    pdfts[stat*nrsrc + src] = MeqExpr(new MeqDFTPS (itsLMN[src],
+                            itsStatUVW[stat]));
       }
       // Make optionally GJones expressions.
       MeqExprRep* gj11;
@@ -801,85 +801,85 @@ void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
       MeqExprRep* gj21;
       MeqExprRep* gj22;
       if (useTotalGain) {
-	// Make a gain/phase expression per station.
-	string nm = itsStations[stat]->getName();
-	MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
-					       itsParmGroup, &itsMEP));
-	MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
-					       itsParmGroup, &itsMEP));
-	MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
-					       itsParmGroup, &itsMEP));
-	MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
-					       itsParmGroup, &itsMEP));
-	MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
-					       itsParmGroup, &itsMEP));
-	MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
-					       itsParmGroup, &itsMEP));
-	MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
-					       itsParmGroup, &itsMEP));
-	MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
-					       itsParmGroup, &itsMEP));
-	if (asAP) {
-	  gj11 = new MeqExprAPToComplex (gj11r, gj11i);
-	  gj12 = new MeqExprAPToComplex (gj12r, gj12i);
-	  gj21 = new MeqExprAPToComplex (gj21r, gj21i);
-	  gj22 = new MeqExprAPToComplex (gj22r, gj22i);
-	} else {
-	  gj11 = new MeqExprToComplex (gj11r, gj11i);
-	  gj12 = new MeqExprToComplex (gj12r, gj12i);
-	  gj21 = new MeqExprToComplex (gj21r, gj21i);
-	  gj22 = new MeqExprToComplex (gj22r, gj22i);
-	}
-	totalGJ[stat] = new MeqJonesNode (MeqExpr(gj11), MeqExpr(gj12),
-					  MeqExpr(gj21), MeqExpr(gj22));
-	corrStat[stat] = new MeqJonesInvert (totalGJ[stat]);
+    // Make a gain/phase expression per station.
+    string nm = itsStations[stat]->getName();
+    MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
+                           itsParmGroup, &itsMEP));
+    MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
+                           itsParmGroup, &itsMEP));
+    MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
+                           itsParmGroup, &itsMEP));
+    MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
+                           itsParmGroup, &itsMEP));
+    MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
+                           itsParmGroup, &itsMEP));
+    MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
+                           itsParmGroup, &itsMEP));
+    MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
+                           itsParmGroup, &itsMEP));
+    MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
+                           itsParmGroup, &itsMEP));
+    if (asAP) {
+      gj11 = new MeqExprAPToComplex (gj11r, gj11i);
+      gj12 = new MeqExprAPToComplex (gj12r, gj12i);
+      gj21 = new MeqExprAPToComplex (gj21r, gj21i);
+      gj22 = new MeqExprAPToComplex (gj22r, gj22i);
+    } else {
+      gj11 = new MeqExprToComplex (gj11r, gj11i);
+      gj12 = new MeqExprToComplex (gj12r, gj12i);
+      gj21 = new MeqExprToComplex (gj21r, gj21i);
+      gj22 = new MeqExprToComplex (gj22r, gj22i);
+    }
+    totalGJ[stat] = new MeqJonesNode (MeqExpr(gj11), MeqExpr(gj12),
+                      MeqExpr(gj21), MeqExpr(gj22));
+    corrStat[stat] = new MeqJonesInvert (totalGJ[stat]);
       }
       if (usePatchGain) {
-	// Make a complex gain expression per station per patch.
-	int grp=0;
-	for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
-	     grpiter != groups.end();
-	     grpiter++, grp++) {
-	  string nm = itsStations[stat]->getName() + ":" + grpiter->first;
-	  MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
-						 itsParmGroup, &itsMEP));
-	  MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
-						 itsParmGroup, &itsMEP));
-	  MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
-						 itsParmGroup, &itsMEP));
-	  MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
-						 itsParmGroup, &itsMEP));
-	  MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
-						 itsParmGroup, &itsMEP));
-	  MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
-						 itsParmGroup, &itsMEP));
-	  MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
-						 itsParmGroup, &itsMEP));
-	  MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
-						 itsParmGroup, &itsMEP));
-	  if (asAP) {
-	    gj11 = new MeqExprAPToComplex (gj11r, gj11i);
-	    gj12 = new MeqExprAPToComplex (gj12r, gj12i);
-	    gj21 = new MeqExprAPToComplex (gj21r, gj21i);
-	    gj22 = new MeqExprAPToComplex (gj22r, gj22i);
-	  } else {
-	    gj11 = new MeqExprToComplex (gj11r, gj11i);
-	    gj12 = new MeqExprToComplex (gj12r, gj12i);
-	    gj21 = new MeqExprToComplex (gj21r, gj21i);
-	    gj22 = new MeqExprToComplex (gj22r, gj22i);
-	  }
-	  patchGJ[stat*nrgrp + grp] = new MeqJonesNode (MeqExpr(gj11),
-							MeqExpr(gj12),
-							MeqExpr(gj21),
-							MeqExpr(gj22));
-	  // Only AP of first group is used for correction.
-	  if (grp == 0) {
-	    corrStat[stat] = new MeqJonesInvert (patchGJ[stat*nrgrp + grp]);
-	  }
-	}
+    // Make a complex gain expression per station per patch.
+    int grp=0;
+    for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
+         grpiter != groups.end();
+         grpiter++, grp++) {
+      string nm = itsStations[stat]->getName() + ":" + grpiter->first;
+      MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
+                         itsParmGroup, &itsMEP));
+      MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
+                         itsParmGroup, &itsMEP));
+      MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
+                         itsParmGroup, &itsMEP));
+      MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
+                         itsParmGroup, &itsMEP));
+      MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
+                         itsParmGroup, &itsMEP));
+      MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
+                         itsParmGroup, &itsMEP));
+      MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
+                         itsParmGroup, &itsMEP));
+      MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
+                         itsParmGroup, &itsMEP));
+      if (asAP) {
+        gj11 = new MeqExprAPToComplex (gj11r, gj11i);
+        gj12 = new MeqExprAPToComplex (gj12r, gj12i);
+        gj21 = new MeqExprAPToComplex (gj21r, gj21i);
+        gj22 = new MeqExprAPToComplex (gj22r, gj22i);
+      } else {
+        gj11 = new MeqExprToComplex (gj11r, gj11i);
+        gj12 = new MeqExprToComplex (gj12r, gj12i);
+        gj21 = new MeqExprToComplex (gj21r, gj21i);
+        gj22 = new MeqExprToComplex (gj22r, gj22i);
+      }
+      patchGJ[stat*nrgrp + grp] = new MeqJonesNode (MeqExpr(gj11),
+                            MeqExpr(gj12),
+                            MeqExpr(gj21),
+                            MeqExpr(gj22));
+      // Only AP of first group is used for correction.
+      if (grp == 0) {
+        corrStat[stat] = new MeqJonesInvert (patchGJ[stat*nrgrp + grp]);
       }
     }
-  }    
+      }
+    }
+  }
   // Make an expression for each baseline.
   int nrusedbl = itsBLInx.size();
   itsExpr.resize (nrusedbl);
@@ -893,43 +893,43 @@ void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
       // Make correction expressions.
       itsCorrMMap[blindex] = new MeqJonesMMap (itsMSMapInfo, bl);
       itsCorrExpr[blindex] = new MeqJonesCMul3 (corrStat[ant1],
-						itsCorrMMap[blindex],
-						corrStat[ant2]);
+                        itsCorrMMap[blindex],
+                        corrStat[ant2]);
     }
     // Predict expressions.
     vector<MeqJonesExpr> vecPatch;
     // Loop through all source groups.
     int grp=0;
     for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
-	 grpiter != groups.end();
-	 grpiter++, grp++) {
+     grpiter != groups.end();
+     grpiter++, grp++) {
       const vector<int>& srcgrp = grpiter->second;;
       vector<MeqJonesExpr> vecSrc;
       vecSrc.reserve (srcgrp.size());
       for (uint j=0; j<srcgrp.size(); ++j) {
-	// Create the total DFT per source.
-	int src = srcgrp[j];
-	MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
-					 pdfts[ant2*nrsrc + src],
-					 itsLMN[src]));
-	// For the time being only point sources are supported.
-	MeqPointSource& mps = dynamic_cast<MeqPointSource&>(*sources[src]);
-	vecSrc.push_back (MeqJonesExpr (new MeqBaseLinPS(expr1, &mps)));
+    // Create the total DFT per source.
+    int src = srcgrp[j];
+    MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
+                     pdfts[ant2*nrsrc + src],
+                     itsLMN[src]));
+    // For the time being only point sources are supported.
+    MeqPointSource& mps = dynamic_cast<MeqPointSource&>(*sources[src]);
+    vecSrc.push_back (MeqJonesExpr (new MeqBaseLinPS(expr1, &mps)));
       }
       MeqJonesExpr sum;
       // Sum all sources in the group.
       if (vecSrc.size() == 1) {
-	sum = vecSrc[0];
+    sum = vecSrc[0];
       } else {
-	sum = MeqJonesExpr (new MeqJonesSum(vecSrc));
+    sum = MeqJonesExpr (new MeqJonesSum(vecSrc));
       }
       // Multiply by ionospheric gain/phase per station per patch.
       if (usePatchGain) {
-	vecPatch.push_back (new MeqJonesCMul3(patchGJ[ant1*nrgrp + grp],
-					      sum,
-					      patchGJ[ant2*nrgrp + grp]));
+    vecPatch.push_back (new MeqJonesCMul3(patchGJ[ant1*nrgrp + grp],
+                          sum,
+                          patchGJ[ant2*nrgrp + grp]));
       } else {
-	vecPatch.push_back (sum);
+    vecPatch.push_back (sum);
       }
     }
     // Sum all patches.
@@ -942,18 +942,18 @@ void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
     // Multiply by total gain/phase per station.
     if (useTotalGain) {
       sumAll = new MeqJonesCMul3(totalGJ[ant1],
-				 sumAll,
-				 totalGJ[ant2]);
+                 sumAll,
+                 totalGJ[ant2]);
     }
     if (useBandpass) {
       sumAll = new MeqJonesCMul3(bandpass[ant1],
-				 sumAll,
-				 bandpass[ant2]);
+                 sumAll,
+                 bandpass[ant2]);
     }
     if (useDipole) {
       sumAll = new MeqJonesCMul3(dipoleExpr[ant1],
-				 sumAll,
-				 dipoleExpr[ant2]);
+                 sumAll,
+                 dipoleExpr[ant2]);
     }
     itsExpr[blindex] = sumAll;
   }
@@ -988,10 +988,10 @@ void Prediffer::setPrecalcNodes (vector<MeqJonesExpr>& nodes)
     std::vector<MeqExprRep*>& pcnodes = itsPrecalcNodes[level];
     pcnodes.resize (0);
     for (std::vector<MeqJonesExpr>::iterator iter=nodes.begin();
-	 iter != nodes.end();
-	 ++iter) {
+     iter != nodes.end();
+     ++iter) {
       if (! iter->isNull()) {
-	iter->getCachingNodes (pcnodes, level, false);
+    iter->getCachingNodes (pcnodes, level, false);
       }
     }
   }
@@ -1008,7 +1008,7 @@ void Prediffer::readParms()
   itsParmValues.clear();
   vector<string> emptyvec;
   ParmDB::ParmDomain pdomain(itsWorkDomain.startX(), itsWorkDomain.endX(),
-			     itsWorkDomain.startY(), itsWorkDomain.endY());
+                 itsWorkDomain.startY(), itsWorkDomain.endY());
   itsMEP.getValues (itsParmValues, emptyvec, pdomain);
   itsGSMMEP.getValues (itsParmValues, emptyvec, pdomain);
   // Remove the funklets from all parms.
@@ -1024,6 +1024,7 @@ void Prediffer::initSolvableParms (const vector<MeqDomain>& solveDomains)
 {
   itsParmData.set (solveDomains, itsWorkDomain);
   const vector<MeqDomain>& localSolveDomains = itsParmData.getDomains();
+
   itsNrPert = 0;
   itsNrScids.resize (localSolveDomains.size());
   std::fill (itsNrScids.begin(), itsNrScids.end(), 0);
@@ -1032,19 +1033,19 @@ void Prediffer::initSolvableParms (const vector<MeqDomain>& solveDomains)
        ++iter)
   {
     int nr = iter->second.initDomain (localSolveDomains,
-				      itsNrPert, itsNrScids);
+                      itsNrPert, itsNrScids);
     if (nr > 0) {
       itsParmData.parms().push_back (ParmData(iter->second.getName(),
-					      iter->second.getParmDBSeqNr(),
-					      iter->second.getFunklets()));
+                          iter->second.getParmDBSeqNr(),
+                          iter->second.getFunklets()));
     }
   }
   // Determine the fitter indices for the frequency and time axis.
   // First check if the (local) solve domains are ordered and regular.
   // Start with finding the number of frequency intervals.
   for (itsFreqNrFit=1; itsFreqNrFit<localSolveDomains.size(); itsFreqNrFit++) {
-    if (localSolveDomains[itsFreqNrFit].startX() < 
-	localSolveDomains[itsFreqNrFit-1].endX()) {
+    if (localSolveDomains[itsFreqNrFit].startX() <
+    localSolveDomains[itsFreqNrFit-1].endX()) {
       break;
     }
   }
@@ -1093,7 +1094,7 @@ void Prediffer::clearSolvableParms()
 }
 
 void Prediffer::mapDataFiles (const string& inColumnName,
-			      const string& outColumnName)
+                  const string& outColumnName)
 {
   Table tab;
   if (! inColumnName.empty()) {
@@ -1101,15 +1102,15 @@ void Prediffer::mapDataFiles (const string& inColumnName,
     if (itsInDataMap == 0  ||  itsInDataMap->getFileName() != inFile) {
       tab = Table(itsMSName);
       ASSERTSTR (tab.tableDesc().isColumn(inColumnName),
-		 "Column " << inColumnName << " does not exist");
+         "Column " << inColumnName << " does not exist");
       delete itsInDataMap;
       itsInDataMap = 0;
       // See if the input file is the previous output file.
       if (itsOutDataMap  &&  itsOutDataMap->getFileName() == inFile) {
-	itsInDataMap = itsOutDataMap;
-	itsOutDataMap = 0;
+    itsInDataMap = itsOutDataMap;
+    itsOutDataMap = 0;
       } else {
-	itsInDataMap = new MMap (inFile, MMap::Read);
+    itsInDataMap = new MMap (inFile, MMap::Read);
       }
     }
   }
@@ -1120,7 +1121,7 @@ void Prediffer::mapDataFiles (const string& inColumnName,
     }
     if (itsOutDataMap == 0  ||  itsOutDataMap->getFileName() != outFile) {
       if (! tab.tableDesc().isColumn(outColumnName)) {
-	addDataColumn (tab, outColumnName, outFile);
+    addDataColumn (tab, outColumnName, outFile);
       }
       delete itsOutDataMap;
       itsOutDataMap = 0;
@@ -1147,16 +1148,16 @@ bool Prediffer::nextDataChunk (bool useFitters)
   int64 startOffset = itsTimeIndex * itsMSMapInfo.timeSize();
   if (itsInDataMap) {
     itsInDataMap->mapFile(startOffset*sizeof(fcomplex),
-			  nrValues*sizeof(fcomplex)); 
+              nrValues*sizeof(fcomplex));
     itsMSMapInfo.setInData(static_cast<fcomplex*>(itsInDataMap->getStart()));
   }
   if (itsOutDataMap) {
     itsOutDataMap->mapFile(startOffset*sizeof(fcomplex),
-			   nrValues*sizeof(fcomplex)); 
+               nrValues*sizeof(fcomplex));
     itsMSMapInfo.setOutData(static_cast<fcomplex*>(itsOutDataMap->getStart()));
   }
   // Map the correct flags subset (this time interval).
-  itsFlagsMap->mapFile(startOffset, nrValues); 
+  itsFlagsMap->mapFile(startOffset, nrValues);
   // Map the weights.
   ///  itsWeightMap->mapFile(..,..);
   // Fill the time vector.
@@ -1177,8 +1178,8 @@ bool Prediffer::nextDataChunk (bool useFitters)
     for (int i=0; i<nt; i++) {
       double time = itsMSDesc.times[itsTimeIndex + st + i];
       while (time > localSolveDomains[interv*itsFreqNrFit].endY()) {
-	interv++;
-	DBGASSERT (interv < localSolveDomains.size()/itsFreqNrFit);
+    interv++;
+    DBGASSERT (interv < localSolveDomains.size()/itsFreqNrFit);
       }
       itsTimeFitInx[i] = interv;
     }
@@ -1187,14 +1188,14 @@ bool Prediffer::nextDataChunk (bool useFitters)
 }
 
 void Prediffer::addDataColumn (Table& tab, const string& columnName,
-			       const string& symlinkName)
+                   const string& symlinkName)
 {
   tab.reopenRW();
   File fil(symlinkName);
   ASSERT (!fil.exists());
   ArrayColumnDesc<Complex> resCol(columnName,
-				  IPosition(2,itsNCorr, itsNrChan),
-				  ColumnDesc::FixedShape);
+                  IPosition(2,itsNCorr, itsNrChan),
+                  ColumnDesc::FixedShape);
   String stManName = "Tiled_"+columnName;
   TiledColumnStMan tiledRes(stManName, IPosition(3,itsNCorr,itsNrChan,1));
   tab.addColumn (resCol, tiledRes);
@@ -1216,8 +1217,8 @@ void Prediffer::addDataColumn (Table& tab, const string& columnName,
 }
 
 void Prediffer::processData (bool useFlags, bool preCalc, bool calcDeriv,
-			     ProcessFuncBL pfunc,
-			     void* arg)
+                 ProcessFuncBL pfunc,
+                 void* arg)
 {
   // Map the correct input and output file (if needed).
   mapDataFiles (itsInDataColumn, itsOutDataColumn);
@@ -1244,7 +1245,7 @@ void Prediffer::processData (bool useFlags, bool preCalc, bool calcDeriv,
     // Size the thread private flag buffers.
     if (useFlags) {
       for (int i=0; i<itsNthread; ++i) {
-	itsFlagVecs[i].resize (nrtimes*nrchan*itsNCorr);
+    itsFlagVecs[i].resize (nrtimes*nrchan*itsNCorr);
       }
     }
     fcomplex* inDataStart  = itsMSMapInfo.inData();
@@ -1254,14 +1255,14 @@ void Prediffer::processData (bool useFlags, bool preCalc, bool calcDeriv,
 
     // Create a request.
     MeqDomain domain(startFreq, endFreq, itsChunkTimes[0],
-		     itsChunkTimes[itsChunkTimes.size()-1]);
+             itsChunkTimes[itsChunkTimes.size()-1]);
     MeqRequest request(domain, nrchan, itsChunkTimes, nrpert);
     request.setFirstX (itsFirstChan);
     // Loop through all baselines.
     //static NSTimer timer("Prediffer::fillFitters", true);
     //timer.start();
     if (preCalc) {
-      precalcNodes (request);
+        precalcNodes (request);
     }
 
     // Loop through all baselines and fill its equations if selected.
@@ -1269,35 +1270,35 @@ void Prediffer::processData (bool useFlags, bool preCalc, bool calcDeriv,
     {
 #pragma omp for schedule(dynamic)
       for (uint blindex=0; blindex<itsBLInx.size(); ++blindex) {
-	int bl = itsBLInx[blindex];
-	// Get pointer to correct data part.
-	unsigned int offset = freqOffset + bl*itsNrChan*itsNCorr;
-	fcomplex* idata = inDataStart + offset;
-	fcomplex* odata = outDataStart + offset;
-	// Convert the flag bits to bools.
-	///	  if (ant1==8&&ant2==11&&tStep<5) {
-	  ///cout << "flagmap: start="<<flagStart<<" sbit="<<flagStartBit
-	  /// << " offs="<<offset<<endl;
-	  ///	  }
+    int bl = itsBLInx[blindex];
+    // Get pointer to correct data part.
+    unsigned int offset = freqOffset + bl*itsNrChan*itsNCorr;
+    fcomplex* idata = inDataStart + offset;
+    fcomplex* odata = outDataStart + offset;
+    // Convert the flag bits to bools.
+    ///   if (ant1==8&&ant2==11&&tStep<5) {
+      ///cout << "flagmap: start="<<flagStart<<" sbit="<<flagStartBit
+      /// << " offs="<<offset<<endl;
+      ///     }
 #if defined _OPENMP
-	int threadNr = omp_get_thread_num();
+    int threadNr = omp_get_thread_num();
 #else
-	int threadNr = 0;
+    int threadNr = 0;
 #endif
-	// If needed, convert flag bits to bools.
-	bool* flags = 0;
-	if (useFlags) {
-	  flags = &itsFlagVecs[threadNr][0];
-	  for (int i=0; i<itsMSMapInfo.nrTimes(); ++i) {
-	    bitToBool (flags+i*nrchan*itsNCorr, flagStart, nrchan*itsNCorr,
-		       offset + flagStartBit);
-	    offset += itsMSMapInfo.timeSize();
-	  }
-	}
-	// Call the given member function.
-	(this->*pfunc) (threadNr, arg, idata, odata, flags,
-			request, blindex, false);
-			///request, blindex, itsAnt1[bl]==4&&itsAnt2[bl]==8);
+    // If needed, convert flag bits to bools.
+    bool* flags = 0;
+    if (useFlags) {
+      flags = &itsFlagVecs[threadNr][0];
+      for (int i=0; i<itsMSMapInfo.nrTimes(); ++i) {
+        bitToBool (flags+i*nrchan*itsNCorr, flagStart, nrchan*itsNCorr,
+               offset + flagStartBit);
+        offset += itsMSMapInfo.timeSize();
+      }
+    }
+    // Call the given member function.
+    (this->*pfunc) (threadNr, arg, idata, odata, flags,
+            request, blindex, false);
+            ///request, blindex, itsAnt1[bl]==4&&itsAnt2[bl]==8);
       }
     } // end omp parallel
       //timer.stop();
@@ -1316,9 +1317,9 @@ void Prediffer::precalcNodes (const MeqRequest& request)
       int nrExprs = exprs.size();
       if (nrExprs > 0) {
 #pragma omp for schedule(dynamic)
-	for (int i=0; i<nrExprs; ++i) {
-	  exprs[i]->precalculate (request);
-	}
+    for (int i=0; i<nrExprs; ++i) {
+      exprs[i]->precalculate (request);
+    }
       }
     }
   } // end omp parallel
@@ -1353,7 +1354,7 @@ void Prediffer::fillFitters (vector<casa::LSQFit>& fitters)
   }
   // Process the data and use the flags.
   processData (true, true, true,
-	       &Prediffer::fillEquation, &threadPrivateFitters);
+                            &Prediffer::fillEquation, &threadPrivateFitters);
   // Merge the thread-specific fitters into the main ones.
   for (int j=1; j<itsNthread; ++j) {
     for (int i=0; i<nfitter; ++i) {
@@ -1372,7 +1373,7 @@ void Prediffer::correctData()
   // Find all nodes to be precalculated.
   setPrecalcNodes (itsCorrExpr);
   processData (false, true, false,
-	       &Prediffer::correctBL, 0);
+           &Prediffer::correctBL, 0);
   ///  if (flush) {
     ///    itsOutDataMap->flush();
     ///  }
@@ -1383,7 +1384,7 @@ void Prediffer::subtractData()
   // Find all nodes to be precalculated.
   setPrecalcNodes (itsExpr);
   processData (false, true, false,
-	       &Prediffer::subtractBL, 0);
+           &Prediffer::subtractBL, 0);
   ///  if (flush) {
     ///    itsOutDataMap->flush();
     ///  }
@@ -1394,11 +1395,11 @@ void Prediffer::writePredictedData()
   // Find all nodes to be precalculated.
   setPrecalcNodes (itsExpr);
   processData (false, true, false,
-	       &Prediffer::predictBL, 0);
+           &Prediffer::predictBL, 0);
 }
 
 void Prediffer::getData (bool useTree,
-			 Array<Complex>& dataArr, Array<Bool>& flagArr)
+             Array<Complex>& dataArr, Array<Bool>& flagArr)
 {
   int nrusedbl = itsBLInx.size();
   int nrchan   = itsLastChan-itsFirstChan+1;
@@ -1422,10 +1423,10 @@ void Prediffer::getData (bool useTree,
 }
 
 void Prediffer::fillEquation (int threadnr, void* arg,
-			      const fcomplex* data, fcomplex*,
-			      const bool* flags,
-			      const MeqRequest& request, int blindex,
-			      bool showd)
+                  const fcomplex* data, fcomplex*,
+                  const bool* flags,
+                  const MeqRequest& request, int blindex,
+                  bool showd)
 {
   ///int bl = itsBLInx[blindex];
   ///int ant1 = itsAnt1[bl];
@@ -1451,7 +1452,7 @@ void Prediffer::fillEquation (int threadnr, void* arg,
   itsPredTimer.start();
   MeqJonesExpr& expr = itsExpr[blindex];
   // Do the actual predict for the entire work domain.
-  MeqJonesResult jresult = expr.getResult (request); 
+  MeqJonesResult jresult = expr.getResult (request);
   itsPredTimer.stop();
 
   itsEqTimer.start();
@@ -1492,135 +1493,135 @@ void Prediffer::fillEquation (int threadnr, void* arg,
       // Also get pointers to the perturbed values.
       int nrParamsFound = 0;
       for (int scinx=0; scinx<itsNrPert; ++scinx) {
-	if (tcres.isDefined(scinx)) {
-	  indices[nrParamsFound] = scinx;
-	  const MeqMatrix& valp = tcres.getPerturbedValue(scinx);
-	  valp.dcomplexStorage (pertReal[nrParamsFound],
-				pertImag[nrParamsFound]);
-	  invPert[nrParamsFound] = 1. / tcres.getPerturbation(scinx, 0);
-	  nrParamsFound++;
-	}
+    if (tcres.isDefined(scinx)) {
+      indices[nrParamsFound] = scinx;
+      const MeqMatrix& valp = tcres.getPerturbedValue(scinx);
+      valp.dcomplexStorage (pertReal[nrParamsFound],
+                pertImag[nrParamsFound]);
+      invPert[nrParamsFound] = 1. / tcres.getPerturbation(scinx, 0);
+      nrParamsFound++;
+    }
       }
 
       if (nrParamsFound > 0) {
-	const fcomplex* cdata  = data;
-	const bool*     cflags = flags;
-	if (fitters.size() == 1) {
-	  // No fitter indexing needed if only one fitter.
-	  for (int tim=0; tim<nrtime; tim++) {
-	    // Loop through all channels.
-	    if (showd) {
-	      showData (corr, sdch, inc, nrchan, cflags, cdata,
-			realVals, imagVals);
-	    }
-	    // Form two equations for each unflagged data point.
-	    int dch = sdch;
-	    for (int ch=0; ch<nrchan; ++ch, dch+=inc) {
-	      if (! cflags[dch]) {
-		double diffr = real(cdata[dch]) - *realVals;
-		double diffi = imag(cdata[dch]) - *imagVals;
-		for (int scinx=0; scinx<nrParamsFound; ++scinx) {
-		  // Calculate the derivative for real and imag part.
-		  double invp = invPert[scinx];
-		  resultr[scinx] = (*pertReal[scinx]++ - *realVals) * invp;
-		  resulti[scinx] = (*pertImag[scinx]++ - *imagVals) * invp;
-		}
-		// Now add the equations to the correct fitter object.
-		if (nrParamsFound != itsNrPert) {
-		  fitters[0]->makeNorm (nrParamsFound, indices,
-					resultr, 1., diffr);
-		  fitters[0]->makeNorm (nrParamsFound, indices,
-					resulti, 1., diffi);
-		} else {
-		  fitters[0]->makeNorm (resultr, 1., diffr);
-		  fitters[0]->makeNorm (resulti, 1., diffi);
-		}
-		if (showd) {
-		  cout << "eq"<<corr<<" ch " << 2*ch << " diff " << diffr;
-		  for (int ii=0; ii<nrParamsFound; ii++) {
-		    cout << ' '<<resultr[ii];
-		  }
-		  cout << endl;
-		  cout << "eq"<<corr<<" ch " << 2*ch+1 << " diff " << diffi;
-		  for (int ii=0; ii<nrParamsFound; ii++) {
-		    cout << ' '<<resulti[ii];
-		  }
-		  cout << endl;
-		}
-		nreq += 2;
-	      } else {
-		for (int scinx=0; scinx<nrParamsFound; ++scinx) {
-		  pertReal[scinx]++;
-		  pertImag[scinx]++;
-		}
-	      }
-	      realVals++;
-	      imagVals++;
-	    }
-	    cdata  += timeSize;       // next observed data time step
-	    cflags += nrchan*itsNCorr;
-	  }
-	} else {
-	  // Multiple fitters, so for each point the correct fitter
-	  // has to be determined.
-	  for (int tim=0; tim<nrtime; tim++) {
-	    // Loop through all channels.
-	    if (showd) {
-	      showData (corr, sdch, inc, nrchan, cflags, cdata,
-			realVals, imagVals);
-	    }
-	    // Get first fitter index for this time line.
-	    int fitInxT = itsTimeFitInx[tim] * itsFreqNrFit;
-	    // Form two equations for each unflagged data point.
-	    int dch = sdch;
-	    for (int ch=0; ch<nrchan; ++ch, dch+=inc) {
-	      if (! cflags[dch]) {
-		int fitInx = fitInxT + itsFreqFitInx[ch];
-		double diffr = real(cdata[dch]) - *realVals;
-		double diffi = imag(cdata[dch]) - *imagVals;
-		for (int scinx=0; scinx<nrParamsFound; ++scinx) {
-		  // Calculate the derivative for real and imag part.
-		  double invp = 1. / tcres.getPerturbation(indices[scinx],
-							   fitInx);
-		  resultr[scinx] = (*pertReal[scinx]++ - *realVals) * invp;
-		  resulti[scinx] = (*pertImag[scinx]++ - *imagVals) * invp;
-		}
-		// Now add the equations to the correct fitter object.
-		if (nrParamsFound != itsNrPert) {
-		  fitters[fitInx]->makeNorm (nrParamsFound, indices,
-					     resultr, 1., diffr);
-		  fitters[fitInx]->makeNorm (nrParamsFound, indices,
-					     resulti, 1., diffi);
-		} else {
-		  fitters[fitInx]->makeNorm (resultr, 1., diffr);
-		  fitters[fitInx]->makeNorm (resulti, 1., diffi);
-		}
-		if (showd) {
-		  cout << "eq"<<corr<<" ch " << 2*ch << " diff " << diffr;
-		  for (int ii=0; ii<nrParamsFound; ii++) {
-		    cout << ' '<<resultr[ii];
-		  }
-		  cout << endl;
-		  cout << "eq"<<corr<<" ch " << 2*ch+1 << " diff " << diffi;
-		  for (int ii=0; ii<nrParamsFound; ii++) {
-		    cout << ' '<<resulti[ii];
-		  }
-		  cout << endl;
-		}
-		nreq += 2;
-	      } else {
-		for (int scinx=0; scinx<nrParamsFound; ++scinx) {
-		  pertReal[scinx]++;
-		  pertImag[scinx]++;
-		}
-	      }
-	      realVals++;
-	      imagVals++;
-	    }
-	    cdata  += timeSize;       // next observed data time step
-	    cflags += nrchan*itsNCorr;
-	  }
-	}
+    const fcomplex* cdata  = data;
+    const bool*     cflags = flags;
+    if (fitters.size() == 1) {
+      // No fitter indexing needed if only one fitter.
+      for (int tim=0; tim<nrtime; tim++) {
+        // Loop through all channels.
+        if (showd) {
+          showData (corr, sdch, inc, nrchan, cflags, cdata,
+            realVals, imagVals);
+        }
+        // Form two equations for each unflagged data point.
+        int dch = sdch;
+        for (int ch=0; ch<nrchan; ++ch, dch+=inc) {
+          if (! cflags[dch]) {
+        double diffr = real(cdata[dch]) - *realVals;
+        double diffi = imag(cdata[dch]) - *imagVals;
+        for (int scinx=0; scinx<nrParamsFound; ++scinx) {
+          // Calculate the derivative for real and imag part.
+          double invp = invPert[scinx];
+          resultr[scinx] = (*pertReal[scinx]++ - *realVals) * invp;
+          resulti[scinx] = (*pertImag[scinx]++ - *imagVals) * invp;
+        }
+        // Now add the equations to the correct fitter object.
+        if (nrParamsFound != itsNrPert) {
+          fitters[0]->makeNorm (nrParamsFound, indices,
+                    resultr, 1., diffr);
+          fitters[0]->makeNorm (nrParamsFound, indices,
+                    resulti, 1., diffi);
+        } else {
+          fitters[0]->makeNorm (resultr, 1., diffr);
+          fitters[0]->makeNorm (resulti, 1., diffi);
+        }
+        if (showd) {
+          cout << "eq"<<corr<<" ch " << 2*ch << " diff " << diffr;
+          for (int ii=0; ii<nrParamsFound; ii++) {
+            cout << ' '<<resultr[ii];
+          }
+          cout << endl;
+          cout << "eq"<<corr<<" ch " << 2*ch+1 << " diff " << diffi;
+          for (int ii=0; ii<nrParamsFound; ii++) {
+            cout << ' '<<resulti[ii];
+          }
+          cout << endl;
+        }
+        nreq += 2;
+          } else {
+        for (int scinx=0; scinx<nrParamsFound; ++scinx) {
+          pertReal[scinx]++;
+          pertImag[scinx]++;
+        }
+          }
+          realVals++;
+          imagVals++;
+        }
+        cdata  += timeSize;       // next observed data time step
+        cflags += nrchan*itsNCorr;
+      }
+    } else {
+      // Multiple fitters, so for each point the correct fitter
+      // has to be determined.
+      for (int tim=0; tim<nrtime; tim++) {
+        // Loop through all channels.
+        if (showd) {
+          showData (corr, sdch, inc, nrchan, cflags, cdata,
+            realVals, imagVals);
+        }
+        // Get first fitter index for this time line.
+        int fitInxT = itsTimeFitInx[tim] * itsFreqNrFit;
+        // Form two equations for each unflagged data point.
+        int dch = sdch;
+        for (int ch=0; ch<nrchan; ++ch, dch+=inc) {
+          if (! cflags[dch]) {
+        int fitInx = fitInxT + itsFreqFitInx[ch];
+        double diffr = real(cdata[dch]) - *realVals;
+        double diffi = imag(cdata[dch]) - *imagVals;
+        for (int scinx=0; scinx<nrParamsFound; ++scinx) {
+          // Calculate the derivative for real and imag part.
+          double invp = 1. / tcres.getPerturbation(indices[scinx],
+                               fitInx);
+          resultr[scinx] = (*pertReal[scinx]++ - *realVals) * invp;
+          resulti[scinx] = (*pertImag[scinx]++ - *imagVals) * invp;
+        }
+        // Now add the equations to the correct fitter object.
+        if (nrParamsFound != itsNrPert) {
+          fitters[fitInx]->makeNorm (nrParamsFound, indices,
+                         resultr, 1., diffr);
+          fitters[fitInx]->makeNorm (nrParamsFound, indices,
+                         resulti, 1., diffi);
+        } else {
+          fitters[fitInx]->makeNorm (resultr, 1., diffr);
+          fitters[fitInx]->makeNorm (resulti, 1., diffi);
+        }
+        if (showd) {
+          cout << "eq"<<corr<<" ch " << 2*ch << " diff " << diffr;
+          for (int ii=0; ii<nrParamsFound; ii++) {
+            cout << ' '<<resultr[ii];
+          }
+          cout << endl;
+          cout << "eq"<<corr<<" ch " << 2*ch+1 << " diff " << diffi;
+          for (int ii=0; ii<nrParamsFound; ii++) {
+            cout << ' '<<resulti[ii];
+          }
+          cout << endl;
+        }
+        nreq += 2;
+          } else {
+        for (int scinx=0; scinx<nrParamsFound; ++scinx) {
+          pertReal[scinx]++;
+          pertImag[scinx]++;
+        }
+          }
+          realVals++;
+          imagVals++;
+        }
+        cdata  += timeSize;       // next observed data time step
+        cflags += nrchan*itsNCorr;
+      }
+    }
       }
     }
   }
@@ -1630,8 +1631,8 @@ void Prediffer::fillEquation (int threadnr, void* arg,
 }
 
 void Prediffer::showData (int corr, int sdch, int inc, int nrchan,
-			  const bool* flags, const fcomplex* data,
-			  const double* realVals, const double* imagVals)
+              const bool* flags, const fcomplex* data,
+              const double* realVals, const double* imagVals)
 {
   cout << "flag=" << corr << "x ";
   int dch = sdch;
@@ -1643,17 +1644,17 @@ void Prediffer::showData (int corr, int sdch, int inc, int nrchan,
   dch = sdch;
   for (int ch=0; ch<nrchan; ch++, dch+=inc) {
     cout << '(' << std::setprecision(12)
-	 << real(data[dch])
-	 << ',' << std::setprecision(12)
-	 << imag(data[dch])<< ')';
+     << real(data[dch])
+     << ',' << std::setprecision(12)
+     << imag(data[dch])<< ')';
   }
   cout << endl;
   cout << "corr=" << corr << "x ";
   for (int ch=0; ch<nrchan; ch++) {
     cout << '(' << std::setprecision(12)
-	 << realVals[ch]
-	 << ',' << std::setprecision(12)
-	 << imagVals[ch]<< ')';
+     << realVals[ch]
+     << ',' << std::setprecision(12)
+     << imagVals[ch]<< ')';
   }
   cout << endl;
 }
@@ -1684,9 +1685,9 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
       int nrExprs = exprs.size();
       if (nrExprs > 0) {
 #pragma omp parallel for schedule(dynamic)
-	for (int i = 0; i < nrExprs; i ++) {
-	  exprs[i]->precalculate (request);
-	}
+    for (int i = 0; i < nrExprs; i ++) {
+      exprs[i]->precalculate (request);
+    }
       }
     }
     // Evaluate for all selected baselines.
@@ -1705,25 +1706,25 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
 }
 
 void Prediffer::getBL (int, void* arg,
-		       const fcomplex* data, fcomplex*,
-		       const bool* flags,
-		       const MeqRequest&, int blindex,
-		       bool)
+               const fcomplex* data, fcomplex*,
+               const bool* flags,
+               const MeqRequest&, int blindex,
+               bool)
 {
   Complex* datap = static_cast<pair<Complex*,bool*>*>(arg)->first;
   bool*    flagp = static_cast<pair<Complex*,bool*>*>(arg)->second;
   int nrchan = itsLastChan-itsFirstChan+1;
   memcpy (datap+blindex*nrchan*itsNCorr, data,
-	  nrchan*itsNCorr*sizeof(Complex));
+      nrchan*itsNCorr*sizeof(Complex));
   memcpy (flagp+blindex*nrchan*itsNCorr, flags,
-	  nrchan*itsNCorr*sizeof(bool));
+      nrchan*itsNCorr*sizeof(bool));
 }
 
 void Prediffer::getMapBL (int, void* arg,
-			  const fcomplex*, fcomplex*,
-			  const bool* flags,
-			  const MeqRequest& request, int blindex,
-			  bool)
+              const fcomplex*, fcomplex*,
+              const bool* flags,
+              const MeqRequest& request, int blindex,
+              bool)
 {
   pair<pair<Complex*,bool*>*, vector<MeqJonesExpr>*>* p1 =
     static_cast<pair<pair<Complex*,bool*>*, vector<MeqJonesExpr>*>*>(arg);
@@ -1733,7 +1734,7 @@ void Prediffer::getMapBL (int, void* arg,
   int nrchan = itsLastChan-itsFirstChan+1;
   datap += blindex*nrchan*itsNCorr;
   memcpy (flagp+blindex*nrchan*itsNCorr, flags,
-	  nrchan*itsNCorr*sizeof(bool));
+      nrchan*itsNCorr*sizeof(bool));
   MeqJonesResult jresult = expr[blindex].getResult (request);
   const double *r1, *i1, *r2, *i2, *r3, *i3, *r4, *i4;
   jresult.result11().getValue().dcomplexStorage (r1, i1);
@@ -1744,43 +1745,43 @@ void Prediffer::getMapBL (int, void* arg,
   for (int iy=0; iy<jresult.result11().getValue().ny(); ++iy) {
     if (itsReverseChan) {
       for (int ix=nx; ix>0;) {
-	ix--;
-	int i = iy*nx + ix;
-	*datap++ = Complex(r1[i], i1[i]);
-	if (itsNCorr > 2) {
-	  *datap++ = Complex(r2[i], i2[i]);
-	  *datap++ = Complex(r3[i], i3[i]);
-	}
-	if (itsNCorr > 1) {
-	  *datap++ = Complex(r4[i], i4[i]);
-	}
+    ix--;
+    int i = iy*nx + ix;
+    *datap++ = Complex(r1[i], i1[i]);
+    if (itsNCorr > 2) {
+      *datap++ = Complex(r2[i], i2[i]);
+      *datap++ = Complex(r3[i], i3[i]);
+    }
+    if (itsNCorr > 1) {
+      *datap++ = Complex(r4[i], i4[i]);
+    }
       }
     } else {
       for (int ix=0; ix<nx; ++ix) {
-	int i = iy*nx + ix;
-	*datap++ = Complex(r1[i], i1[i]);
-	if (itsNCorr > 2) {
-	  *datap++ = Complex(r2[i], i2[i]);
-	  *datap++ = Complex(r3[i], i3[i]);
-	}
-	if (itsNCorr > 1) {
-	  *datap++ = Complex(r4[i], i4[i]);
-	}
+    int i = iy*nx + ix;
+    *datap++ = Complex(r1[i], i1[i]);
+    if (itsNCorr > 2) {
+      *datap++ = Complex(r2[i], i2[i]);
+      *datap++ = Complex(r3[i], i3[i]);
+    }
+    if (itsNCorr > 1) {
+      *datap++ = Complex(r4[i], i4[i]);
+    }
       }
     }
   }
 }
 
 void Prediffer::subtractBL (int, void*,
-			    const fcomplex* dataIn, fcomplex* dataOut,
-			    const bool*,
-			    const MeqRequest& request, int blindex,
-			    bool)
+                const fcomplex* dataIn, fcomplex* dataOut,
+                const bool*,
+                const MeqRequest& request, int blindex,
+                bool)
 {
   itsPredTimer.start();
   MeqJonesExpr& expr = itsExpr[blindex];
   // Do the actual predict.
-  MeqJonesResult jresult = expr.getResult (request); 
+  MeqJonesResult jresult = expr.getResult (request);
   itsPredTimer.stop();
 
   itsEqTimer.start();
@@ -1803,23 +1804,23 @@ void Prediffer::subtractBL (int, void*,
     fcomplex* odata = dataOut;
     for (int corr=0; corr<itsNCorr; corr++, idata++, odata++) {
       if (itsCorr[corr]) {
-	const double* realVals = predReal[corr];
-	const double* imagVals = predImag[corr];
-	// Subtract predicted from the data.
-	int dch = itsReverseChan ? itsNCorr * (nrchan - 1) : 0;
-	int inc = itsReverseChan ? -itsNCorr : itsNCorr;
-	if (idata == odata) {
-	  for (int ch=0; ch<nrchan; ch++, dch+=inc) {
-	    odata[dch] -= makefcomplex(realVals[ch], imagVals[ch]);
-	  }
-	} else {
-	  for (int ch=0; ch<nrchan; ch++, dch+=inc) {
-	    odata[dch] = idata[dch] - makefcomplex(realVals[ch],
-						   imagVals[ch]);
-	  }
-	}
-	predReal[corr] += nrchan;
-	predImag[corr] += nrchan;
+    const double* realVals = predReal[corr];
+    const double* imagVals = predImag[corr];
+    // Subtract predicted from the data.
+    int dch = itsReverseChan ? itsNCorr * (nrchan - 1) : 0;
+    int inc = itsReverseChan ? -itsNCorr : itsNCorr;
+    if (idata == odata) {
+      for (int ch=0; ch<nrchan; ch++, dch+=inc) {
+        odata[dch] -= makefcomplex(realVals[ch], imagVals[ch]);
+      }
+    } else {
+      for (int ch=0; ch<nrchan; ch++, dch+=inc) {
+        odata[dch] = idata[dch] - makefcomplex(realVals[ch],
+                           imagVals[ch]);
+      }
+    }
+    predReal[corr] += nrchan;
+    predImag[corr] += nrchan;
       }
     }
     dataIn  += timeSize;
@@ -1829,10 +1830,10 @@ void Prediffer::subtractBL (int, void*,
 }
 
 void Prediffer::correctBL (int, void*,
-			   const fcomplex*, fcomplex*,
-			   const bool*,
-			   const MeqRequest& request, int blindex,
-			   bool)
+               const fcomplex*, fcomplex*,
+               const bool*,
+               const MeqRequest& request, int blindex,
+               bool)
 {
   itsPredTimer.start();
   MeqJonesResult res = itsCorrExpr[blindex].getResult (request);
@@ -1843,15 +1844,15 @@ void Prediffer::correctBL (int, void*,
 }
 
 void Prediffer::predictBL (int, void*,
-			   const fcomplex*, fcomplex* dataOut,
-			   const bool*,
-			   const MeqRequest& request, int blindex,
-			   bool)
+               const fcomplex*, fcomplex* dataOut,
+               const bool*,
+               const MeqRequest& request, int blindex,
+               bool)
 {
   itsPredTimer.start();
   MeqJonesExpr& expr = itsExpr[blindex];
   // Do the actual predict.
-  MeqJonesResult jresult = expr.getResult (request); 
+  MeqJonesResult jresult = expr.getResult (request);
   itsPredTimer.stop();
 
   itsEqTimer.start();
@@ -1874,16 +1875,16 @@ void Prediffer::predictBL (int, void*,
     fcomplex* data = dataOut;
     for (int corr=0; corr<itsNCorr; corr++, data++) {
       if (itsCorr[corr]) {
-	const double* realVals = predReal[corr];
-	const double* imagVals = predImag[corr];
-	// Store the predict in data.
-	int dch = itsReverseChan ? itsNCorr * (nrchan - 1) : 0;
-	int inc = itsReverseChan ? -itsNCorr : itsNCorr;
-	for (int ch=0; ch<nrchan; ch++, dch+=inc) {
-	  data[dch] = makefcomplex(realVals[ch], imagVals[ch]);
-	}
-	predReal[corr] += nrchan;
-	predImag[corr] += nrchan;
+    const double* realVals = predReal[corr];
+    const double* imagVals = predImag[corr];
+    // Store the predict in data.
+    int dch = itsReverseChan ? itsNCorr * (nrchan - 1) : 0;
+    int inc = itsReverseChan ? -itsNCorr : itsNCorr;
+    for (int ch=0; ch<nrchan; ch++, dch+=inc) {
+      data[dch] = makefcomplex(realVals[ch], imagVals[ch]);
+    }
+    predReal[corr] += nrchan;
+    predImag[corr] += nrchan;
       }
     }
     dataOut += timeSize;
@@ -1892,10 +1893,10 @@ void Prediffer::predictBL (int, void*,
 }
 
 
-bool Prediffer::selectStep (const vector<int>& ant1, 
-			    const vector<int>& ant2,
-			    bool useAutoCorrelations,
-			    const vector<bool>& corr)
+bool Prediffer::selectStep (const vector<int>& ant1,
+                const vector<int>& ant2,
+                bool useAutoCorrelations,
+                const vector<bool>& corr)
 {
   int nrant = itsBLSel.nrow();
   ASSERT (ant1.size() == ant2.size());
@@ -1910,7 +1911,7 @@ bool Prediffer::selectStep (const vector<int>& ant1,
       int a1 = ant1[i];
       int a2 = ant2[i];
       if (a1 < nrant  &&  a2 < nrant) {
-	blSel(a1, a2) = itsBLSel(a1, a2);
+    blSel(a1, a2) = itsBLSel(a1, a2);
       }
     }
   }
@@ -1919,7 +1920,7 @@ bool Prediffer::selectStep (const vector<int>& ant1,
     for (int i=0; i<nrant; i++) {
       blSel(i,i) = false;
     }
-  } 
+  }
   // Fill the correlations to use. Use all if vector is empty.
   for (int i=0; i<itsNCorr; ++i) {
     itsCorr[i] = corr.empty();
@@ -1929,19 +1930,19 @@ bool Prediffer::selectStep (const vector<int>& ant1,
     itsCorr[0] = corr[0];
     if (corr.size() > 1  &&  itsNCorr > 1) {
       if (corr.size() == 2) {
-	// Two values given; last one is always YY (or RR, etc.)
-	itsCorr[itsNCorr-1] = corr[1];
+    // Two values given; last one is always YY (or RR, etc.)
+    itsCorr[itsNCorr-1] = corr[1];
       } else {
-	// More than 2 must be 4 values.
-	ASSERTSTR (corr.size()==4,
-		   "Correlation selection vector must have 1, 2 or 4 flags");
-	if (itsNCorr == 2) {
-	  itsCorr[1] = corr[3];
-	} else {
-	  itsCorr[1] = corr[1];
-	  itsCorr[2] = corr[2];
-	  itsCorr[3] = corr[3];
-	}
+    // More than 2 must be 4 values.
+    ASSERTSTR (corr.size()==4,
+           "Correlation selection vector must have 1, 2 or 4 flags");
+    if (itsNCorr == 2) {
+      itsCorr[1] = corr[3];
+    } else {
+      itsCorr[1] = corr[1];
+      itsCorr[2] = corr[2];
+      itsCorr[3] = corr[3];
+    }
       }
     }
   }
@@ -2022,7 +2023,7 @@ void Prediffer::fillUVW()
     unsigned int tOffset = tStep * itsNrBl * 3;
     double* uvw = uvwDataPtr + tOffset;
     double time = itsMSDesc.times[tStep];
-    
+
     // Set UVW of first station used to 0 (UVW coordinates are relative!).
     statDone.assign (statDone.size(), false);
     int ant0 = itsMSDesc.ant1[0];
@@ -2035,47 +2036,47 @@ void Prediffer::fillUVW()
 //     cout << "itsStatUVW[" << itsAnt1Data[0] << "] time: " << time << " 0, 0, 0" << endl;
 
     int ndone = 1;
-    // Loop until all found stations are handled. This is necessary when not all 
+    // Loop until all found stations are handled. This is necessary when not all
     // stations can be calculated in one loop (depends on the order)
     while (ndone < nStatFnd) {
       int nd = 0;
       // Loop over baselines
       for (unsigned int bl=0; bl<itsNrBl; bl++) {
-	int a1 = itsMSDesc.ant1[bl];
-	int a2 = itsMSDesc.ant2[bl];
-	if (!statDone[a2]) {
-	  if (statDone[a1]) {
-	    statuvw[3*a2]   = uvw[3*bl]   - statuvw[3*a1];
-	    statuvw[3*a2+1] = uvw[3*bl+1] - statuvw[3*a1+1];
-	    statuvw[3*a2+2] = uvw[3*bl+2] - statuvw[3*a1+2];
-	    statDone[a2] = true;
-	    itsStatUVW[a2]->set (time, statuvw[3*a2], statuvw[3*a2+1],
-				 statuvw[3*a2+2]);
+    int a1 = itsMSDesc.ant1[bl];
+    int a2 = itsMSDesc.ant2[bl];
+    if (!statDone[a2]) {
+      if (statDone[a1]) {
+        statuvw[3*a2]   = uvw[3*bl]   - statuvw[3*a1];
+        statuvw[3*a2+1] = uvw[3*bl+1] - statuvw[3*a1+1];
+        statuvw[3*a2+2] = uvw[3*bl+2] - statuvw[3*a1+2];
+        statDone[a2] = true;
+        itsStatUVW[a2]->set (time, statuvw[3*a2], statuvw[3*a2+1],
+                 statuvw[3*a2+2]);
 
-// 	      cout << "itsStatUVW[" << a2 << "] time: " << time << statuvw[3*a2] << " ," << statuvw[3*a2+1] << " ," << statuvw[3*a2+2] << endl;
+//        cout << "itsStatUVW[" << a2 << "] time: " << time << statuvw[3*a2] << " ," << statuvw[3*a2+1] << " ," << statuvw[3*a2+2] << endl;
 
-	    ndone++;
-	    nd++;
-	  }
-	} else if (!statDone[a1]) {
-	  if (statDone[a2]) {
-	    statuvw[3*a1]   = statuvw[3*a2]   - uvw[3*bl];
-	    statuvw[3*a1+1] = statuvw[3*a2+1] - uvw[3*bl+1];
-	    statuvw[3*a1+2] = statuvw[3*a2+2] - uvw[3*bl+2];
-	    statDone[a1] = true;
-	    itsStatUVW[a1]->set (time, statuvw[3*a1], statuvw[3*a1+1],
-				   statuvw[3*a1+2]);
-// 	      cout << "itsStatUVW[" << a1 << "] time: " << time << statuvw[3*a1] << " ," << statuvw[3*a1+1] << " ," << statuvw[3*a1+2] << endl;
+        ndone++;
+        nd++;
+      }
+    } else if (!statDone[a1]) {
+      if (statDone[a2]) {
+        statuvw[3*a1]   = statuvw[3*a2]   - uvw[3*bl];
+        statuvw[3*a1+1] = statuvw[3*a2+1] - uvw[3*bl+1];
+        statuvw[3*a1+2] = statuvw[3*a2+2] - uvw[3*bl+2];
+        statDone[a1] = true;
+        itsStatUVW[a1]->set (time, statuvw[3*a1], statuvw[3*a1+1],
+                   statuvw[3*a1+2]);
+//        cout << "itsStatUVW[" << a1 << "] time: " << time << statuvw[3*a1] << " ," << statuvw[3*a1+1] << " ," << statuvw[3*a1+2] << endl;
 
-	    ndone++;
-	    nd++;
-	  }
-	}
-	if (ndone == nStatFnd) {
-	  break;
-	}
+        ndone++;
+        nd++;
+      }
+    }
+    if (ndone == nStatFnd) {
+      break;
+    }
       } // End loop baselines
-      //	  ASSERT (nd > 0);
+      //      ASSERT (nd > 0);
     } // End loop stations found
   } // End loop time
 
@@ -2109,13 +2110,13 @@ void Prediffer::updateSolvableParms (const ParmDataInfo& parmDataInfo)
       const string& pname = iter->second.getName();
       // Update the parameter matching the name.
       for (vector<ParmData>::const_iterator iterpd = parmData.begin();
-	   iterpd != parmData.end();
-	   iterpd++) {
-	if (iterpd->getName() == pname) {
-	  iter->second.update (*iterpd);
-	  break;
-	}
-	// A non-matching name is ignored.
+       iterpd != parmData.end();
+       iterpd++) {
+    if (iterpd->getName() == pname) {
+      iter->second.update (*iterpd);
+      break;
+    }
+    // A non-matching name is ignored.
       }
     }
   }
@@ -2131,12 +2132,12 @@ void Prediffer::updateSolvableParms()
   {
     if (iter->second.isSolvable()) {
       iter->second.updateFromTable();
-	
-	//       streamsize prec = cout.precision();
-	//       cout.precision(10);
-	//       cout << "****Read: " << iter->second.getCoeffValues().getDouble()
-	// 	   << " for parameter " << iter->second.getName() << endl;
-	//       cout.precision (prec);
+
+    //       streamsize prec = cout.precision();
+    //       cout.precision(10);
+    //       cout << "****Read: " << iter->second.getCoeffValues().getDouble()
+    //     << " for parameter " << iter->second.getName() << endl;
+    //       cout.precision (prec);
     }
   }
   resetEqLoop();
@@ -2163,6 +2164,20 @@ void Prediffer::writeParms()
   cout << "wrote timeIndex=" << itsTimeIndex
        << " nrTimes=" << itsNrTimes << endl;
 }
+
+#ifdef EXPR_GRAPH
+void Prediffer::writeExpressionGraph(const std::string &fileName, int baselineIndex)
+{
+    ASSERT(baselineIndex >= 0 && baselineIndex < itsExpr.size());
+
+    ofstream os(fileName.c_str());
+    os << "digraph MeasurementEquation" << std::endl;
+    os << "{" << std::endl;
+    os << "node [shape=box];" << std::endl;
+    itsExpr[baselineIndex].writeExpressionGraph(os);
+    os << "}" << std::endl;
+}
+#endif
 
 void Prediffer::showSettings() const
 {
