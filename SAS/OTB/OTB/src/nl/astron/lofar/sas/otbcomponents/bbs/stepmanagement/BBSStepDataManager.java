@@ -114,6 +114,7 @@ public class BBSStepDataManager{
             }
         }
     }
+    
     public boolean stepExists(String name){
         boolean exists = false;
         for(String existingStep : this.stepsCollection.keySet()){
@@ -123,18 +124,88 @@ public class BBSStepDataManager{
         }
         return exists;
     }
+    
+    //get the step data that is persisted
     public BBSStepData getStepData(String name){
         BBSStepData returnStep = null;
-        for(String aStep : stepsCollection.keySet()){
-            if(aStep.equalsIgnoreCase(name)){
-                returnStep = stepsCollection.get(name);
-            }
-        }
+        returnStep = stepsCollection.get(name);
         if(returnStep == null){
             returnStep = new BBSStepData();
             stepsCollection.put(name,returnStep);
         }
         return returnStep;
+    }
+    public BBSStepData getInheritedStepData(BBSStep aStep){
+        return getInheritedStepData(aStep,null);
+    }
+    
+    //get the inherited step data
+    private BBSStepData getInheritedStepData(BBSStep aStep, BBSStepData returnData){
+        if(returnData==null){
+            returnData = new BBSStepData();
+        }
+        if(aStep!=null){
+            
+            BBSStepData itsStepData = new BBSStepData();
+            if(aStep.hasParentStep()){
+                itsStepData = getStepData(aStep.getParentStep().getName());
+            }
+            if(returnData.getStation1Selection()==null){
+                if(itsStepData.getStation1Selection()!=null){
+                    returnData.setStation1Selection(itsStepData.getStation1Selection());
+                }
+            }
+            if(returnData.getStation2Selection()==null){
+                if(itsStepData.getStation2Selection()!=null){
+                    returnData.setStation2Selection(itsStepData.getStation2Selection());
+                }
+            }
+            if(returnData.getSources()==null){
+                if(itsStepData.getSources()!=null){
+                    returnData.setSources(itsStepData.getSources());
+                }
+            }
+            if(returnData.getExtraSources()==null){
+                if(itsStepData.getExtraSources()!=null){
+                    returnData.setExtraSources(itsStepData.getExtraSources());
+                }
+            }
+            if(returnData.getInstrumentModel()==null){
+                if(itsStepData.getInstrumentModel()!=null){
+                    returnData.setInstrumentModel(itsStepData.getInstrumentModel());
+                }
+            }
+            if(returnData.getIntegrationFrequency()==-1.0){
+                if(itsStepData.getIntegrationFrequency()!=-1.0){
+                    returnData.setIntegrationFrequency(itsStepData.getIntegrationFrequency());
+                }
+            }
+            if(returnData.getIntegrationTime()==-1.0){
+                if(itsStepData.getIntegrationTime()!=-1.0){
+                    returnData.setIntegrationTime(itsStepData.getIntegrationTime());
+                }
+            }
+            if(returnData.getCorrelationSelection()==null){
+                if(itsStepData.getCorrelationSelection()!=null){
+                    returnData.setCorrelationSelection(itsStepData.getCorrelationSelection());
+                }
+            }
+            if(returnData.getCorrelationType()==null){
+                if(itsStepData.getCorrelationType()!=null){
+                    returnData.setCorrelationType(itsStepData.getCorrelationType());
+                }
+            }
+            if(returnData.getOutputDataColumn()==null){
+                if(itsStepData.getOutputDataColumn()!=null){
+                    returnData.setOutputDataColumn(itsStepData.getOutputDataColumn());
+                }
+            }
+            //add other values
+            if(aStep.hasParentStep()){
+                getInheritedStepData(aStep.getParentStep(),returnData);
+            }
+        }
+        return returnData;
     }
     
     public BBSStrategy getStrategy(){
@@ -411,16 +482,6 @@ public class BBSStepDataManager{
                         
                         //sources
                         if(aHWNode.name.equals("Sources")){
-                            if(aBBSStep.getParentStep() != null){
-                                BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
-                                Vector<String> newString = currentDataForStep.getSources();
-                                if(currentDataForStep.getSources() != null && currentDataForParentStep.getSources() != null){
-                                    if(currentDataForStep.getSources().equals(currentDataForParentStep.getSources())) {
-                                        newString = null;
-                                    }
-                                }
-                                currentDataForStep.setSources(newString);
-                            }
                             if ( currentDataForStep.getSources() != null){
                                 aHWNode.limits = this.getStringFromVector(currentDataForStep.getSources(),true);
                                 SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
@@ -430,16 +491,6 @@ public class BBSStepDataManager{
                         }
                         //extra sources
                         else if(aHWNode.name.equals("ExtraSources")){
-                            if(aBBSStep.getParentStep() != null){
-                                BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
-                                Vector<String> newString = currentDataForStep.getExtraSources();
-                                if(currentDataForStep.getExtraSources() != null && currentDataForParentStep.getExtraSources() != null){
-                                    if(currentDataForStep.getExtraSources().equals(currentDataForParentStep.getExtraSources())) {
-                                        newString = null;
-                                    }
-                                }
-                                currentDataForStep.setExtraSources(newString);
-                            }
                             if ( currentDataForStep.getExtraSources() != null){
                                 aHWNode.limits = this.getStringFromVector(currentDataForStep.getExtraSources(),true);
                                 SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
@@ -450,16 +501,6 @@ public class BBSStepDataManager{
                         
                         //output data column
                         else if(aHWNode.name.equals("OutputData")){
-                            if(aBBSStep.getParentStep() != null){
-                                BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
-                                String newString = currentDataForStep.getOutputDataColumn();
-                                if(currentDataForStep.getOutputDataColumn() != null && currentDataForParentStep.getOutputDataColumn() != null){
-                                    if(currentDataForStep.getOutputDataColumn().equals(currentDataForParentStep.getOutputDataColumn())) {
-                                        newString = null;
-                                    }
-                                }
-                                currentDataForStep.setOutputDataColumn(newString);
-                            }
                             if ( currentDataForStep.getOutputDataColumn() != null){
                                 aHWNode.limits = currentDataForStep.getOutputDataColumn();
                                 SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
@@ -469,16 +510,6 @@ public class BBSStepDataManager{
                         }
                         //instrument data model
                         else if(aHWNode.name.equals("InstrumentModel")){
-                            if(aBBSStep.getParentStep() != null){
-                                BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
-                                Vector<String> newString = currentDataForStep.getInstrumentModel();
-                                if(currentDataForStep.getInstrumentModel() != null && currentDataForParentStep.getInstrumentModel() != null){
-                                    if(currentDataForStep.getInstrumentModel().equals(currentDataForParentStep.getInstrumentModel())) {
-                                        newString = null;
-                                    }
-                                }
-                                currentDataForStep.setInstrumentModel(newString);
-                            }
                             if ( currentDataForStep.getInstrumentModel() != null){
                                 aHWNode.limits = this.getStringFromVector(currentDataForStep.getInstrumentModel(),true);
                                 SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
@@ -499,16 +530,6 @@ public class BBSStepDataManager{
                                 //Time
                                 
                                 if (aCENode.leaf && aCENode.name.equals("Time")) {
-                                    if(aBBSStep.getParentStep() != null){
-                                        BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
-                                        Double newDouble = currentDataForStep.getIntegrationTime();
-                                        if(currentDataForStep.getIntegrationTime() != -1.0 && currentDataForParentStep.getIntegrationTime() != -1.0){
-                                            if(currentDataForStep.getIntegrationTime() == currentDataForParentStep.getIntegrationTime()) {
-                                                newDouble = -1.0;
-                                            }
-                                        }
-                                        currentDataForStep.setIntegrationTime(newDouble);
-                                    }
                                     if ( currentDataForStep.getIntegrationTime() != -1.0){
                                         aCENode.limits = ""+currentDataForStep.getIntegrationTime();
                                         SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
@@ -520,16 +541,6 @@ public class BBSStepDataManager{
                                     //Frequency
                                     
                                 } else if (aCENode.leaf && aCENode.name.equals("Freq")) {
-                                    if(aBBSStep.getParentStep() != null){
-                                        BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
-                                        Double newDouble = currentDataForStep.getIntegrationFrequency();
-                                        if(currentDataForStep.getIntegrationFrequency() != -1.0 && currentDataForParentStep.getIntegrationFrequency() != -1.0){
-                                            if(currentDataForStep.getIntegrationFrequency() == currentDataForParentStep.getIntegrationFrequency()) {
-                                                newDouble = -1.0;
-                                            }
-                                        }
-                                        currentDataForStep.setIntegrationFrequency(newDouble);
-                                    }
                                     if ( currentDataForStep.getIntegrationFrequency() != -1.0){
                                         aCENode.limits = ""+currentDataForStep.getIntegrationFrequency();
                                         SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
@@ -557,16 +568,6 @@ public class BBSStepDataManager{
                                 //Type
                                 
                                 if (aCENode.leaf && aCENode.name.equals("Type")) {
-                                    if(aBBSStep.getParentStep() != null){
-                                        BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
-                                        Vector<String> newString = currentDataForStep.getCorrelationType();
-                                        if(currentDataForStep.getCorrelationType() != null && currentDataForParentStep.getCorrelationType() != null){
-                                            if(currentDataForStep.getCorrelationType().equals(currentDataForParentStep.getCorrelationType())) {
-                                                newString = null;
-                                            }
-                                        }
-                                        currentDataForStep.setCorrelationType(newString);
-                                    }
                                     if ( currentDataForStep.getCorrelationType() != null){
                                         aCENode.limits = this.getStringFromVector(currentDataForStep.getCorrelationType(),true);
                                         SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
@@ -578,16 +579,6 @@ public class BBSStepDataManager{
                                     //Selection
                                     
                                 } else if (aCENode.leaf && aCENode.name.equals("Selection")) {
-                                    if(aBBSStep.getParentStep() != null){
-                                        BBSStepData currentDataForParentStep = this.getStepData(aBBSStep.getParentStep().getName());
-                                        String newString = currentDataForStep.getCorrelationSelection();
-                                        if(currentDataForStep.getCorrelationSelection() != null && currentDataForParentStep.getCorrelationSelection() != null){
-                                            if(currentDataForStep.getCorrelationSelection().equals(currentDataForParentStep.getCorrelationSelection())) {
-                                                newString = null;
-                                            }
-                                        }
-                                        currentDataForStep.setCorrelationSelection(newString);
-                                    }
                                     if ( currentDataForStep.getCorrelationSelection() != null){
                                         aCENode.limits = currentDataForStep.getCorrelationSelection();
                                         SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
