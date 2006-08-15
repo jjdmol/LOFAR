@@ -72,6 +72,7 @@ void subtract (Prediffer& prediffer, const MSDesc& msd,
 }
 
 void solve (Prediffer& prediffer, const MSDesc& msd,
+        const ParmDB::ParmDBMeta &historyPDM,
         const StepProp& stepProp,
         double timeStep, int startChan, int endChan,
         const SolveProp& solveProp,
@@ -81,6 +82,9 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
   double time = msd.startTime;
   double endTime = msd.endTime;
   SolveProp solProp(solveProp);
+  
+  ParmDB::ParmDB history(historyPDM);
+  
   while (time < endTime) {
     // Use given channels and time steps.
     prediffer.setWorkDomain (startChan, endChan, time, timeStep);
@@ -118,6 +122,8 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
 
       // Do the solve.
       solver.solve(false);
+      solver.log(history);
+      
       cout << "iteration " << i << ":  " << setprecision(10)
        << solver.getSolvableValues(0) << endl;
       cout << solver.getQuality(0) << endl;
@@ -226,7 +232,8 @@ bool doIt (const string& parsetName)
       solveProp.setParmPatterns (solvParms);
       solveProp.setExclPatterns (exclParms);
       solveProp.setMaxIter (nriter);
-      solve (prediffer, msd, stepProp,
+      solve (prediffer, msd, ParmDB::ParmDBMeta("aips", "history.parmdb"), 
+         stepProp,
          timeDomainSize, startChan, endChan,
          solveProp,
          nrSolveInterval, saveSolution);
