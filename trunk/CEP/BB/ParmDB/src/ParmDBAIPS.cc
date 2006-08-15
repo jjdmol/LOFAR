@@ -179,20 +179,21 @@ ParmDomain ParmDBAIPS::findRange (const Table& table) const
   if (table.nrow() == 0) {
     return ParmDomain (0,1,0,1);
   }
-  double sx = -1e30;
-  double ex = 1e30;
-  double sy = -1e30;
-  double ey = 1e30;
+  double sx = 1e30;
+  double ex = -1e30;
+  double sy = 1e30;
+  double ey = -1e30;
   TableIterator tabIter(table, "NAME");
   while (! tabIter.pastEnd()) {
     ROScalarColumn<double> sxCol(tabIter.table(), "STARTX");
     ROScalarColumn<double> exCol(tabIter.table(), "ENDX");
     ROScalarColumn<double> syCol(tabIter.table(), "STARTY");
     ROScalarColumn<double> eyCol(tabIter.table(), "ENDY");
-    sx = max (sx, min(sxCol.getColumn()));
-    ex = min (ex, max(exCol.getColumn()));
-    sy = max (sy, min(syCol.getColumn()));
-    ey = min (ey, max(eyCol.getColumn()));
+    
+    sx = min(sx, min(sxCol.getColumn()));
+    ex = max(ex, max(exCol.getColumn()));
+    sy = min(sy, min(syCol.getColumn()));
+    ey = max(ey, max(eyCol.getColumn()));
     tabIter++;
   }
   return ParmDomain (sx,ex,sy,ey);
@@ -508,7 +509,7 @@ void ParmDBAIPS::putOldValue (ParmValueRep& pval,
     errCol.put (rownr, fromVector(pval.itsErrors));
   }
   weightCol.put (rownr, pval.itsWeight);
-  timestampCol.put (rownr, double(MVTime(Time())));
+  timestampCol.put (rownr, double(MVTime(Time()).second()));
   if (overwriteMask) {
     ArrayColumn<bool> maskCol (table, "SOLVABLE");
     if (pval.itsSolvMask.size() > 0  ||  maskCol.isDefined(rownr)) {
@@ -581,7 +582,7 @@ void ParmDBAIPS::putNewValue (const string& parmName,
   weightCol.put (rownr, pval.itsWeight);
   idCol.put (rownr, pval.itsID);
   paridCol.put (rownr, pval.itsParentID);
-  timestampCol.put (rownr, double(MVTime(Time())));
+  timestampCol.put (rownr, double(MVTime(Time()).second()));
   // ParmValue is now stored here.
   pval.itsDBTabRef = tabinx;
   pval.itsDBRowRef = rownr;
