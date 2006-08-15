@@ -1,5 +1,6 @@
 INSTHDRS         	=\
 Correlator.h		\
+FFT.h			\
 FIR.h			\
 AH_BGL_Processing.h	\
 WH_BGL_Processing.h	
@@ -24,6 +25,7 @@ CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 CS1_BGL_Processing_SOURCES	= $(DOCHDRS) \
 Correlator.S			\
 FIR.S				\
+FFT.S				\
 CS1_BGL_Processing_main.cc 	\
 AH_BGL_Processing.cc		\
 WH_BGL_Processing.cc
