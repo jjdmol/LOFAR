@@ -24,6 +24,7 @@
 //# Includes
 #include <CS1_BGLProc/WH_BGL_Processing.h>
 #include <CS1_BGLProc/Correlator.h>
+#include <CS1_BGLProc/FFT.h>
 #include <CS1_BGLProc/FIR.h>
 
 #include <Common/Timer.h>
@@ -1199,6 +1200,28 @@ WH_BGL_Processing* WH_BGL_Processing::make(const string &name)
 }
 
 
+void FFTtest()
+{
+  fftw_plan plan = fftw_create_plan(256, FFTW_FORWARD, FFTW_ESTIMATE);
+
+  fcomplex in[256], fout[256], sout[256];
+
+  for (int i = 0; i < 256; i ++)
+    in[i] = makefcomplex(2 * i, 2 * i + 1);
+
+  fftw_one(plan, (fftw_complex *) in, (fftw_complex *) fout);
+
+  _fft256(in, sout);
+
+  for (int i = 0; i < 256; i ++) {
+    fcomplex diff = fout[i] / sout[i];
+    std::cout << i << " (" << real(fout[i]) << ',' << imag(fout[i]) << ") / (" << real(sout[i]) << ',' << imag(sout[i]) << ") = (" << real(diff) << ',' << imag(diff) << ")\n";
+  }
+
+  //std::exit(0);
+}
+
+
 void WH_BGL_Processing::preprocess()
 {
 #if defined HAVE_MPI
@@ -1211,6 +1234,8 @@ void WH_BGL_Processing::preprocess()
 #else
   itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_FORWARD, FFTW_ESTIMATE);
 #endif
+
+  //FFTtest();
 
   for (int i = 1; i <= NR_SAMPLES_PER_INTEGRATION; i ++) {
 #if INPUT_TYPE == I4COMPLEX_TYPE
@@ -1438,14 +1463,20 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 
       for (; time < firstBad; time ++) {
 	FFTtimer.start();
+#if 0
 	_prefetch(fftInData[time],
 		  sizeof(fcomplex[NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]) / CACHE_LINE_SIZE,
 		  CACHE_LINE_SIZE);
+#endif
 
 	for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+#if 0
 	  fftw_one(itsFFTWPlan,
 		   (fftw_complex *) fftInData[time][pol],
 		   (fftw_complex *) fftOutData[time & 1][pol]);
+#else
+	  _fft256(fftInData[time][pol], fftOutData[time & 1][pol]);
+#endif
 	}
 	FFTtimer.stop();
 
