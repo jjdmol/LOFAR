@@ -69,7 +69,7 @@ DH_Subband::~DH_Subband()
   delete itsSamplesMatrix;
 }
 
-DataHolder *DH_Subband::clone() const
+LOFAR::DataHolder *DH_Subband::clone() const
 {
   return new DH_Subband(*this);
 }
