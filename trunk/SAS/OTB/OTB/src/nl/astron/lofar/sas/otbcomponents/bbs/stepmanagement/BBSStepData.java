@@ -135,7 +135,7 @@ public class BBSStepData{
     public void setOutputDataColumn(String outputDataColumn){
         this.outputDataColumn = outputDataColumn;
     }
-
+    /*
     public BBSStepData clone(){
         BBSStepData newStep = new BBSStepData();
         newStep.setStation1Selection(this.getStation1Selection());
@@ -148,8 +148,7 @@ public class BBSStepData{
         newStep.setCorrelationSelection(this.getCorrelationSelection());
         newStep.setCorrelationType(this.getCorrelationType());
         newStep.setOutputDataColumn(this.getOutputDataColumn());
-        newStep.setCorrelationType(this.getCorrelationType());
         
         return newStep;
-    }
+    }*/
 }
