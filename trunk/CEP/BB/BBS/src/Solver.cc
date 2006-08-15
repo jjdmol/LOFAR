@@ -29,9 +29,14 @@
 
 #include <BBS/BBSTestLogger.h>
 
+#include <ParmDB/ParmValue.h>
+#include <ParmDB/ParmDomain.h>
+
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <iomanip>
+#include <cmath>
 
 using namespace casa;
 
@@ -90,6 +95,93 @@ void Solver::solve (bool useSVD)
   //  BBSTest::Logger::log("solver", timer);
   itsDoSet = false;
   return;
+}
+
+
+// Log the values of the solvable parameters and the quality indicators of the
+// last iteration to a ParmDB. The type of the parameters is set to 'history'
+// to ensure that they cannot accidentily be used as input for BBSkernel. Also,
+// ParmFacade::getHistory() checks on this type.
+void Solver::log(ParmDB::ParmDB &table)
+{
+    ostringstream os;
+    os << std::setfill('0');
+    
+    // Get parameters and solve domains.
+    const vector<ParmData> &parms = itsParmInfo.parms();
+    const vector<MeqDomain> &domains = itsParmInfo.getDomains();
+    
+    // Default values for the coefficients (every parameters of the history
+    // type has exactly one coefficient, and only solvable parameters are
+    // logged).
+    bool solvable = true;    
+    std::vector<int> shape(2, 1);
+    
+    // For each solve domain, log the solver quality indicators and the values of the
+    // coefficients of each solvable parameter.
+    for(size_t i = 0; i < itsFitters.size(); ++i)
+    {
+        ParmDB::ParmValue value;
+        ParmDB::ParmValueRep &valueRep = value.rep();
+        
+        valueRep.setType("history");
+        valueRep.setDomain(ParmDB::ParmDomain(domains[i].startX(), domains[i].endX(), domains[i].startY(), domains[i].endY()));
+    
+        // Log quality indicators.
+        FitterData &fitter = itsFitters[i];
+        
+        os.str("domain");
+        os << std::setw(((int) std::log10(itsFitters.size())) + 1) << i;
+        std::string domainSuffix = os.str();
+        
+        value.setNewParm();
+        double rank = fitter.quality.itsRank;
+        valueRep.setCoeff(&rank, &solvable, shape);
+        table.putValue("solver:rank:" + domainSuffix, value);
+        
+        value.setNewParm();
+        valueRep.setCoeff(&fitter.quality.itsFit, &solvable, shape);
+        table.putValue("solver:fit:" + domainSuffix, value);
+        
+        value.setNewParm();
+        valueRep.setCoeff(&fitter.quality.itsMu, &solvable, shape);
+        table.putValue("solver:mu:" + domainSuffix, value);
+        
+        value.setNewParm();
+        valueRep.setCoeff(&fitter.quality.itsStddev, &solvable, shape);
+        table.putValue("solver:stddev:" + domainSuffix, value);
+        
+        value.setNewParm();
+        valueRep.setCoeff(&fitter.quality.itsChi, &solvable, shape);
+        table.putValue("solver:chi:" + domainSuffix, value);
+        
+        // Log each solvable parameter. Each combinaton of coefficient
+        // and solve domain is logged separately. Otherwise, one would
+        // currently not be able to view coefficients separately in the
+        // plotter.
+        for(size_t j = 0; j < parms.size(); ++j)
+        {
+            const std::vector<bool> &mask = parms[j].getSolvMask(i);
+            const MeqMatrix &coeff = parms[j].getCoeff(i);
+            const double *data = coeff.doubleStorage();
+            
+            int indexWidth = ((int) std::log10(mask.size())) + 1;
+            
+            // Log each coefficient of the current parameter.
+            for(size_t k = 0; k < mask.size(); k++)
+            {
+                // Only log solvable coefficients.
+                if(mask[k])
+                {
+                    value.setNewParm();
+                    valueRep.setCoeff(&data[k], &solvable, shape);
+                    os.str(parms[j].getName());
+                    os << ":c" << std::setw(indexWidth) << k << domainSuffix;
+                    table.putValue(os.str(), value);
+                }
+            }
+        }
+    }
 }
 
 void Solver::mergeFitters (const vector<LSQFit>& fitters, int prediffer)

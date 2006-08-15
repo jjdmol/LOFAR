@@ -29,6 +29,7 @@
 #include <scimath/Fitting/LSQaips.h>
 #include <BBS/ParmData.h>
 #include <BBS/Quality.h>
+#include <ParmDB/ParmDB.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -78,6 +79,10 @@ public:
 
   // Show the relevant info.
   void show (std::ostream&);
+  
+  // Log the quality indicators, and the coefficients of the solvable
+  // parameters to a ParmDB.
+  void log(ParmDB::ParmDB &table);
 
 private:
   // Copy constructor and assignment are not allowed.

@@ -66,10 +66,15 @@ public:
   // Get the number of values.
   int size() const
     { return itsInfo.size(); }
-  // Get the i-th value.
+  
+  // Get the coefficients for the i-th solve domain.
   const MeqMatrix& getCoeff (int index) const
     { return itsInfo[index].coeff; }
-
+  
+  // Get the solvable mask for the i-th solve domain.
+  const std::vector<bool> &getSolvMask(int index) const
+    { return itsInfo[index].solvMask; }
+    
   // Append the solvable coefficient values to the vector.
   // Set the nr of scids and the first scid index.
   int setValues (uint solveDomainInx, vector<double>& values);
