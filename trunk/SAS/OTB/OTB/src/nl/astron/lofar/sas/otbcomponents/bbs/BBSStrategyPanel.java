@@ -550,16 +550,22 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }
             int[] toBeSelectedIndices = new int[toBeSelectedValues.length];
             int aValueIndex = 0;
-            for(String aValue : toBeSelectedValues){
-                for(int in = 0; in < aListComponent.getModel().getSize();in++){
-                    String aCorrType = (String)aListComponent.getModel().getElementAt(in);
-                    if(aValue.equals(aCorrType)){
-                        toBeSelectedIndices[aValueIndex] = in;
+            if(toBeSelectedValues.length>0){
+                for(String aValue : toBeSelectedValues){
+                    
+                    for(int in = 0; in < aListComponent.getModel().getSize();in++){
+                        String aCorrType = (String)aListComponent.getModel().getElementAt(in);
+                        if(aValue.equals(aCorrType)){
+                            toBeSelectedIndices[aValueIndex] = in;
+                        }
                     }
+                    aValueIndex++;
                 }
-                aValueIndex++;
+                aListComponent.setSelectedIndices(toBeSelectedIndices);
+                
+            }else{
+                aListComponent.clearSelection();
             }
-            aListComponent.setSelectedIndices(toBeSelectedIndices);
         }
     }
     
@@ -691,6 +697,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         integrationTimeLabel = new javax.swing.JLabel();
         integrationTimeText = new javax.swing.JTextField();
         integrationTimeUnitLabel = new javax.swing.JLabel();
+        helpButton = new javax.swing.JButton();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -1015,11 +1022,26 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         strategyPanel.add(integrationIntervalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 60, 220, 80));
 
+        helpButton.setText("Help");
+        helpButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                helpButtonActionPerformed(evt);
+            }
+        });
+
+        strategyPanel.add(helpButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 490, -1, -1));
+
         strategyScrollPane.setViewportView(strategyPanel);
 
         add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void helpButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_helpButtonActionPerformed
+        String message = "To be implemented...";
+        
+        JOptionPane.showMessageDialog(null,message, "BBS Strategy Help",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_helpButtonActionPerformed
     
     private void stepMoveDownButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepMoveDownButtonActionPerformed
         TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
@@ -1376,6 +1398,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JScrollPane correlationTypeScrollPane;
     private javax.swing.JButton deleteStationButton;
     private javax.swing.JPanel existingStepAddPanel;
+    private javax.swing.JButton helpButton;
     private javax.swing.JLabel inputDataLabel;
     private javax.swing.JTextField inputDataText;
     private javax.swing.JLabel integrationFrequencyLabel;

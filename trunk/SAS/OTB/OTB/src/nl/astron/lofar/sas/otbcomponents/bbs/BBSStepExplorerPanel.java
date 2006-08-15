@@ -32,6 +32,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.table.DefaultTableModel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
@@ -52,10 +53,13 @@ import org.apache.log4j.Logger;
  */
 public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPanel{
     
-    static Logger logger = Logger.getLogger(BBSPanel.class);
+    static Logger logger = Logger.getLogger(BBSStepExplorerPanel.class);
     static String name = "BBS Step Explorer";
     final static Color INHERITED_FROM_PARENT = new Color(255,255,204);
-    final static Color NOT_INHERITED_FROM_PARENT = Color.WHITE;
+    final static Color NOT_DEFINED = new Color(255,204,204);
+    final static Color NOT_INHERITED_FROM_PARENT = new Color(204,255,204);
+    final static Color DEFAULT = Color.WHITE;
+    
     
     /** Creates new form BeanForm based upon aNode
      *
@@ -107,6 +111,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         }else if(itsStep == null && itsParentBBSStep != null){
             //creating a new step under a given parent step
             this.itsParentBBSStep = itsParentBBSStep;
+            //fill the GUI with the current values of the parent in which the
+            //new step will be situated to ease data entry...
+            fillBBSGui(itsParentBBSStep);
+            stepExplorerStepNameText.setText("");
+            
             this.stepExplorerRevertButton.setEnabled(false);
             
         }else if (itsStep ==null && itsParentBBSStep == null){
@@ -212,134 +221,127 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         
         this.stepExplorerStepNameText.setText(theBBSStep.getName());
         BBSStepData stepData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getName());
-        
+        BBSStepData inheritedData = BBSStepDataManager.getInstance().getInheritedStepData(theBBSStep);
         //sources
-        stepExplorerNSourcesList.setBackground(NOT_INHERITED_FROM_PARENT);
+        stepExplorerNSourcesList.setBackground(DEFAULT);
         if(stepData.getSources() != null && stepData.getSources().size()>0){
             this.fillList(this.stepExplorerNSourcesList,stepData.getSources());
+            stepExplorerNSourcesList.setBackground(NOT_INHERITED_FROM_PARENT);
         }else{
-            if(theBBSStep.hasParentStep()){
-                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
-                if(stepParentData.getSources() != null && stepParentData.getSources().size()>0){
-                    this.fillList(this.stepExplorerNSourcesList,stepParentData.getSources());
-                    stepExplorerNSourcesList.setBackground(INHERITED_FROM_PARENT);
-                } else{
-                    this.fillList(this.stepExplorerNSourcesList,new Vector<String>());
-                }
-            }else{
+            if(inheritedData.getSources() != null && inheritedData.getSources().size()>0){
+                this.fillList(this.stepExplorerNSourcesList,inheritedData.getSources());
+                stepExplorerNSourcesList.setBackground(INHERITED_FROM_PARENT);
+            } else{
                 this.fillList(this.stepExplorerNSourcesList,new Vector<String>());
+                stepExplorerNSourcesList.setBackground(NOT_DEFINED);
             }
         }
         //extra sources
-        stepExplorerESourcesList.setBackground(NOT_INHERITED_FROM_PARENT);
+        stepExplorerESourcesList.setBackground(DEFAULT);
         if(stepData.getExtraSources() != null && stepData.getExtraSources().size()>0){
             this.fillList(this.stepExplorerESourcesList,stepData.getExtraSources());
+            stepExplorerESourcesList.setBackground(NOT_INHERITED_FROM_PARENT);
         }else{
-            if(theBBSStep.hasParentStep()){
-                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
-                if(stepParentData.getExtraSources() != null && stepParentData.getExtraSources().size()>0){
-                    this.fillList(this.stepExplorerESourcesList,stepParentData.getExtraSources());
-                    stepExplorerESourcesList.setBackground(INHERITED_FROM_PARENT);
-                } else{
-                    this.fillList(this.stepExplorerESourcesList,new Vector<String>());
-                }
-            }else{
+            if(inheritedData.getExtraSources() != null && inheritedData.getExtraSources().size()>0){
+                this.fillList(this.stepExplorerESourcesList,inheritedData.getExtraSources());
+                stepExplorerESourcesList.setBackground(INHERITED_FROM_PARENT);
+            } else{
                 this.fillList(this.stepExplorerESourcesList,new Vector<String>());
+                stepExplorerESourcesList.setBackground(NOT_DEFINED);
             }
         }
         //output data column
-        stepExplorerOutputDataText.setBackground(NOT_INHERITED_FROM_PARENT);
+        stepExplorerOutputDataText.setBackground(DEFAULT);
         if(stepData.getOutputDataColumn() != null){
             this.stepExplorerOutputDataText.setText(stepData.getOutputDataColumn());
+            stepExplorerOutputDataText.setBackground(NOT_INHERITED_FROM_PARENT);
+            
         }else{
-            if(theBBSStep.hasParentStep()){
-                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
-                if(stepParentData.getOutputDataColumn() != null){
-                    this.stepExplorerOutputDataText.setText(stepParentData.getOutputDataColumn());
-                    stepExplorerOutputDataText.setBackground(INHERITED_FROM_PARENT);
-                }
-            }else{
+            if(inheritedData.getOutputDataColumn() != null){
+                this.stepExplorerOutputDataText.setText(inheritedData.getOutputDataColumn());
+                stepExplorerOutputDataText.setBackground(INHERITED_FROM_PARENT);
+            } else{
                 this.stepExplorerOutputDataText.setText("");
+                stepExplorerOutputDataText.setBackground(NOT_DEFINED);
             }
         }
         
         //instrument model
-        stepExplorerInstrumentModelList.setBackground(NOT_INHERITED_FROM_PARENT);
+        stepExplorerInstrumentModelList.setBackground(DEFAULT);
         if(stepData.getInstrumentModel() != null && stepData.getInstrumentModel().size()>0){
             this.fillList(this.stepExplorerInstrumentModelList,stepData.getInstrumentModel());
+            stepExplorerInstrumentModelList.setBackground(NOT_INHERITED_FROM_PARENT);
+            
         }else{
-            if(theBBSStep.hasParentStep()){
-                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
-                if(stepParentData.getInstrumentModel() != null && stepParentData.getInstrumentModel().size()>0){
-                    this.fillList(this.stepExplorerInstrumentModelList,stepParentData.getInstrumentModel());
-                    stepExplorerInstrumentModelList.setBackground(INHERITED_FROM_PARENT);
-                } else{
-                    this.fillList(this.stepExplorerInstrumentModelList,new Vector<String>());
-                }
-            }else{
+            if(inheritedData.getInstrumentModel() != null && inheritedData.getInstrumentModel().size()>0){
+                this.fillList(this.stepExplorerInstrumentModelList,inheritedData.getInstrumentModel());
+                stepExplorerInstrumentModelList.setBackground(INHERITED_FROM_PARENT);
+            } else{
                 this.fillList(this.stepExplorerInstrumentModelList,new Vector<String>());
+                stepExplorerInstrumentModelList.setBackground(NOT_DEFINED);
             }
         }
         //integration
         //time
-        this.integrationTimeText.setBackground(NOT_INHERITED_FROM_PARENT);
+        this.integrationTimeText.setBackground(DEFAULT);
         if(stepData.getIntegrationTime() != -1.0){
             this.integrationTimeText.setText(""+stepData.getIntegrationTime());
+            this.integrationTimeText.setBackground(NOT_INHERITED_FROM_PARENT);
+            
         }else{
-            if(theBBSStep.hasParentStep()){
-                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
-                if(stepParentData.getIntegrationTime() != -1.0){
-                    this.integrationTimeText.setText(""+stepParentData.getIntegrationTime());
-                    integrationTimeText.setBackground(INHERITED_FROM_PARENT);
-                }
+            if(inheritedData.getIntegrationTime() != -1.0){
+                this.integrationTimeText.setText(""+inheritedData.getIntegrationTime());
+                integrationTimeText.setBackground(INHERITED_FROM_PARENT);
             }else{
                 this.integrationTimeText.setText("");
+                integrationTimeText.setBackground(NOT_DEFINED);
             }
         }
         //frequency
-        this.integrationFrequencyText.setBackground(NOT_INHERITED_FROM_PARENT);
+        this.integrationFrequencyText.setBackground(DEFAULT);
         if(stepData.getIntegrationFrequency() != -1.0){
             this.integrationFrequencyText.setText(""+stepData.getIntegrationFrequency());
+            this.integrationFrequencyText.setBackground(NOT_INHERITED_FROM_PARENT);
+            
         }else{
-            if(theBBSStep.hasParentStep()){
-                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
-                if(stepParentData.getIntegrationFrequency() != -1.0){
-                    this.integrationFrequencyText.setText(""+stepParentData.getIntegrationFrequency());
-                    integrationFrequencyText.setBackground(INHERITED_FROM_PARENT);
-                }
+            if(inheritedData.getIntegrationFrequency() != -1.0){
+                this.integrationFrequencyText.setText(""+inheritedData.getIntegrationFrequency());
+                integrationFrequencyText.setBackground(INHERITED_FROM_PARENT);
             }else{
                 this.integrationFrequencyText.setText("");
+                integrationFrequencyText.setBackground(NOT_DEFINED);
             }
         }
         //correlation
         //type
-        this.stepExplorerCorrelationTypeList.setBackground(NOT_INHERITED_FROM_PARENT);
+        this.stepExplorerCorrelationTypeList.setBackground(DEFAULT);
         if(stepData.getCorrelationType() != null){
             this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,stepData.getCorrelationType());
+            this.stepExplorerCorrelationTypeList.setBackground(NOT_INHERITED_FROM_PARENT);
+            
         }else{
-            if(theBBSStep.hasParentStep()){
-                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
-                if(stepParentData.getCorrelationType() != null){
-                    this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,stepParentData.getCorrelationType());
-                    stepExplorerCorrelationTypeList.setBackground(INHERITED_FROM_PARENT);
-                }
+            if(inheritedData.getCorrelationType() != null){
+                this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,inheritedData.getCorrelationType());
+                stepExplorerCorrelationTypeList.setBackground(INHERITED_FROM_PARENT);
+                
             }else{
                 this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,new Vector<String>());
+                stepExplorerCorrelationTypeList.setBackground(NOT_DEFINED);
             }
         }
         //selection
-        this.stepExplorerCorrelationSelectionBox.setBackground(NOT_INHERITED_FROM_PARENT);
+        this.stepExplorerCorrelationSelectionBox.setBackground(DEFAULT);
         if(stepData.getCorrelationSelection() != null){
             this.stepExplorerCorrelationSelectionBox.setSelectedItem(stepData.getCorrelationSelection());
+            this.stepExplorerCorrelationSelectionBox.setBackground(NOT_INHERITED_FROM_PARENT);
+            
         }else{
-            if(theBBSStep.hasParentStep()){
-                BBSStepData stepParentData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getParentStep().getName());
-                if(stepParentData.getCorrelationSelection() != null){
-                    this.stepExplorerCorrelationSelectionBox.setSelectedItem(stepParentData.getCorrelationSelection());
-                    stepExplorerCorrelationSelectionBox.setBackground(INHERITED_FROM_PARENT);
-                }
+            if(inheritedData.getCorrelationSelection() != null){
+                this.stepExplorerCorrelationSelectionBox.setSelectedItem(inheritedData.getCorrelationSelection());
+                stepExplorerCorrelationSelectionBox.setBackground(INHERITED_FROM_PARENT);
             }else{
                 this.stepExplorerCorrelationSelectionBox.setSelectedIndex(0);
+                stepExplorerCorrelationSelectionBox.setBackground(NOT_DEFINED);
             }
         }
         //add other variables
@@ -379,63 +381,142 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         enableStepExplorerButtons(enabled);
     }
     
-    private void saveInput(BBSStepData aStepData) {
+    private void saveInput(BBSStep aStep) {
+        BBSStepData aStepData = BBSStepDataManager.getInstance().getStepData(aStep.getName());
+        BBSStepData inheritedData = BBSStepDataManager.getInstance().getInheritedStepData(aStep);
+        
         //normal sources
-        Vector<String> currentNSources = aStepData.getSources();
-        if(!createList(stepExplorerNSourcesList).equals(aStepData.getSources())){
-            aStepData.setSources(createList(stepExplorerNSourcesList));
-        }
-        if(aStepData.getSources()!= null && aStepData.getSources().size()==0){
+        if(createList(stepExplorerNSourcesList).size()==0){
             aStepData.setSources(null);
+        }else{
+            if(createList(stepExplorerNSourcesList).equals(inheritedData.getSources())){
+                aStepData.setSources(null);
+            }else{
+                aStepData.setSources(new Vector<String>());
+            }
+        }
+        if(aStepData.getSources()!=null){
+            if(!createList(stepExplorerNSourcesList).equals(aStepData.getSources())){
+                aStepData.setSources(createList(stepExplorerNSourcesList));
+            }
         }
         //extra sources
-        Vector<String> currentESources = aStepData.getExtraSources();
-        if(!createList(stepExplorerESourcesList).equals(aStepData.getExtraSources())){
-            aStepData.setExtraSources(createList(stepExplorerESourcesList));
-        }
-        if(aStepData.getExtraSources()!= null && aStepData.getExtraSources().size()==0){
+        if(createList(stepExplorerESourcesList).size()==0){
             aStepData.setExtraSources(null);
+        }else{
+            if(createList(stepExplorerESourcesList).equals(inheritedData.getExtraSources())){
+                aStepData.setExtraSources(null);
+            }else{
+                aStepData.setExtraSources(new Vector<String>());
+            }
+        }
+        if(aStepData.getExtraSources()!=null){
+            if(!createList(stepExplorerESourcesList).equals(aStepData.getExtraSources())){
+                aStepData.setExtraSources(createList(stepExplorerESourcesList));
+            }
         }
         //output data column
         if(stepExplorerOutputDataText.getText().equals("")){
             aStepData.setOutputDataColumn(null);
         }else{
-            aStepData.setOutputDataColumn(stepExplorerOutputDataText.getText());
+            if(stepExplorerOutputDataText.getText().equals(inheritedData.getOutputDataColumn())){
+                aStepData.setOutputDataColumn(null);
+            }else{
+                aStepData.setOutputDataColumn("Generated by BBS GUI");
+            }
         }
+        if(aStepData.getOutputDataColumn()!=null){
+            if(!stepExplorerOutputDataText.getText().equals(aStepData.getOutputDataColumn())){
+                aStepData.setOutputDataColumn(stepExplorerOutputDataText.getText());
+            }
+        }
+        
         //instrument model
-        Vector<String> currentInstrumentModel = aStepData.getInstrumentModel();
-        if(!createList(stepExplorerInstrumentModelList).equals(aStepData.getInstrumentModel())){
-            aStepData.setInstrumentModel(createList(stepExplorerInstrumentModelList));
-        }
-        if(aStepData.getInstrumentModel()!= null && aStepData.getInstrumentModel().size()==0){
+        
+        if(createList(stepExplorerInstrumentModelList).size()==0){
             aStepData.setInstrumentModel(null);
+        }else{
+            if(createList(stepExplorerInstrumentModelList).equals(inheritedData.getInstrumentModel())){
+                aStepData.setInstrumentModel(null);
+            }else{
+                aStepData.setInstrumentModel(new Vector<String>());
+            }
         }
+        if(aStepData.getInstrumentModel()!=null){
+            if(!createList(stepExplorerInstrumentModelList).equals(aStepData.getInstrumentModel())){
+                aStepData.setInstrumentModel(createList(stepExplorerInstrumentModelList));
+            }
+        }
+        
         //Integration
         //Time
         if(this.integrationTimeText.getText().equals("")){
             aStepData.setIntegrationTime(-1.0);
         }else{
-            aStepData.setIntegrationTime(Double.parseDouble(integrationTimeText.getText()));
+            if(Double.parseDouble(integrationTimeText.getText()) == inheritedData.getIntegrationTime()){
+                aStepData.setIntegrationTime(-1.0);
+            }else{
+                aStepData.setIntegrationTime(0.0);
+            }
+        }
+        if(aStepData.getIntegrationTime()!=-1.0){
+            if(Double.parseDouble(integrationTimeText.getText()) != aStepData.getIntegrationTime()){
+                aStepData.setIntegrationTime(Double.parseDouble(integrationTimeText.getText()));
+            }
         }
         //Frequency
         if(this.integrationFrequencyText.getText().equals("")){
             aStepData.setIntegrationFrequency(-1.0);
         }else{
-            aStepData.setIntegrationFrequency(Double.parseDouble(integrationFrequencyText.getText()));
+            if(Double.parseDouble(integrationFrequencyText.getText()) == inheritedData.getIntegrationFrequency()){
+                aStepData.setIntegrationFrequency(-1.0);
+            }else{
+                aStepData.setIntegrationFrequency(0.0);
+            }
+        }
+        if(aStepData.getIntegrationFrequency()!=-1.0){
+            if(Double.parseDouble(integrationFrequencyText.getText()) != aStepData.getIntegrationFrequency()){
+                aStepData.setIntegrationFrequency(Double.parseDouble(integrationFrequencyText.getText()));
+            }
         }
         //Correlation
         //Type
-        Vector<String> currentCTypes = createVectorFromSelectionList(this.stepExplorerCorrelationTypeList);
-        if(!currentCTypes.equals(aStepData.getCorrelationType())){
-            aStepData.setCorrelationType(currentCTypes);
-        }
-        if(aStepData.getCorrelationType()!= null && aStepData.getCorrelationType().size()==0){
+        if(this.createVectorFromSelectionList(this.stepExplorerCorrelationTypeList).size()==0){
             aStepData.setCorrelationType(null);
+        }else{
+            if(createVectorFromSelectionList(stepExplorerCorrelationTypeList).equals(inheritedData.getCorrelationType())){
+                aStepData.setCorrelationType(null);
+            }else{
+                aStepData.setCorrelationType(new Vector<String>());
+            }
+        }
+        if(aStepData.getCorrelationType()!=null){
+            if(!createVectorFromSelectionList(stepExplorerCorrelationTypeList).equals(aStepData.getCorrelationType())){
+                aStepData.setCorrelationType(createVectorFromSelectionList(stepExplorerCorrelationTypeList));
+            }
         }
         //Selection
-        String selectedCSelection = this.stepExplorerCorrelationSelectionBox.getSelectedItem().toString();
-        if(!selectedCSelection.equals(aStepData.getCorrelationSelection())){
-            aStepData.setCorrelationSelection(selectedCSelection);
+        String selectedCSelection = null;
+        if(this.stepExplorerCorrelationSelectionBox.getSelectedItem() != null){
+            selectedCSelection = this.stepExplorerCorrelationSelectionBox.getSelectedItem().toString();
+        }
+        if(selectedCSelection == null){
+            aStepData.setCorrelationSelection(null);
+        }else{
+            if(selectedCSelection.equals("N/A")){
+                aStepData.setCorrelationSelection(null);
+            }else{
+                if(selectedCSelection.equals(inheritedData.getCorrelationSelection())){
+                    aStepData.setCorrelationSelection(null);
+                }else{
+                    aStepData.setCorrelationSelection("Generated by BBS GUI");
+                }
+            }
+        }
+        if(aStepData.getCorrelationSelection()!=null){
+            if(selectedCSelection!= null && !selectedCSelection.equals(aStepData.getCorrelationSelection())){
+                aStepData.setCorrelationSelection(selectedCSelection);
+            }
         }
         
         //add other variables
@@ -460,8 +541,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     }
     private Vector<String> createVectorFromSelectionList(JList aListComponent) {
         Vector<String> aList= new Vector<String>();
-        if (aListComponent.getModel().getSize() > 0) {
-            int[] selectedIndices = aListComponent.getSelectedIndices();
+        int[] selectedIndices = aListComponent.getSelectedIndices();
+        if (selectedIndices.length > 0) {
             for (int i=0; i < selectedIndices.length;i++) {
                 aList.add(aListComponent.getModel().getElementAt(selectedIndices[i]).toString());
             }
@@ -471,16 +552,21 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private void fillSelectionListFromVector(JList aListComponent,Vector<String> theList) {
         int[] toBeSelectedIndices = new int[theList.size()];
         int aValueIndex = 0;
-        for(String aValue : theList){
-            for(int in = 0; in < aListComponent.getModel().getSize();in++){
-                String aCorrType = (String)aListComponent.getModel().getElementAt(in);
-                if(aValue.equals(aCorrType)){
-                    toBeSelectedIndices[aValueIndex] = in;
+        if(theList.size()>0){
+            for(String aValue : theList){
+                for(int in = 0; in < aListComponent.getModel().getSize();in++){
+                    String aCorrType = (String)aListComponent.getModel().getElementAt(in);
+                    if(aValue.equals(aCorrType)){
+                        toBeSelectedIndices[aValueIndex] = in;
+                    }
                 }
+                aValueIndex++;
             }
-            aValueIndex++;
+            aListComponent.setSelectedIndices(toBeSelectedIndices);
+            
+        }else{
+            aListComponent.clearSelection();
         }
-        aListComponent.setSelectedIndices(toBeSelectedIndices);
         
     }
     
@@ -584,6 +670,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         addBaseLineButton = new javax.swing.JButton();
         deleteBaseLineButton = new javax.swing.JButton();
         baselineUseAllCheckbox = new javax.swing.JCheckBox();
+        helpButton = new javax.swing.JButton();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -626,7 +713,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             }
         });
 
-        stepExplorerPanel.add(stepExplorerRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 640, 100, -1));
+        stepExplorerPanel.add(stepExplorerRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 650, 100, -1));
 
         stepExplorerOperationPanel.setLayout(new java.awt.BorderLayout());
 
@@ -641,7 +728,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerOperationTypeHeaderPanel.add(stepExplorerOperationTypeLabel, gridBagConstraints);
 
-        stepExplorerOperationComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SOLVE", "SUBTRACT", "CORRECT", "PREDICT", "SHIFT", "REFIT" }));
+        stepExplorerOperationComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "NOT DEFINED", "SOLVE", "SUBTRACT", "CORRECT", "PREDICT", "SHIFT", "REFIT" }));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
@@ -795,6 +882,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerOutputDataPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         stepExplorerOutputDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Data Column"));
+        stepExplorerOutputDataText.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                stepExplorerOutputDataTextKeyReleased(evt);
+            }
+        });
+
         stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 140, 20));
 
         stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 330, 180, 60));
@@ -1024,8 +1117,15 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerCorrelationSelectionLabel.setText("Selection :");
         stepExplorerCorrelationPanel.add(stepExplorerCorrelationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
 
-        stepExplorerCorrelationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AUTO", "CROSS", "ALL" }));
+        stepExplorerCorrelationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "N/A", "AUTO", "CROSS", "ALL" }));
+        stepExplorerCorrelationSelectionBox.setSelectedIndex(0);
         stepExplorerCorrelationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
+        stepExplorerCorrelationSelectionBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                stepExplorerCorrelationSelectionBoxItemStateChanged(evt);
+            }
+        });
+
         stepExplorerCorrelationPanel.add(stepExplorerCorrelationSelectionBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 80, -1));
 
         stepExplorerCorrelationTypeLabel.setText("Type :");
@@ -1037,6 +1137,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             public Object getElementAt(int i) { return strings[i]; }
         });
         stepExplorerCorrelationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY. \n\nAs an example, suppose you select 'XX' here and set Selection to AUTO, then the X polarization signal of each station is correlated with itself. However if we set Selection to CROSS, then the X polarization of station A is correlated with the X polarization of station B for each base line.");
+        stepExplorerCorrelationTypeList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                stepExplorerCorrelationTypeListValueChanged(evt);
+            }
+        });
+
         stepExplorerCorrelationTypeScrollPane.setViewportView(stepExplorerCorrelationTypeList);
 
         stepExplorerCorrelationPanel.add(stepExplorerCorrelationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 50, 80));
@@ -1050,6 +1156,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         integrationFrequencyLabel.setText("Freq. Interval :");
         integrationIntervalPanel.add(integrationFrequencyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 20, -1, -1));
 
+        integrationFrequencyText.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                integrationFrequencyTextKeyReleased(evt);
+            }
+        });
+
         integrationIntervalPanel.add(integrationFrequencyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 20, 70, -1));
 
         integrationFrequencyUnitLabel.setText("Hz");
@@ -1057,6 +1169,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         integrationTimeLabel.setText("Time Interval :");
         integrationIntervalPanel.add(integrationTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 50, -1, -1));
+
+        integrationTimeText.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                integrationTimeTextKeyReleased(evt);
+            }
+        });
 
         integrationIntervalPanel.add(integrationTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 50, 70, -1));
 
@@ -1086,6 +1204,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             }
         });
         baselineStationsTable.setToolTipText("The baselines used");
+        baselineStationsTable.setCellSelectionEnabled(true);
+        baselineStationsTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                baselineStationsTableMouseReleased(evt);
+            }
+        });
+
         baselineStationsScrollPane.setViewportView(baselineStationsTable);
 
         BaselineSelectionPanel.add(baselineStationsScrollPane, java.awt.BorderLayout.CENTER);
@@ -1096,6 +1221,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         addBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
         addBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        addBaseLineButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addBaseLineButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -1105,6 +1236,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
 
         deleteBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteBaseLineButton.setEnabled(false);
         deleteBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
         deleteBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
         deleteBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
@@ -1135,6 +1267,15 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerPanel.add(BaselineSelectionPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 320, 250));
 
+        helpButton.setText("Help");
+        helpButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                helpButtonActionPerformed(evt);
+            }
+        });
+
+        stepExplorerPanel.add(helpButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 650, -1, -1));
+
         stepExplorerScrollPanel.setViewportView(stepExplorerPanel);
 
         BBSStepExplorerPanel.add(stepExplorerScrollPanel, java.awt.BorderLayout.CENTER);
@@ -1142,6 +1283,56 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         add(BBSStepExplorerPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+    
+    private void baselineStationsTableMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_baselineStationsTableMouseReleased
+        // TODO add your handling code here:
+    }//GEN-LAST:event_baselineStationsTableMouseReleased
+    
+    private void addBaseLineButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBaseLineButtonActionPerformed
+        DefaultTableModel bsltm = (DefaultTableModel)this.baselineStationsTable.getModel();
+        bsltm.addRow(new Vector());
+        baselineStationsTable.setBackground(NOT_INHERITED_FROM_PARENT);
+    }//GEN-LAST:event_addBaseLineButtonActionPerformed
+    
+    private void helpButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_helpButtonActionPerformed
+        String message = "";
+        if(this.stepExplorerStepNameText.isEditable()){
+            message = "Color coding in input fields while creating a new step:\n\n";
+            message+="Red - Indicates that the value is not set in the parent step tree. Caution is advised.\n";
+            message+="Yellow - Indicates that the value is set somewhere in its parent step tree.\n";
+            message+="Green - Indicates that the value is set in the parent of the to-be created BBS Step.\n";
+            message+="White - Indicates that the value has never been set and a parent step for the to-be created step is not applicable.\n";
+            
+        }else{
+            message = "Color coding in input fields while editing an existing step:\n\n";
+            message+="Red - Indicates that the value is neither set in this BBS Step or its parent step tree. Caution is advised.\n";
+            message+="Yellow - Indicates that the value is not set in this BBS Step but is set somewhere in its parent step tree.\n";
+            message+="Green - Indicates that the value is set in this BBS Step and thereby overrides any value set in its parent step tree.\n";
+            
+        }
+        
+        JOptionPane.showMessageDialog(null,message, "Step Explorer Help",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_helpButtonActionPerformed
+    
+    private void stepExplorerOutputDataTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_stepExplorerOutputDataTextKeyReleased
+        stepExplorerOutputDataText.setBackground(NOT_INHERITED_FROM_PARENT);
+    }//GEN-LAST:event_stepExplorerOutputDataTextKeyReleased
+    
+    private void stepExplorerCorrelationTypeListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerCorrelationTypeListValueChanged
+        stepExplorerCorrelationTypeList.setBackground(NOT_INHERITED_FROM_PARENT);
+    }//GEN-LAST:event_stepExplorerCorrelationTypeListValueChanged
+    
+    private void stepExplorerCorrelationSelectionBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_stepExplorerCorrelationSelectionBoxItemStateChanged
+        stepExplorerCorrelationSelectionBox.setBackground(NOT_INHERITED_FROM_PARENT);
+    }//GEN-LAST:event_stepExplorerCorrelationSelectionBoxItemStateChanged
+    
+    private void integrationTimeTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_integrationTimeTextKeyReleased
+        integrationTimeText.setBackground(NOT_INHERITED_FROM_PARENT);
+    }//GEN-LAST:event_integrationTimeTextKeyReleased
+    
+    private void integrationFrequencyTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_integrationFrequencyTextKeyReleased
+        integrationFrequencyText.setBackground(NOT_INHERITED_FROM_PARENT);
+    }//GEN-LAST:event_integrationFrequencyTextKeyReleased
     
     private void addInstrumentModelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addInstrumentModelButtonActionPerformed
         String toBeAddedInstrumentModel = this.stepExplorerModifyInstrumentModelText.getText();
@@ -1284,9 +1475,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         if(baselineUseAllCheckbox.isSelected()){
             this.baselineStationsTable.setBackground(Color.LIGHT_GRAY);
             this.baselineStationsTable.setEnabled(false);
+            this.addBaseLineButton.setEnabled(false);
+            this.baselineStationsTable.clearSelection();
+            this.deleteBaseLineButton.setEnabled(false);
         }else{
-            this.baselineStationsTable.setBackground(Color.WHITE);
+            this.baselineStationsTable.setBackground(NOT_INHERITED_FROM_PARENT);
             this.baselineStationsTable.setEnabled(true);
+            this.addBaseLineButton.setEnabled(true);
         }
         
     }//GEN-LAST:event_baselineUseAllCheckboxStateChanged
@@ -1308,7 +1503,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 }
             }
             if(!integrationFrequency.equals("")){
-                 try {
+                try {
                     Double itime = Double.parseDouble(integrationFrequency);
                     integrationFrequencyText.setBackground(Color.WHITE);
                 } catch (NumberFormatException ex) {
@@ -1336,8 +1531,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                         String[] buttons = {"Yes","No, add the already defined step","Cancel, I will select a different name"};
                         int choice =  JOptionPane.showOptionDialog(this,message, "Step conflict detected", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
                         if(choice == 0){
-                            //update all fields in the BBS Step Data object
-                            saveInput(BBSStepDataManager.getInstance().getStepData(newStepName));
+                            //updating the existing step will be handled further on in the method
                         }else if(choice == 1){
                             //existing BBS step to be added
                             if(itsParentBBSStep != null){
@@ -1368,7 +1562,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 //modifying a step
                 if(itsBBSStep != null){
                     //update all fields in the BBS Step Data object
-                    saveInput(BBSStepDataManager.getInstance().getStepData(itsBBSStep.getName()));
+                    saveInput(itsBBSStep);
                     
                 }else{
                     
@@ -1386,7 +1580,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                     }
                     if(itsBBSStep != null){
                         //update all fields in the BBS Step object
-                        saveInput(BBSStepDataManager.getInstance().getStepData(itsBBSStep.getName()));
+                        saveInput(itsBBSStep);
                         
                     }else{
                         //warning
@@ -1429,6 +1623,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JButton deleteNSourceButton;
     private javax.swing.JButton deleteSolvableParmButton;
     private javax.swing.JButton deleteSolvableParmButton1;
+    private javax.swing.JButton helpButton;
     private javax.swing.JLabel integrationFrequencyLabel;
     private javax.swing.JTextField integrationFrequencyText;
     private javax.swing.JLabel integrationFrequencyUnitLabel;
