@@ -37,9 +37,9 @@
 CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
   RETURNS BOOLEAN AS '
 	DECLARE
-		TThardware CONSTANT	INT2 := 10;
-		TTtemplate CONSTANT	INT2 := 20;
-		vFunction  CONSTANT	INT2 := 1;
+		TTtemplate  CONSTANT	INT2 := 20;
+		TThierarchy CONSTANT	INT2 := 30;
+		vFunction   CONSTANT	INT2 := 1;
 		vTreeType		OTDBtree.treetype%TYPE;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
@@ -59,7 +59,7 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		SELECT	treetype
 		INTO	vTreeType
 		FROM	OTDBtree
-		WHERE	treeID = $1;
+		WHERE	treeID = $2;
 		IF NOT FOUND THEN
 		  RAISE EXCEPTION \'Tree % does not exist\', $1;
 		END IF;
@@ -76,7 +76,7 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 			  RAISE EXCEPTION \'Node % of template-tree could not be updated\', $3;
 			  RETURN FALSE;
 			END IF;
-		ELSEIF vTreeType = TTHardware THEN
+		ELSEIF vTreeType = TThierarchy THEN
 			vLimits := replace($5, \'\\\'\', \'\');
 			UPDATE	VIChierarchy
 			SET		value = vLimits
