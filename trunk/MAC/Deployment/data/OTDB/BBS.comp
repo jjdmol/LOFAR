@@ -27,6 +27,7 @@ node   ParmDB     1.0.0  development 'node constraint'  'BBS ParmDB identifiers'
 #--------------------------------------------------------------------------------------------------------
 par  Instrument              I    text   -      10    0    'test.mep'                -        'name of the AIPS++ table containing the instrument parameters'
 par  LocalSky                I    text   -      10    0    'test.gsm'                -        'name of the AIPS++ table containing the local sky parameters'
+par  History                 I    text   -      10    0    'testhistory.mep'         -        'name of the AIPS++ table containing the history data'
 
 # -- BBS Correlation Settings
 #
@@ -47,8 +48,8 @@ node   WorkDomainSize     1.0.0  development 'node constraint'  'BBS WorkDomainS
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Freq                    I    dbl    Hz     10    0    '1'                  -        'work domain size frequency'
-par  Time                    I    dbl    -      10    0    '0.1'                -        'work domain size time'
+par  Freq                    I    dbl    Hz     10    0    '1.0'                   -        'work domain size frequency'
+par  Time                    I    dbl    -      10    0    '0.1'                   -        'work domain size time'
 
 # -- BBS Integration Settings
 #
@@ -58,8 +59,8 @@ node   Integration     1.0.0  development 'node constraint'  'BBS Integration se
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Freq                    I    dbl    Hz     10    0    '1'                  -        'integration interval frequency'
-par  Time                    I    dbl    -      10    0    '0.1'                -        'integration interval time'
+par  Freq                    I    dbl    Hz     10    0    '1.0'                  -        'integration interval frequency'
+par  Time                    I    dbl    -      10    0    '0.1'                  -        'integration interval time'
 
 # -- BBS Strategy Settings
 #
@@ -118,7 +119,7 @@ uses  Integration     1.0.0  development 1                  'BBS Integration att
 #      name            vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   Step            1.0.0  development 'node constraint'  'BBS Step Container'
-uses  DefaultBBSStep  1.0.0  development 1                  'BBS Template Step'
+uses   DefaultBBSStep  1.0.0  development 1                  'BBS Template Step'
 
 # --BBS Global--
 #
