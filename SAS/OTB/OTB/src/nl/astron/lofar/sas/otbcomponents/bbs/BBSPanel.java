@@ -207,7 +207,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         
         this.ParmDBInstrumentText.setText(ParmDBInstrument.limits);
         this.ParmDBLocalSkyText.setText(ParmDBLocalSky.limits);
-        
+        this.ParmDBHistoryText.setText(ParmDBHistory.limits);
     }
     
     private void initialize() {
@@ -322,6 +322,14 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     ParmDBLocalSkyText.setText(aNode.limits);
                 }
+            }else if (aKeyName.equals("History")) {
+                this.ParmDBHistoryText.setToolTipText(aParam.description);
+                this.ParmDBHistory=aNode;
+                if (isRef && aParam != null) {
+                    ParmDBHistoryText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    ParmDBHistoryText.setText(aNode.limits);
+                }
             }
         }
     }
@@ -411,6 +419,11 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("Variable BBS ("+ParmDBLocalSky.name+"//"+ParmDBLocalSky.treeID()+"//"+ParmDBLocalSky.nodeID()+"//"+ParmDBLocalSky.parentID()+"//"+ParmDBLocalSky.paramDefID()+") updated to :"+ParmDBLocalSky.limits);
             saveNode(ParmDBLocalSky);
         }
+        if (this.ParmDBHistory != null && !this.ParmDBHistoryText.getText().equals(ParmDBHistory.limits)) {
+            ParmDBHistory.limits = ParmDBHistoryText.getText();
+            logger.trace("Variable BBS ("+ParmDBHistory.name+"//"+ParmDBHistory.treeID()+"//"+ParmDBHistory.nodeID()+"//"+ParmDBHistory.parentID()+"//"+ParmDBHistory.paramDefID()+") updated to :"+ParmDBHistory.limits);
+            saveNode(ParmDBHistory);
+        }
     }
     
     
@@ -442,6 +455,8 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         ParmDBInstrumentText = new javax.swing.JTextField();
         ParmDBLocalSkyLabel = new javax.swing.JLabel();
         ParmDBLocalSkyText = new javax.swing.JTextField();
+        ParmDBHistoryText = new javax.swing.JTextField();
+        ParmDBHistoryLabel = new javax.swing.JLabel();
         configurationRevertButton = new javax.swing.JButton();
         BBSDatasetDeRefText = new javax.swing.JTextField();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
@@ -529,7 +544,20 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         ParmDBPanel.add(ParmDBLocalSkyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 50, 220, 20));
 
-        BBSGlobalSettingsFieldPanel.add(ParmDBPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 350, 80));
+        ParmDBHistoryText.setToolTipText("Path to the AIPS++ table containing the local sky model parameters");
+        ParmDBHistoryText.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ParmDBHistoryTextActionPerformed(evt);
+            }
+        });
+
+        ParmDBPanel.add(ParmDBHistoryText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 80, 220, 20));
+
+        ParmDBHistoryLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        ParmDBHistoryLabel.setText("History :");
+        ParmDBPanel.add(ParmDBHistoryLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, 100, 20));
+
+        BBSGlobalSettingsFieldPanel.add(ParmDBPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 350, 110));
 
         configurationRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         configurationRevertButton.setText("Revert");
@@ -542,7 +570,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        BBSGlobalSettingsFieldPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 330, 100, -1));
+        BBSGlobalSettingsFieldPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 360, 100, -1));
 
         BBSDatasetDeRefText.setEditable(false);
         BBSDatasetDeRefText.setToolTipText("Dereferenced and actually used value.");
@@ -568,6 +596,10 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void ParmDBHistoryTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParmDBHistoryTextActionPerformed
+// TODO add your handling code here:
+    }//GEN-LAST:event_ParmDBHistoryTextActionPerformed
 
     private void ParmDBLocalSkyTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParmDBLocalSkyTextActionPerformed
 // TODO add your handling code here:
@@ -598,6 +630,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     
     private jOTDBnode ParmDBInstrument;
     private jOTDBnode ParmDBLocalSky;
+    private jOTDBnode ParmDBHistory;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel BBDBDBNameLabel;
@@ -616,6 +649,8 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField BBSDatasetText;
     private javax.swing.JPanel BBSGlobalSettingsFieldPanel;
     private javax.swing.JPanel BBSGlobalSettingsPanel;
+    private javax.swing.JLabel ParmDBHistoryLabel;
+    private javax.swing.JTextField ParmDBHistoryText;
     private javax.swing.JLabel ParmDBInstrumentLabel;
     private javax.swing.JTextField ParmDBInstrumentText;
     private javax.swing.JLabel ParmDBLocalSkyLabel;

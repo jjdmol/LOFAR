@@ -25,8 +25,8 @@ package nl.astron.lofar.sas.otb.panels;
 
 
 import java.awt.event.ActionEvent;
+import java.rmi.RemoteException;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 import javax.swing.JComponent;
@@ -35,13 +35,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import nl.astron.lofar.lofarutils.LofarUtils;
-import nl.astron.lofar.sas.otb.exceptions.ParmDBConfigurationException;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.SharedVars;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
-import nl.astron.lofar.sas.otb.util.ParmDBConfigurationHelper;
 import nl.astron.lofar.sas.otb.util.ResultPanelHelper;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.ParmDBTreeManager;
@@ -52,7 +52,7 @@ import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 
 /**
  * This panel contains a TreePanel and some textfields that display information
- * about the selected treenode. 
+ * about the selected treenode.
  * It is intended to show Observation Trees that are about to run, are running or have run, and thus
  * are NOT intended to do heavy configuration (allthough there are some possibilities left to do so for the
  * time being). Configuring jobs needs 2 be done in the Template.
@@ -87,24 +87,51 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         buttonPanel1.addButton("Info");
         buttonPanel1.addButton("Exit");
         
-         //Sample code to have ParmDB in the tree.
-                
+        //Sample code to have ParmDB in the tree.
+        
         parmDBTreelistener = new TreeModelListener(){
             public void treeStructureChanged(TreeModelEvent e){}
             public void treeNodesRemoved(TreeModelEvent e){}
             public void treeNodesChanged(TreeModelEvent e){}
             public void treeNodesInserted(TreeModelEvent e){
                 TreeNode item = (TreeNode)e.getSource();
-                if (LofarUtils.keyName(item.getName()).equalsIgnoreCase("BBS")){
+                if (LofarUtils.keyName(item.getName()).equalsIgnoreCase("ParmDB")){
                     try {
+                        //remove the pointers to the parmdb tables
+                        item.removeAllChildren();
                         
+                        //add the parmdb nodes
+                        Vector childs =
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(((jOTDBnode)item.getUserObject()).treeID(), ((jOTDBnode)item.getUserObject()).nodeID(), 1);
+                        
+                        Enumeration parmdbparms = childs.elements();
+                        while( parmdbparms.hasMoreElements()  ) {
+                            jOTDBnode parmdbparmitem = (jOTDBnode)parmdbparms.nextElement();
+                            String[] args = new String[3];
+                            String tableName = LofarUtils.keyName(parmdbparmitem.name);
+                                args[0]= tableName;
+                                args[1]="ParmDB";
+                                args[2]=parmdbparmitem.limits;
+                            TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
+                               
+                            TreeNode newNode = new TreeNode(ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()),parmdbparmitem,parmdbparmitem.name);
+                            item.add(parmDBnode);
+                            
+                        }
+                    } catch (RemoteException ex) {
+                        logger.error("ParmDB Plotter could not be loaded : "+ex.getMessage(),ex);
+                    }
+                    
+                    /*
+                    try {
+                     
                         HashMap<String,String> tables = ParmDBConfigurationHelper.getInstance().getParmDBTables();
                         Iterator i = tables.keySet().iterator();
                         while(i.hasNext()){
                             String[] args = new String[3];
                             String tableName = (String)i.next();
                             args[0]= tableName;
-                            args[1]="BBS";
+                            args[1]="ParmDB";
                             args[2]=tables.get(tableName);
                             TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
                             boolean alreadyPresent = false;
@@ -121,7 +148,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                         }
                     } catch (ParmDBConfigurationException ex) {
                         logger.error(ex.getMessage(),ex);
-                    }
+                    }*/
                 }
             }
         };
@@ -151,7 +178,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         // initialize the tree
         setNewRootNode();
         
-       
+        
         
         return true;
     }

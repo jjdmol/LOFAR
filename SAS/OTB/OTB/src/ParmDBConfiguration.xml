@@ -12,29 +12,9 @@
         <server id="ParmDB1" name="ParmDB on LOFAR17">
             <connection>                
                 <rmihostname>lofar17.astron.nl</rmihostname>
-                <rmiport>10502</rmiport>
+                <rmiport>10668</rmiport>
             </connection>
             <tables>
-                <table>
-                    <name>ParmDB - Ger Bandpass</name>
-                    <location>/opt/lofar/data/BBS2/BP/bp1.mep</location>
-                </table>
-		    <table>
-                    <name>ParmDB - Joris VarBP</name>
-                    <location>/opt/lofar/data/BBS2/BP/solveVarBP.mep</location>
-                </table>
-	    	    <table>
-                    <name>ParmDB - Joris Polc</name>
-                    <location>/opt/lofar/data/BBS2/BP/solvePolc.mep</location>
-                </table>
-		    <table>
-                    <name>ParmDB - Joris Bandpass</name>
-                    <location>/opt/lofar/data/BBS2/BP/solveBandpass.mep</location>
-                </table>
-		    <table>
-                    <name>ParmDB - History test</name>
-                    <location>/home/zwieten/tmp/history_test.mep</location>
-                </table>
             </tables>
         </server>
     </servers>    
