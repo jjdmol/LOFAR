@@ -135,9 +135,9 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                 TreeNode newNode = new TreeNode(this.instance,item,item.getNodeID());
                 aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
-                
                 fireTreeInsertionPerformed(evt);
-                
+                //define children for the new node as well...
+                this.defineChildsForNode(newNode);
                 
             }
             if(uniqueNames.size() == 0){

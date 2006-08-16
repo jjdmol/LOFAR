@@ -44,6 +44,7 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.ResultPanelHelper;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.jParmDBnode;
 import nl.astron.lofar.sas.otb.util.treemanagers.ParmDBTreeManager;
 import nl.astron.lofar.sas.otb.util.treemanagers.ResultTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
@@ -207,10 +208,15 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         
         // Check if the nodename uses specific panels and create them
         Vector aPanelList=null;
-        if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.getName()))) {
-            aPanelList=itsPanelHelper.getPanels(LofarUtils.keyName(aNode.getName()));
-        } else {
-            aPanelList=itsPanelHelper.getPanels("*");
+        
+        if(aNode.getUserObject() instanceof jOTDBnode){
+            if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.getName()))) {
+                aPanelList=itsPanelHelper.getPanels(LofarUtils.keyName(aNode.getName()));
+            } else {
+                aPanelList=itsPanelHelper.getPanels("*");
+            }
+        }else if(aNode.getUserObject() instanceof jParmDBnode){
+            aPanelList=itsPanelHelper.getPanels("ParmDBValues");
         }
         
         if (aNode.isLeaf()) {
