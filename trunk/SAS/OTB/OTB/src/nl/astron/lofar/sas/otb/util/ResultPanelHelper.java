@@ -96,7 +96,7 @@ public class ResultPanelHelper {
         Iterator i = itsPanelMap.keySet().iterator();
         while(i.hasNext()){
             String key = (String)i.next();
-            if(aKey.equals(key)){
+            if(aKey.startsWith(key)){
                 returnVector = itsPanelMap.get(key);
             }
         }
@@ -114,7 +114,7 @@ public class ResultPanelHelper {
         Iterator i = itsPanelMap.keySet().iterator();
         while(i.hasNext()){
             String key = (String)i.next();
-            if(aKey.equals(key)){
+            if(aKey.startsWith(key)){
                 returnBool = true;
             }
         }
