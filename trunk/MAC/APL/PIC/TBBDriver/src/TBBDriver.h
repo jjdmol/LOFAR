@@ -24,11 +24,16 @@
 #define LOFAR_TBBDRIVER_TBBDRIVER_H
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include <APL/TBB_Protocol/TP_Protocol.ph>
+#include "TP_Protocol.ph"
 
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_DevicePort.h>
+
+#include <Common/lofar_deque.h>
+
+#include "BoardCmdHandler.h"
+#include "ClientMsgHandler.h"
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -36,7 +41,7 @@ namespace LOFAR{
   namespace TBB{
 	 
     // Description of class.
-    class TBBDriver
+    class TBBDriver : public GCFTask
     {
     public:
 		
@@ -65,21 +70,28 @@ namespace LOFAR{
       TBBDriver (const TBBDriver& that);
       TBBDriver& operator= (const TBBDriver& that);
 		
-			bool SetTbbCommand(GCFEvent& event);
-			bool SetTpCommand(GCFEvent& event);
+			bool SetTbbCommand(unsigned short signal);
+			bool SetTpCommand(unsigned short signal);
 			
 			// define some constants
 	  	// mode of operation
-
-			static const int32	MODE_NORMAL	    = 0; // control all RSPboards
-			static const int32	MODE_SUBSTATION = 1; // control only one RSPboard
+			BoardCmdHandler*		cmdhandler;
+			ClientMsgHandler*		msghandler;
 			
-			GCFTCPPort                   m_acceptor;     // listen for clients on this port
-			GCFETHRawPort*               m_board;        // array of ports, one for each RSP board
-			std::list<GCFPortInterface*> m_client_list;  // list of clients
-			std::list<GCFPortInterface*> m_dead_clients; // list of clients to cleanup
+			struct TbbEvent{
+				unsigned short signal;
+				GCFPortInterface* port;
+			};
+			
+			deque<TbbEvent>* itsTbbQueue;
+			
+			GCFTCPPort          itsAcceptor;     // listen for clients on this port
+			GCFTCPPort          itsMsgPort;     // send messages to this port
+			GCFETHRawPort*      itsBoard;        // array of ports, one for each TBB board
+			//std::list<GCFPortInterface*> itsclient_list;  // list of clients
+			//std::list<GCFPortInterface*> itsdead_clients; // list of clients to cleanup
     };
-  } // namespace TBB
-} // namespace LOFAR
+	} // end TBB namespace
+} // end LOFAR namespace
 
 #endif

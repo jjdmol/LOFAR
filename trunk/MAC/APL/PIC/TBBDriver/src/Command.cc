@@ -25,8 +25,8 @@
 
 #include "Command.h"
 
-using namespace LOFAR;
-using namespace TBB;
+namespace LOFAR {
+	namespace TBB {
 
 Command::Command()
 {
@@ -35,3 +35,45 @@ Command::Command()
 Command::~Command()
 {
 }
+			
+bool Command::isValid(GCFEvent& event)
+{
+	return false;
+}
+				
+void Command::saveTbbEvent(GCFEvent& event)
+{
+}
+				
+void Command::makeTpEvent()
+{
+}
+						
+void Command::sendTpEvent(GCFPortInterface& port)
+{
+}
+
+void Command::saveTpAckEvent(GCFEvent& event, int boardnr)
+{
+}
+
+void Command::sendTbbAckEvent(GCFPortInterface* clientport)
+{
+}
+
+uint32 Command::getSendMask()
+{
+	return 0;
+}
+
+uint32 Command::getRecvMask()
+{
+	return 0;
+}
+			
+uint32 Command::done()
+{
+	return 0;
+}
+	} // end TBB namespace
+} // end LOFAR namespace

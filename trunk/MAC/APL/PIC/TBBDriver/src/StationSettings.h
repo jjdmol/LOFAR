@@ -35,9 +35,6 @@
 namespace LOFAR {
   namespace TBB {
 
-// \addtogroup RSP
-// @{
-
 // forward declaration
 class TBBDriver;
 
@@ -51,17 +48,19 @@ public:
 
 	static StationSettings* instance();
 
-	int32 maxTbbBoards();	// RS.N_RSPBOARDS
+	int32 maxTbbBoards();	// RS.MAX_TBBBOARDS
 	
-	int32 nrTbbBoards();	// 1 | RS.N_RSPBOARDS depending on OPERATION_MODE
+	int32 nrTbbBoards();	// RS.N_TBBBOARDS
 	
-	ostream& print (ostream& os) const;
-
+	int32 nrMpsPerBoard();	// const 4
+	
 	friend class TBBDriver;
 
 protected:	// note TBBDriver must be able to set them
-	void setNrTbbBoards    (int32 nrBlps);
-	void setMaxTbbBoards   (int32 nrBlps);
+	void setMaxTbbBoards(int32 maxBoards);
+	void setNrTbbBoards(int32 nrOfBoards);
+	
+	
 
 private:
 	// Copying is not allowed
@@ -69,32 +68,21 @@ private:
 	StationSettings& operator=(const StationSettings& that);
 
 	//# --- Datamembers ---
-	int32	itsMaxTbbBoards;	// constants
-	int32	itsNrMpsPerBoard;
-	int32	itsNrTbbBoards;		// values depend on OPERATION_MODE
-	int32	itsNrMp;					// values depend on OPERATION_MODE
+	int32	itsMaxTbbBoards;	// max posible boards
+	int32	itsNrTbbBoards;		// nr of installed boards
+	int32	itsNrMpsPerBoard;	// nr of Memmory Proccessors on one board
+	
+	
 	
 	static StationSettings* theirStationSettings;
 };
 
 //# --- inline functions ---
 inline	int32 StationSettings::maxTbbBoards()	{ return (itsMaxTbbBoards);   }
+inline	int32 StationSettings::nrTbbBoards()	{ return (itsNrTbbBoards); }
 inline	int32 StationSettings::nrMpsPerBoard() { return (itsNrMpsPerBoard); }
 
-inline	int32 StationSettings::nrTbbBoards()	{ return (itsNrTbbBoards); }
-inline	int32 StationSettings::nrMp()		{ return (itsNrMp); }
-
-
-//#
-//# operator<<
-//#
-inline ostream& operator<< (ostream& os, const StationSettings& aSS)
-{	
-	return (aSS.print(os));
-}
-
-// @}
-  } // namespace RSP
-} // namespace LOFAR
+	} // end TBB namespace
+} // end LOFAR namespace
 
 #endif

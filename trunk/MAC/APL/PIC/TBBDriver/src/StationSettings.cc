@@ -25,11 +25,10 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <APL/RSP_Protocol/EPA_Protocol.ph>
-#include <StationSettings.h>
+#include "StationSettings.h"
 
 namespace LOFAR {
-  namespace RSP {
+  namespace TBB {
 
 //
 // Initialize singleton
@@ -48,66 +47,35 @@ StationSettings* StationSettings::instance()
 // Default constructor
 //
 StationSettings::StationSettings() :
-	itsMaxRspBoards(0),
-	itsNrBlpsPerBoard(0),
-	itsNrRcusPerBoard(0),
-	itsNrRspBoards(0),
-	itsNrBlps(0),
-	itsNrRcus(0)
+	itsMaxTbbBoards(0),
+	itsNrTbbBoards(0),
+	itsNrMpsPerBoard(4)
 {
 
 }
 
+
+// setMaxTbbBoards
 //
-// setNrBlpsPerBoard
-//
-void StationSettings::setNrBlpsPerBoard (int32 nrBlps)
+void StationSettings::setMaxTbbBoards (int32 maxTbbBoards)
 {
-	itsNrBlpsPerBoard = nrBlps;
-	itsNrRcusPerBoard = itsNrBlpsPerBoard * MEPHeader::N_POL;
-	itsNrBlps         = itsNrBlpsPerBoard * itsNrRspBoards;
-	itsNrRcus         = itsNrRcusPerBoard * itsNrRspBoards;
+	itsMaxTbbBoards = maxTbbBoards;
 }
 
-//
-// setNrRspBoards
-//
-void StationSettings::setNrRspBoards    (int32 nrRspBoards)
-{
-	itsNrRspBoards = nrRspBoards;
-	ASSERTSTR (itsNrRspBoards <= itsMaxRspBoards, 
-			formatString("Range conflict in nr of RSP boards (%d<=%d)",
-			itsNrRspBoards, itsMaxRspBoards));
 
-	itsNrBlps      = itsNrBlpsPerBoard * itsNrRspBoards;
-	itsNrRcus      = itsNrRcusPerBoard * itsNrRspBoards;
+// setNrTbbBoards
+//
+void StationSettings::setNrTbbBoards (int32 nrOfBoards)
+{
+	itsNrTbbBoards = nrOfBoards;
+	
+	ASSERTSTR (itsNrTbbBoards <= itsMaxTbbBoards, 
+			formatString("Range conflict in nr of TBB boards (%d<=%d)",
+			itsNrTbbBoards, itsMaxTbbBoards));
 }
 
-//
-// setMaxRspBoards
-//
-void StationSettings::setMaxRspBoards   (int32 nrRspBoards)
-{
-	itsMaxRspBoards = nrRspBoards;
-	ASSERTSTR (itsNrRspBoards <= itsMaxRspBoards, 
-			formatString("Rangeconflict in nr of RSP boards (%d<=%d)",
-			itsNrRspBoards, itsMaxRspBoards));
-}
 
-//
-// print
-//
-ostream& StationSettings::print (ostream& os) const
-{
-	os << "Max RSPboards: " << itsMaxRspBoards   << endl;
-	os << "Nr RSPboards : " << itsNrRspBoards    << endl;
-	os << "Nr BLPs/board: " << itsNrBlpsPerBoard << endl;
-	os << "Nr RCUs/board: " << itsNrRcusPerBoard << endl;
-	os << "Nr BLPs      : " << itsNrBlps         << endl;
-	os << "Nr RCUs      : " << itsNrRcus         << endl;
 
-	return (os);
-}
 
-  } // namespace PACKAGE
-} // namespace LOFAR
+	} // end TBB namespace
+} // end LOFAR namespace

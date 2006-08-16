@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  GetVersions.h: Get Tbb board versions
+//#  VersionCmd.h: Get Tbb board versions
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,15 +22,13 @@
 //#
 //#  $Id$
 
-#ifndef GETVERSIONS_H_
-#define GETVERSIONS_H_
-
-#include "BoardAction.h"
-#include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include <APL/TBB_Protocol/TP_Protocol.ph>
+#ifndef VERSIONCMD_H_
+#define VERSIONCMD_H_
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
+
+#include "Command.h"
 
 namespace LOFAR {
   namespace TBB {
@@ -38,33 +36,47 @@ namespace LOFAR {
 		class VersionCmd : public Command 
 		{
 			public:
-				/// Constructors for a GetVersions object.
-				GetVersionsCmd(GCFEvent& event);
+				// Constructors for a GetVersions object.
+				VersionCmd();
 	  
-				/// Destructor for GetVersions.
-				virtual ~GetVersionsCmd();
+				// Destructor for GetVersions.
+				virtual ~VersionCmd();
 				
 				virtual bool isValid(GCFEvent& event);
 				
-				virtual void sendTpEvent(GCFEvent& event, GCFPortInterface& boardport[]);
+				virtual void saveTbbEvent(GCFEvent& event);
+				
+				virtual void makeTpEvent();
+						
+				virtual void sendTpEvent(GCFPortInterface& port);
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+				virtual void saveTpAckEvent(GCFEvent& event, int boardnr);
 
-				virtual void sendTbbAckEvent(void);
-
+				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+				
+				virtual uint32 getSendMask();
+				
+				virtual uint32 getRecvMask();
+				
+				virtual uint32 done();
       
 			private:
-				GCFPortInterface*		m_ClientPort;
-				uint32							m_SendMask;  // mask indicates the boards to communicate with
-				uint32							m_RecvMask;  // mask indicates the boards to communicate with
+				uint32	itsSendMask;  // mask indicates the boards to communicate with
+				uint32	itsRecvMask;  // mask indicates the boards handled
+				uint32  itsErrorMask;  // mask indicates the not responding boards
 				
-				uint32	m_boardid[12];
-				uint32	m_swversion[12];
-				uint32	m_boardversion[12];
-				uint32	m_tpversion[12];
-				uint32	m_mpversion[12][4];
+				TPVersionEvent itsVersionEvent;
+				
+				uint32	itsBoardId[MAX_N_TBBBOARDS];
+				uint32	itsSwVersion[MAX_N_TBBBOARDS];
+				uint32	itsBoardVersion[MAX_N_TBBBOARDS];
+				uint32	itsTpVersion[MAX_N_TBBBOARDS];
+				uint32	itsMp1Version[MAX_N_TBBBOARDS];
+				uint32	itsMp2Version[MAX_N_TBBBOARDS];
+				uint32	itsMp3Version[MAX_N_TBBBOARDS];
+				uint32	itsMp4Version[MAX_N_TBBBOARDS];
 		};
-	};
-};
+	} // end TBB namespace
+} // end LOFAR namespace
 
-#endif /* GETVERSIONS_H_ */
+#endif /* VERSIONCMD_H_ */

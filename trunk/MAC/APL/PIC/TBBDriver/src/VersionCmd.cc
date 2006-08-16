@@ -24,95 +24,137 @@
 #include <Common/LofarLogger.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include <APL/TBB_Protocol/TP_Protocol.ph>
-#include <APL/RTCCommon/PSAccess.h>
-#include <blitz/array.h>
+#include "TP_Protocol.ph"
 
 #include "VersionCmd.h"
 
-using namespace blitz;
-using namespace LOFAR;
-using namespace TBB;
-using namespace TBB_Protocol;
-using namespace TP_Protocol;
-using namespace RTC;
+namespace LOFAR {
+	using namespace TBB_Protocol;
+	using namespace TP_Protocol;	
+	namespace TBB {
 
 
-bool VersionCmd::isVallid(GCFEvent& event)
+// Constructors for a GetVersions object.
+VersionCmd::VersionCmd():
+	itsSendMask(0),itsRecvMask(0),itsErrorMask(0)
 {
-	TBBVersionEvent tbbe(event);
-	
-	if((tbbe.signal == TBBVERSION)||(tbbe.signal == TPVERSION))
-	{
+
+}
+	  
+// Destructor for GetVersions.
+VersionCmd::~VersionCmd()
+{
+
+}
+// ----------------------------------------------------------------------------
+bool VersionCmd::isValid(GCFEvent& event)
+{
+	if((event.signal == TBB_VERSION)||(event.signal == TP_VERSION)) {
 		return true;
 	}
 	return false;
 }
 
-void VersionCmd::sendTpEvent(GCFEvent& event, GCFPortInterface& boardport[])
+// ----------------------------------------------------------------------------
+void VersionCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBVersionEvent tbbe(event);
-	TPVersionEvent tpe();
 	
-	m_SendMask = tbbe.tbbmask; // for some commands boardid ???
-	m_RecvMask = 0;
-	m_ClientPort = port;
-	
-	tpe.opcode = 0x00000701;
-	tpe.boardid = 0;
-	tpe.swversion = 0;
-	tpe.boardversion = 0;
-	tpe.tpversion = 0;
-	tpe.mpversion[0] = 0;
-	tpe.mpversion[1] = 0;
-	tpe.mpversion[2] = 0;
-	tpe.mpversion[3] = 0;
-	
-	for (int boardnr = 0;boardnr < m_maxboards;boardnr++)
-	{
-		if(m_SendMask & (1 << boardnr))
-		{
-			boardport[boardnr].send(tpe);
-		}
-	}
-	
+	itsSendMask = tbbe.tbbmask; // for some commands board-id is used ???
+	itsRecvMask = 0;
+	itsErrorMask = 0;
 }
 
-bool VersionCmd::saveTpAckEvent(GCFEvent& event, int boardnr)
+// ----------------------------------------------------------------------------
+void VersionCmd::makeTpEvent()
 {
-	TPVersionEvent tpe(event);
-	m_RecvMask |= (1 << boardnr);
-	
-	m_boardid[boardnr] = tpe.boardid;
-	m_swversion[boardnr] = tpe.swversion;
-	m_boardversion[boardnr] = tpe.boardversion;
-	m_tpversion[boardnr] = tpe.tpversion;
-	m_mpversion[boardnr][0] = tpe.mpversion[0];
-	m_mpversion[boardnr][1] = tpe.mpversion[1];
-	m_mpversion[boardnr][2] = tpe.mpversion[2];
-	m_mpversion[boardnr][3] = tpe.mpversion[3];
-	
-	if(m_RecvMask == m_SendMask) 
-	{
-		return true;
-	}
-	return false;
+	itsVersionEvent.opcode 				= 0x00000701;
+	itsVersionEvent.boardid 			= 0;
+	itsVersionEvent.swversion 		= 0;
+	itsVersionEvent.boardversion 	= 0;
+	itsVersionEvent.tpversion 		= 0;
+	itsVersionEvent.mp1version		= 0;
+	itsVersionEvent.mp2version		= 0;
+	itsVersionEvent.mp3version		= 0;
+	itsVersionEvent.mp4version		= 0;
 }
 
-void VersionCmd::sendTbbAckEvent(void)
+// ----------------------------------------------------------------------------
+void VersionCmd::sendTpEvent(GCFPortInterface& port)
 {
-	TBBVersionackEvent tbbe();
-	
-	for(int boardnr = 0;boardnr < 12;boardnr++)
-	{
-		tpe.board[boardnr].boardid = m_boardid[boardnr];
-		tpe.board[boardnr].swversion = m_bswversion[boardnr];
-		tpe.board[boardnr].boardversion = m_boardversion[boardnr];
-		tpe.board[boardnr].tpversion = m_tpversion[boardnr];
-		tpe.board[boardnr].mpversion[0] = m_mpversion[boardnr][0];
-		tpe.board[boardnr].mpversion[1] = m_mpversion[boardnr][1];
-		tpe.board[boardnr].mpversion[2] = m_mpversion[boardnr][2];
-		tpe.board[boardnr].mpversion[3] = m_mpversion[boardnr][3];		
-	}
-	m_ClientPort.send(tpe);
+	port.send(itsVersionEvent);
+	port.setTimer(TIME_OUT);
 }
+
+// ----------------------------------------------------------------------------
+void VersionCmd::saveTpAckEvent(GCFEvent& event, int boardnr)
+{
+	itsRecvMask |= (1 << boardnr);
+	// in case of a time-out, save alle zero's
+	if(event.signal == F_TIMER) {
+		itsErrorMask |= (1 << boardnr);
+		itsBoardId[boardnr] 		= 0;
+		itsSwVersion[boardnr] 	= 0;
+		itsBoardVersion[boardnr]= 0;
+		itsTpVersion[boardnr] 	= 0;
+		itsMp1Version[boardnr] 	= 0;
+		itsMp2Version[boardnr] 	= 0;
+		itsMp3Version[boardnr] 	= 0;
+		itsMp4Version[boardnr] 	= 0;	
+	}
+	else {
+		TPVersionEvent tpe(event);
+		itsBoardId[boardnr] 		= tpe.boardid;
+		itsSwVersion[boardnr] 	= tpe.swversion;
+		itsBoardVersion[boardnr]= tpe.boardversion;
+		itsTpVersion[boardnr] 	= tpe.tpversion;
+		itsMp1Version[boardnr] 	= tpe.mp1version;
+		itsMp2Version[boardnr] 	= tpe.mp2version;
+		itsMp3Version[boardnr] 	= tpe.mp3version;
+		itsMp4Version[boardnr] 	= tpe.mp4version;
+	}
+}
+
+// ----------------------------------------------------------------------------
+void VersionCmd::sendTbbAckEvent(GCFPortInterface* clientport)
+{
+	TBBVersionackEvent tbbe;
+	
+	tbbe.status = 0;	
+	if(itsErrorMask) {
+		tbbe.status = 1;
+		tbbe.status |= (itsErrorMask << 16);
+	} 
+	for(int boardnr = 0;boardnr < 12;boardnr++) {
+		tbbe.boardinfo[boardnr].boardid 			= itsBoardId[boardnr];
+		tbbe.boardinfo[boardnr].swversion 		= itsSwVersion[boardnr];
+		tbbe.boardinfo[boardnr].boardversion  = itsBoardVersion[boardnr];
+		tbbe.boardinfo[boardnr].tpversion 		= itsTpVersion[boardnr];
+		tbbe.boardinfo[boardnr].mp1version  	= itsMp1Version[boardnr];
+		tbbe.boardinfo[boardnr].mp2version  	= itsMp2Version[boardnr];
+		tbbe.boardinfo[boardnr].mp3version  	= itsMp3Version[boardnr];
+		tbbe.boardinfo[boardnr].mp4version  	= itsMp4Version[boardnr];		
+	}
+	clientport->send(tbbe);
+}
+
+// ----------------------------------------------------------------------------
+uint32 VersionCmd::getSendMask()
+{
+	return itsSendMask;
+}
+
+// ----------------------------------------------------------------------------
+uint32 VersionCmd::getRecvMask()
+{
+	return itsRecvMask;
+}
+
+// ----------------------------------------------------------------------------
+uint32 VersionCmd::done()
+{
+	return (itsRecvMask == itsSendMask);
+}
+	} // end TBB namespace
+} // end LOFAR namespace
+

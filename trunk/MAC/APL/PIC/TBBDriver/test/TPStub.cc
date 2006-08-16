@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <APL/TBB_Protocol/TP_Protocol.ph>
+#include "TP_Protocol.ph"
 #include <RawEvent.h>
 #include <TPStub.h>
 #include <APL/RTCCommon/PSAccess.h>

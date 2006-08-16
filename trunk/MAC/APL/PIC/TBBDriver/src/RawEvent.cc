@@ -25,12 +25,14 @@
 #include <Common/LofarLogger.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
-#include <APL/RSP_Protocol/TP_Protocol.ph>
+#include "TP_Protocol.ph" 
 
 #include "RawEvent.h"
 
-using namespace LOFAR;
-using namespace TP_Protocol;
+namespace LOFAR {
+	using namespace TP_Protocol;
+	namespace TBB {
+	
 
 static const uint8 OPCODE_LEN = 4;
 
@@ -171,5 +173,5 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   
   return status;
 }
-
-
+	} // end TBB namespace
+} // end LOFAR namespace

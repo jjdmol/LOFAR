@@ -25,76 +25,92 @@
 
 #include "BoardCmdHandler.h"
 
-using namespace LOFAR;
-using namespace TBB;
+namespace LOFAR {
+	namespace TBB {
 
 #define N_RETRIES 10
 
-BoardCmdHandler::BoardCmdHandler()
-  : GCFFsm((State)&BoardCmdHandler::tp_send_state),
-    m_retries(0),
-		m_nr_of_boards(12)
+BoardCmdHandler::BoardCmdHandler(GCFPortInterface* board_ports)
+  : GCFFsm((State)&BoardCmdHandler::send_state),
+    itsRetries(0),
+		itsNrOfBoards(12)
 {
+	itsBoardPorts = board_ports; // save address of boards array		
 }
 
 BoardCmdHandler::~BoardCmdHandler()
-{	
+{
+		
 }
 
 GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 			
-  switch (event.signal)
-	{
+  switch (event.signal)	{
   	case F_ENTRY: {
 		}	break;			
 		
 		default: {
-			if(m_Cmd.isValid(event)) // isValid returns true if event is a valid cmd
-			{
-				m_Cmd.sendTpEvent(board_port);
-				// TODO set timeout timer
+			if(itsCmd->isValid(event)) { // isValid returns true if event is a valid cmd
+				itsClientPort = &port;
+				itsCmd->saveTbbEvent(event);
+				itsCmd->makeTpEvent();
+				
+				for(int boardid = 0;boardid < itsNrOfBoards;boardid++) {
+					if((1 << boardid) & itsCmd->getSendMask()) {
+						itsCmd->sendTpEvent(itsBoardPorts[boardid]);
+					}
+				}
 				TRAN(BoardCmdHandler::waitack_state);
 			}
-			else
-			{
+			else {
 				status = GCFEvent::NOT_HANDLED;
 			}
     } break;
 	}
 	return status;
 }
-
+ 
 
 GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 	  
-	switch(event.signal)
-	{
+	switch(event.signal) {
   	case F_ENTRY: {
 		}	break;
 		    
 		case F_TIMER: {
-			sendTbbAckEvent();
-			TRAN(BoardCmdHandler::send_state);
+			// time-out, retry 
+			if(itsBoardRetries[PortToBoardNr(port)] < N_RETRIES) {
+				itsCmd->sendTpEvent(port);	
+			}
+			else {
+				// max retries, save zero's
+				itsCmd->saveTpAckEvent(event,PortToBoardNr(port));
+			}
+			
+			if(itsCmd->done()) {
+				itsCmd->sendTbbAckEvent(itsClientPort);
+				TRAN(BoardCmdHandler::send_state);
+			}
 		}	break;
 		
     case F_EXIT: {
 		} break;
       
     default: {
-			if(Cmd.isValid(event))
-			{
-				if(saveTpAckEvent(event,port)) // if saveTpAckEvent() returns true, all data is received
-				{
-					sendTbbAckEvent();
+			if(itsCmd->isValid(event)) {
+				itsBoardPorts[PortToBoardNr(port)].cancelAllTimers();
+				itsCmd->saveTpAckEvent(event,PortToBoardNr(port));
+				
+				if(itsCmd->done()) {
+					itsCmd->sendTbbAckEvent(itsClientPort);
 					TRAN(BoardCmdHandler::send_state);	
 				}
 			}
-			else
-			{
+			else {
 				status = GCFEvent::NOT_HANDLED;
 			}
 		}	break;
@@ -102,14 +118,27 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 	return status;
 }
 
-void BoardCmdHandler::setBoardPorts(GCFPortInterface& boards)
+void BoardCmdHandler::SetCmd(Command *cmd)
 {
-	m_BoardPort = boards;		
+	itsCmd = cmd;
 }
 
-bool BoardCmdHandler::SetCmd(Command cmd)
+bool BoardCmdHandler::done()
 {
-	m_Cmd = cmd;
+	return itsCmd->done();
 }
 
+int BoardCmdHandler::PortToBoardNr(GCFPortInterface& port)
+{
+	int boardnr;
+	
+	for(boardnr = 0;boardnr < itsNrOfBoards;boardnr++) {
+		if(&port == &itsBoardPorts[boardnr]) { 				
+			return boardnr;
+		}
+	}	
+	return -1;	
+}
+	} // end TBB namespace
+} // end LOFAR namespace
 

@@ -53,7 +53,9 @@ dnl
 lofar_GENERAL
 dnl lofar_BLITZ
 dnl lofar_MPI
-dnl lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(APL/TBB_Protocol,TBB_Protocol,,1,APL/TBB_Protocol/TBB_Protocol.ph,,)
+lofar_INTERNAL(LCS/ACC/APS,aps,,1,APS/ParameterSet.h)
 
 dnl
 dnl Output Makefiles
