@@ -107,48 +107,22 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                         Enumeration parmdbparms = childs.elements();
                         while( parmdbparms.hasMoreElements()  ) {
                             jOTDBnode parmdbparmitem = (jOTDBnode)parmdbparms.nextElement();
-                            String[] args = new String[3];
-                            String tableName = LofarUtils.keyName(parmdbparmitem.name);
+                            //only add values that mean something
+                            if(parmdbparmitem.limits != null && !parmdbparmitem.limits.equalsIgnoreCase("")){
+                                String[] args = new String[3];
+                                String tableName = LofarUtils.keyName(parmdbparmitem.name);
                                 args[0]= tableName;
                                 args[1]="ParmDB";
                                 args[2]=parmdbparmitem.limits;
-                            TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
-                               
-                            TreeNode newNode = new TreeNode(ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()),parmdbparmitem,parmdbparmitem.name);
-                            item.add(parmDBnode);
-                            
+                                TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
+                                
+                                TreeNode newNode = new TreeNode(ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()),parmdbparmitem,parmdbparmitem.name);
+                                item.add(parmDBnode);
+                            }
                         }
                     } catch (RemoteException ex) {
                         logger.error("ParmDB Plotter could not be loaded : "+ex.getMessage(),ex);
                     }
-                    
-                    /*
-                    try {
-                     
-                        HashMap<String,String> tables = ParmDBConfigurationHelper.getInstance().getParmDBTables();
-                        Iterator i = tables.keySet().iterator();
-                        while(i.hasNext()){
-                            String[] args = new String[3];
-                            String tableName = (String)i.next();
-                            args[0]= tableName;
-                            args[1]="ParmDB";
-                            args[2]=tables.get(tableName);
-                            TreeNode parmDBnode =ParmDBTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(args);
-                            boolean alreadyPresent = false;
-                            Enumeration children = item.children();
-                            while(children.hasMoreElements() && !alreadyPresent){
-                                TreeNode child = (TreeNode)children.nextElement();
-                                if (child.getName().equals(parmDBnode.getName())){
-                                    alreadyPresent=true;
-                                }
-                            }
-                            if(!alreadyPresent){
-                                item.add(parmDBnode);
-                            }
-                        }
-                    } catch (ParmDBConfigurationException ex) {
-                        logger.error(ex.getMessage(),ex);
-                    }*/
                 }
             }
         };
