@@ -6,7 +6,7 @@
 # Specify the base index of the TBB board ethernet MAC address
 # The TBB boards addresses will be numbered consecutively.
 #
-# Start from address: 00:00:00:00:00:MAC_BASE
+# Start from address: 10:FA:00:00:MAC_BASE:02
 # TBBDriver.MAC_BASE=1
 
 #
@@ -14,22 +14,19 @@
 # addresses explicitly as MAC_ADDR0..MAC_ADDR11
 # In this case you must leave TBBDriver.MAC_BASE unspecified
 #
-#TBBDriver.MAC_ADDR_0=00:00:00:00:00:08
-#lofar27:eth2:00:50:04:32:B8:5C
-#TBBDriver.MAC_ADDR_0=00:50:04:32:B8:5C
 
-TBBDriver.MAC_ADDR_0=10:FA:00:00:13:00
-TBBDriver.MAC_ADDR_1=10:FA:00:00:12:00
-TBBDriver.MAC_ADDR_2=00:00:00:00:00:03
-TBBDriver.MAC_ADDR_3=00:00:00:00:00:04
-TBBDriver.MAC_ADDR_4=00:00:00:00:00:05
-TBBDriver.MAC_ADDR_5=00:00:00:00:00:06
-TBBDriver.MAC_ADDR_6=00:00:00:00:00:07
-TBBDriver.MAC_ADDR_7=00:00:00:00:00:08
-TBBDriver.MAC_ADDR_8=00:00:00:00:00:09
-TBBDriver.MAC_ADDR_9=00:00:00:00:00:10
-TBBDriver.MAC_ADDR_10=00:00:00:00:00:0A
-TBBDriver.MAC_ADDR_11=00:00:00:00:00:0B
+TBBDriver.MAC_ADDR_0=10:FA:00:00:00:02
+TBBDriver.MAC_ADDR_1=10:FA:00:00:01:02
+TBBDriver.MAC_ADDR_2=10:FA:00:00:02:02
+TBBDriver.MAC_ADDR_3=10:FA:00:00:03:02
+TBBDriver.MAC_ADDR_4=10:FA:00:00:04:02
+TBBDriver.MAC_ADDR_5=10:FA:00:00:05:02
+TBBDriver.MAC_ADDR_6=10:FA:00:00:06:02
+TBBDriver.MAC_ADDR_7=10:FA:00:00:07:02
+TBBDriver.MAC_ADDR_8=10:FA:00:00:08:02
+TBBDriver.MAC_ADDR_9=10:FA:00:00:09:02
+TBBDriver.MAC_ADDR_10=10:FA:00:00:0A:02
+TBBDriver.MAC_ADDR_11=10:FA:00:00:0B:02
 
 #
 # Data output payload size.
@@ -38,58 +35,9 @@ TBBDriver.MAC_ADDR_11=00:00:00:00:00:0B
 #
 TBBDriver.OUTPUT_PAYLOAD_SIZE=736
 
-#
-# Destination IP and MAC address for data packets
-# leaving the RSP board with the given index
-#
-#
-# Output to lofar11
-#
-
-TBBDriver.SRC_IP_ADDR_0=10.1.0.1
-TBBDriver.DST_IP_ADDR_0=192.168.2.111
-TBBDriver.DST_MAC_ADDR_0=00:04:23:B5:C4:6A
 
 #
-# Output to lofar12
-#
-TBBDriver.SRC_IP_ADDR_1=10.1.0.2
-TBBDriver.DST_IP_ADDR_1=192.168.2.112
-TBBDriver.DST_MAC_ADDR_1=00:04:23:B5:C5:CA
-
-TBBDriver.SRC_IP_ADDR_2=10.1.0.3
-TBBDriver.DST_IP_ADDR_2=10.2.0.3
-TBBDriver.DST_MAC_ADDR_2=
-TBBDriver.SRC_IP_ADDR_3=10.1.0.4
-TBBDriver.DST_IP_ADDR_3=10.2.0.4
-TBBDriver.DST_MAC_ADDR_3=
-TBBDriver.SRC_IP_ADDR_4=10.1.0.5
-TBBDriver.DST_IP_ADDR_4=10.2.0.5
-TBBDriver.DST_MAC_ADDR_4=
-TBBDriver.SRC_IP_ADDR_5=10.1.0.6
-TBBDriver.DST_IP_ADDR_5=10.2.0.6
-TBBDriver.DST_MAC_ADDR_5=
-TBBDriver.SRC_IP_ADDR_6=10.1.0.7
-TBBDriver.DST_IP_ADDR_6=10.2.0.7
-TBBDriver.DST_MAC_ADDR_6=
-TBBDriver.SRC_IP_ADDR_7=10.1.0.8
-TBBDriver.DST_IP_ADDR_7=10.2.0.8
-TBBDriver.DST_MAC_ADDR_7=
-TBBDriver.SRC_IP_ADDR_8=10.1.0.9
-TBBDriver.DST_IP_ADDR_8=10.2.0.9
-TBBDriver.DST_MAC_ADDR_8=
-TBBDriver.SRC_IP_ADDR_9=10.1.0.10
-TBBDriver.DST_IP_ADDR_9=10.2.0.10
-TBBDriver.DST_MAC_ADDR_9=
-TBBDriver.SRC_IP_ADDR_10=10.1.0.11
-TBBDriver.DST_IP_ADDR_10=10.2.0.11
-TBBDriver.DST_MAC_ADDR_10=
-TBBDriver.SRC_IP_ADDR_11=10.1.0.12
-TBBDriver.DST_IP_ADDR_11=10.2.0.12
-TBBDriver.DST_MAC_ADDR_11=
-
-#
-# Ethernet interface on which to contact the RSP boards.
+# Ethernet interface on which to contact the TBB boards.
 # This interface would normally be connected to the switch.
 #
 TBBDriver.IF_NAME=eth1
@@ -113,11 +61,4 @@ TBBDriver.IF_NAME=eth1
 # TBBDriver cache.
 #
 TBBDriver.LOOPBACK_MODE=0
-
-#
-# Specify how the TBBDriver should operate:
-# 0: one RSP driver active --> control all boards
-# 1: many RSP drivers active --> control boards -I<n> only
-#
-TBBDriver.OPERATION_MODE=0
 

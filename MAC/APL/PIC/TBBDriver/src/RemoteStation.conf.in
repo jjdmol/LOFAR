@@ -5,10 +5,7 @@
 #
 # Number of TBB boards, normal 12
 #
+RS.MAX_TBBBOARDS=12
 RS.N_TBBBOARDS=1
 
-#
-# Number of Mp's (Memmory Processors) per TBB board
-#
-RS.N_MPS=4
 

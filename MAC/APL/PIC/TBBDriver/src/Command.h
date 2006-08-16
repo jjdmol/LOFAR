@@ -25,37 +25,48 @@
 #ifndef COMMAND_H_
 #define COMMAND_H_
 
-#include <APL/RTCCommon/Timestamp.h>
-
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
-  namespace RSP {
-
+  namespace TBB {
+		
+		static const int MAX_N_TBBBOARDS = 12;
+		static const double TIME_OUT = 0.5; 
+    
     class Command
     {
     public:
-
+						
 			// Constructor for Command
-			Command();
+			Command(){};
 	  
       // Destructor for Command.
-      virtual ~Command();
+      virtual ~Command(){};
 			
-			virtual bool isValid(GCFEvent& event);
+			virtual bool isValid(GCFEvent& event) = 0;
+				
+			virtual void saveTbbEvent(GCFEvent& event) = 0;
+				
+			virtual void makeTpEvent() = 0;
+						
+			virtual void sendTpEvent(GCFPortInterface& port) = 0;
+
+			virtual void saveTpAckEvent(GCFEvent& event, int boardnr) = 0;
+
+			virtual void sendTbbAckEvent(GCFPortInterface* clientport) = 0;
 			
-			virtual void sendTpEvent(GCFEvent& event, GCFPortInterface& boardport[]);
-
-			virtual void saveTpAckEvent(GCFEvent& event);
-
-			virtual void sendTbbAckEvent(void);
+			virtual uint32 getSendMask() = 0;
+				
+			virtual uint32 getRecvMask() = 0;
+			
+			virtual uint32 done() = 0;
 			
     private:
       
 									
     };
-  };
-};
+	} // end TBB namespace
+} // end LOFAR namespace
      
 #endif /* COMMAND_H_ */

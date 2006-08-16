@@ -28,7 +28,9 @@
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
-  namespace TP_Protocol{
+	using namespace TP_Protocol;
+	namespace TBB {
+
 		
 		// TP Command Opcode's
 		// Data Recording
@@ -68,6 +70,6 @@ namespace LOFAR {
 				static LOFAR::GCF::TM::GCFEvent::TResult dispatch(LOFAR::GCF::TM::GCFTask& task,
 																				LOFAR::GCF::TM::GCFPortInterface& port);
 		};
-  };
-};
+	} // end TBB namespace
+} // end LOFAR namespace
 #endif /* RAWEVENT_H_ */

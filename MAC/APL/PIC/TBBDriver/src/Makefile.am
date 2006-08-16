@@ -1,14 +1,46 @@
 # if HAVE_SHMEM
 # SUBDIRS = shmem .
 # endif
+AM_CPPFLAGS = \
+	-I$(top_builddir)/include
+	
+AUTOGEN = autogen
+SUFFIXES = .ph
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	cp $*.ph $(top_builddir)/include/TBBDriver/TP_Protocol
+
+%.ph: %.prot
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	cp $*.ph $(top_builddir)/include/TBBDriver/TP_Protocol
+
 
 lib_LTLIBRARIES         = libtbbdriver.la
 
+EXTRA_DIST = \
+	TP_Protocol.prot 
+
 libtbbdriver_la_SOURCES = \
-	BoardCmdHandler.h \
+	$(NOINST_HEADERS)  \
+	TP_Protocol.cc \
+	StationSettings.cc \
+	RawEvent.cc \
 	BoardCmdHandler.cc \
+	ClientMsgHandler.cc \
+	VersionCmd.cc
+	
+
+NOINST_HEADERS = \
+	TP_Protocol.ph \
+	StationSettings.h \
+	RawEvent.h \
+	BoardCmdHandler.h \
+	ClientMsgHandler.h \
+	Message.h	\
 	Command.h \
-	Command.cc			
+	VersionCmd.h			
+
+NOINSTdir	=
 
 # AM_YFLAGS               = -d -p KeyParse
 # AM_LFLAGS               = -PKeyTokenize
@@ -28,6 +60,9 @@ bin_PROGRAMS = TBBDriver
 TBBDriver_SOURCES = \
 	TBBDriver.h \
 	TBBDriver.cc
+
+TBBDriver_LDADD		= libtbbdriver.la
+TBBDriver_DEPENDENCIES	= libtbbdriver.la $(LOFAR_DEPEND)
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 

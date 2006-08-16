@@ -22,18 +22,23 @@
 //#
 //#  $Id$
 
-/*
-	Ieder commando heeft zijn eigen BoardCmdHandler, alle Tbb borden worden vanuit een module aangesproken. 
-	Ieder commando spreekt dus 12 borden aan, de Tbb borden waar iets naar toe moet worden gestuurt, 
-	worden bepaald door het mask.
-*/
+
+//
+// BoardCmdHandler handle's all commands from the client to the boards.
+// The command will be send to all connected TBB boards, that are listed in the 
+// given send-mask.
+// If there is a response from all boards, this also could be a time-out, the
+// data is send back to the client. The data for boards not responding or connected,
+// is filled with zero's .
+// In the return status a error mask is included 
+//
 
 #ifndef BOARDCMDHANDLER_H_
 #define BOARDCMDHANDLER_H_
 
 #include <GCF/TM/GCF_Control.h>
 
-#include <Command.h>
+#include "Command.h"
 
 namespace LOFAR {
 	namespace TBB {
@@ -42,35 +47,41 @@ namespace LOFAR {
 		{
 	
 			public:
-
+				Command*						itsCmd; // command to use
 				// Constructors for a SyncAction object.
 				// Default direction is read.
-				TbbBoardCmdHandler(GCFPortInterface& board_port, int board_id, int n_indices);
+				BoardCmdHandler(GCFPortInterface* board_ports);
 
 				// Destructor for SyncAction. */
-				~TbbBoardCmdHandler();
+				~BoardCmdHandler();
 
 				// The states of the statemachine.
 				GCFEvent::TResult send_state(GCFEvent& event, GCFPortInterface& port);
 				GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
 								
-				void setBoardPorts(GCFPortInterface& m_board);
-				bool SetCmd(Command cmd);
-
+				void SetCmd(Command *cmd);
+				
+				bool done();
+				
 			protected:
 
 			private:
+				// convert port to portnr, used in the port-array
+				int PortToBoardNr(GCFPortInterface& port);
 				
 				
 			private:
-				int								m_NrOfBoards;
-				GCFPortInterface&	m_BoardPort[m_nr_of_boards];
-				int								m_BoardId[m_nr_of_boards];
-				int								m_BoardRetries;
 				
-				Command						m_Cmd;
+				int									itsRetries;  // max number of retries
+				int									itsNrOfBoards; // numnber of boards installed
+				GCFPortInterface*		itsClientPort; // return port of the actual commmand
+				GCFPortInterface*		itsBoardPorts; // array of tbb board ports
+				
+				int									itsBoardRetries[MAX_N_TBBBOARDS];
+				
+				
 		};
-	};
-};
+	} // end TBB namespace
+} // end LOFAR namespace
 
 #endif /* BOARDACTION_H_ */
