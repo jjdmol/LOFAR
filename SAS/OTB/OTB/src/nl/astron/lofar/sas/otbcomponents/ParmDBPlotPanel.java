@@ -54,6 +54,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
     static String name="Plotter";
     private int successfulNumberOfSlots;
     private MainFrame  itsMainFrame;
+    private jParmDBnode itsParam;
     private String itsParamName;
     private String itsParamTableName;
     
@@ -211,7 +212,12 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 cloneParamName = "*";
             }else{
                 cloneParamName=cloneParamName.substring(itsParamTableName.length()+1);
-                cloneParamName += "*";
+                if(itsParam.isLeaf()){
+                    cloneParamName += "*";
+                }else{
+                    cloneParamName += ":*";
+                }
+                
             }
             try{
                 passToDataAccess = new String[8];
@@ -308,6 +314,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             logger.error("setContent() - jParmFacade RMI error while updating table name ",ex);
         }
         itsParamName = node.getNodeID();
+        itsParam=node;
         itsParamTableName = node.getParmDBIdentifier();
         logger.trace("ParmDB name selected : "+itsParamName);
         

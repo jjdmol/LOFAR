@@ -74,10 +74,7 @@ public class ResultPanelHelper {
         itsPanelMap.put("ParmDB",itsVector);
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
-        itsPanelMap.put("Instrument",itsVector);
-        itsPanelMap.put("LocalSky",itsVector);
-        itsPanelMap.put("History",itsVector);
-        
+        itsPanelMap.put("ParmDBValues",itsVector);       
     }
     
     
@@ -101,7 +98,7 @@ public class ResultPanelHelper {
         Iterator i = itsPanelMap.keySet().iterator();
         while(i.hasNext()){
             String key = (String)i.next();
-            if(aKey.startsWith(key)){
+            if(aKey.equals(key)){
                 returnVector = itsPanelMap.get(key);
             }
         }
@@ -119,7 +116,7 @@ public class ResultPanelHelper {
         Iterator i = itsPanelMap.keySet().iterator();
         while(i.hasNext()){
             String key = (String)i.next();
-            if(aKey.startsWith(key)){
+            if(aKey.equals(key)){
                 returnBool = true;
             }
         }
