@@ -350,7 +350,6 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         ParmDBHistoryLabel.setText("History :");
         ParmDBPanel.add(ParmDBHistoryLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, 100, 20));
 
-        configurationRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         configurationRevertButton.setText("Revert");
         configurationRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
         configurationRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
@@ -361,7 +360,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        ParmDBPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 100, -1));
+        ParmDBPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 80, -1));
 
         add(ParmDBPanel, java.awt.BorderLayout.CENTER);
 
