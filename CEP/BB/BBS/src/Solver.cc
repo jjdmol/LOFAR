@@ -64,15 +64,15 @@ void Solver::solve (bool useSVD)
     FitterData& fitObj = itsFitters[i];
     //  timer.start();
     ASSERT (fitObj.solvableValues.size() > 0);
-    // Solve the equation. 
+    // Solve the equation.
     uint rank;
     double fit;
     LOG_INFO_STR( "Solution before: " << fitObj.solvableValues);
     rank = 0;
     ///    BBSTest::Logger::log("Before: ", itsParmInfo);
     bool solFlag = fitObj.fitter.solveLoop (fit, rank,
-					    &(fitObj.solvableValues[0]),
-					    useSVD);
+                        &(fitObj.solvableValues[0]),
+                        useSVD);
     ///    BBSTest::Logger::log("After: ", itsParmInfo);
     LOG_INFO_STR( "Solution after:  " << fitObj.solvableValues);
 
@@ -106,55 +106,59 @@ void Solver::log(ParmDB::ParmDB &table)
 {
     ostringstream os;
     os << std::setfill('0');
-    
+
     // Get parameters and solve domains.
     const vector<ParmData> &parms = itsParmInfo.parms();
     const vector<MeqDomain> &domains = itsParmInfo.getDomains();
-    
+
     // Default values for the coefficients (every parameters of the history
     // type has exactly one coefficient, and only solvable parameters are
     // logged).
-    bool solvable = true;    
+    bool solvable = true;
     std::vector<int> shape(2, 1);
-    
+
     // For each solve domain, log the solver quality indicators and the values of the
     // coefficients of each solvable parameter.
     for(size_t i = 0; i < itsFitters.size(); ++i)
     {
         ParmDB::ParmValue value;
         ParmDB::ParmValueRep &valueRep = value.rep();
-        
+
         valueRep.setType("history");
         valueRep.setDomain(ParmDB::ParmDomain(domains[i].startX(), domains[i].endX(), domains[i].startY(), domains[i].endY()));
-    
+
         // Log quality indicators.
         FitterData &fitter = itsFitters[i];
-        
-        os.str("domain");
-        os << std::setw(((int) std::log10(itsFitters.size())) + 1) << i;
-        std::string domainSuffix = os.str();
-        
+
+        std::string domainSuffix;
+        if(itsFitters.size() > 1)
+        {
+            os.str("");
+            os << ":domain" << std::setw(((int) std::log10(itsFitters.size())) + 1) << i;
+            domainSuffix = os.str();
+        }
+
         value.setNewParm();
         double rank = fitter.quality.itsRank;
         valueRep.setCoeff(&rank, &solvable, shape);
-        table.putValue("solver:rank:" + domainSuffix, value);
-        
+        table.putValue("solver:rank" + domainSuffix, value);
+
         value.setNewParm();
         valueRep.setCoeff(&fitter.quality.itsFit, &solvable, shape);
-        table.putValue("solver:fit:" + domainSuffix, value);
-        
+        table.putValue("solver:fit" + domainSuffix, value);
+
         value.setNewParm();
         valueRep.setCoeff(&fitter.quality.itsMu, &solvable, shape);
-        table.putValue("solver:mu:" + domainSuffix, value);
-        
+        table.putValue("solver:mu" + domainSuffix, value);
+
         value.setNewParm();
         valueRep.setCoeff(&fitter.quality.itsStddev, &solvable, shape);
-        table.putValue("solver:stddev:" + domainSuffix, value);
-        
+        table.putValue("solver:stddev" + domainSuffix, value);
+
         value.setNewParm();
         valueRep.setCoeff(&fitter.quality.itsChi, &solvable, shape);
-        table.putValue("solver:chi:" + domainSuffix, value);
-        
+        table.putValue("solver:chi" + domainSuffix, value);
+
         // Log each solvable parameter. Each combinaton of coefficient
         // and solve domain is logged separately. Otherwise, one would
         // currently not be able to view coefficients separately in the
@@ -164,9 +168,9 @@ void Solver::log(ParmDB::ParmDB &table)
             const std::vector<bool> &mask = parms[j].getSolvMask(i);
             const MeqMatrix &coeff = parms[j].getCoeff(i);
             const double *data = coeff.doubleStorage();
-            
+
             int indexWidth = ((int) std::log10(mask.size())) + 1;
-            
+
             // Log each coefficient of the current parameter.
             for(size_t k = 0; k < mask.size(); k++)
             {
@@ -175,8 +179,8 @@ void Solver::log(ParmDB::ParmDB &table)
                 {
                     value.setNewParm();
                     valueRep.setCoeff(&data[k], &solvable, shape);
-                    os.str(parms[j].getName());
-                    os << ":c" << std::setw(indexWidth) << k << domainSuffix;
+                    os.str("");
+                    os << parms[j].getName() << ":c" << std::setw(indexWidth) << k << domainSuffix;
                     table.putValue(os.str(), value);
                 }
             }
@@ -208,13 +212,13 @@ void Solver::mergeFitters (const vector<LSQFit>& fitters, int prediffer)
     // Check if given nr of unknowns matches the index length.
     ASSERT (fitters[i].nUnknowns() == scidInx.size());
     ASSERT (itsFitters[fitInx].fitter.merge (fitters[i],
-					     scidInx.size(), &scidInx[0]));
+                         scidInx.size(), &scidInx[0]));
   }
 }
 
 void Solver::initSolvableParmData (int nrPrediffers,
-				   const vector<MeqDomain>& solveDomains,
-				   const MeqDomain& workDomain)
+                   const vector<MeqDomain>& solveDomains,
+                   const MeqDomain& workDomain)
 {
   // Initialize the parm name map.
   itsNameMap.clear();
@@ -232,7 +236,7 @@ void Solver::initSolvableParmData (int nrPrediffers,
 // The solvable parameters coming from the prediffers have to be collected
 // and put into a single solver collection.
 void Solver::setSolvableParmData (const ParmDataInfo& data,
-				  int prediffer)
+                  int prediffer)
 {
   if (data.empty()) {
     return;
@@ -259,7 +263,7 @@ void Solver::setSolvableParmData (const ParmDataInfo& data,
       DBGASSERT (parminx == globalParms.size());
       itsNameMap[predParm.getName()] = parminx;
       globalParms.push_back (ParmData(predParm.getName(),
-				      predParm.getParmDBSeqNr()));
+                      predParm.getParmDBSeqNr()));
       globalParms[parminx].info().resize (totnDom);
     } else {
       // The parameter has already been used. Get its index.
@@ -273,22 +277,22 @@ void Solver::setSolvableParmData (const ParmDataInfo& data,
       int domInx = predInfo.solveDomainIndices[j];
       int fScid  = 0;
       if (globParm.info()[domInx].coeff.isNull()) {
-	// This domain is new for this parm.
-	// Copy the ParmData domain info.
-	globParm.info()[domInx] = predParm.info()[j];
-	fScid = itsFitters[domInx].solvableValues.size();
-	// Append the coeff values to the solvable values of this domain.
-	globParm.setValues (domInx, itsFitters[domInx].solvableValues);
+    // This domain is new for this parm.
+    // Copy the ParmData domain info.
+    globParm.info()[domInx] = predParm.info()[j];
+    fScid = itsFitters[domInx].solvableValues.size();
+    // Append the coeff values to the solvable values of this domain.
+    globParm.setValues (domInx, itsFitters[domInx].solvableValues);
       } else {
-	ASSERT (globParm.info()[domInx].nscid == predParm.info()[j].nscid);
-	fScid = globParm.info()[domInx].firstScid;
+    ASSERT (globParm.info()[domInx].nscid == predParm.info()[j].nscid);
+    fScid = globParm.info()[domInx].firstScid;
       }
       // Map the prediffer scids to the global ones.
       vector<uint>& scidInx = predInfo.scidMap[j];
       int nrs = predParm.info()[j].nscid;
       scidInx.reserve (scidInx.size() + nrs);
       for (int sc=0; sc<nrs; ++sc) {
-	scidInx.push_back (fScid+sc);
+    scidInx.push_back (fScid+sc);
       }
     }
   }
