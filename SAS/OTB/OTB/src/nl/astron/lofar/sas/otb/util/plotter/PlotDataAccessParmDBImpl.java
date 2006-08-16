@@ -112,7 +112,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         String[] constraintsArray = (String[])parameterConstraints.get(new String("PARMDBCONSTRAINTS"));
         
         HashMap<String,Object> returnMap = new HashMap<String, Object>();
-                
+        
         if(parmDB != null){
             
             Vector names = getNames(constraintsArray[0]);
@@ -143,26 +143,29 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 double modifiedJulianDay = julianDay - 2400000.5;
                 
-                /*
                 returnMap.put(PlotConstants.DATASET_SUBNAME,"Generated at "+ utcDate.toString() + " MJD: "+modifiedJulianDay);
-                returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Frequency");
-                returnMap.put(PlotConstants.DATASET_XAXISUNIT,"(Hz)");
-                returnMap.put(PlotConstants.DATASET_XAXISTYPE,"SPATIAL");
-                returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Bandpass Gain");
-                returnMap.put(PlotConstants.DATASET_YAXISUNIT,"");
-                returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
-                returnMap.put(PlotConstants.DATASET_VALUES,getParmValues(names,constraintsArray));
-                */
                 
-                returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Iteration");
-                returnMap.put(PlotConstants.DATASET_XAXISUNIT,"");
-                returnMap.put(PlotConstants.DATASET_XAXISTYPE,"SPATIAL");
-                returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Value");
-                returnMap.put(PlotConstants.DATASET_YAXISUNIT,"");
-                returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
-                returnMap.put(PlotConstants.DATASET_VALUES,this.getParmHistoryValues(names,constraintsArray));
-                
-                
+                String tableName = constraintsArray[7];
+                if(tableName!= null){
+                    if(tableName.equalsIgnoreCase("History")){
+                        returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Iteration");
+                        returnMap.put(PlotConstants.DATASET_XAXISUNIT,"");
+                        returnMap.put(PlotConstants.DATASET_XAXISTYPE,"SPATIAL");
+                        returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Value");
+                        returnMap.put(PlotConstants.DATASET_YAXISUNIT,"");
+                        returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
+                        returnMap.put(PlotConstants.DATASET_VALUES,this.getParmHistoryValues(names,constraintsArray));
+                    }else{
+                        returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Frequency");
+                        returnMap.put(PlotConstants.DATASET_XAXISUNIT,"(Hz)");
+                        returnMap.put(PlotConstants.DATASET_XAXISTYPE,"SPATIAL");
+                        returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Bandpass Gain");
+                        returnMap.put(PlotConstants.DATASET_YAXISUNIT,"");
+                        returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
+                        returnMap.put(PlotConstants.DATASET_VALUES,getParmValues(names,constraintsArray));
+                        
+                    }
+                }
                 
             }else if (constraintsArray.length != this.requiredDataConstraints){
                 
@@ -238,8 +241,16 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 
                 if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
                     HashSet<HashMap<String,Object>> toBeAddedValueObjects = new HashSet<HashMap<String,Object>>();
-                    LinkedList<HashMap<String,Object>> newParmValues = getParmHistoryValues(names,constraintsArray);
                     
+                    String tableName = constraintsArray[7];
+                    LinkedList<HashMap<String,Object>> newParmValues = new LinkedList<HashMap<String,Object>>();
+                    if(tableName!= null){
+                        if(tableName.equalsIgnoreCase("History")){
+                            newParmValues = getParmHistoryValues(names,constraintsArray);
+                        }else{
+                            newParmValues = getParmValues(names,constraintsArray);
+                        }
+                    }
                     for(HashMap<String,Object> parmValue : newParmValues){
                         boolean addData = true;
                         for(HashMap<String,Object> parmValue2 : currentValuesInPlot){
@@ -486,7 +497,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * Helper method that generates a LinkedList with values from the jParmFacade interface
      * @param names filter to be sent to ParmDB.
      * @return vector of Names
-     */    
+     */
     private LinkedList<HashMap<String,Object>> getParmValues(Vector names, String[] constraintsArray) throws PlotterDataAccessException{
         LinkedList<HashMap<String,Object>> returnList = new LinkedList<HashMap<String,Object>>();
         
@@ -602,15 +613,14 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * Helper method that generates a LinkedList with values from the jParmFacade interface
      * @param names filter to be sent to ParmDB.
      * @return vector of Names
-     */    
+     */
     private LinkedList<HashMap<String,Object>> getParmHistoryValues(Vector names, String[] constraintsArray) throws PlotterDataAccessException{
         LinkedList<HashMap<String,Object>> returnList = new LinkedList<HashMap<String,Object>>();
         
-        for(int n = 0; n < names.size();n++)
-        {
+        for(int n = 0; n < names.size();n++) {
             /*
             Vector paramValues;
-            
+             
             try
             {
                 paramValues = parmDB.getRange(names.get(n).toString());
@@ -622,17 +632,17 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 logger.error(exx);
                 throw exx;
             }
-            
-
+             
+             
             double startx = 0.0;
-            
+             
             double endx = 1.0e25;
-            
+             
             double starty = 0.0;
-            
+             
             double endy = 1.0e25;
-            
-            */
+             
+             */
             double startx = Double.parseDouble(constraintsArray[1]);
             
             double endx = Double.parseDouble(constraintsArray[2]);
@@ -640,12 +650,12 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             double starty = Double.parseDouble(constraintsArray[4]);
             
             double endy = Double.parseDouble(constraintsArray[5]);
-
+            
             /*
             double startSolveTime = Double.parseDouble(constraintsArray[5]);
-            
+             
             double endSolveTime = Double.parseDouble(constraintsArray[6]);
-            */
+             */
             
             /*
             returnMap.put(PlotConstants.DATASET_XAXIS_RANGE_START,Double.toString(startx));
@@ -659,12 +669,9 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             
             
             HashMap<String, Vector<Double>> values = new HashMap<String,Vector<Double>>();
-            try
-            {
+            try {
                 values = parmDB.getHistory((names.get(n)).toString(), startx, endx, starty, endy, 0.0, 1e25);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 //TODO LOG!
                 PlotterDataAccessException exx = new PlotterDataAccessException("An invalid getHistory() call was made to the ParmDB interface. Please check that all variables seem OK. Root cause: "+ex.getMessage());
                 exx.initCause(ex);
@@ -673,8 +680,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             }
             
             //Every parameter value
-            for(String aValue : values.keySet())
-            {
+            for(String aValue : values.keySet()) {
                 Vector<Double> valueDoubles = (Vector<Double>)values.get(aValue);
                 
                 //int coefficientCount = valueDoubles.get(0).intValue();
@@ -683,18 +689,15 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 //logger.debug(aValue + ": #coefficients=" + coefficientCount + " #iterations=" + iterationCount);
                 
                 HashMap<String,Object> aValueMap = new HashMap<String,Object>();
-                    
+                
                 logger.debug("Parameter Value Found: "+ aValue);
-
-                if(constraintsArray[7] == null || constraintsArray[7].equalsIgnoreCase(""))
-                {
+                
+                if(constraintsArray[7] == null || constraintsArray[7].equalsIgnoreCase("")) {
                     aValueMap.put(PlotConstants.DATASET_VALUELABEL, aValue);
-                }
-                else
-                {
+                } else {
                     aValueMap.put(PlotConstants.DATASET_VALUELABEL, constraintsArray[7] + " - " + aValue);
                 }
-
+                
                 double[] xArray = new double[valueDoubles.size()];
                 double[] yArray = new double[valueDoubles.size()];
                 
@@ -702,7 +705,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     xArray[i] = i;
                     yArray[i] = valueDoubles.get(i);
                 }
-
+                
                 aValueMap.put(PlotConstants.DATASET_XVALUES,xArray);
                 aValueMap.put(PlotConstants.DATASET_YVALUES,yArray);
                 returnList.add(aValueMap);
