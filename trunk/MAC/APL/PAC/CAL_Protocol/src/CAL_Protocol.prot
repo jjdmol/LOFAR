@@ -33,6 +33,22 @@ enum {
 static const int MAX_N_RCUS=256;
 static const int N_SUBBANDS=512;
 
+//
+// The following events are defined in the CAL protocol
+//
+// SUBARRAYALLOC    (subarrayname, arraygroup, receiverset, nyquist, RCUsettings);
+// SUBARRAYALLOCACK (subarrayname, status);
+// SUBARRAYFREE     (subarrayname);
+// SUBARRAYFREEACK  (subarrayname, status);
+// SUBSCRIBE        (subarrayname, subbandset);
+// SUBSCRIBEACK     (subarrayname, status, handle, subarray);
+// UPDATEGAINS      (timestamp, status, handle, gains);
+// UNSUBSCRIBE      (subarrayname, handle);
+// UNSUBSCRIBEACK   (subarrayname, status);
+//
+// gains : Array<double>[nrAntennes, nrPol, nrSubbands]
+//
+
 PRELUDE_END;
 
 //

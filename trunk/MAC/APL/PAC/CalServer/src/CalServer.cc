@@ -73,13 +73,14 @@ void CalServer::parseOptions(int	argc,
 {
   static struct option long_options[] = {
     { "instance",   required_argument, 0, 'I' },
+    { "daemonize",  optional_argument, 0, 'd' },
     { 0, 0, 0, 0 },
   };
 
   optind = 0; // reset option parsing
   for(;;) {
     int option_index = 0;
-    int c = getopt_long(argc, argv, "I:", long_options, &option_index);
+    int c = getopt_long(argc, argv, "dI:", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -89,6 +90,10 @@ void CalServer::parseOptions(int	argc,
     case 'I': 	// --instance
       m_instancenr = atoi(optarg);
       break;
+
+	case 'd':	// --daemonize
+	  break;
+
     default:
       LOG_FATAL (formatString("Unknown option %c", c));
       ASSERT(false);
@@ -250,7 +255,9 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	m_n_rcus = ack.n_rcus;
 	if (ack.n_rcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol())
 	{
-	  LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
+	  LOG_FATAL_STR("CalServer.N_ANTENNAS (" << 
+					m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol() << 
+					") does not match value from hardware (" << m_n_rcus << ")");
 	  exit(EXIT_FAILURE);
 	}
 
