@@ -33,6 +33,7 @@
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/StationInfo.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
 
 #include "BeamControl.h"
@@ -65,11 +66,22 @@ BeamControl::BeamControl(const string&	cntlrName) :
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
+	// First readin our observation related config file.
+	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
+	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
+
+
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
-	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + ".instanceNr");
-	itsStartTime  = globalParameterSet()->getTime  (itsTreePrefix + ".starttime");
-	itsStopTime   = globalParameterSet()->getTime  (itsTreePrefix + ".stoptime");
+	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
+
+	// get Observation based information
+	itsStartTime     = time_from_string(globalParameterSet()->
+											 getString("Observation.startTime"));
+	itsStopTime      = time_from_string(globalParameterSet()->
+											 getString("Observation.stopTime"));
+	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
+	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -151,7 +163,7 @@ void BeamControl::handlePropertySetAnswer(GCFEvent& answer)
 										getName().c_str(), pPropAnswer->pScope));
 		}
 		// always let timer expire so main task will continue.
-		itsTimerPort->setTimer(0.0);
+		itsTimerPort->setTimer(1.0);
 		break;
 	}
 
@@ -208,10 +220,10 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-    case F_INIT:
+	case F_ENTRY:
    		break;
 
-	case F_ENTRY: {
+    case F_INIT: {
 		// Get access to my own propertyset.
 		LOG_DEBUG ("Activating PropertySet");
 		string	propSetName = formatString(BC_PROPSET_NAME, itsInstanceNr);
@@ -243,16 +255,11 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		break;
 
 	case F_CONNECTED:
-		ASSERTSTR (&port == itsBeamServer, 
+		ASSERTSTR (&port == itsParentPort, 
 									"F_CONNECTED event from port " << port.getName());
 		break;
 
 	case F_DISCONNECTED:
-		port.close();
-		ASSERTSTR (&port == itsBeamServer, 
-								"F_DISCONNECTED event from port " << port.getName());
-		LOG_DEBUG("Connection with BeamServer failed, retry in 2 seconds");
-		itsTimerPort->setTimer(2.0);
 		break;
 	
 	default:
@@ -276,9 +283,6 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_INIT:
-		break;
-
 	case F_ENTRY: {
 		// update PVSS
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
@@ -286,18 +290,25 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		break;
 	}
 
+	case F_INIT:
+		itsBeamServer->open();
+		break;
+
 	case F_ACCEPT_REQ:
 		break;
 
 	case F_CONNECTED: {
-		ASSERTSTR (&port == itsBeamServer, 
+		ASSERTSTR (&port == itsBeamServer || &port == itsParentPort, 
 									"F_CONNECTED event from port " << port.getName());
-		itsTimerPort->cancelAllTimers();
-		LOG_DEBUG ("Connected with BeamServer");
-		setState(CTState::CLAIMED);
-		CONTROLClaimedEvent		answer;
-//TODO		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
+		if (&port == itsBeamServer) {
+			itsTimerPort->cancelAllTimers();
+			LOG_DEBUG ("Connected with BeamServer");
+			setState(CTState::CLAIMED);
+			CONTROLClaimedEvent		answer;
+			answer.cntlrName = getName();
+			answer.result    = CT_RESULT_NO_ERROR;
+			itsParentPort->send(answer);
+		}
 		break;
 	}
 
@@ -347,11 +358,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
 		setState(CTState::PREPARE);
-		doPrepare (msg.cntlrName);
-		setState(CTState::PREPARED);
-		CONTROLPreparedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
+		doPrepare(msg.cntlrName);	// will result in BS_BEAMALLOCACK event
 		break;
 	}
 
@@ -359,6 +366,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
 		setState(CTState::ACTIVE);
+		// TODO: implement something useful
 		CONTROLResumedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send(answer);
@@ -369,6 +377,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		CONTROLSuspendEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
 		setState(CTState::SUSPENDED);
+		// TODO: implement something useful
 		CONTROLSuspendedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send(answer);
@@ -388,9 +397,19 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	}
 
 	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
-	case BS_BEAMALLOCACK:
-		handleBeamAllocAck(event);
+	case BS_BEAMALLOCACK: {
+		BSBeamallocackEvent		msg(event);
+		uint16 result  = handleBeamAllocAck(event);
+		if (result == CT_RESULT_NO_ERROR) {
+			setState(CTState::PREPARED);
+		}
+
+		CONTROLPreparedEvent	answer;
+		answer.cntlrName = getName();
+		answer.result    = result;
+		port.send(answer);
 		break;
+	}
 
 	case BS_BEAMFREEACK:
 		handleBeamFreeAck(event);
@@ -411,87 +430,92 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 //
 void BeamControl::doPrepare(const string&	cntlrName)
 {
-	try {
-		vector<int> subbandsVector;
-		vector<int> beamletsVector;
-		// TODO	use parameterset of 'cntlrname'
-		APLUtilities::string2Vector(m_parameterSet.getString(string("subbands")),subbandsVector);
-		APLUtilities::string2Vector(m_parameterSet.getString(string("beamlets")),beamletsVector);
+	// TODO	use parameterset of 'cntlrname' when being shared controller
 
-		BSBeamallocEvent beamAllocEvent;
-		beamAllocEvent.name 		= getName();
-		beamAllocEvent.subarrayname = m_parameterSet.getString(string("subarrayName"));
-		vector<int>::iterator beamletIt = beamletsVector.begin();
-		vector<int>::iterator subbandIt = subbandsVector.begin();
-		while (beamletIt != beamletsVector.end() && subbandIt != subbandsVector.end()) {
-			beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
-		}
-		itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
+	string	subbandList(globalParameterSet()->getString("Observation.subbandList"));
+	string	beamletList(globalParameterSet()->getString("Observation.beamletList"));
+	LOG_DEBUG_STR("subbandlist:" << subbandList);
+	LOG_DEBUG_STR("beamletList:" << beamletList);
+
+	vector<int> subbandsVector;
+	vector<int> beamletsVector;
+	APLUtilities::string2Vector(subbandList,subbandsVector);
+	APLUtilities::string2Vector(beamletList,beamletsVector);
+	ASSERTSTR (subbandsVector.size() == beamletsVector.size(),
+			"size of subbandList " << subbandsVector.size() << " != " <<
+			" size of beamletList" << beamletsVector.size());
+
+	BSBeamallocEvent beamAllocEvent;
+	beamAllocEvent.name 		= getName();
+	beamAllocEvent.subarrayname = globalParameterSet()->getString("Observation.subarrayName");
+	LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
+
+	vector<int>::iterator beamletIt = beamletsVector.begin();
+	vector<int>::iterator subbandIt = subbandsVector.begin();
+	while (beamletIt != beamletsVector.end() && subbandIt != subbandsVector.end()) {
+		beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 	}
-	catch(Exception& e) {
-		LOG_ERROR(formatString("Error preparing BeamServer: %s",e.message().c_str()));
-	}
+
+	LOG_DEBUG_STR("Sending Alloc event to BeamServer");
+	itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
 }
 
 //
 // handleBeamAllocAck(event);
 //
-bool	BeamControl::handleBeamAllocAck(GCFEvent&	event)
+uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 {
 	// check the beam ID and status of the ACK message
 	BSBeamallocackEvent ackEvent(event);
 	if (ackEvent.status != 0) {
-//		errorCode = CT_RESULT_BEAMALLOC_ERROR;
 		LOG_ERROR_STR("Beamlet allocation failed with errorcode: " << ackEvent.status);
-		return (false);
+		return (CT_RESULT_BEAMALLOC_FAILED);
 	}
+	itsBeamID = ackEvent.handle;
 
 	// read new angles from parameterfile.
-	m_beamID = ackEvent.handle;
-
-	double directionAngle1(0.0);
-	double directionAngle2(0.0);
-	vector<string> sourceTimes;
-	vector<double> declinations;
-	vector<double> rightAscentions;
-
-	try {
-		sourceTimes = m_parameterSet.getStringVector(string("sourceTimes"));
-		declinations = m_parameterSet.getDoubleVector(string("declination"));
-		rightAscentions = m_parameterSet.getDoubleVector(string("rightAscention"));
-	}
-	catch(Exception &e) {
-	}
+	vector<string>	sourceTimes;
+	vector<double>	angles1;
+	vector<double>	angles2;
+	string			beam(globalParameterSet()->locateModule("Beam")+".");
+	sourceTimes     = globalParameterSet()->getStringVector(beam+"angleTimes");
+	angles1    = globalParameterSet()->getDoubleVector(beam+"angle1");
+	angles2 = globalParameterSet()->getDoubleVector(beam+"angle2");
 
 	// point the new beam
 	BSBeampointtoEvent beamPointToEvent;
-	beamPointToEvent.handle = m_beamID;
+	beamPointToEvent.handle = itsBeamID;
 	beamPointToEvent.pointing.setType(static_cast<Pointing::Type>
-				(convertDirection(m_parameterSet.getString(string("directionType")))));
+				(convertDirection(globalParameterSet()->getString(beam+"directionTypes"))));
 
-	if (sourceTimes.size() == 0 || sourceTimes.size() != declinations.size() || 
-								  sourceTimes.size() != rightAscentions.size()) {
+	// only 1 angle?
+	if (sourceTimes.size() == 0 || sourceTimes.size() != angles1.size() || 
+								  sourceTimes.size() != angles2.size()) {
 		// key sourceTimes not found: use one fixed angle
-		directionAngle1=m_parameterSet.getDouble(string("declination"));
-		directionAngle2=m_parameterSet.getDouble(string("rightAscention"));
+		double	directionAngle1(0.0);
+		double	directionAngle2(0.0);
+		directionAngle1=globalParameterSet()->getDouble(beam+"declination");
+		directionAngle2=globalParameterSet()->getDouble(beam+"rightAscention");
 
 		beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
 		beamPointToEvent.pointing.setDirection(directionAngle1,directionAngle2);
 		itsBeamServer->send(beamPointToEvent);
-	}
-	else { 	// its a vecor with angles.
-		vector<double>::iterator declination = declinations.begin();
-		vector<double>::iterator rightAscention = rightAscentions.begin();
-		for (vector<string>::iterator timesIt = sourceTimes.begin(); 
-									  timesIt != sourceTimes.end(); ++timesIt) { 
-			beamPointToEvent.pointing.setTime(RTC::Timestamp(
-											APLUtilities::decodeTimeString(*timesIt),0));
-			beamPointToEvent.pointing.setDirection(*declination++,*rightAscention++);
-			itsBeamServer->send(beamPointToEvent);
-		}
+		// NB: will NOT result in an answer event of the beamserver.
+		return (CT_RESULT_NO_ERROR);
 	}
 
-	return (true);
+ 	// its a vecor with angles.
+	vector<double>::iterator angle1Iter    = angles1.begin();
+	vector<double>::iterator angle2Iter = angles2.begin();
+	for (vector<string>::iterator timesIt = sourceTimes.begin(); 
+								  timesIt != sourceTimes.end(); ++timesIt) { 
+		beamPointToEvent.pointing.setTime(RTC::Timestamp(
+										APLUtilities::decodeTimeString(*timesIt),0));
+		beamPointToEvent.pointing.setDirection(*angle1Iter++,*angle2Iter++);
+		itsBeamServer->send(beamPointToEvent);
+		// NB: will NOT result in an answer event of the beamserver.
+	}
+	return (CT_RESULT_NO_ERROR);
 }
 
 //
@@ -500,8 +524,8 @@ bool	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 void BeamControl::doRelease(GCFEvent&	event)
 {
 	BSBeamfreeEvent		beamFreeEvent;
-//TODO	beamFreeEvent.handle = ...beamID ...
-	itsBeamServer->send(beamFreeEvent);
+	beamFreeEvent.handle = itsBeamID;
+	itsBeamServer->send(beamFreeEvent);	// will result in BS_BEAMFREEACK event
 }
 
 

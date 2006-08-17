@@ -26,16 +26,9 @@ configfilesdir=$(bindir)
 configfiles_DATA 	= 
 #customPrepPVSSDB.ctl
 
-sysconf_DATA		= BeamControl.conf \
-					  BeamControl.log_prop
+sysconf_DATA		= BeamControl.log_prop
 
 %.log_prop: %.log_prop.in
-	cp $< $@
-
-%.conf: %.conf.in
-	cp $< $@
-
-%.ctl: %.ctl.in
 	cp $< $@
 
 clean-local:
