@@ -23,6 +23,21 @@ prelude = << PRELUDE_END
 	     ERR_BEAMFREE,  // could not free beam
 	};
 
+//
+// The following signals are defined in the BS protocol
+//
+// BEAMALLOC     (name,   subarrayname, beamletAllocationMap);
+// BEAMALLOCACK  (handle, status);
+// BEAMMODIFY    (handle, beamletAllocationMap);
+// BEAMMODIFYACK (handle, status);
+// BEAMFREE      (handle);
+// BEAMFREEACK   (handle, status);
+// BEAMPOINTTO   (handle, pointing);
+//
+// pointing            : angle1, angle2, timestamp, coord.type
+// beamletAllocationMap: map<beamletnr, subbandnr>
+//
+
 PRELUDE_END;
 
 //

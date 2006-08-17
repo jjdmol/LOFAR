@@ -75,13 +75,14 @@ void BeamServer::parseOptions(int	argc,
 {
   static struct option long_options[] = {
     { "instance",   required_argument, 0, 'I' },
+    { "daemonize",  optional_argument, 0, 'd' },
     { 0, 0, 0, 0 },
   };
 
   optind = 0; // reset option parsing
   for(;;) {
     int option_index = 0;
-    int c = getopt_long(argc, argv, "I:", long_options, &option_index);
+    int c = getopt_long(argc, argv, "dI:", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -91,6 +92,8 @@ void BeamServer::parseOptions(int	argc,
     case 'I': 	// --instance
       m_instancenr = atoi(optarg);
       break;
+	case 'd':
+	  break;
     default:
       LOG_FATAL (formatString("Unknown option %c", c));
       ASSERT(false);
