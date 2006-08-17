@@ -123,7 +123,7 @@ CTStartDaemon::actionIter	CTStartDaemon::findAction(const string&		cntlrName)
 {
 	actionIter		iter = itsActionList.begin();
 	actionIter		end  = itsActionList.end();
-	while (iter != end && iter->cntlrName != cntlrName) {
+	while (iter != end && sharedControllerName(iter->cntlrName) != cntlrName) {
 		iter++;
 	}
 	return (iter);
