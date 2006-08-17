@@ -44,7 +44,7 @@ namespace LOFAR {
 #define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3"
 #define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v2"
 #define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2"
-#define MAC_SVCMASK_RSPCTLFE                    "RSPCtlFE%s:acceptor"
+#define MAC_SVCMASK_RSPCTLFE			"RSPCtlFE%s:acceptor"
 #define MAC_SVCMASK_PROPERTYAGENT		"GCF-PA%s:provider"
 
 // Define names for the daemons
@@ -63,19 +63,10 @@ namespace LOFAR {
 #define	MAC_SVCMASK_STATIONINFRACTRL	"StationInfraCtrl%s:v1.0"
 
 
-
 // Define names for GCF test applications
-#define MAC_SVCMASK_GCFTEST_ST3SERVER            "ST3%s:server"
-#define MAC_SVCMASK_GCFTEST_ST3PROVIDER          "ST3%s:provider"
-
-
-
-
-
-
-
-
-
+#define MAC_SVCMASK_GCFTEST_ST3SERVER	"ST3%s:server"
+#define MAC_SVCMASK_GCFTEST_ST3PROVIDER	"ST3%s:provider"
+#define MAC_SVCMASK_APLTEST_CTLRMENU	"ControllerTestMenu%s:v1.0"
 
 // @}
   } // namespace GCFCommon
