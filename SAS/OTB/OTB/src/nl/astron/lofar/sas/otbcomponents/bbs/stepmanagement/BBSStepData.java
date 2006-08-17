@@ -23,8 +23,8 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
+import java.util.HashMap;
 import java.util.Vector;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 
 /**
  * @version $Id$
@@ -50,12 +50,14 @@ public class BBSStepData{
     //Step Output Data Column
     private String outputDataColumn = null;
     
-    //TODO: Step Operation Types
+    private String operationName = null;
+    private HashMap<String,String> operationAttributes = null;
+    
     
     
     /** Creates a new instance of BBSStep */
     public BBSStepData() {
-        
+        operationAttributes = new HashMap<String,String>();
     }
    
     public Vector<String> getStation1Selection(){
@@ -135,20 +137,37 @@ public class BBSStepData{
     public void setOutputDataColumn(String outputDataColumn){
         this.outputDataColumn = outputDataColumn;
     }
-    /*
-    public BBSStepData clone(){
-        BBSStepData newStep = new BBSStepData();
-        newStep.setStation1Selection(this.getStation1Selection());
-        newStep.setStation2Selection(this.getStation2Selection());
-        newStep.setSources(this.getSources());
-        newStep.setExtraSources(this.getExtraSources());
-        newStep.setInstrumentModel(this.getInstrumentModel());
-        newStep.setIntegrationFrequency(this.getIntegrationFrequency());
-        newStep.setIntegrationTime(this.getIntegrationTime());
-        newStep.setCorrelationSelection(this.getCorrelationSelection());
-        newStep.setCorrelationType(this.getCorrelationType());
-        newStep.setOutputDataColumn(this.getOutputDataColumn());
-        
-        return newStep;
-    }*/
+    
+    public String getOperationName(){
+        return operationName;
+    }
+    
+    public void setOperationName(String operationName){
+        this.operationName = operationName;
+    }
+    
+    public HashMap<String,String> getOperationAttributes(){
+        return operationAttributes;
+    }
+    
+    public String getOperationAttribute(String key){
+        return operationAttributes.get(key);
+    }
+    
+    public void setOperationAttributes(HashMap<String,String> operationAttributes){
+        this.operationAttributes = operationAttributes;
+    }
+    
+    public void addOperationAttribute(String key, String value){
+        this.operationAttributes.put(key,value);
+    }
+    public void removeOperationAttribute(String key){
+        this.operationAttributes.remove(key);
+    }
+    public void removeAllOperationAttributes(){
+        this.operationAttributes.clear();
+    }
+    public boolean containsOperationAttribute(String key){
+        return this.operationAttributes.containsKey(key);
+    }
 }

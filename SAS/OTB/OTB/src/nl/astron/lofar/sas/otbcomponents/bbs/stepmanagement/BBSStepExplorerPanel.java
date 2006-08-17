@@ -344,6 +344,51 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 stepExplorerCorrelationSelectionBox.setBackground(NOT_DEFINED);
             }
         }
+        //Baseline Selection
+        if(stepData.getStation1Selection() != null && stepData.getStation2Selection() != null){
+            Vector<String> station1 = stepData.getStation1Selection();
+            Vector<String> station2 = stepData.getStation2Selection();
+            if(station1.size()>0 && station2.size()>0){
+                this.baselineUseAllCheckbox.setSelected(false);
+                this.fillBaselineTableFromVectors(station1,station2);
+            }else{
+                this.baselineUseAllCheckbox.setSelected(true);
+            }
+            this.BaselineSelectionPanel.setBackground(NOT_INHERITED_FROM_PARENT);
+        }else{
+            if(inheritedData.getStation1Selection() != null && inheritedData.getStation2Selection() != null){
+                Vector<String> station1 = inheritedData.getStation1Selection();
+                Vector<String> station2 = inheritedData.getStation2Selection();
+                if(station1.size()>0 && station2.size()>0){
+                    this.baselineUseAllCheckbox.setSelected(false);
+                    this.fillBaselineTableFromVectors(station1,station2);
+                }else{
+                    this.baselineUseAllCheckbox.setSelected(true);
+                }
+                BaselineSelectionPanel.setBackground(INHERITED_FROM_PARENT);
+            }else{
+                baselineStationsTable.clearSelection();
+                this.baselineUseAllCheckbox.setSelected(false);
+                this.BaselineSelectionPanel.setBackground(NOT_DEFINED);
+            }
+        }
+        //Operation type
+        
+        this.stepExplorerOperationComboBox.setBackground(DEFAULT);
+        if(stepData.getOperationName() != null){
+            this.stepExplorerOperationComboBox.setSelectedItem(stepData.getOperationName());
+            this.stepExplorerOperationComboBox.setBackground(NOT_INHERITED_FROM_PARENT);
+            
+        }else{
+            if(inheritedData.getOperationName() != null){
+                this.stepExplorerOperationComboBox.setSelectedItem(inheritedData.getOperationName());
+                stepExplorerOperationComboBox.setBackground(INHERITED_FROM_PARENT);
+            }else{
+                this.stepExplorerOperationComboBox.setSelectedItem("NOT DEFINED");
+                stepExplorerOperationComboBox.setBackground(NOT_DEFINED);
+            }
+        }
+        
         //add other variables
         
         
@@ -519,6 +564,89 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             }
         }
         
+        //baseline selection
+        Vector<Vector<String>> baselines = createVectorsFromBaselineTable();
+        Vector<String> station1 = baselines.get(0);
+        Vector<String> station2 = baselines.get(1);
+        if(this.baselineUseAllCheckbox.isSelected()){
+            station1 = new Vector<String>();
+            station2 = new Vector<String>();
+        }       
+        if(station1.equals(inheritedData.getStation1Selection()) && station2.equals(inheritedData.getStation2Selection())){
+            aStepData.setStation1Selection(null);
+        }else{
+            if(this.baselineUseAllCheckbox.isSelected()){
+               aStepData.setStation1Selection(new Vector<String>());
+            }else{
+               if(station1.size()>0 && station2.size()>0){
+                   aStepData.setStation1Selection(new Vector<String>()); 
+               }else{
+                   aStepData.setStation1Selection(null); 
+               }
+               
+            }
+            
+        }
+        
+        if(station1.equals(inheritedData.getStation1Selection()) && station2.equals(inheritedData.getStation2Selection())){
+            aStepData.setStation2Selection(null);
+        }else{
+            if(this.baselineUseAllCheckbox.isSelected()){
+               aStepData.setStation2Selection(new Vector<String>());
+            }else{
+               if(station1.size()>0 && station2.size()>0){
+                   aStepData.setStation2Selection(new Vector<String>()); 
+               }else{
+                   aStepData.setStation2Selection(null); 
+               }
+               
+            }
+        }
+        
+        if(aStepData.getStation1Selection()!=null){
+            if(!station1.equals(aStepData.getStation1Selection())){
+                aStepData.setStation1Selection(station1);
+            }
+        }
+        if(aStepData.getStation2Selection()!=null){
+            if(!station2.equals(aStepData.getStation2Selection())){
+                aStepData.setStation2Selection(station2);
+            }
+        }
+        
+        //Operation
+        
+        //name
+        
+        //Selection
+        String selectedOSelection = null;
+        if(this.stepExplorerOperationComboBox.getSelectedItem() != null){
+            selectedOSelection = this.stepExplorerOperationComboBox.getSelectedItem().toString();
+        }
+        if(selectedOSelection == null){
+            aStepData.setOperationName(null);
+            
+        }else{
+            if(selectedOSelection.equals("NOT DEFINED")){
+                aStepData.setOperationName(null);
+            }else{
+                if(selectedOSelection.equals(inheritedData.getOperationName())){
+                    aStepData.setOperationName(null);
+                }else{
+                    aStepData.setOperationName("Generated by BBS GUI");
+                }
+            }
+        }
+        if(aStepData.getOperationName()!=null){
+            if(selectedOSelection!= null && !selectedOSelection.equals(aStepData.getOperationName())){
+                aStepData.setOperationName(selectedOSelection);
+            }
+        }
+        
+        aStepData.addOperationAttribute("Epsilon","1.0");
+        aStepData.addOperationAttribute("MaxIter","10");
+        aStepData.addOperationAttribute("DomainSize.Freq","1000");
+        
         //add other variables
     }
     
@@ -568,6 +696,63 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             aListComponent.clearSelection();
         }
         
+    }
+    private void fillBaselineTableFromVectors(Vector<String> station1,Vector<String> station2) {
+        baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Station 1", "Station 2"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        DefaultTableModel bsltm = (DefaultTableModel)baselineStationsTable.getModel();
+        
+        if(station1.size() == station2.size()){
+            for(int i = 0; i<station1.size();i++){
+                Vector<String> newRow = new Vector<String>();
+                newRow.add(station1.get(i));
+                newRow.add(station2.get(i));
+                bsltm.addRow(newRow);
+            }
+        }        
+    }
+    
+    private Vector<Vector<String>> createVectorsFromBaselineTable(){
+        Vector<Vector<String>> returnVector = new Vector<Vector<String>>();
+        Vector<String> station1Vector = new Vector<String>();
+        Vector<String> station2Vector = new Vector<String>();
+        DefaultTableModel bsltm = (DefaultTableModel)baselineStationsTable.getModel();
+        if(bsltm.getRowCount()>0){
+            for(int i = 0; i<bsltm.getRowCount();i++){
+                String station1 = ((Vector)bsltm.getDataVector().elementAt(i)).elementAt(0).toString();
+                String station2 = ((Vector)bsltm.getDataVector().elementAt(i)).elementAt(1).toString();
+                station1Vector.add(station1);
+                station2Vector.add(station2);
+            }
+        }
+        
+        returnVector.add(station1Vector);
+        returnVector.add(station2Vector);
+        
+        return returnVector;
+    }
+    private void checkBaselineInput(){
+        String typedText=baselineStation1Text.getText();
+        String typedText2=baselineStation2Text.getText();
+        if(!typedText.equals("") && !typedText2.equals("")){
+            this.addBaseLineButton.setEnabled(true);
+        }else{
+            this.addBaseLineButton.setEnabled(false);
+        }
     }
     
     /** This method is called from within the constructor to
@@ -664,8 +849,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         integrationTimeText = new javax.swing.JTextField();
         integrationTimeUnitLabel = new javax.swing.JLabel();
         BaselineSelectionPanel = new javax.swing.JPanel();
+        baselinePanel = new javax.swing.JPanel();
         baselineStationsScrollPane = new javax.swing.JScrollPane();
         baselineStationsTable = new javax.swing.JTable();
+        baselineInputPanel = new javax.swing.JPanel();
+        baselineStation1Text = new javax.swing.JTextField();
+        baselineStation2Text = new javax.swing.JTextField();
         baselineModsPanel = new javax.swing.JPanel();
         addBaseLineButton = new javax.swing.JButton();
         deleteBaseLineButton = new javax.swing.JButton();
@@ -728,7 +917,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerOperationTypeHeaderPanel.add(stepExplorerOperationTypeLabel, gridBagConstraints);
 
-        stepExplorerOperationComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "NOT DEFINED", "SOLVE", "SUBTRACT", "CORRECT", "PREDICT", "SHIFT", "REFIT" }));
+        stepExplorerOperationComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "NOT DEFINED", "Solve" }));
+        stepExplorerOperationComboBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                stepExplorerOperationComboBoxItemStateChanged(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
@@ -1118,7 +1313,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerCorrelationPanel.add(stepExplorerCorrelationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
 
         stepExplorerCorrelationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "N/A", "AUTO", "CROSS", "ALL" }));
-        stepExplorerCorrelationSelectionBox.setSelectedIndex(0);
         stepExplorerCorrelationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
         stepExplorerCorrelationSelectionBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -1186,6 +1380,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         BaselineSelectionPanel.setLayout(new java.awt.BorderLayout());
 
         BaselineSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Baseline Selection"));
+        baselinePanel.setLayout(new java.awt.BorderLayout());
+
         baselineStationsScrollPane.setPreferredSize(new java.awt.Dimension(453, 250));
         baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1204,7 +1400,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             }
         });
         baselineStationsTable.setToolTipText("The baselines used");
-        baselineStationsTable.setCellSelectionEnabled(true);
         baselineStationsTable.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 baselineStationsTableMouseReleased(evt);
@@ -1213,11 +1408,44 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         baselineStationsScrollPane.setViewportView(baselineStationsTable);
 
-        BaselineSelectionPanel.add(baselineStationsScrollPane, java.awt.BorderLayout.CENTER);
+        baselinePanel.add(baselineStationsScrollPane, java.awt.BorderLayout.CENTER);
+
+        baselineInputPanel.setLayout(new java.awt.GridBagLayout());
+
+        baselineStation1Text.setMinimumSize(new java.awt.Dimension(120, 19));
+        baselineStation1Text.setPreferredSize(new java.awt.Dimension(200, 19));
+        baselineStation1Text.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                baselineStation1TextKeyReleased(evt);
+            }
+        });
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineInputPanel.add(baselineStation1Text, gridBagConstraints);
+
+        baselineStation2Text.setMinimumSize(new java.awt.Dimension(120, 19));
+        baselineStation2Text.setPreferredSize(new java.awt.Dimension(200, 19));
+        baselineStation2Text.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                baselineStation2TextKeyReleased(evt);
+            }
+        });
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        baselineInputPanel.add(baselineStation2Text, gridBagConstraints);
+
+        baselinePanel.add(baselineInputPanel, java.awt.BorderLayout.SOUTH);
+
+        BaselineSelectionPanel.add(baselinePanel, java.awt.BorderLayout.CENTER);
 
         baselineModsPanel.setLayout(new java.awt.GridBagLayout());
 
         addBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addBaseLineButton.setEnabled(false);
         addBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
         addBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
@@ -1240,6 +1468,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         deleteBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
         deleteBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
         deleteBaseLineButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        deleteBaseLineButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteBaseLineButtonActionPerformed(evt);
+            }
+        });
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 0;
@@ -1251,9 +1485,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         baselineUseAllCheckbox.setText("Use all baselines");
         baselineUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         baselineUseAllCheckbox.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        baselineUseAllCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                baselineUseAllCheckboxStateChanged(evt);
+        baselineUseAllCheckbox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                baselineUseAllCheckboxItemStateChanged(evt);
             }
         });
 
@@ -1283,15 +1517,69 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         add(BBSStepExplorerPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void stepExplorerOperationComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_stepExplorerOperationComboBoxItemStateChanged
+        stepExplorerOperationComboBox.setBackground(this.NOT_INHERITED_FROM_PARENT);
+    }//GEN-LAST:event_stepExplorerOperationComboBoxItemStateChanged
+
+    private void baselineUseAllCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_baselineUseAllCheckboxItemStateChanged
+        if(baselineUseAllCheckbox.isSelected()){
+            this.baselineStationsTable.setBackground(Color.LIGHT_GRAY);
+            this.BaselineSelectionPanel.setBackground(this.NOT_INHERITED_FROM_PARENT);
+            this.baselineStationsTable.setEnabled(false);
+            this.baselineStationsTable.clearSelection();
+            this.deleteBaseLineButton.setEnabled(false);
+            this.addBaseLineButton.setEnabled(false);
+            this.baselineStation1Text.setEnabled(false);
+            this.baselineStation2Text.setEnabled(false);
+        }else{
+            this.baselineStationsTable.setBackground(Color.WHITE);
+            this.BaselineSelectionPanel.setBackground(this.NOT_INHERITED_FROM_PARENT);
+            this.baselineStationsTable.setEnabled(true);
+            this.baselineStation1Text.setEnabled(true);
+            this.baselineStation2Text.setEnabled(true);
+            checkBaselineInput();
+        }
+    }//GEN-LAST:event_baselineUseAllCheckboxItemStateChanged
+    
+    private void deleteBaseLineButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBaseLineButtonActionPerformed
+        DefaultTableModel bsltm = (DefaultTableModel)this.baselineStationsTable.getModel();
+        int[] selectedRows = this.baselineStationsTable.getSelectedRows();
+        while(selectedRows.length>0){
+            bsltm.removeRow(selectedRows[0]);
+            selectedRows = this.baselineStationsTable.getSelectedRows();
+            this.BaselineSelectionPanel.setBackground(NOT_INHERITED_FROM_PARENT);
+        }
+        this.deleteBaseLineButton.setEnabled(false);
+        
+    }//GEN-LAST:event_deleteBaseLineButtonActionPerformed
+    
+    private void baselineStation2TextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_baselineStation2TextKeyReleased
+        checkBaselineInput();
+    }//GEN-LAST:event_baselineStation2TextKeyReleased
+    
+    private void baselineStation1TextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_baselineStation1TextKeyReleased
+        checkBaselineInput();
+    }//GEN-LAST:event_baselineStation1TextKeyReleased
     
     private void baselineStationsTableMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_baselineStationsTableMouseReleased
-        // TODO add your handling code here:
+        int[] selectedRows = this.baselineStationsTable.getSelectedRows();
+        if(selectedRows.length>0){
+            this.deleteBaseLineButton.setEnabled(true);
+        }else{
+            this.deleteBaseLineButton.setEnabled(false);
+        }
     }//GEN-LAST:event_baselineStationsTableMouseReleased
     
     private void addBaseLineButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBaseLineButtonActionPerformed
         DefaultTableModel bsltm = (DefaultTableModel)this.baselineStationsTable.getModel();
-        bsltm.addRow(new Vector());
-        baselineStationsTable.setBackground(NOT_INHERITED_FROM_PARENT);
+        String typedText=baselineStation1Text.getText();
+        String typedText2=baselineStation2Text.getText();
+        Vector<String> baselinePair = new Vector<String>();
+        baselinePair.add(typedText);
+        baselinePair.add(typedText2);
+        bsltm.addRow(baselinePair);
+        this.BaselineSelectionPanel.setBackground(NOT_INHERITED_FROM_PARENT);
     }//GEN-LAST:event_addBaseLineButtonActionPerformed
     
     private void helpButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_helpButtonActionPerformed
@@ -1470,22 +1758,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private void stepExplorerRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepExplorerRevertButtonActionPerformed
         this.restoreBBSStepExplorerPanel();
     }//GEN-LAST:event_stepExplorerRevertButtonActionPerformed
-    
-    private void baselineUseAllCheckboxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_baselineUseAllCheckboxStateChanged
-        if(baselineUseAllCheckbox.isSelected()){
-            this.baselineStationsTable.setBackground(Color.LIGHT_GRAY);
-            this.baselineStationsTable.setEnabled(false);
-            this.addBaseLineButton.setEnabled(false);
-            this.baselineStationsTable.clearSelection();
-            this.deleteBaseLineButton.setEnabled(false);
-        }else{
-            this.baselineStationsTable.setBackground(NOT_INHERITED_FROM_PARENT);
-            this.baselineStationsTable.setEnabled(true);
-            this.addBaseLineButton.setEnabled(true);
-        }
         
-    }//GEN-LAST:event_baselineUseAllCheckboxStateChanged
-    
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save step and close") {
             boolean warning = false;
@@ -1612,7 +1885,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JButton addNSourceButton;
     private javax.swing.JButton addSolvableParmButton;
     private javax.swing.JButton addSolvableParmButton1;
+    private javax.swing.JPanel baselineInputPanel;
     private javax.swing.JPanel baselineModsPanel;
+    private javax.swing.JPanel baselinePanel;
+    private javax.swing.JTextField baselineStation1Text;
+    private javax.swing.JTextField baselineStation2Text;
     private javax.swing.JScrollPane baselineStationsScrollPane;
     private javax.swing.JTable baselineStationsTable;
     private javax.swing.JCheckBox baselineUseAllCheckbox;
