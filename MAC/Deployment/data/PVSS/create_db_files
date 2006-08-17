@@ -414,7 +414,8 @@ do
 			create_cpp_pvss_headerfile FixedDataPoints.base;
 			create_cpp_pvss_headerfile ObservationDataPoints.base;
 			echo "created: ${DESTDIR}/${CPP_PVSS_HEADERFILE}"
-			cp ${DESTDIR}/${CPP_PVSS_HEADERFILE} ../../../../installed/*/include/Deployment/
+			mkdir -p ../../../../installed/gnu_debug/include/Deployment/
+			cp ${DESTDIR}/${CPP_PVSS_HEADERFILE} ../../../../installed/gnu_debug/include/Deployment/
 			;;
 	esac
 	shift

@@ -13,4 +13,5 @@ Ring			-		LOFAR_PIC_@ring@
 Station			-		LOFAR_PIC_@ring@_@station@
 StationClock	SC		LOFAR_PIC_@ring@_@station@_StationClock
 ObsSW			-		LOFAR_ObsSW
+RSPBoard		RSP		LOFAR_RSPBoard
 
