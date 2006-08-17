@@ -15,24 +15,25 @@ enum
 	F_APL_PROTOCOL = 10, 	// APPlication specific protocol numbers start here
 };
 
-ServerName	  | id				| value
-------------------+-----------------------------+-------
-FSM			F_FSM_PROTOCOL		  1
-PORT			F_PORT_PROTOCOL		  2
-PI			F_GCF_PROTOCOL +  1       4
-PA			F_GCF_PROTOCOL +  2	  5
-SB			F_GCF_PROTOCOL +  3       6
-KVL			F_GCF_PROTOCOL +  4	  7
+ServerName	  	  | id						| value
+------------------+-------------------------+-------
+FSM					F_FSM_PROTOCOL		      1
+PORT				F_PORT_PROTOCOL		      2
+PML					F_GCF_PROTOCOL +  0       3
+PI					F_GCF_PROTOCOL +  1       4
+PA					F_GCF_PROTOCOL +  2	      5
+SB					F_GCF_PROTOCOL +  3       6
+KVL					F_GCF_PROTOCOL +  4	      7
 
 LogicalDevice		F_APL_PROTOCOL +  1      11
-StartDaemon		F_APL_PROTOCOL +  2	 12
-Control			F_APL_PROTOCOL +  3	 13		// used to be SAS
-THPVSSBridge		F_APL_PROTOCOL +  4	 14
-MIS			F_APL_PROTOCOL +  5	 15
-ABS			F_APL_PROTOCOL + 10	 20
-EPA			F_APL_PROTOCOL + 11      21
-RSP			F_APL_PROTOCOL + 12      22
-CAL			F_APL_PROTOCOL + 13      23
-TBB			F_APL_PROTOCOL + 14			 24
-TP			F_APL_PROTOCOL + 15			 25
-NM			F_APL_PROTOCOL + 20      30
+StartDaemon			F_APL_PROTOCOL +  2		 12
+Control				F_APL_PROTOCOL +  3		 13		// used to be SAS
+THPVSSBridge		F_APL_PROTOCOL +  4		 14
+MIS					F_APL_PROTOCOL +  5		 15
+ABS					F_APL_PROTOCOL + 10		 20
+EPA					F_APL_PROTOCOL + 11      21
+RSP					F_APL_PROTOCOL + 12      22
+CAL					F_APL_PROTOCOL + 13      23
+TBB					F_APL_PROTOCOL + 14		 24
+TP					F_APL_PROTOCOL + 15		 25
+NM					F_APL_PROTOCOL + 20      30
