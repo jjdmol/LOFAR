@@ -459,8 +459,8 @@ void GTMServiceBroker::_checkActionList(const string&	hostname)
 				continue;
 			case SB_GET_SERVICEINFO: 
 				iter->pPort->serviceInfo(SB_NO_CONNECTION, 0, "");
-				continue;
 				iter = itsActionList.erase(iter);
+				continue;
 				break;
 			default: 
 				ASSERTSTR(false, "Unknown action in actionlist: " << iter->type);
