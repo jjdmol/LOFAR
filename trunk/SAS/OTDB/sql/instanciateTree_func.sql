@@ -72,7 +72,7 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 			vIsArray := false;
 		END IF;
 
-		-- Get parameter definition
+		-- Get parameter definition from VICtemplate
 		SELECT	*
 		INTO	vRecord
 		FROM	getVICNodeDef ($1, vNodeName, vParamName);

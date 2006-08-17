@@ -2,6 +2,10 @@
 # DROPS the current database and make a whole new test database
 #
 DATABASENAME=CDR
+if [ $# -eq 1 ]; then
+	DATABASENAME=$1
+fi
+
 #
 echo "DELETING AND REBUILDING DATABASE " $DATABASENAME
 sleep 5
