@@ -234,6 +234,9 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 							 	 OTDBtreeIDType		anObsID, 
 							 	 uint16				aCntlrType)
 {
+	LOG_TRACE_FLOW_STR("requestState(" << aState << "," << aName << "," << anObsID <<
+						"," << aCntlrType <<")" );
+
 	bool	checkName   = (aName != "");
 	bool	checkID     = (anObsID != 0);
 	bool	checkType   = (aCntlrType != CNTLRTYPE_NO_TYPE);
@@ -257,6 +260,9 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 			iter->failed		 = false;
 			iter->nrRetries		 = 0;
 			iter->retryTime		 = 0;
+
+			// add it to the actionlist
+			itsActionList.push_back(*iter);
 		}
 			
 		iter++;
@@ -410,6 +416,8 @@ ChildControl::getCompletedStates (time_t	lastPollTime)
 //
 void ChildControl::_processActionList()
 {
+	LOG_TRACE_FLOW("_processActionList()");
+
 	uint32	nrActions = itsActionList.size();	// prevents handling rescheduled actions
 	// when list is empty return;
 	if (!nrActions) {
@@ -582,7 +590,7 @@ void ChildControl::_setEstablishedState(const string&		aName,
 {
 	CIiter	controller = findController(aName);
 	if (controller == itsCntlrList->end()) {
-		LOG_WARN_STR ("Could not update state of controller " << aName);
+		LOG_WARN_STR ("Could not update state of unknown controller " << aName);
 		return;
 	}
 
@@ -918,7 +926,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 														" to the controllerList");
 			}
 			else {
-				// Resunc of known controller (strange case!)
+				// Resync of known controller (strange case!)
 				controller->requestedState = cts.stateNr(msg.curState);
 				controller->currentState   = cts.stateNr(msg.curState);
 				controller->hostname	   = msg.hostname;
@@ -934,42 +942,42 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		break;
 
 	case CONTROL_CLAIMED: {
-			CONTROLClaimedEvent		result;
+			CONTROLClaimedEvent		result(event);
 			_setEstablishedState(result.cntlrName, CTState::CLAIMED, time(0),
 								 result.result);
 		}
 		break;
 	
 	case CONTROL_PREPARED: {
-			CONTROLPreparedEvent		result;
+			CONTROLPreparedEvent		result(event);
 			_setEstablishedState(result.cntlrName, CTState::PREPARED, time(0),
 								 result.result);
 		}
 		break;
 	
 	case CONTROL_RESUMED: {
-			CONTROLResumedEvent		result;
+			CONTROLResumedEvent		result(event);
 			_setEstablishedState(result.cntlrName, CTState::ACTIVE, time(0),
 								 result.result);
 		}
 		break;
 	
 	case CONTROL_SUSPENDED: {
-			CONTROLSuspendedEvent		result;
+			CONTROLSuspendedEvent		result(event);
 			_setEstablishedState(result.cntlrName, CTState::SUSPENDED, time(0),
 								 result.result);
 		}
 		break;
 	
 	case CONTROL_RELEASED: {
-			CONTROLReleasedEvent		result;
+			CONTROLReleasedEvent		result(event);
 			_setEstablishedState(result.cntlrName, CTState::RELEASED, time(0),
 								 result.result);
 		}
 		break;
 	
 	case CONTROL_FINISH: {
-			CONTROLFinishEvent		msg;
+			CONTROLFinishEvent		msg(event);
 			_setEstablishedState(msg.cntlrName, CTState::FINISHED, time(0),
 								 msg.result);
 

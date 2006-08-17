@@ -52,7 +52,9 @@ static	stateFlow	stateFlowTable[] = {
 //		------------------------------------------------------------------
 	{	CONTROL_CONNECTED,		CTState::CONNECT,		CTState::CONNECTED	},
 	{	CONTROL_CLAIM,			CTState::CONNECTED,		CTState::CLAIMED	},
+	{	CONTROL_CLAIMED,		CTState::CLAIM,			CTState::CLAIMED	},
 	{	CONTROL_PREPARE,		CTState::CLAIMED,		CTState::PREPARED	},
+	{	CONTROL_PREPARED,		CTState::PREPARE,		CTState::PREPARED	},
 	{	CONTROL_RESUME,			CTState::PREPARED,		CTState::ACTIVE		},
 	{	CONTROL_RESUME,			CTState::SUSPENDED,		CTState::ACTIVE		},
 	{	CONTROL_SUSPEND,		CTState::ACTIVE,		CTState::SUSPENDED	},
@@ -132,6 +134,8 @@ GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask)
 //
 // isLegalSignal(signal, parent)
 //
+// Checks if the given signal for the given parent is allowed in (t)his state.
+//
 bool ParentControl::isLegalSignal(uint16	aSignal,
 							   PIiter	aParent)
 {
@@ -163,12 +167,12 @@ CTState::CTstateNr ParentControl::requestedState(uint16	aSignal)
 }
 
 //
-// doRequestedAction(parent)
+// _doRequestedAction(parent)
 //
-void ParentControl::doRequestedAction(PIiter	parent)
+void ParentControl::_doRequestedAction(PIiter	parent)
 {
 	CTState	cts;
-	LOG_DEBUG_STR("doRequestedAction:" << parent->name << " : " << 
+	LOG_DEBUG_STR("_doRequestedAction:" << parent->name << " : " << 
 			cts.name(parent->currentState) << "-->" << cts.name(parent->requestedState));
 
 	// state already reached? make sure the timer is off.
@@ -219,8 +223,11 @@ void ParentControl::doRequestedAction(PIiter	parent)
 			itsMainTaskPort->sendBack(request);
 		}
 		break;
-	case CTState::PREPARED:
-//		concrete_prepare(parent);
+	case CTState::PREPARED: {
+			CONTROLPrepareEvent	request;
+			request.cntlrName = parent->name;
+			itsMainTaskPort->sendBack(request);
+		}
 		break;
 	case CTState::ACTIVE:
 //		concrete_resume(parent);
@@ -242,6 +249,38 @@ void ParentControl::doRequestedAction(PIiter	parent)
 
 }
 
+//
+// _confirmState(msg, cntlrName, result)
+//
+bool ParentControl::_confirmState(uint16			signal,
+								  const string&		cntlrName,
+								  uint16			result)
+{
+	PIiter		parent = findParent(cntlrName);
+	if (!isParent(parent)) {
+		LOG_WARN_STR ("Received answer for unknown parent " << cntlrName <<", ignoring");
+		return (false);
+	}
+
+	CTState	cts;
+//	if (!isLegalSignal(event.signal, parent)) {
+//		LOG_WARN_STR ("Received " << evtstr(event.signal) <<
+//					  " event while requested state is " << 
+//					  cts.name(parent->requestedState));
+//	}
+
+	if (result == !CT_RESULT_NO_ERROR) {
+		parent->failed = true;
+		LOG_DEBUG_STR(cntlrName << " DID NOT reach the " << 
+			cts.name(requestedState(signal)) << " state, error=" << result);
+		return (false);
+	}
+
+	parent->currentState = requestedState(signal);
+	LOG_DEBUG_STR(cntlrName << " reached " << cts.name(parent->currentState) << 
+						" state succesfully");
+	return (true);
+}
 
 // -------------------- THE GCF STATEMACHINES --------------------
 
@@ -337,7 +376,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			// first connection every made with this controller?
 			if (parent->requestedState == CTState::CONNECTED && 
 							parent->currentState == CTState::CONNECT) {
-				doRequestedAction(parent);	// do queued action if any.
+				_doRequestedAction(parent);	// do queued action if any.
 				break;
 			}
 
@@ -409,7 +448,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			}
 
 			if (parent->port->isConnected()) {		// not the reconnect timer?
-				doRequestedAction(parent);
+				_doRequestedAction(parent);
 			}
 
 			// its the reconnect timer of this parent.
@@ -519,6 +558,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		}
 		break;
 
+	// -------------------- signals from Parent process --------------------
 	case CONTROL_RESYNCED:
 	case CONTROL_CLAIM:
 	case CONTROL_PREPARE:
@@ -547,10 +587,58 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 				parent->requestedState = requestedState(event.signal);	
 			}
 			parent->requestTime	   = time(0);
-			doRequestedAction(parent);
+			_doRequestedAction(parent);
 		}
 		break;
 
+	// -------------------- signals from main task --------------------
+	case CONTROL_CLAIMED:
+		{
+			CONTROLClaimedEvent		msg(event);
+			// do we know this parent?
+			PIiter		parent = findParent(msg.cntlrName);
+			if (!isParent(parent)) {
+				LOG_WARN_STR ("Received "<< evtstr(event) <<" answer for unknown parent "
+								<< msg.cntlrName <<", ignoring");
+				break;
+			}
+#if 0
+			_confirmState(event.signal, msg.cntlrName, msg.result);
+			parent->port->send(msg);
+#else
+			if (msg.result == CT_RESULT_NO_ERROR) {
+				parent->currentState = CTState::CLAIMED;
+				LOG_DEBUG_STR(msg.cntlrName << " reached CLAIMED state succesfully");
+			}
+			else {
+				parent->failed = true;
+				LOG_DEBUG_STR(msg.cntlrName << " DID NOT reach the CLAIMED state, error="
+								<< msg.result);
+			}
+			parent->port->send(msg);
+			break;
+#endif
+		}
+		break;
+
+	case CONTROL_PREPARED:
+		{
+			CONTROLPreparedEvent	msg(event);
+			// do we know this parent?
+			PIiter		parent = findParent(msg.cntlrName);
+			if (!isParent(parent)) {
+				LOG_WARN_STR ("Received "<< evtstr(event) <<" answer for unknown parent "
+								<< msg.cntlrName <<", ignoring");
+				break;
+			}
+			_confirmState(event.signal, msg.cntlrName, msg.result);
+			parent->port->send(msg);
+		}
+		break;
+
+	case CONTROL_RESUMED:
+	case CONTROL_SUSPENDED:
+	case CONTROL_RELEASED:
 	default:
 		LOG_DEBUG ("operational, default");
 		status = GCFEvent::NOT_HANDLED;

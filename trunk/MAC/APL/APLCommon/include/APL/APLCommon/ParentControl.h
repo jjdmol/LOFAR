@@ -111,7 +111,8 @@ private:
 	CTState::CTstateNr	requestedState(uint16	aSignal);
 
 	// Internal routines
-	void doRequestedAction(PIiter	parent);
+	void _doRequestedAction(PIiter	parent);
+	bool _confirmState	   (uint16	signal, const string& cntlrName, uint16 result);
 
 
 	//# --- Datamembers ---
