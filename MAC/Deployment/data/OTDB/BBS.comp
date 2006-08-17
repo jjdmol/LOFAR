@@ -51,6 +51,17 @@ node   WorkDomainSize     1.0.0  development 'node constraint'  'BBS WorkDomainS
 par  Freq                    I    dbl    Hz     10    0    '1.0'                   -        'work domain size frequency'
 par  Time                    I    dbl    -      10    0    '0.1'                   -        'work domain size time'
 
+# -- BBS Domain Size Settings
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   DomainSize     1.0.0  development 'node constraint'  'BBS Step Operation DomainSize settings'
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  Freq                    I    dbl    Hz     10    0    '1.0'                   -        'domain size frequency'
+par  Time                    I    dbl    -      10    0    '0.1'                   -        'domain size time'
+
 # -- BBS Integration Settings
 #
 #      name        vers   qual        constr.            descr.
@@ -84,13 +95,30 @@ uses  Integration     1.0.0  development 1                  'BBS Integration att
 #
 #      name           vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   Baselines 1.0.0  development 'node constraint'  'Template BBS Step Baselines'
+node   Baselines      1.0.0  development 'node constraint'  'Template BBS Step Baselines'
 
 #    name                   dir. type   unit   prun. vm   value              constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par    Station1             I    text   -      10    0    '[]'               -        'The stations to be used in the baselines'
 par    Station2             I    text   -      10    0    '[]'               -        'The stations to be used in the baselines'
 
+# -- BBS Step Template Solve Operation definition
+#
+#      name           vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Solve          1.0.0  development 'node constraint'  'Template BBS Step Solve Operation'
+
+#    name                   dir. type   unit   prun. vm   value              constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par    MaxIter              I    int    -      10    0    '10'               -        'Maximum number of iterations'
+par    Epsilon              I    dbl    -      10    0    '1e-7'             -        'Convergence threshold'
+par    MinConverged         I    dbl    -      10    0    '0.95'             -        'Fraction that must have converged'
+par    Parms                I    text   -      10    0    '[]'               -        'Names of solvable parameters'
+par    ExclParms            I    text   -      10    0    '[]'               -        'Parameters excluded from solve'
+
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  DomainSize   1.0.0  development 1                  'BBS Work Domain Size for this strategy'
 
 # -- BBS Step Template definition
 #
@@ -112,7 +140,7 @@ par    Operation            I    text   -      10    0    'SOLVE'            -  
 uses  Baselines       1.0.0  development 1                  'BBS Baseline settings for this step'
 uses  Correlation     1.0.0  development 1                  'BBS Correlation settings for this step'
 uses  Integration     1.0.0  development 1                  'BBS Integration attributes for this step'
-
+uses  Solve           1.0.0  development 1                  'BBS Solve Operation attributes for this step'
 
 # -- BBS Step Container
 #
