@@ -129,7 +129,7 @@ node   BBS        	 1.0.0  development 'node constraint'  "BBS"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  DataSet                 I    text   -      10    0    >>Observation.MSName      -        'Name of the measurement set'
+par  DataSet                 I    text   -      10    0    >>Observation.MSNameMask      -        'Name of the measurement set'
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------

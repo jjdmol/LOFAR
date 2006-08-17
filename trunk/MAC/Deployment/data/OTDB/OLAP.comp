@@ -48,7 +48,7 @@ par  nrStations              I    int    -      10    0    >>VirtualInstrument.s
 par  nrInputNodes            I    int    -      10    0    >>VirtualInstrument.inputNodeList[] - 'number of input nodes in this observation'
 par  nrRSPBoards             I    int    -      10    0	   8                                  - 'Total Nr of RSPboards'
 par  nrSamplesPerSecond      I    int    -      10    0    >>Observation.clockMode.samplesPerSecond    -  'Samples per second'
-par  MSName                  I    text   -      10    0    >>Observation.MSName               - 'Name for the Measurement set for this Observation'
+par  MSName                  I    text   -      10    0    >>Observation.MSNameMask         - 'Name for the Measurement set for this Observation'
 par  nrSamplesPerEthFrame    I    int    -      10    0    125                       -        'number of samples the RSP board will put in one ethernet frame'
 par  nyquistZone             I    int    -      10    0    >>Observation.nyquistZone -        'number of the nyquist zone'
 par  startTime               I    dbl    -      10    0    >>Observation.startTime   -        'start time of the observation in GMT'
