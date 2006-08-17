@@ -45,6 +45,7 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
 
 //# ACC Includes
@@ -90,7 +91,7 @@ private:
 
 	int32	convertDirection(const string&	typeName);
 	void	doPrepare(const string&	cntlrName);
-	bool	handleBeamAllocAck(GCFEvent&	event);
+	uint16	handleBeamAllocAck(GCFEvent&	event);
 	bool	handleBeamFreeAck(GCFEvent&	event);
 	void	doRelease(GCFEvent&	event);
    	void	_connectedHandler(GCFPortInterface& port);
@@ -129,12 +130,11 @@ private:
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
-	time_t					itsStartTime;
-	time_t					itsStopTime;
-
-	//TODO
-	ACC::APS::ParameterSet	m_parameterSet;
-	uint32					m_beamID;
+	ptime					itsStartTime;
+	ptime					itsStopTime;
+	uint32					itsClaimPeriod;
+	uint32					itsPreparePeriod;
+	uint32					itsBeamID;
 };
 
   };//StationCU
