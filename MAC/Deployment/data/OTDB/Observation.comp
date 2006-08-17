@@ -9,17 +9,24 @@
 #--------------------------------------------------------------------------------------------------------
 node  Observation        2.0.0  development 'node constraint'  "Observation"
 
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
+# timing information
 par  startTime               I    text   -      10    0    0                                         - 'start time of the observation in GMT (yyyy-mm-dd hh:mm:ss)'
 par  stopTime                I    text   -      10    0    0                                         - 'stop time of the observation in GMT (yyyy-mm-dd hh:mm:ss)'
 par  claimPeriod             I    int    -      10    0    600                                       - 'periodlength in seconds the CLAIM phases will take'
 par  preparePeriod           I    int    -      10    0    300                                       - 'periodlength in seconds the PREPARE phases will take'
+
+# measurement information
 par  nyquistZone             I    int    -      10    0    0                                         - 'number of the nyquist zone'
 par  subbandList             I    text   -      10    0    [0]                                       - 'list of all used subbands in this observation'
-par  MSName                  I    text   -      10    0    '/data2/ObservationA.MS'                  - 'Name for the Measurement set for this Observation'
+par  beamletList             I    text   -      10    0    [0]                                       - 'mapping of subbands on beamlets'
+par  subarrayName	         I	  text	 -   	10    0	   0			                             - 'Unique name of the subarray'
+par  MSNameMask              I    text   -      10    0    '/data2/ObservationA.MS'                  - 'Name for the Measurement set for this Observation'
 par  channelsPerSubband      I    int    -      10    0    256                                       - 'number of channels per subband'
+par  nrBeams                 I    int    -      10    0    1                                         - 'number of simultaneous beams in this observation'
+
+# clock related info
 par  clockMode               I    node   -      10    0    <<Clock160                                - 'Mode in which clock is running'
 par  sampleClock             I    dbl    MHz    10    0    >>Observation.clockMode.systemClock       - 'sampleClock'
 par  samplesPerSecond        I    int    -      10    0    >>Observation.clockMode.samplesPerSecond  - 'Samples per second'
@@ -29,4 +36,5 @@ par  channelWidth            I    dbl    Hz     10    0    >>Observation.clockMo
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  VirtualInstrument  1.0.0  development '1'		       "Virtual Instrument"
+uses  Beam				 1.0.0  development '1'		       "Beam specification"
 uses  ObsCtrl			 1.0.0  development '1'		       "Observation Control"

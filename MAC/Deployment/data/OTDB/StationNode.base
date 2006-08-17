@@ -14,6 +14,7 @@ par  nrLBAntennas      I    int    -      10    0    0                          
 par  nrHBAntennas      I    int    -      10    0    0                                         -        'Number of HighBand antennas in this station'
 par  stsPosition       I    text   -      10    0    [0,0,0]                                   -        'Station position in longitude, latitude and heigth'
 par  RSPMacAddresses   I    text   -      10    0    '[00:30:00:00:00:00, 00:30:00:00:00:00]'  -        'MAC addresses of the RSPBoards'     
+
 #      name          vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses   ControlSW     1.0.0  development 1                  "Control Software for this Station"
+#uses   ControlSW     1.0.0  development 1                  "Control Software for this Station"

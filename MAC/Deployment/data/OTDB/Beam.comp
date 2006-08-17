@@ -1,6 +1,6 @@
-# -- BeamControl --
+# -- Beam --
 #
-# Component description of the BeamController
+# Component description of a Beam
 #
 # $Id$
 #
@@ -20,10 +20,10 @@
 
 
 #########################################################################################################
-# -- Station Operations --
+# -- Beam --
 #      name       		 vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  BeamControl      1.0.0  development  'node constraint'  "Station BeamControl"
+node  Beam	      1.0.0  development  'node constraint'  "Beam specification"
 
 #
 # name				name of the parameter
@@ -38,14 +38,8 @@ node  BeamControl      1.0.0  development  'node constraint'  "Station BeamContr
 #--------------------------------------------------------------------------------------------------------
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  instanceNr		     I	  uint	 -	10    0	   0			   -	    'BeamController instancenumber'
-par  startTime		     I	  uint	 -	10    0	   >>Observation.startTime -	    'Starttime of observation'
-par  stopTime		     I	  uint	 -	10    0	   >>Observation.stopTime  -	    'Stoptime of observation'
-par  subarrayName	     I	  text	 -	10    0	   0			   -	    'Unique name of the subarray'
-par  subbands		     I	  vuint	 -	10    0	   0			   -	    'Subbands in the subarray'
-par  beamlets		     I	  vuint	 -	10    0	   0			   -	    'The beamlets allocated on the subarray'
-par  sourceTimes	     I	  vuint	 -	10    0	   0			   -	    'Relative time (to starttime) when to activate the declination and rightAscentions'
-par  declination	     I	  vdbl	 -	10    0	   0			   -	    'Declination(s) of the source(s)'
-par  rightAscention	     I	  vdbl	 -	10    0	   0			   -	    'rightAscention(s) of the source(s)'
-par  directionType	     I	  text	 -	10    0	   0			   -	    'Coord.system used for sources'
+par  angle1			     I	  vdbl	 -	10    0	   0			   -	    'Declination(s) of the source(s)'
+par  angle2				 I	  vdbl	 -	10    0	   0			   -	    'rightAscention(s) of the source(s)'
+par  directionTypes	     I	  vtext	 -	10    0	   0			   -	    'Coord.system used for the sources'
+par  angleTimes		     I	  vuint	 -	10    0	   0			   -	    'Relative time (to starttime) when to activate the angles'
 
