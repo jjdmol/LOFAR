@@ -46,8 +46,8 @@ public class BBSStepDataManager{
     private static jOTDBnode stepContainerNode = null;
     private static Vector OTDBcomponentCache = null;
     private BBSStrategy theStrategy = null;
-    private static HashMap<String,BBSStepData> stepsCollection = null;
-    private static HashSet<BBSStep> stepStructureCollection = null;
+    private HashMap<String,BBSStepData> stepsCollection = null;
+    private HashSet<BBSStep> stepStructureCollection = null;
     
     /** Creates a new instance of BBSStepDataManager */
     private BBSStepDataManager() {
@@ -63,11 +63,11 @@ public class BBSStepDataManager{
     }
     
     
-    public void setStepContainerNode(jOTDBnode rootNode){
+    public synchronized void setStepContainerNode(jOTDBnode rootNode){
         this.stepContainerNode = rootNode;
     }
     
-    public Vector<String> getStepNames(){
+    public synchronized Vector<String> getStepNames(){
         Vector<String> returnVector = new Vector<String>();
         for(String aStep : stepsCollection.keySet()){
             returnVector.add(aStep);
@@ -75,7 +75,7 @@ public class BBSStepDataManager{
         return returnVector;
     }
     
-    public BBSStep getBBSStep(BBSStep newParent,String name){
+    public synchronized BBSStep getBBSStep(BBSStep newParent,String name){
         BBSStep returnStep = null;
         //check if the step name is present in the step cache
         for(BBSStep aStep : stepStructureCollection){
@@ -93,7 +93,7 @@ public class BBSStepDataManager{
         return returnStep;
     }
     
-    public void assureBBSStepIsInCollection(BBSStep aStep){
+    public synchronized void assureBBSStepIsInCollection(BBSStep aStep){
         boolean exists = false;
         for(BBSStep anExistingStep : stepStructureCollection){
             if(anExistingStep.getName().equals(aStep.getName())){
@@ -116,7 +116,7 @@ public class BBSStepDataManager{
         }
     }
     
-    public boolean stepExists(String name){
+    public synchronized boolean stepExists(String name){
         boolean exists = false;
         for(String existingStep : this.stepsCollection.keySet()){
             if(existingStep.equalsIgnoreCase(name)){
@@ -127,7 +127,7 @@ public class BBSStepDataManager{
     }
     
     //get the step data that is persisted
-    public BBSStepData getStepData(String name){
+    public synchronized BBSStepData getStepData(String name){
         BBSStepData returnStep = null;
         returnStep = stepsCollection.get(name);
         if(returnStep == null){
@@ -136,7 +136,7 @@ public class BBSStepDataManager{
         }
         return returnStep;
     }
-    public BBSStepData getInheritedStepData(BBSStep aStep){
+    public synchronized BBSStepData getInheritedStepData(BBSStep aStep){
         return getInheritedStepData(aStep,null);
     }
     
@@ -201,6 +201,16 @@ public class BBSStepDataManager{
                     returnData.setOutputDataColumn(itsStepData.getOutputDataColumn());
                 }
             }
+            if(returnData.getOperationName()==null){
+                if(itsStepData.getOperationName()!=null){
+                    returnData.setOperationName(itsStepData.getOperationName());
+                }
+            }
+            if(returnData.getOperationAttributes()==null){
+                if(itsStepData.getOperationAttributes()!=null){
+                    returnData.setOperationAttributes(itsStepData.getOperationAttributes());
+                }
+            }
             //add other values
             if(aStep.hasParentStep()){
                 getInheritedStepData(aStep.getParentStep(),returnData);
@@ -209,14 +219,14 @@ public class BBSStepDataManager{
         return returnData;
     }
     
-    public BBSStrategy getStrategy(){
+    public synchronized BBSStrategy getStrategy(){
         if(theStrategy ==null){
             generateStrategyFromOTDB();
         }
         return theStrategy;
     }
     
-    public void generateStrategyFromOTDB(){
+    public synchronized void generateStrategyFromOTDB(){
         
         //clear the steps collection to make sure only steps are in there that are present in the OTDB
         this.stepsCollection.clear();
@@ -259,7 +269,7 @@ public class BBSStepDataManager{
         }
     }
     
-    public void persistStrategy(){
+    public synchronized void persistStrategy(){
         deleteAllSteps();
         
         for(BBSStep aStep : theStrategy.getChildSteps()){
@@ -515,8 +525,25 @@ public class BBSStepDataManager{
                     SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateCorrelationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
                     SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateIntegrationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
                     if(stepTemplateStepOperationNodeId != -1){
-                        Vector someThing = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentList(currentDataForStep.getOperationName(),true);
-                        SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateStepOperationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
+                        
+                        int stepOperationNodeId = SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateStepOperationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
+                        
+                        //collect components that are part of the operation type...
+                        if(currentDataForStep.getOperationAttributes() != null){
+                            Vector<String> toBeAddedSubComponents = new Vector<String>();
+                            for(String someOperationAttribute : currentDataForStep.getOperationAttributes().keySet()){
+                                String[] splitter = someOperationAttribute.split("[.]");
+                                if(splitter.length>1){
+                                    if(!toBeAddedSubComponents.contains(splitter[0])){
+                                        toBeAddedSubComponents.add(splitter[0]);
+                                    }
+                                }
+                            }
+                            for(String someOperationAttribute : toBeAddedSubComponents){
+                                int stepTemplateStepOperationTypeNodeId = this.getComponentForNode(someOperationAttribute);
+                                SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateStepOperationTypeNodeId,stepContainerNode.treeID(),stepOperationNodeId,"");
+                            }
+                        }
                     }
                     //update the node name
                     newStepNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
@@ -690,41 +717,43 @@ public class BBSStepDataManager{
                         }
                         //persist all the specific operation attributes
                         else if (!aHWNode.leaf && aHWNode.name.equals(currentDataForStep.getOperationName())) {
-                            Vector attributeParms = this.retrieveChildDataForNode(aHWNode);
                             int presentParams = 0;
-                            Enumeration ce = attributeParms.elements();
-                            while( ce.hasMoreElements()  ) {
-                                jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
-                                
-                                String toBeInsertedValue = currentDataForStep.getOperationAttribute(LofarUtils.keyName(aCENode.name));
-                                //direct parameter of Operation
-                                if (aCENode.leaf ){
-                                    if ( toBeInsertedValue != null){
-                                        aCENode.limits = toBeInsertedValue;
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
-                                        presentParams++;
-                                    }else{
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
-                                    }
-                                //parameter node inside Operation
-                                } else if (!aCENode.leaf){
-                                    Vector attributeSubParms = this.retrieveChildDataForNode(aCENode);
-                                    int presentSubParams = 0;
-                                    Enumeration cse = attributeSubParms.elements();
-                                    while( cse.hasMoreElements()  ) {
-                                        jOTDBnode aCSENode = (jOTDBnode)cse.nextElement();
-                                        String toBeInsertedSubValue = currentDataForStep.getOperationAttribute(LofarUtils.keyName(aCENode.name)+"."+LofarUtils.keyName(aCSENode.name));
-                                        if ( toBeInsertedSubValue != null){
-                                            aCSENode.limits = toBeInsertedSubValue;
-                                            SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCSENode);
-                                            presentSubParams++;
+                            if(currentDataForStep.getOperationAttributes()!=null){
+                                Vector attributeParms = this.retrieveChildDataForNode(aHWNode);
+                                Enumeration ce = attributeParms.elements();
+                                while( ce.hasMoreElements()  ) {
+                                    jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                                    
+                                    String toBeInsertedValue = currentDataForStep.getOperationAttribute(LofarUtils.keyName(aCENode.name));
+                                    //direct parameter of Operation
+                                    if (aCENode.leaf ){
+                                        if ( toBeInsertedValue != null){
+                                            aCENode.limits = toBeInsertedValue;
+                                            SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
+                                            presentParams++;
                                         }else{
-                                            SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCSENode);
+                                            SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
                                         }
-                                    }
-                                    //no params inside Operation folder are present, delete this node as well
-                                    if(presentSubParams==0){
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                        //parameter node inside Operation
+                                    } else if (!aCENode.leaf){
+                                        Vector attributeSubParms = this.retrieveChildDataForNode(aCENode);
+                                        int presentSubParams = 0;
+                                        Enumeration cse = attributeSubParms.elements();
+                                        while( cse.hasMoreElements()  ) {
+                                            jOTDBnode aCSENode = (jOTDBnode)cse.nextElement();
+                                            String toBeInsertedSubValue = currentDataForStep.getOperationAttribute(LofarUtils.keyName(aCENode.name)+"."+LofarUtils.keyName(aCSENode.name));
+                                            if ( toBeInsertedSubValue != null){
+                                                aCSENode.limits = toBeInsertedSubValue;
+                                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCSENode);
+                                                presentSubParams++;
+                                            }else{
+                                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCSENode);
+                                            }
+                                        }
+                                        //no params inside Operation folder are present, delete this node as well
+                                        if(presentSubParams==0){
+                                            SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                        }
                                     }
                                 }
                             }
