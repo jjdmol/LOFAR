@@ -93,11 +93,6 @@ void showValues (std::ostream& os, const vector<double>& values,
   }
 }
 
-void showTime (std::ostream& os, double val)
-{
-  os << MVTime::Format(MVTime::YMD, 6) << MVTime(val);
-}
-
 void showHelp()
 {
   cerr << endl;
@@ -407,11 +402,9 @@ void showDomain (const ParmDomain& domain)
   const vector<double>& st = domain.getStart();
   const vector<double>& end = domain.getEnd();
   if (st.size() == 2) {
-    cout << " freq=[" << st[0]/1e6 << " MHz +"
-	 << (end[0]-st[0])/1e3 << " KHz]";
-    cout << " time=[";
-    showTime(cout, st[1]);
-    cout << " +" << (end[1]-st[1])*86400 << " sec]";
+    cout << " freq=[" << st[0]/1e6 << " MHz " << (end[0] - st[0] < 0 ? "-" : "+") << (end[0]-st[0])/1e3 << " KHz]";
+    cout << " time=[" << MVTime::Format(MVTime::YMD, 6) << MVTime(Quantity(st[1], "s")) << " "
+    << (end[1] - st[1] < 0 ? "-" : "+") << (end[1] - st[1]) << " sec]";
   } else {
     for (uint i=0; i<st.size(); ++i) {
       if (i != 0) cout << ',';
