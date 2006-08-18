@@ -79,71 +79,40 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
     }
     
     public void defineChildsForNode(TreeNode aNode) {
-        
         logger.trace("Entry - TreeManager jParmDBnode-defineChildNodes("+aNode.getName()+" ("+((jParmDBnode)aNode.getUserObject()).getNodeID()+"))");
         try {
-             // You must set the flag before defining children if you
+            // You must set the flag before defining children if you
             // use "add" for the new children. Otherwise you get an infinite
             // recursive loop, since add results in a call to getChildCount.
             // However, you could use "insert" in such a case.
             aNode.areChildrenDefined = true;
-            Vector childs;
-            jParmDBnode containedNode = (jParmDBnode)aNode.getUserObject();
-            SharedVars.getJParmFacade().setParmFacadeDB(containedNode.getParmDBLocation());
-            logger.trace("Working with DB: "+containedNode.getParmDBLocation());
-            if(((jParmDBnode)aNode.getUserObject()).isRootNode()){
-                logger.trace("ParmDBtreeNode calling getNames("+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length())+"*)");
-                childs = SharedVars.getJParmFacade().getNames(""+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length())+"*");
-                logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
-            }else{
-                logger.trace("ParmDBtreeNode calling getNames(*"+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length()+1)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*)");
-                childs = SharedVars.getJParmFacade().getNames("*"+containedNode.getNodeID().substring(containedNode.getParmDBIdentifier().length()+1)+this.PARMDB_TREENODE_SEPARATOR_CHAR+"*");
-                logger.trace("ParmDBtreeNode gets "+childs.size()+" names");
-            }
-            Vector<String> uniqueNames = new Vector<String>();
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
-                String aValue = (String)e.nextElement();
-                String splitName[]= aValue.split("["+PARMDB_TREENODE_SEPARATOR_CHAR+"]");
-                String parentLevels[] = containedNode.getNodeID().split("["+PARMDB_TREENODE_SEPARATOR_CHAR+"]");
-                
-                String trace = "ParmDBtreeNode gets name [";
-                for(int i = 0;i<splitName.length;i++){
-                    trace+=","+splitName[i];
+
+            jParmDBnode userNode = (jParmDBnode) aNode.getUserObject();
+            SharedVars.getJParmFacade().setParmFacadeDB(userNode.getParmDBLocation());
+            logger.trace("Working with DB: " + userNode.getParmDBLocation());
+
+            // The first node a user can possibly open is the root node. Once that
+            // happens, all child nodes are defined so defineChildren() is only called
+            // once for the root node and never thereafter.
+            if(userNode.isRootNode()){
+                logger.trace("ParmDBtreeNode calling getNames("+userNode.getNodeID().substring(userNode.getParmDBIdentifier().length())+"*)");
+                Vector children = SharedVars.getJParmFacade().getNames("*");
+                logger.trace("ParmDBtreeNode gets "+children.size()+" names");
+
+                if(children.size() == 0)
+                {
+                    userNode.setLeaf(true);
                 }
-                logger.trace(trace+"]");
-                if (splitName.length >=2) {
-                    aValue=splitName[parentLevels.length-1];
-                }
-                
-                if(!uniqueNames.contains(aValue)){
-                    uniqueNames.addElement(aValue);
+                else
+                {
+                    Enumeration e = children.elements();
+                    while( e.hasMoreElements() ) {
+                        String pathString = (String) e.nextElement();
+                        logger.trace("definePath: " + pathString);
+                        definePath(aNode, pathString.split(PARMDB_TREENODE_SEPARATOR_CHAR), 0);
+                    }
                 }
             }
-            e = uniqueNames.elements();
-            while( e.hasMoreElements()  ) {
-                
-                String childName = (String)e.nextElement();
-                
-                jParmDBnode item = new jParmDBnode(containedNode.getNodeID()+this.PARMDB_TREENODE_SEPARATOR_CHAR+childName,((jParmDBnode)aNode.getUserObject()).getNodeID());
-                //item.leaf=true;
-                item.setName(childName);
-                item.setParmDBLocation(((jParmDBnode)aNode.getUserObject()).getParmDBLocation());
-                item.setParmDBIdentifier(containedNode.getParmDBIdentifier());
-                logger.trace("Node name selected : "+item.getName());
-                ((jParmDBnode)aNode.getUserObject()).setLeaf(false);
-                TreeNode newNode = new TreeNode(this.instance,item,item.getNodeID());
-                aNode.add(newNode);
-                TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
-                fireTreeInsertionPerformed(evt);
-                //define children for the new node as well...
-                this.defineChildsForNode(newNode);
-                
-            }
-            if(uniqueNames.size() == 0){
-                ((jParmDBnode)aNode.getUserObject()).setLeaf(true);
-            }
-            
         } catch(Exception e) {
             logger.fatal("Exception during TreeManager jParmDBnode-defineChildNodes: " + e);
         }
@@ -166,5 +135,78 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
         
         return parmDBnode;
     }
-       
+    
+    // Try to follow the specified path starting at the root node. If at some point
+    // it is not possible to continue, then create all the remaining nodes on the path.
+    // For example, if we start with an empty tree and the specified path is
+    // 'solver:chi' then the node 'solver' does not exist and therefore the nodes
+    // 'solver' and 'chi' will be created. If definePath is subsequently called again
+    // with the path 'solver:rank' then the node 'solver' already exists. However, that
+    // node only has one child called 'chi', so a child 'rank' will be added.
+    private void definePath(TreeNode root, String[] path, int index)
+    {
+        if(index >= path.length)
+        {
+            // We've reached the end of the path, so we're done.
+            return;
+        }
+        else
+        {
+            // Check if the children of the current root node contain
+            // the current node on the path.
+            TreeNode node = null;
+            boolean found = false;
+            Enumeration children = root.children();
+            while(children.hasMoreElements())
+            {
+                node = (TreeNode) children.nextElement();
+                if(((jParmDBnode) node.getUserObject()).getName().equals(path[index]))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if(found)
+            {
+                // Found. So let's continue with the next node on the path.
+                definePath(node, path, index + 1);
+            }
+            else
+            {
+                // Not found. Create all the nodes on the path below and
+                // including the current node.
+                TreeNode pathRoot = root;
+                jParmDBnode pathUserRoot = ((jParmDBnode) pathRoot.getUserObject());
+                
+                for(int i = index; i < path.length; i++)
+                {
+                    // Parent node is no longer a leaf node.
+                    pathUserRoot.setLeaf(false);
+                    
+                    // Create a new jParmDBnode.
+                    String parentID = pathUserRoot.getNodeID();
+                    jParmDBnode item = new jParmDBnode(parentID + this.PARMDB_TREENODE_SEPARATOR_CHAR + path[i], parentID);
+                    item.setName(path[i]);
+                    item.setLeaf(true);
+                    item.setParmDBLocation(pathUserRoot.getParmDBLocation());
+                    item.setParmDBIdentifier(pathUserRoot.getParmDBIdentifier());
+                    
+                    // Create a new TreeNode and add it to the current root.
+                    TreeNode newNode = new TreeNode(this.instance, item, item.getNodeID());
+                    newNode.areChildrenDefined = true;
+                    pathRoot.add(newNode);
+                    
+                    // Is this necessary??
+                    TreeModelEvent evt = new TreeModelEvent(newNode, newNode.getPath());
+                    fireTreeInsertionPerformed(evt);
+                    
+                    // Newly created node becomes the root node for the next
+                    // iteration.
+                    pathRoot = newNode;
+                    pathUserRoot = ((jParmDBnode) pathRoot.getUserObject());
+                }
+            }
+        }
+    }
 }
