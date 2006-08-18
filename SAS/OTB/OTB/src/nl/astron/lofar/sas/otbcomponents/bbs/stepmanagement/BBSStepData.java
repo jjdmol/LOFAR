@@ -57,7 +57,6 @@ public class BBSStepData{
     
     /** Creates a new instance of BBSStep */
     public BBSStepData() {
-        operationAttributes = new HashMap<String,String>();
     }
    
     public Vector<String> getStation1Selection(){
@@ -146,28 +145,44 @@ public class BBSStepData{
         this.operationName = operationName;
     }
     
-    public HashMap<String,String> getOperationAttributes(){
+    public synchronized HashMap<String,String> getOperationAttributes(){
         return operationAttributes;
     }
     
-    public String getOperationAttribute(String key){
-        return operationAttributes.get(key);
+    public synchronized String getOperationAttribute(String key){
+        String returnString = null;
+        if(operationAttributes!=null){
+            returnString=operationAttributes.get(key);
+        }
+        return returnString;
     }
     
-    public void setOperationAttributes(HashMap<String,String> operationAttributes){
+    public synchronized void setOperationAttributes(HashMap<String,String> operationAttributes){
         this.operationAttributes = operationAttributes;
     }
     
-    public void addOperationAttribute(String key, String value){
+    public synchronized void addOperationAttribute(String key, String value){
+        if(operationAttributes==null){
+            operationAttributes=new HashMap<String,String>();
+        }
         this.operationAttributes.put(key,value);
     }
-    public void removeOperationAttribute(String key){
-        this.operationAttributes.remove(key);
+    public synchronized void removeOperationAttribute(String key){
+        if(operationAttributes!=null){
+            this.operationAttributes.remove(key);
+        }
     }
-    public void removeAllOperationAttributes(){
-        this.operationAttributes.clear();
+    public synchronized void removeAllOperationAttributes(){
+        if(operationAttributes!=null){
+            this.operationAttributes.clear();
+        }
+        operationAttributes = null;
     }
-    public boolean containsOperationAttribute(String key){
-        return this.operationAttributes.containsKey(key);
+    public synchronized boolean containsOperationAttribute(String key){
+        boolean returnBool = false;
+        if(operationAttributes!=null){
+            returnBool = this.operationAttributes.containsKey(key);
+        }
+        return returnBool;
     }
 }

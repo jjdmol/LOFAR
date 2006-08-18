@@ -25,6 +25,7 @@ package nl.astron.lofar.sas.otbcomponents.bbs;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.util.HashMap;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
@@ -40,6 +41,7 @@ import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStep;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepData;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepDataManager;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.operations.IBBSStepOperationPanel;
 import org.apache.log4j.Logger;
 
 /**
@@ -59,6 +61,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     final static Color NOT_DEFINED = new Color(255,204,204);
     final static Color NOT_INHERITED_FROM_PARENT = new Color(204,255,204);
     final static Color DEFAULT = Color.WHITE;
+    
+    private static HashMap<String,String> stepOperationPanels = new HashMap<String,String>();
+    private IBBSStepOperationPanel currentStepOperationsPanel = null;
     
     
     /** Creates new form BeanForm based upon aNode
@@ -190,6 +195,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         this.stepExplorerNSourcesList.setModel(new DefaultListModel());
         this.stepExplorerESourcesList.setModel(new DefaultListModel());
         this.stepExplorerInstrumentModelList.setModel(new DefaultListModel());
+        
+        //fill the supported step operation panels
+        stepOperationPanels.put("Solve","nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.operations.BBSStepOperationPanelSolveImpl");
+        
     }
     
     private void initPanel() {
@@ -378,13 +387,16 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         if(stepData.getOperationName() != null){
             this.stepExplorerOperationComboBox.setSelectedItem(stepData.getOperationName());
             this.stepExplorerOperationComboBox.setBackground(NOT_INHERITED_FROM_PARENT);
+            this.loadStepOperationsPanel(this.stepOperationPanels.get(stepData.getOperationName()),stepData,inheritedData);
             
         }else{
             if(inheritedData.getOperationName() != null){
                 this.stepExplorerOperationComboBox.setSelectedItem(inheritedData.getOperationName());
                 stepExplorerOperationComboBox.setBackground(INHERITED_FROM_PARENT);
+                this.loadStepOperationsPanel(this.stepOperationPanels.get(inheritedData.getOperationName()),null,inheritedData);
             }else{
                 this.stepExplorerOperationComboBox.setSelectedItem("NOT DEFINED");
+                this.seOperationAttributesScrollPane.getViewport().removeAll();
                 stepExplorerOperationComboBox.setBackground(NOT_DEFINED);
             }
         }
@@ -571,19 +583,19 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         if(this.baselineUseAllCheckbox.isSelected()){
             station1 = new Vector<String>();
             station2 = new Vector<String>();
-        }       
+        }
         if(station1.equals(inheritedData.getStation1Selection()) && station2.equals(inheritedData.getStation2Selection())){
             aStepData.setStation1Selection(null);
         }else{
             if(this.baselineUseAllCheckbox.isSelected()){
-               aStepData.setStation1Selection(new Vector<String>());
+                aStepData.setStation1Selection(new Vector<String>());
             }else{
-               if(station1.size()>0 && station2.size()>0){
-                   aStepData.setStation1Selection(new Vector<String>()); 
-               }else{
-                   aStepData.setStation1Selection(null); 
-               }
-               
+                if(station1.size()>0 && station2.size()>0){
+                    aStepData.setStation1Selection(new Vector<String>());
+                }else{
+                    aStepData.setStation1Selection(null);
+                }
+                
             }
             
         }
@@ -592,14 +604,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             aStepData.setStation2Selection(null);
         }else{
             if(this.baselineUseAllCheckbox.isSelected()){
-               aStepData.setStation2Selection(new Vector<String>());
+                aStepData.setStation2Selection(new Vector<String>());
             }else{
-               if(station1.size()>0 && station2.size()>0){
-                   aStepData.setStation2Selection(new Vector<String>()); 
-               }else{
-                   aStepData.setStation2Selection(null); 
-               }
-               
+                if(station1.size()>0 && station2.size()>0){
+                    aStepData.setStation2Selection(new Vector<String>());
+                }else{
+                    aStepData.setStation2Selection(null);
+                }
+                
             }
         }
         
@@ -645,7 +657,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         
         aStepData.addOperationAttribute("Epsilon","1.0");
         aStepData.addOperationAttribute("MaxIter","10");
-        aStepData.addOperationAttribute("DomainSize.Freq","1000");
+        aStepData.addOperationAttribute("DomainSize.Freq","666");
+        aStepData.addOperationAttribute("DomainSize.Time","1.0");
         
         //add other variables
     }
@@ -699,17 +712,17 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     }
     private void fillBaselineTableFromVectors(Vector<String> station1,Vector<String> station2) {
         baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Station 1", "Station 2"
-            }
+                new Object [][] {
+            
+        },
+                new String [] {
+            "Station 1", "Station 2"
+        }
         ) {
             Class[] types = new Class [] {
                 java.lang.String.class, java.lang.String.class
             };
-
+            
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
@@ -723,7 +736,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 newRow.add(station2.get(i));
                 bsltm.addRow(newRow);
             }
-        }        
+        }
     }
     
     private Vector<Vector<String>> createVectorsFromBaselineTable(){
@@ -755,6 +768,30 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         }
     }
     
+    private void loadStepOperationsPanel(String name, BBSStepData data, BBSStepData inheritedData){
+        JPanel newPanel = null;
+        try {
+            newPanel = (JPanel) Class.forName(name).newInstance();
+        } catch (ClassNotFoundException ex) {
+            logger.debug("Error during getPanel: "+ ex);
+            return;
+        } catch (InstantiationException ex) {
+            logger.debug("Error during getPanel: "+ ex);
+            return;
+        } catch (IllegalAccessException ex) {
+            logger.debug("Error during getPanel: "+ ex);
+            return;
+        }
+        if (newPanel!=null) {
+            currentStepOperationsPanel = (IBBSStepOperationPanel)newPanel;
+            currentStepOperationsPanel.setBBSStepContent(data,inheritedData);
+            this.seOperationAttributesScrollPane.getViewport().removeAll();
+            this.seOperationAttributesScrollPane.setViewportView(newPanel);
+        }
+        
+        
+    }
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -777,35 +814,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerOperationComboBox = new javax.swing.JComboBox();
         stepExplorerOperationAttributesPanel = new javax.swing.JPanel();
         seOperationAttributesScrollPane = new javax.swing.JScrollPane();
-        seOperationAttributesInputPanel = new javax.swing.JPanel();
-        seOperationAttributeLabel1 = new javax.swing.JLabel();
-        seOperationAttributeText1 = new javax.swing.JTextField();
-        seOperationAttributeText2 = new javax.swing.JTextField();
-        seOperationAttributeLabel2 = new javax.swing.JLabel();
-        seOperationAttributeText3 = new javax.swing.JTextField();
-        seOperationAttributeLabel3 = new javax.swing.JLabel();
-        seOperationAttributeGroup1 = new javax.swing.JPanel();
-        seOperationAttributeLabel4 = new javax.swing.JLabel();
-        seOperationAttributeLabel5 = new javax.swing.JLabel();
-        seOperationAttributeText4 = new javax.swing.JTextField();
-        seOperationAttributeText5 = new javax.swing.JTextField();
-        seOperationAttributeUnitLabel1 = new javax.swing.JLabel();
-        seOperationAttributeUnitLabel2 = new javax.swing.JLabel();
-        seOperationAttributeGroup4 = new javax.swing.JPanel();
-        seOperationAttributeGroup3 = new javax.swing.JPanel();
-        stepExplorerSourcesModsPanel2 = new javax.swing.JPanel();
-        addSolvableParmButton1 = new javax.swing.JButton();
-        modifySolvableParmButton1 = new javax.swing.JButton();
-        deleteSolvableParmButton1 = new javax.swing.JButton();
-        seSolvableParmScrollPane1 = new javax.swing.JScrollPane();
-        seSolvableParmList1 = new javax.swing.JList();
-        seOperationAttributeGroup2 = new javax.swing.JPanel();
-        seOperationAttributeSolvableParmPanel = new javax.swing.JPanel();
-        addSolvableParmButton = new javax.swing.JButton();
-        modifySolvableParmButton = new javax.swing.JButton();
-        deleteSolvableParmButton = new javax.swing.JButton();
-        seSolvableParmScrollPane = new javax.swing.JScrollPane();
-        seSolvableParmList = new javax.swing.JList();
         stepExplorerOutputDataPanel = new javax.swing.JPanel();
         stepExplorerOutputDataText = new javax.swing.JTextField();
         stepExplorerNSources = new javax.swing.JPanel();
@@ -934,140 +942,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerOperationAttributesPanel.setLayout(new java.awt.BorderLayout());
 
         stepExplorerOperationAttributesPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), null));
-        seOperationAttributesInputPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        seOperationAttributeLabel1.setText("Max. iterations :");
-        seOperationAttributesInputPanel.add(seOperationAttributeLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, -1));
-        seOperationAttributeLabel1.getAccessibleContext().setAccessibleName("MaxIter");
-
-        seOperationAttributeText1.setText("5");
-        seOperationAttributesInputPanel.add(seOperationAttributeText1, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 20, 60, -1));
-        seOperationAttributeText1.getAccessibleContext().setAccessibleName("MaxIterValue");
-
-        seOperationAttributeText2.setText("1e-6");
-        seOperationAttributesInputPanel.add(seOperationAttributeText2, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 50, 60, -1));
-        seOperationAttributeText2.getAccessibleContext().setAccessibleName("EpsilonValue");
-
-        seOperationAttributeLabel2.setText("Epsilon :");
-        seOperationAttributesInputPanel.add(seOperationAttributeLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, -1));
-        seOperationAttributeLabel2.getAccessibleContext().setAccessibleName("Epsilon");
-
-        seOperationAttributeText3.setText("0.95");
-        seOperationAttributesInputPanel.add(seOperationAttributeText3, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 80, 60, -1));
-
-        seOperationAttributeLabel3.setText("Min. converged :");
-        seOperationAttributesInputPanel.add(seOperationAttributeLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, -1));
-        seOperationAttributeLabel3.getAccessibleContext().setAccessibleName("Maxiterations :");
-
-        seOperationAttributeGroup1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        seOperationAttributeGroup1.setBorder(javax.swing.BorderFactory.createTitledBorder("Domain Size"));
-        seOperationAttributeLabel4.setText("Frequency :");
-        seOperationAttributeGroup1.add(seOperationAttributeLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, -1));
-
-        seOperationAttributeLabel5.setText("Time :");
-        seOperationAttributeGroup1.add(seOperationAttributeLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 40, -1, -1));
-
-        seOperationAttributeText4.setText("500");
-        seOperationAttributeGroup1.add(seOperationAttributeText4, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 20, 60, -1));
-
-        seOperationAttributeText5.setText("2");
-        seOperationAttributeGroup1.add(seOperationAttributeText5, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 40, 60, -1));
-
-        seOperationAttributeUnitLabel1.setText("Hz");
-        seOperationAttributeGroup1.add(seOperationAttributeUnitLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 20, -1, 20));
-
-        seOperationAttributeUnitLabel2.setText("s");
-        seOperationAttributeGroup1.add(seOperationAttributeUnitLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 40, 20, 20));
-
-        seOperationAttributesInputPanel.add(seOperationAttributeGroup1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 180, 70));
-
-        seOperationAttributeGroup4.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        seOperationAttributeGroup4.setBorder(javax.swing.BorderFactory.createTitledBorder("Parameters"));
-        seOperationAttributeGroup3.setLayout(new java.awt.BorderLayout());
-
-        seOperationAttributeGroup3.setBorder(javax.swing.BorderFactory.createTitledBorder("Excluded"));
-        stepExplorerSourcesModsPanel2.setLayout(new java.awt.GridBagLayout());
-
-        addSolvableParmButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addSolvableParmButton1.setMaximumSize(new java.awt.Dimension(30, 25));
-        addSolvableParmButton1.setMinimumSize(new java.awt.Dimension(30, 25));
-        addSolvableParmButton1.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel2.add(addSolvableParmButton1, gridBagConstraints);
-
-        modifySolvableParmButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
-        modifySolvableParmButton1.setMaximumSize(new java.awt.Dimension(30, 25));
-        modifySolvableParmButton1.setMinimumSize(new java.awt.Dimension(30, 25));
-        modifySolvableParmButton1.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel2.add(modifySolvableParmButton1, gridBagConstraints);
-
-        deleteSolvableParmButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteSolvableParmButton1.setMaximumSize(new java.awt.Dimension(30, 25));
-        deleteSolvableParmButton1.setMinimumSize(new java.awt.Dimension(30, 25));
-        deleteSolvableParmButton1.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerSourcesModsPanel2.add(deleteSolvableParmButton1, gridBagConstraints);
-
-        seOperationAttributeGroup3.add(stepExplorerSourcesModsPanel2, java.awt.BorderLayout.SOUTH);
-
-        seSolvableParmScrollPane1.setViewportView(seSolvableParmList1);
-
-        seOperationAttributeGroup3.add(seSolvableParmScrollPane1, java.awt.BorderLayout.CENTER);
-
-        seOperationAttributeGroup4.add(seOperationAttributeGroup3, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 20, 160, 140));
-
-        seOperationAttributeGroup2.setLayout(new java.awt.BorderLayout());
-
-        seOperationAttributeGroup2.setBorder(javax.swing.BorderFactory.createTitledBorder("Solvable"));
-        seOperationAttributeSolvableParmPanel.setLayout(new java.awt.GridBagLayout());
-
-        addSolvableParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addSolvableParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        addSolvableParmButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        addSolvableParmButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        seOperationAttributeSolvableParmPanel.add(addSolvableParmButton, gridBagConstraints);
-
-        modifySolvableParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
-        modifySolvableParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        modifySolvableParmButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        modifySolvableParmButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        seOperationAttributeSolvableParmPanel.add(modifySolvableParmButton, gridBagConstraints);
-
-        deleteSolvableParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteSolvableParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        deleteSolvableParmButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        deleteSolvableParmButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        seOperationAttributeSolvableParmPanel.add(deleteSolvableParmButton, gridBagConstraints);
-
-        seOperationAttributeGroup2.add(seOperationAttributeSolvableParmPanel, java.awt.BorderLayout.SOUTH);
-
-        seSolvableParmList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "GAIN:*", "PHASE:*" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        seSolvableParmScrollPane.setViewportView(seSolvableParmList);
-
-        seOperationAttributeGroup2.add(seSolvableParmScrollPane, java.awt.BorderLayout.CENTER);
-
-        seOperationAttributeGroup4.add(seOperationAttributeGroup2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 160, 140));
-
-        seOperationAttributesInputPanel.add(seOperationAttributeGroup4, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 10, 350, 170));
-
-        seOperationAttributesScrollPane.setViewportView(seOperationAttributesInputPanel);
-
         stepExplorerOperationAttributesPanel.add(seOperationAttributesScrollPane, java.awt.BorderLayout.CENTER);
 
         stepExplorerOperationPanel.add(stepExplorerOperationAttributesPanel, java.awt.BorderLayout.CENTER);
@@ -1517,11 +1391,28 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         add(BBSStepExplorerPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void stepExplorerOperationComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_stepExplorerOperationComboBoxItemStateChanged
         stepExplorerOperationComboBox.setBackground(this.NOT_INHERITED_FROM_PARENT);
+        String item = stepExplorerOperationComboBox.getSelectedItem().toString();
+        if(item.equals("NOT DEFINED")){
+            this.seOperationAttributesScrollPane.getViewport().removeAll();
+            this.seOperationAttributesScrollPane.revalidate();
+            this.seOperationAttributesScrollPane.repaint();
+            currentStepOperationsPanel = null;
+        }else{
+            
+            BBSStepData stepData = null;
+            BBSStepData inheritedData = null;
+            
+            if(itsBBSStep!=null){
+                stepData=BBSStepDataManager.getInstance().getStepData(itsBBSStep.getName());
+                inheritedData=BBSStepDataManager.getInstance().getInheritedStepData(itsBBSStep);
+            }
+            this.loadStepOperationsPanel(this.stepOperationPanels.get(item),stepData,inheritedData);
+        }
     }//GEN-LAST:event_stepExplorerOperationComboBoxItemStateChanged
-
+    
     private void baselineUseAllCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_baselineUseAllCheckboxItemStateChanged
         if(baselineUseAllCheckbox.isSelected()){
             this.baselineStationsTable.setBackground(Color.LIGHT_GRAY);
@@ -1758,7 +1649,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private void stepExplorerRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepExplorerRevertButtonActionPerformed
         this.restoreBBSStepExplorerPanel();
     }//GEN-LAST:event_stepExplorerRevertButtonActionPerformed
-        
+    
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save step and close") {
             boolean warning = false;
@@ -1883,8 +1774,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JButton addESourceButton;
     private javax.swing.JButton addInstrumentModelButton;
     private javax.swing.JButton addNSourceButton;
-    private javax.swing.JButton addSolvableParmButton;
-    private javax.swing.JButton addSolvableParmButton1;
     private javax.swing.JPanel baselineInputPanel;
     private javax.swing.JPanel baselineModsPanel;
     private javax.swing.JPanel baselinePanel;
@@ -1898,8 +1787,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JButton deleteESourceButton;
     private javax.swing.JButton deleteInstrumentModelButton;
     private javax.swing.JButton deleteNSourceButton;
-    private javax.swing.JButton deleteSolvableParmButton;
-    private javax.swing.JButton deleteSolvableParmButton1;
     private javax.swing.JButton helpButton;
     private javax.swing.JLabel integrationFrequencyLabel;
     private javax.swing.JTextField integrationFrequencyText;
@@ -1908,31 +1795,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JLabel integrationTimeLabel;
     private javax.swing.JTextField integrationTimeText;
     private javax.swing.JLabel integrationTimeUnitLabel;
-    private javax.swing.JButton modifySolvableParmButton;
-    private javax.swing.JButton modifySolvableParmButton1;
-    private javax.swing.JPanel seOperationAttributeGroup1;
-    private javax.swing.JPanel seOperationAttributeGroup2;
-    private javax.swing.JPanel seOperationAttributeGroup3;
-    private javax.swing.JPanel seOperationAttributeGroup4;
-    private javax.swing.JLabel seOperationAttributeLabel1;
-    private javax.swing.JLabel seOperationAttributeLabel2;
-    private javax.swing.JLabel seOperationAttributeLabel3;
-    private javax.swing.JLabel seOperationAttributeLabel4;
-    private javax.swing.JLabel seOperationAttributeLabel5;
-    private javax.swing.JPanel seOperationAttributeSolvableParmPanel;
-    private javax.swing.JTextField seOperationAttributeText1;
-    private javax.swing.JTextField seOperationAttributeText2;
-    private javax.swing.JTextField seOperationAttributeText3;
-    private javax.swing.JTextField seOperationAttributeText4;
-    private javax.swing.JTextField seOperationAttributeText5;
-    private javax.swing.JLabel seOperationAttributeUnitLabel1;
-    private javax.swing.JLabel seOperationAttributeUnitLabel2;
-    private javax.swing.JPanel seOperationAttributesInputPanel;
     private javax.swing.JScrollPane seOperationAttributesScrollPane;
-    private javax.swing.JList seSolvableParmList;
-    private javax.swing.JList seSolvableParmList1;
-    private javax.swing.JScrollPane seSolvableParmScrollPane;
-    private javax.swing.JScrollPane seSolvableParmScrollPane1;
     private javax.swing.JPanel stepExplorerCorrelationPanel;
     private javax.swing.JComboBox stepExplorerCorrelationSelectionBox;
     private javax.swing.JLabel stepExplorerCorrelationSelectionLabel;
@@ -1970,7 +1833,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     private javax.swing.JPanel stepExplorerPanel;
     private javax.swing.JButton stepExplorerRevertButton;
     private javax.swing.JScrollPane stepExplorerScrollPanel;
-    private javax.swing.JPanel stepExplorerSourcesModsPanel2;
     private javax.swing.JLabel stepExplorerStepNameLabel;
     private javax.swing.JTextField stepExplorerStepNameText;
     // End of variables declaration//GEN-END:variables
