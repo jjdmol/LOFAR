@@ -181,7 +181,7 @@ public class BBSStepData{
     public synchronized boolean containsOperationAttribute(String key){
         boolean returnBool = false;
         if(operationAttributes!=null){
-            returnBool = this.operationAttributes.containsKey(key);
+            returnBool = this.operationAttributes.get(key)!=null;
         }
         return returnBool;
     }

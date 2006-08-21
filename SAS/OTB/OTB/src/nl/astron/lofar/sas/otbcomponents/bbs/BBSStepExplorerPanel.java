@@ -57,10 +57,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     
     static Logger logger = Logger.getLogger(BBSStepExplorerPanel.class);
     static String name = "BBS Step Explorer";
-    final static Color INHERITED_FROM_PARENT = new Color(255,255,204);
-    final static Color NOT_DEFINED = new Color(255,204,204);
-    final static Color NOT_INHERITED_FROM_PARENT = new Color(204,255,204);
-    final static Color DEFAULT = Color.WHITE;
+    public final static Color INHERITED_FROM_PARENT = new Color(255,255,204);
+    public final static Color NOT_DEFINED = new Color(255,204,204);
+    public final static Color NOT_INHERITED_FROM_PARENT = new Color(204,255,204);
+    public final static Color DEFAULT = Color.WHITE;
     
     private static HashMap<String,String> stepOperationPanels = new HashMap<String,String>();
     private IBBSStepOperationPanel currentStepOperationsPanel = null;
@@ -197,7 +197,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         this.stepExplorerInstrumentModelList.setModel(new DefaultListModel());
         
         //fill the supported step operation panels
+        stepOperationPanels.put("Predict",null);
         stepOperationPanels.put("Solve","nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.operations.BBSStepOperationPanelSolveImpl");
+        stepOperationPanels.put("Subtract",null);
+        stepOperationPanels.put("Correct",null);
         
     }
     
@@ -384,27 +387,22 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         //Operation type
         
         this.stepExplorerOperationComboBox.setBackground(DEFAULT);
-        if(stepData.getOperationName() != null){
-            this.stepExplorerOperationComboBox.setSelectedItem(stepData.getOperationName());
-            this.stepExplorerOperationComboBox.setBackground(NOT_INHERITED_FROM_PARENT);
-            this.loadStepOperationsPanel(this.stepOperationPanels.get(stepData.getOperationName()),stepData,inheritedData);
-            
-        }else{
+        if(stepData.getOperationName() == null){
             if(inheritedData.getOperationName() != null){
                 this.stepExplorerOperationComboBox.setSelectedItem(inheritedData.getOperationName());
                 stepExplorerOperationComboBox.setBackground(INHERITED_FROM_PARENT);
-                this.loadStepOperationsPanel(this.stepOperationPanels.get(inheritedData.getOperationName()),null,inheritedData);
+                this.loadStepOperationsPanel(this.stepOperationPanels.get(inheritedData.getOperationName()),stepData,inheritedData);
             }else{
                 this.stepExplorerOperationComboBox.setSelectedItem("NOT DEFINED");
                 this.seOperationAttributesScrollPane.getViewport().removeAll();
                 stepExplorerOperationComboBox.setBackground(NOT_DEFINED);
             }
+        }else{
+            this.stepExplorerOperationComboBox.setSelectedItem(stepData.getOperationName());
+            this.stepExplorerOperationComboBox.setBackground(NOT_INHERITED_FROM_PARENT);
+            this.loadStepOperationsPanel(this.stepOperationPanels.get(stepData.getOperationName()),stepData,inheritedData);
+            
         }
-        
-        //add other variables
-        
-        
-        //TODO: Add variables from BBSStep
     }
     
     /** Enables/disables the buttons
@@ -629,8 +627,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         //Operation
         
         //name
-        
-        //Selection
         String selectedOSelection = null;
         if(this.stepExplorerOperationComboBox.getSelectedItem() != null){
             selectedOSelection = this.stepExplorerOperationComboBox.getSelectedItem().toString();
@@ -654,13 +650,49 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 aStepData.setOperationName(selectedOSelection);
             }
         }
-        
-        aStepData.addOperationAttribute("Epsilon","1.0");
-        aStepData.addOperationAttribute("MaxIter","10");
-        aStepData.addOperationAttribute("DomainSize.Freq","666");
-        aStepData.addOperationAttribute("DomainSize.Time","1.0");
-        
-        //add other variables
+        //fetch variables from operation attributes panel
+        if(!selectedOSelection.equals("NOT DEFINED") && currentStepOperationsPanel != null){
+            if(this.currentStepOperationsPanel.getBBSStepOperationAttributes()!=null){
+                
+                HashMap<String,String> valuesFromForm = currentStepOperationsPanel.getBBSStepOperationAttributes();
+                
+                HashMap<String,String> oldValuesFromStep = aStepData.getOperationAttributes();
+                
+                if(oldValuesFromStep == null) oldValuesFromStep = new HashMap<String,String>();
+                
+                for(String aKey : valuesFromForm.keySet()){
+                    if(oldValuesFromStep.containsKey(aKey)){
+                        if(valuesFromForm.get(aKey) == null){
+                            oldValuesFromStep.put(aKey,null);
+                        }else{
+                            if(valuesFromForm.get(aKey).equals(inheritedData.getOperationAttribute(aKey))){
+                                oldValuesFromStep.put(aKey,null);
+                            }else{
+                                oldValuesFromStep.put(aKey,"Generated by BBS GUI");
+                            }
+                        }
+                        if(oldValuesFromStep.get(aKey) != null){
+                            if(!valuesFromForm.get(aKey).equals(oldValuesFromStep.get(aKey))){
+                                oldValuesFromStep.put(aKey,valuesFromForm.get(aKey));
+                                aStepData.setOperationName(selectedOSelection);
+                            }
+                        }
+                    }else{
+                        String newValue = valuesFromForm.get(aKey);
+                        String inheritedValue = inheritedData.getOperationAttribute(aKey);
+                        if(valuesFromForm.get(aKey).equals(inheritedData.getOperationAttribute(aKey))){
+                            oldValuesFromStep.put(aKey,null);
+                        }else{
+                            oldValuesFromStep.put(aKey,valuesFromForm.get(aKey));
+                            aStepData.setOperationName(selectedOSelection);
+                        }
+                    }
+                }
+                aStepData.setOperationAttributes(oldValuesFromStep);
+            }
+        }else if(currentStepOperationsPanel == null){
+            aStepData.setOperationAttributes(null);
+        }
     }
     
     private Vector<String> createList(JList aListComponent) {
@@ -770,25 +802,32 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     
     private void loadStepOperationsPanel(String name, BBSStepData data, BBSStepData inheritedData){
         JPanel newPanel = null;
-        try {
-            newPanel = (JPanel) Class.forName(name).newInstance();
-        } catch (ClassNotFoundException ex) {
-            logger.debug("Error during getPanel: "+ ex);
-            return;
-        } catch (InstantiationException ex) {
-            logger.debug("Error during getPanel: "+ ex);
-            return;
-        } catch (IllegalAccessException ex) {
-            logger.debug("Error during getPanel: "+ ex);
-            return;
-        }
-        if (newPanel!=null) {
-            currentStepOperationsPanel = (IBBSStepOperationPanel)newPanel;
-            currentStepOperationsPanel.setBBSStepContent(data,inheritedData);
+        if(name!=null){
+            try {
+                newPanel = (JPanel) Class.forName(name).newInstance();
+            } catch (ClassNotFoundException ex) {
+                logger.debug("Error during getPanel: "+ ex);
+                return;
+            } catch (InstantiationException ex) {
+                logger.debug("Error during getPanel: "+ ex);
+                return;
+            } catch (IllegalAccessException ex) {
+                logger.debug("Error during getPanel: "+ ex);
+                return;
+            }
+            
+            if (newPanel!=null) {
+                currentStepOperationsPanel = (IBBSStepOperationPanel)newPanel;
+                currentStepOperationsPanel.setBBSStepContent(data,inheritedData);
+                this.seOperationAttributesScrollPane.getViewport().removeAll();
+                this.seOperationAttributesScrollPane.setViewportView(newPanel);
+            }
+        }else{
             this.seOperationAttributesScrollPane.getViewport().removeAll();
-            this.seOperationAttributesScrollPane.setViewportView(newPanel);
+            this.seOperationAttributesScrollPane.revalidate();
+            this.seOperationAttributesScrollPane.repaint();
+            currentStepOperationsPanel = null;
         }
-        
         
     }
     
@@ -925,7 +964,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerOperationTypeHeaderPanel.add(stepExplorerOperationTypeLabel, gridBagConstraints);
 
-        stepExplorerOperationComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "NOT DEFINED", "Solve" }));
+        stepExplorerOperationComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "NOT DEFINED", "Predict", "Solve", "Subtract", "Correct" }));
         stepExplorerOperationComboBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 stepExplorerOperationComboBoxItemStateChanged(evt);
@@ -1401,7 +1440,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             this.seOperationAttributesScrollPane.repaint();
             currentStepOperationsPanel = null;
         }else{
-            
             BBSStepData stepData = null;
             BBSStepData inheritedData = null;
             
@@ -1410,6 +1448,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 inheritedData=BBSStepDataManager.getInstance().getInheritedStepData(itsBBSStep);
             }
             this.loadStepOperationsPanel(this.stepOperationPanels.get(item),stepData,inheritedData);
+            
         }
     }//GEN-LAST:event_stepExplorerOperationComboBoxItemStateChanged
     
@@ -1675,6 +1714,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                     integrationFrequencyText.setBackground(Color.RED);
                 }
             }
+            if(currentStepOperationsPanel!=null){
+                boolean operationOK = this.currentStepOperationsPanel.validateInput();
+                if(!operationOK) warning=true;
+            }
+            
             
             //perform input validation on step name if a new step is entered
             if(itsBBSStep == null && !warning){
@@ -1720,6 +1764,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                     }
                 }
             }
+            
             
             if(!warning){
                 
