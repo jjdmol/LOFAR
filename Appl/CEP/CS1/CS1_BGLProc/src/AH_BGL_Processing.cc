@@ -115,7 +115,7 @@ unsigned AH_BGL_Processing::remapOnTree(unsigned cell, unsigned core, struct BGL
   rts_rankForCoordinates(x, y, z, t, &node, &numProcs);
 
 #if defined HAVE_MPI
-  ASSERTSTR(node < TH_MPI::getNumberOfNodes(), "not enough nodes allocated");
+  ASSERTSTR(node < TH_MPI::getNumberOfNodes(), "not enough nodes allocated (node = " << node << ", TH_MPI::getNumberOfNodes() = " << TH_MPI::getNumberOfNodes() << ")\n");
 #endif
 
   return node;
@@ -127,7 +127,6 @@ unsigned AH_BGL_Processing::remapOnTree(unsigned cell, unsigned core, struct BGL
 void AH_BGL_Processing::define(const KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGL_Processing::define()");
-
   unsigned nrSubBands	     = itsParamSet.getInt32("Observation.NSubbands");
   vector<double> baseFreqs   = itsParamSet.getDoubleVector("Observation.RefFreqs");
   unsigned usedNodesPerCell  = itsParamSet.getInt32("BGLProc.NodesPerCell");
@@ -159,7 +158,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   ASSERTSTR(logicalNode % usedNodesPerCell == 0, "FIRST_NODE not a multiple of BGLProc.NodesPerCell");
 
 #if defined HAVE_MPI
-  unsigned maxCells   = TH_MPI::getNumberOfNodes() / physicalNodesPerCell;
+  unsigned maxCells   = (TH_MPI::getNumberOfNodes() + physicalNodesPerCell) / physicalNodesPerCell;
 #else
   unsigned maxCells   = 1;
 #endif
@@ -168,7 +167,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   unsigned totalCells = nrSubBands / nrSubbandsPerCell;
   unsigned lastCell   = firstCell + std::min(totalCells - firstCell, maxCells);
 
-  ASSERTSTR(firstCell < lastCell, "not enough nodes specified\n");
+  ASSERTSTR(firstCell < lastCell, "not enough nodes specified (firstCell = " << firstCell << ", lastCell = " << lastCell << ", totalCells = " << totalCells << ", logicalNode = " << logicalNode << ", nrSubBands = " << nrSubBands << ", nrSubbandsPerCell = " << nrSubbandsPerCell << ", physicalNodesPerCell = " << physicalNodesPerCell << ", usedNodesPerCell = " << usedNodesPerCell << ")\n");
 
   for (uint cell = firstCell; cell < lastCell; cell ++) {
     for (uint core = 0; core < usedNodesPerCell; core ++) {
