@@ -206,11 +206,13 @@ public class BBSStepDataManager{
                     returnData.setOperationName(itsStepData.getOperationName());
                 }
             }
-            if(returnData.getOperationAttributes()==null){
-                if(itsStepData.getOperationAttributes()!=null){
-                    returnData.setOperationAttributes(itsStepData.getOperationAttributes());
-                }
-            }
+            if(itsStepData.getOperationAttributes()!=null){
+                for(String anAttribute : itsStepData.getOperationAttributes().keySet()){
+                    if(!returnData.containsOperationAttribute(anAttribute) && itsStepData.getOperationAttribute(anAttribute) != null){
+                        returnData.addOperationAttribute(anAttribute,itsStepData.getOperationAttribute(anAttribute));
+                    }
+                }                
+            }            
             //add other values
             if(aStep.hasParentStep()){
                 getInheritedStepData(aStep.getParentStep(),returnData);
@@ -509,7 +511,8 @@ public class BBSStepDataManager{
                 int stepTemplateBaselinesNodeId = this.getComponentForNode("Baselines");
                 int stepTemplateIntegrationNodeId = this.getComponentForNode("Integration");
                 int stepTemplateStepOperationNodeId = -1;
-                if(currentDataForStep.getOperationName() != null && !currentDataForStep.getOperationName().equals("")){
+                if(currentDataForStep.getOperationName() != null && currentDataForStep.getOperationAttributes() != null && 
+                        !currentDataForStep.getOperationName().equals("")){
                     stepTemplateStepOperationNodeId = this.getComponentForNode(currentDataForStep.getOperationName());
                 }
                 
@@ -545,7 +548,7 @@ public class BBSStepDataManager{
                             }
                         }
                     }
-                    //update the node name
+                    
                     newStepNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
                     Vector stepParametersVector = retrieveChildDataForNode(newStepNode);
                     Enumeration spe = stepParametersVector.elements();
