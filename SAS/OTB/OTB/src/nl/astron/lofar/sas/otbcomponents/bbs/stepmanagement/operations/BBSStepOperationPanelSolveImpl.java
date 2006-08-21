@@ -481,7 +481,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         excludedParmsGroupPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        excludedParmsGroupPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Solvable"));
+        excludedParmsGroupPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Excluded"));
         excludedParmsPanel.setLayout(new java.awt.BorderLayout());
 
         excludedParmsList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
