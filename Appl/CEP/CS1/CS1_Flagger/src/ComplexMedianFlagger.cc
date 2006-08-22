@@ -475,7 +475,7 @@ bool ComplexMedianFlagger::UpdateTimeslotData(vector<int>* OldFields,
   ROTableVector<Int>     bandnr  ((*TimeslotTable), "DATA_DESC_ID");
   ROTableVector<Int>     fieldid ((*TimeslotTable), "FIELD_ID");
   ROTableVector<Double>  time    ((*TimeslotTable), "TIME_CENTROID");//for testing purposes
-  ROArrayColumn<Complex> data    ((*TimeslotTable), "DATA");
+  ROArrayColumn<Complex> data    ((*TimeslotTable), "CORRECTED_DATA");
   Cube<Complex>          Data(NumPolarizations, NumChannels, rowcount);
 
   data.getColumn(Data); //We're not checking Data.nrow() Data.ncolumn(), assuming all data is the same size.

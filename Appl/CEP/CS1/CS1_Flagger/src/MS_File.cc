@@ -18,9 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include <casa/BasicMath/Math.h>
-#include <tables/Tables.h>
 #include <casa/Arrays.h>
-#include <tables/Tables/TableIter.h>
 //#include <casa/Quanta/MVTime.h>
 
 #include <iostream>
@@ -52,14 +50,16 @@ void MS_File::init()
 {
   //Number of samples
   itsNumSamples                    = (*MS).nrow();    
-  
+  std::cout << "NumSamples" << itsNumSamples << std::endl;
   //Number of Fields
   MSField fields                   = (*MS).field();
   itsNumFields                     = fields.nrow();
-  
+  std::cout << "NumFields" << itsNumFields << std::endl;
+ 
   //Number of Antennae    
   MSAntenna antennae               = (*MS).antenna();
   itsNumAntennae                   = antennae.nrow();
+  std::cout << "NumAntennae" << itsNumAntennae << std::endl;
   
   //Antenna Names
   ROScalarColumn<String>           ANT_NAME_col(antennae, "NAME");
@@ -70,6 +70,7 @@ void MS_File::init()
   MSSpectralWindow spectral_window = (*MS).spectralWindow();
   ROScalarColumn<Int>              NUM_CHAN_col(spectral_window, "NUM_CHAN");
   itsNumChannels                   = NUM_CHAN_col(0);
+  std::cout << "NumChannels" << itsNumChannels << std::endl;
   
   //Number of polarizations
   MSPolarization      polarization = (*MS).polarization();
@@ -78,6 +79,7 @@ void MS_File::init()
   ROArrayColumn<Int>               CORR_TYPE_col(polarization, "CORR_TYPE");
   itsPolarizations.resize(itsNumPolarizations);
   CORR_TYPE_col.get(0, itsPolarizations);
+  std::cout << "NumPolarizations" << itsNumPolarizations << std::endl;
   
   //calculate theoretical noise level
   ROScalarColumn<Double>           EXPOSURE_col((*MS), "EXPOSURE");
@@ -87,6 +89,7 @@ void MS_File::init()
   Double bandwidth                 = TOTAL_BANDWIDTH_col(0) / itsNumChannels;
   
   itsNoiseLevel                    = 1.0 / sqrt(bandwidth * exposure);
+  std::cout << "Noiselevel" << itsNoiseLevel << std::endl;
     
   //calculate number of timeslots
   ROScalarColumn<Double>           INTERVAL_col((*MS), "INTERVAL");
@@ -96,14 +99,19 @@ void MS_File::init()
   ROScalarColumn<Double>            TIME_CENTROID_col((*MS), "TIME_CENTROID");
   Double firstdate                 = TIME_CENTROID_col(0);
   Double lastdate                  = TIME_CENTROID_col(itsNumSamples-1);
+  std::cout << "interval" << interval << std::endl;
   
   itsNumTimeslots                  = (int)((lastdate-firstdate)/interval) + 1;
+  std::cout << "Numtimeslots" << itsNumTimeslots << std::endl;
   
   //calculate number of baselines.
   itsNumPairs = (itsNumAntennae) * (itsNumAntennae + 1) / 2; //Triangular numbers formula
+  std::cout << "NumPairs" << itsNumPairs << std::endl;
 
   //calculate number of Bands
   itsNumBands                      = itsNumSamples / (itsNumPairs * itsNumTimeslots);
+  std::cout << "NumBands" << itsNumBands << std::endl;
+
 }
 
 //===============>>> MS_File::BaselineIterator  <<<===============

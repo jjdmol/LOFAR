@@ -22,6 +22,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <libgen.h>
 #include <PLC/ACCmain.h>
 #include <casa/Exceptions.h>
 #include <CS1_Flagger/FlaggerProcessControl.h>
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
 {
   try
   {
+    INIT_LOGGER(basename(argv[0]));
     LOFAR::CS1::FlaggerProcessControl myProcess;
     return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
   } //try
