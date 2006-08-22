@@ -13,7 +13,7 @@ TESTS                 = $(TESTSCRIPTS)
 XFAIL_TESTS           =
 
 # all files (.run, .stdout, .in, .log_prop, etc.) needed to run tests
-EXTRA_DIST            = $(TESTSCRIPTS) CS1_Flagger.parset
+EXTRA_DIST            = $(TESTSCRIPTS) CS1_BBS.parset
 
 # Lines to build a test program testprg
 #testprg_SOURCES                = testprg.cc

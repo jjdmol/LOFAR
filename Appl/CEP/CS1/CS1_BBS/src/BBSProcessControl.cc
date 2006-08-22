@@ -94,8 +94,8 @@ namespace LOFAR
         const MeqDomain& workDomain = prediffer.getWorkDomain();
         vector<MeqDomain> solveDomains;
         double freq = workDomain.startX();
-        double stepf = (workDomain.endX() - freq) / nrinterval[0];
-        double stept = (workDomain.endY() - time) / nrinterval[1];
+        double stepf = (workDomain.endX() - workDomain.startX()) / nrinterval[0]; //freq
+        double stept = (workDomain.endY() - workDomain.startY()) / nrinterval[1]; //time
         double sdTime = workDomain.startY();
         for (int i=0; i<nrinterval[1]; ++i) {
           double sdFreq = workDomain.startX();
@@ -258,11 +258,22 @@ namespace LOFAR
           return 1;
         }
       }
+      catch (LOFAR::Exception& _ex)
+      {
+          cout << "LOFAR Exception caught: " << _ex.message() << endl;
+          return false;
+      }
       catch (exception& _ex)
       {
-        cout << "error phase2: " << _ex.what() << endl;
+        cout << "General exception caught: " << _ex.what() << endl;
         return false;
       }
+      catch (...)
+      {
+        cout << "Unknown error. " << endl;
+        return false;
+      }
+      cout << "Program sucessfully ended" << endl;
       return true;
     }
 

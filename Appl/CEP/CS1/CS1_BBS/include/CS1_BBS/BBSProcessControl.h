@@ -39,7 +39,7 @@ namespace LOFAR
       std::string measurementSet;
       std::string skyPDB;
       std::string instrumentPDB;
-      std::string instrumentModelType;
+      std::string instrumentModel;
       std::string operation;
       std::string columnNameIn;
       std::string columnNameOut;
@@ -52,20 +52,21 @@ namespace LOFAR
       int nriter;
       bool calcUVW;
       bool saveSolution;
-      
+      std::vector<int32> antennas;
+      std::vector<bool> corrs;
+   
       void predict (Prediffer& prediffer, const MSDesc& msd,
-                    const string& columnName,
+                    const StepProp& stepProp,
                     double timeStep, int startChan, int endChan);
-
       void subtract (Prediffer& prediffer, const MSDesc& msd,
-                     const string& columnNameIn, const string& columnNameOut,
+                     const StepProp& stepProp,
                      double timeStep, int startChan, int endChan);
+
       void solve (Prediffer& prediffer, const MSDesc& msd,
-                  const string& columnname,
+                  const StepProp& stepProp,
                   double timestep, int startchan, int endchan,
-                  const vector<string>& solvparms, const vector<string>& exclparms,
+                  const SolveProp& solveProp,
                   const vector<int32>& nrinterval,
-                  int maxiterations,
                   bool savesolution);
         
     public:
