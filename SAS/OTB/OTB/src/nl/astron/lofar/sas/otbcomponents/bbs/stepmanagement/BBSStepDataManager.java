@@ -211,8 +211,8 @@ public class BBSStepDataManager{
                     if(!returnData.containsOperationAttribute(anAttribute) && itsStepData.getOperationAttribute(anAttribute) != null){
                         returnData.addOperationAttribute(anAttribute,itsStepData.getOperationAttribute(anAttribute));
                     }
-                }                
-            }            
+                }
+            }
             //add other values
             if(aStep.hasParentStep()){
                 getInheritedStepData(aStep.getParentStep(),returnData);
@@ -331,9 +331,7 @@ public class BBSStepDataManager{
                     stepDataObject.setInstrumentModel(this.getVectorFromString(aHWNode.limits,true));
                 }
             } else if (aHWNode.leaf && aHWNode.name.equals("OutputData")) {
-                if(!aHWNode.limits.equals("")){
-                    stepDataObject.setOutputDataColumn(aHWNode.limits);
-                }
+                stepDataObject.setOutputDataColumn(aHWNode.limits);
             }
             //Set the following values
             else if (aHWNode.leaf && aHWNode.name.equals("Operation")) {
@@ -511,7 +509,7 @@ public class BBSStepDataManager{
                 int stepTemplateBaselinesNodeId = this.getComponentForNode("Baselines");
                 int stepTemplateIntegrationNodeId = this.getComponentForNode("Integration");
                 int stepTemplateStepOperationNodeId = -1;
-                if(currentDataForStep.getOperationName() != null && currentDataForStep.getOperationAttributes() != null && 
+                if(currentDataForStep.getOperationName() != null && currentDataForStep.getOperationAttributes() != null &&
                         !currentDataForStep.getOperationName().equals("")){
                     stepTemplateStepOperationNodeId = this.getComponentForNode(currentDataForStep.getOperationName());
                 }

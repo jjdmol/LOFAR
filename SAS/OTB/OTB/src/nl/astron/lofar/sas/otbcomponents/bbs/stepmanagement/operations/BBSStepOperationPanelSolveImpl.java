@@ -129,32 +129,61 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
             }
         }
         //Solvable Parms
-        this.solvableParmsList.setBackground(BBSStepExplorerPanel.DEFAULT);
+        this.solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.DEFAULT);
+        this.solvableParmsModifyText.setText("");
+        this.fillList(this.solvableParmsList,"[]",true);
         if(itsOperationParameters.get("Parms") != null){
-            this.fillList(solvableParmsList,itsOperationParameters.get("Parms"),true);
-            solvableParmsList.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            String solvParms = itsOperationParameters.get("Parms");
+            if(!solvParms.equals("[]")){
+                this.fillList(this.solvableParmsList,solvParms,true);
+                this.solveAllParmsCheckbox.setSelected(false);
+            }else{
+                this.solveAllParmsCheckbox.setSelected(true);
+            }
+            solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }else{
             if(itsInheritedOperationParameters.get("Parms") != null){
-                this.fillList(solvableParmsList,itsInheritedOperationParameters.get("Parms"),true);
-                solvableParmsList.setBackground(BBSStepExplorerPanel.INHERITED_FROM_PARENT);
-            } else{
-                this.fillList(solvableParmsList,"[]",true);
-                solvableParmsList.setBackground(BBSStepExplorerPanel.NOT_DEFINED);
+                String solvParms = itsInheritedOperationParameters.get("Parms");
+                if(!solvParms.equals("[]")){
+                    this.fillList(this.solvableParmsList,solvParms,true);
+                    this.solveAllParmsCheckbox.setSelected(false);
+                }else{
+                    this.solveAllParmsCheckbox.setSelected(true);
+                }
+                solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.INHERITED_FROM_PARENT);
+            }else{
+                this.solveAllParmsCheckbox.setSelected(false);
+                solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_DEFINED);
             }
         }
         //Excluded Parms
         
-        this.excludedParmsList.setBackground(BBSStepExplorerPanel.DEFAULT);
+        this.excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.DEFAULT);
+        this.excludedParmsModifyText.setText("");
+        this.fillList(excludedParmsList,"[]",true);
         if(itsOperationParameters.get("ExclParms") != null){
-            this.fillList(excludedParmsList,itsOperationParameters.get("ExclParms"),true);
-            excludedParmsList.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            String excludedParms = itsOperationParameters.get("ExclParms");
+            if(!excludedParms.equals("[]")){
+                this.fillList(this.excludedParmsList,excludedParms,true);
+                this.excludeParmsCheckbox.setSelected(true);
+            }else{
+                this.excludeParmsCheckbox.setSelected(false);
+            }
+            excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            
         }else{
             if(itsInheritedOperationParameters.get("ExclParms") != null){
-                this.fillList(excludedParmsList,itsInheritedOperationParameters.get("ExclParms"),true);
-                excludedParmsList.setBackground(BBSStepExplorerPanel.INHERITED_FROM_PARENT);
-            } else{
-                this.fillList(excludedParmsList,"[]",true);
-                excludedParmsList.setBackground(BBSStepExplorerPanel.NOT_DEFINED);
+                String excludedParms = itsInheritedOperationParameters.get("ExclParms");
+                if(!excludedParms.equals("[]")){
+                    this.fillList(this.excludedParmsList,excludedParms,true);
+                    this.excludeParmsCheckbox.setSelected(true);
+                }else{
+                    this.excludeParmsCheckbox.setSelected(false);
+                }
+                excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.INHERITED_FROM_PARENT);
+            }else{
+                this.excludeParmsCheckbox.setSelected(true);
+                excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_DEFINED);
             }
         }
     }
@@ -196,20 +225,26 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         }
         
         //Solvable Parms
-        
-        if(this.solvableParmsList.getModel().getSize() == 0){
-            returnMap.put("Parms",null);
+        if(this.solveAllParmsCheckbox.isSelected()){
+            returnMap.put("Parms","[]");
         }else{
-            returnMap.put("Parms",this.createList(solvableParmsList,true));
+            if(this.solvableParmsList.getModel().getSize() == 0){
+                returnMap.put("Parms",null);
+            }else{
+                returnMap.put("Parms",this.createList(solvableParmsList,true));
+            }
         }
-        
         //Excluded Parms
-        if(this.excludedParmsList.getModel().getSize() == 0){
-            returnMap.put("ExclParms",null);
-        }else{
-            returnMap.put("ExclParms",this.createList(excludedParmsList,true));
-        }
         
+        if(!this.excludeParmsCheckbox.isSelected()){
+            returnMap.put("ExclParms","[]");
+        }else{
+            if(this.excludedParmsList.getModel().getSize() == 0){
+                returnMap.put("ExclParms",null);
+            }else{
+                returnMap.put("ExclParms",this.createList(excludedParmsList,true));
+            }
+        }
         
         return returnMap;
     }
@@ -218,22 +253,62 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         boolean warning = true;
         String dsintegrationTime = this.dsTimeText.getText();
         String dsintegrationFrequency = this.dsFrequencyText.getText();
+        String converged = this.minConvergedText.getText();
+        String epsilon = this.epsilonText.getText();
+        String iterations = this.maxIterationsText.getText();
         if(!dsintegrationTime.equals("")){
             try {
                 Double itime = Double.parseDouble(dsintegrationTime);
                 this.dsTimeText.setBackground(Color.WHITE);
+                dsTimeText.setToolTipText("Time in seconds");
             } catch (NumberFormatException ex) {
                 warning=false;
                 dsTimeText.setBackground(Color.RED);
+                dsTimeText.setToolTipText("This field has to be a valid double (eg. 1.5)");
             }
         }
         if(!dsintegrationFrequency.equals("")){
             try {
                 Double ifreq = Double.parseDouble(dsintegrationFrequency);
                 this.dsFrequencyText.setBackground(Color.WHITE);
+                dsFrequencyText.setToolTipText("Frequency in Hertz (Hz)");
             } catch (NumberFormatException ex) {
                 warning=false;
                 dsFrequencyText.setBackground(Color.RED);
+                dsFrequencyText.setToolTipText("This field has to be a valid double (eg. 1.5)");
+            }
+        }
+        if(!converged.equals("")){
+            try {
+                Double iconverged = Double.parseDouble(converged);
+                this.minConvergedText.setBackground(Color.WHITE);
+                minConvergedText.setToolTipText("Fraction that must have converged");
+            } catch (NumberFormatException ex) {
+                warning=false;
+                minConvergedText.setBackground(Color.RED);
+                minConvergedText.setToolTipText("This field has to be a valid double (eg. 1.5)");
+            }
+        }
+        if(!epsilon.equals("")){
+            try {
+                Double iepsilon = Double.parseDouble(epsilon);
+                this.epsilonText.setBackground(Color.WHITE);
+                epsilonText.setToolTipText("Convergence Threshold");
+            } catch (NumberFormatException ex) {
+                warning=false;
+                epsilonText.setBackground(Color.RED);
+                epsilonText.setToolTipText("This field has to be a valid double (eg. 1.5)");
+            }
+        }
+        if(!iterations.equals("")){
+            try {
+                Integer iiterations = Integer.parseInt(iterations);
+                this.maxIterationsText.setBackground(Color.WHITE);
+                maxIterationsText.setToolTipText("Maximum number of iterations");
+            } catch (NumberFormatException ex) {
+                warning=false;
+                maxIterationsText.setBackground(Color.RED);
+                maxIterationsText.setToolTipText("This field has to be a valid integer (eg. 2)");
             }
         }
         return warning;
@@ -310,7 +385,6 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         dsTimeText = new javax.swing.JTextField();
         dsFrequencyUnitLabel = new javax.swing.JLabel();
         dsTimeUnitLabel = new javax.swing.JLabel();
-        parametersGroupPanel = new javax.swing.JPanel();
         solvableParmsGroupPanel = new javax.swing.JPanel();
         solvableParmsPanel = new javax.swing.JPanel();
         solvableParmsScrollPane = new javax.swing.JScrollPane();
@@ -320,6 +394,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         solvableParmsButtonPanel = new javax.swing.JPanel();
         deleteSolvableParmButton = new javax.swing.JButton();
         addSolvableParmButton = new javax.swing.JButton();
+        solveAllParmsCheckbox = new javax.swing.JCheckBox();
         excludedParmsGroupPanel = new javax.swing.JPanel();
         excludedParmsPanel = new javax.swing.JPanel();
         excludedParmsScrollPane = new javax.swing.JScrollPane();
@@ -329,6 +404,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         excludedParmsButtonPanel = new javax.swing.JPanel();
         deleteExcludedParmButton = new javax.swing.JButton();
         addExcludedParmButton = new javax.swing.JButton();
+        excludeParmsCheckbox = new javax.swing.JCheckBox();
 
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -340,6 +416,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         maxIterationsLabel.setText("Max. iterations :");
         seOperationAttributesInputPanel.add(maxIterationsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, -1));
 
+        maxIterationsText.setText("10");
         maxIterationsText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 maxIterationsTextKeyReleased(evt);
@@ -403,14 +480,16 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         seOperationAttributesInputPanel.add(domainSizeGroupPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 180, 70));
 
-        parametersGroupPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        parametersGroupPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Parameters"));
         solvableParmsGroupPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        solvableParmsGroupPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Solvable"));
+        solvableParmsGroupPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Solvable Parameters"));
         solvableParmsPanel.setLayout(new java.awt.BorderLayout());
 
+        solvableParmsList.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "1", "12" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
         solvableParmsList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 solvableParmsListValueChanged(evt);
@@ -475,15 +554,30 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         solvableParmsPanel.add(solvableParmsEditPanel, java.awt.BorderLayout.SOUTH);
 
-        solvableParmsGroupPanel.add(solvableParmsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 140, 110));
+        solveAllParmsCheckbox.setText("Solve all parms");
+        solveAllParmsCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        solveAllParmsCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        solveAllParmsCheckbox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                solveAllParmsCheckboxItemStateChanged(evt);
+            }
+        });
 
-        parametersGroupPanel.add(solvableParmsGroupPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 160, 140));
+        solvableParmsPanel.add(solveAllParmsCheckbox, java.awt.BorderLayout.NORTH);
+
+        solvableParmsGroupPanel.add(solvableParmsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 140, 140));
+
+        seOperationAttributesInputPanel.add(solvableParmsGroupPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 10, 160, 170));
+
+        add(seOperationAttributesInputPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, -1, -1));
 
         excludedParmsGroupPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        excludedParmsGroupPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Excluded"));
+        excludedParmsGroupPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Excluded Parameters"));
         excludedParmsPanel.setLayout(new java.awt.BorderLayout());
 
+        excludedParmsList.setBackground(java.awt.Color.lightGray);
+        excludedParmsList.setEnabled(false);
         excludedParmsList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 excludedParmsListValueChanged(evt);
@@ -496,6 +590,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         excludedParmsEditPanel.setLayout(new java.awt.BorderLayout());
 
+        excludedParmsModifyText.setEnabled(false);
         excludedParmsModifyText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 excludedParmsModifyTextKeyReleased(evt);
@@ -548,38 +643,83 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         excludedParmsPanel.add(excludedParmsEditPanel, java.awt.BorderLayout.SOUTH);
 
-        excludedParmsGroupPanel.add(excludedParmsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 140, 110));
+        excludeParmsCheckbox.setText("Exclude parms :");
+        excludeParmsCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        excludeParmsCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        excludeParmsCheckbox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                excludeParmsCheckboxItemStateChanged(evt);
+            }
+        });
 
-        parametersGroupPanel.add(excludedParmsGroupPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 20, 160, 140));
+        excludedParmsPanel.add(excludeParmsCheckbox, java.awt.BorderLayout.NORTH);
 
-        seOperationAttributesInputPanel.add(parametersGroupPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 10, 350, 170));
+        excludedParmsGroupPanel.add(excludedParmsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 140, 140));
 
-        add(seOperationAttributesInputPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, -1, -1));
+        add(excludedParmsGroupPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 10, 160, 170));
 
     }// </editor-fold>//GEN-END:initComponents
-
+    
+    private void excludeParmsCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_excludeParmsCheckboxItemStateChanged
+        
+        if(this.excludeParmsCheckbox.isSelected()){
+            this.excludedParmsList.setEnabled(true);
+            this.excludedParmsList.setBackground(Color.WHITE);
+            this.excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            this.excludedParmsList.clearSelection();
+            this.excludedParmsModifyText.setText("");
+            this.excludedParmsModifyText.setEnabled(true);
+        }else{
+            this.excludedParmsList.setEnabled(false);
+            this.excludedParmsList.setBackground(Color.LIGHT_GRAY);
+            this.excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            this.excludedParmsList.clearSelection();
+            this.excludedParmsModifyText.setEnabled(false);
+            this.excludedParmsModifyText.setText("");
+        }
+    }//GEN-LAST:event_excludeParmsCheckboxItemStateChanged
+    
+    private void solveAllParmsCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_solveAllParmsCheckboxItemStateChanged
+        if(this.solveAllParmsCheckbox.isSelected()){
+            this.solvableParmsList.setEnabled(false);
+            this.solvableParmsList.setBackground(Color.LIGHT_GRAY);
+            this.solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            this.solvableParmsList.clearSelection();
+            this.deleteSolvableParmButton.setEnabled(false);
+            this.addSolvableParmButton.setEnabled(false);
+            this.solvableParmsModifyText.setEnabled(false);
+        }else{
+            this.solvableParmsList.setEnabled(true);
+            this.solvableParmsList.setBackground(Color.WHITE);
+            this.solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            this.solvableParmsList.clearSelection();
+            this.solvableParmsModifyText.setEnabled(true);
+            this.solvableParmsModifyText.setText("");
+        }
+    }//GEN-LAST:event_solveAllParmsCheckboxItemStateChanged
+    
     private void addExcludedParmButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addExcludedParmButtonActionPerformed
         String toBeAddedNSource = this.excludedParmsModifyText.getText();
         if(!toBeAddedNSource.equals("")){
             DefaultListModel theStationModel = (DefaultListModel)this.excludedParmsList.getModel();
             theStationModel.addElement(toBeAddedNSource);
-            excludedParmsList.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }
     }//GEN-LAST:event_addExcludedParmButtonActionPerformed
-
+    
     private void deleteExcludedParmButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteExcludedParmButtonActionPerformed
         DefaultListModel theSourceModel = (DefaultListModel)excludedParmsList.getModel();
         int[] selectedIndices = excludedParmsList.getSelectedIndices();
         while(selectedIndices.length>0){
             theSourceModel.remove(selectedIndices[0]);
             selectedIndices = excludedParmsList.getSelectedIndices();
-            excludedParmsList.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }
         if(theSourceModel.size()==0){
             this.deleteExcludedParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteExcludedParmButtonActionPerformed
-
+    
     private void excludedParmsModifyTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_excludedParmsModifyTextKeyReleased
         String toBeAddedNSource = excludedParmsModifyText.getText();
         if(!toBeAddedNSource.equals("")){
@@ -588,7 +728,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
             this.addExcludedParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_excludedParmsModifyTextKeyReleased
-
+    
     private void excludedParmsListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_excludedParmsListValueChanged
         int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
         if(selectedIndices.length>0){
@@ -597,29 +737,29 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
             this.deleteExcludedParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_excludedParmsListValueChanged
-
+    
     private void addSolvableParmButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addSolvableParmButtonActionPerformed
         String toBeAddedNSource = this.solvableParmsModifyText.getText();
         if(!toBeAddedNSource.equals("")){
             DefaultListModel theStationModel = (DefaultListModel)this.solvableParmsList.getModel();
             theStationModel.addElement(toBeAddedNSource);
-            solvableParmsList.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            this.solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }
     }//GEN-LAST:event_addSolvableParmButtonActionPerformed
-
+    
     private void deleteSolvableParmButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteSolvableParmButtonActionPerformed
         DefaultListModel theSourceModel = (DefaultListModel)solvableParmsList.getModel();
         int[] selectedIndices = solvableParmsList.getSelectedIndices();
         while(selectedIndices.length>0){
             theSourceModel.remove(selectedIndices[0]);
             selectedIndices = solvableParmsList.getSelectedIndices();
-            solvableParmsList.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
+            this.solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }
         if(theSourceModel.size()==0){
             this.deleteSolvableParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteSolvableParmButtonActionPerformed
-
+    
     private void solvableParmsModifyTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_solvableParmsModifyTextKeyReleased
         String toBeAddedNSource = solvableParmsModifyText.getText();
         if(!toBeAddedNSource.equals("")){
@@ -628,7 +768,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
             this.addSolvableParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_solvableParmsModifyTextKeyReleased
-
+    
     private void solvableParmsListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_solvableParmsListValueChanged
         int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
         if(selectedIndices.length>0){
@@ -673,6 +813,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
     private javax.swing.JLabel dsTimeUnitLabel;
     private javax.swing.JLabel epsilonLabel;
     private javax.swing.JTextField epsilonText;
+    private javax.swing.JCheckBox excludeParmsCheckbox;
     private javax.swing.JPanel excludedParmsButtonPanel;
     private javax.swing.JPanel excludedParmsEditPanel;
     private javax.swing.JPanel excludedParmsGroupPanel;
@@ -684,7 +825,6 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
     private javax.swing.JTextField maxIterationsText;
     private javax.swing.JLabel minConvergedLabel;
     private javax.swing.JTextField minConvergedText;
-    private javax.swing.JPanel parametersGroupPanel;
     private javax.swing.JPanel seOperationAttributesInputPanel;
     private javax.swing.JPanel solvableParmsButtonPanel;
     private javax.swing.JPanel solvableParmsEditPanel;
@@ -693,6 +833,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
     private javax.swing.JTextField solvableParmsModifyText;
     private javax.swing.JPanel solvableParmsPanel;
     private javax.swing.JScrollPane solvableParmsScrollPane;
+    private javax.swing.JCheckBox solveAllParmsCheckbox;
     // End of variables declaration//GEN-END:variables
     
 }
