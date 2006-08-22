@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include <tables/Tables.h>
+#include <tables/Tables/TableIter.h>
 
 namespace WSRT
 {
