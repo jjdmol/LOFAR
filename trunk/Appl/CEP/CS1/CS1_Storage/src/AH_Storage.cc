@@ -53,6 +53,7 @@ namespace LOFAR
       ASSERT(nrSubbandsPerCell > 0);
       uint nNodesPerCell = itsParamSet.getUint32("BGLProc.NodesPerCell");
       ASSERT(nNodesPerCell > 0);
+      uint maxConcurrent = itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications");
 
       // We must derive how many WH_SubbandWriter objects we have to
       // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerCell
@@ -93,7 +94,7 @@ namespace LOFAR
 	}	
 
 	// limit the number of concurrent incoming connections
-	step.getInDataManager(0).setInRoundRobinPolicy(channels, 1);
+	step.getInDataManager(0).setInRoundRobinPolicy(channels, maxConcurrent);
       }
 
 #ifdef HAVE_MPI
