@@ -239,8 +239,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         this.fillList(this.stepExplorerNSourcesList,new Vector<String>());
         if(stepData.getSources() != null){
             if(stepData.getSources().size()>0){
-                this.fillList(this.stepExplorerNSourcesList,stepData.getSources());
                 this.useAllSourcesCheckbox.setSelected(false);
+                this.fillList(this.stepExplorerNSourcesList,stepData.getSources());
+                
             }else{
                 this.useAllSourcesCheckbox.setSelected(true);
             }
@@ -250,8 +251,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             if(inheritedData.getSources() != null){
                 
                 if(inheritedData.getSources().size()>0){
-                    this.fillList(this.stepExplorerNSourcesList,inheritedData.getSources());
                     this.useAllSourcesCheckbox.setSelected(false);
+                    this.fillList(this.stepExplorerNSourcesList,inheritedData.getSources());
+                    
                 }else{
                     this.useAllSourcesCheckbox.setSelected(true);
                 }
@@ -267,8 +269,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         this.fillList(this.stepExplorerESourcesList,new Vector<String>());
         if(stepData.getExtraSources() != null){
             if(stepData.getExtraSources().size()>0){
-                this.fillList(this.stepExplorerESourcesList,stepData.getExtraSources());
                 this.useExtraSourcesCheckbox.setSelected(true);
+                this.fillList(this.stepExplorerESourcesList,stepData.getExtraSources());
+               
             }else{
                 this.useExtraSourcesCheckbox.setSelected(false);
             }
@@ -277,8 +280,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         }else{
             if(inheritedData.getExtraSources() != null){
                 if(inheritedData.getExtraSources().size()>0){
-                    this.fillList(this.stepExplorerESourcesList,inheritedData.getExtraSources());
                     this.useExtraSourcesCheckbox.setSelected(true);
+                    this.fillList(this.stepExplorerESourcesList,inheritedData.getExtraSources());
+                    
                 }else{
                     this.useExtraSourcesCheckbox.setSelected(false);
                 }
@@ -294,8 +298,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         this.stepExplorerOutputDataText.setText("");
         if(stepData.getOutputDataColumn() != null){
             if(!stepData.getOutputDataColumn().equals("")){
-                this.stepExplorerOutputDataText.setText(stepData.getOutputDataColumn());
                 this.writeOutputCheckbox.setSelected(false);
+                this.stepExplorerOutputDataText.setText(stepData.getOutputDataColumn());
+                
             }else{
                 this.writeOutputCheckbox.setSelected(true);
             }
@@ -304,8 +309,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         }else{
             if(inheritedData.getOutputDataColumn() != null){
                 if(!inheritedData.getOutputDataColumn().equals("")){
-                    this.stepExplorerOutputDataText.setText(inheritedData.getOutputDataColumn());
                     this.writeOutputCheckbox.setSelected(false);
+                    this.stepExplorerOutputDataText.setText(inheritedData.getOutputDataColumn());
+                    
                 }else{
                     this.writeOutputCheckbox.setSelected(true);
                 }
@@ -315,14 +321,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 stepExplorerOutputDataPanel.setBackground(NOT_DEFINED);
             }
         }
-        //instrument model
-        
+        //instrument model 
         stepExplorerInstrumentModel.setBackground(DEFAULT);
         this.stepExplorerInstrumentModelList.clearSelection();
         if(stepData.getInstrumentModel() != null){
             if(stepData.getInstrumentModel().size()>0){
-                this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,stepData.getInstrumentModel());
                 this.noInstrumentModelCheckbox.setSelected(false);
+                this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,stepData.getInstrumentModel());
+                
             }else{
                 this.noInstrumentModelCheckbox.setSelected(true);
             }
@@ -332,8 +338,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             if(inheritedData.getInstrumentModel() != null){
                 
                 if(inheritedData.getInstrumentModel().size()>0){
-                    this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,inheritedData.getInstrumentModel());
                     this.noInstrumentModelCheckbox.setSelected(false);
+                    this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,inheritedData.getInstrumentModel());
+                    
                 }else{
                     this.noInstrumentModelCheckbox.setSelected(true);
                 }
@@ -344,7 +351,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             }
         }
         
-        //integration
+        //integration NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
+        /*
         //time
         this.integrationTimeText.setBackground(DEFAULT);
         if(stepData.getIntegrationTime() != -1.0){
@@ -375,6 +383,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 integrationFrequencyText.setBackground(NOT_DEFINED);
             }
         }
+        */
         //correlation
         //type
         this.stepExplorerCorrelationTypeList.setBackground(DEFAULT);
@@ -627,6 +636,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
                 aStepData.setIntegrationFrequency(Double.parseDouble(integrationFrequencyText.getText()));
             }
         }
+        
         //Correlation
         //Type
         if(this.createVectorFromSelectionList(this.stepExplorerCorrelationTypeList).size()==0){
@@ -1067,6 +1077,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         stepExplorerRevertButton.setText("Revert");
+        stepExplorerRevertButton.setToolTipText("Revert the step variables to the values present when this dialog was opened.");
         stepExplorerRevertButton.setEnabled(false);
         stepExplorerRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
         stepExplorerRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
@@ -1093,6 +1104,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerOperationTypeHeaderPanel.add(stepExplorerOperationTypeLabel, gridBagConstraints);
 
         stepExplorerOperationComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "NOT DEFINED", "Predict", "Solve", "Subtract", "Correct" }));
+        stepExplorerOperationComboBox.setToolTipText("The type of operation to be performed in this step. Use NOT DEFINED when this step is/will be a multistep, or when this step should not perform an operation.");
         stepExplorerOperationComboBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 stepExplorerOperationComboBoxItemStateChanged(evt);
@@ -1118,6 +1130,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerOutputDataPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         stepExplorerOutputDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Output Data Column"));
+        stepExplorerOutputDataText.setText("CORRECTED_DATA");
+        stepExplorerOutputDataText.setToolTipText("Column of the measurement set wherein the output values of this step should be written");
         stepExplorerOutputDataText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 stepExplorerOutputDataTextKeyReleased(evt);
@@ -1127,6 +1141,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerOutputDataPanel.add(stepExplorerOutputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, 150, 20));
 
         writeOutputCheckbox.setText("No output");
+        writeOutputCheckbox.setToolTipText("Check this box if no output data should be written in this step");
         writeOutputCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         writeOutputCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
         writeOutputCheckbox.addItemListener(new java.awt.event.ItemListener() {
@@ -1146,6 +1161,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerNSources.setPreferredSize(new java.awt.Dimension(150, 150));
         stepExplorerNSourcesPanel.setLayout(new java.awt.BorderLayout());
 
+        stepExplorerNSourcesList.setBackground(java.awt.Color.lightGray);
+        stepExplorerNSourcesList.setToolTipText("The specified sources for this step");
+        stepExplorerNSourcesList.setEnabled(false);
         stepExplorerNSourcesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 stepExplorerNSourcesListValueChanged(evt);
@@ -1158,6 +1176,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerNSourcesEditPanel.setLayout(new java.awt.BorderLayout());
 
+        stepExplorerModifyNSourceText.setToolTipText("Input field for a source (Wildcards are allowed eg. 3C34*)");
+        stepExplorerModifyNSourceText.setEnabled(false);
         stepExplorerModifyNSourceText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 stepExplorerModifyNSourceTextKeyReleased(evt);
@@ -1169,7 +1189,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerNSourcesButtonPanel.setLayout(new java.awt.GridBagLayout());
 
         deleteNSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteNSourceButton.setToolTipText("Remove the selected Station from the list");
+        deleteNSourceButton.setToolTipText("Remove the selected source from the list");
         deleteNSourceButton.setEnabled(false);
         deleteNSourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
         deleteNSourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -1188,7 +1208,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerNSourcesButtonPanel.add(deleteNSourceButton, gridBagConstraints);
 
         addNSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addNSourceButton.setToolTipText("Add the station entered to the list");
+        addNSourceButton.setToolTipText("Add the source entered above to the list of sources");
         addNSourceButton.setEnabled(false);
         addNSourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addNSourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -1210,7 +1230,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerNSourcesPanel.add(stepExplorerNSourcesEditPanel, java.awt.BorderLayout.SOUTH);
 
+        useAllSourcesCheckbox.setSelected(true);
         useAllSourcesCheckbox.setText("Use all sources");
+        useAllSourcesCheckbox.setToolTipText("Check this box to use all the sources");
         useAllSourcesCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         useAllSourcesCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
         useAllSourcesCheckbox.addItemListener(new java.awt.event.ItemListener() {
@@ -1231,6 +1253,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerESourcesPanel.setLayout(new java.awt.BorderLayout());
 
         stepExplorerESourcesList.setBackground(java.awt.Color.lightGray);
+        stepExplorerESourcesList.setToolTipText("List of specified extra sources to be used when predicting visibilities");
         stepExplorerESourcesList.setEnabled(false);
         stepExplorerESourcesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
@@ -1244,6 +1267,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerESourcesEditPanel.setLayout(new java.awt.BorderLayout());
 
+        stepExplorerModifyESourceText.setToolTipText("Input field for an extra source (Wildcards are allowed eg. M*)");
         stepExplorerModifyESourceText.setEnabled(false);
         stepExplorerModifyESourceText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
@@ -1256,7 +1280,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerESourcesButtonPanel.setLayout(new java.awt.GridBagLayout());
 
         deleteESourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteESourceButton.setToolTipText("Remove the selected Station from the list");
+        deleteESourceButton.setToolTipText("Remove the selected extra source from the list");
         deleteESourceButton.setEnabled(false);
         deleteESourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
         deleteESourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -1274,7 +1298,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerESourcesButtonPanel.add(deleteESourceButton, gridBagConstraints);
 
         addESourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addESourceButton.setToolTipText("Add the station entered to the list");
+        addESourceButton.setToolTipText("Add the extra source entered to the list");
         addESourceButton.setEnabled(false);
         addESourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addESourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -1296,6 +1320,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerESourcesPanel.add(stepExplorerESourcesEditPanel, java.awt.BorderLayout.SOUTH);
 
         useExtraSourcesCheckbox.setText("Use extra sources :");
+        useExtraSourcesCheckbox.setToolTipText("Check this box to specify extra sources");
         useExtraSourcesCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         useExtraSourcesCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
         useExtraSourcesCheckbox.addItemListener(new java.awt.event.ItemListener() {
@@ -1315,11 +1340,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerInstrumentModel.setBorder(javax.swing.BorderFactory.createTitledBorder("Instrument Model"));
         stepExplorerInstrumentModelPanel.setLayout(new java.awt.BorderLayout());
 
+        stepExplorerInstrumentModelList.setBackground(java.awt.Color.lightGray);
         stepExplorerInstrumentModelList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "TOTALGAIN", "PATCHGAIN", "BANDPASS" };
             public int getSize() { return strings.length; }
             public Object getElementAt(int i) { return strings[i]; }
         });
+        stepExplorerInstrumentModelList.setToolTipText("Select one or more instrument models to be used from this list");
+        stepExplorerInstrumentModelList.setEnabled(false);
         stepExplorerInstrumentModelList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 stepExplorerInstrumentModelListValueChanged(evt);
@@ -1332,7 +1360,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         stepExplorerInstrumentModel.add(stepExplorerInstrumentModelPanel, java.awt.BorderLayout.CENTER);
 
+        noInstrumentModelCheckbox.setSelected(true);
         noInstrumentModelCheckbox.setText("No model");
+        noInstrumentModelCheckbox.setToolTipText("Check this box when no instrument model should be used");
         noInstrumentModelCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         noInstrumentModelCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
         noInstrumentModelCheckbox.addItemListener(new java.awt.event.ItemListener() {
@@ -1352,7 +1382,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         stepExplorerCorrelationPanel.add(stepExplorerCorrelationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
 
         stepExplorerCorrelationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "N/A", "AUTO", "CROSS", "ALL" }));
-        stepExplorerCorrelationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
+        stepExplorerCorrelationSelectionBox.setSelectedIndex(3);
+        stepExplorerCorrelationSelectionBox.setToolTipText("Specifies which station correlations to use.");
         stepExplorerCorrelationSelectionBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 stepExplorerCorrelationSelectionBoxItemStateChanged(evt);
@@ -1369,7 +1400,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             public int getSize() { return strings.length; }
             public Object getElementAt(int i) { return strings[i]; }
         });
-        stepExplorerCorrelationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY. \n\nAs an example, suppose you select 'XX' here and set Selection to AUTO, then the X polarization signal of each station is correlated with itself. However if we set Selection to CROSS, then the X polarization of station A is correlated with the X polarization of station B for each base line.");
+        stepExplorerCorrelationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY.");
+        stepExplorerCorrelationTypeList.setSelectedIndices(new int[]{0,3});
         stepExplorerCorrelationTypeList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 stepExplorerCorrelationTypeListValueChanged(evt);
@@ -1384,11 +1416,15 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Integration"));
-        integrationIntervalPanel.setToolTipText("Cell size for integration. Allows the user to perform operations on a lower resolution, which should be faster in most cases");
+        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 0, 11), java.awt.Color.lightGray));
+        integrationIntervalPanel.setToolTipText("Cell size for integration. Not yet implemented.");
+        integrationIntervalPanel.setEnabled(false);
         integrationFrequencyLabel.setText("Freq. Interval :");
+        integrationFrequencyLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationFrequencyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 20, -1, -1));
 
+        integrationFrequencyText.setToolTipText("Frequency interval in Hertz (Hz)");
+        integrationFrequencyText.setEnabled(false);
         integrationFrequencyText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 integrationFrequencyTextKeyReleased(evt);
@@ -1398,11 +1434,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         integrationIntervalPanel.add(integrationFrequencyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 20, 70, -1));
 
         integrationFrequencyUnitLabel.setText("Hz");
+        integrationFrequencyUnitLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationFrequencyUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 20, -1, -1));
 
         integrationTimeLabel.setText("Time Interval :");
+        integrationTimeLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 50, -1, -1));
 
+        integrationTimeText.setEnabled(false);
         integrationTimeText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 integrationTimeTextKeyReleased(evt);
@@ -1412,6 +1451,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         integrationIntervalPanel.add(integrationTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 50, 70, -1));
 
         integrationTimeUnitLabel.setText("s");
+        integrationTimeUnitLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationTimeUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 50, 10, -1));
 
         stepExplorerPanel.add(integrationIntervalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 310, 320, 80));
@@ -1421,7 +1461,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         BaselineSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Baseline Selection"));
         baselinePanel.setLayout(new java.awt.BorderLayout());
 
+        baselineStationsScrollPane.setToolTipText("The baseline pairs of stations");
+        baselineStationsScrollPane.setEnabled(false);
         baselineStationsScrollPane.setPreferredSize(new java.awt.Dimension(453, 250));
+        baselineStationsTable.setBackground(java.awt.Color.lightGray);
         baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -1451,6 +1494,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         baselineInputPanel.setLayout(new java.awt.GridBagLayout());
 
+        baselineStation1Text.setToolTipText("Input field for the name of the first station part that forms the baseline");
+        baselineStation1Text.setEnabled(false);
         baselineStation1Text.setMinimumSize(new java.awt.Dimension(120, 19));
         baselineStation1Text.setPreferredSize(new java.awt.Dimension(200, 19));
         baselineStation1Text.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1464,6 +1509,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         baselineInputPanel.add(baselineStation1Text, gridBagConstraints);
 
+        baselineStation2Text.setToolTipText("Input field for the name of the second station part that forms the baseline");
+        baselineStation2Text.setEnabled(false);
         baselineStation2Text.setMinimumSize(new java.awt.Dimension(120, 19));
         baselineStation2Text.setPreferredSize(new java.awt.Dimension(200, 19));
         baselineStation2Text.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1479,7 +1526,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
 
         baselinePanel.add(baselineInputPanel, java.awt.BorderLayout.SOUTH);
 
+        baselineUseAllCheckbox.setSelected(true);
         baselineUseAllCheckbox.setText("Use all baselines");
+        baselineUseAllCheckbox.setToolTipText("Check this box to use all baselines available");
         baselineUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         baselineUseAllCheckbox.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         baselineUseAllCheckbox.addItemListener(new java.awt.event.ItemListener() {
@@ -1495,6 +1544,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         baselineModsPanel.setLayout(new java.awt.GridBagLayout());
 
         addBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addBaseLineButton.setToolTipText("Adds a baseline using the Station1 and Station2 values in the input boxes above");
         addBaseLineButton.setEnabled(false);
         addBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -1514,6 +1564,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
 
         deleteBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteBaseLineButton.setToolTipText("Deletes the selected baseline (the selected Station 1 and Station 2 pair)");
         deleteBaseLineButton.setEnabled(false);
         deleteBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
         deleteBaseLineButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -1711,6 +1762,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             message+="Green - Indicates that the value is set in this BBS Step and thereby overrides any value set in its parent step tree.\n";
             
         }
+        
+        message+="\nOperations:\n\nUse NOT DEFINED when this step is/will be a multistep,\n or when this step should not perform an operation.";
         
         JOptionPane.showMessageDialog(null,message, "Step Explorer Help",JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_helpButtonActionPerformed

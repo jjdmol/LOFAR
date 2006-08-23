@@ -1,7 +1,23 @@
 /*
- * BBSStepOperationPanelSolveImpl.java
+ *  BBSStepOperationPanelSolveImpl.java
  *
- * Created on August 18, 2006, 12:25 PM
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.operations;
@@ -14,8 +30,12 @@ import nl.astron.lofar.sas.otbcomponents.bbs.BBSStepExplorerPanel;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepData;
 
 /**
+ * BBSStepOperationPanelSolveImpl Class
  *
- * @author  pompert
+ * @author pompert
+ * @version $Id$
+ * @created 18-8-2006, 13:56
+ * @updated
  */
 public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implements IBBSStepOperationPanel{
     
@@ -425,6 +445,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         seOperationAttributesInputPanel.add(maxIterationsText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 20, 60, -1));
 
+        epsilonText.setText("1e-6");
         epsilonText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 epsilonTextKeyReleased(evt);
@@ -436,6 +457,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         epsilonLabel.setText("Epsilon :");
         seOperationAttributesInputPanel.add(epsilonLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, -1));
 
+        minConvergedText.setText("100.0");
         minConvergedText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 minConvergedTextKeyReleased(evt);
@@ -456,6 +478,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         dsTimeLabel.setText("Time :");
         domainSizeGroupPanel.add(dsTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 40, -1, -1));
 
+        dsFrequencyText.setText("1e25");
         dsFrequencyText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 dsFrequencyTextKeyReleased(evt);
@@ -464,6 +487,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         domainSizeGroupPanel.add(dsFrequencyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 20, 60, -1));
 
+        dsTimeText.setText("1e25");
         dsTimeText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 dsTimeTextKeyReleased(evt);
@@ -485,11 +509,8 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         solvableParmsGroupPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Solvable Parameters"));
         solvableParmsPanel.setLayout(new java.awt.BorderLayout());
 
-        solvableParmsList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "1", "12" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
+        solvableParmsList.setBackground(java.awt.Color.lightGray);
+        solvableParmsList.setEnabled(false);
         solvableParmsList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 solvableParmsListValueChanged(evt);
@@ -502,6 +523,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         solvableParmsEditPanel.setLayout(new java.awt.BorderLayout());
 
+        solvableParmsModifyText.setEnabled(false);
         solvableParmsModifyText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 solvableParmsModifyTextKeyReleased(evt);
@@ -554,6 +576,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         solvableParmsPanel.add(solvableParmsEditPanel, java.awt.BorderLayout.SOUTH);
 
+        solveAllParmsCheckbox.setSelected(true);
         solveAllParmsCheckbox.setText("Solve all parms");
         solveAllParmsCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         solveAllParmsCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
