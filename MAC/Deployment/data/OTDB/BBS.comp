@@ -48,8 +48,8 @@ node   WorkDomainSize     1.0.0  development 'node constraint'  'BBS WorkDomainS
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Freq                    I    dbl    Hz     10    0    ''                   -        'work domain size frequency'
-par  Time                    I    dbl    -      10    0    ''                   -        'work domain size time'
+par  Freq                    I    dbl    Hz     10    0    '1e25'                   -        'work domain size frequency'
+par  Time                    I    dbl    -      10    0    '1e25'                   -        'work domain size time'
 
 # -- BBS Domain Size Settings
 #
@@ -59,10 +59,12 @@ node   DomainSize     1.0.0  development 'node constraint'  'BBS Step Operation 
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Freq                    I    dbl    Hz     10    0    ''                   -        'domain size frequency'
-par  Time                    I    dbl    -      10    0    ''                   -        'domain size time'
+par  Freq                    I    dbl    Hz     10    0    '1e25'                   -        'domain size frequency'
+par  Time                    I    dbl    -      10    0    '1e25'                   -        'domain size time'
 
 # -- BBS Integration Settings
+#
+# TODO: add default values when integration is implemented in the BBS software
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
