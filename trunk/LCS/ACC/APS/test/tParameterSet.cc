@@ -68,7 +68,7 @@ int main() {
 	cout << "\nThe main ParameterSet contains:\n";
 	cout << myPS;
 
-	cout << "Fullname of 'b'=" << myPS.locateKey("b") << endl;
+	cout << "Fullname of 'b'=" << myPS.locateModule("b") << endl;
 
 
 //	cout << "The name of the ParameterSet = " << myPS.getName() << endl;
