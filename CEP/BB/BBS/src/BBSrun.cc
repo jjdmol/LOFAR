@@ -25,6 +25,7 @@
 #include <BBS/Prediffer.h>
 #include <BBS/Solver.h>
 #include <ParmDB/ParmDB.h>
+#include <ParmDB/ParmDBMeta.h>
 #include <MS/MSDesc.h>
 #include <APS/ParameterSet.h>
 #include <Blob/BlobIStream.h>
@@ -72,7 +73,7 @@ void subtract (Prediffer& prediffer, const MSDesc& msd,
 }
 
 void solve (Prediffer& prediffer, const MSDesc& msd,
-        const ParmDB::ParmDBMeta &historyPDM,
+	const ParmDBMeta &historyPDM,
         const StepProp& stepProp,
         double timeStep, int startChan, int endChan,
         const SolveProp& solveProp,
@@ -83,7 +84,7 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
   double endTime = msd.endTime;
   SolveProp solProp(solveProp);
   
-  ParmDB::ParmDB history(historyPDM);
+  LOFAR::ParmDB::ParmDB history(historyPDM);
   
   while (time < endTime) {
     // Use given channels and time steps.
@@ -232,7 +233,7 @@ bool doIt (const string& parsetName)
       solveProp.setParmPatterns (solvParms);
       solveProp.setExclPatterns (exclParms);
       solveProp.setMaxIter (nriter);
-      solve (prediffer, msd, ParmDB::ParmDBMeta("aips", "history.parmdb"), 
+      solve (prediffer, msd, ParmDBMeta("aips", "history.parmdb"), 
          stepProp,
          timeDomainSize, startChan, endChan,
          solveProp,
