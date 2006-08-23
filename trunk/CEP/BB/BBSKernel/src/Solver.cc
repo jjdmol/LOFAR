@@ -134,7 +134,9 @@ void Solver::log(ParmDB::ParmDB &table)
         if(itsFitters.size() > 1)
         {
             os.str("");
-            os << ":domain" << std::setw(((int) std::log10(itsFitters.size())) + 1) << i;
+            os << ":domain"
+	       << std::setw(((int) std::log10(double(itsFitters.size())) + 1))
+	       << i;
             domainSuffix = os.str();
         }
 
@@ -169,7 +171,7 @@ void Solver::log(ParmDB::ParmDB &table)
             const MeqMatrix &coeff = parms[j].getCoeff(i);
             const double *data = coeff.doubleStorage();
 
-            int indexWidth = ((int) std::log10(mask.size())) + 1;
+            int indexWidth = ((int) std::log10(double(mask.size()))) + 1;
 
             // Log each coefficient of the current parameter.
             for(size_t k = 0; k < mask.size(); k++)
