@@ -39,6 +39,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.tree.TreePath;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
@@ -117,8 +118,16 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).equals("WorkDomainSize")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
+               
+                /* INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
                 }else if (LofarUtils.keyName(aNode.name).equals("Integration")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
+                */
+                   
+                //INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, REMOVE CODE BLOCK BELOW WHEN IMPLEMENTED    
+                }else if (LofarUtils.keyName(aNode.name).equals("Integration")) {
+                    SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aNode);
+                //end of removable code block    
                 }else if (LofarUtils.keyName(aNode.name).equals("Correlation")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
@@ -206,12 +215,17 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         this.inputDataText.setText(StrategyInputData.limits);
         this.wdsFrequencyText.setText(StrategyWDSFrequency.limits);
         this.wdsTimeText.setText(StrategyWDSTime.limits);
-        this.integrationFrequencyText.setText(StrategyIntegrationFrequency.limits);
-        this.integrationTimeText.setText(StrategyIntegrationTime.limits);
         wdsFrequencyText.setBackground(Color.WHITE);
         wdsTimeText.setBackground(Color.WHITE);
+        
+        
+        /* INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
+        this.integrationFrequencyText.setText(StrategyIntegrationFrequency.limits);
+        this.integrationTimeText.setText(StrategyIntegrationTime.limits);
         integrationFrequencyText.setBackground(Color.WHITE);
         integrationTimeText.setBackground(Color.WHITE);
+         */
+        
         this.correlationSelectionBox.setSelectedItem(StrategyCorrelationSelection.limits);
         this.fillSelectionListFromString(correlationTypeList,StrategyCorrelationType.limits,true);
         if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
@@ -323,11 +337,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     wdsTimeText.setText(aNode.limits);
                 }
             }
+        /* INTEGRATION NOT IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
         } else if(parentName.equals("Integration")){
             if (aKeyName.equals("Freq")) {
                 this.integrationFrequencyText.setToolTipText(aParam.description);
                 this.StrategyIntegrationFrequency=aNode;
-                
+         
                 if (isRef && aParam != null) {
                     integrationFrequencyText.setText(aNode.limits + " : " + aParam.limits);
                 } else {
@@ -336,13 +351,13 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             } else if (aKeyName.equals("Time")) {
                 this.integrationTimeText.setToolTipText(aParam.description);
                 this.StrategyIntegrationTime=aNode;
-                
+         
                 if (isRef && aParam != null) {
                     integrationTimeText.setText(aNode.limits + " : " + aParam.limits);
                 } else {
                     integrationTimeText.setText(aNode.limits);
                 }
-            }
+            }*/
         } else if(parentName.equals("Correlation")){
             if (aKeyName.equals("Selection")) {
                 this.correlationSelectionBox.setToolTipText(aParam.description);
@@ -434,6 +449,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("Variable BBS Strategy ("+StrategyWDSTime.name+"//"+StrategyWDSTime.treeID()+"//"+StrategyWDSTime.nodeID()+"//"+StrategyWDSTime.parentID()+"//"+StrategyWDSTime.paramDefID()+") updated to :"+StrategyWDSTime.limits);
             saveNode(StrategyWDSTime);
         }
+        /* INTEGRATION NOT IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
         if (this.StrategyIntegrationFrequency != null && !this.integrationFrequencyText.getText().equals(StrategyIntegrationFrequency.limits)) {
             StrategyIntegrationFrequency.limits = integrationFrequencyText.getText();
             logger.trace("Variable BBS Strategy ("+StrategyIntegrationFrequency.name+"//"+StrategyIntegrationFrequency.treeID()+"//"+StrategyIntegrationFrequency.nodeID()+"//"+StrategyIntegrationFrequency.parentID()+"//"+StrategyIntegrationFrequency.paramDefID()+") updated to :"+StrategyIntegrationFrequency.limits);
@@ -444,6 +460,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("Variable BBS Strategy ("+StrategyIntegrationTime.name+"//"+StrategyIntegrationTime.treeID()+"//"+StrategyIntegrationTime.nodeID()+"//"+StrategyIntegrationTime.parentID()+"//"+StrategyIntegrationTime.paramDefID()+") updated to :"+StrategyIntegrationTime.limits);
             saveNode(StrategyIntegrationTime);
         }
+         */
         if (this.StrategyCorrelationSelection != null && !this.correlationSelectionBox.getSelectedItem().toString().equals(StrategyCorrelationSelection.limits)) {
             StrategyCorrelationSelection.limits = correlationSelectionBox.getSelectedItem().toString();
             logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") updating to :"+StrategyCorrelationSelection.limits);
@@ -697,7 +714,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         integrationTimeLabel = new javax.swing.JLabel();
         integrationTimeText = new javax.swing.JTextField();
         integrationTimeUnitLabel = new javax.swing.JLabel();
-        helpButton = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -719,6 +736,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         strategyRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         strategyRevertButton.setText("Revert");
+        strategyRevertButton.setToolTipText("Reverts the values shown in this screen to the values present in the database. WARNING: This also rebuilds the step tree and ignores any changes made to it!");
         strategyRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
         strategyRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
         strategyRevertButton.setPreferredSize(new java.awt.Dimension(100, 25));
@@ -728,7 +746,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        strategyPanel.add(strategyRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 490, -1, -1));
+        strategyPanel.add(strategyRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 520, -1, -1));
 
         stationsPanel.setLayout(new java.awt.BorderLayout());
 
@@ -739,7 +757,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             public int getSize() { return strings.length; }
             public Object getElementAt(int i) { return strings[i]; }
         });
-        stationsList.setToolTipText("Identifiers of the participating stations.");
+        stationsList.setToolTipText("Names of the participating stations.");
         stationsList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 stationsListValueChanged(evt);
@@ -752,6 +770,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         stationsModPanel.setLayout(new java.awt.BorderLayout());
 
+        modifyStationText.setToolTipText("Input a new station name here (Wildcards are allowed like CS*)");
         modifyStationText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 modifyStationTextKeyReleased(evt);
@@ -805,6 +824,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stationsPanel.add(stationsModPanel, java.awt.BorderLayout.SOUTH);
 
         stationsUseAllCheckbox.setText("Use all stations");
+        stationsUseAllCheckbox.setToolTipText("Check this box to use all stations available in the observation");
         stationsUseAllCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         stationsUseAllCheckbox.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         stationsUseAllCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
@@ -821,7 +841,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsPanel.setLayout(new java.awt.BorderLayout());
 
         stepsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Steps"));
-        stepsPanel.setToolTipText("The names of the steps that compose the strategy.");
+        stepsPanel.setToolTipText("");
         stepsPanel.setPreferredSize(new java.awt.Dimension(100, 100));
         stepsModsPanel.setLayout(new java.awt.GridBagLayout());
 
@@ -844,6 +864,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsModsPanel.add(addStepButton, gridBagConstraints);
 
         modifyStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Edit16.gif")));
+        modifyStepButton.setToolTipText("Modify the selected step");
         modifyStepButton.setEnabled(false);
         modifyStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
         modifyStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -859,6 +880,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsModsPanel.add(modifyStepButton, gridBagConstraints);
 
         removeStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        removeStepButton.setToolTipText("Delete the selected step");
         removeStepButton.setEnabled(false);
         removeStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
         removeStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -879,6 +901,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         existingStepAddPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
         stepsList.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        stepsList.setToolTipText("This box shows the already defined steps");
         stepsList.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
@@ -886,7 +909,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         existingStepAddPanel.add(stepsList, gridBagConstraints);
 
         addExistingStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addExistingStepButton.setToolTipText("Add an existing step to the structure");
+        addExistingStepButton.setToolTipText("Add the selected existing step to the structure");
         addExistingStepButton.setEnabled(false);
         addExistingStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addExistingStepButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -954,11 +977,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         correlationPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         correlationPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Correlation"));
+        correlationPanel.setToolTipText("Specifies which station correlations to use");
         correlationSelectionLabel.setText("Selection :");
         correlationPanel.add(correlationSelectionLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 40, -1, -1));
 
         correlationSelectionBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AUTO", "CROSS", "ALL" }));
-        correlationSelectionBox.setToolTipText("Station correlations to use.\n\nAUTO: Use only correlations of each station with itself (i.e. no base lines).Not yet implemented.\nCROSS: Use only correlations between stations (i.e. base lines).\nALL: Use both AUTO and CROSS correlations.");
+        correlationSelectionBox.setToolTipText("Specifies which station correlations to use");
         correlationPanel.add(correlationSelectionBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 60, 80, -1));
 
         correlationTypeLabel.setText("Type :");
@@ -969,7 +993,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             public int getSize() { return strings.length; }
             public Object getElementAt(int i) { return strings[i]; }
         });
-        correlationTypeList.setToolTipText("Correlations of which polarizations to use, one or more of XX,XY,YX,YY. \n\nAs an example, suppose you select 'XX' here and set Selection to AUTO, then the X polarization signal of each station is correlated with itself. However if we set Selection to CROSS, then the X polarization of station A is correlated with the X polarization of station B for each base line.");
+        correlationTypeList.setToolTipText("Specifies which station correlations to use");
         correlationTypeScrollPane.setViewportView(correlationTypeList);
 
         correlationPanel.add(correlationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 40, 40, 80));
@@ -1002,46 +1026,45 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Integration"));
-        integrationIntervalPanel.setToolTipText("Cell size for integration. Allows the user to perform operations on a lower resolution, which should be faster in most cases");
+        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 0, 11), java.awt.Color.lightGray));
+        integrationIntervalPanel.setToolTipText("Cell size for integration. Not yet implemented.");
+        integrationIntervalPanel.setEnabled(false);
         integrationFrequencyLabel.setText("Freq. Interval :");
+        integrationFrequencyLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationFrequencyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, -1));
 
+        integrationFrequencyText.setToolTipText("Frequency Interval in Hz");
+        integrationFrequencyText.setEnabled(false);
         integrationIntervalPanel.add(integrationFrequencyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 20, 70, -1));
 
         integrationFrequencyUnitLabel.setText("Hz");
+        integrationFrequencyUnitLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationFrequencyUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 20, -1, -1));
 
         integrationTimeLabel.setText("Time Interval :");
+        integrationTimeLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, -1));
 
+        integrationTimeText.setToolTipText("Time interval in seconds");
+        integrationTimeText.setEnabled(false);
         integrationIntervalPanel.add(integrationTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 50, 70, -1));
 
         integrationTimeUnitLabel.setText("s");
+        integrationTimeUnitLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationTimeUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 50, 10, -1));
 
         strategyPanel.add(integrationIntervalPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 60, 220, 80));
 
-        helpButton.setText("Help");
-        helpButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                helpButtonActionPerformed(evt);
-            }
-        });
-
-        strategyPanel.add(helpButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 490, -1, -1));
+        jLabel1.setFont(new java.awt.Font("Dialog", 1, 10));
+        jLabel1.setForeground(java.awt.Color.gray);
+        jLabel1.setText("Remember to press 'Save Settings' if you like to save the strategy and its steps tree before you leave this screen.");
+        strategyPanel.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 490, -1, -1));
 
         strategyScrollPane.setViewportView(strategyPanel);
 
         add(strategyScrollPane, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
-    private void helpButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_helpButtonActionPerformed
-        String message = "To be implemented...";
-        
-        JOptionPane.showMessageDialog(null,message, "BBS Strategy Help",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_helpButtonActionPerformed
     
     private void stepMoveDownButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepMoveDownButtonActionPerformed
         TreePath selectedPath = this.stepsTreePanel.getTree().getSelectionPath();
@@ -1301,6 +1324,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             String wdsTime = this.wdsTimeText.getText();
             String wdsFrequency = this.wdsFrequencyText.getText();
             
+            /* INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
             if(!integrationTime.equals("")){
                 try {
                     Double itime = Double.parseDouble(integrationTime);
@@ -1309,6 +1333,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     integrationTimeText.setBackground(Color.RED);
                     warning=true;
                 }
+            }else{
+                integrationTimeText.setBackground(Color.RED);
+                warning=true;
             }
             if(!integrationFrequency.equals("")){
                 try {
@@ -1318,15 +1345,22 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     warning=true;
                     integrationFrequencyText.setBackground(Color.RED);
                 }
+            }else{
+                warning=true;
+                integrationFrequencyText.setBackground(Color.RED);
             }
+            */
             if(!wdsFrequency.equals("")){
                 try {
                     Double itime = Double.parseDouble(wdsFrequency);
                     wdsFrequencyText.setBackground(Color.WHITE);
                 } catch (NumberFormatException ex) {
-                    warning=true;
+                    
                     wdsFrequencyText.setBackground(Color.RED);
                 }
+            }else{
+                warning=true;
+                wdsFrequencyText.setBackground(Color.RED);
             }
             if(!wdsTime.equals("")){
                 try {
@@ -1336,6 +1370,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     warning=true;
                     wdsTimeText.setBackground(Color.RED);
                 }
+            }else{
+                warning=true;
+                wdsTimeText.setBackground(Color.RED);
             }
             if(!warning){
                 itsMainFrame.setHourglassCursor();
@@ -1365,9 +1402,15 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_stationsUseAllCheckboxStateChanged
     
     private void strategyRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_strategyRevertButtonActionPerformed
-        itsMainFrame.setHourglassCursor();
-        this.restoreBBSStrategyPanel();
-        itsMainFrame.setNormalCursor();
+        String message = "Are you sure you want to revert all strategy attributes, including the step tree?";
+        message+="\n\nThis 'Revert' action will remove all changes you have made in the step tree since the last 'Save Settings' action!";
+        String[] buttons = {"Yes","No"};
+        int choice =  JOptionPane.showOptionDialog(this,message, "Please confirm", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
+        if(choice == 0){
+            itsMainFrame.setHourglassCursor();
+            this.restoreBBSStrategyPanel();
+            itsMainFrame.setNormalCursor();
+        }
     }//GEN-LAST:event_strategyRevertButtonActionPerformed
     
     private jOTDBnode itsNode = null;
@@ -1398,7 +1441,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JScrollPane correlationTypeScrollPane;
     private javax.swing.JButton deleteStationButton;
     private javax.swing.JPanel existingStepAddPanel;
-    private javax.swing.JButton helpButton;
     private javax.swing.JLabel inputDataLabel;
     private javax.swing.JTextField inputDataText;
     private javax.swing.JLabel integrationFrequencyLabel;
@@ -1408,6 +1450,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel integrationTimeLabel;
     private javax.swing.JTextField integrationTimeText;
     private javax.swing.JLabel integrationTimeUnitLabel;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JTextField modifyStationText;
     private javax.swing.JButton modifyStepButton;
     private javax.swing.JButton removeStepButton;

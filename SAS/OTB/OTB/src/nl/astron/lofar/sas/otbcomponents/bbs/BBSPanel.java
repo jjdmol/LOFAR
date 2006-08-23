@@ -471,7 +471,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         BBSDatasetLabel.setText("Dataset :");
         BBSGlobalSettingsFieldPanel.add(BBSDatasetLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
 
-        BBSDatasetText.setToolTipText("Path to the measurement set");
+        BBSDatasetText.setToolTipText("Path to the input measurement set");
         BBSDatasetText.setMaximumSize(new java.awt.Dimension(440, 19));
         BBSDatasetText.setMinimumSize(new java.awt.Dimension(440, 19));
         BBSDatasetText.setPreferredSize(new java.awt.Dimension(440, 19));
@@ -544,7 +544,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         ParmDBPanel.add(ParmDBLocalSkyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 50, 220, 20));
 
-        ParmDBHistoryText.setToolTipText("Path to the AIPS++ table containing the local sky model parameters");
+        ParmDBHistoryText.setToolTipText("Path to the AIPS++ table containing the solve history");
         ParmDBHistoryText.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ParmDBHistoryTextActionPerformed(evt);
@@ -561,6 +561,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         configurationRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Undo16.gif")));
         configurationRevertButton.setText("Revert");
+        configurationRevertButton.setToolTipText("Revert the values in this screen to the values present in the database");
         configurationRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
         configurationRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
         configurationRevertButton.setPreferredSize(new java.awt.Dimension(100, 25));

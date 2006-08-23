@@ -59,6 +59,9 @@
           </Constraints>
         </Component>
         <Component class="javax.swing.JTextField" name="epsilonText">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="1e-6"/>
+          </Properties>
           <Events>
             <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="epsilonTextKeyReleased"/>
           </Events>
@@ -79,6 +82,9 @@
           </Constraints>
         </Component>
         <Component class="javax.swing.JTextField" name="minConvergedText">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="100.0"/>
+          </Properties>
           <Events>
             <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="minConvergedTextKeyReleased"/>
           </Events>
@@ -137,6 +143,9 @@
               </Constraints>
             </Component>
             <Component class="javax.swing.JTextField" name="dsFrequencyText">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="1e25"/>
+              </Properties>
               <Events>
                 <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="dsFrequencyTextKeyReleased"/>
               </Events>
@@ -147,6 +156,9 @@
               </Constraints>
             </Component>
             <Component class="javax.swing.JTextField" name="dsTimeText">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="1e25"/>
+              </Properties>
               <Events>
                 <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="dsTimeTextKeyReleased"/>
               </Events>
@@ -219,12 +231,13 @@
                   <SubComponents>
                     <Component class="javax.swing.JList" name="solvableParmsList">
                       <Properties>
-                        <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
-                          <StringArray count="2">
-                            <StringItem index="0" value="1"/>
-                            <StringItem index="1" value="12"/>
-                          </StringArray>
+                        <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                          <Color blue="c0" green="c0" id="lightGray" palette="1" red="c0" type="palette"/>
                         </Property>
+                        <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
+                          <StringArray count="0"/>
+                        </Property>
+                        <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
                       <Events>
                         <EventHandler event="valueChanged" listener="javax.swing.event.ListSelectionListener" parameters="javax.swing.event.ListSelectionEvent" handler="solvableParmsListValueChanged"/>
@@ -242,6 +255,9 @@
                   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
                   <SubComponents>
                     <Component class="javax.swing.JTextField" name="solvableParmsModifyText">
+                      <Properties>
+                        <Property name="enabled" type="boolean" value="false"/>
+                      </Properties>
                       <Events>
                         <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="solvableParmsModifyTextKeyReleased"/>
                       </Events>
@@ -318,6 +334,7 @@
                 </Container>
                 <Component class="javax.swing.JCheckBox" name="solveAllParmsCheckbox">
                   <Properties>
+                    <Property name="selected" type="boolean" value="true"/>
                     <Property name="text" type="java.lang.String" value="Solve all parms"/>
                     <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                       <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">

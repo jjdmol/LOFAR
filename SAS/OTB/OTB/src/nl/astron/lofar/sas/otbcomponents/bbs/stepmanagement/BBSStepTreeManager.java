@@ -45,7 +45,6 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
     // Create a Log4J logger instance
     private static Logger logger = Logger.getLogger(BBSStepTreeManager.class);
     private static BBSStepTreeManager instance;
-    private static String BBSSTEP_TREENODE_SEPARATOR_CHAR = ".";
     
     /**
      * default constructor, protected by a singleton pattern
