@@ -452,7 +452,8 @@ def openHTMLPage(file,title,withHeader):
   file.write("</script>\n")
   # rest of start make up
   file.write("</head>\n")
-  file.write("<body onload=\"makeScrollableTable('tabela',true,'auto'); \">\n")
+  file.write("<body>\n")
+  #file.write("<body onload=\"makeScrollableTable('tabela',true,'auto'); \">\n")
   if withHeader:
     file.write("<center>\n")
     file.write("<h1>"+title+"</h1>\n")
@@ -783,6 +784,22 @@ def main(argv):
         writeLogFile.write('<a name="'+keepLastFoundBuildArray[6]+
                            '/'+aPack+'">\n')
 
+        writeLogFile.write('<pre>\n')
+
+      #
+      # Find needed file not found error 
+      #
+      if str.find(aLine,' *** No rule to make target') > -1:
+        aNewLine=str.split(aLine,'`')
+        aFile=str.split(aNewLine[1],'\'')
+        buildResultsArray.append([aFile[0],keepLastFoundBuildArray[3],
+                                  keepLastFoundBuildArray[6],nfile])
+        #
+        # Write target in log file to be able to find the error later
+        #
+        writeLogFile.write('</pre>\n')
+        writeLogFile.write('<a name="'+keepLastFoundBuildArray[6]+
+                           '/'+aFile[0]+'">\n')
         writeLogFile.write('<pre>\n')
 
       #
