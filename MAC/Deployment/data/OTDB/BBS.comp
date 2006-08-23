@@ -48,8 +48,8 @@ node   WorkDomainSize     1.0.0  development 'node constraint'  'BBS WorkDomainS
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Freq                    I    dbl    Hz     10    0    '1.0'                   -        'work domain size frequency'
-par  Time                    I    dbl    -      10    0    '0.1'                   -        'work domain size time'
+par  Freq                    I    dbl    Hz     10    0    ''                   -        'work domain size frequency'
+par  Time                    I    dbl    -      10    0    ''                   -        'work domain size time'
 
 # -- BBS Domain Size Settings
 #
@@ -59,8 +59,8 @@ node   DomainSize     1.0.0  development 'node constraint'  'BBS Step Operation 
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Freq                    I    dbl    Hz     10    0    '1.0'                   -        'domain size frequency'
-par  Time                    I    dbl    -      10    0    '0.1'                   -        'domain size time'
+par  Freq                    I    dbl    Hz     10    0    ''                   -        'domain size frequency'
+par  Time                    I    dbl    -      10    0    ''                   -        'domain size time'
 
 # -- BBS Integration Settings
 #
@@ -83,7 +83,7 @@ node   Strategy     1.0.0  development 'node constraint'  'BBS Strategy'
 #--------------------------------------------------------------------------------------------------------
 par  Steps                   I    text   -      10    0    '[]'                      -        'The steps contained in this BBS Strategy'
 par  Stations                I    text   -      10    0    '[]'                      -        'Identifiers/names of the stations to be used'
-par  InputData               I    text   -      10    0    'INDATA'                  -        'Measurement Set input data column'
+par  InputData               I    text   -      10    0    'DATA'                    -        'Measurement Set input data column'
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
@@ -110,9 +110,9 @@ node   Solve          1.0.0  development 'node constraint'  'Template BBS Step S
 
 #    name                   dir. type   unit   prun. vm   value              constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par    MaxIter              I    int    -      10    0    '10'               -        'Maximum number of iterations'
-par    Epsilon              I    dbl    -      10    0    '1e-7'             -        'Convergence threshold'
-par    MinConverged         I    dbl    -      10    0    '0.95'             -        'Fraction that must have converged'
+par    MaxIter              I    int    -      10    0    '5'               -        'Maximum number of iterations'
+par    Epsilon              I    dbl    -      10    0    '1e-6'             -        'Convergence threshold'
+par    MinConverged         I    dbl    -      10    0    '100.0'             -        'Fraction that must have converged'
 par    Parms                I    text   -      10    0    '[]'               -        'Names of solvable parameters'
 par    ExclParms            I    text   -      10    0    '[]'               -        'Parameters excluded from solve'
 
@@ -132,8 +132,8 @@ par    Steps                I    text   -      10    0    '[]'               -  
 par    Sources              I    text   -      10    0    '[]'               -        'List of sources'
 par    ExtraSources         I    text   -      10    0    '[]'               -        'List of extra sources'
 par    InstrumentModel      I    text   -      10    0    '[]'               -        'Instrument Model'
-par    OutputData           I    text   -      10    0    ''                 -        'OutputData Column'
-par    Operation            I    text   -      10    0    'SOLVE'            -        'Operation to be performed in this BBS Step'
+par    OutputData           I    text   -      10    0    'CORRECTED_DATA'   -        'OutputData Column'
+par    Operation            I    text   -      10    0    ''                 -        'Operation to be performed in this BBS Step'
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
