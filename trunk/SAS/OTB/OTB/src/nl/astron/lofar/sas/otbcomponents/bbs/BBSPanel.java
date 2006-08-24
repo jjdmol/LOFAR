@@ -39,24 +39,41 @@ import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 
 /**
- * Panel for BBS specific configuration
+ * OTB Component Panel for BBS specific configuration
  *
  * @created 11-07-2006, 13:37
- *
  * @author  pompert
- *
  * @version $Id$
  */
 public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     
     static Logger logger = Logger.getLogger(BBSPanel.class);
     static String name = "BBS";
+                    
+    private jOTDBnode itsNode = null;
+    private MainFrame  itsMainFrame;
+    private Vector<jOTDBparam> itsParamList;
     
+    // Global Settings parameters
+    private jOTDBnode dataSet;
     
-    /** Creates new form BeanForm based upon aNode
+    private jOTDBnode BBDBHost;
+    private jOTDBnode BBDBPort;
+    private jOTDBnode BBDBDBName;
+    private jOTDBnode BBDBUsername;
+    private jOTDBnode BBDBPassword;
+    
+    private jOTDBnode ParmDBInstrument;
+    private jOTDBnode ParmDBLocalSky;
+    private jOTDBnode ParmDBHistory;
+        
+    /** 
+     * Creates new BBSPanel instance using a given MainFrame instance and 
+     * the OTDBnode needed to fill the panel with correct data.
      *
-     * @params  aNode   node to obtain the info from
-     *
+     * @param  aMainFrame   the OTB instance
+     * @param  aNode        the node to obtain the BBS information from 
+     * (should be the BBS node in the component tree)
      */
     public BBSPanel(MainFrame aMainFrame,jOTDBnode aNode) {
         initComponents();
@@ -66,13 +83,18 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         initPanel();
     }
     
-    /** Creates new form BeanForm */
+    /** 
+     * Creates new BBSPanel instance
+     */
     public BBSPanel() {
         initComponents();
         initialize();
         
     }
-    
+    /**
+     * Sets the OTB MainFrame instance in this panel.
+     * @param aMainFrame the MainFrame instance to associate with
+     */
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -80,13 +102,23 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             logger.debug("No Mainframe supplied");
         }
     }
-    
+    /**
+     * Returns the friendly name of this panel
+     * @return String the friendly name of this panel
+     */
     public String getShortName() {
         return name;
     }
-    
+    /**
+     * This method will attempt to fill this panel with a given jOTDBnode object.
+     * <br><br>
+     * <b>Important</b>: The jOTDBnode to be passed on should always be the 'BBS' node. 
+     * @param anObject the BBS jOTDBnode to be displayed in the GUI.
+     */
     public void setContent(Object anObject) {
         itsNode=(jOTDBnode)anObject;
+        //It is assumed itsNode is the Observation BBS root node.
+        
         jOTDBparam aParam=null;
         try {
             //we need to get all the childs from this node.
@@ -104,12 +136,13 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                     aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
                     setField(itsNode,aParam,aNode);
                     
-                    //we need to get all the childs from the following nodes as well.
+                //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).equals("ParmDB")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }else if (LofarUtils.keyName(aNode.name).equals("BBDB")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }else if (LofarUtils.keyName(aNode.name).equals("Strategy")) {
+                    //load the BBS Strategy panel using the strategy node found.
                     this.aBBSStrategyPanel.setMainFrame(this.itsMainFrame);
                     this.aBBSStrategyPanel.setContent(aNode);
                 }
@@ -124,51 +157,47 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         initPanel();
     }
     
-    
+    /**
+     * This method allows the OTB to know if the BBSPanel should 
+     * only have one instance per OTB session. For now this method returns <i>false</i>
+     * @return <i>true</i> - if the panel should be loaded only once, <i>false</i> - panel can
+     * be instantiated more than once. 
+     */
     public boolean isSingleton() {
         return false;
     }
-    
+    /**
+     * This method returns a BBSPanel instance 
+     * @return a new BBSPanel instance
+     */
     public JPanel getInstance() {
         return new BBSPanel();
     }
+    /**
+     * This method tells the OTB if the BBSPanel 
+     * can show a popup menu object in the OTB. 
+     * Returns <i>false</i> for now.
+     *
+     * @return <i>true</i> - if the panel has a popup menu available, 
+     * <i>false</i> - if the panel does not have a popup menu available.
+     */
     public boolean hasPopupMenu() {
         return false;
     }
-    /** create popup menu for this panel
-     *
-     *  // build up the menu
-     *  aPopupMenu= new JPopupMenu();
-     *  aMenuItem=new JMenuItem("Choice 1");
-     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
-     *          popupMenuHandler(evt);
-     *      }
-     *  });
-     *  aMenuItem.setActionCommand("Choice 1");
-     *  aPopupMenu.add(aMenuItem);
-     *  aPopupMenu.setOpaque(true);
-     *
-     *
-     *  aPopupMenu.show(aComponent, x, y );
+    /** 
+     * Creates a popup menu for this panel in the OTB. Not used.
      */
     public void createPopupMenu(Component aComponent,int x, int y) {
-        JPopupMenu aPopupMenu=null;
-        JMenuItem  aMenuItem=null;
-        
-        //  Fill in menu as in the example above
     }
-    /** handles the choice from the popupmenu
-     *
-     * depending on the choices that are possible for this panel perform the action for it
-     *
-     *      if (evt.getActionCommand().equals("Choice 1")) {
-     *          perform action
-     *      }
+    /** 
+     * Handles the choice from the popupmenu in the OTB. Not used.
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
     }
-    /** Restore original Values in Detauks panel
+    /** 
+     * Helper method that retrieves the child nodes for a given jOTDBnode, 
+     * and triggers setField() accordingly.
+     * @param aNode the node to retrieve and display child data of.
      */
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
@@ -191,9 +220,8 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
     }
-    
-    
-    /** Restore original Values in Global Settings panel
+    /** 
+     * Restores original Values in Global Settings panel
      */
     private void restoreBBSGlobalSettingsPanel() {
         
@@ -209,11 +237,16 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         this.ParmDBLocalSkyText.setText(ParmDBLocalSky.limits);
         this.ParmDBHistoryText.setText(ParmDBHistory.limits);
     }
-    
+    /**
+     * Adds the save button on the bottom of the form
+     */
     private void initialize() {
         buttonPanel1.addButton("Save Settings");
     }
-    
+    /**
+     * Initialization method to be implemented when 
+     * User Access is completely implemented in the OTB.
+     */
     private void initPanel() {
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
@@ -237,9 +270,13 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             logger.debug("ERROR:  no node given");
         }
     }
-    /* Set's the different fields in the GUI */
+    /**
+     * Sets the different fields in the GUI, using the names of the nodes provided
+     * @param parent the parent node of the node to be displayed
+     * @param aParam the parameter of the node to be displayed if applicable
+     * @param aNode  the node to be displayed
+     */
     private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
-        // OLAP_HW settings
         if (aParam==null) {
             return;
         }
@@ -333,7 +370,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             }
         }
     }
-    /** saves the given param back to the database
+    /** 
+     * Saves the given node back to the OTDB database
+     * @param aNode the node to be saved
      */
     private void saveNode(jOTDBnode aNode) {
         if (aNode == null) {
@@ -346,86 +385,71 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
-    /** Enables/disables the buttons
+    /** Enables/disables the buttons (unused)
      *
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
-        this.enableOverviewButtons(enabled);
+       
     }
     
-    /** Sets the buttons visible/invisible
+    /** Sets the buttons visible/invisible (unused)
      *
      * @param   visible     true/false visible/invisible
      */
     public void setButtonsVisible(boolean visible) {
-        this.setOverviewButtonsVisible(visible);
-    }
-    private void enableOverviewButtons(boolean enabled) {
-        this.configurationRevertButton.setEnabled(enabled);
+        
     }
     
-    private void setOverviewButtonsVisible(boolean visible) {
-        this.configurationRevertButton.setVisible(visible);
-    }
-    
-    /** Enables/disables the complete form
+    /** Enables/disables the complete form (unused)
      *
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
-        enableOverviewButtons(enabled);
-    }
     
+    }
+    /**
+     * Saves all BBS Configuration nodes in the OTDB, should one or more have changed.
+     */
     private void saveInput() {
         
         if (this.dataSet != null && !this.BBSDatasetText.getText().equals(dataSet.limits)) {
             dataSet.limits = BBSDatasetText.getText();
-            logger.trace("Variable BBS ("+dataSet.name+"//"+dataSet.treeID()+"//"+dataSet.nodeID()+"//"+dataSet.parentID()+"//"+dataSet.paramDefID()+") from value ("+BBSDatasetText.getText()+") updated to :"+dataSet.limits);
             saveNode(dataSet);
         } 
         if (this.BBDBHost != null && !this.BBDBHostText.getText().equals(BBDBHost.limits)) {
             BBDBHost.limits = BBDBHostText.getText();
-            logger.trace("Variable BBS ("+BBDBHost.name+"//"+BBDBHost.treeID()+"//"+BBDBHost.nodeID()+"//"+BBDBHost.parentID()+"//"+BBDBHost.paramDefID()+") updated to :"+BBDBHost.limits);
             saveNode(BBDBHost);
         } 
         if (this.BBDBPort != null && !this.BBDBPortText.getText().equals(BBDBPort.limits)) {
             BBDBPort.limits = BBDBPortText.getText();
-            logger.trace("Variable BBS ("+BBDBPort.name+"//"+BBDBPort.treeID()+"//"+BBDBPort.nodeID()+"//"+BBDBPort.parentID()+"//"+BBDBPort.paramDefID()+") updated to :"+BBDBPort.limits);
             saveNode(BBDBPort);
         } 
         if (this.BBDBDBName != null && !this.BBDBDBNameText.getText().equals(BBDBDBName.limits)) {
             BBDBDBName.limits = BBDBDBNameText.getText();
-            logger.trace("Variable BBS ("+BBDBDBName.name+"//"+BBDBDBName.treeID()+"//"+BBDBDBName.nodeID()+"//"+BBDBDBName.parentID()+"//"+BBDBDBName.paramDefID()+") updated to :"+BBDBDBName.limits);
             saveNode(BBDBDBName);
         } 
         if (this.BBDBUsername != null && !this.BBDBDBUsernameText.getText().equals(BBDBUsername.limits)) {
             BBDBUsername.limits = BBDBDBUsernameText.getText();
-            logger.trace("Variable BBS ("+BBDBUsername.name+"//"+BBDBUsername.treeID()+"//"+BBDBUsername.nodeID()+"//"+BBDBUsername.parentID()+"//"+BBDBUsername.paramDefID()+") updated to :"+BBDBUsername.limits);
             saveNode(BBDBUsername);
         } 
         if (this.BBDBPassword != null && !this.BBDBDBPasswordText.getText().equals(BBDBPassword.limits)) {
             BBDBPassword.limits = BBDBDBPasswordText.getText();
-            logger.trace("Variable BBS ("+BBDBPassword.name+"//"+BBDBPassword.treeID()+"//"+BBDBPassword.nodeID()+"//"+BBDBPassword.parentID()+"//"+BBDBPassword.paramDefID()+") updated to :"+BBDBPassword.limits);
             saveNode(BBDBPassword);
         } 
         if (this.ParmDBInstrument != null && !this.ParmDBInstrumentText.getText().equals(ParmDBInstrument.limits)) {
             ParmDBInstrument.limits = ParmDBInstrumentText.getText();
-            logger.trace("Variable BBS ("+ParmDBInstrument.name+"//"+ParmDBInstrument.treeID()+"//"+ParmDBInstrument.nodeID()+"//"+ParmDBInstrument.parentID()+"//"+ParmDBInstrument.paramDefID()+") updated to :"+ParmDBInstrument.limits);
             saveNode(ParmDBInstrument);
         } 
         if (this.ParmDBLocalSky != null && !this.ParmDBLocalSkyText.getText().equals(ParmDBLocalSky.limits)) {
             ParmDBLocalSky.limits = ParmDBLocalSkyText.getText();
-            logger.trace("Variable BBS ("+ParmDBLocalSky.name+"//"+ParmDBLocalSky.treeID()+"//"+ParmDBLocalSky.nodeID()+"//"+ParmDBLocalSky.parentID()+"//"+ParmDBLocalSky.paramDefID()+") updated to :"+ParmDBLocalSky.limits);
             saveNode(ParmDBLocalSky);
         }
         if (this.ParmDBHistory != null && !this.ParmDBHistoryText.getText().equals(ParmDBHistory.limits)) {
             ParmDBHistory.limits = ParmDBHistoryText.getText();
-            logger.trace("Variable BBS ("+ParmDBHistory.name+"//"+ParmDBHistory.treeID()+"//"+ParmDBHistory.nodeID()+"//"+ParmDBHistory.parentID()+"//"+ParmDBHistory.paramDefID()+") updated to :"+ParmDBHistory.limits);
             saveNode(ParmDBHistory);
         }
-    }
-    
+    }    
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -615,23 +639,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             saveInput();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
-                
-    private jOTDBnode itsNode = null;
-    private MainFrame  itsMainFrame;
-    private Vector<jOTDBparam> itsParamList;
-    
-    // Global Settings parameters
-    private jOTDBnode dataSet;
-    
-    private jOTDBnode BBDBHost;
-    private jOTDBnode BBDBPort;
-    private jOTDBnode BBDBDBName;
-    private jOTDBnode BBDBUsername;
-    private jOTDBnode BBDBPassword;
-    
-    private jOTDBnode ParmDBInstrument;
-    private jOTDBnode ParmDBLocalSky;
-    private jOTDBnode ParmDBHistory;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel BBDBDBNameLabel;

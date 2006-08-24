@@ -21,7 +21,7 @@ import nl.astron.lofar.sas.otb.MainFrame;
  * @version $Id$
  */
 public class BBSStepInputDialog extends javax.swing.JDialog {
-    
+
     /** Creates new form BBSStepInputDialog */
     public BBSStepInputDialog(MainFrame parent, boolean modal, BBSStep tobeDisplayedBBSStep,BBSStep parentBBSStep) {
         super(parent, modal);
@@ -50,36 +50,36 @@ public class BBSStepInputDialog extends javax.swing.JDialog {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        sePanel = new nl.astron.lofar.sas.otbcomponents.bbs.BBSStepExplorerPanel();
-        jLabel1 = new javax.swing.JLabel();
+        warningLabel = new javax.swing.JLabel();
+        sePanel = new nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepExplorerPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-
-        jLabel1.setFont(new java.awt.Font("Dialog", 1, 10));
-        jLabel1.setForeground(java.awt.Color.gray);
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Note : To permanently store this step in its strategy, press 'Save Settings' in the BBS Strategy panel.");
+        warningLabel.setFont(new java.awt.Font("Dialog", 1, 10));
+        warningLabel.setForeground(java.awt.Color.gray);
+        warningLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        warningLabel.setText("Note : To permanently store this step in its strategy, press 'Save Settings' in the BBS Strategy panel.");
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(sePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
             .add(layout.createSequentialGroup()
-                .add(108, 108, 108)
-                .add(jLabel1)
-                .addContainerGap(122, Short.MAX_VALUE))
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(108, 108, 108)
+                        .add(warningLabel))
+                    .add(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(sePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(12, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(12, Short.MAX_VALUE)
                 .add(sePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(jLabel1))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(warningLabel))
         );
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -100,8 +100,8 @@ public class BBSStepInputDialog extends javax.swing.JDialog {
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
-    private nl.astron.lofar.sas.otbcomponents.bbs.BBSStepExplorerPanel sePanel;
+    private nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepExplorerPanel sePanel;
+    private javax.swing.JLabel warningLabel;
     // End of variables declaration//GEN-END:variables
     
 }

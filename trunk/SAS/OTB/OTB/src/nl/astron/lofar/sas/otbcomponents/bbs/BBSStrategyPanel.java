@@ -54,7 +54,7 @@ import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStrategy;
 import org.apache.log4j.Logger;
 
 /**
- * Panel for BBS strategy configuration
+ * OTB Component Panel for BBS Strategy and Steps configuration
  *
  * @author pompert
  * @version $Id$
@@ -64,11 +64,29 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     
     static Logger logger = Logger.getLogger(BBSStrategyPanel.class);
     static String name = "BBS Strategy";
+            
+    private jOTDBnode itsNode = null;
+    private MainFrame  itsMainFrame;
+    private Vector<jOTDBparam> itsParamList;
     
-    /** Creates new form BeanForm based upon aNode
+    // BBS Strategy parameters
+    private jOTDBnode StrategySteps;
+    private jOTDBnode StrategyStations;
+    private jOTDBnode StrategyInputData;
+    private jOTDBnode StrategyCorrelationSelection;
+    private jOTDBnode StrategyCorrelationType;
+    private jOTDBnode StrategyWDSFrequency;
+    private jOTDBnode StrategyWDSTime;
+    private jOTDBnode StrategyIntegrationFrequency;
+    private jOTDBnode StrategyIntegrationTime;
+    
+    /**
+     * Creates new BBSStrategyPanel instance using a given MainFrame instance and
+     * the OTDBnode needed to fill the panel with correct data.
      *
-     * @params  aNode   node to obtain the info from
-     *
+     * @param  aMainFrame   the OTB instance
+     * @param  aNode        the node to obtain the BBS Strategy information from
+     * (should be the BBS.Strategy node in the component tree)
      */
     public BBSStrategyPanel(MainFrame aMainFrame,jOTDBnode aNode) {
         initComponents();
@@ -78,13 +96,18 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         initPanel();
     }
     
-    /** Creates new form BeanForm */
+    /**
+     * Creates new BBSStrategyPanel instance
+     */
     public BBSStrategyPanel() {
         initComponents();
         initialize();
         
     }
-    
+    /**
+     * Sets the OTB MainFrame instance in this panel.
+     * @param aMainFrame the MainFrame instance to associate with
+     */
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -92,13 +115,22 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.debug("No Mainframe supplied");
         }
     }
-    
+    /**
+     * Returns the friendly name of this panel
+     * @return String the friendly name of this panel
+     */
     public String getShortName() {
         return name;
     }
-    
+    /**
+     * This method will attempt to fill this panel with a given jOTDBnode object.
+     * <br><br>
+     * <b>Important</b>: The jOTDBnode to be passed on should always be the 'BBS.Strategy' node.
+     * @param anObject the BBS Strategy jOTDBnode to be displayed in the GUI.
+     */
     public void setContent(Object anObject) {
         itsNode=(jOTDBnode)anObject;
+        //it is assumed itsNode is the BBS.Strategy node.
         jOTDBparam aParam=null;
         try {
             //we need to get all the childs from this node.
@@ -115,19 +147,22 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 if (aNode.leaf) {
                     aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
                     setField(itsNode,aParam,aNode);
+                    
                     //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).equals("WorkDomainSize")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-               
+                    
                 /* INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
                 }else if (LofarUtils.keyName(aNode.name).equals("Integration")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                */
-                   
-                //INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, REMOVE CODE BLOCK BELOW WHEN IMPLEMENTED    
+                 */
+                    
+                    //INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, REMOVE CODE BLOCK BELOW WHEN IMPLEMENTED
                 }else if (LofarUtils.keyName(aNode.name).equals("Integration")) {
                     SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aNode);
-                //end of removable code block    
+                    //end of removable code block
+                    
+                    
                 }else if (LofarUtils.keyName(aNode.name).equals("Correlation")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
@@ -144,51 +179,48 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         
     }
     
-    
+    /**
+     * This method allows the OTB to know if the BBSStrategyPanel should
+     * only have one instance per OTB session. For now this method returns <i>false</i>
+     * @return <i>true</i> - if the panel should be loaded only once, <i>false</i> - panel can
+     * be instantiated more than once.
+     */
     public boolean isSingleton() {
         return false;
     }
-    
+    /**
+     * This method returns a BBSStrategyPanel instance
+     * @return a new BBSStrategyPanel instance
+     */
     public JPanel getInstance() {
         return new BBSStrategyPanel();
     }
+    /**
+     * This method tells the OTB if the BBSPanel
+     * can show a popup menu object in the OTB.
+     * Returns <i>false</i> for now.
+     *
+     * @return <i>true</i> - if the panel has a popup menu available,
+     * <i>false</i> - if the panel does not have a popup menu available.
+     */
     public boolean hasPopupMenu() {
         return false;
     }
-    /** create popup menu for this panel
-     *
-     *  // build up the menu
-     *  aPopupMenu= new JPopupMenu();
-     *  aMenuItem=new JMenuItem("Choice 1");
-     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
-     *          popupMenuHandler(evt);
-     *      }
-     *  });
-     *  aMenuItem.setActionCommand("Choice 1");
-     *  aPopupMenu.add(aMenuItem);
-     *  aPopupMenu.setOpaque(true);
-     *
-     *
-     *  aPopupMenu.show(aComponent, x, y );
+    /**
+     * Creates a popup menu for this panel in the OTB. Not used.
      */
     public void createPopupMenu(Component aComponent,int x, int y) {
-        JPopupMenu aPopupMenu=null;
-        JMenuItem  aMenuItem=null;
-        
-        //  Fill in menu as in the example above
     }
-    /** handles the choice from the popupmenu
-     *
-     * depending on the choices that are possible for this panel perform the action for it
-     *
-     *      if (evt.getActionCommand().equals("Choice 1")) {
-     *          perform action
-     *      }
+    /**
+     * Handles the choice from the popupmenu in the OTB. Not used.
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
     }
-    
+    /**
+     * Helper method that retrieves the child nodes for a given jOTDBnode,
+     * and triggers setField() accordingly.
+     * @param aNode the node to retrieve and display child data of.
+     */
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
@@ -210,7 +242,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
     }
-    
+    /** 
+     * Restores original Values in this panel, including the step tree
+     */
     private void restoreBBSStrategyPanel() {
         this.inputDataText.setText(StrategyInputData.limits);
         this.wdsFrequencyText.setText(StrategyWDSFrequency.limits);
@@ -241,15 +275,19 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         //reload the strategy steps from the OTDB
         BBSStepDataManager.getInstance().generateStrategyFromOTDB();
         this.setupStepTree(StrategySteps);
-        //TODO: add other values accordingly.
     }
-    
+    /**
+     * Adds the save button on the bottom of the form
+     */
     
     private void initialize() {
         this.buttonPanel1.addButton("Save Settings");
         this.stationsList.setModel(new DefaultListModel());
     }
-    
+     /**
+     * Initialization method to be implemented when 
+     * User Access is completely implemented in the OTB.
+     */
     private void initPanel() {
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
@@ -273,7 +311,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.debug("ERROR:  no node given");
         }
     }
-    /* Set's the different fields in the GUI */
+    /**
+     * Sets the different fields in the GUI, using the names of the nodes provided
+     * @param parent the parent node of the node to be displayed
+     * @param aParam the parameter of the node to be displayed if applicable
+     * @param aNode  the node to be displayed
+     */
     private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
         // OLAP_HW settings
         if (aParam==null) {
@@ -375,8 +418,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }
         }
     }
-    
-    /** saves the given param back to the database
+    /** 
+     * Saves the given node back to the OTDB database
+     * @param aNode the node to be saved
      */
     private void saveNode(jOTDBnode aNode) {
         if (aNode == null) {
@@ -389,49 +433,28 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
-    /** Enables/disables the buttons
+    /** Enables/disables the buttons (unused)
      *
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
-        this.enableOverviewButtons(enabled);
-        this.enableDetailButtons(enabled);
     }
     
-    /** Sets the buttons visible/invisible
+    /** Sets the buttons visible/invisible (unused)
      *
      * @param   visible     true/false visible/invisible
      */
     public void setButtonsVisible(boolean visible) {
-        this.setOverviewButtonsVisible(visible);
-        this.setDetailsButtonsVisible(visible);
     }
-    private void enableOverviewButtons(boolean enabled) {
-        this.strategyRevertButton.setEnabled(enabled);
-    }
-    
-    private void setOverviewButtonsVisible(boolean visible) {
-        this.strategyRevertButton.setVisible(visible);
-    }
-    
-    private void enableDetailButtons(boolean enabled) {
-        this.strategyRevertButton.setEnabled(enabled);
-    }
-    
-    private void setDetailsButtonsVisible(boolean visible) {
-        this.strategyRevertButton.setVisible(visible);
-    }
-    
-    
-    /** Enables/disables the complete form
+    /** Enables/disables the complete form (unused)
      *
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
-        enableOverviewButtons(enabled);
-        enableDetailButtons(enabled);
     }
-    
+    /**
+     * Saves all BBS Strategy configuration nodes in the OTDB, should one or more have changed.
+     */
     private void saveInput() {
         
         if (this.StrategyInputData != null && !this.inputDataText.getText().equals(StrategyInputData.limits)) {
@@ -471,7 +494,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("Variable BBS Strategy ("+StrategyCorrelationType.name+"//"+StrategyCorrelationType.treeID()+"//"+StrategyCorrelationType.nodeID()+"//"+StrategyCorrelationType.parentID()+"//"+StrategyCorrelationType.paramDefID()+") updating to :"+StrategyCorrelationType.limits);
             saveNode(StrategyCorrelationType);
         }
-        //clear the stations if the use all stations checkbox is selected
+        //clear the stations list if the use all stations checkbox is selected
         if(this.stationsUseAllCheckbox.isSelected()){
             stationsList.setModel(new DefaultListModel());
         }
@@ -480,8 +503,17 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("Variable BBS Strategy ("+StrategyStations.name+"//"+StrategyStations.treeID()+"//"+StrategyStations.nodeID()+"//"+StrategyStations.parentID()+"//"+StrategyStations.paramDefID()+") updating to :"+StrategyStations.limits);
             saveNode(StrategyStations);
         }
-        //TODO: Other values accordingly
     }
+    /**
+     * Creates a String representation of the contents of a JList component<br><br>
+     * Example of output with createQuotes : ["123","456","789"]<br>
+     * Example of output with !createQuotes: [123,456,789]<br>
+     * Returns '[]' when no items were detected in the JList.
+     *
+     * @param aListComponent the JList component of which the data has to be converted
+     * @param createQuotes add/do not add quotes to each individual value in the string output
+     * @return String representation of aListComponent
+     */
     private String createList(JList aListComponent,boolean createQuotes) {
         String aList="[";
         if (aListComponent.getModel().getSize() > 0) {
@@ -507,6 +539,15 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         aList+="]";
         return aList;
     }
+    /**
+     * Fills a JList component with a String representation of the to-be contents<br><br>
+     * Example of input argument theList with removeQuotes : ["123","456","789"]<br>
+     * Example of input argument theList with !removeQuotes: [123,456,789]
+     *
+     * @param aListComponent the JList component where the data has to be inserted in.
+     * @param theList the String representation of a JList component
+     * @param removeQuotes removes/does not remove quotes from each individual value in the theList input
+     */
     private void fillList(JList aListComponent,String theList,boolean removeQuotes) {
         DefaultListModel itsModel = new DefaultListModel();
         aListComponent.setModel(itsModel);
@@ -529,6 +570,16 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             aListComponent.setModel(itsModel);
         }
     }
+    /**
+     * Creates a String representation of the <b><i>selected</i></b> items in a JList component<br><br>
+     * Example of output with createQuotes : ["123","456","789"]<br>
+     * Example of output with !createQuotes: [123,456,789]<br>
+     * Returns '[]' when no selected items were detected in the JList.
+     * 
+     * @param aListComponent the JList component of which the selected items have to be in a String
+     * @param createQuotes add/do not add quotes to each individual value in the string output
+     * @return String representation of the selected items in a aListComponent
+     */
     private String createStringFromSelectionList(JList aListComponent,boolean createQuotes) {
         String aList="[";
         if (aListComponent.getModel().getSize() > 0) {
@@ -547,6 +598,15 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         aList+="]";
         return aList;
     }
+     /**
+     * Selects items in a JList component using a String representation of the to-be selected contents<br><br>
+     * Example of input argument theList with removeQuotes : ["123","456","789"]<br>
+     * Example of input argument theList with !removeQuotes: [123,456,789]
+     *
+     * @param aListComponent the JList component where the data has to be inserted in.
+     * @param theList the String representation of the selected items in a JList component
+     * @param removeQuotes removes/does not remove quotes from each individual value in the theList input
+     */
     private void fillSelectionListFromString(JList aListComponent,String theList,boolean removeQuotes) {
         String aList = theList;
         if (aList.startsWith("[")) {
@@ -585,11 +645,15 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }
         }
     }
-    
+    /**
+     * This helper method builds up the Step Tree that contains steps associated with the BBS Strategy
+     *
+     * @param strategyRootNode the BBS Strategy node needed to build the step tree
+     */
     private void setupStepTree(jOTDBnode strategyRootNode){
         try {
             //Add steps that make up the strategy to the steps tree browser
-            //
+            //fetch the BBS root Container node, which is the parent of the BBS Strategy node given in strategyRootNode
             Vector steps = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(strategyRootNode.treeID(), strategyRootNode.parentID(), 1);
             // get all the params per child
             Enumeration se = steps.elements();
@@ -597,6 +661,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 jOTDBnode aNode2 = (jOTDBnode)se.nextElement();
                 
                 if (aNode2.leaf) {
+                //retrieve the BBS Step Container node, which holds all steps (BBS.Step)
                 }else if (LofarUtils.keyName(aNode2.name).equals("Step")) {
                     //Add steps to tree
                     Object[] rootNodeArgs = new Object[3];
@@ -615,6 +680,11 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.error("Strategy Step Tree could not be built.",ex);
         }
     }
+    /**
+     * Adds existings steps to the existing Step Combobox in the Step Tree sub-Panel.
+     *
+     * @param items the String items to be added to the combobox.
+     */
     private void setupStepsList(Vector<String> items){
         DefaultComboBoxModel itsModel = new DefaultComboBoxModel();
         stepsList.setModel(itsModel);
@@ -631,14 +701,30 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
-    // If expand is true, expands all nodes in the tree.
-    // Otherwise, collapses all nodes in the tree.
+    /**
+     * Helper method that is used to fully expand the step tree
+     *
+     * If expand is true, it expands all nodes in the tree.
+     * Otherwise, collapses all nodes in the tree.
+     *
+     * @param tree The JTree to expand/collapse
+     * @param expand true/false expand/collapse the tree.
+     *
+     */
+   
     private void expandAll(JTree tree, boolean expand) {
         TreeNode root = (TreeNode)tree.getModel().getRoot();
         
         // Traverse tree from root
         expandAll(tree, new TreePath(root), expand);
     }
+    /**
+     * Helper method that recursively expands a given TreePath
+     *
+     * @param tree The JTree to expand/collapse
+     * @param parent the TreePath to expand
+     * @param expand true/false expand/collapse the treepath.
+     */
     private void expandAll(JTree tree, TreePath parent, boolean expand) {
         // Traverse children
         TreeNode node = (TreeNode)parent.getLastPathComponent();
@@ -1349,7 +1435,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 warning=true;
                 integrationFrequencyText.setBackground(Color.RED);
             }
-            */
+             */
             if(!wdsFrequency.equals("")){
                 try {
                     Double itime = Double.parseDouble(wdsFrequency);
@@ -1412,21 +1498,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             itsMainFrame.setNormalCursor();
         }
     }//GEN-LAST:event_strategyRevertButtonActionPerformed
-    
-    private jOTDBnode itsNode = null;
-    private MainFrame  itsMainFrame;
-    private Vector<jOTDBparam> itsParamList;
-    
-    // BBS Strategy parameters
-    private jOTDBnode StrategySteps;
-    private jOTDBnode StrategyStations;
-    private jOTDBnode StrategyInputData;
-    private jOTDBnode StrategyCorrelationSelection;
-    private jOTDBnode StrategyCorrelationType;
-    private jOTDBnode StrategyWDSFrequency;
-    private jOTDBnode StrategyWDSTime;
-    private jOTDBnode StrategyIntegrationFrequency;
-    private jOTDBnode StrategyIntegrationTime;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addExistingStepButton;
