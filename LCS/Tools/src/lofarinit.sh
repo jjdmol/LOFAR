@@ -90,6 +90,9 @@ else
     if [ "$data_path" != ""  -a  -d ${data_path}DATA ]; then
         LOFARDATAROOT=${data_path}DATA
         export LOFARDATAROOT
+    else
+        LOFARDATAROOT=/opt/lofar/data
+        export LOFARDATAROOT
     fi
 fi
 
