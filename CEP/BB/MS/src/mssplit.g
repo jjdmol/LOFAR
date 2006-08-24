@@ -5,8 +5,11 @@
 include 'table.g'
 
 msconv := function (t, msout, selcommand='', datacolumn='DATA',
-		    makeresidual=F, usedouble=F)
+		    makeresidual=F, usedouble=F, addcorr=F, addmodel=F)
 {
+    if (addcorr) {
+	makeresidual := F;
+    }
     print 'Selecting subset',selcommand;
     t1 := t.query (selcommand,
 		   sortlist='ARRAY_ID,DATA_DESC_ID,TIME,ANTENNA1,ANTENNA2',
@@ -105,7 +108,30 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA',
 	if (is_fail(tr1.renamecol (datacolumn, 'DATA'))) fail;
     }
     if (is_fail(tr1.copyrows (tr2, 1, 1, tr1.nrows()))) fail;
-print 'copied'
+    tr1.close();
+    tr2.close();
+
+    # Adding CORRECTED_DATA and/or MODEL_DATA column.
+    if (addcorr) {
+        print ' adding CORRECTED_DATA column ...'
+        dmd := [TYPE='TiledColumnStMan', NAME='Tiled_CORRECTED_DATA',
+	        SPEC=[DEFAULTTILESHAPE=[4,100000,1],
+		      TILESHAPE=[4,100000,1],
+		      MAXIMUMCACHESIZE=0]];
+        coldes := [name='CORRECTED_DATA', desc=t1.getcoldesc (datacolumn)];
+        coldes.desc.shape := shp;
+        if (is_fail(t2.addcols (coldes, dmd))) fail;
+    }
+    if (addmodel) {
+        print ' adding MODEL_DATA column ...'
+        dmd := [TYPE='TiledColumnStMan', NAME='Tiled_MODEL_DATA',
+	        SPEC=[DEFAULTTILESHAPE=[4,100000,1],
+		      TILESHAPE=[4,100000,1],
+		      MAXIMUMCACHESIZE=0]];
+        coldes := [name='MODEL_DATA', desc=t1.getcoldesc (datacolumn)];
+        coldes.desc.shape := shp;
+        if (is_fail(t2.addcols (coldes, dmd))) fail;
+    }
 
     t1.close();
     t2.close();
@@ -179,37 +205,50 @@ print 'copied'
     t1.close();
     for (i in [1:len(dm)]) {
 	if (dm[i].NAME == 'TiledDataNew') {
-	    print ' DATA stman =', i-1;
-	    nmd := i-1;
-	} else if (dm[i].NAME == 'TiledDataRes') {
-	    print ' RESIDUAL_DATA stman =', i-1;
-	    nmr := i-1;
+	    nmd := dm[i].SPEC.SEQNR;
+	    print ' DATA stman =', nmd;
+	} else if (dm[i].NAME == 'Tiled_CORRECTED_DATA') {
+	    nmc := dm[i].SPEC.SEQNR;
+	    print ' CORRECTED_DATA stman =', nmc;
+	} else if (dm[i].NAME == 'Tiled_MODEL_DATA') {
+	    nmm := dm[i].SPEC.SEQNR;
+	    print ' MODEL_DATA stman =', nmm;
+	} else if (dm[i].NAME == 'Tiled_RESIDUAL_DATA') {
+	    nmr := dm[i].SPEC.SEQNR;
+	    print ' RESIDUAL_DATA stman =', nmr;
 	} else if (dm[i].NAME == 'TiledFlagNew') {
-	    print ' FLAG stman =', i-1;
-	    nmf := i-1;
+	    nmf := dm[i].SPEC.SEQNR;
+	    print ' FLAG stman =', nmf;
 	} else if (dm[i].NAME == 'TiledUVWNew') {
-	    print ' UVW stman =', i-1;
-	    nmu := i-1;
+	    nmu := dm[i].SPEC.SEQNR;
+	    print ' UVW stman =', nmu;
 	}
     }
     # Create symlinks for the data, flags and uvw file.
     shell(spaste('ln -s ','table.f',nmd,'_TSM0 ',msout,'/vis.dat'));
+    shell(spaste('ln -s ','table.f',nmd,'_TSM0 ',msout,'/vis.DATA'));
     shell(spaste('ln -s ','table.f',nmf,'_TSM0 ',msout,'/vis.flg'));
     shell(spaste('ln -s ','table.f',nmu,'_TSM0 ',msout,'/vis.uvw'));
+    if (addcorr) {
+	shell(spaste('ln -s ','table.f',nmc,'_TSM0 ',msout,'/vis.CORRECTED_DATA'));
+    }
+    if (addmodel) {
+	shell(spaste('ln -s ','table.f',nmm,'_TSM0 ',msout,'/vis.MODEL_DATA'));
+    }
     if (makeresidual) {
 	shell(spaste('ln -s ','table.f',nmr,'_TSM0 ',msout,'/vis.res'));
     }
-    # Create the description file.
-    print 'Creating the description file vis.des ...';
-    print shell(paste('MSDesc',msout,'DATA'));
+    # Create the local description file.
+    print 'Creating the local description file vis.des ...';
+    print shell(paste('makemsdesc',msout,'n'));
     # Set the protections such that the world can read the MS created.
     shell(paste('chmod -R +r',msout));
     return T;
 }
 
 
-mssplit := function (msin, nparts, datacolumn='DATA',
-		     makeresidual=F, usedouble=F)
+mssplit := function (msin, nparts=1, datacolumn='DATA',
+		     makeresidual=F, usedouble=F, addcorr=T, addmodel=T)
 {
     t:=table (msin);
     if (is_fail(t)) fail;
@@ -235,9 +274,13 @@ mssplit := function (msin, nparts, datacolumn='DATA',
     }
     # No split needed if only 1 part.
     if (nparts < 2) {
-	res := msconv (t, spaste(msin,'_p1'), '', datacolumn,
-		       makeresidual, usedouble);
+        outnm := spaste(msin,'_p1');
+	res := msconv (t, outnm, '', datacolumn, makeresidual, usedouble,
+	               addcorr, addmodel);
 	t.close();
+	# Create the local description file.
+        print 'Creating the global description file ...';
+        print shell(paste('makemsdesc',outnm,'y'));
 	return res;
     }
     include 'trysplit.g'
@@ -264,7 +307,8 @@ mssplit := function (msin, nparts, datacolumn='DATA',
         if (is_fail(msconv (t, spaste(msin,'_p',part),
 			    spaste('any(ANTENNA1 == ', vecsela1,
 				   ' && ANTENNA2 == ', vecsela2, ')'),
-			    datacolumn, makeresidual, usedouble))) fail;
+			    datacolumn, makeresidual, usedouble,
+	                    addcorr, addmodel))) fail;
         t1 := table (spaste(msin,'_p',part));
         tnrrow +:= t1.nrows();
         rows := [rows, t1.rownumbers(t)];
