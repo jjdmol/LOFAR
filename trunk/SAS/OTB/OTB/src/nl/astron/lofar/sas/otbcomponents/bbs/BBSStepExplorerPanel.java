@@ -48,15 +48,12 @@ import org.apache.log4j.Logger;
  * Panel for BBS Step Explorer
  *
  * @created 11-07-2006, 13:37
- *
  * @author  pompert
- *
  * @version $Id$
  */
-public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPanel{
+public class BBSStepExplorerPanel extends javax.swing.JPanel{
     
     static Logger logger = Logger.getLogger(BBSStepExplorerPanel.class);
-    static String name = "BBS Step Explorer";
     public final static Color INHERITED_FROM_PARENT = new Color(255,255,204);
     public final static Color NOT_DEFINED = new Color(255,204,204);
     public final static Color NOT_INHERITED_FROM_PARENT = new Color(204,255,204);
@@ -64,26 +61,16 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
     
     private static HashMap<String,String> stepOperationPanels = new HashMap<String,String>();
     private IBBSStepOperationPanel currentStepOperationsPanel = null;
-    
-    
-    /** Creates new form BeanForm based upon aNode
-     *
-     * @params  aNode   node to obtain the info from
-     *
-     */
-    public BBSStepExplorerPanel(MainFrame aMainFrame,jOTDBnode aNode) {
-        initComponents();
-        itsMainFrame = aMainFrame;
-        itsNode=aNode;
-        initialize();
-        initPanel();
-    }
+            
+    private BBSStep itsBBSStep = null;
+    private BBSStep itsParentBBSStep = null;
+    private jOTDBnode itsNode = null;
+    private MainFrame  itsMainFrame;
     
     /** Creates new form BeanForm */
     public BBSStepExplorerPanel() {
         initComponents();
         initialize();
-        
     }
     
     public void setMainFrame(MainFrame aMainFrame) {
@@ -92,17 +79,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         } else {
             logger.debug("No Mainframe supplied");
         }
-    }
-    
-    public String getShortName() {
-        return name;
-    }
-    
-    public void setContent(Object anObject) {
-        if(anObject instanceof jOTDBnode){
-            itsNode=(jOTDBnode)anObject;
-        }
-        initPanel();
     }
     public void setBBSStepContent(BBSStep itsStep,BBSStep itsParentBBSStep) {
         
@@ -127,52 +103,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             //assume a new strategy step will be generated
             this.stepExplorerRevertButton.setEnabled(false);
         }
-        initPanel();
-    }
-    
-    
-    public boolean isSingleton() {
-        return false;
-    }
-    
-    public JPanel getInstance() {
-        return new BBSPanel();
-    }
-    public boolean hasPopupMenu() {
-        return false;
-    }
-    /** create popup menu for this panel
-     *
-     *  // build up the menu
-     *  aPopupMenu= new JPopupMenu();
-     *  aMenuItem=new JMenuItem("Choice 1");
-     *  aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-     *      public void actionPerformed(java.awt.event.ActionEvent evt) {
-     *          popupMenuHandler(evt);
-     *      }
-     *  });
-     *  aMenuItem.setActionCommand("Choice 1");
-     *  aPopupMenu.add(aMenuItem);
-     *  aPopupMenu.setOpaque(true);
-     *
-     *
-     *  aPopupMenu.show(aComponent, x, y );
-     */
-    public void createPopupMenu(Component aComponent,int x, int y) {
-        JPopupMenu aPopupMenu=null;
-        JMenuItem  aMenuItem=null;
-        
-        //  Fill in menu as in the example above
-    }
-    /** handles the choice from the popupmenu
-     *
-     * depending on the choices that are possible for this panel perform the action for it
-     *
-     *      if (evt.getActionCommand().equals("Choice 1")) {
-     *          perform action
-     *      }
-     */
-    public void popupMenuHandler(java.awt.event.ActionEvent evt) {
     }
     
     /** Restore original Values in Global Settings panel
@@ -203,30 +133,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
         
     }
     
-    private void initPanel() {
-        // check access
-        UserAccount userAccount = itsMainFrame.getUserAccount();
-        
-        // for now:
-        setAllEnabled(true);
-        
-        if(userAccount.isAdministrator()) {
-            // enable/disable certain controls
-        }
-        if(userAccount.isAstronomer()) {
-            // enable/disable certain controls
-        }
-        if(userAccount.isInstrumentScientist()) {
-            // enable/disable certain controls
-        }
-        if (itsBBSStep != null) {
-            // [TODO]
-            // Fill from existing cfg needed ????
-        } else {
-            logger.debug("ERROR:  no BBS Step given");
-        }
-        
-    }
     /* Set's the different fields in the GUI */
     private void fillBBSGui(BBSStep theBBSStep) {
         
@@ -468,37 +374,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             this.loadStepOperationsPanel(this.stepOperationPanels.get(stepData.getOperationName()),stepData,inheritedData);
             
         }
-    }
-    
-    /** Enables/disables the buttons
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void enableButtons(boolean enabled) {
-        this.enableStepExplorerButtons(enabled);
-    }
-    
-    /** Sets the buttons visible/invisible
-     *
-     * @param   visible     true/false visible/invisible
-     */
-    public void setButtonsVisible(boolean visible) {
-        this.setStepExplorerButtonsVisible(visible);
-    }
-    private void enableStepExplorerButtons(boolean enabled) {
-        
-    }
-    
-    private void setStepExplorerButtonsVisible(boolean visible) {
-        
-    }
-    
-    /** Enables/disables the complete form
-     *
-     * @param   enabled     true/false enabled/disabled
-     */
-    public void setAllEnabled(boolean enabled) {
-        enableStepExplorerButtons(enabled);
     }
     
     private void saveInput(BBSStep aStep) {
@@ -1980,12 +1855,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel implements IViewPan
             fireActionListenerActionPerformed(closeEvt);
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
-    
-    private BBSStep itsBBSStep = null;
-    private BBSStep itsParentBBSStep = null;
-    private jOTDBnode itsNode = null;
-    private MainFrame  itsMainFrame;
-    
+   
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel BBSStepExplorerPanel;
     private javax.swing.JPanel BaselineSelectionPanel;
