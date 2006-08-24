@@ -27,9 +27,15 @@ import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 
 /**
+ * The BBSStep represents an instance of a BBS Step with a given name. For each
+ * BBS Step with a given name, multiple BBSStep objects can exist.
+ *
  * @version $Id$
  * @created July 25, 2006, 10:08 AM
  * @author pompert
+ * @see BBSStrategy
+ * @see BBSStepData
+ * @see BBSStepDataManager
  */
 public class BBSStep implements Cloneable, Comparable{
     
@@ -40,70 +46,108 @@ public class BBSStep implements Cloneable, Comparable{
     //Step Name
     private String name;
     
-    /** Creates a new instance of BBSStep */
+    /** 
+     * Creates a new instance of BBSStep 
+     * 
+     * @param name the Step Name to be given to the BBSStep object instance
+     */
     public BBSStep(String name) {
         this.name=name;
         childSteps = new Vector<BBSStep>();
         parentStep = null;
     }
-    
+    /**
+     * Returns the name of the BBS Step this BBSStep object represents
+     * 
+     * @return the BBS Step name
+     */
     public String getName(){
         return name;
     }
-    
+    /**
+     * Sets the name of the BBS Step this BBSStep object should represent
+     * @param name the name of the BBS Step to be representing
+     */
     public void setName(String name){
         this.name = name;
     }
-    
+    /**
+     * Returns the parent BBSStep/Multistep (null if this BBSStep is a BBSStrategy childstep)
+     * 
+     * @return the BBSStep parent object
+     */
     public BBSStep getParentStep(){
         return parentStep;
     }
-    
+    /**
+     * Sets the parent BBSStep/Multistep (null if this BBSStep is to be a BBSStrategy childstep)
+     * 
+     * @parm parentStep the BBSStep parent object
+     */
     public void setParentStep(BBSStep parentStep){
         this.parentStep = parentStep;
     }
-    
+    /**
+     * Returns true if there is a parent BBSStep/Multistep associated with this BBSStep
+     * 
+     * @return <i>true</i> - if a parent BBSStep is associated, <i>false</i> - if no parent BBSStep
+     * was found and this BBSStep should be a BBSStrategy child step.
+     */
     public boolean hasParentStep(){
         return parentStep != null;
     }
-    
+    /**
+     * Returns a Vector of BBSStep objects that are childs of this BBSStep<br><br>
+     * -Returns null if the child steps have never been set<br>
+     * -Returns empty vector is no child steps are associated.
+     *
+     * @return Vector of BBSStep objects that are children of this BBSStep
+     */
     public Vector<BBSStep> getChildSteps(){
         return childSteps;
     }
-    
-    public BBSStep getChildStep(String name) throws IllegalArgumentException{
-        BBSStep returnStep = null;
-        for(BBSStep aStep : childSteps){
-            if(aStep.name.equals(name)){
-                returnStep = aStep;
-            }
-        }
-        if(returnStep==null){
-            throw new IllegalArgumentException("No Child Step was found with name: "+name);
-        }
-        return returnStep;
-    }
-    public void addChildStep(BBSStep childStep){
+    /**
+     * Adds a BBSStep to this BBSStep's children collection.
+     * 
+     * @parm childStep the BBSStep to associate as a child
+     */
+    protected void addChildStep(BBSStep childStep){
         childStep.setParentStep(this);
         childSteps.add(childStep);
     }
+    /**
+     * Removes all associations with the childsteps (recursively) and vice versa.
+     */
     public void removeAllChildSteps(){
         for(BBSStep childStep : this.childSteps){
             childStep.removeAllChildSteps();
+            childStep.setParentStep(null);
         }
         childSteps.clear();
     }
+    /**
+     * Answers if this BBSStep has any children BBSStep object(s).
+     * 
+     * @return <i>true</i> - if one or more BBSStep children is/are associated, <i>false</i> - if no children BBSStep
+     * objects were found.
+     */
     public boolean hasChildSteps(){
         return childSteps.size()>0;
     }
-    
-    public boolean hasChildStep(BBSStep aChildStep){
-        return childSteps.contains(aChildStep);
-    }
+    /**
+     * Prints the name of the BBS Step this object represents.
+     * @return the name of the represented BBS Step
+     */
     public String toString(){
         return getName();
     }
-    
+    /**
+     * Comparable method implementation that can compare an Object with this BBSStep
+     * 
+     * @parm otherObject the Object to compare with
+     * @return <i>-1</i> - if the Object to be compared with is not a BBSStep object<br>
+     * <i>0</i> - if the BBSStep being compared with shares the same BBS Step name as this BBSStep object<br>
+     */
     public int compareTo(Object otherObject){
         int returnInt = -1;
         if(otherObject instanceof BBSStep){
@@ -114,7 +158,12 @@ public class BBSStep implements Cloneable, Comparable{
         }
         return returnInt;
     }
-    
+    /**
+     * Clones this BBSStep instance including attributes and includes 
+     * clones of the child BBSStep objects.
+     * 
+     * @return complete clone of this BBSStep
+     */
     public BBSStep clone(){
         BBSStep newStep = new BBSStep(getName());
         newStep.setParentStep(null);
@@ -125,6 +174,8 @@ public class BBSStep implements Cloneable, Comparable{
         }
         return newStep;
     }
+    
+    
     public void cascadingStepInsertion(String parent,BBSStep child){
         
         if(parent != null && parent.equals(this.getName())){

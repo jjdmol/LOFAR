@@ -26,8 +26,8 @@ import java.awt.Color;
 import java.util.HashMap;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
-import nl.astron.lofar.sas.otbcomponents.bbs.BBSStepExplorerPanel;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepData;
+import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepExplorerPanel;
 
 /**
  * BBSStepOperationPanelSolveImpl Class
