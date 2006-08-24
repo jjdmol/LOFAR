@@ -88,7 +88,8 @@ int main (int /*argc*/, const char* argv[])
   LOG_TRACE_FLOW_STR(AUTO_FUNCTION_NAME 
                      << ": server woke up"
                      << ", checking state of child processes ...");
-  string cmd = "ps -C " + prog + " --no-header -ostate";
+  string cmd = "ps -C " + prog + " --no-header -ostate -ocomm -ostate | grep '"
+               + prog + " ' | sed -e 's/ tProcess.*//'" ;
   if (system(cmd.c_str()) == -1) {
     LOG_FATAL_STR("system() command failed: " << strerror(errno));
     return 1;
