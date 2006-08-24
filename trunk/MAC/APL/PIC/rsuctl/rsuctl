@@ -79,7 +79,7 @@ $PAGES             = 16;
 $PROGRESS_SIZE     = 32;
 
 $RESPONSETIMEOUT = 2;
-$TO = 3;
+$TO = 5;
 
 #
 # pack format for the MEP message
@@ -692,8 +692,11 @@ sub reconfig
     $packet .= pack("C", $cmd);
 	
     $sock->send_eth_frame($packet);
-    ($response, $error) = readresponse($pcap);
-    return $error;
+    
+    # there will be no response
+    # ($response, $error) = readresponse($pcap);
+
+    return 0;
 }
 
 #
@@ -942,14 +945,17 @@ sub main
 	print STDERR "=== waiting $TO seconds after reset\n"; sleep $TO;
 	print STDERR "=== reconfiguring AP's with factory image (page 8)\n";
 	$error = reconfig($sock, $pcap, 8);
-	if ($error) {
-	    print STDERR "=== reconfig failed, clearing and waiting $TO seconds\n"; sleep $TO;
-	    report(clearctl($sock, $pcap, $CMD_CLEAR));
-	    print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
-	    print STDERR "=== retry reconfig\n";
-	    report(reconfig($sock, $pcap, 8));
-	}
-	print STDERR "=== waiting $TO second after AP reconfig\n"; sleep $TO;
+
+#  	if ($error) {
+#  	    print STDERR "=== reconfig failed, clearing and waiting $TO seconds\n"; sleep $TO;
+#  	    report(clearctl($sock, $pcap, $CMD_CLEAR));
+#  	    print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
+#  	    print STDERR "=== retry reconfig\n";
+#  	    report(reconfig($sock, $pcap, 8));
+#  	}
+
+	$DTO = $TO * 2;
+	print STDERR "=== waiting $DTO second after AP reconfig\n"; sleep $DTO;
 	report(clearctl($sock, $pcap, $CMD_CLEAR));
 	print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
 	report(version_cmd($sock, $pcap) && $error, true);
