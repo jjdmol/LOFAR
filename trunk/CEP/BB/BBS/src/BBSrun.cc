@@ -34,11 +34,13 @@
 #include <Common/VectorUtil.h>
 
 #include <casa/Exceptions/Error.h>
+#include <casa/OS/Path.h>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 
 using namespace std;
+using namespace casa;
 using namespace LOFAR;
 using namespace LOFAR::ParmDB;
 using namespace LOFAR::ACC::APS;
@@ -161,6 +163,7 @@ bool doIt (const string& parsetName)
     instrumentPDB = parameters.getString ("instrument_parmdb");
     skyPDB = parameters.getString ("sky_parmdb");
     measurementSet = parameters.getString ("measurement_set");
+    measurementSet = Path(measurementSet).absoluteName();
     instrumentModel = parameters.getString ("instrument_model");
     calcUVW = parameters.getBool ("calculate_UVW");
     operation = parameters.getString ("operation");
@@ -272,13 +275,17 @@ bool doIt (const string& parsetName)
 
 int main (int argc, const char* argv[])
 {
-  if (argc < 2) {
-    cout << "Run as: BBSrun parset-name" << endl;
-    return 1;
-  }
-  if (doIt (argv[1])) {
-    cout << "OK" << endl;
-    return 0;
+  try {
+    if (argc < 2) {
+      cout << "Run as: BBSrun parset-name" << endl;
+      return 1;
+    }
+    if (doIt (argv[1])) {
+      cout << "OK" << endl;
+      return 0;
+    }
+  } catch (exception& _ex) {
+    cout << "Error: " << _ex.what() << endl;
   }
   return 1;
 }
