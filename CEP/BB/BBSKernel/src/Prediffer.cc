@@ -122,9 +122,7 @@ Prediffer::Prediffer(const string& msName,
              const ParmDB::ParmDBMeta& skyPdm,
              uint ddid,
              bool calcUVW)
-  :
-  itsMSName       (msName),
-  itsMEPName      (meqPdm.getTableName()),
+: itsMEPName      (meqPdm.getTableName()),
   itsMEP          (meqPdm),
   itsGSMMEPName   (skyPdm.getTableName()),
   itsGSMMEP       (skyPdm),
@@ -144,17 +142,20 @@ Prediffer::Prediffer(const string& msName,
   itsPredTimer    ("P:predict", false),
   itsEqTimer      ("P:eq|save", false)
 {
+  // Get absolute path name for MS.
+  itsMSName = Path(msName).absoluteName();
+  cout << "ms=" << itsMSName << endl;
   LOG_INFO_STR( "Prediffer constructor ("
-        << "'" << msName   << "', "
+        << "'" << itsMSName   << "', "
         << "'" << meqPdm.getTableName() << "', "
         << "'" << skyPdm.getTableName() << "', "
         << itsCalcUVW << ")" );
   // Read the meta data and map the flags file.
   //readDescriptiveData(msName);
-  readMeasurementSetMetaData(msName);
+  readMeasurementSetMetaData(itsMSName);
   processMSDesc(ddid);
 
-  itsFlagsMap = new FlagsMap(msName + "/vis.flg", MMap::Read);
+  itsFlagsMap = new FlagsMap(itsMSName + "/vis.flg", MMap::Read);
   // Get all sources from the ParmDB.
   itsSources = new MeqSourceList(itsGSMMEP, itsParmGroup);
   // Create the UVW nodes and fill them with uvw-s from MS if not calculated.
