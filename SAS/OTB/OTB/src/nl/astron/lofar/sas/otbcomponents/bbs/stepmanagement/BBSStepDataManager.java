@@ -35,6 +35,8 @@ import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
 import org.apache.log4j.Logger;
 
 /**
+ * The BBSStepDataManager manages the BBS Step tree, its persistence and its correctness.
+ *
  * @version $Id$
  * @created July 26, 2006, 10:04 AM
  * @author pompert
@@ -49,24 +51,39 @@ public class BBSStepDataManager{
     private HashMap<String,BBSStepData> stepsCollection = null;
     private HashSet<BBSStep> stepStructureCollection = null;
     
-    /** Creates a new instance of BBSStepDataManager */
+    /** 
+     * Creates a new instance of BBSStepDataManager, protected by a singleton pattern
+     */
     private BBSStepDataManager() {
         stepsCollection = new HashMap<String,BBSStepData> ();
         stepStructureCollection = new HashSet<BBSStep>();
     }
-    
+    /**
+     * Returns a static instance of the BBSStepDataManager class.
+     *
+     * @return the BBSStepDataManager instance
+     */
     public static synchronized BBSStepDataManager getInstance(){
         if(instance==null){
             instance = new BBSStepDataManager();
         }
         return instance;
     }
-    
-    
+    /**
+     * This method will allow the BBSStepDataManager to locate the proper BBS tree in the OTDB
+     * to locate the BBS Strategy and Steps. 
+     * This method has to be used/called before any other methods will work.
+     *
+     * @parm rootNode the BBS.Step 'Step Container' OTDBnode.
+     */
     public synchronized void setStepContainerNode(jOTDBnode rootNode){
         this.stepContainerNode = rootNode;
     }
-    
+    /**
+     * Returns the unique names of every Step currently being managed.
+     *
+     * @return the unique names of all the steps being managed.
+     */
     public synchronized Vector<String> getStepNames(){
         Vector<String> returnVector = new Vector<String>();
         for(String aStep : stepsCollection.keySet()){
@@ -74,7 +91,18 @@ public class BBSStepDataManager{
         }
         return returnVector;
     }
-    
+    /**
+     * Returns a BBSStep with a given name, and attaches it to a given parent 
+     * or the BBS Strategy.<br><br>
+     * If a BBSStep object already exists with the same name in the managed BBSStep cache, 
+     * a clone of that existing step is returned. 
+     * A new BBSStep is created should that not be the case. 
+     * It will also be added to the cache of BBSSteps being managed.
+     *
+     * @parm newParent the BBSStep parent to attach the new BBSStep to, or null if the BBSStep is a BBS Strategy step.
+     * @parm name the name to be given to the BBS Step.
+     * @return a BBSStep object with the given name and association with the given parent BBSStep
+     */
     public synchronized BBSStep getBBSStep(BBSStep newParent,String name){
         BBSStep returnStep = null;
         //check if the step name is present in the step cache
@@ -92,7 +120,14 @@ public class BBSStepDataManager{
         }
         return returnStep;
     }
-    
+    /**
+     * This helper method assures that a BBSStep is present in the BBSStep cache.
+     * This updates the cache if the given BBSStep with its Step Name does not yet exist, 
+     * or updates the cached BBSStep if it does already exist. 
+     * (Step Name is used to identify the BBSStep)
+     *
+     * @parm aStep the BBSStep object to check in the BBSStep cache.
+     */
     public synchronized void assureBBSStepIsInCollection(BBSStep aStep){
         boolean exists = false;
         for(BBSStep anExistingStep : stepStructureCollection){
@@ -116,6 +151,12 @@ public class BBSStepDataManager{
         }
     }
     
+    /**
+     * Answers if a BBSStep with the given name is already available in the BBSStep cache.
+     *
+     * @parm name the name of the BBS Step to check for
+     * @return <i>true</i> - if the step is already defined, <i>false</i> - if the step is not yet defined
+     */
     public synchronized boolean stepExists(String name){
         boolean exists = false;
         for(String existingStep : this.stepsCollection.keySet()){
@@ -125,8 +166,13 @@ public class BBSStepDataManager{
         }
         return exists;
     }
-    
-    //get the step data that is persisted
+    /**
+     * Retrieves the BBSStepData object for a given Step name. 
+     * This ensures that Step data is current for all BBS Steps in the tree.
+     *
+     * @parm name the BBS Step name to fetch the data for
+     * @return the BBSStepData object for the given name. If no step data was available, null is returned.
+     */
     public synchronized BBSStepData getStepData(String name){
         BBSStepData returnStep = null;
         returnStep = stepsCollection.get(name);
@@ -136,98 +182,32 @@ public class BBSStepDataManager{
         }
         return returnStep;
     }
+    /**
+     * Retrieves all inherited step data in a BBSStepData object for a given BBS Step. 
+     * The data for the step itself is ignored, so only data from parent steps is present.
+     *
+     * @parm aStep the BBSStep to fetch all inherited data for.
+     * @return the BBSStepData object containing all inherited data for the given BBSStep, ignoring its own data.
+     */
     public synchronized BBSStepData getInheritedStepData(BBSStep aStep){
         return getInheritedStepData(aStep,null);
     }
-    
-    //get the inherited step data
-    private BBSStepData getInheritedStepData(BBSStep aStep, BBSStepData returnData){
-        if(returnData==null){
-            returnData = new BBSStepData();
-        }
-        if(aStep!=null){
-            
-            BBSStepData itsStepData = new BBSStepData();
-            if(aStep.hasParentStep()){
-                itsStepData = getStepData(aStep.getParentStep().getName());
-            }
-            if(returnData.getStation1Selection()==null){
-                if(itsStepData.getStation1Selection()!=null){
-                    returnData.setStation1Selection(itsStepData.getStation1Selection());
-                }
-            }
-            if(returnData.getStation2Selection()==null){
-                if(itsStepData.getStation2Selection()!=null){
-                    returnData.setStation2Selection(itsStepData.getStation2Selection());
-                }
-            }
-            if(returnData.getSources()==null){
-                if(itsStepData.getSources()!=null){
-                    returnData.setSources(itsStepData.getSources());
-                }
-            }
-            if(returnData.getExtraSources()==null){
-                if(itsStepData.getExtraSources()!=null){
-                    returnData.setExtraSources(itsStepData.getExtraSources());
-                }
-            }
-            if(returnData.getInstrumentModel()==null){
-                if(itsStepData.getInstrumentModel()!=null){
-                    returnData.setInstrumentModel(itsStepData.getInstrumentModel());
-                }
-            }
-            if(returnData.getIntegrationFrequency()==-1.0){
-                if(itsStepData.getIntegrationFrequency()!=-1.0){
-                    returnData.setIntegrationFrequency(itsStepData.getIntegrationFrequency());
-                }
-            }
-            if(returnData.getIntegrationTime()==-1.0){
-                if(itsStepData.getIntegrationTime()!=-1.0){
-                    returnData.setIntegrationTime(itsStepData.getIntegrationTime());
-                }
-            }
-            if(returnData.getCorrelationSelection()==null){
-                if(itsStepData.getCorrelationSelection()!=null){
-                    returnData.setCorrelationSelection(itsStepData.getCorrelationSelection());
-                }
-            }
-            if(returnData.getCorrelationType()==null){
-                if(itsStepData.getCorrelationType()!=null){
-                    returnData.setCorrelationType(itsStepData.getCorrelationType());
-                }
-            }
-            if(returnData.getOutputDataColumn()==null){
-                if(itsStepData.getOutputDataColumn()!=null){
-                    returnData.setOutputDataColumn(itsStepData.getOutputDataColumn());
-                }
-            }
-            if(returnData.getOperationName()==null){
-                if(itsStepData.getOperationName()!=null){
-                    returnData.setOperationName(itsStepData.getOperationName());
-                }
-            }
-            if(itsStepData.getOperationAttributes()!=null){
-                for(String anAttribute : itsStepData.getOperationAttributes().keySet()){
-                    if(!returnData.containsOperationAttribute(anAttribute) && itsStepData.getOperationAttribute(anAttribute) != null){
-                        returnData.addOperationAttribute(anAttribute,itsStepData.getOperationAttribute(anAttribute));
-                    }
-                }
-            }
-            //add other values
-            if(aStep.hasParentStep()){
-                getInheritedStepData(aStep.getParentStep(),returnData);
-            }
-        }
-        return returnData;
-    }
-    
+    /**
+     * Returns a static BBSStrategy object that is the entry point to the entire BBS Step tree. 
+     * A new BBSStrategy object will be generated using the OTDB if the BBSStrategy object does not yet exist.
+     *
+     * @return the BBSStrategy object 
+     */
     public synchronized BBSStrategy getStrategy(){
         if(theStrategy ==null){
             generateStrategyFromOTDB();
         }
         return theStrategy;
     }
-    
+    /**
+     * (Re)generates the BBSStrategy and all BBS Steps using data active in the OTDB BBS template tree. 
+     * This action reverts any changes made to the BBS Strategy and steps since the last persistStrategy() call.
+     */
     public synchronized void generateStrategyFromOTDB(){
         
         //clear the steps collection to make sure only steps are in there that are present in the OTDB
@@ -270,7 +250,9 @@ public class BBSStepDataManager{
             }
         }
     }
-    
+    /**
+     * Persists the BBS Strategy and all BBS Steps therein to the OTDB template tree. 
+     */
     public synchronized void persistStrategy(){
         deleteAllSteps();
         
@@ -297,7 +279,12 @@ public class BBSStepDataManager{
             logger.error("persistStep() : Step could not be linked to its Parent Step/Strategy!",ex);
         }
     }
-    
+    /**
+     * Helper method to recursively build a BBSStep object and all child BBSStep objects from a Step node in the OTDB Step container.
+     *
+     * @parm parentNode the BBSStep object to build.
+     * @parm parentOTDBnode the OTDB node pointer to the Step node in BBS.Step.***
+     */
     private void buildStep(BBSStep parentNode, jOTDBnode parentOTDBnode) throws RemoteException{
         
         //create a StepData object to fill the variables
@@ -463,6 +450,11 @@ public class BBSStepDataManager{
         }
     }
     
+    /**
+     * Helper method that persists a BBSStep object with its data to the OTDB template tree.
+     *
+     * @parm aBBSStep the BBSStep object to persist.
+     */
     private void persistStep(BBSStep aBBSStep){
         
         
@@ -795,6 +787,9 @@ public class BBSStepDataManager{
         
     }
     
+    /**
+     * Helper method that deletes all BBS Steps present in the OTDB template tree.
+     */
     private void deleteAllSteps(){
         
         jOTDBnode parentStepsNode = this.getStrategyStepsNode(this.getStepContainerNode());
@@ -820,7 +815,101 @@ public class BBSStepDataManager{
             }
         }
     }
-    
+    /**
+     * Helper method that recursively adds inherited data for a given BBS Step 
+     * to a worker object that should be complete with all needed data when 
+     * the bottom up BBS Step recursion is complete.
+     *
+     * @parm returnData the worker BBSStepData object that must be filled with data from the given BBSStep.
+     * @parm aStep the BBSStep to check and get data from to add to the recursively built BBSStepData object
+     * @return BBSStepData a (in)complete set of data to be processed further until the recursion is finished.
+     */
+    private BBSStepData getInheritedStepData(BBSStep aStep, BBSStepData returnData){
+        if(returnData==null){
+            returnData = new BBSStepData();
+        }
+        if(aStep!=null){
+            
+            BBSStepData itsStepData = new BBSStepData();
+            if(aStep.hasParentStep()){
+                itsStepData = getStepData(aStep.getParentStep().getName());
+            }
+            if(returnData.getStation1Selection()==null){
+                if(itsStepData.getStation1Selection()!=null){
+                    returnData.setStation1Selection(itsStepData.getStation1Selection());
+                }
+            }
+            if(returnData.getStation2Selection()==null){
+                if(itsStepData.getStation2Selection()!=null){
+                    returnData.setStation2Selection(itsStepData.getStation2Selection());
+                }
+            }
+            if(returnData.getSources()==null){
+                if(itsStepData.getSources()!=null){
+                    returnData.setSources(itsStepData.getSources());
+                }
+            }
+            if(returnData.getExtraSources()==null){
+                if(itsStepData.getExtraSources()!=null){
+                    returnData.setExtraSources(itsStepData.getExtraSources());
+                }
+            }
+            if(returnData.getInstrumentModel()==null){
+                if(itsStepData.getInstrumentModel()!=null){
+                    returnData.setInstrumentModel(itsStepData.getInstrumentModel());
+                }
+            }
+            if(returnData.getIntegrationFrequency()==-1.0){
+                if(itsStepData.getIntegrationFrequency()!=-1.0){
+                    returnData.setIntegrationFrequency(itsStepData.getIntegrationFrequency());
+                }
+            }
+            if(returnData.getIntegrationTime()==-1.0){
+                if(itsStepData.getIntegrationTime()!=-1.0){
+                    returnData.setIntegrationTime(itsStepData.getIntegrationTime());
+                }
+            }
+            if(returnData.getCorrelationSelection()==null){
+                if(itsStepData.getCorrelationSelection()!=null){
+                    returnData.setCorrelationSelection(itsStepData.getCorrelationSelection());
+                }
+            }
+            if(returnData.getCorrelationType()==null){
+                if(itsStepData.getCorrelationType()!=null){
+                    returnData.setCorrelationType(itsStepData.getCorrelationType());
+                }
+            }
+            if(returnData.getOutputDataColumn()==null){
+                if(itsStepData.getOutputDataColumn()!=null){
+                    returnData.setOutputDataColumn(itsStepData.getOutputDataColumn());
+                }
+            }
+            if(returnData.getOperationName()==null){
+                if(itsStepData.getOperationName()!=null){
+                    returnData.setOperationName(itsStepData.getOperationName());
+                }
+            }
+            if(itsStepData.getOperationAttributes()!=null){
+                for(String anAttribute : itsStepData.getOperationAttributes().keySet()){
+                    if(!returnData.containsOperationAttribute(anAttribute) && itsStepData.getOperationAttribute(anAttribute) != null){
+                        returnData.addOperationAttribute(anAttribute,itsStepData.getOperationAttribute(anAttribute));
+                    }
+                }
+            }
+            //add other values
+            if(aStep.hasParentStep()){
+                getInheritedStepData(aStep.getParentStep(),returnData);
+            }
+        }
+        return returnData;
+    }
+    /**
+     * Helper method that retrieves a Vector of strings out of a String representation thereof.
+     *
+     * @parm theList the String representation of a Vector to convert
+     * @parm removeQuotes tells if quotes are/are not present in the String and should/should not be removed in the process.
+     * @return Vector of Strings extrapolated from theList.
+     */
     private Vector<String> getVectorFromString(String theList,boolean removeQuotes) {
         Vector<String> listItems = new Vector<String>();
         String aList = theList;
@@ -842,7 +931,13 @@ public class BBSStepDataManager{
         }
         return listItems;
     }
-    
+    /**
+     * Helper method that retrieves a String representation of a Vector of strings.
+     *
+     * @parm aStringVector the String Vector to convert to a String representation.
+     * @parm createQuotes tells if quotes should/should not be added in the process.
+     * @return String representation of aStringVector.
+     */
     private String getStringFromVector(Vector<String> aStringVector,boolean createQuotes) {
         String aList="[";
         if (aStringVector.size() > 0) {
@@ -862,7 +957,12 @@ public class BBSStepDataManager{
         aList+="]";
         return aList;
     }
-    
+    /**
+     * Helper method that retrieves a Vector of jOTDBnode objects that are the child of aNode.
+     *
+     * @parm aNode the jOTDBnode to retrieve the child nodes for.
+     * @return Vector of child jOTDBnode objects.
+     */
     private Vector retrieveChildDataForNode(jOTDBnode aNode){
         Vector HWchilds = new Vector();
         try {
@@ -873,7 +973,12 @@ public class BBSStepDataManager{
         }
         return HWchilds;
     }
-    
+    /**
+     * Helper method to fetch the BBS.Strategy.Steps jOTDBnode using the BBS.Step jOTDBnode as a guideline.
+     *
+     * @parm stepContainerNode the BBS.Step jOTDBnode 
+     * @return the BBS.Strategy.Steps jOTDBnode
+     */
     private jOTDBnode getStrategyStepsNode(jOTDBnode stepContainerNode){
         jOTDBnode strategyStepsParameter=null;
         try {
@@ -897,7 +1002,12 @@ public class BBSStepDataManager{
         }
         return strategyStepsParameter;
     }
-    
+    /**
+     * Helper method that retrieves the OTDB component ID using a node name to identify the component.
+     *
+     * @parm nodeName the OTDB node name to lookup the component ID for.
+     * @return the component ID of the found component node, or 0 if no component was found.
+     */
     private int getComponentForNode(String nodeName){
         
         int returnId = 0;
@@ -917,7 +1027,11 @@ public class BBSStepDataManager{
         }
         return returnId;
     }
-    
+    /**
+     * Helper method that returns the BBS.Step 'Step Container' node.
+     *
+     * @return the BBS.Step 'Step Container' node.
+     */
     private synchronized jOTDBnode getStepContainerNode(){
         return this.stepContainerNode;
     }

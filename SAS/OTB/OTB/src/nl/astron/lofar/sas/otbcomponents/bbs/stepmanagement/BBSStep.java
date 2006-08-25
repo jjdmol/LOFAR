@@ -174,8 +174,15 @@ public class BBSStep implements Cloneable, Comparable{
         }
         return newStep;
     }
-    
-    
+    /**
+     * Inserts a child BBSStep into this BBSStep object, should the parent String
+     * argument be equal to the name of this BBSStep object. It then calls the same method
+     * on all child steps, to make sure all BBSStep objects that share the same name will
+     * contain the same amount of child steps.
+     * 
+     * @parm parent the Step name of the parent BBSStep to insert the BBSStep into.
+     * @parm child the BBSStep object to insert as a child step.
+     */
     public void cascadingStepInsertion(String parent,BBSStep child){
         
         if(parent != null && parent.equals(this.getName())){
@@ -187,7 +194,18 @@ public class BBSStep implements Cloneable, Comparable{
         }
         
     }
-    
+    /**
+     * Deletes a child BBSStep from this BBSStep object, should the parent String
+     * argument be equal to the name of this BBSStep object. It then calls the same method
+     * on all child steps, to make sure all BBSStep objects that share the same name will
+     * contain the same amount of child steps.
+     * 
+     * @parm parent the Step name of the parent BBSStep to delete the BBSStep from.
+     * @parm child the BBSStep object to delete.
+     * @parm indexOfChild the index of the child step in its parent, to make sure only one 
+     * BBSStep is deleted when more than one BBSStep objects with the same name are present in the 
+     * parent's child step collection.
+     */
     public void cascadingStepDeletion(BBSStep parent,BBSStep child, int indexOfChild){
         
         if(parent != null && parent.getName().equals(this.getName())){
@@ -204,6 +222,17 @@ public class BBSStep implements Cloneable, Comparable{
         }
         
     }
+    /**
+     * Moves a child BBSStep to a new place in this BBSStep object, should the parent String
+     * argument be equal to the name of this BBSStep object. It then calls the same method
+     * on all child steps, to make sure all BBSStep objects that share the same name will
+     * contain the same order of child steps.
+     * 
+     * @parm parent the Step name of the parent BBSStep to move the BBSStep in.
+     * @parm child the BBSStep object to move.
+     * @parm oldIndexOfChild the current index of the child step in its parent.
+     * @parm newIndexOfChild the new index of the child step in its parent.
+     */
     public void cascadingStepMove(BBSStep parent,BBSStep child, int oldIndexOfChild, int newIndexOfChild){
         
         if(parent != null && parent.getName().equals(this.getName())){
