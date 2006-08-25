@@ -44,8 +44,8 @@ namespace LOFAR {
       TimeStamp	    &setStamp(unsigned seqId, unsigned blockId);
       unsigned	    getSeqId() const;
       unsigned	    getBlockId() const;
-      static unsigned getMaxBlockId();
-      static void     setMaxBlockId(unsigned nMBID);
+      static double getMaxBlockId();
+      static void   setMaxBlockId(double nMBID);
 
       TimeStamp	    &operator += (const TimeStamp &other);
       TimeStamp	    &operator += (int64 increment);
@@ -74,8 +74,8 @@ namespace LOFAR {
       friend void ::LOFAR::dataConvert(DataFormat fmt, TimeStamp* inout, uint nrval);
 
     protected:
-      int64		itsTime;
-      static unsigned	theirMaxBlockId;
+      int64	    itsTime;
+      static double theirMaxBlockId, theirInvMaxBlockId;
     };
 
   } // namespace CS1
@@ -99,33 +99,34 @@ namespace LOFAR {
 
     inline TimeStamp::TimeStamp(unsigned seqId, unsigned blockId)
       {
-	itsTime = (int64) seqId * theirMaxBlockId + blockId;
+	itsTime = (int64) (seqId * theirMaxBlockId + .5) + blockId;
       }
 
     inline TimeStamp &TimeStamp::setStamp(unsigned seqId, unsigned blockId)
       {
-	itsTime = (int64) seqId * theirMaxBlockId + blockId;
+	itsTime = (int64) (seqId * theirMaxBlockId + .5) + blockId;
 	return *this;
       }
 
     inline unsigned TimeStamp::getSeqId() const
       {
-	return itsTime / theirMaxBlockId;
+	return (unsigned) (itsTime * theirInvMaxBlockId);
       }
 
     inline unsigned TimeStamp::getBlockId() const
       {
-	return itsTime % theirMaxBlockId;
+	return itsTime - (unsigned) (theirMaxBlockId * getSeqId() + .5);
       }
 
-    inline unsigned TimeStamp::getMaxBlockId()
+    inline double TimeStamp::getMaxBlockId()
       {
 	return theirMaxBlockId;
       }
 
-    inline void TimeStamp::setMaxBlockId(unsigned nMBID)
+    inline void TimeStamp::setMaxBlockId(double nMBID)
       {
-	theirMaxBlockId = nMBID;
+	theirMaxBlockId    = nMBID;
+	theirInvMaxBlockId = 1 / nMBID;
       }
 
     inline TimeStamp &TimeStamp::operator += (const TimeStamp &other)
