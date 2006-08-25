@@ -38,7 +38,6 @@ import org.apache.log4j.Logger;
  * @author pompert
  * @version $Id$
  * @created 25-7-2006, 13:56
- * @updated
  */
 public class BBSStepTreeManager extends GenericTreeManager implements ITreeManager{
     
@@ -52,7 +51,7 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
     private BBSStepTreeManager(UserAccount anAccount) {
         super(anAccount);
     }
-    
+        
     public static BBSStepTreeManager getInstance(UserAccount anAccount){
         if(instance==null){
             instance = new BBSStepTreeManager(anAccount);

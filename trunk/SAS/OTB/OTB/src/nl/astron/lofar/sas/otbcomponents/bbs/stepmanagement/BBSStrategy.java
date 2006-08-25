@@ -28,6 +28,8 @@ import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 
 /**
+ * Representation of the BBS Strategy to contain all BBS Strategy steps.
+ *
  * @version $Id$
  * @created July 25, 2006, 10:08 AM
  * @author pompert
@@ -36,51 +38,63 @@ public class BBSStrategy{
     
     //Contained substeps
     private Vector<BBSStep> childSteps;
-    //pointer to the Step Container in OTDB
-    private jOTDBnode stepContainerNode = null;
     
-    /** Creates a new instance of BBSStep */
+    /** 
+     * Creates a new instance of BBSStrategy 
+     */
     public BBSStrategy() {
         childSteps = new Vector<BBSStep>();
     }
     
+    /**
+     * Returns a Vector of BBSStep objects that are childs of this BBSStrategy<br><br>
+     * -Returns null if the child steps have never been set<br>
+     * -Returns empty vector is no child steps are associated.
+     *
+     * @return Vector of BBSStep objects that are children of this BBSStep
+     */
     public Vector<BBSStep> getChildSteps(){
         return childSteps;
-    }
+    }    
     
-    public BBSStep getChildStep(String name) throws IllegalArgumentException{
-        BBSStep returnStep = null;
-        for(BBSStep aStep : childSteps){
-            if(aStep.getName().equals(name)){
-                returnStep = aStep;
-            }
-        }
-        if(returnStep==null){
-            throw new IllegalArgumentException("No Child Step was found with name: "+name);
-        }
-        return returnStep;
-    }
+    /**
+     * Adds a BBSStep to this BBSStrategy's children collection.
+     * 
+     * @parm childStep the BBSStep to associate as a child
+     */
     public void addChildStep(BBSStep childStep){
         childSteps.add(childStep);
     }
+    
+    /**
+     * Removes all associations with the childsteps (recursively) and vice versa.
+     */
     public void removeAllChildSteps(){
         for(BBSStep childStep : this.childSteps){
             childStep.removeAllChildSteps();
         }
         childSteps.clear();
     }
-    public void moveChildStep(BBSStep childStep, int newIndex){
-        if(hasChildStep(childStep) && childSteps.size()>newIndex && newIndex >= 0){
-            childSteps.remove(childStep);
-            childSteps.add(newIndex,childStep);
-        }
-    }
+    
+    /**
+     * Answers if this BBSStrategy has any children BBSStep object(s).
+     * 
+     * @return <i>true</i> - if one or more BBSStep children is/are associated, <i>false</i> - if no children BBSStep
+     * objects were found.
+     */
     public boolean hasChildSteps(){
         return childSteps.size()>0;
     }
-    public boolean hasChildStep(BBSStep aChildStep){
-        return childSteps.contains(aChildStep);
-    }
+    
+    /**
+     * Inserts a child BBSStep into this BBSStrategy object, should parent be null. It then calls the same method
+     * on all child steps, to make sure all BBSStep objects that share the same name will
+     * contain the same amount of child steps.
+     * 
+     * @parm parent the Step name of the parent BBSStep to insert the BBSStep into.
+     * null if it is to be inserted in this BBSStrategy child steps collection
+     * @parm child the BBSStep object to insert as a child step.
+     */
     public void cascadingStepInsertion(String parent,BBSStep child){
         //strategy step
         if(parent==null){
@@ -90,8 +104,20 @@ public class BBSStrategy{
                 childStep.cascadingStepInsertion(parent,child);
             }
         }
-    }
+    }    
     
+    /**
+     * Deletes a child BBSStep from this BBSStrategy object, should parent be null. It then calls the same method
+     * on all child steps, to make sure all BBSStep objects that share the same name will
+     * contain the same amount of child steps.
+     * 
+     * @parm parent the Step name of the parent BBSStep to delete the BBSStep from.
+     *  null if it is to be deleted from this BBSStrategy child steps collection
+     * @parm child the BBSStep object to delete.
+     * @parm indexOfChild the index of the child step in its parent, to make sure only one 
+     * BBSStep is deleted when more than one BBSStep objects with the same name are present in the 
+     * parent's child step collection.
+     */
     public void cascadingStepDeletion(BBSStep parent,BBSStep child, int indexOfChild){
         //strategy step
        if(parent==null){
@@ -107,6 +133,18 @@ public class BBSStrategy{
             childStep.cascadingStepDeletion(parent,child,indexOfChild);
         }
     }
+    
+    /**
+     * Moves a child BBSStep to a new place in this BBSStrategy object, should parent be null. It then calls the same method
+     * on all child steps, to make sure all BBSStep objects that share the same name will
+     * contain the same order of child steps.
+     * 
+     * @parm parent the Step name of the parent BBSStep to move the BBSStep in.
+     *  null if it is to be moved inside this BBSStrategy's child steps collection
+     * @parm child the BBSStep object to move.
+     * @parm oldIndexOfChild the current index of the child step in its parent.
+     * @parm newIndexOfChild the new index of the child step in its parent.
+     */
     public void cascadingStepMove(BBSStep parent,BBSStep child, int oldIndexOfChild, int newIndexOfChild){
         
         if(parent == null){

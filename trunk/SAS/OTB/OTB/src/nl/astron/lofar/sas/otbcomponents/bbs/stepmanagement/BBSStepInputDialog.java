@@ -1,7 +1,24 @@
 /*
  * BBSStepInputDialog.java
  *
- * Created on July 31, 2006, 2:14 PM
+ *  Copyright (C) 2002-2007
+ *  ASTRON (Netherlands Foundation for Research in Astronomy)
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
  */
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
@@ -12,17 +29,17 @@ import nl.astron.lofar.sas.otb.MainFrame;
 
 
 /**
- * Dialog that contains a panel for BBS Step Explorer
+ * Dialog that contains a panel for the BBS Step Explorer
  *
  * @created 31-07-2006, 13:37
- *
  * @author  pompert
- *
  * @version $Id$
  */
 public class BBSStepInputDialog extends javax.swing.JDialog {
 
-    /** Creates new form BBSStepInputDialog */
+    /** 
+     * Creates new form BBSStepInputDialog 
+     */
     public BBSStepInputDialog(MainFrame parent, boolean modal, BBSStep tobeDisplayedBBSStep,BBSStep parentBBSStep) {
         super(parent, modal);
         initComponents();
@@ -94,7 +111,9 @@ public class BBSStepInputDialog extends javax.swing.JDialog {
             }
         });
     }
-    
+    /**
+     * Closes the dialog
+     */
     public void closeDialog(){
         this.setVisible(false);
     }

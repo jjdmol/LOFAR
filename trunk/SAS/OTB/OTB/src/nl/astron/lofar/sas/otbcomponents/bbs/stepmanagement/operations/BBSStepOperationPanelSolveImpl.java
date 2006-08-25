@@ -30,7 +30,7 @@ import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepData;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepExplorerPanel;
 
 /**
- * BBSStepOperationPanelSolveImpl Class
+ * Solve operation panel implementation of IBBSStepOperationPanel
  *
  * @author pompert
  * @version $Id$
@@ -43,7 +43,9 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
     private HashMap<String,String> itsInheritedOperationParameters = new HashMap<String,String>();
     
     
-    /** Creates new form BBSStepOperationPanelSolveImpl */
+    /** 
+     * Creates new form BBSStepOperationPanelSolveImpl 
+     */
     public BBSStepOperationPanelSolveImpl() {
         initComponents();
         this.solvableParmsList.setModel(new DefaultListModel());

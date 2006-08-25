@@ -27,6 +27,11 @@ import java.util.HashMap;
 import java.util.Vector;
 
 /**
+ * BBS Step Data object, which serves as a data structure for a given BBS Step with a unique name.
+ *
+ * All the attributes of a BBS Step are present, as well as a generic collection of operation 
+ * attributes which can be filled for any given operation type.
+ *
  * @version $Id$
  * @created August 9, 2006, 14:32 PM
  * @author pompert
@@ -49,8 +54,9 @@ public class BBSStepData{
     private Vector<String> correlationType = null;
     //Step Output Data Column
     private String outputDataColumn = null;
-    
+    //Step Operation name
     private String operationName = null;
+    //Step Operation attributes
     private HashMap<String,String> operationAttributes = null;
     
     

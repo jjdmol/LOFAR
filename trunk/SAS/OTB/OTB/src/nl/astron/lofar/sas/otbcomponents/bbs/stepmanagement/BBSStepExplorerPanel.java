@@ -67,12 +67,18 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
     
-    /** Creates new form BeanForm */
+    /** 
+     * Creates new BBSStepExplorerPanel 
+     */
     public BBSStepExplorerPanel() {
         initComponents();
         initialize();
     }
-    
+    /**
+     * Sets the OTB MainFrame link.
+     *
+     * @parm aMainFrame the OTB MainFrame instance to set.
+     */
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -80,6 +86,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             logger.debug("No Mainframe supplied");
         }
     }
+    /**
+     * Fills the panel with a certain BBSStep object, and displays inherited data from a given parent BBSStep object
+     *
+     * @parm itsStep the BBSStep object to display in the panel and to modify, null if adding a new Step
+     * @parm itsParentBBSStep when adding a new step, this parent BBSStep can be 
+     * displayed to show default values, null if no parent BBSStep can be defined.
+     */
     public void setBBSStepContent(BBSStep itsStep,BBSStep itsParentBBSStep) {
         
         if(itsStep != null && itsParentBBSStep == null){
@@ -105,7 +118,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }
     
-    /** Restore original Values in Global Settings panel
+    /** 
+     * Helper method that restores original values in the panel, only when modifying a BBSStep
      */
     private void restoreBBSStepExplorerPanel() {
         
@@ -116,6 +130,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }
     
+    /**
+     * Helper method that initializes the panel
+     */
     private void initialize() {
         buttonPanel1.addButton("Save step and close");
         buttonPanel1.addButton("Close");
@@ -133,7 +150,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         
     }
     
-    /* Set's the different fields in the GUI */
+    /**
+     * Helper method that sets all the different fields in the GUI using the data of a given BBSStep
+     *
+     * @parm theBBSStep the BBSStep object to show data of.
+     */
     private void fillBBSGui(BBSStep theBBSStep) {
         
         this.stepExplorerStepNameText.setText(theBBSStep.getName());
@@ -376,6 +397,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }
     
+    /**
+     * Helper method that saves the input fields in the panel to a BBSStep object.
+     *
+     * @parm aStep the BBSStep object to save all the fields in the panel to.
+     */
     private void saveInput(BBSStep aStep) {
         BBSStepData aStepData = BBSStepDataManager.getInstance().getStepData(aStep.getName());
         BBSStepData inheritedData = BBSStepDataManager.getInstance().getInheritedStepData(aStep);
@@ -673,6 +699,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }
     
+    /**
+     * Helper method that builds a String Vector representation of the contents of a JList.
+     *
+     * @parm aListComponent the JList component to build a String Vector representation for.
+     * @return String Vector representation of the contents of the given JList.
+     */
     private Vector<String> createList(JList aListComponent) {
         Vector<String> aList = new Vector<String>();
         if (aListComponent.getModel().getSize() > 0) {
@@ -682,6 +714,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
         return aList;
     }
+    
+    /**
+     * Helper method that fills a JList with a String Vector representation of a JList.
+     *
+     * @parm aListComponent the JList to fill
+     * @parm theList the String Vector to fill the JList with.
+     */
     private void fillList(JList aListComponent,Vector<String> theList) {
         DefaultListModel itsModel = new DefaultListModel();
         aListComponent.setModel(itsModel);
@@ -690,6 +729,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
         aListComponent.setModel(itsModel);
     }
+    
+    /**
+     * Helper method that builds a String Vector representation of the <i>selected</i> contents of a JList.
+     *
+     * @parm aListComponent the JList component to build a String Vector representation for.
+     * @return String Vector representation of the <i>selected</i> contents of the given JList.
+     */
     private Vector<String> createVectorFromSelectionList(JList aListComponent) {
         Vector<String> aList= new Vector<String>();
         int[] selectedIndices = aListComponent.getSelectedIndices();
@@ -700,6 +746,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
         return aList;
     }
+    
+    /**
+     * Helper method that selects items in a JList with a String Vector representation of the selected items of a JList.
+     *
+     * @parm aListComponent the JList to select items in.
+     * @parm theList the String Vector to select items in the JList with.
+     */
     private void fillSelectionListFromVector(JList aListComponent,Vector<String> theList) {
         int[] toBeSelectedIndices = new int[theList.size()];
         int aValueIndex = 0;
@@ -720,6 +773,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
         
     }
+    
+    /**
+     * Helper method that fills the Baseline table with the Station1 and Station2 Vectors
+     *
+     * @parm station1 the Station1 part of the Baseline pair of Vectors.
+     * @parm station2 the Station2 part of the Baseline pair of Vectors.
+     */
     private void fillBaselineTableFromVectors(Vector<String> station1,Vector<String> station2) {
         baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
                 new Object [][] {
@@ -749,6 +809,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }
     
+    /**
+     * Helper method that creates the Station1 and Station2 vectors out of the items in the Baseline table
+     *
+     * @return Vector containing 2 String Vectors : Station1 (index 0) and Station2 (index 1).
+     */
     private Vector<Vector<String>> createVectorsFromBaselineTable(){
         Vector<Vector<String>> returnVector = new Vector<Vector<String>>();
         Vector<String> station1Vector = new Vector<String>();
@@ -768,6 +833,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         
         return returnVector;
     }
+    /**
+     * Helper method that checks if the Baseline input text fields are filled 
+     * correctly before entering a new row in the Baseline table
+     */
     private void checkBaselineInput(){
         String typedText=baselineStation1Text.getText();
         String typedText2=baselineStation2Text.getText();
@@ -777,7 +846,15 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             this.addBaseLineButton.setEnabled(false);
         }
     }
-    
+    /**
+     * Helper method that loads a Step Operation panel if the BBSStep displayed
+     * in this panel contains a valid Operation that needs extra attributes to be entered.
+     *
+     * @parm name the full String representation of a Step Operation panel to load 
+     * (eg. nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.operations.***) 
+     * @parm data the BBSStep to display the Operation Attributes of in the Step Operation panel when modifying a step.
+     * @parm inheritedData the BBSStep to display the Operation Attributes of in the Step Operation panel when adding a new step.
+     */
     private void loadStepOperationsPanel(String name, BBSStepData data, BBSStepData inheritedData){
         JPanel newPanel = null;
         if(name!=null){
@@ -809,6 +886,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         
     }
     
+    /**
+     * Helper method that checks the input of all non-String attributes of a BBS Step, like double and integer attributes.
+     *
+     * It changes the background color of an erroneous input field to Color.RED to instruct the user to correct it.
+     *
+     * @return <i>true</i> - if all input is OK, <i>false</i> - if some input is not OK. 
+     */
     private boolean validateInput(){
         boolean operationOK = true;
         //perform input validation on the double values in the form
