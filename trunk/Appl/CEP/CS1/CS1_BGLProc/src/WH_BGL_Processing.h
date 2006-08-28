@@ -27,7 +27,13 @@
 
 #define DELAY_COMPENSATION
 
+#if defined HAVE_FFTW3
+#include <fftw3.h>
+#elif defined HAVE_FFTW2
 #include <fftw.h>
+#else
+#error Should have FFTW3 or FFTW2 installed
+#endif
 
 #include <tinyCEP/WorkHolder.h>
 #include <CS1_Interface/bitset.h>
@@ -121,7 +127,12 @@ class WH_BGL_Processing: public WorkHolder {
 #endif
 
     /// FIR Filter variables
+#if defined HAVE_FFTW3
+    fftwf_plan	    itsFFTWPlan;
+#elif defined HAVE_FFTW2
     fftw_plan	    itsFFTWPlan;
+#endif
+
     static vector<double>  itsBaseFrequencies;
     double	    itsChannelBandwidth;
 

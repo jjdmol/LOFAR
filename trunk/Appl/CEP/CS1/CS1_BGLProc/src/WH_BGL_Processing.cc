@@ -30,7 +30,6 @@
 #include <Common/Timer.h>
 #include <Transport/TH_MPI.h>
 
-#include <fftw.h>
 #include <complex>
 #include <cmath>
 
@@ -1232,11 +1231,16 @@ void WH_BGL_Processing::preprocess()
   std::clog << "node " << TH_MPI::getCurrentRank() << " filters subbands " << itsFirstSubband << " to " << itsLastSubband << " starting at " << itsCurrentSubband << " with " << itsSubbandIncrement << " as increment\n";
 #endif
 
+#if defined HAVE_FFTW3
+  fftwf_complex cbuf1[NR_SUBBAND_CHANNELS], cbuf2[NR_SUBBAND_CHANNELS];
+  itsFFTWPlan = fftwf_plan_dft_1d(NR_SUBBAND_CHANNELS, cbuf1, cbuf2, FFTW_FORWARD, FFTW_ESTIMATE);
+#elif defined HAVE_FFTW2
 #if defined HAVE_BGL && NR_SUBBAND_CHANNELS == 256
   fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 -1 0 1 1 1 352 0) (128 529 -1 0 1 1 0 2817 0) (64 529 -1 0 1 1 0 1409 0) (32 529 -1 0 1 1 0 705 0) (16 529 -1 0 1 1 0 353 0) (8 529 -1 0 1 1 0 177 0) (4 529 -1 0 1 1 0 89 0) (2 529 -1 0 1 1 0 45 0))");
   itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_FORWARD, FFTW_USE_WISDOM);
 #else
   itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_FORWARD, FFTW_ESTIMATE);
+#endif
 #endif
 
   //FFTtest();
@@ -1402,9 +1406,15 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 	    samples[chan][stat][time][pol] = makefcomplex(0, 0);
 	  }
 	} else {
+#if defined HAVE_FFTW3
+	  fftwf_execute_dft(itsFFTWPlan,
+			    (fftwf_complex *) fftInData[NR_TAPS - 1 + time][pol],
+			    (fftwf_complex *) fftOutData);
+#else
 	  fftw_one(itsFFTWPlan,
 		   (fftw_complex *) fftInData[NR_TAPS - 1 + time][pol],
 		   (fftw_complex *) fftOutData);
+#endif
 
 	  for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 #if defined DELAY_COMPENSATION
@@ -1529,9 +1539,13 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 		    CACHE_LINE_SIZE);
 
 	  for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+#if 0
 	    fftw_one(itsFFTWPlan,
 		     (fftw_complex *) fftInData[time + t][pol],
 		     (fftw_complex *) fftOutData[t][pol]);
+#else
+	    _fft256(fftInData[time + t][pol], fftOutData[t][pol]);
+#endif
 	  }
 	}
       }
@@ -1806,7 +1820,11 @@ void WH_BGL_Processing::process()
 
 void WH_BGL_Processing::postprocess()
 {
+#if defined HAVE_FFTW3
+  fftwf_destroy_plan(itsFFTWPlan);
+#elif defined HAVE_FFTW2
   fftw_destroy_plan(itsFFTWPlan);
+#endif
 }
 
 
