@@ -19,7 +19,8 @@ DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
 bin_PROGRAMS 		= CS1_BGL_Processing 
 
-CCAS			= /bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/gcc
+#CCAS			= /bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/gcc
+CCAS			= gcc
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 
 CS1_BGL_Processing_SOURCES	= $(DOCHDRS) \

@@ -1200,6 +1200,8 @@ WH_BGL_Processing* WH_BGL_Processing::make(const string &name)
 }
 
 
+#if defined HAVE_BGL
+
 void FFTtest()
 {
   fftw_plan plan = fftw_create_plan(256, FFTW_FORWARD, FFTW_ESTIMATE);
@@ -1220,6 +1222,8 @@ void FFTtest()
 
   //std::exit(0);
 }
+
+#endif
 
 
 void WH_BGL_Processing::preprocess()
