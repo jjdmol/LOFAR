@@ -144,7 +144,6 @@ Prediffer::Prediffer(const string& msName,
 {
   // Get absolute path name for MS.
   itsMSName = Path(msName).absoluteName();
-  cout << "ms=" << itsMSName << endl;
   LOG_INFO_STR( "Prediffer constructor ("
         << "'" << itsMSName   << "', "
         << "'" << meqPdm.getTableName() << "', "
@@ -632,7 +631,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
         }
     }
 
-    cout << itsMSDesc;
+//    cout << itsMSDesc;
 }
 
 void Prediffer::processMSDesc (uint ddid)
