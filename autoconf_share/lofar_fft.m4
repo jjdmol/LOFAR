@@ -55,3 +55,11 @@ ifelse($1, [], [lfr_option=0], [lfr_option=$1])
 lofar_EXTERNAL(FFTW3,[$lfr_option],fftw3.h)
 ])
 
+# lofar_FFTW3F(option) checks the single-precision library
+AC_DEFUN([lofar_FFTW3F],dnl
+[dnl
+AC_PREREQ(2.13)dnl
+ifelse($1, [], [lfr_option=0], [lfr_option=$1])
+lofar_EXTERNAL(FFTW3,[$lfr_option],fftw3.h,fftw3f)
+])
+
