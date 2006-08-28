@@ -57,7 +57,7 @@ Selector* Sel_RoundRobin::clone() const
   return new Sel_RoundRobin(*this);
 }
 
-unsigned int Sel_RoundRobin::getNext()
+void Sel_RoundRobin::selectNext()
 {
   itsSelectedIndex++;
   if (itsSelectedIndex >= (int)itsNOptions)
@@ -65,7 +65,6 @@ unsigned int Sel_RoundRobin::getNext()
       itsSelectedIndex = 0;
   }
   itsCurrentSelection = itsOptions[itsSelectedIndex];
-  return itsCurrentSelection;
 }
 
 }

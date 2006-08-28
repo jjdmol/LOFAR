@@ -48,7 +48,7 @@ public:
 
   virtual ~Sel_RoundRobin();
 
-  virtual unsigned int getNext();
+  virtual void selectNext();
 
   Selector* clone() const;
 

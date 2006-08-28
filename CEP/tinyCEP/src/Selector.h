@@ -45,13 +45,13 @@ public:
 
   virtual ~Selector();
 
-  virtual unsigned int getNext() = 0;
+  virtual void selectNext() = 0;
   
   virtual Selector* clone() const = 0;
 
   unsigned int getNumberOfOptions();
 
-  int getCurrentSelection();
+  virtual int getCurrentSelection();
 
 protected:
   Selector(const Selector&);
