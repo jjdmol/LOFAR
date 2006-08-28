@@ -95,9 +95,6 @@ namespace LOFAR
     Selector* getInputSelector();  // Get the input selector
     Selector* getOutputSelector();  // Get the output selector
 
-    DataHolder* selectInHolder();   // Select an input
-    DataHolder* selectOutHolder();  // Select an output
-
     // Check if this TinyDataManager has a selector
     bool hasInputSelector();
     bool hasOutputSelector();
