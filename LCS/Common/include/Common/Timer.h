@@ -192,18 +192,6 @@ namespace LOFAR {
     asm volatile ("rdtsc" : "=a" (eax), "=d" (edx));
 
     total_time -= ((unsigned long long) edx << 32) + eax;
-#elif (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
-    asm volatile
-    (
-	"rdtsc\n\t"
-	"subl %%eax, %0\n\t"
-	"sbbl %%edx, %1"
-    :
-	"+m" (total_time_low), "+m" (total_time_high)
-    :
-    :
-	"eax", "edx"
-    );
 #elif defined __ia64__ && defined __INTEL_COMPILER
     total_time -= __getReg(_IA64_REG_AR_ITC);
 #elif defined __ia64__ && defined __GNUC__
@@ -277,18 +265,6 @@ namespace LOFAR {
 
     asm volatile ("rdtsc\n\t" : "=a" (eax), "=d" (edx));
     total_time += ((unsigned long long) edx << 32) + eax;
-#elif (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
-    asm volatile
-    (
-	"rdtsc\n\t"
-	"addl %%eax, %0\n\t"
-	"adcl %%edx, %1"
-    :
-	"+m" (total_time_low), "+m" (total_time_high)
-    :
-    :
-	"eax", "edx"
-    );
 #elif defined __ia64__ && defined __INTEL_COMPILER
     total_time += __getReg(_IA64_REG_AR_ITC);
 #elif defined __ia64__ && defined __GNUC__
