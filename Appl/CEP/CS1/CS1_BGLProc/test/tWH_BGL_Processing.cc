@@ -179,13 +179,13 @@ void checkCorrelatorTestPattern(WH_BGL_Processing &wh)
   float max = 0.0;
 
   for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-    if (cabs((*visibilities)[0][ch][1][1]) > max) {
-      max = cabs((*visibilities)[0][ch][1][1]);
+    if (abs((*visibilities)[0][ch][1][1]) > max) {
+      max = abs((*visibilities)[0][ch][1][1]);
     }
   }
 
   for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-    std::cout << ch << ' ' << (10 * std::log10(cabs((*visibilities)[0][ch][1][1]) / max)) << '\n';
+    std::cout << ch << ' ' << (10 * std::log10(abs((*visibilities)[0][ch][1][1]) / max)) << '\n';
   }
 }
 
