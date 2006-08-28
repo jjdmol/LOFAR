@@ -46,11 +46,13 @@ namespace LOFAR
 class Sel_Linked : public Selector
 {
 public:
-  Sel_Linked(Selector* selector, unsigned int itsNoptions);
+  Sel_Linked(Selector* selector);
 
   virtual ~Sel_Linked();
 
-  virtual unsigned int getNext();
+  virtual void selectNext();
+
+  virtual int getCurrentSelection();
 
   Selector* clone() const;
 

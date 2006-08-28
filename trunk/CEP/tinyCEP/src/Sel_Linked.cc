@@ -31,12 +31,10 @@
 namespace LOFAR
 {
 
-Sel_Linked::Sel_Linked(Selector* selector, unsigned int noOptions)
-  :  Selector(noOptions),
+Sel_Linked::Sel_Linked(Selector* selector)
+  :  Selector(selector->getNumberOfOptions()),
      itsLink(selector)
 {
-  ASSERTSTR(itsNOptions == itsLink->getNumberOfOptions(), 
-	    "Selector does not have the same number of selection options as the selector it is linked to");
 }
 
 Sel_Linked::Sel_Linked(const Sel_Linked& that)
@@ -53,10 +51,14 @@ Selector* Sel_Linked::clone() const
 Sel_Linked::~Sel_Linked()
 {}
 
-unsigned int Sel_Linked::getNext()
+void Sel_Linked::selectNext()
 {
-  itsCurrentSelection = itsLink->getCurrentSelection();
-  return itsCurrentSelection;
+  // Do nothing, we are just following another selector
+}
+
+int Sel_Linked::getCurrentSelection()
+{
+  return itsLink->getCurrentSelection();
 }
 
 }
