@@ -319,22 +319,6 @@ Selector* TinyDataManager::getOutputSelector()
   return itsOutputSelector;
 }
 
-DataHolder* TinyDataManager::selectInHolder()
-{
-  ASSERTSTR(itsInputSelector != 0, "No input selector set");
-  unsigned int ch =  itsInputSelector->getCurrentSelection();
-  itsInputSelector->selectNext();
-  return getInHolder(ch);
-}
- 
-DataHolder* TinyDataManager::selectOutHolder()
-{
-  ASSERTSTR(itsOutputSelector != 0, "No output selector set");
-  unsigned int ch =  itsOutputSelector->getCurrentSelection();
-  itsOutputSelector->selectNext();
-  return getOutHolder(ch);
-}
-
 bool TinyDataManager::hasInputSelector()
 {
   if (itsInputSelector == 0)
