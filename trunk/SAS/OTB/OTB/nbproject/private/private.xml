@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/1">
+        <file>file:/home/pompert/data/LOFAR/SAS/OTB/OTB/nbproject/project.properties</file>
+        <file>file:/home/pompert/data/LOFAR/SAS/OTB/OTB/src/nl/astron/lofar/sas/otbcomponents/bbs/stepmanagement/BBSStep.java</file>
+        <file>file:/home/pompert/data/LOFAR/SAS/OTB/OTB/src/nl/astron/lofar/sas/otbcomponents/bbs/stepmanagement/BBSStepDataManager.java</file>
+        <file>file:/home/pompert/data/LOFAR/SAS/OTB/OTB/src/nl/astron/lofar/sas/otbcomponents/bbs/stepmanagement/BBSStepTreeManager.java</file>
+        <file>file:/home/pompert/data/LOFAR/SAS/OTB/OTB/src/nl/astron/lofar/sas/otbcomponents/bbs/stepmanagement/operations/IBBSStepOperationPanel.java</file>
+    </open-files>
 </project-private>
