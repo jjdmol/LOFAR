@@ -819,6 +819,13 @@ def main(argv):
             buildResultsArray.append([aFile,keepLastFoundBuildArray[3],
                                       keepLastFoundBuildArray[6],nfile])
 
+            #
+            # Write target in log file to be able to find the error later
+            #
+            writeLogFile.write('</pre>\n')
+            writeLogFile.write('<a name="'+keepLastFoundBuildArray[6]+
+                               '/'+aFile+'">\n')
+            writeLogFile.write('<pre>\n')
       #
       # Find Source line and filter out the src that is been compiled here
       #
