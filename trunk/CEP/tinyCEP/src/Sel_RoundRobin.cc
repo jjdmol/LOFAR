@@ -35,13 +35,16 @@ Sel_RoundRobin::Sel_RoundRobin(unsigned int noOptions)
 {
   for (unsigned i = 0; i < noOptions; i ++)
     itsOptions.push_back(i);
+  itsCurrentSelection = itsOptions[itsSelectedIndex];
 }
 
 Sel_RoundRobin::Sel_RoundRobin(std::vector<int> &options)
   :  Selector(options.size()),
      itsOptions(options),
      itsSelectedIndex(0)
-{}
+{
+  itsCurrentSelection = itsOptions[itsSelectedIndex];
+}
 
 Sel_RoundRobin::~Sel_RoundRobin()
 {}
