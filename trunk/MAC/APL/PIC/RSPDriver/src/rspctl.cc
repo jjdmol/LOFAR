@@ -69,6 +69,9 @@ static void usage();
 double g_sample_frequency = DEFAULT_SAMPLE_FREQUENCY;
 bool   g_getclock = false;
 
+// gnuplot support <= 16 graphs
+#define MAX_PLOT_GRAPHS 16
+
 /**
  * Function to convert the complex semi-floating point representation used by the
  * EPA firmware to a complex<double>.
@@ -1218,6 +1221,13 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
     
     if(m_duration == 0)
     {
+      if (get_ndevices() > MAX_PLOT_GRAPHS) {
+	fprintf(stderr, "Error: plotting supports upto %d graphs. Select fewer receivers using '--select'.\n",
+		MAX_PLOT_GRAPHS);
+        stop();
+        GCFTask::stop();
+	return;
+      }
       plot_statistics(m_stats, timestamp);
     }
     else
