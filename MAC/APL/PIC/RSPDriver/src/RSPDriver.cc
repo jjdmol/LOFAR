@@ -233,13 +233,8 @@ RSPDriver::RSPDriver(string name)
   ASSERT(m_board);
 
   //
-  // Attempt access of RSPDriver.MAC_BASE, if it fails use the RSPDriver.ADDR0
-  // parameters.
+  // Get MAC addresses of RSPBoards
   //
-  bool bUseMAC_BASE = true;
-  try         { (void)GET_CONFIG("RSPDriver.MAC_BASE",i); }
-  catch (...) { bUseMAC_BASE = false;                     }
-
   char boardname[64];
   char paramname[64];
   char macaddrstr[64];
@@ -247,15 +242,8 @@ RSPDriver::RSPDriver(string name)
   {
     snprintf(boardname, 64, "board%d", boardid);
 
-    if (bUseMAC_BASE)
-    {
-      snprintf(macaddrstr, 64, "00:00:00:00:00:%02x", boardid + GET_CONFIG("RSPDriver.MAC_BASE", i));
-    }
-    else
-    {
-      snprintf(paramname, 64, "RSPDriver.MAC_ADDR_%d", boardid);
-      strncpy(macaddrstr, GET_CONFIG_STRING(paramname), 64);
-    }
+    snprintf(paramname, 64, "RSPDriver.MAC_ADDR_%d", boardid);
+    strncpy(macaddrstr, GET_CONFIG_STRING(paramname), 64);
 
     LOG_DEBUG_STR("initializing board " << boardname << ":" << macaddrstr);
     m_board[boardid].init(*this, boardname, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
