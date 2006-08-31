@@ -51,7 +51,7 @@ public class BBSStepDataManager{
     private HashMap<String,BBSStepData> stepsCollection = null;
     private HashSet<BBSStep> stepStructureCollection = null;
     
-    /** 
+    /**
      * Creates a new instance of BBSStepDataManager, protected by a singleton pattern
      */
     private BBSStepDataManager() {
@@ -71,7 +71,7 @@ public class BBSStepDataManager{
     }
     /**
      * This method will allow the BBSStepDataManager to locate the proper BBS tree in the OTDB
-     * to locate the BBS Strategy and Steps. 
+     * to locate the BBS Strategy and Steps.
      * This method has to be used/called before any other methods will work.
      *
      * @parm rootNode the BBS.Step 'Step Container' OTDBnode.
@@ -92,11 +92,11 @@ public class BBSStepDataManager{
         return returnVector;
     }
     /**
-     * Returns a BBSStep with a given name, and attaches it to a given parent 
+     * Returns a BBSStep with a given name, and attaches it to a given parent
      * or the BBS Strategy.<br><br>
-     * If a BBSStep object already exists with the same name in the managed BBSStep cache, 
-     * a clone of that existing step is returned. 
-     * A new BBSStep is created should that not be the case. 
+     * If a BBSStep object already exists with the same name in the managed BBSStep cache,
+     * a clone of that existing step is returned.
+     * A new BBSStep is created should that not be the case.
      * It will also be added to the cache of BBSSteps being managed.
      *
      * @parm newParent the BBSStep parent to attach the new BBSStep to, or null if the BBSStep is a BBS Strategy step.
@@ -122,8 +122,8 @@ public class BBSStepDataManager{
     }
     /**
      * This helper method assures that a BBSStep is present in the BBSStep cache.
-     * This updates the cache if the given BBSStep with its Step Name does not yet exist, 
-     * or updates the cached BBSStep if it does already exist. 
+     * This updates the cache if the given BBSStep with its Step Name does not yet exist,
+     * or updates the cached BBSStep if it does already exist.
      * (Step Name is used to identify the BBSStep)
      *
      * @parm aStep the BBSStep object to check in the BBSStep cache.
@@ -167,7 +167,7 @@ public class BBSStepDataManager{
         return exists;
     }
     /**
-     * Retrieves the BBSStepData object for a given Step name. 
+     * Retrieves the BBSStepData object for a given Step name.
      * This ensures that Step data is current for all BBS Steps in the tree.
      *
      * @parm name the BBS Step name to fetch the data for
@@ -183,7 +183,7 @@ public class BBSStepDataManager{
         return returnStep;
     }
     /**
-     * Retrieves all inherited step data in a BBSStepData object for a given BBS Step. 
+     * Retrieves all inherited step data in a BBSStepData object for a given BBS Step.
      * The data for the step itself is ignored, so only data from parent steps is present.
      *
      * @parm aStep the BBSStep to fetch all inherited data for.
@@ -193,10 +193,10 @@ public class BBSStepDataManager{
         return getInheritedStepData(aStep,null);
     }
     /**
-     * Returns a static BBSStrategy object that is the entry point to the entire BBS Step tree. 
+     * Returns a static BBSStrategy object that is the entry point to the entire BBS Step tree.
      * A new BBSStrategy object will be generated using the OTDB if the BBSStrategy object does not yet exist.
      *
-     * @return the BBSStrategy object 
+     * @return the BBSStrategy object
      */
     public synchronized BBSStrategy getStrategy(){
         if(theStrategy ==null){
@@ -205,7 +205,7 @@ public class BBSStepDataManager{
         return theStrategy;
     }
     /**
-     * (Re)generates the BBSStrategy and all BBS Steps using data active in the OTDB BBS template tree. 
+     * (Re)generates the BBSStrategy and all BBS Steps using data active in the OTDB BBS template tree.
      * This action reverts any changes made to the BBS Strategy and steps since the last persistStrategy() call.
      */
     public synchronized void generateStrategyFromOTDB(){
@@ -251,7 +251,7 @@ public class BBSStepDataManager{
         }
     }
     /**
-     * Persists the BBS Strategy and all BBS Steps therein to the OTDB template tree. 
+     * Persists the BBS Strategy and all BBS Steps therein to the OTDB template tree.
      */
     public synchronized void persistStrategy(){
         deleteAllSteps();
@@ -419,7 +419,12 @@ public class BBSStepDataManager{
             while( e2.hasMoreElements()  ) {
                 
                 jOTDBnode aHWNode = (jOTDBnode)e2.nextElement();
-                
+                /*
+                 * This operation only supports operation node attributes of up to two levels deep.
+                 *
+                 * For instance: Solve.DomainSize.Freq is supported
+                 *               Predict.DomainSize.Integration.Freq is NOT supported...
+                 */
                 if (!aHWNode.leaf && aHWNode.name.equals(stepDataObject.getOperationName())){
                     Vector operationParms = this.retrieveChildDataForNode(aHWNode);
                     
@@ -716,7 +721,12 @@ public class BBSStepDataManager{
                                 Enumeration ce = attributeParms.elements();
                                 while( ce.hasMoreElements()  ) {
                                     jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
-                                    
+                                     /*
+                                      * This operation only supports operation node attributes of up to two levels deep.
+                                      *
+                                      * For instance: Solve.DomainSize.Freq is supported
+                                      *               Predict.DomainSize.Integration.Freq is NOT supported...
+                                      */
                                     String toBeInsertedValue = currentDataForStep.getOperationAttribute(LofarUtils.keyName(aCENode.name));
                                     //direct parameter of Operation
                                     if (aCENode.leaf ){
@@ -816,8 +826,8 @@ public class BBSStepDataManager{
         }
     }
     /**
-     * Helper method that recursively adds inherited data for a given BBS Step 
-     * to a worker object that should be complete with all needed data when 
+     * Helper method that recursively adds inherited data for a given BBS Step
+     * to a worker object that should be complete with all needed data when
      * the bottom up BBS Step recursion is complete.
      *
      * @parm returnData the worker BBSStepData object that must be filled with data from the given BBSStep.
@@ -976,7 +986,7 @@ public class BBSStepDataManager{
     /**
      * Helper method to fetch the BBS.Strategy.Steps jOTDBnode using the BBS.Step jOTDBnode as a guideline.
      *
-     * @parm stepContainerNode the BBS.Step jOTDBnode 
+     * @parm stepContainerNode the BBS.Step jOTDBnode
      * @return the BBS.Strategy.Steps jOTDBnode
      */
     private jOTDBnode getStrategyStepsNode(jOTDBnode stepContainerNode){
