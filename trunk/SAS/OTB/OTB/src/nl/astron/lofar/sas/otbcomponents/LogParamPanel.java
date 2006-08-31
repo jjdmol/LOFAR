@@ -71,7 +71,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     
     private void initializeTabs() {
         LogParamTableModel aModel = new LogParamTableModel();
-        tablePanel1.setTableModel(aModel);
+        jTable1.setModel(aModel);
     }
     
     public void setMainFrame(MainFrame aMainFrame) {
@@ -152,9 +152,9 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
             // enable/disable certain controls
         }
         
-        tablePanel1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        jTable1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         LogParamTableModel model = new LogParamTableModel();
-        tablePanel1.setTableModel(model);
+        jTable1.setModel(model);
         if (itsNode == null ) {
             logger.debug("ERROR:  empty node supplied");
             LogParamNameText.setText("");
@@ -235,8 +235,10 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        jLabel1 = new javax.swing.JLabel();
-        tablePanel1 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        titleText = new javax.swing.JLabel();
+        warningText = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
         jPanel1 = new javax.swing.JPanel();
         LogParamNameLabel = new javax.swing.JLabel();
         LogParamStartTimeLabel = new javax.swing.JLabel();
@@ -248,8 +250,26 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         LogParamNameText = new javax.swing.JTextField();
         LogParamRecentOnlyCheckbox = new javax.swing.JCheckBox();
 
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Untitled");
+        titleText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        titleText.setText("no Title");
+        titleText.setVisible(false);
+
+        warningText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        warningText.setText("no Warning");
+        warningText.setVisible(false);
+
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane1.setViewportView(jTable1);
 
         LogParamNameLabel.setText("Name");
 
@@ -308,7 +328,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
                             .add(LogParamRecentOnlyCheckbox))
                         .add(LogParamNameText))
                     .add(logParamApplyButton))
-                .addContainerGap(406, Short.MAX_VALUE))
+                .addContainerGap(258, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -335,16 +355,26 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 967, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .add(tablePanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 967, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, titleText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 819, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, warningText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 819, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 819, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(jLabel1)
-                .add(tablePanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 519, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(titleText)
+                .add(16, 16, 16)
+                .add(warningText)
+                .add(18, 18, 18)
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 430, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -353,7 +383,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         itsEndTime=LogParamEndTimeText.getText();
         setMostRecent=LogParamRecentOnlyCheckbox.isSelected();
         itsMainFrame.setHourglassCursor();
-        if (!((LogParamTableModel)tablePanel1.getTableModel()).fillTable(itsMainFrame,itsNode.nodeID(),itsStartTime,itsEndTime,setMostRecent)) {
+        if (!((LogParamTableModel)jTable1.getModel()).fillTable(itsMainFrame,itsNode.nodeID(),itsStartTime,itsEndTime,setMostRecent)) {
             logger.debug("Error filling LogParamTableMode");
         }
         itsMainFrame.setNormalCursor();
@@ -383,11 +413,13 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JCheckBox LogParamRecentOnlyCheckbox;
     private javax.swing.JLabel LogParamStartTimeLabel;
     private javax.swing.JTextField LogParamStartTimeText;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable jTable1;
     private javax.swing.JButton logParamApplyButton;
     private javax.swing.JButton logParamCancelButton;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel1;
+    private javax.swing.JLabel titleText;
+    private javax.swing.JLabel warningText;
     // End of variables declaration//GEN-END:variables
 
     /**
@@ -443,11 +475,6 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
      */
     public void setTitle(String title) {
         this.itsTitle = title;
-        jLabel1.setText(itsTitle);
+        titleText.setText(itsTitle);
     }
-
-
-
-
-    
 }

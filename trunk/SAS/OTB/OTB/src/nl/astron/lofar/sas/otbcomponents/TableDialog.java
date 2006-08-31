@@ -50,9 +50,8 @@ public class TableDialog extends javax.swing.JDialog {
         itsModel = aModel;
         itsTitle = aTitle;
         titleLabel.setText(aTitle);
-        tablePanel.setTableModel(aModel);
-        tablePanel.validate();
-        tablePanel.setVisible(true);
+        jTable1.setModel(aModel);
+        jTable1.validate();
     }
     
     public AbstractTableModel getModel() {        
@@ -66,11 +65,13 @@ public class TableDialog extends javax.swing.JDialog {
     /** if this var is a reference, we need to make that obvious
      */
     public void setWarning(String aS) {
-        tablePanel.setWarning(aS);
+        warningText.setText(aS);
+        warningText.setVisible(true);
     }
     
     public void removeWarning() {
-        tablePanel.removeWarning();
+        warningText.setText("");
+        warningText.setVisible(false);
     }
     
      
@@ -82,12 +83,12 @@ public class TableDialog extends javax.swing.JDialog {
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        tablePanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        titleLabel = new javax.swing.JLabel();
+        warningText = new javax.swing.JLabel();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
-        titleLabel = new javax.swing.JLabel();
-
-        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -95,7 +96,12 @@ public class TableDialog extends javax.swing.JDialog {
         setModal(true);
         setName("loadFileDialog");
         setResizable(false);
-        getContentPane().add(tablePanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, -1, -1));
+        titleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        titleLabel.setText("no Title");
+
+        warningText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        warningText.setText("no Warning");
+        warningText.setVisible(false);
 
         okButton.setText("OK");
         okButton.addActionListener(new java.awt.event.ActionListener() {
@@ -104,8 +110,6 @@ public class TableDialog extends javax.swing.JDialog {
             }
         });
 
-        getContentPane().add(okButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 490, -1, -1));
-
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -113,10 +117,50 @@ public class TableDialog extends javax.swing.JDialog {
             }
         });
 
-        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 490, -1, -1));
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane1.setViewportView(jTable1);
 
-        getContentPane().add(titleLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 150, 10));
-
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .addContainerGap()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(okButton)
+                        .add(11, 11, 11)
+                        .add(cancelButton))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, warningText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, titleLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .addContainerGap()
+                .add(titleLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 15, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(18, 18, 18)
+                .add(warningText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 414, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(17, 17, 17)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(okButton)
+                    .add(cancelButton))
+                .add(20, 20, 20))
+        );
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -139,9 +183,11 @@ public class TableDialog extends javax.swing.JDialog {
             
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable jTable1;
     private javax.swing.JButton okButton;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel;
     private javax.swing.JLabel titleLabel;
+    private javax.swing.JLabel warningText;
     // End of variables declaration//GEN-END:variables
 
     /**
