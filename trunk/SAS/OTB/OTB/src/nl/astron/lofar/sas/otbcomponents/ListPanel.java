@@ -236,7 +236,7 @@ public class ListPanel extends javax.swing.JPanel {
         jScrollPane1.setViewportView(jList2);
 
         warningText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        setVisible(false);
+        warningText.setVisible(false);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
@@ -286,7 +286,7 @@ public class ListPanel extends javax.swing.JPanel {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(DownListButton1)
                         .add(48, 48, 48))
-                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE))
+                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 197, Short.MAX_VALUE))
                 .add(32, 32, 32)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(ApplyButton)

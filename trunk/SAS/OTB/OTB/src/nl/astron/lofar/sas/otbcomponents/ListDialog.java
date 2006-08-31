@@ -95,27 +95,10 @@ public class ListDialog extends javax.swing.JDialog {
         setModal(true);
         setName("loadFileDialog");
         setResizable(false);
-        listPanel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                listPanelActionPerformed(evt);
-            }
-        });
-
         getContentPane().add(listPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, -1, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void listPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_listPanelActionPerformed
-        String aCommand = evt.getActionCommand();
-        if (aCommand.equals("Apply")) {
-           itsList=listPanel.getList();
-           isChanged=listPanel.isNew();
-        } else {
-            isChanged=false;
-        }
-        this.dispose();
-    }//GEN-LAST:event_listPanelActionPerformed
 
 
     private MainFrame itsMainFrame = null;

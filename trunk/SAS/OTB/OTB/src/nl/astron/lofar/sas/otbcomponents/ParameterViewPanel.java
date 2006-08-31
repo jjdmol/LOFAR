@@ -609,10 +609,10 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         ParamRuntimeModText.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "false", "true" }));
 
         derefLabel.setText("Deref Value:");
-        setVisible(false);
+        derefLabel.setVisible(false);
 
         derefText.setEditable(false);
-        setVisible(false);
+        derefText.setVisible(false);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);

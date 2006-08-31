@@ -50,8 +50,8 @@ public class TableDialog extends javax.swing.JDialog {
         itsModel = aModel;
         itsTitle = aTitle;
         titleLabel.setText(aTitle);
-        jTable1.setModel(aModel);
-        jTable1.validate();
+        tablePanel1.setTableModel(aModel);
+        tablePanel1.validate();
     }
     
     public AbstractTableModel getModel() {        
@@ -65,13 +65,11 @@ public class TableDialog extends javax.swing.JDialog {
     /** if this var is a reference, we need to make that obvious
      */
     public void setWarning(String aS) {
-        warningText.setText(aS);
-        warningText.setVisible(true);
+        tablePanel1.setWarning(aS);
     }
     
     public void removeWarning() {
-        warningText.setText("");
-        warningText.setVisible(false);
+        tablePanel1.removeWarning();
     }
     
      
@@ -84,11 +82,9 @@ public class TableDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         titleLabel = new javax.swing.JLabel();
-        warningText = new javax.swing.JLabel();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tablePanel1 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -98,10 +94,6 @@ public class TableDialog extends javax.swing.JDialog {
         setResizable(false);
         titleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         titleLabel.setText("no Title");
-
-        warningText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        warningText.setText("no Warning");
-        warningText.setVisible(false);
 
         okButton.setText("OK");
         okButton.addActionListener(new java.awt.event.ActionListener() {
@@ -117,19 +109,6 @@ public class TableDialog extends javax.swing.JDialog {
             }
         });
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        jScrollPane1.setViewportView(jTable1);
-
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -141,9 +120,8 @@ public class TableDialog extends javax.swing.JDialog {
                         .add(okButton)
                         .add(11, 11, 11)
                         .add(cancelButton))
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, warningText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, titleLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE))
+                    .add(tablePanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -151,11 +129,9 @@ public class TableDialog extends javax.swing.JDialog {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(titleLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 15, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(18, 18, 18)
-                .add(warningText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 414, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(17, 17, 17)
+                .add(tablePanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 458, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(20, 20, 20)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(okButton)
                     .add(cancelButton))
@@ -183,11 +159,9 @@ public class TableDialog extends javax.swing.JDialog {
             
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
     private javax.swing.JButton okButton;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel1;
     private javax.swing.JLabel titleLabel;
-    private javax.swing.JLabel warningText;
     // End of variables declaration//GEN-END:variables
 
     /**
