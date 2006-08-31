@@ -1,9 +1,9 @@
 check_PROGRAMS	      =	tBlobString tBlobStream tBlobArray tBlobField \
-			tKeyValueMap 
+			tBlobAipsIO tKeyValueMap
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS	      =	tBlobString tBlobStream tBlobArray tBlobField \
-			tKeyValueMap 
+			tBlobAipsIO tKeyValueMap
 #ENDCHECKTOOLPROGS
 
 TESTSCRIPTS = \
@@ -11,6 +11,7 @@ TESTSCRIPTS = \
 	  tBlobField_test.sh \
           tBlobStream_test.sh \
           tBlobString_test.sh \
+	  tBlobAipsIO_test.sh \
 	  tKeyValueMap_test.sh 
 
 TESTS	= $(TESTSCRIPTS)
@@ -35,6 +36,10 @@ tBlobArray_DEPENDENCIES		= ../src/libblob.la $(LOFAR_DEPEND)
 tBlobField_SOURCES		= tBlobField.cc
 tBlobField_LDADD		= ../src/libblob.la
 tBlobField_DEPENDENCIES		= ../src/libblob.la $(LOFAR_DEPEND)
+
+tBlobAipsIO_SOURCES		= tBlobAipsIO.cc
+tBlobAipsIO_LDADD		= ../src/libblob.la
+tBlobAipsIO_DEPENDENCIES	= ../src/libblob.la $(LOFAR_DEPEND)
 
 tKeyValueMap_SOURCES		= tKeyValueMap.cc
 tKeyValueMap_LDADD		= ../src/libblob.la

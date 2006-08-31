@@ -52,6 +52,7 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_AIPSPP(0,"-lcasa")
 
 dnl
 dnl Output Makefiles
