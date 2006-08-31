@@ -46,7 +46,7 @@ double NSTimer::get_CPU_speed_in_MHz()
     assert(sizeof(int) == 4);
     assert(sizeof(long long) == 8);
 
-#if defined __linux__ && \
+#if (defined __linux__ || defined __blrts__) && \
     (defined __i386__ || defined __x86_64__ || defined __ia64__ || defined __PPC__) && \
     (defined __GNUC__ || defined __INTEL_COMPILER || defined __PATHSCALE__ || defined __xlC__)
     ifstream infile("/proc/cpuinfo");
@@ -56,6 +56,9 @@ double NSTimer::get_CPU_speed_in_MHz()
 	infile.getline(buffer, 256);
 
 #if defined __PPC__
+	if (strcmp("machine\t\t: Blue Gene", buffer) == 0)
+	    return 700.0;
+
 	if (strncmp("timebase", buffer, 8) == 0 && (colon = strchr(buffer, ':')) != 0)
 	    return atof(colon + 2) / 1e6;
 #else
@@ -65,8 +68,6 @@ double NSTimer::get_CPU_speed_in_MHz()
     }
 
     return 0.0;
-#elif defined __blrts__ // BlueGene/L
-    return 700.0;
 #else
 #warning unsupported architecture
     return 0.0;
