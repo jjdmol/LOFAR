@@ -57,13 +57,13 @@ namespace LOFAR
     const string& getFileName();
 
     // Get the flag at the given position.
-    bool FlagsMap::getFlag (uint pos);
+    bool getFlag (uint pos);
 
     // Set the flag at the given position.
-    void FlagsMap::setFlag (uint pos);
+    void setFlag (uint pos);
 
     // Clear the flag at the given position.
-    void FlagsMap::clearFlag (uint pos);
+    void clearFlag (uint pos);
 
   private:
     // Forbid copy constructor and assignment.
