@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 
 #include <BBSControl/DH_Prediff.h>
-#include <BBSControl/BlobAipsIO.h>
 #include <BBS/ParmData.h>
+#include <Blob/BlobAipsIO.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
