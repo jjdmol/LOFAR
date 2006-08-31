@@ -60,7 +60,7 @@ namespace LOFAR {
     casa::Array<double>      antPos;       //# antenna positions in ITRF
     std::vector<double>      arrayPos;     //# position of the array in ITRF
 
-    void MSDesc::writeDesc (std::ostream& os) const;
+    void writeDesc (std::ostream& os) const;
   };
 
   // Write the data into a blob.
