@@ -90,10 +90,10 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Duplicate",false);
             buttonPanel1.addButton("Modify");
             buttonPanel1.addButton("Delete");            
-            buttonPanel1.addButton("Instanciate");
+            buttonPanel1.addButton("Build VIC tree");
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Delete",false);
-            buttonPanel1.setButtonEnabled("Instanciate",false);
+            buttonPanel1.setButtonEnabled("Build VIC tree",false);
         } else if (itsTabFocus.equals("Components")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("New");
@@ -608,9 +608,9 @@ public class MainPanel extends javax.swing.JPanel
                     }
                 }
                 
-            } else if (aButton.equals("Instanciate")) {
+            } else if (aButton.equals("Build VIC tree")) {
                 if (itsMainFrame.getSharedVars().getTreeID() < 1) {
-                    JOptionPane.showMessageDialog(null,"Select a tree to instanciate first",
+                    JOptionPane.showMessageDialog(null,"Select a tree to build first",
                         "No Tree Selected",
                         JOptionPane.WARNING_MESSAGE);
                 } else {
@@ -749,7 +749,11 @@ public class MainPanel extends javax.swing.JPanel
             
             if (aSelectedTree != null) {
                 // show treeInfo dialog
-                treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
+                if (treeInfoDialog == null ) {
+                    treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
+                } else {
+                    treeInfoDialog.setTree(aSelectedTree);
+                }
                 treeInfoDialog.setLocationRelativeTo(this);
                 treeInfoDialog.setVisible(true);
 
@@ -784,7 +788,11 @@ public class MainPanel extends javax.swing.JPanel
         itsFileStatus="";
         
         // show login dialog
-        loadFileDialog = new LoadFileDialog(itsMainFrame,true,aType);
+        if (loadFileDialog == null ) {
+            loadFileDialog = new LoadFileDialog(itsMainFrame,true,aType);
+        } else {
+            loadFileDialog.setType(aType);
+        }
         loadFileDialog.setLocationRelativeTo(this);
         if (aType.equals("VIC-component")) {
             loadFileDialog.setStatusVisible(false);
@@ -872,9 +880,9 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Duplicate",true);
                     buttonPanel1.setButtonEnabled("Modify",true);
                     if (aTreeState.equals("approved")) {
-                        buttonPanel1.setButtonEnabled("Instanciate",true);
+                        buttonPanel1.setButtonEnabled("Build VIC tree",true);
                     } else {
-                        buttonPanel1.setButtonEnabled("Instanciate",false);
+                        buttonPanel1.setButtonEnabled("Build VIC tree",false);
                     }
                 } else {
                     buttonPanel1.setButtonEnabled("Duplicate",false);
@@ -887,7 +895,7 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Modify",false);
                 buttonPanel1.setButtonEnabled("Delete",false);                
                 buttonPanel1.setButtonEnabled("Info",false);  
-                buttonPanel1.setButtonEnabled("Instanciate",false);
+                buttonPanel1.setButtonEnabled("Build VIC tree",false);
             }
         } else if (itsTabFocus.equals("Components")) {
             if (componentID > 0 ) {
@@ -910,12 +918,12 @@ public class MainPanel extends javax.swing.JPanel
         }
     }
     
-    private MainFrame      itsMainFrame;
+    private MainFrame      itsMainFrame = null;
     private String         itsTabFocus="PIC";
     private boolean        buttonsInitialized=false;
-    private LoadFileDialog loadFileDialog;
-    private TreeInfoDialog treeInfoDialog;
-    private boolean        changed=false;
+    private LoadFileDialog loadFileDialog = null;
+    private TreeInfoDialog treeInfoDialog = null;
+    private boolean        changed=true;
     
     // File to be loaded info
     File itsNewFile=null;
