@@ -6,7 +6,6 @@ pkginclude_HEADERS = \
 	BBSStrategy.h \
 	BBSStructs.h \
 	BlackBoardDemo.h \
-	BlobAipsIO.h \
 	DH_Prediff.h \
 	DH_Solution.h \
 	DH_WOPrediff.h \
