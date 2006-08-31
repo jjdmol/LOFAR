@@ -87,7 +87,7 @@ public class TablePanel extends javax.swing.JPanel {
 
         warningText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         warningText.setText(" ");
-        setVisible(false);
+        warningText.setVisible(false);
         add(warningText, java.awt.BorderLayout.NORTH);
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
