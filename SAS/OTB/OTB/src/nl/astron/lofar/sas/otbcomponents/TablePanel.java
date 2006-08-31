@@ -114,7 +114,7 @@ public class TablePanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-        this.fireMouseListenerMouseClicked(evt);
+        fireMouseListenerMouseClicked(evt);
     }//GEN-LAST:event_jTable1MouseClicked
     
     
