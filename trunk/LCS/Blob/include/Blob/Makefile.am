@@ -1,4 +1,5 @@
 pkginclude_HEADERS = \
+	BlobAipsIO.h \
         BlobArray.h \
 	BlobArray.tcc \
         BlobArrayHeader.h \

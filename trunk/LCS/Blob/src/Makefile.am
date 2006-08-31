@@ -1,6 +1,7 @@
 lib_LTLIBRARIES 	= libblob.la
 
 libblob_la_SOURCES 	= \
+	BlobAipsIO.cc \
         BlobArray.cc \
         BlobField2.cc \
         BlobFieldSet.cc \

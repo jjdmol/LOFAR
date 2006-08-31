@@ -21,15 +21,17 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/BlobAipsIO.h>
+#include <Common/LofarLogger.h>
+
+#if defined(HAVE_AIPSPP)
+
+#include <Blob/BlobAipsIO.h>
 #include <Blob/BlobOBufChar.h>
 #include <Blob/BlobIBufChar.h>
-#include <Common/LofarLogger.h>
 #include <casa/IO/AipsIO.h>
 
 using namespace LOFAR;
 using namespace casa;
-using namespace std;
 
 void doIt()
 {
@@ -75,11 +77,23 @@ void doIt()
 
 int main()
 {
+  INIT_LOGGER("tBlobAipsIO");
   try {
     doIt();
-  } catch (exception& x) {
-    cout << "Unexpected expection: " << x.what() << endl;
+  } catch (std::exception& x) {
+    LOG_FATAL_STR("Unexpected expection: " << x.what());
     return 1;
   }
   return 0;
 }
+
+#else
+
+int main()
+{
+  INIT_LOGGER("tBlobAipsIO");
+  LOG_INFO("AIPS++ not available. Test skipped");
+  return 3;
+}
+
+#endif

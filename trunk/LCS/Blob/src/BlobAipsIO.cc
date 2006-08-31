@@ -21,7 +21,12 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/BlobAipsIO.h>
+
+#if !defined(HAVE_AIPSPP)
+#warning AIPS++ is not available, but BlobAipsIO needs it.
+#else
+
+#include <Blob/BlobAipsIO.h>
 
 using namespace casa;
 
@@ -87,3 +92,5 @@ namespace LOFAR {
   }
 
 }
+
+#endif
