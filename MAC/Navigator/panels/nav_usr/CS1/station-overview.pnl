@@ -1,22 +1,44 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 108 950 741 N "_3DFace" 0
+PANEL,391 228 950 741 N "_3DFace" 1
+"$datapoint"
 "main()
 {
-	TableObservations.appendLine(\"Observation\",\"Observation1\",
-		\"Start\",\"01-12-2006 12:00:00\",
-		\"End\",\"01-01-2007 12:00:00\",
-		\"Status\",\"Running\");
+	string ring;
+  dyn_string dpElements = splitDatapointPath($datapoint);
+  if(dynlen(dpElements) >= 3)
+  {
+  	ring = dpElements[3];
+	  TextRing.text = ring;
+	}
 
-	TableObservations.appendLine(\"Observation\",\"Observation2\",
-		\"Start\",\"01-12-2006 12:00:00\",
-		\"End\",\"01-01-2007 12:00:00\",
-		\"Status\",\"Running\");
+	string query = \"SELECT '_online.._value' FROM '\" + $datapoint + \"*.state' WHERE _DPT = \\\"Station\\\"\";
+	dpQueryConnectAll(
+		\"updateStationsTable\",
+		true, 
+		\"StationsStateQuery\",
+		query);
+		
 }" 0
 EE E E 1 0 0 0  10 10
 "" 0 1
-EE 2
+E"updateStationsTable(string identifier, dyn_dyn_anytype result)
+{
+	if(identifier == \"StationsStateQuery\")
+	{
+		TableStations.deleteAllLines();
+	  for(int i=2; i<=dynlen(result);i++)
+	  {
+	  	string tempName = dpSubStr(result[i][1],DPSUB_DP);
+	  	string stationName = substr(tempName,strlen(dpSubStr($datapoint,DPSUB_DP))+1);
+			TableStations.appendLine(\"Station\",stationName);
+			TableStations.updateLine(1,\"Station\",stationName,\"Status\",result[i][2]);
+		}
+	}
+}
+" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -36,18 +58,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 12 366 44
+E E 0 1 1 0 1 E U  0 E 12 12 194 44
 0 2 0 "s" 0 0 0 192 0 0  12 12
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-240-100-100-*-*-iso8859-1|-27,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 27 Station controller overview
+LANG:1 15 Ring details - 
 2 10
 "Text6"
 ""
-1 10 570 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 110 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -56,14 +78,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 572 53 590
-0 2 0 "s" 0 0 0 192 0 0  12 572
+E E 0 1 1 0 1 E U  0 E 12 112 70 130
+0 2 0 "s" 0 0 0 192 0 0  12 112
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 5 Rings
+LANG:1 8 Stations
 4 12
 "Line1"
 ""
@@ -80,7 +102,7 @@ E E 0 3 2 0 1 E  940 50 10 50
 2 17
 "Text3"
 ""
-1 10 210 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 490 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 18 0 0 0 0 0
 EE E
@@ -89,8 +111,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 212 106 230
-0 2 0 "s" 0 0 0 192 0 0  12 212
+E E 0 1 1 0 1 E U  0 E 492 422 586 440
+0 2 0 "s" 0 0 0 192 0 0  492 422
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -100,7 +122,7 @@ LANG:1 12 Hardware log
 2 18
 "Text4"
 ""
-1 490 210 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 490 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -109,98 +131,58 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 492 212 581 230
-0 2 0 "s" 0 0 0 192 0 0  492 212
+E E 0 1 1 0 1 E U  0 E 492 72 581 90
+0 2 0 "s" 0 0 0 192 0 0  492 72
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 12 Software log
-2 19
-"TextID"
+2 28
+"TextRing"
 ""
-1 10 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 200 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-20 0 0 0 0 0
+29 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 72 103 90
-0 2 0 "s" 0 0 0 192 0 0  12 72
+E E 0 1 1 0 1 E U  0 E 202 12 210 44
+0 2 0 "s" 0 0 0 192 0 0  202 12
  1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-240-100-100-*-*-iso8859-1|-27,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 13 Controller ID
-2 20
-"Text2"
+LANG:1 1 .
+2 29
+"Text12"
 ""
-1 20 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 62 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-21 0 0 0 0 0
+30 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 102 50 118
-0 2 0 "s" 0 0 0 192 0 0  22 102
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 5 Start
-2 21
-"Text7"
-""
-1 20 130 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-22 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 132 45 148
-0 2 0 "s" 0 0 0 192 0 0  22 132
+E E 0 1 1 0 1 E U  0 E 12 64 47 80
+0 2 0 "s" 0 0 0 192 0 0  12 64
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 3 End
-2 22
-"Text8"
-""
-1 20 160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-23 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 162 60 178
-0 2 0 "s" 0 0 0 192 0 0  22 162
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Status
+LANG:1 6 State:
 25 9
-"TableControllers"
+"TableStations"
 ""
-1 0 300 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 6 -1167 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 10 0 0 0 0 0
 EE E
@@ -211,25 +193,36 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-8 598 942 735
-E E 1 0 1 4 4 "Rings" 0 1 0 "s" 1
-LANG:1 5 Rings
+8 138 482 722
+E "main(int row, string column, string value)
+{
+  DebugTN(\"ColumnCommand\",row,column,value);
+	string dp = TableStations.cellValueRC(row,\"Station\") + \":LOFAR_PermSW\";
+	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
+	navConfigTriggerNavigatorRefreshWithDP(dp);
+}" 0
+ 1 0 1 2 10 "Station" 0 1 0 "s" 1
+LANG:1 7 Station
 E1
 LANG:1 0 
- 225 "#2" 0 1 0 "s" 1
-LANG:1 5 Start
-E1
-LANG:1 0 
- 225 "#3" 0 1 0 "s" 1
-LANG:1 3 End
-E1
-LANG:1 0 
- 225 "#4" 0 1 0 "s" 1
+ 225 "Status" 0 1 0 "s" 1
 LANG:1 6 Status
 E1
 LANG:1 0 
  225 26 26 "" 1 1
 LANG:1 2 #1
+"" 1 1
+LANG:1 3 #10
+"" 1 1
+LANG:1 2 #9
+"" 1 1
+LANG:1 2 #8
+"" 1 1
+LANG:1 2 #7
+"" 1 1
+LANG:1 2 #6
+"" 1 1
+LANG:1 2 #5
 "" 1 1
 LANG:1 2 #2
 "" 1 1
@@ -244,7 +237,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 17 23
 "SelectionList1"
 ""
-1 10 240 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 490 450 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -255,7 +248,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-8 238 467 552
+488 448 942 722
 0
 E
 E
@@ -265,7 +258,7 @@ E
 17 24
 "SelectionList2"
 ""
-1 490 240 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 490 100 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 25 0 0 0 0 0
 EE E
@@ -276,19 +269,19 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-488 238 942 552
+488 98 942 412
 0
 E
 E
 E
 
 3 1
-14 25
-"TextFieldStart"
+14 30
+"txt_state"
 ""
-1 80 100 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 90 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
-26 0 0 0 0 0
+31 0 0 0 0 0
 EE E
 0
 1
@@ -297,48 +290,47 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-78 98 282 125
+88 58 292 85
 2 "s" 0 0 0 0 0 0 
 E
-E
-E
-14 26
-"TextFieldEnd"
-""
-1 80 130 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-27 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-78 128 282 155
-2 "s" 0 0 0 0 0 0 
-E
-E
-E
-14 27
-"TextFieldStatus"
-""
-1 80 160 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-28 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-78 158 282 185
-2 "s" 0 0 0 0 0 0 
-E
-E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( !dpExists( $datapoint + \".state:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            $datapoint + \".state:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+EP_textFieldInCB(string dp, string sNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, sNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {CCU1:LOFAR_PermSW_MACScheduler.state}
+// DPConfig {:_online.._value}
+// DPType {string}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
 E
 0
 LAYER, 1 

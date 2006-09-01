@@ -1,12 +1,12 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,299 108 950 741 N "_3DFace" 0
+PANEL,297 106 950 741 N "_3DFace" 0
 "main()
 {
 	dpConnect(\"updateObservationsTable\",\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\");
 	
-	string query = \"SELECT '_online.._value' FROM 'LOFAR_ObsSW_*.state' WHERE _DPT = \\\"BeamDirectionCtrl\\\" OR _DPT = \\\"CentralStationCtrl\\\"\";
+	string query = \"SELECT '_online.._value' FROM 'LOFAR_ObsSW_*.state' WHERE _DPT = \\\"BeamCtrl\\\"\"; // OR _DPT = \\\"CentralStationCtrl\\\"\";
 	dpQueryConnectAll(
 		\"updateControllersTable\",
 		true, 
@@ -459,7 +459,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E "main(int row, string column, string value)
 {
   DebugTN(\"ColumnCommand\",row,column,value);
-	string dp = \"CCU1:LOFAR_ObsSW_\" + TableObservations.cellValueRC(row,\"Observation\");
+	string dp = \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(row,\"Observation\");
 	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
