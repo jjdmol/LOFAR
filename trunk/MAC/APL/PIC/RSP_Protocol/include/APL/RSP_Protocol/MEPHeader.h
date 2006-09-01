@@ -136,6 +136,7 @@ namespace LOFAR {
        */
       static const uint8 RSR_STATUS       = 0x00;
       static const uint8 RSR_VERSION      = 0x01;
+      static const uint8 RSR_TIMESTAMP    = 0x02;
 
       static const uint8 RSU_FLASHRW      = 0x01;
       static const uint8 RSU_FLASHERASE   = 0x02;
@@ -256,6 +257,7 @@ namespace LOFAR {
        */
       static const uint16 RSR_STATUS_SIZE       = 200;
       static const uint16 RSR_VERSION_SIZE      = 2;
+      static const uint16 RSR_TIMESTAMP_SIZE    = 4;
       
       static const uint16 RSU_FLASHRW_SIZE      = 1024;
       static const uint16 RSU_FLASHERASE_SIZE   = 1;
@@ -384,6 +386,7 @@ namespace LOFAR {
       //
       static const FieldsType RSR_STATUS_HDR;
       static const FieldsType RSR_VERSION_HDR;
+      static const FieldsType RSR_TIMESTAMP_HDR;
       
       static const FieldsType RSU_FLASHRW_HDR;
       static const FieldsType RSU_FLASHERASE_HDR;

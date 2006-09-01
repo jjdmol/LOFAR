@@ -40,8 +40,7 @@ namespace LOFAR {
       /**
        * Constructors for a CDOWrite object.
        */
-      CDOWrite(GCFPortInterface& board_port, int board_id,
-	       const char* srcip, const char* dstip, const char* dstmac);
+      CDOWrite(GCFPortInterface& board_port, int board_id);
 	  
       /* Destructor for CDOWrite. */
       virtual ~CDOWrite();
@@ -75,6 +74,11 @@ namespace LOFAR {
        * to an array of 6 bytes.
        */
       uint32 string2ip(const char* ipstring);
+
+      /**
+       * Setup an appropriate UDP/IP header
+       */
+      void setup_udpip_header();
 
       /**
        * Compute the 16-bit 1-complements checksum for the IP header.
@@ -135,6 +139,7 @@ namespace LOFAR {
       // private data
       EPA_Protocol::MEPHeader m_hdr;
       UDPIPType               m_udpip_hdr;
+      uint8                   m_srcmac[ETH_ALEN];
       uint8                   m_dstmac[ETH_ALEN];
     };
   };

@@ -99,6 +99,7 @@
 #include "TDSProtocolWrite.h"
 #include "TDSResultRead.h"
 #include "RADWrite.h"
+#include "TimestampWrite.h"
 
 #include "Cache.h"
 #include "RawEvent.h"
@@ -434,17 +435,7 @@ void RSPDriver::addAllSyncActions()
 
     if (1 == GET_CONFIG("RSPDriver.WRITE_CDO", i))
     {
-      char dstip[64];
-      char srcip[64];
-      char dstmac[64];
-      snprintf(srcip,  64, "RSPDriver.SRC_IP_ADDR_%d", boardid);
-      snprintf(dstip,  64, "RSPDriver.DST_IP_ADDR_%d", boardid);
-      snprintf(dstmac, 64, "RSPDriver.DST_MAC_ADDR_%d", boardid);
-
-      CDOWrite* cdowrite = new CDOWrite(m_board[boardid], boardid,
-                                        GET_CONFIG_STRING(srcip),
-                                        GET_CONFIG_STRING(dstip),
-                                        GET_CONFIG_STRING(dstmac));
+      CDOWrite* cdowrite = new CDOWrite(m_board[boardid], boardid);
 
       m_scheduler.addSyncAction(cdowrite);
 
@@ -639,6 +630,12 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(hbaresultread);
     }
 
+    if (1 == GET_CONFIG("RSPDriver.WRITE_TIMESTAMP", i))
+    {
+      TimestampWrite* timestampwrite = new TimestampWrite(m_board[boardid], boardid, m_scheduler);
+      ASSERT(timestampwrite);
+      m_scheduler.addSyncAction(timestampwrite);
+    }
   } // for (boardid...)
 }
 

@@ -79,6 +79,7 @@ namespace LOFAR {
 	  bs_state.resize(nrBlps);
 	  tds_state.resize(nrRspBoards);
 	  rad_state.resize(nrRspBoards);
+	  ts_state.resize(nrRspBoards);
 	}
 
 	/*
@@ -102,6 +103,7 @@ namespace LOFAR {
 	  bs_state.reset();
 	  tds_state.reset();
 	  rad_state.reset();
+	  ts_state.reset();
 
 	  sys_state.read();
 	  bf_state.write_force();
@@ -118,6 +120,7 @@ namespace LOFAR {
 	  bs_state.check();
 	  tds_state.check();
 	  rad_state.write_force();
+	  ts_state.write_force();
 	}
 
 	void schedule() {
@@ -136,6 +139,7 @@ namespace LOFAR {
 	  bs_state.check();
 	  tds_state.check();
 	  rad_state.check();
+	  ts_state.write_force(); // always write timestamp
 	}
 
 	void clear() {
@@ -154,6 +158,7 @@ namespace LOFAR {
 	  bs_state.clear();
 	  tds_state.clear();
 	  rad_state.clear();
+	  ts_state.clear();
 	}
 
 	void print(std::ostream& out) const {
@@ -177,6 +182,7 @@ namespace LOFAR {
 	  out << "BS                "; bs_state.print(out);
 	  out << "TDS               "; tds_state.print(out);
 	  out << "RAD               "; rad_state.print(out);
+	  out << "Timestamp         "; ts_state.print(out);
 	  out << endl;
 	}
 
@@ -209,6 +215,7 @@ namespace LOFAR {
 	RTC::RegisterState& bs()             { return bs_state; }
 	RTC::RegisterState& tds()            { return tds_state; }
 	RTC::RegisterState& rad()            { return rad_state; }
+	RTC::RegisterState& ts()             { return ts_state; }
 	/*@}*/
 
       private:
@@ -227,6 +234,7 @@ namespace LOFAR {
 	RTC::RegisterState bs_state;             // BS register state
 	RTC::RegisterState tds_state;            // TDS register state (Clock board)
 	RTC::RegisterState rad_state;            // RAD register state
+	RTC::RegisterState ts_state;             // RSR Timestamp register state
 
 	int m_nrcus;
       };
