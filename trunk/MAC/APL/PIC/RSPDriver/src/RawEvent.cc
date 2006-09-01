@@ -208,7 +208,28 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
   /* pid = 0x06 (BST) */
   {
-    /* reg = 0x00 (BST_POWER) */
+    /* reg = 0x00 (BST_POWER_LANE_0) */
+    { 0,
+      EPA_READ,      /* READ    */
+      0,
+      EPA_BST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x01 (BST_POWER_LANE_1) */
+    { 0,
+      EPA_READ,      /* READ    */
+      0,
+      EPA_BST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x02 (BST_POWER_LANE_2) */
+    { 0,
+      EPA_READ,      /* READ    */
+      0,
+      EPA_BST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x03 (BST_POWER_LANE_3) */
     { 0,
       EPA_READ,      /* READ    */
       0,
