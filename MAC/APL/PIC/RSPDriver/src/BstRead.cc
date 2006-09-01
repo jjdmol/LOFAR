@@ -38,7 +38,7 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 BstRead::BstRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, 1)
+  : SyncAction(board_port, board_id, MEPHeader::N_SERDES_LANES)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -53,11 +53,19 @@ void BstRead::sendrequest()
 
   Cache::getInstance().getState().bst().read(getBoardId());
 
-  bstread.hdr.set(MEPHeader::BST_POWER_HDR, MEPHeader::DST_RSP,
-		  MEPHeader::READ, MEPHeader::BST_POWER_SIZE);
+  bstread.hdr.set(MEPHeader::READ,
+		  MEPHeader::DST_RSP,
+		  MEPHeader::BST,
+		  getCurrentIndex(),
+		  MEPHeader::BST_POWER_SIZE);
 
   m_hdr = bstread.hdr;
   getBoardPort().send(bstread);
+
+  Range fragment_range(0, MEPHeader::N_LOCAL_BEAMLETS - 1);
+  fragment_range = fragment_range + (getCurrentIndex() * MEPHeader::N_LOCAL_BEAMLETS);
+
+  LOG_WARN_STR("fragment_range=" << fragment_range);
 }
 
 void BstRead::sendrequest_status()
@@ -108,9 +116,10 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   LOG_DEBUG(formatString("BstRead::handleack: boardid=%d",
 			 getBoardId()));
 
-  Range fragment_range(0, ((MEPHeader::BST_POWER_SIZE / sizeof(uint32)) / MEPHeader::N_POL) - 1);
+  Range fragment_range(0, MEPHeader::N_LOCAL_BEAMLETS - 1);
+  fragment_range = fragment_range + (getCurrentIndex() * MEPHeader::N_LOCAL_BEAMLETS);
 
-  LOG_DEBUG_STR("fragment_range=" << fragment_range);
+  LOG_WARN_STR("fragment_range=" << fragment_range);
   
   if (MEPHeader::BST_POWER != ack.hdr.m_fields.addr.regid)
   {
@@ -132,8 +141,10 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   // y-pol beamlet statistics: copy and convert to double
   cache(getBoardId() * 2 + 1, fragment_range) =
     convert_uint32_to_double(stats(Range::all(), 1));
-  
-  Cache::getInstance().getState().bst().read_ack(getBoardId());
+
+  if (getCurrentIndex() == MEPHeader::N_SERDES_LANES - 1) {
+    Cache::getInstance().getState().bst().read_ack(getBoardId());
+  }
 
   return GCFEvent::HANDLED;
 }

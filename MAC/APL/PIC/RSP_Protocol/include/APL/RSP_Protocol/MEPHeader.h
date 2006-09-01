@@ -158,7 +158,10 @@ namespace LOFAR {
       static const uint8 BF_YROUT         = 0x02;
       static const uint8 BF_YIOUT         = 0x03;
 
-      static const uint8 BST_POWER        = 0x00;
+      static const uint8 BST_POWER_LANE_0 = 0x00;
+      static const uint8 BST_POWER_LANE_1 = 0x01;
+      static const uint8 BST_POWER_LANE_2 = 0x02;
+      static const uint8 BST_POWER_LANE_3 = 0x03;
 
       static const uint8 SST_POWER        = 0x00;
 

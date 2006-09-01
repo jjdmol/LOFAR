@@ -58,7 +58,7 @@ const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR          = { WRITE, 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT }, 0, BF_YROUT_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT }, 0, BF_YIOUT_SIZE, 0, 0 };
 
-const MEPHeader::FieldsType MEPHeader::BST_POWER_HDR         = { READ,  0, 0, { DST_RSP, BST, BST_POWER }, 0, BST_POWER_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::BST_POWER_HDR         = { READ,  0, 0, { DST_RSP, BST, BST_POWER_LANE_0 }, 0, BST_POWER_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::SST_POWER_HDR         = { READ,  0, 0, { DST_BLP0, SST, SST_POWER }, 0, SST_POWER_SIZE, 0, 0 };
 
