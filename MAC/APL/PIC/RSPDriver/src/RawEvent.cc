@@ -55,6 +55,14 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_RSR_VERSION,    /* READACK */
       0,
     },
+
+    /* reg = 0x02 (RSR_TIMESTAMP) */
+    { 0,
+      EPA_READ,          /* READ     */
+      EPA_RSR_TIMESTAMP, /* WRITE    */
+      EPA_RSR_TIMESTAMP, /* READACK  */
+      EPA_WRITEACK,      /* WRITEACK */
+    },
   },
 
   /* pid = 0x02 (RSU) */

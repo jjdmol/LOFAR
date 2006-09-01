@@ -35,6 +35,8 @@
 
 #define N_CDO_REGISTERS 2
 #define BASEUDPPORT 0x10FA // (=4346) start numbering src and dst UDP ports at this number (4346)
+#define EPA_CEP_OUTPUT_HEADER_SIZE 16 // bytes
+#define EPA_CEP_BEAMLET_SIZE sizeof(uint16)
 
 using namespace blitz;
 using namespace LOFAR;
@@ -65,18 +67,23 @@ uint32 CDOWrite::string2ip(const char* ipstring)
   return result;
 }
 
-CDOWrite::CDOWrite(GCFPortInterface& board_port, int board_id,
-		   const char* srcip, const char* dstip, const char* dstmac)
-  : SyncAction(board_port, board_id, N_CDO_REGISTERS)
+void CDOWrite::setup_udpip_header()
 {
-  memset(&m_hdr, 0, sizeof(MEPHeader));
-
   uint32 l_srcip;
   uint32 l_dstip;
 
-  l_srcip = string2ip(srcip);
-  l_dstip = string2ip(dstip);
-  string2mac(dstmac, m_dstmac);
+  char dstip[64];
+  char srcip[64];
+  snprintf(srcip,  64, "RSPDriver.SRC_IP_ADDR_%d", getBoardId());
+  snprintf(dstip,  64, "RSPDriver.DST_IP_ADDR_%d", getBoardId());
+
+  l_srcip = string2ip(GET_CONFIG_STRING(srcip));
+  l_dstip = string2ip(GET_CONFIG_STRING(dstip));
+
+  uint32 payload_size = EPA_CEP_OUTPUT_HEADER_SIZE
+    + (GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i) 
+       * (MEPHeader::N_PHASEPOL * GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i)) 
+       * EPA_CEP_BEAMLET_SIZE);
 
   //
   // Setup the UDP/IP header
@@ -84,7 +91,7 @@ CDOWrite::CDOWrite(GCFPortInterface& board_port, int board_id,
   m_udpip_hdr.ip.version      = 4; // IPv4
   m_udpip_hdr.ip.ihl          = sizeof(m_udpip_hdr.ip) / sizeof(uint32);
   m_udpip_hdr.ip.dscp         = 0x00;
-  m_udpip_hdr.ip.total_length = htons(sizeof(m_udpip_hdr) + GET_CONFIG("RSPDriver.OUTPUT_PAYLOAD_SIZE", i));
+  m_udpip_hdr.ip.total_length = htons(sizeof(m_udpip_hdr) + payload_size);
   m_udpip_hdr.ip.seqnr        = htons(0);
   //m_udpip_hdr.ip.flags        = 0x2;
   m_udpip_hdr.ip.flags_offset = htons(0x2 << 13);
@@ -100,8 +107,14 @@ CDOWrite::CDOWrite(GCFPortInterface& board_port, int board_id,
 
   m_udpip_hdr.udp.srcport     = htons(BASEUDPPORT + getBoardId());
   m_udpip_hdr.udp.dstport     = htons(BASEUDPPORT + getBoardId());
-  m_udpip_hdr.udp.length      = htons(sizeof(m_udpip_hdr.udp) + GET_CONFIG("RSPDriver.OUTPUT_PAYLOAD_SIZE", i));
+  m_udpip_hdr.udp.length      = htons(sizeof(m_udpip_hdr.udp) + payload_size);
   m_udpip_hdr.udp.checksum    = htons(0); // disable check summing
+}
+
+CDOWrite::CDOWrite(GCFPortInterface& board_port, int board_id)
+  : SyncAction(board_port, board_id, N_CDO_REGISTERS)
+{
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 CDOWrite::~CDOWrite()
@@ -157,12 +170,46 @@ void CDOWrite::sendrequest()
 
       cdo.hdr.set(MEPHeader::CDO_SETTINGS_HDR);
 
-      cdo.station_id       = getBoardId() + 1;
+      int output_lane = -1;
+      for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+	char paramname[64];
+	snprintf(paramname, 64, "RSPDriver.LANE_%d_BLET_OUT", lane);
+	if (getBoardId() == GET_CONFIG(paramname, i)) {
+	  output_lane = lane;
+	  break;
+	}
+      }
+
+      cdo.station_id.lane = output_lane;
+      cdo.station_id.id = GET_CONFIG("RS.STATION_ID", i);
+
       // fill in some magic so we recognise these fields easily in tcpdump/ethereal output
       cdo.configuration_id = 0xBBAA;
-      cdo.format           = 0xDDCC;
-      cdo.antenna_id       = 0xFFEE;
-      memcpy(cdo.destination_mac, m_dstmac, ETH_ALEN);
+      cdo.dataformat       = 0xDDCC;
+
+      cdo.nof_blocks       = GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i);
+      cdo.nof_beamlets     = GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
+
+      if (output_lane >= 0) {
+	cdo.control.enable   = 1;
+	cdo.control.lane     = output_lane;
+	char srcmac[64]; snprintf(srcmac, 64, GET_CONFIG_STRING("RSPDriver.CDO_SRCMAC_FORMAT"),
+				  GET_CONFIG("RS.STATION_ID", i), output_lane);
+	char dstmac[64]; snprintf(dstmac, 64, "RSPDriver.DST_MAC_ADDR_%d", getBoardId());
+	string2mac(srcmac, cdo.src_mac);
+	string2mac(GET_CONFIG_STRING(dstmac), cdo.dst_mac);
+
+	// setup UDP/IP header
+	setup_udpip_header();
+
+      } else {
+	cdo.control.enable = 0;
+	cdo.control.lane   = 0;
+
+	memset(cdo.src_mac, 0, ETH_ALEN);
+	memset(cdo.dst_mac, 0, ETH_ALEN);
+      }
+      cdo.control.ffi      = 0;
 
       m_hdr = cdo.hdr;
       getBoardPort().send(cdo);

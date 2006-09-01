@@ -185,7 +185,9 @@ RSPDriver_SOURCES = \
 	HBAResultRead.h \
 	HBAResultRead.cc \
 	RADWrite.h \
-	RADWrite.cc
+	RADWrite.cc \
+	TimestampWrite.h \
+	TimestampWrite.cc
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \

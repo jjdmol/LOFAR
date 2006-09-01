@@ -211,6 +211,19 @@ prelude = << PRELUDE_END
     uint8 ffi         :5;
   };
 
+  typedef struct CDOStationId
+  {
+    uint8  lane:5;
+    uint16 id  :11;
+  };
+
+  typedef struct CDOControl
+  {
+    uint8 enable:1; // enable CEP output
+    uint8 lane  :2; // select which lane to output (value = 0,1,2,3)
+    uint8 ffi   :5;
+  };
+
 PRELUDE_END;
 
 //
@@ -389,6 +402,21 @@ event = {
   param = {
     name = "version";
     type = "RSRVersion";
+  };
+};
+
+event = {
+  noheader;
+  signal = RSR_TIMESTAMP;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "timestamp";
+    type = "uint32";
   };
 };
 
@@ -707,22 +735,34 @@ event = {
   };
   param = {
     name = "station_id";
-    type = "uint32";
+    type = "CDOStationId";
   };
   param = {
     name = "configuration_id";
     type = "uint16";
   };
   param = {
-    name = "format";
+    name = "dataformat";
     type = "uint16";
   };
   param = {
-    name = "antenna_id";
-    type = "uint16";
+    name = "control";
+    type = "CDOControl";
   };
   param = {
-    name = "destination_mac";
+    name = "nof_blocks";
+    type = "uint8";
+  };
+  param = {
+    name = "nof_beamlets";
+    type = "uint8";
+  };
+  param = {
+    name = "dst_mac";
+    type = "uint8[ETH_ALEN]";
+  };
+  param = {
+    name = "src_mac";
     type = "uint8[ETH_ALEN]";
   };
 };

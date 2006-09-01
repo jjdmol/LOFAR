@@ -1977,7 +1977,7 @@ static void usage()
 #endif
   cout << "rspctl --xcsubband                             # get the subband selection for cross correlation" << endl;
   cout << "rspctl --xcsubband=<int>                       # set the subband to cross correlate" << endl;
-  cout << "rspctl --clock[=<int>]                         # get or set the clock frequency of clocks in Hz" << endl;
+  cout << "rspctl --clock[=<int>]                         # get or set the clock frequency of clocks in MHz" << endl;
   cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or set the 16 delays of one or more HBA's" << endl;
   cout << "rspctl --version            [--select=<set>]   # get version information" << endl;
   cout << "rspctl --rspclear           [--select=<set>]   # clear FPGA registers on RSPboard" << endl;
