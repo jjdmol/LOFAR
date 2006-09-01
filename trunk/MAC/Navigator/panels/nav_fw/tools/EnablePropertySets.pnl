@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 Enable property sets
-PANEL,300 247 460 120 N "_3DFace" 0
+PANEL,293 76 460 120 N "_3DFace" 0
 EEE E E 1 -1 -1 0  10 10
 "" 0 1
 EE 2
