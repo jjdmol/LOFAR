@@ -80,9 +80,9 @@ int main(int, const char* argv[])
     Coord3D v3(M_PI/4, -M_PI/3, 2);
 
     ASSERT(!v3.isZero());
-    ASSERT(Numeric::compare(v3.get()[0], 2*0.5*(0.5*sqrt(2))) &&
-           Numeric::compare(v3.get()[1], 2*0.5*(0.5*sqrt(2))) &&
-           Numeric::compare(v3.get()[2], 2*0.5*-sqrt(3)));
+    ASSERT(Numeric::compare(v3.get()[0], 2*0.5*(0.5*sqrt(2.0))) &&
+           Numeric::compare(v3.get()[1], 2*0.5*(0.5*sqrt(2.0))) &&
+           Numeric::compare(v3.get()[2], 2*0.5*-sqrt(3.0)));
     ASSERT(Numeric::compare(v3.longitude(), M_PI/4) &&
            Numeric::compare(v3.latitude(), -M_PI/3) &&
            Numeric::compare(v3.radius(), 2));
@@ -95,9 +95,9 @@ int main(int, const char* argv[])
     Coord3D v4(-2*M_PI/3, 3*M_PI/4, 249.98);
 
     ASSERT(!v4.isZero());
-    ASSERT(Numeric::compare(v4.get()[0], 249.98*(-0.5*sqrt(2))*-0.5) &&
-           Numeric::compare(v4.get()[1], 249.98*(-0.5*sqrt(2))*(-0.5*sqrt(3))) &&
-           Numeric::compare(v4.get()[2], 249.98*(0.5*sqrt(2))));
+    ASSERT(Numeric::compare(v4.get()[0], 249.98*(-0.5*sqrt(2.0))*-0.5) &&
+           Numeric::compare(v4.get()[1], 249.98*(-0.5*sqrt(2.0))*(-0.5*sqrt(3.0))) &&
+           Numeric::compare(v4.get()[2], 249.98*(0.5*sqrt(2.0))));
     ASSERT(Numeric::compare(v4.longitude(), -2*M_PI/3 + M_PI) &&
            Numeric::compare(v4.latitude(),  M_PI - 3*M_PI/4) &&
            Numeric::compare(v4.radius(), 249.98));
@@ -110,9 +110,9 @@ int main(int, const char* argv[])
     v -= v2;
     ASSERT(v == v1);
     v += v3;
-    ASSERT(Numeric::compare(v.get()[0],  3 + 2*0.5*(0.5*sqrt(2))) &&
-           Numeric::compare(v.get()[1],  4 + 2*0.5*(0.5*sqrt(2))) &&
-           Numeric::compare(v.get()[2], 12 + 2*0.5*-sqrt(3)));
+    ASSERT(Numeric::compare(v.get()[0],  3 + 2*0.5*(0.5*sqrt(2.0))) &&
+           Numeric::compare(v.get()[1],  4 + 2*0.5*(0.5*sqrt(2.0))) &&
+           Numeric::compare(v.get()[2], 12 + 2*0.5*-sqrt(3.0)));
 
 
     // Multiply and divide vectors by a scalar.
@@ -131,7 +131,7 @@ int main(int, const char* argv[])
     // Calculate inner products
     ASSERT(v0 * v1 == 0);
     ASSERT(v1 * v2 == 3*16 + 4*11 + 12*8);
-    ASSERT(Numeric::compare(v3*v4, 0.25*249.98*(1+sqrt(3)-2*sqrt(6))));
+    ASSERT(Numeric::compare(v3*v4, 0.25*249.98*(1+sqrt(3.0)-2*sqrt(6.0))));
 
   }
 
