@@ -214,6 +214,7 @@ public class MainPanel extends javax.swing.JPanel
                 }
             }   
             this.setChanged(false);
+            this.validate();
             this.validateButtons();
             itsMainFrame.setNormalCursor();
         } 
@@ -923,7 +924,7 @@ public class MainPanel extends javax.swing.JPanel
     private boolean        buttonsInitialized=false;
     private LoadFileDialog loadFileDialog = null;
     private TreeInfoDialog treeInfoDialog = null;
-    private boolean        changed=true;
+    private boolean        changed=false;
     
     // File to be loaded info
     File itsNewFile=null;
