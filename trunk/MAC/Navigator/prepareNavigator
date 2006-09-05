@@ -9,14 +9,17 @@ cp config/progs.nav config/progs
 PVSS00pmon -proj $1 &
 echo -n "Importing Navigator specific DPT's and DP's..."
 PVSS00ascii -in dplist/nav_fw/XTU_Navigator_database.dpl -currentproj; echo "(done)"
-echo -n "Importing STSLCU specific DPT's..."
-PVSS00ascii -in dplist/nav_usr/STS/STSLCU_PIC_database_types.dpl -currentproj; echo "(done)"
+
+echo -n "Importing fixed datapoints..."
+cd ../Deployment/data/PVSS/
+./create_db_files PVSS
+PVSS00ascii -in PVSS_datapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in PVSS_datapoints.dpl -currentproj; echo "(done)"
+cd $curPath
+
 echo -n "Prepare project to enable use of GCF based MAC controllers..."
 PVSS00ctrl -script libs/nav_fw/gcfpa-prep.ctl -currentproj; echo "(done)"
-echo -n "Importing CaptureStats specific DPT's..."
-PVSS00ascii -in dplist/nav_usr/STS/PIC_CaptureStats.dpl -currentproj; echo "(done)"
-echo -n "Importing STSLCU specific DP's..."
-PVSS00ascii -in dplist/nav_usr/STS/STSLCU_PIC_database.dpl -currentproj; echo "(done)"
+
 echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
 convertedDefaultFile=`sed -e "s/CCU1/$sysName/" dplist/nav_usr/MAC/MAC_Default_panelviews.dpl`
 echo "$convertedDefaultFile" > MAC_Default_panelviews.dpl

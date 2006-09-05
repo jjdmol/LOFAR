@@ -2,351 +2,241 @@
 
 # Datapoint/DpId
 DpName	TypeName	ID
-__navU0000_TCcuPic_viewconfig	GCFNavViewConfiguration	63858
-__navU0000_TLcuPic_viewconfig	GCFNavViewConfiguration	63859
-__navU0000_TLcuPicADCStatistics_viewconfig	GCFNavViewConfiguration	63860
-__navU0000_TLcuPicAlert_viewconfig	GCFNavViewConfiguration	63861
-__navU0000_TLcuPicBoard_viewconfig	GCFNavViewConfiguration	63862
-__navU0000_TLcuPicBoardRCUStatus_viewconfig	GCFNavViewConfiguration	63863
-__navU0000_TLcuPicEthernet_viewconfig	GCFNavViewConfiguration	63864
-__navU0000_TLcuPicFPGA_viewconfig	GCFNavViewConfiguration	63865
-__navU0000_TLcuPicHFA_viewconfig	GCFNavViewConfiguration	63866
-__navU0000_TLcuPicLFA_viewconfig	GCFNavViewConfiguration	63867
-__navU0000_TLcuPicMaintenance_viewconfig	GCFNavViewConfiguration	63868
-__navU0000_TLcuPicMEPStatus_viewconfig	GCFNavViewConfiguration	63869
-__navU0000_TLcuPicRack_viewconfig	GCFNavViewConfiguration	63870
-__navU0000_TLcuPicRCU_viewconfig	GCFNavViewConfiguration	63871
-__navU0000_TLcuPicSubRack_viewconfig	GCFNavViewConfiguration	63872
-__navU0000_TLcuPicSYNCStatus_viewconfig	GCFNavViewConfiguration	63873
+__nav_view_list	GCFNavView	48073
+__nav_view_plot	GCFNavView	48074
+__nav_SingleElement_Trend	GCFNavSubViewConfigTrend	48248
+__nav_view_trend	GCFNavView	51142
+__nav_view_panel	GCFNavView	51247
+__nav_view_alert	GCFNavView	51347
+__nav_view_bar	GCFNavView	51400
+__nav_view_control	GCFNavView	51401
+__nav_view_config	GCFNavView	51402
+__nav_view_log	GCFNavView	51403
+__nav_view_archive	GCFNavView	52168
+__nav_Alert_viewconfig	GCFNavViewConfiguration	52278
+__nav_default_viewconfig	GCFNavViewConfiguration	56917
 __navU0000_CCU1_viewconfig	GCFNavViewConfiguration	63874
-__navU0000_subview_Panel_Station-Antenna-HFA	GCFNavSubView	63942
 __navU0000_TLcuPic_config_Panel_Station-Antenna-HFA	GCFNavSubViewConfigPanel	63943
-__navU0000_subview_Panel_Station-Antenna-LFA	GCFNavSubView	63944
 __navU0000_TLcuPic_config_Panel_Station-Antenna-LFA	GCFNavSubViewConfigPanel	63945
-__navU0000_subview_Panel_Station	GCFNavSubView	63946
 __navU0000_TLcuPic_config_Panel_Station	GCFNavSubViewConfigPanel	63947
-__navU0000_subview_Panel_Overview	GCFNavSubView	63948
 __navU0000_TLcuPicSubRack_config_Panel_Overview	GCFNavSubViewConfigPanel	63949
-__navU0000_subview_Panel_RcuOverview	GCFNavSubView	63952
 __navU0000_TLcuPicRCU_config_Panel_RcuOverview	GCFNavSubViewConfigPanel	63953
 __navU0000_subview_Panel_LofarMain	GCFNavSubView	63954
 __navU0000_CCU1_config_Panel_LofarMain	GCFNavSubViewConfigPanel	63955
-__navU0000_subview_Panel_LofarMainDrenthe	GCFNavSubView	63956
-__navU0000_CCU1_config_Panel_LofarMainDrenthe	GCFNavSubViewConfigPanel	63957
-__navU0000_subview_Panel_Nederland	GCFNavSubView	63958
-__navU0000_CCU1_config_Panel_Nederland	GCFNavSubViewConfigPanel	63959
-__navU0000_subview_Panel_NederlandGrey	GCFNavSubView	63960
-__navU0000_CCU1_config_Panel_NederlandGrey	GCFNavSubViewConfigPanel	63961
 __navU0000_subview_List_List-1	GCFNavSubView	63962
 __navU0000_TLcuPic_config_List_List-1	GCFNavSubViewConfigList	63963
 __navU0000_subview_Panel_CaptureStatMAC	GCFNavSubView	63975
 __navU0000_CCU1_config_Panel_CaptureStatMAC	GCFNavSubViewConfigPanel	63976
-__navU0000_subview_Panel_CaptureStat	GCFNavSubView	63977
 __navU0000_TLcuPic_config_Panel_CaptureStat	GCFNavSubViewConfigPanel	63978
 __navU0000_subview_List_List-2	GCFNavSubView	63994
 __navU0000_CCU1_config_List_List-2	GCFNavSubViewConfigList	63995
-__navU0000_TAplLogicalDevice_viewconfig	GCFNavViewConfiguration	64095
-__navU0000_TAplMacScheduler_viewconfig	GCFNavViewConfiguration	64096
-__navU0000_TAplPacSO_viewconfig	GCFNavViewConfiguration	64097
-__navU0000_TAplStartDaemon_viewconfig	GCFNavViewConfiguration	64098
-__navU0000_TAplVicAO_viewconfig	GCFNavViewConfiguration	64099
-__navU0000_TAplVicARG_viewconfig	GCFNavViewConfiguration	64100
-__navU0000_TAplVicMaintenanceVI_viewconfig	GCFNavViewConfiguration	64101
-__navU0000_TAplVicVI_viewconfig	GCFNavViewConfiguration	64102
-__navU0000_TLcuPac_viewconfig	GCFNavViewConfiguration	64103
-__navU0000_TLcuPacLogicalDeviceScheduler_viewconfig	GCFNavViewConfiguration	64104
-__navU0000_TLcuPacSBF_viewconfig	GCFNavViewConfiguration	64105
-__navU0000_TLcuPacSR_viewconfig	GCFNavViewConfiguration	64106
-__navU0000_TLcuPacSRG_viewconfig	GCFNavViewConfiguration	64107
-__navU0000_TLcuPacVT_viewconfig	GCFNavViewConfiguration	64108
-__navU0000_TLcuPacWaveformGenerator_viewconfig	GCFNavViewConfiguration	64109
-__navU0000_TLcuPicCaptureStats_viewconfig	GCFNavViewConfiguration	64110
-__navU0000_TLcuPicCommand_viewconfig	GCFNavViewConfiguration	64111
-__navU0000_TLcuPicSNMP_viewconfig	GCFNavViewConfiguration	64112
-__navU0000_TLcuPicSNMPdevice_viewconfig	GCFNavViewConfiguration	64113
 __navU0000_subview_Control_Control-1	GCFNavSubView	64172
 __navU0000_TAplMacScheduler_config_Control_Control-1	GCFNavSubViewConfigControl	64173
 __navU0000_subview_Panel_CDR-Dem	GCFNavSubView	64218
 __navU0000_CCU1_config_Panel_CDR-Dem	GCFNavSubViewConfigPanel	64219
-__navU0000_subview_List_ListL	GCFNavSubView	64246
-__navU0000_TAplLogicalDevice_config_List_ListL	GCFNavSubViewConfigList	64247
-__navU0000_subview_Panel_CDR-Dem0	GCFNavSubView	64370
 __navU0000_TAplMacScheduler_config_Panel_CDR-Dem0	GCFNavSubViewConfigPanel	64371
 __navU0000_subview_Control_ControlLogicalDevice	GCFNavSubView	64389
 __navU0000_TAplLogicalDevice_config_Control_ControlLogicalDevice	GCFNavSubViewConfigControl	64390
-__navU0000_subview_Alert_Alert-1	GCFNavSubView	64467
-__navU0000_TAplMacScheduler_config_Alert_Alert-1	GCFNavSubViewConfigAlert	64468
 __navU0000_subview_Plot_Plot-1	GCFNavSubView	64470
 __navU0000_TLcuPicSubRack_config_Plot_Plot-1	GCFNavSubViewConfigPlot	64471
+__navU0000_TWanCable_viewconfig	GCFNavViewConfiguration	64687
+__navU0000_TWanContainer_viewconfig	GCFNavViewConfiguration	64688
+__navU0000_TWanLogicalSegment_viewconfig	GCFNavViewConfiguration	64689
+__navU0000_TWanSwitchPort_viewconfig	GCFNavViewConfiguration	64690
+__navU0000_TWanSwitchPT12_viewconfig	GCFNavViewConfiguration	64691
+__navU0000_TWanSwitchPT24_viewconfig	GCFNavViewConfiguration	64692
+__navU0000_TWanSwitchPT48_viewconfig	GCFNavViewConfiguration	64693
+__navU0000_TWanSwitchPT6_viewconfig	GCFNavViewConfiguration	64694
+__navU0000_subview_List_ListSeqment	GCFNavSubView	64695
+__navU0000_TWanLogicalSegment_config_List_ListSeqment	GCFNavSubViewConfigList	64696
+__navU0000_subview_List_ListSwitch48	GCFNavSubView	64711
+__navU0000_TWanSwitchPT48_config_List_ListSwitch48	GCFNavSubViewConfigList	64712
+__navU0000_subview_List_ListStatus	GCFNavSubView	64713
+__navU0000_TWanContainer_config_List_ListStatus	GCFNavSubViewConfigList	64714
+__navU0000_subview_List_ListLogical	GCFNavSubView	64728
+__navU0000_TAplLogicalDevice_config_List_ListLogical	GCFNavSubViewConfigList	64729
+__navU0000_subview_List_ListVIC	GCFNavSubView	64807
+__navU0000_TCcuPic_config_List_ListVIC	GCFNavSubViewConfigList	64808
+__navU0000_subview_Alert_Alert-1	GCFNavSubView	65008
+__navU0000_TCcuPic_config_Alert_Alert-1	GCFNavSubViewConfigAlert	65009
+__navU0000_subview_List_List-MACScheduler	GCFNavSubView	65051
+__navU0000_TAplMacScheduler_config_List_List-MACScheduler	GCFNavSubViewConfigList	65052
+__navU0000_subview_List_VIStartDaemonList	GCFNavSubView	65054
+__navU0000_TAplStartDaemon_config_List_VIStartDaemonList	GCFNavSubViewConfigList	65055
+__navU0000_subview_Trend_VIStartDaemonTrend	GCFNavSubView	65056
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend	GCFNavSubViewConfigTrend	65057
+__navU0000_subview_Alert_VIStartDaemonAlert	GCFNavSubView	65058
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert	GCFNavSubViewConfigAlert	65059
+__navU0000_subview_Plot_VIStartDaemonPlot	GCFNavSubView	65060
+__navU0000_TAplStartDaemon_config_Plot_VIStartDaemonPlot	GCFNavSubViewConfigPlot	65061
+__navU0000_subview_Bar_VIStartDaemonBar	GCFNavSubView	65062
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar	GCFNavSubViewConfigBar	65063
+__navU0000_subview_Control_VIStartDaemonControl	GCFNavSubView	65064
+__navU0000_TAplStartDaemon_config_Control_VIStartDaemonControl	GCFNavSubViewConfigControl	65065
+__navU0000_subview_Panel_VIStartDaemonPanel	GCFNavSubView	65069
+__navU0000_TAplStartDaemon_config_Panel_VIStartDaemonPanel	GCFNavSubViewConfigPanel	65070
+__navU0000_subview_Panel_SoftwareOverview	GCFNavSubView	65071
+__navU0000_CCU1_config_Panel_SoftwareOverview	GCFNavSubViewConfigPanel	65072
+__navU0000_subview_Panel_CS1-Controller-Overview	GCFNavSubView	65073
+__navU0000_CCU1_config_Panel_CS1-Controller-Overview	GCFNavSubViewConfigPanel	65074
+__navU0000_subview_Panel_CS1-Software-Overview	GCFNavSubView	65075
+__navU0000_CCU1_config_Panel_CS1-Software-Overview	GCFNavSubViewConfigPanel	65076
+__navU0000_subview_Panel_CS1-Observation-Details-Imaging	GCFNavSubView	65077
+__navU0000_CCU1_config_Panel_CS1-Observation-Details-Imaging	GCFNavSubViewConfigPanel	65078
+__navU0000_subview_Panel_CS1-Rings-Overview	GCFNavSubView	65079
+__navU0000_CCU1_config_Panel_CS1-Rings-Overview	GCFNavSubViewConfigPanel	65080
+__navU0000_subview_Panel_CS1-Station-Overview	GCFNavSubView	65081
+__navU0000_CCU1_config_Panel_CS1-Station-Overview	GCFNavSubViewConfigPanel	65082
+__navU0000_subview_Panel_CS1-Observation-Status	GCFNavSubView	65083
+__navU0000_CCU1_config_Panel_CS1-Observation-Status	GCFNavSubViewConfigPanel	65084
+__navU0000_CCU1_config_Panel_MACSchedulerPanel	GCFNavSubViewConfigPanel	66519
+__navU0000_ObsSW_viewconfig	GCFNavViewConfiguration	66771
+__navU0000_subview_Panel_Imaging-Observation-Details	GCFNavSubView	66772
+__navU0000_ObsSW_config_Panel_Imaging-Observation-Details	GCFNavSubViewConfigPanel	66773
+__navU0000_subview_Panel_MACScheduler	GCFNavSubView	66776
+__navU0000_PIC_viewconfig	GCFNavViewConfiguration	71422
+__navU0000_subview_Panel_SubRack-Overview	GCFNavSubView	75966
+__navU0000_PicSubRack_config_Panel_SubRack-Overview	GCFNavSubViewConfigPanel	75967
+__navU0000_subview_Panel_Station	GCFNavSubView	75968
+__navU0000_PIC_config_Panel_Station	GCFNavSubViewConfigPanel	75969
+__navU0000_subview_Panel_RcuOverview	GCFNavSubView	75978
+__navU0000_PicRCU_config_Panel_RcuOverview	GCFNavSubViewConfigPanel	75979
+__navU0000_subview_List_SubRack-List	GCFNavSubView	75980
+__navU0000_PicSubRack_config_List_SubRack-List	GCFNavSubViewConfigList	75981
+__navU0000_RSPBoard_viewconfig	GCFNavViewConfiguration	76091
+__navU0000_subview_Panel_RSPBoard-Panel	GCFNavSubView	76092
+__navU0000_RSPBoard_config_Panel_RSPBoard-Panel	GCFNavSubViewConfigPanel	76093
+__navU0000_subview_List_RSPBoard-List	GCFNavSubView	76095
+__navU0000_RSPBoard_config_List_RSPBoard-List	GCFNavSubViewConfigList	76096
+__navU0000_subview_Panel_CEP-Logical-Panel	GCFNavSubView	76103
+__navU0000_LOFAR_CEP_config_Panel_CEP-Logical-Panel	GCFNavSubViewConfigPanel	76104
+__navU0000_LOFAR_CEP_viewconfig	GCFNavViewConfiguration	76105
+__navU0000_subview_Panel_CEP-Logical-View	GCFNavSubView	76107
+__navU0000_CEP_config_Panel_CEP-Logical-View	GCFNavSubViewConfigPanel	76108
+__navU0000_CEP_viewconfig	GCFNavViewConfiguration	76109
+__navU0000_subview_Panel_CEP-Physical-View	GCFNavSubView	76110
+__navU0000_CEP_config_Panel_CEP-Physical-View	GCFNavSubViewConfigPanel	76111
+__navU0000_LOFAR_PIC_WAN_viewconfig	GCFNavViewConfiguration	76118
+__navU0000_subview_Panel_WAN	GCFNavSubView	76120
+__navU0000_PIC_config_Panel_WAN	GCFNavSubViewConfigPanel	76121
+__navU0000_subview_List_MacScheduler-List	GCFNavSubView	76130
+__navU0000_MacScheduler_config_List_MacScheduler-List	GCFNavSubViewConfigList	76131
+__navU0000_subview_Panel_MacScheduler-Panel	GCFNavSubView	76132
+__navU0000_MacScheduler_config_Panel_MacScheduler-Panel	GCFNavSubViewConfigPanel	76133
+__navU0000_MacScheduler_viewconfig	GCFNavViewConfiguration	76134
+__navU0000_subview_Panel_ObservationControl-Panel	GCFNavSubView	76315
+__navU0000_LOFAR_ObsSW_Observation5_config_Panel_ObservationControl-Panel	GCFNavSubViewConfigPanel	76316
+__navU0000_LOFAR_ObsSW_Observation5_viewconfig	GCFNavViewConfiguration	76317
+__navU0000_ObsCtrl_viewconfig	GCFNavViewConfiguration	76318
+__navU0000_ObsCtrl_config_Panel_Imaging_Observation_Details	GCFNavSubViewConfigPanel	76320
+__navU0000_MACScheduler_viewconfig	GCFNavViewConfiguration	76321
+__navU0000_MACScheduler_config_Panel_MacScheduler	GCFNavSubViewConfigPanel	76322
+__navU0000_subview_Bar_Bar-1	GCFNavSubView	76329
+__navU0000_PIC_config_Bar_Bar-1	GCFNavSubViewConfigBar	76330
+__navU0000_subview_Trend_Trend-11	GCFNavSubView	76338
+__navU0000_ObsCtrl_config_Trend_Trend-11	GCFNavSubViewConfigTrend	76339
+__navU0000_subview_List_ObsCtrl-List-1	GCFNavSubView	76343
+__navU0000_ObsCtrl_config_List_ObsCtrl-List-1	GCFNavSubViewConfigList	76344
+__navU0000_subview_List_List-Observation-Details	GCFNavSubView	76350
+__navU0000_ObsCtrl_config_List_List-Observation-Details	GCFNavSubViewConfigList	76351
+__navU0000_subview_Panel_Panel-Observation-Details	GCFNavSubView	76352
+__navU0000_ObsCtrl_config_Panel_Panel-Observation-Details	GCFNavSubViewConfigPanel	76353
+__navU0000_subview_Panel_Panel-Switch-CEP	GCFNavSubView	76354
+__navU0000_TWanSwitchPT48_config_Panel_Panel-Switch-CEP	GCFNavSubViewConfigPanel	76355
+__navU0000_subview_Panel_Panel-Rings	GCFNavSubView	76440
+__navU0000_PermSW_config_Panel_Panel-Rings	GCFNavSubViewConfigPanel	76441
+__navU0000_PermSW_viewconfig	GCFNavViewConfiguration	76442
+__navU0000_subview_Panel_Panel-Stations	GCFNavSubView	76443
+__navU0000_Ring_config_Panel_Panel-Stations	GCFNavSubViewConfigPanel	76444
+__navU0000_Ring_viewconfig	GCFNavViewConfiguration	76445
+__navU0000_subview_Panel_Panel-Controllers	GCFNavSubView	76446
+__navU0000_PermSW_config_Panel_Panel-Controllers	GCFNavSubViewConfigPanel	76447
 
 # DpValue
 ElementName	TypeName	_original.._value	_original.._status	_original.._stime
-__navU0000_TCcuPic_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	30.09.2005 12:33:36.437
-__navU0000_TCcuPic_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	12.10.2005 20:30:07.859
-__navU0000_TCcuPic_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:39.906
-__navU0000_TCcuPic_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:39.906
-__navU0000_TCcuPic_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:39.906
-__navU0000_TCcuPic_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:39.906
-__navU0000_TLcuPic_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	22.09.2005 06:59:35.960
-__navU0000_TLcuPic_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	22.09.2005 06:59:38.132
-__navU0000_TLcuPic_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:40.140
-__navU0000_TLcuPic_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_Station, __navU0000_subview_Panel_Station-Antenna-LFA, __navU0000_subview_Panel_Station-Antenna-HFA, __navU0000_subview_Panel_CaptureStat	0x101	15.09.2005 11:48:54.203
-__navU0000_TLcuPic_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TLcuPic_config_List_List-1, __navU0000_TLcuPic_config_Panel_Station, __navU0000_TLcuPic_config_Panel_Station-Antenna-LFA, __navU0000_TLcuPic_config_Panel_Station-Antenna-HFA, __navU0000_TLcuPic_config_Panel_CaptureStat	0x101	15.09.2005 11:48:54.203
-__navU0000_TLcuPic_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 4, 0, 0, 0, 0, 0, 0, 0, 0	0x101	15.09.2005 11:48:54.203
-__navU0000_TLcuPicADCStatistics_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:40.359
-__navU0000_TLcuPicADCStatistics_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.09.2005 08:08:40.359
-__navU0000_TLcuPicADCStatistics_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:40.359
-__navU0000_TLcuPicADCStatistics_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:40.359
-__navU0000_TLcuPicADCStatistics_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:40.359
-__navU0000_TLcuPicADCStatistics_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:40.359
-__navU0000_TLcuPicAlert_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:40.671
-__navU0000_TLcuPicAlert_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.10.2005 13:59:04.843
-__navU0000_TLcuPicAlert_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:40.671
-__navU0000_TLcuPicAlert_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:40.671
-__navU0000_TLcuPicAlert_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:40.671
-__navU0000_TLcuPicAlert_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:40.671
-__navU0000_TLcuPicBoard_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:40.921
-__navU0000_TLcuPicBoard_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 10:03:57.734
-__navU0000_TLcuPicBoard_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:40.921
-__navU0000_TLcuPicBoard_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 09:35:25.500
-__navU0000_TLcuPicBoard_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 09:35:25.500
-__navU0000_TLcuPicBoard_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 09:35:25.500
-__navU0000_TLcuPicBoardRCUStatus_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:41.125
-__navU0000_TLcuPicBoardRCUStatus_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.09.2005 08:08:41.125
-__navU0000_TLcuPicBoardRCUStatus_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:41.125
-__navU0000_TLcuPicBoardRCUStatus_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:41.125
-__navU0000_TLcuPicBoardRCUStatus_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:41.125
-__navU0000_TLcuPicBoardRCUStatus_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:41.125
-__navU0000_TLcuPicEthernet_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:41.375
-__navU0000_TLcuPicEthernet_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.09.2005 08:08:41.375
-__navU0000_TLcuPicEthernet_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:41.375
-__navU0000_TLcuPicEthernet_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:41.375
-__navU0000_TLcuPicEthernet_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:41.375
-__navU0000_TLcuPicEthernet_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:41.375
-__navU0000_TLcuPicFPGA_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	30.09.2005 08:11:25.828
-__navU0000_TLcuPicFPGA_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 10:03:52.937
-__navU0000_TLcuPicFPGA_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:41.703
-__navU0000_TLcuPicFPGA_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:41.703
-__navU0000_TLcuPicFPGA_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:41.703
-__navU0000_TLcuPicFPGA_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:41.703
-__navU0000_TLcuPicHFA_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:41.890
-__navU0000_TLcuPicHFA_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.09.2005 08:08:41.890
-__navU0000_TLcuPicHFA_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:41.890
-__navU0000_TLcuPicHFA_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:41.890
-__navU0000_TLcuPicHFA_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:41.890
-__navU0000_TLcuPicHFA_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:41.890
-__navU0000_TLcuPicLFA_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:42.203
-__navU0000_TLcuPicLFA_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.09.2005 08:08:42.203
-__navU0000_TLcuPicLFA_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:42.203
-__navU0000_TLcuPicLFA_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:42.203
-__navU0000_TLcuPicLFA_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:42.203
-__navU0000_TLcuPicLFA_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:42.203
-__navU0000_TLcuPicMaintenance_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:42.531
-__navU0000_TLcuPicMaintenance_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 12:58:09.390
-__navU0000_TLcuPicMaintenance_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:42.531
-__navU0000_TLcuPicMaintenance_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:42.531
-__navU0000_TLcuPicMaintenance_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:42.531
-__navU0000_TLcuPicMaintenance_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:42.531
-__navU0000_TLcuPicMEPStatus_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:42.765
-__navU0000_TLcuPicMEPStatus_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.09.2005 08:08:42.765
-__navU0000_TLcuPicMEPStatus_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:42.765
-__navU0000_TLcuPicMEPStatus_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:42.765
-__navU0000_TLcuPicMEPStatus_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:42.765
-__navU0000_TLcuPicMEPStatus_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:42.765
-__navU0000_TLcuPicRack_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	19.09.2005 09:05:01.031
-__navU0000_TLcuPicRack_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	12.10.2005 20:30:15.406
-__navU0000_TLcuPicRack_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:42.984
-__navU0000_TLcuPicRack_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:42.984
-__navU0000_TLcuPicRack_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:42.984
-__navU0000_TLcuPicRack_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:42.984
-__navU0000_TLcuPicRCU_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:43.328
-__navU0000_TLcuPicRCU_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	30.09.2005 10:03:40.421
-__navU0000_TLcuPicRCU_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:43.328
-__navU0000_TLcuPicRCU_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_Panel_RcuOverview	0x101	14.09.2005 09:35:46.531
-__navU0000_TLcuPicRCU_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TLcuPicRCU_config_Panel_RcuOverview	0x101	14.09.2005 09:35:46.531
-__navU0000_TLcuPicRCU_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 09:35:46.531
-__navU0000_TLcuPicSubRack_viewconfig.selectedView	GCFNavViewConfiguration	6	0x101	14.10.2005 13:58:50.937
-__navU0000_TLcuPicSubRack_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	14.10.2005 13:58:51.328
-__navU0000_TLcuPicSubRack_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:43.562
-__navU0000_TLcuPicSubRack_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_Panel_Overview, __navU0000_subview_Plot_Plot-1	0x101	14.10.2005 13:57:02.953
-__navU0000_TLcuPicSubRack_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TLcuPicSubRack_config_Panel_Overview, __navU0000_TLcuPicSubRack_config_Plot_Plot-1	0x101	14.10.2005 13:57:02.953
-__navU0000_TLcuPicSubRack_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 0, 0, 1, 0, 0, 0, 0	0x101	14.10.2005 13:57:02.953
-__navU0000_TLcuPicSYNCStatus_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	14.09.2005 08:08:43.859
-__navU0000_TLcuPicSYNCStatus_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.09.2005 08:08:43.859
-__navU0000_TLcuPicSYNCStatus_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:43.859
-__navU0000_TLcuPicSYNCStatus_viewconfig.subViews	GCFNavViewConfiguration		0x101	14.09.2005 08:08:43.859
-__navU0000_TLcuPicSYNCStatus_viewconfig.configs	GCFNavViewConfiguration		0x101	14.09.2005 08:08:43.859
-__navU0000_TLcuPicSYNCStatus_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	14.09.2005 08:08:43.859
-__navU0000_CCU1_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	11.10.2005 15:16:13.093
-__navU0000_CCU1_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	14.10.2005 13:27:55.187
+__nav_view_list.caption	GCFNavView	"List"	0x101	13.09.2005 15:28:11.976
+__nav_view_list.configPanel	GCFNavView	"nav_fw/list_config.pnl"	0x101	13.09.2005 15:28:11.977
+__nav_view_plot.caption	GCFNavView	"Plot"	0x101	13.09.2005 15:28:11.977
+__nav_view_plot.configPanel	GCFNavView	"nav_fw/plot_config.pnl"	0x101	13.09.2005 15:28:11.977
+__nav_SingleElement_Trend.1.Trace1.dpName	GCFNavSubViewConfigTrend	"PIC_Stations_Station01_Rack1_SubRack1_Board1.status"	0x101	13.09.2005 15:28:11.978
+__nav_SingleElement_Trend.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	13.09.2005 15:28:11.978
+__nav_SingleElement_Trend.1.Trace1.ScaleMin	GCFNavSubViewConfigTrend	0	0x101	13.09.2005 15:28:11.979
+__nav_SingleElement_Trend.1.Trace1.ScaleMax	GCFNavSubViewConfigTrend	100	0x101	13.09.2005 15:28:11.979
+__nav_SingleElement_Trend.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Next"	0x101	13.09.2005 15:28:11.980
+__nav_SingleElement_Trend.1.Trace6.dpName	GCFNavSubViewConfigTrend	""	0x101	13.09.2005 15:28:11.980
+__nav_SingleElement_Trend.1.Trace6.AutoScale	GCFNavSubViewConfigTrend	1	0x101	13.09.2005 15:28:11.981
+__nav_SingleElement_Trend.1.Trace6.ScaleMax	GCFNavSubViewConfigTrend	12	0x101	13.09.2005 15:28:11.981
+__nav_SingleElement_Trend.1.Trace6.LegendName	GCFNavSubViewConfigTrend	""	0x101	13.09.2005 15:28:11.982
+__nav_SingleElement_Trend.1.Title	GCFNavSubViewConfigTrend	"Single element trend"	0x101	13.09.2005 15:28:11.982
+__nav_SingleElement_Trend.1.Days	GCFNavSubViewConfigTrend	3	0x101	13.09.2005 15:28:11.983
+__nav_SingleElement_Trend.1.Hours	GCFNavSubViewConfigTrend	0	0x101	13.09.2005 15:28:11.983
+__nav_SingleElement_Trend.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	13.09.2005 15:28:11.984
+__nav_SingleElement_Trend.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	13.09.2005 15:28:11.984
+__nav_SingleElement_Trend.2.Trace1.dpName	GCFNavSubViewConfigTrend	""	0x101	13.09.2005 15:28:11.985
+__nav_SingleElement_Trend.2.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	13.09.2005 15:28:11.985
+__nav_SingleElement_Trend.2.Trace1.ScaleMax	GCFNavSubViewConfigTrend	1212	0x101	13.09.2005 15:28:11.985
+__nav_SingleElement_Trend.2.Trace1.LegendName	GCFNavSubViewConfigTrend	""	0x101	13.09.2005 15:28:11.986
+__nav_SingleElement_Trend.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	13.09.2005 15:28:11.986
+__nav_SingleElement_Trend.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	13.09.2005 15:28:11.987
+__nav_SingleElement_Trend.Standard	GCFNavSubViewConfigTrend	1	0x101	13.09.2005 15:28:11.987
+__nav_SingleElement_Trend.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	13.09.2005 15:28:11.988
+__nav_SingleElement_Trend.DedicatedPanelName	GCFNavSubViewConfigTrend	"Station.pnl"	0x101	13.09.2005 15:28:11.988
+__nav_SingleElement_Trend.Dedicated	GCFNavSubViewConfigTrend	0	0x101	13.09.2005 15:28:11.989
+__nav_view_trend.caption	GCFNavView	"Trend"	0x101	13.09.2005 15:28:11.989
+__nav_view_trend.configPanel	GCFNavView	"nav_fw/trend_config.pnl"	0x101	13.09.2005 15:28:11.989
+__nav_view_panel.caption	GCFNavView	"Panel"	0x101	13.09.2005 15:28:11.990
+__nav_view_panel.configPanel	GCFNavView	"nav_fw/panel_config.pnl"	0x101	13.09.2005 15:28:11.990
+__nav_view_alert.caption	GCFNavView	"Alert"	0x101	13.09.2005 15:28:11.991
+__nav_view_alert.configPanel	GCFNavView	"nav_fw/alert_config.pnl"	0x101	13.09.2005 15:28:11.991
+__nav_view_bar.caption	GCFNavView	"Bar"	0x101	13.09.2005 15:28:11.992
+__nav_view_bar.configPanel	GCFNavView	"nav_fw/bar_config.pnl"	0x101	13.09.2005 15:28:11.992
+__nav_view_control.caption	GCFNavView	"Control"	0x101	13.09.2005 15:28:11.992
+__nav_view_control.configPanel	GCFNavView	"nav_fw/control_config.pnl"	0x101	13.09.2005 15:28:11.993
+__nav_view_config.caption	GCFNavView	"Config"	0x101	13.09.2005 15:28:11.993
+__nav_view_config.configPanel	GCFNavView	"nav_fw/nopanel.pnl"	0x101	13.09.2005 15:28:11.994
+__nav_view_log.caption	GCFNavView	"Log"	0x101	13.09.2005 15:28:11.994
+__nav_view_log.configPanel	GCFNavView	"nav_fw/log_config.pnl"	0x101	13.09.2005 15:28:11.995
+__nav_view_archive.caption	GCFNavView	"Archive"	0x101	13.09.2005 15:28:11.995
+__nav_view_archive.configPanel	GCFNavView	"nav_fw/archive_config.pnl"	0x101	13.09.2005 15:28:11.995
+__nav_default_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	05.09.2006 06:17:52.515
+__nav_default_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	05.09.2006 06:17:55.734
+__nav_default_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	13.09.2005 15:28:11.997
+__nav_default_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1	0x20101	13.06.2006 13:02:53.396
+__nav_default_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2	0x20101	13.06.2006 13:04:31.074
+__nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	13.06.2006 13:02:07.839
+__navU0000_CCU1_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	05.09.2006 06:27:11.753
+__navU0000_CCU1_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	05.09.2006 06:27:12.217
 __navU0000_CCU1_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	14.09.2005 08:08:44.078
-__navU0000_CCU1_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-2, __navU0000_subview_Panel_Nederland, __navU0000_subview_Panel_LofarMainDrenthe, __navU0000_subview_Panel_LofarMain, __navU0000_subview_Panel_NederlandGrey, __navU0000_subview_Panel_CaptureStatMAC, __navU0000_subview_Panel_CDR-Dem	0x101	11.10.2005 10:32:33.328
-__navU0000_CCU1_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_CCU1_config_Panel_Nederland, __navU0000_CCU1_config_Panel_LofarMainDrenthe, __navU0000_CCU1_config_Panel_LofarMain, __navU0000_CCU1_config_Panel_NederlandGrey, __navU0000_CCU1_config_Panel_CaptureStatMAC, __navU0000_CCU1_config_Panel_CDR-Dem	0x101	11.10.2005 10:32:33.328
-__navU0000_CCU1_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 6, 0, 0, 0, 0, 0, 0, 0, 0	0x101	11.10.2005 10:32:33.328
-__navU0000_subview_Panel_Station-Antenna-HFA.caption	GCFNavSubView	"Station_Antenna_HFA"	0x101	14.09.2005 09:27:32.390
-__navU0000_subview_Panel_Station-Antenna-HFA.filename	GCFNavSubView	"nav_usr/STS/Station_Antenna_HFA.pnl"	0x101	14.09.2005 09:27:43.156
-__navU0000_subview_Panel_Station-Antenna-LFA.caption	GCFNavSubView	"Station_Antenna_LFA"	0x101	14.09.2005 09:31:16.468
-__navU0000_subview_Panel_Station-Antenna-LFA.filename	GCFNavSubView	"nav_usr/STS/Station_Antenna_LFA.pnl"	0x101	14.09.2005 09:31:32.953
-__navU0000_subview_Panel_Station.caption	GCFNavSubView	"Station"	0x101	14.09.2005 09:32:24.968
-__navU0000_subview_Panel_Station.filename	GCFNavSubView	"nav_usr/STS/Station.pnl"	0x101	14.09.2005 09:32:36.593
-__navU0000_subview_Panel_Overview.caption	GCFNavSubView	"Overview"	0x101	14.09.2005 09:33:45.156
-__navU0000_subview_Panel_Overview.filename	GCFNavSubView	"nav_usr/STS/Station_Subrack.pnl"	0x101	14.09.2005 09:33:56.812
-__navU0000_subview_Panel_RcuOverview.caption	GCFNavSubView	"RcuOverview"	0x101	14.09.2005 09:35:46.296
-__navU0000_subview_Panel_RcuOverview.filename	GCFNavSubView	"nav_usr/STS/Station_Subrack_RCU.pnl"	0x101	14.09.2005 09:35:55.062
+__navU0000_CCU1_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-2, __navU0000_subview_Panel_LofarMain, __navU0000_subview_Panel_CaptureStatMAC, __navU0000_subview_Panel_CDR-Dem, __navU0000_subview_Panel_SoftwareOverview, __navU0000_subview_Panel_CS1-Controller-Overview, __navU0000_subview_Panel_CS1-Software-Overview, __navU0000_subview_Panel_CS1-Observation-Details-Imaging, __navU0000_subview_Panel_CS1-Rings-Overview, __navU0000_subview_Panel_CS1-Station-Overview, __navU0000_subview_Panel_CS1-Observation-Status	0x20101	13.07.2006 07:14:32.185
+__navU0000_CCU1_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_CCU1_config_Panel_LofarMain, __navU0000_CCU1_config_Panel_CaptureStatMAC, __navU0000_CCU1_config_Panel_CDR-Dem, __navU0000_CCU1_config_Panel_SoftwareOverview, __navU0000_CCU1_config_Panel_CS1-Controller-Overview, __navU0000_CCU1_config_Panel_CS1-Software-Overview, __navU0000_CCU1_config_Panel_CS1-Observation-Details-Imaging, __navU0000_CCU1_config_Panel_CS1-Rings-Overview, __navU0000_CCU1_config_Panel_CS1-Station-Overview, __navU0000_CCU1_config_Panel_CS1-Observation-Status	0x20101	13.07.2006 07:14:32.185
+__navU0000_CCU1_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 10, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	13.07.2006 07:14:32.185
 __navU0000_subview_Panel_LofarMain.caption	GCFNavSubView	"LofarMain"	0x101	14.09.2005 09:37:35.453
-__navU0000_subview_Panel_LofarMain.filename	GCFNavSubView	"nav_usr/STS/LOFAR_main.pnl"	0x101	14.09.2005 09:37:49.062
-__navU0000_subview_Panel_LofarMainDrenthe.caption	GCFNavSubView	"LofarMainDrenthe"	0x101	14.09.2005 09:38:33.562
-__navU0000_subview_Panel_LofarMainDrenthe.filename	GCFNavSubView	"nav_usr/STS/LOFAR_main_Drenthe.pnl"	0x101	14.09.2005 09:38:54.609
-__navU0000_subview_Panel_Nederland.caption	GCFNavSubView	"Nederland"	0x101	14.09.2005 09:40:11.093
-__navU0000_subview_Panel_Nederland.filename	GCFNavSubView	"nav_usr/STS/nederland.pnl"	0x101	14.09.2005 09:40:32.562
-__navU0000_subview_Panel_NederlandGrey.caption	GCFNavSubView	"NederlandGrey"	0x101	14.09.2005 09:42:30.765
-__navU0000_subview_Panel_NederlandGrey.filename	GCFNavSubView	"nav_usr/STS/nederland_grey.pnl"	0x101	14.09.2005 09:43:27.296
+__navU0000_subview_Panel_LofarMain.filename	GCFNavSubView	"nav_usr/CS1/cs1-main.pnl"	0x20101	13.07.2006 07:13:51.390
 __navU0000_subview_List_List-1.caption	GCFNavSubView	"List_1"	0x101	14.09.2005 10:03:09.109
 __navU0000_subview_List_List-1.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x101	14.09.2005 10:03:09.109
-__navU0000_TLcuPic_config_List_List-1.queryResult	GCFNavSubViewConfigList	""	0x20101	22.09.2005 06:59:36.278
+__navU0000_TLcuPic_config_List_List-1.customList	GCFNavSubViewConfigList	0	0x20101	03.08.2006 13:33:45.180
+__navU0000_TLcuPic_config_List_List-1.Title	GCFNavSubViewConfigList	""	0x20101	03.08.2006 07:46:24.828
+__navU0000_TLcuPic_config_List_List-1.trigger	GCFNavSubViewConfigList	0	0x20101	03.08.2006 13:32:39.871
+__navU0000_TLcuPic_config_List_List-1.queryResult	GCFNavSubViewConfigList		0x20101	15.08.2006 14:44:52.903
+__navU0000_TLcuPic_config_List_List-1.floatDecimals	GCFNavSubViewConfigList	1	0x20101	03.08.2006 07:46:24.828
+__navU0000_TLcuPic_config_List_List-1.selectionQueryDPE	GCFNavSubViewConfigList	""	0x20101	03.08.2006 07:46:24.828
+__navU0000_TLcuPic_config_List_List-1.selectionQuery	GCFNavSubViewConfigList	""	0x20101	03.08.2006 07:46:24.828
 __navU0000_subview_Panel_CaptureStatMAC.caption	GCFNavSubView	"CaptureStatMAC"	0x101	15.09.2005 11:47:48.359
 __navU0000_subview_Panel_CaptureStatMAC.filename	GCFNavSubView	"nav_usr/CCU/CaptureStats.pnl"	0x101	15.09.2005 11:48:05.640
-__navU0000_subview_Panel_CaptureStat.caption	GCFNavSubView	"CaptureStat"	0x101	15.09.2005 11:48:53.984
-__navU0000_subview_Panel_CaptureStat.filename	GCFNavSubView	"nav_usr/STS/CaptureStats.pnl"	0x101	15.09.2005 11:49:14.734
 __navU0000_subview_List_List-2.caption	GCFNavSubView	"List_2"	0x101	20.09.2005 07:40:07.218
 __navU0000_subview_List_List-2.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x101	20.09.2005 07:40:07.218
-__navU0000_CCU1_config_List_List-2.queryResult	GCFNavSubViewConfigList	""	0x101	11.10.2005 15:16:13.093
-__navU0000_TAplLogicalDevice_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	14.10.2005 13:52:32.828
-__navU0000_TAplLogicalDevice_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	14.10.2005 13:52:33.140
-__navU0000_TAplLogicalDevice_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:09.015
-__navU0000_TAplLogicalDevice_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_ListL, __navU0000_subview_Control_ControlLogicalDevice	0x101	11.10.2005 15:11:50.781
-__navU0000_TAplLogicalDevice_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TAplLogicalDevice_config_List_ListL, __navU0000_TAplLogicalDevice_config_Control_ControlLogicalDevice	0x101	11.10.2005 15:11:50.781
-__navU0000_TAplLogicalDevice_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 0, 0, 0, 0, 0, 0, 1, 0, 0	0x101	11.10.2005 15:11:50.781
-__navU0000_TAplMacScheduler_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	14.10.2005 13:59:15.187
-__navU0000_TAplMacScheduler_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	14.10.2005 13:59:15.625
-__navU0000_TAplMacScheduler_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:09.296
-__navU0000_TAplMacScheduler_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_Panel_CDR-Dem0, __navU0000_subview_Alert_Alert-1, __navU0000_subview_Control_Control-1	0x101	14.10.2005 13:54:35.515
-__navU0000_TAplMacScheduler_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TAplMacScheduler_config_Panel_CDR-Dem0, __navU0000_TAplMacScheduler_config_Alert_Alert-1, __navU0000_TAplMacScheduler_config_Control_Control-1	0x101	14.10.2005 13:54:35.515
-__navU0000_TAplMacScheduler_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 1, 0, 0, 0, 1, 0, 0	0x101	14.10.2005 13:54:35.515
-__navU0000_TAplPacSO_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:09.500
-__navU0000_TAplPacSO_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	11.10.2005 11:40:49.250
-__navU0000_TAplPacSO_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:09.500
-__navU0000_TAplPacSO_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:09.500
-__navU0000_TAplPacSO_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:09.500
-__navU0000_TAplPacSO_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:09.500
-__navU0000_TAplStartDaemon_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:09.906
-__navU0000_TAplStartDaemon_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 13:42:34.390
-__navU0000_TAplStartDaemon_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:09.906
-__navU0000_TAplStartDaemon_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:09.906
-__navU0000_TAplStartDaemon_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:09.906
-__navU0000_TAplStartDaemon_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:09.906
-__navU0000_TAplVicAO_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:10.140
-__navU0000_TAplVicAO_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	11.10.2005 11:40:45.234
-__navU0000_TAplVicAO_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:10.140
-__navU0000_TAplVicAO_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:10.140
-__navU0000_TAplVicAO_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:10.140
-__navU0000_TAplVicAO_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:10.140
-__navU0000_TAplVicARG_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:10.390
-__navU0000_TAplVicARG_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:10.390
-__navU0000_TAplVicARG_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:10.390
-__navU0000_TAplVicARG_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:10.390
-__navU0000_TAplVicARG_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:10.390
-__navU0000_TAplVicARG_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:10.390
-__navU0000_TAplVicMaintenanceVI_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:10.578
-__navU0000_TAplVicMaintenanceVI_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:10.578
-__navU0000_TAplVicMaintenanceVI_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:10.578
-__navU0000_TAplVicMaintenanceVI_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:10.578
-__navU0000_TAplVicMaintenanceVI_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:10.578
-__navU0000_TAplVicMaintenanceVI_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:10.578
-__navU0000_TAplVicVI_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	11.10.2005 11:38:51.750
-__navU0000_TAplVicVI_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	11.10.2005 11:38:52.328
-__navU0000_TAplVicVI_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:10.796
-__navU0000_TAplVicVI_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:10.796
-__navU0000_TAplVicVI_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:10.796
-__navU0000_TAplVicVI_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:10.796
-__navU0000_TLcuPac_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:11.031
-__navU0000_TLcuPac_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:11.031
-__navU0000_TLcuPac_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:11.031
-__navU0000_TLcuPac_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:11.031
-__navU0000_TLcuPac_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:11.031
-__navU0000_TLcuPac_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:11.031
-__navU0000_TLcuPacLogicalDeviceScheduler_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:11.234
-__navU0000_TLcuPacLogicalDeviceScheduler_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:11.234
-__navU0000_TLcuPacLogicalDeviceScheduler_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:11.234
-__navU0000_TLcuPacLogicalDeviceScheduler_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:11.234
-__navU0000_TLcuPacLogicalDeviceScheduler_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:11.234
-__navU0000_TLcuPacLogicalDeviceScheduler_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:11.234
-__navU0000_TLcuPacSBF_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:11.562
-__navU0000_TLcuPacSBF_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:11.562
-__navU0000_TLcuPacSBF_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:11.562
-__navU0000_TLcuPacSBF_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:11.562
-__navU0000_TLcuPacSBF_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:11.562
-__navU0000_TLcuPacSBF_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:11.562
-__navU0000_TLcuPacSR_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:11.781
-__navU0000_TLcuPacSR_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:11.781
-__navU0000_TLcuPacSR_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:11.781
-__navU0000_TLcuPacSR_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:11.781
-__navU0000_TLcuPacSR_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:11.781
-__navU0000_TLcuPacSR_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:11.781
-__navU0000_TLcuPacSRG_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:12.171
-__navU0000_TLcuPacSRG_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:12.171
-__navU0000_TLcuPacSRG_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:12.171
-__navU0000_TLcuPacSRG_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:12.171
-__navU0000_TLcuPacSRG_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:12.171
-__navU0000_TLcuPacSRG_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:12.171
-__navU0000_TLcuPacVT_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:12.453
-__navU0000_TLcuPacVT_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:12.453
-__navU0000_TLcuPacVT_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:12.453
-__navU0000_TLcuPacVT_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:12.453
-__navU0000_TLcuPacVT_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:12.453
-__navU0000_TLcuPacVT_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:12.453
-__navU0000_TLcuPacWaveformGenerator_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:12.656
-__navU0000_TLcuPacWaveformGenerator_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:12.656
-__navU0000_TLcuPacWaveformGenerator_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:12.656
-__navU0000_TLcuPacWaveformGenerator_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:12.656
-__navU0000_TLcuPacWaveformGenerator_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:12.656
-__navU0000_TLcuPacWaveformGenerator_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:12.656
-__navU0000_TLcuPicCaptureStats_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:13.093
-__navU0000_TLcuPicCaptureStats_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:13.093
-__navU0000_TLcuPicCaptureStats_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:13.093
-__navU0000_TLcuPicCaptureStats_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:13.093
-__navU0000_TLcuPicCaptureStats_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:13.093
-__navU0000_TLcuPicCaptureStats_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:13.093
-__navU0000_TLcuPicCommand_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:13.421
-__navU0000_TLcuPicCommand_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:13.421
-__navU0000_TLcuPicCommand_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:13.421
-__navU0000_TLcuPicCommand_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:13.421
-__navU0000_TLcuPicCommand_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:13.421
-__navU0000_TLcuPicCommand_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:13.421
-__navU0000_TLcuPicSNMP_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:13.968
-__navU0000_TLcuPicSNMP_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:13.968
-__navU0000_TLcuPicSNMP_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:13.968
-__navU0000_TLcuPicSNMP_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:13.968
-__navU0000_TLcuPicSNMP_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:13.968
-__navU0000_TLcuPicSNMP_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:13.968
-__navU0000_TLcuPicSNMPdevice_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	30.09.2005 07:42:14.250
-__navU0000_TLcuPicSNMPdevice_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	30.09.2005 07:42:14.250
-__navU0000_TLcuPicSNMPdevice_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	30.09.2005 07:42:14.250
-__navU0000_TLcuPicSNMPdevice_viewconfig.subViews	GCFNavViewConfiguration		0x101	30.09.2005 07:42:14.250
-__navU0000_TLcuPicSNMPdevice_viewconfig.configs	GCFNavViewConfiguration		0x101	30.09.2005 07:42:14.250
-__navU0000_TLcuPicSNMPdevice_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	30.09.2005 07:42:14.250
+__navU0000_CCU1_config_List_List-2.customList	GCFNavSubViewConfigList	0	0x20101	03.08.2006 14:11:20.270
+__navU0000_CCU1_config_List_List-2.Title	GCFNavSubViewConfigList	"Test Geert"	0x20101	03.08.2006 14:11:15.905
+__navU0000_CCU1_config_List_List-2.queryResult	GCFNavSubViewConfigList		0x20101	05.09.2006 06:27:11.853
+__navU0000_CCU1_config_List_List-2.floatDecimals	GCFNavSubViewConfigList	0	0x20101	03.08.2006 14:11:15.906
+__navU0000_CCU1_config_List_List-2.selectionQueryDPE	GCFNavSubViewConfigList	""	0x20101	03.08.2006 14:11:15.906
+__navU0000_CCU1_config_List_List-2.selectionQuery	GCFNavSubViewConfigList	""	0x20101	03.08.2006 14:11:15.906
 __navU0000_subview_Control_Control-1.caption	GCFNavSubView	"Control_1"	0x101	30.09.2005 11:12:36.609
 __navU0000_subview_Control_Control-1.filename	GCFNavSubView	"nav_fw/control_view.pnl"	0x101	30.09.2005 11:12:36.609
 __navU0000_subview_Panel_CDR-Dem.caption	GCFNavSubView	"CDR Dem"	0x101	11.10.2005 10:32:33.187
-__navU0000_subview_Panel_CDR-Dem.filename	GCFNavSubView	"nav_usr/STS/LDR1_7_DemoScreen.pnl"	0x101	11.10.2005 10:33:13.640
-__navU0000_subview_List_ListL.caption	GCFNavSubView	"ListL"	0x101	11.10.2005 11:39:39.859
-__navU0000_subview_List_ListL.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x101	11.10.2005 11:39:39.859
-__navU0000_TAplLogicalDevice_config_List_ListL.queryResult	GCFNavSubViewConfigList	""	0x101	11.10.2005 15:16:07.875
-__navU0000_subview_Panel_CDR-Dem0.caption	GCFNavSubView	"CDR Dem0"	0x101	11.10.2005 14:54:42.875
-__navU0000_subview_Panel_CDR-Dem0.filename	GCFNavSubView	"nav_usr/STS/LDR1_7_DemoScreen.pnl"	0x101	11.10.2005 14:55:02.343
+__navU0000_subview_Panel_CDR-Dem.filename	GCFNavSubView	"nav_usr/STS/Station_Subrack_RCU.pnl"	0x20101	15.08.2006 14:39:14.559
 __navU0000_subview_Control_ControlLogicalDevice.caption	GCFNavSubView	"ControlLogicalDevice"	0x101	11.10.2005 15:09:00.703
 __navU0000_subview_Control_ControlLogicalDevice.filename	GCFNavSubView	"nav_fw/control_view.pnl"	0x101	11.10.2005 15:09:00.703
-__navU0000_subview_Alert_Alert-1.caption	GCFNavSubView	"Alert_1"	0x101	14.10.2005 13:54:35.359
-__navU0000_subview_Alert_Alert-1.filename	GCFNavSubView	"nav_fw/alert_view.pnl"	0x101	14.10.2005 13:54:35.359
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.1.Active	GCFNavSubViewConfigAlert	1	0x101	14.10.2005 13:55:29.515
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.1.nrOfRows	GCFNavSubViewConfigAlert	2	0x101	14.10.2005 13:54:37.578
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.1.nrOfColumns	GCFNavSubViewConfigAlert	2	0x101	14.10.2005 13:54:37.609
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.2.Active	GCFNavSubViewConfigAlert	1	0x101	14.10.2005 13:56:16.906
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.2.nrOfRows	GCFNavSubViewConfigAlert	2	0x101	14.10.2005 13:56:12.625
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.2.nrOfColumns	GCFNavSubViewConfigAlert	2	0x101	14.10.2005 13:56:15.421
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.3.nrOfRows	GCFNavSubViewConfigAlert	2	0x101	14.10.2005 13:54:37.640
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.3.nrOfColumns	GCFNavSubViewConfigAlert	2	0x101	14.10.2005 13:54:37.656
-__navU0000_TAplMacScheduler_config_Alert_Alert-1.nrOfRowsList	GCFNavSubViewConfigAlert	1	0x101	14.10.2005 13:54:37.640
 __navU0000_subview_Plot_Plot-1.caption	GCFNavSubView	"Plot_1"	0x101	14.10.2005 13:57:02.734
 __navU0000_subview_Plot_Plot-1.filename	GCFNavSubView	"nav_fw/plot_view.pnl"	0x101	14.10.2005 13:57:02.734
 __navU0000_TLcuPicSubRack_config_Plot_Plot-1.1.dpName	GCFNavSubViewConfigPlot	"STSLCU1:PIC_Rack0_SubRack0_Board0_AP0_RCU0.statisticsSubbandPower"	0x101	14.10.2005 13:58:02.625
@@ -354,3 +244,306 @@ __navU0000_TLcuPicSubRack_config_Plot_Plot-1.1.active	GCFNavSubViewConfigPlot	1	
 __navU0000_TLcuPicSubRack_config_Plot_Plot-1.updateRate	GCFNavSubViewConfigPlot	10	0x101	14.10.2005 13:57:04.828
 __navU0000_TLcuPicSubRack_config_Plot_Plot-1.currentDatapoint	GCFNavSubViewConfigPlot	"STSLCU1:PIC_Rack0_SubRack0"	0x101	14.10.2005 13:58:51.375
 __navU0000_TLcuPicSubRack_config_Plot_Plot-1.plotState	GCFNavSubViewConfigPlot	"PAUSE"	0x101	14.10.2005 13:57:04.296
+__navU0000_TWanCable_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	20.12.2005 16:35:15.417
+__navU0000_TWanCable_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	20.12.2005 16:35:15.417
+__navU0000_TWanCable_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.12.2005 16:35:15.417
+__navU0000_TWanCable_viewconfig.subViews	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:15.417
+__navU0000_TWanCable_viewconfig.configs	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:15.417
+__navU0000_TWanCable_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	20.12.2005 16:35:15.417
+__navU0000_TWanContainer_viewconfig.selectedView	GCFNavViewConfiguration	1	0x20101	23.12.2005 12:39:19.850
+__navU0000_TWanContainer_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	09.01.2006 10:41:40.167
+__navU0000_TWanContainer_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.12.2005 16:35:15.662
+__navU0000_TWanContainer_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_ListStatus	0x20101	21.12.2005 12:08:42.253
+__navU0000_TWanContainer_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TWanContainer_config_List_ListStatus	0x20101	21.12.2005 12:08:42.253
+__navU0000_TWanContainer_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	21.12.2005 12:08:42.253
+__navU0000_TWanLogicalSegment_viewconfig.selectedView	GCFNavViewConfiguration	8	0x20101	22.12.2005 12:07:35.316
+__navU0000_TWanLogicalSegment_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	10.07.2006 13:22:33.028
+__navU0000_TWanLogicalSegment_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.12.2005 16:35:15.969
+__navU0000_TWanLogicalSegment_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_ListSeqment	0x20101	20.12.2005 16:35:53.360
+__navU0000_TWanLogicalSegment_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TWanLogicalSegment_config_List_ListSeqment	0x20101	20.12.2005 16:35:53.360
+__navU0000_TWanLogicalSegment_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	20.12.2005 16:35:53.360
+__navU0000_TWanSwitchPort_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	20.12.2005 16:35:16.258
+__navU0000_TWanSwitchPort_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	20.12.2005 16:35:16.258
+__navU0000_TWanSwitchPort_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.12.2005 16:35:16.258
+__navU0000_TWanSwitchPort_viewconfig.subViews	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:16.258
+__navU0000_TWanSwitchPort_viewconfig.configs	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:16.258
+__navU0000_TWanSwitchPort_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	20.12.2005 16:35:16.258
+__navU0000_TWanSwitchPT12_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	20.12.2005 16:35:16.564
+__navU0000_TWanSwitchPT12_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	20.12.2005 16:35:16.564
+__navU0000_TWanSwitchPT12_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.12.2005 16:35:16.564
+__navU0000_TWanSwitchPT12_viewconfig.subViews	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:16.564
+__navU0000_TWanSwitchPT12_viewconfig.configs	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:16.564
+__navU0000_TWanSwitchPT12_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	20.12.2005 16:35:16.564
+__navU0000_TWanSwitchPT24_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	20.12.2005 16:35:16.859
+__navU0000_TWanSwitchPT24_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	20.12.2005 16:35:16.859
+__navU0000_TWanSwitchPT24_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.12.2005 16:35:16.859
+__navU0000_TWanSwitchPT24_viewconfig.subViews	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:16.859
+__navU0000_TWanSwitchPT24_viewconfig.configs	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:16.859
+__navU0000_TWanSwitchPT24_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	20.12.2005 16:35:16.859
+__navU0000_TWanSwitchPT48_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	30.08.2006 13:21:03.822
+__navU0000_TWanSwitchPT48_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 09:44:30.502
+__navU0000_TWanSwitchPT48_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.12.2005 16:35:17.253
+__navU0000_TWanSwitchPT48_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_ListSwitch48, __navU0000_subview_Panel_Panel-Switch-CEP	0x20101	30.08.2006 13:17:27.856
+__navU0000_TWanSwitchPT48_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TWanSwitchPT48_config_List_ListSwitch48, __navU0000_TWanSwitchPT48_config_Panel_Panel-Switch-CEP	0x20101	30.08.2006 13:17:27.856
+__navU0000_TWanSwitchPT48_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	30.08.2006 13:17:27.856
+__navU0000_TWanSwitchPT6_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	20.12.2005 16:35:17.551
+__navU0000_TWanSwitchPT6_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	20.12.2005 16:35:17.551
+__navU0000_TWanSwitchPT6_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.12.2005 16:35:17.551
+__navU0000_TWanSwitchPT6_viewconfig.subViews	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:17.551
+__navU0000_TWanSwitchPT6_viewconfig.configs	GCFNavViewConfiguration		0x20101	20.12.2005 16:35:17.551
+__navU0000_TWanSwitchPT6_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	20.12.2005 16:35:17.551
+__navU0000_subview_List_ListSeqment.caption	GCFNavSubView	"ListSeqment"	0x20101	20.12.2005 16:35:53.111
+__navU0000_subview_List_ListSeqment.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	20.12.2005 16:35:53.111
+__navU0000_TWanLogicalSegment_config_List_ListSeqment.queryResult	GCFNavSubViewConfigList		0x20101	10.07.2006 13:24:19.811
+__navU0000_subview_List_ListSwitch48.caption	GCFNavSubView	"ListSwitch48"	0x20101	21.12.2005 12:07:46.646
+__navU0000_subview_List_ListSwitch48.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	21.12.2005 12:07:46.646
+__navU0000_TWanSwitchPT48_config_List_ListSwitch48.queryResult	GCFNavSubViewConfigList		0x20101	30.08.2006 13:21:03.952
+__navU0000_subview_List_ListStatus.caption	GCFNavSubView	"ListStatus"	0x20101	21.12.2005 12:08:41.989
+__navU0000_subview_List_ListStatus.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	21.12.2005 12:08:41.989
+__navU0000_TWanContainer_config_List_ListStatus.customList	GCFNavSubViewConfigList	1	0x20101	21.12.2005 12:08:52.362
+__navU0000_TWanContainer_config_List_ListStatus.Title	GCFNavSubViewConfigList	"Status"	0x20101	21.12.2005 13:27:56.816
+__navU0000_TWanContainer_config_List_ListStatus.queryResult	GCFNavSubViewConfigList	"WANLCU1:PIC_WAN_ARM1.status", "WANLCU1:PIC_WAN_ARM1_RS1.status", "WANLCU1:PIC_WAN_ARM1_RS1_Repeater.status", "WANLCU1:PIC_WAN_ARM1_RS1_Stationsw.status", "WANLCU1:PIC_WAN_ARM1_RS2.status", "WANLCU1:PIC_WAN_ARM1_RS2_Repeater.status", "WANLCU1:PIC_WAN_ARM1_RS3.status", "WANLCU1:PIC_WAN_ARM1_RS3_Repeater.status", "WANLCU1:PIC_WAN_ARM1_RS4.status", "WANLCU1:PIC_WAN_ARM1_RS4_Repeater.status"	0x20101	09.01.2006 10:41:46.799
+__navU0000_TWanContainer_config_List_ListStatus.floatDecimals	GCFNavSubViewConfigList	0	0x20101	21.12.2005 13:27:56.816
+__navU0000_TWanContainer_config_List_ListStatus.selectionQueryDPE	GCFNavSubViewConfigList	"status"	0x20101	21.12.2005 13:27:56.817
+__navU0000_TWanContainer_config_List_ListStatus.selectionQuery	GCFNavSubViewConfigList	"*"	0x20101	21.12.2005 13:27:56.816
+__navU0000_subview_List_ListLogical.caption	GCFNavSubView	"ListLogical"	0x20101	21.12.2005 12:40:31.129
+__navU0000_subview_List_ListLogical.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	21.12.2005 12:40:31.129
+__navU0000_TAplLogicalDevice_config_List_ListLogical.queryResult	GCFNavSubViewConfigList		0x20101	23.12.2005 14:54:21.561
+__navU0000_subview_List_ListVIC.caption	GCFNavSubView	"ListVIC"	0x20101	22.12.2005 12:12:47.077
+__navU0000_subview_List_ListVIC.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	22.12.2005 12:12:47.077
+__navU0000_TCcuPic_config_List_ListVIC.customList	GCFNavSubViewConfigList	0	0x20101	13.06.2006 12:35:28.402
+__navU0000_TCcuPic_config_List_ListVIC.queryResult	GCFNavSubViewConfigList		0x20101	26.06.2006 06:44:08.397
+__navU0000_subview_Alert_Alert-1.caption	GCFNavSubView	"Alert_1"	0x20101	06.01.2006 15:15:11.563
+__navU0000_subview_Alert_Alert-1.filename	GCFNavSubView	"nav_fw/alert_view.pnl"	0x20101	06.01.2006 15:15:11.563
+__navU0000_TCcuPic_config_Alert_Alert-1.1.nrOfRows	GCFNavSubViewConfigAlert	1	0x20101	06.01.2006 15:15:14.062
+__navU0000_TCcuPic_config_Alert_Alert-1.1.nrOfColumns	GCFNavSubViewConfigAlert	2	0x20101	06.01.2006 15:15:14.127
+__navU0000_TCcuPic_config_Alert_Alert-1.2.nrOfRows	GCFNavSubViewConfigAlert	2	0x20101	06.01.2006 15:15:14.126
+__navU0000_TCcuPic_config_Alert_Alert-1.2.nrOfColumns	GCFNavSubViewConfigAlert	2	0x20101	06.01.2006 15:15:14.131
+__navU0000_TCcuPic_config_Alert_Alert-1.3.nrOfRows	GCFNavSubViewConfigAlert	1	0x20101	06.01.2006 15:15:14.111
+__navU0000_TCcuPic_config_Alert_Alert-1.3.nrOfColumns	GCFNavSubViewConfigAlert	1	0x20101	06.01.2006 15:15:14.120
+__navU0000_TCcuPic_config_Alert_Alert-1.nrOfRowsList	GCFNavSubViewConfigAlert	1	0x20101	06.01.2006 15:15:14.120
+__navU0000_subview_List_List-MACScheduler.caption	GCFNavSubView	"List-MACScheduler"	0x20101	13.06.2006 13:07:28.095
+__navU0000_subview_List_List-MACScheduler.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	13.06.2006 13:07:28.095
+__navU0000_TAplMacScheduler_config_List_List-MACScheduler.customList	GCFNavSubViewConfigList	0	0x20101	29.08.2006 12:20:54.752
+__navU0000_TAplMacScheduler_config_List_List-MACScheduler.Title	GCFNavSubViewConfigList	"MACScheduler properties"	0x20101	15.08.2006 14:42:17.118
+__navU0000_TAplMacScheduler_config_List_List-MACScheduler.trigger	GCFNavSubViewConfigList	0	0x20101	16.06.2006 06:20:52.876
+__navU0000_TAplMacScheduler_config_List_List-MACScheduler.queryResult	GCFNavSubViewConfigList		0x20101	13.07.2006 09:25:38.189
+__navU0000_TAplMacScheduler_config_List_List-MACScheduler.floatDecimals	GCFNavSubViewConfigList	0	0x20101	15.08.2006 14:42:17.118
+__navU0000_TAplMacScheduler_config_List_List-MACScheduler.selectionQueryDPE	GCFNavSubViewConfigList	"*"	0x20101	15.08.2006 14:42:17.118
+__navU0000_TAplMacScheduler_config_List_List-MACScheduler.selectionQuery	GCFNavSubViewConfigList	"MACScheduler"	0x20101	15.08.2006 14:42:17.118
+__navU0000_subview_List_VIStartDaemonList.caption	GCFNavSubView	"VIStartDaemonList"	0x20101	16.06.2006 09:09:22.357
+__navU0000_subview_List_VIStartDaemonList.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	16.06.2006 09:09:22.357
+__navU0000_TAplStartDaemon_config_List_VIStartDaemonList.queryResult	GCFNavSubViewConfigList	"CCU1:VIC_VIStartDaemon.command", "CCU1:VIC_VIStartDaemon.status"	0x20101	16.06.2006 12:11:19.002
+__navU0000_subview_Trend_VIStartDaemonTrend.caption	GCFNavSubView	"VIStartDaemonTrend"	0x20101	16.06.2006 09:09:47.937
+__navU0000_subview_Trend_VIStartDaemonTrend.filename	GCFNavSubView	"nav_fw/trend_view.pnl"	0x20101	16.06.2006 09:12:49.600
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Trace1.dpName	GCFNavSubViewConfigTrend	"STSLCU1:PIC.statisticsBeamletMean"	0x20101	16.06.2006 09:11:44.541
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Trace1.ScaleMin	GCFNavSubViewConfigTrend	0	0x20101	16.06.2006 09:11:44.537
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Trace1.ScaleMax	GCFNavSubViewConfigTrend	10	0x20101	16.06.2006 09:11:44.537
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"statisticsBeamletMean"	0x20101	16.06.2006 09:11:44.533
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Trace2.dpName	GCFNavSubViewConfigTrend	"STSLCU1:PIC.statisticsBeamletPower"	0x20101	16.06.2006 09:11:57.225
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Trace2.ScaleMin	GCFNavSubViewConfigTrend	0	0x20101	16.06.2006 09:11:57.222
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Trace2.ScaleMax	GCFNavSubViewConfigTrend	10	0x20101	16.06.2006 09:11:57.221
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Trace2.LegendName	GCFNavSubViewConfigTrend	"statisticsBeamletPower"	0x20101	16.06.2006 09:11:57.218
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Title	GCFNavSubViewConfigTrend	"T1"	0x20101	16.06.2006 09:10:56.261
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Minutes	GCFNavSubViewConfigTrend	5	0x20101	16.06.2006 09:09:51.466
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.1.Seconds	GCFNavSubViewConfigTrend	2	0x20101	16.06.2006 09:09:51.466
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Trace1.dpName	GCFNavSubViewConfigTrend	"STSLCU1:PIC.statisticsSubbandMean"	0x20101	16.06.2006 09:14:05.370
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Trace1.ScaleMin	GCFNavSubViewConfigTrend	0	0x20101	16.06.2006 09:12:22.197
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Trace1.ScaleMax	GCFNavSubViewConfigTrend	10	0x20101	16.06.2006 09:14:05.367
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Trace1.LegendName	GCFNavSubViewConfigTrend	"statisticsSubbandMean"	0x20101	16.06.2006 09:14:05.317
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Trace2.dpName	GCFNavSubViewConfigTrend	"STSLCU1:PIC.statisticsSubbandPower"	0x20101	16.06.2006 09:14:14.991
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Trace2.ScaleMin	GCFNavSubViewConfigTrend	0	0x20101	16.06.2006 09:12:32.388
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Trace2.ScaleMax	GCFNavSubViewConfigTrend	10	0x20101	16.06.2006 09:14:14.988
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Trace2.LegendName	GCFNavSubViewConfigTrend	"statisticsSubbandPower"	0x20101	16.06.2006 09:14:14.984
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Title	GCFNavSubViewConfigTrend	"T2"	0x20101	16.06.2006 09:13:01.912
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Minutes	GCFNavSubViewConfigTrend	5	0x20101	16.06.2006 09:09:51.532
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.2.Seconds	GCFNavSubViewConfigTrend	2	0x20101	16.06.2006 09:09:51.532
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.Standard	GCFNavSubViewConfigTrend	1	0x20101	16.06.2006 09:12:49.594
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.Trend2Active	GCFNavSubViewConfigTrend	1	0x20101	16.06.2006 09:12:49.594
+__navU0000_TAplStartDaemon_config_Trend_VIStartDaemonTrend.Dedicated	GCFNavSubViewConfigTrend	0	0x20101	16.06.2006 09:12:49.594
+__navU0000_subview_Alert_VIStartDaemonAlert.caption	GCFNavSubView	"VIStartDaemonAlert"	0x20101	16.06.2006 09:24:01.808
+__navU0000_subview_Alert_VIStartDaemonAlert.filename	GCFNavSubView	"nav_fw/alert_view.pnl"	0x20101	16.06.2006 09:24:01.808
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.1.Title	GCFNavSubViewConfigAlert	"T1"	0x20101	16.06.2006 09:24:17.722
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.1.Active	GCFNavSubViewConfigAlert	1	0x20101	16.06.2006 09:24:11.733
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.1.nrOfRows	GCFNavSubViewConfigAlert	2	0x20101	16.06.2006 09:24:04.519
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.1.nrOfColumns	GCFNavSubViewConfigAlert	2	0x20101	16.06.2006 09:24:04.527
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.2.Title	GCFNavSubViewConfigAlert	"T2"	0x20101	16.06.2006 09:24:24.656
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.2.Active	GCFNavSubViewConfigAlert	1	0x20101	16.06.2006 09:24:13.124
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.2.nrOfRows	GCFNavSubViewConfigAlert	1	0x20101	16.06.2006 09:24:04.753
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.2.nrOfColumns	GCFNavSubViewConfigAlert	2	0x20101	16.06.2006 09:24:04.772
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.3.Title	GCFNavSubViewConfigAlert	"T3"	0x20101	16.06.2006 09:24:28.591
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.3.Active	GCFNavSubViewConfigAlert	1	0x20101	16.06.2006 09:24:14.271
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.3.nrOfRows	GCFNavSubViewConfigAlert	2	0x20101	16.06.2006 09:24:04.772
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.3.nrOfColumns	GCFNavSubViewConfigAlert	2	0x20101	16.06.2006 09:24:04.780
+__navU0000_TAplStartDaemon_config_Alert_VIStartDaemonAlert.nrOfRowsList	GCFNavSubViewConfigAlert	1	0x20101	16.06.2006 09:24:04.766
+__navU0000_subview_Plot_VIStartDaemonPlot.caption	GCFNavSubView	"VIStartDaemonPlot"	0x20101	16.06.2006 09:48:05.237
+__navU0000_subview_Plot_VIStartDaemonPlot.filename	GCFNavSubView	"nav_fw/plot_view.pnl"	0x20101	16.06.2006 09:48:05.237
+__navU0000_TAplStartDaemon_config_Plot_VIStartDaemonPlot.1.dpName	GCFNavSubViewConfigPlot	"STSLCU1:PIC.statisticsSubbandPower"	0x20101	16.06.2006 09:49:11.662
+__navU0000_TAplStartDaemon_config_Plot_VIStartDaemonPlot.1.active	GCFNavSubViewConfigPlot	1	0x20101	16.06.2006 09:49:11.660
+__navU0000_TAplStartDaemon_config_Plot_VIStartDaemonPlot.updateRate	GCFNavSubViewConfigPlot	10	0x20101	16.06.2006 09:48:08.265
+__navU0000_TAplStartDaemon_config_Plot_VIStartDaemonPlot.currentDatapoint	GCFNavSubViewConfigPlot	"CCU1:VIC_VIStartDaemon"	0x20101	16.06.2006 09:48:07.575
+__navU0000_TAplStartDaemon_config_Plot_VIStartDaemonPlot.plotState	GCFNavSubViewConfigPlot	"PAUSE"	0x20101	16.06.2006 09:48:07.912
+__navU0000_subview_Bar_VIStartDaemonBar.caption	GCFNavSubView	"VIStartDaemonBar"	0x20101	16.06.2006 11:09:41.387
+__navU0000_subview_Bar_VIStartDaemonBar.filename	GCFNavSubView	"nav_fw/bar_view.pnl"	0x20101	16.06.2006 11:09:41.387
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar.warnLevel	GCFNavSubViewConfigBar	10	0x20101	16.06.2006 11:10:44.261
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar.alertLevel	GCFNavSubViewConfigBar	60	0x20101	16.06.2006 11:10:44.261
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar.dpNames	GCFNavSubViewConfigBar		0x20101	16.06.2006 11:10:44.269
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar.queryDP	GCFNavSubViewConfigBar	"VIStartDaemon"	0x20101	16.06.2006 11:10:44.261
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar.queryDPE	GCFNavSubViewConfigBar	"status"	0x20101	16.06.2006 11:10:44.261
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar.normalColor	GCFNavSubViewConfigBar	"{51,204,0}"	0x20101	16.06.2006 11:10:49.008
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar.firstLevelColor	GCFNavSubViewConfigBar	"{255,255,0}"	0x20101	16.06.2006 11:10:49.008
+__navU0000_TAplStartDaemon_config_Bar_VIStartDaemonBar.secondLevelColor	GCFNavSubViewConfigBar	"{255,153,0}"	0x20101	16.06.2006 11:10:49.008
+__navU0000_subview_Control_VIStartDaemonControl.caption	GCFNavSubView	"VIStartDaemonControl"	0x20101	16.06.2006 11:31:12.831
+__navU0000_subview_Control_VIStartDaemonControl.filename	GCFNavSubView	"nav_fw/control_view.pnl"	0x20101	16.06.2006 11:31:12.831
+__navU0000_subview_Panel_VIStartDaemonPanel.caption	GCFNavSubView	"VIStartDaemonPanel"	0x20101	16.06.2006 11:48:15.297
+__navU0000_subview_Panel_VIStartDaemonPanel.filename	GCFNavSubView	"nav_usr/MAC/VT_Schedule.pnl"	0x20101	16.06.2006 11:49:51.219
+__navU0000_subview_Panel_SoftwareOverview.caption	GCFNavSubView	"SoftwareOverview"	0x20101	19.06.2006 13:06:42.137
+__navU0000_subview_Panel_SoftwareOverview.filename	GCFNavSubView	"nav_usr/CS1/software-overview.pnl"	0x20101	19.06.2006 13:07:05.709
+__navU0000_subview_Panel_CS1-Controller-Overview.caption	GCFNavSubView	"CS1_Controller_Overview"	0x20101	26.06.2006 06:44:55.689
+__navU0000_subview_Panel_CS1-Controller-Overview.filename	GCFNavSubView	"nav_usr/CS1/controller-overview.pnl"	0x20101	26.06.2006 06:46:49.380
+__navU0000_subview_Panel_CS1-Software-Overview.caption	GCFNavSubView	"CS1_Software_Overview"	0x20101	26.06.2006 06:45:31.799
+__navU0000_subview_Panel_CS1-Software-Overview.filename	GCFNavSubView	"nav_usr/CS1/software-overview.pnl"	0x20101	26.06.2006 06:47:05.883
+__navU0000_subview_Panel_CS1-Observation-Details-Imaging.caption	GCFNavSubView	"CS1_Observation_Details_Imaging"	0x20101	26.06.2006 06:45:51.933
+__navU0000_subview_Panel_CS1-Observation-Details-Imaging.filename	GCFNavSubView	"nav_usr/CS1/observation-details-imaging.pnl"	0x20101	26.06.2006 06:47:31.305
+__navU0000_subview_Panel_CS1-Rings-Overview.caption	GCFNavSubView	"CS1_Rings_Overview"	0x20101	26.06.2006 06:46:17.977
+__navU0000_subview_Panel_CS1-Rings-Overview.filename	GCFNavSubView	"nav_usr/CS1/rings-overview.pnl"	0x20101	26.06.2006 06:47:45.149
+__navU0000_subview_Panel_CS1-Station-Overview.caption	GCFNavSubView	"CS1_Station_Overview"	0x20101	26.06.2006 06:46:32.421
+__navU0000_subview_Panel_CS1-Station-Overview.filename	GCFNavSubView	"nav_usr/CS1/station-overview.pnl"	0x20101	26.06.2006 06:48:05.768
+__navU0000_subview_Panel_CS1-Observation-Status.caption	GCFNavSubView	"CS1_Observation_Status"	0x20101	26.06.2006 06:48:27.552
+__navU0000_subview_Panel_CS1-Observation-Status.filename	GCFNavSubView	"nav_usr/CS1/observation-status.pnl"	0x20101	26.06.2006 06:48:40.485
+__navU0000_ObsSW_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	13.07.2006 09:26:14.489
+__navU0000_ObsSW_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	28.07.2006 05:45:35.438
+__navU0000_ObsSW_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	12.07.2006 12:56:33.621
+__navU0000_ObsSW_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-MACScheduler, __navU0000_subview_Panel_Imaging-Observation-Details, __navU0000_subview_Control_Control-1	0x20101	12.07.2006 12:58:19.847
+__navU0000_ObsSW_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TAplMacScheduler_config_List_List-MACScheduler, __navU0000_ObsSW_config_Panel_Imaging-Observation-Details, __navU0000_TAplMacScheduler_config_Control_Control-1	0x20101	12.07.2006 12:58:19.847
+__navU0000_ObsSW_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 0, 0, 0, 0, 0, 1, 0, 0	0x20101	12.07.2006 12:58:19.847
+__navU0000_subview_Panel_Imaging-Observation-Details.caption	GCFNavSubView	"Imaging Observation Details"	0x20101	12.07.2006 12:58:19.642
+__navU0000_subview_Panel_Imaging-Observation-Details.filename	GCFNavSubView	"nav_usr/CS1/observation-details-imaging.pnl"	0x20101	12.07.2006 12:58:31.298
+__navU0000_subview_Panel_MACScheduler.caption	GCFNavSubView	"MACScheduler"	0x20101	12.07.2006 13:04:59.278
+__navU0000_subview_Panel_MACScheduler.filename	GCFNavSubView	"nav_usr/CS1/software-overview.pnl"	0x20101	01.08.2006 12:13:14.049
+__navU0000_PIC_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	15.08.2006 14:33:18.938
+__navU0000_PIC_viewconfig.selectedSubView	GCFNavViewConfiguration	2	0x20101	04.09.2006 09:44:44.275
+__navU0000_PIC_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	14.07.2006 10:49:01.197
+__navU0000_PIC_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_Station, __navU0000_subview_Panel_WAN, __navU0000_subview_Bar_Bar-1	0x20101	03.08.2006 07:34:09.888
+__navU0000_PIC_viewconfig.configs	GCFNavViewConfiguration	__navU0000_TLcuPic_config_List_List-1, __navU0000_PIC_config_Panel_Station, __navU0000_PIC_config_Panel_WAN, __navU0000_PIC_config_Bar_Bar-1	0x20101	03.08.2006 07:34:09.888
+__navU0000_PIC_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 2, 0, 0, 0, 0, 1, 0, 0, 0	0x20101	03.08.2006 07:34:09.888
+__navU0000_subview_Panel_SubRack-Overview.caption	GCFNavSubView	"SubRack Overview"	0x20101	14.07.2006 11:51:08.683
+__navU0000_subview_Panel_SubRack-Overview.filename	GCFNavSubView	"nav_usr/STS/Station_Subrack.pnl"	0x20101	14.07.2006 11:51:29.838
+__navU0000_subview_Panel_Station.caption	GCFNavSubView	"Station"	0x20101	14.07.2006 11:52:06.102
+__navU0000_subview_Panel_Station.filename	GCFNavSubView	"nav_usr/CS1/Station-CS1.pnl"	0x20101	03.08.2006 07:31:38.906
+__navU0000_subview_Panel_RcuOverview.caption	GCFNavSubView	"RcuOverview"	0x20101	14.07.2006 11:57:48.345
+__navU0000_subview_Panel_RcuOverview.filename	GCFNavSubView	"nav_usr/STS/Station_Subrack_RCU.pnl"	0x20101	14.07.2006 11:58:07.271
+__navU0000_subview_List_SubRack-List.caption	GCFNavSubView	"SubRack List"	0x20101	14.07.2006 12:02:50.212
+__navU0000_subview_List_SubRack-List.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	14.07.2006 12:02:50.212
+__navU0000_PicSubRack_config_List_SubRack-List.queryResult	GCFNavSubViewConfigList		0x20101	14.07.2006 12:09:51.362
+__navU0000_RSPBoard_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	04.09.2006 09:36:20.625
+__navU0000_RSPBoard_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 09:36:21.092
+__navU0000_RSPBoard_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	18.07.2006 14:32:49.505
+__navU0000_RSPBoard_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_RSPBoard-List, __navU0000_subview_Panel_RSPBoard-Panel	0x20101	19.07.2006 08:02:23.789
+__navU0000_RSPBoard_viewconfig.configs	GCFNavViewConfiguration	__navU0000_RSPBoard_config_List_RSPBoard-List, __navU0000_RSPBoard_config_Panel_RSPBoard-Panel	0x20101	19.07.2006 08:02:23.789
+__navU0000_RSPBoard_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	19.07.2006 08:02:23.789
+__navU0000_subview_Panel_RSPBoard-Panel.caption	GCFNavSubView	"RSPBoard Panel"	0x20101	18.07.2006 14:33:28.231
+__navU0000_subview_Panel_RSPBoard-Panel.filename	GCFNavSubView	"nav_usr/CS1/Station_Subrack-CS1.pnl"	0x20101	29.08.2006 09:53:55.556
+__navU0000_subview_List_RSPBoard-List.caption	GCFNavSubView	"RSPBoard List"	0x20101	19.07.2006 08:02:23.569
+__navU0000_subview_List_RSPBoard-List.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	19.07.2006 08:02:23.569
+__navU0000_RSPBoard_config_List_RSPBoard-List.customList	GCFNavSubViewConfigList	0	0x20101	08.08.2006 14:15:31.289
+__navU0000_RSPBoard_config_List_RSPBoard-List.queryResult	GCFNavSubViewConfigList		0x20101	04.09.2006 09:36:20.738
+__navU0000_subview_Panel_CEP-Logical-Panel.caption	GCFNavSubView	"CEP Logical Panel"	0x20101	20.07.2006 12:04:42.377
+__navU0000_subview_Panel_CEP-Logical-Panel.filename	GCFNavSubView	"nav_fw/panel_view.pnl"	0x20101	20.07.2006 12:04:42.377
+__navU0000_LOFAR_CEP_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	20.07.2006 12:04:42.964
+__navU0000_LOFAR_CEP_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	20.07.2006 12:04:42.964
+__navU0000_LOFAR_CEP_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.07.2006 12:04:42.964
+__navU0000_LOFAR_CEP_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_CEP-Logical-Panel	0x20101	20.07.2006 12:04:42.966
+__navU0000_LOFAR_CEP_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_LOFAR_CEP_config_Panel_CEP-Logical-Panel	0x20101	20.07.2006 12:04:42.966
+__navU0000_LOFAR_CEP_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	20.07.2006 12:04:42.966
+__navU0000_subview_Panel_CEP-Logical-View.caption	GCFNavSubView	"CEP Logical View"	0x20101	20.07.2006 12:14:43.304
+__navU0000_subview_Panel_CEP-Logical-View.filename	GCFNavSubView	"nav_usr/CEP/CEP_logical_view.pnl"	0x20101	20.07.2006 12:15:04.501
+__navU0000_CEP_viewconfig.selectedView	GCFNavViewConfiguration	1	0x20101	08.08.2006 14:07:57.907
+__navU0000_CEP_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 09:39:14.482
+__navU0000_CEP_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	20.07.2006 12:14:43.744
+__navU0000_CEP_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_CEP-Logical-View, __navU0000_subview_Panel_CEP-Physical-View	0x20101	29.08.2006 09:51:56.794
+__navU0000_CEP_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_CEP_config_Panel_CEP-Logical-View, __navU0000_CEP_config_Panel_CEP-Physical-View	0x20101	29.08.2006 09:51:56.794
+__navU0000_CEP_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 2, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	29.08.2006 09:51:56.794
+__navU0000_subview_Panel_CEP-Physical-View.caption	GCFNavSubView	"CEP Physical View"	0x20101	20.07.2006 12:15:30.791
+__navU0000_subview_Panel_CEP-Physical-View.filename	GCFNavSubView	"nav_usr/CEP/CEP_fysical_view.pnl"	0x20101	20.07.2006 12:15:53.287
+__navU0000_LOFAR_PIC_WAN_viewconfig.selectedView	GCFNavViewConfiguration	1	0x20101	25.07.2006 14:20:30.513
+__navU0000_LOFAR_PIC_WAN_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	25.07.2006 14:14:10.979
+__navU0000_LOFAR_PIC_WAN_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	25.07.2006 14:14:10.979
+__navU0000_LOFAR_PIC_WAN_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1	0x20101	25.07.2006 14:18:55.522
+__navU0000_LOFAR_PIC_WAN_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2	0x20101	25.07.2006 14:19:46.471
+__navU0000_LOFAR_PIC_WAN_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	25.07.2006 14:20:13.966
+__navU0000_subview_Panel_WAN.caption	GCFNavSubView	"WAN"	0x20101	25.07.2006 14:29:21.310
+__navU0000_subview_Panel_WAN.filename	GCFNavSubView	"nav_usr/CS1/WAN-CS1.pnl"	0x20101	25.07.2006 14:29:43.932
+__navU0000_subview_List_MacScheduler-List.caption	GCFNavSubView	"MacScheduler List"	0x20101	31.07.2006 11:45:39.507
+__navU0000_subview_List_MacScheduler-List.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	31.07.2006 11:45:39.507
+__navU0000_subview_Panel_MacScheduler-Panel.caption	GCFNavSubView	"MacScheduler Panel"	0x20101	31.07.2006 11:48:04.538
+__navU0000_subview_Panel_MacScheduler-Panel.filename	GCFNavSubView	"nav_usr/CS1/software-overview.pnl"	0x20101	31.07.2006 11:48:19.714
+__navU0000_MacScheduler_viewconfig.selectedView	GCFNavViewConfiguration	1	0x20101	01.08.2006 08:54:36.811
+__navU0000_MacScheduler_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	01.08.2006 12:08:58.052
+__navU0000_MacScheduler_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	31.07.2006 11:48:05.070
+__navU0000_MacScheduler_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_MacScheduler-Panel	0x20101	31.07.2006 11:48:05.072
+__navU0000_MacScheduler_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_MacScheduler_config_Panel_MacScheduler-Panel	0x20101	31.07.2006 11:48:05.072
+__navU0000_MacScheduler_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	31.07.2006 11:48:05.072
+__navU0000_subview_Panel_ObservationControl-Panel.caption	GCFNavSubView	"ObservationControl Panel"	0x20101	01.08.2006 10:00:54.733
+__navU0000_subview_Panel_ObservationControl-Panel.filename	GCFNavSubView	"nav_fw/panel_view.pnl"	0x20101	01.08.2006 10:00:54.733
+__navU0000_LOFAR_ObsSW_Observation5_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	01.08.2006 10:00:55.172
+__navU0000_LOFAR_ObsSW_Observation5_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x20101	01.08.2006 10:00:55.172
+__navU0000_LOFAR_ObsSW_Observation5_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	01.08.2006 10:00:55.172
+__navU0000_LOFAR_ObsSW_Observation5_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_ObservationControl-Panel	0x20101	01.08.2006 10:00:55.175
+__navU0000_LOFAR_ObsSW_Observation5_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_LOFAR_ObsSW_Observation5_config_Panel_ObservationControl-Panel	0x20101	01.08.2006 10:00:55.175
+__navU0000_LOFAR_ObsSW_Observation5_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	01.08.2006 10:00:55.175
+__navU0000_ObsCtrl_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	29.08.2006 12:22:35.561
+__navU0000_ObsCtrl_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 09:51:53.024
+__navU0000_ObsCtrl_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	01.08.2006 10:02:32.181
+__navU0000_ObsCtrl_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-Observation-Details, __navU0000_subview_Panel_Panel-Observation-Details, __navU0000_subview_Trend_Trend-11	0x20101	29.08.2006 12:21:48.157
+__navU0000_ObsCtrl_viewconfig.configs	GCFNavViewConfiguration	__navU0000_ObsCtrl_config_List_List-Observation-Details, __navU0000_ObsCtrl_config_Panel_Panel-Observation-Details, __navU0000_ObsCtrl_config_Trend_Trend-11, __navU0000_ObsSW_config_Panel_Imaging-Observation-Details, __navU0000_TAplMacScheduler_config_Control_Control-1	0x20101	29.08.2006 12:21:48.157
+__navU0000_ObsCtrl_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 1, 0, 0, 0, 0, 0, 0, 0	0x20101	29.08.2006 12:21:48.157
+__navU0000_ObsCtrl_config_Panel_Imaging_Observation_Details.Dummy1	GCFNavSubViewConfigPanel	""	0x20101	01.08.2006 10:04:35.314
+__navU0000_ObsCtrl_config_Panel_Imaging_Observation_Details.Dummy2	GCFNavSubViewConfigPanel	""	0x20101	01.08.2006 10:04:35.314
+__navU0000_MACScheduler_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	17.08.2006 11:37:09.202
+__navU0000_MACScheduler_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 09:49:35.458
+__navU0000_MACScheduler_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	01.08.2006 12:11:16.860
+__navU0000_MACScheduler_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_MacScheduler-Panel	0x20101	01.08.2006 12:11:16.860
+__navU0000_MACScheduler_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_MacScheduler_config_Panel_MacScheduler-Panel	0x20101	01.08.2006 12:11:16.860
+__navU0000_MACScheduler_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	01.08.2006 12:11:16.860
+__navU0000_MACScheduler_config_Panel_MacScheduler.Dummy1	GCFNavSubViewConfigPanel	""	0x20101	01.08.2006 12:12:12.686
+__navU0000_MACScheduler_config_Panel_MacScheduler.Dummy2	GCFNavSubViewConfigPanel	""	0x20101	01.08.2006 12:12:12.686
+__navU0000_subview_Bar_Bar-1.caption	GCFNavSubView	"Bar_1"	0x20101	03.08.2006 07:34:09.667
+__navU0000_subview_Bar_Bar-1.filename	GCFNavSubView	"nav_fw/bar_view.pnl"	0x20101	03.08.2006 07:34:09.667
+__navU0000_PIC_config_Bar_Bar-1.dpNames	GCFNavSubViewConfigBar		0x20101	07.08.2006 09:15:48.539
+__navU0000_subview_Trend_Trend-11.caption	GCFNavSubView	"Trend_11"	0x20101	03.08.2006 14:00:35.732
+__navU0000_subview_Trend_Trend-11.filename	GCFNavSubView	"nav_fw/trend_view.pnl"	0x20101	03.08.2006 14:00:35.732
+__navU0000_ObsCtrl_config_Trend_Trend-11.1.Minutes	GCFNavSubViewConfigTrend	5	0x20101	03.08.2006 14:00:39.113
+__navU0000_ObsCtrl_config_Trend_Trend-11.1.Seconds	GCFNavSubViewConfigTrend	2	0x20101	03.08.2006 14:00:39.114
+__navU0000_ObsCtrl_config_Trend_Trend-11.2.Minutes	GCFNavSubViewConfigTrend	5	0x20101	03.08.2006 14:00:39.119
+__navU0000_ObsCtrl_config_Trend_Trend-11.2.Seconds	GCFNavSubViewConfigTrend	2	0x20101	03.08.2006 14:00:39.119
+__navU0000_ObsCtrl_config_Trend_Trend-11.Standard	GCFNavSubViewConfigTrend	1	0x20101	03.08.2006 14:00:39.112
+__navU0000_subview_List_ObsCtrl-List-1.caption	GCFNavSubView	"ObsCtrl_List_1"	0x20101	08.08.2006 14:20:43.276
+__navU0000_subview_List_ObsCtrl-List-1.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	08.08.2006 14:20:43.276
+__navU0000_ObsCtrl_config_List_ObsCtrl-List-1.trigger	GCFNavSubViewConfigList	0	0x20101	08.08.2006 14:44:50.322
+__navU0000_ObsCtrl_config_List_ObsCtrl-List-1.queryResult	GCFNavSubViewConfigList		0x20101	29.08.2006 12:20:28.050
+__navU0000_subview_List_List-Observation-Details.caption	GCFNavSubView	"List Observation Details"	0x20101	29.08.2006 12:21:25.547
+__navU0000_subview_List_List-Observation-Details.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x20101	29.08.2006 12:21:25.547
+__navU0000_ObsCtrl_config_List_List-Observation-Details.queryResult	GCFNavSubViewConfigList		0x20101	29.08.2006 12:22:35.672
+__navU0000_subview_Panel_Panel-Observation-Details.caption	GCFNavSubView	"Panel Observation Details"	0x20101	29.08.2006 12:21:47.887
+__navU0000_subview_Panel_Panel-Observation-Details.filename	GCFNavSubView	"nav_usr/CS1/observation-details-imaging.pnl"	0x20101	29.08.2006 12:22:00.231
+__navU0000_subview_Panel_Panel-Switch-CEP.caption	GCFNavSubView	"Panel Switch CEP"	0x20101	30.08.2006 13:17:27.536
+__navU0000_subview_Panel_Panel-Switch-CEP.filename	GCFNavSubView	"nav_usr/WAN/Switch48.pnl"	0x20101	30.08.2006 13:17:41.135
+__navU0000_subview_Panel_Panel-Rings.caption	GCFNavSubView	"Panel Rings"	0x20101	31.08.2006 06:08:24.598
+__navU0000_subview_Panel_Panel-Rings.filename	GCFNavSubView	"nav_usr/CS1/rings-overview.pnl"	0x20101	01.09.2006 06:39:17.140
+__navU0000_PermSW_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	31.08.2006 06:43:40.581
+__navU0000_PermSW_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 10:03:32.677
+__navU0000_PermSW_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	31.08.2006 06:08:25.322
+__navU0000_PermSW_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_Panel-Rings, __navU0000_subview_Panel_Panel-Controllers	0x20101	31.08.2006 12:04:36.104
+__navU0000_PermSW_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_PermSW_config_Panel_Panel-Rings, __navU0000_PermSW_config_Panel_Panel-Controllers	0x20101	31.08.2006 12:04:36.104
+__navU0000_PermSW_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 2, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	31.08.2006 12:04:36.104
+__navU0000_subview_Panel_Panel-Stations.caption	GCFNavSubView	"Panel Stations"	0x20101	31.08.2006 09:32:09.906
+__navU0000_subview_Panel_Panel-Stations.filename	GCFNavSubView	"nav_usr/CS1/station-overview.pnl"	0x20101	01.09.2006 06:40:03.360
+__navU0000_Ring_viewconfig.selectedView	GCFNavViewConfiguration	1	0x20101	31.08.2006 09:32:10.280
+__navU0000_Ring_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 10:03:21.471
+__navU0000_Ring_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	31.08.2006 09:32:10.280
+__navU0000_Ring_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_List_List-1, __navU0000_subview_Panel_Panel-Stations	0x20101	31.08.2006 09:32:10.282
+__navU0000_Ring_viewconfig.configs	GCFNavViewConfiguration	__navU0000_CCU1_config_List_List-2, __navU0000_Ring_config_Panel_Panel-Stations	0x20101	31.08.2006 09:32:10.282
+__navU0000_Ring_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	31.08.2006 09:32:10.282
+__navU0000_subview_Panel_Panel-Controllers.caption	GCFNavSubView	"Panel Controllers"	0x20101	31.08.2006 12:04:35.884
+__navU0000_subview_Panel_Panel-Controllers.filename	GCFNavSubView	"nav_usr/CS1/controller-overview.pnl"	0x20101	31.08.2006 12:04:51.645
