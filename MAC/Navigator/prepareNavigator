@@ -1,9 +1,14 @@
 #!/bin/sh
 
-curPath=`pwd`
+curPath=C:`pwd`
 sysName="CTU1"
 export PVSS_II=$curPath/config/config
+
+
 PVSStoolSyncTypes -system 1 $sysName -project $1
+
+
+
 cp config/progs config/progs.orig
 cp config/progs.nav config/progs
 PVSS00pmon -proj $1 &
@@ -11,9 +16,9 @@ echo -n "Importing Navigator specific DPT's and DP's..."
 PVSS00ascii -in dplist/nav_fw/XTU_Navigator_database.dpl -currentproj; echo "(done)"
 
 echo -n "Importing fixed datapoints..."
-cd ../Deployment/data/PVSS/
-./create_db_files PVSS
-./create_db_files OBS
+#cd ../Deployment/data/PVSS/
+#./create_db_files PVSS
+#./create_db_files OBS
 PVSS00ascii -in PVSS_datapointtypes.dpl -currentproj; echo "(done)"
 PVSS00ascii -in PVSS_datapoints.dpl -currentproj; echo "(done)"
 PVSS00ascii -in OBS_datapointtypes.dpl -currentproj; echo "(done)"
@@ -32,4 +37,4 @@ PVSS00pmon -currentproj -stopWait
 
 echo "PVSS00NG         |   once |      30 |        3 |        1 |" >> config/progs
 echo "PVSS00NV         | always |      30 |        3 |        2 |-p vision/login.pnl -iconBar -menuBar" >> config/progs
-echo "PVSS00NV         | manual |      30 |        3 |        2 |-p nav_fw/tools/EnableTool.pnl -iconBar -menuBar" >> config/progs
+echo "PVSS00NV         | manual |      30 |        3 |        2 |-p nav_fw/tools/EnablePropertySets.pnl -iconBar -menuBar" >> config/progs
