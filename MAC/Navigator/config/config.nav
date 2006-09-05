@@ -1,0 +1,7 @@
+[general]
+pvss_path ="C:/ETM/PVSS2/3.0"
+proj_path ="projectDir"
+proj_version = "3.0"
+userName = "root"
+password = ""
+langs = "de_AT.iso88591"
