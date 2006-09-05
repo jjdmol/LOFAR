@@ -29,6 +29,7 @@
 #include <Blob/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 #include <CS1_Interface/CS1_Config.h>
+#include <CS1_Interface/DH_Visibilities.h>
 #ifdef USE_MAC_PI
 # include <GCF/PALlight/CEPPropertySet.h>
 # include <GCF/GCF_PVDynArr.h>
@@ -69,6 +70,9 @@ namespace LOFAR
       /// forbid assignment
       WH_SubbandWriter& operator= (const WH_SubbandWriter&);
 
+      // clear the integration buffers
+      void clearAllSums();
+
       const vector<uint> itsSubbandIDs;     ///< IDs of the subband(s)
       const ACC::APS::ParameterSet itsPS;
       uint  itsNStations;
@@ -84,8 +88,10 @@ namespace LOFAR
       vector<uint> itsBandIDs;   ///< MS IDs of the frequency bands
       uint itsFieldID;           ///< MS ID of the field, i.e. the beam.
       uint itsTimeCounter;       ///< Counts the time
-      bool *itsFlagsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
-      float *itsWeightsBuffer; //[NR_BASELINES][NR_SUBBAND_CHANNELS];
+      uint itsTimesToIntegrate;  ///< Number of timeSteps to integrate
+      bool *itsFlagsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
+      float *itsWeightsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS];
+      DH_Visibilities::VisibilityType *itsVisibilities;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
 
       float itsWeightFactor;
 

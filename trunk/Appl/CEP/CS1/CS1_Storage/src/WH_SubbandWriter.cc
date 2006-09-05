@@ -54,8 +54,10 @@ namespace LOFAR
         itsPS         (pset),
         itsWriter     (0),
         itsTimeCounter(0),
-        itsFlagsBuffer(0),
-        itsWeightsBuffer(0),
+	itsTimesToIntegrate(1),
+        itsFlagsBuffers(0),
+        itsWeightsBuffers(0),
+	itsVisibilities(0),
         itsWriteTimer ("writing-MS")
 #ifdef USE_MAC_PI
       ,itsPropertySet(0)
@@ -85,6 +87,7 @@ namespace LOFAR
       for (int i=0; i<itsNinputs; i++) {
         sprintf(str, "DH_in_%d", i);
         getDataManager().addInDataHolder(i, new DH_Visibilities(str, pset));
+        getDataManager().setAutoTriggerIn(i, false);
       }
 
       // Set a round robin input selector
@@ -150,6 +153,7 @@ namespace LOFAR
       double startTime = itsPS.getDouble("Observation.StartTime");
       LOG_TRACE_VAR_STR("startTime = " << startTime);
       
+      itsTimesToIntegrate = itsPS.getInt32("Storage.IntegrationTime");
       double timeStep = itsPS.getDouble("Observation.NSubbandSamples") / 
                         itsPS.getDouble("Observation.SampleRate");
       LOG_TRACE_VAR_STR("timeStep = " << timeStep);
@@ -158,7 +162,7 @@ namespace LOFAR
       ASSERTSTR(antPos.size() == 3 * itsNStations,
                 antPos.size() << " == " << 3 * itsNStations);
       
-      itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, 
+      itsWriter = new MSWriter(msName.c_str(), startTime, timeStep * itsTimesToIntegrate, 
                                itsNChannels, itsNPolSquared, itsNStations, 
                                antPos);
 
@@ -193,47 +197,91 @@ namespace LOFAR
       itsFieldID = itsWriter->addField (RA, DEC);
 
       // Allocate buffers
-      itsFlagsBuffer   = new bool[itsNVisibilities];
-      itsWeightsBuffer = new float[itsNBaselines * itsNChannels];
+      itsFlagsBuffers   = new bool[itsNrSubbandsPerCell * itsNVisibilities];
+      itsWeightsBuffers = new float[itsNrSubbandsPerCell * itsNBaselines * itsNChannels];
+      itsVisibilities   = new DH_Visibilities::VisibilityType[itsNrSubbandsPerCell * itsNVisibilities];
 
-#if 0
-      memset(itsFlagsBuffer, 0, itsNVisibilities * sizeof(bool));
-      for (uint j=0; j < itsNBaselines*itsNChannels; j++)
-      {
-        itsWeightsBuffer[j] = 1;
+      clearAllSums();
+    }
+
+    void WH_SubbandWriter::clearAllSums(){
+      memset(itsWeightsBuffers, 0, itsNrSubbandsPerCell * itsNBaselines * itsNChannels * sizeof(float));
+      memset(itsVisibilities, 0, itsNrSubbandsPerCell * itsNVisibilities * sizeof(DH_Visibilities::VisibilityType));
+      for (uint i = 0; i < itsNrSubbandsPerCell * itsNVisibilities; i++) {
+	itsFlagsBuffers[i] = true;
       }
-#endif
     }
 
     void WH_SubbandWriter::process() 
     {
+      if (itsTimeCounter % itsTimesToIntegrate == 0) {
+	clearAllSums();
+      }
+
       // Write the visibilities for all subbands per cell.
       for (uint sb = 0; sb < itsNrSubbandsPerCell; ++sb) {
         
         // Select the next input
-        DH_Visibilities* inputDH = 
-          (DH_Visibilities*)getDataManager().selectInHolder();
+	int inHolderNr = getDataManager().getInputSelector()->getCurrentSelection();
+	//cerr<<"Current selection "<<inHolderNr<<endl;
+	getDataManager().getInHolder(inHolderNr);
+	getDataManager().readyWithInHolder(inHolderNr);
+	DH_Visibilities* inputDH = (DH_Visibilities*)getDataManager().getInHolder(inHolderNr);
+
+
+	//Dump input
 
         // Write 1 DH_Visibilities of size
         // fcomplex[nbaselines][nsubbandchannesl][npol][npol]
         DH_Visibilities::NrValidSamplesType *valSamples = 
           &inputDH->getNrValidSamples(0, 0);
 
+	DH_Visibilities::VisibilityType* newVis = &inputDH->getVisibility(0, 0, 0, 0);
         for (uint i = 0; i < itsNBaselines * itsNChannels; i ++) {
-          itsWeightsBuffer[i] = itsWeightFactor * valSamples[i];
+          itsWeightsBuffers[sb * itsNBaselines * itsNChannels + i] += itsWeightFactor * valSamples[i] / itsTimesToIntegrate;
           bool flagged = valSamples[i] == 0;
-          itsFlagsBuffer[4 * i    ] = flagged;
-          itsFlagsBuffer[4 * i + 1] = flagged;
-          itsFlagsBuffer[4 * i + 2] = flagged;
-          itsFlagsBuffer[4 * i + 3] = flagged;
+          itsFlagsBuffers[sb * itsNVisibilities + 4 * i    ] &= flagged;
+          itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 1] &= flagged;
+          itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 2] &= flagged;
+          itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 3] &= flagged;
+	  // Currently we just add the samples, this way the time centroid stays in place
+	  // We could also divide by the weight and multiple the sum by the total weight.
+	  itsVisibilities[sb * itsNVisibilities + 4 * i    ] += newVis[4 * i    ];
+	  itsVisibilities[sb * itsNVisibilities + 4 * i + 1] += newVis[4 * i + 1];
+	  itsVisibilities[sb * itsNVisibilities + 4 * i + 2] += newVis[4 * i + 2];
+	  itsVisibilities[sb * itsNVisibilities + 4 * i + 3] += newVis[4 * i + 3];
         }
+#if 0
+        for (uint b = 0; b < itsNBaselines; b ++) {
+	  cout<<"baseLine: "<<b<<" valid samples: "<<valSamples[b*itsNChannels]<<endl;
+	}
+#endif
   
-        itsWriteTimer.start();
-        itsWriter->write (itsBandIDs[sb], itsFieldID, 0, itsNChannels,
-                          itsTimeCounter, itsNVisibilities,
-                          &inputDH->getVisibility(0, 0, 0, 0),
-                          itsFlagsBuffer, itsWeightsBuffer);
-        itsWriteTimer.stop();
+	if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
+	  itsWriteTimer.start();
+	  itsWriter->write (itsBandIDs[sb], itsFieldID, 0, itsNChannels,
+			    itsTimeCounter, itsNVisibilities,
+			    &(itsVisibilities[sb * itsNVisibilities]),
+			    &(itsFlagsBuffers[sb * itsNVisibilities]), 
+			    &(itsWeightsBuffers[sb * itsNBaselines * itsNChannels]));
+	  itsWriteTimer.stop();
+	}
+
+#if 0
+	bool found = false;
+	for (uint b = 0; b<itsNBaselines; b++) {
+	  for (uint c = 0; c<itsNChannels; c++) {
+	    found = found || (inputDH->getVisibility(b, c, 0, 0) != makefcomplex(0,0));
+	  }
+	}
+	if (found){
+	  cout<<"writing non-zero data for subband ";
+	} else {
+	  cout<<"writing zeros for subband ";
+	}
+	cout <<sb<<" from inputholder "<<getDataManager().getInputSelector()->getCurrentSelection()<<endl;
+#endif
+	getDataManager().getInputSelector()->selectNext();
       }
 
       // Update the time counter.
@@ -243,11 +291,11 @@ namespace LOFAR
 
     void WH_SubbandWriter::postprocess() 
     {
-      delete [] itsFlagsBuffer;
-      delete [] itsWeightsBuffer;
+      delete [] itsFlagsBuffers;
+      delete [] itsWeightsBuffers;
       delete itsWriter;
-      itsFlagsBuffer = 0;
-      itsWeightsBuffer = 0;
+      itsFlagsBuffers = 0;
+      itsWeightsBuffers = 0;
       cout<<itsWriteTimer<<endl;
     }
     
