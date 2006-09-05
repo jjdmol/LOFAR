@@ -41,7 +41,7 @@ namespace LFDebug
 
   bool Context::initialized = false;
 
-  // debug output stream -- same as cerr on startup
+  // debug output stream -- same as clog on startup
   ostream * dbg_stream_p = &clog;
   ofstream dbg_file;
 
@@ -94,14 +94,14 @@ namespace LFDebug
       range = contexts->equal_range(contxt);
       if( range.first == contexts->end() )
       {
-        cerr<<"Debug: unknown context '"<<contxt<<"'\n";
+        clog<<"Debug: unknown context '"<<contxt<<"'\n";
         return false;
       }
-      cerr<<"Debug: setting debug level "<<contxt<<"="<<level<<endl;
+      clog<<"Debug: setting debug level "<<contxt<<"="<<level<<endl;
     }
     else // set all contexts
     {
-      cerr<<"Debug: setting all debug levels to "<<level<<endl;
+      clog<<"Debug: setting all debug levels to "<<level<<endl;
     }
     // set levels in range
     for( CMI iter = range.first; iter != range.second; iter++ )
@@ -121,7 +121,7 @@ namespace LFDebug
     Context::initialize();
     if( !contexts )
     {
-      cerr<<"initLevels: warning: context map not initialized\n";
+      clog<<"initLevels: warning: context map not initialized\n";
       return;
     }
     loadLevels (fname);
@@ -136,10 +136,10 @@ namespace LFDebug
     FILE *f = fopen(fname.c_str(),"rt");
     if( !f )
     {
-      cerr<<"Debug::loadLevels: error opening "<<fname<<endl;
+      clog<<"Debug::loadLevels: error opening "<<fname<<endl;
       return;
     }
-    cerr<<"Debug: loading levels from file "<<fname<<endl;
+    clog<<"Debug: loading levels from file "<<fname<<endl;
     while( !feof(f) )
     {
       char line[1024];
@@ -150,7 +150,7 @@ namespace LFDebug
       int level;
       if( sscanf(line,"%s %d",context,&level)<2 )
       {
-        cerr<<"Debug: ignoring line: "<<line;
+        clog<<"Debug: ignoring line: "<<line;
         continue;
       }
       setLevel(context,level);
@@ -167,7 +167,7 @@ namespace LFDebug
   {
     if( parent == this )
     {
-      cerr<<"Debug: context "<<name<<" is its own parent, aborting"<<endl;
+      clog<<"Debug: context "<<name<<" is its own parent, aborting"<<endl;
       abort();
     }
     if( !contexts ) // allocate on first use
@@ -191,7 +191,7 @@ namespace LFDebug
     setLevel(lev);
 #ifndef DISABLE_DEBUG_OUTPUT
     if( newcontext ) 
-      cerr<<"Debug: registered context "<<name<<"="<<lev<<"\n";
+      clog<<"Debug: registered context "<<name<<"="<<lev<<"\n";
 #endif
     //## end Debug::Context::Context%3C21B594005B.body
   }
