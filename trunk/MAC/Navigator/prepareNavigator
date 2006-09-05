@@ -13,8 +13,11 @@ PVSS00ascii -in dplist/nav_fw/XTU_Navigator_database.dpl -currentproj; echo "(do
 echo -n "Importing fixed datapoints..."
 cd ../Deployment/data/PVSS/
 ./create_db_files PVSS
+./create_db_files OBS
 PVSS00ascii -in PVSS_datapointtypes.dpl -currentproj; echo "(done)"
 PVSS00ascii -in PVSS_datapoints.dpl -currentproj; echo "(done)"
+PVSS00ascii -in OBS_datapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in OBS_datapoints.dpl -currentproj; echo "(done)"
 cd $curPath
 
 echo -n "Prepare project to enable use of GCF based MAC controllers..."
