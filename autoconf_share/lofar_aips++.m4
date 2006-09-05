@@ -225,7 +225,6 @@ dnl
     AC_SUBST(LIBS)dnl
 dnl
     AC_DEFINE(HAVE_AIPSPP, 1, [Define if AIPS++ is installed])dnl
-    AM_CONDITIONAL(HAVE_AIPSPP, [test "true" = "true"])dnl
     [
   fi
 fi
