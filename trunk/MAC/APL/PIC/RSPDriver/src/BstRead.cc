@@ -61,11 +61,6 @@ void BstRead::sendrequest()
 
   m_hdr = bstread.hdr;
   getBoardPort().send(bstread);
-
-  Range fragment_range(0, MEPHeader::N_LOCAL_BEAMLETS - 1);
-  fragment_range = fragment_range + (getCurrentIndex() * MEPHeader::N_LOCAL_BEAMLETS);
-
-  LOG_WARN_STR("fragment_range=" << fragment_range);
 }
 
 void BstRead::sendrequest_status()
@@ -119,9 +114,9 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   Range fragment_range(0, MEPHeader::N_LOCAL_BEAMLETS - 1);
   fragment_range = fragment_range + (getCurrentIndex() * MEPHeader::N_LOCAL_BEAMLETS);
 
-  LOG_WARN_STR("fragment_range=" << fragment_range);
+  LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
-  if (MEPHeader::BST_POWER != ack.hdr.m_fields.addr.regid)
+  if (getCurrentIndex() != ack.hdr.m_fields.addr.regid)
   {
     LOG_ERROR("invalid bst ack");
     return GCFEvent::HANDLED;
