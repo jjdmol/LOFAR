@@ -209,8 +209,11 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 	if (m_retries++ > N_RETRIES)
 	{
 	  // abort
-	  LOG_FATAL("maximum retries reached!");
-	  exit(EXIT_FAILURE);
+	  LOG_WARN("maximum retries reached, protocol probably out of sync, trying to continue anyway");
+
+	  // pretend we've completed the update
+	  setCompleted(true);
+	  TRAN(SyncAction::idle_state);
 	}
       }
     }

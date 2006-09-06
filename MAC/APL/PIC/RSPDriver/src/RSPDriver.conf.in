@@ -30,8 +30,8 @@ RSPDriver.SOFTPPS=0
 # Specify MAC addresses of the RSP boards explicitly
 #
 RSPDriver.MAC_ADDR_0=10:FA:00:00:13:00
-RSPDriver.MAC_ADDR_1=10:FA:00:00:13:00
-RSPDriver.MAC_ADDR_2=10:FA:00:00:13:00
+RSPDriver.MAC_ADDR_1=10:FA:00:00:12:00
+RSPDriver.MAC_ADDR_2=10:FA:00:00:11:00
 RSPDriver.MAC_ADDR_3=10:FA:00:00:10:00
 
 # RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
@@ -77,76 +77,22 @@ RSPDriver.MAC_ADDR_23=10:FA:00:00:18:00
 #RSPDriver.OUTPUT_PAYLOAD_SIZE=6928
 
 #
-# Destination IP and MAC address for data packets
-# leaving the RSP board with the given index
+# Serdes lane settings.
 #
-
-RSPDriver.SRC_IP_ADDR_0=10.10.0.1
-RSPDriver.DST_IP_ADDR_0=10.170.0.1
-RSPDriver.SRC_MAC_ADDR_0=10:FA:00:00:00:00
-# FTS-1
-RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
-# CS-1
-# RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:93:3B
-
-RSPDriver.SRC_IP_ADDR_1=10.10.0.2
-RSPDriver.DST_IP_ADDR_1=10.170.0.2
-RSPDriver.SRC_MAC_ADDR_1=10:FA:00:00:00:01
-# FTS-1
-RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D4
-# CS-1
-# RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:B0:E1
-
-RSPDriver.SRC_IP_ADDR_2=10.10.0.3
-RSPDriver.DST_IP_ADDR_2=10.170.0.3
-RSPDriver.SRC_MAC_ADDR_2=10:FA:00:00:00:02
-RSPDriver.DST_MAC_ADDR_2=00:E0:81:31:B2:F5
-RSPDriver.SRC_IP_ADDR_3=10.10.0.4
-RSPDriver.DST_IP_ADDR_3=10.170.0.4
-RSPDriver.SRC_MAC_ADDR_3=10:FA:00:00:00:03
-RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:DE:8B
-RSPDriver.SRC_IP_ADDR_4=10.10.0.4
-RSPDriver.DST_IP_ADDR_4=10.170.0.4
-RSPDriver.SRC_MAC_ADDR_4=10:FA:00:00:00:04
-RSPDriver.DST_MAC_ADDR_4=00:E0:81:31:20:37
-RSPDriver.SRC_IP_ADDR_5=10.10.0.5
-RSPDriver.DST_IP_ADDR_5=10.170.0.5
-RSPDriver.SRC_MAC_ADDR_5=10:FA:00:00:00:05
-RSPDriver.DST_MAC_ADDR_5=00:E0:81:31:DE:9B
-RSPDriver.SRC_IP_ADDR_6=10.10.0.6
-RSPDriver.DST_IP_ADDR_6=10.170.0.6
-RSPDriver.SRC_MAC_ADDR_6=10:FA:00:00:00:06
-RSPDriver.DST_MAC_ADDR_6=00:E0:81:31:8C:D1
-RSPDriver.SRC_IP_ADDR_7=10.10.0.7
-RSPDriver.DST_IP_ADDR_7=10.170.0.7
-RSPDriver.SRC_MAC_ADDR_7=10:FA:00:00:00:07
-RSPDriver.DST_MAC_ADDR_7=00:E0:81:31:9B:87
-RSPDriver.SRC_IP_ADDR_8=10.10.0.8
-RSPDriver.DST_IP_ADDR_8=10.170.0.8
-RSPDriver.SRC_MAC_ADDR_8=10:FA:00:00:00:08
-RSPDriver.DST_MAC_ADDR_8=00:E0:81:31:B3:26
-RSPDriver.SRC_IP_ADDR_9=10.10.0.9
-RSPDriver.DST_IP_ADDR_9=10.170.0.9
-RSPDriver.SRC_MAC_ADDR_9=10:FA:00:00:00:09
-RSPDriver.DST_MAC_ADDR_9=00:E0:81:31:DF:D5
-RSPDriver.SRC_IP_ADDR_10=10.10.0.10
-RSPDriver.DST_IP_ADDR_10=10.170.0.10
-RSPDriver.SRC_MAC_ADDR_10=10:FA:00:00:00:10
-RSPDriver.DST_MAC_ADDR_10=00:E0:81:31:92:11
-RSPDriver SRC_IP_ADDR_11=10.10.0.11
-RSPDriver.DST_IP_ADDR_11=10.170.0.11
-RSPDriver.SRC_MAC_ADDR_11=10:FA:00:00:00:11
-RSPDriver.DST_MAC_ADDR_11=00:E0:81:31:B2:15
-
+# Define the end of the four SERDES rings. The boards
+# not defined as end of the lane will pass on their
+# cross-correlation or beamlet data to the neighbour board.
 #
-# Define the end of the four SERDES rings. 
+# This also defines which RSP board will output data from which
+# lane on its CDO port (CDO = CEP Data Output).
 #
-# Complete beamforming and cross-correlation results
+# Complete beamforming and cross-correlation data and statistics
 # will be available on the last RSP board in a ring.
+# All other boards in the ring will produce partial 
+# data and statistics.
 #
 # Assuming the index of the last RSP board is N, then
 # the ring starts at RSP board (N - 1) % N_RSPBOARDS
-# The specified
 #
 # Note: the specified RSP board index will be taken
 # modulo N_RSPBOARDS to prevent out of range indices.
@@ -156,7 +102,6 @@ RSPDriver.DST_MAC_ADDR_11=00:E0:81:31:B2:15
 # for difference between operation with data from SERDES
 # ring and without.
 #
-RSPDriver.IGNORE_REMOTE_DATA=0
 RSPDriver.LANE_0_BLET_OUT=0
 RSPDriver.LANE_1_BLET_OUT=1
 RSPDriver.LANE_2_BLET_OUT=2
@@ -165,21 +110,66 @@ RSPDriver.LANE_0_XLET_OUT=0
 RSPDriver.LANE_1_XLET_OUT=1
 RSPDriver.LANE_2_XLET_OUT=2
 RSPDriver.LANE_3_XLET_OUT=3
+RSPDriver.IGNORE_REMOTE_DATA=0
 
 #
 # CDO Control
-# This controls which RSP board outputs which SERDES lane.
+# This controls the format of CEP output data from the serdes lane specified in
+# the previous section.
 #
 # CDO_ENABLE=(0|1)   : when 0 disable output on all RSP boards
 # CDO_N_BLOCKS=(N)   : Set number of blocks of N_BEAMLETS beamlets per output Ethernet frame
 # CDO_N_BEAMLETS=(N) : Set number of beamlets to output in each block
 # CDO_SRCMAC_FORMAT  : Template for the src mac address of the boards that output data to CEP
-#                      First %02x will be replaced by station id, second by lane number
+#   First %02x will be replaced by station id, second by lane number,
+#   e.g. Station 14, lane 3 will be: 10:FA:00:0E:03:01
 #
 RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
 RSPDriver.CDO_N_BEAMLETS=54
 RSPDriver.CDO_SRCMAC_FORMAT=10:FA:00:%02x:%02x:01
+# FTS-1
+RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
+RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D4
+# CS-1
+# RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:93:3B
+# RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:B0:E1
+RSPDriver.DST_MAC_ADDR_2=00:E0:81:31:B2:F5
+RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:DE:8B
+RSPDriver.DST_MAC_ADDR_4=00:E0:81:31:20:37
+RSPDriver.DST_MAC_ADDR_5=00:E0:81:31:DE:9B
+RSPDriver.DST_MAC_ADDR_6=00:E0:81:31:8C:D1
+RSPDriver.DST_MAC_ADDR_7=00:E0:81:31:9B:87
+RSPDriver.DST_MAC_ADDR_8=00:E0:81:31:B3:26
+RSPDriver.DST_MAC_ADDR_9=00:E0:81:31:DF:D5
+RSPDriver.DST_MAC_ADDR_10=00:E0:81:31:92:11
+RSPDriver.DST_MAC_ADDR_11=00:E0:81:31:B2:15
+
+RSPDriver.SRC_IP_ADDR_0=10.10.0.1
+RSPDriver.SRC_IP_ADDR_1=10.10.0.2
+RSPDriver.SRC_IP_ADDR_2=10.10.0.3
+RSPDriver.SRC_IP_ADDR_3=10.10.0.4
+RSPDriver.SRC_IP_ADDR_4=10.10.0.4
+RSPDriver.SRC_IP_ADDR_5=10.10.0.5
+RSPDriver.SRC_IP_ADDR_6=10.10.0.6
+RSPDriver.SRC_IP_ADDR_7=10.10.0.7
+RSPDriver.SRC_IP_ADDR_8=10.10.0.8
+RSPDriver.SRC_IP_ADDR_9=10.10.0.9
+RSPDriver.SRC_IP_ADDR_10=10.10.0.10
+RSPDriver SRC_IP_ADDR_11=10.10.0.11
+
+RSPDriver.DST_IP_ADDR_0=10.170.0.1
+RSPDriver.DST_IP_ADDR_1=10.170.0.2
+RSPDriver.DST_IP_ADDR_2=10.170.0.3
+RSPDriver.DST_IP_ADDR_3=10.170.0.4
+RSPDriver.DST_IP_ADDR_4=10.170.0.4
+RSPDriver.DST_IP_ADDR_5=10.170.0.5
+RSPDriver.DST_IP_ADDR_6=10.170.0.6
+RSPDriver.DST_IP_ADDR_7=10.170.0.7
+RSPDriver.DST_IP_ADDR_8=10.170.0.8
+RSPDriver.DST_IP_ADDR_9=10.170.0.9
+RSPDriver.DST_IP_ADDR_10=10.170.0.10
+RSPDriver.DST_IP_ADDR_11=10.170.0.11
 
 #
 # Specify the absolute backplane index of the first

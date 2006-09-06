@@ -104,8 +104,14 @@ EPAStub::EPAStub(string name)
   m_reg[MEPHeader::BF][MEPHeader::BF_YIOUT].addr      = new char[MEPHeader::BF_YIOUT_SIZE      * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::BF][MEPHeader::BF_YIOUT].size      = MEPHeader::BF_YIOUT_SIZE;
 
-  m_reg[MEPHeader::BST][MEPHeader::BST_POWER].addr     = new char[MEPHeader::BST_POWER_SIZE];
-  m_reg[MEPHeader::BST][MEPHeader::BST_POWER].size     = MEPHeader::BST_POWER_SIZE;
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER_LANE_0].addr = new char[MEPHeader::BST_POWER_SIZE];
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER_LANE_0].size = MEPHeader::BST_POWER_SIZE;
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER_LANE_1].addr = new char[MEPHeader::BST_POWER_SIZE];
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER_LANE_1].size = MEPHeader::BST_POWER_SIZE;
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER_LANE_2].addr = new char[MEPHeader::BST_POWER_SIZE];
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER_LANE_2].size = MEPHeader::BST_POWER_SIZE;
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER_LANE_3].addr = new char[MEPHeader::BST_POWER_SIZE];
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER_LANE_3].size = MEPHeader::BST_POWER_SIZE;
 
   m_reg[MEPHeader::SST][MEPHeader::SST_POWER].addr     = new char[MEPHeader::SST_POWER_SIZE     * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::SST][MEPHeader::SST_POWER].size     = MEPHeader::SST_POWER_SIZE;
@@ -217,7 +223,7 @@ EPAStub::EPAStub(string name)
 		  break;
 
 		case MEPHeader::BST:
-		  if (MEPHeader::BST_POWER == regid)
+		    if (0 <= regid < MEPHeader::N_SERDES_LANES)
 		    {
 		      //
 		      // Initialize beamlet statistics register with sensible test pattern

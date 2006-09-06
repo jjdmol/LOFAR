@@ -185,7 +185,7 @@ void CDOWrite::sendrequest()
 
       // fill in some magic so we recognise these fields easily in tcpdump/ethereal output
       cdo.configuration_id = 0xBBAA;
-      cdo.dataformat       = 0xDDCC;
+      cdo.ffi              = 0xDDCC;
 
       cdo.nof_blocks       = GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i);
       cdo.nof_beamlets     = GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
