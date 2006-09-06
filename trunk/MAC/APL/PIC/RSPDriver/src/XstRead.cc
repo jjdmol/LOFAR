@@ -31,6 +31,8 @@
 #include "XstRead.h"
 #include "Cache.h"
 
+#include <stdlib.h>
+
 using namespace blitz;
 using namespace LOFAR;
 using namespace RSP;
@@ -58,7 +60,9 @@ void XstRead::sendrequest()
   // In this case we need to offset cross correlation indexing to access to correct items of the global
   // cross-correlation array as computed by the firmware.
   //
-  uint16 offset = GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) * MEPHeader::XLET_SIZE;
+  uint16 first_rsp_board = strtol(GET_CONFIG_STRING("RSPDriver.XST_FIRST_RSP_BOARD"), 0, 16);
+  LOG_WARN_STR("first_rsp_board = " << first_rsp_board);
+  uint16 offset = first_rsp_board * MEPHeader::XLET_SIZE;
 
   Cache::getInstance().getState().xst().read(getBoardId());
 
