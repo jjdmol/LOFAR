@@ -219,9 +219,9 @@ prelude = << PRELUDE_END
 
   typedef struct CDOControl
   {
-    uint8 enable:1; // enable CEP output
-    uint8 lane  :2; // select which lane to output (value = 0,1,2,3)
-    uint8 ffi   :5;
+    uint8  enable:1; // enable CEP output
+    uint8  lane  :2; // select which lane to output (value = 0,1,2,3)
+    uint16 ffi   :13;
   };
 
 PRELUDE_END;
@@ -742,7 +742,7 @@ event = {
     type = "uint16";
   };
   param = {
-    name = "dataformat";
+    name = "ffi";
     type = "uint16";
   };
   param = {
