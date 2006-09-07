@@ -504,7 +504,10 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 		// add parent to the pool and open the connection with the parent
 		itsParentList.push_back(parent);
-		dynamic_cast<GCFTCPPort*>(parent.port)->setHostName (parent.hostname);
+
+		static_cast<GCFTCPPort*>(parent.port)->setHostName (parent.hostname);
+		//Dynamic cast causes crash!?? dynamic_cast<GCFTCPPort*>(parent.port)->setHostName (parent.hostname);
+
 		parent.port->open();		// results in F_CONN of F_DISCONN
 		LOG_DEBUG_STR("Registered parent "<< parent.name <<" on port "<< parent.port);
 
