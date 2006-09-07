@@ -42,7 +42,7 @@ Observation.StopTime  = 53328.6823958333 # MJD: 2004/11/19 16h22m39s
 Observation.RefFreqs = [1.0e5, 3.0e5, 5.0e5, 7.0e5, 9.0e5, 11.0e5, 13.0e5, 15.0e5]  # the reference frequency for each stored(!) subband (Hz)
 
 # General Variables
-General.SubbandsPerCell = 1
+General.SubbandsPerPset = 1
 
 # Variables for the DelayCompensation
 DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
@@ -74,7 +74,8 @@ Input.Transport.Station6.Rsp0.th        = NULL  # should be one of ETHERNET, FIL
 # and the number of filters within a cell. 
 # These parameters MUST match the compiled in values in TFC_Config.h
 # Note that some values may differ from values defined in the Input section.
-BGLProc.NodesPerCell = 16
+BGLProc.NodesPerPset = 16
+BGLProc.PsetsPerCell = 1
 BGLProc.NPPFTaps = 16
 BGLProc.MaxConcurrentCommunications = 4
 

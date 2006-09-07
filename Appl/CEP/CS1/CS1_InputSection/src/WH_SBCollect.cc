@@ -61,7 +61,7 @@ namespace LOFAR
 			     "WH_SBCollect"),
 	itsPS               (pset),
 	itsNStations        (pset.getInt32("Observation.NStations")),
-	itsNSubbandsPerCell (pset.getInt32("General.SubbandsPerCell"))
+	itsNSubbandsPerCell (pset.getInt32("General.SubbandsPerPset") * pset.getInt32("BGLProc.PsetsPerCell"))
     {
       char str[32];
       for (int i=0; i<itsNinputs; i++)

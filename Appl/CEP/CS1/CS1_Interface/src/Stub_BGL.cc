@@ -40,8 +40,9 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pS
   itsConnections(0)
 {
   if (theirNrCells == 0) { // first time
-    theirNrCells	   = pSet.getInt32("Observation.NSubbands") / pSet.getInt32("General.SubbandsPerCell");
-    theirNrNodesPerCell    = pSet.getInt32("BGLProc.NodesPerCell");
+    int psetsPerCell	= pSet.getInt32("BGLProc.PsetsPerCell");
+    theirNrCells	= pSet.getInt32("Observation.NSubbands") / (pSet.getInt32("General.SubbandsPerPset") * psetsPerCell);
+    theirNrNodesPerCell = pSet.getInt32("BGLProc.NodesPerPset") * psetsPerCell;
   }
 
   size_t size = theirNrCells * theirNrNodesPerCell;
@@ -73,7 +74,7 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
 {
   size_t index = cellNr * theirNrNodesPerCell + nodeNr;
 
-  ASSERTSTR(cellNr < (theirNrCells), "cellNr argument out of bounds; "
+  ASSERTSTR(cellNr < theirNrCells, "cellNr argument out of bounds; "
 	    << cellNr << " / " << theirNrCells);
   ASSERTSTR(nodeNr < theirNrNodesPerCell, "nodeNr argument out of bounds; "
 	    << nodeNr << " / " << theirNrNodesPerCell);

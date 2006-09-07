@@ -57,7 +57,7 @@ namespace LOFAR {
 			     TransportHolder& th,
 			     uint stationNr)
       : WorkHolder (1, 
-		    ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / (ps.getInt32("Input.NRSPBoards") * ps.getInt32("General.SubbandsPerCell")), 
+		    ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / (ps.getInt32("Input.NRSPBoards") * ps.getInt32("General.SubbandsPerPset") * ps.getInt32("BGLProc.PsetsPerCell")), 
 		    name, 
 		    "WH_RSPInput"),
 	itsTH(th),
@@ -71,7 +71,7 @@ namespace LOFAR {
 
       // get parameters
       itsNSubbands = ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / ps.getInt32("Input.NRSPBoards");
-      itsNSubbandsPerCell = ps.getInt32("General.SubbandsPerCell");
+      itsNSubbandsPerCell = ps.getInt32("General.SubbandsPerPset") * ps.getInt32("BGLProc.PsetsPerCell");
       itsNSamplesPerSec = ps.getInt32("Observation.NSubbandSamples");
       itsNHistorySamples = (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Observation.NChannels");
  

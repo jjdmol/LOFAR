@@ -36,8 +36,8 @@ namespace LOFAR
       Stub_BGL_Subband(bool iAmOnBGL, const ACC::APS::ParameterSet &);
 
     protected:
-      virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);
-      virtual TransportHolder *newServerTH(unsigned subband, unsigned slave);
+      virtual TransportHolder *newClientTH(unsigned cell, unsigned node);
+      virtual TransportHolder *newServerTH(unsigned cell, unsigned node);
   
     private:
       vector<string> servers, services;
