@@ -8,8 +8,8 @@ libcs1_storage_la_SOURCES	= AH_Storage.cc           \
 bin_PROGRAMS			= CS1_Storage
 
 CS1_Storage_SOURCES		= CS1_Storage_main.cc
-CS1_Storage_LDADD		= ../src/libcs1_storage.la
-CS1_Storage_DEPENDENCIES	= ../src/libcs1_storage.la $(LOFAR_DEPEND)
+CS1_Storage_LDADD		= libcs1_storage.la
+CS1_Storage_DEPENDENCIES	= libcs1_storage.la $(LOFAR_DEPEND)
 
 configfilesdir			= $(bindir)
 configfiles_DATA                = CS1_Storage.machinefile \
