@@ -1172,13 +1172,13 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
 
   itsChannelBandwidth = ps.getDouble("Observation.SampleRate") / NR_SUBBAND_CHANNELS;
 
-  unsigned nrSubbandsPerCell = ps.getUint32("General.SubbandsPerCell");
-  unsigned nrNodesPerCell    = ps.getUint32("BGLProc.NodesPerCell");
+  unsigned nrSubbandsPerPset = ps.getUint32("General.SubbandsPerPset");
+  unsigned nrNodesPerPset    = ps.getUint32("BGLProc.NodesPerPset");
 
-  itsFirstSubband     = (coreNumber / nrNodesPerCell) * nrSubbandsPerCell;
-  itsLastSubband      = itsFirstSubband + nrSubbandsPerCell;
-  itsCurrentSubband   = itsFirstSubband + coreNumber % nrNodesPerCell % nrSubbandsPerCell;
-  itsSubbandIncrement = nrNodesPerCell % nrSubbandsPerCell;
+  itsFirstSubband     = (coreNumber / nrNodesPerPset) * nrSubbandsPerPset;
+  itsLastSubband      = itsFirstSubband + nrSubbandsPerPset;
+  itsCurrentSubband   = itsFirstSubband + coreNumber % nrNodesPerPset % nrSubbandsPerPset;
+  itsSubbandIncrement = nrNodesPerPset % nrSubbandsPerPset;
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
 //getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
@@ -1815,7 +1815,6 @@ void WH_BGL_Processing::process()
   static NSTimer writeTimer("send timer", true);
   writeTimer.start();
   getDataManager().readyWithOutHolder(VISIBILITIES_CHANNEL);
-  getDataManager().getOutHolder(VISIBILITIES_CHANNEL);
   writeTimer.stop();
 
 #if defined HAVE_MPI
