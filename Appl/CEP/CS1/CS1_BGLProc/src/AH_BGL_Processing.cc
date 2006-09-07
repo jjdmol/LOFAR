@@ -87,7 +87,7 @@ void AH_BGL_Processing::undefine()
 
 #if defined HAVE_BGL
 
-unsigned AH_BGL_Processing::remapOnTree(unsigned cell, unsigned core, struct BGLPersonality &personality)
+unsigned AH_BGL_Processing::remapOnTree(unsigned pset, unsigned core, struct BGLPersonality &personality)
 {
   unsigned psetXsize  = personality.getXpsetSize();
   unsigned psetYsize  = personality.getYpsetSize();
@@ -97,9 +97,9 @@ unsigned AH_BGL_Processing::remapOnTree(unsigned cell, unsigned core, struct BGL
   unsigned psetYcount = personality.getYsize() / psetYsize;
   unsigned psetZcount = personality.getZsize() / psetZsize;
 
-  unsigned xOrigin    = cell			       % psetXcount * psetXsize;
-  unsigned yOrigin    = cell / psetXcount	       % psetYcount * psetYsize;
-  unsigned zOrigin    = cell / psetXcount / psetYcount % psetZcount * psetZsize;
+  unsigned xOrigin    = pset			       % psetXcount * psetXsize;
+  unsigned yOrigin    = pset / psetXcount	       % psetYcount * psetYsize;
+  unsigned zOrigin    = pset / psetXcount / psetYcount % psetZcount * psetZsize;
 
   unsigned psetSize   = personality.numNodesInPset();
 
@@ -115,7 +115,7 @@ unsigned AH_BGL_Processing::remapOnTree(unsigned cell, unsigned core, struct BGL
   rts_rankForCoordinates(x, y, z, t, &node, &numProcs);
 
 #if defined HAVE_MPI
-  ASSERTSTR(node < TH_MPI::getNumberOfNodes(), "not enough nodes allocated (node = " << node << ", TH_MPI::getNumberOfNodes() = " << TH_MPI::getNumberOfNodes() << ")\n");
+  ASSERTSTR(node < (unsigned) TH_MPI::getNumberOfNodes(), "not enough nodes allocated (node = " << node << ", TH_MPI::getNumberOfNodes() = " << TH_MPI::getNumberOfNodes() << ")\n");
 #endif
 
   return node;
@@ -129,8 +129,9 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   LOG_TRACE_FLOW_STR("Start of AH_BGL_Processing::define()");
   unsigned nrSubBands	     = itsParamSet.getInt32("Observation.NSubbands");
   vector<double> baseFreqs   = itsParamSet.getDoubleVector("Observation.RefFreqs");
-  unsigned usedNodesPerCell  = itsParamSet.getInt32("BGLProc.NodesPerCell");
-  unsigned nrSubbandsPerCell = itsParamSet.getInt32("General.SubbandsPerCell");
+  unsigned psetsPerCell	     = itsParamSet.getInt32("BGLProc.PsetsPerCell");
+  unsigned usedNodesPerPset  = itsParamSet.getInt32("BGLProc.NodesPerPset");
+  unsigned nrSubbandsPerPset = itsParamSet.getInt32("General.SubbandsPerPset");
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
@@ -142,44 +143,48 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   struct BGLPersonality personality;
   int retval = rts_get_personality(&personality, sizeof personality);
   ASSERTSTR(retval == 0, "Could not get personality");
-  unsigned physicalNodesPerCell = personality.numNodesInPset();
+  unsigned physicalNodesPerPset = personality.numNodesInPset();
 
   if (personality.isVirtualNodeMode())
-    physicalNodesPerCell *= 2;
+    physicalNodesPerPset *= 2;
 
-  ASSERTSTR(usedNodesPerCell <= physicalNodesPerCell, "too many nodes per cell");
+  ASSERTSTR(usedNodesPerPset <= physicalNodesPerPset, "too many nodes per pset");
 #else
-  unsigned physicalNodesPerCell = usedNodesPerCell;
+  unsigned physicalNodesPerPset = usedNodesPerPset;
 #endif
 
   const char *str	  = getenv("FIRST_NODE");
   unsigned   logicalNode  = str != 0 ? atoi(str) : 0;
 
-  ASSERTSTR(logicalNode % usedNodesPerCell == 0, "FIRST_NODE not a multiple of BGLProc.NodesPerCell");
+  ASSERTSTR(logicalNode % usedNodesPerPset == 0, "FIRST_NODE not a multiple of BGLProc.NodesPerPset");
 
 #if defined HAVE_MPI
-  unsigned maxCells   = (TH_MPI::getNumberOfNodes() + physicalNodesPerCell) / physicalNodesPerCell;
+  unsigned maxPsets   = (TH_MPI::getNumberOfNodes() + physicalNodesPerPset) / physicalNodesPerPset;
 #else
-  unsigned maxCells   = 1;
+  unsigned maxPsets   = 1;
 #endif
 
-  unsigned firstCell  = logicalNode / usedNodesPerCell;
-  unsigned totalCells = nrSubBands / nrSubbandsPerCell;
-  unsigned lastCell   = firstCell + std::min(totalCells - firstCell, maxCells);
+  unsigned firstPset  = logicalNode / usedNodesPerPset;
+  unsigned totalPsets = nrSubBands / nrSubbandsPerPset;
+  unsigned lastPset   = firstPset + std::min(totalPsets - firstPset, maxPsets);
 
-  ASSERTSTR(firstCell < lastCell, "not enough nodes specified (firstCell = " << firstCell << ", lastCell = " << lastCell << ", totalCells = " << totalCells << ", logicalNode = " << logicalNode << ", nrSubBands = " << nrSubBands << ", nrSubbandsPerCell = " << nrSubbandsPerCell << ", physicalNodesPerCell = " << physicalNodesPerCell << ", usedNodesPerCell = " << usedNodesPerCell << ")\n");
+  ASSERTSTR(firstPset < lastPset, "not enough nodes specified (firstPset = " << firstPset << ", lastPset = " << lastPset << ", totalPsets = " << totalPsets << ", logicalNode = " << logicalNode << ", nrSubBands = " << nrSubBands << ", nrSubbandsPerPset = " << nrSubbandsPerPset << ", physicalNodesPerPset = " << physicalNodesPerPset << ", usedNodesPerPset = " << usedNodesPerPset << ")\n");
 
-  for (uint cell = firstCell; cell < lastCell; cell ++) {
-    for (uint core = 0; core < usedNodesPerCell; core ++) {
+  for (unsigned pset = firstPset; pset < lastPset; pset ++) {
+    for (unsigned core = 0; core < usedNodesPerPset; core ++) {
       WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", logicalNode, itsParamSet);
       itsWHs.push_back(wh);
       TinyDataManager &dm = wh->getDataManager();
-      itsSubbandStub->connect(cell, core, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
-//    itsRFI_MitigationStub->connect(cell, core, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-      itsVisibilitiesStub->connect(cell, core, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+
+      unsigned cell = pset / psetsPerCell;
+      unsigned cellCore = core + usedNodesPerPset * (pset % psetsPerCell);
+
+      itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
+//    itsRFI_MitigationStub->connect(cell, cellCore, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
+      itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
 #if defined HAVE_BGL
-      wh->runOnNode(remapOnTree(cell - firstCell, core, personality));
+      wh->runOnNode(remapOnTree(pset - firstPset, core, personality));
 #else
       wh->runOnNode(logicalNode);
 #endif
@@ -205,9 +210,6 @@ void AH_BGL_Processing::init()
     }
 #endif
   }
-
-  std::cerr << "init done\n";
-  std::cerr.flush();
 }
 
 void AH_BGL_Processing::run(int steps) {
@@ -218,8 +220,7 @@ void AH_BGL_Processing::run(int steps) {
     class NSTimer timer(timer_name, true);
 
     LOG_TRACE_LOOP_STR("processing run " << i );
-    std::cerr << "run " << i << " of " << steps << '\n';
-    std::cerr.flush();
+    std::clog << "run " << i << " of " << steps << std::endl;
 
     timer.start();
     for (uint j = 0; j < itsWHs.size(); j ++) {
@@ -227,8 +228,7 @@ void AH_BGL_Processing::run(int steps) {
     }
     timer.stop();
 
-    std::cerr << "run " << i << " of " << steps << " done\n";
-    std::cerr.flush();
+    std::clog << "run " << i << " of " << steps << " done" << std::endl;
   }
   LOG_TRACE_FLOW_STR("Finished AH_BGL_Processing::run() "  );
 }
