@@ -47,11 +47,13 @@ namespace LOFAR
 
       itsStub = new Stub_BGL_Visibilities(false, itsParamSet);
 
+      uint nrPsetsPerCell = itsParamSet.getUint32("BGLProc.PsetsPerCell");
+      ASSERT(nrPsetsPerCell > 0);
       uint nrSubbands = itsParamSet.getUint32("Observation.NSubbands");
       ASSERT(nrSubbands > 0);
-      uint nrSubbandsPerCell = itsParamSet.getUint32("General.SubbandsPerCell");
+      uint nrSubbandsPerCell = itsParamSet.getUint32("General.SubbandsPerPset") * nrPsetsPerCell;
       ASSERT(nrSubbandsPerCell > 0);
-      uint nNodesPerCell = itsParamSet.getUint32("BGLProc.NodesPerCell");
+      uint nNodesPerCell = itsParamSet.getUint32("BGLProc.NodesPerPset") * nrPsetsPerCell;
       ASSERT(nNodesPerCell > 0);
       uint maxConcurrent = itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications");
 
