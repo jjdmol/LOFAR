@@ -38,8 +38,8 @@ namespace LOFAR
         : Stub_BGL(iAmOnBGL, iAmOnBGL, pSet) {}
 
     protected:
-      virtual TransportHolder *newClientTH(unsigned subband, unsigned slave);
-      virtual TransportHolder *newServerTH(unsigned subband, unsigned slave);
+      virtual TransportHolder *newClientTH(unsigned cell, unsigned node);
+      virtual TransportHolder *newServerTH(unsigned cell, unsigned node);
     };
 
   } //namespace CS1

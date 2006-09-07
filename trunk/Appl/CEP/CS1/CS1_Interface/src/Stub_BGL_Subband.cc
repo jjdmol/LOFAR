@@ -42,15 +42,15 @@ namespace LOFAR
     }
 
 
-    TransportHolder *Stub_BGL_Subband::newClientTH(unsigned subband, unsigned slave)
+    TransportHolder *Stub_BGL_Subband::newClientTH(unsigned cell, unsigned node)
     {
-      return new TH_Socket(servers[subband], services[slave], false, Socket::TCP, false);
+      return new TH_Socket(servers[cell], services[node], false, Socket::TCP, false);
     }
 
 
-    TransportHolder *Stub_BGL_Subband::newServerTH(unsigned, unsigned slave)
+    TransportHolder *Stub_BGL_Subband::newServerTH(unsigned, unsigned node)
     {
-      return new TH_Socket(services[slave], false, Socket::TCP, 5, false);
+      return new TH_Socket(services[node], false, Socket::TCP, 5, false);
     }
 
   } //namespace CS1
