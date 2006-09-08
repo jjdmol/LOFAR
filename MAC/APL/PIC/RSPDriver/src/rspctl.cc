@@ -1003,6 +1003,16 @@ void StatusCommand::send()
   }
 }
 
+#define BOARD_ITERATOR_BEGIN						\
+do {									\
+  int boardin = 0;							\
+  for (int boardout = 0; boardout < get_ndevices(); boardout++) {	\
+    if (mask[boardout])
+
+#define BOARD_ITERATOR_NEXT boardin++
+
+#define BOARD_ITERATOR_END } } while(0)
+
 GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 {
   switch (event.signal) {
@@ -1010,81 +1020,95 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
   case RSP_GETSTATUSACK: {
 
     RSPGetstatusackEvent ack(event);
-    bitset<MAX_N_RCUS> mask = getRCUMask();
+    bitset<MAX_N_RSPBOARDS> mask = getRSPMask();
 
     if (ack.status != SUCCESS) {
       logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
       break;
     }
 		
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
-      logMessage(cout,formatString("RSP[%2d] 1.2 V: %3.2f , 2.5 V: %3.2f, 3.3 V: %3.2f", boardid,
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
+      logMessage(cout,formatString("RSP[%2d] 1.2 V: %3.2f , 2.5 V: %3.2f, 3.3 V: %3.2f", boardout,
 				   (2.5/192.0) * board.rsp.voltage_1_2,
 				   (3.3/192.0) * board.rsp.voltage_2_5,
 				   (5.0/192.0) * board.rsp.voltage_3_3));
-    }
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
+
+
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
       logMessage(cout,formatString("RSP[%2d] PCB_temp: %2d , BP_temp: %2d, "
 				   "Temp AP0: %3d , AP1: %3d , AP2: %3d , AP3: %3d",
-				   boardid,
+				   boardout,
 				   board.rsp.pcb_temp, board.rsp.bp_temp,
 				   board.rsp.ap0_temp, board.rsp.ap1_temp, 
 				   board.rsp.ap2_temp, board.rsp.ap3_temp));
-    }
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
 
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
-      logMessage(cout,formatString("RSP[%2d] BP_clock: %3d", boardid, board.rsp.bp_clock));
-    }
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
+      logMessage(cout,formatString("RSP[%2d] BP_clock: %3d", boardout, board.rsp.bp_clock));
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
 
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
       logMessage(cout,formatString("RSP[%2d] Ethernet nr frames: %ld , nr errors: %ld , last error: %d",
-				   boardid,
+				   boardout,
 				   board.eth.nof_frames, board.eth.nof_errors,
 				   board.eth.last_error));
-    }
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
+
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
       logMessage(cout,formatString("RSP[%2d] MEP sequencenr: %ld , error: %d",
-				   boardid,
+				   boardout,
 				   board.mep.seqnr, board.mep.error));
-    }
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
+
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
       logMessage(cout,formatString("RSP[%2d] Errors ri: %5d ,  rcuX: %5d ,  rcuY: %5d,   lcu: %5d,    cep: %5d",
-				   boardid,
+				   boardout,
 				   board.diag.ri_errors, board.diag.rcux_errors,
 				   board.diag.rcuy_errors, board.diag.lcu_errors,
 				   board.diag.cep_errors));
       logMessage(cout,formatString("RSP[%2d]    serdes: %5d , ap0ri: %5d , ap1ri: %5d, ap2ri: %5d , ap3ri: %5d",
-				   boardid,
+				   boardout,
 				   board.diag.serdes_errors, board.diag.ap0_ri_errors,
 				   board.diag.ap1_ri_errors, board.diag.ap2_ri_errors,
 				   board.diag.ap3_ri_errors));
-    }
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
-      logMessage(cout,formatString("RSP[%2d] Sync         diff      count    samples     slices", boardid));
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
+
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
+      logMessage(cout,formatString("RSP[%2d] Sync         diff      count    samples     slices", boardout));
       for (int blp = 0; blp < 4; blp++) {
 	BSStatus*	bs= &(board.ap0_sync)+blp;
 	logMessage(cout,formatString("RSP[%2d]     %d:  %10lu %10lu %10lu %10lu", 
-				     boardid, blp, bs->ext_count, bs->sync_count,
+				     boardout, blp, bs->ext_count, bs->sync_count,
 				     bs->sample_offset, bs->slice_count));
       }
-    }
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
-      logMessage(cout,formatString("RSP[%2d] RCUStatus   pllX       pllY  overflowX  overflowY", boardid));
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
+
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
+      logMessage(cout,formatString("RSP[%2d] RCUStatus   pllX       pllY  overflowX  overflowY", boardout));
       for (int ap = 0; ap < 4; ap++) {
 	RCUStatus*	as= &(board.blp0_rcu)+ap;
 	logMessage(cout,formatString("RSP[%2d]     %d: %10ld %10ld %10ld %10ld", 
-				     boardid, ap, as->pllx, as->plly, 
+				     boardout, ap, as->pllx, as->plly, 
 				     as->nof_overflowx, as->nof_overflowy));
       }
-    }
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
 
     const char* trig[] = {
       "Board Reset",                   // 0x0
@@ -1094,33 +1118,35 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
       "Watchdog timer timeout"         // 0x4
     };
 
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
-      logMessage(cout, formatString("RSP[%2d] RSU Status:", boardid));
-      logMessage(cout, formatString("RSP[%2d]     Trigger: %s", boardid,
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
+      logMessage(cout, formatString("RSP[%2d] RSU Status:", boardout));
+      logMessage(cout, formatString("RSP[%2d]     Trigger: %s", boardout,
 				    (board.cp_status.trig <= 0x4 ? trig[board.cp_status.trig] : "Invalid")));
-      logMessage(cout, formatString("RSP[%2d]     Image  : %s", boardid,
+      logMessage(cout, formatString("RSP[%2d]     Image  : %s", boardout,
 				    (board.cp_status.im ? "Application image" : "Factory image")));
-      logMessage(cout, formatString("RSP[%2d]     FPGA   : %s", boardid,
+      logMessage(cout, formatString("RSP[%2d]     FPGA   : %s", boardout,
 				    (board.cp_status.fpga ? "AP was reconfigured" : "BP was reconfigured")));
-      logMessage(cout, formatString("RSP[%2d]     Result : %s", boardid,
+      logMessage(cout, formatString("RSP[%2d]     Result : %s", boardout,
 				    (board.cp_status.fpga ? "ERROR" : "OK")));
-      logMessage(cout, formatString("RSP[%2d]     Status : %s", boardid,
+      logMessage(cout, formatString("RSP[%2d]     Status : %s", boardout,
 				    (board.cp_status.rdy ? "DONE" : "IN PROGRESS")));
-    }
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
 
-    for (int boardid = 0; boardid < ack.sysstatus.board().extent(firstDim); boardid++) {
-      BoardStatus&	board = ack.sysstatus.board()(boardid);
-      logMessage(cout, formatString("RSP[%2d] ADO Status  adc_offset_x  adc_offset_y (in LS bits)", boardid));
+    BOARD_ITERATOR_BEGIN {
+      BoardStatus&	board = ack.sysstatus.board()(boardin);
+      logMessage(cout, formatString("RSP[%2d] ADO Status  adc_offset_x  adc_offset_y (in LS bits)", boardout));
       for (int ap = 0; ap < 4; ap++) {
 	ADOStatus* as= &(board.blp0_adc_offset)+ap;
 	BSStatus*  bs= &(board.ap0_sync)+ap;
 	logMessage(cout, formatString("RSP[%2d]     %d:         %10ld    %10ld",
-				      boardid, ap,
+				      boardout, ap,
 				      (bs->slice_count > 0 ? as->adc_offset_x / (int32)bs->slice_count / 4 : 0),
 				      (bs->slice_count > 0 ? as->adc_offset_y / (int32)bs->slice_count / 4 : 0)));
       }
-    }
+      BOARD_ITERATOR_NEXT;
+    } BOARD_ITERATOR_END;
   }
     break;
   }
