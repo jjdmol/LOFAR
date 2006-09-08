@@ -33,6 +33,7 @@
 #include <APS/ParameterSet.h>
 #include <Transport/TransportHolder.h>
 #include <Generator/RSPEthFrame.h>
+#include <Generator/Flaggers.h>
 
 namespace LOFAR 
 {
@@ -75,6 +76,7 @@ namespace LOFAR
       int itsStationId;
       int itsDelay;
       TransportHolder* itsTH;
+      Flagger* itsFlagger;
     };
 
     // @}

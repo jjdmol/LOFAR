@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Generator/AH_Recorder.h>
+#include <Generator/RSPTimeStamp.h>
 #include <Common/lofar_iostream.h>
 #include <APS/ParameterSet.h>
 #include <CEPFrame/Step.h>
@@ -76,6 +77,9 @@ namespace LOFAR {
       // scampi run the first process on the first node in the machinefile
       lastFreeNode = 1;
 #endif
+
+      TimeStamp::setMaxBlockId(itsParamSet.getDouble("Generator.SampleFreq"));
+
 
       int NRSP = itsParamSet.getInt32("Data.NStations");
       int WH_DH_NameSize = 40;

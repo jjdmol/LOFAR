@@ -48,7 +48,7 @@ namespace LOFAR {
 	itsPS(ps),
 	itsSignal(0)
     {
-      itsFrequency = ps.getDouble("Generator.OutputRate") / ps.getInt32("Generator.NPacketsInFrame");
+      itsFrequency = ps.getDouble("Generator.OutputRate") / ps.getInt32("Generator.NTimesPerFrame");
       double deltaT = 1 / ps.getDouble("Generator.SampleFreq");
 
       string signalType = ps.getString("Generator.SignalType");
@@ -101,8 +101,8 @@ namespace LOFAR {
     {
       if (itsFrequency == 0) {
 	// frequency was set to zero, which means output should go as fast as possible
-	// we do that by setting theirNoAlarms to the number of runs
-	theirNoAlarms += itsPS.getInt32("Generator.NoRuns");
+	// we do that by setting theirNoAlarms to -1
+	theirNoAlarms = -1;
       } else {
 	if (!theirTimerSet) {
 	  sighandler_t ret = signal(SIGALRM, *WH_Signal::timerSignal);
@@ -140,6 +140,13 @@ namespace LOFAR {
       header.setBlockId(itsStamp.getBlockId());
 
       itsSignal->fillNext(myEthFrame.getData());
+
+      char* src = myEthFrame.getBufferp();
+      int  size = myEthFrame.getSize();
+      for (int o = 1; o < itsNoutputs; o++) {
+	memcpy(((DH_RSP*)getDataManager().getOutHolder(o))->getFrame()->getBufferp(),
+	       src, size);
+      }
 
       int timerCount = 0;
       while (theirNoAlarms == 0) 

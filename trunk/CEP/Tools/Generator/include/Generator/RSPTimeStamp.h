@@ -20,139 +20,217 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_GENERATOR_RSPTIMESTAMP_H
-#define LOFAR_GENERATOR_RSPTIMESTAMP_H
+#ifndef LOFAR_CS1_INTERFACE_RSPTIMESTAMP_H
+#define LOFAR_CS1_INTERFACE_RSPTIMESTAMP_H
 
-// \file
-// Small class to hold the timestamps from RSP
+#include <Common/lofar_iosfwd.h>
+#include <Common/DataConvert.h>
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+namespace LOFAR {
 
-//# Includes
+  // This is needed to be able to put the TimeStamp in a Blob
+  namespace Generator {
+    class TimeStamp;
+  }
+  void dataConvert(DataFormat fmt, Generator::TimeStamp* inout, uint nrval);
 
-namespace LOFAR 
-{
-  namespace Generator 
-  {
-
-    // \addtogroup Generator
-    // @{
+  namespace Generator {
 
     class TimeStamp {
     public:
-      TimeStamp(const int seqId = 0, const int blockId = 0);
+      TimeStamp(int64 time = 0);
+      TimeStamp(unsigned seqId, unsigned blockId);
 
-      // set the Stamp
-      void setStamp(const int seqId, const int blockId);
-      // get sequence ID
-      const int getSeqId () const;
-      // get block ID
-      const int getBlockId () const;
-      static int getMaxBlockId() {return theirMaxBlockId; };
-      static void setMaxBlockId(int nMBID) {theirMaxBlockId = nMBID; };
+      TimeStamp	    &setStamp(unsigned seqId, unsigned blockId);
+      unsigned	    getSeqId() const;
+      unsigned	    getBlockId() const;
+      static double getMaxBlockId();
+      static void   setMaxBlockId(double nMBID);
 
-      // the blockId restarts at zero at some point. Check if we are there yet
-      void checkOverflow();
+      TimeStamp	    &operator += (const TimeStamp &other);
+      TimeStamp	    &operator += (int64 increment);
+      TimeStamp	    &operator -= (const TimeStamp &other);
+      TimeStamp	    &operator -= (int64 decrement);
+      TimeStamp	     operator ++ (int);
+      TimeStamp	    &operator ++ ();
+      TimeStamp	    &operator -- (int);
+      TimeStamp	    &operator -- ();
 
-      // increase the value of the stamp
-      void operator+= (const TimeStamp& other);
-      void operator+= (int increment);
-      void operator++ (int);
+      TimeStamp	    operator + (int64 other) const;
+      int64	    operator + (const TimeStamp &other) const;
+      TimeStamp	    operator - (int64 other) const;
+      int64	    operator - (const TimeStamp &other) const;
 
-      TimeStamp operator+ (int other) const;
-      long long operator- (const TimeStamp& other) const;
-      TimeStamp operator- (int other) const;
-      bool operator>  (const TimeStamp& other) const;
-      bool operator<  (const TimeStamp& other) const;
-      bool operator>= (const TimeStamp& other) const;
-      bool operator<= (const TimeStamp& other) const;
-      bool operator== (const TimeStamp& other) const;
+      bool	    operator >  (const TimeStamp &other) const;
+      bool	    operator <  (const TimeStamp &other) const;
+      bool	    operator >= (const TimeStamp &other) const;
+      bool	    operator <= (const TimeStamp &other) const;
+      bool	    operator == (const TimeStamp &other) const;
+      bool	    operator != (const TimeStamp &other) const;
 
-      friend ostream& operator<<(ostream& os, const TimeStamp& ss);
+      friend ostream  &operator << (ostream &os, const TimeStamp &ss);
 
-    private:
-      int itsSeqId;
-      int itsBlockId;
+      // This is needed to be able to put the TimeStamp in a Blob
+      friend void ::LOFAR::dataConvert(DataFormat fmt, TimeStamp* inout, uint nrval);
 
-      static int theirMaxBlockId;
+    protected:
+      int64	    itsTime;
+      static double theirMaxBlockId, theirInvMaxBlockId;
     };
+
+  } // namespace Generator
+
+  // This is needed to be able to put the TimeStamp in a Blob
+  inline void dataConvert(DataFormat fmt, Generator::TimeStamp* inout, uint nrval)
+    {
+      for (uint i=0; i<nrval ;i++) {
+ 	dataConvert64(fmt, &(inout[i].itsTime));
+      }
+    }
+
+  namespace Generator {
 
     typedef TimeStamp timestamp_t;
 
-    inline void TimeStamp::setStamp(const int seqId, const int blockId)
-    { itsSeqId = seqId; itsBlockId = blockId; checkOverflow(); };
-  
-    inline const int TimeStamp::getSeqId () const
-    { return itsSeqId; }
-  
-    inline const int TimeStamp::getBlockId () const
-    { return itsBlockId; }
+    inline TimeStamp::TimeStamp(int64 time)
+      {
+	itsTime = time;
+      }
 
-    inline void TimeStamp::operator += (const TimeStamp& other)
-    { 
-      itsBlockId += other.itsBlockId;
-      checkOverflow();
-      itsSeqId += other.itsSeqId;
-    }
-    inline void TimeStamp::operator += (int increment)
-    { 
-      itsBlockId += increment;
-      checkOverflow();
-    }
+    inline TimeStamp::TimeStamp(unsigned seqId, unsigned blockId)
+      {
+	itsTime = (int64) (seqId * theirMaxBlockId + .5) + blockId;
+      }
 
-    inline void TimeStamp::operator ++ (int)
-    { 
-      itsBlockId ++;
-      checkOverflow();
-    }
+    inline TimeStamp &TimeStamp::setStamp(unsigned seqId, unsigned blockId)
+      {
+	itsTime = (int64) (seqId * theirMaxBlockId + .5) + blockId;
+	return *this;
+      }
 
-    inline TimeStamp TimeStamp::operator+ (int increment) const
-    { 
-      // check overflow is done in the constructor
-      return TimeStamp(itsSeqId, itsBlockId + increment);
-    }
-    inline TimeStamp TimeStamp::operator- (int decrement) const
-    { 
-      // check overflow is done in the constructor
-      return TimeStamp(itsSeqId, itsBlockId - decrement);
-    }
+    inline unsigned TimeStamp::getSeqId() const
+      {
+	return (unsigned) (itsTime * theirInvMaxBlockId);
+      }
 
-    inline long long TimeStamp::operator- (const TimeStamp& other) const
-    { 
-      long long seqdecr = itsSeqId - other.itsSeqId;
-      int blockdecr = itsBlockId - other.itsBlockId;
-      
-      return  (seqdecr*theirMaxBlockId) + blockdecr;
-    }
+    inline unsigned TimeStamp::getBlockId() const
+      {
+	return itsTime - (unsigned) (theirMaxBlockId * getSeqId() + .5);
+      }
 
-    inline bool TimeStamp::operator > (const TimeStamp& other) const
-    { 
-      if (itsSeqId > other.itsSeqId) return true;
-      if (itsSeqId < other.itsSeqId) return false;
-      if (itsBlockId > other.itsBlockId) return true;
-      return false;
-    }
-    inline bool TimeStamp::operator >= (const TimeStamp& other) const
-    { return !operator<(other); }
+    inline double TimeStamp::getMaxBlockId()
+      {
+	return theirMaxBlockId;
+      }
 
-    inline bool TimeStamp::operator < (const TimeStamp& other) const
-    { 
-      if (itsSeqId < other.itsSeqId) return true;
-      if (itsSeqId > other.itsSeqId) return false;
-      if (itsBlockId < other.itsBlockId) return true;
-      return false;
-    }
-    inline bool TimeStamp::operator <= (const TimeStamp& other) const
-    { return !operator>(other); }
+    inline void TimeStamp::setMaxBlockId(double nMBID)
+      {
+	theirMaxBlockId    = nMBID;
+	theirInvMaxBlockId = 1 / nMBID;
+      }
 
-    inline bool TimeStamp::operator == (const TimeStamp& other) const
-    { 
-      return ((itsSeqId == other.itsSeqId) && (itsBlockId == other.itsBlockId));
-    }
+    inline TimeStamp &TimeStamp::operator += (const TimeStamp &other)
+      { 
+	itsTime += other.itsTime;
+	return *this;
+      }
 
-    // @}
+    inline TimeStamp &TimeStamp::operator += (int64 increment)
+      { 
+	itsTime += increment;
+	return *this;
+      }
+
+    inline TimeStamp &TimeStamp::operator -= (const TimeStamp &other)
+      { 
+	itsTime -= other.itsTime;
+	return *this;
+      }
+
+    inline TimeStamp &TimeStamp::operator -= (int64 decrement)
+      { 
+	itsTime -= decrement;
+	return *this;
+      }
+
+    inline TimeStamp &TimeStamp::operator ++ ()
+      { 
+	++ itsTime;
+	return *this;
+      }
+
+    inline TimeStamp TimeStamp::operator ++ (int)
+      { 
+        TimeStamp tmp = *this;
+	++ itsTime;
+	return tmp;
+      }
+
+    inline TimeStamp &TimeStamp::operator -- ()
+      { 
+	-- itsTime;
+	return *this;
+      }
+
+    inline TimeStamp &TimeStamp::operator -- (int)
+      { 
+	-- itsTime;
+	return *this;
+      }
+
+    inline TimeStamp TimeStamp::operator + (int64 increment) const
+      { 
+	return TimeStamp(itsTime + increment);
+      }
+
+    inline int64 TimeStamp::operator + (const TimeStamp &other) const
+      { 
+	return itsTime + other.itsTime;
+      }
+
+    inline TimeStamp TimeStamp::operator - (int64 decrement) const
+      { 
+	return TimeStamp(itsTime - decrement);
+      }
+
+    inline int64 TimeStamp::operator - (const TimeStamp &other) const
+      { 
+	return itsTime - other.itsTime;
+      }
+
+    inline bool TimeStamp::operator > (const TimeStamp &other) const
+      { 
+	return itsTime > other.itsTime;
+      }
+
+    inline bool TimeStamp::operator >= (const TimeStamp &other) const
+      {
+	return itsTime >= other.itsTime;
+      }
+
+    inline bool TimeStamp::operator < (const TimeStamp &other) const
+      { 
+	return itsTime < other.itsTime;
+      }
+
+    inline bool TimeStamp::operator <= (const TimeStamp &other) const
+      {
+	return itsTime <= other.itsTime;
+      }
+
+    inline bool TimeStamp::operator == (const TimeStamp &other) const
+      { 
+	return itsTime == other.itsTime;
+      }
+
+    inline bool TimeStamp::operator != (const TimeStamp &other) const
+      { 
+	return itsTime != other.itsTime;
+      }
 
   } // namespace Generator
+
 } // namespace LOFAR
 
 #endif
+
