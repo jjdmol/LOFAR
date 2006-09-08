@@ -1,7 +1,5 @@
 //#  RSPTimeStamp.cc: Small class to hold the timestamps from RSP
 //#
-//#  Copyright (C) 2006
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
@@ -20,41 +18,25 @@
 //#
 //#  $Id$
 
-//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-//# Includes
-#include <Common/LofarLogger.h>
 #include <Generator/RSPTimeStamp.h>
+#include <Common/lofar_iostream.h>
+#include <Blob/BlobField.tcc>
 
 namespace LOFAR {
   namespace Generator {
 
-    int TimeStamp::theirMaxBlockId = 156250;
+    double TimeStamp::theirMaxBlockId = 156250, TimeStamp::theirInvMaxBlockId = 1.0 / 156250;
 
-    TimeStamp::TimeStamp(const int seqId, const int blockId) 
-      :itsSeqId(seqId),
-       itsBlockId(blockId)
+    ostream &operator << (ostream &os, const TimeStamp &ss)
     {
-      checkOverflow();
-    }
-
-    void TimeStamp::checkOverflow() {
-      if (itsBlockId >= theirMaxBlockId) {
-        int newBlockId = itsBlockId % theirMaxBlockId;
-        itsSeqId += itsBlockId / theirMaxBlockId; 
-        itsBlockId = newBlockId;
-      } else if (itsBlockId < 0) {
-        int newBlockId = (itsBlockId % theirMaxBlockId) + theirMaxBlockId;
-        itsSeqId += -1 + itsBlockId / theirMaxBlockId; 
-        itsBlockId = newBlockId;
-      };
-    }  
-
-    ostream& operator<<(ostream& os, const TimeStamp& ss){
-      os<<ss.itsSeqId<<" s: "<<ss.itsBlockId;
-      return os;
+      return os << ss.getSeqId() << " s: " << ss.getBlockId();
     }
 
   } // namespace Generator
+
+  // This is needed to be able to put the TimeStamp in a Blob
+  template class BlobField<Generator::TimeStamp>;
+
 } // namespace LOFAR

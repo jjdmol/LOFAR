@@ -1,5 +1,7 @@
-//#  Generator_main.cc:
+//#  Flagger.cc: one line description
 //#
+//#  Copyright (C) 2006
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
@@ -18,20 +20,19 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <PLC/ACCmain.h>
+//# Includes
 #include <Common/LofarLogger.h>
-#include <tinyCEP/ApplicationHolderController.h>
-#include <Generator/AH_Generator.h>
+#include <Generator/Flaggers.h>
 
-using namespace LOFAR;
-using namespace LOFAR::Generator;
+namespace LOFAR {
+  namespace Generator {
 
-int main(int argc, char **argv) {
-  INIT_LOGGER("Generator");
+    bool RangeFlagger::sendData(const TimeStamp& t) {
+      return !((t.getBlockId() => itsMinBlockId) && (t.getBlockId() < itsMaxBlockId));
+    }
 
-  AH_Generator myAH;
-  ApplicationHolderController myAHController(myAH, 1);
-  return ACC::PLC::ACCmain(argc, argv, &myAHController);
-}
+  } // namespace Generator
+} // namespace LOFAR

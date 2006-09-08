@@ -1,7 +1,8 @@
 
 lib_LTLIBRARIES         = libgenerator.la
 
-libgenerator_la_SOURCES = 	Signals.cc \
+libgenerator_la_SOURCES  = Flaggers.cc \
+		 	Signals.cc \
 				RSPTimeStamp.cc \
 		   	        WH_FakeStation.cc \
 				WH_Signal.cc \

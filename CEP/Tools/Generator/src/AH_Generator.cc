@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Generator/AH_Generator.h>
+#include <Generator/RSPTimeStamp.h>
 #include <Common/lofar_iostream.h>
 #include <APS/ParameterSet.h>
 #include <CEPFrame/Step.h>
@@ -72,6 +73,8 @@ namespace LOFAR {
       LOG_TRACE_FLOW_STR("Create output side interface stubs");
       // todo: define this input interface; although there are no
       //       connection involved, we do have to define the port/IP numbering schemes
+
+      TimeStamp::setMaxBlockId(itsParamSet.getDouble("Generator.SampleFreq"));
 
       int NRSP = itsParamSet.getInt32("Generator.NStations");
       int WH_DH_NameSize = 40;

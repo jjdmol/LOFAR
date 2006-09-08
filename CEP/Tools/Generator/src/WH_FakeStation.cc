@@ -52,6 +52,9 @@ namespace LOFAR {
       itsStationId = stationID;
       getDataManager().addInDataHolder(0, new DH_RSP("incoming_DH_RSP", itsPS));
       getDataManager().addOutDataHolder(0, new DH_RSP("outgoing_DH_RSP", itsPS));
+      // To skip sending some data
+      itsFlagger = new RangeFlagger(0 + 1000*stationID, 2000 + stationID * 1000);
+      //itsFlagger = new Flagger();
     }
 
     WH_FakeStation::~WH_FakeStation() {
@@ -93,7 +96,9 @@ namespace LOFAR {
       myHeader.setBlockId(myStamp.getBlockId());
       
       if (itsTH != 0) {
-	itsTH->sendBlocking(myEthFrame.getBufferp(), myEthFrame.getSize(), 0);
+	if (itsFlagger->sendData(myStamp)){
+	  itsTH->sendBlocking(myEthFrame.getBufferp(), myEthFrame.getSize(), 0);
+	}
       }
     }
 

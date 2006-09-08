@@ -50,7 +50,7 @@ namespace LOFAR
     private:
       // Copying is not allowed
       Signal (const Signal& that);
-      Signal& operator= (const Signal that);
+      Signal& operator= (const Signal& that);
 
       //# Datamembers
     };
