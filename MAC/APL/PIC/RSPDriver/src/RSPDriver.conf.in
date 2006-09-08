@@ -29,10 +29,10 @@ RSPDriver.SOFTPPS=0
 #
 # Specify MAC addresses of the RSP boards explicitly
 #
-RSPDriver.MAC_ADDR_0=10:FA:00:00:13:00
-RSPDriver.MAC_ADDR_1=10:FA:00:00:12:00
-RSPDriver.MAC_ADDR_2=10:FA:00:00:11:00
-RSPDriver.MAC_ADDR_3=10:FA:00:00:10:00
+RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
+RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
+RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
+RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
 
 # RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
 # RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
@@ -129,11 +129,11 @@ RSPDriver.CDO_N_BLOCKS=16
 RSPDriver.CDO_N_BEAMLETS=54
 RSPDriver.CDO_SRCMAC_FORMAT=10:FA:00:%02x:%02x:01
 # FTS-1
-RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
-RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D4
+# RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
+# RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D4
 # CS-1
-# RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:93:3B
-# RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:B0:E1
+RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:93:3B
+RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:B0:E1
 RSPDriver.DST_MAC_ADDR_2=00:E0:81:31:B2:F5
 RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:DE:8B
 RSPDriver.DST_MAC_ADDR_4=00:E0:81:31:20:37
@@ -177,7 +177,7 @@ RSPDriver.DST_IP_ADDR_11=10.170.0.12
 #
 # MAC address is equal to : 10:FA:00:00:XX:00
 #
-RSPDriver.XST_FIRST_RSP_BOARD=0x13
+RSPDriver.XST_FIRST_RSP_BOARD=0x00
 
 #
 # Ethernet interface on which to contact the RSP boards.
@@ -190,7 +190,7 @@ RSPDriver.IF_NAME=eth1
 # beamlet statistics match the subband statistics
 #
 RSPDriver.IDENTITY_WEIGHTS=1
-RSPDriver.FIRST_SUBBAND=384
+RSPDriver.FIRST_SUBBAND=0
 
 #
 # Select LOOPBACK_MODE mode
@@ -265,7 +265,7 @@ RSPDriver.READ_WG=0
 # into the hardware when the driver starts.
 # Currently allowed values are: 0 (off), 160 (MHz) and 200 (MHz)
 #
-RSPDriver.DEFAULT_SAMPLING_FREQUENCY=160
+RSPDriver.DEFAULT_SAMPLING_FREQUENCY=200
 
 #
 # Specify how the rspdriver should operate:

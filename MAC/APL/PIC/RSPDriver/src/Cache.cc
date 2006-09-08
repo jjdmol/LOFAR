@@ -114,7 +114,7 @@ void CacheBuffer::reset(void)
     m_beamletweights()(Range::all(), Range::all(), Range(0, MEPHeader::N_LOCAL_XLETS - 1)) = 
       complex<int16>(0,0);
 
-    LOG_INFO_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
+    LOG_DEBUG_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
 
     //
     // Set default subband selection starting at RSPDriver.FIRST_SUBBAND
@@ -127,7 +127,7 @@ void CacheBuffer::reset(void)
       }
     }
 
-    LOG_WARN_STR("m_subbandselection()=" << m_subbandselection());
+    LOG_DEBUG_STR("m_subbandselection()=" << m_subbandselection());
   }
 
   // initialize RCU settings

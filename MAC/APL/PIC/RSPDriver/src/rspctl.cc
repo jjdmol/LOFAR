@@ -1221,13 +1221,6 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
     
     if(m_duration == 0)
     {
-      if (get_ndevices() > MAX_PLOT_GRAPHS) {
-	fprintf(stderr, "Error: plotting supports upto %d graphs. Select fewer receivers using '--select'.\n",
-		MAX_PLOT_GRAPHS);
-        stop();
-        GCFTask::stop();
-	return;
-      }
       plot_statistics(m_stats, timestamp);
     }
     else
@@ -1288,7 +1281,17 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
   strcpy(plotcmd, "plot ");
 
+  // count selected devices
   int count = 0;
+  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) { if (mask[rcuout]) count++; }
+  if (count > MAX_PLOT_GRAPHS) {
+    fprintf(stderr, "Error: plotting supports upto %d graphs. Select fewer receivers using '--select'.\n",
+	    MAX_PLOT_GRAPHS);
+    exit(EXIT_FAILURE);
+  }
+
+  // splot devices
+  count = 0;
   for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
   {
     if (mask[rcuout])
