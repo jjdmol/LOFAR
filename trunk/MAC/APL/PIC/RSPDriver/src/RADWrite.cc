@@ -31,6 +31,8 @@
 #include "RADWrite.h"
 #include "Cache.h"
 
+#include <netinet/in.h>
+
 using namespace blitz;
 using namespace LOFAR;
 using namespace RSP;
@@ -78,21 +80,22 @@ void RADWrite::sendrequest()
   for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
     uint8 mode = 0x00; // default is to ignore remote data (first board in ring)
 
-    int blet_out = GET_CONFIG(formatString("RSPDriver.LANE_%d_BLET_OUT", lane).c_str(), i);
-    int xlet_out = GET_CONFIG(formatString("RSPDriver.LANE_%d_XLET_OUT", lane).c_str(), i);
+    int blet_out = GET_CONFIG(formatString("RSPDriver.LANE_%d_BLET_OUT", lane).c_str(), i) % StationSettings::instance()->nrRspBoards();
+    int xlet_out = GET_CONFIG(formatString("RSPDriver.LANE_%d_XLET_OUT", lane).c_str(), i) % StationSettings::instance()->nrRspBoards();
 
     // if there are more than 1 boards and
     // if this board is not the first board in the ring
     // it should combine local and remote data
     // unless disables explicitly from the configuration file
     if (0 == GET_CONFIG("RSPDriver.IGNORE_REMOTE_DATA", i)) {
-      if (StationSettings::instance()->nrRspBoards() > 0) {
-	if (getBoardId() != (blet_out + 1) % StationSettings::instance()->nrRspBoards()) {
-	  mode |= 0x02;
-	}
-	if (getBoardId() != (xlet_out + 1) % StationSettings::instance()->nrRspBoards()) {
-	  mode |= 0x08;
-	}
+      if (StationSettings::instance()->nrRspBoards() > 1) {
+
+	int exclude_board = (int)getBoardId() - 1;
+	exclude_board %= StationSettings::instance()->nrRspBoards();
+	if (exclude_board < 0) exclude_board += StationSettings::instance()->nrRspBoards();
+
+	if (exclude_board != blet_out) mode |= 0x02;
+	if (exclude_board != xlet_out) mode |= 0x08;
       }
     }
     
@@ -100,7 +103,7 @@ void RADWrite::sendrequest()
 
   }
 
-  LOG_INFO_STR(formatString("rad.lanemode(rspboard=%d)=0x%08x", getBoardId(), rad.lanemode));
+  LOG_INFO_STR(formatString("rad.lanemode(rspboard=%d)=0x%08x", getBoardId(), htonl(rad.lanemode)));
 
   m_hdr = rad.hdr;
   getBoardPort().send(rad);

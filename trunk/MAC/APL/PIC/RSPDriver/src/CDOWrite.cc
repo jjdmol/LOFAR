@@ -199,6 +199,9 @@ void CDOWrite::sendrequest()
 	string2mac(srcmac, cdo.src_mac);
 	string2mac(GET_CONFIG_STRING(dstmac), cdo.dst_mac);
 
+	LOG_INFO_STR("SRC_MAC lane=" << output_lane << " rspboard=" << getBoardId()
+		     << " srcmac=" << srcmac << " dstmac=" << GET_CONFIG_STRING(dstmac));
+
 	// setup UDP/IP header
 	setup_udpip_header();
 
