@@ -76,6 +76,9 @@ public:
     static int		remoteCopy	  (const string& localFile, 
 								   const string& remoteHost, 
 								   const string& remoteFile);
+	static int      copyFromRemote(const string& remoteHost, 
+								   const string& remoteFile,
+								   const string& localFile);
     static string	getTempFileName(const string&	format="");
 
 protected:
