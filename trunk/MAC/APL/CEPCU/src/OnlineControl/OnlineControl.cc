@@ -413,14 +413,33 @@ uint16_t OnlineControl::doClaim(const string& cntlrName)
 	string processScope("AC.process");
 	string onlineCtrlPrefix(globalParameterSet()->locateModule("OnlineCtrl") + "OnlineCtrl.");
   
-	string procName, newProcName, nodeName;
+	string procName, startstoptype, executable, hostName;
 	string ldName(getName().c_str());
 	
-	procName = globalParameterSet()->getString(onlineCtrlPrefix+"ApplCtrl.application");
-		
+	procName = globalParameterSet()->getString(onlineCtrlPrefix+"ApplCtrl.ACCprocess.name");
+	startstoptype = globalParameterSet()->getString(onlineCtrlPrefix+"ApplCtrl.ACCprocess.startstopType");
+	executable = globalParameterSet()->getString(onlineCtrlPrefix+"ApplCtrl.ACCprocess.executable");
+	hostName = globalParameterSet()->getString(onlineCtrlPrefix+"ApplCtrl.ACCprocess.hostname");
+
 	itsCepAppParams.adoptCollection(globalParameterSet()->makeSubset(onlineCtrlPrefix+"ApplCtrl", "AC"));
 	itsCepAppParams.adoptCollection(globalParameterSet()->makeSubset(onlineCtrlPrefix+procName, procName));
 	  
+	// add some keys to cope with the differences between the OTDB and ACC
+	itsCepAppParams.replace("AC.process[0].count","1");
+	itsCepAppParams.replace("AC.application",procName);
+	itsCepAppParams.replace("AC.process[1].ID",procName);
+	itsCepAppParams.replace("AC.hostname",hostName);
+	itsCepAppParams.replace(formatString("%s.%s[0].startstoptype",procName.c_str(),procName.c_str()),startstoptype);
+	itsCepAppParams.replace(formatString("%s.%s[0].executable",procName.c_str(),procName.c_str()),executable);
+
+	// create nodelist
+	vector<string> nodes = globalParameterSet()->getStringVector("Observation.VirtualInstrument.BGLNodeList");
+	int nodeIndex=1;
+	for(vector<string>::iterator it=nodes.begin();it!=nodes.end();++it)
+	{
+	  itsCepAppParams.replace(formatString("AC.%s[%d].node",procName.c_str(),nodeIndex++),*it);
+	}
+		
   }
   catch(APSException &)
   {
@@ -446,10 +465,10 @@ uint16_t OnlineControl::doPrepare(const string&	cntlrName)
   
 	// schedule all ACC commands
 	time_t startTime  = to_time_t(itsStartTime);
-	time_t initTime   = startTime  - itsCepAppParams.getTime("AC.timeout.init");
-	time_t defineTime = initTime   - itsCepAppParams.getTime("AC.timeout.define") - 
-	                                 itsCepAppParams.getTime("AC.timeout.startup");
-	time_t bootTime   = defineTime - itsCepAppParams.getTime("AC.timeout.createsubsets");
+	time_t initTime   = startTime  - itsCepAppParams.getTime("AC.timeout_init");
+	time_t defineTime = initTime   - itsCepAppParams.getTime("AC.timeout_define") - 
+	                                 itsCepAppParams.getTime("AC.timeout_startup");
+	time_t bootTime   = defineTime - itsCepAppParams.getTime("AC.timeout_createsubsets");
 	time_t now = time(0);
 	time_t stopTime = to_time_t(itsStopTime);
 	LOG_DEBUG(formatString("%d boot %s",        bootTime,   ctime(&bootTime)));
@@ -459,12 +478,11 @@ uint16_t OnlineControl::doPrepare(const string&	cntlrName)
 	LOG_DEBUG(formatString("%d now %s time %d", now,        ctime(&now), time(0)));
 	LOG_DEBUG(formatString("%d stop %s",        stopTime,   ctime(&stopTime)));
 	
-	string hostName, remoteParamPath;
+	string hostName;
 	hostName = itsCepAppParams.getString("AC.hostname");
-	remoteParamPath = itsCepAppParams.getString("AC.remoteParamPath");
 	if (now > bootTime)
 	{
-	  APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,remoteParamPath);
+	  APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
 	  LOG_WARN("Cannot guarantee all CEP processes are started in time.");
 	}
 	else
@@ -489,7 +507,7 @@ uint16_t OnlineControl::doPrepare(const string&	cntlrName)
 		  assert(0);
 		  break;
 	  }    
-	  APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,remoteParamPath);
+	  APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
 	}
   }
   catch(APSException &)
@@ -508,7 +526,7 @@ void OnlineControl::doRelease(GCFEvent&	/*event*/)
   string hostName, remoteFile, resultFile;
   hostName = itsCepAppParams.getString("AC.hostname");
   resultFile = formatString("ACC-%s_result.param", getName().c_str());
-  remoteFile = itsCepAppParams.getString("AC.remoteParamPath") + string("/") + resultFile;
+  remoteFile = string(LOFAR_SHARE_LOCATION) + string("/") + resultFile;
   APLCommon::APLUtilities::copyFromRemote(hostName,remoteFile,resultFile);
   itsResultParams.adoptFile(resultFile);
   //  itsResultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
@@ -541,9 +559,9 @@ void OnlineControl::appBooted(uint16 result)
   if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  
   {
     time_t startTime  = to_time_t(itsStartTime);
-    time_t initTime   = startTime  - itsCepAppParams.getTime("AC.timeout.init");
-    time_t defineTime = initTime   - itsCepAppParams.getTime("AC.timeout.define") - 
-                                     itsCepAppParams.getTime("AC.timeout.startup");
+    time_t initTime   = startTime  - itsCepAppParams.getTime("AC.timeout_init");
+    time_t defineTime = initTime   - itsCepAppParams.getTime("AC.timeout_define") - 
+                                     itsCepAppParams.getTime("AC.timeout_startup");
     itsCepApplication.define(defineTime);
   }
   else if (result == 0) // Error
@@ -559,7 +577,7 @@ void OnlineControl::appDefined(uint16 result)
   if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
   {
     time_t startTime  = to_time_t(itsStartTime);
-    time_t initTime   = startTime  - itsCepAppParams.getTime("AC.timeout.init");
+    time_t initTime   = startTime  - itsCepAppParams.getTime("AC.timeout_init");
   
     itsCepApplication.init(initTime);
   }
@@ -630,7 +648,7 @@ void OnlineControl::appRecovered(uint16 /*result*/)
 {
   
   time_t startTime  = to_time_t(itsStartTime);
-  time_t reinitTime = startTime  - itsCepAppParams.getTime("AC.timeout.reinit");
+  time_t reinitTime = startTime  - itsCepAppParams.getTime("AC.timeout_reinit");
   
   string paramFileName(formatString("ACC-%s.param", getName().c_str()));
   
