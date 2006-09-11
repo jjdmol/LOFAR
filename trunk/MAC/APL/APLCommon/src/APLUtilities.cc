@@ -236,6 +236,58 @@ int APLUtilities::remoteCopy (const string& localFile,
 }
 
 //
+// copyFromRemote(remoteHost, remoteFile, localFile)
+//
+int APLUtilities::copyFromRemote(const string& remoteHost, 
+								 const string& remoteFile,
+								 const string& localFile)
+{
+	string		tmpResultFile(getTempFileName());
+  
+	// -B: batch mode; -q: no progress bar
+	string command(formatString("scp -Bq %s:%s %s 1>&2 2>%s", 
+									remoteHost.c_str(), remoteFile.c_str(), localFile.c_str(),
+									tmpResultFile.c_str()));
+	// execute the command.
+	int error = system(command.c_str());
+	LOG_DEBUG(formatString("copy command: %s",command.c_str()));
+
+	if(error == 0) {			
+		LOG_INFO(formatString("Successfully copied %s:%s to %s",
+							  remoteHost.c_str(),remoteFile.c_str(),localFile.c_str()));
+	}
+	else {
+		// an error occured, try to reconstruct the message
+		char 	outputLine[200];
+		string 	outputString;
+		FILE* 	f = fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
+		if (f == NULL) {						// oops, problems opening the file
+			LOG_ERROR(
+				formatString("Unable to remote copy %s:%s to %s: reason unknown",
+							 remoteHost.c_str(),remoteFile.c_str(),localFile.c_str()));
+		}
+		else {
+			// construct the error message
+			while(!feof(f)) {
+				fgets(outputLine,200,f);
+				if(!feof(f)) {
+					outputString+=string(outputLine);
+				}
+			}
+			fclose(f);
+			LOG_ERROR(formatString("Unable to remote copy %s:%s to %s: %s",
+								   remoteHost.c_str(),remoteFile.c_str(),localFile.c_str(),
+								   outputString.c_str()));
+		}
+	}
+
+	// remove the temporarely file.
+	remove(tmpResultFile.c_str());
+
+	return (error);
+}
+
+//
 // getTempFileName([format])
 //
 string APLUtilities::getTempFileName(const string&	format)
