@@ -1,19 +1,19 @@
 #
-AC.timeout.powerup      =  3 m
-AC.timeout.powerdown    =  3 m
-AC.timeout.createsubsets=  3 m
-AC.timeout.exitdelay    = 15 m
-AC.timeout.startup      =  2 m
-AC.timeout.define       = 40
-AC.timeout.init         = 40
-AC.timeout.run          = 30
-AC.timeout.pause        = 50
-AC.timeout.recover      = 50
-AC.timeout.snapshot     = 30
-AC.timeout.reinit       = 30
-AC.timeout.info         = 30
-AC.timeout.quit         = 60
-AC.timeout.kill         = 60
+AC.timeout_powerup      =  3 m
+AC.timeout_powerdown    =  3 m
+AC.timeout_createsubsets=  3 m
+AC.timeout_exitdelay    = 15 m
+AC.timeout_startup      =  2 m
+AC.timeout_define       = 40
+AC.timeout_init         = 40
+AC.timeout_run          = 30
+AC.timeout_pause        = 50
+AC.timeout_recover      = 50
+AC.timeout_snapshot     = 30
+AC.timeout_reinit       = 30
+AC.timeout_info         = 30
+AC.timeout_quit         = 60
+AC.timeout_kill         = 60
 #
 AC.application=testAppl
 AC.resultfile =./AC_result.log
