@@ -126,22 +126,22 @@ namespace LOFAR
 	{
 	  pred->setWorkDomain(wo->getStartChannel(), wo->getEndChannel(), 
 			      wo->getStartTime(), wo->getTimeLength());
-	  pred->writePredictedData(wo->getWriteInDataCol() 
-				   ? "DATA" : "CORRECTED_DATA");
+// 	  pred->writePredictedData(wo->getWriteInDataCol() 
+// 				   ? "DATA" : "CORRECTED_DATA");
 	}
 	else
 	{
 	  if (wo->getNewBaselines())
 	  {
-	    pred->select(ant, ant, wo->getUseAutoCorrelations(), corrs);
+// 	    pred->select(ant, ant, wo->getUseAutoCorrelations(), corrs);
       
 	    vector<int> emptyS(0);
 	    if (peelSrcs.size() > 0)
 	    {
-	      pred->setPeelGroups(peelSrcs, emptyS);
+// 	      pred->setPeelGroups(peelSrcs, emptyS);
 	    }
-	    pred->clearSolvableParms();
-	    pred->setSolvableParms(pNames, exPNames);
+// 	    pred->clearSolvableParms();
+// 	    pred->setSolvableParms(pNames, exPNames);
 	
 	    pred->setWorkDomain(wo->getStartChannel(), wo->getEndChannel(), 
 				wo->getStartTime(), wo->getTimeLength());
@@ -151,10 +151,10 @@ namespace LOFAR
 	    vector<int> emptyS(0);
 	    if (peelSrcs.size() > 0)
 	    {
-	      pred->setPeelGroups(peelSrcs, emptyS);
+// 	      pred->setPeelGroups(peelSrcs, emptyS);
 	    }
-	    pred->clearSolvableParms();
-	    pred->setSolvableParms(pNames, exPNames);
+// 	    pred->clearSolvableParms();
+// 	    pred->setSolvableParms(pNames, exPNames);
       
 	    pred->setWorkDomain(wo->getStartChannel(), wo->getEndChannel(), 
 				wo->getStartTime(), wo->getTimeLength());
@@ -164,10 +164,10 @@ namespace LOFAR
 	    vector<int> emptyS(0);
 	    if (peelSrcs.size() > 0)
 	    {
-	      pred->setPeelGroups(peelSrcs, emptyS);
+// 	      pred->setPeelGroups(peelSrcs, emptyS);
 	    }
-	    pred->clearSolvableParms();
-	    pred->setSolvableParms(pNames, exPNames);
+// 	    pred->clearSolvableParms();
+// 	    pred->setSolvableParms(pNames, exPNames);
 	  }
 
 	  // Loop over iterations
@@ -214,7 +214,7 @@ namespace LOFAR
 	      dhRes = dynamic_cast<DH_Prediff*>
 		(getDataManager().getOutHolder(prediffChanId));
 	      vector<casa::LSQFit> fitters;
-	      pred->fillFitters (fitters, "DATA");
+// 	      pred->fillFitters (fitters, "DATA");
 	      dhRes->setFitters (fitters);
 	      MeqDomain domain = pred->getWorkDomain();
 	      dhRes->setDomain (domain.startX(), domain.endX(),
@@ -229,7 +229,7 @@ namespace LOFAR
 	  if (wo->getSubtractSources())
 	  {
 	    // >>>For now: always write in new file 
-	    pred->subtractData("DATA", "CORRECTED_DATA");
+// 	    pred->subtractData("DATA", "CORRECTED_DATA");
 	  }
       
 	} // end else
@@ -281,14 +281,14 @@ namespace LOFAR
 
 	vector<vector<int> > srcgrp;
 	getSrcGrp (args, srcgrp);
-	Prediffer* pred = new Prediffer(msName,
-					makePDM("meqTableName", myargs),
-					makePDM("skyTableName", myargs),
-					antNrs, modelType, srcgrp, calcUVW);
-	// add to map
-	itsPrediffs.insert(PrediffMap::value_type(id, pred));
-	isNew = true;
-	return pred;
+// 	Prediffer* pred = new Prediffer(msName,
+// 					makePDM("meqTableName", myargs),
+// 					makePDM("skyTableName", myargs),
+// 					antNrs, modelType, srcgrp, calcUVW);
+// 	// add to map
+// 	itsPrediffs.insert(PrediffMap::value_type(id, pred));
+// 	isNew = true;
+// 	return pred;
       }
     }
 
