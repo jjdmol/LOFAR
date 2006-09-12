@@ -377,9 +377,9 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
-		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received RELEASE(" << msg.cntlrName << ")");
 		setState(CTState::RELEASE);
-		doRelease(event);
+		doRelease();
 		setState(CTState::RELEASED);
 		CONTROLReleasedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
@@ -395,6 +395,33 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 
 	return (status);
 }
+
+//
+// finished_state(event, port)
+//
+// Finishing state. 
+//
+GCFEvent::TResult OnlineControl::finished_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_ENTRY: {
+      GCFTask::stop();
+      break;
+	}
+	default:
+		LOG_DEBUG("active_state, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return (status);
+}
+
+
 
 
 //
@@ -519,27 +546,44 @@ uint16_t OnlineControl::doPrepare(const string&	cntlrName)
 }
 
 //
-// doRelease(event)
+// doRelease()
 //
-void OnlineControl::doRelease(GCFEvent&	/*event*/)
+void OnlineControl::doRelease(void)
 {
-  string hostName, remoteFile, resultFile;
-  hostName = itsCepAppParams.getString("AC.hostname");
-  resultFile = formatString("ACC-%s_result.param", getName().c_str());
-  remoteFile = string(LOFAR_SHARE_LOCATION) + string("/") + resultFile;
-  APLCommon::APLUtilities::copyFromRemote(hostName,remoteFile,resultFile);
-  itsResultParams.adoptFile(resultFile);
-  //  itsResultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
-  if (!itsResultParams.isDefined(formatString("%s.faultyNodes", getName().c_str())))
+  try
   {
-    itsResultParams.add(formatString("%s.faultyNodes", getName().c_str()), "");
+	string hostName, remoteFile, resultFile;
+	hostName = itsCepAppParams.getString("AC.hostname");
+	resultFile = formatString("ACC-%s_result.param", getName().c_str());
+	remoteFile = string(LOFAR_SHARE_LOCATION) + string("/") + resultFile;
+	APLCommon::APLUtilities::copyFromRemote(hostName,remoteFile,resultFile);
+	itsResultParams.adoptFile(resultFile);
+	//  itsResultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
+	if (!itsResultParams.isDefined(formatString("%s.faultyNodes", getName().c_str())))
+    {
+	  itsResultParams.add(formatString("%s.faultyNodes", getName().c_str()), "");
+	}
+	itsResultParams.writeFile(formatString("%s_result.param", getName().c_str()));
   }
-  itsResultParams.writeFile(formatString("%s_result.param", getName().c_str()));
-
+  catch(...)
+  {
+  }
   itsCepApplication.quit(0);
 }
 
+//
+// finishController
+//
+void OnlineControl::finishController(uint16_t result)
+{
+  setState(CTState::RELEASE);
+  doRelease();
+  setState(CTState::RELEASED);
+  LOG_DEBUG ("Going to finished state");
+  TRAN(OnlineControl::finished_state); // go to next state.
+}
 
+//
 // _connectedHandler(port)
 //
 void OnlineControl::_connectedHandler(GCFPortInterface& /*port*/)
@@ -567,8 +611,7 @@ void OnlineControl::appBooted(uint16 result)
   else if (result == 0) // Error
   {
     LOG_ERROR("Error in ACC. Stops CEP application and releases Online Control.");
-    itsCepApplication.quit(0);
-	//    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
+	finishController(CT_RESULT_UNSPECIFIED);
   }
 }
 
@@ -584,8 +627,7 @@ void OnlineControl::appDefined(uint16 result)
   else if (result == 0) // Error
   {
     LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-    itsCepApplication.quit(0);
-	//    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
+	finishController(CT_RESULT_UNSPECIFIED);
   }
 }
 
@@ -602,8 +644,7 @@ void OnlineControl::appInitialized(uint16 result)
   else if (result == 0) // Error
   {
     LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-    itsCepApplication.quit(0);
-	//    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
+	finishController(CT_RESULT_UNSPECIFIED);
   }
 }
 
@@ -616,8 +657,7 @@ void OnlineControl::appRunDone(uint16 result)
   else if (result == 0) // Error
   {
     LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-    itsCepApplication.quit(0);
-	//    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
+	finishController(CT_RESULT_UNSPECIFIED);
   }
 }
 
@@ -627,9 +667,13 @@ void OnlineControl::appPaused(uint16 /*result*/)
 
 void OnlineControl::appQuitDone(uint16 result)
 {
-  if (result == AcCmdMaskOk)
+  if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
   {  
     //_qualityGuard.stopMonitoring(); // not in this increment
+  }
+  else
+  {
+	finishController(CT_RESULT_NO_ERROR);
   }
 }
 

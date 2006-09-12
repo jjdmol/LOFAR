@@ -86,6 +86,10 @@ public:
    	GCFEvent::TResult active_state  (GCFEvent& e, 
 									 GCFPortInterface& p);
 
+	// Finishing mode. 
+	GCFEvent::TResult finished_state(GCFEvent& event, 
+									 GCFPortInterface& port);
+
 protected: // implemenation of abstract CEPApplicationManagerInterface methods
     void    appBooted(uint16 result);
     void    appDefined(uint16 result);
@@ -108,7 +112,8 @@ private:
 
 	uint16_t doClaim(const string& cntlrName);
 	uint16_t doPrepare(const string& cntlrName);
-	void	 doRelease(GCFEvent&	event);
+	void	 doRelease();
+	void     finishController(uint16_t result);
    	void	 _connectedHandler(GCFPortInterface& port);
    	void	 _disconnectedHandler(GCFPortInterface& port);
 	void	 setState(CTState::CTstateNr     newState);
