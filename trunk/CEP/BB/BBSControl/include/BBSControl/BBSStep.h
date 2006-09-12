@@ -37,6 +37,8 @@ namespace LOFAR
 {
   //# Forward Declarations.
   namespace ACC { namespace APS { class ParameterSet; } }
+  class BlobIStream;
+  class BlobOStream;
 
   namespace BBS
   {
@@ -54,14 +56,8 @@ namespace LOFAR
     class BBSStep
     {
     public:
-
       // Destructor.
       virtual ~BBSStep();
-
-      // Initialize the data members of the current BBSStep by looking up
-      // their key/value pairs in the given ParameterSet. If a key/value pair
-      // is not present, then the value will be that of the parent BBSStep
-      // object.
 
       // Return the name of this step.
       const string& getName() const { return itsName; }
@@ -84,10 +80,6 @@ namespace LOFAR
       // implemented things the ugly way.
       vector<const BBSStep*> getAllSteps() const;
 
-      // Print the contents of \c *this in human readable form into the output
-      // stream \a os.
-      virtual void print(ostream& os) const;
-
       // Create a new step object. The new step can either be a BBSSingleStep
       // or a BBSMultiStep object. This is determined by examining the
       // parameter set \a parSet. If this set contains a key
@@ -98,21 +90,29 @@ namespace LOFAR
 			     const ACC::APS::ParameterSet& parSet,
 			     const BBSStep* parent = 0);
 
-      // Execute will do a callback to a member function of \a sc. Which
-      // member function will be called depends on the runtime type of the
-      // BBSStep that's being executed. For example, a BBSSolveStep will call
-      // \a sc->doSolveStep().
-      //
-      // \note The current "double dispatch" implementation is (probably)
-      // temporary. Once the "old" BBS3 control part has been rewritten it
-      // will likely be removed.
-      //
-      // \attention StrategyController has \e nothing to do with a
-      // BBSStrategy. The name is just a remnant of the "old" BBS3 code. Much
-      // of this code will be rewritten after CS1.
-      virtual void execute(const StrategyController* sc) const = 0;
+      // Create a new BBSStep object by deserializing the contents of the blob
+      // input stream \a bis. The second, optional, argument is used to pass a
+      // backreference to the parent BBSStep object. The first element in the
+      // input stream shall be a string containing the class-id of the
+      // BBSStep object to be constructed.
+      // \throw BBSControlException when class-id does not denote a valid
+      // BBSStep class type.
+      static BBSStep* deserialize(BlobIStream& bis,
+				  const BBSStep* parent = 0);
+
+      // Serialize \c *this by writing its contents into the blob output
+      // stream \a bos.
+      void serialize(BlobOStream& bos) const;
+
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
+      virtual void print(ostream& os) const;
 
     protected:
+      // Default constructor. Construct an empty BBSStep object and make it a
+      // child of the BBSStep object \a parent.
+      BBSStep(const BBSStep* parent = 0) : itsParent(parent) {}
+
       // Construct a BBSStep. \a name identifies the step name in the
       // parameter set file. It does \e not uniquely identify the step \e
       // object being created. The third argument is used to pass a
@@ -121,15 +121,25 @@ namespace LOFAR
 	      const ACC::APS::ParameterSet& parSet,
 	      const BBSStep* parent);
 
+      // Write the contents of \c *this into the blob output stream \a bos.
+      virtual void write(BlobOStream& bos) const;
+
+      // Read the contents from the blob input stream \a bis into \c *this.
+      virtual void read(BlobIStream& bis);
+
     private:
-      // Override the default values, "inherited" from the parent step object,
-      // for those members that are specified in \a parSet.
-      void setParms(const ACC::APS::ParameterSet& parSet);
+      // Return the type of \c *this as a string.
+      virtual const string& type() const = 0;
 
       // Implementation of getAllSteps(). The default implementation adds \c
       // this to the vector \a steps.
       // \note This method must be overridden by BBSMultiStep.
       virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
+
+      // Override the default values, "inherited" from the parent step object,
+      // for those members that are specified in \a parSet.
+      void setParms(const ACC::APS::ParameterSet& parSet);
+
 
       // Name of this step.
       string                 itsName;
@@ -163,10 +173,16 @@ namespace LOFAR
       // A list of instrument models to be used for this step.
       vector<string>         itsInstrumentModels;
 
+      // Write the contents of a BBSStep to an output stream.
+      friend ostream& operator<<(ostream&, const BBSStep&);
+
+//       // Write the contents of a BBSStep to a blob output stream.
+//       friend BlobOStream& operator<<(BlobOStream&, const BBSStep&);
+
     };
 
-    // Write the contents of a BBSStep to an output stream.
-    ostream& operator<<(ostream&, const BBSStep&);
+//     // Assign the contents of a blob input stream to a BBSStep.
+//     BlobIStream& operator>>(BlobIStream&, BBSStep&);
 
     // @}
     
