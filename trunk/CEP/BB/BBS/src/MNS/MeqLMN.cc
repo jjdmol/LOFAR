@@ -41,8 +41,6 @@ MeqLMN::MeqLMN (MeqSource* source)
 
 MeqLMN::~MeqLMN()
 {
-    removeChild(itsSource->getRa());
-    removeChild(itsSource->getDec());
 }
 
 MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)

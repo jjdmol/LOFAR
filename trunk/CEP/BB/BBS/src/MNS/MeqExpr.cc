@@ -29,6 +29,7 @@
 #include <Common/Exception.h>
 //#include <Common/Timer.h>
 #include <iomanip>
+#include <algorithm>
 
 namespace LOFAR {
 
@@ -45,6 +46,11 @@ MeqExprRep::MeqExprRep()
 
 MeqExprRep::~MeqExprRep()
 {
+  for(std::vector<MeqExprRep*>::iterator it = itsChildren.begin(); it != itsChildren.end(); ++it)
+  {
+    (*it)->decrNParents();
+  }
+  
   delete itsResult;
   delete itsResVec;
 }
@@ -59,21 +65,14 @@ void MeqExprRep::addChild (MeqExpr& child)
 
 void MeqExprRep::removeChild(MeqExpr &child)
 {
-    MeqExprRep* childRep = child.itsRep;
-    ASSERT(childRep != 0);
-
-    std::vector<MeqExprRep*>::iterator it;
-    for(it = itsChildren.begin(); it < itsChildren.end(); ++it)
-    {
-        if((*it) == childRep)
-        {
-            break;
-        }
-    }
+    ASSERT(child.itsRep != NULL);
+    
+    std::vector<MeqExprRep*>::iterator it = std::find(itsChildren.begin(), itsChildren.end(), child.itsRep);
+    
     ASSERT(it != itsChildren.end());
-
+    
+    (*it)->decrNParents();
     itsChildren.erase(it);
-    childRep->decrNParents();
 }
 
 int MeqExprRep::setLevel (int level)
