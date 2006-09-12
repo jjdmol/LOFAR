@@ -29,7 +29,7 @@ EXTRA_DIST = $(TESTSCRIPTS) \
 	tComplex.stdout \
 	tDataConvert.stdout \
 	testLogger.log_prop testLogger.debug \
-	tHexdump.log_prop \
+	tHexdump.log_prop tNumeric.stdout \
 	tProcess.log_prop tProcess.stdout \
 	tRunOnNode.log_prop tRunOnNode.stdout \
 	tStringUtil.stdout 
