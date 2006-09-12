@@ -27,10 +27,13 @@
 #include <BBSControl/BBSMultiStep.h>
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/Exceptions.h>
+#include <BBSControl/StreamFormatting.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
-#include <BBSControl/StreamFormatting.h>
 
 namespace LOFAR
 {
@@ -44,12 +47,13 @@ namespace LOFAR
 
     BBSStep::~BBSStep()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
 
 
     string BBSStep::getFullName() const
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       string name;
       if (itsParent) name = itsParent->getFullName() + ".";
       name += itsName;
@@ -57,22 +61,9 @@ namespace LOFAR
     }
 
 
-    void BBSStep::print(ostream& os) const
-    {
-      os << "Step: " << itsName;
-      Indent id;  // add an extra indentation level
-      os << endl << indent << "Full name: " << getFullName()
-	 << endl << indent << itsBaselines
-	 << endl << indent << itsCorrelation
-	 << endl << indent << itsIntegration
-	 << endl << indent << "Sources: " << itsSources
-	 << endl << indent << "Extra sources: " << itsExtraSources
-	 << endl << indent << "Instrument models: " << itsInstrumentModels;
-    }
-
-
     vector<const BBSStep*> BBSStep::getAllSteps() const
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       vector<const BBSStep*> steps;
       doGetAllSteps(steps);
       return steps;
@@ -83,7 +74,7 @@ namespace LOFAR
 			     const ParameterSet& parset,
 			     const BBSStep* parent)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // If \a parset contains a key <tt>Step.<em>name</em>.Steps</tt>, then
       // \a name is a BBSMultiStep, otherwise it is a SingleStep.
@@ -114,13 +105,68 @@ namespace LOFAR
     }
 
 
+    BBSStep* BBSStep::deserialize(BlobIStream& bis,
+				  const BBSStep* parent)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
+      // Read the "start-of-object" marker.
+      bis.getStart("BBSStep");
+
+      // Read the class type of the BBSStep to be created.
+      string type;
+      bis >> type;
+      LOG_TRACE_VAR_STR("Class type to be created is: " << type);
+
+      // Create a new BBSStep object based on \a type.
+      BBSStep* step(0);
+      if      (type == "BBSMultiStep")    step = new BBSMultiStep(parent);
+      else if (type == "BBSSingleStep")   step = new BBSSingleStep(parent);
+      else if (type == "BBSSolveStep")    step = new BBSSolveStep(parent);
+//    else if (type == "BBSSubtractStep") step = new BBSSubtractStep(parent);
+//    else if (type == "BBSCorrectStep")  step = new BBSCorrectStep(parent);
+//    else if (type == "BBSPredictStep")  step = new BBSPredictStep(parent);
+//    else if (type == "BBSShiftStep")    step = new BBSShiftStep(parent);
+//    else if (type == "BBSRefitStep")    step = new BBSRefitStep(parent);
+      else THROW (BBSControlException, "\"" << type << 
+		  "\" is not a valid BBSStep class type");
+
+      // Read the rest of the data into the new BBSStep object.
+      step->read(bis);
+
+      // Read the "end-of-object" marker
+      bis.getEnd();
+
+      // Return the new BBSStep object.
+      return step;
+    }
+
+
+    void BBSStep::serialize(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
+      // Write the "start-of-object" marker.
+      bos.putStart("BBSStep", 1);
+
+      // Write the class type of \c *this.
+      bos << type();
+
+      // Write the contents of \c *this into the output blob stream \a bos.
+      write(bos);
+
+      // Write hte "end-of-object" marker.
+      bos.putEnd();
+    }
+
+
     //##--------   P r o t e c t e d   m e t h o d s   --------##//
 
     BBSStep::BBSStep(const string& name, 
 		     const ParameterSet& parset,
 		     const BBSStep* parent)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // Copy the data members from the parent, if present, so that they have
       // sensible default values.
@@ -138,11 +184,52 @@ namespace LOFAR
     }
 
 
+    void BBSStep::read(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      bis >> itsName
+	  >> itsBaselines
+	  >> itsCorrelation
+ 	  >> itsIntegration
+ 	  >> itsSources
+ 	  >> itsExtraSources
+ 	  >> itsInstrumentModels;
+    }
+
+
+    void BBSStep::write(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      bos << itsName
+ 	  << itsBaselines
+ 	  << itsCorrelation
+ 	  << itsIntegration
+ 	  << itsSources
+ 	  << itsExtraSources
+ 	  << itsInstrumentModels;
+    }
+
+
+    void BBSStep::print(ostream& os) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      os << "Step: " << itsName;
+      Indent id;  // add an extra indentation level
+      os << endl << indent << "Full name: " << getFullName()
+	 << endl << indent << itsBaselines
+	 << endl << indent << itsCorrelation
+	 << endl << indent << itsIntegration
+	 << endl << indent << "Sources: " << itsSources
+	 << endl << indent << "Extra sources: " << itsExtraSources
+	 << endl << indent << "Instrument models: " << itsInstrumentModels;
+    }
+
+
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
     void BBSStep::setParms(const ParameterSet& ps)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // If defined, get the baseline selection for this step.
       try {
@@ -189,6 +276,7 @@ namespace LOFAR
 
     void BBSStep::doGetAllSteps(vector<const BBSStep*>& steps) const
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       steps.push_back(this);
     }
     
@@ -197,6 +285,7 @@ namespace LOFAR
 
     ostream& operator<<(ostream& os, const BBSStep& bs)
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       bs.print(os);
       return os;
     }

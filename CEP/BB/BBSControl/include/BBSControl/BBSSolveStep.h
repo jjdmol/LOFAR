@@ -28,6 +28,7 @@
 
 //# Includes
 #include <BBSControl/BBSSingleStep.h>
+#include <BBSControl/BBSStructs.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -42,23 +43,32 @@ namespace LOFAR
     class BBSSolveStep : public BBSSingleStep
     {
     public:
+      // Default constructor. Construct an empty BBSSolveStep object and make
+      // it a child of the BBSStep object \a parent.
+      BBSSolveStep(const BBSStep* parent = 0);
+
+      // Construct a BBSSolveStep having the name \a name. Configuration
+      // information for this step can be retrieved from the parameter set \a
+      // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
+      // is a pointer to the BBSStep object that is the parent of \c *this.
       BBSSolveStep(const string& name,
 		   const ACC::APS::ParameterSet& parset,
 		   const BBSStep* parent);
 
       virtual ~BBSSolveStep();
 
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
       virtual void print(ostream& os) const;
 
-      virtual void execute(const StrategyController* sc) const;
+    protected:
+      // Write the contents of \c *this into the blob output stream \a bos.
+      virtual void write(BlobOStream& bos) const;
+
+      // Read the contents from the blob input stream \a bis into \c *this.
+      virtual void read(BlobIStream& bis);
 
     private:
-      // Solve domain size.
-      struct DomainSize
-      {
-	double bandWidth;           ///< Bandwidth in Hz.
-	double timeInterval;        ///< Time interval in seconds.
-      };
       uint32 itsMaxIter;            ///< Maximum number of iterations
       double itsEpsilon;            ///< Convergence threshold
       double itsMinConverged;       ///< Fraction that must have converged
@@ -66,9 +76,8 @@ namespace LOFAR
       vector<string> itsExclParms;  ///< Parameters to be excluded from solve
       DomainSize itsDomainSize;     ///< Solve domain size.
 
-      // Write the contents of a BBSSolveStep to an output stream.
-      friend ostream& operator<<(ostream&, const BBSSolveStep&);
-      friend ostream& operator<<(ostream&, const BBSSolveStep::DomainSize&);
+      // Return the type of \c *this as a string.
+      virtual const string& type() const;
 
     };
 

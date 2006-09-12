@@ -24,11 +24,16 @@
 
 #include <BBSControl/BBSStructs.h>
 #include <BBSControl/StreamFormatting.h>
+#include <Blob/BlobArray.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
+
+    //# -------  ostream operators  ------- #//
 
     ostream& operator<<(ostream& os, const BBDB& obj)
     {
@@ -97,6 +102,114 @@ namespace LOFAR
       os << endl << indent << "Station1: " << obj.station1
 	 << endl << indent << "Station2: " << obj.station2;
       return os;
+    }
+
+
+    //# -------  BlobOStream operators  ------- #//
+
+    BlobOStream& operator<<(BlobOStream& bos, const BBDB& obj)
+    {
+      bos << obj.host
+	  << obj.port
+	  << obj.dbName
+	  << obj.username
+	  << obj.password;
+      return bos;
+    }
+
+
+    BlobOStream& operator<<(BlobOStream& bos, const ParmDB& obj)
+    {
+      bos << obj.instrument
+	  << obj.localSky;
+      return bos;
+    }
+
+
+    BlobOStream& operator<<(BlobOStream& bos, const DomainSize& obj)
+    {
+      bos << obj.bandWidth
+	  << obj.timeInterval;
+      return bos;
+    }
+
+
+    BlobOStream& operator<<(BlobOStream& bos, const Correlation& obj)
+    {
+      bos << static_cast<int32>(obj.selection)
+	  << obj.type;
+      return bos;
+    }
+
+
+    BlobOStream& operator<<(BlobOStream& bos, const Integration& obj)
+    {
+      bos << obj.deltaFreq
+	  << obj.deltaTime;
+      return bos;
+    }
+
+
+    BlobOStream& operator<<(BlobOStream& bos, const Baselines& obj)
+    {
+      bos << obj.station1
+	  << obj.station2;
+      return bos;
+    }
+
+
+    //# -------  BlobIStream operators  ------- #//
+
+    BlobIStream& operator>>(BlobIStream& bis, BBDB& obj)
+    {
+      bis >> obj.host
+	  >> obj.port
+	  >> obj.dbName
+	  >> obj.username
+	  >> obj.password;
+      return bis;
+    }
+
+
+    BlobIStream& operator>>(BlobIStream& bis, ParmDB& obj)
+    {
+      bis >> obj.instrument
+	  >> obj.localSky;
+      return bis;
+    }
+
+
+    BlobIStream& operator>>(BlobIStream& bis, DomainSize& obj)
+    {
+      bis >> obj.bandWidth
+	  >> obj.timeInterval;
+      return bis;
+    }
+
+
+    BlobIStream& operator>>(BlobIStream& bis, Correlation& obj)
+    {
+      int32 selection;
+      bis >> selection;
+      obj.selection = static_cast<Correlation::Selection>(selection);
+      bis >> obj.type;
+      return bis;
+    }
+
+
+    BlobIStream& operator>>(BlobIStream& bis, Integration& obj)
+    {
+      bis >> obj.deltaFreq
+	  >> obj.deltaTime;
+      return bis;
+    }
+
+
+    BlobIStream& operator>>(BlobIStream& bis, Baselines& obj)
+    {
+      bis >> obj.station1
+	  >> obj.station2;
+      return bis;
     }
 
 

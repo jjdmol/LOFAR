@@ -9,6 +9,7 @@ libbbscontrol_la_SOURCES= \
 	BBSStrategy.cc \
 	BBSStructs.cc \
 	BlackBoardDemo.cc \
+	DH_BBSStep.cc \
 	DH_Prediff.cc \
 	DH_Solution.cc \
 	DH_WOPrediff.cc \

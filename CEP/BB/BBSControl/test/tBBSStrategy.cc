@@ -37,7 +37,7 @@ int main()
 
   try {
 
-    BBSStrategy strategy(ParameterSet(progName + ".parset"));
+    BBSStrategy strategy(ParameterSet("tBBSControl.parset"));
     cout << strategy << endl;
 
 //     vector<const BBSStep*> steps = strategy.getAllSteps();

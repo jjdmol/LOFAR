@@ -44,6 +44,10 @@ namespace LOFAR
     class BBSSingleStep : public BBSStep
     {
     public:
+      // Default constructor. Construct an empty BBSSingleStep object and make
+      // it a child of the BBSStep object \a parent.
+      BBSSingleStep(const BBSStep* parent = 0);
+
       // Construct a BBSSingleStep having the name \a name. Configuration
       // information for this step can be retrieved from the parameter set \a
       // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
@@ -54,15 +58,23 @@ namespace LOFAR
 
       virtual ~BBSSingleStep();
 
-      // Print the contents of \c *this in human readable form.
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
       virtual void print(ostream& os) const;
 
-      virtual void execute(const StrategyController*) const;
+    protected:
+      // Write the contents of \c *this into the blob output stream \a bos.
+      virtual void write(BlobOStream& bos) const;
+
+      // Read the contents from the blob input stream \a bis into \c *this.
+      virtual void read(BlobIStream& bis);
 
     private:
+      // Return the type of \c *this as a string.
+      virtual const string& type() const;
+
       // Name of the data column to write data to
       string          itsOutputData;
-
     };
 
     // For the time being we'll define the following steps as typedefs. If,

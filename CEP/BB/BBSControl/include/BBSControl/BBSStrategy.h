@@ -94,11 +94,10 @@ namespace LOFAR
       // Integration intervals in frequency (Hz) and time (s).
       Integration            itsIntegration;
 
-
-      // Write the contents of a BBSStrategy to an output stream.
-      friend ostream& operator<<(ostream&, const BBSStrategy&);
-
     };
+
+    // Write the contents of a BBSStrategy to an output stream.
+    ostream& operator<<(ostream&, const BBSStrategy&);
 
     // @}
     

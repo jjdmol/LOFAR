@@ -24,10 +24,12 @@
 
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/Exceptions.h>
-#include <APS/ParameterSet.h>
-#include <Common/LofarLogger.h>
 #include <BBSControl/StreamFormatting.h>
-#include <BBSControl/StrategyController.h>
+#include <APS/ParameterSet.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobArray.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -36,12 +38,20 @@ namespace LOFAR
     using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
+    BBSSolveStep::BBSSolveStep(const BBSStep* parent) : 
+      BBSSingleStep(parent), 
+      itsMaxIter(0), itsEpsilon(0), itsMinConverged(0)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+    }
+
+
     BBSSolveStep::BBSSolveStep(const string& name, 
 			       const ParameterSet& parset,
 			       const BBSStep* parent) :
       BBSSingleStep(name, parset, parent)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // Create a subset of \a parset, containing only the relevant keys for
       // the current BBSSingleStep.
@@ -61,12 +71,39 @@ namespace LOFAR
 
     BBSSolveStep::~BBSSolveStep()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+    }
+
+
+    void BBSSolveStep::read(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      BBSSingleStep::read(bis);
+      bis >> itsMaxIter
+	  >> itsEpsilon
+	  >> itsMinConverged
+	  >> itsParms
+	  >> itsExclParms
+	  >> itsDomainSize;
+    }
+
+
+    void BBSSolveStep::write(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      BBSSingleStep::write(bos);
+      bos << itsMaxIter
+	  << itsEpsilon
+	  << itsMinConverged
+	  << itsParms
+  	  << itsExclParms
+	  << itsDomainSize;
     }
 
 
     void BBSSolveStep::print(ostream& os) const
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       BBSSingleStep::print(os);
       Indent id;
       os << endl << indent << "Solve: ";
@@ -82,25 +119,11 @@ namespace LOFAR
     }
 
 
-    void BBSSolveStep::execute(const StrategyController* sc) const
+    const string& BBSSolveStep::type() const
     {
-      sc->doSolveStep();
-    }
-
-
-    ostream& operator<<(ostream& os, const BBSSolveStep& bs)
-    {
-      bs.print(os);
-      return os;
-    }
-
-    ostream& operator<<(ostream& os, const BBSSolveStep::DomainSize& ds)
-    {
-      os << "Domain size: ";
-      Indent id;  // Add one indentation level
-      os << endl << indent << "Bandwidth: " << ds.bandWidth << " (Hz)"
-	 << endl << indent << "Time interval: " << ds.timeInterval << " (s)";
-      return os;
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      static const string theType("BBSSolveStep");
+      return theType;
     }
 
 

@@ -23,10 +23,12 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSMultiStep.h>
-#include <APS/ParameterSet.h>
-#include <Common/LofarLogger.h>
 #include <BBSControl/StreamFormatting.h>
 #include <BBSControl/Exceptions.h>
+#include <APS/ParameterSet.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -40,7 +42,7 @@ namespace LOFAR
 			       const BBSStep* parent) :
       BBSStep(name, parset, parent)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // This multistep consists of the following steps.
       vector<string> steps(parset.getStringVector("Step." + name + ".Steps"));
@@ -55,7 +57,7 @@ namespace LOFAR
 
     BBSMultiStep::~BBSMultiStep()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // Clean up all steps.
       for(uint i = 0; i < itsSteps.size(); ++i) {
@@ -65,9 +67,46 @@ namespace LOFAR
     }
 
 
+    void BBSMultiStep::read(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
+      // First read the data members of the base class from the input stream.
+      BBSStep::read(bis);
+
+      // How many BBSStep objects does this BBSMultiStep contain?
+      uint32 sz;
+      bis >> sz;
+      LOG_TRACE_VAR_STR("BBSMultiStep \"" << this->getName() << 
+			"\" contains " << sz << " children.");
+
+      // Create the new BBSSteps by reading the blob input stream.
+      for (uint i = 0; i < sz; ++i) {
+	itsSteps.push_back(BBSStep::deserialize(bis, this));
+      }
+    }
+
+
+    void BBSMultiStep::write(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
+      // First write the data members of the base class to the output stream.
+      BBSStep::write(bos);
+
+      // Write the number of BBSStep objects that this BBSMultiStep contains.
+      bos << static_cast<uint32>(itsSteps.size());
+
+      // Write the BBSStep objects, one by one.
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+	itsSteps[i]->serialize(bos);
+      }
+    }
+
+
     void BBSMultiStep::print(ostream& os) const
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       BBSStep::print(os);
       Indent id;
       for (uint i = 0; i < itsSteps.size(); ++i) {
@@ -76,14 +115,17 @@ namespace LOFAR
     }
 
 
-    void BBSMultiStep::execute(const StrategyController*) const
+    const string& BBSMultiStep::type() const 
     {
-      THROW(BBSControlException, "Cannot call execute() on a multi-step");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      static const string theType("BBSMultiStep");
+      return theType;
     }
 
 
     void BBSMultiStep::doGetAllSteps(vector<const BBSStep*>& steps) const
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
@@ -93,7 +135,7 @@ namespace LOFAR
 
     void BBSMultiStep::infiniteRecursionCheck(const string& name) const
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       if (name == getName()) {
 	THROW (BBSControlException, 
 	       "Infinite recursion detected in defintion of BBSStep \""

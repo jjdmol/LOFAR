@@ -1,0 +1,4 @@
+#!/bin/sh
+cp $srcdir/tBBSControl.parset .
+./tBBSStrategy
+rm -f tBBSControl.parset

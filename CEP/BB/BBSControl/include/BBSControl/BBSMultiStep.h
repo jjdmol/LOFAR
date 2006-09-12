@@ -43,27 +43,45 @@ namespace LOFAR
     class BBSMultiStep : public BBSStep
     {
     public:
+      // Construct a BBSMultiStep. \a name identifies the step name in the
+      // parameter set file. It does \e not uniquely identify the step \e
+      // object being created. The third argument is used to pass a
+      // backreference to the parent BBSStep object.
       BBSMultiStep(const string& name,
 		   const ACC::APS::ParameterSet& parset,
 		   const BBSStep* parent);
 
+      // Default constructor. Construct an empty BBSMultiStep object and make
+      // it a child of the BBSStep object \a parent.
+      BBSMultiStep(const BBSStep* parent = 0) : BBSStep(parent) {}
+
       virtual ~BBSMultiStep();
 
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
       virtual void print(ostream& os) const;
 
-      virtual void execute(const StrategyController*) const;
+    protected:
+      // Write the contents of \c *this into the blob output stream \a bos.
+      virtual void write(BlobOStream& bos) const;
+
+      // Read the contents from the blob input stream \a bis into \c *this.
+      virtual void read(BlobIStream& bis);
 
     private:
+      // Return the type of \c *this as a string.
+      virtual const string& type() const;
+
+      // Implementation of getAllSteps() for BBSMultiStep. It retrieves all
+      // steps by calling getAllSteps() on all steps that comprise this
+      // multistep.
+      virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
+
       // Check to see if there's an infinite recursion present in the
       // definition of a BBSMultiStep. This can happen when one of the steps
       // (identified by the argument \a name) defining the BBSMultiStep refers
       // directly or indirectly to that same BBSMultiStep. 
       void infiniteRecursionCheck(const string& name) const;
-
-      // Implementation of getAllSteps() for BBSMultiStep. It retrieves all
-      // steps by calling getAllSteps() on all steps that comprise this
-      // multistep.
-      void doGetAllSteps(vector<const BBSStep*>& steps) const;
 
       // Vector holding a sequence of BBSSteps.
       vector<const BBSStep*> itsSteps;

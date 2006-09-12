@@ -24,9 +24,11 @@
 
 #include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/Exceptions.h>
-#include <APS/ParameterSet.h>
-#include <Common/LofarLogger.h>
 #include <BBSControl/StreamFormatting.h>
+#include <APS/ParameterSet.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -35,12 +37,18 @@ namespace LOFAR
     using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
+    BBSSingleStep::BBSSingleStep(const BBSStep* parent) : 
+      BBSStep(parent)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+    }
+
     BBSSingleStep::BBSSingleStep(const string& name, 
 				 const ParameterSet& parset,
 				 const BBSStep* parent) :
       BBSStep(name, parset, parent)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // Create a subset of \a parset, containing only the relevant keys for
       // the current BBSSingleStep.
@@ -53,22 +61,42 @@ namespace LOFAR
 
     BBSSingleStep::~BBSSingleStep()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+    }
+
+
+    void BBSSingleStep::read(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      BBSStep::read(bis);
+      bis >> itsOutputData;
+    }
+
+
+    void BBSSingleStep::write(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      BBSStep::write(bos);
+      bos << itsOutputData;
     }
 
 
     void BBSSingleStep::print(ostream& os) const
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       BBSStep::print(os);
       Indent id;
       os << endl << indent << "Output data: " << itsOutputData;
     }
 
 
-    void BBSSingleStep::execute(const StrategyController*) const
+    const string& BBSSingleStep::type() const 
     {
-      THROW(BBSControlException, "Not yet implemented");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      static const string theType("BBSSingleStep");
+      return theType;
     }
+
 
   } // namespace BBS
 

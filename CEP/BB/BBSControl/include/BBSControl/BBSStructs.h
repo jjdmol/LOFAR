@@ -35,6 +35,10 @@
 
 namespace LOFAR
 {
+  //# Forward declarations
+  class BlobIStream;
+  class BlobOStream;
+
   namespace BBS
   {
     // \addtogroup BBS
@@ -127,6 +131,23 @@ namespace LOFAR
     ostream& operator<<(ostream&, const Correlation&);
     ostream& operator<<(ostream&, const Integration&);
     ostream& operator<<(ostream&, const Baselines&);
+    // @}
+
+    // Blob I/O methods for these structs.
+    // @{
+    BlobOStream& operator<<(BlobOStream&, const BBDB&);
+    BlobOStream& operator<<(BlobOStream&, const ParmDB&);
+    BlobOStream& operator<<(BlobOStream&, const DomainSize&);
+    BlobOStream& operator<<(BlobOStream&, const Correlation&);
+    BlobOStream& operator<<(BlobOStream&, const Integration&);
+    BlobOStream& operator<<(BlobOStream&, const Baselines&);
+
+    BlobIStream& operator>>(BlobIStream&, BBDB&);
+    BlobIStream& operator>>(BlobIStream&, ParmDB&);
+    BlobIStream& operator>>(BlobIStream&, DomainSize&);
+    BlobIStream& operator>>(BlobIStream&, Correlation&);
+    BlobIStream& operator>>(BlobIStream&, Integration&);
+    BlobIStream& operator>>(BlobIStream&, Baselines&);
     // @}
 
     // @}
