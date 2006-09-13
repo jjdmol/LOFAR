@@ -8,14 +8,10 @@ pkginclude_HEADERS = \
 	BlackBoardDemo.h \
 	DH_BBSStep.h \
 	DH_Prediff.h \
-	DH_Solution.h \
-	DH_WOPrediff.h \
-	DH_WOSolve.h \
 	ParmWriter.h \
 	SC_CompoundIter.h \
 	SC_Simple.h \
 	SC_WritePredData.h \
-	StrategyController.h \
 	StreamFormatting.h \
 	WH_Control.h \
 	WH_Prediff.h \
