@@ -37,7 +37,7 @@ lofar_INTERNAL(LCS/databases/TransportPostgres,TransportPostgres,,1,TransportPos
 lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/WorkHolder.h)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h)
-lofar_INTERNAL(CEP/BB/BBS,BBS,,1,BBS/ParmData.h)
+#lofar_INTERNAL(CEP/BB/BBS,BBS,,1,BBS/ParmData.h)
 lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
 lofar_INTERNAL(CEP/BB/MS,MS,,1,MS/MSDesc.h,bbms)
 
