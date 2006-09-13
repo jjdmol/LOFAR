@@ -565,6 +565,8 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	LOG_ERROR("ACC shape and parent array positions shape don't match.");
 	LOG_ERROR_STR("ACC.shape=" << m_accs.getFront().getACC().shape());
 	LOG_ERROR_STR("'" << start.parent << "'.shape=" << positions.shape());
+	LOG_ERROR_STR("Expecting AntenneArray with " << 
+						m_accs.getFront().getACC().extent(fourthDim) << " antennas.");
 
 	ack.status = ERR_RANGE;
       }
