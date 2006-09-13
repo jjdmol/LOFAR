@@ -129,14 +129,16 @@ sub usage
 
 Usage: rsuctl [options] command
 
+  standalone command (doesn't need an RSP MAC address to run)
+    [-b -f in.ttf -o out.bin] # Convert a ttf file to a binary file
+
   options
     [-i ifname]    # Ethernet interface name on which to communicate (default is eth1)
     -m mac-address # MAC-address of the target board (Mandatory)
 
-  command (specify at least one of the following)
+  command (specify at least one of the following, need -m option at least)
     [-l] # List the images currently stored in all pages of the flash
 
-    [-b -f in.ttf -o out.bin]        # Convert a ttf file to a binary file
     [-e -p page [-F]]                # Erase flash page, 0 <= page < 16 (-F forces erase of page 0)
     [-x -p page                      # Start (load & reset) new firmware from the specified page
     [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
@@ -209,7 +211,7 @@ sub readresponse
 	    return ('', $retval, '');
 	}
 	
-	my ($ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved) =
+	($ethdr, $type, $status, $framesize, $blp, $rsp, $pid, $regid, $offset, $size, $seqnr, $reserved) =
 	    unpack($MEPRECVFORMAT, $g_packet);
 	
 	if ($TYPE_WRITEACK != $type && $TYPE_READACK != $type) {
@@ -772,6 +774,25 @@ sub main
 
     # check that at least one argument is present
     usage() if ($opt_h);
+
+    if (defined($opt_b)) {
+	
+	# CONVERT TO BINARY
+	#
+	# readimage
+
+	die "=== ERR no input file specified"  if (!defined($opt_f) || ($opt_f eq ""));
+	die "=== ERR no output file specified" if (!defined($opt_o) || ($opt_o eq ""));
+	$image = readimage($opt_f);
+
+	open(DUMPFILE, ">$opt_o") || die "=== ERR failed to open file '$opt_o' for writing\n";
+	print DUMPFILE $image;
+	close(DUMPFILE);
+	report($error, true);
+
+	return;
+    }
+
     if (!defined($opt_m)) {
 	print STDERR "=== ERR Must specify MAC address using -m option";
 	usage();
@@ -820,24 +841,6 @@ sub main
 	print STDERR "\n";
 	report($error, true);
 	
-	return;
-    }
-
-    if (defined($opt_b)) {
-	
-	# CONVERT TO BINARY
-	#
-	# readimage
-
-	die "=== ERR no input file specified"  if (!defined($opt_f) || ($opt_f eq ""));
-	die "=== ERR no output file specified" if (!defined($opt_o) || ($opt_o eq ""));
-	$image = readimage($opt_f);
-
-	open(DUMPFILE, ">$opt_o") || die "=== ERR failed to open file '$opt_o' for writing\n";
-	print DUMPFILE $image;
-	close(DUMPFILE);
-	report($error, true);
-
 	return;
     }
 
