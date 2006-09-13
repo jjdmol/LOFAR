@@ -53,6 +53,15 @@ namespace LOFAR
     // pattern (see Gamma, 1995). It is the base class for all BBSStep
     // classes, both composite and leaf classes. It has data members that are
     // common to all BBSStep classes.
+    //
+    // \todo Make the BBSStep class family exception safe. Currently, methods
+    // like BBSStep::create and BBSStep::deserialize operate on and return raw
+    // pointers. When an exception occurs within these methods, memory will be
+    // leaked. The solution is to use, e.g., boost::shared_ptr. We must be
+    // careful though, not to create circular dependencies, since that will
+    // cause the pointer to never be freed. This can happen since a BBSStep
+    // stores a pointer to its parent as backreference. Here, we should
+    // probably use a boost::weak_ptr. See Bug #906
     class BBSStep
     {
     public:
