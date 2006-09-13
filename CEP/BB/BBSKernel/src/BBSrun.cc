@@ -55,6 +55,9 @@ void predict (Prediffer& prediffer, const MSDesc& msd,
   while (time < endTime) {
     prediffer.setWorkDomain (startChan, endChan, time, timeStep);
     prediffer.setStepProp (stepProp);
+#ifdef EXPR_GRAPH
+    prediffer.writeExpressionGraph("expr_graph.dot", 0);
+#endif    
     prediffer.writePredictedData();
     time += timeStep;
   }
@@ -70,6 +73,20 @@ void subtract (Prediffer& prediffer, const MSDesc& msd,
     prediffer.setWorkDomain (startChan, endChan, time, timeStep);
     prediffer.setStepProp (stepProp);
     prediffer.subtractData();
+    time += timeStep;
+  }
+}
+
+void correct(Prediffer &prediffer, const MSDesc& msd,
+           const StepProp& stepProp,
+           double timeStep, int startChan, int endChan)
+{
+  double time = msd.startTime;
+  double endTime = msd.endTime;
+  while (time < endTime) {
+    prediffer.setWorkDomain (startChan, endChan, time, timeStep);
+    prediffer.setStepProp (stepProp);
+    prediffer.correctData();
     time += timeStep;
   }
 }
@@ -215,14 +232,15 @@ bool doIt (const string& parsetName)
               calcUVW);
   // Set strategy.
   StrategyProp stratProp;
-  stratProp.setAntennas (antennas);
-  stratProp.setCorr (corrs);
-  stratProp.setInColumn (columnNameIn);
+  stratProp.setAntennas(antennas);
+  stratProp.setCorr(corrs);
+  stratProp.setInColumn(columnNameIn);
   ASSERT (prediffer.setStrategyProp (stratProp));
   // Fill step properties.
   StepProp stepProp;
   stepProp.setModel (StringUtil::split(instrumentModel,'.'));
   stepProp.setOutColumn (columnNameOut);
+  stepProp.setCorr(corrs);
   try {
     if (operation == "solve") {
       ASSERT (nrSolveInterval.size()==2);
@@ -250,8 +268,13 @@ bool doIt (const string& parsetName)
       cout << "output column name     : " << columnNameOut << endl;
       subtract (prediffer, msd, stepProp,
         timeDomainSize, startChan, endChan);
+    } else if (operation == "correct") {
+      cout << "input column name      : " << columnNameIn << endl;
+      cout << "output column name     : " << columnNameOut << endl;
+      correct (prediffer, msd, stepProp,
+        timeDomainSize, startChan, endChan);
     } else {
-      cout << "Only operations solve, predict, and subtract are valid" << endl;
+      cout << "Only operations predict, subtract, correct, and solve are valid" << endl;
       return 1;
     }
   }
@@ -275,6 +298,11 @@ bool doIt (const string& parsetName)
 
 int main (int argc, const char* argv[])
 {
+    INIT_LOGGER("BBSrun");
+    
+#ifdef EXPR_GRAPH
+  std::cout << "EXPR_GRAPH defined..." << std::endl;
+#endif  
   try {
     if (argc < 2) {
       cout << "Run as: BBSrun parset-name" << endl;

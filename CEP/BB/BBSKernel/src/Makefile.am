@@ -10,7 +10,8 @@ SolveProp.h		\
 StepProp.h		\
 StrategyProp.h		\
 ParmWriter.h		\
-BBSTestLogger.h
+BBSTestLogger.h     \
+BBSKernelProcessControl.h
 
 pkginclude_MNSdir = $(pkgincludedir)/MNS
 pkginclude_MNS_HEADERS = \
@@ -77,6 +78,7 @@ StrategyProp.cc		\
 ParmData.cc		\
 ParmWriter.cc		\
 BBSTestLogger.cc	\
+BBSKernelProcessControl.cc  \
 MNS/MeqBaseDFTPS.cc \
 MNS/MeqBaseLinPS.cc \
 MNS/MeqDFTPS.cc \
@@ -120,10 +122,14 @@ MNS/MeqStation.cc \
 MNS/MeqStatUVW.cc \
 MNS/MeqTabular.cc 
 
-bin_PROGRAMS = BBSrun
+bin_PROGRAMS = BBSrun BBSKernel
 
 BBSrun_SOURCES = BBSrun.cc
 BBSrun_LDADD = libbbs.la
 BBSrun_DEPENDENCIES = libbbs.la $(LOFAR_DEPEND)
+
+BBSKernel_SOURCES = BBSKernel.cc
+BBSKernel_LDADD = libbbs.la
+BBSKernel_DEPENDENCIES = libbbs.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
