@@ -209,7 +209,7 @@
     
   # Recursive.
   # Check that the destination is not a subdirectory of the source.
-  rest=`echo $DESTINATION | sed "s%$SOURCE%%"`
+  rest=`echo $DESTINATION | sed "s%$SOURCE/%%"`
   if [ "$rest" != "$DESTINATION" ]; then
     echo "destination is a subdirectory of the source directory" 1>&2
     echo -n "Do you really want this? (y,n) [n]: " 1>&2
