@@ -30,7 +30,10 @@
 #include <BBS/ParmData.h>
 #include <sstream>
 
-namespace LOFAR{
+namespace LOFAR
+{
+namespace BBS
+{
 
   namespace BBSTest {
 
@@ -98,4 +101,6 @@ namespace LOFAR{
       }
     }
   }
+  
+} // namespace BBS
 } // namespace LOFAR

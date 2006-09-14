@@ -25,6 +25,8 @@
 
 namespace LOFAR
 {
+namespace BBS 
+{
 
   MMapMSInfo::MMapMSInfo (const MSDesc& msdesc, uint ddid,
 			  bool reverseChan)
@@ -48,4 +50,5 @@ namespace LOFAR
     }
   }
 
-}
+} // namespace BBS
+} // namespace LOFAR

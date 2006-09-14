@@ -42,6 +42,7 @@
 using namespace std;
 using namespace casa;
 using namespace LOFAR;
+using namespace LOFAR::BBS;
 using namespace LOFAR::ParmDB;
 using namespace LOFAR::ACC::APS;
 

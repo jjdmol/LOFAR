@@ -29,7 +29,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqBaseLinPS::MeqBaseLinPS (const MeqExpr& dft, MeqPointSource* source)
 : itsDFT    (dft),
@@ -130,4 +133,5 @@ std::string MeqBaseLinPS::getLabel()
 }
 #endif
 
-}
+} // namespace BBS
+} // namespace LOFAR

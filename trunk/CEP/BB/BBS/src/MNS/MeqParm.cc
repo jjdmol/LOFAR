@@ -25,7 +25,10 @@
 #include <Common/LofarLogger.h>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 
 MeqParm::MeqParm (const string& name)
@@ -105,4 +108,5 @@ void MeqParmGroup::clear()
   itsParms.clear();
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

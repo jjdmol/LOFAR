@@ -4,7 +4,10 @@
 #include <assert.h>
 #include <stdlib.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // The Pool class is a very fast, stack-based allocator where objects can
 // be temporarily stored that would otherwise be deleted and allocated again.
@@ -51,6 +54,7 @@ template <class T> class Pool {
     T *top;
 };
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

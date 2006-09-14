@@ -26,6 +26,8 @@
 
 namespace LOFAR
 {
+namespace BBS 
+{
 
 Quality::Quality()
 {
@@ -51,4 +53,5 @@ void Quality::show(ostream& os) const
   os << "itsChi    : " <<  itsChi     << endl;
 }
 
+} // namespace BBS
 } // namespace LOFAR

@@ -30,17 +30,26 @@
 #include <BBS/MNS/MeqMatrixRep.h>
 
 //# Forward Declarations
-namespace casa {
-template<class T> class Matrix;
+namespace casa
+{
+    template<class T> class Matrix;
 }
 
-namespace LOFAR {
-class BlobOStream;
-class BlobIStream;
-class MeqMatrixTmp;
+namespace LOFAR
+{
+    class BlobOStream;
+    class BlobIStream;
+    
+    namespace BBS
+    {
+        class MeqMatrixTmp;
+    }
 }
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -224,6 +233,8 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& os, MeqMatrix& vec);
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
+
 
 #endif

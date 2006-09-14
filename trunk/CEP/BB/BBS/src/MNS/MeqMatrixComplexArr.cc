@@ -41,7 +41,10 @@
 #include <xmmintrin.h>
 #endif
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // Allocation will be done from the pool containing matrices of poolNElements
 // or less elements.
@@ -1015,4 +1018,5 @@ void MeqMatrixComplexArr::fillRowWithProducts(dcomplex v0, dcomplex factor,
 #endif
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

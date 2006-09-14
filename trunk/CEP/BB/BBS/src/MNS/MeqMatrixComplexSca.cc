@@ -33,7 +33,10 @@
 #include <Common/Timer.h>
 #endif
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqMatrixComplexSca::~MeqMatrixComplexSca()
 {}
@@ -305,4 +308,5 @@ MeqMatrixRep* MeqMatrixComplexSca::sum()
   return this;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

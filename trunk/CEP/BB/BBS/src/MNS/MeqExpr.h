@@ -38,7 +38,11 @@
     #include <iostream>
 #endif
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
+
 //# Forward Declarations.
 class MeqExpr;
 
@@ -276,6 +280,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

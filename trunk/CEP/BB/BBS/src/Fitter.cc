@@ -33,7 +33,10 @@
 using namespace std;
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS 
+{
 
   void Fitter::set (int nfitter, int nunknown)
   {
@@ -97,4 +100,5 @@ namespace LOFAR {
     aio.getend();
   }
 
+} // namespace BBS
 } // namespace LOFAR

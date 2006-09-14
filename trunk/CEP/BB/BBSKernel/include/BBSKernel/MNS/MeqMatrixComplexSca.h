@@ -30,7 +30,10 @@
 #include <BBS/MNS/MeqMatrixRep.h>
 #include <Common/lofar_complex.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -101,6 +104,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

@@ -26,7 +26,10 @@
 // This class represents the result in a Jones matrix of a domain for
 // which the expressions have been evaluated.
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
   MeqResultVecRep::MeqResultVecRep (int size, int nspid)
   : itsCount (0)
@@ -73,4 +76,5 @@ namespace LOFAR {
     return *this;
   }
 
-}
+} // namespace BBS
+} // namespace LOFAR

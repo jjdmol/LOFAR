@@ -31,7 +31,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqPolcLog::MeqPolcLog(const ParmDB::ParmValue& pvalue)
   : MeqFunklet(pvalue)
@@ -332,4 +335,5 @@ MeqResult MeqPolcLog::getAnResult(const MeqRequest& request, int nrpert, int per
   return getResult(request, nrpert, pertInx);
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

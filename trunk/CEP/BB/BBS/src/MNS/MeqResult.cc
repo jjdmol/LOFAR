@@ -26,7 +26,10 @@
 #include <BBS/MNS/Pool.h>
 #include <BBS/MNS/MeqParmFunklet.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 Pool<MeqResultRep> MeqResultRep::theirPool;
 #pragma omp threadprivate(MeqResultRep::theirPool)
@@ -126,4 +129,5 @@ MeqResult& MeqResult::operator= (const MeqResult& that)
   return *this;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

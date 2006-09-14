@@ -27,7 +27,10 @@
 #include <Common/LofarLogger.h>
 #include <cmath>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqParmSingle::MeqParmSingle (const string& name, double value)
 : MeqParm  (name),
@@ -44,4 +47,5 @@ MeqResult MeqParmSingle::getResult (const MeqRequest& request)
   return result;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

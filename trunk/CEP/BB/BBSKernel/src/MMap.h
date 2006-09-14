@@ -33,6 +33,8 @@
 
 namespace LOFAR
 {
+namespace BBS
+{
 
 // \ addtogroup BBS
 // @{
@@ -111,6 +113,7 @@ inline bool MMap::isWritable() const
 
 // @}
 
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

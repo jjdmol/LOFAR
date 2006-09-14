@@ -116,6 +116,8 @@ using namespace casa;
 
 namespace LOFAR
 {
+namespace BBS 
+{
 
 Prediffer::Prediffer(const string& msName,
              const ParmDB::ParmDBMeta& meqPdm,
@@ -2203,4 +2205,5 @@ void Prediffer::showSettings() const
   cout << endl;
 }
 
+} // namespace BBS
 } // namespace LOFAR

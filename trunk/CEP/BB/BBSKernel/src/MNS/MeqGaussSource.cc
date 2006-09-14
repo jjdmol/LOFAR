@@ -24,7 +24,10 @@
 #include <BBS/MNS/MeqGaussSource.h>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqGaussSource::MeqGaussSource (const string& name,
 				const string& groupName,
@@ -46,4 +49,5 @@ MeqGaussSource::MeqGaussSource (const string& name,
 MeqGaussSource::~MeqGaussSource()
 {}
 
-}
+} // namespace BBS
+} // namespace LOFAR

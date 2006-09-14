@@ -34,6 +34,9 @@ namespace LOFAR
   // Forward Declarations.
   class MSDesc;
 
+namespace BBS
+{
+
 // \ addtogroup BBS
 // @{
 // 
@@ -102,6 +105,7 @@ private:
 
 // @}
 
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

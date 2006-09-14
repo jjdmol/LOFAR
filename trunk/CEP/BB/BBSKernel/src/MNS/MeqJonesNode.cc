@@ -25,7 +25,10 @@
 #include <BBS/MNS/MeqJonesNode.h>
 #include <BBS/MNS/MeqExpr.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqJonesNode::MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
                 const MeqExpr& elem21, const MeqExpr& elem22)
@@ -62,4 +65,5 @@ std::string MeqJonesNode::getLabel()
 }
 #endif
 
-}
+} // namespace BBS
+} // namespace LOFAR

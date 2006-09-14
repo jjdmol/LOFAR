@@ -35,7 +35,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqMatrix::MeqMatrix (double value)
 {
@@ -445,8 +448,8 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
   return bs;
 }
 
-}
-
+} // namespace BBS
+} // namespace LOFAR
 
 //# Instantiate the AIPS++ templates needed for Matrix<dcomplex>
 //# This is needed because dcomplex is usually not the same as casa::DComplex.

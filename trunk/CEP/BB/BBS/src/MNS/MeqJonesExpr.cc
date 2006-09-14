@@ -26,7 +26,10 @@
 #include <Common/LofarLogger.h>
 //#include <Common/Timer.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqJonesExprRep::~MeqJonesExprRep()
 {
@@ -42,4 +45,5 @@ void MeqJonesExprRep::precalculate (const MeqRequest& request)
   itsReqId = request.getId();
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

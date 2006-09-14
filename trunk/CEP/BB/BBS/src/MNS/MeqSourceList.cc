@@ -33,7 +33,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqSourceList::MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup& group)
 {
@@ -158,4 +161,5 @@ void MeqSourceList::add (MeqSource* source)
   group.push_back (idx);
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

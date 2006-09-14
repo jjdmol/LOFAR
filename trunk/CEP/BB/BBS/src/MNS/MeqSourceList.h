@@ -32,7 +32,10 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 //# Forward Declarations
 class MeqParmGroup;
@@ -88,6 +91,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

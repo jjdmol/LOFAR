@@ -1,2 +1,2 @@
 #!/bin/sh
-$lofar_sharedir/runtest.sh tBandpass > tBandpass.log 2>&1
+$lofar_sharedir/runtest.sh tBandpass > /dev/null 2>&1

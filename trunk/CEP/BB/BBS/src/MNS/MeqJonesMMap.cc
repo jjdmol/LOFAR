@@ -24,7 +24,10 @@
 #include <BBS/MNS/MeqJonesMMap.h>
 #include <Common/LofarLogger.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
   MeqJonesMMap::MeqJonesMMap (const MMapMSInfo& info, int blnr)
     : itsInfo     (&info),
@@ -137,4 +140,6 @@ namespace LOFAR {
       }
     }
   }
-}
+
+} // namespace BBS
+} // namespace LOFAR

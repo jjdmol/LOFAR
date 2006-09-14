@@ -27,6 +27,7 @@
 
 
 using namespace LOFAR;
+using namespace LOFAR::BBS;
 using namespace std;
 
 void doTest (int nx, int ny)

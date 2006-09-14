@@ -31,17 +31,29 @@
 //# Includes
 #include <Common/lofar_map.h>
 
+//# Forward Declarations
 namespace LOFAR
-{
-  // \addtogroup BBS
-  // @{
-  //# Forward Declarations
-  class ParmDataInfo;
-  class MeqMatrix;
-  namespace ParmDB {
+{  
+  namespace ParmDB
+  {
     class ParmValueRep;
   }
 
+  namespace BBS
+  {
+    class ParmDataInfo;
+    class MeqMatrix;
+  }
+}
+
+
+namespace LOFAR
+{
+namespace BBS
+{
+  
+  // \addtogroup BBS
+  // @{
 
   // Description of class.
   class ParmWriter
@@ -62,6 +74,7 @@ namespace LOFAR
   };
 
   // @}
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

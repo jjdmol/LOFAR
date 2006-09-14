@@ -31,6 +31,8 @@
 
 namespace LOFAR
 {
+namespace BBS
+{
 
 // \addtogroup BBS
 // @{
@@ -62,6 +64,7 @@ inline ostream& operator<< (ostream& os, const Quality& qual)
 
 // @}
 
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

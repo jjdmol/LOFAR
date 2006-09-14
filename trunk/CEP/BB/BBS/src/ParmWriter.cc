@@ -37,6 +37,9 @@ using namespace std;
 
 namespace LOFAR
 {
+namespace BBS 
+{
+
 ParmWriter::ParmWriter()
 {}
 
@@ -115,4 +118,5 @@ void ParmWriter::setCoeff (ParmDB::ParmValueRep& pval, const MeqMatrix& coeff)
   }
 }
 
+} // namespace BBS
 } // namespace LOFAR

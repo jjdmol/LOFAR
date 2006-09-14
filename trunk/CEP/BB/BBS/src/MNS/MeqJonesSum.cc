@@ -26,7 +26,10 @@
 #include <BBS/MNS/MeqJonesResult.h>
 #include <BBS/MNS/MeqMatrixTmp.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
   MeqJonesSum::MeqJonesSum (const std::vector<MeqJonesExpr>& expr)
     : itsExpr (expr)
@@ -113,4 +116,6 @@ std::string MeqJonesSum::getLabel()
     return std::string("MeqJonesSum\\nSum of Jones matrices");
 }
 #endif
-}
+
+} // namespace BBS
+} // namespace LOFAR

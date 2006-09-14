@@ -35,10 +35,12 @@
 #include <xmmintrin.h>
 #endif
 
-
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqJonesCMul3::MeqJonesCMul3 (const MeqJonesExpr& left,
                   const MeqJonesExpr& mid,
@@ -617,4 +619,5 @@ std::string MeqJonesCMul3::getLabel()
 }
 #endif
 
-}
+} // namespace BBS
+} // namespace LOFAR

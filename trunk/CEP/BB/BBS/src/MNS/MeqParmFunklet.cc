@@ -35,7 +35,7 @@ using namespace std;
 
 // Make sorting vector<MPFHolder> possible (on domain).
 // So define operator< for it.
-bool less_mp (LOFAR::MeqFunklet* x, LOFAR::MeqFunklet* y)
+bool less_mp (LOFAR::BBS::MeqFunklet* x, LOFAR::BBS::MeqFunklet* y)
 {
   return (x->domain().startY() < y->domain().startY()  ||
 	  (x->domain().startY() == y->domain().startY()  &&
@@ -43,7 +43,10 @@ bool less_mp (LOFAR::MeqFunklet* x, LOFAR::MeqFunklet* y)
 }
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqParmFunklet::MeqParmFunklet (const string& name, ParmDB::ParmDB* table)
 : MeqParm    (name),
@@ -398,4 +401,5 @@ void MeqParmFunklet::save()
   }
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

@@ -26,7 +26,10 @@
 #include <BBS/MNS/MeqDiag.h>
 #include <BBS/MNS/MeqExpr.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqDiag::MeqDiag(const MeqExpr& xx, const MeqExpr& yy)
 : itsXX(xx),
@@ -53,4 +56,5 @@ MeqJonesResult MeqDiag::getJResult(const MeqRequest& request)
   return res;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

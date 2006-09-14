@@ -32,8 +32,11 @@
 
 using namespace casa;
 
-namespace LOFAR {
-
+namespace LOFAR
+{
+namespace BBS
+{
+using LOFAR::operator<<;
 
 MeqFunklet::MeqFunklet()
 : itsNrScid (0)
@@ -188,4 +191,5 @@ void MeqFunklet::update (const vector<double>& values)
   }
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

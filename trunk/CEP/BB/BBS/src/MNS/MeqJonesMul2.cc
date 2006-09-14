@@ -31,7 +31,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqJonesMul2::MeqJonesMul2 (const MeqJonesExpr& left,
 			    const MeqJonesExpr& right)
@@ -151,4 +154,5 @@ MeqJonesResult MeqJonesMul2::getJResult (const MeqRequest& request)
   return result;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

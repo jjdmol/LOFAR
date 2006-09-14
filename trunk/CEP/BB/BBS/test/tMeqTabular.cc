@@ -29,6 +29,7 @@
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
+using namespace LOFAR::BBS;
 using namespace casa;
 
 #define EPSILON 1.0e-12

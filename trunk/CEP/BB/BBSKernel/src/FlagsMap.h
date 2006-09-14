@@ -28,7 +28,8 @@
 
 namespace LOFAR
 {
-
+namespace BBS
+{
   // This class implements a mmap operation for the data flags which are bits.
 
   class FlagsMap
@@ -94,6 +95,7 @@ namespace LOFAR
     return ((itsFlags[index] & (uchar(1) << (realpos%8)))  ==  0);
   }
 
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

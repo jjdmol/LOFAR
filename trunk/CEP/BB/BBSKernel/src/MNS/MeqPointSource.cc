@@ -24,7 +24,10 @@
 #include <BBS/MNS/MeqPointSource.h>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqPointSource::MeqPointSource (const string& name,
                 const string& groupName,
@@ -41,4 +44,5 @@ MeqPointSource::MeqPointSource (const string& name,
 MeqPointSource::~MeqPointSource()
 {}
 
-}
+} // namespace BBS
+} // namespace LOFAR

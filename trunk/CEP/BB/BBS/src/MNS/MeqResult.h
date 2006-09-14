@@ -36,7 +36,10 @@
 // This class represents a result of a domain for which an expression
 // has been evaluated.
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 //# Forward Declarations
 class MeqParmFunklet;
@@ -213,6 +216,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif
