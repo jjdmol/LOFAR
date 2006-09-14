@@ -91,18 +91,18 @@ public:
 									 GCFPortInterface& port);
 
 protected: // implemenation of abstract CEPApplicationManagerInterface methods
-    void    appBooted(uint16 result);
-    void    appDefined(uint16 result);
-    void    appInitialized(uint16 result);
-    void    appRunDone(uint16 result);
-    void    appPaused(uint16 result);
-    void    appQuitDone(uint16 result);
-    void    appSnapshotDone(uint16 result);
-    void    appRecovered(uint16 result);
-    void    appReinitialized(uint16 result);
-    void    appReplaced(uint16 result);
-    string  appSupplyInfo(const string& keyList);
-    void    appSupplyInfoAnswer(const string& answer);
+    void    appBooted(const string& procName, uint16 result);
+    void    appDefined(const string& procName, uint16 result);
+    void    appInitialized(const string& procName, uint16 result);
+    void    appRunDone(const string& procName, uint16 result);
+    void    appPaused(const string& procName, uint16 result);
+    void    appQuitDone(const string& procName, uint16 result);
+    void    appSnapshotDone(const string& procName, uint16 result);
+    void    appRecovered(const string& procName, uint16 result);
+    void    appReinitialized(const string& procName, uint16 result);
+    void    appReplaced(const string& procName, uint16 result);
+    string  appSupplyInfo(const string& procName, const string& keyList);
+    void    appSupplyInfoAnswer(const string& procName, const string& answer);
   
 private:
 	// avoid defaultconstruction and copying
@@ -119,6 +119,7 @@ private:
 	void	 setState(CTState::CTstateNr     newState);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
+	typedef boost::shared_ptr<CEPApplicationManager> CEPApplicationManagerPtr;
 
    	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
    	GCFMyPropertySetPtr           itsPropertySet;
@@ -130,8 +131,8 @@ private:
 
 	GCFTimerPort*			itsTimerPort;
 
-    CEPApplicationManager   itsCepApplication;
-    ACC::APS::ParameterSet  itsCepAppParams;
+    map<string, CEPApplicationManagerPtr>  itsCepApplications;
+    vector<ACC::APS::ParameterSet> itsCepAppParams;
     ACC::APS::ParameterSet  itsResultParams;
 
 	CTState::CTstateNr		itsState;
