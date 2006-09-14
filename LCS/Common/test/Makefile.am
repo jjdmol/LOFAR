@@ -83,8 +83,6 @@ tNumeric_LDADD			= ../src/libcommon.la
 tNumeric_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  LOFARROOT=$(LOFARROOT)
 
 
 include $(top_srcdir)/Makefile.common

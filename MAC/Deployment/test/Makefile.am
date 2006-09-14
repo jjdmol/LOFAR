@@ -17,8 +17,6 @@ tStationInfo_LDADD			= ../src/libdeployment.la
 tStationInfo_DEPENDENCIES	= ../src/libdeployment.la $(LOFAR_DEPEND)
 
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  LOFARROOT=$(LOFARROOT)
 
 
 include $(top_srcdir)/Makefile.common

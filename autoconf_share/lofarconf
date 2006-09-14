@@ -205,4 +205,4 @@ if [ "$cmpmakes$varmakes" != "" ]; then
 fi
 
 # Delete the local variant file that has been created.
-\rm variants_local
+\rm -f variants_local

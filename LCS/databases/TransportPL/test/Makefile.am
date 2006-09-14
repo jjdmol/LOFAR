@@ -19,10 +19,6 @@ TestBidirectional_SOURCES 	= TestBidirectional.cc DH_Example.cc
 LDADD				= ../src/libtransportpl.la 
 DEPENDENCIES			= ../src/libtransportpl.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
-				  lofar_sharedir=$(lofar_sharedir) \
-				  common_top_builddir=$(common_top_builddir) \
-				  MPIBIN=$(MPIBIN)
 
 TESTS	=					\
 	Example_test.sh				\

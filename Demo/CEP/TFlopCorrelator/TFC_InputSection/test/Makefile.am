@@ -27,8 +27,5 @@ CyclicCounterTest.cc				\
 
 TESTS   = 	                                \
 tWH_SBCollect.sh
-TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
-				  lofar_sharedir=$(lofar_sharedir) \
-				  common_top_builddir=$(common_top_builddir)
 
 include $(top_srcdir)/Makefile.common

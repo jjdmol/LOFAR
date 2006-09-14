@@ -21,8 +21,6 @@ EXTRA_tDH_BBSStep_DIST		= tDH_BBSStep.run
 
 TESTS				= $(check_SCRIPTS)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  LOFARROOT=$(LOFARROOT)
 
 EXTRA_DIST			= $(check_SCRIPTS) \
 				  $(EXTRA_tBBSStrategy_DIST) \

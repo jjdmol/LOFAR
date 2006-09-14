@@ -18,8 +18,6 @@ APTest_SOURCES 		       = APCmdImpl.cc APCmdImpl.h APTest.cc
 APTest_DEPENDENCIES	       = $(LOFAR_DEPEND) 
 APTest_LDADD			   = 
 
-TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir) \
-							  LOFARROOT=$(LOFARROOT)
 
 include $(top_srcdir)/Makefile.common
 

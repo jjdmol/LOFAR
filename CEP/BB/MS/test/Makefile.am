@@ -8,7 +8,6 @@ TESTS	= tMSSplit_test.sh
 tMSSplit_SOURCES		= tMSSplit.cc
 tMSSplit_DEPENDENCIES		= $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
 
 
 include $(top_srcdir)/Makefile.common

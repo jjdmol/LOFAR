@@ -11,9 +11,6 @@ tConverterStress_DEPENDENCIES	= ../src/libamcimpl.la $(LOFAR_DEPEND)
 TESTS				= tConverter.sh \
 				  tConverterStress.sh 
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  LOFARROOT=$(LOFARROOT) \
-				  AIPSPP=$(AIPSPP)
 
 EXTRA_DIST			= $(TESTS) \
 				  tConverter.run \

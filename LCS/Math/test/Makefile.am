@@ -22,7 +22,6 @@ tLorrays_SOURCES		= tLorrays.cc
 tLorrays_LDADD			= ../src/libmath.la
 tLorrays_DEPENDENCIES		= ../src/libmath.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
 
 
 include $(top_srcdir)/Makefile.common

@@ -57,8 +57,6 @@ TESTSCRIPTS = \
 
 TESTS = $(TESTSCRIPTS)
 
-TESTS_ENVIRONMENT	  = lofar_sharedir=$(lofar_sharedir) \
-					   MPIBIN=$(MPIBIN)
 
 EXTRA_DIST =				\
 	DH_Ethernet.h DH_Example.h DH_ExampleExtra.h \

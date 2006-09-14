@@ -30,8 +30,6 @@ EXTRA_Example3_DIST	= Example3.run Example3.stdout
 LDADD			= ../src/libtinycep.la
 DEPENDENCIES		= ../src/libtinycep.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT	= top_srcdir=$(top_srcdir) \
-			  lofar_sharedir=$(lofar_sharedir)
 
 TESTS			= Example_test.sh  \
 			  Example2_test.sh \

@@ -24,11 +24,6 @@ ExampleDB2_SOURCES              = ExampleDB2.cc DH_ExampleExtra3.cc
 LDADD			= ../src/libtransportpostgres.la
 DEPENDENCIES		= ../src/libtransportpostgres.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  srcdir=$(srcdir) \
-				  LOFARROOT=$(LOFARROOT) \
-				  LOFARDATAROOT=$(LOFARDATAROOT) \
-				  MPIBIN=$(MPIBIN)
 
 
 include $(top_srcdir)/Makefile.common

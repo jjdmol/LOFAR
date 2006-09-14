@@ -16,10 +16,5 @@ tWH_DelayCompensation_DEPENDENCIES = ../src/libcs1_delaycompensation.la $(LOFAR_
 # all files (.run, .stdout, .in, .log_prop, etc.) needed to run tests
 EXTRA_DIST		= $(TESTS)
 
-TESTS_ENVIRONMENT	= lofar_sharedir=$(lofar_sharedir) \
-			  srcdir=$(srcdir) \
-			  LOFARROOT=$(LOFARROOT) \
-			  LOFARDATAROOT=$(LOFARDATAROOT) \
-			  MPIBIN=$(MPIBIN)
 
 include $(top_srcdir)/Makefile.common
