@@ -29,9 +29,6 @@ CyclicBufferTest_SOURCES	= CyclicBufferTest.cc
 LDADD				= ../src/libcepframe.la
 DEPENDENCIES			= ../src/libcepframe.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  top_srcdir=$(top_srcdir) \
-				  MPIBIN=$(MPIBIN)
 
 TESTS	=					\
 	Example_test.sh				\

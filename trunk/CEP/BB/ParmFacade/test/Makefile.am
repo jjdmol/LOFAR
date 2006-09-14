@@ -20,11 +20,6 @@ tParmFacade_SOURCES		= tParmFacade.cc
 tParmFacade_LDADD		= ../src/libparmfacade.la
 tParmFacade_DEPENDENCIES	= ../src/libparmfacade.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  srcdir=$(srcdir) \
-				  LOFARROOT=$(LOFARROOT) \
-				  LOFARDATAROOT=$(LOFARDATAROOT) \
-				  MPIBIN=$(MPIBIN)
 
 
 include $(top_srcdir)/Makefile.common

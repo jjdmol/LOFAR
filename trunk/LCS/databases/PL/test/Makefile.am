@@ -75,9 +75,6 @@ TESTS			= $(check_SCRIPTS)
 
 XFAIL_TESTS		= tAttr1.sh
 
-TESTS_ENVIRONMENT	= lofar_sharedir=$(lofar_sharedir) \
-			  srcdir=$(srcdir) \
-			  CHECKTOOL="$(CHECKTOOL)"
 
 EXTRA_DIST		= $(check_SCRIPTS) \
 			  $(EXTRA_tA_DIST) \

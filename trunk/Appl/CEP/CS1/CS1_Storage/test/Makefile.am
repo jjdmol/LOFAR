@@ -20,11 +20,6 @@ tAH_TestStorage_SOURCES		= tAH_TestStorage.cc \
 tAH_TestStorage_LDADD		= ../src/libcs1_storage.la
 tAH_TestStorage_DEPENDENCIES	= ../src/libcs1_storage.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  srcdir=$(srcdir) \
-				  LOFARROOT=$(LOFARROOT) \
-				  LOFARDATAROOT=$(LOFARDATAROOT) \
-				  MPIBIN=$(MPIBIN)
 
 
 include $(top_srcdir)/Makefile.common

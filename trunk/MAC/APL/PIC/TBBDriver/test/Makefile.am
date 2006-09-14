@@ -20,11 +20,6 @@ EXTRA_DIST            = $(TESTSCRIPTS)
 #testprg_LDADD			= ../src/libtbbdriver.la
 #testprg_DEPENDENCIES		= ../src/libtbbdriver.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  srcdir=$(srcdir) \
-				  LOFARROOT=$(LOFARROOT) \
-				  LOFARDATAROOT=$(LOFARDATAROOT) \
-				  MPIBIN=$(MPIBIN)
 
 
 include $(top_srcdir)/Makefile.common

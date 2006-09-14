@@ -9,7 +9,6 @@ TESTS	              =
 XFAIL_TESTS           =
 
 
-TESTS_ENVIRONMENT     = lofar_sharedir=$(lofar_sharedir)
 
 
 include $(top_srcdir)/Makefile.common

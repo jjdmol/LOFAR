@@ -39,8 +39,6 @@ TESTSCRIPTS					= tConverter_test.sh \
 
 TESTS						= $(TESTSCRIPTS)
 
-TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir) \
-							  LOFARROOT=$(LOFARROOT)
 
 EXTRA_DIST					= DATABASENAME \
 							  tConnection.log_prop \

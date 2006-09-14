@@ -13,8 +13,6 @@ CyclicBufferTest_SOURCES 	= CyclicBufferTest.cc
 #LDADD				= ../src/libtransport.la 
 #DEPENDENCIES			= ../src/libtransport.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  MPIBIN=$(MPIBIN)
 
 TESTS	=					\
 	CyclicBufferTest_test.sh		

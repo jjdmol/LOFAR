@@ -45,8 +45,6 @@ tKeyValueMap_SOURCES		= tKeyValueMap.cc
 tKeyValueMap_LDADD		= ../src/libblob.la
 tKeyValueMap_DEPENDENCIES	= ../src/libblob.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  LOFARROOT=$(LOFARROOT)
 
 
 include $(top_srcdir)/Makefile.common

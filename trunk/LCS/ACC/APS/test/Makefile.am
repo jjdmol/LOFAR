@@ -11,8 +11,6 @@ TESTSCRIPTS 			= \
 
 TESTS					= $(TESTSCRIPTS)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-						  LOFARROOT=$(LOFARROOT)
 
 EXTRA_DIST				= \
 						  tParameterSet.in_merge \

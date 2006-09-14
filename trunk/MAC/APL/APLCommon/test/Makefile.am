@@ -6,8 +6,6 @@ tControllerDefines_DEPENCIES= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
 TESTSCRIPTS					= tControllerDefines_test.sh
 
-TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir) \
-							  LOFARROOT=$(LOFARROOT)
 
 TESTS						= $(TESTSCRIPTS)
 

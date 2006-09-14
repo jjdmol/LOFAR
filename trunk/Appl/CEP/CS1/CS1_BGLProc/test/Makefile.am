@@ -25,8 +25,5 @@ CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 TESTS   = 					\
 tWH_BGL_Processing.sh
 
-TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
-				  lofar_sharedir=$(lofar_sharedir) \
-				  common_top_builddir=$(common_top_builddir)
 
 include $(top_srcdir)/Makefile.common

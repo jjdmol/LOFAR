@@ -33,9 +33,6 @@ tShift_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
 
 LDADD				= ../src/libbbs3.la 
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  MPIBIN=$(MPIBIN) \
-				  AIPSPP=$(AIPSPP)
 
 TESTS = tMeqPolc.sh tMeqParm.sh tPredSolv.sh tPredict.sh tSubtract.sh tCorrect.sh tPerturbed.sh tMSData.sh
 

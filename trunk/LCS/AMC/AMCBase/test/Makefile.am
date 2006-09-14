@@ -65,8 +65,6 @@ TESTS				= tCoord3D.sh \
 				  tDH_Request.sh \
 				  tDH_Result.sh
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  LOFARROOT=$(LOFARROOT)
 
 EXTRA_DIST			= $(TESTS) \
 				  tDirection.stdout \

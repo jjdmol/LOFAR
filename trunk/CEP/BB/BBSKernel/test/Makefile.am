@@ -46,11 +46,6 @@ tDFT_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
 
 LDADD				= ../src/libbbs.la 
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  prefix=$(prefix) \
-				  srcdir=${srcdir} \
-				  MPIBIN=$(MPIBIN) \
-				  AIPSPP=$(AIPSPP)
 
 TESTS = tFillRow.sh tMeqPolc.sh tMeqPolcLog.sh tMeqTabular.sh tMeqParm.sh \
 tParmMerge.sh tMSData.sh tPredict.sh tPerturbed.sh tSubtract.sh tCorrect.sh \
