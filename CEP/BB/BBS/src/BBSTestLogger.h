@@ -40,6 +40,8 @@
 
 namespace LOFAR
 {
+namespace BBS
+{
 
 // \addtogroup BBS
 // @{
@@ -111,6 +113,7 @@ namespace LOFAR
     };
   }
 
+} // end namespace BBS
 } // end namespace LOFAR
 
 #endif

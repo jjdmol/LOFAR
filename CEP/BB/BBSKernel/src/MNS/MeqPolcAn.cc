@@ -31,7 +31,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 
 MeqPolc::~MeqPolc()
@@ -178,4 +181,5 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
   return result;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

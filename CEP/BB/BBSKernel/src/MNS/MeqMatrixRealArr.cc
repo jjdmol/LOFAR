@@ -43,7 +43,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // Allocation will be done from the pool containing matrices of poolNElements
 // or less elements.
@@ -887,4 +890,5 @@ MeqMatrixRep* MeqMatrixRealArr::sum()
   return result;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

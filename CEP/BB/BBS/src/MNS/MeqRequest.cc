@@ -25,7 +25,10 @@
 #include <Common/LofarLogger.h>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqRequestId MeqRequest::theirRequestId = 0;
 
@@ -134,4 +137,5 @@ void MeqRequest::setDomain (const MeqDomain& domain, int nx,
   itsYP = &itsY[0];
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

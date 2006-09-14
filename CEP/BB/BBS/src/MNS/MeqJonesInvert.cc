@@ -40,7 +40,10 @@
 //
 // Also note that conj(AB) = conj(B)conj(A)
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqJonesInvert::~MeqJonesInvert()
 {}
@@ -102,4 +105,5 @@ MeqJonesResult MeqJonesInvert::getJResult (const MeqRequest& request)
   return result;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

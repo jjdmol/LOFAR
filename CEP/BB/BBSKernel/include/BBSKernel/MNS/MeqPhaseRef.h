@@ -30,7 +30,10 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -78,6 +81,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

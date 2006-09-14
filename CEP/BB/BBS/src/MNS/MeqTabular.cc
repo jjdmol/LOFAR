@@ -36,6 +36,9 @@ using namespace casa;
 
 namespace LOFAR
 {
+namespace BBS
+{
+
   MeqTabular::MeqTabular (const ParmDB::ParmValue& pvalue)
   : MeqFunklet (pvalue)
   {
@@ -236,4 +239,6 @@ namespace LOFAR
   {
     return getResult (request, nrpert, pertInx);
   }
-}
+
+} // namespace BBS
+} // namespace LOFAR

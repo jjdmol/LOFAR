@@ -25,6 +25,8 @@
 
 namespace LOFAR
 {
+namespace BBS 
+{
 
   FlagsMap::FlagsMap (const string& fileName, MMap::protection prot)
     : itsMMap (fileName, prot),
@@ -64,4 +66,5 @@ namespace LOFAR
   }
 
 
+} // namespace BBS
 } // namespace LOFAR

@@ -28,14 +28,19 @@
 
 //# Includes
 #include <Common/lofar_complex.h>
-#include <Common/lofar_iostream.h>
+//#include <Common/lofar_iostream.h>
+#include <iostream>
 #include <casa/iosfwd.h>
 
 #if defined _OPENMP
 #include <omp.h>
 #endif
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
+using LOFAR::dcomplex;
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -88,7 +93,7 @@ public:
   int nelements() const
     { return itsLength; }
 
-  virtual void show (ostream& os) const = 0;
+  virtual void show (std::ostream& os) const = 0;
 
   bool isComplex() const
     { return (type & 2) != 0; }
@@ -172,6 +177,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

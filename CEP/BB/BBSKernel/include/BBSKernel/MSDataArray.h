@@ -29,8 +29,11 @@
 
 //# Includes
 
-namespace LOFAR {
-
+namespace LOFAR
+{
+namespace BBS
+{
+ 
 // \ingroup BBS
 // @{
 
@@ -56,6 +59,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

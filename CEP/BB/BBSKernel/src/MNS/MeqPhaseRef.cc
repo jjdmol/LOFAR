@@ -36,7 +36,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
 : itsStartTime (startTime)
@@ -94,4 +97,5 @@ MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
 //  cout << "ep3 " << ep3 << endl;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

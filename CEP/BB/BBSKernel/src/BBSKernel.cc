@@ -27,12 +27,12 @@
 #include <PLC/ACCmain.h>
 #include <BBS/BBSKernelProcessControl.h>
 
-using namespace LOFAR;
+using namespace LOFAR::BBS;
 
 int main(int argc, char **argv)
 {
   INIT_LOGGER(basename(argv[0]));
 
   BBSKernelProcessControl process;
-  return ACC::PLC::ACCmain(argc, argv, &process);
+  return LOFAR::ACC::PLC::ACCmain(argc, argv, &process);
 }

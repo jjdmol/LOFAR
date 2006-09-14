@@ -26,7 +26,10 @@
 #include <BBS/MNS/MeqMatrixComplexArr.h>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqMatrixTmp::MeqMatrixTmp (double value, int nx, int ny, bool init)
 {
@@ -121,4 +124,5 @@ MeqMatrixTmp sum (const MeqMatrixTmp& arg)
   return arg.itsRep->sum();
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

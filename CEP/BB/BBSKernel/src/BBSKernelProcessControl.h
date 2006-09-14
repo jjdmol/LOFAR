@@ -31,7 +31,14 @@
 #include <PLC/ProcessControl.h>
 #include <APS/ParameterSet.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
+
+// \addtogroup BBS
+// @{
+
 //# Description of class.
 // The ProcessControl class defines the command interface that can be used
 // to control the processes of an application.<br>
@@ -107,6 +114,7 @@ public:
     std::string askInfo(const string& keylist);
 }; // class BBSKernelProcessControl
 
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

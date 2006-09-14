@@ -28,7 +28,12 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
+using LOFAR::dcomplex;
+using LOFAR::conj;
 
 MeqBaseDFTPS::MeqBaseDFTPS (const MeqExpr& left, const MeqExpr& right,
                 const MeqExpr& lmn)
@@ -173,4 +178,5 @@ std::string MeqBaseDFTPS::getLabel()
 }
 #endif
 
-}
+} // namespace BBS
+} // namespace LOFAR

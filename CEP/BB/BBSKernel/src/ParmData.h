@@ -35,12 +35,15 @@
 
 namespace LOFAR {
 
-// \addtogroup BBS
-// @{
-
 //# Forward Declarations.
 class BlobOStream;
 class BlobIStream;
+
+namespace BBS
+{
+
+// \addtogroup BBS
+// @{
 
 class ParmData
 {
@@ -187,6 +190,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

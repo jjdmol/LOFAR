@@ -26,7 +26,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 
 MeqMatrixRep::~MeqMatrixRep()
@@ -73,4 +76,5 @@ void MeqMatrixRep::fillRowWithProducts(dcomplex, dcomplex, int)
   throw (AipsError ("MeqMatrixRep::fillRowWithProducts not implemented"));
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

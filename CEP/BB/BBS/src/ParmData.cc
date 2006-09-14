@@ -27,7 +27,11 @@
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS 
+{
+  using LOFAR::operator<<;
 
   ParmData::ParmData()
     : itsDBSeqNr   (-1),
@@ -237,4 +241,6 @@ namespace LOFAR {
       os << ' ' << itsDomains[i] << " [" << itsDomainIndices[i] << ']' << endl;
     }
   }
-}
+
+} // namespace BBS
+} // namespace LOFAR

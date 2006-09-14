@@ -32,6 +32,8 @@
 
 namespace LOFAR
 {
+namespace BBS 
+{
   
 MMap::MMap (const string& fileName, protection prot)
   : itsFileName  (fileName),
@@ -141,4 +143,5 @@ void MMap::flush()
   }
 }
 
+} // namespace BBS
 } // namespace LOFAR

@@ -31,6 +31,7 @@
 #include <Blob/BlobIStream.h>
 
 using namespace LOFAR;
+using namespace LOFAR::BBS;
 using namespace std;
 
 
@@ -81,7 +82,7 @@ void doIt1sd (const ParmDB::ParmDBMeta& pdm)
   {
     int nr = iter->second.initDomain (localSolveDomains, nrpert, nrscids);
     if (nr > 0) {
-      parmdata.parms().push_back (ParmData(iter->second.getName(),
+      parmdata.parms().push_back (LOFAR::BBS::ParmData(iter->second.getName(),
 					   iter->second.getParmDBSeqNr(),
 					   iter->second.getFunklets()));
     }
@@ -125,7 +126,7 @@ void doIt4sd (const ParmDB::ParmDBMeta& pdm)
   {
     int nr = iter->second.initDomain (localSolveDomains, nrpert, nrscids);
     if (nr > 0) {
-      parmdata.parms().push_back (ParmData(iter->second.getName(),
+      parmdata.parms().push_back (LOFAR::BBS::ParmData(iter->second.getName(),
 					   iter->second.getParmDBSeqNr(),
 					   iter->second.getFunklets()));
     }
@@ -174,7 +175,7 @@ void doIt4sd2pd (const ParmDB::ParmDBMeta& pdm)
   {
     int nr = iter->second.initDomain (localSolveDomains1, nrpert1, nrscids1);
     if (nr > 0) {
-      parmdata1.parms().push_back (ParmData(iter->second.getName(),
+      parmdata1.parms().push_back (LOFAR::BBS::ParmData(iter->second.getName(),
 					    iter->second.getParmDBSeqNr(),
 					    iter->second.getFunklets()));
     }
@@ -205,7 +206,7 @@ void doIt4sd2pd (const ParmDB::ParmDBMeta& pdm)
   {
     int nr = iter->second.initDomain (localSolveDomains2, nrpert2, nrscids2);
     if (nr > 0) {
-      parmdata2.parms().push_back (ParmData(iter->second.getName(),
+      parmdata2.parms().push_back (LOFAR::BBS::ParmData(iter->second.getName(),
 					    iter->second.getParmDBSeqNr(),
 					    iter->second.getFunklets()));
     }

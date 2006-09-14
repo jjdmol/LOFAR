@@ -31,7 +31,10 @@
 #include <iomanip>
 #include <algorithm>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqExprRep::MeqExprRep()
   : itsCount    (0),
@@ -373,4 +376,5 @@ std::string MeqExprAPToComplex::getLabel()
 }
 #endif
 
-}
+} // namespace BBS
+} // namespace LOFAR

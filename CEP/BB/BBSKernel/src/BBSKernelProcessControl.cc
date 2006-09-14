@@ -30,6 +30,9 @@
 
 namespace LOFAR 
 {
+namespace BBS 
+{
+    
     BBSKernelProcessControl::BBSKernelProcessControl()
     : ProcessControl()
     {
@@ -128,4 +131,5 @@ namespace LOFAR
         return std::string("");
     }
 
+} // namespace BBS
 } // namespace LOFAR

@@ -39,6 +39,7 @@
 #include <sstream>
 
 using namespace LOFAR;
+using namespace LOFAR::BBS;
 using namespace casa;
 using namespace std;
 

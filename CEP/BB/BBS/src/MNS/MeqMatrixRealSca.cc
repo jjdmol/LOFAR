@@ -31,7 +31,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqMatrixRealSca::~MeqMatrixRealSca()
 {}
@@ -257,4 +260,5 @@ MeqMatrixRep* MeqMatrixRealSca::sum()
   return this;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

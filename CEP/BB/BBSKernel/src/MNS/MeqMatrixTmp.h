@@ -33,7 +33,10 @@
 #include <BBS/MNS/MeqMatrixComplexSca.h>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -176,6 +179,7 @@ inline ostream& operator<< (ostream& os, const MeqMatrixTmp& vec)
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

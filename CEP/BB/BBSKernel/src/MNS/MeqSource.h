@@ -30,7 +30,10 @@
 #include <BBS/MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -76,6 +79,7 @@ protected:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

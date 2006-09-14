@@ -32,7 +32,10 @@
 #include <ParmDB/ParmValue.h>
 #include <Common/lofar_vector.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -158,6 +161,7 @@ protected:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

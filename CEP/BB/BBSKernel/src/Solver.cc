@@ -42,6 +42,9 @@ using namespace casa;
 
 namespace LOFAR
 {
+namespace BBS 
+{
+using LOFAR::operator<<;
 
 Solver::Solver ()
 : itsDoSet  (true)
@@ -58,7 +61,7 @@ void Solver::solve (bool useSVD)
 {
   LOG_INFO_STR( "solve using file ");
   ASSERT (!itsDoSet);
-  BBSTest::ScopedTimer timer("S:solver");
+  //BBSTest::ScopedTimer timer("S:solver");
   vector<ParmData>& globalParms = itsParmInfo.parms();
   for (uint i=0; i<itsFitters.size(); ++i) {
     FitterData& fitObj = itsFitters[i];
@@ -322,10 +325,12 @@ void Solver::show (ostream& os)
   }
   os << "Solver ParmInfo: " << endl;
   itsParmInfo.show (os);
+  
   os << "Solver Fitter Values:" << endl;
   for (uint i=0; i<itsFitters.size(); ++i) {
     os << ' ' << itsFitters[i].solvableValues << endl;
   }
+  
   os << "Solver PredInfo:" << endl;
   for (uint i=0; i<itsPredInfo.size(); ++i) {
     os << " sdindices " << itsPredInfo[i].solveDomainIndices << endl;
@@ -337,6 +342,7 @@ void Solver::show (ostream& os)
   }
 }
 
+} // namespace BBS
 } // namespace LOFAR
 
 //# Instantiate the makeNorm template.

@@ -24,7 +24,10 @@
 #include <BBS/MNS/MeqParmFunklet.h>
 #include <BBS/MNS/MeqMatrixTmp.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
   MeqParmExpr::MeqParmExpr (const string& expr, MeqParmGroup& group,
 			    ParmDB::ParmDB* table)
@@ -69,4 +72,5 @@ namespace LOFAR {
     return *v[0] * *v[1];
   }
 
-}
+} // namespace BBS
+} // namespace LOFAR

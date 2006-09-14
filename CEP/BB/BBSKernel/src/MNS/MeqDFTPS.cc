@@ -32,8 +32,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
-
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqDFTPS::MeqDFTPS (const MeqExpr& lmn, MeqStatUVW* uvw)
 : itsLMN (lmn),
@@ -130,4 +132,5 @@ std::string MeqDFTPS::getLabel()
 }
 #endif
 
-}
+} // namespace BBS
+} // namespace LOFAR

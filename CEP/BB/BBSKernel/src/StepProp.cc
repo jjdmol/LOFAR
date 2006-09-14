@@ -27,6 +27,8 @@ using namespace casa;
 
 namespace LOFAR
 {
+namespace BBS 
+{
 
 // \addtogroup BBS
 // @{
@@ -124,4 +126,5 @@ void StepProp::expandPatterns (const vector<string>& antNames) const
   }
 }
 
+} // namespace BBS
 } // namespace LOFAR

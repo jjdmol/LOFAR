@@ -26,7 +26,10 @@
 // \file
 // Class holding an interferometer
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -37,6 +40,7 @@ namespace LOFAR {
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

@@ -124,11 +124,11 @@ echo "---------------- END $1 ----------------"
 return $RETURN_VALUE
 }
 
-run_subtest clean_constant &&
-run_subtest clean_polc &&
-run_subtest clean_band_constant &&
-run_subtest noise_constant &&
-run_subtest noise_polc &&
-run_subtest noise_band_constant
+run_subtest clean_constant > tBandpass_tmp.log 2>&1 &&
+run_subtest clean_polc > tBandpass_tmp.log 2>&1 &&
+run_subtest clean_band_constant > tBandpass_tmp.log 2>&1 &&
+run_subtest noise_constant > tBandpass_tmp.log 2>&1 &&
+run_subtest noise_polc > tBandpass_tmp.log 2>&1 &&
+run_subtest noise_band_constant > tBandpass_tmp.log 2>&1
 
 exit $?

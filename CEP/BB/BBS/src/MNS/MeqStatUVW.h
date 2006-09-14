@@ -33,7 +33,10 @@
 #include <Common/lofar_map.h>
 #include <measures/Measures/MeasFrame.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -105,6 +108,7 @@ private:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

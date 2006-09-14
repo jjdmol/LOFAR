@@ -37,6 +37,8 @@
 
 namespace LOFAR
 {
+namespace BBS
+{
 
 // \addtogroup BBS
 // @{
@@ -113,10 +115,11 @@ private:
   {
     casa::LSQFit   fitter;
     Quality        quality;
-    vector<double> solvableValues;
+    std::vector<double> solvableValues;
     int            nused;
     int            nflagged;
   };
+  
   struct PredifferInfo
   {
     vector<int>           solveDomainIndices;
@@ -132,6 +135,7 @@ private:
 
 // @}
 
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

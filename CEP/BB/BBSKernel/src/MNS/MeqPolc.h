@@ -29,7 +29,10 @@
 //# Includes
 #include <BBS/MNS/MeqFunklet.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -68,6 +71,7 @@ public:
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

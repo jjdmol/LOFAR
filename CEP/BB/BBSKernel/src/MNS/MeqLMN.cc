@@ -30,7 +30,10 @@
 #include <Common/LofarLogger.h>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqLMN::MeqLMN (MeqSource* source)
 : itsSource    (source)
@@ -209,4 +212,5 @@ std::string MeqLMN::getLabel()
 }
 #endif
 
-}
+} // namespace BBS
+} // namespace LOFAR

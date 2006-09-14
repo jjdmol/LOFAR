@@ -29,7 +29,10 @@
 #include <BBS/MNS/MeqMatrix.h>
 #include <BBS/MNS/MeqMatrixTmp.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqStatExpr::MeqStatExpr (const MeqExpr& faradayRotation,
 			  const MeqExpr& dipoleRotation,
@@ -191,4 +194,5 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
   return result;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

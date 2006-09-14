@@ -24,7 +24,10 @@
 #include <BBS/MNS/MeqDomain.h>
 #include <Common/LofarLogger.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqDomain::MeqDomain()
 : itsStartX (0),
@@ -68,4 +71,5 @@ std::ostream& operator<< (std::ostream& os, const MeqDomain& domain)
   return os;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

@@ -31,7 +31,10 @@
 #include <Common/LofarLogger.h>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqLMN::MeqLMN (MeqPointSource* source)
 : itsSource    (source)
@@ -140,4 +143,5 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
   return result;
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

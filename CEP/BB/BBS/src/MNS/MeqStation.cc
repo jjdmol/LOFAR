@@ -23,7 +23,10 @@
 #include <lofar_config.h>
 #include <BBS/MNS/MeqStation.h>
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqStation::MeqStation()
 {}
@@ -36,4 +39,5 @@ MeqStation::MeqStation (MeqExpr posX, MeqExpr posY, MeqExpr posZ,
   itsName (name)
 {}
 
-}
+} // namespace BBS
+} // namespace LOFAR

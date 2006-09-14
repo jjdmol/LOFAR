@@ -37,7 +37,10 @@
 
 using namespace casa;
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 MeqStatUVW::MeqStatUVW (MeqStation* station,
             const MeqPhaseRef* phaseRef)
@@ -140,4 +143,5 @@ void MeqStatUVW::set (double time, double u, double v, double w)
   itsUVW[MeqTime(time)] = MeqUVW(u,v,w);
 }
 
-}
+} // namespace BBS
+} // namespace LOFAR

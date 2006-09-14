@@ -32,7 +32,10 @@
 // This class represents the result in a Jones matrix of a domain for
 // which the expressions have been evaluated.
 
-namespace LOFAR {
+namespace LOFAR
+{
+namespace BBS
+{
 
 // \ingroup BBS
 // \addtogroup MNS
@@ -78,6 +81,7 @@ namespace LOFAR {
 
 // @}
 
-}
+} // namespace BBS
+} // namespace LOFAR
 
 #endif
