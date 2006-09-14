@@ -53,7 +53,7 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
       {
         _lastOkCmd = cmd;
       }
-      _interface.appBooted(result);
+      _interface.appBooted(_procName, result);
       break;
 
     case ACCmdQuit:
@@ -61,7 +61,7 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
       {
         _continuePoll = false;
       }
-      _interface.appQuitDone(result);
+      _interface.appQuitDone(_procName, result);
       break;
 
     case ACCmdDefine:
@@ -69,7 +69,7 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
       {
         _lastOkCmd = cmd;
       }
-      _interface.appDefined(result);
+      _interface.appDefined(_procName, result);
       break;
 
     case ACCmdInit:
@@ -77,11 +77,11 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
       {
         _lastOkCmd = cmd;
       }
-      _interface.appInitialized(result);
+      _interface.appInitialized(_procName, result);
       break;
 
     case ACCmdPause:
-      _interface.appPaused(result);
+      _interface.appPaused(_procName, result);
       break;
 
     case ACCmdRun:
@@ -89,23 +89,23 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
       {
         _lastOkCmd = cmd;
       }
-      _interface.appRunDone(result);
+      _interface.appRunDone(_procName, result);
       break;
 
     case ACCmdSnapshot:
-      _interface.appSnapshotDone(result);
+      _interface.appSnapshotDone(_procName, result);
       break;
 
     case ACCmdRecover:
-      _interface.appRecovered(result);
+      _interface.appRecovered(_procName, result);
       break;
 
     case ACCmdReinit:
-      _interface.appReinitialized(result);
+      _interface.appReinitialized(_procName, result);
       break;
 
     case ACCmdReplace:
-      _interface.appReplaced(result);
+      _interface.appReplaced(_procName, result);
       break;
 
     default:
@@ -117,12 +117,12 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
 
 void  CEPApplicationManager::handleAnswerMsg   (const string& answer)
 {
-  _interface.appSupplyInfoAnswer(answer);
+  _interface.appSupplyInfoAnswer(_procName, answer);
 }
 
 string  CEPApplicationManager::supplyInfoFunc  (const string& keyList)
 {
-  return _interface.appSupplyInfo(keyList);
+  return _interface.appSupplyInfo(_procName, keyList);
 }
 
   } // namespace CEPCU

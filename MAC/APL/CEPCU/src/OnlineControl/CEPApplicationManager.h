@@ -46,18 +46,18 @@ class CEPApplicationManagerInterface
     virtual ~CEPApplicationManagerInterface() {}
     
   public:
-    virtual void    appBooted(uint16 result) = 0;
-    virtual void    appDefined(uint16 result) = 0;
-    virtual void    appInitialized(uint16 result) = 0;
-    virtual void    appRunDone(uint16 result) = 0;
-    virtual void    appPaused(uint16 result) = 0;
-    virtual void    appQuitDone(uint16 result) = 0;
-    virtual void    appSnapshotDone(uint16 result) = 0;
-    virtual void    appRecovered(uint16 result) = 0;
-    virtual void    appReinitialized(uint16 result) = 0;
-    virtual void    appReplaced(uint16 result) = 0;
-    virtual string  appSupplyInfo(const string& keyList) = 0;
-    virtual void    appSupplyInfoAnswer(const string& answer) = 0;    
+    virtual void    appBooted(const string& procName, uint16 result) = 0;
+    virtual void    appDefined(const string& procName, uint16 result) = 0;
+    virtual void    appInitialized(const string& procName, uint16 result) = 0;
+    virtual void    appRunDone(const string& procName, uint16 result) = 0;
+    virtual void    appPaused(const string& procName, uint16 result) = 0;
+    virtual void    appQuitDone(const string& procName, uint16 result) = 0;
+    virtual void    appSnapshotDone(const string& procName, uint16 result) = 0;
+    virtual void    appRecovered(const string& procName, uint16 result) = 0;
+    virtual void    appReinitialized(const string& procName, uint16 result) = 0;
+    virtual void    appReplaced(const string& procName, uint16 result) = 0;
+    virtual string  appSupplyInfo(const string& procName, const string& keyList) = 0;
+    virtual void    appSupplyInfoAnswer(const string& procName, const string& answer) = 0;    
 
   private:
     // protected copy constructor
@@ -124,6 +124,7 @@ class CEPApplicationManager : public ACC::ALC::ACClientFunctions,
     ACC::ALC::ACAsyncClient         _acClient;
     bool                            _continuePoll;
     ACC::ALC::ACCmd                 _lastOkCmd;
+	string                          _procName;
     
     ALLOC_TRACER_CONTEXT  
 };
@@ -132,10 +133,10 @@ inline CEPApplicationManager::CEPApplicationManager(
                                     CEPApplicationManagerInterface& interface, 
                                     const string& appName) :
       _interface(interface),
-      _acClient(this, appName, 10, 100, 1, 0),
+	  _acClient(this, appName, 10, 100, 1, 0),
       _continuePoll(false),
-      _lastOkCmd(ACC::ALC::ACCmdNone)
-      
+	  _lastOkCmd(ACC::ALC::ACCmdNone),
+      _procName(appName)
 { 
   use(); // to avoid that this object will be deleted in GCFTask::stop;
 }
