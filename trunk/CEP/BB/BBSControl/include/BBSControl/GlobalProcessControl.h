@@ -1,4 +1,4 @@
-//# DH_BBSStep.h: DataHolder for a BBSStep object.
+//# BBSProcessControl.h: Implementation of ACC/PLC ProcessControl class.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,14 +20,15 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_DH_BBSSTEP_H
-#define LOFAR_BBSCONTROL_DH_BBSSTEP_H
+#ifndef LOFAR_BBSCONTROL_BBSPROCESSCONTROL_H
+#define LOFAR_BBSCONTROL_BBSPROCESSCONTROL_H
 
 // \file
-// Base component class of the DH_BBSStep composite pattern.
+// Implementation of ACC/PLC ProcessControl class
 
 //# Includes
-#include <Transport/DataHolder.h>
+#include <PLC/ProcessControl.h>
+#include <boost/logic/tribool_fwd.hpp>
 
 namespace LOFAR
 {
@@ -36,39 +37,29 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations.
-    class BBSStep;
 
     // \addtogroup BBS
     // @{
 
-    // This class wraps a BBSStep object to prepare it for transport using the
-    // %LOFAR Transport library.
-    class DH_BBSStep : public DataHolder
+    class BBSProcessControl : public ACC::PLC::ProcessControl
     {
     public:
-      // Constructor. We will use extra blobs to store our variable length
-      // conversion requests, so we must initialize the blob machinery.
-      DH_BBSStep();
-
-      // Destructor.
-      virtual ~DH_BBSStep();
-
-      // Write the BBSStep to be sent into the I/O buffers of the DataHolder.
-      void writeBuf(BBSStep*);
-      
-      // Read the BBSStep that was received from the I/O buffers of the
-      // DataHolder.
-      void readBuf(BBSStep*&);
-        
+      virtual ~BBSProcessControl();
+      virtual boost::logic::tribool define();
+      virtual boost::logic::tribool init();
+      virtual boost::logic::tribool run();
+      virtual boost::logic::tribool quit();
     private:
-      // Make a deep copy.
-      // \note Must be redefined, because it's defined pure virtual in the
-      // base class. Made it private, because we won't use it.
-      virtual DH_BBSStep* clone() const;
+      // The operations below are not supported by BBSProcessControl.
+      // @{
+      virtual boost::logic::tribool pause(const string& condition);
+      virtual boost::logic::tribool snapshot(const string& destination);
+      virtual boost::logic::tribool recover(const string& source);
+      virtual boost::logic::tribool reinit(const string& configID);
+      virtual string                askInfo(const string& keylist);
 
-      // Version number for this class
-      static const int theirVersionNr;
 
+      // @}
     };
 
     // @}

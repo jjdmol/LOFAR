@@ -185,13 +185,7 @@ namespace LOFAR
       // Write the contents of a BBSStep to an output stream.
       friend ostream& operator<<(ostream&, const BBSStep&);
 
-//       // Write the contents of a BBSStep to a blob output stream.
-//       friend BlobOStream& operator<<(BlobOStream&, const BBSStep&);
-
     };
-
-//     // Assign the contents of a blob input stream to a BBSStep.
-//     BlobIStream& operator>>(BlobIStream&, BBSStep&);
 
     // @}
     

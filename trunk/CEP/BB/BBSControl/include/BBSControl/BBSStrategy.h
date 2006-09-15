@@ -32,10 +32,13 @@
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
+  //# Forward declarations
+  class BlobIStream;
+  class BlobOStream;
+
   namespace BBS
   {
     //# Forward declarations
@@ -47,11 +50,24 @@ namespace LOFAR
     class BBSStrategy
     {
     public:
+      // Default constructor. Create an empty strategy, which is useful when
+      // deserializing a BBSStrategy object.
+      BBSStrategy() {}
 
       // Create a solve strategy for the given work domain.
       BBSStrategy(const ACC::APS::ParameterSet& aParamSet);
 
+      // Destructor.
       ~BBSStrategy();
+
+      // Deserialize the contents of the blob input stream \a bis into \c
+      // *this. 
+      void deserialize(BlobIStream& bis);
+
+      // Serialize \c *this by writing its contents into the blob output
+      // stream \a bos. The argument \a doSteps indicates whether the data
+      // member itsSteps should be written as well. By default, it won't.
+      void serialize(BlobOStream& bos, bool doSteps = false) const;
 
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
@@ -64,6 +80,13 @@ namespace LOFAR
       vector<const BBSStep*> getAllSteps() const;
 
     private:
+      // Read the BBSStep objects from the blob input stream \a bis and store
+      // them in \a itsSteps.
+      void BBSStrategy::readSteps(BlobIStream& bis);
+
+      // Write the BBSStep objects in \a itsSteps to the blob output stream \a
+      // bos.
+      void BBSStrategy::writeSteps(BlobOStream& bos) const;
 
       // Name of the Measurement Set
       string                 itsDataSet;
@@ -73,9 +96,6 @@ namespace LOFAR
 
       // Information about the parameter database.
       ParmDB                 itsParmDB;
-
-      // Sequence of steps that comprise this solve strategy.
-      vector<const BBSStep*> itsSteps;
 
       // Names of the stations to use. Names may contains wildcards, like \c *
       // and \c ?. Expansion of wildcards will be done in the BBS kernel, so
@@ -93,6 +113,9 @@ namespace LOFAR
 
       // Integration intervals in frequency (Hz) and time (s).
       Integration            itsIntegration;
+
+      // Sequence of steps that comprise this solve strategy.
+      vector<const BBSStep*> itsSteps;
 
     };
 

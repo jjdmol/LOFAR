@@ -3,10 +3,12 @@ pkginclude_HEADERS = \
 	BBSSingleStep.h \
 	BBSSolveStep.h \
 	BBSMultiStep.h \
+	BBSProcessControl.h \
 	BBSStrategy.h \
 	BBSStructs.h \
 	BlackBoardDemo.h \
 	DH_BBSStep.h \
+	DH_BBSStrategy.h \
 	DH_Prediff.h \
 	ParmWriter.h \
 	SC_CompoundIter.h \

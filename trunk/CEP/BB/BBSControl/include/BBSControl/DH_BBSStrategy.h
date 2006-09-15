@@ -1,4 +1,4 @@
-//# DH_BBSStep.h: DataHolder for a BBSStep object.
+//# DH_BBSStrategy.h: DataHolder for the parameters of a BBSStrategy.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_DH_BBSSTEP_H
-#define LOFAR_BBSCONTROL_DH_BBSSTEP_H
+#ifndef LOFAR_BBSCONTROL_DH_BBSSTRATEGY_H
+#define LOFAR_BBSCONTROL_DH_BBSSTRATEGY_H
 
 // \file
-// Base component class of the DH_BBSStep composite pattern.
+// Base component class of the DH_BBSStrategy composite pattern.
 
 //# Includes
 #include <Transport/DataHolder.h>
@@ -36,35 +36,40 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations.
-    class BBSStep;
+    class BBSStrategy;
 
     // \addtogroup BBS
     // @{
 
-    // This class wraps a BBSStep object to prepare it for transport using the
-    // %LOFAR Transport library.
-    class DH_BBSStep : public DataHolder
+    // This class wraps all the data members of a BBSStrategy object, \e
+    // except the BBSStep objects it contains, to prepare it for transport
+    // using the %LOFAR Transport library.
+    class DH_BBSStrategy : public DataHolder
     {
     public:
       // Constructor. We will use extra blobs to store our variable length
       // conversion requests, so we must initialize the blob machinery.
-      DH_BBSStep();
+      DH_BBSStrategy();
 
       // Destructor.
-      virtual ~DH_BBSStep();
+      virtual ~DH_BBSStrategy();
 
-      // Write the BBSStep to be sent into the I/O buffers of the DataHolder.
-      void writeBuf(BBSStep*);
+      // Write all data members to be sent into the I/O buffers of the
+      // DataHolder. The argument \a doSteps determines whether the BBSStep
+      // objects within a BBSStrategy will be written as well. By default,
+      // they won't.
+      void writeBuf(const BBSStrategy& bs, bool doSteps = false);
       
-      // Read the BBSStep that was received from the I/O buffers of the
+      // Read all data members of the BBSStrategy object, \e except the
+      // BBSStep objects, that were received from the I/O buffers of the
       // DataHolder.
-      void readBuf(BBSStep*&);
+      void readBuf(BBSStrategy& bs);
         
     private:
       // Make a deep copy.
       // \note Must be redefined, because it's defined pure virtual in the
       // base class. Made it private, because we won't use it.
-      virtual DH_BBSStep* clone() const;
+      virtual DH_BBSStrategy* clone() const;
 
       // Version number for this class
       static const int theirVersionNr;

@@ -25,6 +25,7 @@
 
 //# Includes
 #include <BBSControl/DH_BBSStep.h>
+#include <BBSControl/BBSStep.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
