@@ -98,7 +98,7 @@ bool doIt(bool doSteps)
   // Clean up the files `sendFile' and `recvFile'
   cmd = "rm -f " + arg;
   LOG_TRACE_FLOW_STR("About to make call `system(" << cmd << ")'");
-  //  system(cmd.c_str());
+  system(cmd.c_str());
 
   if (result != 0) {
     LOG_ERROR("`sendStrategy' and `recvStrategy' are not equal");
