@@ -1771,6 +1771,9 @@ void WH_BGL_Processing::doCorrelate()
 
 void WH_BGL_Processing::process()
 {
+  NSTimer totalTimer("total", true);
+  totalTimer.start();
+
 #if defined HAVE_MPI
   std::clog.precision(15);
   std::clog << "core " << TH_MPI::getCurrentRank() << ": start reading at " << MPI_Wtime() << '\n';
@@ -1820,6 +1823,8 @@ void WH_BGL_Processing::process()
 #if defined HAVE_MPI
   std::clog << "core " << TH_MPI::getCurrentRank() << ": start idling at " << MPI_Wtime() << '\n';
 #endif
+
+  totalTimer.stop();
 }
 
 
