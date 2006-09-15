@@ -106,7 +106,7 @@ namespace LOFAR
 	struct itimerval value;
 	memset (&value, 0, sizeof(itimerval));
 
-	double interval = 1 / itsNSubbandsPerCell;
+	double interval = itsPS.getUint32("Observation.NSubbandSamples") / itsPS.getDouble("Observation.SampleRate") / itsNSubbandsPerCell;
 	__time_t secs = static_cast<__time_t>(floor(interval));
 	__time_t usecs = static_cast<__time_t>(1e6 * (interval - secs));
 	// this means 1MHz is the highest frequency
@@ -114,7 +114,7 @@ namespace LOFAR
 	value.it_interval.tv_usec = usecs;
 	value.it_value.tv_sec = secs;
 	value.it_value.tv_usec = usecs;
-	cout << "Setting timer interval to " << secs << "secs and " << usecs << "ms" << endl;
+	clog << "Setting timer interval to " << secs << "secs and " << usecs << "ms" << endl;
 
 	setitimer(ITIMER_REAL, &value, 0);
 #else
