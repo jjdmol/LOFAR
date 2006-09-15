@@ -75,7 +75,7 @@ public:
   virtual void removeFunklets();
 
   // Read the polcs for the given domain.
-  virtual void fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>&,
+  virtual void fillFunklets (const std::map<std::string,LOFAR::ParmDB::ParmValueSet>&,
                  const MeqDomain&);
 
   // Initialize the solvable parameter for the given domain.
@@ -145,7 +145,7 @@ public:
     { return itsParmPtr->getParmDBSeqNr(); }
   void removeFunklets()
     { itsParmPtr->removeFunklets(); }
-  void fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>& parmSet,
+  void fillFunklets (const std::map<std::string,LOFAR::ParmDB::ParmValueSet>& parmSet,
              const MeqDomain& domain)
     { itsParmPtr->fillFunklets (parmSet, domain); }
   int initDomain (const vector<MeqDomain>& solveDomains, int& pertIndex,

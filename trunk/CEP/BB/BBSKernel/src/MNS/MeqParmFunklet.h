@@ -56,7 +56,7 @@ class MeqParmFunklet: public MeqParm
 {
 public:
   // Create a stored paramater with the given name and type.
-  MeqParmFunklet (const string& name, ParmDB::ParmDB* table);
+  MeqParmFunklet (const string& name, LOFAR::ParmDB::ParmDB* table);
 
   virtual ~MeqParmFunklet();
 
@@ -65,7 +65,7 @@ public:
   // a MeqParmFunklet.
   static MeqExpr create (const string& name,
 			 MeqParmGroup& group,
-			 ParmDB::ParmDB* table);
+			 LOFAR::ParmDB::ParmDB* table);
 
   // Get the requested result of the parameter.
   virtual MeqResult getResult (const MeqRequest&);
@@ -77,7 +77,7 @@ public:
   // Only fill if not filled yet.
   // It means that clearFunklets need to be called if a new work domain
   // is to be processed.
-  virtual void fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>&,
+  virtual void fillFunklets (const std::map<std::string,LOFAR::ParmDB::ParmValueSet>&,
 			     const MeqDomain&);
 
   // Add a funklet.
@@ -96,7 +96,7 @@ public:
   virtual const vector<MeqFunklet*>& getFunklets() const;
 
   // Get the ParmDBInfo
-  virtual ParmDB::ParmDBMeta getParmDBMeta() const;
+  virtual LOFAR::ParmDB::ParmDBMeta getParmDBMeta() const;
 
   // Get the ParmDB seqnr.
   virtual int getParmDBSeqNr() const;
@@ -127,7 +127,7 @@ private:
                                    //# This is the max nr of scids/funklet
   int                 itsPertInx;  //# index of first perturbed value in result
   vector<MeqFunklet*> itsFunklets;
-  ParmDB::ParmDB*     itsTable;
+  LOFAR::ParmDB::ParmDB*     itsTable;
   MeqDomain           itsWorkDomain;
 };
 

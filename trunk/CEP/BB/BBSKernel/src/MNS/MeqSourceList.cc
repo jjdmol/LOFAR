@@ -38,23 +38,23 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqSourceList::MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup& group)
+MeqSourceList::MeqSourceList (LOFAR::ParmDB::ParmDB& parmTable, MeqParmGroup& group)
 {
   // Get the vector of all parms containing a source name.
   // Also get all parms representing a gaussian source.
   vector<string> nams = parmTable.getNames("RA:*");
   vector<string> gnams = parmTable.getNames("Phi:*");
   if (nams.size() == 0) {
-    map<string,ParmDB::ParmValueSet> pset;
+    map<string,LOFAR::ParmDB::ParmValueSet> pset;
     parmTable.getDefValues (pset, "RA:*");
-    for (map<string,ParmDB::ParmValueSet>::const_iterator iter = pset.begin();
+    for (map<string,LOFAR::ParmDB::ParmValueSet>::const_iterator iter = pset.begin();
 	 iter != pset.end();
 	 iter++) {
       nams.push_back (iter->first);
     }
     pset.clear();
     parmTable.getDefValues (pset, "Phi:*");
-    for (map<string,ParmDB::ParmValueSet>::const_iterator iter = pset.begin();
+    for (map<string,LOFAR::ParmDB::ParmValueSet>::const_iterator iter = pset.begin();
 	 iter != pset.end();
 	 iter++) {
       gnams.push_back (iter->first);

@@ -105,7 +105,7 @@ void Solver::solve (bool useSVD)
 // last iteration to a ParmDB. The type of the parameters is set to 'history'
 // to ensure that they cannot accidentily be used as input for BBSkernel. Also,
 // ParmFacade::getHistory() checks on this type.
-void Solver::log(ParmDB::ParmDB &table)
+void Solver::log(LOFAR::ParmDB::ParmDB &table)
 {
     ostringstream os;
     os << std::setfill('0');
@@ -124,11 +124,11 @@ void Solver::log(ParmDB::ParmDB &table)
     // coefficients of each solvable parameter.
     for(size_t i = 0; i < itsFitters.size(); ++i)
     {
-        ParmDB::ParmValue value;
-        ParmDB::ParmValueRep &valueRep = value.rep();
+        LOFAR::ParmDB::ParmValue value;
+        LOFAR::ParmDB::ParmValueRep &valueRep = value.rep();
 
         valueRep.setType("history");
-        valueRep.setDomain(ParmDB::ParmDomain(domains[i].startX(), domains[i].endX(), domains[i].startY(), domains[i].endY()));
+        valueRep.setDomain(LOFAR::ParmDB::ParmDomain(domains[i].startX(), domains[i].endX(), domains[i].startY(), domains[i].endY()));
 
         // Log quality indicators.
         FitterData &fitter = itsFitters[i];

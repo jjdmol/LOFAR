@@ -36,10 +36,10 @@ namespace BBS
 {
 
 
-MeqPolc::MeqPolc (const ParmDB::ParmValue& pvalue)
+MeqPolc::MeqPolc (const LOFAR::ParmDB::ParmValue& pvalue)
 : MeqFunklet (pvalue)
 {
-  const ParmDB::ParmValueRep& pval = pvalue.rep();
+  const LOFAR::ParmDB::ParmValueRep& pval = pvalue.rep();
   ASSERTSTR (pval.itsType == "polc",
 	     "Funklet in ParmValue is not of type 'polc'");
 }

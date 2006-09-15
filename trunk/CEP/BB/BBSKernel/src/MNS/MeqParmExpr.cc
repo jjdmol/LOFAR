@@ -30,7 +30,7 @@ namespace BBS
 {
 
   MeqParmExpr::MeqParmExpr (const string& expr, MeqParmGroup& group,
-			    ParmDB::ParmDB* table)
+			    LOFAR::ParmDB::ParmDB* table)
   {
     // Only the multiplication or subtraction of 2 parms is supported.
     string::size_type idx = expr.find('-');

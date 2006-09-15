@@ -47,7 +47,7 @@ int MeqParm::getParmDBSeqNr() const
 void MeqParm::removeFunklets()
 {}
 
-void MeqParm::fillFunklets (const std::map<std::string,ParmDB::ParmValueSet>&,
+void MeqParm::fillFunklets (const std::map<std::string,LOFAR::ParmDB::ParmValueSet>&,
                 const MeqDomain&)
 {}
 

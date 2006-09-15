@@ -39,10 +39,10 @@ namespace LOFAR
 namespace BBS
 {
 
-  MeqTabular::MeqTabular (const ParmDB::ParmValue& pvalue)
+  MeqTabular::MeqTabular (const LOFAR::ParmDB::ParmValue& pvalue)
   : MeqFunklet (pvalue)
   {
-    const ParmDB::ParmValueRep& pval = pvalue.rep();
+    const LOFAR::ParmDB::ParmValueRep& pval = pvalue.rep();
     ASSERTSTR (pval.itsType == "tabular",
         "Funklet in ParmValue is not of type 'tabular'");
   }

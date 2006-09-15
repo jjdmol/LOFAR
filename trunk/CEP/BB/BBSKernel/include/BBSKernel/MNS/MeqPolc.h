@@ -52,10 +52,10 @@ public:
     {}
 
   // Create a polc from a ParmValue object.
-  MeqPolc (const ParmDB::ParmValue&);
+  MeqPolc (const LOFAR::ParmDB::ParmValue&);
 
   // Convert a polc to a ParmValue object.
-  ParmDB::ParmValue toParmValue() const;
+  LOFAR::ParmDB::ParmValue toParmValue() const;
 
   virtual ~MeqPolc();
 

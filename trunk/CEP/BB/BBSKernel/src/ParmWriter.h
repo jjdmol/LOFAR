@@ -70,7 +70,7 @@ namespace BBS
 		double tStart, double tEnd);
 
   private:
-    void setCoeff (ParmDB::ParmValueRep& pval, const MeqMatrix& coeff);
+    void setCoeff (LOFAR::ParmDB::ParmValueRep& pval, const MeqMatrix& coeff);
   };
 
   // @}

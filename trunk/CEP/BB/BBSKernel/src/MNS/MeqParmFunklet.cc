@@ -48,7 +48,7 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqParmFunklet::MeqParmFunklet (const string& name, ParmDB::ParmDB* table)
+MeqParmFunklet::MeqParmFunklet (const string& name, LOFAR::ParmDB::ParmDB* table)
 : MeqParm    (name),
   itsDefUsed (false),
   itsNrPert  (0),
@@ -63,7 +63,7 @@ MeqParmFunklet::~MeqParmFunklet()
 
 MeqExpr MeqParmFunklet::create (const string& name,
 				 MeqParmGroup& group,
-				 ParmDB::ParmDB* table)
+				 LOFAR::ParmDB::ParmDB* table)
 {
   // If the parm already exists, return it.
   MeqParmGroup::iterator pos = group.find (name);
@@ -71,12 +71,12 @@ MeqExpr MeqParmFunklet::create (const string& name,
     return pos->second;
   }
   // If the parm is an expression, use that.
-  map<string,ParmDB::ParmValueSet> pset;
+  map<string,LOFAR::ParmDB::ParmValueSet> pset;
   table->getDefValues (pset, name);
   if (! pset.empty()) {
-    ParmDB::ParmValueSet& pvset = pset.begin()->second;
+    LOFAR::ParmDB::ParmValueSet& pvset = pset.begin()->second;
     if (! pvset.getValues().empty()) {
-      ParmDB::ParmValueRep& pv = pvset.getValues()[0].rep();
+      LOFAR::ParmDB::ParmValueRep& pv = pvset.getValues()[0].rep();
       if (pv.itsType == "parmexpr") {
 	return new MeqParmExpr (pv.itsExpr, group, table);
       }
@@ -218,7 +218,7 @@ MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
   return result;
 }
 
-ParmDB::ParmDBMeta MeqParmFunklet::getParmDBMeta() const
+LOFAR::ParmDB::ParmDBMeta MeqParmFunklet::getParmDBMeta() const
 {
   return itsTable->getParmDBMeta();
 }
@@ -239,21 +239,21 @@ void MeqParmFunklet::removeFunklets()
 }
 
 void MeqParmFunklet::fillFunklets 
-                (const map<string,ParmDB::ParmValueSet>& parmSet,
+                (const map<string,LOFAR::ParmDB::ParmValueSet>& parmSet,
 		 const MeqDomain& domain)
 {
   // Only fill if not filled yet.
   if (! itsFunklets.empty()) {
     return;
   }
-  ParmDB::ParmDomain pdomain(domain.startX(), domain.endX(),
+  LOFAR::ParmDB::ParmDomain pdomain(domain.startX(), domain.endX(),
 			     domain.startY(), domain.endY());
   bool found = false;
   // Try to find the funklets in the parm set.
-  map<string,ParmDB::ParmValueSet>::const_iterator pos =
+  map<string,LOFAR::ParmDB::ParmValueSet>::const_iterator pos =
                                                    parmSet.find(getName());
   if (pos != parmSet.end()) {
-    const vector<ParmDB::ParmValue>& vec = pos->second.getValues();
+    const vector<LOFAR::ParmDB::ParmValue>& vec = pos->second.getValues();
     if (vec.size() > 0) {
       // Check if the funklet domains cover the entire domain and if they
       // do not overlap.  /// Not implemented yet!!!
@@ -272,7 +272,7 @@ void MeqParmFunklet::fillFunklets
   }
   if (!found) {
     // No value found, so use a default value.
-    ParmDB::ParmValue pval = itsTable->getDefValue (getName());
+    LOFAR::ParmDB::ParmValue pval = itsTable->getDefValue (getName());
     ASSERTSTR (!pval.rep().itsShape.empty(),
 	       "No value found for parameter " << getName()
 	       << " in given domain");
@@ -385,8 +385,8 @@ void MeqParmFunklet::updateFromTable()
 	     "MeqParmFunklet::updateFromTable - "
 	     "domain mismatches domain given in itsFunklets");
   // Find the funklet(s) for the current domain.
-  ParmDB::ParmDomain pdomain = itsWorkDomain.toParmDomain();
-  ParmDB::ParmValueSet pset = itsTable->getValues (getName(), pdomain);
+  LOFAR::ParmDB::ParmDomain pdomain = itsWorkDomain.toParmDomain();
+  LOFAR::ParmDB::ParmValueSet pset = itsTable->getValues (getName(), pdomain);
   ASSERT(pset.getValues().size() == 1);
   MeqPolc newpolc (pset.getValues()[0]);
   // Update the coefficients with the new ones.
@@ -396,7 +396,7 @@ void MeqParmFunklet::updateFromTable()
 void MeqParmFunklet::save()
 {
   for (unsigned int i=0; i<itsFunklets.size(); i++) {
-    ParmDB::ParmValue pval = itsFunklets[i]->getParmValue();
+    LOFAR::ParmDB::ParmValue pval = itsFunklets[i]->getParmValue();
     itsTable->putValue (getName(), pval);
   }
 }

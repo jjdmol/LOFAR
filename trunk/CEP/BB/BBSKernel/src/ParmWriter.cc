@@ -51,7 +51,7 @@ void ParmWriter::write (const ParmDataInfo& pDataInfo,
 			double tStart, double tEnd)
 {
   const vector<ParmData>& pData = pDataInfo.parms();
-  ParmDB::ParmDomain pdomain(fStart, fEnd, tStart, tEnd);
+  LOFAR::ParmDB::ParmDomain pdomain(fStart, fEnd, tStart, tEnd);
   // Store all parameters, all domains in their own ParmTable
   // Use one ParmTable at the time to avoid reopening the same table.
   vector<char> done(pData.size(), 0);
@@ -80,18 +80,18 @@ void ParmWriter::write (const ParmDataInfo& pDataInfo,
     // Get the ParmDB object for this ParmDB index.
     // It requires that Prediffer and Controller open the ParmDBs in
     // the same order.
-    ParmDB::ParmDB pdb = ParmDB::ParmDB::getParmDB (lastDBnr);
-    map<string,ParmDB::ParmValueSet> vals;
+    LOFAR::ParmDB::ParmDB pdb = LOFAR::ParmDB::ParmDB::getParmDB (lastDBnr);
+    map<string,LOFAR::ParmDB::ParmValueSet> vals;
     pdb.getValues (vals, parmNames, pdomain);
     // Add entries for parms not present in the map.
     // They are clearly new parms.
     // Set the value for all parms.
     for (uint i=0; i<parmNames.size(); i++) {
       const ParmData& parmd = pData[parmIndex[i]];
-      map<string,ParmDB::ParmValueSet>::iterator pos = vals.find(parmNames[i]);
+      map<string,LOFAR::ParmDB::ParmValueSet>::iterator pos = vals.find(parmNames[i]);
       if (pos == vals.end()) {
-	ParmDB::ParmValueSet pset(parmNames[i]);
-	ParmDB::ParmValue pval = pdb.getDefValue (parmNames[i]);
+	LOFAR::ParmDB::ParmValueSet pset(parmNames[i]);
+	LOFAR::ParmDB::ParmValue pval = pdb.getDefValue (parmNames[i]);
 	for (int j=0; j<parmd.size(); ++j) {
 	  //// set correct domain
 	  setCoeff (pval.rep(), parmd.getCoeff(j));
@@ -109,7 +109,7 @@ void ParmWriter::write (const ParmDataInfo& pDataInfo,
   }
 }
 
-void ParmWriter::setCoeff (ParmDB::ParmValueRep& pval, const MeqMatrix& coeff)
+void ParmWriter::setCoeff (LOFAR::ParmDB::ParmValueRep& pval, const MeqMatrix& coeff)
 {
   ASSERT (int(pval.itsCoeff.size()) == coeff.nelements());
   const double* vals = coeff.doubleStorage();
