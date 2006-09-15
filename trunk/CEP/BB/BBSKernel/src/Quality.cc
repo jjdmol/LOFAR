@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBS/Quality.h>
+#include <BBSKernel/Quality.h>
 
 namespace LOFAR
 {

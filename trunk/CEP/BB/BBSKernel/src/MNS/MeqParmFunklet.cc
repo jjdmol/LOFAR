@@ -21,10 +21,10 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqParmFunklet.h>
-#include <BBS/MNS/MeqParmExpr.h>
-#include <BBS/MNS/MeqPolc.h>
-#include <BBS/ParmData.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
+#include <BBSKernel/MNS/MeqParmExpr.h>
+#include <BBSKernel/MNS/MeqPolc.h>
+#include <BBSKernel/ParmData.h>
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/LofarLogger.h>

@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBS/MMap.h>
+#include <BBSKernel/MMap.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>

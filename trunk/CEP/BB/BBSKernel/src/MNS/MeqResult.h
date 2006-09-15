@@ -27,8 +27,8 @@
 // The result of an expression for a domain.
 
 //# Includes
-#include <BBS/MNS/MeqMatrix.h>
-#include <BBS/MNS/Pool.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/Pool.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_iostream.h>

@@ -27,8 +27,8 @@
 // The base class for a parameter
 
 //# Includes
-#include <BBS/MNS/MeqExpr.h>
-#include <BBS/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqResult.h>
 #include <ParmDB/ParmValue.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>

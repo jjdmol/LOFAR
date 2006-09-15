@@ -27,7 +27,7 @@
 // A sum of MeqJonesExpr
 
 //# Includes
-#include <BBS/MNS/MeqJonesExpr.h>
+#include <BBSKernel/MNS/MeqJonesExpr.h>
 #include <vector>
 
 namespace LOFAR

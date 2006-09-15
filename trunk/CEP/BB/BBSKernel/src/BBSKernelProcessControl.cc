@@ -26,7 +26,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <BBS/BBSKernelProcessControl.h>
+#include <BBSKernel/BBSKernelProcessControl.h>
 
 namespace LOFAR 
 {

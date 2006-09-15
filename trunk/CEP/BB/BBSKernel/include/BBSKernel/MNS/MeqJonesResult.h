@@ -27,7 +27,7 @@
 // The result of the 4 expressions in a Jones matrix for a domain.
 
 //# Includes
-#include <BBS/MNS/MeqResultVec.h>
+#include <BBSKernel/MNS/MeqResultVec.h>
 
 // This class represents the result in a Jones matrix of a domain for
 // which the expressions have been evaluated.

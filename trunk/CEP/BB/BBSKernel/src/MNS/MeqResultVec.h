@@ -27,7 +27,7 @@
 // A result vector containing multiple results.
 
 //# Includes
-#include <BBS/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqResult.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_vector.h>
 

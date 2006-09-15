@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqResultVec.h>
+#include <BBSKernel/MNS/MeqResultVec.h>
 
 // This class represents the result in a Jones matrix of a domain for
 // which the expressions have been evaluated.

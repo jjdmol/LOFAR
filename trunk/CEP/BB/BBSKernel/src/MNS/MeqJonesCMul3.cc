@@ -23,11 +23,11 @@
 #include <lofar_config.h>
 #include <Common/Timer.h>
 
-#include <BBS/MNS/MeqJonesCMul3.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqJonesResult.h>
-#include <BBS/MNS/MeqMatrix.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqJonesCMul3.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqJonesResult.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
 
 #if defined __SSE2__

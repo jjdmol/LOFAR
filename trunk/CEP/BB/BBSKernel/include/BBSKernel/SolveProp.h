@@ -26,7 +26,7 @@
 // \file
 // Solve properties.
 
-#include <BBS/MNS/MeqDomain.h>
+#include <BBSKernel/MNS/MeqDomain.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 

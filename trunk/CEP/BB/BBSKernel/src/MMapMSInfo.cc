@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <BBS/MMapMSInfo.h>
+#include <BBSKernel/MMapMSInfo.h>
 #include <MS/MSDesc.h>
 
 namespace LOFAR

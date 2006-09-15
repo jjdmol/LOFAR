@@ -20,9 +20,9 @@
 //#
 //# $Id$
 
-#include <BBS/MNS/MeqParmExpr.h>
-#include <BBS/MNS/MeqParmFunklet.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqParmExpr.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 
 namespace LOFAR
 {

@@ -27,7 +27,7 @@
 // List of sources
 
 //# Includes
-#include <BBS/MNS/MeqPointSource.h>
+#include <BBSKernel/MNS/MeqPointSource.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>

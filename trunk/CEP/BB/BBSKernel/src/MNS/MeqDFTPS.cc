@@ -22,12 +22,12 @@
 
 #include <lofar_config.h>
 
-#include <BBS/MNS/MeqDFTPS.h>
-#include <BBS/MNS/MeqStatUVW.h>
-#include <BBS/MNS/MeqLMN.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqResult.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqDFTPS.h>
+#include <BBSKernel/MNS/MeqStatUVW.h>
+#include <BBSKernel/MNS/MeqLMN.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <casa/BasicSL/Constants.h>
 
 using namespace casa;

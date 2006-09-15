@@ -22,25 +22,25 @@
 
 #include <lofar_config.h>
 
-#include <BBS/Prediffer.h>
-#include <BBS/MMap.h>
-#include <BBS/FlagsMap.h>
-#include <BBS/MNS/MeqLMN.h>
-#include <BBS/MNS/MeqDFTPS.h>
-#include <BBS/MNS/MeqDiag.h>
-#include <BBS/MNS/MeqBaseDFTPS.h>
-#include <BBS/MNS/MeqBaseLinPS.h>
-#include <BBS/MNS/MeqStatExpr.h>
-#include <BBS/MNS/MeqJonesSum.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
-#include <BBS/MNS/MeqMatrixComplexArr.h>
-#include <BBS/MNS/MeqMatrixRealArr.h>
-#include <BBS/MNS/MeqParmFunklet.h>
-#include <BBS/MNS/MeqParmSingle.h>
-#include <BBS/MNS/MeqPointSource.h>
-#include <BBS/MNS/MeqJonesCMul3.h>
-#include <BBS/MNS/MeqJonesInvert.h>
-#include <BBS/MNS/MeqJonesMMap.h>
+#include <BBSKernel/Prediffer.h>
+#include <BBSKernel/MMap.h>
+#include <BBSKernel/FlagsMap.h>
+#include <BBSKernel/MNS/MeqLMN.h>
+#include <BBSKernel/MNS/MeqDFTPS.h>
+#include <BBSKernel/MNS/MeqDiag.h>
+#include <BBSKernel/MNS/MeqBaseDFTPS.h>
+#include <BBSKernel/MNS/MeqBaseLinPS.h>
+#include <BBSKernel/MNS/MeqStatExpr.h>
+#include <BBSKernel/MNS/MeqJonesSum.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqMatrixComplexArr.h>
+#include <BBSKernel/MNS/MeqMatrixRealArr.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
+#include <BBSKernel/MNS/MeqParmSingle.h>
+#include <BBSKernel/MNS/MeqPointSource.h>
+#include <BBSKernel/MNS/MeqJonesCMul3.h>
+#include <BBSKernel/MNS/MeqJonesInvert.h>
+#include <BBSKernel/MNS/MeqJonesMMap.h>
 
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
@@ -105,7 +105,7 @@
 #include <malloc.h>
 #include <unistd.h>
 
-#include <BBS/BBSTestLogger.h>
+#include <BBSKernel/BBSTestLogger.h>
 
 #if defined _OPENMP
 #include <omp.h>

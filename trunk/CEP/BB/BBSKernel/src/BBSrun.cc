@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <BBS/Prediffer.h>
-#include <BBS/Solver.h>
+#include <BBSKernel/Prediffer.h>
+#include <BBSKernel/Solver.h>
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmDBMeta.h>
 #include <MS/MSDesc.h>

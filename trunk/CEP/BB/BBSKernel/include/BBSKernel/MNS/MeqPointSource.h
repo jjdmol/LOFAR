@@ -27,7 +27,7 @@
 // Class holding a point source
 
 //# Includes
-#include <BBS/MNS/MeqSource.h>
+#include <BBSKernel/MNS/MeqSource.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR

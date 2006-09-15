@@ -27,10 +27,10 @@
 // Temporary matrix for Mns
 
 //# Includes
-#include <BBS/MNS/MeqMatrixRep.h>
-#include <BBS/MNS/MeqMatrix.h>
-#include <BBS/MNS/MeqMatrixRealSca.h>
-#include <BBS/MNS/MeqMatrixComplexSca.h>
+#include <BBSKernel/MNS/MeqMatrixRep.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqMatrixRealSca.h>
+#include <BBSKernel/MNS/MeqMatrixComplexSca.h>
 
 
 namespace LOFAR

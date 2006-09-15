@@ -22,9 +22,9 @@
 
 #include <lofar_config.h>
 
-#include <BBS/MNS/MeqJonesSum.h>
-#include <BBS/MNS/MeqJonesResult.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqJonesSum.h>
+#include <BBSKernel/MNS/MeqJonesResult.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 
 namespace LOFAR
 {

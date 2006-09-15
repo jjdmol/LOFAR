@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/ParmData.h>
+#include <BBSKernel/ParmData.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <Common/VectorUtil.h>

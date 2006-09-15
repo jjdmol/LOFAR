@@ -27,9 +27,9 @@
 // The request for an evaluation of an expression
 
 //# Includes
-#include <BBS/MNS/MeqRequestId.h>
-#include <BBS/MNS/MeqDomain.h>
-#include <BBS/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqRequestId.h>
+#include <BBSKernel/MNS/MeqDomain.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR

@@ -23,11 +23,11 @@
 #include <lofar_config.h>
 #include <Common/Timer.h>
 
-#include <BBS/MNS/MeqStatExpr.h>
-#include <BBS/MNS/MeqExpr.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqMatrix.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqStatExpr.h>
+#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 
 namespace LOFAR
 {

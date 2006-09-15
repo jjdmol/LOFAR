@@ -27,8 +27,8 @@
 // Calculates parameter values using a least squares fitter
 
 #include <scimath/Fitting/LSQaips.h>
-#include <BBS/ParmData.h>
-#include <BBS/Quality.h>
+#include <BBSKernel/ParmData.h>
+#include <BBSKernel/Quality.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>

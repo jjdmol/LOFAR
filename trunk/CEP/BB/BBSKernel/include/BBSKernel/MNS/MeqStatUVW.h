@@ -27,9 +27,9 @@
 // The station UVW coordinates for a time domain
 
 //# Includes
-#include <BBS/MNS/MeqResult.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqStation.h>
+#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqStation.h>
 #include <Common/lofar_map.h>
 #include <measures/Measures/MeasFrame.h>
 

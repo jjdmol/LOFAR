@@ -27,8 +27,8 @@
 // Get part of the data from the Mapped MS.
 
 //# Includes
-#include <BBS/MNS/MeqJonesExpr.h>
-#include <BBS/MMapMSInfo.h>
+#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/MMapMSInfo.h>
 
 namespace LOFAR
 {

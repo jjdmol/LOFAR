@@ -27,8 +27,8 @@
 // Parameter function with coeffients valid for a given domain
 
 //# Includes
-#include <BBS/MNS/MeqDomain.h>
-#include <BBS/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqDomain.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
 #include <ParmDB/ParmValue.h>
 #include <Common/lofar_vector.h>
 

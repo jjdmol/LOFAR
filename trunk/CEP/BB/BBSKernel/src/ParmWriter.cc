@@ -24,9 +24,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <BBS/ParmWriter.h>
-#include <BBS/ParmData.h>
-#include <BBS/MNS/MeqDomain.h>
+#include <BBSKernel/ParmWriter.h>
+#include <BBSKernel/ParmData.h>
+#include <BBSKernel/MNS/MeqDomain.h>
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmValue.h>
 #include <Common/LofarLogger.h>

@@ -23,10 +23,10 @@
 #include <lofar_config.h>
 #include <utility>
 
-#include <BBS/MNS/MeqTabular.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqResult.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqTabular.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
 
 #define MIN(__a, __b)   __a <= __b ? __a : __b;

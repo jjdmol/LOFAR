@@ -24,11 +24,11 @@
 
 #include <lofar_config.h>
 
-#include <BBS/MNS/MeqMatrixRealSca.h>
-#include <BBS/MNS/MeqMatrixRealArr.h>
-#include <BBS/MNS/MeqMatrixComplexSca.h>
-#include <BBS/MNS/MeqMatrixComplexArr.h>
-#include <BBS/MNS/Pool.h>
+#include <BBSKernel/MNS/MeqMatrixRealSca.h>
+#include <BBSKernel/MNS/MeqMatrixRealArr.h>
+#include <BBSKernel/MNS/MeqMatrixComplexSca.h>
+#include <BBSKernel/MNS/MeqMatrixComplexArr.h>
+#include <BBSKernel/MNS/Pool.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 

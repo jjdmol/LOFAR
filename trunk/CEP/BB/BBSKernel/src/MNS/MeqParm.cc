@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqParm.h>
+#include <BBSKernel/MNS/MeqParm.h>
 #include <Common/LofarLogger.h>
 
 
