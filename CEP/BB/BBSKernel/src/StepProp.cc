@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <BBS/StepProp.h>
+#include <BBSKernel/StepProp.h>
 #include <Common/LofarLogger.h>
 
 using namespace casa;

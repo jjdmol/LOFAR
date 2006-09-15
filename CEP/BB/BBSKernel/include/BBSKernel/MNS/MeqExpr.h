@@ -27,10 +27,10 @@
 // The base class of an expression
 
 //# Includes
-#include <BBS/MNS/MeqRequestId.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqResult.h>
-#include <BBS/MNS/MeqResultVec.h>
+#include <BBSKernel/MNS/MeqRequestId.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqResultVec.h>
 #include <vector>
 
 #ifdef EXPR_GRAPH

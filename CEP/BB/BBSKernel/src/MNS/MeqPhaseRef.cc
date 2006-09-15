@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqPhaseRef.h>
+#include <BBSKernel/MNS/MeqPhaseRef.h>
 #include <Common/LofarLogger.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>

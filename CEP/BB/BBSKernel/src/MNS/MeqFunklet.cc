@@ -22,10 +22,10 @@
 
 #include <lofar_config.h>
 
-#include <BBS/MNS/MeqFunklet.h>
-#include <BBS/MNS/MeqPolc.h>
-#include <BBS/MNS/MeqPolcLog.h>
-#include <BBS/MNS/MeqTabular.h>
+#include <BBSKernel/MNS/MeqFunklet.h>
+#include <BBSKernel/MNS/MeqPolc.h>
+#include <BBSKernel/MNS/MeqPolcLog.h>
+#include <BBSKernel/MNS/MeqTabular.h>
 #include <Common/LofarLogger.h>
 #include <Common/VectorUtil.h>
 #include <casa/Arrays/Matrix.h>

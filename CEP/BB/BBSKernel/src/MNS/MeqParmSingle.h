@@ -27,7 +27,7 @@
 // The class for a single parameter
 
 //# Includes
-#include <BBS/MNS/MeqParm.h>
+#include <BBSKernel/MNS/MeqParm.h>
 
 
 namespace LOFAR

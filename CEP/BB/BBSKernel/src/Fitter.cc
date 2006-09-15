@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <BBS/Fitter.h>
+#include <BBSKernel/Fitter.h>
 #include <Common/LofarLogger.h>
 #include <casa/Containers/Record.h>
 #include <casa/IO/AipsIO.h>

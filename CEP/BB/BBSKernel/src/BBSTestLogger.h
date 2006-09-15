@@ -34,7 +34,7 @@
 #include <Common/lofar_vector.h>
 #include <Transport/TH_MPI.h>
 #include <fstream>
-#include <BBS/ParmData.h>
+#include <BBSKernel/ParmData.h>
 #include <Common/Timer.h>
 #include <casa/OS/Timer.h>
 

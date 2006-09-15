@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <BBS/StrategyProp.h>
+#include <BBSKernel/StrategyProp.h>
 #include <Common/LofarLogger.h>
 
 using namespace casa;

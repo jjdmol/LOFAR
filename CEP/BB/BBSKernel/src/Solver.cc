@@ -22,12 +22,12 @@
 
 #include <lofar_config.h>
 
-#include <BBS/Solver.h>
+#include <BBSKernel/Solver.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 
-#include <BBS/BBSTestLogger.h>
+#include <BBSKernel/BBSTestLogger.h>
 
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDomain.h>

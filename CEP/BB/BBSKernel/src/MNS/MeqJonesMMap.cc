@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqJonesMMap.h>
+#include <BBSKernel/MNS/MeqJonesMMap.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR

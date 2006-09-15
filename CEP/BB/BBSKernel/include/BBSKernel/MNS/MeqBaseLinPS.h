@@ -27,10 +27,10 @@
 // Baseline prediction of a point source with linear polarisation.
 
 //# Includes
-#include <BBS/MNS/MeqJonesExpr.h>
-#include <BBS/MNS/MeqLMN.h>
-#include <BBS/MNS/MeqPointSource.h>
-#include <BBS/MNS/MeqDFTPS.h>
+#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/MNS/MeqLMN.h>
+#include <BBSKernel/MNS/MeqPointSource.h>
+#include <BBSKernel/MNS/MeqDFTPS.h>
 
 namespace LOFAR
 {

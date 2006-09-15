@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 //#include <Common/Timer.h>
 
-#include <BBS/MNS/MeqBaseLinPS.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqBaseLinPS.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
 
 using namespace casa;

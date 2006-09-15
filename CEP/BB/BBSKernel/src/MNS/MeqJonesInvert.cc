@@ -20,10 +20,10 @@
 //#
 //# $Id$
 
-#include <BBS/MNS/MeqJonesInvert.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqMatrix.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqJonesInvert.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 
 // Inverse of a 2x2 matrix:
 //

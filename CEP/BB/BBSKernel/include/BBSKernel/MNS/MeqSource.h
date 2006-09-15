@@ -27,7 +27,7 @@
 // Abstract base class for holding a source
 
 //# Includes
-#include <BBS/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR

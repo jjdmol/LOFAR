@@ -27,8 +27,8 @@
 // A stored parameter with funklet coefficients
 
 //# Includes
-#include <BBS/MNS/MeqParm.h>
-#include <BBS/MNS/MeqFunklet.h>
+#include <BBSKernel/MNS/MeqParm.h>
+#include <BBSKernel/MNS/MeqFunklet.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/lofar_vector.h>
 

@@ -27,7 +27,7 @@
 // The DFT for a point source.
 
 //# Includes
-#include <BBS/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqExpr.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR

@@ -27,9 +27,9 @@
 // The base class of a Jones matrix expression.
 
 //# Includes
-#include <BBS/MNS/MeqExpr.h>
-#include <BBS/MNS/MeqJonesResult.h>
-#include <BBS/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqJonesResult.h>
+#include <BBSKernel/MNS/MeqRequest.h>
 #include <Common/LofarLogger.h>
 
 

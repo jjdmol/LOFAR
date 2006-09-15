@@ -27,7 +27,7 @@
 // Baseline DFT of a point source.
 
 //# Includes
-#include <BBS/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqExpr.h>
 
 namespace LOFAR
 {

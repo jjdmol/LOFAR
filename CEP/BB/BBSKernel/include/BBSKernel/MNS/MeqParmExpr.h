@@ -27,7 +27,7 @@
 // A parm which is an expression of other parms.
 
 //# Includes
-#include <BBS/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqExpr.h>
 #include <ParmDB/ParmDB.h>
 
 namespace LOFAR

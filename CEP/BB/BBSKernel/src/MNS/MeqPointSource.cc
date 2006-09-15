@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqPointSource.h>
+#include <BBSKernel/MNS/MeqPointSource.h>
 
 
 namespace LOFAR

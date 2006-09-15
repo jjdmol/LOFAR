@@ -27,8 +27,8 @@
 // The properties for solvable parameters
 
 //# Includes
-#include <BBS/MNS/MeqMatrix.h>
-#include <BBS/MNS/MeqFunklet.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqFunklet.h>
 #include <Common/LofarTypes.h>
 #include <string>
 #include <vector>

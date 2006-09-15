@@ -23,10 +23,10 @@
 #undef TIMER
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqMatrixRealSca.h>
-#include <BBS/MNS/MeqMatrixRealArr.h>
-#include <BBS/MNS/MeqMatrixComplexSca.h>
-#include <BBS/MNS/MeqMatrixComplexArr.h>
+#include <BBSKernel/MNS/MeqMatrixRealSca.h>
+#include <BBSKernel/MNS/MeqMatrixRealArr.h>
+#include <BBSKernel/MNS/MeqMatrixComplexSca.h>
+#include <BBSKernel/MNS/MeqMatrixComplexArr.h>
 #include <Common/LofarLogger.h>
 
 #if defined TIMER

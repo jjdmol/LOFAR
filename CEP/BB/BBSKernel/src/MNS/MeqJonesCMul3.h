@@ -27,7 +27,7 @@
 // Calculate left*mid*conj(right)
 
 //# Includes
-#include <BBS/MNS/MeqJonesExpr.h>
+#include <BBSKernel/MNS/MeqJonesExpr.h>
 
 namespace LOFAR
 {

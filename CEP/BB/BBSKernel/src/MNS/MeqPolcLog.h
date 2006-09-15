@@ -55,7 +55,7 @@
 // example.
 
 //# Includes
-#include <BBS/MNS/MeqFunklet.h>
+#include <BBSKernel/MNS/MeqFunklet.h>
 
 namespace LOFAR
 {

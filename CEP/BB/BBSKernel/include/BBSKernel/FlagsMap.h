@@ -24,7 +24,7 @@
 #define BBS_FLAGSMAP_H
 
 //# Includes
-#include <BBS/MMap.h>
+#include <BBSKernel/MMap.h>
 
 namespace LOFAR
 {

@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <BBS/FlagsMap.h>
+#include <BBSKernel/FlagsMap.h>
 
 namespace LOFAR
 {

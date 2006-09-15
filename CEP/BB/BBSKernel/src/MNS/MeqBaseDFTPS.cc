@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <BBS/MNS/MeqBaseDFTPS.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqBaseDFTPS.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
 
 using namespace casa;

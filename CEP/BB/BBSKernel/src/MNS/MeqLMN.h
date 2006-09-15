@@ -27,7 +27,7 @@
 // Class holding the LMN values of a point source
 
 //# Includes
-#include <BBS/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR

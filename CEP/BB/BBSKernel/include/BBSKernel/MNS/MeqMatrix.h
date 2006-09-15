@@ -27,7 +27,7 @@
 // Matrix for Mns
 
 //# Includes
-#include <BBS/MNS/MeqMatrixRep.h>
+#include <BBSKernel/MNS/MeqMatrixRep.h>
 
 //# Forward Declarations
 namespace casa

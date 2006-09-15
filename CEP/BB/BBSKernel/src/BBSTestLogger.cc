@@ -27,7 +27,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <BBSTestLogger.h>
-#include <BBS/ParmData.h>
+#include <BBSKernel/ParmData.h>
 #include <sstream>
 
 namespace LOFAR

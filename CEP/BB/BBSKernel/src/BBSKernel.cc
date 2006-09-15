@@ -25,7 +25,7 @@
 
 #include <Common/LofarLogger.h>
 #include <PLC/ACCmain.h>
-#include <BBS/BBSKernelProcessControl.h>
+#include <BBSKernel/BBSKernelProcessControl.h>
 
 using namespace LOFAR::BBS;
 

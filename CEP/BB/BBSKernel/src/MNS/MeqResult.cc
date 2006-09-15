@@ -21,10 +21,10 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqResult.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
-#include <BBS/MNS/Pool.h>
-#include <BBS/MNS/MeqParmFunklet.h>
+#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/Pool.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
 
 namespace LOFAR
 {

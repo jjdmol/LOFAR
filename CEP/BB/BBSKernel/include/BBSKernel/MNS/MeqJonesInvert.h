@@ -27,7 +27,7 @@
 // The inverse of a Jones matrix expression.
 
 //# Includes
-#include <BBS/MNS/MeqJonesExpr.h>
+#include <BBSKernel/MNS/MeqJonesExpr.h>
 
 
 namespace LOFAR

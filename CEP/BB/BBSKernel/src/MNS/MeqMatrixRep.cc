@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqMatrixRep.h>
+#include <BBSKernel/MNS/MeqMatrixRep.h>
 #include <casa/Exceptions/Error.h>
 
 using namespace casa;

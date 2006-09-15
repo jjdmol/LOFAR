@@ -27,7 +27,7 @@
 // Ordinary polynomial with coefficients valid for a given domain
 
 //# Includes
-#include <BBS/MNS/MeqFunklet.h>
+#include <BBSKernel/MNS/MeqFunklet.h>
 
 namespace LOFAR
 {

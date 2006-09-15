@@ -22,11 +22,11 @@
 
 #include <lofar_config.h>
 
-#include <BBS/MNS/MeqStatUVW.h>
-#include <BBS/MNS/MeqPhaseRef.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqExpr.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqStatUVW.h>
+#include <BBSKernel/MNS/MeqPhaseRef.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/MPosition.h>

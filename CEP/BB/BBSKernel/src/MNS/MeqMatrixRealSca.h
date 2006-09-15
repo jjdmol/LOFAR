@@ -27,7 +27,7 @@
 // Temporary matrix for Mns
 
 //# Includes
-#include <BBS/MNS/MeqMatrixRep.h>
+#include <BBSKernel/MNS/MeqMatrixRep.h>
 
 namespace LOFAR
 {

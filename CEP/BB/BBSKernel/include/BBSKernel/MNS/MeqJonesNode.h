@@ -27,8 +27,8 @@
 // A node in a Jones matrix expression.
 
 //# Includes
-#include <BBS/MNS/MeqJonesExpr.h>
-#include <BBS/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/MNS/MeqExpr.h>
 
 namespace LOFAR
 {

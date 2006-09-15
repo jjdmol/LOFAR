@@ -21,10 +21,10 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqSourceList.h>
-#include <BBS/MNS/MeqPointSource.h>
-#include <BBS/MNS/MeqGaussSource.h>
-#include <BBS/MNS/MeqParmFunklet.h>
+#include <BBSKernel/MNS/MeqSourceList.h>
+#include <BBSKernel/MNS/MeqPointSource.h>
+#include <BBSKernel/MNS/MeqGaussSource.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/Arrays/Vector.h>
