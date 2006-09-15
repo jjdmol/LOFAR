@@ -49,7 +49,7 @@ MeqDomain::MeqDomain (double startX, double endX,
 	     " must be < endY " << endY);
 }
 
-MeqDomain::MeqDomain (const ParmDB::ParmDomain& pdomain)
+MeqDomain::MeqDomain (const LOFAR::ParmDB::ParmDomain& pdomain)
 {
   ASSERTSTR (pdomain.getStart().size() == 2,
 	     "BBS only supports 2-dim funklets and domains");
@@ -59,9 +59,9 @@ MeqDomain::MeqDomain (const ParmDB::ParmDomain& pdomain)
   itsEndY   = pdomain.getEnd()[1];
 }
 
-ParmDB::ParmDomain MeqDomain::toParmDomain() const
+LOFAR::ParmDB::ParmDomain MeqDomain::toParmDomain() const
 {
-  return ParmDB::ParmDomain (startX(), endX(), startY(), endY());
+  return LOFAR::ParmDB::ParmDomain (startX(), endX(), startY(), endY());
 }
 
 std::ostream& operator<< (std::ostream& os, const MeqDomain& domain)

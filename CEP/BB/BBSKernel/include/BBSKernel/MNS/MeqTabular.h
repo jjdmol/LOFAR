@@ -46,10 +46,10 @@ namespace BBS
       {}
 
     // Create a tabular from a ParmValue object.
-    MeqTabular (const ParmDB::ParmValue&);
+    MeqTabular (const LOFAR::ParmDB::ParmValue&);
 
     // Convert a tabular to a ParmValue object.
-    ParmDB::ParmValue toParmValue() const;
+    LOFAR::ParmDB::ParmValue toParmValue() const;
 
     virtual ~MeqTabular();
 

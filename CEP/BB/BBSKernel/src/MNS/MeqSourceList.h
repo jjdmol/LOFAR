@@ -52,7 +52,7 @@ public:
     {}
 
   // Fill the source list from the sources in the parm table.
-  MeqSourceList (ParmDB::ParmDB& parmTable, MeqParmGroup& group);
+  MeqSourceList (LOFAR::ParmDB::ParmDB& parmTable, MeqParmGroup& group);
 
   ~MeqSourceList();
 

@@ -54,10 +54,10 @@ public:
   MeqDomain (double startX, double endX, double startY, double endY);
 
   // Create from a ParmDomain. It checks if it is a 2-dim domain.
-  explicit MeqDomain (const ParmDB::ParmDomain&);
+  explicit MeqDomain (const LOFAR::ParmDB::ParmDomain&);
 
   // Convert to a ParmDomain.
-  ParmDB::ParmDomain toParmDomain() const;
+  LOFAR::ParmDB::ParmDomain toParmDomain() const;
 
   // Get the start, end, and step of the domain.
   double startX() const

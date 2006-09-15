@@ -87,8 +87,8 @@ public:
   // for the specified data descriptor (i.e. spectral window).
   // The UVW coordinates can be calculated or taken from the MS.
   Prediffer (const string& msName,
-         const ParmDB::ParmDBMeta& meqPtd,
-         const ParmDB::ParmDBMeta& skyPtd,
+         const LOFAR::ParmDB::ParmDBMeta& meqPtd,
+         const LOFAR::ParmDB::ParmDBMeta& skyPtd,
          uint ddid,
          bool calcUVW);
 
@@ -353,9 +353,9 @@ private:
 
   string                itsMSName;      //# Measurement set name
   string                itsMEPName;     //# Common parmtable name
-  ParmDB::ParmDB        itsMEP;         //# Common parmtable
+  LOFAR::ParmDB::ParmDB        itsMEP;         //# Common parmtable
   string                itsGSMMEPName;  //# GSM parameters parmtable name
-  ParmDB::ParmDB        itsGSMMEP;      //# parmtable for GSM parameters
+  LOFAR::ParmDB::ParmDB        itsGSMMEP;      //# parmtable for GSM parameters
   MeqParmGroup          itsParmGroup;   //# container for all parms
   bool                  itsCalcUVW;
 
@@ -417,7 +417,7 @@ private:
   bool           itsIsWeightSpec;  //# true = weight per channel
 
   //# All parm values in current work domain.
-  map<string,ParmDB::ParmValueSet> itsParmValues;
+  map<string,LOFAR::ParmDB::ParmValueSet> itsParmValues;
 
   //# Fitter info set by initSolvableParms.
   vector<int> itsFreqFitInx;       //# Fitter for each freq in work domain

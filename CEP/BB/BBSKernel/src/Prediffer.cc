@@ -120,8 +120,8 @@ namespace BBS
 {
 
 Prediffer::Prediffer(const string& msName,
-             const ParmDB::ParmDBMeta& meqPdm,
-             const ParmDB::ParmDBMeta& skyPdm,
+             const LOFAR::ParmDB::ParmDBMeta& meqPdm,
+             const LOFAR::ParmDB::ParmDBMeta& skyPdm,
              uint ddid,
              bool calcUVW)
 : itsMEPName      (meqPdm.getTableName()),
@@ -1009,7 +1009,7 @@ void Prediffer::readParms()
   // Read all parms for this domain into a single map.
   itsParmValues.clear();
   vector<string> emptyvec;
-  ParmDB::ParmDomain pdomain(itsWorkDomain.startX(), itsWorkDomain.endX(),
+  LOFAR::ParmDB::ParmDomain pdomain(itsWorkDomain.startX(), itsWorkDomain.endX(),
                  itsWorkDomain.startY(), itsWorkDomain.endY());
   itsMEP.getValues (itsParmValues, emptyvec, pdomain);
   itsGSMMEP.getValues (itsParmValues, emptyvec, pdomain);

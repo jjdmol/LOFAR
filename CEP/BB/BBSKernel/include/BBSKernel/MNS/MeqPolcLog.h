@@ -76,10 +76,10 @@ public:
   }
 
   // Create a PolcLog from a ParmValue object.
-  MeqPolcLog(const ParmDB::ParmValue& pvalue);
+  MeqPolcLog(const LOFAR::ParmDB::ParmValue& pvalue);
 
   // Convert a PolcLog to a ParmValue object.
-  ParmDB::ParmValue toParmValue() const;
+  LOFAR::ParmDB::ParmValue toParmValue() const;
 
   virtual ~MeqPolcLog();
 

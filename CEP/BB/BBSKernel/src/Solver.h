@@ -84,7 +84,7 @@ public:
   
   // Log the quality indicators, and the coefficients of the solvable
   // parameters to a ParmDB.
-  void log(ParmDB::ParmDB &table);
+  void log(LOFAR::ParmDB::ParmDB &table);
 
 private:
   // Copy constructor and assignment are not allowed.

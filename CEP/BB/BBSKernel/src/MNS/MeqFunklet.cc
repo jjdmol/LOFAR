@@ -44,11 +44,11 @@ MeqFunklet::MeqFunklet()
   setDomain (MeqDomain(0,1,0,1));
 }
 
-MeqFunklet::MeqFunklet (const ParmDB::ParmValue& pvalue)
+MeqFunklet::MeqFunklet (const LOFAR::ParmDB::ParmValue& pvalue)
 : itsNrScid (0),
   itsParmValue (pvalue.clone())
 {
-  const ParmDB::ParmValueRep& pval = pvalue.rep();
+  const LOFAR::ParmDB::ParmValueRep& pval = pvalue.rep();
   itsDomain = MeqDomain(pval.itsDomain);
   if (pval.itsShape.size() != 0) {
     ASSERT (pval.itsShape.size() == 2);
@@ -83,9 +83,9 @@ MeqFunklet& MeqFunklet::operator= (const MeqFunklet& that)
   return *this;
 }
 
-MeqFunklet* MeqFunklet::make (const ParmDB::ParmValue& pvalue, const string& name)
+MeqFunklet* MeqFunklet::make (const LOFAR::ParmDB::ParmValue& pvalue, const string& name)
 {
-  const ParmDB::ParmValueRep& pval = pvalue.rep();
+  const LOFAR::ParmDB::ParmValueRep& pval = pvalue.rep();
   
   ASSERTSTR(pval.itsShape.size() == 2, 
     "No 2-dim funklet " << pval.itsType << ' ' << pval.itsShape << " found for parameter " << name);
@@ -147,7 +147,7 @@ void MeqFunklet::clearSolvable()
 void MeqFunklet::setDomain (const MeqDomain& domain)
 {
   itsDomain = domain;
-  itsParmValue.rep().setDomain (ParmDB::ParmDomain(domain.startX(),
+  itsParmValue.rep().setDomain (LOFAR::ParmDB::ParmDomain(domain.startX(),
 						   domain.endX(),
 						   domain.startY(),
 						   domain.endY()));

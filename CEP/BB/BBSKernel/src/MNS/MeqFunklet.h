@@ -59,7 +59,7 @@ public:
   MeqFunklet();
 
   // Create the funklet from a parm value.
-  explicit MeqFunklet (const ParmDB::ParmValue& pvalue);
+  explicit MeqFunklet (const LOFAR::ParmDB::ParmValue& pvalue);
 
   // Copy constructor.
   MeqFunklet (const MeqFunklet&);
@@ -74,7 +74,7 @@ public:
 
   // Create the correct derived funklet from a ParmValue.
   // The caller is responsible for deleting the newly created object.
-  static MeqFunklet* make (const ParmDB::ParmValue&, const std::string& name);
+  static MeqFunklet* make (const LOFAR::ParmDB::ParmValue&, const std::string& name);
 
   // Calculate the value and possible perturbations.
   virtual MeqResult getResult (const MeqRequest&,
@@ -133,7 +133,7 @@ public:
     { value = itsCoeff; }
 
   // Get the parm value.
-  const ParmDB::ParmValue& getParmValue() const
+  const LOFAR::ParmDB::ParmValue& getParmValue() const
     { return itsParmValue; }
 
   // Set to be a new parm value (i.e. a new record in the parm table).
@@ -156,7 +156,7 @@ protected:
   MeqDomain    itsDomain;
   int          itsNrScid;
   int          itsScidInx;           //# Index of first solvable coeff.
-  ParmDB::ParmValue itsParmValue;
+  LOFAR::ParmDB::ParmValue itsParmValue;
 };
 
 // @}

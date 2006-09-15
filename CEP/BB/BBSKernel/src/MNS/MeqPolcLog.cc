@@ -36,10 +36,10 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqPolcLog::MeqPolcLog(const ParmDB::ParmValue& pvalue)
+MeqPolcLog::MeqPolcLog(const LOFAR::ParmDB::ParmValue& pvalue)
   : MeqFunklet(pvalue)
 {
-  const ParmDB::ParmValueRep& pval = pvalue.rep();
+  const LOFAR::ParmDB::ParmValueRep& pval = pvalue.rep();
   
   ASSERTSTR(pval.itsType == "polclog",
     "Funklet in ParmValue is not of type 'polclog'.");
@@ -69,7 +69,7 @@ MeqResult MeqPolcLog::getResult(const MeqRequest& request, int nrpert, int pertI
   //          "The output domain should be completely contained within the input domain.");
   
   // Get the f0 constants from the parmdb.
-  const ParmDB::ParmValueRep &parameters = itsParmValue.rep();
+  const LOFAR::ParmDB::ParmValueRep &parameters = itsParmValue.rep();
   ASSERTSTR(parameters.itsConstants.size() >= 2, "No constants found in the parmdb for this polclog.");
   const double f0[2] = {parameters.itsConstants[0], parameters.itsConstants[1]};
   ASSERTSTR(f0[0] > 0.0 && f0[1] == 0.0, "A polclog should always be logarithmic in frequency and linear in time.");
