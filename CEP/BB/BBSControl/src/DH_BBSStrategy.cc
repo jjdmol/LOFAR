@@ -1,4 +1,4 @@
-//#  DH_BBSStep.cc: DataHolder for a BBSStep object.
+//#  DH_BBSStrategy.cc: DataHolder for the parameters of a BBSStrategy.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/DH_BBSStep.h>
-#include <BBSControl/BBSStep.h>
+#include <BBSControl/DH_BBSStrategy.h>
+#include <BBSControl/BBSStrategy.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
@@ -33,17 +33,17 @@ namespace LOFAR
   namespace BBS
   {
     // Initialize the verion number of this class.
-    const int DH_BBSStep::theirVersionNr = 1;
+    const int DH_BBSStrategy::theirVersionNr = 1;
 
     
-    DH_BBSStep::DH_BBSStep() : 
-      DataHolder("aDH_BBSStep", "DH_BBSStep", theirVersionNr)
+    DH_BBSStrategy::DH_BBSStrategy() : 
+      DataHolder("aDH_BBSStrategy", "DH_BBSStrategy", theirVersionNr)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // We will use extra blobs to store our variable length BBSSteps. So we
-      // must initialize the blob machinery.
-      setExtraBlob("DH_BBSStep", theirVersionNr);
+      // We will use extra blobs to store our variable length
+      // BBSStrategy. So we must initialize the blob machinery.
+      setExtraBlob("DH_BBSStrategy", theirVersionNr);
 
       // We must call this method, even though we won't use the fixed buffer
       // that's being created. Neat, huh?
@@ -51,28 +51,28 @@ namespace LOFAR
     }
 
 
-    DH_BBSStep::~DH_BBSStep()
+    DH_BBSStrategy::~DH_BBSStrategy()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
 
-    void DH_BBSStep::writeBuf(BBSStep* bs)
+    void DH_BBSStrategy::writeBuf(const BBSStrategy& bs, bool doSteps)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // Create the output blob that will hold the BBSStep to be sent.
+      // Create the output blob that will hold the BBSStrategy to be sent.
       BlobOStream& bos = createExtraBlob();
 
-      // Fill the output blob with the BBSStep data. 
+      // Fill the output blob with the BBSStrategy data. 
       // \note We don't need to call putStart() and putEnd() on the blob
       // stream; this is done by the DataBlobExtra class in the Transport
       // library.
-      bs->serialize(bos);
+      bs.serialize(bos, doSteps);
     }
 
 
-    void DH_BBSStep::readBuf(BBSStep*& bs)
+    void DH_BBSStrategy::readBuf(BBSStrategy& bs)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -84,15 +84,15 @@ namespace LOFAR
       // Make sure we've received the correct version of this class.
       ASSERT(found && version == theirVersionNr);
       
-      // Retrieve the BBSStep data.
-      bs = BBSStep::deserialize(bis);
+      // Retrieve the BBSStrategy data.
+      bs.deserialize(bis);
 
       // Assert that we're really at the end of the blob.
       bis.getEnd();
     }
 
 
-    DH_BBSStep* DH_BBSStep::clone() const
+    DH_BBSStrategy* DH_BBSStrategy::clone() const
     {
       THROW(Exception, "We should NEVER call this method!");
     }

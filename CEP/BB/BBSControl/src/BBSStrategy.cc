@@ -24,9 +24,13 @@
 
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
+#include <BBSControl/BBSStructs.h>
 #include <BBSControl/Exceptions.h>
-#include <Common/LofarLogger.h>
 #include <BBSControl/StreamFormatting.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobArray.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -39,7 +43,7 @@ namespace LOFAR
 
     BBSStrategy::BBSStrategy(const ParameterSet& aParSet)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // Get the name of the Measurement Set.
       itsDataSet = aParSet.getString("DataSet");
@@ -58,14 +62,6 @@ namespace LOFAR
       // Create a subset of \a aParSet, containing only the relevant keys for
       // a Strategy.
       ParameterSet ps(aParSet.makeSubset("Strategy."));
-
-      // This strategy consists of the following steps.
-      vector<string> steps(ps.getStringVector("Steps"));
-
-      // Create a new step for each name in \a steps.
-      for (uint i = 0; i < steps.size(); ++i) {
-	itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
-      }
 
       // ID's of the stations to be used by this strategy.
       itsStations = ps.getStringVector("Stations");
@@ -89,12 +85,20 @@ namespace LOFAR
       // Get the integration intervals in frequency (Hz) and time (s).
       itsIntegration.deltaFreq = ps.getDouble("Integration.Freq");
       itsIntegration.deltaTime = ps.getDouble("Integration.Time");
+
+      // This strategy consists of the following steps.
+      vector<string> steps(ps.getStringVector("Steps"));
+
+      // Create a new step for each name in \a steps.
+      for (uint i = 0; i < steps.size(); ++i) {
+	itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
+      }
     }
 
 
     BBSStrategy::~BBSStrategy()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // Clean up all steps.
       for (uint i = 0; i < itsSteps.size(); ++i) {
@@ -104,8 +108,48 @@ namespace LOFAR
     }
 
 
+    void BBSStrategy::deserialize(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      bis >> itsDataSet
+	  >> itsBBDB
+	  >> itsParmDB
+	  >> itsStations
+	  >> itsInputData
+	  >> itsDomainSize
+	  >> itsCorrelation
+	  >> itsIntegration;
+      // Do we also need to deserialize the BBSStep objects?
+      bool doSteps;
+      bis >> doSteps;
+      LOG_TRACE_COND_STR("Deserialize the BBSStep objects as well?  " <<
+			 (doSteps ? "Yes" : "No"));
+      if (doSteps) readSteps(bis);
+    }
+
+    
+    void BBSStrategy::serialize(BlobOStream& bos, bool doSteps) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      bos << itsDataSet
+	  << itsBBDB
+	  << itsParmDB
+	  << itsStations
+	  << itsInputData
+	  << itsDomainSize
+	  << itsCorrelation
+	  << itsIntegration;
+      // Do we also need to serialize the BBSStep objects?
+      bos << doSteps;
+      LOG_TRACE_COND_STR("Serialize the BBSStep objects as well?  " <<
+		    (doSteps ? "Yes" : "No"));
+      if (doSteps) writeSteps(bos);
+    }
+
+
     void BBSStrategy::print(ostream& os) const
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       os << endl << indent << "Measurement Set: " << itsDataSet
 	 << endl << indent << itsBBDB
 	 << endl << indent << itsParmDB
@@ -124,6 +168,7 @@ namespace LOFAR
 
     vector<const BBSStep*> BBSStrategy::getAllSteps() const
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       vector<const BBSStep*> steps;
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
@@ -133,10 +178,44 @@ namespace LOFAR
     }
 
 
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+
+    void BBSStrategy::readSteps(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
+      // How many BBSStep objects does this BBSStrategy contain?
+      uint32 sz;
+      bis >> sz;
+      LOG_TRACE_VAR_STR("This BBSStrategy contains " << sz << 
+			" BBSStep objects.");
+      
+      // Create the new BBSSteps by reading the blob input stream.
+      for (uint i = 0; i < sz; ++i) {
+	itsSteps.push_back(BBSStep::deserialize(bis));
+      }
+    }
+
+
+    void BBSStrategy::writeSteps(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
+      // Write the number of BBSStep objects that this BBSStrategy contains.
+      bos << static_cast<uint32>(itsSteps.size());
+
+      // Write the BBSStep objects, one by one.
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+	itsSteps[i]->serialize(bos);
+      }
+    }
+
+
     //##--------   G l o b a l   m e t h o d s   --------##//
 
     ostream& operator<<(ostream& os, const BBSStrategy& bs)
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       bs.print(os); 
       return os;
     }
