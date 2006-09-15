@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 
 #include <Common/lofar_iostream.h>
-#include <Common/Timer.h>
 
 #include <CS1_BGLProc/AH_BGL_Processing.h>
 #include <CS1_BGLProc/WH_BGL_Processing.h>
@@ -215,20 +214,11 @@ void AH_BGL_Processing::init()
 void AH_BGL_Processing::run(int steps) {
   LOG_TRACE_FLOW_STR("Start AH_BGL_Processing::run() "  );
   for (int i = 0; i < steps; i++) {
-    char timer_name[32];
-    sprintf(timer_name, "baseProcess(%d)", i);
-    class NSTimer timer(timer_name, true);
-
     LOG_TRACE_LOOP_STR("processing run " << i );
-    std::clog << "run " << i << " of " << steps << std::endl;
 
-    timer.start();
     for (uint j = 0; j < itsWHs.size(); j ++) {
       itsWHs[j]->baseProcess();
     }
-    timer.stop();
-
-    std::clog << "run " << i << " of " << steps << " done" << std::endl;
   }
   LOG_TRACE_FLOW_STR("Finished AH_BGL_Processing::run() "  );
 }
