@@ -31,7 +31,7 @@ namespace LOFAR {
 
     ostream &operator << (ostream &os, const TimeStamp &ss)
     {
-      return os << ss.getSeqId() << " s: " << ss.getBlockId();
+      return os << "["<<ss.getSeqId() << "s, " << ss.getBlockId()<<"]";
     }
 
   } // namespace CS1

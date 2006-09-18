@@ -99,23 +99,39 @@ namespace LOFAR {
 
     inline TimeStamp::TimeStamp(unsigned seqId, unsigned blockId)
       {
+#ifdef EVEN_SECOND_HAS_MORE_SAMPLES
 	itsTime = (int64) (seqId * theirMaxBlockId + .5) + blockId;
+#else
+	itsTime = (int64) (seqId * theirMaxBlockId) + blockId;
+#endif
       }
 
     inline TimeStamp &TimeStamp::setStamp(unsigned seqId, unsigned blockId)
       {
+#ifdef EVEN_SECOND_HAS_MORE_SAMPLES
 	itsTime = (int64) (seqId * theirMaxBlockId + .5) + blockId;
+#else
+	itsTime = (int64) (seqId * theirMaxBlockId) + blockId;
+#endif
 	return *this;
       }
 
     inline unsigned TimeStamp::getSeqId() const
       {
+#ifdef EVEN_SECOND_HAS_MORE_SAMPLES
 	return (unsigned) (itsTime * theirInvMaxBlockId);
+#else
+	return (unsigned) ((itsTime - 0.5) * theirInvMaxBlockId);
+#endif
       }
 
     inline unsigned TimeStamp::getBlockId() const
       {
-	return itsTime - (unsigned) (theirMaxBlockId * getSeqId() + .5);
+#ifdef EVEN_SECOND_HAS_MORE_SAMPLES
+	return itsTime - (int64) (theirMaxBlockId * getSeqId() + .5);
+#else
+	return itsTime - (int64) (theirMaxBlockId * getSeqId());
+#endif
       }
 
     inline double TimeStamp::getMaxBlockId()
