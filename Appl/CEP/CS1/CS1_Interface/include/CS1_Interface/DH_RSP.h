@@ -63,12 +63,7 @@ namespace LOFAR
       float getFineDelayAfterEnd() const;
       void  setFineDelayAfterEnd(float delay);
 
-      BufferType* getBuffer();
-  
-      /// Get read access to the Buffer.
-      const BufferType* getBuffer() const;
-
-      uint getBufferSize() const;
+      BufferType* getSubband(uint subbandNr);
 
       /// Reset the buffer
       void resetBuffer();
@@ -105,14 +100,12 @@ namespace LOFAR
       RectMatrix<BufferType> *itsMatrix;
     };
 
-    inline DH_RSP::BufferType *DH_RSP::getBuffer()
-    { return itsBuffer; }
-
-    inline uint DH_RSP::getBufferSize() const
-    { return itsBufSize; }
-   
-    inline const DH_RSP::BufferType *DH_RSP::getBuffer() const
-    { return itsBuffer; }
+    inline DH_RSP::BufferType* DH_RSP::getSubband(uint subbandNr)
+    {
+      dimType sbDim = itsMatrix->getDim("Subbands");
+      RectMatrix<DH_RSP::BufferType>::cursorType cursor = itsMatrix->getCursor(subbandNr * sbDim);
+      return itsMatrix->getBlock(cursor, sbDim, 1, itsNTimes * itsNoPolarisations * sizeof(DH_RSP::BufferType));
+    }
 
     inline const int DH_RSP::getStationID() const
     { return *itsStationID; }
@@ -127,7 +120,7 @@ namespace LOFAR
     { *itsTimeStamp = timestamp; }
 
     inline void DH_RSP::resetBuffer()
-    { memset(itsBuffer, 0, itsBufSize); }
+    { memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); }
 
     inline RectMatrix<DH_RSP::BufferType> &DH_RSP::getDataMatrix() const 
     { return *itsMatrix; }
