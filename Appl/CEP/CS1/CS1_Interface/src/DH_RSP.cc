@@ -59,9 +59,9 @@ namespace LOFAR
     DH_RSP::~DH_RSP()
     {
       delete itsFlags;
-    }
+    };
 
-    DataHolder* DH_RSP::clone() const
+    LOFAR::DataHolder* DH_RSP::clone() const
     {
       return new DH_RSP(*this);
     }

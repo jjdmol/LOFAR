@@ -1,7 +1,7 @@
-check_PROGRAMS		= tSparseSet
+check_PROGRAMS		= tSparseSet tRSPTimeStamp
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS		= tSparseSet
+CHECKTOOLPROGS		= tSparseSet tRSPTimeStamp
 #ENDCHECKTOOLPROGS
 
 # scripts used to run tests
@@ -9,7 +9,8 @@ TESTSCRIPTS		=
 
 # scripts and possible programs to run tests
 TESTS			= $(TESTSCRIPTS) \
-			  tSparseSet
+			  tSparseSet \
+			  tRSPTimeStamp
 
 XFAIL_TESTS		=
 
@@ -19,6 +20,10 @@ EXTRA_DIST		= $(TESTSCRIPTS)
 tSparseSet_SOURCES	= tSparseSet.cc
 tSparseSet_LDADD	= ../src/libcs1_interface.la
 tSparseSet_DEPENDENCIES = ../src/libcs1_interface.la
+
+tRSPTimeStamp_SOURCES	= tRSPTimeStamp.cc
+tRSPTimeStamp_LDADD	= ../src/libcs1_interface.la
+tRSPTimeStamp_DEPENDENCIES = ../src/libcs1_interface.la
 
 # Lines to build a test program testprg
 #testprg_SOURCES		= testprg.cc

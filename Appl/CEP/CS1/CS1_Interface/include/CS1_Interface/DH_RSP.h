@@ -48,7 +48,7 @@ namespace LOFAR
 
       virtual ~DH_RSP();
 
-      DataHolder *clone() const;
+      DataHolder* clone() const;
 
       /// Allocate the buffers.
       virtual void init();
