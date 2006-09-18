@@ -75,6 +75,7 @@ namespace LOFAR
       LockedRange& operator= (const LockedRange& that);
 
       void printTimers(ostream& os);
+      void printPointers();
 
       //# Datamembers
       const S itsSize;

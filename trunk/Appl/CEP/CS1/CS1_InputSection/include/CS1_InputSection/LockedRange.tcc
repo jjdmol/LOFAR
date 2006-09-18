@@ -57,6 +57,16 @@ namespace LOFAR
     };
 
     template < class T, class S >
+    void LockedRange < T, S >::printPointers ()
+    {
+      cout << "LockedRange : " << endl
+	   << "  itsReadTail  = " << itsReadTail << endl
+	   << "  itsReadHead  = " << itsReadHead << endl
+	   << "  itsWriteTail = " <<itsWriteTail << endl
+	   << "  itsWriteHead = " << itsWriteHead <<endl;
+    };
+
+    template < class T, class S >
     T LockedRange < T, S >::writeLock (const T & desiredBegin,
 					 const T & desiredEnd)
     {
@@ -93,7 +103,8 @@ namespace LOFAR
 	  if (!amWaiting)
 	    {
 	      itsWriteLockTimer.stop ();
-	      cout<<"Waiting for space: "<<begin<<" - "<<end<<endl;
+	      cout<<"Waiting for space: "<<begin<<" - "<<end<< endl;;
+	      printPointers();
 	      itsWaitingForSpaceTimer.start ();
 	      amWaiting = true;
 	    }
@@ -171,7 +182,8 @@ namespace LOFAR
 	  if (!amWaiting)
 	    {
 	      itsReadLockTimer.stop ();
-	      cout<<"Waiting for data: "<<begin<<" - "<<end<<endl;
+	      cout<<"Waiting for data: "<<begin<<" - "<<end<< endl;
+      	      printPointers();
 	      itsWaitingForDataTimer.start ();
 	      amWaiting = true;
 	    }
