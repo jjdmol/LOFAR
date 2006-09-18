@@ -155,7 +155,7 @@ namespace LOFAR
 
     // Macro for defining a for-loop that walks through 1 dimension from cursor to cursor + noElem
 #define MATRIX_FOR_LOOP_PART(matrix, dim, cursor, noElem) \
-    int cursorMax = cursor + (dim).memsize * noElem;\
+    int cursorMax = cursor + (dim).memSize * noElem;\
     for (; (matrix).isCursorValid(cursor)&&(cursor < cursorMax); (matrix).moveCursor(&cursor, dim)) 
 
 #else //ENABLE_DBGASSERT
@@ -167,7 +167,7 @@ namespace LOFAR
     for (; cursor < cursorMax; (matrix).moveCursor(&cursor, dim)) 
 
 #define MATRIX_FOR_LOOP_PART(matrix, dim, cursor, noElem) \
-    int cursorMax = cursor + (dim).memsize * noElem;\
+    int cursorMax = cursor + (dim).memSize * noElem;\
     for (; cursor < cursorMax; (matrix).moveCursor(&cursor, dim)) 
 
 #endif //ENABLE_DBGASSERT
