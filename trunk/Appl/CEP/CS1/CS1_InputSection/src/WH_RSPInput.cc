@@ -119,7 +119,7 @@ namespace LOFAR {
       args.ipHeaderSize       = itsPS.getInt32("Input.IPHeaderSize");
       args.frameHeaderSize    = itsPS.getInt32("Input.SzEPAheader");
       args.nTimesPerFrame     = itsPS.getInt32("Input.NTimesInFrame");
-      args.nSubbandsPerFrame  = itsNSubbands;
+      args.nSubbandsPerFrame  = itsPS.getInt32("Input.NSubbandsPerFrame");
 
       args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
 
@@ -151,14 +151,13 @@ namespace LOFAR {
       // determine starttime
       double startTime = itsPS.getDouble("Observation.StartTime");
       double utc = 0;
-      if (startTime < 60*60*24*32) {
-	// if starttime is less than a month after the zero point of MJD, 
-	// it is probably not meant as MJD, so take the literal value
-	// This is needed for test purposes until the RSP-boards use utc.
-	utc = startTime;
-      } else { 
-	utc = AMC::Epoch(startTime).utc();
-      }
+
+#if 1
+      // interpret the time as utc
+      utc = startTime;
+#else
+      utc = AMC::Epoch(startTime).utc();
+#endif
       int sampleFreq = itsPS.getInt32("Observation.SampleRate");
       int seconds = (int)floor(utc);
       int samples = (int)((utc - floor(utc)) * sampleFreq);
@@ -220,19 +219,17 @@ namespace LOFAR {
       for (int output = 0; output < itsNoutputs; output ++) {
 	rspDHp = (DH_RSP*)getDataManager().getOutHolder(output);
 	for (int subband = 0; subband < itsNSubbandsPerCell; subband++) {
-	  subbandbuffer.push_back((Beamlet*)rspDHp->getBuffer());
+	  subbandbuffer.push_back((Beamlet*)rspDHp->getSubband(subband));
 	}
       }
 	  
       // get the data from the cyclic buffer
       itsGetElemTimer->start();
-      //cout<<"reading from buffer"<<endl;cout.flush();
 
       itsBBuffer->getElements(subbandbuffer,
 			      &flags,
 			      delayedstamp - itsNHistorySamples, 
 			      itsNSamplesPerSec + itsNHistorySamples);
-      cout<<"done reading from buffer"<<endl;cout.flush();
       itsGetElemTimer->stop();
 
       // fill in the outgoing dataholders
@@ -247,7 +244,7 @@ namespace LOFAR {
  	rspDHp->setFineDelayAtBegin((*delayDHp)[itsStationNr].fineDelayAtBegin);
  	rspDHp->setFineDelayAfterEnd((*delayDHp)[itsStationNr].fineDelayAfterEnd);
 	
-#if 1
+#if 0
 	// print flags
 	cout<<"WH_RSP out "<<itsStationNr<<" "<<delayedstamp<<" output " << output << " flags: "<< flags <<endl;
 	// printsamples
