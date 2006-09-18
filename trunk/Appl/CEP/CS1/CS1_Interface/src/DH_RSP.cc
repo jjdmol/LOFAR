@@ -86,6 +86,9 @@ namespace LOFAR
 
       // Create the data blob
       createDataBlock();
+      // use memset to null the buffer
+      memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
+      itsFlags->write(createExtraBlob());
     }
 
     void DH_RSP::fillDataPointers()
@@ -102,9 +105,6 @@ namespace LOFAR
   
       // Fill in TimeStamp pointer
       itsTimeStamp = getData<TimeStamp> ("TimeStamp");
-
-      // use memset to null the buffer
-      memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
     }
 
     void DH_RSP::fillExtraData()
