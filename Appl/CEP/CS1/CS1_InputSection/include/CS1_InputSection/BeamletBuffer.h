@@ -36,6 +36,7 @@
 #include <CS1_Interface/DH_RSP.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/SparseSet.h>
+#include <boost/thread.hpp>
 
 namespace LOFAR 
 {
@@ -88,8 +89,12 @@ namespace LOFAR
 	};
       }
 
+      // checked for skippeddata and flag it in chunks
+      void checkForSkippedData(TimeStamp writeBegin);
+
       //# Datamembers
       vector<Beamlet *> itsSBBuffers;
+      mutex itsFlagsMutex;
       SparseSet itsFlags;
       uint itsNSubbands;
       int itsSize;
@@ -101,6 +106,7 @@ namespace LOFAR
       // These are for statistics
       uint itsDroppedItems;
       uint itsDummyItems;
+      uint itsSkippedItems;
 
       NSTimer itsWriteTimer;
       NSTimer itsReadTimer;
