@@ -39,9 +39,6 @@
 #include <stdlib.h>
 // for sleep (yield)
 #include <boost/thread.hpp>
-#ifdef HAVE_MPI
-#include <mpi.h>
-#endif
 
 namespace LOFAR
 {
@@ -127,10 +124,7 @@ namespace LOFAR
 
     void WH_SBCollect::process() 
     {
-#ifdef HAVE_MPI
-      cout << MPI_Wtime() << " begin of SBCollect process" << endl;
-#endif
-      
+     
       vector<DH_RSP*> inHolders;
       vector<RectMatrix<DH_RSP::BufferType> *> inMatrices;
       vector<RectMatrix<DH_RSP::BufferType>::cursorType> inCursors;
@@ -170,7 +164,7 @@ namespace LOFAR
 	}
 
 #endif
-	cout << "WH_SBCollect input done " << endl;
+	//cout << "WH_SBCollect input done " << endl;
 #endif
 
       }
@@ -251,9 +245,6 @@ namespace LOFAR
 	getDataManager().getOutputSelector()->selectNext();
       }
 
-#ifdef HAVE_MPI
-      cout << MPI_Wtime() << " end of SBCollect process" << endl;
-#endif
     }
 
     void WH_SBCollect::postprocess() 

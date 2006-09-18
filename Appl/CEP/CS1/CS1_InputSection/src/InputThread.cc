@@ -126,7 +126,6 @@ namespace LOFAR {
 	    if (!validTimeStampReceived) invalidStamps.push_back({actualstamp, expectedstamp} );
 	    // hack for error in rsp boards where timestamps are not equal on both boards
 #endif
-	    seqid -= itsArgs.rspBugCompensation;
 	    actualstamp.setStamp(seqid ,blockid);
 
 	    //cerr<<endl<<"Reading stamp: " << actualstamp<<endl;
