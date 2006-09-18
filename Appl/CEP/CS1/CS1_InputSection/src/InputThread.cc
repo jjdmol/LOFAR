@@ -53,8 +53,10 @@ namespace LOFAR {
       TimeStamp expectedstamp;
       vector<PacketStats> missedStamps;
       vector<PacketStats> oldStamps;
+      vector<PacketStats> invalidStamps;
       missedStamps.reserve(500);
       oldStamps.reserve(500);
+      invalidStamps.reserve(500);
 #endif
 
       bool firstloop = true;
@@ -91,38 +93,51 @@ namespace LOFAR {
       while(!theirShouldStop) {
 	threadTimer.start();
 
-	try {
-	  receiveTimer.start();
-	  itsArgs.th->recvBlocking( (void*)totRecvframe, frameSize, 0);
-	  receiveTimer.stop();
-	} catch (Exception& e) {
-	  LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder("<<e.what()<<", stopping thread");
-	  break;
-	}	
+	bool validTimeStampReceived = false;
+	while (!validTimeStampReceived) {
+	  try {
+	    receiveTimer.start();
+	    //cerr<<"InputThread reading "<<frameSize<<" bytes from TH ("<<(void*)itsArgs.th<<" into "<<(void*)totRecvframe<<endl;
+	    itsArgs.th->recvBlocking( (void*)totRecvframe, frameSize, 0);
+	    receiveTimer.stop();
+	  } catch (Exception& e) {
+	    LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder("<<e.what()<<", stopping thread");
+	    break;
+	  }	
 
-	// get the actual timestamp of first EPApacket in frame
-	if (!dataContainsValidStamp) {
-	  if (!firstloop) {
-	    actualstamp += itsArgs.nTimesPerFrame; 
+	  // get the actual timestamp of first EPApacket in frame
+	  if (!dataContainsValidStamp) {
+	    if (!firstloop) {
+	      actualstamp += itsArgs.nTimesPerFrame; 
+	    } else {
+	      actualstamp = TimeStamp(0, 0);
+#ifdef PACKET_STATISTICS
+	      expectedstamp = actualstamp;
+#endif
+	      firstloop = false;
+	    }	  
+	    validTimeStampReceived = true;
 	  } else {
-	    actualstamp = TimeStamp(0, 0);
+	    seqid   = ((int*)&recvframe[8])[0];
+	    blockid = ((int*)&recvframe[12])[0];
+	    validTimeStampReceived = (seqid != 0xffff); //if the second counter has 0xffff, the data cannot be trusted.
+	    //cerr<<"InputThread received valid? :"<<validTimeStampReceived<<endl;
 #ifdef PACKET_STATISTICS
-	    expectedstamp = actualstamp;
+	    if (!validTimeStampReceived) invalidStamps.push_back({actualstamp, expectedstamp} );
+	    // hack for error in rsp boards where timestamps are not equal on both boards
 #endif
-	    firstloop = false;
-	  }	  
-	} else {
-	  seqid   = ((int*)&recvframe[8])[0];
-	  blockid = ((int*)&recvframe[12])[0];
-	  actualstamp.setStamp(seqid ,blockid);
-          //cerr<<endl<<"Reading stamp: " << actualstamp<<endl;
+	    seqid -= itsArgs.rspBugCompensation;
+	    actualstamp.setStamp(seqid ,blockid);
+
+	    //cerr<<endl<<"Reading stamp: " << actualstamp<<endl;
 #ifdef PACKET_STATISTICS
-	  if (firstloop) {
-	    // firstloop
-	    expectedstamp.setStamp(seqid, blockid); // init expectedstamp
-	    firstloop = false;
+	    if (firstloop) {
+	      // firstloop
+	      expectedstamp.setStamp(seqid, blockid); // init expectedstamp
+	      firstloop = false;
+	    }
+#endif
 	  }
-#endif
 	}
       
 	// check and process the incoming data
@@ -143,7 +158,10 @@ namespace LOFAR {
 #endif
 	writeTimer.start();
 	// expected packet received so write data into corresponding buffer
+	//cerr<<"InputThread: "<<actualstamp<<endl;
+
 	itsArgs.BBuffer->writeElements((Beamlet*)&recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame, strideSize);
+
 	writeTimer.stop();
 	threadTimer.stop();
       }
@@ -159,6 +177,11 @@ namespace LOFAR {
       vector<PacketStats>::iterator rit = oldStamps.begin();
       for (; rit != oldStamps.end(); rit++) {
 	LOG_TRACE_INFO_STR("REW " << rit->receivedStamp<<" received at time "<< rit->expectedStamp);
+      }
+      LOG_TRACE_INFO_STR("Invalid timestamps:");
+      vector<PacketStats>::iterator iit = invalidStamps.begin();
+      for (; iit != invalidStamps.end(); iit++) {
+	LOG_TRACE_INFO_STR("INV received at time "<< iit->expectedStamp);
       }
 #endif
     }
