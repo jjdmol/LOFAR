@@ -139,8 +139,6 @@ namespace LOFAR
     private:
       bool areInSameDim(const cursorType& cur1, const cursorType& cur2, const dimType& dim) const;
 
-      friend class DataHolder;
-
       valueType* itsData;
       map<string, dimType*> itsDimMap;
       int itsTotalSize;
