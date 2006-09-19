@@ -132,8 +132,8 @@ private:
 	//# --- DataMembers ---
 	uint16		*itsVersionNumber;
 	int16		*itsCommand;
-	time_t		*itsScheduleTime;
-	time_t		*itsWaitTime;
+	int32		*itsScheduleTime;
+	int32		*itsWaitTime;
 	uint16		*itsResult;
 	string		itsOptions;
 	string		itsProcList;
