@@ -144,9 +144,8 @@ void	DH_ApplControl::fillDataPointers() {
 
 	itsVersionNumber = getData<uint16>("VersionNumber");
 	itsCommand 		 = getData<int16> ("Command");
-	// need old plain C typecast to get the time_t values back.
-	itsScheduleTime  = (time_t*)(getData<int32>("ScheduleTime"));
-	itsWaitTime		 = (time_t*)(getData<int32>("WaitTime"));
+	itsScheduleTime  = getData<int32> ("ScheduleTime");
+	itsWaitTime		 = getData<int32> ("WaitTime");
 	itsResult 		 = getData<uint16>("Result");
 
 	*itsVersionNumber = 0x0100;		// TODO define a constant WriteVersion
