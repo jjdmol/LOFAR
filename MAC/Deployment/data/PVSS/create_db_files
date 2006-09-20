@@ -308,6 +308,33 @@ substitute_ring()
 }
 
 #
+# substitute_observation
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_observation()
+{
+	while read dp dpt
+	do
+		if [ -n "$OBSNAME" ]; then
+			echo $dp"	"$dpt | awk -v obsname=$OBSNAME '{
+				hasObs=index($1,"@observation@");
+				if (hasObs > 0) {
+					dpname=$1;
+					sub("@observation@", obsname, dpname)
+					print dpname"	"$2;
+				}
+				else {
+					print $1"	"$2;
+				}
+			} '
+		else
+			echo $dp"	"$dpt
+		fi
+	done
+}
+
+#
 # substitute_instancenr
 #
 # replaces all lines containing the marker @instancenr@ with the instancenr
@@ -455,6 +482,7 @@ create_dp_file()
 				substitute_Cabinet | \
 				substitute_cluster_node | \
 				substitute_cluster | \
+				substitute_observation | \
 				substitute_instancenr | \
 				sort -k1,1 |\
 				number_dps >>${DESTDIR}/${DP_FILE}
