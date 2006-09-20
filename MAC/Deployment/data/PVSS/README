@@ -2,7 +2,7 @@
 With the files in this directory the datapointtypes and datapoints can be
 generated for the whole PVSS database.
 There are three types of files:
- - the base files contain the database structure that has to be generated.
+ - the base file contain the database structure that has to be generated.
  - the list files contain the values a variable can have.
  - the dpdef files define in human-readable format the complex datapointtypes.
 
@@ -27,10 +27,4 @@ floatArr		DPEL_DYN_FLOAT
 doubleArr		DPEL_DYN_FLOAT
 
 
-The create_db_files script generates two types of files:
-
-create_db_files PVSS	creates a file with datapointtypes and a file with
-						the PVSSdatapoints.
-create_db_files C++		creates a c++ headerfile with constants that can be 
-						used in c++ programs to access the datapoints.
 
