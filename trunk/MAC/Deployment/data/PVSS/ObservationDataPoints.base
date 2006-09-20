@@ -1,5 +1,0 @@
-#
-# DPtype	endpoint	DataPoint
-#----------------------------------------------------------------------------
-ObsCtrl			OC		LOFAR_ObsSW_@observation@_ObsCtrl
-BeamCtrl		BC		LOFAR_ObsSW_@observation@_@ring@_@station@_BeamCtrl
