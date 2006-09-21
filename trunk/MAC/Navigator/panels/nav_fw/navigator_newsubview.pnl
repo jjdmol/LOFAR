@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 Add Remove subview
-PANEL,545 331 429 103 N "_3DFace" 4
+PANEL,391 228 429 103 N "_3DFace" 4
 "$addView"
 "$selectedElementDpType"
 "$selectedView"
@@ -11,7 +11,7 @@ PANEL,545 331 429 103 N "_3DFace" 4
   //Date: 25-1-2005 By: AdB
   //several changes, because this version only works with
   // new and not existing subviews!
-  //DebugTN(\"New SubView: $addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType:\",$addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType);
+  //LOG_TRACE(\"New SubView: $addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType:\",$addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType);
 
   int selectedSubView;
   dyn_int nrOfSubViews;
@@ -86,7 +86,9 @@ PANEL,545 331 429 103 N "_3DFace" 4
 }" 0
 EE E E 1 -1 -1 0  40 11
 "" 0 1
-E"#uses \"nav_fw/gcfnav-configuration-functions.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-configuration-functions.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
+" 0
  2
 "CBRef""1"
 "EClose"E
@@ -274,7 +276,7 @@ LANG:1 0
   string viewsPath;
   dpGet(\"__navigator.\" + ELNAME_VIEWSPATH, viewsPath);
   viewsPath = getPath(PANELS_REL_PATH) + viewsPath;
-  DebugTN(viewsPath);
+  LOG_TRACE(viewsPath);
   string fileName;
   fileSelector(fileName,viewsPath,true,\"*.pnl\");
 

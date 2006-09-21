@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 4 view
-PANEL,272 201 950 740 N "_3DFace" 2
+PANEL,307 228 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -198,6 +198,8 @@ void navViewPlotMain()
 E E E 1 -1 -1 0  18 10
 "" 0 1
 E"#uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
+
 int local_plotSizeX;
 int local_plotSizeY;
 string PICTURE_PATH = PROJ_PATH + \"pictures/\";
@@ -259,12 +261,12 @@ void navViewPlotContextMenu()
     case 1: // PAUSE
       PLOT_STATE=\"PAUSE\";
       navViewPlotChangeState();
-      DebugN(\"case 1 - pause\");
+      LOG_TRACE(\"case 1 - pause\");
       break;
     case 2: // PLAY
       PLOT_STATE=\"PLAY\";
       navViewPlotChangeState();
-      DebugN(\"case 2 - play\");
+      LOG_TRACE(\"case 2 - play\");
       break;
     case 3:    
       dpSetWait($datapoint + \"_Board0_Maintenance.status:_original.._value\", 0);
@@ -280,21 +282,21 @@ void navViewPlotContextMenu()
 
 void navViewPlotChangeState()
 {
-  DebugN(\"function entered\"); 
-  DebugN(\"PLOT_STATE:\"+PLOT_STATE);
+  LOG_TRACE(\"function entered\"); 
+  LOG_TRACE(\"PLOT_STATE:\"+PLOT_STATE);
   if(\"PLAY\"==PLOT_STATE)
   {
     setValue(\"icon_play\",   \"visible\", TRUE);
     setValue(\"icon_pause1\", \"visible\", FALSE);
     setValue(\"icon_pause2\", \"visible\", FALSE);
-    DebugN(\"play\"); 
+    LOG_TRACE(\"play\"); 
   }
   else if (\"PAUSE\"==PLOT_STATE)
   {
     setValue(\"icon_play\",   \"visible\", FALSE);
     setValue(\"icon_pause1\", \"visible\", TRUE);
     setValue(\"icon_pause2\", \"visible\", TRUE);
-    DebugN(\"pause\");
+    LOG_TRACE(\"pause\");
   }
   else
   {
@@ -473,8 +475,7 @@ void navViewPlotContextMenu()
       delay(1);
       dyn_string rcv;
       dpGet(\"__navigator.recordRCV\", rcv);
-      DebugN(\"#####  RCV ####\");
-      DebugN(rcv);//$showDatapoints
+      LOG_TRACE(\"#####  RCV ####\",rcv);
       dpGet(\"__navigator.viewsPath\", viewsPath);
 
       ChildPanelOnCentralModal(viewsPath + \"plot_view_display_recordings.pnl\",
@@ -591,7 +592,7 @@ LANG:1 0
 "main()
 {
   string recordStatus = navViewPlotGetRecordStatus($configDatapoint, $datapoint);
-  //DebugN(\"recordStatus:\"+recordStatus);
+  //LOG_TRACE(\"recordStatus:\"+recordStatus);
   setValue(\"\", \"visible\",(recordStatus==\"recording\"));
   /*
   if(recordStatus==\"recording\")

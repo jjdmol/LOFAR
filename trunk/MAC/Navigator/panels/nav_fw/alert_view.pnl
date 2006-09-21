@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 5 panel
-PANEL,269 267 1006 750 N "_3DFace" 2
+PANEL,304 275 1006 750 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -274,6 +274,7 @@ EE E E 1 -1 -1 0  0 0
 "" 0 1
 E"#uses \"nav_fw/gcfnav-functions.ctl\"
 #uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcf-util.ctl\"
 dyn_string dpAlertList;" 0
  2
 "CBRef""1"
@@ -774,11 +775,11 @@ LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
   getValue(\"\", \"currentCell\", Row, Column);
   dpGet($configDatapoint + \".1.Column\" + Column + \"dpNames\", ColumndpNames); 
   string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
-  DebugTN(\"newDatapoint: \" + newDatapoint);
+  LOG_DEBUG(\"newDatapoint: \" + newDatapoint);
   if (dpExists(newDatapoint))
   {
-    DebugTN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
-    DebugTN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    LOG_DEBUG(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    LOG_DEBUG(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
     navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
   }
 }" 0
@@ -872,11 +873,11 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
   getValue(\"\", \"currentCell\", Row, Column);
   dpGet($configDatapoint + \".2.Column\" + Column + \"dpNames\", ColumndpNames); 
   string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
-  DebugN(\"newDatapoint: \" + newDatapoint);
+  LOG_DEBUG(\"newDatapoint: \" + newDatapoint);
   if (dpExists(newDatapoint))
   {
-    DebugN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
-    DebugN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    LOG_DEBUG(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    LOG_DEBUG(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
     navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
   }
 
@@ -971,11 +972,11 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
   getValue(\"\", \"currentCell\", Row, Column);
   dpGet($configDatapoint + \".3.Column\" + Column + \"dpNames\", ColumndpNames); 
   string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
-  DebugN(\"newDatapoint: \" + newDatapoint);
+  LOG_DEBUG(\"newDatapoint: \" + newDatapoint);
   if (dpExists(newDatapoint))
   {
-    DebugN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
-    DebugN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    LOG_DEBUG(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    LOG_DEBUG(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
     navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
   }
 
