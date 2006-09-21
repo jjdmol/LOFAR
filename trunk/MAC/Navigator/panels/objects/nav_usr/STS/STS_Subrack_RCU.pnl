@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,299 108 139 149 N "_3DFace" 4
+PANEL,367 206 139 149 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -9,7 +9,11 @@ PANEL,299 108 139 149 N "_3DFace" 4
 "main()
 {
   //Function: Set background color of RCU
-  setValue(\"text_RCUNr\", \"text\", \"RCU\" + $RCUNr );
+  int ap  = 0;
+  int rcu = 0;
+  sscanf($APNr,\"%d\",ap);
+  sscanf($RCUNr,\"%d\",rcu);
+  setValue(\"text_RCUNr\", \"text\", \"RCU\" + (ap*2+rcu) );
   string dpRCU = $datapoint + \".AP\"+ $APNr +\".RCU\"+ $RCUNr;
   backGround.toolTipText       = dpRCU;
   icon_maintenance.toolTipText = dpRCU;
@@ -120,11 +124,7 @@ LANG:1 3 RCU
 "icon_maintenance"
 ""
 1 50 107 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
- "main()
-{
-  RCUContextMenu();
-}" 0
- E
+ E E
 10 0 0 0 0 0
 EE E
 0
@@ -132,11 +132,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \".AP\"+ $APNr +\".RCU\"+ $RCUNr, \"Station_Subrack_RCU.pnl\");
-}" 0
- 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 50 68 90 108
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 50 68 90 108
 0
 LAYER, 1 
 1

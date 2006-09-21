@@ -1,14 +1,14 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,293 76 773 511 N "_3DFace" 2
+PANEL,258 100 203 231 N "_3DFace" 2
 "$Station"
 "$referenceDatapoint"
 "main()
 {
 	txt_station.text = $Station;
 }" 0
-EE E E 1 0 0 0  -1 -1
+EE E E 1 0 0 0  145 145
 "" 0 1
 E"click()
 {
@@ -22,12 +22,12 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-7 0
-"Ellipse1"
+7 47
+"Ellipse26"
 ""
-1 145 145 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
+1 75 75 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
  E E
-1 0 0 0 0 0
+48 0 0 0 0 0
 EE E
 0
 1
@@ -38,37 +38,11 @@ E "main()
 {
 	click();
 }" 0
- 0 3 1 0 1 E U  1 E 145 145 105 105
-4 34
-"Line2"
-""
-1 145 147 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-35 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  225 157 145 147
-4 36
-"Line3"
-""
-1 145 112 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-37 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  145 146 219 112
+ 0 3 1 0 1 E U  1 E 75 75 55 55
 4 37
 "Line4"
 ""
-1 143 77 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 45 44 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 38 0 0 0 0 0
 EE E
@@ -77,37 +51,207 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  143 146 188 77
-4 38
-"Line5"
+E E 0 3 1 0 1 E  45 104 105 44
+2 46
+"txt_station"
 ""
-1 145 65 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 36 133 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
  E E
-39 0 0 0 0 0
+47 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  145 147 145 65
-4 39
-"Line6"
+E E 0 1 1 0 1 E U  1 E 38 135 114 151
+0 2 0 "s" 0 0 0 65 0 0  38 135
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 <station>
+7 58
+"Ellipse37"
 ""
-1 101 80 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 99 44 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
-40 0 0 0 0 0
+59 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  145 146 101 80
+E E 0 3 1 0 1 E U  1 E 101 46 10 10
+7 59
+"Ellipse38"
+""
+1 101 46 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+60 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 102 47 9 9
+7 60
+"Ellipse39"
+""
+1 45 44 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+61 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 47 46 10 10
+7 61
+"Ellipse40"
+""
+1 47 46 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+62 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 48 47 9 9
+7 62
+"Ellipse41"
+""
+1 43 100 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+63 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 45 102 10 10
+7 63
+"Ellipse42"
+""
+1 45 102 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+64 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 46 103 9 9
+4 64
+"Line1"
+""
+1 74 41 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+65 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  74 71 74 41
+7 50
+"Ellipse29"
+""
+1 72 33 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+51 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 74 35 10 10
+7 51
+"Ellipse30"
+""
+1 74 35 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+52 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 75 36 9 9
+4 65
+"Line13"
+""
+1 75 82 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+66 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  75 112 75 82
+7 52
+"Ellipse31"
+""
+1 72 112 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 74 114 10 10
+7 53
+"Ellipse32"
+""
+1 74 114 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 75 115 9 9
 4 40
 "Line7"
 ""
-1 72 117 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 55 54 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 41 0 0 0 0 0
 EE E
@@ -116,406 +260,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  144 147 72 117
-4 41
-"Line8"
-""
-1 66 148 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-42 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  66 164 145 148
-4 42
-"Line9"
-""
-1 90 148 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-43 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  90 203 145 148
-4 43
-"Line10"
-""
-1 127 147 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-44 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  127 223 145 147
-4 44
-"Line11"
-""
-1 146 147 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-45 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  172 222 146 147
-4 45
-"Line12"
-""
-1 145 148 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-46 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  207 197 145 148
-7 6
-"Ellipse4"
-""
-1 144.019 144.019 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-7 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -5.55769230769232 -5.55769230769232  1 E 144.5 144.5 13 13
-7 7
-"Ellipse5"
-""
-1 146 146 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-8 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 146 146 14 14
-7 12
-"Ellipse2"
-""
-1 206.01852 196.01852 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-13 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -7.94230769230771 -7.557692307692324  1 E 206.5 196.5 13 13
-7 13
-"Ellipse3"
-""
-1 208 198 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-14 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 208 198 14 14
-7 14
-"Ellipse6"
-""
-1 87.018519 200.01852 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-15 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -3.365384615384623 -7.711538461538479  1 E 87.5 200.5 13 13
-7 15
-"Ellipse7"
-""
-1 89 202 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-16 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 89 202 14 14
-7 16
-"Ellipse8"
-""
-1 225.01852 157.01852 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-17 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -8.673076923076943 -6.057692307692321  1 E 225.5 157.5 13 13
-7 17
-"Ellipse9"
-""
-1 227 159 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-18 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 227 159 14 14
-7 18
-"Ellipse10"
-""
-1 65.018519 162.01852 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-19 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -2.519230769230775 -6.250000000000014  1 E 65.5 162.5 13 13
-7 19
-"Ellipse11"
-""
-1 67 164 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-20 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 67 164 14 14
-7 20
-"Ellipse12"
-""
-1 218.01852 109.01852 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-21 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -8.403846153846173 -4.211538461538471  1 E 218.5 109.5 13 13
-7 21
-"Ellipse13"
-""
-1 220 111 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-22 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 220 111 14 14
-7 22
-"Ellipse14"
-""
-1 68.018519 113.01852 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-23 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -2.63461538461539 -4.365384615384625  1 E 68.5 113.5 13 13
-7 23
-"Ellipse15"
-""
-1 70 115 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-24 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 70 115 14 14
-7 24
-"Ellipse16"
-""
-1 187.01852 73.018519 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-25 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -7.211538461538478 -2.826923076923083  1 E 187.5 73.5 13 13
-7 25
-"Ellipse17"
-""
-1 189 75 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-26 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 189 75 14 14
-7 26
-"Ellipse18"
-""
-1 98.018519 76.018519 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-27 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -3.788461538461547 -2.942307692307699  1 E 98.5 76.5 13 13
-7 27
-"Ellipse19"
-""
-1 100 78 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-28 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 100 78 14 14
-7 28
-"Ellipse20"
-""
-1 169.01852 220.01852 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-29 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -6.519230769230783 -8.48076923076925  1 E 169.5 220.5 13 13
-7 29
-"Ellipse21"
-""
-1 171 222 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-30 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 171 222 14 14
-7 30
-"Ellipse22"
-""
-1 125.01852 222.01852 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-31 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -4.826923076923087 -8.557692307692326  1 E 125.5 222.5 13 13
-7 31
-"Ellipse23"
-""
-1 127 224 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
- E E
-32 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-	click();
-}" 0
- 0 1 1 0 1 E U  1 E 127 224 14 14
+E E 0 3 1 0 1 E  105 104 55 54
 7 32
 "Ellipse24"
 ""
-1 143.01852 61.018519 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 102 101 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 33 0 0 0 0 0
 EE E
@@ -524,11 +273,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E 1.038461538461539 0 1.038461538461539  -5.519230769230782 -2.365384615384621  1 E 143.5 61.5 13 13
+E E 0 3 1 0 1 E U  1 E 104 103 10 10
 7 33
 "Ellipse25"
 ""
-1 145 63 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+1 104 103 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
  E E
 34 0 0 0 0 0
 EE E
@@ -541,27 +290,110 @@ E "main()
 {
 	click();
 }" 0
- 0 1 1 0 1 E U  1 E 145 63 14 14
-2 46
-"txt_station"
+ 0 1 1 0 1 E U  1 E 105 104 9 9
+4 38
+"Line5"
 ""
-1 90 259 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
+1 31 75 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
-47 0 0 0 0 0
+39 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 92 261 198 279
-0 2 0 "s" 0 0 0 65 0 0  92 261
- 1
+E E 0 3 1 0 1 E  121 75 31 75
+7 48
+"Ellipse27"
+""
+1 72 72 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+49 0 0 0 0 0
+EE E
+0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
+LANG:1 0 
 1
-LANG:1 9 <station>
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 74 74 10 10
+7 49
+"Ellipse28"
+""
+1 74 74 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 75 75 9 9
+7 56
+"Ellipse35"
+""
+1 112 72 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+57 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 114 74 10 10
+7 57
+"Ellipse36"
+""
+1 114 74 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+58 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 115 75 9 9
+7 54
+"Ellipse33"
+""
+1 32 72 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+55 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 34 74 10 10
+7 55
+"Ellipse34"
+""
+1 34 74 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+56 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 35 75 9 9
 0
 LAYER, 1 
 1
@@ -591,26 +423,22 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-2 "Group21" 193 183 222 212
-2 13 12
-2 "Group24" 74 187 103 216
-2 15 14
-2 "Group20" 212 144 241 173
-2 17 16
-2 "Group25" 52 149 81 178
-2 19 18
-2 "Group19" 205 96 234 125
-2 21 20
-2 "Group26" 55 100 84 129
-2 23 22
-2 "Group18" 174 60 203 89
-2 25 24
-2 "Group27" 85 63 114 92
-2 27 26
-2 "Group22" 156 207 185 236
-2 29 28
-2 "Group23" 112 209 141 238
-2 31 30
-2 "Group17" 130 48 159 77
+2 "Group13" 64 25 84 45
+2 51 50
+2 "Group14" 64 104 84 124
+2 53 52
+2 "Group17" 94 93 114 113
 2 33 32
+2 "Group12" 64 64 84 84
+2 49 48
+2 "Group15" 24 64 44 84
+2 55 54
+2 "Group17" 91 36 111 56
+2 59 58
+2 "Group18" 37 36 57 56
+2 61 60
+2 "Group19" 35 92 55 112
+2 63 62
+2 "Group16" 104 64 124 84
+2 57 56
 0
