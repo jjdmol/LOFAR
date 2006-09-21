@@ -232,7 +232,7 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
   { // simply append it to the tree, because the parent is the root or undefined
     fwTreeView_appendNode(name,value,handle,level,referenceName);
     nodeId = fwTreeView_getNodeCount(referenceName);
-    DebugTN("in fwTreeView_appendToParentNode: node appended, parent is root or illegal");
+    LOG_TRACE("in fwTreeView_appendToParentNode: node appended, parent is root or illegal");
   }
   else
   {
@@ -242,7 +242,7 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
     { // append node because parent is not exactly one level higher than the level of the node.
       fwTreeView_appendNode(name,value,handle,level,referenceName);
       nodeId = fwTreeView_getNodeCount(referenceName);
-      DebugTN("in fwTreeView_appendToParentNode: requested level is not parent level + 1");
+      LOG_TRACE("in fwTreeView_appendToParentNode: requested level is not parent level + 1");
     }
     else
     {

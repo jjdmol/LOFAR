@@ -168,6 +168,7 @@ void navConfigSetNavigatorID(int newID)
   }
   if (createConfiguration)
   {
+    LOG_DEBUG("Creating new navigator configuration");
     dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
   }
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, 0);
@@ -265,6 +266,10 @@ void navConfigSetSelectedElement(string datapointPath)
   if (dpAccessable(dpSelectedElementContainer))
   {
     dpSet(dpSelectedElementContainer, dpSelectedElement);
+  }
+  else
+  {
+    LOG_WARN("Configuration element does not exist:",dpSelectedElementContainer);
   }
 }
 
@@ -635,7 +640,7 @@ string navConfigGetViewConfig(string datapointPath)
   }
   if (!dpAccessable(dpViewConfig))
   {
-    LOG_TRACE("navConfigGetViewConfig", "DP does not exist, using default configuration", dpViewConfig);
+    LOG_INFO("navConfigGetViewConfig", "DP does not exist, using default configuration", dpViewConfig);
     dpViewConfig = "__nav_default_viewconfig";
   }
   LOG_TRACE(dpViewConfig);
@@ -741,7 +746,7 @@ bool navConfigSanityCheck(string &message)
     if (!sane)
     {
       message = "Invalid view configuration\n#views and nrOfSubViews do not correspond\n(" + tab[viewsIndex][1] + ")";
-      DebugTN(message);
+      LOG_WARN(message);
     }
     
     if (sane)
@@ -754,7 +759,7 @@ bool navConfigSanityCheck(string &message)
       if (!sane)
       {
         message = "Invalid view configuration\n#subviews, #configs and total nrOfSubViews do not correspond\n(" + tab[viewsIndex][1] + ")";
-        DebugTN(message);
+        LOG_WARN(message);
       }
     }
     
@@ -763,12 +768,11 @@ bool navConfigSanityCheck(string &message)
       for (i = 1; i <= dynlen(tab[viewsIndex][2]) && sane; i++)
       {
         sane = dpAccessable(tab[viewsIndex][2][i]);
-        LOG_TRACE("check view existance:", sane, tab[viewsIndex][2][i]);
       }
       if (!sane)
       {
         message = "Invalid view configuration\nview item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
-        DebugTN(message);
+        LOG_WARN(message);
       }
     }
     
@@ -777,12 +781,11 @@ bool navConfigSanityCheck(string &message)
       for (i = 1; i <= dynlen(tab[subViewsIndex][2]) && sane; i++)
       {
         sane = dpAccessable(tab[subViewsIndex][2][i]);
-        DebugTN("check subview existance:", sane, tab[subViewsIndex][2][i]);
       }
       if (!sane)
       {
         message = "Invalid view configuration\nsubview item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
-        DebugTN(message);
+        LOG_WARN(message);
       }
     }
     
@@ -791,12 +794,11 @@ bool navConfigSanityCheck(string &message)
       for (i = 1; i <= dynlen(tab[configsIndex][2]) && sane; i++)
       {
         sane = dpAccessable(tab[configsIndex][2][i]);
-        DebugTN("check configs existance:", sane, tab[configsIndex][2][i]);
       }
       if (!sane)
       {
         message = "Invalid view configuration\nconfig item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
-        DebugTN(message);
+        LOG_WARN(message);
       }
     }
     
@@ -916,6 +918,7 @@ bool navConfigConfigSubviewPermitted()
   }
   else
   {
+    LOG_INFO("Subview configuration not permitted for this user");
     return FALSE;
   }
 }

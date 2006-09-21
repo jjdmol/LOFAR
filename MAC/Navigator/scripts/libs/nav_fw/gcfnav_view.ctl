@@ -24,6 +24,8 @@
 //# global functions for the views of the Navigator.
 //#
 
+#uses "nav_fw/gcf-util.ctl"
+
 global string CURRENT_DP_MESSAGE = "Current selection in tree";
 global dyn_string g_ContectMenuDpAccessableErrorText = "PUSH_BUTTON, No actions possible, 2, 0";
 
@@ -372,20 +374,23 @@ int navViewPlotGenerateGnuPlotScriptFile(int plotNumber, string plotTitle,
 ///////////////////////////////////////////////////////////////////////////
 int navViewPlotGenerateGnuplotOutput(int plotNumber)
 {
-    
-    if ((access(navConfigGetPathName(g_path_gnuplot) + navConfigGetPathName("/") + "wgnuplot.exe", F_OK)==0) && 
-        (access(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".dem", F_OK)==0))
+    string wgnuplotPath   = navConfigGetPathName(g_path_gnuplot) + navConfigGetPathName("/") + "wgnuplot.exe";
+    string plotConfigPath = navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".dem";
+    string plotPath       = navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".png";
+    if ((access(wgnuplotPath, F_OK)==0) && 
+        (access(plotConfigPath, F_OK)==0))
     {
-      system("start /b rm " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".png");
-      system(navConfigGetPathName(g_path_gnuplot) + navConfigGetPathName("/") + "wgnuplot.exe " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".dem");
-      if (access(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber + ".png", F_OK)!=0)
+      system("start /b rm " + plotPath);
+      system(wgnuplotPath + " " + plotConfigPath);
+      if (access(plotPath, F_OK)!=0)
       {
+        LOG_ERROR("Error accessing plot file",plotPath);
         return -1;                
       }
     }
     else
     {
-      DebugN("Error fincen wgnuplot and gnuplot1.dem");
+      LOG_ERROR("Error accessing wgnuplot and plot configuration",wgnuplotPath,plotConfigPath);
       return -1;
     }
 

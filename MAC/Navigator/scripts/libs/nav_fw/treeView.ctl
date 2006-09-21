@@ -1,21 +1,33 @@
-// file: treeView.ctl 
-//
-// contents: 
-// companion library of the generic panel tree/treeView.pnl which is used to 
-// display items in a tree view form.
-//
-// laset modification dates: April 13, 00 1st version (v1.0)
-// author: Tilman Mueller - Astron
-//  date           author         version       modification
-//------------------------------------------------------------------------------
+//# treeView.ctl
+//#
+//#  Copyright (C) 2002-2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
 
-/** @name treeView.ctl library.
- * Companion library of the generic panel nav_fw/treeView.pnl which is used to 
- * display items in a tree view form.
- * @author T. Mueller - Astron
- * @version 0.1
- */
-//@{
+//#
+//# companion library of the generic panel tree/treeView.pnl which is used to 
+//# display items in a tree view form.
+//#
+//# last modification date: April 13, 00 1st version (v1.0)
+//# author: Tilman Mueller - Astron
+
+#uses "nav_fw/gcf-util.ctl"
 
 /** @name "constants"
  */

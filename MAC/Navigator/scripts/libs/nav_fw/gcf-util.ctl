@@ -170,7 +170,6 @@ void initLog()
       err=getLastError();
       if(dynlen(err)>0)
         errorDialog(err);
-      DebugTN("loglevel initialized to ",g_loglevel);
       // monitor future updates:
       dpConnect("loglevelUpdated",DPNAME_LOGLEVEL+".");
       err=getLastError();
