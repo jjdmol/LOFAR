@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,233 201 954 748 N "_3DFace" 2
+PANEL,307 228 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -79,7 +79,7 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
     }
     else
     {
-      DebugN(\"####### This is an illegal DPE type  #################\");
+      LOG_ERROR(\"####### This is an illegal DPE type  #################\",hulp);
     }
 
   }
@@ -149,7 +149,7 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
   {
     string DedicatedPanelName;
     dpGet($configDatapoint + \".DedicatedPanelName\", DedicatedPanelName);
-    DebugN(\"Load dedicated_trend.panel: \" + DedicatedPanelName);    
+    LOG_TRACE(\"Load dedicated_trend.panel: \" + DedicatedPanelName);    
   }
 } 
 
@@ -294,7 +294,7 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
   }
   else
 	{
-	  //DebugN(\"Trend dpName2Connect:\"+dpName);
+	  //LOG_TRACE(\"Trend dpName2Connect:\"+dpName);
 	  if (dpGetElementName($datapoint)!=\"\")   //SelectedItem is a datapoint element
 	  { 
 	    navPMLloadPropertySet(dpSubStr($datapoint, DPSUB_SYS_DP));
@@ -339,6 +339,7 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 EE E E 1 -1 -1 0  20 30
 "" 0 1
 E"//Include of ctl file
+#uses \"nav_fw/gcfnav_view.ctl\"
 #uses \"nav_fw/gcfnav_view.ctl\"
 " 0
  2

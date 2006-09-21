@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,388 212 950 471 N "_3DFace" 3
+PANEL,304 275 950 471 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
@@ -78,7 +78,8 @@ ArrangeConfigTableContent(string dp1, dyn_string ColumnTitles,
 " 0
 EE E E 1 -1 -1 0  -180 -147
 "" 0 1
-EE 2
+E"#uses \"nav_fw/gcf-util.ctl\"" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -154,7 +155,7 @@ E
       	break;
   	case 2:
 				setValue (\"Table1\", \"cellBackCol\", \"white\");
-				DebugN(\"navViewAlertGetDpFromColumn(Row,Column):\"+navViewAlertGetDpFromColumn(Row,Column));
+				LOG_DEBUG(\"navViewAlertGetDpFromColumn(Row,Column):\",navViewAlertGetDpFromColumn(Row,Column));
         ChildPanelOnCentralModal(\"nav_fw/alert_config_table_cell.pnl\",
 				                         \"Select DP\", makeDynString(\"$Row:\" + Row,
 				                                                    \"$Column:\" + Column,

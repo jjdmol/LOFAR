@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,255 161 697 398 N "_3DFace" 5
+PANEL,307 228 697 398 N "_3DFace" 5
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -42,6 +42,8 @@ E"//Include of ctl file
 #uses \"nav_fw/gcfnav_view.ctl\"
 #uses \"nav_fw/gcf-common.ctl\"
 #uses \"nav_fw/gcfnav-functions.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
+
 string traceColor=\"\";
 string newTraceColor=\"\";" 0
  2
@@ -668,11 +670,11 @@ LANG:1 6 Cancel
   PanelOff();
 }" 0
  E E E
-1 67 1 "" 0
+1 76 1 "" 0
 0
-1 68 1 "" 1
+1 77 1 "" 1
 0
-1 69 1 "" 2
+1 78 1 "" 2
 0
 13 77
 "btn_traceColor"
@@ -703,7 +705,7 @@ LANG:1 4 Auto
    
    int ok=colorEditor(aColor);
    if (ok == -1) {
-      DebugN(\"Color chooser failed.\");
+      LOG_WARN(\"Color chooser failed.\");
    } else {
       setValue(\"btn_traceColor\",\"backCol\",aColor);
       setValue(\"btn_traceColor\",\"text\",aColor);

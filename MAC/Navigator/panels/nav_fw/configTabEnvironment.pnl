@@ -1,10 +1,11 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,299 106 730 540 N "_3DFace" 0
+PANEL,435 286 730 540 N "_3DFace" 0
 EEE E E 1 -1 -1 0  80 120
 "" 0 1
-E"#uses \"nav_fw/gcfnav-functions.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-functions.ctl\"
+#uses \"nav_fw/gcf-util.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -323,7 +324,7 @@ LANG:1 6 Create
 {
 list_usernames.selectedPos=list_usernames.itemCount;
 
-DebugN(\"set focus\");
+LOG_TRACE(\"set focus\");
 }" 0
 E E
 0
@@ -746,7 +747,7 @@ LANG:1 5 Apply
     else
     {
      GroupsForEnvironment = GroupsForEnvironment +\"|\" +items[i];
-     DebugN(\"i\"+i+\": \"+GroupsForEnvironment);
+     LOG_TRACE(\"i\"+i+\": \"+GroupsForEnvironment);
     }
   }
   //dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
@@ -893,8 +894,7 @@ LANG:1 14 getEnvironment
       }
     }
   }
-  DebugN(\"environmentListAvailableToUser\");
-  DebugN(environmentListAvailableToUser);
+  LOG_TRACE(\"environmentListAvailableToUser\",environmentListAvailableToUser);
   
 }" 0
  E E E

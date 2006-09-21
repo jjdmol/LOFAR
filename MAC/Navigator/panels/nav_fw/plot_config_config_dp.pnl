@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,398 334 710 349 N "_3DFace" 4
+PANEL,307 228 710 349 N "_3DFace" 4
 "$PlotNr"
 "$configDatapoint"
 "$datapoint"
@@ -10,7 +10,9 @@ EEE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
 #uses \"nav_fw/gcfnav_view.ctl\"
-#uses \"nav_fw/gcf-common.ctl\"" 0
+#uses \"nav_fw/gcf-common.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
+" 0
  2
 "CBRef""1"
 "EClose"E
@@ -591,11 +593,11 @@ LANG:1 6 Cancel
   PanelOff();
 }" 0
  E E E
-1 67 1 "" 0
+1 95 1 "" 0
 0
-1 68 1 "" 1
+1 96 1 "" 1
 0
-1 69 1 "" 2
+1 97 1 "" 2
 0
 20 70
 "btn_Active"
@@ -626,7 +628,7 @@ E E
 {
   bool plotActive;
   dpGet($configDatapoint + \".\" + $PlotNr + \".active\", plotActive);
-  DebugN(\"plotActive:\"+plotActive);
+  LOG_TRACE(\"plotActive:\"+plotActive);
   btn_Active.state(0) = plotActive;
   
   
