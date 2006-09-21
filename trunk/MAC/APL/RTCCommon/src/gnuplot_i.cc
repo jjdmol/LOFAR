@@ -245,7 +245,7 @@ void gnuplot_cmd(gnuplot_ctrl *  handle, char *  cmd, ...)
     vsprintf(local_cmd, cmd, ap);
     va_end(ap);
 
-    strcat(local_cmd, "\n");
+    //strcat(local_cmd, "\n");
 
     fputs(local_cmd, handle->gnucmd) ;
     fflush(handle->gnucmd) ;
@@ -310,7 +310,7 @@ void gnuplot_set_xlabel(gnuplot_ctrl * h, char * label)
 {
     char    cmd[GP_CMD_SIZE] ;
 
-    sprintf(cmd, "set xlabel \"%s\"", label) ;
+    sprintf(cmd, "set xlabel \"%s\"\n", label) ;
     gnuplot_cmd(h, cmd) ;
     return ;
 }
@@ -331,7 +331,7 @@ void gnuplot_set_ylabel(gnuplot_ctrl * h, char * label)
 {
     char    cmd[GP_CMD_SIZE] ;
 
-    sprintf(cmd, "set ylabel \"%s\"", label) ;
+    sprintf(cmd, "set ylabel \"%s\"\n", label) ;
     gnuplot_cmd(h, cmd) ;
     return ;
 }
@@ -443,9 +443,9 @@ void gnuplot_plot_x(
     }
     
     if (title == NULL) {
-        sprintf(line, "%s \"%s\" with %s", cmd, name, handle->pstyle) ;
+        sprintf(line, "%s \"%s\" with %s\n", cmd, name, handle->pstyle) ;
     } else {
-        sprintf(line, "%s \"%s\" title \"%s\" with %s", cmd, name,
+        sprintf(line, "%s \"%s\" title \"%s\" with %s\n", cmd, name,
                       title, handle->pstyle) ;
     }
 
@@ -511,9 +511,9 @@ void gnuplot_plot_xy(
   }
 
   if (title == NULL) {
-    sprintf(line, "%s \"%s\" with %s", cmd, "-", handle->pstyle) ;
+    sprintf(line, "%s \"%s\" with %s\n", cmd, "-", handle->pstyle) ;
   } else {
-    sprintf(line, "%s \"%s\" title \"%s\" with %s", cmd, "-",
+    sprintf(line, "%s \"%s\" title \"%s\" with %s\n", cmd, "-",
 	    title, handle->pstyle) ;
   }
 
@@ -642,10 +642,10 @@ void gnuplot_plot_slope(
     }
 
     if (handle->nplots > 0) {
-        sprintf(cmd, "replot %g * x + %g title \"%s\" with %s",
+        sprintf(cmd, "replot %g * x + %g title \"%s\" with %s\n",
                       a, b, title, handle->pstyle) ;
     } else {
-        sprintf(cmd, "plot %g * x + %g title \"%s\" with %s",
+        sprintf(cmd, "plot %g * x + %g title \"%s\" with %s\n",
                       a, b, title, handle->pstyle) ;
     }
     gnuplot_cmd(handle, cmd) ;
@@ -700,7 +700,7 @@ void gnuplot_plot_equation(
         strcpy(plot_str, "plot") ;
     }
 
-    sprintf(cmd, "%s %s title \"%s\" with %s", 
+    sprintf(cmd, "%s %s title \"%s\" with %s\n", 
                   plot_str, equation, title_str, h->pstyle) ;
     gnuplot_cmd(h, cmd) ;
     h->nplots++ ;
@@ -755,19 +755,19 @@ void gnuplot_splot(
 #if 0
 static int plotcount = 0;
 
-    gnuplot_cmd(h, "set terminal postscript color");
-    gnuplot_cmd(h, "set output \"skyplot_%d.ps\"", plotcount++);
-    gnuplot_cmd(h, "set zrange [1e7:3.5e7]");
+    gnuplot_cmd(h, "set terminal postscript color\n");
+    gnuplot_cmd(h, "set output \"skyplot_%d.ps\"\n", plotcount++);
+    gnuplot_cmd(h, "set zrange [1e7:3.5e7]\n");
 #endif
 
 #if 0
-    gnuplot_cmd(h, "set pm3d at s hidden3d 100");
-    gnuplot_cmd(h, "set style line 100 lt 5 lw 0.5");
-    gnuplot_cmd(h, "unset hidden3d");
-    gnuplot_cmd(h, "unset surf");
+    gnuplot_cmd(h, "set pm3d at s hidden3d 100\n");
+    gnuplot_cmd(h, "set style line 100 lt 5 lw 0.5\n");
+    gnuplot_cmd(h, "unset hidden3d\n");
+    gnuplot_cmd(h, "unset surf\n");
 #else
-    gnuplot_cmd(h, "set pm3d at s scansforward corners2color c1");
-    gnuplot_cmd(h, "unset hidden3d");
+    gnuplot_cmd(h, "set pm3d at s scansforward corners2color c1\n");
+    gnuplot_cmd(h, "unset hidden3d\n");
     //gnuplot_cmd(h, "unset surf");
 #endif
 //     gnuplot_cmd(h, "set pm3d at s scansforward");
@@ -777,12 +777,12 @@ static int plotcount = 0;
 //     gnuplot_cmd(h, "set samples 25");
 //     gnuplot_cmd(h, "set isosamples 20");
 //     gnuplot_cmd(h, "set ticslevel 0");
-    gnuplot_cmd(h, "set xrange [0:%d]", matrix.cols());
-    gnuplot_cmd(h, "set yrange [0:%d]", matrix.rows());
-    gnuplot_cmd(h, "set title '%s'", title);
-    gnuplot_cmd(h, "set view 130,40");
+    gnuplot_cmd(h, "set xrange [0:%d]\n", matrix.cols());
+    gnuplot_cmd(h, "set yrange [0:%d]\n", matrix.rows());
+    gnuplot_cmd(h, "set title '%s'\n", title);
+    gnuplot_cmd(h, "set view 130,40\n");
 
-    gnuplot_cmd(h, "splot '/tmp/temp.dat' matrix") ;
+    gnuplot_cmd(h, "splot '/tmp/temp.dat' matrix\n") ;
 }
 
 void gnuplot_contour_plot(
@@ -803,18 +803,18 @@ void gnuplot_contour_plot(
    }
     outfile.close();
 
-    gnuplot_cmd(h, "set pm3d");
+    gnuplot_cmd(h, "set pm3d\n");
 //     gnuplot_cmd(h, "set pm3d at s scansforward");
 //     gnuplot_cmd(h, "set key below");
 //     gnuplot_cmd(h, "set border 4095");
-    gnuplot_cmd(h, "unset surface");
+    gnuplot_cmd(h, "unset surface\n");
 //    gnuplot_cmd(h, "set contour surface");
 //     gnuplot_cmd(h, "set samples 25");
 //     gnuplot_cmd(h, "set isosamples 20");
 //     gnuplot_cmd(h, "set ticslevel 0");
-    gnuplot_cmd(h, "set title '%s'", title);
-    gnuplot_cmd(h, "set view 60,30");
-    gnuplot_cmd(h, "splot '/tmp/temp.dat' matrix") ;
+    gnuplot_cmd(h, "set title '%s'\n", title);
+    gnuplot_cmd(h, "set view 60,30\n");
+    gnuplot_cmd(h, "splot '/tmp/temp.dat' matrix\n") ;
 }
 
 #endif
