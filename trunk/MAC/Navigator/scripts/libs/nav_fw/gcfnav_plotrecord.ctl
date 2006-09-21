@@ -1,6 +1,34 @@
+//# gcfnav_plotrecord.ctl
+//#
+//#  Copyright (C) 2002-2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+
+//#
+//# Plot recording functions
+//#
+
+#uses "nav_fw/gcf-util.ctl"
 #uses "nav_fw/gcf-common.ctl"
 #uses "nav_fw/gcfnav-functions.ctl"
 #uses "nav_fw/gcfnav_view.ctl"
+
 global int g_counter=0;
 global string g_path_temp = "";
 global dyn_string recordList;
@@ -190,8 +218,16 @@ dyn_string navViewPlotRecordGetDpNamesToRecord(string configDatapoint)
         {
           newDatapoints[dynlen(newDatapoints)+1] = configDatapoint + "|"+ currentDatapoint + plotDpName + "|"+ i+"|"  + fileNamePrefix + "|0";
         }
+        else 
+        {
+          LOG_WARN("Unable to connect to plot datapoint",plotDpName);
+        }
       }
     }
+  }
+  else
+  {
+    LOG_WARN("Plot configuration does not exist",configDatapoint);
   }
   return newDatapoints;
 }

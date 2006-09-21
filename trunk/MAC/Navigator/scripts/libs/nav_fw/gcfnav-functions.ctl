@@ -611,6 +611,10 @@ void treeAddDatapoints(dyn_string names)
                 {
                   dpGet(addingDPpart + "." + elementName, referenceContent);
                 }
+                else
+                {
+                  LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
+                }
                 for (int k = 1; k <= dynlen(referenceContent); k++)
                 {
                   dyn_string referenceSplit = strsplit(referenceContent[k], "=");
@@ -960,9 +964,13 @@ void Navigator_HandleEventInitialize()
   {
     string datapointPath = buildPathFromNode(selectedNode);
     string dpViewConfig = navConfigGetViewConfig(datapointPath);
-    if (selectedNode != 0 && dpAccessable(dpViewConfig))
+    if (dpAccessable(dpViewConfig))
     {
       showView(dpViewConfig, datapointPath);
+    }
+    else
+    {
+      LOG_WARN("Unable to read view configuration",datapointPath,dpViewConfig);
     }
   }    
 
@@ -1005,7 +1013,6 @@ void Navigator_HandleUpdateTrigger(string dpe, int trigger)
 {
   string newDatapoint;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
-  //if ((newDatapoint != "") && dpAccessable(newDatapoint)) Orginal
   if (newDatapoint != "")
   {
     changeSelectedPosition(newDatapoint);
@@ -1075,9 +1082,13 @@ void TabViews_HandleEventSelectionChanged()
       navConfigSetSelectedView(datapointPath, tabCtrl.activeRegister + 1);
     
       string dpViewConfig = navConfigGetViewConfig(datapointPath);
-      if (selectedNode != 0 && dpAccessable(dpViewConfig))
+      if (dpAccessable(dpViewConfig))
       {
         showActiveView(dpViewConfig, datapointPath);
+      }
+      else
+      {
+        LOG_WARN("Unable to read view configuration",datapointPath,dpViewConfig);
       }
     }
   }
@@ -1331,7 +1342,7 @@ void ButtonMaximize_HandleEventClick()
     string datapointPath = buildPathFromNode(Node);
     string dpViewConfig = navConfigGetViewConfig(datapointPath);
     LOG_TRACE("ButtonMaximize_HandleEventClick", Node, dpViewConfig);
-    if (Node != 0 && dpAccessable(dpViewConfig))
+    if (dpAccessable(dpViewConfig))
     {
       int selectedView;
       int selectedSubView;
@@ -1384,6 +1395,10 @@ void ButtonMaximize_HandleEventClick()
           }
         }
       }
+    }
+    else
+    {
+      LOG_WARN("Unable to read view configuration",datapointPath,dpViewConfig);
     }
   }
 }

@@ -211,7 +211,7 @@ void ComboBoxViewsSelectionChanged()
   if(viewsComboBoxCtrl.itemCount==0)
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nosubview.pnl",panelParameters);
-    LOG_DEBUG("1. No subview configured for this datapoint type");
+    LOG_WARN("1. No subview configured for this datapoint type");
   }
   //  else if(!dpAccessable(g_datapoint))
   //  {
@@ -221,31 +221,31 @@ void ComboBoxViewsSelectionChanged()
   else if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
-    LOG_DEBUG("3 selectedPanel:", selectedPanel);
+    LOG_INFO("3 selectedPanel:", selectedPanel);
   }
   else if (selectedPanel=="0")
   {
     selectedPanel = viewsPath + "nopanel.pnl";
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nopanel.pnl",panelParameters);
-    LOG_DEBUG("4 No panel configured for this subview");
+    LOG_WARN("4 No panel configured for this subview");
   }
-  else  //3. The configured panel file for this subview has not been found
+  else  //5. The configured panel file for this subview has not been found
   {
     string oldSelectedPanel = selectedPanel;
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nopanelfound.pnl",panelParameters);
-    LOG_DEBUG("5. File does not exist:",oldSelectedPanel);
+    LOG_WARN("5. File does not exist:",oldSelectedPanel);
   }            
  
   string datapointTypeName = "";
   if(dpAccessable(g_datapoint+"__enabled"))
   {
     datapointTypeName = getDpTypeFromEnabled(g_datapoint);
-    DebugTN("get typename from enabled",g_datapoint,datapointTypeName);
+    LOG_INFO("get typename from enabled",g_datapoint,datapointTypeName);
   }
   else if(dpAccessable(g_datapoint))
   {
     datapointTypeName = dpTypeName(g_datapoint);
-    DebugTN("get typename not from enabled but it is accessible ",g_datapoint,datapointTypeName);
+    LOG_INFO("get typename not from enabled but it is accessible ",g_datapoint,datapointTypeName);
   }
   else
   {
@@ -256,7 +256,7 @@ void ComboBoxViewsSelectionChanged()
     {
       datapointTypeName = substr(datapointTypeName, sepPos + 1);
     }
-    DebugTN("datapoint is not enabled and not accessible",g_datapoint,datapointTypeName);
+    LOG_INFO("datapoint is not enabled and not accessible",g_datapoint,datapointTypeName);
   }
 
   // Load the config panel in the viewTabsCtrl
@@ -277,7 +277,7 @@ void ComboBoxViewsSelectionChanged()
   }
   else
   {
-    LOG_DEBUG("File does not exist:",g_configPanelFileName);
+    LOG_WARN("File does not exist:",g_configPanelFileName);
   }
 }
 
@@ -305,7 +305,6 @@ bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string select
                   "$configDatapoint:" + configDatapoint),
     resultFloat,
     resultString);
-  DebugN(resultFloat);
   success = resultFloat[1];
   nrOfSubViews = resultFloat[2];
   if(success)
