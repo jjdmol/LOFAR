@@ -59,6 +59,9 @@ using namespace RSP_Protocol;
 using namespace rspctl;
 using namespace RTC;
 
+// declare class constants
+double WGCommand::AMPLITUDE_SCALE = (1.0 * ((uint32)(1 << 11)-1) / (uint32)(1 << 11)) * (uint32)(1 << 31);
+
 // local funtions
 static void usage();
 
@@ -69,8 +72,7 @@ static void usage();
 double g_sample_frequency = DEFAULT_SAMPLE_FREQUENCY;
 bool   g_getclock = false;
 
-// gnuplot support <= 16 graphs
-#define MAX_PLOT_GRAPHS 16
+#define PAIR 2
 
 /**
  * Function to convert the complex semi-floating point representation used by the
@@ -866,12 +868,12 @@ void RegisterStateCommand::stop()
 
 WGCommand::WGCommand(GCFPortInterface& port) :
   Command(port),
-  m_frequency(0.0),
+  m_mode(0),
   m_phase(0),
-  m_amplitude((uint32)(((double)2047/2048) * (uint32)(1 << 31))),
-  m_mode(0)
+  m_frequency(0),
+  m_amplitude((uint32)round(AMPLITUDE_SCALE))
 {
-  //cout << "amplitude=" << m_amplitude << endl;
+  cout << "amplitude=" << m_amplitude << endl;
 }
 
 void WGCommand::send()
@@ -893,10 +895,13 @@ void WGCommand::send()
     wgset.timestamp = Timestamp(0,0);
     wgset.rcumask = getRCUMask();
     wgset.settings().resize(1);
+
     //wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / g_sample_frequency) + 0.5);
-    wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / g_sample_frequency);
-    wgset.settings()(0).phase = m_phase;
-    wgset.settings()(0).ampl = m_amplitude;
+    //wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / g_sample_frequency);
+
+    wgset.settings()(0).freq        = m_frequency;
+    wgset.settings()(0).phase       = m_phase;
+    wgset.settings()(0).ampl        = m_amplitude;
     wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
 
     if (m_frequency < 1e-6)
@@ -1282,61 +1287,51 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
     if (!handle)
       return;
 
-    //gnuplot_setstyle(handle, "steps");
-    gnuplot_cmd(handle, "set grid x y");
+    gnuplot_cmd(handle, "set grid x y\n");
   }
 
-  gnuplot_cmd(handle, "set ylabel \"dB\"");
-  gnuplot_cmd(handle, "set yrange [0:160]");
+  gnuplot_cmd(handle, "set ylabel \"dB\"\n");
+  gnuplot_cmd(handle, "set yrange [0:160]\n");
 
   switch (m_type)
   {
     case Statistics::SUBBAND_POWER:
-      gnuplot_cmd(handle, "set xrange [0:%f]", g_sample_frequency / 2.0);
+      gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"\n");
+      gnuplot_cmd(handle, "set xrange [0:%f]\n", g_sample_frequency / 2.0);
       break;
     case Statistics::BEAMLET_POWER:
-      gnuplot_cmd(handle, "set xrange [0:%d]", MEPHeader::N_BEAMLETS);
+      gnuplot_cmd(handle, "set xlabel \"Beamlet index\"\n");
+      gnuplot_cmd(handle, "set xrange [0:%d]\n", MEPHeader::N_BEAMLETS);
       break;
   }
 
-  char plotcmd[2048];
+  char plotcmd[256];
   time_t seconds = timestamp.sec();
-  strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"", gmtime(&seconds));
+  strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 
   gnuplot_cmd(handle, plotcmd);
 
-  strcpy(plotcmd, "plot ");
-
-  // count selected devices
-  int count = 0;
-  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) { if (mask[rcuout]) count++; }
-  if (count > MAX_PLOT_GRAPHS) {
-    fprintf(stderr, "Error: plotting supports upto %d graphs. Select fewer receivers using '--select'.\n",
-	    MAX_PLOT_GRAPHS);
-    exit(EXIT_FAILURE);
-  }
+  gnuplot_cmd(handle, "plot ");
 
   // splot devices
-  count = 0;
+  int count = 0;
   for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
   {
     if (mask[rcuout])
     {
       if (count > 0)
-        strcat(plotcmd, ",");
+        gnuplot_cmd(handle, ",");
       count++;
 
       switch (m_type)
       {
         case Statistics::SUBBAND_POWER:
-	  gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"");
-          snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
-                   g_sample_frequency, n_freqbands*2.0, rcuout);
+          gnuplot_cmd(handle, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
+		      g_sample_frequency, n_freqbands*2.0, rcuout);
           break;
         case Statistics::BEAMLET_POWER:
-	  gnuplot_cmd(handle, "set xlabel \"Beamlet index\"");
-          snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
-		   (rcuout/2), (rcuout%2?'Y':'X'));
+          gnuplot_cmd(handle, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
+		      (rcuout/2), (rcuout%2?'Y':'X'));
           break;
         default:
           logMessage(cerr,"Error: invalid m_type");
@@ -1346,11 +1341,9 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
     }
   }
 
-  gnuplot_cmd(handle, plotcmd);
+  gnuplot_cmd(handle, "\n");
 
   gnuplot_write_matrix(handle, stats);
-
-  //gnuplot_cmd(handle, "set nomultiplot");
 }
 
 void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
@@ -1558,18 +1551,18 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
       return;
 
     //gnuplot_setstyle(handle, "steps");
-    gnuplot_cmd(handle, "set grid x y");
+    gnuplot_cmd(handle, "set grid x y\n");
   }
 
   //gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
-  gnuplot_cmd(handle, "set xlabel \"RCU\"");
-  gnuplot_cmd(handle, "set ylabel \"RCU\"");
-  gnuplot_cmd(handle, "set xrange [0:%d]", n_ant-1);
-  gnuplot_cmd(handle, "set yrange [0:%d]", n_ant-1);
+  gnuplot_cmd(handle, "set xlabel \"RCU\"\n");
+  gnuplot_cmd(handle, "set ylabel \"RCU\"\n");
+  gnuplot_cmd(handle, "set xrange [0:%d]\n", n_ant-1);
+  gnuplot_cmd(handle, "set yrange [0:%d]\n", n_ant-1);
 
-  char plotcmd[2048];
+  char plotcmd[256];
   time_t seconds = timestamp.sec();
-  strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"", gmtime(&seconds));
+  strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 
   gnuplot_cmd(handle, plotcmd);
 
@@ -1582,7 +1575,7 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
               "set key off\n"
               "set border 0\n");
 
-  gnuplot_cmd(handle, "splot \"-\" matrix with points ps 12 pt 5 palette");
+  gnuplot_cmd(handle, "splot \"-\" matrix with points ps 12 pt 5 palette\n");
 
   //xcstats = 10.0*log(real(xcstats)*real(xcstats))/log(10.0);
 
@@ -1987,7 +1980,7 @@ static void usage()
   cout << "       --rcuenable[=0]           # enable (or disable) input from RCU's" << endl;
   cout << endl;
   cout << "rspctl --wg                  [--select=<set>]  # get waveform generator settings" << endl;
-  cout << "rspctl --wg=freq [--phase=..][--select=<set>]  # set waveform generator settings" << endl;
+  cout << "rspctl --wg=freq [--phase=..] [--amplitude=..] [--select=<set>]  # set waveform generator settings" << endl;
   cout << "rspctl --status         [--select=<set>]       # get status" << endl;
   cout << "rspctl --statistics[=(subband|beamlet)]        # get subband (default) or beamlet statistics" << endl;
   cout << "             [--select=<set>]                  #" << endl;
@@ -1997,7 +1990,7 @@ static void usage()
 #ifdef ENABLE_RSPFE
   cout << "             [--feport=<hostname>:<port>]      #" << endl;
 #endif
-  cout << "rspctl --xcstatistics   [--select=<set>]       # get crosscorrelation statistics" << endl;
+  cout << "rspctl --xcstatistics  [--select=first,second] # get crosscorrelation statistics (of pair of RSP boards)" << endl;
   cout << "             [--duration=<seconds>]            #" << endl;
   cout << "             [--integration=<seconds>]         #" << endl;
   cout << "             [--directory=<directory>]         #" << endl;
@@ -2022,10 +2015,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
   // select all by default
   select.clear();
-  for (int i = 0; i < MAX_N_RCUS; ++i)
-    {
-      select.push_back(i);
-    }
+  for (int i = 0; i < MAX_N_RCUS; ++i) select.push_back(i);
 
   optind = 0; // reset option parsing
   //opterr = 0; // no error reporting to stderr
@@ -2047,6 +2037,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
           { "rcuenable",      optional_argument, 0, 'E' },
 	  { "wg",             optional_argument, 0, 'g' },
 	  { "wgmode",         required_argument, 0, 'G' },
+	  { "amplitude",      required_argument, 0, 'A' },
 	  { "phase",          required_argument, 0, 'P' },
 	  { "status",         no_argument,       0, 'q' },
 	  { "statistics",     optional_argument, 0, 't' },
@@ -2321,7 +2312,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		    delete command;
 		    return 0;
 		  }
-		wgcommand->setFrequency(frequency);
+		wgcommand->setFrequency(frequency, g_sample_frequency);
 	      }
 	  }
 	  break;
@@ -2353,6 +2344,21 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
 		wgcommand->setPhase((uint8)(phase / (2 * M_PI) * 256));
 	      }
+	  }
+	  break;
+
+	case 'A':  // --amplitude
+	  {
+	    if (optarg) {
+	      double amplitude = atof(optarg);
+	      if (amplitude > 2.0 || amplitude < 0.0) {
+		logMessage(cerr, "Error: option '--amplitude' paramter must be >= 0 and <= 1.0");
+		delete command;
+		return 0;
+	      }
+	      WGCommand *wgcommand = dynamic_cast<WGCommand*>(command);
+	      wgcommand->setAmplitude(amplitude);
+	    }
 	  }
 	  break;
 
@@ -2397,8 +2403,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      delete command;
 	    XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(m_server);
 	    command = xcstatscommand;
-	    command->set_ndevices(m_nrcus);
-	    command->setSelectable(false); // no selection allowed
+	    command->set_ndevices(PAIR);
 	  }
 	  break;
 
@@ -2620,15 +2625,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
   if (command)
     {
-      if (!command->getSelectable())
-	{
-	  // select all
-	  select.clear();
-	  for (int i = 0; i < MAX_N_RCUS; ++i)
-	    {
-	      select.push_back(i);
-	    }
-	}
       command->setSelect(select);
     }
 

@@ -66,22 +66,6 @@ namespace LOFAR {
       virtual GCFEvent::TResult ack(GCFEvent& e) = 0;
 
       /**
-       * Set seletable.
-       */
-      void setSelectable(bool selectable)
-      {
-        m_selectable = selectable;
-      }
-
-      /**
-       * Get selectable.
-       */
-      bool getSelectable()
-      {
-        return m_selectable;
-      }
-
-      /**
        * Set selection.
        */
       void setSelect(std::list<int> select)
@@ -170,7 +154,6 @@ namespace LOFAR {
         m_rspport(port),
         m_select(),
         m_get(true), 
-        m_selectable(true), 
         m_ndevices(0)
       {}
       Command(); // no default construction allowed
@@ -181,7 +164,6 @@ namespace LOFAR {
     private:
       std::list<int> m_select;
       bool           m_get; // get or set
-      bool           m_selectable; // is selection possible?
       int            m_ndevices;
     };
 
@@ -373,32 +355,48 @@ namespace LOFAR {
     class WGCommand : public Command
     {
     public:
+      static double AMPLITUDE_SCALE;
+
       WGCommand(GCFPortInterface& port);
       virtual ~WGCommand()
       {}
       virtual void send();
       virtual GCFEvent::TResult ack(GCFEvent& e);
-      void setFrequency(double frequency)
+
+      // set frequency in range 0 <= frequency < sample_frequency / 2.0
+      void setFrequency(double frequency, double samplefreq)
       {
-        m_frequency = frequency;
+        m_frequency = (uint32)round(frequency * ((uint64)1 << 32) / samplefreq);
       }
+
       void setWaveMode(int mode)
       {
         m_mode = mode;
       }
-      void setPhase(int phase)
+
+      // set phase in range 0 <= phase < 360
+      void setPhase(double phase)
       {
-        m_phase = phase;
+	while (phase < 0.0)    phase += 360.0;
+	while (phase >= 360.0) phase -= 360.0;
+
+        m_phase = (uint8)round((1 << 8) * (phase / 360.0));
       }
+
+      // set amplitude in range 0.0 <= amplitude < 2.0
       void setAmplitude(double amplitude)
       {
-        m_amplitude = (uint8)(amplitude*(double)(1<<7)/100.0);
+	if (amplitude >=  2.0) amplitude = 2.0;
+	if (amplitude < 0.0) amplitude = 0.0;
+
+        m_amplitude = (uint32)(amplitude * AMPLITUDE_SCALE);
       }
+
     private:
-      double m_frequency;
+      uint8  m_mode;
       uint8  m_phase;
+      uint32 m_frequency;
       uint32 m_amplitude;
-      uint8	 m_mode;
     };
 
     //
