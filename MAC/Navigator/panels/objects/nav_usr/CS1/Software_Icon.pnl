@@ -1,0 +1,232 @@
+V 10
+1
+LANG:1 12 SoftwareIcon
+PANEL,456 100 154 186 N "_3DFace" 1
+"$referenceDatapoint"
+EE"main()
+{
+aplViewNavigateTo(\"\", $referenceDatapoint, \":LOFAR_PIC\", \"software-overview.pnl\");
+}" 0
+ E E 1 0 0 0  -1 -1
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border30"
+""
+1 20 110 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 20 90 110
+4 1
+"Line14"
+""
+1 50 80 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  70 80 50 80
+4 2
+"Line15"
+""
+1 70 50 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  70 80 70 50
+6 3
+"Border26"
+""
+1 62 67 E E E 1 E 1 E N "_WindowText" E N {102,255,0} E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 62 58 77 67
+4 4
+"Line12"
+""
+1 50 50 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  70 50 50 50
+4 5
+"Line13"
+""
+1 46 36 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  46 90 46 36
+10 6
+"Polyline2"
+""
+1 46 44 E E E 1 E 1 E N "_WindowText" E N {255,255,51} E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 4 46 44
+36 49
+46 54
+56 49
+1
+7 7
+"Ellipse3"
+""
+1 45 33 E E E 1 E 1 E N "_WindowText" E N {255,0,255} E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 45 33 10 5
+10 8
+"Polyline3"
+""
+1 70 44 E E E 1 E 1 E N "_WindowText" E N {255,255,51} E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 4 70 44
+60 49
+70 54
+80 49
+1
+6 9
+"Border27"
+""
+1 38 67 E E E 1 E 1 E N "_WindowText" E N {102,255,0} E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 38 58 53 67
+10 10
+"Polyline4"
+""
+1 46 74 E E E 1 E 1 E N "_WindowText" E N {255,255,51} E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 4 46 74
+36 79
+46 84
+56 79
+1
+6 11
+"Border28"
+""
+1 65 95 E E E 1 E 1 E N "_WindowText" E N {0,0,255} E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 65 75 75 95
+7 12
+"Ellipse5"
+""
+1 46 94 E E E 1 E 1 E N "_WindowText" E N {255,0,51} E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 46 94 5 5
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+2 "Group1" 20 20 90 110
+13 12 11 10 9 8 7 6 5 4 3 2 1 0
+0
