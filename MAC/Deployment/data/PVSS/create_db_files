@@ -87,6 +87,22 @@ create_ring_station_list()
 }
 
 #
+# create_wan_switch_list
+#
+create_wan_switch_list()
+{
+	cleanlist ${WANFILE} | while read wan
+	do 
+		cleanlist ${wan}Wan.list | awk -v WAN=${wan} \
+		'{ 
+			print WAN"_"$1 
+		}'
+	done	>>/tmp/wslist
+	concatfile /tmp/wslist
+	rm -f /tmp/wslist
+}
+
+#
 # labelize somename
 #
 # Capitalizes the name preceding initial capitals with an _
@@ -241,6 +257,58 @@ substitute_Cabinet()
 			for (cabinet=0; cabinet<int(nrBoards/8); cabinet++) {
 				dpname=$1;
 				sub("@cabinet@", "Cabinet"cabinet, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_wan_switch
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_wan_switch()
+{
+	awk -v WANSWITCHLIST=${WANSWITCHLIST} '
+	BEGIN {
+		nrWan=split(WANSWITCHLIST, wanname, ":");
+	};
+	{
+		hasWan=index($1,"@wan@_@switch@");
+		if (hasWan > 0) {
+			for (wan in wanname) {
+				dpname=$1;
+				sub("@wan@_@switch@", wanname[wan], dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_wan
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_wan()
+{
+	awk -v WANLIST=${WANLIST} '
+	BEGIN {
+		nrWan=split(WANLIST, wanname, ":");
+	};
+	{
+		hasWan=index($1,"@wan@");
+		if (hasWan > 0) {
+			for (wan in wanname) {
+				dpname=$1;
+				sub("@wan@", wanname[wan], dpname)
 				print dpname"	"$2;
 			}
 		}
@@ -477,6 +545,8 @@ create_dp_file()
 				substitute_ring_station  | \
 				substitute_ring | \
 				substitute_arm | \
+				substitute_wan_switch  | \
+				substitute_wan  | \
 				substitute_Cabinet_SubRack_RSPBoard | \
 				substitute_Cabinet_SubRack | \
 				substitute_Cabinet | \
@@ -569,6 +639,7 @@ ARMFILE=Arms.list
 BOARDFILE=RSPBoards.list
 CLUSTERFILE=Clusters.list
 RINGFILE=Rings.list
+WANFILE=Wan.list
 ERRORFILE=/tmp/Crea.Error
 INPUTFILE=./PVSSDataPoints.base
 
@@ -582,6 +653,7 @@ ARMLIST=`concatfile $ARMFILE`
 CLUSTERLIST=`concatfile $CLUSTERFILE`
 RINGLIST=`concatfile $RINGFILE`
 RINGSTATIONLIST=`create_ring_station_list`
+WANSWITCHLIST=`create_wan_switch_list`
 NRRSPBOARDS=`grep -s ${STNNAME} ${BOARDFILE} | awk '{ print $2 }'`
 
 # create the desired files
