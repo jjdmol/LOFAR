@@ -52,14 +52,12 @@ public:
 	
 	int32 nrTbbBoards();	// RS.N_TBBBOARDS
 	
-	int32 nrMpsPerBoard();	// const 4
-	
 	friend class TBBDriver;
 
 protected:	// note TBBDriver must be able to set them
 	void setMaxTbbBoards(int32 maxBoards);
 	void setNrTbbBoards(int32 nrOfBoards);
-	
+	//void setNrTpRetries(int32 nrOfBoards);
 	
 
 private:
@@ -70,17 +68,14 @@ private:
 	//# --- Datamembers ---
 	int32	itsMaxTbbBoards;	// max posible boards
 	int32	itsNrTbbBoards;		// nr of installed boards
-	int32	itsNrMpsPerBoard;	// nr of Memmory Proccessors on one board
-	
-	
-	
+	//int32 itsNrTpRetries;
+		
 	static StationSettings* theirStationSettings;
 };
 
 //# --- inline functions ---
 inline	int32 StationSettings::maxTbbBoards()	{ return (itsMaxTbbBoards);   }
 inline	int32 StationSettings::nrTbbBoards()	{ return (itsNrTbbBoards); }
-inline	int32 StationSettings::nrMpsPerBoard() { return (itsNrMpsPerBoard); }
 
 	} // end TBB namespace
 } // end LOFAR namespace

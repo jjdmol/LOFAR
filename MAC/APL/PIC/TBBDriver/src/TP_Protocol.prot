@@ -11,16 +11,45 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+15)";
 // e.g.
 include = '<sys/time.h>';
 include = '<linux/types.h>';
-include = '<bitset>';
+//include = '<bitset>';
 include = '<Common/LofarTypes.h>';
 
-include = '<APL/RTCCommon/Timestamp.h>';
+//include = '<APL/RTCCommon/Timestamp.h>';
 
 prelude = << PRELUDE_END
 
-  static const int MAX_N_TBBBOARDS = 12;
-  static const int SUCCESS         = 1;
-  static const int FAILURE         = 0;
+	
+	// TP Command Opcode's
+		// Data Recording
+	static const uint32 TPALLOC   = 0x00000100;  // OUT allocate buffer space to a certain input channel
+	static const uint32 TPFREE    = 0x00000101;  // OUT free buffer settings and disable input channel 
+	static const uint32 TPRECORD  = 0x00000102;  // OUT record channel
+	static const uint32 TPSTOP    = 0x00000103;  // OUT freeze channel
+		// Triggering
+	static const uint32 TPTRIGGER = 0x00000200;  // IN trigger detected
+	static const uint32 TPTRIGCLR = 0x00000201;  // OUT clear trigger flag
+		// Data reading
+	static const uint32 TPREAD    = 0x00000300;  // OUT send recorded data to CEP
+	static const uint32 TPUDP     = 0x00000301;  // OUT configure UDP and IP header
+		// Board information
+	static const uint32 TPVERSION = 0x00000700;  // IN/OUT returns board version
+	static const uint32 TPSIZE    = 0x00000702;  // IN/OUT returns TBB memory size
+		// Board status
+	static const uint32 TPERROR   = 0x00000703;  // IN error on TBB board
+		// Board control
+	static const uint32 TPCLEAR   = 0x00000710;  // OUT clear registers
+	static const uint32 TPRESET   = 0x00000711;  // OUT reset to facory image
+	static const uint32 TPCONFIG  = 0x00000712;  // OUT reconfigure image
+		// Remote system update
+	static const uint32 TPERASEF  = 0x00000720;  // OUT erase flash memory
+	static const uint32 TPREADF   = 0x00000721;  // IN/OUT read flash memory
+	static const uint32 TPWRITEF  = 0x00000722;  // OUT write flash memory
+		// DDR2 acces
+	static const uint32 TPREADW   = 0x00000730;  // IN/OUT read 64bit word from mp
+	static const uint32 TPWRITEW  = 0x00000731;  // OUT write 64bit wort to mp
+		// Direct register acces 
+	static const uint32 TPREADR   = 0x00000740;  // IN/OUT read register(direct access), for debug purpose
+	static const uint32 TPWRITER  = 0x00000741;  // OUT write register(direct access), for debug purpose
 
 PRELUDE_END;
 
@@ -46,6 +75,10 @@ event = {
     type = "uint32";
   };
   param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
     name = "channel";
     type = "uint32";
   };
@@ -68,6 +101,10 @@ event = {
     type = "uint32";
   };
   param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
     name = "channel";
     type = "uint32";
   };
@@ -79,6 +116,10 @@ event = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
   param = {
@@ -96,6 +137,10 @@ event = {
     type = "uint32";
   };
   param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
     name = "channel";
     type = "uint32";
   };
@@ -108,6 +153,10 @@ event = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
   param = {
@@ -133,6 +182,10 @@ event = {
     type = "uint32";
   };
   param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
     name = "channel";
     type = "uint32";
   };
@@ -145,6 +198,10 @@ event = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
   param = {
@@ -171,6 +228,10 @@ event = {
     type = "uint32";
   };
   param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
     name = "udp";
     type = "uint32[2]";
   };
@@ -194,6 +255,10 @@ event = {
     name = "opcode";
     type = "uint32";
   };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
 	param = {
     name = "boardid";
     type = "uint32";
@@ -211,6 +276,10 @@ event = {
 		type = "uint32";
 	};
 	param = {
+		name = "mp0version";
+		type = "uint32";
+	};
+	param = {
 		name = "mp1version";
 		type = "uint32";
 	};
@@ -222,10 +291,6 @@ event = {
 		name = "mp3version";
 		type = "uint32";
 	};
-	param = {
-		name = "mp4version";
-		type = "uint32";
-	};
 };
 
 
@@ -235,6 +300,10 @@ event = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
   param = {
@@ -250,6 +319,9 @@ event = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };param = {
+    name = "status";
     type = "uint32";
   };
   param = {
@@ -267,6 +339,10 @@ event = {
     name = "opcode";
     type = "uint32";
   };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
 };
 
 event = {
@@ -275,6 +351,10 @@ event = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
 };
@@ -291,6 +371,10 @@ event = {
     name = "image";
     type = "uint32";
   };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
 };
 
 // Remote system update
@@ -300,6 +384,10 @@ event  = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
   param = {
@@ -314,6 +402,10 @@ event  = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
 	param = {
@@ -334,6 +426,10 @@ event  = {
     name = "opcode";
     type = "uint32";
   };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
 	param = {
 		name = "addr";
 		type = "uint32";
@@ -351,6 +447,10 @@ event  = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
 	param = {
@@ -377,6 +477,10 @@ event  = {
   dir = INOUT;
   param = {
     name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
 	param = {

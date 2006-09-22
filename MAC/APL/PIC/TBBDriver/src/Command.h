@@ -31,9 +31,6 @@
 namespace LOFAR {
   namespace TBB {
 		
-		static const int MAX_N_TBBBOARDS = 12;
-		static const double TIME_OUT = 0.5; 
-    
     class Command
     {
     public:
@@ -46,21 +43,23 @@ namespace LOFAR {
 			
 			virtual bool isValid(GCFEvent& event) = 0;
 				
-			virtual void saveTbbEvent(GCFEvent& event) = 0;
-				
-			virtual void makeTpEvent() = 0;
-						
+			virtual void saveTbbEvent(GCFEvent& event, int32 boards) = 0;
+											
 			virtual void sendTpEvent(GCFPortInterface& port) = 0;
 
-			virtual void saveTpAckEvent(GCFEvent& event, int boardnr) = 0;
+			virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr) = 0;
 
 			virtual void sendTbbAckEvent(GCFPortInterface* clientport) = 0;
+			
+			virtual void portError(int32 boardnr) = 0;
 			
 			virtual uint32 getSendMask() = 0;
 				
 			virtual uint32 getRecvMask() = 0;
 			
-			virtual uint32 done() = 0;
+			virtual bool done() = 0;
+			
+			virtual bool waitAck() = 0;
 			
     private:
       

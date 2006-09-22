@@ -3,19 +3,10 @@
 #
 
 #
-# Specify the base index of the TBB board ethernet MAC address
-# The TBB boards addresses will be numbered consecutively.
+# Specify the MAC addresses of all TBB boards
 #
-# Start from address: 10:FA:00:00:MAC_BASE:02
-# TBBDriver.MAC_BASE=1
-
-#
-# Instead of specifying MAC_BASE, one can specify all MAC
-# addresses explicitly as MAC_ADDR0..MAC_ADDR11
-# In this case you must leave TBBDriver.MAC_BASE unspecified
-#
-
-TBBDriver.MAC_ADDR_0=10:FA:00:00:00:02
+TBBDriver.MAC_ADDR_0=00:30:48:2D:82:F7
+#TBBDriver.MAC_ADDR_0=10:FA:00:00:00:02
 TBBDriver.MAC_ADDR_1=10:FA:00:00:01:02
 TBBDriver.MAC_ADDR_2=10:FA:00:00:02:02
 TBBDriver.MAC_ADDR_3=10:FA:00:00:03:02
@@ -29,36 +20,14 @@ TBBDriver.MAC_ADDR_10=10:FA:00:00:0A:02
 TBBDriver.MAC_ADDR_11=10:FA:00:00:0B:02
 
 #
-# Data output payload size.
-# Should eventually be computed dynamically
-# based on settings.
-#
-TBBDriver.OUTPUT_PAYLOAD_SIZE=736
-
-
-#
 # Ethernet interface on which to contact the TBB boards.
 # This interface would normally be connected to the switch.
 #
 TBBDriver.IF_NAME=eth1
 
 #
-# Select LOOPBACK_MODE mode
 #
-# If LOOPBACK_MODE == 0, the WRITE is done first.
-# In this mode the TBBDriver checks that what was
-# written is correctly read back from the board. This can
-# be used to check that the RSP board or the EPAStub
-# functions correctly. Read results are not stored in
-# the TBBDriver cache.
 #
-# If LOOPBACK_MODE == 1, the READ is done first.
-# In this mode you can check with Ethereal that what was
-# read from the RSP board or EPAStub is written back in
-# the same way. This is used to check whether the TBBDriver
-# stores the information at the correct location in its cache.
-# Of course in this mode reads results are stored in the
-# TBBDriver cache.
 #
-TBBDriver.LOOPBACK_MODE=0
-
+TBBDriver.TP_RETRIES=10
+TBBDriver.TP_TIMEOUT=0.2

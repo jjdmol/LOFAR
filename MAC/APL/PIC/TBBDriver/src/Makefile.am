@@ -1,6 +1,7 @@
 # if HAVE_SHMEM
 # SUBDIRS = shmem .
 # endif
+# SUBDIRS = test
 AM_CPPFLAGS = \
 	-I$(top_builddir)/include
 	
@@ -13,34 +14,77 @@ SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 	cp $*.ph $(top_builddir)/include/TBBDriver/TP_Protocol
+	
+BUILT_SOURCES = \
+	TBBDriver.conf \
+	RemoteStation.conf \
+	tbbctl.conf
 
+sysconf_DATA = \
+	TBBDriver.conf \
+	RemoteStation.conf \
+	tbbctl.conf
 
-lib_LTLIBRARIES         = libtbbdriver.la
+%.conf: %.conf.in
+	cp $< $@
+
+lib_LTLIBRARIES = \
+	libtbbdriver.la \
+	libtp_protocol.la
 
 EXTRA_DIST = \
+	$(BUILT_SOURCES) \
 	TP_Protocol.prot 
 
-libtbbdriver_la_SOURCES = \
-	$(NOINST_HEADERS)  \
+	
+libtp_protocol_la_SOURCES = \
+	TP_Protocol.ph \
 	TP_Protocol.cc \
-	StationSettings.cc \
-	RawEvent.cc \
+	RawEvent.h \
+	RawEvent.cc
+
+libtbbdriver_la_SOURCES = \
+	$(noinst_HEADERS) \
 	BoardCmdHandler.cc \
 	ClientMsgHandler.cc \
-	VersionCmd.cc
-	
+	AllocCmd.cc \
+	FreeCmd.cc \
+	RecordCmd.cc \
+	StopCmd.cc \
+	TrigclrCmd.cc \
+	ReadCmd.cc \
+	UdpCmd.cc \
+	VersionCmd.cc \
+	SizeCmd.cc \
+	ClearCmd.cc \
+	ResetCmd.cc \
+	ConfigCmd.cc \
+	ErasefCmd.cc \
+	ReadfCmd.cc \
+	WritefCmd.cc		
 
-NOINST_HEADERS = \
-	TP_Protocol.ph \
-	StationSettings.h \
-	RawEvent.h \
+noinst_HEADERS = \
 	BoardCmdHandler.h \
 	ClientMsgHandler.h \
 	Message.h	\
 	Command.h \
-	VersionCmd.h			
+	AllocCmd.h \
+	FreeCmd.h \
+	RecordCmd.h \
+	StopCmd.h \
+	TrigclrCmd.h \
+	ReadCmd.h \
+	UdpCmd.h \
+	VersionCmd.h \
+	SizeCmd.h \
+	ClearCmd.h \
+	ResetCmd.h \
+	ConfigCmd.h \
+	ErasefCmd.h \
+	ReadfCmd.h \
+	WritefCmd.h		
 
-NOINSTdir	=
+#NOINSTdir	=
 
 # AM_YFLAGS               = -d -p KeyParse
 # AM_LFLAGS               = -PKeyTokenize
@@ -61,8 +105,14 @@ TBBDriver_SOURCES = \
 	TBBDriver.h \
 	TBBDriver.cc
 
-TBBDriver_LDADD		= libtbbdriver.la
-TBBDriver_DEPENDENCIES	= libtbbdriver.la $(LOFAR_DEPEND)
+TBBDriver_LDADD = \
+	libtbbdriver.la \
+	libtp_protocol.la
+	
+TBBDriver_DEPENDENCIES = \
+	libtbbdriver.la \
+	libtp_protocol.la \
+	$(LOFAR_DEPEND)
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
