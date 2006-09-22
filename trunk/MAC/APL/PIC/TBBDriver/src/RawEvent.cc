@@ -30,9 +30,9 @@
 #include "RawEvent.h"
 
 namespace LOFAR {
-	using namespace TP_Protocol;
+	using namespace TP_Protocol;	
 	namespace TBB {
-	
+
 
 static const uint8 OPCODE_LEN = 4;
 
@@ -42,7 +42,7 @@ static const uint8 OPCODE_LEN = 4;
 typedef struct {
 	GCFEvent  event;
 	uint32		opcode;
-	uint8     payload[ETH_DATA_LEN-4];
+	uint8     payload[ETH_DATA_LEN - sizeof(uint32)];
 } RawFrame;
 static RawFrame buf;
 
@@ -53,13 +53,14 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   
   // Receive a raw packet
-  ssize_t size = port.recv(buf.payload, ETH_DATA_LEN);
+  //ssize_t size = port.recv(buf.payload, ETH_DATA_LEN);
+  ssize_t size = port.recv(&buf.opcode, ETH_DATA_LEN);
   
 	// at least 4 bytes
   if (size < OPCODE_LEN) return GCFEvent::NOT_HANDLED;
   
 	
-  LOG_DEBUG(formatString("F_DATAIN: Opcode=0x%04x",buf.opcode));
+  LOG_DEBUG(formatString("in RawEvent::F_DATAIN: Opcode=0x%08x",buf.opcode));
  
   //
   // If no error, lookup buf.opcode number, else assign ACK_ERROR buf.event.signal number
@@ -68,79 +69,79 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 	 {
 	 case TPALLOC:
   		buf.event.signal = TP_ALLOC;
-  		buf.event.length = 16;
+  		buf.event.length = 20;
   		break;
 	 case TPFREE:
   		buf.event.signal = TP_FREE;
-  		buf.event.length = 8;
+  		buf.event.length = 12;
   		break;
 	 case TPRECORD:
   		buf.event.signal = TP_RECORD;
-  		buf.event.length = 8;
+  		buf.event.length = 12;
   		break;
 	 case TPSTOP:
   		buf.event.signal = TP_RECORD;
-  		buf.event.length = 8;
+  		buf.event.length = 12;
   		break;
 	 case TPTRIGGER:
   		buf.event.signal = TP_TRIGGER;
-  		buf.event.length = 16;
+  		buf.event.length = 20;
   		break;
 	 case TPTRIGCLR:
   		buf.event.signal = TP_TRIGCLR;
-  		buf.event.length = 8;
+  		buf.event.length = 12;
   		break;
 	 case TPREAD:
   		buf.event.signal = TP_READ;
-  		buf.event.length = 16;
+  		buf.event.length = 20;
   		break;
 	 case TPUDP:
   		buf.event.signal = TP_UDP;
-  		buf.event.length = 40;
+  		buf.event.length = 44;
   		break;
 	 case TPVERSION:
   		buf.event.signal = TP_VERSION;
-  		buf.event.length = 36;
+  		buf.event.length = 40;
   		break;
 	 case TPSIZE:
   		buf.event.signal = TP_SIZE;
-  		buf.event.length = 8;
+  		buf.event.length = 12;
   		break;
 	 case TPERROR:
   		buf.event.signal = TP_ERROR;
-  		buf.event.length = 8;
+  		buf.event.length = 12;
   		break;
 	 case TPCLEAR:
   		buf.event.signal = TP_CLEAR;
-  		buf.event.length = 4;
+  		buf.event.length = 8;
   		break;
 	 case TPRESET:
   		buf.event.signal = TP_RESET;
-  		buf.event.length = 4;
+  		buf.event.length = 8;
   		break;
 	 case TPCONFIG:
   		buf.event.signal = TP_CONFIG;
-  		buf.event.length = 8;
+  		buf.event.length = 12;
   		break;
 	 case TPERASEF:
   		buf.event.signal = TP_ERASEF;
-  		buf.event.length = 8;
+  		buf.event.length = 12;
   		break;
 	 case TPREADF:
   		buf.event.signal = TP_READF;
-  		buf.event.length = 1028;
+  		buf.event.length = 1032;
   		break;
 	 case TPWRITEF:
   		buf.event.signal = TP_WRITEF;
-  		buf.event.length = 1028;
+  		buf.event.length = 1032;
   		break;
 	 case TPREADW:
   		buf.event.signal = TP_READW;
-  		buf.event.length = 20;
+  		buf.event.length = 24;
   		break;
 	 case TPWRITEW:
   		buf.event.signal = TP_WRITEW;
-  		buf.event.length = 20;
+  		buf.event.length = 24;
   		break;
 	 default:
   		buf.event.signal = 0;
@@ -149,10 +150,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 	 }
   
   if (buf.event.signal) // buf.event.signal == 0 indicates unrecognised or invalid MEP message
-	{
-		
-		 (void)new((void*)&buf.event) GCFEvent(buf.event.signal); // placement new does in place construction
-				
+	{				
 		//
 		// Print debugging info
 		// 
@@ -173,5 +171,6 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   
   return status;
 }
-	} // end TBB namespace
-} // end LOFAR namespace
+
+	} // end namespace TBB
+} // end namespace LOFAR

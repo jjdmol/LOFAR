@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  VersionCmd.h: Get TBB board versions
+//#  AllocCmd.h: Allocate memmory
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef VERSIONCMD_H_
-#define VERSIONCMD_H_
+#ifndef ALLOCCMD_H_
+#define ALLOCCMD_H_
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
@@ -37,19 +37,19 @@ namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
 
-		class VersionCmd : public Command 
+		class AllocCmd : public Command 
 		{
 			public:
-				// Constructors for a GetVersions object.
-				VersionCmd();
+				// Constructors for a AllocCmd object.
+				AllocCmd();
 	  
-				// Destructor for GetVersions.
-				virtual ~VersionCmd();
+				// Destructor for AllocCmd.
+				virtual ~AllocCmd();
 				
 				virtual bool isValid(GCFEvent& event);
 				
 				virtual void saveTbbEvent(GCFEvent& event, int32 boards);
-											
+									
 				virtual void sendTpEvent(GCFPortInterface& port);
 
 				virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr);
@@ -72,22 +72,14 @@ namespace LOFAR {
 				uint32  itsErrorMask;  // mask indicates the not responding boards
 				uint32	itsBoardsMask;	// Installed boards mask
 				
-				TPVersionEvent			*itsTPE;
-				TPVersionEvent			*itsTPackE;
-				TBBVersionEvent			*itsTBBE;
-				TBBVersionackEvent	*itsTBBackE;
+				TPAllocEvent			*itsTPE;
+				TPAllocEvent			*itsTPackE;
+				TBBAllocEvent			*itsTBBE;
+				TBBAllocackEvent	*itsTBBackE;
 				
 				uint32	itsBoardStatus[MAX_N_TBBBOARDS];
-				uint32	itsBoardId[MAX_N_TBBBOARDS];
-				uint32	itsSwVersion[MAX_N_TBBBOARDS];
-				uint32	itsBoardVersion[MAX_N_TBBBOARDS];
-				uint32	itsTpVersion[MAX_N_TBBBOARDS];
-				uint32	itsMp0Version[MAX_N_TBBBOARDS];
-				uint32	itsMp1Version[MAX_N_TBBBOARDS];
-				uint32	itsMp2Version[MAX_N_TBBBOARDS];
-				uint32	itsMp3Version[MAX_N_TBBBOARDS];
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* VERSIONCMD_H_ */
+#endif /* ALLOCCMD_H_ */

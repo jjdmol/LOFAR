@@ -47,10 +47,9 @@ namespace LOFAR {
 		{
 	
 			public:
-				Command*						itsCmd; // command to use
 				// Constructors for a SyncAction object.
 				// Default direction is read.
-				BoardCmdHandler(GCFPortInterface* board_ports);
+				BoardCmdHandler();
 
 				// Destructor for SyncAction. */
 				~BoardCmdHandler();
@@ -59,26 +58,35 @@ namespace LOFAR {
 				GCFEvent::TResult send_state(GCFEvent& event, GCFPortInterface& port);
 				GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
 								
-				void SetCmd(Command *cmd);
+				void setBoardPorts(GCFPortInterface* board_ports);
+				void setTpCmd(Command *cmd);
+				void setTpRetries(int32 Retries);
+				void setNrOfTbbBoards(int32 NrOfBoards);
+				void setMaxTbbBoards(int32 MaxBoards);
+				void setTpTimeOut(double TimeOut);
 				
-				bool done();
+				bool tpCmdDone();
 				
 			protected:
 
 			private:
 				// convert port to portnr, used in the port-array
-				int PortToBoardNr(GCFPortInterface& port);
+				int portToBoardNr(GCFPortInterface& port);
 				
 				
 			private:
 				
-				int									itsRetries;  // max number of retries
-				int									itsNrOfBoards; // numnber of boards installed
+				int32								itsRetries;  // max number of retries
+				int32								itsNrOfBoards;
+				int32								itsMaxBoards;
+				double							itsTimeOut;
+				bool								itsCmdDone;
+				
 				GCFPortInterface*		itsClientPort; // return port of the actual commmand
 				GCFPortInterface*		itsBoardPorts; // array of tbb board ports
 				
-				int									itsBoardRetries[MAX_N_TBBBOARDS];
-				
+				int32								itsBoardRetries[MAX_N_TBBBOARDS];
+				Command*						itsCmd; // command to use			
 				
 		};
 	} // end TBB namespace

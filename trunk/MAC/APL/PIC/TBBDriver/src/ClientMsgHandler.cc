@@ -103,5 +103,6 @@ void ClientMsgHandler::SetMessage(Message *msg)
 {
 	itsMsg = msg;
 }
-	} // end TBB namespace
-} // end LOFAR namespace
+
+	} // end namespace TBB
+} // end namespace LOFAR

@@ -51,7 +51,21 @@ namespace LOFAR{
 			// GTMTopologyService classes.
 			TBBDriver(string name);
       ~TBBDriver();
-		
+			
+			// open all board ports
+			void openBoards();
+			
+			// check if all boardports are open
+			bool isEnabled();
+			
+			
+      // The init state. 
+			// This state is used to wait for events from the client
+      // and board ports. When a event is received the command is executed 
+			// and transition to the busy state is made.
+      GCFEvent::TResult init_state(GCFEvent& event, GCFPortInterface &port);
+      
+      
       // The idle state. 
 			// This state is used to wait for events from the client
       // and board ports. When a event is received the command is executed 
@@ -63,7 +77,8 @@ namespace LOFAR{
 			// but they will be put on the que.
 			// All TPEvent will be transmittted imediallie
       GCFEvent::TResult busy_state(GCFEvent& event, GCFPortInterface &port);
-		
+			
+			void undertaker();
 		
     private:
       // Copying is not allowed ??
@@ -74,22 +89,22 @@ namespace LOFAR{
 			bool SetTpCommand(unsigned short signal);
 			
 			// define some constants
-	  	// mode of operation
-			BoardCmdHandler*		cmdhandler;
-			ClientMsgHandler*		msghandler;
-			
+	  	BoardCmdHandler			*cmdhandler;
+			ClientMsgHandler		*msghandler;
+			Command 						*cmd;
 			struct TbbEvent{
-				unsigned short signal;
-				GCFPortInterface* port;
+				unsigned short		signal;
+				GCFPortInterface	*port;
 			};
 			
-			deque<TbbEvent>* itsTbbQueue;
+			deque<TbbEvent> 		*itsTbbQueue;
 			
 			GCFTCPPort          itsAcceptor;     // listen for clients on this port
 			GCFTCPPort          itsMsgPort;     // send messages to this port
-			GCFETHRawPort*      itsBoard;        // array of ports, one for each TBB board
-			//std::list<GCFPortInterface*> itsclient_list;  // list of clients
-			//std::list<GCFPortInterface*> itsdead_clients; // list of clients to cleanup
+			GCFETHRawPort      	*itsBoard;        // array of ports, one for each TBB board
+			
+			std::list<GCFPortInterface*> itsClientList;  // list of clients
+			std::list<GCFPortInterface*> itsDeadClients; // list of clients to cleanup
     };
 	} // end TBB namespace
 } // end LOFAR namespace

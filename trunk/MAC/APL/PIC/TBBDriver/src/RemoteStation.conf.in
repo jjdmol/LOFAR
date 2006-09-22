@@ -3,9 +3,9 @@
 #
 
 #
-# Number of TBB boards, normal 12
+# Number of TBB boards installed, normal 12
+# Maximum number of boards = 12, read Information.txt how to change it.
 #
-RS.MAX_TBBBOARDS=12
 RS.N_TBBBOARDS=1
 
 

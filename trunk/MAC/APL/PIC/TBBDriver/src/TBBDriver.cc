@@ -23,44 +23,41 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-//# Includes
-
+#include <Common/LofarLocators.h>
 #include <APS/ParameterSet.h>
+#include <GCF/GCF_ServiceInfo.h>
 
 #include "TBBDriver.h"
-#include "StationSettings.h"
-
 #include "RawEvent.h" 
 
 // include all cmd and msg classes
-// #include <AllocCmd.h>
-// #include <FreeCmd.h>
-// #include <RecordCmd.h>
-// #include <Stop.h>
-// #include <TrigclrCmd.h>
-// #include <ReadCmd.h>
-// #include <UdpCmd.h>
+#include "AllocCmd.h"
+#include "FreeCmd.h"
+#include <RecordCmd.h>
+#include <StopCmd.h>
+#include <TrigclrCmd.h>
+#include <ReadCmd.h>
+#include <UdpCmd.h>
 #include "VersionCmd.h"
-// #include <SizeCmd.h>
-// #include <ClearCmd.h>
-// #include <ResetCmd.h>
-// #include <ConfigCmd.h>
-// #include <ErasefCmd.h>
-// #include <ReadfCmd.h>
-// #include <WritefCmd.h>
+#include <SizeCmd.h>
+#include <ClearCmd.h>
+#include <ResetCmd.h>
+#include <ConfigCmd.h>
+#include <ErasefCmd.h>
+#include <ReadfCmd.h>
+#include <WritefCmd.h>
 // #include <ReadwCmd.h>
 // #include <WritewCmd.h>
 // #include <TriggerMsg.h>
 // #include <ErrorMsg.h>
 
 
-#define ETHERTYPE_TP 0x10FA			// first 4 letters of LOFAr
+#define ETHERTYPE_TP 0x7BB0			// letters of TBB
 
-
-namespace LOFAR {
-	using namespace ACC::APS;
-	namespace TBB {
+using namespace LOFAR;
+using namespace GCFCommon;
+using namespace ACC::APS;
+using namespace TBB;
 
 static int32    g_instancenr = -1;
 
@@ -106,15 +103,9 @@ void parseOptions(int argc, char** argv)
 }
 */		
 TBBDriver::TBBDriver(string name)
-  : GCFTask((State)&TBBDriver::idle_state, name)
+  : GCFTask((State)&TBBDriver::init_state, name)
 {
-  // first initialize the global settins
-  LOG_DEBUG("Setting up station settings");
-  StationSettings*	tbb_ss = StationSettings::instance();
-  tbb_ss->setMaxTbbBoards  (globalParameterSet()->getInt32("RS.MAX_TBBBOARDS"));
-  tbb_ss->setNrTbbBoards   (globalParameterSet()->getInt32("RS.N_TBBBOARDS"));
-	  
-  //LOG_DEBUG_STR (*tbb_ss);
+	cmd = 0;
 
   // tell broker we are here
   LOG_DEBUG("Registering protocols");
@@ -127,11 +118,12 @@ TBBDriver::TBBDriver(string name)
   if (g_instancenr>=0) {
 	 acceptorID = formatString("(%d)", g_instancenr);
   }
-  itsAcceptor.init(*this, "acceptor_v3"+acceptorID, GCFPortInterface::MSPP, TBB_PROTOCOL);
+  itsAcceptor.init(*this, MAC_SVCMASK_TBBDRIVER + acceptorID, GCFPortInterface::MSPP, TBB_PROTOCOL);
 
   // open port with TBB board
   LOG_DEBUG("Connecting to TBB boards");
-  itsBoard = new GCFETHRawPort[StationSettings::instance()->nrTbbBoards()];
+	itsBoard = new GCFETHRawPort[globalParameterSet()->getInt32("RS.N_TBBBOARDS")];
+  //itsBoard = new GCFETHRawPort[tbb_ss->nrTbbBoards()];
   ASSERT(itsBoard);
 	
 	itsMsgPort.init(*this, "MsgPort", GCFPortInterface::SAP, TBB_PROTOCOL);
@@ -153,7 +145,7 @@ TBBDriver::TBBDriver(string name)
   char boardname[64];
   char paramname[64];
   char macaddrstr[64];
-  for (int boardid = 0; boardid < StationSettings::instance()->nrTbbBoards(); boardid++) {
+	for (int boardid = 0; boardid < globalParameterSet()->getInt32("RS.N_TBBBOARDS"); boardid++) {
 		snprintf(boardname, 64, "board%d", boardid);
 		
 		if (bUseMAC_BASE) {
@@ -168,23 +160,107 @@ TBBDriver::TBBDriver(string name)
 		itsBoard[boardid].init(*this, boardname, GCFPortInterface::SAP, TP_PROTOCOL,true /*raw*/);
 		itsBoard[boardid].setAddr(globalParameterSet()->getString("TBBDriver.IF_NAME").c_str(), macaddrstr);
 		
-		// set ethertype to 0x10FA so Ethereal can decode EPA messages
+		// set ethertype to 0x7BB0 so Ethereal can decode TBB messages
 		itsBoard[boardid].setEtherType(ETHERTYPE_TP);
-	 }
+	}
 	 
 	 // create cmd & msg handler
-	 cmdhandler = new BoardCmdHandler(itsBoard);
+	LOG_DEBUG_STR("initializing handlers");
+	 cmdhandler = new BoardCmdHandler();
 	 msghandler = new ClientMsgHandler(itsMsgPort);
-	 	 
+	 
+	 cmdhandler->setBoardPorts(itsBoard);
+	 cmdhandler->setMaxTbbBoards(MAX_N_TBBBOARDS);
+	 cmdhandler->setNrOfTbbBoards(globalParameterSet()->getInt32("RS.N_TBBBOARDS"));
+	 cmdhandler->setTpRetries(globalParameterSet()->getInt32("TBBDriver.TP_RETRIES"));
+	 cmdhandler->setTpTimeOut(globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"));
+	 	 	 
 	 // set Tbb queue
+	 LOG_DEBUG_STR("initializing TbbQueue");
 	 itsTbbQueue = new deque<TbbEvent>(100);
+	 itsTbbQueue->clear();
 }
 
 
 TBBDriver::~TBBDriver()
 {
-	//delete cmdhandler; // delete BoardCmdHandler
+	delete cmdhandler; 
+	delete msghandler;
 }
+
+
+void TBBDriver::undertaker()
+{
+  for (list<GCFPortInterface*>::iterator it = itsDeadClients.begin();
+       it != itsDeadClients.end();
+       it++)
+  {
+    delete (*it);
+  }
+  itsDeadClients.clear();
+}
+
+//
+// openBoards()
+//
+void TBBDriver::openBoards()
+{
+	LOG_DEBUG_STR("opening boards");
+	for (int boardid = 0; boardid < globalParameterSet()->getInt32("RS.N_TBBBOARDS"); boardid++)
+  {
+    if (!itsBoard[boardid].isConnected()) itsBoard[boardid].open();
+  }
+}
+
+//
+// isEnabled()
+//
+bool TBBDriver::isEnabled()
+{
+  bool enabled = true;
+	for (int boardid = 0; boardid < globalParameterSet()->getInt32("RS.N_TBBBOARDS"); boardid++)
+  {
+    if (!itsBoard[boardid].isConnected())
+    {
+      enabled = false;
+      break;
+    }
+  }
+  return enabled;
+}
+
+
+GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	
+	switch(event.signal) {
+		case F_INIT: {
+		} break;
+        
+		case F_ENTRY:	{
+			openBoards();
+		}	break;
+		
+		case F_CONNECTED: {
+      LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
+      
+      if (isEnabled()) {
+        // All board ports are open, start waiting for clients
+      	if (!itsAcceptor.isConnected())
+      		itsAcceptor.open();
+      }
+      if (itsAcceptor.isConnected()) 
+      	TRAN(TBBDriver::idle_state);
+    } break;
+		
+		default: {
+			status = GCFEvent::NOT_HANDLED;
+		}	break;
+	}
+	return status;
+}
+	
 
 //
 // idle(event, port)
@@ -192,33 +268,56 @@ TBBDriver::~TBBDriver()
 GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
+  undertaker();
   
 	switch(event.signal) {
-		case F_INIT: {   }	break;
+		case F_INIT: {
+		} break;
         
 		case F_ENTRY:	{
-			
 			// look if there is an Tbb command in queue
+			
 			if(!itsTbbQueue->empty()) {
-				GCFEvent event;
-				TbbEvent* tbbevent;
-				*tbbevent = itsTbbQueue->front();
+				GCFEvent e;
 				
-				event.signal = tbbevent->signal;
+				e.signal = itsTbbQueue->front().signal; //tbbevent->signal;
 				
-				SetTbbCommand(tbbevent->signal);
+				SetTbbCommand(itsTbbQueue->front().signal);
 				
-				status = cmdhandler->dispatch(event,*tbbevent->port);
+				status = cmdhandler->dispatch(e,*itsTbbQueue->front().port);
 				
 				itsTbbQueue->pop_front();
 				TRAN(TBBDriver::busy_state);
-			
 			}
 		}	break;
         
 		case F_CONNECTED:	{
 			LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
 		}	break;
+		
+		case F_DISCONNECTED: {
+			
+			LOG_INFO(formatString("DISCONNECTED: port '%s'", port.getName().c_str()));
+      port.close();
+      		
+			if (&port == &itsAcceptor) {
+        LOG_FATAL("Failed to start listening for client connections.");
+        exit(EXIT_FAILURE);
+      }
+      else {
+				itsClientList.remove(&port);
+        itsDeadClients.push_back(&port);
+      }
+		} break;
+		
+		case F_ACCEPT_REQ: {
+			GCFTCPPort* client = new GCFTCPPort();
+			client->init(*this, "client", GCFPortInterface::SPP, TBB_PROTOCOL);
+      itsAcceptor.accept(*client);
+      itsClientList.push_back(client);
+
+      LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", itsClientList.size()));
+		} break;
 		
 		case F_DATAIN: {
 			status = RawEvent::dispatch(*this, port);	
@@ -232,7 +331,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 			}
 			// if it is not a Tbb event, look for Tp event
 			else if(SetTpCommand(event.signal)) {
-				status = cmdhandler->dispatch(event,port);	
+				status = msghandler->dispatch(event,port);	
 				TRAN(TBBDriver::busy_state);
 			}
 			// if not a Tbb or Tp event, return not-handled 
@@ -251,6 +350,9 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 	GCFEvent::TResult status = GCFEvent::HANDLED;    
 	
 	switch(event.signal) {
+		case F_INIT: {
+		} break;
+		
 		case F_ENTRY: {
 		}	break;
 		
@@ -265,6 +367,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 		
 		case F_DISCONNECTED: {
+			TRAN(TBBDriver::idle_state);	
 		}	break;
 		
 		case F_EXIT: {
@@ -301,7 +404,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case TP_WRITEW:
 		{
 			status = cmdhandler->dispatch(event,port); // dispatch ack from boards
-			if(cmdhandler->done()){
+			if(cmdhandler->tpCmdDone()){
 				TRAN(TBBDriver::idle_state);
 			}
 		}	break;	
@@ -313,12 +416,15 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		}	break;		
 						
 		default: {
+			if(cmdhandler->tpCmdDone()){
+				TRAN(TBBDriver::idle_state);
+			}
 			// put event on the queue
 			TbbEvent tbbevent;
 			tbbevent.signal = event.signal;
 			tbbevent.port = &port;
 			itsTbbQueue->push_back(tbbevent);
-			//status = GCFEvent::NOT_HANDLED;
+			status = GCFEvent::NOT_HANDLED;
 		}	break;
 	}
 	return status;
@@ -327,96 +433,111 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 
 bool TBBDriver::SetTbbCommand(unsigned short signal)
 {
+	if(cmd) delete cmd;
 	switch(signal)
 	{
-		/*
+		
 		case TBB_ALLOC:	{
-			AllocCmd *cmd = AllocCmd();
-			cmdhandler->SetCmd(cmd);
+			AllocCmd *cmd;
+			cmd = new AllocCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
-		case TBB_FREE:	{
-			FreeCmd *cmd = FreeCmd();
-		cmdhandler->SetCmd(cmd);
+		case TBB_FREE: {
+			FreeCmd *cmd;
+			cmd = new FreeCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
-		
+		/*
 		case TBB_RECORD: 	{
-			RecordCmd *cmd = RecordCmd();
-			cmdhandler->SetCmd(cmd);
+			RecordCmd *cmd;
+			cmd = new RecordCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_STOP:	{
-			Stopcmd *cmd = StopCmd();
-			cmdhandler->SetCmd(cmd);
+			Stopcmd *cmd;
+			cmd = new StopCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_TRIGCLR:	{
-			TrigclrCmd *cmd = TrigclrCmd();
-			cmdhandler->SetCmd(cmd);
+			TrigclrCmd *cmd;
+			cmd = new TrigclrCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_READ:	{
-			ReadCmd *cmd = ReadCmd();
-			cmdhandler->SetCmd(cmd);
+			ReadCmd *cmd;
+			cmd = new ReadCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_UDP: {
-			UdpCmd *cmd = UdpCmd();
-			cmdhandler->SetCmd(cmd);
+			UdpCmd *cmd;
+			cmd = new UdpCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		*/
 		case TBB_VERSION: {
 			VersionCmd *cmd;
-
-			cmd = new VersionCmd;
-			
-			cmdhandler->SetCmd(cmd);
+			cmd = new VersionCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
-		/*
+		
 		case TBB_SIZE:	{
-			SizeCmd *cmd = SizeCmd();
-			cmdhandler->SetCmd(cmd);
+			SizeCmd *cmd;
+			cmd = new SizeCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_CLEAR:	{
-			ClearCmd *cmd = ClearCmd();
-			cmdhandler->SetCmd(cmd);
+			ClearCmd *cmd;
+			cmd = new ClearCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_RESET:	{
-			ResetCmd *cmd = ResetCmd();
-			cmdhandler->SetCmd(cmd);
+			ResetCmd *cmd;
+			cmd = new ResetCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_CONFIG:	{
-			ConfigCmd *cmd = ConfigCmd();
-			cmdhandler->SetCmd(cmd);
+			ConfigCmd *cmd;
+			cmd = new ConfigCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_ERASEF:	{
-			ErasefCmd *cmd = ErasefCmd();
-			cmdhandler->SetCmd(cmd);
+			ErasefCmd *cmd;
+			cmd = new ErasefCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_READF:	{
-			ReadfCmd *cmd = ReadfCmd();
-			cmdhandler->SetCmd(cmd);
+			ReadfCmd *cmd;
+			cmd = new ReadfCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_WRITEF:
 		{
-			WritefCmd *cmd = WritefCmd();
-			cmdhandler->SetCmd(cmd);
+			WritefCmd *cmd;
+			cmd = new WritefCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
-		
+		/*
 		case TBB_READW: {
-			ReadwCmd *cmd = ReadwCmd();
-			cmdhandler->SetCmd(cmd);
+			ReadwCmd *cmd;
+			cmd = new ReadwCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		
 		case TBB_WRITEW:	{
-			WritewCmd *cmd = WritewCmd();
-			cmdhandler->SetCmd(cmd);
+			WritewCmd *cmd;
+			cmd = new WritewCmd();
+			cmdhandler->setTpCmd(cmd);
 		} break;
 		*/ 
 		default: {
@@ -433,12 +554,12 @@ bool TBBDriver::SetTpCommand(unsigned short signal)
 		/*
 		case TP_TRIGGER: {
 			TriggerMsg *msg = TriggerMsg();
-			msghandler->SetCmd(msg);
+			msghandler->SetTBBMsg(msg);
 		} break;
 		
 		case TP_ERROR:	{
 			ErrorMsg *msg = ErrorMsg();
-			msghandler->SetCmd(msg);
+			msghandler->SetTBBMsg(msg);
 		} break;
 		*/ 
 		default: {
@@ -448,15 +569,16 @@ bool TBBDriver::SetTpCommand(unsigned short signal)
 	return true;
 }
 
-	} // namespace TBB
-} // namespace LOFAR
+	//} // end namespace TBB
+//} // end namespace LOFAR
+
         
 //
 // main (argc, argv)
 //
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);    // initializes log system
+  LOFAR::GCF::TM::GCFTask::init(argc, argv);    // initializes log system
   
 	/*
 	LOG_INFO(formatString("Starting up %s", argv[0]));
@@ -475,8 +597,9 @@ int main(int argc, char** argv)
 	*/
   LOG_DEBUG ("Reading configuration files");
   try {
-		LOFAR::ACC::APS::globalParameterSet()->adoptFile("TBBDriverPorts.conf");
-		LOFAR::ACC::APS::globalParameterSet()->adoptFile("RemoteStation.conf");
+  	LOFAR::ConfigLocator cl;
+		LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));
+		LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("TBBDriver.conf"));
 	}
 	catch (LOFAR::Exception e) {
 		LOG_ERROR_STR("Failed to load configuration files: " << e.text());
@@ -491,8 +614,8 @@ int main(int argc, char** argv)
 		LOFAR::GCF::TM::GCFTask::run();
 	}
 	catch (LOFAR::Exception e) {
-		//LOG_ERROR_STR("Exception: " << e.text());
-		//exit(EXIT_FAILURE);
+		LOG_ERROR_STR("Exception: " << e.text());
+		exit(EXIT_FAILURE);
 	}
   
   LOG_INFO("Normal termination of program");

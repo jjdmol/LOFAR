@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  VersionCmd.h: Get TBB board versions
+//#  ErasefCmd.h: III
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef VERSIONCMD_H_
-#define VERSIONCMD_H_
+#ifndef ERASEFCMD_H_
+#define ERASEFCMD_H_
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
@@ -37,19 +37,19 @@ namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
 
-		class VersionCmd : public Command 
+		class ErasefCmd : public Command 
 		{
 			public:
-				// Constructors for a GetVersions object.
-				VersionCmd();
+				// Constructors for a ErasefCmd object.
+				ErasefCmd();
 	  
-				// Destructor for GetVersions.
-				virtual ~VersionCmd();
+				// Destructor for ErasefCmd.
+				virtual ~ErasefCmd();
 				
 				virtual bool isValid(GCFEvent& event);
 				
 				virtual void saveTbbEvent(GCFEvent& event, int32 boards);
-											
+									
 				virtual void sendTpEvent(GCFPortInterface& port);
 
 				virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr);
@@ -72,22 +72,16 @@ namespace LOFAR {
 				uint32  itsErrorMask;  // mask indicates the not responding boards
 				uint32	itsBoardsMask;	// Installed boards mask
 				
-				TPVersionEvent			*itsTPE;
-				TPVersionEvent			*itsTPackE;
-				TBBVersionEvent			*itsTBBE;
-				TBBVersionackEvent	*itsTBBackE;
+				TPErasefEvent			*itsTPE;
+				TPErasefEvent			*itsTPackE;
+				TBBErasefEvent		*itsTBBE;
+				TBBErasefackEvent	*itsTBBackE;
 				
-				uint32	itsBoardStatus[MAX_N_TBBBOARDS];
-				uint32	itsBoardId[MAX_N_TBBBOARDS];
-				uint32	itsSwVersion[MAX_N_TBBBOARDS];
-				uint32	itsBoardVersion[MAX_N_TBBBOARDS];
-				uint32	itsTpVersion[MAX_N_TBBBOARDS];
-				uint32	itsMp0Version[MAX_N_TBBBOARDS];
-				uint32	itsMp1Version[MAX_N_TBBBOARDS];
-				uint32	itsMp2Version[MAX_N_TBBBOARDS];
-				uint32	itsMp3Version[MAX_N_TBBBOARDS];
+				// variables holding data from tp cmd
+				uint32	itsBoardStatus;
+				uint32	itsAddr;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* VERSIONCMD_H_ */
+#endif /* ERASEFCMD_H_ */

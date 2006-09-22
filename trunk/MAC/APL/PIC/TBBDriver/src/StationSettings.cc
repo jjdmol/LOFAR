@@ -28,7 +28,7 @@
 #include "StationSettings.h"
 
 namespace LOFAR {
-  namespace TBB {
+	namespace TBB {
 
 //
 // Initialize singleton
@@ -48,8 +48,7 @@ StationSettings* StationSettings::instance()
 //
 StationSettings::StationSettings() :
 	itsMaxTbbBoards(0),
-	itsNrTbbBoards(0),
-	itsNrMpsPerBoard(4)
+	itsNrTbbBoards(0)
 {
 
 }
@@ -74,8 +73,5 @@ void StationSettings::setNrTbbBoards (int32 nrOfBoards)
 			itsNrTbbBoards, itsMaxTbbBoards));
 }
 
-
-
-
-	} // end TBB namespace
-} // end LOFAR namespace
+	} // end namespace TBB
+} // end namespace LOFAR
