@@ -67,6 +67,7 @@ OfflineControl::OfflineControl(const string&	cntlrName) :
 	itsCepAppParams     (),
 	itsResultParams     (),
 	itsProcessDependencies(),
+	itsCepAppStartTimes (),
 	itsState			(CTState::NOSTATE),
 	itsTreePrefix       (""),
 	itsInstanceNr       (0),
@@ -427,7 +428,7 @@ GCFEvent::TResult OfflineControl::finished_state(GCFEvent& event, GCFPortInterfa
 
 
 //
-// doPrepare(cntlrName)
+// doClaim(cntlrName)
 //
 uint16_t OfflineControl::doClaim(const string& cntlrName)
 {
@@ -544,12 +545,25 @@ void OfflineControl::prepareProcess(const string& cntlrName, const string& procN
 	it->second.writeFile(paramFileName);
   
 	// schedule all ACC commands
+	itsCepAppStartTimes[procName] = startTime;
 	time_t initTime   = startTime  - it->second.getTime("AC.timeout_init");
 	time_t defineTime = initTime   - it->second.getTime("AC.timeout_define") - 
 	                                 it->second.getTime("AC.timeout_startup");
 	time_t bootTime   = defineTime - it->second.getTime("AC.timeout_createsubsets");
 	time_t now = time(0);
 	time_t stopTime = to_time_t(itsStopTime);
+	if(now >= stopTime)
+	{
+	  // stoptime has already passed. Calculate a new stoptime based on the observation parameters
+	  time_t startOffset = startTime - to_time_t(itsStartTime);
+	  stopTime += startOffset;
+	  // convert time_t to local time before constructing a ptime object from it
+	  tm* ptm = localtime(&startTime);
+	  itsStartTime = ptime_from_tm(*ptm);
+	  ptm = localtime(&stopTime);
+	  itsStopTime  = ptime_from_tm(*ptm);
+	  stopTime = to_time_t(itsStopTime);
+	}
 	LOG_DEBUG(formatString("%d now %s time %d", now,        ctime(&now), time(0)));
 	LOG_DEBUG(formatString("%d boot %s",        bootTime,   ctime(&bootTime)));
 	LOG_DEBUG(formatString("%d define %s",      defineTime, ctime(&defineTime)));
@@ -586,8 +600,12 @@ void OfflineControl::prepareProcess(const string& cntlrName, const string& procN
 		  default:
 			assert(0);
 			break;
-		}   
-	  } 
+		}
+	  }   
+	  else
+	  {
+		LOG_WARN(formatString("Unable to find ACC process for %s.",procName.c_str()));
+	  }
 	  APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
 	}
   }
@@ -660,15 +678,29 @@ void OfflineControl::appBooted(const string& procName, uint16 result)
   LOG_INFO_STR("appBooted from " << procName);
   if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  
   {
-    time_t startTime  = to_time_t(itsStartTime);
-    time_t initTime   = startTime  - itsCepAppParams[0].getTime("AC.timeout_init");
-    time_t defineTime = initTime   - itsCepAppParams[0].getTime("AC.timeout_define") - 
-                                     itsCepAppParams[0].getTime("AC.timeout_startup");
-	map<string,CEPApplicationManagerPtr>::iterator it = itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
-	{
-	  it->second->define(defineTime);
+	map<string,CEPApplicationManagerPtr>::iterator itApp = itsCepApplications.find(procName);
+	map<string, ACC::APS::ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
+	map<string,time_t>::iterator itStart = itsCepAppStartTimes.find(procName);
+	if(itApp != itsCepApplications.end() && itParam != itsCepAppParams.end() && itStart != itsCepAppStartTimes.end())
+    {
+	  time_t now = time(0);
+	  time_t startTime  = itStart->second;
+	  time_t initTime   = startTime  - itParam->second.getTime("AC.timeout_init");
+	  time_t defineTime = initTime   - itParam->second.getTime("AC.timeout_define") - 
+                                       itParam->second.getTime("AC.timeout_startup");
+
+	LOG_DEBUG(formatString("%d now %s time %d", now,        ctime(&now), time(0)));
+	LOG_DEBUG(formatString("%d define %s",      defineTime, ctime(&defineTime)));
+	LOG_DEBUG(formatString("%d init %s",        initTime,   ctime(&initTime)));
+	LOG_DEBUG(formatString("%d start %s",       startTime,  ctime(&startTime)));
+
+	  itApp->second->define(defineTime);
 	}
+	else
+    {
+	  LOG_ERROR("Error in ACC. Stops CEP application and releases Offline Control.");
+	  finishController(CT_RESULT_UNSPECIFIED);
+    }
   }
   else if (result == 0) // Error
   {
@@ -682,18 +714,30 @@ void OfflineControl::appDefined(const string& procName, uint16 result)
   LOG_INFO_STR("appDefined from " << procName);
   if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
   {
-    time_t startTime  = to_time_t(itsStartTime);
-    time_t initTime   = startTime  - itsCepAppParams[0].getTime("AC.timeout_init");
+	map<string,CEPApplicationManagerPtr>::iterator itApp = itsCepApplications.find(procName);
+	map<string, ACC::APS::ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
+	map<string,time_t>::iterator itStart = itsCepAppStartTimes.find(procName);
+	if(itApp != itsCepApplications.end() && itParam != itsCepAppParams.end() && itStart != itsCepAppStartTimes.end())
+    {
+	  time_t now = time(0);
+	  time_t startTime  = itStart->second;
+	  time_t initTime   = startTime  - itParam->second.getTime("AC.timeout_init");
   
-	map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
-	{
-	  it->second->init(initTime);
+	LOG_DEBUG(formatString("%d now %s time %d", now,        ctime(&now), time(0)));
+	LOG_DEBUG(formatString("%d init %s",        initTime,   ctime(&initTime)));
+	LOG_DEBUG(formatString("%d start %s",       startTime,  ctime(&startTime)));
+
+	  itApp->second->init(initTime);
 	}
+	else
+    {
+	  LOG_ERROR("Error in ACC. Stops CEP application and releases Offline Control.");
+	  finishController(CT_RESULT_UNSPECIFIED);
+    }
   }
   else if (result == 0) // Error
   {
-    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+	LOG_ERROR("Error in ACC. Stops CEP application and releases Offline Control.");
 	finishController(CT_RESULT_UNSPECIFIED);
   }
 }
@@ -707,15 +751,21 @@ void OfflineControl::appInitialized(const string& procName, uint16 result)
   }
   else if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  
   {
-	map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
-	{
-	  it->second->run(to_time_t(itsStartTime));
+	map<string,CEPApplicationManagerPtr>::iterator itApp =  itsCepApplications.find(procName);
+	map<string,time_t>::iterator itStart = itsCepAppStartTimes.find(procName);
+	if(itApp != itsCepApplications.end() && itStart != itsCepAppStartTimes.end())
+    {
+	  itApp->second->run(itStart->second);
 	}
+	else
+    {
+	  LOG_ERROR("Error in ACC. Stops CEP application and releases Offline Control.");
+	  finishController(CT_RESULT_UNSPECIFIED);
+    }
   }
   else if (result == 0) // Error
   {
-    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+	LOG_ERROR("Error in ACC. Stops CEP application and releases Offline Control.");
 	finishController(CT_RESULT_UNSPECIFIED);
   }
 }
@@ -725,36 +775,10 @@ void OfflineControl::appRunDone(const string& procName, uint16 result)
   LOG_INFO_STR("appRunDone from " << procName);
   if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
   {      
-	map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
+	map<string,CEPApplicationManagerPtr>::iterator itApp =  itsCepApplications.find(procName);
+	if(itApp != itsCepApplications.end())
 	{
-	  it->second->quit(to_time_t(itsStopTime));
-	}
-  }
-  else if (result == AcCmdMaskOk)
-  {
-	// Run done. Check if processes depend on this process.
-	map<string, vector<string> >::iterator it;
-	for(it = itsProcessDependencies.begin(); it != itsProcessDependencies.end();++it)
-	{
-	  if(it->second.size() > 0)
-	  {
-		for(vector<string>::iterator dIt = it->second.begin(); dIt != it->second.end(); ++dIt)
-		{
-		  if((*dIt) == procName)
-		  {
-			// This process depends on the process that just finished
-			// Remove the process from the dependencies list. 
-			it->second.erase(dIt);
-			// If the list is empty now, the new process can be started
-			if(it->second.size() == 0)
-			{
-			  // start the process in 5 seconds
-			  prepareProcess(itsCntlrName,it->first,time(0)+5);
-			}
-		  }
-		}
-	  }
+	  itApp->second->quit(to_time_t(itsStopTime));
 	}
   }
   else if (result == 0) // Error
@@ -776,9 +800,63 @@ void OfflineControl::appQuitDone(const string& procName, uint16 result)
   {  
     //_qualityGuard.stopMonitoring(); // not in this increment
   }
-  else
+  else if (result == AcCmdMaskOk)
   {
-	finishController(CT_RESULT_NO_ERROR);
+	// process finished. Check if processes depend on this process.
+	map<string, vector<string> >::iterator itDep;
+	for(itDep = itsProcessDependencies.begin(); itDep != itsProcessDependencies.end();++itDep)
+	{
+	  if(itDep->second.size() > 0)
+	  {
+		vector<string>::iterator itDepProc = itDep->second.begin();
+		bool found = false;
+		while(itDepProc != itDep->second.end() && !found)
+		{
+		  LOG_DEBUG(formatString("appQuitDone: comparing %s with %s",itDepProc->c_str(),procName.c_str()));
+		  if((*itDepProc) == procName)
+		  {
+			found = true;
+			// This process depends on the process that just finished
+			// If the list only contains the finished process, the new process can be started
+			if(itDep->second.size() == 1)
+			{
+			  map<string, ACC::APS::ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
+			  if(itParam != itsCepAppParams.end())
+			  {
+				// boot the process in 30 seconds
+				time_t bootTime = time(0) + 30;
+				time_t startTime = bootTime + itParam->second.getTime("AC.timeout_init") +
+				                              itParam->second.getTime("AC.timeout_define") + 
+				                              itParam->second.getTime("AC.timeout_startup") + 
+				                              itParam->second.getTime("AC.timeout_createsubsets");
+
+				prepareProcess(itsCntlrName,itDep->first,startTime);
+			  }
+			}
+		  }
+		  else
+		  {
+			++itDepProc;
+		  }
+		}
+		if(itDepProc != itDep->second.end() && found)
+		{
+		  LOG_DEBUG(formatString("appQuitDone: removing dependency of %s",itDepProc->c_str()));
+		  // Remove the process from the dependencies list. 
+		  itDep->second.erase(itDepProc);
+		}
+	  }
+	}
+	// remove the process from the AC process list. If the list is empty, OfflineControl can be finished
+	itsCepApplications.erase(procName);
+	if(itsCepApplications.size() == 0)
+    {
+	  finishController(CT_RESULT_NO_ERROR);
+  	}
+  }
+  else if(result != 0)
+  {
+ 	finishController(CT_RESULT_UNSPECIFIED);
   }
 }
 
@@ -802,15 +880,17 @@ void OfflineControl::appRecovered(const string& procName, uint16 /*result*/)
 {
   LOG_INFO_STR("appRecovered from " << procName);
   
-  time_t startTime  = to_time_t(itsStartTime);
-  time_t reinitTime = startTime  - itsCepAppParams[0].getTime("AC.timeout_reinit");
-  
-  string paramFileName(formatString("ACC-%s.param", getName().c_str()));
-  
-  map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-  if(it != itsCepApplications.end())
+  map<string,CEPApplicationManagerPtr>::iterator itApp = itsCepApplications.find(procName);
+  map<string, ACC::APS::ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
+  map<string,time_t>::iterator itStart = itsCepAppStartTimes.find(procName);
+  if(itApp != itsCepApplications.end() && itParam != itsCepAppParams.end() && itStart != itsCepAppStartTimes.end())
   {
-	it->second->reinit(reinitTime, paramFileName);
+	time_t startTime  = itStart->second;
+	time_t reinitTime = startTime  - itParam->second.getTime("AC.timeout_reinit");
+  
+	string paramFileName(formatString("ACC-%s.param", getName().c_str()));
+  
+	itApp->second->reinit(reinitTime, paramFileName);
   }
 }
 
