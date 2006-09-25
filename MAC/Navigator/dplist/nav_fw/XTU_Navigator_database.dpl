@@ -347,10 +347,9 @@ GCFLogLevel.GCFLogLevel	21#2
 
 # Datapoint/DpId
 DpName	TypeName	ID
+__navigator	GCFNavigator	48265
 __nav_view_list	GCFNavView	48073
 __nav_view_plot	GCFNavView	48074
-__nav_SingleElement_Trend	GCFNavSubViewConfigTrend	48248
-__navigator	GCFNavigator	48265
 __nav_view_trend	GCFNavView	51142
 __nav_view_panel	GCFNavView	51247
 __nav_view_alert	GCFNavView	51347
@@ -361,6 +360,8 @@ __nav_view_log	GCFNavView	51403
 __nav_view_archive	GCFNavView	52168
 __nav_Alert_viewconfig	GCFNavViewConfiguration	52278
 __nav_default_viewconfig	GCFNavViewConfiguration	56917
+__nav_default_subview_List_List	GCFNavSubView	63962
+__nav_default_config_List_List   GCFNavSubViewConfigList 63963
 __loglevel	GCFLogLevel	48254
 
 # DpValue
@@ -369,30 +370,6 @@ __nav_view_list.caption	GCFNavView	"List"	0x101	17.02.2005 10:35:48.746
 __nav_view_list.configPanel	GCFNavView	"nav_fw/list_config.pnl"	0x101	17.02.2005 10:35:48.746
 __nav_view_plot.caption	GCFNavView	"Plot"	0x101	17.02.2005 10:35:48.756
 __nav_view_plot.configPanel	GCFNavView	"nav_fw/plot_config.pnl"	0x101	17.02.2005 10:35:48.756
-__nav_SingleElement_Trend.1.Trace1.dpName	GCFNavSubViewConfigTrend	"CS010:LOFAR_PIC_Cabinet0_SubRack0_RSPBoard0.state"	0x101	15.04.2005 07:24:24.371
-__nav_SingleElement_Trend.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 10:35:48.776
-__nav_SingleElement_Trend.1.Trace1.ScaleMin	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 10:35:48.786
-__nav_SingleElement_Trend.1.Trace1.ScaleMax	GCFNavSubViewConfigTrend	100	0x101	17.02.2005 10:35:48.786
-__nav_SingleElement_Trend.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Next"	0x101	17.02.2005 10:35:48.786
-__nav_SingleElement_Trend.1.Trace6.dpName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 10:35:48.796
-__nav_SingleElement_Trend.1.Trace6.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 10:35:48.796
-__nav_SingleElement_Trend.1.Trace6.ScaleMax	GCFNavSubViewConfigTrend	12	0x101	17.02.2005 10:35:48.806
-__nav_SingleElement_Trend.1.Trace6.LegendName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 10:35:48.806
-__nav_SingleElement_Trend.1.Title	GCFNavSubViewConfigTrend	"Single element trend"	0x101	17.02.2005 10:35:48.816
-__nav_SingleElement_Trend.1.Days	GCFNavSubViewConfigTrend	3	0x101	17.02.2005 10:35:48.816
-__nav_SingleElement_Trend.1.Hours	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 10:35:48.826
-__nav_SingleElement_Trend.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 10:35:48.826
-__nav_SingleElement_Trend.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 10:35:48.836
-__nav_SingleElement_Trend.2.Trace1.dpName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 10:35:48.836
-__nav_SingleElement_Trend.2.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 10:35:48.846
-__nav_SingleElement_Trend.2.Trace1.ScaleMax	GCFNavSubViewConfigTrend	1212	0x101	17.02.2005 10:35:48.846
-__nav_SingleElement_Trend.2.Trace1.LegendName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 10:35:48.856
-__nav_SingleElement_Trend.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 10:35:48.856
-__nav_SingleElement_Trend.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 10:35:48.866
-__nav_SingleElement_Trend.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 10:35:48.866
-__nav_SingleElement_Trend.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 10:35:48.866
-__nav_SingleElement_Trend.DedicatedPanelName	GCFNavSubViewConfigTrend	"Station.pnl"	0x101	17.02.2005 10:35:48.876
-__nav_SingleElement_Trend.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 10:35:48.876
 __nav_view_trend.caption	GCFNavView	"Trend"	0x101	17.02.2005 10:35:48.907
 __nav_view_trend.configPanel	GCFNavView	"nav_fw/trend_config.pnl"	0x101	17.02.2005 10:35:48.917
 __nav_view_panel.caption	GCFNavView	"Panel"	0x101	17.02.2005 10:35:49.848
@@ -410,11 +387,20 @@ __nav_view_log.configPanel	GCFNavView	"nav_fw/log_config.pnl"	0x101	25.04.2005 1
 __nav_view_archive.caption	GCFNavView	"Archive"	0x101	17.02.2005 10:35:50.939
 __nav_view_archive.configPanel	GCFNavView	"nav_fw/archive_config.pnl"	0x101	17.02.2005 10:35:50.939
 __nav_default_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	03.05.2005 06:02:43.918
-__nav_default_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	03.05.2005 06:02:48.775
+__nav_default_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	03.05.2005 06:02:48.775
 __nav_default_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	01.03.2005 13:28:07.508
-__nav_default_viewconfig.subViews	GCFNavViewConfiguration		0x101	01.03.2005 13:28:30.521
-__nav_default_viewconfig.configs	GCFNavViewConfiguration		0x101	02.03.2005 07:01:19.549
-__nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	01.03.2005 13:28:25.304
+__nav_default_viewconfig.subViews	GCFNavViewConfiguration	__nav_default_subview_List_List	0x101	01.03.2005 13:28:30.521
+__nav_default_viewconfig.configs	GCFNavViewConfiguration	__nav_default_config_List_List	0x101	02.03.2005 07:01:19.549
+__nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	01.03.2005 13:28:25.304
+__nav_default_subview_List_List.caption	GCFNavSubView	"List"	0x101	14.09.2005 10:03:09.109
+__nav_default_subview_List_List.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x101	14.09.2005 10:03:09.109
+__nav_default_config_List_List.customList        GCFNavSubViewConfigList 0       0x20101 03.08.2006 13:33:45.180
+__nav_default_config_List_List.Title     GCFNavSubViewConfigList ""      0x20101 03.08.2006 07:46:24.828
+__nav_default_config_List_List.trigger   GCFNavSubViewConfigList 0       0x20101 03.08.2006 13:32:39.871
+__nav_default_config_List_List.queryResult       GCFNavSubViewConfigList         0x20101 18.09.2006 12:05:38.296
+__nav_default_config_List_List.floatDecimals     GCFNavSubViewConfigList 1       0x20101 03.08.2006 07:46:24.828
+__nav_default_config_List_List.selectionQueryDPE GCFNavSubViewConfigList ""      0x20101 03.08.2006 07:46:24.828
+__nav_default_config_List_List.selectionQuery    GCFNavSubViewConfigList ""      0x20101 03.08.2006 07:46:24.828
 __loglevel.	GCFLogLevel	30000	0x101	05.04.2005 11:43:25.652
 __navigator.viewsPath	GCFNavigator	"nav_fw/"	0x101	07.07.2005 07:19:27.498
 __navigator.resourceRoots	GCFNavigator	"CCU1:PIC", "CCU1:PAC", "CCU1:LOFAR"	0x101	07.07.2005 07:19:49.490
