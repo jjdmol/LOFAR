@@ -94,10 +94,11 @@ ApplControlComm::ApplControlComm(const string&		port,
 ApplControlComm::~ApplControlComm() 
 {
 	// Retrieve pointer to transportholder
-	TH_Socket*	theTH = dynamic_cast<TH_Socket*>
-									(itsReadConn->getTransportHolder());
+//	TH_Socket*	theTH = dynamic_cast<TH_Socket*>
+//									(itsReadConn->getTransportHolder());
 
-	delete theTH;
+//	delete theTH;
+	delete itsReadConn->getTransportHolder();
 	delete itsDataHolder;
 	delete itsReadConn;
 	delete itsWriteConn;
