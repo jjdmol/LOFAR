@@ -425,7 +425,7 @@ GCFEvent::TResult OnlineControl::finished_state(GCFEvent& event, GCFPortInterfac
 
 
 //
-// doPrepare(cntlrName)
+// doClaim(cntlrName)
 //
 uint16_t OnlineControl::doClaim(const string& cntlrName)
 {

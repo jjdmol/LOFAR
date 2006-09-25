@@ -137,12 +137,14 @@ inline CEPApplicationManager::CEPApplicationManager(
       _continuePoll(false),
 	  _lastOkCmd(ACC::ALC::ACCmdNone),
       _procName(appName)
-{ 
+{
+  LOG_DEBUG(formatString("constructing CEPApplicationManager(%s)",_procName.c_str()));
   use(); // to avoid that this object will be deleted in GCFTask::stop;
 }
 
 inline CEPApplicationManager::~CEPApplicationManager()
 {
+  LOG_DEBUG(formatString("destructing CEPApplicationManager(%s)",_procName.c_str()));
   GCFTask::deregisterHandler(*this);
 }
 

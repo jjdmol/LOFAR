@@ -134,15 +134,16 @@ private:
 
     map<string, CEPApplicationManagerPtr> itsCepApplications;
     map<string, ACC::APS::ParameterSet>   itsCepAppParams;
-    ACC::APS::ParameterSet  itsResultParams;
+    ACC::APS::ParameterSet                itsResultParams;
 	map<string, vector<string> >          itsProcessDependencies;
+	map<string,time_t>		              itsCepAppStartTimes;
 
 	CTState::CTstateNr		itsState;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
-	ptime					itsStartTime;
+	ptime                   itsStartTime;
 	ptime					itsStopTime;
 	uint32					itsClaimPeriod;
 	uint32					itsPreparePeriod;
