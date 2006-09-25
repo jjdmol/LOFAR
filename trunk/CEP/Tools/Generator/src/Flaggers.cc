@@ -31,7 +31,7 @@ namespace LOFAR {
   namespace Generator {
 
     bool RangeFlagger::sendData(const TimeStamp& t) {
-      return !((t.getBlockId() => itsMinBlockId) && (t.getBlockId() < itsMaxBlockId));
+      return !((t.getBlockId() >= itsMinBlockId) && (t.getBlockId() < itsMaxBlockId));
     }
 
   } // namespace Generator
