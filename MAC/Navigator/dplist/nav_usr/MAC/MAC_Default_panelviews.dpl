@@ -11,9 +11,9 @@ __navU0000_TWanSwitchPT48_config_List_ListSwitch48	GCFNavSubViewConfigList	64712
 __navU0000_ObsSW_viewconfig	GCFNavViewConfiguration	66771
 __navU0000_subview_Panel_Imaging-Observation-Details	GCFNavSubView	66772
 __navU0000_ObsSW_config_Panel_Imaging-Observation-Details	GCFNavSubViewConfigPanel	66773
-__navU0000_PIC_viewconfig	GCFNavViewConfiguration	71422
+__navU0000_StnPIC_viewconfig	GCFNavViewConfiguration	71422
 __navU0000_subview_Panel_Station	GCFNavSubView	75968
-__navU0000_PIC_config_Panel_Station	GCFNavSubViewConfigPanel	75969
+__navU0000_StnPIC_config_Panel_Station	GCFNavSubViewConfigPanel	75969
 __navU0000_RSPBoard_viewconfig	GCFNavViewConfiguration	76091
 __navU0000_subview_Panel_RSPBoard-Panel	GCFNavSubView	76092
 __navU0000_RSPBoard_config_Panel_RSPBoard-Panel	GCFNavSubViewConfigPanel	76093
@@ -60,12 +60,12 @@ __navU0000_ObsSW_viewconfig.configs	GCFNavViewConfiguration	__navU0000_ObsSW_con
 __navU0000_ObsSW_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	12.07.2006 12:58:19.847
 __navU0000_subview_Panel_Imaging-Observation-Details.caption	GCFNavSubView	"Imaging Observation Details"	0x20101	12.07.2006 12:58:19.642
 __navU0000_subview_Panel_Imaging-Observation-Details.filename	GCFNavSubView	"nav_usr/CS1/observation-details-imaging.pnl"	0x20101	12.07.2006 12:58:31.298
-__navU0000_PIC_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	15.08.2006 14:33:18.938
-__navU0000_PIC_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 09:44:44.275
-__navU0000_PIC_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	14.07.2006 10:49:01.197
-__navU0000_PIC_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_Panel_Station	0x20101	03.08.2006 07:34:09.888
-__navU0000_PIC_viewconfig.configs	GCFNavViewConfiguration	__navU0000_PIC_config_Panel_Station	0x20101	03.08.2006 07:34:09.888
-__navU0000_PIC_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	03.08.2006 07:34:09.888
+__navU0000_StnPIC_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	15.08.2006 14:33:18.938
+__navU0000_StnPIC_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x20101	04.09.2006 09:44:44.275
+__navU0000_StnPIC_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x20101	14.07.2006 10:49:01.197
+__navU0000_StnPIC_viewconfig.subViews	GCFNavViewConfiguration	__navU0000_subview_Panel_Station	0x20101	03.08.2006 07:34:09.888
+__navU0000_StnPIC_viewconfig.configs	GCFNavViewConfiguration	__navU0000_StnPIC_config_Panel_Station	0x20101	03.08.2006 07:34:09.888
+__navU0000_StnPIC_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x20101	03.08.2006 07:34:09.888
 __navU0000_subview_Panel_Station.caption	GCFNavSubView	"Station"	0x20101	14.07.2006 11:52:06.102
 __navU0000_subview_Panel_Station.filename	GCFNavSubView	"nav_usr/CS1/Station-CS1.pnl"	0x20101	03.08.2006 07:31:38.906
 __navU0000_RSPBoard_viewconfig.selectedView	GCFNavViewConfiguration	2	0x20101	04.09.2006 09:36:20.625
