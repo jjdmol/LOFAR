@@ -361,7 +361,7 @@ __nav_view_archive	GCFNavView	52168
 __nav_Alert_viewconfig	GCFNavViewConfiguration	52278
 __nav_default_viewconfig	GCFNavViewConfiguration	56917
 __nav_default_subview_List_List	GCFNavSubView	63962
-__nav_default_config_List_List   GCFNavSubViewConfigList 63963
+__nav_default_config_List_List	GCFNavSubViewConfigList	63963
 __loglevel	GCFLogLevel	48254
 
 # DpValue
@@ -394,13 +394,13 @@ __nav_default_viewconfig.configs	GCFNavViewConfiguration	__nav_default_config_Li
 __nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	01.03.2005 13:28:25.304
 __nav_default_subview_List_List.caption	GCFNavSubView	"List"	0x101	14.09.2005 10:03:09.109
 __nav_default_subview_List_List.filename	GCFNavSubView	"nav_fw/list_view.pnl"	0x101	14.09.2005 10:03:09.109
-__nav_default_config_List_List.customList        GCFNavSubViewConfigList 0       0x20101 03.08.2006 13:33:45.180
-__nav_default_config_List_List.Title     GCFNavSubViewConfigList ""      0x20101 03.08.2006 07:46:24.828
-__nav_default_config_List_List.trigger   GCFNavSubViewConfigList 0       0x20101 03.08.2006 13:32:39.871
-__nav_default_config_List_List.queryResult       GCFNavSubViewConfigList         0x20101 18.09.2006 12:05:38.296
-__nav_default_config_List_List.floatDecimals     GCFNavSubViewConfigList 1       0x20101 03.08.2006 07:46:24.828
-__nav_default_config_List_List.selectionQueryDPE GCFNavSubViewConfigList ""      0x20101 03.08.2006 07:46:24.828
-__nav_default_config_List_List.selectionQuery    GCFNavSubViewConfigList ""      0x20101 03.08.2006 07:46:24.828
+__nav_default_config_List_List.customList	GCFNavSubViewConfigList	0	0x20101	03.08.2006 13:33:45.180
+__nav_default_config_List_List.Title	GCFNavSubViewConfigList	""	0x20101	03.08.2006 07:46:24.828
+__nav_default_config_List_List.trigger	GCFNavSubViewConfigList	0	0x20101	03.08.2006 13:32:39.871
+__nav_default_config_List_List.queryResult	GCFNavSubViewConfigList		0x20101	18.09.2006 12:05:38.296
+__nav_default_config_List_List.floatDecimals	GCFNavSubViewConfigList	1	0x20101	03.08.2006 07:46:24.828
+__nav_default_config_List_List.selectionQueryDPE	GCFNavSubViewConfigList	""	0x20101	03.08.2006 07:46:24.828
+__nav_default_config_List_List.selectionQuery	GCFNavSubViewConfigList	""	0x20101	03.08.2006 07:46:24.828
 __loglevel.	GCFLogLevel	30000	0x101	05.04.2005 11:43:25.652
 __navigator.viewsPath	GCFNavigator	"nav_fw/"	0x101	07.07.2005 07:19:27.498
 __navigator.resourceRoots	GCFNavigator	"CCU1:PIC", "CCU1:PAC", "CCU1:LOFAR"	0x101	07.07.2005 07:19:49.490
