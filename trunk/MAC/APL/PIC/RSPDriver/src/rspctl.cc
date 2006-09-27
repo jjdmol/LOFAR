@@ -1448,7 +1448,6 @@ void XCStatisticsCommand::send()
     RSPSubxcstatsEvent subxcstats;
 
     subxcstats.timestamp = Timestamp(0,0);
-    subxcstats.rcumask = getRCUMask();
     subxcstats.period = 1;
 
     m_rspport.send(subxcstats);
@@ -1635,7 +1634,13 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 
   if (SUCCESS == upd.status)
   {
-    capture_xcstatistics(upd.stats(),upd.timestamp);
+    Range r1, r2;
+    if (!getRSPRange2(r1, r2)) {
+      logMessage(cerr, "RSP range selection must have exactly 4 numbers");
+      exit(EXIT_FAILURE);
+    }
+    Array<complex<double>, 4> selection = upd.stats()(Range::all(), Range::all(), r1, r2);
+    capture_xcstatistics(selection, upd.timestamp);
   }
 
   return GCFEvent::HANDLED;
@@ -2403,7 +2408,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      delete command;
 	    XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(m_server);
 	    command = xcstatscommand;
-	    command->set_ndevices(PAIR);
+	    command->set_ndevices(m_nrspboards);
 	  }
 	  break;
 
