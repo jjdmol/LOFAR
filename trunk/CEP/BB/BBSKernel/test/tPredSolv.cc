@@ -21,10 +21,10 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/Prediffer.h>
-#include <BBS/Solver.h>
-#include <BBS/ParmWriter.h>
-#include <BBS/MNS/MeqParmFunklet.h>
+#include <BBSKernel/Prediffer.h>
+#include <BBSKernel/Solver.h>
+#include <BBSKernel/ParmWriter.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>

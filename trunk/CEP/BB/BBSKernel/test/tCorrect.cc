@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/Prediffer.h>
+#include <BBSKernel/Prediffer.h>
 #include <Common/LofarLogger.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ArrayColumn.h>
