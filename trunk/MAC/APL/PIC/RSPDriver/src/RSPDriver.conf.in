@@ -33,48 +33,26 @@ RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
 RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
-
-# RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
-# RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
-# RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
-# RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
 RSPDriver.MAC_ADDR_4=10:FA:00:00:04:00
 RSPDriver.MAC_ADDR_5=10:FA:00:00:05:00
 RSPDriver.MAC_ADDR_6=10:FA:00:00:06:00
 RSPDriver.MAC_ADDR_7=10:FA:00:00:07:00
 RSPDriver.MAC_ADDR_8=10:FA:00:00:08:00
-RSPDriver.MAC_ADDR_9=10:FA:00:00:0A:00
-RSPDriver.MAC_ADDR_10=10:FA:00:00:0B:00
-RSPDriver.MAC_ADDR_11=10:FA:00:00:0C:00
-RSPDriver.MAC_ADDR_12=10:FA:00:00:0D:00
-RSPDriver.MAC_ADDR_13=10:FA:00:00:0E:00
-RSPDriver.MAC_ADDR_14=10:FA:00:00:0F:00
-RSPDriver.MAC_ADDR_15=10:FA:00:00:10:00
-RSPDriver.MAC_ADDR_16=10:FA:00:00:11:00
-RSPDriver.MAC_ADDR_17=10:FA:00:00:12:00
-RSPDriver.MAC_ADDR_18=10:FA:00:00:13:00
-RSPDriver.MAC_ADDR_19=10:FA:00:00:14:00
-RSPDriver.MAC_ADDR_20=10:FA:00:00:15:00
-RSPDriver.MAC_ADDR_21=10:FA:00:00:16:00
-RSPDriver.MAC_ADDR_22=10:FA:00:00:17:00
-RSPDriver.MAC_ADDR_23=10:FA:00:00:18:00
-
-#
-# Data output payload size.
-# Should eventually be computed dynamically
-# based on settings.
-#
-# Data output payload size.
-# Should eventually be computed dynamically
-# based on settings.
-# c_frame_size  = g_hdr_sz + c_epa_hdr_size + nof_blocks * (c_block_size)
-#               =    16    +      8         +      16    * (   2*2*54   ) = 3480 words (16 bit)
-# OUTPUT_PAYLOAD_SIZE = (3480 - 16) * 2 = 6928 octets
-#
-# Ethernet frame size: 3480*2 + 14 = 6974
-#
-# NO LONGER USED
-#RSPDriver.OUTPUT_PAYLOAD_SIZE=6928
+RSPDriver.MAC_ADDR_9=10:FA:00:00:09:00
+RSPDriver.MAC_ADDR_10=10:FA:00:00:0A:00
+RSPDriver.MAC_ADDR_11=10:FA:00:00:0B:00
+RSPDriver.MAC_ADDR_12=10:FA:00:00:0C:00
+RSPDriver.MAC_ADDR_13=10:FA:00:00:0D:00
+RSPDriver.MAC_ADDR_14=10:FA:00:00:0E:00
+RSPDriver.MAC_ADDR_15=10:FA:00:00:0F:00
+RSPDriver.MAC_ADDR_16=10:FA:00:00:10:00
+RSPDriver.MAC_ADDR_17=10:FA:00:00:11:00
+RSPDriver.MAC_ADDR_18=10:FA:00:00:12:00
+RSPDriver.MAC_ADDR_19=10:FA:00:00:13:00
+RSPDriver.MAC_ADDR_20=10:FA:00:00:14:00
+RSPDriver.MAC_ADDR_21=10:FA:00:00:15:00
+RSPDriver.MAC_ADDR_22=10:FA:00:00:16:00
+RSPDriver.MAC_ADDR_23=10:FA:00:00:17:00
 
 #
 # Serdes lane settings.
@@ -128,6 +106,7 @@ RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
 RSPDriver.CDO_N_BEAMLETS=54
 RSPDriver.CDO_SRCMAC_FORMAT=10:FA:00:%02x:%02x:01
+
 # FTS-1
 # RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
 # RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D4
@@ -156,7 +135,7 @@ RSPDriver.SRC_IP_ADDR_7=10.10.0.8
 RSPDriver.SRC_IP_ADDR_8=10.10.0.9
 RSPDriver.SRC_IP_ADDR_9=10.10.0.10
 RSPDriver.SRC_IP_ADDR_10=10.10.0.11
-RSPDriver SRC_IP_ADDR_11=10.10.0.12
+RSPDriver.SRC_IP_ADDR_11=10.10.0.12
 
 RSPDriver.DST_IP_ADDR_0=10.170.0.1
 RSPDriver.DST_IP_ADDR_1=10.170.0.2
@@ -183,7 +162,8 @@ RSPDriver.XST_FIRST_RSP_BOARD=0x00
 # Ethernet interface on which to contact the RSP boards.
 # This interface would normally be connected to the switch.
 #
-RSPDriver.IF_NAME=eth1
+# eth1 is live hardware
+RSPDriver.IF_NAME=eth0
 
 #
 # Make sure that initially the
@@ -248,9 +228,10 @@ RSPDriver.WRITE_TIMESTAMP=1
 #
 # TDS_CONTROL
 #
-# 0x00000002 : Only RSPBoard 1 controls a TDS board
+# 0x00111111 : Only first RSP board in each rack of the six racks
+#              controls the TD-oard
 #
-RSPDriver.TDS_CONTROL=0x00000001
+RSPDriver.TDS_CONTROL=0x00111111
 
 #
 # Optionally read RW-registers.
@@ -265,7 +246,7 @@ RSPDriver.READ_WG=0
 # into the hardware when the driver starts.
 # Currently allowed values are: 0 (off), 160 (MHz) and 200 (MHz)
 #
-RSPDriver.DEFAULT_SAMPLING_FREQUENCY=200
+RSPDriver.DEFAULT_SAMPLING_FREQUENCY=160
 
 #
 # Specify how the rspdriver should operate:
@@ -274,3 +255,8 @@ RSPDriver.DEFAULT_SAMPLING_FREQUENCY=200
 #
 RSPDriver.OPERATION_MODE=0
 
+#
+# Set initial gain for beamforming and cross-correlation
+#
+RSPDriver.BF_GAIN=8000
+RSPDriver.XC_GAIN=8000
