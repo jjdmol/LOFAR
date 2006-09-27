@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicMath/Math.h>
 

@@ -21,9 +21,9 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/Prediffer.h>
-#include <BBS/Solver.h>
-#include <BBS/MNS/MeqMatrix.h>
+#include <BBSKernel/Prediffer.h>
+#include <BBSKernel/Solver.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicMath/Math.h>

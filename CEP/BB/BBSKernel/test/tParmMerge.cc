@@ -21,9 +21,9 @@
 //# $Id$
 
 
-#include <BBS/MNS/MeqParmFunklet.h>
-#include <BBS/ParmData.h>
-#include <BBS/Solver.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
+#include <BBSKernel/ParmData.h>
+#include <BBSKernel/Solver.h>
 #include <ParmDB/ParmDB.h>
 #include <Blob/BlobOBufChar.h>
 #include <Blob/BlobIBufChar.h>

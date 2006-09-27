@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBS/Prediffer.h>
+#include <BBSKernel/Prediffer.h>
 #include <MS/MSDesc.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobIBufStream.h>

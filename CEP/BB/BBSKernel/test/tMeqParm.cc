@@ -21,11 +21,11 @@
 //# $Id$
 
 
-#include <BBS/MNS/MeqParmFunklet.h>
-#include <BBS/MNS/MeqPolc.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqResult.h>
-#include <BBS/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
+#include <BBSKernel/MNS/MeqPolc.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
 
