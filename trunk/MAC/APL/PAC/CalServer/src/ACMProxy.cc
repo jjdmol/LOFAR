@@ -104,6 +104,7 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	RSPGetconfigackEvent ack(e);
 	m_nrcus = ack.n_rcus;
+	m_nrspboards = ack.n_rspboards;
 	if (m_nrcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol())
 	{
 	  LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
@@ -336,12 +337,6 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	RSPSubxcstatsEvent subxc;
 
 	subxc.timestamp = m_starttime + (long)1; // wait 1 second to get result
-	subxc.rcumask.reset();
-
-	LOG_DEBUG_STR("nRCU's=" << m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol());
-	for (int i = 0; i < m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol(); i++) {
-	  subxc.rcumask.set(i);
-	}
 	subxc.period = 1;
 
 	m_rspdriver.send(subxc);
