@@ -820,10 +820,6 @@ event = {
     userdefined;
   };
   param = {
-    name = "rcumask";
-    type = "std::bitset<MAX_N_RCUS>";
-  };
-  param = {
     name = "period";
     type = "uint16";
   };
@@ -904,10 +900,6 @@ event = {
     name = "timestamp";
     type = "RTC::Timestamp";
     userdefined;
-  };
-  param = {
-    name = "rcumask";
-    type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
     name = "cache";
