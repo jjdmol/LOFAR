@@ -107,7 +107,7 @@ void CacheBuffer::reset(void)
     // these weights ensure that the beamlet statistics
     // exactly match the subband statistics
     m_beamletweights()(Range::all(), Range::all(), Range::all()) =
-      complex<int16>(0x4000, 0);
+      complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
 
     // reset weights on first N_LOCAL_XLETS beamlets for cross correlation
     // they will be set again in BWWrite::sendrequest()
