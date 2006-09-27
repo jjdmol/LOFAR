@@ -89,7 +89,6 @@ namespace LOFAR {
     private:
       GetXCStatsCmd();
       RSPGetxcstatsEvent* m_event;
-      unsigned int m_n_devices;
     };
   };
 };

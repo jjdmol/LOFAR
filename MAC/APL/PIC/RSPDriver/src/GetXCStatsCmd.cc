@@ -40,8 +40,6 @@ GetXCStatsCmd::GetXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation 
 {
   m_event = new RSPGetxcstatsEvent(event);
 
-  m_n_devices = StationSettings::instance()->nrRcus();
-
   setOperation(oper);
   setPeriod(0);
   setPort(port);
@@ -59,26 +57,8 @@ void GetXCStatsCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  // TinyVector<int, 4> s = cache.getXCStats()().shape();
-  // s(2) = m_event->rcumask.count() / 2;
-  TinyVector<int, 4> s(MEPHeader::N_POL, MEPHeader::N_POL,
-		       (m_event->rcumask.count() + 1) / MEPHeader::N_POL,
-		       StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
-  ack.stats().resize(s);
-  
-  int result_device = 0;
-  for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++)
-  {
-    if (m_event->rcumask[cache_device])
-    {
-      Range blps(0, (StationSettings::instance()->nrRcus() / MEPHeader::N_POL) - 1);
-
-      ack.stats()(result_device % MEPHeader::N_POL, Range::all(), result_device / MEPHeader::N_POL, blps) 
-	= cache.getXCStats()()(cache_device % MEPHeader::N_POL, Range::all(), cache_device / MEPHeader::N_POL, blps);
-      
-      result_device++;
-    }
-  }
+  ack.stats().resize(cache.getXCStats()().shape());
+  ack.stats() = cache.getXCStats()();
 
   getPort()->send(ack);
 }
@@ -105,7 +85,7 @@ void GetXCStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetXCStatsCmd::validate() const
 {
-  return (m_event->rcumask.count() <= m_n_devices);
+  return true;
 }
 
 bool GetXCStatsCmd::readFromCache() const

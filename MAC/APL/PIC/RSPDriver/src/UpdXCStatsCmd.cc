@@ -69,27 +69,8 @@ void UpdXCStatsCmd::complete(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
-
-  //  TinyVector<int, 4> s = cache.getXCStats()().shape();
-  // s(2) = m_event->rcumask.count() / 2;
-  TinyVector<int, 4> s(MEPHeader::N_POL, MEPHeader::N_POL,
-		       (m_event->rcumask.count() + 1) / MEPHeader::N_POL,
-		       StationSettings::instance()->nrBlps());
-  ack.stats().resize(s);
-  
-  int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      Range blps(0, StationSettings::instance()->nrBlps() - 1);
-
-      ack.stats()(result_rcu % MEPHeader::N_POL, Range::all(), result_rcu / MEPHeader::N_POL, blps) 
-	= cache.getXCStats()()(cache_rcu % MEPHeader::N_POL, Range::all(), cache_rcu / MEPHeader::N_POL, blps);
-      
-      result_rcu++;
-    }
-  }
+  ack.stats().resize(cache.getXCStats()().shape());
+  ack.stats() = cache.getXCStats()();
 
   getPort()->send(ack);
 }
@@ -106,5 +87,5 @@ void UpdXCStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdXCStatsCmd::validate() const
 {
-  return ((int)m_event->rcumask.count() <= StationSettings::instance()->nrRcus());
+  return true;
 }

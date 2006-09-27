@@ -113,6 +113,30 @@ namespace LOFAR {
       }
 
       /**
+       * Distill two rectdomains from the selection list
+       */
+      bool getRSPRange2(blitz::Range& r1, blitz::Range& r2) const
+      {
+	blitz::TinyVector<int, 2> lowerbounds(0,0), upperbounds(0,0);
+
+	std::list<int> select = m_select;
+
+	if (select.size() != 4) return false;
+	
+	int lb = select.front();
+	select.pop_front();
+	int ub = select.front();
+	r1 = blitz::Range(lb, ub);
+
+	lb = select.front();
+	select.pop_front();
+	ub = select.front();
+	r2 = blitz::Range(lb, ub);
+
+	return true;
+      }
+
+      /**
        * Set mode (true == get, false = set)
        */
       void setMode(bool get)
