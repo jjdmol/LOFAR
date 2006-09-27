@@ -53,7 +53,10 @@ void TimestampWrite::sendrequest()
 {
   EPARsrTimestampEvent ts;
     
-  ts.hdr.set(MEPHeader::RSR_TIMESTAMP_HDR, MEPHeader::DST_ALL_BLPS, MEPHeader::WRITE);
+  // send timestamp to all FPGA's (ALL BLP's and RSP)
+  // RSP uses it on CEP output
+  // BLP's use it on TBB data output via the backplane
+  ts.hdr.set(MEPHeader::RSR_TIMESTAMP_HDR, MEPHeader::DST_ALL, MEPHeader::WRITE);
   ts.timestamp = m_scheduler.getCurrentTime().sec();
   
   m_hdr = ts.hdr;
