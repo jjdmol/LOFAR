@@ -131,6 +131,8 @@ void BWWrite::sendrequest()
   m_remaining -= size;
   m_offset    += size;
 
+  int xc_gain = GET_CONFIG("RSPDriver.XC_GAIN", i);
+
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
@@ -142,7 +144,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 1) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentIndex() + m_blp, 0) = complex<int16>(0x4000, 0);
+      weights(getCurrentIndex() + m_blp, 0) = complex<int16>(xc_gain, 0);
     }
     break;
 
@@ -155,7 +157,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 1) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentIndex() + m_blp, 0) = complex<int16>(0, 0x4000);
+      weights(getCurrentIndex() + m_blp, 0) = complex<int16>(0, xc_gain);
     }
     break;
     
@@ -168,7 +170,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 0) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentIndex() + m_blp, 1) = complex<int16>(0x4000, 0);
+      weights(getCurrentIndex() + m_blp, 1) = complex<int16>(xc_gain, 0);
     }
     break;
     
@@ -181,7 +183,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 0) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentIndex() + m_blp, 1) = complex<int16>(0, 0x4000);
+      weights(getCurrentIndex() + m_blp, 1) = complex<int16>(0, xc_gain);
     }
     break;
   }
