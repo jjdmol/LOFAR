@@ -47,6 +47,7 @@ using namespace RSP_Test;
 
 // number of RCUS to select in the rcumask
 #define N_TEST_RCUS 8
+#define N_TEST_RSPS 2
 
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)
@@ -897,10 +898,6 @@ GCFEvent::TResult RSPTest::test012(GCFEvent& e, GCFPortInterface& port)
       RSPGetxcstatsEvent getxcstats;
 
       getxcstats.timestamp.setNow();
-      getxcstats.rcumask.reset();
-      for (int i = 0; i < N_TEST_RCUS; i++) {
-	getxcstats.rcumask.set(i);
-      }
       getxcstats.cache = false;
 
       TESTC_ABORT(m_server.send(getxcstats) > 0, RSPTest::final);
@@ -919,10 +916,6 @@ GCFEvent::TResult RSPTest::test012(GCFEvent& e, GCFPortInterface& port)
       RSPSubxcstatsEvent subxcstats;
 
       subxcstats.timestamp.setNow();
-      subxcstats.rcumask.reset();
-      for (int i = 0; i < N_TEST_RCUS; i++) {
-	subxcstats.rcumask.set(i);
-      }
       subxcstats.period = 1;
       
       TESTC_ABORT(m_server.send(subxcstats) > 0, RSPTest::final);
