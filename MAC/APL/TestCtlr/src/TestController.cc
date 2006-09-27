@@ -297,6 +297,206 @@ GCFEvent::TResult TestController::prepare_state(GCFEvent& event, GCFPortInterfac
 	return (status);
 }
 
+//
+// run_state(event, port)
+//
+GCFEvent::TResult TestController::run_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+	LOG_DEBUG_STR ("run_state:" << evtstr(event));
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_INIT:
+		break;
+	  
+	case F_ENTRY: {
+			// Start ChildControl task
+			cout << "Requesting controller to goto RUN state..." << endl;;
+			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			if (!itsChildControl->requestState(CTState::ACTIVE, cntlrName, itsObsNr, itsCntlrType)) {
+				cout << "Error during state request, bailing out" << endl;
+				stop();
+			}
+		}
+   		break;
+
+	case F_TIMER:
+	case F_CONNECTED:
+	case F_DISCONNECTED:
+		break;
+
+	case CONTROL_RESUMED: {
+			CONTROLResumedEvent msg(event);
+			cout << endl << "Resume result = " << msg.result << endl;
+			if (msg.result != CT_RESULT_NO_ERROR) {
+				cout << "Bailing out because of the errors." << endl;
+				stop ();
+			}
+			else {
+				_doActionMenu();
+			}
+		}
+		break;
+
+	default:
+		LOG_DEBUG ("TestController::run, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+//
+// suspend_state(event, port)
+//
+GCFEvent::TResult TestController::suspend_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+	LOG_DEBUG_STR ("suspend_state:" << evtstr(event));
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_INIT:
+		break;
+	  
+	case F_ENTRY: {
+			// Start ChildControl task
+			cout << "Requesting controller to goto SUSPEND state..." << endl;;
+			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			if (!itsChildControl->requestState(CTState::SUSPEND, cntlrName, itsObsNr, itsCntlrType)) {
+				cout << "Error during state request, bailing out" << endl;
+				stop();
+			}
+		}
+   		break;
+
+	case F_TIMER:
+	case F_CONNECTED:
+	case F_DISCONNECTED:
+		break;
+
+	case CONTROL_SUSPENDED: {
+			CONTROLSuspendedEvent msg(event);
+			cout << endl << "Suspend result = " << msg.result << endl;
+			if (msg.result != CT_RESULT_NO_ERROR) {
+				cout << "Bailing out because of the errors." << endl;
+				stop ();
+			}
+			else {
+				_doActionMenu();
+			}
+		}
+		break;
+
+	default:
+		LOG_DEBUG ("TestController::suspend, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+//
+// release_state(event, port)
+//
+GCFEvent::TResult TestController::release_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+	LOG_DEBUG_STR ("release_state:" << evtstr(event));
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_INIT:
+		break;
+	  
+	case F_ENTRY: {
+			// Start ChildControl task
+			cout << "Requesting controller to goto RELEASE state..." << endl;;
+			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			if (!itsChildControl->requestState(CTState::ACTIVE, cntlrName, itsObsNr, itsCntlrType)) {
+				cout << "Error during state request, bailing out" << endl;
+				stop();
+			}
+		}
+   		break;
+
+	case F_TIMER:
+	case F_CONNECTED:
+	case F_DISCONNECTED:
+		break;
+
+	case CONTROL_RELEASED: {
+			CONTROLReleasedEvent msg(event);
+			cout << endl << "Release result = " << msg.result << endl;
+			if (msg.result != CT_RESULT_NO_ERROR) {
+				cout << "Bailing out because of the errors." << endl;
+				stop ();
+			}
+			else {
+				_doActionMenu();
+			}
+		}
+		break;
+
+	default:
+		LOG_DEBUG ("TestController::release, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+//
+// finish_state(event, port)
+//
+GCFEvent::TResult TestController::finish_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+	LOG_DEBUG_STR ("finish_state:" << evtstr(event));
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_INIT:
+		break;
+	  
+	case F_ENTRY: {
+			// Start ChildControl task
+			cout << "Requesting controller to goto FINISH state..." << endl;;
+			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			if (!itsChildControl->requestState(CTState::FINISH, cntlrName, itsObsNr, itsCntlrType)) {
+				cout << "Error during state request, bailing out" << endl;
+				stop();
+			}
+		}
+   		break;
+
+	case F_TIMER:
+	case F_CONNECTED:
+	case F_DISCONNECTED:
+		break;
+
+	case CONTROL_FINISHED: {
+			CONTROLFinishedEvent msg(event);
+			cout << endl << "Finish result = " << msg.result << endl;
+			if (msg.result != CT_RESULT_NO_ERROR) {
+				cout << "Bailing out because of the errors." << endl;
+				stop ();
+			}
+			else {
+				_doActionMenu();
+			}
+		}
+		break;
+
+	default:
+		LOG_DEBUG ("TestController::finish, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
 
 //
 // _chooseController
@@ -314,7 +514,7 @@ int16 TestController::_chooseController()
 //	cout << " 6. StationControl" << endl;
 	cout << " 7. DigitalBoardControl" << endl;
 	cout << " 8. BeamControl" << endl;
-//	cout << " 9. CalibrationControl" << endl;
+	cout << " 9. CalibrationControl" << endl;
 //	cout << "10. StationInfraControl" << endl;
 	cout << endl;
 	cout << " 0. stop" << endl;
@@ -324,7 +524,7 @@ int16 TestController::_chooseController()
 		cout << endl;
 		cout << "Type number of your choice: ";
 		cin >> CntlrType;
-		if (CntlrType < 0 || CntlrType > 8 || (CntlrType > 3 && CntlrType < 7)) {
+		if (CntlrType < 0 || CntlrType > 9 || (CntlrType > 3 && CntlrType < 7)) {
 			cout << endl << "Wrong number, please retry." << endl;
 			CntlrType = -1;
 		}
@@ -382,11 +582,13 @@ void TestController::_doActionMenu()
 	cout << endl;
 	cout << "Action to perform" << endl;
 	cout << "=================" << endl;
-	cout << " C Claim" << endl;
-	cout << " P Prepare" << endl;
-	cout << " S Start" << endl;
-	cout << " F Finish" << endl << endl;
-	cout << " Q Quit program" << endl;
+	cout << " c Claim" << endl;
+	cout << " p Prepare" << endl;
+	cout << " R Resume (run)" << endl;
+	cout << " s Suspend" << endl;
+	cout << " r Release" << endl;
+	cout << " f Finish" << endl << endl;
+	cout << " q Quit menuprogram" << endl;
 
 	string	command;
 	while (command.empty()) {
@@ -395,25 +597,31 @@ void TestController::_doActionMenu()
 		cin.clear();
 		cin >> command;
 		switch (command.c_str()[0]) {
-		case 'C':
+		case 'c':
 			TRAN(TestController::claim_state);
 			return;
 			break;
-		case 'P':
+		case 'p':
 			TRAN(TestController::prepare_state);
 			return;
 			break;
-#if 0
-		case 'S':
-			TRAN(TestController::start_state);
+		case 'R':
+			TRAN(TestController::run_state);
 			return;
 			break;
-		case 'F':
+		case 's':
+			TRAN(TestController::suspend_state);
+			return;
+			break;
+		case 'r':
+			TRAN(TestController::release_state);
+			return;
+			break;
+		case 'f':
 			TRAN(TestController::finish_state);
 			return;
 			break;
-#endif
-		case 'Q':
+		case 'q':
 			stop();
 			break;
 		default:

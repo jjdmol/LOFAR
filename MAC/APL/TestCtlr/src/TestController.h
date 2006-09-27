@@ -71,6 +71,10 @@ public:
    	GCFEvent::TResult startup_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult claim_state   (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult prepare_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult run_state     (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult suspend_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult release_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult finish_state  (GCFEvent& e, GCFPortInterface& p);
 
 private:
 	// avoid copying
