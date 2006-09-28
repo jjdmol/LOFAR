@@ -69,7 +69,7 @@ bool VersionCmd::isValid(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void VersionCmd::saveTbbEvent(GCFEvent& event, int32 boards)
+void VersionCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
 {
 	itsTBBE 			= new TBBVersionEvent(event);
 		
@@ -82,10 +82,7 @@ void VersionCmd::saveTbbEvent(GCFEvent& event, int32 boards)
 	} 
 	
 	// mask for the installed boards
-	if(boards > MAX_N_TBBBOARDS) boards = MAX_N_TBBBOARDS;
-	for(int boardnr = 0;boardnr < boards;boardnr++) {
-		itsBoardsMask |= (1 << boardnr);
-	}
+	itsBoardsMask = activeboards;
 	
 	// Send only commands to boards installed
 	itsErrorMask = itsSendMask & ~itsBoardsMask;

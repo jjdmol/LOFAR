@@ -62,6 +62,7 @@ namespace LOFAR {
 				void setTpCmd(Command *cmd);
 				void setTpRetries(int32 Retries);
 				void setNrOfTbbBoards(int32 NrOfBoards);
+				void setActiveBoards(int32 ActiveBoards);
 				void setMaxTbbBoards(int32 MaxBoards);
 				void setTpTimeOut(double TimeOut);
 				
@@ -78,6 +79,7 @@ namespace LOFAR {
 				
 				int32								itsRetries;  // max number of retries
 				int32								itsNrOfBoards;
+				uint32							itsActiveBoards;
 				int32								itsMaxBoards;
 				double							itsTimeOut;
 				bool								itsCmdDone;

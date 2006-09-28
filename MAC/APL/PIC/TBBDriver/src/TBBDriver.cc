@@ -33,23 +33,23 @@
 // include all cmd and msg classes
 #include "AllocCmd.h"
 #include "FreeCmd.h"
-#include <RecordCmd.h>
-#include <StopCmd.h>
-#include <TrigclrCmd.h>
-#include <ReadCmd.h>
-#include <UdpCmd.h>
+#include "RecordCmd.h"
+#include "StopCmd.h"
+#include "TrigclrCmd.h"
+#include "ReadCmd.h"
+#include "UdpCmd.h"
 #include "VersionCmd.h"
-#include <SizeCmd.h>
-#include <ClearCmd.h>
-#include <ResetCmd.h>
-#include <ConfigCmd.h>
-#include <ErasefCmd.h>
-#include <ReadfCmd.h>
-#include <WritefCmd.h>
-// #include <ReadwCmd.h>
-// #include <WritewCmd.h>
-// #include <TriggerMsg.h>
-// #include <ErrorMsg.h>
+#include "SizeCmd.h"
+#include "ClearCmd.h"
+#include "ResetCmd.h"
+#include "ConfigCmd.h"
+#include "ErasefCmd.h"
+#include "ReadfCmd.h"
+#include "WritefCmd.h"
+// #include "ReadwCmd.h"
+// #include "WritewCmd.h"
+// #include "TriggerMsg.h"
+// #include "ErrorMsg.h"
 
 
 #define ETHERTYPE_TP 0x7BB0			// letters of TBB
@@ -61,6 +61,7 @@ using namespace TBB;
 
 static int32    g_instancenr = -1;
 
+static const double ALIVECHECKTIME = 60.0;
 
 /*
 //
@@ -101,12 +102,17 @@ void parseOptions(int argc, char** argv)
 	}
 
 }
-*/		
+*/
+
+//-----------------------------------------------------------------------------		
 TBBDriver::TBBDriver(string name)
   : GCFTask((State)&TBBDriver::init_state, name)
 {
 	cmd = 0;
-
+	itsActiveBoards = 0;
+	itsAliveCheck = false;
+	itsActiveBoardsChange = false;
+	
   // tell broker we are here
   LOG_DEBUG("Registering protocols");
   registerProtocol(TBB_PROTOCOL, TBB_PROTOCOL_signalnames);
@@ -122,7 +128,8 @@ TBBDriver::TBBDriver(string name)
 
   // open port with TBB board
   LOG_DEBUG("Connecting to TBB boards");
-	itsBoard = new GCFETHRawPort[globalParameterSet()->getInt32("RS.N_TBBBOARDS")];
+	//itsBoard = new GCFETHRawPort[globalParameterSet()->getInt32("RS.N_TBBBOARDS")];
+	itsBoard = new GCFETHRawPort[MAX_N_TBBBOARDS];
   //itsBoard = new GCFETHRawPort[tbb_ss->nrTbbBoards()];
   ASSERT(itsBoard);
 	
@@ -145,7 +152,8 @@ TBBDriver::TBBDriver(string name)
   char boardname[64];
   char paramname[64];
   char macaddrstr[64];
-	for (int boardid = 0; boardid < globalParameterSet()->getInt32("RS.N_TBBBOARDS"); boardid++) {
+	//for (int boardid = 0; boardid < globalParameterSet()->getInt32("RS.N_TBBBOARDS"); boardid++) {
+	for (int boardid = 0; boardid < MAX_N_TBBBOARDS; boardid++) {
 		snprintf(boardname, 64, "board%d", boardid);
 		
 		if (bUseMAC_BASE) {
@@ -158,6 +166,7 @@ TBBDriver::TBBDriver(string name)
 
 		LOG_DEBUG_STR("initializing board " << boardname << ":" << macaddrstr);
 		itsBoard[boardid].init(*this, boardname, GCFPortInterface::SAP, TP_PROTOCOL,true /*raw*/);
+		LOG_DEBUG_STR("setAddr " << boardname << ":" << macaddrstr);
 		itsBoard[boardid].setAddr(globalParameterSet()->getString("TBBDriver.IF_NAME").c_str(), macaddrstr);
 		
 		// set ethertype to 0x7BB0 so Ethereal can decode TBB messages
@@ -166,76 +175,42 @@ TBBDriver::TBBDriver(string name)
 	 
 	 // create cmd & msg handler
 	LOG_DEBUG_STR("initializing handlers");
-	 cmdhandler = new BoardCmdHandler();
-	 msghandler = new ClientMsgHandler(itsMsgPort);
+	cmdhandler = new BoardCmdHandler();
+	msghandler = new MsgHandler();
 	 
-	 cmdhandler->setBoardPorts(itsBoard);
-	 cmdhandler->setMaxTbbBoards(MAX_N_TBBBOARDS);
-	 cmdhandler->setNrOfTbbBoards(globalParameterSet()->getInt32("RS.N_TBBBOARDS"));
-	 cmdhandler->setTpRetries(globalParameterSet()->getInt32("TBBDriver.TP_RETRIES"));
-	 cmdhandler->setTpTimeOut(globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"));
+	cmdhandler->setBoardPorts(itsBoard);
+	cmdhandler->setMaxTbbBoards(MAX_N_TBBBOARDS);
+	//cmdhandler->setNrOfTbbBoards(globalParameterSet()->getInt32("RS.N_TBBBOARDS"));
+	cmdhandler->setTpRetries(globalParameterSet()->getInt32("TBBDriver.TP_RETRIES"));
+	cmdhandler->setTpTimeOut(globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"));
 	 	 	 
-	 // set Tbb queue
-	 LOG_DEBUG_STR("initializing TbbQueue");
-	 itsTbbQueue = new deque<TbbEvent>(100);
-	 itsTbbQueue->clear();
+	// set Tbb queue
+	LOG_DEBUG_STR("initializing TbbQueue");
+	itsTbbQueue = new deque<TbbEvent>(100);
+	itsTbbQueue->clear();
+	 
+	itsAlive					= new TPAliveEvent();
+ 	itsAlive->opcode	= TPALIVE;
+ 	itsAlive->status	= 0;
 }
 
-
+//-----------------------------------------------------------------------------
 TBBDriver::~TBBDriver()
 {
 	delete cmdhandler; 
 	delete msghandler;
+	delete itsAlive;
 }
 
-
-void TBBDriver::undertaker()
-{
-  for (list<GCFPortInterface*>::iterator it = itsDeadClients.begin();
-       it != itsDeadClients.end();
-       it++)
-  {
-    delete (*it);
-  }
-  itsDeadClients.clear();
-}
-
-//
-// openBoards()
-//
-void TBBDriver::openBoards()
-{
-	LOG_DEBUG_STR("opening boards");
-	for (int boardid = 0; boardid < globalParameterSet()->getInt32("RS.N_TBBBOARDS"); boardid++)
-  {
-    if (!itsBoard[boardid].isConnected()) itsBoard[boardid].open();
-  }
-}
-
-//
-// isEnabled()
-//
-bool TBBDriver::isEnabled()
-{
-  bool enabled = true;
-	for (int boardid = 0; boardid < globalParameterSet()->getInt32("RS.N_TBBBOARDS"); boardid++)
-  {
-    if (!itsBoard[boardid].isConnected())
-    {
-      enabled = false;
-      break;
-    }
-  }
-  return enabled;
-}
-
-
+//-----------------------------------------------------------------------------
 GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	
 	switch(event.signal) {
 		case F_INIT: {
+			if (itsAcceptor.isConnected())
+				itsAcceptor.close();
 		} break;
         
 		case F_ENTRY:	{
@@ -244,16 +219,23 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 		
 		case F_CONNECTED: {
       LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
-      
-      if (isEnabled()) {
-        // All board ports are open, start waiting for clients
-      	if (!itsAcceptor.isConnected())
-      		itsAcceptor.open();
-      }
-      if (itsAcceptor.isConnected()) 
+			
+			if(isEnabled())
+				itsAcceptor.open();	      			
+			
+			if (itsAcceptor.isConnected()) {
+				cmdhandler->setActiveBoards(itsActiveBoards); 
+      	itsAcceptor.setTimer(5.0);
       	TRAN(TBBDriver::idle_state);
+      }
     } break;
 		
+		case F_TIMER: {
+    } break;
+		
+		case F_DATAIN: {
+		}	break;
+				 
 		default: {
 			status = GCFEvent::NOT_HANDLED;
 		}	break;
@@ -262,7 +244,7 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 }
 	
 
-//
+//-----------------------------------------------------------------------------
 // idle(event, port)
 //
 GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
@@ -322,19 +304,41 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		case F_DATAIN: {
 			status = RawEvent::dispatch(*this, port);	
 		}	break;
-			
+		
+		case F_TIMER: {
+			if(&port == &itsAcceptor) {
+				CheckAlive(event, port);
+				TRAN(TBBDriver::busy_state);
+			}
+		} break;
+		
+		case TBB_GETCONFIG: {
+		
+		} break;
+		
+		case TBB_SUBSCRIBE: {
+			msghandler->addClient(port)	;
+		} break;
+		
+		case TBB_UNSUBSCRIBE: {
+			msghandler->removeClient(port);
+		} break;
+				
+		case TP_TRIGGER: {
+			msghandler->sendTrigger(event);
+		} break;
+
+		case TP_ERROR: {
+			msghandler->sendError(event);
+		} break;					
+		
 		default: {
 			// look if the event is a Tbb event
 			if(SetTbbCommand(event.signal)) {
 				status = cmdhandler->dispatch(event,port);
 				TRAN(TBBDriver::busy_state);
 			}
-			// if it is not a Tbb event, look for Tp event
-			else if(SetTpCommand(event.signal)) {
-				status = msghandler->dispatch(event,port);	
-				TRAN(TBBDriver::busy_state);
-			}
-			// if not a Tbb or Tp event, return not-handled 
+			// if not a Tbb event, return not-handled 
 			else
 				status = GCFEvent::NOT_HANDLED;
 		}	break;
@@ -342,7 +346,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 	return status;
 }
 
-//
+//-----------------------------------------------------------------------------
 // enabled(event, port)
 //
 GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
@@ -363,7 +367,12 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		}	break;
 		
 		case F_TIMER: {
-			status = cmdhandler->dispatch(event,port); // dispatch time-out event	
+			if(itsAliveCheck) {
+				if(CheckAlive(event, port))
+					TRAN(TBBDriver::idle_state);
+			}
+			else
+				status = cmdhandler->dispatch(event,port); // dispatch time-out event	
 		} break;
 		
 		case F_DISCONNECTED: {
@@ -377,13 +386,26 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			status = RawEvent::dispatch(*this, port);
 		}	break;
 					
-		case TP_TRIGGER:
+		case TP_ALIVE: {
+			if(CheckAlive(event, port))
+				TRAN(TBBDriver::idle_state);
+		} break;
+		
+		case TBB_SUBSCRIBE: {
+			msghandler->addClient(port)	;
+		} break;
+		
+		case TBB_UNSUBSCRIBE: {
+			msghandler->removeClient(port);
+		} break;
+		
+		case TP_TRIGGER: {
+			msghandler->sendTrigger(event);
+		} break;
+
 		case TP_ERROR: {
-			// look for Tp event
-			if(SetTpCommand(event.signal)) {
-				status = msghandler->dispatch(event,port);	
-			}
-		}	break;		
+			msghandler->sendError(event);
+		} break;		
 		
 		case TP_ALLOC:	
 		case TP_FREE:
@@ -409,12 +431,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			}
 		}	break;	
 		
-		case TBB_TRIGGERACK:
-		case TBB_ERRORACK:
-		{
-			status = cmdhandler->dispatch(event,port); // dispatch ack from client
-		}	break;		
-						
+								
 		default: {
 			if(cmdhandler->tpCmdDone()){
 				TRAN(TBBDriver::idle_state);
@@ -430,7 +447,90 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 	return status;
 }
 
+//-----------------------------------------------------------------------------
+void TBBDriver::undertaker()
+{
+  for (list<GCFPortInterface*>::iterator it = itsDeadClients.begin();
+       it != itsDeadClients.end();
+       it++)
+  {
+    delete (*it);
+  }
+  itsDeadClients.clear();
+}
 
+//-----------------------------------------------------------------------------
+// openBoards()
+//
+void TBBDriver::openBoards()
+{
+	LOG_DEBUG_STR("opening boards");
+	for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) {
+		if (itsBoard[boardnr].isConnected())
+			itsBoard[boardnr].close();
+		itsBoard[boardnr].open();
+  }
+}
+
+//-----------------------------------------------------------------------------
+// isEnabled()
+//
+bool TBBDriver::isEnabled()
+{
+  bool enabled = true;
+	for (int boardid = 0; boardid < MAX_N_TBBBOARDS; boardid++)
+	{
+    if (!itsBoard[boardid].isConnected())
+    {
+      enabled = false;
+      break;
+    }
+  }
+  return enabled;
+}
+
+//-----------------------------------------------------------------------------
+bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
+{
+	bool done = false;
+	int boardnr;
+	static uint32 activeboards;
+	static uint32 checkmask;
+	
+	if(!itsAliveCheck) {
+		itsAliveCheck	= true;
+		checkmask			= 0;
+		activeboards	= 0;
+		
+		for(boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) {
+			itsBoard[boardnr].send(*itsAlive);
+			itsBoard[boardnr].setTimer(0.5);
+			checkmask |= (1 << boardnr);
+		}
+	}
+	else {
+		port.cancelAllTimers();
+		for(boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
+			if(&port == &itsBoard[boardnr]) {
+				checkmask &= ~(1 << boardnr);
+				if(event.signal == TP_ALIVE)
+					itsActiveBoards |= (1 << boardnr);	
+			}
+		}
+	}
+	if(checkmask == 0) {
+		if(activeboards != itsActiveBoards) {
+			itsActiveBoards = activeboards;
+			itsActiveBoardsChange = true;
+		}
+		itsAliveCheck = false;
+		itsAcceptor.setTimer(ALIVECHECKTIME);
+		done = true;
+	}
+	return done;
+}
+
+//-----------------------------------------------------------------------------
 bool TBBDriver::SetTbbCommand(unsigned short signal)
 {
 	if(cmd) delete cmd;
@@ -448,7 +548,7 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 			cmd = new FreeCmd();
 			cmdhandler->setTpCmd(cmd);
 		} break;
-		/*
+		
 		case TBB_RECORD: 	{
 			RecordCmd *cmd;
 			cmd = new RecordCmd();
@@ -456,7 +556,7 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 		} break;
 		
 		case TBB_STOP:	{
-			Stopcmd *cmd;
+			StopCmd *cmd;
 			cmd = new StopCmd();
 			cmdhandler->setTpCmd(cmd);
 		} break;
@@ -478,7 +578,7 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 			cmd = new UdpCmd();
 			cmdhandler->setTpCmd(cmd);
 		} break;
-		*/
+		
 		case TBB_VERSION: {
 			VersionCmd *cmd;
 			cmd = new VersionCmd();
@@ -548,32 +648,11 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 }
 
 
-bool TBBDriver::SetTpCommand(unsigned short signal)
-{
-	switch(signal) {
-		/*
-		case TP_TRIGGER: {
-			TriggerMsg *msg = TriggerMsg();
-			msghandler->SetTBBMsg(msg);
-		} break;
-		
-		case TP_ERROR:	{
-			ErrorMsg *msg = ErrorMsg();
-			msghandler->SetTBBMsg(msg);
-		} break;
-		*/ 
-		default: {
-			return false;
-		}
-	}
-	return true;
-}
-
-	//} // end namespace TBB
+  //} // end namespace TBB
 //} // end namespace LOFAR
 
         
-//
+//-----------------------------------------------------------------------------
 // main (argc, argv)
 //
 int main(int argc, char** argv)

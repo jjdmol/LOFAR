@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  TrigclrCmd.h: III
+//#  ReadwCmd.h: III
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef TRIGCLRCMD_H_
-#define TRIGCLRCMD_H_
+#ifndef READWCMD_H_
+#define READWCMD_H_
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
@@ -37,14 +37,14 @@ namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
 
-		class TrigclrCmd : public Command 
+		class ReadwCmd : public Command 
 		{
 			public:
-				// Constructors for a TrigclrCmd object.
-				TrigclrCmd();
+				// Constructors for a ReadwCmd object.
+				ReadwCmd();
 	  
-				// Destructor for TrigclrCmd.
-				virtual ~TrigclrCmd();
+				// Destructor for ReadwCmd.
+				virtual ~ReadwCmd();
 				
 				virtual bool isValid(GCFEvent& event);
 				
@@ -72,15 +72,19 @@ namespace LOFAR {
 				uint32  itsErrorMask;  // mask indicates the not responding boards
 				uint32	itsBoardsMask;	// Installed boards mask
 				
-				TPTrigclrEvent			*itsTPE;
-				TPTrigclrEvent			*itsTPackE;
-				TBBTrigclrEvent			*itsTBBE;
-				TBBTrigclrackEvent	*itsTBBackE;
+				TPReadwEvent			*itsTPE;
+				TPReadwEvent			*itsTPackE;
+				TBBReadwEvent			*itsTBBE;
+				TBBReadwackEvent	*itsTBBackE;
 				
 				// variables holding data from tp cmd
-				uint32	itsBoardStatus[MAX_N_TBBBOARDS];
+				uint32	itsBoardStatus;
+				uint32	itsMp;
+				uint32	itsAddr;
+				uint32	itWordLo;
+				uint32	itWordHi;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* TRIGCLRCMD_H_ */
+#endif /* READWCMD_H_ */

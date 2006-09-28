@@ -61,7 +61,7 @@ bool RecordCmd::isValid(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void RecordCmd::saveTbbEvent(GCFEvent& event, int32 boards)
+void RecordCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
 {
 	itsTBBE 			= new TBBRecordEvent(event);
 		
@@ -74,10 +74,7 @@ void RecordCmd::saveTbbEvent(GCFEvent& event, int32 boards)
 	} 
 	
 	// mask for the installed boards
-	if(boards > MAX_N_TBBBOARDS) boards = MAX_N_TBBBOARDS;
-	for(int boardnr = 0;boardnr < boards;boardnr++) {
-		itsBoardsMask |= (1 << boardnr);
-	}
+		itsBoardsMask = activeboards;
 	
 	// Send only commands to boards installed
 	itsErrorMask = itsSendMask & ~itsBoardsMask;
