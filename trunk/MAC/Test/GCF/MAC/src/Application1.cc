@@ -14,6 +14,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <csignal>
 #include "TST_Protocol.ph"
 #include <Suite/suite.h>
 
@@ -75,6 +76,10 @@ Application::~Application()
   
 }
 
+void Application::abort()
+{
+  FINISH;
+}
 
 GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
@@ -1352,16 +1357,28 @@ void Application::run()
  } // namespace GCF
 } // namespace LOFAR
 
-using namespace LOFAR::GCF;
+static LOFAR::GCF::Test::Application* pApp = 0;
+
+void sigintHandler(/*@unused@*/int signum)
+{
+  LOG_INFO(LOFAR::formatString("SIGINT signal detected (%d)",signum));
+  if(0 != pApp)
+    pApp->abort();
+}
 
 int main(int argc, char* argv[])
 {
-  TM::GCFTask::init(argc, argv);
+  LOFAR::GCF::TM::GCFTask::init(argc, argv);
 
   LOG_INFO("MACProcessScope: GCF.TEST.MAC.App1");
     
   Suite s("GCF Test", &cerr);
-  s.addTest(new LOFAR::GCF::Test::Application);
+  pApp = new LOFAR::GCF::Test::Application;
+  s.addTest(pApp);
+  
+  /* install ctrl-c signal handler */
+  (void)signal(SIGINT,sigintHandler);
+  
   s.run();
   s.report();
   s.free();
