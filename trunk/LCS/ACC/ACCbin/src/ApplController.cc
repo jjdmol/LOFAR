@@ -452,6 +452,7 @@ void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg,
 		// some command is running, has new command overrule 'rights'?
 		if ((newCmd != ACCmdQuit) && (newCmd != ACCmdPause)){
 			// No overrule rights, reject new command
+			LOG_DEBUG(formatString("Command rejected: Previous command is still running. itsCurState:%d, newCmd:%d",itsCurState,newCmd));
 			sendExecutionResult (0, "Previous command is still running");
 			return;
 		}
