@@ -35,6 +35,7 @@ BoardCmdHandler::BoardCmdHandler()
 {
 	itsRetries 		= 10;
 	itsNrOfBoards	= 12;
+	itsActiveBoards = 0;
 	itsMaxBoards	= 12;
 	itsTimeOut		= 0.2;
 	itsCmdDone		= true;
@@ -56,6 +57,7 @@ BoardCmdHandler::~BoardCmdHandler()
 GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+	uint32		boardmask;
 			
   switch (event.signal)	{
   	
@@ -74,21 +76,28 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
 		default: {
 			if(itsCmd && itsCmd->isValid(event)) { // isValid returns true if event is a valid cmd
 				itsClientPort = &port;
-				itsCmd->saveTbbEvent(event,itsNrOfBoards);
+				itsCmd->saveTbbEvent(event,itsActiveBoards);
 				
 				if(itsCmd->getSendMask()) {				
 					itsCmdDone = false;
-					for(int boardid = 0;boardid < itsNrOfBoards;boardid++) {
-						if((1 << boardid) & itsCmd->getSendMask()) {
-							if(itsBoardPorts[boardid].isConnected()) {
-								itsCmd->sendTpEvent(itsBoardPorts[boardid]);
+					for(int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
+						boardmask = (1 << boardnr);
+
+						LOG_DEBUG_STR(formatString("TP sending boardmask    [0x%08X]", boardmask));
+						LOG_DEBUG_STR(formatString("TP sending activeboards [0x%08X]", itsActiveBoards));
+						LOG_DEBUG_STR(formatString("TP sending sendmask     [0x%08X]", itsCmd->getSendMask()));
+
+						if((boardmask & itsActiveBoards) && (boardmask & itsCmd->getSendMask())) {
+								
+							if(itsBoardPorts[boardnr].isConnected()) {
+								itsCmd->sendTpEvent(itsBoardPorts[boardnr]);
 								if(itsCmd->waitAck()) 
-									itsBoardPorts[boardid].setTimer(itsTimeOut);
+									itsBoardPorts[boardnr].setTimer(itsTimeOut);
 							}
 							else {
-								itsCmd->portError(boardid);
+								itsCmd->portError(boardnr);
 							}
-							itsBoardRetries[boardid]++;
+							itsBoardRetries[boardnr]++;
 						}
 					}
 				}
@@ -192,6 +201,11 @@ void BoardCmdHandler::setNrOfTbbBoards(int32 NrOfBoards)
 {
 	itsNrOfBoards = NrOfBoards;
 }
+
+void BoardCmdHandler::setActiveBoards(int32 ActiveBoards)
+{
+	itsActiveBoards = ActiveBoards;
+}
 	
 void BoardCmdHandler::setMaxTbbBoards(int32 MaxBoards)
 {
@@ -212,7 +226,7 @@ int32 BoardCmdHandler::portToBoardNr(GCFPortInterface& port)
 {
 	int32 boardnr;
 	
-	for(boardnr = 0;boardnr < itsNrOfBoards;boardnr++) {
+	for(boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
 		if(&port == &itsBoardPorts[boardnr]) { 				
 			return boardnr;
 		}

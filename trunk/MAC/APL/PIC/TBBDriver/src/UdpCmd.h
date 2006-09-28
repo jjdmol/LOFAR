@@ -48,7 +48,7 @@ namespace LOFAR {
 				
 				virtual bool isValid(GCFEvent& event);
 				
-				virtual void saveTbbEvent(GCFEvent& event, int32 boards);
+				virtual void saveTbbEvent(GCFEvent& event, uint32 activeboards);
 									
 				virtual void sendTpEvent(GCFPortInterface& port);
 

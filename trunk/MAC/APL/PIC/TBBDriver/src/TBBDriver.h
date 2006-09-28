@@ -33,7 +33,7 @@
 #include <Common/lofar_deque.h>
 
 #include "BoardCmdHandler.h"
-#include "ClientMsgHandler.h"
+#include "MsgHandler.h"
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -52,7 +52,10 @@ namespace LOFAR{
 			TBBDriver(string name);
       ~TBBDriver();
 			
-			// open all board ports
+			// 
+			int32 portToBoardNr(GCFPortInterface& port);
+			
+						// open all board ports
 			void openBoards();
 			
 			// check if all boardports are open
@@ -84,14 +87,21 @@ namespace LOFAR{
       // Copying is not allowed ??
       TBBDriver (const TBBDriver& that);
       TBBDriver& operator= (const TBBDriver& that);
-		
-			bool SetTbbCommand(unsigned short signal);
-			bool SetTpCommand(unsigned short signal);
 			
-			// define some constants
-	  	BoardCmdHandler			*cmdhandler;
-			ClientMsgHandler		*msghandler;
-			Command 						*cmd;
+			void sendMessage(GCFEvent& event);
+			bool CheckAlive(GCFEvent& event, GCFPortInterface& port);
+			bool SetTbbCommand(unsigned short signal);
+			
+			// define some variables
+			TPAliveEvent			*itsAlive;
+	  	BoardCmdHandler		*cmdhandler;
+			MsgHandler				*msghandler;
+			Command 					*cmd;
+			bool							itsAliveCheck;
+			uint32						itsActiveBoards;
+			bool							itsActiveBoardsChange;
+			
+			
 			struct TbbEvent{
 				unsigned short		signal;
 				GCFPortInterface	*port;

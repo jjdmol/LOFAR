@@ -1,4 +1,4 @@
-//#  ConfigCmd.cc: implementation of the ConfigCmd class
+//#  ReadwCmd.cc: implementation of the ReadwCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,47 +23,49 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "ConfigCmd.h"
+#include "ReadwCmd.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
 	using namespace TP_Protocol;
 	namespace TBB {
 
-//--Constructors for a ConfigCmd object.----------------------------------------
-ConfigCmd::ConfigCmd():
+//--Constructors for a ReadwCmd object.----------------------------------------
+ReadwCmd::ReadwCmd():
 		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
 {
-	itsTPE 			= new TPConfigEvent();
+	itsTPE 			= new TPReadwEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBConfigackEvent();
+	itsTBBackE 	= new TBBReadwackEvent();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsBoardStatus[boardnr]	= 0;
-	}		
+	itsMp						= 0;
+	itsBoardStatus	= 0;
+	itsAddr					= 0;
+	itsWordLo				= 0;
+	itsWordHi				= 0;
 }
 	  
-//--Destructor for ConfigCmd.---------------------------------------------------
-ConfigCmd::~ConfigCmd()
+//--Destructor for ReadwCmd.---------------------------------------------------
+ReadwCmd::~ReadwCmd()
 {
 	delete itsTPE;
 	delete itsTBBackE;
 }
 
 // ----------------------------------------------------------------------------
-bool ConfigCmd::isValid(GCFEvent& event)
+bool ReadwCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_CONFIG)||(event.signal == TP_CONFIG)) {
+	if((event.signal == TBB_READW)||(event.signal == TP_READW)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void ConfigCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
+void ReadwCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
 {
-	itsTBBE 			= new TBBConfigEvent(event);
+	itsTBBE 			= new TBBReadwEvent(event);
 		
 	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
 	// if SendMask = 0, select all boards
@@ -81,21 +83,24 @@ void ConfigCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
 	itsSendMask = itsSendMask & itsBoardsMask;
 	
 	// initialize TP send frame
-	itsTPE->opcode	= TPCONFIG;
-	itsTPE->status	=	0;
-	itsTPE->image	 	= itsTBBE->image;
+	itsTPE->opcode	= TPREADW;
+	itsTPE->status	= 0;
+	itsTPE->mp			=	itsTBBE->mp;
+	itsTPE->addr		=	itsTBBE->addr;
+	itsTPE->wordlo	= 0;
+	itsTPE->wordhi	= 0;
 	
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-void ConfigCmd::sendTpEvent(GCFPortInterface& port)
+void ReadwCmd::sendTpEvent(GCFPortInterface& port)
 {
 	port.send(*itsTPE);
 }
 
 // ----------------------------------------------------------------------------
-void ConfigCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void ReadwCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
@@ -103,58 +108,66 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPConfigEvent(event);
+		itsTPackE = new TPReadwEvent(event);
 		
-		itsBoardStatus[boardnr]	= itsTPackE->status;
+		itsBoardStatus	= itsTPackE->status;
+		itsMp 		= itsTPackE->mp;
+		itsAddr		= itsTPackE->addr;
+		itsWordLo	= itsTPackE->wordlo;
+		itsWordHi	= itsTPackE->wordhi;
 		
-		LOG_DEBUG_STR(formatString("Received ConfigAck from boardnr[%d]", boardnr));
+		LOG_DEBUG_STR(formatString("Received ReadwAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
 	}
 }
 
 // ----------------------------------------------------------------------------
-void ConfigCmd::sendTbbAckEvent(GCFPortInterface* clientport)
+void ReadwCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	itsTBBackE->commstatus = SUCCESS;	
 	if(itsErrorMask) {
 		itsTBBackE->commstatus = FAILURE;
 		itsTBBackE->commstatus |= (itsErrorMask << 16);
 	} 
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsTBBackE->boardstatus[boardnr]	= itsBoardStatus[boardnr];
-	}
+	
+	itsTBBackE->boardstatus	= itsBoardStatus;
+	itsTBBackE->mp					= itsMp;
+	itsTBBackE->addr 				= itsAddr;
+	itsTBBackE->wordlo			=	itsWordLo;
+	itsTBBackE->wordhi			= itsWordHi;
+	
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-void ConfigCmd::portError(int32 boardnr)
+void ReadwCmd::portError(int32 boardnr)
 {
 	itsRecvMask	|= (1 << boardnr);
 	itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
-uint32 ConfigCmd::getSendMask()
+uint32 ReadwCmd::getSendMask()
 {
 	return itsSendMask;
 }
 
 // ----------------------------------------------------------------------------
-uint32 ConfigCmd::getRecvMask()
+uint32 ReadwCmd::getRecvMask()
 {
 	return itsRecvMask;
 }
 
 // ----------------------------------------------------------------------------
-bool ConfigCmd::done()
+bool ReadwCmd::done()
 {
 	return (itsRecvMask == itsSendMask);
 }
 
 // ----------------------------------------------------------------------------
-bool ConfigCmd::waitAck()
+bool ReadwCmd::waitAck()
 {
-	return false;
+	return true;
 }
 
 	} // end TBB namespace

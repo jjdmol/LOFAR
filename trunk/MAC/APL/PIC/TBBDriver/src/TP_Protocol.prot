@@ -50,7 +50,8 @@ prelude = << PRELUDE_END
 		// Direct register acces 
 	static const uint32 TPREADR   = 0x00000740;  // IN/OUT read register(direct access), for debug purpose
 	static const uint32 TPWRITER  = 0x00000741;  // OUT write register(direct access), for debug purpose
-
+		// Alive
+	static const uint32 TPALIVE   = 0x00000999;  // OUT if response board exist
 PRELUDE_END;
 
 //
@@ -499,5 +500,19 @@ event  = {
 		name = "wordhi";
 		type = "uint32";
 	};
+};
+
+event  = {
+  noheader;
+  signal = ALIVE;
+  dir = INOUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
 };
 

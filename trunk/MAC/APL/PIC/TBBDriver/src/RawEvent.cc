@@ -143,6 +143,11 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   		buf.event.signal = TP_WRITEW;
   		buf.event.length = 24;
   		break;
+   case TPALIVE:
+  		buf.event.signal = TP_ALIVE;
+  		buf.event.length = 8;
+  		break;	
+  		
 	 default:
   		buf.event.signal = 0;
 			buf.event.length = 0;

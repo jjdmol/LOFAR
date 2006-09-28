@@ -18,20 +18,9 @@ include = '<APL/RTCCommon/Timestamp.h>';
 
 prelude = << PRELUDE_END
 
-	static const int MAX_N_TBBBOARDS = 12;
-	static const int SUCCESS         = 1;
-	static const int FAILURE         = 0;
-
-  struct struct_boardinfo{
-  	uint32 boardid;
-  	uint32 swversion;
-  	uint32 boardversion;
-  	uint32 tpversion;
-  	uint32 mp1version; 
-  	uint32 mp2version; 
-  	uint32 mp3version; 
-  	uint32 mp4version;
-  };
+	static const int32 MAX_N_TBBBOARDS = 12;
+	static const uint32 SUCCESS      = 0;
+	static const uint32 FAILURE      = 1;
 
 PRELUDE_END;
 
@@ -49,12 +38,12 @@ PRELUDE_END;
 //
 // type uint32 (4 bytes)
 //  
-// bit0 = 1, SUCCESS, all boards have responded
-//      = 0, FAILURE, one of the boards is not responding
+// bit0 = 0, SUCCESS, all boards have responded
+//      = 1, FAILURE, one of the boards is not responding
 //
 // bit16 = bit0 and bit31 = bit15 from tbbmask
-// bit16 .. bit31, = 1, if board response was OK
-//                 = 0, if board response was not ok
+// bit16 .. bit31, = 0, if board response was OK
+//                 = 1, if board response was not_OK
 //
 
 //
@@ -62,6 +51,45 @@ PRELUDE_END;
 //
 
 // TBB events
+
+// configuration info
+event = {
+  signal = GETCONFIG;
+  dir = IN;
+};
+
+event = {
+  signal = GETCONFIGACK;
+  dir = OUT;
+	param = {
+    name = "max_boards";
+    type = "uint32";
+	};
+	param = {
+    name = "active_boards";
+    type = "uint32";
+	};	
+};
+
+event = {
+	signal = SUBSCRIBE;
+	dir = IN;
+};
+
+event = {
+	signal = SUBSCRIBEACK;
+	dir = OUT;
+};
+
+event = {
+	signal = UNSUBSCRIBE;
+	dir = IN;
+};
+
+event = {
+	signal = UNSUBSCRIBEACK;
+	dir = OUT;
+};
 
 // data recording
 event = {
@@ -89,8 +117,12 @@ event = {
   signal = ALLOCACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -111,8 +143,12 @@ event = {
   signal = FREEACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -133,8 +169,12 @@ event = {
   signal = RECORDACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -155,8 +195,12 @@ event = {
   signal = STOPACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -183,15 +227,6 @@ event = {
 };
 
 event = {
-  signal = TRIGGERACK;
-  dir = IN;
-	param = {
-    name = "status";
-    type = "uint32";
-	};	
-};
-
-event = {
   signal = TRIGCLR;
   dir = IN;
   param = {
@@ -208,8 +243,12 @@ event = {
   signal = TRIGCLRACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -239,8 +278,12 @@ event = {
   signal = READACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -269,13 +312,27 @@ event = {
   signal = UDPACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
 // Operation and Maintenance
 // Board information
+
+event = {
+  signal = BOARDCHANGE;
+  dir = OUT;
+  param = {
+    name = "activeboards";
+    type = "uint32";
+  };
+};
+
 event = {
   signal = VERSION;
   dir = IN;
@@ -289,13 +346,45 @@ event = {
   signal = VERSIONACK;
   dir = OUT;
   param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
   };
   param = {
-    name = "boardinfo";
-    type = "struct_boardinfo[MAX_N_TBBBOARDS]";
-  };
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+ 	param = {
+    name = "boardid";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+ 	param = {
+    name = "swversion";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+	param = {
+    name = "boardversion";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+	param = {
+    name = "tpversion";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+	param = {
+    name = "mp0version";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+	param = {
+    name = "mp1version";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+	param = {
+    name = "mp2version";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+	param = {
+    name = "mp3version";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};	
 };
 
 event = {
@@ -311,9 +400,13 @@ event = {
   signal = SIZEACK;
   dir = OUT;
   param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
   };
+  param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
   param = {
     name = "size";
     type = "uint32[MAX_N_TBBBOARDS]";
@@ -330,15 +423,6 @@ event = {
   };
 };
 
-event = {
-  signal = ERRORACK;
-  dir = IN;
-	param = {
-    name = "status";
-    type = "uint32";
-	};	
-};
-
 // Board control
 event = {
   signal = CLEAR;
@@ -353,8 +437,12 @@ event = {
   signal = CLEARACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -371,8 +459,12 @@ event = {
   signal = RESETACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -393,8 +485,12 @@ event = {
   signal = CONFIGACK;
   dir = OUT;
 	param = {
-    name = "status";
+    name = "commstatus";
     type = "uint32";
+	};
+	param = {
+    name = "boardstatus";
+    type = "uint32[MAX_N_TBBBOARDS]";
 	};	
 };
 
@@ -403,7 +499,7 @@ event  = {
   signal = ERASEF;
   dir = IN;
   param = {
-    name = "boardid";
+    name = "tbbmask";
     type = "uint32";
   };
   param = {
@@ -416,12 +512,16 @@ event = {
   signal = ERASEFACK;
   dir = OUT;
 	param = {
-		name = "boardid";
+		name = "commstatus";
 		type = "uint32";
 	};
 	param = {
-    name = "status";
+    name = "boardstatus";
     type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
 	};	
 };
 
@@ -429,7 +529,7 @@ event  = {
   signal = READF;
   dir = IN;
 	param = {
-		name = "boardid";
+		name = "tbbmask";
 		type = "uint32";
 	};
   param = {
@@ -442,7 +542,11 @@ event = {
   signal = READFACK;
   dir = OUT;
 	param = {
-		name = "boardid";
+		name = "commstatus";
+		type = "uint32";
+	};
+	param = {
+		name = "boardstatus";
 		type = "uint32";
 	};
 	param = {
@@ -460,7 +564,7 @@ event  = {
   signal = WRITEF;
   dir = IN;
 	param = {
-		name = "boardid";
+		name = "tbbmask";
 		type = "uint32";
 	};
 	param = {
@@ -477,13 +581,17 @@ event = {
   signal = WRITEFACK;
   dir = OUT;
 	param = {
-		name = "boardid";
+		name = "commstatus";
 		type = "uint32";
 	};
 	param = {
-    name = "status";
-    type = "uint32";
-	};	
+		name = "boardstatus";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
 };
 
 // DDR2 Access
@@ -491,7 +599,7 @@ event  = {
   signal = READW;
   dir = IN;
   param = {
-    name = "boardid";
+    name = "tbbmask";
     type = "uint32";
   };
   param = {
@@ -508,7 +616,11 @@ event = {
   signal = READWACK;
   dir = OUT;
 	param = {
-		name = "boardid";
+		name = "commstatus";
+		type = "uint32";
+	};
+	param = {
+		name = "boardstatus";
 		type = "uint32";
 	};
 	param = {
@@ -533,7 +645,7 @@ event  = {
   signal = WRITEW;
   dir = IN;
   param = {
-    name = "boardid";
+    name = "tbbmask";
     type = "uint32";
   };
 	param = {
@@ -557,12 +669,16 @@ event = {
   signal = WRITEWACK;
   dir = OUT;
 	param = {
-		name = "boardid";
+    name = "commstatus";
+    type = "uint32";
+	};
+	param = {
+		name = "boardstatus";
 		type = "uint32";
 	};
 	param = {
-    name = "status";
-    type = "uint32";
+		name = "addr";
+		type = "uint32";
 	};	
 };
 

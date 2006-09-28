@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  ClientMsgHandler.h: TBB Driver boardaction class
+//#  MsgHandler.h: TBB Driver boardaction class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,45 +24,53 @@
 
 
 
-#ifndef CLIENTMSGHANDLER_H_
-#define CLIENTMSGHANDLER_H_
+#ifndef MSGHANDLER_H_
+#define MSGHANDLER_H_
 
+#include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
+#include <Common/lofar_set.h>
 
-#include "Message.h"
+#include <APL/TBB_Protocol/TBB_Protocol.ph>
+#include "TP_Protocol.ph"
 
 namespace LOFAR {
 	namespace TBB {
 	
-		class ClientMsgHandler : public GCFFsm
+		class MsgHandler
 		{
 	
 			public:
-				Message*						itsMsg; // Message in use
-				// Constructors for a SyncAction object.
-				// Default direction is read.
-				ClientMsgHandler(GCFPortInterface& port);
+				// Constructors for a MsgHandler object.
+				MsgHandler();
 
-				// Destructor for SyncAction. */
-				~ClientMsgHandler();
-
-				// The states of the statemachine.
-				GCFEvent::TResult send_state(GCFEvent& event, GCFPortInterface& port);
-				GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
-								
-				void SetMessage(Message *msg);
+				// Destructor for MsgHandler. */
+				~MsgHandler();
+				
+				void addClient(GCFPortInterface& port);
+				
+				void removeClient(GCFPortInterface& port);
+				
+				void sendTrigger(GCFEvent& event);
+				
+				void sendError(GCFEvent& event);
+				
+				void sendBoardChange(uint32 activeboards);
+					
+				void sendMessage(GCFEvent& event);
 
 			protected:
 				
 			private:
-				int									itsRetries; // number of atempts
-				GCFPortInterface*		itsMsgPort; // the port the message come from
-				GCFPortInterface*		itsBoardPort; // return port of the actual message
 				
+				std::set<GCFPortInterface*> itsClientMsgList;  // list of clients witch receive messages
 				
-				
+				TBBTriggerEvent			*itsTriggerE;
+				TBBErrorEvent				*itsErrorE;
+				TBBBoardchangeEvent	*itsBoardchangeE;
+					
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* CLIENTMSGACTION_H_ */
+#endif /* MSGHANDLER_H_ */

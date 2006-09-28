@@ -46,7 +46,7 @@ libtp_protocol_la_SOURCES = \
 libtbbdriver_la_SOURCES = \
 	$(noinst_HEADERS) \
 	BoardCmdHandler.cc \
-	ClientMsgHandler.cc \
+	MsgHandler.cc \
 	AllocCmd.cc \
 	FreeCmd.cc \
 	RecordCmd.cc \
@@ -65,8 +65,7 @@ libtbbdriver_la_SOURCES = \
 
 noinst_HEADERS = \
 	BoardCmdHandler.h \
-	ClientMsgHandler.h \
-	Message.h	\
+	MsgHandler.h \
 	Command.h \
 	AllocCmd.h \
 	FreeCmd.h \
