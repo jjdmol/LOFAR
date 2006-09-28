@@ -102,33 +102,36 @@ void changeSelectedPosition(string newDatapoint)
   int i;
   long nodeID;
   dyn_string datapointPath = splitDatapointPath(newDatapoint);
-  string systemName = substr(getSystemName(getSystemId()), 0, (strlen(getSystemName(getSystemId())) - 1));
-  if (g_datapoint == systemName)
-  {
-    TreeView_OnExpand(1);
-  }
+  LOG_DEBUG("changeSelectedPostion> changing selection to :",newDatapoint);
+  string systemName = strrtrim(dpSubStr(newDatapoint, DPSUB_SYS), ":");
+//  if (g_datapoint == systemName)
+//  {
+//    TreeView_OnExpand(1);
+//  }
   string temp = "";
   string temp_dpe = "";
 
-  dyn_string dcurrent = splitDatapointPath(g_datapoint);
-  dyn_string dnew     = splitDatapointPath(newDatapoint);
-  int Index;
-  for (i = 1; i <= dynlen(datapointPath); i++)
+  for (i = 0; i <= dynlen(datapointPath); i++)
   {
-    if (i == 1)
+    if(i == 0)
     {
-      temp = datapointPath[i];
+      temp = systemName;
+    }
+    else if (i == 1)
+    {
+      temp = temp + ":" + datapointPath[i];
     }
     else
     {
-    if (i == dynlen(datapointPath)) //last element in datapointPath could be an datapoint element
-    {
-     temp_dpe = temp + "." + datapointPath[i];
-    }
+      if (i == dynlen(datapointPath)) //last element in datapointPath could be an datapoint element
+      {
+       temp_dpe = temp + "." + datapointPath[i];
+      }
       temp = temp + "_" + datapointPath[i]; //build datapoint
     }
 
     nodeID = getNodeFromDatapoint(temp);
+    LOG_DEBUG("changeSelectedPostion> trying to expand '" + temp + "', nodeID=" + nodeID);
     if (nodeID == 0) //temp not found
     {
       nodeID = getNodeFromDatapoint(temp + " ->"); //maybe a local reference
@@ -150,16 +153,17 @@ void changeSelectedPosition(string newDatapoint)
       if (nodeID != 0)
       {
         TreeView_OnExpand((nodeID));
+        LOG_DEBUG("changeSelectedPostion> expanding node " + nodeID);
       }
       else
       {
         nodeID = getNodeFromDatapoint(temp_dpe); //nodeID not found, try the datapoint element
         if (nodeID != 0)
-      {
-      TreeView_OnExpand(nodeID);
-      
-     }
-    }
+        {
+          TreeView_OnExpand(nodeID);
+          LOG_DEBUG("changeSelectedPostion> expanding node " + nodeID);
+        }
+      }
     }
   }
 
@@ -495,31 +499,37 @@ void treeAddDatapoints(dyn_string names)
   g_nodeID  = 0;  // to increase performance
   if (dynlen(names) > 0)
   {
-    systemName = strrtrim(dpSubStr(names[1], DPSUB_SYS), ":");
-
-    // Check if the item already exists
-    if (mappingHasKey(g_datapoint2itemID, systemName))
-    {
-      addedNode = g_datapoint2itemID[systemName];
-    }
-    else
-    {
-      addedNode = treeAddNode(-1, 0, systemName);
-      LOG_TRACE("Added root node: ", addedNode, systemName);
-      insertDatapointNodeMapping(addedNode, systemName);
-    }  
     // go through the list of datapoint names
     string aName;
+    string currentSystemName = "";
     for (namesIndex = 1; namesIndex <= dynlen(names); namesIndex++)
     {
       dyn_int internalNodeMapping;
       dyn_string internalFullDPName;
-      aName = names[namesIndex];
 
       int pathIndex;
       dyn_string dpPathElements;
       string datapointName;
       int parentId;
+
+      systemName = strrtrim(dpSubStr(names[namesIndex], DPSUB_SYS), ":");
+      if(currentSystemName != systemName)
+      {
+        currentSystemName = systemName;
+        // Check if the item already exists
+        if (mappingHasKey(g_datapoint2itemID, systemName))
+        {
+          addedNode = g_datapoint2itemID[systemName];
+        }
+        else
+        {
+          addedNode = treeAddNode(-1, 0, systemName);
+          LOG_TRACE("Added root node: ", addedNode, systemName);
+          insertDatapointNodeMapping(addedNode, systemName);
+        }  
+      }
+      
+      aName = names[namesIndex];
       // remove the System part from the datapoint name
       datapointName = dpSubStr(aName, DPSUB_DP);
       if (datapointName == "")
@@ -604,28 +614,49 @@ void treeAddDatapoints(dyn_string names)
             string elementName = splittedElement[elementLevel + 1];
             if ("__" == substr(elementName, 0, 2)) //Check if the elementName contains reference info
             {
-              if (strpos(addingDPpart, " ->") < 0)
+              // special case: __childDp
+              if (strpos(elementName,"__childDp") >= 0)
               {
-                dyn_string referenceContent;
+                string referenceContent;
                 if (dpAccessable(addingDPpart + "." + elementName))
                 {
                   dpGet(addingDPpart + "." + elementName, referenceContent);
+                  // add the reference to the global list. This list is inspected on several occasions, e.g. when
+                  // the user changes the selected item in the tree
+                  dynAppend(g_referenceList, addingDPpart + "=" + referenceContent);
+                  LOG_TRACE("Add reference: ", addingDPpart + "=" + referenceContent);
                 }
                 else
                 {
                   LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
                 }
-                for (int k = 1; k <= dynlen(referenceContent); k++)
+              }
+              else
+              {
+                // in all other cases: add a reference to the tree
+                if (strpos(addingDPpart, " ->") < 0)
                 {
-                  dyn_string referenceSplit = strsplit(referenceContent[k], "=");
-                  string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
-                  dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
-                  dynAppend(names, referenceText);
-                  LOG_TRACE("Add reference: ", referenceText);
-                  // Because this is a reference, the DP's of the branche must be retrieved and
-                  // add to the dyn_string names, for correct build-up of the tree.
-                  dyn_string refResources = navConfigGetResources(referenceText, 2);
-                  dynAppend(names, refResources);
+                  dyn_string referenceContent;
+                  if (dpAccessable(addingDPpart + "." + elementName))
+                  {
+                    dpGet(addingDPpart + "." + elementName, referenceContent);
+                  }
+                  else
+                  {
+                    LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
+                  }
+                  for (int k = 1; k <= dynlen(referenceContent); k++)
+                  {
+                    dyn_string referenceSplit = strsplit(referenceContent[k], "=");
+                    string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
+                    dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
+                    dynAppend(names, referenceText);
+                    LOG_TRACE("Add reference: ", referenceText);
+                    // Because this is a reference, the DP's of the branche must be retrieved and
+                    // add to the dyn_string names, for correct build-up of the tree.
+                    dyn_string refResources = navConfigGetResources(referenceText, 2);
+                    dynAppend(names, refResources);
+                  }
                 }
               }
             }
@@ -735,7 +766,7 @@ insertInternalNodeMapping(dyn_int internalNodeMapping, dyn_string fullDPname)
 string buildPathFromNode(long Node)
 {
   string datapointPath = "";
-  if (Node >= 1)
+  if (Node >= 1 && dynlen(g_itemID2datapoint) >= Node)
   {
     datapointPath = g_itemID2datapoint[Node];
   }
@@ -752,12 +783,20 @@ long getNodeFromDatapoint(string dpe)
 {
   long nodeId = 0;
   
-  //string datapointName = dpSubStr(dpe, DPSUB_SYS_DP_EL); Origiganel 
-  string datapointName = getSystemName(getSystemId()) + dpe;  //New AdB 18-3-2005
+  string datapointName = dpSubStr(dpe, DPSUB_SYS_DP_EL); // Origiganel 
+  //string datapointName = getSystemName(getSystemId()) + dpe;  //New AdB 18-3-2005 maar wel ...
   LOG_TRACE("getNodeFromDatapoint: searching for: ", dpe, datapointName);
   if (mappingHasKey(g_datapoint2itemID, datapointName))
   {
     nodeId = g_datapoint2itemID[datapointName];
+  }
+  else
+  {
+    // maybe it was a systemname?
+    if (mappingHasKey(g_datapoint2itemID, dpe))
+    {
+      nodeId = g_datapoint2itemID[dpe];
+    }
   }
   LOG_TRACE("found??? nodeId= ", nodeId);
   return nodeId;
@@ -1182,10 +1221,10 @@ void TreeCtrl_HandleEventOnExpand(long Node)
     if (Node != 0)
     {
       string datapointPath = buildPathFromNode(Node);
-      if (Node == 1)
-      {
-        datapointPath = "";
-      }
+//      if (Node == 1)
+//      {
+//        datapointPath = "";
+//      }
       // get top level resources. "" means no parent, 1 means: 1 level deep
       dyn_string resources = navConfigGetResources(datapointPath, 2);
       LOG_DEBUG("adding resources: ", LOG_DYN(resources));
@@ -1233,7 +1272,9 @@ void TreeCtrl_HandleEventOnCollapse(unsigned Node)
     datapoint[k]= g_itemID2datapoint[j];
     k++;
   }
-
+  
+  LOG_TRACE("TreeCtrl_HandleEventOnCollapse("+Node+"): removing dp's from tree:",LOG_DYN(datapoint));
+  
   //delete the collapse nodes from g_itemID2datapoint and g_datapoint2itemID
   for (int i = 1; i <= dynlen(datapoint); i++)
   {
@@ -1432,10 +1473,10 @@ TreeView_OnSelect(unsigned pos)
   checkForReference(datapointPath, reference, parentDatapointIsReference);
   
   LOG_TRACE("check for expand", parentDatapointIsReference, datapointPath, dpAccessable(datapointPath));
-  //Check or the access is permitted to this point in the tree
+  //Check if the access is permitted to this point in the tree
   if (checkDpPermit(datapointPath) || pos == 1)
   {
-    //check or the selected item in the tree is an dpe. If yes, use the dp name to check the existance
+    //check if the selected item in the tree is an dpe. If yes, use the dp name to check the existence
     if (strpos(datapointPath, ".") > 0)
     {
      dyn_string datapointPathSplit = strsplit(datapointPath, ".");
@@ -1444,7 +1485,16 @@ TreeView_OnSelect(unsigned pos)
     }
     if (!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath + "__enabled")))
     {
-      TreeCtrl_HandleEventOnSelChange(pos);
+      // set the tree selection to the referenced item
+      if(parentDatapointIsReference)
+      {
+        LOG_INFO("Navigating to referenced datapoint:",datapointPath);
+        navConfigTriggerNavigatorRefreshWithDP(datapointPath);
+      }
+      else
+      {
+        TreeCtrl_HandleEventOnSelChange(pos);
+      }
     }
     else
     {
@@ -1471,10 +1521,10 @@ TreeView_OnExpand(unsigned pos)
 {
   LOG_DEBUG("TreeView_OnExpand", pos);
   string datapointPath = buildPathFromNode(pos);
-  if (pos == 1)
-  {
-    datapointPath = "";
-  }      
+//  if (pos == 1)
+//  {
+//    datapointPath = "";
+//  }      
   if (checkDpPermit(datapointPath) || pos == 1)
   {
     dyn_string reference;
@@ -1578,7 +1628,7 @@ bool dpIsDistributed(string dpName)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// Function checkDpPermit: Checks or the current user has permission to
+// Function checkDpPermit: Checks if the current user has permission to
 //                         access the current datapoint
 //
 // Output: TRUE,  permitted to access given dpName 

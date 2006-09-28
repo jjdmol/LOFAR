@@ -211,7 +211,7 @@ void ComboBoxViewsSelectionChanged()
   if(viewsComboBoxCtrl.itemCount==0)
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nosubview.pnl",panelParameters);
-    LOG_WARN("1. No subview configured for this datapoint type");
+    LOG_WARN("1. No subview configured for this datapoint", g_datapoint);
   }
   //  else if(!dpAccessable(g_datapoint))
   //  {
@@ -227,7 +227,7 @@ void ComboBoxViewsSelectionChanged()
   {
     selectedPanel = viewsPath + "nopanel.pnl";
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nopanel.pnl",panelParameters);
-    LOG_WARN("4 No panel configured for this subview");
+    LOG_WARN("4 No panel configured for this subview",selectedSubView);
   }
   else  //5. The configured panel file for this subview has not been found
   {

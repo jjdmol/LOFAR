@@ -14,7 +14,6 @@ PANEL,299 108 946 43 N "_3DFace" 4
   {
 	  viewConfigDpName = \"__nav_default_viewconfig\";
 	}
-  DebugN(\"viewConfigDpName:\"+viewConfigDpName);
   if(dpAccessable(viewConfigDpName))
   {
     dpGet(viewConfigDpName + \".nrOfSubViews\",nrOfSubViews);
