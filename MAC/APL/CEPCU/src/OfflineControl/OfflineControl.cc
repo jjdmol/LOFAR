@@ -442,25 +442,25 @@ uint16_t OfflineControl::doClaim(const string& cntlrName)
 	string executable, hostName, startstoptype;
 	string ldName(getName().c_str());
 	
-	procNames = globalParameterSet()->getStringVector(offlineCtrlPrefix+"ApplCtrl.ACCprocess.name");
+	procNames = globalParameterSet()->getStringVector(offlineCtrlPrefix+"ApplCtrl.application");
 
 	for(size_t i=0;i<procNames.size();i++)
 	{
 	  string procName = procNames[i];
 
-	  startstoptype = globalParameterSet()->getString(formatString("%sApplCtrl.%s.startstopType",
+	  startstoptype = globalParameterSet()->getString(formatString("%s%s._startstopType",
 																   offlineCtrlPrefix.c_str(),
 																   procName.c_str()));
-	  executable    = globalParameterSet()->getString(formatString("%sApplCtrl.%s.executable",
+	  executable    = globalParameterSet()->getString(formatString("%s%s._executable",
 																   offlineCtrlPrefix.c_str(),
 																   procName.c_str()));
-	  hostName      = globalParameterSet()->getString(formatString("%sApplCtrl.%s.hostname",
+	  hostName      = globalParameterSet()->getString(formatString("%s%s._hostname",
 																   offlineCtrlPrefix.c_str(),
 																   procName.c_str()));
-	  nodes   = globalParameterSet()->getStringVector(formatString("%sApplCtrl.%s.nodes",
+	  nodes   = globalParameterSet()->getStringVector(formatString("%s%s._nodes",
 																   offlineCtrlPrefix.c_str(),
 																   procName.c_str()));
-	  itsProcessDependencies[procName] = globalParameterSet()->getStringVector(formatString("%sApplCtrl.%s.depends",
+	  itsProcessDependencies[procName] = globalParameterSet()->getStringVector(formatString("%s%s._depends",
 																							offlineCtrlPrefix.c_str(),
 																							procName.c_str()));
 
@@ -474,8 +474,6 @@ uint16_t OfflineControl::doClaim(const string& cntlrName)
 	  params.adoptCollection(globalParameterSet()->makeSubset(offlineCtrlPrefix+"ApplCtrl", "AC"));
 	  // import the <procname> section
 	  params.adoptCollection(globalParameterSet()->makeSubset(offlineCtrlPrefix+procName, procName));
-	  // import the OLAP section
-	  params.adoptCollection(globalParameterSet()->makeSubset(offlineCtrlPrefix+"OLAP", "OLAP"));
 	  
 	  // add some keys to cope with the differences between the OTDB and ACC
 	  params.replace("AC.resultfile", formatString("./ACC-%s_%s_result.param", cntlrName.c_str(),procName.c_str()));
@@ -495,9 +493,10 @@ uint16_t OfflineControl::doClaim(const string& cntlrName)
 	  itsCepAppParams[procName] = params;
 	}
   }
-  catch(APSException &)
+  catch(APSException &e)
   {
 	// key not found. skip
+	LOG_FATAL(e.text());
 	result = CT_RESULT_UNSPECIFIED;
   }
   return result;
@@ -523,9 +522,10 @@ uint16_t OfflineControl::doPrepare(const string& cntlrName)
 	  }
 	}
   }
-  catch(APSException &)
+  catch(APSException &e)
   {
 	// key not found. skip
+	LOG_FATAL(e.text());
 	result = CT_RESULT_UNSPECIFIED;
   }
   return result;
