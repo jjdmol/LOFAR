@@ -94,6 +94,15 @@ public:
    	GCFEvent::TResult active_state  (GCFEvent& e, 
 									 GCFPortInterface& p);
 
+	// Cleaning up. Write state to PVSS property
+   	GCFEvent::TResult finishing_state(GCFEvent& e, 
+								 	  GCFPortInterface& p);
+
+	// Make the transition to the finishing state
+	void finish();
+
+	static void sigintHandler(int signum);
+
 private:
 	// avoid copying
 	MACScheduler(const MACScheduler&);
