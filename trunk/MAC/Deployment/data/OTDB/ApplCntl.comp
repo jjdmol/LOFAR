@@ -38,6 +38,6 @@ par  timeout_info           I    text    period 10    0    30        -        "M
 par  timeout_quit           I    text    period 10    0    60        -        "Max time the processes may take to quit"
 par  timeout_kill           I    text    period 10    0    60        -        "Delay after the quit command before the remainng processes are killed""
 
-par  application            I    text    -      10    0    -         -        "Name of the (tree)node that is the process that must be controlled"
+par  application            I    text    -      10    0    '[]'      -        "List of the (tree)nodes (processes) that must be controlled"
 par  resultfile             I    text    -      10    0    ../log/ACC.result  -  "The file the results should be written in."
 
