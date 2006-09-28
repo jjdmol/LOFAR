@@ -25,7 +25,8 @@ class Application : public TM::GCFTask, public ::Test
     Application();
     virtual ~Application();
 
-    void run();    
+    void run();
+    void abort();
     
   private: 
     TM::GCFEvent::TResult initial(TM::GCFEvent& e, TM::GCFPortInterface& p);
