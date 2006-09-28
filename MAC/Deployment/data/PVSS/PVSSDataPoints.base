@@ -15,7 +15,7 @@
 LOFAR			-		C	P	LOFAR
 PIC				-		C	P	LOFAR_PIC
 Ring			-		C	P	LOFAR_PIC_@ring@
-Station			-		C	P	LOFAR_PIC_@ring@_@station@
+Station			STS		C	P	LOFAR_PIC_@ring@_@station@
 Cluster			-		C	P	LOFAR_PIC_@cluster@
 Node			-		C	P	LOFAR_PIC_@cluster@_@node@
 WAN				-		C	P	LOFAR_WAN_@wan@
