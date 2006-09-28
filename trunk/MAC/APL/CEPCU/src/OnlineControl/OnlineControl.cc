@@ -439,22 +439,22 @@ uint16_t OnlineControl::doClaim(const string& cntlrName)
 	string executable, hostName, startstoptype;
 	string ldName(getName().c_str());
 	
-	procNames = globalParameterSet()->getStringVector(onlineCtrlPrefix+"ApplCtrl.ACCprocess.name");
+	procNames = globalParameterSet()->getStringVector(onlineCtrlPrefix+"ApplCtrl.application");
 
 	for(size_t i=0;i<procNames.size();i++)
 	{
 	  string procName = procNames[i];
 
-	  startstoptype = globalParameterSet()->getString(formatString("%sApplCtrl.%s.startstopType",
+	  startstoptype = globalParameterSet()->getString(formatString("%s%s._startstopType",
 																   onlineCtrlPrefix.c_str(),
 																   procName.c_str()));
-	  executable    = globalParameterSet()->getString(formatString("%sApplCtrl.%s.executable",
+	  executable    = globalParameterSet()->getString(formatString("%s%s._executable",
 																   onlineCtrlPrefix.c_str(),
 																   procName.c_str()));
-	  hostName      = globalParameterSet()->getString(formatString("%sApplCtrl.%s.hostname",
+	  hostName      = globalParameterSet()->getString(formatString("%s%s._hostname",
 																   onlineCtrlPrefix.c_str(),
 																   procName.c_str()));
-	  nodes   = globalParameterSet()->getStringVector(formatString("%sApplCtrl.%s.nodes",
+	  nodes   = globalParameterSet()->getStringVector(formatString("%s%s._nodes",
 																   onlineCtrlPrefix.c_str(),
 																   procName.c_str()));
 
@@ -489,9 +489,10 @@ uint16_t OnlineControl::doClaim(const string& cntlrName)
 	  itsCepAppParams.push_back(params);
 	}
   }
-  catch(APSException &)
+  catch(APSException &e)
   {
 	// key not found. skip
+	LOG_FATAL(e.text());
 	result = CT_RESULT_UNSPECIFIED;
   }
   return result;
@@ -565,9 +566,10 @@ uint16_t OnlineControl::doPrepare(const string&	cntlrName)
 	  }
 	}
   }
-  catch(APSException &)
+  catch(APSException &e)
   {
 	// key not found. skip
+	LOG_FATAL(e.text());
 	result = CT_RESULT_UNSPECIFIED;
   }
   return result;
