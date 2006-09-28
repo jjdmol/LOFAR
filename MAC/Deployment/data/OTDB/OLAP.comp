@@ -58,6 +58,16 @@ par  stsPosition             I    text   -      10    0    >>VirtualInstrument.s
 par  RSPMACAddresses         I    text   -      10    0    >>VirtualInstrument.stationList[].RSPMacAddresses - 'MAC addresses of the RSPBoards' 
 par InputNodeMACAddresses    I    text   -      10    0    >>VirtualInstrument.inputNodeList[].MACAddress  -   'List of all MACaddresses from inputNodes'
 
+#
+#generic parameters needed by ACC to start OLAP
+#
+par  _nodes                  I    text   -      10    0    '[]'                          -        'Nodes used by the BBS process'
+par  _startstopType          I    text   -      10    0    cmdline,mpirun,bgl            -        'Method of starting the proces'
+par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
+par  _hostname               I    text   -      10    0    -                             -        'The hostname of the machine to start the proces on'
+par  _depends                I    text   -      10    0    '[]'                          -        'The processes that must be finished before this process can start'
+
+
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  OLAP_HW      1.0.0  development 1                  "Partitions and IP stuff"

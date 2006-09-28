@@ -12,4 +12,7 @@ par  _hostname               I    text   -      10    0    RS002                
 
 
 uses  ApplCtrl     1.0.0  development 1                  "The ACC controller"
+uses  Input        1.0.0  development 1                  "Online Applications"
+uses  Fringe       1.0.0  development 1                  "Online Applications"
 uses  OLAP         1.0.0  development 1                  "Online Applications"
+uses  Storage      1.0.0  development 1                  "Online Applications"
