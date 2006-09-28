@@ -418,17 +418,48 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   int maxDepth;
   bool parentDatapointIsReference;
   checkForReference(parentDatapoint, reference, parentDatapointIsReference);
+  
   if (parentDatapoint == "")
   {
+    // An empty parentdatapoint indicates that the navigator is starting up
+    // The roots are read from the Navigator configuration
     maxDepth = depth;
     // read the roots from the configuration
     dpGet(DPNAME_NAVIGATOR + "." + ELNAME_RESOURCEROOTS, resourceRoots);
     err = getLastError();
     if (dynlen(err) > 0)
     {
-      // if nothing specified, take the local PIC and PAC trees
-      resourceRoots = makeDynString("PIC", "PAC");
+      // if nothing specified, take the local LOFAR tree
+      resourceRoots = makeDynString("LOFAR");
     }  
+  }
+  else if(strpos(parentDatapoint, ":") < 0)
+  {
+    // if the parent datapoint does not contain the system separator ':' then
+    // it must be a root datapoint
+    LOG_DEBUG("parent is root",parentDatapoint);
+    
+    maxDepth = depth;
+    // read the roots from the configuration
+    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_RESOURCEROOTS, resourceRoots);
+    // now only use the resource roots of the requested parent
+    if (dynlen(resourceRoots) > 0)
+    {
+      int i=1;
+      while(i <= dynlen(resourceRoots))
+      {
+        if(strpos(resourceRoots[i],parentDatapoint) == 0)
+        {
+          // yup, this resource must stay
+          i++;
+        }
+        else
+        {
+          // nope, we don't need this resource at this moment
+          dynRemove(resourceRoots,i);
+        }
+      }
+    }
   }
   else
   {

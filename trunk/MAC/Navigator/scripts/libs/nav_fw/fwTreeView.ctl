@@ -228,7 +228,12 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
   
   //DebugTN("in fwTreeView_appendToParentNode:", parentIndex,name, value, handle, level);
   //DebugTN("name:" + name + " |value:" + value + " |handle:" + handle + " |level:"+ level);
-  if(parentIndex <= 1 || parentIndex > fwTreeView_getNodeCount(referenceName))
+//
+//  Removed the check for parentIndex <= 1 because the tree can have more than one root  
+//  if(parentIndex <= 1 || parentIndex > fwTreeView_getNodeCount(referenceName))
+//
+  parentNode = fwTreeView_getNode(parentIndex, referenceName);
+  if(parentIndex > fwTreeView_getNodeCount(referenceName) || dynlen(parentNode) < 5)
   { // simply append it to the tree, because the parent is the root or undefined
     fwTreeView_appendNode(name,value,handle,level,referenceName);
     nodeId = fwTreeView_getNodeCount(referenceName);
@@ -237,7 +242,6 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
   else
   {
     // check the requested level against the the level of the parent
-    parentNode = fwTreeView_getNode(parentIndex, referenceName);
     if(level != (parentNode[fwTreeView_LEVEL] + 1))
     { // append node because parent is not exactly one level higher than the level of the node.
       fwTreeView_appendNode(name,value,handle,level,referenceName);
@@ -247,17 +251,17 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
     else
     {
       // insert the node after the last direct child of the parent
-	  //DebugTN("____________________________________");
+      //DebugTN("____________________________________");
       int i=1;
 
-	  if (g_parentIndex==parentIndex)
-	  {
-		  g_nodeID = g_nodeID + 1;
-		  i = g_nodeID;
-		  //DebugTN("##____skip_while_loop_____##");
-	  }
-	  else
-	  {
+  	  if (g_parentIndex==parentIndex)
+  	  {
+  		  g_nodeID = g_nodeID + 1;
+  		  i = g_nodeID;
+  		  //DebugTN("##____skip_while_loop_____##");
+  	  }
+  	  else
+  	  {
         if(parentIndex+i <= fwTreeView_getNodeCount(referenceName))
         {       
           testNode = fwTreeView_getNode(parentIndex+i,referenceName);
@@ -272,11 +276,11 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
             }
           }
         }
-      g_nodeID = i;
+        g_nodeID = i;
       }
-    fwTreeView_insertTreeNode(parentIndex+i,name,value,handle,level,referenceName);
-	  nodeId = parentIndex+i;
-	  g_parentIndex = parentIndex;
+      fwTreeView_insertTreeNode(parentIndex+i,name,value,handle,level,referenceName);
+  	  nodeId = parentIndex+i;
+  	  g_parentIndex = parentIndex;
     }
   }
 

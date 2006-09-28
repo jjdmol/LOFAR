@@ -5,7 +5,8 @@ PANEL,391 228 1272 960 N "_3DFace" 0
 "main()
 {
   gcfStartFollowDistSystems();
-  navConfigCheckResourceRoots();
+  // waar slaat dit in hemelsnaam op? Ik wil met de Navigator toch ook remote systemen kunnen bekijken?
+  // navConfigCheckResourceRoots();
   Navigator_HandleEventInitialize();
   navConfigInitPathNames();
 }
