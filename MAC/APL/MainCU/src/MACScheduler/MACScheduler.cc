@@ -34,6 +34,7 @@
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <signal.h>
 
 #include "MACSchedulerDefines.h"
 #include "MACScheduler.h"
@@ -49,6 +50,9 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace ACC::APS;
 	namespace MainCU {
+
+// static (this) pointer used for signal handling
+static MACScheduler* pMacScheduler = 0;
 	
 //
 // MACScheduler()
@@ -112,6 +116,13 @@ MACScheduler::~MACScheduler()
 	if (itsOTDBconnection) {
 		delete itsOTDBconnection;
 	}
+}
+
+void MACScheduler::sigintHandler(/*@unused@*/int signum)
+{
+  LOG_INFO(LOFAR::formatString("SIGINT signal detected (%d)",signum));
+  if(0 != pMacScheduler)
+    pMacScheduler->finish();
 }
 
 
@@ -310,6 +321,12 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		break;
 
 	case F_ENTRY: {
+  	    // install my own signal handler. GCFTask also installs a handler so we have to install our
+	    // handler later than the GCFTask handler.
+	    pMacScheduler = this;
+		/* install ctrl-c signal handler */
+		(void)signal(SIGINT,MACScheduler::sigintHandler);
+
 		// update PVSS
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
@@ -401,6 +418,53 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	}
 
 	return (status);
+}
+
+//
+// finishing_state(event, port)
+//
+// Write controller state to PVSS, wait for 1 second (using a timer) to let GCF handle the property change
+// and close the controller
+//
+GCFEvent::TResult MACScheduler::finishing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_INIT:
+		break;
+
+	case F_ENTRY: {
+		// update PVSS
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+
+		itsTimerPort->setTimer(1L);
+		break;
+	}
+  
+    case F_TIMER:
+      GCFTask::stop();
+      break;
+    
+	default:
+		LOG_DEBUG("finishing_state, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+//
+// finish
+//
+// Make the transition to the finishing state
+//
+void MACScheduler::finish()
+{
+  TRAN(MACScheduler::finishing_state);
 }
 
 //
@@ -564,7 +628,7 @@ void MACScheduler::_removeActiveObservation(const string& name)
 //
 // _connectedHandler(port)
 //
-void MACScheduler::_connectedHandler(GCFPortInterface& port)
+void MACScheduler::_connectedHandler(GCFPortInterface& /*port*/)
 {
 }
 
