@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,300 211 182 113 N "_3DFace" 6
+PANEL,530 245 182 113 N "_3DFace" 6
 "$RSPBoardNr"
 "$RackNr"
 "$SubrackNr"
@@ -19,7 +19,7 @@ PANEL,300 211 182 113 N "_3DFace" 6
 EP_setBackColor()
 {
   dyn_errClass err;
-  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
+  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_Subrack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
   rect_Subrack.toolTipText = dpPrefix;
   icon_maintenance.toolTipText = dpPrefix;
   if( !dpAccessable( dpPrefix + \".AP0.RCU0.status:_online.._value\") ||
@@ -67,7 +67,7 @@ EP_setBackColor()
 
 navViewPanelStationLoadSubRack()
 {
-  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
+  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_Subrack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
   //Load the property set for the following dpNames:
   navPMLloadPropertySet(dpPrefix + \".AP0.RCU0.status:_online.._value\");
   navPMLloadPropertySet(dpPrefix + \".AP0.RCU1.status:_online.._value\");
@@ -321,7 +321,7 @@ EP_setBackColorCB(string dpSource1,  unsigned AP0_RCU0_stat,
 
 navViewPanelStationUnloadSubRack()
 {
-  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
+  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_Subrack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
   //Unload the property set for the following dpNames:
   navPMLunloadPropertySet(dpPrefix + \"AP0.RCU0.status:_online.._value\");
   navPMLunloadPropertySet(dpPrefix + \"AP0.RCU1.status:_online.._value\");
@@ -367,7 +367,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_SubRack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
 }
 " 0
  0 1 1 0 1 E U  1 E 31 25 159 67
@@ -545,7 +545,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_SubRack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
 }" 0
  0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 117 25 157 65
 7 1
@@ -573,7 +573,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 47 33 108 49
+E "main()
+{
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
+}" 0
+ 0 1 1 0 1 E U  0 E 47 33 108 49
 0 2 0 "s" 0 0 0 64 0 0  47 33
  1
 1

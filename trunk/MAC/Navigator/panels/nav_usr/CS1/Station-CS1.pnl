@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,300 211 954 746 N "_3DFace" 3
+PANEL,530 245 954 746 N "_3DFace" 3
 "$configDatapoint"
 "$datapoint"
 "$referenceDatapoint"
@@ -1069,7 +1069,7 @@ LANG:1 6 Layer8
 3 33 "Rack1_Subrack0"
 "objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 203 166 T 698 1 0 1  -147 168  
 6
-"$RSPBoardNr""0"
+"$RSPBoardNr""4"
 "$RackNr""0"
 "$SubrackNr""1"
 "$configDatapoint""$configDatapoint"
@@ -1105,7 +1105,7 @@ LANG:1 6 Layer8
 3 31 "Rack1_Subrack1"
 "objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 234 219 T 696 1 0 1  -178 157  
 6
-"$RSPBoardNr""1"
+"$RSPBoardNr""5"
 "$RackNr""0"
 "$SubrackNr""1"
 "$configDatapoint""$configDatapoint"
@@ -1114,7 +1114,7 @@ LANG:1 6 Layer8
 3 34 "Rack1_Subrack2"
 "objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 211 311 T 699 1 0 1  -155 107  
 6
-"$RSPBoardNr""2"
+"$RSPBoardNr""6"
 "$RackNr""0"
 "$SubrackNr""1"
 "$configDatapoint""$configDatapoint"
@@ -1123,7 +1123,7 @@ LANG:1 6 Layer8
 3 35 "Rack1_Subrack3"
 "objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 190 340 T 700 1 0 1  -134 120  
 6
-"$RSPBoardNr""3"
+"$RSPBoardNr""7"
 "$RackNr""0"
 "$SubrackNr""1"
 "$configDatapoint""$configDatapoint"
