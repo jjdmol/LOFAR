@@ -30,6 +30,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Fitting/LSQFit.h>
 
+#include <BBSKernel/BBSKernelStructs.h>
 #include <BBSKernel/StrategyProp.h>
 #include <BBSKernel/StepProp.h>
 #include <BBSKernel/SolveProp.h>
@@ -56,6 +57,9 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
+#include <map>
+#include <utility>
+
 namespace casa {
   class Table;
 }
@@ -73,6 +77,7 @@ class MMap;
 class FlagsMap;
 class MeqJonesMMap;
 
+
 // Prediffer calculates the equations for the solver.
 // It reads the measured data and predicts the data from the model.
 // It subtracts them from each other and calculates the derivatives.
@@ -82,16 +87,14 @@ class Prediffer
 {
 
 public:
-  // Create Prediffer object for a specific
-  // MeaurementSet, MEQ model (with associated MEP database) and skymodel
-  // for the specified data descriptor (i.e. spectral window).
-  // The UVW coordinates can be calculated or taken from the MS.
-  Prediffer (const string& msName,
-         const LOFAR::ParmDB::ParmDBMeta& meqPtd,
-         const LOFAR::ParmDB::ParmDBMeta& skyPtd,
-         uint ddid,
-         bool calcUVW);
-
+  // NOTE: new constructor to comply with BBSStep interface.
+  Prediffer(const string& measurementSet,
+            const string& inputColumn,
+            const string& skyParameterDB,
+            const string& instrumentParameterDB,
+            uint subbandID,
+            bool calcUVW);
+                          
   // Destructor
   ~Prediffer();
 
@@ -100,14 +103,12 @@ public:
   // if many small accesses have to be done.
   // <group>
   void lock (bool lockForWrite = true)
-    { itsMEP.lock (lockForWrite); itsGSMMEP.lock (lockForWrite); }
+    { itsMEP->lock (lockForWrite); itsGSMMEP->lock (lockForWrite); }
   void unlock()
-    { itsMEP.unlock(); itsGSMMEP.unlock(); }
+    { itsMEP->unlock(); itsGSMMEP->unlock(); }
 
-  // Set the strategy properties.
-  // It returns false if no antennas are to be used in this MS part.
-  bool setStrategyProp (const StrategyProp&);
-
+  bool setSelection(const vector<string> &stations, const Correlation &correlation);
+  
   // Set the work domain.
   // The work domain (in frequency and time) is adjusted to the
   // observation domain of the MS used.
@@ -115,49 +116,31 @@ public:
   // It returns false if the given work domain has no overlap with the
   // MS part handled by this Prediffer
   // <group>
-  bool setWorkDomain (const MeqDomain&);
-  bool setWorkDomain (int startChan, int endChan,
-              double startTime, double lengthTime);
+  bool setWorkDomain(const MeqDomain& domain);
+  bool setWorkDomain(double startFreq, double endFreq, double startTime, double endTime);
+  bool setWorkDomain(int startChan, int endChan, double startTime, double lengthTime);
+//  bool setWorkDomain(int startChannel, int endChannel, double startTime, double endTime);
   // </group>
+  
+  bool setContext(const PredictContext &context);
+  bool setContext(const SubtractContext &context);
+  bool setContext(const CorrectContext &context);
+  bool setContext(const GenerateContext &context);
+  
+  void predictVisibilities();
+  void subtractVisibilities();
+  void correctVisibilities();
+  void generateEquations(vector<casa::LSQFit> &equations);
 
+  
   // Get the actual work domain for this MS (after a setStrategy).
   const MeqDomain& getWorkDomain() const
     { return itsWorkDomain; }
-
-  // Set the properties to be used in the step that will be performed.
-  // It selects the data to be used and it builds the expression tree using
-  // the given instrument and source model.
-  // It returns false if the selection is such that no data is left.
-  bool setStepProp (const StepProp&);
-
-  // Initialize all solvable parameters in the MeqExpr tree for the
-  // given solve domains.
-  // It sets the scids of the solvable parms and fills itsParmData.
-  // It returns false if no solvable parameters are found for this MS.
-  bool setSolveProp (const SolveProp&);
 
   // Return the solvable parms.
   // The parms are in ascending order of spidnr.
   const ParmDataInfo& getSolvableParmData() const
     { return itsParmData; }
-
-  // Get the equations for all selected baselines and fill the
-  // fitter vector with them.
-  // The fitter vector is resized as needed.
-  // All fitter objects are initialized before being filled.
-  void fillFitters (vector<casa::LSQFit>& fitters);
-
-  // Shift data to another phase reference position.
-  void shiftData();
-
-  // Apply corrections to the data.
-  void correctData();
-
-  // Subtract (corrupted) sources from the data.
-  void subtractData();
-
-  // Write the predicted data into the .res or .dat file.
-  void writePredictedData();
 
   // There are three ways to update the solvable parms after the solver
   // found a new solution.
@@ -194,17 +177,69 @@ public:
         casa::Array<casa::Complex>& data,
         casa::Array<casa::Bool>& flags);
 
+  const vector<MeqDomain> &getSolveDomains() const
+  {
+    return itsSolveDomains;
+  }
+  
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  
+  // WARNING: DEPRECATED. Create Prediffer object for a specific
+  // MeaurementSet, MEQ model (with associated MEP database) and skymodel
+  // for the specified data descriptor (i.e. spectral window).
+  // The UVW coordinates can be calculated or taken from the MS.
+  Prediffer (const string& msName,
+         const LOFAR::ParmDB::ParmDBMeta& meqPtd,
+         const LOFAR::ParmDB::ParmDBMeta& skyPtd,
+         uint ddid,
+         bool calcUVW);
+  
+  // WARNING: DEPRECATED. Will be removed in the next release.
+  // Old interface to set strategy and steps.
+  // Set the strategy properties.
+  // It returns false if no antennas are to be used in this MS part.
+  bool setStrategyProp (const StrategyProp&);
+
+  // Set the properties to be used in the step that will be performed.
+  // It selects the data to be used and it builds the expression tree using
+  // the given instrument and source model.
+  // It returns false if the selection is such that no data is left.
+  bool setStepProp (const StepProp&);
+  
+  // Initialize all solvable parameters in the MeqExpr tree for the
+  // given solve domains.
+  // It sets the scids of the solvable parms and fills itsParmData.
+  // It returns false if no solvable parameters are found for this MS.
+  bool setSolveProp (const SolveProp&);
+  
+  // Get the equations for all selected baselines and fill the
+  // fitter vector with them.
+  // The fitter vector is resized as needed.
+  // All fitter objects are initialized before being filled.
+  void fillFitters(vector<casa::LSQFit>& fitters);
+
+  // Shift data to another phase reference position.
+  void shiftData();
+
+  // Apply corrections to the data.
+  void correctData();
+
+  // Subtract (corrupted) sources from the data.
+  void subtractData();
+
+  // Write the predicted data into the .res or .dat file.
+  void writePredictedData();
+
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+
 private:
   // Copy constructor and assignment are not allowed.
   // <group>
   Prediffer (const Prediffer& other);
   Prediffer& operator= (const Prediffer& other);
   // </group>
-
-  // Get measurement set description from file
-  // NB. DEPRECATED -- only use for debugging purposes, will
-  // be removed in the next release.
-  void readDescriptiveData (const string& fileName);
 
   // Read measurement set meta data
   void readMeasurementSetMetaData(const string& fileName);
@@ -215,21 +250,10 @@ private:
   // Get the phase reference position of the first field.
   void getPhaseRef (double ra, double dec, double startTime);
 
+  bool setContext(const Context &context);
+
   // Get the station info (position and name).
   void fillStations();
-
-  // Select the stations for a strategy.
-  // False is returned if no stations/baselines are left.
-  bool selectStations (const vector<int>& antnrs, bool useAutoCorr);
-
-  // Do the selection of baselines and correlations for a step.
-  bool selectStep (const vector<int>& ant1,
-           const vector<int>& ant2,
-           bool useAutoCorrelations,
-           const vector<bool>& corr);
-
-  // Fill indices and count nr of baselines and correlations selected.
-  bool fillBaseCorr (const casa::Matrix<bool>& blSel);
 
   // Fill all UVW coordinates if they are not calculated.
   void fillUVW();
@@ -237,15 +261,6 @@ private:
   // Get all sources from the sky model table.
   // Also check the source groups.
   void getSources();
-
-  // Make a selection of the MS to be used in the domain iteration.
-  // The size of the antenna vectors is the number of baselines to be used.
-  // They give the first and second antenna (i.e. station) of each baseline.
-  // <br>The correlation vector has 4 values and tells which correlations
-  // to use from the data.
-  // It returns false if nothing is left after selection.
-  bool select (const vector<int>& ant1, const vector<int>& ant2,
-               bool useAutoCorrelations, const vector<bool>& corr);
 
   // Make the entire tree.
   void makeTree (const vector<string>& modelType,
@@ -351,13 +366,39 @@ private:
          const bool* flags, const fcomplex* data,
          const double* realData, const double* imagData);
 
-  string                itsMSName;      //# Measurement set name
-  string                itsMEPName;     //# Common parmtable name
-  LOFAR::ParmDB::ParmDB        itsMEP;         //# Common parmtable
-  string                itsGSMMEPName;  //# GSM parameters parmtable name
-  LOFAR::ParmDB::ParmDB        itsGSMMEP;      //# parmtable for GSM parameters
-  MeqParmGroup          itsParmGroup;   //# container for all parms
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  
+  // Get measurement set description from file
+  // NB. DEPRECATED -- only use for debugging purposes, will
+  // be removed in the next release.
+  void readDescriptiveData (const string& fileName);
+
+  // Select the stations for a strategy.
+  // False is returned if no stations/baselines are left.
+  bool selectStations (const vector<int>& antnrs, bool useAutoCorr);
+
+  // Do the selection of baselines and correlations for a step.
+  bool selectStep (const vector<int>& ant1,
+           const vector<int>& ant2,
+           bool useAutoCorrelations,
+           const vector<bool>& corr);
+
+  // Fill indices and count nr of baselines and correlations selected.
+  bool fillBaseCorr (const casa::Matrix<bool>& blSel);
+
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  
+  uint                  itsSubbandID;
   bool                  itsCalcUVW;
+  
+  string                itsMSName;      //# Measurement set name
+  LOFAR::ParmDB::ParmDB *itsMEP;        //# Common parmtable
+  string                itsMEPName;     //# Common parmtable name
+  LOFAR::ParmDB::ParmDB *itsGSMMEP;     //# parmtable for GSM parameters
+  string                itsGSMMEPName;  //# GSM parameters parmtable name
+  MeqParmGroup          itsParmGroup;   //# container for all parms
 
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
 
@@ -401,9 +442,11 @@ private:
   unsigned int         itsNrBl;        //# Total number of baselines in MS
   //# Define the baselines that can be used (thus selected in strategy).
   //# The seqnr is the sequence number of the baseline in the MS.
-  casa::Matrix<bool>   itsBLSel;       //# Antenna pair selected in strategy?
+  
+  std::map<std::pair<int, int>, int>    itsSelectedBaselines;
+  
   //# Define which baselines are selected in the select function.
-  vector<int>          itsBLInx;       //# Seqnrs of selected baselines
+  vector<int>    itsBLInx;         //# Seqnrs of selected baselines
   unsigned int   itsTimeIndex;     //# The index of the current time
   unsigned int   itsNrTimes;       //# The number of times in the time domain
   unsigned int   itsNrTimesDone;   //# Nr of times done after a setDomain
@@ -436,6 +479,16 @@ private:
   //# Timers.
   NSTimer itsPredTimer;
   NSTimer itsEqTimer;
+  
+  vector<MeqDomain>                 itsSolveDomains;
+  
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  
+  casa::Matrix<bool>   itsBLSel;       //# Antenna pair selected in strategy?
+  
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
 };
 
 // @}

@@ -128,6 +128,9 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
     solProp.setDomains (solveDomains);
     prediffer.setSolveProp (solProp);
 
+    cout << "Solve domains:" << endl;
+    cout << solveDomains << endl;
+    
     Solver solver;
     solver.initSolvableParmData (1, solveDomains, prediffer.getWorkDomain());
     solver.setSolvableParmData (prediffer.getSolvableParmData(), 0);
@@ -143,7 +146,7 @@ void solve (Prediffer& prediffer, const MSDesc& msd,
 
       // Do the solve.
       solver.solve(false);
-      solver.log(history);
+      solver.log(history, "BBSrun");
       
       cout << "iteration " << i << ":  " << setprecision(10)
        << solver.getSolvableValues(0) << endl;
