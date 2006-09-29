@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+nobase_pkginclude_HEADERS = \
 Quality.h               \
 MMap.h			\
 MMapMSInfo.h		\
@@ -10,11 +10,8 @@ SolveProp.h		\
 StepProp.h		\
 StrategyProp.h		\
 ParmWriter.h		\
-BBSTestLogger.h     \
-BBSKernelProcessControl.h
-
-pkginclude_MNSdir = $(pkgincludedir)/MNS
-pkginclude_MNS_HEADERS = \
+BBSTestLogger.h		\
+BBSKernelStructs.h	\
 MNS/MeqBaseDFTPS.h \
 MNS/MeqBaseLinPS.h \
 MNS/MeqDFTPS.h \
@@ -63,10 +60,9 @@ MNS/Pool.h
 
 noinst_HEADERS =
 
+lib_LTLIBRARIES = libbbskernel.la
 
-lib_LTLIBRARIES = libbbs.la
-
-libbbs_la_SOURCES  = 	\
+libbbskernel_la_SOURCES  = 	\
 Quality.cc		\
 MMap.cc			\
 MMapMSInfo.cc		\
@@ -78,7 +74,7 @@ StrategyProp.cc		\
 ParmData.cc		\
 ParmWriter.cc		\
 BBSTestLogger.cc	\
-BBSKernelProcessControl.cc  \
+BBSKernelStructs.cc	\
 MNS/MeqBaseDFTPS.cc \
 MNS/MeqBaseLinPS.cc \
 MNS/MeqDFTPS.cc \
@@ -122,14 +118,10 @@ MNS/MeqStation.cc \
 MNS/MeqStatUVW.cc \
 MNS/MeqTabular.cc 
 
-bin_PROGRAMS = BBSrun BBSKernel
+bin_PROGRAMS = BBSrun
 
 BBSrun_SOURCES = BBSrun.cc
-BBSrun_LDADD = libbbs.la
-BBSrun_DEPENDENCIES = libbbs.la $(LOFAR_DEPEND)
-
-BBSKernel_SOURCES = BBSKernel.cc
-BBSKernel_LDADD = libbbs.la
-BBSKernel_DEPENDENCIES = libbbs.la $(LOFAR_DEPEND)
+BBSrun_LDADD = libbbskernel.la
+BBSrun_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

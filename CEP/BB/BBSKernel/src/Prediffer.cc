@@ -112,80 +112,356 @@
 #endif
 
 using namespace casa;
-
+using namespace std;
 
 namespace LOFAR
 {
 namespace BBS 
 {
+using LOFAR::operator<<;
+using std::max;
 
-Prediffer::Prediffer(const string& msName,
-             const LOFAR::ParmDB::ParmDBMeta& meqPdm,
-             const LOFAR::ParmDB::ParmDBMeta& skyPdm,
-             uint ddid,
-             bool calcUVW)
-: itsMEPName      (meqPdm.getTableName()),
-  itsMEP          (meqPdm),
-  itsGSMMEPName   (skyPdm.getTableName()),
-  itsGSMMEP       (skyPdm),
-  itsCalcUVW      (calcUVW),
-  itsSources      (0),
-  itsNrPert       (0),
-  itsNCorr        (0),
-  itsNrBl         (0),
-  itsTimeIndex    (0),
-  itsNrTimes      (0),
-  itsNrTimesDone  (0),
-  itsInDataMap    (0),
-  itsOutDataMap   (0),
-  itsFlagsMap     (0),
-  itsWeightMap    (0),
-  itsIsWeightSpec (false),
-  itsPredTimer    ("P:predict", false),
-  itsEqTimer      ("P:eq|save", false)
+Prediffer::Prediffer(   const string& measurementSet,
+                        const string& inputColumn,
+                        const string& skyParameterDB,
+                        const string& instrumentParameterDB,
+                        uint subbandID,
+                        bool calcUVW)
+    :   itsSubbandID        (subbandID),
+        itsCalcUVW          (calcUVW),
+        itsMEP              (0),
+        itsGSMMEP           (0),
+        itsSources          (0),
+        itsInDataColumn     (inputColumn),
+        itsNrPert           (0),
+        itsNCorr            (0),
+        itsNrBl             (0),
+        itsTimeIndex        (0),
+        itsNrTimes          (0),
+        itsNrTimesDone      (0),
+        itsInDataMap        (0),
+        itsOutDataMap       (0),
+        itsFlagsMap         (0),
+        itsWeightMap        (0),
+        itsIsWeightSpec     (false),
+        itsPredTimer        ("P:predict", false),
+        itsEqTimer          ("P:eq|save", false)
 {
-  // Get absolute path name for MS.
-  itsMSName = Path(msName).absoluteName();
-  LOG_INFO_STR( "Prediffer constructor ("
-        << "'" << itsMSName   << "', "
-        << "'" << meqPdm.getTableName() << "', "
-        << "'" << skyPdm.getTableName() << "', "
-        << itsCalcUVW << ")" );
-  // Read the meta data and map the flags file.
-  //readDescriptiveData(msName);
-  readMeasurementSetMetaData(itsMSName);
-  processMSDesc(ddid);
-
-  itsFlagsMap = new FlagsMap(itsMSName + "/vis.flg", MMap::Read);
-  // Get all sources from the ParmDB.
-  itsSources = new MeqSourceList(itsGSMMEP, itsParmGroup);
-  // Create the UVW nodes and fill them with uvw-s from MS if not calculated.
-  fillUVW();
-  // Allocate thread private buffers.
+    // Get path to measurement set.
+    itsMSName = Path(measurementSet).absoluteName();
+    LOG_INFO_STR("Input: " << itsMSName << "::" << itsInDataColumn);
+    
+    // Read meta data (needed to know for instance the number of available
+    // correlations).
+    readMeasurementSetMetaData(itsMSName);
+    // Amongst other things, processMSDesc() calls fillStations(), which
+    // sets itsStations which is used later on in this method.
+    processMSDesc(itsSubbandID);
+    
+    // Open sky parmdb and instrument parmdb.
+    LOFAR::ParmDB::ParmDBMeta skyParameterDBMeta("aips", skyParameterDB);
+    itsGSMMEP = new LOFAR::ParmDB::ParmDB(skyParameterDBMeta);
+    itsGSMMEPName = skyParameterDBMeta.getTableName();
+    LOG_INFO_STR("Sky model ParmDB: " << itsGSMMEPName);
+    
+    LOFAR::ParmDB::ParmDBMeta instrumentParameterDBMeta("aips", instrumentParameterDB);
+    itsMEP = new LOFAR::ParmDB::ParmDB(instrumentParameterDBMeta);
+    itsMEPName = instrumentParameterDBMeta.getTableName();
+    LOG_INFO_STR("Instrument model ParmDB: " << itsMEPName);
+  
+    // Allocate thread private buffers.
 #if defined _OPENMP
-  itsNthread = omp_get_max_threads();
+    itsNthread = omp_get_max_threads();
 #else
-  itsNthread = 1;
+    itsNthread = 1;
 #endif
-  itsFlagVecs.resize (itsNthread);
-  itsResultVecs.resize (itsNthread);
-  itsDiffVecs.resize (itsNthread);
-  itsIndexVecs.resize (itsNthread);
+    itsFlagVecs.resize(itsNthread);
+    itsResultVecs.resize(itsNthread);
+    itsDiffVecs.resize(itsNthread);
+    itsIndexVecs.resize(itsNthread);
 }
 
-bool Prediffer::setStrategyProp (const StrategyProp& strat)
+
+Prediffer::~Prediffer()
 {
-  itsInDataColumn = strat.getInColumn();
-  // Initially use all correlations.
-  for (int i=0; i<itsNCorr; ++i) {
-    itsCorr[i] = true;
+  LOG_TRACE_FLOW( "Prediffer destructor" );
+
+  delete itsSources;
+  for (vector<MeqStatUVW*>::iterator iter = itsStatUVW.begin();
+       iter != itsStatUVW.end();
+       iter++) {
+    delete *iter;
   }
-  strat.expandPatterns (itsMSDesc.antNames);
-  return selectStations (strat.getAntennas(),         // Available antennas
-             strat.getAutoCorr());
+  for (vector<MeqStation*>::iterator iter = itsStations.begin();
+       iter != itsStations.end();
+       iter++) {
+    delete *iter;
+  }
+
+  delete itsMEP;
+  delete itsGSMMEP;
+  
+  delete itsInDataMap;
+  delete itsOutDataMap;
+  delete itsFlagsMap;
+  delete itsWeightMap;
+
+  // clear up the matrix pool
+  MeqMatrixComplexArr::poolDeactivate();
+  MeqMatrixRealArr::poolDeactivate();
 }
 
-bool Prediffer::setWorkDomain (const MeqDomain& domain)
+
+bool Prediffer::setSelection(const vector<string> &stations, const Correlation &correlation)
+{    
+    // Select correlations.
+    const vector<string> &availableCorrelations = itsMSDesc.corrTypes;
+    const vector<string> &requestedCorrelations = correlation.type;
+    LOG_INFO_STR("Available correlation(s): " << availableCorrelations);
+    LOG_INFO_STR("Requested correlation(s): " << requestedCorrelations);
+    
+    if(requestedCorrelations.size() == 0)
+    {
+        // Select all available correlations if none are requested explicitly.
+        for(int i = 0; i < availableCorrelations.size(); ++i)
+        {
+            itsCorr[i] = true;
+        }
+    }
+    else
+    {
+        for(int i = 0; i < availableCorrelations.size(); ++i)
+        {
+            itsCorr[i] = false;
+            for(int j = 0; j < requestedCorrelations.size(); ++j)
+            {
+                if(availableCorrelations[i] == requestedCorrelations[j])
+                {
+                    itsCorr[i] = true;
+                    break;
+                }
+            }
+        }
+        ASSERTSTR(itsCorr[0] || itsCorr[1] || itsCorr[2] || itsCorr[3], "At least one correlation should be selected.");
+    }    
+    
+    LOG_INFO_STR("Selected correlations(s): "
+                    << (itsCorr[0] ? " " + availableCorrelations[0] : "") 
+                    << (itsCorr[1] ? " " + availableCorrelations[1] : "")
+                    << (itsCorr[2] ? " " + availableCorrelations[2] : "")
+                    << (itsCorr[3] ? " " + availableCorrelations[3] : ""));
+    
+    // Select stations.
+    const vector<string> &availableStations = itsMSDesc.antNames;
+    const vector<string> &requestedStations = stations;
+    LOG_INFO_STR("Available station(s): " << availableStations);
+    LOG_INFO_STR("Requested station(s): " << requestedStations);
+    
+    vector<string> debugSelectedStations;
+    if(requestedStations.empty())
+    {
+        // Select all available stations if none are requested explicitly.
+        itsSelStations = itsStations;
+        debugSelectedStations = availableStations;
+    }
+    else
+    {
+        itsSelStations = vector<MeqStation*>(availableStations.size(), (MeqStation*) 0);
+        
+        for(vector<string>::const_iterator it = requestedStations.begin();
+            it != requestedStations.end();
+            ++it)
+        {
+            casa::Regex regex = casa::Regex::fromPattern(*it);
+            
+            // If a names matches, add its antennanr to the vector.
+            for(uint i = 0; i < availableStations.size(); ++i)
+            {
+                String stationName(availableStations[i]);
+                if(stationName.matches(regex))
+                {
+                    itsSelStations[i] = itsStations[i];
+                    debugSelectedStations.push_back(availableStations[i]);
+                }
+            }
+        }
+    }
+    LOG_INFO_STR("Selected station(s): " << debugSelectedStations);
+    
+    // Select baselines.
+    itsSelectedBaselines.clear();    
+    for(int i = 0; i < itsMSDesc.ant1.size(); ++i)
+    {
+        const pair<int, int> baseline(itsMSDesc.ant1[i], itsMSDesc.ant2[i]);
+        
+        if(itsSelStations[baseline.first] && itsSelStations[baseline.second])
+        {
+            if( correlation.selection == Correlation::ALL
+                || (baseline.first == baseline.second && correlation.selection == Correlation::AUTO)
+                || (baseline.first != baseline.second && correlation.selection == Correlation::CROSS))
+            {
+                itsSelectedBaselines[baseline] = i;
+            }
+        }
+    }
+    LOG_INFO_STR("No. of selected baselines: " << itsSelectedBaselines.size());
+        
+    // Map flags into memory.
+    itsFlagsMap = new FlagsMap(itsMSName + "/vis.flg", MMap::Read);
+    
+    // Get all sources from the ParmDB.
+    itsSources = new MeqSourceList(*itsGSMMEP, itsParmGroup);
+    
+    // Create the UVW nodes and fill them with uvw-s from MS if not calculated.
+    fillUVW();
+  
+    return (itsSelectedBaselines.size() > 0);
+}
+
+
+bool Prediffer::setContext(const Context &context)
+{
+    // Select correlations.
+    const vector<string> &availableCorrelations = itsMSDesc.corrTypes;
+    const vector<string> &requestedCorrelations = context.correlation.type;
+    LOG_INFO_STR("Available correlation(s): " << availableCorrelations);
+    LOG_INFO_STR("Requested correlation(s): " << requestedCorrelations);
+    
+    // Shouldn't we AND the selected correlations with those selected in the strategy?
+    // (This currently _does_ happen for baselines.)
+    if(requestedCorrelations.size() == 0)
+    {
+        // Select all available correlations if none are requested explicitly.
+        for(int i = 0; i < availableCorrelations.size(); ++i)
+        {
+            itsCorr[i] = true;
+        }
+    }
+    else
+    {
+        for(int i = 0; i < availableCorrelations.size(); ++i)
+        {
+            itsCorr[i] = false;
+            for(int j = 0; j < requestedCorrelations.size(); ++j)
+            {
+                if(availableCorrelations[i] == requestedCorrelations[j])
+                {
+                    itsCorr[i] = true;
+                    break;
+                }
+            }
+        }
+        ASSERTSTR(itsCorr[0] || itsCorr[1] || itsCorr[2] || itsCorr[3], "At least one correlation should be selected.");
+    }    
+    LOG_INFO_STR("Selected correlations(s): "
+                    << (itsCorr[0] ? " " + availableCorrelations[0] : "") 
+                    << (itsCorr[1] ? " " + availableCorrelations[1] : "")
+                    << (itsCorr[2] ? " " + availableCorrelations[2] : "")
+                    << (itsCorr[3] ? " " + availableCorrelations[3] : ""));
+    
+    // Select baselines.
+    itsBLInx.clear();
+    if(context.baselines.station1.empty())
+    {
+        // If no baselines are speficied, use all baselines selected in the strategy that
+        // match the correlation selection of this context.
+        map<pair<int, int>, int>::const_iterator it = itsSelectedBaselines.begin();
+        while(it != itsSelectedBaselines.end())
+        {
+            const pair<int, int> &baseline = it->first;
+            
+            if( context.correlation.selection == Correlation::ALL
+                || (baseline.first == baseline.second && context.correlation.selection == Correlation::AUTO)
+                || (baseline.first != baseline.second && context.correlation.selection == Correlation::CROSS))
+            {
+                itsBLInx.push_back(it->second);
+            }
+            ++it;
+        }
+    }
+    else
+    {
+        vector<string>::const_iterator baseline_it1 = context.baselines.station1.begin();
+        vector<string>::const_iterator baseline_it2 = context.baselines.station2.begin();
+
+        while(baseline_it1 != context.baselines.station1.end())
+        {   
+            // Find the IDs of all the stations of which the name matches the regex
+            // specified in the context (Baselines.station1 and Baselines.station2).
+            vector<int> stationGroup1, stationGroup2;
+            casa::Regex regex1 = casa::Regex::fromPattern(*baseline_it1);
+            casa::Regex regex2 = casa::Regex::fromPattern(*baseline_it2);
+
+            for(int i = 0; i < itsMSDesc.antNames.size(); ++i)
+            {
+                String stationName(itsMSDesc.antNames[i]);
+
+                if(stationName.matches(regex1))
+                {
+                    stationGroup1.push_back(i);
+                }
+
+                if(stationName.matches(regex2))
+                {
+                    stationGroup2.push_back(i);
+                }
+            }
+
+            ASSERTSTR(!stationGroup1.empty() && !stationGroup2.empty(), "Baseline specification does not match any station in the measurement set.");
+
+            // Generate all possible baselines (pairs) from the two groups of station IDs. If a baseline
+            // is selected in the current strategy _and_ matches the correlation selection of this context,
+            // select it for processing (by adding the ID of the _baseline_ to the itsBLInx vector).
+            for(vector<int>::const_iterator it1 = stationGroup1.begin(); it1 != stationGroup1.end(); ++it1)
+            {
+                for(vector<int>::const_iterator it2 = stationGroup2.begin(); it2 != stationGroup2.end(); ++it2)
+                {
+                    if( context.correlation.selection == Correlation::ALL
+                        || (*it1 == *it2 && context.correlation.selection == Correlation::AUTO)
+                        || (*it1 != *it2 && context.correlation.selection == Correlation::CROSS))
+                    {
+                        const pair<int, int> baseline(*it1, *it2);
+                        
+                        map<pair<int, int>, int>::const_iterator index = itsSelectedBaselines.find(baseline);
+                        
+                        if(index != itsSelectedBaselines.end())
+                        {
+                            itsBLInx.push_back(index->second);
+                        }
+                    }
+                }
+            }
+
+            ++baseline_it1;
+            ++baseline_it2;
+        }
+    }
+    ASSERTSTR(itsBLInx.size() > 0, "No baselines selected in current context.");
+    
+    // Create the measurement equation for each interferometer (baseline).
+    if(context.sources.empty())
+    {
+        // If no sources are specified, use all available sources.
+        makeTree(context.instrumentModel, itsSources->getSourceNames());
+    }
+    else
+    {
+        makeTree(context.instrumentModel, context.sources);
+    }
+
+    // Put funklets in parms which are not filled yet. (?)
+    for (MeqParmGroup::iterator it = itsParmGroup.begin();
+        it != itsParmGroup.end();
+        ++it)
+    {
+        it->second.fillFunklets(itsParmValues, itsWorkDomain);
+    }
+    
+    return true;
+}
+
+
+bool Prediffer::setWorkDomain(const MeqDomain &domain)
 {
   int startChan = int(0.5 + (domain.startX() - itsStartFreq) / itsStepFreq);
   int endChan   = int(0.5 + (domain.endX() - itsStartFreq) / itsStepFreq) - 1;
@@ -249,15 +525,15 @@ bool Prediffer::setWorkDomain (const MeqDomain& domain)
   // Read all parameter values which are part of the work domain.
   readParms();
   // Show frequency domain.
-  LOG_INFO_STR ("Workdomain: " << itsWorkDomain
+  LOG_INFO_STR("Workdomain: " << setprecision(10) << itsWorkDomain
         << " (channels " << itsFirstChan << '-' << itsLastChan
-        << " of " << itsStepFreq << " Hz" );
+        << " of " << itsStepFreq << " Hz)" );
 
   return true;
 }
 
-bool Prediffer::setWorkDomain (int startChan, int endChan,
-                   double tstart, double tlength)
+
+bool Prediffer::setWorkDomain(int startChan, int endChan, double tstart, double tlength)
 {
   // Determine the first and last channel to process.
   if (startChan < 0) {
@@ -272,83 +548,179 @@ bool Prediffer::setWorkDomain (int startChan, int endChan,
                   tstart+tlength));
 }
 
-bool Prediffer::setStepProp (const StepProp& stepProp)
+
+bool Prediffer::setWorkDomain(double startFreq, double endFreq, double startTime, double endTime)
 {
-  itsOutDataColumn = stepProp.getOutColumn();
-  stepProp.expandPatterns (itsMSDesc.antNames);
-  if (!selectStep (stepProp.getAnt1(), stepProp.getAnt2(),
-           stepProp.getAutoCorr(),
-           stepProp.getCorr())) {
-    return false;
-  }
-  // If no sources given, use all sources.
-  if (stepProp.getSources().empty()) {
-    makeTree (stepProp.getModel(), itsSources->getSourceNames());
-  } else {
-    makeTree (stepProp.getModel(), stepProp.getSources());
-  }
-  // Put funklets in parms which are not filled yet.
-  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
-       iter != itsParmGroup.end();
-       ++iter)
-  {
-    iter->second.fillFunklets (itsParmValues, itsWorkDomain);
-  }
-  return true;
+    return setWorkDomain(MeqDomain(startFreq, endFreq, startTime, endTime));
 }
 
-bool Prediffer::setSolveProp (const SolveProp& solveProp)
+/*
+bool Prediffer::setWorkDomain(int startChannel, int endChannel, double startTime, double endTime)
 {
-  LOG_INFO_STR( "setSolveProp");
-  const vector<string>& parms = solveProp.getParmPatterns();
-  const vector<string>& excludePatterns = solveProp.getExclPatterns();
-  // Convert patterns to regexes.
-  vector<Regex> parmRegex;
-  for (unsigned int i=0; i<parms.size(); i++) {
-    parmRegex.push_back (Regex::fromPattern(parms[i]));
-  }
-  vector<Regex> excludeRegex;
-  for (unsigned int i=0; i<excludePatterns.size(); i++) {
-    excludeRegex.push_back (Regex::fromPattern(excludePatterns[i]));
-  }
-  // Find all parms matching the parms.
-  // Exclude them if matching an excludePattern
-  int nrsolv = 0;
-  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
-       iter != itsParmGroup.end();
-       ++iter)
-  {
-    String parmName (iter->second.getName());
-    // Loop through all regex-es until a match is found.
-    for (vector<Regex>::iterator incIter = parmRegex.begin();
-     incIter != parmRegex.end();
-     incIter++) {
-      if (parmName.matches(*incIter)) {
-    bool parmExc = false;
-    // Test if not excluded.
-    for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
-         excIter != excludeRegex.end();
-         excIter++) {
-      if (parmName.matches(*excIter)) {
-        parmExc = true;
-        break;
-      }
+    if(startChannel < 0)
+    {
+        startChan = 0;
     }
-    if (!parmExc) {
-      LOG_TRACE_OBJ_STR( "setSolvable: " << iter->second.getName());
-      iter->second.setSolvable (true);
-      nrsolv++;
+    else if(startChannel >= itsNrChan)
+    {
+        startChannel = itsNrChan - 1;
     }
-    break;
-      }
+    
+    if(endChannel < startChannel)
+    {
+        endChannel = startChannel;
     }
-  }
-  if (nrsolv == 0) {
-    return false;
-  }
-  initSolvableParms (solveProp.getDomains());
-  return itsNrPert>0;
+    else if(endChannel >= itsNrChan)
+    {
+        endChannel = itsNrChan - 1;
+    }
+    
+    return setWorkDomain(MeqDomain( itsStartFreq + startChannel * itsStepFreq,
+                                    itsStartFreq + (endChannel + 1) * itsStepFreq,
+                                    startTime,
+                                    endTime));
 }
+*/
+
+bool Prediffer::setContext(const PredictContext &context)
+{
+    if(!setContext(dynamic_cast<const Context &>(context)))
+    {
+        return false;
+    }
+    
+    itsOutDataColumn = context.outputColumn;
+    return true;
+}
+
+
+bool Prediffer::setContext(const SubtractContext &context)
+{
+    if(!setContext(dynamic_cast<const Context &>(context)))
+    {
+        return false;
+    }
+    
+    itsOutDataColumn = context.outputColumn;
+    return true;
+}
+
+
+bool Prediffer::setContext(const CorrectContext &context)
+{
+    if(!setContext(dynamic_cast<const Context &>(context)))
+    {
+        return false;
+    }
+    
+    itsOutDataColumn = context.outputColumn;
+    return true;
+}
+
+
+bool Prediffer::setContext(const GenerateContext &context)
+{
+    if(!setContext(dynamic_cast<const Context &>(context)))
+    {
+        return false;
+    }
+    
+    const vector<string>& unknowns = context.unknowns;
+    const vector<string>& excludedUnknowns = context.excludedUnknowns;
+    
+    // Convert patterns to regexes.
+    vector<Regex> unknowsRegex;
+    for(unsigned int i = 0; i < unknowns.size(); i++)
+    {
+        unknowsRegex.push_back(Regex::fromPattern(unknowns[i]));
+    }
+    
+    vector<Regex> excludedUnknownsRegex;
+    for(unsigned int i = 0; i < excludedUnknowns.size(); i++)
+    {
+        excludedUnknownsRegex.push_back(Regex::fromPattern(excludedUnknowns[i]));
+    }
+    
+    // Find all parms matching the parms.
+    // Exclude them if matching an excludePattern
+    int nrsolv = 0;
+    for(MeqParmGroup::iterator parameter_it = itsParmGroup.begin();
+        parameter_it != itsParmGroup.end();
+        ++parameter_it)
+    {
+        String parameterName(parameter_it->second.getName());
+        
+        // Loop through all regex-es until a match is found.
+        for(vector<Regex>::iterator included_it = unknowsRegex.begin();
+            included_it != unknowsRegex.end();
+            included_it++)
+        {
+            if(parameterName.matches(*included_it))
+            {
+                bool include = true;
+                
+                // Test if not excluded.
+                for(vector<Regex>::const_iterator excluded_it = excludedUnknownsRegex.begin();
+                    excluded_it != excludedUnknownsRegex.end();
+                    excluded_it++)
+                {
+                    if(parameterName.matches(*excluded_it))
+                    {
+                        include = false;
+                        break;
+                    }
+                }
+        
+                if(include)
+                {
+                    LOG_TRACE_OBJ_STR("setSolvable: " << parameter_it->second.getName());
+                    parameter_it->second.setSolvable(true);
+                    nrsolv++;
+                }
+                
+                break;
+            }
+        }
+    }
+    
+    if(nrsolv == 0)
+    {
+        return false;
+    }
+                        
+    itsSolveDomains = context.solveDomains;
+    initSolvableParms(itsSolveDomains);
+    
+    return itsNrPert>0;
+}
+
+
+void Prediffer::predictVisibilities()
+{
+    writePredictedData();
+}
+
+
+void Prediffer::subtractVisibilities()
+{
+    subtractData();
+}
+
+
+void Prediffer::correctVisibilities()
+{
+    correctData();
+}
+
+
+void Prediffer::generateEquations(vector<casa::LSQFit> &equations)
+{
+    fillFitters(equations);
+}
+
+
+//-----------------------[ Model ]-----------------------//
+
 
 void Prediffer::makeTree (const vector<string>& modelType,
               const vector<string>& sourceNames)
@@ -399,44 +771,302 @@ void Prediffer::makeTree (const vector<string>& modelType,
           useTotalGain, usePatchGain, asAP, useDipole, useBandpass);
 }
 
-Prediffer::~Prediffer()
+void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
+                const map<string, vector<int> >& groups,
+                bool useTotalGain, bool usePatchGain,
+                bool asAP,
+                bool useDipole, bool useBandpass)
 {
-  LOG_TRACE_FLOW( "Prediffer destructor" );
-
-  delete itsSources;
-  for (vector<MeqStatUVW*>::iterator iter = itsStatUVW.begin();
-       iter != itsStatUVW.end();
-       iter++) {
-    delete *iter;
+  // Allocate the vectors holding the expressions.
+  int nrstat = itsStations.size();
+  int nrsrc  = sources.size();
+  int nrgrp  = groups.size();
+  // GJ is real/imag or ampl/phase
+  string gjname1 = "real:";
+  string gjname2 = "imag:";
+  if (asAP) {
+    gjname1 = "ampl:";
+    gjname2 = "phase:";
   }
-  for (vector<MeqStation*>::iterator iter = itsStations.begin();
-       iter != itsStations.end();
-       iter++) {
-    delete *iter;
+  // Vector containing DipoleExpr-s.
+  vector<MeqJonesExpr> dipoleExpr(nrstat);
+  // Vector containing DFTPS-s.
+  vector<MeqExpr> pdfts(nrsrc*nrstat);
+  // Vector containing all gains per station per patch.
+  vector<MeqJonesExpr> patchGJ(nrgrp*nrstat);
+  // Vector containing all Gain-s per station.
+  vector<MeqJonesExpr> totalGJ(nrstat);
+  // Correction per station.
+  vector<MeqJonesExpr> corrStat(nrstat);
+  // Bandpass per station.
+  vector<MeqJonesExpr> bandpass(nrstat);
+
+  // Fill the vectors for each station.
+  for (int stat=0; stat<nrstat; ++stat) {
+    // Do it only if the station is actually used.
+    if (itsStations[stat] != 0) {
+      // Do pure station parameters only if told so.
+      if (useDipole) {
+    MeqExpr frot (MeqParmFunklet::create ("frot:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, itsMEP));
+    MeqExpr drot (MeqParmFunklet::create ("drot:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, itsMEP));
+    MeqExpr dell (MeqParmFunklet::create ("dell:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, itsMEP));
+    MeqExpr gj11 (MeqParmFunklet::create ("dgain:X:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, itsMEP));
+    MeqExpr gj22 (MeqParmFunklet::create ("dgain:Y:" +
+                          itsStations[stat]->getName(),
+                          itsParmGroup, itsMEP));
+    dipoleExpr[stat] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
+                             gj11, gj22));
+      }
+      // Make a bandpass per station
+      if (useBandpass) {
+        string stationName = itsStations[stat]->getName();
+        MeqExpr bandpassXX(MeqParmFunklet::create("bandpass:X:" + stationName,
+                          itsParmGroup, itsMEP));
+        MeqExpr bandpassYY(MeqParmFunklet::create("bandpass:Y:" + stationName,
+                          itsParmGroup, itsMEP));
+
+        bandpass[stat] = new MeqDiag(MeqExpr(bandpassXX), MeqExpr(bandpassYY));
+      }
+      // Make a DFT per station per source.
+      for (int src=0; src<nrsrc; ++src) {
+    pdfts[stat*nrsrc + src] = MeqExpr(new MeqDFTPS (itsLMN[src],
+                            itsStatUVW[stat]));
+      }
+      // Make optionally GJones expressions.
+      MeqExprRep* gj11;
+      MeqExprRep* gj12;
+      MeqExprRep* gj21;
+      MeqExprRep* gj22;
+      if (useTotalGain) {
+    // Make a gain/phase expression per station.
+    string nm = itsStations[stat]->getName();
+    MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
+                           itsParmGroup, itsMEP));
+    MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
+                           itsParmGroup, itsMEP));
+    MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
+                           itsParmGroup, itsMEP));
+    MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
+                           itsParmGroup, itsMEP));
+    MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
+                           itsParmGroup, itsMEP));
+    MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
+                           itsParmGroup, itsMEP));
+    MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
+                           itsParmGroup, itsMEP));
+    MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
+                           itsParmGroup, itsMEP));
+    if (asAP) {
+      gj11 = new MeqExprAPToComplex (gj11r, gj11i);
+      gj12 = new MeqExprAPToComplex (gj12r, gj12i);
+      gj21 = new MeqExprAPToComplex (gj21r, gj21i);
+      gj22 = new MeqExprAPToComplex (gj22r, gj22i);
+    } else {
+      gj11 = new MeqExprToComplex (gj11r, gj11i);
+      gj12 = new MeqExprToComplex (gj12r, gj12i);
+      gj21 = new MeqExprToComplex (gj21r, gj21i);
+      gj22 = new MeqExprToComplex (gj22r, gj22i);
+    }
+    totalGJ[stat] = new MeqJonesNode (MeqExpr(gj11), MeqExpr(gj12),
+                      MeqExpr(gj21), MeqExpr(gj22));
+    corrStat[stat] = new MeqJonesInvert (totalGJ[stat]);
+      }
+      if (usePatchGain) {
+    // Make a complex gain expression per station per patch.
+    int grp=0;
+    for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
+         grpiter != groups.end();
+         grpiter++, grp++) {
+      string nm = itsStations[stat]->getName() + ":" + grpiter->first;
+      MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
+                         itsParmGroup, itsMEP));
+      MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
+                         itsParmGroup, itsMEP));
+      MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
+                         itsParmGroup, itsMEP));
+      MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
+                         itsParmGroup, itsMEP));
+      MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
+                         itsParmGroup, itsMEP));
+      MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
+                         itsParmGroup, itsMEP));
+      MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
+                         itsParmGroup, itsMEP));
+      MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
+                         itsParmGroup, itsMEP));
+      if (asAP) {
+        gj11 = new MeqExprAPToComplex (gj11r, gj11i);
+        gj12 = new MeqExprAPToComplex (gj12r, gj12i);
+        gj21 = new MeqExprAPToComplex (gj21r, gj21i);
+        gj22 = new MeqExprAPToComplex (gj22r, gj22i);
+      } else {
+        gj11 = new MeqExprToComplex (gj11r, gj11i);
+        gj12 = new MeqExprToComplex (gj12r, gj12i);
+        gj21 = new MeqExprToComplex (gj21r, gj21i);
+        gj22 = new MeqExprToComplex (gj22r, gj22i);
+      }
+      patchGJ[stat*nrgrp + grp] = new MeqJonesNode (MeqExpr(gj11),
+                            MeqExpr(gj12),
+                            MeqExpr(gj21),
+                            MeqExpr(gj22));
+      // Only AP of first group is used for correction.
+      if (grp == 0) {
+        corrStat[stat] = new MeqJonesInvert (patchGJ[stat*nrgrp + grp]);
+      }
+    }
+      }
+    }
   }
-
-  delete itsInDataMap;
-  delete itsOutDataMap;
-  delete itsFlagsMap;
-  delete itsWeightMap;
-
-  // clear up the matrix pool
-  MeqMatrixComplexArr::poolDeactivate();
-  MeqMatrixRealArr::poolDeactivate();
+  // Make an expression for each baseline.
+  int nrusedbl = itsBLInx.size();
+  itsExpr.resize (nrusedbl);
+  itsCorrExpr.resize (nrusedbl);
+  itsCorrMMap.resize (nrusedbl);
+  for (int blindex=0; blindex<nrusedbl; blindex++) {
+    int bl = itsBLInx[blindex];
+    int ant1 = itsMSDesc.ant1[bl];
+    int ant2 = itsMSDesc.ant2[bl];
+    if (usePatchGain || useTotalGain) {
+      // Make correction expressions.
+      itsCorrMMap[blindex] = new MeqJonesMMap (itsMSMapInfo, bl);
+      itsCorrExpr[blindex] = new MeqJonesCMul3 (corrStat[ant1],
+                        itsCorrMMap[blindex],
+                        corrStat[ant2]);
+    }
+    // Predict expressions.
+    vector<MeqJonesExpr> vecPatch;
+    // Loop through all source groups.
+    int grp=0;
+    for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
+     grpiter != groups.end();
+     grpiter++, grp++) {
+      const vector<int>& srcgrp = grpiter->second;;
+      vector<MeqJonesExpr> vecSrc;
+      vecSrc.reserve (srcgrp.size());
+      for (uint j=0; j<srcgrp.size(); ++j) {
+    // Create the total DFT per source.
+    int src = srcgrp[j];
+    MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
+                     pdfts[ant2*nrsrc + src],
+                     itsLMN[src]));
+    // For the time being only point sources are supported.
+    MeqPointSource& mps = dynamic_cast<MeqPointSource&>(*sources[src]);
+    vecSrc.push_back (MeqJonesExpr (new MeqBaseLinPS(expr1, &mps)));
+      }
+      MeqJonesExpr sum;
+      // Sum all sources in the group.
+      if (vecSrc.size() == 1) {
+    sum = vecSrc[0];
+      } else {
+    sum = MeqJonesExpr (new MeqJonesSum(vecSrc));
+      }
+      // Multiply by ionospheric gain/phase per station per patch.
+      if (usePatchGain) {
+    vecPatch.push_back (new MeqJonesCMul3(patchGJ[ant1*nrgrp + grp],
+                          sum,
+                          patchGJ[ant2*nrgrp + grp]));
+      } else {
+    vecPatch.push_back (sum);
+      }
+    }
+    // Sum all patches.
+    MeqJonesExpr sumAll;
+    if (vecPatch.size() == 1) {
+      sumAll = vecPatch[0];
+    } else {
+      sumAll = MeqJonesExpr (new MeqJonesSum(vecPatch));
+    }
+    // Multiply by total gain/phase per station.
+    if (useTotalGain) {
+      sumAll = new MeqJonesCMul3(totalGJ[ant1],
+                 sumAll,
+                 totalGJ[ant2]);
+    }
+    if (useBandpass) {
+      sumAll = new MeqJonesCMul3(bandpass[ant1],
+                 sumAll,
+                 bandpass[ant2]);
+    }
+    if (useDipole) {
+      sumAll = new MeqJonesCMul3(dipoleExpr[ant1],
+                 sumAll,
+                 dipoleExpr[ant2]);
+    }
+    itsExpr[blindex] = sumAll;
+  }
 }
 
-void Prediffer::readDescriptiveData (const string& fileName)
+void Prediffer::setPrecalcNodes (vector<MeqJonesExpr>& nodes)
 {
-  ASSERTSTR(false, "DEPRECATED -- will be removed in next release. Use Prediffer::readMeasurementSetMetaData instead.");
-
-  // Get meta data from description file.
-  string name(fileName+"/vis.des");
-  std::ifstream istr(name.c_str());
-  ASSERTSTR (istr, "File " << fileName << "/vis.des could not be opened");
-  BlobIBufStream bbs(istr);
-  BlobIStream bis(bbs);
-  bis >> itsMSDesc;
+  // First clear the levels of all nodes in the tree.
+  for (uint i=0; i<nodes.size(); ++i) {
+    if (! nodes[i].isNull()) {
+      nodes[i].clearDone();
+    }
+  }
+  // Now set the levels of all nodes in the tree.
+  // The top nodes have level 0; lower nodes have 1, 2, etc..
+  int nrLev = -1;
+  for (uint i=0; i<nodes.size(); ++i) {
+    if (! nodes[i].isNull()) {
+      nrLev = max (nrLev, nodes[i].setLevel(0));
+    }
+  }
+  nrLev++;
+  ASSERT (nrLev > 0);
+  itsPrecalcNodes.resize (nrLev);
+  // Find the nodes to be precalculated at each level.
+  // That is not needed for the root nodes (the baselines).
+  // The nodes used by the baselines are always precalculated (even if
+  // having one parent).
+  // It may happen that a station is used by only one baseline. Calculating
+  // such a baseline is much more work if the station was not precalculated.
+  for (int level=1; level<nrLev; ++level) {
+    vector<MeqExprRep*>& pcnodes = itsPrecalcNodes[level];
+    pcnodes.resize (0);
+    for (vector<MeqJonesExpr>::iterator iter=nodes.begin();
+     iter != nodes.end();
+     ++iter) {
+      if (! iter->isNull()) {
+    iter->getCachingNodes (pcnodes, level, false);
+      }
+    }
+  }
+  LOG_TRACE_FLOW_STR("#levels=" << nrLev);
+  for (int i=0; i<nrLev; ++i) {
+    LOG_TRACE_FLOW_STR("#expr on level " << i << " is " << itsPrecalcNodes[i].size());
+  }
 }
+
+void Prediffer::precalcNodes (const MeqRequest& request)
+{
+#pragma omp parallel
+  {
+    // Loop through expressions to be precalculated.
+    // At each level the expressions can be executed in parallel.
+    // Level 0 is formed by itsExpr which are not calculated here.
+    for (int level = itsPrecalcNodes.size(); --level > 0;) {
+      vector<MeqExprRep*>& exprs = itsPrecalcNodes[level];
+      int nrExprs = exprs.size();
+      if (nrExprs > 0) {
+#pragma omp for schedule(dynamic)
+    for (int i=0; i<nrExprs; ++i) {
+      exprs[i]->precalculate (request);
+    }
+      }
+    }
+  } // end omp parallel
+}
+
+//-----------------------[ MS Access ]-----------------------//
 
 void Prediffer::readMeasurementSetMetaData(const string &fileName)
 {
@@ -651,7 +1281,7 @@ void Prediffer::processMSDesc (uint ddid)
     double  tmp  = itsEndFreq;
     itsEndFreq   = itsStartFreq;
     itsStartFreq = tmp;
-    itsStepFreq  = std::abs(itsStepFreq);
+    itsStepFreq  = abs(itsStepFreq);
   }
   // Set the MS info.
   itsMSMapInfo = MMapMSInfo (itsMSDesc, ddid, itsReverseChan);
@@ -692,317 +1322,73 @@ void Prediffer::fillStations()
   }
 }
 
-bool Prediffer::selectStations (const vector<int>& antnrs, bool useAutoCorr)
+void Prediffer::mapDataFiles (const string& inColumnName,
+                  const string& outColumnName)
 {
-  int nrant = itsStations.size();
-  // Get all stations actually used.
-  // Default is all stations.
-  if (antnrs.empty()) {
-    itsSelStations = itsStations;
-  } else {
-    // Set given stations.
-    itsSelStations = vector<MeqStation*>(nrant, (MeqStation*)0);
-    for (uint i=0; i<antnrs.size(); i++) {
-      int ant = antnrs[i];
-      if (ant >= 0  &&  ant < nrant) {
-    itsSelStations[ant] = itsStations[ant];
-      }
-    }
-  }
-  // Fill a a matrix telling for each antenna pair where contained in the MS.
-  // First initialize to not contained.
-  itsBLSel.resize (nrant, nrant);
-  itsBLSel = false;
-  // Set if selected for each baseline in the MS.
-  int nr = 0;
-  for (uint i=0; i<itsMSDesc.ant1.size(); ++i) {
-    int a1 = itsMSDesc.ant1[i];
-    int a2 = itsMSDesc.ant2[i];
-    if (itsSelStations[a1] && itsSelStations[a2]) {
-      if (useAutoCorr  ||  a1 != a2) {
-    itsBLSel(a1,a2) = true;
-    nr++;
-      }
-    }
-  }
-  return nr>0;
-}
-
-void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
-                const map<string, vector<int> >& groups,
-                bool useTotalGain, bool usePatchGain,
-                bool asAP,
-                bool useDipole, bool useBandpass)
-{
-  // Allocate the vectors holding the expressions.
-  int nrstat = itsStations.size();
-  int nrsrc  = sources.size();
-  int nrgrp  = groups.size();
-  // GJ is real/imag or ampl/phase
-  string gjname1 = "real:";
-  string gjname2 = "imag:";
-  if (asAP) {
-    gjname1 = "ampl:";
-    gjname2 = "phase:";
-  }
-  // Vector containing DipoleExpr-s.
-  vector<MeqJonesExpr> dipoleExpr(nrstat);
-  // Vector containing DFTPS-s.
-  vector<MeqExpr> pdfts(nrsrc*nrstat);
-  // Vector containing all gains per station per patch.
-  vector<MeqJonesExpr> patchGJ(nrgrp*nrstat);
-  // Vector containing all Gain-s per station.
-  vector<MeqJonesExpr> totalGJ(nrstat);
-  // Correction per station.
-  vector<MeqJonesExpr> corrStat(nrstat);
-  // Bandpass per station.
-  vector<MeqJonesExpr> bandpass(nrstat);
-
-  // Fill the vectors for each station.
-  for (int stat=0; stat<nrstat; ++stat) {
-    // Do it only if the station is actually used.
-    if (itsStations[stat] != 0) {
-      // Do pure station parameters only if told so.
-      if (useDipole) {
-    MeqExpr frot (MeqParmFunklet::create ("frot:" +
-                          itsStations[stat]->getName(),
-                          itsParmGroup, &itsMEP));
-    MeqExpr drot (MeqParmFunklet::create ("drot:" +
-                          itsStations[stat]->getName(),
-                          itsParmGroup, &itsMEP));
-    MeqExpr dell (MeqParmFunklet::create ("dell:" +
-                          itsStations[stat]->getName(),
-                          itsParmGroup, &itsMEP));
-    MeqExpr gj11 (MeqParmFunklet::create ("dgain:X:" +
-                          itsStations[stat]->getName(),
-                          itsParmGroup, &itsMEP));
-    MeqExpr gj22 (MeqParmFunklet::create ("dgain:Y:" +
-                          itsStations[stat]->getName(),
-                          itsParmGroup, &itsMEP));
-    dipoleExpr[stat] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
-                             gj11, gj22));
-      }
-      // Make a bandpass per station
-      if (useBandpass) {
-        string stationName = itsStations[stat]->getName();
-        MeqExpr bandpassXX(MeqParmFunklet::create("bandpass:X:" + stationName,
-                          itsParmGroup, &itsMEP));
-        MeqExpr bandpassYY(MeqParmFunklet::create("bandpass:Y:" + stationName,
-                          itsParmGroup, &itsMEP));
-
-        bandpass[stat] = new MeqDiag(MeqExpr(bandpassXX), MeqExpr(bandpassYY));
-      }
-      // Make a DFT per station per source.
-      for (int src=0; src<nrsrc; ++src) {
-    pdfts[stat*nrsrc + src] = MeqExpr(new MeqDFTPS (itsLMN[src],
-                            itsStatUVW[stat]));
-      }
-      // Make optionally GJones expressions.
-      MeqExprRep* gj11;
-      MeqExprRep* gj12;
-      MeqExprRep* gj21;
-      MeqExprRep* gj22;
-      if (useTotalGain) {
-    // Make a gain/phase expression per station.
-    string nm = itsStations[stat]->getName();
-    MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
-                           itsParmGroup, &itsMEP));
-    MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
-                           itsParmGroup, &itsMEP));
-    MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
-                           itsParmGroup, &itsMEP));
-    MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
-                           itsParmGroup, &itsMEP));
-    MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
-                           itsParmGroup, &itsMEP));
-    MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
-                           itsParmGroup, &itsMEP));
-    MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
-                           itsParmGroup, &itsMEP));
-    MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
-                           itsParmGroup, &itsMEP));
-    if (asAP) {
-      gj11 = new MeqExprAPToComplex (gj11r, gj11i);
-      gj12 = new MeqExprAPToComplex (gj12r, gj12i);
-      gj21 = new MeqExprAPToComplex (gj21r, gj21i);
-      gj22 = new MeqExprAPToComplex (gj22r, gj22i);
-    } else {
-      gj11 = new MeqExprToComplex (gj11r, gj11i);
-      gj12 = new MeqExprToComplex (gj12r, gj12i);
-      gj21 = new MeqExprToComplex (gj21r, gj21i);
-      gj22 = new MeqExprToComplex (gj22r, gj22i);
-    }
-    totalGJ[stat] = new MeqJonesNode (MeqExpr(gj11), MeqExpr(gj12),
-                      MeqExpr(gj21), MeqExpr(gj22));
-    corrStat[stat] = new MeqJonesInvert (totalGJ[stat]);
-      }
-      if (usePatchGain) {
-    // Make a complex gain expression per station per patch.
-    int grp=0;
-    for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
-         grpiter != groups.end();
-         grpiter++, grp++) {
-      string nm = itsStations[stat]->getName() + ":" + grpiter->first;
-      MeqExpr gj11r (MeqParmFunklet::create ("gain:11:" + gjname1 + nm,
-                         itsParmGroup, &itsMEP));
-      MeqExpr gj11i (MeqParmFunklet::create ("gain:11:" + gjname2 + nm,
-                         itsParmGroup, &itsMEP));
-      MeqExpr gj12r (MeqParmFunklet::create ("gain:12:" + gjname1 + nm,
-                         itsParmGroup, &itsMEP));
-      MeqExpr gj12i (MeqParmFunklet::create ("gain:12:" + gjname2 + nm,
-                         itsParmGroup, &itsMEP));
-      MeqExpr gj21r (MeqParmFunklet::create ("gain:21:" + gjname1 + nm,
-                         itsParmGroup, &itsMEP));
-      MeqExpr gj21i (MeqParmFunklet::create ("gain:21:" + gjname2 + nm,
-                         itsParmGroup, &itsMEP));
-      MeqExpr gj22r (MeqParmFunklet::create ("gain:22:" + gjname1 + nm,
-                         itsParmGroup, &itsMEP));
-      MeqExpr gj22i (MeqParmFunklet::create ("gain:22:" + gjname2 + nm,
-                         itsParmGroup, &itsMEP));
-      if (asAP) {
-        gj11 = new MeqExprAPToComplex (gj11r, gj11i);
-        gj12 = new MeqExprAPToComplex (gj12r, gj12i);
-        gj21 = new MeqExprAPToComplex (gj21r, gj21i);
-        gj22 = new MeqExprAPToComplex (gj22r, gj22i);
+  Table tab;
+  if (! inColumnName.empty()) {
+    string inFile = itsMSName + "/vis." + inColumnName;
+    if (itsInDataMap == 0  ||  itsInDataMap->getFileName() != inFile) {
+      tab = Table(itsMSName);
+      ASSERTSTR (tab.tableDesc().isColumn(inColumnName),
+         "Column " << inColumnName << " does not exist");
+      delete itsInDataMap;
+      itsInDataMap = 0;
+      // See if the input file is the previous output file.
+      if (itsOutDataMap  &&  itsOutDataMap->getFileName() == inFile) {
+    itsInDataMap = itsOutDataMap;
+    itsOutDataMap = 0;
       } else {
-        gj11 = new MeqExprToComplex (gj11r, gj11i);
-        gj12 = new MeqExprToComplex (gj12r, gj12i);
-        gj21 = new MeqExprToComplex (gj21r, gj21i);
-        gj22 = new MeqExprToComplex (gj22r, gj22i);
-      }
-      patchGJ[stat*nrgrp + grp] = new MeqJonesNode (MeqExpr(gj11),
-                            MeqExpr(gj12),
-                            MeqExpr(gj21),
-                            MeqExpr(gj22));
-      // Only AP of first group is used for correction.
-      if (grp == 0) {
-        corrStat[stat] = new MeqJonesInvert (patchGJ[stat*nrgrp + grp]);
-      }
-    }
+    itsInDataMap = new MMap (inFile, MMap::Read);
       }
     }
   }
-  // Make an expression for each baseline.
-  int nrusedbl = itsBLInx.size();
-  itsExpr.resize (nrusedbl);
-  itsCorrExpr.resize (nrusedbl);
-  itsCorrMMap.resize (nrusedbl);
-  for (int blindex=0; blindex<nrusedbl; blindex++) {
-    int bl = itsBLInx[blindex];
-    int ant1 = itsMSDesc.ant1[bl];
-    int ant2 = itsMSDesc.ant2[bl];
-    if (usePatchGain || useTotalGain) {
-      // Make correction expressions.
-      itsCorrMMap[blindex] = new MeqJonesMMap (itsMSMapInfo, bl);
-      itsCorrExpr[blindex] = new MeqJonesCMul3 (corrStat[ant1],
-                        itsCorrMMap[blindex],
-                        corrStat[ant2]);
+  if (! outColumnName.empty()) {
+    string outFile = itsMSName + "/vis." + outColumnName;
+    if (tab.isNull()) {
+      tab = Table(itsMSName);
     }
-    // Predict expressions.
-    vector<MeqJonesExpr> vecPatch;
-    // Loop through all source groups.
-    int grp=0;
-    for (map<string,vector<int> >::const_iterator grpiter = groups.begin();
-     grpiter != groups.end();
-     grpiter++, grp++) {
-      const vector<int>& srcgrp = grpiter->second;;
-      vector<MeqJonesExpr> vecSrc;
-      vecSrc.reserve (srcgrp.size());
-      for (uint j=0; j<srcgrp.size(); ++j) {
-    // Create the total DFT per source.
-    int src = srcgrp[j];
-    MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
-                     pdfts[ant2*nrsrc + src],
-                     itsLMN[src]));
-    // For the time being only point sources are supported.
-    MeqPointSource& mps = dynamic_cast<MeqPointSource&>(*sources[src]);
-    vecSrc.push_back (MeqJonesExpr (new MeqBaseLinPS(expr1, &mps)));
+    if (itsOutDataMap == 0  ||  itsOutDataMap->getFileName() != outFile) {
+      if (! tab.tableDesc().isColumn(outColumnName)) {
+    addDataColumn (tab, outColumnName, outFile);
       }
-      MeqJonesExpr sum;
-      // Sum all sources in the group.
-      if (vecSrc.size() == 1) {
-    sum = vecSrc[0];
-      } else {
-    sum = MeqJonesExpr (new MeqJonesSum(vecSrc));
-      }
-      // Multiply by ionospheric gain/phase per station per patch.
-      if (usePatchGain) {
-    vecPatch.push_back (new MeqJonesCMul3(patchGJ[ant1*nrgrp + grp],
-                          sum,
-                          patchGJ[ant2*nrgrp + grp]));
-      } else {
-    vecPatch.push_back (sum);
-      }
+      delete itsOutDataMap;
+      itsOutDataMap = 0;
+      itsOutDataMap = new MMap (outFile, MMap::ReWr);
     }
-    // Sum all patches.
-    MeqJonesExpr sumAll;
-    if (vecPatch.size() == 1) {
-      sumAll = vecPatch[0];
-    } else {
-      sumAll = MeqJonesExpr (new MeqJonesSum(vecPatch));
-    }
-    // Multiply by total gain/phase per station.
-    if (useTotalGain) {
-      sumAll = new MeqJonesCMul3(totalGJ[ant1],
-                 sumAll,
-                 totalGJ[ant2]);
-    }
-    if (useBandpass) {
-      sumAll = new MeqJonesCMul3(bandpass[ant1],
-                 sumAll,
-                 bandpass[ant2]);
-    }
-    if (useDipole) {
-      sumAll = new MeqJonesCMul3(dipoleExpr[ant1],
-                 sumAll,
-                 dipoleExpr[ant2]);
-    }
-    itsExpr[blindex] = sumAll;
   }
 }
 
-void Prediffer::setPrecalcNodes (vector<MeqJonesExpr>& nodes)
+void Prediffer::addDataColumn (Table& tab, const string& columnName,
+                   const string& symlinkName)
 {
-  // First clear the levels of all nodes in the tree.
-  for (uint i=0; i<nodes.size(); ++i) {
-    if (! nodes[i].isNull()) {
-      nodes[i].clearDone();
+  tab.reopenRW();
+  File fil(symlinkName);
+  ASSERT (!fil.exists());
+  ArrayColumnDesc<Complex> resCol(columnName,
+                  IPosition(2,itsNCorr, itsNrChan),
+                  ColumnDesc::FixedShape);
+  String stManName = "Tiled_"+columnName;
+  TiledColumnStMan tiledRes(stManName, IPosition(3,itsNCorr,itsNrChan,1));
+  tab.addColumn (resCol, tiledRes);
+  tab.flush();
+  // Find out which datamanager the new column is in.
+  // Create symlink for it.
+  Record dminfo = tab.dataManagerInfo();
+  ostringstream filNam;
+  for (uint i=0; i<dminfo.nfields(); ++i) {
+    const Record& dm = dminfo.subRecord(i);
+    if (dm.asString("NAME") == stManName) {
+      ostringstream ostr;
+      filNam << "table.f" << i << "_TSM0";
+      SymLink sl(fil);
+      sl.create (filNam.str());
+      break;
     }
-  }
-  // Now set the levels of all nodes in the tree.
-  // The top nodes have level 0; lower nodes have 1, 2, etc..
-  int nrLev = -1;
-  for (uint i=0; i<nodes.size(); ++i) {
-    if (! nodes[i].isNull()) {
-      nrLev = std::max (nrLev, nodes[i].setLevel(0));
-    }
-  }
-  nrLev++;
-  ASSERT (nrLev > 0);
-  itsPrecalcNodes.resize (nrLev);
-  // Find the nodes to be precalculated at each level.
-  // That is not needed for the root nodes (the baselines).
-  // The nodes used by the baselines are always precalculated (even if
-  // having one parent).
-  // It may happen that a station is used by only one baseline. Calculating
-  // such a baseline is much more work if the station was not precalculated.
-  for (int level=1; level<nrLev; ++level) {
-    std::vector<MeqExprRep*>& pcnodes = itsPrecalcNodes[level];
-    pcnodes.resize (0);
-    for (std::vector<MeqJonesExpr>::iterator iter=nodes.begin();
-     iter != nodes.end();
-     ++iter) {
-      if (! iter->isNull()) {
-    iter->getCachingNodes (pcnodes, level, false);
-      }
-    }
-  }
-  LOG_TRACE_FLOW_STR("#levels=" << nrLev);
-  for (int i=0; i<nrLev; ++i) {
-    LOG_TRACE_FLOW_STR("#expr on level " << i << " is " << itsPrecalcNodes[i].size());
   }
 }
 
+//-----------------------[ Parameter Access ]-----------------------//
 
 void Prediffer::readParms()
 {
@@ -1011,8 +1397,8 @@ void Prediffer::readParms()
   vector<string> emptyvec;
   LOFAR::ParmDB::ParmDomain pdomain(itsWorkDomain.startX(), itsWorkDomain.endX(),
                  itsWorkDomain.startY(), itsWorkDomain.endY());
-  itsMEP.getValues (itsParmValues, emptyvec, pdomain);
-  itsGSMMEP.getValues (itsParmValues, emptyvec, pdomain);
+  itsMEP->getValues (itsParmValues, emptyvec, pdomain);
+  itsGSMMEP->getValues (itsParmValues, emptyvec, pdomain);
   // Remove the funklets from all parms.
   for (MeqParmGroup::iterator iter = itsParmGroup.begin();
        iter != itsParmGroup.end();
@@ -1029,7 +1415,7 @@ void Prediffer::initSolvableParms (const vector<MeqDomain>& solveDomains)
 
   itsNrPert = 0;
   itsNrScids.resize (localSolveDomains.size());
-  std::fill (itsNrScids.begin(), itsNrScids.end(), 0);
+  fill (itsNrScids.begin(), itsNrScids.end(), 0);
   for (MeqParmGroup::iterator iter = itsParmGroup.begin();
        iter != itsParmGroup.end();
        ++iter)
@@ -1095,42 +1481,9 @@ void Prediffer::clearSolvableParms()
   }
 }
 
-void Prediffer::mapDataFiles (const string& inColumnName,
-                  const string& outColumnName)
-{
-  Table tab;
-  if (! inColumnName.empty()) {
-    string inFile = itsMSName + "/vis." + inColumnName;
-    if (itsInDataMap == 0  ||  itsInDataMap->getFileName() != inFile) {
-      tab = Table(itsMSName);
-      ASSERTSTR (tab.tableDesc().isColumn(inColumnName),
-         "Column " << inColumnName << " does not exist");
-      delete itsInDataMap;
-      itsInDataMap = 0;
-      // See if the input file is the previous output file.
-      if (itsOutDataMap  &&  itsOutDataMap->getFileName() == inFile) {
-    itsInDataMap = itsOutDataMap;
-    itsOutDataMap = 0;
-      } else {
-    itsInDataMap = new MMap (inFile, MMap::Read);
-      }
-    }
-  }
-  if (! outColumnName.empty()) {
-    string outFile = itsMSName + "/vis." + outColumnName;
-    if (tab.isNull()) {
-      tab = Table(itsMSName);
-    }
-    if (itsOutDataMap == 0  ||  itsOutDataMap->getFileName() != outFile) {
-      if (! tab.tableDesc().isColumn(outColumnName)) {
-    addDataColumn (tab, outColumnName, outFile);
-      }
-      delete itsOutDataMap;
-      itsOutDataMap = 0;
-      itsOutDataMap = new MMap (outFile, MMap::ReWr);
-    }
-  }
-}
+
+//-----------------------[ Computation ]-----------------------//
+
 
 // Currently this function always returns all data in the work domain.
 // In the future it can be made smarter and process less if the work domain
@@ -1187,35 +1540,6 @@ bool Prediffer::nextDataChunk (bool useFitters)
     }
   }
   return true;
-}
-
-void Prediffer::addDataColumn (Table& tab, const string& columnName,
-                   const string& symlinkName)
-{
-  tab.reopenRW();
-  File fil(symlinkName);
-  ASSERT (!fil.exists());
-  ArrayColumnDesc<Complex> resCol(columnName,
-                  IPosition(2,itsNCorr, itsNrChan),
-                  ColumnDesc::FixedShape);
-  String stManName = "Tiled_"+columnName;
-  TiledColumnStMan tiledRes(stManName, IPosition(3,itsNCorr,itsNrChan,1));
-  tab.addColumn (resCol, tiledRes);
-  tab.flush();
-  // Find out which datamanager the new column is in.
-  // Create symlink for it.
-  Record dminfo = tab.dataManagerInfo();
-  ostringstream filNam;
-  for (uint i=0; i<dminfo.nfields(); ++i) {
-    const Record& dm = dminfo.subRecord(i);
-    if (dm.asString("NAME") == stManName) {
-      ostringstream ostr;
-      filNam << "table.f" << i << "_TSM0";
-      SymLink sl(fil);
-      sl.create (filNam.str());
-      break;
-    }
-  }
 }
 
 void Prediffer::processData (bool useFlags, bool preCalc, bool calcDeriv,
@@ -1305,26 +1629,6 @@ void Prediffer::processData (bool useFlags, bool preCalc, bool calcDeriv,
     } // end omp parallel
       //timer.stop();
   }
-}
-
-void Prediffer::precalcNodes (const MeqRequest& request)
-{
-#pragma omp parallel
-  {
-    // Loop through expressions to be precalculated.
-    // At each level the expressions can be executed in parallel.
-    // Level 0 is formed by itsExpr which are not calculated here.
-    for (int level = itsPrecalcNodes.size(); --level > 0;) {
-      vector<MeqExprRep*>& exprs = itsPrecalcNodes[level];
-      int nrExprs = exprs.size();
-      if (nrExprs > 0) {
-#pragma omp for schedule(dynamic)
-    for (int i=0; i<nrExprs; ++i) {
-      exprs[i]->precalculate (request);
-    }
-      }
-    }
-  } // end omp parallel
 }
 
 void Prediffer::fillFitters (vector<casa::LSQFit>& fitters)
@@ -1482,6 +1786,7 @@ void Prediffer::fillEquation (int threadnr, void* arg,
     if (itsCorr[corr]) {
       // Get the results for this correlation.
       const MeqResult& tcres = *predResults[corr];
+      
       // Get pointers to the main data.
       const MeqMatrix& val = tcres.getValue();
       const double* realVals;
@@ -1630,35 +1935,6 @@ void Prediffer::fillEquation (int threadnr, void* arg,
   //fillEquationTimer.stop();
   itsEqTimer.stop();
   ///  cout << "nreq="<<nreq<<endl;
-}
-
-void Prediffer::showData (int corr, int sdch, int inc, int nrchan,
-              const bool* flags, const fcomplex* data,
-              const double* realVals, const double* imagVals)
-{
-  cout << "flag=" << corr << "x ";
-  int dch = sdch;
-  for (int ch=0; ch<nrchan; ch++, dch+=inc) {
-    cout << flags[dch]<< ' ';
-  }
-  cout << endl;
-  cout << "cor=" << corr << "x ";
-  dch = sdch;
-  for (int ch=0; ch<nrchan; ch++, dch+=inc) {
-    cout << '(' << std::setprecision(12)
-     << real(data[dch])
-     << ',' << std::setprecision(12)
-     << imag(data[dch])<< ')';
-  }
-  cout << endl;
-  cout << "corr=" << corr << "x ";
-  for (int ch=0; ch<nrchan; ch++) {
-    cout << '(' << std::setprecision(12)
-     << realVals[ch]
-     << ',' << std::setprecision(12)
-     << imagVals[ch]<< ')';
-  }
-  cout << endl;
 }
 
 vector<MeqResult> Prediffer::getResults (bool calcDeriv)
@@ -1895,84 +2171,6 @@ void Prediffer::predictBL (int, void*,
 }
 
 
-bool Prediffer::selectStep (const vector<int>& ant1,
-                const vector<int>& ant2,
-                bool useAutoCorrelations,
-                const vector<bool>& corr)
-{
-  int nrant = itsBLSel.nrow();
-  ASSERT (ant1.size() == ant2.size());
-  Matrix<bool> blSel;
-  if (ant1.size() == 0) {
-    // No baselines specified, select all baselines in strategy.
-    blSel = itsBLSel;
-  } else {
-    blSel.resize (nrant, nrant);
-    blSel = false;
-    for (uint i=0; i<ant1.size(); i++) {
-      int a1 = ant1[i];
-      int a2 = ant2[i];
-      if (a1 < nrant  &&  a2 < nrant) {
-    blSel(a1, a2) = itsBLSel(a1, a2);
-      }
-    }
-  }
-  // Unset auto-correlations if needed.
-  if (!useAutoCorrelations) {
-    for (int i=0; i<nrant; i++) {
-      blSel(i,i) = false;
-    }
-  }
-  // Fill the correlations to use. Use all if vector is empty.
-  for (int i=0; i<itsNCorr; ++i) {
-    itsCorr[i] = corr.empty();
-  }
-  if (corr.size() > 0) {
-    // Some values given; first one is always XX (or LL, etc.)
-    itsCorr[0] = corr[0];
-    if (corr.size() > 1  &&  itsNCorr > 1) {
-      if (corr.size() == 2) {
-    // Two values given; last one is always YY (or RR, etc.)
-    itsCorr[itsNCorr-1] = corr[1];
-      } else {
-    // More than 2 must be 4 values.
-    ASSERTSTR (corr.size()==4,
-           "Correlation selection vector must have 1, 2 or 4 flags");
-    if (itsNCorr == 2) {
-      itsCorr[1] = corr[3];
-    } else {
-      itsCorr[1] = corr[1];
-      itsCorr[2] = corr[2];
-      itsCorr[3] = corr[3];
-    }
-      }
-    }
-  }
-  return fillBaseCorr (blSel);
-}
-
-bool Prediffer::fillBaseCorr (const Matrix<bool>& blSel)
-{
-  // Count the nr of baselines actually used for this step.
-  // Store the seqnr of all selected baselines.
-  itsBLInx.clear();
-  for (uint i=0; i<itsMSDesc.ant1.size(); ++i) {
-    int a1 = itsMSDesc.ant1[i];
-    int a2 = itsMSDesc.ant2[i];
-    if (blSel(a1,a2)) {
-      itsBLInx.push_back (i);
-    }
-  }
-  // Count the nr of selecteed correlations.
-  int nSelCorr = 0;
-  for (int i=0; i<itsNCorr; ++i) {
-    if (itsCorr[i]) {
-      nSelCorr++;
-    }
-  }
-  return (itsBLInx.size() > 0  &&  nSelCorr > 0);
-}
-
 void Prediffer::fillUVW()
 {
   // Create the UVW nodes.
@@ -2168,16 +2366,16 @@ void Prediffer::writeParms()
 }
 
 #ifdef EXPR_GRAPH
-void Prediffer::writeExpressionGraph(const std::string &fileName, int baselineIndex)
+void Prediffer::writeExpressionGraph(const string &fileName, int baselineIndex)
 {
     ASSERT(baselineIndex >= 0 && baselineIndex < itsExpr.size());
 
     ofstream os(fileName.c_str());
-    os << "digraph MeasurementEquation" << std::endl;
-    os << "{" << std::endl;
-    os << "node [shape=box];" << std::endl;
+    os << "digraph MeasurementEquation" << endl;
+    os << "{" << endl;
+    os << "node [shape=box];" << endl;
     itsExpr[baselineIndex].writeExpressionGraph(os);
-    os << "}" << std::endl;
+    os << "}" << endl;
 }
 #endif
 
@@ -2204,6 +2402,319 @@ void Prediffer::showSettings() const
   cout << "  calcuvw  : " << itsCalcUVW << endl;
   cout << endl;
 }
+
+void Prediffer::showData (int corr, int sdch, int inc, int nrchan,
+              const bool* flags, const fcomplex* data,
+              const double* realVals, const double* imagVals)
+{
+  cout << "flag=" << corr << "x ";
+  int dch = sdch;
+  for (int ch=0; ch<nrchan; ch++, dch+=inc) {
+    cout << flags[dch]<< ' ';
+  }
+  cout << endl;
+  cout << "cor=" << corr << "x ";
+  dch = sdch;
+  for (int ch=0; ch<nrchan; ch++, dch+=inc) {
+    cout << '(' << setprecision(12)
+     << real(data[dch])
+     << ',' << setprecision(12)
+     << imag(data[dch])<< ')';
+  }
+  cout << endl;
+  cout << "corr=" << corr << "x ";
+  for (int ch=0; ch<nrchan; ch++) {
+    cout << '(' << setprecision(12)
+     << realVals[ch]
+     << ',' << setprecision(12)
+     << imagVals[ch]<< ')';
+  }
+  cout << endl;
+}
+
+
+// DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+// DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+
+Prediffer::Prediffer(const string& msName,
+             const LOFAR::ParmDB::ParmDBMeta& meqPdm,
+             const LOFAR::ParmDB::ParmDBMeta& skyPdm,
+             uint ddid,
+             bool calcUVW)
+: itsCalcUVW      (calcUVW),
+  itsMEPName      (meqPdm.getTableName()),
+  itsGSMMEPName   (skyPdm.getTableName()),
+  itsSources      (0),
+  itsNrPert       (0),
+  itsNCorr        (0),
+  itsNrBl         (0),
+  itsTimeIndex    (0),
+  itsNrTimes      (0),
+  itsNrTimesDone  (0),
+  itsInDataMap    (0),
+  itsOutDataMap   (0),
+  itsFlagsMap     (0),
+  itsWeightMap    (0),
+  itsIsWeightSpec (false),
+  itsPredTimer    ("P:predict", false),
+  itsEqTimer      ("P:eq|save", false)
+{
+  // Get absolute path name for MS.
+  itsMSName = Path(msName).absoluteName();
+  LOG_INFO_STR( "Prediffer constructor ("
+        << "'" << itsMSName   << "', "
+        << "'" << meqPdm.getTableName() << "', "
+        << "'" << skyPdm.getTableName() << "', "
+        << itsCalcUVW << ")" );
+  // Read the meta data and map the flags file.
+  //readDescriptiveData(msName);
+  readMeasurementSetMetaData(itsMSName);
+  processMSDesc(ddid);
+    
+  itsGSMMEP = new LOFAR::ParmDB::ParmDB(skyPdm);
+  itsMEP = new LOFAR::ParmDB::ParmDB(meqPdm);
+
+  itsFlagsMap = new FlagsMap(itsMSName + "/vis.flg", MMap::Read);
+  // Get all sources from the ParmDB.
+  itsSources = new MeqSourceList(*itsGSMMEP, itsParmGroup);
+  // Create the UVW nodes and fill them with uvw-s from MS if not calculated.
+  fillUVW();
+  // Allocate thread private buffers.
+#if defined _OPENMP
+  itsNthread = omp_get_max_threads();
+#else
+  itsNthread = 1;
+#endif
+  itsFlagVecs.resize (itsNthread);
+  itsResultVecs.resize (itsNthread);
+  itsDiffVecs.resize (itsNthread);
+  itsIndexVecs.resize (itsNthread);
+}
+
+bool Prediffer::setStrategyProp (const StrategyProp& strat)
+{
+  itsInDataColumn = strat.getInColumn();
+  // Initially use all correlations.
+  for (int i=0; i<itsNCorr; ++i) {
+    itsCorr[i] = true;
+  }
+  strat.expandPatterns (itsMSDesc.antNames);
+  return selectStations (strat.getAntennas(),         // Available antennas
+             strat.getAutoCorr());
+}
+
+bool Prediffer::setStepProp (const StepProp& stepProp)
+{
+  itsOutDataColumn = stepProp.getOutColumn();
+  stepProp.expandPatterns (itsMSDesc.antNames);
+  if (!selectStep (stepProp.getAnt1(), stepProp.getAnt2(),
+           stepProp.getAutoCorr(),
+           stepProp.getCorr())) {
+    return false;
+  }
+  // If no sources given, use all sources.
+  if (stepProp.getSources().empty()) {
+    makeTree (stepProp.getModel(), itsSources->getSourceNames());
+  } else {
+    makeTree (stepProp.getModel(), stepProp.getSources());
+  }
+  // Put funklets in parms which are not filled yet.
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
+  {
+    iter->second.fillFunklets (itsParmValues, itsWorkDomain);
+  }
+  return true;
+}
+
+bool Prediffer::setSolveProp (const SolveProp& solveProp)
+{
+  LOG_INFO_STR( "setSolveProp");
+  const vector<string>& parms = solveProp.getParmPatterns();
+  const vector<string>& excludePatterns = solveProp.getExclPatterns();
+  // Convert patterns to regexes.
+  vector<Regex> parmRegex;
+  for (unsigned int i=0; i<parms.size(); i++) {
+    parmRegex.push_back (Regex::fromPattern(parms[i]));
+  }
+  vector<Regex> excludeRegex;
+  for (unsigned int i=0; i<excludePatterns.size(); i++) {
+    excludeRegex.push_back (Regex::fromPattern(excludePatterns[i]));
+  }
+  // Find all parms matching the parms.
+  // Exclude them if matching an excludePattern
+  int nrsolv = 0;
+  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+       iter != itsParmGroup.end();
+       ++iter)
+  {
+    String parmName (iter->second.getName());
+    // Loop through all regex-es until a match is found.
+    for (vector<Regex>::iterator incIter = parmRegex.begin();
+     incIter != parmRegex.end();
+     incIter++) {
+      if (parmName.matches(*incIter)) {
+    bool parmExc = false;
+    // Test if not excluded.
+    for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
+         excIter != excludeRegex.end();
+         excIter++) {
+      if (parmName.matches(*excIter)) {
+        parmExc = true;
+        break;
+      }
+    }
+    if (!parmExc) {
+      LOG_TRACE_OBJ_STR( "setSolvable: " << iter->second.getName());
+      iter->second.setSolvable (true);
+      nrsolv++;
+    }
+    break;
+      }
+    }
+  }
+  if (nrsolv == 0) {
+    return false;
+  }
+  initSolvableParms (solveProp.getDomains());
+  return itsNrPert>0;
+}
+
+void Prediffer::readDescriptiveData (const string& fileName)
+{
+  ASSERTSTR(false, "DEPRECATED -- will be removed in next release. Use Prediffer::readMeasurementSetMetaData instead.");
+
+  // Get meta data from description file.
+  string name(fileName+"/vis.des");
+  ifstream istr(name.c_str());
+  ASSERTSTR (istr, "File " << fileName << "/vis.des could not be opened");
+  BlobIBufStream bbs(istr);
+  BlobIStream bis(bbs);
+  bis >> itsMSDesc;
+}
+
+bool Prediffer::selectStations (const vector<int>& antnrs, bool useAutoCorr)
+{
+  int nrant = itsStations.size();
+  // Get all stations actually used.
+  // Default is all stations.
+  if (antnrs.empty()) {
+    itsSelStations = itsStations;
+  } else {
+    // Set given stations.
+    itsSelStations = vector<MeqStation*>(nrant, (MeqStation*)0);
+    for (uint i=0; i<antnrs.size(); i++) {
+      int ant = antnrs[i];
+      if (ant >= 0  &&  ant < nrant) {
+    itsSelStations[ant] = itsStations[ant];
+      }
+    }
+  }
+  // Fill a a matrix telling for each antenna pair where contained in the MS.
+  // First initialize to not contained.
+  itsBLSel.resize (nrant, nrant);
+  itsBLSel = false;
+  // Set if selected for each baseline in the MS.
+  int nr = 0;
+  for (uint i=0; i<itsMSDesc.ant1.size(); ++i) {
+    int a1 = itsMSDesc.ant1[i];
+    int a2 = itsMSDesc.ant2[i];
+    if (itsSelStations[a1] && itsSelStations[a2]) {
+      if (useAutoCorr  ||  a1 != a2) {
+    itsBLSel(a1,a2) = true;
+    nr++;
+      }
+    }
+  }
+  return nr>0;
+}
+
+bool Prediffer::selectStep (const vector<int>& ant1,
+                const vector<int>& ant2,
+                bool useAutoCorrelations,
+                const vector<bool>& corr)
+{
+  int nrant = itsBLSel.nrow();
+  ASSERT (ant1.size() == ant2.size());
+  Matrix<bool> blSel;
+  if (ant1.size() == 0) {
+    // No baselines specified, select all baselines in strategy.
+    blSel = itsBLSel;
+  } else {
+    blSel.resize (nrant, nrant);
+    blSel = false;
+    for (uint i=0; i<ant1.size(); i++) {
+      int a1 = ant1[i];
+      int a2 = ant2[i];
+      if (a1 < nrant  &&  a2 < nrant) {
+    blSel(a1, a2) = itsBLSel(a1, a2);
+      }
+    }
+  }
+  // Unset auto-correlations if needed.
+  if (!useAutoCorrelations) {
+    for (int i=0; i<nrant; i++) {
+      blSel(i,i) = false;
+    }
+  }
+  // Fill the correlations to use. Use all if vector is empty.
+  for (int i=0; i<itsNCorr; ++i) {
+    itsCorr[i] = corr.empty();
+  }
+  if (corr.size() > 0) {
+    // Some values given; first one is always XX (or LL, etc.)
+    itsCorr[0] = corr[0];
+    if (corr.size() > 1  &&  itsNCorr > 1) {
+      if (corr.size() == 2) {
+    // Two values given; last one is always YY (or RR, etc.)
+    itsCorr[itsNCorr-1] = corr[1];
+      } else {
+    // More than 2 must be 4 values.
+    ASSERTSTR (corr.size()==4,
+           "Correlation selection vector must have 1, 2 or 4 flags");
+    if (itsNCorr == 2) {
+      itsCorr[1] = corr[3];
+    } else {
+      itsCorr[1] = corr[1];
+      itsCorr[2] = corr[2];
+      itsCorr[3] = corr[3];
+    }
+      }
+    }
+  }
+  
+  cout << blSel << endl;
+  
+  return fillBaseCorr (blSel);
+}
+
+bool Prediffer::fillBaseCorr (const Matrix<bool>& blSel)
+{
+  // Count the nr of baselines actually used for this step.
+  // Store the seqnr of all selected baselines.
+  itsBLInx.clear();
+  for (uint i=0; i<itsMSDesc.ant1.size(); ++i) {
+    int a1 = itsMSDesc.ant1[i];
+    int a2 = itsMSDesc.ant2[i];
+    if (blSel(a1,a2)) {
+      itsBLInx.push_back (i);
+    }
+  }
+  // Count the nr of selecteed correlations.
+  int nSelCorr = 0;
+  for (int i=0; i<itsNCorr; ++i) {
+    if (itsCorr[i]) {
+      nSelCorr++;
+    }
+  }
+  return (itsBLInx.size() > 0  &&  nSelCorr > 0);
+}
+
+// DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+// DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+
+
 
 } // namespace BBS
 } // namespace LOFAR

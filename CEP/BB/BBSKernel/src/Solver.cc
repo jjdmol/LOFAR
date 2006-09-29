@@ -38,6 +38,7 @@
 #include <iomanip>
 #include <cmath>
 
+using namespace std;
 using namespace casa;
 
 namespace LOFAR
@@ -105,10 +106,10 @@ void Solver::solve (bool useSVD)
 // last iteration to a ParmDB. The type of the parameters is set to 'history'
 // to ensure that they cannot accidentily be used as input for BBSkernel. Also,
 // ParmFacade::getHistory() checks on this type.
-void Solver::log(LOFAR::ParmDB::ParmDB &table)
+void Solver::log(LOFAR::ParmDB::ParmDB &table, const string &stepName)
 {
     ostringstream os;
-    os << std::setfill('0');
+    os << setfill('0');
 
     // Get parameters and solve domains.
     const vector<ParmData> &parms = itsParmInfo.parms();
@@ -118,7 +119,7 @@ void Solver::log(LOFAR::ParmDB::ParmDB &table)
     // type has exactly one coefficient, and only solvable parameters are
     // logged).
     bool solvable = true;
-    std::vector<int> shape(2, 1);
+    vector<int> shape(2, 1);
 
     // For each solve domain, log the solver quality indicators and the values of the
     // coefficients of each solvable parameter.
@@ -133,36 +134,35 @@ void Solver::log(LOFAR::ParmDB::ParmDB &table)
         // Log quality indicators.
         FitterData &fitter = itsFitters[i];
 
-        std::string domainSuffix;
+        string stepPrefix = stepName + ":";
+        string domainSuffix;
         if(itsFitters.size() > 1)
         {
             os.str("");
-            os << ":domain"
-	       << std::setw(((int) std::log10(double(itsFitters.size())) + 1))
-	       << i;
+            os << ":domain" << setw(((int) log10(double(itsFitters.size())) + 1)) << i;
             domainSuffix = os.str();
         }
 
         value.setNewParm();
         double rank = fitter.quality.itsRank;
         valueRep.setCoeff(&rank, &solvable, shape);
-        table.putValue("solver:rank" + domainSuffix, value);
+        table.putValue(stepPrefix + "solver:rank" + domainSuffix, value);
 
         value.setNewParm();
         valueRep.setCoeff(&fitter.quality.itsFit, &solvable, shape);
-        table.putValue("solver:fit" + domainSuffix, value);
+        table.putValue(stepPrefix + "solver:fit" + domainSuffix, value);
 
         value.setNewParm();
         valueRep.setCoeff(&fitter.quality.itsMu, &solvable, shape);
-        table.putValue("solver:mu" + domainSuffix, value);
+        table.putValue(stepPrefix + "solver:mu" + domainSuffix, value);
 
         value.setNewParm();
         valueRep.setCoeff(&fitter.quality.itsStddev, &solvable, shape);
-        table.putValue("solver:stddev" + domainSuffix, value);
+        table.putValue(stepPrefix + "solver:stddev" + domainSuffix, value);
 
         value.setNewParm();
         valueRep.setCoeff(&fitter.quality.itsChi, &solvable, shape);
-        table.putValue("solver:chi" + domainSuffix, value);
+        table.putValue(stepPrefix + "solver:chi" + domainSuffix, value);
 
         // Log each solvable parameter. Each combinaton of coefficient
         // and solve domain is logged separately. Otherwise, one would
@@ -170,11 +170,11 @@ void Solver::log(LOFAR::ParmDB::ParmDB &table)
         // plotter.
         for(size_t j = 0; j < parms.size(); ++j)
         {
-            const std::vector<bool> &mask = parms[j].getSolvMask(i);
+            const vector<bool> &mask = parms[j].getSolvMask(i);
             const MeqMatrix &coeff = parms[j].getCoeff(i);
             const double *data = coeff.doubleStorage();
 
-            int indexWidth = ((int) std::log10(double(mask.size()))) + 1;
+            int indexWidth = ((int) log10(double(mask.size()))) + 1;
 
             // Log each coefficient of the current parameter.
             for(size_t k = 0; k < mask.size(); k++)
@@ -185,7 +185,7 @@ void Solver::log(LOFAR::ParmDB::ParmDB &table)
                     value.setNewParm();
                     valueRep.setCoeff(&data[k], &solvable, shape);
                     os.str("");
-                    os << parms[j].getName() << ":c" << std::setw(indexWidth) << k << domainSuffix;
+                    os << stepPrefix << parms[j].getName() << ":c" << setw(indexWidth) << k << domainSuffix;
                     table.putValue(os.str(), value);
                 }
             }
