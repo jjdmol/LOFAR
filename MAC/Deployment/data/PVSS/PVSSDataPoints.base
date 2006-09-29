@@ -32,6 +32,7 @@ OfflineCtrl		-		C	O	LOFAR_ObsSW_@observation@_OfflineCtrl
 Ring			-		C	O	LOFAR_ObsSW_@ring@
 Station			-		C	O	LOFAR_ObsSW_@ring@_@station@
 #
+StnLOFAR		-		S	P	LOFAR
 StnPIC			-		S	P	LOFAR_PIC
 Cabinet			-		S	P	LOFAR_PIC_@cabinet@
 SubRack			-		S	P	LOFAR_PIC_@cabinet@_@subrack@
