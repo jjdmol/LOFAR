@@ -1,0 +1,483 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,391 228 730 540 N "_3DFace" 0
+"main()
+{
+	int loglevel;
+	dpGet(getSystemName() + \"__loglevel.\",loglevel);
+	displayLogLevel(loglevel);
+	
+	dyn_string resourceRoots;
+	dpGet(getSystemName() + \"__navigator.resourceRoots\",resourceRoots);
+	SelectionList_Roots.items = resourceRoots;
+	SelectionList_Roots.selectedPos = 1;
+}" 0
+EE E E 1 -1 -1 0  40 154
+"" 0 1
+E"displayLogLevel(int loglevel)
+{
+	TextField_LogLevel.text = loglevel;
+	switch(loglevel)
+	{
+		case 50000:
+			RadioButton_LogLevel.number = 0;
+			break;
+		case 40000:
+			RadioButton_LogLevel.number = 1;
+			break;
+		case 30000:
+			RadioButton_LogLevel.number = 2;
+			break;
+		case 20000:
+			RadioButton_LogLevel.number = 3;
+			break;
+		case 10000:
+			RadioButton_LogLevel.number = 4;
+			break;
+		case 0:
+			RadioButton_LogLevel.number = 5;
+			break;
+		default:
+			RadioButton_LogLevel.number = 6;
+			break;
+	}
+}" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 9
+"Border1"
+""
+1 20 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 20 190 190
+2 74
+"Text5"
+""
+1 28 23 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+74 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 30 25 80 41
+0 2 0 "s" 0 0 0 192 0 0  30 25
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Log level
+6 82
+"Border11"
+""
+1 188 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+81 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 188 20 558 190
+6 124
+"Border2"
+""
+1 20 370 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+113 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 200 190 370
+6 125
+"Border3"
+""
+1 188 370 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+114 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 188 200 558 370
+2 126
+"Text1"
+""
+1 30 210 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+115 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 212 120 228
+0 2 0 "s" 0 0 0 192 0 0  32 212
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Resource roots
+2 132
+"Text2"
+""
+1 78 1070 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+121 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 232 178 308
+0 2 0 "s" 0 0 0 64 0 0  32 232
+ 3
+1
+LANG:1 109 -microsoft windows-Arial-normal-i-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,255,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 22 (The Navigator must be
+1
+LANG:1 109 -microsoft windows-Arial-normal-i-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,255,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 24 restarted before changes
+1
+LANG:1 109 -microsoft windows-Arial-normal-i-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,255,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 26 to this field take effect)
+13 40
+"Button1"
+""
+1 490 380 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+41 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+488 378 561 405
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  dpSet(getSystemName() + \"__loglevel.\", TextField_LogLevel.text);
+ 
+	dpSet(getSystemName() + \"__navigator.resourceRoots\",SelectionList_Roots.items);
+  
+}" 0
+ E E E
+19 122
+"RadioButton_LogLevel"
+""
+1 30 50 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+111 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 48 112 182
+7
+T 
+1
+LANG:1 5 Fatal
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 5 Error
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 7 Warning
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 4 Info
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 5 Debug
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 5 Trace
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 6 Custom
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+ 1
+E
+"main(int button)
+{
+	switch(button)
+	{
+		case 0:
+			displayLogLevel(50000);
+			break;
+		case 1:
+			displayLogLevel(40000);
+			break;
+		case 2:
+			displayLogLevel(30000);
+			break;
+		case 3:
+			displayLogLevel(20000);
+			break;
+		case 4:
+			displayLogLevel(10000);
+			break;
+		case 5:
+			displayLogLevel(0);
+			break;
+		case 6:
+		default:
+			break;
+	}
+}" 0
+
+14 123
+"TextField_LogLevel"
+""
+1 200 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+112 0 0 0 0 0
+"main()
+{
+	RadioButton_LogLevel.number = 6;
+}" 0
+E E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+198 28 322 55
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+17 127
+"SelectionList_Roots"
+""
+1 200 210 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+116 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+198 208 372 322
+0
+E
+"main()
+{
+	TextField_Roots.text = SelectionList_Roots.selectedText;	
+}" 0
+
+E
+
+3 1
+14 128
+"TextField_Roots"
+""
+1 200 330 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+117 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+198 328 372 355
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+	TextField_Roots.text	= SelectionList_Roots.selectedText;
+}" 0
+
+E
+13 129
+"Button_AddRoots"
+""
+1 380 210 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+118 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+378 208 442 235
+T 
+1
+LANG:1 3 Add
+"main()
+{
+	if(strlen(TextField_Roots.text) > 0)
+	{
+		SelectionList_Roots.appendItem(TextField_Roots.text);
+		SelectionList_Roots.selectedPos = SelectionList_Roots.itemCount;
+	}
+}" 0
+ E E E
+13 130
+"Button_RemoveRoots"
+""
+1 720 450 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+119 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+378 238 442 265
+T 
+1
+LANG:1 6 Remove
+"main()
+{
+	int selected = SelectionList_Roots.selectedPos;
+	if(selected > 0)
+	{
+		SelectionList_Roots.deletePos(selected);
+		if(selected > 1)
+			SelectionList_Roots.selectedPos = selected-1;
+		else
+			SelectionList_Roots.selectedPos = 1;
+	}
+}" 0
+ E E E
+13 131
+"Button_CahngeRoots"
+""
+1 1060 720 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+120 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+378 268 442 295
+T 
+1
+LANG:1 6 Change
+"main()
+{
+	if(strlen(TextField_Roots.text) > 0 && SelectionList_Roots.selectedPos > 0)
+	{
+		int selected = SelectionList_Roots.selectedPos;
+		SelectionList_Roots.replacePos(SelectionList_Roots.selectedPos,TextField_Roots.text);
+		SelectionList_Roots.selectedPos = selected;
+	}
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

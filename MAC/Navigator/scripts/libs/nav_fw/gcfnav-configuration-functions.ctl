@@ -399,6 +399,26 @@ void checkForReferenceReplaceOriginal(dyn_string &resources, dyn_string referenc
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigQueryResourceRoots
+//
+// returns - list of expanded resource root names
+///////////////////////////////////////////////////////////////////////////
+dyn_string navConfigQueryResourceRoots()
+{
+  dyn_string resourceRootsForQuery;
+  dyn_string resourceRoots;
+  int i;
+  
+  dpGet(DPNAME_NAVIGATOR + "." + ELNAME_RESOURCEROOTS, resourceRootsForQuery);
+  for(i = 1; i<=dynlen(resourceRootsForQuery); i++)
+  {
+    dyn_string resourceNames = dpNames(resourceRootsForQuery[i]);
+    LOG_DEBUG("resourceRoots query results for " + resourceRootsForQuery[i] + ":",LOG_DYN(resourceNames));
+    dynAppend(resourceRoots,resourceNames);
+  }
+  return resourceRoots;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //Function navConfigGetResources
@@ -425,7 +445,7 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
     // The roots are read from the Navigator configuration
     maxDepth = depth;
     // read the roots from the configuration
-    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_RESOURCEROOTS, resourceRoots);
+    resourceRoots = navConfigQueryResourceRoots();
     err = getLastError();
     if (dynlen(err) > 0)
     {
@@ -441,7 +461,7 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
     
     maxDepth = depth;
     // read the roots from the configuration
-    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_RESOURCEROOTS, resourceRoots);
+    resourceRoots = navConfigQueryResourceRoots();
     // now only use the resource roots of the requested parent
     if (dynlen(resourceRoots) > 0)
     {
