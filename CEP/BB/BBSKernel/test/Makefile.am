@@ -3,48 +3,48 @@ tParmMerge tPredSolv tPredict tSubtract tCorrect tPerturbed tMSData \
 tShift tDFT
 
 tMeqPolc_SOURCES = tMeqPolc.cc
-tMeqPolc_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tMeqPolc_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tMeqPolcLog_SOURCES = tMeqPolcLog.cc
-tMeqPolcLog_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tMeqPolcLog_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tMeqTabular_SOURCES = tMeqTabular.cc
-tMeqTabular_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tMeqTabular_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tFillRow_SOURCES = tFillRow.cc
-tFillRow_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tFillRow_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tMeqParm_SOURCES = tMeqParm.cc
-tMeqParm_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tMeqParm_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tParmMerge_SOURCES = tParmMerge.cc
-tParmMerge_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tParmMerge_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tPredSolv_SOURCES = tPredSolv.cc
-tPredSolv_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tPredSolv_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tPredict_SOURCES = tPredict.cc
-tPredict_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tPredict_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tSubtract_SOURCES = tSubtract.cc
-tSubtract_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tSubtract_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tCorrect_SOURCES = tCorrect.cc
-tCorrect_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tCorrect_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tPerturbed_SOURCES = tPerturbed.cc
-tPerturbed_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tPerturbed_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tMSData_SOURCES = tMSData.cc
-tMSData_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tMSData_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tShift_SOURCES = tShift.cc
-tShift_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tShift_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tDFT_SOURCES = tDFT.cc
-tDFT_DEPENDENCIES = ../src/libbbs.la $(LOFAR_DEPEND)
+tDFT_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
-LDADD				= ../src/libbbs.la 
+LDADD				= ../src/libbbskernel.la 
 
 
 TESTS = tFillRow.sh tMeqPolc.sh tMeqPolcLog.sh tMeqTabular.sh tMeqParm.sh \
