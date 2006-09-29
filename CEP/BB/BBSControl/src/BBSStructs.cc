@@ -53,7 +53,8 @@ namespace LOFAR
       os << "Parameter database:";
       Indent id;
       os << endl << indent << "Instrument table: " << obj.instrument
-	 << endl << indent << "Local sky table: " << obj.localSky;
+	 << endl << indent << "Local sky table: " << obj.localSky
+	 << endl << indent << "History table: " << obj.history;
       return os;
     }
 
@@ -68,39 +69,12 @@ namespace LOFAR
     }
 
 
-    ostream& operator<<(ostream& os, const Correlation& obj)
-    {
-      os << "Correlation:";
-      Indent id;
-      os << endl << indent << "Selection: ";
-      switch(obj.selection) {
-      case Correlation::NONE:  os << "NONE";  break;
-      case Correlation::AUTO:  os << "AUTO";  break;
-      case Correlation::CROSS: os << "CROSS"; break;
-      case Correlation::ALL:   os << "ALL";   break;
-      default: os << "*****"; break;
-      }
-      os << endl << indent << "Type:" << obj.type;
-      return os;
-    }
-
-
     ostream& operator<<(ostream& os, const Integration& obj)
     {
       os << "Integration:";
       Indent id;
       os << endl << indent << "Delta frequency: " << obj.deltaFreq << " (Hz)"
 	 << endl << indent << "Delta time: " << obj.deltaTime << " (s)";
-      return os;
-    }
-
-
-    ostream& operator<<(ostream& os, const Baselines& obj)
-    {
-      os << "Baselines:";
-      Indent id;
-      os << endl << indent << "Station1: " << obj.station1
-	 << endl << indent << "Station2: " << obj.station2;
       return os;
     }
 
@@ -121,7 +95,8 @@ namespace LOFAR
     BlobOStream& operator<<(BlobOStream& bos, const ParmDB& obj)
     {
       bos << obj.instrument
-	  << obj.localSky;
+	  << obj.localSky
+	  << obj.history;
       return bos;
     }
 
@@ -174,7 +149,8 @@ namespace LOFAR
     BlobIStream& operator>>(BlobIStream& bis, ParmDB& obj)
     {
       bis >> obj.instrument
-	  >> obj.localSky;
+	  >> obj.localSky
+	  >> obj.history;
       return bis;
     }
 

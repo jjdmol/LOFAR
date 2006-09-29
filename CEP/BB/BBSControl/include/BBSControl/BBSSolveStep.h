@@ -68,7 +68,7 @@ namespace LOFAR
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);
 
-    private:
+    public:
       uint32 itsMaxIter;            ///< Maximum number of iterations
       double itsEpsilon;            ///< Convergence threshold
       double itsMinConverged;       ///< Fraction that must have converged

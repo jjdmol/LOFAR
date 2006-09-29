@@ -4,6 +4,7 @@ pkginclude_HEADERS = \
 	BBSSolveStep.h \
 	BBSMultiStep.h \
 	BBSProcessControl.h \
+	BBSKernelProcessControl.h \
 	BBSStrategy.h \
 	BBSStructs.h \
 	BlackBoardDemo.h \

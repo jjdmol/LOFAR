@@ -79,7 +79,7 @@ namespace LOFAR
       // in this class?
       vector<const BBSStep*> getAllSteps() const;
 
-    private:
+    public:
       // Read the BBSStep objects from the blob input stream \a bis and store
       // them in \a itsSteps.
       void BBSStrategy::readSteps(BlobIStream& bis);

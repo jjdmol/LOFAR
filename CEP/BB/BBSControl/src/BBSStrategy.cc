@@ -58,7 +58,8 @@ namespace LOFAR
       // Retrieve the parameter database related key/value pairs.
       itsParmDB.instrument = aParSet.getString("ParmDB.Instrument");
       itsParmDB.localSky = aParSet.getString("ParmDB.LocalSky");
-
+      itsParmDB.history = aParSet.getString("ParmDB.History");
+      
       // Create a subset of \a aParSet, containing only the relevant keys for
       // a Strategy.
       ParameterSet ps(aParSet.makeSubset("Strategy."));

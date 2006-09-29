@@ -136,7 +136,7 @@ namespace LOFAR
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);
 
-    private:
+    public:
       // Return the type of \c *this as a string.
       virtual const string& type() const = 0;
 

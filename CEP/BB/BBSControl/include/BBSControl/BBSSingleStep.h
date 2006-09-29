@@ -69,7 +69,7 @@ namespace LOFAR
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);
 
-    private:
+    public:
       // Return the type of \c *this as a string.
       virtual const string& type() const;
 
@@ -77,13 +77,62 @@ namespace LOFAR
       string          itsOutputData;
     };
 
+    
+    class BBSPredictStep: public BBSSingleStep
+    {
+    public:
+        BBSPredictStep(const BBSStep* parent = 0)
+        : BBSSingleStep(parent)
+        {
+        }
+        
+        BBSPredictStep(const string& name, 
+            const ACC::APS::ParameterSet& parSet,
+            const BBSStep* parent)
+        :BBSSingleStep(name, parSet, parent)
+        {
+        }
+    };
+    
+    
+    class BBSSubtractStep: public BBSSingleStep
+    {
+    public:
+        BBSSubtractStep(const BBSStep* parent = 0)
+        : BBSSingleStep(parent)
+        {
+        }
+    
+        BBSSubtractStep(const string& name, 
+            const ACC::APS::ParameterSet& parSet,
+            const BBSStep* parent)
+        : BBSSingleStep(name, parSet, parent)
+        {
+        }
+    };
+    
+    
+    class BBSCorrectStep: public BBSSingleStep
+    {
+    public:
+        BBSCorrectStep(const BBSStep* parent = 0)
+        : BBSSingleStep(parent)
+        {
+        }
+    
+        BBSCorrectStep(const string& name, 
+            const ACC::APS::ParameterSet& parSet,
+            const BBSStep* parent)
+        : BBSSingleStep(name, parSet, parent)
+        {
+        }
+    };
+    
+    
     // For the time being we'll define the following steps as typedefs. If,
     // and when, they need to be "upgraded" to a real class, we can do so,
     // without affecting code referring to these types.
     // @{
-    typedef BBSSingleStep BBSSubtractStep;
-    typedef BBSSingleStep BBSCorrectStep;
-    typedef BBSSingleStep BBSPredictStep;
     typedef BBSSingleStep BBSShiftStep;
     typedef BBSSingleStep BBSRefitStep;
     // @}
