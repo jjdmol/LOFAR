@@ -1415,8 +1415,7 @@ void ButtonMaximize_HandleEventClick()
           string subViewFileName;
           if (navConfigGetSubViewConfigElements(subViews[beginSubViews + selectedSubView - 1], subViewCaption, subViewFileName))
           {
-            string viewsPath = navConfigGetViewsPath();
-            LOG_DEBUG("subviewcaption, subviewfilename:", subViewCaption, viewsPath + subViewFileName);
+            LOG_DEBUG("subviewcaption, subviewfilename:", subViewCaption, subViewFileName);
   
             string dpNameTemp = datapointPath;
             bool isReference;
@@ -1432,7 +1431,7 @@ void ButtonMaximize_HandleEventClick()
               "$datapoint:" + dpNameTemp,
               "$configDatapoint:" + configs[beginSubViews + selectedSubView - 1],
               "$referenceDatapoint:" + referenceDatapoint);
-            ModuleOnWithPanel(dpNameTemp, -1, -1, 0, 0, 1, 1, "", viewsPath + subViewFileName, subViewCaption, panelParameters);
+            ModuleOnWithPanel(dpNameTemp, -1, -1, 0, 0, 1, 1, "", subViewFileName, subViewCaption, panelParameters);
           }
         }
       }
