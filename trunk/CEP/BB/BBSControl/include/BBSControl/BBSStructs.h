@@ -33,6 +33,8 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
+#include <BBSKernel/BBSKernelStructs.h>
+
 namespace LOFAR
 {
   //# Forward declarations
@@ -61,6 +63,7 @@ namespace LOFAR
     {
       string instrument;    ///< Instrument parameters (MS table)
       string localSky;	    ///< Local sky parameters (MS table)
+      string history;       ///< History (MS table)
     };
 
     // Domain size is defined by two parameters: bandwidth f(Hz), and time
@@ -72,20 +75,6 @@ namespace LOFAR
       double timeInterval;  ///< Time interval is seconds.
     };
 
-    // Information about which correlation products (auto, cross, or both),
-    // and which polarizations should be used.
-    struct Correlation
-    {
-      Correlation() : selection(NONE) {}
-      enum Selection {
-	NONE,               ///< No correlations
-	AUTO,               ///< Auto correlation only.
-	CROSS,              ///< Cross correlation only.
-	ALL                 ///< Both auto- and cross correlation
-      } selection;
-      vector<string> type;  ///< E.g., ["XX", "XY", "YX", "YY"]
-    };
-
     // Sizes of the integration intervals, when applied. Integration can be
     // performed along the frequency axis and the time axis.q
     struct Integration
@@ -95,42 +84,12 @@ namespace LOFAR
       double deltaTime;     ///< time integration interval: t(s)
     };
 
-    // Two vectors of stations names, which, when paired element-wise, define
-    // the baselines to be used in the current step. Names may contain
-    // wildcards, like \c * and \c ?. If they do, then all possible baselines
-    // will be constructed from the expanded names. Expansion of wildcards
-    // will be done in the BBS kernel.
-    // 
-    // For example, suppose that: 
-    // \verbatim 
-    // station1 = ["CS*", "RS1"]
-    // station2 = ["CS*", "RS2"] 
-    // \endverbatim
-    // Furthermore, suppose that \c CS* expands to \c CS1, \c CS2, and \c
-    // CS3. Then, in the BBS kernel, seven baselines will be constructed:
-    // \verbatim
-    // [ CS1:CS1, CS1:CS2, CS1:CS3, CS2:CS2, CS2:CS3, CS3:CS3, RS1:RS2 ]
-    // \endverbatim
-    // 
-    // \note Station names are \e not expanded by matching with all existing
-    // %LOFAR stations, but only with those that took part in a particular
-    // observation; i.e., only those stations that are mentioned in the \c
-    // ANTENNA table in the Measurement Set.
-    struct Baselines
-    {
-      vector<string> station1;
-      vector<string> station2;
-    };
-
-
     // Write the contents of these structs in human readable form.
     // @{
     ostream& operator<<(ostream&, const BBDB&);
     ostream& operator<<(ostream&, const ParmDB&);
     ostream& operator<<(ostream&, const DomainSize&);
-    ostream& operator<<(ostream&, const Correlation&);
     ostream& operator<<(ostream&, const Integration&);
-    ostream& operator<<(ostream&, const Baselines&);
     // @}
 
     // Blob I/O methods for these structs.
