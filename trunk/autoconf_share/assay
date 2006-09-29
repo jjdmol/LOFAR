@@ -162,7 +162,7 @@
 
 # Initialize the command to be executed.
   COMMAND="$CMDPREFIX ./$PROG"
-  CHECKTOOLCOMMAND="$CHKTOOL $COMMAND"
+  CHECKTOOLCOMMAND="$CMDPREFIX $CHKTOOL ./$PROG"
 
 
 # Define exit and interrupt handler.
