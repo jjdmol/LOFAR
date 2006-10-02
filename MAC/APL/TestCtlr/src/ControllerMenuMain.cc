@@ -1,4 +1,4 @@
-//#  TestControllerMain.cc: Main entry for the TestController program.
+//#  ControllerMenuMain.cc: Main entry for the ControllerMenu program.
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "TestController.h"
+#include "ControllerMenu.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::Test;
@@ -32,10 +32,10 @@ int main(int argc, char* argv[])
 {
 	GCFTask::init(argc, argv);
 
-	ParentControl*	pc = ParentControl::instance();
-	pc->start();	// make initial transition
+	ChildControl*	cc = ChildControl::instance();
+	cc->start();	// make initial transition
 
-	TestController	tc(argv[1]);
+	ControllerMenu	tc;
 	tc.start(); // make initial transition
 
 	GCFTask::run();

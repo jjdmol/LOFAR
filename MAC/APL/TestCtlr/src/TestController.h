@@ -1,6 +1,6 @@
-//#  TestController.h: Interface between MAC and SAS.
+//#  TestController.h: Dummy task for testing parentControl
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,13 +20,12 @@
 //#
 //#  $Id$
 
-#ifndef TestController_H
-#define TestController_H
-
-//# Includes
-#include <boost/shared_ptr.hpp>
+#ifndef PARENTONLY_H
+#define PARENTONLY_H
 
 //# GCF Includes
+#include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -34,15 +33,14 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
+#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
+#include <APL/APLCommon/PropertySetAnswer.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/ChildControl.h>
+#include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
 
 //# Common Includes
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
 
 //# ACC Includes
@@ -58,53 +56,37 @@ using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
-using	GCF::TM::GCFTask;
-using	APLCommon::ChildControl;
+using	APLCommon::ParentControl;
 
-class TestController : public GCFTask
+
+class TestController : public GCFTask,
+						   APLCommon::PropertySetAnswerHandlerInterface
 {
 public:
-	TestController();
+	explicit TestController(const string& cntlrName);
 	~TestController();
 
+   	// PropertySetAnswerHandlerInterface method
+   	virtual void handlePropertySetAnswer(GCFEvent& answer);
+
+	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult startup_state (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult claim_state   (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult prepare_state (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult run_state     (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult suspend_state (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult release_state (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult finish_state  (GCFEvent& e, GCFPortInterface& p);
+	
+	// Normal control mode. 
+   	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 
 private:
-	// avoid copying
+	// avoid defaultconstruction and copying
+	TestController();
 	TestController(const TestController&);
    	TestController& operator=(const TestController&);
 
-	int16	_chooseController();
-	void	_doStartMenu();
-	void	_doActionMenu();
-   	void 	_connectedHandler(GCFPortInterface& port);
-   	void 	_disconnectedHandler(GCFPortInterface& port);
+	ParentControl*			itsParentControl;	// pointer to parent control task
+	GCFITCPort*				itsParentPort;		// comm.port with parent task
+	GCFTimerPort*			itsTimerPort;		// general port for timers
 
-	// Ports for StartDaemon and ObservationControllers.
-   	GCFTimerPort*		itsTimerPort;			// for timers
-
-	// pointer to child control task
-	ChildControl*		itsChildControl;
-	GCFITCPort*			itsChildPort;
-
-	// Second timer used for internal timing.
-	uint32				itsSecondTimer;			// 1 second hardbeat
-
-	// Scheduling settings
-	uint32				itsQueuePeriod;			// period between queueing and start
-	uint32				itsClaimPeriod;			// period between claiming and start
-	ptime				itsStartTime;	
-	ptime				itsStopTime;
-
-	uint16				itsCntlrType;
-	uint32				itsObsNr;
+	string					itsController;
+	uint16					itsState;
 };
 
   };//Test

@@ -1,4 +1,4 @@
-//#  TestController.cc: Program for testing controller manually
+//#  TestController.cc: Dummy task for debugging parentControl
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,59 +19,58 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-
+//#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/lofar_fstream.h>
+#include <Common/LofarLocators.h>
 
+#include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <GCF/GCF_PVTypes.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
+#include <GCF/GCF_ServiceInfo.h>
+#include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
-#include <APL/APLCommon/ControllerDefines.h>
-#include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/StationInfo.h>
 
 #include "TestController.h"
 
-using namespace std;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 
 namespace LOFAR {
-	using namespace GCFCommon;
 	using namespace APLCommon;
-	using namespace GCF::Common;
-	using namespace GCF::TM;
-	using namespace Deployment;
 	using namespace ACC::APS;
 	namespace Test {
 	
 //
 // TestController()
 //
-TestController::TestController() :
-	GCFTask 			((State)&TestController::initial_state,string("TestCtlr")),
-	itsTimerPort		(0),
-	itsChildControl		(0),
-	itsChildPort		(0),
-	itsSecondTimer		(0),
-	itsQueuePeriod		(0),
-	itsClaimPeriod		(0),
-	itsStartTime		(),
-	itsStopTime			()
+TestController::TestController(const string&	cntlrName) :
+	GCFTask 			((State)&TestController::initial_state,cntlrName),
+	PropertySetAnswerHandlerInterface(),
+	itsParentControl	(0),
+	itsParentPort		(0),
+	itsTimerPort		(0)
 {
-	LOG_TRACE_OBJ ("TestController construction");
+	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
-	// attach to child control task
-	itsChildControl = ChildControl::instance();
-	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", 
+	// attach to parent control task
+	itsParentControl = ParentControl::instance();
+	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
 									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
-	itsChildPort->open();		// will result in F_CONNECTED
+	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
+	itsParentPort->open();		// will result in F_CONNECTED
 
-	// need port for timers
-	itsTimerPort = new GCFTimerPort(*this, "Timerport");
+	// need port for timers.
+	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
+	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 }
 
@@ -81,573 +80,225 @@ TestController::TestController() :
 //
 TestController::~TestController()
 {
-	LOG_TRACE_OBJ ("~TestController");
+	LOG_TRACE_OBJ_STR (getName() << " destruction");
+}
 
+
+//
+// handlePropertySetAnswer(answer)
+//
+void TestController::handlePropertySetAnswer(GCFEvent& answer)
+{
+	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
 }
 
 
 //
 // initial_state(event, port)
 //
-GCFEvent::TResult TestController::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
+// Setup all connections.
+//
+GCFEvent::TResult TestController::initial_state(GCFEvent& event, 
+													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial_state:" << evtstr(event));
+	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
 	switch (event.signal) {
-	case F_ENTRY:
-		break;
-	  
-    case F_INIT:
-		// Start ChildControl task
-		LOG_DEBUG ("Enabling ChildControltask");
-		itsChildControl->openService(MAC_SVCMASK_APLTEST_CTLRMENU, 0);
-		itsChildControl->registerCompletionPort(itsChildPort);
-		cout << "Waiting till other tasks are ready...";
-		itsTimerPort->setTimer(2.0);	// give other task some time.
-   		break;
-
-	case F_TIMER:
-		itsCntlrType = _chooseController();
-		_doStartMenu();	
-		TRAN(TestController::startup_state);
-		break;
-
-	case F_CONNECTED:
-	case F_DISCONNECTED:
-		break;
-	
-	default:
-		LOG_DEBUG ("TestController::initial, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
-//
-// startup_state(event, port)
-//
-// startup the controller
-//
-GCFEvent::TResult TestController::startup_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-	LOG_DEBUG_STR ("startup_state:" << evtstr(event));
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-    case F_INIT:
-		break;
-	  
 	case F_ENTRY: {
-			// Start ChildControl task
-			cout << "Starting up controller ... ";
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->startChild(cntlrName,
-											 itsObsNr,
-											 itsCntlrType,
-											 0,
-											 myHostname(false))) {
-				cout << "Error during start of controller, bailing out" << endl;
-				stop();
-			}
-			cout << endl << "Startrequest queued, waiting for confirmation...";
-		}
-   		break;
+		// Start ParentControl task
+		LOG_DEBUG ("Enabling ParentControl task");
+		itsParentPort = itsParentControl->registerTask(this);
+	}
+	break;
 
-	case F_TIMER:
 	case F_CONNECTED:
-	case F_DISCONNECTED:
-		break;
-
-	case CONTROL_STARTED: {
-			CONTROLStartedEvent msg(event);
-			if (msg.successful) {
-				cout << endl << "Startdaemon reports succesful startup.";
-				cout << "Waiting for connection with controller ...";
-			}
-			else {
-				cout << endl << "StartDaemon could not start the controller, bailing out." << endl;
-				stop();
-			}
-		}
-		break;
-
-	case CONTROL_CONNECTED: {
-			CONTROLConnectedEvent msg(event);
-			cout << endl << "Connection result = " << msg.result << endl;
-			if (msg.result != CT_RESULT_NO_ERROR) {
-				cout << "Bailing out because of the errors." << endl;
-				stop ();
-			}
-			else {
-				_doActionMenu();	// does a TRAN
-			}
-		}
+		TRAN(TestController::active_state);				// go to next state.
 		break;
 
 	default:
-		LOG_DEBUG ("TestController::startup, default");
-		status = GCFEvent::NOT_HANDLED;
+		LOG_DEBUG_STR ("initial, default");
 		break;
 	}    
-	return (status);
-}
 
-//
-// claim_state(event, port)
-//
-GCFEvent::TResult TestController::claim_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-	LOG_DEBUG_STR ("claim_state:" << evtstr(event));
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-    case F_INIT:
-		break;
-	  
-	case F_ENTRY: {
-			// Start ChildControl task
-			cout << "Requesting controller to goto CLAIM state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->requestState(CTState::CLAIMED, cntlrName, itsObsNr, itsCntlrType)) {
-				cout << "Error during state request, bailing out" << endl;
-				stop();
-			}
-		}
-   		break;
-
-	case F_TIMER:
-	case F_CONNECTED:
-	case F_DISCONNECTED:
-		break;
-
-	case CONTROL_CLAIMED: {
-			CONTROLClaimedEvent msg(event);
-			cout << endl << "Claim result = " << msg.result << endl;
-			if (msg.result != CT_RESULT_NO_ERROR) {
-				cout << "Bailing out because of the errors." << endl;
-				stop ();
-			}
-			else {
-				_doActionMenu();
-			}
-		}
-		break;
-
-	default:
-		LOG_DEBUG ("TestController::claim, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
+	return (GCFEvent::HANDLED);
 }
 
 
 //
-// prepare_state(event, port)
+// active_state(event, port)
 //
-GCFEvent::TResult TestController::prepare_state(GCFEvent& event, GCFPortInterface& /*port*/)
+// Normal operation state. 
+//
+GCFEvent::TResult TestController::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("prepare_state:" << evtstr(event));
+	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
 	switch (event.signal) {
-    case F_INIT:
-		break;
-	  
-	case F_ENTRY: {
-			// Start ChildControl task
-			cout << "Requesting controller to goto PREPARE state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->requestState(CTState::PREPARED, cntlrName, itsObsNr, itsCntlrType)) {
-				cout << "Error during state request, bailing out" << endl;
-				stop();
-			}
-		}
-   		break;
-
-	case F_TIMER:
-	case F_CONNECTED:
-	case F_DISCONNECTED:
-		break;
-
-	case CONTROL_PREPARED: {
-			CONTROLPreparedEvent msg(event);
-			cout << endl << "Prepare result = " << msg.result << endl;
-			if (msg.result != CT_RESULT_NO_ERROR) {
-				cout << "Bailing out because of the errors." << endl;
-				stop ();
-			}
-			else {
-				_doActionMenu();
-			}
+	case F_TIMER:  {
+		switch (itsState) {
+		case CTState::CONNECT: {
+			CONTROLConnectedEvent	answer;
+			answer.cntlrName = itsController;
+			answer.result = true;
+			LOG_DEBUG_STR("Sending CONNECTED event");
+			itsParentPort->send(answer);
 		}
 		break;
 
-	default:
-		LOG_DEBUG ("TestController::prepare, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
-//
-// run_state(event, port)
-//
-GCFEvent::TResult TestController::run_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-	LOG_DEBUG_STR ("run_state:" << evtstr(event));
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-    case F_INIT:
-		break;
-	  
-	case F_ENTRY: {
-			// Start ChildControl task
-			cout << "Requesting controller to goto RUN state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->requestState(CTState::ACTIVE, cntlrName, itsObsNr, itsCntlrType)) {
-				cout << "Error during state request, bailing out" << endl;
-				stop();
-			}
-		}
-   		break;
-
-	case F_TIMER:
-	case F_CONNECTED:
-	case F_DISCONNECTED:
-		break;
-
-	case CONTROL_RESUMED: {
-			CONTROLResumedEvent msg(event);
-			cout << endl << "Resume result = " << msg.result << endl;
-			if (msg.result != CT_RESULT_NO_ERROR) {
-				cout << "Bailing out because of the errors." << endl;
-				stop ();
-			}
-			else {
-				_doActionMenu();
-			}
+		case CTState::RESYNC: {
 		}
 		break;
 
-	default:
-		LOG_DEBUG ("TestController::run, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
-//
-// suspend_state(event, port)
-//
-GCFEvent::TResult TestController::suspend_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-	LOG_DEBUG_STR ("suspend_state:" << evtstr(event));
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-    case F_INIT:
-		break;
-	  
-	case F_ENTRY: {
-			// Start ChildControl task
-			cout << "Requesting controller to goto SUSPEND state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->requestState(CTState::SUSPEND, cntlrName, itsObsNr, itsCntlrType)) {
-				cout << "Error during state request, bailing out" << endl;
-				stop();
-			}
-		}
-   		break;
-
-	case F_TIMER:
-	case F_CONNECTED:
-	case F_DISCONNECTED:
-		break;
-
-	case CONTROL_SUSPENDED: {
-			CONTROLSuspendedEvent msg(event);
-			cout << endl << "Suspend result = " << msg.result << endl;
-			if (msg.result != CT_RESULT_NO_ERROR) {
-				cout << "Bailing out because of the errors." << endl;
-				stop ();
-			}
-			else {
-				_doActionMenu();
-			}
+		case CTState::SCHEDULE: {
+			CONTROLScheduledEvent	answer;
+			answer.cntlrName = itsController;
+			answer.result = 0;
+			LOG_DEBUG_STR("Sending SCHEDULED event");
+			itsParentPort->send(answer);
 		}
 		break;
 
-	default:
-		LOG_DEBUG ("TestController::suspend, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
-//
-// release_state(event, port)
-//
-GCFEvent::TResult TestController::release_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-	LOG_DEBUG_STR ("release_state:" << evtstr(event));
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-    case F_INIT:
-		break;
-	  
-	case F_ENTRY: {
-			// Start ChildControl task
-			cout << "Requesting controller to goto RELEASE state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->requestState(CTState::ACTIVE, cntlrName, itsObsNr, itsCntlrType)) {
-				cout << "Error during state request, bailing out" << endl;
-				stop();
-			}
-		}
-   		break;
-
-	case F_TIMER:
-	case F_CONNECTED:
-	case F_DISCONNECTED:
-		break;
-
-	case CONTROL_RELEASED: {
-			CONTROLReleasedEvent msg(event);
-			cout << endl << "Release result = " << msg.result << endl;
-			if (msg.result != CT_RESULT_NO_ERROR) {
-				cout << "Bailing out because of the errors." << endl;
-				stop ();
-			}
-			else {
-				_doActionMenu();
-			}
+		case CTState::CLAIM: {
+			CONTROLClaimedEvent	answer;
+			answer.cntlrName = itsController;
+			answer.result = 0;
+			LOG_DEBUG_STR("Sending CLAIMED event");
+			itsParentPort->send(answer);
 		}
 		break;
 
-	default:
-		LOG_DEBUG ("TestController::release, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
-//
-// finish_state(event, port)
-//
-GCFEvent::TResult TestController::finish_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-	LOG_DEBUG_STR ("finish_state:" << evtstr(event));
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-    case F_INIT:
-		break;
-	  
-	case F_ENTRY: {
-			// Start ChildControl task
-			cout << "Requesting controller to goto FINISH state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->requestState(CTState::FINISH, cntlrName, itsObsNr, itsCntlrType)) {
-				cout << "Error during state request, bailing out" << endl;
-				stop();
-			}
+		case CTState::PREPARE: {
+			CONTROLPreparedEvent	answer;
+			answer.cntlrName = itsController;
+			answer.result = 0;
+			LOG_DEBUG_STR("Sending PREPARED event");
+			itsParentPort->send(answer);
 		}
-   		break;
-
-	case F_TIMER:
-	case F_CONNECTED:
-	case F_DISCONNECTED:
 		break;
+
+		case CTState::RESUME: {
+			CONTROLResumedEvent	answer;
+			answer.cntlrName = itsController;
+			answer.result = 0;
+			LOG_DEBUG_STR("Sending RESUMED event");
+			itsParentPort->send(answer);
+		}
+		break;
+
+		case CTState::SUSPEND: {
+			CONTROLSuspendedEvent	answer;
+			answer.cntlrName = itsController;
+			answer.result = 0;
+			LOG_DEBUG_STR("Sending SUSPENDED event");
+			itsParentPort->send(answer);
+		}
+		break;
+
+		case CTState::RELEASE: {
+			CONTROLReleasedEvent	answer;
+			answer.cntlrName = itsController;
+			answer.result = 0;
+			LOG_DEBUG_STR("Sending RELEASED event");
+			itsParentPort->send(answer);
+			LOG_DEBUG_STR("Will send FINISH event over 6 seconds");
+			itsState      = CTState::FINISH;
+			itsTimerPort->setTimer(6.0);
+		}
+		break;
+
+		case CTState::FINISH: {
+			CONTROLFinishEvent	msg;
+			msg.cntlrName = itsController;
+			msg.treeID    = 7;
+			msg.errorMsg  = "Normal Termination";
+			msg.result    = 0;
+			LOG_DEBUG_STR("Sending FINISH event");
+			itsParentPort->send(msg);
+		}
+		break;
+
+		} // switch state
+	}
+	break;
+
+	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+	case CONTROL_CONNECT: {
+		CONTROLConnectEvent		msg(event);
+		itsController = msg.cntlrName;
+		itsState      = CTState::CONNECT;
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+
+	case CONTROL_RESYNC: {
+
+	}
+	break;
+
+	case CONTROL_SCHEDULE: {
+		CONTROLScheduleEvent		msg(event);
+		itsController = msg.cntlrName;
+		itsState      = CTState::SCHEDULE;
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+
+	case CONTROL_CLAIM: {
+		CONTROLClaimEvent		msg(event);
+		itsController = msg.cntlrName;
+		itsState      = CTState::CLAIM;
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+
+	case CONTROL_PREPARE: {
+		CONTROLPrepareEvent		msg(event);
+		itsController = msg.cntlrName;
+		itsState      = CTState::PREPARE;
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+
+	case CONTROL_RESUME: {
+		CONTROLResumeEvent		msg(event);
+		itsController = msg.cntlrName;
+		itsState      = CTState::RESUME;
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+
+	case CONTROL_SUSPEND: {
+		CONTROLSuspendEvent		msg(event);
+		itsController = msg.cntlrName;
+		itsState      = CTState::SUSPEND;
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+
+	case CONTROL_RELEASE: {
+		CONTROLReleaseEvent		msg(event);
+		itsController = msg.cntlrName;
+		itsState      = CTState::RELEASE;
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
 
 	case CONTROL_FINISHED: {
-			CONTROLFinishedEvent msg(event);
-			cout << endl << "Finish result = " << msg.result << endl;
-			if (msg.result != CT_RESULT_NO_ERROR) {
-				cout << "Bailing out because of the errors." << endl;
-				stop ();
-			}
-			else {
-				_doActionMenu();
-			}
-		}
-		break;
-
-	default:
-		LOG_DEBUG ("TestController::finish, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
-
-//
-// _chooseController
-//
-int16 TestController::_chooseController()
-{
-	cout << endl;
-	cout << endl << "Controller types"<< endl;
-	cout << endl << "================"<< endl;
-	cout << " 1. ObservationControl" << endl;
-	cout << " 2. OnlineControl" << endl;
-	cout << " 3. OfflineControl" << endl;
-//	cout << " 4. BeamDirectionControl" << endl;
-//	cout << " 5. RingControl" << endl;
-//	cout << " 6. StationControl" << endl;
-	cout << " 7. DigitalBoardControl" << endl;
-	cout << " 8. BeamControl" << endl;
-	cout << " 9. CalibrationControl" << endl;
-//	cout << "10. StationInfraControl" << endl;
-	cout << endl;
-	cout << " 0. stop" << endl;
-
-	int		CntlrType(-1);
-	while (CntlrType < 0) {
-		cout << endl;
-		cout << "Type number of your choice: ";
-		cin >> CntlrType;
-		if (CntlrType < 0 || CntlrType > 9 || (CntlrType > 3 && CntlrType < 7)) {
-			cout << endl << "Wrong number, please retry." << endl;
-			CntlrType = -1;
-		}
-	}
-
-	if (CntlrType == 0) {
+		CONTROLFinishedEvent		msg(event);
+		LOG_DEBUG_STR("About to quit");
+		sleep(2);
 		stop();
 	}
-	
-	return (CntlrType + 1);
-}
+	break;
 
-//
-// _doStartMenu
-//
-void TestController::_doStartMenu()
-{
-	cout << endl;
-	cout << "You need an exportFile from OTDB containing an Observation." << endl;
-	cout << "Its name has the format /opt/lofar/share/Observation_<nr>." << endl;
-	string	command("ls -1 /opt/lofar/share/Observation_*");
-	system(command.c_str());
-
-	int32	obsnr(-1);
-	while (obsnr < 0) {
-		cout << endl;
-		cout << "What observationNumber would you like to use? : ";
-		cin.clear();
-		cin >> obsnr;
-		if (obsnr == 0) {
-			stop();
-			return;
-		}
-		ifstream	iFile;
-		string obsFileName(formatString("/opt/lofar/share/Observation_%d", obsnr));
-		iFile.open(obsFileName.c_str(), ifstream::in);
-		if (!iFile) {
-			cout << endl << "Cannot open file " << obsFileName << endl;
-			cout << endl << "Try again or type 0 to stop" << endl;
-			obsnr = -1;
-		}
-		else {
-			iFile.close();
-		}
+	default:
+		LOG_DEBUG("active_state, default");
+		break;
 	}
-	itsObsNr = obsnr;
+
+	return (GCFEvent::HANDLED);
 }
 
 
-//
-// _doActionMenu
-//
-void TestController::_doActionMenu()
-{
-	cout << endl;
-	cout << "Action to perform" << endl;
-	cout << "=================" << endl;
-	cout << " c Claim" << endl;
-	cout << " p Prepare" << endl;
-	cout << " R Resume (run)" << endl;
-	cout << " s Suspend" << endl;
-	cout << " r Release" << endl;
-	cout << " f Finish" << endl << endl;
-	cout << " q Quit menuprogram" << endl;
-
-	string	command;
-	while (command.empty()) {
-		cout << endl;
-		cout << "Enter Command to send to controller: ";
-		cin.clear();
-		cin >> command;
-		switch (command.c_str()[0]) {
-		case 'c':
-			TRAN(TestController::claim_state);
-			return;
-			break;
-		case 'p':
-			TRAN(TestController::prepare_state);
-			return;
-			break;
-		case 'R':
-			TRAN(TestController::run_state);
-			return;
-			break;
-		case 's':
-			TRAN(TestController::suspend_state);
-			return;
-			break;
-		case 'r':
-			TRAN(TestController::release_state);
-			return;
-			break;
-		case 'f':
-			TRAN(TestController::finish_state);
-			return;
-			break;
-		case 'q':
-			stop();
-			break;
-		default:
-			command = "";
-			break;
-		}
-	}
-}
-
-
-
-//
-// _connectedHandler(port)
-//
-void TestController::_connectedHandler(GCFPortInterface& port)
-{
-}
-
-//
-// _disconnectedHandler(port)
-//
-void TestController::_disconnectedHandler(GCFPortInterface& port)
-{
-	port.close();
-}
-
-
-}; // namespace Test
-}; // namespace LOFAR
+}; // Test
+}; // LOFAR
