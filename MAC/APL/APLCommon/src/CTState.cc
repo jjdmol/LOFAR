@@ -42,11 +42,14 @@ CTState::CTState()
 	itsStates[CONNECTED]			= "Connected";
 	itsStates[RESYNC]				= "Resyncing";
 	itsStates[RESYNCED]				= "Resynced";
+	itsStates[SCHEDULE]				= "Schedule";
+	itsStates[SCHEDULED]			= "Scheduled";
 	itsStates[CLAIM]				= "Claiming";
 	itsStates[CLAIMED]				= "Claimed";
 	itsStates[PREPARE]				= "Preparing";
 	itsStates[PREPARED]				= "Prepared";
-	itsStates[ACTIVE]				= "Active";
+	itsStates[RESUME]				= "Activating";
+	itsStates[RESUMED]				= "Active";
 	itsStates[SUSPEND]				= "Suspending";
 	itsStates[SUSPENDED]			= "Suspended";
 	itsStates[RELEASE]				= "Releasing";

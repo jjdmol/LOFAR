@@ -61,6 +61,7 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"BeamControl", 			"BeamCtrl",		false	},
 	{	"CalibrationControl", 	"CalCtrl",		true	},
 	{	"StationInfraControl", 	"StsInfraCtrl",	true	},
+	{	"TestController", 		"TestCtrl",		false	},
 	{	"",						"",				false	}
 };
 
@@ -198,6 +199,9 @@ string	createPropertySetName(const string&		propSetMask,
 	if ((pos = psName.find("@observation@")) != string::npos) {
 		psName.replace(pos, 13, string("Observation") +
 								lexical_cast<string>(getObservationNr(controllerName)));
+	}
+	if ((pos = psName.find("@RSPBoard@")) != string::npos) {
+		psName.replace(pos, 10, string("RSPBoard%d"));
 	}
 		
 	return (psName);

@@ -56,6 +56,7 @@ enum	{
 	CNTLRTYPE_BEAMCTRL,					// BeamControl
 	CNTLRTYPE_CALIBRATIONCTRL,			// CalibrationControl
 	CNTLRTYPE_STATIONINFRACTRL,			// StationInfraControl
+	CNTLRTYPE_TESTCTRL,					// StationControl
 	
 	CNTLRTYPE_NR_TYPES					// should always be the last
 };
