@@ -519,7 +519,7 @@ void ChildControl::_processActionList()
 			}
 			break;
 
-		case CTState::ACTIVE:
+		case CTState::RESUMED:
 			{
 				CONTROLResumeEvent		request;
 				request.cntlrName = controller->cntlrName;
@@ -595,13 +595,15 @@ void ChildControl::_setEstablishedState(const string&		aName,
 	}
 
 	// update controller information
+	CTState		CntlrState;
 	if (!(controller->failed = (result != CT_RESULT_NO_ERROR))) {
 		controller->currentState  = newState;
+		LOG_DEBUG_STR("Controller " << aName <<" now in state "<< CntlrState.name(newState));
+	}
+	else {
+		LOG_DEBUG_STR("Controller " << aName <<" remains in state "<< CntlrState.name(controller->currentState));
 	}
 	controller->establishTime = atTime;
-
-	CTState		CntlrState;
-	LOG_DEBUG_STR("Controller " << aName <<" now in state "<< CntlrState.name(newState));
 
 	// Don't report 'ANYSTATE = lost connection' to the maintask yet.
 	if (newState == CTState::ANYSTATE) {
@@ -647,7 +649,14 @@ void ChildControl::_setEstablishedState(const string&		aName,
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
-	case CTState::ACTIVE: {
+	case CTState::SCHEDULED: {
+			CONTROLScheduledEvent	msg;
+			msg.cntlrName = controller->cntlrName;
+			msg.result    = result;
+			itsCompletionPort->sendBack(msg);
+		}
+		break;
+	case CTState::RESUMED: {
 			CONTROLResumedEvent	msg;
 			msg.cntlrName = controller->cntlrName;
 			msg.result    = result;
@@ -831,7 +840,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				}
 
 				// found controller, close port
-				if (controller->currentState == CTState::FINISHED) {// expected disconnect?
+				if (controller->currentState >= CTState::FINISH) {// expected disconnect?
 					LOG_DEBUG_STR("Removing " << controller->cntlrName << 
 															" from the controllerList");
 					itsCntlrList->erase(controller);			// just remove
@@ -849,6 +858,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 					}
 					itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
 				}
+				break;// out of while loop
 			}
 		}
 		break;
@@ -957,7 +967,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	
 	case CONTROL_RESUMED: {
 			CONTROLResumedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::ACTIVE, time(0),
+			_setEstablishedState(result.cntlrName, CTState::RESUMED, time(0),
 								 result.result);
 		}
 		break;
@@ -978,7 +988,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	
 	case CONTROL_FINISH: {
 			CONTROLFinishEvent		msg(event);
-			_setEstablishedState(msg.cntlrName, CTState::FINISHED, time(0),
+			_setEstablishedState(msg.cntlrName, CTState::FINISH, time(0),
 								 msg.result);
 
 			// inform child its shutdown is registered

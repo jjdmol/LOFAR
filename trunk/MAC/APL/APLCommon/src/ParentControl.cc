@@ -55,12 +55,18 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_CLAIMED,		CTState::CLAIM,			CTState::CLAIMED	},
 	{	CONTROL_PREPARE,		CTState::CLAIMED,		CTState::PREPARED	},
 	{	CONTROL_PREPARED,		CTState::PREPARE,		CTState::PREPARED	},
-	{	CONTROL_RESUME,			CTState::PREPARED,		CTState::ACTIVE		},
-	{	CONTROL_RESUME,			CTState::SUSPENDED,		CTState::ACTIVE		},
-	{	CONTROL_SUSPEND,		CTState::ACTIVE,		CTState::SUSPENDED	},
+	{	CONTROL_RESUME,			CTState::PREPARED,		CTState::RESUMED	},
+	{	CONTROL_RESUME,			CTState::SUSPENDED,		CTState::RESUMED	},
+	{	CONTROL_RESUMED,		CTState::RESUME,		CTState::RESUMED	},
+	{	CONTROL_SUSPEND,		CTState::RESUMED,		CTState::SUSPENDED	},
+	{	CONTROL_SUSPEND,		CTState::PREPARED,		CTState::SUSPENDED	},
+	{	CONTROL_SUSPENDED,		CTState::SUSPEND,		CTState::SUSPENDED	},
 	{	CONTROL_RELEASE,		CTState::ANYSTATE,		CTState::RELEASED	},
-	{	CONTROL_FINISHED,		CTState::FINISH,		CTState::FINISHED	},
+	{	CONTROL_RELEASED,		CTState::RELEASE,		CTState::RELEASED	},
+	{	CONTROL_FINISH,			CTState::ANYSTATE,		CTState::FINISHED	},
+	{	CONTROL_FINISHED,		CTState::ANYSTATE,		CTState::FINISHED	},
 	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
+	{	CONTROL_SCHEDULE,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	0x00,					CTState::NOSTATE,		CTState::NOSTATE	}
 };
 
@@ -180,7 +186,9 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 		parent->nrRetries = -1;
 		itsTimerPort.cancelTimer(parent->timerID);
 		parent->timerID = 0;
-		return;
+		if (parent->requestedState != CTState::FINISHED) {
+			return;
+		}
 	}
 
 	switch (parent->requestedState) {
@@ -229,18 +237,39 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 			itsMainTaskPort->sendBack(request);
 		}
 		break;
-	case CTState::ACTIVE:
-//		concrete_resume(parent);
+	case CTState::RESUMED: {
+			CONTROLResumeEvent	request;
+			request.cntlrName = parent->name;
+			itsMainTaskPort->sendBack(request);
+		}
 		break;
-	case CTState::SUSPENDED:
-//		concrete_suspend(parent);
+	case CTState::SUSPENDED: {
+			CONTROLSuspendEvent	request;
+			request.cntlrName = parent->name;
+			itsMainTaskPort->sendBack(request);
+		}
 		break;
-	case CTState::RELEASED:
-//		concrete_release(parent);
+	case CTState::RELEASED: {
+			CONTROLReleaseEvent	request;
+			request.cntlrName = parent->name;
+			itsMainTaskPort->sendBack(request);
+		}
 		break;
-	case CTState::FINISHED:
-		parent->port->close();
-		itsParentList.erase(parent);
+	case CTState::SCHEDULED: {
+			CONTROLScheduleEvent	request;
+			request.cntlrName = parent->name;
+			itsMainTaskPort->sendBack(request);
+		}
+		break;
+	case CTState::FINISHED: {
+			// close port and cleanup admin
+			parent->port->close();
+			itsParentList.erase(parent);
+			// pass to maintask
+			CONTROLFinishedEvent	request;
+			request.cntlrName = parent->name;
+			itsMainTaskPort->sendBack(request);
+		}
 		break;
 	default:
 		ASSERTSTR(false, "Serious programming error, requestedState=" << 
@@ -374,8 +403,9 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			}
 
 			// first connection every made with this controller?
+LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requestedState);
 			if (parent->requestedState == CTState::CONNECTED && 
-							parent->currentState == CTState::CONNECT) {
+							parent->currentState < CTState::CONNECTED) {
 				_doRequestedAction(parent);	// do queued action if any.
 				break;
 			}
@@ -405,7 +435,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			if (isParent(parent)) {
 				// trying to make first contact?
 				if (parent->requestedState == CTState::CONNECTED &&
-									parent->currentState != CTState::CONNECTED) {
+									parent->currentState < CTState::CONNECTED) {
 					// try again in one second.
 					parent->port->close();
 					parent->timerID = itsTimerPort.setTimer(1.0);
@@ -505,8 +535,8 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		// add parent to the pool and open the connection with the parent
 		itsParentList.push_back(parent);
 
+		// Dynamic cast causes crash!?? 
 		static_cast<GCFTCPPort*>(parent.port)->setHostName (parent.hostname);
-		//Dynamic cast causes crash!?? dynamic_cast<GCFTCPPort*>(parent.port)->setHostName (parent.hostname);
 
 		parent.port->open();		// results in F_CONN of F_DISCONN
 		LOG_DEBUG_STR("Registered parent "<< parent.name <<" on port "<< parent.port);
@@ -562,7 +592,8 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		break;
 
 	// -------------------- signals from Parent process --------------------
-	case CONTROL_RESYNCED:
+	case CONTROL_RESYNC:
+	case CONTROL_SCHEDULE:
 	case CONTROL_CLAIM:
 	case CONTROL_PREPARE:
 	case CONTROL_RESUME:
@@ -584,8 +615,8 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 							" event while requested state is " << parent->requestedState);
 			}
 
-			// When we were resyncing yust continue what we were trying to do.
-			if (event.signal != CONTROL_RESYNCED) {
+			// When we were resyncing just continue what we were trying to do.
+			if (event.signal != CONTROL_RESYNCED && event.signal != CONTROL_SCHEDULED) {
 				// use stateFlowTable to determine the required state.
 				parent->requestedState = requestedState(event.signal);	
 			}
@@ -640,8 +671,77 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		break;
 
 	case CONTROL_RESUMED:
+		{
+			CONTROLResumedEvent	msg(event);
+			// do we know this parent?
+			PIiter		parent = findParent(msg.cntlrName);
+			if (isParent(parent)) {
+				_confirmState(event.signal, msg.cntlrName, msg.result);
+				parent->port->send(msg);
+			}
+		}
+		break;
+
 	case CONTROL_SUSPENDED:
+		{
+			CONTROLSuspendedEvent	msg(event);
+			// do we know this parent?
+			PIiter		parent = findParent(msg.cntlrName);
+			if (isParent(parent)) {
+				_confirmState(event.signal, msg.cntlrName, msg.result);
+				parent->port->send(msg);
+			}
+		}
+		break;
+
 	case CONTROL_RELEASED:
+		{
+			CONTROLReleasedEvent	msg(event);
+			// do we know this parent?
+			PIiter		parent = findParent(msg.cntlrName);
+			if (isParent(parent)) {
+				_confirmState(event.signal, msg.cntlrName, msg.result);
+				parent->port->send(msg);
+			}
+		}
+		break;
+
+	case CONTROL_RESYNCED:
+		{
+			CONTROLResyncedEvent	msg(event);
+			// do we know this parent?
+			PIiter		parent = findParent(msg.cntlrName);
+			if (isParent(parent)) {
+				_confirmState(event.signal, msg.cntlrName, msg.result);
+				parent->port->send(msg);
+			}
+		}
+		break;
+
+	case CONTROL_SCHEDULED:
+		{
+			CONTROLScheduledEvent	msg(event);
+			// do we know this parent?
+			PIiter		parent = findParent(msg.cntlrName);
+			if (isParent(parent)) {
+				_confirmState(event.signal, msg.cntlrName, msg.result);
+				parent->port->send(msg);
+			}
+		}
+		break;
+
+	case CONTROL_FINISH:
+		{
+			CONTROLFinishEvent	msg(event);
+			// do we know this parent?
+			PIiter		parent = findParent(msg.cntlrName);
+			if (isParent(parent)) {
+				_confirmState(event.signal, msg.cntlrName, msg.result);
+				parent->port->send(msg);
+			}
+		}
+		break;
+
 	default:
 		LOG_DEBUG ("operational, default");
 		status = GCFEvent::NOT_HANDLED;
