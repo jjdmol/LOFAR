@@ -29,7 +29,7 @@
 
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmDBMeta.h>
 #include <BBSControl/BBSStrategy.h>

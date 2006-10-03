@@ -23,15 +23,18 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSProcessControl.h>
+#include <BBSControl/BBSStrategy.h>
 #include <Common/LofarLogger.h>
 #include <boost/logic/tribool.hpp>
 
 using namespace boost::logic;
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR
 {
   namespace BBS
   {
+
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     BBSProcessControl::~BBSProcessControl()
@@ -43,7 +46,15 @@ namespace LOFAR
     tribool BBSProcessControl::define()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      return indeterminate;
+      try {
+	itsParamSet = *globalParameterSet();
+	itsStrategy = new BBSStrategy(itsParamSet);
+	itsSteps = itsStrategy->getAllSteps();
+      } catch(Exception& e) {
+	LOG_WARN_STR(e);
+	return false;
+      }
+      return true;
     }
 
 

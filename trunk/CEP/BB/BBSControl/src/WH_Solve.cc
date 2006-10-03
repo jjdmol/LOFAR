@@ -36,7 +36,7 @@
 #include <BBS/BBSTestLogger.h>
 
 #include <iostream>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 
 using namespace std;
 

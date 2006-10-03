@@ -11,8 +11,7 @@ libbbscontrol_la_SOURCES= \
 	BBSStructs.cc \
 	DH_BBSStep.cc \
 	DH_BBSStrategy.cc \
-	ParameterSetReader.cc \
-	StreamFormatting.cc
+	ParameterSetReader.cc
 
 bin_PROGRAMS		= BBSControl BBSKernel
 
