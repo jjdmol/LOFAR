@@ -8,8 +8,8 @@ pkginclude_HEADERS = \
 	BBSStrategy.h \
 	BBSStructs.h \
 	BlackBoardDemo.h \
-	DH_BBSStep.h \
-	DH_BBSStrategy.h \
+	BlobStreamable.h \
+	DH_BlobStreamable.h \
 	DH_Prediff.h \
 	ParmWriter.h \
 	SC_CompoundIter.h \

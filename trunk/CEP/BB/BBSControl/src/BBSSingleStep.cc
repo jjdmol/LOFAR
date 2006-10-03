@@ -37,11 +37,12 @@ namespace LOFAR
     using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
-    BBSSingleStep::BBSSingleStep(const BBSStep* parent) : 
+    BBSSingleStep::BBSSingleStep(const BBSStep* parent) :
       BBSStep(parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
+
 
     BBSSingleStep::BBSSingleStep(const string& name, 
 				 const ParameterSet& parset,
@@ -90,7 +91,7 @@ namespace LOFAR
     }
 
 
-    const string& BBSSingleStep::type() const 
+    const string& BBSSingleStep::classType() const 
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       static const string theType("BBSSingleStep");

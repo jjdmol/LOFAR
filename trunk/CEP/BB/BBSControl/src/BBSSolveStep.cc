@@ -39,7 +39,7 @@ namespace LOFAR
     using LOFAR::operator<<;
 
     BBSSolveStep::BBSSolveStep(const BBSStep* parent) : 
-      BBSSingleStep(parent), 
+      BBSSingleStep(parent),
       itsMaxIter(0), itsEpsilon(0), itsMinConverged(0)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -119,7 +119,7 @@ namespace LOFAR
     }
 
 
-    const string& BBSSolveStep::type() const
+    const string& BBSSolveStep::classType() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       static const string theType("BBSSolveStep");

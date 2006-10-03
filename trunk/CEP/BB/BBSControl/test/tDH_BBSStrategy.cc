@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <BBSControl/DH_BBSStrategy.h>
+#include <BBSControl/DH_BlobStreamable.h>
 #include <BBSControl/BBSStrategy.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TH_Mem.h>
@@ -50,18 +50,19 @@ bool doIt(bool doSteps)
 
   // Create a BBSStrategy `sendStrategy' to be sent.
   BBSStrategy sendStrategy(parset);
-  BBSStrategy recvStrategy;
+  sendStrategy.shouldWriteSteps(doSteps);
 
   TH_Mem aTH;
-  DH_BBSStrategy sendDH;
-  DH_BBSStrategy recvDH;
+  DH_BlobStreamable sendDH;
+  DH_BlobStreamable recvDH;
   Connection conn("conn", &sendDH, &recvDH, &aTH, false);
 
   // Send `sendStrategy' from `sendDH' to `recvDH' using Connection `conn'.
-  sendDH.writeBuf(sendStrategy, doSteps);
+  sendDH.serialize(sendStrategy);
   conn.write();
   conn.read();
-  recvDH.readBuf(recvStrategy);
+  BBSStrategy* recvStrategy = dynamic_cast<BBSStrategy*>(recvDH.deserialize());
+  ASSERT(recvStrategy);
 
   // If \a doSteps is false, we should write to file a copy of \a sendStrategy
   // that does not contain any BBSStep objects. Otherwise the `diff' will
@@ -82,7 +83,7 @@ bool doIt(bool doSteps)
   // Store the contents of `recvStrategy' in `recvFile'
   ofs.open(recvFile);
   ASSERT(ofs);
-  ASSERT(ofs << recvStrategy);
+  ASSERT(ofs << *recvStrategy);
   ofs.close();
   ASSERT(ofs);
 
@@ -116,7 +117,7 @@ int main()
   LOG_INFO_STR(progName << " is starting up ...");
 
   try {
-    ASSERT(doIt(true) && doIt(false));
+    ASSERT(doIt(false) && doIt(true));
   } 
   catch (Exception& e) {
     LOG_FATAL_STR(progName << " terminated due to a fatal exception!\n" << e);

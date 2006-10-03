@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <BBSControl/DH_BBSStep.h>
+#include <BBSControl/DH_BlobStreamable.h>
 #include <BBSControl/BBSStep.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TH_Mem.h>
@@ -65,15 +65,15 @@ int main()
     ASSERT(ofs);
 
     TH_Mem aTH;
-    DH_BBSStep sendDH;
-    DH_BBSStep recvDH;
+    DH_BlobStreamable sendDH("sendDH");
+    DH_BlobStreamable recvDH("recvDH");
     Connection conn("conn", &sendDH, &recvDH, &aTH, false);
 
     // Send `sendStep' from `sendDH' to `recvDH' using Connection `conn'.
-    sendDH.writeBuf(sendStep);
+    sendDH.serialize(*sendStep);
     conn.write();
     conn.read();
-    recvDH.readBuf(recvStep);
+    recvStep = dynamic_cast<BBSStep*>(recvDH.deserialize());
     ASSERT(recvStep);
 
     // Store the contents of `recvStep' in `recvFile'

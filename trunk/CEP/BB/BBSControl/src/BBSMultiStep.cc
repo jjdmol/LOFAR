@@ -82,7 +82,10 @@ namespace LOFAR
 
       // Create the new BBSSteps by reading the blob input stream.
       for (uint i = 0; i < sz; ++i) {
-	itsSteps.push_back(BBSStep::deserialize(bis, this));
+	BBSStep* step;
+	ASSERT(step = dynamic_cast<BBSStep*>(BlobStreamable::deserialize(bis)));
+	step->setParent(this);
+	itsSteps.push_back(step);
       }
     }
 
@@ -115,7 +118,7 @@ namespace LOFAR
     }
 
 
-    const string& BBSMultiStep::type() const 
+    const string& BBSMultiStep::classType() const 
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       static const string theType("BBSMultiStep");
@@ -142,8 +145,9 @@ namespace LOFAR
 	       << name << "\". Please check your ParameterSet file.");
       }
       const BBSMultiStep* parent;
-      if ((parent = dynamic_cast<const BBSMultiStep*>(getParent())) != 0)
+      if ((parent = dynamic_cast<const BBSMultiStep*>(getParent())) != 0) {
 	parent->infiniteRecursionCheck(name);
+      }
     }
 
   } // namespace BBS
