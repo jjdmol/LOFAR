@@ -5,12 +5,13 @@ if [ "$OSTYPE" = "win32" ]; then
   curPath=C:`pwd`
 fi
 
-sysName="CTU1"
+mainSysName="MCU001"
+stationName="CS010"
 export PVSS_II=$curPath/config/config
 cp config/progs config/progs.orig
 cp config/progs.nav config/progs
 
-PVSStoolSyncTypes -system 1 $sysName -project $1
+PVSStoolSyncTypes -system 61 $mainSysName -project $1
 
 PVSS00pmon -proj $1 &
 echo -n "Importing Navigator specific DPT's and DP's..."
@@ -22,16 +23,38 @@ if [ "$OSTYPE" != "win32" ]; then
    cd ../Deployment/data/PVSS/
    ./create_db_files 
    ./create_db_files -o Observation_10
-   ./create_db_files -s CS010
-   ./create_db_files -o Observation_10 -s CS010
 
 fi
 PVSS00ascii -in MainPermDatapointtypes.dpl -currentproj; echo "(done)"
 PVSS00ascii -in MainObsDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in CS010PermDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in CS010ObsDatapointtypes.dpl -currentproj; echo "(done)"
 PVSS00ascii -in MainPermDatapoints.dpl -currentproj; echo "(done)"
 PVSS00ascii -in MainObsDatapoints.dpl -currentproj; echo "(done)"
+cd $curPath
+
+echo -n "Prepare project to enable use of GCF based MAC controllers..."
+PVSS00ctrl -script libs/nav_fw/gcfpa-prep.ctl -currentproj; echo "(done)"
+
+echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
+convertedDefaultFile=`sed -e "s/CCU1/$mainSysName/" dplist/nav_usr/MAC/MAC_Default_panelviews.dpl`
+echo "$convertedDefaultFile" > MAC_Default_panelviews.dpl
+PVSS00ascii -in MAC_Default_panelviews.dpl -currentproj; echo "(done)"
+rm -f MAC_Default_panelviews.dpl
+PVSS00pmon -currentproj -stopWait
+
+PVSStoolSyncTypes -system 10 $stationName -project $1
+
+PVSS00pmon -proj $1 &
+
+echo -n "Importing fixed datapoints..."
+
+if [ "$OSTYPE" != "win32" ]; then
+   cd ../Deployment/data/PVSS/
+   ./create_db_files -s CS010
+   ./create_db_files -o Observation_10 -s CS010
+
+fi
+PVSS00ascii -in CS010PermDatapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in CS010ObsDatapointtypes.dpl -currentproj; echo "(done)"
 PVSS00ascii -in CS010PermDatapoints.dpl -currentproj; echo "(done)"
 PVSS00ascii -in CS010ObsDatapoints.dpl -currentproj; echo "(done)"
 cd $curPath
@@ -39,16 +62,20 @@ cd $curPath
 echo -n "Prepare project to enable use of GCF based MAC controllers..."
 PVSS00ctrl -script libs/nav_fw/gcfpa-prep.ctl -currentproj; echo "(done)"
 
-echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
-convertedDefaultFile=`sed -e "s/CCU1/$sysName/" dplist/nav_usr/MAC/MAC_Default_panelviews.dpl`
-echo "$convertedDefaultFile" > MAC_Default_panelviews.dpl
-PVSS00ascii -in MAC_Default_panelviews.dpl -currentproj; echo "(done)"
-rm -f MAC_Default_panelviews.dpl
 PVSS00pmon -currentproj -stopWait
 
 echo "PVSS00NG         |   once |      30 |        3 |        1 |" >> config/progs
 echo "PVSS00NV         | always |      30 |        3 |        2 |-p vision/login.pnl -iconBar -menuBar" >> config/progs
 echo "PVSS00NV         | manual |      30 |        3 |        2 |-p nav_fw/tools/EnablePropertySets.pnl -iconBar -menuBar" >> config/progs
+echo "PVSS00dist       | always |      30 |        3 |        2 |" >> config/progs
+
+echo "distributed = 1" >> config/config
+echo "" >> config/config
+echo "[dist]" >> config/config
+
+
+
+
 
 
 
