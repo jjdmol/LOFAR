@@ -26,10 +26,10 @@
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSStructs.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/StreamFormatting.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobArray.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -38,6 +38,7 @@ namespace LOFAR
 
   namespace BBS
   {
+    using LOFAR::operator<<;
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 

@@ -18,6 +18,7 @@ BBDB.PassWord           =                   # password for accessing the DBMS
 
 ParmDB.Instrument       = test.mep          # instrument parameters (MS table)
 ParmDB.LocalSky         = test.gsm          # local sky parameters (MS table)
+ParmDB.History          = test.his          # history (MS table)
 
 Step.xyz1.Steps         = [ sl1, sl2 ]      # names of substeps
 Step.xyz1.Baselines.Station1 =            \ # baselines to use 

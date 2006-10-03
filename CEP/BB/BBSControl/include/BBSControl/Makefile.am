@@ -15,7 +15,6 @@ pkginclude_HEADERS = \
 	SC_CompoundIter.h \
 	SC_Simple.h \
 	SC_WritePredData.h \
-	StreamFormatting.h \
 	WH_Control.h \
 	WH_Prediff.h \
 	WH_Solve.h
