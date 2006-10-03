@@ -27,8 +27,8 @@
 // The properties for solvable parameters
 
 //# Includes
+#include <BBSControl/BlobStreamable.h>
 #include <BBSControl/BBSStructs.h>
-#include <APS/ParameterSet.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -38,6 +38,7 @@ namespace LOFAR
   //# Forward declarations
   class BlobIStream;
   class BlobOStream;
+  namespace ACC { namespace APS { class ParameterSet; } }
 
   namespace BBS
   {
@@ -47,7 +48,7 @@ namespace LOFAR
     // \addtogroup BBS
     // @{
 
-    class BBSStrategy
+    class BBSStrategy : public BlobStreamable
     {
     public:
       // Default constructor. Create an empty strategy, which is useful when
@@ -60,15 +61,6 @@ namespace LOFAR
       // Destructor.
       ~BBSStrategy();
 
-      // Deserialize the contents of the blob input stream \a bis into \c
-      // *this. 
-      void deserialize(BlobIStream& bis);
-
-      // Serialize \c *this by writing its contents into the blob output
-      // stream \a bos. The argument \a doSteps indicates whether the data
-      // member itsSteps should be written as well. By default, it won't.
-      void serialize(BlobOStream& bos, bool doSteps = false) const;
-
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
 
@@ -79,7 +71,20 @@ namespace LOFAR
       // in this class?
       vector<const BBSStep*> getAllSteps() const;
 
-    public:
+      // Indicate whether the BBSSteps contained in \c itsSteps should also be
+      // written when write(BlobOStream&) is called.
+      void shouldWriteSteps(bool doSteps) { itsWriteSteps = doSteps; }
+
+    private:
+      // Read the contents from the blob input stream \a bis into \c *this.
+      virtual void read(BlobIStream& bis);
+
+      // Write the contents of \c *this into the blob output stream \a bos.
+      virtual void write(BlobOStream& bos) const;
+
+      // Return the class type of \c *this as a string.
+      virtual const string& classType() const;
+
       // Read the BBSStep objects from the blob input stream \a bis and store
       // them in \a itsSteps.
       void BBSStrategy::readSteps(BlobIStream& bis);
@@ -117,6 +122,9 @@ namespace LOFAR
       // Sequence of steps that comprise this solve strategy.
       vector<const BBSStep*> itsSteps;
 
+      // Flag indicating whether the BBSStep objects in \c itsSteps should
+      // also be written when write(BlobOStream&) is called.
+      bool                   itsWriteSteps;
     };
 
     // Write the contents of a BBSStrategy to an output stream.

@@ -106,61 +106,6 @@ namespace LOFAR
     }
 
 
-    BBSStep* BBSStep::deserialize(BlobIStream& bis,
-				  const BBSStep* parent)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-
-      // Read the "start-of-object" marker.
-      bis.getStart("BBSStep");
-
-      // Read the class type of the BBSStep to be created.
-      string type;
-      bis >> type;
-      LOG_TRACE_VAR_STR("Class type to be created is: " << type);
-
-      // Create a new BBSStep object based on \a type.
-      BBSStep* step(0);
-      if      (type == "BBSMultiStep")    step = new BBSMultiStep(parent);
-      else if (type == "BBSSingleStep")   step = new BBSSingleStep(parent);
-      else if (type == "BBSSolveStep")    step = new BBSSolveStep(parent);
-//    else if (type == "BBSSubtractStep") step = new BBSSubtractStep(parent);
-//    else if (type == "BBSCorrectStep")  step = new BBSCorrectStep(parent);
-//    else if (type == "BBSPredictStep")  step = new BBSPredictStep(parent);
-//    else if (type == "BBSShiftStep")    step = new BBSShiftStep(parent);
-//    else if (type == "BBSRefitStep")    step = new BBSRefitStep(parent);
-      else THROW (BBSControlException, "\"" << type << 
-		  "\" is not a valid BBSStep class type");
-
-      // Read the rest of the data into the new BBSStep object.
-      step->read(bis);
-
-      // Read the "end-of-object" marker
-      bis.getEnd();
-
-      // Return the new BBSStep object.
-      return step;
-    }
-
-
-    void BBSStep::serialize(BlobOStream& bos) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-
-      // Write the "start-of-object" marker.
-      bos.putStart("BBSStep", 1);
-
-      // Write the class type of \c *this.
-      bos << type();
-
-      // Write the contents of \c *this into the output blob stream \a bos.
-      write(bos);
-
-      // Write hte "end-of-object" marker.
-      bos.putEnd();
-    }
-
-
     //##--------   P r o t e c t e d   m e t h o d s   --------##//
 
     BBSStep::BBSStep(const string& name, 

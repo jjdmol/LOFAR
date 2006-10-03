@@ -61,16 +61,15 @@ namespace LOFAR
       // stream \a os.
       virtual void print(ostream& os) const;
 
-    protected:
+    private:
       // Write the contents of \c *this into the blob output stream \a bos.
       virtual void write(BlobOStream& bos) const;
 
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);
 
-    public:
       // Return the type of \c *this as a string.
-      virtual const string& type() const;
+      virtual const string& classType() const;
 
       // Implementation of getAllSteps() for BBSMultiStep. It retrieves all
       // steps by calling getAllSteps() on all steps that comprise this

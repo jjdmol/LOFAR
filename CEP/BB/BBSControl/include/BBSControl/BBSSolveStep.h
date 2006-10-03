@@ -61,23 +61,22 @@ namespace LOFAR
       // stream \a os.
       virtual void print(ostream& os) const;
 
-    protected:
+    private:
       // Write the contents of \c *this into the blob output stream \a bos.
       virtual void write(BlobOStream& bos) const;
 
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);
 
-    public:
+      // Return the type of \c *this as a string.
+      virtual const string& classType() const;
+
       uint32 itsMaxIter;            ///< Maximum number of iterations
       double itsEpsilon;            ///< Convergence threshold
       double itsMinConverged;       ///< Fraction that must have converged
       vector<string> itsParms;      ///< Names of the solvable parameters
       vector<string> itsExclParms;  ///< Parameters to be excluded from solve
       DomainSize itsDomainSize;     ///< Solve domain size.
-
-      // Return the type of \c *this as a string.
-      virtual const string& type() const;
 
     };
 

@@ -27,6 +27,7 @@
 // Base component class of the BBSStep composite pattern.
 
 //# Includes
+#include <BBSControl/BlobStreamable.h>
 #include <BBSControl/BBSStructs.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -62,7 +63,7 @@ namespace LOFAR
     // cause the pointer to never be freed. This can happen since a BBSStep
     // stores a pointer to its parent as backreference. Here, we should
     // probably use a boost::weak_ptr. See Bug #906
-    class BBSStep
+    class BBSStep : public BlobStreamable
     {
     public:
       // Destructor.
@@ -78,6 +79,9 @@ namespace LOFAR
 
       // Return a pointer to the parent of this step.
       const BBSStep* getParent() const { return itsParent; }
+
+      // Make \a parent the parent of this step.
+      void setParent(const BBSStep* parent) { itsParent = parent; }
 
       // Get all steps that this step consists of. The result will be a vector
       // containing pointers to all steps, sorted pre-order depth-first.
@@ -98,20 +102,6 @@ namespace LOFAR
       static BBSStep* create(const string& name,
 			     const ACC::APS::ParameterSet& parSet,
 			     const BBSStep* parent = 0);
-
-      // Create a new BBSStep object by deserializing the contents of the blob
-      // input stream \a bis. The second, optional, argument is used to pass a
-      // backreference to the parent BBSStep object. The first element in the
-      // input stream shall be a string containing the class-id of the
-      // BBSStep object to be constructed.
-      // \throw BBSControlException when class-id does not denote a valid
-      // BBSStep class type.
-      static BBSStep* deserialize(BlobIStream& bis,
-				  const BBSStep* parent = 0);
-
-      // Serialize \c *this by writing its contents into the blob output
-      // stream \a bos.
-      void serialize(BlobOStream& bos) const;
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
@@ -136,10 +126,7 @@ namespace LOFAR
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);
 
-    public:
-      // Return the type of \c *this as a string.
-      virtual const string& type() const = 0;
-
+    private:
       // Implementation of getAllSteps(). The default implementation adds \c
       // this to the vector \a steps.
       // \note This method must be overridden by BBSMultiStep.

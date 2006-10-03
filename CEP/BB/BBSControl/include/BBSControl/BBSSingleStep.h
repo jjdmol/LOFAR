@@ -71,7 +71,7 @@ namespace LOFAR
 
     public:
       // Return the type of \c *this as a string.
-      virtual const string& type() const;
+      virtual const string& classType() const;
 
       // Name of the data column to write data to
       string          itsOutputData;

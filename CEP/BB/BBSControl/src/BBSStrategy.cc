@@ -26,6 +26,7 @@
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSStructs.h>
 #include <BBSControl/Exceptions.h>
+#include <APS/ParameterSet.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobArray.h>
@@ -42,7 +43,8 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    BBSStrategy::BBSStrategy(const ParameterSet& aParSet)
+    BBSStrategy::BBSStrategy(const ParameterSet& aParSet) :
+      itsWriteSteps(false)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
@@ -110,45 +112,6 @@ namespace LOFAR
     }
 
 
-    void BBSStrategy::deserialize(BlobIStream& bis)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      bis >> itsDataSet
-	  >> itsBBDB
-	  >> itsParmDB
-	  >> itsStations
-	  >> itsInputData
-	  >> itsDomainSize
-	  >> itsCorrelation
-	  >> itsIntegration;
-      // Do we also need to deserialize the BBSStep objects?
-      bool doSteps;
-      bis >> doSteps;
-      LOG_TRACE_COND_STR("Deserialize the BBSStep objects as well?  " <<
-			 (doSteps ? "Yes" : "No"));
-      if (doSteps) readSteps(bis);
-    }
-
-    
-    void BBSStrategy::serialize(BlobOStream& bos, bool doSteps) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      bos << itsDataSet
-	  << itsBBDB
-	  << itsParmDB
-	  << itsStations
-	  << itsInputData
-	  << itsDomainSize
-	  << itsCorrelation
-	  << itsIntegration;
-      // Do we also need to serialize the BBSStep objects?
-      bos << doSteps;
-      LOG_TRACE_COND_STR("Serialize the BBSStep objects as well?  " <<
-		    (doSteps ? "Yes" : "No"));
-      if (doSteps) writeSteps(bos);
-    }
-
-
     void BBSStrategy::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -182,6 +145,51 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
+    void BBSStrategy::read(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      bis >> itsDataSet
+	  >> itsBBDB
+	  >> itsParmDB
+	  >> itsStations
+	  >> itsInputData
+	  >> itsDomainSize
+	  >> itsCorrelation
+	  >> itsIntegration;
+      // Do we also need to deserialize the BBSStep objects?
+      bis >> itsWriteSteps;
+      LOG_TRACE_COND_STR("Deserialize the BBSStep objects as well?  " <<
+			 (itsWriteSteps ? "Yes" : "No"));
+      if (itsWriteSteps) readSteps(bis);
+    }
+
+    
+    void BBSStrategy::write(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      bos << itsDataSet
+	  << itsBBDB
+	  << itsParmDB
+	  << itsStations
+	  << itsInputData
+	  << itsDomainSize
+	  << itsCorrelation
+	  << itsIntegration;
+      // Do we also need to serialize the BBSStep objects?
+      bos << itsWriteSteps;
+      LOG_TRACE_COND_STR("Serialize the BBSStep objects as well?  " <<
+		    (itsWriteSteps ? "Yes" : "No"));
+      if (itsWriteSteps) writeSteps(bos);
+    }
+
+
+    const string& BBSStrategy::classType() const
+    {
+      static const string theType("BBSStrategy");
+      return theType;
+    }
+
+
     void BBSStrategy::readSteps(BlobIStream& bis)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -194,7 +202,9 @@ namespace LOFAR
       
       // Create the new BBSSteps by reading the blob input stream.
       for (uint i = 0; i < sz; ++i) {
-	itsSteps.push_back(BBSStep::deserialize(bis));
+	BBSStep* step;
+	ASSERT(step = dynamic_cast<BBSStep*>(BlobStreamable::deserialize(bis)));
+	itsSteps.push_back(step);
       }
     }
 
