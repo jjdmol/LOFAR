@@ -27,7 +27,7 @@
 #include <BBSKernel/MNS/MeqPolcLog.h>
 #include <BBSKernel/MNS/MeqTabular.h>
 #include <Common/LofarLogger.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <casa/Arrays/Matrix.h>
 
 using namespace casa;

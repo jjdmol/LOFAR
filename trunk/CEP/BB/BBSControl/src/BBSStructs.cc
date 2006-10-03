@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSStructs.h>
-#include <BBSControl/StreamFormatting.h>
+#include <Common/StreamUtil.h>
 #include <Blob/BlobArray.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
@@ -32,6 +32,7 @@ namespace LOFAR
 {
   namespace BBS
   {
+    using LOFAR::operator<<;
 
     //# -------  ostream operators  ------- #//
 

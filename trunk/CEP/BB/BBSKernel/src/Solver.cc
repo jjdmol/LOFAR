@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Solver.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 

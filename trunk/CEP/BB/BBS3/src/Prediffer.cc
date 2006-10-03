@@ -47,7 +47,7 @@
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobIBufStream.h>
 #include <Blob/BlobArray.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarLogger.h>
 
