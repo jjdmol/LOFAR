@@ -47,7 +47,6 @@ namespace LOFAR
     class BBSProcessControl : public ACC::PLC::ProcessControl
     {
     public:
-      BBSProcessControl();
       virtual ~BBSProcessControl();
       virtual boost::logic::tribool define();
       virtual boost::logic::tribool init();
@@ -67,7 +66,7 @@ namespace LOFAR
       ACC::APS::ParameterSet  itsParamSet;
 
       // The strategy that will be constructed from the parameter set.
-      shared_ptr<BBSStrategy> itsStrategy;
+      BBSStrategy*            itsStrategy;
 
       // Vector containing all the separate steps that this strategy consists
       // of in sequential order.
