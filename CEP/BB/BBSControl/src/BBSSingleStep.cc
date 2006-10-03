@@ -24,7 +24,7 @@
 
 #include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/StreamFormatting.h>
+#include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>

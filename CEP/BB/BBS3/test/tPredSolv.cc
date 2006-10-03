@@ -26,7 +26,7 @@
 #include <BBS3/ParmWriter.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <ParmDB/ParmDB.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <Blob/BlobOBufChar.h>
 #include <Blob/BlobIBufChar.h>

@@ -31,7 +31,7 @@
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobIBufStream.h>
 #include <Common/LofarLogger.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Path.h>

@@ -26,7 +26,7 @@
 #include <ParmDB/ParmDB.h>
 #include <Blob/KeyValueMap.h>
 #include <Blob/KeyParser.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/Quanta/MVTime.h>

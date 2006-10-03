@@ -17,6 +17,7 @@ libcommon_la_SOURCES 	= \
 	Process.cc \
 	RunOnNode.cc \
 	Stopwatch.cc \
+	StreamUtil.cc \
 	StringUtil.cc \
 	Timer.cc \
 	TypeNames.cc \

@@ -26,7 +26,7 @@
 #include <BBS/MNS/MeqParmFunklet.h>
 #include <BBS/BBSTestLogger.h>
 #include <ParmDB/ParmDB.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <stdexcept>

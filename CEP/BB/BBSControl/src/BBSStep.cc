@@ -27,7 +27,7 @@
 #include <BBSControl/BBSMultiStep.h>
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/StreamFormatting.h>
+#include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <Blob/BlobIStream.h>
@@ -42,6 +42,7 @@ namespace LOFAR
 
   namespace BBS
   {
+    using LOFAR::operator<<;
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 

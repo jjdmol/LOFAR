@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSMultiStep.h>
-#include <BBSControl/StreamFormatting.h>
+#include <Common/StreamUtil.h>
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
 #include <Blob/BlobIStream.h>

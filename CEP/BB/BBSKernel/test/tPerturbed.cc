@@ -24,7 +24,7 @@
 #include <BBSKernel/Prediffer.h>
 #include <BBSKernel/Solver.h>
 #include <BBSKernel/MNS/MeqMatrix.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicMath/Math.h>
 #include <stdexcept>

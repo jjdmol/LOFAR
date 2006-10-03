@@ -26,7 +26,7 @@
 #include <Blob/BlobOBufStream.h>
 #include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
-#include <Common/VectorUtil.h>
+#include <Common/StreamUtil.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <iostream>

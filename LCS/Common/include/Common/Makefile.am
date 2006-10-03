@@ -47,11 +47,11 @@ pkginclude_HEADERS = \
 	Process.h \
 	RunOnNode.h \
 	Stopwatch.h \
+	StreamUtil.h \
 	StringUtil.h \
 	Timer.h \
 	TypeNames.h \
-	TypeNames.tcc \
-	VectorUtil.h
+	TypeNames.tcc
 
 pkginclude_Net_HEADERS = \
 	Net/FdSet.h \
