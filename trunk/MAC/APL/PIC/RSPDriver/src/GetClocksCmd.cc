@@ -57,7 +57,6 @@ void GetClocksCmd::ack(CacheBuffer& cache)
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
-
   ack.clock = cache.getClock();
 
   getPort()->send(ack);
