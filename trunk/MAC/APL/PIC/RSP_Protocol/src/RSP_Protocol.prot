@@ -30,7 +30,7 @@ include = '<APL/RSP_Protocol/MEPHeader.h>';
 
 prelude = << PRELUDE_END
 
-  static const int MAX_N_RCUS      = 128 * MEPHeader::N_POL;
+  static const int MAX_N_RCUS      = MEPHeader::MAX_N_RCUS;
   static const int MAX_N_RSPBOARDS = 24;
   static const int SUCCESS         = 1;
   static const int FAILURE         = 0;
