@@ -71,6 +71,7 @@ namespace LOFAR {
 	       int                            nyquist_zone,
 	       int                            nsubbands,
 	       uint32                         rcucontrol);
+      SubArray(std::string name); // used to return unknown subarray
       virtual ~SubArray();
 
       /**

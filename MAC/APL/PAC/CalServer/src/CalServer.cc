@@ -562,7 +562,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	|| m_accs.getFront().getACC().extent(fourthDim) != positions.extent(firstDim)
 	|| m_accs.getFront().getACC().extent(fifthDim)  != positions.extent(firstDim))
       {
-	LOG_ERROR("ACC shape and parent array positions shape don't match.");
+	LOG_INFO("ACC shape and parent array positions shape don't match.");
 	LOG_ERROR_STR("ACC.shape=" << m_accs.getFront().getACC().shape());
 	LOG_ERROR_STR("'" << start.parent << "'.shape=" << positions.shape());
 	LOG_ERROR_STR("Expecting AntenneArray with " << 
@@ -572,7 +572,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
       }
     else if ((start.subset & invalidmask).any())
       {
-	LOG_ERROR("Invalid subset.");
+	LOG_INFO("CAL_START: Invalid receiver subset.");
 	ack.status = ERR_RANGE;
       }
     else
@@ -663,12 +663,17 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
     // don't register subarray in cal_subscribe
     // it has already been registerd in cal_start
 
+    LOG_INFO_STR("Subscription succeeded: " << subscribe.name);
+
   } else {
 
     ack.status = ERR_NO_SUBARRAY;
     ack.handle = 0;
-    memset(&ack.subarray, 0, sizeof(SubArray));
+    //memset(&ack.subarray, 0, sizeof(SubArray));
     // doesn't work with gcc-3.4 ack.subarray = SubArray();
+    (void)new((void*)&ack.subarray) SubArray();
+
+    LOG_INFO_STR("Subarray not found: " << subscribe.name);
 
   }
 
@@ -697,10 +702,13 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
     subarray->detach((SubArraySubscription*)unsubscribe.handle);
 
     // handle is no longer valid
+    LOG_INFO_STR("Subscription deleted: " << unsubscribe.name);
 
   } else {
 
     ack.status = ERR_NO_SUBARRAY;
+
+    LOG_INFO_STR("Subscription failed. Subbarray not found: " << unsubscribe.name);
 
   }
   port.send(ack);
@@ -726,10 +734,14 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
     // return antenna positions
     ack.positions = *(static_cast<AntennaArray*>(subarray));
 
+    LOG_INFO("Sending subarray info: " << getsubarray.name);
+
   } else {
 
     // TODO: need sensible value for ack.positions, it is not initialized at this point
     ack.status = ERR_NO_SUBARRAY;
+
+    LOG_INFO("Getsubarray. Subarray not found: " << getsubarray.name);
 
   }
 

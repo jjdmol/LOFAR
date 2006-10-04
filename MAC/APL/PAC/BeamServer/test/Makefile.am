@@ -22,6 +22,9 @@ bin_PROGRAMS = \
 	SweepTest \
 	BeamServerTest
 
+bin_SCRIPTS = \
+	beamctltest
+
 #	BeamServerTest 
 #	CheckWeightsTest2 
 

@@ -57,7 +57,7 @@ SubArray::SubArray(string                 name,
 	 && m_antenna_selection.extent(secondDim) == m_pos.extent(secondDim)
 	 && m_pos.extent(thirdDim) == 3);
 
-  LOG_INFO_STR("select=" << select);
+  LOG_DEBUG_STR("select=" << select);
 
   // make array at least big enough
   m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
@@ -73,14 +73,14 @@ SubArray::SubArray(string                 name,
     }
   }
   m_antenna_count = k;
-  LOG_INFO_STR("m_antenna_count=" << m_antenna_count);
+  LOG_DEBUG_STR("m_antenna_count=" << m_antenna_count);
   ASSERT(m_antenna_count > 0);
 
   // resize the arrays
   m_pos.resizeAndPreserve(m_antenna_count, m_pos.extent(secondDim), m_pos.extent(thirdDim));
   m_rcuindex.resizeAndPreserve(m_antenna_count, m_rcuindex.extent(secondDim));
 
-  LOG_INFO_STR("m_rcuindex(after)=" << m_rcuindex);
+  LOG_DEBUG_STR("m_rcuindex(after)=" << m_rcuindex);
 
   // create calibration result objects
   m_result[FRONT] = new AntennaGains(m_pos.extent(firstDim), m_pos.extent(secondDim), m_spw.getNumSubbands());

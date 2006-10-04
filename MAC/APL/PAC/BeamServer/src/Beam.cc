@@ -362,6 +362,7 @@ Beam* Beams::get(string nodeid, string subarrayname, Beamlet2SubbandMap allocati
   if (beam) {
 
     if (!beam->allocate(allocation, m_beamlets, m_nsubbands)) {
+      LOG_DEBUG("Failed to allocate all required beamlets");
       delete beam;
       beam = 0;
     } else {

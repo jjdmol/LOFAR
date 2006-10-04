@@ -523,6 +523,9 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
 	CALSubscribeEvent subscribe;
 	subscribe.name = m_bt.getBeam()->getSubarrayName();
 	subscribe.subbandset = m_bt.getBeam()->getAllocation().getAsBitset();
+
+	LOG_INFO_STR("Subscribing to subarray: " << subscribe.name);
+
 	m_calserver.send(subscribe);
       }
       break;
@@ -536,6 +539,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
 	    && (ack.subarray.getSPW().getNumSubbands() >=
 		(int)m_bt.getBeam()->getAllocation()().size()) ) {
 
+	  LOG_INFO("Got subscription to subarray");
 	  LOG_WARN_STR("ack.subarray.positions=" << ack.subarray.getAntennaPos());
 
 	  // set positions on beam
@@ -550,6 +554,8 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
 	  m_bt.getPort()->send(beamallocack);
 
 	} else {
+
+	  LOG_INFO("Failed to subscribe to subarray");
 
 	  // failed to subscribe
 	  beamallocack.status = ERR_BEAMALLOC;
@@ -566,7 +572,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
 
     case F_DISCONNECTED:
       {
-	LOG_INFO("\n>>> deferring F_DISCONNECTED event <<<\n");
+	LOG_INFO(">>> deferring F_DISCONNECTED event <<<");
 	defer(e, port); // process F_DISCONNECTED again in enabled state
 
 	if (&port == m_bt.getPort()) TRAN(BeamServer::enabled);
@@ -585,7 +591,6 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
 
     default:
       // all other events are handled in the enabled state
-      LOG_INFO("\n>>> deferring event <<<\n");
       defer(e, port);
       break;
     }
@@ -637,7 +642,7 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& e, GCFPortInterface& port
 
     case F_DISCONNECTED:
       {
-	LOG_INFO("\n>>> deferring F_DISCONNECTED event <<<\n");
+	LOG_INFO(">>> deferring F_DISCONNECTED event <<<");
 	defer(e, port); // process F_DISCONNECTED again in enabled state
 
 	if (&port == m_bt.getPort()) TRAN(BeamServer::enabled);
@@ -661,7 +666,6 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& e, GCFPortInterface& port
 
     default:
       // all other events are handled in the enabled state
-      LOG_INFO("\n>>> deferring event <<<\n");
       defer(e, port);
       break;
     }
@@ -677,7 +681,7 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 
   if (!beam) {
 
-    LOG_ERROR("BEAMALLOC: failed to allocate beam");
+    LOG_INFO("BEAMALLOC: failed to allocate beam");
 
     BSBeamallocackEvent ack;
     ack.handle = 0;
@@ -722,7 +726,8 @@ bool BeamServer::beampointto_action(BSBeampointtoEvent& pt,
   Beam* beam = (Beam*)pt.handle;
 
   if (m_beams.exists(beam))  {
-    LOG_INFO_STR("received new coordinates: " << pt.pointing.angle0() << ", "
+    LOG_INFO_STR("received new coordinates for beam " << beam->getName()
+		 << ": " << pt.pointing.angle0() << ", "
 		 << pt.pointing.angle1() << ", time=" << pt.pointing.time());
 
     //
@@ -843,6 +848,7 @@ void BeamServer::defer(GCFEvent& e, GCFPortInterface& p)
   char* event = new char[sizeof(e) + e.length];
   memcpy(event, (const char*)&e, sizeof(e) + e.length);
   m_deferred_queue[&p].push_back(event);
+  LOG_INFO_STR(">>> deferring event " << m_deferred_queue[&p].size() << " <<<");
 }
 
 GCFEvent::TResult BeamServer::recall(GCFPortInterface& p)
@@ -850,6 +856,7 @@ GCFEvent::TResult BeamServer::recall(GCFPortInterface& p)
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
   if (m_deferred_queue[&p].size() > 0) {
+    LOG_INFO_STR(">>> recalling event " << m_deferred_queue[&p].size() << " <<<");
     char* event = m_deferred_queue[&p].front();
     m_deferred_queue[&p].pop_front();
     status = dispatch(*(GCFEvent*)event, p);

@@ -125,5 +125,6 @@ void AntennaArrays::getAll(std::string url)
 					      arraydata.getPositions());
 
     m_arrays[arraydata.getName()] = newarray;
+    LOG_INFO_STR("Read array definition '" << arraydata.getName() << "' from file '" << url << "'");
   }
 }
