@@ -194,7 +194,7 @@ void CDOWrite::sendrequest()
 	cdo.control.enable   = 1;
 	cdo.control.lane     = output_lane;
 	char srcmac[64]; snprintf(srcmac, 64, GET_CONFIG_STRING("RSPDriver.CDO_SRCMAC_FORMAT"),
-				  GET_CONFIG("RS.STATION_ID", i), output_lane);
+				  GET_CONFIG("RS.STATION_ID", i), getBoardId());
 	char dstmac[64]; snprintf(dstmac, 64, "RSPDriver.DST_MAC_ADDR_%d", getBoardId());
 	string2mac(srcmac, cdo.src_mac);
 	string2mac(GET_CONFIG_STRING(dstmac), cdo.dst_mac);
