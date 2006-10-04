@@ -99,8 +99,8 @@ RSPDriver.IGNORE_REMOTE_DATA=0
 # CDO_N_BLOCKS=(N)   : Set number of blocks of N_BEAMLETS beamlets per output Ethernet frame
 # CDO_N_BEAMLETS=(N) : Set number of beamlets to output in each block
 # CDO_SRCMAC_FORMAT  : Template for the src mac address of the boards that output data to CEP
-#   First %02x will be replaced by station id, second by lane number,
-#   e.g. Station 14, lane 3 will be: 10:FA:00:0E:03:01
+#   First %02x will be replaced by station id, second by RSP board index,
+#   e.g. Station 14, RSP board 3 will be: 10:FA:00:0E:03:01
 #
 RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
