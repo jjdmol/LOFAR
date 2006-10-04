@@ -231,6 +231,10 @@ namespace LOFAR {
        * The N_BEAMLETS are a selection from this
        * number of beamlets.
        */
+      static const uint16 N_POL            = 2;                    // number of polarizations
+      static const uint16 N_PHASE          = 2;                    // number of phases in a complex number
+      static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      // number of phase polarizations
+      static const uint16 MAX_N_RCUS       = 128 * MEPHeader::N_POL;
       static const uint16 N_SUBBANDS       = 512;
       static const uint16 N_REMOTE_XLETS   = 54; 
       static const uint16 N_SERDES_LANES   = 4;
@@ -238,9 +242,6 @@ namespace LOFAR {
       static const uint16 N_LOCAL_XLETS    = 4;
       static const uint16 N_BEAMLETS       = 216;
       static const uint16 N_LOCAL_BEAMLETS = 54; // N_BEAMLETS / N_SERDES_LANES
-      static const uint16 N_POL            = 2;                    // number of polarizations
-      static const uint16 N_PHASE          = 2;                    // number of phases in a complex number
-      static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      // number of phase polarizations
       static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
 
       static const uint16 N_HBA_DELAYS     = 16; // number of High Band antenna delay elements
