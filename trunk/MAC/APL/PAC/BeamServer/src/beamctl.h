@@ -46,6 +46,8 @@ namespace LOFAR
 	  beamctl(string name,
 		  string parent,
 		  const list<int>& rcus,
+		  const list<int>& subbands,
+		  const list<int>& beamlets,
 		  RSP_Protocol::RCUSettings& rcumode,
 		  const BS_Protocol::Pointing& direction);
 	  virtual ~beamctl();
@@ -79,6 +81,8 @@ namespace LOFAR
 
 	  string                     m_parent; // name of the full array
 	  list<int>                  m_rcus;   // selection of rcus
+	  list<int>                  m_subbands; // selection of subbands
+	  list<int>                  m_beamlets; // selection of beamlets
 	  RSP_Protocol::RCUSettings& m_rcumode;
 	  BS_Protocol::Pointing      m_direction;
 	};

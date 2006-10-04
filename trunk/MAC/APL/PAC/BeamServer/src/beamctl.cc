@@ -34,6 +34,8 @@
 #include <string.h>
 #include <blitz/array.h>
 #include <getopt.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -42,6 +44,19 @@
 
 #define BEAMCTL_ARRAY "beamctl_array"
 #define BEAMCTL_BEAM  "beamctl_beam"
+
+#define ARRAY_FLAG     0x01
+#define RCUS_FLAG      0x02
+#define RCUMODE_FLAG   0x04
+#define DIRECTION_FLAG 0x08
+#define SUBBANDS_FLAG  0x10
+#define BEAMLETS_FLAG  0x20
+#define ALL_FLAGS (  ARRAY_FLAG			\
+		   | RCUS_FLAG			\
+		   | RCUMODE_FLAG		\
+		   | DIRECTION_FLAG		\
+		   | SUBBANDS_FLAG		\
+		   | BEAMLETS_FLAG)
 
 using namespace std;
 using namespace blitz;
@@ -54,10 +69,13 @@ using namespace BS_Protocol;
 beamctl::beamctl(string name,
 		 string parent,
 		 const list<int>& rcus,
+		 const list<int>& subbands,
+		 const list<int>& beamlets,
 		 RSP_Protocol::RCUSettings& rcumode,
 		 const BS_Protocol::Pointing& direction)
   : GCFTask((State)&beamctl::initial, name), m_beamhandle(0),
-    m_parent(parent), m_rcus(rcus), m_rcumode(rcumode), m_direction(direction)
+    m_parent(parent), m_rcus(rcus), m_subbands(subbands), m_beamlets(beamlets),
+    m_rcumode(rcumode), m_direction(direction)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
   registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
@@ -135,12 +153,15 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
       {
 	CALStartEvent start;
 
-	start.name   = BEAMCTL_ARRAY;
+	start.name   = BEAMCTL_ARRAY + formatString("_%d", getpid());
 	start.parent = m_parent;
 	start.subset = getRCUMask();
 	start.nyquist_zone = m_rcumode()(0).getNyquistZone();
 	start.rcumode().resize(1);
 	start.rcumode()(0) = m_rcumode()(0);
+
+	LOG_INFO_STR("Creating subarray: " << start.name);
+
 	m_calserver.send(start);
       }
       break;
@@ -149,7 +170,7 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
       {
 	CALStartackEvent ack(e);
 
-	if (ack.name != BEAMCTL_ARRAY || ack.status != CAL_Protocol::SUCCESS) {
+	if (ack.status != CAL_Protocol::SUCCESS) {
 
 	  cerr << "Error: failed to start calibration" << endl;
 	  TRAN(beamctl::final);
@@ -198,12 +219,13 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
       {
 	BSBeamallocEvent alloc;
 	
-	alloc.name = BEAMCTL_BEAM;
-	alloc.subarrayname = BEAMCTL_ARRAY;
+	alloc.name = BEAMCTL_BEAM + formatString("_%d", getpid());
+	alloc.subarrayname = BEAMCTL_ARRAY + formatString("_%d", getpid());
 
-	for (int i = 0; i < 10; i++)
-	{
-	    alloc.allocation()[i] = i;
+	std::list<int>::iterator its = m_subbands.begin();
+	std::list<int>::iterator itb = m_beamlets.begin();
+	for (; its != m_subbands.end() && itb != m_beamlets.end(); ++its, ++itb) {
+	  alloc.allocation()[(*itb)] = (*its);
 	}
 
 	m_beamserver.send(alloc);
@@ -281,12 +303,14 @@ void usage()
 {
   cout <<
 "Usage: beamctl\n"
-"  --array=name   # name of  array of which the RCU's are part (for positions)\n"
-"  [--rcus=<set>] # select set of RCU's, all RCU's if not specified\n"
-"  --rcumode=0..7 # RCU mode to use\n"
+"  --array=name      # name of  array of which the RCU's are part (for positions)\n"
+"  [--rcus=<set>]    # select set of RCU's, all RCU's if not specified\n"
+"  --rcumode=0..7    # RCU mode to use\n"
+"  --subbands=<set>  # set of subbands to use for this beam\n"
+"  --beamlets=<list> # list of beamlets on which to allocate the subbands\n" 
 "  --direction=lon,lat[,type] # lon, lat are double values\n"
 "                             # type is one of J2000 (default), AZEL, LOFAR_LMN,\n"
-"  --help         # print this usage\n"
+"  --help            # print this usage\n"
 "\n"
 "This utility connects to the CalServer to create a subarray of --array\n"
 "containing the selected RCU's. The CalServer sets those RCU's in the mode\n"
@@ -387,17 +411,20 @@ void beamctl::mainloop()
 
 int main(int argc, char** argv)
 {
-  LOG_INFO(formatString("Program %s has started", argv[0]));
-
   char *array = "unset";              // --array argument goes here
-  list<int> rcus;                     // --rcus argument goes here, default is to select all
+  list<int> rcus;                     // --rcus argument goes here
+  list<int> subbands;                 // --subbands argument goed here
+  list<int> beamlets;                 // --beamlets argument goes here
   RSP_Protocol::RCUSettings rcumode;  // --rcumode argument goes here
   Pointing direction;                 // --direction argument goed here
   unsigned char presence = 0;         // keep track of which arguments have been specified
 
   // initialize rcus
   rcus.clear();
-  for (int i = 0; i < MAX_N_RCUS; i++) rcus.push_back(i);
+  //for (int i = 0; i < MAX_N_RCUS; i++) rcus.push_back(i);
+
+  subbands.clear();
+  beamlets.clear();
 
   // initialize rcumode
   rcumode().resize(1);
@@ -411,6 +438,8 @@ int main(int argc, char** argv)
       { "rcus",      optional_argument, 0, 'r' },
       { "rcumode",   required_argument, 0, 'm' },
       { "direction", required_argument, 0, 'd' },
+      { "subbands",  required_argument, 0, 's' },
+      { "beamlets",  required_argument, 0, 'b' },
       { "help",      no_argument,       0, 'h' },
       { 0, 0, 0, 0 },
     };
@@ -424,37 +453,93 @@ int main(int argc, char** argv)
 
     case 'a':
       {
-	if (!optarg) { cerr << "Error: missing --array argument" << endl; usage(); exit(EXIT_FAILURE); }
-	array=strdup(optarg);
-	presence |= 0x01;
+	if (!optarg) {
+	  cerr << "Error: missing --array value" << endl;
+	} else {
+	  array=strdup(optarg);
+	  presence |= ARRAY_FLAG;
+	}
       }
       break;
      
     case 'r':
       {
-	if (!optarg) { cerr << "Error: missing --rcus argument" << endl; usage(); exit(EXIT_FAILURE); }
-	rcus = strtolist(optarg, MAX_N_RCUS);
-	// optional argument
+	if (!optarg) {
+	  cerr << "Error: missing --rcus value" << endl;
+	} else {
+	  rcus = strtolist(optarg, MAX_N_RCUS);
+	  presence |= RCUS_FLAG;
+	}
       }
       break;
 
     case 'm':
       {
-	if (!optarg) { cerr << "Error: missing --rcumode argument" << endl; usage(); exit(EXIT_FAILURE); }
-	int mode = 0;
-	if ((mode = atoi(optarg) < 0) || mode > 7) {
-	  cerr << formatString("Error: --rcumode=%d, out of range [0..7]", mode) << endl;
-	  exit(EXIT_FAILURE);
+	if (!optarg) {
+	  cerr << "Error: missing --rcumode value" << endl;
+	} else {
+	  int mode = 0;
+	  if ((mode = atoi(optarg) < 0) || mode > 7) {
+	    cerr << formatString("Error: --rcumode=%d, out of range [0..7]", mode) << endl;
+	  } else {
+	    rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)mode);
+	    presence |= RCUMODE_FLAG;
+	  }
 	}
-	rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)mode);
-	presence |= 0x02;
       }
       break;
 
     case 'd':
       {
-	if (!optarg) { cerr << "Error: missing --direction argument" << endl; usage(); exit(EXIT_FAILURE); }
-	presence |= 0x04;
+	if (!optarg) {
+	  cerr << "Error: missing --direction value" << endl;
+	} else {
+	  double lon = 0.0, lat = 0.0;
+	  char type[11] = "J2000";
+	  int nargs = sscanf(optarg, "%lf,%lf,%10s", &lon, &lat, type);
+	  if (nargs < 2) {
+	    cerr << "Error: invalid number of parameters for --direction " << endl;
+	  } else {
+	    LOG_DEBUG(formatString("lon=%lf, lat=%lf, type=%s", lon, lat, type));
+
+	    direction.setDirection(lat, lon);
+
+	    if (string("J2000") == string(type)) {
+	      direction.setType(Pointing::J2000);
+	      presence |= DIRECTION_FLAG;
+	    } else if (string("AZEL") == string(type)) {
+	      direction.setType(Pointing::AZEL);
+	      presence |= DIRECTION_FLAG;
+	    } else if (string("LOFAR_LMN") == string(type)) {
+	      direction.setType(Pointing::LOFAR_LMN);
+	      presence |= DIRECTION_FLAG;
+	    } else {
+	      cerr << "Error: invalid coordinate type '" << type << "'" << endl;
+	    }
+	  }
+	}
+      }
+      break;
+
+    case 's':
+      {
+	if (!optarg) {
+	  cerr << "Error: missing --subbands value" << endl;
+	} else {
+	  subbands = strtolist(optarg, MEPHeader::N_SUBBANDS);
+	  presence |= SUBBANDS_FLAG;
+	}
+      }
+      break;
+
+    case 'b':
+      {
+	if (!optarg) {
+	  cerr << "Error: missing --beamlets value" << endl;
+	} else {
+	  beamlets = strtolist(optarg, MEPHeader::N_BEAMLETS);
+	  presence |= BEAMLETS_FLAG;
+	}
       }
       break;
 
@@ -475,15 +560,40 @@ int main(int argc, char** argv)
     }
   }
 
-  if (presence != 0x07) {
-    cerr << "Error: Not all required arguments have been specified" << endl;
+  if (! (presence & ARRAY_FLAG)) {
+    cerr << "Error: --array argument missing." << endl;
+  }
+  if (! (presence & RCUS_FLAG)) {
+    cerr << "Error: --rcus argument missing." << endl;
+  }
+  if (! (presence & RCUMODE_FLAG)) {
+    cerr << "Error: --rcumode argument missing." << endl;
+  }
+  if (! (presence & DIRECTION_FLAG)) {
+    cerr << "Error: --direction argument missing." << endl;
+  }
+  if (! (presence & SUBBANDS_FLAG)) {
+    cerr << "Error: --subbands argument missing." << endl;
+  }
+  if (! (presence & BEAMLETS_FLAG)) {
+    cerr << "Error: --beamlets argument missing." << endl;
+  }
+
+  if (presence != ALL_FLAGS) {
+    cerr << "Error: Not all required arguments have been specified correctly." << endl;
     usage();
     exit(EXIT_FAILURE);
   }
 
-  GCFTask::init(argc, argv);
+  if (subbands.size() != beamlets.size()) {
+    cerr << "Error: length of --subbands value must be equal to length of --beamlets value." << endl;
+    exit(EXIT_FAILURE);
+  }
 
-  beamctl ctl("beamctl", array, rcus, rcumode, direction);
+  GCFTask::init(argc, argv);
+  LOG_INFO(formatString("Program %s has started", argv[0]));
+
+  beamctl ctl("beamctl", array, rcus, subbands, beamlets, rcumode, direction);
 
   try {
     ctl.mainloop();

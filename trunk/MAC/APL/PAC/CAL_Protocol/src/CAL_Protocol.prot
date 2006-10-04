@@ -31,7 +31,8 @@ enum {
 };
 
 static const int MAX_N_RCUS=256;
-static const int N_SUBBANDS=512;
+static const int N_SUBBANDS=MEPHeader::N_SUBBANDS;
+static const int N_BEAMLETS=MEPHeader::N_BEAMLETS;
 
 //
 // The following events are defined in the CAL protocol
