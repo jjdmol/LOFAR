@@ -111,6 +111,8 @@ GCFEvent::TResult GSBController::initial(GCFEvent& event, GCFPortInterface& port
 //
 GCFEvent::TResult GSBController::operational(GCFEvent& event, GCFPortInterface& port)
 {
+	LOG_TRACE_FLOW_STR ("operation:" << evtstr(event) << "@" << port.getName());
+
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {

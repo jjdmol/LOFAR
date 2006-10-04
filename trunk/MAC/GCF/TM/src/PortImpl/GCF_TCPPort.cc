@@ -331,8 +331,22 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 //
 ssize_t GCFTCPPort::recv(void* buf, size_t count)
 {
-  ASSERT(_pSocket);
-  return _pSocket->recv(buf, count);
+	ASSERT(_pSocket);
+
+	if (!isConnected()) {
+		LOG_ERROR(formatString (
+					"Port '%s' on task '%s' not connected! Can't read device!",
+					getRealName().c_str(), getTask()->getName().c_str()));
+		return 0;
+	}
+
+	ssize_t	btsRead = _pSocket->recv(buf, count);
+	if (btsRead == 0) {
+		setState(S_DISCONNECTING);     
+		schedule_disconnected();
+	}
+
+	return (btsRead);
 }
 
 //
