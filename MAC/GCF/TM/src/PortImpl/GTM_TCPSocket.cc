@@ -63,6 +63,10 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
 	ssize_t written(0);
 	do {
 		written = ::write(_fd, ((char*)buf) + (count - countLeft), countLeft);
+		if (written == 0) {		// is it a disconnect?
+			return (0);
+		}
+
 		if (written == -1) {
 			if (errno != EINTR) {
 				LOG_WARN(LOFAR::formatString ( "send, error: %s", strerror(errno)));
@@ -91,6 +95,10 @@ ssize_t GTMTCPSocket::recv(void* buf, size_t count)
 	ssize_t received(0);
 	do {
 		received = ::read(_fd, ((char*)buf) + (count - countLeft), countLeft);
+		if (received == 0) {	// is it a disconnect?
+			return(0);
+		}
+
 		if (received == -1) {
 			if (errno != EINTR) {
 				LOG_WARN(formatString ( "recv, error: %s", strerror(errno)));
