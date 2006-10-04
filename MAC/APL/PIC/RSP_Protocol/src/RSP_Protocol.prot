@@ -1050,6 +1050,9 @@ event = {
     userdefined;
   };
   param = {
+    // this parameter is now obsolete (has no effect)
+    // UPDCLOCK will be sent as soon as the clock value
+    // has been changed by a SETCLOCK event
     name = "period";
     type = "uint16";
   };

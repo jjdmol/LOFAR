@@ -36,12 +36,13 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-UpdClocksCmd::UpdClocksCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdClocksCmd::UpdClocksCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+  m_event(0), m_current_clock(0)
 {
   m_event = new RSPSubclockEvent(event);
 
   setOperation(oper);
-  setPeriod(m_event->period);
+  setPeriod(1);
   setPort(port);
 }
 
@@ -62,23 +63,19 @@ void UpdClocksCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 
 void UpdClocksCmd::complete(CacheBuffer& cache)
 {
-  RSPUpdclockEvent ack;
+  if (cache.getClock() != m_current_clock) {
 
-  ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
-  ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
+    RSPUpdclockEvent ack;
+    
+    ack.timestamp = getTimestamp();
+    ack.status = SUCCESS;
+    ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
+    ack.clock = cache.getClock();
 
-  ack.clock = cache.getClock();
-
-  // only send ack if clock setting has been applied to all boards
-  bool sendack = true;
-  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++) {
-    if (RTC::RegisterState::DONE != cache.getCache().getState().tds().get(cache_rsp)) {
-      sendack = false;
-    }
+    getPort()->send(ack);
   }
 
-  if (sendack) getPort()->send(ack);
+  m_current_clock = cache.getClock();
 }
 
 const Timestamp& UpdClocksCmd::getTimestamp() const
