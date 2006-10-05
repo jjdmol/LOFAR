@@ -104,7 +104,7 @@ namespace LOFAR
 	    {
 	      itsWriteLockTimer.stop ();
 	      cout<<"Waiting for space: "<<begin<<" - "<<end<< endl;;
-	      printPointers();
+	      //printPointers();
 	      itsWaitingForSpaceTimer.start ();
 	      amWaiting = true;
 	    }
@@ -183,7 +183,7 @@ namespace LOFAR
 	    {
 	      itsReadLockTimer.stop ();
 	      cout<<"Waiting for data: "<<begin<<" - "<<end<< endl;
-      	      printPointers();
+      	      //printPointers();
 	      itsWaitingForDataTimer.start ();
 	      amWaiting = true;
 	    }
