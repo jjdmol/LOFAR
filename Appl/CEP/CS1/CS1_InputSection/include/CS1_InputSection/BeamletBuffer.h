@@ -62,7 +62,7 @@ namespace LOFAR
       ~BeamletBuffer();
 
       // write elements in the buffer, return value is number of succesfully written elements
-      uint writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint stride);
+      uint writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint nSubbandsPerBlock);
       // get elements out of the buffer, return value is number of valid elements
       uint getElements(vector<Beamlet *> buffers, SparseSet* flags, TimeStamp begin, uint nElements);
 
