@@ -122,9 +122,15 @@ void GTMTCPServerSocket::workProc()
 
     struct sockaddr_in clientAddress;
     socklen_t clAddrLen = sizeof(clientAddress);
-    _pDataSocket->setFD(::accept(_fd, 
-                 (struct sockaddr*) &clientAddress, 
-                 &clAddrLen));
+    int newSocketFD;
+
+    /* loop to handle transient errors */
+    while ((newSocketFD = ::accept(_fd, 
+			   (struct sockaddr*) &clientAddress,
+				   &clAddrLen)) < 0 &&
+	   (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno)) /*noop*/;
+
+    _pDataSocket->setFD(newSocketFD);
          
     if (_pDataSocket->getFD() >= 0) {
       GCFEvent connectedEvent(F_CONNECTED);
@@ -147,9 +153,12 @@ bool GTMTCPServerSocket::accept(GTMFile& newSocket)
     struct sockaddr_in clientAddress;
     socklen_t clAddrLen = sizeof(clientAddress);
     int newSocketFD;
-    newSocketFD = ::accept(_fd, 
+
+    /* loop to handle transient errors */
+    while ((newSocketFD = ::accept(_fd, 
                        (struct sockaddr*) &clientAddress, 
-                       &clAddrLen);
+				   &clAddrLen)) < 0 &&
+	   (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno)) /*noop*/;
     
     result = (newSocket.setFD(newSocketFD) > 0);
     if (!result) {
