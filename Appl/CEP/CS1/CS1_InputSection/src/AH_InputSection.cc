@@ -64,13 +64,7 @@ namespace LOFAR {
       LOG_TRACE_FLOW_STR("Start of AH_InputSection::define()");
       undefine();
 
-#ifdef HAVE_MPICH
-      // mpich needs to run the first process on the master node to enable debugging
-      int lowestFreeNode = 1;
-#else
-      // scampi doesn't need an extra node
       int lowestFreeNode = 0;
-#endif
       
       TimeStamp::setMaxBlockId(itsParamSet.getDouble("Observation.SampleRate"));
 
