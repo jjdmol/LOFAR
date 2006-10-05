@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/hexdump.h>
 #include <CS1_InputSection/InputThread.h>
 #include <Common/Timer.h>
 #include <Transport/TransportHolder.h>
@@ -85,9 +86,6 @@ namespace LOFAR {
       // init Transportholder
       ASSERTSTR(itsArgs.th->init(), "Could not init TransportHolder");
 
-      // how far is one beamlet of a subband away from the next beamlet of the same subband
-      int strideSize = itsArgs.nSubbandsPerFrame;
-
       bool dataContainsValidStamp = (itsArgs.th->getType() != "TH_Null");
 
       while(!theirShouldStop) {
@@ -97,7 +95,7 @@ namespace LOFAR {
 	while (!validTimeStampReceived) {
 	  try {
 	    receiveTimer.start();
-	    //cerr<<"InputThread reading "<<frameSize<<" bytes from TH ("<<(void*)itsArgs.th<<" into "<<(void*)totRecvframe<<endl;
+	    //cerr<<"InputThread "<<itsArgs.ID << " reading "<<frameSize<<" bytes from TH ("<<(void*)itsArgs.th<<" into "<<(void*)totRecvframe<<endl;
 	    itsArgs.th->recvBlocking( (void*)totRecvframe, frameSize, 0);
 	    receiveTimer.stop();
 	  } catch (Exception& e) {
@@ -122,11 +120,12 @@ namespace LOFAR {
 	    blockid = ((int*)&recvframe[12])[0];
 	    validTimeStampReceived = (seqid != 0xffff); //if the second counter has 0xffff, the data cannot be trusted.
 	    //cerr<<"InputThread received valid? :"<<validTimeStampReceived<<endl;
-#ifdef PACKET_STATISTICS
-	    if (!validTimeStampReceived) invalidStamps.push_back({actualstamp, expectedstamp} );
+#ifdef PACKET_STATISTICS	    
+	    if (!validTimeStampReceived) invalidStamps.push_back(PacketStats(actualstamp, expectedstamp));
 	    // hack for error in rsp boards where timestamps are not equal on both boards
 #endif
 	    actualstamp.setStamp(seqid ,blockid);
+	    //cerr<<"InputThread received stamp: "<<actualstamp<<" ("<<seqid<<", "<<blockid<<")"<<endl;
 
 	    //cerr<<endl<<"Reading stamp: " << actualstamp<<endl;
 #ifdef PACKET_STATISTICS
@@ -142,12 +141,10 @@ namespace LOFAR {
 	// check and process the incoming data
 #ifdef PACKET_STATISTICS
 	if (actualstamp < expectedstamp) {
-	  PacketStats rewritten = {actualstamp, expectedstamp};
-	  oldStamps.push_back(rewritten);
+	  oldStamps.push_back(PacketStats(actualstamp, expectedstamp));
 	} else if (actualstamp > expectedstamp) {
 	  do {
-	    PacketStats missed = {actualstamp, expectedstamp};
-	    missedStamps.push_back(missed);
+	    missedStamps.push_back(PacketStats(actualstamp, expectedstamp));
 	    // increase the expectedstamp
 	    expectedstamp += itsArgs.nTimesPerFrame;
 	  } while (actualstamp > expectedstamp);
@@ -159,7 +156,12 @@ namespace LOFAR {
 	// expected packet received so write data into corresponding buffer
 	//cerr<<"InputThread: "<<actualstamp<<endl;
 
-	itsArgs.BBuffer->writeElements((Beamlet*)&recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame, strideSize);
+	try {
+	  itsArgs.BBuffer->writeElements((Beamlet*)&recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame, itsArgs.nSubbandsPerFrame);
+	} catch (Exception& e) {
+	  LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't write to BeamletBuffer("<<e.what()<<", stopping thread");
+	  break;
+	}	
 
 	writeTimer.stop();
 	threadTimer.stop();
@@ -167,20 +169,20 @@ namespace LOFAR {
 
       printTimers(itsTimers);
 #ifdef PACKET_STATISTICS
-      LOG_TRACE_INFO("Timestamps of missed packets:");
+      LOG_WARN("Timestamps of missed packets:");
       vector<PacketStats>::iterator it = missedStamps.begin();
       for (; it != missedStamps.end(); it++) {
-	LOG_TRACE_INFO_STR("MIS " << it->expectedStamp << " missed at time " << it->receivedStamp);
+	LOG_WARN_STR("MIS " << it->expectedStamp << " missed at time " << it->receivedStamp);
       }
-      LOG_TRACE_INFO_STR("Rewritten packets:");
+      LOG_WARN_STR("Rewritten packets:");
       vector<PacketStats>::iterator rit = oldStamps.begin();
       for (; rit != oldStamps.end(); rit++) {
-	LOG_TRACE_INFO_STR("REW " << rit->receivedStamp<<" received at time "<< rit->expectedStamp);
+	LOG_WARN_STR("REW " << rit->receivedStamp<<" received at time "<< rit->expectedStamp);
       }
-      LOG_TRACE_INFO_STR("Invalid timestamps:");
+      LOG_WARN_STR("Invalid timestamps:");
       vector<PacketStats>::iterator iit = invalidStamps.begin();
       for (; iit != invalidStamps.end(); iit++) {
-	LOG_TRACE_INFO_STR("INV received at time "<< iit->expectedStamp);
+	LOG_WARN_STR("INV received at time "<< iit->expectedStamp);
       }
 #endif
     }

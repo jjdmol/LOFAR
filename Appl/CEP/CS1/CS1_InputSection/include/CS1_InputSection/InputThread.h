@@ -54,9 +54,12 @@ namespace LOFAR
       int frameHeaderSize;
       int nTimesPerFrame;
       int nSubbandsPerFrame;
+      int ID;
     };
   
-    struct PacketStats {
+    class PacketStats {
+    public:
+      PacketStats(const TimeStamp& rStamp, const TimeStamp& eStamp): receivedStamp(rStamp), expectedStamp(eStamp) {};
       TimeStamp receivedStamp;
       TimeStamp expectedStamp;
     };
