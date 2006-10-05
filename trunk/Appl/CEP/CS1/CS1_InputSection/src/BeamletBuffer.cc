@@ -75,7 +75,7 @@ namespace LOFAR {
 	TimeStamp realBegin = itsLockedRange.writeLock(itsHighestWritten, flagEnd);
 
 	itsWriteTimer.start();
-	cerr<<"BeamletBuffer: skipping "<<flagEnd<<" - "<<itsHighestWritten<<" ("<<flagEnd-itsHighestWritten<<")"<<endl;
+	cerr<<"BeamletBuffer: skipping "<<itsHighestWritten<<" - "<<flagEnd<<" ("<<flagEnd-itsHighestWritten<<")"<<endl;
 	itsSkippedItems += flagEnd - itsHighestWritten;
 	// we skipped a part, so write zeros there
 	uint startI = mapTime2Index(realBegin);
@@ -107,8 +107,13 @@ namespace LOFAR {
       }
     }
 
-    uint BeamletBuffer::writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint stride)
+    uint BeamletBuffer::writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint subbandsPerFrame)
     {
+#define TIMEFASTESTDIM
+      // is the time the fastest running dimension or the subband
+      // (it used to be subband, but in the new firmware, TIME is the fastest
+      // changing dimension (so per subband there is a number of timeslices))
+
       // if this part start beyond itsHighestWritten, there is a gap in the data in the buffer
       // so set that data to zero and invalidate it.
       //cerr<<"BeamletBuffer checking for skipped data"<<endl;
@@ -120,42 +125,70 @@ namespace LOFAR {
       TimeStamp realBegin = itsLockedRange.writeLock(begin, end);
       //cerr<<"BeamletBuffer writelock received"<<endl;
 
-      itsDroppedItems += realBegin - begin;
+      if (realBegin < end) {
+
+	itsDroppedItems += realBegin - begin;
+
+#ifdef TIMEFASTESTDIM
+	data += realBegin - begin;
+#else 
+	data += subbandsPerFrame * (realBegin - begin);
+#endif
      
-      itsWriteTimer.start();
+	itsWriteTimer.start();
 
-      uint startI = mapTime2Index(realBegin);
-      uint endI = mapTime2Index(end);
+	uint startI = mapTime2Index(realBegin);
+	uint endI = mapTime2Index(end);
 
-      if (endI < startI) {
-	// the data wraps around the allocated memory, so do it in two parts
-	for (uint i = startI; i < itsSize; i ++) {
+	//cerr<<"BeamletBuffer: write from "<<realBegin<<" instead of "<<begin<<endl;
+	//cerr<<"BeamletBuffer: Writing from "<<startI<<" to "<<endI<<" timestamp "<<begin<<endl;
+	if (endI < startI) {
+	  // the data wraps around the allocated memory, so do it in two parts
+	  
+#ifdef TIMEFASTESTDIM
+	  uint chunk1 = itsSize - startI;
 	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    itsSBBuffers[sb][i] = data[sb];
+	    memcpy(&(itsSBBuffers[sb][startI]), &(data[0])     , chunk1 * sizeof(Beamlet));
+	    memcpy(&(itsSBBuffers[sb][0])     , &(data[chunk1]), endI * sizeof(Beamlet));
+	    data += nElements;		
 	  }
-	  data += stride;
-	}      
-	for (uint i = 0; i < endI; i ++) {
+#else
+	  for (uint i = startI; i < itsSize; i ++) {
+	    for (uint sb = 0; sb < itsNSubbands; sb++) {
+	      itsSBBuffers[sb][i] = data[sb];
+	    }
+	    data += subbandsPerFrame;
+	  }      
+	  for (uint i = 0; i < endI; i ++) {
+	    for (uint sb = 0; sb < itsNSubbands; sb++) {
+	      itsSBBuffers[sb][i] = data[sb];
+	    }
+	    data += subbandsPerFrame;
+	  }      
+#endif
+	  mutex::scoped_lock sl(itsFlagsMutex);
+	  itsFlags.exclude(startI, itsSize).exclude(0, endI);
+	} else {
+#ifdef TIMEFASTESTDIM
 	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    itsSBBuffers[sb][i] = data[sb];
+	    memcpy(&(itsSBBuffers[sb][startI]), data, (endI - startI) * sizeof(Beamlet));
+	    data += nElements;		
 	  }
-	  data += stride;
+#else
+	  for (uint i = startI; i < endI; i ++) {
+	    for (uint sb = 0; sb < itsNSubbands; sb++) {
+	      itsSBBuffers[sb][i] = data[sb];
+	    }
+	    data += subbandsPerFrame;
 	}      
-	mutex::scoped_lock sl(itsFlagsMutex);
-	itsFlags.exclude(startI, itsSize).exclude(0, endI);
-      } else {
-	for (uint i = startI; i < endI; i ++) {
-	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    itsSBBuffers[sb][i] = data[sb];
-	  }
-	  data += stride;
-	}      
-	mutex::scoped_lock sl(itsFlagsMutex);
-	itsFlags.exclude(startI, endI);
+#endif
+	  mutex::scoped_lock sl(itsFlagsMutex);
+	  itsFlags.exclude(startI, endI);
+	}
+
+	itsWriteTimer.stop();
+	if (itsHighestWritten < end) itsHighestWritten = end;
       }
-
-      itsWriteTimer.stop();
-      if (itsHighestWritten < end) itsHighestWritten = end;
       itsLockedRange.writeUnlock(end);
       return end - realBegin;
     }
