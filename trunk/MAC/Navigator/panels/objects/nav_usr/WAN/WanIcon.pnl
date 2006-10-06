@@ -1,15 +1,19 @@
 V 10
 1
 LANG:1 7 WanIcon
-PANEL,456 100 119 151 N "_3DFace" 1
-"$referenceDatapoint"
+PANEL,332 104 119 151 N "_3DFace" 1
+"$datapoint"
 EE"main()
 {
-aplViewNavigateTo(\"\", $referenceDatapoint, \":LOFAR_PIC\", \"WAN-CS1.pnl\");
+click();
 }" 0
  E E 1 0 0 0  20 80
 "" 0 1
-EE 2
+E"click()
+{
+	aplViewNavigateTo($datapoint,\"\", \":LOFAR_PIC\", \"WAN-CS1.pnl\");
+}" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -29,7 +33,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 20 64 80
+E "main()
+{
+click();
+}" 0
+ 0 1 1 0 1 E U  1 E 20 20 64 80
 6 1
 "Border2"
 ""
@@ -42,7 +50,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 24 46 31 52
+E "main()
+{
+click();
+}" 0
+ 0 1 1 0 1 E U  1 E 24 46 31 52
 6 2
 "Border4"
 ""
@@ -55,7 +67,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 50 25 57 31
+E "main()
+{
+click();
+}" 0
+ 0 1 1 0 1 E U  1 E 50 25 57 31
 6 3
 "Border5"
 ""
@@ -68,7 +84,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 50 35 57 41
+E "main()
+{
+click();
+}" 0
+ 0 1 1 0 1 E U  1 E 50 35 57 41
 6 4
 "Border6"
 ""
@@ -81,7 +101,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 50 45 57 51
+E "main()
+{
+click();
+}" 0
+ 0 1 1 0 1 E U  1 E 50 45 57 51
 6 5
 "Border7"
 ""
@@ -94,7 +118,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 50 55 57 61
+E "main()
+{
+click();
+}" 0
+ 0 1 1 0 1 E U  1 E 50 55 57 61
 6 6
 "Border8"
 ""
@@ -107,7 +135,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 50 65 57 71
+E "main()
+{
+click();
+}" 0
+ 0 1 1 0 1 E U  1 E 50 65 57 71
 4 7
 "Line6"
 ""

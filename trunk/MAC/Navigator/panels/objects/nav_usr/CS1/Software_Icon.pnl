@@ -1,15 +1,19 @@
 V 10
 1
 LANG:1 12 SoftwareIcon
-PANEL,456 100 154 186 N "_3DFace" 1
-"$referenceDatapoint"
+PANEL,305 99 154 186 N "_3DFace" 1
+"$datapoint"
 EE"main()
 {
-aplViewNavigateTo(\"\", $referenceDatapoint, \":LOFAR_PIC\", \"software-overview.pnl\");
+click();
 }" 0
- E E 1 0 0 0  -1 -1
+ E E 1 0 0 0  20 110
 "" 0 1
-EE 2
+E"click() 
+{
+	aplViewNavigateTo($datapoint, \"\", \":LOFAR_PermSW\", \"software-overview.pnl\");
+}" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -29,7 +33,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 20 90 110
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 20 20 90 110
 4 1
 "Line14"
 ""
@@ -68,7 +76,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 62 58 77 67
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 62 58 77 67
 4 4
 "Line12"
 ""
@@ -107,7 +119,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 4 46 44
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 4 46 44
 36 49
 46 54
 56 49
@@ -124,7 +140,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 45 33 10 5
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 45 33 10 5
 10 8
 "Polyline3"
 ""
@@ -137,7 +157,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 4 70 44
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 4 70 44
 60 49
 70 54
 80 49
@@ -154,7 +178,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 38 58 53 67
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 38 58 53 67
 10 10
 "Polyline4"
 ""
@@ -167,7 +195,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 4 46 74
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 4 46 74
 36 79
 46 84
 56 79
@@ -184,7 +216,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 65 75 75 95
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 65 75 75 95
 7 12
 "Ellipse5"
 ""
@@ -197,7 +233,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 46 94 5 5
+E "main()
+{
+	click();
+}" 0
+ 0 1 1 0 1 E U  1 E 46 94 5 5
 0
 LAYER, 1 
 1

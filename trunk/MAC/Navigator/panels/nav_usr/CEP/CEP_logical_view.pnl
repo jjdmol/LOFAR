@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 SwitchRect2
-PANEL,299 222 1094 839 N "_3DFace" 0
+PANEL,305 99 1094 839 N "_3DFace" 0
 EEE E E 1 0 0 0  130 470
 "" 0 1
 EE 2
@@ -41,7 +41,7 @@ E E 0 1 1 0 1 E U  1 E 256 150 286 480
 6 8
 "AuxProcRect"
 ""
-1 63 570 E E E 1 E 1 E N "_WindowText" E N "Lofar_background_dark" E E
+1 60 570 E E E 1 E 1 E N "_WindowText" E N "Lofar_background_dark" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -50,7 +50,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 63 510 723 570
+E E 0 1 1 0 1 E U  1 E 60 510 720 570
 4 9
 "Line1"
 ""
@@ -998,7 +998,7 @@ LANG:1 6 Layer8
 1
 "$clusterType""Input"
 3 1 ""
-"objects\\nav_usr\\CEP\\Cep_logical_cluster.pnl" 970 420 T 138 1 0 1  -387 80  
+"objects\\nav_usr\\CEP\\Cep_logical_cluster.pnl" 970 420 T 138 1 0 1  -390 80  
 1
 "$clusterType""Output"
 3 2 ""
