@@ -403,7 +403,7 @@ __nav_default_config_List_List.selectionQueryDPE	GCFNavSubViewConfigList	""	0x20
 __nav_default_config_List_List.selectionQuery	GCFNavSubViewConfigList	""	0x20101	03.08.2006 07:46:24.828
 __loglevel.	GCFLogLevel	30000	0x101	05.04.2005 11:43:25.652
 __navigator.viewsPath	GCFNavigator	"nav_fw/"	0x101	07.07.2005 07:19:27.498
-__navigator.resourceRoots	GCFNavigator	"CCU1:PIC", "CCU1:PAC", "CCU1:LOFAR"	0x101	07.07.2005 07:19:49.490
+__navigator.resourceRoots	GCFNavigator	"MCU001:LOFAR"	0x101	07.07.2005 07:19:49.490
 __navigator.environmentNames	GCFNavigator	"Personal"	0x101	07.07.2005 07:19:06.338
 __navigator.environmentGroups	GCFNavigator	""	0x101	25.07.2005 08:48:35.944
 __navigator.treeAccess	GCFNavigator	"", "", "", "", "", "", "", "", "*:*", "", "", "", "", "", "", "", ""	0x101	15.07.2005 13:49:56.495

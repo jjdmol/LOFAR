@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,265 103 799 547 N "_3DFace" 1
+PANEL,345 108 799 547 N "_3DFace" 1
 "$FESNType"
 "main()
 {
@@ -52,11 +52,11 @@ void computeFESNSumAlert(string ident, dyn_dyn_anytype tab)
 	}
 	if (error > 0)
 	{
-    FESNBorder.backCol = \"red\";
+    FESNborder.backCol = \"red\";
 	}
 	else
 	{
-		FESNBorder.backCol = \"Lofar_device_active\";
+		FESNborder.backCol = \"Lofar_device_active\";
 	}
 }" 0
 EE E E 1 0 0 0  240 240

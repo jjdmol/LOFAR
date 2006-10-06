@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 Enable property sets
-PANEL,293 76 460 120 N "_3DFace" 0
+PANEL,416 258 540 182 N "_3DFace" 0
 EEE E E 1 -1 -1 0  10 10
 "" 0 1
 EE 2
@@ -172,7 +172,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 "main()
 {
-  setValue(\"\", \"text\", getSystemName()+\"*\");
+  setValue(\"\", \"text\", getSystemName()+\"LOFAR*\");
 }" 0
 
 E
