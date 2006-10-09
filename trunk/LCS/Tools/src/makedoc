@@ -49,10 +49,10 @@
   # Try to find out which doxygen to use from the variants file.
   doxline=
   if [ -f $confdir/variants.$lfr_host ]; then
-    doxline=`grep with-doxygen $confdir/variants.$lfr_host`
+    doxline=`grep with-doxygen= $confdir/variants.$lfr_host`
   fi
   if [ "$doxline" = ""  -a  -f $confdir/variants ]; then
-    doxline=`grep with-doxygen $confdir/variants`
+    doxline=`grep with-doxygen= $confdir/variants`
   fi
   doxdir=`echo $doxline | sed 's/.*--with-doxygen=\([^ ]\+\).*/\1/'`
   if [ "$doxdir" != ""  -a  -f $doxdir/doxygen ]; then
