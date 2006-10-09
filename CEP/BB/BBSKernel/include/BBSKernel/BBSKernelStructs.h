@@ -1,4 +1,4 @@
-\//# BBSKernelStructs.h: some global structs used in the kernel.
+//# BBSKernelStructs.h: some global structs used in the kernel.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
