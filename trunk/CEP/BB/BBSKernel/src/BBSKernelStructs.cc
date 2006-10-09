@@ -25,51 +25,41 @@
 #include <BBSKernel/BBSKernelStructs.h>
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <Common/StreamUtil.h>
-
-#include <iostream>
-
-using namespace std;
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
-namespace BBS
-{
+  namespace BBS
+  {
     using LOFAR::operator<<;
     
     ostream& operator<<(ostream& os, const Correlation& obj)
     {
-        os << "Correlation:" << endl;
-        os << ". " << "Selection: ";
-        switch(obj.selection)
-        {
-            case Correlation::AUTO:
-                os << ". " << "AUTO";
-                break;
-    
-            case Correlation::CROSS:
-                os << ". " << "CROSS";
-                break;
-    
-            case Correlation::ALL:
-                os << ". " << "ALL";
-                break;
-            
-            default:
-                os << ". " << "*****";
-                break;
-        }
-        os << endl;
-        os << ". " << "Type:" << obj.type << endl;
-        return os;
+      os << "Correlation:";
+      Indent id;
+      os << endl << indent << "Selection: ";
+      switch(obj.selection) {
+      case Correlation::NONE:  os << "NONE";  break;
+      case Correlation::AUTO:  os << "AUTO";  break;
+      case Correlation::CROSS: os << "CROSS"; break;
+      case Correlation::ALL:   os << "ALL";   break;
+      default: os << "*****"; break;
+      }
+      os << endl << indent << "Type:" << obj.type;
+      return os;
     }
+
 
     ostream& operator<<(ostream& os, const Baselines& obj)
     {
-        os << "Baselines:" << endl;
-        os << ". " << "Station1: " << obj.station1 << endl;
-        os << ". " << "Station2: " << obj.station2 << endl;
-        return os;
+      os << "Baselines:";
+      Indent id;
+      os << endl << indent << "Station1: " << obj.station1
+	 << endl << indent << "Station2: " << obj.station2;
+      return os;
     }
 
-} // namespace BBS
+
+  } // namespace BBS
+
 } // namespace LOFAR

@@ -1,4 +1,4 @@
-//# BBSKernelStructs.h: some global structs used in the kernel.
+\//# BBSKernelStructs.h: some global structs used in the kernel.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,35 +23,29 @@
 #ifndef LOFAR_BBSKERNEL_BBSKERNELSTRUCTS_H
 #define LOFAR_BBSKERNEL_BBSKERNELSTRUCTS_H
 
-#include <vector>
-#include <string>
-#include <iostream>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_iosfwd.h>
 
 namespace LOFAR
 {
-namespace BBS
-{
+  namespace BBS
+  {
     class MeqDomain;
 
     // Information about which correlation products (auto, cross, or both),
     // and which polarizations should be used.
     struct Correlation
     {
-        Correlation()
-        : selection(ALL)
-        {
-        }
-
-        enum Selection
-        {
-            AUTO,                   // Auto correlation only.
-            CROSS,                  // Cross correlation only.
-            ALL                     // Both auto- and cross correlation
-        } selection;
-
-        std::vector<std::string>  type;  // E.g., ["XX", "XY", "YX", "YY"]
+      Correlation() : selection(NONE) {}
+      enum Selection {
+	NONE,               ///< No correlations
+	AUTO,               ///< Auto correlation only.
+	CROSS,              ///< Cross correlation only.
+	ALL                 ///< Both auto- and cross correlation
+      } selection;
+      vector<string> type;  ///< E.g., ["XX", "XY", "YX", "YY"]
     };
-
 
     // Two vectors of stations names, which, when paired element-wise, define
     // the baselines to be used in the current step. Names may contain
@@ -76,49 +70,50 @@ namespace BBS
     // ANTENNA table in the Measurement Set.
     struct Baselines
     {
-        std::vector<std::string>    station1;
-        std::vector<std::string>    station2;
+      vector<string> station1;
+      vector<string> station2;
     };
 
 
     struct Context
     {
-        Baselines                   baselines;
-        Correlation                 correlation;
-        std::vector<std::string>    sources;
-        std::vector<std::string>    instrumentModel;    
+      Baselines         baselines;
+      Correlation       correlation;
+      vector<string>    sources;
+      vector<string>    instrumentModel;    
     };
 
 
     struct PredictContext: Context
     {
-        std::string                 outputColumn;
+      string            outputColumn;
     };
 
 
     struct SubtractContext: Context
     {
-        std::string                 outputColumn;
+      string            outputColumn;
     };
 
 
     struct CorrectContext: Context
     {
-        std::string                 outputColumn;
+      string            outputColumn;
     };
 
 
     struct GenerateContext: Context
     {
-        std::vector<std::string>    unknowns;
-        std::vector<std::string>    excludedUnknowns;
-        std::vector<MeqDomain>      solveDomains;
+      vector<string>    unknowns;
+      vector<string>    excludedUnknowns;
+      vector<MeqDomain> solveDomains;
     };
 
-    std::ostream& operator<<(std::ostream&, const Correlation&);
-    std::ostream& operator<<(std::ostream&, const Baselines&);
+    ostream& operator<<(ostream&, const Correlation&);
+    ostream& operator<<(ostream&, const Baselines&);
 
-} // namespace BBS
+  } // namespace BBS
+
 } // namespace LOFAR
 
 #endif
