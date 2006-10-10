@@ -26,13 +26,13 @@
 namespace LOFAR {
   namespace StationCU {
 
-#define PSN_DIG_BOARD_CTRL	"LOFAR_PermSW_@ring@_@station@_DigBoardCtrl@instance@"
+#define PSN_DIG_BOARD_CTRL	"lofar28:LOFAR_PermSW_DigBoardCtrl@instance@"
 #define PST_DIG_BOARD_CTRL	"DigBoardCtrl"
 #define PN_DBC_CONNECTED	"connected"
 #define PN_DBC_CLOCK		"clock"
 
 // next three line should be defined elsewhere because we are not the owner.
-#define	PSN_STATION_CLOCK	"LOFAR_PIC_@ring@_@station@_StationClock"
+#define	PSN_STATION_CLOCK	"lofar28:LOFAR_PIC_StationClock"
 #define PST_STATION_CLOCK	"StationClock"
 #define PN_SC_CLOCK			"clock"
 
