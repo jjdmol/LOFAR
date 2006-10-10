@@ -10,12 +10,23 @@ fi
 #
 mainSysName="MCU001"
 
+#
+# set distributed system on in the project
+#
+echo "distributed = 1" >> config/config
+echo "" >> config/config
+echo "eventPort = 5997" >> config/config
+echo "dataPort = 5998" >> config/config
+echo "pmonPort = 5999" >> config/config
+echo "" >> config/config
+echo "[dist]" >> config/config
+
 export PVSS_II=$curPath/config/config
 cp config/progs config/progs.orig
 cp config/progs.nav config/progs
 
 #
-# Link Stationname to systemnumber 10
+# Link MainCU to systemnumber 61
 #
 PVSStoolSyncTypes -system 61 $mainSysName -project $1
 
@@ -23,6 +34,13 @@ PVSStoolSyncTypes -system 61 $mainSysName -project $1
 # Start project in background
 #
 PVSS00pmon -proj $1 &
+
+
+#
+# empty the database from demo stuff
+#
+echo -n "empty the database from demo stuff"
+PVSS00ctrl -script scripts/emptyDatabase.ctl -currentproj; echo "(done)"
 
 #
 # import Navigator specific  DPT's and DP's
@@ -77,12 +95,6 @@ echo "PVSS00NV         | always |      30 |        3 |        2 |-p vision/login
 echo "PVSS00NV         | manual |      30 |        3 |        2 |-p nav_fw/tools/EnablePropertySets.pnl -iconBar -menuBar" >> config/progs
 echo "PVSS00dist       | always |      30 |        3 |        2 |" >> config/progs
 
-#
-# set distributed system on in the project
-#
-echo "distributed = 1" >> config/config
-echo "" >> config/config
-echo "[dist]" >> config/config
 
 
 
