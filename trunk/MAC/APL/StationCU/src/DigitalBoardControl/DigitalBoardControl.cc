@@ -60,6 +60,7 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 	itsExtPropertySet	(),
 	itsOwnPSinitialized (false),
 	itsExtPSinitialized (false),
+	itsParentPort		(0),
 	itsTimerPort		(0),
 	itsRSPDriver		(0)
 {
@@ -76,11 +77,18 @@ itsClock = globalParameterSet()->getUint32(itsTreePrefix + "sampleClock");
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
-	// prepare TCP port to BeamServer.
+	// prepare TCP port to RSPDriver.
 	itsRSPDriver = new GCFTCPPort (*this, MAC_SVCMASK_RSPDRIVER,
 											GCFPortInterface::SAP, RSP_PROTOCOL);
 	ASSERTSTR(itsRSPDriver, "Cannot allocate TCPport to RSPDriver");
 	itsRSPDriver->setInstanceNr(itsInstanceNr);
+
+	// attach to parent control task
+	itsParentControl = ParentControl::instance();
+	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
+									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
+	itsParentPort->open();		// will result in F_CONNECTED
 
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
@@ -126,9 +134,11 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
 										getName().c_str(), pPropAnswer->pScope));
 		}
-		// always let timer expire so main task will continue.
-		LOG_DEBUG_STR("Property set " << pPropAnswer->pScope << 
+		else {
+			LOG_DEBUG_STR("Property set " << pPropAnswer->pScope << 
 													" enabled, continuing main task");
+		}
+		// always let timer expire so main task will continue.
 		itsTimerPort->setTimer(0.5);
 		break;
 	}
@@ -160,17 +170,27 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 															pPropAnswer->pPropName);
 	}
 
-//	case F_SUBSCRIBED:
-//	case F_UNSUBSCRIBED:
-//	case F_PS_CONFIGURED:
-//	case F_EXTPS_LOADED:
-//	case F_EXTPS_UNLOADED:
-//	case F_MYPS_ENABLED:
-//	case F_MYPS_DISABLED:
-//	case F_VGETRESP:
-//	case F_VSETRESP:
-//	case F_VCHANGEMSG:
-//	case F_SERVER_GONE:
+	case F_SUBSCRIBED: {
+		GCFPropAnswerEvent* pPropAnswer=static_cast<GCFPropAnswerEvent*>(&answer);
+		LOG_DEBUG_STR("Got SUBSCRIBE signal from property " << pPropAnswer->pPropName);
+		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
+			// signal main task we have a subscription
+			itsTimerPort->setTimer(0.5);
+		}
+		break;
+	}
+
+//	case F_SUBSCRIBED: 		GCFPropAnswerEvent		pPropName
+//	case F_UNSUBSCRIBED:	GCFPropAnswerEvent		pPropName
+//	case F_PS_CONFIGURED:	GCFConfAnswerEvent		pApcName
+//	case F_EXTPS_LOADED:	GCFPropSetAnswerEvent	pScope, result
+//	case F_EXTPS_UNLOADED:	GCFPropSetAnswerEvent	pScope, result
+//	case F_MYPS_ENABLED:	GCFPropSetAnswerEvent	pScope, result
+//	case F_MYPS_DISABLED:	GCFPropSetAnswerEvent	pScope, result
+//	case F_VGETRESP:		GCFPropValueEvent		pValue, pPropName
+//	case F_VSETRESP:		GCFPropAnswerEvent		pPropName
+//	case F_VCHANGEMSG:		GCFPropValueEvent		pValue, pPropName
+//	case F_SERVER_GONE:		GCFPropSetAnswerEvent	pScope, result
 
 	default:
 		break;
@@ -197,7 +217,7 @@ GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event,
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		string	myPropSetName(createPropertySetName(PSN_DIG_BOARD_CTRL, getName()));
-myPropSetName=myPropSetName.substr(6);
+myPropSetName=myPropSetName.substr(8);
 		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
 		itsOwnPropertySet = GCFMyPropertySetPtr(
 								new GCFMyPropertySet(myPropSetName.c_str(),
@@ -226,7 +246,7 @@ myPropSetName=myPropSetName.substr(6);
 			
 			// Now connect to propertyset that dictates the clocksetting
 			string	extPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
-extPropSetName= extPropSetName.substr(6);
+extPropSetName= extPropSetName.substr(8);
 			LOG_DEBUG_STR ("Connecting to PropertySet " << extPropSetName);
 			itsExtPropertySet = GCFExtPropertySetPtr(
 									new GCFExtPropertySet(extPropSetName.c_str(),
@@ -240,18 +260,28 @@ extPropSetName= extPropSetName.substr(6);
 		if (!itsExtPSinitialized) {
 			itsExtPSinitialized = true;
 
+			// take subscription
+			LOG_DEBUG_STR("Taking subscription in property " <<  PN_SC_CLOCK);
+			itsExtPropertySet->subscribeProp(PN_SC_CLOCK);
+			break;
+		}
+
+		// third timer event is from subscription
+		if (itsClock == 0) {
+			// get current value
+			LOG_DEBUG_STR("Getting current value of property " <<  PN_SC_CLOCK);
 			GCFProperty*	requiredClockProp = 
-						itsExtPropertySet->getProperty(PN_SC_CLOCK);
+									itsExtPropertySet->getProperty(PN_SC_CLOCK);
 			ASSERTSTR(requiredClockProp, "Property " << PN_SC_CLOCK << 
 									" not in propertyset " << PSN_STATION_CLOCK);
-			
 			requiredClockProp->requestValue();
 			break;
 		}
 
-		// third timer event is from retrieving the required clock.
+		// fourth timer event is from retrieving the required clock.
 		if (itsClock) {
 			LOG_DEBUG ("Attached to external propertySet, going to connect state");
+			itsParentPort = itsParentControl->registerTask(this);
 			TRAN(DigitalBoardControl::connect_state);			// go to next state.
 		}
 		break;
@@ -264,7 +294,7 @@ extPropSetName= extPropSetName.substr(6);
 	
 	default:
 		LOG_DEBUG_STR ("initial, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = defaultMessageHandling(event, port);
 		break;
 	}    
 	return (status);
@@ -296,12 +326,11 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 		break;
 
 	case F_CONNECTED:
-		ASSERTSTR (&port == itsRSPDriver, 
-									"F_CONNECTED event from port " << port.getName());
-
-		LOG_DEBUG ("Connected with RSPDriver, going to subscription state");
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
-		TRAN(DigitalBoardControl::subscribe_state);		// go to next state.
+		if (&port == itsRSPDriver) {
+			LOG_DEBUG ("Connected with RSPDriver, going to subscription state");
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+			TRAN(DigitalBoardControl::subscribe_state);		// go to next state.
+		}
 		break;
 
 	case F_DISCONNECTED:
@@ -315,7 +344,7 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 
 	default:
 		LOG_DEBUG_STR ("connect, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = defaultMessageHandling(event, port);
 		break;
 	}    
 
@@ -367,7 +396,7 @@ GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event,
 
 	default:
 		LOG_DEBUG_STR ("subscribe, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = defaultMessageHandling(event, port);
 		break;
 	}    
 
@@ -427,7 +456,7 @@ GCFEvent::TResult DigitalBoardControl::retrieve_state(GCFEvent& event,
 
 	default:
 		LOG_DEBUG_STR ("retrieve, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = defaultMessageHandling(event, port);
 		break;
 	}    
 
@@ -478,7 +507,7 @@ GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event,
 
 	default:
 		LOG_DEBUG_STR ("setClock, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = defaultMessageHandling(event, port);
 		break;
 	}    
 
@@ -531,7 +560,8 @@ GCFEvent::TResult DigitalBoardControl::active_state(GCFEvent& event, GCFPortInte
 		}
 
 		if (updateEvent.clock != itsClock) {
-			LOG_ERROR_STR ("CLOCK WAS CHANGED TO " << updateEvent.clock << " BY SOMEONE WHILE CLOCK SHOULD BE " << itsClock << ". CHANGING CLOCK BACK.");
+			LOG_ERROR_STR ("CLOCK WAS CHANGED TO " << updateEvent.clock << 
+						   " BY SOMEONE WHILE CLOCK SHOULD BE " << itsClock << ". CHANGING CLOCK BACK.");
 			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("Clock unallowed changed"));
 			TRAN (DigitalBoardControl::setClock_state);
 		}
@@ -542,7 +572,7 @@ GCFEvent::TResult DigitalBoardControl::active_state(GCFEvent& event, GCFPortInte
 
 	default:
 		LOG_DEBUG("active_state, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = defaultMessageHandling(event, port);
 		break;
 	}
 
@@ -623,6 +653,99 @@ void DigitalBoardControl::sendClockSetting()
 
 	itsRSPDriver->send(msg);
 }
+
+//
+// defaultMessageHandling
+//
+GCFEvent::TResult DigitalBoardControl::defaultMessageHandling(GCFEvent& 		event, 
+															  GCFPortInterface& port)
+{
+	switch (event.signal) {
+		case CONTROL_CONNECT: {
+			CONTROLConnectEvent		msg(event);
+			CONTROLConnectedEvent	answer;
+			answer.cntlrName = msg.cntlrName;
+			answer.result = true;
+			itsParentPort->send(answer);
+		}
+		break;
+
+		case CONTROL_SCHEDULE: {
+			CONTROLScheduleEvent		msg(event);
+			CONTROLScheduledEvent	answer;
+			answer.cntlrName = msg.cntlrName;
+			answer.result = 0;
+			itsParentPort->send(answer);
+		}
+		break;
+
+		case CONTROL_CLAIM: {
+			CONTROLClaimEvent		msg(event);
+			CONTROLClaimedEvent	answer;
+			answer.cntlrName = msg.cntlrName;
+			answer.result = 0;
+			itsParentPort->send(answer);
+		}
+		break;
+
+		case CONTROL_PREPARE: {
+			CONTROLPrepareEvent		msg(event);
+			CONTROLPreparedEvent	answer;
+			answer.cntlrName = msg.cntlrName;
+			answer.result = 0;
+			itsParentPort->send(answer);
+		}
+		break;
+
+		case CONTROL_RESUME: {
+			CONTROLResumeEvent		msg(event);
+			CONTROLResumedEvent	answer;
+			answer.cntlrName = msg.cntlrName;
+			answer.result = 0;
+			itsParentPort->send(answer);
+		}
+		break;
+
+		case CONTROL_SUSPEND: {
+			CONTROLSuspendEvent		msg(event);
+			CONTROLSuspendedEvent	answer;
+			answer.cntlrName = msg.cntlrName;
+			answer.result = 0;
+			itsParentPort->send(answer);
+		}
+		break;
+
+		case CONTROL_RELEASE: {
+			CONTROLReleaseEvent		msg(event);
+			CONTROLReleasedEvent	answer;
+			answer.cntlrName = msg.cntlrName;
+			answer.result = 0;
+			itsParentPort->send(answer);
+
+			CONTROLFinishEvent		fEvent;
+			fEvent.cntlrName = msg.cntlrName;
+			fEvent.treeID    = getObservationNr(msg.cntlrName);
+			fEvent.errorMsg  = "Normal Termination";
+			fEvent.result    = 0;
+			LOG_DEBUG_STR("Sending FINISH event");
+			itsParentPort->send(fEvent);
+		}
+		break;
+
+		case CONTROL_RESYNC: {
+
+		}
+		break;
+
+		default: {
+			LOG_WARN_STR ("no action defined for event:" << eventstr(event));
+		}
+		break;
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
 
 }; // StationCU
 }; // LOFAR

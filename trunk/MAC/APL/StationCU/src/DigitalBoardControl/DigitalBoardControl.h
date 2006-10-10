@@ -62,6 +62,7 @@ using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
+using	APLCommon::ParentControl;
 
 
 class DigitalBoardControl : public GCFTask,
@@ -76,12 +77,13 @@ private:
    	virtual void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During the initial state all connections with the other programs are made.
-   	GCFEvent::TResult initial_state   (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult connect_state   (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult subscribe_state (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult retrieve_state  (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult setClock_state  (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult active_state    (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult initial_state   		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult connect_state   		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult subscribe_state 		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult retrieve_state  		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult setClock_state  		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult active_state    		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult defaultMessageHandling (GCFEvent& e, GCFPortInterface& p);
 
 	// avoid defaultconstruction and copying
 	DigitalBoardControl();
@@ -105,8 +107,8 @@ private:
 	bool							itsExtPSinitialized;
 
 	// pointer to parent control task
-//	ParentControl*			itsParentControl;
-//	GCFITCPort*				itsParentPort;
+	ParentControl*			itsParentControl;
+	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
 
