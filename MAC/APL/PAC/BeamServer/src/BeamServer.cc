@@ -295,11 +295,12 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
   static int period = 0;
 
   undertaker();
-  
+
   switch (e.signal)
     {
     case F_ENTRY:
       {
+	m_calserver.setTimer((long)0); // trigger single recall
       }
       break;
 
@@ -307,10 +308,11 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
       {
 	GCFTCPPort* client = new GCFTCPPort();
 	client->init(*this, "client", GCFPortInterface::SPP, BS_PROTOCOL);
-	m_acceptor.accept(*client);
-	m_client_list.push_back(client);
-
-	LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
+	if (!m_acceptor.accept(*client)) delete client;
+	else {
+	  m_client_list.push_back(client);
+	  LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
+	}
       }
       break;
       
@@ -322,27 +324,37 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
     case F_TIMER:
       {
-	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
+	if (&port == &m_calserver) {
 
-	LOG_DEBUG_STR("timer=" << Timestamp(timer->sec, timer->usec));
+	  // recall one deferred event, set timer again if an event was handled
+	  if (recall(port) == GCFEvent::HANDLED) m_calserver.setTimer((long)0);
 
-	period++;
-	if (0 == (period % COMPUTE_INTERVAL))
-	  {
-	    period = 0;
+	} else {
 
-	    // compute new weights after sending weights
-	    compute_weights(Timestamp(timer->sec, 0) + COMPUTE_INTERVAL);
+	  GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
-	    send_weights(Timestamp(timer->sec,0) + COMPUTE_INTERVAL);
-	  }
+	  LOG_DEBUG_STR("timer=" << Timestamp(timer->sec, timer->usec));
 
-	if (m_beams_modified)
-	  {
-	    send_sbselection();
+	  period++;
+	  if (0 == (period % COMPUTE_INTERVAL))
+	    {
+	      period = 0;
 
-	    m_beams_modified = false;
-	  }
+	      // compute new weights and send them weights
+	      LOG_INFO_STR("computing weights " << Timestamp(timer->sec, timer->usec));
+	      compute_weights(Timestamp(timer->sec, 0) + COMPUTE_INTERVAL);
+	      LOG_INFO_STR("done computing weights");
+
+	      send_weights(Timestamp(timer->sec,0) + COMPUTE_INTERVAL);
+	    }
+
+	  if (m_beams_modified)
+	    {
+	      send_sbselection();
+
+	      m_beams_modified = false;
+	    }
+	}
       }
       break;
 
@@ -396,7 +408,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	CALUpdateEvent calupd(e);
 
 	if (CAL_Protocol::SUCCESS == calupd.status) {
-	  LOG_INFO("\n\nReceived valid CAL_UPDATE event.\n\n");
+	  LOG_INFO("Received valid CAL_UPDATE event.");
 
 	  m_beams.updateCalibration(calupd.handle, calupd.gains);
 	}
@@ -539,8 +551,8 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
 	    && (ack.subarray.getSPW().getNumSubbands() >=
 		(int)m_bt.getBeam()->getAllocation()().size()) ) {
 
-	  LOG_INFO("Got subscription to subarray");
-	  LOG_WARN_STR("ack.subarray.positions=" << ack.subarray.getAntennaPos());
+	  LOG_INFO_STR("Got subscription to subarray " << ack.subarray.getName());
+	  LOG_DEBUG_STR("ack.subarray.positions=" << ack.subarray.getAntennaPos());
 
 	  // set positions on beam
 	  m_bt.getBeam()->setSubarray(ack.subarray);
@@ -583,9 +595,6 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
       {
 	// completed current transaction, reset
 	m_bt.reset();
-
-	// recall any deferred events
-	recall(port);
       }
       break;
 
@@ -658,9 +667,6 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& e, GCFPortInterface& port
 
 	// completed current transaction, reset
 	m_bt.reset();
-
-	// recall any deferred events
-	recall(port);
       }
       break;
 
@@ -726,7 +732,7 @@ bool BeamServer::beampointto_action(BSBeampointtoEvent& pt,
   Beam* beam = (Beam*)pt.handle;
 
   if (m_beams.exists(beam))  {
-    LOG_INFO_STR("received new coordinates for beam " << beam->getName()
+    LOG_INFO_STR("new coordinates for " << beam->getName()
 		 << ": " << pt.pointing.angle0() << ", "
 		 << pt.pointing.angle1() << ", time=" << pt.pointing.time());
 
@@ -847,20 +853,20 @@ void BeamServer::defer(GCFEvent& e, GCFPortInterface& p)
 {
   char* event = new char[sizeof(e) + e.length];
   memcpy(event, (const char*)&e, sizeof(e) + e.length);
-  m_deferred_queue[&p].push_back(event);
-  LOG_INFO_STR(">>> deferring event " << m_deferred_queue[&p].size() << " <<<");
+  m_deferred_queue.push_back(pair<char*, GCFPortInterface*>(event, &p));
+  LOG_DEBUG_STR(">>> deferring event " << m_deferred_queue.size() << " <<<");
 }
 
-GCFEvent::TResult BeamServer::recall(GCFPortInterface& p)
+GCFEvent::TResult BeamServer::recall(GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  if (m_deferred_queue[&p].size() > 0) {
-    LOG_INFO_STR(">>> recalling event " << m_deferred_queue[&p].size() << " <<<");
-    char* event = m_deferred_queue[&p].front();
-    m_deferred_queue[&p].pop_front();
-    status = dispatch(*(GCFEvent*)event, p);
-    delete [] event;
+  if (m_deferred_queue.size() > 0) {
+    LOG_DEBUG_STR(">>> recalling event " << m_deferred_queue.size() << " <<<");
+    pair<char*, GCFPortInterface*> port_event = m_deferred_queue.front();
+    m_deferred_queue.pop_front();
+    status = dispatch(*(GCFEvent*)(port_event.first), *port_event.second);
+    delete [] port_event.first;
   }
   
   return status;
