@@ -10,12 +10,14 @@ main()
     { 
       dpType = types[i];
      	
-     	if (substr(dpType,0,1) != "_")
+     	if (substr(dpType,0,1) != "_" 
+     	    && substr(dpType,0,7) != "ANALOG2"
+     	    && substr(dpType,0,15) != "ExampleDP_Float" )
      	{
 	     	DebugN("DPType: "+dpType);
 				string dpName;
-  			dyn_string names = dpNames("*",dpType);  
-  			len2 = dynlen(names);
+  		  dyn_string names = dpNames("*",dpType);  
+        len2 = dynlen(names);
   			if (len2 > 0)
   			{
     			for (i2 = 1; i2 <= len2; i2++)
