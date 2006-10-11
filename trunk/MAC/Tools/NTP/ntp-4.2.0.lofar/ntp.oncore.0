@@ -49,7 +49,11 @@ MASK 20
 # otherwise NTP will not receive sufficient timestamps to lock
 # to GPS clock.
 # In production systems in the field the next line should be commented out
-TRAIM OFF
+# 
+# 11-10-2006 kjw: field tests show that TRAIM can be used safely in the
+# field, therefor the following line is commented out by default
+#
+# TRAIM OFF
 
 #
 # Shared memory interface. Not used at the moment.

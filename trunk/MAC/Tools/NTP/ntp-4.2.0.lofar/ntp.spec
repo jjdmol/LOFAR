@@ -8,7 +8,7 @@
 Summary: Synchronizes system time using the Network Time Protocol (NTP).
 Name: ntp
 Version: 4.2.0.lofar
-Release: 4
+Release: 5
 License: distributable
 Group: System Environment/Daemons
 Source0: http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-%{tarversion}.tar.gz
@@ -205,6 +205,10 @@ fi
 
 
 %changelog
+* Wed Oct 11 2006 Klaas Jan Wierenga <wierenga@astron.nl>
+- enable TRAIM by default (uncomment TRAIM OFF line), TRAIM has been shown
+  to work correctly in the field and it is required to have accurate PPS timing
+
 * Fri Jul 21 2006 Klaas Jan Wierenga <wierenga@astron.nl>
 - disabled TRAIM by default (needed for lab setup, should be enable in production)
 - better ntp.conf settings, used suggestions from Tac32 manual
