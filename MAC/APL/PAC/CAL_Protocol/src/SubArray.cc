@@ -155,6 +155,7 @@ unsigned int SubArray::getSize()
 {
   return
       MSH_STRING_SIZE(m_name)
+    + MSH_ARRAY_SIZE (m_geoloc,   double)
     + MSH_ARRAY_SIZE (m_pos,      double)
     + MSH_ARRAY_SIZE (m_rcuindex, int16)
     + m_spw.getSize();
@@ -165,6 +166,7 @@ unsigned int SubArray::pack(void* buffer)
   unsigned int offset = 0;
 
   MSH_PACK_STRING(buffer, offset, m_name);
+  MSH_PACK_ARRAY(buffer,  offset, m_geoloc,   double);
   MSH_PACK_ARRAY(buffer,  offset, m_pos,      double);
   MSH_PACK_ARRAY(buffer,  offset, m_rcuindex, int16);
   offset += m_spw.pack(((char*)buffer) + offset);
@@ -177,6 +179,7 @@ unsigned int SubArray::unpack(void* buffer)
   unsigned int offset = 0;
 
   MSH_UNPACK_STRING(buffer, offset, m_name);
+  MSH_UNPACK_ARRAY(buffer,  offset, m_geoloc,   double, 1);
   MSH_UNPACK_ARRAY(buffer,  offset, m_pos,      double, 3);
   MSH_UNPACK_ARRAY(buffer,  offset, m_rcuindex, int16,  2);
   offset += m_spw.unpack(((char*)buffer) + offset);

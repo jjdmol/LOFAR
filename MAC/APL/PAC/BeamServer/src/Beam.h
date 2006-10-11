@@ -267,6 +267,9 @@ namespace LOFAR {
        */
       explicit Beams(int nbeamlets, int nsubbands);
 
+      /* destructor */
+      ~Beams();
+
       /**
        * Create a new beam.
        */

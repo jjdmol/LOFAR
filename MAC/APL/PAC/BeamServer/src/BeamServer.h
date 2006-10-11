@@ -221,8 +221,8 @@ namespace LOFAR {
 	std::list<GCFPortInterface*> m_client_list; // list of currently connected clients
 	std::list<GCFPortInterface*> m_dead_clients; // list of disconnected clients to be removed
 
-	std::map<GCFPortInterface*, std::set<Beam*> >  m_client_beams; // mapping from client port to set of beams
-	std::map<GCFPortInterface*, std::list<char*> > m_deferred_queue; // deferred events
+	std::map<GCFPortInterface*, std::set<Beam*> >   m_client_beams; // mapping from client port to set of beams
+	std::list<std::pair<char*, GCFPortInterface*> > m_deferred_queue; // deferred events
 
 	BeamTransaction m_bt; // current beam transaction
 

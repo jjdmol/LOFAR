@@ -174,61 +174,60 @@ static int setNonblocking(int fd)
 
 void Beam::logPointing(Pointing pointing)
 {
-  if (GET_CONFIG("BeamServer.DISABLE_INDI", i)) return;
-
-  static FILE* pipe = 0;
   double hh, mm, ss, deg, degmm, degss;
+  static FILE* pipe = 0;
   ConfigLocator cl;
   static string pipename = cl.locate("/indi_pipe");
   int retry = 0;
 
-  /**
-   * Write RaDec coordinates to the named pipe.
-   * If there is no-one listening on the named pipe it
-   * will eventually block which we prevent by making the filedescriptor
-   * non-blocking.
-   * When a write (fprintf) to the named-pipe fails, assume that the pipe
-   * has been closed by the other end and re-open it and write the value again.
-   */
-
-  do {
-    /* open pipe if not already open */
-    if (!pipe) {
-      pipe = fopen(pipename.c_str(), "w+");
-      if (!pipe) {
-	LOG_WARN_STR("Could not open '" << pipename << "'");
-	return;
-      }
-      setNonblocking(fileno(pipe));
-    }
-
-    hh = (pointing.angle0() * 180.0 / M_PI) / 15.0;
-    mm = (hh - floor(hh)) * 60;
-    ss = (mm - floor(mm)) * 60;
-    hh = floor(hh);
-    mm = floor(mm);
-    
-    deg = pointing.angle1() * 180.0 / M_PI;
-    degmm = (deg - floor(deg)) * 60;
-    degss = (degmm - floor(degmm)) * 60;
-    deg = floor(deg);
-    degmm = floor(degmm);
-    if (deg > 90.0) deg = 360.0 - deg;
-
-    /*
-     * If failed to write, closed the pipe and retry by
-     * re-opening the pipe (at the beginning of the while loop.
+  if (!GET_CONFIG("BeamServer.DISABLE_INDI", i)) {
+    /**
+     * Write RaDec coordinates to the named pipe.
+     * If there is no-one listening on the named pipe it
+     * will eventually block which we prevent by making the filedescriptor
+     * non-blocking.
+     * When a write (fprintf) to the named-pipe fails, assume that the pipe
+     * has been closed by the other end and re-open it and write the value again.
      */
-    if (fprintf(pipe, "%s %d %lf %lf\n",
-		getName().c_str(), 0, pointing.angle0(), pointing.angle1()) < 0) {
-      fclose(pipe);
-      pipe = 0;
-    }
-  }
-  while (retry++ < 5);
+    do {
+      /* open pipe if not already open */
+      if (!pipe) {
+	pipe = fopen(pipename.c_str(), "w+");
+	if (!pipe) {
+	  LOG_WARN_STR("Could not open '" << pipename << "'");
+	  return;
+	}
+	setNonblocking(fileno(pipe));
+      }
 
-  LOG_DEBUG_STR("RA=" << hh << "h " << mm << "m " << ss << "s");
-  LOG_DEBUG_STR("DEC=" << deg << "deg " << degmm << "' " << degss << "''");
+      /*
+       * If failed to write, closed the pipe and retry by
+       * re-opening the pipe (at the beginning of the while loop.
+       */
+      if (fprintf(pipe, "%s %d %lf %lf\n",
+		  getName().c_str(), 0, pointing.angle0(), pointing.angle1()) < 0) {
+	fclose(pipe);
+	pipe = 0;
+      }
+    }
+    while (retry++ < 5);
+  }
+
+  hh = (pointing.angle0() * 180.0 / M_PI) / 15.0;
+  mm = (hh - floor(hh)) * 60;
+  ss = (mm - floor(mm)) * 60;
+  hh = floor(hh);
+  mm = floor(mm);
+  
+  deg = pointing.angle1() * 180.0 / M_PI;
+  degmm = (deg - floor(deg)) * 60;
+  degss = (degmm - floor(degmm)) * 60;
+  deg = floor(deg);
+  degmm = floor(degmm);
+  if (deg > 90.0) deg = 360.0 - deg;
+
+  LOG_INFO_STR("RA=" << hh << "h " << mm << "m " << ss << "s");
+  LOG_INFO_STR("DEC=" << deg << "deg " << degmm << "' " << degss << "''");
       
   if (pipe) fflush(pipe);
 }
@@ -311,7 +310,10 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
     /* set time and convert to LMN */
     track[t].setTime(begintime + (long)t);
     blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
-    Position location(loc(0), loc(1), loc(2));
+    Position location(loc(0), // location must be in ITRF radians/meters
+		      loc(1),
+		      loc(2), Position::ITRF);
+    LOG_DEBUG_STR("Geographical location " << loc);
     Pointing lmn = track[t].convertToLMN(conv, &location);
 
     /* store in m_lmns and calculate normalized n-coordinate */
@@ -321,9 +323,9 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
 				+ (m_lmns(t,1) * m_lmns(t,1))));
 
     
-    LOG_TRACE_VAR(formatString("direction@%d=(%f,%f,%f)",
-			       begintime.sec() + t,
-			       m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)));
+    LOG_INFO_STR(formatString("direction@%d=(%f,%f,%f)",
+			      begintime.sec() + t,
+			      m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)));
 
     if ((fabs(m_lmns(t,0)) > 1.0) || (fabs(m_lmns(t,1)) > 1.0)) {
 
@@ -353,6 +355,15 @@ const CAL::SpectralWindow& Beam::getSPW() const
 
 Beams::Beams(int nbeamlets, int nsubbands) : m_beamlets(nbeamlets), m_nsubbands(nsubbands)
 {
+}
+
+Beams::~Beams()
+{
+  for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
+  {
+    delete bi->first;
+  }
+  m_beams.clear();
 }
 
 Beam* Beams::get(string nodeid, string subarrayname, Beamlet2SubbandMap allocation)

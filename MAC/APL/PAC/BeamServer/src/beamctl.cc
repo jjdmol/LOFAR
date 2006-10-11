@@ -72,10 +72,10 @@ beamctl::beamctl(string name,
 		 const list<int>& subbands,
 		 const list<int>& beamlets,
 		 RSP_Protocol::RCUSettings& rcumode,
-		 const BS_Protocol::Pointing& direction)
+		 double longitude, double latitude, string type)
   : GCFTask((State)&beamctl::initial, name), m_beamhandle(0),
     m_parent(parent), m_rcus(rcus), m_subbands(subbands), m_beamlets(beamlets),
-    m_rcumode(rcumode), m_direction(direction)
+    m_rcumode(rcumode), m_longitude(longitude), m_latitude(latitude), m_type(type)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
   registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
@@ -159,6 +159,8 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 	start.nyquist_zone = m_rcumode()(0).getNyquistZone();
 	start.rcumode().resize(1);
 	start.rcumode()(0) = m_rcumode()(0);
+	
+	LOG_INFO_STR("Rcumode=" << start.rcumode()(0).getRaw());
 
 	LOG_INFO_STR("Creating subarray: " << start.name);
 
@@ -250,9 +252,41 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	BSBeampointtoEvent pointto;
 	pointto.handle = ack.handle;
 
-	pointto.pointing = m_direction;
+	pointto.pointing.setDirection(m_longitude, m_latitude);
 
-	m_beamserver.send(pointto);
+	if ("J2000" == m_type) {
+	  pointto.pointing.setType(Pointing::J2000);
+	} else if ("AZEL" == m_type) {
+	  pointto.pointing.setType(Pointing::AZEL);
+	} else if ("LOFAR_LMN" == m_type) {
+	  pointto.pointing.setType(Pointing::LOFAR_LMN);
+	} else if ("SKYSCAN" == m_type) {
+	} else {
+	  LOG_FATAL_STR("Error: invalid coordinate type '" << m_type << "'");
+	  exit(EXIT_FAILURE);
+	}
+
+	if ("SKYSCAN" != m_type) {
+	  m_beamserver.send(pointto);
+	} else {
+	  Timestamp time;
+	  time.setNow(20.0); // start 20 seconds from now
+	  pointto.pointing.setType(Pointing::LOFAR_LMN);
+
+	  // Assuming 5 meter wavelength (60MHz) and a station diameter of 60 m
+	  // then HPBW is 0.08333 or 1/12. Therefor we use 2.0/24.0 stepsize
+	  // to step through l and m
+	  for (double m = -1.0; m <= 1.0; m += 2.0/24.0) {
+	    for (double l = -1.0; l <= 1.0; l+= 2.0/24.0) {
+	      if (l*l+m*m <= 1.0) {
+		pointto.pointing.setTime(time);
+		pointto.pointing.setDirection(l, m);
+		m_beamserver.send(pointto);
+		time = time + (long)1; // advance 1 second
+	      }
+	    }
+	  }
+	}
       }
       break;
 
@@ -308,8 +342,9 @@ void usage()
 "  --rcumode=0..7    # RCU mode to use\n"
 "  --subbands=<set>  # set of subbands to use for this beam\n"
 "  --beamlets=<list> # list of beamlets on which to allocate the subbands\n" 
-"  --direction=lon,lat[,type] # lon, lat are double values\n"
-"                             # type is one of J2000 (default), AZEL, LOFAR_LMN,\n"
+"  --direction=longitude,latitude[,type] # lat,lon are floating point values specified in radians\n"
+"                    # type is one of J2000 (default), AZEL, LOFAR_LMN, SKYSCAN\n"
+"                    # SKYSCAN will scan the sky with a 26 x 26 grid in the (l,m) plane\n"
 "  --help            # print this usage\n"
 "\n"
 "This utility connects to the CalServer to create a subarray of --array\n"
@@ -419,6 +454,10 @@ int main(int argc, char** argv)
   Pointing direction;                 // --direction argument goed here
   unsigned char presence = 0;         // keep track of which arguments have been specified
 
+  double latitude = 0.0;
+  double longitude = 0.0;
+  char type[11] = "J2000";
+
   // initialize rcus
   rcus.clear();
   //for (int i = 0; i < MAX_N_RCUS; i++) rcus.push_back(i);
@@ -475,11 +514,12 @@ int main(int argc, char** argv)
 
     case 'm':
       {
+	cout << "optarg=" << optarg << endl;
 	if (!optarg) {
 	  cerr << "Error: missing --rcumode value" << endl;
 	} else {
 	  int mode = 0;
-	  if ((mode = atoi(optarg) < 0) || mode > 7) {
+	  if ((mode = atoi(optarg)) < 0 || mode > 7) {
 	    cerr << formatString("Error: --rcumode=%d, out of range [0..7]", mode) << endl;
 	  } else {
 	    rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)mode);
@@ -494,24 +534,19 @@ int main(int argc, char** argv)
 	if (!optarg) {
 	  cerr << "Error: missing --direction value" << endl;
 	} else {
-	  double lon = 0.0, lat = 0.0;
-	  char type[11] = "J2000";
-	  int nargs = sscanf(optarg, "%lf,%lf,%10s", &lon, &lat, type);
+	  int nargs = sscanf(optarg, "%lf,%lf,%10s", &longitude, &latitude, type);
 	  if (nargs < 2) {
 	    cerr << "Error: invalid number of parameters for --direction " << endl;
 	  } else {
-	    LOG_DEBUG(formatString("lon=%lf, lat=%lf, type=%s", lon, lat, type));
-
-	    direction.setDirection(lat, lon);
+	    LOG_INFO(formatString("longitude=%lf, latitude=%lf, type=%s", longitude, latitude, type));
 
 	    if (string("J2000") == string(type)) {
-	      direction.setType(Pointing::J2000);
 	      presence |= DIRECTION_FLAG;
 	    } else if (string("AZEL") == string(type)) {
-	      direction.setType(Pointing::AZEL);
 	      presence |= DIRECTION_FLAG;
 	    } else if (string("LOFAR_LMN") == string(type)) {
-	      direction.setType(Pointing::LOFAR_LMN);
+	      presence |= DIRECTION_FLAG;
+	    } else if (string("SKYSCAN") == string(type)) {
 	      presence |= DIRECTION_FLAG;
 	    } else {
 	      cerr << "Error: invalid coordinate type '" << type << "'" << endl;
@@ -593,7 +628,7 @@ int main(int argc, char** argv)
   GCFTask::init(argc, argv);
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
-  beamctl ctl("beamctl", array, rcus, subbands, beamlets, rcumode, direction);
+  beamctl ctl("beamctl", array, rcus, subbands, beamlets, rcumode, longitude, latitude, type);
 
   try {
     ctl.mainloop();
