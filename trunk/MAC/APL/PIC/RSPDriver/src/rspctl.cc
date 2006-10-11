@@ -1382,14 +1382,13 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
       FILE* file = getFile(deviceout,fileName);
       if (stats.extent(secondDim)
           /*!= (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),*/
-          != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
-             stats.extent(secondDim), file))
+          != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double), stats.extent(secondDim), file))
       {
         logMessage(cerr,formatString("Error: unable to write to file %s",fileName));
         exit(EXIT_FAILURE);
       }
+      result_device++;
     }
-    result_device++;
   }
 }
 
