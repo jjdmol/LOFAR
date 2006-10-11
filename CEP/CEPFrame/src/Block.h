@@ -170,6 +170,29 @@ public:
 				 blockingComm); }
   
   /**
+     Connect one input of this block without specifying the other block.
+     This is especially usefull when using TH_File or TH_DB. The data doesn't
+     need to be written from another WorkHolder but from a file for instance.
+  */
+  bool connectIn (const string& name,
+		  TransportHolder* prototype,
+		  int targetChannel, 
+		  bool blockingComm)
+    { return itsRep->connectIn (name, prototype, targetChannel, blockingComm);}
+
+  /**
+     Connect one output of this block without specifying the other block.
+     This is especially usefull when using TH_File or TH_DB. The data doesn't
+     need to be written to another WorkHolder but to a file for instance.
+  */
+  bool connectOut (const string& name,
+		   TransportHolder* prototype,
+		   int sourceChannel, 
+		   bool blockingComm)
+    { return itsRep->connectOut(name, prototype, sourceChannel, blockingComm);}
+
+
+  /**
      Connect all output DataHolders of aBlock to the input DataHolders of
      this Block. The steps must have the same number of DataHolders.
      This is the normal way of connecting two Blocks to each other.
