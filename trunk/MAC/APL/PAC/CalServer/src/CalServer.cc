@@ -353,10 +353,11 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
       {
  	GCFTCPPort* client = new GCFTCPPort();
  	client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
-	m_acceptor.accept(*client);
-	m_clients[client] = ""; // empty string to indicate there is a connection, but no subarray yet
-
-	LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_clients.size()));
+	if (!m_acceptor.accept(*client)) delete client;
+	else {
+	  m_clients[client] = ""; // empty string to indicate there is a connection, but no subarray yet
+	  LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_clients.size()));
+	}
       }
       break;
       
