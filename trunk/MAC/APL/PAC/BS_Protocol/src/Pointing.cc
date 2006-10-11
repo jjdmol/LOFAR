@@ -45,45 +45,58 @@ Pointing::~Pointing()
 
 Pointing Pointing::convertToLMN(Converter* conv, Position* pos)
 {
-  Direction result = Direction(angle0(), angle1()); // start with current coordinates
+  // start with current coordinates
+  // angle0 = longitude = RA, Az or l
+  // angle1 = latitude  = Dec, El or m
+
+  Direction result = Direction(angle0(), angle1());
   double
     mjd      = 0.0,
     fraction = 0.0,
+    az       = 0.0,
+    el       = 0.0,
     l        = 0.0,
     m        = 0.0,
     n        = 0.0;
 
+  ASSERT(conv && pos);
+
+  time().convertToMJD(mjd, fraction); // mjd,fraction in UTC
   RequestData request(result, *pos, Epoch(mjd, fraction));
   ResultData resultdata;
+
+  l = angle0();
+  m = angle1();
 
   switch (getType()) {
 
   case J2000:
     /* convert J2000 to LMN */
-    ASSERT(conv && pos);
-    time().convertToMJD(mjd, fraction);
-
-
+    LOG_INFO_STR("J2000(rad)=(" << result.longitude() << ", " << result.latitude() << ")");
     conv->j2000ToAzel(resultdata, request);
     result = resultdata.direction[0];
     
     /* now convert from azel to lmn by falling through to AZEL label */
-    /* Note: break intentionally omitted */
+    /* Note: break omitted intentionally */
 
   case AZEL:
     /* convert AZEL to LMN */
-    //LOG_DEBUG_STR("azel=(" << result.angle0() << ", " << result.angle1() << ")");
-    LOG_DEBUG_STR("azel=(" << result.longitude() << ", " << result.latitude() << ")");
+    az = result.longitude();
+    el = result.latitude();
 
-    l = -::cos(result.latitude()) * ::sin(result.longitude());
-    m = ::cos(result.latitude()) * ::cos(result.longitude());
-    n = ::sin(result.latitude());
-    LOG_DEBUG_STR("lmn=(" << l << ", " << m << ", " << n << ")");
-    result = Direction(l,m);
-    break;
+    LOG_INFO_STR("AZEL(rad)=(" << az << ", " << el << ")");
+
+    // See LOFAR-ASTRON-MEM-105, top of page 7
+    l = ::cos(el) * ::sin(az);
+    m = ::cos(el) * ::cos(az);
+    n = ::sin(el);
+
+    /* Note: break omitted intentionally */
 
   case LOFAR_LMN:
+
     /* coordinates are already in LMN format */
+    LOG_INFO_STR("lmn=(" << l << ", " << m << ", " << n << ")");
     break;
 
   default:
@@ -93,10 +106,7 @@ Pointing Pointing::convertToLMN(Converter* conv, Position* pos)
   }
 
   /* return LOFAR_LMN pointing */
-  return Pointing(result.longitude(),
-		  result.latitude(),
-		  time(),
-		  LOFAR_LMN);
+  return Pointing(l, m, time(), LOFAR_LMN);
 }
 
 unsigned int Pointing::getSize()

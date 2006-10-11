@@ -49,7 +49,7 @@ namespace LOFAR
 		  const list<int>& subbands,
 		  const list<int>& beamlets,
 		  RSP_Protocol::RCUSettings& rcumode,
-		  const BS_Protocol::Pointing& direction);
+		  double longitude, double latitude, std::string type);
 	  virtual ~beamctl();
 
 	  // state methods
@@ -84,7 +84,10 @@ namespace LOFAR
 	  list<int>                  m_subbands; // selection of subbands
 	  list<int>                  m_beamlets; // selection of beamlets
 	  RSP_Protocol::RCUSettings& m_rcumode;
-	  BS_Protocol::Pointing      m_direction;
+
+	  double m_longitude;
+	  double m_latitude;
+	  string m_type;
 	};
 
     };
