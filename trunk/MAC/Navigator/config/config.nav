@@ -1,7 +1,8 @@
 [general]
-pvss_path ="C:\ETM\PVSS2\3.0"
-proj_path ="C:\Data\LOFAR\MAC\Navigator"
+pvss_path = "C:/ETM/PVSS2/3.0"
+proj_path = "C:/Data/LOFAR/MAC/Navigator"
 proj_version = "3.0"
 userName = "root"
 password = ""
 langs = "en_US.iso88591"
+distributed = 1

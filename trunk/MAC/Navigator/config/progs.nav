@@ -13,3 +13,4 @@ PVSS00valarch    | manual |      30 |        3 |        1 |-num 5
 PVSS00event      | always |      30 |        3 |        1 |
 PVSS00ctrl       | always |      30 |        3 |        1 |-f pvss_scripts.lst
 PVSS00sim        | always |      30 |        3 |        1 |
+PVSS00dist       | always |      30 |        3 |        1 |
