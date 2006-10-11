@@ -107,6 +107,58 @@ bool BlockRep::connectData (const string& name,
 }
 
 
+bool BlockRep::connectOut (const string& name,
+			   TransportHolder* prototype,
+			   int sourceChannel, 
+			   bool blockingComm)
+{
+  DataManager& sourceDM = getOutDataManager(sourceChannel);
+  Connection* conn = new Connection(name, sourceDM.getGeneralOutHolder(sourceChannel), 
+				    0, 
+				    prototype, blockingComm);
+  sourceDM.setOutConnection(sourceChannel, conn);
+  if (getParent() != 0)
+  {
+    getParent()->addConnection(conn);
+  }
+  else if (isComposite())
+  {
+    ((CompositeRep*)(this))->addConnection(conn);
+  }
+  else
+  {
+    THROW(LOFAR::Exception, "This Block " + getName() + " has not yet been added to a Composite. Do this before connecting.");
+  }
+  return true;
+}
+
+
+bool BlockRep::connectIn (const string& name,
+			  TransportHolder* prototype,
+			  int targetChannel, 
+			  bool blockingComm)
+{
+  DataManager& targetDM = getInDataManager(targetChannel);
+  Connection* conn = new Connection(name, 0,
+				    targetDM.getGeneralInHolder(targetChannel),
+				    prototype, blockingComm);
+  targetDM.setInConnection(targetChannel, conn);
+  if (getParent() != 0)
+  {
+    getParent()->addConnection(conn);
+  }
+  else if (isComposite())
+  {
+    ((CompositeRep*)(this))->addConnection(conn);
+  }
+  else
+  {
+    THROW(LOFAR::Exception, "This Block " + getName() + " has not yet been added to a Composite. Do this before connecting.");
+  }
+  return true;
+}
+
+
 bool BlockRep::connectRep (int   thisDHIndex,
 			   BlockRep* aBlock,
 			   int   thatDHIndex,
