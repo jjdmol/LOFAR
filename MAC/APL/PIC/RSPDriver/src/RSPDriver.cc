@@ -886,10 +886,11 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     {
       GCFTCPPort* client = new GCFTCPPort();
       client->init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
-      m_acceptor.accept(*client);
-      m_client_list.push_back(client);
-
-      LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
+      if (!m_acceptor.accept(*client)) delete client;
+      else {
+	m_client_list.push_back(client);
+	LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
+      }
     }
     break;
 
