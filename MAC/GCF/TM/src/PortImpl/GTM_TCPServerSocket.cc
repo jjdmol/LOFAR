@@ -32,6 +32,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#define MAX_ACCEPT_RETRIES 100 /* maximum number of ::accept retries */
+
 namespace LOFAR {
  namespace GCF {
   namespace TM {
@@ -125,10 +127,12 @@ void GTMTCPServerSocket::workProc()
     int newSocketFD;
 
     /* loop to handle transient errors */
+    int retries = MAX_ACCEPT_RETRIES;
     while ((newSocketFD = ::accept(_fd, 
 			   (struct sockaddr*) &clientAddress,
-				   &clAddrLen)) < 0 &&
-	   (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno)) /*noop*/;
+				   &clAddrLen)) < 0
+	   && (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno)
+	   && --retries > 0) /*noop*/;
 
     _pDataSocket->setFD(newSocketFD);
          
@@ -155,10 +159,12 @@ bool GTMTCPServerSocket::accept(GTMFile& newSocket)
     int newSocketFD;
 
     /* loop to handle transient errors */
+    int retries = MAX_ACCEPT_RETRIES;
     while ((newSocketFD = ::accept(_fd, 
                        (struct sockaddr*) &clientAddress, 
-				   &clAddrLen)) < 0 &&
-	   (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno)) /*noop*/;
+				   &clAddrLen)) < 0
+	   && (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno)
+	   && --retries > 0) /*noop*/;
     
     result = (newSocket.setFD(newSocketFD) > 0);
     if (!result) {
