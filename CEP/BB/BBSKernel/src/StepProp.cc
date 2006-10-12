@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <BBSKernel/StepProp.h>
 #include <Common/LofarLogger.h>
 

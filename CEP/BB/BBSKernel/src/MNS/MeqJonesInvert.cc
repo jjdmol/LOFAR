@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <BBSKernel/MNS/MeqJonesInvert.h>
 #include <BBSKernel/MNS/MeqRequest.h>
 #include <BBSKernel/MNS/MeqMatrix.h>

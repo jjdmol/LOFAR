@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <BBSKernel/MNS/MeqParmExpr.h>
 #include <BBSKernel/MNS/MeqParmFunklet.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
