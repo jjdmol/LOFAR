@@ -104,7 +104,7 @@ namespace LOFAR
     {
       dimType sbDim = itsMatrix->getDim("Subbands");
       RectMatrix<DH_RSP::BufferType>::cursorType cursor = itsMatrix->getCursor(subbandNr * sbDim);
-      return itsMatrix->getBlock(cursor, sbDim, 1, itsNTimes * itsNoPolarisations * sizeof(DH_RSP::BufferType));
+      return itsMatrix->getBlock(cursor, sbDim, 1, itsNTimes * itsNoPolarisations);
     }
 
     inline const int DH_RSP::getStationID() const
