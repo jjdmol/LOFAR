@@ -5,95 +5,22 @@ if [ "$OSTYPE" = "win32" ]; then
   curPath=C:`pwd`
 fi
 
-#
-#  Default Stationname, change when needed
-#
-mainSysName="MCU001"
 
 #
-# set distributed system on in the project
+# set local remoteDriver on in the project
 #
-echo "distributed = 1" >> config/config
-echo "" >> config/config
-echo "eventPort = 5997" >> config/config
-echo "dataPort = 5998" >> config/config
-echo "pmonPort = 5999" >> config/config
-echo "" >> config/config
-echo "[dist]" >> config/config
+cp config/config config/config.orig
+cp ../LOFAR/MAC/Navigator/config/config.nav config/config
 
-export PVSS_II=$curPath/config/config
 cp config/progs config/progs.orig
-cp config/progs.nav config/progs
-
-#
-# Link MainCU to systemnumber 61
-#
-PVSStoolSyncTypes -system 61 $mainSysName -project $1
-
-#
-# Start project in background
-#
-PVSS00pmon -proj $1 &
-
-
-#
-# empty the database from demo stuff
-#
-echo -n "empty the database from demo stuff"
-PVSS00ctrl -script scripts/emptyDatabase.ctl -currentproj; echo "(done)"
-
-#
-# import Navigator specific  DPT's and DP's
-#
-echo -n "Importing Navigator specific DPT's and DP's..."
-PVSS00ascii -in dplist/nav_fw/XTU_Navigator_database.dpl -currentproj; echo "(done)"
-
-echo -n "Importing fixed datapoints..."
-
-if [ "$OSTYPE" != "win32" ]; then
-   cd ../Deployment/data/PVSS/
-   ./create_db_files 
-   ./create_db_files -o Observation_10
-
-fi
-
-#
-# load (default) fixed datapoints for a MainCU  and an observation
-# (Observation_10) in the database
-#
-PVSS00ascii -in MainPermDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in MainObsDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in MainPermDatapoints.dpl -currentproj; echo "(done)"
-PVSS00ascii -in MainObsDatapoints.dpl -currentproj; echo "(done)"
-cd $curPath
-
-#
-# prepare project to enable use of GCF based MAC controllers
-#
-echo -n "Prepare project to enable use of GCF based MAC controllers..."
-PVSS00ctrl -script libs/nav_fw/gcfpa-prep.ctl -currentproj; echo "(done)"
-
-#
-# load some default navigator panels into the project
-#
-echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
-convertedDefaultFile=`sed -e "s/CCU1/$mainSysName/" dplist/nav_usr/MAC/MAC_Default_panelviews.dpl`
-echo "$convertedDefaultFile" > MAC_Default_panelviews.dpl
-PVSS00ascii -in MAC_Default_panelviews.dpl -currentproj; echo "(done)"
-rm -f MAC_Default_panelviews.dpl
-
-#
-#shut down project
-#
-PVSS00pmon -currentproj -stopWait
+cp ../LOFAR/MAC/Navigator/config/progs.nav config/progs
 
 #
 #prepare the configuration files with the manager that should be able to run
 #
 echo "PVSS00NG         |   once |      30 |        3 |        1 |" >> config/progs
 echo "PVSS00NV         | always |      30 |        3 |        2 |-p vision/login.pnl -iconBar -menuBar" >> config/progs
-echo "PVSS00NV         | manual |      30 |        3 |        2 |-p nav_fw/tools/EnablePropertySets.pnl -iconBar -menuBar" >> config/progs
-echo "PVSS00dist       | always |      30 |        3 |        2 |" >> config/progs
+echo "PVSS00NG         | manual |      30 |        2 |        2 |" >> config/progs
 
 
 
