@@ -35,6 +35,7 @@
 #include <Transport/TransportHolder.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_Socket.h>
+#include <Transport/TH_File.h>
 
 #define IS_MULTIPLE(number, bignumber) (floor(bignumber / number) == (1.0 * bignumber / number))
 
@@ -87,8 +88,18 @@ namespace LOFAR {
       int inputCells = nRSP/nStations;
       int nameBufferSize = 40;
       char nameBuffer[nameBufferSize];
-  
-      itsOutputStub = new Stub_BGL_Subband(false, itsParamSet);
+
+      vector<string> outputFileNames = itsParamSet.getStringVector("Input.OutputRawDataFiles");
+      bool writeRawDataToFile = itsParamSet.getBool("Input.WriteRawDataToFile");
+      if (!writeRawDataToFile)
+      {
+        itsOutputStub = new Stub_BGL_Subband(false, itsParamSet);
+      }
+      else
+      {
+        nNodesPerCell = (itsParamSet.getInt32("General.SubbandsPerPset") * psetsPerCell);
+      }
+       
       itsInputStub = new Stub_Delay(true, itsParamSet);
 
       for (int ic = 0; ic < inputCells; ic ++) {
@@ -177,16 +188,28 @@ namespace LOFAR {
 	  if (makeConnections) {
 	    for (int core = 0; core < nNodesPerCell; core++) {
 	      collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 3);
-	      itsOutputStub->connect(cell + ic * nCells / inputCells,
-				     core,
-				     (collectSteps.back())->getOutDataManager(0), 
-				     core);
-	      channels.push_back(core);
+	      if (writeRawDataToFile)
+              {
+	        TransportHolder *theTH = 0;
+		
+	        theTH = new TH_File(outputFileNames[core], TH_File::Write);
+	        collectSteps.back()->connectOut("output", theTH, core, true);
+	      }
+	      else
+	      { 
+	        itsOutputStub->connect(cell + ic * nCells / inputCells,
+				       core,
+				       (collectSteps.back())->getOutDataManager(0), 
+				       core);
+		
+		channels.push_back(core);
+		collectSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
+              } 
 	    }
-	    collectSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
 	  }
 	}
       }
+      
       LOG_TRACE_FLOW_STR("Finished define()");
 
 #ifdef HAVE_MPI
