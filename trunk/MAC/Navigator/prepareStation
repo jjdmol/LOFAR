@@ -79,7 +79,6 @@ PVSS00pmon -currentproj -stopWait
 
 cp ../LOFAR/MAC/Navigator/panels/nav_fw/tools/EnablePropertySets.pnl panels
 
-echo "PVSS00NV         | manual |      30 |        3 |        2 |-p EnablePropertySets.pnl -iconBar -menuBar" >> config/progs
 
 
 
