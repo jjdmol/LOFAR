@@ -25,6 +25,7 @@
 #include <BBSKernel/Prediffer.h>
 #include <BBSKernel/MMap.h>
 #include <BBSKernel/FlagsMap.h>
+#include <BBSKernel/Exceptions.h>
 #include <BBSKernel/MNS/MeqLMN.h>
 #include <BBSKernel/MNS/MeqDFTPS.h>
 #include <BBSKernel/MNS/MeqDiag.h>
@@ -1070,6 +1071,8 @@ void Prediffer::precalcNodes (const MeqRequest& request)
 
 void Prediffer::readMeasurementSetMetaData(const string &fileName)
 {
+  try
+  {
     MeasurementSet ms(fileName);
 
     Path absolutePath = Path(fileName).absoluteName();
@@ -1079,7 +1082,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     itsMSDesc.npart  = 1;
 
     /*
-        Get baselines.
+      Get baselines.
     */
     Block<String> sortColumns(2);
     sortColumns[0] = "ANTENNA1";
@@ -1091,7 +1094,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     station2Column.getColumn().tovector(itsMSDesc.ant2);
 
     /*
-        Get information about frequency grid.
+      Get information about frequency grid.
     */
     MSDataDescription dataDescription(ms.dataDescription());
     ROMSDataDescColumns dataDescriptionColumns(dataDescription);
@@ -1105,30 +1108,30 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
 
     for(int i = 0; i < spectralWindowCount; i++)
     {
-        Vector<double> channelFrequency = spectralWindowColumns.chanFreq()(i);
-        Vector<double> channelWidth = spectralWindowColumns.chanWidth()(i);
+      Vector<double> channelFrequency = spectralWindowColumns.chanFreq()(i);
+      Vector<double> channelWidth = spectralWindowColumns.chanWidth()(i);
 
-        // So far, only equal frequency spacings are possible.
-        ASSERTSTR(allEQ(channelWidth, channelWidth(0)), "Channels must have equal spacings");
+      // So far, only equal frequency spacings are possible.
+      ASSERTSTR(allEQ(channelWidth, channelWidth(0)), "Channels must have equal spacings");
 
-        int channelCount = channelWidth.nelements();
-        itsMSDesc.nchan[i] = channelCount;
+      int channelCount = channelWidth.nelements();
+      itsMSDesc.nchan[i] = channelCount;
 
-        double step = abs(channelWidth(0));
-        if(channelFrequency(0) > channelFrequency(channelCount - 1))
-        {
-            itsMSDesc.startFreq[i] = channelFrequency(0) + step / 2;
-            itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] - channelCount * step;
-        }
-        else
-        {
-            itsMSDesc.startFreq[i] = channelFrequency(0) - step / 2;
-            itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] + channelCount * step;
-        }
+      double step = abs(channelWidth(0));
+      if(channelFrequency(0) > channelFrequency(channelCount - 1))
+      {
+	itsMSDesc.startFreq[i] = channelFrequency(0) + step / 2;
+	itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] - channelCount * step;
+      }
+      else
+      {
+	itsMSDesc.startFreq[i] = channelFrequency(0) - step / 2;
+	itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] + channelCount * step;
+      }
     }
 
     /*
-        Get information about time grid.
+      Get information about time grid.
     */
     ROScalarColumn<double> timeColumn(ms, "TIME");
     Vector<double> time = timeColumn.getColumn();
@@ -1142,28 +1145,28 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
 
     for(uInt i = 0; i < timeCount; i++)
     {
-        itsMSDesc.times[i] = time[timeIndex[i]];
-        itsMSDesc.exposures[i] = exposure[timeIndex[i]];
+      itsMSDesc.times[i] = time[timeIndex[i]];
+      itsMSDesc.exposures[i] = exposure[timeIndex[i]];
     }
 
     /*
-        Get phase center as RA and DEC (J2000).
+      Get phase center as RA and DEC (J2000).
 
-        From AIPS++ note 229 (MeasurementSet definition version 2.0):
-        ---
-        FIELD: Field positions for each source
-        Notes:
-            The FIELD table defines a field position on the sky. For interferometers,
-            this is the correlated field position. For single dishes, this is the
-            nominal pointing direction.
-        ---
+      From AIPS++ note 229 (MeasurementSet definition version 2.0):
+      ---
+      FIELD: Field positions for each source
+      Notes:
+      The FIELD table defines a field position on the sky. For interferometers,
+      this is the correlated field position. For single dishes, this is the
+      nominal pointing direction.
+      ---
 
-        The way this column is used by SelfCal seems to have nothing to do with sources.
-        In LOFAR/CEP/BB/MS/src/makemsdesc.cc the following line can be found:
-            MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
-        which should be equivalent to:
-            MDirection phaseRef = mssubc.phaseDirMeas(0);
-        as used in the code below.
+      The way this column is used by SelfCal seems to have nothing to do with sources.
+      In LOFAR/CEP/BB/MS/src/makemsdesc.cc the following line can be found:
+      MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
+      which should be equivalent to:
+      MDirection phaseRef = mssubc.phaseDirMeas(0);
+      as used in the code below.
     */
     MSField field(ms.field());
     ROMSFieldColumns fieldColumns(field);
@@ -1173,7 +1176,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     itsMSDesc.dec = phaseCenterAngles.getBaseValue()(1);
 
     /*
-        Get correlation types.
+      Get correlation types.
     */
     MSPolarization polarization(ms.polarization());
     ROMSPolarizationColumns polarizationColumn(polarization);
@@ -1182,11 +1185,11 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     itsMSDesc.corrTypes.resize(correlationTypeCount);
     for(int i = 0; i < correlationTypeCount; i++)
     {
-        itsMSDesc.corrTypes[i] = Stokes::name(Stokes::type(correlationTypes(i)));
+      itsMSDesc.corrTypes[i] = Stokes::name(Stokes::type(correlationTypes(i)));
     }
 
     /*
-        Get station names and positions in ITRF coordinates.
+      Get station names and positions in ITRF coordinates.
     */
     MSAntenna antenna(ms.antenna());
     ROMSAntennaColumns antennaColumns(antenna);
@@ -1197,20 +1200,20 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     itsMSDesc.antPos.resize(IPosition(2, 3, antennaCount));
     for(int i = 0; i < antennaCount; i++)
     {
-        itsMSDesc.antNames[i] = antennaColumns.name()(i);
-        MPosition position = antennaColumns.positionMeas()(i);
-        position = MPosition::Convert(position, MPosition::ITRF)();
-        const MVPosition& positionVector = position.getValue();
-        sumVector += positionVector;
-        for(int j = 0; j < 3; j++)
-        {
-            itsMSDesc.antPos(IPosition(2, j, i)) = positionVector(j);
-        }
+      itsMSDesc.antNames[i] = antennaColumns.name()(i);
+      MPosition position = antennaColumns.positionMeas()(i);
+      position = MPosition::Convert(position, MPosition::ITRF)();
+      const MVPosition& positionVector = position.getValue();
+      sumVector += positionVector;
+      for(int j = 0; j < 3; j++)
+      {
+	itsMSDesc.antPos(IPosition(2, j, i)) = positionVector(j);
+      }
     }
 
     /*
-        Get the array position in ITRF coordinates, or use the centroid
-        of the station positions if the array position is unknown.
+      Get the array position in ITRF coordinates, or use the centroid
+      of the station positions if the array position is unknown.
     */
     MSObservation observation(ms.observation());
     ROMSObservationColumns observationColumns(observation);
@@ -1219,51 +1222,56 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     MVPosition positionVector;
     if(observation.nrow() > 0 && MeasTable::Observatory(position, observationColumns.telescopeName()(0)))
     {
-        position = MPosition::Convert(position, MPosition::ITRF)();
-        positionVector = position.getValue();
+      position = MPosition::Convert(position, MPosition::ITRF)();
+      positionVector = position.getValue();
     }
     else
     {
-        positionVector = sumVector * (1.0 / (double) antennaCount);
+      positionVector = sumVector * (1.0 / (double) antennaCount);
     }
 
     itsMSDesc.arrayPos.resize(3);
     for(int i = 0; i < 3; i++)
     {
-        itsMSDesc.arrayPos[i] = positionVector(i);
+      itsMSDesc.arrayPos[i] = positionVector(i);
     }
 
     /*
-        Determine the startTime and endTime of the observation.
+      Determine the startTime and endTime of the observation.
     */
     if(observation.nrow() > 0)
     {
-        Vector<double> times = observationColumns.timeRange()(0);
-        itsMSDesc.startTime = times(0);
-        itsMSDesc.endTime   = times(1);
+      Vector<double> times = observationColumns.timeRange()(0);
+      itsMSDesc.startTime = times(0);
+      itsMSDesc.endTime   = times(1);
     }
     else
     {
-        itsMSDesc.startTime = 0.0;
-        itsMSDesc.endTime   = 0.0;
+      itsMSDesc.startTime = 0.0;
+      itsMSDesc.endTime   = 0.0;
     }
 
     if(itsMSDesc.startTime >= itsMSDesc.endTime)
     {
-        /*
-          Invalid start / end times; derive from times and interval.
-          Difference between interval and exposure is startup time which
-          is taken into account.
-        */
-        if(timeCount > 0)
-        {
-            ROScalarColumn<double> interval(ms, "INTERVAL");
-            itsMSDesc.startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2 + (interval(0) - itsMSDesc.exposures[0]);
-            itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
-        }
+      /*
+	Invalid start / end times; derive from times and interval.
+	Difference between interval and exposure is startup time which
+	is taken into account.
+      */
+      if(timeCount > 0)
+      {
+	ROScalarColumn<double> interval(ms, "INTERVAL");
+	itsMSDesc.startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2 + (interval(0) - itsMSDesc.exposures[0]);
+	itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
+      }
     }
+  }
 
-//    cout << itsMSDesc;
+  catch (AipsError& e)
+  {
+    THROW(BBSKernelException, "AipsError: " << e.what());
+  }
+  //    cout << itsMSDesc;
 }
 
 void Prediffer::processMSDesc (uint ddid)

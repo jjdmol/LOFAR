@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <BBSKernel/Fitter.h>
 #include <Common/LofarLogger.h>
 #include <casa/Containers/Record.h>
