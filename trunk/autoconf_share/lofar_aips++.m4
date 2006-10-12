@@ -188,11 +188,31 @@ else
       AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$with_wcs"
     fi      
     AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_$arch -DAIPS_NO_TEMPLATE_SRC"
+    # Check if we're on a x86-64 bit system.
+    if test "`arch`" = "x86_64"; then
+      AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_64B"
+    fi
     if test "$lofar_compiler" = "kcc"; then
       AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_KAICC"
     fi
     AIPSPP_LDFLAGS="-L$ALP/lib -Wl,-rpath,$ALP/lib"
     AIPSPP_LIBS="$ALP/lib/version.o $lfr_aipslibs"
+
+    # If we're using GCC 4.x, we need to add -lgfortran to AIPSPP_LIBS. 
+    # This should be handled by the AIPS++ build environment IMHO.
+    version=`$CXX -v 2>&1 | tail -1`
+    # A typical version strings looks like this:
+    #   gcc version 4.0.2 20050901 (prerelease) (SUSE Linux)
+    if echo $version | grep -iq gcc; then
+      # We'll assume that the first word starting with one or more digits is
+      # the version number, so strip off the rest.
+      version=`echo $version | sed -e 's,^[^0-9]*,,' -e 's,[ \t].*$,,'`
+      # We only need the major version number.
+      major=`echo $version | cut -s -d'.' -f1`
+      if test $major -ge 4; then
+        AIPSPP_LIBS="$AIPSPP_LIBS -lgfortran"
+      fi
+    fi
 
     if test "$with_pgplot" != "no"; then
       ]AC_CHECK_FILE([$with_pgplot],
