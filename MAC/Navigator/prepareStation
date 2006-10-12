@@ -10,19 +10,40 @@ fi
 #
 StationName="CS010"
 
-export PVSS_II=$curPath/config/config
-cp config/progs config/progs.orig
-cp config/progs.nav config/progs
+
+
 
 #
-# Link Stationname to systemnumber 10
+# set distributed system on in the project
 #
-PVSStoolSyncTypes -system 10 $stationName -project $1
+cp config/config config/config.orig
+cp ../LOFAR/MAC/Navigator/config/config.station config/config
+
+export PVSS_II=$curPath/config/config
+cp config/progs config/progs.orig
+cp ../LOFAR/MAC/Navigator/config/progs.station config/progs
 
 #
 # Start project in background
 #
 PVSS00pmon -proj $1 &
+
+#
+# Wait  some time untill pmon is running
+#
+echo -n "Taking some time to give the pmon a chance to start..."
+sleep 60
+echo "(done)"
+#
+# empty the database from demo stuff (this has catastrofal results for now, 
+# allthough it does the right thing, it renders the database useless, so ETM 
+# is working on a solution for this. Conclusion is:
+# Keep ANALOG2 (used in poowerconfigs) and ExampleDP_Float (used as default point in sumalert lists)
+# even after this there seem to happen some strange things. So for now let's keep them in the system.
+#
+#echo -n "empty the database from demo stuff"
+#PVSS00ctrl -script emptyDatabase.ctl -currentproj; echo "(done)"
+
 
 echo -n "Importing fixed datapoints..."
 
@@ -37,30 +58,28 @@ fi
 # load (default) fixed datapoints for a Station (CS010) and an observation
 # (Observation_10) in the database
 #
-PVSS00ascii -in CS010PermDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in CS010ObsDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in CS010PermDatapoints.dpl -currentproj; echo "(done)"
-PVSS00ascii -in CS010ObsDatapoints.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010PermDatapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010ObsDatapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010PermDatapoints.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010ObsDatapoints.dpl -currentproj; echo "(done)"
 cd $curPath
 
+cp ../LOFAR/MAC/Navigator/scripts/libs/nav_fw/gcfpa-prep.ctl scripts
 #
 # prepare project to enable use of GCF based MAC controllers
 #
 echo -n "Prepare project to enable use of GCF based MAC controllers..."
-PVSS00ctrl -script libs/nav_fw/gcfpa-prep.ctl -currentproj; echo "(done)"
+PVSS00ctrl -script gcfpa-prep.ctl -currentproj; echo "(done)"
 
 #
 #shut down project
 #
 PVSS00pmon -currentproj -stopWait
 
-#
-# set distributed system on in the project
-#
-echo "distributed = 1" >> config/config
-echo "" >> config/config
-echo "[dist]" >> config/config
 
+cp ../LOFAR/MAC/Navigator/panels/nav_fw/tools/EnablePropertySets.pnl panels
+
+echo "PVSS00NV         | manual |      30 |        3 |        2 |-p EnablePropertySets.pnl -iconBar -menuBar" >> config/progs
 
 
 
