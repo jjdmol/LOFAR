@@ -10,17 +10,12 @@ fi
 # set local remoteDriver on in the project
 #
 cp config/config config/config.orig
-cp ../LOFAR/MAC/Navigator/config/config.nav config/config
+cp config/config.nav config/config
 
 cp config/progs config/progs.orig
-cp ../LOFAR/MAC/Navigator/config/progs.nav config/progs
+cp config/progs.nav config/progs
 
-#
-#prepare the configuration files with the manager that should be able to run
-#
-echo "PVSS00NG         |   once |      30 |        3 |        1 |" >> config/progs
-echo "PVSS00NV         | always |      30 |        3 |        2 |-p vision/login.pnl -iconBar -menuBar" >> config/progs
-echo "PVSS00NG         | manual |      30 |        2 |        2 |" >> config/progs
+
 
 
 

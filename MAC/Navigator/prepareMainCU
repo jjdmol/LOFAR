@@ -14,16 +14,12 @@ mainSysName="MCU001"
 # set distributed system on in the project
 #
 cp config/config config/config.orig
-cp config/config.maincu config/config
+cp ../LOFAR/MAC/Navigator/config/config.maincu config/config
 echo "" >> config/config
-echo "eventPort = 5997" >> config/config
-echo "dataPort = 5998" >> config/config
-echo "pmonPort = 5999" >> config/config
-
 
 export PVSS_II=$curPath/config/config
 cp config/progs config/progs.orig
-cp config/progs.maincu config/progs
+cp ../LOFAR/MAC/Navigator/config/progs.maincu config/progs
 
 
 #
@@ -52,7 +48,9 @@ echo "(done)"
 # import Navigator specific  DPT's and DP's
 #
 echo -n "Importing Navigator specific DPT's and DP's..."
-PVSS00ascii -in dplist/nav_fw/XTU_Navigator_database.dpl -currentproj; echo "(done)"
+
+cp ../LOFAR/MAC/Navigator/dplist/nav_fw/XTU_Navigator_database.dpl dplist/XTU_Navigator_database.dpl
+PVSS00ascii -in dplist/XTU_Navigator_database.dpl -currentproj; echo "(done)"
 
 echo -n "Importing fixed datapoints..."
 
@@ -67,23 +65,25 @@ fi
 # load (default) fixed datapoints for a MainCU  and an observation
 # (Observation_10) in the database
 #
-PVSS00ascii -in MainPermDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in MainObsDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in MainPermDatapoints.dpl -currentproj; echo "(done)"
-PVSS00ascii -in MainObsDatapoints.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/MainPermDatapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/MainObsDatapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/MainPermDatapoints.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/MainObsDatapoints.dpl -currentproj; echo "(done)"
 cd $curPath
 
 #
 # prepare project to enable use of GCF based MAC controllers
 #
 echo -n "Prepare project to enable use of GCF based MAC controllers..."
-PVSS00ctrl -script libs/nav_fw/gcfpa-prep.ctl -currentproj; echo "(done)"
+
+cp ../LOFAR/MAC/Navigator/scripts/libs/nav_fw/gcfpa-prep.ctl scripts/libs/gcfpa-prep.ctl
+PVSS00ctrl -script libs/gcfpa-prep.ctl -currentproj; echo "(done)"
 
 #
 # load some default navigator panels into the project
 #
 echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
-convertedDefaultFile=`sed -e "s/CCU1/$mainSysName/" dplist/nav_usr/MAC/MAC_Default_panelviews.dpl`
+convertedDefaultFile=`sed -e "s/CCU1/$mainSysName/" ../LOFAR/MAC/Navigator/dplist/nav_usr/MAC/MAC_Default_panelviews.dpl`
 echo "$convertedDefaultFile" > MAC_Default_panelviews.dpl
 PVSS00ascii -in MAC_Default_panelviews.dpl -currentproj; echo "(done)"
 rm -f MAC_Default_panelviews.dpl
@@ -97,7 +97,6 @@ PVSS00pmon -currentproj -stopWait
 
 cp ../LOFAR/MAC/Navigator/panels/nav_fw/tools/EnablePropertySets.pnl panels
 
-echo "PVSS00NV         | manual |      30 |        3 |        2 |-p nav_fw/tools/EnablePropertySets.pnl -iconBar -menuBar" >> config/progs
 
 
 
