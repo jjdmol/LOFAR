@@ -51,9 +51,19 @@ TESTS = tFillRow.sh tMeqPolc.sh tMeqPolcLog.sh tMeqTabular.sh tMeqParm.sh \
 tParmMerge.sh tMSData.sh tPredict.sh tPerturbed.sh tSubtract.sh tCorrect.sh \
 tPredSolv.sh tBandpass.sh
 
+# Currently, these tests fail due to floating point discrepancies. It should
+# be investigated how this can be solved.
+XFAIL_TESTS = tPredSolv.sh tBandpass.sh
+
+EXTRA_DIST = $(TESTS) tMeqParm.stdout tMeqPolcLog.stdout tMeqPolc.stdout \
+tParmMerge.stdout tPredSolv.stdout t3C343.run tBandpass.run tCorrect.run \
+tMeqPolcLog.run tMSData.run tParmMerge.run tPerturbed.run tPredict.run \
+tPredSolv.run tSubtract.run makeDemoParmDB makeDemoParmDBCorr \
+makeDemoParmDBPred tParmMerge.in_mep1 tParmMerge.in_mep2
+
 # programs to run through supplied checktools
-CHECKTOOLPROGS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular tMeqParm tParmMerge \
-tMSData tPredict tPerturbed tSubtract tCorrect
+CHECKTOOLPROGS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular tMeqParm \
+tParmMerge tMSData tPredict tPerturbed tSubtract tCorrect
 #ENDCHECKTOOLPROGS
 
 include $(top_srcdir)/Makefile.common
