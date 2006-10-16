@@ -202,6 +202,7 @@ do
     shift
     skipbuilt=1
     update=0
+    updas=0
   elif [ "$1" = -noskipbuilt ]; then
     shift
     skipbuilt=0
@@ -592,7 +593,7 @@ do
     tagstr=", cvstag $vers"
   fi
   if [ $update = 0 ]; then
-    echo "Needs package $pkg$tagstr"
+    echo "Uses package $pkg$tagstr"
   else
     echo "Full update of package $pkg$tagstr"
     echo "$cvscomm update -dAP $rtag $updq $pkg" >> rub.log 2>&1
@@ -639,10 +640,14 @@ if [ "$system" != 0 ]; then
   exit 0
 fi
 
-# Determine the build commands.
+# Start fresh if needed.
 echo "See build.log for build details"
-\rm build.log
+if [ $skipbuilt = 0 ]; then
+  \rm build.log
+  \rm build.booted
+fi  
 touch build.log
+touch build.booted
 
 # Do bootstrap if needed.
 # Make sure bootstrap is executable; Eclipse does not set x bit.
@@ -650,9 +655,16 @@ touch build.log
 if [ $boot = 1 ]; then
   for pkg in $pkgs
   do
+    if [ $skipbuilt = 1 ]; then
+      fgrep "$pkg " build.booted >& /dev/null
+      if [ $? = 0 ]; then
+        echo "  package $pkg already bootstrapped in a previous run" | tee build.log
+        continue
+      fi
+    fi
     echo "" >> build.log
     echo "  bootstrapping package $pkg ..."
-    (cd $pkg && rm -rf autom4te.cache && chmod +x bootstrap && ./bootstrap;) >> build.log 2>&1
+    (cd $pkg && rm -rf autom4te.cache && chmod +x bootstrap && ./bootstrap && echo $pkg '# bootstrapped at' `date` >> $curwd/build.booted;) >> build.log 2>&1
   done
   echo "" >> build.log
 fi
@@ -665,7 +677,10 @@ fi
 echo "Variants to be built: $variants"
 
 # Assemble the build options.    
-bopt="$kopt"
+bopt="$kopt $jobsopt"
+if [ $skipbuilt = 1 ]; then
+  bopt="$bopt -skipbuilt"
+fi  
 if [ $conf = 1 ]; then
   bopt="$bopt -conf"
   if [ "$confopt" != "" ]; then
@@ -719,6 +734,6 @@ do
     $pgmpath/rubbuild $bopt -build "$p1:$p3" $pkgs
   else
     echo "Invoking build on $p2 ..."
-    ssh -x $p2 $pgmpath/rubbuild -bg -srcdir `pwd` $bopt -build "$p1:$p3" $pkgs
+    ssh -x $p2 $pgmpath/rubbuild -bg -srcdir $curwd $bopt -build "$p1:$p3" $pkgs
   fi
 done

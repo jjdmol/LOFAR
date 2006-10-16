@@ -89,7 +89,7 @@ cd $srcdir >> $logfile 2>&1 || exit 1
 srcdir=`pwd`
 curwdl=`basename $srcdir`
 if [ "$curwdl" != "LOFAR" ]; then
-  echo "Error in rubbuild: srcdir must be the LOFAR directory in the code tree" >> $logfile
+  echo "Error in rubbuild: srcdir must be the LOFAR directory in the code tree" | tee $logfile
   exit 1
 fi
 
@@ -137,12 +137,11 @@ do
   if [ $skipbuilt = 1 ]; then
     fgrep "$pkg " $resfile >& /dev/null
     if [ $? = 0 ]; then
-      echo "  skipping package $pkg; already built in a previous run" >> $logfile
+      echo "  skipping package $pkg; already built in a previous run" | tee $logfile
       continue
     fi
   fi
-  echo " *** Building package $pkg ***"
-  echo " *** Building package $pkg ***" >> $logfile
+  echo " *** Building package $pkg ***" | tee $logfile
 
   if [ "$builddir" = "" ]; then
     initcmd="cd $pkg && mkdir -p build/$variant && cd build/$variant"
@@ -171,10 +170,8 @@ do
 done
 
 if [ "$status" != 0 ]; then
-  echo " Error during build (see $logfile for details)"
-  echo " Error during build on `uname -n` (see $logfile for details)" >> $srcdir/build.log
+  echo " Error during build on `uname -n` (see $logfile for details)" | tee $srcdir/build.log
   exit $status
 fi
-echo "Variant $buildvarpr successfully built (see $logfile for details)"
-echo "Variant $buildvarpr successfully built on `uname -n` (see $logfile for details)" >> $srcdir/build.log
+echo "Variant $buildvarpr successfully built on `uname -n` (see $logfile for details)" | tee $srcdir/build.log
 exit 0
