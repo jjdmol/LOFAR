@@ -40,6 +40,7 @@
 #include <APL/APLCommon/PropertySetAnswer.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
 
@@ -96,9 +97,13 @@ private:
 	bool							itsOwnPSinitialized;
 	bool							itsExtPSinitialized;
 
+	// pointer to child control task
+	ChildControl*			itsChildControl;
+	GCFITCPort*				itsChildPort;
+
 	// pointer to parent control task
-//	ParentControl*			itsParentControl;
-//	GCFITCPort*				itsParentPort;
+	ParentControl*			itsParentControl;
+	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
 
