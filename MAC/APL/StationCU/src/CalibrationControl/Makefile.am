@@ -4,15 +4,13 @@ CalibrationControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
 								  -fdiagnostics-show-location=once
 
-CalibrationControl_SOURCES		= ResourceAllocator.cc \
-								  CalibrationControl.cc \
+CalibrationControl_SOURCES		= CalibrationControl.cc \
 								  CalibrationControlMain.cc 
 
 CalibrationControl_LDADD		= $(LOFAR_DEPEND)
 CalibrationControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-NOINSTHDRS 					= ResourceAllocator.h \
-							  CalibrationControl.h \
+NOINSTHDRS 					= CalibrationControl.h \
 							  CalibrationControlDefines.h
 
 INSTHDRS 					= 

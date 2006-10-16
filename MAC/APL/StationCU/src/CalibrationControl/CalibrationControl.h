@@ -46,6 +46,8 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+//#include <Common/lofar_bitset.h>
+#include <bitset>
 #include <Common/LofarLogger.h>
 
 //# ACC Includes
@@ -75,12 +77,13 @@ public:
    	virtual void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During the initial state all connections with the other programs are made.
-   	GCFEvent::TResult initial_state (GCFEvent& e, 
-									 GCFPortInterface& p);
+   	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
+	
+	// During the PVSS state the PVSS parametersets are loaded
+   	GCFEvent::TResult PVSS_state (GCFEvent& e, GCFPortInterface& p);
 	
 	// Normal control mode. 
-   	GCFEvent::TResult active_state  (GCFEvent& e, 
-									 GCFPortInterface& p);
+   	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 
 private:
 	// avoid defaultconstruction and copying
@@ -91,43 +94,47 @@ private:
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
 
-	void    setState(CTState::CTstateNr     newState);
-	uint8	convertBandSelection(const string&	bandselection);
-	bool	propertySetsAvailable();
-	int32	getRCUhardwareNr(const string&	propName);
-	void	loadPVSSpropertySets();
-	bool	claimResources();
-	void	startCalServer();
-	void	stopCalServer();
+	void    setState          	  (CTState::CTstateNr     newState);
+	void    setObservationState	  (const string&	name, CTState::CTstateNr newState);
+	uint8	convertFilterSelection(const string&	bandselection);
+	bool	propertySetsAvailable ();
+	int32	getRCUHardwareNr	  (const string&	propName);
+	void	loadPVSSpropertySets  ();
+	bool	claimResources		  (const string&	name);
+	bool	addObservation		  (const string&	name);
+	uint16	handleClaimEvent	  (const string&	name);
+	uint16	handlePrepareEvent	  (const string&	name);
+	bool	startCalibration  	  (const string&	name);
+	bool	stopCalibration	  	  (const string&	name);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
+	typedef std::bitset<256>  							  RCUset_t;
 
    	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
    	GCFMyPropertySetPtr           itsPropertySet;
 	bool						  itsPropertySetInitialized;
 
-#if 0
-	// Administration of the CalibrationControllers
+	// Administration of the Observations we serve.
 	typedef struct {
-		OTDB::treeIDType	treeID;		// tree in the OTDB
-		GCFTCPPort*			port;		// TCP connection with controller
-		uint16				state;		// state the controller has
-	} ObsCntlr_t;
+		uint16				state;			// state the observation has
+		int16				nyquistZone;	// 0 | 1 | 2
+		uint32				sampleFreq;		// 160e6 | 200e6
+		string				bandSelection;	// LB_10_90, HB_110_190, etc
+		string				antennaArray;	// CS1_LBA (AntennaArray.conf)
+		RCUset_t			RCUset;			// set with participating receivers
+	} ObsInfo_t;
+	typedef map<string,ObsInfo_t>::iterator			OIter;
+	typedef map<string,ObsInfo_t>::const_iterator	const_OIter;
 
-	// Map with all active CalibrationControllers.
-	map<GCFTCPPort*, ObsCntlr_t>	itsObsCntlrMap;
-	vector<GCFTCPPort*>				itsObsCntlrPorts;
-#endif
+	//# --- Datamembers ---
 
-	// pointer to parent control task
-	ParentControl*			itsParentControl;
-	GCFITCPort*				itsParentPort;
+	ParentControl*			itsParentControl;	// pointer to parent control task
+	GCFITCPort*				itsParentPort;		// comm.port with parent task
+	GCFTimerPort*			itsTimerPort;		// general port for timers
+	GCFTCPPort*				itsCalServer;		// connection with CalServer
+//	CTState::CTstateNr		itsState;			// 
 
-	GCFTimerPort*			itsTimerPort;
-
-	GCFTCPPort*				itsCalServer;
-
-	CTState::CTstateNr		itsState;
+	map<string /*name*/, ObsInfo_t>	itsObsMap;	// Map with all active Observations
 
 	// ParameterSet variables
 	string					itsTreePrefix;
@@ -136,10 +143,10 @@ private:
 	time_t					itsStopTime;
 	uint32					itsPropSetAvailTimer;
 
-	int16					itsNyquistZone;
-	string					itsBandSelection;
-	string					itsAntennaArray;
-	vector<uint16>			itsRCUvector;
+//	int16					itsNyquistZone;
+//	string					itsBandSelection;
+//	string					itsAntennaArray;
+//	vector<uint16>			itsRCUvector;
 
 	//TODO
 	typedef map<uint16,bool> TRCUFunctionalityMap;
