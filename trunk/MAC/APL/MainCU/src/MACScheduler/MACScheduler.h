@@ -101,6 +101,7 @@ public:
 	// Make the transition to the finishing state
 	void finish();
 
+	// interrupt handler for updating PVSS when exiting program.
 	static void sigintHandler(int signum);
 
 private:
