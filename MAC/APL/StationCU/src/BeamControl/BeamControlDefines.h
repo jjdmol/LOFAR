@@ -28,14 +28,13 @@ namespace LOFAR {
 
 #define BC_TASKNAME					"BeamCtrl"
 
-#define BC_PROPSET_NAME				"LOFAR_ObsSW_ObsCtrl%d_BeamCtrl"
-#define BC_PROPSET_TYPE				"BeamCtrl"
-#define BC_OBSERVATIONSTATE			"observationState"
+#define PSN_BEAM_CTRL   			"LOFAR_ObsSW_@observation@_BeamCtrl"
+#define PST_BEAM_CTRL   			"BeamCtrl"
+#define PN_BC_CONNECTED 			"connected"
 
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"
 #define PVSSNAME_FSM_ERROR			"error"
-
 
 }; // MCU
 }; // LOFAR
