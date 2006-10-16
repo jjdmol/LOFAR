@@ -226,9 +226,9 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
     case F_INIT: {
 		// Get access to my own propertyset.
 		LOG_DEBUG ("Activating PropertySet");
-		string	propSetName = formatString(BC_PROPSET_NAME, itsInstanceNr);
+		string	propSetName(createPropertySetName(PSN_BEAM_CTRL, getName()));
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  BC_PROPSET_TYPE,
+																  PST_BEAM_CTRL,
 																  PS_CAT_TEMPORARY,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
@@ -365,7 +365,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	case CONTROL_RESUME: {
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
-		setState(CTState::ACTIVE);
+		setState(CTState::RESUME);
 		// TODO: implement something useful
 		CONTROLResumedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
@@ -404,10 +404,11 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 			setState(CTState::PREPARED);
 		}
 
+		LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << result << ") event");
 		CONTROLPreparedEvent	answer;
 		answer.cntlrName = getName();
 		answer.result    = result;
-		port.send(answer);
+		itsParentPort->send(answer);
 		break;
 	}
 
@@ -447,7 +448,7 @@ void BeamControl::doPrepare(const string&	cntlrName)
 
 	BSBeamallocEvent beamAllocEvent;
 	beamAllocEvent.name 		= getName();
-	beamAllocEvent.subarrayname = globalParameterSet()->getString("Observation.subarrayName");
+	beamAllocEvent.subarrayname = globalParameterSet()->getString("Observation.antennaArray");
 	LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
 
 	vector<int>::iterator beamletIt = beamletsVector.begin();
