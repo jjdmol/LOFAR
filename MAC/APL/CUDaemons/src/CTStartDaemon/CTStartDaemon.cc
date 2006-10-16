@@ -163,19 +163,20 @@ void CTStartDaemon::sendCreatedMsg(actionIter		action, int32	result)
 //
 void CTStartDaemon::sendNewParentAndCreatedMsg(actionIter		action)
 {
+	string		adminName = sharedControllerName(action->cntlrName);
+
 	// connection with new controller is made, send 'newparent' message
 	STARTDAEMONNewparentEvent	msg;
-	msg.cntlrName	  = action->cntlrName;
+	msg.cntlrName	  = adminName;
 	msg.parentHost	  = action->parentHost;
 	msg.parentService = action->parentService;
 	
 	// map controllername to controllerport
-	string		adminName = sharedControllerName(msg.cntlrName);
 	CTiter	controller = itsActiveCntlrs.find(adminName);
 	ASSERTSTR(isController(controller), adminName << 
 										" not found in controller list");
 	controller->second->send(msg);
-	LOG_DEBUG_STR("Sending NewParent(" << msg.cntlrName << "," <<
+	LOG_DEBUG_STR("Sending NewParent(" << adminName << "," <<
 						msg.parentHost << "," << msg.parentService << ")");
 
 	// send customer message that controller is on the air
@@ -428,7 +429,7 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 
 		// wait for controller to register, add action to actionList
 		action_t			action;
-		action.cntlrName	 = createEvent.cntlrName;
+		action.cntlrName	 = createEvent.cntlrName;		// store full name
 		action.cntlrType	 = createEvent.cntlrType;
 		action.parentHost	 = createEvent.parentHost;
 		action.parentService = createEvent.parentService;
@@ -462,7 +463,8 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 						", adding it to the controllerList");
 
 		// are there a newParent actions waiting?
-		actionIter	action = findAction(inMsg.cntlrName);
+		string	adminName = sharedControllerName(inMsg.cntlrName);
+		actionIter	action = findAction(adminName);
 		while (isAction(action)) {
 			// first stop failure-timer
 			itsTimerPort->cancelTimer(action->timerID);
@@ -470,7 +472,7 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 			sendNewParentAndCreatedMsg(action);
 			LOG_DEBUG_STR ("Removing " << action->cntlrName << " from actionlist");
 			itsActionList.erase(action);
-			action = findAction(inMsg.cntlrName);
+			action = findAction(adminName);
 		}
 		break;
 	}
