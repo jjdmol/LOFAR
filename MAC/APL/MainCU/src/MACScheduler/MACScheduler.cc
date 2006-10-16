@@ -118,11 +118,16 @@ MACScheduler::~MACScheduler()
 	}
 }
 
-void MACScheduler::sigintHandler(/*@unused@*/int signum)
+//
+// sigintHandler(signum)
+//
+void MACScheduler::sigintHandler(int signum)
 {
-  LOG_INFO(LOFAR::formatString("SIGINT signal detected (%d)",signum));
-  if(0 != pMacScheduler)
-    pMacScheduler->finish();
+	LOG_DEBUG (formatString("SIGINT signal detected (%d)",signum));
+
+	if (pMacScheduler) {
+		pMacScheduler->finish();
+	}
 }
 
 
@@ -221,11 +226,12 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 	case F_TIMER: {		// must be timer that PropSet is enabled.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),      GCFPVString  ("initial"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),      GCFPVString  (""));
-		itsPropertySet->setValue(string(PN_MS_OTDB_CONNECTED),    GCFPVBool    (false));
-		itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL),    GCFPVString  (""));
-		itsPropertySet->setValue(string(PN_MS_OTDB_POLLINTERVAL), GCFPVUnsigned(itsOTDBpollInterval));
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE,      GCFPVString  ("initial"));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,      GCFPVString  (""));
+		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,    GCFPVBool    (false));
+		itsPropertySet->setValue(PN_MS_OTDB_LAST_POLL,    GCFPVString  (""));
+		itsPropertySet->setValue(PN_MS_OTDB_POLLINTERVAL, GCFPVUnsigned(itsOTDBpollInterval));
+		itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
 
       
 		// Try to connect to the SAS database.
@@ -321,11 +327,10 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		break;
 
 	case F_ENTRY: {
-  	    // install my own signal handler. GCFTask also installs a handler so we have to install our
-	    // handler later than the GCFTask handler.
+  	    // install my own signal handler. GCFTask also installs a handler so we have 
+		// to install our handler later than the GCFTask handler.
 	    pMacScheduler = this;
-		/* install ctrl-c signal handler */
-		(void)signal(SIGINT,MACScheduler::sigintHandler);
+		signal (SIGINT, MACScheduler::sigintHandler);	// ctrl-c
 
 		// update PVSS
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
@@ -475,6 +480,11 @@ void MACScheduler::finish()
 //
 void MACScheduler::_doOTDBcheck()
 {
+	// REO: test pvss appl
+	ptime	currentTime = from_time_t(time(0));
+	itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL),
+										GCFPVString(to_simple_string(currentTime)));
+
 	// get new list (list is ordered on starttime)
 	vector<OTDBtree> newTreeList = itsOTDBconnection->getExecutableTrees();
 	if (newTreeList.empty()) {
@@ -487,12 +497,7 @@ void MACScheduler::_doOTDBcheck()
 	// walk through the list and bring each observation in the right state when necc.
 	uint32		listSize = newTreeList.size();
 	uint32		idx = 0;
-	ptime		currentTime = from_time_t(time(0));
 	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
-
-	// REO: test pvss appl
-	itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL),
-										GCFPVString(to_simple_string(currentTime)));
 
 	while (idx < listSize)  {
 		// timediff = time to go before start of Observation
@@ -528,8 +533,7 @@ void MACScheduler::_doOTDBcheck()
 											treeID, 
 											CNTLRTYPE_OBSERVATIONCTRL, 
 											0,		// instanceNr
-											"rs001");
-//											myHostname(true));
+											myHostname(true));
 				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
 
 				// register this Observation
