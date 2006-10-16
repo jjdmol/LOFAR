@@ -653,6 +653,7 @@ ARMLIST=`concatfile $ARMFILE`
 CLUSTERLIST=`concatfile $CLUSTERFILE`
 RINGLIST=`concatfile $RINGFILE`
 RINGSTATIONLIST=`create_ring_station_list`
+WANLIST=`concatfile $WANFILE`
 WANSWITCHLIST=`create_wan_switch_list`
 NRRSPBOARDS=`grep -s ${STNNAME} ${BOARDFILE} | awk '{ print $2 }'`
 

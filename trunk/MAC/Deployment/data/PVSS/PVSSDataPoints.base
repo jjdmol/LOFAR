@@ -18,8 +18,9 @@ Ring			-		C	P	LOFAR_PIC_@ring@
 Station			STS		C	P	LOFAR_PIC_@ring@_@station@
 Cluster			-		C	P	LOFAR_PIC_@cluster@
 Node			-		C	P	LOFAR_PIC_@cluster@_@node@
-WAN				-		C	P	LOFAR_PIC_@wan@
-Switch			-		C	P	LOFAR_PIC_@wan@_@switch@
+WAN				-		C	P	LOFAR_PIC_WAN
+WANarea			-		C	P	LOFAR_PIC_WAN_@wan@
+Switch			-		C	P	LOFAR_PIC_WAN_@wan@_@switch@
 PermSW			-		C	P	LOFAR_PermSW
 MACScheduler	MS		C	P	LOFAR_PermSW_MACScheduler
 Ring			-		C	P	LOFAR_PermSW_@ring@
