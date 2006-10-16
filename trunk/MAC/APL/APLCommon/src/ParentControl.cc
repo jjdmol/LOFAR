@@ -122,17 +122,19 @@ ParentControl::~ParentControl()
 //
 GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask)
 {
-	itsMainTaskPort = new GCFITCPort(*mainTask, *this, mainTask->getName(), 
-										GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsMainTaskPort, "Can not allocate ITC port for parent-control");
-	itsMainTaskPort->open();		// will result in F_CONN signal
+	if (!itsMainTaskPort) {
+		itsMainTaskPort = new GCFITCPort(*mainTask, *this, mainTask->getName(), 
+											GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+		ASSERTSTR(itsMainTaskPort, "Can not allocate ITC port for parent-control");
+		itsMainTaskPort->open();		// will result in F_CONN signal
 
-	itsSDPort = new GCFTCPPort(*this, MAC_SVCMASK_STARTDAEMON, 
-										GCFPortInterface::SAP, STARTDAEMON_PROTOCOL);
-	ASSERTSTR(itsSDPort, "Can not allocate clientport to startDaemon");
-	itsSDPort->open();				// will result in F_COON or F_DISCONN signal
+		itsSDPort = new GCFTCPPort(*this, MAC_SVCMASK_STARTDAEMON, 
+											GCFPortInterface::SAP, STARTDAEMON_PROTOCOL);
+		ASSERTSTR(itsSDPort, "Can not allocate clientport to startDaemon");
+		itsSDPort->open();				// will result in F_COON or F_DISCONN signal
 
-	itsControllerName = mainTask->getName();		// remember for later
+		itsControllerName = mainTask->getName();		// remember for later
+	}
 
 	return (itsMainTaskPort);
 }

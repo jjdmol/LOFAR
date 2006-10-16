@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/ControllerAdmin.h>
 
 namespace LOFAR {
@@ -51,8 +52,9 @@ ControllerAdmin*	ControllerAdmin::instance()
 ControllerAdmin::CIiter	ControllerAdmin::findController(const string&	name) {
 	CIiter			iter = itsList.begin();
 	const_CIiter	end = itsList.end();
+	string	adminName = sharedControllerName(name);
 
-	while (iter != end && iter->getName() != name)  {
+	while (iter != end && sharedControllerName(iter->getName()) != adminName)  {
 		iter++;
 	}
 
