@@ -113,9 +113,6 @@ public:
 
   FILE      *itsInFile;
   FILE      *itsOutFile;
-
-  char      itsSeparator[9];
-  int       itsSepLen;
 };
 
 // @} // Doxygen endgroup Transport
