@@ -28,50 +28,81 @@
 
 //# Includes
 #include <PLC/ProcessControl.h>
-#include <Common/lofar_smartptr.h>
-#include <boost/logic/tribool_fwd.hpp>
 
 namespace LOFAR
 {
   //# Forward Declarations.
+  class CSConnection;
+  class TH_Socket;
 
   namespace BBS
   {
     //# Forward Declarations.
     class BBSStrategy;
     class BBSStep;
+    class BlobStreamable;
+    class DH_BlobStreamable;
 
     // \addtogroup BBS
     // @{
 
+    // Implementation of the ProcessControl interface for the global BBS
+    // controller.
     class BBSProcessControl : public ACC::PLC::ProcessControl
     {
     public:
+      // Default constructor.
+      BBSProcessControl();
+
+      // Destructor.
       virtual ~BBSProcessControl();
-      virtual boost::logic::tribool define();
-      virtual boost::logic::tribool init();
-      virtual boost::logic::tribool run();
-      virtual boost::logic::tribool quit();
-    private:
-      // The operations below are not supported by BBSProcessControl.
+
+      // @name Implementation of PLC interface.
       // @{
-      virtual boost::logic::tribool pause(const string& condition);
-      virtual boost::logic::tribool snapshot(const string& destination);
-      virtual boost::logic::tribool recover(const string& source);
-      virtual boost::logic::tribool reinit(const string& configID);
-      virtual string                askInfo(const string& keylist);
+      virtual tribool define();
+      virtual tribool init();
+      virtual tribool run();
+      virtual tribool quit();
+      virtual tribool pause(const string& condition);
+      virtual tribool snapshot(const string& destination);
+      virtual tribool recover(const string& source);
+      virtual tribool reinit(const string& configID);
+      virtual string  askInfo(const string& keylist);
       // @}
 
-      // Our parameter set.
-      ACC::APS::ParameterSet  itsParamSet;
+    private:
+      // Send the strategy or one of the steps across.
+      bool sendObject(const BlobStreamable& bs);
 
-      // The strategy that will be constructed from the parameter set.
+      // The strategy that will be executed by this controller.
       BBSStrategy*            itsStrategy;
 
-      // Vector containing all the separate steps that this strategy consists
-      // of in sequential order.
+      // Vector containing all the separate steps, in sequential order, that
+      // the strategy consists of.
       vector<const BBSStep*>  itsSteps;
 
+      // Iterator for keeping track where we left while traversing the vector
+      // \c itsSteps. We need this iterator, because the run() method will be
+      // invoked several times by ACCmain. In each call to run() we must
+      // execute one BBSStep.
+      vector<const BBSStep*>::const_iterator itsStepsIterator;
+
+      // DataHolder for exchanging data between global (BBS) and local
+      // (BBSKernel) process control.
+      DH_BlobStreamable* itsDataHolder;
+
+      // TransportHolder used to exchange DataHolders. The global controller
+      // will open a server connection, waiting for local controllers to
+      // connect.
+      TH_Socket* itsTransportHolder;
+
+      // Connection between the global (BBS) process control and the local
+      // (BBSKernel) process control.
+      CSConnection* itsConnection;
+
+      // Flag indicating whether we've sent \c itsStrategy. We only need to
+      // send it once, as the very first message.
+      bool itsStrategySent;
     };
 
     // @}

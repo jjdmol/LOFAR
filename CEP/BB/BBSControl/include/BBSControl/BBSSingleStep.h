@@ -44,6 +44,16 @@ namespace LOFAR
     class BBSSingleStep : public BBSStep
     {
     public:
+      virtual ~BBSSingleStep();
+
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
+      virtual void print(ostream& os) const;
+
+      // Return the name of the data column to write data to.
+      string outputData() const { return itsOutputData; }
+
+    protected:
       // Default constructor. Construct an empty BBSSingleStep object and make
       // it a child of the BBSStep object \a parent.
       BBSSingleStep(const BBSStep* parent = 0);
@@ -56,87 +66,132 @@ namespace LOFAR
 		    const ACC::APS::ParameterSet& parset,
 		    const BBSStep* parent);
 
-      virtual ~BBSSingleStep();
-
-      // Print the contents of \c *this in human readable form into the output
-      // stream \a os.
-      virtual void print(ostream& os) const;
-
-    protected:
       // Write the contents of \c *this into the blob output stream \a bos.
       virtual void write(BlobOStream& bos) const;
 
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);
 
-    public:
-      // Return the type of \c *this as a string.
-      virtual const string& classType() const;
-
-      // Name of the data column to write data to
+      // Name of the data column to write data to.
       string          itsOutputData;
     };
 
     
-    class BBSPredictStep: public BBSSingleStep
+    class BBSPredictStep : public BBSSingleStep
     {
     public:
-        BBSPredictStep(const BBSStep* parent = 0)
-        : BBSSingleStep(parent)
-        {
-        }
+      BBSPredictStep(const BBSStep* parent = 0) : 
+	BBSSingleStep(parent)
+      {
+      }
         
-        BBSPredictStep(const string& name, 
-            const ACC::APS::ParameterSet& parSet,
-            const BBSStep* parent)
-        :BBSSingleStep(name, parSet, parent)
-        {
-        }
-    };
-    
-    
-    class BBSSubtractStep: public BBSSingleStep
-    {
-    public:
-        BBSSubtractStep(const BBSStep* parent = 0)
-        : BBSSingleStep(parent)
-        {
-        }
-    
-        BBSSubtractStep(const string& name, 
-            const ACC::APS::ParameterSet& parSet,
-            const BBSStep* parent)
-        : BBSSingleStep(name, parSet, parent)
-        {
-        }
-    };
-    
-    
-    class BBSCorrectStep: public BBSSingleStep
-    {
-    public:
-        BBSCorrectStep(const BBSStep* parent = 0)
-        : BBSSingleStep(parent)
-        {
-        }
-    
-        BBSCorrectStep(const string& name, 
-            const ACC::APS::ParameterSet& parSet,
-            const BBSStep* parent)
-        : BBSSingleStep(name, parSet, parent)
-        {
-        }
-    };
-    
-    
-    // For the time being we'll define the following steps as typedefs. If,
-    // and when, they need to be "upgraded" to a real class, we can do so,
-    // without affecting code referring to these types.
-    // @{
-    typedef BBSSingleStep BBSShiftStep;
-    typedef BBSSingleStep BBSRefitStep;
-    // @}
+      BBSPredictStep(const string& name, 
+		     const ACC::APS::ParameterSet& parSet,
+		     const BBSStep* parent) :
+	BBSSingleStep(name, parSet, parent)
+      {
+      }
 
+    private:
+      // Return the type of \c *this as a string.
+      virtual const string& classType() const {
+	static string theType("BBSPredictStep");
+	return theType;
+      }
+    };
+    
+    
+    class BBSSubtractStep : public BBSSingleStep
+    {
+    public:
+      BBSSubtractStep(const BBSStep* parent = 0) : 
+	BBSSingleStep(parent)
+      {
+      }
+    
+      BBSSubtractStep(const string& name, 
+		      const ACC::APS::ParameterSet& parSet,
+		      const BBSStep* parent) :
+        BBSSingleStep(name, parSet, parent)
+      {
+      }
+    private:
+      // Return the type of \c *this as a string.
+      virtual const string& classType() const {
+	static string theType("BBSSubtractStep");
+	return theType;
+      }
+    };
+    
+    
+    class BBSCorrectStep : public BBSSingleStep
+    {
+    public:
+      BBSCorrectStep(const BBSStep* parent = 0) :
+	BBSSingleStep(parent)
+      {
+      }
+    
+      BBSCorrectStep(const string& name, 
+		     const ACC::APS::ParameterSet& parSet,
+		     const BBSStep* parent) :
+	BBSSingleStep(name, parSet, parent)
+      {
+      }
+    private:
+      // Return the type of \c *this as a string.
+      virtual const string& classType() const {
+	static string theType("BBSCorrectStep");
+	return theType;
+      }
+    };
+    
+
+    class BBSShiftStep : public BBSSingleStep
+    {
+    public:
+      BBSShiftStep(const BBSStep* parent = 0) :
+	BBSSingleStep(parent)
+      {
+      }
+    
+      BBSShiftStep(const string& name, 
+		     const ACC::APS::ParameterSet& parSet,
+		     const BBSStep* parent) :
+	BBSSingleStep(name, parSet, parent)
+      {
+      }
+    private:
+      // Return the type of \c *this as a string.
+      virtual const string& classType() const {
+	static string theType("BBSShiftStep");
+	return theType;
+      }
+    };
+    
+
+    class BBSRefitStep : public BBSSingleStep
+    {
+    public:
+      BBSRefitStep(const BBSStep* parent = 0) :
+	BBSSingleStep(parent)
+      {
+      }
+    
+      BBSRefitStep(const string& name, 
+		     const ACC::APS::ParameterSet& parSet,
+		     const BBSStep* parent) :
+	BBSSingleStep(name, parSet, parent)
+      {
+      }
+    private:
+      // Return the type of \c *this as a string.
+      virtual const string& classType() const {
+	static string theType("BBSRefitStep");
+	return theType;
+      }
+    };
+    
     // @}
     
   } // namespace BBS

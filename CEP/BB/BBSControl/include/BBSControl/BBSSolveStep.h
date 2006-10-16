@@ -61,6 +61,16 @@ namespace LOFAR
       // stream \a os.
       virtual void print(ostream& os) const;
 
+      // @name Accessor methods
+      // @{
+      uint32 maxIter()           const { return itsMaxIter; }
+      double epsilon()           const { return itsEpsilon; }
+      double minConverged()      const { return itsMinConverged; }
+      vector<string> parms()     const { return itsParms; }
+      vector<string> exclParms() const { return itsExclParms; }
+      DomainSize domainSize()    const { return itsDomainSize; }
+      // @}
+
     private:
       // Write the contents of \c *this into the blob output stream \a bos.
       virtual void write(BlobOStream& bos) const;

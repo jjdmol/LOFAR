@@ -22,8 +22,8 @@
 //#
 //#  $Id: 
 
-#ifndef __BBSKERNELPROCESSCONTROL_H__
-#define __BBSKERNELPROCESSCONTROL_H__
+#ifndef LOFAR_BBSCONTROL_BBSKERNELPROCESSCONTROL_H
+#define LOFAR_BBSCONTROL_BBSKERNELPROCESSCONTROL_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -33,115 +33,89 @@
 
 namespace LOFAR
 {
+  //# Forward declations
+  namespace ParmDB { class ParmDB; }
+  class CSConnection;
+  class TH_Socket;
 
-namespace ParmDB
-{
-    class ParmDB;
-} // namespace ParmDB
+  namespace BBS
+  {
+    //# Forward declations
+    class BBSStep;
+    class BBSStrategy;
+    class BBSPredictStep;
+    class BBSSubtractStep;
+    class BBSCorrectStep;
+    class BBSSolveStep;
+    class Prediffer;
+    struct Context;
+    class DH_BlobStreamable;
 
-namespace BBS
-{
-
-class BBSStep;
-class BBSStrategy;
-class BBSPredictStep;
-class BBSSubtractStep;
-class BBSCorrectStep;
-class BBSSolveStep;
-class Prediffer;
-struct Context;
-
-// \addtogroup BBS
-// @{
-
-//# Description of class.
-// The ProcessControl class defines the command interface that can be used
-// to control the processes of an application.<br>
-// All functions in this class are abstract and need to be
-// implemented on both the client and the server-side. On the client side
-// the implementation will only forward the function-call, on the server
-// side (= the application process) the real implementation must be done.
-
-class BBSKernelProcessControl: public LOFAR::ACC::PLC::ProcessControl
-{
-public:
-    // Constructor
-    BBSKernelProcessControl();
-    
-    // Destructor
-    ~BBSKernelProcessControl();
-
-    // \name Command to control the processes.
-    // There are a dozen commands that can be sent to a application process
-    // to control its flow. The return values for these command are:<br>
-    // - True   - Command executed succesfully.
-    // - False  - Command could not be executed.
-    // 
+    // \addtogroup BBS
     // @{
 
-    // During the \c define state the process check the contents of the
-    // ParameterSet it received during start-up. When everthing seems ok the
-    // process constructs the communication channels for exchanging data
-    // with the other processes. The connection are NOT made in the stage.
-    boost::logic::tribool define();
+    // Implementation of the ProcessControl interface for the local BBSKernel
+    // controller.
+    class BBSKernelProcessControl: public ACC::PLC::ProcessControl
+    {
+    public:
+      // Default constructor.
+      BBSKernelProcessControl();
 
-    // When a process receives an \c init command it allocates the buffers it
-    // needs an makes the connections with the other processes. When the
-    // process succeeds in this it is ready for dataprocessing (or whatever
-    // task the process has).
-    boost::logic::tribool init();
+      // Destructor
+      virtual ~BBSKernelProcessControl();
 
-    // During the \c run phase the process does the work it is designed for.
-    // The run phase stays active until another command is send.
-    boost::logic::tribool run();
+      // @name Implementation of PLC interface.
+      // @{
+      virtual tribool define();
+      virtual tribool init();
+      virtual tribool run();
+      virtual tribool pause(const string& condition);
+      virtual tribool quit();
+      virtual tribool snapshot(const string& destination);
+      virtual tribool recover(const string& source);
+      virtual tribool reinit(const string& configID);
+      virtual string  askInfo(const string& keylist);
+      // @}
 
-    // With the \c pause command the process stops its run phase and starts
-    // waiting for another command. The \c condition argument contains the
-    // contition the process should use for ending the run phase. This
-    // condition is a key-value pair that can eg. contain a timestamp or a
-    // number of a datasample.
-    boost::logic::tribool pause(const string& condition);
+      bool handle(const BBSStrategy *strategy);
+      bool handle(const BBSStep *step);
 
-    // \c Quit stops the process.
-    // The process \b must call \c unregisterAtAC at ProcControlServer during 
-    // the execution of this command to pass the final results to the 
-    // Application Controller.
-    boost::logic::tribool quit();
+    private:
+      // @name Implementation of handle() for the different BBSStep types.
+      // @{
+      bool doHandle(const BBSPredictStep *step);
+      bool doHandle(const BBSSubtractStep *step);
+      bool doHandle(const BBSCorrectStep *step);
+      bool doHandle(const BBSSolveStep *step);
+      // @}
 
-    // With the \c snapshot command the process is instructed to save itself
-    // in a database is such a way that on another moment in time it can
-    // be reconstructed and can continue it task.<br>
-    // The \c destination argument contains database info the process
-    // must use to save itself.
-    boost::logic::tribool snapshot(const string& destination);
+      void convertStepToContext(const BBSStep *step, Context &context);
 
-    // \c Recover reconstructs the process as it was saved some time earlier.
-    // The \c source argument contains the database info the process must use
-    // to find the information it needs.
-    boost::logic::tribool recover(const string& source);
+      // Parameter set for this process controller.
+      ACC::APS::ParameterSet itsParameterSet;
 
-    // With \c reinit the process receives a new parameterset that it must use
-    // to reinitialize itself.
-    boost::logic::tribool reinit(const string& configID);
-    // @}
+      // Prediffer
+      Prediffer* itsPrediffer;
 
-    // Define a generic way to exchange info between client and server.
-    std::string askInfo(const string& keylist);
+      // History database.
+      LOFAR::ParmDB::ParmDB* itsHistory;
 
-    bool handle(const BBSStrategy *strategy);
-    bool handle(const BBSPredictStep *step);
-    bool handle(const BBSSubtractStep *step);
-    bool handle(const BBSCorrectStep *step);
-    bool handle(const BBSSolveStep *step);
+      // DataHolder for exchanging data between local (BBSKernel) and global
+      // (BBS) process control.
+      DH_BlobStreamable* itsDataHolder;
 
-private:
-    void convertStepToContext(const BBSStep *step, Context &context);
-    
-    Prediffer *itsPrediffer;
-    LOFAR::ParmDB::ParmDB *itsHistory;
-}; // class BBSKernelProcessControl
+      // TransportHolder used to exchange DataHolders. The local controller
+      // will open a client connection to the global controller.
+      TH_Socket* itsTransportHolder;
 
-} // namespace BBS
+      // Connection between the local (BBSKernel) process control and the
+      // global (BBS) process control.
+      CSConnection* itsConnection;
+    };
+
+  } // namespace BBS
+
 } // namespace LOFAR
 
 #endif
