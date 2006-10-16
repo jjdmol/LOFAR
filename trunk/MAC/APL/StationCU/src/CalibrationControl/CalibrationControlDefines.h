@@ -28,8 +28,10 @@ namespace LOFAR {
 
 #define CC_TASKNAME					"CalCtrl"
 
-#define CC_PROPSET_NAME				"LOFAR_ObsSW_ObsCtrl%d_CalCtrl"
-#define CC_PROPSET_TYPE				"CalCtrl"
+#define PSN_CAL_CTRL	"LOFAR_PermSW_CalCtrl@instance@"
+#define PST_CAL_CTRL	"CalCtrl"
+
+#define PROPNAME_FUNCTIONALITY		"functionality"
 
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"

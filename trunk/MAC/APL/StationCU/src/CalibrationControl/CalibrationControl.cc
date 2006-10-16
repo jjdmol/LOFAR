@@ -21,6 +21,7 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
@@ -33,6 +34,7 @@
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/StationInfo.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 #include "CalibrationControl.h"
@@ -60,7 +62,9 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	itsParentPort		(0),
 	itsTimerPort		(0),
 	itsCalServer		(0),
-	itsState			(CTState::NOSTATE)
+//	itsState			(CTState::NOSTATE)
+	itsObsMap			(),
+	itsPropSetAvailTimer(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -70,12 +74,14 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	itsStartTime  = globalParameterSet()->getTime  (itsTreePrefix + ".starttime");
 	itsStopTime   = globalParameterSet()->getTime  (itsTreePrefix + ".stoptime");
 
+	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
+
 	// CalibrationControl specific parameters
 	// TODO: these values are delivered for every customer!
-	itsNyquistZone   = globalParameterSet()->getInt16("nyquistZone");
-	itsBandSelection = globalParameterSet()->getString("bandSelection");
-	itsAntennaArray  = globalParameterSet()->getString("antennaArray");
-	itsRCUvector	 = globalParameterSet()->getUint16Vector("rcus");
+//	itsNyquistZone   = globalParameterSet()->getInt16("nyquistZone");
+//	itsBandFilter	 = globalParameterSet()->getString("bandFilter");
+//	itsAntennaArray  = globalParameterSet()->getString("antennaArray");
+//	itsRCUvector	 = globalParameterSet()->getUint16Vector("receiverList");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -96,6 +102,7 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
 	registerProtocol (CAL_PROTOCOL,		   CAL_PROTOCOL_signalnames);
+	registerProtocol (F_PML_PROTOCOL,	   F_PML_PROTOCOL_signalnames);
 
 	setState(CTState::CREATED);
 }
@@ -110,7 +117,6 @@ CalibrationControl::~CalibrationControl()
 
 	if (itsPropertySet) {
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
-		itsPropertySet->disable();
 	}
 
 	// ...
@@ -121,35 +127,26 @@ CalibrationControl::~CalibrationControl()
 //
 void    CalibrationControl::setState(CTState::CTstateNr     newState)
 {
-	itsState = newState;
+//	itsState = newState;
 
 	if (itsPropertySet) {
 		CTState		cts;
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),
-								 GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString(cts.name(newState)));
 	}
 }   
 
 
 //
-// convertBandSelection(string) : uint8
+// convertFilterSelection(string) : uint8
 //
-uint8 CalibrationControl::convertBandSelection(const string&	bandselection) 
+uint8 CalibrationControl::convertFilterSelection(const string&	filterselection) 
 {
-	if (bandselection == "LB_10_90") {
-		return(0xB9);
-	}
-	if (bandselection == "HB_110_190") {
-		return(0xC6);
-	}
-	if (bandselection == "HB_170_230") {
-		return(0xCE);
-	}
-	if (bandselection == "HB_210_250") {
-		return(0xD6);
-	}
+	if (filterselection == "LB_10_90") 		{ return(0xB9); }
+	if (filterselection == "HB_110_190") 	{ return(0xC6); }
+	if (filterselection == "HB_170_230") 	{ return(0xCE); }
+	if (filterselection == "HB_210_250") 	{ return(0xD6); }
 
-	LOG_WARN_STR ("bandselection value '" << bandselection << 
+	LOG_WARN_STR ("filterselection value '" << filterselection << 
 											"' not recognized, using LB_10_90");
 	return (0xB9);
 }
@@ -157,17 +154,22 @@ uint8 CalibrationControl::convertBandSelection(const string&	bandselection)
 //
 // propertySetsAvailable()
 //
+// REO: does CC watch every rcu propertyset????
+//
 bool CalibrationControl::propertySetsAvailable()
 {
+	return (true);
+
 	// TODO: calculate m_n_rcus: racks * subracks ...
-	uint32	m_n_rcus = 192;
-	return (m_rcuFunctionalityMap.size() == m_n_rcus);
+	// uint32	m_n_rcus = 192;
+	// return (m_rcuFunctionalityMap.size() == m_n_rcus);
+	
 }
 
 //
-// getRCUhardwareNr (propertyname)
+// getRCUHardwareNr (propertyname)
 //
-int32 CalibrationControl::getRCUhardwareNr(const string&	propName)
+int32 CalibrationControl::getRCUHardwareNr(const string&	propName)
 {
 	// strip property and systemname, propertyset name remains
 	int    posBegin 		= propName.find_first_of(":") + 1;
@@ -203,7 +205,7 @@ void CalibrationControl::handlePropertySetAnswer(GCFEvent& answer)
 										getName().c_str(), pPropAnswer->pScope));
 		}
 		// always let timer expire so main task will continue.
-		itsTimerPort->setTimer(0.0);
+		itsTimerPort->setTimer(0.5);
 		break;
 	}
 
@@ -230,7 +232,7 @@ void CalibrationControl::handlePropertySetAnswer(GCFEvent& answer)
 		if (strstr(pPropAnswer->pPropName, PROPNAME_FUNCTIONALITY) != 0) {
 			LOG_DEBUG("functionality property changed");
 			// add the functionality to the internal cache
-			int rcu = getRCUhardwareNr(pPropAnswer->pPropName);
+			int rcu = getRCUHardwareNr(pPropAnswer->pPropName);
 			if (rcu >= 0) {
 				bool functional = ((GCFPVBool*)pPropAnswer->pValue)->getValue();
 				m_rcuFunctionalityMap[static_cast<uint16>(rcu)] = functional;
@@ -248,16 +250,17 @@ void CalibrationControl::handlePropertySetAnswer(GCFEvent& answer)
 		break;
 	}
 
-//	case F_SUBSCRIBED:
-//	case F_UNSUBSCRIBED:
-//	case F_PS_CONFIGURED:
-//	case F_EXTPS_LOADED:
-//	case F_EXTPS_UNLOADED:
-//	case F_MYPS_ENABLED:
-//	case F_MYPS_DISABLED:
-//	case F_VGETRESP:
-//	case F_VCHANGEMSG:
-//	case F_SERVER_GONE:
+//  case F_SUBSCRIBED:      GCFPropAnswerEvent      pPropName
+//  case F_UNSUBSCRIBED:    GCFPropAnswerEvent      pPropName
+//  case F_PS_CONFIGURED:   GCFConfAnswerEvent      pApcName
+//  case F_EXTPS_LOADED:    GCFPropSetAnswerEvent   pScope, result
+//  case F_EXTPS_UNLOADED:  GCFPropSetAnswerEvent   pScope, result
+//  case F_MYPS_ENABLED:    GCFPropSetAnswerEvent   pScope, result
+//  case F_MYPS_DISABLED:   GCFPropSetAnswerEvent   pScope, result
+//  case F_VGETRESP:        GCFPropValueEvent       pValue, pPropName
+//  case F_VSETRESP:        GCFPropAnswerEvent      pPropName
+//  case F_VCHANGEMSG:      GCFPropValueEvent       pValue, pPropName
+//  case F_SERVER_GONE:     GCFPropSetAnswerEvent   pScope, result
 
 	default:
 		break;
@@ -283,11 +286,11 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		LOG_DEBUG ("Activating my PropertySet");
-		string	propSetName = formatString(CC_PROPSET_NAME, itsInstanceNr);
+		string	propSetName(createPropertySetName(PSN_CAL_CTRL, getName()));
+		LOG_DEBUG_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  CC_PROPSET_TYPE,
-																  PS_CAT_TEMPORARY,
+																  PST_CAL_CTRL,
+																  PS_CAT_PERM_AUTOLOAD,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
 		// Wait for timer that is set in PropertySetAnswer on ENABLED event
@@ -318,6 +321,11 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		break;
 
 	case F_CONNECTED:
+		if (&port == itsParentPort) {
+			break;
+		}
+
+		// CONNECT must be from Calserver.
 		ASSERTSTR (&port == itsCalServer, 
 									"F_CONNECTED event from port " << port.getName());
 		itsTimerPort->cancelAllTimers();
@@ -362,7 +370,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
-		loadPVSSpropertySets();							// of all RCU boards
+//		loadPVSSpropertySets();							// of all RCU boards
 														// this takes a while so
 		itsPropSetAvailTimer = itsTimerPort->setTimer(3.0);	// check over 3 seconds
 		break;
@@ -408,10 +416,12 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
-		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
-		setState(CTState::CONNECTED);
 		CONTROLConnectedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
+		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
+		// add observation to list if not already in list
+		answer.result = addObservation(msg.cntlrName) ?
+									CT_RESULT_NO_ERROR : CT_RESULT_UNSPECIFIED;
 		port.send(answer);
 		break;
 	}
@@ -428,37 +438,30 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLClaimedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
 		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
-		setState(CTState::CLAIM);
-		if (claimResources()) {
-			LOG_DEBUG_STR (msg.cntlrName << ":resources claimed successful");
-			setState(CTState::CLAIMED);
-			answer.result = CT_RESULT_NO_ERROR;
-		}
-		else {
-			LOG_ERROR_STR (msg.cntlrName << 
-							":failed to claim resources, staying in idle mode");
-			setState(CTState::CONNECTED);
-			answer.result = CT_RESULT_CLAIM_FAILED;
-		}
-		itsParentPort.send(answer);
+		answer.result = handleClaimEvent(msg.cntlrName);
+		port.send(answer);
 		break;
 	}
 
 	case CONTROL_PREPARE: {
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
-		setState(CTState::PREPARE);
-		startCalServer();			// will result in CAL_STARTACK event
+		if (!startCalibration(msg.cntlrName)) {	// will result in CAL_STARTACK event
+			CONTROLPreparedEvent	answer;		// when command was sent.
+			answer.cntlrName = msg.cntlrName;
+			answer.result = CT_RESULT_CALSTART_FAILED;
+			port.send(answer);
+		}
 		break;
 	}
 
 	case CONTROL_RESUME: {
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
-		setState(CTState::ACTIVE);
 		// TODO: do something here?
 		CONTROLResumedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
+		answer.result = CT_RESULT_NO_ERROR;
 		port.send(answer);
 		break;
 	}
@@ -466,10 +469,10 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	case CONTROL_SUSPEND: {
 		CONTROLSuspendEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
-		setState(CTState::SUSPENDED);
 		// TODO: do something here?
 		CONTROLSuspendedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
+		answer.result = CT_RESULT_NO_ERROR;
 		port.send(answer);
 		break;
 	}
@@ -477,42 +480,47 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
-		setState(CTState::RELEASE);
-		stopCalServer(event);		// will result in CAL_STOPACK event
+		if (!stopCalibration(msg.cntlrName)) {	// will result in CAL_STOPACK event
+			CONTROLPreparedEvent	answer;		// when command was sent.
+			answer.cntlrName = msg.cntlrName;
+			answer.result = CT_RESULT_CALSTOP_FAILED;
+			port.send(answer);
+		}
 		break;
 	}
 
 	// -------------------- EVENTS RECEIVED FROM CALSERVER --------------------
 
-	case CAL_STARTACK:
-		CALStartEvent			ack(event);
+	case CAL_STARTACK: {
+		CALStartackEvent		ack(event);
 		CONTROLPreparedEvent	answer;
-		answer.cntlrName = ack.cntlrName;
+		answer.cntlrName = ack.name;
 		if (ack.status == SUCCESS) {
-			LOG_DEBUG ("Start of CalServer was succesful");
-			setState(CTState::PREPARED);
+			LOG_DEBUG ("Start of calibration was succesful");
 			answer.result = CT_RESULT_NO_ERROR;
+			setObservationState(ack.name, CTState::PREPARED);
 		}
 		else {
 			LOG_ERROR("Start of calibration failed, staying in CLAIMED mode");
-			setState(CTState::CLAIMED);
 			answer.result = CT_RESULT_CALSTART_FAILED;
+			setObservationState(ack.name, CTState::CLAIMED);
 		}
-		itsParentPort->send();
-		break;
+		itsParentPort->send(answer);
+	}
+	break;
 
 	case CAL_STOPACK: {
 		CALStopackEvent			ack(event);
 		CONTROLReleasedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
+		answer.cntlrName = ack.name;
 		if (ack.status == SUCCESS) {
-			LOG_DEBUG ("Calserver successfully stopped");
-			setState(CTState::RELEASED);
+			LOG_DEBUG ("Calibration successfully stopped");
+			setObservationState(ack.name, CTState::RELEASED);
 			answer.result = CT_RESULT_NO_ERROR;
 		}
 		else {
 			LOG_ERROR("Stop of calibration failed, going to SUSPENDED mode");
-			setState(CT::State::SUSPENDED);
+			setObservationState(ack.name, CTState::SUSPENDED);
 			answer.result = CT_RESULT_CALSTOP_FAILED;
 		}
 		itsParentPort->send(answer);
@@ -530,16 +538,17 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 
 
 //
-// claimResources()
+// claimResources(name)
 //
-bool CalibrationControl::claimResources()
+bool CalibrationControl::claimResources(const string& name)
 {
+#if 0
 	// claim the resources:
 	ResourceAllocator::TRcuSubset 	rcuSubset;
 	for (TRCUMap::iterator it = m_rcuMap.begin(); it != m_rcuMap.end(); ++it) {
 		rcuSubset.set(it->first);
 	}
-	uint8 rcuControl  = getRcuControlValue(itsBandSelection);
+	uint8 rcuControl  = getRcuControlValue(itsBandFilter);
 
 	if(!_getResourceAllocator()->claimSRG(shared_from_this(),
 										  _getPriority(),
@@ -551,20 +560,23 @@ bool CalibrationControl::claimResources()
 	}
 
 	_getResourceAllocator()->logSRGallocation();
+#endif
 	return (true);
 }
+
 
 //
 // loadPVSSpropertySets
 //
 void	CalibrationControl::loadPVSSpropertySets()
 {
+#if 0
 	// load propertysets for the rcus
 	try {
 		for(vector<uint16>::iterator it = rcuVector.begin(); 
 													it != rcuVector.end(); ++it) {
 			char scopeString[300];
-			int rackRelNr,subRackRelNr,boardRelNr,apRelNr,rcuRelNr;
+			int  boardRelNr, apRelNr, rcuRelNr;
 			getRCURelNumbers((*it),rackRelNr,subRackRelNr,boardRelNr,apRelNr,rcuRelNr);
 			sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rackRelNr,subRackRelNr,boardRelNr,apRelNr,rcuRelNr);
 
@@ -578,43 +590,63 @@ void	CalibrationControl::loadPVSSpropertySets()
 	catch(Exception &e) {
 		LOG_FATAL(formatString("Error claiming SRG: %s",e.message().c_str()));
 	}
+#endif
 }
 
-//
-// startCalServer
-//
-void	CalibrationControl::startCalServer() 
-{
-	// send CALStartEvent
-	LOG_DEBUG ("Sending CALSTART to CAL server");
-	CALStartEvent calStartEvent;
-	calStartEvent.name   		   = getName();
-	calStartEvent.parent 		   = itsAntennaArray;
-	calStartEvent.nyquist_zone     = itsNyquistZone;
-	calStartEvent.rcucontrol.value = convertBandSelection(itsBandSelection);
 
-	calStartEvent.subset.reset(); // reset every bit
-	for (TRCUMap::iterator it = m_rcuMap.begin(); it != m_rcuMap.end(); ++it) {
-		calStartEvent.subset.set(it->first);
+//
+// startCalibration(name)
+//
+bool	CalibrationControl::startCalibration(const string& name) 
+{
+	// search observation
+	OIter		observation = itsObsMap.find(name);
+	if (observation == itsObsMap.end()) {
+		LOG_DEBUG_STR(name << " is unknown, ignoring event");
+		return(false);
 	}
 
+	// send CALStartEvent
+	CALStartEvent calStartEvent;
+	calStartEvent.name   	   = name;
+	calStartEvent.parent 	   = observation->second.antennaArray;
+	calStartEvent.nyquist_zone = observation->second.nyquistZone;
+	calStartEvent.rcumode().resize(1);
+	calStartEvent.rcumode()(0).setRaw(convertFilterSelection(observation->second.bandSelection));
+	calStartEvent.subset 	   = observation->second.RCUset;
+	LOG_DEBUG_STR("Sending CALSTART(" << name <<","<< calStartEvent.parent <<","<<
+				   calStartEvent.nyquist_zone <<","<< 
+				   convertFilterSelection(observation->second.bandSelection) <<")");
+
 	itsCalServer->send(calStartEvent);
+	return (true);
 }
 
 
 //
-// stopCalServer()
+// stopCalibration(name)
 //
-void	CalibrationControl::stopCalServer()
+bool	CalibrationControl::stopCalibration(const string&	name)
 {
+	// search observation
+	OIter		observation = itsObsMap.find(name);
+	if (observation == itsObsMap.end()) {
+		LOG_DEBUG_STR(name << " is unknown, ignoring event");
+		return(false);
+	}
+
 	// send CALStopEvent
-	LOG_DEBUG ("Sending CALSTOP to CAL server");
+	LOG_DEBUG_STR ("Sending CALSTOP(" << name << ") to CALserver");
 	CALStopEvent calStopEvent;
-	calStopEvent.name = getName();
+	calStopEvent.name = name;
 	itsCalServer->send(calStopEvent);
 
+#if 0
 	itsResourceAllocator->releaseSRG(shared_from_this()); // TODO
 	itsResourceAllocator->logSRGallocation();
+#endif
+
+	return (true);
 }
 
 //
@@ -632,6 +664,83 @@ void CalibrationControl::_disconnectedHandler(GCFPortInterface& port)
 	port.close();
 }
 
+
+//
+// addObservation(name)
+//
+bool CalibrationControl::addObservation(const string&	name)
+{
+	// Already in admin? return error.
+	if (itsObsMap.find(name) != itsObsMap.end()) {
+		LOG_DEBUG_STR(name << " already in admin, returning error");
+		return (false);
+	}
+
+	// find and read parameterset of this observation.
+	ParameterSet	theObsPS;
+	LOG_TRACE_OBJ_STR("Trying to readfile " << LOFAR_SHARE_LOCATION << "/" << name);
+	theObsPS.adoptFile(string(LOFAR_SHARE_LOCATION) + "/" + name);
+
+	ObsInfo_t		theNewObs;
+	theNewObs.state			= CTState::CREATED;
+	theNewObs.nyquistZone	= theObsPS.getInt16("Observation.nyquistZone");
+	theNewObs.sampleFreq	= theObsPS.getUint32("Observation.sampleClock");
+	theNewObs.bandSelection = theObsPS.getString("Observation.bandFilter");
+	theNewObs.antennaArray	= theObsPS.getString("Observation.antennaArray");
+	vector<uint16>	RCUnumbers(theObsPS.getUint16Vector("Observation.receiverList"));
+	if (RCUnumbers.empty()) {							// No receivers in list?
+		theNewObs.RCUset.set();							// assume all receivers
+	}
+	else {
+		theNewObs.RCUset.reset();						// clear set.
+		for (uint i = 0; i < RCUnumbers.size(); i++) {
+			theNewObs.RCUset.set(RCUnumbers[i]);		// set mentioned receivers
+		}
+	}
+
+	LOG_DEBUG_STR("Adding " << name << " to administration");
+	itsObsMap[name] = theNewObs;
+
+	return (true);
+}
+
+//
+// handleClaimEvent(observation)
+//
+uint16 CalibrationControl::handleClaimEvent(const string&	name)
+{
+	// search observation
+	OIter		observation = itsObsMap.find(name);
+	if (observation == itsObsMap.end()) {
+		LOG_DEBUG_STR(name << " is unknown, ignoring event");
+		return(CT_RESULT_CLAIM_FAILED);
+	}
+
+	// check if receivers are available
+	if (!claimResources(name)) {
+		LOG_ERROR_STR (name << ":failed to claim resources, staying in idle mode");
+		return (CT_RESULT_CLAIM_FAILED);
+	}
+
+	LOG_DEBUG_STR (name << ":resources claimed successful");
+	observation->second.state = CTState::CLAIMED;
+	return (CT_RESULT_NO_ERROR);
+}
+
+//
+// setObservationState(name, state)
+//
+void CalibrationControl::setObservationState(const string& 		name, 
+											 CTState::CTstateNr	newState)
+{
+	// search observation
+	OIter		observation = itsObsMap.find(name);
+	if (observation == itsObsMap.end()) {
+		return;
+	}
+
+	observation->second.state = newState;
+}
 
 }; // StationCU
 }; // LOFAR
