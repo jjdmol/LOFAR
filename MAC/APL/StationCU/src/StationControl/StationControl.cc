@@ -61,6 +61,10 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsExtPropertySet	(),
 	itsOwnPSinitialized (false),
 	itsExtPSinitialized (false),
+	itsChildControl		(0),
+	itsChildPort		(0),
+	itsParentControl	(0),
+	itsParentPort		(0),
 	itsTimerPort		(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
@@ -70,6 +74,20 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + "instanceNr");
 
 	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
+
+	// attach to child control task
+	itsChildControl = ChildControl::instance();
+	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", 
+									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
+	itsChildPort->open();		// will result in F_CONNECTED
+
+	// attach to parent control task
+	itsParentControl = ParentControl::instance();
+	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
+									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for Parentcontrol");
+	itsParentPort->open();		// will result in F_CONNECTED
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -180,11 +198,8 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-//		string	myPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
-//myPropSetName=myPropSetName.substr(8);
-								//new GCFMyPropertySet(myPropSetName.c_str(),
-//		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
-		LOG_DEBUG_STR ("Activating PropertySet " << PSN_STATION_CLOCK);
+		string	myPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
+		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
 		itsOwnPropertySet = GCFMyPropertySetPtr(
 								new GCFMyPropertySet(PSN_STATION_CLOCK,
 													 PST_STATION_CLOCK,
