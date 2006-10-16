@@ -69,19 +69,10 @@ namespace LOFAR
       // Destructor.
       virtual ~BBSStep();
 
-      // Return the name of this step.
-      const string& getName() const { return itsName; }
-
       // Return the full name of this step. The full name consists of the name
       // of this step, preceeded by that of its parent, etc., separated by
       // dots.
-      string getFullName() const;
-
-      // Return a pointer to the parent of this step.
-      const BBSStep* getParent() const { return itsParent; }
-
-      // Make \a parent the parent of this step.
-      void setParent(const BBSStep* parent) { itsParent = parent; }
+      string fullName() const;
 
       // Get all steps that this step consists of. The result will be a vector
       // containing pointers to all steps, sorted pre-order depth-first.
@@ -106,6 +97,38 @@ namespace LOFAR
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
       virtual void print(ostream& os) const;
+
+      // @name Accessor methods
+      // @{
+
+      // Return the name of this step.
+      string getName() const { return itsName; }
+
+      // Return a pointer to the parent of this step.
+      const BBSStep* getParent() const { return itsParent; }
+
+      // Make \a parent the parent of this step.
+      void setParent(const BBSStep* parent) { itsParent = parent; }
+
+      // Return the selection of baselines for this step.
+      Baselines baselines() const { return itsBaselines; }
+
+      // Return which correlation products should be used for this step.
+      Correlation correlation() const { return itsCorrelation; }
+
+      // Return the amount of integration that must be applied to the data.
+      Integration integration() const { return itsIntegration; }
+
+      // Return the sources in the source model for the current patch.
+      vector<string> sources() const { return itsSources; }
+
+      // Return the extra sources outside the current patch.
+      vector<string> extraSources() const { return itsExtraSources; }
+
+      // Return a list of instrument models to be used for this step.
+      vector<string> instrumentModels() const { return itsInstrumentModels; }
+
+      // @}
 
     protected:
       // Default constructor. Construct an empty BBSStep object and make it a
@@ -135,7 +158,6 @@ namespace LOFAR
       // Override the default values, "inherited" from the parent step object,
       // for those members that are specified in \a parSet.
       void setParms(const ACC::APS::ParameterSet& parSet);
-
 
       // Name of this step.
       string                 itsName;

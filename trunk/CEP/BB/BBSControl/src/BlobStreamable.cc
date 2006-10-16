@@ -85,10 +85,14 @@ namespace LOFAR
     // a proper object factory.
     BlobStreamable* BlobStreamable::create(const string& typeName)
     {
-      if      (typeName == "BBSMultiStep")  return new BBSMultiStep();
-      else if (typeName == "BBSSingleStep") return new BBSSingleStep();
-      else if (typeName == "BBSSolveStep")  return new BBSSolveStep();
-      else if (typeName == "BBSStrategy")   return new BBSStrategy();
+      if      (typeName == "BBSStrategy")     return new BBSStrategy();
+      else if (typeName == "BBSMultiStep")    return new BBSMultiStep();
+      else if (typeName == "BBSSolveStep")    return new BBSSolveStep();
+      else if (typeName == "BBSPredictStep")  return new BBSPredictStep();
+      else if (typeName == "BBSSubtractStep") return new BBSSubtractStep();
+      else if (typeName == "BBSCorrectStep")  return new BBSCorrectStep();
+      else if (typeName == "BBSShiftStep")    return new BBSShiftStep();
+      else if (typeName == "BBSRefitStep")    return new BBSRefitStep();
       else return 0;
     }
 

@@ -75,6 +75,18 @@ namespace LOFAR
       // written when write(BlobOStream&) is called.
       void shouldWriteSteps(bool doSteps) { itsWriteSteps = doSteps; }
 
+      // @name Accessor methods
+      // @{
+      string         dataSet()     const { return itsDataSet; }
+      BBDB           bbDB()        const { return itsBBDB; }
+      ParmDB         parmDB()      const { return itsParmDB; }
+      vector<string> stations()    const { return itsStations; }
+      string         inputData()   const { return itsInputData; }
+      DomainSize     domainSize()  const { return itsDomainSize; }
+      Correlation    correlation() const { return itsCorrelation; }
+      Integration    integration() const { return itsIntegration; }
+      // @}
+
     private:
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);

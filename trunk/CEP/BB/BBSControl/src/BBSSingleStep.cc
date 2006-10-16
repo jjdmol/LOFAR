@@ -91,14 +91,6 @@ namespace LOFAR
     }
 
 
-    const string& BBSSingleStep::classType() const 
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      static const string theType("BBSSingleStep");
-      return theType;
-    }
-
-
   } // namespace BBS
 
 } // namespace LOFAR

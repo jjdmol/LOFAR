@@ -26,427 +26,471 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSKernelProcessControl.h>
-
-#include <APS/ParameterSet.h>
-#include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
-#include <ParmDB/ParmDB.h>
-#include <ParmDB/ParmDBMeta.h>
+#include <BBSControl/DH_BlobStreamable.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSKernel/BBSKernelStructs.h>
 #include <BBSKernel/Prediffer.h>
 #include <BBSKernel/Solver.h>
+#include <ParmDB/ParmDB.h>
+#include <ParmDB/ParmDBMeta.h>
+#include <APS/ParameterSet.h>
+#include <Transport/TH_Socket.h>
+#include <Transport/CSConnection.h>
+#include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h>
+#include <Common/lofar_iomanip.h>
 
-#include <iostream>
-#include <iomanip>
-using namespace std;
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR 
 {
-namespace BBS 
-{
+  namespace BBS 
+  {
     using LOFAR::operator<<;
-        
-    BBSKernelProcessControl::BBSKernelProcessControl()
-    :   ProcessControl(),
-        itsPrediffer(0),
-        itsHistory(0)
-    {
-    }
+
+
+    //##----   P u b l i c   m e t h o d s   ----##//
     
-    // Destructor
+    BBSKernelProcessControl::BBSKernelProcessControl() :
+      ProcessControl(),
+      itsPrediffer(0), 
+      itsHistory(0),
+      itsDataHolder(0), 
+      itsTransportHolder(0), 
+      itsConnection(0)
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
+
+
     BBSKernelProcessControl::~BBSKernelProcessControl()
     {
-        delete itsPrediffer;
-        delete itsHistory;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      delete itsPrediffer;
+      delete itsHistory;
+      delete itsDataHolder;
+      delete itsTransportHolder;
+      delete itsConnection;
     }
 
-    // \name Command to control the processes.
-    // There are a dozen commands that can be sent to a application process
-    // to control its flow. The return values for these command are:<br>
-    // - True   - Command executed succesfully.
-    // - False  - Command could not be executed.
-    // 
-    // @{
 
-    // During the \c define state the process check the contents of the
-    // ParameterSet it received during start-up. When everthing seems ok the
-    // process constructs the communication channels for exchanging data
-    // with the other processes. The connection are NOT made in the stage.
-    boost::logic::tribool BBSKernelProcessControl::define()
+    tribool BBSKernelProcessControl::define()
     {
-        LOG_TRACE_FLOW("define()");
-        //LOFAR::ACC::APS::ParameterSet* parset = LOFAR::ACC::APS::globalParameterSet();
-        
-        // Get BBSController IP-address?
-        // Initialize some data holders?
-        
-        return true;
-    }
+      LOG_INFO("BBSKernelProcessControl::define()");
+      try {
+	// Create a new data holder.
+	itsDataHolder = new DH_BlobStreamable();
 
-    // When a process receives an \c init command it allocates the buffers it
-    // needs and makes the connections with the other processes. When the
-    // process succeeds in this it is ready for dataprocessing (or whatever
-    // task the process has).
-    boost::logic::tribool BBSKernelProcessControl::init()
-    {
-        LOG_TRACE_FLOW("init()");
-        
-        // Create connection with BBSController?
-        
-        return true;
+	// Create a new client TH_Socket. Do not connect yet.
+	itsTransportHolder = 
+	  new TH_Socket(globalParameterSet()->getString("BBSControl.server"),
+			globalParameterSet()->getString("BBSControl.port"),
+			true,         // sync
+			Socket::TCP,  // protocol
+			false);       // open socket now
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	  return false;
+      }
+      return true;
     }
 
-    // During the \c run phase the process does the work it is designed for.
-    // The run phase stays active until another command is send.
-    boost::logic::tribool BBSKernelProcessControl::run()
+
+    tribool BBSKernelProcessControl::init()
     {
-        LOG_TRACE_FLOW("run()");
-        
-        // Non-blocking receive from BBSControl
-        
-        // If received msg
-        bool status = true;
-/*        
-        if(...)
-        {
-            if(msg->type() == BBSStrategy::type())
-            {
-                status = handle(dynamic_cast<BBSStrategy*>(msg));
-            }
-            if(msg->type() == BBSPredictStep::type())
-            {
-                status = handle(dynamic_cast<BBSPredictStep*>(msg));
-            }
-            else if(msg->type() == BBSSubtractStep::type())
-            {
-                status = handle(dynamic_cast<BBSSubtractStep*>(msg));
-            }
-            else if(msg->type() == BBSCorrectStep::type())
-            {
-                status = handle(dynamic_cast<BBSCorrectStep*>(msg));
-            }
-            else if(msg->type() == BBSSolveStep::type())
-            {
-                status = handle(dynamic_cast<BBSSolveStep*>(msg));
-            }
-            else
-            {
-                LOG_ERROR("Received message of unknown type, skipped.")
-            }
-        }
-*/            
-        return status;
+      LOG_INFO("BBSKernelProcessControl::init()");
+      try {
+	// DH_BlobStreamable is initialized implicitly by its constructor.
+	ASSERT(itsDataHolder);
+	if (!itsDataHolder->isInitialized()) {
+	  LOG_ERROR("Initialization of DataHolder failed");
+	  return false;
+	}
+	// Connect the client socket to the server.
+	ASSERT(itsTransportHolder);
+	if (!itsTransportHolder->init()) {
+	  LOG_ERROR("Initialization of TransportHolder failed");
+	  return false;
+	}
+	// Create a new CSConnection object.
+	itsConnection = new CSConnection("RWConn", 
+					 itsDataHolder, 
+					 itsDataHolder, 
+					 itsTransportHolder);
+	if (!itsConnection || !itsConnection->isConnected()) {
+	  LOG_ERROR("Creation of Connection failed");
+	  return false;
+	}
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	return false;
+      }
+      // All went well.
+      return true;
     }
 
-    // With the \c pause command the process stops its run phase and starts
-    // waiting for another command. The \c condition argument contains the
-    // contition the process should use for ending the run phase. This
-    // condition is a key-value pair that can eg. contain a timestamp or a
-    // number of a datasample.
-    boost::logic::tribool BBSKernelProcessControl::pause(const string& condition)
+
+    tribool BBSKernelProcessControl::run()
     {
-        return false;
+      LOG_INFO("BBSKernelProcessControl::run()");
+
+      try {
+	// Blocking receive from BBSProcessControl
+	ASSERT(itsConnection);
+	if (itsConnection->read() == CSConnection::Error) {
+	  LOG_ERROR("Connection::read() failed");
+	  return false;
+	}
+	// Deserialize the received message.
+	ASSERT(itsDataHolder);
+	BlobStreamable* msg = itsDataHolder->deserialize();
+	if (!msg) {
+	  LOG_ERROR("Failed to deserialize message");
+	  return false;
+	}
+	LOG_DEBUG_STR("Received a " << itsDataHolder->classType() 
+		      << " object");
+
+	// If the message contains a `strategy', handle the `strategy'.
+	BBSStrategy* strategy = dynamic_cast<BBSStrategy*>(msg);
+	if (strategy) {
+	  return handle(strategy);
+	}
+	// If the message contains a `step', handle the `step'.
+	BBSStep* step = dynamic_cast<BBSStep*>(msg);
+	if (step) {
+	  return handle(step);
+	}
+	// We received a message we can't handle
+	LOG_WARN_STR("Received message of unsupported type `" << 
+		     itsDataHolder->classType() << "'. Skipped.");
+	return false;
+
+	// Should we send the result back?
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	return false;
+      }
     }
 
-    // \c Quit stops the process.
-    // The process \b must call \c unregisterAtAC at ProcControlServer during 
-    // the execution of this command to pass the final results to the 
-    // Application Controller.
-    boost::logic::tribool BBSKernelProcessControl::quit()
+
+    tribool BBSKernelProcessControl::pause(const string& /*condition*/)
     {
-        LOG_TRACE_FLOW("quit()");
-        return true;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return false;
     }
 
-    // With the \c snapshot command the process is instructed to save itself
-    // in a database is such a way that on another moment in time it can
-    // be reconstructed and can continue it task.<br>
-    // The \c destination argument contains database info the process
-    // must use to save itself.
-    boost::logic::tribool BBSKernelProcessControl::snapshot(const string& destination)
+
+    tribool BBSKernelProcessControl::quit()
     {
-        return false;
+      LOG_INFO("BBSKernelProcessControl::quit()");
+      return true;
     }
 
-    // \c Recover reconstructs the process as it was saved some time earlier.
-    // The \c source argument contains the database info the process must use
-    // to find the information it needs.
-    boost::logic::tribool BBSKernelProcessControl::recover(const string& source)
+
+    tribool BBSKernelProcessControl::snapshot(const string& /*destination*/)
     {
-        return false;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return false;
     }
 
-    // With \c reinit the process receives a new parameterset that it must use
-    // to reinitialize itself.
-    boost::logic::tribool BBSKernelProcessControl::reinit(const string& configID)
-    {
-        return false;
-    }
-    // @}
 
-    // Define a generic way to exchange info between client and server.
-    std::string BBSKernelProcessControl::askInfo(const string& keylist)
+    tribool BBSKernelProcessControl::recover(const string& /*source*/)
     {
-        return std::string("");
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return false;
     }
 
-    // This is somewhat hairy: convert from struct Correlation to struct CorrelationMask, which are
-    // basically the same. However, one is defined in the BBSControl package and the other in the
-    // BBSKernel package. It may be better to move the Correlation struct, and also the Baselines struct,
-    // to the BBSKernel package and then have BBSControl depend on that.
-    //
-    // Note: Correlation::NONE is meaningless; it is an error if this should occur.
-    //
-    /*
-    CorrelationMask BBSKernelProcessControl::convertCorrelationToMask(const Correlation &correlation)
+
+    tribool BBSKernelProcessControl::reinit(const string& /*configID*/)
     {
-        CorrelationMask mask;
-        
-        switch(correlation.selection)
-        {
-            case Correlation::AUTO:
-                mask.selection = CorrelationMask::AUTO;
-                break;
-            case Correlation::CROSS:
-                mask.selection = CorrelationMask::CROSS;
-                break;
-            default:
-                mask.selection = CorrelationMask::ALL;
-                break;
-        }
-        mask.type = correlation.type;        
-        
-        return mask;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return false;
     }
-    */
-    
-    // This is somewhat hairy: convert a BBSStep to a context. If the issue mentioned above
-    // at convertCorrelationToMask() is resolved, this method will become simpler. The baselines
-    // and correlation could then be copied directly.
-    void BBSKernelProcessControl::convertStepToContext(const BBSStep *step, Context &context)
+
+
+    std::string BBSKernelProcessControl::askInfo(const string& /*keylist*/)
     {
-        ASSERT(step->itsBaselines.station1.size() == step->itsBaselines.station2.size());
-        
-        context.baselines = step->itsBaselines;
-        /*
-        vector<string>::const_iterator it1 = step->itsBaselines.station1.begin();
-        vector<string>::const_iterator it2 = step->itsBaselines.station2.begin();
-        while(it1 != step->itsBaselines.station1.end())
-        {
-            context.baselines.push_back(pair<string, string>(*it1, *it2));
-            ++it1;
-            ++it2;        
-        }
-        */
-        context.correlation = step->itsCorrelation;
-        context.sources = step->itsSources;        
-        context.instrumentModel = step->itsInstrumentModels;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return std::string("");
     }
-    
-    
+
+
     bool BBSKernelProcessControl::handle(const BBSStrategy *strategy)
     {
-        delete itsHistory;
-        itsHistory = 0;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      try
+      {
+	// Pre-condition check
+	ASSERT(strategy);
+
+	delete itsHistory;
+	itsHistory = 0;
         
-        if(!strategy->itsParmDB.history.empty())
-        {
-            LOFAR::ParmDB::ParmDBMeta historyDBMeta("aips", strategy->itsParmDB.history);
-            itsHistory = new LOFAR::ParmDB::ParmDB(historyDBMeta);
-        }
+	if(!strategy->parmDB().history.empty())
+	{
+	  LOFAR::ParmDB::ParmDBMeta historyDBMeta("aips", 
+						  strategy->parmDB().history);
+	  itsHistory = new LOFAR::ParmDB::ParmDB(historyDBMeta);
+	}
         
-        // Create a new Prediffer.
-        delete itsPrediffer;
-        itsPrediffer = new Prediffer(   strategy->itsDataSet,
-                                        strategy->itsInputData,
-                                        strategy->itsParmDB.localSky,
-                                        strategy->itsParmDB.instrument,
-                                        0,
-                                        false);
+	// Create a new Prediffer.
+	delete itsPrediffer;
+	itsPrediffer = new Prediffer(strategy->dataSet(),
+				     strategy->inputData(),
+				     strategy->parmDB().localSky,
+				     strategy->parmDB().instrument,
+				     0,
+				     false);
         
-        // Set data selection and work domain.
-        bool status;
-        status = itsPrediffer->setSelection(strategy->itsStations, strategy->itsCorrelation)
-                 && itsPrediffer->setWorkDomain(-1, -1, 0, 1e12);
-        return status;
+	// Set data selection and work domain.
+	bool status;
+	status = itsPrediffer->setSelection(strategy->stations(), 
+					    strategy->correlation())
+	  && itsPrediffer->setWorkDomain(-1, -1, 0, 1e12);
+	return status;
+      }
+
+      catch (Exception& e)
+      {
+	LOG_WARN_STR(e);
+	return false;
+      }
+    }
+    
+
+    bool BBSKernelProcessControl::handle(const BBSStep* bs)
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      {
+	const BBSPredictStep* step = dynamic_cast<const BBSPredictStep*>(bs);
+	if (step) return doHandle(step);
+      }
+      {
+	const BBSSubtractStep* step = dynamic_cast<const BBSSubtractStep*>(bs);
+	if (step) return doHandle(step);
+      }
+      {
+	const BBSCorrectStep* step = dynamic_cast<const BBSCorrectStep*>(bs);
+	if (step) return doHandle(step);
+      }
+      {
+	const BBSSolveStep* step = dynamic_cast<const BBSSolveStep*>(bs);
+	if (step) return doHandle(step);
+      }
+      return false;
+    }
+
+
+    //##----   P r i v a t e   m e t h o d s   ----##//
+    
+    void BBSKernelProcessControl::convertStepToContext(const BBSStep *step, Context &context)
+    {
+      ASSERT(step->baselines().station1.size() == 
+	     step->baselines().station2.size());
+      
+      context.baselines = step->baselines();
+      /*
+	vector<string>::const_iterator it1 = step->itsBaselines.station1.begin();
+	vector<string>::const_iterator it2 = step->itsBaselines.station2.begin();
+	while(it1 != step->itsBaselines.station1.end())
+	{
+	context.baselines.push_back(pair<string, string>(*it1, *it2));
+	++it1;
+	++it2;        
+	}
+      */
+      context.correlation = step->correlation();
+      context.sources = step->sources();        
+      context.instrumentModel = step->instrumentModels();
     }
     
     
-    bool BBSKernelProcessControl::handle(const BBSPredictStep *step)
+    bool BBSKernelProcessControl::doHandle(const BBSPredictStep *step)
     {
-        ASSERTSTR(itsPrediffer, "No Prediffer available.");
-        ASSERTSTR(step, "Step corrupted.");
-        
-        PredictContext context;
-        convertStepToContext(step, context);
-        context.outputColumn = step->itsOutputData;
-        
-        // Set context.
-        if(!itsPrediffer->setContext(context))
-        {
-            return false;
-        }
-        
-        // Execute predict.
-        itsPrediffer->predictVisibilities();
-        return true;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      ASSERTSTR(itsPrediffer, "No Prediffer available.");
+      ASSERTSTR(step, "Step corrupted.");
+      
+      PredictContext context;
+      convertStepToContext(step, context);
+      context.outputColumn = step->outputData();
+      
+      // Set context.
+      if(!itsPrediffer->setContext(context))
+      {
+	return false;
+      }
+      
+      // Execute predict.
+      itsPrediffer->predictVisibilities();
+      return true;
     }
     
     
-    bool BBSKernelProcessControl::handle(const BBSSubtractStep *step)
+    bool BBSKernelProcessControl::doHandle(const BBSSubtractStep *step)
     {
-        ASSERTSTR(itsPrediffer, "No Prediffer available.");
-        ASSERTSTR(step, "Step corrupted.");
+      ASSERTSTR(itsPrediffer, "No Prediffer available.");
+      ASSERTSTR(step, "Step corrupted.");
         
-        SubtractContext context;
-        convertStepToContext(step, context);
-        context.outputColumn = step->itsOutputData;
+      SubtractContext context;
+      convertStepToContext(step, context);
+      context.outputColumn = step->outputData();
         
-        // Set context.
-        if(!itsPrediffer->setContext(context))
-        {
-            return false;
-        }
+      // Set context.
+      if(!itsPrediffer->setContext(context))
+      {
+	return false;
+      }
         
-        // Execute subtract.
-        itsPrediffer->subtractVisibilities();
-        return true;
+      // Execute subtract.
+      itsPrediffer->subtractVisibilities();
+      return true;
     }
 
     
-    bool BBSKernelProcessControl::handle(const BBSCorrectStep *step)
+    bool BBSKernelProcessControl::doHandle(const BBSCorrectStep *step)
     {
-        ASSERTSTR(itsPrediffer, "No Prediffer available.");
-        ASSERTSTR(step, "Step corrupted.");
+      ASSERTSTR(itsPrediffer, "No Prediffer available.");
+      ASSERTSTR(step, "Step corrupted.");
         
-        CorrectContext context;
-        convertStepToContext(step, context);
-        context.outputColumn = step->itsOutputData;
+      CorrectContext context;
+      convertStepToContext(step, context);
+      context.outputColumn = step->outputData();
         
-        // Set context.
-        if(!itsPrediffer->setContext(context))
-        {
-            return false;
-        }
+      // Set context.
+      if(!itsPrediffer->setContext(context))
+      {
+	return false;
+      }
         
-        // Execute correct.
-        itsPrediffer->correctVisibilities();
-        return true;
+      // Execute correct.
+      itsPrediffer->correctVisibilities();
+      return true;
     }
         
     
-    bool BBSKernelProcessControl::handle(const BBSSolveStep *step)
+    bool BBSKernelProcessControl::doHandle(const BBSSolveStep *step)
     {
-        ASSERTSTR(itsPrediffer, "No Prediffer available.");
-        ASSERTSTR(step, "Step corrupted.");
+      ASSERTSTR(itsPrediffer, "No Prediffer available.");
+      ASSERTSTR(step, "Step corrupted.");
         
-        // Construct context.
-        GenerateContext context;
-        convertStepToContext(step, context);
-        context.unknowns = step->itsParms;
-        context.excludedUnknowns = step->itsExclParms;
+      // Construct context.
+      GenerateContext context;
+      convertStepToContext(step, context);
+      context.unknowns = step->parms();
+      context.excludedUnknowns = step->exclParms();
         
-        // Create solve domains. For now this just splits the work domain in a rectangular grid,
-        // with cells of size step->itsDomainSize. Should become more interesting in the near future.
-        const MeqDomain &workDomain = itsPrediffer->getWorkDomain();
+      // Create solve domains. For now this just splits the work domain in a rectangular grid,
+      // with cells of size step->itsDomainSize. Should become more interesting in the near future.
+      const MeqDomain &workDomain = itsPrediffer->getWorkDomain();
         
-        const int freqCount = (int) ceil((workDomain.endX() - workDomain.startX()) / step->itsDomainSize.bandWidth);
-        const int timeCount = (int) ceil((workDomain.endY() - workDomain.startY()) / step->itsDomainSize.timeInterval);
+      const int freqCount = (int) ceil((workDomain.endX() - workDomain.startX()) / step->domainSize().bandWidth);
+      const int timeCount = (int) ceil((workDomain.endY() - workDomain.startY()) / step->domainSize().timeInterval);
 
-        double timeOffset = workDomain.startY();
-        double timeSize = step->itsDomainSize.timeInterval;
+      double timeOffset = workDomain.startY();
+      double timeSize = step->domainSize().timeInterval;
         
-        int time = 0;
-        while(time < timeCount)
-        {
-            double freqOffset = workDomain.startX();
-            double freqSize = step->itsDomainSize.bandWidth;
+      int time = 0;
+      while(time < timeCount)
+      {
+	double freqOffset = workDomain.startX();
+	double freqSize = step->domainSize().bandWidth;
 
-            if(timeOffset + timeSize > workDomain.endY())
-            {
-                timeSize = workDomain.endY() - timeOffset;
-            }
+	if(timeOffset + timeSize > workDomain.endY())
+	{
+	  timeSize = workDomain.endY() - timeOffset;
+	}
 
-            int freq = 0;
-            while(freq < freqCount)
-            {
-                if(freqOffset + freqSize > workDomain.endX())
-                {
-                    freqSize = workDomain.endX() - freqOffset;
-                }
+	int freq = 0;
+	while(freq < freqCount)
+	{
+	  if(freqOffset + freqSize > workDomain.endX())
+	  {
+	    freqSize = workDomain.endX() - freqOffset;
+	  }
 
-                context.solveDomains.push_back(MeqDomain(freqOffset, freqOffset + freqSize, timeOffset, timeOffset + timeSize));
+	  context.solveDomains.push_back(MeqDomain(freqOffset, freqOffset + freqSize, timeOffset, timeOffset + timeSize));
 
-                freqOffset += freqSize;
-                freq++;
-            }
+	  freqOffset += freqSize;
+	  freq++;
+	}
 
-            timeOffset += timeSize;
-            time++;
-        }
+	timeOffset += timeSize;
+	time++;
+      }
     
-        // Set context.
-        if(!itsPrediffer->setContext(context))
-        {
-            return false;
-        }
+      // Set context.
+      if(!itsPrediffer->setContext(context))
+      {
+	return false;
+      }
         
-        cout << "Solve domains:" << endl;
-        cout << itsPrediffer->getSolveDomains() << endl;
+      cout << "Solve domains:" << endl;
+      cout << itsPrediffer->getSolveDomains() << endl;
         
-        // Initialize the solver.
-        Solver solver;
-        solver.initSolvableParmData(1, itsPrediffer->getSolveDomains(), itsPrediffer->getWorkDomain());
-        solver.setSolvableParmData(itsPrediffer->getSolvableParmData(), 0);
-        itsPrediffer->showSettings();
+      // Initialize the solver.
+      Solver solver;
+      solver.initSolvableParmData(1, itsPrediffer->getSolveDomains(), itsPrediffer->getWorkDomain());
+      solver.setSolvableParmData(itsPrediffer->getSolvableParmData(), 0);
+      itsPrediffer->showSettings();
 
-        // Main iteration loop.
-        unsigned int iteration = 0;
-        bool converged = false;
-        while(iteration < step->itsMaxIter && !converged)
-        {
-            // Generate normal equations and pass them to the solver.
-            vector<casa::LSQFit> equations;
-            itsPrediffer->generateEquations(equations);
-            solver.mergeFitters(equations, 0);
+      // Main iteration loop.
+      unsigned int iteration = 0;
+      bool converged = false;
+      while(iteration < step->maxIter() && !converged)
+      {
+	// Generate normal equations and pass them to the solver.
+	vector<casa::LSQFit> equations;
+	itsPrediffer->generateEquations(equations);
+	solver.mergeFitters(equations, 0);
 
-            // Do one Levenberg-Maquardt step.
-            solver.solve(false);
+	// Do one Levenberg-Maquardt step.
+	solver.solve(false);
             
-            // Optionally log to history.
-            if(itsHistory)
-            {
-                solver.log(*itsHistory, step->itsName);
-            }
+	// Optionally log to history.
+	if(itsHistory)
+	{
+	  solver.log(*itsHistory, step->getName());
+	}
 
-            // Check for convergence.
-            int convergedSolveDomains = 0;
-            for(unsigned int i = 0; i < context.solveDomains.size(); ++i)
-            {
-                Quality quality = solver.getQuality(i);
-                if(quality.itsChi < step->itsEpsilon)
-                {
-                    convergedSolveDomains++;
-                }
-            }
-            converged = (((double) convergedSolveDomains) / context.solveDomains.size()) > step->itsMinConverged;
+	// Check for convergence.
+	int convergedSolveDomains = 0;
+	for(unsigned int i = 0; i < context.solveDomains.size(); ++i)
+	{
+	  Quality quality = solver.getQuality(i);
+	  if(quality.itsChi < step->epsilon())
+	  {
+	    convergedSolveDomains++;
+	  }
+	}
+	converged = (((double) convergedSolveDomains) / context.solveDomains.size()) > step->minConverged();
             
-            cout << "iteration " << iteration << ":  " << setprecision(10) << solver.getSolvableValues(0) << endl;
-            cout << "solve domains converged: " << convergedSolveDomains << "/" << context.solveDomains.size() <<
-                " (" << (((double) convergedSolveDomains) / context.solveDomains.size() * 100.0) << "%)" << endl;
+	cout << "iteration " << iteration << ":  " << setprecision(10) << solver.getSolvableValues(0) << endl;
+	cout << "solve domains converged: " << convergedSolveDomains << "/" << context.solveDomains.size() <<
+	  " (" << (((double) convergedSolveDomains) / context.solveDomains.size() * 100.0) << "%)" << endl;
 
-            // Send updates back to the Prediffer.
-            itsPrediffer->updateSolvableParms(solver.getSolvableParmData());
+	// Send updates back to the Prediffer.
+	itsPrediffer->updateSolvableParms(solver.getSolvableParmData());
             
-            iteration++;
-        }
+	iteration++;
+      }
         
-        //cout << "Writing solutions into ParmDB ..." << endl;
-        //itsPrediffer->writeParms();
-        return true;
+      //cout << "Writing solutions into ParmDB ..." << endl;
+      //itsPrediffer->writeParms();
+      return true;
     }
-} // namespace BBS
+
+  } // namespace BBS
+
 } // namespace LOFAR

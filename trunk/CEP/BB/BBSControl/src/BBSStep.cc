@@ -52,11 +52,11 @@ namespace LOFAR
     }
 
 
-    string BBSStep::getFullName() const
+    string BBSStep::fullName() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       string name;
-      if (itsParent) name = itsParent->getFullName() + ".";
+      if (itsParent) name = itsParent->fullName() + ".";
       name += itsName;
       return name;
     }
@@ -161,7 +161,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       os << "Step: " << itsName;
       Indent id;  // add an extra indentation level
-      os << endl << indent << "Full name: " << getFullName()
+      os << endl << indent << "Full name: " << fullName()
 	 << endl << indent << itsBaselines
 	 << endl << indent << itsCorrelation
 	 << endl << indent << itsIntegration
