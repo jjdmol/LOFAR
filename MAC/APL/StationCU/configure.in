@@ -78,6 +78,7 @@ src/Makefile
 src/DigitalBoardControl/Makefile
 src/BeamControl/Makefile
 src/CalibrationControl/Makefile
+src/StationControl/Makefile
 Makefile
 StationCU.spec
 )
