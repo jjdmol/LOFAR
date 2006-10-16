@@ -29,6 +29,7 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <Controller_Protocol.ph>
@@ -165,7 +166,7 @@ bool ChildControl::startChild (const string&		aName,
 	string			prefix = wholeSet.getString("prefix");
 
 	// Create a parameterset with software related issues.
-	string	cntlrSetName(formatString("%s/%s", LOFAR_SHARE_LOCATION, aName.c_str()));
+	string	cntlrSetName(formatString("%s/%s", LOFAR_SHARE_LOCATION, sharedControllerName(aName).c_str()));
 	LOG_DEBUG_STR("Creating parameterfile: " << cntlrSetName);
 	// first add the controller specific stuff
 	string	nodeName(parsetNodeName(aCntlrType));
