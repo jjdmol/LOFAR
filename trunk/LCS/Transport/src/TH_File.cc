@@ -36,8 +36,6 @@ TH_File::TH_File():
   itsOutFile(NULL)
 {
   LOG_TRACE_FLOW("TH_File default constructor");
-  sprintf(itsSeparator,"TH_FILE");
-  itsSepLen = strlen(itsSeparator) + 1;
 }
 
 TH_File::TH_File(string aFileName,
@@ -48,8 +46,6 @@ TH_File::TH_File(string aFileName,
   itsOutFile(NULL)
 { 
   LOG_TRACE_FLOW("TH_File constructor"); 
-  sprintf(itsSeparator,"TH_FILE");
-  itsSepLen = strlen(itsSeparator) + 1;
 }
 
 TH_File::~TH_File()
@@ -91,16 +87,7 @@ bool TH_File::recvBlocking(void* buf, int nbytes, int, int, DataHolder*)
       int n_read;
       n_read = fread(buf, 1, nbytes, itsInFile);
       ASSERTSTR (n_read == nbytes, "TH_File::recvBlocking not enough bytes have been read");
-      LOG_TRACE_CALC_STR( "Read main block " << n_read ); 
-      char mySep[255];
-      n_read = fread(mySep,
-		     1,
-		     itsSepLen,
-		     itsInFile);
-      LOG_TRACE_CALC_STR( "Read separator block " << n_read << " : " << mySep ); 
-      ASSERT((n_read == itsSepLen) && (strncmp(itsSeparator,mySep, itsSepLen)== 0));
-
-      LOG_TRACE_COND_STR( "Read from File " << itsFileName );
+      LOG_TRACE_CALC_STR( "Read block " << n_read << " bytes from " << itsFileName ); 
     } else {
       LOG_ERROR_STR( "Error reading from file " << itsFileName );
       result = false;	
@@ -139,15 +126,6 @@ bool TH_File::sendBlocking(void* buf, int nbytes, int, DataHolder*)
       int n_written;
       n_written = fwrite(buf, 1, nbytes, itsOutFile);
       ASSERTSTR(n_written == nbytes, "TH_File::sendBlocking not enough bytes have been written");
-      n_written = fwrite(itsSeparator,
-			 1,
-			 itsSepLen,
-			 itsOutFile);
-      ASSERT(n_written == itsSepLen);
-      LOG_TRACE_COND_STR ( "Write to File " << itsFileName 
-			   << " (" << nbytes 
-			   << "," << itsSepLen 
-			   << ") bytes" );
     } else {
       LOG_ERROR_STR( "Error writing to file" << itsFileName);
       result = false;	
