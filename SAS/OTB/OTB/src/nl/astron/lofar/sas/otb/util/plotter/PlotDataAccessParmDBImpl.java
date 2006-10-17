@@ -107,46 +107,43 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         if(parmDB == null){
             this.initiateConnectionToParmDB(constraints);
         }
+        
         HashMap<String,Object> parameterConstraints = (HashMap<String,Object>)constraints;
-        
         String[] constraintsArray = (String[])parameterConstraints.get(new String("PARMDBCONSTRAINTS"));
-        
+
         HashMap<String,Object> returnMap = new HashMap<String, Object>();
-        
+
         if(parmDB != null){
-            
-            Vector names = getNames(constraintsArray[0]);
-            
-            if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
-                
-                returnMap.put(PlotConstants.DATASET_NAME,"ParmDB dataset '"+constraintsArray[0]+"'");
-                
-                TimeZone utcZone = TimeZone.getTimeZone("UTC");
-                
-                utcZone.setDefault(utcZone);
-                
-                Calendar aCalendar = Calendar.getInstance(utcZone);
-                
-                Date utcDate = aCalendar.getTime();
-                
-                //Test code to accomplish MJD notation
-                
-                int epoch_unix_to_julian = 2440588;
-                
-                double curDate = utcDate.getTime();
-                
-                double millis = (1000*60*60*24);
-                
-                double floorDivide = (curDate >= 0) ? curDate / millis : ((curDate+1)/millis) -1;
-                
-                double julianDay = epoch_unix_to_julian + floorDivide;
-                
-                double modifiedJulianDay = julianDay - 2400000.5;
-                
-                returnMap.put(PlotConstants.DATASET_SUBNAME,"Generated at "+ utcDate.toString() + " MJD: "+modifiedJulianDay);
-                
+            if(constraintsArray.length == this.requiredDataConstraints){
                 String tableName = constraintsArray[7];
-                if(tableName!= null){
+
+                LinkedList<HashMap<String,Object>> values = null;
+                Vector<String> nameFilter = new Vector();
+                nameFilter.add(constraintsArray[0]);
+                if(tableName.equalsIgnoreCase("History")){
+                    values = getParmHistoryValues(nameFilter,constraintsArray);
+                }else{
+                    values = getParmValues(nameFilter,constraintsArray);
+                }
+                
+                if(values != null && values.size() > 0){
+                    returnMap.put(PlotConstants.DATASET_NAME,"ParmDB dataset '"+constraintsArray[0]+"'");
+
+                    TimeZone utcZone = TimeZone.getTimeZone("UTC");
+                    utcZone.setDefault(utcZone);
+                    Calendar aCalendar = Calendar.getInstance(utcZone);
+                    Date utcDate = aCalendar.getTime();
+
+                    //Test code to accomplish MJD notation
+                    int epoch_unix_to_julian = 2440588;
+                    double curDate = utcDate.getTime();
+                    double millis = (1000*60*60*24);
+                    double floorDivide = (curDate >= 0) ? curDate / millis : ((curDate+1)/millis) -1;
+                    double julianDay = epoch_unix_to_julian + floorDivide;
+                    double modifiedJulianDay = julianDay - 2400000.5;
+
+                    returnMap.put(PlotConstants.DATASET_SUBNAME,"Generated at "+ utcDate.toString() + " MJD: "+modifiedJulianDay);
+
                     if(tableName.equalsIgnoreCase("History")){
                         returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Iteration");
                         returnMap.put(PlotConstants.DATASET_XAXISUNIT,"");
@@ -154,7 +151,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                         returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Value");
                         returnMap.put(PlotConstants.DATASET_YAXISUNIT,"");
                         returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
-                        returnMap.put(PlotConstants.DATASET_VALUES,this.getParmHistoryValues(names,constraintsArray));
+                        returnMap.put(PlotConstants.DATASET_VALUES,values);
                     }else{
                         returnMap.put(PlotConstants.DATASET_XAXISLABEL,"Frequency");
                         returnMap.put(PlotConstants.DATASET_XAXISUNIT,"(Hz)");
@@ -162,21 +159,16 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                         returnMap.put(PlotConstants.DATASET_YAXISLABEL,"Bandpass Gain");
                         returnMap.put(PlotConstants.DATASET_YAXISUNIT,"");
                         returnMap.put(PlotConstants.DATASET_YAXISTYPE,"SPATIAL");
-                        returnMap.put(PlotConstants.DATASET_VALUES,getParmValues(names,constraintsArray));
-                        
+                        returnMap.put(PlotConstants.DATASET_VALUES,values);
                     }
+                    
+                }else{
+                    throw new PlotterDataAccessException("No results were found in the ParmDB table(s) using the given parameter name filter ( " + nameFilter + " )");
                 }
-                
-            }else if (constraintsArray.length != this.requiredDataConstraints){
-                
+                    
+            }else{
                 throw new PlotterDataAccessException("An invalid amount of parameters (" +constraintsArray.length+" instead of " +this.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
-                
-            }else if (names.size() < 1){
-                
-                throw new PlotterDataAccessException("No results were found in the ParmDB table(s) using the given parameter name filter ( "+constraintsArray[0]+" )");
-                
             }
-            
         }
         return returnMap;
     }
@@ -224,46 +216,51 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     public HashMap<String,Object> updateData(HashMap<String,Object> currentData, Object constraints) throws PlotterDataAccessException{
         
         if(parmDB == null){
-            
             this.initiateConnectionToParmDB(constraints);
-            
         }
+
         try{
-            
             LinkedList<HashMap<String,Object>> currentValuesInPlot = (LinkedList<HashMap<String,Object>>)currentData.get(PlotConstants.DATASET_VALUES);
-            
             HashMap<String,Object> operatorsOnDataset = (HashMap<String,Object>)constraints;
             
             if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_ADD)){
                 HashMap<String,Object> addDataSet = (HashMap<String,Object>)operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_ADD);
                 String[] constraintsArray = (String[])addDataSet.get("PARMDBCONSTRAINTS");
-                Vector names = getNames(constraintsArray[0]);
-                
-                if(names != null && names.size()>=1 && constraintsArray.length == this.requiredDataConstraints){
-                    HashSet<HashMap<String,Object>> toBeAddedValueObjects = new HashSet<HashMap<String,Object>>();
-                    
+
+                if(constraintsArray.length == this.requiredDataConstraints){
                     String tableName = constraintsArray[7];
-                    LinkedList<HashMap<String,Object>> newParmValues = new LinkedList<HashMap<String,Object>>();
-                    if(tableName!= null){
-                        if(tableName.equalsIgnoreCase("History")){
-                            newParmValues = getParmHistoryValues(names,constraintsArray);
-                        }else{
-                            newParmValues = getParmValues(names,constraintsArray);
-                        }
+
+                    LinkedList<HashMap<String,Object>> newParmValues = null;
+                    Vector<String> nameFilter = new Vector();
+                    nameFilter.add(constraintsArray[0]);
+                    if(tableName.equalsIgnoreCase("History")){
+                        newParmValues = getParmHistoryValues(nameFilter,constraintsArray);
+                    }else{
+                        newParmValues = getParmValues(nameFilter,constraintsArray);
                     }
-                    for(HashMap<String,Object> parmValue : newParmValues){
-                        boolean addData = true;
-                        for(HashMap<String,Object> parmValue2 : currentValuesInPlot){
-                            String compareValue = (String)parmValue2.get(PlotConstants.DATASET_VALUELABEL);
-                            if(parmValue.get(PlotConstants.DATASET_VALUELABEL).equals(compareValue)){
-                                addData = false;
+                
+                    if(newParmValues != null && newParmValues.size() > 0){
+                        HashSet<HashMap<String,Object>> toBeAddedValueObjects = new HashSet<HashMap<String,Object>>();
+                        
+                        for(HashMap<String,Object> parmValue : newParmValues){
+                            boolean addData = true;
+                            for(HashMap<String,Object> parmValue2 : currentValuesInPlot){
+                                String compareValue = (String)parmValue2.get(PlotConstants.DATASET_VALUELABEL);
+                                if(parmValue.get(PlotConstants.DATASET_VALUELABEL).equals(compareValue)){
+                                    addData = false;
+                                }
+                            }
+                            if(addData){
+                                toBeAddedValueObjects.add(parmValue);
                             }
                         }
-                        if(addData){
-                            toBeAddedValueObjects.add(parmValue);
-                        }
+                        currentValuesInPlot.addAll(toBeAddedValueObjects);
+                    }else{
+                        throw new PlotterDataAccessException("No results were found in the ParmDB table(s) using the given parameter name filter ( " + nameFilter + " )");
                     }
-                    currentValuesInPlot.addAll(toBeAddedValueObjects);
+                    
+                }else{
+                    throw new PlotterDataAccessException("An invalid amount of parameters (" +constraintsArray.length+" instead of " +this.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
                 }
             } else if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
                 
@@ -617,7 +614,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     private LinkedList<HashMap<String,Object>> getParmHistoryValues(Vector names, String[] constraintsArray) throws PlotterDataAccessException{
         LinkedList<HashMap<String,Object>> returnList = new LinkedList<HashMap<String,Object>>();
         
-        for(int n = 0; n < names.size();n++) {
+        for(int n = 0; n < names.size(); n++) {
             /*
             Vector paramValues;
              
