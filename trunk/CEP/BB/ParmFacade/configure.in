@@ -51,10 +51,12 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(CEP/BB/BBS,BBS,,1,BBS/MNS/MeqParmFunklet.h)
+lofar_INTERNAL(CEP/BB/BBSKernel,BBSKernel,,1,BBSKernel/MNS/MeqParmFunklet.h)
+lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
+
 lofar_AIPSPP(1,"-ltables -lscimath -lscimath_f -lcasa")
-lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
-lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)
+#lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
+#lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)
 
 dnl
 dnl Output Makefiles
