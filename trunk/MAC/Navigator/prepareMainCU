@@ -11,6 +11,12 @@ fi
 mainSysName="MCU001"
 
 #
+# Set DBSynchronisation to DB number (can be found in list later)
+#
+PVSStoolSyncTypes -system 61 $mainSysName -project $1
+
+
+#
 # set distributed system on in the project
 #
 cp config/config config/config.orig
