@@ -21,16 +21,17 @@
 //# $Id$
 
 #include <ParmFacade/ParmFacade.h>
-#include <BBS/MNS/MeqRequest.h>
-#include <BBS/MNS/MeqParmFunklet.h>
-#include <BBS/MNS/MeqResult.h>
-#include <BBS/MNS/MeqMatrix.h>
+#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/MeqParmFunklet.h>
+#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/MNS/MeqMatrix.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <casa/Utilities/Regex.h>
 
 using namespace std;
 using namespace casa;
+using namespace LOFAR::BBS;
 
 // Create tParmFacade.in_mep with parmdb using:
 //   create tablename='tParmFacade.in_mep'
