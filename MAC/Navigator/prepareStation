@@ -11,6 +11,10 @@ fi
 StationName="CS010"
 
 
+#
+# Set DBSynchronisation to DB number (can be found in list later)
+#
+PVSStoolSyncTypes -system 10 $StationName -project $1
 
 
 #
