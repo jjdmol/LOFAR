@@ -1,4 +1,4 @@
-gnu.compiler.conf: CXX="$CCACHE /usr/bin/g++"
+gnu64.compiler.conf: CXX="$CCACHE /usr/bin/g++"
 
 mpich.var:                --with-mpich=/opt/mpich/ch-p4
 
