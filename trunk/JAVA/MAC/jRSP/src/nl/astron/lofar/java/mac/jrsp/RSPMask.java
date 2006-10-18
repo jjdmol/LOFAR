@@ -37,7 +37,7 @@ public class RSPMask implements IMask {
      */
     public RSPMask()
     {
-        itsMask = 0;
+        itsMask = 1;
     }
         
     /**
