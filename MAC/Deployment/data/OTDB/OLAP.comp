@@ -8,7 +8,7 @@ node   OLAP_HW     1.0.0  development 'node constraint'  "OLAP Hardware"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname               I    text   -      10    0    'INP002'                  -        'host on which OLAP will be started, value is determined by the scheduler'
+par  _hostname               I    text   -      10    0    'lii002'                  -        'host on which OLAP will be started, value is determined by the scheduler'
 par  AMCServerHost           I    text   -      10    0    '192.168.100.254'         -        'ip-address of AMC server'
 par  AMCServerPort           I    int    -      10    0    '8400'                    -        'port on which the AMC server is listening'
 par  DelayCompensationHost   I    text   -      10    0    '192.168.100.254'         -        'ip-address of AMC server'
