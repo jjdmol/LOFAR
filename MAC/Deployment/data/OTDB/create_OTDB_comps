@@ -172,6 +172,8 @@ do
 done
 shift								# remove --
 
+rm -f ${DESTDIR}/*.gcomp
+
 for file in `ls -1 *.base | grep -v Node`
 do
 	rawname=`echo $file | cut -d'.' -f1`
