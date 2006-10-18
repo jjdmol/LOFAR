@@ -1637,7 +1637,7 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
       logMessage(cerr, "RSP range selection must have exactly 4 numbers");
       exit(EXIT_FAILURE);
     }
-    Array<complex<double>, 4> selection = upd.stats()(Range::all(), Range::all(), r1, r2);
+    Array<complex<double>, 4> selection = upd.stats()(Range::all(), Range::all(), r1, r2).copy();
     capture_xcstatistics(selection, upd.timestamp);
   }
 
