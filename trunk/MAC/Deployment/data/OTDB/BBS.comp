@@ -10,7 +10,7 @@ node   BBDB     1.0.0  development 'node constraint'  'BBS Blackboard Database'
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname               I    text   -      10    0    'IMG002'                  -        'host on which BBS will be started, value is determined by the scheduler'
+par  _hostname               I    text   -      10    0    'lioff002'                  -        'host on which BBS will be started, value is determined by the scheduler'
 par  Host                    I    text   -      10    0    '127.0.0.1'               -        'Host on which the Blackboard database resides'
 par  Port                    I    int    -      10    0    '12345'                   -        'Port on which the Blackboard database is listening'
 par  DBName                  I    text   -      10    0    'blackboard'              -        'Database name with the Black Board tables'
