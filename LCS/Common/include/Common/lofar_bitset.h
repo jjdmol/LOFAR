@@ -91,8 +91,6 @@
 #include <cstddef>     // for size_t
 #include <cstring>     // for memset
 #include <string>
-#include <bits/functexcept.h>   // for invalid_argument, out_of_range,
-                                // overflow_error
 #include <ostream>     // for ostream (operator<<)
 #include <istream>     // for istream (operator>>)
 
@@ -103,6 +101,13 @@
 
 namespace LOFAR
 {
+  // <group>
+  // Exception functions as declared in bits/functexpts.h.
+  void bitset_throw_overflow_error(const std::string&);
+  void bitset_throw_out_of_range(const std::string&);
+  void bitset_throw_invalid_argument(const std::string&);
+  // </group>
+
 
   extern const unsigned char _S_bit_count[256];
   extern const unsigned char _S_first_one[256];
@@ -310,7 +315,7 @@ namespace LOFAR
     {
       for (size_t __i = 1; __i < _Nw; ++__i)
 	if (_M_w[__i])
-	  std::__throw_overflow_error("bitset -- too large to fit in unsigned uint32");
+	  bitset_throw_overflow_error("bitset -- too large to fit in unsigned uint32");
       return _M_w[0];
     }
 
@@ -542,7 +547,7 @@ namespace LOFAR
       // localized to this single should-never-get-this-far function.
       _WordT&
       _M_getword(size_t) const
-      { std::__throw_out_of_range("bitset -- zero-length"); return *new _WordT; }
+      { bitset_throw_out_of_range("bitset -- zero-length"); return *new _WordT; }
 
       _WordT
       _M_hiword() const { return 0; }
@@ -782,7 +787,7 @@ namespace LOFAR
 		      size_t __pos = 0) : _Base()
       {
 	if (__pos > __s.size())
-	  std::__throw_out_of_range("bitset -- initial position is larger than "
+	  bitset_throw_out_of_range("bitset -- initial position is larger than "
 	                       "the string itself");
 	_M_copy_from_string(__s, __pos,
 			    std::basic_string<_CharT, _Traits, _Alloc>::npos);
@@ -802,7 +807,7 @@ namespace LOFAR
 	     size_t __pos, size_t __n) : _Base()
       {
 	if (__pos > __s.size())
-	  std::__throw_out_of_range("bitset -- initial position is larger than "
+	  bitset_throw_out_of_range("bitset -- initial position is larger than "
 	                       "the string itself");
 	_M_copy_from_string(__s, __pos, __n);
       }
@@ -938,7 +943,7 @@ namespace LOFAR
     set(size_t __pos, bool __val = true)
     {
       if (__pos >= _Nb)
-	std::__throw_out_of_range("bitset -- set() argument too large");
+	bitset_throw_out_of_range("bitset -- set() argument too large");
       return _Unchecked_set(__pos, __val);
     }
 
@@ -963,7 +968,7 @@ namespace LOFAR
     reset(size_t __pos)
     {
       if (__pos >= _Nb)
-	std::__throw_out_of_range("bitset -- reset() argument too large");
+	bitset_throw_out_of_range("bitset -- reset() argument too large");
       return _Unchecked_reset(__pos);
     }
 
@@ -987,7 +992,7 @@ namespace LOFAR
     flip(size_t __pos)
     {
       if (__pos >= _Nb)
-	std::__throw_out_of_range("bitset -- flip() argument too large");
+	bitset_throw_out_of_range("bitset -- flip() argument too large");
       return _Unchecked_flip(__pos);
     }
 
@@ -1090,7 +1095,7 @@ namespace LOFAR
     test(size_t __pos) const
     {
       if (__pos >= _Nb)
-	std::__throw_out_of_range("bitset -- test() argument too large");
+	bitset_throw_out_of_range("bitset -- test() argument too large");
       return _Unchecked_test(__pos);
     }
 
@@ -1159,7 +1164,7 @@ namespace LOFAR
 	      set(__i);
 	      break;
 	    default:
-	      std::__throw_invalid_argument("bitset -- string contains characters "
+	      bitset_throw_invalid_argument("bitset -- string contains characters "
 	                               "which are neither 0 nor 1");
 	    }
 	}

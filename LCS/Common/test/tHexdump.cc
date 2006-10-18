@@ -46,11 +46,10 @@ int main (int, char *argv[]) {
 
 	LOG_INFO ("testing hexdump(FILE*, ...)");
 	char	fileTest [80];
-	strcpy (fileTest, "this should appear in the file");
+	strcpy (fileTest,"this should appear in the  file tHexdump_tmp.txt");
 	FILE*	fd = fopen("./tHexdump_tmp.txt", "w");
 	hexdump(fd, fileTest, strlen(fileTest));
 	fclose(fd);
-	system("cat ./tHexdump_tmp.txt");
 
 	LOG_INFO ("testing hexdump(char*, ...)");
 	char	charPtrTest [80];

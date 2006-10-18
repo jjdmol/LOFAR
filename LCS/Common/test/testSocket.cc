@@ -1,4 +1,4 @@
-//#  testSockt.cc: Manual program to test Net/Socket code
+//#  testSocket.cc: Manual program to test Net/Socket code
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,6 +28,14 @@
 #include <fcntl.h>
 
 using namespace LOFAR;
+
+#ifndef USE_SOCKETS
+int main (int, char*) {
+  cout << "testSocket not run;l sockets are not supported" << endl;
+  return 3;
+}
+#else
+
 
 static	Socket*		dataSock = 0;
 static	Socket*		testSock = 0;
@@ -179,7 +187,7 @@ char getMenuChoice()
 }
 
 int main (int32	argc, char*argv[]) {
-	
+
 	INIT_LOGGER("testSocket");
 	
 	switch (argc) {
@@ -245,3 +253,4 @@ int main (int32	argc, char*argv[]) {
 	return (0);
 }
 
+#endif  // USE_SOCKETS

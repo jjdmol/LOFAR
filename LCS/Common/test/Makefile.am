@@ -21,6 +21,7 @@ TESTSCRIPTS = \
 	tProcess.sh \
 	tRunOnNode.sh \
 	tTimer.sh \
+	testSocket.sh \
 	tStringUtil_test.sh
 
 TESTS = $(TESTSCRIPTS)
