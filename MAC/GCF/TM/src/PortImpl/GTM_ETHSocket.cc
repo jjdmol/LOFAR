@@ -220,7 +220,6 @@ int GTMETHSocket::open(const char* ifname,
     }
   
     // print MAC address for destination
-    printf("DEST HWADDR: ");
     macAddress = "";
     for (int i = 0; i < ETH_ALEN; i++)
     {
