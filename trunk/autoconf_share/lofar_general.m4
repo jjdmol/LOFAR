@@ -81,6 +81,10 @@ AC_ARG_WITH(threads,
 	[  --with-threads            enable support of threads],
 	[with_threads="$withval"],
 	[with_threads=no])dnl
+AC_ARG_WITH(sockets,
+	[  --with-sockets            enable support of sockets],
+	[with_sockets="$withval"],
+	[with_sockets=no])dnl
 AC_ARG_WITH(sse,
 	[  --with-sse                enable support of sse instructions],
 	[with_sse="$withval"],
@@ -191,6 +195,10 @@ AC_DEFINE(LOFAR_DEBUG,dnl
 
       lfr_ldflags="$lfr_ldflags -pthread";
     fi
+  fi
+
+  if test "$with_sockets" != "no"; then
+    lfr_cppflags="$lfr_cppflags -DUSE_SOCKETS";
   fi
 
   if test "$with_sse" != "no"; then
