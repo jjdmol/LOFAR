@@ -44,6 +44,7 @@ pkginclude_HEADERS = \
 	LofarTypes.h \
 	lofar_vector.h \
 	Numeric.h \
+	ObjectFactory.h \
 	Process.h \
 	RunOnNode.h \
 	Stopwatch.h \
