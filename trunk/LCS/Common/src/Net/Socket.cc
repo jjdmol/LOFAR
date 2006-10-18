@@ -28,7 +28,7 @@
 #include <Common/hexdump.h>
 #include <Common/Exception.h>
 
-#ifdef USE_SOCKETS
+#ifndef USE_NOSOCKETS
 
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -57,7 +57,7 @@ namespace LOFAR
 int32 Socket::defaultSigpipeCounter;
 
 
-#ifndef USE_SOCKETS
+#ifdef USE_NOSOCKETS
 Socket::Socket (const string&)
   { throw Exception("Sockets not supported"); }
 Socket::Socket (const string&, const string&, int32, int32)
@@ -1145,6 +1145,6 @@ int32 Socket::setDefaults ()
 #endif  // HAVE_BGL
 }
 
-#endif  // USE_SOCKETS
+#endif  // USE_NOSOCKETS
 
 } // namespace LOFAR

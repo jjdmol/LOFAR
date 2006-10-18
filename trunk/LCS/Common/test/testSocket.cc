@@ -29,7 +29,7 @@
 
 using namespace LOFAR;
 
-#ifndef USE_SOCKETS
+#ifdef USE_NOSOCKETS
 int main (int, char*) {
   cout << "testSocket not run;l sockets are not supported" << endl;
   return 3;
@@ -253,4 +253,4 @@ int main (int32	argc, char*argv[]) {
 	return (0);
 }
 
-#endif  // USE_SOCKETS
+#endif  // USE_NOSOCKETS

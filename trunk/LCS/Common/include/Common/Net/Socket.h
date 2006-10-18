@@ -237,7 +237,7 @@ public:
         } ErrorCodes;
 
 protected:
-#ifdef USE_SOCKETS
+#ifndef USE_NOSOCKETS
 	// Constructs a generic socket for an incoming connection on a server
 	// socket.
 	// @{
@@ -292,7 +292,7 @@ private:
         // Blocking mode or not
         bool                            itsIsBlocking;
 
-#ifdef USE_SOCKETS
+#ifndef USE_NOSOCKETS
         // Connected client address(TCP)
         struct sockaddr_in              itsTCPAddr;
         // Connected client address(UNIX)
