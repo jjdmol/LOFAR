@@ -603,9 +603,10 @@ DBTYPENAME=Main
 DBTYPE=C
 STNNAME="Station"
 
-eval set argv=`getopt "d:o:s:Sh" $*`		# reformat arguments
-shift
-while [ "$1" != "--" ]
+argv=`getopt "d:o:s:Sh" $*`		# reformat arguments
+#eval set argv=`getopt "d:o:s:Sh" $*`		# reformat arguments
+#shift
+while [ -n "$1" -a "$1" != "--" ]
 do
 	case "$1" in
 		-d)	DESTDIR=$2
@@ -628,6 +629,8 @@ do
 			shift 1
 			;;
 		-h) SyntaxError
+			;;
+		*) SyntaxError
 			;;
 	esac
 done
