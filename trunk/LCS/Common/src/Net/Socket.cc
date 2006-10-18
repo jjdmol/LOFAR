@@ -26,6 +26,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
+#include <Common/Exception.h>
+
+#ifdef USE_SOCKETS
 
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -43,12 +46,45 @@
 #include <netdb.h>
 #endif
 
+#endif
+
+
 namespace LOFAR
 {
 
 //# NOTE: EAGAIN = EWOULDBLOCK so errors are only checked for EWOULDBLOCK
 
 int32 Socket::defaultSigpipeCounter;
+
+
+#ifndef USE_SOCKETS
+Socket::Socket (const string&)
+  { throw Exception("Sockets not supported"); }
+Socket::Socket (const string&, const string&, int32, int32)
+  { throw Exception("Sockets not supported"); }
+Socket::~Socket()
+  {}
+int32 Socket::initServer (const string&, int32, int32)
+  { throw Exception("Sockets not supported"); }
+int32 Socket::initClient (const string&, const string&, int32)
+  { throw Exception("Sockets not supported"); }
+int32 Socket::connect (int32)
+  { throw Exception("Sockets not supported"); }
+Socket* Socket::accept(int32)
+  { throw Exception("Sockets not supported"); }
+int32 Socket::shutdown (bool, bool)
+  { throw Exception("Sockets not supported"); }
+int32 Socket::setBlocking (bool)
+  { throw Exception("Sockets not supported"); }
+int32 Socket::read (void*, int32)
+  { throw Exception("Sockets not supported"); }
+int32 Socket::write (const void*, int32)
+  { throw Exception("Sockets not supported"); }
+int32 Socket::readBlocking (void*, int32)
+  { throw Exception("Sockets not supported"); }
+int32 Socket::writeBlocking (const void*, int32)
+  { throw Exception("Sockets not supported"); }
+#else
 
 //
 // Socket(optionalname)
@@ -1108,5 +1144,7 @@ int32 Socket::setDefaults ()
 	return (SK_OK);
 #endif  // HAVE_BGL
 }
+
+#endif  // USE_SOCKETS
 
 } // namespace LOFAR

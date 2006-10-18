@@ -237,6 +237,7 @@ public:
         } ErrorCodes;
 
 protected:
+#ifdef USE_SOCKETS
 	// Constructs a generic socket for an incoming connection on a server
 	// socket.
 	// @{
@@ -247,15 +248,15 @@ protected:
 	// Sets default socket options like reuse address, linger, etc.
 	int32 setDefaults();
 
-	// Saves given errorcode and system errorcode
-	inline int32 setErrno(int32 ErrorNr);
-
 	// Tries to init the socket by resolving all parameters and allocating
 	// the real socket.
 	// @{
 	int32 initUnixSocket(bool	asServer);
 	int32 initTCPSocket (bool	asServer);
 	// @}
+#endif
+	// Saves given errorcode and system errorcode
+	inline int32 setErrno(int32 ErrorNr);
 
 private:
 	// Copying is not allowed
@@ -290,10 +291,13 @@ private:
         bool                            itsIsInitialized;
         // Blocking mode or not
         bool                            itsIsBlocking;
+
+#ifdef USE_SOCKETS
         // Connected client address(TCP)
         struct sockaddr_in              itsTCPAddr;
         // Connected client address(UNIX)
         struct sockaddr_un              itsUnixAddr;
+#endif
 
 	//# Support for sigpipes
 	const volatile int32*	sigpipeCounter;

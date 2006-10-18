@@ -20,9 +20,18 @@
 
 #include <lofar_config.h>
 #include <Common/lofar_bitset.h>
+#include <stdexcept>
 
 namespace LOFAR
 {
+  void bitset_throw_overflow_error(const std::string& s)
+    { throw std::overflow_error(s); }
+  void bitset_throw_out_of_range(const std::string& s)
+    { throw std::out_of_range(s); }
+  void bitset_throw_invalid_argument(const std::string& s)
+    { throw std::invalid_argument(s); }
+
+
   const unsigned char _S_bit_count[256] = {
     0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
     1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
