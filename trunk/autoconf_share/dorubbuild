@@ -58,7 +58,7 @@ kstr=
 [ $kopt = 1 ] && kstr='-k'
 
 # Generate output files.
-if [ "$builddir" = "" ]; then
+if [ "$builddir" = "." ]; then
   resname=$variant
   buildvarpr=$variant
 else
@@ -79,10 +79,10 @@ echo "" >> $logfile
 echo "***** Building packages in $builddir $variant" >> $logfile
 
 # See what kind of build we have to do (in source tree or separate tree).
-# If $builddir is empty, it is a variant name in the source tree,
+# If $builddir is ., it is a variant name in the source tree,
 #   meaning a build is done in $pkg/build/$variant.
 # Otherwise it is a separate tree where a build is done in
-#   $builddir/$variant/$pkg. In this case $builddir must end in build.
+#   $builddir/$variant/$pkg.
 
 # Check if in correct directory.
 cd $srcdir >> $logfile 2>&1 || exit 1
@@ -121,9 +121,9 @@ if [ $buildmake = 1 ]; then
   fi
 fi
 
-# Create build directory if needed.
-if [ "$builddir" != "" ]; then
-  (cd $rbuilddir && mkdir -p build/$variant) >> $logfile 2>&1
+# Create build/variant directory if needed.
+if [ "$builddir" != "." ]; then
+  (cd $builddir && mkdir -p build/$variant) >> $logfile 2>&1
   if [ $? != 0 ]; then
     exit 1
   fi
@@ -143,10 +143,10 @@ do
   fi
   echo " *** Building package $pkg ***" | tee $logfile
 
-  if [ "$builddir" = "" ]; then
+  if [ "$builddir" = "." ]; then
     initcmd="cd $pkg && mkdir -p build/$variant && cd build/$variant"
   else
-    initcmd="cd $builddir/$variant && mkdir -p $pkg && cd $pkg"
+    initcmd="cd $builddir/build/$variant && mkdir -p $pkg && cd $pkg"
   fi
   if [ $conf = 1 ]; then
     confcmd="$srcdir/$pkg/lofarconf $confopt && "
