@@ -228,17 +228,18 @@ fi
 variant=$p1
 builddir=`eval echo $p2`      # make sure possible ~ is expanded
 
-# See if we have to add /build.
-if [ "$builddir" != "" ]; then
+# See if we have to remove /build.
+if [ "$builddir" = "" ]; then
+  builddir='.'
+else
   atemp=`basename $builddir`
-  if [ "$atemp" != "build" ]; then
-    builddir=$builddir/build
+  if [ "$atemp" = "build" ]; then
+    builddir=`dirname $builddir`
   fi
-  rbuilddir=`dirname $builddir`
-fi
-if [ ! -d $rbuilddir ]; then
-  echo "Error in rubbuild: build directory $rbuilddir does not exist"
-  exit 1
+  if [ ! -d $builddir ]; then
+    echo "Error in rubbuild: build directory $builddir does not exist"
+    exit 1
+  fi
 fi
 
 # See what kind of build we have to do (in source tree or separate tree).
@@ -256,7 +257,7 @@ if [ "$curwdl" != "LOFAR" ]; then
   exit 1
 fi
 
-if [ "$builddir" = "" ]; then
+if [ "$builddir" = "." ]; then
   buildvarpr=$variant
 else
   buildvarpr="$builddir $variant"
