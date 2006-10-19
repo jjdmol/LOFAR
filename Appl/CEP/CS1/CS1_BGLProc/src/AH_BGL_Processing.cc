@@ -22,7 +22,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#define USE_ZOID
+#undef USE_ZOID
 
 #include <Common/lofar_iostream.h>
 
