@@ -22,6 +22,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#define USE_ZOID
+
 #include <Common/lofar_iostream.h>
 
 #include <CS1_BGLProc/AH_BGL_Processing.h>
@@ -36,8 +38,10 @@
 #if defined HAVE_MPI
 #include <Transport/TH_MPI.h>
 #endif
-#include <Transport/TH_Mem.h>
-#include <Transport/TH_Socket.h>
+
+#if defined USE_ZOID
+#include <CS1_Interface/TH_ZoidClient.h>
+#endif
 
 #include <Blob/KeyValueMap.h>
 
@@ -178,9 +182,15 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
       unsigned cell = pset / psetsPerCell;
       unsigned cellCore = core + usedNodesPerPset * (pset % psetsPerCell);
 
+#if defined USE_ZOID
+      TH_ZoidClient *th = new TH_ZoidClient();
+      Connection    *conn = new Connection("zoid", 0, dm.getGeneralInHolder(WH_BGL_Processing::SUBBAND_CHANNEL), th, true);
+      dm.setInConnection(WH_BGL_Processing::SUBBAND_CHANNEL, conn);
+#else
       itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
 //    itsRFI_MitigationStub->connect(cell, cellCore, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
       itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+#endif
 
 #if defined HAVE_BGL
       wh->runOnNode(remapOnTree(pset - firstPset, core, personality));

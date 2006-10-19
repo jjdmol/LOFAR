@@ -1783,9 +1783,6 @@ void WH_BGL_Processing::process()
   readTimer.start();
   getDataManager().readyWithInHolder(SUBBAND_CHANNEL);
 #if defined SPARSE_FLAGS
-#if defined HAVE_MPI
-  std::clog << "core " << TH_MPI::getCurrentRank() << ": start getting extra data at " << MPI_Wtime() << '\n';
-#endif
   get_DH_Subband()->getExtraData();
 #endif
   readTimer.stop();
