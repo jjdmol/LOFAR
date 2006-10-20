@@ -53,8 +53,11 @@ prelude = << PRELUDE_END
 // SUSPENDED (string cntlrName, uint16 result)
 // RELEASE   (string cntlrName)
 // RELEASED  (string cntlrName, uint16 result)
+// QUIT      (string cntlrName)
 // FINISH    (string cntlrName, uint32 treeID, uint16 result, string errorMsg)
 // FINISHED  (string cntlrName, uint16 result)
+//
+// COMMON	 (string cntlrName)	// not a real signal, the common part of all signals
 //
 
 PRELUDE_END;
@@ -324,6 +327,18 @@ event = {
 };
 
 //
+// QUIT - sent by a parent to all childs to start quit sequence
+//
+event = {
+	signal = QUIT;
+	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+};
+
+//
 // FINISH - sent by a child to tell its parent it is dying.
 //
 event = {
@@ -360,6 +375,19 @@ event = {
 	param = {
 	  name = "result";
 	  type = "uint16";
+	};
+};
+
+//
+// COMMON - not a real signal, its the common part of all CONTROL events.
+// Makes it possible to use a CONTROLCommonEvent to get the name of the controller.
+//
+event = {
+	signal = COMMON;
+	dir = OUT; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
 	};
 };
 

@@ -30,6 +30,7 @@
 
 //# Includes
 #include <APS/ParameterSet.h>
+#include <bitset>
 
 namespace LOFAR {
   namespace APLCommon {
@@ -51,6 +52,8 @@ public:
 	~Observation();
 	explicit	Observation (ACC::APS::ParameterSet*		aParSet);
 
+	typedef std::bitset<256> 	  RCUset_t;
+
 	//# Datamembers
 	string			name;
 	int32			treeID;
@@ -59,6 +62,9 @@ public:
 	int16			nyquistZone;
 	vector<int16>	subbands;
 	int32			sampleClock;
+	string			filter;
+	string			antennaArray;
+	RCUset_t		RCUset;			// set with participating receivers
 };
 
 // @}
