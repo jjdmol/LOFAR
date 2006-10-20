@@ -53,6 +53,8 @@ Input.SzEPAheader=16
 Input.IPHeaderSize=32
 Input.NSamplesToBuffer=6000000
 Input.NRSPBoards=4
+Input.WriteRawDataToFile = F
+Input.OutputRawDataFiles = ["RawDataSB0.out", "RawDataSB1.out", "RawDataSB2.out", "RawDataSB3.out", "RawDataSB4.out", "RawDataSB5.out", "RawDataSB6.out", "RawDataSB7.out", "RawDataSB8.out", "RawDataSB9.out"]
 Input.Transport.Station0.Rsp0.th        = NULL  # should be one of ETHERNET, FILE, SOCKET, NULL
 Input.Transport.Station0.Rsp0.inputFile = "udp_rsp0.data"
 Input.Transport.Station0.Rsp0.interface = eth1
@@ -82,6 +84,7 @@ BGLProc.MaxConcurrentCommunications = 4
 # Variables for Storage
 Storage.MSName = /data2/ObservationA.MS
 Storage.WriteToMAC = F
+Storage.StorageStationNames = ["CS10_dipole0", "CS10_dipole4", "CS10_dipole8", "CS10_dipole12", "CS8_dipole0", "CS8_dipole4", "CS8_dipole8", "CS8_dipole12", "CS1_dipole0", "CS1_dipole4", "CS1_dipole8", "CS1_dipole12", "CS12_dipole0", "CS12_dipole4", "CS12_dipole8", "CS12_dipole12"]
 
 Data.NStations = 2
 Data.NPolarisations = 2
