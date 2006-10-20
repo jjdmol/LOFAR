@@ -1,0 +1,122 @@
+# This file is built up as follow:
+# - Connection data (first all hosts, then all ports, because the hosts need to be changed sometimes, the ports can stay the same)
+# - Data format (things like no subbands, station positions
+# - Some variables for producing fake data, these will be read by several applications
+# - Some general variables (like number of runs)
+# - Variables per application. The idea is that these variables are only read by that specific application (if they must be read by more applications, put them in General...)
+
+Connect = true
+
+TransposePorts = [9000, 9001, 9002, 9003, 9004, 9005, 9006, 9007, 9008, 9009, 9010, 9011]
+
+# The hosts for all (socket)connections
+# Do not change these hosts without changing the machinefile(s). Host on which TFC_DelayCompensation runs.
+Connections.Input_Delay.ServerHost     =10.20.1.10
+Connections.AMC.ServerHost             =127.0.0.1    # where AMC server runs
+
+# The ports for all (socket)connections
+Connections.Input_Delay.Ports    =[7200,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7204,7201,7202,7203,7204,7201,7202,7203,7204,7201,7202,7203]
+Connections.Input_BGLProc.Ports  =[8000, 8001, 8002, 8003, 8004, 8005, 8006, 8007, 8008, 8009, 8010, 8011, 8012, 8013, 8014, 8015, 8016, 8017, 8018, 8019, 8020, 8021, 8022, 8023, 8024, 8025, 8026, 8027, 8028, 8029, 8030, 8031, 8032, 8033, 8034, 8035, 8036, 8037, 8038, 8039, 8040, 8041, 8042, 8043, 8044, 8045, 8046, 8047, 8048, 8049, 8050, 8051, 8052, 8053, 8054, 8055, 8056, 8057, 8058, 8059, 8060, 8061, 8062, 8063]
+Connections.BGLProc_Storage.Ports=[8200, 8201, 8202, 8203, 8204, 8205, 8206, 8207, 8208, 8209, 8210, 8211, 8212, 8213, 8214, 8215, 8216, 8217, 8218, 8219, 8220, 8221, 8222, 8223, 8224, 8225, 8226, 8227, 8228, 8229, 8230, 8231, 8232, 8233, 8234, 8235, 8236, 8237, 8238, 8239, 8240, 8241, 8242, 8243, 8244, 8245, 8246, 8247, 8248, 8249, 8250, 8251, 8252, 8253, 8254, 8255, 8256, 8257, 8258, 8259, 8260, 8261, 8262, 8263]
+Connections.AMC.Port             =31337
+
+# The format of the data
+Observation.NChannels = 256
+Observation.NPolarisations=2
+Observation.PositionType = ITRF     # should be ITRF
+Observation.StationPositions = [\   # long, lat, alt
+3826445.092 , 460923.319 , 5064346.196 ,\ # CS10 antenna  0 (rcu0)
+3826426.4071, 460950.3711, 5064357.7736,\ # CS10 antenna  4 (rcu8)
+3826447.720 , 460917.9109, 5064344.7126,\ # CS10 antenna  8 (rcu16)
+3826435.6425, 460938.9631, 5064351.8736,\ # CS10 antenna  12 (rcu24)
+3826314.932 , 460863.1097, 5064449.3196,\ # CS8  antenna  0 (rcu0)
+3826292.4937, 460886.0964, 5064464.0812,\ # CS8  antenna  4 (rcu8)
+3826322.1133, 460979.2737, 5064433.4283,\ # CS8  antenna  8 (rcu16)
+3826344.552 , 460956.2871, 5064418.6678,\ # CS8  antenna 12 (rcu24)
+3826597.415 , 460830.5359, 5064240.2635,\ # CS1  antenna  0 (rcu0)
+3826574.9777, 460853.5227, 5064255.0255,\ # CS1  antenna  4 (rcu8)
+3826592.2508, 460880.2595, 5064239.6452,\ # CS1  antenna  8 (rcu16)
+3826614.688 , 460857.2727, 5064224.8833 \ # CS1  antenna 12 (rcu24)
+]
+
+Observation.NBeams = 1              # number of beams used
+Observation.DirectionType = J2000   # direction type
+Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
+0, 0.92]
+
+# General Variables
+General.SubbandsPerPset = 1
+
+# Variables for the DelayCompensation
+DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
+
+# Variables for the InputSection
+Input.NTimesInFrame=16
+Input.NSubbandsPerFrame=32
+Input.SzEPAheader=16
+Input.IPHeaderSize=32
+Input.NSamplesToBuffer=4000000
+Input.Transport.Station0.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station0.Rsp0.inputFile = "/tmp/Generator1.out"
+Input.Transport.Station0.Rsp0.interface = eth1
+Input.Transport.Station0.Rsp0.sourceMac = "00:00:00:0a:00:01"
+Input.Transport.Station0.Rsp0.destinationMac = "00:e0:81:34:93:3b"
+Input.Transport.Station1.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station1.Rsp0.inputFile = "/tmp/Generator2.out"
+Input.Transport.Station1.Rsp0.interface = eth1
+Input.Transport.Station1.Rsp0.sourceMac = "00:00:00:0a:01:01"
+Input.Transport.Station1.Rsp0.destinationMac = "00:e0:81:34:93:3b"
+Input.Transport.Station2.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station2.Rsp0.interface = eth1
+Input.Transport.Station2.Rsp0.sourceMac = "00:00:00:0a:02:01"
+Input.Transport.Station2.Rsp0.destinationMac = "00:e0:81:31:b0:e1"
+Input.Transport.Station3.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station3.Rsp0.interface = eth1
+Input.Transport.Station3.Rsp0.sourceMac = "00:00:00:0a:03:01"
+Input.Transport.Station3.Rsp0.destinationMac = "00:e0:81:31:b0:e1"
+Input.Transport.Station4.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station4.Rsp0.interface = eth1
+Input.Transport.Station4.Rsp0.sourceMac = "00:00:00:08:00:01"
+Input.Transport.Station4.Rsp0.destinationMac = "00:e0:81:31:de:8b"
+Input.Transport.Station5.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station5.Rsp0.interface = eth1
+Input.Transport.Station5.Rsp0.sourceMac = "00:00:00:08:01:01"
+Input.Transport.Station5.Rsp0.destinationMac = "00:e0:81:31:de:8b"
+Input.Transport.Station6.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station6.Rsp0.interface = eth1
+Input.Transport.Station6.Rsp0.sourceMac = "00:00:00:08:02:01"
+Input.Transport.Station6.Rsp0.destinationMac = "00:e0:81:29:20:37"
+Input.Transport.Station7.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station7.Rsp0.interface = eth1
+Input.Transport.Station7.Rsp0.sourceMac = "00:00:00:08:03:01"
+Input.Transport.Station7.Rsp0.destinationMac = "00:e0:81:29:20:37"
+Input.Transport.Station8.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station8.Rsp0.interface = eth1
+Input.Transport.Station8.Rsp0.sourceMac = "00:00:00:01:00:01"
+Input.Transport.Station8.Rsp0.destinationMac = "00:e0:81:34:8c:d1"
+Input.Transport.Station9.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station9.Rsp0.interface = eth1
+Input.Transport.Station9.Rsp0.sourceMac = "00:00:00:01:01:01"
+Input.Transport.Station9.Rsp0.destinationMac = "00:e0:81:34:8c:d1"
+Input.Transport.Station10.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station10.Rsp0.interface = eth1
+Input.Transport.Station10.Rsp0.sourceMac = "00:00:00:01:02:01"
+Input.Transport.Station10.Rsp0.destinationMac = "00:E0:81:34:9B:87"
+Input.Transport.Station11.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
+Input.Transport.Station11.Rsp0.interface = eth1
+Input.Transport.Station11.Rsp0.sourceMac = "00:00:00:01:03:01"
+Input.Transport.Station11.Rsp0.destinationMac = "00:E0:81:34:9B:87"
+
+# Variables for BGLProcessing
+# This defines the number of computing "cells" in the application
+# and the number of filters within a cell. 
+# These parameters MUST match the compiled in values in TFC_Config.h
+# Note that some values may differ from values defined in the Input section.
+BGLProc.NodesPerPset = 8
+BGLProc.PsetsPerCell = 4
+BGLProc.NPPFTaps = 16
+BGLProc.MaxConcurrentCommunications = 2
+
+# Variables for Storage
+Storage.WriteToMAC = F
+
