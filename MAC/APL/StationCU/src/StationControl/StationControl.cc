@@ -264,8 +264,10 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
    		break;
 
 	case F_ENTRY: {
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("connected"));
+
 		// start DigitalBoardController
-		LOG_DEBUG_STR("Starting DigitalBaordController");
+		LOG_DEBUG_STR("Starting DigitalBoardController");
 		itsChildControl->startChild(CNTLRTYPE_DIGITALBOARDCTRL,
 							   		0,			// treeID, 
 							   		0,			// instanceNr,
@@ -338,8 +340,8 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	}
 	break;
 
-	case CONTROL_SCHEDULE:
 	case CONTROL_CLAIM:
+	case CONTROL_SCHEDULE:
 	case CONTROL_PREPARE:
 	case CONTROL_RESUME:
 	case CONTROL_SUSPEND:
@@ -351,7 +353,19 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			LOG_WARN_STR("Event for unknown observation: " << ObsEvent.cntlrName);
 			break;
 		}
+
+		if (event.signal == CONTROL_CLAIM && 
+								itsClock != theObs->second->obsPar()->sampleClock) {
+			itsClock = theObs->second->obsPar()->sampleClock;
+			LOG_DEBUG_STR ("Changing clock to " << itsClock);
+			itsOwnPropertySet->setValue(PN_SC_CLOCK,GCFPVInteger(itsClock));
+			// TODO: give clock 5 seconds to stabelize
+		}
+
+		// pass event to observation FSM
 		theObs->second->dispatch(event, port);
+
+		// end of FSM?
 		if (event.signal == CONTROL_QUIT && theObs->second->isReady()) {
 			LOG_DEBUG_STR("Removing " <<ObsEvent.cntlrName<< " from the administration");
 			delete theObs->second;
