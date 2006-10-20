@@ -47,6 +47,7 @@ pkginclude_HEADERS = \
 	ObjectFactory.h \
 	Process.h \
 	RunOnNode.h \
+	Singleton.h \
 	Stopwatch.h \
 	StreamUtil.h \
 	StringUtil.h \
