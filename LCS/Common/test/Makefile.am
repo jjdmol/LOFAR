@@ -11,19 +11,19 @@ CHECKTOOLPROGS 	      =	testLogger tAllocator tDataConvert tFileLocator \
 #ENDCHECKTOOLPROGS
 
 TESTSCRIPTS = \
-	tComplex.sh \
+	testLogger.sh \
 	tAllocator.sh \
-	tDataConvert_test.sh \
-	tFileLocator_test.sh \
-	testLogger_test.sh \
-	tHexdump_test.sh    \
-	tNumeric.sh \
+	tDataConvert.sh \
+	tFileLocator.sh \
+	tStringUtil.sh \
+	tStreamUtil.sh \
+	tHexdump.sh \
+	testSocket.sh \
+	tComplex.sh \
 	tProcess.sh \
 	tRunOnNode.sh \
 	tTimer.sh \
-	testSocket.sh \
-	tStringUtil_test.sh
-	tStreamUtil.sh \
+	tNumeric.sh \
 	tSingleton.sh \
 	tObjectFactory.sh
 
@@ -37,10 +37,6 @@ EXTRA_DIST = $(TESTSCRIPTS) \
 	tProcess.log_prop tProcess.stdout \
 	tRunOnNode.log_prop tRunOnNode.stdout \
 	tStringUtil.stdout tStreamUtil.stdout
-
-testSocket_SOURCES		= testSocket.cc
-testSocket_LDADD		= ../src/libcommon.la	
-testSocket_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 testLogger_SOURCES		= testLogger.cc
 testLogger_LDADD		= ../src/libcommon.la	
@@ -70,6 +66,14 @@ tHexdump_SOURCES		= tHexdump.cc
 tHexdump_LDADD			= ../src/libcommon.la	
 tHexdump_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
+testSocket_SOURCES		= testSocket.cc
+testSocket_LDADD		= ../src/libcommon.la	
+testSocket_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tComplex_SOURCES		= tComplex.cc
+tComplex_LDADD			= ../src/libcommon.la	
+tComplex_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+
 tProcess_SOURCES		= tProcess.cc
 tProcess_LDADD			= ../src/libcommon.la	
 tProcess_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
@@ -81,10 +85,6 @@ tRunOnNode_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 tTimer_SOURCES			= tTimer.cc
 tTimer_LDADD			= ../src/libcommon.la	
 tTimer_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
-
-tComplex_SOURCES		= tComplex.cc
-tComplex_LDADD			= ../src/libcommon.la	
-tComplex_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 tNumeric_SOURCES		= tNumeric.cc
 tNumeric_LDADD			= ../src/libcommon.la	
@@ -99,6 +99,5 @@ tObjectFactory_SOURCES		= tObjectFactory.cc \
 				  Coordinates.h Coordinates.cc
 tObjectFactory_LDADD		= ../src/libcommon.la	
 tObjectFactory_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
-
 
 include $(top_srcdir)/Makefile.common
