@@ -59,8 +59,9 @@ public:
 			   State					initial,
 			   ACC::APS::ParameterSet*	aPS);
 	virtual ~ActiveObs();
-	void	start()		{ initFsm();	}
-	bool	isReady()	{ return (itsReadyFlag); }
+	void					start()		{ initFsm();	}
+	bool					isReady()	{ return (itsReadyFlag); }
+	APLCommon::Observation*	obsPar()	{ return (&itsObsPar); }
 
 	GCFEvent::TResult	initial	   (GCFEvent&	event, GCFPortInterface&	port);
 	GCFEvent::TResult	connected  (GCFEvent&	event, GCFPortInterface&	port);
