@@ -1,2 +1,2 @@
 #!/bin/sh
-$lofar_sharedir/runtest.sh testSocket 2>&1 > testSocket_test.log
+$lofar_sharedir/runtest.sh testSocket 2>&1 > testSocket.log
