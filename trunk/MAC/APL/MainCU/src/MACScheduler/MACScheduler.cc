@@ -529,9 +529,8 @@ void MACScheduler::_doOTDBcheck()
 			}
 			else {
 				// fire request for new controller, will result in CONTROL_STARTED
-				itsChildControl->startChild(cntlrName, 
+				itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
 											treeID, 
-											CNTLRTYPE_OBSERVATIONCTRL, 
 											0,		// instanceNr
 											myHostname(true));
 				// Note: controller is now in state NO_STATE/CONNECTED (C/R)

@@ -579,9 +579,16 @@ void ChildControl::_processActionList()
 			break;
 
 		case CTState::RELEASED:
-		case CTState::FINISHED:
 			{
 				CONTROLReleaseEvent		request;
+				request.cntlrName = controller->cntlrName;
+				controller->port->send(request);
+			}
+			break;
+
+		case CTState::FINISHED:
+			{
+				CONTROLQuitEvent		request;
 				request.cntlrName = controller->cntlrName;
 				controller->port->send(request);
 			}
