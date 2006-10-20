@@ -1,0 +1,160 @@
+import Hosts
+from CS1_Jobs import *
+import time
+import os
+import copy
+
+class Section(object):
+    """
+    Represents a part of the CS1 application
+    """
+
+    def __init__(self, parset, package, host, buildvar = 'gnu_opt'):
+        self.parset = parset
+        self.package = package
+        self.host = host
+        self.buildvar = buildvar
+        self.executable = self.package.split('/')[-1]
+        
+    def build(self, cvsupdate, doBuild):
+        self.buildJob = BuildJob(self.package.split('/')[-1], \
+                                 self.host, \
+                                 self.buildvar, \
+                                 self.package)            
+        self.buildJob.build(cvsupdate, doBuild)
+
+    def isBuildSuccess(self):
+        return self.buildJob.isSuccess()
+    
+    def run(self, obsID, noRuns, runCmd = None):
+        if '_bgl' in self.buildvar:
+            self.runJob = BGLJob(self.package.split('/')[-1], \
+                                 self.host, \
+                                 executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                                 noProcesses = self.noProcesses, \
+                                 partition = self.partition, \
+                                 workingDir = self.workingDir)
+        elif 'mpi' in self.buildvar:
+            self.runJob = MPIJob(self.package.split('/')[-1], \
+                                 self.host, \
+                                 executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                                 noProcesses = self.noProcesses)
+        else:            
+            self.runJob = Job(self.package.split('/')[-1], \
+                              self.host, \
+                              executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable)
+
+        parsetfile = '/tmp/' + self.executable + '.parset'
+        self.parset.writeToFile(parsetfile)
+        # For now set the timeout on 100 times the number of seconds to process
+        self.runJob.run(obsID, parsetfile, 100*noRuns, noRuns, runCmd)
+        os.remove(parsetfile)
+
+    def isRunDone(self):
+        return self.runJob.isDone()
+    
+    def abortRun(self):
+        self.runJob.abort()
+    
+    def isRunSuccess(self):
+        return self.runJob.isSuccess()
+
+class InputSection(Section):
+    def __init__(self, parset, myhost):
+
+        self.nrsp = parset.getInt32('Input.NRSPBoards')
+        nSubbands = parset.getInt32('Observation.NSubbands')
+        nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
+        nCells = float(nSubbands) / float(nSubbandsPerCell)
+        if not nCells == float(int(nCells)):
+            raise Exception('Not a integer number of compute cells!')
+        self.nCells = int(nCells)
+        self.noProcesses = self.nrsp + self.nCells
+
+        host = copy.deepcopy(myhost)
+
+        slaves = host.getSlaves()
+        newslaves = [slaves[ind - 1] for ind in [1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 2, 3, 5, 6, 8, 9]]
+        host.setSlaves(newslaves)
+
+        Section.__init__(self, parset, \
+                         'Appl/CEP/CS1/CS1_InputSection', \
+                         host = host, \
+                         buildvar = 'gnu64_mpich-opt')
+
+        myslaves = self.host.getSlaves()[self.nrsp : self.nrsp + self.nCells]
+        transposeIPs = [s.getIntName() for s in myslaves]
+        bglprocIPs = [s.getExtIP() for s in myslaves]
+        self.parset['TransposeHosts'] = '[' + ','.join(transposeIPs) + ']'
+        self.parset['Connections.Input_BGLProc.ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
+
+    def run(self, obsID, noRuns, runCmd = None):
+        Section.run(self, obsID, noRuns, runCmd)
+
+class StorageSection(Section):
+    def __init__(self, parset, host):
+
+        nSubbands = parset.getInt32('Observation.NSubbands')
+        nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
+        if not nSubbands % nSubbandsPerCell == 0:
+            raise Exception('Not a integer number of subbands per compute cells!')
+
+        self.noProcesses = nSubbands / nSubbandsPerCell
+
+        Section.__init__(self, parset, \
+                         'Appl/CEP/CS1/CS1_Storage', \
+                         host = host, \
+                         buildvar = 'gnu32_mpich-opt')
+
+        storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses)]
+        self.parset['Connections.BGLProc_Storage.ServerHosts'] = '[' + ','.join(storageIPs) + ']'
+
+        
+class BGLProcSection(Section):
+    def __init__(self, parset, host, partition, workingDir):
+        self.partition = partition
+        self.workingDir = workingDir
+
+        nSubbands = parset.getInt32('Observation.NSubbands')
+        nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
+        if not nSubbands % nSubbandsPerCell == 0:
+            raise Exception('Not a integer number of compute cells!')
+        nCells = nSubbands / nSubbandsPerCell
+        self.noProcesses = int(nCells) * parset.getInt32('BGLProc.NodesPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
+        self.noProcesses = 128 # The calculation above is not correct, because some ranks aren't used
+
+        Section.__init__(self, parset, \
+                         'Appl/CEP/CS1/CS1_BGLProc', \
+                         host = host, \
+                         buildvar = 'gnu_bgl')
+
+        self.executable = 'CS1_BGL_Processing'
+        
+    def run(self, obsID, noRuns, runCmd = None):
+        nodesPerCell = self.parset.getInt32('BGLProc.NodesPerPset') * self.parset.getInt32('BGLProc.PsetsPerCell')
+        subbandsPerCell = self.parset.getInt32('General.SubbandsPerPset') * self.parset.getInt32('BGLProc.PsetsPerCell')
+        actualRuns = int(noRuns * subbandsPerCell / nodesPerCell)
+        if not actualRuns * nodesPerCell == noRuns * subbandsPerCell:
+            raise Exception('illegal number of runs')
+        Section.run(self, obsID, int(noRuns * subbandsPerCell / nodesPerCell), runCmd)        
+
+class GeneratorSection(Section):
+    def __init__(self, parset, host):
+        Section.__init__(self, parset, \
+                         'Demo/CEP/TFlopCorrelator/TFC_Generator', \
+                         host = host, \
+                         buildvar = 'gnu_opt')
+
+class DelayCompensationSection(Section):
+    def __init__(self, parset, host):
+        Section.__init__(self, parset, \
+                         'Appl/CEP/CS1/CS1_DelayCompensation', \
+                         host = host, \
+                         buildvar = 'gnu_opt')
+
+class Flagger(Section):
+    def __init__(self, parset, host):
+        Section.__init__(self, parset, \
+                         'Appl/CEP/CS1/CS1_Flagger', \
+                         host = host, \
+                         buildvar = 'gnu_opt')
