@@ -27,8 +27,10 @@
 #include "Shapes.h"
 #include "Coordinates.h"
 #include <Common/StreamUtil.h>
+#include <memory>
 
 using namespace LOFAR;
+using namespace std;
 
 void doShapes()
 {
@@ -36,19 +38,19 @@ void doShapes()
        << ShapeFactory::instance().registeredClassIds()
        << endl;
   {
-    Shape* shape = ShapeFactory::instance().create("Rectangle");
+    auto_ptr<Shape> shape(ShapeFactory::instance().create("Rectangle"));
     cout << *shape << endl;
   }
   {
-    Shape* shape = ShapeFactory::instance().create("Square");
+    auto_ptr<Shape> shape(ShapeFactory::instance().create("Square"));
     cout << *shape << endl;
   }
   {
-    Shape* shape = ShapeFactory::instance().create("Ellipse");
+    auto_ptr<Shape> shape(ShapeFactory::instance().create("Ellipse"));
     cout << *shape << endl;
   }
   {
-    Shape* shape = ShapeFactory::instance().create("Circle");
+    auto_ptr<Shape> shape(ShapeFactory::instance().create("Circle"));
     cout << *shape << endl;
   }
 }
@@ -59,18 +61,18 @@ void doCoordinates()
        << CoordinateFactory::instance().registeredClassIds()
        << endl;
   {
-    Coordinate* coord = CoordinateFactory::instance().
-      create("Cartesian", 2.4, 3.6, 4.8);
+    auto_ptr<Coordinate> coord(CoordinateFactory::instance().
+      create("Cartesian", 2.4, 3.6, 4.8));
     cout << *coord << endl;
   }
   {
-    Coordinate* coord = CoordinateFactory::instance().
-      create("Cylindrical", 0.6, 1.2, 2.4);
+    auto_ptr<Coordinate> coord(CoordinateFactory::instance().
+      create("Cylindrical", 0.6, 1.2, 2.4));
     cout << *coord << endl;
   }
   {
-    Coordinate* coord = CoordinateFactory::instance().
-      create("Spherical", 0.3, 0.15, 9.6);
+    auto_ptr<Coordinate> coord(CoordinateFactory::instance().
+      create("Spherical", 0.3, 0.15, 9.6));
     cout << *coord << endl;
   }
 }
