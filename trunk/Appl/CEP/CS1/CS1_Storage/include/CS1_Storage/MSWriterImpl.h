@@ -62,7 +62,8 @@ namespace LOFAR
       // must have shape [3,nantennas].
       MSWriterImpl (const char* msName, double startTime, double timeStep,
                     int nfreq, int ncorr,
-                    int nantennas, const vector<double>& antPos);
+                    int nantennas, const vector<double>& antPos,
+		    const vector<std::string>& storageStationNames);
 
       // Destructor
       ~MSWriterImpl();
@@ -121,7 +122,8 @@ namespace LOFAR
 
       // Create the MS and fill its subtables as much as possible.
       void createMS (const char* msName, 
-                     const casa::Block<casa::MPosition>& antPos);
+                     const casa::Block<casa::MPosition>& antPos,
+		     const vector<std::string>& storageStationNames);
 
       // Add a band.
       int addBand (int npolarizations, int nchannels,
@@ -134,7 +136,8 @@ namespace LOFAR
 
       // Fill the various subtables (at the end).
       // <group>
-      void fillAntenna (const casa::Block<casa::MPosition>& antPos);
+      void fillAntenna (const casa::Block<casa::MPosition>& antPos,
+                        const vector<std::string>& storageStationNames);
       void fillFeed();
       void fillObservation();
       void fillProcessor();

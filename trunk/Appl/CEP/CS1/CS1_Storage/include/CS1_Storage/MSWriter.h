@@ -27,6 +27,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 
+
 namespace LOFAR
 {
   namespace CS1
@@ -47,7 +48,8 @@ namespace LOFAR
       // Thus antPos must have shape [2,nantennas].
       MSWriter (const char* msName, double startTime, double timeStep, 
                 int nChan, int nPol, uint nantennas,
-                const vector<double>& antPos);
+                const vector<double>& antPos,
+		const vector<std::string>& storageStationNames);
 
       // Destructor
       ~MSWriter();
