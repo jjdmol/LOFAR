@@ -26,6 +26,7 @@
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <CS1_Interface/CS1_Config.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
