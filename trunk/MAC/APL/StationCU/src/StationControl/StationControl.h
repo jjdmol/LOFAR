@@ -23,8 +23,13 @@
 #ifndef STATIONCONTROL_H
 #define STATIONCONTROL_H
 
-//# Includes
-#include <boost/shared_ptr.hpp>
+//# Common Includes
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+#include <Common/LofarLogger.h>
+
+//# ACC Includes
+#include <APS/ParameterSet.h>
 
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
@@ -35,34 +40,32 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Event.h>
 
-//# local includes
+//# Application includes
 #include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
 #include <APL/APLCommon/PropertySetAnswer.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
+#include <APL/APLCommon/Observation.h>
 #include <APL/APLCommon/CTState.h>
 
-//# Common Includes
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
-#include <Common/LofarLogger.h>
-
-//# ACC Includes
-#include <APS/ParameterSet.h>
+//# local includes
+#include "ActiveObs.h"
 
 // forward declaration
 
 namespace LOFAR {
-	namespace StationCU {
+	using APLCommon::ChildControl;
+	using APLCommon::ParentControl;
 
-using	GCF::TM::GCFTimerPort;
-using	GCF::TM::GCFITCPort;
-using	GCF::TM::GCFPort;
-using	GCF::TM::GCFEvent;
-using	GCF::TM::GCFPortInterface;
-using	GCF::TM::GCFTask;
+	namespace StationCU {
+	using	GCF::TM::GCFTimerPort;
+	using	GCF::TM::GCFITCPort;
+	using	GCF::TM::GCFPort;
+	using	GCF::TM::GCFEvent;
+	using	GCF::TM::GCFPortInterface;
+	using	GCF::TM::GCFTask;
 
 
 class StationControl : public GCFTask,
@@ -78,6 +81,7 @@ private:
 
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state     (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult connect_state     (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult operational_state (GCFEvent& e, GCFPortInterface& p);
 
 	// avoid defaultconstruction and copying
@@ -85,15 +89,13 @@ private:
 	StationControl(const StationControl&);
    	StationControl& operator=(const StationControl&);
 
+	bool _addObservation(const string&   name);
    	void _disconnectedHandler(GCFPortInterface& port);
 
 	// Data members
-   	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet>  GCFMyPropertySetPtr;
-   	typedef boost::shared_ptr<GCF::PAL::GCFExtPropertySet> GCFExtPropertySetPtr;
-
    	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
-   	GCFMyPropertySetPtr				itsOwnPropertySet;
-   	GCFExtPropertySetPtr			itsExtPropertySet;
+   	GCF::PAL::GCFMyPropertySet*		itsOwnPropertySet;
+   	GCF::PAL::GCFExtPropertySet*	itsExtPropertySet;
 	bool							itsOwnPSinitialized;
 	bool							itsExtPSinitialized;
 
@@ -112,6 +114,9 @@ private:
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
 	uint32					itsClock;
+
+	typedef	map<string, ActiveObs*>::iterator		ObsIter;
+	map<string, ActiveObs*>	itsObsMap;			// current running observations
 };
 
   };//StationCU
