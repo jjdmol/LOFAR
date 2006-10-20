@@ -94,7 +94,6 @@ private:
 
 	void 	setState(CTState::CTstateNr	newState);
 	void	setObservationTimers();
-	void	startChildControllers();
 
 	void	doHeartBeatTask();
 

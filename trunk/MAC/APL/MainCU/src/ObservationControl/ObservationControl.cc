@@ -146,49 +146,6 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 }
 
 //
-// startChildControllers()
-//
-void ObservationControl::startChildControllers()
-{
-	string	myname   = globalParameterSet()->getString("_moduleName");
-	string	fullname = globalParameterSet()->locateModule(myname)+myname+".";
-	ParameterSet	subset = globalParameterSet()->makeSubset(fullname);
-
-	ParameterSet::const_iterator	iter = subset.begin();
-	ParameterSet::const_iterator	end  = subset.end();
-	string	childname;
-	while (iter != end) {
-		string::size_type pos = iter->first.find(".", 0);
-		if (pos != string::npos && iter->first.substr(0,pos) != childname) {
-			childname = iter->first.substr(0,pos);
-			// collect the information to start the child controller
-			string	childhostname  = subset.getString(childname+"._hostname");
-			uint16	childCntlrType = getControllerType(childname);
-			uint32	treeID         = globalParameterSet()->getUint32("_treeID");
-			uint16	instanceNr	   = 0;		// TODO
-			string	childCntlrName = controllerName(childCntlrType, instanceNr, treeID);
-
-			// child already running???
-			CTState::CTstateNr	requestedState= 
-									itsChildControl->getRequestedState(childCntlrName);
-
-			if (requestedState == CTState::NOSTATE) {
-				// fire request for new controller, will result in CONTROL_STARTED
-				itsChildControl->startChild(childCntlrName, 
-											treeID, 
-											childCntlrType,
-											instanceNr,
-											myHostname(true));
-				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
-
-				LOG_DEBUG_STR("Requested start of " << childCntlrName);
-			}
-		}
-		iter++;
-	}
-}
-
-//
 // handlePropertySetAnswer(answer)
 //
 void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
@@ -362,7 +319,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case F_ENTRY: {
 		// convert times and periods to timersettings.
 		setObservationTimers();
-		startChildControllers();
+		itsChildControl->startChildControllers();
 		itsHeartBeat = itsTimerPort->setTimer(1.0 * itsHeartBeat);
 		break;
 	}
@@ -394,7 +351,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			// TODO: do something else?	--> OE 837
 		}
 		else if (timerEvent.id == itsStartTimer) {
-			setState(CTState::ACTIVE);
+			setState(CTState::RESUME);
 			itsStartTimer = 0;
 			// TODO: do something else?	--> OE 837
 		}
@@ -536,7 +493,7 @@ void ObservationControl::setObservationTimers()
 
 	// (re)set the start timer
 	itsTimerPort->cancelTimer(itsStartTimer);
-	if (itsState < CTState::ACTIVE) { 				// not yet active?
+	if (itsState < CTState::RESUME) { 				// not yet active?
 		sec2go = start - now;
 		if (sec2go > 0) {
 			itsStartTimer = itsTimerPort->setTimer(1.0 * sec2go);
