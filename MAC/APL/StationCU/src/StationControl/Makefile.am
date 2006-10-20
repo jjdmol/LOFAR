@@ -5,12 +5,14 @@ StationControl_CPPFLAGS		= -Wno-deprecated \
 								  -fdiagnostics-show-location=once
 
 StationControl_SOURCES		= StationControl.cc \
-								  StationControlMain.cc 
+							  ActiveObs.cc \
+							  StationControlMain.cc 
 
 StationControl_LDADD		= $(LOFAR_DEPEND)
 StationControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= StationControl.h \
+							  ActiveObs.h \
 							  StationControlDefines.h
 
 INSTHDRS 					= 

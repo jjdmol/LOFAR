@@ -22,10 +22,13 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <APL/APLCommon/ChildControl.h>
+#include <APL/APLCommon/ParentControl.h>
 
 #include "StationControl.h"
 
 using namespace LOFAR::GCF::TM;
+using namespace LOFAR::APLCommon;
 using namespace LOFAR::StationCU;
 
 int main(int argc, char* argv[])
