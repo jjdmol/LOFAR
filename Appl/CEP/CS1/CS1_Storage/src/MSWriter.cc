@@ -38,7 +38,8 @@ namespace LOFAR
 
     MSWriter::MSWriter (const char* msName, double startTime, double timeStep,
                         int nChan, int nPol,
-                        uint nantennas, const vector<double>& antPos)
+                        uint nantennas, const vector<double>& antPos,
+			const vector<string>& storageStationNames)
       : itsWriter (0)
     {
       ASSERTSTR(antPos.size() == 3*nantennas, antPos.size() << " == " << 3*nantennas <<
@@ -46,7 +47,7 @@ namespace LOFAR
       try {
         itsWriter = new MSWriterImpl (msName, startTime, timeStep, nChan, nPol, 
                                       nantennas, 
-                                      antPos);
+                                      antPos, storageStationNames);
       } catch (AipsError x) {
         cerr << "MSWriter exception: " << x.getMesg() << endl;
         exit(0);

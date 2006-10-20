@@ -67,7 +67,8 @@ namespace LOFAR
 
     MSWriterImpl::MSWriterImpl (const char* msName, double startTime, double timeStep,
                                 int nfreq, int ncorr,
-                                int nantennas, const vector<double>& antPos)
+                                int nantennas, const vector<double>& antPos,
+				const vector<string>& storageStationNames)
       : itsNrBand   (0),
         itsNrField  (0),
         itsNrAnt    (nantennas),
@@ -106,7 +107,7 @@ namespace LOFAR
         antMPos[i] = MPosition::Convert (mpos, MPosition::ITRF) ();
       }
       // Create the MS.
-      createMS (msName, antMPos);
+      createMS (msName, antMPos, storageStationNames);
       itsNrPol  = new Block<Int>;
       itsNrChan = new Block<Int>;
       itsPolnr  = new Block<Int>;
@@ -149,7 +150,8 @@ namespace LOFAR
 
 
     void MSWriterImpl::createMS (const char* msName,
-                                 const Block<MPosition>& antPos)
+                                 const Block<MPosition>& antPos,
+				 const vector<string>& storageStationNames)
     {
       // Get the MS main default table description..
       TableDesc td = MS::requiredTableDesc();
@@ -217,7 +219,7 @@ namespace LOFAR
       // so the MS will know about those optional sutables.
       itsMS->createDefaultSubtables (Table::New);
       // Fill various subtables.
-      fillAntenna (antPos);
+      fillAntenna (antPos, storageStationNames);
       fillFeed();
       fillProcessor();
       fillObservation();
@@ -406,7 +408,8 @@ namespace LOFAR
       return itsNrField-1;
     }
 
-    void MSWriterImpl::fillAntenna (const Block<MPosition>& antPos)
+    void MSWriterImpl::fillAntenna (const Block<MPosition>& antPos,
+                                    const vector<string>& storageStationNames)
     {
       // Determine constants for the ANTENNA subtable.
       Vector<Double> antOffset(3);
@@ -415,8 +418,9 @@ namespace LOFAR
       MSAntenna msant = itsMS->antenna();
       MSAntennaColumns msantCol(msant);
       msant.addRow (itsNrAnt);
+      
       for (Int i=0; i<itsNrAnt; i++) {
-        msantCol.name().put (i, "ST_" + String::toString(i));
+        msantCol.name().put (i, storageStationNames[i]);
         msantCol.station().put (i, "LOFAR");
         msantCol.type().put (i, "GROUND-BASED");
         msantCol.mount().put (i, "ALT-AZ");

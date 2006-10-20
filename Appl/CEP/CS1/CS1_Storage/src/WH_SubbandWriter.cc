@@ -162,9 +162,11 @@ namespace LOFAR
       ASSERTSTR(antPos.size() == 3 * itsNStations,
                 antPos.size() << " == " << 3 * itsNStations);
       
+      vector<string> storageStationNames = itsPS.getStringVector("Storage.StorageStationNames");
+     
       itsWriter = new MSWriter(msName.c_str(), startTime, timeStep * itsTimesToIntegrate, 
                                itsNChannels, itsNPolSquared, itsNStations, 
-                               antPos);
+                               antPos, storageStationNames);
 
       double chanWidth = itsPS.getDouble("Observation.SampleRate") /
 			 itsPS.getDouble("Observation.NChannels");
