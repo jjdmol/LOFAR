@@ -19,39 +19,42 @@ include = '<Common/LofarTypes.h>';
 prelude = << PRELUDE_END
 
 	
-	// TP Command Opcode's
-		// Data Recording
-	static const uint32 TPALLOC   = 0x00000100;  // OUT allocate buffer space to a certain input channel
-	static const uint32 TPFREE    = 0x00000101;  // OUT free buffer settings and disable input channel 
-	static const uint32 TPRECORD  = 0x00000102;  // OUT record channel
-	static const uint32 TPSTOP    = 0x00000103;  // OUT freeze channel
-		// Triggering
-	static const uint32 TPTRIGGER = 0x00000200;  // IN trigger detected
-	static const uint32 TPTRIGCLR = 0x00000201;  // OUT clear trigger flag
-		// Data reading
-	static const uint32 TPREAD    = 0x00000300;  // OUT send recorded data to CEP
-	static const uint32 TPUDP     = 0x00000301;  // OUT configure UDP and IP header
-		// Board information
-	static const uint32 TPVERSION = 0x00000700;  // IN/OUT returns board version
-	static const uint32 TPSIZE    = 0x00000702;  // IN/OUT returns TBB memory size
-		// Board status
-	static const uint32 TPERROR   = 0x00000703;  // IN error on TBB board
-		// Board control
-	static const uint32 TPCLEAR   = 0x00000710;  // OUT clear registers
-	static const uint32 TPRESET   = 0x00000711;  // OUT reset to facory image
-	static const uint32 TPCONFIG  = 0x00000712;  // OUT reconfigure image
-		// Remote system update
-	static const uint32 TPERASEF  = 0x00000720;  // OUT erase flash memory
-	static const uint32 TPREADF   = 0x00000721;  // IN/OUT read flash memory
-	static const uint32 TPWRITEF  = 0x00000722;  // OUT write flash memory
-		// DDR2 acces
-	static const uint32 TPREADW   = 0x00000730;  // IN/OUT read 64bit word from mp
-	static const uint32 TPWRITEW  = 0x00000731;  // OUT write 64bit wort to mp
-		// Direct register acces 
-	static const uint32 TPREADR   = 0x00000740;  // IN/OUT read register(direct access), for debug purpose
-	static const uint32 TPWRITER  = 0x00000741;  // OUT write register(direct access), for debug purpose
-		// Alive
-	static const uint32 TPALIVE   = 0x00000999;  // OUT if response board exist
+	//--TP Command Opcode's-------------------------------------------------------
+	//--Data Recording----------
+	static const uint32 TPALLOC   	= 0x00000100;  // OUT allocate buffer space to a certain input channel
+	static const uint32 TPFREE    	= 0x00000101;  // OUT free buffer settings and disable input channel 
+	static const uint32 TPRECORD  	= 0x00000102;  // OUT record channel
+	static const uint32 TPSTOP    	= 0x00000103;  // OUT freeze channel
+	//--Triggering--------------
+	static const uint32 TPTRIGGER 	= 0x00000200;  // IN trigger detected
+	static const uint32 TPTRIGCLR 	= 0x00000201;  // OUT clear trigger flag
+	//--Data reading------------
+	static const uint32 TPREAD    	= 0x00000300;  // OUT send recorded data to CEP
+	static const uint32 TPUDP     	= 0x00000301;  // OUT configure UDP and IP header
+	static const uint32 TPPAGEPERIOD= 0x00000302;  // OUT time in one page 30.2 format in nsec
+	//--Board information-------
+	static const uint32 TPVERSION 	= 0x00000700;  // IN/OUT returns board version
+	static const uint32 TPSIZE    	= 0x00000701;  // IN/OUT returns TBB memory size
+	//--Board status------------
+	static const uint32 TPERROR  		= 0x00000702;  // IN error on TBB board
+	static const uint32 TPSTATUS 		= 0x00000703;  // IN status of board Voltage and Temperature
+	static const uint32 TPALIVE  		= 0x00000704;  // OUT if response board exist
+	//--Board control-----------
+	static const uint32 TPCLEAR  		= 0x00000710;  // OUT clear registers
+	static const uint32 TPRESET   	= 0x00000711;  // OUT reset to facory image
+	static const uint32 TPCONFIG 		= 0x00000712;  // OUT reconfigure image
+	//--Remote system update----
+	static const uint32 TPERASEF 		= 0x00000720;  // OUT erase flash memory
+	static const uint32 TPREADF  		= 0x00000721;  // IN/OUT read flash memory
+	static const uint32 TPWRITEF		= 0x00000722;  // OUT write flash memory
+	//--DDR2 acces--------------
+	static const uint32 TPREADW			= 0x00000730;  // IN/OUT read 64bit word from mp
+	static const uint32 TPWRITEW 		= 0x00000731;  // OUT write 64bit wort to mp
+	//--Direct register acces--- 
+	static const uint32 TPREADR  		= 0x00000740;  // IN/OUT read register(direct access), for debug purpose
+	static const uint32 TPWRITER 		= 0x00000741;  // OUT write register(direct access), for debug purpose
+	static const uint32 TPREADRX 		= 0x00000742;  // OUT write register(direct access), for debug purpose
+	
 PRELUDE_END;
 
 //
@@ -66,11 +69,11 @@ PRELUDE_END;
 // TP events
 //
 
-// data recording
+//--data recording------------
 event = {
   noheader;
   signal = ALLOC;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -92,11 +95,25 @@ event = {
 		type = "uint32";
 	};
 };
+
+event = {
+  noheader;
+  signal = ALLOCACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
   
 event = {
   noheader;
   signal = FREE;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -107,6 +124,20 @@ event = {
   };
   param = {
     name = "channel";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = FREEACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
 };
@@ -114,7 +145,7 @@ event = {
 event = {
   noheader;
   signal = RECORD;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -125,6 +156,20 @@ event = {
   };
   param = {
     name = "channel";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = RECORDACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
     type = "uint32";
   };
 };
@@ -132,7 +177,7 @@ event = {
 event = {
   noheader;
   signal = STOP;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -147,11 +192,25 @@ event = {
   };
 };
 
-// Triggering
+event = {
+  noheader;
+  signal = STOPACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+//--Triggering----------------
 event = {
   noheader;
   signal = TRIGGER;
-  dir = INOUT;
+  dir = IN;
   param = {
     name = "opcode";
     type = "uint32";
@@ -177,7 +236,7 @@ event = {
 event = {
   noheader;
   signal = TRIGCLR;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -192,11 +251,25 @@ event = {
   };
 };
 
-// Data reading
+event = {
+  noheader;
+  signal = TRIGCLRACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+//--Data reading--------------
 event = {
   noheader;
   signal = READ;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -210,20 +283,41 @@ event = {
     type = "uint32";
   };
 	param = {
-		name = "time";
+		name = "secondstime";
 		type = "uint32";
 	};
 	param = {
-		name = "period";
+		name = "sampletime";
+		type = "uint32";
+	};
+	param = {
+		name = "prepages";
+		type = "uint32";
+	};
+	param = {
+		name = "postpages";
 		type = "uint32";
 	};
 };
-  
 
 event = {
   noheader;
+  signal = READACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+  
+event = {
+  noheader;
   signal = UDP;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -233,25 +327,88 @@ event = {
     type = "uint32";
   };
   param = {
-    name = "udp";
-    type = "uint32[2]";
-  };
-	param = {
+		name = "mac";
+		type = "uint32[2]";
+	};
+  param = {
 		name = "ip";
 		type = "uint32[5]";
 	};
 	param = {
-		name = "mac";
-		type = "uint32[2]";
-	};
+    name = "udp";
+    type = "uint32[2]";
+  };
 };
+
+event = {
+  noheader;
+  signal = UDPACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = PAGEPERIOD;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
+    name = "channel";
+    type = "uint32";
+  };
+};  
+
+event = {
+  noheader;
+  signal = PAGEPERIODACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
+    name = "pageperiod";
+    type = "uint32";
+  };
+};  
   
-// Operation and Maintenance
-// Board information
+//--Operation and Maintenance-
 event = {
   noheader;
   signal = VERSION;
-  dir = INOUT;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = VERSIONACK;
+  dir = IN;
   param = {
     name = "opcode";
     type = "uint32";
@@ -294,11 +451,24 @@ event = {
 	};
 };
 
-
 event = {
   noheader;
   signal = SIZE;
-  dir = INOUT;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = SIZEACK;
+  dir = IN;
   param = {
     name = "opcode";
     type = "uint32";
@@ -308,16 +478,16 @@ event = {
     type = "uint32";
   };
   param = {
-    name = "size";
+    name = "npages";
     type = "uint32";
   };
 };
 
-// Board status
+//--Board status--------------
 event = {
   noheader;
   signal = ERROR;
-  dir = INOUT;
+  dir = IN;
   param = {
     name = "opcode";
     type = "uint32";
@@ -331,11 +501,121 @@ event = {
   };
 };
 
-// Board control
+event = {
+  noheader;
+  signal = STATUS;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = STATUSACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
+    name = "V12";
+    type = "uint32";
+  };
+  param = {
+    name = "V25";
+    type = "uint32";
+  };
+  param = {
+    name = "V33";
+    type = "uint32";
+  };
+  param = {
+    name = "Tpcb";
+    type = "uint32";
+  };
+  param = {
+    name = "Ttp";
+    type = "uint32";
+  };
+  param = {
+    name = "Tmp0";
+    type = "uint32";
+  };
+  param = {
+    name = "Tmp1";
+    type = "uint32";
+  };
+  param = {
+    name = "Tmp2";
+    type = "uint32";
+  };
+  param = {
+    name = "Tmp3";
+    type = "uint32";
+  };
+};
+
+event  = {
+  noheader;
+  signal = ALIVE;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event  = {
+  noheader;
+  signal = ALIVEACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+  param = {
+    name = "resetflag";
+    type = "uint32";
+  };
+};
+
+//--Board control-------------
 event = {
   noheader;
   signal = CLEAR;
-  dir = INOUT;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = CLEARACK;
+  dir = IN;
   param = {
     name = "opcode";
     type = "uint32";
@@ -349,7 +629,21 @@ event = {
 event = {
   noheader;
   signal = RESET;
-  dir = INOUT;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = RESETACK;
+  dir = IN;
   param = {
     name = "opcode";
     type = "uint32";
@@ -363,13 +657,27 @@ event = {
 event = {
   noheader;
   signal = CONFIG;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
   };
   param = {
-    name = "image";
+    name = "status";
+    type = "uint32";
+  };
+  param = {
+    name = "imagenr";
+    type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = CONFIGACK;
+  dir = IN;
+  param = {
+    name = "opcode";
     type = "uint32";
   };
   param = {
@@ -378,7 +686,7 @@ event = {
   };
 };
 
-// Remote system update
+//--Remote system update------
 event  = {
   noheader;
   signal = ERASEF;
@@ -399,8 +707,22 @@ event  = {
 
 event  = {
   noheader;
-  signal = READF;
+  signal = ERASEFACK;
   dir = INOUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event  = {
+  noheader;
+  signal = READF;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -413,6 +735,20 @@ event  = {
 		name = "addr";
 		type = "uint32";
 	};
+};
+
+event  = {
+  noheader;
+  signal = READFACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
   param = {
     name = "data";
     type = "uint32[256]";
@@ -422,7 +758,7 @@ event  = {
 event  = {
   noheader;
   signal = WRITEF;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -441,11 +777,25 @@ event  = {
 	};
 };
 
-// DDR2 Access
+event  = {
+  noheader;
+  signal = WRITEFACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+//--DDR2 Access---------------
 event  = {
   noheader;
   signal = READW;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -462,6 +812,20 @@ event  = {
 		name = "addr";
 		type = "uint32";
 	};
+};
+
+event  = {
+  noheader;
+  signal = READWACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
 	param = {
 		name = "wordlo";
 		type = "uint32";
@@ -475,7 +839,7 @@ event  = {
 event  = {
   noheader;
   signal = WRITEW;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "opcode";
     type = "uint32";
@@ -504,8 +868,8 @@ event  = {
 
 event  = {
   noheader;
-  signal = ALIVE;
-  dir = INOUT;
+  signal = WRITEWACK;
+  dir = IN;
   param = {
     name = "opcode";
     type = "uint32";

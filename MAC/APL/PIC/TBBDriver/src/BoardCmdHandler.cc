@@ -25,6 +25,7 @@
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "BoardCmdHandler.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -33,40 +34,33 @@ namespace LOFAR {
 BoardCmdHandler::BoardCmdHandler()
   : GCFFsm((State)&BoardCmdHandler::send_state)
 {
-	itsRetries 		= 10;
-	itsNrOfBoards	= 12;
-	itsActiveBoards = 0;
-	itsMaxBoards	= 12;
-	itsTimeOut		= 0.2;
-	itsCmdDone		= true;
+	itsMaxRetries = 10;
+	itsRetries = 0;
+	itsNrOfBoards	= 0;
+	itsNrOfChannels = 0;
+	itsCmdType = BoardCmd;
+	itsBoardNr = 0;
+	itsChannelNr = 0;
+	itsNextCmd = false;
 	itsClientPort	= 0;
-	itsBoardPorts	= 0;
-	
-	for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
-		itsBoardRetries[boardnr] = 0;
-	}
-	
 	itsCmd = 0;		
 }
 
-BoardCmdHandler::~BoardCmdHandler()
-{
-		
-}
+BoardCmdHandler::~BoardCmdHandler() {  }
 
 GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-	uint32		boardmask;
-			
+				
   switch (event.signal)	{
   	
   	case F_INIT: {
   	} break;
   	
   	case F_ENTRY: {
-  		for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
-				itsBoardRetries[boardnr] = 0;
+			if (itsCmd) {
+				sendCmd(); 
+				TRAN(BoardCmdHandler::waitack_state);
 			}
 		} break;			
 	  
@@ -74,41 +68,12 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
   	} break;
 
 		default: {
-			if(itsCmd && itsCmd->isValid(event)) { // isValid returns true if event is a valid cmd
+			
+			if (itsCmd && itsCmd->isValid(event)) { // isValid returns true if event is a valid cmd
 				itsClientPort = &port;
-				itsCmd->saveTbbEvent(event,itsActiveBoards);
-				
-				if(itsCmd->getSendMask()) {				
-					itsCmdDone = false;
-					for(int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
-						boardmask = (1 << boardnr);
-
-						LOG_DEBUG_STR(formatString("TP sending boardmask    [0x%08X]", boardmask));
-						LOG_DEBUG_STR(formatString("TP sending activeboards [0x%08X]", itsActiveBoards));
-						LOG_DEBUG_STR(formatString("TP sending sendmask     [0x%08X]", itsCmd->getSendMask()));
-
-						if((boardmask & itsActiveBoards) && (boardmask & itsCmd->getSendMask())) {
-								
-							if(itsBoardPorts[boardnr].isConnected()) {
-								itsCmd->sendTpEvent(itsBoardPorts[boardnr]);
-								if(itsCmd->waitAck()) 
-									itsBoardPorts[boardnr].setTimer(itsTimeOut);
-							}
-							else {
-								itsCmd->portError(boardnr);
-							}
-							itsBoardRetries[boardnr]++;
-						}
-					}
-				}
-				if(itsCmd->waitAck()) {					
-					TRAN(BoardCmdHandler::waitack_state);
-				}
-				else {
-					itsCmd->sendTbbAckEvent(itsClientPort);
-					itsCmdDone = true;
-					itsCmd = 0;
-				}
+				itsCmd->saveTbbEvent(event);
+				sendCmd();
+				TRAN(BoardCmdHandler::waitack_state);
 			}
 			else {
 				status = GCFEvent::NOT_HANDLED;
@@ -128,51 +93,35 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 		}	break;
   	
   	case F_ENTRY: {
-			if(itsCmd->done()) {
-				itsCmd->sendTbbAckEvent(itsClientPort);
-				itsCmdDone = true;
-				itsCmd = 0;
-				TRAN(BoardCmdHandler::send_state);	
+					
+			if (!itsCmd->waitAck() || itsNextCmd) {
+				nextCmd();
+				TRAN(BoardCmdHandler::send_state);
 			}
 		}	break;
 		    
 		case F_TIMER: {
 			// time-out, retry 
-			if(itsBoardRetries[portToBoardNr(port)] < itsRetries) {
-				if(port.isConnected()) {
-					itsCmd->sendTpEvent(port);
-					port.setTimer(itsTimeOut);
-				}
-				itsBoardRetries[portToBoardNr(port)]++;
-				LOG_DEBUG_STR(formatString("itsRetries[%d] = %d", portToBoardNr(port), itsBoardRetries[portToBoardNr(port)]));	
+			if (itsRetries < itsMaxRetries) {
+				sendCmd();
+				LOG_DEBUG_STR(formatString("itsRetries[%d] = %d", itsBoardNr, itsRetries));	
 			}
 			else {
-				// max retries, save zero's
-				itsCmd->saveTpAckEvent(event,portToBoardNr(port));
+				itsCmd->saveTpAckEvent(event,itsBoardNr); // max retries, save zero's
+				nextCmd();
 			}
-			
-			if(itsCmd->done()) {
-				itsCmd->sendTbbAckEvent(itsClientPort);
-				itsCmdDone = true;
-				itsCmd = 0;
-				TRAN(BoardCmdHandler::send_state);
-			}
+			TRAN(BoardCmdHandler::send_state);
 		}	break;
 		
     case F_EXIT: {
 		} break;
       
     default: {
-			if(itsCmd->isValid(event)) {
+			if (itsCmd->isValid(event)) {
 				port.cancelAllTimers();
-				itsCmd->saveTpAckEvent(event,portToBoardNr(port));
-				
-				if(itsCmd->done()) {
-					itsCmd->sendTbbAckEvent(itsClientPort);
-					itsCmdDone = true;
-					itsCmd = 0;
-					TRAN(BoardCmdHandler::send_state);	
-				}
+				itsCmd->saveTpAckEvent(event,itsBoardNr);
+				nextCmd();
+				TRAN(BoardCmdHandler::send_state);
 			}
 			else {
 				status = GCFEvent::NOT_HANDLED;
@@ -182,11 +131,49 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 	return status;
 }
 
-void BoardCmdHandler::setBoardPorts(GCFPortInterface* board_ports)
+void BoardCmdHandler::sendCmd()
 {
-	itsBoardPorts	= board_ports; // save address of boards array		
+	itsNextCmd = true;
+	uint32 boardmask = (1 << itsBoardNr);
+		
+	if (boardmask & DriverSettings::instance()->activeBoardsMask()) {
+		if (itsCmd->getCmdType() == BoardCmd) {
+			if (boardmask & itsCmd->getBoardMask()) {
+				itsCmd->sendTpEvent(itsBoardNr, itsChannelNr);
+				itsRetries++;
+				itsNextCmd = false;
+			}	
+		}	
+		if (itsCmd->getCmdType() == ChannelCmd) {
+			if (DriverSettings::instance()->getChSelected(itsChannelNr)) {
+				itsCmd->sendTpEvent(itsBoardNr, itsChannelNr);			
+				itsRetries++;
+				itsNextCmd = false;
+			}
+		}
+	}
 }
 
+void BoardCmdHandler::nextCmd()
+{
+	if(itsCmd->getCmdType() == BoardCmd) {
+		itsBoardNr++;
+	}
+	if(itsCmd->getCmdType() == ChannelCmd) {
+		itsChannelNr++;
+		itsBoardNr = DriverSettings::instance()->getChBoardNr(itsChannelNr);
+	}
+	// if all command done send ack meassage to client and clear all variables
+	if ((itsBoardNr == DriverSettings::instance()->maxBoards()) ||
+		  (itsChannelNr == DriverSettings::instance()->maxChannels())) {
+		itsCmd->sendTbbAckEvent(itsClientPort);
+		itsCmd = 0;
+		itsBoardNr = 0;
+		itsChannelNr = 0;
+		itsRetries = 0;	
+	}	
+}
+	
 void BoardCmdHandler::setTpCmd(Command *cmd)
 {
 	itsCmd = cmd;
@@ -194,45 +181,14 @@ void BoardCmdHandler::setTpCmd(Command *cmd)
 
 void BoardCmdHandler::setTpRetries(int32 Retries)
 {
-	itsRetries = Retries;
-}
-
-void BoardCmdHandler::setNrOfTbbBoards(int32 NrOfBoards)
-{
-	itsNrOfBoards = NrOfBoards;
-}
-
-void BoardCmdHandler::setActiveBoards(int32 ActiveBoards)
-{
-	itsActiveBoards = ActiveBoards;
-}
-	
-void BoardCmdHandler::setMaxTbbBoards(int32 MaxBoards)
-{
-	itsMaxBoards = MaxBoards;
-}
-				
-void BoardCmdHandler::setTpTimeOut(double TimeOut)
-{
-	itsTimeOut = TimeOut;
+	itsMaxRetries = Retries;
 }
 
 bool BoardCmdHandler::tpCmdDone()
 {
-	return itsCmdDone;
+	if(itsCmd == 0) return true;
+	return false;
 }
 
-int32 BoardCmdHandler::portToBoardNr(GCFPortInterface& port)
-{
-	int32 boardnr;
-	
-	for(boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
-		if(&port == &itsBoardPorts[boardnr]) { 				
-			return boardnr;
-		}
-	}	
-	return -1;	
-}
-	
 	} // end namespace TBB
 } // end namespace LOFAR

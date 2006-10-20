@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "ResetCmd.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -32,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a ResetCmd object.----------------------------------------
 ResetCmd::ResetCmd():
-		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPResetEvent();
 	itsTPackE 	= 0;
@@ -54,31 +55,27 @@ ResetCmd::~ResetCmd()
 // ----------------------------------------------------------------------------
 bool ResetCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_RESET)||(event.signal == TP_RESET)) {
+	if((event.signal == TBB_RESET)||(event.signal == TP_RESETACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void ResetCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
+void ResetCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBResetEvent(event);
 		
-	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
-	// if SendMask = 0, select all boards
-	if(itsSendMask == 0) {
-		for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			itsSendMask |= (1 << boardnr);
-		}
-	} 
+	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
 	
 	// mask for the installed boards
-	itsBoardsMask = activeboards;
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsSendMask & ~itsBoardsMask;
-	itsSendMask = itsSendMask & itsBoardsMask;
+	itsErrorMask = itsBoardMask & ~itsBoardsMask;
+	itsBoardMask = itsBoardMask & itsBoardsMask;
+	
+	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPRESET;
@@ -88,21 +85,27 @@ void ResetCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
 }
 
 // ----------------------------------------------------------------------------
-void ResetCmd::sendTpEvent(GCFPortInterface& port)
+void ResetCmd::sendTpEvent(int32 boardnr, int32)
 {
-	port.send(*itsTPE);
+	DriverSettings*		ds = DriverSettings::instance();
+	
+	if(ds->boardPort(boardnr).isConnected()) {
+		ds->boardPort(boardnr).send(*itsTPE);
+		ds->boardPort(boardnr).setTimer(ds->timeout());
+	}
+	else
+		itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
-	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPResetEvent(event);
+		itsTPackE = new TPResetackEvent(event);
 		
 		itsBoardStatus[boardnr]	= itsTPackE->status;
 		
@@ -114,40 +117,25 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->commstatus = SUCCESS;	
-	if(itsErrorMask) {
-		itsTBBackE->commstatus = FAILURE;
-		itsTBBackE->commstatus |= (itsErrorMask << 16);
-	} 
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsTBBackE->boardstatus[boardnr]	= itsBoardStatus[boardnr];
+	if(itsErrorMask != 0) {
+		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status |= (itsErrorMask << 16);
 	}
+	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+	
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-void ResetCmd::portError(int32 boardnr)
+CmdTypes ResetCmd::getCmdType()
 {
-	itsRecvMask	|= (1 << boardnr);
-	itsErrorMask |= (1 << boardnr);
+	return BoardCmd;
 }
 
 // ----------------------------------------------------------------------------
-uint32 ResetCmd::getSendMask()
+uint32 ResetCmd::getBoardMask()
 {
-	return itsSendMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 ResetCmd::getRecvMask()
-{
-	return itsRecvMask;
-}
-
-// ----------------------------------------------------------------------------
-bool ResetCmd::done()
-{
-	return (itsRecvMask == itsSendMask);
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------

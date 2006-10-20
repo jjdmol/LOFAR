@@ -1,4 +1,3 @@
-//#  AllocCmd.cc: implementation of the AllocCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +19,10 @@
 //#
 //#  $Id$
 
-
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "AllocCmd.h"
+#include "StatusCmd.h"
 #include "DriverSettings.h"
 
 namespace LOFAR {
@@ -32,48 +30,52 @@ namespace LOFAR {
 	using namespace TP_Protocol;
 	namespace TBB {
 
-//--Constructors for a AllocCmd object.----------------------------------------
-AllocCmd::AllocCmd():
+//--Constructors for a StatusCmd object.----------------------------------------
+StatusCmd::StatusCmd():
 		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
 {
-	itsTPE 			= new TPAllocEvent();
+	itsTPE 			= new TPStatusEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE	= new TBBAllocackEvent();
+	itsTBBackE 	= new TBBStatusackEvent();
 	
-	for(int boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) { 
+	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsBoardStatus[boardnr]	= 0;
-		itsChannelMask[boardnr]	= 0;
-	}
+		itsV12[boardnr] 				= 0;
+		itsV25[boardnr] 				= 0;
+		itsV33[boardnr] 				= 0;
+		itsTpcb[boardnr] 				= 0;
+		itsTtp[boardnr] 				= 0;
+		itsTmp0[boardnr] 				= 0;
+		itsTmp1[boardnr] 				= 0;
+		itsTmp2[boardnr] 				= 0;
+		itsTmp3[boardnr] 				= 0;
+	}		
 }
 	  
-//--Destructor for AllocCmd.---------------------------------------------------
-AllocCmd::~AllocCmd()
+//--Destructor for StatusCmd.---------------------------------------------------
+StatusCmd::~StatusCmd()
 {
 	delete itsTPE;
 	delete itsTBBackE;
 }
 
 // ----------------------------------------------------------------------------
-bool AllocCmd::isValid(GCFEvent& event)
+bool StatusCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_ALLOC)||(event.signal == TP_ALLOCACK)) {
+	if((event.signal == TBB_STATUS)||(event.signal == TP_STATUSACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void AllocCmd::saveTbbEvent(GCFEvent& event)
+void StatusCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE				= new TBBAllocEvent(event);
+	itsTBBE 			= new TBBStatusEvent(event);
 		
-	for(int boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) {
-		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; // for some commands board-id is used ???
-		if(itsChannelMask[boardnr] != 0)  itsBoardMask |= (1 << boardnr);
-	}
-	
-	// mask for the installed boards
+	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
+		
 	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
@@ -83,111 +85,91 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
-	itsTPE->opcode			= TPALLOC;
-	itsTPE->status			=	0;
-		
+	itsTPE->opcode	= TPSTATUS;
+	itsTPE->status	=	0;
+			
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-//void AllocCmd::sendTpEvent(GCFPortInterface& port, int32 channelnr)
-void AllocCmd::sendTpEvent(int32 boardnr, int32 channelnr)
+void StatusCmd::sendTpEvent(int32 boardnr, int32)
 {
 	DriverSettings*		ds = DriverSettings::instance();
-	itsTPE->channel = 0;
-	itsTPE->pageaddr = 0;
-	itsTPE->pagelength =	0;	
+	
 	if(ds->boardPort(boardnr).isConnected()) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
-			
 }
 
 // ----------------------------------------------------------------------------
-void AllocCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void StatusCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPAllocackEvent(event);
+		itsTPackE = new TPStatusackEvent(event);
 		
 		itsBoardStatus[boardnr]	= itsTPackE->status;
-		LOG_DEBUG_STR(formatString("Received AllocAck from boardnr[%d]", boardnr));
+		itsV12[boardnr]					= itsTPackE->V12;
+		itsV25[boardnr]					= itsTPackE->V25;
+		itsV33[boardnr]					= itsTPackE->V33;
+		itsTpcb[boardnr]				= itsTPackE->Tpcb;
+		itsTtp[boardnr]					= itsTPackE->Ttp;
+		itsTmp0[boardnr]				= itsTPackE->Tmp0;
+		itsTmp1[boardnr]				= itsTPackE->Tmp1;
+		itsTmp2[boardnr]				= itsTPackE->Tmp2;
+		itsTmp3[boardnr]				= itsTPackE->Tmp3;
+		
+		LOG_DEBUG_STR(formatString("Received StatusAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
 	}
 }
 
 // ----------------------------------------------------------------------------
-void AllocCmd::sendTbbAckEvent(GCFPortInterface* clientport)
+void StatusCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	if(itsErrorMask != 0) {
 		itsTBBackE->status |= COMM_ERROR;
 		itsTBBackE->status |= (itsErrorMask << 16);
 	}
 	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
-		 
+	
+	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
+		itsTBBackE->V12[boardnr]					= itsV12[boardnr];
+		itsTBBackE->V25[boardnr]					= itsV25[boardnr];
+		itsTBBackE->V33[boardnr]					= itsV33[boardnr];
+		itsTBBackE->Tpcb[boardnr]					= itsTpcb[boardnr];
+		itsTBBackE->Ttp[boardnr]					= itsTtp[boardnr];
+		itsTBBackE->Tmp0[boardnr]					= itsTmp0[boardnr];
+		itsTBBackE->Tmp1[boardnr]					= itsTmp1[boardnr];
+		itsTBBackE->Tmp2[boardnr]					= itsTmp2[boardnr];
+		itsTBBackE->Tmp3[boardnr]					= itsTmp3[boardnr];
+	}
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-uint32 AllocCmd::getBoardMask()
+CmdTypes StatusCmd::getCmdType()
+{
+	return BoardCmd;
+}
+
+// ----------------------------------------------------------------------------
+uint32 StatusCmd::getBoardMask()
 {
 	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------
-uint32 AllocCmd::getChannelMask(int32 boardnr)
-{
-	return itsChannelMask[boardnr];
-}
-
-// ----------------------------------------------------------------------------
-bool AllocCmd::waitAck()
+bool StatusCmd::waitAck()
 {
 	return true;
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes AllocCmd::getCmdType()
-{
-	return ChannelCmd;
-}
-
-// ----------------------------------------------------------------------------
-int32 getNrOfBits(uint32 mask)
-{
-	int bits = 0;
-	for (int nr = 0; nr < 32; nr++) {
-		if (mask & (1 << nr)) bits++;
-	}
-	return bits;
-}
-
-// ----------------------------------------------------------------------------
-void AllocCmd::devideChannels()
-{
-	for (int boardnr = 0; boardnr < 12; boardnr++) {
-		int32 channels;
-		int32 memorysize;
-		int32 channelsize;
-		
-		memorysize = DriverSettings::instance()->getMemorySize(boardnr);
-		channels = getNrOfBits(itsChannelMask[boardnr]);
-		
-		switch (channels) {
-			case 1: {
-				channelsize = (memorysize / channels);			
-				
-			} break;
-		}
-	}
-}
-
 
 	} // end TBB namespace
 } // end LOFAR namespace

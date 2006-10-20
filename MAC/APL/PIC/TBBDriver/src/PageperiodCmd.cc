@@ -1,4 +1,4 @@
-//#  AllocCmd.cc: implementation of the AllocCmd class
+//#  PageperiodCmd.cc: implementation of the PageperiodCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,10 @@
 //#
 //#  $Id$
 
-
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "AllocCmd.h"
+#include "PageperiodCmd.h"
 #include "DriverSettings.h"
 
 namespace LOFAR {
@@ -32,50 +31,41 @@ namespace LOFAR {
 	using namespace TP_Protocol;
 	namespace TBB {
 
-//--Constructors for a AllocCmd object.----------------------------------------
-AllocCmd::AllocCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
+//--Constructors for a PageperiodCmd object.----------------------------------------
+PageperiodCmd::PageperiodCmd():
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0)
 {
-	itsTPE 			= new TPAllocEvent();
+	itsTPE 			= new TPPageperiodEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE	= new TBBAllocackEvent();
-	
-	for(int boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) { 
-		itsBoardStatus[boardnr]	= 0;
-		itsChannelMask[boardnr]	= 0;
-	}
+	itsTBBackE 	= new TBBPageperiodackEvent();
 }
 	  
-//--Destructor for AllocCmd.---------------------------------------------------
-AllocCmd::~AllocCmd()
+//--Destructor for PageperiodCmd.---------------------------------------------------
+PageperiodCmd::~PageperiodCmd()
 {
 	delete itsTPE;
 	delete itsTBBackE;
 }
 
 // ----------------------------------------------------------------------------
-bool AllocCmd::isValid(GCFEvent& event)
+bool PageperiodCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_ALLOC)||(event.signal == TP_ALLOCACK)) {
+	if((event.signal == TBB_PAGEPERIOD)||(event.signal == TP_PAGEPERIODACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void AllocCmd::saveTbbEvent(GCFEvent& event)
+void PageperiodCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE				= new TBBAllocEvent(event);
+	itsTBBE 			= new TBBPageperiodEvent(event);
 		
-	for(int boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) {
-		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; // for some commands board-id is used ???
-		if(itsChannelMask[boardnr] != 0)  itsBoardMask |= (1 << boardnr);
-	}
+	itsBoardMask = (1 << DriverSettings::instance()->getChBoardNr((int32)itsTBBE->channel));
 	
-	// mask for the installed boards
 	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-	
+		
 	// Send only commands to boards installed
 	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
@@ -83,111 +73,75 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
-	itsTPE->opcode			= TPALLOC;
+	itsTPE->opcode			= TPPAGEPERIOD;
 	itsTPE->status			=	0;
-		
+	itsTPE->channel 		= itsTBBE->channel; 
+	
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-//void AllocCmd::sendTpEvent(GCFPortInterface& port, int32 channelnr)
-void AllocCmd::sendTpEvent(int32 boardnr, int32 channelnr)
+void PageperiodCmd::sendTpEvent(int32 boardnr, int32)
 {
 	DriverSettings*		ds = DriverSettings::instance();
-	itsTPE->channel = 0;
-	itsTPE->pageaddr = 0;
-	itsTPE->pagelength =	0;	
+	
 	if(ds->boardPort(boardnr).isConnected()) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
-			
 }
 
 // ----------------------------------------------------------------------------
-void AllocCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void PageperiodCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPAllocackEvent(event);
+		itsTPackE = new TPPageperiodackEvent(event);
 		
-		itsBoardStatus[boardnr]	= itsTPackE->status;
-		LOG_DEBUG_STR(formatString("Received AllocAck from boardnr[%d]", boardnr));
+		itsBoardStatus = itsTPackE->status;
+		itsPageperiod	= itsTPackE->pageperiod;
+		
+		LOG_DEBUG_STR(formatString("Received PageperiodAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
 	}
 }
 
 // ----------------------------------------------------------------------------
-void AllocCmd::sendTbbAckEvent(GCFPortInterface* clientport)
+void PageperiodCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	if(itsErrorMask != 0) {
 		itsTBBackE->status |= COMM_ERROR;
 		itsTBBackE->status |= (itsErrorMask << 16);
 	}
 	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
-		 
+	 
+	itsTBBackE->pageperiod	= itsPageperiod;
+	
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-uint32 AllocCmd::getBoardMask()
-{
-	return itsBoardMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 AllocCmd::getChannelMask(int32 boardnr)
-{
-	return itsChannelMask[boardnr];
-}
-
-// ----------------------------------------------------------------------------
-bool AllocCmd::waitAck()
-{
-	return true;
-}
-
-// ----------------------------------------------------------------------------
-CmdTypes AllocCmd::getCmdType()
+CmdTypes PageperiodCmd::getCmdType()
 {
 	return ChannelCmd;
 }
 
 // ----------------------------------------------------------------------------
-int32 getNrOfBits(uint32 mask)
+uint32 PageperiodCmd::getBoardMask()
 {
-	int bits = 0;
-	for (int nr = 0; nr < 32; nr++) {
-		if (mask & (1 << nr)) bits++;
-	}
-	return bits;
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------
-void AllocCmd::devideChannels()
+bool PageperiodCmd::waitAck()
 {
-	for (int boardnr = 0; boardnr < 12; boardnr++) {
-		int32 channels;
-		int32 memorysize;
-		int32 channelsize;
-		
-		memorysize = DriverSettings::instance()->getMemorySize(boardnr);
-		channels = getNrOfBits(itsChannelMask[boardnr]);
-		
-		switch (channels) {
-			case 1: {
-				channelsize = (memorysize / channels);			
-				
-			} break;
-		}
-	}
+	return true;
 }
-
 
 	} // end TBB namespace
 } // end LOFAR namespace

@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "WritewCmd.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -32,18 +33,13 @@ namespace LOFAR {
 
 //--Constructors for a WritewCmd object.----------------------------------------
 WritewCmd::WritewCmd():
-		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0),
+		itsMp(0),itsAddr(0),itsWordLo(0),itsWordHi(0)
 {
 	itsTPE 			= new TPWritewEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBWritewackEvent();
-	
-	itsMp						= 0;
-	itsBoardStatus	= 0;
-	itsAddr					= 0;
-	itsWordLo				= 0;
-	itsWordHi				= 0;
 }
 	  
 //--Destructor for WritewCmd.---------------------------------------------------
@@ -56,34 +52,27 @@ WritewCmd::~WritewCmd()
 // ----------------------------------------------------------------------------
 bool WritewCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_WRITEW)||(event.signal == TP_WRITEW)) {
+	if((event.signal == TBB_WRITEW)||(event.signal == TP_WRITEWACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void WritewCmd::saveTbbEvent(GCFEvent& event, int32 boards)
+void WritewCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBWritewEvent(event);
 		
-	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
-	// if SendMask = 0, select all boards
-	if(itsSendMask == 0) {
-		for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			itsSendMask |= (1 << boardnr);
-		}
-	} 
+	itsBoardMask = (1 << itsTBBE->board);
 	
 	// mask for the installed boards
-	if(boards > MAX_N_TBBBOARDS) boards = MAX_N_TBBBOARDS;
-	for(int boardnr = 0;boardnr < boards;boardnr++) {
-		itsBoardsMask |= (1 << boardnr);
-	}
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsSendMask & ~itsBoardsMask;
-	itsSendMask = itsSendMask & itsBoardsMask;
+	itsErrorMask = itsBoardMask & ~itsBoardsMask;
+	itsBoardMask = itsBoardMask & itsBoardsMask;
+	
+	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPWRITEW;
@@ -97,28 +86,30 @@ void WritewCmd::saveTbbEvent(GCFEvent& event, int32 boards)
 }
 
 // ----------------------------------------------------------------------------
-void WritewCmd::sendTpEvent(GCFPortInterface& port)
+void WritewCmd::sendTpEvent(int32 boardnr, int32)
 {
-	port.send(*itsTPE);
+	DriverSettings*		ds = DriverSettings::instance();
+	
+	if(ds->boardPort(boardnr).isConnected()) {
+		ds->boardPort(boardnr).send(*itsTPE);
+		ds->boardPort(boardnr).setTimer(ds->timeout());
+	}
+	else
+		itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
 void WritewCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
-	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPWritewEvent(event);
+		itsTPackE = new TPWritewackEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
-		itsMp 		= itsTPackE->mp;
-		itsAddr		= itsTPackE->addr;
-		itsWordLo	= itsTPackE->wordlo;
-		itsWordHi	= itsTPackE->wordhi;
-		
+				
 		LOG_DEBUG_STR(formatString("Received WritewAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
 	}
@@ -127,40 +118,25 @@ void WritewCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void WritewCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->commstatus = SUCCESS;	
-	if(itsErrorMask) {
-		itsTBBackE->commstatus = FAILURE;
-		itsTBBackE->commstatus |= (itsErrorMask << 16);
-	} 
-	itsTBBackE->boardstatus	= itsBoardStatus;
-	itsTBBackE->addr				= itsAddr;
-	
+	if(itsErrorMask != 0) {
+		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status |= (itsErrorMask << 16);
+	}
+	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-void WritewCmd::portError(int32 boardnr)
+CmdTypes WritewCmd::getCmdType()
 {
-	itsRecvMask	|= (1 << boardnr);
-	itsErrorMask |= (1 << boardnr);
+	return BoardCmd;
 }
 
 // ----------------------------------------------------------------------------
-uint32 WritewCmd::getSendMask()
+uint32 WritewCmd::getBoardMask()
 {
-	return itsSendMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 WritewCmd::getRecvMask()
-{
-	return itsRecvMask;
-}
-
-// ----------------------------------------------------------------------------
-bool WritewCmd::done()
-{
-	return (itsRecvMask == itsSendMask);
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------

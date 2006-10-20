@@ -68,84 +68,93 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   switch(buf.opcode)
 	 {
 	 case TPALLOC:
-  		buf.event.signal = TP_ALLOC;
-  		buf.event.length = 20;
+  		buf.event.signal = TP_ALLOCACK;
+  		buf.event.length = 8;
   		break;
 	 case TPFREE:
-  		buf.event.signal = TP_FREE;
-  		buf.event.length = 12;
+  		buf.event.signal = TP_FREEACK;
+  		buf.event.length = 8;
   		break;
 	 case TPRECORD:
-  		buf.event.signal = TP_RECORD;
-  		buf.event.length = 12;
+  		buf.event.signal = TP_RECORDACK;
+  		buf.event.length = 8;
   		break;
 	 case TPSTOP:
-  		buf.event.signal = TP_RECORD;
-  		buf.event.length = 12;
+  		buf.event.signal = TP_RECORDACK;
+  		buf.event.length = 8;
   		break;
 	 case TPTRIGGER:
   		buf.event.signal = TP_TRIGGER;
   		buf.event.length = 20;
   		break;
 	 case TPTRIGCLR:
-  		buf.event.signal = TP_TRIGCLR;
-  		buf.event.length = 12;
+  		buf.event.signal = TP_TRIGCLRACK;
+  		buf.event.length = 8;
   		break;
 	 case TPREAD:
-  		buf.event.signal = TP_READ;
-  		buf.event.length = 20;
+  		buf.event.signal = TP_READACK;
+  		buf.event.length = 8;
   		break;
 	 case TPUDP:
-  		buf.event.signal = TP_UDP;
-  		buf.event.length = 44;
+  		buf.event.signal = TP_UDPACK;
+  		buf.event.length = 8;
   		break;
+	 case TPPAGEPERIOD:
+  		buf.event.signal = TP_PAGEPERIODACK;
+  		buf.event.length = 12;
+  		break;
+  		
 	 case TPVERSION:
-  		buf.event.signal = TP_VERSION;
+  		buf.event.signal = TP_VERSIONACK;
   		buf.event.length = 40;
   		break;
 	 case TPSIZE:
-  		buf.event.signal = TP_SIZE;
+  		buf.event.signal = TP_SIZEACK;
   		buf.event.length = 12;
+  		break;
+  case TPSTATUS:
+  		buf.event.signal = TP_STATUSACK;
+  		buf.event.length = 44;
   		break;
 	 case TPERROR:
   		buf.event.signal = TP_ERROR;
   		buf.event.length = 12;
   		break;
 	 case TPCLEAR:
-  		buf.event.signal = TP_CLEAR;
+  		buf.event.signal = TP_CLEARACK;
   		buf.event.length = 8;
   		break;
 	 case TPRESET:
-  		buf.event.signal = TP_RESET;
+  		buf.event.signal = TP_RESETACK;
   		buf.event.length = 8;
   		break;
 	 case TPCONFIG:
-  		buf.event.signal = TP_CONFIG;
-  		buf.event.length = 12;
+  		buf.event.signal = TP_CONFIGACK;
+  		buf.event.length = 8;
   		break;
 	 case TPERASEF:
-  		buf.event.signal = TP_ERASEF;
-  		buf.event.length = 12;
+  		buf.event.signal = TP_ERASEFACK;
+  		buf.event.length = 8;
   		break;
 	 case TPREADF:
-  		buf.event.signal = TP_READF;
+  		buf.event.signal = TP_READFACK;
   		buf.event.length = 1032;
   		break;
 	 case TPWRITEF:
-  		buf.event.signal = TP_WRITEF;
-  		buf.event.length = 1032;
+  		buf.event.signal = TP_WRITEFACK;
+  		buf.event.length = 8;
   		break;
 	 case TPREADW:
-  		buf.event.signal = TP_READW;
-  		buf.event.length = 24;
+  		buf.event.signal = TP_READWACK;
+  		buf.event.length = 16;
   		break;
 	 case TPWRITEW:
-  		buf.event.signal = TP_WRITEW;
-  		buf.event.length = 24;
+  		buf.event.signal = TP_WRITEWACK;
+  		buf.event.length = 8;
   		break;
    case TPALIVE:
-  		buf.event.signal = TP_ALIVE;
-  		buf.event.length = 8;
+  		buf.event.signal = TP_ALIVEACK;
+  		buf.event.length = 12;
   		break;	
   		
 	 default:

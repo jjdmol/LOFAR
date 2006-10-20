@@ -28,6 +28,7 @@
 #include <GCF/GCF_ServiceInfo.h>
 
 #include "TBBDriver.h"
+#include "DriverSettings.h"
 #include "RawEvent.h" 
 
 // include all cmd and msg classes
@@ -38,18 +39,18 @@
 #include "TrigclrCmd.h"
 #include "ReadCmd.h"
 #include "UdpCmd.h"
+#include "PageperiodCmd.h"
 #include "VersionCmd.h"
 #include "SizeCmd.h"
+#include "StatusCmd.h"
 #include "ClearCmd.h"
 #include "ResetCmd.h"
 #include "ConfigCmd.h"
 #include "ErasefCmd.h"
 #include "ReadfCmd.h"
 #include "WritefCmd.h"
-// #include "ReadwCmd.h"
-// #include "WritewCmd.h"
-// #include "TriggerMsg.h"
-// #include "ErrorMsg.h"
+#include "ReadwCmd.h"
+#include "WritewCmd.h"
 
 
 #define ETHERTYPE_TP 0x7BB0			// letters of TBB
@@ -113,6 +114,11 @@ TBBDriver::TBBDriver(string name)
 	itsAliveCheck = false;
 	itsActiveBoardsChange = false;
 	
+  // setting up driver settings
+  DriverSettings*		tbb_ds = DriverSettings::instance();
+  tbb_ds->setMaxBoards(MAX_N_TBBBOARDS);
+	tbb_ds->setTimeOut(globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"));  
+    
   // tell broker we are here
   LOG_DEBUG("Registering protocols");
   registerProtocol(TBB_PROTOCOL, TBB_PROTOCOL_signalnames);
@@ -128,16 +134,13 @@ TBBDriver::TBBDriver(string name)
 
   // open port with TBB board
   LOG_DEBUG("Connecting to TBB boards");
-	//itsBoard = new GCFETHRawPort[globalParameterSet()->getInt32("RS.N_TBBBOARDS")];
-	itsBoard = new GCFETHRawPort[MAX_N_TBBBOARDS];
-  //itsBoard = new GCFETHRawPort[tbb_ss->nrTbbBoards()];
+	itsBoard = new GCFETHRawPort[tbb_ds->maxBoards()];
   ASSERT(itsBoard);
 	
-	itsMsgPort.init(*this, "MsgPort", GCFPortInterface::SAP, TBB_PROTOCOL);
-	// TODO
-	//itsMsgPort.setAddr(globalParameterSet()->getString("TBBDriver.IF_NAME").c_str(), macaddrstr);
+	tbb_ds->setBoardPorts(itsBoard);
 	
-  //
+	itsMsgPort.init(*this, "MsgPort", GCFPortInterface::SAP, TBB_PROTOCOL);
+
   // Attempt access of TBBDriver.MAC_BASE, if it fails use the TBBDriver.ADDR0
   // parameters.
   //
@@ -152,8 +155,8 @@ TBBDriver::TBBDriver(string name)
   char boardname[64];
   char paramname[64];
   char macaddrstr[64];
-	//for (int boardid = 0; boardid < globalParameterSet()->getInt32("RS.N_TBBBOARDS"); boardid++) {
-	for (int boardid = 0; boardid < MAX_N_TBBBOARDS; boardid++) {
+
+	for (int boardid = 0; boardid < tbb_ds->maxBoards(); boardid++) {
 		snprintf(boardname, 64, "board%d", boardid);
 		
 		if (bUseMAC_BASE) {
@@ -177,12 +180,9 @@ TBBDriver::TBBDriver(string name)
 	LOG_DEBUG_STR("initializing handlers");
 	cmdhandler = new BoardCmdHandler();
 	msghandler = new MsgHandler();
-	 
-	cmdhandler->setBoardPorts(itsBoard);
-	cmdhandler->setMaxTbbBoards(MAX_N_TBBBOARDS);
-	//cmdhandler->setNrOfTbbBoards(globalParameterSet()->getInt32("RS.N_TBBBOARDS"));
+		
 	cmdhandler->setTpRetries(globalParameterSet()->getInt32("TBBDriver.TP_RETRIES"));
-	cmdhandler->setTpTimeOut(globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"));
+	
 	 	 	 
 	// set Tbb queue
 	LOG_DEBUG_STR("initializing TbbQueue");
@@ -192,6 +192,11 @@ TBBDriver::TBBDriver(string name)
 	itsAlive					= new TPAliveEvent();
  	itsAlive->opcode	= TPALIVE;
  	itsAlive->status	= 0;
+ 	 	
+ 	itsSize						=	new TPSizeEvent();
+ 	itsSize->opcode 	= TPSIZE;
+ 	itsSize->status 	= 0;
+ 	
 }
 
 //-----------------------------------------------------------------------------
@@ -200,6 +205,7 @@ TBBDriver::~TBBDriver()
 	delete cmdhandler; 
 	delete msghandler;
 	delete itsAlive;
+	delete itsSize;
 }
 
 //-----------------------------------------------------------------------------
@@ -220,12 +226,11 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 		case F_CONNECTED: {
       LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
 			
-			if(isEnabled())
-				itsAcceptor.open();	      			
-			
+			if(isEnabled()) {
+				itsAcceptor.open();
+			}	      			
 			if (itsAcceptor.isConnected()) {
-				cmdhandler->setActiveBoards(itsActiveBoards); 
-      	itsAcceptor.setTimer(5.0);
+      	itsAcceptor.setTimer((long)5);
       	TRAN(TBBDriver::idle_state);
       }
     } break;
@@ -313,7 +318,20 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 		
 		case TBB_GETCONFIG: {
+			TBBGetconfigackEvent ack;
+			ack.max_boards = DriverSettings::instance()->maxBoards();
+			ack.active_boards = DriverSettings::instance()->activeBoardsMask();
+			port.send(ack); 
+		} break;
 		
+		case TBB_SIZE: {
+			TBBSizeackEvent ack;
+			ack.status = ~DriverSettings::instance()->activeBoardsMask() << 16;
+			if (ack.status != 0) ack.status |= COMM_ERROR;
+			for (int32 boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) {
+				ack.npages[boardnr] = DriverSettings::instance()->getMemorySize(boardnr);
+			}
+			port.send(ack); 
 		} break;
 		
 		case TBB_SUBSCRIBE: {
@@ -323,7 +341,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		case TBB_UNSUBSCRIBE: {
 			msghandler->removeClient(port);
 		} break;
-				
+						
 		case TP_TRIGGER: {
 			msghandler->sendTrigger(event);
 		} break;
@@ -386,9 +404,25 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			status = RawEvent::dispatch(*this, port);
 		}	break;
 					
-		case TP_ALIVE: {
-			if(CheckAlive(event, port))
+		case TP_ALIVEACK: {
+			if(CheckAlive(event, port)) {
+				//cmdhandler->setActiveBoards(itsActiveBoards); 
 				TRAN(TBBDriver::idle_state);
+			}
+		} break;
+		
+		case TP_SIZEACK: {
+			if(CheckAlive(event, port)) {
+				TRAN(TBBDriver::idle_state);
+			}
+		} break;
+		
+		case TBB_GETCONFIG: {
+			TBBGetconfigackEvent ack;
+			ack.max_boards = DriverSettings::instance()->maxBoards();
+			ack.active_boards = itsActiveBoards;
+			port.send(ack); 
+		
 		} break;
 		
 		case TBB_SUBSCRIBE: {
@@ -407,23 +441,25 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			msghandler->sendError(event);
 		} break;		
 		
-		case TP_ALLOC:	
-		case TP_FREE:
-		case TP_RECORD: 
-		case TP_STOP:
-		case TP_TRIGCLR:
-		case TP_READ:
-		case TP_UDP:
-		case TP_VERSION:
-		case TP_SIZE:
-		case TP_CLEAR:
-		case TP_RESET:
-		case TP_CONFIG:
-		case TP_ERASEF:
-		case TP_READF:
-		case TP_WRITEF:
-		case TP_READW:
-		case TP_WRITEW:
+		case TP_ALLOCACK:	
+		case TP_FREEACK:
+		case TP_RECORDACK: 
+		case TP_STOPACK:
+		case TP_TRIGCLRACK:
+		case TP_READACK:
+		case TP_UDPACK:
+		case TP_PAGEPERIODACK:	
+		case TP_VERSIONACK:
+		//case TP_SIZEACK:
+		case TP_STATUSACK:
+		case TP_CLEARACK:
+		case TP_RESETACK:
+		case TP_CONFIGACK:
+		case TP_ERASEFACK:
+		case TP_READFACK:
+		case TP_WRITEFACK:
+		case TP_READWACK:
+		case TP_WRITEWACK:
 		{
 			status = cmdhandler->dispatch(event,port); // dispatch ack from boards
 			if(cmdhandler->tpCmdDone()){
@@ -465,7 +501,7 @@ void TBBDriver::undertaker()
 void TBBDriver::openBoards()
 {
 	LOG_DEBUG_STR("opening boards");
-	for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) {
+	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
 		if (itsBoard[boardnr].isConnected())
 			itsBoard[boardnr].close();
 		itsBoard[boardnr].open();
@@ -478,9 +514,9 @@ void TBBDriver::openBoards()
 bool TBBDriver::isEnabled()
 {
   bool enabled = true;
-	for (int boardid = 0; boardid < MAX_N_TBBBOARDS; boardid++)
+	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++)
 	{
-    if (!itsBoard[boardid].isConnected())
+    if (!itsBoard[boardnr].isConnected())
     {
       enabled = false;
       break;
@@ -493,34 +529,53 @@ bool TBBDriver::isEnabled()
 bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 {
 	bool done = false;
-	int boardnr;
+	static int32 boardnr;
 	static uint32 activeboards;
 	static uint32 checkmask;
 	
 	if(!itsAliveCheck) {
 		itsAliveCheck	= true;
+		boardnr = 0;
 		checkmask			= 0;
 		activeboards	= 0;
 		
-		for(boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) {
-			itsBoard[boardnr].send(*itsAlive);
-			itsBoard[boardnr].setTimer(0.5);
-			checkmask |= (1 << boardnr);
+		for(int nr = 0; nr < DriverSettings::instance()->maxBoards(); nr++) {
+			//itsBoard[boardnr].send(*itsAlive);
+			//itsBoard[boardnr].send(*itsSize);
+			//itsBoard[boardnr].setTimer(0.5);
+			checkmask |= (1 << nr);
 		}
+		itsBoard[boardnr].send(*itsSize);
+		itsBoard[boardnr].setTimer(DriverSettings::instance()->timeout());
 	}
 	else {
 		port.cancelAllTimers();
-		for(boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			if(&port == &itsBoard[boardnr]) {
+		//for(boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) {
+			//if(&port == &itsBoard[boardnr]) {
 				checkmask &= ~(1 << boardnr);
-				if(event.signal == TP_ALIVE)
-					itsActiveBoards |= (1 << boardnr);	
-			}
-		}
+				//if(event.signal == TP_ALIVE)
+				if(event.signal == TP_SIZEACK) {
+					activeboards |= (1 << boardnr);
+					TPSizeackEvent ack(event);
+					DriverSettings::instance()->setMemorySize(boardnr,ack.npages);
+				}
+				else {
+					DriverSettings::instance()->setMemorySize(boardnr,0);
+				}
+				boardnr++;
+				if (boardnr < DriverSettings::instance()->maxBoards()) {
+					itsBoard[boardnr].send(*itsSize);
+					itsBoard[boardnr].setTimer(DriverSettings::instance()->timeout());
+				}
+			
+			
+		//}
 	}
 	if(checkmask == 0) {
 		if(activeboards != itsActiveBoards) {
 			itsActiveBoards = activeboards;
+			DriverSettings::instance()->setActiveBoards(itsActiveBoards);
+			LOG_DEBUG_STR("Active boards: " << itsActiveBoards);
 			itsActiveBoardsChange = true;
 		}
 		itsAliveCheck = false;
@@ -579,6 +634,12 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 			cmdhandler->setTpCmd(cmd);
 		} break;
 		
+		case TBB_PAGEPERIOD: {
+			PageperiodCmd *cmd;
+			cmd = new PageperiodCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
 		case TBB_VERSION: {
 			VersionCmd *cmd;
 			cmd = new VersionCmd();
@@ -588,6 +649,12 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 		case TBB_SIZE:	{
 			SizeCmd *cmd;
 			cmd = new SizeCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
+		case TBB_STATUS:	{
+			StatusCmd *cmd;
+			cmd = new StatusCmd();
 			cmdhandler->setTpCmd(cmd);
 		} break;
 		
@@ -627,7 +694,7 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 			cmd = new WritefCmd();
 			cmdhandler->setTpCmd(cmd);
 		} break;
-		/*
+
 		case TBB_READW: {
 			ReadwCmd *cmd;
 			cmd = new ReadwCmd();
@@ -639,14 +706,13 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 			cmd = new WritewCmd();
 			cmdhandler->setTpCmd(cmd);
 		} break;
-		*/ 
+
 		default: {
 			return false;
 		}
 	}
 	return true;
 }
-
 
   //} // end namespace TBB
 //} // end namespace LOFAR

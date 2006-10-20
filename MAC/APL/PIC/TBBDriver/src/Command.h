@@ -31,7 +31,9 @@
 namespace LOFAR {
   namespace TBB {
 		
-    class Command
+		enum CmdTypes {BoardCmd,ChannelCmd}; 
+				
+		class Command
     {
     public:
 						
@@ -43,27 +45,22 @@ namespace LOFAR {
 			
 			virtual bool isValid(GCFEvent& event) = 0;
 				
-			virtual void saveTbbEvent(GCFEvent& event, uint32 activeboards) = 0;
+			virtual void saveTbbEvent(GCFEvent& event) = 0;
 											
-			virtual void sendTpEvent(GCFPortInterface& port) = 0;
-
+			virtual void sendTpEvent(int32 boardnr, int32 channelnr) = 0;
+			
 			virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr) = 0;
 
 			virtual void sendTbbAckEvent(GCFPortInterface* clientport) = 0;
 			
-			virtual void portError(int32 boardnr) = 0;
-			
-			virtual uint32 getSendMask() = 0;
+			virtual uint32 getBoardMask() = 0;
 				
-			virtual uint32 getRecvMask() = 0;
-			
-			virtual bool done() = 0;
-			
 			virtual bool waitAck() = 0;
 			
+			virtual CmdTypes getCmdType() = 0;
+			
     private:
-      
-									
+												
     };
 	} // end TBB namespace
 } // end LOFAR namespace

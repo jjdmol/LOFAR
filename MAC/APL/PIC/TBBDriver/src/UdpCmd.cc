@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "UdpCmd.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -32,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a UdpCmd object.----------------------------------------
 UdpCmd::UdpCmd():
-		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPUdpEvent();
 	itsTPackE 	= 0;
@@ -54,31 +55,27 @@ UdpCmd::~UdpCmd()
 // ----------------------------------------------------------------------------
 bool UdpCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_UDP)||(event.signal == TP_UDP)) {
+	if((event.signal == TBB_UDP)||(event.signal == TP_UDPACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void UdpCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
+void UdpCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBUdpEvent(event);
 		
-	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
-	// if SendMask = 0, select all boards
-	if(itsSendMask == 0) {
-		for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			itsSendMask |= (1 << boardnr);
-		}
-	} 
+	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
 	
 	// mask for the installed boards
-	itsBoardsMask = activeboards;
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsSendMask & ~itsBoardsMask;
-	itsSendMask = itsSendMask & itsBoardsMask;
+	itsErrorMask = itsBoardMask & ~itsBoardsMask;
+	itsBoardMask = itsBoardMask & itsBoardsMask;
+	
+	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPUDP;
@@ -97,21 +94,27 @@ void UdpCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
 }
 
 // ----------------------------------------------------------------------------
-void UdpCmd::sendTpEvent(GCFPortInterface& port)
+void UdpCmd::sendTpEvent(int32 boardnr, int32)
 {
-	port.send(*itsTPE);
+	DriverSettings*		ds = DriverSettings::instance();
+	
+	if(ds->boardPort(boardnr).isConnected()) {
+		ds->boardPort(boardnr).send(*itsTPE);
+		ds->boardPort(boardnr).setTimer(ds->timeout());
+	}
+	else
+		itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
 void UdpCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
-	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPUdpEvent(event);
+		itsTPackE = new TPUdpackEvent(event);
 		
 		itsBoardStatus[boardnr]	= itsTPackE->status;
 		
@@ -123,40 +126,25 @@ void UdpCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void UdpCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->commstatus = SUCCESS;	
-	if(itsErrorMask) {
-		itsTBBackE->commstatus = FAILURE;
-		itsTBBackE->commstatus |= (itsErrorMask << 16);
-	} 
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsTBBackE->boardstatus[boardnr]	= itsBoardStatus[boardnr];
+	if(itsErrorMask != 0) {
+		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status |= (itsErrorMask << 16);
 	}
+	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-void UdpCmd::portError(int32 boardnr)
+CmdTypes UdpCmd::getCmdType()
 {
-	itsRecvMask	|= (1 << boardnr);
-	itsErrorMask |= (1 << boardnr);
+	return BoardCmd;
 }
 
 // ----------------------------------------------------------------------------
-uint32 UdpCmd::getSendMask()
+uint32 UdpCmd::getBoardMask()
 {
-	return itsSendMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 UdpCmd::getRecvMask()
-{
-	return itsRecvMask;
-}
-
-// ----------------------------------------------------------------------------
-bool UdpCmd::done()
-{
-	return (itsRecvMask == itsSendMask);
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------

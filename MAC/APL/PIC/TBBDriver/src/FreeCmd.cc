@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "FreeCmd.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -32,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a FreeCmd object.----------------------------------------
 FreeCmd::FreeCmd():
-		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPFreeEvent();
 	itsTPackE 	= 0;
@@ -41,6 +42,7 @@ FreeCmd::FreeCmd():
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsBoardStatus[boardnr]	= 0;
+		itsChannelMask[boardnr]	= 0;
 	}
 }
 	  
@@ -54,58 +56,64 @@ FreeCmd::~FreeCmd()
 // ----------------------------------------------------------------------------
 bool FreeCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_FREE)||(event.signal == TP_FREE)) {
+	if((event.signal == TBB_FREE)||(event.signal == TP_FREEACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void FreeCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
+void FreeCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBFreeEvent(event);
-		
-	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
-	// if SendMask = 0, select all boards
-	if(itsSendMask == 0) {
-		for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			itsSendMask |= (1 << boardnr);
-		}
-	} 
+
+	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
+		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; // for some commands board-id is used ???
+		if(itsChannelMask[boardnr] != 0)  itsBoardMask |= (1 << boardnr);
+	}
 	
 	// mask for the installed boards
-		itsBoardsMask = activeboards;
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsSendMask & ~itsBoardsMask;
-	itsSendMask = itsSendMask & itsBoardsMask;
+	itsErrorMask = itsBoardMask & ~itsBoardsMask;
+	itsBoardMask = itsBoardMask & itsBoardsMask;
+	
+	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPFREE;
 	itsTPE->status			= 0;
-	itsTPE->channel			= itsTBBE->channel;
-	
+		
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-void FreeCmd::sendTpEvent(GCFPortInterface& port)
+void FreeCmd::sendTpEvent(int32 boardnr, int32 channelnr)
 {
-	port.send(*itsTPE);
+	DriverSettings*		ds = DriverSettings::instance();
+	itsTPE->channel = DriverSettings::instance()->getChBoardChannelNr(channelnr); 
+	
+	if(ds->boardPort(boardnr).isConnected()) {
+		ds->boardPort(boardnr).send(*itsTPE);
+		ds->boardPort(boardnr).setTimer(ds->timeout());
+	}
+	else
+		itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
 void FreeCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
-	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPFreeEvent(event);
+		itsTPackE = new TPFreeackEvent(event);
 		
 		itsBoardStatus[boardnr]			= itsTPackE->status;
+		
 		LOG_DEBUG_STR(formatString("Received FreeAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
 	}
@@ -114,40 +122,25 @@ void FreeCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void FreeCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->commstatus = SUCCESS;	
-	if(itsErrorMask) {
-		itsTBBackE->commstatus = FAILURE;
-		itsTBBackE->commstatus |= (itsErrorMask << 16);
+	if(itsErrorMask != 0) {
+		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status |= (itsErrorMask << 16);
 	}
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsTBBackE->boardstatus[boardnr]	= itsBoardStatus[boardnr];
-	} 
+	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+ 
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-void FreeCmd::portError(int32 boardnr)
+CmdTypes FreeCmd::getCmdType()
 {
-	itsRecvMask |= (1 << boardnr);
-	itsErrorMask |= (1 << boardnr);
+	return BoardCmd;
 }
 
 // ----------------------------------------------------------------------------
-uint32 FreeCmd::getSendMask()
+uint32 FreeCmd::getBoardMask()
 {
-	return itsSendMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 FreeCmd::getRecvMask()
-{
-	return itsRecvMask;
-}
-
-// ----------------------------------------------------------------------------
-bool FreeCmd::done()
-{
-	return (itsRecvMask == itsSendMask);
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------

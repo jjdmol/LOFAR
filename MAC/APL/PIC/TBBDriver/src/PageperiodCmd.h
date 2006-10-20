@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  ReadwCmd.h: III
+//#  PageperiodCmd.h: III
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef READWCMD_H_
-#define READWCMD_H_
+#ifndef PAGEPERIODCMD_H_
+#define PAGEPERIODCMD_H_
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
@@ -37,14 +37,14 @@ namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
 
-		class ReadwCmd : public Command 
+		class PageperiodCmd : public Command 
 		{
 			public:
-				// Constructors for a ReadwCmd object.
-				ReadwCmd();
+				// Constructors for a PageperiodCmd object.
+				PageperiodCmd();
 	  
-				// Destructor for ReadwCmd.
-				virtual ~ReadwCmd();
+				// Destructor for PageperiodCmd.
+				virtual ~PageperiodCmd();
 				
 				virtual bool isValid(GCFEvent& event);
 				
@@ -67,19 +67,16 @@ namespace LOFAR {
 				uint32  itsErrorMask;  // mask indicates the not responding boards
 				uint32	itsBoardsMask;	// Installed boards mask
 				
-				TPReadwEvent			*itsTPE;
-				TPReadwackEvent		*itsTPackE;
-				TBBReadwEvent			*itsTBBE;
-				TBBReadwackEvent	*itsTBBackE;
+				TPPageperiodEvent			*itsTPE;
+				TPPageperiodackEvent	*itsTPackE;
+				TBBPageperiodEvent		*itsTBBE;
+				TBBPageperiodackEvent	*itsTBBackE;
 				
 				// variables holding data from tp cmd
 				uint32	itsBoardStatus;
-				uint32	itsMp;
-				uint32	itsAddr;
-				uint32	itsWordLo;
-				uint32	itsWordHi;
+				uint32	itsPageperiod;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* READWCMD_H_ */
+#endif /* PAGEPERIODCMD_H_ */
