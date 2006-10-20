@@ -1,42 +1,36 @@
-check_PROGRAMS	      =	testLogger tAllocator tDataConvert tFileLocator \
-			tStringUtil tStreamUtil tHexdump testSocket \
-			tComplex tProcess tRunOnNode tTimer tNumeric \
-			tSingleton tObjectFactory
+check_PROGRAMS	=	testLogger tAllocator tDataConvert \
+			tFileLocator tStringUtil tStreamUtil \
+			tHexdump testSocket tComplex tProcess \
+			tRunOnNode tTimer tNumeric tSingleton \
+			tObjectFactory
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS 	      =	testLogger tAllocator tDataConvert tFileLocator \
-			tStringUtil tStreamUtil tHexdump testSocket \
-			tComplex tProcess tRunOnNode tTimer tNumeric \
-			tSingleton tObjectFactory
-#ENDCHECKTOOLPROGS
+CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
+			tFileLocator tStringUtil tStreamUtil \
+			tHexdump testSocket tComplex tProcess \
+			tRunOnNode tTimer tNumeric tSingleton \
+			tObjectFactory
 
-TESTSCRIPTS = \
-	testLogger.sh \
-	tAllocator.sh \
-	tDataConvert.sh \
-	tFileLocator.sh \
-	tStringUtil.sh \
-	tStreamUtil.sh \
-	tHexdump.sh \
-	testSocket.sh \
-	tComplex.sh \
-	tProcess.sh \
-	tRunOnNode.sh \
-	tTimer.sh \
-	tNumeric.sh \
-	tSingleton.sh \
-	tObjectFactory.sh
+TESTSCRIPTS	= 	testLogger.sh tAllocator.sh tDataConvert.sh \
+			tFileLocator.sh tStringUtil.sh tStreamUtil.sh \
+			tHexdump.sh testSocket.sh tComplex.sh tProcess.sh \
+			tRunOnNode.sh tTimer.sh tNumeric.sh tSingleton.sh \
+			tObjectFactory.sh
 
-TESTS = $(TESTSCRIPTS)
+TESTS		=	$(TESTSCRIPTS)
 
-EXTRA_DIST = $(TESTSCRIPTS) \
-	tComplex.stdout \
-	tDataConvert.stdout \
-	testLogger.log_prop testLogger.debug \
-	tHexdump.log_prop tNumeric.stdout \
-	tProcess.log_prop tProcess.stdout \
-	tRunOnNode.log_prop tRunOnNode.stdout \
-	tStringUtil.stdout tStreamUtil.stdout
+EXTRA_DIST	=	$(TESTSCRIPTS) \
+			testLogger.log_prop testLogger.debug \
+			tDataConvert.stdout \
+			tStringUtil.stdout \
+			tStreamUtil.stdout \
+			tHexdump.log_prop \
+			testSocket.run \
+			tComplex.stdout \
+			tProcess.log_prop tProcess.run tProcess.stdout \
+			tRunOnNode.log_prop tRunOnNode.stdout \
+			tNumeric.run tNumeric.stdout \
+			tObjectFactory.stdout
 
 testLogger_SOURCES		= testLogger.cc
 testLogger_LDADD		= ../src/libcommon.la	
