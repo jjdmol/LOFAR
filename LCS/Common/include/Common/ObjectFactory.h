@@ -55,6 +55,7 @@
 
 
 #    include <Common/lofar_map.h>
+#    include <Common/lofar_vector.h>
 #    include <boost/preprocessor/repetition.hpp>
 #    include <boost/preprocessor/iteration/iterate.hpp>
 
@@ -64,9 +65,12 @@
 
 namespace LOFAR
 {
+  // \addtogroup Common
+  // @{
   // Primary template. \c Signature is the signature of the class'
   // constructor; \c TypeId is the type of its unique id.
   template <typename Signature, typename TypeId> class ObjectFactory;
+  // @}
 }
 
 #    define BOOST_PP_ITERATION_LIMITS (0, OBJECT_FACTORY_MAX_CTOR_ARG)
@@ -82,7 +86,9 @@ namespace LOFAR
 
 namespace LOFAR
 {
-  //
+  // \addtogroup Common
+  // @{
+
   // Template specialization.
   // Expansion of the \c BOOST_PP_ENUM macros leads to the generation of the
   // following template specializations:
@@ -142,6 +148,18 @@ namespace LOFAR
       return (itsCreatorMap.erase(id));
     }
 
+    // Return a vector of TypeId containing the ID's of all registered
+    // classes.
+    vector<TypeId> registeredClassIds()
+    {
+      vector<TypeId> ids;
+      const_iterator end = itsCreatorMap.end();
+      for (const_iterator it = itsCreatorMap.begin(); it != end; ++it) {
+	ids.push_back(it->first);
+      }
+      return ids;
+    }
+
     // Create a new class instance of the class identified by \a id. 
     // If \a id is not found in \c itsCreatorMap a null pointer is returned.
     Base* create(TypeId id BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(n, A, a))
@@ -180,6 +198,8 @@ namespace LOFAR
     }
 
   };
+
+  // @}
 
 } // namespace LOFAR
 
