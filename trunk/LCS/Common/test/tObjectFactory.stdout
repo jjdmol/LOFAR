@@ -1,10 +1,10 @@
 
 ** Shapes **
 Registered classes: [Circle,Ellipse,Rectangle,Square]
-Ellipse
-Circle
 Rectangle
 Square
+Ellipse
+Circle
 
 ** Coordinates **
 Registered classes: [Cartesian,Cylindrical,Spherical]
