@@ -84,6 +84,15 @@ public:
 	void	openService	(const string&		aServiceName,
 						 uint32				instanceNr = 0);
 
+	// Start all childControllers at once.
+	void startChildControllers();
+
+	// Start one childController
+	bool startChild	(uint16				aCntlrType, 
+					 OTDBtreeIDType		anObsID, 
+					 uint32				instanceNr = 0,
+					 const string&		hostname = "localhost");
+
 	// Functions to manage the child controllers
 	// Most functions contain the arguments for the selection:
 	// controllername	: select one uniq controller
@@ -91,11 +100,6 @@ public:
 	// controllertype	: select all controllers of that type
 	// ObservationID and controllerType can be combined to select all controllers
 	// of a specific type of a specific observation.
-	bool		startChild		(const string&		aName, 
-								 OTDBtreeIDType		anObsID, 
-								 uint16				aCntlrType, 
-							     uint32				instanceNr = 0,
-								 const string&		hostname = "localhost");
 	bool		requestState	(CTState::CTstateNr	state, 
 								 const string&		aName, 
 								 OTDBtreeIDType		anObsID = 0, 

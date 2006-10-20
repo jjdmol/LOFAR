@@ -68,11 +68,29 @@ Observation::Observation(ACC::APS::ParameterSet*		aParSet) :
 	if (aParSet->isDefined(prefix+"nyquistZone")) {
 		nyquistZone = aParSet->getInt16(prefix+"nyquistZone");
 	}
-	if (aParSet->isDefined(prefix+"sampleClock")) {
-		sampleClock = aParSet->getUint32(prefix+"sampleClock");
-	}
 	if (aParSet->isDefined(prefix+"subbandList")) {
 		subbands = aParSet->getInt16Vector(prefix+"subbandList");
+	}
+	if (aParSet->isDefined(prefix+"bandFilter")) {
+		filter = aParSet->getString(prefix+"bandFilter");
+	}
+	if (aParSet->isDefined(prefix+"antennaArray")) {
+		antennaArray = aParSet->getString(prefix+"antennaArray");
+	}
+	RCUset.reset();							// clear RCUset by default.
+	if (aParSet->isDefined(prefix+"receiverList")) {
+		vector<uint16> RCUnumbers(aParSet->getUint16Vector(prefix+"receiverList"));
+		if (RCUnumbers.empty()) {			// No receivers in the list?
+			RCUset.set();					// assume all receivers.
+		}
+		else {
+			for (uint i = 0; i < RCUnumbers.size();i++) {
+				RCUset.set(RCUnumbers[i]);	// set mentioned receivers
+			}
+		}
+	}
+	if (aParSet->isDefined(prefix+"sampleClock")) {
+		sampleClock = aParSet->getUint32(prefix+"sampleClock");
 	}
 }
 

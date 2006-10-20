@@ -40,6 +40,7 @@ using namespace boost;
 namespace LOFAR {
   using namespace Deployment;
   using namespace GCF::TM;
+  using namespace GCF::Common;
   using namespace ACC::APS;
   namespace APLCommon {
 
@@ -146,14 +147,14 @@ void ChildControl::openService(const string&	aServiceName,
 //
 // startChild (name, obsId, aCntlType, instanceNr, hostname)
 //
-bool ChildControl::startChild (const string&		aName, 
+bool ChildControl::startChild (uint16				aCntlrType, 
 							   OTDBtreeIDType		anObsID, 
-							   uint16				aCntlrType, 
 							   uint32				instanceNr,
 							   const string&		hostname)
 {
 	// first check if child already exists
-	if (findController(aName) != itsCntlrList->end()) {
+	string	cntlrName(controllerName(aCntlrType, anObsID, instanceNr));
+	if (findController(cntlrName) != itsCntlrList->end()) {
 		return (false);
 	}	
 
@@ -166,7 +167,7 @@ bool ChildControl::startChild (const string&		aName,
 	string			prefix = wholeSet.getString("prefix");
 
 	// Create a parameterset with software related issues.
-	string	cntlrSetName(formatString("%s/%s", LOFAR_SHARE_LOCATION, sharedControllerName(aName).c_str()));
+	string	cntlrSetName(formatString("%s/%s", LOFAR_SHARE_LOCATION, sharedControllerName(cntlrName).c_str()));
 	LOG_DEBUG_STR("Creating parameterfile: " << cntlrSetName);
 	// first add the controller specific stuff
 	string	nodeName(parsetNodeName(aCntlrType));
@@ -195,7 +196,7 @@ bool ChildControl::startChild (const string&		aName,
 	// Alright, child does not exist yet. 
 	// construct structure with all information
 	ControllerInfo		ci;
-	ci.cntlrName	  = aName;
+	ci.cntlrName	  = cntlrName;
 	ci.instanceNr	  = instanceNr;
 	ci.obsID		  = anObsID;
 	ci.cntlrType	  = aCntlrType;
@@ -210,7 +211,7 @@ bool ChildControl::startChild (const string&		aName,
 
 	// Update our administration.
 	itsCntlrList->push_back(ci);
-	LOG_DEBUG_STR("Added " << aName << " to the controllerList");
+	LOG_DEBUG_STR("Added " << cntlrName << " to the controllerList");
 
 	// Add it to the action list.
 	itsActionList.push_back(ci);
@@ -220,9 +221,50 @@ bool ChildControl::startChild (const string&		aName,
 		itsActionTimer = itsListener->setTimer(0.0);
 	}
 
-	LOG_TRACE_COND_STR ("Scheduled start of " << aName << " for obs " << anObsID);
+	LOG_TRACE_COND_STR ("Scheduled start of " << cntlrName << " for obs " << anObsID);
 
 	return (true);
+}
+
+//
+// startChildControllers()
+//
+void ChildControl::startChildControllers()
+{
+	string	myname   = globalParameterSet()->getString("_moduleName");
+	string	fullname = globalParameterSet()->locateModule(myname)+myname+".";
+	ParameterSet	subset = globalParameterSet()->makeSubset(fullname);
+
+	ParameterSet::const_iterator	iter = subset.begin();
+	ParameterSet::const_iterator	end  = subset.end();
+	string	childname;
+	while (iter != end) {
+		string::size_type pos = iter->first.find(".", 0);
+		if (pos != string::npos && iter->first.substr(0,pos) != childname) {
+			childname = iter->first.substr(0,pos);
+			// collect the information to start the child controller
+			string	childhostname  = subset.getString(childname+"._hostname");
+			uint16	childCntlrType = getControllerType(childname);
+			uint32	treeID         = globalParameterSet()->getUint32("_treeID");
+			uint16	instanceNr	   = 0;		// TODO
+			string	childCntlrName = controllerName(childCntlrType, instanceNr, treeID);
+
+			// child already running???
+			CTState::CTstateNr	requestedState = getRequestedState(childCntlrName);
+
+			if (requestedState == CTState::NOSTATE) {
+				// fire request for new controller, will result in CONTROL_STARTED
+				startChild(childCntlrType, 
+						   treeID, 
+						   instanceNr,
+						   myHostname(true));
+				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
+
+				LOG_DEBUG_STR("Requested start of " << childCntlrName);
+			}
+		}
+		iter++;
+	}
 }
 
 //
