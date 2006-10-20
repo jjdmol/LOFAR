@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "StopCmd.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -32,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a StopCmd object.----------------------------------------
 StopCmd::StopCmd():
-		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPStopEvent();
 	itsTPackE 	= 0;
@@ -41,6 +42,7 @@ StopCmd::StopCmd():
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsBoardStatus[boardnr]	= 0;
+		itsChannelMask[boardnr]	= 0;
 	}		
 }
 	  
@@ -54,56 +56,62 @@ StopCmd::~StopCmd()
 // ----------------------------------------------------------------------------
 bool StopCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_STOP)||(event.signal == TP_STOP)) {
+	if((event.signal == TBB_STOP)||(event.signal == TP_STOPACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void StopCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
+void StopCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBStopEvent(event);
 		
-	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
-	// if SendMask = 0, select all boards
-	if(itsSendMask == 0) {
-		for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			itsSendMask |= (1 << boardnr);
-		}
-	} 
+	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
+		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; // for some commands board-id is used ???
+		if(itsChannelMask[boardnr] != 0)  itsBoardMask |= (1 << boardnr);
+	}
 	
 	// mask for the installed boards
-	itsBoardsMask = activeboards;
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsSendMask & ~itsBoardsMask;
-	itsSendMask = itsSendMask & itsBoardsMask;
+	itsErrorMask = itsBoardMask & ~itsBoardsMask;
+	itsBoardMask = itsBoardMask & itsBoardsMask;
+	
+	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPSTOP;
 	itsTPE->status			=	0;
-	itsTPE->channel	 		= itsTBBE->channel;
 	
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-void StopCmd::sendTpEvent(GCFPortInterface& port)
+void StopCmd::sendTpEvent(int32 boardnr, int32 channelnr)
 {
-	port.send(*itsTPE);
+	DriverSettings*		ds = DriverSettings::instance();
+	
+	itsTPE->channel = DriverSettings::instance()->getChBoardChannelNr(channelnr);
+	
+	if(ds->boardPort(boardnr).isConnected()) {
+		ds->boardPort(boardnr).send(*itsTPE);
+		ds->boardPort(boardnr).setTimer(ds->timeout());
+	}
+	else
+		itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
 void StopCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
-	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPStopEvent(event);
+		itsTPackE = new TPStopackEvent(event);
 		
 		itsBoardStatus[boardnr]	= itsTPackE->status;
 		
@@ -115,40 +123,25 @@ void StopCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void StopCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->commstatus = SUCCESS;	
-	if(itsErrorMask) {
-		itsTBBackE->commstatus = FAILURE;
-		itsTBBackE->commstatus |= (itsErrorMask << 16);
-	} 
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsTBBackE->boardstatus[boardnr]	= itsBoardStatus[boardnr];
+	if(itsErrorMask != 0) {
+		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status |= (itsErrorMask << 16);
 	}
+	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+		
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-void StopCmd::portError(int32 boardnr)
+uint32 StopCmd::getBoardMask()
 {
-	itsRecvMask	|= (1 << boardnr);
-	itsErrorMask |= (1 << boardnr);
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------
-uint32 StopCmd::getSendMask()
+CmdTypes StopCmd::getCmdType()
 {
-	return itsSendMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 StopCmd::getRecvMask()
-{
-	return itsRecvMask;
-}
-
-// ----------------------------------------------------------------------------
-bool StopCmd::done()
-{
-	return (itsRecvMask == itsSendMask);
+	return ChannelCmd;
 }
 
 // ----------------------------------------------------------------------------

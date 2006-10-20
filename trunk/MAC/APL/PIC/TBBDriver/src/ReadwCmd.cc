@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "ReadwCmd.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -32,18 +33,13 @@ namespace LOFAR {
 
 //--Constructors for a ReadwCmd object.----------------------------------------
 ReadwCmd::ReadwCmd():
-		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0),
+		itsMp(0),itsAddr(0),itsWordLo(0),itsWordHi(0)
 {
 	itsTPE 			= new TPReadwEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBReadwackEvent();
-	
-	itsMp						= 0;
-	itsBoardStatus	= 0;
-	itsAddr					= 0;
-	itsWordLo				= 0;
-	itsWordHi				= 0;
 }
 	  
 //--Destructor for ReadwCmd.---------------------------------------------------
@@ -56,63 +52,62 @@ ReadwCmd::~ReadwCmd()
 // ----------------------------------------------------------------------------
 bool ReadwCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_READW)||(event.signal == TP_READW)) {
+	if((event.signal == TBB_READW)||(event.signal == TP_READWACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void ReadwCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
+void ReadwCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBReadwEvent(event);
 		
-	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
-	// if SendMask = 0, select all boards
-	if(itsSendMask == 0) {
-		for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			itsSendMask |= (1 << boardnr);
-		}
-	} 
-	
+	itsBoardMask = (1 << itsTBBE->board);
+
 	// mask for the installed boards
-	itsBoardsMask = activeboards;
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsSendMask & ~itsBoardsMask;
-	itsSendMask = itsSendMask & itsBoardsMask;
+	itsErrorMask = itsBoardMask & ~itsBoardsMask;
+	itsBoardMask = itsBoardMask & itsBoardsMask;
+	
+	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPREADW;
 	itsTPE->status	= 0;
 	itsTPE->mp			=	itsTBBE->mp;
 	itsTPE->addr		=	itsTBBE->addr;
-	itsTPE->wordlo	= 0;
-	itsTPE->wordhi	= 0;
-	
+	itsMp						= itsTBBE->mp;
+	itsAddr					= itsTBBE->addr;
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-void ReadwCmd::sendTpEvent(GCFPortInterface& port)
+void ReadwCmd::sendTpEvent(int32 boardnr, int32)
 {
-	port.send(*itsTPE);
+	DriverSettings*		ds = DriverSettings::instance();
+	
+	if(ds->boardPort(boardnr).isConnected()) {
+		ds->boardPort(boardnr).send(*itsTPE);
+		ds->boardPort(boardnr).setTimer(ds->timeout());
+	}
+	else
+		itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
 void ReadwCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
-	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPReadwEvent(event);
+		itsTPackE = new TPReadwackEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
-		itsMp 		= itsTPackE->mp;
-		itsAddr		= itsTPackE->addr;
 		itsWordLo	= itsTPackE->wordlo;
 		itsWordHi	= itsTPackE->wordhi;
 		
@@ -124,13 +119,12 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ReadwCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->commstatus = SUCCESS;	
-	if(itsErrorMask) {
-		itsTBBackE->commstatus = FAILURE;
-		itsTBBackE->commstatus |= (itsErrorMask << 16);
-	} 
+	if(itsErrorMask != 0) {
+		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status |= (itsErrorMask << 16);
+	}
+	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;	
 	
-	itsTBBackE->boardstatus	= itsBoardStatus;
 	itsTBBackE->mp					= itsMp;
 	itsTBBackE->addr 				= itsAddr;
 	itsTBBackE->wordlo			=	itsWordLo;
@@ -140,28 +134,15 @@ void ReadwCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 }
 
 // ----------------------------------------------------------------------------
-void ReadwCmd::portError(int32 boardnr)
+CmdTypes ReadwCmd::getCmdType()
 {
-	itsRecvMask	|= (1 << boardnr);
-	itsErrorMask |= (1 << boardnr);
+	return BoardCmd;
 }
 
 // ----------------------------------------------------------------------------
-uint32 ReadwCmd::getSendMask()
+uint32 ReadwCmd::getBoardMask()
 {
-	return itsSendMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 ReadwCmd::getRecvMask()
-{
-	return itsRecvMask;
-}
-
-// ----------------------------------------------------------------------------
-bool ReadwCmd::done()
-{
-	return (itsRecvMask == itsSendMask);
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------

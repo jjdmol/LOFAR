@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "ErasefCmd.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -32,15 +33,12 @@ namespace LOFAR {
 
 //--Constructors for a ErasefCmd object.----------------------------------------
 ErasefCmd::ErasefCmd():
-		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0),itsAddr(0)
 {
 	itsTPE 			= new TPErasefEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBErasefackEvent();
-	
-	itsBoardStatus	= 0;
-	itsAddr 				= 0;
 }
 	  
 //--Destructor for ErasefCmd.---------------------------------------------------
@@ -53,31 +51,27 @@ ErasefCmd::~ErasefCmd()
 // ----------------------------------------------------------------------------
 bool ErasefCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_ERASEF)||(event.signal == TP_ERASEF)) {
+	if((event.signal == TBB_ERASEF)||(event.signal == TP_ERASEFACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void ErasefCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
+void ErasefCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBErasefEvent(event);
 		
-	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
-	// if SendMask = 0, select all boards
-	if(itsSendMask == 0) {
-		for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			itsSendMask |= (1 << boardnr);
-		}
-	} 
+	itsBoardMask = (1 << itsTBBE->board);
 	
 	// mask for the installed boards
-	itsBoardsMask = activeboards;
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsSendMask & ~itsBoardsMask;
-	itsSendMask = itsSendMask & itsBoardsMask;
+	itsErrorMask = itsBoardMask & ~itsBoardsMask;
+	itsBoardMask = itsBoardMask & itsBoardsMask;
+	
+	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPERASEF;
@@ -88,24 +82,29 @@ void ErasefCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
 }
 
 // ----------------------------------------------------------------------------
-void ErasefCmd::sendTpEvent(GCFPortInterface& port)
+void ErasefCmd::sendTpEvent(int32 boardnr, int32)
 {
-	port.send(*itsTPE);
+	DriverSettings*		ds = DriverSettings::instance();
+	
+	if(ds->boardPort(boardnr).isConnected()) {
+		ds->boardPort(boardnr).send(*itsTPE);
+		ds->boardPort(boardnr).setTimer(ds->timeout());
+	}
+	else
+		itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
 void ErasefCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
-	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
-		itsTPackE = new TPErasefEvent(event);
+		itsTPackE = new TPErasefackEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
-		itsAddr					=	itsTPackE->addr;
 		
 		LOG_DEBUG_STR(formatString("Received ErasefAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
@@ -115,40 +114,27 @@ void ErasefCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ErasefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->commstatus = SUCCESS;	
-	if(itsErrorMask) {
-		itsTBBackE->commstatus = FAILURE;
-		itsTBBackE->commstatus |= (itsErrorMask << 16);
+	if(itsErrorMask != 0) {
+		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status |= (itsErrorMask << 16);
 	}
-	itsTBBackE->boardstatus	= itsBoardStatus;
+	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+
 	itsTBBackE->addr				=	itsAddr;
 	
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
-void ErasefCmd::portError(int32 boardnr)
+CmdTypes ErasefCmd::getCmdType()
 {
-	itsRecvMask	|= (1 << boardnr);
-	itsErrorMask |= (1 << boardnr);
+	return BoardCmd;
 }
 
 // ----------------------------------------------------------------------------
-uint32 ErasefCmd::getSendMask()
+uint32 ErasefCmd::getBoardMask()
 {
-	return itsSendMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 ErasefCmd::getRecvMask()
-{
-	return itsRecvMask;
-}
-
-// ----------------------------------------------------------------------------
-bool ErasefCmd::done()
-{
-	return (itsRecvMask == itsSendMask);
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------

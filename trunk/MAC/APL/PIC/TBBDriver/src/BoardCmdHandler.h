@@ -58,36 +58,37 @@ namespace LOFAR {
 				GCFEvent::TResult send_state(GCFEvent& event, GCFPortInterface& port);
 				GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
 								
-				void setBoardPorts(GCFPortInterface* board_ports);
 				void setTpCmd(Command *cmd);
 				void setTpRetries(int32 Retries);
 				void setNrOfTbbBoards(int32 NrOfBoards);
-				void setActiveBoards(int32 ActiveBoards);
-				void setMaxTbbBoards(int32 MaxBoards);
-				void setTpTimeOut(double TimeOut);
-				
+				//void setTpTimeOut(double TimeOut);
 				bool tpCmdDone();
 				
 			protected:
 
 			private:
 				// convert port to portnr, used in the port-array
-				int portToBoardNr(GCFPortInterface& port);
-				
+				//int portToBoardNr(GCFPortInterface& port);
+				void sendCmd();
+				void nextCmd();
 				
 			private:
 				
-				int32								itsRetries;  // max number of retries
-				int32								itsNrOfBoards;
-				uint32							itsActiveBoards;
-				int32								itsMaxBoards;
-				double							itsTimeOut;
-				bool								itsCmdDone;
+				// constants
+				int32		itsMaxRetries;
+				// variables
+				int32		itsRetries;
+				int32		itsNrOfBoards;
+				int32		itsNrOfChannels;
+				
+				CmdTypes itsCmdType;
+				int32		itsBoardNr;
+				int32		itsChannelNr;
+				bool		itsNextCmd;
 				
 				GCFPortInterface*		itsClientPort; // return port of the actual commmand
-				GCFPortInterface*		itsBoardPorts; // array of tbb board ports
-				
-				int32								itsBoardRetries[MAX_N_TBBBOARDS];
+										
+				//int32								itsBoardRetries[MAX_N_TBBBOARDS];
 				Command*						itsCmd; // command to use			
 				
 		};

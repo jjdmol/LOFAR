@@ -94,6 +94,7 @@ namespace LOFAR{
 			
 			// define some variables
 			TPAliveEvent			*itsAlive;
+			TPSizeEvent				*itsSize;
 	  	BoardCmdHandler		*cmdhandler;
 			MsgHandler				*msghandler;
 			Command 					*cmd;
@@ -101,17 +102,16 @@ namespace LOFAR{
 			uint32						itsActiveBoards;
 			bool							itsActiveBoardsChange;
 			
-			
 			struct TbbEvent{
 				unsigned short		signal;
 				GCFPortInterface	*port;
 			};
 			
-			deque<TbbEvent> 		*itsTbbQueue;
+			deque<TbbEvent> *itsTbbQueue;
 			
-			GCFTCPPort          itsAcceptor;     // listen for clients on this port
-			GCFTCPPort          itsMsgPort;     // send messages to this port
-			GCFETHRawPort      	*itsBoard;        // array of ports, one for each TBB board
+			GCFTCPPort      itsAcceptor;     // listen for clients on this port
+			GCFTCPPort      itsMsgPort;     // send messages to this port
+			GCFETHRawPort   *itsBoard;        // array of ports, one for each TBB board
 			
 			std::list<GCFPortInterface*> itsClientList;  // list of clients
 			std::list<GCFPortInterface*> itsDeadClients; // list of clients to cleanup

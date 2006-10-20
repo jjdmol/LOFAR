@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  ReadwCmd.h: III
+//#  StatusCmd.h: III
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef READWCMD_H_
-#define READWCMD_H_
+#ifndef STATUSCMD_H_
+#define STATUSCMD_H_
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
@@ -37,14 +37,14 @@ namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
 
-		class ReadwCmd : public Command 
+		class StatusCmd : public Command 
 		{
 			public:
-				// Constructors for a ReadwCmd object.
-				ReadwCmd();
+				// Constructors for a StatusCmd object.
+				StatusCmd();
 	  
-				// Destructor for ReadwCmd.
-				virtual ~ReadwCmd();
+				// Destructor for StatusCmd.
+				virtual ~StatusCmd();
 				
 				virtual bool isValid(GCFEvent& event);
 				
@@ -67,19 +67,24 @@ namespace LOFAR {
 				uint32  itsErrorMask;  // mask indicates the not responding boards
 				uint32	itsBoardsMask;	// Installed boards mask
 				
-				TPReadwEvent			*itsTPE;
-				TPReadwackEvent		*itsTPackE;
-				TBBReadwEvent			*itsTBBE;
-				TBBReadwackEvent	*itsTBBackE;
+				TPStatusEvent			*itsTPE;
+				TPStatusackEvent	*itsTPackE;
+				TBBStatusEvent		*itsTBBE;
+				TBBStatusackEvent	*itsTBBackE;
 				
 				// variables holding data from tp cmd
-				uint32	itsBoardStatus;
-				uint32	itsMp;
-				uint32	itsAddr;
-				uint32	itsWordLo;
-				uint32	itsWordHi;
+				uint32	itsBoardStatus[MAX_N_TBBBOARDS];
+				uint32	itsV12[MAX_N_TBBBOARDS];
+				uint32	itsV25[MAX_N_TBBBOARDS];
+				uint32	itsV33[MAX_N_TBBBOARDS];
+				uint32	itsTpcb[MAX_N_TBBBOARDS];
+				uint32	itsTtp[MAX_N_TBBBOARDS];
+				uint32	itsTmp0[MAX_N_TBBBOARDS];
+				uint32	itsTmp1[MAX_N_TBBBOARDS];
+				uint32	itsTmp2[MAX_N_TBBBOARDS];
+				uint32	itsTmp3[MAX_N_TBBBOARDS];
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* READWCMD_H_ */
+#endif /* STATUSCMD_H_ */

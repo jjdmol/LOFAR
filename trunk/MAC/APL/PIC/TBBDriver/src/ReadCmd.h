@@ -48,37 +48,33 @@ namespace LOFAR {
 				
 				virtual bool isValid(GCFEvent& event);
 				
-				virtual void saveTbbEvent(GCFEvent& event, uint32 activeboards);
+				virtual void saveTbbEvent(GCFEvent& event);
 									
-				virtual void sendTpEvent(GCFPortInterface& port);
+				virtual void sendTpEvent(int32 boardnr, int32 channelnr);
 
 				virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr);
 
 				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
 				
-				virtual void portError(int32 boardnr);
-				
-				virtual uint32 getSendMask();
-				
-				virtual uint32 getRecvMask();
-				
-				virtual bool done();
+				virtual uint32 getBoardMask();
 				
 				virtual bool waitAck();
+				
+				virtual CmdTypes getCmdType();
       
 			private:
-				uint32	itsSendMask;  // mask indicates the boards to communicate with
-				uint32	itsRecvMask;  // mask indicates the boards handled
+				uint32	itsBoardMask;  // mask indicates the boards to communicate with
 				uint32  itsErrorMask;  // mask indicates the not responding boards
 				uint32	itsBoardsMask;	// Installed boards mask
+				uint32	itsChannel;
 				
 				TPReadEvent			*itsTPE;
-				TPReadEvent			*itsTPackE;
+				TPReadackEvent	*itsTPackE;
 				TBBReadEvent		*itsTBBE;
 				TBBReadackEvent	*itsTBBackE;
 				
 				// variables holding data from tp cmd
-				uint32	itsBoardStatus[MAX_N_TBBBOARDS];
+				uint32	itsBoardStatus;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

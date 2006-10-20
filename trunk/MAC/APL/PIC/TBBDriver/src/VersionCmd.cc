@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "VersionCmd.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -32,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a VersionCmd object.--------------------------------------
 VersionCmd::VersionCmd():
-		itsSendMask(0),itsRecvMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPVersionEvent();
 	itsTPackE 	= 0;
@@ -62,64 +63,58 @@ VersionCmd::~VersionCmd()
 // ----------------------------------------------------------------------------
 bool VersionCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_VERSION)||(event.signal == TP_VERSION)) {
+	if((event.signal == TBB_VERSION)||(event.signal == TP_VERSIONACK)) {
 		return true;
 	}
 	return false;
 }
 
 // ----------------------------------------------------------------------------
-void VersionCmd::saveTbbEvent(GCFEvent& event, uint32 activeboards)
+void VersionCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBVersionEvent(event);
 		
-	itsSendMask = itsTBBE->tbbmask; // for some commands board-id is used ???
-	// if SendMask = 0, select all boards
-	if(itsSendMask == 0) {
-		for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-			itsSendMask |= (1 << boardnr);
-		}
-	} 
-	
+	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
+			
 	// mask for the installed boards
-	itsBoardsMask = activeboards;
-	
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
+
 	// Send only commands to boards installed
-	itsErrorMask = itsSendMask & ~itsBoardsMask;
-	itsSendMask = itsSendMask & itsBoardsMask;
+	itsErrorMask = itsBoardMask & ~itsBoardsMask;
+	itsBoardMask = itsBoardMask & itsBoardsMask;
+	
+	itsTBBackE->status = 0;
 	
 	// fill TP command, to send
 	itsTPE->opcode 			  = TPVERSION;
 	itsTPE->status				= 0;
-	itsTPE->boardid 			= 0;
-	itsTPE->swversion 		= 0;
-	itsTPE->boardversion  = 0;
-	itsTPE->tpversion 		= 0;
-	itsTPE->mp0version		= 0;
-	itsTPE->mp1version		= 0;
-	itsTPE->mp2version		= 0;
-	itsTPE->mp3version		= 0;
-		
+			
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-void VersionCmd::sendTpEvent(GCFPortInterface& port)
+void VersionCmd::sendTpEvent(int32 boardnr, int32)
 {
-	port.send(*itsTPE);
+	DriverSettings*		ds = DriverSettings::instance();
+	
+	if(ds->boardPort(boardnr).isConnected()) {
+		ds->boardPort(boardnr).send(*itsTPE);
+		ds->boardPort(boardnr).setTimer(ds->timeout());
+	}
+	else
+		itsErrorMask |= (1 << boardnr);
 }
 
 // ----------------------------------------------------------------------------
 void VersionCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
-	itsRecvMask |= (1 << boardnr);
 	// in case of a time-out, set error mask
 	if(event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
 		//TPVersionEvent tpe(event);
-		itsTPackE = new TPVersionEvent(event);
+		itsTPackE = new TPVersionackEvent(event);
 		
 		itsBoardStatus[boardnr]	= itsTPackE->status;
 		itsBoardId[boardnr] 		= itsTPackE->boardid;
@@ -131,19 +126,10 @@ void VersionCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 		itsMp2Version[boardnr] 	= itsTPackE->mp2version;
 		itsMp3Version[boardnr] 	= itsTPackE->mp3version;
 		
-		LOG_DEBUG_STR(formatString("Received VersionAck from boardnr[%d]", boardnr));
-		/*
-		LOG_DEBUG_STR(formatString("opcode       = 0X%08X", itsTPackE->opcode));
-		LOG_DEBUG_STR(formatString("status       = 0X%08X", itsTPackE->status));
-		LOG_DEBUG_STR(formatString("boardid      = 0X%08X", itsTPackE->boardid));
-		LOG_DEBUG_STR(formatString("swversion    = 0X%08X", itsTPackE->swversion));
-		LOG_DEBUG_STR(formatString("boardversion = 0X%08X", itsTPackE->boardversion));
-		LOG_DEBUG_STR(formatString("tpversion    = 0X%08X", itsTPackE->tpversion));
-		LOG_DEBUG_STR(formatString("mp0version   = 0X%08X", itsTPackE->mp0version));
-		LOG_DEBUG_STR(formatString("mp1version   = 0X%08X", itsTPackE->mp1version));
-		LOG_DEBUG_STR(formatString("mp2version   = 0X%08X", itsTPackE->mp2version));
-		LOG_DEBUG_STR(formatString("mp3version   = 0X%08X", itsTPackE->mp3version));
-		*/
+		LOG_DEBUG_STR(formatString("VersionCmd: board[%d] %u;%u;%u;%u;%u;%u;%u;%u;%u",
+				boardnr,itsTPackE->status,itsTPackE->boardid,itsTPackE->swversion,itsTPackE->boardversion,
+				itsTPackE->tpversion,itsTPackE->mp0version,itsTPackE->mp1version,itsTPackE->mp2version,itsTPackE->mp3version));
+		
 		delete itsTPackE;
 	}
 }
@@ -151,14 +137,13 @@ void VersionCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void VersionCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->commstatus = SUCCESS;	
-	if(itsErrorMask) {
-		itsTBBackE->commstatus = FAILURE;
-		itsTBBackE->commstatus |= (itsErrorMask << 16);
-	} 
-	// fill all the fields of the TBBackEvent
+	if(itsErrorMask != 0) {
+		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status |= (itsErrorMask << 16);
+	}
+	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsTBBackE->boardstatus[boardnr]	= itsBoardStatus[boardnr];
 		itsTBBackE->boardid[boardnr] 			= itsBoardId[boardnr];
 		itsTBBackE->swversion[boardnr] 		= itsSwVersion[boardnr];
 		itsTBBackE->boardversion[boardnr] = itsBoardVersion[boardnr];
@@ -172,29 +157,15 @@ void VersionCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 }
 
 // ----------------------------------------------------------------------------
-void VersionCmd::portError(int32 boardnr)
+CmdTypes VersionCmd::getCmdType()
 {
-	itsRecvMask |= (1 << boardnr);
-	itsErrorMask |= (1 << boardnr);
+	return BoardCmd;
 }
 
 // ----------------------------------------------------------------------------
-uint32 VersionCmd::getSendMask()
+uint32 VersionCmd::getBoardMask()
 {
-	return itsSendMask;
-}
-
-// ----------------------------------------------------------------------------
-uint32 VersionCmd::getRecvMask()
-{
-	return itsRecvMask;
-}
-
-// ----------------------------------------------------------------------------
-bool VersionCmd::done()
-{
-	if (itsRecvMask == itsSendMask) return true;
-	return false;
+	return itsBoardMask;
 }
 
 // ----------------------------------------------------------------------------

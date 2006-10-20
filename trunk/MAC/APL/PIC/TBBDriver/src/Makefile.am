@@ -45,6 +45,7 @@ libtp_protocol_la_SOURCES = \
 
 libtbbdriver_la_SOURCES = \
 	$(noinst_HEADERS) \
+	DriverSettings.cc \
 	BoardCmdHandler.cc \
 	MsgHandler.cc \
 	AllocCmd.cc \
@@ -54,16 +55,21 @@ libtbbdriver_la_SOURCES = \
 	TrigclrCmd.cc \
 	ReadCmd.cc \
 	UdpCmd.cc \
+	PageperiodCmd.cc \
 	VersionCmd.cc \
 	SizeCmd.cc \
+	StatusCmd.cc \
 	ClearCmd.cc \
 	ResetCmd.cc \
 	ConfigCmd.cc \
 	ErasefCmd.cc \
 	ReadfCmd.cc \
-	WritefCmd.cc		
+	WritefCmd.cc \
+	ReadwCmd.cc \
+	WritewCmd.cc		
 
 noinst_HEADERS = \
+	DriverSettings.h \
 	BoardCmdHandler.h \
 	MsgHandler.h \
 	Command.h \
@@ -74,14 +80,18 @@ noinst_HEADERS = \
 	TrigclrCmd.h \
 	ReadCmd.h \
 	UdpCmd.h \
+	PageperiodCmd.h \
 	VersionCmd.h \
 	SizeCmd.h \
+	StatusCmd.h \
 	ClearCmd.h \
 	ResetCmd.h \
 	ConfigCmd.h \
 	ErasefCmd.h \
 	ReadfCmd.h \
-	WritefCmd.h		
+	WritefCmd.h	\
+	ReadwCmd.h \
+	WritewCmd.h	
 
 #NOINSTdir	=
 
@@ -93,12 +103,18 @@ noinst_HEADERS = \
 # libtbbdriver_la_LIBADD     = shmem/libshmem.la
 # endif
 
-bin_PROGRAMS = TBBDriver
+bin_PROGRAMS = \
+	TBBDriver \
+	tbbctl
 
 # Lines to build a program prg
 #prg_SOURCES		= prg.cc
 #prg_LDADD		= libtbbdriver.la
 #prg_DEPENDENCIES	= libtbbdriver.la $(LOFAR_DEPEND)
+
+tbbctl_SOURCES = \
+	tbbctl.h \
+	tbbctl.cc
 
 TBBDriver_SOURCES = \
 	TBBDriver.h \
