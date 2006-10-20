@@ -343,22 +343,26 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		else if (timerEvent.id == itsClaimTimer) {
 			setState(CTState::CLAIM);
 			itsClaimTimer = 0;
-			// TODO: do something else?	--> OE 837
+			LOG_DEBUG("Requesting all childs to execute the CLAIM state");
+			itsChildControl->requestState(CTState::CLAIMED, "");
 		}
 		else if (timerEvent.id == itsPrepareTimer) {
 			setState(CTState::PREPARE);
 			itsPrepareTimer = 0;
-			// TODO: do something else?	--> OE 837
+			LOG_DEBUG("Requesting all childs to execute the PREPARE state");
+			itsChildControl->requestState(CTState::PREPARED, "");
 		}
 		else if (timerEvent.id == itsStartTimer) {
 			setState(CTState::RESUME);
 			itsStartTimer = 0;
-			// TODO: do something else?	--> OE 837
+			LOG_DEBUG("Requesting all childs to go operation state");
+			itsChildControl->requestState(CTState::RESUMED, "");
 		}
 		else if (timerEvent.id == itsStopTimer) {
 			setState(CTState::FINISH);
 			itsStopTimer = 0;
-			// TODO: do something else?	--> OE 837
+			LOG_DEBUG("Requesting all childs to quit");
+			itsChildControl->requestState(CTState::FINISHED, "");
 		}
 		// some other timer?
 
