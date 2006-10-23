@@ -9,13 +9,17 @@ class Section(object):
     Represents a part of the CS1 application
     """
 
-    def __init__(self, parset, package, host, buildvar = 'gnu_opt'):
+    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = '~/CS1_auto'):
+        self.workingDir = workingDir
         self.parset = parset
         self.package = package
         self.host = host
         self.buildvar = buildvar
         self.executable = self.package.split('/')[-1]
         
+    def getName(self):
+        return self.package.split('/')[-1]
+
     def build(self, cvsupdate, doBuild):
         self.buildJob = BuildJob(self.package.split('/')[-1], \
                                  self.host, \
@@ -26,7 +30,7 @@ class Section(object):
     def isBuildSuccess(self):
         return self.buildJob.isSuccess()
     
-    def run(self, obsID, noRuns, runCmd = None):
+    def run(self, runlog, noRuns, runCmd = None):
         if '_bgl' in self.buildvar:
             self.runJob = BGLJob(self.package.split('/')[-1], \
                                  self.host, \
@@ -38,16 +42,22 @@ class Section(object):
             self.runJob = MPIJob(self.package.split('/')[-1], \
                                  self.host, \
                                  executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
-                                 noProcesses = self.noProcesses)
+                                 noProcesses = self.noProcesses,
+                                 workingDir = self.workingDir)
         else:            
             self.runJob = Job(self.package.split('/')[-1], \
                               self.host, \
-                              executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable)
+                              executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable,
+                              workingDir = self.workingDir)
 
         parsetfile = '/tmp/' + self.executable + '.parset'
         self.parset.writeToFile(parsetfile)
         # For now set the timeout on 100 times the number of seconds to process
-        self.runJob.run(obsID, parsetfile, 100*noRuns, noRuns, runCmd)
+        self.runJob.run(runlog, 
+                        parsetfile,
+                        100*noRuns,
+                        noRuns,
+                        runCmd)
         os.remove(parsetfile)
 
     def isRunDone(self):
@@ -88,8 +98,8 @@ class InputSection(Section):
         self.parset['TransposeHosts'] = '[' + ','.join(transposeIPs) + ']'
         self.parset['Connections.Input_BGLProc.ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
 
-    def run(self, obsID, noRuns, runCmd = None):
-        Section.run(self, obsID, noRuns, runCmd)
+    def run(self, runlog, noRuns, runCmd = None):
+        Section.run(self, runlog, noRuns, runCmd)
 
 class StorageSection(Section):
     def __init__(self, parset, host):
@@ -130,13 +140,13 @@ class BGLProcSection(Section):
 
         self.executable = 'CS1_BGL_Processing'
         
-    def run(self, obsID, noRuns, runCmd = None):
+    def run(self, runlog, noRuns, runCmd = None):
         nodesPerCell = self.parset.getInt32('BGLProc.NodesPerPset') * self.parset.getInt32('BGLProc.PsetsPerCell')
         subbandsPerCell = self.parset.getInt32('General.SubbandsPerPset') * self.parset.getInt32('BGLProc.PsetsPerCell')
         actualRuns = int(noRuns * subbandsPerCell / nodesPerCell)
         if not actualRuns * nodesPerCell == noRuns * subbandsPerCell:
             raise Exception('illegal number of runs')
-        Section.run(self, obsID, int(noRuns * subbandsPerCell / nodesPerCell), runCmd)        
+        Section.run(self, runlog, int(noRuns * subbandsPerCell / nodesPerCell), runCmd)        
 
 class GeneratorSection(Section):
     def __init__(self, parset, host):
@@ -158,3 +168,4 @@ class Flagger(Section):
                          'Appl/CEP/CS1/CS1_Flagger', \
                          host = host, \
                          buildvar = 'gnu_opt')
+
