@@ -2,6 +2,7 @@ pkginclude_MNSdir = $(pkgincludedir)/MNS
 
 pkginclude_HEADERS =		\
 	BBSKernelStructs.h	\
+	BBSStatus.h		\
 	BBSTestLogger.h		\
 	Exceptions.h		\
 	FlagsMap.h		\
@@ -69,6 +70,7 @@ lib_LTLIBRARIES = libbbskernel.la
 
 libbbskernel_la_SOURCES = 	\
 	BBSKernelStructs.cc	\
+	BBSStatus.cc		\
 	BBSTestLogger.cc	\
 	FlagsMap.cc		\
 	MMap.cc			\
