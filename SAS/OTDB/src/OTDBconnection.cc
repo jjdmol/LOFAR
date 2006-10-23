@@ -74,7 +74,7 @@ bool OTDBconnection::connect()
 
 	// Note: we connect to the database as user Lofar, the real DBaccess
 	// is implemented in the SP's we will call.
-	string	connectString("host=dop50 dbname= " + itsDatabase
+	string	connectString("host=dop50.astron.nl dbname= " + itsDatabase
 						+ " user=postgres");
 
 	// try to make the connection to the database
