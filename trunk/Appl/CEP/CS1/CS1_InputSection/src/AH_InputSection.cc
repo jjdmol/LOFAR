@@ -89,7 +89,7 @@ namespace LOFAR {
       int nameBufferSize = 40;
       char nameBuffer[nameBufferSize];
 
-      vector<string> outputFileNames = itsParamSet.getStringVector("Input.OutputRawDataFiles");
+      vector<string> outputFileNames;
       bool writeRawDataToFile = itsParamSet.getBool("Input.WriteRawDataToFile");
       if (!writeRawDataToFile)
       {
@@ -97,6 +97,7 @@ namespace LOFAR {
       }
       else
       {
+        outputFileNames = itsParamSet.getStringVector("Input.OutputRawDataFiles");
         nNodesPerCell = (itsParamSet.getInt32("General.SubbandsPerPset") * psetsPerCell);
       }
        
@@ -203,9 +204,12 @@ namespace LOFAR {
 				       core);
 		
 		channels.push_back(core);
-		collectSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
               } 
 	    }
+	    if (!writeRawDataToFile)
+	    {
+	      collectSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
+	    }  
 	  }
 	}
       }
