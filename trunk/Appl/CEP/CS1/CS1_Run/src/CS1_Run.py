@@ -3,38 +3,10 @@
 import time
 from optparse import OptionParser
 
-from Hosts import *
+from CS1_Hosts import *
 from CS1_Parset import CS1_Parset
 from CS1_RSPCtl import RSPCtl
 from CS1_Sections import *
-
-
-liifen    = ClusterFEN(name = 'liifen',
-                       address = '129.125.99.51')
-liifen.setSlavesByPattern('lii%03d', '10.20.150.%d', range(1, 13))
-
-listfen   = ClusterFEN(name = 'listfen'    ,
-                       address = '129.125.99.50')
-listfen.setSlavesByPattern('list%03d', '10.20.170.%d', range(1, 13))
-
-hpclf     = Host(name = 'hpclf'  , \
-                 address = 'hpclf1.service.rug.nl')
-bglfen1   = Host(name = 'bglfen1', \
-                 address = 'bglfen1.service.rug.nl')
-CS10LCU   = Host(name = 'lcu', \
-                 address = '10.151.18.1')
-localhost = Host(name = 'localhost', \
-                 address = 'localhost')
-
-sections = [\
-    #DelayCompensationSection(obsID, parset, listfen),\
-    InputSection(parset, liifen),\
-    BGLProcSection(parset, bglfen1, 'R000_128_0', '/bglst1/home2/zwart'),\
-    StorageSection(parset, listfen)\
-    #Flagger(obsID, parset, listfen)\
-    ]
-
-
 
 def doObservation(obsID, parset):
     if False:
@@ -44,13 +16,24 @@ def doObservation(obsID, parset):
         rsp.selectRCUs([0, 1, 2, 8, 9])
         rsp.setWG([2], 60e6)
     
+
+    sections = [\
+        #DelayCompensationSection(parset, listfen),\
+        InputSection(parset, liifen),\
+        BGLProcSection(parset, bglfen3, 'R000_B00', '/bglhome2/lofarsystem'),\
+        StorageSection(parset, listfen)\
+        #Flagger(parset, listfen)\
+        ]
+
+
     noRuns = int(parset['Observation.StopTime']) - int(parset['Observation.StartTime'])
     #print int(parset['Observation.StopTime']), int(parset['Observation.StartTime']), noRuns
 
-    parset.writeToFile(parset.getMSName().split('/')[-1] + '.parset')
+    parset.writeToFile('/log/' + parset.getMSName().split('/')[-1] + '.parset')
     for section in sections:
         print ('Starting ' + section.package)
-        section.run(obsID, noRuns)
+        runlog = '/log/' + obsID + '.' + section.getName() + '.runlog'
+        section.run(runlog, noRuns)
         print 
 
     for section in sections:
@@ -101,13 +84,15 @@ if __name__ == '__main__':
     parset.setInterval(options.starttime, options.runtime)
 
     # if the msname wasn't given, read the next number from the file
+    runningNumberFile = '/log/nextMSNumber'
+
     if not 'Storage.MSName' in parset:
         try:
-            inf = open('nextMSNumber.txt', 'r')
+            inf = open(runningNumberFile, 'r')
             measurementnumber = int(inf.readline())
             inf.close()
             MSName = '/data/' + str(measurementnumber) + '.MS'
-            outf = open('nextMSNumber.txt', 'w')
+            outf = open(runningNumberFile, 'w')
             outf.write(str(measurementnumber + 1) + '\n')
             outf.close()
         except:

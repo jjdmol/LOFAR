@@ -8,16 +8,16 @@ class Job(object):
     Represents a run of some program.
 
     """
-    workingDir = '~/CS1_auto/'
-    def __init__(self, name, host, executable):
+    def __init__(self, name, host, executable, workingDir):
+        self.workingDir = workingDir
         self.name = name
         self.host = host
         self.executable = executable
         self.remoteRunLog = self.workingDir + 'run.' + name + '.log'
         self.runlog = None
 
-    def run(self, obsID, parsetfile, timeOut, noRuns, runCmd = None):
-        self.runlog = os.path.join(os.getcwd(), 'logs') + '/' + obsID + '.' + self.name + '.runlog'
+    def run(self, runlog, parsetfile, timeOut, noRuns, runCmd = None):
+        self.runlog = runlog
         self.runLogRetreived = False
         self.host.sput(parsetfile, '~/')
         if runCmd == None:
@@ -54,14 +54,14 @@ class MPIJob(Job):
     '''
     This is a variation on a job that runs with MPI
     '''
-    def __init__(self, name, host, executable, noProcesses):
+    def __init__(self, name, host, executable, noProcesses, workingDir):
         self.noProcesses = noProcesses
-        Job.__init__(self, name, host, executable)
-    def run(self, obsID, parsetfile, timeOut, noRuns, runCmd):
+        Job.__init__(self, name, host, executable, workingDir)
+    def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
         self.createMachinefile()
         if runCmd == None:
             runCmd = self.executable
-        Job.run(self, obsID, parsetfile, timeOut, noRuns, 'mpirun -np ' + str(self.noProcesses) + \
+        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -np ' + str(self.noProcesses) + \
                 ' --no-local -machinefile ~/' + self.name + '.machinefile ' + runCmd)
     def abort(self):
         print('Aborting ' + self.name)
@@ -89,23 +89,23 @@ class BGLJob(Job):
         self.noProcesses = noProcesses
 
         # this can overwrite the values that were set before this line
-        Job.__init__(self, name, host, executable)
+        Job.__init__(self, name, host, executable, workingDir)
         self.tmplog = 'CS1_auto.tmplog'
         self.jobID = '0'
 
-    def run(self, obsID, parsetfile, timeOut, noRuns, runCmd):
+    def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
         self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
         self.host.sput(parsetfile, self.workingDir)
-        Job.run(self, obsID, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
+        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
 
 
 class BuildJob(Job):
     ''' A job that builds a LOFAR package '''
-    def __init__(self, package, host, buildvar, name):
-        Job.__init__(self, name, host, None)
+    def __init__(self, package, host, buildvar, name, workingDir):
+        Job.__init__(self, name, host, None, workingDir)
         self.buildvar = buildvar
         self.package = package
-        self.remoteRunLog = '~/CS1_auto/LOFAR/build.log'
+        self.remoteRunLog = workingDir + '/LOFAR/build.log'
         
     def run(self, cvsupdate, doBuild):
         self.buildLogRetreived = False
@@ -116,7 +116,7 @@ class BuildJob(Job):
             rubOptions = ''
         rubOptions = rubOptions + ' -cvs \'' + cvsCommand + '\' -distclean -release=main -build ' + self.buildvar + ' ' + self.package
         if doBuild:
-            self.runCommand = self.host.executeAsync('cd CS1_auto/LOFAR ; ./autoconf_share/rub ' + rubOptions)
+            self.runCommand = self.host.executeAsync('cd ' + workingDir + '/LOFAR ; ./autoconf_share/rub ' + rubOptions)
         else:
             self.runCommand = self.host.executeAsync('echo build not done')
 

@@ -1,6 +1,9 @@
 import Hosts
 
 class RSPCtl(object):
+    """
+    RSPCtl can be used to control the lcu for an rsp board. You shouldn't use this class, use MAC/SAS in stead.
+    """
 
     def __init__(self, lcu):
         self.host = lcu
