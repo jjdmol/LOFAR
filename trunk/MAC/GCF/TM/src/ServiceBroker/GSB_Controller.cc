@@ -84,8 +84,7 @@ GCFEvent::TResult GSBController::initial(GCFEvent& event, GCFPortInterface& port
 		break;
 
 	case F_ENTRY:
-	case F_TIMER:
-		itsListener.open();		// Open Listener port
+		ASSERTSTR(itsListener.open(), "Cannot open listener. Another ServiceBroker already running?");
 		break;
 
 	case F_CONNECTED:
@@ -95,7 +94,7 @@ GCFEvent::TResult GSBController::initial(GCFEvent& event, GCFPortInterface& port
 
 	case F_DISCONNECTED:
 		if (&port == &itsListener)
-			itsListener.setTimer(1.0); // try again after 1 second
+			ASSERTSTR(false, "Cannot open listenerport, another ServiceBroker is running?");
 		break;
 
 	default:
