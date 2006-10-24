@@ -268,8 +268,10 @@ namespace LOFAR
 
       // The observation epoch should be given by a start time and a stop
       // time. Both times must be specified in Modified Julian Date (MJD).
-      Epoch startTime = ps.getDouble("Observation.StartTime");
-      Epoch stopTime  = ps.getDouble("Observation.StopTime");
+      Epoch startTime;
+      startTime.utc(ps.getDouble("Observation.StartTime"));
+      Epoch stopTime;
+      stopTime.utc(ps.getDouble("Observation.StopTime"));
 
       // The time step is equal to one integration period, which, in turn, is
       // defined as the number of samples used per integration period divided
