@@ -10,3 +10,9 @@ lapack.var:             --with-ldflags="-lgfortran"
 aipspp.var:		--with-ldflags="-lgfortran"
 
 standard.var:           $(lofar_root) $(aipspp) $(threads) $(sse) $(shmem) $(searchpath) $(python)
+
+mpich.var:                --with-mpich=/opt/mpich/ch-p4
+openmpi.var:              --with-mpich=/opt/openmpi
+
+openmpi.variant.conf:	  $(standard) $(openmpi)
+openmpi-opt.variant.conf: $(standard) $(openmpi) $(optimize)
