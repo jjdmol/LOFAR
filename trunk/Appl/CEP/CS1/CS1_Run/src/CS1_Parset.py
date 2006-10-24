@@ -34,6 +34,9 @@ class CS1_Parset(Parameters.Parset):
     def setNStations(self, nstations):
         self['Observation.NStations'] = nstations
         self['Input.NRSPBoards'] = nstations
+
+    def getNStations(self):
+        return int(self['Observation.NStations'])
         
     def getFirstSubband(self):
         return self.firstSB
@@ -50,6 +53,12 @@ class CS1_Parset(Parameters.Parset):
 
     def getMSName(self):
         return self['Storage.MSName']
+
+    def getNCells(self):
+        subbands = self.getInt32('Observation.NSubbands')
+        psetspercell = self.getInt32('BGLProc.PsetsPerCell')
+        subbandsperpset = self.getInt32('General.SubbandsPerPset')
+        return subbands / (psetspercell * subbandsperpset)
 
     def updateSBValues(self):
         if self.clock == '160MHz':

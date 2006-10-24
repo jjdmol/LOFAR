@@ -18,11 +18,11 @@ def doObservation(obsID, parset):
     
 
     sections = [\
-        #DelayCompensationSection(parset, listfen),\
-        InputSection(parset, liifen),\
-        BGLProcSection(parset, bglfen3, 'R000_B00', '/bglhome2/lofarsystem'),\
-        StorageSection(parset, listfen)\
-        #Flagger(parset, listfen)\
+        #DelayCompensationSection(parset, listfen),
+        InputSection(parset, liifen),
+        BGLProcSection(parset, bglfen3, 'R000_B00', '/bglhome2/lofarsystem'),
+        StorageSection(parset, listfen)
+        #Flagger(parset, listfen)
         ]
 
 
@@ -85,16 +85,29 @@ if __name__ == '__main__':
 
     # if the msname wasn't given, read the next number from the file
     runningNumberFile = '/log/nextMSNumber'
+    MSdatabaseFile = '/log/MSList'
 
     if not 'Storage.MSName' in parset:
         try:
             inf = open(runningNumberFile, 'r')
             measurementnumber = int(inf.readline())
             inf.close()
-            MSName = '/data/' + str(measurementnumber) + '.MS'
+
+            # MS name is L<yyyy>_<nnnnn>_<mmm>.MS
+            # the <mmm> is filled in by the subbandwriter
+            year = str(time.gmtime()[0])
+            MSNumber = '/data/L' + year + '_' + str(measurementnumber)
+            MSName = MSNumber + '.MS'
+
             outf = open(runningNumberFile, 'w')
             outf.write(str(measurementnumber + 1) + '\n')
             outf.close()
+
+            dbfile = open(MSdatabaseFile, 'a')
+            nodesStr = str([1] * parset.getNCells() + [0] * (12 - parset.getNCells()))[1:-1]
+            dateStr = time.strftime('%Y %0m %0d', time.gmtime())
+            dbfile.write(MSNumber + '\t' + dateStr + '\t' + nodesStr + '\n')
+            dbfile.close()
         except:
             MSName = '/data/Test.MS'
         parset['Storage.MSName'] = MSName

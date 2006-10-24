@@ -20,7 +20,7 @@ class Parset(object):
 
     def writeToFile(self, fileName):
         outf = open(fileName, 'w')
-        for key, value in self.parameters.iteritems():
+        for key, value in sorted(self.parameters.iteritems()):
             outf.write(key + ' = ' + str(value) + '\n')
         outf.close()
 
