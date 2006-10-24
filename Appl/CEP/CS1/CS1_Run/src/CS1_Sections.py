@@ -114,7 +114,7 @@ class StorageSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_Storage', \
                          host = host, \
-                         buildvar = 'gnu32_mpich-opt')
+                         buildvar = 'gnu32_openmpi-opt')
 
         storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses)]
         self.parset['Connections.BGLProc_Storage.ServerHosts'] = '[' + ','.join(storageIPs) + ']'
