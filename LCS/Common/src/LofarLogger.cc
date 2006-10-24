@@ -38,7 +38,7 @@ namespace LOFAR {
 // Creates a NDC with the text "application@node" and pushes it
 // on the NDC stack
 void lofarLoggerInitNode(void) {
-	int		MAXLEN = 128;
+	const int	MAXLEN = 128;
 	int		applNameLen = 0;
 	char	hostName [MAXLEN];
 	char	applName [MAXLEN];
