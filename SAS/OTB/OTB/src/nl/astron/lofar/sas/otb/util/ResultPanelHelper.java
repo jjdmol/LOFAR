@@ -74,7 +74,19 @@ public class ResultPanelHelper {
         itsPanelMap.put("ParmDB",itsVector);
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
-        itsPanelMap.put("ParmDBValues",itsVector);       
+        itsPanelMap.put("ParmDBValues",itsVector);
+        
+        //BBS
+        itsVector = new Vector<String>();
+        addBasePanels();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
+        itsPanelMap.put("BBS",itsVector);
+        
+        //OLAP
+        itsVector = new Vector<String>();
+        addBasePanels();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
+        itsPanelMap.put("OLAP",itsVector);
     }
     
     
