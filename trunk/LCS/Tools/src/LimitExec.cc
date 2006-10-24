@@ -23,6 +23,14 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+
+#ifdef USE_NOFORK
+int main()
+{
+  return 1;
+}
+#else
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -116,3 +124,5 @@ int main(int argc, char** argv)
 
   return exit_status(status);
 }
+
+#endif   // USE_NOFORK
