@@ -122,6 +122,7 @@ namespace LOFAR {
       args.nSubbandsPerFrame  = itsPS.getInt32("Input.NSubbandsPerFrame");
 
       args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
+      args.ID                 = itsStationNr;
 
   
       if ((itsTH.getType() == "TH_File") || (itsTH.getType() == "TH_Null")) {
@@ -138,7 +139,10 @@ namespace LOFAR {
     {
       // create the buffer controller.
       int cyclicBufferSize = itsPS.getInt32("Input.NSamplesToBuffer");
-      itsBBuffer = new BeamletBuffer(cyclicBufferSize, itsNSubbands, cyclicBufferSize/6, cyclicBufferSize/6);
+      int subbandsToReadFromFrame = itsNSubbands * itsPS.getInt32("Observation.NStations") / itsPS.getInt32("Input.NRSPBoards");
+      ASSERTSTR(subbandsToReadFromFrame < itsPS.getInt32("Input.NSubbandsPerFrame"), subbandsToReadFromFrame << " < " << itsPS.getInt32("Input.NSubbandsPerFrame"));
+
+      itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, cyclicBufferSize/6, cyclicBufferSize/6);
       startThread();
       itsPrePostTimer = new NSTimer("pre/post");
       itsProcessTimer = new NSTimer("process");

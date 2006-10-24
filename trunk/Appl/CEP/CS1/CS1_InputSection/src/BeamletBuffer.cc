@@ -75,7 +75,7 @@ namespace LOFAR {
 	TimeStamp realBegin = itsLockedRange.writeLock(itsHighestWritten, flagEnd);
 
 	itsWriteTimer.start();
-	cerr<<"BeamletBuffer: skipping "<<itsHighestWritten<<" - "<<flagEnd<<" ("<<flagEnd-itsHighestWritten<<")"<<endl;
+	//cerr<<"BeamletBuffer: skipping "<<itsHighestWritten<<" - "<<flagEnd<<" ("<<flagEnd-itsHighestWritten<<")"<<endl;
 	itsSkippedItems += flagEnd - itsHighestWritten;
 	// we skipped a part, so write zeros there
 	uint startI = mapTime2Index(realBegin);
