@@ -26,6 +26,7 @@
 //# Includes
 #include<Common/LofarLogger.h>
 #include<APS/KVpair.h>
+#include<time.h>
 
 namespace LOFAR {
   namespace ACC {

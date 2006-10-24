@@ -21,10 +21,11 @@
 //# $Id$
 
 
-#ifndef HAVE_BGL
-
 #ifndef LOFAR_TRANSPORT_TH_ETHERNET_H
 #define LOFAR_TRANSPORT_TH_ETHERNET_H
+
+#ifndef HAVE_BGL
+#ifndef USE_NOSOCKETS
 
 // \file
 // Transport mechanism for Ethernet 
@@ -109,7 +110,7 @@ public:
   char* itsSendPacketData;
   
   uint16 itsEthertype;
-  
+
   struct sockaddr_ll itsSockaddr;
 
   void initSocket();
@@ -135,6 +136,7 @@ inline void TH_Ethernet::reset()
 
 }
 
+#endif
 #endif
 
 #endif
