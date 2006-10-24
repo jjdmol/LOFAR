@@ -1,5 +1,5 @@
 import Hosts
-from CS1_Jobs import *
+from LOFAR_Jobs import *
 import time
 import os
 import copy
@@ -9,7 +9,7 @@ class Section(object):
     Represents a part of the CS1 application
     """
 
-    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = '~/CS1_auto'):
+    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = '~/'):
         self.workingDir = workingDir
         self.parset = parset
         self.package = package
@@ -34,20 +34,20 @@ class Section(object):
         if '_bgl' in self.buildvar:
             self.runJob = BGLJob(self.package.split('/')[-1], \
                                  self.host, \
-                                 executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                                 executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses, \
                                  partition = self.partition, \
                                  workingDir = self.workingDir)
         elif 'mpi' in self.buildvar:
             self.runJob = MPIJob(self.package.split('/')[-1], \
                                  self.host, \
-                                 executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                                 executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses,
                                  workingDir = self.workingDir)
         else:            
             self.runJob = Job(self.package.split('/')[-1], \
                               self.host, \
-                              executable = '~/CS1_auto/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable,
+                              executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable,
                               workingDir = self.workingDir)
 
         parsetfile = '/tmp/' + self.executable + '.parset'
@@ -90,7 +90,7 @@ class InputSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_InputSection', \
                          host = host, \
-                         buildvar = 'gnu64_mpich-opt')
+                         buildvar = 'gnu64_openmpi-opt')
 
         myslaves = self.host.getSlaves()[self.nrsp : self.nrsp + self.nCells]
         transposeIPs = [s.getIntName() for s in myslaves]
@@ -131,14 +131,20 @@ class BGLProcSection(Section):
             raise Exception('Not a integer number of compute cells!')
         nCells = nSubbands / nSubbandsPerCell
         self.noProcesses = int(nCells) * parset.getInt32('BGLProc.NodesPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
-        self.noProcesses = 128 # The calculation above is not correct, because some ranks aren't used
+        self.noProcesses = 64 # The calculation above is not correct, because some ranks aren't used
 
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_BGLProc', \
                          host = host, \
                          buildvar = 'gnu_bgl')
 
-        self.executable = 'CS1_BGL_Processing'
+
+        # The executable for BGL_Processing should be recompiled for every combination of the number
+        # of stations and the clock setting. So for every combination there should be an executable present.
+        # todo: We should check here if the executable exists
+        nstations = parset.getNStations()
+        clock = parset.getClockString()
+        self.executable = 'CS1_BGL_Processing.' + str(nstations) + 'st.' + clock
         
     def run(self, runlog, noRuns, runCmd = None):
         nodesPerCell = self.parset.getInt32('BGLProc.NodesPerPset') * self.parset.getInt32('BGLProc.PsetsPerCell')

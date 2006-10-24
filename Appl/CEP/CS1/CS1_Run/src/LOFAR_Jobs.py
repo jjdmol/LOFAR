@@ -62,7 +62,7 @@ class MPIJob(Job):
         if runCmd == None:
             runCmd = self.executable
         Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -np ' + str(self.noProcesses) + \
-                ' --no-local -machinefile ~/' + self.name + '.machinefile ' + runCmd)
+                ' -machinefile ~/' + self.name + '.machinefile ' + runCmd)
     def abort(self):
         print('Aborting ' + self.name)
         self.host.executeAsync('killall ' + self.name).waitForDone()
@@ -90,7 +90,7 @@ class BGLJob(Job):
 
         # this can overwrite the values that were set before this line
         Job.__init__(self, name, host, executable, workingDir)
-        self.tmplog = 'CS1_auto.tmplog'
+        self.tmplog = 'CS1_Run.tmplog'
         self.jobID = '0'
 
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
