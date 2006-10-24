@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time
+import os
 from optparse import OptionParser
 
 from CS1_Hosts import *
@@ -29,7 +30,10 @@ def doObservation(obsID, parset):
     noRuns = int(parset['Observation.StopTime']) - int(parset['Observation.StartTime'])
     #print int(parset['Observation.StopTime']), int(parset['Observation.StartTime']), noRuns
 
-    parset.writeToFile('/log/' + parset.getMSName().split('/')[-1] + '.parset')
+    logdir = '/log/'
+    if not os.access(logdir, os.W_OK):
+        logdir = '~/'
+    parset.writeToFile(logdir + parset.getMSName().split('/')[-1] + '.parset')
     for section in sections:
         print ('Starting ' + section.package)
         runlog = '/log/' + obsID + '.' + section.getName() + '.runlog'
@@ -96,7 +100,7 @@ if __name__ == '__main__':
             # MS name is L<yyyy>_<nnnnn>_<mmm>.MS
             # the <mmm> is filled in by the subbandwriter
             year = str(time.gmtime()[0])
-            MSNumber = '/data/L' + year + '_' + str(measurementnumber)
+            MSNumber = '/data/L' + year + '_' + '%05d' % measurementnumber
             MSName = MSNumber + '.MS'
 
             outf = open(runningNumberFile, 'w')

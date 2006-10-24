@@ -1,10 +1,10 @@
 import time
 import LOFAR_Parset
 
-class CS1_Parset(Parameters.Parset):
+class CS1_Parset(LOFAR_Parset.Parset):
 
     def __init__(self):
-        Parameters.Parset.__init__(self)
+        LOFAR_Parset.Parset.__init__(self)
         #self.clock = '160MHz'
         #self.firstSB = 60e6
         #self.nSubbands = 8
