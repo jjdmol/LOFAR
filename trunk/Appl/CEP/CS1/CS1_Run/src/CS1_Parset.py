@@ -1,5 +1,5 @@
 import time
-import Parameters
+import LOFAR_Parset
 
 class CS1_Parset(Parameters.Parset):
 
