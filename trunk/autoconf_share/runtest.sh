@@ -81,7 +81,7 @@ chmod +w .
 # otherwise use fallback LOFAR/LCS/Tools/src
 # Note that if LOFARROOT is already set, it won't be changed because the
 # Tools/src directory does not have a bin directory.
-if test "$prefix"; then
+if test -f "$prefix/lofarinit.sh"; then
   lofarinitdir=$prefix
 else
   lofarinitdir=`pwd | sed -e 's%/LOFAR/.*%/LOFAR/LCS/Tools/src%'`
