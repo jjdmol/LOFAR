@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#ifndef HAVE_BGL
-
 #include <lofar_config.h>
+
+#ifndef HAVE_BGL
+#ifndef USE_NOSOCKETS
 
 #include <Transport/TH_Ethernet.h>
 #include <Transport/BaseSim.h>
 #include <Transport/DataHolder.h> 
 #include <Common/LofarLogger.h>
-
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -443,4 +443,4 @@ void TH_Ethernet::bindToIF(){
 }
 
 #endif
-
+#endif
