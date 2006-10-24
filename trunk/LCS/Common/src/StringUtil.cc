@@ -27,6 +27,7 @@
 #include <Common/StringUtil.h>
 #include <iostream>
 #include <stdarg.h>
+#include <time.h>
 
 namespace LOFAR
 {

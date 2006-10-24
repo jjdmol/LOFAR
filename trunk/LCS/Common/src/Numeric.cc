@@ -149,7 +149,9 @@ namespace LOFAR
 
     // If \a ilhs and \a irhs are less than \a maxUlps apart, then \a lhs and
     // \a rhs are considered equal.
-    return std::llabs(ilhs - irhs) <= maxUlps;
+    ilhs -= irhs;
+    if (ilhs < 0) ilhs = -ilhs;
+    return ilhs <= maxUlps;
 
   }
   
