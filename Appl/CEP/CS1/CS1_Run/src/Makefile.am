@@ -25,14 +25,16 @@ glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
 
 pythondir = $(bindir)
-dist_python_SCRIPTS = 	CS1_Jobs.py \
+dist_python_SCRIPTS = 	\
+			Commands.py \
+			Hosts.py \
+			CS1_Hosts.py \
+			Parameters.py \
 			CS1_Parset.py \
+			LOFAR_Jobs.py \
 			CS1_RSPCtl.py \
 			CS1_Run.py \
 			CS1_Sections.py \
-			Commands.py \
-			Hosts.py \
-			Parameters.py			   
 
 scriptdir = $(bindir)
 dist_script_SCRIPTS = 
