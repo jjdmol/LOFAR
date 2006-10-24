@@ -29,7 +29,7 @@ dist_python_SCRIPTS = 	\
 			Commands.py \
 			Hosts.py \
 			CS1_Hosts.py \
-			Parameters.py \
+			LOFAR_Parset.py \
 			CS1_Parset.py \
 			LOFAR_Jobs.py \
 			CS1_RSPCtl.py \
