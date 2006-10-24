@@ -222,7 +222,7 @@ public class MainFrame extends javax.swing.JFrame {
         // and the panels that are based on the same treeid as the one that fires this
         String aTreeID="";
         if (friendlyName.contains("(") && friendlyName.contains(")")) {
-            aTreeID="("+friendlyName.substring(friendlyName.indexOf('('),friendlyName.indexOf(')'))+")";
+            aTreeID="("+friendlyName.substring(friendlyName.indexOf('(')+1,friendlyName.indexOf(')'))+")";
         }
         Iterator it=itsPlugins.keySet().iterator();
         while (it.hasNext()) {
@@ -251,6 +251,10 @@ public class MainFrame extends javax.swing.JFrame {
       * @param friendlyName name of the panel
      */
     public void showPanel(String friendlyName) {
+        if (friendlyName.contains("(") && friendlyName.contains(")")) {
+            String aTreeID=friendlyName.substring(friendlyName.indexOf('(')+1,friendlyName.indexOf(')'));
+            itsSharedVars.setTreeID(Integer.valueOf(aTreeID));
+        }
         PluginPanelInfo ppi = itsPlugins.get(friendlyName);
         if(itsActivePanel != null) {
             getContentPane().remove(itsActivePanel);
