@@ -178,6 +178,10 @@ AC_ARG_WITH(lofar-libdir,
     lfr_cxx=`basename $CXX`;
     if test "x$lfr_cxx" = "xg++"; then
       lofar_compiler="gnu";
+    elif test "x$lfr_cxx" = "xCC"; then
+      if test "$PE_ENV" = "PGI"; then
+        lofar_compiler="pgi";             # Cray XT3
+      fi
     elif test "x$lfr_cxx" = "xKCC"; then
       lofar_compiler="kcc";
       AR="$CXX";

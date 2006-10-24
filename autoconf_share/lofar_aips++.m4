@@ -195,7 +195,10 @@ else
     if test "$lofar_compiler" = "kcc"; then
       AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_KAICC"
     fi
-    AIPSPP_LDFLAGS="-L$ALP/lib -Wl,-rpath,$ALP/lib"
+    AIPSPP_LDFLAGS="-L$ALP/lib"
+    if test "$lofar_compiler" != "pgi"; then
+      AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$ALP/lib"
+    fi
     AIPSPP_LIBS="$ALP/lib/version.o $lfr_aipslibs"
 
     # If we're using GCC 4.x, we need to add -lgfortran to AIPSPP_LIBS. 
