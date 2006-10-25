@@ -29,6 +29,7 @@
 
 #include "StationSettings.h"
 #include "SetClocksCmd.h"
+#include "Sequencer.h"
 
 using namespace blitz;
 using namespace LOFAR;
@@ -64,8 +65,9 @@ void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
   cache.getClock() = m_event->clock;
   LOG_INFO_STR(formatString("Setting clock to %d MHz @ ", m_event->clock) << getTimestamp());
+
   if (setModFlag) {
-    cache.getCache().getState().tds().write();
+    Sequencer::getInstance().startSequence(Sequencer::SETCLOCK);
   }
 }
 

@@ -30,7 +30,6 @@
 #include "TDSProtocolWrite.h"
 #include "TDSi2cdefs.h"
 #include "Cache.h"
-#include "InitState.h"
 
 #include <netinet/in.h>
 
@@ -153,35 +152,18 @@ void TDSProtocolWrite::sendrequest()
   char* buf = 0;
 
   // skip update if the Clocks settings have not been modified
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().tds().get(getBoardId()))
-  {
-    Cache::getInstance().getState().tds().unmodified(getBoardId());
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().tdwrite().get(getBoardId())) {
+
+    Cache::getInstance().getState().tdwrite().unmodified(getBoardId());
     setContinue(true);
     return;
-  }
-
-  // indicate that we're initialising the hardware
-  if (InitState::instance().getState() == InitState::INIT) {
-
-    LOG_INFO_STR(formatString("Sending clock setting via RSP board %d: %d MHz",
-			      getBoardId(), Cache::getInstance().getBack().getClock()));
-
   }
 
   uint32 tds_control = 0;
   sscanf(GET_CONFIG_STRING("RSPDriver.TDS_CONTROL"), "%x", &tds_control);
 
-  LOG_INFO_STR(formatString("tds_control=0x%08x", tds_control));
   if (!(tds_control & (1 << getBoardId()))) {
-    //
-    // RSPDriver.TDS_CONTROL is a bitmask which indicates
-    // which of the 24 RSP boards control a TDS board in
-    // their subrack.
-    //
-    // If the bit corresponding to getBoardId() is not set,
-    // then simply assume that the clocks change has been made (write_ack).
-    //
-    Cache::getInstance().getState().tds().write_ack(getBoardId());
+    Cache::getInstance().getState().tdwrite().write_ack(getBoardId());
     setContinue(true);
 
     return;
@@ -225,11 +207,16 @@ void TDSProtocolWrite::sendrequest()
 
   tdsprotocol.protocol.setBuffer((char*)buf + m_offset, size);
 
+  // indicate that we're initialising the hardware
+  LOG_INFO_STR(formatString("Sending clock setting (offset=%d) via RSP board %d: %d MHz",
+			    m_offset, getBoardId(), Cache::getInstance().getBack().getClock()));
+
   // advance
   m_remaining -= size;
   m_offset    += size;
 
   m_hdr = tdsprotocol.hdr; // remember header to match with ack
+
   getBoardPort().send(tdsprotocol);
 }
 
@@ -251,14 +238,14 @@ GCFEvent::TResult TDSProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("TDSProtocolWrite::handleack: invalid ack");
-    Cache::getInstance().getState().tds().write_error(getBoardId());
+    Cache::getInstance().getState().tdwrite().write_error(getBoardId());
     return GCFEvent::NOT_HANDLED;
   }
 
   // Mark register modification as applied
   // Still needs to be confirmed by TDSRegisterRead
   if (0 == m_remaining) {
-    Cache::getInstance().getState().tds().read_schedule(getBoardId());
+    Cache::getInstance().getState().tdwrite().write_ack(getBoardId());
   }
 
   return GCFEvent::HANDLED;

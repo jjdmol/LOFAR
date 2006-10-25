@@ -115,7 +115,7 @@ namespace LOFAR {
       /**
        * Distill two rectdomains from the selection list
        */
-      bool getRSPRange2(blitz::Range& r1, blitz::Range& r2) const
+      bool getRSPRange2(blitz::Range& r1, blitz::Range& r2, int n_blps = MEPHeader::N_BLPS) const
       {
 	blitz::TinyVector<int, 2> lowerbounds(0,0), upperbounds(0,0);
 
@@ -123,15 +123,17 @@ namespace LOFAR {
 
 	if (select.size() != 4) return false;
 	
-	int lb = select.front();
+	int lb = select.front() * n_blps;
 	select.pop_front();
-	int ub = select.front();
-	r1 = blitz::Range(lb, ub);
+	int ub = select.front() * n_blps;
+	select.pop_front();
+	r1 = blitz::Range(lb, ub - 1);
 
-	lb = select.front();
+	lb = select.front() * n_blps;
 	select.pop_front();
-	ub = select.front();
-	r2 = blitz::Range(lb, ub);
+	ub = select.front() * n_blps;
+	select.pop_front();
+	r2 = blitz::Range(lb, ub - 1);
 
 	return true;
       }
@@ -521,8 +523,10 @@ namespace LOFAR {
       void plot_xcstatistics(blitz::Array<std::complex<double>, 4>& stats, const RTC::Timestamp& timestamp);
       void dump_xcstatistics(blitz::Array<std::complex<double>, 4>& stats, const RTC::Timestamp& timestamp);
       virtual GCFEvent::TResult ack(GCFEvent& e);
+      void setAngle(bool value) { m_xcangle = value; }
     private:
       blitz::Array<std::complex<double>, 4> m_stats;
+      bool m_xcangle;
     };
 
     //

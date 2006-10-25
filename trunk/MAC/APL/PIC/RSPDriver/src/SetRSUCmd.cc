@@ -29,6 +29,7 @@
 
 #include "StationSettings.h"
 #include "SetRSUCmd.h"
+#include "Sequencer.h"
 
 using namespace blitz;
 using namespace LOFAR;
@@ -68,11 +69,11 @@ void SetRSUCmd::apply(CacheBuffer& cache, bool setModFlag)
     if (m_event->rspmask[cache_rsp]) {
       LOG_INFO (formatString("RSUcontrol for board %d", cache_rsp));
       cache.getRSUSettings()()(cache_rsp) = m_event->settings()(0);
-
-      if (setModFlag) {
-	cache.getCache().getState().rsuclear().write(cache_rsp);
-      }
     }
+  }
+
+  if (setModFlag) {
+    Sequencer::getInstance().startSequence(Sequencer::RSPCLEAR);
   }
 }
 

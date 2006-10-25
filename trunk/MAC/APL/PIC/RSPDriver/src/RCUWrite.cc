@@ -39,6 +39,7 @@ RCUWrite::RCUWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
+  doAtInit(); // needed to enable/disable RCU's during initialization
 }
 
 RCUWrite::~RCUWrite()

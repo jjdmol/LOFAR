@@ -30,7 +30,6 @@
 #include "StationSettings.h"
 #include "TimestampWrite.h"
 #include "Cache.h"
-#include "InitState.h"
 
 using namespace LOFAR;
 using namespace RSP;

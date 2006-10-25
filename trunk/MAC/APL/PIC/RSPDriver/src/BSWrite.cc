@@ -30,10 +30,6 @@
 #include "StationSettings.h"
 #include "BSWrite.h"
 #include "Cache.h"
-#include "InitState.h"
-
-// nof seconds to wait with next action in init sequence
-#define DELAY_NEXT ((long)0)
 
 using namespace LOFAR;
 using namespace RSP;
@@ -57,19 +53,11 @@ BSWrite::~BSWrite()
 
 void BSWrite::sendrequest()
 {
-  if (InitState::instance().getState() == InitState::WRITE_RCUENABLE) {
-
-    Cache::getInstance().reset(); // reset all cache values to default
-    Cache::getInstance().getState().force(); // force read/write of all register after clear
-
-    InitState::instance().setRCUEnableDone((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
-  }
-
   // skip update if the neither of the RCU's settings have been modified
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bs().get((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp))
-  {
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bs().get((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp)) {
     Cache::getInstance().getState().bs().unmodified((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
     setContinue(true);
+
     return;
   }
 
@@ -111,8 +99,6 @@ GCFEvent::TResult BSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   // change state to indicate that it has been applied in the hardware
   Cache::getInstance().getState().bs().write_ack((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
-
-  InitState::instance().setBSDone((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
 
   return GCFEvent::HANDLED;
 }

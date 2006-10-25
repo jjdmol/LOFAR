@@ -76,6 +76,7 @@
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
+#include "XWWrite.h"
 #include "BWWrite.h"
 #include "BWRead.h"
 #include "SSWrite.h"
@@ -96,6 +97,7 @@
 #include "WriteReg.h"
 #include "ReadReg.h"
 #include "CDOWrite.h"
+#include "TDSResultWrite.h"
 #include "TDSProtocolWrite.h"
 #include "TDSResultRead.h"
 #include "RADWrite.h"
@@ -103,6 +105,7 @@
 
 #include "Cache.h"
 #include "RawEvent.h"
+#include "Sequencer.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -296,7 +299,7 @@ bool RSPDriver::isEnabled()
  * Order is:
  * - BS:      write syncrhonization settings    // BSWrite
  * - STATUS (RSP Status): read RSP status info  // StatusRead
- * - BF:      write beamformer weights          // BWWrite
+ * - BF:      write beamformer weights          // XWWrite/BWWrite
  * - SS:      write subband selection settings  // SSWrite
  * - RCU:     write RCU control settings        // RCUWrite/RCUProtocolWrite/RCUResultRead
  * - HBA:     write HBA control settings        // HBAProtocolWrite/HBAResultRead
@@ -374,13 +377,15 @@ void RSPDriver::addAllSyncActions()
     // order is important; TDSResultRead should be added before TDSProtocolWrite
     if (1 == GET_CONFIG("RSPDriver.READWRITE_TDS_PROTOCOL", i))
     {
+      TDSResultWrite* tdsresultwrite = new TDSResultWrite(m_board[boardid], boardid);
+      ASSERT(tdsresultwrite);
+      m_scheduler.addSyncAction(tdsresultwrite);
+
       TDSProtocolWrite* tdsprotocolwrite = new TDSProtocolWrite(m_board[boardid], boardid);
       ASSERT(tdsprotocolwrite);
       m_scheduler.addSyncAction(tdsprotocolwrite);
-    }
-    if (1 == GET_CONFIG("RSPDriver.READWRITE_TDS_PROTOCOL", i))
-    {
-      TDSResultRead* tdsresultread = new TDSResultRead(m_board[boardid], boardid, m_scheduler);
+
+      TDSResultRead* tdsresultread = new TDSResultRead(m_board[boardid], boardid);
       ASSERT(tdsresultread);
       m_scheduler.addSyncAction(tdsresultread);
     }
@@ -525,21 +530,40 @@ void RSPDriver::addAllSyncActions()
       {
         if (1 == GET_CONFIG("RSPDriver.WRITE_BF", i))
         {
-          BWWrite* bwsync = 0;
+          BWWrite* bwwrite = 0;
 
           for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
-            bwsync = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_XROUT);
-            ASSERT(bwsync);
-            m_scheduler.addSyncAction(bwsync);
-            bwsync = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_XIOUT);
-            ASSERT(bwsync);
-            m_scheduler.addSyncAction(bwsync);
-            bwsync = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_YROUT);
-            ASSERT(bwsync);
-            m_scheduler.addSyncAction(bwsync);
-            bwsync = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_YIOUT);
-            ASSERT(bwsync);
-            m_scheduler.addSyncAction(bwsync);
+            bwwrite = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_XROUT);
+            ASSERT(bwwrite);
+            m_scheduler.addSyncAction(bwwrite);
+            bwwrite = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_XIOUT);
+            ASSERT(bwwrite);
+            m_scheduler.addSyncAction(bwwrite);
+            bwwrite = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_YROUT);
+            ASSERT(bwwrite);
+            m_scheduler.addSyncAction(bwwrite);
+            bwwrite = new BWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_YIOUT);
+            ASSERT(bwwrite);
+            m_scheduler.addSyncAction(bwwrite);
+          }
+        }
+        if (1 == GET_CONFIG("RSPDriver.WRITE_XBF", i))
+        {
+          XWWrite* xwwrite = 0;
+
+          for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
+            xwwrite = new XWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_XROUT);
+            ASSERT(xwwrite);
+            m_scheduler.addSyncAction(xwwrite);
+            xwwrite = new XWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_XIOUT);
+            ASSERT(xwwrite);
+            m_scheduler.addSyncAction(xwwrite);
+            xwwrite = new XWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_YROUT);
+            ASSERT(xwwrite);
+            m_scheduler.addSyncAction(xwwrite);
+            xwwrite = new XWWrite(m_board[boardid], boardid, blp, MEPHeader::BF_YIOUT);
+            ASSERT(xwwrite);
+            m_scheduler.addSyncAction(xwwrite);
           }
         }
       }
@@ -547,21 +571,21 @@ void RSPDriver::addAllSyncActions()
       {
         if (1 == GET_CONFIG("RSPDriver.READ_BF", i))
         {
-          BWRead* bwsync = 0;
+          BWRead* bwread = 0;
 
           for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
-            bwsync = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_XROUT);
-            ASSERT(bwsync);
-            m_scheduler.addSyncAction(bwsync);
-            bwsync = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_XIOUT);
-            ASSERT(bwsync);
-            m_scheduler.addSyncAction(bwsync);
-            bwsync = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_YROUT);
-            ASSERT(bwsync);
-            m_scheduler.addSyncAction(bwsync);
-            bwsync = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_YIOUT);
-            ASSERT(bwsync);
-            m_scheduler.addSyncAction(bwsync);
+            bwread = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_XROUT);
+            ASSERT(bwread);
+            m_scheduler.addSyncAction(bwread);
+            bwread = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_XIOUT);
+            ASSERT(bwread);
+            m_scheduler.addSyncAction(bwread);
+            bwread = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_YROUT);
+            ASSERT(bwread);
+            m_scheduler.addSyncAction(bwread);
+            bwread = new BWRead(m_board[boardid], boardid, blp, MEPHeader::BF_YIOUT);
+            ASSERT(bwread);
+            m_scheduler.addSyncAction(bwread);
           }
         }
       }
@@ -685,7 +709,11 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
         // standard time format and trigger on rising edge, API version 1
         memset(&parm, 0, sizeof(pps_params_t));
         parm.mode = PPS_TSFMT_TSPEC;
-        parm.mode |= PPS_CAPTUREASSERT; // trigger on ASSERT
+	if (GET_CONFIG("RSPDriver.PPS_TRIGGER", i)) {
+	  parm.mode |= PPS_CAPTUREASSERT; // trigger on ASSERT
+	} else {
+	  parm.mode |= PPS_CAPTURECLEAR; // trigger on CLEAR
+	}
         parm.api_version = PPS_API_VERS_1;
 
         if ((m_ppsfd = open(GET_CONFIG_STRING("RSPDriver.PPS_DEVICE"), O_RDWR)) < 0) {
@@ -1121,8 +1149,15 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
           m_board[0].setTimer((long)1); // next event in one (software) second
 #endif
 
+	  // delay the driver some number of microseconds after it receives the PPS tick
+	  // this may be needed to synchronized the driver properly to the hardware
+	  if (GET_CONFIG("RSPDriver.PPS_DELAY", i) > 0) {
+	    usleep(GET_CONFIG("RSPDriver.PPS_DELAY", i));
+	  }
+
           /* run the scheduler with the timer event */
           status = m_scheduler.run(timer, port);
+	  Sequencer::getInstance().run(timer, port);
         }
       }
       else if (&port == &m_acceptor)
@@ -1258,6 +1293,7 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
           
   /* run the scheduler with the timer event */
   status = m_scheduler.run(timer, port);
+  Sequencer::getInstance().run(timer, port);
 
   return status;
 }

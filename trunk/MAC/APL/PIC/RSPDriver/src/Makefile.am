@@ -133,12 +133,12 @@ RSPDriver_SOURCES = \
 	\
 	SyncAction.h \
 	SyncAction.cc \
-	InitState.h \
-	InitState.cc \
 	WriteReg.h \
 	WriteReg.cc \
 	ReadReg.h \
 	ReadReg.cc \
+	XWWrite.h \
+	XWWrite.cc \
 	BWWrite.h \
 	BWWrite.cc \
 	BWRead.h \
@@ -178,6 +178,8 @@ RSPDriver_SOURCES = \
 	TDSProtocolWrite.cc \
 	TDSProtocolWrite.h \
 	TDSi2cdefs.h \
+	TDSResultWrite.cc \
+	TDSResultWrite.h \
 	TDSResultRead.cc \
 	TDSResultRead.h \
 	HBAProtocolWrite.h \
@@ -187,7 +189,9 @@ RSPDriver_SOURCES = \
 	RADWrite.h \
 	RADWrite.cc \
 	TimestampWrite.h \
-	TimestampWrite.cc
+	TimestampWrite.cc \
+	Sequencer.h \
+	Sequencer.cc
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \

@@ -25,8 +25,7 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include "SyncAction.h"
-#include "Cache.h"
-#include "InitState.h"
+#include "Sequencer.h"
 
 using namespace LOFAR;
 using namespace RSP;
@@ -95,7 +94,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
     {
       for (;;) {
 
-	if (!m_atinit && (InitState::instance().getState() != InitState::INIT)) {
+	if (!m_atinit && Sequencer::getInstance().isActive()) {
 
 	  // skip this action and continue with the next
 	  setContinue(true); // continue with next action

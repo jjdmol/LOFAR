@@ -27,9 +27,20 @@ RSPDriver.PPS_DEVICE=/dev/oncore.pps.0
 RSPDriver.SOFTPPS=0
 
 #
+# Delay the driver some number of microseconds after it receives the PPS tick
+# this may be needed to synchronized the driver properly to the hardware
+#
+RSPDriver.PPS_DELAY=0
+
+#
+# PPS trigger is on ASSERT (1) or CLEAR (0)
+#
+RSPDriver.PPS_TRIGGER=1
+
+#
 # Specify MAC addresses of the RSP boards explicitly
 #
-RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
+RSPDriver.MAC_ADDR_0=10:FA:00:00:03:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
 RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
@@ -88,7 +99,7 @@ RSPDriver.LANE_0_XLET_OUT=11
 RSPDriver.LANE_1_XLET_OUT=11
 RSPDriver.LANE_2_XLET_OUT=11
 RSPDriver.LANE_3_XLET_OUT=11
-RSPDriver.IGNORE_REMOTE_DATA=0
+RSPDriver.IGNORE_REMOTE_DATA=1
 
 #
 # CDO Control
@@ -104,9 +115,8 @@ RSPDriver.IGNORE_REMOTE_DATA=0
 #
 RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
-#RSPDriver.CDO_N_BEAMLETS=54
-RSPDriver.CDO_N_BEAMLETS=32
-RSPDriver.CDO_SRCMAC_FORMAT=10:FA:00:%02x:%02x:01
+RSPDriver.CDO_N_BEAMLETS=4 #32
+RSPDriver.CDO_SRCMAC_FORMAT=10:FA:00:%02x:01:%02x
 
 # FTS-1
 # RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
@@ -115,7 +125,7 @@ RSPDriver.CDO_SRCMAC_FORMAT=10:FA:00:%02x:%02x:01
 RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:93:3B
 RSPDriver.DST_MAC_ADDR_1=00:E0:81:34:93:3B
 RSPDriver.DST_MAC_ADDR_2=00:E0:81:31:B0:E1
-RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:B0:E1
+RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:B2:F5
 RSPDriver.DST_MAC_ADDR_4=00:E0:81:31:B2:F5
 RSPDriver.DST_MAC_ADDR_5=00:E0:81:31:B2:F5
 RSPDriver.DST_MAC_ADDR_6=00:E0:81:34:93:3B
@@ -124,18 +134,6 @@ RSPDriver.DST_MAC_ADDR_8=00:E0:81:31:B0:E1
 RSPDriver.DST_MAC_ADDR_9=00:E0:81:31:B0:E1
 RSPDriver.DST_MAC_ADDR_10=00:E0:81:31:B2:F5
 RSPDriver.DST_MAC_ADDR_11=00:E0:81:31:B2:F5
-
-#RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:B0:E1
-#RSPDriver.DST_MAC_ADDR_2=00:E0:81:31:B2:F5
-#RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:DE:8B
-#RSPDriver.DST_MAC_ADDR_4=00:E0:81:31:20:37
-#RSPDriver.DST_MAC_ADDR_5=00:E0:81:31:DE:9B
-#RSPDriver.DST_MAC_ADDR_6=00:E0:81:31:8C:D1
-#RSPDriver.DST_MAC_ADDR_7=00:E0:81:31:9B:87
-#RSPDriver.DST_MAC_ADDR_8=00:E0:81:31:B3:26
-#RSPDriver.DST_MAC_ADDR_9=00:E0:81:31:DF:D5
-#RSPDriver.DST_MAC_ADDR_10=00:E0:81:31:92:11
-#RSPDriver.DST_MAC_ADDR_11=00:E0:81:31:B2:15
 
 RSPDriver.SRC_IP_ADDR_0=10.10.0.1
 RSPDriver.SRC_IP_ADDR_1=10.10.0.2
@@ -221,6 +219,7 @@ RSPDriver.WRITE_CDO_ONCE=1#0
 RSPDriver.READ_CDO=0
 RSPDriver.WRITE_RAD=1
 RSPDriver.READ_STATUS=1
+RSPDriver.WRITE_XBF=1
 RSPDriver.WRITE_BF=1
 RSPDriver.WRITE_SS=1
 RSPDriver.WRITE_RCU=1
@@ -258,7 +257,7 @@ RSPDriver.READ_WG=0
 # into the hardware when the driver starts.
 # Currently allowed values are: 0 (off), 160 (MHz) and 200 (MHz)
 #
-RSPDriver.DEFAULT_SAMPLING_FREQUENCY=160
+RSPDriver.DEFAULT_SAMPLING_FREQUENCY=200
 
 #
 # Specify how the rspdriver should operate:
@@ -272,3 +271,10 @@ RSPDriver.OPERATION_MODE=0
 #
 RSPDriver.BF_GAIN=8000
 RSPDriver.XC_GAIN=8000
+
+#
+# If set to 1 (true), then the cross-correlation array will
+# be filled completely by copying the conjugate of a cross-correlation
+# across the diagonal if a value equals zero.
+#
+RSPDriver.XC_FILL=1
