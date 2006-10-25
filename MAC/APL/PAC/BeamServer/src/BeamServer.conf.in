@@ -13,4 +13,9 @@ BeamServer.DISABLE_SETSUBBANDS=0
 #
 BeamServer.DISABLE_INDI=1
 
+#
+# Gain of the beamformer
+#
+BeamServer.BF_GAIN=8000
+
 
