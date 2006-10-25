@@ -68,6 +68,11 @@ using namespace RSP_Protocol;
 #define SYSTEM_CLOCK_FREQ 120e6 // 120 MHz
 
 //
+// global variable for beamformer gain
+//
+static int g_bf_gain = 0;
+
+//
 // parseOptions
 //
 void BeamServer::parseOptions(int	argc,
@@ -760,8 +765,8 @@ BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
  */
 inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 {
-  return complex<int16_t>((int16_t)(round(cd.real()*SCALE)),
-			  (int16_t)(round(cd.imag()*SCALE)));
+  return complex<int16_t>((int16_t)(round(cd.real() * g_bf_gain)),
+			  (int16_t)(round(cd.imag() * g_bf_gain)));
 }
 
 /**
@@ -892,6 +897,9 @@ int main(int argc, char** argv)
   {
     ConfigLocator cl;
     globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));
+
+    // set global bf_gain
+    g_bf_gain = GET_CONFIG("BeamServer.BF_GAIN", i);
   }
   catch (Exception e)
   {
