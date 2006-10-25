@@ -21,7 +21,7 @@ def doObservation(obsID, parset):
     sections = [\
         #DelayCompensationSection(parset, listfen),
         InputSection(parset, liifen),
-        BGLProcSection(parset, bglfen3, 'R000_B00', '/bglhome2/lofarsystem'),
+        BGLProcSection(parset, bglfen3, 'R000_128_0', '/bglhome2/lofarsystem'),
         StorageSection(parset, listfen)
         #Flagger(parset, listfen)
         ]
@@ -32,7 +32,7 @@ def doObservation(obsID, parset):
 
     logdir = '/log/'
     if not os.access(logdir, os.W_OK):
-        logdir = '~/'
+        logdir = './'
     parset.writeToFile(logdir + parset.getMSName().split('/')[-1] + '.parset')
     for section in sections:
         print ('Starting ' + section.package)
