@@ -545,6 +545,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	 i < positions.extent(firstDim)*positions.extent(secondDim);
 	 i++)
     {
+      // subset is one-dimensional (receiver), select is two-dimensional (antenna, polarization)
       if (start.subset[i]) select(i/2,i%2) = true;
     }
 
