@@ -79,20 +79,19 @@ void SSWrite::sendrequest()
   // Explain this in more detail
   for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 
-    int src_offset = lane + MEPHeader::N_LOCAL_XLETS;
-    int dst_offset = (lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES)) + MEPHeader::N_LOCAL_XLETS;
+    int hw_offset = lane + MEPHeader::N_LOCAL_XLETS;
+    int cache_offset = (lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES)) + MEPHeader::N_LOCAL_XLETS;
     
     // strided source range, stride = nrBlpsPerBoard
-    Range src_range(src_offset, src_offset + MEPHeader::N_BEAMLETS - 1,
-		    StationSettings::instance()->nrBlpsPerBoard());
-    Range dst_range(dst_offset, dst_offset + (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) - 1);
+    Range hw_range(hw_offset, hw_offset + MEPHeader::N_BEAMLETS - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
+    Range cache_range(cache_offset, cache_offset + (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) - 1, 1);
 
     LOG_DEBUG_STR("lane=" << lane);
-    LOG_DEBUG_STR("src_range=" << dst_range);
-    LOG_DEBUG_STR("dst_range=" << src_range);
+    LOG_DEBUG_STR("hw_range=" << hw_range);
+    LOG_DEBUG_STR("cache_range=" << cache_range);
 
-    subbands(src_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     dst_range); // x
-    subbands(src_range, 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, dst_range); // y
+    subbands(hw_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     cache_range); // x
+    subbands(hw_range, 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, cache_range); // y
   }
 
   m_hdr = ss.hdr;
