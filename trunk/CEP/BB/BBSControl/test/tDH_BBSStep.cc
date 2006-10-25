@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <BBSControl/DH_BlobStreamable.h>
+#include <Transport/DH_BlobStreamable.h>
 #include <BBSControl/BBSStep.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TH_Mem.h>
