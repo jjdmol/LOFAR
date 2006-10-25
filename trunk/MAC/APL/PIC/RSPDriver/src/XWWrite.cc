@@ -1,4 +1,4 @@
-//#  BWWrite.cc: implementation of the BWWrite class
+//#  XWWrite.cc: implementation of the XWWrite class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,7 +32,7 @@
 #include <string.h>
 #include <blitz/array.h>
 
-#include "BWWrite.h"
+#include "XWWrite.h"
 #include "Cache.h"
 #include "StationSettings.h"
 
@@ -43,28 +43,20 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
-BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
-  : SyncAction(board_port, board_id, BF_N_FRAGMENTS),
+XWWrite::XWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
+  : SyncAction(board_port, board_id, 1),
     m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
-BWWrite::~BWWrite()
+XWWrite::~XWWrite()
 {
 }
 
-void BWWrite::sendrequest()
+void XWWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
-
-  // no conditional, update every second
-
-  // reset m_offset and m_remaining for each register
-  if (0 == getCurrentIndex()) {
-    m_offset = MEPHeader::N_LOCAL_XLETS * MEPHeader::WEIGHT_SIZE;
-    m_remaining = MEPHeader::BF_XROUT_SIZE - m_offset; // representative for XR, XI, YR, YI size
-  }
 
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -72,19 +64,15 @@ void BWWrite::sendrequest()
     exit(EXIT_FAILURE);
   }
 
-  LOG_DEBUG(formatString(">>>> BWWrite(%s) global_blp=%d, blp=%d, regid=%d, m_offset=%d, m_remaining=%d",
+  LOG_DEBUG(formatString(">>>> XWWrite(%s) global_blp=%d, regid=%d",
 			 getBoardPort().getName().c_str(),
-			 global_blp, m_blp, m_regid, m_offset, m_remaining));
+			 global_blp,
+			 m_regid));
   
   // send next BF configure message
   EPABfCoefsWriteEvent bfcoefs;
 
-  size_t size = (MEPHeader::N_BEAMLETS * MEPHeader::WEIGHT_SIZE) / BF_N_FRAGMENTS;
-  LOG_DEBUG_STR("size=" << size);
-
-  // this code is only guaranteed to work under the following conditions
-  ASSERT(size < MEPHeader::FRAGMENT_SIZE);
-
+  size_t size = MEPHeader::N_LOCAL_XLETS * MEPHeader::WEIGHT_SIZE;
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
@@ -106,37 +94,10 @@ void BWWrite::sendrequest()
   }
 
   // create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
-  int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / BF_N_FRAGMENTS;
-  Array<complex<int16>, 2> weights(nbeamlets_per_fragment, MEPHeader::N_POL);
+  Array<complex<int16>, 2> weights(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_POL);
   bfcoefs.coef.setBuffer(weights.data(), weights.size() * sizeof(complex<uint16>));
 
-  LOG_DEBUG_STR("weights shape=" << weights.shape());
-
-  ASSERT(MEPHeader::N_BEAMLETS % BF_N_FRAGMENTS == 0);
-  for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
-
-    int hw_offset = lane;
-    int cache_offset = lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) + (getCurrentIndex() * nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES);
-
-    Range hw_range(hw_offset, hw_offset + nbeamlets_per_fragment - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
-    Range cache_range(cache_offset, cache_offset + (nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES) - 1, 1);
-    
-    LOG_DEBUG_STR("lane=" << lane);
-    LOG_DEBUG_STR("hw_range=" << hw_range);
-    LOG_DEBUG_STR("cache_range=" << cache_range);
-
-    // X
-    weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, cache_range);
-
-    // Y
-    weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, cache_range);
-  }
-
-  // update m_remaining and m_offset for next write
-  m_remaining -= size;
-  m_offset    += size;
-
-  //int xc_gain = GET_CONFIG("RSPDriver.XC_GAIN", i);
+  int xc_gain = GET_CONFIG("RSPDriver.XC_GAIN", i);
 
   switch (m_regid)
   {
@@ -147,6 +108,9 @@ void BWWrite::sendrequest()
 
       // y weights should be 0
       weights(Range::all(), 1) = 0;
+
+      // overwrite first weights for cross correlation
+      weights(m_blp, 0) = complex<int16>(xc_gain, 0);
     }
     break;
 
@@ -157,6 +121,9 @@ void BWWrite::sendrequest()
 
       // y weights should be 0
       weights(Range::all(), 1) = 0;
+
+      // overwrite first weights for cross correlation
+      weights(m_blp, 0) = complex<int16>(0, xc_gain);
     }
     break;
     
@@ -167,6 +134,9 @@ void BWWrite::sendrequest()
 
       // x weights should be 0
       weights(Range::all(), 0) = 0;
+
+      // overwrite first weights for cross correlation
+      weights(m_blp, 1) = complex<int16>(xc_gain, 0);
     }
     break;
     
@@ -177,6 +147,9 @@ void BWWrite::sendrequest()
 
       // x weights should be 0
       weights(Range::all(), 0) = 0;
+
+      // overwrite first weights for cross correlation
+      weights(m_blp, 1) = complex<int16>(0, xc_gain);
     }
     break;
   }
@@ -185,16 +158,16 @@ void BWWrite::sendrequest()
   getBoardPort().send(bfcoefs);
 }
 
-void BWWrite::sendrequest_status()
+void XWWrite::sendrequest_status()
 {
   // intentionally left empty
 }
 
-GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult XWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   if (EPA_WRITEACK != event.signal)
   {
-    LOG_WARN("BWWrite::handleack: unexpected ack");
+    LOG_WARN("XWWrite::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
   
@@ -206,17 +179,15 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   {
     Cache::getInstance().getState().bf().write_error(global_blp * MEPHeader::N_PHASEPOL + m_regid);
 
-    LOG_ERROR("BWWrite::handleack: invalid ack");
+    LOG_ERROR("XWWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
 
   } else {
 
-    //
-    // Last fragment signals completion
-    //
-    if (BF_N_FRAGMENTS - 1 == getCurrentIndex()) {
-      Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
-    }
+    // need separate xbf().write_ack register?
+#if 0
+    Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+#endif
 
   }
 
