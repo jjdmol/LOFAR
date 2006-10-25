@@ -36,7 +36,7 @@ def doObservation(obsID, parset):
     parset.writeToFile(logdir + parset.getMSName().split('/')[-1] + '.parset')
     for section in sections:
         print ('Starting ' + section.package)
-        runlog = '/log/' + obsID + '.' + section.getName() + '.runlog'
+        runlog = logdir + obsID + '.' + section.getName() + '.runlog'
         section.run(runlog, noRuns)
         print 
 
