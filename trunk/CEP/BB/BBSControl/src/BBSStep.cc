@@ -23,9 +23,13 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSStep.h>
-#include <BBSControl/BBSSingleStep.h>
-#include <BBSControl/BBSMultiStep.h>
+#include <BBSControl/BBSCorrectStep.h>
+#include <BBSControl/BBSPredictStep.h>
+#include <BBSControl/BBSRefitStep.h>
+#include <BBSControl/BBSShiftStep.h>
 #include <BBSControl/BBSSolveStep.h>
+#include <BBSControl/BBSSubtractStep.h>
+#include <BBSControl/BBSMultiStep.h>
 #include <BBSControl/Exceptions.h>
 #include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
