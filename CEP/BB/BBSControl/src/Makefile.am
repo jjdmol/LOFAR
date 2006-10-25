@@ -1,16 +1,21 @@
 lib_LTLIBRARIES		= libbbscontrol.la
 
 libbbscontrol_la_SOURCES= \
-	BBSStep.cc \
+	BBSControl.cc \
+	BBSCorrectStep.cc \
+	BBSKernel.cc \
+	BBSKernelProcessControl.cc \
+	BBSMultiStep.cc \
+	BBSPredictStep.cc \
+	BBSProcessControl.cc \
+	BBSRefitStep.cc \
+	BBSShiftStep.cc \
 	BBSSingleStep.cc \
 	BBSSolveStep.cc \
-	BBSMultiStep.cc \
-	BBSProcessControl.cc \
-	BBSKernelProcessControl.cc \
+	BBSStep.cc \
 	BBSStrategy.cc \
 	BBSStructs.cc \
-	BlobStreamable.cc \
-	DH_BlobStreamable.cc \
+	BBSSubtractStep.cc \
 	ParameterSetReader.cc
 
 bin_PROGRAMS		= BBSControl BBSKernel

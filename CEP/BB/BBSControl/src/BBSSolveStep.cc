@@ -38,6 +38,16 @@ namespace LOFAR
     using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
+    // Register BBSSolveStep with the BBSStreamableFactory. Use an anonymous
+    // namespace. This ensures that the variable `dummy' gets its own private
+    // storage area and is only visible in this compilation unit.
+    namespace
+    {
+      bool dummy = BlobStreamableFactory::instance().
+	registerClass<BBSSolveStep>("BBSSolveStep");
+    }
+
+
     BBSSolveStep::BBSSolveStep(const BBSStep* parent) : 
       BBSSingleStep(parent),
       itsMaxIter(0), itsEpsilon(0), itsMinConverged(0)

@@ -23,11 +23,11 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSMultiStep.h>
-#include <Common/StreamUtil.h>
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -37,6 +37,16 @@ namespace LOFAR
   namespace BBS
   {
     
+    // Register BBSMultiStep with the BBSStreamableFactory. Use an anonymous
+    // namespace. This ensures that the variable `dummy' gets its own private
+    // storage area and is only visible in this compilation unit.
+    namespace
+    {
+      bool dummy = BlobStreamableFactory::instance().
+ 	registerClass<BBSMultiStep>("BBSMultiStep");
+    }
+
+
     BBSMultiStep::BBSMultiStep(const string& name,
 			       const ParameterSet& parset,
 			       const BBSStep* parent) :

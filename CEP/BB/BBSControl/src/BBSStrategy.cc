@@ -41,6 +41,16 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
+    // Register BBSStrategy with the BBSStreamableFactory. Use an anonymous
+    // namespace. This ensures that the variable `dummy' gets its own private
+    // storage area and is only visible in this compilation unit.
+    namespace
+    {
+      bool dummy = BlobStreamableFactory::instance().
+	registerClass<BBSStrategy>("BBSStrategy");
+    }
+
+
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     BBSStrategy::BBSStrategy(const ParameterSet& aParSet) :
