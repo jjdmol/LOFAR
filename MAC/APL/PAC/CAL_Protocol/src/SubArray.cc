@@ -61,8 +61,21 @@ SubArray::SubArray(string                 name,
 
   // make array at least big enough
   m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
+  m_rcuindex = 0;
 
-  // TODO: compact arrays by removing antennas of which both polarizations have not been selected
+#if 1
+  int sel = 0;
+  for (int ant = 0; ant < m_pos.extent(firstDim); ant++) {
+    for (int pol = 0; pol < m_pos.extent(secondDim); pol++) {
+      if (m_antenna_selection(ant, pol)) {
+	m_pos(sel, pol) = m_pos(ant, pol);
+	m_rcuindex(sel, pol) = ant * m_pos.extent(secondDim) + pol;
+	sel++;
+      }
+    }
+  }
+  m_antenna_count = sel;
+#else
   int k = 0;
   for (int i = 0; i < m_pos.extent(firstDim); i++) {
     if (sum(m_antenna_selection(i, Range::all())) > 0) {
@@ -73,6 +86,8 @@ SubArray::SubArray(string                 name,
     }
   }
   m_antenna_count = k;
+#endif
+
   LOG_DEBUG_STR("m_antenna_count=" << m_antenna_count);
   ASSERT(m_antenna_count > 0);
 
@@ -80,7 +95,7 @@ SubArray::SubArray(string                 name,
   m_pos.resizeAndPreserve(m_antenna_count, m_pos.extent(secondDim), m_pos.extent(thirdDim));
   m_rcuindex.resizeAndPreserve(m_antenna_count, m_rcuindex.extent(secondDim));
 
-  LOG_DEBUG_STR("m_rcuindex(after)=" << m_rcuindex);
+  LOG_INFO_STR("m_rcuindex(after)=" << m_rcuindex);
 
   // create calibration result objects
   m_result[FRONT] = new AntennaGains(m_pos.extent(firstDim), m_pos.extent(secondDim), m_spw.getNumSubbands());
