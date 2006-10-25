@@ -150,7 +150,7 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 	    LOG_DEBUG_STR("lmn="   << lmn);
 	  }
 
-	  complex<double> scaling = 2.0 * M_PI * freq * complex<double>(0.0,1.0) / SPEED_OF_LIGHT_MS;
+	  complex<double> scaling = -2.0 * M_PI * freq * complex<double>(0.0,1.0) / SPEED_OF_LIGHT_MS;
 
 	  //
 	  // calculate (xm - yl + zn) for both polarizations
