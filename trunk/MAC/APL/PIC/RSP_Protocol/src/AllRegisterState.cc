@@ -47,7 +47,9 @@ unsigned int AllRegisterState::getSize()
     + xst_state.getSize()
     + cdo_state.getSize()
     + bs_state.getSize()
-    + tds_state.getSize()
+    + tdclear_state.getSize()
+    + tdwrite_state.getSize()
+    + tdread_state.getSize()
     + rad_state.getSize()
     + ts_state.getSize();
 }
@@ -69,7 +71,9 @@ unsigned int AllRegisterState::pack  (void* buffer)
   offset += xst_state.pack((char*)buffer + offset);
   offset += cdo_state.pack((char*)buffer + offset);
   offset += bs_state.pack((char*)buffer + offset);
-  offset += tds_state.pack((char*)buffer + offset);
+  offset += tdclear_state.pack((char*)buffer + offset);
+  offset += tdwrite_state.pack((char*)buffer + offset);
+  offset += tdread_state.pack((char*)buffer + offset);
   offset += rad_state.pack((char*)buffer + offset);
   offset += ts_state.pack((char*)buffer + offset);
 
@@ -93,7 +97,9 @@ unsigned int AllRegisterState::unpack(void *buffer)
   offset += xst_state.unpack((char*)buffer + offset);
   offset += cdo_state.unpack((char*)buffer + offset);
   offset += bs_state.unpack((char*)buffer + offset);
-  offset += tds_state.unpack((char*)buffer + offset);
+  offset += tdclear_state.unpack((char*)buffer + offset);
+  offset += tdwrite_state.unpack((char*)buffer + offset);
+  offset += tdread_state.unpack((char*)buffer + offset);
   offset += rad_state.unpack((char*)buffer + offset);
   offset += ts_state.unpack((char*)buffer + offset);
 
