@@ -77,7 +77,9 @@ namespace LOFAR {
 	  xst_state.resize(nrRspBoards);
 	  cdo_state.resize(nrRspBoards);
 	  bs_state.resize(nrBlps);
-	  tds_state.resize(nrRspBoards);
+	  tdclear_state.resize(nrRspBoards);
+	  tdwrite_state.resize(nrRspBoards);
+	  tdread_state.resize(nrRspBoards);
 	  rad_state.resize(nrRspBoards);
 	  ts_state.resize(nrRspBoards);
 	}
@@ -101,7 +103,9 @@ namespace LOFAR {
 	  xst_state.reset();
 	  cdo_state.reset();
 	  bs_state.reset();
-	  tds_state.reset();
+	  tdclear_state.reset();
+	  tdwrite_state.reset();
+	  tdread_state.reset();
 	  rad_state.reset();
 	  ts_state.reset();
 
@@ -118,7 +122,9 @@ namespace LOFAR {
 	  xst_state.read();
 	  cdo_state.write_force();
 	  bs_state.check();
-	  tds_state.check();
+	  tdclear_state.check();
+	  tdwrite_state.check();
+	  tdread_state.check();
 	  rad_state.write_force();
 	  ts_state.write_force();
 	}
@@ -137,7 +143,9 @@ namespace LOFAR {
 	  xst_state.read();
 	  cdo_state.check();
 	  bs_state.check();
-	  tds_state.check();
+	  tdclear_state.check();
+	  tdwrite_state.check();
+	  tdread_state.check();
 	  rad_state.check();
 	  ts_state.write_force(); // always write timestamp
 	}
@@ -156,7 +164,9 @@ namespace LOFAR {
 	  xst_state.clear();
 	  cdo_state.clear();
 	  bs_state.clear();
-	  tds_state.clear();
+	  tdclear_state.clear();
+	  tdwrite_state.clear();
+	  tdread_state.clear();
 	  rad_state.clear();
 	  ts_state.clear();
 	}
@@ -180,7 +190,9 @@ namespace LOFAR {
 	  out << "XCorrelationStats "; xst_state.print(out);
 	  out << "CDO               "; cdo_state.print(out);
 	  out << "BS                "; bs_state.print(out);
-	  out << "TDS               "; tds_state.print(out);
+	  out << "TDSClear          "; tdclear_state.print(out);
+	  out << "TDSWrite          "; tdwrite_state.print(out);
+	  out << "TDSRead           "; tdread_state.print(out);
 	  out << "RAD               "; rad_state.print(out);
 	  out << "Timestamp         "; ts_state.print(out);
 	  out << endl;
@@ -213,7 +225,9 @@ namespace LOFAR {
 	RTC::RegisterState& xst()            { return xst_state; }
 	RTC::RegisterState& cdo()            { return cdo_state; }
 	RTC::RegisterState& bs()             { return bs_state; }
-	RTC::RegisterState& tds()            { return tds_state; }
+	RTC::RegisterState& tdclear()        { return tdclear_state; }
+	RTC::RegisterState& tdwrite()        { return tdwrite_state; }
+	RTC::RegisterState& tdread()         { return tdread_state; }
 	RTC::RegisterState& rad()            { return rad_state; }
 	RTC::RegisterState& ts()             { return ts_state; }
 	/*@}*/
@@ -232,7 +246,9 @@ namespace LOFAR {
 	RTC::RegisterState xst_state;            // XST State
 	RTC::RegisterState cdo_state;            // CDO state
 	RTC::RegisterState bs_state;             // BS register state
-	RTC::RegisterState tds_state;            // TDS register state (Clock board)
+	RTC::RegisterState tdclear_state;        // TDS register clear
+	RTC::RegisterState tdwrite_state;        // TDS register clear
+	RTC::RegisterState tdread_state;         // TDS register clear
 	RTC::RegisterState rad_state;            // RAD register state
 	RTC::RegisterState ts_state;             // RSR Timestamp register state
 
