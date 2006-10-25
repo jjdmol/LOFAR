@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <BBSControl/DH_BlobStreamable.h>
+#include <Transport/DH_BlobStreamable.h>
 #include <BBSControl/BBSStrategy.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TH_Mem.h>
@@ -86,6 +86,9 @@ bool doIt(bool doSteps)
   ASSERT(ofs << *recvStrategy);
   ofs.close();
   ASSERT(ofs);
+
+  // Clean up `recvStrategy'
+  delete recvStrategy;
 
   string cmd;
   string arg(sendFile + string(" ") + recvFile);
