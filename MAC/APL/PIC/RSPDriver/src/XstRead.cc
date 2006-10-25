@@ -191,8 +191,8 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   // strided range, stride = nrBlpsPerBoard
   Range dst_range(m_regid / nrRcusPerBoard, nrBlps - 1, nrBlpsPerBoard);
 
-  LOG_INFO_STR(formatString("m_regid=%02d rcu=%03d cache(%02d,Range(0,1),%02d,",
-			    m_regid, rcu, rcu %  MEPHeader::N_POL, rcu / MEPHeader::N_POL) << dst_range << ")");
+  LOG_DEBUG_STR(formatString("m_regid=%02d rcu=%03d cache(%02d,Range(0,1),%02d,",
+			     m_regid, rcu, rcu %  MEPHeader::N_POL, rcu / MEPHeader::N_POL) << dst_range << ")");
 
   // rcu with X cross-correlations
   cache(rcu % MEPHeader::N_POL, 0, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 0));

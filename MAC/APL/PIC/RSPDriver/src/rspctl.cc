@@ -138,6 +138,18 @@ inline complex<double> convert_to_amplphase_from_int16(complex<int16> int16val)
 			 ((::atan(imag(cdval) / real(cdval))) / M_PI) * 180.0); 
 }
 
+BZ_DECLARE_FUNCTION_RET(blitz_abs, double)
+inline double blitz_abs(complex<double> val)
+{
+  return sqrt(val.real()*val.real() + val.imag()*val.imag());
+}
+
+BZ_DECLARE_FUNCTION_RET(blitz_angle, double)
+inline double blitz_angle(complex<double> val)
+{
+  return atan(val.imag() / val.real()) * 180.0 / M_PI;
+}
+
 WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port), m_type(WeightsCommand::COMPLEX)
 {
 }
@@ -1424,7 +1436,7 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 }
 
 XCStatisticsCommand::XCStatisticsCommand(GCFPortInterface& port) : StatisticsBaseCommand(port),
-  m_stats()
+								   m_stats(), m_xcangle(false)
 {
 }
 
@@ -1446,7 +1458,7 @@ void XCStatisticsCommand::send()
     RSPSubxcstatsEvent subxcstats;
 
     subxcstats.timestamp = Timestamp(0,0);
-    subxcstats.period = 1;
+    subxcstats.period = 4;
 
     m_rspport.send(subxcstats);
   }
@@ -1469,8 +1481,8 @@ void XCStatisticsCommand::stop()
   }
 }
 
-void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp)
-{
+void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp){
+
   if (0 == m_nseconds)
   {
     // initialize values array
@@ -1504,6 +1516,7 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
       pastats.resize(m_stats.shape());
       pastats = convert_to_amplphase(m_stats);
 
+#if 0
       for (int i = 0; i < pastats.extent(firstDim) * pastats.extent(thirdDim); i++) {
 
 	string logString;
@@ -1512,6 +1525,7 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
 	}
 	logMessage(cout,logString);
       }
+#endif
 
       plot_xcstatistics(m_stats, timestamp);
     }
@@ -1536,26 +1550,33 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
 void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, const Timestamp& timestamp)
 {
   static gnuplot_ctrl* handle = 0;
-  int n_ant = xcstats.extent(thirdDim);
 
-  // initialize the freq array
-  firstIndex i;
+  Array<double, 2> thestats;
 
-  if (!handle)
-  {
+  thestats.resize(xcstats.extent(firstDim) * xcstats.extent(thirdDim),
+		  xcstats.extent(secondDim) * xcstats.extent(fourthDim));
+
+  if (!m_xcangle) {
+    for (int i = 0; i < thestats.extent(firstDim); i++)
+      for (int j = 0; j < thestats.extent(secondDim); j++)
+	thestats(i,j) = sqrt(xcstats(i % 2, j % 2, i/2, j/2).real()*
+			     xcstats(i % 2, j % 2, i/2, j/2).real()+
+			     xcstats(i % 2, j % 2, i/2, j/2).imag()*
+			     xcstats(i % 2, j % 2, i/2, j/2).imag());
+  } else {
+    for (int i = 0; i < thestats.extent(firstDim); i++)
+      for (int j = 0; j < thestats.extent(secondDim); j++)
+	thestats(i,j) = atan(xcstats(i % 2, j % 2, i/2, j/2).imag()/
+			     xcstats(i % 2, j % 2, i/2, j/2).real()) * 180.0 / M_PI;
+  }
+
+  int n_ant = thestats.extent(firstDim);
+
+  if (!handle) {
     handle = gnuplot_init();
     if (!handle)
       return;
-
-    //gnuplot_setstyle(handle, "steps");
-    gnuplot_cmd(handle, "set grid x y\n");
   }
-
-  //gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
-  gnuplot_cmd(handle, "set xlabel \"RCU\"\n");
-  gnuplot_cmd(handle, "set ylabel \"RCU\"\n");
-  gnuplot_cmd(handle, "set xrange [0:%d]\n", n_ant-1);
-  gnuplot_cmd(handle, "set yrange [0:%d]\n", n_ant-1);
 
   char plotcmd[256];
   time_t seconds = timestamp.sec();
@@ -1563,20 +1584,15 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
 
   gnuplot_cmd(handle, plotcmd);
 
-  gnuplot_cmd(handle,
-              "set view 0,0\n"
-              "set ticslevel 0\n"
-              "unset xtics\n"
-              "unset ytics\n"
-              "unset colorbox\n"
-              "set key off\n"
-              "set border 0\n");
+  gnuplot_cmd(handle, "plot \"-\" binary array=%dx%d format='%%double' with image\n", n_ant, n_ant);
 
-  gnuplot_cmd(handle, "splot \"-\" matrix with points ps 12 pt 5 palette\n");
+  if (!m_xcangle) {
+    thestats = 10.0*log(thestats)/log(10.0);
+  }
 
-  //xcstats = 10.0*log(real(xcstats)*real(xcstats))/log(10.0);
-
-  gnuplot_write_matrix(handle, real(xcstats(0,0,Range::all(),Range::all())), true);
+  if ((size_t)thestats.size() != fwrite(thestats.data(), sizeof(double), (size_t)thestats.size(), handle->gnucmd)) {
+    logMessage(cerr, "Failed to write to gnuplot.");
+  }
 }
 
 void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp)
@@ -1632,6 +1648,7 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 
   if (SUCCESS == upd.status)
   {
+#if 0
     Range r1, r2;
     if (!getRSPRange2(r1, r2)) {
       logMessage(cerr, "RSP range selection must have exactly 4 numbers");
@@ -1639,6 +1656,9 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
     }
     Array<complex<double>, 4> selection = upd.stats()(Range::all(), Range::all(), r1, r2).copy();
     capture_xcstatistics(selection, upd.timestamp);
+#else
+    capture_xcstatistics(upd.stats(), upd.timestamp);
+#endif
   }
 
   return GCFEvent::HANDLED;
@@ -1993,7 +2013,7 @@ static void usage()
 #ifdef ENABLE_RSPFE
   cout << "             [--feport=<hostname>:<port>]      #" << endl;
 #endif
-  cout << "rspctl --xcstatistics  [--select=first,second] # get crosscorrelation statistics (of pair of RSP boards)" << endl;
+  cout << "rspctl [--angle] --xcstatistics  [--select=first,second] # get crosscorrelation statistics (of pair of RSP boards)" << endl;
   cout << "             [--duration=<seconds>]            #" << endl;
   cout << "             [--integration=<seconds>]         #" << endl;
   cout << "             [--directory=<directory>]         #" << endl;
@@ -2015,6 +2035,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
   RCUCommand* rcumodecommand = 0;
   HBACommand* hbacommand     = 0;
   list<int> select;
+  bool xcangle = false;
 
   // select all by default
   select.clear();
@@ -2045,6 +2066,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "status",         no_argument,       0, 'q' },
 	  { "statistics",     optional_argument, 0, 't' },
 	  { "xcstatistics",   no_argument,       0, 'x' },
+	  { "xcangle",        no_argument,       0, 'B' },
 	  { "xcsubband",      optional_argument, 0, 'z' },
 	  { "clock",          optional_argument, 0, 'c' },
 	  { "hbadelays",      optional_argument, 0, 'H' },
@@ -2399,12 +2421,18 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      }
 	  }
 	  break;
+	case 'B':
+	  {
+	    xcangle = true;
+	  }
+	  break;
 
 	case 'x':	// -- xcstatistics
 	  {
 	    if (command)
 	      delete command;
 	    XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(m_server);
+	    xcstatscommand->setAngle(xcangle);
 	    command = xcstatscommand;
 	    command->set_ndevices(m_nrspboards);
 	  }

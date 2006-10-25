@@ -42,6 +42,7 @@ RADWrite::RADWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
+  doAtInit();
 }
 
 RADWrite::~RADWrite()

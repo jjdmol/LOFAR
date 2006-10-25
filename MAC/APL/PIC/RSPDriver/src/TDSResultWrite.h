@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  TDSResultRead.h: Synchronize rcu settings with RSP hardware.
+//#  TDSResultWrite.h: Clear the TDS protocol result register
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef TDSRESULTREAD_H_
-#define TDSRESULTREAD_H_
+#ifndef TDSRESULTWRITE_H_
+#define TDSRESULTWRITE_H_
 
 #include <APL/RSP_Protocol/MEPHeader.h>
 
@@ -32,16 +32,16 @@
 namespace LOFAR {
   namespace RSP {
 
-    class TDSResultRead : public SyncAction
+    class TDSResultWrite : public SyncAction
     {
     public:
       /**
-       * Constructors for a TDSResultRead object.
+       * Constructors for a TDSResultWrite object.
        */
-      TDSResultRead(GCFPortInterface& board_port, int board_id);
+      TDSResultWrite(GCFPortInterface& board_port, int board_id);
 
-      /* Destructor for TDSResultRead. */
-      virtual ~TDSResultRead();
+      /* Destructor for TDSResultWrite. */
+      virtual ~TDSResultWrite();
 
       /**
        * Send the write message.
@@ -60,8 +60,9 @@ namespace LOFAR {
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+
     };
   };
 };
      
-#endif /* TDSRESULTREAD_H_ */
+#endif /* TDSRESULTWRITE_H_ */

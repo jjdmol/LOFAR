@@ -30,7 +30,6 @@
 #include "TDSResultRead.h"
 #include "TDSi2cdefs.h"
 #include "Cache.h"
-#include "InitState.h"
 #include "StationSettings.h"
 
 #include <netinet/in.h>
@@ -42,10 +41,8 @@ using namespace EPA_Protocol;
 using namespace blitz;
 using namespace RTC;
 
-#define DELAY_NEXT ((long)0)
-
-TDSResultRead::TDSResultRead(GCFPortInterface& board_port, int board_id, const Scheduler& scheduler)
-  : SyncAction(board_port, board_id, 1), m_delay(0), m_scheduler(scheduler)
+TDSResultRead::TDSResultRead(GCFPortInterface& board_port, int board_id)
+  : SyncAction(board_port, board_id, 1)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 
@@ -60,43 +57,19 @@ TDSResultRead::~TDSResultRead()
 
 void TDSResultRead::sendrequest()
 {
-  if (InitState::instance().getState() == InitState::WRITE_RSU) {
+   if (RTC::RegisterState::READ != Cache::getInstance().getState().tdread().get(getBoardId())) {
+     Cache::getInstance().getState().tdread().read_ack(getBoardId());
+     setContinue(true);
 
-    cerr << "CLOCK CHANGE COMPLETED ON ALL BOARDS" << endl;
-    
-    // After changing the clock an RSP clear is required.
-
-    // Change the regsiter to set the clear flag
-    RSUSettings::ResetControl 	rsumode;
-    rsumode.setClear(true);
-    Cache::getInstance().getBack().getRSUSettings()()(getBoardId()) = rsumode;
-
-    // signal that the register has changed
-    Cache::getInstance().getState().rsuclear().reset(getBoardId());
-    Cache::getInstance().getState().rsuclear().write_force(getBoardId());
+     return;
   }
 
-  // skip update if the Clocks settings have not been modified
-  if (RTC::RegisterState::READ != Cache::getInstance().getState().tds().get(getBoardId()))
-  {
-    InitState::instance().setTDSDone(getBoardId()); // mark done
+  uint32 tds_control = 0;
+  sscanf(GET_CONFIG_STRING("RSPDriver.TDS_CONTROL"), "%x", &tds_control);
+
+  if (!(tds_control & (1 << getBoardId()))) {
+    Cache::getInstance().getState().tdread().read_ack(getBoardId());
     setContinue(true);
-    return;
-  }
-
-  // when in INIT state, clear the TDS result register by
-  // writing 0xFF in all bytes
-  if (InitState::instance().getState() == InitState::INIT) {
-
-    InitState::instance().init(InitState::WRITE_TDS);
-
-    // send write event
-    cerr << "CLEARING TDS_RESULT REGISTER" << endl;
-    EPATdsResultEvent tdsresult;
-    tdsresult.hdr.set(MEPHeader::TDS_RESULT_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE, MEPHeader::TDS_RESULT_SIZE);
-    memset(tdsresult.result, 0xFF, MEPHeader::TDS_RESULT_SIZE);
-    m_hdr = tdsresult.hdr; // remember header to match with ack
-    getBoardPort().send(tdsresult);
 
     return;
   }
@@ -145,22 +118,19 @@ void printbin(void* buf, int n)
 
 GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_TDS_RESULT != event.signal)
-    {
-      LOG_WARN("TDSResultRead::handleack:: unexpected ack");
-      return GCFEvent::NOT_HANDLED;
-    }
+  if (EPA_TDS_RESULT != event.signal) {
+    LOG_WARN("TDSResultRead::handleack:: unexpected ack");
+
+    return GCFEvent::NOT_HANDLED;
+  }
   
   EPATdsResultEvent ack(event);
 
-  if (!ack.hdr.isValidAck(m_hdr))
-    {
-      LOG_ERROR("TDSResultRead::handleack: invalid ack");
-      return GCFEvent::NOT_HANDLED;
-    }
+  if (!ack.hdr.isValidAck(m_hdr)) {
+    LOG_ERROR("TDSResultRead::handleack: invalid ack");
 
-  // bail out if this is the write ack
-  if (MEPHeader::WRITEACK == ack.hdr.m_fields.type) return GCFEvent::HANDLED;
+    return GCFEvent::NOT_HANDLED;
+  }
 
   int    idiff = 0;
 
@@ -172,13 +142,12 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 
     idiff = imemcmp(tds_160MHz_result, ack.result, sizeof(tds_160MHz_result));
     if (-1 == idiff) {
-      Cache::getInstance().getState().tds().read_ack(getBoardId());
-      InitState::instance().setTDSDone(getBoardId());
+      Cache::getInstance().getState().tdread().read_ack(getBoardId());
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (160MHz): unexpected I2C result response, first mismatch @ %d", idiff));
 
       // try to read again
-      Cache::getInstance().getState().tds().read_error(getBoardId());
+      Cache::getInstance().getState().tdread().read_error(getBoardId());
     }
     break;
 
@@ -188,13 +157,12 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 
     idiff = imemcmp(tds_200MHz_result, ack.result, sizeof(tds_200MHz_result));
     if (-1 == idiff) {
-      Cache::getInstance().getState().tds().read_ack(getBoardId());
-      InitState::instance().setTDSDone(getBoardId());
+      Cache::getInstance().getState().tdread().read_ack(getBoardId());
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (200MHz): unexpected I2C result response, first mismatch @ %d", idiff));
 
       // try to read again
-      Cache::getInstance().getState().tds().read_error(getBoardId());
+      Cache::getInstance().getState().tdread().read_error(getBoardId());
     }
     break;
 
@@ -203,13 +171,12 @@ GCFEvent::TResult TDSResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
     printbin(ack.result, sizeof(tds_off_result));
     idiff = imemcmp(tds_off_result, ack.result, sizeof(tds_off_result));
     if (-1 == idiff) {
-      Cache::getInstance().getState().tds().read_ack(getBoardId());
-      InitState::instance().setTDSDone(getBoardId());
+      Cache::getInstance().getState().tdread().read_ack(getBoardId());
     } else {
       LOG_ERROR(formatString("TDSResultRead::handleack (OFF): unexpected I2C result response, first mismatch @ %d", idiff));
 
       // try to read again
-      Cache::getInstance().getState().tds().read_error(getBoardId());
+      Cache::getInstance().getState().tdread().read_error(getBoardId());
     }
     break;
   }

@@ -34,7 +34,6 @@
 #include "StationSettings.h"
 #include "RSUWrite.h"
 #include "Cache.h"
-#include "InitState.h"
 
 // nof seconds to wait with writing BS register after RSU clear
 // seems that original value 5 was too small, EPA team uses 7
@@ -68,32 +67,17 @@ RSUWrite::~RSUWrite()
 
 void RSUWrite::sendrequest()
 {
-  EPARsuResetEvent reset;
-  
-  reset.hdr.set(MEPHeader::RSU_RESET_HDR);
-
-  if (InitState::instance().getState() == InitState::WRITE_BS &&
-      m_mark != Timestamp(0,0) && m_mark + WRITE_BS_DELAY <= m_scheduler.getCurrentTime()) {
-
-    // next write all BS registers on all AP's of this board
-    for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
-      Cache::getInstance().getState().bs().reset((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + blp);
-      Cache::getInstance().getState().bs().write_force((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + blp);
-    }
-  }
-
   // cache modified, or initialising and clock update has completed
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rsuclear().get(getBoardId())) {
     Cache::getInstance().getState().rsuclear().unmodified(getBoardId());
-
     setContinue(true);
+
     return;
   }
 
-  if (InitState::instance().getState() == InitState::INIT) {
-    // indicate that we're initialising the hardware
-    InitState::instance().init(InitState::WRITE_RSU);
-  }
+  EPARsuResetEvent reset;
+
+  reset.hdr.set(MEPHeader::RSU_RESET_HDR);
 
   // read values from cache
   RSUSettings& s = Cache::getInstance().getBack().getRSUSettings();
@@ -122,25 +106,22 @@ void RSUWrite::sendrequest_status()
 
 GCFEvent::TResult RSUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_WRITEACK != event.signal)
-  {
+  if (EPA_WRITEACK != event.signal) {
     LOG_WARN("RSUWrite::handleack: unexpected ack");
+
     return GCFEvent::NOT_HANDLED;
   }
 
   EPAWriteackEvent ack(event);
 
-  if (!ack.hdr.isValidAck(m_hdr))
-  {
+  if (!ack.hdr.isValidAck(m_hdr)) {
     LOG_ERROR("RSUWrite::handleack: invalid ack");
     Cache::getInstance().getState().rsuclear().write_error(getBoardId());
+
     return GCFEvent::NOT_HANDLED;
   }
 
   Cache::getInstance().getState().rsuclear().write_ack(getBoardId());
-
-  InitState::instance().setRSUDone(getBoardId());
-  m_mark = m_scheduler.getCurrentTime();
 
   Cache::getInstance().getBack().getRSUSettings()()(getBoardId()).setRaw(0); // clear the flags
 

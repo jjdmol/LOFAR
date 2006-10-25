@@ -25,6 +25,8 @@
 
 #include "StationSettings.h"
 #include "Cache.h"
+#include "Sequencer.h"
+
 #include <APL/RTCCommon/PSAccess.h>
 
 #include <blitz/array.h>
@@ -114,7 +116,8 @@ void CacheBuffer::reset(void)
     m_beamletweights()(Range::all(), Range::all(), Range(0, MEPHeader::N_LOCAL_XLETS - 1)) = 
       complex<int16>(0,0);
 
-    LOG_DEBUG_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
+    // This log statement is SLOOOWWW for full size LOFAR array, don't enable it again
+    // LOG_DEBUG_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
 
     //
     // Set default subband selection starting at RSPDriver.FIRST_SUBBAND
@@ -127,7 +130,8 @@ void CacheBuffer::reset(void)
       }
     }
 
-    LOG_DEBUG_STR("m_subbandselection()=" << m_subbandselection());
+    // This log statement is SLOOOWWW for full size LOFAR array, don't enable it again
+    // LOG_DEBUG_STR("m_subbandselection()=" << m_subbandselection());
   }
 
   // initialize RCU settings
@@ -176,7 +180,7 @@ void CacheBuffer::reset(void)
 
   // BoardStatus
   m_systemstatus.board().resize(StationSettings::instance()->nrRspBoards());
-  BoardStatus             boardinit;
+  BoardStatus boardinit;
   memset(&boardinit, 0, sizeof(BoardStatus));
   m_systemstatus.board() = boardinit;
 
@@ -284,9 +288,9 @@ Cache::Cache() : m_front(0), m_back(0)
   getState().init(StationSettings::instance()->nrRspBoards(),
 		  StationSettings::instance()->nrBlps(),
 		  StationSettings::instance()->nrRcus());
-  
+
   // start by writing the correct clock setting
-  getState().tds().write_force();
+  Sequencer::getInstance().startSequence(Sequencer::SETCLOCK);
 }
 
 Cache::~Cache()
@@ -303,6 +307,13 @@ void Cache::reset(void)
 
 void Cache::swapBuffers()
 {
+  if (GET_CONFIG("RSPDriver.XC_FILL", i)) {
+    // fill xcorr array by copying and taking complex conjugate of values mirrored in the diagonal
+    Array<complex<double>, 4> xc(m_back->getXCStats()());
+    firstIndex  i; secondIndex j; thirdIndex  k; fourthIndex  l;
+    xc = where(xc(i,j,k,l)==complex<double>(0,0), conj(xc(i,j,l,k)), xc(i,j,k,l));
+  }
+
   CacheBuffer *tmp = m_front;
   m_front = m_back;
   m_back  = tmp;

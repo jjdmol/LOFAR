@@ -609,9 +609,9 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     /* reg = 0x01 (TDS_RESULT) */
     { 0,
       EPA_READ,       /* READ     */
-      0,
+      EPA_TDS_RESULT, /* WRITE    */
       EPA_TDS_RESULT, /* READACK  */
-      0,
+      EPA_WRITEACK,   /* WRITEACK */
     },
   },
 
