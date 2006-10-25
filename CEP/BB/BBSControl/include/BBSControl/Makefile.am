@@ -1,15 +1,18 @@
 pkginclude_HEADERS = \
-	BBSStep.h \
+	BBSCorrectStep.h \
+	BBSKernelProcessControl.h \
+	BBSMultiStep.h \
+	BBSPredictStep.h \
+	BBSProcessControl.h \
+	BBSRefitStep.h \
+	BBSShiftStep.h \
 	BBSSingleStep.h \
 	BBSSolveStep.h \
-	BBSMultiStep.h \
-	BBSProcessControl.h \
-	BBSKernelProcessControl.h \
+	BBSStep.h \
 	BBSStrategy.h \
 	BBSStructs.h \
+	BBSSubtractStep.h \
 	BlackBoardDemo.h \
-	BlobStreamable.h \
-	DH_BlobStreamable.h \
 	DH_Prediff.h \
 	ParmWriter.h \
 	SC_CompoundIter.h \
