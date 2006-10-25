@@ -45,17 +45,19 @@ Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
 0, 0.92]
 
 # General Variables
-General.SubbandsPerPset = 1
+General.SubbandsPerPset = 4
 
 # Variables for the DelayCompensation
 DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
 
 # Variables for the InputSection
 Input.NTimesInFrame=16
-Input.NSubbandsPerFrame=32
+Input.NSubbandsPerFrame=40
 Input.SzEPAheader=16
 Input.IPHeaderSize=32
 Input.NSamplesToBuffer=4000000
+Input.WriteRawDataToFile = F
+Input.OutputRawDataFiles = []
 Input.Transport.Station0.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
 Input.Transport.Station0.Rsp0.inputFile = "/tmp/Generator1.out"
 Input.Transport.Station0.Rsp0.interface = eth1
@@ -112,11 +114,16 @@ Input.Transport.Station11.Rsp0.destinationMac = "00:E0:81:34:9B:87"
 # and the number of filters within a cell. 
 # These parameters MUST match the compiled in values in TFC_Config.h
 # Note that some values may differ from values defined in the Input section.
-BGLProc.NodesPerPset = 8
+BGLProc.NodesPerPset = 16
 BGLProc.PsetsPerCell = 4
 BGLProc.NPPFTaps = 16
 BGLProc.MaxConcurrentCommunications = 2
 
 # Variables for Storage
 Storage.WriteToMAC = F
+Storage.StorageStationNames = ["CS10_dipole0", "CS10_dipole4",
+"CS10_dipole8", "CS10_dipole12", \
+"CS8_dipole0", "CS8_dipole4", "CS8_dipole8",  "CS8_dipole12", \
+"CS1_dipole0", "CS1_dipole4", "CS1_dipole8", "CS1_dipole12", \
+"CS16_dipole0", "CS16_dipole4", "CS16_dipole8", "CS16_dipole12"]
 

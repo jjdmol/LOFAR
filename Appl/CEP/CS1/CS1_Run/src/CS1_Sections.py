@@ -84,7 +84,7 @@ class InputSection(Section):
         host = copy.deepcopy(myhost)
 
         slaves = host.getSlaves()
-        newslaves = [slaves[ind - 1] for ind in [1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 2, 3, 5, 6, 8, 9]]
+        newslaves = [slaves[ind - 1] for ind in [1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 10, 11, 12, 2, 3, 5, 6, 8, 9, 11, 12]]
         host.setSlaves(newslaves)
 
         Section.__init__(self, parset, \
