@@ -27,7 +27,7 @@
 // The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/BlobStreamable.h>
+#include <Blob/BlobStreamable.h>
 #include <BBSControl/BBSStructs.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>

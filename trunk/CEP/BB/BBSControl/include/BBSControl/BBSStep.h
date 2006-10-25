@@ -27,8 +27,8 @@
 // Base component class of the BBSStep composite pattern.
 
 //# Includes
-#include <BBSControl/BlobStreamable.h>
 #include <BBSControl/BBSStructs.h>
+#include <Blob/BlobStreamable.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
@@ -196,8 +196,6 @@ namespace LOFAR
 
     };
 
-    // @}
-    
   } // namespace BBS
 
 } // namespace LOFAR
