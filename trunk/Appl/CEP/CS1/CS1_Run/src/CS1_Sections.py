@@ -37,7 +37,7 @@ class Section(object):
                                  executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses, \
                                  partition = self.partition, \
-                                 workingDir = self.workingDir)
+                                 workingDir = self.bglWorkingDir)
         elif 'mpi' in self.buildvar:
             self.runJob = MPIJob(self.package.split('/')[-1], \
                                  self.host, \
@@ -123,7 +123,7 @@ class StorageSection(Section):
 class BGLProcSection(Section):
     def __init__(self, parset, host, partition, workingDir):
         self.partition = partition
-        self.workingDir = workingDir
+        self.bglWorkingDir = workingDir
 
         nSubbands = parset.getInt32('Observation.NSubbands')
         nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
@@ -131,7 +131,7 @@ class BGLProcSection(Section):
             raise Exception('Not a integer number of compute cells!')
         nCells = nSubbands / nSubbandsPerCell
         self.noProcesses = int(nCells) * parset.getInt32('BGLProc.NodesPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
-        self.noProcesses = 64 # The calculation above is not correct, because some ranks aren't used
+        self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
 
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_BGLProc', \
