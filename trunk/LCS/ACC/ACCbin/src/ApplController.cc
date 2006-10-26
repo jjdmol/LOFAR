@@ -184,7 +184,14 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 								static_cast<PCCmd>(command), anAP);
 			}
 			else {			// result is a NACK!
-				sendExecutionResult(0, "Nack from process:" + anAP->getName());
+				// send result to parent of not already done.
+				if (itsCurACMsg) {
+					sendExecutionResult(0, "Nack from process:" + anAP->getName());
+				}
+				else {
+					LOG_DEBUG_STR("Receive late Nack from proces " << anAP->getName() 
+									<< ", ignoring");
+				}
 			}
 		}
 		else {
