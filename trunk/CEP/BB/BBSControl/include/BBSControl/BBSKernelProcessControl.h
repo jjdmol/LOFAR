@@ -35,8 +35,9 @@ namespace LOFAR
 {
   //# Forward declations
   namespace ParmDB { class ParmDB; }
-  class CSConnection;
+  class DH_BlobStreamable;
   class TH_Socket;
+  class CSConnection;
 
   namespace BBS
   {
@@ -49,7 +50,6 @@ namespace LOFAR
     class BBSSolveStep;
     class Prediffer;
     struct Context;
-    class DH_BlobStreamable;
 
     // \addtogroup BBS
     // @{

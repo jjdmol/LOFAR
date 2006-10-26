@@ -25,7 +25,7 @@
 #include <BBSControl/BBSProcessControl.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
-#include <BBSControl/DH_BlobStreamable.h>
+#include <Transport/DH_BlobStreamable.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/CSConnection.h>
 #include <Common/LofarLogger.h>

@@ -26,16 +26,23 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSKernelProcessControl.h>
-#include <BBSControl/DH_BlobStreamable.h>
 #include <BBSControl/BBSStrategy.h>
+#include <BBSControl/BBSCorrectStep.h>
+#include <BBSControl/BBSMultiStep.h>
+#include <BBSControl/BBSPredictStep.h>
+#include <BBSControl/BBSRefitStep.h>
+#include <BBSControl/BBSShiftStep.h>
 #include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/BBSSolveStep.h>
+#include <BBSControl/BBSStep.h>
+#include <BBSControl/BBSSubtractStep.h>
 #include <BBSKernel/BBSKernelStructs.h>
 #include <BBSKernel/Prediffer.h>
 #include <BBSKernel/Solver.h>
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmDBMeta.h>
 #include <APS/ParameterSet.h>
+#include <Transport/DH_BlobStreamable.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/CSConnection.h>
 #include <Common/LofarLogger.h>
