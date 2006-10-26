@@ -32,16 +32,16 @@
 namespace LOFAR
 {
   //# Forward Declarations.
-  class CSConnection;
+  class BlobStreamable;
+  class DH_BlobStreamable;
   class TH_Socket;
+  class CSConnection;
 
   namespace BBS
   {
     //# Forward Declarations.
     class BBSStrategy;
     class BBSStep;
-    class BlobStreamable;
-    class DH_BlobStreamable;
 
     // \addtogroup BBS
     // @{
