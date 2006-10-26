@@ -156,7 +156,7 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 						  indeterminate(result) ? PcCmdMaskNotSupported : 0);
 	}
 
-	return (true);
+	return (result);
 }
 
 
