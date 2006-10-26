@@ -12,7 +12,8 @@ tWH_BGL_Processing_SOURCES =			\
 tWH_BGL_Processing.cc				\
 ../src/WH_BGL_Processing.cc			\
 ../src/Correlator.S				\
-../src/FIR.S
+../src/FIR.S					\
+../src/FFT.S
 
 #tFFT_SOURCES =					\
 #tFFT.cc						\
