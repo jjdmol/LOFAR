@@ -14,6 +14,7 @@ libblob_la_SOURCES 	= \
         BlobOBufStream.cc \
         BlobOBufString.cc \
         BlobOStream.cc \
+	BlobStreamable.cc \
         BlobString.cc \
         BlobStringType.cc \
         KeyParse.yy \

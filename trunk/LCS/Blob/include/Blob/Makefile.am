@@ -21,6 +21,7 @@ pkginclude_HEADERS = \
         BlobOBufString.h \
         BlobOBufVector.h \
         BlobOStream.h \
+	BlobStreamable.h \
         BlobString.h \
         BlobStringTraits.h \
         BlobStringType.h \
