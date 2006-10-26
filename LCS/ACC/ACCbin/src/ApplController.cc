@@ -261,7 +261,7 @@ void ApplController::createParSubsets()
 		ps.add(setName+".ACnode", itsBootParamSet->getString("AC.node"));
 
 		// --- cmdline ---
-		if ((startStopType == "cmdline") && (nProcesses != 0)) {
+		if (startStopType == "cmdline") {
 			if (nProcesses == 0) {
 				// This processSet is a single commandline process
 				itsProcRuler.add(PR_Shell(ps.getString(setName + ".node"),
@@ -296,7 +296,7 @@ void ApplController::createParSubsets()
 		} else if (startStopType == "mpirun") {
 			// This processSet is an MPI program
 			vector<string> nodeNames;
-			for (uint p = 1; p <= nProcesses; p++) {
+			for (int32 p = 1; p <= nProcesses; p++) {
 				nodeNames.push_back(itsObsParamSet->getString(
 									formatString("%s.%s[%d].node", 
 									applicationName.c_str(), setName.c_str(), p)));
