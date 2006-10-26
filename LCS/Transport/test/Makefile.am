@@ -15,7 +15,8 @@ check_PROGRAMS		  = Example \
 			    ExampleMPI \
 			    ExampleSocket \
 			    ExampleEthernet \
-			    tServer tClient
+			    tServer tClient \
+			    tCSConnection
 
 Example_SOURCES 	  = Example.cc DH_Example.cc
 
@@ -40,6 +41,8 @@ ExampleEthernet_SOURCES	  = ExampleEthernet.cc DH_Ethernet.cc
 tServer_SOURCES		  = tServer.cc DH_Socket.cc
 
 tClient_SOURCES		  = tClient.cc DH_Socket.cc
+
+tCSConnection_SOURCES	  = tCSConnection.cc
 
 LDADD			  = ../src/libtransport.la 
 DEPENDENCIES		  = ../src/libtransport.la $(LOFAR_DEPEND)
