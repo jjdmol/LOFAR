@@ -5,6 +5,7 @@ pkginclude_HEADERS = \
 	CSConnection.h \
 	DataBlobExtra.h \
 	DataHolder.h \
+	DH_BlobStreamable.h \
 	TH_Ethernet.h \
 	TH_File.h \
 	TH_Mem.h \
