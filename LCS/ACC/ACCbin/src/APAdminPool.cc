@@ -93,7 +93,7 @@ void APAdminPool::remove(APAdmin*	anAPAdmin) throw(Exception)
 	THROW(Exception, "DataHolder " << anAPAdmin << "not in pool");
 }
 
-// loop over all dataholder to see if data is ready.
+// loop over all dataholders to see if data is ready.
 // Start scan where we stopped last time.
 // TODO:rewrite for select call
 APAdmin*	APAdminPool::poll(time_t		waitTime)
@@ -139,6 +139,32 @@ void APAdminPool::writeToAll(PCCmd			command,
 	startAckCollection(command);
 }
 
+
+//
+// registerAck(command, apadmin)
+//
+bool APAdminPool::registerAck(PCCmd			aCommand,
+							  APAdmin*		anAPAdmin)
+{
+	if (aCommand != itsLastCmd) {
+		if (itsLastCmd == PCCmdNone) {
+			LOG_DEBUG_STR("Process " << anAPAdmin->getName() <<
+					  " is late, Ack received for " << aCommand);
+		}
+		else {
+			LOG_WARN_STR("Process " << anAPAdmin->getName() <<
+					  " is out of sync, Ack received for " << aCommand << 
+					  " iso " << itsLastCmd);
+		}
+		return (false);
+	}
+
+	if (itsAckList.isSet(anAPAdmin->getSocketID())) {
+		itsAckList.remove(anAPAdmin->getSocketID());
+		--itsNrAcksToRecv;
+	}
+	return (true);
+}
 
 // cleanup APAdmins that lost connection
 // When one is found the DH is removed from the pool, the search is stopped
