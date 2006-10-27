@@ -126,7 +126,11 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
      *  @return Nr of rows 
      */
     public int getRowCount() {
-        return data.length;
+        if (data != null) {
+            return data.length;
+        } else {
+            return 0;
+        }
     }
 
     /** Returns the column names 
