@@ -36,11 +36,18 @@ using namespace LOFAR::ACC;
 //
 // MAIN (ParameterFile)
 //
-int main (int	argc, char*	argv[]) {
+int main (int	argc, char*	argv[]) 
+{
+
+	// close filedescriptors from our launcher
+//	for (int f = dup(2); f > 2; --f) {
+//		close(f);
+//	}
 
 	// Always get Logger up first
 	string		progName = basename(argv[0]);
 	INIT_LOGGER (progName.c_str());
+	LOG_INFO_STR("Initialized logsystem with " << progName << ".log_prop");
 
 	// Check invocation syntax
 	if (argc < 2) {
@@ -54,10 +61,6 @@ int main (int	argc, char*	argv[]) {
 
 	try {
 		signal (SIGPIPE, SIG_IGN);		// ignore write errors on sockets
-		// close filedescriptors from our launcher
-		for (int f = dup(2); f > 2; --f) {
-			close(f);
-		}
 
 		ApplController		theAC(argv[1]);
 

@@ -92,7 +92,7 @@ public:
 	// for the given command. Tell the APAdminPool that on this APAdmin an Ack
 	// message was received. Registering an Ack for the wrong command has no 
 	// effect.
-	void registerAck       (PCCmd			aCommand,
+	bool registerAck       (PCCmd			aCommand,
 							APAdmin*		anAPAdmin);
 
 	// Cancel the collection of Acks. When Acks are registered after this call
@@ -233,25 +233,6 @@ inline void APAdminPool::startAckCollection(PCCmd  aCommand)
 }
 
 //#
-//# registerAck(command, apadmin)
-//#
-inline void APAdminPool::registerAck(PCCmd			aCommand,
-									 APAdmin*		anAPAdmin)
-{
-	if (aCommand != itsLastCmd) {
-		LOG_DEBUG_STR("Process" << anAPAdmin->getName() <<
-					  "is out of sync, Ack received for " << aCommand << 
-					  "iso " << itsLastCmd);
-		return;
-	}
-
-	if (itsAckList.isSet(anAPAdmin->getSocketID())) {
-		itsAckList.remove(anAPAdmin->getSocketID());
-		--itsNrAcksToRecv;
-	}
-}
-
-//#
 //# stopAckCollection()
 //#
 inline void APAdminPool::stopAckCollection()
@@ -268,7 +249,6 @@ inline bool APAdminPool::allAcksReceived()
 {
 	return (itsLastCmd != PCCmdNone && itsNrAcksToRecv == 0);
 }
-
 
 // @} addgroup
   } // namespace ACC

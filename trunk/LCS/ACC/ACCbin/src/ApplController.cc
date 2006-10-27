@@ -176,29 +176,16 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 	default:
 		// The rest of the command should be an Ack on the outstanding command.
 		if (ack) {
-			uint16	result  = DHProcPtr->getResult();
+			// always register ack.
+			bool	ackOnTime = itsAPAPool->registerAck(command, anAP);
+
 			// note: the process can return three values: Ok/NotSupported/Error
 			// Handle NotSupported as Ok.
-			if (result & (PcCmdMaskOk | PcCmdMaskNotSupported)) {
-				itsAPAPool->registerAck(
-								static_cast<PCCmd>(command), anAP);
-			}
-			else {			// result is a NACK!
-				LOG_DEBUG_STR("itsCurACMsg = " << itsCurACMsg);
-				ACCmd	curCmd(ACCmdNone);
-				if (itsCurACMsg) {
-					curCmd = itsCurACMsg->getCommand();
-				}
-				LOG_DEBUG_STR("curCmd = " << curCmd);
-				LOG_DEBUG_STR("command = " << command);
-				// send result to parent of not already done.
-				if (curCmd == command) {
-					sendExecutionResult(0, "Nack from process:" + anAP->getName());
-				}
-				else {
-					LOG_DEBUG_STR("Received late Nack from proces " << anAP->getName() 
-									<< ", ignoring");
-				}
+			uint16	result  = DHProcPtr->getResult();
+			bool	successful = ((result & (PcCmdMaskOk | PcCmdMaskNotSupported)) != 0);
+
+			if (ackOnTime && !successful) { 
+				sendExecutionResult(0, "Nack from process:" + anAP->getName());
 			}
 		}
 		else {
@@ -499,7 +486,7 @@ void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg,
 void ApplController::doEventLoop()
 {
 	// Loop optimalisation when not waiting for ACK's
-	const uint16	loopDiff = 5;			// poll AP 5 times less than AM
+	const uint16	loopDiff = 1;			// poll AP 5 times less than AM
 	uint16			loopCounter = loopDiff;
 
 	// prepare ping information for ACDaemon
