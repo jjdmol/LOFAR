@@ -269,8 +269,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.stationsUseAllCheckbox.setSelected(false);
             this.fillList(stationsList,StrategyStations.limits,true);
         }
-        modifyStationText.setText("");
-        addStationButton.setEnabled(false);
+//        addStationButton.setEnabled(false);
         
         //reload the strategy steps from the OTDB
         BBSStepDataManager.getInstance().generateStrategyFromOTDB();
@@ -283,6 +282,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private void initialize() {
         this.buttonPanel1.addButton("Save Settings");
         this.stationsList.setModel(new DefaultListModel());
+        this.modifyStationsCombobox.removeAllItems();
+        this.modifyStationsCombobox.addItem("CS001");
+        this.modifyStationsCombobox.addItem("CS008");
+        this.modifyStationsCombobox.addItem("CS010");
+        this.modifyStationsCombobox.addItem("CS016");
+        
     }
      /**
      * Initialization method to be implemented when 
@@ -343,7 +348,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }else if (aKeyName.equals("Stations")) {
                 this.stationsList.setToolTipText(aParam.description);
                 this.StrategyStations = aNode;
-                modifyStationText.setText("");
+                
                 //set the checkbox correctly when no stations are provided in the data
                 if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
                     this.stationsUseAllCheckbox.setSelected(true);
@@ -763,10 +768,10 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stationsScrollPane = new javax.swing.JScrollPane();
         stationsList = new javax.swing.JList();
         stationsModPanel = new javax.swing.JPanel();
-        modifyStationText = new javax.swing.JTextField();
         stationsButtonPanel = new javax.swing.JPanel();
         deleteStationButton = new javax.swing.JButton();
         addStationButton = new javax.swing.JButton();
+        modifyStationsCombobox = new javax.swing.JComboBox();
         stationsUseAllCheckbox = new javax.swing.JCheckBox();
         stepsPanel = new javax.swing.JPanel();
         stepsModsPanel = new javax.swing.JPanel();
@@ -856,15 +861,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         stationsModPanel.setLayout(new java.awt.BorderLayout());
 
-        modifyStationText.setToolTipText("Input a new station name here (Wildcards are allowed like CS*)");
-        modifyStationText.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                modifyStationTextKeyReleased(evt);
-            }
-        });
-
-        stationsModPanel.add(modifyStationText, java.awt.BorderLayout.CENTER);
-
         stationsButtonPanel.setLayout(new java.awt.GridBagLayout());
 
         deleteStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
@@ -888,7 +884,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         addStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
         addStationButton.setToolTipText("Add the station entered to the list");
-        addStationButton.setEnabled(false);
         addStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
         addStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
         addStationButton.setPreferredSize(new java.awt.Dimension(30, 25));
@@ -906,6 +901,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stationsButtonPanel.add(addStationButton, gridBagConstraints);
 
         stationsModPanel.add(stationsButtonPanel, java.awt.BorderLayout.SOUTH);
+
+        modifyStationsCombobox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        stationsModPanel.add(modifyStationsCombobox, java.awt.BorderLayout.CENTER);
 
         stationsPanel.add(stationsModPanel, java.awt.BorderLayout.SOUTH);
 
@@ -1112,7 +1110,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 0, 11), java.awt.Color.lightGray));
+        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), java.awt.Color.lightGray));
         integrationIntervalPanel.setToolTipText("Cell size for integration. Not yet implemented.");
         integrationIntervalPanel.setEnabled(false);
         integrationFrequencyLabel.setText("Freq. Interval :");
@@ -1362,16 +1360,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.setupStepsList(BBSStepDataManager.getInstance().getStepNames());
         }
     }//GEN-LAST:event_addStepButtonActionPerformed
-    
-    private void modifyStationTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_modifyStationTextKeyReleased
-        String toBeAddedStation = modifyStationText.getText();
-        if(!toBeAddedStation.equals("")){
-            this.addStationButton.setEnabled(true);
-        }else{
-            this.addStationButton.setEnabled(false);
-        }
-    }//GEN-LAST:event_modifyStationTextKeyReleased
-    
+        
     private void stationsListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stationsListValueChanged
         int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
         if(selectedIndices.length>0){
@@ -1394,9 +1383,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_deleteStationButtonActionPerformed
     
     private void addStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addStationButtonActionPerformed
-        String toBeAddedStation = this.modifyStationText.getText();
-        if(!toBeAddedStation.equals("")){
-            DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
+        String toBeAddedStation = (String)this.modifyStationsCombobox.getSelectedItem();
+        DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
+        if(!theStationModel.contains(toBeAddedStation)){
             theStationModel.addElement(toBeAddedStation);
         }
     }//GEN-LAST:event_addStationButtonActionPerformed
@@ -1478,12 +1467,13 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.stationsList.setEnabled(false);
             this.addStationButton.setEnabled(false);
             this.deleteStationButton.setEnabled(false);
-            this.modifyStationText.setEnabled(false);
+            this.modifyStationsCombobox.setEnabled(false);
             
         }else{
             this.stationsList.setBackground(Color.WHITE);
             this.stationsList.setEnabled(true);
-            this.modifyStationText.setEnabled(true);
+            this.addStationButton.setEnabled(true);
+            this.modifyStationsCombobox.setEnabled(true);
         }
     }//GEN-LAST:event_stationsUseAllCheckboxStateChanged
     
@@ -1522,7 +1512,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField integrationTimeText;
     private javax.swing.JLabel integrationTimeUnitLabel;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JTextField modifyStationText;
+    private javax.swing.JComboBox modifyStationsCombobox;
     private javax.swing.JButton modifyStepButton;
     private javax.swing.JButton removeStepButton;
     private javax.swing.JPanel stationsButtonPanel;

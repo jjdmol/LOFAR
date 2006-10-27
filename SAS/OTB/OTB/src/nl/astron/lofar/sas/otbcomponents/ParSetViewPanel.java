@@ -24,18 +24,18 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.rmi.RemoteException;
+import java.util.StringTokenizer;
+import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.table.DefaultTableModel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
@@ -281,15 +281,28 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
             //obtain the remote file
             byte[] dldata = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().downloadFile(aRemoteFileName);
              
-            ByteArrayInputStream aBS = new ByteArrayInputStream(dldata);
-            Reader reader= new InputStreamReader(aBS);
-            jTextField1.read(reader,"");
+//            ByteArrayInputStream aBS = new ByteArrayInputStream(dldata);
+//            Reader reader= new InputStreamReader(aBS);
+            String aParSet="";
+            for (int i=0; i< dldata.length;i++) {
+                aParSet+=(char)dldata[i];
+            }
+            
+            // split inputfile in different lines on return.
+            String[] lines = aParSet.split("\n");
+            DefaultTableModel aModel=(DefaultTableModel)jTable1.getModel();
+            
+            for (int i=0; i< lines.length; i++) {
+                String[] keyval = lines[i].split("=");
+                aModel.addRow(keyval);
+            }
+            jTable1.setModel(aModel);
+//            jTable1.updateUI();
+            
         } catch (RemoteException ex) {
             logger.debug("exportTree failed : " + ex);
-        } catch (FileNotFoundException ex) {
-            logger.debug("Error during newPICTree creation: "+ ex);
         } catch (IOException ex) {
-            logger.debug("Error during newPICTree creation: "+ ex);
+            logger.debug("Error during getParSet: "+ ex);
         }
     }
     
@@ -303,7 +316,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         GetParsetButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextField1 = new javax.swing.JTextField();
+        jTable1 = new javax.swing.JTable();
 
         GetParsetButton.setText("Get Parset");
         GetParsetButton.addActionListener(new java.awt.event.ActionListener() {
@@ -315,24 +328,46 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("ParSet View Panel");
 
-        jScrollPane1.setViewportView(jTextField1);
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Parameter", "Value"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(jTable1);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
+                .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(71, 71, 71)
-                        .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 460, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 946, Short.MAX_VALUE))
-                    .add(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(GetParsetButton)))
-                .addContainerGap())
+                        .add(GetParsetButton)
+                        .addContainerGap(871, Short.MAX_VALUE))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, jLabel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 845, Short.MAX_VALUE)
+                            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 845, Short.MAX_VALUE))
+                        .add(111, 111, 111))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -361,7 +396,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton GetParsetButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextField jTextField1;
+    private javax.swing.JTable jTable1;
     // End of variables declaration//GEN-END:variables
 
     /**

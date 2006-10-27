@@ -140,7 +140,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             stepExplorerStepNameText.setEditable(true);
         }
         this.stepExplorerNSourcesList.setModel(new DefaultListModel());
-        this.stepExplorerESourcesList.setModel(new DefaultListModel());
+        this.stepExplorerInstrumentModelList.setModel(new DefaultListModel());
+//        this.stepExplorerESourcesList.setModel(new DefaultListModel());
         
         //fill the supported step operation panels
         stepOperationPanels.put("Predict",null);
@@ -148,6 +149,30 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         stepOperationPanels.put("Subtract",null);
         stepOperationPanels.put("Correct",null);
         
+        // Fill the comboboxes (will need to be done from Database later)
+        stepExplorerModifyNSourceCombobox.removeAllItems();
+        stepExplorerModifyNSourceCombobox.addItem("CygA");
+        stepExplorerModifyNSourceCombobox.addItem("CasA");
+        stepExplorerModifyNSourceCombobox.addItem("TauA");
+        stepExplorerModifyNSourceCombobox.addItem("VirA");
+        stepExplorerModifyNSourceCombobox.addItem("HerA");
+        stepExplorerModifyNSourceCombobox.addItem("PerA");
+        stepExplorerModifyNSourceCombobox.addItem("3C123");
+        stepExplorerModifyNSourceCombobox.addItem("3C134");
+        stepExplorerModifyNSourceCombobox.addItem("3C157");
+        stepExplorerModifyNSourceCombobox.addItem("3C196");
+        stepExplorerModifyNSourceCombobox.addItem("3C219");
+        stepExplorerModifyNSourceCombobox.addItem("3C295");
+        stepExplorerModifyNSourceCombobox.addItem("3C343");
+        stepExplorerModifyNSourceCombobox.addItem("3C343.1");
+        stepExplorerModifyNSourceCombobox.addItem("3C353");
+        stepExplorerModifyNSourceCombobox.addItem("3C363.1");
+        stepExplorerModifyNSourceCombobox.addItem("3C400");
+        
+        stepExplorerModifyInstrumentModelCombobox.removeAllItems();
+        stepExplorerModifyInstrumentModelCombobox.addItem("TOTALGAIN");
+        stepExplorerModifyInstrumentModelCombobox.addItem("PATCHGAIN");
+        stepExplorerModifyInstrumentModelCombobox.addItem("BANDPASS");
     }
     
     /**
@@ -160,9 +185,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         this.stepExplorerStepNameText.setText(theBBSStep.getName());
         BBSStepData stepData = BBSStepDataManager.getInstance().getStepData(theBBSStep.getName());
         BBSStepData inheritedData = BBSStepDataManager.getInstance().getInheritedStepData(theBBSStep);
+        
         //sources
         stepExplorerNSources.setBackground(DEFAULT);
-        this.stepExplorerModifyNSourceText.setText("");
         this.fillList(this.stepExplorerNSourcesList,new Vector<String>());
         if(stepData.getSources() != null){
             if(stepData.getSources().size()>0){
@@ -190,35 +215,95 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
                 stepExplorerNSources.setBackground(NOT_DEFINED);
             }
         }
-        //extra sources
-        stepExplorerESources.setBackground(DEFAULT);
-        this.stepExplorerModifyESourceText.setText("");
-        this.fillList(this.stepExplorerESourcesList,new Vector<String>());
-        if(stepData.getExtraSources() != null){
-            if(stepData.getExtraSources().size()>0){
-                this.useExtraSourcesCheckbox.setSelected(true);
-                this.fillList(this.stepExplorerESourcesList,stepData.getExtraSources());
-               
+
+        //instrument model 
+        stepExplorerInstrumentModel.setBackground(DEFAULT);
+        this.fillList(this.stepExplorerInstrumentModelList,new Vector<String>());
+        if(stepData.getInstrumentModel() != null){
+            if(stepData.getInstrumentModel().size()>0){
+                this.noInstrumentModelCheckbox.setSelected(false);
+                this.fillList(this.stepExplorerInstrumentModelList,stepData.getInstrumentModel());
+                
             }else{
-                this.useExtraSourcesCheckbox.setSelected(false);
+                this.noInstrumentModelCheckbox.setSelected(true);
             }
-            stepExplorerESources.setBackground(NOT_INHERITED_FROM_PARENT);
+            stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
             
         }else{
-            if(inheritedData.getExtraSources() != null){
-                if(inheritedData.getExtraSources().size()>0){
-                    this.useExtraSourcesCheckbox.setSelected(true);
-                    this.fillList(this.stepExplorerESourcesList,inheritedData.getExtraSources());
+            if(inheritedData.getInstrumentModel() != null){
+                
+                if(inheritedData.getInstrumentModel().size()>0){
+                    this.noInstrumentModelCheckbox.setSelected(false);
+                    this.fillList(this.stepExplorerInstrumentModelList,inheritedData.getInstrumentModel());
                     
                 }else{
-                    this.useExtraSourcesCheckbox.setSelected(false);
+                    this.noInstrumentModelCheckbox.setSelected(true);
                 }
-                stepExplorerESources.setBackground(INHERITED_FROM_PARENT);
+                stepExplorerInstrumentModel.setBackground(INHERITED_FROM_PARENT);
             }else{
-                this.useExtraSourcesCheckbox.setSelected(true);
-                stepExplorerESources.setBackground(NOT_DEFINED);
+                this.noInstrumentModelCheckbox.setSelected(false);
+                stepExplorerInstrumentModel.setBackground(NOT_DEFINED);
             }
         }
+/*        //instrument model 
+        stepExplorerInstrumentModel.setBackground(DEFAULT);
+        this.stepExplorerInstrumentModelList.clearSelection();
+        if(stepData.getInstrumentModel() != null){
+            if(stepData.getInstrumentModel().size()>0){
+                this.noInstrumentModelCheckbox.setSelected(false);
+                this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,stepData.getInstrumentModel());
+                
+            }else{
+                this.noInstrumentModelCheckbox.setSelected(true);
+            }
+            stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
+            
+        }else{
+            if(inheritedData.getInstrumentModel() != null){
+                
+                if(inheritedData.getInstrumentModel().size()>0){
+                    this.noInstrumentModelCheckbox.setSelected(false);
+                    this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,inheritedData.getInstrumentModel());
+                    
+                }else{
+                    this.noInstrumentModelCheckbox.setSelected(true);
+                }
+                stepExplorerInstrumentModel.setBackground(INHERITED_FROM_PARENT);
+            }else{
+                this.noInstrumentModelCheckbox.setSelected(false);
+                stepExplorerInstrumentModel.setBackground(NOT_DEFINED);
+            }
+        }
+*/
+//        //extra sources
+//        stepExplorerESources.setBackground(DEFAULT);
+//        this.stepExplorerModifyESourceText.setText("");
+//        this.fillList(this.stepExplorerESourcesList,new Vector<String>());
+//        if(stepData.getExtraSources() != null){
+//            if(stepData.getExtraSources().size()>0){
+//                this.useExtraSourcesCheckbox.setSelected(true);
+//                this.fillList(this.stepExplorerESourcesList,stepData.getExtraSources());
+               
+//            }else{
+//                this.useExtraSourcesCheckbox.setSelected(false);
+//            }
+//            stepExplorerESources.setBackground(NOT_INHERITED_FROM_PARENT);
+            
+//        }else{
+//            if(inheritedData.getExtraSources() != null){
+//                if(inheritedData.getExtraSources().size()>0){
+//                    this.useExtraSourcesCheckbox.setSelected(true);
+//                    this.fillList(this.stepExplorerESourcesList,inheritedData.getExtraSources());
+                    
+//                }else{
+//                    this.useExtraSourcesCheckbox.setSelected(false);
+//                }
+//                stepExplorerESources.setBackground(INHERITED_FROM_PARENT);
+//            }else{
+//                this.useExtraSourcesCheckbox.setSelected(true);
+//                stepExplorerESources.setBackground(NOT_DEFINED);
+//            }
+//        }
         //output data column
         
         this.stepExplorerOutputDataPanel.setBackground(DEFAULT);
@@ -248,35 +333,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
                 stepExplorerOutputDataPanel.setBackground(NOT_DEFINED);
             }
         }
-        //instrument model 
-        stepExplorerInstrumentModel.setBackground(DEFAULT);
-        this.stepExplorerInstrumentModelList.clearSelection();
-        if(stepData.getInstrumentModel() != null){
-            if(stepData.getInstrumentModel().size()>0){
-                this.noInstrumentModelCheckbox.setSelected(false);
-                this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,stepData.getInstrumentModel());
-                
-            }else{
-                this.noInstrumentModelCheckbox.setSelected(true);
-            }
-            stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
-            
-        }else{
-            if(inheritedData.getInstrumentModel() != null){
-                
-                if(inheritedData.getInstrumentModel().size()>0){
-                    this.noInstrumentModelCheckbox.setSelected(false);
-                    this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,inheritedData.getInstrumentModel());
-                    
-                }else{
-                    this.noInstrumentModelCheckbox.setSelected(true);
-                }
-                stepExplorerInstrumentModel.setBackground(INHERITED_FROM_PARENT);
-            }else{
-                this.noInstrumentModelCheckbox.setSelected(false);
-                stepExplorerInstrumentModel.setBackground(NOT_DEFINED);
-            }
-        }
+
         
         //integration NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
         /*
@@ -431,30 +488,83 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             }
         }
         
-        //extra sources
-        Vector<String> esources = createList(stepExplorerESourcesList);
-        if(!this.useExtraSourcesCheckbox.isSelected()){
-            esources = new Vector<String>();
+        //instrument model        
+        
+        Vector<String> imodels = createList(stepExplorerInstrumentModelList);
+        if(this.noInstrumentModelCheckbox.isSelected()){
+            imodels = new Vector<String>();
         }
-        if(esources.equals(inheritedData.getExtraSources())){
-            aStepData.setExtraSources(null);
+        if(imodels.equals(inheritedData.getInstrumentModel())){
+            aStepData.setInstrumentModel(null);
         }else{
-            if(!this.useExtraSourcesCheckbox.isSelected()){
-                aStepData.setExtraSources(new Vector<String>());
+            if(this.noInstrumentModelCheckbox.isSelected()){
+                aStepData.setInstrumentModel(new Vector<String>());
             }else{
-                if(esources.size()>0){
-                    aStepData.setExtraSources(new Vector<String>());
+                if(imodels.size()>0){
+                    aStepData.setInstrumentModel(new Vector<String>());
                 }else{
-                    aStepData.setExtraSources(null);
+                    aStepData.setInstrumentModel(null);
                 }
                 
             }
         }
-        if(aStepData.getExtraSources()!=null){
-            if(!esources.equals(aStepData.getExtraSources())){
-                aStepData.setExtraSources(esources);
+        if(aStepData.getInstrumentModel()!=null){
+            if(!imodels.equals(aStepData.getInstrumentModel())){
+                aStepData.setInstrumentModel(imodels);
             }
         }
+        
+/*        //instrument model        
+        
+        Vector<String> imodels = createVectorFromSelectionList(stepExplorerInstrumentModelList);
+        if(this.noInstrumentModelCheckbox.isSelected()){
+            imodels = new Vector<String>();
+        }
+        if(imodels.equals(inheritedData.getInstrumentModel())){
+            aStepData.setInstrumentModel(null);
+        }else{
+            if(this.noInstrumentModelCheckbox.isSelected()){
+                aStepData.setInstrumentModel(new Vector<String>());
+            }else{
+                if(imodels.size()>0){
+                    aStepData.setInstrumentModel(new Vector<String>());
+                }else{
+                    aStepData.setInstrumentModel(null);
+                }
+                
+            }
+        }
+        if(aStepData.getInstrumentModel()!=null){
+            if(!imodels.equals(aStepData.getInstrumentModel())){
+                aStepData.setInstrumentModel(imodels);
+            }
+        }        
+*/       
+
+//extra sources
+//        Vector<String> esources = createList(stepExplorerESourcesList);
+//        if(!this.useExtraSourcesCheckbox.isSelected()){
+//            esources = new Vector<String>();
+//        }
+//        if(esources.equals(inheritedData.getExtraSources())){
+//            aStepData.setExtraSources(null);
+//        }else{
+//            if(!this.useExtraSourcesCheckbox.isSelected()){
+//                aStepData.setExtraSources(new Vector<String>());
+//            }else{
+//                if(esources.size()>0){
+//                    aStepData.setExtraSources(new Vector<String>());
+//                }else{
+//                    aStepData.setExtraSources(null);
+//                }
+                
+//            }
+//        }
+//        if(aStepData.getExtraSources()!=null){
+//            if(!esources.equals(aStepData.getExtraSources())){
+//                aStepData.setExtraSources(esources);
+//            }
+//        }
         //output data column
         String outputdata = stepExplorerOutputDataText.getText();
         if(this.writeOutputCheckbox.isSelected()){
@@ -480,31 +590,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             }
         }
         
-        //instrument model        
-        
-        Vector<String> imodels = createVectorFromSelectionList(stepExplorerInstrumentModelList);
-        if(this.noInstrumentModelCheckbox.isSelected()){
-            imodels = new Vector<String>();
-        }
-        if(imodels.equals(inheritedData.getInstrumentModel())){
-            aStepData.setInstrumentModel(null);
-        }else{
-            if(this.noInstrumentModelCheckbox.isSelected()){
-                aStepData.setInstrumentModel(new Vector<String>());
-            }else{
-                if(imodels.size()>0){
-                    aStepData.setInstrumentModel(new Vector<String>());
-                }else{
-                    aStepData.setInstrumentModel(null);
-                }
-                
-            }
-        }
-        if(aStepData.getInstrumentModel()!=null){
-            if(!imodels.equals(aStepData.getInstrumentModel())){
-                aStepData.setInstrumentModel(imodels);
-            }
-        }
+
         
         //Integration
         //Time
@@ -956,29 +1042,24 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         writeOutputCheckbox = new javax.swing.JCheckBox();
         stepExplorerNSources = new javax.swing.JPanel();
         stepExplorerNSourcesPanel = new javax.swing.JPanel();
+        useAllSourcesCheckbox = new javax.swing.JCheckBox();
         stepExplorerNSourcesScrollPane = new javax.swing.JScrollPane();
         stepExplorerNSourcesList = new javax.swing.JList();
         stepExplorerNSourcesEditPanel = new javax.swing.JPanel();
-        stepExplorerModifyNSourceText = new javax.swing.JTextField();
+        stepExplorerModifyNSourceCombobox = new javax.swing.JComboBox();
         stepExplorerNSourcesButtonPanel = new javax.swing.JPanel();
-        deleteNSourceButton = new javax.swing.JButton();
         addNSourceButton = new javax.swing.JButton();
-        useAllSourcesCheckbox = new javax.swing.JCheckBox();
-        stepExplorerESources = new javax.swing.JPanel();
-        stepExplorerESourcesPanel = new javax.swing.JPanel();
-        stepExplorerESourcesScrollPane = new javax.swing.JScrollPane();
-        stepExplorerESourcesList = new javax.swing.JList();
-        stepExplorerESourcesEditPanel = new javax.swing.JPanel();
-        stepExplorerModifyESourceText = new javax.swing.JTextField();
-        stepExplorerESourcesButtonPanel = new javax.swing.JPanel();
-        deleteESourceButton = new javax.swing.JButton();
-        addESourceButton = new javax.swing.JButton();
-        useExtraSourcesCheckbox = new javax.swing.JCheckBox();
+        deleteNSourceButton = new javax.swing.JButton();
         stepExplorerInstrumentModel = new javax.swing.JPanel();
         stepExplorerInstrumentModelPanel = new javax.swing.JPanel();
+        noInstrumentModelCheckbox = new javax.swing.JCheckBox();
         stepExplorerInstrumentModelScrollPane = new javax.swing.JScrollPane();
         stepExplorerInstrumentModelList = new javax.swing.JList();
-        noInstrumentModelCheckbox = new javax.swing.JCheckBox();
+        stepExplorerInstrumentModelEditPanel = new javax.swing.JPanel();
+        stepExplorerModifyInstrumentModelCombobox = new javax.swing.JComboBox();
+        StepExplorerInstrumentModelButtonPanel = new javax.swing.JPanel();
+        addInstrumentButton = new javax.swing.JButton();
+        deleteInstrumentButton = new javax.swing.JButton();
         stepExplorerCorrelationPanel = new javax.swing.JPanel();
         stepExplorerCorrelationSelectionLabel = new javax.swing.JLabel();
         stepExplorerCorrelationSelectionBox = new javax.swing.JComboBox();
@@ -1111,7 +1192,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         stepExplorerOutputDataPanel.add(writeOutputCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, -1));
 
-        stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 300, 170, 90));
+        stepExplorerPanel.add(stepExplorerOutputDataPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 280, 170, 110));
 
         stepExplorerNSources.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -1119,6 +1200,19 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         stepExplorerNSources.setMinimumSize(new java.awt.Dimension(150, 150));
         stepExplorerNSources.setPreferredSize(new java.awt.Dimension(150, 150));
         stepExplorerNSourcesPanel.setLayout(new java.awt.BorderLayout());
+
+        useAllSourcesCheckbox.setSelected(true);
+        useAllSourcesCheckbox.setText("Use all sources");
+        useAllSourcesCheckbox.setToolTipText("Check this box to use all the sources");
+        useAllSourcesCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        useAllSourcesCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        useAllSourcesCheckbox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                useAllSourcesCheckboxItemStateChanged(evt);
+            }
+        });
+
+        stepExplorerNSourcesPanel.add(useAllSourcesCheckbox, java.awt.BorderLayout.NORTH);
 
         stepExplorerNSourcesList.setBackground(java.awt.Color.lightGray);
         stepExplorerNSourcesList.setToolTipText("The specified sources for this step");
@@ -1135,36 +1229,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         stepExplorerNSourcesEditPanel.setLayout(new java.awt.BorderLayout());
 
-        stepExplorerModifyNSourceText.setToolTipText("Input field for a source (Wildcards are allowed eg. 3C34*)");
-        stepExplorerModifyNSourceText.setEnabled(false);
-        stepExplorerModifyNSourceText.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                stepExplorerModifyNSourceTextKeyReleased(evt);
-            }
-        });
-
-        stepExplorerNSourcesEditPanel.add(stepExplorerModifyNSourceText, java.awt.BorderLayout.CENTER);
+        stepExplorerModifyNSourceCombobox.setToolTipText("Add sources");
+        stepExplorerModifyNSourceCombobox.setEnabled(false);
+        stepExplorerNSourcesEditPanel.add(stepExplorerModifyNSourceCombobox, java.awt.BorderLayout.CENTER);
 
         stepExplorerNSourcesButtonPanel.setLayout(new java.awt.GridBagLayout());
-
-        deleteNSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteNSourceButton.setToolTipText("Remove the selected source from the list");
-        deleteNSourceButton.setEnabled(false);
-        deleteNSourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        deleteNSourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        deleteNSourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        deleteNSourceButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                deleteNSourceButtonActionPerformed(evt);
-            }
-        });
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerNSourcesButtonPanel.add(deleteNSourceButton, gridBagConstraints);
 
         addNSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
         addNSourceButton.setToolTipText("Add the source entered above to the list of sources");
@@ -1185,139 +1254,37 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerNSourcesButtonPanel.add(addNSourceButton, gridBagConstraints);
 
-        stepExplorerNSourcesEditPanel.add(stepExplorerNSourcesButtonPanel, java.awt.BorderLayout.SOUTH);
-
-        stepExplorerNSourcesPanel.add(stepExplorerNSourcesEditPanel, java.awt.BorderLayout.SOUTH);
-
-        useAllSourcesCheckbox.setSelected(true);
-        useAllSourcesCheckbox.setText("Use all sources");
-        useAllSourcesCheckbox.setToolTipText("Check this box to use all the sources");
-        useAllSourcesCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        useAllSourcesCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        useAllSourcesCheckbox.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                useAllSourcesCheckboxItemStateChanged(evt);
-            }
-        });
-
-        stepExplorerNSourcesPanel.add(useAllSourcesCheckbox, java.awt.BorderLayout.NORTH);
-
-        stepExplorerNSources.add(stepExplorerNSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 150, 130));
-
-        stepExplorerPanel.add(stepExplorerNSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 0, 170, 160));
-
-        stepExplorerESources.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        stepExplorerESources.setBorder(javax.swing.BorderFactory.createTitledBorder("Extra Sources"));
-        stepExplorerESourcesPanel.setLayout(new java.awt.BorderLayout());
-
-        stepExplorerESourcesList.setBackground(java.awt.Color.lightGray);
-        stepExplorerESourcesList.setToolTipText("List of specified extra sources to be used when predicting visibilities");
-        stepExplorerESourcesList.setEnabled(false);
-        stepExplorerESourcesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-                stepExplorerESourcesListValueChanged(evt);
-            }
-        });
-
-        stepExplorerESourcesScrollPane.setViewportView(stepExplorerESourcesList);
-
-        stepExplorerESourcesPanel.add(stepExplorerESourcesScrollPane, java.awt.BorderLayout.CENTER);
-
-        stepExplorerESourcesEditPanel.setLayout(new java.awt.BorderLayout());
-
-        stepExplorerModifyESourceText.setToolTipText("Input field for an extra source (Wildcards are allowed eg. M*)");
-        stepExplorerModifyESourceText.setEnabled(false);
-        stepExplorerModifyESourceText.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                stepExplorerModifyESourceTextKeyReleased(evt);
-            }
-        });
-
-        stepExplorerESourcesEditPanel.add(stepExplorerModifyESourceText, java.awt.BorderLayout.CENTER);
-
-        stepExplorerESourcesButtonPanel.setLayout(new java.awt.GridBagLayout());
-
-        deleteESourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
-        deleteESourceButton.setToolTipText("Remove the selected extra source from the list");
-        deleteESourceButton.setEnabled(false);
-        deleteESourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        deleteESourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        deleteESourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        deleteESourceButton.addActionListener(new java.awt.event.ActionListener() {
+        deleteNSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteNSourceButton.setToolTipText("Remove the selected source from the list");
+        deleteNSourceButton.setEnabled(false);
+        deleteNSourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteNSourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteNSourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        deleteNSourceButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                deleteESourceButtonActionPerformed(evt);
+                deleteNSourceButtonActionPerformed(evt);
             }
         });
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerESourcesButtonPanel.add(deleteESourceButton, gridBagConstraints);
+        stepExplorerNSourcesButtonPanel.add(deleteNSourceButton, gridBagConstraints);
 
-        addESourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
-        addESourceButton.setToolTipText("Add the extra source entered to the list");
-        addESourceButton.setEnabled(false);
-        addESourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        addESourceButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        addESourceButton.setPreferredSize(new java.awt.Dimension(30, 25));
-        addESourceButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addESourceButtonActionPerformed(evt);
-            }
-        });
+        stepExplorerNSourcesEditPanel.add(stepExplorerNSourcesButtonPanel, java.awt.BorderLayout.SOUTH);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stepExplorerESourcesButtonPanel.add(addESourceButton, gridBagConstraints);
+        stepExplorerNSourcesPanel.add(stepExplorerNSourcesEditPanel, java.awt.BorderLayout.SOUTH);
 
-        stepExplorerESourcesEditPanel.add(stepExplorerESourcesButtonPanel, java.awt.BorderLayout.SOUTH);
+        stepExplorerNSources.add(stepExplorerNSourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 150, 240));
 
-        stepExplorerESourcesPanel.add(stepExplorerESourcesEditPanel, java.awt.BorderLayout.SOUTH);
+        stepExplorerPanel.add(stepExplorerNSources, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 0, 170, 270));
 
-        useExtraSourcesCheckbox.setText("Use extra sources :");
-        useExtraSourcesCheckbox.setToolTipText("Check this box to specify extra sources");
-        useExtraSourcesCheckbox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        useExtraSourcesCheckbox.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        useExtraSourcesCheckbox.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                useExtraSourcesCheckboxItemStateChanged(evt);
-            }
-        });
-
-        stepExplorerESourcesPanel.add(useExtraSourcesCheckbox, java.awt.BorderLayout.NORTH);
-
-        stepExplorerESources.add(stepExplorerESourcesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 150, 130));
-
-        stepExplorerPanel.add(stepExplorerESources, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 0, 170, 160));
-
-        stepExplorerInstrumentModel.setLayout(new java.awt.BorderLayout());
+        stepExplorerInstrumentModel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         stepExplorerInstrumentModel.setBorder(javax.swing.BorderFactory.createTitledBorder("Instrument Model"));
         stepExplorerInstrumentModelPanel.setLayout(new java.awt.BorderLayout());
-
-        stepExplorerInstrumentModelList.setBackground(java.awt.Color.lightGray);
-        stepExplorerInstrumentModelList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "TOTALGAIN", "PATCHGAIN", "BANDPASS" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        stepExplorerInstrumentModelList.setToolTipText("Select one or more instrument models to be used from this list");
-        stepExplorerInstrumentModelList.setEnabled(false);
-        stepExplorerInstrumentModelList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-                stepExplorerInstrumentModelListValueChanged(evt);
-            }
-        });
-
-        stepExplorerInstrumentModelScrollPane.setViewportView(stepExplorerInstrumentModelList);
-
-        stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelScrollPane, java.awt.BorderLayout.CENTER);
-
-        stepExplorerInstrumentModel.add(stepExplorerInstrumentModelPanel, java.awt.BorderLayout.CENTER);
 
         noInstrumentModelCheckbox.setSelected(true);
         noInstrumentModelCheckbox.setText("No model");
@@ -1330,9 +1297,75 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             }
         });
 
-        stepExplorerInstrumentModel.add(noInstrumentModelCheckbox, java.awt.BorderLayout.NORTH);
+        stepExplorerInstrumentModelPanel.add(noInstrumentModelCheckbox, java.awt.BorderLayout.NORTH);
 
-        stepExplorerPanel.add(stepExplorerInstrumentModel, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 170, 170, 120));
+        stepExplorerInstrumentModelScrollPane.setPreferredSize(new java.awt.Dimension(260, 132));
+        stepExplorerInstrumentModelList.setBackground(java.awt.Color.lightGray);
+        stepExplorerInstrumentModelList.setToolTipText("the specified instrument models for this step");
+        stepExplorerInstrumentModelList.setEnabled(false);
+        stepExplorerInstrumentModelList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                stepExplorerInstrumentModelListValueChanged(evt);
+            }
+        });
+
+        stepExplorerInstrumentModelScrollPane.setViewportView(stepExplorerInstrumentModelList);
+
+        stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelScrollPane, java.awt.BorderLayout.CENTER);
+
+        stepExplorerInstrumentModelEditPanel.setLayout(new java.awt.BorderLayout());
+
+        stepExplorerModifyInstrumentModelCombobox.setToolTipText("Input Instrument Models");
+        stepExplorerModifyInstrumentModelCombobox.setEnabled(false);
+        stepExplorerInstrumentModelEditPanel.add(stepExplorerModifyInstrumentModelCombobox, java.awt.BorderLayout.CENTER);
+
+        StepExplorerInstrumentModelButtonPanel.setLayout(new java.awt.GridBagLayout());
+
+        addInstrumentButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addInstrumentButton.setToolTipText("Add the source entered above to the list of sources");
+        addInstrumentButton.setEnabled(false);
+        addInstrumentButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addInstrumentButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addInstrumentButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        addInstrumentButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addInstrumentButtonActionPerformed(evt);
+            }
+        });
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        StepExplorerInstrumentModelButtonPanel.add(addInstrumentButton, gridBagConstraints);
+
+        deleteInstrumentButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteInstrumentButton.setToolTipText("Remove the selected source from the list");
+        deleteInstrumentButton.setEnabled(false);
+        deleteInstrumentButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        deleteInstrumentButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        deleteInstrumentButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        deleteInstrumentButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteInstrumentButtonActionPerformed(evt);
+            }
+        });
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+        StepExplorerInstrumentModelButtonPanel.add(deleteInstrumentButton, gridBagConstraints);
+
+        stepExplorerInstrumentModelEditPanel.add(StepExplorerInstrumentModelButtonPanel, java.awt.BorderLayout.SOUTH);
+
+        stepExplorerInstrumentModelPanel.add(stepExplorerInstrumentModelEditPanel, java.awt.BorderLayout.SOUTH);
+
+        stepExplorerInstrumentModel.add(stepExplorerInstrumentModelPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(6, 14, 158, 250));
+
+        stepExplorerPanel.add(stepExplorerInstrumentModel, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 0, 170, 270));
 
         stepExplorerCorrelationPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -1371,11 +1404,11 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         stepExplorerCorrelationPanel.add(stepExplorerCorrelationTypeScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, 50, 80));
 
-        stepExplorerPanel.add(stepExplorerCorrelationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 170, 170, 120));
+        stepExplorerPanel.add(stepExplorerCorrelationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 270, 170, 120));
 
         integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 0, 11), java.awt.Color.lightGray));
+        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), java.awt.Color.lightGray));
         integrationIntervalPanel.setToolTipText("Cell size for integration. Not yet implemented.");
         integrationIntervalPanel.setEnabled(false);
         integrationFrequencyLabel.setText("Freq. Interval :");
@@ -1562,18 +1595,45 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         add(BBSStepExplorerPanel, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void deleteInstrumentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteInstrumentButtonActionPerformed
+        DefaultListModel theInstrumentModel = (DefaultListModel)stepExplorerInstrumentModelList.getModel();
+        int[] selectedIndices = stepExplorerInstrumentModelList.getSelectedIndices();
+        while(selectedIndices.length>0){
+            theInstrumentModel.remove(selectedIndices[0]);
+            selectedIndices = stepExplorerInstrumentModelList.getSelectedIndices();
+            stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
+        }
+        if(theInstrumentModel.size()==0){
+            this.deleteInstrumentButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_deleteInstrumentButtonActionPerformed
+
+    private void addInstrumentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addInstrumentButtonActionPerformed
+        String toBeAddedInstrumentModel = (String)this.stepExplorerModifyInstrumentModelCombobox.getSelectedItem();
+        DefaultListModel theInstrumentModel = (DefaultListModel)stepExplorerInstrumentModelList.getModel();
+        if(!theInstrumentModel.contains(toBeAddedInstrumentModel)){
+            theInstrumentModel.addElement(toBeAddedInstrumentModel);
+            stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
+        }
+    }//GEN-LAST:event_addInstrumentButtonActionPerformed
     
     private void noInstrumentModelCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_noInstrumentModelCheckboxItemStateChanged
-        if(this.noInstrumentModelCheckbox.isSelected()){
+     if(this.noInstrumentModelCheckbox.isSelected()){
             this.stepExplorerInstrumentModelList.setEnabled(false);
             this.stepExplorerInstrumentModelList.setBackground(Color.LIGHT_GRAY);
             this.stepExplorerInstrumentModel.setBackground(this.NOT_INHERITED_FROM_PARENT);
             this.stepExplorerInstrumentModelList.clearSelection();
+            this.deleteInstrumentButton.setEnabled(false);
+            this.addInstrumentButton.setEnabled(false);
+            this.stepExplorerModifyInstrumentModelCombobox.setEnabled(false);
         }else{
             this.stepExplorerInstrumentModelList.setEnabled(true);
             this.stepExplorerInstrumentModelList.setBackground(Color.WHITE);
             this.stepExplorerInstrumentModel.setBackground(this.NOT_INHERITED_FROM_PARENT);
             this.stepExplorerInstrumentModelList.clearSelection();
+            this.addInstrumentButton.setEnabled(true);
+            this.stepExplorerModifyInstrumentModelCombobox.setEnabled(true);
         }
     }//GEN-LAST:event_noInstrumentModelCheckboxItemStateChanged
     
@@ -1586,25 +1646,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             this.stepExplorerOutputDataPanel.setBackground(this.NOT_INHERITED_FROM_PARENT);
         }
     }//GEN-LAST:event_writeOutputCheckboxItemStateChanged
-    
-    private void useExtraSourcesCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_useExtraSourcesCheckboxItemStateChanged
-        if(this.useExtraSourcesCheckbox.isSelected()){
-            this.stepExplorerESourcesList.setEnabled(true);
-            this.stepExplorerESourcesList.setBackground(Color.WHITE);
-            this.stepExplorerESources.setBackground(this.NOT_INHERITED_FROM_PARENT);
-            this.stepExplorerESourcesList.clearSelection();
-            this.stepExplorerModifyESourceText.setText("");
-            this.stepExplorerModifyESourceText.setEnabled(true);
-        }else{
-            this.stepExplorerESourcesList.setEnabled(false);
-            this.stepExplorerESourcesList.setBackground(Color.LIGHT_GRAY);
-            this.stepExplorerESources.setBackground(this.NOT_INHERITED_FROM_PARENT);
-            this.stepExplorerESourcesList.clearSelection();
-            this.stepExplorerModifyESourceText.setEnabled(false);
-            this.stepExplorerModifyESourceText.setText("");
-        }
-    }//GEN-LAST:event_useExtraSourcesCheckboxItemStateChanged
-    
+        
     private void useAllSourcesCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_useAllSourcesCheckboxItemStateChanged
         if(this.useAllSourcesCheckbox.isSelected()){
             this.stepExplorerNSourcesList.setEnabled(false);
@@ -1613,14 +1655,14 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             this.stepExplorerNSourcesList.clearSelection();
             this.deleteNSourceButton.setEnabled(false);
             this.addNSourceButton.setEnabled(false);
-            this.stepExplorerModifyNSourceText.setEnabled(false);
+            this.stepExplorerModifyNSourceCombobox.setEnabled(false);
         }else{
             this.stepExplorerNSourcesList.setEnabled(true);
             this.stepExplorerNSourcesList.setBackground(Color.WHITE);
             this.stepExplorerNSources.setBackground(this.NOT_INHERITED_FROM_PARENT);
             this.stepExplorerNSourcesList.clearSelection();
-            this.stepExplorerModifyNSourceText.setEnabled(true);
-            this.stepExplorerModifyNSourceText.setText("");
+            this.stepExplorerModifyNSourceCombobox.setEnabled(true);
+            this.addNSourceButton.setEnabled(true);
         }
     }//GEN-LAST:event_useAllSourcesCheckboxItemStateChanged
         
@@ -1750,47 +1792,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     private void stepExplorerInstrumentModelListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerInstrumentModelListValueChanged
         this.stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
     }//GEN-LAST:event_stepExplorerInstrumentModelListValueChanged
-    
-    private void addESourceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addESourceButtonActionPerformed
-        String toBeAddedESource = this.stepExplorerModifyESourceText.getText();
-        if(!toBeAddedESource.equals("")){
-            DefaultListModel theStationModel = (DefaultListModel)stepExplorerESourcesList.getModel();
-            theStationModel.addElement(toBeAddedESource);
-            stepExplorerESources.setBackground(NOT_INHERITED_FROM_PARENT);
-        }
-    }//GEN-LAST:event_addESourceButtonActionPerformed
-    
-    private void deleteESourceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteESourceButtonActionPerformed
-        DefaultListModel theSourceModel = (DefaultListModel)stepExplorerESourcesList.getModel();
-        int[] selectedIndices = stepExplorerESourcesList.getSelectedIndices();
-        while(selectedIndices.length>0){
-            theSourceModel.remove(selectedIndices[0]);
-            selectedIndices = stepExplorerESourcesList.getSelectedIndices();
-            stepExplorerESources.setBackground(NOT_INHERITED_FROM_PARENT);
-        }
-        if(theSourceModel.size()==0){
-            this.deleteESourceButton.setEnabled(false);
-        }
-    }//GEN-LAST:event_deleteESourceButtonActionPerformed
-    
-    private void stepExplorerModifyESourceTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_stepExplorerModifyESourceTextKeyReleased
-        String toBeAddedESource = stepExplorerModifyESourceText.getText();
-        if(!toBeAddedESource.equals("")){
-            this.addESourceButton.setEnabled(true);
-        }else{
-            this.addESourceButton.setEnabled(false);
-        }
-    }//GEN-LAST:event_stepExplorerModifyESourceTextKeyReleased
-    
-    private void stepExplorerESourcesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerESourcesListValueChanged
-        int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
-        if(selectedIndices.length>0){
-            this.deleteESourceButton.setEnabled(true);
-        }else{
-            this.deleteESourceButton.setEnabled(false);
-        }
-    }//GEN-LAST:event_stepExplorerESourcesListValueChanged
-    
+                    
     private void stepExplorerNSourcesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerNSourcesListValueChanged
         int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
         if(selectedIndices.length>0){
@@ -1801,10 +1803,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }//GEN-LAST:event_stepExplorerNSourcesListValueChanged
     
     private void addNSourceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNSourceButtonActionPerformed
-        String toBeAddedNSource = this.stepExplorerModifyNSourceText.getText();
-        if(!toBeAddedNSource.equals("")){
-            DefaultListModel theStationModel = (DefaultListModel)stepExplorerNSourcesList.getModel();
-            theStationModel.addElement(toBeAddedNSource);
+        String toBeAddedNSource = (String)this.stepExplorerModifyNSourceCombobox.getSelectedItem();
+        DefaultListModel theSourcesModel = (DefaultListModel)stepExplorerNSourcesList.getModel();
+        if(!theSourcesModel.contains(toBeAddedNSource)){
+            theSourcesModel.addElement(toBeAddedNSource);
             stepExplorerNSources.setBackground(NOT_INHERITED_FROM_PARENT);
         }
     }//GEN-LAST:event_addNSourceButtonActionPerformed
@@ -1821,16 +1823,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             this.deleteNSourceButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteNSourceButtonActionPerformed
-    
-    private void stepExplorerModifyNSourceTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_stepExplorerModifyNSourceTextKeyReleased
-        String toBeAddedNSource = stepExplorerModifyNSourceText.getText();
-        if(!toBeAddedNSource.equals("")){
-            this.addNSourceButton.setEnabled(true);
-        }else{
-            this.addNSourceButton.setEnabled(false);
-        }
-    }//GEN-LAST:event_stepExplorerModifyNSourceTextKeyReleased
-    
+        
     private void stepExplorerStepNameTextKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_stepExplorerStepNameTextKeyReleased
         if(stepExplorerStepNameText.isEnabled()){
             String currentText = stepExplorerStepNameText.getText();
@@ -1943,8 +1936,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel BBSStepExplorerPanel;
     private javax.swing.JPanel BaselineSelectionPanel;
+    private javax.swing.JPanel StepExplorerInstrumentModelButtonPanel;
     private javax.swing.JButton addBaseLineButton;
-    private javax.swing.JButton addESourceButton;
+    private javax.swing.JButton addInstrumentButton;
     private javax.swing.JButton addNSourceButton;
     private javax.swing.JPanel baselineInputPanel;
     private javax.swing.JPanel baselineModsPanel;
@@ -1956,7 +1950,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     private javax.swing.JCheckBox baselineUseAllCheckbox;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JButton deleteBaseLineButton;
-    private javax.swing.JButton deleteESourceButton;
+    private javax.swing.JButton deleteInstrumentButton;
     private javax.swing.JButton deleteNSourceButton;
     private javax.swing.JButton helpButton;
     private javax.swing.JLabel integrationFrequencyLabel;
@@ -1974,18 +1968,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     private javax.swing.JLabel stepExplorerCorrelationTypeLabel;
     private javax.swing.JList stepExplorerCorrelationTypeList;
     private javax.swing.JScrollPane stepExplorerCorrelationTypeScrollPane;
-    private javax.swing.JPanel stepExplorerESources;
-    private javax.swing.JPanel stepExplorerESourcesButtonPanel;
-    private javax.swing.JPanel stepExplorerESourcesEditPanel;
-    private javax.swing.JList stepExplorerESourcesList;
-    private javax.swing.JPanel stepExplorerESourcesPanel;
-    private javax.swing.JScrollPane stepExplorerESourcesScrollPane;
     private javax.swing.JPanel stepExplorerInstrumentModel;
+    private javax.swing.JPanel stepExplorerInstrumentModelEditPanel;
     private javax.swing.JList stepExplorerInstrumentModelList;
     private javax.swing.JPanel stepExplorerInstrumentModelPanel;
     private javax.swing.JScrollPane stepExplorerInstrumentModelScrollPane;
-    private javax.swing.JTextField stepExplorerModifyESourceText;
-    private javax.swing.JTextField stepExplorerModifyNSourceText;
+    private javax.swing.JComboBox stepExplorerModifyInstrumentModelCombobox;
+    private javax.swing.JComboBox stepExplorerModifyNSourceCombobox;
     private javax.swing.JPanel stepExplorerNSources;
     private javax.swing.JPanel stepExplorerNSourcesButtonPanel;
     private javax.swing.JPanel stepExplorerNSourcesEditPanel;
@@ -2005,7 +1994,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     private javax.swing.JLabel stepExplorerStepNameLabel;
     private javax.swing.JTextField stepExplorerStepNameText;
     private javax.swing.JCheckBox useAllSourcesCheckbox;
-    private javax.swing.JCheckBox useExtraSourcesCheckbox;
     private javax.swing.JCheckBox writeOutputCheckbox;
     // End of variables declaration//GEN-END:variables
     
