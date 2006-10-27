@@ -61,7 +61,7 @@ class MPIJob(Job):
         self.createMachinefile()
         if runCmd == None:
             runCmd = self.executable
-        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -np ' + str(self.noProcesses) + \
+        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun --byslot -np ' + str(self.noProcesses) + \
                 ' -machinefile ~/' + self.name + '.machinefile ' + runCmd)
     def abort(self):
         print('Aborting ' + self.name)

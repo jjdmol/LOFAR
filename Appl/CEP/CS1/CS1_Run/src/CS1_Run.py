@@ -41,7 +41,13 @@ def doObservation(obsID, parset):
         for section in sections:
             print ('Starting ' + section.package)
             runlog = logdir + obsID + '.' + section.getName() + '.runlog'
-            section.run(runlog, noRuns)
+
+            # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
+            # This way all sections run longer than needed and storage stops before the rest does
+            if not isinstance(section, StorageSection):
+                section.run(runlog, noRuns+10)
+            else:
+                section.run(runlog, noRuns)
             print 
 
         for section in sections:
