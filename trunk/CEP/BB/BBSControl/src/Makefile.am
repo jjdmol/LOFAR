@@ -1,9 +1,7 @@
 lib_LTLIBRARIES		= libbbscontrol.la
 
 libbbscontrol_la_SOURCES= \
-	BBSControl.cc \
 	BBSCorrectStep.cc \
-	BBSKernel.cc \
 	BBSKernelProcessControl.cc \
 	BBSMultiStep.cc \
 	BBSPredictStep.cc \
