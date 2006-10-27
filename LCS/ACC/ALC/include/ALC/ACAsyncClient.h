@@ -32,7 +32,6 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ALC/ApplControlClient.h>
-#include <ALC/ACAsyncClient.h>
 
 namespace LOFAR {
   namespace ACC {
