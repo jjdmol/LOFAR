@@ -76,15 +76,19 @@ class InputSection(Section):
         nSubbands = parset.getInt32('Observation.NSubbands')
         nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
         nCells = float(nSubbands) / float(nSubbandsPerCell)
-        if not nCells == float(int(nCells)):
-            raise Exception('Not a integer number of compute cells!')
+        if not nSubbands % nSubbandsPerCell == 0:
+            raise Exception('Not a integer number of compute cells (nSubbands = %d and nSubbandsPerCell = %d)' % (nSubbands, nSubbandsPerCell))
         self.nCells = int(nCells)
         self.noProcesses = self.nrsp + self.nCells
 
         host = copy.deepcopy(myhost)
 
         slaves = host.getSlaves()
-        newslaves = [slaves[ind - 1] for ind in [1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 10, 11, 12, 2, 3, 5, 6, 8, 9, 11, 12]]
+        inputNodes = parset.getInputNodes() + [2, 3, 5, 6, 8, 9, 11, 12]
+        # for sbCollect use only the nodes that are used less than 2 times
+        sbcollectNodes = [node for node in range(1, 13) if inputNodes.count(node) < 2]
+        newslaves = [slaves[ind - 1] for ind in inputNodes + sbcollectNodes]
+        
         host.setSlaves(newslaves)
 
         Section.__init__(self, parset, \
