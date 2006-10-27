@@ -62,7 +62,9 @@ namespace LOFAR
 
     tribool BBSProcessControl::define()
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_INFO("BBSProcessControl::define()");
+      
       try {
 	// Retrieve the strategy from the parameter set.
 	itsStrategy = new BBSStrategy(*globalParameterSet());
@@ -75,13 +77,14 @@ namespace LOFAR
 
 	// Create a new server TH_Socket. Do not open the socket yet.
 	itsTransportHolder = 
-	  new TH_Socket(globalParameterSet()->getString("BBSControl.port"),
+	  new TH_Socket(globalParameterSet()->getString("Controller.Port"),
 			true,         // sync
 			Socket::TCP,  // protocol
 			false);       // open socket now
       }
       catch (Exception& e) {
-	LOG_ERROR_STR(e);
+	LOG_ERROR_STR("Caught exception in BBSProcessControl::define()\n" 
+                      << e);
 	  return false;
       }
       return true;
@@ -90,7 +93,9 @@ namespace LOFAR
 
     tribool BBSProcessControl::init()
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_INFO("BBSProcessControl::init()");
+
       try {
 	// We need to send the strategy first.
 	itsStrategySent = false;
@@ -131,6 +136,7 @@ namespace LOFAR
 
     tribool BBSProcessControl::run()
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_INFO("BBSProcessControl::run()");
 
       try {
@@ -161,37 +167,14 @@ namespace LOFAR
     }
     
 
-    bool BBSProcessControl::sendObject(const BlobStreamable& bs)
-    {
-      try {
-	// Serialize the object
-	itsDataHolder->serialize(bs);
-	LOG_DEBUG_STR("Sending a " << itsDataHolder->classType() << " object");
-
-	// Do a blocking send
-	if (itsConnection->write() == CSConnection::Error) {
-	  LOG_ERROR("Connection::write() failed");
-	  return false;
-	}
-      }
-      catch (Exception& e) {
-	LOG_ERROR_STR(e);
-	return false;
-      }
-      // All went well.
-      return true;
-    }
-
-
     tribool BBSProcessControl::quit()
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_INFO("BBSProcessControl::quit()");
       return true;
     }
 
 
-    //##--------   P r i v a t e   m e t h o d s   --------##//
-    
     tribool BBSProcessControl::pause(const string& /*condition*/)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -226,7 +209,32 @@ namespace LOFAR
     string BBSProcessControl::askInfo(const string& /*keylist*/)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_WARN("Not supported");
       return string();
+    }
+
+
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+    
+    bool BBSProcessControl::sendObject(const BlobStreamable& bs)
+    {
+      try {
+	// Serialize the object
+	itsDataHolder->serialize(bs);
+	LOG_DEBUG_STR("Sending a " << itsDataHolder->classType() << " object");
+
+	// Do a blocking send
+	if (itsConnection->write() == CSConnection::Error) {
+	  LOG_ERROR("Connection::write() failed");
+	  return false;
+	}
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	return false;
+      }
+      // All went well.
+      return true;
     }
 
 

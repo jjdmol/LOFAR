@@ -48,6 +48,8 @@ namespace LOFAR
     }
 
 
+    //##--------   P u b l i c   m e t h o d s   --------##//
+
     BBSSolveStep::BBSSolveStep(const BBSStep* parent) : 
       BBSSingleStep(parent),
       itsMaxIter(0), itsEpsilon(0), itsMinConverged(0)
@@ -85,32 +87,6 @@ namespace LOFAR
     }
 
 
-    void BBSSolveStep::read(BlobIStream& bis)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      BBSSingleStep::read(bis);
-      bis >> itsMaxIter
-	  >> itsEpsilon
-	  >> itsMinConverged
-	  >> itsParms
-	  >> itsExclParms
-	  >> itsDomainSize;
-    }
-
-
-    void BBSSolveStep::write(BlobOStream& bos) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      BBSSingleStep::write(bos);
-      bos << itsMaxIter
-	  << itsEpsilon
-	  << itsMinConverged
-	  << itsParms
-  	  << itsExclParms
-	  << itsDomainSize;
-    }
-
-
     void BBSSolveStep::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -129,9 +105,37 @@ namespace LOFAR
     }
 
 
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+
+    void BBSSolveStep::write(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      BBSSingleStep::write(bos);
+      bos << itsMaxIter
+	  << itsEpsilon
+	  << itsMinConverged
+	  << itsParms
+  	  << itsExclParms
+	  << itsDomainSize;
+    }
+
+
+    void BBSSolveStep::read(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      BBSSingleStep::read(bis);
+      bis >> itsMaxIter
+	  >> itsEpsilon
+	  >> itsMinConverged
+	  >> itsParms
+	  >> itsExclParms
+	  >> itsDomainSize;
+    }
+
+
     const string& BBSSolveStep::classType() const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
       static const string theType("BBSSolveStep");
       return theType;
     }

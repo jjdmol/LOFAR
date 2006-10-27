@@ -36,7 +36,6 @@ namespace LOFAR
 
   namespace BBS
   {
-    
     // Register BBSMultiStep with the BBSStreamableFactory. Use an anonymous
     // namespace. This ensures that the variable `dummy' gets its own private
     // storage area and is only visible in this compilation unit.
@@ -46,6 +45,8 @@ namespace LOFAR
  	registerClass<BBSMultiStep>("BBSMultiStep");
     }
 
+
+    //##--------   P u b l i c   m e t h o d s   --------##//
 
     BBSMultiStep::BBSMultiStep(const string& name,
 			       const ParameterSet& parset,
@@ -77,9 +78,39 @@ namespace LOFAR
     }
 
 
-    void BBSMultiStep::read(BlobIStream& bis)
+    void BBSMultiStep::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      BBSStep::print(os);
+      Indent id;
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+	os << endl << indent << *itsSteps[i];
+      }
+    }
+
+
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+
+    void BBSMultiStep::write(BlobOStream& bos) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+
+      // First write the data members of the base class to the output stream.
+      BBSStep::write(bos);
+
+      // Write the number of BBSStep objects that this BBSMultiStep contains.
+      bos << static_cast<uint32>(itsSteps.size());
+
+      // Write the BBSStep objects, one by one.
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+	itsSteps[i]->serialize(bos);
+      }
+    }
+
+
+    void BBSMultiStep::read(BlobIStream& bis)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
 
       // First read the data members of the base class from the input stream.
       BBSStep::read(bis);
@@ -100,37 +131,9 @@ namespace LOFAR
     }
 
 
-    void BBSMultiStep::write(BlobOStream& bos) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-
-      // First write the data members of the base class to the output stream.
-      BBSStep::write(bos);
-
-      // Write the number of BBSStep objects that this BBSMultiStep contains.
-      bos << static_cast<uint32>(itsSteps.size());
-
-      // Write the BBSStep objects, one by one.
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-	itsSteps[i]->serialize(bos);
-      }
-    }
-
-
-    void BBSMultiStep::print(ostream& os) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      BBSStep::print(os);
-      Indent id;
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-	os << endl << indent << *itsSteps[i];
-      }
-    }
-
-
     const string& BBSMultiStep::classType() const 
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
       static const string theType("BBSMultiStep");
       return theType;
     }
@@ -138,7 +141,7 @@ namespace LOFAR
 
     void BBSMultiStep::doGetAllSteps(vector<const BBSStep*>& steps) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
@@ -148,7 +151,7 @@ namespace LOFAR
 
     void BBSMultiStep::infiniteRecursionCheck(const string& name) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
       if (name == getName()) {
 	THROW (BBSControlException, 
 	       "Infinite recursion detected in defintion of BBSStep \""

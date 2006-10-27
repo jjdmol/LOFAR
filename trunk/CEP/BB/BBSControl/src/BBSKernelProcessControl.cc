@@ -92,8 +92,8 @@ namespace LOFAR
 
 	// Create a new client TH_Socket. Do not connect yet.
 	itsTransportHolder = 
-	  new TH_Socket(globalParameterSet()->getString("BBSControl.server"),
-			globalParameterSet()->getString("BBSControl.port"),
+	  new TH_Socket(globalParameterSet()->getString("Controller.Host"),
+			globalParameterSet()->getString("Controller.Port"),
 			true,         // sync
 			Socket::TCP,  // protocol
 			false);       // open socket now

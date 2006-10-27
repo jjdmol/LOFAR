@@ -179,7 +179,7 @@ namespace LOFAR
 
     void BBSStep::setParms(const ParameterSet& ps)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
 
       // If defined, get the baseline selection for this step.
       try {
@@ -226,7 +226,7 @@ namespace LOFAR
 
     void BBSStep::doGetAllSteps(vector<const BBSStep*>& steps) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
       steps.push_back(this);
     }
     
