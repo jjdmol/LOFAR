@@ -37,6 +37,25 @@ namespace LOFAR
     using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
+    //##--------   P u b l i c   m e t h o d s   --------##//
+
+    BBSSingleStep::~BBSSingleStep()
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+    }
+
+
+    void BBSSingleStep::print(ostream& os) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      BBSStep::print(os);
+      Indent id;
+      os << endl << indent << "Output data: " << itsOutputData;
+    }
+
+
+    //##--------   P r o t e c t e d   m e t h o d s   --------##//
+
     BBSSingleStep::BBSSingleStep(const BBSStep* parent) :
       BBSStep(parent)
     {
@@ -60,20 +79,6 @@ namespace LOFAR
     }
 
 
-    BBSSingleStep::~BBSSingleStep()
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-    }
-
-
-    void BBSSingleStep::read(BlobIStream& bis)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      BBSStep::read(bis);
-      bis >> itsOutputData;
-    }
-
-
     void BBSSingleStep::write(BlobOStream& bos) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -82,12 +87,11 @@ namespace LOFAR
     }
 
 
-    void BBSSingleStep::print(ostream& os) const
+    void BBSSingleStep::read(BlobIStream& bis)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      BBSStep::print(os);
-      Indent id;
-      os << endl << indent << "Output data: " << itsOutputData;
+      BBSStep::read(bis);
+      bis >> itsOutputData;
     }
 
 

@@ -37,15 +37,15 @@ int main(int argc, char *argv[])
   LOG_INFO_STR(progName << " is starting up ...");
   try {
     BBSProcessControl myProcess;
-    return ACCmain(argc, argv, &myProcess);
+    if (!ACCmain(argc, argv, &myProcess)) {
+      LOG_ERROR("ACCmain returned with an error status");
+      return 1;
+    }
   } 
-
-  catch(Exception& e)
-  {
+  catch(Exception& e) {
     LOG_FATAL_STR(progName << " terminated due to fatal exception!\n" << e);
     return 1;
   }
-
   LOG_INFO_STR(progName << " terminated successfully.");
   return 0;
 }
