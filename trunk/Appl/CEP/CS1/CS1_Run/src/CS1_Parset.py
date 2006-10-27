@@ -47,8 +47,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
             else:
                 self[THKey + '.th'] = 'ETHERNET'
             self[THKey + '.interface'] = 'eth1'
-            self[THKey + '.sourceMac'] = s.getSrcMAC()
-            self[THKey + '.destinationMac'] = s.getDstMAC()
+            self[THKey + '.sourceMac'] = station.getSrcMAC()
+            self[THKey + '.destinationMac'] = station.getDstMAC()
 
     def setInputToMem(self):
         self.inputFromMemory = True
