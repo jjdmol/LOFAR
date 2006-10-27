@@ -521,9 +521,10 @@ void ApplController::doEventLoop()
 			--loopCounter;
 		}
 
-		cout << *itsAPAPool; 		// temp debug info
-		cout << *itsStateEngine;
-		cout << "Ping at: " << timeString(nextPing) << endl;
+ 		// temp debug info
+		LOG_TRACE_STAT_STR(*itsAPAPool);
+		LOG_TRACE_STAT_STR(*itsStateEngine);
+		LOG_TRACE_STAT_STR("Ping at: " << timeString(nextPing));
 
 		// Only sleep when idle
 		if (itsCurState == StateNone) {
@@ -554,7 +555,7 @@ void ApplController::checkForACCommands()
 	// connection (yet/anymore). This will ensure that we at least will
 	// pickup a (re)connect from the AM.
 
-	LOG_DEBUG("Polling user side");
+	LOG_TRACE_STAT("Polling user side");
 	if (itsServerStub->pollForMessage()) {			// new command received?
 		DH_ApplControl* newMsg   = itsServerStub->getDataHolder();
 		time_t          execTime = newMsg->getScheduleTime();
@@ -585,7 +586,7 @@ void ApplController::checkForACCommands()
 void ApplController::checkForAPMessages() 
 {
 	// Anything received from the application processes?
-	LOG_DEBUG("Polling process side");
+	LOG_TRACE_STAT("Polling process side");
 	APAdmin*		activeAP;
 	while ((activeAP = itsAPAPool->poll(1000))) {
 		handleProcMessage(activeAP);	// handle it
@@ -603,7 +604,7 @@ void ApplController::checkForAPMessages()
 void ApplController::checkForConnectingAPs() 
 {
 	// Any new incomming connections from the appl. processes?
-	LOG_DEBUG("New processes to connect?");
+	LOG_TRACE_STAT("New processes to connect?");
 	Socket*		newAPSocket;
 	while ((newAPSocket = itsProcListener->accept(100))) {
 		LOG_DEBUG("Incomming process connection");
@@ -622,7 +623,7 @@ void ApplController::checkForDisconnectingAPs()
 	// Check for disconnected client processes. During the read action
 	// it may have turned out that a process has dropped the connection
 	// this is registered in the Socket. Cleanup these APadmins.
-	LOG_DEBUG("Cleaning process side");
+	LOG_TRACE_STAT("Cleaning process side");
 	while(APAdmin*	anAPA = itsAPAPool->cleanup()) {
 		// TODO: AM.report(anAPA->getName() << " has disconnected");
 		LOG_DEBUG_STR (anAPA->getName() << " has disconnected");
@@ -640,7 +641,7 @@ void ApplController::checkForDisconnectingAPs()
 // another state to execute or to sent an Ack to the AC user.
 void ApplController::checkAckCompletion() 
 {
-	LOG_DEBUG("All ack's received?");
+	LOG_TRACE_STAT("All ack's received?");
 
 	if (itsCurState == StateStartupAppl) {
 		if (itsAPAPool->onlineCount() == itsProcRuler.size()) {
@@ -662,7 +663,7 @@ void ApplController::checkAckCompletion()
 //
 void ApplController::checkStateTimer() 
 {
-	LOG_DEBUG("State timer still running?");
+	LOG_TRACE_STAT("State timer still running?");
 
 	if (itsStateEngine->IsStateExpired()) {
 		// Special case: handle Quit command extras
@@ -686,7 +687,7 @@ void ApplController::checkStateTimer()
 //
 void ApplController::checkCmdStack() 
 {
-	LOG_DEBUG("Time for a stack command?");
+	LOG_TRACE_STAT("Time for a stack command?");
 
 	if (itsCmdStack->timeExpired()) {
 		acceptOrRefuseACMsg(itsCmdStack->pop(), true);
@@ -702,7 +703,7 @@ void ApplController::checkCmdStack()
 //
 void ApplController::checkStateEngine()
 {
-	LOG_DEBUG("Time for next commmand phase?");
+	LOG_TRACE_STAT("Time for next commmand phase?");
 	if (!itsStateEngine->isStateFinished()) {	
 		return;
 	}
