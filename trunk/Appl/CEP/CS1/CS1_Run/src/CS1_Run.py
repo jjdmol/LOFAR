@@ -2,12 +2,14 @@
 
 import time
 import os
+import sys
 from optparse import OptionParser
 
 from CS1_Hosts import *
 from CS1_Parset import CS1_Parset
 from CS1_RSPCtl import RSPCtl
 from CS1_Sections import *
+from CS1_Stations import *
 
 def doObservation(obsID, parset):
     if False:
@@ -21,7 +23,7 @@ def doObservation(obsID, parset):
     sections = [\
         #DelayCompensationSection(parset, listfen),
         InputSection(parset, liifen),
-        BGLProcSection(parset, bglfen3, 'R000_128_0', '/bglhome2/lofarsystem'),
+        BGLProcSection(parset, bglfen3, 'R000_128_0', '/bglhome2/lofarsystem/'),
         StorageSection(parset, listfen)
         #Flagger(parset, listfen)
         ]
@@ -34,17 +36,23 @@ def doObservation(obsID, parset):
     if not os.access(logdir, os.W_OK):
         logdir = './'
     parset.writeToFile(logdir + parset.getMSName().split('/')[-1] + '.parset')
-    for section in sections:
-        print ('Starting ' + section.package)
-        runlog = logdir + obsID + '.' + section.getName() + '.runlog'
-        section.run(runlog, noRuns)
-        print 
 
-    for section in sections:
-        print ('Waiting for ' + section.package + ' to finish ...')
-        ret = section.isRunSuccess()
-        print (ret)
-        print 
+    try:
+        for section in sections:
+            print ('Starting ' + section.package)
+            runlog = logdir + obsID + '.' + section.getName() + '.runlog'
+            section.run(runlog, noRuns)
+            print 
+
+        for section in sections:
+            print ('Waiting for ' + section.package + ' to finish ...')
+            ret = section.isRunSuccess()
+            print (ret)
+            print
+    except KeyboardInterrupt:
+        for s in section:
+            print ('Aborting ' + section.package)
+            s.abortRun()
 
 if __name__ == '__main__':
 
@@ -54,11 +62,12 @@ if __name__ == '__main__':
     parser.add_option('--parset'         , dest='parset'         , default='CS1.parset', type='string', help='name of the parameterset [%default]')
     parser.add_option('--clock'          , dest='clock'          , default='160MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
     parser.add_option('--subbands'       , dest='subbands'       , default='60MHz,8'   , type='string', help='freq of first subband and number of subbands to use [%default]')
-    parser.add_option('--stations'       , dest='stations'       , default='12'        , type='int'   , help='number of stations (or microstations [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
     parser.add_option('--starttime'     , dest='starttime', default=int(time.time() + 100), type='int', help='start of measurement in UTC seconds [now + 100s]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
+    parser.add_option('--stationlist'    , dest='stationlist' , default='CS10_4dipoles', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
+    parser.add_option('--fakeinput'      , dest='fakeinput'      , action='count'                     , help='do not really read from the inputs, but from memory')
 
     # parse the options
     (options, args) = parser.parse_args()
@@ -73,7 +82,6 @@ if __name__ == '__main__':
 
     parset.readFromFile(options.parset)
     parset.setClock(options.clock)
-    parset.setNStations(options.stations)
     parset.setIntegrationTime(options.integrationtime)
     if options.msname:
         parset.setMSName(options.msname)
@@ -86,6 +94,23 @@ if __name__ == '__main__':
 
     # read the runtime (optional start in utc and the length of the measurement)
     parset.setInterval(options.starttime, options.runtime)
+
+    # read the stations from CS1_Stations.py
+    # todo: WARNING this is very dangerous, because there could be any code in the station string
+    # the exec should probably be replaced by something safer, but this is only a temporary script
+    # This way is convenient because a user can say CS10_4dipoles + CS01_4dipoles
+    try:
+        exec('stationList =' + options.stationlist)
+    except:
+        print 'Cannot parse station configuration: ' + str(options.stationlist)
+        sys.exit(1)
+        
+    parset.setStations(stationList)
+
+    # see if we are using fake input
+    if options.fakeinput > 0:
+        parset.setInterval(1, options.runtime)
+        parset.setInputToMem()
 
     # if the msname wasn't given, read the next number from the file
     runningNumberFile = '/log/nextMSNumber'

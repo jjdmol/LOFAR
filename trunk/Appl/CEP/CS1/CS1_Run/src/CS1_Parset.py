@@ -5,13 +5,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
 
     def __init__(self):
         LOFAR_Parset.Parset.__init__(self)
-        #self.clock = '160MHz'
-        #self.firstSB = 60e6
-        #self.nSubbands = 8
-        #self.setClock('160MHz')
-        #self.setSubbands('60MHz', 8)
-        #self.setInterval(time.time() + 600, 600)
-        #self.setIntegrationTime(1)
+        self.inputFromMemory = False
+        self.stationList = list()
 
     def setClock(self, clock):
         self.clock = clock
@@ -31,9 +26,40 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self.nSubbands = number
         self.updateSBValues()
 
-    def setNStations(self, nstations):
-        self['Observation.NStations'] = nstations
-        self['Input.NRSPBoards'] = nstations
+    def setStations(self, stationList):
+        self.stationList = stationList
+        self['Observation.NStations'] = len(stationList)
+        self['Input.NRSPBoards'] = len(stationList)
+        self['Storage.StorageStationNames'] = [s.getName() for s in stationList]
+        positionlist = list()
+        for s in stationList:
+            (x,y,z) = s.getPosition()
+            positionlist.append(x)
+            positionlist.append(y)
+            positionlist.append(z)
+        self['Observation.StationPositions'] = positionlist
+        for i in range(0, len(stationList)):
+            station = stationList[i]
+            # todo: this doesn't work yet with multiple rspboards per station
+            THKey = 'Input.Transport.Station%d.Rsp0' % i
+            if self.inputFromMemory == True:
+                self[THKey + '.th'] = 'NULL'
+            else:
+                self[THKey + '.th'] = 'ETHERNET'
+            self[THKey + '.interface'] = 'eth1'
+            self[THKey + '.sourceMac'] = s.getSrcMAC()
+            self[THKey + '.destinationMac'] = s.getDstMAC()
+
+    def setInputToMem(self):
+        self.inputFromMemory = True
+        for i in range(0, len(self.stationList)):
+            station = self.stationList[i]
+            # todo: this doesn't work yet with multiple rspboards per station
+            THKey = 'Input.Transport.Station%d.Rsp0' % i
+            self[THKey + '.th'] = 'NULL'
+
+    def getInputNodes(self):
+        return [s.getInputNode() for s in self.stationList]
 
     def getNStations(self):
         return int(self['Observation.NStations'])

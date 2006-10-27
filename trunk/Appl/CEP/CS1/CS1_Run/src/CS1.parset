@@ -114,8 +114,8 @@ Input.Transport.Station11.Rsp0.destinationMac = "00:E0:81:34:9B:87"
 # and the number of filters within a cell. 
 # These parameters MUST match the compiled in values in TFC_Config.h
 # Note that some values may differ from values defined in the Input section.
-BGLProc.NodesPerPset = 16
-BGLProc.PsetsPerCell = 4
+BGLProc.NodesPerPset = 4
+BGLProc.PsetsPerCell = 1
 BGLProc.NPPFTaps = 16
 BGLProc.MaxConcurrentCommunications = 2
 
