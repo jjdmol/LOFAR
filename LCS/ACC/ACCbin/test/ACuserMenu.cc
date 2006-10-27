@@ -236,7 +236,7 @@ void showMenu()
 }
 
 int main (int argc, char *argv[]) {
-	INIT_LOGGER ("default");
+	INIT_LOGGER ("ACuserMenu");
 
 	char		aChoice = ' ';
 	while (aChoice != 'q') {
