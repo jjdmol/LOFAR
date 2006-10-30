@@ -32,7 +32,6 @@ using namespace LOFAR;
 
 int main (int, char *argv[]) {
 
-        cout << ">>>" << endl;
 	// Read in the log-environment configuration
 	// We should always start with this.
 	INIT_LOGGER("tHexdump");
@@ -41,41 +40,32 @@ int main (int, char *argv[]) {
 	LOG_INFO (formatString("Program %s has started", argv[0]));
 
 	LOG_INFO ("testing hexdump(stdout, ...)");
-        cout << "<<<" << endl;
 	char	stdoutTest [80];
 	strcpy (stdoutTest, "this should appear on standard out");
 	hexdump (stdoutTest, strlen(stdoutTest));
 
-        cout << ">>>" << endl;
 	LOG_INFO ("testing hexdump(FILE*, ...)");
-        cout << "<<<" << endl;
 	char	fileTest [80];
 	strcpy (fileTest,"this should appear in the  file tHexdump_tmp.txt");
 	FILE*	fd = fopen("./tHexdump_tmp.txt", "w");
 	hexdump(fd, fileTest, strlen(fileTest));
 	fclose(fd);
 
-        cout << ">>>" << endl;
 	LOG_INFO ("testing hexdump(char*, ...)");
-        cout << "<<<" << endl;
 	char	charPtrTest [80];
 	char	hexdumpInfo [380];	// approx 4.8 * input string size
 	strcpy(charPtrTest, "this should appear in the given string");
 	hexdump(hexdumpInfo, charPtrTest, strlen(charPtrTest));
 	cout << hexdumpInfo << endl;
 
-        cout << ">>>" << endl;
 	LOG_INFO ("testing hexdump(string, ...)");
-        cout << "<<<" << endl;
 	string		hexdumpString;
 	char		stringTest [80];
 	strcpy(stringTest, "this should appear in the C++ string");
 	hexdump(hexdumpString, stringTest, strlen(stringTest));
 	cout << hexdumpString << endl;
 
-        cout << ">>>" << endl;
 	LOG_INFO("Normal termination of program");
-	cout << "<<<" << endl;
 	return (0);
 }
 
