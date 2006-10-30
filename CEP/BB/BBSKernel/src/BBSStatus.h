@@ -31,6 +31,7 @@
 //# Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_iosfwd.h>
+#include <Blob/BlobStreamable.h>
 
 namespace LOFAR
 {
@@ -47,7 +48,7 @@ namespace LOFAR
     // enumerated value), with its associated return value as a string, and an
     // optional additional error message. A BBSStatus instance can be
     // transported using the BlobIStream and BlobOStream classes.
-    class BBSStatus
+    class BBSStatus : public BlobStreamable
     {
     public:
       // Status values that can be set by the BBS kernel.
@@ -82,6 +83,15 @@ namespace LOFAR
       { return itsStatus == OK; }
 
     private:
+      // Read the contents from the blob input stream \a bis into \c *this.
+      virtual void read(BlobIStream& bis);
+
+      // Write the contents of \c *this into the blob output stream \a bos.
+      virtual void write(BlobOStream& bos) const;
+
+      // Return the class type of \c *this as a string.
+      virtual const string& classType() const;
+
       // The return status
       Status itsStatus;
 
