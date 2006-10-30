@@ -45,7 +45,7 @@ namespace LOFAR
       //#          Status that is defined in the header file!
       static const string stsString[N_Status+1] = {
         "Success",
-        "BBS kernel error",
+        "BBSKernel error",
         "Unknown error"    //# This line should ALWAYS be last!
       };
       if (itsStatus < 0) return stsString[N_Status];
