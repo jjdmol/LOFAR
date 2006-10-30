@@ -25,10 +25,31 @@
 
 //# Includes
 #include <BBSKernel/BBSStatus.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobOBufChar.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
+
+void checkBlobIO(const BBSStatus& obs)
+{
+  BlobOBufChar bob;
+  BlobOStream bos(bob);
+  obs.serialize(bos);
+
+  BlobIBufChar bib(bob.getBuffer(), bob.size());
+  BlobIStream bis(bib);
+  BBSStatus* ibs = dynamic_cast<BBSStatus*>(BlobStreamable::deserialize(bis));
+  ASSERT(ibs);
+  ASSERTSTR(ibs->get() == obs.get() &&
+	    ibs->text() == obs.text(),
+	    "ibs = " << ibs << "; obs = " << obs);
+  delete ibs;
+}
+
 
 int main(int /*argc*/, const char* const argv[])
 {
@@ -40,18 +61,21 @@ int main(int /*argc*/, const char* const argv[])
       BBSStatus bs;
       ASSERT(bs.get() == BBSStatus::OK);
       ASSERT(bs);
+      checkBlobIO(bs);
       cout << bs << endl;
     }
     {
       BBSStatus bs(BBSStatus::OK, "OK, keep up the good work");
       ASSERT(bs.get() == BBSStatus::OK);
       ASSERT(bs);
+      checkBlobIO(bs);
       cout << bs << endl;
     }
     {
       BBSStatus bs(BBSStatus::ERROR, "This is NOT good!");
       ASSERT(bs.get() == BBSStatus::ERROR);
       ASSERT(!bs);
+      checkBlobIO(bs);
       cout << bs << endl;
     }
     {
@@ -60,11 +84,14 @@ int main(int /*argc*/, const char* const argv[])
                          "This should never happen!");
       ASSERT(bs.get() == BBSStatus::UNKNOWN);
       ASSERT(!bs);
+      checkBlobIO(bs);
       cout << bs << endl;
     }
-  } catch (Exception& e) {
+  }
+  catch (Exception& e) {
     cerr << e << endl;
     return 1;
   }
+
   return 0;
 }
