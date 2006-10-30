@@ -66,6 +66,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode ParmDBInstrument;
     private jOTDBnode ParmDBLocalSky;
     private jOTDBnode ParmDBHistory;
+    
+    private jOTDBnode ControllerHost;
+    private jOTDBnode ControllerPort;
         
     /** 
      * Creates new BBSPanel instance using a given MainFrame instance and 
@@ -236,6 +239,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         this.ParmDBInstrumentText.setText(ParmDBInstrument.limits);
         this.ParmDBLocalSkyText.setText(ParmDBLocalSky.limits);
         this.ParmDBHistoryText.setText(ParmDBHistory.limits);
+        
+        this.ControllerHostText.setText(ControllerHost.limits);
+        this.ControllerPortText.setText(ControllerPort.limits);
     }
     /**
      * Adds the save button on the bottom of the form
@@ -368,6 +374,24 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                     ParmDBHistoryText.setText(aNode.limits);
                 }
             }
+        } else if (parentName.equals("Controller")) {
+            if (aKeyName.equals("Host")) {
+                this.ControllerHostText.setToolTipText(aParam.description);
+                this.ControllerHost=aNode;
+                if (isRef && aParam != null) {
+                    ControllerHostText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    ControllerHostText.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("Port")) {
+                this.ControllerPortText.setToolTipText(aParam.description);
+                this.ControllerPort=aNode;
+                if (isRef && aParam != null) {
+                    ControllerPortText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    ControllerPortText.setText(aNode.limits);
+                }
+            }
         }
     }
     /** 
@@ -449,6 +473,14 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             ParmDBHistory.limits = ParmDBHistoryText.getText();
             saveNode(ParmDBHistory);
         }
+        if (this.ControllerHost != null && !this.ControllerHostText.getText().equals(ControllerHost.limits)) {
+            ControllerHost.limits = ControllerHostText.getText();
+            saveNode(ControllerHost);
+        }        
+        if (this.ControllerPort != null && !this.ControllerPortText.getText().equals(ControllerPort.limits)) {
+            ControllerPort.limits = ControllerPortText.getText();
+            saveNode(ControllerPort);
+        }        
     }    
     
     /** This method is called from within the constructor to
@@ -483,6 +515,11 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         ParmDBHistoryLabel = new javax.swing.JLabel();
         configurationRevertButton = new javax.swing.JButton();
         BBSDatasetDeRefText = new javax.swing.JTextField();
+        ControllerPanel = new javax.swing.JPanel();
+        ControllerHostLabel = new javax.swing.JLabel();
+        ControllerHostText = new javax.swing.JTextField();
+        ControllerPortLabel = new javax.swing.JLabel();
+        ControllerPortText = new javax.swing.JTextField();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
         aBBSStrategyPanel = new nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel();
 
@@ -560,21 +597,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         ParmDBPanel.add(ParmDBLocalSkyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 100, 20));
 
         ParmDBLocalSkyText.setToolTipText("Path to the AIPS++ table containing the local sky model parameters");
-        ParmDBLocalSkyText.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ParmDBLocalSkyTextActionPerformed(evt);
-            }
-        });
-
         ParmDBPanel.add(ParmDBLocalSkyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 50, 220, 20));
 
         ParmDBHistoryText.setToolTipText("Path to the AIPS++ table containing the solve history");
-        ParmDBHistoryText.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ParmDBHistoryTextActionPerformed(evt);
-            }
-        });
-
         ParmDBPanel.add(ParmDBHistoryText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 80, 220, 20));
 
         ParmDBHistoryLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -595,7 +620,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        BBSGlobalSettingsFieldPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 360, 100, -1));
+        BBSGlobalSettingsFieldPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 470, 100, -1));
 
         BBSDatasetDeRefText.setEditable(false);
         BBSDatasetDeRefText.setToolTipText("Dereferenced and actually used value.");
@@ -603,6 +628,25 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         BBSDatasetDeRefText.setMinimumSize(new java.awt.Dimension(440, 19));
         BBSDatasetDeRefText.setPreferredSize(new java.awt.Dimension(440, 19));
         BBSGlobalSettingsFieldPanel.add(BBSDatasetDeRefText, new org.netbeans.lib.awtextra.AbsoluteConstraints(360, 30, 180, -1));
+
+        ControllerPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        ControllerPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Controller"));
+        ControllerHostLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        ControllerHostLabel.setText("Host:");
+        ControllerPanel.add(ControllerHostLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 100, 20));
+
+        ControllerHostText.setToolTipText("Path to the AIPS++ table containing the instrument parameters");
+        ControllerPanel.add(ControllerHostText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 20, 220, 20));
+
+        ControllerPortLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        ControllerPortLabel.setText("Port:");
+        ControllerPanel.add(ControllerPortLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 100, 20));
+
+        ControllerPortText.setToolTipText("Path to the AIPS++ table containing the local sky model parameters");
+        ControllerPanel.add(ControllerPortText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 50, 220, 20));
+
+        BBSGlobalSettingsFieldPanel.add(ControllerPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, 350, 90));
 
         BBSGlobalSettingsPanel.add(BBSGlobalSettingsFieldPanel, java.awt.BorderLayout.CENTER);
 
@@ -621,14 +665,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
-
-    private void ParmDBHistoryTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParmDBHistoryTextActionPerformed
-// TODO add your handling code here:
-    }//GEN-LAST:event_ParmDBHistoryTextActionPerformed
-
-    private void ParmDBLocalSkyTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParmDBLocalSkyTextActionPerformed
-// TODO add your handling code here:
-    }//GEN-LAST:event_ParmDBLocalSkyTextActionPerformed
 
     private void configurationRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationRevertButtonActionPerformed
         this.restoreBBSGlobalSettingsPanel();
@@ -657,6 +693,11 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField BBSDatasetText;
     private javax.swing.JPanel BBSGlobalSettingsFieldPanel;
     private javax.swing.JPanel BBSGlobalSettingsPanel;
+    private javax.swing.JLabel ControllerHostLabel;
+    private javax.swing.JTextField ControllerHostText;
+    private javax.swing.JPanel ControllerPanel;
+    private javax.swing.JLabel ControllerPortLabel;
+    private javax.swing.JTextField ControllerPortText;
     private javax.swing.JLabel ParmDBHistoryLabel;
     private javax.swing.JTextField ParmDBHistoryText;
     private javax.swing.JLabel ParmDBInstrumentLabel;
