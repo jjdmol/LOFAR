@@ -2,6 +2,18 @@
 #
 # $Id$
 #
+
+# -- BBS Controller Settings
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Controller  1.0.0  development 'node constraint'  'BBS Controller'
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  Host                    I    text   -      10    0    '127.0.0.1'               -        'Host on which the Controller resides'
+par  Port                    I    int    -      10    0    '33333'                   -        'Port on which the Controller is listening'
+
 # -- BBS BBDB Settings
 #
 #      name        vers   qual        constr.            descr.
@@ -168,7 +180,8 @@ par  _depends                I    text   -      10    0    '[Flagger]'          
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  BBDB     1.0.0  development 1                  'Blackboard database for BBS'
-uses  ParmDB   1.0.0  development 1                  'ParmDB settings for BBS'
-uses  Strategy 1.0.0  development 1                  'Strategy to be used by BBS'
-uses  Step     1.0.0  development 1                  'Strategy Step Container'
+uses  Controller   1.0.0  development 1                  'BBS Controller'
+uses  BBDB         1.0.0  development 1                  'Blackboard database for BBS'
+uses  ParmDB       1.0.0  development 1                  'ParmDB settings for BBS'
+uses  Strategy     1.0.0  development 1                  'Strategy to be used by BBS'
+uses  Step         1.0.0  development 1                  'Strategy Step Container'
