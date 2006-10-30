@@ -64,7 +64,7 @@ namespace LOFAR
       // user can optionally supply extra text, providing a more detailed
       // description of the actual error.
       BBSStatus(Status sts = OK, 
-		const string& txt = string());
+        const string& txt = string());
 
       // Get the return value.
       Status get() const

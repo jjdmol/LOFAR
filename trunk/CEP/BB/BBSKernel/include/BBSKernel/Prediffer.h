@@ -251,6 +251,7 @@ private:
   void getPhaseRef (double ra, double dec, double startTime);
 
   bool setContext(const Context &context);
+  void updateCorrelationMask(vector<bool> &mask, const vector<string> &requestedCorrelations);
 
   // Get the station info (position and name).
   void fillStations();
@@ -432,7 +433,8 @@ private:
   int          itsNrPert;             //# Nr of perturbed values in result
   ParmDataInfo itsParmData;           //# solvable parm info.
 
-  bool                 itsCorr[4];     //# Correlations to use
+  vector<bool>         itsSelectedCorr;//# Correlations selected in initial data selection (setSelection())
+  vector<bool>         itsCorr;        //# Correlations to use (subset of itsSelectedCorr)
   int                  itsNCorr;       //# Number of correlations (XX, etc.)
   int                  itsNSelCorr;    //# Number of correlations selected
   casa::Vector<double> itsTimes;       //# All times in MS

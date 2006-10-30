@@ -50,7 +50,7 @@ using LOFAR::operator<<;
 Solver::Solver ()
 : itsDoSet  (true)
 {
-  LOG_INFO_STR( "Solver constructor" );
+  LOG_TRACE_FLOW( "Solver constructor" );
 }
 
 Solver::~Solver()
@@ -60,7 +60,7 @@ Solver::~Solver()
 
 void Solver::solve (bool useSVD)
 {
-  LOG_INFO_STR( "solve using file ");
+  //LOG_INFO_STR( "solve using file ");
   ASSERT (!itsDoSet);
   //BBSTest::ScopedTimer timer("S:solver");
   vector<ParmData>& globalParms = itsParmInfo.parms();
@@ -71,14 +71,14 @@ void Solver::solve (bool useSVD)
     // Solve the equation.
     uint rank;
     double fit;
-    LOG_INFO_STR( "Solution before: " << fitObj.solvableValues);
+    LOG_DEBUG_STR( "Solution before: " << fitObj.solvableValues);
     rank = 0;
     ///    BBSTest::Logger::log("Before: ", itsParmInfo);
     bool solFlag = fitObj.fitter.solveLoop (fit, rank,
                         &(fitObj.solvableValues[0]),
                         useSVD);
     ///    BBSTest::Logger::log("After: ", itsParmInfo);
-    LOG_INFO_STR( "Solution after:  " << fitObj.solvableValues);
+    LOG_DEBUG_STR( "Solution after:  " << fitObj.solvableValues);
 
     fitObj.quality.init();
     fitObj.quality.itsSolFlag = solFlag;

@@ -105,6 +105,7 @@
 #include <fstream>
 #include <malloc.h>
 #include <unistd.h>
+#include <algorithm>
 
 #include <BBSKernel/BBSTestLogger.h>
 
@@ -154,22 +155,47 @@ Prediffer::Prediffer(   const string& measurementSet,
     
     // Read meta data (needed to know for instance the number of available
     // correlations).
-    readMeasurementSetMetaData(itsMSName);
+    try
+    {
+        readMeasurementSetMetaData(itsMSName);
+    }
+    catch (AipsError &_ex)
+    {
+        THROW(BBSKernelException, "Failed to read input meta data (AipsError: " << _ex.what() << ")");
+    }
+    
     // Amongst other things, processMSDesc() calls fillStations(), which
-    // sets itsStations which is used later on in this method.
+    // sets itsStations. Eventually it may make sense to remove MSDesc from
+    // the Prediffer.
     processMSDesc(itsSubbandID);
     
-    // Open sky parmdb and instrument parmdb.
-    LOFAR::ParmDB::ParmDBMeta skyParameterDBMeta("aips", skyParameterDB);
-    itsGSMMEP = new LOFAR::ParmDB::ParmDB(skyParameterDBMeta);
-    itsGSMMEPName = skyParameterDBMeta.getTableName();
-    LOG_INFO_STR("Sky model ParmDB: " << itsGSMMEPName);
+    // Open sky parmdb.
+    try
+    {
+        LOFAR::ParmDB::ParmDBMeta skyParameterDBMeta("aips", skyParameterDB);
+        itsGSMMEP = new LOFAR::ParmDB::ParmDB(skyParameterDBMeta);
+        itsGSMMEPName = skyParameterDBMeta.getTableName();
+        LOG_INFO_STR("Sky model ParmDB: " << itsGSMMEPName);
+    }
+    catch (AipsError &_ex)
+    {
+        THROW(BBSKernelException, "Failed to open sky parameter db: " << skyParameterDB << endl << "(AipsError: " << _ex.what() << ")");
+    }
+
+    // Open instrument parmdb.
+    try
+    {
+        LOFAR::ParmDB::ParmDBMeta instrumentParameterDBMeta("aips", instrumentParameterDB);
+        itsMEP = new LOFAR::ParmDB::ParmDB(instrumentParameterDBMeta);
+        itsMEPName = instrumentParameterDBMeta.getTableName();
+        LOG_INFO_STR("Instrument model ParmDB: " << itsMEPName);
+    }
+    catch (AipsError &_ex)
+    {
+        THROW(BBSKernelException, "Failed to open instrument parameter db: " << instrumentParameterDB << endl << "(AipsError: " << _ex.what() << ")");
+    }
     
-    LOFAR::ParmDB::ParmDBMeta instrumentParameterDBMeta("aips", instrumentParameterDB);
-    itsMEP = new LOFAR::ParmDB::ParmDB(instrumentParameterDBMeta);
-    itsMEPName = instrumentParameterDBMeta.getTableName();
-    LOG_INFO_STR("Instrument model ParmDB: " << itsMEPName);
-  
+          
     // Allocate thread private buffers.
 #if defined _OPENMP
     itsNthread = omp_get_max_threads();
@@ -213,6 +239,29 @@ Prediffer::~Prediffer()
 }
 
 
+void Prediffer::updateCorrelationMask(vector<bool> &mask, const vector<string> &requestedCorrelations)
+{
+    if(requestedCorrelations.empty()) return;
+    
+    const vector<string> &availableCorrelations = itsMSDesc.corrTypes;
+    for(int i = 0; i < availableCorrelations.size(); ++i)
+    {
+        if(mask[i])
+        {
+            mask[i] = false;
+            for(int j = 0; j < requestedCorrelations.size(); ++j)
+            {
+                if(requestedCorrelations[j] == availableCorrelations[i])
+                {
+                    mask[i] = true;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+
 bool Prediffer::setSelection(const vector<string> &stations, const Correlation &correlation)
 {    
     // Select correlations.
@@ -221,37 +270,31 @@ bool Prediffer::setSelection(const vector<string> &stations, const Correlation &
     LOG_INFO_STR("Available correlation(s): " << availableCorrelations);
     LOG_INFO_STR("Requested correlation(s): " << requestedCorrelations);
     
-    if(requestedCorrelations.size() == 0)
+    // Initially select all correlations.
+    fill(itsSelectedCorr.begin(), itsSelectedCorr.end(), true);
+    
+    // Deselect all correlations _not_ present in requestedCorrelations.
+    updateCorrelationMask(itsSelectedCorr, requestedCorrelations);
+    
+    // Verify that at least one correlations is still selected.
+    if(count(itsSelectedCorr.begin(), itsSelectedCorr.end(), true) == 0)
     {
-        // Select all available correlations if none are requested explicitly.
-        for(int i = 0; i < availableCorrelations.size(); ++i)
+        LOG_ERROR("At least one correlation should be selected.");
+        return false;
+    }
+    
+    // Output selected correlations (inform the user).
+    ostringstream os;
+    os << "Selected correlation(s):";
+    for(unsigned int i = 0; i < availableCorrelations.size(); ++i)
+    {
+        if(itsSelectedCorr[i])
         {
-            itsCorr[i] = true;
+            os << " " << availableCorrelations[i];
         }
     }
-    else
-    {
-        for(int i = 0; i < availableCorrelations.size(); ++i)
-        {
-            itsCorr[i] = false;
-            for(int j = 0; j < requestedCorrelations.size(); ++j)
-            {
-                if(availableCorrelations[i] == requestedCorrelations[j])
-                {
-                    itsCorr[i] = true;
-                    break;
-                }
-            }
-        }
-        ASSERTSTR(itsCorr[0] || itsCorr[1] || itsCorr[2] || itsCorr[3], "At least one correlation should be selected.");
-    }    
-    
-    LOG_INFO_STR("Selected correlations(s): "
-                    << (itsCorr[0] ? " " + availableCorrelations[0] : "") 
-                    << (itsCorr[1] ? " " + availableCorrelations[1] : "")
-                    << (itsCorr[2] ? " " + availableCorrelations[2] : "")
-                    << (itsCorr[3] ? " " + availableCorrelations[3] : ""));
-    
+    LOG_INFO_STR(os.str());
+        
     // Select stations.
     const vector<string> &availableStations = itsMSDesc.antNames;
     const vector<string> &requestedStations = stations;
@@ -290,6 +333,8 @@ bool Prediffer::setSelection(const vector<string> &stations, const Correlation &
     LOG_INFO_STR("Selected station(s): " << debugSelectedStations);
     
     // Select baselines.
+    LOG_INFO_STR("Requested baselines: " << (correlation.selection == Correlation::AUTO ? "AUTO" : (correlation.selection == Correlation::CROSS ? "CROSS" : (correlation.selection == Correlation::ALL ? "ALL" : "UNKNOWN"))));
+    
     itsSelectedBaselines.clear();    
     for(int i = 0; i < itsMSDesc.ant1.size(); ++i)
     {
@@ -325,40 +370,32 @@ bool Prediffer::setContext(const Context &context)
     // Select correlations.
     const vector<string> &availableCorrelations = itsMSDesc.corrTypes;
     const vector<string> &requestedCorrelations = context.correlation.type;
-    LOG_INFO_STR("Available correlation(s): " << availableCorrelations);
+//    LOG_INFO_STR("Available correlation(s): " << availableCorrelations);
     LOG_INFO_STR("Requested correlation(s): " << requestedCorrelations);
     
-    // Shouldn't we AND the selected correlations with those selected in the strategy?
-    // (This currently _does_ happen for baselines.)
-    if(requestedCorrelations.size() == 0)
+    
+    // Deselect all correlations _not_ present in requestedCorrelations.
+    itsCorr = itsSelectedCorr;
+    updateCorrelationMask(itsCorr, requestedCorrelations);
+    
+    // Verify that at least one correlations is still selected.
+    if(count(itsCorr.begin(), itsCorr.end(), true) == 0)
     {
-        // Select all available correlations if none are requested explicitly.
-        for(int i = 0; i < availableCorrelations.size(); ++i)
+        LOG_ERROR("At least one correlation should be selected.");
+        return false;
+    }
+    
+    // Output selected correlations (inform the user).
+    ostringstream os;
+    os << "Selected correlations(s):";
+    for(unsigned int i = 0; i < availableCorrelations.size(); ++i)
+    {
+        if(itsCorr[i])
         {
-            itsCorr[i] = true;
+            os << " " << availableCorrelations[i];
         }
     }
-    else
-    {
-        for(int i = 0; i < availableCorrelations.size(); ++i)
-        {
-            itsCorr[i] = false;
-            for(int j = 0; j < requestedCorrelations.size(); ++j)
-            {
-                if(availableCorrelations[i] == requestedCorrelations[j])
-                {
-                    itsCorr[i] = true;
-                    break;
-                }
-            }
-        }
-        ASSERTSTR(itsCorr[0] || itsCorr[1] || itsCorr[2] || itsCorr[3], "At least one correlation should be selected.");
-    }    
-    LOG_INFO_STR("Selected correlations(s): "
-                    << (itsCorr[0] ? " " + availableCorrelations[0] : "") 
-                    << (itsCorr[1] ? " " + availableCorrelations[1] : "")
-                    << (itsCorr[2] ? " " + availableCorrelations[2] : "")
-                    << (itsCorr[3] ? " " + availableCorrelations[3] : ""));
+    LOG_INFO_STR(os.str());
     
     // Select baselines.
     itsBLInx.clear();
@@ -526,9 +563,11 @@ bool Prediffer::setWorkDomain(const MeqDomain &domain)
   // Read all parameter values which are part of the work domain.
   readParms();
   // Show frequency domain.
-  LOG_INFO_STR("Workdomain: " << setprecision(10) << itsWorkDomain
-        << " (channels " << itsFirstChan << '-' << itsLastChan
-        << " of " << itsStepFreq << " Hz)" );
+  LOG_INFO_STR("Work domain: " << setprecision(10) << itsWorkDomain
+        << " (channel(s) " << itsFirstChan << " - " << itsLastChan
+        << " of " << itsStepFreq / 1000.0 << " kHz, " << itsNrTimes
+        << " samples(s) of " << setprecision(3) << (endTime - startTime) / itsNrTimes
+        << " s on average)");
 
   return true;
 }
@@ -629,30 +668,39 @@ bool Prediffer::setContext(const GenerateContext &context)
     const vector<string>& unknowns = context.unknowns;
     const vector<string>& excludedUnknowns = context.excludedUnknowns;
     
-    // Convert patterns to regexes.
-    vector<Regex> unknowsRegex;
-    for(unsigned int i = 0; i < unknowns.size(); i++)
+    vector<casa::Regex> unknowsRegex;
+    vector<casa::Regex> excludedUnknownsRegex;
+
+    try
     {
-        unknowsRegex.push_back(Regex::fromPattern(unknowns[i]));
+        // Convert patterns to aips++ regexes.
+        for(unsigned int i = 0; i < unknowns.size(); i++)
+        {
+            unknowsRegex.push_back(casa::Regex::fromPattern(unknowns[i]));
+        }
+    
+        for(unsigned int i = 0; i < excludedUnknowns.size(); i++)
+        {
+            excludedUnknownsRegex.push_back(casa::Regex::fromPattern(excludedUnknowns[i]));
+        }
+    }
+    catch(exception &_ex)
+    {
+        LOG_ERROR_STR("Error parsing Parms/ExclParms regular expression (exception: " << _ex.what() << ")");
+        return false;
     }
     
-    vector<Regex> excludedUnknownsRegex;
-    for(unsigned int i = 0; i < excludedUnknowns.size(); i++)
-    {
-        excludedUnknownsRegex.push_back(Regex::fromPattern(excludedUnknowns[i]));
-    }
-    
-    // Find all parms matching the parms.
-    // Exclude them if matching an excludePattern
-    int nrsolv = 0;
+    // Find all parms matching context.unknowns, exclude those that
+    // match context.excludedUnknowns.
+    int unknowCount = 0;
     for(MeqParmGroup::iterator parameter_it = itsParmGroup.begin();
         parameter_it != itsParmGroup.end();
         ++parameter_it)
     {
         String parameterName(parameter_it->second.getName());
-        
+
         // Loop through all regex-es until a match is found.
-        for(vector<Regex>::iterator included_it = unknowsRegex.begin();
+        for(vector<casa::Regex>::iterator included_it = unknowsRegex.begin();
             included_it != unknowsRegex.end();
             included_it++)
         {
@@ -661,7 +709,7 @@ bool Prediffer::setContext(const GenerateContext &context)
                 bool include = true;
                 
                 // Test if not excluded.
-                for(vector<Regex>::const_iterator excluded_it = excludedUnknownsRegex.begin();
+                for(vector<casa::Regex>::const_iterator excluded_it = excludedUnknownsRegex.begin();
                     excluded_it != excludedUnknownsRegex.end();
                     excluded_it++)
                 {
@@ -676,7 +724,7 @@ bool Prediffer::setContext(const GenerateContext &context)
                 {
                     LOG_TRACE_OBJ_STR("setSolvable: " << parameter_it->second.getName());
                     parameter_it->second.setSolvable(true);
-                    nrsolv++;
+                    unknowCount++;
                 }
                 
                 break;
@@ -684,8 +732,9 @@ bool Prediffer::setContext(const GenerateContext &context)
         }
     }
     
-    if(nrsolv == 0)
+    if(unknowCount == 0)
     {
+	LOG_ERROR("No unknowns selected in this context.");
         return false;
     }
                         
@@ -750,6 +799,14 @@ void Prediffer::makeTree (const vector<string>& modelType,
       }
     }
   }
+  
+  LOG_INFO_STR("Instrument model:"
+    << (asAP ? "" : " REALIMAG") 
+    << (useDipole ? " DIPOLE" : "") 
+    << (useTotalGain ? " TOTALGAIN" : "") 
+    << (usePatchGain ? " PATCHGAIN" : "") 
+    << (useBandpass ? " BANDPASS" : ""));
+  
   // Find all sources and groups to use.
   // Make an LMN node for each source used.
   int nrsrc = sourceNames.size();
@@ -805,7 +862,7 @@ void Prediffer::makeLOFARExprs (const vector<MeqSource*>& sources,
   // Fill the vectors for each station.
   for (int stat=0; stat<nrstat; ++stat) {
     // Do it only if the station is actually used.
-    if (itsStations[stat] != 0) {
+    if (itsSelStations[stat] != 0) {
       // Do pure station parameters only if told so.
       if (useDipole) {
     MeqExpr frot (MeqParmFunklet::create ("frot:" +
@@ -1071,8 +1128,6 @@ void Prediffer::precalcNodes (const MeqRequest& request)
 
 void Prediffer::readMeasurementSetMetaData(const string &fileName)
 {
-  try
-  {
     MeasurementSet ms(fileName);
 
     Path absolutePath = Path(fileName).absoluteName();
@@ -1108,26 +1163,26 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
 
     for(int i = 0; i < spectralWindowCount; i++)
     {
-      Vector<double> channelFrequency = spectralWindowColumns.chanFreq()(i);
-      Vector<double> channelWidth = spectralWindowColumns.chanWidth()(i);
+        Vector<double> channelFrequency = spectralWindowColumns.chanFreq()(i);
+        Vector<double> channelWidth = spectralWindowColumns.chanWidth()(i);
 
-      // So far, only equal frequency spacings are possible.
-      ASSERTSTR(allEQ(channelWidth, channelWidth(0)), "Channels must have equal spacings");
+        // So far, only equal frequency spacings are possible.
+        ASSERTSTR(allEQ(channelWidth, channelWidth(0)), "Channels must have equal spacings");
 
-      int channelCount = channelWidth.nelements();
-      itsMSDesc.nchan[i] = channelCount;
+        int channelCount = channelWidth.nelements();
+        itsMSDesc.nchan[i] = channelCount;
 
-      double step = abs(channelWidth(0));
-      if(channelFrequency(0) > channelFrequency(channelCount - 1))
-      {
-	itsMSDesc.startFreq[i] = channelFrequency(0) + step / 2;
-	itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] - channelCount * step;
-      }
-      else
-      {
-	itsMSDesc.startFreq[i] = channelFrequency(0) - step / 2;
-	itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] + channelCount * step;
-      }
+        double step = abs(channelWidth(0));
+        if(channelFrequency(0) > channelFrequency(channelCount - 1))
+        {
+            itsMSDesc.startFreq[i] = channelFrequency(0) + step / 2;
+            itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] - channelCount * step;
+        }
+        else
+        {
+            itsMSDesc.startFreq[i] = channelFrequency(0) - step / 2;
+            itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] + channelCount * step;
+        }
     }
 
     /*
@@ -1145,13 +1200,13 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
 
     for(uInt i = 0; i < timeCount; i++)
     {
-      itsMSDesc.times[i] = time[timeIndex[i]];
-      itsMSDesc.exposures[i] = exposure[timeIndex[i]];
+        itsMSDesc.times[i] = time[timeIndex[i]];
+        itsMSDesc.exposures[i] = exposure[timeIndex[i]];
     }
 
     /*
       Get phase center as RA and DEC (J2000).
-
+     
       From AIPS++ note 229 (MeasurementSet definition version 2.0):
       ---
       FIELD: Field positions for each source
@@ -1185,7 +1240,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     itsMSDesc.corrTypes.resize(correlationTypeCount);
     for(int i = 0; i < correlationTypeCount; i++)
     {
-      itsMSDesc.corrTypes[i] = Stokes::name(Stokes::type(correlationTypes(i)));
+        itsMSDesc.corrTypes[i] = Stokes::name(Stokes::type(correlationTypes(i)));
     }
 
     /*
@@ -1200,15 +1255,16 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     itsMSDesc.antPos.resize(IPosition(2, 3, antennaCount));
     for(int i = 0; i < antennaCount; i++)
     {
-      itsMSDesc.antNames[i] = antennaColumns.name()(i);
-      MPosition position = antennaColumns.positionMeas()(i);
-      position = MPosition::Convert(position, MPosition::ITRF)();
-      const MVPosition& positionVector = position.getValue();
-      sumVector += positionVector;
-      for(int j = 0; j < 3; j++)
-      {
-	itsMSDesc.antPos(IPosition(2, j, i)) = positionVector(j);
-      }
+        itsMSDesc.antNames[i] = antennaColumns.name()(i);
+        MPosition position = antennaColumns.positionMeas()(i);
+        position = MPosition::Convert(position, MPosition::ITRF)();
+        const MVPosition& positionVector = position.getValue();
+        sumVector += positionVector;
+      
+        for(int j = 0; j < 3; j++)
+        {
+            itsMSDesc.antPos(IPosition(2, j, i)) = positionVector(j);
+        }
     }
 
     /*
@@ -1222,18 +1278,19 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     MVPosition positionVector;
     if(observation.nrow() > 0 && MeasTable::Observatory(position, observationColumns.telescopeName()(0)))
     {
-      position = MPosition::Convert(position, MPosition::ITRF)();
-      positionVector = position.getValue();
+        position = MPosition::Convert(position, MPosition::ITRF)();
+        positionVector = position.getValue();
     }
     else
     {
-      positionVector = sumVector * (1.0 / (double) antennaCount);
+        LOG_WARN("Array position unknown; will use centroid of stations.");
+        positionVector = sumVector * (1.0 / (double) antennaCount);
     }
 
     itsMSDesc.arrayPos.resize(3);
     for(int i = 0; i < 3; i++)
     {
-      itsMSDesc.arrayPos[i] = positionVector(i);
+        itsMSDesc.arrayPos[i] = positionVector(i);
     }
 
     /*
@@ -1241,37 +1298,30 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     */
     if(observation.nrow() > 0)
     {
-      Vector<double> times = observationColumns.timeRange()(0);
-      itsMSDesc.startTime = times(0);
-      itsMSDesc.endTime   = times(1);
+        Vector<double> times = observationColumns.timeRange()(0);
+        itsMSDesc.startTime  = times(0);
+        itsMSDesc.endTime    = times(1);
     }
     else
     {
-      itsMSDesc.startTime = 0.0;
-      itsMSDesc.endTime   = 0.0;
+        itsMSDesc.startTime = 0.0;
+        itsMSDesc.endTime   = 0.0;
     }
 
     if(itsMSDesc.startTime >= itsMSDesc.endTime)
     {
-      /*
-	Invalid start / end times; derive from times and interval.
-	Difference between interval and exposure is startup time which
-	is taken into account.
-      */
-      if(timeCount > 0)
-      {
-	ROScalarColumn<double> interval(ms, "INTERVAL");
-	itsMSDesc.startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2 + (interval(0) - itsMSDesc.exposures[0]);
-	itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
-      }
+        /*
+          Invalid start / end times; derive from times and interval.
+          Difference between interval and exposure is startup time which
+          is taken into account.
+        */
+        if(timeCount > 0)
+        {
+            ROScalarColumn<double> interval(ms, "INTERVAL");
+            itsMSDesc.startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2 + (interval(0) - itsMSDesc.exposures[0]);
+            itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
+        }
     }
-  }
-
-  catch (AipsError& e)
-  {
-    THROW(BBSKernelException, "AipsError: " << e.what());
-  }
-  //    cout << itsMSDesc;
 }
 
 void Prediffer::processMSDesc (uint ddid)
@@ -1279,6 +1329,8 @@ void Prediffer::processMSDesc (uint ddid)
   ASSERT (ddid < itsMSDesc.nchan.size());
   // Set the observation info.
   itsNCorr     = itsMSDesc.corrTypes.size();
+  itsSelectedCorr.resize(itsNCorr);
+  itsCorr.resize(itsNCorr);
   itsNrChan    = itsMSDesc.nchan[ddid];
   itsStartFreq = itsMSDesc.startFreq[ddid];
   itsEndFreq   = itsMSDesc.endFreq[ddid];
@@ -2156,6 +2208,7 @@ void Prediffer::predictBL (int, void*,
     jresult.getResult21().getValue().dcomplexStorage(predReal[2], predImag[2]);
     jresult.getResult22().getValue().dcomplexStorage(predReal[3], predImag[3]);
   }
+  
   // Loop through the times and correlations.
   for (int tim=0; tim<nrtime; tim++) {
     fcomplex* data = dataOut;
