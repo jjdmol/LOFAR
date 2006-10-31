@@ -144,6 +144,8 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }else if (LofarUtils.keyName(aNode.name).equals("BBDB")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Controller")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 }else if (LofarUtils.keyName(aNode.name).equals("Strategy")) {
                     //load the BBS Strategy panel using the strategy node found.
                     this.aBBSStrategyPanel.setMainFrame(this.itsMainFrame);
