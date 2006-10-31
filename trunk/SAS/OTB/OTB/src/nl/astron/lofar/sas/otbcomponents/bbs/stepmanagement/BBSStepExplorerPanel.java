@@ -1790,7 +1790,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }//GEN-LAST:event_integrationFrequencyTextKeyReleased
     
     private void stepExplorerInstrumentModelListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerInstrumentModelListValueChanged
-        this.stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
+        int[] selectedIndices = ((JList)evt.getSource()).getSelectedIndices();
+        if(selectedIndices.length>0){
+            this.deleteInstrumentButton.setEnabled(true);
+        }else{
+            this.deleteInstrumentButton.setEnabled(false);
+        }
     }//GEN-LAST:event_stepExplorerInstrumentModelListValueChanged
                     
     private void stepExplorerNSourcesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stepExplorerNSourcesListValueChanged
