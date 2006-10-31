@@ -8,7 +8,6 @@
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   Controller  1.0.0  development 'node constraint'  'BBS Controller'
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Host                    I    text   -      10    0    '127.0.0.1'               -        'Host on which the Controller resides'
@@ -19,10 +18,8 @@ par  Port                    I    int    -      10    0    '33333'              
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   BBDB     1.0.0  development 'node constraint'  'BBS Blackboard Database'
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname               I    text   -      10    0    'lioff002'                  -        'host on which BBS will be started, value is determined by the scheduler'
 par  Host                    I    text   -      10    0    '127.0.0.1'               -        'Host on which the Blackboard database resides'
 par  Port                    I    int    -      10    0    '12345'                   -        'Port on which the Blackboard database is listening'
 par  DBName                  I    text   -      10    0    'blackboard'              -        'Database name with the Black Board tables'
@@ -34,7 +31,6 @@ par  PassWord                I    text   -      10    0    ''                   
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   ParmDB     1.0.0  development 'node constraint'  'BBS ParmDB identifiers'
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Instrument              I    text   -      10    0    'test.mep'                -        'name of the AIPS++ table containing the instrument parameters'
@@ -46,7 +42,6 @@ par  History                 I    text   -      10    0    'testhistory.mep'    
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   Correlation     1.0.0  development 'node constraint'  'BBS Correlation settings'
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Selection               I    text   -      10    0    'ALL'                -        'one of AUTO,CROSS,ALL'
@@ -57,7 +52,6 @@ par  Type                    I    text   -      10    0    '["XX","YY"]'        
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   WorkDomainSize     1.0.0  development 'node constraint'  'BBS WorkDomainSize settings'
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Freq                    I    dbl    Hz     10    0    '1e25'                   -        'work domain size frequency'
@@ -68,7 +62,6 @@ par  Time                    I    dbl    -      10    0    '1e25'               
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   DomainSize     1.0.0  development 'node constraint'  'BBS Step Operation DomainSize settings'
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Freq                    I    dbl    Hz     10    0    '1e25'                   -        'domain size frequency'
@@ -81,7 +74,6 @@ par  Time                    I    dbl    -      10    0    '1e25'               
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   Integration     1.0.0  development 'node constraint'  'BBS Integration settings'
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Freq                    I    dbl    Hz     10    0    '1.0'                  -        'integration interval frequency'
@@ -92,13 +84,11 @@ par  Time                    I    dbl    -      10    0    '0.1'                
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   Strategy     1.0.0  development 'node constraint'  'BBS Strategy'
-
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Steps                   I    text   -      10    0    '[]'                      -        'The steps contained in this BBS Strategy'
 par  Stations                I    text   -      10    0    '[]'                      -        'Identifiers/names of the stations to be used'
 par  InputData               I    text   -      10    0    'DATA'                    -        'Measurement Set input data column'
-
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  Correlation     1.0.0  development 1                  'BBS Correlation for this strategy'
@@ -110,7 +100,6 @@ uses  Integration     1.0.0  development 1                  'BBS Integration att
 #      name           vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   Baselines      1.0.0  development 'node constraint'  'Template BBS Step Baselines'
-
 #    name                   dir. type   unit   prun. vm   value              constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par    Station1             I    text   -      10    0    '[]'               -        'The stations to be used in the baselines'
@@ -121,7 +110,6 @@ par    Station2             I    text   -      10    0    '[]'               -  
 #      name           vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   Solve          1.0.0  development 'node constraint'  'Template BBS Step Solve Operation'
-
 #    name                   dir. type   unit   prun. vm   value              constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par    MaxIter              I    int    -      10    0    '5'               -        'Maximum number of iterations'
@@ -129,7 +117,6 @@ par    Epsilon              I    dbl    -      10    0    '1e-6'             -  
 par    MinConverged         I    dbl    -      10    0    '100.0'             -        'Fraction that must have converged'
 par    Parms                I    text   -      10    0    '[]'               -        'Names of solvable parameters'
 par    ExclParms            I    text   -      10    0    '[]'               -        'Parameters excluded from solve'
-
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  DomainSize   1.0.0  development 1                  'BBS Work Domain Size for this strategy'
@@ -139,7 +126,6 @@ uses  DomainSize   1.0.0  development 1                  'BBS Work Domain Size f
 #      name           vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   DefaultBBSStep 1.0.0  development 'node constraint'  'Template BBS Step'
-
 #    name                   dir. type   unit   prun. vm   value              constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par    Steps                I    text   -      10    0    '[]'               -        'The steps contained in this BBS Step'
@@ -148,7 +134,6 @@ par    ExtraSources         I    text   -      10    0    '[]'               -  
 par    InstrumentModel      I    text   -      10    0    '[]'               -        'Instrument Model'
 par    OutputData           I    text   -      10    0    'CORRECTED_DATA'   -        'OutputData Column'
 par    Operation            I    text   -      10    0    ''                 -        'Operation to be performed in this BBS Step'
-
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  Baselines       1.0.0  development 1                  'BBS Baseline settings for this step'
@@ -163,25 +148,44 @@ uses  Solve           1.0.0  development 1                  'BBS Solve Operation
 node   Step            1.0.0  development 'node constraint'  'BBS Step Container'
 uses   DefaultBBSStep  1.0.0  development 1                  'BBS Template Step'
 
-# --BBS Global--
+# -- BBSKernel
 #
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   BBS        	 1.0.0  development 'node constraint'  "BBS"
-
-#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  DataSet                 I    text   -      10    0    >>Observation.MSNameMask      -        'Name of the measurement set'
-par  _nodes                  I    text   -      10    0    '[]'                          -        'Nodes used by the process'
-par  _startstopType          I    text   -      10    0    cmdline,mpirun,bgl            -        'Method of starting the proces'
-par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
-par  _hostname               I    text   -      10    0    -                             -        'The hostname of the machine to start the proces on'
-par  _depends                I    text   -      10    0    '[Flagger]'                   -        'The processes that must be finished before this process can start'
-
-#      name        vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
+node  BBSKernel    1.0.0  development 'node constraint'  "BBSKernel"
 uses  Controller   1.0.0  development 1                  'BBS Controller'
 uses  BBDB         1.0.0  development 1                  'Blackboard database for BBS'
 uses  ParmDB       1.0.0  development 1                  'ParmDB settings for BBS'
 uses  Strategy     1.0.0  development 1                  'Strategy to be used by BBS'
 uses  Step         1.0.0  development 1                  'Strategy Step Container'
+#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
+par  _startstopType          I    text   -      10    0    cmdline,mpirun,bgl            -        'Method of starting the proces'
+par  _node                   I    text   -      10    0    '[]'                          -        'Nodes used by the process'
+
+# -- BBSControl
+#
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  BBSControl   1.0.0  development 'node constraint'  "BBSControl"
+uses  Controller   1.0.0  development 1                  'BBS Controller'
+#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
+par  _startstopType          I    text   -      10    0    cmdline,mpirun,bgl            -        'Method of starting the proces'
+par  _node                   I    text   -      10    0    '[]'                          -        'Nodes used by the process'
+
+# --BBS Global--
+#
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  BBS      	    1.0.0  development 		'node constraint'  "BBS"
+uses  BBSKernel     1.0.0  development 		1   			   "BBSKernel"
+uses  BBSControl    1.0.0  development 		1   			   "BBSControl"
+#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  DataSet                 I    text   -      10    0    >>Observation.MSNameMask      -        'Name of the measurement set'
+par  _procs                  I    text   -      10    0    '[BBSKernel,BBSControl]'      -        'The processes the application consists of'
+par  _depends                I    text   -      10    0    '[Flagger]'                   -        'The application that must be finished before this appl. can start'
+
