@@ -71,7 +71,7 @@ public class ConfigPanelHelper {
         //BBS
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSPanel");
-        itsPanelMap.put("BBS",itsVector);
+        itsPanelMap.put("BBSControl",itsVector);
         
         //BBS Strategy
         itsVector = new Vector<String>();
