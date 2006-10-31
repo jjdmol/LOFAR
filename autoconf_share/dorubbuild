@@ -42,6 +42,8 @@ conf=$1
 shift
 clean=$1
 shift
+bldtest=$1
+shift
 check=$1
 shift
 checktool=$1
@@ -103,11 +105,14 @@ if [ $clean = 1 ]; then
 fi
 if [ $buildmake = 1 ]; then
   mainmake="date && make $kstr $jobsopt "
+  if [ $bldtest = 1 ]; then
+    postmake="&& (cd test && make test;)"
+  fi
   if [ $check = 1 ]; then
     if [ "$checktool" = "" ]; then
-      postmake="&& make $kstr check "
+      postmake="$postmake && make $kstr check "
     else
-      postmake="&& make $kstr CHECKTOOL='$checktool' check "
+      postmake="$postmake && make $kstr CHECKTOOL='$checktool' check "
     fi
   fi
   if [ $install = 1 ]; then

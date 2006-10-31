@@ -74,6 +74,7 @@ conf=0
 confopt=
 clean=0
 distclean=0
+bldtest=0
 check=0
 checktool=
 install=2
@@ -169,6 +170,7 @@ do
     variants=
     conf=0
     clean=0
+    bldtest=0
     check=0
     if [ $install = 1 ]; then
       install=0
@@ -218,6 +220,12 @@ do
   elif [ "$1" = -nodistclean ]; then
     shift
     distclean=0
+  elif [ "$1" = -test ]; then
+    shift
+    bldtest=1
+  elif [ "$1" = -notest ]; then
+    shift
+    bldtest=0
   elif [ "$1" = -check ]; then
     shift
     check=1
@@ -324,7 +332,7 @@ if [ $help = 1 ]; then
   echo ' rub [-cvs cvs-command] [-update] [-updq string] [-r<cvstag>]'
   echo '     [-recur[sive]] [-release=option] [-build variants]] [-skipbuilt]'
   echo '     [-system] [-boot] [-conf] [-confopt string] [-k] [-j<option>]'
-  echo '     [-[dist]clean] [-make] [-check] [-checktool tool] [-install]'
+  echo '     [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-install]'
   echo '     [-distcheck] [-rpm]'
   echo '     package1 [-v<version>] [...]'
   echo ''
@@ -399,6 +407,8 @@ if [ $help = 1 ]; then
   echo '                    -nomake is more useful; it skips doing make and'
   echo '                    implies -noclean and -noinstall.'
   echo '                    Default is -make.'
+  echo '  -test             indicates that a make test should be done.'
+  echo '                    Default is -notest.'
   echo '  -check            indicates that a make check should be done.'
   echo '                    Default is -nocheck.'
   echo '  -checktool string Optional checking tool to use with make check.'
@@ -434,9 +444,9 @@ if [ $pkgfound != 1 ]; then
   echo "  Use 'rub -h' to get a description"
   exit 1
 fi
-if test $install = 1  -o  $clean != 0  -o  $check = 1  -o  $conf = 1  -o  $distcheck = 1  -o  $rpm = 1; then
+if test $install = 1  -o  $clean != 0  -o  $check = 1  -o  $conf = 1  -o  $bldtest = 1  -o  $distcheck = 1  -o  $rpm = 1; then
   if [ "$variants" = "" ]; then
-    echo "Error: -build variant is needed with -conf,-(dist)clean,-check,-install,-distcheck,-rpm"
+    echo "Error: -build variant is needed with -conf,-(dist)clean,-test,-check,-install,-distcheck,-rpm"
     exit 1
   fi
 fi
@@ -699,6 +709,10 @@ if [ $buildmake = 0 ]; then
   bopt="$bopt -nomake"
 else
   echo "  Packages will be built"
+  if [ $bldtest = 1 ]; then
+    bopt="$bopt -test"
+    echo "  Packages test programs will be built"
+  fi
   if [ $check = 1 ]; then
     if [ "$checktool" = "" ]; then
       bopt="$bopt -check"

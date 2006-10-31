@@ -42,6 +42,7 @@ conf=0
 confopt=
 clean=0
 distclean=0
+bldtest=0
 check=0
 checktool=
 install=2
@@ -91,6 +92,7 @@ do
     variants=
     conf=0
     clean=0
+    bldtest=0
     check=0
     if [ $install = 1 ]; then
       install=0
@@ -126,6 +128,12 @@ do
   elif [ "$1" = -nodistclean ]; then
     shift
     distclean=0
+  elif [ "$1" = -test ]; then
+    shift
+    bldtest=1
+  elif [ "$1" = -notest ]; then
+    shift
+    bldtest=0
   elif [ "$1" = -check ]; then
     shift
     check=1
@@ -198,7 +206,7 @@ if test $# -lt 1; then
   echo 'Run as:'
   echo ' rubbuild [-srcdir] [-build variant] [-skipbuilt] [-bg]'
   echo '          [-conf] [-confopt string] [-k] [-j<option>]'
-  echo '          [-[dist]clean] [-make] [-check] [-checktool tool] [-install]'
+  echo '          [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-install]'
   echo '          [-distcheck] [-rpm]'
   echo '          package1 ...'
   exit 1
@@ -269,8 +277,8 @@ fi
 # dorubbuild writes the build output to a log file.
 if [ $bg = 1 ]; then
   echo "Building packages on `uname -n` in $buildvarpr in the background"
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$clean" "$check" "$checktool" "$install" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$clean" "$bldtest" "$check" "$checktool" "$install" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
 else
   echo "Building packages in $buildvarpr ..."
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$clean" "$check" "$checktool" "$install" "$distcheck" "$rpm" $pkgs
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$clean" "$bldtest" "$check" "$checktool" "$install" "$distcheck" "$rpm" $pkgs
 fi
