@@ -76,17 +76,6 @@ public class ResultPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
         itsPanelMap.put("ParmDBValues",itsVector);
         
-        //BBS
-        itsVector = new Vector<String>();
-        addBasePanels();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
-        itsPanelMap.put("BBS",itsVector);
-        
-        //OLAP
-        itsVector = new Vector<String>();
-        addBasePanels();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
-        itsPanelMap.put("OLAP",itsVector);
     }
     
     
@@ -95,6 +84,8 @@ public class ResultPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
         //generic parameter panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
+        //generic parset view panel
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
         //generic logging panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.LogParamPanel");
     }

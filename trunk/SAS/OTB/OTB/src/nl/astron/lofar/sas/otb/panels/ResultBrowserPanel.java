@@ -231,7 +231,8 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             String aPanelName= it.next().toString();
             // Check if the wanted panel is the Node or Parameter Panel. if so only add depending on leaf
             if ((aPanelName.contains("NodeViewPanel") && aNode.isLeaf()) |
-                    (aPanelName.contains("ParameterViewPanel") && !aNode.isLeaf())) {
+                    (aPanelName.contains("ParameterViewPanel") && !aNode.isLeaf())|
+                    (aPanelName.contains("ParSetViewPanel") && aNode.isLeaf())) {
                 skip = true;
             }
             if (!skip) {
