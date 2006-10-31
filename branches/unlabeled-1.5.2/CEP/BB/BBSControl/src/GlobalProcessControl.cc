@@ -147,7 +147,7 @@ namespace LOFAR
 
 	// If we have not sent the strategy yet. We should do so now.
 	if (!itsStrategySent) {
-	  return sendObject(*itsStrategy);
+	  return itsStrategySent = sendObject(*itsStrategy);
 	}
 	// Else, we should send the next step, unless we're at the end of the
 	// vector of steps.
