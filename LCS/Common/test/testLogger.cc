@@ -52,7 +52,7 @@ public:
 	
 private:
 	int		myIntVar;
-	ALLOC_TRACER_CONTEXT;				// attach seperate trace logger to this class
+	ALLOC_TRACER_CONTEXT				// attach seperate trace logger to this class
 
 };
 // create a logger 'my_test_class' and attach it to myTestclass.
@@ -68,7 +68,7 @@ public:
 		LOG_TRACE_FLOW ("This message is also shown");
 	}
 private:
-	ALLOC_TRACER_CONTEXT;
+	ALLOC_TRACER_CONTEXT
 };
 #ifdef ENABLE_TRACER
 INIT_TRACER_CONTEXT(foo, "foo");
@@ -105,7 +105,7 @@ public:
 	};
 
 private:
-	ALLOC_TRACER_CONTEXT;
+	ALLOC_TRACER_CONTEXT
 };
 
 #ifdef ENABLE_TRACER
