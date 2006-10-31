@@ -29,6 +29,8 @@
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 
+#ifndef USE_NOSOCKETS
+
 #if defined(__sun)
 #include <arpa/nameser.h>
 #include <netinet/in.h>
@@ -38,8 +40,12 @@ typedef	int	socklen_t;
 #endif
 
 #include <resolv.h>
-#include <errno.h>
 #include <sys/un.h>
+
+#endif
+
+#include <errno.h>
+
 
 namespace LOFAR
 {
