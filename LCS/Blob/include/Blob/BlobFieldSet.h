@@ -199,7 +199,7 @@ namespace LOFAR {
       uint                        itsNormalSize;
       std::vector<BlobFieldBase*> itsFields;
       NameMap                     itsNameMap;
-      ALLOC_TRACER_CONTEXT;
+      ALLOC_TRACER_CONTEXT
     };
 
 // </group>
