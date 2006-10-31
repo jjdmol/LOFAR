@@ -172,6 +172,7 @@ uses  Strategy     1.0.0  development 1                  'Strategy to be used by
 uses  Step         1.0.0  development 1                  'Strategy Step Container'
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
+par  DataSet                 I    text   -      10    0    >>Observation.MSNameMask      -        'Name of the measurement set'
 par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
 par  _startstopType          I    text   -      10    0    cmdline,mpirun,bgl            -        'Method of starting the proces'
 par  _node                   I    text   -      10    0    '[]'                          -        'Nodes used by the process'
@@ -185,7 +186,6 @@ uses  BBSKernel     1.0.0  development 		1   			   "BBSKernel"
 uses  BBSControl    1.0.0  development 		1   			   "BBSControl"
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  DataSet                 I    text   -      10    0    >>Observation.MSNameMask      -        'Name of the measurement set'
 par  _procs                  I    text   -      10    0    '[BBSKernel,BBSControl]'      -        'The processes the application consists of'
 par  _depends                I    text   -      10    0    '[Flagger]'                   -        'The application that must be finished before this appl. can start'
 
