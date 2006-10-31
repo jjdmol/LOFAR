@@ -137,7 +137,7 @@ namespace LOFAR
     template<typename Derived>
       bool registerClass(TypeId id)
     {
-      return itsCreatorMap.insert(value_type(id, &doCreate<Derived>)).second;
+      return itsCreatorMap.insert(value_type(id, static_cast<CreatorFunc>(&doCreate<Derived>))).second;
     }
   
     // Unregister the class identified by \a id. The class identified by \a id
