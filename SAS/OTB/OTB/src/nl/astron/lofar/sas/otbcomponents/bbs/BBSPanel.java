@@ -292,7 +292,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         String aKeyName = LofarUtils.keyName(aNode.name);
         String parentName = String.valueOf(parent.name);
         
-        if(parentName.equals("BBS")){
+        if(parentName.equals("BBSControl")){
             if (aKeyName.equals("DataSet")) {
                 this.BBSDatasetText.setToolTipText(aParam.description);
                 this.dataSet=aNode;
