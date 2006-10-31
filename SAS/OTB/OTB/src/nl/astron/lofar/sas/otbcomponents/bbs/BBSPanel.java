@@ -638,14 +638,14 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         ControllerHostLabel.setText("Host:");
         ControllerPanel.add(ControllerHostLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 100, 20));
 
-        ControllerHostText.setToolTipText("Path to the AIPS++ table containing the instrument parameters");
+        ControllerHostText.setToolTipText("Hostname or IP Address of the host on which the black board database and the parameter databases reside");
         ControllerPanel.add(ControllerHostText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 20, 220, 20));
 
         ControllerPortLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         ControllerPortLabel.setText("Port:");
         ControllerPanel.add(ControllerPortLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 100, 20));
 
-        ControllerPortText.setToolTipText("Path to the AIPS++ table containing the local sky model parameters");
+        ControllerPortText.setToolTipText("Port number on which the controller server is listening");
         ControllerPanel.add(ControllerPortText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 50, 220, 20));
 
         BBSGlobalSettingsFieldPanel.add(ControllerPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, 350, 90));

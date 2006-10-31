@@ -366,7 +366,7 @@
                     </Component>
                     <Component class="javax.swing.JTextField" name="ControllerHostText">
                       <Properties>
-                        <Property name="toolTipText" type="java.lang.String" value="Path to the AIPS++ table containing the instrument parameters"/>
+                        <Property name="toolTipText" type="java.lang.String" value="Hostname or IP Address of the host on which the black board database and the parameter databases reside"/>
                       </Properties>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
@@ -387,7 +387,7 @@
                     </Component>
                     <Component class="javax.swing.JTextField" name="ControllerPortText">
                       <Properties>
-                        <Property name="toolTipText" type="java.lang.String" value="Path to the AIPS++ table containing the local sky model parameters"/>
+                        <Property name="toolTipText" type="java.lang.String" value="Port number on which the controller server is listening"/>
                       </Properties>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
