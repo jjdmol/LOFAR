@@ -3,25 +3,10 @@
 # $Id$
 #
 
-# -- ACprocess --
-#      name        vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  ACCprocess   1.0.0  development 'node constraint'  "Definition of an ACC process"
-
-#    name              dir. type    unit   prun. vm   value     constr.  descr.
-#----------------------------------------------------------------------------------------------------------------------------------
-par  name              I    text    -      10    0    -                   -        "Logical name of the process"
-par  count             I    int     -      10    0    -                   -        "Number of processes to start"
-par  startstopType     I    text    -      10    0    cmdline,mpirun,bgl  -        "Method of starting the proces"
-par  executable        I    text    -      10    0    -                   -        "The name of the executable to start"
-par  hostname          I    text    -      10    0    -                   -        "The hostname of the machine to start the proces on"
-
-
 # -- ApplCtrl --
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node  ApplCtrl     1.0.0  development 'node constraint'  "The 'ACC' ApplicationController"
-uses  ACCprocess   1.0.0  development 1..100             "Definition of an ACC process"
 
 #    name                   dir. type    unit   prun. vm   value     constr.  descr.
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -36,8 +21,8 @@ par  timeout_snapshot       I    text    period 10    0    30        -        "M
 par  timeout_reinit         I    text    period 10    0    30        -        "Max time the reinit phase of the processes may take"
 par  timeout_info           I    text    period 10    0    30        -        "Max time it may take to give an answer"
 par  timeout_quit           I    text    period 10    0    60        -        "Max time the processes may take to quit"
-par  timeout_kill           I    text    period 10    0    60        -        "Delay after the quit command before the remainng processes are killed""
+par  timeout_kill           I    text    period 10    0    60        -        "Delay after the quit command before the remaining processes are killed""
 
-par  application            I    text    -      10    0    '[]'      -        "List of the (tree)nodes (processes) that must be controlled"
+par  application            I    text    -      10    0    '[]'      -        "List of the applications that must be controlled"
 par  resultfile             I    text    -      10    0    ../log/ACC.result  -  "The file the results should be written in."
 
