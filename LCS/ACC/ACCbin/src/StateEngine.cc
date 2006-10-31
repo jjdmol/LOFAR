@@ -85,18 +85,18 @@ StateEngine::~StateEngine()
 void StateEngine::init(const ParameterSet*	aPS)
 {
 	// (constant) timer values for the states
-	StateLifeTime[StateCreatePSubset]= aPS->getTime("AC.timeout_createsubsets");
-    StateLifeTime[StateStartupAppl]	 = aPS->getTime("AC.timeout_startup");
-	StateLifeTime[StateDefineCmd]	 = aPS->getTime("AC.timeout_define");
-	StateLifeTime[StateInitCmd]		 = aPS->getTime("AC.timeout_init");
-    StateLifeTime[StateRunCmd]		 = aPS->getTime("AC.timeout_run");
-	StateLifeTime[StatePauseCmd]	 = aPS->getTime("AC.timeout_pause");
-	StateLifeTime[StateRecoverCmd]	 = aPS->getTime("AC.timeout_recover");
-	StateLifeTime[StateSnapshotCmd]	 = aPS->getTime("AC.timeout_snapshot");
-	StateLifeTime[StateReinitCmd]	 = aPS->getTime("AC.timeout_reinit");
-	StateLifeTime[StateInfoCmd]		 = aPS->getTime("AC.timeout_info");
-	StateLifeTime[StateQuitCmd]		 = aPS->getTime("AC.timeout_quit");
-	StateLifeTime[StateKillAppl]	 = aPS->getTime("AC.timeout_kill");
+	StateLifeTime[StateCreatePSubset]= aPS->getTime("ApplCtrl.timeout_createsubsets");
+    StateLifeTime[StateStartupAppl]	 = aPS->getTime("ApplCtrl.timeout_startup");
+	StateLifeTime[StateDefineCmd]	 = aPS->getTime("ApplCtrl.timeout_define");
+	StateLifeTime[StateInitCmd]		 = aPS->getTime("ApplCtrl.timeout_init");
+    StateLifeTime[StateRunCmd]		 = aPS->getTime("ApplCtrl.timeout_run");
+	StateLifeTime[StatePauseCmd]	 = aPS->getTime("ApplCtrl.timeout_pause");
+	StateLifeTime[StateRecoverCmd]	 = aPS->getTime("ApplCtrl.timeout_recover");
+	StateLifeTime[StateSnapshotCmd]	 = aPS->getTime("ApplCtrl.timeout_snapshot");
+	StateLifeTime[StateReinitCmd]	 = aPS->getTime("ApplCtrl.timeout_reinit");
+	StateLifeTime[StateInfoCmd]		 = aPS->getTime("ApplCtrl.timeout_info");
+	StateLifeTime[StateQuitCmd]		 = aPS->getTime("ApplCtrl.timeout_quit");
+	StateLifeTime[StateKillAppl]	 = aPS->getTime("ApplCtrl.timeout_kill");
 }
 
 void StateEngine::reset()
