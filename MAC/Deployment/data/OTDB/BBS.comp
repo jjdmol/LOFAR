@@ -154,10 +154,6 @@ uses   DefaultBBSStep  1.0.0  development 1                  'BBS Template Step'
 #--------------------------------------------------------------------------------------------------------
 node  BBSKernel    1.0.0  development 'node constraint'  "BBSKernel"
 uses  Controller   1.0.0  development 1                  'BBS Controller'
-uses  BBDB         1.0.0  development 1                  'Blackboard database for BBS'
-uses  ParmDB       1.0.0  development 1                  'ParmDB settings for BBS'
-uses  Strategy     1.0.0  development 1                  'Strategy to be used by BBS'
-uses  Step         1.0.0  development 1                  'Strategy Step Container'
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
@@ -170,6 +166,10 @@ par  _node                   I    text   -      10    0    '[]'                 
 #--------------------------------------------------------------------------------------------------------
 node  BBSControl   1.0.0  development 'node constraint'  "BBSControl"
 uses  Controller   1.0.0  development 1                  'BBS Controller'
+uses  BBDB         1.0.0  development 1                  'Blackboard database for BBS'
+uses  ParmDB       1.0.0  development 1                  'ParmDB settings for BBS'
+uses  Strategy     1.0.0  development 1                  'Strategy to be used by BBS'
+uses  Step         1.0.0  development 1                  'Strategy Step Container'
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
