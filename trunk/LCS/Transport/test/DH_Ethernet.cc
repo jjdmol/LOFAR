@@ -20,6 +20,7 @@
 //
 //  $Id$
 
+#ifndef USE_NOSOCKETS
 
 #include "DH_Ethernet.h"
 
@@ -89,3 +90,5 @@ DH_Ethernet::BufferType& DH_Ethernet::getBufferElement(unsigned int element)
 }
 
 } // end namespace
+
+#endif

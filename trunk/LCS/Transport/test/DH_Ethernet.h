@@ -23,6 +23,8 @@
 #ifndef LIBTRANSPORT_TEST_DH_ETHERNET_H
 #define LIBTRANSPORT_TEST_DH_ETHERNET_H
 
+#ifndef USE_NOSOCKETS
+
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Transport/DataHolder.h>
@@ -82,5 +84,7 @@ inline const DH_Ethernet::BufferType* DH_Ethernet::getBuffer() const
   { return itsBuffer; }
 
 }
+
+#endif
 
 #endif 
