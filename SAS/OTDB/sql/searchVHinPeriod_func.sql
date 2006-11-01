@@ -38,8 +38,8 @@ CREATE OR REPLACE FUNCTION searchVHinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTA
   RETURNS SETOF OTDBvalue AS '
 	DECLARE
 		vRecord		RECORD;
-		vFullname	VARCHAR(120);
-		vNodename	VARCHAR(120);
+		vFullname	VARCHAR(150);
+		vNodename	VARCHAR(150);
 		vLeaf		VIChierarchy.leaf%TYPE;
 		vParamRefID	VIChierarchy.paramRefID%TYPE;
 		vQuery		TEXT;

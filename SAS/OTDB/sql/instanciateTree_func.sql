@@ -43,7 +43,7 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 		vParamName	VARCHAR(200);
 		vRemainder	VARCHAR(200);
 		vOrgArray	VARCHAR(200);
-		vElem		VARCHAR(100);
+		vElem		VARCHAR(150);
 		vAnswer		TEXT;
 		vIsArray	BOOLEAN;
 		vSize		INTEGER;

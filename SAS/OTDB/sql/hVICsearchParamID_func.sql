@@ -34,15 +34,15 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION hVICsearchParamID(VARCHAR(120))
+CREATE OR REPLACE FUNCTION hVICsearchParamID(VARCHAR(150))
   RETURNS INT4 AS '
 	DECLARE
 	  vDotPos		INT4;
 	  vFieldnr		INT4;
 	  vNodeID		INT4;
 	  vParentID		INT4;
-	  vNodename		VARCHAR(40);
-	  vKey			VARCHAR(120);
+	  vNodename		VARCHAR(150);
+	  vKey			VARCHAR(150);
 
 	BEGIN
 	  vKey      := $1;

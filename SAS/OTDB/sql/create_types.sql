@@ -98,7 +98,7 @@ CREATE TYPE OTDBparamDef AS (
 
 CREATE TYPE OTDBvalue AS (
 	paramID			INT4,
-	name			VARCHAR(120),
+	name			VARCHAR(150),
 	value			TEXT,
 	time			timestamp(0)
 );

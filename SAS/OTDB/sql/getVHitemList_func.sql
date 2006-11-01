@@ -38,8 +38,8 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
   RETURNS SETOF OTDBnode AS '
 	DECLARE
 		vRecord		RECORD;
-		vFullname	VARCHAR(120);
-		vQuery		VARCHAR(100);
+		vFullname	VARCHAR(250);
+		vQuery		VARCHAR(250);
 		vLeaf		VIChierarchy.leaf%TYPE;
 		vParamRefID	VIChierarchy.paramRefID%TYPE;
 		i			INTEGER;

@@ -38,8 +38,8 @@ CREATE OR REPLACE FUNCTION searchPICinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMEST
   RETURNS SETOF OTDBvalue AS '
 	DECLARE
 		vRecord		RECORD;
-		vFullname	VARCHAR(120);
-		vNodename	VARCHAR(120);
+		vFullname	VARCHAR(150);
+		vNodename	VARCHAR(150);
 		vLeaf		PIChierarchy.leaf%TYPE;
 		vParamRefID	PIChierarchy.paramRefID%TYPE;
 		vQuery		TEXT;

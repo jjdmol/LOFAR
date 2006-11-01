@@ -55,7 +55,7 @@ CREATE SEQUENCE PICparamrefID;
 
 CREATE TABLE PICparamref (
 	paramID		INT4			NOT NULL DEFAULT nextval('PICparamrefID'),
-	PVSSname	VARCHAR(120)	NOT NULL,
+	PVSSname	VARCHAR(150)	NOT NULL,
 	par_type	INT2			REFERENCES param_type(ID),
 	unit		INT2			DEFAULT 0 REFERENCES unit(ID),
 	pruning		INT2			DEFAULT 10,
@@ -79,7 +79,7 @@ CREATE TABLE PIChierarchy (
 	nodeID		INT4			NOT NULL DEFAULT nextval('PIChierarchID'),
 	parentID	INT4			NOT NULL, --  REFERENCES PIChierachy(nodeID),
 	paramRefID	INT4			NOT NULL REFERENCES PICparamref(paramID),
-	name		VARCHAR(120)		NOT NULL,
+	name		VARCHAR(150)		NOT NULL,
 	index		INT2			NOT NULL DEFAULT 0,
 	leaf		BOOLEAN			DEFAULT TRUE,
 
