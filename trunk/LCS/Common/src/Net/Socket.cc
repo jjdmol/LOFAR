@@ -62,6 +62,8 @@ Socket::Socket (const string&)
   { throw Exception("Sockets not supported"); }
 Socket::Socket (const string&, const string&, int32, int32)
   { throw Exception("Sockets not supported"); }
+Socket::Socket (const string&, const string&, const string&, int32)
+  { throw Exception("Sockets not supported"); }
 Socket::~Socket()
   {}
 int32 Socket::initServer (const string&, int32, int32)
@@ -84,6 +86,8 @@ int32 Socket::readBlocking (void*, int32)
   { throw Exception("Sockets not supported"); }
 int32 Socket::writeBlocking (const void*, int32)
   { throw Exception("Sockets not supported"); }
+string Socket::errstr () const
+  { return "Sockets not supported"; }
 #else
 
 //
