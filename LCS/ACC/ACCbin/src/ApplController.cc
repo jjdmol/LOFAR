@@ -276,7 +276,7 @@ void ApplController::createParSubsets()
 				basePS.add(procPrefix+"._ACport", 
 											itsBootParamSet->getString("AC.processportnr"));
 				basePS.add(procPrefix+"._ACnode", itsBootParamSet->getString("AC.node"));
-				basePS.replace("parsetPrefix", procPrefix);
+				basePS.replace("parsetPrefix", procPrefix+".");
 				prevProcName = procName;
 			}
 
