@@ -71,7 +71,7 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(80))
+CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150))
   RETURNS INT4 AS '
 	DECLARE
 		vNode		RECORD;
@@ -111,7 +111,7 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(80))
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(80))
+CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150))
   RETURNS INT4 AS '
 	DECLARE
 	  vFunction  		CONSTANT INT2 := 1;
@@ -125,7 +125,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(80))
 	  vVersion			VICnodedef.version%TYPE;
 	  vParentRefID		VICtemplate.originID%TYPE;
 	  vDummy			VICparamDef.paramID%TYPE;
-	  vNewName			VARCHAR(80);
+	  vNewName			VARCHAR(150);
 
 	BEGIN
 	  -- check authorisation(authToken, treeID, func, dummy)

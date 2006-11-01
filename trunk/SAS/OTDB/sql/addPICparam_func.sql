@@ -36,16 +36,16 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
+CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
   RETURNS INT4 AS '
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
 		vNodeID		PIChierarchy.nodeID%TYPE;
 		vParentID	PIChierarchy.parentID%TYPE;
 		vParType	param_type.id%TYPE;
-		vFullname	VARCHAR(120);
-		vNodename	VARCHAR(120);
-		vBasename	VARCHAR(120);
+		vFullname	VARCHAR(150);
+		vNodename	VARCHAR(150);
+		vBasename	VARCHAR(150);
 		vParamIndex	INT2;
 		vFieldnr	INT4;
 		vLeaf		BOOLEAN;

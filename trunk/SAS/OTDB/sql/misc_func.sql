@@ -144,7 +144,7 @@ CREATE OR REPLACE FUNCTION VersionNrValue(VARCHAR(50))
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION getVersionNr(VARCHAR(50))
+CREATE OR REPLACE FUNCTION getVersionNr(VARCHAR(150))
   RETURNS INT4 AS '
 	BEGIN
 		RETURN VersionNrValue(substring($1 from \'%{#"%#"}\' for \'#\'));
@@ -163,8 +163,8 @@ CREATE OR REPLACE FUNCTION getVersionNr(VARCHAR(50))
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION childNodeName(VARCHAR(50), INT4)
-  RETURNS VARCHAR(50) AS '
+CREATE OR REPLACE FUNCTION childNodeName(VARCHAR(150), INT4)
+  RETURNS VARCHAR(150) AS '
 	BEGIN
 		RETURN \'#\' || $1 || \'{\' || VersionNrString($2) || \'}\';
 	END;
@@ -182,7 +182,7 @@ CREATE OR REPLACE FUNCTION childNodeName(VARCHAR(50), INT4)
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION cleanNodeName(VARCHAR(50))
+CREATE OR REPLACE FUNCTION cleanNodeName(VARCHAR(150))
   RETURNS TEXT AS '
 	BEGIN
 		IF substr($1, length($1)) = \'}\' THEN

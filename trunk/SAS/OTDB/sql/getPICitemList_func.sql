@@ -38,9 +38,9 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
   RETURNS SETOF OTDBnode AS '
 	DECLARE
 		vRecord		RECORD;
-		vFullname	VARCHAR(120);
-		vNodename	VARCHAR(100);
-		vQuery		VARCHAR(100);
+		vFullname	VARCHAR(150);
+		vNodename	VARCHAR(150);
+		vQuery		VARCHAR(150);
 		vLeaf		PIChierarchy.leaf%TYPE;
 		vParamRefID	PIChierarchy.paramRefID%TYPE;
 		i			INTEGER;
@@ -98,7 +98,7 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 --
 -- Types:	OTDBnode
 --
-CREATE OR REPLACE FUNCTION getPICitemList(INT4, VARCHAR(120))
+CREATE OR REPLACE FUNCTION getPICitemList(INT4, VARCHAR(150))
   RETURNS SETOF OTDBnode AS '
 	DECLARE
 		vRecord		RECORD;
