@@ -23,8 +23,13 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#ifndef HAVE_BGL
-// We can't use raw ethernet on BlueGene/L
+#if defined(HAVE_BGL) || defined(USE_NOSOCKETS)
+// We can't use raw ethernet
+int main (int argc, const char** argv)
+{
+  return 3;
+}
+#else
 
 #include "DH_Ethernet.h"
 #include <Transport/Connection.h>
@@ -124,9 +129,4 @@ int main (int argc, const char** argv)
   return 0;
 }
 
-#else
-int main (int argc, const char** argv)
-{
-  return 0;
-}
 #endif

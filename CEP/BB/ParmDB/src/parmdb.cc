@@ -203,11 +203,13 @@ PTCommand getCommand (char*& str)
 
 std::string getUserName()
 {
+#ifndef USE_NOSOCKETS
   passwd* aPwd;
-  if ((aPwd = getpwuid(getuid())) == 0) {
-    return "";
+  if ((aPwd = getpwuid(getuid())) != 0) {
+    return aPwd->pw_name;
   }
-  return aPwd->pw_name;
+#endif
+  return "test";
 }
 
 
@@ -723,7 +725,7 @@ void updateDefParms (map<string,ParmValueSet>& parmSet, KeyValueMap& kvmap)
 void doIt (bool noPrompt)
 {
   parmtab = 0;
-  int buffersize = 1024000;
+  const int buffersize = 1024000;
   char cstra[buffersize];
   // Loop until stop is given.
   while (true) {
