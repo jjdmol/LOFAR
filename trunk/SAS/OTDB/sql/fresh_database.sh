@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 # DROPS the current database and make a whole new test database
 #
