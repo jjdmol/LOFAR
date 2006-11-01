@@ -74,6 +74,9 @@ namespace LOFAR
       // Send the strategy or one of the steps across.
       bool sendObject(const BlobStreamable& bs);
 
+      // Receive a BlobStreamable object, e.g., a BBSStatus.
+      BlobStreamable* recvObject();
+
       // The strategy that will be executed by this controller.
       BBSStrategy*            itsStrategy;
 

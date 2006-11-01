@@ -35,6 +35,7 @@ namespace LOFAR
 {
   //# Forward declations
   namespace ParmDB { class ParmDB; }
+  class BlobStreamable;
   class DH_BlobStreamable;
   class TH_Socket;
   class CSConnection;
@@ -91,6 +92,13 @@ namespace LOFAR
       // @}
 
       void convertStepToContext(const BBSStep *step, Context &context);
+
+      // Send the strategy or one of the steps across.
+      bool sendObject(const BlobStreamable& bs);
+
+      // Receive a BlobStreamable object, e.g., a BBSStatus.
+      BlobStreamable* recvObject();
+
 
       // Parameter set for this process controller.
       ACC::APS::ParameterSet itsParameterSet;

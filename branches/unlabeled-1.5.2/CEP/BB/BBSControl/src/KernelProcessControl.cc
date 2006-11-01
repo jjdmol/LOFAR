@@ -27,27 +27,27 @@
 
 #include <BBSControl/BBSKernelProcessControl.h>
 #include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSCorrectStep.h>
-#include <BBSControl/BBSMultiStep.h>
-#include <BBSControl/BBSPredictStep.h>
-#include <BBSControl/BBSRefitStep.h>
-#include <BBSControl/BBSShiftStep.h>
-#include <BBSControl/BBSSingleStep.h>
-#include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSStep.h>
+#include <BBSControl/BBSPredictStep.h>
+#include <BBSControl/BBSSubtractStep.h>
+#include <BBSControl/BBSCorrectStep.h>
+#include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSSubtractStep.h>
 #include <BBSKernel/BBSKernelStructs.h>
 #include <BBSKernel/Prediffer.h>
 #include <BBSKernel/Solver.h>
+#include <BBSKernel/BBSStatus.h>
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmDBMeta.h>
 #include <APS/ParameterSet.h>
 #include <Transport/DH_BlobStreamable.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/CSConnection.h>
+#include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
+#include <Common/lofar_smartptr.h>
 
 using namespace LOFAR::ACC::APS;
 
@@ -146,41 +146,50 @@ namespace LOFAR
       LOG_INFO("BBSKernelProcessControl::run()");
 
       try {
-	// Blocking receive from BBSProcessControl
-	ASSERT(itsConnection);
-	if (itsConnection->read() == CSConnection::Error) {
-	  LOG_ERROR("Connection::read() failed");
-	  return false;
-	}
-	// Deserialize the received message.
-	ASSERT(itsDataHolder);
-	BlobStreamable* msg = itsDataHolder->deserialize();
-	if (!msg) {
-	  LOG_ERROR("Failed to deserialize message");
-	  return false;
-	}
-	LOG_DEBUG_STR("Received a " << itsDataHolder->classType() 
-		      << " object");
+        // Receive the next message
+        scoped_ptr<BlobStreamable> msg(recvObject());
+	if (!msg) return false;
 
 	// If the message contains a `strategy', handle the `strategy'.
-	BBSStrategy* strategy = dynamic_cast<BBSStrategy*>(msg);
+	BBSStrategy* strategy = dynamic_cast<BBSStrategy*>(msg.get());
 	if (strategy) {
-	  return handle(strategy);
-	}
+          if (handle(strategy)) {
+            sendObject(BBSStatus(BBSStatus::OK));
+            return true;
+          }
+          else {
+            sendObject(BBSStatus(BBSStatus::ERROR));
+            return false;
+          }
+        }
+
 	// If the message contains a `step', handle the `step'.
-	BBSStep* step = dynamic_cast<BBSStep*>(msg);
+	BBSStep* step = dynamic_cast<BBSStep*>(msg.get());
 	if (step) {
-	  return handle(step);
-	}
+          if (handle(step)) {
+            BBSStatus sts(BBSStatus::OK);
+            LOG_DEBUG_STR("Sending BBSStatus: " << sts);
+            sendObject(BBSStatus(BBSStatus::OK));
+            return true;
+          }
+          else {
+            sendObject(BBSStatus(BBSStatus::ERROR));
+            return false;
+          }
+        }
+
 	// We received a message we can't handle
-	LOG_WARN_STR("Received message of unsupported type `" << 
-		     itsDataHolder->classType() << "'. Skipped.");
+        ostringstream oss;
+        oss << "Received message of unsupported type `" 
+            << itsDataHolder->classType() << "'. Skipped.";
+	LOG_WARN(oss.str());
+        sendObject(BBSStatus(BBSStatus::ERROR, oss.str()));
 	return false;
 
-	// Should we send the result back?
       }
       catch (Exception& e) {
 	LOG_ERROR_STR(e);
+        sendObject(BBSStatus(BBSStatus::ERROR, e.message()));
 	return false;
       }
     }
@@ -323,6 +332,56 @@ namespace LOFAR
     }
     
     
+    bool BBSKernelProcessControl::sendObject(const BlobStreamable& bs)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      try {
+	// Serialize the object
+	itsDataHolder->serialize(bs);
+	LOG_DEBUG_STR("Sending a " << itsDataHolder->classType() << " object");
+
+	// Do a blocking send
+	if (itsConnection->write() == CSConnection::Error) {
+	  LOG_ERROR("Connection::write() failed");
+	  return false;
+	}
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	return false;
+      }
+      // All went well.
+      return true;
+    }
+
+
+    BlobStreamable* BBSKernelProcessControl::recvObject()
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      try {
+	// Do a blocking receive
+	if (itsConnection->read() == CSConnection::Error) {
+	  THROW(IOException, "CSConnection::read() failed");
+	}
+
+	// Deserialize the object
+	BlobStreamable* bs = itsDataHolder->deserialize();
+	if (!bs) {
+	  LOG_ERROR("Error while receiving object");
+	}
+	LOG_DEBUG_STR("Received a " << itsDataHolder->classType() <<
+		      " object");
+
+	// Return the object
+	return bs;
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	return 0;
+      }
+    }
+
+
     bool BBSKernelProcessControl::doHandle(const BBSPredictStep *step)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
