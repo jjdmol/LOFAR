@@ -737,6 +737,7 @@
                     </Component>
                     <Component class="javax.swing.JTextField" name="integrationFrequencyText">
                       <Properties>
+                        <Property name="editable" type="boolean" value="false"/>
                         <Property name="toolTipText" type="java.lang.String" value="Frequency interval in Hertz (Hz)"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
@@ -773,6 +774,7 @@
                     </Component>
                     <Component class="javax.swing.JTextField" name="integrationTimeText">
                       <Properties>
+                        <Property name="editable" type="boolean" value="false"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
                       <Events>

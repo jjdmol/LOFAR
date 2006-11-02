@@ -245,36 +245,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
                 stepExplorerInstrumentModel.setBackground(NOT_DEFINED);
             }
         }
-/*        //instrument model 
-        stepExplorerInstrumentModel.setBackground(DEFAULT);
-        this.stepExplorerInstrumentModelList.clearSelection();
-        if(stepData.getInstrumentModel() != null){
-            if(stepData.getInstrumentModel().size()>0){
-                this.noInstrumentModelCheckbox.setSelected(false);
-                this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,stepData.getInstrumentModel());
-                
-            }else{
-                this.noInstrumentModelCheckbox.setSelected(true);
-            }
-            stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
-            
-        }else{
-            if(inheritedData.getInstrumentModel() != null){
-                
-                if(inheritedData.getInstrumentModel().size()>0){
-                    this.noInstrumentModelCheckbox.setSelected(false);
-                    this.fillSelectionListFromVector(this.stepExplorerInstrumentModelList,inheritedData.getInstrumentModel());
-                    
-                }else{
-                    this.noInstrumentModelCheckbox.setSelected(true);
-                }
-                stepExplorerInstrumentModel.setBackground(INHERITED_FROM_PARENT);
-            }else{
-                this.noInstrumentModelCheckbox.setSelected(false);
-                stepExplorerInstrumentModel.setBackground(NOT_DEFINED);
-            }
-        }
-*/
+
 //        //extra sources
 //        stepExplorerESources.setBackground(DEFAULT);
 //        this.stepExplorerModifyESourceText.setText("");
@@ -335,8 +306,6 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
 
         
-        //integration NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
-        /*
         //time
         this.integrationTimeText.setBackground(DEFAULT);
         if(stepData.getIntegrationTime() != -1.0){
@@ -367,7 +336,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
                 integrationFrequencyText.setBackground(NOT_DEFINED);
             }
         }
-        */
+
         //correlation
         //type
         this.stepExplorerCorrelationTypeList.setBackground(DEFAULT);
@@ -1415,6 +1384,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         integrationFrequencyLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationFrequencyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 20, -1, -1));
 
+        integrationFrequencyText.setEditable(false);
         integrationFrequencyText.setToolTipText("Frequency interval in Hertz (Hz)");
         integrationFrequencyText.setEnabled(false);
         integrationFrequencyText.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1433,6 +1403,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         integrationTimeLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 50, -1, -1));
 
+        integrationTimeText.setEditable(false);
         integrationTimeText.setEnabled(false);
         integrationTimeText.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {

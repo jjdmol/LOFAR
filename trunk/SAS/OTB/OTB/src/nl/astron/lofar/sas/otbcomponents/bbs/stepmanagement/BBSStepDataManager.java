@@ -603,7 +603,7 @@ public class BBSStepDataManager{
                                 //Time
                                 
                                 if (aCENode.leaf && aCENode.name.equals("Time")) {
-                                    if ( currentDataForStep.getIntegrationTime() != -1.0){
+                                    if ( currentDataForStep.getIntegrationTime() != -1){
                                         aCENode.limits = ""+currentDataForStep.getIntegrationTime();
                                         SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
@@ -614,7 +614,7 @@ public class BBSStepDataManager{
                                     //Frequency
                                     
                                 } else if (aCENode.leaf && aCENode.name.equals("Freq")) {
-                                    if ( currentDataForStep.getIntegrationFrequency() != -1.0){
+                                    if ( currentDataForStep.getIntegrationFrequency() != -1){
                                         aCENode.limits = ""+currentDataForStep.getIntegrationFrequency();
                                         SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
@@ -698,7 +698,7 @@ public class BBSStepDataManager{
                                     }
                                 }
                             }
-                            //no params inside Integration are present, delete this node as well
+                            //no params inside Baseline are present, delete this node as well
                             if(presentParams==0){
                                 SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
                             }
