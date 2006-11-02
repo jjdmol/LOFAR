@@ -99,11 +99,11 @@ namespace LOFAR
 
       // Read the BBSStep objects from the blob input stream \a bis and store
       // them in \a itsSteps.
-      void BBSStrategy::readSteps(BlobIStream& bis);
+      void readSteps(BlobIStream& bis);
 
       // Write the BBSStep objects in \a itsSteps to the blob output stream \a
       // bos.
-      void BBSStrategy::writeSteps(BlobOStream& bos) const;
+      void writeSteps(BlobOStream& bos) const;
 
       // Name of the Measurement Set
       string                 itsDataSet;
