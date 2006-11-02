@@ -74,7 +74,8 @@ namespace LOFAR
 
 	// Retrieve the steps in the strategy in sequential order.
 	itsSteps = itsStrategy->getAllSteps();
-
+    LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
+    
 	// Create a new data holder.
 	itsDataHolder = new DH_BlobStreamable();
 
