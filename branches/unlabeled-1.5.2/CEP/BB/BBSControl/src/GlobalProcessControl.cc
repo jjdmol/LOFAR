@@ -44,6 +44,8 @@ namespace LOFAR
     BBSProcessControl::BBSProcessControl() :
       ProcessControl(),
       itsStrategy(0),
+      itsDataHolder(0), 
+      itsTransportHolder(0), 
       itsConnection(0),
       itsStrategySent(false)
     {
@@ -55,6 +57,8 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       delete itsStrategy;
+      delete itsDataHolder;
+      delete itsTransportHolder;
       delete itsConnection;
     }
 
@@ -70,6 +74,16 @@ namespace LOFAR
 
 	// Retrieve the steps in the strategy in sequential order.
 	itsSteps = itsStrategy->getAllSteps();
+
+	// Create a new data holder.
+	itsDataHolder = new DH_BlobStreamable();
+
+	// Create a new server TH_Socket. Do not open the socket yet.
+	itsTransportHolder = 
+	  new TH_Socket(globalParameterSet()->getString("Controller.Port"),
+			true,         // sync
+			Socket::TCP,  // protocol
+			false);       // open socket now
       }
       catch (Exception& e) {
 	LOG_ERROR_STR("Caught exception in BBSProcessControl::define()\n" 
@@ -86,15 +100,35 @@ namespace LOFAR
       LOG_INFO("BBSProcessControl::init()");
 
       try {
+	// Check pre-conditions
+	ASSERT(itsDataHolder);
+	ASSERT(itsTransportHolder);
+
 	// We need to send the strategy first.
 	itsStrategySent = false;
 
 	// Set the step iterator at the start of the vector of steps.
 	itsStepsIterator = itsSteps.begin();
 
-        // Create a new BBS server connection.
-        itsConnection = new BBSConnection
-          (globalParameterSet()->getString("Controller.Port"));
+	// DH_BlobStreamable is initialized implicitly by its constructor.
+	if (!itsDataHolder->isInitialized()) {
+	  LOG_ERROR("Initialization of DataHolder failed");
+	  return false;
+	}
+	// Connect the client socket to the server.
+	if (!itsTransportHolder->init()) {
+	  LOG_ERROR("Initialization of TransportHolder failed");
+	  return false;
+	}
+	// Create a new CSConnection object.
+	itsConnection = new CSConnection("RWConn", 
+					 itsDataHolder, 
+					 itsDataHolder, 
+					 itsTransportHolder);
+	if (!itsConnection || !itsConnection->isConnected()) {
+	  LOG_ERROR("Creation of Connection failed");
+	  return false;
+	}
       }
       catch (Exception& e) {
 	LOG_ERROR_STR(e);
@@ -112,21 +146,23 @@ namespace LOFAR
 
       try {
 	// Check pre-conditions
+	ASSERT(itsDataHolder);
 	ASSERT(itsConnection);
+	ASSERT(itsStrategy);
 
 	// Keep the result of sending data.
 	bool result;
 
 	// If we have not sent the strategy yet. We should do so now.
 	if (!itsStrategySent) {
-	  result = itsStrategySent = itsConnection->sendObject(*itsStrategy);
+	  result = itsStrategySent = sendObject(*itsStrategy);
 	}
 	// Else, we should send the next step, unless we're at the end of the
 	// vector of steps.
 	else {
 	  if (itsStepsIterator != itsSteps.end()) {
 	    // Send the next step and increment the iterator.
-	   result = itsConnection->sendObject(**itsStepsIterator++);
+	   result = sendObject(**itsStepsIterator++);
 	  }
 	  else {
 	    LOG_TRACE_COND("Reached end of vector of steps");
@@ -137,7 +173,7 @@ namespace LOFAR
 	if (!result) return false;
 
 	// Read back the response from the BBS kernel (probably a BBSStatus).
-	BlobStreamable* bs = itsConnection->recvObject();
+	BlobStreamable* bs = recvObject();
 
 	// Something went (terribly) wrong. Return immediately.
 	if (!bs) return false;
@@ -213,6 +249,60 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_WARN("Not supported");
       return string();
+    }
+
+
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+    
+    bool BBSProcessControl::sendObject(const BlobStreamable& bs)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      try {
+	// Serialize the object
+	itsDataHolder->serialize(bs);
+	LOG_DEBUG_STR("Sending a " << itsDataHolder->classType() << " object");
+
+	// Do a blocking send
+	if (itsConnection->write() == CSConnection::Error) {
+	  LOG_ERROR("Connection::write() failed");
+	  return false;
+	}
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	return false;
+      }
+      // All went well.
+      return true;
+    }
+
+
+    BlobStreamable* BBSProcessControl::recvObject()
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      try {
+	// Do a blocking receive
+	if (itsConnection->read() == CSConnection::Error) {
+	  THROW(IOException, "CSConnection::read() failed");
+	}
+
+	// Deserialize the object
+	BlobStreamable* bs = itsDataHolder->deserialize();
+	if (!bs) {
+	  LOG_ERROR("Error while receiving object");
+	}
+	LOG_DEBUG_STR("Received a " << itsDataHolder->classType() <<
+		      " object");
+
+	// Return the object
+	return bs;
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	return 0;
+      }
+      // We should never get here.
+      ASSERTSTR(false, "We should never get here.");
     }
 
   } // namespace BBS
