@@ -152,16 +152,8 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 }else if (LofarUtils.keyName(aNode.name).equals("WorkDomainSize")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                     
-                /* INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
                 }else if (LofarUtils.keyName(aNode.name).equals("Integration")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                 */
-                    
-                    //INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, REMOVE CODE BLOCK BELOW WHEN IMPLEMENTED
-                }else if (LofarUtils.keyName(aNode.name).equals("Integration")) {
-                    SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aNode);
-                    //end of removable code block
-                    
                     
                 }else if (LofarUtils.keyName(aNode.name).equals("Correlation")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
@@ -253,12 +245,10 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         wdsTimeText.setBackground(Color.WHITE);
         
         
-        /* INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
         this.integrationFrequencyText.setText(StrategyIntegrationFrequency.limits);
         this.integrationTimeText.setText(StrategyIntegrationTime.limits);
         integrationFrequencyText.setBackground(Color.WHITE);
         integrationTimeText.setBackground(Color.WHITE);
-         */
         
         this.correlationSelectionBox.setSelectedItem(StrategyCorrelationSelection.limits);
         this.fillSelectionListFromString(correlationTypeList,StrategyCorrelationType.limits,true);
@@ -385,7 +375,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     wdsTimeText.setText(aNode.limits);
                 }
             }
-        /* INTEGRATION NOT IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
         } else if(parentName.equals("Integration")){
             if (aKeyName.equals("Freq")) {
                 this.integrationFrequencyText.setToolTipText(aParam.description);
@@ -405,7 +394,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     integrationTimeText.setText(aNode.limits);
                 }
-            }*/
+            }
         } else if(parentName.equals("Correlation")){
             if (aKeyName.equals("Selection")) {
                 this.correlationSelectionBox.setToolTipText(aParam.description);
@@ -477,7 +466,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("Variable BBS Strategy ("+StrategyWDSTime.name+"//"+StrategyWDSTime.treeID()+"//"+StrategyWDSTime.nodeID()+"//"+StrategyWDSTime.parentID()+"//"+StrategyWDSTime.paramDefID()+") updated to :"+StrategyWDSTime.limits);
             saveNode(StrategyWDSTime);
         }
-        /* INTEGRATION NOT IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
         if (this.StrategyIntegrationFrequency != null && !this.integrationFrequencyText.getText().equals(StrategyIntegrationFrequency.limits)) {
             StrategyIntegrationFrequency.limits = integrationFrequencyText.getText();
             logger.trace("Variable BBS Strategy ("+StrategyIntegrationFrequency.name+"//"+StrategyIntegrationFrequency.treeID()+"//"+StrategyIntegrationFrequency.nodeID()+"//"+StrategyIntegrationFrequency.parentID()+"//"+StrategyIntegrationFrequency.paramDefID()+") updated to :"+StrategyIntegrationFrequency.limits);
@@ -488,7 +476,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("Variable BBS Strategy ("+StrategyIntegrationTime.name+"//"+StrategyIntegrationTime.treeID()+"//"+StrategyIntegrationTime.nodeID()+"//"+StrategyIntegrationTime.parentID()+"//"+StrategyIntegrationTime.paramDefID()+") updated to :"+StrategyIntegrationTime.limits);
             saveNode(StrategyIntegrationTime);
         }
-         */
         if (this.StrategyCorrelationSelection != null && !this.correlationSelectionBox.getSelectedItem().toString().equals(StrategyCorrelationSelection.limits)) {
             StrategyCorrelationSelection.limits = correlationSelectionBox.getSelectedItem().toString();
             logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") updating to :"+StrategyCorrelationSelection.limits);
@@ -1117,6 +1104,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         integrationFrequencyLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationFrequencyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, -1, -1));
 
+        integrationFrequencyText.setEditable(false);
         integrationFrequencyText.setToolTipText("Frequency Interval in Hz");
         integrationFrequencyText.setEnabled(false);
         integrationIntervalPanel.add(integrationFrequencyText, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 20, 70, -1));
@@ -1129,6 +1117,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         integrationTimeLabel.setEnabled(false);
         integrationIntervalPanel.add(integrationTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, -1));
 
+        integrationTimeText.setEditable(false);
         integrationTimeText.setToolTipText("Time interval in seconds");
         integrationTimeText.setEnabled(false);
         integrationIntervalPanel.add(integrationTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 50, 70, -1));
@@ -1399,7 +1388,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             String wdsTime = this.wdsTimeText.getText();
             String wdsFrequency = this.wdsFrequencyText.getText();
             
-            /* INTEGRATION NOT YET IMPLEMENTED @ 23-08-2006, UNCOMMENT WHEN IMPLEMENTED
             if(!integrationTime.equals("")){
                 try {
                     Double itime = Double.parseDouble(integrationTime);
@@ -1424,7 +1412,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 warning=true;
                 integrationFrequencyText.setBackground(Color.RED);
             }
-             */
             if(!wdsFrequency.equals("")){
                 try {
                     Double itime = Double.parseDouble(wdsFrequency);
