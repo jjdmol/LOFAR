@@ -117,6 +117,7 @@ public:
   // MS part handled by this Prediffer
   // <group>
   bool setWorkDomain(const MeqDomain& domain);
+  bool setWorkDomainSize(double freq, double time);
   bool setWorkDomain(double startFreq, double endFreq, double startTime, double endTime);
   bool setWorkDomain(int startChan, int endChan, double startTime, double lengthTime);
 //  bool setWorkDomain(int startChannel, int endChannel, double startTime, double endTime);
