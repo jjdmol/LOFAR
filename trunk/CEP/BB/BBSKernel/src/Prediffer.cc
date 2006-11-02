@@ -573,6 +573,13 @@ bool Prediffer::setWorkDomain(const MeqDomain &domain)
 }
 
 
+bool Prediffer::setWorkDomainSize(double freq, double time)
+{
+    double startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2.0;
+    return setWorkDomain(MeqDomain(itsStartFreq, itsStartFreq + freq, startTime, startTime + time));
+}
+
+
 bool Prediffer::setWorkDomain(int startChan, int endChan, double tstart, double tlength)
 {
   // Determine the first and last channel to process.
@@ -1280,6 +1287,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     {
         position = MPosition::Convert(position, MPosition::ITRF)();
         positionVector = position.getValue();
+        //LOG_TRACE_FLOW("Array position: " << position);
     }
     else
     {
