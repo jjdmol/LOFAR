@@ -71,7 +71,8 @@ namespace LOFAR
 
 	// Retrieve the steps in the strategy in sequential order.
 	itsSteps = itsStrategy->getAllSteps();
-
+    LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
+    
 	// Create a new data holder.
 	itsDataHolder = new DH_BlobStreamable();
 
@@ -147,6 +148,7 @@ namespace LOFAR
 
 	// If we have not sent the strategy yet. We should do so now.
 	if (!itsStrategySent) {
+          itsStrategySent = true;
 	  return sendObject(*itsStrategy);
 	}
 	// Else, we should send the next step, unless we're at the end of the
