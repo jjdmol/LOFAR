@@ -273,7 +273,7 @@ namespace BBS
                                          strategy->parmDB().localSky,
                                          strategy->parmDB().instrument,
                                          0,
-                                         true);
+                                         false);
 
             // Set data selection and work domain.
             DomainSize workDomainSize = strategy->domainSize();
