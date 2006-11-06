@@ -27,6 +27,7 @@
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>
+#include <GCF/GCF_ServiceInfo.h>
 #include <OTDB/TreeValue.h>
 #include <OTDB/TreeTypeConv.h>
 #include <OTDB/TreeStateConv.h>
@@ -55,7 +56,7 @@ KeyValueLoggerMaster::KeyValueLoggerMaster() :
   registerProtocol(KVL_PROTOCOL, KVL_PROTOCOL_signalnames);
   
   // initialize the port
-  _kvlMasterPortProvider.init(*this, "server", GCFPortInterface::MSPP, KVL_PROTOCOL);
+  _kvlMasterPortProvider.init(*this, MAC_SVCMASK_KVLMASTER, GCFPortInterface::MSPP, KVL_PROTOCOL);
 }
 
 KeyValueLoggerMaster::~KeyValueLoggerMaster()

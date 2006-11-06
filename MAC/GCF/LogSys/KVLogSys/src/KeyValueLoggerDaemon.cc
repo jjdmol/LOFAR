@@ -23,10 +23,11 @@
 #include <lofar_config.h>
 
 #include "KeyValueLoggerDaemon.h"
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>
+#include <GCF/GCF_ServiceInfo.h>
 #include <GCF/PAL/GCF_Answer.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <ManagerIdentifier.hxx>
@@ -56,8 +57,8 @@ KeyValueLoggerDaemon::KeyValueLoggerDaemon() :
   registerProtocol(KVL_PROTOCOL, KVL_PROTOCOL_signalnames);
 
   // initialize the port
-  _kvlMasterClientPort.init(*this, "client", GCFPortInterface::SAP, KVL_PROTOCOL);
-  _kvlDaemonPortProvider.init(*this, "server", GCFPortInterface::MSPP, KVL_PROTOCOL);
+  _kvlMasterClientPort.init(*this, MAC_SVCMASK_KVLMASTER, GCFPortInterface::SAP, KVL_PROTOCOL);
+  _kvlDaemonPortProvider.init(*this, MAC_SVCMASK_KVLDAEMON, GCFPortInterface::MSPP, KVL_PROTOCOL);
 }
 
 KeyValueLoggerDaemon::~KeyValueLoggerDaemon()
