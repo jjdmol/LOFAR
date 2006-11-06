@@ -460,13 +460,15 @@ create_dpt_file()
 			if [ ${prefix} != "-" ]; then
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
 				echo "	error	25#3"
+				echo "	logmsg	25#4"
 			fi
 		else
 			echo "TypeName"
 			echo "${dpt}.${dpt}	1#1"
 			echo "	state	25#2"
 			echo "	error	25#3"
-			let count=4
+			echo "	logmsg	25#4"
+			let count=5
 			let depth=1
 			oldnode=""
 			cleanlist ${dpt}.dpdef | awk -v elemNr=$count ' 
