@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 
+#include <GCF/GCF_ServiceInfo.h>
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
 #include <APS/ParameterSet.h>
 #include <KVL_Protocol.ph>
@@ -57,12 +58,12 @@ GCFKeyValueLogger::GCFKeyValueLogger() :
   GCFTask((State)&GCFKeyValueLogger::initial, KVL_CLIENT_TASK_NAME),
   _manIdToSkip(-1)
 {
-  // register the protocol for debugging purposes
-  registerProtocol(KVL_PROTOCOL, KVL_PROTOCOL_signalnames);
+	// register the protocol for debugging purposes
+	registerProtocol(KVL_PROTOCOL, KVL_PROTOCOL_signalnames);
 
-  // initialize the port
-  _kvlClientPort.init(*this, "client", GCFPortInterface::SAP, KVL_PROTOCOL);
-  globalParameterSet()->adoptFile("KeyValueLoggerDaemon.conf");
+	// initialize the port
+	_kvlClientPort.init(*this, MAC_SVCMASK_KVLDAEMON, GCFPortInterface::SAP, KVL_PROTOCOL);
+//	globalParameterSet()->adoptFile("../etc/KeyValueLoggerDaemon.conf");
 }
 
 GCFEvent::TResult GCFKeyValueLogger::initial(GCFEvent& e, GCFPortInterface& /*p*/)

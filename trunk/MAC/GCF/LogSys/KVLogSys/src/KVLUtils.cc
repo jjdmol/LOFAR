@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include "KVLUtils.h"
-#include <GCF/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>
