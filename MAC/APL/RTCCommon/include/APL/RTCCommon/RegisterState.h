@@ -100,14 +100,13 @@ namespace LOFAR {
 
 	void read         (int i = -1) { tran(IDLE,          READ,          i); }
 	void check        (int i = -1) { tran(IDLE,          CHECK,         i); }
-	void write_force  (int i = -1) { tran(IDLE,          WRITE,         i); }
 	void unmodified   (int i = -1) { tran(CHECK,         IDLE,          i); }
-	void write        (int i = -1) { tran(CHECK,         WRITE,         i); }
 	void read_schedule(int i = -1) { tran(WRITE,         READ,          i); }
 	void read_ack     (int i = -1) { tran(READ,          DONE,          i); }
 	void write_ack    (int i = -1) { tran(WRITE,         DONE,          i); }
 	void read_error   (int i = -1) { tran(READ,          READ_ERROR,    i); }
 	void write_error  (int i = -1) { tran(WRITE,         WRITE_ERROR,   i); }
+	void write        (int i = -1);
 
 	void clear(int i = -1);
 	void reset(int i = -1);
