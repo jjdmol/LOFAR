@@ -78,6 +78,8 @@ public:
 
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
 	
 	// During the PVSS state the PVSS parametersets are loaded
    	GCFEvent::TResult PVSS_state (GCFEvent& e, GCFPortInterface& p);
@@ -96,7 +98,7 @@ private:
 
 	void    setState          	  (CTState::CTstateNr     newState);
 	void    setObservationState	  (const string&	name, CTState::CTstateNr newState);
-	uint8	convertFilterSelection(const string&	bandselection);
+	int32	convertFilterSelection(const string&	bandselection);
 	bool	propertySetsAvailable ();
 	int32	getRCUHardwareNr	  (const string&	propName);
 	void	loadPVSSpropertySets  ();

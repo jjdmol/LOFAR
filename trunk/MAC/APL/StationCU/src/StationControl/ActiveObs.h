@@ -63,6 +63,8 @@ public:
 	bool					isReady()	{ return (itsReadyFlag); }
 	APLCommon::Observation*	obsPar()	{ return (&itsObsPar); }
 
+	ostream& print (ostream& os) const;
+
 	GCFEvent::TResult	initial	   (GCFEvent&	event, GCFPortInterface&	port);
 	GCFEvent::TResult	connected  (GCFEvent&	event, GCFPortInterface&	port);
 	GCFEvent::TResult	standby    (GCFEvent&	event, GCFPortInterface&	port);
@@ -79,12 +81,20 @@ private:
 	string						itsName;
 	int32						itsInstanceNr;
 	APLCommon::Observation		itsObsPar;
-	bool						itsBeamConnection;
-	bool						itsCalConnection;
-	string						itsCalCntlrName;
+	bool						itsBeamCntlrReady;
+	bool						itsCalCntlrReady;
 	string						itsBeamCntlrName;
+	string						itsCalCntlrName;
 	bool						itsReadyFlag;
 };
+
+//#
+//# operator<<
+//#
+inline ostream& operator<< (ostream& os, const ActiveObs& anActiveObs)
+{	
+	return (anActiveObs.print(os));
+}
 
 // @}
   } // namespace StationCU

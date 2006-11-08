@@ -76,12 +76,13 @@ public:
    	void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During the initial state all connections with the other programs are made.
-   	GCFEvent::TResult initial_state (GCFEvent& e, 
-									 GCFPortInterface& p);
-	
-	// Normal control mode. 
-   	GCFEvent::TResult active_state  (GCFEvent& e, 
-									 GCFPortInterface& p);
+   	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
+	// connected to PVSS, waiting for CLAIM event
+   	GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
+	// connected to BeamServer, waiting for PREPARE event
+   	GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
+	// Normal control mode, beam is active
+   	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 
 private:
 	// avoid defaultconstruction and copying

@@ -76,13 +76,6 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 
 	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
 
-	// CalibrationControl specific parameters
-	// TODO: these values are delivered for every customer!
-//	itsNyquistZone   = globalParameterSet()->getInt16("nyquistZone");
-//	itsBandFilter	 = globalParameterSet()->getString("bandFilter");
-//	itsAntennaArray  = globalParameterSet()->getString("antennaArray");
-//	itsRCUvector	 = globalParameterSet()->getUint16Vector("receiverList");
-
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
 	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
@@ -139,16 +132,19 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 //
 // convertFilterSelection(string) : uint8
 //
-uint8 CalibrationControl::convertFilterSelection(const string&	filterselection) 
+int32 CalibrationControl::convertFilterSelection(const string&	filterselection) 
 {
-	if (filterselection == "LB_10_90") 		{ return(0xB9); }
-	if (filterselection == "HB_110_190") 	{ return(0xC6); }
-	if (filterselection == "HB_170_230") 	{ return(0xCE); }
-	if (filterselection == "HB_210_250") 	{ return(0xD6); }
+	if (filterselection == "LBL_10_90")		{ return(1); }
+	if (filterselection == "LBL_30_80")		{ return(2); }
+	if (filterselection == "LBH_10_90")		{ return(3); }
+	if (filterselection == "LBH_30_80")		{ return(4); }
+	if (filterselection == "HB_110_190") 	{ return(5); }
+	if (filterselection == "HB_170_230") 	{ return(6); }
+	if (filterselection == "HB_210_250") 	{ return(7); }
 
 	LOG_WARN_STR ("filterselection value '" << filterselection << 
-											"' not recognized, using LB_10_90");
-	return (0xB9);
+											"' not recognized, using LBL_10_90");
+	return (1);
 }
 
 //
@@ -494,8 +490,9 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	case CAL_STARTACK: {
 		CALStartackEvent		ack(event);
 		CONTROLPreparedEvent	answer;
-		answer.cntlrName = ack.name;
-		if (ack.status == SUCCESS) {
+//		answer.cntlrName = ack.name;
+		answer.cntlrName = getName();
+		if (ack.status == SUCCESS || ack.status == ERR_ALREADY_REGISTERED) {
 			LOG_DEBUG ("Start of calibration was succesful");
 			answer.result = CT_RESULT_NO_ERROR;
 			setObservationState(ack.name, CTState::PREPARED);
@@ -512,7 +509,8 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	case CAL_STOPACK: {
 		CALStopackEvent			ack(event);
 		CONTROLReleasedEvent	answer;
-		answer.cntlrName = ack.name;
+//		answer.cntlrName = ack.name;
+		answer.cntlrName = getName();
 		if (ack.status == SUCCESS) {
 			LOG_DEBUG ("Calibration successfully stopped");
 			setObservationState(ack.name, CTState::RELEASED);
@@ -607,16 +605,20 @@ bool	CalibrationControl::startCalibration(const string& name)
 	}
 
 	// send CALStartEvent
+	string		obsName(formatString("observation[%d]{%d}", getInstanceNr(getName()), 
+															getObservationNr(getName())));
 	CALStartEvent calStartEvent;
-	calStartEvent.name   	   = name;
+	calStartEvent.name   	   = obsName;
 	calStartEvent.parent 	   = observation->second.antennaArray;
-	calStartEvent.nyquist_zone = observation->second.nyquistZone;
 	calStartEvent.rcumode().resize(1);
-	calStartEvent.rcumode()(0).setRaw(convertFilterSelection(observation->second.bandSelection));
+// REO	    rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)mode);
+	calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
+										convertFilterSelection(observation->second.bandSelection));
+	calStartEvent.nyquist_zone = calStartEvent.rcumode()(0).getNyquistZone();
 	calStartEvent.subset 	   = observation->second.RCUset;
-	LOG_DEBUG_STR("Sending CALSTART(" << name <<","<< calStartEvent.parent <<","<<
-				   calStartEvent.nyquist_zone <<","<< 
-				   convertFilterSelection(observation->second.bandSelection) <<")");
+	LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%d,%08X)", 
+							obsName.c_str(), calStartEvent.parent.c_str(),
+							calStartEvent.nyquist_zone, calStartEvent.rcumode()(0).getRaw()));
 
 	itsCalServer->send(calStartEvent);
 	return (true);
@@ -626,7 +628,7 @@ bool	CalibrationControl::startCalibration(const string& name)
 //
 // stopCalibration(name)
 //
-bool	CalibrationControl::stopCalibration(const string&	name)
+bool	CalibrationControl::stopCalibration(const string& name)
 {
 	// search observation
 	OIter		observation = itsObsMap.find(name);
@@ -636,9 +638,11 @@ bool	CalibrationControl::stopCalibration(const string&	name)
 	}
 
 	// send CALStopEvent
-	LOG_DEBUG_STR ("Sending CALSTOP(" << name << ") to CALserver");
+	string		obsName(formatString("observation[%d]{%d}", getInstanceNr(getName()), 
+															getObservationNr(getName())));
+	LOG_DEBUG_STR ("Sending CALSTOP(" << obsName << ") to CALserver");
 	CALStopEvent calStopEvent;
-	calStopEvent.name = name;
+	calStopEvent.name = obsName;
 	itsCalServer->send(calStopEvent);
 
 #if 0

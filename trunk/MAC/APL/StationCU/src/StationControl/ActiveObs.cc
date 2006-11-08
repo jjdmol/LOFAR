@@ -49,12 +49,12 @@ ActiveObs::ActiveObs(const string&		name,
 	itsName(name),
 	itsInstanceNr(getInstanceNr(name)),
 	itsObsPar(APLCommon::Observation(thePS)),
-	itsBeamConnection(false),
-	itsCalConnection(false),
-	itsCalCntlrName(controllerName(CNTLRTYPE_CALIBRATIONCTRL, 
-								   itsInstanceNr, itsObsPar.treeID)),
+	itsBeamCntlrReady(false),
+	itsCalCntlrReady(false),
 	itsBeamCntlrName(controllerName(CNTLRTYPE_BEAMCTRL, 
 									itsInstanceNr, itsObsPar.treeID)),
+	itsCalCntlrName(controllerName(CNTLRTYPE_CALIBRATIONCTRL, 
+								   itsInstanceNr, itsObsPar.treeID)),
 	itsReadyFlag(false)
 {
 }
@@ -72,7 +72,7 @@ ActiveObs::~ActiveObs()
 //
 GCFEvent::TResult	ActiveObs::initial(GCFEvent&	event, GCFPortInterface&	/*port*/)
 {
-	LOG_DEBUG_STR(itsName << ":initial");
+	LOG_DEBUG(formatString("%s:initial - %04X", itsName.c_str(), event.signal));
 
 	switch (event.signal) {
 	case F_ENTRY: 
@@ -96,21 +96,21 @@ GCFEvent::TResult	ActiveObs::initial(GCFEvent&	event, GCFPortInterface&	/*port*/
 	}
 	break;
 
-	case CONTROL_CONNECT: {
-		CONTROLConnectEvent		msg(event);
+	case CONTROL_CONNECTED: {
+		CONTROLConnectedEvent		msg(event);
 		if (msg.cntlrName == itsCalCntlrName) {
-			itsCalConnection = true;
+			itsCalCntlrReady = true;
 			LOG_DEBUG("Connected to CalibrationController");
 		}
 		else if (msg.cntlrName == itsBeamCntlrName) {
-			itsBeamConnection = true;
+			itsBeamCntlrReady = true;
 			LOG_DEBUG("Connected to BeamController");
 		}
 		else {
 			ASSERTSTR(false, "Received Connect event for wrong controller: "
 																	<< msg.cntlrName);
 		}
-		if (itsBeamConnection && itsCalConnection) {
+		if (itsBeamCntlrReady && itsCalCntlrReady) {
 			LOG_DEBUG_STR("Connected to both controllers, going to connected state");
 			TRAN(ActiveObs::connected);
 		}
@@ -141,25 +141,42 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	/*port
 
 	switch (event.signal) {
 	case F_ENTRY: 
-		LOG_DEBUG_STR(itsName << ": in 'connected-mode', wating for CLAIM event");
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
+		LOG_DEBUG_STR(itsName << ": in 'connected-mode', waiting for CLAIM event");
 		break;
 
 	case CONTROL_CLAIM: {
 		// The stationControllerTask should have set the stationclock by now.
 		// Activate the Calibration Controller
-		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to calibrate the subarray");
+		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to connect to CalServer");
 		ChildControl::instance()->
-					requestState(CTState::CLAIMED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+				requestState(CTState::CLAIMED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to connect to BeamServer");
+		ChildControl::instance()->
+				requestState(CTState::CLAIMED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		// will result in CONTROL_CLAIMED
 	}
 	break;
 
 	case CONTROL_CLAIMED: {
 		CONTROLClaimedEvent		msg(event);
-		ASSERTSTR(msg.cntlrName == itsCalCntlrName, 
-					"Received claimed event of unknown controller: " << msg.cntlrName);
-		LOG_DEBUG_STR("Subarray is calibrated, going to standby mode");
-		TRAN(ActiveObs::standby);
+		if (msg.cntlrName == itsBeamCntlrName) {
+			LOG_DEBUG_STR("BeamController is connected to BeamServer");
+			itsBeamCntlrReady = true;
+		}
+		else if (msg.cntlrName == itsCalCntlrName) {
+			LOG_DEBUG("CalController is connected to CalServer");
+			itsCalCntlrReady = true;
+		}
+		else {
+			ASSERTSTR(false, "Received claimed event of unknown controller: " << 
+							 msg.cntlrName);
+		}
+		if (itsBeamCntlrReady && itsCalCntlrReady) {
+			LOG_DEBUG("Both controllers are ready, going to standby mode");
+			TRAN(ActiveObs::standby);
+		}
 	}
 	break;
 
@@ -190,24 +207,50 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	/*port*/
 
 	switch (event.signal) {
 	case F_ENTRY: 
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
 		LOG_DEBUG_STR(itsName << ": in 'standby-mode', wating for PREPARE event");
 		break;
 
 	case CONTROL_PREPARE: {
 		// Activate the BeamController
-		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to start the beam");
+		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to calibrate the subarray");
 		ChildControl::instance()->
-				requestState(CTState::PREPARE, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
+				requestState(CTState::PREPARED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		// will result in CONTROL_PREPARED
 	}
 	break;
 
 	case CONTROL_PREPARED: {
 		CONTROLPreparedEvent		msg(event);
-		ASSERTSTR(msg.cntlrName == itsBeamCntlrName, 
-					"Received prepared event of unknown controller: " << msg.cntlrName);
-		LOG_DEBUG_STR("Beam is started, going to operational mode");
-		TRAN(ActiveObs::operational);
+		if (msg.cntlrName == itsCalCntlrName) {
+			if (msg.result != CT_RESULT_NO_ERROR) {
+				LOG_ERROR_STR("Calibration of subarray FAILED with error " << msg.result);
+				break;
+			}
+			LOG_DEBUG("Subarray is calibrated, asking BeamCtlr to start the beam");
+			itsCalCntlrReady = true;
+			ChildControl::instance()->requestState(CTState::PREPARED, 
+											itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
+			// will result in another CONTROL_PREPARED
+		}
+		else if (msg.cntlrName == itsBeamCntlrName) {
+			if (msg.result != CT_RESULT_NO_ERROR) {
+				LOG_ERROR_STR("Start op beam failed with error " << msg.result);	
+				break;
+			}
+			LOG_DEBUG_STR("BeamController has started the beam");
+			itsBeamCntlrReady = true;
+		}
+		else {
+			ASSERTSTR(false, "Received claimed event of unknown controller: " << 
+							 msg.cntlrName);
+		}
+
+		if (itsBeamCntlrReady && itsCalCntlrReady) {
+			LOG_DEBUG("Both controllers are ready, going to operational mode");
+			TRAN(ActiveObs::operational);
+		}
 	}
 	break;
 
@@ -238,7 +281,25 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	/*po
 
 	switch (event.signal) {
 	case F_ENTRY: 
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
 		LOG_DEBUG_STR(itsName << ": in 'operational-mode' until RELEASE event");
+		break;
+
+	case CONTROL_SUSPEND: {
+		// pass event through to controllers
+		LOG_DEBUG("Passing SUSPEND event to childs");
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
+		ChildControl::instance()->
+				requestState(CTState::SUSPENDED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		ChildControl::instance()->
+				requestState(CTState::SUSPENDED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		// will result in CONTROL_RELEASED
+	}
+	break;
+	
+	case CONTROL_SUSPENDED:
 		break;
 
 	case CONTROL_RELEASE: {
@@ -286,6 +347,8 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 
 	switch (event.signal) {
 	case F_ENTRY: 
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
 		LOG_DEBUG_STR(itsName << ": in 'stopping-mode' until controllers are down");
 		break;
 
@@ -306,18 +369,18 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 	case CONTROL_FINISHED: {
 		CONTROLFinishedEvent		msg(event);
 		if (msg.cntlrName == itsCalCntlrName) {
-			itsCalConnection = false;
+			itsCalCntlrReady = true;
 			LOG_DEBUG_STR("CalibrationController " << itsCalCntlrName << " is down");
 		}
 		else if (msg.cntlrName == itsBeamCntlrName) {
-			itsBeamConnection = false;
+			itsBeamCntlrReady = true;
 			LOG_DEBUG_STR("BeamController " << itsBeamCntlrName << " is down");
 		}
 		else {
 			ASSERTSTR(false, "Received finished event for wrong controller: "
 																	<< msg.cntlrName);
 		}
-		if (!itsBeamConnection && !itsCalConnection) {
+		if (itsBeamCntlrReady && itsCalCntlrReady) {
 			LOG_DEBUG_STR("Both controllers are down, informing stationControl task");
 			itsReadyFlag = true;
 		}
@@ -335,6 +398,24 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 	}
 
 	return (GCFEvent::HANDLED);
+}
+
+ostream& ActiveObs::print (ostream& os) const
+{
+	os << "ACTIVEOBS         : " << itsName << endl;
+	os << "instancenr        : " << itsInstanceNr << endl;
+	os << "treeid            : " << itsObsPar.treeID << endl;
+	os << "nyquistZone       : " << itsObsPar.nyquistZone << endl;
+	os << "sampleClock       : " << itsObsPar.sampleClock << endl;
+	os << "filter            : " << itsObsPar.filter << endl;
+	os << "antennaArray      : " << itsObsPar.antennaArray << endl;
+	os << "BeamCntlr ready   : " << itsBeamCntlrReady << endl;
+	os << "CalCntlr ready    : " << itsCalCntlrReady << endl;
+	os << "BeamControllerName: " << itsBeamCntlrName << endl;
+	os << "CalControllerName : " << itsCalCntlrName << endl;
+	os << "Ready             : " << itsReadyFlag << endl;
+
+	return (os);
 }
 
 
