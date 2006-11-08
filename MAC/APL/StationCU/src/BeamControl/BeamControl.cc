@@ -210,7 +210,7 @@ void BeamControl::handlePropertySetAnswer(GCFEvent& answer)
 //
 // initial_state(event, port)
 //
-// Setup all connections.
+// Connect to PVSS and report state back to startdaemon
 //
 GCFEvent::TResult BeamControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -246,11 +246,9 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 		  
 			// Start ParentControl task
-			LOG_DEBUG ("Enabling ParentControl task");
+			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
 			itsParentPort = itsParentControl->registerTask(this);
-
-			LOG_DEBUG ("Going to operational state");
-			TRAN(BeamControl::active_state);				// go to next state.
+			// results in CONTROL_CONNECT
 		}
 		break;
 
@@ -262,6 +260,19 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 	case F_DISCONNECTED:
 		break;
 	
+	case CONTROL_CONNECT: {
+		CONTROLConnectEvent		msg(event);
+		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
+		setState(CTState::CONNECTED);
+		CONTROLConnectedEvent	answer;
+		answer.cntlrName = msg.cntlrName;
+		port.send(answer);
+
+		LOG_DEBUG ("Going to started state");
+		TRAN(BeamControl::started_state);				// go to next state.
+		break;
+	}
+
 	default:
 		LOG_DEBUG_STR ("initial, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -270,6 +281,140 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 	return (status);
 }
 
+
+//
+// started_state(event, port)
+//
+// wait for CLAIM event
+//
+GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("started:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// update PVSS
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("started"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		break;
+	}
+
+	case F_INIT:
+		break;
+
+	case F_CONNECTED: {
+		ASSERTSTR (&port == itsBeamServer, "F_CONNECTED event from port " 
+											<< port.getName());
+		itsTimerPort->cancelAllTimers();
+		LOG_DEBUG ("Connected with BeamServer, going to claimed state");
+		setState(CTState::CLAIMED);
+		sendControlResult(*itsParentPort, CONTROL_CLAIMED, getName(), CT_RESULT_NO_ERROR);
+		TRAN(BeamControl::claimed_state);				// go to next state.
+		break;
+	}
+
+	case F_DISCONNECTED: {
+		port.close();
+		ASSERTSTR (&port == itsBeamServer, 
+								"F_DISCONNECTED event from port " << port.getName());
+		LOG_DEBUG("Connection with BeamServer failed, retry in 2 seconds");
+		itsTimerPort->setTimer(2.0);
+		break;
+	}
+
+	case F_TIMER: 
+//		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+		LOG_DEBUG ("Trying to reconnect to BeamServer");
+		itsBeamServer->open();		// will result in F_CONN or F_DISCONN
+		break;
+
+	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+	case CONTROL_CLAIM: {
+		CONTROLClaimEvent		msg(event);
+		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
+		setState(CTState::CLAIM);
+		LOG_DEBUG ("Trying to connect to BeamServer");
+		itsBeamServer->open();		// will result in F_CONN or F_DISCONN
+		break;
+	}
+
+	default:
+		LOG_DEBUG("started, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return (status);
+}
+
+//
+// claimed_state(event, port)
+//
+// wait for PREPARE event.
+//
+GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("claimed:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// update PVSS
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("claimed"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		break;
+	}
+
+	case F_INIT:
+		break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		ASSERTSTR (&port == itsBeamServer, 
+								"F_DISCONNECTED event from port " << port.getName());
+		LOG_DEBUG("Connection with BeamServer lost, going to reconnect state.");
+		TRAN(BeamControl::started_state);
+		break;
+	}
+
+	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+	case CONTROL_PREPARE: {
+		CONTROLPrepareEvent		msg(event);
+		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
+		setState(CTState::PREPARE);
+		doPrepare(msg.cntlrName);	// will result in BS_BEAMALLOCACK event
+		break;
+	}
+
+	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
+	case BS_BEAMALLOCACK: {
+		BSBeamallocackEvent		msg(event);
+		uint16 result  = handleBeamAllocAck(event);
+		if (result == CT_RESULT_NO_ERROR) {
+			setState(CTState::PREPARED);
+			LOG_DEBUG("Beam allocated, going to active state");
+			TRAN(BeamControl::active_state);
+		}
+
+		LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << result << ") event");
+		CONTROLPreparedEvent	answer;
+		answer.cntlrName = getName();
+		answer.result    = result;
+		itsParentPort->send(answer);
+		break;
+	}
+
+	default:
+		LOG_DEBUG("claimed, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return (status);
+}
 
 //
 // active_state(event, port)
@@ -291,74 +436,23 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	}
 
 	case F_INIT:
-		itsBeamServer->open();
 		break;
-
-	case F_ACCEPT_REQ:
-		break;
-
-	case F_CONNECTED: {
-		ASSERTSTR (&port == itsBeamServer || &port == itsParentPort, 
-									"F_CONNECTED event from port " << port.getName());
-		if (&port == itsBeamServer) {
-			itsTimerPort->cancelAllTimers();
-			LOG_DEBUG ("Connected with BeamServer");
-			setState(CTState::CLAIMED);
-			CONTROLClaimedEvent		answer;
-			answer.cntlrName = getName();
-			answer.result    = CT_RESULT_NO_ERROR;
-			itsParentPort->send(answer);
-		}
-		break;
-	}
 
 	case F_DISCONNECTED: {
 		port.close();
 		ASSERTSTR (&port == itsBeamServer, 
 								"F_DISCONNECTED event from port " << port.getName());
-		LOG_DEBUG("Connection with BeamServer failed, retry in 2 seconds");
-		itsTimerPort->setTimer(2.0);
+		LOG_DEBUG("Connection with BeamServer lost, going to reconnect");
+		TRAN(BeamControl::started_state);
 		break;
 	}
-
-	case F_TIMER: 
-//		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-		LOG_DEBUG ("Trying to reconnect to BeamServer");
-		itsBeamServer->open();		// will result in F_CONN or F_DISCONN
-		break;
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
-	case CONTROL_CONNECT: {
-		CONTROLConnectEvent		msg(event);
-		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
-		setState(CTState::CONNECTED);
-		CONTROLConnectedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
-		break;
-	}
 
 	case CONTROL_SCHEDULED: {
 		CONTROLScheduledEvent		msg(event);
 		LOG_DEBUG_STR("Received SCHEDULED(" << msg.cntlrName << ")");
 		// TODO: do something usefull with this information!
-		break;
-	}
-
-	case CONTROL_CLAIM: {
-		CONTROLClaimEvent		msg(event);
-		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
-		setState(CTState::CLAIM);
-		LOG_DEBUG ("Trying to connect to BeamServer");
-		itsBeamServer->open();		// will result in F_CONN or F_DISCONN
-		break;
-	}
-
-	case CONTROL_PREPARE: {
-		CONTROLPrepareEvent		msg(event);
-		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
-		setState(CTState::PREPARE);
-		doPrepare(msg.cntlrName);	// will result in BS_BEAMALLOCACK event
 		break;
 	}
 
@@ -393,25 +487,19 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		CONTROLReleasedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
 		port.send(answer);
+		LOG_DEBUG("Released beam going back to 'claimed' mode");
+		TRAN(BeamControl::claimed_state);
 		break;
 	}
+
+	case CONTROL_QUIT: {
+		CONTROLQuitEvent		msg(event);
+		LOG_DEBUG("Received QUIT event, going down");
+		stop();
+	}
+	break;
 
 	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
-	case BS_BEAMALLOCACK: {
-		BSBeamallocackEvent		msg(event);
-		uint16 result  = handleBeamAllocAck(event);
-		if (result == CT_RESULT_NO_ERROR) {
-			setState(CTState::PREPARED);
-		}
-
-		LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << result << ") event");
-		CONTROLPreparedEvent	answer;
-		answer.cntlrName = getName();
-		answer.result    = result;
-		itsParentPort->send(answer);
-		break;
-	}
-
 	case BS_BEAMFREEACK:
 		handleBeamFreeAck(event);
 		break;
@@ -448,7 +536,8 @@ void BeamControl::doPrepare(const string&	cntlrName)
 
 	BSBeamallocEvent beamAllocEvent;
 	beamAllocEvent.name 		= getName();
-	beamAllocEvent.subarrayname = globalParameterSet()->getString("Observation.antennaArray");
+	beamAllocEvent.subarrayname = formatString("observation[%d]{%d}", getInstanceNr(getName()),
+																	getObservationNr(getName()));
 	LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
 
 	vector<int>::iterator beamletIt = beamletsVector.begin();
@@ -478,7 +567,7 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 	vector<string>	sourceTimes;
 	vector<double>	angles1;
 	vector<double>	angles2;
-	string			beam(globalParameterSet()->locateModule("Beam")+".");
+	string			beam(globalParameterSet()->locateModule("Beam")+"Beam.");
 	sourceTimes     = globalParameterSet()->getStringVector(beam+"angleTimes");
 	angles1    = globalParameterSet()->getDoubleVector(beam+"angle1");
 	angles2 = globalParameterSet()->getDoubleVector(beam+"angle2");
@@ -540,6 +629,7 @@ bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 //TODO		errorCode = CT_RESULT_BEAMFREE_ERROR;
 //TODO		LOG_ERROR_STR("Beamlet de-allocation failed with errorcode: " << ack.status);
 //TODO	}
+	return (true);
 }
 
 // _connectedHandler(port)

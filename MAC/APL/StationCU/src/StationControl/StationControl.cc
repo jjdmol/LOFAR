@@ -229,7 +229,13 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		}
 
-		LOG_DEBUG ("Attached to external propertySet, going to connection state");
+		LOG_DEBUG ("Attached to external propertySet");
+
+		LOG_DEBUG ("Enabling ChildControl task");
+		itsChildControl->openService(MAC_SVCMASK_STATIONCTRL, itsInstanceNr);
+		itsChildControl->registerCompletionPort(itsChildPort);
+
+		LOG_DEBUG ("Going to connect state to attach to DigitalBoardController");
 		TRAN(StationControl::connect_state);			// go to next state.
 		break;
 
@@ -272,15 +278,44 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 							   		0,			// treeID, 
 							   		0,			// instanceNr,
 							   		myHostname(true));
-		// will result in CONTROL_CONNECT
+		// will result in CONTROL_STARTED and CONTROL_CONNECT if not error.
 		}
 		break;
 
-	case CONTROL_CONNECT: {
-		CONTROLConnectEvent		msg(event);
+	case CONTROL_STARTED: {
+		CONTROLStartedEvent		msg(event);
+		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
+							"Started event of unknown controller: " << msg.cntlrName);
+			if (msg.successful) {
+				LOG_INFO_STR("Startup of " << msg.cntlrName << 
+											" succesful, waiting for connection");
+			}
+			else {
+				LOG_WARN_STR("Startup of " << msg.cntlrName << "FAILED");
+				// inform parent about the failure
+				CONTROLConnectedEvent	answer;
+				answer.cntlrName = getName();
+				answer.result    = CT_RESULT_LOST_CONNECTION;
+				itsParentPort->send(answer);
+			}
+		}
+		break;
+
+	case CONTROL_CONNECTED: {
+		CONTROLConnectedEvent		msg(event);
 		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
 							"Connect event of unknown controller: " << msg.cntlrName);
-		LOG_DEBUG ("Attached to DigitalBoardControl, going to operational state");
+
+		// inform parent the chain is up
+		CONTROLConnectedEvent	answer;
+		answer.cntlrName = getName();
+		answer.result    = CT_RESULT_NO_ERROR;
+		itsParentPort->send(answer);
+
+		LOG_DEBUG ("Attached to DigitalBoardControl, enabling ParentControl task");
+		itsParentPort = itsParentControl->registerTask(this);
+
+		LOG_DEBUG ("All initialisation done, going to operational state");
 		TRAN(StationControl::operational_state);			// go to next state.
 		}
 		break;
@@ -289,6 +324,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		break;
 
 	case F_DISCONNECTED:
+		port.close();
 		break;
 	
 	default:
@@ -333,22 +369,37 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		CONTROLConnectEvent		msg(event);
 		CONTROLConnectedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
-		// add observation to the list of not already in the list
+		// add observation to the list if not already in the list
 		answer.result = _addObservation(msg.cntlrName) ? 
 									CT_RESULT_NO_ERROR : CT_RESULT_UNSPECIFIED;
 		port.send(answer);
 	}
 	break;
 
-	case CONTROL_CLAIM:
+	case CONTROL_CONNECTED:		// from ChildITCport
+	case CONTROL_SCHEDULED:
+	case CONTROL_CLAIMED:
+	case CONTROL_PREPARED:
+	case CONTROL_RESUMED:
+	case CONTROL_SUSPENDED:
+	case CONTROL_RELEASED:
+	case CONTROL_CLAIM:			// from ParentITCport
 	case CONTROL_SCHEDULE:
 	case CONTROL_PREPARE:
 	case CONTROL_RESUME:
 	case CONTROL_SUSPEND:
 	case CONTROL_RELEASE:
 	case CONTROL_QUIT: {
+		// All the events have the problem that the controller can be StationControl,
+		// CalibrationControl or BeamControl. But what they all have in common is
+		// the instancenumber and treeID.
+		// Substract instanceNr and treeID and contruct the StationControl-variant.
 		CONTROLCommonEvent	ObsEvent(event);
-		ObsIter		theObs = itsObsMap.find(ObsEvent.cntlrName);
+		uint16			 instanceNr = getInstanceNr(ObsEvent.cntlrName);
+		OTDBtreeIDType	 treeID	    = getObservationNr(ObsEvent.cntlrName);
+		string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, 
+															instanceNr, treeID);
+		ObsIter			 theObs     = itsObsMap.find(cntlrName);
 		if (theObs == itsObsMap.end()) {
 			LOG_WARN_STR("Event for unknown observation: " << ObsEvent.cntlrName);
 			break;
@@ -363,6 +414,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		}
 
 		// pass event to observation FSM
+		LOG_TRACE_FLOW("Dispatch to observation FSM's");
 		theObs->second->dispatch(event, port);
 
 		// end of FSM?
@@ -370,15 +422,35 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			LOG_DEBUG_STR("Removing " <<ObsEvent.cntlrName<< " from the administration");
 			delete theObs->second;
 			itsObsMap.erase(theObs);
+			break;
 		}
+
+		// check if all actions for this event are finished.
+		vector<ChildControl::StateInfo>	cntlrStates = 
+									itsChildControl->getPendingRequest("", treeID);
+		if (cntlrStates.empty()) {	// no pending requests? Ready.
+			sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_NO_ERROR);
+			break;
+		}
+		// Show where we are waiting for. When error occured, report it back and stop
+		for (uint i = 0; i < cntlrStates.size(); i++) {
+			if (cntlrStates[i].result != CT_RESULT_NO_ERROR) {
+				LOG_ERROR_STR("Controller " << cntlrStates[i].name << 
+							  " failed with error " << cntlrStates[i].result);
+				sendControlResult(*itsParentPort, event.signal, cntlrName, 
+														cntlrStates[i].result);
+				break;
+			}
+			LOG_TRACE_COND_STR ("Still waiting for " << cntlrStates[i].name);
+		} // for
 	}
 	break;
 
 	default:
 		LOG_DEBUG("active_state, default");
 		status = GCFEvent::NOT_HANDLED;
-		break;
-	}
+	break;
+	} // switch
 
 	return (status);
 }
@@ -400,11 +472,14 @@ bool StationControl::_addObservation(const string&	name)
 	theObsPS.adoptFile(string(LOFAR_SHARE_LOCATION) + "/" + name);
 
 	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS);
-	LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
-	return (false);
+	if (!theNewObs) {
+		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
+		return (false);
+	}
 
 	LOG_DEBUG_STR("Adding " << name << " to administration");
 	itsObsMap[name] = theNewObs;
+	LOG_DEBUG_STR(*theNewObs);
 	theNewObs->start();				// call initial state.
 
 	return (true);

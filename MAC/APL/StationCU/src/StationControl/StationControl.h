@@ -113,7 +113,7 @@ private:
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
-	uint32					itsClock;
+	int32					itsClock;
 
 	typedef	map<string, ActiveObs*>::iterator		ObsIter;
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
