@@ -74,7 +74,7 @@ CSConnection::~CSConnection()
 
 CSConnection::State CSConnection::read()
 {
-  LOG_TRACE_FLOW("CSConnection read()");
+  LOG_TRACE_RTTI("CSConnection read()");
   DBGASSERTSTR(itsDestDH != 0, "No destination DataHolder set!");
   DBGASSERTSTR(itsDestDH->isInitialized(), 
 	       "Destination dataholder has not been initialized!");

@@ -99,7 +99,7 @@ void APAdminPool::remove(APAdmin*	anAPAdmin) throw(Exception)
 APAdmin*	APAdminPool::poll(time_t		waitTime)
 {
 	for (int i = itsCurElement; i < itsReadMask.count(); ++i) {
-		cout << "poll at " << i << endl;
+		LOG_TRACE_COND_STR("poll at " << i);
 		if (itsAPAPool.at(i)->read()) {
 			setCurElement (i+1);
 			return (itsAPAPool.at(i));
@@ -111,6 +111,7 @@ APAdmin*	APAdminPool::poll(time_t		waitTime)
 }
 
 //
+
 // void writeToAll(command, options)
 //
 void APAdminPool::writeToAll(PCCmd			command,

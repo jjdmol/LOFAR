@@ -25,10 +25,13 @@
 #include <BBSControl/BBSProcessControl.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
+#include <BBSKernel/BBSStatus.h>
 #include <Transport/DH_BlobStreamable.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/CSConnection.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exceptions.h>
+#include <Common/lofar_smartptr.h>
 
 using namespace LOFAR::ACC::APS;
 
@@ -98,6 +101,10 @@ namespace LOFAR
       LOG_INFO("BBSProcessControl::init()");
 
       try {
+	// Check pre-conditions
+	ASSERT(itsDataHolder);
+	ASSERT(itsTransportHolder);
+
 	// We need to send the strategy first.
 	itsStrategySent = false;
 
@@ -105,13 +112,11 @@ namespace LOFAR
 	itsStepsIterator = itsSteps.begin();
 
 	// DH_BlobStreamable is initialized implicitly by its constructor.
-	ASSERT(itsDataHolder);
 	if (!itsDataHolder->isInitialized()) {
 	  LOG_ERROR("Initialization of DataHolder failed");
 	  return false;
 	}
 	// Connect the client socket to the server.
-	ASSERT(itsTransportHolder);
 	if (!itsTransportHolder->init()) {
 	  LOG_ERROR("Initialization of TransportHolder failed");
 	  return false;
@@ -146,26 +151,58 @@ namespace LOFAR
 	ASSERT(itsConnection);
 	ASSERT(itsStrategy);
 
+	// Keep the result of sending data.
+	bool result;
+
 	// If we have not sent the strategy yet. We should do so now.
 	if (!itsStrategySent) {
-          itsStrategySent = true;
-	  return sendObject(*itsStrategy);
+	  result = itsStrategySent = sendObject(*itsStrategy);
 	}
 	// Else, we should send the next step, unless we're at the end of the
 	// vector of steps.
 	else {
-	  if (itsStepsIterator == itsSteps.end()) {
-	    LOG_TRACE_COND("Reached end of vector of steps");
-	    return false;
+	  if (itsStepsIterator != itsSteps.end()) {
+	    // Send the next step and increment the iterator.
+	   result = sendObject(**itsStepsIterator++);
 	  }
-	  // Send the next step and increment the iterator.
-	  return sendObject(**itsStepsIterator++);
+	  else {
+	    LOG_TRACE_COND("Reached end of vector of steps");
+	    result = false;
+	  }
 	}
+	// If something went wrong, return immediately.
+	if (!result) return false;
+
+	// Read back the response from the BBS kernel (probably a BBSStatus).
+	BlobStreamable* bs = recvObject();
+
+	// Something went (terribly) wrong. Return immediately.
+	if (!bs) return false;
+
+        // Assume we've received a BBSStatus
+        BBSStatus* sts = dynamic_cast<BBSStatus*>(bs);
+        if (!sts) {
+          LOG_ERROR("Expected to receive a BBSStatus");
+          return false;
+        }
+
+        LOG_DEBUG_STR("Received BBSStatus: " << *sts);
+        if (!(*sts)) {
+          LOG_ERROR_STR("Received BBSStatus: " << *sts);
+          return false;
+        }
+
+	// Do some smart things.
+	// ...
+
       }
       catch (Exception& e) {
 	LOG_ERROR_STR(e);
 	return false;
       }
+
+      // All went well.
+      return true;
     }
     
 
@@ -220,6 +257,7 @@ namespace LOFAR
     
     bool BBSProcessControl::sendObject(const BlobStreamable& bs)
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       try {
 	// Serialize the object
 	itsDataHolder->serialize(bs);
@@ -239,6 +277,34 @@ namespace LOFAR
       return true;
     }
 
+
+    BlobStreamable* BBSProcessControl::recvObject()
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      try {
+	// Do a blocking receive
+	if (itsConnection->read() == CSConnection::Error) {
+	  THROW(IOException, "CSConnection::read() failed");
+	}
+
+	// Deserialize the object
+	BlobStreamable* bs = itsDataHolder->deserialize();
+	if (!bs) {
+	  LOG_ERROR("Error while receiving object");
+	}
+	LOG_DEBUG_STR("Received a " << itsDataHolder->classType() <<
+		      " object");
+
+	// Return the object
+	return bs;
+      }
+      catch (Exception& e) {
+	LOG_ERROR_STR(e);
+	return 0;
+      }
+      // We should never get here.
+      ASSERTSTR(false, "We should never get here.");
+    }
 
   } // namespace BBS
 
