@@ -40,45 +40,45 @@ Array<int32, 2> WGSettings::m_presets;
 
 void WGSettings::initWaveformPresets()
 {
-  m_presets.resize(N_WAVEFORM_PRESETS, N_WAVE_SAMPLES);
+  m_presets.resize(N_WAVEFORM_PRESETS, MEPHeader::N_WAVE_SAMPLES);
   
   //
   // Initialize SINE waveform
   //
-  for (int i = 0; i < N_WAVE_SAMPLES; i++)
+  for (int i = 0; i < MEPHeader::N_WAVE_SAMPLES; i++)
   {
-    WGSettings::m_presets(PRESET_SINE, i) = (int32)(::sin((double)i * 2.0 * M_PI / N_WAVE_SAMPLES) * (1<<15));
+    WGSettings::m_presets(PRESET_SINE, i) = (int32)(::sin((double)i * 2.0 * M_PI / MEPHeader::N_WAVE_SAMPLES) * (1<<15));
   }
   LOG_DEBUG_STR("sine=" << WGSettings::m_presets(PRESET_SINE, Range::all()));
 
   //
   // Initialize SQUARE waveform
   //
-  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  for (int i = 0; i < MEPHeader::N_WAVE_SAMPLES / 2; i++)
   {
     WGSettings::m_presets(PRESET_SQUARE, i) = ((1<<15)-1);
   }
-  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  for (int i = 0; i < MEPHeader::N_WAVE_SAMPLES / 2; i++)
   {
-    WGSettings::m_presets(PRESET_SQUARE, i + N_WAVE_SAMPLES / 2) = -(1<<15);
+    WGSettings::m_presets(PRESET_SQUARE, i + MEPHeader::N_WAVE_SAMPLES / 2) = -(1<<15);
   }
   LOG_DEBUG_STR("square=" << WGSettings::m_presets(PRESET_SQUARE, Range::all()));
 
   //
   // Initialize TRIANGLE waveform
   //
-  for (int i = 0; i < N_WAVE_SAMPLES / 4; i++)
+  for (int i = 0; i < MEPHeader::N_WAVE_SAMPLES / 4; i++)
   {
     WGSettings::m_presets(PRESET_TRIANGLE, i) = i * (1<<8);
   }
-  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  for (int i = 0; i < MEPHeader::N_WAVE_SAMPLES / 2; i++)
   {
-    WGSettings::m_presets(PRESET_TRIANGLE, i + N_WAVE_SAMPLES / 4)
+    WGSettings::m_presets(PRESET_TRIANGLE, i + MEPHeader::N_WAVE_SAMPLES / 4)
       = ((1<<15)-1) - i * (1<<8);
   }
-  for (int i = 0; i < N_WAVE_SAMPLES / 4; i++)
+  for (int i = 0; i < MEPHeader::N_WAVE_SAMPLES / 4; i++)
   {
-    WGSettings::m_presets(PRESET_TRIANGLE, i + 3 * N_WAVE_SAMPLES / 4)
+    WGSettings::m_presets(PRESET_TRIANGLE, i + 3 * MEPHeader::N_WAVE_SAMPLES / 4)
       = -(1<<15) + i * (1<<8);
   }
   LOG_DEBUG_STR("triangle=" << WGSettings::m_presets(PRESET_TRIANGLE, Range::all()));
@@ -86,13 +86,13 @@ void WGSettings::initWaveformPresets()
   //
   // Initialize RAMP waveform
   //
-  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  for (int i = 0; i < MEPHeader::N_WAVE_SAMPLES / 2; i++)
   {
     WGSettings::m_presets(PRESET_RAMP, i) = i * (1<<7);
   }
-  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  for (int i = 0; i < MEPHeader::N_WAVE_SAMPLES / 2; i++)
   {
-    WGSettings::m_presets(PRESET_RAMP, i + N_WAVE_SAMPLES / 2) = -(1<<15) + i * (1<<7);
+    WGSettings::m_presets(PRESET_RAMP, i + MEPHeader::N_WAVE_SAMPLES / 2) = -(1<<15) + i * (1<<7);
   }
   LOG_DEBUG_STR("ramp=" << WGSettings::m_presets(PRESET_RAMP, Range::all()));
 }

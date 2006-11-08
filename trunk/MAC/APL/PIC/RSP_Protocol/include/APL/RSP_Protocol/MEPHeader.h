@@ -248,12 +248,6 @@ namespace LOFAR {
 
       static const uint16 N_HBA_DELAYS     = 16; // number of High Band antenna delay elements
  
-      //
-      // Registers too large to send in a single ethernet frame
-      // (> 1500 bytes) will be sent in a number of fragments of this size.
-      //
-      static const uint16 FRAGMENT_SIZE = 1024;
-    
       /*@}*/
 
       
@@ -280,10 +274,10 @@ namespace LOFAR {
       
       static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 960?
 
-      static const uint16 BF_XROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_XIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_YROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_YIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_XROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
+      static const uint16 BF_XIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
+      static const uint16 BF_YROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
+      static const uint16 BF_YIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
 
       static const uint16 BST_POWER_SIZE        = N_LOCAL_BEAMLETS * N_POL * sizeof(uint32);
 
@@ -321,6 +315,21 @@ namespace LOFAR {
        */
       static const uint16 RAD_BP_SIZE = 4; // four bytes = 32 bits, 8 bits per lane
 
+      //
+      // Registers too large to send in a single ethernet frame
+      // (> 1500 bytes) will be sent in a number of fragments of this size.
+      //
+      static const uint16 FRAGMENT_SIZE        = 1024;
+      static const uint16 N_AP                 = 4;
+      static const uint16 BF_N_FRAGMENTS       = 2;
+      static const uint16 N_WAVE_SAMPLES       = DIAG_WGXWAVE_SIZE / sizeof(int32);
+      static const uint16 SST_N_FRAGMENTS      = SST_POWER_SIZE / FRAGMENT_SIZE;
+      static const uint16 N_SST_STATS          = FRAGMENT_SIZE / sizeof(uint32);
+      static const uint16 N_DIAG_WG_REGISTERS  = 2;
+      static const uint16 N_CDO_REGISTERS      = 2;
+      static const uint16 N_RCUPROTOCOL_WRITES = 2;
+      static const uint16 N_HBAPROTOCOL_WRITES = 2;
+    
       /*@}*/
 
     public:
