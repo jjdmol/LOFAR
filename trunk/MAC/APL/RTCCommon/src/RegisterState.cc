@@ -95,6 +95,8 @@ void RegisterState::tran(State source, State target, int i)
       m_state(j) = target;
     } else if (target != m_state(j)) {
       LOG_ERROR_STR("tran(" << source << ", " << target << ") failed, current state = " << m_state(j));
+      // for some reason the LOG_ERROR doesn't work in this file so cerr is sometimes used like below
+      //cerr << "tran(" << source << ", " << target << ") failed, current state = " << m_state(j) << endl;
     }
   }
 }
@@ -123,6 +125,34 @@ void RegisterState::clear(int i)
       m_state(j) = WRITE;
     } else {
       LOG_ERROR_STR("clear tran from " << m_state(j) << " failed");
+    }
+  }
+}
+
+// transition from IDLE or CHECK -> WRITE
+void RegisterState::write(int i)
+{
+  int lb = 0, ub = 0;
+  if (i < 0) {
+    lb = 0;
+    ub = m_state.extent(blitz::firstDim);
+  } else {
+    ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+    lb = i;
+    ub = i + 1;
+  }
+   
+  for (int j = lb; j < ub; j++) {
+    if (IDLE == m_state(j)) {
+      m_state(j) = WRITE;
+    } else if (CHECK == m_state(j)) {
+      m_state(j) = WRITE;
+    } else if (WRITE == m_state(j)) {
+      // already in write state
+    } else {
+      LOG_ERROR_STR("tran to " << WRITE << " from " << m_state(j) << " failed");
+      // for some reason the LOG_ERROR doesn't work in this file so cerr is sometimes used like below
+      //cerr << "tran to " << WRITE << " from " << m_state(j) << " failed" << endl;
     }
   }
 }
