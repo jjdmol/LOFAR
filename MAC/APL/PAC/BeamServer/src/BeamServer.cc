@@ -253,25 +253,32 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 Beam* BeamServer::newBeam(BeamTransaction& bt, GCFPortInterface* port,
 			  std::string name, std::string subarrayname, BS_Protocol::Beamlet2SubbandMap allocation)
 {
-  ASSERT(port);
+	ASSERT(port);
 
-  // check for valid parameters
-  // returning 0 will result in a negative ACK
-  if (!(0 == bt.getBeam() && 0 == bt.getPort())) return 0; // previous alloc in progress
-  if (0 == name.length())                        return 0; // name must be set
-  if (0 == subarrayname.length())                return 0; // subarrayname must be set
+	// check for valid parameters
+	// returning 0 will result in a negative ACK
+	if (bt.getBeam() != 0 || bt.getPort() != 0) {
+		LOG_DEBUG("Previous alloc is still in progress");
+		 return (0);
+	}
+	if (name.length() == 0) {
+		LOG_DEBUG("Name of beam not set, cannot alloc new beam");
+		return (0);
+	}
+	if (subarrayname.length() == 0)  {
+		LOG_DEBUG("SubArrayName not set, cannot alloc new beam");
+		return (0); 
+	}
 
-  Beam* beam = m_beams.get(name, subarrayname, allocation);
+	Beam* beam = m_beams.get(name, subarrayname, allocation);
 
-  if (beam) {
-    // register new beam
-    m_client_beams[port].insert(beam);
+	if (beam) { // register new beam
+		m_client_beams[port].insert(beam);
+		m_beams_modified = true;
+		bt.set(port, beam);
+	}
 
-    m_beams_modified = true;
-    bt.set(port, beam);
-  }
-
-  return beam;
+	return (beam);
 }
 
 void BeamServer::deleteBeam(BeamTransaction& bt)

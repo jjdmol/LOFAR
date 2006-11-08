@@ -24,10 +24,14 @@ include = '<Common/LofarTypes.h>';
 prelude = << PRELUDE_END
 
 enum {
-  SUCCESS = 0,
-  ERR_RANGE,       // range error in message parameters
-  ERR_NO_PARENT,   // no parent antenna array by that name found
-  ERR_NO_SUBARRAY, // no subarray by that name found
+	SUCCESS = 0,
+	ERR_RANGE,       		// range error in message parameters
+	ERR_NO_PARENT,   		// no parent antenna array by that name found
+	ERR_NO_SUBARRAY, 		// no subarray by that name found
+	ERR_ALREADY_REGISTERED,	// subarray already registered
+	ERR_ONLY_ONE_SUBARRAY,  // only 1 subarray per client allowed
+	ERR_NO_SUBARRAY_NAME,	// name of subarray is empty
+	ERR_NO_ANTENNAS			// antenna selection is empty
 };
 
 static const int MAX_N_RCUS=256;

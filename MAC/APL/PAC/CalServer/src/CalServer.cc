@@ -491,128 +491,122 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  CALStartEvent start(e);
-  CALStartackEvent ack;
+	CALStartEvent 	 start(e);
+	CALStartackEvent ack;
 
-  ack.status = CAL_Protocol::SUCCESS; // assume succes, until otherwise
-  ack.name = start.name;
+	ack.status = CAL_Protocol::SUCCESS; // assume succes, until otherwise
+	ack.name   = start.name;
 
-  // find parent AntennaArray
-  const AntennaArray* parent = m_arrays.getByName(start.parent);
+	// find parent AntennaArray
+	const AntennaArray* parent = m_arrays.getByName(start.parent);
 
-  if (m_subarrays.getByName(start.name)) {
+	if (m_subarrays.getByName(start.name)) {
+		LOG_ERROR_STR("A subarray with name='" << start.name << "' has already been registered.");
+		ack.status = ERR_ALREADY_REGISTERED;
 
-    LOG_ERROR_STR("A subarray with name='" << start.name << "' has already been registered.");
-    ack.status = ERR_RANGE;
+	} else if ("" != m_clients[&port]) {
+		LOG_ERROR_STR("A subarray has already been registered: name=" << m_clients[&port]);
+		LOG_ERROR("Only one active subarray per client supported.");
+		ack.status = ERR_ONLY_ONE_SUBARRAY;
 
-  } else if ("" != m_clients[&port]) {
+	} else if ("" == string(start.name)) {
+		LOG_ERROR("Empty subarray name.");
+		ack.status = ERR_NO_SUBARRAY_NAME;
 
-    LOG_ERROR_STR("A subarray has already been registered: name=" << m_clients[&port]);
-    LOG_ERROR("Only one active subarray per client supported.");
-    ack.status = ERR_RANGE;
+	} else if (!parent) {
+		// parent not found, set error status
+		LOG_ERROR_STR("Parent array '" << start.parent << "' not found.");
+		ack.status = ERR_NO_PARENT;
 
-  } else if ("" == string(start.name)) {
+	} else if (start.subset.count() == 0) {
+		// empty selection
+		LOG_ERROR("Empty antenna selection not allowed.");
+		ack.status = ERR_NO_ANTENNAS;
 
-    LOG_ERROR("Empty subarray name.");
-    ack.status = ERR_RANGE;
+	} else {
+		// register because this is a cal_start
+		m_clients[&port] = string(start.name); // register subarray with port
 
-  } else if (!parent) {
+		const Array<double, 3>& positions = parent->getAntennaPos();
+		Array<bool, 2> select;
+		select.resize(positions.extent(firstDim), positions.extent(secondDim));
+		select = false;
 
-    // parent not found, set error status
-    LOG_ERROR_STR("Parent array '" << start.parent << "' not found.");
-    ack.status = ERR_NO_PARENT;
+		for (int i = 0; i < positions.extent(firstDim)*positions.extent(secondDim); i++) {
+		// subset is one-dimensional (receiver), select is two-dimensional (antenna, polarization)
+			if (start.subset[i]) {
+				select(i/2,i%2) = true;
+			}
+		}
 
-  } else if (start.subset.count() == 0) {
+		LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
+		LOG_DEBUG_STR("positions.shape()" << positions.shape());
 
-    // empty selection
-    LOG_ERROR("Empty antenna selection not allowed.");
-    ack.status = ERR_RANGE;
+		// check start.subset value
+		bitset<RSP_Protocol::MAX_N_RCUS> invalidmask;
+		for (int i = 0; i < m_n_rcus; i++) {
+			invalidmask.set(i);
+		}
+		invalidmask.flip();
 
-  } else {
-    
-    // register because this is a cal_start
-    m_clients[&port] = string(start.name); // register subarray with port
+		// check dimensions of the various arrays for compatibility
+		if (m_accs.getFront().getACC().extent(firstDim) != GET_CONFIG("CalServer.N_SUBBANDS", i)
+			|| m_accs.getFront().getACC().extent(secondDim) != positions.extent(secondDim)
+			|| m_accs.getFront().getACC().extent(thirdDim)  != positions.extent(secondDim)
+			|| m_accs.getFront().getACC().extent(fourthDim) != positions.extent(firstDim)
+			|| m_accs.getFront().getACC().extent(fifthDim)  != positions.extent(firstDim))
+		{
+			LOG_INFO("ACC shape and parent array positions shape don't match.");
+			LOG_ERROR_STR("ACC.shape=" << m_accs.getFront().getACC().shape());
+			LOG_ERROR_STR("'" << start.parent << "'.shape=" << positions.shape());
+			LOG_ERROR_STR("Expecting AntenneArray with " << 
+			m_accs.getFront().getACC().extent(fourthDim) << " antennas.");
+			ack.status = ERR_RANGE;
+		}
+		else if ((start.subset & invalidmask).any()) {
+			LOG_INFO("CAL_START: Invalid receiver subset.");
+			ack.status = ERR_RANGE;
+		}
+		else {
+			// create subarray to calibrate
+			SubArray* subarray = new SubArray(start.name,
+												parent->getGeoLoc(),
+												positions,
+												select,
+												m_sampling_frequency,
+												start.nyquist_zone,
+												GET_CONFIG("CalServer.N_SUBBANDS", i),
+												start.rcumode()(0).getRaw());
 
-    const Array<double, 3>& positions = parent->getAntennaPos();
-    Array<bool, 2> select;
-    select.resize(positions.extent(firstDim),
-		  positions.extent(secondDim));
-    select = false;
+			m_subarrays.schedule_add(subarray);
 
-    for (int i = 0;
-	 i < positions.extent(firstDim)*positions.extent(secondDim);
-	 i++)
-    {
-      // subset is one-dimensional (receiver), select is two-dimensional (antenna, polarization)
-      if (start.subset[i]) select(i/2,i%2) = true;
-    }
+			// calibration will start within one second
 
-    LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
-    LOG_DEBUG_STR("positions.shape()" << positions.shape());
+			//
+			// set the control register of the RCU's 
+			//
+			RSPSetrcuEvent setrcu;
+			setrcu.timestamp = Timestamp(0,0); // immediate
 
-    // check start.subset value
-    bitset<RSP_Protocol::MAX_N_RCUS> invalidmask;
-    for (int i = 0; i < m_n_rcus; i++) invalidmask.set(i);
-    invalidmask.flip();
+			// mask only available RCUs
+			bitset<RSP_Protocol::MAX_N_RCUS> validmask;
+			for (int i = 0; i < m_n_rcus; i++) {
+				validmask.set(i);
+			}
+			setrcu.rcumask = start.subset & validmask;
+			setrcu.settings().resize(1);
+			setrcu.settings()(0) = start.rcumode()(0);
+			LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X,%08X)", 
+									setrcu.rcumask.to_ulong(), start.rcumode()(0).getRaw()));
+			m_rspdriver.send(setrcu);
+		}
+	}
 
-    // check dimensions of the various arrays for compatibility
-    if (   m_accs.getFront().getACC().extent(firstDim) != GET_CONFIG("CalServer.N_SUBBANDS", i)
-	|| m_accs.getFront().getACC().extent(secondDim) != positions.extent(secondDim)
-	|| m_accs.getFront().getACC().extent(thirdDim)  != positions.extent(secondDim)
-	|| m_accs.getFront().getACC().extent(fourthDim) != positions.extent(firstDim)
-	|| m_accs.getFront().getACC().extent(fifthDim)  != positions.extent(firstDim))
-      {
-	LOG_INFO("ACC shape and parent array positions shape don't match.");
-	LOG_ERROR_STR("ACC.shape=" << m_accs.getFront().getACC().shape());
-	LOG_ERROR_STR("'" << start.parent << "'.shape=" << positions.shape());
-	LOG_ERROR_STR("Expecting AntenneArray with " << 
-						m_accs.getFront().getACC().extent(fourthDim) << " antennas.");
+	port.send(ack); // send ack
 
-	ack.status = ERR_RANGE;
-      }
-    else if ((start.subset & invalidmask).any())
-      {
-	LOG_INFO("CAL_START: Invalid receiver subset.");
-	ack.status = ERR_RANGE;
-      }
-    else
-      {
-	// create subarray to calibrate
-	SubArray* subarray = new SubArray(start.name,
-					  parent->getGeoLoc(),
-					  positions,
-					  select,
-					  m_sampling_frequency,
-					  start.nyquist_zone,
-					  GET_CONFIG("CalServer.N_SUBBANDS", i),
-					  start.rcumode()(0).getRaw());
-	
-	m_subarrays.schedule_add(subarray);
-
-	// calibration will start within one second
-
-	//
-	// set the control register of the RCU's 
-	//
-	RSPSetrcuEvent setrcu;
-	setrcu.timestamp = Timestamp(0,0); // immediate
-
-	// mask only available RCUs
-	bitset<RSP_Protocol::MAX_N_RCUS> validmask;
-	for (int i = 0; i < m_n_rcus; i++) validmask.set(i);
-	setrcu.rcumask = start.subset & validmask;
-	setrcu.settings().resize(1);
-	setrcu.settings()(0) = start.rcumode()(0);
-
-	m_rspdriver.send(setrcu);
-      }
-  }
-
-  port.send(ack); // send ack
-
-  return status;
+	return status;
 }
 
 GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port)
