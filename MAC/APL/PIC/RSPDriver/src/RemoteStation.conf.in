@@ -5,15 +5,9 @@
 #
 # Number of RSP boards
 #
-RS.N_RSPBOARDS=1
+RS.N_RSPBOARDS=12
 
 #
 # Specify the station id (0 <= StationId < 256)
 #
 RS.STATION_ID=11
-
-#
-# Number of BLP's per RSP board
-#
-RS.N_BLPS=4
-

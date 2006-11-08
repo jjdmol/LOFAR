@@ -40,7 +40,7 @@ RSPDriver.PPS_TRIGGER=1
 #
 # Specify MAC addresses of the RSP boards explicitly
 #
-RSPDriver.MAC_ADDR_0=10:FA:00:00:03:00
+RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
 RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
@@ -91,15 +91,15 @@ RSPDriver.MAC_ADDR_23=10:FA:00:00:17:00
 # for difference between operation with data from SERDES
 # ring and without.
 #
-RSPDriver.LANE_0_BLET_OUT=11
-RSPDriver.LANE_1_BLET_OUT=11
-RSPDriver.LANE_2_BLET_OUT=11
-RSPDriver.LANE_3_BLET_OUT=11
-RSPDriver.LANE_0_XLET_OUT=11
-RSPDriver.LANE_1_XLET_OUT=11
-RSPDriver.LANE_2_XLET_OUT=11
-RSPDriver.LANE_3_XLET_OUT=11
-RSPDriver.IGNORE_REMOTE_DATA=1
+RSPDriver.LANE_0_BLET_OUT=0
+RSPDriver.LANE_1_BLET_OUT=0
+RSPDriver.LANE_2_BLET_OUT=0
+RSPDriver.LANE_3_BLET_OUT=0
+RSPDriver.LANE_0_XLET_OUT=0
+RSPDriver.LANE_1_XLET_OUT=0
+RSPDriver.LANE_2_XLET_OUT=0
+RSPDriver.LANE_3_XLET_OUT=0
+RSPDriver.IGNORE_REMOTE_DATA=0
 
 #
 # CDO Control
@@ -278,3 +278,8 @@ RSPDriver.XC_GAIN=8000
 # across the diagonal if a value equals zero.
 #
 RSPDriver.XC_FILL=1
+
+#
+# Disable initialization to enable testing on a system without hardware
+#
+RSPDriver.DISABLE_INIT=0

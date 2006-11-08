@@ -38,11 +38,9 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-#define N_REGISTERS 2 // the number of registers to write (DiagWg and DiagWgwave)
-
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id,
-	       StationSettings::instance()->nrRcusPerBoard() * N_REGISTERS)
+	       StationSettings::instance()->nrRcusPerBoard() * MEPHeader::N_DIAG_WG_REGISTERS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -55,16 +53,16 @@ WGWrite::~WGWrite()
 void WGWrite::sendrequest()
 {
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) 
-    + (getCurrentIndex() / N_REGISTERS);
-  uint8 blpid = 1 << (getCurrentIndex() / N_REGISTERS / MEPHeader::N_POL);
+    + (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS);
+  uint8 blpid = 1 << (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS / MEPHeader::N_POL);
 
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().diagwgsettings().get(global_rcu)) {
-    Cache::getInstance().getState().diagwgsettings().unmodified(global_rcu);
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().diagwgsettings().get(getBoardId() * getNumIndices() + getCurrentIndex())) {
+    Cache::getInstance().getState().diagwgsettings().unmodified(getBoardId() * getNumIndices() + getCurrentIndex());
     setContinue(true);
     return;
   }
 
-  switch (getCurrentIndex() % N_REGISTERS) {
+  switch (getCurrentIndex() % MEPHeader::N_DIAG_WG_REGISTERS) {
 
   case 0:
     {
@@ -112,7 +110,7 @@ void WGWrite::sendrequest()
 
       // copy waveform to event to be sent
       Array<int32, 1> wave((int32*)&wgwave.samples,
-			   shape(N_WAVE_SAMPLES),
+			   shape(MEPHeader::N_WAVE_SAMPLES),
 			   neverDeleteData);
 
       wave = WGSettings::preset(w()(global_rcu).preset);
@@ -140,17 +138,19 @@ GCFEvent::TResult WGWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   EPAWriteackEvent ack(event);
 
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) 
-    + (getCurrentIndex() / N_REGISTERS);
+    + (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS);
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("WGWrite::handleack: invalid ack");
-    Cache::getInstance().getState().diagwgsettings().write_error(global_rcu);
+    Cache::getInstance().getState().diagwgsettings().write_error(getBoardId() * getNumIndices() + getCurrentIndex());
     return GCFEvent::NOT_HANDLED;
   }
+
+  LOG_INFO_STR("wrote " << (int)global_rcu);
   
   // change state to indicate that it has been applied in the hardware
-  Cache::getInstance().getState().diagwgsettings().write_ack(global_rcu);
+  Cache::getInstance().getState().diagwgsettings().write_ack(getBoardId() * getNumIndices() + getCurrentIndex());
 
   return GCFEvent::HANDLED;
 }

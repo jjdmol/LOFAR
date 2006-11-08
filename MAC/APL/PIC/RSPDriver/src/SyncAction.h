@@ -84,7 +84,8 @@ namespace LOFAR {
       /**
        * Get index of current local index
        */
-      int getCurrentIndex() const;
+      int getCurrentIndex() const { return m_current_index; }
+      int getNumIndices() const { return m_n_indices; }
 
       /**
        * Reset the statemachine to the initial state.

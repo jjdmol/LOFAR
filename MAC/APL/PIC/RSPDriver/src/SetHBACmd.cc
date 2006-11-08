@@ -68,6 +68,7 @@ void SetHBACmd::apply(CacheBuffer& cache, bool setModFlag)
       cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(0, Range::all());
       if (setModFlag) {
         cache.getCache().getState().hbaprotocol().write(cache_rcu);
+	cache.getCache().getState().hbaprotocol().write(cache_rcu);
       }
     }
   }

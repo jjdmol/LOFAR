@@ -44,7 +44,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
-  : SyncAction(board_port, board_id, BF_N_FRAGMENTS),
+  : SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS),
     m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
@@ -79,7 +79,7 @@ void BWWrite::sendrequest()
   // send next BF configure message
   EPABfCoefsWriteEvent bfcoefs;
 
-  size_t size = (MEPHeader::N_BEAMLETS * MEPHeader::WEIGHT_SIZE) / BF_N_FRAGMENTS;
+  size_t size = (MEPHeader::N_BEAMLETS * MEPHeader::WEIGHT_SIZE) / MEPHeader::BF_N_FRAGMENTS;
   LOG_DEBUG_STR("size=" << size);
 
   // this code is only guaranteed to work under the following conditions
@@ -106,13 +106,25 @@ void BWWrite::sendrequest()
   }
 
   // create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
-  int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / BF_N_FRAGMENTS;
+  int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / MEPHeader::BF_N_FRAGMENTS;
   Array<complex<int16>, 2> weights(nbeamlets_per_fragment, MEPHeader::N_POL);
   bfcoefs.coef.setBuffer(weights.data(), weights.size() * sizeof(complex<uint16>));
 
+#if 0
+  Array<int, 2> index(MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+  Array<int, 2> mapped_index(nbeamlets_per_fragment, MEPHeader::N_POL);
+
+  for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
+    for (int pol = 0; pol < MEPHeader::N_POL; pol++) {
+      index(beamlet, pol) = beamlet * MEPHeader::N_POL + pol;
+    }
+  }
+  mapped_index = 0;
+#endif
+
   LOG_DEBUG_STR("weights shape=" << weights.shape());
 
-  ASSERT(MEPHeader::N_BEAMLETS % BF_N_FRAGMENTS == 0);
+  ASSERT(MEPHeader::N_BEAMLETS % MEPHeader::BF_N_FRAGMENTS == 0);
   for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 
     int hw_offset = lane;
@@ -130,7 +142,16 @@ void BWWrite::sendrequest()
 
     // Y
     weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, cache_range);
+
+#if 0
+    mapped_index(hw_range, 0) = index(cache_range, 0);
+    mapped_index(hw_range, 1) = index(cache_range, 1);
+#endif
   }
+
+#if 0
+  LOG_DEBUG_STR("mapped_index=" << mapped_index);
+#endif
 
   // update m_remaining and m_offset for next write
   m_remaining -= size;
@@ -214,7 +235,7 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     //
     // Last fragment signals completion
     //
-    if (BF_N_FRAGMENTS - 1 == getCurrentIndex()) {
+    if (MEPHeader::MEPHeader::BF_N_FRAGMENTS - 1 == getCurrentIndex()) {
       Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
     }
 

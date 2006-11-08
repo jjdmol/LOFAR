@@ -252,11 +252,6 @@ bool SyncAction::hasCompleted() const
   return m_completed;
 }
 
-int SyncAction::getCurrentIndex() const
-{
-  return m_current_index;
-}
-
 /**
  * Force completion by resetting to idle state
  * and resetting various state variables.

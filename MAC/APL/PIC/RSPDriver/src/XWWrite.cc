@@ -97,6 +97,8 @@ void XWWrite::sendrequest()
   Array<complex<int16>, 2> weights(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_POL);
   bfcoefs.coef.setBuffer(weights.data(), weights.size() * sizeof(complex<uint16>));
 
+  weights = complex<int16>(0, 0);
+
   int xc_gain = GET_CONFIG("RSPDriver.XC_GAIN", i);
 
   switch (m_regid)
@@ -106,9 +108,6 @@ void XWWrite::sendrequest()
       // weights for x-real part
       // no added conversions needed
 
-      // y weights should be 0
-      weights(Range::all(), 1) = 0;
-
       // overwrite first weights for cross correlation
       weights(m_blp, 0) = complex<int16>(xc_gain, 0);
     }
@@ -116,12 +115,6 @@ void XWWrite::sendrequest()
 
     case MEPHeader::BF_XIOUT:
     {
-      // weights for x-imaginary part
-      weights *= complex<int16>(0,1);
-
-      // y weights should be 0
-      weights(Range::all(), 1) = 0;
-
       // overwrite first weights for cross correlation
       weights(m_blp, 0) = complex<int16>(0, xc_gain);
     }
@@ -132,9 +125,6 @@ void XWWrite::sendrequest()
       // weights for y-real part
       // no added conversions needed
 
-      // x weights should be 0
-      weights(Range::all(), 0) = 0;
-
       // overwrite first weights for cross correlation
       weights(m_blp, 1) = complex<int16>(xc_gain, 0);
     }
@@ -142,12 +132,6 @@ void XWWrite::sendrequest()
     
     case MEPHeader::BF_YIOUT:
     {
-      // weights for y-imaginary part
-      weights *= complex<int16>(0,1);
-
-      // x weights should be 0
-      weights(Range::all(), 0) = 0;
-
       // overwrite first weights for cross correlation
       weights(m_blp, 1) = complex<int16>(0, xc_gain);
     }
@@ -173,11 +157,15 @@ GCFEvent::TResult XWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   
   EPAWriteackEvent ack(event);
 
+#if 0
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
+#endif
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
+#if 0
     Cache::getInstance().getState().bf().write_error(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+#endif
 
     LOG_ERROR("XWWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
