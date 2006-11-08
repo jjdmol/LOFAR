@@ -401,12 +401,16 @@ namespace LOFAR {
       }
 
       // set phase in range 0 <= phase < 360
-      void setPhase(double phase)
+      void setPhase(uint8 phase)
       {
+#if 0
 	while (phase < 0.0)    phase += 360.0;
 	while (phase >= 360.0) phase -= 360.0;
 
         m_phase = (uint8)round((1 << 8) * (phase / 360.0));
+#else
+	m_phase = phase;
+#endif
       }
 
       // set amplitude in range 0.0 <= amplitude < 2.0
