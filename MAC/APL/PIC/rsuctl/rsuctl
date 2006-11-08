@@ -23,9 +23,11 @@ $VERSION = q$Revision$;
 #     [-c] # Clear all FPGA's (restart current image)
 #     [-s] # Send SYNC pulse to all FPGA's
 #
+#     [-q] # Prevent checking for running RSPDriver (prevents pause at start)
 #     [-P] # Ping the board (find board when using broadcast address)
 #     [-V] # Read RSU status and RSR versions
 #     [-h] # This help text
+#
 #
 
 use Net::RawIP;
@@ -148,7 +150,8 @@ Usage: rsuctl [options] command
     [-r] # Reset all FPGA's (load factory image)
     [-c] # Clear all FPGA's (restart current image)
     [-s] # Send SYNC pulse to all FPGA's
-
+    
+    [-q] # Prevent checking for running RSPDriver (prevents pause at start)
     [-P] # Ping the board (find board when using broadcast address)
     [-V] # Read RSU status and RSR versions
     [-h] # This help text
@@ -770,7 +773,7 @@ sub main
 
     print STDERR "=== rsuctl ($VERSION)\n";
 
-    Getopt::Std::getopts("i:m:lbf:o:exwvdp:FrcsPVh");
+    Getopt::Std::getopts("i:m:lbf:o:exwvdp:FrcsPVhq");
 
     # check that at least one argument is present
     usage() if ($opt_h);
@@ -819,9 +822,11 @@ sub main
 	  
 	print STDERR "=== connected to RSP board(s) on $opt_i:$opt_m\n";
 
-	print STDERR "=== checking for running RSPDriver\n";
-	($payload, $error) = readresponse($pcap);
-	die "=== RSPDriver appears to be running, stop it first\n" if ($payload ne '');
+	if (!defined($opt_q)) {
+	    print STDERR "=== checking for running RSPDriver\n";
+	    ($payload, $error) = readresponse($pcap);
+	    die "=== RSPDriver appears to be running, stop it first\n" if ($payload ne '');
+	}
     }
 
     if (defined($opt_l)) {
