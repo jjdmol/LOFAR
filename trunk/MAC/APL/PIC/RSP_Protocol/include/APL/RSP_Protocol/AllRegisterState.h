@@ -71,11 +71,11 @@ namespace LOFAR {
 	  rcuprotocol_state.resize(nrRcus);
 	  hbaprotocol_state.resize(nrRcus);
 	  rsuclear_state.resize(nrRspBoards);
-	  diagwgsettings_state.resize(nrRcus);
-	  sst_state.resize(nrBlps);
+	  diagwgsettings_state.resize(nrRcus * EPA_Protocol::MEPHeader::N_DIAG_WG_REGISTERS);
+	  sst_state.resize(nrBlps * EPA_Protocol::MEPHeader::SST_N_FRAGMENTS);
 	  bst_state.resize(nrRspBoards);
-	  xst_state.resize(nrRspBoards);
-	  cdo_state.resize(nrRspBoards);
+	  xst_state.resize(nrRspBoards * EPA_Protocol::MEPHeader::XST_NR_STATS);
+	  cdo_state.resize(nrRspBoards * EPA_Protocol::MEPHeader::N_CDO_REGISTERS);
 	  bs_state.resize(nrBlps);
 	  tdclear_state.resize(nrRspBoards);
 	  tdwrite_state.resize(nrRspBoards);
@@ -110,29 +110,29 @@ namespace LOFAR {
 	  ts_state.reset();
 
 	  sys_state.read();
-	  bf_state.write_force();
-	  ss_state.write_force();
-	  rcusettings_state.write_force();
-	  rcuprotocol_state.write_force();
-	  hbaprotocol_state.write_force();
+	  bf_state.write();
+	  ss_state.write();
+	  rcusettings_state.write();
+	  rcuprotocol_state.write();
+	  hbaprotocol_state.write();
 	  rsuclear_state.check();
-	  diagwgsettings_state.write_force();
+	  diagwgsettings_state.write();
 	  sst_state.read();
 	  bst_state.read();
 	  xst_state.read();
-	  cdo_state.write_force();
+	  cdo_state.write();
 	  bs_state.check();
 	  tdclear_state.check();
 	  tdwrite_state.check();
 	  tdread_state.check();
-	  rad_state.write_force();
-	  ts_state.write_force();
+	  rad_state.write();
+	  ts_state.write();
 	}
 
 	void schedule() {
 	  sys_state.read();
-	  bf_state.write_force(); // always write bf
-	  ss_state.write_force(); // always write ss
+	  bf_state.write(); // always write bf
+	  ss_state.write(); // always write ss
 	  rcusettings_state.check();
 	  rcuprotocol_state.check();
 	  hbaprotocol_state.check();
@@ -147,7 +147,7 @@ namespace LOFAR {
 	  tdwrite_state.check();
 	  tdread_state.check();
 	  rad_state.check();
-	  ts_state.write_force(); // always write timestamp
+	  ts_state.write(); // always write timestamp
 	}
 
 	void clear() {
