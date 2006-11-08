@@ -573,7 +573,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			// create subarray to calibrate
 			SubArray* subarray = new SubArray(start.name,
 												parent->getGeoLoc(),
-												positions,
+												positions.copy(),
 												select,
 												m_sampling_frequency,
 												start.nyquist_zone,
@@ -603,7 +603,6 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			m_rspdriver.send(setrcu);
 		}
 	}
-
 	port.send(ack); // send ack
 
 	return status;

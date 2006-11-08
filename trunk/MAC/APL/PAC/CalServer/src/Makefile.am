@@ -83,6 +83,7 @@ juggle_acc_SOURCES = \
 
 CalServer_DEPEND = \
 	$(top_builddir)/src/libcaldevel.la \
+	$(top_builddir)/src/libcal_protocol.la \
 	$(LOFAR_DEPEND)
 
 bin_SCRIPTS = \

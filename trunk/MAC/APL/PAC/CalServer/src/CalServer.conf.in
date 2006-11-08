@@ -50,6 +50,7 @@ CalServer.WriteACCToFile=1
 # to clients.
 #
 CalServer.DisableCalibration=1
+CalServer.DisableACMProxy=1
 
 #
 # ACMProxy task configuration
