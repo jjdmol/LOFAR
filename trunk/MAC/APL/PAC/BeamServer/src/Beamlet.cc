@@ -162,18 +162,21 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 	      int srcrcu = (antenna * MEPHeader::N_POL) + pol;
 	      int destrcu = beam->getSubarray().getRCUIndex(antenna, pol);
 
-	      weights(all, destrcu, bi) =
-	        exp(scaling *
-		    ((  pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 0) * lmn(all, 0))
-		     + (pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 1) * lmn(all, 1))
-		     + (pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 2) * lmn(all, 2))));
+	      if (destrcu >= 0) {
+		weights(all, destrcu, bi) =
+		  exp(scaling *
+		      ((  pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 0) * lmn(all, 0))
+		       + (pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 1) * lmn(all, 1))
+		       + (pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 2) * lmn(all, 2))));
+	      }
 	    }
 	  }
 
-	  LOG_DEBUG_STR("weights(t=all,rcu=all,beamlet=" << bi << ") = " << weights(all, all, bi));
+	  //	  LOG_DEBUG_STR("weights(t=all,rcu=all,beamlet=" << bi << ") = " << weights(all, all, bi));
 	}
     }
 
+  LOG_DEBUG_STR("weights=" << weights);
   LOG_DEBUG(formatString("sizeof weights() = %d bytes", weights.size()*sizeof(complex<double>)));
   LOG_DEBUG(formatString("contiguous storage? %s", (weights.isStorageContiguous()?"yes":"no")));
 }
