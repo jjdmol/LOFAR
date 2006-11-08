@@ -155,6 +155,7 @@ const CAL::AntennaGains& Beam::getCalibration() const
   return m_gains;
 }
 
+#if 0
 static int setNonblocking(int fd)
 {
   int flags;
@@ -231,6 +232,7 @@ void Beam::logPointing(Pointing pointing)
       
   if (pipe) fflush(pipe);
 }
+#endif
 
 int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::Converter* conv)
 {
@@ -245,13 +247,14 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
   m_lmns.resize(compute_interval, 3);
   m_lmns = 0.0;
 
-  LOG_DEBUG_STR("Begintime=" << begintime);
+  LOG_INFO_STR("computing weights for interval [" << begintime 
+	       << " : " << begintime + (long)(compute_interval - 1) << "]");
 
   while (!m_pointing_queue.empty()) {
 
     Pointing pointing = m_pointing_queue.top();
 
-    LOG_DEBUG_STR("Process pointing @ time " << pointing.time());
+    LOG_INFO_STR("Process pointing for time " << pointing.time());
 
     if (pointing.time() < begintime) {
 
@@ -310,9 +313,9 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
     /* set time and convert to LMN */
     track[t].setTime(begintime + (long)t);
     blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
-    Position location(loc(0), // location must be in ITRF radians/meters
-		      loc(1),
-		      loc(2), Position::ITRF);
+    Position location((loc(0) * M_PI) / 180.0, // location must be in WGS84 radians/meters
+		      (loc(1) * M_PI) / 180.0,
+		      loc(2), Position::WGS84);
     LOG_DEBUG_STR("Geographical location " << loc);
     Pointing lmn = track[t].convertToLMN(conv, &location);
 
@@ -322,23 +325,23 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
     m_lmns(t,2) = ::sqrt(1.0 - ((m_lmns(t,0) * m_lmns(t,0))
 				+ (m_lmns(t,1) * m_lmns(t,1))));
 
-    
-    LOG_INFO_STR(formatString("direction@%d=(%f,%f,%f)",
-			      begintime.sec() + t,
-			      m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)));
+#if 0
+    if ((fabs(m_lmns(t,0)) > 1.0 + eps) || (fabs(m_lmns(t,1)) > 1.0 + eps)) {
 
-    if ((fabs(m_lmns(t,0)) > 1.0) || (fabs(m_lmns(t,1)) > 1.0)) {
-
-      LOG_ERROR("\nl or m coordinate out of range -1.0 < l < 1.0, setting to (l,m) to (0.0, 0.0)\n");
+      LOG_WARN("\nl or m coordinate out of range -1.0 < l < 1.0, setting to (l,m) to (0.0, 0.0)\n");
       m_lmns(t,0) = 0.0;
       m_lmns(t,1) = 0.0;
       m_lmns(t,2) = 1.0;
     }
+#endif
+
+    LOG_INFO_STR(formatString("direction=(%f,%f,%f) @ ",
+			      m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)) << track[t].time());
   }
 
   LOG_DEBUG_STR("Current pointing (" << current_pointing.angle0() << ", " << current_pointing.angle1() <<
 		") @ time " << current_pointing.time());
-  logPointing(current_pointing);
+  //logPointing(current_pointing);
 
   return 0;
 }
