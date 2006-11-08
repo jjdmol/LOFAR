@@ -26,7 +26,6 @@ prog="RSPDriver"
 # These files must exist
 [ -x $PREFIX/bin/$prog ] || exit 0
 [ -e $PREFIX/etc/$prog.conf ] || exit 0
-[ -e $PREFIX/etc/$prog""Ports.conf ] || exit 0
 [ -e $PREFIX/etc/RemoteStation.conf ] || exit 0
 
 start() {
