@@ -52,50 +52,45 @@ SubArray::SubArray(string                 name,
   m_antenna_selection(select),
   m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands, rcucontrol)
 {
+  Array<double, 3> newpos(m_pos.shape());
+  
   // assert sizes
   ASSERT(m_antenna_selection.extent(firstDim) == m_pos.extent(firstDim)
 	 && m_antenna_selection.extent(secondDim) == m_pos.extent(secondDim)
 	 && m_pos.extent(thirdDim) == 3);
 
+  LOG_DEBUG_STR("name=" << name);
   LOG_DEBUG_STR("select=" << select);
+  LOG_DEBUG_STR("m_pos=" << m_pos);
 
   // make array at least big enough
   m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
-  m_rcuindex = 0;
+  m_rcuindex = -1;
 
-#if 1
   int sel = 0;
+  newpos = 0.0;
   for (int ant = 0; ant < m_pos.extent(firstDim); ant++) {
-    for (int pol = 0; pol < m_pos.extent(secondDim); pol++) {
-      if (m_antenna_selection(ant, pol)) {
-	m_pos(sel, pol) = m_pos(ant, pol);
-	m_rcuindex(sel, pol) = ant * m_pos.extent(secondDim) + pol;
-	sel++;
+    if (sum(m_antenna_selection(ant, Range::all())) > 0) {
+      for (int pol = 0; pol < m_pos.extent(secondDim); pol++) {
+	if (m_antenna_selection(ant, pol)) {
+	  newpos(sel, pol, Range::all()) = m_pos(ant, pol, Range::all());
+	  m_rcuindex(sel, pol) = ant * m_pos.extent(secondDim) + pol;
+	}
       }
+      sel++;
     }
   }
   m_antenna_count = sel;
-#else
-  int k = 0;
-  for (int i = 0; i < m_pos.extent(firstDim); i++) {
-    if (sum(m_antenna_selection(i, Range::all())) > 0) {
-      m_pos(k, Range::all(), Range::all()) = m_pos(i, Range::all(), Range::all());
-      m_rcuindex(k, 0) = (i * m_pos.extent(secondDim));
-      m_rcuindex(k, 1) = (i * m_pos.extent(secondDim)) + 1;
-      k++;
-    }
-  }
-  m_antenna_count = k;
-#endif
+  m_pos = newpos; // overwrite original positions
 
-  LOG_DEBUG_STR("m_antenna_count=" << m_antenna_count);
   ASSERT(m_antenna_count > 0);
 
   // resize the arrays
   m_pos.resizeAndPreserve(m_antenna_count, m_pos.extent(secondDim), m_pos.extent(thirdDim));
   m_rcuindex.resizeAndPreserve(m_antenna_count, m_rcuindex.extent(secondDim));
 
-  LOG_INFO_STR("m_rcuindex(after)=" << m_rcuindex);
+  LOG_DEBUG_STR("m_pos=" << m_pos);
+  LOG_DEBUG_STR("m_rcuindex=" << m_rcuindex);
 
   // create calibration result objects
   m_result[FRONT] = new AntennaGains(m_pos.extent(firstDim), m_pos.extent(secondDim), m_spw.getNumSubbands());
