@@ -61,10 +61,6 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
 		       m_event->rcumask.count(),
 		       MEPHeader::N_BEAMLETS);
 
-  // copy from offset N_LOCAL_XLETS in the cache
-  Range src_range = Range(MEPHeader::N_LOCAL_XLETS,
-			  MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
-
   int result_rcu = 0;
   for (int cache_rcu = 0;
        cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
@@ -72,7 +68,7 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
     if (m_event->rcumask[cache_rcu])
     {
       ack.weights()(0, result_rcu, Range::all()) =
-	cache.getBeamletWeights()()(0, cache_rcu, src_range);
+	cache.getBeamletWeights()()(0, cache_rcu, Range::all());
       
       result_rcu++;
     }
