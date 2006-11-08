@@ -755,7 +755,7 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 
 	} else {
 
-	  logMessage(cout,formatString("Received initial sample frequency: clock=%dMHz", ack.clock));
+	  LOG_DEBUG(formatString("Received initial sample frequency: clock=%dMHz", ack.clock));
 
 	  // Subscribe to updates from now on
 	  RSPSubclockEvent subclock;
@@ -885,7 +885,7 @@ WGCommand::WGCommand(GCFPortInterface& port) :
   m_frequency(0),
   m_amplitude((uint32)round(AMPLITUDE_SCALE))
 {
-  cout << "amplitude=" << m_amplitude << endl;
+  LOG_DEBUG_STR("amplitude=" << m_amplitude);
 }
 
 void WGCommand::send()
@@ -914,7 +914,7 @@ void WGCommand::send()
     wgset.settings()(0).freq        = m_frequency;
     wgset.settings()(0).phase       = m_phase;
     wgset.settings()(0).ampl        = m_amplitude;
-    wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
+    wgset.settings()(0).nof_samples = MEPHeader::N_WAVE_SAMPLES;
 
     if (m_frequency < 1e-6)
     {
@@ -924,11 +924,11 @@ void WGCommand::send()
     {
       if (m_mode == 0) { 	/* forget to set mode? assume calc mode */
         wgset.settings()(0).mode = WGSettings::MODE_CALC;
-    	wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
+    	wgset.settings()(0).nof_samples = MEPHeader::N_WAVE_SAMPLES;
       }
 	  else {
         wgset.settings()(0).mode = m_mode;
-    	wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
+    	wgset.settings()(0).nof_samples = MEPHeader::N_WAVE_SAMPLES;
       }
     }
     wgset.settings()(0).preset = 0; // or one of PRESET_[SINE|SQUARE|TRIANGLE|RAMP]
@@ -992,6 +992,7 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
       status = GCFEvent::NOT_HANDLED;
       break;
   }
+  LOG_INFO("WGCommand success");
 
   GCFTask::stop();
 
@@ -1759,7 +1760,10 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
     case F_ENTRY:
     {
       if (!m_server.isConnected())
-        m_server.open();
+        if (!m_server.open()) {
+	  LOG_FATAL("failed to open port to RSPDriver");
+	  exit(EXIT_FAILURE);
+	}
     }
     break;
 
@@ -1779,9 +1783,8 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
       m_nrcus        = ack.n_rcus;
       m_nrspboards   = ack.n_rspboards;
       m_maxrspboards = ack.max_rspboards;
-      logMessage(cout,formatString("n_rcus     =%d",m_nrcus));
-      logMessage(cout,formatString("n_rspboards=%d of %d",
-				   m_nrspboards, m_maxrspboards));
+      LOG_DEBUG_STR(formatString("n_rcus     =%d",m_nrcus));
+      LOG_DEBUG_STR(formatString("n_rspboards=%d of %d",   m_nrspboards, m_maxrspboards));
       TRAN(RSPCtl::docommand);
     }
     break;
@@ -2013,7 +2016,7 @@ static void usage()
 #ifdef ENABLE_RSPFE
   cout << "             [--feport=<hostname>:<port>]      #" << endl;
 #endif
-  cout << "rspctl [--angle] --xcstatistics  [--select=first,second] # get crosscorrelation statistics (of pair of RSP boards)" << endl;
+  cout << "rspctl [--xcangle] --xcstatistics  [--select=first,second] # get crosscorrelation statistics (of pair of RSP boards)" << endl;
   cout << "             [--duration=<seconds>]            #" << endl;
   cout << "             [--integration=<seconds>]         #" << endl;
   cout << "             [--directory=<directory>]         #" << endl;
@@ -2367,7 +2370,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		    return 0;
 		}
 		WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
-		wgcommand->setPhase((uint8)(phase / (2 * M_PI) * 256));
+		wgcommand->setPhase((uint8)((phase / (2 * M_PI)) * (1 << 8)));
 	      }
 	  }
 	  break;
