@@ -59,8 +59,9 @@ using namespace RTC;
 
 using namespace RSP_Protocol;
 
+#define LEADIN_TIME ((long)10)
 #define COMPUTE_INTERVAL ((long)10)
-#define UPDATE_INTERVAL  1
+#define UPDATE_INTERVAL  5
 #define N_DIM 3 // x, y, z or l, m, n
 
 #define SCALE (1<<(16-2))
@@ -342,22 +343,22 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	  if (recall(port) == GCFEvent::HANDLED) m_calserver.setTimer((long)0);
 
 	} else {
+	  // &port == &m_rspdriver
 
 	  GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
 	  LOG_DEBUG_STR("timer=" << Timestamp(timer->sec, timer->usec));
 
-	  period++;
-	  if (0 == (period % COMPUTE_INTERVAL))
+	  period += UPDATE_INTERVAL;
+	  if (period >= COMPUTE_INTERVAL)
 	    {
 	      period = 0;
 
 	      // compute new weights and send them weights
 	      LOG_INFO_STR("computing weights " << Timestamp(timer->sec, timer->usec));
-	      compute_weights(Timestamp(timer->sec, 0) + COMPUTE_INTERVAL);
-	      LOG_INFO_STR("done computing weights");
+	      compute_weights(Timestamp(timer->sec, 0) + LEADIN_TIME);
 
-	      send_weights(Timestamp(timer->sec,0) + COMPUTE_INTERVAL);
+	      send_weights(Timestamp(timer->sec, 0) + LEADIN_TIME);
 	    }
 
 	  if (m_beams_modified)
@@ -794,6 +795,9 @@ void BeamServer::compute_weights(Timestamp time)
 
 void BeamServer::send_weights(Timestamp time)
 {
+
+  LOG_DEBUG_STR("weights_uint16=" << m_weights16);
+
   if (!GET_CONFIG("BeamServer.DISABLE_SETWEIGHTS", i)) {
     RSPSetweightsEvent sw;
 
@@ -807,6 +811,7 @@ void BeamServer::send_weights(Timestamp time)
     sw.weights().resize(COMPUTE_INTERVAL, m_nrcus, MEPHeader::N_BEAMLETS);
     sw.weights() = m_weights16;
 
+    LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(COMPUTE_INTERVAL-1));
     m_rspdriver.send(sw);
   }
 }

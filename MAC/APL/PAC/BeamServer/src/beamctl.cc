@@ -58,6 +58,8 @@
 		   | SUBBANDS_FLAG		\
 		   | BEAMLETS_FLAG)
 
+#define SKYSCAN_STARTDELAY 30.0
+
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
@@ -270,7 +272,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	  m_beamserver.send(pointto);
 	} else {
 	  Timestamp time;
-	  time.setNow(20.0); // start 20 seconds from now
+	  time.setNow(SKYSCAN_STARTDELAY); // start after appropriate delay
 	  pointto.pointing.setType(Pointing::LOFAR_LMN);
 
 	  // Assuming 5 meter wavelength (60MHz) and a station diameter of 60 m

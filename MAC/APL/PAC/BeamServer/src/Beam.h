@@ -130,7 +130,7 @@ namespace LOFAR {
        * be a named pipe. The data on this named pipe
        * is read by an INDI driver and passed on to KStars.
        */
-      void logPointing(BS_Protocol::Pointing pointing);
+      //void logPointing(BS_Protocol::Pointing pointing);
 
       /**
        * Convert coordinates from the m_pointing_queue
