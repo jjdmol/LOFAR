@@ -52,8 +52,8 @@ public:
 	static StationSettings* instance();
 
 	int32 maxRspBoards();	// RS.N_RSPBOARDS
-	int32 nrBlpsPerBoard();	// RS.N_BLPS
-	int32 nrRcusPerBoard();	// RS.N_BLPS * N_POL
+	int32 nrBlpsPerBoard();	// MEPHeader::N_BLPS
+	int32 nrRcusPerBoard();	// MEPHeader::N_BLPS * N_POL
 
 	int32 nrRspBoards();	// 1 | RS.N_RSPBOARDS depending on OPERATION_MODE
 	int32 nrBlps();			// nrRspBoards * nrBlpsPerBoard

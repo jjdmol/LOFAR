@@ -64,13 +64,13 @@ void XstRead::sendrequest()
   LOG_DEBUG_STR("first_rsp_board = " << first_rsp_board);
   uint16 offset = first_rsp_board * MEPHeader::XLET_SIZE;
 
-  Cache::getInstance().getState().xst().read(getBoardId());
-
   if (m_regid < MEPHeader::XST_STATS || m_regid >= MEPHeader::XST_NR_STATS)
   {
     LOG_FATAL("invalid regid");
     exit(EXIT_FAILURE);
   }
+
+  Cache::getInstance().getState().xst().read(getBoardId() * MEPHeader::XST_NR_STATS + (m_regid - MEPHeader::XST_STATS));
 
   EPAReadEvent xstread;
 
@@ -159,14 +159,14 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getState().xst().read_error(getBoardId());
+    Cache::getInstance().getState().xst().read_error(getBoardId() * MEPHeader::XST_NR_STATS + (m_regid - MEPHeader::XST_STATS));
     LOG_ERROR("XstRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
 
   if (ack.hdr.m_fields.addr.regid >= MEPHeader::XST_NR_STATS)
   {
-    Cache::getInstance().getState().xst().read_error(getBoardId());
+    Cache::getInstance().getState().xst().read_error(getBoardId() * MEPHeader::XST_NR_STATS + (m_regid - MEPHeader::XST_STATS));
     LOG_ERROR("invalid xst ack");
     return GCFEvent::HANDLED;
   }
@@ -198,7 +198,7 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   cache(rcu % MEPHeader::N_POL, 0, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 0));
   cache(rcu % MEPHeader::N_POL, 1, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 1));
 
-  Cache::getInstance().getState().xst().read_ack(getBoardId());
+  Cache::getInstance().getState().xst().read_ack(getBoardId() * MEPHeader::XST_NR_STATS + (m_regid - MEPHeader::XST_STATS));
 
   return GCFEvent::HANDLED;
 }

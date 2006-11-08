@@ -42,7 +42,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 BWRead::BWRead(GCFPortInterface& board_port, int board_id, int blp, int regid)
-  : SyncAction(board_port, board_id, BF_N_FRAGMENTS),
+  : SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS),
     m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));

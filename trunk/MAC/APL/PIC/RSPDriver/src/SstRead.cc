@@ -40,7 +40,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 SstRead::SstRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * SST_N_FRAGMENTS)
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::SST_N_FRAGMENTS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -53,13 +53,12 @@ void SstRead::sendrequest()
 {
   EPAReadEvent sstread;
 
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / SST_N_FRAGMENTS);
-  Cache::getInstance().getState().sst().read(global_blp);
+  Cache::getInstance().getState().sst().read(getBoardId() * getNumIndices() + getCurrentIndex());
 
-  uint16 byteoffset = (getCurrentIndex() % SST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
+  uint16 byteoffset = (getCurrentIndex() % MEPHeader::SST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
 
-  sstread.hdr.set(MEPHeader::SST_POWER_HDR, 1 << (getCurrentIndex() / SST_N_FRAGMENTS),
-		  MEPHeader::READ, N_SST_STATS * sizeof(uint32), byteoffset);
+  sstread.hdr.set(MEPHeader::SST_POWER_HDR, 1 << (getCurrentIndex() / MEPHeader::SST_N_FRAGMENTS),
+		  MEPHeader::READ, MEPHeader::N_SST_STATS * sizeof(uint32), byteoffset);
 
   m_hdr = sstread.hdr;
   getBoardPort().send(sstread);
@@ -103,11 +102,11 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   EPASstStatsEvent ack(event);
 
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / SST_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / MEPHeader::SST_N_FRAGMENTS);
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    Cache::getInstance().getState().sst().read_error(global_blp);
+    Cache::getInstance().getState().sst().read_error(getBoardId() * getNumIndices() + getCurrentIndex());
     LOG_ERROR("SstRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -118,19 +117,19 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 			 global_blp, offset));
 
   Range fragment_range(offset / MEPHeader::N_POL,
-		       (offset / MEPHeader::N_POL) + (N_SST_STATS / MEPHeader::N_POL) - 1);
+		       (offset / MEPHeader::N_POL) + (MEPHeader::N_SST_STATS / MEPHeader::N_POL) - 1);
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
   if (MEPHeader::SST_POWER != ack.hdr.m_fields.addr.regid)
   {
-    Cache::getInstance().getState().sst().read_error(global_blp);
+    Cache::getInstance().getState().sst().read_error(getBoardId() * getNumIndices() + getCurrentIndex());
     LOG_ERROR("invalid sst ack");
     return GCFEvent::HANDLED;
   }
 
   Array<uint32, 2> stats((uint32*)&ack.stat,
-			 shape(N_SST_STATS / MEPHeader::N_POL,
+			 shape(MEPHeader::N_SST_STATS / MEPHeader::N_POL,
 			       MEPHeader::N_POL),
 			 neverDeleteData);
 
@@ -142,7 +141,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   // y-pol subband statistics: copy and convert to double
   cache(global_blp * 2 + 1, fragment_range) = convert_uint32_to_double(stats(Range::all(), 1));
   
-  Cache::getInstance().getState().sst().read_ack(global_blp);
+  Cache::getInstance().getState().sst().read_ack(getBoardId() * getNumIndices() + getCurrentIndex());
 
   return GCFEvent::HANDLED;
 }

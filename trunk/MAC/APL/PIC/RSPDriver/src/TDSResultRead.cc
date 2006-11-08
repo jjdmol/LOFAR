@@ -58,7 +58,7 @@ TDSResultRead::~TDSResultRead()
 void TDSResultRead::sendrequest()
 {
    if (RTC::RegisterState::READ != Cache::getInstance().getState().tdread().get(getBoardId())) {
-     Cache::getInstance().getState().tdread().read_ack(getBoardId());
+     Cache::getInstance().getState().tdread().unmodified(getBoardId());
      setContinue(true);
 
      return;

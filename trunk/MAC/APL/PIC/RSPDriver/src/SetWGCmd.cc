@@ -68,7 +68,8 @@ void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
       cache.getWGSettings()()(cache_rcu) = m_event->settings()(0);
 
       if (setModFlag) {
-	cache.getCache().getState().diagwgsettings().write(cache_rcu);
+	LOG_INFO_STR("scheduling write for " << cache_rcu);
+	cache.getCache().getState().diagwgsettings().write(cache_rcu * MEPHeader::N_DIAG_WG_REGISTERS);
       }
     }
   }

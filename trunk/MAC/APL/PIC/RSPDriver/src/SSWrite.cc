@@ -69,6 +69,18 @@ void SSWrite::sendrequest()
 			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
 			    neverDeleteData);
 
+#if 0
+  Array<int, 2> index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+  Array<int, 2> mapped_index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+
+  for (int beamlet = MEPHeader::N_LOCAL_XLETS; beamlet < MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS; beamlet++) {
+    for (int pol = 0; pol < MEPHeader::N_POL; pol++) {
+      index(beamlet, pol) = beamlet * MEPHeader::N_POL + pol;
+    }
+  }
+  mapped_index = 0;
+#endif
+
   // copy crosslet selection
   Range xlet_range(0, MEPHeader::N_LOCAL_XLETS-1);
   subbands(xlet_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     xlet_range); // x
@@ -92,7 +104,16 @@ void SSWrite::sendrequest()
 
     subbands(hw_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     cache_range); // x
     subbands(hw_range, 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, cache_range); // y
+
+#if 0
+    mapped_index(hw_range, 0) = index(cache_range, 0);
+    mapped_index(hw_range, 1) = index(cache_range, 1);
+#endif
   }
+
+#if 0
+  LOG_DEBUG_STR("mapped_index=" << mapped_index);
+#endif
 
   m_hdr = ss.hdr;
   getBoardPort().send(ss);

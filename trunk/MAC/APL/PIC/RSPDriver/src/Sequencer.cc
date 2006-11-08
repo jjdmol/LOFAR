@@ -24,6 +24,8 @@
 #include <Common/LofarLogger.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
+#include <APL/RTCCommon/PSAccess.h>
+
 #include "Sequencer.h"
 #include "Cache.h"
 #include "StationSettings.h"
@@ -91,11 +93,13 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
     
     case F_TIMER:
     {
-      if (SETCLOCK == m_sequence) {
-	Cache::getInstance().reset();
-	TRAN(Sequencer::clearclock_state);
-      } else if (RSPCLEAR == m_sequence) {
-	TRAN(Sequencer::rsuclear_state);
+      if (!GET_CONFIG("RSPDriver.DISABLE_INIT", i)) {
+	if (SETCLOCK == m_sequence) {
+	  Cache::getInstance().reset();
+	  TRAN(Sequencer::clearclock_state);
+	} else if (RSPCLEAR == m_sequence) {
+	  TRAN(Sequencer::rsuclear_state);
+	}
       }
     }
     break;
@@ -125,7 +129,7 @@ GCFEvent::TResult Sequencer::clearclock_state(GCFEvent& event, GCFPortInterface&
     {
       LOG_DEBUG("Entering Sequencer::clearclock_state");
       Cache::getInstance().getState().tdclear().reset();
-      Cache::getInstance().getState().tdclear().write_force();
+      Cache::getInstance().getState().tdclear().write();
 
     }
     break;
@@ -162,7 +166,7 @@ GCFEvent::TResult Sequencer::writeclock_state(GCFEvent& event, GCFPortInterface&
     {
       LOG_DEBUG("Entering Sequencer::writeclock_state");
       Cache::getInstance().getState().tdwrite().reset();
-      Cache::getInstance().getState().tdwrite().write_force();
+      Cache::getInstance().getState().tdwrite().write();
     }
     break;
     
@@ -215,7 +219,7 @@ GCFEvent::TResult Sequencer::readclock_state(GCFEvent& event, GCFPortInterface& 
 	  Cache::getInstance().getState().tdread().reset();
 	  Cache::getInstance().getState().tdread().read();
 	}
-      } else if (Cache::getInstance().getState().tdread().isMatchAll(RegisterState::CHECK)) {
+      } else if (Cache::getInstance().getState().tdread().isMatchAll(RegisterState::IDLE)) {
 	TRAN(Sequencer::rcudisable_state);
       }
     }
@@ -252,7 +256,7 @@ GCFEvent::TResult Sequencer::rcudisable_state(GCFEvent& event, GCFPortInterface&
       Cache::getInstance().getBack().getRCUSettings()() = control;
 
       Cache::getInstance().getState().rcusettings().reset();
-      Cache::getInstance().getState().rcusettings().write_force();
+      Cache::getInstance().getState().rcusettings().write();
 
       m_timer = 0;
     }
@@ -303,7 +307,7 @@ GCFEvent::TResult Sequencer::rsuclear_state(GCFEvent& event, GCFPortInterface& /
 
       // signal that the register has changed
       Cache::getInstance().getState().rsuclear().reset();
-      Cache::getInstance().getState().rsuclear().write_force();
+      Cache::getInstance().getState().rsuclear().write();
 
       m_timer = 0;
     }
@@ -341,7 +345,7 @@ GCFEvent::TResult Sequencer::setblocksync_state(GCFEvent& event, GCFPortInterfac
     {
       LOG_DEBUG("Entering Sequencer::setblocksync_state");
       Cache::getInstance().getState().bs().reset();
-      Cache::getInstance().getState().bs().write_force();
+      Cache::getInstance().getState().bs().write();
       m_timer = 0;
     }
     break;
@@ -383,7 +387,7 @@ GCFEvent::TResult Sequencer::radwrite_state(GCFEvent& event, GCFPortInterface& /
     {
       LOG_DEBUG("Entering Sequencer::radwrit_state");
       Cache::getInstance().getState().rad().reset();
-      Cache::getInstance().getState().rad().write_force();
+      Cache::getInstance().getState().rad().write();
 
       m_timer = 0;
     }
@@ -395,7 +399,7 @@ GCFEvent::TResult Sequencer::radwrite_state(GCFEvent& event, GCFPortInterface& /
 	  && Cache::getInstance().getState().rad().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to write RAD settings register. Retrying...");
 	Cache::getInstance().getState().rad().reset();
-	Cache::getInstance().getState().rad().write_force();
+	Cache::getInstance().getState().rad().write();
       } else if (Cache::getInstance().getState().rad().isMatchAll(RegisterState::IDLE)) {
 	TRAN(Sequencer::rcuenable_state);
       }
@@ -433,7 +437,7 @@ GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& 
       Cache::getInstance().getBack().getRCUSettings()() = control;
 
       Cache::getInstance().getState().rcusettings().reset();
-      Cache::getInstance().getState().rcusettings().write_force();
+      Cache::getInstance().getState().rcusettings().write();
     }
     break;
     

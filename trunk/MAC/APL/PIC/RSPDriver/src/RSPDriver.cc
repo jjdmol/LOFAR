@@ -194,7 +194,7 @@ RSPDriver::RSPDriver(string name)
   StationSettings*      ssp = StationSettings::instance();
   ssp->setMaxRspBoards  (GET_CONFIG("RS.N_RSPBOARDS", i));
   ssp->setNrRspBoards   (GET_CONFIG("RS.N_RSPBOARDS", i));
-  ssp->setNrBlpsPerBoard(GET_CONFIG("RS.N_BLPS", i));
+  ssp->setNrBlpsPerBoard(MEPHeader::N_BLPS);
   if (GET_CONFIG("RSPDriver.OPERATION_MODE", i) == MODE_SUBSTATION) {
     ssp->setNrRspBoards(1);
   };

@@ -33,7 +33,6 @@
 #include "CDOWrite.h"
 #include "Cache.h"
 
-#define N_CDO_REGISTERS 2
 #define BASEUDPPORT 0x10FA // (=4346) start numbering src and dst UDP ports at this number (4346)
 #define EPA_CEP_OUTPUT_HEADER_SIZE 16 // bytes
 #define EPA_CEP_BEAMLET_SIZE sizeof(uint16)
@@ -112,7 +111,7 @@ void CDOWrite::setup_udpip_header()
 }
 
 CDOWrite::CDOWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, N_CDO_REGISTERS)
+  : SyncAction(board_port, board_id, MEPHeader::N_CDO_REGISTERS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -151,13 +150,13 @@ void CDOWrite::sendrequest()
 {
   // write register (with same setting) every second if WRITE_CDO_ONCE == 0
   if (0 == GET_CONFIG("RSPDriver.WRITE_CDO_ONCE", i)) {
-    Cache::getInstance().getState().cdo().write(getBoardId());
+    Cache::getInstance().getState().cdo().write(getBoardId() * getNumIndices() + getCurrentIndex());
   }
 
   // skip update if the CDO settings have not been modified
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().cdo().get(getBoardId()))
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().cdo().get(getBoardId() * getNumIndices() + getCurrentIndex()))
   {
-    Cache::getInstance().getState().cdo().unmodified(getBoardId());
+    Cache::getInstance().getState().cdo().unmodified(getBoardId() * getNumIndices() + getCurrentIndex());
     setContinue(true);
     return;
   }
@@ -252,12 +251,12 @@ GCFEvent::TResult CDOWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("CDOWrite::handleack: invalid ack");
-    Cache::getInstance().getState().cdo().write_error(getBoardId());
+    Cache::getInstance().getState().cdo().write_error(getBoardId() * getNumIndices() + getCurrentIndex());
     return GCFEvent::NOT_HANDLED;
   }
 
   if (1 == getCurrentIndex()) {
-    Cache::getInstance().getState().cdo().write_ack(getBoardId());
+    Cache::getInstance().getState().cdo().write_ack(getBoardId() * getNumIndices() + getCurrentIndex());
   }
   
   return GCFEvent::HANDLED;
