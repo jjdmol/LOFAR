@@ -96,8 +96,7 @@ void CacheBuffer::reset(void)
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(),
-			    MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
+  m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
   m_beamletweights() = complex<int16>(0,0);
 
   m_subbandselection().resize(StationSettings::instance()->nrRcus(),
@@ -111,14 +110,6 @@ void CacheBuffer::reset(void)
     m_beamletweights()(Range::all(), Range::all(), Range::all()) =
       complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
 
-    // reset weights on first N_LOCAL_XLETS beamlets for cross correlation
-    // they will be set again in BWWrite::sendrequest()
-    m_beamletweights()(Range::all(), Range::all(), Range(0, MEPHeader::N_LOCAL_XLETS - 1)) = 
-      complex<int16>(0,0);
-
-    // This log statement is SLOOOWWW for full size LOFAR array, don't enable it again
-    // LOG_DEBUG_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
-
     //
     // Set default subband selection starting at RSPDriver.FIRST_SUBBAND
     //
@@ -129,9 +120,6 @@ void CacheBuffer::reset(void)
 	  (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
       }
     }
-
-    // This log statement is SLOOOWWW for full size LOFAR array, don't enable it again
-    // LOG_DEBUG_STR("m_subbandselection()=" << m_subbandselection());
   }
 
   // initialize RCU settings
@@ -161,7 +149,7 @@ void CacheBuffer::reset(void)
   init.preset = WGSettings::PRESET_SINE;
   m_wgsettings() = init;
 
-  m_wgsettings.waveforms().resize(StationSettings::instance()->nrRcus(), N_WAVE_SAMPLES);
+  m_wgsettings.waveforms().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_WAVE_SAMPLES);
   m_wgsettings.waveforms() = 0;
 
   m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
@@ -311,7 +299,7 @@ void Cache::swapBuffers()
     // fill xcorr array by copying and taking complex conjugate of values mirrored in the diagonal
     Array<complex<double>, 4> xc(m_back->getXCStats()());
     firstIndex  i; secondIndex j; thirdIndex  k; fourthIndex  l;
-    xc = where(xc(i,j,k,l)==complex<double>(0,0), conj(xc(i,j,l,k)), xc(i,j,k,l));
+    xc = where(xc(i,j,k,l)==complex<double>(0,0), conj(xc(j,i,l,k)), xc(i,j,k,l));
   }
 
   CacheBuffer *tmp = m_front;
