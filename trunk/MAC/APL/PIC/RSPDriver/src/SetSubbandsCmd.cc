@@ -75,7 +75,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 	{
 	  if (m_event->rcumask[cache_rcu])
 	    {
-	      cache.getSubbandSelection()()(cache_rcu, Range::all()) = 0;
+	      cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
 	      cache.getSubbandSelection()()(cache_rcu, dst_range)
 		= m_event->subbands()(0, Range::all()) * (int)MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
 	
