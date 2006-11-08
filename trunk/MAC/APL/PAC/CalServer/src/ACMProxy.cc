@@ -206,7 +206,9 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 	    }
 	    finalize(true); // done reading from file
 	  } else {
-	    TRAN(ACMProxy::initializing);
+	    if (!GET_CONFIG("CalServer.DisableACMProxy", i)) {
+	      TRAN(ACMProxy::initializing);
+	    }
 	  }
 	} else {
 	  LOG_WARN("failed to get writeLock on ACC backbuffer");
