@@ -135,18 +135,19 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 	if (command & PCCmdResult) {
 		command = static_cast<PCCmd>(command ^ PCCmdResult);
 		ack = true;
-		cout << "Ack on command: " << command;
+		LOG_TRACE_VAR_STR("Ack on command: " << command);
 	}
 	else {
-		cout << "command=" << command << endl;
+		LOG_TRACE_VAR_STR("command=" << command);
 	}
-	cout << ", options=" << DHProcPtr->getOptions() << endl;
+	LOG_TRACE_VAR_STR("  options=" << DHProcPtr->getOptions());
 
 	switch (command) {
 	case PCCmdInfo:
 		// TODO: AP ask for some info, we should answer this
 		break;
 	case PCCmdAnswer:
+
 		// TODO: AP returns an answer on a question we have sent it
 		break;
 	case PCCmdStart:

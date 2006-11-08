@@ -29,7 +29,7 @@ using namespace LOFAR;
 using namespace LOFAR::BBS;
 using namespace LOFAR::ACC::PLC;
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
   const char* progName = basename(argv[0]);
   INIT_LOGGER(progName);
@@ -37,8 +37,9 @@ int main(int argc, char **argv)
   LOG_INFO_STR(progName << " is starting up ...");
   try {
     BBSKernelProcessControl myProcess;
-    if (!ACCmain(argc, argv, &myProcess)) {
-      LOG_ERROR("ACCmain returned with an error status");
+    int result = ACCmain(argc, argv, &myProcess);
+    if (result != 0) {
+      LOG_ERROR_STR("ACCmain returned with error status: " << result);
       return 1;
     }
   }

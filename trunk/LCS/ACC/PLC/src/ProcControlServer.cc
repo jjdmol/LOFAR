@@ -91,7 +91,7 @@ string		ProcControlServer::askInfo(const string&	keylist) const
 
 bool	ProcControlServer::pollForMessage() const
 {
-	LOG_TRACE_FLOW("ProcControlServer:pollForMessage");
+	LOG_TRACE_RTTI("ProcControlServer:pollForMessage");
 
 	return (itsCommChan->poll());
 }

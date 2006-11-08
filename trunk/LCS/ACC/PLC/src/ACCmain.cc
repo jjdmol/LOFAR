@@ -121,8 +121,10 @@ namespace LOFAR {
 	    if (ps == 0) {
 	      LOG_INFO_STR("Could not find a parameter set.");
 	    } else {
-	      APS::globalParameterSet()->adoptCollection(*ps);
+              string prefix = ps->getString("parsetPrefix");
+              ParameterSet ParamSet = ps->makeSubset(prefix);
 	      delete ps;
+              APS::globalParameterSet()->adoptCollection(ParamSet);
 	    }
 
 	    LOG_TRACE_FLOW(programName + " starting define");
@@ -151,12 +153,13 @@ namespace LOFAR {
 	    // Read in parameterfile and get my name
 	    ParameterSet itsOrigParamSet(argv[2]);
 	    string procID = itsOrigParamSet.getString("process.name");
-	    ParameterSet ParamSet = itsOrigParamSet.makeSubset(procID + ".");
+            string prefix = itsOrigParamSet.getString("parsetPrefix");
+	    ParameterSet ParamSet = itsOrigParamSet.makeSubset(prefix);
 
 	    APS::globalParameterSet()->adoptCollection(ParamSet);
 
-	    ProcControlServer pcServer(ParamSet.getString("ACnode"),
-				       ParamSet.getUint16("ACport"),
+	    ProcControlServer pcServer(ParamSet.getString("_ACnode"),
+				       ParamSet.getUint16("_ACport"),
 				       theProcess);
        
 
@@ -165,21 +168,15 @@ namespace LOFAR {
 	    LOG_TRACE_FLOW("Registered at ApplController");
 
 	    // Main processing loop
+            bool isRunning = false;
 	    while (1) {
-	      LOG_TRACE_FLOW("Polling ApplController for message");
-	      bool isRunning = false;
+	      LOG_TRACE_STAT("Polling ApplController for message");
 	      if (pcServer.pollForMessage()) {
-		LOG_TRACE_FLOW("Message received from ApplController");
+		LOG_TRACE_COND("Message received from ApplController");
 	  
 		// get pointer to received data
 		DH_ProcControl* newMsg = pcServer.getDataHolder();
 	  
-		if (!pcServer.handleMessage(newMsg)) {
-                  LOG_ERROR_STR("ProcControlServer::handleMessage() failed: "
-                                "cmd=" << newMsg->getCommand() << "; "
-                                "options=[" << newMsg->getOptions() << "]");
-                }
-
 		if (newMsg->getCommand() == ACC::PLC::PCCmdQuit) {
 		  break;
 		} else if (newMsg->getCommand() == ACC::PLC::PCCmdRun) {
@@ -187,10 +184,18 @@ namespace LOFAR {
 		} else if (newMsg->getCommand() == ACC::PLC::PCCmdPause) {
 		  isRunning = false;
 		}		  
+
+		if (!pcServer.handleMessage(newMsg)) {
+                  LOG_ERROR("ProcControlServer::handleMessage() failed");
+                }
+
 	      } else if (isRunning == true) {
-		// Call run again.
-		// It is possible that a process doesn't support this. It should check for that itself.
-		theProcess->run();
+		// Call run again. It is possible that a process doesn't
+		// support this. It should check for that itself. 
+                // If run() fails, toggle the isRunning flag to false.
+		if (!theProcess->run()) {
+                  isRunning = false;
+                }
 	      }
 	    }
     
@@ -201,6 +206,9 @@ namespace LOFAR {
 	  LOG_FATAL_STR("Caught exception: " << ex << endl);
 	  LOG_FATAL_STR(argv[0] << " terminated by exception!");
 	  return 1;
+        } catch (std::exception& ex) {
+          LOG_FATAL_STR("Caught std::exception: " << ex.what());
+          return 1;
 	} catch (...) {
 	  LOG_FATAL_STR("Caught unknown exception, exitting");
 	  return 1;

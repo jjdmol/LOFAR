@@ -314,7 +314,7 @@ void TH_Socket::waitForSent(void*, int, int)
 //
 bool TH_Socket::init()
 {
-	LOG_TRACE_FLOW("TH_Socket::init()");
+	LOG_TRACE_RTTI("TH_Socket::init()");
 
 	if (!openSocket()) {
 	  return false;

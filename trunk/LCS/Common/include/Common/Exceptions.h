@@ -1,6 +1,6 @@
-//#  BBSControl.cc: 
+//#  Exceptions.h: Declaration and definition of SINFONI specific exceptions.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,33 +20,30 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
-#include <libgen.h>
-#include <BBSControl/BBSProcessControl.h>
-#include <PLC/ACCmain.h>
+#ifndef LOFAR_COMMON_EXCEPTIONS_H
+#define LOFAR_COMMON_EXCEPTIONS_H
 
-using namespace LOFAR;
-using namespace LOFAR::BBS;
-using namespace LOFAR::ACC::PLC;
+//# Includes
+#include <Common/Exception.h>
 
-int main(int argc, char *argv[])
+namespace LOFAR
 {
-  const char* progName = basename(argv[0]);
-  INIT_LOGGER(progName);
+  //
+  // This exception will be thrown when an I/O error occurs.
+  //
+  EXCEPTION_CLASS(IOException, Exception);
 
-  LOG_INFO_STR(progName << " is starting up ...");
-  try {
-    BBSProcessControl myProcess;
-    int result = ACCmain(argc, argv, &myProcess);
-    if (result != 0) {
-      LOG_ERROR_STR("ACCmain returned with error status: " << result);
-      return 1;
-    }
-  } 
-  catch(Exception& e) {
-    LOG_FATAL_STR(progName << " terminated due to fatal exception!\n" << e);
-    return 1;
-  }
-  LOG_INFO_STR(progName << " terminated successfully.");
-  return 0;
-}
+  //
+  // This exception will be thrown when a math error occurs.
+  //
+  EXCEPTION_CLASS(MathException, Exception);
+
+  //
+  // This exception will be thrown when a method is called that has not been
+  // implemented (yet).
+  //
+  EXCEPTION_CLASS(NotImplemented, Exception);
+
+} // namespace ASTRON
+
+#endif

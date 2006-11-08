@@ -476,6 +476,10 @@ bool Prediffer::setContext(const Context &context)
     }
     ASSERTSTR(itsBLInx.size() > 0, "No baselines selected in current context.");
     
+    // Clear solvable flag from all parameters (may still be set from the
+    // previous step).
+    clearSolvableParms();
+
     // Create the measurement equation for each interferometer (baseline).
     if(context.sources.empty())
     {

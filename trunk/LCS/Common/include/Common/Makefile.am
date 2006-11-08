@@ -15,6 +15,7 @@ pkginclude_HEADERS = \
 	DataConvert.h \
 	DataFormat.h \
 	Exception.h \
+	Exceptions.h \
 	FileLocator.h \
 	hexdump.h \
 	i4complex.h \
