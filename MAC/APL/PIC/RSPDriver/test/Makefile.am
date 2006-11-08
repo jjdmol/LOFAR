@@ -11,6 +11,10 @@ bin_PROGRAMS = \
 	EPAStub \
 	RSPTest
 
+bin_SCRIPTS = \
+	beamtest \
+	wgtest
+
 #check_PROGRAMS = \
 #	RSPTest
 
