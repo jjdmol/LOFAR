@@ -1,4 +1,4 @@
-bin_PROGRAMS 				= ControllerMenu TestController
+bin_PROGRAMS 				= ControllerMenu TestController CodeLoggingTest
 
 ControllerMenu_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -Wno-deprecated \
@@ -15,6 +15,10 @@ TestController_SOURCES		= TestController.cc \
 TestController_LDADD		= $(LOFAR_DEPEND)
 TestController_DEPENDENCIES	= $(LOFAR_DEPEND)
 
+CodeLoggingTest_SOURCES		= CodeLoggingTest.cc
+CodeLoggingTest_LDADD		= $(LOFAR_DEPEND)
+CodeLoggingTest_DEPENDENCIES	= $(LOFAR_DEPEND)
+
 NOINSTHDRS 					= ControllerMenu.h 
 
 INSTHDRS 					= 
@@ -27,7 +31,7 @@ EXTRA_DIST 					=
 
 #in case of make install these files will be copied to the bindir beside the test apps
 
-sysconf_DATA		= ControllerMenu.log_prop TestController.log_prop
+sysconf_DATA		= ControllerMenu.log_prop TestController.log_prop CodeLoggingTest.log_prop
 
 %.log_prop: %.log_prop.in
 	cp $< $@

@@ -145,9 +145,8 @@ GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterfac
 			// Start ChildControl task
 			cout << "Starting up controller ... ";
 			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->startChild(cntlrName,
+			if (!itsChildControl->startChild(itsCntlrType,
 											 itsObsNr,
-											 itsCntlrType,
 											 0,
 											 myHostname(false))) {
 				cout << "Error during start of controller, bailing out" << endl;
