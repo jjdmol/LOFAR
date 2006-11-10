@@ -95,8 +95,9 @@ MACScheduler::MACScheduler() :
 
 	itsObservations.reserve(10);		// already reserve memory for 10 observations.
 
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
+	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
+	registerProtocol(PA_PROTOCOL, 		  PA_PROTOCOL_signalnames);
+	registerProtocol(F_PML_PROTOCOL, 	  F_PML_PROTOCOL_signalnames);
 }
 
 

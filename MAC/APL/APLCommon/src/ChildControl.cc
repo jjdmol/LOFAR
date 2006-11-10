@@ -293,8 +293,9 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 							 	 OTDBtreeIDType		anObsID, 
 							 	 uint16				aCntlrType)
 {
-	LOG_TRACE_FLOW_STR("requestState(" << aState << "," << aName << "," << anObsID <<
-						"," << aCntlrType <<")" );
+	CTState		cts;
+	LOG_TRACE_FLOW_STR("requestState(" << cts.name(aState) << "," << aName << "," 
+						<< anObsID << "," << aCntlrType <<")" );
 
 	bool	checkName   = (aName != "");
 	bool	checkID     = (anObsID != 0);
@@ -1068,6 +1069,8 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			CONTROLFinishedEvent	reply;
 			reply.cntlrName = msg.cntlrName;
 			port.send(reply);
+			_setEstablishedState(msg.cntlrName, CTState::FINISHED, time(0),
+								 msg.result);
 		}
 		break;
 	

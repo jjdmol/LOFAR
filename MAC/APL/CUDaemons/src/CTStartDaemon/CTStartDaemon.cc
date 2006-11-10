@@ -155,6 +155,7 @@ void CTStartDaemon::sendCreatedMsg(actionIter		action, int32	result)
 	createdEvent.cntlrName = action->cntlrName;
 	createdEvent.result	   = result;
 	action->parentPort->send(createdEvent);
+	LOG_DEBUG_STR("Sent 'Created' msg at port " << action->parentPort);
 }
 
 
@@ -167,7 +168,7 @@ void CTStartDaemon::sendNewParentAndCreatedMsg(actionIter		action)
 
 	// connection with new controller is made, send 'newparent' message
 	STARTDAEMONNewparentEvent	msg;
-	msg.cntlrName	  = adminName;
+	msg.cntlrName	  = action->cntlrName;
 	msg.parentHost	  = action->parentHost;
 	msg.parentService = action->parentService;
 	
@@ -176,12 +177,12 @@ void CTStartDaemon::sendNewParentAndCreatedMsg(actionIter		action)
 	ASSERTSTR(isController(controller), adminName << 
 										" not found in controller list");
 	controller->second->send(msg);
-	LOG_DEBUG_STR("Sending NewParent(" << adminName << "," <<
+	LOG_DEBUG_STR("Sending NewParent(" << msg.cntlrName << "," <<
 						msg.parentHost << "," << msg.parentService << ")");
 
 	// send customer message that controller is on the air
 	sendCreatedMsg(action, SD_RESULT_NO_ERROR);
-	action->parentPort->close();
+//	action->parentPort->close();
 }
 
 
@@ -436,6 +437,7 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 		action.parentPort	 = &port;
 		action.timerID		 = itsTimerPort->setTimer(20.0);	// failure over 20 sec
 		LOG_DEBUG_STR ("Adding " << action.cntlrName << " to actionList");
+		LOG_DEBUG(formatString("XXX %s:%d:%s:%s:%X:%ld", action.cntlrName.c_str(), action.cntlrType, action.parentHost.c_str(), action.parentService.c_str(), action.parentPort, action.timerID));
 		itsActionList.push_back(action);
 		break;
 	}
@@ -471,6 +473,10 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 
 			sendNewParentAndCreatedMsg(action);
 			LOG_DEBUG_STR ("Removing " << action->cntlrName << " from actionlist");
+		LOG_DEBUG(formatString("XXX %s:%d:%s:%s:%X:%ld", action->cntlrName.c_str(), action->cntlrType, action->parentHost.c_str(), action->parentService.c_str(), action->parentPort, action->timerID));
+			LOG_DEBUG("Clearing pointer to port to prevent close");
+		LOG_DEBUG(formatString("XXX %s:%d:%s:%s:%X:%ld", action->cntlrName.c_str(), action->cntlrType, action->parentHost.c_str(), action->parentService.c_str(), action->parentPort, action->timerID));
+			action->parentPort = 0;	// don't destroy the port yet
 			itsActionList.erase(action);
 			action = findAction(adminName);
 		}

@@ -359,7 +359,7 @@ GCFEvent::TResult OfflineControl::active_state(GCFEvent& event, GCFPortInterface
 	case CONTROL_RESUME: {
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
-		setState(CTState::ACTIVE);
+		setState(CTState::RESUME);
 		// TODO: implement something useful
 		CONTROLResumedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
@@ -433,62 +433,45 @@ GCFEvent::TResult OfflineControl::finished_state(GCFEvent& event, GCFPortInterfa
 uint16_t OfflineControl::doClaim(const string& cntlrName)
 {
   uint16_t result = CT_RESULT_NO_ERROR;
-  try
-  {
-	string processScope("AC.process");
-	string offlineCtrlPrefix(globalParameterSet()->locateModule("OfflineCtrl") + "OfflineCtrl.");
-  
+  try {
 	vector<string> procNames, nodes;
 	string executable, hostName, startstoptype;
-	string ldName(getName().c_str());
 	
-	procNames = globalParameterSet()->getStringVector(offlineCtrlPrefix+"ApplCtrl.application");
+	procNames = globalParameterSet()->getStringVector("ApplCtrl.application");
 
-	for(size_t i=0;i<procNames.size();i++)
-	{
+	for (size_t i = 0; i < procNames.size(); i++) {
 	  string procName = procNames[i];
 
-	  startstoptype = globalParameterSet()->getString(formatString("%s%s._startstopType",
-																   offlineCtrlPrefix.c_str(),
-																   procName.c_str()));
-	  executable    = globalParameterSet()->getString(formatString("%s%s._executable",
-																   offlineCtrlPrefix.c_str(),
-																   procName.c_str()));
-	  hostName      = globalParameterSet()->getString(formatString("%s%s._hostname",
-																   offlineCtrlPrefix.c_str(),
-																   procName.c_str()));
-	  nodes   = globalParameterSet()->getStringVector(formatString("%s%s._nodes",
-																   offlineCtrlPrefix.c_str(),
-																   procName.c_str()));
-	  itsProcessDependencies[procName] = globalParameterSet()->getStringVector(formatString("%s%s._depends",
-																							offlineCtrlPrefix.c_str(),
-																							procName.c_str()));
+	  startstoptype = globalParameterSet()->getString(procName + "._startstopType");
+	  executable    = globalParameterSet()->getString(procName + "._executable");
+	  hostName      = globalParameterSet()->getString(procName + "._hostname");
+	  nodes   		= globalParameterSet()->getStringVector(procName + "._nodes");
+	  itsProcessDependencies[procName] = 
+					  globalParameterSet()->getStringVector(procName + "._depends");
 
 	  CEPApplicationManagerPtr accClient(new CEPApplicationManager(*this, procName));
 	  itsCepApplications[procName] = accClient;
 	  
 	  ACC::APS::ParameterSet params;
 	  params.clear();
-	  params.replace("AC.application", cntlrName);
 	  // import the ApplCtrl section
-	  params.adoptCollection(globalParameterSet()->makeSubset(offlineCtrlPrefix+"ApplCtrl", "AC"));
+	  params.adoptCollection(globalParameterSet()->makeSubset("ApplCtrl", "ApplCtrl"));
 	  // import the <procname> section
-	  params.adoptCollection(globalParameterSet()->makeSubset(offlineCtrlPrefix+procName, procName));
+	  params.adoptCollection(globalParameterSet()->makeSubset(procName, procName));
 	  
 	  // add some keys to cope with the differences between the OTDB and ACC
-	  params.replace("AC.resultfile", formatString("./ACC-%s_%s_result.param", cntlrName.c_str(),procName.c_str()));
-	  params.replace("AC.process[0].count","1");
-	  params.replace("AC.application",procName);
-	  params.replace("AC.process[1].ID",procName);
-	  params.replace("AC.hostname",hostName);
-	  params.replace(formatString("%s.%s[0].startstoptype",procName.c_str(),procName.c_str()),startstoptype);
-	  params.replace(formatString("%s.%s[0].executable",procName.c_str(),procName.c_str()),executable);
+	  params.replace("ApplCtrl.resultfile", formatString("./ACC-%s_%s_result.param", cntlrName.c_str(),procName.c_str()));
+	  params.replace("ApplCtrl.process[0].count","1");
+	  params.replace("ApplCtrl.application",procName);
+	  params.replace("ApplCtrl.process[1].ID",procName);
+	  params.replace("ApplCtrl.hostname",hostName);
+	  params.replace(formatString("%s[0]._startstopType", procName.c_str()),startstoptype);
+	  params.replace(formatString("%s[0]._executable",procName.c_str()),executable);
 
 	  // create nodelist
 	  int nodeIndex=1;
-	  for(vector<string>::iterator it=nodes.begin();it!=nodes.end();++it)
-	  {
-		params.replace(formatString("AC.%s[%d].node",procName.c_str(),nodeIndex++),*it);
+	  for (vector<string>::iterator it=nodes.begin(); it != nodes.end(); ++it) {
+		params.replace(formatString("ApplCtrl.%s[%d]._node",procName.c_str(),nodeIndex++),*it);
 	  }
 	  itsCepAppParams[procName] = params;
 	}
@@ -537,23 +520,21 @@ uint16_t OfflineControl::doPrepare(const string& cntlrName)
 void OfflineControl::prepareProcess(const string& cntlrName, const string& procName, const time_t startTime)
 {
   map<string, ACC::APS::ParameterSet>::iterator it = itsCepAppParams.find(procName);
-  if(it != itsCepAppParams.end())
-  {
-	string procName = it->second.getString("AC.process[1].ID");
-	string hostName = it->second.getString("AC.hostname");
+  if(it != itsCepAppParams.end()) {
+	string procName = it->second.getString("ApplCtrl.process[1].ID");
+	string hostName = it->second.getString("ApplCtrl.hostname");
 	string paramFileName(formatString("ACC-%s_%s.param", cntlrName.c_str(),procName.c_str()));
 	it->second.writeFile(paramFileName);
   
 	// schedule all ACC commands
 	itsCepAppStartTimes[procName] = startTime;
-	time_t initTime   = startTime  - it->second.getTime("AC.timeout_init");
-	time_t defineTime = initTime   - it->second.getTime("AC.timeout_define") - 
-	                                 it->second.getTime("AC.timeout_startup");
-	time_t bootTime   = defineTime - it->second.getTime("AC.timeout_createsubsets");
+	time_t initTime   = startTime  - it->second.getTime("ApplCtrl.timeout_init");
+	time_t defineTime = initTime   - it->second.getTime("ApplCtrl.timeout_define") - 
+	                                 it->second.getTime("ApplCtrl.timeout_startup");
+	time_t bootTime   = defineTime - it->second.getTime("ApplCtrl.timeout_createsubsets");
 	time_t now = time(0);
 	time_t stopTime = to_time_t(itsStopTime);
-	if(now >= stopTime)
-	{
+	if(now >= stopTime) {
 	  // stoptime has already passed. Calculate a new stoptime based on the observation parameters
 	  time_t startOffset = startTime - to_time_t(itsStartTime);
 	  stopTime += startOffset;
@@ -571,18 +552,14 @@ void OfflineControl::prepareProcess(const string& cntlrName, const string& procN
 	LOG_DEBUG(formatString("%d start %s",       startTime,  ctime(&startTime)));
 	LOG_DEBUG(formatString("%d stop %s",        stopTime,   ctime(&stopTime)));
 	
-	if (now > bootTime)
-	{
+	if (now > bootTime) {
 	  APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
 	  LOG_WARN("Cannot guarantee all CEP processes are started in time.");
 	}
-	else
-	{
+	else {
 	  CEPApplicationManagerPtr cepAppPtr = itsCepApplications[procName];
-	  if(NULL != cepAppPtr)
-	  {
-		switch (cepAppPtr->getLastOkCmd())
-		{
+	  if(NULL != cepAppPtr) {
+		switch (cepAppPtr->getLastOkCmd()) {
 		  case ACCmdNone:
 			cepAppPtr->boot(bootTime, paramFileName);
 			break;
@@ -602,8 +579,7 @@ void OfflineControl::prepareProcess(const string& cntlrName, const string& procN
 			break;
 		}
 	  }   
-	  else
-	  {
+	  else {
 		LOG_WARN(formatString("Unable to find ACC process for %s.",procName.c_str()));
 	  }
 	  APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
@@ -616,21 +592,18 @@ void OfflineControl::prepareProcess(const string& cntlrName, const string& procN
 //
 void OfflineControl::doRelease(void)
 {
-  try
-  {
+  try {
 	map<string, ACC::APS::ParameterSet>::iterator it;
-	for(it = itsCepAppParams.begin(); it != itsCepAppParams.end();++it)
-	{
+	for(it = itsCepAppParams.begin(); it != itsCepAppParams.end();++it) {
 	  string hostName, remoteFile, resultFile, procName;
-	  hostName = it->second.getString("AC.hostname");
-	  procName = it->second.getString("AC.process[1].ID");
+	  hostName = it->second.getString("ApplCtrl.hostname");
+	  procName = it->second.getString("ApplCtrl.process[1].ID");
 	  resultFile = formatString("ACC-%s_%s_result.param", getName().c_str(),procName.c_str());
 	  remoteFile = string(LOFAR_SHARE_LOCATION) + string("/") + resultFile;
-	  APLCommon::APLUtilities::copyFromRemote(hostName,remoteFile,resultFile);
+//	  APLCommon::APLUtilities::copyFromRemote(hostName,remoteFile,resultFile);
 	  itsResultParams.adoptFile(resultFile);
 	  //  itsResultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
-	  if (!itsResultParams.isDefined(formatString("%s.faultyNodes", getName().c_str())))
-	  {
+	  if (!itsResultParams.isDefined(formatString("%s.faultyNodes", getName().c_str()))) {
 		itsResultParams.add(formatString("%s.faultyNodes", getName().c_str()), "");
 	  }
 	  itsResultParams.writeFile(formatString("%s_result.param", getName().c_str()));
@@ -640,8 +613,7 @@ void OfflineControl::doRelease(void)
   {
   }
   map<string, CEPApplicationManagerPtr>::iterator it;
-  for(it = itsCepApplications.begin();it != itsCepApplications.end();++it)
-  {
+  for(it = itsCepApplications.begin();it != itsCepApplications.end();++it) {
 	it->second->quit(0);
   }
 }

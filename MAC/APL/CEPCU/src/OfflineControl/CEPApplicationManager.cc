@@ -57,24 +57,21 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
       break;
 
     case ACCmdQuit:
-      if (result == AcCmdMaskOk && result == 0)
-      {
+      if (result == AcCmdMaskOk && result == 0) {
         _continuePoll = false;
       }
       _interface.appQuitDone(_procName, result);
       break;
 
     case ACCmdDefine:
-      if (result == AcCmdMaskOk)
-      {
+      if (result == AcCmdMaskOk) {
         _lastOkCmd = cmd;
       }
       _interface.appDefined(_procName, result);
       break;
 
     case ACCmdInit:
-      if (result == AcCmdMaskOk)
-      {
+      if (result == AcCmdMaskOk) {
         _lastOkCmd = cmd;
       }
       _interface.appInitialized(_procName, result);
@@ -85,8 +82,7 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
       break;
 
     case ACCmdRun:
-      if (result == AcCmdMaskOk)
-      {
+      if (result == AcCmdMaskOk) {
         _lastOkCmd = cmd;
       }
       _interface.appRunDone(_procName, result);
