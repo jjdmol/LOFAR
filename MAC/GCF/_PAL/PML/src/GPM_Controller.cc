@@ -101,114 +101,108 @@ void GPMController::release()
   }
 }
 
+//
+// loadPropSet(propSet)
+//
 TPMResult GPMController::loadPropSet(GCFExtPropertySet& propSet)
 {
-  TPMResult result(PM_NO_ERROR);
-  
-  string destPA = determineDest(propSet.getScope());
-  if (checkDestination(destPA))
-  {
-    PALoadPropSetEvent request;
-  
-    TAction action;
-    action.pPropSet = &propSet;
-    action.signal = request.signal;
+	string destPA = determineDest(propSet.getScope());
+	LOG_DEBUG_STR("loadPropSet:scope=" << propSet.getScope() << ",destPA=" << destPA);
 
-    request.seqnr = registerAction(action);
-    
-    if (_distPropertyAgent.isConnected() && _propertyAgent.isConnected())
-    {
-      request.scope += propSet.getScope();
-      string::size_type index = request.scope.find(':');
-      if (index < request.scope.length())
-      {
-        request.scope.erase(0, index + 1);
-      }    
-      
-      _distPropertyAgent.setDestAddr(destPA);
-      _distPropertyAgent.send(request);
-    }
-  }
-  else
-  {
-    result = PM_PA_NOT_REACHABLE;
-  }
-  return result;
+	if (!checkDestination(destPA)) {
+		return (PM_PA_NOT_REACHABLE);
+	}
+
+	PALoadPropSetEvent request;
+
+	TAction action;
+	action.pPropSet = &propSet;
+	action.signal = request.signal;
+
+	request.seqnr = registerAction(action);
+
+	if (_distPropertyAgent.isConnected() && _propertyAgent.isConnected()) {
+		request.scope += propSet.getScope();
+		string::size_type index = request.scope.find(':');
+		if (index < request.scope.length()) {
+			request.scope.erase(0, index + 1);
+		}    
+
+		_distPropertyAgent.setDestAddr(destPA);
+		_distPropertyAgent.send(request);
+	}
+
+	return (PM_NO_ERROR);
 }
 
+//
+// unloadPropSet(propSet)
+//
 TPMResult GPMController::unloadPropSet(GCFExtPropertySet& propSet)
 {
-  TPMResult result(PM_NO_ERROR);
- 
-  string destPA = determineDest(propSet.getScope());
-  if (checkDestination(destPA))
-  {
-    PAUnloadPropSetEvent request;
-  
-    TAction action;
-    action.pPropSet = &propSet;
-    action.signal = request.signal;
-  
-    request.seqnr = registerAction(action);
-  
-  
-    if (_distPropertyAgent.isConnected() && _propertyAgent.isConnected())
-    {
-      request.scope += propSet.getScope();
-      string::size_type index = request.scope.find(':');
-      if (index < request.scope.length())
-      {
-        request.scope.erase(0, index + 1);
-      }
-  
-      _distPropertyAgent.setDestAddr(destPA);
-      _distPropertyAgent.send(request);
-  
-      _extPropertySets.remove(&propSet);
-    }
-  }
-  else
-  {
-    result = PM_PA_NOT_REACHABLE;
-  }
-  return result;
+	string destPA = determineDest(propSet.getScope());
+	LOG_DEBUG_STR("unloadPropSet:scope=" << propSet.getScope() << ",destPA=" << destPA);
+
+	if (!checkDestination(destPA)) {
+		return (PM_PA_NOT_REACHABLE);
+	}
+
+	PAUnloadPropSetEvent request;
+
+	TAction action;
+	action.pPropSet = &propSet;
+	action.signal = request.signal;
+
+	request.seqnr = registerAction(action);
+
+
+	if (_distPropertyAgent.isConnected() && _propertyAgent.isConnected()) {
+		request.scope += propSet.getScope();
+		string::size_type index = request.scope.find(':');
+		if (index < request.scope.length()) {
+			request.scope.erase(0, index + 1);
+		}
+
+		_distPropertyAgent.setDestAddr(destPA);
+		_distPropertyAgent.send(request);
+
+		_extPropertySets.remove(&propSet);
+	}
+
+	return (PM_NO_ERROR);
 }
 
 TPMResult GPMController::configurePropSet(GCFPropertySet& propSet, const string& apcName)
 {
-  TPMResult result(PM_NO_ERROR);
-   
-  string destPA = determineDest(propSet.getScope());
-  if (checkDestination(destPA))
-  {
-    PAConfPropSetEvent request;
-    
-    TAction action;
-    action.pPropSet = &propSet;
-    action.signal = request.signal;
-    action.apcName = apcName;
-    
-    request.seqnr = registerAction(action);
-  
-    if (_distPropertyAgent.isConnected() && _propertyAgent.isConnected())
-    {
-      request.scope += propSet.getScope();
-      string::size_type index = request.scope.find(':');
-      if (index < request.scope.length())
-      {
-        request.scope.erase(0, index + 1);
-      }
-      request.apcName = apcName;
-  
-      _distPropertyAgent.setDestAddr(destPA);
-      _distPropertyAgent.send(request);
-    }
-  }
-  else
-  {
-    result = PM_PA_NOT_REACHABLE;
-  }
-  return result;
+	string destPA = determineDest(propSet.getScope());
+	LOG_DEBUG_STR("configurePropSet:scope=" <<propSet.getScope() << ",destPA=" << destPA);
+
+	if (!checkDestination(destPA)) {
+		return (PM_PA_NOT_REACHABLE);
+	}
+
+	PAConfPropSetEvent request;
+
+	TAction action;
+	action.pPropSet = &propSet;
+	action.signal = request.signal;
+	action.apcName = apcName;
+
+	request.seqnr = registerAction(action);
+
+	if (_distPropertyAgent.isConnected() && _propertyAgent.isConnected()) {
+		request.scope += propSet.getScope();
+		string::size_type index = request.scope.find(':');
+		if (index < request.scope.length()) {
+			request.scope.erase(0, index + 1);
+		}
+		request.apcName = apcName;
+
+		_distPropertyAgent.setDestAddr(destPA);
+		_distPropertyAgent.send(request);
+	}
+
+	return (PM_NO_ERROR);
 }
 
 void GPMController::deletePropSet(const GCFPropertySet& propSet)
@@ -230,7 +224,9 @@ void GPMController::deletePropSet(const GCFPropertySet& propSet)
 //
 TPMResult GPMController::registerScope(GCFMyPropertySet& propSet)
 {
-	// propery already registered??
+	LOG_DEBUG_STR("registerScope:" << propSet.getScope());
+
+ 	// propery already registered??
 	if (_myPropertySets.find(propSet.getScope()) != _myPropertySets.end()) {
 		return(PM_SCOPE_ALREADY_EXISTS);
 	}
@@ -625,63 +621,62 @@ void logResult(TPAResult result, GCFPropertySet& propSet)
     case PA_NO_ERROR:
       break;
     case PA_UNKNOWN_ERROR:
-      LOG_FATAL(formatString ( 
-          "Unknown error"));      
+      LOG_FATAL(formatString ("Unknown error"));      
       break;
     case PA_PS_GONE:
       LOG_ERROR(formatString ( 
-          "The property set is gone while perfoming an action on it. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "The property set is gone while perfoming an action on it. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_MISSING_PROPS:
       LOG_ERROR(formatString ( 
-          "One or more loaded properties are not owned by any application. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "One or more loaded properties are not owned by any application. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_WRONG_STATE:
       LOG_FATAL(formatString ( 
-          "The my property set is in a wrong state. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "The my property set is in a wrong state. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_PROP_SET_NOT_EXISTS:
       LOG_INFO(formatString ( 
-          "Prop. set does not exists. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "Prop. set does not exists. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_PROP_SET_ALREADY_EXISTS:
       LOG_INFO(formatString ( 
-          "Prop. set allready exists. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "Prop. set allready exists. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_DPTYPE_UNKNOWN:
       LOG_INFO(formatString ( 
-          "Specified type not known. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "Specified type not known. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_INTERNAL_ERROR:
       LOG_FATAL(formatString ( 
-          "Internal error in PA. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "Internal error in PA. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_PI_INTERNAL_ERROR:
       LOG_FATAL(formatString ( 
-          "Internal error in PI. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "Internal error in PI. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_APC_NOT_EXISTS:
       LOG_ERROR(formatString ( 
-          "APC not exists. (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "APC not exists. (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_LINK_TIME_OUT:
       LOG_ERROR(formatString ( 
-          "Linking of the prop. set could not be completed in time (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "Linking of the prop. set could not be completed in time (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;
     case PA_SERVER_GONE:
       LOG_INFO(formatString ( 
-          "Server of prop. set is gone (%s:%s)",
-          propSet.getType().c_str(), propSet.getScope().c_str()));
+          "Server of prop. set is gone (s=%s,t=%s)",
+          propSet.getScope().c_str(), propSet.getType().c_str()));
       break;      
     default:
       break;

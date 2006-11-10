@@ -28,261 +28,248 @@
 #include "GPM_Controller.h"
 #include <GCF/Utils.h>
 
-namespace LOFAR 
+namespace LOFAR {
+ namespace GCF {
+  using namespace Common;
+  namespace PAL {
+
+//
+// GCFExtPropertySet(name,type,answer*)
+//
+GCFExtPropertySet::GCFExtPropertySet(const char*	name, 
+									 const char*	type,
+									 GCFAnswer*		pAnswerObj) :
+	GCFPropertySet(name, type, pAnswerObj), 
+	_isLoaded(false)
 {
- namespace GCF 
- {
-using namespace Common;
-  namespace PAL
-  {
-GCFExtPropertySet::GCFExtPropertySet(const char* name, 
-                                     const char* type,                                      
-                                     GCFAnswer* pAnswerObj) :
-  GCFPropertySet(name, type, pAnswerObj), 
-  _isLoaded(false)
-{
-  loadPropSetIntoRam();
+	LOG_DEBUG(formatString("GCFExtPropertySet()(scope=%s,type=%s)",
+							getScope().c_str(), getType().c_str()));
+	loadPropSetIntoRam();
 }
 
+
+//
+// GCFExtPropertySet()
+//
 GCFExtPropertySet::~GCFExtPropertySet()
 {
-  if (_isLoaded)
-  {
-    ASSERT(_pController);
-    _pController->unloadPropSet(*this);  
-  }
+	if (_isLoaded) {
+		ASSERT(_pController);
+		_pController->unloadPropSet(*this);  
+	}
 }
 
+
+//
+// createPropObject
+//
 GCFProperty* GCFExtPropertySet::createPropObject(const TPropertyInfo& propInfo)
 {
-  return new GCFExtProperty(propInfo, *this);
+	return (new GCFExtProperty(propInfo, *this));
 }
 
+
+//
+// load()
+//
 TGCFResult GCFExtPropertySet::load()
 {  
-  TGCFResult result(GCF_NO_ERROR);
-  
-  if (_isBusy)
-  {
-    LOG_INFO(formatString ( 
-        "This property set with Instance name (%s) is busy with an action. Ignored!",
-        getScope().c_str()));
-    result = GCF_BUSY;
-  }
-  else if (_isLoaded)
-  {
-    LOG_INFO(formatString ( 
-        "This instance of the property set with Instance name (%s) is already loaded. Ignored!",
-        getScope().c_str()));
-    result = GCF_ALREADY_LOADED;
-  }
-  else if (getScope().length() == 0)
-  {
-    LOG_INFO(formatString ( 
-        "Instance name not set. Ignored!",
-        getScope().c_str()));
-    result = GCF_NO_PROPER_DATA;
-  }
-  else
-  {
-    LOG_INFO(formatString ( 
-        "REQ: Load ext. property set %s",
-        getScope().c_str()));
+	if (_isBusy) {
+		LOG_DEBUG(formatString("PropertySet(%s) is busy and can not be loaded. Ignored!", 
+							 getScope().c_str()));
+		return (GCF_BUSY);
+	}
 
-    ASSERT(_pController);
-    TPMResult pmResult = _pController->loadPropSet(*this);
-    
-    if (pmResult == PM_NO_ERROR)
-    {
-      _isBusy = true;
-    }
-    else
-    {
-      result = GCF_EXTPS_LOAD_ERROR;
-    }
-  }
-  return result;
+	if (_isLoaded) {
+		LOG_DEBUG(formatString("PropertySet(%s) is already loaded. Ignored!", 
+								getScope().c_str()));
+		return(GCF_ALREADY_LOADED);
+	}
+
+	if (getScope().length() == 0) {
+		LOG_DEBUG(formatString ("load:Instance name not set.", getScope().c_str()));
+		return(GCF_NO_PROPER_DATA);
+	}
+
+	LOG_DEBUG(formatString("REQ: Load ext. property set %s", getScope().c_str()));
+
+	ASSERT(_pController);
+	TPMResult pmResult = _pController->loadPropSet(*this);
+	if (pmResult != PM_NO_ERROR) {
+		return(GCF_EXTPS_LOAD_ERROR);
+	}
+
+	// finally! everything went well, mark it busy.
+	_isBusy = true;
+	return (GCF_NO_ERROR);
 }
 
+
+//
+// loaded(result)
+//
 void GCFExtPropertySet::loaded(TGCFResult result)
 {
-  ASSERT(_isBusy);
-  ASSERT(!_isLoaded);
-  _isBusy = false;
-  LOG_INFO(formatString ( 
-      "PA-RESP: Prop. set '%s' is loaded%s",
-      getScope().c_str(), 
-      (result == GCF_NO_ERROR ? "" : " (with errors)")));
-  if (result == GCF_NO_ERROR)
-  {
-    _isLoaded = true;
-  }
+	ASSERT(_isBusy);
+	ASSERT(!_isLoaded);
 
-  dispatchAnswer(F_EXTPS_LOADED, result);
+	_isBusy = false;
+	LOG_DEBUG(formatString("PA-RESP: Prop. set '%s' is loaded%s", getScope().c_str(), 
+									(result == GCF_NO_ERROR ? "" : " (with errors)")));
+	if (result == GCF_NO_ERROR) {
+		_isLoaded = true;
+	}
+
+	dispatchAnswer(F_EXTPS_LOADED, result);
 }
 
+//
+// unload()
+//
 TGCFResult GCFExtPropertySet::unload()
 {  
-  TGCFResult result(GCF_NO_ERROR);
-  
-  if (_isBusy)
-  {
-    LOG_INFO(formatString ( 
-        "This property set with Instance name (%s) is busy with an action. Ignored!",
-        getScope().c_str()));
-    result = GCF_BUSY;
-  }
-  else if (!_isLoaded)
-  {
-    LOG_INFO(formatString ( 
-        "This instance of the property set with Instance name (%s) was not loaded here. Ignored!",
-        getScope().c_str()));
-    result = GCF_NOT_LOADED;
-  }
-  else if (getScope().length() == 0)
-  {
-    LOG_INFO(formatString ( 
-        "Instance name not set. Ignored!",
-        getScope().c_str()));
-    result = GCF_NO_PROPER_DATA;
-  }
-  else
-  {    
-    LOG_INFO(formatString ( 
-        "REQ: Unload ext. property set %s",
-        getScope().c_str()));
+	if (_isBusy) {
+		LOG_DEBUG(formatString("PropertySet(%s) is busy and can not be unloaded!",
+							getScope().c_str()));
+		return (GCF_BUSY);
+	}
 
-    ASSERT(_pController);
-    TPMResult pmResult = _pController->unloadPropSet(*this);
-    
-    if (pmResult == PM_NO_ERROR)
-    {
-      _isBusy = true;
-    }
-    else
-    {
-      result = GCF_EXTPS_UNLOAD_ERROR;
-    }
-  }
-  return result;
+	if (!_isLoaded) {
+		LOG_DEBUG(formatString ("PropertySet(%s) was not loaded here!", 
+								getScope().c_str()));
+		return (GCF_NOT_LOADED);
+	}
+
+	if (getScope().length() == 0) {
+		LOG_DEBUG(formatString ("unload:Instance name is not set.", getScope().c_str()));
+		return (GCF_NO_PROPER_DATA);
+	}
+
+	LOG_DEBUG(formatString ("REQ: Unload ext. property set %s", getScope().c_str()));
+
+	ASSERT(_pController);
+	TPMResult pmResult = _pController->unloadPropSet(*this);
+	if (pmResult != PM_NO_ERROR) {
+		return (GCF_EXTPS_UNLOAD_ERROR);
+	}
+
+	_isBusy = true;
+	return (GCF_NO_ERROR);
 }
 
+//
+// unloaded(result)
+//
 void GCFExtPropertySet::unloaded(TGCFResult result)
 {
-  ASSERT(_isBusy);
-  ASSERT(_isLoaded);
-  _isBusy = false;
-  LOG_INFO(formatString ( 
-      "PA-RESP: Prop. set '%s' is unloaded%s",
-      getScope().c_str(), 
-      (result == GCF_NO_ERROR ? "" : " (with errors)")));
+	ASSERT(_isBusy);
+	ASSERT(_isLoaded);
 
-  _isLoaded = false;
-  
-  GCFExtProperty* pProperty(0);
-  for (TPropertyList::iterator iter = _properties.begin();
-       iter != _properties.end(); ++iter)
-  {
-    pProperty = (GCFExtProperty*) iter->second;
-    ASSERT(pProperty);
-    if (pProperty->isSubscribed())
-    {
-      pProperty->unsubscribe();
-    }
-  }
+	_isBusy   = false;
+	_isLoaded = false;
+	LOG_DEBUG(formatString ("PA-RESP: Prop. set '%s' is unloaded%s", getScope().c_str(), 
+							  (result == GCF_NO_ERROR ? "" : " (with errors)")));
 
-  dispatchAnswer(F_EXTPS_UNLOADED, result);  
+	// unsubscribe to all properties
+	GCFExtProperty* pProperty(0);
+	for (TPropertyList::iterator iter = _properties.begin(); 
+								 iter != _properties.end(); ++iter) {
+		pProperty = (GCFExtProperty*) iter->second;
+		ASSERT(pProperty);
+		if (pProperty->isSubscribed()) {
+			pProperty->unsubscribe();
+		}
+	}
+
+	dispatchAnswer(F_EXTPS_UNLOADED, result);  
 }
 
+//
+// serverIsGone()
+//
 void GCFExtPropertySet::serverIsGone()
 {
-  if (_isLoaded)
-  {
-    LOG_INFO(formatString ( 
-        "PA-IND: Server for prop. set '%s' is gone",
-        getScope().c_str()));
-    _isLoaded = false;
-  
-    GCFExtProperty* pProperty(0);
-    for (TPropertyList::iterator iter = _properties.begin();
-         iter != _properties.end(); ++iter)
-    {
-      pProperty = (GCFExtProperty*) iter->second;
-      ASSERT(pProperty);
-      if (pProperty->isSubscribed())
-      {
-        pProperty->unsubscribe();
-      }
-    }
-  
-    dispatchAnswer(F_SERVER_GONE, GCF_NO_ERROR);  
-  }
-  _isBusy = false;
+	_isBusy = false;
+
+	if (!_isLoaded) {
+		return;
+	}
+		
+	LOG_INFO(formatString ("PA-IND: Server for prop. set '%s' is gone", 
+							getScope().c_str()));
+	_isLoaded = false;
+
+	// unsubscribe to all properties
+	GCFExtProperty* pProperty(0);
+	for (TPropertyList::iterator iter = _properties.begin();
+								iter != _properties.end(); ++iter) {
+		pProperty = (GCFExtProperty*) iter->second;
+		ASSERT(pProperty);
+		if (pProperty->isSubscribed()) {
+			pProperty->unsubscribe();
+		}
+	}
+
+	dispatchAnswer(F_SERVER_GONE, GCF_NO_ERROR);  
 }
 
+
+//
+// requestValue(propname)
+//
 TGCFResult GCFExtPropertySet::requestValue(const string propName) const
 {
-  GCFProperty* pProperty = getProperty(propName);
-  if (pProperty)
-  {
-    return pProperty->requestValue();    
-  }
-  else 
-  {
-    LOG_INFO(formatString ( 
-        "This property set has no property '%s'. Ignored!",
-        propName.c_str()));
-    return GCF_PROP_NOT_IN_SET;
-  }
+	GCFProperty* pProperty = getProperty(propName);
+	if (pProperty) {
+		return (pProperty->requestValue());
+	}
+
+	LOG_DEBUG(formatString ("PropertySet(%s) has no property.", propName.c_str()));
+	return (GCF_PROP_NOT_IN_SET);
 }
 
+//
+// subscribeProp(propname)
+//
 TGCFResult GCFExtPropertySet::subscribeProp(const string propName) const
 {
-  GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
-  if (pProperty)
-  {
-    return pProperty->subscribe();    
-  }
-  else 
-  {
-    LOG_INFO(formatString ( 
-        "This property set has no property '%s'. Ignored!",
-        propName.c_str()));
-    return GCF_PROP_NOT_IN_SET;
-  }
+	GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
+	if (pProperty) {
+		return (pProperty->subscribe());
+	}
+
+	LOG_DEBUG(formatString ("PropertySet has no property '%s'.", propName.c_str()));
+	return (GCF_PROP_NOT_IN_SET);
 }
 
+//
+// unsubscribeProp(propname)
+//
 TGCFResult GCFExtPropertySet::unsubscribeProp(const string propName) const
 {
-  GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
-  if (pProperty)
-  {
-    return pProperty->unsubscribe();    
-  }
-  else 
-  {
-    LOG_INFO(formatString ( 
-        "This property set has no property '%s'. Ignored!",
-        propName.c_str()));
-    return GCF_PROP_NOT_IN_SET;
-  }
+	GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
+	if (pProperty) {
+		return (pProperty->unsubscribe());
+	}
+
+	LOG_DEBUG(formatString ("PropertySet has no property '%s'.", propName.c_str()));
+	return (GCF_PROP_NOT_IN_SET);
 }
 
+//
+// isPropSubscribed(propname)
+//
 bool GCFExtPropertySet::isPropSubscribed (const string propName) const
 {
-  GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
-  if (pProperty)
-  {
-    return pProperty->isSubscribed();    
-  }
-  else 
-  {
-    LOG_INFO(formatString ( 
-        "This property set has no property '%s'.",
-        propName.c_str()));
-    return false;
-  }
+	GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
+	if (pProperty) {
+		return pProperty->isSubscribed();    
+	}
+
+	LOG_DEBUG(formatString ("PropertySet has no property '%s'.", propName.c_str()));
+	return (false);
 }
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR
