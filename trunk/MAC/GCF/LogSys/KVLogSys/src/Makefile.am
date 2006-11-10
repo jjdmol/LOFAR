@@ -21,7 +21,7 @@ libgcfkvlc_la_LIBADD= libkvlprot.la
 libgcfkvlc_la_DEPENDENCIES= libkvlprot.la $(LOFAR_DEPEND)
 libgcfkvlc_la_CPPFLAGS= -DLOFARLOGGER_SUBPACKAGE=\"KVLC\"
 
-bin_PROGRAMS   		= KeyValueLoggerDaemon KeyValueLoggerMaster
+bin_PROGRAMS   		= KeyValueLoggerDaemon KeyValueLoggerMaster 
 noinst_LTLIBRARIES 	= libkvlprot.la libkvld.la libkvlm.la
 
 libkvlprot_la_SOURCES= $(DOCHDRS) \

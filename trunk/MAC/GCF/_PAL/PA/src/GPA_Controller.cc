@@ -99,200 +99,193 @@ GCFEvent::TResult GPAController::startup_state(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+//
+// wait_state(event, port)
+//
 GCFEvent::TResult GPAController::waiting_state(GCFEvent& e, GCFPortInterface& p)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  GPAPropSetSession* pPropSetSession(0);
-  GCFEvent* pEvent(0);
-    
-  switch (e.signal)
-  {
-    case F_ENTRY:
-      LOG_INFO("Property Agent is ready!!!");
-      _garbageTimerId = _distPmlPortProvider.setTimer(2.0, 2.0);
-      break;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	GPAPropSetSession* pPropSetSession(0);
+	GCFEvent* pEvent(0);
 
-    case F_CONNECTED:   
-      _pmlPorts.push_back(&p);
-      break;
+	switch (e.signal) {
+	case F_ENTRY:
+		LOG_INFO("Property Agent is ready!!!");
+		_garbageTimerId = _distPmlPortProvider.setTimer(2.0, 2.0);
+		break;
 
-    case F_ACCEPT_REQ:
-      acceptConnectRequest(p);
-      break;
+	case F_CONNECTED:   
+		_pmlPorts.push_back(&p);
+		break;
 
-    case F_DISCONNECTED:      
-      if (&p != &_pmlPortProvider && &p != &_distPmlPortProvider) p.close();
-      // else //TODO: find out whether this can realy happend
-      break;
+	case F_ACCEPT_REQ:
+		acceptConnectRequest(p);
+		break;
 
-    case F_CLOSED:
-      for (TPropSetSessions::iterator iter = _propSetSessions.begin();
-           iter != _propSetSessions.end(); ++iter)
-      {
-        _pmlPortGarbage[&p].push_back(iter->second);
+	case F_DISCONNECTED:      
+		if (&p != &_pmlPortProvider && &p != &_distPmlPortProvider) {
+			p.close();
+		}
+		// else //TODO: find out whether this can realy happend
+		break;
 
-        LOG_DEBUG(formatString("Distributes 'closed' event to session '%s' (port %p is now in use by %d sessions)...",
-            iter->second->getName().c_str(), &p, _pmlPortGarbage[&p].size()));
+	case F_CLOSED:
+		for (TPropSetSessions::iterator iter = _propSetSessions.begin();
+										iter != _propSetSessions.end(); ++iter) {
+			_pmlPortGarbage[&p].push_back(iter->second);
 
-        iter->second->GCFFsm::dispatch(e, p);
-      }
-      if (_propSetSessions.empty())
-      {
-        _pmlPortGarbage[&p];
-      }
-      _pmlPorts.remove(&p);
-      break;
-      
-    case PA_LOAD_PROP_SET:
-    {
-      PALoadPropSetEvent* pRequest = new PALoadPropSetEvent(e);
-      LOG_DEBUG(formatString("Try to load prop. set '%s'...", pRequest->scope.c_str()));
-      pEvent = pRequest;
-      pPropSetSession = findPropSet(pRequest->scope);
-      if (!pPropSetSession) {
-        LOG_DEBUG(formatString("Prop. set '%s' not exists. Not loaded!!!",
-            pRequest->scope.c_str()));
-        PAPropSetLoadedEvent response;
-        response.seqnr = pRequest->seqnr;
-        response.result = PA_PROP_SET_NOT_EXISTS;
-        p.send(response);
-      }
-      break;
-    }
-    case PA_UNLOAD_PROP_SET:
-    {      
-      PAUnloadPropSetEvent* pRequest = new PAUnloadPropSetEvent(e);
-      LOG_DEBUG(formatString("Try to unload prop. set '%s'...", pRequest->scope.c_str()));
-      pEvent = pRequest;
-      pPropSetSession = findPropSet(pRequest->scope);
-      if (!pPropSetSession) {
-        LOG_DEBUG(formatString("Prop. set '%s' not exists. Not unloaded!!!",
-            pRequest->scope.c_str()));
-        PAPropSetUnloadedEvent response;
-        response.seqnr = pRequest->seqnr;
-        response.result = PA_PROP_SET_NOT_EXISTS;
-        p.send(response);
-      }
-      break;
-    }
-    case PA_CONF_PROP_SET:
-    {      
-      PAConfPropSetEvent* pRequest = new PAConfPropSetEvent(e);
-      LOG_DEBUG(formatString("Try to configure prop. set '%s'...", pRequest->scope.c_str()));
-      pEvent = pRequest;
-      pPropSetSession = findPropSet(pRequest->scope);
-      if (!pPropSetSession) {
-        LOG_DEBUG(formatString("Prop. set '%s' not exists. Not configured!!!",
-            pRequest->scope.c_str()));
-        PAPropSetConfEvent response;
-        response.seqnr = pRequest->seqnr;
-        response.apcName = pRequest->apcName;
-        response.result = PA_PROP_SET_NOT_EXISTS;
-        p.send(response);
-      }
-      break;
-    }
-    case PA_REGISTER_SCOPE:
-    {
-      PARegisterScopeEvent* pRequest = new PARegisterScopeEvent(e);
-      LOG_DEBUG(formatString("Try to enable prop. set '%s'...", pRequest->scope.c_str()));
-      pPropSetSession = findPropSet(pRequest->scope);
-      if (pPropSetSession) {
-        LOG_DEBUG(formatString("Prop. set '%s' already exists. Not enabled again!!!",
-            pRequest->scope.c_str()));
-        PAScopeRegisteredEvent response;
-        response.seqnr = pRequest->seqnr;
-        response.result = PA_PROP_SET_ALREADY_EXISTS;
-        p.send(response);
-      }
-      else {
-        LOG_DEBUG(formatString("Create the prop. set session: '%s_session'.",
-            pRequest->scope.c_str()));
-        pEvent = pRequest;
-        pPropSetSession = new GPAPropSetSession(*this, p);
-        ASSERT(pPropSetSession);
-        _propSetSessions[pRequest->scope] = pPropSetSession;
-      }
-      break;
-    }
-    case PA_UNREGISTER_SCOPE:
-    {      
-      PAUnregisterScopeEvent* pRequest = new PAUnregisterScopeEvent(e);
-      LOG_DEBUG(formatString("Try to disable prop. set '%s'...",
-          pRequest->scope.c_str()));
-      pEvent = pRequest;
-      pPropSetSession = findPropSet(pRequest->scope);
-      if (!pPropSetSession)
-      {
-        LOG_DEBUG(formatString("Prop. set '%s' not exists. Not disable!!!",
-            pRequest->scope.c_str()));
-        PAScopeUnregisteredEvent response;
-        response.seqnr = pRequest->seqnr;
-        response.result = PA_PROP_SET_NOT_EXISTS;
-        p.send(response);
-      }
-      break;
-    }
-    case PA_PROP_SET_LINKED:
-    {
-      PAPropSetLinkedEvent* pResponse = new PAPropSetLinkedEvent(e);
-      pEvent = pResponse;
-      pPropSetSession = findPropSet(pResponse->scope);
-      break;
-    }
-    case PA_PROP_SET_UNLINKED:
-    {
-      PAPropSetUnlinkedEvent* pResponse = new PAPropSetUnlinkedEvent(e);
-      pEvent = pResponse;
-      pPropSetSession = findPropSet(pResponse->scope);
-      break;
-    }
-    case F_TIMER:
-    {
-      GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
-//      LOG_DEBUG(formatString("Timer %d expired.", pTimer->id));
-      if (&p == &_distPmlPortProvider)
-      {        
-        if (pTimer->id == _garbageTimerId)
-        {
-          emptyGarbage();
-        }
-        else
-        {
-          if (pTimer->arg)
-          {
-            pPropSetSession = (GPAPropSetSession*)pTimer->arg;
-            pPropSetSession->doNextRequest();
-          }          
-        }
-      }      
-      break;
-    }
- 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+			LOG_DEBUG(formatString("Distributes 'closed' event to session '%s' (port %p is now in use by %d sessions)...",
+						iter->second->getName().c_str(), &p, _pmlPortGarbage[&p].size()));
 
-  if (pEvent)
-  {
-    if (pPropSetSession)
-    {    
-      if (pPropSetSession->GCFFsm::dispatch(*pEvent, p) == GCFEvent::HANDLED)
-      {
-        // message is handled event pointer can be deleted
-        delete pEvent;
-      }
-      //else: message is queued, so keep the pointer a live until this message is handled, 
-      //      will be destroyed by RequestManager
-    }
-    else
-    {
-      delete pEvent;
-    }
-  }
-  
-  return status;
+			iter->second->GCFFsm::dispatch(e, p);
+		}
+		if (_propSetSessions.empty()) {
+			_pmlPortGarbage[&p];
+		}
+		_pmlPorts.remove(&p);
+		break;
+
+	case PA_LOAD_PROP_SET:
+	{
+		PALoadPropSetEvent* pRequest = new PALoadPropSetEvent(e);
+		LOG_DEBUG(formatString("Try to load prop. set '%s'...", pRequest->scope.c_str()));
+		pEvent = pRequest;
+		pPropSetSession = findPropSet(pRequest->scope);
+		if (!pPropSetSession) {
+			LOG_DEBUG(formatString("Prop. set '%s' not exists. Not loaded!!!",
+			pRequest->scope.c_str()));
+			PAPropSetLoadedEvent response;
+			response.seqnr = pRequest->seqnr;
+			response.result = PA_PROP_SET_NOT_EXISTS;
+			p.send(response);
+		}
+		break;
+	}
+	case PA_UNLOAD_PROP_SET:
+	{      
+		PAUnloadPropSetEvent* pRequest = new PAUnloadPropSetEvent(e);
+		LOG_DEBUG(formatString("Try to unload prop. set '%s'...", pRequest->scope.c_str()));
+		pEvent = pRequest;
+		pPropSetSession = findPropSet(pRequest->scope);
+		if (!pPropSetSession) {
+			LOG_DEBUG(formatString("Prop. set '%s' not exists. Not unloaded!!!",
+			pRequest->scope.c_str()));
+			PAPropSetUnloadedEvent response;
+			response.seqnr = pRequest->seqnr;
+			response.result = PA_PROP_SET_NOT_EXISTS;
+			p.send(response);
+		}
+		break;
+	}
+	case PA_CONF_PROP_SET:
+	{      
+		PAConfPropSetEvent* pRequest = new PAConfPropSetEvent(e);
+		LOG_DEBUG(formatString("Try to configure prop. set '%s'...", pRequest->scope.c_str()));
+		pEvent = pRequest;
+		pPropSetSession = findPropSet(pRequest->scope);
+		if (!pPropSetSession) {
+			LOG_DEBUG(formatString("Prop. set '%s' not exists. Not configured!!!",
+			pRequest->scope.c_str()));
+			PAPropSetConfEvent response;
+			response.seqnr = pRequest->seqnr;
+			response.apcName = pRequest->apcName;
+			response.result = PA_PROP_SET_NOT_EXISTS;
+			p.send(response);
+		}
+		break;
+	}
+	case PA_REGISTER_SCOPE:
+	{
+		PARegisterScopeEvent* pRequest = new PARegisterScopeEvent(e);
+		LOG_DEBUG(formatString("Try to enable prop. set '%s'...", pRequest->scope.c_str()));
+		pPropSetSession = findPropSet(pRequest->scope);
+		if (pPropSetSession) {
+			LOG_DEBUG(formatString("Prop. set '%s' already exists. Not enabled again!!!",
+			pRequest->scope.c_str()));
+			PAScopeRegisteredEvent response;
+			response.seqnr = pRequest->seqnr;
+			response.result = PA_PROP_SET_ALREADY_EXISTS;
+			p.send(response);
+		}
+		else {
+			LOG_DEBUG(formatString("Create the prop. set session: '%s_session'.",
+			pRequest->scope.c_str()));
+			pEvent = pRequest;
+			pPropSetSession = new GPAPropSetSession(*this, p);
+			ASSERT(pPropSetSession);
+			_propSetSessions[pRequest->scope] = pPropSetSession;
+		}
+		break;
+	}
+	case PA_UNREGISTER_SCOPE:
+	{      
+		PAUnregisterScopeEvent* pRequest = new PAUnregisterScopeEvent(e);
+		LOG_DEBUG(formatString("Try to disable prop. set '%s'...",
+		pRequest->scope.c_str()));
+		pEvent = pRequest;
+		pPropSetSession = findPropSet(pRequest->scope);
+		if (!pPropSetSession) {
+			LOG_DEBUG(formatString("Prop. set '%s' not exists. Not disable!!!",
+			pRequest->scope.c_str()));
+			PAScopeUnregisteredEvent response;
+			response.seqnr = pRequest->seqnr;
+			response.result = PA_PROP_SET_NOT_EXISTS;
+			p.send(response);
+		}
+		break;
+	}
+	case PA_PROP_SET_LINKED:
+	{
+		PAPropSetLinkedEvent* pResponse = new PAPropSetLinkedEvent(e);
+		pEvent = pResponse;
+		pPropSetSession = findPropSet(pResponse->scope);
+		break;
+	}
+	case PA_PROP_SET_UNLINKED:
+	{
+		PAPropSetUnlinkedEvent* pResponse = new PAPropSetUnlinkedEvent(e);
+		pEvent = pResponse;
+		pPropSetSession = findPropSet(pResponse->scope);
+		break;
+	}
+	case F_TIMER:
+	{
+		GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
+		//      LOG_DEBUG(formatString("Timer %d expired.", pTimer->id));
+		if (&p == &_distPmlPortProvider) {        
+			if (pTimer->id == _garbageTimerId) {
+				emptyGarbage();
+			}
+			else {
+				if (pTimer->arg) {
+					pPropSetSession = (GPAPropSetSession*)pTimer->arg;
+					pPropSetSession->doNextRequest();
+				}          
+			}
+		}      
+		break;
+	}
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	if (pEvent) {
+		if (pPropSetSession) {    
+			if (pPropSetSession->GCFFsm::dispatch(*pEvent, p) == GCFEvent::HANDLED) {
+				// message is handled event pointer can be deleted
+				delete pEvent;
+			}
+			//else: message is queued, so keep the pointer a live until this message is handled, 
+			//      will be destroyed by RequestManager
+		}
+		else {
+			delete pEvent;
+		}
+	}
+
+	return status;
 }
 
 void GPAController::mayDeleted(GPAPropSetSession& session)
@@ -345,6 +338,8 @@ void GPAController::closingPortFinished(GPAPropSetSession &pss, GCFPortInterface
 
 GPAPropSetSession* GPAController::findPropSet(const string& scope) const
 {
+	LOG_DEBUG_STR("findPropSet(" << scope << ")");
+
   TPropSetSessions::const_iterator iter = _propSetSessions.find(scope);  
   return (iter != _propSetSessions.end() ? iter->second : 0);
 }

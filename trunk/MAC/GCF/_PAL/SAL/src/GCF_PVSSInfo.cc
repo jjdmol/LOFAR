@@ -105,6 +105,8 @@ bool GCFPVSSInfo::propExists(const string& dpeName)
 {
   DpIdentifier dpId;
   CharString dpePvssName(dpeName.c_str());
+  LOG_TRACE_VAR_STR("propExists(" << dpeName << "):" << dpePvssName);
+
   if (Manager::getId(dpePvssName, dpId) == PVSS_FALSE)
     return false;
   else
