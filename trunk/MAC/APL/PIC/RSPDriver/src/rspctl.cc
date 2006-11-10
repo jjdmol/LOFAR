@@ -196,7 +196,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
     case RSP_GETWEIGHTSACK:
     {
       RSPGetweightsackEvent ack(e);
-      bitset<MAX_N_RCUS> mask = getRCUMask();
+      bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
       if (SUCCESS != ack.status) {
 	logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
@@ -340,7 +340,7 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
     case RSP_GETSUBBANDSACK:
     {
       RSPGetsubbandsackEvent ack(e);
-      bitset<MAX_N_RCUS> mask = getRCUMask();
+      bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
       std::ostringstream msg;
       msg << "getsubbandsack.timestamp=" << ack.timestamp;
@@ -439,7 +439,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
     case RSP_GETRCUACK:
     {
       RSPGetrcuackEvent ack(e);
-      bitset<MAX_N_RCUS> mask = getRCUMask();
+      bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
       if (SUCCESS == ack.status)
       {
@@ -535,7 +535,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
     case RSP_GETHBAACK:
     {
       RSPGethbaackEvent ack(e);
-      bitset<MAX_N_RCUS> mask = getRCUMask();
+      bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
       cout << "settings().shape()=" << ack.settings().shape() << endl;
 
@@ -613,7 +613,7 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
 #if 0
     case RSP_GETRSUACK: {
       RSPGetrsuackEvent ack(e);
-      bitset<MAX_N_RCUS> mask = getRCUMask();
+      bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
       if (SUCCESS == ack.status) {
         int boardin = 0;
@@ -951,7 +951,7 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
       {
 
         // print settings
-        bitset<MAX_N_RCUS> mask = getRCUMask();
+        bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
         int rcuin = 0;
         for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
         {
@@ -1293,7 +1293,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 {
   static gnuplot_ctrl* handle = 0;
   int n_freqbands = stats.extent(secondDim);
-  bitset<MAX_N_RCUS> mask = getRCUMask();
+  bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
   // initialize the freq array
   firstIndex i;
@@ -1365,7 +1365,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
 void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
 {
-  bitset<MAX_N_RCUS> mask = getRCUMask();
+  bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
   int result_device=0;
   for (int deviceout = 0; deviceout < get_ndevices(); deviceout++)
@@ -2050,7 +2050,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
   // select all by default
   select.clear();
-  for (int i = 0; i < MAX_N_RCUS; ++i) select.push_back(i);
+  for (int i = 0; i < MEPHeader::MAX_N_RCUS; ++i) select.push_back(i);
 
   optind = 0; // reset option parsing
   //opterr = 0; // no error reporting to stderr
