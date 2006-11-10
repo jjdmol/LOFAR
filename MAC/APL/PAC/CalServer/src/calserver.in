@@ -46,10 +46,26 @@ start() {
     # Start CalServer
     echo -n $"Starting $prog: "
     
-    daemon $PREFIX/bin/$prog $OPTIONS
+    # create logging output directory and push it
+    # because BeamServer dumps logfiles in the current
+    # directory
+    mkdir -p $PREFIX/var/log
+    pushd $PREFIX/var/log > /dev/null
+
+    #
+    # start in the background
+    #
+    # we can use the relative path because we know we are in
+    # $PREFIX/var/log (with pushd on previous line)
+    #
+    daemon ../../bin/$prog $OPTIONS
     RETVAL=$?
     [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
     echo
+
+    # return to original directory
+    popd > /dev/null
+
     return $RETVAL
 }
 
