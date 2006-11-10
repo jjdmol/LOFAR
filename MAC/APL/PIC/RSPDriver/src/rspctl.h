@@ -447,9 +447,8 @@ namespace LOFAR {
         m_duration=duration;
         m_endTime.setNow((double)m_duration);
       }
-      void setIntegration(uint32 integration) {
-        if(integration > 0)
-          m_integration=integration;
+      void setIntegration(int32 integration) {
+	m_integration=integration;
       }
       void setDirectory(const char* dir) {
         m_directory = dir;
@@ -479,7 +478,7 @@ namespace LOFAR {
       uint32 m_subscriptionhandle;
       uint32 m_duration;
       RTC::Timestamp m_endTime;
-      uint32 m_integration;
+      int32  m_integration;
       uint32 m_nseconds;
       string m_directory;
       FILE** m_file; // array of file descriptors, one for each rcu
