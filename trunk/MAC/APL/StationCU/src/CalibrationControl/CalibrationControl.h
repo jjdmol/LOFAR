@@ -28,30 +28,26 @@
 
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/PAL/GCF_ExtPropertySet.h>
+//#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
 
 //# local includes
 #include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
 #include <APL/APLCommon/PropertySetAnswer.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
-#include <APL/APLCommon/Controller_Protocol.ph>
+//#include <APL/APLCommon/APLCommonExceptions.h>
+//#include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ParentControl.h>
+#include <APL/APLCommon/Observation.h>
 #include <APL/APLCommon/CTState.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
-//#include <Common/lofar_bitset.h>
-#include <bitset>
-#include <Common/LofarLogger.h>
+//#include <bitset>
 
 //# ACC Includes
-#include <APS/ParameterSet.h>
+//#include <APS/ParameterSet.h>
 
 // forward declaration
 
@@ -80,12 +76,10 @@ public:
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
-	
-	// During the PVSS state the PVSS parametersets are loaded
-   	GCFEvent::TResult PVSS_state (GCFEvent& e, GCFPortInterface& p);
-	
 	// Normal control mode. 
    	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
+	// Quiting, shutdown connections, send FINISH and quit
+   	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
 
 private:
 	// avoid defaultconstruction and copying
@@ -95,66 +89,32 @@ private:
 
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
+	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
 
 	void    setState          	  (CTState::CTstateNr     newState);
-	void    setObservationState	  (const string&	name, CTState::CTstateNr newState);
 	int32	convertFilterSelection(const string&	bandselection);
-	bool	propertySetsAvailable ();
-	int32	getRCUHardwareNr	  (const string&	propName);
-	void	loadPVSSpropertySets  ();
-	bool	claimResources		  (const string&	name);
-	bool	addObservation		  (const string&	name);
-	uint16	handleClaimEvent	  (const string&	name);
-	uint16	handlePrepareEvent	  (const string&	name);
-	bool	startCalibration  	  (const string&	name);
-	bool	stopCalibration	  	  (const string&	name);
+	uint16	handleClaimEvent	  ();
+	uint16	handlePrepareEvent	  ();
+	bool	startCalibration  	  ();
+	bool	stopCalibration	  	  ();
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-	typedef std::bitset<256>  							  RCUset_t;
 
    	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
    	GCFMyPropertySetPtr           itsPropertySet;
 	bool						  itsPropertySetInitialized;
 
-	// Administration of the Observations we serve.
-	typedef struct {
-		uint16				state;			// state the observation has
-		int16				nyquistZone;	// 0 | 1 | 2
-		uint32				sampleFreq;		// 160e6 | 200e6
-		string				bandSelection;	// LB_10_90, HB_110_190, etc
-		string				antennaArray;	// CS1_LBA (AntennaArray.conf)
-		RCUset_t			RCUset;			// set with participating receivers
-	} ObsInfo_t;
-	typedef map<string,ObsInfo_t>::iterator			OIter;
-	typedef map<string,ObsInfo_t>::const_iterator	const_OIter;
-
 	//# --- Datamembers ---
-
 	ParentControl*			itsParentControl;	// pointer to parent control task
 	GCFITCPort*				itsParentPort;		// comm.port with parent task
 	GCFTimerPort*			itsTimerPort;		// general port for timers
 	GCFTCPPort*				itsCalServer;		// connection with CalServer
-//	CTState::CTstateNr		itsState;			// 
-
-	map<string /*name*/, ObsInfo_t>	itsObsMap;	// Map with all active Observations
+	CTState::CTstateNr		itsState;			// 
 
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
-	time_t					itsStartTime;
-	time_t					itsStopTime;
-	uint32					itsPropSetAvailTimer;
-
-//	int16					itsNyquistZone;
-//	string					itsBandSelection;
-//	string					itsAntennaArray;
-//	vector<uint16>			itsRCUvector;
-
-	//TODO
-	typedef map<uint16,bool> TRCUFunctionalityMap;
-	TRCUFunctionalityMap        m_rcuFunctionalityMap;
-	typedef map<uint16,boost::shared_ptr<GCF::PAL::GCFExtPropertySet> > TRCUMap;
-	TRCUMap           			m_rcuMap;
+	APLCommon::Observation	itsObsPar;
 };
 
   };//StationCU

@@ -70,7 +70,6 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
 
-
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
 	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
@@ -80,8 +79,11 @@ BeamControl::BeamControl(const string&	cntlrName) :
 											 getString("Observation.startTime"));
 	itsStopTime      = time_from_string(globalParameterSet()->
 											 getString("Observation.stopTime"));
-	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
-	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
+//	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
+//	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
+
+	// Instruct codeloggingProcessor
+	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -225,8 +227,8 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 
     case F_INIT: {
 		// Get access to my own propertyset.
-		LOG_DEBUG ("Activating PropertySet");
 		string	propSetName(createPropertySetName(PSN_BEAM_CTRL, getName()));
+		LOG_DEBUG_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
 																  PST_BEAM_CTRL,
 																  PS_CAT_TEMPORARY,
@@ -258,15 +260,15 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		break;
 
 	case F_DISCONNECTED:
+	case F_CLOSED:
+	case F_EXIT:
 		break;
 	
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
 		setState(CTState::CONNECTED);
-		CONTROLConnectedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
+		sendControlResult(port, CONTROL_CONNECTED, msg.cntlrName, CT_RESULT_NO_ERROR);
 
 		LOG_DEBUG ("Going to started state");
 		TRAN(BeamControl::started_state);				// go to next state.
@@ -274,10 +276,10 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 	}
 
 	default:
-		LOG_DEBUG_STR ("initial, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = _defaultEventHandler(event, port);
 		break;
-	}    
+	}
+
 	return (status);
 }
 
@@ -296,12 +298,13 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("started"));
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("started"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 		break;
 	}
 
 	case F_INIT:
+	case F_EXIT:
 		break;
 
 	case F_CONNECTED: {
@@ -324,6 +327,9 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
+	case F_CLOSED:
+		break;
+
 	case F_TIMER: 
 //		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 		LOG_DEBUG ("Trying to reconnect to BeamServer");
@@ -340,9 +346,12 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
+	case CONTROL_QUIT:
+		TRAN(BeamControl::quiting_state);
+		break;
+
 	default:
-		LOG_DEBUG("started, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = _defaultEventHandler(event, port);
 		break;
 	}
 
@@ -363,12 +372,13 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("claimed"));
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("claimed"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 		break;
 	}
 
 	case F_INIT:
+	case F_EXIT:
 		break;
 
 	case F_DISCONNECTED: {
@@ -380,14 +390,21 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
+	case F_CLOSED:
+		break;
+
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	case CONTROL_PREPARE: {
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
 		setState(CTState::PREPARE);
-		doPrepare(msg.cntlrName);	// will result in BS_BEAMALLOCACK event
+		doPrepare();	// will result in BS_BEAMALLOCACK event
 		break;
 	}
+
+	case CONTROL_QUIT:
+		TRAN(BeamControl::quiting_state);
+		break;
 
 	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
 	case BS_BEAMALLOCACK: {
@@ -398,18 +415,19 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 			LOG_DEBUG("Beam allocated, going to active state");
 			TRAN(BeamControl::active_state);
 		}
+		else {
+			LOG_WARN_STR("Beamallocation failed with error " << result << 
+						 ", staying in CLAIMED mode");
+			setState(CTState::CLAIMED);
+		}
 
 		LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << result << ") event");
-		CONTROLPreparedEvent	answer;
-		answer.cntlrName = getName();
-		answer.result    = result;
-		itsParentPort->send(answer);
+		sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), result);
 		break;
 	}
 
 	default:
-		LOG_DEBUG("claimed, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = _defaultEventHandler(event, port);
 		break;
 	}
 
@@ -430,12 +448,13 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 		break;
 	}
 
 	case F_INIT:
+	case F_EXIT:
 		break;
 
 	case F_DISCONNECTED: {
@@ -446,6 +465,9 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		TRAN(BeamControl::started_state);
 		break;
 	}
+	
+	case F_CLOSED:
+		break;
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 
@@ -460,21 +482,17 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
 		setState(CTState::RESUME);
-		// TODO: implement something useful
-		CONTROLResumedEvent		answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
+		sendControlResult(port, CONTROL_RESUMED, msg.cntlrName, CT_RESULT_NO_ERROR);
+		setState(CTState::RESUMED);
 		break;
 	}
 
 	case CONTROL_SUSPEND: {
 		CONTROLSuspendEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
+		setState(CTState::SUSPEND);
+		sendControlResult(port, CONTROL_SUSPENDED, msg.cntlrName, CT_RESULT_NO_ERROR);
 		setState(CTState::SUSPENDED);
-		// TODO: implement something useful
-		CONTROLSuspendedEvent		answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
 		break;
 	}
 
@@ -482,31 +500,98 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
 		setState(CTState::RELEASE);
-		doRelease(event);
-		setState(CTState::RELEASED);
-		CONTROLReleasedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
-		LOG_DEBUG("Released beam going back to 'claimed' mode");
-		TRAN(BeamControl::claimed_state);
+		doRelease();	// results in BS_BEAMFREEACK
 		break;
 	}
 
-	case CONTROL_QUIT: {
-		CONTROLQuitEvent		msg(event);
-		LOG_DEBUG("Received QUIT event, going down");
-		stop();
+	case CONTROL_QUIT:
+		TRAN(BeamControl::quiting_state);
+		break;
+
+	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
+	case BS_BEAMFREEACK: {
+		if (!handleBeamFreeAck(event)) {
+			LOG_DEBUG("Error in freeing beam, staying in active_state");
+			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
+															CT_RESULT_BEAMFREE_FAILED);
+		}
+		else {
+			LOG_DEBUG("Released beam going back to 'claimed' mode");
+			setState(CTState::RELEASED);
+			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
+															CT_RESULT_NO_ERROR);
+			TRAN(BeamControl::claimed_state);
+		}
 	}
 	break;
 
-	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
-	case BS_BEAMFREEACK:
-		handleBeamFreeAck(event);
+	default:
+		status = _defaultEventHandler(event, port);
+		break;
+	}
+
+	return (status);
+}
+
+//
+// quiting_state(event, port)
+//
+// Quiting: send FINISH, wait for answer max 5 seconds, stop
+//
+GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("quiting:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// update PVSS
+		setState(CTState::FINISH);
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("quiting"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsBeamServer->close();
+		break;
+	}
+
+	case F_INIT:
+	case F_EXIT:
 		break;
 
+	case F_DISCONNECTED:
+		port.close();
+		// fall through!!! 
+	case F_CLOSED: {
+		ASSERTSTR (&port == itsBeamServer, 
+								"F_DISCONNECTED event from port " << port.getName());
+		LOG_DEBUG("Connection with BeamServer down, sending FINISH");
+		CONTROLFinishEvent		request;
+		request.cntlrName = getName();
+		request.result	  = CT_RESULT_NO_ERROR;
+		itsParentPort->send(request);
+		itsTimerPort->setTimer(5.0);		// wait max 5 seconds for response
+		break;
+	}
+	
+	case F_TIMER:
+		LOG_DEBUG("Timeout on reception of FINISHED event, too bad.");
+		setState(CTState::FINISHED);
+		stop();
+		break;
+
+	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+
+	case CONTROL_FINISHED: {
+		CONTROLFinishedEvent		msg(event);
+		LOG_DEBUG_STR("Received FINISHED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Normal shutdown of " << getName());
+		setState(CTState::FINISHED);
+		stop();
+		break;
+	}
+
 	default:
-		LOG_DEBUG("active_state, default");
-		status = GCFEvent::NOT_HANDLED;
+		status = _defaultEventHandler(event, port);
 		break;
 	}
 
@@ -515,12 +600,10 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 
 //
-// doPrepare(cntlrName)
+// doPrepare()
 //
-void BeamControl::doPrepare(const string&	cntlrName)
+void BeamControl::doPrepare()
 {
-	// TODO	use parameterset of 'cntlrname' when being shared controller
-
 	string	subbandList(globalParameterSet()->getString("Observation.subbandList"));
 	string	beamletList(globalParameterSet()->getString("Observation.beamletList"));
 	LOG_DEBUG_STR("subbandlist:" << subbandList);
@@ -611,7 +694,7 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 //
 // doRelease(event)
 //
-void BeamControl::doRelease(GCFEvent&	event)
+void BeamControl::doRelease()
 {
 	BSBeamfreeEvent		beamFreeEvent;
 	beamFreeEvent.handle = itsBeamID;
@@ -632,11 +715,60 @@ bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 	return (true);
 }
 
+// _defaultEventHandler(event, port)
+//
+GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event, 
+													GCFPortInterface&	port)
+{
+	CTState		cts;
+	LOG_DEBUG_STR("Received " << evtstr(event) << " in state " << cts.name(itsState)
+				  << ". DEFAULT handling.");
+
+	GCFEvent::TResult	result(GCFEvent::NOT_HANDLED);
+
+	switch (event.signal) {
+		case CONTROL_CONNECT:
+		case CONTROL_RESYNC:
+		case CONTROL_SCHEDULE:	// we should do something with this
+		case CONTROL_CLAIM:
+		case CONTROL_PREPARE:
+		case CONTROL_RESUME:
+		case CONTROL_SUSPEND:
+		case CONTROL_RELEASE:
+		case CONTROL_FINISH:
+			 if (sendControlResult(port, event.signal, getName(), CT_RESULT_NO_ERROR)) {
+				result = GCFEvent::HANDLED;
+			}
+			break;
+		
+		case CONTROL_CONNECTED:
+		case CONTROL_RESYNCED:
+		case CONTROL_SCHEDULED:
+		case CONTROL_CLAIMED:
+		case CONTROL_PREPARED:
+		case CONTROL_RESUMED:
+		case CONTROL_SUSPENDED:
+		case CONTROL_RELEASED:
+		case CONTROL_FINISHED:
+			result = GCFEvent::HANDLED;
+			break;
+	}
+
+	if (result == GCFEvent::NOT_HANDLED) {
+		LOG_WARN_STR("Event " << evtstr(event) << " NOT handled in state " << 
+					 cts.name(itsState));
+	}
+
+	return (result);
+}
+
+
 // _connectedHandler(port)
 //
-void BeamControl::_connectedHandler(GCFPortInterface& port)
+void BeamControl::_connectedHandler(GCFPortInterface& /*port*/)
 {
 }
+
 
 //
 // _disconnectedHandler(port)

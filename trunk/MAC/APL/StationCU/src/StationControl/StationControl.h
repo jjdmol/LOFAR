@@ -89,8 +89,8 @@ private:
 	StationControl(const StationControl&);
    	StationControl& operator=(const StationControl&);
 
-	bool _addObservation(const string&   name);
-   	void _disconnectedHandler(GCFPortInterface& port);
+	uint16	_addObservation(const string&   name);
+   	void	_disconnectedHandler(GCFPortInterface& port);
 
 	// Data members
    	APLCommon::PropertySetAnswer	itsPropertySetAnswer;

@@ -83,6 +83,8 @@ public:
    	GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
 	// Normal control mode, beam is active
    	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
+	// Quiting, shutdown connections, send FINISH and quit
+   	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
 
 private:
 	// avoid defaultconstruction and copying
@@ -91,32 +93,20 @@ private:
    	BeamControl& operator=(const BeamControl&);
 
 	int32	convertDirection(const string&	typeName);
-	void	doPrepare(const string&	cntlrName);
+	void	doPrepare();
 	uint16	handleBeamAllocAck(GCFEvent&	event);
 	bool	handleBeamFreeAck(GCFEvent&	event);
-	void	doRelease(GCFEvent&	event);
+	void	doRelease();
    	void	_connectedHandler(GCFPortInterface& port);
    	void	_disconnectedHandler(GCFPortInterface& port);
 	void	setState(CTState::CTstateNr     newState);
+	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
 
    	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
    	GCFMyPropertySetPtr           itsPropertySet;
 	bool						  itsPropertySetInitialized;
-
-#if 0
-	// Administration of the BeamControllers
-	typedef struct {
-		OTDB::treeIDType	treeID;		// tree in the OTDB
-		GCFTCPPort*			port;		// TCP connection with controller
-		uint16				state;		// state the controller has
-	} ObsCntlr_t;
-
-	// Map with all active BeamControllers.
-	map<GCFTCPPort*, ObsCntlr_t>	itsObsCntlrMap;
-	vector<GCFTCPPort*>				itsObsCntlrPorts;
-#endif
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;

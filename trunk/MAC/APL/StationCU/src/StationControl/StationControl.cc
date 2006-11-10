@@ -278,7 +278,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 							   		0,			// treeID, 
 							   		0,			// instanceNr,
 							   		myHostname(true));
-		// will result in CONTROL_STARTED and CONTROL_CONNECT if not error.
+		// will result in CONTROL_STARTED (and CONTROL_CONNECTED if no error).
 		}
 		break;
 
@@ -370,9 +370,10 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		CONTROLConnectedEvent	answer;
 		answer.cntlrName = msg.cntlrName;
 		// add observation to the list if not already in the list
-		answer.result = _addObservation(msg.cntlrName) ? 
-									CT_RESULT_NO_ERROR : CT_RESULT_UNSPECIFIED;
-		port.send(answer);
+		answer.result = _addObservation(msg.cntlrName);
+		if (answer.result != CT_RESULT_NO_ERROR) {
+			port.send(answer);
+		}
 	}
 	break;
 
@@ -389,6 +390,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	case CONTROL_RESUME:
 	case CONTROL_SUSPEND:
 	case CONTROL_RELEASE:
+	case CONTROL_FINISH:
 	case CONTROL_QUIT: {
 		// All the events have the problem that the controller can be StationControl,
 		// CalibrationControl or BeamControl. But what they all have in common is
@@ -418,18 +420,29 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		theObs->second->dispatch(event, port);
 
 		// end of FSM?
-		if (event.signal == CONTROL_QUIT && theObs->second->isReady()) {
+		if (event.signal == CONTROL_FINISH && theObs->second->isReady()) {
 			LOG_DEBUG_STR("Removing " <<ObsEvent.cntlrName<< " from the administration");
 			delete theObs->second;
 			itsObsMap.erase(theObs);
-			break;
 		}
 
 		// check if all actions for this event are finished.
+LOG_TRACE_FLOW("Counting busy controllers...");
 		vector<ChildControl::StateInfo>	cntlrStates = 
 									itsChildControl->getPendingRequest("", treeID);
+LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 		if (cntlrStates.empty()) {	// no pending requests? Ready.
-			sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_NO_ERROR);
+			if (event.signal != CONTROL_FINISH) {
+				sendControlResult(*itsParentPort, event.signal, cntlrName, 
+																CT_RESULT_NO_ERROR);
+			}
+			else {
+				// we are done, pass finish request to parent
+				CONTROLFinishEvent		request;
+				request.cntlrName = cntlrName;
+				request.result	  = CT_RESULT_NO_ERROR;
+				itsParentPort->send(request);
+			}
 			break;
 		}
 		// Show where we are waiting for. When error occured, report it back and stop
@@ -458,12 +471,12 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //
 // addObservation(name)
 //
-bool StationControl::_addObservation(const string&	name)
+uint16 StationControl::_addObservation(const string&	name)
 {
 	// Already in admin? Return error.
 	if (itsObsMap.find(name) != itsObsMap.end()) {
-		LOG_DEBUG_STR(name << " already in admin, returning error");
-		return (false);
+		LOG_WARN_STR(name << " already in admin, returning error");
+		return (CT_RESULT_ALREADY_REGISTERED);
 	}
 
 	// find and read parameterset of this observation
@@ -474,7 +487,7 @@ bool StationControl::_addObservation(const string&	name)
 	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS);
 	if (!theNewObs) {
 		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
-		return (false);
+		return (CT_RESULT_UNSPECIFIED);
 	}
 
 	LOG_DEBUG_STR("Adding " << name << " to administration");
@@ -482,7 +495,7 @@ bool StationControl::_addObservation(const string&	name)
 	LOG_DEBUG_STR(*theNewObs);
 	theNewObs->start();				// call initial state.
 
-	return (true);
+	return (CT_RESULT_NO_ERROR);
 }
 
 
