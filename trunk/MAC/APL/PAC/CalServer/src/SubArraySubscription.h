@@ -41,9 +41,9 @@ namespace LOFAR {
     class SubArraySubscription : public RTC::Observer
       {
       public:
-	SubArraySubscription(SubArray*                                    subarray,
-			     std::bitset<LOFAR::CAL_Protocol::N_SUBBANDS> subbandset,
-			     GCFPortInterface&                            port) :
+	SubArraySubscription(SubArray*                          subarray,
+			     std::bitset<MEPHeader::N_SUBBANDS> subbandset,
+			     GCFPortInterface&                  port) :
 	  m_subarray(subarray),
 	  m_subbandset(subbandset),
 	  m_port(port) {}
@@ -58,7 +58,7 @@ namespace LOFAR {
       private:
 	SubArray* m_subarray; // the subject of this observer
 
-	std::bitset<CAL_Protocol::N_SUBBANDS> m_subbandset; // subset of subbands which to update
+	std::bitset<MEPHeader::N_SUBBANDS> m_subbandset; // subset of subbands which to update
 	GCFPortInterface&                     m_port;       // port on which to send updates
       };
 
