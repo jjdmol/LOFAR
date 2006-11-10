@@ -346,27 +346,26 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 	LOG_DEBUG_STR(itsName << ":stopping");
 
 	switch (event.signal) {
-	case F_ENTRY: 
+	case F_ENTRY:  {
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
-		LOG_DEBUG_STR(itsName << ": in 'stopping-mode' until controllers are down");
-		break;
 
-	case CONTROL_QUIT: {
 		// release beam at the BeamController
 		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to quit");
 		ChildControl::instance()->
 				requestState(CTState::FINISHED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
-		// will result in CONTROL_RELEASED
+		// will result in CONTROL_FINISHED
 
 		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to quit");
 		ChildControl::instance()->
 				requestState(CTState::FINISHED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
-		// will result in CONTROL_RELEASED
+		// will result in CONTROL_FINISHED
+
+		LOG_DEBUG_STR(itsName << ": in 'stopping-mode' until controllers are down");
 	}
 	break;
 
-	case CONTROL_FINISHED: {
+	case CONTROL_FINISH: {
 		CONTROLFinishedEvent		msg(event);
 		if (msg.cntlrName == itsCalCntlrName) {
 			itsCalCntlrReady = true;
