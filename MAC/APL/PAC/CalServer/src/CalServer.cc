@@ -545,9 +545,9 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		LOG_DEBUG_STR("positions.shape()" << positions.shape());
 
 		// check start.subset value
-		bitset<RSP_Protocol::MAX_N_RCUS> invalidmask;
+		bitset<MEPHeader::MAX_N_RCUS> invalidmask;
 		for (int i = 0; i < m_n_rcus; i++) {
-			invalidmask.set(i);
+		  invalidmask.set(i);
 		}
 		invalidmask.flip();
 
@@ -591,15 +591,18 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			setrcu.timestamp = Timestamp(0,0); // immediate
 
 			// mask only available RCUs
-			bitset<RSP_Protocol::MAX_N_RCUS> validmask;
+			bitset<MEPHeader::MAX_N_RCUS> validmask;
 			for (int i = 0; i < m_n_rcus; i++) {
 				validmask.set(i);
 			}
 			setrcu.rcumask = start.subset & validmask;
 			setrcu.settings().resize(1);
 			setrcu.settings()(0) = start.rcumode()(0);
-			LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X,%08X)", 
-									setrcu.rcumask.to_ulong(), start.rcumode()(0).getRaw()));
+
+			// previsou LOG statement contained start.rcumask.to_ulong() which
+			// throws an exception because the number of bits = 256!
+			LOG_DEBUG_STR(formatString("Sending RSP_SETRCU(%08X) to ", 
+						  start.rcumode()(0).getRaw()) << setrcu.rcumask);
 			m_rspdriver.send(setrcu);
 		}
 	}
