@@ -77,7 +77,7 @@ public:
 		time_t				requestTime;	// time of requested state
 		CTState::CTstateNr	currentState;	// currrent (known) state of the controller
 		time_t				establishTime;	// time this state was reached
-		bool				failed;			// the requested state could not be reached
+		uint16				result;			// the requested state could not be reached
 	} StateInfo;
 
 	// Assign a name to the service the task should offer to the childs

@@ -52,12 +52,13 @@ Observation::Observation(ACC::APS::ParameterSet*		aParSet) :
 	sampleClock(0)
 {
 	// analyse ParameterSet.
-	string prefix = ACC::APS::moduleName(aParSet->locateModule("Observation"));
+	string prefix = aParSet->locateModule("Observation") + "Observation.";
+	LOG_TRACE_VAR_STR("'Observation' located at: " << prefix);
 	if (aParSet->isDefined(prefix+"name")) {
 		name = aParSet->getString(prefix+"name");
 	}
-	if (aParSet->isDefined(prefix+"treeID")) {
-		treeID = aParSet->getInt32(prefix+"treeID");
+	if (aParSet->isDefined("_treeID")) {
+		treeID = aParSet->getInt32("_treeID");
 	}
 	if (aParSet->isDefined(prefix+"startTime")) {
 		startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));

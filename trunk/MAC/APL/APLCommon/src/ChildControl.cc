@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <sys/stat.h>
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_ServiceInfo.h>
@@ -152,45 +153,59 @@ bool ChildControl::startChild (uint16				aCntlrType,
 							   uint32				instanceNr,
 							   const string&		hostname)
 {
+	LOG_DEBUG_STR("startChild(" << aCntlrType <<","<< anObsID <<","<< instanceNr 
+											  <<","<< hostname << ")");
+
 	// first check if child already exists
-	string	cntlrName(controllerName(aCntlrType, anObsID, instanceNr));
+	string	cntlrName(controllerName(aCntlrType, instanceNr, anObsID));
 	if (findController(cntlrName) != itsCntlrList->end()) {
+		LOG_DEBUG_STR("Controller " << cntlrName << " already running.");
 		return (false);
 	}	
 
 	// make sure there is a parameterSet for the program.
 	// search observation-parset for controller name and determine prefix
 	// NOTE: this name must be the same as in the MACScheduler.
-	string	baseSetName = formatString("%s/Observation_%d", LOFAR_SHARE_LOCATION, anObsID);
-	LOG_DEBUG_STR ("Reading parameterfile: " << baseSetName);
-	ParameterSet	wholeSet (baseSetName);
-	string			prefix = wholeSet.getString("prefix");
+	if (anObsID == 0  && isSharedController(aCntlrType)) {
+		LOG_DEBUG_STR("Startup of shared controller" << cntlrName << 
+									". Skipping creation of observation parset.");
+	}
+	else {
+		string	baseSetName = formatString("%s/Observation_%d", 
+											LOFAR_SHARE_LOCATION, anObsID);
+		LOG_DEBUG_STR ("Reading parameterfile: " << baseSetName);
+		ParameterSet	wholeSet (baseSetName);
+		string			prefix = wholeSet.getString("prefix");
 
-	// Create a parameterset with software related issues.
-	string	cntlrSetName(formatString("%s/%s", LOFAR_SHARE_LOCATION, sharedControllerName(cntlrName).c_str()));
-	LOG_DEBUG_STR("Creating parameterfile: " << cntlrSetName);
-	// first add the controller specific stuff
-	string	nodeName(parsetNodeName(aCntlrType));
-	string	position(wholeSet.locateModule(nodeName));
-	LOG_DEBUG_STR("Ctype=" << aCntlrType << ", name=" << nodeName << 
-				  ", position=" << position);
-	ParameterSet	cntlrSet = wholeSet.makeSubset(position+nodeName+".");
-	// always add Observation and all its children to the Parset.
-	cntlrSet.adoptCollection(wholeSet.makeSubset(wholeSet.locateModule("Observation")));
-	// Add some comment lines and some extra fields to the file
-	cntlrSet.add("prefix", prefix+position+nodeName+".");
-	cntlrSet.add("_instanceNr", lexical_cast<string>(instanceNr));
-	cntlrSet.add("_moduleName", nodeName);
-	cntlrSet.add("_treeID", lexical_cast<string>(anObsID));
-	cntlrSet.add("# moduleName", nodeName);
-	cntlrSet.add("# pathName", prefix+position+nodeName+".");
-	cntlrSet.add("# treeID", lexical_cast<string>(anObsID));
-	// Finally write to subset to the file.
-	cntlrSet.writeFile (cntlrSetName);
+		// Create a parameterset with software related issues.
+		string	cntlrSetName(formatString("%s/%s", LOFAR_SHARE_LOCATION, 
+												   cntlrName.c_str()));
+//											sharedControllerName(cntlrName).c_str()));
+		LOG_DEBUG_STR("Creating parameterfile: " << cntlrSetName);
+		// first add the controller specific stuff
+		string	nodeName(parsetNodeName(aCntlrType));
+		string	position(wholeSet.locateModule(nodeName));
+		LOG_DEBUG_STR("Ctype=" << aCntlrType << ", name=" << nodeName << 
+					  ", position=" << position);
+		ParameterSet	cntlrSet = wholeSet.makeSubset(position+nodeName+".");
+		// always add Observation and all its children to the Parset.
+		cntlrSet.adoptCollection(wholeSet.makeSubset(wholeSet.locateModule("Observation")));
+		// Add some comment lines and some extra fields to the file
+		cntlrSet.add("prefix", prefix+position+nodeName+".");
+		cntlrSet.add("_instanceNr", lexical_cast<string>(instanceNr));
+		cntlrSet.add("_moduleName", nodeName);
+		cntlrSet.add("_treeID", lexical_cast<string>(anObsID));
+		cntlrSet.add("# moduleName", nodeName);
+		cntlrSet.add("# pathName", prefix+position+nodeName+".");
+		cntlrSet.add("# treeID", lexical_cast<string>(anObsID));
+		// Finally write to subset to the file.
+		cntlrSet.writeFile (cntlrSetName);
 
-	// When program must run on another system scp file to that system
-	if (hostname != GCF::Common::myHostname(false)) {
-		APLUtilities::remoteCopy(cntlrSetName, hostname, cntlrSetName);
+		// When program must run on another system scp file to that system
+		if (hostname != GCF::Common::myHostname(false)  && 
+			hostname != GCF::Common::myHostname(true)) {
+			APLUtilities::remoteCopy(cntlrSetName, hostname, cntlrSetName);
+		}
 	}
 
 	// Alright, child does not exist yet. 
@@ -208,6 +223,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	ci.establishTime  = 0;
 	ci.retryTime	  = 0;
 	ci.nrRetries	  = 0;
+	ci.result		  = CT_RESULT_NO_ERROR;
 
 	// Update our administration.
 	itsCntlrList->push_back(ci);
@@ -300,7 +316,7 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 			// send request to child
 			iter->requestedState = aState;
 			iter->requestTime    = currentTime;
-			iter->failed		 = false;
+			iter->result		 = CT_RESULT_NO_ERROR;
 			iter->nrRetries		 = 0;
 			iter->retryTime		 = 0;
 
@@ -411,6 +427,7 @@ ChildControl::getPendingRequest (const string&		aName,
 			si.requestTime	  = iter->requestTime;
 			si.currentState	  = iter->currentState;
 			si.establishTime  = iter->establishTime;
+			si.result		  = iter->result;
 			resultVec.push_back(si);
 		}
 		iter++;
@@ -442,6 +459,7 @@ ChildControl::getCompletedStates (time_t	lastPollTime)
 			si.requestTime	  = iter->requestTime;
 			si.currentState	  = iter->currentState;
 			si.establishTime  = iter->establishTime;
+			si.result		  = iter->result;
 			resultVec.push_back(si);
 		}
 		iter++;
@@ -595,7 +613,8 @@ void ChildControl::_processActionList()
 			break;
 
 		default:
-			ASSERTSTR(false, "Unhandled action: " << action->requestedState);
+			CTState		cts;
+			ASSERTSTR(false, "Unhandled action: " << cts.name(action->requestedState));
 		}
 		action++;						// hop to next
 		itsActionList.pop_front();	// remove handled action.
@@ -638,6 +657,10 @@ void ChildControl::_setEstablishedState(const string&		aName,
 										time_t				atTime,
 										uint16				result)
 {
+	CTState		CntlrState;
+	LOG_TRACE_FLOW_STR("_setEstablishedState(" << aName <<","<< CntlrState.name(newState) <<","<<
+																result <<")");
+
 	CIiter	controller = findController(aName);
 	if (controller == itsCntlrList->end()) {
 		LOG_WARN_STR ("Could not update state of unknown controller " << aName);
@@ -645,8 +668,7 @@ void ChildControl::_setEstablishedState(const string&		aName,
 	}
 
 	// update controller information
-	CTState		CntlrState;
-	if (!(controller->failed = (result != CT_RESULT_NO_ERROR))) {
+	if ((controller->result = result) == CT_RESULT_NO_ERROR) {
 		controller->currentState  = newState;
 		LOG_DEBUG_STR("Controller " << aName <<" now in state "<< CntlrState.name(newState));
 	}
@@ -979,6 +1001,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				ci.establishTime  = 0;
 				ci.retryTime	  = 0;
 				ci.nrRetries	  = 0;
+				ci.result		  = CT_RESULT_NO_ERROR;
 
 				// Update our administration.
 				itsCntlrList->push_back(ci);

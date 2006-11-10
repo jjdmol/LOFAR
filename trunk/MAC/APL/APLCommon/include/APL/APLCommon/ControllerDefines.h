@@ -25,6 +25,7 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
+#include <GCF/TM/GCF_PortInterface.h>
 
 namespace LOFAR { 
 namespace APLCommon {
@@ -38,6 +39,8 @@ enum
 	CT_RESULT_CALSTART_FAILED,
 	CT_RESULT_CALSTOP_FAILED,
 	CT_RESULT_BEAMALLOC_FAILED,
+	CT_RESULT_BEAMFREE_FAILED,
+	CT_RESULT_ALREADY_REGISTERED,
     CT_RESULT_UNSPECIFIED
 };
 
@@ -93,6 +96,12 @@ int32	getControllerType	(const string&	ObservationName);
 // Construct PS name solving markers line @observation@, @ring@, etc.
 string	createPropertySetName(const string&		propSetMask,
 							  const string&		controllerName);
+
+// Construct a message the matches the given CTState and send it on the port.
+bool sendControlResult(GCF::TM::GCFPortInterface&	port,
+					   uint16						signal,
+					   const string&				cntlrName,
+					   uint16						result);
 };	// APLCommon
 }; // LOFAR
 

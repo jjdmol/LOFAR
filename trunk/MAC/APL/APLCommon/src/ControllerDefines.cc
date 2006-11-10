@@ -30,6 +30,7 @@
 #include <APS/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
+#include <APL/APLCommon/Controller_Protocol.ph>
 
 #include <boost/config.hpp>
 #include <boost/lexical_cast.hpp>
@@ -56,10 +57,10 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"OfflineControl", 		"OfflineCtrl",	false	},
 	{	"BeamDirectionControl",	"BeamDirCtrl",	true	},
 	{	"RingControl", 			"RingCtrl",		true	},
-	{	"StationControl", 		"StationCtrl",	false	},
-	{	"DigitalBoardControl", 	"DigBoardCtrl",	false	},
+	{	"StationControl", 		"StationCtrl",	true	},
+	{	"DigitalBoardControl", 	"DigBoardCtrl",	true	},
 	{	"BeamControl", 			"BeamCtrl",		false	},
-	{	"CalibrationControl", 	"CalCtrl",		true	},
+	{	"CalibrationControl", 	"CalCtrl",		false	},
 	{	"StationInfraControl", 	"StsInfraCtrl",	true	},
 	{	"TestController", 		"TestCtrl",		false	},
 	{	"",						"",				false	}
@@ -75,6 +76,10 @@ string	controllerName (uint16		cntlrType,
 {
 	ASSERTSTR (cntlrType != CNTLRTYPE_NO_TYPE && cntlrType < CNTLRTYPE_NR_TYPES,
 			"No controller defined with type: " << cntlrType);
+
+	if (ObservationNr == 0) {		// used when starting up shared controllers
+		return (controllerTable[cntlrType].cntlrName);
+	}
 
 	return (formatString("%s[%d]{%d}", controllerTable[cntlrType].cntlrName,
 												instanceNr, ObservationNr));
@@ -97,9 +102,10 @@ string	sharedControllerName (const string&	controllerName)
 		return (controllerName);
 	}
 
-	uint32	observationNr = getObservationNr (controllerName);
-	return (formatString("%s{%d}", controllerTable[cntlrType].cntlrName,
-															observationNr));
+//	uint32	observationNr = getObservationNr (controllerName);
+//	return (formatString("%s{%d}", controllerTable[cntlrType].cntlrName,
+//															observationNr));
+	return (controllerTable[cntlrType].cntlrName);
 }
 
 // Return name of the executable
@@ -207,12 +213,96 @@ string	createPropertySetName(const string&		propSetMask,
 	return (psName);
 }
 
+// sendControlResult(port, CONTROLsignal, cntlrName, result);
+// Construct a message that matches the given signal and send it on the port.
+// Supported are:
+// CONNECTED, RESYNCED, SCHEDULED, CLAIMED, PREPARED, RESUMED, SUSPENDED, RELEASED
+//
+bool sendControlResult(GCF::TM::GCFPortInterface&	port,
+					   uint16						signal,
+					   const string&				cntlrName,
+					   uint16						result)
+{
+	switch (signal) {
+	case CONTROL_CONNECT:
+	case CONTROL_CONNECTED: {
+			CONTROLConnectedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
+	case CONTROL_RESYNC:
+	case CONTROL_RESYNCED: {
+			CONTROLResyncedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+			port.send(answer);
+		}
+		break;
+	case CONTROL_SCHEDULE:
+	case CONTROL_SCHEDULED: {
+			CONTROLScheduledEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
+	case CONTROL_CLAIM:
+	case CONTROL_CLAIMED: {
+			CONTROLClaimedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
+	case CONTROL_PREPARE:
+	case CONTROL_PREPARED: {
+			CONTROLPreparedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
+	case CONTROL_RESUME:
+	case CONTROL_RESUMED: {
+			CONTROLResumedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
+	case CONTROL_SUSPEND:
+	case CONTROL_SUSPENDED: {
+			CONTROLSuspendedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
+	case CONTROL_RELEASE:
+	case CONTROL_RELEASED: {
+			CONTROLReleasedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
+	case CONTROL_FINISH:
+	case CONTROL_FINISHED: {
+			CONTROLFinishedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
+	default:
+		ASSERTSTR(false, 
+			formatString("State %04X is not supported by 'sendControlResult'", signal));
 
-
-
+	}
+}
 
   } // namespace APLCommon
 } // namespace LOFAR
-
-
-
