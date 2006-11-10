@@ -108,7 +108,8 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
-
+	registerProtocol (F_PML_PROTOCOL, 	   F_PML_PROTOCOL_signalnames);
+ 
 	setState(CTState::CREATED);
 }
 
