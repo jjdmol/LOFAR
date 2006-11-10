@@ -46,6 +46,8 @@ namespace LOFAR {
 #define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2"
 #define MAC_SVCMASK_RSPCTLFE			"RSPCtlFE%s:acceptor"
 #define MAC_SVCMASK_PROPERTYAGENT		"GCF-PA%s:provider"
+#define MAC_SVCMASK_KVLDAEMON			"KVLDaemon%s:v1.0"
+#define MAC_SVCMASK_KVLMASTER			"KVLMaster%s:v1.0"
 
 // Define names for the daemons
 #define MAC_SVCMASK_SERVICEBROKER		"ServiceBroker%s:v1.0"
