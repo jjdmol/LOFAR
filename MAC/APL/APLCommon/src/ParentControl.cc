@@ -67,6 +67,7 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_FINISHED,		CTState::ANYSTATE,		CTState::FINISHED	},
 	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_SCHEDULE,		CTState::ANYSTATE,		CTState::ANYSTATE	},
+	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
 	{	0x00,					CTState::NOSTATE,		CTState::NOSTATE	}
 };
 
@@ -263,14 +264,20 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 			itsMainTaskPort->sendBack(request);
 		}
 		break;
+	case CTState::FINISH: {
+			CONTROLQuitEvent		request;
+			request.cntlrName = parent->name;
+			itsMainTaskPort->sendBack(request);
+		}
+		break;
 	case CTState::FINISHED: {
-			// close port and cleanup admin
-			parent->port->close();
-			itsParentList.erase(parent);
 			// pass to maintask
 			CONTROLFinishedEvent	request;
 			request.cntlrName = parent->name;
 			itsMainTaskPort->sendBack(request);
+			// close port and cleanup admin
+			parent->port->close();
+			itsParentList.erase(parent);
 		}
 		break;
 	default:
@@ -300,7 +307,7 @@ bool ParentControl::_confirmState(uint16			signal,
 //					  cts.name(parent->requestedState));
 //	}
 
-	if (result == !CT_RESULT_NO_ERROR) {
+	if (result != CT_RESULT_NO_ERROR) {
 		parent->failed = true;
 		LOG_DEBUG_STR(cntlrName << " DID NOT reach the " << 
 			cts.name(requestedState(signal)) << " state, error=" << result);
@@ -558,7 +565,7 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 			CONTROLConnectedEvent	inMsg(event);
 			PIiter	parent = findParent(inMsg.cntlrName);
 			if (!isParent(parent)) {
-				LOG_ERROR_STR("Cannot forward CONNECT event for " << inMsg.cntlrName);
+				LOG_ERROR_STR("Cannot forward CONNECTED event for " << inMsg.cntlrName);
 				break;
 			}
 			CONTROLConnectEvent	outMsg;
@@ -601,7 +608,8 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 	case CONTROL_RESUME:
 	case CONTROL_SUSPEND:
 	case CONTROL_RELEASE:
-	case CONTROL_FINISHED:
+	case CONTROL_QUIT:
+	case CONTROL_FINISHED:		// NB: is an answer!
 		{
 			// do we know this parent?
 			PIiter		parent = findParent(&port);

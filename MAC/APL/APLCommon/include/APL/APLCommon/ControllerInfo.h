@@ -82,7 +82,7 @@ private:
 	time_t				requestTime;	// time of requested state
 	CTState::CTstateNr	currentState;	// the state the controller has
 	time_t				establishTime;	// time the current state was reached
-	bool				failed;			// requested state could not be reached
+	uint16				result;			// error nr of last action
 	// --- for use in action list ---
 	time_t				retryTime;		// time the request must be retried
 	uint32				nrRetries;		// nr of retries performed
