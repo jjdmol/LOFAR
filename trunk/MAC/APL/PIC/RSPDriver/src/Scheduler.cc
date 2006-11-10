@@ -274,7 +274,7 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
   char timestr[32];
   time_t sec = scheduled_time.sec();
   strftime(timestr, 32, "%T", localtime(&sec));
-  LOG_INFO(formatString("Scheduler::enter scheduled_time=%s.%d", timestr, scheduled_time.usec()));
+  LOG_DEBUG(formatString("Scheduler::enter scheduled_time=%s.%d", timestr, scheduled_time.usec()));
 
   // push the command on the appropriate queue
   switch (queue)
@@ -337,7 +337,7 @@ void Scheduler::scheduleCommands()
 
     if (command->getTimestamp() <= m_current_time + (long)scheduling_offset)
     {
-      LOG_INFO_STR("scheduling command with time=" << command->getTimestamp());
+      LOG_DEBUG_STR("scheduling command with time=" << command->getTimestamp());
 
       m_now_queue.push(command);
       m_later_queue.pop();
@@ -369,7 +369,7 @@ void Scheduler::scheduleCommands()
 
     if (command->getTimestamp() <= m_current_time + (long)scheduling_offset)
     {
-      LOG_INFO_STR("scheduling periodic command with time=" << command->getTimestamp());
+      LOG_DEBUG_STR("scheduling periodic command with time=" << command->getTimestamp());
       m_now_queue.push(command);
     }
 

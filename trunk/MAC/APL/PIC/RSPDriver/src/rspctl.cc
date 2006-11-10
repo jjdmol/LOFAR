@@ -1251,10 +1251,14 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
     }
   }
 
-  m_stats += stats;
+  if (m_integration > 0) {
+    m_stats += stats;
+  } else {
+    m_stats = stats;
+  }
   m_nseconds++; // advance to next second
 
-  if (0 == m_nseconds % m_integration)
+  if (0 == (int32)m_nseconds % m_integration)
   {
     if (m_integration > 0) 
     {
@@ -1499,10 +1503,14 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
     }
   }
 
-  m_stats += stats;
+  if (m_integration > 0) {
+    m_stats += stats;
+  } else {
+    m_stats = stats;
+  }
   m_nseconds++; // advance to next second
 
-  if (0 == m_nseconds % m_integration)
+  if (0 == (int32)m_nseconds % m_integration)
   {
     if (m_integration > 0) 
     {
