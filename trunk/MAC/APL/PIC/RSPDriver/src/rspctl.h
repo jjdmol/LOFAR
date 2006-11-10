@@ -76,9 +76,9 @@ namespace LOFAR {
       /**
        * Get the mask (MAX_N_RCUS bits).
        */
-      std::bitset<MAX_N_RCUS> getRCUMask() const
+      std::bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const
       {
-        std::bitset<MAX_N_RCUS> mask;
+        std::bitset<MEPHeader::MAX_N_RCUS> mask;
       
         mask.reset();
         std::list<int>::const_iterator it;
@@ -86,7 +86,7 @@ namespace LOFAR {
         for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
           if (count >= get_ndevices())
             break;
-          if (*it < MAX_N_RCUS)
+          if (*it < MEPHeader::MAX_N_RCUS)
             mask.set(*it);
         }
         return mask;
