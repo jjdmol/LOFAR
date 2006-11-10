@@ -67,7 +67,7 @@ namespace LOFAR
 	  /**
 	   * Return the seleted rcus as bitset<MAX_N_RCUS>
 	   */
-	  std::bitset<MAX_N_RCUS> getRCUMask() const;
+	  std::bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const;
 
 	  void mainloop();
 

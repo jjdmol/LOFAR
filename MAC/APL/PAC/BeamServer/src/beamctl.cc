@@ -356,17 +356,17 @@ void usage()
   << endl;
 }
 
-std::bitset<MAX_N_RCUS> beamctl::getRCUMask() const
+std::bitset<MEPHeader::MAX_N_RCUS> beamctl::getRCUMask() const
 {
-  std::bitset<MAX_N_RCUS> mask;
+  std::bitset<MEPHeader::MAX_N_RCUS> mask;
   
   mask.reset();
   std::list<int>::const_iterator it;
   int count = 0; // limit to ndevices
   for (it = m_rcus.begin(); it != m_rcus.end(); ++it, ++count) {
-    if (count >= MAX_N_RCUS) break;
+    if (count >= MEPHeader::MAX_N_RCUS) break;
     
-    if (*it < MAX_N_RCUS)
+    if (*it < MEPHeader::MAX_N_RCUS)
       mask.set(*it);
   }
   return mask;
@@ -462,7 +462,7 @@ int main(int argc, char** argv)
 
   // initialize rcus
   rcus.clear();
-  //for (int i = 0; i < MAX_N_RCUS; i++) rcus.push_back(i);
+  //for (int i = 0; i < MEPHeader::MAX_N_RCUS; i++) rcus.push_back(i);
 
   subbands.clear();
   beamlets.clear();
@@ -508,7 +508,7 @@ int main(int argc, char** argv)
 	if (!optarg) {
 	  cerr << "Error: missing --rcus value" << endl;
 	} else {
-	  rcus = strtolist(optarg, MAX_N_RCUS);
+	  rcus = strtolist(optarg, MEPHeader::MAX_N_RCUS);
 	  presence |= RCUS_FLAG;
 	}
       }
