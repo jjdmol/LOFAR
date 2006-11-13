@@ -1,35 +1,175 @@
 V 10
 1
-LANG:1 8 (NoName)
-PANEL,293 76 611 516 N "_3DFace" 0
+LANG:1 13 ObsCtrl_State
+PANEL,424 247 950 741 N "_3DFace" 1
+"$datapoint"
 "main()
 {
-	string query = \"SELECT '_online.._value' FROM 'LOFAR_*.state' WHERE _DPT = \\\"CalCtrl\\\" OR _DPT = \\\"DigBoardCtrl\\\" OR _DPT = \\\"BeamCtrl\\\" OR _DPT = \\\"ObsCtrl\\\"\";
-	dpQueryConnectAll(
-		\"updateControllersTable\",
-		true, 
-		\"ControllerStateQuery\",
-		query);
+	// check if this panel is placed on the right datapoint
+	navViewCheckDpType($datapoint,\"ObsCtrl\");  
+  // get obsname from dp
+	string obsName= getPathComponent($datapoint,3);
+	//DebugTN(\"Observation: \"+obsName);
+	
+	setValue(\"txt_Observation\",\"text\",obsName);
 
-}" 0
-EE E E 1 0 0 0  10 10
-"" 0 1
-E"updateControllersTable(string identifier, dyn_dyn_anytype result)
+	// load propertyset from datapoint
+	navPMLloadPropertySet($datapoint);
+	
+	showLogging();
+	
+	// check if the requiered datapoint for this view are enabled and accessible
+	if (dpAccessable($datapoint + \".state\") && dpAccessable($datapoint + \".error\")) {
+		dpConnect(\"updateObsCtrl\", $datapoint + \".state:_online.._value\",
+		                           $datapoint + \".error:_online.._value\",
+		                           $datapoint + \".state:_online.._invalid\");
+  } else {
+    setValue(\"ObsCtrl_border\", \"backCol\", \"_dpdoesnotexist\");
+  }  
+}
+
+updateObsCtrl(string dp1, string state,
+							string dp2, string error,
+							string dp3, bool invalid)
 {
-	if(identifier == \"ControllerStateQuery\")
+
+	string SymbolCol;
+	if (invalid) 
 	{
-		TableControllers.deleteAllLines();
-	  for(int i=2; i<=dynlen(result);i++)
-	  {
-	  	string tempName = dpSubStr(result[i][1],DPSUB_DP);
-		  dyn_string dpElements = splitDatapointPath(tempName);
-	  	string ctrlName = dpElements[dynlen(dpElements)];
-			TableControllers.appendLine(\"Controller\",ctrlName);
-			TableControllers.updateLine(1,\"Controller\",ctrlName,\"Status\",result[i][2]);
+		SymbolCol=\"Lofar_device_invalid\";
+  } else {
+		SymbolCol=\"Lofar_device_active\";	  
+  }
+	setValue(\"ObsCtrl_border\", \"backCol\", SymbolCol);
+  setValue(\"txt_State\", \"text\", state);
+  setValue(\"txt_Error\", \"text\", error);	
+}
+
+
+
+" 0
+"main()
+{
+  navPMLunloadPropertySet($datapoint);
+}" 0
+E E E 1 0 0 0  10 10
+"" 0 1
+E"#uses \"nav_usr/CS1/CS1_Common.ctl\"
+showLogging()
+{
+	//DebugTN(\"startLogging\");
+	
+	string dpLog = $datapoint+\".logmsg\";
+
+	string systemName = dpSubStr(dpLog,DPSUB_SYS);
+  string bareDP     = dpSubStr(dpLog,DPSUB_DP_EL_CONF_DET_ATT);
+
+  obs_table_logging.deleteAllLines();
+ 
+  if(dpExists(dpLog))
+  {
+
+		// initialize the logging table with historical data:
+		dyn_dyn_anytype tab;
+		int z;
+		time tStart;
+		time tStop;
+		tStop = getCurrentTime();
+		tStart = tStop - 3*3600; // three hours of history
+	
+		string query = \"SELECT ALL '_original.._value' FROM '\" + dpLog + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
+			formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+			formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
+			
+		//DebugTN(\"Query: \" + query);
+		dpQuery(query, tab);
+		//DebugTN(\"Found: \" + tab + \" length: \" + dynlen(tab));
+	 	 
+	 	
+		for(z=2;z<dynlen(tab);z++)
+		{
+			addLogMessage(tab[z][2]);
 		}
+	
+		// connect to logging
+		dpConnect(\"updateLogging\",dpLog);
 	}
 }
-" 0
+
+//
+// Update logging callback
+//
+updateLogging(string dpe, string dpv)
+{
+  //DebugTN(\"LogMsg: \"+dpv);
+  if (dpv != \"\") {
+    addLogMessage(dpv);
+  }
+}
+
+//
+// Add logMsg to table.
+//
+addLogMessage(string msg)
+{
+  //split lines like:
+  // 13-11-06 10:06:00.519|INFO|MAC.GCF.PAL.SAL|Set value of property 'MCU001:LOFAR_PermSW_MACScheduler.OTDB.lastPoll'|GSA_Service.cc:661
+  // into relevant pieces
+
+  if (msg != \"\") {
+    //DebugTN(\"msg: \" + msg);
+
+    dyn_string msgParts;
+    string dateTime=\"\";
+    string level=\"\";
+    string source=\"\";
+    string logMsg=\"\";
+    string codeLine=\"\";
+    bool error=false;
+
+    msgParts = strsplit(msg,\"|\");
+
+    if (dynlen(msgParts) >=2) {
+      dateTime = msgParts[2];
+    } else {
+    	error=true;
+   	}
+    if (dynlen(msgParts) >=3) {
+      level    = msgParts[3];
+    } else {
+    	error=true;
+   	}
+    if (dynlen(msgParts) >=4) {
+      source   = msgParts[4];
+    } else {
+    	error=true;
+   	}
+
+    if (dynlen(msgParts) >=5) {
+      logMsg = msgParts[5];
+    } else {
+    	error=true;
+   	}
+
+    if (dynlen(msgParts) >=6) {
+      codeLine = msgParts[6];
+    } else {
+    	error=true;
+   	}
+	
+	
+    //DebugTN(\"dateTime: \" + dateTime);
+    //DebugTN(\"level: \" + level);
+    //DebugTN(\"source: \" + source);
+    //DebugTN(\"logMsg: \" + logMsg);
+    //DebugTN(\"codeLine: \" + codeLine);
+
+		if (!error && logMsg != \"\") {
+	    obs_table_logging.appendLine(\"time\",dateTime,\"level\",level,\"source\",source,\"message\",logMsg,\"code\",codeLine);
+  	  obs_table_logging.lineVisible(-1);
+  	 }
+  }
+}" 0
  2
 "CBRef""1"
 "EClose"E
@@ -38,65 +178,166 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-2 0
-"Text1"
+6 45
+"ObsCtrl_border"
 ""
-1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 85 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  E E
-1 0 0 0 0 0
+24 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 12 270 44
-0 2 0 "s" 0 0 0 192 0 0  12 12
+E E 0 1 1 0 1 E U  1 E 10 10 260 85
+1 46 4 "" 0
+0
+1 47 4 "" 1
+0
+1 48 4 "" 4
+0
+1 49 4 "" 5
+0
+1 50 4 "" 6
+0
+1 51 4 "" 7
+0
+1 52 4 "" 8
+0
+1 53 4 "" 10
+0
+1 54 4 "" 11
+0
+1 57 5 "" 0
+0
+1 58 5 "" 1
+0
+1 59 5 "" 4
+0
+1 60 5 "" 5
+0
+1 61 5 "" 6
+0
+1 62 5 "" 7
+0
+1 63 5 "" 8
+0
+1 64 5 "" 10
+0
+1 65 5 "" 11
+0
+1 68 6 "" 0
+0
+1 69 6 "" 1
+0
+1 70 6 "" 4
+0
+1 71 6 "" 5
+0
+1 72 6 "" 6
+0
+1 73 6 "" 7
+0
+1 74 6 "" 8
+0
+1 75 6 "" 10
+0
+1 76 6 "" 11
+0
+1 79 7 "" 0
+0
+1 80 7 "" 1
+0
+1 81 7 "" 4
+0
+1 82 7 "" 5
+0
+1 83 7 "" 6
+0
+1 84 7 "" 7
+0
+1 85 7 "" 8
+0
+1 86 7 "" 10
+0
+1 87 7 "" 11
+0
+6 66
+"Observation_border"
+""
+1 10 114 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 89 940 114
+2 67
+"Text2"
+""
+1 10 89 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 91 133 113
+0 2 0 "s" 0 0 0 192 0 0  12 91
  1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-240-100-100-*-*-iso8859-1|-27,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 19 Controller overview
-2 10
-"Text6"
+LANG:1 12 Observation:
+2 68
+"txt_Observation"
 ""
-1 10 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 141 91 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-11 0 0 0 0 0
+31 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 72 92 90
-0 2 0 "s" 0 0 0 192 0 0  12 72
+E E 0 1 1 0 1 E U  0 E 143 93 287 111
+0 2 0 "s" 0 0 0 192 0 0  143 93
  1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 11 Controllers
-4 12
-"Line1"
-""
-1 10 50 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-13 0 0 0 0 0
-EE E
+LANG:1 17 <ObservationName>
+1 55 4 "" 2
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 2 0 1 E  940 50 10 50
-25 9
-"TableControllers"
+1 56 4 "" 9
+0
+1 66 5 "" 2
+0
+1 67 5 "" 9
+0
+1 77 6 "" 2
+0
+1 78 6 "" 9
+0
+1 88 7 "" 2
+0
+1 89 7 "" 9
+0
+25 90
+"obs_table_logging"
 ""
-1 5 -1327 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 365 -129 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
-10 0 0 0 0 0
+32 0 0 0 0 0
 EE E
 0
 1
@@ -105,23 +346,29 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-8 98 482 735
-E E 1 0 1 2 4 "Controller" 0 1 0 "s" 1
-LANG:1 10 Controller
+268 8 942 87
+E E 1 0 1 5 1 "time" 0 1 0 "s" 1
+LANG:1 4 time
 E1
 LANG:1 0 
- 225 "Status" 0 1 0 "s" 1
-LANG:1 6 Status
+ 150 "level" 0 1 0 "s" 1
+LANG:1 5 level
 E1
 LANG:1 0 
- 225 26 26 "" 1 1
+ 70 "source" 0 1 0 "s" 1
+LANG:1 6 source
+E1
+LANG:1 0 
+ 200 "message" 0 1 0 "s" 1
+LANG:1 7 message
+E1
+LANG:1 0 
+ 1000 "code" 0 1 0 "s" 1
+LANG:1 4 code
+E1
+LANG:1 0 
+ 200 16 16 "" 1 1
 LANG:1 2 #1
-"" 1 1
-LANG:1 2 #2
-"" 1 1
-LANG:1 2 #3
-"" 1 1
-LANG:1 2 #4
 8 30 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -131,6 +378,106 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 LAYER, 1 
 1
 LANG:1 6 Layer2
+2 0
+"Text1"
+""
+1 12 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 14 12 85 34
+0 2 0 "s" 0 0 0 192 0 0  14 12
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 ObsCtrl
+2 13
+"ObsCtrl_state"
+""
+1 17 35 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 37 78 58
+0 2 0 "s" 0 0 0 64 0 0  19 37
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 State :
+2 35
+"txt_State"
+""
+1 67 35 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 69 37 84 53
+0 2 0 "s" 0 0 0 192 0 0  69 37
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 txt
+2 14
+"ObsCtrl_Error"
+""
+1 17 56 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 58 58 74
+0 2 0 "s" 0 0 0 192 0 0  19 58
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Error :
+2 36
+"txt_Error"
+""
+1 67 55 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 69 57 84 73
+0 2 0 "s" 0 0 0 192 0 0  69 57
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 txt
 0
 LAYER, 2 
 1
@@ -156,4 +503,24 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 4 "station_4"
+"objects\\nav_usr\\CS1\\Station_ctrl_view.pnl" 180 601 T 25 1 0 1  294 139  
+2
+"$Station""CS016"
+"$datapoint""$datapoint"
+3 5 "Station_3"
+"objects\\nav_usr\\CS1\\Station_ctrl_view.pnl" 183 432 T 26 1 0 1  -173 308  
+2
+"$Station""CS010"
+"$datapoint""$datapoint"
+3 6 "Station_2"
+"objects\\nav_usr\\CS1\\Station_ctrl_view.pnl" 487 270 T 27 1 0 1  -13 163  
+2
+"$Station""CS008"
+"$datapoint""$datapoint"
+3 7 "Station_1"
+"objects\\nav_usr\\CS1\\Station_ctrl_view.pnl" 195 216 T 28 1 0 1  -185 217  
+2
+"$Station""CS001"
+"$datapoint""$datapoint"
 0
