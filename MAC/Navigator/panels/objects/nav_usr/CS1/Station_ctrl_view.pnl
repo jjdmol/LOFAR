@@ -21,9 +21,9 @@ PANEL,372 214 484 325 N "_3DFace" 2
 	navPMLloadPropertySet(DigBoardCtrlDP);
 	navPMLloadPropertySet(StationCtrlDP);
 
-	DebugTN(\"init entered\");
+	//DebugTN(\"init entered\");
   logThreadID=startThread(\"connectLogDP\");  
-  DebugTN(\"ThreadId: \"+$Station+ \": \"+logThreadID);
+  //DebugTN(\"ThreadId: \"+$Station+ \": \"+logThreadID);
 
 	selectedDP=StationCtrlDP+\".logmsg\";
 
