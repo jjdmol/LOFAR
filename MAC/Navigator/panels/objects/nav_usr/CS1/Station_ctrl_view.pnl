@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,416 258 484 325 N "_3DFace" 2
+PANEL,372 214 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()
@@ -249,30 +249,30 @@ addLogMessage(string msg)
 
     msgParts = strsplit(msg,\"|\");
 
+    if (dynlen(msgParts) >=1) {
+      dateTime = msgParts[1];
+    } else {
+    	error=true;
+   	}
     if (dynlen(msgParts) >=2) {
-      dateTime = msgParts[2];
+      level    = msgParts[2];
     } else {
     	error=true;
    	}
     if (dynlen(msgParts) >=3) {
-      level    = msgParts[3];
+      source   = msgParts[3];
     } else {
     	error=true;
    	}
+
     if (dynlen(msgParts) >=4) {
-      source   = msgParts[4];
+      logMsg = msgParts[4];
     } else {
     	error=true;
    	}
 
     if (dynlen(msgParts) >=5) {
-      logMsg = msgParts[5];
-    } else {
-    	error=true;
-   	}
-
-    if (dynlen(msgParts) >=6) {
-      codeLine = msgParts[6];
+      codeLine = msgParts[5];
     } else {
     	error=true;
    	}
@@ -515,7 +515,7 @@ LANG:1 0
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
 8 148 467 306
-E E 1 0 1 4 1 "time" 0 1 0 "s" 1
+E E 1 0 1 5 1 "time" 0 1 0 "s" 1
 LANG:1 4 time
 E1
 LANG:1 0 
@@ -531,7 +531,11 @@ LANG:1 0
 LANG:1 7 message
 E1
 LANG:1 0 
- 1000 16 16 "" 1 1
+ 1000 "code" 0 1 0 "s" 1
+LANG:1 4 code
+E1
+LANG:1 0 
+ 200 16 16 "" 1 1
 LANG:1 2 #1
 8 30 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial

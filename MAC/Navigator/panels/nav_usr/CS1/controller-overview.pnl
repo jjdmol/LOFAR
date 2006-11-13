@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 13 ObsCtrl_State
-PANEL,424 247 950 741 N "_3DFace" 1
+PANEL,372 214 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -117,7 +117,7 @@ addLogMessage(string msg)
   // into relevant pieces
 
   if (msg != \"\") {
-    //DebugTN(\"msg: \" + msg);
+    DebugTN(\"msg: \" + msg);
 
     dyn_string msgParts;
     string dateTime=\"\";
@@ -129,40 +129,40 @@ addLogMessage(string msg)
 
     msgParts = strsplit(msg,\"|\");
 
+    if (dynlen(msgParts) >=1) {
+      dateTime = msgParts[1];
+    } else {
+    	error=true;
+   	}
     if (dynlen(msgParts) >=2) {
-      dateTime = msgParts[2];
+      level    = msgParts[2];
     } else {
     	error=true;
    	}
     if (dynlen(msgParts) >=3) {
-      level    = msgParts[3];
+      source   = msgParts[3];
     } else {
     	error=true;
    	}
+
     if (dynlen(msgParts) >=4) {
-      source   = msgParts[4];
+      logMsg = msgParts[4];
     } else {
     	error=true;
    	}
 
     if (dynlen(msgParts) >=5) {
-      logMsg = msgParts[5];
-    } else {
-    	error=true;
-   	}
-
-    if (dynlen(msgParts) >=6) {
-      codeLine = msgParts[6];
+      codeLine = msgParts[5];
     } else {
     	error=true;
    	}
 	
 	
-    //DebugTN(\"dateTime: \" + dateTime);
-    //DebugTN(\"level: \" + level);
-    //DebugTN(\"source: \" + source);
-    //DebugTN(\"logMsg: \" + logMsg);
-    //DebugTN(\"codeLine: \" + codeLine);
+    DebugTN(\"dateTime: \" + dateTime);
+    DebugTN(\"level: \" + level);
+    DebugTN(\"source: \" + source);
+    DebugTN(\"logMsg: \" + logMsg);
+    DebugTN(\"codeLine: \" + codeLine);
 
 		if (!error && logMsg != \"\") {
 	    obs_table_logging.appendLine(\"time\",dateTime,\"level\",level,\"source\",source,\"message\",logMsg,\"code\",codeLine);
