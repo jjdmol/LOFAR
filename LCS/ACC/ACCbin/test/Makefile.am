@@ -1,5 +1,5 @@
 
-check_PROGRAMS		= ACuserMenu APExample APTest
+check_PROGRAMS		= APExample APTest
 
 TESTS			= 
 
