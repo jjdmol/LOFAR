@@ -1,4 +1,4 @@
-7
+9
 "Lofar_background_dark" N {41,104,235}
 "Lofar_background_light" N {114,164,242}
 "Lofar_device_active" N {51,204,0}
@@ -6,3 +6,5 @@
 "Lofar_cep_IO" N {255,158,156}
 "Lofar_cep_Switch" N {198,255,231}
 "Lofar_cep_BG" N {156,158,255}
+"Lofar_device_inactive" N {192,192,192}
+"Lofar_device_invalid" N {255,0,255}
