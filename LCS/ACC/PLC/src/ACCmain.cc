@@ -28,6 +28,7 @@
 #include <PLC/ACCmain.h>
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
+#include <APS/Exceptions.h>
 #include <PLC/ProcControlServer.h>
 #ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
@@ -38,6 +39,7 @@ namespace LOFAR {
     namespace PLC {
 
       using APS::ParameterSet;
+      using APS::APSException;
 
       int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 
@@ -121,10 +123,14 @@ namespace LOFAR {
 	    if (ps == 0) {
 	      LOG_INFO_STR("Could not find a parameter set.");
 	    } else {
-              string prefix = ps->getString("parsetPrefix");
-              ParameterSet ParamSet = ps->makeSubset(prefix);
+	      try {
+		string prefix = ps->getString("parsetPrefix");
+		ParameterSet ParamSet = ps->makeSubset(prefix);
+		APS::globalParameterSet()->adoptCollection(ParamSet);
+	      } catch (APSException&) {
+		APS::globalParameterSet()->adoptCollection(*ps);
+	      }
 	      delete ps;
-              APS::globalParameterSet()->adoptCollection(ParamSet);
 	    }
 
 	    LOG_TRACE_FLOW(programName + " starting define");
