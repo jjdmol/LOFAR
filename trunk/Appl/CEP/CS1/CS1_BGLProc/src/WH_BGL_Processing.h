@@ -133,7 +133,7 @@ class WH_BGL_Processing: public WorkHolder {
     fftw_plan	    itsFFTWPlan;
 #endif
 
-    static vector<double>  itsBaseFrequencies;
+    static vector<double>  itsCenterFrequencies;
     double	    itsChannelBandwidth;
 
     const ACC::APS::ParameterSet &itsPS;
