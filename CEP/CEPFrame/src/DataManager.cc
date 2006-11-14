@@ -123,7 +123,7 @@ DataHolder* DataManager::getInHolder(int channel)
   if (itsInDHsinfo[channel].currentDH == 0)
   {
     // If dataholder is shared between input and output, get read/write permission 
-    if (dhpPtr->getSharing() == true)
+    if (dhpPtr->getSharing())
     {
       itsInDHsinfo[channel].currentDH =  dhpPtr->getRWLockedDH(&itsInDHsinfo[channel].id);
     }
@@ -144,7 +144,7 @@ DataHolder* DataManager::getOutHolder(int channel)
   if (itsOutDHsinfo[channel].currentDH == 0)
   {
     // If dataholder is shared between input and output, get read/write permission
-    if (dhpPtr->getSharing() == true)
+    if (dhpPtr->getSharing())
     {
       itsOutDHsinfo[channel].currentDH = dhpPtr->getRWLockedDH(&itsOutDHsinfo[channel].id);
     }
@@ -167,7 +167,7 @@ void DataManager::readyWithInHolder(int channel)
 
     DHPoolManager* dhpPtr = itsSynMan->getInPoolManagerPtr(channel);
 
-    if (itsSynMan->isInSynchronous(channel) == true)
+    if (itsSynMan->isInSynchronous(channel))
     {
       if (getInConnection(channel)!=0)
       {
@@ -185,7 +185,7 @@ void DataManager::readyWithInHolder(int channel)
       itsSynMan->readAsynchronous(channel);
     }
 
-    if (dhpPtr->getSharing() == true)                // Shared in- and output
+    if (dhpPtr->getSharing())                // Shared in- and output
     {
       dhpPtr->writeUnlock(itsInDHsinfo[channel].id);
     }
@@ -210,7 +210,7 @@ void DataManager::readyWithOutHolder(int channel)
 
   if (itsOutDHsinfo[channel].id >= 0)
   {
-    if (itsSynMan->isOutSynchronous(channel) == true)
+    if (itsSynMan->isOutSynchronous(channel))
     {
       if (getOutConnection(channel) != 0)
       {
@@ -335,34 +335,37 @@ void DataManager::initializeInputs()
 {
   for (int ch = 0; ch < itsNinputs; ch++)
   {
-    if (doAutoTriggerIn(ch) && (itsInDHsinfo[ch].currentDH == 0))
+    if (itsInDHsinfo[ch].currentDH == 0)
     {
-      if (itsSynMan->isInSynchronous(ch) == true)
+      if (itsSynMan->isInSynchronous(ch))
       {
-	itsInDHsinfo[ch].currentDH = itsSynMan->getInPoolManagerPtr(ch)->
-	                         getWriteLockedDH(&itsInDHsinfo[ch].id);
-	
-	// Only perform the read if no rate is set;
-	// this assumes that we are currently handling ProcessStep == 1
-	// todo: can't we get the process step from elsewere?
-	if ( getInputRate(ch) == 1 ) {
-	  LOG_TRACE_COND_STR("DM Allowed input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
-	  if (getInConnection(ch) != 0)
-	  {
-	    ASSERTSTR(getInConnection(ch)->read()!= Connection::Error,
-		      "Error in reading input channel " << ch);
+	if (doAutoTriggerIn(ch))
+	{
+	  itsInDHsinfo[ch].currentDH = itsSynMan->getInPoolManagerPtr(ch)->
+				   getWriteLockedDH(&itsInDHsinfo[ch].id);
+	  
+	  // Only perform the read if no rate is set;
+	  // this assumes that we are currently handling ProcessStep == 1
+	  // todo: can't we get the process step from elsewere?
+	  if (getInputRate(ch) == 1) {
+	    LOG_TRACE_COND_STR("DM Allowed input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
+	    if (getInConnection(ch) != 0)
+	    {
+	      ASSERTSTR(getInConnection(ch)->read()!= Connection::Error,
+			"Error in reading input channel " << ch);
+	    }
+	    else
+	    {
+	      LOG_TRACE_COND_STR("DM Skip input handling;  channel = " << ch << " step=1 is not connected");
+	    }
+	  } else {
+	    LOG_TRACE_COND_STR("DM Skip input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
 	  }
-	  else
-	  {
-	    LOG_TRACE_COND_STR("DM Skip input handling;  channel = " << ch << " step=1 is not connected");
-	  }
-	} else {
-	  LOG_TRACE_COND_STR("DM Skip input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
+	  
+	  itsSynMan->getInPoolManagerPtr(ch)->writeUnlock(itsInDHsinfo[ch].id);
+	  itsInDHsinfo[ch].id = -1;
+	  itsInDHsinfo[ch].currentDH = 0;
 	}
-	
-	itsSynMan->getInPoolManagerPtr(ch)->writeUnlock(itsInDHsinfo[ch].id);
-	itsInDHsinfo[ch].id = -1;
-	itsInDHsinfo[ch].currentDH = 0;
       }
       else
       {
@@ -380,7 +383,7 @@ void DataManager::setInBufferingProperties(int channel, bool synchronous,
   // by a dedicated sharing method
   setInBuffer(channel, synchronous, 20); 
 
-  if (shareDHs == true)
+  if (shareDHs)
   {
     DBGASSERTSTR(channel < getOutputs(), 
  		 "corresponding output channel does not exist");
@@ -406,7 +409,7 @@ void DataManager::setOutBufferingProperties(int channel, bool synchronous,
 
   setOutBuffer(channel, synchronous, 20);
 
-  if (shareDHs == true)
+  if (shareDHs)
   {
     DBGASSERTSTR(channel < getInputs(), 
  		 "corresponding input channel does not exist");
