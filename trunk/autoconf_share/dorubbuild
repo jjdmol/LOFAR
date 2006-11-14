@@ -106,7 +106,7 @@ fi
 if [ $buildmake = 1 ]; then
   mainmake="date && make $kstr $jobsopt "
   if [ $bldtest = 1 ]; then
-    postmake="&& (cd test && make test;)"
+    postmake="&& (if [ -d test ]; then cd test && make test; fi;)"
   fi
   if [ $check = 1 ]; then
     if [ "$checktool" = "" ]; then
