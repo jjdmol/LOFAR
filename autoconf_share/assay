@@ -219,7 +219,7 @@
     # Because the job does not wait, we do that by using a wait file.
     # Note that yod does wait.
     if test "$AIPSPATH" != ""; then
-      $PBS_AIPSPATH="PBS -v $AIPSPATH"
+      PBS_AIPSPATH="PBS -v $AIPSPATH"
     fi
     rm -f ${PROG}_tmp.wait
     cat > ${PROG}_tmp.qsub <<EOF
