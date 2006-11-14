@@ -53,7 +53,7 @@ inline static dcomplex cosisin(double x)
 
 #endif
 
-vector<double> WH_BGL_Processing::itsBaseFrequencies;
+vector<double> WH_BGL_Processing::itsCenterFrequencies;
 FIR WH_BGL_Processing::itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION | 2][NR_POLARIZATIONS] CACHE_ALIGNED;
 #if defined SPARSE_FLAGS
@@ -1167,8 +1167,8 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
   ASSERT(_correlator_constants_used.nr_polarizations		== NR_POLARIZATIONS);
 #endif
 
-  if (itsBaseFrequencies.size() == 0)
-    itsBaseFrequencies = ps.getDoubleVector("Observation.RefFreqs");
+  if (itsCenterFrequencies.size() == 0)
+    itsCenterFrequencies = ps.getDoubleVector("Observation.RefFreqs");
 
   itsChannelBandwidth = ps.getDouble("Observation.SampleRate") / NR_SUBBAND_CHANNELS;
 
@@ -1796,7 +1796,7 @@ void WH_BGL_Processing::process()
   computeFlags();
 
 #if NR_SUBBAND_CHANNELS > 1
-  doPPF(itsBaseFrequencies[itsCurrentSubband] - (NR_SUBBAND_CHANNELS / 2) * itsChannelBandwidth);
+  doPPF(itsCenterFrequencies[itsCurrentSubband] - (NR_SUBBAND_CHANNELS / 2) * itsChannelBandwidth);
 #else
   bypassPPF();
 #endif
@@ -1819,6 +1819,14 @@ void WH_BGL_Processing::process()
 
 #if defined HAVE_MPI
   std::clog << "core " << TH_MPI::getCurrentRank() << ": start idling at " << MPI_Wtime() << '\n';
+#endif
+
+#if 0
+  static int count = 0;
+
+  if (TH_MPI::getCurrentRank() == 5 && ++ count == 9)
+    for (double time = MPI_Wtime() + 4.0; MPI_Wtime() < time;)
+      ;
 #endif
 
   totalTimer.stop();
