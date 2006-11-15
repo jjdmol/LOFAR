@@ -40,8 +40,8 @@ RSPDriver.PPS_TRIGGER=1
 #
 # Specify MAC addresses of the RSP boards explicitly
 #
-RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
-RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
+RSPDriver.MAC_ADDR_0=10:FA:00:00:11:00
+RSPDriver.MAC_ADDR_1=10:FA:00:00:12:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
 RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
 RSPDriver.MAC_ADDR_4=10:FA:00:00:04:00
@@ -210,9 +210,6 @@ RSPDriver.LOOPBACK_MODE=0
 RSPDriver.WRITE_RSU=1
 RSPDriver.WRITE_BS=1
 RSPDriver.WRITE_CDO=1
-# WRITE_CDO_ONCE, if set to 1 only write CDO register once at startup
-# otherwise rewrite same data every update (= second)
-RSPDriver.WRITE_CDO_ONCE=1#0
 # READ_CDO, if set to 1 reads back contents of pid=CDO, regid=0x01
 # This can be used to verify that the UDP/IP header is correctly
 # written to the register.

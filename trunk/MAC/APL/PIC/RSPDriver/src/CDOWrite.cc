@@ -149,11 +149,6 @@ uint16 CDOWrite::compute_ip_checksum(void* addr, int count)
 
 void CDOWrite::sendrequest()
 {
-  // write register (with same setting) every second if WRITE_CDO_ONCE == 0
-  if (0 == GET_CONFIG("RSPDriver.WRITE_CDO_ONCE", i)) {
-    Cache::getInstance().getState().cdo().write(getBoardId() * getNumIndices() + getCurrentIndex());
-  }
-
   // skip update if the CDO settings have not been modified
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().cdo().get(getBoardId() * getNumIndices() + getCurrentIndex()))
   {
