@@ -72,6 +72,7 @@ namespace LOFAR {
 	GCFEvent::TResult setblocksync_state(GCFEvent& event, GCFPortInterface& port);
 	GCFEvent::TResult radwrite_state(GCFEvent& event, GCFPortInterface& port);
 	GCFEvent::TResult rcuenable_state(GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult cdoenable_state(GCFEvent& event, GCFPortInterface& port);
 	/*@}*/
 
       private:

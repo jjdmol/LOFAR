@@ -398,8 +398,7 @@ GCFEvent::TResult Sequencer::radwrite_state(GCFEvent& event, GCFPortInterface& /
       if (   m_timer++ > WRITE_TIMEOUT 
 	  && Cache::getInstance().getState().rad().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to write RAD settings register. Retrying...");
-	Cache::getInstance().getState().rad().reset();
-	Cache::getInstance().getState().rad().write();
+	TRAN(Sequencer::rsuclear_state);
       } else if (Cache::getInstance().getState().rad().isMatchAll(RegisterState::IDLE)) {
 	TRAN(Sequencer::rcuenable_state);
       }
@@ -446,7 +445,48 @@ GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& 
       if (   m_timer++ > WRITE_TIMEOUT
 	  && Cache::getInstance().getState().rcusettings().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to enable receivers. Retrying...");
-	TRAN(Sequencer::clearclock_state);
+	TRAN(Sequencer::rsuclear_state);
+      } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
+	TRAN(Sequencer::cdoenable_state);
+      }
+    }
+    break;
+
+    case F_EXIT:
+    {
+      LOG_DEBUG("Leaving Sequencer::rcuenable_state");
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult Sequencer::cdoenable_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_ENTRY:
+    {
+      LOG_DEBUG("Entering Sequencer::rcuenable_state");
+
+      Cache::getInstance().getState().cdo().reset();
+      Cache::getInstance().getState().cdo().write();
+    }
+    break;
+    
+    case F_TIMER:
+    {
+      if (   m_timer++ > WRITE_TIMEOUT
+	  && Cache::getInstance().getState().rcusettings().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
+	LOG_WARN("Failed to enable receivers. Retrying...");
+	TRAN(Sequencer::rsuclear_state);
       } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
 	stopSequence();
 	TRAN(Sequencer::idle_state);
