@@ -27,9 +27,9 @@ Ring			-		C	P	LOFAR_PermSW_@ring@
 Station			-		C	P	LOFAR_PermSW_@ring@_@station@
 ObsSW			-		C	O	LOFAR_ObsSW
 Observation		-		C	O	LOFAR_ObsSW_@observation@
-ObsCtrl			-		C	O	LOFAR_ObsSW_@observation@_ObsCtrl
-OnlineCtrl		-		C	O	LOFAR_ObsSW_@observation@_OnlineCtrl
-OfflineCtrl		-		C	O	LOFAR_ObsSW_@observation@_OfflineCtrl
+ObsCtrl			OBS		C	O	LOFAR_ObsSW_@observation@_ObsCtrl
+OnlineCtrl		ON		C	O	LOFAR_ObsSW_@observation@_OnlineCtrl
+OfflineCtrl		OFF		C	O	LOFAR_ObsSW_@observation@_OfflineCtrl
 Ring			-		C	O	LOFAR_ObsSW_@observation@_@ring@
 Station			-		C	O	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
