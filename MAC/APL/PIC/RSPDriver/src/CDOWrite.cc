@@ -114,6 +114,7 @@ CDOWrite::CDOWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, MEPHeader::N_CDO_REGISTERS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
+  doAtInit();
 }
 
 CDOWrite::~CDOWrite()
@@ -255,9 +256,7 @@ GCFEvent::TResult CDOWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     return GCFEvent::NOT_HANDLED;
   }
 
-  if (1 == getCurrentIndex()) {
-    Cache::getInstance().getState().cdo().write_ack(getBoardId() * getNumIndices() + getCurrentIndex());
-  }
+  Cache::getInstance().getState().cdo().write_ack(getBoardId() * getNumIndices() + getCurrentIndex());
   
   return GCFEvent::HANDLED;
 }
