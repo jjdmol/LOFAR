@@ -87,7 +87,9 @@ else
   lofarinitdir=`pwd | sed -e 's%/LOFAR/.*%/LOFAR/LCS/Tools/src%'`
 fi
 cd $lofarinitdir
-. lofarinit.sh
+if test -r lofarinit.sh; then
+  . lofarinit.sh
+fi
 cd $curwd
 
 # Initialize AIPS++.
@@ -113,6 +115,7 @@ if test -f "$srcdir/$1.in"; then
 fi
 \rm -rf $1.in_*
 \cp -r $srcdir/$1.in_* . > /dev/null 2>&1
+chmod -R +w $1.in_* > /dev/null 2>&1    # Make writable (for make distcheck).
 if test -f "$srcdir/$1.stdout"; then
     \rm -f $1.stdout
     \cp $srcdir/$1.stdout .
