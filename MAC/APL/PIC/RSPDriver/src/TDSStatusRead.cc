@@ -122,7 +122,7 @@ GCFEvent::TResult TDSStatusRead::handleack(GCFEvent& event, GCFPortInterface& /*
     status.board()(getBoardId()).invalid = 1;
     Cache::getInstance().getState().tdstatusread().read_error(getBoardId());
   } else {
-    LOG_INFO(formatString("LOCK: 0x%02x", ack.result[STATUS_INDEX]));
+    LOG_DEBUG(formatString("LOCK: 0x%02x", ack.result[STATUS_INDEX]));
     memcpy(&status.board()(getBoardId()), &ack.result + STATUS_INDEX, sizeof(TDBoardStatus));
     Cache::getInstance().getState().tdstatusread().read_ack(getBoardId());
   }
