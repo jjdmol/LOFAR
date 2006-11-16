@@ -18,14 +18,21 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	TBBDriver.conf \
 	RemoteStation.conf \
-	tbbctl.conf
+	tbbctl.conf \
+	TBBDriver.log_prop \
+	tbbctl.log_prop
 
 sysconf_DATA = \
 	TBBDriver.conf \
 	RemoteStation.conf \
-	tbbctl.conf
+	tbbctl.conf \
+	TBBDriver.log_prop \
+	tbbctl.log_prop
 
 %.conf: %.conf.in
+	cp $< $@
+	
+%.log_prop: %.log_prop.in
 	cp $< $@
 
 lib_LTLIBRARIES = \
@@ -66,7 +73,10 @@ libtbbdriver_la_SOURCES = \
 	ReadfCmd.cc \
 	WritefCmd.cc \
 	ReadwCmd.cc \
-	WritewCmd.cc		
+	WritewCmd.cc \
+	ReadrCmd.cc \
+	WriterCmd.cc \
+	ReadxCmd.cc		
 
 noinst_HEADERS = \
 	DriverSettings.h \
@@ -91,7 +101,10 @@ noinst_HEADERS = \
 	ReadfCmd.h \
 	WritefCmd.h	\
 	ReadwCmd.h \
-	WritewCmd.h	
+	WritewCmd.h	\
+	ReadrCmd.h \
+	WriterCmd.h \
+	ReadxCmd.h
 
 #NOINSTdir	=
 

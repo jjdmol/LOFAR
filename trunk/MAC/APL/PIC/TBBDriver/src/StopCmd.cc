@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a StopCmd object.----------------------------------------
 StopCmd::StopCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsChannel(0)
 {
 	itsTPE 			= new TPStopEvent();
 	itsTPackE 	= 0;
@@ -41,7 +41,7 @@ StopCmd::StopCmd():
 	itsTBBackE 	= new TBBStopackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsBoardStatus[boardnr]	= 0;
+		itsTBBackE->status[boardnr]	= 0;
 		itsChannelMask[boardnr]	= 0;
 	}		
 }
@@ -56,10 +56,10 @@ StopCmd::~StopCmd()
 // ----------------------------------------------------------------------------
 bool StopCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_STOP)||(event.signal == TP_STOPACK)) {
-		return true;
+	if ((event.signal == TBB_STOP)||(event.signal == TP_STOPACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -67,19 +67,29 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBStopEvent(event);
 		
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; // for some commands board-id is used ???
-		if(itsChannelMask[boardnr] != 0)  itsBoardMask |= (1 << boardnr);
-	}
-	
 	// mask for the installed boards
 	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
+		
+	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
+		
+		if (!(itsBoardsMask & (1 << boardnr))) 
+			itsTBBackE->status[boardnr] |= NO_BOARD;
+		
+		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; 		
+		
+		if (itsChannelMask[boardnr] != 0)
+			itsBoardMask |= (1 << boardnr);
+			
+		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR & CHANNEL_SEL_ERROR);
+				
+		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0))
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+	}
 	
 	// Send only commands to boards installed
 	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
-	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPSTOP;
@@ -89,31 +99,40 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void StopCmd::sendTpEvent(int32 boardnr, int32 channelnr)
+bool StopCmd::sendTpEvent(int32 boardnr, int32 channelnr)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	itsTPE->channel = DriverSettings::instance()->getChBoardChannelNr(channelnr);
+	itsTPE->channel = DriverSettings::instance()->getChInputNr(channelnr);
+	itsChannel = channelnr;
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+	
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void StopCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
-		itsErrorMask |= (1 << boardnr);
+	if (event.signal == F_TIMER) {
+		itsTBBackE->status[boardnr] |= COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPStopackEvent(event);
 		
-		itsBoardStatus[boardnr]	= itsTPackE->status;
+		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
+			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));
+		
+		if (itsTPackE->status == 0)
+			DriverSettings::instance()->setChActive(itsChannel, false); 	
 		
 		LOG_DEBUG_STR(formatString("Received StopAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
@@ -123,11 +142,10 @@ void StopCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void StopCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
-		itsTBBackE->status |= COMM_ERROR;
-		itsTBBackE->status |= (itsErrorMask << 16);
+	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status[boardnr] == 0)
+			itsTBBackE->status[boardnr] = SUCCESS;
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 		
 	clientport->send(*itsTBBackE);
 }
@@ -135,19 +153,19 @@ void StopCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 // ----------------------------------------------------------------------------
 uint32 StopCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 CmdTypes StopCmd::getCmdType()
 {
-	return ChannelCmd;
+	return(ChannelCmd);
 }
 
 // ----------------------------------------------------------------------------
 bool StopCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end TBB namespace

@@ -57,7 +57,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   ssize_t size = port.recv(&buf.opcode, ETH_DATA_LEN);
   
 	// at least 4 bytes
-  if (size < OPCODE_LEN) return GCFEvent::NOT_HANDLED;
+  if (size < OPCODE_LEN) return(GCFEvent::NOT_HANDLED);
   
 	
   LOG_DEBUG(formatString("in RawEvent::F_DATAIN: Opcode=0x%08x",buf.opcode));
@@ -67,6 +67,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   //
   switch(buf.opcode)
 	 {
+	 
 	 case TPALLOC:
   		buf.event.signal = TP_ALLOCACK;
   		buf.event.length = 8;
@@ -112,7 +113,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   		buf.event.signal = TP_SIZEACK;
   		buf.event.length = 12;
   		break;
-  case TPSTATUS:
+   case TPSTATUS:
   		buf.event.signal = TP_STATUSACK;
   		buf.event.length = 44;
   		break;
@@ -152,6 +153,18 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   		buf.event.signal = TP_WRITEWACK;
   		buf.event.length = 8;
   		break;
+	 case TPREADR:
+  		buf.event.signal = TP_READRACK;
+  		buf.event.length = 2056;
+  		break;
+   case TPWRITER:
+  		buf.event.signal = TP_WRITERACK;
+  		buf.event.length = 8;
+  		break;
+   case TPREADX:
+  		buf.event.signal = TP_READXACK;
+  		buf.event.length = 1032;
+  		break;	
    case TPALIVE:
   		buf.event.signal = TP_ALIVEACK;
   		buf.event.length = 12;
@@ -183,7 +196,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 		LOG_WARN("F_DATAIN: Discarding unknown message.");
 	}
   
-  return status;
+  return(status);
 }
 
 	} // end namespace TBB

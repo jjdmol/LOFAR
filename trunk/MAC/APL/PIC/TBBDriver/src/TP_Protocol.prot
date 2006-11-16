@@ -53,7 +53,7 @@ prelude = << PRELUDE_END
 	//--Direct register acces--- 
 	static const uint32 TPREADR  		= 0x00000740;  // IN/OUT read register(direct access), for debug purpose
 	static const uint32 TPWRITER 		= 0x00000741;  // OUT write register(direct access), for debug purpose
-	static const uint32 TPREADRX 		= 0x00000742;  // OUT write register(direct access), for debug purpose
+	static const uint32 TPREADX 		= 0x00000742;  // OUT write register(direct access), for debug purpose
 	
 PRELUDE_END;
 
@@ -880,3 +880,143 @@ event  = {
   };
 };
 
+//--Direct register access-----
+event  = {
+  noheader;
+  signal = READR;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "pid";
+		type = "uint32";
+	};
+	param = {
+		name = "regid";
+		type = "uint32";
+	};
+};
+
+event  = {
+  noheader;
+  signal = READRACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+	param = {
+		name = "data";
+		type = "uint32[256]";
+	};
+};
+
+event  = {
+  noheader;
+  signal = WRITER;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "pid";
+		type = "uint32";
+	};
+	param = {
+		name = "regid";
+		type = "uint32";
+	};
+	param = {
+		name = "data";
+		type = "uint32[3]";
+	};
+};
+
+event  = {
+  noheader;
+  signal = WRITERACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+};
+
+event  = {
+  noheader;
+  signal = READX;
+  dir = OUT;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "pid";
+		type = "uint32";
+	};
+	param = {
+		name = "regid";
+		type = "uint32";
+	};
+	param = {
+		name = "pagelength";
+		type = "uint32";
+	};
+	param = {
+		name = "pageaddr";
+		type = "uint32";
+	};
+};
+
+event  = {
+  noheader;
+  signal = READXACK;
+  dir = IN;
+  param = {
+    name = "opcode";
+    type = "uint32";
+  };
+  param = {
+    name = "status";
+    type = "uint32";
+  };
+	param = {
+		name = "pagedata";
+		type = "uint32[256]";
+	};
+};

@@ -35,7 +35,7 @@
 
 
 namespace LOFAR {
-  namespace tbbctl {
+  namespace TbbCtl {
   	
 //-----------------------------------------------------------------------------
 // class Command :base class for control commands towards the TBBDriver.
@@ -65,12 +65,23 @@ public:
 		
 		str.clear();
 		str.append("=ERROR= ");
-		if (status & COMM_ERROR)		str.append(";Board not available ");
-		if (status & ALLOC_ERROR)		str.append(";Allocation not posible ");
-		if (status & CLEAR_ERROR)		str.append(";Clear failed ");
-		if (status & RESET_ERROR)		str.append(";Reset failed");
-		if (status & CONFIG_ERROR)	str.append(";Reconfiguration failed");
-		
+		if ((status & COMM_ERROR) || (status & NO_BOARD))			
+																	str.append(";Board not available ");
+		if (status & SELECT_ERROR)		str.append(";Not selectable ");
+		if (status & CMD_ERROR)				str.append(";Command failed ");
+		if (status & ALLOC_ERROR)			str.append(";Alloc error ");
+		if (status & CHANNEL_IN_USE)	str.append(";Channel In Use ");
+		if (status & INPUT_IN_USE) 		str.append(";Input In Use ");
+		if (status & BUFFER_TO_LARGE) str.append(";Buffer To Large ");
+		if (status & NO_MP_WRITER)		str.append(";No Mp Writer ");
+		if (status & RING_FULL)				str.append(";Ring Full ");
+		if (status & CRC_ERROR_MP0)		str.append(";CRC error MP0 ");
+		if (status & CRC_ERROR_MP1)		str.append(";CRC error MP1 ");
+		if (status & CRC_ERROR_MP2)		str.append(";CRC error MP2 ");
+		if (status & CRC_ERROR_MP3)		str.append(";CRC error MP3 ");
+		if (status & CRC_ERROR_TP)		str.append(";CRC error TP ");
+		if (status & ACK_ERROR_TP)		str.append(";ACK error TP ");
+		if (status & TIMEOUT_TP_MP)		str.append(";TIMEOUT TP-MP ");
 		return str;
 	}
 	
@@ -158,13 +169,26 @@ public:
 		return itsChannelMask[boardnr];
 	}
 	
+	//--------------------------------------------------------
+	void setCmdDone(bool done)
+	{
+			itsCmdDone = done;
+	}
+	
+	//--------------------------------------------------------
+	bool isCmdDone()
+	{
+			return itsCmdDone;
+	}
+		
 	
 protected:
 	explicit Command(GCFPortInterface& port) : 
   	itsPort(port),
   	itsMax(0),
 		itsSelected(false),
-  	itsSelect(0)
+  	itsSelect(0),
+  	itsCmdDone(false)
 	{
 		for(int32 nr = 0; nr < MAX_N_TBBBOARDS;nr++)
 			itsChannelMask[nr] = 0; 
@@ -178,6 +202,7 @@ protected:
 	bool							itsSelected;
 	std::list<int>		itsSelect; 
 	uint32						itsChannelMask[MAX_N_TBBBOARDS];
+	bool							itsCmdDone;
 	
 		
 private:
@@ -198,6 +223,17 @@ class AllocCmd : public Command
 	private:
 		int itsAddr;
 		int itsLength;
+};
+
+//-----------------------------------------------------------------------------
+class AllocInfoCmd : public Command
+{
+	public:
+		AllocInfoCmd(GCFPortInterface& port);
+		virtual ~AllocInfoCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+	private:
 };
 
 //-----------------------------------------------------------------------------
@@ -403,7 +439,7 @@ class WritewCmd : public Command
 		uint32	itsWordLo;
 		uint32	itsWordHi;
 };
-/*
+
 //-----------------------------------------------------------------------------
 class ReadrCmd : public Command
 {
@@ -425,7 +461,32 @@ class WriterCmd : public Command
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 	private:
 };
-*/
+
+//-----------------------------------------------------------------------------
+class ReadPageCmd : public Command
+{
+	public:
+		ReadPageCmd(GCFPortInterface& port);
+		virtual ~ReadPageCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setMp(uint32 mp)		{	itsMp = mp;	}
+		void setAddr(uint32 addr)  {	itsAddr = addr;	}
+		static const uint32 PID6 = 6;
+		static const uint32 REGID0 = 0;
+		static const uint32 REGID1 = 1;
+		static const uint32 REGID2 = 2;
+		static const uint32 PAGEREAD = 1;
+		static const uint32 DATALENGTH = 256;
+		static const uint32 DATA1POS = 0;
+		static const uint32 DATA2POS = 256;
+	private:
+		int32 itsCmdStage;
+		uint32 itsMp;
+		uint32 itsAddr;
+		uint32 itsData[512];
+};
+
 
 //-----------------------------------------------------------------------------
 // Controller class for tbbctl
@@ -479,7 +540,8 @@ private:
 
   // the command to execute
   Command* 	itsCommand;
-
+	
+	
   // dimensions of the connected hardware
 	uint32	itsActiveBoards;	// mask b0 = board0, b1 = board1 ....
 	int			itsMemory[MAX_N_TBBBOARDS];

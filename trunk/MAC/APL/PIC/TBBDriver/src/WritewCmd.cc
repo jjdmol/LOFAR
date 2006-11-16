@@ -52,10 +52,10 @@ WritewCmd::~WritewCmd()
 // ----------------------------------------------------------------------------
 bool WritewCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_WRITEW)||(event.signal == TP_WRITEWACK)) {
-		return true;
+	if ((event.signal == TBB_WRITEW)||(event.signal == TP_WRITEWACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -86,23 +86,27 @@ void WritewCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void WritewCmd::sendTpEvent(int32 boardnr, int32)
+bool WritewCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected()) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+		
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void WritewCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
+	if (event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
@@ -118,11 +122,13 @@ void WritewCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void WritewCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
+	itsTBBackE->status = 0;
+	if (itsErrorMask != 0) {
 		itsTBBackE->status |= COMM_ERROR;
 		itsTBBackE->status |= (itsErrorMask << 16);
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+	if (itsBoardMask == 0) itsTBBackE->status |= SELECT_ERROR; 
+	if (itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 
 	clientport->send(*itsTBBackE);
 }
@@ -130,19 +136,19 @@ void WritewCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 // ----------------------------------------------------------------------------
 CmdTypes WritewCmd::getCmdType()
 {
-	return BoardCmd;
+	return(BoardCmd);
 }
 
 // ----------------------------------------------------------------------------
 uint32 WritewCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 bool WritewCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end TBB namespace

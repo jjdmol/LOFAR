@@ -47,7 +47,7 @@ namespace LOFAR {
 				
 			virtual void saveTbbEvent(GCFEvent& event) = 0;
 											
-			virtual void sendTpEvent(int32 boardnr, int32 channelnr) = 0;
+			virtual bool sendTpEvent(int32 boardnr, int32 channelnr) = 0;
 			
 			virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr) = 0;
 

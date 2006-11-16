@@ -50,7 +50,7 @@ namespace LOFAR {
 				
 				virtual void saveTbbEvent(GCFEvent& event);
 									
-				virtual void sendTpEvent(int32 boardnr, int32 channelnr);
+				virtual bool sendTpEvent(int32 boardnr, int32 channelnr);
 
 				virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr);
 
@@ -71,18 +71,6 @@ namespace LOFAR {
 				TPStatusackEvent	*itsTPackE;
 				TBBStatusEvent		*itsTBBE;
 				TBBStatusackEvent	*itsTBBackE;
-				
-				// variables holding data from tp cmd
-				uint32	itsBoardStatus[MAX_N_TBBBOARDS];
-				uint32	itsV12[MAX_N_TBBBOARDS];
-				uint32	itsV25[MAX_N_TBBBOARDS];
-				uint32	itsV33[MAX_N_TBBBOARDS];
-				uint32	itsTpcb[MAX_N_TBBBOARDS];
-				uint32	itsTtp[MAX_N_TBBBOARDS];
-				uint32	itsTmp0[MAX_N_TBBBOARDS];
-				uint32	itsTmp1[MAX_N_TBBBOARDS];
-				uint32	itsTmp2[MAX_N_TBBBOARDS];
-				uint32	itsTmp3[MAX_N_TBBBOARDS];
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

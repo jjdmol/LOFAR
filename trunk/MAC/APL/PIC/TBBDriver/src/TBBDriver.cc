@@ -51,6 +51,9 @@
 #include "WritefCmd.h"
 #include "ReadwCmd.h"
 #include "WritewCmd.h"
+#include "ReadrCmd.h"
+#include "WriterCmd.h"
+#include "ReadxCmd.h"
 
 
 #define ETHERTYPE_TP 0x7BB0			// letters of TBB
@@ -110,7 +113,7 @@ TBBDriver::TBBDriver(string name)
   : GCFTask((State)&TBBDriver::init_state, name)
 {
 	cmd = 0;
-	itsActiveBoards = 0;
+	itsActiveBoards = 0xFF000000;
 	itsAliveCheck = false;
 	itsActiveBoardsChange = false;
 	
@@ -226,11 +229,18 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 		case F_CONNECTED: {
       LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
 			
-			if(isEnabled()) {
+			if (isEnabled()) {
+				TPClearEvent clear;
+				clear.opcode = TPCLEAR;
+				clear.status = 0;
+				for (int32 bnr = 0; bnr < DriverSettings::instance()->maxBoards(); bnr++) {
+					itsBoard[bnr].send(clear);	
+					LOG_DEBUG(formatString("CLEAR: board on port '%s'", itsBoard[bnr].getName().c_str()));
+				} 
 				itsAcceptor.open();
 			}	      			
 			if (itsAcceptor.isConnected()) {
-      	itsAcceptor.setTimer((long)5);
+      	itsAcceptor.setTimer((long)4);
       	TRAN(TBBDriver::idle_state);
       }
     } break;
@@ -245,7 +255,7 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 			status = GCFEvent::NOT_HANDLED;
 		}	break;
 	}
-	return status;
+	return(status);
 }
 	
 
@@ -264,7 +274,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		case F_ENTRY:	{
 			// look if there is an Tbb command in queue
 			
-			if(!itsTbbQueue->empty()) {
+			if (!itsTbbQueue->empty()) {
 				GCFEvent e;
 				
 				e.signal = itsTbbQueue->front().signal; //tbbevent->signal;
@@ -311,7 +321,8 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		}	break;
 		
 		case F_TIMER: {
-			if(&port == &itsAcceptor) {
+			LOG_DEBUG("F_TIMER in idle_state");
+			if (&port == &itsAcceptor) {
 				CheckAlive(event, port);
 				TRAN(TBBDriver::busy_state);
 			}
@@ -326,10 +337,23 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		
 		case TBB_SIZE: {
 			TBBSizeackEvent ack;
-			ack.status = ~DriverSettings::instance()->activeBoardsMask() << 16;
-			if (ack.status != 0) ack.status |= COMM_ERROR;
-			for (int32 boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) {
+			for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
+				ack.status[boardnr] = 0;
+			}
+			for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
+				if (!(DriverSettings::instance()->activeBoardsMask() & (1 << boardnr)))
+					ack.status[boardnr] |= NO_BOARD; 
+				if (ack.status[boardnr] == 0) ack.status[boardnr] = SUCCESS; 
 				ack.npages[boardnr] = DriverSettings::instance()->getMemorySize(boardnr);
+			}
+			port.send(ack); 
+		} break;
+		
+		case TBB_ALLOCINFO: {
+			TBBAllocinfoackEvent ack;
+			for (int32 ch = 0; ch < DriverSettings::instance()->maxChannels(); ch++) {
+				ack.channelstartaddr[ch] = DriverSettings::instance()->getChStartAddr(ch);
+				ack.channelsize[ch] = DriverSettings::instance()->getChPageSize(ch);
 			}
 			port.send(ack); 
 		} break;
@@ -352,7 +376,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		
 		default: {
 			// look if the event is a Tbb event
-			if(SetTbbCommand(event.signal)) {
+			if (SetTbbCommand(event.signal)) {
 				status = cmdhandler->dispatch(event,port);
 				TRAN(TBBDriver::busy_state);
 			}
@@ -361,7 +385,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 				status = GCFEvent::NOT_HANDLED;
 		}	break;
 	}
-	return status;
+	return(status);
 }
 
 //-----------------------------------------------------------------------------
@@ -371,6 +395,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;    
 	
+	LOG_INFO_STR(formatString("event.signal = [%d]",event.signal));
 	switch(event.signal) {
 		case F_INIT: {
 		} break;
@@ -385,11 +410,12 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		}	break;
 		
 		case F_TIMER: {
-			if(itsAliveCheck) {
-				if(CheckAlive(event, port))
+			LOG_DEBUG("F_TIMER in busy_state");
+			if (itsAliveCheck) {
+				if (CheckAlive(event, port))
 					TRAN(TBBDriver::idle_state);
 			}
-			else
+			if (&port != &itsAcceptor) 
 				status = cmdhandler->dispatch(event,port); // dispatch time-out event	
 		} break;
 		
@@ -405,14 +431,15 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		}	break;
 					
 		case TP_ALIVEACK: {
-			if(CheckAlive(event, port)) {
+			if (CheckAlive(event, port)) {
 				//cmdhandler->setActiveBoards(itsActiveBoards); 
 				TRAN(TBBDriver::idle_state);
 			}
 		} break;
 		
 		case TP_SIZEACK: {
-			if(CheckAlive(event, port)) {
+			LOG_DEBUG("TP_SIZEACK");
+			if (CheckAlive(event, port)) {
 				TRAN(TBBDriver::idle_state);
 			}
 		} break;
@@ -460,16 +487,20 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case TP_WRITEFACK:
 		case TP_READWACK:
 		case TP_WRITEWACK:
+		case TP_READRACK:
+		case TP_WRITERACK:
+		case TP_READXACK:	
 		{
 			status = cmdhandler->dispatch(event,port); // dispatch ack from boards
-			if(cmdhandler->tpCmdDone()){
+			if (cmdhandler->tpCmdDone()){
 				TRAN(TBBDriver::idle_state);
 			}
 		}	break;	
 		
 								
 		default: {
-			if(cmdhandler->tpCmdDone()){
+			LOG_DEBUG("DEFAULT");
+			if (cmdhandler->tpCmdDone()){
 				TRAN(TBBDriver::idle_state);
 			}
 			// put event on the queue
@@ -480,7 +511,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			status = GCFEvent::NOT_HANDLED;
 		}	break;
 	}
-	return status;
+	return(status);
 }
 
 //-----------------------------------------------------------------------------
@@ -522,7 +553,7 @@ bool TBBDriver::isEnabled()
       break;
     }
   }
-  return enabled;
+  return(enabled);
 }
 
 //-----------------------------------------------------------------------------
@@ -533,7 +564,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 	static uint32 activeboards;
 	static uint32 checkmask;
 	
-	if(!itsAliveCheck) {
+	if (!itsAliveCheck) {
 		itsAliveCheck	= true;
 		boardnr = 0;
 		checkmask			= 0;
@@ -549,46 +580,42 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 		itsBoard[boardnr].setTimer(DriverSettings::instance()->timeout());
 	}
 	else {
-		port.cancelAllTimers();
-		//for(boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) {
-			//if(&port == &itsBoard[boardnr]) {
-				checkmask &= ~(1 << boardnr);
-				//if(event.signal == TP_ALIVE)
-				if(event.signal == TP_SIZEACK) {
-					activeboards |= (1 << boardnr);
-					TPSizeackEvent ack(event);
-					DriverSettings::instance()->setMemorySize(boardnr,ack.npages);
-				}
-				else {
-					DriverSettings::instance()->setMemorySize(boardnr,0);
-				}
-				boardnr++;
-				if (boardnr < DriverSettings::instance()->maxBoards()) {
-					itsBoard[boardnr].send(*itsSize);
-					itsBoard[boardnr].setTimer(DriverSettings::instance()->timeout());
-				}
-			
-			
-		//}
+		//port.cancelAllTimers();
+		itsBoard[boardnr].cancelAllTimers();
+		checkmask &= ~(1 << boardnr);
+		//LOG_DEBUG_STR(formatString("Received SizeAck from boardnr[%d]",boardnr));
+		DriverSettings::instance()->setMemorySize(boardnr,0);
+		if ((event.signal == TP_SIZEACK) && (&port == &itsBoard[boardnr])){
+			activeboards |= (1 << boardnr);
+			TPSizeackEvent ack(event);
+			LOG_DEBUG_STR(formatString("Received SizeAck from boardnr[%d][%u]",boardnr,ack.npages));
+			DriverSettings::instance()->setMemorySize(boardnr,ack.npages);
+		}
+		boardnr++;
+		if (boardnr < DriverSettings::instance()->maxBoards()) {
+			itsBoard[boardnr].send(*itsSize);
+			itsBoard[boardnr].setTimer(DriverSettings::instance()->timeout());
+		}
+		
 	}
-	if(checkmask == 0) {
-		if(activeboards != itsActiveBoards) {
+	if (checkmask == 0) {
+		if (activeboards != itsActiveBoards) {
 			itsActiveBoards = activeboards;
 			DriverSettings::instance()->setActiveBoards(itsActiveBoards);
-			LOG_DEBUG_STR("Active boards: " << itsActiveBoards);
 			itsActiveBoardsChange = true;
 		}
+		LOG_INFO_STR(formatString("Active boards: [0x%03X]",itsActiveBoards));
 		itsAliveCheck = false;
 		itsAcceptor.setTimer(ALIVECHECKTIME);
 		done = true;
 	}
-	return done;
+	return(done);
 }
 
 //-----------------------------------------------------------------------------
 bool TBBDriver::SetTbbCommand(unsigned short signal)
 {
-	if(cmd) delete cmd;
+	if (cmd) delete cmd;
 	switch(signal)
 	{
 		
@@ -706,12 +733,30 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 			cmd = new WritewCmd();
 			cmdhandler->setTpCmd(cmd);
 		} break;
-
+		
+		case TBB_READR:	{
+			ReadrCmd *cmd;
+			cmd = new ReadrCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
+		case TBB_WRITER:	{
+			WriterCmd *cmd;
+			cmd = new WriterCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
+		case TBB_READX:	{
+			ReadxCmd *cmd;
+			cmd = new ReadxCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
 		default: {
-			return false;
+			return(false);
 		}
 	}
-	return true;
+	return(true);
 }
 
   //} // end namespace TBB
@@ -765,7 +810,7 @@ int main(int argc, char** argv)
   
   LOG_INFO("Normal termination of program");
   
-  return 0;
+  return(0);
 }
 
 // Remove lines or remove comments for copy constructor and assignment.
