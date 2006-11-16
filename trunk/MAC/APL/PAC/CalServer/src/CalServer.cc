@@ -752,7 +752,7 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 void CalServer::write_acc()
 {
   time_t now = time(0);
-  struct tm* t = localtime(&now);
+  struct tm* t = gmtime(&now);
   char filename[PATH_MAX];
   const Array<std::complex<double>, 5>& acc = m_accs.getFront().getACC();
   Array<std::complex<double>, 3> newacc;
