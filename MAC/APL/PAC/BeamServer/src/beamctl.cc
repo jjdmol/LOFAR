@@ -278,9 +278,10 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	  // Assuming 5 meter wavelength (60MHz) and a station diameter of 60 m
 	  // then HPBW is 0.08333 or 1/12. Therefor we use 2.0/24.0 stepsize
 	  // to step through l and m
-	  for (double m = -1.0; m <= 1.0; m += 2.0/24.0) {
-	    for (double l = -1.0; l <= 1.0; l+= 2.0/24.0) {
-	      if (l*l+m*m <= 1.0) {
+	  double eps = 5.6e-16;
+	  for (double m = -1.0; m <= 1.0 + eps; m += 2.0/24.0) {
+	    for (double l = -1.0; l <= 1.0 + eps; l+= 2.0/24.0) {
+	      if (l*l+m*m <= 1.0 + eps) {
 		pointto.pointing.setTime(time);
 		pointto.pointing.setDirection(l, m);
 		m_beamserver.send(pointto);
