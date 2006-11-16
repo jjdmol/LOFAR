@@ -210,6 +210,18 @@ prelude = << PRELUDE_END
     uint16 ffi   :13;
   };
 
+  typedef struct TDBoardStatus
+  {
+    uint8 input_10MHz:1;  // 1 = SMA, 0 = Infiniband
+    uint8 output_clock:1; // 1 = 200MHz, 0 = 160MHz
+    uint8 pps_input:1;   // 1 = Infiniband, 0 = SMA
+    uint8 ffi1:1;  // bit 0x08
+    uint8 invalid:1; // are the bits in this structure valid?
+    uint8 ffi3:1;  // bit 0x20
+    uint8 pll_160MHz_locked:1; // 1 = locked, 0 = NOT locked
+    uint8 pll_200MHz_locked:1; // 1 = locked, 0 = NOT locked
+  };
+
 PRELUDE_END;
 
 //

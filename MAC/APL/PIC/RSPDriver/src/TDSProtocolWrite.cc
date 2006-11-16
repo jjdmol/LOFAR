@@ -127,19 +127,6 @@ TDSProtocolWrite::TDSProtocolWrite(GCFPortInterface& board_port, int board_id)
 
   // this action should be performed at initialisation
   doAtInit();
-
-#if 0
-  // patch the tds_160MHz sequence and its result to check programming PLL
-  for (int i = 3; i < TDS_PROGRAMPLLS_SIZE; i += 7) printf("%c", (tds_160MHz[i] & 0x80 ? '#' : '_'));
-  printf("\n");
-  for (int i = 3; i < TDS_PROGRAMPLLS_SIZE; i += 7) printf("%c", (tds_160MHz[i] & 0x40 ? '#' : '_'));
-  printf("\n");
-  for (int i = 3; i < TDS_PROGRAMPLLS_SIZE; i += 7) printf("%c", (tds_160MHz[i] & 0x20 ? '#' : '_'));
-  printf("\n");
-
-  for (int i = 3; i < TDS_PROGRAMPLLS_SIZE; i += 7)        tds_160MHz[i]        &= 0xDB;
-  for (int i = 1; i < TDS_PROGRAMPLLS_RESULT_SIZE; i += 3) tds_160MHz_result[i] &= 0xDB;
-#endif
 }
 
 TDSProtocolWrite::~TDSProtocolWrite()

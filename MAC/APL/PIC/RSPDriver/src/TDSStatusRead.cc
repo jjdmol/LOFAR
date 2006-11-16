@@ -1,4 +1,4 @@
-//#  TDSResultWrite.cc: implementation of the TDSResultWrite class
+//#  TDSStatusRead.cc: implementation of the TDSStatusRead class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,7 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <string.h>
 
-#include "TDSResultWrite.h"
+#include "TDSStatusRead.h"
 #include "TDSi2cdefs.h"
 #include "Cache.h"
 #include "StationSettings.h"
@@ -35,83 +35,97 @@
 #include <netinet/in.h>
 #include <blitz/array.h>
 
+#define STATUS_INDEX 0
+#define READOK_INDEX 1
+
 using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 using namespace blitz;
 using namespace RTC;
 
-TDSResultWrite::TDSResultWrite(GCFPortInterface& board_port, int board_id)
+TDSStatusRead::TDSStatusRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
-
-  // this action should be performed at initialisation
-  doAtInit();
 }
 
-TDSResultWrite::~TDSResultWrite()
+TDSStatusRead::~TDSStatusRead()
 {
   /* TODO: delete event? */
 }
 
-void TDSResultWrite::sendrequest()
+void TDSStatusRead::sendrequest()
 {
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().tdclear().get(getBoardId())) {
-    Cache::getInstance().getState().tdclear().unmodified(getBoardId());
-    setContinue(true);
-
-    return;
-  }
+  // always perform this action
 
   uint32 tds_control = 0;
   sscanf(GET_CONFIG_STRING("RSPDriver.TDS_CONTROL"), "%x", &tds_control);
 
   if (!(tds_control & (1 << getBoardId()))) {
-    Cache::getInstance().getState().tdclear().write_ack(getBoardId());
+
+    Cache::getInstance().getBack().getTDStatus().board()(getBoardId()).invalid = 1;
+    Cache::getInstance().getState().tdstatusread().read_ack(getBoardId());
     setContinue(true);
 
     return;
   }
 
+  // send read event
   EPATdsResultEvent tdsresult;
-  tdsresult.hdr.set(MEPHeader::TDS_RESULT_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE, MEPHeader::TDS_RESULT_SIZE);
-  memset(tdsresult.result, 0xFF, MEPHeader::TDS_RESULT_SIZE);
+  tdsresult.hdr.set(MEPHeader::TDS_RESULT_HDR, MEPHeader::DST_RSP, MEPHeader::READ, sizeof(tds_readstatus_result));
   m_hdr = tdsresult.hdr; // remember header to match with ack
-
-  // send write event
-  LOG_INFO_STR("Clearing TDSH Protocol results register on board " << getBoardId());
-
   getBoardPort().send(tdsresult);
 }
 
-void TDSResultWrite::sendrequest_status()
+void TDSStatusRead::sendrequest_status()
 {
   // intentionally left empty
 }
 
-GCFEvent::TResult TDSResultWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+#if 0
+void printbin(void* buf, int n)
 {
-  if (EPA_WRITEACK != event.signal) {
-    LOG_WARN("TDSResultWrite::handleack:: unexpected ack");
+  unsigned char* c = (unsigned char*)buf;
+  fprintf(stderr, "TDSStatusRead: ");
+  for (int i = 0; i< n; i++) {
+    fprintf(stderr, "%02x ", c[i]);
+  }
+  fprintf(stderr, "\n");
+}
+#else
+#define printbin(buf, n) do { } while (0)
+#endif
+
+GCFEvent::TResult TDSStatusRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  if (EPA_TDS_RESULT != event.signal) {
+    LOG_WARN("TDSStatusRead::handleack:: unexpected ack");
+
     return GCFEvent::NOT_HANDLED;
   }
   
   EPATdsResultEvent ack(event);
 
   if (!ack.hdr.isValidAck(m_hdr)) {
-    LOG_ERROR("TDSResultWrite::handleack: invalid ack");
+    LOG_ERROR("TDSStatusRead::handleack: invalid ack");
+
     return GCFEvent::NOT_HANDLED;
   }
 
-  // bail out if this is no a write ack
-  if (!MEPHeader::WRITEACK == ack.hdr.m_fields.type) {
-    LOG_ERROR("TDSResultWrite::handleack: invalid ack");
-    Cache::getInstance().getState().tdclear().write_error(getBoardId());
-    return GCFEvent::NOT_HANDLED;
-  }
+  printbin(ack.result, sizeof(tds_readstatus_result));
 
-  Cache::getInstance().getState().tdclear().write_ack(getBoardId());
+  TDStatus& status = Cache::getInstance().getBack().getTDStatus();
+
+  if (ack.result[READOK_INDEX]) {
+    // indicate that status is invalid
+    status.board()(getBoardId()).invalid = 1;
+    Cache::getInstance().getState().tdstatusread().read_error(getBoardId());
+  } else {
+    LOG_INFO(formatString("LOCK: 0x%02x", ack.result[STATUS_INDEX]));
+    memcpy(&status.board()(getBoardId()), &ack.result + STATUS_INDEX, sizeof(TDBoardStatus));
+    Cache::getInstance().getState().tdstatusread().read_ack(getBoardId());
+  }
 
   return GCFEvent::HANDLED;
 }

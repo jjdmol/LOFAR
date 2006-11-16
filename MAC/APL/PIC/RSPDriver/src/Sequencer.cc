@@ -210,7 +210,7 @@ GCFEvent::TResult Sequencer::readclock_state(GCFEvent& event, GCFPortInterface& 
     
     case F_TIMER:
     {
-      if (Cache::getInstance().getState().tdread().getMatchCount(Range::all(), RegisterState::READ_ERROR) > 0) {
+      if (Cache::getInstance().getState().tdread().getMatchCount(RegisterState::READ_ERROR) > 0) {
 	if (m_timer++ > TDREAD_TIMEOUT) {
 	  LOG_WARN("Failed to verify setting of clock. Retrying...");
 	  TRAN(Sequencer::writeclock_state);
@@ -265,7 +265,7 @@ GCFEvent::TResult Sequencer::rcudisable_state(GCFEvent& event, GCFPortInterface&
     case F_TIMER:
     {
       if (   m_timer++ > WRITE_TIMEOUT
-	  && Cache::getInstance().getState().rcusettings().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
+	  && Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to disable receivers. Retrying...");
 	TRAN(Sequencer::clearclock_state);
       } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
@@ -353,7 +353,7 @@ GCFEvent::TResult Sequencer::setblocksync_state(GCFEvent& event, GCFPortInterfac
     case F_TIMER:
     {
       if (   m_timer++ > WRITE_TIMEOUT
-	  && Cache::getInstance().getState().bs().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
+	  && Cache::getInstance().getState().bs().getMatchCount(RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to set BS (blocksync) register. Retrying...");
 	Cache::getInstance().getState().bs().reset();
 	TRAN(Sequencer::rsuclear_state);
@@ -396,7 +396,7 @@ GCFEvent::TResult Sequencer::radwrite_state(GCFEvent& event, GCFPortInterface& /
     case F_TIMER:
     {
       if (   m_timer++ > WRITE_TIMEOUT 
-	  && Cache::getInstance().getState().rad().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
+	  && Cache::getInstance().getState().rad().getMatchCount(RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to write RAD settings register. Retrying...");
 	TRAN(Sequencer::rsuclear_state);
       } else if (Cache::getInstance().getState().rad().isMatchAll(RegisterState::IDLE)) {
@@ -443,7 +443,7 @@ GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& 
     case F_TIMER:
     {
       if (   m_timer++ > WRITE_TIMEOUT
-	  && Cache::getInstance().getState().rcusettings().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
+	  && Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to enable receivers. Retrying...");
 	TRAN(Sequencer::rsuclear_state);
       } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
@@ -484,7 +484,7 @@ GCFEvent::TResult Sequencer::cdoenable_state(GCFEvent& event, GCFPortInterface& 
     case F_TIMER:
     {
       if (   m_timer++ > WRITE_TIMEOUT
-	  && Cache::getInstance().getState().rcusettings().getMatchCount(Range::all(), RegisterState::WRITE) > 0) {
+	  && Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to enable receivers. Retrying...");
 	TRAN(Sequencer::rsuclear_state);
       } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {

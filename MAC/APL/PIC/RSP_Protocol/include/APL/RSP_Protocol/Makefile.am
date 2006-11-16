@@ -11,6 +11,7 @@ INSTHDRS = \
 	Versions.h \
 	WGSettings.h \
 	XCStatistics.h \
+	TDStatus.h \
 	AllRegisterState.h \
 	MEPHeader.h \
 	MEPData.h
