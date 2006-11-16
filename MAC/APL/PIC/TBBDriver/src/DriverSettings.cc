@@ -40,7 +40,7 @@ DriverSettings* DriverSettings::instance()
 	if (theirDriverSettings == 0) {
 		theirDriverSettings = new DriverSettings();
 	}
-	return (theirDriverSettings);
+	return(theirDriverSettings);
 }
 
 //
@@ -81,27 +81,28 @@ void DriverSettings::setMaxBoards (int32 maxboards)
 	itsChannel = new ChannelInfo[itsMaxChannels];
 		
 	int32 boardnr = 0;
-	int32 channelnr = 0;
+	int32 inputnr = 0;
 	int32 mpnr = 0;
 	
 	for (int nr = 0; nr < itsMaxChannels; nr++) {
 		itsChannel[nr].Selected = false;
+		itsChannel[nr].Allocated = false;
 		itsChannel[nr].Active = false;
 		itsChannel[nr].BoardNr = boardnr;
-		itsChannel[nr].BoardChannelNr = channelnr;
+		itsChannel[nr].InputNr = inputnr;
 		itsChannel[nr].MpNr = mpnr;
 		itsChannel[nr].StartAddr = 0;
-		itsChannel[nr].PageLength = 0;
-		boardnr++;
-		if (boardnr == itsMaxBoards) boardnr = 0;
-		channelnr++;
-		if (channelnr == itsChannelsPerBoard) channelnr = 0;
-		mpnr++;
-		if (mpnr == itsMpsPerBoard) mpnr = 0;
+		itsChannel[nr].PageSize = 0;
+		inputnr++;
+		if (inputnr == itsChannelsPerBoard) {
+			inputnr = 0;
+			boardnr++;
+		}
+		mpnr = (int32)(inputnr / 4);
 	}
 	
 	if (itsMemorySize) delete itsMemorySize;
-	itsMemorySize = new int32[itsMaxBoards];
+	itsMemorySize = new uint32[itsMaxBoards];
 	
 	for (int nr = 0;nr < itsMaxBoards; nr++) {
 		itsMemorySize[nr] = 0;

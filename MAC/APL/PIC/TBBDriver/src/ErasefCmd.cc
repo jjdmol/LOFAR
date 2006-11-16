@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a ErasefCmd object.----------------------------------------
 ErasefCmd::ErasefCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0),itsAddr(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0)
 {
 	itsTPE 			= new TPErasefEvent();
 	itsTPackE 	= 0;
@@ -51,10 +51,10 @@ ErasefCmd::~ErasefCmd()
 // ----------------------------------------------------------------------------
 bool ErasefCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_ERASEF)||(event.signal == TP_ERASEFACK)) {
-		return true;
+	if ((event.signal == TBB_ERASEF)||(event.signal == TP_ERASEFACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -82,23 +82,27 @@ void ErasefCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void ErasefCmd::sendTpEvent(int32 boardnr, int32)
+bool ErasefCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected()) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+	
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void ErasefCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
+	if (event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
@@ -114,33 +118,33 @@ void ErasefCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ErasefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
+	itsTBBackE->status = 0;
+	if (itsErrorMask != 0) {
 		itsTBBackE->status |= COMM_ERROR;
 		itsTBBackE->status |= (itsErrorMask << 16);
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+	if (itsBoardMask == 0) itsTBBackE->status |= SELECT_ERROR; 
+	if (itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 
-	itsTBBackE->addr				=	itsAddr;
-	
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
 CmdTypes ErasefCmd::getCmdType()
 {
-	return BoardCmd;
+	return(BoardCmd);
 }
 
 // ----------------------------------------------------------------------------
 uint32 ErasefCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 bool ErasefCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end TBB namespace

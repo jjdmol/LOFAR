@@ -33,12 +33,14 @@ namespace LOFAR {
 
 //--Constructors for a ReadCmd object.----------------------------------------
 ReadCmd::ReadCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0), itsChannel(0),itsBoardStatus(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0), itsChannel(0)
 {
 	itsTPE 			= new TPReadEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBReadackEvent();
+	
+	itsTBBackE->status = 0;
 }
 	  
 //--Destructor for ReadCmd.---------------------------------------------------
@@ -51,10 +53,10 @@ ReadCmd::~ReadCmd()
 // ----------------------------------------------------------------------------
 bool ReadCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_READ)||(event.signal == TP_READACK)) {
-		return true;
+	if ((event.signal == TBB_READ)||(event.signal == TP_READACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -71,8 +73,6 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
-	itsTBBackE->status = 0;
-	
 	// initialize TP send frame
 	itsTPE->opcode			= TPREAD;
 	itsTPE->status			=	0;
@@ -86,29 +86,31 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void ReadCmd::sendTpEvent(int32 boardnr, int32)
+bool ReadCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected()) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+	
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void ReadCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
+	if (event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
 		itsTPackE = new TPReadackEvent(event);
-		
-		itsBoardStatus = itsTPackE->status;
 		
 		LOG_DEBUG_STR(formatString("Received ReadAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
@@ -118,11 +120,13 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ReadCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
+	itsTBBackE->status = 0;
+	if (itsErrorMask != 0) {
 		itsTBBackE->status |= COMM_ERROR;
 		itsTBBackE->status |= (itsErrorMask << 16);
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+	if (itsBoardMask == 0) itsTBBackE->status |= SELECT_ERROR; 
+	if (itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 	 
 	clientport->send(*itsTBBackE);
 }
@@ -130,19 +134,19 @@ void ReadCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 // ----------------------------------------------------------------------------
 uint32 ReadCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 CmdTypes ReadCmd::getCmdType()
 {
-	return ChannelCmd;
+	return(ChannelCmd);
 }
 
 // ----------------------------------------------------------------------------
 bool ReadCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end TBB namespace

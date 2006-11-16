@@ -99,7 +99,7 @@ void MsgHandler::sendBoardChange(uint32 activeboards)
 //-----------------------------------------------------------------------------
 void MsgHandler::sendMessage(GCFEvent& event)
 {
-  if(!itsClientMsgList.empty()) {
+  if (!itsClientMsgList.empty()) {
     for (set<GCFPortInterface*>::iterator it = itsClientMsgList.begin();
          it != itsClientMsgList.end();
          it++)

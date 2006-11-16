@@ -34,12 +34,13 @@ namespace LOFAR {
 struct ChannelInfo
 {
 	bool		Selected;
+	bool		Allocated;
 	bool		Active;
 	int32		BoardNr;
-	int32		BoardChannelNr;
+	int32		InputNr;
 	int32		MpNr;
 	uint32	StartAddr;
-	uint32	PageLength;
+	uint32	PageSize;
 };
 		
 		
@@ -69,20 +70,22 @@ public:
 	//void setChannelMask(int32 boardnr, uint32 channelmask);
 
 	bool getChSelected(int32 channelnr);
+	bool getChAllocated(int32 channelnr);
 	bool getChActive(int32 channelnr);
 	int32 getChBoardNr(int32 channelnr);
-	int32 getChBoardChannelNr(int32 channelnr);
+	int32 getChInputNr(int32 channelnr);
 	int32 getChMpNr(int32 channelnr);
 	uint32 getChStartAddr(int32 channelnr);
-	uint32 getChPageLength(int32 channelnr);
+	uint32 getChPageSize(int32 channelnr);
 
 	void setChSelected(int32 channelnr, bool select);
+	void setChAllocated(int32 channelnr, bool allocated);
 	void setChActive(int32 channelnr, bool active);
 	void setChStartAddr(int32 channelnr, uint32 startaddr);
-	void setChPageLength(int32 channelnr, uint32 pagelength);
+	void setChPageSize(int32 channelnr, uint32 pagesize);
 	
-	int32 getMemorySize(int32 boardnr);
-	void setMemorySize(int32 boardnr,int32 pages);
+	uint32 getMemorySize(int32 boardnr);
+	void setMemorySize(int32 boardnr,uint32 pages);
 	
 	friend class TBBDriver;
 
@@ -109,7 +112,7 @@ private:
 	
 	//uint32			*itsChannelMask;
 	ChannelInfo	*itsChannel;
-	int32	*itsMemorySize;
+	uint32	*itsMemorySize;
 		
 	GCFPortInterface*		itsBoardPorts; // array of tbb board ports
 				
@@ -128,21 +131,23 @@ inline	GCFPortInterface& DriverSettings::boardPort(int32 boardnr)	{ return (itsB
 
 //---- inline functions for channel information ------------
 inline	bool DriverSettings::getChSelected(int32 channelnr) { return (itsChannel[channelnr].Selected); }
+inline	bool DriverSettings::getChAllocated(int32 channelnr) { return (itsChannel[channelnr].Allocated); }
 inline	bool DriverSettings::getChActive(int32 channelnr) { return (itsChannel[channelnr].Active); };
 inline	int32 DriverSettings::getChBoardNr(int32 channelnr) { return (itsChannel[channelnr].BoardNr); }
-inline	int32 DriverSettings::getChBoardChannelNr(int32 channelnr) { return (itsChannel[channelnr].BoardChannelNr); }
+inline	int32 DriverSettings::getChInputNr(int32 channelnr) { return (itsChannel[channelnr].InputNr); }
 inline	int32 DriverSettings::getChMpNr(int32 channelnr) { return (itsChannel[channelnr].MpNr); }
 inline	uint32 DriverSettings::getChStartAddr(int32 channelnr) { return (itsChannel[channelnr].StartAddr); }
-inline	uint32 DriverSettings::getChPageLength(int32 channelnr) { return (itsChannel[channelnr].PageLength); }
+inline	uint32 DriverSettings::getChPageSize(int32 channelnr) { return (itsChannel[channelnr].PageSize); }
 
 inline	void DriverSettings::setChSelected(int32 channelnr, bool select) { itsChannel[channelnr].Selected = select; }
+inline	void DriverSettings::setChAllocated(int32 channelnr, bool allocated) { itsChannel[channelnr].Allocated = allocated; }
 inline	void DriverSettings::setChActive(int32 channelnr, bool active){ itsChannel[channelnr].Active = active; }
 inline	void DriverSettings::setChStartAddr(int32 channelnr, uint32 startaddr){ itsChannel[channelnr].StartAddr = startaddr; }
-inline	void DriverSettings::setChPageLength(int32 channelnr, uint32 pagelength){ itsChannel[channelnr].PageLength = pagelength; }
+inline	void DriverSettings::setChPageSize(int32 channelnr, uint32 pagesize){ itsChannel[channelnr].PageSize = pagesize; }
 
 //---- inline functions for board information ------------
-inline	int32 DriverSettings::getMemorySize(int32 boardnr) { return (itsMemorySize[boardnr]); }
-inline	void DriverSettings::setMemorySize(int32 boardnr,int32 pages) { itsMemorySize[boardnr] = pages; }
+inline	uint32 DriverSettings::getMemorySize(int32 boardnr) { return (itsMemorySize[boardnr]); }
+inline	void DriverSettings::setMemorySize(int32 boardnr,uint32 pages) { itsMemorySize[boardnr] = pages; }
 
   } // namespace TBB
 } // namespace LOFAR

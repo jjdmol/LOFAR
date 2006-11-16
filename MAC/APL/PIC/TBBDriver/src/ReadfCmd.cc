@@ -33,16 +33,12 @@ namespace LOFAR {
 
 //--Constructors for a ReadfCmd object.----------------------------------------
 ReadfCmd::ReadfCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0),itsAddr(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0)
 {
 	itsTPE 			= new TPReadfEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBReadfackEvent();
-	
-	for(int an = 0; an < 256;an++) {
-		itsData[an] = 0;
-	}			
 }
 	  
 //--Destructor for ReadfCmd.---------------------------------------------------
@@ -55,10 +51,10 @@ ReadfCmd::~ReadfCmd()
 // ----------------------------------------------------------------------------
 bool ReadfCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_READF)||(event.signal == TP_READFACK)) {
-		return true;
+	if ((event.signal == TBB_READF)||(event.signal == TP_READFACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -86,23 +82,27 @@ void ReadfCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void ReadfCmd::sendTpEvent(int32 boardnr, int32)
+bool ReadfCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected()) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+		
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void ReadfCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
+	if (event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
@@ -110,7 +110,7 @@ void ReadfCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 		
 		itsBoardStatus	= itsTPackE->status;
 		for(int an=0; an < 256; an++) {
-			itsData[an]	= itsTPackE->data[an];
+			itsTBBackE->data[an]	= itsTPackE->data[an];
 		}
 		
 		LOG_DEBUG_STR(formatString("Received ReadfAck from boardnr[%d]", boardnr));
@@ -121,16 +121,13 @@ void ReadfCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ReadfCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
+	itsTBBackE->status = 0;
+	if (itsErrorMask != 0) {
 		itsTBBackE->status |= COMM_ERROR;
 		itsTBBackE->status |= (itsErrorMask << 16);
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
-	
-	itsTBBackE->addr 				= itsAddr;
-	for(int an=0; an < 256; an++) {
-		itsTBBackE->data[an]	= itsData[an];
-	}
+	if (itsBoardMask == 0) itsTBBackE->status |= SELECT_ERROR; 
+	if (itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 	
 	clientport->send(*itsTBBackE);
 }
@@ -138,19 +135,19 @@ void ReadfCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 // ----------------------------------------------------------------------------
 CmdTypes ReadfCmd::getCmdType()
 {
-	return BoardCmd;
+	return(BoardCmd);
 }
 
 // ----------------------------------------------------------------------------
 uint32 ReadfCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 bool ReadfCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end TBB namespace

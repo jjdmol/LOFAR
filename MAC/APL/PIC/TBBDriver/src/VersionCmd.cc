@@ -41,15 +41,7 @@ VersionCmd::VersionCmd():
 	itsTBBackE 	= new TBBVersionackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsBoardStatus[boardnr]		= 0;
-		itsBoardId[boardnr]				= 0;
-		itsSwVersion[boardnr]			= 0;
-		itsBoardVersion[boardnr]	= 0;
-		itsTpVersion[boardnr] 		= 0;
-		itsMp0Version[boardnr]		= 0;
-		itsMp1Version[boardnr]		= 0;
-		itsMp2Version[boardnr]		= 0;
-		itsMp3Version[boardnr]		= 0;
+		itsTBBackE->status[boardnr]		= 0;
 	}
 }
   
@@ -63,27 +55,32 @@ VersionCmd::~VersionCmd()
 // ----------------------------------------------------------------------------
 bool VersionCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_VERSION)||(event.signal == TP_VERSIONACK)) {
-		return true;
+	if ((event.signal == TBB_VERSION)||(event.signal == TP_VERSIONACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
 void VersionCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBVersionEvent(event);
-		
-	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
-			
+	
 	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();	
+	itsBoardMask = itsTBBE->boardmask;
+	
+	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
+		if (!(itsBoardsMask & (1 << boardnr))) 
+			itsTBBackE->status[boardnr] |= NO_BOARD;
+		
+		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+	}
+	
 	// Send only commands to boards installed
 	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
-	itsTBBackE->status = 0;
 	
 	// fill TP command, to send
 	itsTPE->opcode 			  = TPVERSION;
@@ -93,41 +90,47 @@ void VersionCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void VersionCmd::sendTpEvent(int32 boardnr, int32)
+bool VersionCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+	
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void VersionCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
-		itsErrorMask |= (1 << boardnr);
+	if (event.signal == F_TIMER) {
+		itsTBBackE->status[boardnr] |= COMM_ERROR;
 	}
 	else {
 		//TPVersionEvent tpe(event);
 		itsTPackE = new TPVersionackEvent(event);
 		
-		itsBoardStatus[boardnr]	= itsTPackE->status;
-		itsBoardId[boardnr] 		= itsTPackE->boardid;
-		itsSwVersion[boardnr] 	= itsTPackE->swversion;
-		itsBoardVersion[boardnr]= itsTPackE->boardversion;
-		itsTpVersion[boardnr] 	= itsTPackE->tpversion;
-		itsMp0Version[boardnr] 	= itsTPackE->mp0version;
-		itsMp1Version[boardnr] 	= itsTPackE->mp1version;
-		itsMp2Version[boardnr] 	= itsTPackE->mp2version;
-		itsMp3Version[boardnr] 	= itsTPackE->mp3version;
+		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
+			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
 		
-		LOG_DEBUG_STR(formatString("VersionCmd: board[%d] %u;%u;%u;%u;%u;%u;%u;%u;%u",
-				boardnr,itsTPackE->status,itsTPackE->boardid,itsTPackE->swversion,itsTPackE->boardversion,
+		itsTBBackE->boardid[boardnr] 			= itsTPackE->boardid;
+		itsTBBackE->swversion[boardnr]  	= itsTPackE->swversion;
+		itsTBBackE->boardversion[boardnr]	= itsTPackE->boardversion;
+		itsTBBackE->tpversion[boardnr]		= itsTPackE->tpversion;
+		itsTBBackE->mp0version[boardnr] 	= itsTPackE->mp0version;
+		itsTBBackE->mp1version[boardnr] 	= itsTPackE->mp1version;
+		itsTBBackE->mp2version[boardnr] 	= itsTPackE->mp2version;
+		itsTBBackE->mp3version[boardnr] 	= itsTPackE->mp3version;
+		
+		LOG_DEBUG_STR(formatString("VersionCmd: board[%d] %08X;%u;%u;%u;%u;%u;%u;%u;%u",
+				boardnr,itsTBBackE->status[boardnr],itsTPackE->boardid,itsTPackE->swversion,itsTPackE->boardversion,
 				itsTPackE->tpversion,itsTPackE->mp0version,itsTPackE->mp1version,itsTPackE->mp2version,itsTPackE->mp3version));
 		
 		delete itsTPackE;
@@ -137,41 +140,30 @@ void VersionCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void VersionCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
-		itsTBBackE->status |= COMM_ERROR;
-		itsTBBackE->status |= (itsErrorMask << 16);
+	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status[boardnr] == 0)
+			itsTBBackE->status[boardnr] = SUCCESS;
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
-	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsTBBackE->boardid[boardnr] 			= itsBoardId[boardnr];
-		itsTBBackE->swversion[boardnr] 		= itsSwVersion[boardnr];
-		itsTBBackE->boardversion[boardnr] = itsBoardVersion[boardnr];
-		itsTBBackE->tpversion[boardnr] 		= itsTpVersion[boardnr];
-		itsTBBackE->mp0version[boardnr]  	= itsMp0Version[boardnr];
-		itsTBBackE->mp1version[boardnr]  	= itsMp1Version[boardnr];
-		itsTBBackE->mp2version[boardnr]  	= itsMp2Version[boardnr];
-		itsTBBackE->mp3version[boardnr]  	= itsMp3Version[boardnr];		
-	}
+
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
 CmdTypes VersionCmd::getCmdType()
 {
-	return BoardCmd;
+	return(BoardCmd);
 }
 
 // ----------------------------------------------------------------------------
 uint32 VersionCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 bool VersionCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end namespace TBB

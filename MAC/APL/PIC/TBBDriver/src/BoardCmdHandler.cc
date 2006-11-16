@@ -80,7 +80,7 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
 			}
     } break;
 	}
-	return status;
+	return(status);
 }
  
 
@@ -93,7 +93,7 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 		}	break;
   	
   	case F_ENTRY: {
-					
+			// if cmd returns no ack or board/channel is not selected or not responding return to send_stae		
 			if (!itsCmd->waitAck() || itsNextCmd) {
 				nextCmd();
 				TRAN(BoardCmdHandler::send_state);
@@ -128,27 +128,29 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 			}
 		}	break;
 	}
-	return status;
+	return(status);
 }
 
 void BoardCmdHandler::sendCmd()
 {
-	itsNextCmd = true;
+	itsNextCmd = true; // if true, go to next board or channel
 	uint32 boardmask = (1 << itsBoardNr);
 		
 	if (boardmask & DriverSettings::instance()->activeBoardsMask()) {
 		if (itsCmd->getCmdType() == BoardCmd) {
 			if (boardmask & itsCmd->getBoardMask()) {
-				itsCmd->sendTpEvent(itsBoardNr, itsChannelNr);
-				itsRetries++;
-				itsNextCmd = false;
+				if (itsCmd->sendTpEvent(itsBoardNr, itsChannelNr)) {
+					itsRetries++;
+					itsNextCmd = false;
+				}
 			}	
 		}	
 		if (itsCmd->getCmdType() == ChannelCmd) {
 			if (DriverSettings::instance()->getChSelected(itsChannelNr)) {
-				itsCmd->sendTpEvent(itsBoardNr, itsChannelNr);			
-				itsRetries++;
-				itsNextCmd = false;
+				if (itsCmd->sendTpEvent(itsBoardNr, itsChannelNr)) {
+					itsRetries++;
+					itsNextCmd = false;
+				}
 			}
 		}
 	}
@@ -156,10 +158,10 @@ void BoardCmdHandler::sendCmd()
 
 void BoardCmdHandler::nextCmd()
 {
-	if(itsCmd->getCmdType() == BoardCmd) {
+	if (itsCmd->getCmdType() == BoardCmd) {
 		itsBoardNr++;
 	}
-	if(itsCmd->getCmdType() == ChannelCmd) {
+	if (itsCmd->getCmdType() == ChannelCmd) {
 		itsChannelNr++;
 		itsBoardNr = DriverSettings::instance()->getChBoardNr(itsChannelNr);
 	}
@@ -186,8 +188,8 @@ void BoardCmdHandler::setTpRetries(int32 Retries)
 
 bool BoardCmdHandler::tpCmdDone()
 {
-	if(itsCmd == 0) return true;
-	return false;
+	if (itsCmd == 0) return(true);
+	return(false);
 }
 
 	} // end namespace TBB

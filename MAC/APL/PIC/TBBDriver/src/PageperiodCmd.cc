@@ -51,10 +51,10 @@ PageperiodCmd::~PageperiodCmd()
 // ----------------------------------------------------------------------------
 bool PageperiodCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_PAGEPERIOD)||(event.signal == TP_PAGEPERIODACK)) {
-		return true;
+	if ((event.signal == TBB_PAGEPERIOD)||(event.signal == TP_PAGEPERIODACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -81,30 +81,34 @@ void PageperiodCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void PageperiodCmd::sendTpEvent(int32 boardnr, int32)
+bool PageperiodCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected()) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+	
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void PageperiodCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
+	if (event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
 		itsTPackE = new TPPageperiodackEvent(event);
 		
-		itsBoardStatus = itsTPackE->status;
-		itsPageperiod	= itsTPackE->pageperiod;
+		itsBoardStatus 					= itsTPackE->status;
+		itsTBBackE->pageperiod	= itsTPackE->pageperiod;
 		
 		LOG_DEBUG_STR(formatString("Received PageperiodAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
@@ -114,33 +118,33 @@ void PageperiodCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void PageperiodCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
+	itsTBBackE->status = 0;
+	if (itsErrorMask != 0) {
 		itsTBBackE->status |= COMM_ERROR;
 		itsTBBackE->status |= (itsErrorMask << 16);
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+	if (itsBoardMask == 0) itsTBBackE->status |= SELECT_ERROR; 
+	if (itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 	 
-	itsTBBackE->pageperiod	= itsPageperiod;
-	
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
 CmdTypes PageperiodCmd::getCmdType()
 {
-	return ChannelCmd;
+	return(ChannelCmd);
 }
 
 // ----------------------------------------------------------------------------
 uint32 PageperiodCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 bool PageperiodCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end TBB namespace

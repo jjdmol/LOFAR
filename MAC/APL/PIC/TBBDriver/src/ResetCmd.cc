@@ -41,7 +41,7 @@ ResetCmd::ResetCmd():
 	itsTBBackE 	= new TBBResetackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsBoardStatus[boardnr]	= 0;
+		itsTBBackE->status[boardnr]	= 0;
 	}		
 }
 	  
@@ -55,10 +55,10 @@ ResetCmd::~ResetCmd()
 // ----------------------------------------------------------------------------
 bool ResetCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_RESET)||(event.signal == TP_RESETACK)) {
-		return true;
+	if ((event.signal == TBB_RESET)||(event.signal == TP_RESETACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -66,16 +66,22 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBResetEvent(event);
 		
-	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
-	
 	// mask for the installed boards
 	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
+	itsBoardMask = itsTBBE->boardmask;
+	
+	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
+		
+		if (!(itsBoardsMask & (1 << boardnr))) 
+			itsTBBackE->status[boardnr] |= NO_BOARD;
+		
+		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+	}
 	
 	// Send only commands to boards installed
 	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
-	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPRESET;
@@ -85,29 +91,34 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void ResetCmd::sendTpEvent(int32 boardnr, int32)
+bool ResetCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+	
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
+	if (event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
 		itsTPackE = new TPResetackEvent(event);
 		
-		itsBoardStatus[boardnr]	= itsTPackE->status;
+		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
+			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
 		
 		LOG_DEBUG_STR(formatString("Received ResetAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
@@ -117,11 +128,10 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
-		itsTBBackE->status |= COMM_ERROR;
-		itsTBBackE->status |= (itsErrorMask << 16);
+	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status[boardnr] == 0)
+			itsTBBackE->status[boardnr] = SUCCESS;
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 	
 	clientport->send(*itsTBBackE);
 }
@@ -129,19 +139,19 @@ void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 // ----------------------------------------------------------------------------
 CmdTypes ResetCmd::getCmdType()
 {
-	return BoardCmd;
+	return(BoardCmd);
 }
 
 // ----------------------------------------------------------------------------
 uint32 ResetCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 bool ResetCmd::waitAck()
 {
-	return false;
+	return(false);
 }
 
 	} // end TBB namespace

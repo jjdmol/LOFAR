@@ -40,16 +40,7 @@ StatusCmd::StatusCmd():
 	itsTBBackE 	= new TBBStatusackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsBoardStatus[boardnr]	= 0;
-		itsV12[boardnr] 				= 0;
-		itsV25[boardnr] 				= 0;
-		itsV33[boardnr] 				= 0;
-		itsTpcb[boardnr] 				= 0;
-		itsTtp[boardnr] 				= 0;
-		itsTmp0[boardnr] 				= 0;
-		itsTmp1[boardnr] 				= 0;
-		itsTmp2[boardnr] 				= 0;
-		itsTmp3[boardnr] 				= 0;
+		itsTBBackE->status[boardnr]	= 0;
 	}		
 }
 	  
@@ -63,26 +54,32 @@ StatusCmd::~StatusCmd()
 // ----------------------------------------------------------------------------
 bool StatusCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_STATUS)||(event.signal == TP_STATUSACK)) {
-		return true;
+	if ((event.signal == TBB_STATUS)||(event.signal == TP_STATUSACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
 void StatusCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBStatusEvent(event);
-		
-	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
-		
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
+	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();	
+	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
+	
+	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
+		
+		if (!(itsBoardsMask & (1 << boardnr))) 
+			itsTBBackE->status[boardnr] |= NO_BOARD;
+		
+		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+	}	
+		
 	// Send only commands to boards installed
 	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
-	itsTBBackE->status = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPSTATUS;
@@ -92,38 +89,44 @@ void StatusCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void StatusCmd::sendTpEvent(int32 boardnr, int32)
+bool StatusCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+		
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void StatusCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
+	if (event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
 		itsTPackE = new TPStatusackEvent(event);
 		
-		itsBoardStatus[boardnr]	= itsTPackE->status;
-		itsV12[boardnr]					= itsTPackE->V12;
-		itsV25[boardnr]					= itsTPackE->V25;
-		itsV33[boardnr]					= itsTPackE->V33;
-		itsTpcb[boardnr]				= itsTPackE->Tpcb;
-		itsTtp[boardnr]					= itsTPackE->Ttp;
-		itsTmp0[boardnr]				= itsTPackE->Tmp0;
-		itsTmp1[boardnr]				= itsTPackE->Tmp1;
-		itsTmp2[boardnr]				= itsTPackE->Tmp2;
-		itsTmp3[boardnr]				= itsTPackE->Tmp3;
+		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
+			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+		
+		itsTBBackE->V12[boardnr]	= itsTPackE->V12;
+		itsTBBackE->V25[boardnr]	= itsTPackE->V25;
+		itsTBBackE->V33[boardnr]	= itsTPackE->V33;
+		itsTBBackE->Tpcb[boardnr]	= itsTPackE->Tpcb;
+		itsTBBackE->Ttp[boardnr]	= itsTPackE->Ttp;
+		itsTBBackE->Tmp0[boardnr]	= itsTPackE->Tmp0;
+		itsTBBackE->Tmp1[boardnr]	= itsTPackE->Tmp1;
+		itsTBBackE->Tmp2[boardnr]	= itsTPackE->Tmp2;
+		itsTBBackE->Tmp3[boardnr]	= itsTPackE->Tmp3;
 		
 		LOG_DEBUG_STR(formatString("Received StatusAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
@@ -133,42 +136,30 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void StatusCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
-		itsTBBackE->status |= COMM_ERROR;
-		itsTBBackE->status |= (itsErrorMask << 16);
+	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status[boardnr] == 0)
+			itsTBBackE->status[boardnr] = SUCCESS;
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) {
-		itsTBBackE->V12[boardnr]					= itsV12[boardnr];
-		itsTBBackE->V25[boardnr]					= itsV25[boardnr];
-		itsTBBackE->V33[boardnr]					= itsV33[boardnr];
-		itsTBBackE->Tpcb[boardnr]					= itsTpcb[boardnr];
-		itsTBBackE->Ttp[boardnr]					= itsTtp[boardnr];
-		itsTBBackE->Tmp0[boardnr]					= itsTmp0[boardnr];
-		itsTBBackE->Tmp1[boardnr]					= itsTmp1[boardnr];
-		itsTBBackE->Tmp2[boardnr]					= itsTmp2[boardnr];
-		itsTBBackE->Tmp3[boardnr]					= itsTmp3[boardnr];
-	}
 	clientport->send(*itsTBBackE);
 }
 
 // ----------------------------------------------------------------------------
 CmdTypes StatusCmd::getCmdType()
 {
-	return BoardCmd;
+	return(BoardCmd);
 }
 
 // ----------------------------------------------------------------------------
 uint32 StatusCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 bool StatusCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end TBB namespace

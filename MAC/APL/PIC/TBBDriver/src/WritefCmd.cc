@@ -33,16 +33,12 @@ namespace LOFAR {
 
 //--Constructors for a WritefCmd object.----------------------------------------
 WritefCmd::WritefCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0),itsAddr(0)
+		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0)
 {
 	itsTPE 			= new TPWritefEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBWritefackEvent();
-	
-	for(int an = 0; an < 256;an++) {
-		itsData[an] = 0;
-	}
 }
 	  
 //--Destructor for WritefCmd.---------------------------------------------------
@@ -55,10 +51,10 @@ WritefCmd::~WritefCmd()
 // ----------------------------------------------------------------------------
 bool WritefCmd::isValid(GCFEvent& event)
 {
-	if((event.signal == TBB_WRITEF)||(event.signal == TP_WRITEFACK)) {
-		return true;
+	if ((event.signal == TBB_WRITEF)||(event.signal == TP_WRITEFACK)) {
+		return(true);
 	}
-	return false;
+	return(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -90,23 +86,27 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void WritefCmd::sendTpEvent(int32 boardnr, int32)
+bool WritefCmd::sendTpEvent(int32 boardnr, int32)
 {
+	bool sending = false;
 	DriverSettings*		ds = DriverSettings::instance();
 	
-	if(ds->boardPort(boardnr).isConnected()) {
+	if (ds->boardPort(boardnr).isConnected()) {
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
+		sending = true;
 	}
 	else
 		itsErrorMask |= (1 << boardnr);
+		
+	return(sending);
 }
 
 // ----------------------------------------------------------------------------
 void WritefCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
-	if(event.signal == F_TIMER) {
+	if (event.signal == F_TIMER) {
 		itsErrorMask |= (1 << boardnr);
 	}
 	else {
@@ -122,11 +122,13 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void WritefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if(itsErrorMask != 0) {
+	itsTBBackE->status = 0;
+	if (itsErrorMask != 0) {
 		itsTBBackE->status |= COMM_ERROR;
 		itsTBBackE->status |= (itsErrorMask << 16);
 	}
-	if(itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+	if (itsBoardMask == 0) itsTBBackE->status |= SELECT_ERROR; 
+	if (itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
 	
 	clientport->send(*itsTBBackE);
 }
@@ -134,19 +136,19 @@ void WritefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 // ----------------------------------------------------------------------------
 CmdTypes WritefCmd::getCmdType()
 {
-	return BoardCmd;
+	return(BoardCmd);
 }
 
 // ----------------------------------------------------------------------------
 uint32 WritefCmd::getBoardMask()
 {
-	return itsBoardMask;
+	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
 bool WritefCmd::waitAck()
 {
-	return true;
+	return(true);
 }
 
 	} // end TBB namespace

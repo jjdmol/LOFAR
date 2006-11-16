@@ -33,6 +33,7 @@
 
 #include "Command.h"
 
+
 namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
@@ -50,7 +51,7 @@ namespace LOFAR {
 				
 				virtual void saveTbbEvent(GCFEvent& event);
 									
-				virtual void sendTpEvent(int32 boardnr, int32 channelnr);
+				virtual bool sendTpEvent(int32 boardnr, int32 channelnr);
 
 				virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr);
 
@@ -66,7 +67,7 @@ namespace LOFAR {
 				
 								      
 			private:
-				void devideChannels();
+				bool devideChannels(int32 boardnr);
 				
 				uint32	itsBoardMask;  // mask indicates the boards to communicate with
 				uint32  itsErrorMask;  // mask indicates the not responding boards
@@ -74,12 +75,11 @@ namespace LOFAR {
 				int32		itsChannel;
 				uint32	itsChannelMask[MAX_N_TBBBOARDS];
 				
+								
 				TPAllocEvent			*itsTPE;
 				TPAllocackEvent		*itsTPackE;
 				TBBAllocEvent			*itsTBBE;
 				TBBAllocackEvent	*itsTBBackE;
-				
-				uint32	itsBoardStatus[MAX_N_TBBBOARDS];
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
