@@ -675,7 +675,7 @@ if [ $boot = 1 ]; then
     echo "" >> build.log
     echo "  bootstrapping package $pkg ..."
 
-    cd $curwd/$pkg >> $curwd/build.log 2>&1
+    pushd $curwd/$pkg >> $curwd/build.log 2>&1
     rm -rf autom4te.cache >> $curwd/build.log 2>&1
     
     # Try to set execution permissions, ignore failure.
@@ -687,6 +687,8 @@ if [ $boot = 1 ]; then
       echo "  bootstrap of package $pkg failed, check file permissions..."
       exit 1
     fi
+
+    popd >> $curwd/build.log 2>&1
 
     echo $pkg '# bootstrapped at' `date` >> $curwd/build.result; >> $curwd/build.log 2>&1
   done
