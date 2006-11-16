@@ -91,9 +91,6 @@ void TDSStatusWrite::sendrequest()
   tdsprotocol.hdr.set(MEPHeader::TDS_PROTOCOL_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE, sizeof(tds_readstatus), 0);
   tdsprotocol.protocol.setBuffer((char*)buf, sizeof(tds_readstatus));
 
-  // indicate that we're initialising the hardware
-  LOG_INFO_STR("Reading lock detect on board " << getBoardId());
-
   m_hdr = tdsprotocol.hdr; // remember header to match with ack
 
   getBoardPort().send(tdsprotocol);
