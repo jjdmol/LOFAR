@@ -157,7 +157,27 @@ void BWWrite::sendrequest()
   m_remaining -= size;
   m_offset    += size;
 
-  //int xc_gain = GET_CONFIG("RSPDriver.XC_GAIN", i);
+  //
+  // conjugate weights to get the correct matrix
+
+  // weight a_r + i . a_i
+  //
+  // (a_r + i . a_i) . (x_r + i . x_i) = ( a_r . x_r - a_i . x_i ) + i ( a_i . x_r + a_r . x_i )
+  //
+  // This is equal to:
+  //
+  // ( x_out_r )   ( a_r  -a_i )   ( x_in_r )
+  // (         ) = (           ) * (        )
+  // ( x_out_i )   ( a_i   a_r )   ( x_in_i )
+  // 
+  // and the same for y
+  //
+  // To send to correct weights to the beamformer we must therefore
+  // take the conjugate of the weight (a_r, a_i) to produce (a_r, -a_i)
+  // for the x_our_r component and take the conjugate AND multiply by i
+  // the weight (a_r, a_i) to produce (a_i, a_r).
+  //
+  weights = conj(weights);
 
   switch (m_regid)
   {
@@ -173,6 +193,7 @@ void BWWrite::sendrequest()
 
     case MEPHeader::BF_XIOUT:
     {
+      // multiply by i to get correct weights
       // weights for x-imaginary part
       weights *= complex<int16>(0,1);
 
@@ -193,6 +214,7 @@ void BWWrite::sendrequest()
     
     case MEPHeader::BF_YIOUT:
     {
+      // multiply by i to get correct weights
       // weights for y-imaginary part
       weights *= complex<int16>(0,1);
 
