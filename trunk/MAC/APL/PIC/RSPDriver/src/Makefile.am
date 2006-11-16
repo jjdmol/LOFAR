@@ -175,13 +175,17 @@ RSPDriver_SOURCES = \
 	BSWrite.cc \
 	RSUWrite.h \
 	RSUWrite.cc \
+	TDSi2cdefs.h \
 	TDSProtocolWrite.cc \
 	TDSProtocolWrite.h \
-	TDSi2cdefs.h \
 	TDSResultWrite.cc \
 	TDSResultWrite.h \
 	TDSResultRead.cc \
 	TDSResultRead.h \
+	TDSStatusWrite.h \
+	TDSStatusWrite.cc \
+	TDSStatusRead.h \
+	TDSStatusRead.cc \
 	HBAProtocolWrite.h \
 	HBAProtocolWrite.cc \
 	HBAResultRead.h \

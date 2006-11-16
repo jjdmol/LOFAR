@@ -25,6 +25,7 @@ include = '<APL/RSP_Protocol/SystemStatus.h>';
 include = '<APL/RSP_Protocol/Statistics.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
 include = '<APL/RSP_Protocol/Versions.h>';
+include = '<APL/RSP_Protocol/TDStatus.h>';
 include = '<APL/RSP_Protocol/AllRegisterState.h>';
 include = '<APL/RSP_Protocol/MEPHeader.h>';
 
@@ -1394,3 +1395,117 @@ event = {
   };
 };
 
+event = {
+  signal = GETTDSTATUS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETTDSTATUSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "tdstatus";
+    type = "TDStatus";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBTDSTATUS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBTDSTATUSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UPDTDSTATUS;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+  param = {
+    name = "tdstatus";
+    type = "TDStatus";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBTDSTATUS;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBTDSTATUSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};

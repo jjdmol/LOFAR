@@ -112,7 +112,7 @@ namespace LOFAR {
 	void reset(int i = -1);
 
 	State get(int i) const;
-	int   getMatchCount(blitz::Range r, State matchstate) const;
+	int   getMatchCount(State matchstate) const;
 	bool  isMatchAll(State matchstate) const;
 
 	void print(std::ostream& out) const;

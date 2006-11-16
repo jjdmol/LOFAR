@@ -43,6 +43,7 @@ librsp_protocol_la_SOURCES = \
 	Versions.cc \
 	WGSettings.cc \
 	XCStatistics.cc \
+	TDStatus.cc \
 	AllRegisterState.cc \
 	MEPHeader.cc \
 	MEPData.cc

@@ -69,6 +69,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
   LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
   LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
+  LOG_DEBUG_STR("m_tdstatus.board().size()     =" << m_tdstatus.board().size()     * sizeof(EPA_Protocol::TDBoardStatus));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -85,6 +86,7 @@ CacheBuffer::~CacheBuffer()
   m_systemstatus.board().free();
   m_versions.bp().free();
   m_versions.ap().free();
+  m_tdstatus.board().free();
 }
 
 void CacheBuffer::reset(void)
@@ -177,6 +179,13 @@ void CacheBuffer::reset(void)
   m_versions.bp() = versioninit;
   m_versions.ap().resize(StationSettings::instance()->nrBlps());
   m_versions.ap() = versioninit;
+
+  // TDBoardStatus
+  m_tdstatus.board().resize(StationSettings::instance()->nrRspBoards());
+  TDBoardStatus tdstatusinit;
+  memset(&tdstatusinit, 0, sizeof(TDBoardStatus));
+  tdstatusinit.invalid = 1;
+  m_tdstatus.board() = tdstatusinit;
 }
 
 RTC::Timestamp CacheBuffer::getTimestamp() const
@@ -242,6 +251,11 @@ Versions& CacheBuffer::getVersions()
 uint32& CacheBuffer::getClock()
 {
   return m_clock;
+}
+
+TDStatus& CacheBuffer::getTDStatus()
+{
+  return m_tdstatus;
 }
 
 void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)

@@ -100,6 +100,8 @@
 #include "TDSResultWrite.h"
 #include "TDSProtocolWrite.h"
 #include "TDSResultRead.h"
+#include "TDSStatusWrite.h"
+#include "TDSStatusRead.h"
 #include "RADWrite.h"
 #include "TimestampWrite.h"
 
@@ -304,6 +306,7 @@ bool RSPDriver::isEnabled()
  * - RCU:     write RCU control settings        // RCUWrite/RCUProtocolWrite/RCUResultRead
  * - HBA:     write HBA control settings        // HBAProtocolWrite/HBAResultRead
  * - TDS:     write TDS control settings        // TDSProtocolWrite/TDSResultRead
+ * - TDSSTATUS: read TDS status                 // TDSStatusWrite/TDSStatusRead
  * - SST:     read subband statistics           // SstRead
  * - BST:     read beamlet statistics           // BstRead
  * - XST:     read crosslet statistics          // XstRead
@@ -390,6 +393,16 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(tdsresultread);
     }
 
+    if (1 == GET_CONFIG("RSPDriver.READWRITE_TDSSTATUS", i))
+    {
+      TDSStatusWrite* tdsstatuswrite = new TDSStatusWrite(m_board[boardid], boardid);
+      ASSERT(tdsstatuswrite);
+      m_scheduler.addSyncAction(tdsstatuswrite);
+      
+      TDSStatusRead* tdsstatusread = new TDSStatusRead(m_board[boardid], boardid);
+      ASSERT(tdsstatusread);
+      m_scheduler.addSyncAction(tdsstatusread);
+    }
 
     /*
      * Clear the board if needed.

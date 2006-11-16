@@ -35,14 +35,14 @@ RegisterState::State RegisterState::get(int i) const
   return m_state(i);
 }
 
-int RegisterState::getMatchCount(Range r, State matchstate) const
+int RegisterState::getMatchCount(State matchstate) const
 {
-  return sum(where(m_state(r) == matchstate, 1, 0));
+  return sum(where(m_state == matchstate, 1, 0));
 }
 
 bool RegisterState::isMatchAll(State matchstate) const
 {
-  return (sum(where(m_state == matchstate, 1, 0)) == m_state.extent(blitz::firstDim));
+  return (getMatchCount(matchstate) == m_state.extent(blitz::firstDim));
 }
 
 void RegisterState::print(std::ostream& out) const

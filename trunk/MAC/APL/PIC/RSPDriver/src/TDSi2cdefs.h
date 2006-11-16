@@ -52,11 +52,13 @@
 #define TDS_READ_REVISION			\
       0x07, 0x44 >> 1, 0x00
 #define TDS_READ_REVISION_SIZE 3
+#define TDS_READ_REVISION_RESULT_SIZE 2
 
 // read lock detect
 #define TDS_READ_LOCKDETECT			\
       0x07, 0x42 >> 1, 0x01
 #define TDS_READ_LOCKDETECT_SIZE 3
+#define TDS_READ_LOCKDETECT_RESULT_SIZE 2
 
 // LED1 ON
 #define TDS_LED1_ON						\
@@ -369,6 +371,9 @@ namespace LOFAR {
     extern uint8 tds_off_result[  TDS_VCXO_OFF_RESULT_SIZE
 				+ TDS_OFF_RESULT_SIZE
 				+ TDS_C_END_RESULT_SIZE];
+
+    extern uint8 tds_readstatus_result[  TDS_READ_LOCKDETECT_RESULT_SIZE
+                                       + TDS_C_END_RESULT_SIZE];
   };
 };
      
