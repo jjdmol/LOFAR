@@ -216,7 +216,7 @@ WITH_CHECK=1
 CHECKTOOL=
 build_system:
 	@if test 2 -eq $(WITH_CLEAN); then \
-	  $(MAKE) cleandist ; \
+	  $(MAKE) distclean ; \
 	  ../../lofarconf; \
 	fi; \
 	if test 1 -eq $(WITH_CLEAN); then \
