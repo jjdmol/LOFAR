@@ -1404,6 +1404,10 @@ event = {
     userdefined;
   };
   param = {
+    name = "rspmask";
+    type = "std::bitset<MAX_N_RSPBOARDS>";
+  };
+  param = {
     name = "cache";
     type = "uint8";
   };
@@ -1435,6 +1439,10 @@ event = {
     name = "timestamp";
     type = "RTC::Timestamp";
     userdefined;
+  };
+  param = {
+    name = "rspmask";
+    type = "std::bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "period";
