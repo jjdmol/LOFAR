@@ -210,13 +210,22 @@ prelude = << PRELUDE_END
     uint16 ffi   :13;
   };
 
+  //
+  // The unkown and invalid bits have no meaning in the TD status byte.
+  // They are overloaded here to indicate whether the value stored has
+  // been read from hardware and whether the RSP board has control over
+  // the TD board:
+  //
+  // unknown: (0 = value has been read from hardware, 1 = value has not been read)
+  // invalid: (0 = RSP board is controlling a TD board, 1 = RSP board is not controlling a TD board)
+  //
   typedef struct TDBoardStatus
   {
     uint8 input_10MHz:1;  // 1 = SMA, 0 = Infiniband
     uint8 output_clock:1; // 1 = 200MHz, 0 = 160MHz
     uint8 pps_input:1;   // 1 = Infiniband, 0 = SMA
-    uint8 ffi1:1;  // bit 0x08
-    uint8 invalid:1; // are the bits in this structure valid?
+    uint8 unknown:1;  // 1 if status not yet read
+    uint8 invalid:1;  // 1 if board is not controlling TD board
     uint8 ffi3:1;  // bit 0x20
     uint8 pll_160MHz_locked:1; // 1 = locked, 0 = NOT locked
     uint8 pll_200MHz_locked:1; // 1 = locked, 0 = NOT locked
