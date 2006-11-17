@@ -153,8 +153,14 @@ EPAStub::EPAStub(string name)
   m_reg[MEPHeader::TDS][MEPHeader::TDS_RESULT].addr  = new char[MEPHeader::TDS_RESULT_SIZE];
   m_reg[MEPHeader::TDS][MEPHeader::TDS_RESULT].size  = MEPHeader::TDS_RESULT_SIZE;
 
-  m_reg[MEPHeader::TBB][MEPHeader::TBB_CONTROL].addr  = new char[MEPHeader::TBB_CONTROL_SIZE];
-  m_reg[MEPHeader::TBB][MEPHeader::TBB_CONTROL].size  = MEPHeader::TBB_CONTROL_SIZE;
+  m_reg[MEPHeader::TBB][MEPHeader::TBB_SETTINGSX].addr  = new char[MEPHeader::TBB_SETTINGS_SIZE];
+  m_reg[MEPHeader::TBB][MEPHeader::TBB_SETTINGSX].size  = MEPHeader::TBB_SETTINGS_SIZE;
+  m_reg[MEPHeader::TBB][MEPHeader::TBB_SETTINGSY].addr  = new char[MEPHeader::TBB_SETTINGS_SIZE];
+  m_reg[MEPHeader::TBB][MEPHeader::TBB_SETTINGSY].size  = MEPHeader::TBB_SETTINGS_SIZE;
+  m_reg[MEPHeader::TBB][MEPHeader::TBB_BANDSELY].addr  = new char[MEPHeader::TBB_BANDSEL_SIZE];
+  m_reg[MEPHeader::TBB][MEPHeader::TBB_BANDSELY].size  = MEPHeader::TBB_BANDSEL_SIZE;
+  m_reg[MEPHeader::TBB][MEPHeader::TBB_BANDSELY].addr  = new char[MEPHeader::TBB_BANDSEL_SIZE];
+  m_reg[MEPHeader::TBB][MEPHeader::TBB_BANDSELY].size  = MEPHeader::TBB_BANDSEL_SIZE;
 
   //
   // initialize registers to some sensible test pattern
@@ -444,7 +450,8 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_BS_NOFSAMPLESPERSYNC:
     case EPA_TDS_PROTOCOL:
     case EPA_TDS_RESULT:
-    case EPA_TBB_CONTROL:
+    case EPA_TBB_SETTINGS:
+    case EPA_TBB_BANDSEL:
       {
 	EPAWriteEvent write(event);
 

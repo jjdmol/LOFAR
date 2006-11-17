@@ -134,6 +134,8 @@ RSPDriver_SOURCES = \
 	GetRegisterStateCmd.cc \
 	UpdRegisterStateCmd.h \
 	UpdRegisterStateCmd.cc \
+	SetTBBCmd.h \
+	SetTBBCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \
@@ -198,6 +200,10 @@ RSPDriver_SOURCES = \
 	RADWrite.cc \
 	TimestampWrite.h \
 	TimestampWrite.cc \
+	TBBSettingsWrite.h \
+	TBBSettingsWrite.cc \
+	TBBBandselWrite.h \
+	TBBBandselWrite.cc \
 	Sequencer.h \
 	Sequencer.cc
 

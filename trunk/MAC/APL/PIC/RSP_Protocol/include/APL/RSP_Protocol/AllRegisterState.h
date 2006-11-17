@@ -84,6 +84,8 @@ namespace LOFAR {
 	  ts_state.resize(nrRspBoards);
 	  tdstatuswrite_state.resize(nrRspBoards);
 	  tdstatusread_state.resize(nrRspBoards);
+	  tbbsettings_state.resize(nrRcus);
+	  tbbbandsel_state.resize(nrRcus);
 	}
 
 	/*
@@ -112,6 +114,8 @@ namespace LOFAR {
 	  ts_state.reset();
 	  tdstatuswrite_state.reset();
 	  tdstatusread_state.reset();
+	  tbbsettings_state.reset();
+	  tbbbandsel_state.reset();
 
 	  sys_state.read();
 	  bf_state.write();
@@ -133,6 +137,8 @@ namespace LOFAR {
 	  ts_state.write();
 	  tdstatuswrite_state.write();
 	  tdstatusread_state.read();
+	  tbbsettings_state.check();
+	  tbbbandsel_state.check();
 	}
 
 	void schedule() {
@@ -156,6 +162,8 @@ namespace LOFAR {
 	  ts_state.write(); // always write timestamp
 	  tdstatuswrite_state.write();
 	  tdstatusread_state.read();
+	  tbbsettings_state.check();
+	  tbbbandsel_state.check();
 	}
 
 	void clear() {
@@ -179,6 +187,8 @@ namespace LOFAR {
 	  ts_state.clear();
 	  tdstatuswrite_state.clear();
 	  tdstatusread_state.clear();
+	  tbbsettings_state.clear();
+	  tbbbandsel_state.clear();
 	}
 
 	void print(std::ostream& out) const {
@@ -207,6 +217,8 @@ namespace LOFAR {
 	  out << "Timestamp         "; ts_state.print(out);
 	  out << "TDS Status (write)"; tdstatuswrite_state.print(out);
 	  out << "TDS Status (read) "; tdstatusread_state.print(out);
+	  out << "TBBSettings       "; tbbsettings_state.print(out);
+	  out << "TBBBandsel        "; tbbbandsel_state.print(out);
 	  out << endl;
 	}
 
@@ -244,6 +256,8 @@ namespace LOFAR {
 	RTC::RegisterState& ts()             { return ts_state; }
 	RTC::RegisterState& tdstatuswrite()  { return tdstatuswrite_state; }
 	RTC::RegisterState& tdstatusread()   { return tdstatusread_state; }
+	RTC::RegisterState& tbbsettings()    { return tbbsettings_state; }
+	RTC::RegisterState& tbbbandsel()     { return tbbbandsel_state; }
 	/*@}*/
 
       private:
@@ -267,6 +281,8 @@ namespace LOFAR {
 	RTC::RegisterState ts_state;             // RSR Timestamp register state
 	RTC::RegisterState tdstatuswrite_state;  // TDS status write
 	RTC::RegisterState tdstatusread_state;   // TDS status result
+	RTC::RegisterState tbbsettings_state;    // TBB settings state
+	RTC::RegisterState tbbbandsel_state;     // TBB bandsel state
 
 	int m_nrcus;
       };

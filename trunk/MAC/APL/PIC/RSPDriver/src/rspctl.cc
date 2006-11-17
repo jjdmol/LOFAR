@@ -882,6 +882,93 @@ GCFEvent::TResult TDStatusCommand::ack(GCFEvent& event)
   return GCFEvent::HANDLED;
 }
 
+TBBCommand::TBBCommand(GCFPortInterface& port) : Command(port), m_type(0)
+{
+}
+
+void TBBCommand::send()
+{
+  if (getMode())
+  {
+    // GET
+    LOG_FATAL("not yet implemented");
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    // SET
+    RSPSettbbEvent settbb;
+
+    settbb.timestamp = Timestamp(0,0);
+    settbb.rcumask = getRCUMask();
+
+    logMessage(cerr,formatString("rcumask.count()=%d",settbb.rcumask.count()));
+
+    // if only 1 subband selected, apply selection to all
+    switch (m_type) {
+
+    case TRANSIENT:
+      {
+	settbb.settings().resize(1);
+	settbb.settings()(0) = 0;
+      }
+      break;
+
+    case SUBBANDS:
+      {
+	bitset<MEPHeader::N_SUBBANDS> bandsel;
+
+	settbb.settings().resize(1);
+
+	std::list<int>::iterator it;
+	for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++) {
+	  if ((*it) >= MEPHeader::N_SUBBANDS) continue;
+	  settbb.settings()(0).set(*it);
+	}
+      }
+      break;
+
+    default:
+      LOG_FATAL("invalid tbbmode type");
+      exit(EXIT_FAILURE);
+      break;
+    }
+
+    m_rspport.send(settbb);
+  }
+}
+
+GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+    case RSP_SETTBBACK:
+    {
+      RSPSettbbackEvent ack(e);
+
+      std::ostringstream msg;
+      msg << "settbback.timestamp=" << ack.timestamp;
+      logMessage(cout, msg.str());
+
+      if (SUCCESS != ack.status)
+      {
+        logMessage(cerr,"Error: RSP_SETTBB command failed.");
+      }
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  GCFTask::stop();
+
+  return status;
+}
+
 //
 // RegisterStateCommand
 //
@@ -1940,6 +2027,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_UPDREGISTERSTATE:
     case RSP_SETHBAACK:
     case RSP_GETHBAACK:
+    case RSP_SETTBBACK:
       status = m_command->ack(e); // handle the acknowledgement
       break;
 
@@ -1989,7 +2077,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 
     default:
       logMessage(cerr,"Error: unhandled event.");
-      //      GCFTask::stop(); ignore
+      GCFTask::stop();
       break;
     }
 
@@ -2100,7 +2188,8 @@ static void usage()
   cout << "rspctl --xcsubband                             # get the subband selection for cross correlation" << endl;
   cout << "rspctl --xcsubband=<int>                       # set the subband to cross correlate" << endl;
   cout << "rspctl --clock[=<int>]                         # get or set the clock frequency of clocks in MHz" << endl;
-  cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or set the 16 delays of one or more HBA's" << endl;
+  cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
+  cout << "rspctl --tbbmode[=transient | =subbands,<set>]  # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
   cout << "rspctl --version            [--select=<set>]   # get version information" << endl;
   cout << "rspctl --rspclear           [--select=<set>]   # clear FPGA registers on RSPboard" << endl;
   cout << "rspctl --regstate                              # show update status of all registers once every second" << endl;
@@ -2148,8 +2237,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "xcsubband",      optional_argument, 0, 'z' },
 	  { "clock",          optional_argument, 0, 'c' },
 	  { "hbadelays",      optional_argument, 0, 'H' },
+	  { "tbbmode",        optional_argument, 0, 'T' },
 	  { "version",        no_argument,       0, 'v' },
-//	  { "rspreset",       optional_argument, 0, 'R' },
+	  //	  { "rspreset",       optional_argument, 0, 'R' },
 	  { "rspclear",       optional_argument, 0, 'C' },
 	  { "regstate",       no_argument,       0, 'S' },
 	  { "help",           no_argument,       0, 'h' },
@@ -2423,30 +2513,30 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	case 'G':	// --wgmode
 	  {
 	    if (optarg) {
-		int mode = atoi(optarg);
-		if (mode != 0 && mode != 1 && mode != 3 && mode != 5) {
-		    logMessage(cerr,"Error: option '--wgmode' parameter must be 0,1,3 or 5");
-		    delete command;
-		    return 0;
-		}
-		WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
-		wgcommand->setWaveMode(mode);
+	      int mode = atoi(optarg);
+	      if (mode != 0 && mode != 1 && mode != 3 && mode != 5) {
+		logMessage(cerr,"Error: option '--wgmode' parameter must be 0,1,3 or 5");
+		delete command;
+		return 0;
 	      }
+	      WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
+	      wgcommand->setWaveMode(mode);
+	    }
 	  }
 	  break;
 
 	case 'P':	// --phase
 	  {
 	    if (optarg) {
-		double phase = atof(optarg);
-		if (phase < 0 || phase > (M_PI * 2.0)) {
-		    logMessage(cerr,"Error: option '--phase' parameter must be between 0 and 2 pi");
-		    delete command;
-		    return 0;
-		}
-		WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
-		wgcommand->setPhase((uint8)((phase / (2 * M_PI)) * (1 << 8)));
+	      double phase = atof(optarg);
+	      if (phase < 0 || phase > (M_PI * 2.0)) {
+		logMessage(cerr,"Error: option '--phase' parameter must be between 0 and 2 pi");
+		delete command;
+		return 0;
 	      }
+	      WGCommand*	wgcommand = dynamic_cast<WGCommand*>(command);
+	      wgcommand->setPhase((uint8)((phase / (2 * M_PI)) * (1 << 8)));
+	    }
 	  }
 	  break;
 
@@ -2590,7 +2680,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    command = rsucommand;
 	    command->set_ndevices(m_nrspboards);
 
-		rsucommand->setMode(false);	// is a SET command
+	    rsucommand->setMode(false);	// is a SET command
 	    rsucommand->control().setClear(true);
 	  }
 	  break;
@@ -2628,6 +2718,41 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	      hbacommand->setDelayList(strtolist(optarg, (uint8)-1));
 	    }
+	  }
+	  break;
+
+	case 'T': // --tbbmode
+	  {
+	    if (command) delete command;
+	    TBBCommand* tbbcommand = new TBBCommand(m_server);
+	    command = tbbcommand;
+
+	    command->set_ndevices(m_nrcus);
+
+	    if (optarg)
+	      {
+		tbbcommand->setMode(false);
+		if (!strcmp(optarg, "transient")) {
+		  tbbcommand->setType(TBBCommand::TRANSIENT);
+		} else if (!strncmp(optarg, "subbands", strlen("subbands"))) {
+		  tbbcommand->setType(TBBCommand::SUBBANDS);
+
+		  char* liststring = strchr(optarg, ',');
+		  if (liststring) {
+		    list<int> subbandlist = strtolist(liststring, MEPHeader::N_SUBBANDS);
+		    if (subbandlist.empty()) {
+		      logMessage(cerr,"Error: missing or invalid subband set '--tbbmode=subbands' option");
+		      exit(EXIT_FAILURE);
+		    }
+		    tbbcommand->setSubbandSet(subbandlist);
+		  } else {
+		    logMessage(cerr,"Error: missing or invalid subband set '--tbbmode=subbands' option");
+		  }
+		} else {
+		  LOG_FATAL_STR("invalid statistics type '" << optarg << "'");
+		  exit(EXIT_FAILURE);
+		}
+	      }
 	  }
 	  break;
 

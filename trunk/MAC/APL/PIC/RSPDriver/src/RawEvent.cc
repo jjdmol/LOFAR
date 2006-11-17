@@ -617,10 +617,31 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
   /* pid = 0x0F (TBB) */
   {
-    /* reg = 0x00 (TBB_CONTROL) */
+    /* reg = 0x00 (TBB_SETTINGSX) */
     { 0,
       0,
-      EPA_TBB_CONTROL, /* WRITE    */
+      EPA_TBB_SETTINGS, /* WRITE    */
+      0,
+      EPA_WRITEACK,    /* WRITEACK */
+    },
+    /* reg = 0x01 (TBB_SETTINGSY) */
+    { 0,
+      0,
+      EPA_TBB_SETTINGS, /* WRITE    */
+      0,
+      EPA_WRITEACK,    /* WRITEACK */
+    },
+    /* reg = 0x02 (TBB_BANDSELX) */
+    { 0,
+      0,
+      EPA_TBB_BANDSEL, /* WRITE    */
+      0,
+      EPA_WRITEACK,    /* WRITEACK */
+    },
+    /* reg = 0x03 (TBB_BANDSELY) */
+    { 0,
+      0,
+      EPA_TBB_BANDSEL, /* WRITE    */
       0,
       EPA_WRITEACK,    /* WRITEACK */
     },
