@@ -131,7 +131,7 @@ namespace LOFAR {
 	  tdread_state.check();
 	  rad_state.write();
 	  ts_state.write();
-	  tdstatuswrite_state.read();
+	  tdstatuswrite_state.write();
 	  tdstatusread_state.read();
 	}
 
@@ -154,7 +154,7 @@ namespace LOFAR {
 	  tdread_state.check();
 	  rad_state.check();
 	  ts_state.write(); // always write timestamp
-	  tdstatuswrite_state.read();
+	  tdstatuswrite_state.write();
 	  tdstatusread_state.read();
 	}
 
@@ -177,8 +177,8 @@ namespace LOFAR {
 	  tdread_state.clear();
 	  rad_state.clear();
 	  ts_state.clear();
-	  tdstatuswrite_state.read();
-	  tdstatusread_state.read();
+	  tdstatuswrite_state.clear();
+	  tdstatusread_state.clear();
 	}
 
 	void print(std::ostream& out) const {
