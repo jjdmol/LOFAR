@@ -548,7 +548,6 @@ namespace LOFAR {
     private:
       blitz::Array<RSP_Protocol::SystemStatus, 1> m_board;
     };
-
     //
     // class ClockCommand
     //
@@ -587,6 +586,23 @@ namespace LOFAR {
       }
     private:
       uint32 m_clock;
+    };
+
+    //
+    // class TDStatusCommand
+    //
+    class TDStatusCommand : public Command
+    {
+    public:
+      TDStatusCommand(GCFPortInterface& port);
+      virtual ~TDStatusCommand() {}
+      virtual void send();
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+      blitz::Array<TDStatus, 1>& board() {	// just pass reference to user
+	return m_board;
+      }
+    private:
+      blitz::Array<RSP_Protocol::TDStatus, 1> m_board;
     };
 
     //

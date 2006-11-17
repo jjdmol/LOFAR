@@ -167,7 +167,7 @@ RSPDriver.DST_IP_ADDR_11=10.170.0.12
 #
 # MAC address is equal to : 10:FA:00:00:XX:00
 #
-RSPDriver.XST_FIRST_RSP_BOARD=0x00
+RSPDriver.XST_FIRST_RSP_BOARD=0x11
 
 #
 # Ethernet interface on which to contact the RSP boards.

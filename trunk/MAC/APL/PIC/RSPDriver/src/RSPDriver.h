@@ -153,6 +153,10 @@ namespace LOFAR {
       void rsp_subclock(GCFEvent& event, GCFPortInterface &port);
       void rsp_unsubclock(GCFEvent& event, GCFPortInterface &port);
 
+      void rsp_subtdstatus  (GCFEvent& event, GCFPortInterface &port);
+      void rsp_unsubtdstatus(GCFEvent& event, GCFPortInterface &port);
+      void rsp_gettdstatus  (GCFEvent& event, GCFPortInterface &port);
+
       void rsp_getregisterstate(GCFEvent& event, GCFPortInterface &port);
       void rsp_subregisterstate(GCFEvent& event, GCFPortInterface &port);
       void rsp_unsubregisterstate(GCFEvent& event, GCFPortInterface &port);
