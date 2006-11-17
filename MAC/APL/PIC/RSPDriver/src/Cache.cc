@@ -184,7 +184,7 @@ void CacheBuffer::reset(void)
   m_tdstatus.board().resize(StationSettings::instance()->nrRspBoards());
   TDBoardStatus tdstatusinit;
   memset(&tdstatusinit, 0, sizeof(TDBoardStatus));
-  tdstatusinit.invalid = 1;
+  tdstatusinit.unknown = 1;
   m_tdstatus.board() = tdstatusinit;
 }
 

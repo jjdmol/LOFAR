@@ -71,6 +71,8 @@
 #include "SetClocksCmd.h"
 #include "GetClocksCmd.h"
 #include "UpdClocksCmd.h"
+#include "GetTDStatusCmd.h"
+#include "UpdTDStatusCmd.h"
 #include "GetRegisterStateCmd.h"
 #include "UpdRegisterStateCmd.h"
 
@@ -1086,6 +1088,18 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       rsp_unsubclock(event, port);
       break;
      
+    case RSP_SUBTDSTATUS:
+      rsp_subtdstatus(event, port);
+      break;
+      
+    case RSP_UNSUBTDSTATUS:
+      rsp_unsubtdstatus(event, port);
+      break;
+
+    case RSP_GETTDSTATUS:
+      rsp_gettdstatus(event, port);
+      break;
+      
     case RSP_GETREGISTERSTATE:
       rsp_getregisterstate(event, port);
       break;
@@ -2272,6 +2286,88 @@ void RSPDriver::rsp_unsubclock(GCFEvent& event, GCFPortInterface& port)
   }
 
   port.send(ack);
+}
+
+//
+// rsp_subtdstatus(event,port)
+//
+void RSPDriver::rsp_subtdstatus(GCFEvent& event, GCFPortInterface& port)
+{
+  // subscription is done by entering a UpdTDStatusCmd in the periodic queue
+  Ptr<UpdTDStatusCmd> command = new UpdTDStatusCmd(event, port, Command::READ);
+  RSPSubtdstatusackEvent ack;
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SUBSTATUS: invalid parameter");
+    
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = FAILURE;
+    ack.handle = 0;
+
+    port.send(ack);
+    return;
+  }
+  else
+  {
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = SUCCESS;
+    ack.handle = (uint32)&(*command);
+    port.send(ack);
+  }
+
+  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+                          Scheduler::PERIODIC);
+}
+
+//
+// rsp_unsubtdstatus(event,port)
+//
+void RSPDriver::rsp_unsubtdstatus(GCFEvent& event, GCFPortInterface& port)
+{
+  RSPUnsubtdstatusEvent unsub(event);
+
+  RSPUnsubtdstatusackEvent ack;
+  ack.timestamp = m_scheduler.getCurrentTime();
+  ack.status = FAILURE;
+  ack.handle = unsub.handle;
+
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
+  {
+    ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBSTATUS: failed to remove subscription");
+  }
+
+  port.send(ack);
+}
+
+//
+// rsp_gettdstatus (event, port)
+//
+void RSPDriver::rsp_gettdstatus(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetTDStatusCmd> command = new GetTDStatusCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    command->ack_fail();
+    return;
+  }
+
+  // if null timestamp get value from the cache and acknowledge immediately
+  if ((Timestamp(0,0) == command->getTimestamp())
+      && (true == command->readFromCache()))
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
 }
 
 //

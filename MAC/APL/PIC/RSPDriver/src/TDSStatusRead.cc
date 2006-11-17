@@ -57,6 +57,8 @@ TDSStatusRead::~TDSStatusRead()
 
 void TDSStatusRead::sendrequest()
 {
+  TDStatus& status = Cache::getInstance().getBack().getTDStatus();
+
   // always perform this action
 
   uint32 tds_control = 0;
@@ -64,12 +66,15 @@ void TDSStatusRead::sendrequest()
 
   if (!(tds_control & (1 << getBoardId()))) {
 
-    Cache::getInstance().getBack().getTDStatus().board()(getBoardId()).invalid = 1;
+    status.board()(getBoardId()).invalid = 1;
     Cache::getInstance().getState().tdstatusread().read_ack(getBoardId());
     setContinue(true);
 
     return;
   }
+
+  // start with unknown status
+  status.board()(getBoardId()).unknown = 1;
 
   // send read event
   EPATdsResultEvent tdsresult;
@@ -118,8 +123,8 @@ GCFEvent::TResult TDSStatusRead::handleack(GCFEvent& event, GCFPortInterface& /*
   TDStatus& status = Cache::getInstance().getBack().getTDStatus();
 
   if (ack.result[READOK_INDEX]) {
-    // indicate that status is invalid
-    status.board()(getBoardId()).invalid = 1;
+    // indicate that status is unknown
+    status.board()(getBoardId()).unknown = 1;
     Cache::getInstance().getState().tdstatusread().read_error(getBoardId());
   } else {
     LOG_DEBUG(formatString("LOCK: 0x%02x", ack.result[STATUS_INDEX]));

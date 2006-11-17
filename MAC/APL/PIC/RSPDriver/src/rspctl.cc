@@ -66,6 +66,19 @@ double WGCommand::AMPLITUDE_SCALE = (1.0 * ((uint32)(1 << 11)-1) / (uint32)(1 <<
 static void usage();
 
 //
+// Some handy macro's to iterate of RSP boards
+//
+#define BOARD_ITERATOR_BEGIN						\
+do {									\
+  int boardin = 0;							\
+  for (int boardout = 0; boardout < get_ndevices(); boardout++) {	\
+    if (mask[boardout])
+
+#define BOARD_ITERATOR_NEXT boardin++
+
+#define BOARD_ITERATOR_END } } while(0)
+
+//
 // Sample frequency, as received from the RSPDriver
 //
 #define DEFAULT_SAMPLE_FREQUENCY 160.0e6
@@ -808,6 +821,67 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
   return GCFEvent::HANDLED;
 }
 
+TDStatusCommand::TDStatusCommand(GCFPortInterface& port) : 
+	Command(port),
+	m_board()
+{
+}
+
+void TDStatusCommand::send()
+{
+  if (getMode()) { // GET
+    RSPGettdstatusEvent gettdstatus;
+    
+    gettdstatus.timestamp = Timestamp(0,0);
+    gettdstatus.rspmask = getRSPMask();
+    gettdstatus.cache = true;
+
+    m_rspport.send(gettdstatus);
+  }
+  else { // SET
+    logMessage(cerr,"Setting tdstatus not yet allowed");
+  }
+}
+
+GCFEvent::TResult TDStatusCommand::ack(GCFEvent& event)
+{
+  if (RSP_GETTDSTATUSACK == event.signal) {
+
+    RSPGettdstatusackEvent ack(event);
+    bitset<MAX_N_RSPBOARDS> mask = getRSPMask();
+    
+    if (ack.status != SUCCESS) {
+      logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
+    } else {
+
+      logMessage(cout,formatString(    "        10MHz input | output clock | PPS input | PLL 160MHZ | PLL 200MHz"));
+      BOARD_ITERATOR_BEGIN {
+	TDBoardStatus& boardstatus = ack.tdstatus.board()(boardin);
+	if (!boardstatus.invalid) {
+	  if (!boardstatus.unknown) {
+	    logMessage(cout,formatString("RSP[%2d]    %3s      |      %3d     |    %3s    | %10s | %10s", boardout,
+					 (boardstatus.input_10MHz  ? "SMA" : "INF"),
+					 (boardstatus.output_clock ? 200   : 160),
+					 (boardstatus.pps_input    ? "INF" : "SMA"),
+					 (boardstatus.pll_160MHz_locked ? "LOCKED" : "not locked"),
+					 (boardstatus.pll_200MHz_locked ? "LOCKED" : "not locked")));
+	  } else {
+	    logMessage(cout,formatString("RSP[%2d]    %3s      |      %3s     |    %3s    | %10s | %10s", boardout,
+					 "?", "?", "?", "?", "?"));
+	  }
+	} else {
+	  logMessage(cout,formatString("RSP[%2d] not controlling TD board", boardout));
+	}
+
+	BOARD_ITERATOR_NEXT;
+      } BOARD_ITERATOR_END;
+    }
+  }
+
+  GCFTask::stop();
+  return GCFEvent::HANDLED;
+}
+
 //
 // RegisterStateCommand
 //
@@ -1020,16 +1094,6 @@ void StatusCommand::send()
     logMessage(cerr,"Setting status not yet allowed");
   }
 }
-
-#define BOARD_ITERATOR_BEGIN						\
-do {									\
-  int boardin = 0;							\
-  for (int boardout = 0; boardout < get_ndevices(); boardout++) {	\
-    if (mask[boardout])
-
-#define BOARD_ITERATOR_NEXT boardin++
-
-#define BOARD_ITERATOR_END } } while(0)
 
 GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 {
@@ -1871,6 +1935,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_SETWGACK:
     case RSP_SETCLOCKACK:
     case RSP_GETSTATUSACK:
+    case RSP_GETTDSTATUSACK:
     case RSP_SUBREGISTERSTATEACK:
     case RSP_UPDREGISTERSTATE:
     case RSP_SETHBAACK:
@@ -2015,7 +2080,8 @@ static void usage()
   cout << endl;
   cout << "rspctl --wg                  [--select=<set>]  # get waveform generator settings" << endl;
   cout << "rspctl --wg=freq [--phase=..] [--amplitude=..] [--select=<set>]  # set waveform generator settings" << endl;
-  cout << "rspctl --status         [--select=<set>]       # get status" << endl;
+  cout << "rspctl --status         [--select=<set>]       # get status of RSP boards" << endl;
+  cout << "rspctl --tdstatus       [--select=<set>]       # get status of TD boards" << endl;
   cout << "rspctl --statistics[=(subband|beamlet)]        # get subband (default) or beamlet statistics" << endl;
   cout << "             [--select=<set>]                  #" << endl;
   cout << "             [--duration=<seconds>]            #" << endl;
@@ -2075,6 +2141,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "amplitude",      required_argument, 0, 'A' },
 	  { "phase",          required_argument, 0, 'P' },
 	  { "status",         no_argument,       0, 'q' },
+	  { "tdstatus",       no_argument,       0, 'Q' },
 	  { "statistics",     optional_argument, 0, 't' },
 	  { "xcstatistics",   no_argument,       0, 'x' },
 	  { "xcangle",        no_argument,       0, 'B' },
@@ -2099,7 +2166,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
       int option_index = 0;
       int c = getopt_long(argc, argv,
-			  "l:w::a::s::r::g::qt::xz::vc::hf:d:i:I:", long_options, &option_index);
+			  "l:w::a::s::r::g::qQt::xz::vc::hf:d:i:I:", long_options, &option_index);
 
       if (c == -1)
 	break;
@@ -2405,6 +2472,15 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    StatusCommand* statuscommand = new StatusCommand(m_server);
 	    command = statuscommand;
 
+	    command->set_ndevices(m_nrspboards);
+	  }
+	  break;
+
+	case 'Q': // --tdstatus
+	  {
+	    if (command) delete command;
+	    TDStatusCommand* tdstatuscommand = new TDStatusCommand(m_server);
+	    command = tdstatuscommand;
 	    command->set_ndevices(m_nrspboards);
 	  }
 	  break;
