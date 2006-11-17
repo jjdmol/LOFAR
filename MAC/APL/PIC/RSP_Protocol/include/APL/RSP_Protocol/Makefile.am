@@ -12,6 +12,7 @@ INSTHDRS = \
 	WGSettings.h \
 	XCStatistics.h \
 	TDStatus.h \
+	TBBSettings.h \
 	AllRegisterState.h \
 	MEPHeader.h \
 	MEPData.h

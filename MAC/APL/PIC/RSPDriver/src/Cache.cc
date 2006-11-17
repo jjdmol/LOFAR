@@ -258,6 +258,11 @@ TDStatus& CacheBuffer::getTDStatus()
   return m_tdstatus;
 }
 
+TBBSettings& CacheBuffer::getTBBSettings()
+{
+  return m_tbbsettings;
+}
+
 void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)
 {
   m_timestamp = timestamp;

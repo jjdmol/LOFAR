@@ -26,6 +26,7 @@ include = '<APL/RSP_Protocol/Statistics.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
 include = '<APL/RSP_Protocol/Versions.h>';
 include = '<APL/RSP_Protocol/TDStatus.h>';
+include = '<APL/RSP_Protocol/TBBSettings.h>';
 include = '<APL/RSP_Protocol/AllRegisterState.h>';
 include = '<APL/RSP_Protocol/MEPHeader.h>';
 
@@ -1515,5 +1516,41 @@ event = {
   param = {
     name = "handle";
     type = "uint32";
+  };
+};
+
+//
+// TBB Control
+//
+event = {
+  signal = SETTBB;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "TBBSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETTBBACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
   };
 };

@@ -605,6 +605,34 @@ namespace LOFAR {
       blitz::Array<RSP_Protocol::TDStatus, 1> m_board;
     };
 
+
+    //
+    // class TBBCommand
+    //
+    class TBBCommand : public Command
+    {
+    public:
+      TBBCommand(GCFPortInterface& port);
+      virtual ~TBBCommand() {}
+      enum {
+	TRANSIENT = 1,
+	SUBBANDS,
+      };
+      virtual void send();
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+      void setSubbandSet(std::list<int> subbandlist)
+      {
+        m_subbandlist = subbandlist;
+      }
+      void setType(int type)
+      {
+	m_type = type;
+      }
+    private:
+      std::list<int> m_subbandlist;
+      int m_type;
+    };
+
     //
     // class RegisterStateCommand
     //

@@ -69,6 +69,7 @@ namespace LOFAR {
       RSP_Protocol::Versions&          getVersions();
       uint32&                          getClock();
       RSP_Protocol::TDStatus&          getTDStatus();
+      RSP_Protocol::TBBSettings&       getTBBSettings();
       /*@}*/
 
       /**
@@ -100,6 +101,7 @@ namespace LOFAR {
       RSP_Protocol::Versions         m_versions;
       uint32                         m_clock;
       RSP_Protocol::TDStatus         m_tdstatus;
+      RSP_Protocol::TBBSettings      m_tbbsettings;
 
       Cache* m_cache;
     };

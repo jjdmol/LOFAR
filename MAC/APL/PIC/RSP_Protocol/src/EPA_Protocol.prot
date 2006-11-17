@@ -12,6 +12,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+11)";
 include = '<sys/time.h>';
 include = '<linux/types.h>';
 include = '<net/ethernet.h>';
+include = '<bitset>';
 include = '<Common/LofarTypes.h>';
 include = '<APL/RSP_Protocol/MEPHeader.h>';
 include = '<APL/RSP_Protocol/MEPData.h>';
@@ -837,7 +838,7 @@ event = {
 
 event = {
   noheader;
-  signal = TBB_CONTROL;
+  signal = TBB_SETTINGS;
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
@@ -845,10 +846,45 @@ event = {
     userdefined;
   };
   param = {
-    name = "dummy";
+    name = "stationid";
     type = "uint8";
   };
+  param = {
+    name = "rspid";
+    type = "uint8";
+  };
+  param = {
+    name = "rcuid";
+    type = "uint8";
+  };
+  param = {
+    name = "sample_freq";
+    type = "uint8";
+  };
+  param = {
+    name = "nof_samples";
+    type = "uint16";
+  };
+  param = {
+    name = "nof_bands";
+    type = "uint16";
+  };
 };  
+
+event = {
+  noheader;
+  signal = TBB_BANDSEL;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "bandsel";
+    type = "std::bitset<MEPHeader::N_SUBBANDS>";
+  };
+};
 
 event = {
   noheader;

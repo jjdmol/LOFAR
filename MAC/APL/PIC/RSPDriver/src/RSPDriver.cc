@@ -75,6 +75,7 @@
 #include "UpdTDStatusCmd.h"
 #include "GetRegisterStateCmd.h"
 #include "UpdRegisterStateCmd.h"
+#include "SetTBBCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -104,6 +105,8 @@
 #include "TDSResultRead.h"
 #include "TDSStatusWrite.h"
 #include "TDSStatusRead.h"
+#include "TBBSettingsWrite.h"
+#include "TBBBandselWrite.h"
 #include "RADWrite.h"
 #include "TimestampWrite.h"
 
@@ -313,6 +316,7 @@ bool RSPDriver::isEnabled()
  * - BST:     read beamlet statistics           // BstRead
  * - XST:     read crosslet statistics          // XstRead
  * - WG:      write waveform generator settings // WGWrite
+ * - TBB:     write                             // TBBSettingsWrite/TBBBandselWrite
  * - VERSION: read version info                 // VersionsRead
  *
  * For testing purposes, read back register that have just been written
@@ -499,6 +503,17 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
+    if (1 == GET_CONFIG("RSPDriver.WRITE_TBB", i))
+    {
+      TBBSettingsWrite* tbbsettingswrite = new TBBSettingsWrite(m_board[boardid], boardid);
+      ASSERT(tbbsettingswrite);
+      m_scheduler.addSyncAction(tbbsettingswrite);
+
+      TBBBandselWrite* tbbbandselwrite = new TBBBandselWrite(m_board[boardid], boardid);
+      ASSERT(tbbbandselwrite);
+      m_scheduler.addSyncAction(tbbbandselwrite);
+    }
+    
     for (int action = 0; action < 2; action++)
     {
       if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
@@ -1110,6 +1125,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     
     case RSP_UNSUBREGISTERSTATE:
       rsp_unsubregisterstate(event, port);
+      break;
+
+    case RSP_SETTBB:
+      rsp_settbb(event, port);
       break;
 
     case F_TIMER:
@@ -2455,6 +2474,38 @@ void RSPDriver::rsp_unsubregisterstate(GCFEvent& event, GCFPortInterface& port)
   }
 
   port.send(ack);
+}
+
+//
+// rsp_settbb(event,port)
+//
+void RSPDriver::rsp_settbb(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<SetTBBCmd> command = new SetTBBCmd(event, port, Command::WRITE);
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SETTBB: invalid parameter");
+    
+    RSPSethbaackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+
+  // if timestamp == Timestamp(0,0) apply changes immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    LOG_INFO("applying TBB control immediately");
+    command->apply(Cache::getInstance().getFront(), true);
+    command->apply(Cache::getInstance().getBack(), false);
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+  command->ack(Cache::getInstance().getFront());
 }
 
 //

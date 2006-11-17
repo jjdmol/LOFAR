@@ -80,7 +80,10 @@ const MEPHeader::FieldsType MEPHeader::BS_NOF_SAMPLES_PER_SYNC_HDR = { WRITE, 0,
 const MEPHeader::FieldsType MEPHeader::TDS_PROTOCOL_HDR      = { WRITE, 0, 0, { DST_RSP, TDS, TDS_PROTOCOL }, 0, TDS_PROTOCOL_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::TDS_RESULT_HDR        = { READ,  0, 0, { DST_RSP, TDS, TDS_RESULT   }, 0, TDS_RESULT_SIZE,   0, 0 };
 
-const MEPHeader::FieldsType MEPHeader::TBB_CONTROL_HDR       = { WRITE, 0, 0, { DST_RSP, TBB, TBB_CONTROL }, 0, TBB_CONTROL_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::TBB_SETTINGSX_HDR     = { WRITE, 0, 0, { DST_BLP0, TBB, TBB_SETTINGSX }, 0, TBB_SETTINGS_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::TBB_SETTINGSY_HDR     = { WRITE, 0, 0, { DST_BLP0, TBB, TBB_SETTINGSY }, 0, TBB_SETTINGS_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::TBB_BANDSELX_HDR      = { WRITE, 0, 0, { DST_BLP0, TBB, TBB_BANDSELX },  0, TBB_BANDSEL_SIZE,  0, 0 };
+const MEPHeader::FieldsType MEPHeader::TBB_BANDSELY_HDR      = { WRITE, 0, 0, { DST_BLP0, TBB, TBB_BANDSELY },  0, TBB_BANDSEL_SIZE,  0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::RAD_BP_HDR            = { WRITE, 0, 0, { DST_RSP, RAD, RAD_BP }, 0, RAD_BP_SIZE, 0, 0 };
 

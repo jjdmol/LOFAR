@@ -199,7 +199,10 @@ namespace LOFAR {
       /**
        * Placeholder register for future TBB control via the RSP board.
        */
-      static const uint8 TBB_CONTROL      = 0x00;
+      static const uint8 TBB_SETTINGSX = 0x00;
+      static const uint8 TBB_SETTINGSY = 0x01;
+      static const uint8 TBB_BANDSELX  = 0x02;
+      static const uint8 TBB_BANDSELY  = 0x03;
 
       /**
        * RAD_BP register controls how local and remove crosslet and
@@ -247,7 +250,11 @@ namespace LOFAR {
       static const uint16 WEIGHT_SIZE      = N_POL * sizeof(std::complex<uint16>);
 
       static const uint16 N_HBA_DELAYS     = 16; // number of High Band antenna delay elements
- 
+      
+      // TBB related constants
+      static const uint16 TBB_MAXPAYLOADSIZE     = 1948; // available TBB payload bytes
+      static const uint16 TBB_NTRANSIENTSAMPLES  = 1024; // number of 12-bit transient samples per frame
+      static const uint16 TBB_SPECTRALSAMPLESIZE = sizeof(std::complex<uint16>);
       /*@}*/
 
       
@@ -308,7 +315,8 @@ namespace LOFAR {
       /**
        * Placeholder register for future TBB control via the RSP board.
        */
-      static const uint16 TBB_CONTROL_SIZE      = 0;
+      static const uint16 TBB_SETTINGS_SIZE = 8;
+      static const uint16 TBB_BANDSEL_SIZE  = 64;
 
       /**
        * Size of the RAD_BP register.
@@ -445,7 +453,10 @@ namespace LOFAR {
       static const FieldsType TDS_PROTOCOL_HDR;
       static const FieldsType TDS_RESULT_HDR;
 
-      static const FieldsType TBB_CONTROL_HDR;
+      static const FieldsType TBB_SETTINGSX_HDR;
+      static const FieldsType TBB_SETTINGSY_HDR;
+      static const FieldsType TBB_BANDSELX_HDR;
+      static const FieldsType TBB_BANDSELY_HDR;
 
       static const FieldsType RAD_BP_HDR;
       /*@}*/
