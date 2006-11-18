@@ -489,11 +489,14 @@ void ChildControl::_processActionList()
 	LOG_TRACE_VAR_STR("Found " << nrActions << " actions in list");
 
 	// Walk through the action list
+	CTState		cts;
 	time_t		currentTime = time(0);
 	CIiter		action = itsActionList.begin();
 	while (nrActions > 0) {
 		// don't process (rescheduled) action that lay in the future
 		if (action->retryTime > currentTime) {	// retry in future?
+			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
+					cts.name(action->requestedState) << " because its too early");
 			itsActionList.push_back(*action);	// add at back
 			action++;							// hop to next
 			itsActionList.pop_front();			// remove at front.
@@ -506,14 +509,26 @@ void ChildControl::_processActionList()
 		if (controller == itsCntlrList->end()) {
 			LOG_WARN_STR("Controller " << action->cntlrName << 
 						 " not in administration, discarding request for state " << 
-						 action->requestedState);
+						 cts.name(action->requestedState));
 			action++;					// hop to next
 			itsActionList.pop_front();	// remove 'handled' action.
 			nrActions--;				// one less to handle.
 			continue;
 		}
+
+		if (action->requestedState > CTState::CONNECTED && !controller->port) {
+			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
+					cts.name(action->requestedState) << " until connection is made");
+			itsActionList.push_back(*action);	// add at back
+			action++;							// hop to next
+			itsActionList.pop_front();			// remove at front.
+			nrActions--;						// one less to handle.
+			continue;
+		}
 			
 		// found an action that should be handled now.
+		LOG_DEBUG_STR("handling:" << action->cntlrName << "->" << 
+												cts.name(action->requestedState));
 		switch (action->requestedState) {
 		case CTState::CONNECTED: 	// start program, wait for CONNECTED msgs of child
 			{

@@ -63,8 +63,10 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_SUSPENDED,		CTState::SUSPEND,		CTState::SUSPENDED	},
 	{	CONTROL_RELEASE,		CTState::ANYSTATE,		CTState::RELEASED	},
 	{	CONTROL_RELEASED,		CTState::RELEASE,		CTState::RELEASED	},
-	{	CONTROL_FINISH,			CTState::ANYSTATE,		CTState::FINISHED	},
-	{	CONTROL_FINISHED,		CTState::ANYSTATE,		CTState::FINISHED	},
+	{	CONTROL_FINISH,			CTState::RELEASED,		CTState::FINISHED	},
+	{	CONTROL_FINISHED,		CTState::RELEASED,		CTState::FINISHED	},
+//	{	CONTROL_FINISH,			CTState::ANYSTATE,		CTState::FINISHED	},
+//	{	CONTROL_FINISHED,		CTState::ANYSTATE,		CTState::FINISHED	},
 	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_SCHEDULE,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
@@ -85,7 +87,7 @@ ParentControl* ParentControl::instance()
 
 
 //
-// ParentControl(name, porenthost, parentService))
+// ParentControl(name, parenthost, parentService))
 //
 ParentControl::ParentControl() :
 	GCFTask			 ((State)&ParentControl::initial, "ParentControl"),
@@ -132,13 +134,100 @@ GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask)
 		itsSDPort = new GCFTCPPort(*this, MAC_SVCMASK_STARTDAEMON, 
 											GCFPortInterface::SAP, STARTDAEMON_PROTOCOL);
 		ASSERTSTR(itsSDPort, "Can not allocate clientport to startDaemon");
-		itsSDPort->open();				// will result in F_COON or F_DISCONN signal
+		itsSDPort->open();				// will result in F_CONN or F_DISCONN signal
 
 		itsControllerName = mainTask->getName();		// remember for later
 	}
 
 	return (itsMainTaskPort);
 }
+
+//
+// activateObservationTimers(cntlrName, startTime, stopTime)
+//
+// Initializes a timer for the begin and the end of the observation.
+// At this time the ParentControl task will generate a RESUME and QUIT signal
+// When one of the times is 'not_a_date_time' the corresponding timer is cleared.
+// False is returned when (one of) the timers could not be set.
+//
+bool ParentControl::activateObservationTimers(const string&		cntlrName,
+											  ptime				startTime, 
+											  ptime				stopTime)
+{
+	LOG_DEBUG_STR("activateObsTimers(" << cntlrName <<","<< to_simple_string(startTime) <<
+									","<< to_simple_string(stopTime) << ")");
+
+	PIiter		parent = findParent(cntlrName);
+	if (!isParent(parent)) {
+		LOG_ERROR_STR("Unknown controllername " << cntlrName << 
+					  ". Can not activate observation-timers.");
+		return (false);
+	}
+
+	bool	legalStartTime(!startTime.is_not_a_date_time());
+	bool	legalStopTime (!stopTime.is_not_a_date_time());
+	if (legalStartTime && legalStopTime && stopTime < startTime) {
+		LOG_ERROR_STR("Stoptime(" << to_simple_string(startTime) << 
+						") lays BEFORE starttime(" << to_simple_string(stopTime) << 
+						"). Ignoring timesettings!");
+		return (false);
+	}
+
+	ptime			now(from_time_t(time(0L)));		// get current time
+	time_duration	startDiff(seconds(0));			// calc when to start
+	time_duration	stopDiff (seconds(0));			// calc when to stop
+	if (legalStartTime) {
+		startDiff = startTime - now;				// calc when to start
+		LOG_INFO_STR("Start is over " << to_simple_string(startDiff) << " hours at " 
+					<< to_simple_string(startTime));
+	}
+	if (legalStopTime) {
+		stopDiff = stopTime - now;
+		LOG_INFO_STR("Stop is over  " << to_simple_string(stopDiff) << " hours at " 
+					<< to_simple_string(stopTime));
+	}
+
+	//	startdiff	stopdiff	action
+	//		>0			>0		everything in the future, set timers
+	//		>0			<0		stopTime < startTime, captured above
+	//		<0			>0		obs should be running by now!!
+	//		<0			<0		obs is over!
+	if (stopDiff.seconds() < 0) {
+		LOG_ERROR("Stoptime is already past! Shutting down controller.");
+		parent->requestedState = CTState::FINISH;
+		parent->requestTime	   = time(0);
+		_doRequestedAction(parent);
+		return (false);
+	}
+
+	if (startDiff.seconds() < 0) {
+		LOG_WARN("Observation should have been started, going to start-state a.s.a.p.");
+		parent->requestedState = CTState::RESUMED;
+		parent->requestTime	   = time(0);
+		_doRequestedAction(parent);
+	}
+
+	// set or reset the real timers.
+	if (startDiff.seconds() > 0) {
+		parent->startTimer = itsTimerPort.setTimer((double)startDiff.seconds());
+	}
+	else {
+		itsTimerPort.cancelTimer(parent->startTimer);
+		parent->startTimer = 0;
+	}
+
+	if (stopDiff.seconds() > 0) {
+		parent->stopTimer = itsTimerPort.setTimer((double)stopDiff.seconds());
+	}
+	else {
+		itsTimerPort.cancelTimer(parent->stopTimer);
+		parent->stopTimer = 0;
+	}
+
+	return (true);
+}
+
+// -------------------- PRIVATE FUNCTIONS --------------------
 
 //
 // isLegalSignal(signal, parent)
@@ -163,6 +252,8 @@ bool ParentControl::isLegalSignal(uint16	aSignal,
 //
 // requestedState(signal)
 //
+// Translate received signal into the state that must be reached.
+//
 CTState::CTstateNr ParentControl::requestedState(uint16	aSignal)
 {
 	uint32	i = 0;
@@ -173,6 +264,72 @@ CTState::CTstateNr ParentControl::requestedState(uint16	aSignal)
 		i++;
 	}
 	ASSERTSTR(false, "No new state defined for signal " << evtstr(aSignal));
+}
+
+//
+// getNextState(parent)
+//
+// Returns the state that must be realized. When a signal is received 'out of band'
+// of the 'normal' sequence the missing state is returned.
+//
+CTState::CTstateNr ParentControl::getNextState(PIiter		parent)
+{
+	if (parent->currentState == parent->requestedState) {
+		return (parent->requestedState);
+	}
+
+	// look if signal is inband
+	uint32	i = 0;
+	while (stateFlowTable[i].signal) {
+		if ((stateFlowTable[i].requestedState == parent->requestedState) &&
+			(stateFlowTable[i].currentState == parent->currentState)) {
+			// yes, requested state is allowed in the current state
+			return(stateFlowTable[i].requestedState);
+		}
+		i++;
+	}
+
+	// signal is not an inband signal, try to find a path the leads to the req. state
+	CTState		cts;
+	CTState::CTstateNr	requestedState = parent->requestedState;
+	CTState::CTstateNr	currentState   = parent->currentState;
+	i = 0;
+	for(;;) {
+		// find matching requested state
+		if (stateFlowTable[i].requestedState == requestedState) {
+			// does (moved) currentState match state of table?
+			if (stateFlowTable[i].currentState == currentState) {
+				LOG_INFO_STR("State change from " << cts.name(parent->currentState) <<
+						" to " << cts.name(parent->requestedState) << 
+						" is out of band. First going to state " << 
+						cts.name(stateFlowTable[i].requestedState));
+				return (stateFlowTable[i].requestedState);
+			}
+
+			// can requested state be reached from any state?
+			if (stateFlowTable[i].currentState == CTState::ANYSTATE) {
+				return (stateFlowTable[i].requestedState);
+			}
+
+			// does this state lay between currentstate of parent and requested?
+			if (stateFlowTable[i].currentState > currentState) {
+				// adopt this step and try to resolve it
+				requestedState = stateFlowTable[i].currentState;
+				i = 0;
+				continue;
+			}
+		}
+
+		i++;
+		if (!stateFlowTable[i].signal) {
+			// no matching route found. Just return requested state and 
+			// hope for the best.
+			LOG_WARN_STR("Not supported state change from " << 
+						cts.name(parent->currentState) << " to " << 
+						cts.name(parent->requestedState) << ". Hope it will work!");
+			return (parent->requestedState);
+		}
+	}
 }
 
 //
@@ -194,7 +351,8 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 		}
 	}
 
-	switch (parent->requestedState) {
+//	switch (parent->requestedState) {
+	switch (getNextState(parent)) {
 	case CTState::CONNECTED: {
 			// try to make first contact with parent by identifying ourself
 			if (parent->nrRetries == 0) {	// no more retries left?
@@ -317,6 +475,11 @@ bool ParentControl::_confirmState(uint16			signal,
 	parent->currentState = requestedState(signal);
 	LOG_DEBUG_STR(cntlrName << " reached " << cts.name(parent->currentState) << 
 						" state succesfully");
+
+	if (parent->currentState != parent->requestedState) {	// chain of states?
+		_doRequestedAction(parent);							// start next step
+	}
+
 	return (true);
 }
 
@@ -391,6 +554,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 {
 	LOG_DEBUG_STR ("operational:" << evtstr(event) << "@" << port.getName());
 
+	CTState				cts;
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
@@ -412,7 +576,6 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			}
 
 			// first connection every made with this controller?
-LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requestedState);
 			if (parent->requestedState == CTState::CONNECTED && 
 							parent->currentState < CTState::CONNECTED) {
 				_doRequestedAction(parent);	// do queued action if any.
@@ -420,7 +583,6 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 			}
 
 			// Connecting is a reconnect, first resync with parent
-			CTState		cts;
 			LOG_DEBUG_STR ("Sending RESYNC(" << parent->name << "," 
 											<< cts.name(parent->currentState) << ")");
 			CONTROLResyncEvent	resync;
@@ -450,8 +612,8 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 					parent->timerID = itsTimerPort.setTimer(1.0);
 					if (parent->nrRetries < 0) {
 						parent->nrRetries = 30;
-						LOG_WARN_STR ("Lost connection with new parent " << parent->name <<
-									  ", starting reconnect sequence");
+						LOG_WARN_STR ("Lost connection with new parent " << parent->name 
+									<< ", starting reconnect sequence");
 					}
 					LOG_TRACE_VAR_STR("parent:" << parent->name << ", timerID:" 
 												<< parent->timerID);
@@ -515,7 +677,6 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 		// Attempt to start me up for the second time??? send resync
 		PIiter	oldParent = findParent(NPevent.cntlrName);
 		if (isParent(oldParent)) {
-			CTState		cts;
 			LOG_DEBUG_STR ("Attempt to start me up twice, just sending RESYNC(" 
 				<< oldParent->name << "," << cts.name(oldParent->currentState) << ")");
 			CONTROLResyncEvent	resync;
@@ -585,7 +746,7 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 		// warn operator when we are out of sync with our parent.
 		if (parent->requestedState != CTState::CONNECTED) {
 			LOG_WARN_STR ("Received 'CONNECTED' event while requested state is " <<
-						parent->requestedState);
+						cts.name(parent->requestedState));
 		}
 		// always accept new state because parent thinks we are in this state.
 		// TODO: when we are already beyond the claiming state should we release
@@ -622,7 +783,8 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 			// warn operator when we are out of sync with our parent.
 			if (!isLegalSignal(event.signal, parent)) {
 				LOG_WARN_STR ("Received " << evtstr(event.signal) <<
-							" event while requested state is " << parent->requestedState);
+							" event while requested state is " << 
+							cts.name(parent->requestedState));
 			}
 
 			// When we were resyncing just continue what we were trying to do.
@@ -635,7 +797,7 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 		}
 		break;
 
-	// -------------------- signals from main task --------------------
+	// -------------------- SIGNALS FROM MAIN TASK --------------------
 	case CONTROL_CLAIMED:
 		{
 			CONTROLClaimedEvent		msg(event);
@@ -646,22 +808,8 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 								<< msg.cntlrName <<", ignoring");
 				break;
 			}
-#if 0
 			_confirmState(event.signal, msg.cntlrName, msg.result);
 			parent->port->send(msg);
-#else
-			if (msg.result == CT_RESULT_NO_ERROR) {
-				parent->currentState = CTState::CLAIMED;
-				LOG_DEBUG_STR(msg.cntlrName << " reached CLAIMED state succesfully");
-			}
-			else {
-				parent->failed = true;
-				LOG_DEBUG_STR(msg.cntlrName << " DID NOT reach the CLAIMED state, error="
-								<< msg.result);
-			}
-			parent->port->send(msg);
-			break;
-#endif
 		}
 		break;
 
@@ -722,7 +870,7 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
 			if (isParent(parent)) {
-				_confirmState(event.signal, msg.cntlrName, msg.result);
+				// note do not register this state, it is not a real state
 				parent->port->send(msg);
 			}
 		}
@@ -734,7 +882,7 @@ LOG_TRACE_VAR_STR("cur=" << parent->currentState << ", req=" << parent->requeste
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
 			if (isParent(parent)) {
-				_confirmState(event.signal, msg.cntlrName, msg.result);
+				// note do not register this state, it is not a real state
 				parent->port->send(msg);
 			}
 		}

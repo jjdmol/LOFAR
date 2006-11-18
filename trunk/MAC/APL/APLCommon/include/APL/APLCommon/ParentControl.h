@@ -29,7 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_string.h>
-#include <Common/lofar_map.h>
+#include <Common/lofar_datetime.h>
 #include <Common/lofar_list.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_TCPPort.h>
@@ -71,6 +71,11 @@ public:
 	// Its gets an ITCport pointer in return.
 	GCFITCPort* registerTask (GCFTask*			mainTask);
 
+	// Let ParentControlTask watch for start- and stop-time of observation.
+	// When the given time is reached the ParentControlTask generates a RESUME / QUIT event.
+	bool 		activateObservationTimers(const string&		cntlrName,
+										  ptime				startTime, 
+										  ptime				stopTime);
 private:
 	// Copying and default construction is not allowed
 	ParentControl();
@@ -80,7 +85,6 @@ private:
 	// GCFTask statemachine
 	GCFEvent::TResult	initial		(GCFEvent&	event, GCFPortInterface&	port);
 	GCFEvent::TResult	operational	(GCFEvent&	event, GCFPortInterface&	port);
-
 
 	// Note: When the controller is a shared controller it will have multiple
 	//		 parents and for each of these parents it must handle its own
@@ -95,7 +99,9 @@ private:
 		CTState::CTstateNr	currentState;	// the state we reached for that parent
 		time_t				establishTime;	// time the current state was reached
 		int32				nrRetries;		// nr of retries performed
-		uint32				timerID;		// timer for this parent
+		uint32				timerID;		// (retry)timer for this parent
+		uint32				startTimer;		// timer for automatic start of Obs.
+		uint32				stopTimer;		// timer for automatic shutdown
 		bool				failed;			// reaching requested state failed.
 	} ParentInfo_t;
 	typedef list<ParentInfo_t>::iterator		PIiter;
@@ -109,11 +115,11 @@ private:
 	{	return (parentPtr != itsParentList.end());	}
 	bool 				isLegalSignal (uint16	aSignal, PIiter	aParent);
 	CTState::CTstateNr	requestedState(uint16	aSignal);
+	CTState::CTstateNr	getNextState  (PIiter	parent);
 
 	// Internal routines
 	void _doRequestedAction(PIiter	parent);
 	bool _confirmState	   (uint16	signal, const string& cntlrName, uint16 result);
-
 
 	//# --- Datamembers ---
 	list<ParentInfo_t>			itsParentList;		// administration of child controller
