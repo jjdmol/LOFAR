@@ -137,11 +137,12 @@ private:
 	uint32					itsPrepareTimer;
 	uint32					itsStartTimer;
 	uint32					itsStopTimer;
-	uint32					itsHeartBeat;
+	uint32					itsHeartBeatTimer;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
+	uint32					itsHeartBeatItv;
 	uint32					itsClaimPeriod;
 	uint32					itsPreparePeriod;
 	ptime					itsStartTime;
