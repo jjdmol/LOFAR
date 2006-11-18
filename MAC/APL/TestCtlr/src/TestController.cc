@@ -283,6 +283,14 @@ GCFEvent::TResult TestController::active_state(GCFEvent& event, GCFPortInterface
 	}
 	break;
 
+	case CONTROL_QUIT: {
+		CONTROLQuitEvent		msg(event);
+		itsController = msg.cntlrName;
+		itsState      = CTState::FINISH;
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+		
 	case CONTROL_FINISHED: {
 		CONTROLFinishedEvent		msg(event);
 		LOG_DEBUG_STR("About to quit");
