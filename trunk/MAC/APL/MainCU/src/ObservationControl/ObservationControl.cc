@@ -65,7 +65,8 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsPrepareTimer		(0),
 	itsStartTimer		(0),
 	itsStopTimer		(0),
-	itsHeartBeat		(0)
+	itsHeartBeatTimer	(0),
+	itsHeartBeatItv		(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -82,9 +83,9 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
 
 	// My own parameters
-	itsTreePrefix = globalParameterSet()->getString("prefix");
-	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
-	itsHeartBeat  = globalParameterSet()->getUint32("heartbeatInterval");
+	itsTreePrefix   = globalParameterSet()->getString("prefix");
+	itsInstanceNr   = globalParameterSet()->getUint32("_instanceNr");
+	itsHeartBeatItv = globalParameterSet()->getUint32("heartbeatInterval");
 
 	// Inform Logging manager who we are
 	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
@@ -257,8 +258,8 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		LOG_DEBUG ("Activating PropertySet");
 		string	propSetName(createPropertySetName(PSN_OBS_CTRL, getName()));
+		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
 																  PST_OBS_CTRL,
 																  PS_CAT_TEMPORARY,
@@ -319,9 +320,9 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case F_ENTRY: {
 		// convert times and periods to timersettings.
-		setObservationTimers();
 		itsChildControl->startChildControllers();
-		itsHeartBeat = itsTimerPort->setTimer(1.0 * itsHeartBeat);
+		setObservationTimers();
+		itsHeartBeatTimer = itsTimerPort->setTimer(1.0 * itsHeartBeatItv);
 		break;
 	}
 
@@ -338,7 +339,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case F_TIMER:  {
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-		if (timerEvent.id == itsHeartBeat) {
+		if (timerEvent.id == itsHeartBeatTimer) {
 			doHeartBeatTask();
 		}
 		else if (timerEvent.id == itsClaimTimer) {
@@ -369,7 +370,14 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 		break;
 	}
-	
+
+	// -------------------- EVENT RECEIVED FROM PARENT CONTROL --------------------
+	case CONTROL_QUIT: {
+		LOG_INFO("Received manual request for shutdown, accepting it.");
+		itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
+		itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
+		break;
+	}
 
 	// -------------------- EVENT RECEIVED FROM CHILD CONTROL --------------------
 	case CONTROL_STARTED: {
@@ -440,13 +448,15 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case CONTROL_FINISH: {
 		CONTROLFinishEvent		msg(event);
 		LOG_DEBUG_STR("Received FINISH(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!	--> OE 837
+		CONTROLFinishedEvent	answer;
+		answer.cntlrName = msg.cntlrName;
+		answer.result    = CT_RESULT_NO_ERROR;
+		port.send(answer);
 		break;
 	}
 
-
 	default:
-		LOG_DEBUG("active_state, default");
+		LOG_WARN("active_state, DEFAULT");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -466,53 +476,83 @@ void ObservationControl::setObservationTimers()
 	time_t	now   = to_time_t(second_clock::universal_time());
 	time_t	start = to_time_t(itsStartTime);
 	time_t	stop  = to_time_t(itsStopTime);
-	int32	sec2go;
+
+	// cancel current timers
+	itsTimerPort->cancelTimer(itsClaimTimer);
+	itsTimerPort->cancelTimer(itsPrepareTimer);
+	itsTimerPort->cancelTimer(itsStartTimer);
+	itsTimerPort->cancelTimer(itsStopTimer);
+	itsClaimTimer = itsPrepareTimer = itsStartTimer = itsStopTimer = 0;
+
+	// recalc new intervals
+	int32	sec2claim   = start - now - itsPreparePeriod - itsClaimPeriod;
+	int32	sec2prepare = start - now - itsPreparePeriod;
+	int32	sec2start   = start - now;
+	int32	sec2stop    = stop  - now;
+
+	CTState::CTstateNr	assumedState(CTState::NOSTATE);
 
 	// (re)set the claim timer
-	itsTimerPort->cancelTimer(itsClaimTimer);
 	if (itsState < CTState::CLAIM) { 				// claim state not done yet?
-		sec2go = start - now - itsPreparePeriod - itsClaimPeriod;
-		if (sec2go > 0) {
-			itsClaimTimer = itsTimerPort->setTimer(1.0 * sec2go);
-			LOG_DEBUG_STR ("Claimperiod starts over " << sec2go << " seconds");
+		if (sec2claim > 0) {
+			itsClaimTimer = itsTimerPort->setTimer(1.0 * sec2claim);
+			LOG_DEBUG_STR ("Claimperiod starts over " << sec2claim << " seconds");
 		}
 		else {
-			itsClaimTimer = itsTimerPort->setTimer(0.0);
-			LOG_DEBUG_STR ("Claimperiod started " << -sec2go << " seconds AGO!");
+			assumedState = CTState::CLAIM;
+			LOG_DEBUG_STR ("Claimperiod started " << -sec2claim << " seconds AGO!");
 		}
 	}
 		
 	// (re)set the prepare timer
-	itsTimerPort->cancelTimer(itsPrepareTimer);
 	if (itsState < CTState::PREPARE) { 				// prepare state not done yet?
-		sec2go = start - now - itsPreparePeriod;
-		if (sec2go > 0) {
-			itsPrepareTimer = itsTimerPort->setTimer(1.0 * sec2go);
-			LOG_DEBUG_STR ("PreparePeriod starts over " << sec2go << " seconds");
+		if (sec2prepare > 0) {
+			itsPrepareTimer = itsTimerPort->setTimer(1.0 * sec2prepare);
+			LOG_DEBUG_STR ("PreparePeriod starts over " << sec2prepare << " seconds");
 		}
 		else {
-			itsPrepareTimer = itsTimerPort->setTimer(0.0);
-			LOG_DEBUG_STR ("PreparePeriod started " << -sec2go << " seconds AGO!");
+			assumedState = CTState::PREPARE;
+			LOG_DEBUG_STR ("PreparePeriod started " << -sec2prepare << " seconds AGO!");
 		}
 	}
 
 	// (re)set the start timer
-	itsTimerPort->cancelTimer(itsStartTimer);
 	if (itsState < CTState::RESUME) { 				// not yet active?
-		sec2go = start - now;
-		if (sec2go > 0) {
-			itsStartTimer = itsTimerPort->setTimer(1.0 * sec2go);
-			LOG_DEBUG_STR ("Observation starts over " << sec2go << " seconds");
+		if (sec2start > 0) {
+			itsStartTimer = itsTimerPort->setTimer(1.0 * sec2start);
+			LOG_DEBUG_STR ("Observation starts over " << sec2start << " seconds");
 		}
 		else {
-			itsStartTimer = itsTimerPort->setTimer(0.0);
-			LOG_DEBUG_STR ("Observation started " << -sec2go << " seconds AGO!");
+			assumedState = CTState::RESUME;
+			LOG_DEBUG_STR ("Observation started " << -sec2start << " seconds AGO!");
 		}
 	}
 
-	// always set stoptimer to new value (if stop was reached we would be dead).
-	itsTimerPort->cancelTimer(itsStopTimer);
-	itsStopTimer = itsTimerPort->setTimer(1.0 * stop - now);
+	// (re)set the stop timer
+	if (itsState < CTState::RELEASE) { 				// not yet shutting down?
+		if (sec2stop > 0) {
+			itsStopTimer = itsTimerPort->setTimer(1.0 * sec2stop);
+			LOG_DEBUG_STR ("Observation stops over " << sec2stop << " seconds");
+		}
+		else {
+			assumedState = CTState::RELEASE;
+			LOG_DEBUG_STR ("Observation should have been stopped " << -sec2start << 
+							" seconds AGO!");
+		}
+	}
+
+	// Timers of states in the future are set by now. Set the timer of the assumed
+	// state to expired immediately. This may result in requesting a RESUME state
+	// when not even the CLAIM state is reached yet. The parentControl task of the
+	// child-controller will solve this by merging in the missing states.
+	switch (assumedState) {
+	case CTState::RELEASE: itsStopTimer    = itsTimerPort->setTimer(0.0); break;
+	case CTState::RESUME:  itsStartTimer   = itsTimerPort->setTimer(0.0); break;
+	case CTState::PREPARE: itsPrepareTimer = itsTimerPort->setTimer(0.0); break;
+	case CTState::CLAIM:   itsClaimTimer   = itsTimerPort->setTimer(0.0); break;
+	default:	break;	// satisfy compiler
+	}
+
 	LOG_DEBUG_STR ("Observation ends over " << (stop-now)/60 << " minutes");
 }
 
@@ -521,7 +561,7 @@ void ObservationControl::setObservationTimers()
 //
 void  ObservationControl::doHeartBeatTask()
 {
-	itsHeartBeat = itsTimerPort->setTimer(1.0 * itsHeartBeat);
+	itsHeartBeatTimer = itsTimerPort->setTimer(1.0 * itsHeartBeatItv);
 	
 	uint32	nrChilds = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 	vector<ChildControl::StateInfo>		lateCntlrs = 
@@ -544,7 +584,7 @@ void  ObservationControl::doHeartBeatTask()
 //
 // _connectedHandler(port)
 //
-void ObservationControl::_connectedHandler(GCFPortInterface& port)
+void ObservationControl::_connectedHandler(GCFPortInterface& /*port*/)
 {
 }
 
