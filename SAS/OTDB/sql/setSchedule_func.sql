@@ -73,6 +73,16 @@ CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, TIMESTAMP, TIMESTAMP)
 				stoptime  = $4
 		WHERE	treeID = $2;
 
+		UPDATE	vicHierarchy
+		SET		value = $3
+		WHERE	treeID = $2
+		AND		name LIKE \'%.Observation.startTime\';
+
+		UPDATE	vicHierarchy
+		SET		value = $4
+		WHERE	treeID = $2
+		AND		name LIKE \'%.Observation.stopTime\';
+
 		RETURN TRUE;
 	END;
 ' LANGUAGE plpgsql;
