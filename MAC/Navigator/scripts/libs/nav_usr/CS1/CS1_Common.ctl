@@ -31,8 +31,10 @@
 // aCheckType = required DPT
 
 navViewCheckDpType(string aDp, string aCheckType){
-  //DebugN(aCheckType);
-  //DebugN(dpTypeName($datapoint));
+  //DebugTN("CheckType : "+aCheckType);
+  //DebugTN("DP        : "+$datapoint);
+  //DebugTN("dpTypeName: "+dpTypeName($datapoint));
+
   if (aCheckType != dpTypeName($datapoint)){
     ChildPanelOnCentralModal("objects/nav_fw/warning_wrong_datatype.pnl",
 	                     "WRONG datapointtype",
