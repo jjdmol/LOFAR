@@ -59,8 +59,6 @@ Connection::State BGLConnection::read()
   LOG_TRACE_COND_STR("Transport::read; call recv with tag " << getTag());
 
   if (itsDestDH->hasFixedSize()) {    
-    std::clog << "reading fixed-size message of " << align(itsDestDH->getDataSize(), 16) << " bytes" << std::endl;
-
     if (!getTransportHolder()->recvBlocking(itsDestDH->getDataPtr(),
 					    align(itsDestDH->getDataSize(), 16),
 					    getTag(), 0, itsDestDH))
@@ -68,7 +66,6 @@ Connection::State BGLConnection::read()
   } else {
     // Read blob header first (plus possibly some extra bytes)
     uint headerSize = align(itsDestDH->getHeaderSize(), 16);
-    std::clog << "reading variable-size header of " << headerSize << " bytes" << std::endl;
 
     if (!getTransportHolder()->recvBlocking(itsDestDH->getDataPtr(), headerSize,
 					    getTag(), 0, itsDestDH))
@@ -78,7 +75,6 @@ Connection::State BGLConnection::read()
     itsDestDH->resizeBuffer(totalLength);
 
     unsigned dataLength = align(totalLength - headerSize, 16);
-    std::clog << "reading variable-size data of " << dataLength << " bytes" << std::endl;
     char     *dataPtr   = static_cast<char*>(itsDestDH->getDataPtr()) + headerSize;
 
     if (!getTransportHolder()->recvBlocking(dataPtr, dataLength,
@@ -105,7 +101,6 @@ Connection::State BGLConnection::write()
   itsSourceDH->pack();
 
   if (itsSourceDH->hasFixedSize()) {    
-    std::clog << "writing fixed-size message of " << align(itsSourceDH->getDataSize(), 16) << " bytes" << std::endl;
     if (!getTransportHolder()->sendBlocking(itsSourceDH->getDataPtr(),
 					    align(itsSourceDH->getDataSize(), 16),
 					    getTag(), itsSourceDH))
@@ -114,7 +109,6 @@ Connection::State BGLConnection::write()
     // Read and write sizes should match.  Send blob header first.
     unsigned headerSize = align(itsSourceDH->getHeaderSize(), 16);
 
-    std::clog << "writing variable-size header of " << headerSize << " bytes" << std::endl;
     if (!getTransportHolder()->sendBlocking(itsSourceDH->getDataPtr(),
 					    headerSize, getTag(),
 					    itsSourceDH))
@@ -124,7 +118,6 @@ Connection::State BGLConnection::write()
     unsigned dataLength	 = align(totalLength - headerSize, 16);
     char*    dataPtr	 = static_cast<char*>(itsSourceDH->getDataPtr()) + headerSize;
 
-    std::clog << "writing variable-size data of " << dataLength << " bytes" << std::endl;
     if (!getTransportHolder()->sendBlocking(dataPtr, dataLength,
 					    getTag(), itsSourceDH))
       return Error;
