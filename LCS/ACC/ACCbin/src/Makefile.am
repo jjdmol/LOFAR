@@ -1,7 +1,7 @@
 
 bin_PROGRAMS		= ApplController ACDaemon ACcli ACuserMenu
 
-bin_SCRIPTS		= startAP.sh startBGL.sh startMPI.sh \
+dist_bin_SCRIPTS	= startAP.sh startBGL.sh startMPI.sh \
 			  stopAP.sh stopBGL.sh stopMPI.sh
 
 ### ApplController ###
