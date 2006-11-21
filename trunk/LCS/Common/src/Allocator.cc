@@ -54,7 +54,10 @@ namespace LOFAR
     // just before the returned buffer.
     // Usually allocation is always done on a multiple of 8 bytes, but
     // with valgrind that is not the case. So be prepared for everything.
-    uchar* data = new uchar[nbytes + align];
+    // Also allocate some extra bytes at the end to ensure that the special
+    // Connection class can send multiple of N bytes to optimize performance.
+    // The alignment value is used for N.
+    uchar* data = new uchar[nbytes + 2*align];
     // Align the buffer as needed.
     ptrdiff_t ptr = (ptrdiff_t(data) & ~(align-1)) + align;
     uchar* newbuf = (uchar*)ptr;
