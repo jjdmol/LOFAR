@@ -3,7 +3,8 @@ SUBDIRS=src include
 DISTCHECK_CONFIGURE_FLAGS=\
       --with-common=$(prefix) \
       --with-blob=$(prefix) \
-      --with-transport=$(prefix) 
+      --with-transport=$(prefix) \
+      --with-aps=$(prefix)
 
 EXTRA_DIST = \
       Makefile.common \
