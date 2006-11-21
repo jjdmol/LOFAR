@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,372 214 484 325 N "_3DFace" 2
+PANEL,294 508 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()

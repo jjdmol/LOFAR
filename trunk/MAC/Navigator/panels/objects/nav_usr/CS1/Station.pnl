@@ -1,16 +1,48 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,730 103 174 196 N "_3DFace" 2
+PANEL,300 108 174 196 N "_3DFace" 2
 "$Station"
 "$referenceDatapoint"
 "main()
 {
-	txt_station.text = $Station;
+	txt_Station.text = $Station;
+	baseDP           = $Station+\":LOFAR\";
+	
+	// load propertysets from datapoints
+	navPMLloadPropertySet(baseDP);
+	
+	// check if the requiered datapoint for this view are enabled and accessible
+	if (dpAccessable(baseDP+\".state\")) {
+	  dpConnect(\"updateStation\",baseDP + \".state\",
+ 	                            baseDP + \".state:_online.._invalid\");
+ 	} else {
+    setValue(\"Station\", \"backCol\", \"_dpdoesnotexist\");
+  }	
+}
+
+updateStation(string dp1, string state, 
+							string dp3, bool invalid)
+{
+	string SymbolCol;
+	if (invalid) 
+	{
+		SymbolCol=\"Lofar_device_invalid\";
+  } else {
+		SymbolCol=\"Lofar_device_active\";	  
+  }
+  setValue(\"Station\", \"backCol\", SymbolCol);
+}
+" 0
+"main()
+{
+	navPMLunloadPropertySet(baseDP);
 }" 0
-EE E E 1 0 0 0  145 135
+E E E 1 0 0 0  145 135
 "" 0 1
-E"click()
+E"string baseDP=\"\";
+
+click()
 {
   aplViewNavigateTo(\"\", $referenceDatapoint, $Station + \":LOFAR_PIC\", \"Station-CS1.pnl\");
 }" 0
@@ -23,9 +55,9 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 7 0
-"Ellipse1"
+"Station"
 ""
-1 70 66 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
+1 70 66 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_inactive" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -109,9 +141,9 @@ E "main()
 }" 0
  0 1 1 0 1 E U  1 E 71 67 10 10
 2 12
-"txt_station"
+"txt_Station"
 ""
-1 31 119 E E E 1 E 1 E N "_WindowText" E N {255,154,44} E E
+1 28 119 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -120,11 +152,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 33 121 112 137
-0 2 0 "s" 0 0 0 65 0 0  33 121
+E E 0 1 1 0 1 E U  1 E 30 121 109 137
+0 2 0 "s" 0 0 0 65 0 0  30 121
  1
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 9 <station>

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 13 ObsCtrl_State
-PANEL,372 214 950 741 N "_3DFace" 1
+PANEL,514 322 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -42,7 +42,7 @@ updateObsCtrl(string dp1, string state,
   }
 	setValue(\"ObsCtrl_border\", \"backCol\", SymbolCol);
   setValue(\"txt_State\", \"text\", state);
-  setValue(\"txt_Error\", \"text\", error);	
+  setValue(\"txt_Error\", \"text\", substr(error,0,30));	
 }
 
 
