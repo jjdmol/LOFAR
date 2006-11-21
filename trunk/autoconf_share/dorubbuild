@@ -40,6 +40,8 @@ buildmake=$1
 shift
 conf=$1
 shift
+confopt=$1
+shift
 clean=$1
 shift
 bldtest=$1

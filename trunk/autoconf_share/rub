@@ -709,9 +709,6 @@ if [ $skipbuilt = 1 ]; then
 fi  
 if [ $conf = 1 ]; then
   bopt="$bopt -conf"
-  if [ "$confopt" != "" ]; then
-    bopt="$bopt -confopt $confopt"
-  fi
   echo "  Packages will be configured"
 fi
 if [ $clean = 1 ]; then
@@ -761,9 +758,9 @@ do
   p3=`echo $variant | awk -F: '{print $3}'`
   if [ "$p2" = "" ]; then
     # No user@machine given, so do the build locally.
-    $pgmpath/rubbuild $bopt -build "$p1:$p3" $pkgs
+    $pgmpath/rubbuild $bopt -confopt "$confopt" -build "$p1:$p3" $pkgs
   else
     echo "Invoking build on $p2 ..."
-    ssh -x $p2 $pgmpath/rubbuild -bg -srcdir $curwd $bopt -build "$p1:$p3" $pkgs
+    ssh -x $p2 $pgmpath/rubbuild -bg -srcdir $curwd $bopt -confopt "$confopt" -build "$p1:$p3" $pkgs
   fi
 done
