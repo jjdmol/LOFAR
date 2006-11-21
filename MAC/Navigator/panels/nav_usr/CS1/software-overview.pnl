@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,227 144 1026 741 N "_3DFace" 0
+PANEL,295 123 1026 741 N "_3DFace" 0
 "main()
 {
 	dpConnect(\"updateObservationsTable\",\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\");
@@ -606,7 +606,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 98 358 302 385
 2 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {valid}
+"// SimpleCtrlScriptStart {invalid}
 main()
 {
   EP_textFieldIn();
@@ -616,14 +616,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( \"CCU1:LOFAR_PermSW_MACScheduler.OTDB.connected:_online.._value\"))
+  if( !dpExists( \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.connected:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            \"CCU1:LOFAR_PermSW_MACScheduler.OTDB.connected:_online.._value\");
+            \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.connected:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -662,7 +662,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 98 388 302 415
 2 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {valid}
+"// SimpleCtrlScriptStart {invalid}
 main()
 {
   EP_textFieldIn();
@@ -672,14 +672,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( \"CCU1:LOFAR_PermSW_MACScheduler.OTDB.pollinterval:_online.._value\"))
+  if( !dpExists( \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.pollinterval:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            \"CCU1:LOFAR_PermSW_MACScheduler.OTDB.pollinterval:_online.._value\");
+            \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.pollinterval:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -718,7 +718,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 98 418 302 445
 2 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {valid}
+"// SimpleCtrlScriptStart {invalid}
 main()
 {
   EP_textFieldIn();
@@ -728,14 +728,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( \"CCU1:LOFAR_PermSW_MACScheduler.OTDB.lastPoll:_online.._value\"))
+  if( !dpExists( \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.lastPoll:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            \"CCU1:LOFAR_PermSW_MACScheduler.OTDB.lastPoll:_online.._value\");
+            \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.lastPoll:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -774,7 +774,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 98 278 302 305
 2 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {valid}
+"// SimpleCtrlScriptStart {invalid}
 main()
 {
   EP_textFieldIn();
@@ -784,14 +784,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( \"CCU1:LOFAR_PermSW_MACScheduler.state:_online.._value\"))
+  if( !dpExists( \"MCU001:LOFAR_PermSW_MACScheduler.state:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            \"CCU1:LOFAR_PermSW_MACScheduler.state:_online.._value\");
+            \"MCU001:LOFAR_PermSW_MACScheduler.state:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -830,7 +830,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 98 308 302 335
 2 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {valid}
+"// SimpleCtrlScriptStart {invalid}
 main()
 {
   EP_textFieldIn();
@@ -840,14 +840,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( \"CCU1:LOFAR_PermSW_MACScheduler.error:_online.._value\"))
+  if( !dpExists( \"MCU001:LOFAR_PermSW_MACScheduler.error:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            \"CCU1:LOFAR_PermSW_MACScheduler.error:_online.._value\");
+            \"MCU001:LOFAR_PermSW_MACScheduler.error:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
