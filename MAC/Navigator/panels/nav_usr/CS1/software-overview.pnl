@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,352 226 1026 741 N "_3DFace" 0
+PANEL,227 144 1026 741 N "_3DFace" 0
 "main()
 {
 	dpConnect(\"updateObservationsTable\",\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\");
@@ -18,64 +18,60 @@ EE E E 1 0 0 0  10 10
 "" 0 1
 E"updateObservationsTable(string dpe, dyn_string dpv)
 {
-	for(int i=0; i < TableObservations.lineCount; i++)
-	{
-		navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
-	}
-	TableObservations.deleteAllLines();
+  for(int i=0; i < TableObservations.lineCount; i++)
+  {
+    navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
+  }
+  TableObservations.deleteAllLines();
   for(int i=1; i<=dynlen(dpv);i++)
   {
-		TableObservations.appendLine(\"Observation\",dpv[i]);
-		string dpPrefix = \"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl\";
+    TableObservations.appendLine(\"Observation\",dpv[i]);
+    string dpPrefix = \"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl\";
+	
+    navPMLloadPropertySet(dpPrefix);
 		
-		navPMLloadPropertySet(dpPrefix);
-		
-		for(int i=0; i<10 && !dpAccessable(dpPrefix);i++)
-		{
-			delay(0,250);
-		}
+    for(int i=0; i<10 && !dpAccessable(dpPrefix);i++)
+    {
+      delay(0,250);
+    }
 
-		dpConnect(\"updateObservationsTableState\",dpPrefix + \".state:_online.._value\");
-		dpConnect(\"updateObservationsTableController\",
-							dpPrefix + \".claimPeriod:_online.._value\",
-							dpPrefix + \".preparePeriod:_online.._value\",
-							dpPrefix + \".startTime:_online.._value\",
-							dpPrefix + \".stopTime:_online.._value\");
-	}
+    dpConnect(\"updateObservationsTableState\",dpPrefix + \".state:_online.._value\");
+    dpConnect(\"updateObservationsTableController\",dpPrefix + \".claimPeriod:_online.._value\",
+						  dpPrefix + \".preparePeriod:_online.._value\",
+						  dpPrefix + \".startTime:_online.._value\",
+						  dpPrefix + \".stopTime:_online.._value\");
+  }
 }
 
 updateObservationsTableState(string dpe, string dpv)
 {
-	string dp = dpSubStr(dpe,DPSUB_DP);
-	for(int i=0; i < TableObservations.lineCount; i++)
-	{
-		if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\"))
-		{
-			TableObservations.cellValueRC(i,\"Status\",dpv);
-		}
-	}
-
+  string dp = dpSubStr(dpe,DPSUB_DP);
+  for(int i=0; i < TableObservations.lineCount; i++)
+  {
+    if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\"))
+    {
+      TableObservations.cellValueRC(i,\"Status\",dpv);
+    }
+  }
 }
 
 updateObservationsTableController(string dpe1, string claimPeriod, 
-																	string dpe2, string preparePeriod, 
-																	string dpe3, string startTime, 
-																	string dpe4, string stopTime)
+    				  string dpe2, string preparePeriod, 
+				  string dpe3, string startTime, 
+				  string dpe4, string stopTime)
 {
-	string dp = dpSubStr(dpe1,DPSUB_DP);
-	for(int i=0; i < TableObservations.lineCount; i++)
-	{
-		if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\")
-		{
-			TableObservations.cellValueRC(i,\"ClaimPeriod\",claimPeriod);
-			TableObservations.cellValueRC(i,\"PreparePeriod\",preparePeriod);
-			TableObservations.cellValueRC(i,\"StartTime\",startTime);
-			TableObservations.cellValueRC(i,\"StopTime\",stopTime);
-		}
-	}
-
+  string dp = dpSubStr(dpe1,DPSUB_DP);
+  for(int i=0; i < TableObservations.lineCount; i++)
+  {
+    if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\")
+    {
+      TableObservations.cellValueRC(i,\"ClaimPeriod\",claimPeriod);
+      TableObservations.cellValueRC(i,\"PreparePeriod\",preparePeriod);
+      TableObservations.cellValueRC(i,\"StartTime\",startTime);
+      TableObservations.cellValueRC(i,\"StopTime\",stopTime);
+    }
+  }
 }
-
 updateControllersTable(string identifier, dyn_dyn_anytype result)
 {
 	if(identifier == \"ControllerStateQuery\")

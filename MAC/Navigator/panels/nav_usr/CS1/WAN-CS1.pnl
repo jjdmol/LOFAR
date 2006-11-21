@@ -1,11 +1,12 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,300 241 954 746 N "_3DFace" 3
+PANEL,335 106 954 746 N "_3DFace" 3
 "$configDatapoint"
 "$datapoint"
 "$referenceDatapoint"
-"
+"main() {
+}
 " 0
 EE E E 1 -1 -1 0  188 128
 "" 0 1
@@ -302,7 +303,7 @@ T
 LANG:1 8 view CEP
 "main()
 {
-  aplViewNavigateTo(\"\", $referenceDatapoint, \"LOFAR_CEP\", \"nav_usr/CEP/CEP_fysical_view.pnl\");
+  aplViewNavigateTo(\"\", $referenceDatapoint, \"LOFAR_PIC\", \"nav_usr/CEP/CEP_fysical_view.pnl\");
 }" 0
  E E E
 0

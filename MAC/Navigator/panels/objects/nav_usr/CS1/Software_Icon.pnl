@@ -1,17 +1,48 @@
 V 10
 1
 LANG:1 12 SoftwareIcon
-PANEL,305 99 154 186 N "_3DFace" 1
-"$datapoint"
-EE"main()
+PANEL,908 331 154 186 N "_3DFace" 0
+"main()
+{
+	// check if the requiered datapoint for this view are enabled and accessible
+	if (dpAccessable(baseDP+\".state\") && dpAccessable(baseDP + \".error\")) {
+		dpConnect(\"updateSoftwareIcon\",baseDP + \".state\",
+ 	                           			 baseDP + \".error\",
+ 	                            		 baseDP + \".state:_online.._invalid\");
+ 	} else {
+    setValue(\"SoftwareIcon_border\", \"foreCol\", \"_dpdoesnotexist\");
+  }	
+
+
+}
+
+
+updateSoftwareIcon(string dp1, string state,
+									 string dp2, string error,
+									 string dp3, bool invalid)
+{
+	string SymbolCol;
+	if (invalid) 
+	{
+		SymbolCol=\"Lofar_device_invalid\";
+  } else {
+		SymbolCol=\"Lofar_device_active\";	  
+  }
+  setValue(\"SoftwareIcon_border\", \"foreCol\", SymbolCol);
+}" 0
+E"main()
 {
 click();
 }" 0
  E E 1 0 0 0  20 110
 "" 0 1
-E"click() 
+E"#uses \"nav_usr/STS/STS-functions.ctl\"
+
+string baseDP= \"LOFAR_PermSW\";
+
+click() 
 {
-	aplViewNavigateTo($datapoint, \"\", \":LOFAR_PermSW\", \"software-overview.pnl\");
+	aplViewNavigateTo(\"\", \"\", baseDP, \"\");
 }" 0
  2
 "CBRef""1"
@@ -22,7 +53,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"Border30"
+"SoftwareIcon_border"
 ""
 1 20 110 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
@@ -30,7 +61,7 @@ LANG:1 6 Layer1
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -47,10 +78,14 @@ E "main()
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  70 80 50 80
+E "main()
+{
+	click();
+}" 0
+ 0 2 1 0 1 E  70 80 50 80
 4 2
 "Line15"
 ""
@@ -60,10 +95,14 @@ E E 0 2 1 0 1 E  70 80 50 80
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  70 80 70 50
+E "main()
+{
+	click();
+}" 0
+ 0 2 1 0 1 E  70 80 70 50
 6 3
 "Border26"
 ""
@@ -73,7 +112,7 @@ E E 0 2 1 0 1 E  70 80 70 50
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -90,10 +129,14 @@ E "main()
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  70 50 50 50
+E "main()
+{
+	click();
+}" 0
+ 0 2 1 0 1 E  70 50 50 50
 4 5
 "Line13"
 ""
@@ -103,10 +146,14 @@ E E 0 2 1 0 1 E  70 50 50 50
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  46 90 46 36
+E "main()
+{
+	click();
+}" 0
+ 0 2 1 0 1 E  46 90 46 36
 10 6
 "Polyline2"
 ""
@@ -116,7 +163,7 @@ E E 0 2 1 0 1 E  46 90 46 36
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -137,7 +184,7 @@ E "main()
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -154,7 +201,7 @@ E "main()
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -175,7 +222,7 @@ E "main()
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -192,7 +239,7 @@ E "main()
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -213,7 +260,7 @@ E "main()
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -230,7 +277,7 @@ E "main()
 EE E
 0
 1
-LANG:1 0 
+LANG:1 18 Permanent Software
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -267,6 +314,4 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-2 "Group1" 20 20 90 110
-13 12 11 10 9 8 7 6 5 4 3 2 1 0
 0

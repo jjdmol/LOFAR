@@ -1,30 +1,8 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,265 103 806 562 N "_3DFace" 1
+PANEL,335 106 806 562 N "_3DFace" 1
 "$switchType"
-EEE E E 1 0 0 0  80 65
-"" 0 1
-EE 2
-"CBRef""1"
-"EClose"E
-""
-DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
-LAYER, 0 
-1
-LANG:1 6 Layer1
-7 0
-"internalSwitch"
-""
-1 80 65 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-1 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
 "main()
 {
   // Check for PC types only
@@ -76,7 +54,29 @@ void computeSwitchSumAlert(string ident, dyn_dyn_anytype tab)
 		internalSwitch.backCol = \"Lofar_device_active\";
 	}
 }" 0
- E 0 1 1 0 1 E U  1 E 80 65 50 25
+EE E E 1 0 0 0  80 65
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+7 0
+"internalSwitch"
+""
+1 80 65 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 80 65 50 25
 2 1
 "Text4"
 ""
