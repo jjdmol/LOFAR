@@ -3,6 +3,7 @@ lib_LTLIBRARIES			= libtransport.la
 libtransport_la_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 libtransport_la_SOURCES		= \
+	BGLConnection.cc \
 	Connection.cc \
 	ConnectionPool.cc \
 	CSConnection.cc \

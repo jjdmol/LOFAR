@@ -58,13 +58,13 @@ class Connection
   Connection(const string& name, DataHolder* dhSource, DataHolder* dhDest, 
 	     TransportHolder* th, bool blockingComm=true);
 
-  ~Connection();
+  virtual ~Connection();
 
   /// Read the data.
-  State read ();
+  virtual State read ();
 
   /// Send the data.
-  State write ();
+  virtual State write ();
 
   /// Wait until the previous read has finished (use with non-blocking communication)
   void waitForRead();
@@ -102,6 +102,10 @@ class Connection
   void setDestinationDH(DataHolder* dest);
   void setSourceDH(DataHolder* dest);
 
+protected:
+  DataHolder* itsSourceDH;       // The source DataHolder
+  DataHolder* itsDestDH;         // The destination DataHolder
+
 private:
 
   typedef enum ReadState{Idle, TotalLength, Header, Message};
@@ -113,8 +117,6 @@ private:
   static int theirNextTag;      // The next unique tag
 
   string      itsName;           // Name of this Connection
-  DataHolder* itsSourceDH;       // The source DataHolder
-  DataHolder* itsDestDH;         // The destination DataHolder
   TransportHolder* itsTransportHolder; // Its TransportHolder 
   int         itsTag;            // The tag used to uniquely identify the connection in read/write.
   bool        itsIsBlocking;     // Blocking communication on this connection?
