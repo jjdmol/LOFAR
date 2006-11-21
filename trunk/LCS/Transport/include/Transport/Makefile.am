@@ -1,5 +1,6 @@
 pkginclude_HEADERS = \
 	BaseSim.h \
+	BGLConnection.h \
 	Connection.h \
 	ConnectionPool.h \
 	CSConnection.h \
