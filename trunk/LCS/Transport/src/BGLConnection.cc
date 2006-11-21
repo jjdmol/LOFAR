@@ -93,7 +93,7 @@ Connection::State BGLConnection::write()
   DBGASSERTSTR(itsSourceDH != 0, "No source DataHolder set!");
   DBGASSERTSTR(itsSourceDH->isInitialized(), 
 	       "Source dataholder has not been initialized!");
-  DBGASSERT(itsTransportHolder != 0);
+  DBGASSERT(getTransportHolder() != 0);
   DBGASSERT(itsSourceDH != 0);
 
   LOG_TRACE_COND_STR("Transport::write; call send with tag " << getTag());
