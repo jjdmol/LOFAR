@@ -34,7 +34,7 @@ namespace LOFAR
   // @{
 
   // Singleton implements the so-called Meyers singleton (see Item 26 in
-  // <em>More Effective C++<em>, by Scott Meyers).
+  // <em>More Effective C++</em>, by Scott Meyers).
   //
   // \attention The Meyers singleton is \e not thread-safe. So, you can only
   // safely use this Singleton class <em>as long as</em> there is only one

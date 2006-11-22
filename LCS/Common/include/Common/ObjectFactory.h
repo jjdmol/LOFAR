@@ -53,6 +53,9 @@
 #  ifndef LOFAR_COMMON_OBJECT_FACTORY_H
 #    define LOFAR_COMMON_OBJECT_FACTORY_H
 
+#    ifndef HAVE_BOOST
+#      error The Boost.Preprocessor metaprogramming tools are required
+#    endif
 
 #    include <Common/lofar_map.h>
 #    include <Common/lofar_vector.h>
