@@ -1,5 +1,4 @@
 # BeamCntrl
 connected		bool
-
-	
+beams			stringArr
 	
