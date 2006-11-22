@@ -1,4 +1,7 @@
 # CalCtlr
 #
 connected	bool
-subarrays	stringArr
+obsname		string
+antennaArray	string
+filter	string
+nyquistzone	int
