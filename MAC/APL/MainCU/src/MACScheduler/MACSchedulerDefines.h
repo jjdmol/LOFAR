@@ -42,8 +42,6 @@ namespace LOFAR {
 #define PVSSNAME_FSM_STATE			"state"
 #define PVSSNAME_FSM_ERROR			"error"
 
-#define OC_PROPSET_NAME				"LOFAR_ObsSW_Observation%d"
-#define OC_PROPSET_TYPE				"Observation"
 
 }; // MCU
 }; // LOFAR
