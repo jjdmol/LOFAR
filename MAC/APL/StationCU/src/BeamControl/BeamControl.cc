@@ -74,14 +74,6 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	itsTreePrefix = globalParameterSet()->getString("prefix");
 	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
 
-	// get Observation based information
-	itsStartTime     = time_from_string(globalParameterSet()->
-											 getString("Observation.startTime"));
-	itsStopTime      = time_from_string(globalParameterSet()->
-											 getString("Observation.stopTime"));
-//	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
-//	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
-
 	// Instruct codeloggingProcessor
 	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
 
@@ -667,8 +659,8 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 		// key sourceTimes not found: use one fixed angle
 		double	directionAngle1(0.0);
 		double	directionAngle2(0.0);
-		directionAngle1=globalParameterSet()->getDouble(beam+"declination");
-		directionAngle2=globalParameterSet()->getDouble(beam+"rightAscention");
+		directionAngle1=globalParameterSet()->getDouble(beam+"angle1");
+		directionAngle2=globalParameterSet()->getDouble(beam+"angle2");
 
 		beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
 		beamPointToEvent.pointing.setDirection(directionAngle1,directionAngle2);
