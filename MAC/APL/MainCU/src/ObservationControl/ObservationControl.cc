@@ -183,14 +183,21 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 
 	case F_VGETRESP:
 	case F_VCHANGEMSG: {
-		// check which property changed
+		// check which propertySet(!) changed
 		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
 
 		string PropSetName = createPropertySetName(PSN_OBS_CTRL, getName());
 		if (strstr(pPropAnswer->pPropName, PropSetName.c_str()) == 0) {
-			break;
+			break;	// if not my own, exit
 		}
 
+		// don't watch state and error fields.
+		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0)) {
+			return;
+		}
+ 
+		// periods are of type integer.
 		if	(pPropAnswer->pValue->getType() == LPT_INTEGER) {
 			uint32  newVal = (uint32) ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
 
@@ -205,9 +212,17 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 				itsPreparePeriod = newVal;
 			}
 		}
+		// times are of type string
 		else if	(pPropAnswer->pValue->getType() == LPT_STRING) {
 			string  newVal = (string) ((GCFPVString*)pPropAnswer->pValue)->getValue();
-			ptime	newTime = time_from_string(newVal);
+			ptime	newTime;
+			try {
+				newTime = time_from_string(newVal);
+			}
+			catch (exception&	e) {
+				LOG_DEBUG_STR(newVal << " is not a legal time!!!");
+				return;
+			}
 			if (strstr(pPropAnswer->pPropName, PN_OC_START_TIME) != 0) {
 				LOG_INFO_STR ("Changing startTime from " << to_simple_string(itsStartTime)
 							 << " to " << newVal);
@@ -223,16 +238,17 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 		break;
 	}  
 
-//	case F_SUBSCRIBED:
-//	case F_UNSUBSCRIBED:
-//	case F_PS_CONFIGURED:
-//	case F_EXTPS_LOADED:
-//	case F_EXTPS_UNLOADED:
-//	case F_MYPS_ENABLED:
-//	case F_MYPS_DISABLED:
-//	case F_VGETRESP:
-//	case F_VCHANGEMSG:
-//	case F_SERVER_GONE:
+//  case F_SUBSCRIBED:      GCFPropAnswerEvent      pPropName
+//  case F_UNSUBSCRIBED:    GCFPropAnswerEvent      pPropName
+//  case F_PS_CONFIGURED:   GCFConfAnswerEvent      pApcName
+//  case F_EXTPS_LOADED:    GCFPropSetAnswerEvent   pScope, result
+//  case F_EXTPS_UNLOADED:  GCFPropSetAnswerEvent   pScope, result
+//  case F_MYPS_ENABLED:    GCFPropSetAnswerEvent   pScope, result
+//  case F_MYPS_DISABLED:   GCFPropSetAnswerEvent   pScope, result
+//  case F_VGETRESP:        GCFPropValueEvent       pValue, pPropName
+//  case F_VSETRESP:        GCFPropAnswerEvent      pPropName
+//  case F_VCHANGEMSG:      GCFPropValueEvent       pValue, pPropName
+//  case F_SERVER_GONE:     GCFPropSetAnswerEvent   pScope, result
 
 	default:
 		break;
@@ -243,7 +259,7 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 //
 // initial_state(event, port)
 //
-// Setup all connections.
+// Create top datapoint of this observation in PVSS.
 //
 GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -258,11 +274,62 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
+		string	propSetName(createPropertySetName(PSN_OBSERVATION, getName()));
+		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
+		itsBootPS = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
+																  PST_OBSERVATION,
+																  PS_CAT_TEMP_AUTOLOAD,
+																  &itsPropertySetAnswer));
+		itsBootPS->enable();
+		// Wait for timer that is set in PropertySetAnswer on ENABLED event
+		}
+		break;
+	  
+	case F_TIMER: {		// must be timer that PropSet has set.
+		// update PVSS.
+		LOG_TRACE_FLOW ("top DP of observation created, going to starting state");
+		TRAN(ObservationControl::starting_state);				// go to next state.
+		}
+		break;
+
+	case F_CONNECTED:
+		break;
+
+	case F_DISCONNECTED:
+		break;
+	
+	default:
+		LOG_DEBUG_STR ("initial, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+
+//
+// starting_state(event, port)
+//
+// Setup all connections.
+//
+GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("starting:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_INIT:
+   		break;
+
+	case F_ENTRY: {
+		// Get access to my own propertyset.
 		string	propSetName(createPropertySetName(PSN_OBS_CTRL, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
 																  PST_OBS_CTRL,
-																  PS_CAT_TEMPORARY,
+																  PS_CAT_TEMP_AUTOLOAD,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
 		// Wait for timer that is set in PropertySetAnswer on ENABLED event
@@ -295,7 +362,7 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 		break;
 	
 	default:
-		LOG_DEBUG_STR ("initial, default");
+		LOG_DEBUG_STR ("starting, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
