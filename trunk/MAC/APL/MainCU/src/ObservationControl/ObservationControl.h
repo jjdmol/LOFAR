@@ -78,8 +78,12 @@ public:
    	// PropertySetAnswerHandlerInterface method
    	virtual void handlePropertySetAnswer(GCFEvent& answer);
 
-	// During the initial state all connections with the other programs are made.
+	// During this state the top DP LOFAR_ObsSW_<observation> is created
    	GCFEvent::TResult initial_state (GCFEvent& e, 
+									 GCFPortInterface& p);
+	
+	// During this state all connections with the other programs are made.
+   	GCFEvent::TResult starting_state (GCFEvent& e, 
 									 GCFPortInterface& p);
 	
 	// Normal control mode. 
@@ -104,8 +108,9 @@ private:
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
 
-   	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
-   	GCFMyPropertySetPtr           itsPropertySet;
+   	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
+   	GCFMyPropertySetPtr				itsPropertySet;
+	GCFMyPropertySetPtr				itsBootPS;
 
 #if 0
 	// Administration of the ObservationControllers

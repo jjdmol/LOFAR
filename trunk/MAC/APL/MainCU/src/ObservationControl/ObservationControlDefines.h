@@ -42,6 +42,9 @@ namespace LOFAR {
 #define PVSSNAME_FSM_STATE			"state"
 #define PVSSNAME_FSM_ERROR			"error"
 
+// Observation
+#define PSN_OBSERVATION	"LOFAR_ObsSW_@observation@"
+#define PST_OBSERVATION	"Observation"
 
 }; // MCU
 }; // LOFAR
