@@ -332,6 +332,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		// to install our handler later than the GCFTask handler.
 	    pMacScheduler = this;
 		signal (SIGINT, MACScheduler::sigintHandler);	// ctrl-c
+		signal (SIGTERM, MACScheduler::sigintHandler);	// kill
 
 		// update PVSS
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
