@@ -92,14 +92,15 @@ private:
 	BeamControl(const BeamControl&);
    	BeamControl& operator=(const BeamControl&);
 
-	int32	convertDirection(const string&	typeName);
-	void	doPrepare();
-	uint16	handleBeamAllocAck(GCFEvent&	event);
-	bool	handleBeamFreeAck(GCFEvent&	event);
-	void	doRelease();
-   	void	_connectedHandler(GCFPortInterface& port);
-   	void	_disconnectedHandler(GCFPortInterface& port);
-	void	setState(CTState::CTstateNr     newState);
+	int32	convertDirection		(const string&	typeName);
+	void	doPrepare				();
+	uint16	handleBeamAllocAck		(GCFEvent&	event);
+	bool	handleBeamFreeAck		(GCFEvent&	event);
+	void	doRelease				();
+
+   	void	_connectedHandler		(GCFPortInterface& port);
+   	void	_disconnectedHandler	(GCFPortInterface& port);
+	void	setState				(CTState::CTstateNr     newState);
 	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
@@ -121,11 +122,7 @@ private:
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
-	ptime					itsStartTime;
-	ptime					itsStopTime;
-	uint32					itsClaimPeriod;
-	uint32					itsPreparePeriod;
-	uint32					itsBeamID;
+	uint32					itsBeamID;				// returned from BeamServer
 };
 
   };//StationCU
