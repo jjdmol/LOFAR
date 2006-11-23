@@ -384,13 +384,13 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	case CONTROL_RESUMED:
 	case CONTROL_SUSPENDED:
 	case CONTROL_RELEASED:
+	case CONTROL_FINISH:
 	case CONTROL_CLAIM:			// from ParentITCport
 	case CONTROL_SCHEDULE:
 	case CONTROL_PREPARE:
 	case CONTROL_RESUME:
 	case CONTROL_SUSPEND:
 	case CONTROL_RELEASE:
-	case CONTROL_FINISH:
 	case CONTROL_QUIT: {
 		// All the events have the problem that the controller can be StationControl,
 		// CalibrationControl or BeamControl. But what they all have in common is
