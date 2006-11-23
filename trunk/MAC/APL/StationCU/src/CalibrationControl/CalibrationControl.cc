@@ -490,6 +490,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
 															CT_RESULT_NO_ERROR);
 			setState(CTState::RELEASED);
+			TRAN(CalibrationControl::claimed_state);			// go to next state.
 		}
 		else {
 			LOG_ERROR("Stop of calibration failed, going to SUSPENDED mode");
