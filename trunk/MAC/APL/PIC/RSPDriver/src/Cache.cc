@@ -70,6 +70,22 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
   LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
   LOG_DEBUG_STR("m_tdstatus.board().size()     =" << m_tdstatus.board().size()     * sizeof(EPA_Protocol::TDBoardStatus));
+  LOG_DEBUG_STR("m_tbbsettings().size()        =" << m_tbbsettings().size()        * sizeof(bitset<MEPHeader::N_SUBBANDS>));
+
+  LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
+	         m_beamletweights().size()    	       
+	       + m_subbandselection().size()  
+	       + m_rcusettings().size()       
+	       + m_rsusettings().size()       
+	       + m_wgsettings().size()        
+	       + m_subbandstats().size()      
+	       + m_beamletstats().size()      
+	       + m_xcstats().size()           
+	       + m_systemstatus.board().size()
+	       + m_versions.bp().size()       
+	       + m_versions.ap().size()       
+	       + m_tdstatus.board().size()    
+	       + m_tbbsettings().size()));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -87,6 +103,7 @@ CacheBuffer::~CacheBuffer()
   m_versions.bp().free();
   m_versions.ap().free();
   m_tdstatus.board().free();
+  m_tbbsettings().free();
 }
 
 void CacheBuffer::reset(void)
@@ -186,6 +203,12 @@ void CacheBuffer::reset(void)
   memset(&tdstatusinit, 0, sizeof(TDBoardStatus));
   tdstatusinit.unknown = 1;
   m_tdstatus.board() = tdstatusinit;
+
+  // TBBSettings
+  m_tbbsettings().resize(StationSettings::instance()->nrRcus());
+  bitset<MEPHeader::N_SUBBANDS> bandsel;
+  bandsel = 0;
+  m_tbbsettings() = bandsel;
 }
 
 RTC::Timestamp CacheBuffer::getTimestamp() const

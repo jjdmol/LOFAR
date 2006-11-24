@@ -40,8 +40,8 @@ RSPDriver.PPS_TRIGGER=1
 #
 # Specify MAC addresses of the RSP boards explicitly
 #
-RSPDriver.MAC_ADDR_0=10:FA:00:00:11:00
-RSPDriver.MAC_ADDR_1=10:FA:00:00:12:00
+RSPDriver.MAC_ADDR_0=10:FA:00:00:01:00
+RSPDriver.MAC_ADDR_1=10:FA:00:00:03:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
 RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
 RSPDriver.MAC_ADDR_4=10:FA:00:00:04:00
@@ -173,7 +173,7 @@ RSPDriver.XST_FIRST_RSP_BOARD=0x11
 # Ethernet interface on which to contact the RSP boards.
 # This interface would normally be connected to the switch.
 #
-RSPDriver.IF_NAME=eth1
+RSPDriver.IF_NAME=eth0
 
 #
 # Make sure that initially the

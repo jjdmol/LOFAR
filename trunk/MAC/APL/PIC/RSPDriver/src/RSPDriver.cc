@@ -76,6 +76,7 @@
 #include "GetRegisterStateCmd.h"
 #include "UpdRegisterStateCmd.h"
 #include "SetTBBCmd.h"
+#include "GetTBBCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -1129,6 +1130,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 
     case RSP_SETTBB:
       rsp_settbb(event, port);
+      break;
+
+    case RSP_GETTBB:
+      rsp_gettbb(event, port);
       break;
 
     case F_TIMER:
@@ -2506,6 +2511,39 @@ void RSPDriver::rsp_settbb(GCFEvent& event, GCFPortInterface& port)
     (void)m_scheduler.enter(Ptr<Command>(&(*command)));
   }
   command->ack(Cache::getInstance().getFront());
+}
+
+//
+// rsp_gettbb(event,port)
+//
+void RSPDriver::rsp_gettbb(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetTBBCmd> command = new GetTBBCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    LOG_ERROR("GETTBB: invalid parameter");
+    
+    RSPGettbbackEvent ack;
+    ack.settings().resize(1);
+    ack.settings() = 0;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+  
+  // if null timestamp get value from the cache and acknowledge immediately
+  if ( (Timestamp(0,0) == command->getTimestamp())
+       && (true == command->readFromCache()))
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
 }
 
 //
