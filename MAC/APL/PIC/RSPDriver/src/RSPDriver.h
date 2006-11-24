@@ -162,6 +162,7 @@ namespace LOFAR {
       void rsp_unsubregisterstate(GCFEvent& event, GCFPortInterface &port);
 
       void rsp_settbb(GCFEvent& event, GCFPortInterface &port);
+      void rsp_gettbb(GCFEvent& event, GCFPortInterface &port);
       /*@}*/
 
     private:

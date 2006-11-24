@@ -73,6 +73,8 @@ void TBBBandselWrite::sendrequest()
 		      
   tbbbandsel.bandsel = Cache::getInstance().getBack().getTBBSettings()()(global_rcu);
 
+  LOG_INFO_STR("TBBBandselWrite (rcu=" << (int)global_rcu << " = " << tbbbandsel.bandsel);
+
   m_hdr = tbbbandsel.hdr;
   getBoardPort().send(tbbbandsel);
 }

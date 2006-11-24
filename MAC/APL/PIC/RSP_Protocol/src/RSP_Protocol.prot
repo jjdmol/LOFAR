@@ -1554,3 +1554,40 @@ event = {
     type = "int16";
   };
 };
+
+event = {
+  signal = GETTBB;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETTBBACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "TBBSettings";
+    userdefined;
+  };
+};

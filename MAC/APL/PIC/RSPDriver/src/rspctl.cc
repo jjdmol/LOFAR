@@ -46,6 +46,8 @@
 #include <ctype.h>
 #include <set>
 
+#include <netinet/in.h>
+
 #include <APL/RTCCommon/gnuplot_i.h>
 
 #include "rspctl.h"
@@ -64,6 +66,9 @@ double WGCommand::AMPLITUDE_SCALE = (1.0 * ((uint32)(1 << 11)-1) / (uint32)(1 <<
 
 // local funtions
 static void usage();
+
+// Constants
+#define BITSOFBYTE 8
 
 //
 // Some handy macro's to iterate of RSP boards
@@ -335,7 +340,7 @@ void SubbandsCommand::send()
       break;
 
     default:
-      LOG_FATAL("invalid subbanselection type");
+      logMessage(cerr,"Error: invalid subbandselection type");
       exit(EXIT_FAILURE);
       break;
     }
@@ -600,7 +605,7 @@ void RSUCommand::send()
 {
   if (getMode()) {
     // GET not supported
-    LOG_FATAL("RSUCommand GET not supported");
+    logMessage(cerr, "Error: RSUCommand GET not supported");
     exit(EXIT_FAILURE);
   }
   else {
@@ -702,7 +707,7 @@ GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
        * This signal is handled in SubClockCommand.
        * We should never end up here.
        */
-      LOG_FATAL("invalid code path");
+      logMessage(cerr, "Error: invalid code path");
       exit(EXIT_FAILURE);
     }
     break;
@@ -745,7 +750,7 @@ void SubClockCommand::send()
   else
   {
     // SET not supported
-    LOG_FATAL("SubClockCommand: SET not supported");
+    logMessage(cerr, "SubClockCommand: SET not supported");
     exit(EXIT_FAILURE);
   }
 }
@@ -891,8 +896,13 @@ void TBBCommand::send()
   if (getMode())
   {
     // GET
-    LOG_FATAL("not yet implemented");
-    exit(EXIT_FAILURE);
+    RSPGettbbEvent gettbb;
+
+    gettbb.timestamp = Timestamp(0,0);
+    gettbb.rcumask = getRCUMask();
+    gettbb.cache = true;
+
+    m_rspport.send(gettbb);
   }
   else
   {
@@ -902,7 +912,7 @@ void TBBCommand::send()
     settbb.timestamp = Timestamp(0,0);
     settbb.rcumask = getRCUMask();
 
-    logMessage(cerr,formatString("rcumask.count()=%d",settbb.rcumask.count()));
+    logMessage(cout,formatString("rcumask.count()=%d", settbb.rcumask.count()));
 
     // if only 1 subband selected, apply selection to all
     switch (m_type) {
@@ -910,26 +920,26 @@ void TBBCommand::send()
     case TRANSIENT:
       {
 	settbb.settings().resize(1);
-	settbb.settings()(0) = 0;
+	settbb.settings()(0).reset();
       }
       break;
 
     case SUBBANDS:
       {
-	bitset<MEPHeader::N_SUBBANDS> bandsel;
-
 	settbb.settings().resize(1);
+	settbb.settings()(0).reset();
 
 	std::list<int>::iterator it;
 	for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++) {
 	  if ((*it) >= MEPHeader::N_SUBBANDS) continue;
 	  settbb.settings()(0).set(*it);
 	}
+	logMessage(cout, formatString("tbbbandsel.count()=%d ", settbb.settings()(0).count()));
       }
       break;
 
     default:
-      LOG_FATAL("invalid tbbmode type");
+      logMessage(cerr, "Error: invalid tbbmode type");
       exit(EXIT_FAILURE);
       break;
     }
@@ -944,6 +954,40 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 
   switch (e.signal)
   {
+    case RSP_GETTBBACK:
+    {
+      RSPGettbbackEvent ack(e);
+
+      std::ostringstream msg;
+      msg << "settbback.timestamp=" << ack.timestamp;
+      logMessage(cout, msg.str());
+      msg.seekp(0);
+
+      if (SUCCESS != ack.status) {
+	logMessage(cerr, "Error: RSP_GETTBB command failed.");
+	break;
+      }
+
+      // print settings
+      int rcuin = 0;
+      for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+      {
+	if (getRCUMask()[rcuout])
+        {
+	  cout << formatString("RCU[%02u].tbbsettings= ", rcuout);
+	  for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(unsigned long) * BITSOFBYTE); ilong++) {
+
+	    cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & std::bitset<MEPHeader::N_SUBBANDS>(0xFFFFFFFF)).to_ulong()));
+	    ack.settings()(rcuin) >>= sizeof(unsigned long)*BITSOFBYTE;
+	  }
+	  cout << endl;
+
+	  rcuin++;
+	}
+      }
+    }
+    break;
+
     case RSP_SETTBBACK:
     {
       RSPSettbbackEvent ack(e);
@@ -954,7 +998,7 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 
       if (SUCCESS != ack.status)
       {
-        logMessage(cerr,"Error: RSP_SETTBB command failed.");
+        logMessage(cerr, "Error: RSP_SETTBB command failed.");
       }
     }
     break;
@@ -992,7 +1036,7 @@ void RegisterStateCommand::send()
   else
   {
     // SET not supported
-    LOG_FATAL("RegisterStateCommand: SET not supported");
+    logMessage(cerr, "Error: RegisterStateCommand: SET not supported");
     exit(EXIT_FAILURE);
   }
 }
@@ -1567,7 +1611,7 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 
     if (SUCCESS != ack.status)
     {
-      logMessage(cerr,"failed to subscribe to statistics");
+      logMessage(cerr,"Error: failed to subscribe to statistics");
       exit(EXIT_FAILURE);
     }
 
@@ -1790,7 +1834,7 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 
     if (SUCCESS != ack.status)
     {
-      logMessage(cerr,"failed to subscribe to xcstatistics");
+      logMessage(cerr,"Error: failed to subscribe to xcstatistics");
       exit(EXIT_FAILURE);
     }
     else
@@ -1811,7 +1855,7 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 #if 0
     Range r1, r2;
     if (!getRSPRange2(r1, r2)) {
-      logMessage(cerr, "RSP range selection must have exactly 4 numbers");
+      logMessage(cerr, "Error: RSP range selection must have exactly 4 numbers");
       exit(EXIT_FAILURE);
     }
     Array<complex<double>, 4> selection = upd.stats()(Range::all(), Range::all(), r1, r2).copy();
@@ -1920,7 +1964,7 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
     {
       if (!m_server.isConnected())
         if (!m_server.open()) {
-	  LOG_FATAL("failed to open port to RSPDriver");
+	  logMessage(cerr, "Error: failed to open port to RSPDriver");
 	  exit(EXIT_FAILURE);
 	}
     }
@@ -2028,6 +2072,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_SETHBAACK:
     case RSP_GETHBAACK:
     case RSP_SETTBBACK:
+    case RSP_GETTBBACK:
       status = m_command->ack(e); // handle the acknowledgement
       break;
 
@@ -2043,6 +2088,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	  if (0 == (m_command = parse_options(m_argc, m_argv)))
 	    {
 	      logMessage(cerr,"Warning: no command specified.");
+	      usage();
 	      exit(EXIT_FAILURE);
 	    }
 	  // check if a connection must be made with a frontend. If so, connect first
@@ -2592,7 +2638,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		  command->set_ndevices(m_nrspboards * MEPHeader::N_POL);
 		  statscommand->setType(Statistics::BEAMLET_POWER);
 		} else {
-		  LOG_FATAL_STR("invalid statistics type '" << optarg << "'");
+		  logMessage(cerr, formatString("Error: invalid statistics type %s", optarg));
 		  exit(EXIT_FAILURE);
 		}
 	      }
@@ -2738,7 +2784,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		  tbbcommand->setType(TBBCommand::SUBBANDS);
 
 		  char* liststring = strchr(optarg, ',');
-		  if (liststring) {
+		  liststring++; // skip the ,
+		  if (liststring && *liststring) {
 		    list<int> subbandlist = strtolist(liststring, MEPHeader::N_SUBBANDS);
 		    if (subbandlist.empty()) {
 		      logMessage(cerr,"Error: missing or invalid subband set '--tbbmode=subbands' option");
@@ -2749,7 +2796,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		    logMessage(cerr,"Error: missing or invalid subband set '--tbbmode=subbands' option");
 		  }
 		} else {
-		  LOG_FATAL_STR("invalid statistics type '" << optarg << "'");
+		  logMessage(cerr, formatString("Error: invalid statistics type %s", optarg));
 		  exit(EXIT_FAILURE);
 		}
 	      }
@@ -2861,6 +2908,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	case '?':
 	default:
+	  logMessage(cerr, "Error: invalid option");
 	  exit(EXIT_FAILURE);
 	  break;
 	}

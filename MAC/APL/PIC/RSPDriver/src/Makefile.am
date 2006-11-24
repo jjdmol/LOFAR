@@ -136,6 +136,8 @@ RSPDriver_SOURCES = \
 	UpdRegisterStateCmd.cc \
 	SetTBBCmd.h \
 	SetTBBCmd.cc \
+	GetTBBCmd.h \
+	GetTBBCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \
