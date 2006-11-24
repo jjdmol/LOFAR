@@ -40,8 +40,8 @@ RSPDriver.PPS_TRIGGER=1
 #
 # Specify MAC addresses of the RSP boards explicitly
 #
-RSPDriver.MAC_ADDR_0=10:FA:00:00:01:00
-RSPDriver.MAC_ADDR_1=10:FA:00:00:03:00
+RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
+RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
 RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
 RSPDriver.MAC_ADDR_4=10:FA:00:00:04:00
@@ -118,23 +118,50 @@ RSPDriver.CDO_N_BLOCKS=16
 RSPDriver.CDO_N_BEAMLETS=40
 RSPDriver.CDO_SRCMAC_FORMAT=10:FA:00:%02x:01:%02x
 
+#
+# Destination MAC addresses configuration
+# for output RSP boards
+# Must match with MAC addresses of CEP input nodes
+#
+# Uncomment only the lines for the specific station
+# on which the configuration file is used.
+#
+
 # FTS-1
 # RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
 # RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D4
-# CS-1
+
+# CS01:
+# RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:8C:D1
+# RSPDriver.DST_MAC_ADDR_1=00:E0:81:34:8C:D1
+# RSPDriver.DST_MAC_ADDR_2=00:E0:81:34:9B:87
+# RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:B3:27
+
+# CS08:
+# RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8B
+# RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DE:8B
+# RSPDriver.DST_MAC_ADDR_2=00:E0:81:29:20:37
+# RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:DE:9B
+
+# CS16:
+# RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DF:D5
+# RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D5
+# RSPDriver.DST_MAC_ADDR_2=00:E0:81:34:92:11
+# RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:B2:15
+
+# CS10:
 RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:93:3B
 RSPDriver.DST_MAC_ADDR_1=00:E0:81:34:93:3B
 RSPDriver.DST_MAC_ADDR_2=00:E0:81:31:B0:E1
 RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:B2:F5
-RSPDriver.DST_MAC_ADDR_4=00:E0:81:31:B2:F5
-RSPDriver.DST_MAC_ADDR_5=00:E0:81:31:B2:F5
-RSPDriver.DST_MAC_ADDR_6=00:E0:81:34:93:3B
-RSPDriver.DST_MAC_ADDR_7=00:E0:81:34:93:3B
-RSPDriver.DST_MAC_ADDR_8=00:E0:81:31:B0:E1
-RSPDriver.DST_MAC_ADDR_9=00:E0:81:31:B0:E1
-RSPDriver.DST_MAC_ADDR_10=00:E0:81:31:B2:F5
-RSPDriver.DST_MAC_ADDR_11=00:E0:81:31:B2:F5
 
+#
+# EOF Destination MAC address configuration
+#
+
+#
+# Source IP address in UDP header for each RSP board
+#
 RSPDriver.SRC_IP_ADDR_0=10.10.0.1
 RSPDriver.SRC_IP_ADDR_1=10.10.0.2
 RSPDriver.SRC_IP_ADDR_2=10.10.0.3
@@ -148,6 +175,9 @@ RSPDriver.SRC_IP_ADDR_9=10.10.0.10
 RSPDriver.SRC_IP_ADDR_10=10.10.0.11
 RSPDriver.SRC_IP_ADDR_11=10.10.0.12
 
+#
+# Destination IP adress in UDP header for each RSP board
+#
 RSPDriver.DST_IP_ADDR_0=10.170.0.1
 RSPDriver.DST_IP_ADDR_1=10.170.0.2
 RSPDriver.DST_IP_ADDR_2=10.170.0.3
@@ -167,13 +197,13 @@ RSPDriver.DST_IP_ADDR_11=10.170.0.12
 #
 # MAC address is equal to : 10:FA:00:00:XX:00
 #
-RSPDriver.XST_FIRST_RSP_BOARD=0x11
+RSPDriver.XST_FIRST_RSP_BOARD=0x00
 
 #
 # Ethernet interface on which to contact the RSP boards.
 # This interface would normally be connected to the switch.
 #
-RSPDriver.IF_NAME=eth0
+RSPDriver.IF_NAME=eth1
 
 #
 # Make sure that initially the
@@ -256,7 +286,7 @@ RSPDriver.READ_WG=0
 # into the hardware when the driver starts.
 # Currently allowed values are: 0 (off), 160 (MHz) and 200 (MHz)
 #
-RSPDriver.DEFAULT_SAMPLING_FREQUENCY=200
+RSPDriver.DEFAULT_SAMPLING_FREQUENCY=160
 
 #
 # Specify how the rspdriver should operate:
