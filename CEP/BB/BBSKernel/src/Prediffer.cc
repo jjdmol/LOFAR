@@ -755,7 +755,8 @@ bool Prediffer::setContext(const GenerateContext &context)
         return false;
     }
                         
-    initSolvableParms(context.solveDomains);
+    itsSolveDomains = context.solveDomains;
+    initSolvableParms(itsSolveDomains);
     
     return itsNrPert>0;
 }
