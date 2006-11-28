@@ -12,15 +12,7 @@ pkginclude_HEADERS = \
 	BBSStrategy.h \
 	BBSStructs.h \
 	BBSSubtractStep.h \
-	BlackBoardDemo.h \
-	DH_Prediff.h \
-	ParmWriter.h \
-	SC_CompoundIter.h \
-	SC_Simple.h \
-	SC_WritePredData.h \
-	WH_Control.h \
-	WH_Prediff.h \
-	WH_Solve.h
+	Exceptions.h
 
 noinst_HEADERS =
 
