@@ -162,7 +162,7 @@ public:
   void writeParms();
 
 #ifdef EXPR_GRAPH
-  void writeExpressionGraph(const std::string &fileName, int baselineIndex);
+  void writeExpressionGraph(const string &fileName, int baselineIndex);
 #endif
 
   // Show the settings of the Prediffer.
@@ -178,11 +178,6 @@ public:
         casa::Array<casa::Complex>& data,
         casa::Array<casa::Bool>& flags);
 
-  const vector<MeqDomain> &getSolveDomains() const
-  {
-    return itsSolveDomains;
-  }
-  
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   
@@ -242,9 +237,12 @@ private:
   Prediffer& operator= (const Prediffer& other);
   // </group>
 
-  // Read measurement set meta data
+  // Read measurement set meta data.
   void readMeasurementSetMetaData(const string& fileName);
 
+  // Get the name of the file that contains the data that belongs to the specified column.
+  string getFileForColumn(const string &column);
+  
   // Process the MS description for the given dd (spectral window).
   void processMSDesc (uint ddid);
 
@@ -295,8 +293,9 @@ private:
   void mapDataFiles (const string& inFile, const string& outFile);
 
   // Add a data column to the table and create a symlink for it.
-  void addDataColumn (casa::Table& tab, const string& columnName,
-              const string& symlinkName);
+//  void addDataColumn (casa::Table& tab, const string& columnName,
+//              const string& symlinkName);
+  void addDataColumn (casa::Table& tab, const string& columnName);
 
   // Define the signature of a function processing a baseline.
   typedef void (Prediffer::*ProcessFuncBL) (int threadnr, void* arg,
@@ -419,6 +418,7 @@ private:
   string itsOutDataColumn;
 
   MSDesc itsMSDesc;                   //# description of the MS
+  map<string, string>  itsColumns;   //# mapping from column name to table file within MS.
   double itsStartFreq;                //# start frequency of observation
   double itsEndFreq;
   double itsStepFreq;
@@ -446,7 +446,7 @@ private:
   //# Define the baselines that can be used (thus selected in strategy).
   //# The seqnr is the sequence number of the baseline in the MS.
   
-  std::map<std::pair<int, int>, int>    itsSelectedBaselines;
+  map<pair<int, int>, int>    itsSelectedBaselines;
   
   //# Define which baselines are selected in the select function.
   vector<int>    itsBLInx;         //# Seqnrs of selected baselines
@@ -482,8 +482,6 @@ private:
   //# Timers.
   NSTimer itsPredTimer;
   NSTimer itsEqTimer;
-  
-  vector<MeqDomain>                 itsSolveDomains;
   
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED

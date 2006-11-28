@@ -65,7 +65,7 @@
 #include <casa/Quanta/MVPosition.h>
 #include <casa/OS/Timer.h>
 #include <casa/OS/RegularFile.h>
-#include <casa/OS/SymLink.h>
+//#include <casa/OS/SymLink.h>
 #include <casa/Containers/Record.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/IO/MemoryIO.h>
@@ -353,7 +353,13 @@ bool Prediffer::setSelection(const vector<string> &stations, const Correlation &
     LOG_INFO_STR("No. of selected baselines: " << itsSelectedBaselines.size());
         
     // Map flags into memory.
-    itsFlagsMap = new FlagsMap(itsMSName + "/vis.flg", MMap::Read);
+    string flagFile = getFileForColumn(MS::columnName(MS::FLAG));
+    if(flagFile.empty())
+    {
+        return false;
+    }
+    LOG_INFO_STR("Input column " << MS::columnName(MS::FLAG) << " maps to: " << flagFile);
+    itsFlagsMap = new FlagsMap(flagFile, MMap::Read);
     
     // Get all sources from the ParmDB.
     itsSources = new MeqSourceList(*itsGSMMEP, itsParmGroup);
@@ -476,10 +482,10 @@ bool Prediffer::setContext(const Context &context)
     }
     ASSERTSTR(itsBLInx.size() > 0, "No baselines selected in current context.");
     
-    // Clear solvable flag from all parameters (may still be set from the
-    // previous step).
+    // Clear the solvable flag on all parameters (may still be set from the
+    // previous step.
     clearSolvableParms();
-
+    
     // Create the measurement equation for each interferometer (baseline).
     if(context.sources.empty())
     {
@@ -679,7 +685,7 @@ bool Prediffer::setContext(const GenerateContext &context)
     const vector<string>& unknowns = context.unknowns;
     const vector<string>& excludedUnknowns = context.excludedUnknowns;
     
-    vector<casa::Regex> unknowsRegex;
+    vector<casa::Regex> unknownsRegex;
     vector<casa::Regex> excludedUnknownsRegex;
 
     try
@@ -687,7 +693,7 @@ bool Prediffer::setContext(const GenerateContext &context)
         // Convert patterns to aips++ regexes.
         for(unsigned int i = 0; i < unknowns.size(); i++)
         {
-            unknowsRegex.push_back(casa::Regex::fromPattern(unknowns[i]));
+            unknownsRegex.push_back(casa::Regex::fromPattern(unknowns[i]));
         }
     
         for(unsigned int i = 0; i < excludedUnknowns.size(); i++)
@@ -703,7 +709,7 @@ bool Prediffer::setContext(const GenerateContext &context)
     
     // Find all parms matching context.unknowns, exclude those that
     // match context.excludedUnknowns.
-    int unknowCount = 0;
+    int unknownCount = 0;
     for(MeqParmGroup::iterator parameter_it = itsParmGroup.begin();
         parameter_it != itsParmGroup.end();
         ++parameter_it)
@@ -711,15 +717,15 @@ bool Prediffer::setContext(const GenerateContext &context)
         String parameterName(parameter_it->second.getName());
 
         // Loop through all regex-es until a match is found.
-        for(vector<casa::Regex>::iterator included_it = unknowsRegex.begin();
-            included_it != unknowsRegex.end();
+        for(vector<casa::Regex>::iterator included_it = unknownsRegex.begin();
+            included_it != unknownsRegex.end();
             included_it++)
         {
             if(parameterName.matches(*included_it))
             {
                 bool include = true;
                 
-                // Test if not excluded.
+                // Test if excluded.
                 for(vector<casa::Regex>::const_iterator excluded_it = excludedUnknownsRegex.begin();
                     excluded_it != excludedUnknownsRegex.end();
                     excluded_it++)
@@ -735,7 +741,7 @@ bool Prediffer::setContext(const GenerateContext &context)
                 {
                     LOG_TRACE_OBJ_STR("setSolvable: " << parameter_it->second.getName());
                     parameter_it->second.setSolvable(true);
-                    unknowCount++;
+                    unknownCount++;
                 }
                 
                 break;
@@ -743,14 +749,13 @@ bool Prediffer::setContext(const GenerateContext &context)
         }
     }
     
-    if(unknowCount == 0)
+    if(unknownCount == 0)
     {
 	LOG_ERROR("No unknowns selected in this context.");
         return false;
     }
                         
-    itsSolveDomains = context.solveDomains;
-    initSolvableParms(itsSolveDomains);
+    initSolvableParms(context.solveDomains);
     
     return itsNrPert>0;
 }
@@ -1144,7 +1149,6 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
     Path absolutePath = Path(fileName).absoluteName();
     itsMSDesc.msPath = absolutePath.dirName();
     itsMSDesc.msName = absolutePath.baseName();
-
     itsMSDesc.npart  = 1;
 
     /*
@@ -1334,6 +1338,68 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
             itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
         }
     }
+
+    /*
+        Create a map from column name to file on disk.
+    */
+    Record info = ms.dataManagerInfo();
+    for(unsigned int i = 0; i < info.nfields(); ++i)
+    {
+        const Record &dm = info.subRecord(i);
+        const Array<String> columns = dm.asArrayString("COLUMNS");
+        
+        /*
+            BBS requires TiledColumnStMan (or another StorageManager that stores data
+            linearly on disk) and one column per DataManager. This is because mmap is
+            used to access the data.
+        */
+        if(dm.asString("TYPE") == "TiledColumnStMan" && columns.size() == 1)
+        {
+            /*
+                The data bound to a TiledColumnStMan is stored in a file called table.f<seqnr>_TSM0 where
+                <seqnr> is SPEC.SEQNR stored in the DataManager info record. (In glish use getdminfo() on
+                an MS). However, this is only a heuristic, because if there are several different TiledStMan
+                used in one MS it might also be _TSM1 for instance. The mapping created here is guaranteed to
+                work with Storage.
+            */
+            unsigned int idx = i;
+            
+            try
+            {
+                const Record &spec = dm.asRecord("SPEC");
+                idx = spec.asuInt("SEQNR");
+            }
+            catch(AipsError &_ex)
+            {
+                LOG_WARN_STR("DataManager " << i + 1 << " has no SPEC.SEQNR. Please verify (e.g. with glish) that the columns bound to this DataManager are stored in " << fileName << "/table.f" << i << "_TSM0.");
+            }
+        
+            /*
+                Update the column map.
+            */
+            ostringstream os;
+            os << "table.f" << idx << "_TSM0";
+            
+            for(Array<String>::const_iterator it = columns.begin(); it != columns.end(); ++it)
+            {
+                itsColumns[static_cast<string>(*it)] = os.str();
+            }
+        }            
+    }
+}
+
+string Prediffer::getFileForColumn(const string &column)
+{
+    map<string, string>::const_iterator it = itsColumns.find(column);
+    
+    if(it == itsColumns.end())
+    {
+        return string();    
+    }
+    else
+    {
+        return itsMSName + "/" + it->second;
+    }
 }
 
 void Prediffer::processMSDesc (uint ddid)
@@ -1398,8 +1464,11 @@ void Prediffer::mapDataFiles (const string& inColumnName,
                   const string& outColumnName)
 {
   Table tab;
+  
   if (! inColumnName.empty()) {
-    string inFile = itsMSName + "/vis." + inColumnName;
+    string inFile = getFileForColumn(inColumnName);
+    ASSERTSTR(!inFile.empty(), "Column " << inColumnName << " does not exist or has non-standard storage manager.");
+    
     if (itsInDataMap == 0  ||  itsInDataMap->getFileName() != inFile) {
       tab = Table(itsMSName);
       ASSERTSTR (tab.tableDesc().isColumn(inColumnName),
@@ -1414,47 +1483,57 @@ void Prediffer::mapDataFiles (const string& inColumnName,
     itsInDataMap = new MMap (inFile, MMap::Read);
       }
     }
+    LOG_INFO_STR("Input column " << inColumnName << " maps to: " << inFile);
   }
+  
+  
   if (! outColumnName.empty()) {
-    string outFile = itsMSName + "/vis." + outColumnName;
     if (tab.isNull()) {
       tab = Table(itsMSName);
     }
-    if (itsOutDataMap == 0  ||  itsOutDataMap->getFileName() != outFile) {
-      if (! tab.tableDesc().isColumn(outColumnName)) {
-    addDataColumn (tab, outColumnName, outFile);
+    
+    string outFile = getFileForColumn(outColumnName);
+    if (itsOutDataMap == 0 || outFile.empty() || itsOutDataMap->getFileName() != outFile) {
+      if (!tab.tableDesc().isColumn(outColumnName)) {
+//    addDataColumn (tab, outColumnName, outFile);
+        addDataColumn (tab, outColumnName);
+        outFile = getFileForColumn(outColumnName);
       }
+      ASSERTSTR(!outFile.empty(), "Could not figure out which file contains the column " << outColumnName);
+      
       delete itsOutDataMap;
       itsOutDataMap = 0;
       itsOutDataMap = new MMap (outFile, MMap::ReWr);
     }
+    LOG_INFO_STR("Output column " << outColumnName << " maps to: " << outFile);
   }
 }
 
-void Prediffer::addDataColumn (Table& tab, const string& columnName,
-                   const string& symlinkName)
+
+void Prediffer::addDataColumn(Table& tab, const string& columnName)
 {
-  tab.reopenRW();
-  File fil(symlinkName);
-  ASSERT (!fil.exists());
-  ArrayColumnDesc<Complex> resCol(columnName,
-                  IPosition(2,itsNCorr, itsNrChan),
-                  ColumnDesc::FixedShape);
+  ASSERT(itsColumns.find(columnName) == itsColumns.end());
+  
+  ArrayColumnDesc<Complex> resCol(columnName, IPosition(2, itsNCorr, itsNrChan), ColumnDesc::FixedShape);
   String stManName = "Tiled_"+columnName;
   TiledColumnStMan tiledRes(stManName, IPosition(3,itsNCorr,itsNrChan,1));
+  
+  tab.reopenRW();
   tab.addColumn (resCol, tiledRes);
   tab.flush();
-  // Find out which datamanager the new column is in.
-  // Create symlink for it.
+  
+  /*
+    Find out which datamanager the new column is in.
+  */
   Record dminfo = tab.dataManagerInfo();
-  ostringstream filNam;
-  for (uint i=0; i<dminfo.nfields(); ++i) {
+  for (uint i=0; i<dminfo.nfields(); ++i)
+  {
     const Record& dm = dminfo.subRecord(i);
-    if (dm.asString("NAME") == stManName) {
-      ostringstream ostr;
-      filNam << "table.f" << i << "_TSM0";
-      SymLink sl(fil);
-      sl.create (filNam.str());
+    if (dm.asString("NAME") == stManName)
+    {
+      ostringstream os;
+      os << "table.f" << i << "_TSM0";
+      itsColumns[columnName] = os.str();
       break;
     }
   }
@@ -2286,7 +2365,9 @@ void Prediffer::fillUVW()
   // Map uvw data into memory
   size_t nrBytes = itsMSDesc.times.size() * itsNrBl * 3 * sizeof(double);
   double* uvwDataPtr = 0;
-  MMap* mapPtr = new MMap(itsMSName+"/vis.uvw", MMap::Read);
+  string UVWFile = getFileForColumn(MS::columnName(MS::UVW));
+  LOG_INFO_STR("Input column " << MS::columnName(MS::UVW) << " maps to: " << UVWFile);
+  MMap* mapPtr = new MMap(UVWFile, MMap::Read);
   mapPtr->mapFile(0, nrBytes);
   uvwDataPtr = (double*)mapPtr->getStart();
 
@@ -2547,7 +2628,7 @@ Prediffer::Prediffer(const string& msName,
   itsGSMMEP = new LOFAR::ParmDB::ParmDB(skyPdm);
   itsMEP = new LOFAR::ParmDB::ParmDB(meqPdm);
 
-  itsFlagsMap = new FlagsMap(itsMSName + "/vis.flg", MMap::Read);
+  itsFlagsMap = new FlagsMap(itsMSName + getFileForColumn(MS::columnName(MS::FLAG)), MMap::Read);
   // Get all sources from the ParmDB.
   itsSources = new MeqSourceList(*itsGSMMEP, itsParmGroup);
   // Create the UVW nodes and fill them with uvw-s from MS if not calculated.
