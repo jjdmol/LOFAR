@@ -90,6 +90,10 @@ public:
    	GCFEvent::TResult active_state  (GCFEvent& e, 
 									 GCFPortInterface& p);
 
+	// Terminating mode. 
+   	GCFEvent::TResult finishing_state(GCFEvent& e, 
+									  GCFPortInterface& p);
+
 private:
 	// avoid defaultconstruction and copying
 	ObservationControl();
