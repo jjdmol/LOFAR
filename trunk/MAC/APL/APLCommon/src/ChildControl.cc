@@ -205,6 +205,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		if (hostname != GCF::Common::myHostname(false)  && 
 			hostname != GCF::Common::myHostname(true)) {
 			APLUtilities::remoteCopy(cntlrSetName, hostname, cntlrSetName);
+			APLUtilities::remoteCopy(baseSetName, hostname, baseSetName);
 		}
 	}
 
@@ -224,6 +225,8 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	ci.retryTime	  = 0;
 	ci.nrRetries	  = 0;
 	ci.result		  = CT_RESULT_NO_ERROR;
+	ci.startTime	  = 0;					// only used for reschedule
+	ci.stopTime		  = 0;					// only used for reschedule
 
 	// Update our administration.
 	itsCntlrList->push_back(ci);
@@ -235,6 +238,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	// Trigger statemachine.
 	if (itsListener) {
 		itsActionTimer = itsListener->setTimer(0.0);
+		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
 	}
 
 	LOG_TRACE_COND_STR ("Scheduled start of " << cntlrName << " for obs " << anObsID);
@@ -273,7 +277,7 @@ void ChildControl::startChildControllers()
 				startChild(childCntlrType, 
 						   treeID, 
 						   instanceNr,
-						   myHostname(true));
+						   childhostname);
 				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
 
 				LOG_DEBUG_STR("Requested start of " << childCntlrName);
@@ -314,20 +318,76 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 		if (!(checkName && iter->cntlrName != aName) && 
 			!(checkID && iter->obsID != anObsID) && 
 		    !(checkType && iter->cntlrType != aCntlrType)) {
-			// send request to child
+
+			// update controllerinfo to requested state and make an action of it.
 			iter->requestedState = aState;
 			iter->requestTime    = currentTime;
 			iter->result		 = CT_RESULT_NO_ERROR;
 			iter->nrRetries		 = 0;
 			iter->retryTime		 = 0;
-
-			// add it to the actionlist
 			itsActionList.push_back(*iter);
 		}
 			
 		iter++;
 	}	
+	itsTimerPort.cancelTimer(itsActionTimer);
 	itsActionTimer = itsTimerPort.setTimer(0.0);	// invoke _processActionList
+	LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
+
+	return (true);
+}
+
+//
+// rescheduleChilds(startTime, stopTime, [name], [observation], [type])
+//
+// Sends a reschedule request to the given child or childs.
+//
+bool ChildControl::rescheduleChilds	(time_t				aStartTime,
+									 time_t				aStopTime,
+									 const string&		aName, 
+									 OTDBtreeIDType		anObsID, 
+									 uint16				aCntlrType)
+{
+	CTState		cts;
+	LOG_TRACE_FLOW_STR("reschedule(" << aStartTime << "," 
+									 << aStopTime  << ","
+									 << aName <<","<< anObsID <<","<< aCntlrType <<")" );
+
+	bool	checkName   = (aName != "");
+	bool	checkID     = (anObsID != 0);
+	bool	checkType   = (aCntlrType != CNTLRTYPE_NO_TYPE);
+	time_t	currentTime = time(0);
+
+	CIiter			iter  = itsCntlrList->begin();
+	const_CIiter	end   = itsCntlrList->end();
+	while (iter != end) {
+		// count the child when x has to be checked and matches:
+		//  id==id	checkID	count_it
+		//	  Y		  Y			Y
+		//	  Y		  N			Y
+		//	  N		  Y			N --> checkID && id!=id
+		//	  N		  N			Y
+		if (!(checkName && iter->cntlrName != aName) && 
+			!(checkID && iter->obsID != anObsID) && 
+		    !(checkType && iter->cntlrType != aCntlrType)) {
+			// remember the reschedule.
+			iter->startTime = aStartTime;
+			iter->stopTime  = aStopTime;
+			// don't change state of original, it's an interim state.
+			ControllerInfo	cntlrCopy(*iter);
+			cntlrCopy.requestedState = CTState::SCHEDULED;
+			cntlrCopy.requestTime	 = currentTime;
+			cntlrCopy.result		 = CT_RESULT_NO_ERROR;
+			cntlrCopy.nrRetries		 = 0;
+			cntlrCopy.retryTime		 = 0;
+			itsActionList.push_back(cntlrCopy);	// TODO: push_front????
+		}
+			
+		iter++;
+	}	
+	itsTimerPort.cancelTimer(itsActionTimer);
+	itsActionTimer = itsTimerPort.setTimer(0.0);	// invoke _processActionList
+	LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
 
 	return (true);
 }
@@ -480,6 +540,10 @@ void ChildControl::_processActionList()
 {
 	LOG_TRACE_FLOW("_processActionList()");
 
+	// always cancel timer that brought me here.
+	itsTimerPort.cancelTimer(itsActionTimer);
+	itsActionTimer = 0;
+
 	uint32	nrActions = itsActionList.size();	// prevents handling rescheduled actions
 	// when list is empty return;
 	if (!nrActions) {
@@ -493,7 +557,7 @@ void ChildControl::_processActionList()
 	time_t		currentTime = time(0);
 	CIiter		action = itsActionList.begin();
 	while (nrActions > 0) {
-		// don't process (rescheduled) action that lay in the future
+		// don't process (rescheduled) action that lays in the future
 		if (action->retryTime > currentTime) {	// retry in future?
 			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
 					cts.name(action->requestedState) << " because its too early");
@@ -620,6 +684,16 @@ void ChildControl::_processActionList()
 			}
 			break;
 
+		case CTState::SCHEDULED:
+			{
+				CONTROLScheduleEvent		request;
+				request.cntlrName = controller->cntlrName;
+				request.startTime = controller->startTime;
+				request.stopTime  = controller->stopTime;
+				controller->port->send(request);
+			}
+			break;
+
 		case CTState::FINISHED:
 			{
 				CONTROLQuitEvent		request;
@@ -638,7 +712,9 @@ void ChildControl::_processActionList()
 	}
 
 	if (itsActionList.size()) {							// when unhandled actions in list
+		itsTimerPort.cancelTimer(itsActionTimer);
 		itsActionTimer = itsTimerPort.setTimer(1.0);	// restart timer
+		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
 	}
 
 }
@@ -954,12 +1030,12 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	case F_TIMER:
 		{
 			GCFTimerEvent&      timerEvent = static_cast<GCFTimerEvent&>(event);
+			LOG_DEBUG_STR("TIMERID=" << timerEvent.id);
 			if (timerEvent.id == itsGarbageTimer) {
 				itsGarbageTimer = 0;
 				_doGarbageCollection();
 			}
 			else {
-				itsActionTimer = 0;
 				_processActionList();
 			}
 		}
@@ -1029,6 +1105,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				controller->requestedState = cts.stateNr(msg.curState);
 				controller->currentState   = cts.stateNr(msg.curState);
 				controller->hostname	   = msg.hostname;
+				controller->port 		   = &port;
 				LOG_DEBUG_STR("Updated info of reconnected controller " << msg.cntlrName);
 			}
 
@@ -1073,6 +1150,10 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			_setEstablishedState(result.cntlrName, CTState::RELEASED, time(0),
 								 result.result);
 		}
+		break;
+	
+	case CONTROL_SCHEDULED:
+		// do nothing, is not a state change.
 		break;
 	
 	case CONTROL_FINISH: {

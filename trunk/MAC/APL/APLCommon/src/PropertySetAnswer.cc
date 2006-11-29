@@ -35,12 +35,12 @@ PropertySetAnswer::PropertySetAnswer(PropertySetAnswerHandlerInterface& handler)
   GCFAnswer(),
   m_handler(handler)
 {
-  LOG_DEBUG(formatString("PropertySetAnswer::PropertySetAnswer"));
+  LOG_DEBUG("PropertySetAnswer::PropertySetAnswer");
 }
 
 PropertySetAnswer::~PropertySetAnswer()
 {
-  LOG_DEBUG(formatString("PropertySetAnswer::~PropertySetAnswer"));
+  LOG_DEBUG("PropertySetAnswer::~PropertySetAnswer");
 }
 
 void PropertySetAnswer::handleAnswer(GCFEvent& answer)

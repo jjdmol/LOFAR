@@ -104,6 +104,11 @@ public:
 								 const string&		aName, 
 								 OTDBtreeIDType		anObsID = 0, 
 								 uint16				aCntlrType = CNTLRTYPE_NO_TYPE);
+	bool		rescheduleChilds(time_t				aStartTime,
+								 time_t				aStopTime,
+								 const string&		aName, 
+								 OTDBtreeIDType		anObsID = 0, 
+								 uint16				aCntlrType = CNTLRTYPE_NO_TYPE);
 	uint32		countChilds		(OTDBtreeIDType		anObsID = 0, 
 								 uint16				aCntlrType = CNTLRTYPE_NO_TYPE);
 
