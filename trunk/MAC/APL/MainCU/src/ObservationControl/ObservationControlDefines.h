@@ -41,6 +41,7 @@ namespace LOFAR {
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"
 #define PVSSNAME_FSM_ERROR			"error"
+#define PVSSNAME_FSM_LOGMSG			"logmsg"
 
 // Observation
 #define PSN_OBSERVATION	"LOFAR_ObsSW_@observation@"

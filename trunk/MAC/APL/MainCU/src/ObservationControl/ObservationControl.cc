@@ -88,7 +88,9 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsHeartBeatItv = globalParameterSet()->getUint32("heartbeatInterval");
 
 	// Inform Logging manager who we are
-	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
+	// TODO read this from the PARSET file!
+	uint32	treeID(globalParameterSet()->getUint32("_treeID"));
+	LOG_INFO(formatString("MACProcessScope: LOFAR.ObsSW.Observation%d.ObsCtrl", treeID));
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -152,7 +154,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 //
 void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 {
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
+	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << evtstr(answer));
 
 	switch(answer.signal) {
 	case F_MYPS_ENABLED: {
@@ -193,7 +195,8 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 
 		// don't watch state and error fields.
 		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0)) {
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
 			return;
 		}
  
@@ -235,6 +238,9 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 			}
 		}
 		setObservationTimers();
+		LOG_DEBUG("Sending all childs a RESCHEDULE event");
+		itsChildControl->rescheduleChilds(to_time_t(itsStartTime), 
+										  to_time_t(itsStopTime), "");
 		break;
 	}  
 
@@ -277,9 +283,9 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 		string	propSetName(createPropertySetName(PSN_OBSERVATION, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
 		itsBootPS = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  PST_OBSERVATION,
-																  PS_CAT_TEMP_AUTOLOAD,
-																  &itsPropertySetAnswer));
+															 PST_OBSERVATION,
+															 PS_CAT_TEMP_AUTOLOAD,
+															 &itsPropertySetAnswer));
 		itsBootPS->enable();
 		// Wait for timer that is set in PropertySetAnswer on ENABLED event
 		}
@@ -339,8 +345,12 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 	case F_TIMER: {		// must be timer that PropSet has set.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString  ("initial"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString  (""));
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString   ("initial"));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString   (""));
+		itsPropertySet->setValue(PN_OC_CLAIM_PERIOD,GCFPVInteger  (itsClaimPeriod));
+		itsPropertySet->setValue(PN_OC_PREPARE_PERIOD,GCFPVInteger(itsPreparePeriod));
+		itsPropertySet->setValue(PN_OC_START_TIME,GCFPVString(to_simple_string(itsStartTime)));
+		itsPropertySet->setValue(PN_OC_STOP_TIME, GCFPVString(to_simple_string(itsStopTime)));
       
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControl task");
@@ -515,10 +525,10 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case CONTROL_FINISH: {
 		CONTROLFinishEvent		msg(event);
 		LOG_DEBUG_STR("Received FINISH(" << msg.cntlrName << ")");
-		CONTROLFinishedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
-		answer.result    = CT_RESULT_NO_ERROR;
-		port.send(answer);
+//		CONTROLFinishedEvent	answer;
+//		answer.cntlrName = msg.cntlrName;
+//		answer.result    = CT_RESULT_NO_ERROR;
+//		port.send(answer);
 		break;
 	}
 
@@ -528,6 +538,44 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		break;
 	}
 
+	return (status);
+}
+
+//
+// finishing_state(event, port)
+//
+// Write controller state to PVSS, wait for 1 second (using a timer) to let GCF 
+// handle the property change and close the controller
+//
+GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event, 
+													  GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_INIT:
+		break;
+
+	case F_ENTRY: {
+		// update PVSS
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+
+		itsTimerPort->setTimer(1L);
+		break;
+	}
+  
+    case F_TIMER:
+      GCFTask::stop();
+      break;
+    
+	default:
+		LOG_DEBUG("finishing_state, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
 	return (status);
 }
 
@@ -620,7 +668,7 @@ void ObservationControl::setObservationTimers()
 	default:	break;	// satisfy compiler
 	}
 
-	LOG_DEBUG_STR ("Observation ends over " << (stop-now)/60 << " minutes");
+	LOG_DEBUG_STR ("Observation ends at " << to_simple_string(itsStopTime));
 }
 
 //
@@ -635,6 +683,10 @@ void  ObservationControl::doHeartBeatTask()
 						itsChildControl->getPendingRequest("", 0, CNTLRTYPE_NO_TYPE);
 	if (lateCntlrs.empty()) {
 		LOG_DEBUG_STR("All (" << nrChilds << ") controllers are up to date");
+		if (itsState == CTState::FINISH) {
+			LOG_DEBUG_STR("Time for me to shutdown");
+			TRAN(ObservationControl::finishing_state);
+		}
 		return;
 	}
 
