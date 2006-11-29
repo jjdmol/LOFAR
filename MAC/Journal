@@ -10,16 +10,32 @@ GCF/GCFCommon
 ** GCF_ServiceInfo.h: Created a file containing all servicenames to be used in MAC
 		as well the well-known portnumber of any ServiceBroker.
 ** GCF_PVTypes.h: created file that includes all GCF_PVxxx files.
+** Utils: Added function myHostname(giveFullName).
+
 
 APL/APLCommon
-============
-** Added messages FINISH and FINISHED to LDprotocol to allow ObsCntlrs to tell
-		the MACSchedulers that they are ready.
-** Added ANNOUNCEMENT messages to the StartDaemonProtocol to support shared
-		controller. Modified the other message to meet proposition [A].
+=============
+** Rewrote all software in this directory.
+** Added ANNOUNCEMENT and NEWPARENT messages to the StartDaemonProtocol to support 
+		shared controller. Modified the other messages to meet proposition [A].
 ** ControllerDefines.h replaces LogicalDevice.h. The file does not only define
 		constants for controllertypes and their errors but also a collection of
 		routines for creating and using controller names. See proposition [A].
+** StationInfo: All kind of routines to get the stationname, ringnr, armnr etc. of
+		the machine we are running on.
+** CTState: Class that contains all possible states a controller can be in. Supports
+		convertions from nr->name and viceversa.
+** Observation: Class the can be constructed from a Parsetfile and that substracts
+		all observationbased information from that parsetfile. The information
+		is than available as public fields.
+** ParentControl: singleton task that a controller must use to manage the communication
+		and administration of its parent-controller(s). The task can also take care
+		of the claim/prepare/start/stop timers and is capable of merging in 'missing'
+		states when an 'out of band' state-change is requested. E.g. merges in 'prepare'
+		when a 'run' state is received in 'claim' mode.
+** ChildControl: singleton task that a controller must use to manage the communication
+		and administration of its child-controller(s). Capable of starting child-
+		controllers and creating the corresponding parsetfiles.
 
 GCF/TM
 ======
@@ -36,7 +52,8 @@ GCF/TM
 		and the ServiceBroker is used immediately.
 ** GCF_TimerPort: New porttype for handling timers.
 ** ServiceBroker: no longer informs clients about gone services.
-** GCF_Task: uses LofarLocators for log_prop and conf file.
+** GCF_Task: uses LofarLocators for log_prop and conf file. Tasks do not abort anymore
+		when the parsetfile can not be found.
 ** GTM_ServiceBroker: does not read ServiceBroker.conf file anymore. Solved major
 		bug in unregistering all ports always. (because of another bug in the
 		GSB_Controller this never lead to problems).
@@ -83,10 +100,34 @@ GCF/APL/VIC/VirtualInstrument
 ** MaintenanceVI: is now a LogicalDevice program iso a task
 ** ObservationVI: is now a LogicalDevice program iso a task
 
-GCF/APL/MainCU/src/MACScheduler
-===============================
+APL/MainCU/src/MACScheduler
+===========================
 Complete new implementation of the MACScheduler: It polls the OTDB itself
 and only controls ObsControllers.
+
+APL/MainCU/src/ObservationControl
+=================================
+New controller that is the topcontroller of each observation. It is started by the
+MACScheduler and takes care of all controllers necessary to do the observation.
+
+APL/StationCU/src/StationControl
+================================
+New controller that is the topcontroller of a station. It manages all other controllers
+on the station. It runs always an it (thus) capable of managing several observations.
+
+APL/StationCU/src/DigitalBoardControl
+=====================================
+New controller that controls the sample clock of the station. The clock value in PVSS
+is leading. When someone changes the clock manually it immediately changes the clock
+back. The clock value in PVSS is manages by the StationController.
+
+APL/StationCU/src/BeamControl
+=============================
+New controller that manages the beams of one observation.
+
+APL/StationCU/src/CalibrationControl
+====================================
+New controller that managess the calibration of the subarrays of one observation.
 
 
 PROPOSITIONS
