@@ -62,10 +62,10 @@ StationControl::StationControl(const string&	cntlrName) :
 	GCFTask 			((State)&StationControl::initial_state,cntlrName),
 	PropertySetAnswerHandlerInterface(),
 	itsPropertySetAnswer(*this),
-	itsOwnPropertySet	(),
-	itsExtPropertySet	(),
+	itsClockPropSet		(),
+	itsOwnPropSet		(),
+	itsClockPSinitialized(false),
 	itsOwnPSinitialized (false),
-	itsExtPSinitialized (false),
 	itsChildControl		(0),
 	itsChildPort		(0),
 	itsParentControl	(0),
@@ -78,7 +78,8 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsTreePrefix = globalParameterSet()->getString("prefix");
 	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + "instanceNr");
 
-	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
+	// TODO
+	LOG_INFO("MACProcessScope: LOFAR.PermSW.StationCtrl");
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -111,8 +112,8 @@ StationControl::~StationControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	if (itsOwnPropertySet) {
-		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
+	if (itsOwnPropSet) {
+		itsOwnPropSet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
 	}
 
 	// ...
@@ -158,11 +159,20 @@ void StationControl::handlePropertySetAnswer(GCFEvent& answer)
 	case F_VCHANGEMSG: {
 		// check which property changed
 		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+
 		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
 			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
 			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
 			break;
 		}
+
+		// don't watch state and error fields.
+		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
+			return;
+		}
+ 
 		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << 
 															pPropAnswer->pPropName);
 	}
@@ -203,13 +213,13 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		string	myPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
+		string	myPropSetName(createPropertySetName(PSN_STATION_CTRL, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
-		itsOwnPropertySet = new GCFMyPropertySet(PSN_STATION_CLOCK,
-													 PST_STATION_CLOCK,
+		itsOwnPropSet = new GCFMyPropertySet(PSN_STATION_CTRL,
+													 PST_STATION_CTRL,
 													 PS_CAT_PERM_AUTOLOAD,
 													 &itsPropertySetAnswer);
-		itsOwnPropertySet->enable();		// will result in F_MYPS_ENABLED
+		itsOwnPropSet->enable();		// will result in F_MYPS_ENABLED
 
 		// When myPropSet is enabled we will connect to the external PropertySet
 		// that dictates the systemClock setting.
@@ -225,18 +235,30 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
-			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+			itsOwnPropSet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
+			itsOwnPropSet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+
+			// enable clock propertyset.
+			string	clkPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
+			LOG_DEBUG_STR ("Activating PropertySet " << clkPropSetName);
+			itsClockPropSet = new GCFMyPropertySet(PSN_STATION_CLOCK,
+														 PST_STATION_CLOCK,
+														 PS_CAT_PERM_AUTOLOAD,
+														 &itsPropertySetAnswer);
+			itsClockPropSet->enable();		// will result in F_MYPS_ENABLED
 		}
+		else {
+			itsClockPSinitialized = true;
 
-		LOG_DEBUG ("Attached to external propertySet");
+			LOG_DEBUG ("Attached to external propertySets");
 
-		LOG_DEBUG ("Enabling ChildControl task");
-		itsChildControl->openService(MAC_SVCMASK_STATIONCTRL, itsInstanceNr);
-		itsChildControl->registerCompletionPort(itsChildPort);
+			LOG_DEBUG ("Enabling ChildControl task");
+			itsChildControl->openService(MAC_SVCMASK_STATIONCTRL, itsInstanceNr);
+			itsChildControl->registerCompletionPort(itsChildPort);
 
-		LOG_DEBUG ("Going to connect state to attach to DigitalBoardController");
-		TRAN(StationControl::connect_state);			// go to next state.
+			LOG_DEBUG ("Going to connect state to attach to DigitalBoardController");
+			TRAN(StationControl::connect_state);			// go to next state.
+		}
 		break;
 
 	case F_CONNECTED:
@@ -270,7 +292,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
    		break;
 
 	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("connected"));
+		itsOwnPropSet->setValue(PVSSNAME_FSM_STATE,GCFPVString("connected"));
 
 		// start DigitalBoardController
 		LOG_DEBUG_STR("Starting DigitalBoardController");
@@ -353,16 +375,29 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("active"));
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsOwnPropSet->setValue(PVSSNAME_FSM_STATE,GCFPVString("active"));
+		itsOwnPropSet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 	}
 	break;
 
 	case F_ACCEPT_REQ:
 	case F_CONNECTED:
 	case F_DISCONNECTED:
-	case F_TIMER: 
 		break;
+
+	case F_TIMER:  {
+		ObsIter			 theObs     = itsObsMap.find(port.getName());
+		if (theObs == itsObsMap.end()) {
+			LOG_WARN_STR("Event for unknown observation: " << port.getName());
+			break;
+		}
+
+		// pass event to observation FSM
+		LOG_TRACE_FLOW("Dispatch to observation FSM's");
+		theObs->second->dispatch(event, port);
+		LOG_TRACE_FLOW("Back from dispatch");
+	}
+	break;
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	case CONTROL_CONNECT: {
@@ -411,7 +446,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 								itsClock != theObs->second->obsPar()->sampleClock) {
 			itsClock = theObs->second->obsPar()->sampleClock;
 			LOG_DEBUG_STR ("Changing clock to " << itsClock);
-			itsOwnPropertySet->setValue(PN_SC_CLOCK,GCFPVInteger(itsClock));
+			itsClockPropSet->setValue(PN_SC_CLOCK,GCFPVInteger(itsClock));
 			// TODO: give clock 5 seconds to stabelize
 		}
 
@@ -484,7 +519,7 @@ uint16 StationControl::_addObservation(const string&	name)
 	LOG_TRACE_OBJ_STR("Trying to readfile " << LOFAR_SHARE_LOCATION << "/" << name);
 	theObsPS.adoptFile(string(LOFAR_SHARE_LOCATION) + "/" + name);
 
-	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS);
+	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, *this);
 	if (!theNewObs) {
 		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
 		return (CT_RESULT_UNSPECIFIED);

@@ -31,15 +31,24 @@
 #include <GCF/TM/GCF_Fsm.h>
 #include <GCF/TM/GCF_Event.h>
 #include <GCF/TM/GCF_Port.h>
+#include <GCF/TM/GCF_TimerPort.h>
 #include <APL/APLCommon/Observation.h>
+#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
+#include <APL/APLCommon/PropertySetAnswer.h>
+#include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/PAL/GCF_Answer.h>
+
 
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  using GCF::TM::GCFFsm;
-  using GCF::TM::GCFEvent;
-  using GCF::TM::GCFPortInterface;
-  namespace StationCU {
+	using GCF::TM::GCFFsm;
+	using GCF::TM::GCFEvent;
+	using GCF::TM::GCFPortInterface;
+	using GCF::TM::GCFTask;
+	using GCF::TM::GCFTimerPort;
+	using GCF::PAL::GCFMyPropertySet;
+	namespace StationCU {
 
 // \addtogroup package
 // @{
@@ -52,13 +61,17 @@ namespace LOFAR {
 // The ActiveObs class can instruct the ChildControl task directly, the responses
 // are captured in the StationController task that will forward them.
 //
-class ActiveObs : public GCFFsm
+class ActiveObs : public GCFFsm,
+				  APLCommon::PropertySetAnswerHandlerInterface
 {
 public:
 	ActiveObs (const string&			name,
 			   State					initial,
-			   ACC::APS::ParameterSet*	aPS);
+			   ACC::APS::ParameterSet*	aPS,
+			   GCFTask&					task);
 	virtual ~ActiveObs();
+	virtual void handlePropertySetAnswer(GCFEvent&	answer);
+
 	void					start()		{ initFsm();	}
 	bool					isReady()	{ return (itsReadyFlag); }
 	APLCommon::Observation*	obsPar()	{ return (&itsObsPar); }
@@ -66,6 +79,7 @@ public:
 	ostream& print (ostream& os) const;
 
 	GCFEvent::TResult	initial	   (GCFEvent&	event, GCFPortInterface&	port);
+	GCFEvent::TResult	starting   (GCFEvent&	event, GCFPortInterface&	port);
 	GCFEvent::TResult	connected  (GCFEvent&	event, GCFPortInterface&	port);
 	GCFEvent::TResult	standby    (GCFEvent&	event, GCFPortInterface&	port);
 	GCFEvent::TResult	operational(GCFEvent&	event, GCFPortInterface&	port);
@@ -78,6 +92,10 @@ private:
 	ActiveObs& operator=(const ActiveObs& that);
 
 	//# --- Datamembers ---
+	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
+	GCFMyPropertySet*				itsPropertySet;
+	GCFTimerPort*					itsPropSetTimer;
+
 	string						itsName;
 	int32						itsInstanceNr;
 	APLCommon::Observation		itsObsPar;
