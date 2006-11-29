@@ -66,7 +66,7 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_FINISH,			CTState::RELEASED,		CTState::FINISHED	},
 	{	CONTROL_FINISHED,		CTState::RELEASED,		CTState::FINISHED	},
 //	{	CONTROL_FINISH,			CTState::ANYSTATE,		CTState::FINISHED	},
-//	{	CONTROL_FINISHED,		CTState::ANYSTATE,		CTState::FINISHED	},
+	{	CONTROL_FINISHED,		CTState::FINISH,		CTState::FINISHED	},
 	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_SCHEDULE,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
@@ -208,19 +208,19 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 	}
 
 	// set or reset the real timers.
+	itsTimerPort.cancelTimer(parent->startTimer);
 	if (startDiff.seconds() > 0) {
 		parent->startTimer = itsTimerPort.setTimer((double)startDiff.seconds());
 	}
 	else {
-		itsTimerPort.cancelTimer(parent->startTimer);
 		parent->startTimer = 0;
 	}
 
+	itsTimerPort.cancelTimer(parent->stopTimer);
 	if (stopDiff.seconds() > 0) {
 		parent->stopTimer = itsTimerPort.setTimer((double)stopDiff.seconds());
 	}
 	else {
-		itsTimerPort.cancelTimer(parent->stopTimer);
 		parent->stopTimer = 0;
 	}
 
@@ -467,7 +467,7 @@ bool ParentControl::_confirmState(uint16			signal,
 
 	if (result != CT_RESULT_NO_ERROR) {
 		parent->failed = true;
-		LOG_DEBUG_STR(cntlrName << " DID NOT reach the " << 
+		LOG_ERROR_STR(cntlrName << " DID NOT reach the " << 
 			cts.name(requestedState(signal)) << " state, error=" << result);
 		return (false);
 	}
@@ -787,8 +787,26 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 							cts.name(parent->requestedState));
 			}
 
+			if (event.signal == CONTROL_SCHEDULE) {		// reschedule request?
+				CONTROLScheduleEvent		schedMsg(event);
+				if (parent->stopTimer) {				// do we keep track of the time?
+					activateObservationTimers(parent->name, 	// yes
+											  from_time_t(schedMsg.startTime), 
+											  from_time_t(schedMsg.stopTime));
+					// don't bother maintask with reschedule.
+					CONTROLScheduledEvent	answer;
+					answer.cntlrName = schedMsg.cntlrName;
+					answer.result    = CT_RESULT_NO_ERROR;
+					parent->port->send(answer);
+					return (GCFEvent::HANDLED);
+				}
+				// maintask does not use my timers, just pass through the event.
+				itsMainTaskPort->sendBack(schedMsg);
+				return (GCFEvent::HANDLED);
+			}
+
 			// When we were resyncing just continue what we were trying to do.
-			if (event.signal != CONTROL_RESYNCED && event.signal != CONTROL_SCHEDULED) {
+			if (event.signal != CONTROL_RESYNCED && event.signal != CONTROL_SCHEDULE) {
 				// use stateFlowTable to determine the required state.
 				parent->requestedState = requestedState(event.signal);	
 			}
@@ -871,7 +889,11 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			PIiter		parent = findParent(msg.cntlrName);
 			if (isParent(parent)) {
 				// note do not register this state, it is not a real state
-				parent->port->send(msg);
+				LOG_INFO_STR("Controller " << msg.cntlrName << " is resynced");
+			}
+			else {
+				LOG_WARN_STR("Received RESYNCED message from unknown controller " 
+																	<< msg.cntlrName);
 			}
 		}
 		break;
@@ -883,6 +905,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			PIiter		parent = findParent(msg.cntlrName);
 			if (isParent(parent)) {
 				// note do not register this state, it is not a real state
+				LOG_DEBUG_STR("Passing SCHEDULED event to parent ocntroller");
 				parent->port->send(msg);
 			}
 		}
