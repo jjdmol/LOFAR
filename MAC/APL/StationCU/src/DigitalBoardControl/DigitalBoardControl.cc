@@ -72,7 +72,8 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 // for now
 itsClock = globalParameterSet()->getUint32(itsTreePrefix + "sampleClock");
 
-	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
+	// TODO
+	LOG_INFO("MACProcessScope: LOFAR.PermSW.iDigBoardCtrl");
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -160,6 +161,14 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 	case F_VCHANGEMSG: {
 		// check which property changed
 		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+
+		// don't watch state and error fields.
+		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
+			return;
+		}
+
 		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
 			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
 			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
