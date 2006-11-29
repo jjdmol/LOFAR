@@ -586,7 +586,7 @@ void MACScheduler::_addActiveObservation(const Observation&	newObs)
 
 	// update own admin and PVSS datapoint
 	itsObservations.push_back(newObs);
-	itsPVSSObsList.push_back(new GCFPVString(newObs.name));
+	itsPVSSObsList.push_back(new GCFPVString(formatString("Observation%d", newObs.treeID)));
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
 
 	LOG_DEBUG_STR("Added observation " << newObs.name << " to active observation-list");
@@ -600,12 +600,14 @@ void MACScheduler::_addActiveObservation(const Observation&	newObs)
 void MACScheduler::_removeActiveObservation(const string& name)
 {
 	// search observation.
+	OTDB::treeIDType		treeID;
 	vector<Observation>::iterator	end  = itsObservations.end();
 	vector<Observation>::iterator	iter = itsObservations.begin();
 	bool	found(false);
 	while (!found && (iter != end)) {
 		if (iter->name == name) {
 			found = true;
+			treeID = iter->treeID;
 			itsObservations.erase(iter);
 			LOG_DEBUG_STR("Removed observation " << name << " from active observationList");
 		}
@@ -616,10 +618,11 @@ void MACScheduler::_removeActiveObservation(const string& name)
 		return;
 	}
 
+	string		obsName(formatString("Observation%d", treeID));
 	GCFPValueArray::iterator	pEnd  = itsPVSSObsList.end();
 	GCFPValueArray::iterator	pIter = itsPVSSObsList.begin();
 	while (pIter != pEnd) {
-		if ((static_cast<GCFPVString*>(*pIter))->getValue() == name) {
+		if ((static_cast<GCFPVString*>(*pIter))->getValue() == obsName) {
 			delete 	*pIter;
 			itsPVSSObsList.erase(pIter);
 			break;
