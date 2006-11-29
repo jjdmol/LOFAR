@@ -94,10 +94,10 @@ private:
 
 	// Data members
    	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
-   	GCF::PAL::GCFMyPropertySet*		itsOwnPropertySet;
-   	GCF::PAL::GCFExtPropertySet*	itsExtPropertySet;
+   	GCF::PAL::GCFMyPropertySet*		itsClockPropSet;
+   	GCF::PAL::GCFMyPropertySet*		itsOwnPropSet;
+	bool							itsClockPSinitialized;
 	bool							itsOwnPSinitialized;
-	bool							itsExtPSinitialized;
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;

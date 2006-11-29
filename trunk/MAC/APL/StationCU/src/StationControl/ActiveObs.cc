@@ -32,11 +32,16 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include "ActiveObs.h"
 
+// Observation
+#define PSN_OBSERVATION	"LOFAR_ObsSW_@observation@"
+#define PST_OBSERVATION	"Observation"
+
 namespace LOFAR {
 	using ACC::APS::ParameterSet;
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace GCF::Common;
+	using namespace GCF::PAL;
 	namespace StationCU {
 
 //
@@ -44,8 +49,12 @@ namespace LOFAR {
 //
 ActiveObs::ActiveObs(const string&		name,
 					 State				initial,
-					 ParameterSet*		thePS) :
+					 ParameterSet*		thePS,
+					 GCFTask&			task) :
 	GCFFsm(initial),
+	PropertySetAnswerHandlerInterface(),
+	itsPropertySetAnswer(*this),
+	itsPropSetTimer(new GCFTimerPort(task, name)),
 	itsName(name),
 	itsInstanceNr(getInstanceNr(name)),
 	itsObsPar(APLCommon::Observation(thePS)),
@@ -67,19 +76,131 @@ ActiveObs::~ActiveObs()
 }
 
 //
-// initial(event, port)
-// Connect to childControllers BeamControl and CalControl
+// handlePropertySetAnswer(answer)
 //
-GCFEvent::TResult	ActiveObs::initial(GCFEvent&	event, GCFPortInterface&	/*port*/)
+void ActiveObs::handlePropertySetAnswer(GCFEvent& answer)
+{
+	LOG_DEBUG_STR ("ActiveObs::handlePropertySetAnswer");
+
+	switch(answer.signal) {
+	case F_MYPS_ENABLED: 
+	case F_EXTPS_LOADED: {
+		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
+		if(pPropAnswer->result != GCF_NO_ERROR) {
+			LOG_ERROR(formatString("PropertySet %s NOT ENABLED", pPropAnswer->pScope));
+		}
+		// always let timer expire so main task will continue.
+		LOG_DEBUG_STR("Property set " << pPropAnswer->pScope << 
+													" enabled, continuing main task");
+		itsPropSetTimer->setTimer(0.5);
+		break;
+	}
+	
+	case F_VGETRESP: {	// initial get of required clock
+		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+//		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
+//			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
+//
+//			// signal main task we have the value.
+//			LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
+//			itsTimerPort->setTimer(0.5);
+//			break;
+//		}
+		LOG_WARN_STR("Got VGETRESP signal from unknown property " << 
+															pPropAnswer->pPropName);
+	}
+
+	case F_VCHANGEMSG: {
+		// check which property changed
+		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+//		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
+//			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
+//			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
+//			break;
+//		}
+		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << 
+															pPropAnswer->pPropName);
+	}
+
+//  case F_SUBSCRIBED:      GCFPropAnswerEvent      pPropName
+//  case F_UNSUBSCRIBED:    GCFPropAnswerEvent      pPropName
+//  case F_PS_CONFIGURED:   GCFConfAnswerEvent      pApcName
+//  case F_EXTPS_LOADED:    GCFPropSetAnswerEvent   pScope, result
+//  case F_EXTPS_UNLOADED:  GCFPropSetAnswerEvent   pScope, result
+//  case F_MYPS_ENABLED:    GCFPropSetAnswerEvent   pScope, result
+//  case F_MYPS_DISABLED:   GCFPropSetAnswerEvent   pScope, result
+//  case F_VGETRESP:        GCFPropValueEvent       pValue, pPropName
+//  case F_VSETRESP:        GCFPropAnswerEvent      pPropName
+//  case F_VCHANGEMSG:      GCFPropValueEvent       pValue, pPropName
+//  case F_SERVER_GONE:     GCFPropSetAnswerEvent   pScope, result
+
+	default:
+		break;
+	}  
+}
+
+//
+// initial(event, port)
+//
+// Create top datapoint of this observation in PVSS.
+//
+GCFEvent::TResult ActiveObs::initial(GCFEvent& event, 
+								     GCFPortInterface& port)
 {
 	LOG_DEBUG(formatString("%s:initial - %04X", itsName.c_str(), event.signal));
 
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
 	switch (event.signal) {
-	case F_ENTRY: 
-		LOG_DEBUG_STR("Started statemachine for observation " << itsName);
+    case F_INIT:
+		LOG_DEBUG_STR("Starting statemachine for observation " << itsName);
+   		break;
+
+	case F_ENTRY: {
+		// Get access to my own propertyset.
+		string	propSetName(createPropertySetName(PSN_OBSERVATION, itsName));
+		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
+		itsPropertySet = new GCFMyPropertySet(propSetName.c_str(),
+											 PST_OBSERVATION,
+											 PS_CAT_TEMP_AUTOLOAD,
+											 &itsPropertySetAnswer);
+		itsPropertySet->enable();
+		// Wait for timer that is set in PropertySetAnswer on ENABLED event
+		}
+		break;
+	  
+	case F_TIMER: {		// must be timer that PropSet has set.
+		// update PVSS.
+		LOG_TRACE_FLOW ("top DP of observation created, going to starting state");
+		TRAN(ActiveObs::starting);				// go to next state.
+		}
 		break;
 
-	case F_INIT: {
+	case F_CONNECTED:
+		break;
+
+	case F_DISCONNECTED:
+		break;
+	
+	default:
+		LOG_DEBUG_STR ("initial, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+
+//
+// starting(event, port)
+// Connect to childControllers BeamControl and CalControl
+//
+GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	/*port*/)
+{
+	LOG_DEBUG(formatString("%s:starting - %04X", itsName.c_str(), event.signal));
+
+	switch (event.signal) {
+	case F_ENTRY:  {
 		LOG_DEBUG_STR("Starting controller " << itsCalCntlrName);
 		ChildControl::instance()->startChild(CNTLRTYPE_CALIBRATIONCTRL,
 											 itsObsPar.treeID,
@@ -209,7 +330,7 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	/*port*/
 	case F_ENTRY: 
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
-		LOG_DEBUG_STR(itsName << ": in 'standby-mode', wating for PREPARE event");
+		LOG_DEBUG_STR(itsName << ": in 'standby-mode', waiting for PREPARE event");
 		break;
 
 	case CONTROL_PREPARE: {
@@ -399,6 +520,9 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 	return (GCFEvent::HANDLED);
 }
 
+//
+// print(os)
+//
 ostream& ActiveObs::print (ostream& os) const
 {
 	os << "ACTIVEOBS         : " << itsName << endl;

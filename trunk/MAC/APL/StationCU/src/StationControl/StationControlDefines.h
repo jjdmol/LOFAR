@@ -27,16 +27,18 @@ namespace LOFAR {
   namespace StationCU {
 
 // next three line should be defined elsewhere because we are not the owner.
-//#define	PSN_STATION_CLOCK	"LOFAR_PermSW_MACScheduler"
-//#define PST_STATION_CLOCK	"MACScheduler"
-//#define PN_SC_CLOCK			"OTDB.pollinterval"
 #define	PSN_STATION_CLOCK	"LOFAR_PIC_StationClock"
 #define PST_STATION_CLOCK	"StationClock"
 #define PN_SC_CLOCK			"clock"
 
+// StationCtrl
+#define PSN_STATION_CTRL	"LOFAR_PermSW_StationCtrl"
+#define PST_STATION_CTRL	"StationCtrl"
+
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"
 #define PVSSNAME_FSM_ERROR			"error"
+#define PVSSNAME_FSM_LOGMSG			"logmsg"
 
 
 }; // StationCU
