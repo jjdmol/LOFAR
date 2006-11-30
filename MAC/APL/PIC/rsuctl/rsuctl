@@ -937,35 +937,23 @@ sub main
 	
 	# RESET
 	#
-	# send reset
-	# wait $TO seconds
+	# send reset (factory image (page 0) will start on BP)
+	# wait $DTO seconds
 	# reconfigure AP's with page 8 (factory default for AP's)
-	# if reconfig failed (this can happen when an invalid AP image was loaded previously)
-	#   clear
-	#   wait $TO second
-	#   reconfig again
 	# wait $TO second
-	# send clear
-	# wait $TO seconds
 	# read rsustatus and versions
+	
+	$DTO = $TO * 2;
 
 	report(clearctl($sock, $pcap, $CMD_RESET));
-	print STDERR "=== waiting $TO seconds after reset\n"; sleep $TO;
+	print STDERR "=== waiting $DTO seconds after reset\n"; sleep $DTO;
 	print STDERR "=== reconfiguring AP's with factory image (page 8)\n";
 	$error = reconfig($sock, $pcap, 8);
 
-#  	if ($error) {
-#  	    print STDERR "=== reconfig failed, clearing and waiting $TO seconds\n"; sleep $TO;
-#  	    report(clearctl($sock, $pcap, $CMD_CLEAR));
-#  	    print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
-#  	    print STDERR "=== retry reconfig\n";
-#  	    report(reconfig($sock, $pcap, 8));
-#  	}
+	# don't check the error return code because we know
+	# it indicates failure while the reconfig is actually in progress
 
-	$DTO = $TO * 2;
-	print STDERR "=== waiting $DTO second after AP reconfig\n"; sleep $DTO;
-	report(clearctl($sock, $pcap, $CMD_CLEAR));
-	print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
+	print STDERR "=== waiting $TO second after AP reconfig\n"; sleep $TO;
 	report(version_cmd($sock, $pcap) && $error, true);
 
 	return;
