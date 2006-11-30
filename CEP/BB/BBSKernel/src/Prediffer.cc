@@ -1379,7 +1379,7 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
                 Update the column map.
             */
             ostringstream os;
-            os << "table.f" << idx << "_TSM0";
+            os << itsMSName << "/table.f" << idx << "_TSM0";
             
             for(Array<String>::const_iterator it = columns.begin(); it != columns.end(); ++it)
             {
@@ -1399,7 +1399,7 @@ string Prediffer::getFileForColumn(const string &column)
     }
     else
     {
-        return itsMSName + "/" + it->second;
+        return it->second;
     }
 }
 
@@ -1483,8 +1483,8 @@ void Prediffer::mapDataFiles (const string& inColumnName,
       } else {
     itsInDataMap = new MMap (inFile, MMap::Read);
       }
+      LOG_INFO_STR("Input column " << inColumnName << " maps to: " << inFile);
     }
-    LOG_INFO_STR("Input column " << inColumnName << " maps to: " << inFile);
   }
   
   
@@ -1500,13 +1500,14 @@ void Prediffer::mapDataFiles (const string& inColumnName,
         addDataColumn (tab, outColumnName);
         outFile = getFileForColumn(outColumnName);
       }
-      ASSERTSTR(!outFile.empty(), "Could not figure out which file contains the column " << outColumnName);
+      ASSERTSTR(!outFile.empty(), "Column " << outColumnName << " does not exist or has non-standard storage manager.");
       
       delete itsOutDataMap;
       itsOutDataMap = 0;
       itsOutDataMap = new MMap (outFile, MMap::ReWr);
+      
+      LOG_INFO_STR("Output column " << outColumnName << " maps to: " << outFile);
     }
-    LOG_INFO_STR("Output column " << outColumnName << " maps to: " << outFile);
   }
 }
 
@@ -1517,7 +1518,7 @@ void Prediffer::addDataColumn(Table& tab, const string& columnName)
   
   ArrayColumnDesc<Complex> resCol(columnName, IPosition(2, itsNCorr, itsNrChan), ColumnDesc::FixedShape);
   String stManName = "Tiled_"+columnName;
-  TiledColumnStMan tiledRes(stManName, IPosition(3,itsNCorr,itsNrChan,1));
+  TiledColumnStMan tiledRes(stManName, IPosition(3, itsNCorr, itsNrChan, 1));
   
   tab.reopenRW();
   tab.addColumn (resCol, tiledRes);
@@ -1533,7 +1534,7 @@ void Prediffer::addDataColumn(Table& tab, const string& columnName)
     if (dm.asString("NAME") == stManName)
     {
       ostringstream os;
-      os << "table.f" << i << "_TSM0";
+      os << itsMSName << "/table.f" << i << "_TSM0";
       itsColumns[columnName] = os.str();
       break;
     }
@@ -2629,7 +2630,7 @@ Prediffer::Prediffer(const string& msName,
   itsGSMMEP = new LOFAR::ParmDB::ParmDB(skyPdm);
   itsMEP = new LOFAR::ParmDB::ParmDB(meqPdm);
 
-  itsFlagsMap = new FlagsMap(itsMSName + getFileForColumn(MS::columnName(MS::FLAG)), MMap::Read);
+  itsFlagsMap = new FlagsMap(getFileForColumn(MS::columnName(MS::FLAG)), MMap::Read);
   // Get all sources from the ParmDB.
   itsSources = new MeqSourceList(*itsGSMMEP, itsParmGroup);
   // Create the UVW nodes and fill them with uvw-s from MS if not calculated.
