@@ -215,9 +215,8 @@ void ParameterSetImpl::addStream(istream&	inputStream, bool	merge)
 			*separator= '\0';					// terminate key string
 			valueStr = separator + 1;			// ValueStr starts after = sign
 
-			// skip trailing spaces from key (allowing spaces before = sign)
-			keyStr = paramLine;
-			rtrim(keyStr);
+			// skip leading and trailing spaces from key (allowing spaces before = sign)
+			rtrim(keyStr = ltrim(paramLine));
 		}
 
 		// skip leading spaces from value (allowing space afer = sign)
@@ -375,6 +374,7 @@ void ParameterSetImpl::remove(const string& aKey)
 // Original string is destroyed because null-characters are placed in it.
 //
 // Syntax: [ <element> , <element> , <element> ]
+// or 	   <element>
 // An element may be placed between single or double qoutes.
 //
 vector<char*> splitVector(char*	target)
@@ -383,6 +383,14 @@ vector<char*> splitVector(char*	target)
 
 	// trim target and check array markers
 	uint32			lastPos = rtrim(target = ltrim(target)) - 1;
+
+	// if no markers are used, read the one and only argument.
+	if (target[0] != '[' && target[lastPos] != ']') {
+		result.push_back(target);
+		return (result);
+	}	
+
+	// When only one marker is used, throw exception.
 	if (target[0] != '[' || target[lastPos] != ']') {
 		THROW (APSException, 
 				formatString("Array %s should be limited with '[' and ']'", 
@@ -895,7 +903,11 @@ string	ParameterSetImpl::locateModule(const string&	shortKey) const
 	const_iterator		eom  = end();
 	while ((iter != eom)) {
 		if (keyName(moduleName(iter->first)) == shortKey) {
-			return (moduleName(moduleName((iter->first)))+".");
+			string prefix = moduleName(moduleName((iter->first)));
+			if (prefix.length() > 0) {
+				prefix += ".";
+			}
+			return (prefix);
 		}
 		iter++;
 	}
