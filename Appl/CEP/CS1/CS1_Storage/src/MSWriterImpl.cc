@@ -57,6 +57,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/Slicer.h>
+#include <AMCBase/Epoch.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -68,15 +69,17 @@ namespace LOFAR
     MSWriterImpl::MSWriterImpl (const char* msName, double startTime, double timeStep,
                                 int nfreq, int ncorr,
                                 int nantennas, const vector<double>& antPos,
-				const vector<string>& storageStationNames)
+				const vector<string>& storageStationNames,
+				uint timesToIntegrate)
       : itsNrBand   (0),
         itsNrField  (0),
         itsNrAnt    (nantennas),
         itsNrFreq   (nfreq),
         itsNrCorr   (ncorr),
-        itsNrTimes  (0),
+	itsNrTimes  (0),
         itsTimeStep (timeStep),
-        itsStartTime(MVEpoch(startTime).getTime().getValue("s")),
+	itsTimesToIntegrate(timesToIntegrate),
+	itsStartTime(0),
         itsNrPol    (0),
         itsNrChan   (0),
         itsPolnr    (0),
@@ -85,27 +88,38 @@ namespace LOFAR
         itsMS       (0),
         itsMSCol    (0)
     {
-      AlwaysAssert (nantennas >= 0, AipsError);
+	      AlwaysAssert (nantennas >= 0, AipsError);
+
+      // Convert the startTime from seconds since 1 Jan 1970 (UTC) to Modified Julian Day.
+      AMC::Epoch epoch;
+      epoch.utc(startTime);
+      itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
+      
       // Get the position of Westerbork in WGS84.
       MPosition arrayPosTmp;
       AlwaysAssert (MeasTable::Observatory(arrayPosTmp, "WSRT"), AipsError);
       itsArrayPos = new MPosition;
       *itsArrayPos = MPosition::Convert (arrayPosTmp, MPosition::WGS84) ();
-      const MVPosition& arrayMVPos = itsArrayPos->getValue();
-      itsArrayLon = arrayMVPos.getLong();
-      double arrayLat = arrayMVPos.getLat();
-      double arrayAlt = arrayMVPos.getLength("m").getValue();
-      // Convert the relative antenna distances (in m) to long/lat.
-      // Note that 4.e7 meters = 360 degrees.
-      // Keep the antenna positions in ITRF coordinates.
+      
       Block<MPosition> antMPos(nantennas);
+
+      // Keep the antenna positions in WGS84 coordinates.
+      try {
       for (int i=0; i<nantennas; i++) {
-        double lat = arrayLat + antPos[3*i] / 4.e7 * 2 * C::pi;
-        double lon = itsArrayLon + antPos[3*i+1] / (std::cos(lat)*4.e7) * 2 * C::pi;
-        double alt = arrayAlt + antPos[3*i+2];
-        MPosition mpos (MVPosition(alt, lon, lat), MPosition::WGS84);
-        antMPos[i] = MPosition::Convert (mpos, MPosition::ITRF) ();
+        //cout << "antPos[" << 3*i+2 << "] = " << antPos[3*i+2] << " m" << endl;
+	//cout << "antPos[" << 3*i <<   "] = " << antPos[3*i]   << " rad" << endl;
+	//cout << "antPos[" << 3*i+1 << "] = " << antPos[3*i+1] << " rad" << endl;
+
+        MPosition mpos(MPosition(MVPosition(Quantity(antPos[3*i+2], "m"), 
+	      	                            Quantity(antPos[3*i], "rad"), 
+			                    Quantity(antPos[3*i+1], "rad")),
+	                                    MPosition::WGS84));
+        antMPos[i] = MPosition::Convert (mpos, MPosition::ITRF) (); 					  
       }
+      } catch (AipsError& e) {
+        cout << "AipsError: " << e.what() << endl;
+      }
+
       // Create the MS.
       createMS (msName, antMPos, storageStationNames);
       itsNrPol  = new Block<Int>;
@@ -224,27 +238,6 @@ namespace LOFAR
       fillProcessor();
       fillObservation();
       fillState();
-
-      // Find out which datamanagers contain DATA, FLAG and UVW.
-      // Create symlinks for them.
-      Record dminfo = itsMS->dataManagerInfo();
-      for (uint i=0; i<dminfo.nfields(); ++i) {
-        const Record& dm = dminfo.subRecord(i);
-        String slname;
-        if (dm.asString("NAME") == "TiledData") {
-          slname = "/vis.dat";
-        } else if (dm.asString("NAME") == "TiledFlag") {
-          slname = "/vis.flg";
-        } else if (dm.asString("NAME") == "TiledUVW") {
-          slname = "/vis.uvw";
-        }
-        if (! slname.empty()) {
-          ostringstream ostr;
-          ostr << "table.f" << i << "_TSM0";
-          SymLink sl(msName+slname);
-          sl.create (ostr.str());
-        }
-      }
 
       // Add weight_spectrum description
 
@@ -459,7 +452,7 @@ namespace LOFAR
         msfeedCol.feedId().put (i, 0);
         msfeedCol.spectralWindowId().put (i, -1);
         msfeedCol.time().put (i, itsStartTime + itsNrTimes*itsTimeStep/2.);
-        msfeedCol.interval().put (i, itsNrTimes*itsTimeStep);
+	msfeedCol.interval().put (i, itsNrTimes*itsTimeStep);
         msfeedCol.beamId().put (i, -1);
         msfeedCol.beamOffset().put (i, feedOffset);
         msfeedCol.polarizationType().put (i, feedType);
@@ -480,6 +473,8 @@ namespace LOFAR
       Vector<Double> timeRange(2);
       timeRange(0) = itsStartTime;
       timeRange(1) = itsStartTime + itsNrTimes*itsTimeStep;
+      
+      
       // Data is public one year after end of observation.
       Double releaseDate = timeRange(1) + 365.25*24*60*60;
       // Fill the columns
@@ -528,9 +523,10 @@ namespace LOFAR
     void MSWriterImpl::updateTimes()
     {
       // Calculate the interval, end, and central time.
-      Double interval = itsNrTimes*itsTimeStep;
+      Double interval = (itsNrTimes/itsTimesToIntegrate)*itsTimeStep;
       Double endTime = itsStartTime + interval;
       Double midTime = (itsStartTime + endTime) / 2;
+
       // Update all rows in FEED subtable.
       {
         MSFeed mssub = itsMS->feed();
@@ -557,7 +553,7 @@ namespace LOFAR
         MSObservationColumns msobsCol(msobs);
         Vector<Double> timeRange(2);
         timeRange(0) = itsStartTime;
-        timeRange(1) = itsStartTime + itsNrTimes*itsTimeStep;
+	timeRange(1) = itsStartTime + ((itsNrTimes/itsTimesToIntegrate)*itsTimeStep);
         for (uInt i=0; i<msobs.nrow(); i++) {
           msobsCol.timeRange().put (i, timeRange);
         }
@@ -572,6 +568,18 @@ namespace LOFAR
       ASSERT(bandId >= 0  &&  bandId < itsNrBand);
       ASSERT(fieldId >= 0  &&  fieldId < itsNrField);
       ASSERT(data != 0);
+
+      Double time;
+	
+      if (itsNrTimes == 0)
+      {
+        time = itsStartTime + itsTimeStep/2.;
+      }
+      else
+      { 
+        time = itsStartTime + (itsNrTimes/itsTimesToIntegrate)*itsTimeStep+ itsTimeStep/2.; 
+      }
+	
       if (timeCounter >= itsNrTimes) {
         itsNrTimes = timeCounter+1;
       }
@@ -602,7 +610,8 @@ namespace LOFAR
       sigma = 1;
       //   Array<Float> weight(IPosition(1, shape(0)));
       //   weight = 1;
-      Double time = itsStartTime + timeCounter*itsTimeStep;
+      
+      //Double time = itsStartTime + timeCounter*itsTimeStep;
       // Calculate the apparent HA and DEC for the array center.
       // First store time in frame.
       Quantity qtime(time, "s");
@@ -633,8 +642,8 @@ namespace LOFAR
 
           itsMSCol->flagRow().put (rowNumber, False);
           itsMSCol->time().put (rowNumber, time);
-          itsMSCol->antenna1().put (rowNumber, i);
-          itsMSCol->antenna2().put (rowNumber, j);
+          itsMSCol->antenna1().put (rowNumber, j);
+          itsMSCol->antenna2().put (rowNumber, i);
           itsMSCol->feed1().put (rowNumber, 0);
           itsMSCol->feed2().put (rowNumber, 0);
           itsMSCol->dataDescId().put (rowNumber, bandId);

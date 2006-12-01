@@ -49,7 +49,8 @@ namespace LOFAR
       MSWriter (const char* msName, double startTime, double timeStep, 
                 int nChan, int nPol, uint nantennas,
                 const vector<double>& antPos,
-		const vector<std::string>& storageStationNames);
+		const vector<std::string>& storageStationNames,
+		uint timesToIntegrate);
 
       // Destructor
       ~MSWriter();
