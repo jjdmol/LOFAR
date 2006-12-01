@@ -14,5 +14,5 @@ standard.var:           $(lofar_root) $(aipspp) $(threads) $(sse) $(shmem) $(sea
 mpich.var:                --with-mpich=/opt/mpich/ch-p4
 openmpi.var:              --with-mpich=/opt/openmpi
 
-openmpi.variant.conf:	  $(standard) $(openmpi)
+openmpi.variant.conf:	  $(standard) $(openmpi) $(debug)
 openmpi-opt.variant.conf: $(standard) $(openmpi) $(optimize)
