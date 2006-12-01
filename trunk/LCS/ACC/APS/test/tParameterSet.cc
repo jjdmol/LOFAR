@@ -70,22 +70,6 @@ int main() {
 
 	cout << "Fullname of 'b'=" << myPS.locateModule("b") << endl;
 
-
-//	cout << "The name of the ParameterSet = " << myPS.getName() << endl;
-//	cout << "The vers of the ParameterSet = " << myPS.getVersionNr() << endl;
-//	if (isValidVersionNr(myPS.getVersionNr())) {
-//		cout << "this is a valid version number" << endl;
-//	} else {
-//		cout << "this is NOT a valid version number" << endl;
-//	}
-
-//	string	psErrors;
-//	if (!myPS.check(psErrors)) {
-//		cout << "Parameter check says: " << psErrors << endl;
-//	} else {
-//		cout << "ParameterSet is OK." << endl;
-//	}
-
 	cout << "isValidVersionNr(1.2.3.4)   = " << isValidVersionNr("1.2.3.4") << endl;
 	cout << "isValidVersionNr(1.2.3)     = " << isValidVersionNr("1.2.3") << endl;
 	cout << "isValidVersionNr(1.2)       = " << isValidVersionNr("1.2") << endl;
@@ -121,7 +105,13 @@ int main() {
 		cout << intVector.size() << " elements in intVector1Dim\n";
 		copy (intVector.begin(), intVector.end(), 
 		      std::ostream_iterator<int, char>(cout, ","));
-		//	cout << intVector << endl;
+		cout << endl;
+
+		cout << "trying to read single int as vector\n";
+		intVector = myPS.getInt32Vector("a.b.c");
+		cout << intVector.size() << " elements in a.b.c\n";
+		copy (intVector.begin(), intVector.end(), 
+		      std::ostream_iterator<int, char>(cout, ","));
 		cout << endl;
 	}
 	catch (LOFAR::Exception& ex) {
