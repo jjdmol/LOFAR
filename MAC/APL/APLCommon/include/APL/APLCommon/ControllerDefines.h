@@ -68,9 +68,10 @@ enum	{
 // of the controller and the observationID.
 // Note: the returned name is always the 'non-shared' name. To get the 'shared'
 //		 name passed the result to 'sharedControllerName')
-string	controllerName (uint16		cntlrType, 
-						uint16		instanceNr, 
-						uint32		ObservationNr);
+string	controllerName (uint16			cntlrType, 
+						uint16			instanceNr, 
+						uint32			ObservationNr,
+						const string&	hostname = "");
 
 // Convert a controller type to the coresponding node in the OTDB.
 string	parsetNodeName (uint16		cntlrType);

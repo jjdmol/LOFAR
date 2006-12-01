@@ -32,6 +32,7 @@
 using namespace LOFAR;
 using namespace LOFAR::APLCommon;
 using namespace LOFAR::Deployment;
+using namespace LOFAR::GCF::Common;
 
 int main (int	argc, char* argv[]) 
 {
@@ -40,16 +41,20 @@ int main (int	argc, char* argv[])
 	uint16		cntlrType(CNTLRTYPE_STATIONCTRL);
 	uint16		instanceNr(8);
 	uint32		obsNr(123);
+	string		hostname(myHostname(false));
 
 	string	cntlrName = controllerName(cntlrType, instanceNr, obsNr);
 	LOG_INFO_STR("Controllername = " << cntlrName);
-	ASSERTSTR (cntlrName == "StationControl[8]{123}", 
-			"Expecting cntlrName 'StationControl[8]{123}' in stead of " << cntlrName);
+	ASSERTSTR (cntlrName == hostname+":StationControl[8]{123}", 
+			"Expecting cntlrName '" << hostname << 
+			":StationControl[8]{123}' in stead of " << cntlrName);
+
 
 	string	sharedName = sharedControllerName(cntlrName);
 	LOG_INFO_STR("SharedName = " << sharedName);
-	ASSERTSTR (sharedName == "StationControl", 
-			"Expecting sharedName 'StationControl' in stead of " << sharedName);
+	ASSERTSTR (sharedName == hostname+":StationControl", 
+			"Expecting sharedName '" << hostname << ":StationControl' in stead of " 
+			<< sharedName);
 
 	string	execName = getExecutable(cntlrType);
 	LOG_INFO_STR("Executable = " << execName);

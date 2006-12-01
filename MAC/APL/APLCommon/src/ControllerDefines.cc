@@ -70,19 +70,27 @@ static cntlrDefinition_t controllerTable[] = {
 // of the controller and the observationID.
 // Note: the returned name is always the 'non-shared' name. To get the 'shared'
 //		 name passed the result to 'sharedControllerName')
-string	controllerName (uint16		cntlrType, 
-						uint16		instanceNr, 
-						uint32		ObservationNr)
+string	controllerName (uint16			cntlrType, 
+						uint16			instanceNr, 
+						uint32			ObservationNr,
+						const string&	hostname)
 {
 	ASSERTSTR (cntlrType != CNTLRTYPE_NO_TYPE && cntlrType < CNTLRTYPE_NR_TYPES,
 			"No controller defined with type: " << cntlrType);
 
-	if (ObservationNr == 0) {		// used when starting up shared controllers
-		return (controllerTable[cntlrType].cntlrName);
+	string	theHostname(hostname);
+	if (theHostname.empty()) {
+		theHostname = myHostname(false);
 	}
 
-	return (formatString("%s[%d]{%d}", controllerTable[cntlrType].cntlrName,
-												instanceNr, ObservationNr));
+	if (ObservationNr == 0) {		// used when starting up shared controllers
+		return (formatString("%s:%s", theHostname.c_str(),
+									  controllerTable[cntlrType].cntlrName));
+	}
+
+	return (formatString("%s:%s[%d]{%d}", theHostname.c_str(),
+										  controllerTable[cntlrType].cntlrName,
+										  instanceNr, ObservationNr));
 }
 
 // Convert a controller type to the coresponding node in the OTDB.
@@ -105,7 +113,9 @@ string	sharedControllerName (const string&	controllerName)
 //	uint32	observationNr = getObservationNr (controllerName);
 //	return (formatString("%s{%d}", controllerTable[cntlrType].cntlrName,
 //															observationNr));
-	return (controllerTable[cntlrType].cntlrName);
+	string	cntlrName(controllerName);			// destroyable copy.
+	rtrim(cntlrName, "[]{}0123456789");
+	return (cntlrName);
 }
 
 // Return name of the executable
@@ -145,6 +155,11 @@ int32	getControllerType	(const string&	controllerName)
 {
 	string	cntlrName(controllerName);		// destroyable copy
 	rtrim(cntlrName, "[]{}0123456789");		// cut down to executable name
+	uint	pos;
+	if ((pos = cntlrName.find(":")) != string::npos) {	// strip off hostname
+		cntlrName.erase(0, pos+1);
+	}
+
 	// first try on controllername
 	uint32	idx = CNTLRTYPE_NO_TYPE + 1;
 	while (idx < CNTLRTYPE_NR_TYPES) {
@@ -181,10 +196,11 @@ string	createPropertySetName(const string&		propSetMask,
 {
 	string	psName(propSetMask);		// editable copy
 	uint	pos;
-	// when name contains @station@ cut of everything before and replace it with 
-	// stationname+:  -> LOFAR_PIC_@ring@_@station@_CalCtrl_xxx --> CS010:CalCtrl_xxx
-	if ((pos = psName.find("@station@_")) != string::npos) {
-		psName.replace(0, pos+10, PVSSDatabaseName() + ":");
+	// when name contains @ring@_@station@ cut out this marker and prepend hostname
+	// stationname+:  -> LOFAR_ObsSW_@ring@_@station@_CalCtrl_xxx --> CS010:LOFAR_ObsSW_CalCtrl_xxx
+	if ((pos = psName.find("@ring@_@station@_")) != string::npos) {
+		psName.erase(pos, 17);
+		psName = myHostname(false) + ":" + psName;
 	}
 
 	if ((pos = psName.find("@ring@")) != string::npos) {
