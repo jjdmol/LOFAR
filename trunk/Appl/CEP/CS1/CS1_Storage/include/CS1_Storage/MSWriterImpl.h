@@ -63,7 +63,8 @@ namespace LOFAR
       MSWriterImpl (const char* msName, double startTime, double timeStep,
                     int nfreq, int ncorr,
                     int nantennas, const vector<double>& antPos,
-		    const vector<std::string>& storageStationNames);
+		    const vector<std::string>& storageStationNames, 
+		    uint timesToIntegrate);
 
       // Destructor
       ~MSWriterImpl();
@@ -155,6 +156,7 @@ namespace LOFAR
       int itsNrCorr;                     ///< Fixed nr of correlations (polar.)
       int itsNrTimes;                    ///< nr of exposures
       double itsTimeStep;                ///< duration of each exposure (sec)
+      uint itsTimesToIntegrate;          ///< Number of timeSteps to integrate (sec)
       double itsStartTime;               ///< start time of observation (sec)
       casa::Block<casa::Int>* itsNrPol;  ///< nr of polarizations for each band
       casa::Block<casa::Int>* itsNrChan; ///< nr of channels for each band

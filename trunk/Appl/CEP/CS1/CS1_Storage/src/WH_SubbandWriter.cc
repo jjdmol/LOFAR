@@ -163,10 +163,9 @@ namespace LOFAR
                 antPos.size() << " == " << 3 * itsNStations);
       
       vector<string> storageStationNames = itsPS.getStringVector("Storage.StorageStationNames");
-     
       itsWriter = new MSWriter(msName.c_str(), startTime, timeStep * itsTimesToIntegrate, 
                                itsNChannels, itsNPolSquared, itsNStations, 
-                               antPos, storageStationNames);
+                               antPos, storageStationNames, itsTimesToIntegrate);
 
       double chanWidth = itsPS.getDouble("Observation.SampleRate") /
 			 itsPS.getDouble("Observation.NChannels");
@@ -258,7 +257,6 @@ namespace LOFAR
 	  cout<<"baseLine: "<<b<<" valid samples: "<<valSamples[b*itsNChannels]<<endl;
 	}
 #endif
-  
 	if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
 	  itsWriteTimer.start();
 	  itsWriter->write (itsBandIDs[sb], itsFieldID, 0, itsNChannels,
