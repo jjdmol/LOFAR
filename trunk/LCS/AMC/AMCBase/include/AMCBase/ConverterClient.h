@@ -35,9 +35,6 @@
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
 
-// #include <AMCBase/Direction.h>
-// #include <Common/lofar_vector.h>
-
 namespace LOFAR
 {
   //# Forward declarations
@@ -65,11 +62,17 @@ namespace LOFAR
     class ConverterClient : public Converter
     {
     public:
+      // \throw IOException when connecting to server fails.
       ConverterClient(const string& server = "localhost", 
                       uint16 port = 31337);
 
       virtual ~ConverterClient();
 
+      // @{
+      // \throw ConverterException when an error occurs within the converter
+      // (e.g., its received wrong or inconsistent request data).
+      // \throw IOException when the connection with the server was lost and
+      // could not be restored.
       virtual void j2000ToAzel(ResultData&, const RequestData&);
       
       virtual void azelToJ2000(ResultData&, const RequestData&);
@@ -77,13 +80,14 @@ namespace LOFAR
       virtual void j2000ToItrf(ResultData&, const RequestData&);
       
       virtual void itrfToJ2000(ResultData&, const RequestData&);
+      // @}
 
     private:
-      //@{
+      // @{
       // Make this class non-copyable.
       ConverterClient(const ConverterClient&);
       ConverterClient& operator=(const ConverterClient&);
-      //@}
+      // @}
 
       // Perform actual conversion by first sending a conversion request to
       // the server and then receiving the conversion result.

@@ -103,12 +103,12 @@ namespace LOFAR
       const string& showType() const;
 
       // Add Position \a that to \c this. 
-      // \throw AssertError if the reference types of \c this and \a that
+      // \throw TypeException if the reference types of \c this and \a that
       // differ.
       Position& operator+=(const Position& that);
 
       // Subtract Position \a that from \c this. 
-      // \throw AssertError if the reference types of \c this and \a that
+      // \throw TypeException if the reference types of \c this and \a that
       // differ.
      Position& operator-=(const Position& that);
 
@@ -119,12 +119,12 @@ namespace LOFAR
       Position& operator/=(double a);
 
       // Calculate the inner product of \c this and the Position \a that.
-      // \throw AssertError if the reference types of \c this and \a that
+      // \throw TypeException if the reference types of \c this and \a that
       // differ.
       double operator*(const Position& that);
 
       // Calculate the inner product of \c this and the Direction \a that.
-      // \throw AssertError if the reference types of \c this and \a that
+      // \throw TypeException if the reference types of \c this and \a that
       // differ.
       double operator*(const Direction& that);
 
@@ -137,13 +137,13 @@ namespace LOFAR
     };
 
     // Calculate the sum of two Positions. 
-    // \throw AssertError if the reference types of \c this and \a that
+    // \throw TypeException if the reference types of \c this and \a that
     // differ.
     inline Position operator+(const Position& lhs, const Position& rhs)
     { return Position(lhs) += rhs; }
 
     // Calculate the difference between two Positions. 
-    // \throw AssertError if the reference types of \c this and \a that
+    // \throw TypeException if the reference types of \c this and \a that
     // differ.
     inline Position operator-(const Position& lhs, const Position& rhs)
     { return Position(lhs) -= rhs; }
