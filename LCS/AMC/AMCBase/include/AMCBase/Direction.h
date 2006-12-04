@@ -100,12 +100,12 @@ namespace LOFAR
       const string& showType() const;
 
       // Add Direction \a that to \c this. 
-      // \throw AssertError if the reference types of \c this and \a that
+      // \throw TypeException if the reference types of \c this and \a that
       // differ.
       Direction& operator+=(const Direction& that);
 
       // Subtract Direction \a that from \c this. 
-      // \throw AssertError if the reference types of \c this and \a that
+      // \throw TypeException if the reference types of \c this and \a that
       // differ.
       Direction& operator-=(const Direction& that);
 
@@ -116,12 +116,12 @@ namespace LOFAR
       Direction& operator/=(double a);
 
       // Calculate the inner product of \c this and the Direction \a that.
-      // \throw AssertError if the reference types of \c this and \a that
+      // \throw TypeException if the reference types of \c this and \a that
       // differ.
       double operator*(const Direction& that);
 
       // Calculate the inner product of \c this and the Position \a that.
-      // \throw AssertError if the reference types of \c this and \a that
+      // \throw TypeException if the reference types of \c this and \a that
       // differ.
       double operator*(const Position& that);
 
@@ -134,13 +134,13 @@ namespace LOFAR
     };
 
     // Calculate the sum of two Directions. 
-    // \throw AssertError if the reference types of \c this and \a that
+    // \throw TypeException if the reference types of \c this and \a that
     // differ.
     inline Direction operator+(const Direction& lhs, const Direction& rhs)
     { return Direction(lhs) += rhs; }
 
     // Calculate the difference between two Directions. 
-    // \throw AssertError if the reference types of \c this and \a that
+    // \throw TypeException if the reference types of \c this and \a that
     // differ.
     inline Direction operator-(const Direction& lhs, const Direction& rhs)
     { return Direction(lhs) -= rhs; }

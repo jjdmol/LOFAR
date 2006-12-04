@@ -36,7 +36,7 @@ namespace LOFAR
   namespace AMC
   {
 
-    // \addtogroup AMC
+    // \addtogroup AMCBase
     // @{
 
     // This is the base exception class for the AMC package

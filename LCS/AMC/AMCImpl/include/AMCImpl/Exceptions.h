@@ -38,16 +38,15 @@ namespace LOFAR
 
     // \addtogroup AMCImpl
     // @{
+
     // This exception is thrown when an error occurs within the conversion
     // methods.
     EXCEPTION_CLASS(ConverterError, Exception);
-    // @}
 
-    // \addtogroup AMCServer
-    // @{
     // This exception is thrown when an error occurs within the AMCServer
     // sub-package.
     EXCEPTION_CLASS(ServerError, Exception);
+
     // @}
 
   } // namespace AMC

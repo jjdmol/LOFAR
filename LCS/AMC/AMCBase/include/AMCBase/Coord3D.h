@@ -124,7 +124,7 @@ namespace LOFAR
     { return Coord3D(v) /= a; }
     
     // Calculate the inner product of two vectors originating at the origin
-    // and pointing to 3D-coordinates \a lhs and \a rhs respectively..
+    // and pointing to 3D-coordinates \a lhs and \a rhs respectively.
     double operator*(const Coord3D& lhs, const Coord3D& rhs);
 
     // Compare two 3D-coordinates for equality.
