@@ -45,7 +45,7 @@ namespace LOFAR
     //# Forward declarations
     class BBSStep;
 
-    // \addtogroup BBS
+    // \addtogroup BBSControl
     // @{
 
     class BBSStrategy : public BlobStreamable

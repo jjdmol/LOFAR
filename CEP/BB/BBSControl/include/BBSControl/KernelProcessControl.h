@@ -52,7 +52,7 @@ namespace LOFAR
     class Prediffer;
     struct Context;
 
-    // \addtogroup BBS
+    // \addtogroup BBSControl
     // @{
 
     // Implementation of the ProcessControl interface for the local BBSKernel

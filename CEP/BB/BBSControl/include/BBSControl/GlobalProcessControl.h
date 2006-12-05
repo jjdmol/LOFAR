@@ -43,7 +43,7 @@ namespace LOFAR
     class BBSStrategy;
     class BBSStep;
 
-    // \addtogroup BBS
+    // \addtogroup BBSControl
     // @{
 
     // Implementation of the ProcessControl interface for the global BBS
