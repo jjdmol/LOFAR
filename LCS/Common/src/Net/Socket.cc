@@ -308,41 +308,36 @@ int32 Socket::initClient (const string&	hostname,
 int32 Socket::initUnixSocket(bool		asServer)
 {
 	LOG_TRACE_CALC(formatString("Socket::initUnixSocket(%s,%d)",
-											itsSocketname.c_str(), asServer));
-	string 		path;
-	if (asServer) {
-		path = itsPort;
-	}
-	else {
-		path = itsHost + ":" + itsPort;
-	}
+		itsSocketname.c_str(), asServer));
 
-    // setup socket address
-    itsUnixAddr.sun_family = AF_UNIX;
-    ASSERTSTR (path.length() < sizeof(itsUnixAddr.sun_path), 
-													"socket name too long");
+	// setup socket address
+	string path = itsPort;
+	itsUnixAddr.sun_family = AF_UNIX;
+
+	ASSERTSTR (path.length() < sizeof(itsUnixAddr.sun_path), 
+		"socket name too long");
 
 	memset (itsUnixAddr.sun_path, 0, sizeof(itsUnixAddr.sun_path));
-    if (path[0] == '=')  { // abstract socket name
+	if (path[0] == '=')  { // abstract socket name
 		path.substr(1).copy(itsUnixAddr.sun_path+1, sizeof(itsUnixAddr.sun_path)-1);
-    }
-    else  { // socket in filesystem
+	}
+	else  { // socket in filesystem
 		path.copy (itsUnixAddr.sun_path, sizeof(itsUnixAddr.sun_path));
 	}
 
-    // create socket
-    itsSocketID = ::socket (PF_UNIX, SOCK_STREAM, 0);
-    if (itsSocketID < 0) {
-      return (setErrno(SOCKET));
+	// create socket
+	itsSocketID = ::socket (PF_UNIX, SOCK_STREAM, 0);
+	if (itsSocketID < 0) {
+		return (setErrno(SOCKET));
 	}
-    LOG_TRACE_CALC(formatString("Socket(%d):creating unix socket %s", 
-												itsSocketID, path.c_str()));
+	LOG_TRACE_CALC(formatString("Socket(%d):creating unix socket %s", 
+		itsSocketID, path.c_str()));
 
-    if (setDefaults() < 0) {
+	if (setDefaults() < 0) {
 		::close (itsSocketID);
 		itsSocketID = -1;
 		return (itsErrno);
-    }
+	}
 
 	return (SK_OK);
 }
