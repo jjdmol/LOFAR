@@ -43,7 +43,7 @@ namespace LOFAR
 
   namespace BBS
   {
-    // \addtogroup BBS
+    // \addtogroup BBSControl
     // @{
 
     // Information about the Blackboard database.

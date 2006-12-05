@@ -47,7 +47,7 @@ namespace LOFAR
     class BBSMultiStep;
     class StrategyController;
 
-    // \addtogroup BBS
+    // \addtogroup BBSControl
     // @{
 
     // This is the so-called \e component class in the BBSStep composite
