@@ -140,6 +140,8 @@ private:
 	GCFTimerPort*			itsTimerPort;
 
 	CTState::CTstateNr		itsState;
+	uint32					itsBusyControllers;
+	uint16					itsChildResult;
 	
 	// timers for the several stages.
 	uint32					itsClaimTimer;

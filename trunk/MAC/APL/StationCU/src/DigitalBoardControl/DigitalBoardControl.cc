@@ -73,7 +73,7 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 itsClock = globalParameterSet()->getUint32(itsTreePrefix + "sampleClock");
 
 	// TODO
-	LOG_INFO("MACProcessScope: LOFAR.PermSW.iDigBoardCtrl");
+	LOG_INFO("MACProcessScope: LOFAR.PermSW.DigBoardCtrl");
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -125,7 +125,7 @@ DigitalBoardControl::~DigitalBoardControl()
 //
 void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 {
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << eventstr(answer));
+	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << eventstr(answer));
 
 	switch(answer.signal) {
 	case F_MYPS_ENABLED: 

@@ -75,9 +75,6 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
 	itsObsPar	  = Observation(globalParameterSet());
 
-	// Instruct CodeLoggingProcessor
-	LOG_INFO_STR("MACProcessScope: " << itsTreePrefix + cntlrName);
-
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
 	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
@@ -112,6 +109,7 @@ CalibrationControl::~CalibrationControl()
 
 	if (itsPropertySet) {
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
+		itsPropertySet->disable();
 	}
 
 	// ...
@@ -212,10 +210,10 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		string	propSetName(createPropertySetName(PSN_CAL_CTRL, getName()));
-		LOG_DEBUG_STR ("Activating PropertySet" << propSetName);
+		LOG_INFO_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
 																  PST_CAL_CTRL,
-																  PS_CAT_TEMPORARY,
+																  PS_CAT_TEMP_AUTOLOAD,
 																  &itsPropertySetAnswer));
 		itsPropertySet->enable();
 		// Wait for timer that is set in PropertySetAnswer on ENABLED event
@@ -226,10 +224,16 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		if (!itsPropertySetInitialized) {
 			itsPropertySetInitialized = true;
 
+			// Instruct CodeLoggingProcessor
+			// TODO
+			uint32	treeID = getObservationNr(getName());
+			LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".CalCtrl");
+
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
 			itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("initial"));
 			itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+			itsPropertySet->setValue(string(PN_CC_CONNECTED),GCFPVBool(false));
 		  
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
@@ -254,7 +258,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		setState(CTState::CONNECTED);
 		sendControlResult(port, CONTROL_CONNECTED, msg.cntlrName, CT_RESULT_NO_ERROR);
 		
-		LOG_DEBUG ("Going to started state");
+		LOG_INFO ("Going to started state");
 		TRAN(CalibrationControl::started_state);
 		break;
 	}
@@ -293,7 +297,8 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 		ASSERTSTR (&port == itsCalServer, 
 									"F_CONNECTED event from port " << port.getName());
 		itsTimerPort->cancelAllTimers();
-		LOG_DEBUG ("Connected with CalServer, going to claimed state");
+		itsPropertySet->setValue(string(PN_CC_CONNECTED),GCFPVBool(true));
+		LOG_INFO ("Connected with CalServer, going to claimed state");
 		setState(CTState::CLAIMED);
 		sendControlResult(*itsParentPort, CONTROL_CLAIMED, getName(), CT_RESULT_NO_ERROR);
 		TRAN(CalibrationControl::claimed_state);			// go to next state.
@@ -303,7 +308,8 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 		port.close();
 		ASSERTSTR (&port == itsCalServer, 
 								"F_DISCONNECTED event from port " << port.getName());
-		LOG_DEBUG("Connection with CalServer failed, retry in 2 seconds");
+		itsPropertySet->setValue(string(PN_CC_CONNECTED),GCFPVBool(false));
+		LOG_WARN("Connection with CalServer failed, retry in 2 seconds");
 		itsTimerPort->setTimer(2.0);
 		break;
 
@@ -365,7 +371,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 		port.close();
 		ASSERTSTR (&port == itsCalServer, 
 								"F_DISCONNECTED event from port " << port.getName());
-		LOG_DEBUG("Connection with CalServer lost, going to reconnect state.");
+		LOG_WARN("Connection with CalServer lost, going to reconnect state.");
 		TRAN(CalibrationControl::started_state);
 		break;
 
@@ -393,7 +399,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 	case CAL_STARTACK: {
 		CALStartackEvent		ack(event);
 		if (ack.status == SUCCESS || ack.status == ERR_ALREADY_REGISTERED) {
-			LOG_DEBUG ("Start of calibration was succesful");
+			LOG_INFO ("Start of calibration was succesful");
 			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(),
 																CT_RESULT_NO_ERROR);
 			setState(CTState::PREPARED);
@@ -486,7 +492,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	case CAL_STOPACK: {
 		CALStopackEvent			ack(event);
 		if (ack.status == SUCCESS) {
-			LOG_DEBUG ("Calibration successfully stopped");
+			LOG_INFO ("Calibration successfully stopped");
 			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
 															CT_RESULT_NO_ERROR);
 			setState(CTState::RELEASED);

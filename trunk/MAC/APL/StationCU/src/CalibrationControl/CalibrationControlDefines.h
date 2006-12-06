@@ -28,14 +28,17 @@ namespace LOFAR {
 
 #define CC_TASKNAME					"CalCtrl"
 
-#define PSN_CAL_CTRL	"LOFAR_PermSW_CalCtrl@instance@"
-#define PST_CAL_CTRL	"CalCtrl"
+#define PSN_CAL_CTRL				"LOFAR_ObsSW_@observation@_CalCtrl"
+#define PST_CAL_CTRL				"CalCtrl"
+#define PN_CC_CONNECTED				"connected"
+#define PN_CC_SUBARRAYS				"subarrays"
 
 #define PROPNAME_FUNCTIONALITY		"functionality"
 
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"
 #define PVSSNAME_FSM_ERROR			"error"
+#define PVSSNAME_FSM_LOGMSG			"logmsg"
 
 
 }; // MCU
