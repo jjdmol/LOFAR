@@ -64,10 +64,9 @@ namespace LOFAR {
       
 			private:
 				uint32	itsBoardMask;  // mask indicates the boards to communicate with
-				uint32  itsErrorMask;  // mask indicates the not responding boards
 				uint32	itsBoardsMask;	// Installed boards mask
 				uint32	itsChannelMask[MAX_N_TBBBOARDS];
-				int32	itsChannel;
+				int32		itsChannel;
 				
 				TPFreeEvent			*itsTPE;
 				TPFreeackEvent	*itsTPackE;

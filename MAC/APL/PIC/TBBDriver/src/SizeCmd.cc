@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a SizeCmd object.----------------------------------------
 SizeCmd::SizeCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPSizeEvent();
 	itsTPackE 	= 0;
@@ -76,11 +76,10 @@ void SizeCmd::saveTbbEvent(GCFEvent& event)
 			itsTBBackE->status[boardnr] |= NO_BOARD;
 						
 		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
 	}
 		
 	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
 	// initialize TP send frame
@@ -102,7 +101,7 @@ bool SizeCmd::sendTpEvent(int32 boardnr, int32)
 		sending = true;
 	}
 	else
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status[boardnr] |= CMD_ERROR;
 		
 	return(sending);
 }
@@ -112,7 +111,7 @@ void SizeCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status[boardnr] |= COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPSizeackEvent(event);

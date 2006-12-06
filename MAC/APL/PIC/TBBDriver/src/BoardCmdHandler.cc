@@ -135,7 +135,7 @@ void BoardCmdHandler::sendCmd()
 {
 	itsNextCmd = true; // if true, go to next board or channel
 	uint32 boardmask = (1 << itsBoardNr);
-		
+	
 	if (boardmask & DriverSettings::instance()->activeBoardsMask()) {
 		if (itsCmd->getCmdType() == BoardCmd) {
 			if (boardmask & itsCmd->getBoardMask()) {

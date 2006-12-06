@@ -85,9 +85,8 @@ void DriverSettings::setMaxBoards (int32 maxboards)
 	int32 mpnr = 0;
 	
 	for (int nr = 0; nr < itsMaxChannels; nr++) {
+		itsChannel[nr].Status = 'F';
 		itsChannel[nr].Selected = false;
-		itsChannel[nr].Allocated = false;
-		itsChannel[nr].Active = false;
 		itsChannel[nr].BoardNr = boardnr;
 		itsChannel[nr].InputNr = inputnr;
 		itsChannel[nr].MpNr = mpnr;

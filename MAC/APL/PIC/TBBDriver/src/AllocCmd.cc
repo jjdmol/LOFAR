@@ -35,7 +35,7 @@ namespace LOFAR {
 
 //--Constructors for a AllocCmd object.----------------------------------------
 AllocCmd::AllocCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsChannel(0)
+		itsBoardMask(0),itsBoardsMask(0),itsChannel(0)
 {
 	itsTPE 			= new TPAllocEvent();
 	itsTPackE 	= 0;
@@ -83,10 +83,11 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 		
 		for (int ch = 0; ch < 16; ch++) {
 			if (itsChannelMask[boardnr] & (1 << ch)) {
-				if (DriverSettings::instance()->getChSelected((ch + (boardnr * 16))))
-					itsTBBackE->status[boardnr] |= ALLOC_ERROR;		
+				if (DriverSettings::instance()->getChStatus((ch + (boardnr * 16))) != 'F') {
+					itsTBBackE->status[boardnr] |= ALLOC_ERROR;
+				}		
 				else	
-					DriverSettings::instance()->setChSelected((ch + (boardnr * 16)), true);	
+					DriverSettings::instance()->setChSelected((ch + (boardnr * 16)),true);
 			}
 		} 		
 		
@@ -94,10 +95,10 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 			itsBoardMask |= (1 << boardnr);
 			
 		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & CHANNEL_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | CHANNEL_SEL_ERROR);
 				
 		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
 		
 		if ((itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0)) {
 			if (!devideChannels(boardnr)) // calculate allocations
@@ -107,7 +108,6 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 	}
 		
 	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
 	// initialize TP send frame
@@ -133,8 +133,8 @@ bool AllocCmd::sendTpEvent(int32 boardnr, int32 channelnr)
 	// send cmd if no errors
 	if 	(ds->boardPort(boardnr).isConnected() &&
 			(itsTBBackE->status[boardnr] == 0) && 
-			(itsTPE->channel < 16) &&
-			!ds->getChAllocated(channelnr)) {
+			(ds->getChStatus(channelnr) == 'F')) {
+		
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
 		sending = true;
@@ -142,7 +142,7 @@ bool AllocCmd::sendTpEvent(int32 boardnr, int32 channelnr)
 																boardnr,channelnr));
 	}
 	else 
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status[boardnr] |= CMD_ERROR;
 	
 	return(sending);
 }
@@ -164,7 +164,7 @@ void AllocCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
 			
 		if(itsTPackE->status == 0) 
-			DriverSettings::instance()->setChAllocated(itsChannel, true); 
+			DriverSettings::instance()->setChStatus(itsChannel, 'A'); 	 
 		
 		LOG_DEBUG_STR(formatString("Received AllocAck from boardnr[%d], status[0x%08X]", 
 																boardnr,itsTBBackE->status[boardnr]));
@@ -221,7 +221,7 @@ uint32 getNrOfBits(uint32 mask)
 // ----------------------------------------------------------------------------
 bool AllocCmd::devideChannels(int32 boardnr)
 {
-	bool selected = false;
+	bool board_free = true;
 	bool success = false;
 	uint32 channels;
 	uint32 memorysize;
@@ -245,11 +245,13 @@ bool AllocCmd::devideChannels(int32 boardnr)
 	addr = 0;
 	
 	
+	// check if all board inputs are free
 	for (int32 ch = 0; ch < DriverSettings::instance()->nrChannelsPerBoard(); ch++) {
-		if (DriverSettings::instance()->getChAllocated(ch + (boardnr * 16)))
-			selected = true;
+		if (DriverSettings::instance()->getChStatus(ch + (boardnr * 16)) != 'F')
+			board_free = false;
 	}
-	if (!selected) {
+	
+	if (board_free) {
 	success = true;
 	switch (channels) {
 		case 1: {
@@ -284,23 +286,23 @@ bool AllocCmd::devideChannels(int32 boardnr)
 				while (channelmask) {
 					for (int32 ch = 0; ch < 4; ch++) {
 						if (channelmask & (1 << ch)) {
-							channelmask &= ~ch;
+							channelmask &= ~(1 << ch);
 							channeladdr[ch] = addr;
 							addr += channelsize;
 							ch = 4; // break;								
 						}
 					}
-					for (int32 ch = 5; ch < 8; ch++) {
+					for (int32 ch = 4; ch < 8; ch++) {
 						if (channelmask & (1 << ch)) {
-							channelmask &= ~ch;
+							channelmask &= ~(1 << ch);
 							channeladdr[ch] = addr;
 							addr += channelsize;
 							ch = 8;	// break;							
 						}
 					}
-					for (int32 ch = 9; ch < 12; ch++) {
+					for (int32 ch = 8; ch < 12; ch++) {
 						if (channelmask & (1 << ch)) {
-							channelmask &= ~ch;
+							channelmask &= ~(1 << ch);
 							channeladdr[ch] = addr;
 							addr += channelsize;
 							ch = 12;	// break;							
@@ -308,7 +310,7 @@ bool AllocCmd::devideChannels(int32 boardnr)
 					}
 					for (int32 ch = 12; ch < 16; ch++) {
 						if (channelmask & (1 << ch)) {
-							channelmask &= ~ch;
+							channelmask &= ~(1 << ch);
 							channeladdr[ch] = addr;
 							addr += channelsize;
 							ch = 16;	// break;							
@@ -353,6 +355,7 @@ bool AllocCmd::devideChannels(int32 boardnr)
 			success = false;
 		}	break;
 	}
+	
 	if (success) {	// save to DriverSettings
 		for (int32 ch = 0; ch < 16; ch++) {
 			if (DriverSettings::instance()->getChSelected(ch + (boardnr * 16))) {

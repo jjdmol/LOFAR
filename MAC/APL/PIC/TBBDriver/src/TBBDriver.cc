@@ -327,7 +327,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 				TRAN(TBBDriver::busy_state);
 			}
 		} break;
-		
+				
 		case TBB_GETCONFIG: {
 			TBBGetconfigackEvent ack;
 			ack.max_boards = DriverSettings::instance()->maxBoards();
@@ -349,11 +349,14 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 			port.send(ack); 
 		} break;
 		
-		case TBB_ALLOCINFO: {
-			TBBAllocinfoackEvent ack;
+		case TBB_CHANNELINFO: {
+			TBBChannelinfoackEvent ack;
 			for (int32 ch = 0; ch < DriverSettings::instance()->maxChannels(); ch++) {
+				ack.channelstatus[ch] = (uint32)DriverSettings::instance()->getChStatus(ch);
 				ack.channelstartaddr[ch] = DriverSettings::instance()->getChStartAddr(ch);
 				ack.channelsize[ch] = DriverSettings::instance()->getChPageSize(ch);
+				ack.channelplace[ch] = ((DriverSettings::instance()->getChBoardNr(ch) << 16) |
+														(DriverSettings::instance()->getChInputNr(ch) & 0xFFFF));
 			}
 			port.send(ack); 
 		} break;
@@ -429,7 +432,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case F_DATAIN: {
 			status = RawEvent::dispatch(*this, port);
 		}	break;
-					
+		
 		case TP_ALIVEACK: {
 			if (CheckAlive(event, port)) {
 				//cmdhandler->setActiveBoards(itsActiveBoards); 

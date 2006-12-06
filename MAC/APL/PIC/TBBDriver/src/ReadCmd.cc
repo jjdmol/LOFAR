@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a ReadCmd object.----------------------------------------
 ReadCmd::ReadCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0), itsChannel(0)
+		itsBoardMask(0),itsBoardsMask(0), itsChannel(0)
 {
 	itsTPE 			= new TPReadEvent();
 	itsTPackE 	= 0;
@@ -70,7 +70,6 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
 	// initialize TP send frame
@@ -96,8 +95,8 @@ bool ReadCmd::sendTpEvent(int32 boardnr, int32)
 		ds->boardPort(boardnr).setTimer(ds->timeout());
 		sending = true;
 	}
-	else
-		itsErrorMask |= (1 << boardnr);
+	else 
+		itsTBBackE->status |= CMD_ERROR;
 	
 	return(sending);
 }
@@ -107,7 +106,7 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status |= COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPReadackEvent(event);
@@ -120,13 +119,8 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ReadCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->status = 0;
-	if (itsErrorMask != 0) {
-		itsTBBackE->status |= COMM_ERROR;
-		itsTBBackE->status |= (itsErrorMask << 16);
-	}
-	if (itsBoardMask == 0) itsTBBackE->status |= SELECT_ERROR; 
-	if (itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;
+	if (itsTBBackE->status == 0)
+			itsTBBackE->status = SUCCESS;
 	 
 	clientport->send(*itsTBBackE);
 }

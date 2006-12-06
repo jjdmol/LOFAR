@@ -44,7 +44,10 @@ class Command
 {
 
 public:
-	virtual ~Command() {}
+	virtual ~Command()
+	{
+		logMessage(cout,formatString("=============================================================================="));
+	}
 	
 	// Send the command to the TBBDriver
 	virtual void send() = 0;
@@ -65,8 +68,8 @@ public:
 		
 		str.clear();
 		str.append("=ERROR= ");
-		if ((status & COMM_ERROR) || (status & NO_BOARD))			
-																	str.append(";Board not available ");
+		if (status & NO_BOARD)				str.append(";Board not available ");
+		if (status & COMM_ERROR)			str.append(";Comm. time-out ");			
 		if (status & SELECT_ERROR)		str.append(";Not selectable ");
 		if (status & CMD_ERROR)				str.append(";Command failed ");
 		if (status & ALLOC_ERROR)			str.append(";Alloc error ");
@@ -226,11 +229,11 @@ class AllocCmd : public Command
 };
 
 //-----------------------------------------------------------------------------
-class AllocInfoCmd : public Command
+class ChannelInfoCmd : public Command
 {
 	public:
-		AllocInfoCmd(GCFPortInterface& port);
-		virtual ~AllocInfoCmd() { }
+		ChannelInfoCmd(GCFPortInterface& port);
+		virtual ~ChannelInfoCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 	private:
@@ -471,7 +474,8 @@ class ReadPageCmd : public Command
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 		void setMp(uint32 mp)		{	itsMp = mp;	}
-		void setAddr(uint32 addr)  {	itsAddr = addr;	}
+		void setAddr(uint32 addr)  { itsAddr = addr; }
+		void setPages(uint32 pages)  { itsPages = pages; }
 		static const uint32 PID6 = 6;
 		static const uint32 REGID0 = 0;
 		static const uint32 REGID1 = 1;
@@ -482,9 +486,22 @@ class ReadPageCmd : public Command
 		static const uint32 DATA2POS = 256;
 	private:
 		int32 itsCmdStage;
+		uint32 itsPage;
 		uint32 itsMp;
 		uint32 itsAddr;
+		uint32 itsPages;
 		uint32 itsData[512];
+		
+		int itsStationId;
+		int itsRspId;
+		int itsRcuId;
+		int itsSampleFreq;
+		time_t itsTime;
+		int itsSampleNr;
+		int itsSamplesPerFrame;
+		int itsFreqBands;
+		int itsTotalSamples;
+		int itsTotalBands;
 };
 
 
