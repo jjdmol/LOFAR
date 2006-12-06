@@ -30,6 +30,7 @@
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include "StationControlDefines.h"
 #include "ActiveObs.h"
 
 // Observation
@@ -73,6 +74,10 @@ ActiveObs::ActiveObs(const string&		name,
 //
 ActiveObs::~ActiveObs()
 {
+	if (itsPropertySet) {
+		itsPropertySet->disable();
+		delete itsPropertySet;
+	}
 }
 
 //
@@ -118,6 +123,14 @@ void ActiveObs::handlePropertySetAnswer(GCFEvent& answer)
 //			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
 //			break;
 //		}
+
+		// don't watch state and error fields.
+		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
+			return;
+		}
+ 
 		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << 
 															pPropAnswer->pPropName);
 	}
@@ -205,14 +218,14 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	/*port*
 		ChildControl::instance()->startChild(CNTLRTYPE_CALIBRATIONCTRL,
 											 itsObsPar.treeID,
 											 itsInstanceNr,
-											 myHostname(true));
+											 myHostname(false));
 		// Results in CONTROL_CONNECT in StationControl Task.
 											
 		LOG_DEBUG_STR("Starting controller " << itsBeamCntlrName);
 		ChildControl::instance()->startChild(CNTLRTYPE_BEAMCTRL,
 											 itsObsPar.treeID,
 											 itsInstanceNr,
-											 myHostname(true));
+											 myHostname(false));
 		// Results in CONTROL_CONNECT in StationControl Task.
 	}
 	break;
@@ -423,6 +436,22 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	/*po
 	case CONTROL_SUSPENDED:
 		break;
 
+	case CONTROL_RESUME: {
+		// pass event through to controllers
+		LOG_DEBUG("Passing RESUME event to childs");
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
+		ChildControl::instance()->
+				requestState(CTState::RESUMED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		ChildControl::instance()->
+				requestState(CTState::RESUMED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		// will result in CONTROL_RESUMED
+	}
+	break;
+
+	case CONTROL_RESUMED:
+		break;
+	
 	case CONTROL_RELEASE: {
 		// release beam at the BeamController
 		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to stop the beam");
@@ -434,10 +463,19 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	/*po
 
 	case CONTROL_RELEASED: {
 		CONTROLReleaseEvent		msg(event);
-		ASSERTSTR(msg.cntlrName == itsBeamCntlrName, 
-					"Received released event of unknown controller: " << msg.cntlrName);
-		LOG_DEBUG_STR("Beam is stopped, going to standby mode");
-		TRAN(ActiveObs::standby);
+		if (msg.cntlrName == itsBeamCntlrName) {
+			LOG_DEBUG_STR("Beam is stopped, stopping calibration");
+			ChildControl::instance()->
+				requestState(CTState::RELEASED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+			break;
+		}
+		if (msg.cntlrName == itsCalCntlrName) {
+			LOG_DEBUG_STR("Calibration is stopped, going to standby mode");
+			TRAN(ActiveObs::standby);
+			break;
+		}
+		ASSERTSTR(false, "RELEASE event received from unknown controller:" 
+																	<< msg.cntlrName);
 	}
 	break;
 

@@ -125,7 +125,7 @@ StationControl::~StationControl()
 //
 void StationControl::handlePropertySetAnswer(GCFEvent& answer)
 {
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << eventstr(answer));
+	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << eventstr(answer));
 
 	switch(answer.signal) {
 	case F_MYPS_ENABLED: 
@@ -299,15 +299,16 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		itsChildControl->startChild(CNTLRTYPE_DIGITALBOARDCTRL,
 							   		0,			// treeID, 
 							   		0,			// instanceNr,
-							   		myHostname(true));
+							   		myHostname(false));
 		// will result in CONTROL_STARTED (and CONTROL_CONNECTED if no error).
 		}
 		break;
 
 	case CONTROL_STARTED: {
 		CONTROLStartedEvent		msg(event);
-		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
-							"Started event of unknown controller: " << msg.cntlrName);
+//		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
+//							"Started event of unknown controller: " << msg.cntlrName);
+// note: hostname is now in controller.
 			if (msg.successful) {
 				LOG_INFO_STR("Startup of " << msg.cntlrName << 
 											" succesful, waiting for connection");
@@ -325,8 +326,9 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 
 	case CONTROL_CONNECTED: {
 		CONTROLConnectedEvent		msg(event);
-		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
-							"Connect event of unknown controller: " << msg.cntlrName);
+//		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
+//							"Connect event of unknown controller: " << msg.cntlrName);
+// note: hostname is now in controller.
 
 		// inform parent the chain is up
 		CONTROLConnectedEvent	answer;

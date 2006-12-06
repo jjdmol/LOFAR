@@ -421,24 +421,28 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		}
 		else if (timerEvent.id == itsClaimTimer) {
 			setState(CTState::CLAIM);
+			itsChildResult = CT_RESULT_NO_ERROR;
 			itsClaimTimer = 0;
 			LOG_DEBUG("Requesting all childs to execute the CLAIM state");
 			itsChildControl->requestState(CTState::CLAIMED, "");
 		}
 		else if (timerEvent.id == itsPrepareTimer) {
 			setState(CTState::PREPARE);
+			itsChildResult = CT_RESULT_NO_ERROR;
 			itsPrepareTimer = 0;
 			LOG_DEBUG("Requesting all childs to execute the PREPARE state");
 			itsChildControl->requestState(CTState::PREPARED, "");
 		}
 		else if (timerEvent.id == itsStartTimer) {
 			setState(CTState::RESUME);
+			itsChildResult = CT_RESULT_NO_ERROR;
 			itsStartTimer = 0;
 			LOG_DEBUG("Requesting all childs to go operation state");
 			itsChildControl->requestState(CTState::RESUMED, "");
 		}
 		else if (timerEvent.id == itsStopTimer) {
 			setState(CTState::FINISH);
+			itsChildResult = CT_RESULT_NO_ERROR;
 			itsStopTimer = 0;
 			LOG_DEBUG("Requesting all childs to quit");
 			itsChildControl->requestState(CTState::FINISHED, "");
@@ -490,45 +494,41 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case CONTROL_CLAIMED: {
 		CONTROLClaimedEvent		msg(event);
 		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!	--> OE 837
+		itsChildResult |= msg.result;
 		break;
 	}
 
 	case CONTROL_PREPARED: {
 		CONTROLPreparedEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!	--> OE 837
+		itsChildResult |= msg.result;
 		break;
 	}
 
 	case CONTROL_RESUMED: {
 		CONTROLResumedEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!	--> OE 837
+		itsChildResult |= msg.result;
 		break;
 	}
 
 	case CONTROL_SUSPENDED: {
 		CONTROLSuspendedEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!	--> OE 837
+		itsChildResult |= msg.result;
 		break;
 	}
 
 	case CONTROL_RELEASED: {
 		CONTROLReleasedEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!	--> OE 837
+		itsChildResult |= msg.result;
 		break;
 	}
 
-	case CONTROL_FINISH: {
+	case CONTROL_FINISH: {		// Note: request iso answer
 		CONTROLFinishEvent		msg(event);
 		LOG_DEBUG_STR("Received FINISH(" << msg.cntlrName << ")");
-//		CONTROLFinishedEvent	answer;
-//		answer.cntlrName = msg.cntlrName;
-//		answer.result    = CT_RESULT_NO_ERROR;
-//		port.send(answer);
 		break;
 	}
 
@@ -676,23 +676,42 @@ void ObservationControl::setObservationTimers()
 //
 void  ObservationControl::doHeartBeatTask()
 {
+	// re-init heartbeat timer.
+	itsTimerPort->cancelTimer(itsHeartBeatTimer);
 	itsHeartBeatTimer = itsTimerPort->setTimer(1.0 * itsHeartBeatItv);
 	
+	// find out how many controllers are still busy.
 	uint32	nrChilds = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 	vector<ChildControl::StateInfo>		lateCntlrs = 
 						itsChildControl->getPendingRequest("", 0, CNTLRTYPE_NO_TYPE);
+
+	// all controllers up to date?
 	if (lateCntlrs.empty()) {
 		LOG_DEBUG_STR("All (" << nrChilds << ") controllers are up to date");
 		if (itsState == CTState::FINISH) {
 			LOG_DEBUG_STR("Time for me to shutdown");
 			TRAN(ObservationControl::finishing_state);
+			return;
 		}
+// TODO: ParentControl asserts with:
+// _doRequestedAction:MCU001:ObservationControl[0]{13} : Claimed-->Connected [ParentControl.cc:342]
+// Assertion: parent->currentState == CTState::CONNECT; Unexpected state:9 [ParentControl.cc:374]
+// 
+//		if (itsBusyControllers) {	// last time not all cntrls ready?
+//			CTState		cts;
+//			sendControlResult(*itsParentPort, cts.signal(itsState), getName(), 
+//							  itsChildResult);
+// TODO
+//	DO NOT SEND RESULT TO MACSCHEDULER BUT CALL setState with right state(curstate+1)...
+//			itsBusyControllers = 0;
+//		}
 		return;
 	}
 
-	LOG_DEBUG_STR (lateCntlrs.size() << " controllers are still out of sync");
+	itsBusyControllers = lateCntlrs.size();
+	LOG_DEBUG_STR (itsBusyControllers << " controllers are still out of sync");
 	CTState		cts;
-	for (uint32 i = 0; i < lateCntlrs.size(); i++) {
+	for (uint32 i = 0; i < itsBusyControllers; i++) {
 		ChildControl::StateInfo*	si = &lateCntlrs[i];
 		LOG_DEBUG_STR(si->name << ":" << cts.name(si->currentState) << " iso " 
 									  << cts.name(si->requestedState));
