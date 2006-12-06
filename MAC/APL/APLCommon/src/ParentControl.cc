@@ -167,8 +167,8 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 	bool	legalStartTime(!startTime.is_not_a_date_time());
 	bool	legalStopTime (!stopTime.is_not_a_date_time());
 	if (legalStartTime && legalStopTime && stopTime < startTime) {
-		LOG_ERROR_STR("Stoptime(" << to_simple_string(startTime) << 
-						") lays BEFORE starttime(" << to_simple_string(stopTime) << 
+		LOG_ERROR_STR("Stoptime(" << to_simple_string(stopTime) << 
+						") lays BEFORE starttime(" << to_simple_string(startTime) << 
 						"). Ignoring timesettings!");
 		return (false);
 	}

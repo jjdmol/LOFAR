@@ -26,36 +26,45 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APL/APLCommon/CTState.h>
+#include <APL/APLCommon/Controller_Protocol.ph>
 
 namespace LOFAR {
   namespace APLCommon {
+
+typedef struct stateSignal {
+	CTState::CTstateNr	state;
+	uint16				signal;
+	char*				name;
+} stateSignal_t;
+
+stateSignal_t	stateSignalTable[] = {
+	{	CTState::NOSTATE,	0x00,				"Unknown" 	},
+	{	CTState::CREATED,	CONTROL_STARTED,	"Created"	},
+	{	CTState::CONNECT,	CONTROL_CONNECT,	"Connecting"},
+	{	CTState::CONNECTED,	CONTROL_CONNECTED,	"Connected"	},
+	{	CTState::RESYNC,	CONTROL_RESYNC,		"Resyncing"	},
+	{	CTState::RESYNCED,	CONTROL_RESYNCED,	"Resynced"	},
+	{	CTState::SCHEDULE,	CONTROL_SCHEDULE,	"Schedule"	},
+	{	CTState::SCHEDULED,	CONTROL_SCHEDULED,	"Scheduled"	},
+	{	CTState::CLAIM,		CONTROL_CLAIM,		"Claiming"	},
+	{	CTState::CLAIMED,	CONTROL_CLAIMED,	"Claimed"	},
+	{	CTState::PREPARE,	CONTROL_PREPARE,	"Preparing"	},
+	{	CTState::PREPARED,	CONTROL_PREPARED,	"Prepared"	},
+	{	CTState::RESUME,	CONTROL_RESUME,		"Activating"},
+	{	CTState::RESUMED,	CONTROL_RESUMED,	"Active"	},
+	{	CTState::SUSPEND,	CONTROL_SUSPEND,	"Suspending"},
+	{	CTState::SUSPENDED,	CONTROL_SUSPENDED,	"Suspended"	},
+	{	CTState::RELEASE,	CONTROL_RELEASE,	"Releasing"	},
+	{	CTState::RELEASED,	CONTROL_RELEASED,	"Released"	},
+	{	CTState::FINISH,	CONTROL_FINISH,		"Finishing"	},
+	{	CTState::FINISHED,	CONTROL_FINISHED,	"Finished"	}
+};
 
 //
 // CTState()
 //
 CTState::CTState()
 {
-	itsStates.resize(LAST_STATE);
-	itsStates[NOSTATE] 				= "Unknown";
-	itsStates[CREATED] 				= "Created";
-	itsStates[CONNECT]				= "Connecting";
-	itsStates[CONNECTED]			= "Connected";
-	itsStates[RESYNC]				= "Resyncing";
-	itsStates[RESYNCED]				= "Resynced";
-	itsStates[SCHEDULE]				= "Schedule";
-	itsStates[SCHEDULED]			= "Scheduled";
-	itsStates[CLAIM]				= "Claiming";
-	itsStates[CLAIMED]				= "Claimed";
-	itsStates[PREPARE]				= "Preparing";
-	itsStates[PREPARED]				= "Prepared";
-	itsStates[RESUME]				= "Activating";
-	itsStates[RESUMED]				= "Active";
-	itsStates[SUSPEND]				= "Suspending";
-	itsStates[SUSPENDED]			= "Suspended";
-	itsStates[RELEASE]				= "Releasing";
-	itsStates[RELEASED]				= "Released";
-	itsStates[FINISH]				= "Finishing";
-	itsStates[FINISHED]				= "Finished";
 }
 
 //
@@ -70,7 +79,7 @@ CTState::~CTState()
 //
 string	CTState::name(uint16			aStateNr) const
 { 
-	return ((aStateNr < LAST_STATE) ?  itsStates[aStateNr] : "NoConnection");
+	return ((aStateNr < LAST_STATE) ?  stateSignalTable[aStateNr].name : "NoConnection");
 }
 
 //
@@ -80,7 +89,7 @@ uint16	CTState::value(const string&		aStateName) const
 {
 	uint16	i = NOSTATE;
 	while (i < LAST_STATE) {
-		if (itsStates[i] == aStateName) {
+		if (stateSignalTable[i].name == aStateName) {
 			return (i);
 		}
 		i++;
@@ -113,6 +122,18 @@ CTState::CTstateNr	CTState::stateNr(uint16		someNr) const
 
 
 }
+
+//
+// signal(CTstateNr)
+//
+uint16	CTState::signal(CTstateNr	aStateNr) const
+{
+	ASSERTSTR((aStateNr >= NOSTATE) && (aStateNr < LAST_STATE), 
+								aStateNr << " is not a valid CTState");
+
+	return (stateSignalTable[aStateNr].signal);
+}
+
 
   } // namespace APL
 } // namespace LOFAR

@@ -157,7 +157,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 											  <<","<< hostname << ")");
 
 	// first check if child already exists
-	string	cntlrName(controllerName(aCntlrType, instanceNr, anObsID));
+	string	cntlrName(controllerName(aCntlrType, instanceNr, anObsID, hostname));
 	if (findController(cntlrName) != itsCntlrList->end()) {
 		LOG_DEBUG_STR("Controller " << cntlrName << " already running.");
 		return (false);
@@ -263,25 +263,28 @@ void ChildControl::startChildControllers()
 		if (pos != string::npos && iter->first.substr(0,pos) != childname) {
 			childname = iter->first.substr(0,pos);
 			// collect the information to start the child controller
-			string	childhostname  = subset.getString(childname+"._hostname");
-			uint16	childCntlrType = getControllerType(childname);
-			uint32	treeID         = globalParameterSet()->getUint32("_treeID");
-			uint16	instanceNr	   = 0;		// TODO
-			string	childCntlrName = controllerName(childCntlrType, instanceNr, treeID);
+			vector<string>	hostnames = subset.getStringVector(childname+"._hostname");
+			for (uint i = 0; i < hostnames.size(); i++) {
+				uint16	childCntlrType = getControllerType(childname);
+				uint32	treeID         = globalParameterSet()->getUint32("_treeID");
+				uint16	instanceNr	   = 0;		// TODO
+				string	childCntlrName = 
+						controllerName(childCntlrType, instanceNr, treeID, hostnames[i]);
 
-			// child already running???
-			CTState::CTstateNr	requestedState = getRequestedState(childCntlrName);
+				// child already running???
+				CTState::CTstateNr	requestedState = getRequestedState(childCntlrName);
 
-			if (requestedState == CTState::NOSTATE) {
-				// fire request for new controller, will result in CONTROL_STARTED
-				startChild(childCntlrType, 
-						   treeID, 
-						   instanceNr,
-						   childhostname);
-				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
+				if (requestedState == CTState::NOSTATE) {
+					// fire request for new controller, will result in CONTROL_STARTED
+					startChild(childCntlrType, 
+							   treeID, 
+							   instanceNr,
+							   hostnames[i]);
+					// Note: controller is now in state NO_STATE/CONNECTED (C/R)
 
-				LOG_DEBUG_STR("Requested start of " << childCntlrName);
-			}
+					LOG_DEBUG_STR("Requested start of " << childCntlrName);
+				}
+			} // for
 		}
 		iter++;
 	}
